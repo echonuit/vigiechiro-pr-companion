@@ -165,6 +165,35 @@ inventer une mesure qui n'a pas été faite.
 Un fichier **annoncé mais introuvable** fait échouer la comparaison. Sans ce refus, les cinquante cas
 diraient tous « plancher inconnu » et personne n'irait chercher le chemin fautif.
 
+## Les deux bouts, et ce que la seconde paire a appris
+
+Depuis l'[ADR 4296](../decisions/4296-on-compare-les-deux-bouts-du-clip.md), la comparaison porte sur la
+**première** image du clip autant que sur la dernière. Chacune a son plancher, et le classement retient
+le plus grand des deux rapports.
+
+La première image est **plus stable que la dernière** : sur 51 cas et deux paires de tournages, soit
+102 mesures, son plancher vaut **0,000 % sans exception**. Elle n'est pas pour autant aveugle - les
+premières images de deux cas différents diffèrent de 2,4 à 3 %.
+
+!!! warning "Un plancher haut peut n'être qu'un mauvais tirage"
+
+    `chaque_carte_ouvre_ce_qu_elle_annonce` a rendu **0,809 %** sur la première paire et **0,073 %** sur
+    la seconde, onze fois moins. Ce plancher n'était donc pas une propriété du cas.
+
+    Sur les 51 cas, 3 planchers diffèrent de plus de 0,1 % d'une paire à l'autre, 10 de 0,01 à 0,1 %, et
+    38 de moins de 0,01 %.
+
+    ⚠️ La règle du **pire observé** garde 0,809 % pour ce cas, définitivement. C'est le prix assumé de
+    ne pas fabriquer de faux positifs : un plancher ne redescend jamais, donc **un seul mauvais tirage
+    aveugle un cas pour de bon**. Avec assez de paires, un centile vaudrait mieux qu'un maximum ; avec
+    deux, il n'y a pas de quoi le calculer.
+
+### Les images du début ne sortent que si le début a bougé
+
+Son plancher valant zéro partout, produire ces montages systématiquement ferait cinquante fichiers
+identiques qui noieraient les deux ou trois qui comptent. Vérifié sur une comparaison réelle : 51
+montages de fin, **zéro** montage de début.
+
 ## Ce que la méthode ne voit pas
 
 ⚠️ **L'image finale compare la destination, pas le chemin.**
