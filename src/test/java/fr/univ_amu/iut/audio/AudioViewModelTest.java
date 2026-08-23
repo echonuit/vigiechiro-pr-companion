@@ -759,7 +759,7 @@ class AudioViewModelTest {
         @DisplayName("L'export écrit l'archive et le bilan se confirme en message de succès")
         void export_ecrit_et_se_confirme(@TempDir Path racine) {
             when(service.especesPrioritaires()).thenReturn(java.util.Set.of());
-            when(sequenceDao.findById(1L)).thenReturn(Optional.empty());
+            when(sequenceDao.findParIds(any())).thenReturn(java.util.Map.of());
             Path archive = racine.resolve("observations-sons.zip");
             AudioViewModel vm = vm();
 
@@ -826,7 +826,7 @@ class AudioViewModelTest {
             // CSV, le son ne peut pas suivre. Un succès qui n'en dirait rien laisserait croire que
             // l'archive est complète, et l'expert écouterait un silence qu'il croirait vide.
             when(service.especesPrioritaires()).thenReturn(java.util.Set.of());
-            when(sequenceDao.findById(1L)).thenReturn(Optional.empty());
+            when(sequenceDao.findParIds(any())).thenReturn(java.util.Map.of());
             AudioViewModel vm = vm();
 
             String message = vm.exports()
