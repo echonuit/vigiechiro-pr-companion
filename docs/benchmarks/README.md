@@ -9,7 +9,7 @@
 
 | Outil (fourni) | Rôle |
 |---|---|
-| [`perf.outils.GenerateurJeuDeDonnees`](../../src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java) | Peuple une base SQLite : `perf.passages` passages (déf. 1000) + `perf.observations` observations (déf. 4031). Déterministe, base réécrite à neuf. |
+| [`perf.outils.GenerateurJeuDeDonnees`](../../src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java) | Peuple une base SQLite : `perf.sites` carrés (déf. 40) de 10 points, `perf.passages` passages (déf. 1000) + `perf.observations` observations (déf. 4031). Déterministe, base réécrite à neuf. |
 | [`perf.outils.BancMesure`](../../src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java) | Génère le jeu puis chronomètre les opérations O5 **à froid** (1ᵉʳ appel) et **à chaud** (médiane), et imprime l'`EXPLAIN QUERY PLAN` de chaque requête. |
 | [`perf.outils.BancImport`](../../src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java) | Génère une **nuit synthétique** de vrais WAV + journal `LogPR`, lance le **vrai** import (`ServiceImport`) et mesure temps (copie / transformation #12 / persistance), débit (fichiers/s, Mo/s) et **mémoire crête** (O3). |
 
@@ -25,7 +25,13 @@ export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-open
   -Dexec.args="-Dvigiechiro.workspace=/tmp/vigiechiro-bench -cp %classpath fr.univ_amu.iut.perf.outils.BancMesure"
 ```
 
-Volumes paramétrables : `-Dperf.passages=...`, `-Dperf.observations=...` (à ajouter dans `exec.args`).
+Volumes paramétrables : `-Dperf.sites=...`, `-Dperf.passages=...`, `-Dperf.observations=...` (à ajouter
+dans `exec.args`).
+
+> ⚠️ **`perf.sites` est la dimension qu'on oublie.** Le jeu a longtemps semé **un** carré, quelle que soit
+> la valeur de `perf.passages` : les relevés O5 étaient donc aveugles aux requêtes lancées **par site** ou
+> **par point**, qui sont exactement celles qui coûtent à un observateur ayant beaucoup de carrés. Un
+> test (`JeuDuBancTest`) refuse désormais que le jeu retombe à un seul carré.
 
 ## Lancer le banc d'import (O3 : tenue sur nuit volumineuse)
 

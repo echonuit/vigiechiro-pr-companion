@@ -49,7 +49,9 @@ import java.util.List;
 /// Paramétrable par propriétés système :
 ///  - `vigiechiro.workspace` : dossier de la base (défaut : `<tmp>/vigiechiro-bench`) ;
 ///  - `perf.passages` : nombre de passages (défaut 1000) ;
-///  - `perf.observations` : nombre d'observations (défaut 4031).
+///  - `perf.observations` : nombre d'observations (défaut 4031) ;
+///  - `perf.sites` : nombre de **carrés** (défaut 40), chacun portant [#NB_POINTS] points. C'est la
+///    dimension qui porte les lectures répétées : la garder à 1 rend le banc aveugle.
 ///
 /// La base du workspace est **réécrite à neuf** au lancement, pour garantir la reproductibilité.
 public final class GenerateurJeuDeDonnees {
@@ -59,7 +61,20 @@ public final class GenerateurJeuDeDonnees {
     private static final String TAXON = "Pippip"; // taxon pré-semé (V02__seed_taxons.sql)
     private static final int PASSAGES_DEFAUT = 1000;
     private static final int OBSERVATIONS_DEFAUT = 4031;
-    private static final int NB_POINTS = 10; // les passages se répartissent sur ces points
+    private static final int NB_POINTS = 10; // points PAR SITE ; les passages s'y répartissent
+
+    /// Nombre de **carrés** du jeu par défaut.
+    ///
+    /// ⚠️ Il valait **1** jusqu'à la clôture du chantier des lectures répétées, et cette valeur rendait
+    /// le banc **aveugle à ce qu'il était censé mesurer**. Les écrans lançaient une requête par site puis
+    /// une par point : sur un site et dix points, cela faisait onze requêtes, invisibles. Le relevé
+    /// annonçait 18 ms pour mille passages, sous une cible de 200, pendant qu'un coordinateur
+    /// départemental - cent cinquante carrés - en payait plus de quatre cents.
+    ///
+    /// **Le banc faisait varier la mauvaise dimension** : il montait les passages en gardant la
+    /// topologie constante, quand le coût vivait dans la topologie. Un jeu d'essai qui ne fait pas
+    /// varier ce qui porte le défaut ne peut pas le voir, et son vert se lit comme une garantie.
+    private static final int NB_SITES_DEFAUT = 40;
     private static final int ANNEE_BASE = 2020;
 
     private static final StatutWorkflow[] STATUTS = StatutWorkflow.values();
@@ -109,17 +124,26 @@ public final class GenerateurJeuDeDonnees {
         return new Bilan(passages, observations);
     }
 
-    /// Un site et [#NB_POINTS] points d'écoute ; renvoie les identifiants des points.
+    /// `perf.sites` carrés de [#NB_POINTS] points chacun ; renvoie les identifiants des points.
     private static List<Long> creerPoints(SourceDeDonnees source) {
-        Site site = new SiteDao(source)
-                .insert(new Site(
-                        null, "640380", "Carré du banc", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
+        int nbSites = Integer.getInteger("perf.sites", NB_SITES_DEFAUT);
+        SiteDao siteDao = new SiteDao(source);
         PointDao pointDao = new PointDao(source);
-        List<Long> points = new ArrayList<>(NB_POINTS);
-        for (int i = 0; i < NB_POINTS; i++) {
-            points.add(
-                    pointDao.insert(new PointDEcoute(null, "P" + i, 43.5 + i * 0.001, 5.4 + i * 0.001, null, site.id()))
-                            .id());
+        List<Long> points = new ArrayList<>(nbSites * NB_POINTS);
+        for (int s = 0; s < nbSites; s++) {
+            Site site = siteDao.insert(new Site(
+                    null,
+                    String.format("%06d", 640380 + s),
+                    "Carré " + s + " du banc",
+                    Protocole.STANDARD,
+                    null,
+                    "2026-01-01",
+                    ID_UTILISATEUR));
+            for (int i = 0; i < NB_POINTS; i++) {
+                points.add(pointDao.insert(new PointDEcoute(
+                                null, "P" + i, 43.5 + s * 0.01 + i * 0.001, 5.4 + i * 0.001, null, site.id()))
+                        .id());
+            }
         }
         return points;
     }
