@@ -38,6 +38,16 @@ Les deux opérations critiques sont **largement sous les cibles** (facteur ~4 à
 | Sélection ~4031 observations (`findByResults`) | < 100 ms | ~25 ms ✅ |
 | Tri/filtre ~1000 passages (multisite) | < 200 ms | ~18 ms ✅ |
 
+!!! warning "Ces deux chiffres ont été relevés sur **un seul carré**"
+    Le jeu du banc semait **un** site de dix points, quelle que soit la valeur de `perf.passages`. Les
+    écrans lançaient pourtant une requête **par site** puis une **par point** : sur cette topologie, onze
+    requêtes, noyées dans le bruit. Le relevé « ~18 ms ✅ » était donc exact **et** aveugle - un
+    coordinateur départemental, cent cinquante carrés, en payait plus de quatre cents.
+
+    Le jeu sème désormais `perf.sites` carrés (défaut **40**), et un test
+    (`JeuDuBancTest`) refuse qu'il retombe à un. **Les deux chiffres ci-dessus sont donc à refaire** sur
+    la nouvelle topologie : ils ne sont pas faux, ils mesuraient autre chose que ce qu'on croyait.
+
 Sans l'index, la sélection faisait un `SCAN` (~75 ms froid) ; l'index la ramène à ~25 ms. Le gain est
 **verrouillé par un test CI** (non-régression du plan d'exécution).
 
@@ -122,3 +132,50 @@ Deux nuances utiles :
   demanderait des lectures sur la connexion transactionnelle, pour un gain nul.
 - **L'atomicité est un effet de bord bienvenu, pas le motif.** Le motif est le coût ; mais une écriture de
   masse groupée ne laisse plus, en cas d'interruption, un état à moitié écrit.
+
+## Les lectures de masse passent par un lot
+
+La règle ci-dessus vaut pour les **écritures**. La même figure existe côté **lectures**, et elle a coûté
+davantage parce que rien ne la nommait.
+
+Un écran qui compose N lignes en interrogeant la base **pour chacune** paie N requêtes là où une seule
+suffirait. Ce n'est pas un `fsync` par ligne, donc c'est moins spectaculaire qu'une écriture de masse -
+mais le coût **croît avec l'inventaire de l'utilisateur**, c'est-à-dire qu'il est absent des jeux d'essai
+et maximal chez celui qui a le plus de données.
+
+Mesuré sur six chemins (#4251, #4271, #4278, #4280, #4283, #4286, #4293), à cent cinquante carrés :
+
+| Chemin | Avant | Après |
+|---|---|---|
+| « Mes sites » | 165-241 ms | 6-8 ms |
+| « Carte & passages » | 339-377 ms | 15-18 ms |
+| « Ma saison » | 386-409 ms | 6-12 ms |
+| Audit de cohérence | 11 requêtes par nuit | 2 |
+| Export des sons | 3 requêtes par son | lecture unique |
+
+**La règle.** Toute boucle qui compose des lignes à partir de la base lit **par lot** avant de boucler :
+`PointDao#findParSites`, `PassageDao#findParPoints`, `SequenceDao#findParIds`, ou un index construit
+depuis un `findAll()` quand la table porte une ligne par entité. Les lectures par identifiants passent
+par `LotsDeParametres.decouper` : SQLite refuse au-delà de quelques centaines de paramètres liés, et un
+remède contre la lenteur ne doit pas introduire un défaut de justesse.
+
+⚠️ **Ce qui ne se lit pas par lot.** Les tables de **volume** - originaux, séquences d'écoute - restent
+lues par session. Une nuit en porte des milliers : les charger toutes d'un bloc échangerait un défaut de
+lenteur contre un défaut de mémoire.
+
+### Comment on chiffre une lecture répétée
+
+**Pas au chronomètre.** Trois façons de se tromper ont été rencontrées le même jour :
+
+- **la première mesure d'un processus n'est pas une mesure** : le démarrage de la JVM coûte ~300 ms quelle
+  que soit la taille des données, et comparer deux chiffres pris à des rangs différents compare deux
+  choses différentes ;
+- **lire le code sous-compte** : l'audit semblait faire six requêtes par nuit, le compteur en a trouvé
+  **onze** - cinq vivaient un appel plus bas ;
+- **une autre session charge la machine** : un banc filmé (`ffmpeg`) faisait varier les relevés du simple
+  au double.
+
+Ce qui marche est de **compter les connexions ouvertes**, en sous-classant `SourceDeDonnees`, puis de
+comparer ce compte à **deux tailles de jeu**. C'est déterministe, insensible à la charge, et cela attrape
+les requêtes **où qu'elles vivent** dans la pile d'appels. Deux exemples dans le dépôt :
+`RequetesDeLAuditTest` et `ExportObservationsEtSonsTest#l_export_lit_par_lot`.

@@ -1004,6 +1004,7 @@
 
 /* Bandeau de retour d'operation, partage par les ecrans (cable par commun/view/BandeauRetour).
    `.bandeau-retour` porte la mise en forme commune ; la classe de severite, ajoutee par le cablage,
+<<<<<<< Updated upstream
    porte les couleurs. Toujours visible quand un retour est present, contrairement au placeholder gris
    de l'etat vide. Volontairement TRES visible (gras, fond sature, epais filet d'accent a gauche) :
    c'est parfois le seul retour sur le succes ou l'echec d'une operation, il ne doit pas passer
@@ -1020,6 +1021,25 @@
     -fx-background-radius: 5;
     -fx-border-radius: 5;
     -fx-border-width: 1 1 1 6;
+=======
+   porte les couleurs.
+
+   Aligne sur l'encart d'alerte maison (`.alerte-r20` du Diagnostic : 12px, graisse normale, marge 8,
+   rayon 4, filet uniforme). Il en divergeait sur QUATRE points a la fois - 14px, gras, marge 12/16,
+   filet d'accent de 6px a gauche - et empilait donc autant de procedes d'emphase pour dire ce que la
+   couleur dit deja. Ne s'en voyait pas tant qu'il vivait seul sur la vue audio d'ou il vient ; remonte
+   dans `commun` (#1792) puis pose sur douze ecrans (#1870), il se retrouvait cote a cote avec des
+   encarts de meme statut qu'il ecrasait.
+
+   Ce qui le distingue reste : la couleur (la severite) et la croix (on peut l'ecarter, contrairement a
+   un encart d'etat permanent). C'est suffisant, et c'est un procede par intention. */
+.bandeau-retour {
+    -fx-font-size: 12px;
+    -fx-padding: 8;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-border-width: 1;
+>>>>>>> Stashed changes
 }
 
 /* Icone de severite, posee par le cablage en tete du bandeau (#1933) : le marqueur etait auparavant
