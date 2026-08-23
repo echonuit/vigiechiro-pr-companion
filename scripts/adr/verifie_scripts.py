@@ -30,8 +30,16 @@ ADR_2843 = "2843-tiret-cadratin.py"
 _echecs: list[str] = []
 
 
+# Les scripts que ce harnais a REELLEMENT charges pendant la passe. C'est la source du controle de
+# completude : une liste declaree serait un second inventaire a tenir, c'est-a-dire le defaut qu'on
+# corrige. Elle se remplit au fil des cas, donc un `test_*` defini mais jamais joue laisse son
+# detecteur decouvert - et le dit.
+_charges: set[str] = set()
+
+
 def _charge(nom: str):
     """Importe un script au nom non-importable (chiffres, tirets) par son chemin."""
+    _charges.add(nom)
     module = "adr_" + nom.replace("-", "_").replace(".py", "")
     spec = importlib.util.spec_from_file_location(module, ICI / nom)
     m = importlib.util.module_from_spec(spec)
@@ -343,6 +351,51 @@ def test_loupe_0044() -> None:
         _verifie("loupe 0044 voit un mécanisme réel, ignore le Javadoc qui le cite", n, 1)
 
 
+def test_2635_refus_sans_surface() -> None:
+    m = _charge("2635-refus-sans-surface.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/site/model/Refus.java",
+            "class Refus {\n"
+            '  String a() { return "Connectez-vous depuis le menu \u2630"; }\n'
+            '  String b() { return "Connectez-vous depuis le menu principal"; }\n'
+            '  // autrefois : return "ouvrez le menu \u2630";\n'
+            "}\n",
+        )
+        # Hors `**/model/**`, le glyphe est legitime : la surface a le droit de se nommer. Sans ce
+        # second fichier, un script qui aurait perdu son filtre de zone resterait vert.
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/site/view/Ecran.java",
+            "class Ecran {\n" '  String a() { return "menu \u2630"; }\n' "}\n",
+        )
+        n = len(m.suspects(sources=racine))
+        _verifie("2635 voit le glyphe dans un modèle, ignore le commentaire et la vue", n, 1)
+
+
+def test_3947_message_enveloppe() -> None:
+    m = _charge("3947-message-enveloppe.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        # Les TROIS formes que l'ADR nomme, une par ligne. Un compte exact rattrape la regression
+        # d'une SEULE d'entre elles - ce qu'un temoin unique laisserait passer.
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/commun/Enveloppe.java",
+            "class Enveloppe {\n"
+            "  String a(Exception e) { return e.getMessage() != null ? e.getMessage() : e.toString(); }\n"
+            "  String b(Exception e) { return e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName(); }\n"
+            '  String c(Throwable t) { return t.getCause() != null ? t.getCause().getMessage() : "?"; }\n'
+            "  String d(Exception e) { return CauseLisible.de(e); }\n"
+            "  // ancien : e.getMessage() != null ? e.getMessage() : e.toString();\n"
+            "}\n",
+        )
+        n = len(m.suspects(sources=racine))
+        _verifie("3947 voit les trois formes, ignore le remède et le commentaire", n, 3)
+
+
 def test_rapport_et_resserrement() -> None:
     rapport = _charge("rapport.py")
     # Le parsing : une ligne normalisée doit être reconnue.
@@ -357,7 +410,92 @@ def test_rapport_et_resserrement() -> None:
     _verifie("rapport.py ne resserre pas une marge exacte", props2, [])
 
 
+def _completude(dossier: pathlib.Path | None = None, charges: set[str] | None = None) -> list[str]:
+    """Les detecteurs que l'etape « Cliquets ADR » lance et que ce harnais n'exerce pas.
+
+    L'etape lance `scripts/adr/[0-9]*.py`. Ce harnais existe pour prouver que chacun DETECTE
+    encore : sans ce controle, un detecteur ajoute sans cas temoin n'est tenu que par son cliquet,
+    c'est-a-dire par un compte qui ne monte pas - le trou exact que l'en-tete de ce fichier decrit.
+    Mesure du 2026-08-23 : `2635-refus-sans-surface.py` et `3947-message-enveloppe.py` etaient dans
+    ce cas, et rien ne pouvait le dire (#4268).
+    """
+    dossier = ICI if dossier is None else dossier
+    charges = _charges if charges is None else charges
+    detecteurs = {p.name for p in dossier.glob("[0-9]*.py")}
+    if not detecteurs:
+        raise SystemExit(
+            f"Aucun detecteur sous {dossier} : c'est le HARNAIS qui est en cause, pas les scripts. "
+            "Le dossier a-t-il ete deplace ?"
+        )
+    return sorted(detecteurs - charges)
+
+
+def auto_test() -> int:
+    """Teste le testeur.
+
+    Ce fichier prouve que chaque detecteur detecte encore. Rien ne prouvait que LUI le fasse : un
+    `_completude` qui aurait cesse de comparer rendrait une liste vide, c'est-a-dire un vert, sur un
+    dossier ou un detecteur n'a aucun cas. C'est la forme meme du defaut que tout ce mecanisme
+    combat, un cran plus haut (#4268).
+
+    Repond a `--auto-test` comme les 30 autres gardes du depot, et pour la meme raison.
+
+    ⚠️ Ce qu'il ne couvre PAS, et il vaut mieux le lire ici que le croire : il eprouve la
+    FONCTION `_completude`, pas son cablage. Debrancher son appel plus bas rendrait le harnais
+    vert sans que ces trois cas bronchent - mesure faite. Fermer ce trou demanderait de rendre le
+    corps de `__main__` appelable avec un dossier injecte, ce qui ferait rejouer les quatorze cas
+    reels a chaque essai. Le cout a paru superieur au risque : l'appel tient en une ligne, juste
+    sous les cas, et se voit a la relecture.
+    """
+    echecs: list[str] = []
+
+    def verifie(cas: str, obtenu, attendu) -> None:
+        if obtenu == attendu:
+            print(f"  ✔ {cas}")
+        else:
+            echecs.append(cas)
+            print(f"  ✘ {cas} : attendu {attendu}, obtenu {obtenu}")
+
+    print("Auto-test du harnais lui-même (#4268) :")
+    with tempfile.TemporaryDirectory() as d:
+        faux = pathlib.Path(d)
+        (faux / "1234-temoin.py").write_text("", encoding="utf-8")
+        # `rapport.py` ne commence pas par un chiffre : l'etape « Cliquets ADR » ne le lance pas,
+        # le controle n'a donc pas a l'exiger. Sans ce cas, un controle trop large passerait.
+        (faux / "rapport.py").write_text("", encoding="utf-8")
+
+        verifie(
+            "un détecteur sans cas témoin est signalé",
+            _completude(faux, set()),
+            ["1234-temoin.py"],
+        )
+        verifie(
+            "le même, une fois exercé, ne l'est plus",
+            _completude(faux, {"1234-temoin.py"}),
+            [],
+        )
+
+    # Un dossier sans detecteur accuse le HARNAIS : il ne rend pas un vert rassurant. C'est le
+    # patron des autres gardes du depot - distinguer « rien a redire » de « je n'ai rien lu ».
+    with tempfile.TemporaryDirectory() as d:
+        try:
+            _completude(pathlib.Path(d), set())
+            accuse = False
+        except SystemExit:
+            accuse = True
+    verifie("un dossier sans détecteur accuse le harnais, au lieu de rendre un vert", accuse, True)
+
+    print("\n3 cas, dont 1 qui DOIT rougir sur un harnais aveugle.")
+    if echecs:
+        print(f"{len(echecs)} cas en échec : ne pas se fier au verdict de ce harnais.", file=sys.stderr)
+        return 1
+    print("Auto-test concluant.")
+    return 0
+
+
 if __name__ == "__main__":
+    if "--auto-test" in sys.argv:
+        raise SystemExit(auto_test())
     print("Auto-test des scripts de vérification ADR (#2467) :")
     for essai in (
         test_0008_echec_silencieux,
@@ -371,12 +509,29 @@ if __name__ == "__main__":
         test_2843_couverture_distingue_dedans_dehors,
         test_2843_balayage_non_recursif,
         test_2493_modale_suit_croissance,
+        test_2635_refus_sans_surface,
+        test_3947_message_enveloppe,
         test_loupe_0020,
         test_loupe_0044,
         test_rapport_et_resserrement,
     ):
         essai()
+    decouverts = _completude()
+    if decouverts:
+        print(
+            f"\n{len(decouverts)} détecteur(s) sans cas témoin : " + ", ".join(decouverts),
+            file=sys.stderr,
+        )
+        print(
+            "   Ils ne sont tenus que par leur cliquet, c'est-à-dire par un compte qui ne monte pas.\n"
+            "   C'est le trou que ce harnais existe pour fermer.",
+            file=sys.stderr,
+        )
     if _echecs:
         print(f"\n{len(_echecs)} cas en échec : un script ne détecte plus ce qu'il devrait.", file=sys.stderr)
+    if _echecs or decouverts:
         sys.exit(1)
-    print("\nTous les scripts détectent leur violation témoin et ignorent les commentaires.")
+    print(
+        f"\nLes {len(_charges)} scripts chargés détectent leur violation témoin et ignorent les "
+        "commentaires ;\naucun détecteur lancé par « Cliquets ADR » n'est sans cas."
+    )
