@@ -5,9 +5,11 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.FenetreSaisonniere;
+import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
+import fr.univ_amu.iut.sites.model.CommuneDuPoint;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
@@ -18,6 +20,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -129,12 +132,19 @@ public class ServiceSoldeSaison {
         // résoudre les noms de campagne (#2355) : pas une requête par point.
         Set<Long> tiers = carresDeTiers.tousLesIds();
         Map<Long, String> nomsCampagnes = nomsDesCampagnes();
-        for (Site site : siteDao.findByUtilisateur(idUtilisateur)) {
-            if (site.protocole() != Protocole.STANDARD || tiers.contains(site.id())) {
-                continue;
-            }
-            for (PointDEcoute point : pointDao.findBySite(site.id())) {
-                LigneSaison ligne = ligneDuPoint(site, point, annee, aujourdhui, nomsCampagnes);
+        // ⚠️ Les quatre sources restantes se lisent AUSSI par lot (#4278). Le commentaire ci-dessus
+        // énonçait déjà le principe - « pas une requête par point » - et ne le tenait que pour deux
+        // tables : les points, les passages, l'opportunisme et les communes en faisaient chacun la leur.
+        // Mesuré à chaud sur cent cinquante carrés : 400 ms, quand « Mes sites » (#4251) et « Carte &
+        // passages » (#4277), qui lisent la même topologie par lot, en mettent 8 et 15.
+        List<Site> retenus = siteDao.findByUtilisateur(idUtilisateur).stream()
+                .filter(site -> site.protocole() == Protocole.STANDARD && !tiers.contains(site.id()))
+                .toList();
+        ContexteSaison contexte = lireEnUnLot(retenus, nomsCampagnes);
+
+        for (Site site : retenus) {
+            for (PointDEcoute point : contexte.points().getOrDefault(site.id(), List.of())) {
+                LigneSaison ligne = ligneDuPoint(site, point, annee, aujourdhui, contexte);
                 if (releveDeLaCampagne(ligne, campagne)) {
                     lignes.add(ligne);
                 }
@@ -183,10 +193,34 @@ public class ServiceSoldeSaison {
         return nomCampagne != null && nomCampagne.toLowerCase(Locale.ROOT).contains(fragmentEnMinuscules);
     }
 
+    /// Tout ce que l'écran lit **une seule fois** pour toutes ses lignes (#4278) : la topologie, les
+    /// passages, l'opportunisme et les communes. Un objet plutôt que six paramètres - la méthode qui
+    /// compose une ligne en prenait déjà cinq.
+    private record ContexteSaison(
+            Map<Long, List<PointDEcoute>> points,
+            Map<Long, List<Passage>> passages,
+            Set<Long> opportunistes,
+            Map<Long, Commune> communes,
+            Map<Long, String> nomsCampagnes) {}
+
+    private ContexteSaison lireEnUnLot(List<Site> retenus, Map<Long, String> nomsCampagnes) {
+        Map<Long, List<PointDEcoute>> points =
+                pointDao.findParSites(retenus.stream().map(Site::id).toList());
+        Map<Long, List<Passage>> passages = passageDao.findParPoints(points.values().stream()
+                .flatMap(List::stream)
+                .map(PointDEcoute::id)
+                .toList());
+        Map<Long, Commune> communes = new HashMap<>();
+        for (CommuneDuPoint resolue : communeDao.findAll()) {
+            communes.put(resolue.idPoint(), resolue.commune());
+        }
+        return new ContexteSaison(points, passages, opportunistes.tousLesIds(), communes, nomsCampagnes);
+    }
+
     private LigneSaison ligneDuPoint(
-            Site site, PointDEcoute point, int annee, LocalDate aujourdhui, Map<Long, String> nomsCampagnes) {
-        CasePassage nuit1 = casePour(point.id(), annee, 1, nomsCampagnes);
-        CasePassage nuit2 = casePour(point.id(), annee, 2, nomsCampagnes);
+            Site site, PointDEcoute point, int annee, LocalDate aujourdhui, ContexteSaison contexte) {
+        CasePassage nuit1 = casePour(point.id(), annee, 1, contexte);
+        CasePassage nuit2 = casePour(point.id(), annee, 2, contexte);
         // Les nuits opportunistes quittent les colonnes protocolaires (#2525) : y laisser une pastille
         // ferait lire « ce passage est fait » là où le passage protocolaire manque, pendant que le
         // « reste à faire » dit d'aller poser l'enregistreur. Elles ont leur propre colonne.
@@ -207,16 +241,22 @@ public class ServiceSoldeSaison {
                 // La commune du point (#3313) : lue au même endroit que partout ailleurs, la table
                 // latérale `point_commune` (ADR 2791). Absente tant qu'elle n'est pas résolue - un point
                 // sans GPS, un rattrapage jamais lancé - et c'est un état normal, pas un manque.
-                communeDao.pour(point.id()).map(Commune::nom).orElse(null));
+                Optional.ofNullable(contexte.communes().get(point.id()))
+                        .map(Commune::nom)
+                        .orElse(null));
     }
 
-    private CasePassage casePour(Long idPoint, int annee, int numero, Map<Long, String> nomsCampagnes) {
-        return passageDao
-                .trouverParPointAnneePassage(idPoint, annee, numero)
+    /// La case d'un point pour une nuit protocolaire, prise dans le lot **déjà lu** : aucune requête ici.
+    private static CasePassage casePour(Long idPoint, int annee, int numero, ContexteSaison contexte) {
+        return contexte.passages().getOrDefault(idPoint, List.of()).stream()
+                .filter(passage -> passage.annee() == annee && passage.numeroPassage() == numero)
+                .findFirst()
                 .map(passage -> CasePassage.de(
                         passage,
-                        opportunistes.estOpportuniste(passage.id()),
-                        passage.idCampagne() == null ? null : nomsCampagnes.get(passage.idCampagne())))
+                        contexte.opportunistes().contains(passage.id()),
+                        passage.idCampagne() == null
+                                ? null
+                                : contexte.nomsCampagnes().get(passage.idCampagne())))
                 .orElseGet(CasePassage::absente);
     }
 
