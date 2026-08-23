@@ -41,6 +41,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
 
 /// Tests du service [ServiceMultisite] sur une base SQLite jetable (`@TempDir` + [MigrationSchema]). La
 /// topologie est semée par [JeuDeDonneesPassage] (plusieurs nuits qui **partagent** leur site et leur
@@ -401,5 +402,37 @@ class ServiceMultisiteTest {
         assertThat(lignes.get(lignes.size() - 1).verdict())
                 .as("verdict null trié en dernier")
                 .isNull();
+    }
+
+    @Test
+    @DisplayName("#4271 : les deux lectures de l'écran lisent par LOT, pas site par site")
+    void l_ecran_lit_par_lot() {
+        PointDao points = Mockito.spy(injecteur.getInstance(PointDao.class));
+        PassageDao passages = Mockito.spy(injecteur.getInstance(PassageDao.class));
+        ServiceMultisite surveille = new ServiceMultisite(
+                injecteur.getInstance(SiteDao.class),
+                points,
+                passages,
+                injecteur.getInstance(ReleveTraitementDao.class),
+                injecteur.getInstance(ResultatsIdentificationDao.class),
+                injecteur.getInstance(PointCommuneDao.class),
+                Optional.empty(),
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)));
+        Mockito.clearInvocations(points, passages);
+
+        surveille.listerPassages(ID_USER, FiltresMultisite.aucun(), TriMultisite.PAR_ANNEE);
+        surveille.agregerPourCarte(ID_USER);
+
+        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
+        // variance de la machine. Le défaut mesuré (#4271) : une requête par site pour ses points, puis
+        // une par point pour ses passages, dans les DEUX lectures - 160 ms à soixante carrés, 360 ms à
+        // cent cinquante, là où la lecture par lot ne bouge pas.
+        //
+        // Deux appels attendus par lecture par lot : `listerPassages` et `agregerPourCarte` parcourent
+        // la même topologie, chacune pour son compte.
+        Mockito.verify(points, Mockito.never()).findBySite(Mockito.any());
+        Mockito.verify(passages, Mockito.never()).findByPoint(Mockito.any());
+        Mockito.verify(points, Mockito.times(2)).findParSites(Mockito.any());
+        Mockito.verify(passages, Mockito.times(2)).findParPoints(Mockito.any());
     }
 }
