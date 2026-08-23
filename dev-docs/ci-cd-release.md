@@ -573,6 +573,8 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `compare-apercus.sh` | montre, sur une PR, les écrans qu'elle change : avant/après accolés, part de pixels, et le **dit** quand aucun ne change | `capture-vues.yml` |
 | `verifie-inventaires-ci.sh` | les trois inventaires que la CI tient **sur elle-même** concordent avec la réalité | `lint.yml` |
 | `scripts/adr/verifie_scripts.py` | les scripts cités par les ADR | `lint.yml` |
+| `scripts/graphify/pont_ressources.py` | l'index de classe Java préfère la **classe** à la page `X.java`, et le compte des commandes CLI couvertes reste borné par le nombre de commandes | `lint.yml` |
+| `scripts/graphify/rebuild.py` | `GRAPH_REPORT.md` annonce le corpus réel, et non un corpus vide suivi d'un verdict qui le contredit | `lint.yml` |
 
 ### Et un analyseur les lit tous (#4108)
 

@@ -173,10 +173,7 @@ def reconstruire() -> None:
     if not to_json(graphe, communautes, str(GRAPHE)):
         journal('ecriture de graph.json refusee')
         raise SystemExit(1)
-    detection = {
-        'files': {}, 'total_files': 0, 'total_words': 0,
-        'needs_graph': True, 'skipped_sensitive': [],
-    }
+    detection = corpus_du_depot()
     (SORTIE / 'GRAPH_REPORT.md').write_text(
         generate(graphe, communautes, cohesion, libelles, dieux, surprises, detection,
                  {'input': 0, 'output': 0}, str(RACINE), suggested_questions=questions),
@@ -187,7 +184,92 @@ def reconstruire() -> None:
             f'{len(communautes)} communautes')
 
 
+def corpus_du_depot(detection=None):
+    """Le corpus tel que l'entete de GRAPH_REPORT.md doit l'annoncer.
+
+    `reconstruire()` passait ici une detection codee en dur a zero. Le rapport ouvrait
+    donc sur « 0 files · ~0 words » suivi de « corpus is large enough that graph
+    structure adds value » : deux phrases qui se contredisent, sur un depot qui compte
+    plus de 2 700 fichiers (#4231). Le meme document mentait ou non selon le chemin qui
+    l'avait ecrit - la chaine complete, elle, disait vrai.
+
+    On interroge donc la meme detection qu'elle. Le balayage coute une dizaine de
+    secondes, negligeable devant l'extraction et le clustering qui suivent, et c'est le
+    prix de la seule propriete qui vaille : le rapport annonce le meme corpus quel que
+    soit le chemin qui le produit.
+
+    `detection` n'est la que pour les tests, qui ne balaient pas le disque.
+    """
+    if detection is None:
+        from graphify.detect import detect
+        detection = detect(RACINE)
+    corpus = dict(detection)
+    corpus.setdefault('needs_graph', True)
+    corpus.setdefault('skipped_sensitive', [])
+    return corpus
+
+
+def auto_test():
+    """Trois cas ; les deux premiers doivent rougir tant que le corpus est code en dur."""
+    echecs = []
+
+    def verifier(nom, condition, detail=''):
+        if condition:
+            print(f'  ok   {nom}')
+        else:
+            print(f'  ECHEC {nom}{" : " + detail if detail else ""}')
+            echecs.append(nom)
+
+    # 1 : une detection injectee doit ressortir telle quelle. Le corpus code en dur
+    # faisait ouvrir le rapport sur « 0 files · ~0 words » suivi de « corpus is large
+    # enough that graph structure adds value » - deux phrases qui se contredisent (#4231).
+    faux = {'files': {'code': ['a.java']}, 'total_files': 2730, 'total_words': 2421355,
+            'skipped_sensitive': [], 'warning': 'temoin'}
+    c = corpus_du_depot(faux)
+    verifier('la detection fournie ressort telle quelle',
+             (c.get('total_files'), c.get('total_words')) == (2730, 2421355),
+             f"obtenu : {c.get('total_files')} fichiers, {c.get('total_words')} mots")
+    verifier("l avertissement de corpus n est pas perdu",
+             c.get('warning') == 'temoin', f"obtenu : {c.get('warning')!r}")
+
+    # 2 : la cle que `generate()` consomme reste posee.
+    verifier("la cle needs_graph est presente", c.get('needs_graph') is True)
+
+    # 3 : sans argument, la detection est demandee a graphify - c est ce qui fait dire
+    # au rapport la meme chose que la chaine complete. On injecte un faux module pour le
+    # prouver sans balayer le disque, et sans exiger graphify sur le runner de CI.
+    import types
+    temoin = {'total_files': 7, 'total_words': 42, 'files': {}, 'skipped_sensitive': []}
+    sauvegarde = {n: sys.modules.get(n) for n in ('graphify', 'graphify.detect')}
+    try:
+        paquet = types.ModuleType('graphify')
+        paquet.__path__ = []
+        faux = types.ModuleType('graphify.detect')
+        faux.detect = lambda racine: dict(temoin)
+        paquet.detect = faux
+        sys.modules['graphify'] = paquet
+        sys.modules['graphify.detect'] = faux
+        sans_argument = corpus_du_depot()
+    finally:
+        for nom, mod in sauvegarde.items():
+            if mod is None:
+                sys.modules.pop(nom, None)
+            else:
+                sys.modules[nom] = mod
+    verifier('sans argument, la detection vient de graphify et non d un compte en dur',
+             sans_argument.get('total_files') == 7,
+             f"obtenu : {sans_argument.get('total_files')}")
+
+    if echecs:
+        print(f'\n{len(echecs)} cas en echec : {", ".join(echecs)}')
+        return 1
+    print('\nauto-test : tous les cas passent')
+    return 0
+
+
 def main(argv: list[str]) -> int:
+    if '--auto-test' in argv:
+        return auto_test()
     if not GRAPHE.exists():
         journal('aucun graphe existant, rien a mettre a jour '
                 '(lancer /graphify . une premiere fois)')
