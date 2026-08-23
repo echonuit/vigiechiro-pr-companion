@@ -238,12 +238,19 @@ class MainViewTest {
             navigateur.afficher(new Group(), "site-detail", "Carré 640380");
         });
 
+        // ⚠️ On PRESSE les touches, on ne lance pas le `Runnable` de l'accélérateur. Lancer le
+        // `Runnable` prouve que le `Runnable` fait son travail ; presser prouve que le raccourci est
+        // CÂBLÉ, ce qui est la question. Et sans frappe réelle, aucun `KeyEvent` n'atteint la scène,
+        // donc le calque des gestes n'a rien à dessiner et le clip ne montre pas le raccourci (#4242).
+
         // Alt+← est bien câblé au RETOUR (écran précédent réel = sites), pas au saut à l'accueil.
-        robot.interact(() -> scene.getAccelerators().get(altGauche).run());
+        robot.push(KeyCode.ALT, KeyCode.LEFT);
+        WaitForAsyncUtils.waitForFxEvents();
         assertThat(navigation.vueCouranteProperty().get()).isEqualTo("sites");
 
         // Alt+Début saute directement à l'accueil depuis n'importe quel écran.
-        robot.interact(() -> scene.getAccelerators().get(altDebut).run());
+        robot.push(KeyCode.ALT, KeyCode.HOME);
+        WaitForAsyncUtils.waitForFxEvents();
         assertThat(navigation.vueCouranteProperty().get()).isEqualTo("accueil");
         assertThat(robot.lookup("#boutonRetour").queryAs(Button.class).isVisible())
                 .isFalse();
@@ -437,7 +444,10 @@ class MainViewTest {
                 .isFalse();
         Respiration.avantLeGeste(robot);
 
-        robot.interact(() -> scene.getAccelerators().get(ctrlF).run());
+        // ⚠️ On PRESSE Ctrl+F. Lancer le `Runnable` de l'accélérateur donnait bien le focus, mais
+        // aucun `KeyEvent` n'atteignait la scène : le clip de ce cas ne montrait AUCUN raccourci, et sa
+        // bande de badge restait immobile à la troisième décimale sur les 49 images utiles (#4242).
+        robot.push(KeyCode.CONTROL, KeyCode.F);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(champ.isFocused())

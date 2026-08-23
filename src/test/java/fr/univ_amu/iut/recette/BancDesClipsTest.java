@@ -10,6 +10,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -136,6 +138,40 @@ class BancDesClipsTest {
                         Si la conversion est un chantier à elle seule, l'ajouter à \
                         SANS_CHROME_EN_ATTENTE avec son numéro d'issue - la dette reste alors visible \
                         et comptée, au lieu de se fondre dans le vert.""").isEmpty();
+    }
+
+    /// Lancer le `Runnable` d'un accélérateur, plutôt que de presser les touches.
+    ///
+    /// Ce fichier cite le motif qu'il traque, et se signalerait lui-même : c'est [#MOI] qui l'en
+    /// dispense, comme pour les autres gardes de cette classe.
+    private static final String ACCELERATEUR_LANCE = "getAccelerators()";
+
+    @Test
+    @DisplayName("#4242 : un cas filmé PRESSE son raccourci, il ne lance pas son accélérateur")
+    void un_cas_filme_presse_son_raccourci() {
+        List<String> lances = new ArrayList<>();
+        for (Path source : classesFilmees()) {
+            String code = lire(source);
+            Matcher lance = Pattern.compile(Pattern.quote(ACCELERATEUR_LANCE) + "\\s*\\.get\\([^)]*\\)\\s*\\.run\\(")
+                    .matcher(code);
+            while (lance.find()) {
+                lances.add(source.getFileName().toString());
+            }
+        }
+
+        assertThat(lances).as("""
+                        Ces cas obtiennent l'EFFET d'un raccourci sans que la touche soit pressée.
+
+                        Aucun `KeyEvent` n'atteint alors la scène, donc le calque des gestes n'a rien à \
+                        observer et le clip ne montre AUCUN raccourci : mesuré sur \
+                        `ctrl_f_active_la_recherche`, la bande du badge y était immobile à la troisième \
+                        décimale sur les 49 images utiles (#4242).
+
+                        L'assertion y perd aussi : lancer le `Runnable` prouve que le `Runnable` fait son \
+                        travail, pas que le raccourci est CÂBLÉ.
+
+                        Remède : `robot.push(KeyCode.CONTROL, KeyCode.F)`, précédé d'une respiration si \
+                        le geste doit se voir venir (ADR 4248).""").isEmpty();
     }
 
     /// Les classes de test qui **citent un cas** et **montent une scène** : celles dont le banc tourne
