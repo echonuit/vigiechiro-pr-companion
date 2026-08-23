@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -17,7 +18,9 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.animation.AnimationTimer;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -65,7 +68,10 @@ class ScenarioVoileChargementTest {
                 // aucune image n'est rendue pendant ce temps, et le voile n'existerait sur aucune trame.
                 .executeur(BancDeRecette.Executeur.ASYNCHRONE)
                 .semer(this::semerUneSaisonEntiere)
-                .ouvrir(inj -> inj.getInstance(NavigationSites.class).ouvrirAccueil())
+                // ⚠️ On reste sur l'ACCUEIL. Ouvrir « Mes sites » ici ferait tomber le chargement
+                // pendant `@Start`, c'est-à-dire AVANT que la caméra ne tourne : le clip publié montrait
+                // un écran déjà chargé, et l'assertion restait verte parce que le voile avait bel et
+                // bien paru - hors champ. C'est le vert qui ne prouve rien, vu en ouvrant l'image.
                 .montrer(stage);
 
         // ⚠️ Le guet se pose ICI, et pas dans le corps du cas. Le chargement démarre pendant
@@ -75,18 +81,27 @@ class ScenarioVoileChargementTest {
         surveillerLeVoile(stage);
     }
 
-    /// Note que le voile a été visible, depuis l'instant où la scène existe.
+    /// Guette le voile **à chaque battement de JavaFX**, comme la caméra échantillonne ses images.
+    ///
+    /// ⚠️ Trois formes ont échoué avant celle-ci, et chacune pour la même raison : elles regardaient au
+    /// mauvais moment. Un écouteur posé sur les voiles existants ne voit pas celui qui NAÎT avec l'écran
+    /// « Mes sites » ; un guet posé dans le corps du cas arrive après que le voile a cédé ; un filtre
+    /// d'événements ne se déclenche pas pendant qu'un fil d'arrière-plan travaille.
+    ///
+    /// Un `AnimationTimer` bat sur le fil JavaFX à la cadence du rendu : s'il ne voit pas le voile,
+    /// c'est qu'aucune image rendue ne le portait - donc que le clip ne le montre pas non plus. C'est
+    /// exactement la question que ce cas doit trancher.
     private void surveillerLeVoile(Stage fenetre) {
-        fenetre.getScene().getRoot().lookupAll(".occupation-voile").forEach(voile -> {
-            if (voile.isVisible()) {
-                voileVu.set(true);
+        Scene scene = fenetre.getScene();
+        new AnimationTimer() {
+            @Override
+            public void handle(long maintenant) {
+                scene.getRoot().lookupAll(".occupation-voile").stream()
+                        .filter(Node::isVisible)
+                        .findAny()
+                        .ifPresent(voile -> voileVu.set(true));
             }
-            voile.visibleProperty().addListener((observable, avant, apres) -> {
-                if (Boolean.TRUE.equals(apres)) {
-                    voileVu.set(true);
-                }
-            });
-        });
+        }.start();
     }
 
     private void semerUneSaisonEntiere(Injector inj) {
@@ -109,8 +124,16 @@ class ScenarioVoileChargementTest {
     @CasDeRecette(value = "S1-17", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-17 · le voile paraît pendant le chargement, et cède la place aux cartes")
     void le_voile_parait_puis_cede_la_place(FxRobot robot) throws TimeoutException {
-        // ⚠️ Le voile est GUETTÉ depuis `start()`, il ne se constate pas après coup : quand les cartes
-        // sont là, il est déjà parti.
+        Respiration.avantLeGeste(robot);
+
+        // ⚠️ Le guet ne compte QUE ce qui se passe pendant le film : la fenêtre a pu montrer un voile
+        // en se montant, hors champ, et ce voile-là ne prouve rien de ce que le clip donne à voir.
+        voileVu.set(false);
+
+        // C'est ce clic qui déclenche le chargement, et le clip le montre : sans lui, l'écran
+        // paraîtrait chargé sans qu'on sache d'où il vient.
+        GesteVisible.cliquer(robot, "Mes sites");
+
         WaitForAsyncUtils.waitFor(
                 20,
                 TimeUnit.SECONDS,
@@ -118,8 +141,8 @@ class ScenarioVoileChargementTest {
         Respiration.surLeMomentCle(robot);
 
         assertThat(voileVu.get())
-                .as("le voile a-t-il seulement paru ? Sans cette question, un clip qui n'aurait rien"
-                        + " voilé passerait pour la preuve que le voile fonctionne")
+                .as("le voile a-t-il paru PENDANT le film ? Sans cette question, un clip qui montrerait"
+                        + " un écran déjà chargé passerait pour la preuve que le voile fonctionne")
                 .isTrue();
 
         Node voile = robot.lookup(".occupation-voile").query();
