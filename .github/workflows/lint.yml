@@ -109,6 +109,24 @@ jobs:
         # de disques sur un runner pour vérifier des chaînes de caractères.
         run: bash scripts/doc-video/filme-un-parcours.sh --auto-test
 
+      - name: Les deux comparaisons visuelles, et leurs grandes images
+        # ⚠️ `compare-apercus.sh` avait un `--auto-test` de huit cas qui ne tournait NULLE PART. Le
+        # même défaut que celui décrit plus haut pour le banc de documentation, dans un autre outil :
+        # un garde dont personne ne vérifie qu'il passe.
+        #
+        # Et il ne l'aurait pas vu de toute façon : ses images faisaient 80 × 40, quand le défaut
+        # n'apparaît qu'AU-DELÀ DU MILLION DE PIXELS - ImageMagick y écrit ses comptes en notation
+        # scientifique, « 1.2034e+06 ». Trente-trois captures du dépôt dépassent ce seuil, et pour
+        # elles la part de pixels changés valait « ? ». Les deux auto-tests portent désormais chacun
+        # leur cas de grande image (#4274).
+        #
+        # Ils vivent ici et non dans `lint` parce que celui des tournages a besoin de ffmpeg, que ce
+        # job installe déjà.
+        run: |
+          chmod +x .github/assets/compare-apercus.sh .github/assets/compare-tournages.sh
+          ./.github/assets/compare-apercus.sh --auto-test
+          ./.github/assets/compare-tournages.sh --auto-test
+
   outillage-release:
     # release.yml ne se déclenche qu'au push sur `main` : aucune CI de PR ne traverse la chaîne de
     # publication, donc une erreur d'installation ou de configuration ne se verrait qu'à la prochaine
