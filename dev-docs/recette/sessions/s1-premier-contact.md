@@ -114,13 +114,17 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
     ne rouvrait rien : le motif conseillait de se connecter, on suivait ce conseil, on revenait, et le
     bouton restait grisé à répéter le même conseil (#4205). Il fallait quitter l'écran et y revenir.
     L'état de connexion n'était **observable** nulle part - on pouvait le demander, pas le suivre.
-- **S1-17** · Voile d'occupation au chargement : sur une base fournie, l'écran se voile le temps de
-  recomposer ses cartes, puis le voile cède la place. Un voile resté en place bloquerait tout.
+- **S1-17** · L'écran chargé, ses cartes lisibles, et **rien qui le voile**. Un voile resté en place
+  bloquerait tout.
 
-    ⚠️ Ce cas a longtemps été réputé **infilmable**, et la raison était fausse : mesurée sur une fixture
-    de deux sites, où le chargement est instantané. Sur cent cinquante carrés - ce que suit un
-    coordinateur départemental - il prend un demi-seconde. Le voile n'était pas invisible, il était
-    invisible sur une base de démonstration.
+    ⚠️ Ce cas a montré le voile **paraître** pendant un temps, sur une base de cent cinquante carrés où
+    le chargement prenait un demi-seconde. Puis #4251 a fait lire l'écran **par lot** : le chargement ne
+    dure plus - huit millisecondes à cent cinquante carrés comme à soixante - et le voile ne tient plus
+    sur une seule image.
+
+    **La case n'a donc plus de voile à montrer, parce que le produit s'est amélioré.** Elle garde ce
+    qu'elle peut garder : qu'aucun voile ne reste. Le mécanisme, lui, existe toujours et servira le jour
+    où un écran mettra du temps - « Carte & passages » y met encore cent vingt millisecondes (#4271).
 
 **Étape 4 · Détail de carré**
 

@@ -3,13 +3,19 @@ package fr.univ_amu.iut.passage.model.dao;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.DaoGenerique;
+import fr.univ_amu.iut.commun.persistence.LotsDeParametres;
 import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.Passage;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /// DAO de l'entité centrale [Passage] (table `passage`).
 ///
@@ -75,6 +81,28 @@ public class PassageDao extends DaoGenerique<Passage, Long> {
     /// Passages d'un point d'écoute, triés par année puis n° de passage.
     public List<Passage> findByPoint(Long idPoint) {
         return query("SELECT * FROM passage WHERE point_id = ? ORDER BY year, passage_number", MAPPER, idPoint);
+    }
+
+    /// Les passages de **plusieurs points à la fois**, groupés par point (#4251).
+    ///
+    /// Même raison que [fr.univ_amu.iut.sites.model.dao.PointDao#findParSites]: quatre endroits
+    /// appelaient [#findByPoint(Long)] dans une boucle imbriquée, une requête par point. Le découpage en
+    /// tranches ([LotsDeParametres]) garde la lecture sûre quel que soit l'inventaire.
+    ///
+    /// @return une entrée par point **ayant au moins un passage**
+    public Map<Long, List<Passage>> findParPoints(Collection<Long> idsPoints) {
+        Map<Long, List<Passage>> parPoint = new HashMap<>();
+        for (List<Long> tranche : LotsDeParametres.decouper(idsPoints)) {
+            String trous = tranche.stream().map(id -> "?").collect(Collectors.joining(", "));
+            query(
+                            "SELECT * FROM passage WHERE point_id IN (" + trous + ")"
+                                    + " ORDER BY year, passage_number",
+                            MAPPER,
+                            tranche.toArray())
+                    .forEach(passage -> parPoint.computeIfAbsent(passage.idPoint(), cle -> new ArrayList<>())
+                            .add(passage));
+        }
+        return parPoint;
     }
 
     /// Nombre de passages **rattachés** à une campagne (#2630).
