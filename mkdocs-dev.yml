@@ -250,6 +250,8 @@ nav:
     - 4188 · Une modale se filme avec son écran: decisions/4188-une-modale-se-filme-avec-son-ecran.md
     - 4234 · Un motif de blocage se montre: decisions/4234-un-motif-de-blocage-se-montre-il-ne-se-lit-pas.md
     - 4235 · Le garde d'abord, l'abstraction ensuite: decisions/4235-le-garde-d-abord-l-abstraction-ensuite.md
+    - 4248 · Un banc qui filme de l'intérieur dessine lui-même le geste: decisions/4248-un-banc-qui-filme-de-l-interieur-dessine-lui-meme-le-geste.md
+    - 4249 · Un fichier écrit par plusieurs JVM se reconstruit: decisions/4249-un-fichier-ecrit-par-plusieurs-jvm-se-reconstruit.md
     - 4079 · Une condition de job nomme l'état qu'elle attend: decisions/4079-une-condition-de-job-nomme-l-etat-qu-elle-attend.md
   - Recette (acceptation):
     - Méthode: recette/index.md
