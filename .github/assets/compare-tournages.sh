@@ -47,8 +47,17 @@
 # qui touche l'interface. Et le chiffre TRIE, il ne prouve pas : sous un mot changé on est à deux fois
 # le plancher.
 #
-# Usage : compare-tournages.sh <dossier avant> <dossier après> <dossier de sortie> [tolérance %]
-#         compare-tournages.sh --plancher <dossier A> <dossier B>
+# ## Le plancher se mesure par CAS, pas une fois pour toutes
+#
+# Mesuré sur 51 cas, deux tournages du même commit sur deux runners : la médiane du plancher vaut
+# 0,008 %, 48 cas sur 51 sont sous 0,05 %, et TROIS dépassent - jusqu'à 0,809 %.
+#
+# ⚠️ Un seuil unique mentirait donc dans les deux sens. Le pire plancher aveuglerait 48 cas pour se
+# protéger de trois ; la médiane ferait crier ces trois-là à chaque tournage. Un écart se lit contre
+# le plancher de SON cas, et c'est à quoi sert le fichier de planchers (#4287).
+#
+# Usage : compare-tournages.sh <dossier avant> <dossier après> <dossier de sortie> [tolérance %] [planchers]
+#         compare-tournages.sh --plancher <dossier A> <dossier B> [fichier de planchers]
 #         compare-tournages.sh --auto-test
 set -uo pipefail
 
@@ -132,6 +141,25 @@ cas_du_dossier() {
 
 comparer() {
   local avant_dir="$1" apres_dir="$2" sortie="$3" tolerance="${4:-$TOLERANCE_PAR_DEFAUT}"
+  local planchers="${5:-}"
+
+  # Les planchers par cas, s'ils sont fournis : un écart se lit contre le bruit de SON cas (#4287).
+  local -A sol nbp
+  if [ -n "$planchers" ]; then
+    # ⚠️ Un fichier ANNONCÉ mais absent ne se lit pas comme « aucun plancher connu » : c'est une
+    # erreur de chemin, et sans ce message les cinquante cas diraient tous « plancher inconnu » sans
+    # que personne ne cherche le fichier.
+    if [ ! -f "$planchers" ]; then
+      echo "::error::Fichier de planchers introuvable : « ${planchers} »."
+      return 1
+    fi
+    local pn pv pc
+    while IFS=$'\t' read -r pn pv pc; do
+      case "$pn" in ''|\#*) continue ;; esac
+      sol["$pn"]="$pv"
+      nbp["$pn"]="${pc:-1}"
+    done < "$planchers"
+  fi
   mkdir -p "$sortie"
   local index="${sortie}/index.md"
 
@@ -152,7 +180,7 @@ comparer() {
   fi
 
   local lignes="${sortie}/.lignes" ; : > "$lignes"
-  local communs=0 apparus=0 disparus=0 bouges=0 illisibles=0
+  local communs=0 apparus=0 disparus=0 bouges=0 illisibles=0 au_dessus=0
   local nom avant apres
 
   for nom in $noms; do
@@ -160,12 +188,12 @@ comparer() {
     apres="${apres_dir}/${nom}.mp4"
 
     if [ ! -f "$avant" ]; then
-      printf '%s\t%s\t%s\t%s\n' "999.999" "$nom" "cas **apparu**" "pas d'avant à montrer" >> "$lignes"
+      printf '%s\t%s\t%s\t%s\n' "9000000" "$nom" "cas **apparu**" "pas d'avant à montrer" >> "$lignes"
       apparus=$((apparus + 1))
       continue
     fi
     if [ ! -f "$apres" ]; then
-      printf '%s\t%s\t%s\t%s\n' "998.998" "$nom" "cas **disparu**" "plus de clip dans le tournage courant" >> "$lignes"
+      printf '%s\t%s\t%s\t%s\n' "8000000" "$nom" "cas **disparu**" "plus de clip dans le tournage courant" >> "$lignes"
       disparus=$((disparus + 1))
       continue
     fi
@@ -173,7 +201,7 @@ comparer() {
     communs=$((communs + 1))
     local ia="${sortie}/${nom}.avant.png" ib="${sortie}/${nom}.apres.png"
     if ! derniere_image "$avant" "$ia" || ! derniere_image "$apres" "$ib"; then
-      printf '%s\t%s\t%s\t%s\n' "997.997" "$nom" "⚠️ image finale illisible" "clip corrompu ?" >> "$lignes"
+      printf '%s\t%s\t%s\t%s\n' "7000000" "$nom" "⚠️ image finale illisible" "clip corrompu ?" >> "$lignes"
       illisibles=$((illisibles + 1))
       rm -f "$ia" "$ib"
       continue
@@ -194,11 +222,31 @@ comparer() {
     # tranquillement « aucun cas ne bouge ». Un instrument cassé qui se présente en succès est pire
     # que pas d'instrument (ADR 2748).
     if [ "$part" = "?" ]; then
-      printf '%s\t%s\t%s\t%s\n' "996.996" "$nom" "⚠️ mesure impossible" "${da} s → ${db} s · ${geste}" >> "$lignes"
+      printf '%s\t%s\t%s\t%s\n' "6000000" "$nom" "⚠️ mesure impossible" "${da} s → ${db} s · ${geste}" >> "$lignes"
       illisibles=$((illisibles + 1))
       continue
     fi
-    printf '%s\t%s\t%s %%\t%s\n' "$part" "$nom" "$part" "${da} s → ${db} s · ${geste}" >> "$lignes"
+    # ⚠️ Le tri se fait sur le RAPPORT au bruit propre du cas quand on le connaît, et non sur l'écart
+    # absolu. Mesuré : un cas à 1,799 % dont le plancher vaut 0,809 % bouge deux fois moins qu'un cas
+    # à 1,561 % dont le plancher vaut 0,101 %. L'écart absolu les classait dans le mauvais ordre.
+    local cellule cle sien
+    sien="${sol[$nom]:-}"
+    if [ -z "$planchers" ]; then
+      cellule="${part} %"
+      cle="$part"
+    elif [ -z "$sien" ]; then
+      # Un cas sans plancher connu se DIT : le prendre pour stable serait inventer une mesure.
+      cellule="${part} % · ⚠️ plancher inconnu"
+      cle="$part"
+    else
+      local rapport
+      rapport=$(LC_ALL=C awk -v e="$part" -v p="$sien" \
+        'BEGIN { d = (p + 0 > 0.001) ? p + 0 : 0.001; printf "%.1f", e / d }')
+      cellule="${part} % · **×${rapport}** de son bruit (plancher ${sien} %, ${nbp[$nom]} paire(s))"
+      cle="$rapport"
+      awk -v r="$rapport" 'BEGIN { exit !(r + 0 > 1) }' 2>/dev/null && au_dessus=$((au_dessus + 1))
+    fi
+    printf '%s\t%s\t%s\t%s\n' "$cle" "$nom" "$cellule" "${da} s → ${db} s · ${geste}" >> "$lignes"
     # ⚠️ Le comptage se fait sur une comparaison NUMÉRIQUE, pas sur la chaîne : « 10.000 » est plus
     # grand que « 9.000 », et un tri de texte dirait l'inverse.
     awk -v p="$part" 'BEGIN { exit !(p + 0 > 0) }' 2>/dev/null && bouges=$((bouges + 1))
@@ -209,6 +257,12 @@ comparer() {
     echo
     echo "Tolérance de couleur : **${tolerance} %**. Le chiffre **trie**, il ne prouve pas :"
     echo "sous un mot changé on est à deux fois le plancher de bruit. C'est la carte \`.ou.png\` qui dit **où**."
+    if [ -n "$planchers" ]; then
+      echo
+      echo "Les cas sont classés par leur **rapport au bruit de leur propre cas**, et non par leur écart"
+      echo "absolu : un cas dont le plancher est haut doit bouger davantage pour dire quelque chose."
+      echo "⚠️ Lire le nombre de paires : un plancher tiré d'une seule paire ne prouve pas la stabilité."
+    fi
     echo
     if [ "$bouges" -eq 0 ] && [ "$apparus" -eq 0 ] && [ "$disparus" -eq 0 ] && [ "$illisibles" -eq 0 ]; then
       echo "**Aucun cas ne bouge** : les ${communs} cas communs rendent une image finale identique,"
@@ -221,19 +275,48 @@ comparer() {
       done
     fi
     echo
-    echo "_${communs} cas comparé(s), ${bouges} au-dessus de zéro, ${apparus} apparu(s), ${disparus} disparu(s), ${illisibles} mesure(s) impossible(s)._"
+    if [ -n "$planchers" ]; then
+      echo "_${communs} cas comparé(s), ${au_dessus} au-dessus de leur propre plancher, ${bouges} au-dessus"
+      echo "de zéro, ${apparus} apparu(s), ${disparus} disparu(s), ${illisibles} mesure(s) impossible(s)._"
+    else
+      echo "_${communs} cas comparé(s), ${bouges} au-dessus de zéro, ${apparus} apparu(s), ${disparus} disparu(s), ${illisibles} mesure(s) impossible(s)._"
+    fi
   } > "$index"
 
   rm -f "$lignes"
-  echo "${communs} cas comparé(s), ${bouges} qui bougent, ${apparus} apparu(s), ${disparus} disparu(s), ${illisibles} mesure(s) impossible(s)."
+  if [ -n "$planchers" ]; then
+    echo "${communs} cas comparé(s), ${au_dessus} au-dessus de leur plancher, ${bouges} qui bougent, ${apparus} apparu(s), ${disparus} disparu(s), ${illisibles} mesure(s) impossible(s)."
+  else
+    echo "${communs} cas comparé(s), ${bouges} qui bougent, ${apparus} apparu(s), ${disparus} disparu(s), ${illisibles} mesure(s) impossible(s)."
+  fi
   return 0
 }
 
-### Remesure le plancher : deux tournages qu'on SAIT identiques, la plus grande part observée.
+### Remesure le plancher : deux tournages qu'on SAIT identiques.
+###
+### Avec un troisième argument, écrit le plancher PAR CAS dans un fichier et l'ACCUMULE : relancer sur
+### une autre paire garde le PIRE plancher observé et compte une paire de plus.
+###
+### ⚠️ Le pire, et non la moyenne : un plancher qui sous-estime le bruit fabrique des faux positifs,
+### c'est-à-dire exactement ce qu'on cherche à éviter.
+###
+### ⚠️ Le compte de paires est écrit parce qu'un plancher tiré d'UNE paire ne prouve rien. Un cas dont
+### le plancher est ressorti à 0,000 % n'est pas stable : il l'était cette fois-là (#4287).
 plancher() {
-  local a="$1" b="$2" bac pire=0
+  local a="$1" b="$2" fichier="${3:-}" bac pire=0
   bac=$(mktemp -d)
   trap 'rm -rf "$bac"' RETURN
+
+  local -A sol nbp
+  if [ -n "$fichier" ] && [ -f "$fichier" ]; then
+    local n v c
+    while IFS=$'\t' read -r n v c; do
+      case "$n" in ''|\#*) continue ;; esac
+      sol["$n"]="$v"
+      nbp["$n"]="${c:-1}"
+    done < "$fichier"
+  fi
+
   local nom
   for nom in $(cas_du_dossier "$a"); do
     [ -f "$b/$nom.mp4" ] || continue
@@ -244,10 +327,35 @@ plancher() {
     fuzz=$(part_changee "$bac/a.png" "$bac/b.png" "$TOLERANCE_PAR_DEFAUT")
     printf '%-56s brut %8s %%   tolérance %s %% : %8s %%\n' "$nom" "$brut" "$TOLERANCE_PAR_DEFAUT" "$fuzz"
     pire=$(awk -v p="$pire" -v f="$fuzz" 'BEGIN { print (f + 0 > p + 0) ? f : p }')
+
+    if [ -n "$fichier" ]; then
+      local vu="${sol[$nom]:-}" compte="${nbp[$nom]:-0}"
+      if [ -n "$vu" ]; then
+        sol["$nom"]=$(awk -v x="$vu" -v y="$fuzz" 'BEGIN { print (y + 0 > x + 0) ? y : x }')
+      else
+        sol["$nom"]="$fuzz"
+      fi
+      nbp["$nom"]=$((compte + 1))
+    fi
   done
+
+  if [ -n "$fichier" ]; then
+    {
+      echo "# Plancher de bruit PAR CAS, à ${TOLERANCE_PAR_DEFAUT} % de tolérance."
+      echo "# Colonnes : cas, plancher en %, nombre de paires de tournages qui l'ont produit."
+      echo "# ⚠️ Le PIRE plancher observé est gardé : sous-estimer le bruit fabrique des faux positifs."
+      echo "# ⚠️ Un plancher tiré d'UNE seule paire ne prouve rien. Lire la troisième colonne."
+      for nom in "${!sol[@]}"; do
+        printf '%s\t%s\t%s\n' "$nom" "${sol[$nom]}" "${nbp[$nom]}"
+      done | LC_ALL=C sort
+    } > "$fichier"
+    echo "Planchers écrits dans « ${fichier} » : ${#sol[@]} cas."
+  fi
+
   echo
-  echo "Plancher observé à ${TOLERANCE_PAR_DEFAUT} % de tolérance : ${pire} %."
-  echo "Un écart inférieur à ce plancher ne dit rien ; c'est la carte des différences qu'il faut ouvrir."
+  echo "Plancher le plus haut à ${TOLERANCE_PAR_DEFAUT} % de tolérance : ${pire} %."
+  echo "⚠️ Ce nombre ne fait PAS un seuil : le retenir pour tous aveuglerait les cas stables, qui sont"
+  echo "la grande majorité. Un écart se lit contre le plancher de SON cas."
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -351,8 +459,46 @@ if [ "${1:-}" = "--auto-test" ]; then
   verifie "un outil absent est une panne, pas une mesure" "Outils absents" "$sortie"
   verifie "et l'outil manquant est NOMMÉ" "compare" "$sortie"
 
+  # 8. Le fichier de planchers : écrit, puis ACCUMULÉ en gardant le PIRE.
+  #
+  # ⚠️ La deuxième paire est volontairement BRUYANTE là où la première était muette. Deux paires
+  # identiques ne prouveraient que le compteur ; il faut un écart qui monte pour prouver que c'est bien
+  # le maximum qui est retenu, et non la dernière valeur vue.
+  mkdir -p "$bac/p1a" "$bac/p1b" "$bac/p2a" "$bac/p2b"
+  clip "$bac/p1a/stable.mp4" white
+  cp "$bac/p1a/stable.mp4" "$bac/p1b/stable.mp4"
+  clip "$bac/p2a/stable.mp4" white
+  clip "$bac/p2b/stable.mp4" black
+
+  "$MOI" --plancher "$bac/p1a" "$bac/p1b" "$bac/sols.tsv" >/dev/null 2>&1
+  sortie=$(grep -v '^#' "$bac/sols.tsv")
+  verifie "le plancher d'une paire muette vaut zéro, sur une paire" "stable	0.000	1" "$sortie"
+
+  "$MOI" --plancher "$bac/p2a" "$bac/p2b" "$bac/sols.tsv" >/dev/null 2>&1
+  sortie=$(grep -v '^#' "$bac/sols.tsv")
+  verifie "une seconde paire bruyante ÉCRASE par le haut" "stable	100.000	2" "$sortie"
+
+  # 9. Un écart se lit contre le plancher de son cas, et le compte le dit.
+  #
+  # Le plancher de « stable » vaut 100 % : même un écart de 100 % ne le dépasse pas. C'est le cas qui
+  # distingue ce classement de l'ancien, où tout écart non nul « bougeait ».
+  sortie=$("$MOI" "$bac/p2a" "$bac/p2b" "$bac/avec-sols" 5 "$bac/sols.tsv" 2>&1)
+  verifie "un écart égal à son plancher ne le dépasse pas" "0 au-dessus de leur plancher" "$sortie"
+  verifie "et le rapport au bruit propre est affiché" "de son bruit" "$(cat "$bac/avec-sols/index.md")"
+
+  # 10. Un cas ABSENT du fichier de planchers se dit, au lieu d'être pris pour stable.
+  mkdir -p "$bac/p3a" "$bac/p3b"
+  clip "$bac/p3a/inconnu.mp4" white
+  clip "$bac/p3b/inconnu.mp4" blue
+  sortie=$("$MOI" "$bac/p3a" "$bac/p3b" "$bac/sans-sol" 5 "$bac/sols.tsv" 2>&1)
+  verifie "un cas sans plancher connu est SIGNALÉ" "plancher inconnu" "$(cat "$bac/sans-sol/index.md")"
+
+  # 11. Un fichier de planchers ANNONCÉ mais absent : une erreur de chemin, pas cinquante inconnues.
+  sortie=$("$MOI" "$bac/p3a" "$bac/p3b" "$bac/sol-absent" 5 "$bac/pas-la.tsv" 2>&1) && echecs=1
+  verifie "un fichier de planchers introuvable est une erreur" "Fichier de planchers introuvable" "$sortie"
+
   if [ "$echecs" = 0 ]; then
-    echo "Auto-test de la comparaison de deux tournages : OK (14 cas, dont l'outil absent et la grande toile)."
+    echo "Auto-test de la comparaison de deux tournages : OK (20 cas, dont les planchers par cas et l'outil absent)."
   else
     echo "Auto-test de la comparaison de deux tournages : ÉCHEC."
   fi
@@ -362,15 +508,15 @@ fi
 # ---------------------------------------------------------------------------------------------
 
 if [ "${1:-}" = "--plancher" ]; then
-  [ "$#" -ge 3 ] || { echo "usage : $(basename "$MOI") --plancher <dossier A> <dossier B>" >&2; exit 2; }
+  [ "$#" -ge 3 ] || { echo "usage : $(basename "$MOI") --plancher <dossier A> <dossier B> [fichier]" >&2; exit 2; }
   exige_ses_outils || exit 3
-  plancher "$2" "$3"
+  plancher "$2" "$3" "${4:-}"
   exit 0
 fi
 
 if [ "$#" -lt 3 ]; then
-  echo "usage : $(basename "$MOI") <dossier avant> <dossier après> <dossier de sortie> [tolérance %]" >&2
+  echo "usage : $(basename "$MOI") <dossier avant> <dossier après> <dossier de sortie> [tolérance %] [planchers]" >&2
   exit 2
 fi
 exige_ses_outils || exit 3
-comparer "$1" "$2" "$3" "${4:-$TOLERANCE_PAR_DEFAUT}"
+comparer "$1" "$2" "$3" "${4:-$TOLERANCE_PAR_DEFAUT}" "${5:-}"
