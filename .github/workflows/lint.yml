@@ -77,7 +77,10 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/apt-vigiechiro
-          key: apt-${{ runner.os }}-banc-filme
+          # ⚠️ La clé NOMME ce qu'elle contient. Ajouter un paquet sans la changer ferait servir un
+          # cache d'avant, et le défaut n'apparaîtrait qu'au second passage - celui qui TROUVE le
+          # cache, pas celui qui le remplit.
+          key: apt-${{ runner.os }}-banc-filme-imagemagick
 
       - name: Installer de quoi afficher et filmer
         # ⚠️ PAS le cache de fichiers, et c'est une leçon payée. `awalsh128/cache-apt-pkgs-action`
@@ -108,6 +111,17 @@ jobs:
         # faut toujours de ceux qu'un parcours à carte réclame, ce qui évite d'installer un service
         # de disques sur un runner pour vérifier des chaînes de caractères.
         run: bash scripts/doc-video/filme-un-parcours.sh --auto-test
+
+      - name: Installer ImageMagick, que le runner ne fournit pas
+        # ⚠️ « L'image `ubuntu-latest` ne fournit AUCUN ImageMagick », comme le dit déjà
+        # `capture-vues.yml`. Mesuré ici en le supposant présent : l'étape suivante a rendu
+        # « ImageMagick requis pour l'auto-test » et le job entier avec.
+        #
+        # `--avec-recommandations` parce que le paquet `imagemagick` ne tire ses binaires que par ses
+        # recommandations : sans le drapeau, `convert` reste introuvable.
+        env:
+          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
+        run: bash .github/scripts/installer-paquets.sh --avec-recommandations imagemagick
 
       - name: Les deux comparaisons visuelles, et leurs grandes images
         # ⚠️ `compare-apercus.sh` avait un `--auto-test` de huit cas qui ne tournait NULLE PART. Le
