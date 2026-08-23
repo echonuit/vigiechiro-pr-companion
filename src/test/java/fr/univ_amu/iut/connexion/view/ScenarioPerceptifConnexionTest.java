@@ -21,11 +21,11 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
-import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
@@ -179,8 +179,8 @@ class ScenarioPerceptifConnexionTest {
         Parent racine = loader.load();
         // ⚠️ La taille du produit, et `Habillage.scene` : c'est lui qui embarque la typographie, donc
         // ce qui fait que le clip montre l'application telle qu'elle est livrée.
-        stage.setScene(Habillage.scene(racine, LARGEUR, HAUTEUR));
-        stage.show();
+        FenetreDuBanc.poser(stage, racine, LARGEUR, HAUTEUR);
+        FenetreDuBanc.afficher(stage);
         fenetre = stage;
     }
 

@@ -26,7 +26,6 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.CritereListe;
-import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
@@ -35,6 +34,7 @@ import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
@@ -214,8 +214,8 @@ class ScenarioPerceptifFiltresTest {
         controleur.ouvrirSur(new SourceObservations.References("u-1"));
         // ⚠️ `Habillage.scene`, et non `new Scene` : c'est lui qui embarque la typographie du produit.
         // Un clip tourné sans lui montrerait l'application dans une police qu'elle n'a jamais.
-        stage.setScene(Habillage.scene(vue, 1000, 700));
-        stage.show();
+        FenetreDuBanc.poser(stage, vue, 1000, 700);
+        FenetreDuBanc.afficher(stage);
     }
 
     @Test
