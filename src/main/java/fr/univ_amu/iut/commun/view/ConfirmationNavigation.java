@@ -3,7 +3,6 @@ package fr.univ_amu.iut.commun.view;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 
 /// Confirmation par défaut (vrai `Alert` modal), factorisant le patron
 /// `Alert(CONFIRMATION, …, OK, CANCEL)` jusque-là dupliqué dans les controllers. Implémente
@@ -42,7 +41,9 @@ public final class ConfirmationNavigation implements Confirmateur {
     }
 
     private static boolean confirme(Alert alerte) {
-        return alerte.showAndWait().filter(bouton -> bouton == ButtonType.OK).isPresent();
+        return alerte.showAndWait()
+                .filter(bouton -> bouton == BoutonsDeDialogue.CONFIRMER)
+                .isPresent();
     }
 
     /// Le dialogue **tel qu'il sera montré**, sans le montrer (#1468).
@@ -55,7 +56,8 @@ public final class ConfirmationNavigation implements Confirmateur {
     /// Désormais la capture et la production passent par **ce même code** : ce que la doc montre est ce que
     /// l'utilisateur verra.
     public Alert dialogue(String message) {
-        Alert alerte = new Alert(AlertType.CONFIRMATION, message, ButtonType.OK, ButtonType.CANCEL);
+        Alert alerte =
+                new Alert(AlertType.CONFIRMATION, message, BoutonsDeDialogue.CONFIRMER, BoutonsDeDialogue.ANNULER);
         Habillage.poser(alerte.getDialogPane());
         if (titre != null) {
             alerte.setTitle(titre);
@@ -71,7 +73,7 @@ public final class ConfirmationNavigation implements Confirmateur {
     /// s'aligne sous le début du détail et non sous la puce. Comme [#dialogue(String)], il passe par le
     /// **code de production** pour que la capture montre ce que l'utilisateur verra (ADR 0025).
     public Alert dialogue(CompteRendu compteRendu) {
-        Alert alerte = new Alert(AlertType.CONFIRMATION, "", ButtonType.OK, ButtonType.CANCEL);
+        Alert alerte = new Alert(AlertType.CONFIRMATION, "", BoutonsDeDialogue.CONFIRMER, BoutonsDeDialogue.ANNULER);
         var contenu = VueCompteRendu.rendre(compteRendu, VueCompteRendu.SANS_PLAFOND);
         // Le `DialogPane` ne rembourre presque pas son contenu, là où une modale FXML s'en charge par sa
         // racine : sans cette classe, le bloc touche le bord du dialogue (revue visuelle de #2225).

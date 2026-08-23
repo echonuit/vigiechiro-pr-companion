@@ -137,6 +137,37 @@ class ConventionsDEcritureTest {
                         Ce défaut en est à sa quatrième venue : #1940, #1967, #3452, #4130.""").isEmpty();
     }
 
+    @Test
+    @DisplayName("#4229 : un dialogue du produit n'emprunte pas ses boutons à la locale du poste")
+    void un_dialogue_n_emprunte_pas_ses_boutons_a_la_locale() throws IOException {
+        List<String> fautifs = new ArrayList<>();
+        for (Path source : sources()) {
+            if (!source.startsWith(Path.of("src/main/java"))) {
+                continue;
+            }
+            String code = codeSeul(Files.readString(source, StandardCharsets.UTF_8));
+            Matcher standard = Pattern.compile("\\bButtonType\\.(OK|CANCEL|CLOSE|YES|NO)\\b")
+                    .matcher(code);
+            while (standard.find()) {
+                fautifs.add(
+                        "%s:%d : ButtonType.%s".formatted(source, ligne(code, standard.start()), standard.group(1)));
+            }
+        }
+
+        assertThat(fautifs).as("""
+                        Ces boutons portent un libellé que JAVAFX traduit depuis la locale de la \
+                        MACHINE, pas depuis l'application.
+
+                        Tout le reste de cette interface est en français écrit en dur : le produit \
+                        serait donc français partout, sauf sur les boutons de ses dialogues, qui \
+                        suivraient le poste. Un utilisateur français sur un système anglais lit un \
+                        message français et clique « Cancel ».
+
+                        Remède : `BoutonsDeDialogue.CONFIRMER`, `ANNULER`, `FERMER`, qui portent le \
+                        libellé français ET conservent le `ButtonData` - c'est lui qui dit à JavaFX \
+                        lequel est le bouton par défaut et lequel ferme sur Échap.""").isEmpty();
+    }
+
     /// Les noms sous lesquels un fichier de test désigne un Stage qu'il a **reçu** : les paramètres de
     /// type `Stage`, et les champs auxquels ils sont affectés.
     ///
