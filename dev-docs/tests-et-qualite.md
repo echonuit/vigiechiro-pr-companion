@@ -10,7 +10,7 @@ référence structurée ; le repo-root garde un mémo
 |---|---|
 | `./mvnw test` | **Toute** la suite de tests |
 | `./mvnw test -Dtest=SitesViewModelTest` | Une seule **classe** de test |
-| `./mvnw test -Dtest=SitesViewModelTest#chargeLesSites` | Une seule **méthode** |
+| `./mvnw test -Dtest=SitesViewModelTest#charger_lit_par_lot` | Une seule **méthode** |
 | `./mvnw verify` | Build complet : tests + couverture + contrôles (PMD/JaCoCo **non** bloquants) |
 | `./mvnw -Pquality-gate verify` | **Portail qualité** : PMD `failOnViolation` + seuils JaCoCo **bloquants** |
 | `./mvnw -Pmutation test` | Tests de **mutation** PIT (lent, à la demande) |

@@ -520,6 +520,46 @@ d'abstractions de données, pas de l'API JDBC).
 
 ---
 
+## Lecture par lot (`findPar…`)
+
+**Le problème.** Un écran qui compose N lignes en interrogeant la base **pour chacune** paie N requêtes
+là où une suffirait. Le coût **croît avec l'inventaire de l'utilisateur** : il est donc absent des jeux
+d'essai, et maximal chez celui qui a le plus de données. Sept chemins en souffraient (#4251, #4271,
+#4278, #4280, #4283, #4286, #4293).
+
+**La solution.** Lire **une fois pour tout le lot** avant de boucler, et servir la boucle depuis une
+`Map` indexée.
+
+**Dans cette application.** Trois lectures groupées existent -
+[`PointDao#findParSites`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/sites/model/dao/PointDao.java),
+[`PassageDao#findParPoints`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/dao/PassageDao.java)
+et `SequenceDao#findParIds` - et rendent leur résultat **déjà groupé**. Quand la table ne porte qu'une
+ligne par entité (journal, relevé, commune, rapprochement), un `findAll()` indexé en mémoire suffit :
+c'est ce que fait `ContexteAudit` pour l'audit complet, et `RegistrePassages` côté CLI depuis l'origine.
+
+⚠️ **Les lectures par identifiants passent par `LotsDeParametres.decouper`.** SQLite refuse au-delà de
+quelques centaines de paramètres liés : sans découpage, un inventaire un peu large ferait **échouer**
+l'appel là où la boucle, elle, marchait. Un remède contre la lenteur ne doit pas introduire un défaut de
+justesse.
+
+⚠️ **Ce qui ne se lit pas par lot** : les tables de **volume** (originaux, séquences d'écoute) restent
+lues par session. Une nuit en porte des milliers ; les charger d'un bloc échangerait un défaut de
+lenteur contre un défaut de mémoire.
+
+**Comment on le garde.** En comptant des **requêtes**, jamais des millisecondes - un butoir en temps se
+noie dans la variance de la machine. Deux formes dans le dépôt : un `Mockito.spy` sur le DAO
+(`verify(never())` sur la lecture unitaire, `times(1)` sur la lecture groupée), ou un compteur de
+connexions comparé à **deux tailles de jeu** (`RequetesDeLAuditTest`). La seconde attrape les requêtes
+**où qu'elles vivent** dans la pile d'appels, ce que la première ne voit pas.
+
+Le pourquoi chiffré, et les trois façons de se tromper en mesurant, vivent dans
+[Performance et benchmarks](performance.md).
+
+**Principes.** **SRP** (le DAO sait lire un lot, l'appelant sait composer) et le corollaire de l'ADR
+0014 : la parité CLI ↔ IHM porte aussi sur **la façon de lire**, pas seulement sur les capacités.
+
+---
+
 ## Template Method (`DaoGenerique`)
 
 **Le problème.** Tous les DAO réécriraient la même mécanique : ouvrir une connexion, exécuter, itérer
