@@ -46,13 +46,13 @@ class EnregistreurDeFilmTest {
 
     @Test
     @DisplayName("un test qui cite un cas se filme")
-    void unTestQuiCiteUnCasSeFilme() {
+    void un_test_qui_cite_un_cas_se_filme() {
         assertThat(EnregistreurDeFilm.aFilmer(List.of("S1-26"), false)).isTrue();
     }
 
     @Test
     @DisplayName("un test qui ne cite aucun cas ne se filme pas")
-    void unTestSansCasNeSeFilmePas() {
+    void un_test_sans_cas_ne_se_filme_pas() {
         assertThat(EnregistreurDeFilm.aFilmer(List.of(), false)).isFalse();
     }
 
@@ -60,13 +60,13 @@ class EnregistreurDeFilmTest {
     /// demande, elle ne s'obtient pas par défaut : un tournage complet est ce que le banc sert à produire.
     @Test
     @DisplayName("la propriété « tout » filme aussi ce qui ne cite rien")
-    void laProprieteToutFilmeAussiCeQuiNeCiteRien() {
+    void la_propriete_tout_filme_aussi_ce_qui_ne_cite_rien() {
         assertThat(EnregistreurDeFilm.aFilmer(List.of(), true)).isTrue();
     }
 
     @Test
     @DisplayName("« tout » ne retire rien à ce qui cite un cas")
-    void toutNeRetireRienACeQuiCiteUnCas() {
+    void tout_ne_retire_rien_a_ce_qui_cite_un_cas() {
         assertThat(EnregistreurDeFilm.aFilmer(List.of("S1-26"), true)).isTrue();
     }
 
@@ -77,7 +77,7 @@ class EnregistreurDeFilmTest {
     /// console : seul le dossier tranche.
     @Test
     @DisplayName("le moteur ne laisse aucune trace derrière un test qui ne cite rien")
-    void aucuneTracePourUnTestQuiNeCiteRien(@TempDir Path bac) throws IOException {
+    void aucune_trace_pour_un_test_qui_ne_cite_rien(@TempDir Path bac) throws IOException {
         Path clips = bac.resolve("clips");
 
         jouer(SeanceSansCas.class, clips);
@@ -94,7 +94,7 @@ class EnregistreurDeFilmTest {
     /// qui permet de la laisser branchée sur une classe hors séance filmée.
     @Test
     @DisplayName("sans la propriété de tournage, rien n'est écrit non plus")
-    void sansLaProprieteDeTournageRienNEstEcrit(@TempDir Path bac) {
+    void sans_la_propriete_de_tournage_rien_n_est_ecrit(@TempDir Path bac) {
         Path clips = bac.resolve("clips");
         System.clearProperty("recette.film");
         System.setProperty("recette.film.dossier", clips.toString());

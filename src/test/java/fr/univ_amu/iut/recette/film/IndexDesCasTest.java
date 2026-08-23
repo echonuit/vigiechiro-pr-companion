@@ -34,7 +34,7 @@ class IndexDesCasTest {
     /// de deux forks, et l'index final doit porter les deux moitiés.
     @Test
     @DisplayName("deux JVM écrivent le même index, et aucune n'efface l'autre")
-    void deuxJvmNeSEffacentPas(@TempDir Path bac) throws IOException {
+    void deux_jvm_ne_s_effacent_pas(@TempDir Path bac) throws IOException {
         Path index = bac.resolve("index.md");
 
         IndexDesCas premiere = new IndexDesCas(index, "fork-1");
@@ -57,7 +57,7 @@ class IndexDesCasTest {
     /// AVANT le sien, celle-ci passerait et l'autre pas, ou l'inverse selon l'implémentation.
     @Test
     @DisplayName("l'ordre d'arrivée des forks ne change pas l'index")
-    void lOrdreDesForksNeChangeRien(@TempDir Path bac) throws IOException {
+    void l_ordre_des_forks_ne_change_rien(@TempDir Path bac) throws IOException {
         Path index = bac.resolve("index.md");
 
         IndexDesCas tardive = new IndexDesCas(index, "fork-z");
@@ -73,7 +73,7 @@ class IndexDesCasTest {
 
     @Test
     @DisplayName("les lignes sont rangées par cas, quel que soit le fork qui les a produites")
-    void lesLignesSontRangeesParCas(@TempDir Path bac) throws IOException {
+    void les_lignes_sont_rangees_par_cas(@TempDir Path bac) throws IOException {
         Path index = bac.resolve("index.md");
 
         IndexDesCas seconde = new IndexDesCas(index, "fork-2");
@@ -99,7 +99,7 @@ class IndexDesCasTest {
     /// le seul `pid` : la collision avait changé de place, pas disparu.
     @Test
     @DisplayName("deux JVM de même numéro de processus ne s'effacent pas non plus")
-    void deuxJvmDeMemePidNeSEffacentPas(@TempDir Path bac) throws IOException {
+    void deux_jvm_de_meme_pid_ne_s_effacent_pas(@TempDir Path bac) throws IOException {
         Path index = bac.resolve("index.md");
 
         IndexDesCas premiere = new IndexDesCas(index);
@@ -120,7 +120,7 @@ class IndexDesCasTest {
     /// n'identifie pas.
     @Test
     @DisplayName("l'identité par défaut ne se réemploie jamais")
-    void lIdentiteParDefautNeSeReemploieJamais() {
+    void l_identite_par_defaut_ne_se_reemploie_jamais() {
         assertThat(IndexDesCas.identiteParDefaut())
                 .as("deux séances de la même JVM doivent porter deux noms de fragment")
                 .isNotEqualTo(IndexDesCas.identiteParDefaut());
@@ -130,7 +130,7 @@ class IndexDesCasTest {
     /// séances qui rejouent le même cas rendent une seule ligne, tout en gardant deux fragments.
     @Test
     @DisplayName("un même cas joué par un même test ne paraît qu'une fois")
-    void unMemeCasNeParaitQuUneFois(@TempDir Path bac) throws IOException {
+    void un_meme_cas_ne_parait_qu_une_fois(@TempDir Path bac) throws IOException {
         Path index = bac.resolve("index.md");
 
         IndexDesCas premiere = new IndexDesCas(index);
@@ -150,7 +150,7 @@ class IndexDesCasTest {
     /// dédupliquer sur le seul cas la trahirait.
     @Test
     @DisplayName("un cas couvert par deux tests garde ses deux lignes")
-    void unCasCouvertParDeuxTestsGardeSesDeuxLignes(@TempDir Path bac) throws IOException {
+    void un_cas_couvert_par_deux_tests_garde_ses_deux_lignes(@TempDir Path bac) throws IOException {
         Path index = bac.resolve("index.md");
 
         IndexDesCas seul = new IndexDesCas(index, "fork-1");
@@ -163,7 +163,7 @@ class IndexDesCasTest {
 
     @Test
     @DisplayName("sans aucune ligne, aucun index n'est écrit")
-    void sansLigneAucunIndex(@TempDir Path bac) throws IOException {
+    void sans_ligne_aucun_index(@TempDir Path bac) throws IOException {
         Path index = bac.resolve("index.md");
 
         new IndexDesCas(index, "fork-vide").close();
@@ -177,7 +177,7 @@ class IndexDesCasTest {
     /// dossier de tournage réutilisé en porte de trop.
     @Test
     @DisplayName("un fragment étranger au tournage se compte, il ne se devine pas")
-    void unFragmentEtrangerSeCompte(@TempDir Path bac) throws IOException {
+    void un_fragment_etranger_se_compte(@TempDir Path bac) throws IOException {
         Path index = bac.resolve("index.md");
         Files.createDirectories(bac.resolve("index.d"));
         Files.writeString(bac.resolve("index.d/index-tournage-precedent.tsv"), "S9-99\tvieux_test\tvieux.mp4\ttrue\n");

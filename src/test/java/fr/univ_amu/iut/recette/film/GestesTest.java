@@ -30,7 +30,7 @@ class GestesTest {
 
         @Test
         @DisplayName("une lettre nue hors d'un champ est un raccourci")
-        void uneLettreNueHorsDUnChampEstUnRaccourci() {
+        void une_lettre_nue_hors_d_un_champ_est_un_raccourci() {
             assertThat(Gestes.aAfficher(false, false))
                     .as("R, D, N, 1/2/3 sont des raccourcis de l'écran d'écoute")
                     .isTrue();
@@ -38,7 +38,7 @@ class GestesTest {
 
         @Test
         @DisplayName("la même lettre dans un champ de saisie est de la frappe")
-        void laMemeLettreDansUnChampEstDeLaFrappe() {
+        void la_meme_lettre_dans_un_champ_est_de_la_frappe() {
             assertThat(Gestes.aAfficher(false, true))
                     .as("le champ montre déjà ce qu'on y tape : un badge par caractère n'ajoute rien")
                     .isFalse();
@@ -46,7 +46,7 @@ class GestesTest {
 
         @Test
         @DisplayName("un modificateur fait un raccourci, même dans un champ de saisie")
-        void unModificateurFaitUnRaccourciMemeDansUnChamp() {
+        void un_modificateur_fait_un_raccourci_meme_dans_un_champ() {
             assertThat(Gestes.aAfficher(true, true))
                     .as("Ctrl+S se commande aussi depuis un champ, et son effet est invisible")
                     .isTrue();
@@ -59,20 +59,20 @@ class GestesTest {
 
         @Test
         @DisplayName("une touche nue se lit seule")
-        void uneToucheNueSeLitSeule() {
+        void une_touche_nue_se_lit_seule() {
             assertThat(Gestes.libelle("R", false, false, false)).isEqualTo("R");
         }
 
         @Test
         @DisplayName("les modificateurs précèdent la touche, dans un ordre fixe")
-        void lesModificateursPrecedentLaTouche() {
+        void les_modificateurs_precedent_la_touche() {
             // L'ordre est fixe pour que deux clips ne montrent pas deux libellés du même geste.
             assertThat(Gestes.libelle("S", true, true, true)).isEqualTo("Ctrl + Maj + Alt + S");
         }
 
         @Test
         @DisplayName("un modificateur seul se lit quand même")
-        void unModificateurSeulSeLitQuandMeme() {
+        void un_modificateur_seul_se_lit_quand_meme() {
             assertThat(Gestes.libelle("S", true, false, false)).isEqualTo("Ctrl + S");
         }
     }
@@ -85,19 +85,19 @@ class GestesTest {
 
         @Test
         @DisplayName("à l'instant de l'appui, le halo est entier")
-        void aLInstantDeLAppuiLeHaloEstEntier() {
+        void a_l_instant_de_l_appui_le_halo_est_entier() {
             assertThat(Gestes.resorption(0, 300)).isCloseTo(1.0, within(0.001));
         }
 
         @Test
         @DisplayName("à mi-chemin, il est à moitié")
-        void aMiCheminIlEstAMoitie() {
+        void a_mi_chemin_il_est_a_moitie() {
             assertThat(Gestes.resorption(150, 300)).isCloseTo(0.5, within(0.001));
         }
 
         @Test
         @DisplayName("passé sa durée, il a disparu et ne repart pas en négatif")
-        void passeSaDureeIlADisparu() {
+        void passe_sa_duree_il_a_disparu() {
             assertThat(Gestes.resorption(300, 300)).isZero();
             assertThat(Gestes.resorption(10_000, 300))
                     .as("un clip long ne doit pas rallumer un halo éteint")
@@ -106,7 +106,7 @@ class GestesTest {
 
         @Test
         @DisplayName("un âge négatif ne dépasse pas le halo entier")
-        void unAgeNegatifNeDepassePasLeHaloEntier() {
+        void un_age_negatif_ne_depasse_pas_le_halo_entier() {
             // L'horloge peut rendre un instant antérieur entre deux images ; le halo ne doit pas
             // grossir au-delà de lui-même pour autant.
             assertThat(Gestes.resorption(-50, 300)).isCloseTo(1.0, within(0.001));
@@ -120,13 +120,13 @@ class GestesTest {
 
         @Test
         @DisplayName("sans le moindre geste, il n'y a rien à dessiner")
-        void sansGesteRienADessiner() {
+        void sans_geste_rien_a_dessiner() {
             assertThat(new Gestes().pointeur()).isEmpty();
         }
 
         @Test
         @DisplayName("le dernier déplacement fait foi")
-        void leDernierDeplacementFaitFoi() {
+        void le_dernier_deplacement_fait_foi() {
             Gestes gestes = new Gestes();
 
             gestes.noterPointeur("fenetre", 10, 20);
@@ -143,7 +143,7 @@ class GestesTest {
         /// dessiner un point de menu dans le repère de la fenêtre principale le poserait ailleurs.
         @Test
         @DisplayName("la position se rapporte à la fenêtre où elle a été prise")
-        void laPositionSeRapporteALaFenetre() {
+        void la_position_se_rapporte_a_la_fenetre() {
             Gestes gestes = new Gestes();
 
             gestes.noterPointeur("menu", 5, 6);
@@ -154,7 +154,7 @@ class GestesTest {
 
         @Test
         @DisplayName("un badge remplace le précédent, il ne s'y empile pas")
-        void unBadgeRemplaceLePrecedent() {
+        void un_badge_remplace_le_precedent() {
             Gestes gestes = new Gestes();
 
             gestes.noterTouche("R", 1_000);
@@ -165,7 +165,7 @@ class GestesTest {
 
         @Test
         @DisplayName("passé sa durée, le badge s'efface")
-        void passeSaDureeLeBadgeSEfface() {
+        void passe_sa_duree_le_badge_s_efface() {
             Gestes gestes = new Gestes();
 
             gestes.noterTouche("R", 1_000);
