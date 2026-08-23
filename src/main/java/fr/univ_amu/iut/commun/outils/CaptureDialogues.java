@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.persistence.PlacementRacine;
 import fr.univ_amu.iut.commun.persistence.RegimeRestauration;
 import fr.univ_amu.iut.commun.view.ActionAPropos;
 import fr.univ_amu.iut.commun.view.AlerteDemarrage;
+import fr.univ_amu.iut.commun.view.BoutonsDeDialogue;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.ContenuChoixSauvegarde;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
@@ -23,7 +24,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -209,7 +209,7 @@ public final class CaptureDialogues {
                         new VersionApplication(),
                         new Workspace(Path.of("/home/naturaliste/Documents/VigieChiro-Companion")))
                 .resume();
-        Alert alerte = new Alert(Alert.AlertType.INFORMATION, ApercuFx.enrouler(resume), ButtonType.OK);
+        Alert alerte = new Alert(Alert.AlertType.INFORMATION, ApercuFx.enrouler(resume), BoutonsDeDialogue.FERMER);
         alerte.setHeaderText(ActionAPropos.ENTETE);
         alerte.getDialogPane().setPrefWidth(540);
         ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);

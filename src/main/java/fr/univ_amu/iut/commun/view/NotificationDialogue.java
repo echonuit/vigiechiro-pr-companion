@@ -5,7 +5,6 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.stage.Window;
 
 /// Implémentation **réelle** de [Notificateur] : la boîte de dialogue modale de JavaFX. Jumelle de
@@ -51,7 +50,7 @@ public final class NotificationDialogue implements Notificateur {
     /// avertissement se distingue d'une information, et rien ne le vérifiait, `showAndWait` figeant
     /// tout test headless qui aurait voulu regarder.
     public Alert dialogue(NiveauNotification niveau, String entete, String message) {
-        Alert alerte = new Alert(type(niveau), message, ButtonType.OK);
+        Alert alerte = new Alert(type(niveau), message, BoutonsDeDialogue.FERMER);
         Habillage.poser(alerte.getDialogPane());
         alerte.setHeaderText(entete);
         return alerte;
@@ -67,7 +66,7 @@ public final class NotificationDialogue implements Notificateur {
     public void notifier(NiveauNotification niveau, String entete, CompteRenduChiffre compteRendu) {
         PanneauCompteRendu bande = new PanneauCompteRendu();
         bande.afficher(compteRendu);
-        Alert alerte = new Alert(type(niveau), "", ButtonType.OK);
+        Alert alerte = new Alert(type(niveau), "", BoutonsDeDialogue.FERMER);
         alerte.setHeaderText(entete);
         alerte.getDialogPane().setContent(bande);
         Habillage.poser(alerte.getDialogPane());

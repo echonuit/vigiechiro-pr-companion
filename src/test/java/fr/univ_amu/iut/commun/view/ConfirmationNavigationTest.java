@@ -8,6 +8,8 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -111,5 +113,35 @@ class ConfirmationNavigationTest {
         assertThat(contenu.get().getPadding().getLeft())
                 .as("sans marge gauche effective, le compte rendu se colle au bord du dialogue")
                 .isGreaterThan(0);
+    }
+
+    @Test
+    @DisplayName("#4229 : les boutons parlent français, quelle que soit la langue du poste")
+    void les_boutons_parlent_francais(FxRobot robot) {
+        AtomicReference<List<String>> libelles = new AtomicReference<>();
+        robot.interact(() -> libelles.set(new ConfirmationNavigation()
+                .dialogue("Se déconnecter ?").getDialogPane().getButtonTypes().stream()
+                        .map(ButtonType::getText)
+                        .toList()));
+
+        // ⚠️ `ButtonType.OK` et `ButtonType.CANCEL` portent un libellé que JAVAFX traduit depuis la
+        // locale de la MACHINE. Tout le reste de cette interface est en français écrit en dur : un
+        // utilisateur français sur un système anglais lisait « Se déconnecter effacera le jeton… » et
+        // cliquait « Cancel ». Vu sur un clip de recette, tourné sur un runner en anglais - le film
+        // montrait un produit que personne n'utilise.
+        assertThat(libelles.get())
+                .as("un dialogue français ne peut pas emprunter ses boutons à la locale du poste")
+                .containsExactlyInAnyOrder("Confirmer", "Annuler");
+    }
+
+    @Test
+    @DisplayName("#4229 : le rôle des boutons est conservé, pas seulement leur texte")
+    void le_role_des_boutons_est_conserve() {
+        // ⚠️ Le `ButtonData` dit à JavaFX lequel est le bouton par défaut, lequel ferme sur Échap, et
+        // dans quel ordre les poser selon la plateforme. Renommer sans le conserver casserait ces trois
+        // comportements EN SILENCE : le dialogue paraîtrait juste et se comporterait mal.
+        assertThat(BoutonsDeDialogue.CONFIRMER.getButtonData()).isEqualTo(ButtonData.OK_DONE);
+        assertThat(BoutonsDeDialogue.ANNULER.getButtonData()).isEqualTo(ButtonData.CANCEL_CLOSE);
+        assertThat(BoutonsDeDialogue.FERMER.getButtonData()).isEqualTo(ButtonData.OK_DONE);
     }
 }
