@@ -69,9 +69,57 @@ ci-dessus le montre.
 
 !!! warning "La tolérance se mesure, elle ne se fige pas"
 
-    Les 5 % valent pour une machine et sept cas. Sur une autre, le plancher peut différer.
-    `compare-tournages.sh --plancher <A> <B>` le remesure sur place, en comparant deux tournages qu'on
-    sait identiques.
+    `compare-tournages.sh --plancher <A> <B>` remesure le plancher sur place, en comparant deux
+    tournages qu'on sait identiques.
+
+## Le plancher du runner, mesuré
+
+Deux tournages des 51 cas, sur le **même commit**, lancés sur deux runners GitHub distincts - la
+situation réelle, chaque publication filmant sur une machine neuve.
+
+| plancher à 5 % de tolérance | cas |
+|---|---|
+| ≥ 0,5 % | 1 |
+| 0,1 à 0,5 % | 2 |
+| < 0,05 % | 48 |
+
+**Médiane : 0,008 %.** Le plancher n'est donc pas haut partout. Il est bas sur 48 cas, et haut sur
+trois :
+
+| cas | son plancher |
+|---|---|
+| `ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce` | 0,809 % |
+| `ScenarioPerceptifRefusDepotTest.le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion` | 0,230 % |
+| `ScenarioFicheSiteTest.les_boutons_disent_ce_qui_les_empeche` | 0,101 % |
+
+!!! danger "Un seuil global mentirait dans les deux sens"
+
+    Retenir le pire plancher, 0,809 %, comme seuil unique **aveuglerait 48 cas pour se protéger de
+    trois** : un libellé entier changé, qui vaut 0,364 %, passerait sous le seuil sans être vu.
+
+    Retenir la médiane laisserait au contraire ces trois cas crier au changement à chaque tournage.
+
+    Un écart se lit donc contre **le plancher de son propre cas**, pas contre un seuil unique.
+
+!!! warning "Ces planchers viennent d'un seul tirage"
+
+    Une paire de tournages donne UNE mesure par cas. Un cas dont le plancher est ressorti à 0,000 %
+    n'est pas prouvé stable : il l'était cette fois-là. Les rapports que ce plancher permet de calculer
+    - « douze fois son bruit » - ne valent donc pas mieux que leur échantillon, et un cas ne se déclare
+    instable qu'après plusieurs paires.
+
+### Ce que cette mesure a corrigé
+
+Sur une comparaison réelle, deux cas dépassaient 1 % et semblaient donc être les vrais changements.
+Rapportés à leur propre plancher, ils se séparent :
+
+- `les_boutons_disent_ce_qui_les_empeche` : 1,561 % pour un plancher de 0,101 %, soit **quinze fois**
+  son bruit. Et l'image le confirme - une infobulle « Suppression impossible : ce site porte des
+  passages » est apparue, ce qui correspond au correctif #4253.
+- `chaque_carte_ouvre_ce_qu_elle_annonce` : 1,799 % pour un plancher de 0,809 %, soit **deux fois**
+  seulement. Sa carte des différences ne montre que du rouge sur le texte et les bordures, jamais un
+  changement localisé : c'est du bruit de rendu, et le chiffre brut le faisait passer pour un
+  changement.
 
 ## Ce que la méthode ne voit pas
 
