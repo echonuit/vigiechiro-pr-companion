@@ -3,6 +3,13 @@
 Cette page existe pour **une décision** : le banc filmé en Java pur peut-il remplacer le banc bash ?
 Elle ne l'affirme pas, elle donne de quoi trancher - les mêmes cas, filmés par les deux, côte à côte.
 
+!!! note "Ses chiffres sont datés, et le savent"
+
+    Les mesures ci-dessous ont été prises à un instant, sur deux pré-versions mouvantes. Pour comparer
+    deux tournages **du jour** - une version contre la tournante, ou deux versions entre elles - voir
+    [Comparer deux tournages](comparer-deux-tournages.md), qui refait la comparaison à la demande et
+    chiffre ce qui a changé.
+
 ## Ce qui est déjà mesuré
 
 | | banc bash | banc Java |

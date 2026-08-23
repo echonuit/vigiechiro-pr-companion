@@ -253,6 +253,10 @@ son montage et son index en Java :
 [Comparer les deux bancs](recette/comparer-les-deux-bancs.md), et cette page-là est datée : elle
 mourra avec la décision.
 
+Ce qui lui survivra, c'est [Comparer deux tournages](recette/comparer-deux-tournages.md) : depuis que
+chaque version porte les clips des deux bancs sur son tag, la comparaison se refait à la demande sur le
+produit du jour, au lieu d'être figée dans une page.
+
 ⚠️ **Trois états, pas deux.** Un cas « perceptif » n'est ni couvert ni à couvrir : le script le
 marque `*perceptif*`, et le mot « couvert » reste réservé à ce que la CI prouve. Compter un scénario
 joué parmi les couverts fabriquerait exactement le vert creux que ce harnais combat.
