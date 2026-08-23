@@ -156,9 +156,10 @@ les en-têtes et le corps envoyé.
 | Pré-version roulante `clips-recette` | tout le monde | jusqu'au tournage suivant |
 | Tag de version, clips préfixés `java-` | tout le monde | **pour toujours**, le tag ne bouge pas |
 
-⚠️ L'en-tête de `tournage-recette.yml` dit « il ne PUBLIE pas, les clips restent en artefact ». C'est
-vrai du versement, et faux de la confidentialité : sur un dépôt public, un artefact est public. La
-phrase mérite d'être précisée le jour où ce mode existera.
+⚠️ L'en-tête de `tournage-recette.yml` disait « il ne PUBLIE pas, les clips restent en artefact ».
+C'était vrai du versement, et faux de la confidentialité : sur un dépôt public, un artefact est public.
+**La phrase a été corrigée** à la clôture du chantier, et le workflow verse désormais sur deux
+destinations qui lui sont propres.
 
 ### Les parades, dans l'ordre où elles doivent être posées
 
@@ -343,10 +344,9 @@ Elle trancherait trois choses :
 3. **la durée de vie du jeton** : un jeton de tournage se révoque à la fin du run, donc il ne peut pas
    être celui du contrat hebdomadaire, qui vit de durer.
 
-Elle s'écrira en passe 10, comme le veut le cycle, et portera le numéro de son chantier : **ADR 4291**.
+Elle a été écrite en passe 10 : **[ADR 4291](../decisions/4291-un-clip-tourne-contre-la-plateforme-ne-se-range-pas-avec-les-autres.md)**.
 
-⚠️ Ce que cette page **ne dit pas**, faute de l'avoir mesuré : combien de cas parmi les ~220 hors
-application deviendraient réellement filmables avec un jeton en lecture seule. La lecture donne les
-sites, les participations, les résultats et le journal de traitement, donc S8 (« récupérer une nuit
-déposée ») semble à portée et S4 (« déposer et suivre ») non, puisque déposer est une écriture. Ce tri
-demande de dérouler les deux scripts de session, cas par cas, et il n'a pas été fait ici.
+⚠️ Ce que cette page ne disait pas, faute de l'avoir mesuré, **a été mesuré depuis** : le tri des deux
+scripts de session, cas par cas, donne **29 cas de S8 sur 38** atteignables, et **S4 hors de portée** -
+elle écrit sans qu'aucun `DELETE` client ne le défasse, demande une carte SD réelle et attend deux
+heures le calcul Tadarida. Le détail vit dans l'EPIC #4291.
