@@ -210,19 +210,32 @@ class ScenarioFicheSiteTest {
                 .as("les deux boutons grisés sont ce que ce cas fait juger : ils doivent être à l'image")
                 .isTrue();
 
-        // ⚠️ Et ce que ce cas fait juger, c'est ce qu'ils DISENT. Le test lisait `isDisabled()`, ce qui
-        // n'est pas la même chose : un gris sans motif est un défaut, et un gris au mauvais motif en est
-        // un pire. Le libellé est posé sur l'ENVELOPPE, un bouton désactivé n'affichant pas d'infobulle.
-        assertThat(InfobulleDeBlocage.texteDe(
-                        robot.lookup("#enveloppeOuvrirPortail").query()))
+        // ⚠️ Et les motifs PARAISSENT, un par un. Ce cas s'appelle « les boutons disent ce qui les
+        // empêche » et ne montrait que le gris : les deux motifs étaient lus par programme, donc absents
+        // de l'image. Un spectateur voyait deux boutons ternes et aucune explication - « ne montre pas
+        // ce qu'il doit » (#4173). L'attente de l'infobulle est une assertion : si elle ne vient pas, le
+        // test échoue au lieu de filmer un écran muet.
+
+        // ⚠️ Et ce que ce cas fait juger, c'est ce qu'ils DISENT - donc les motifs PARAISSENT, un par
+        // un. Le test lisait `isDisabled()` puis le texte PAR PROGRAMME : les deux motifs étaient donc
+        // absents de l'image, et le clip montrait deux boutons ternes sans un mot d'explication. « Ne
+        // montre pas ce qu'il doit » (#4173).
+        //
+        // L'attente de l'infobulle est une assertion : si elle ne vient pas, le test échoue au lieu de
+        // filmer un écran muet. Un motif qu'on ne peut pas faire venir n'existe pas pour l'utilisateur.
+        assertThat(InfobulleDeBlocage.montrerEtLire(
+                        robot.lookup("#enveloppeOuvrirPortail").query(), robot))
                 .as("le motif nomme ce qui manque, et le geste qui le répare")
                 .contains("pas encore relié")
                 .contains("synchronisez");
-        assertThat(InfobulleDeBlocage.texteDe(
-                        robot.lookup("#enveloppeSupprimer").query()))
+        Respiration.leTempsDeLire(robot);
+
+        assertThat(InfobulleDeBlocage.montrerEtLire(
+                        robot.lookup("#enveloppeSupprimer").query(), robot))
                 .as("le motif nomme ce qui bloque, et ce qu'il faudrait retirer d'abord")
                 .contains("porte des passages")
                 .contains("Supprimez d'abord");
+        Respiration.leTempsDeLire(robot);
     }
 
     /// Revient à « Mes sites » par le fil d'Ariane, comme le ferait un observateur.

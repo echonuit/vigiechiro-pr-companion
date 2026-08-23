@@ -48,7 +48,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -347,7 +346,10 @@ class ScenarioModaleCarreTest {
         assertThat(creer.isDisabled())
                 .as("déclarer ici referait le doublon local qui a produit le dépôt manqué")
                 .isTrue();
-        assertThat(InfobulleDeBlocage.texteDe(robot.lookup("#enveloppeValider").queryAs(StackPane.class)))
+        // ⚠️ Le motif PARAÎT : « Créer » grisé sans explication ne dit pas pourquoi on ne peut plus
+        // déclarer, et c'est justement ce que ce cas fait juger.
+        assertThat(InfobulleDeBlocage.montrerEtLire(
+                        robot.lookup("#enveloppeValider").query(), robot))
                 .contains("existe déjà")
                 .doesNotContain("6 chiffres");
         Respiration.surLeMomentCle(robot);
