@@ -4,13 +4,16 @@ import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.RegionDuCarre;
 import fr.univ_amu.iut.commun.model.RegionsFrancaises;
 import fr.univ_amu.iut.commun.model.Severite;
+import fr.univ_amu.iut.sites.model.CommuneDuPoint;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -55,21 +58,33 @@ public final class AuditDepartementDuPoint {
 
     /// Les constats de tous les points de tous les sites, dans l'ordre des sites puis des points.
     List<ConstatAudit> auditer() {
+        // ⚠️ Points et communes lus **par lot** (#4280) : la boucle en lançait une requête par site, puis
+        // une par point pour sa commune. Même défaut que #4251, #4271 et #4278, de moindre ampleur -
+        // mesuré à chaud, 130 ms à cent cinquante carrés, et qui croît avec l'inventaire.
+        List<Site> sites = siteDao.findAll();
+        Map<Long, List<PointDEcoute>> pointsParSite =
+                pointDao.findParSites(sites.stream().map(Site::id).toList());
+        Map<Long, Commune> communes = new HashMap<>();
+        for (CommuneDuPoint resolue : communeDao.findAll()) {
+            communes.put(resolue.idPoint(), resolue.commune());
+        }
+
         List<ConstatAudit> constats = new ArrayList<>();
-        for (Site site : siteDao.findAll()) {
+        for (Site site : sites) {
             Optional<String> duCarre = RegionDuCarre.departement(site.numeroCarre());
             if (duCarre.isEmpty()) {
                 continue; // numéro illisible : pas de première lecture, rien à confronter
             }
-            for (PointDEcoute point : pointDao.findBySite(site.id())) {
-                confronter(site, point, duCarre.get()).ifPresent(constats::add);
+            for (PointDEcoute point : pointsParSite.getOrDefault(site.id(), List.of())) {
+                confronter(site, point, duCarre.get(), communes).ifPresent(constats::add);
             }
         }
         return List.copyOf(constats);
     }
 
-    private Optional<ConstatAudit> confronter(Site site, PointDEcoute point, String duCarre) {
-        Optional<Commune> commune = communeDao.pour(point.id());
+    private Optional<ConstatAudit> confronter(
+            Site site, PointDEcoute point, String duCarre, Map<Long, Commune> communes) {
+        Optional<Commune> commune = Optional.ofNullable(communes.get(point.id()));
         if (commune.isEmpty()) {
             return Optional.empty(); // commune non résolue : pas de seconde lecture
         }

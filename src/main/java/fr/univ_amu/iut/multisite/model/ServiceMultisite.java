@@ -141,10 +141,10 @@ public class ServiceMultisite {
 
     /// Vue agrégée des passages de l'utilisateur, filtrée puis triée.
     ///
-    /// Parcourt les sites de l'utilisateur ([SiteDao#findByUtilisateur(String)]), leurs
-    /// points ([PointDao#findBySite(Long)]) et les passages de chaque point
-    /// ([PassageDao#findByPoint(Long)]), aplatit chaque passage en [LignePassage], ne conserve que
-    /// les lignes acceptées par `filtres`, et trie selon `tri`.
+    /// Lit les sites de l'utilisateur ([SiteDao#findByUtilisateur(String)]), puis leurs points
+    /// ([PointDao#findParSites]) et les passages de ces points ([PassageDao#findParPoints]) **en deux
+    /// requêtes**, aplatit chaque passage en [LignePassage], ne conserve que les lignes acceptées par
+    /// `filtres`, et trie selon `tri`.
     ///
     /// @return liste mutable et triée (sûre à réordonner par l'appelant)
     public List<LignePassage> listerPassages(String idUtilisateur, FiltresMultisite filtres, TriMultisite tri) {
