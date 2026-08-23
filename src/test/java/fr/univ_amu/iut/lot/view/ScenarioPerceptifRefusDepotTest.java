@@ -6,7 +6,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provides;
@@ -14,16 +13,11 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import com.google.inject.util.Modules;
-import fr.univ_amu.iut.App;
-import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
-import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.commun.view.ExecuteurTache;
-import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -43,9 +37,9 @@ import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
@@ -55,7 +49,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Labeled;
 import javafx.stage.Stage;
@@ -122,22 +115,18 @@ class ScenarioPerceptifRefusDepotTest {
     private ContextePassage contexte;
 
     @Start
-    void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-scenario-refus");
-        System.setProperty("vigiechiro.workspace", workspace.toString());
-
-        injector =
-                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
+    void start(Stage stage) throws IOException {
+        injector = BancDeRecette.surLeChrome()
+                .taille(1180, 900)
+                // Asynchrone, comme les autres scénarios perceptifs : en synchrone le dépôt se ferait sur
+                // le fil JavaFX, aucune image ne serait rendue, et le passage à juger n'existerait sur
+                // aucune trame.
+                .executeur(BancDeRecette.Executeur.ASYNCHRONE)
+                .remplacer(new AbstractModule() {
                     @Override
                     protected void configure() {
-                        // Asynchrone, comme les autres scénarios perceptifs : en synchrone le dépôt se ferait
-                        // sur le fil JavaFX, aucune image ne serait rendue, et le passage à juger n'existerait
-                        // sur aucune trame.
-                        bind(ExecuteurTache.class)
-                                .to(ExecuteurTacheAsynchrone.class)
-                                .in(Singleton.class);
-                        // ⚠️ Qualifiant intermédiaire, comme `DepotVigieChiroModule` : sans lui, la cible de
-                        // l'`OptionalBinder` se référencerait elle-même.
+                        // ⚠️ Qualifiant intermédiaire, comme `DepotVigieChiroModule` : sans lui, la cible
+                        // de l'`OptionalBinder` se référencerait elle-même.
                         OptionalBinder.newOptionalBinder(binder(), DepotVigieChiro.class)
                                 .setBinding()
                                 .to(Key.get(DepotVigieChiro.class, Names.named(QUALIFIANT)));
@@ -147,27 +136,22 @@ class ScenarioPerceptifRefusDepotTest {
                     @Singleton
                     @Named(QUALIFIANT)
                     DepotVigieChiro depotQuiRefuse() {
-                        // ⚠️ `DepotVigieChiro` est final : pas de sous-classe possible. Le dépôt le mocke déjà
-                        // ailleurs (`LotDepotConnecteViewTest`), et c'est la seule frontière truquée ici - tout
-                        // le reste du chemin, écran compris, est celui de la production.
+                        // ⚠️ `DepotVigieChiro` est final : pas de sous-classe possible. Le dépôt le mocke
+                        // déjà ailleurs (`LotDepotConnecteViewTest`), et c'est la seule frontière truquée
+                        // ici - tout le reste du chemin, écran compris, est celui de la production.
                         DepotVigieChiro faux = mock(DepotVigieChiro.class);
                         when(faux.deposer(any(), any(), any(), any())).thenReturn(bilanRefuse());
                         return faux;
                     }
-                }));
-
-        SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
-        new MigrationSchema(source).migrer();
-        contexte = semerUneNuitPreteADeposer(source, workspace);
-
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
-        FenetreDuBanc.poser(stage, loader.load(), 1180, 900);
-        // ⚠️ L'écran du lot est ouvert AVANT `show()`. Ouvert après, l'accueil paraissait une fraction
-        // de seconde puis l'écran du lot surgissait sans qu'aucun geste ne l'explique : le clip
-        // commençait sur un écran qui n'a rien à voir avec le cas.
-        injector.getInstance(NavigationLot.class).ouvrir(contexte);
-        FenetreDuBanc.afficher(stage);
+                })
+                .semer(inj -> contexte = semerUneNuitPreteADeposer(
+                        inj.getInstance(SourceDeDonnees.class),
+                        inj.getInstance(Workspace.class).racine()))
+                // ⚠️ L'écran du lot est ouvert AVANT `show()`. Ouvert après, l'accueil paraissait une
+                // fraction de seconde puis l'écran du lot surgissait sans qu'aucun geste ne l'explique :
+                // le clip commençait sur un écran qui n'a rien à voir avec le cas.
+                .ouvrir(inj -> inj.getInstance(NavigationLot.class).ouvrir(contexte))
+                .montrer(stage);
     }
 
     @AfterEach

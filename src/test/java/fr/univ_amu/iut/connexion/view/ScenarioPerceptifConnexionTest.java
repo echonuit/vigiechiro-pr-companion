@@ -5,27 +5,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.util.Modules;
-import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
-import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.commun.model.Horloge;
-import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.persistence.MigrationSchema;
-import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.commun.view.ExecuteurTache;
-import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
+import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
@@ -33,14 +22,10 @@ import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.recette.Seance;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -114,17 +99,15 @@ class ScenarioPerceptifConnexionTest {
 
     private Injector injector;
 
+    /// Le client bouchonné : la seule frontière que ce scénario remplace.
+    private final ClientVigieChiro client = mock(ClientVigieChiro.class);
+
     private Stage fenetre;
 
     @Start
     void start(Stage stage) throws IOException {
-        Path workspace = Files.createTempDirectory("vc-scenario-connexion");
-        System.setProperty("vigiechiro.workspace", workspace.toString());
-        StockageConnexion stockage = new StockageConnexion(new Workspace(workspace), Horloge.systeme());
-        ClientVigieChiro client = mock(ClientVigieChiro.class);
-        // La récupération PREND DU TEMPS, sans quoi il n'y aurait rien à voir : la zone de
-        // progression paraîtrait et disparaîtrait entre deux images. Hors séance filmée, aucune
-        // attente n'est payée.
+        // La récupération PREND DU TEMPS, sans quoi il n'y aurait rien à voir : la zone de progression
+        // paraîtrait et disparaîtrait entre deux images. Hors séance filmée, aucune attente n'est payée.
         when(client.moi()).thenAnswer(appel -> {
             if (Seance.filmee()) {
                 Thread.sleep(LATENCE_RECUPERATION_MS);
@@ -132,56 +115,28 @@ class ScenarioPerceptifConnexionTest {
             return ReponseApi.succes(new ProfilVigieChiro("u-scenario", "chiro", "observateur"));
         });
 
-        // ⚠️ L'application RÉELLE, et non une scène hôte vide. La version précédente montait un
-        // `StackPane` sans contenu ni dimensions, au motif que « ce qu'il faut voir est
-        // l'ouverture ». Le clip publié montrait donc un écran noir, un rectangle blanc de la
-        // taille d'une vignette, puis une modale posée dans un coin : rien qui permette de juger
-        // « la saisie est en place, rien ne se replace ». Un scénario perceptif se juge à l'oeil,
-        // et un oeil a besoin d'un contexte.
-        //
-        // `Modules.override` est le chemin que `RacineInjecteur` documente lui-même, et que les
-        // outils de capture empruntent déjà : on garde le câblage du produit, on ne remplace que ce
-        // que ce scénario doit tenir - le client, l'ouvreur de lien, et l'exécuteur.
-        injector =
-                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        // ⚠️ L'exécuteur ASYNCHRONE, celui de la production, et non le synchrone que
-                        // `@ImplementedBy` donne par défaut aux tests. Le transitoire de S1-27
-                        // n'existe que hors du fil JavaFX : en synchrone, la récupération bloque le
-                        // fil, aucune image n'est rendue pendant ce temps, et il n'y aurait rien à
-                        // filmer.
-                        //
-                        // C'est l'exact contraire du besoin des captures (#3242), qui exigent le
-                        // synchrone pour ne pas photographier un « Chargement… ». Ici, ce chargement
-                        // EST le sujet.
-                        bind(ExecuteurTache.class)
-                                .to(ExecuteurTacheAsynchrone.class)
-                                .in(Singleton.class);
-                    }
-
+        injector = BancDeRecette.surLeChrome()
+                .taille(LARGEUR, HAUTEUR)
+                // ⚠️ ASYNCHRONE, celui de la production. Le transitoire de S1-27 n'existe que hors du fil
+                // JavaFX : en synchrone, la récupération bloque le fil, aucune image n'est rendue pendant
+                // ce temps, et il n'y aurait rien à filmer. C'est l'exact contraire du besoin des
+                // captures (#3242), qui exigent le synchrone pour ne pas photographier un « Chargement… ».
+                // Ici, ce chargement EST le sujet.
+                .executeur(BancDeRecette.Executeur.ASYNCHRONE)
+                .remplacer(new AbstractModule() {
                     @Provides
-                    ConnexionViewModel viewModel() {
+                    ConnexionViewModel viewModel(StockageConnexion stockage) {
                         return new ConnexionViewModel(stockage, client, Set.of(), Optional.empty());
                     }
 
                     @Provides
                     OuvreurDeLien ouvreurDeLien() {
-                        return lien -> {
-                            // Le scénario n'ouvre aucun navigateur : rien à voir sur le film, et
-                            // rien à lancer sur la machine qui filme.
-                        };
+                        // Le scénario n'ouvre aucun navigateur : rien à voir sur le film, et rien à
+                        // lancer sur la machine qui filme.
+                        return lien -> {};
                     }
-                }));
-        new MigrationSchema(injector.getInstance(SourceDeDonnees.class)).migrer();
-
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
-        Parent racine = loader.load();
-        // ⚠️ La taille du produit, et `Habillage.scene` : c'est lui qui embarque la typographie, donc
-        // ce qui fait que le clip montre l'application telle qu'elle est livrée.
-        FenetreDuBanc.poser(stage, racine, LARGEUR, HAUTEUR);
-        FenetreDuBanc.afficher(stage);
+                })
+                .montrer(stage);
         fenetre = stage;
     }
 

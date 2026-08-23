@@ -2,26 +2,13 @@ package fr.univ_amu.iut.sites.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Singleton;
-import com.google.inject.util.Modules;
-import fr.univ_amu.iut.App;
-import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.commun.persistence.MigrationSchema;
-import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.commun.view.ExecuteurTache;
-import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
+import java.io.IOException;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -54,28 +41,13 @@ class MesSitesEtatVideViewTest {
     private Injector injector;
 
     @Start
-    void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-mes-sites-vide");
-        System.setProperty("vigiechiro.workspace", workspace.toString());
-        injector =
-                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(ExecuteurTache.class)
-                                .to(ExecuteurTacheSynchrone.class)
-                                .in(Singleton.class);
-                    }
-                }));
-        new MigrationSchema(injector.getInstance(SourceDeDonnees.class)).migrer();
-        // ⚠️ AUCUN seed, et c'est tout le sujet : la base est migrée, donc saine, et vide.
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
-        Parent racine = loader.load();
-        // ⚠️ `Habillage` via `FenetreDuBanc` : ces trois cas sont FILMÉS, et une scène montée sans
-        // habillage porte la police de la MACHINE (#3773, #4149).
-        FenetreDuBanc.poser(stage, racine, 1180, 900);
-        injector.getInstance(NavigationSites.class).ouvrirAccueil();
-        FenetreDuBanc.afficher(stage);
+    void start(Stage stage) throws IOException {
+        // ⚠️ AUCUN semis, et c'est tout le sujet : la base est migrée, donc saine, et vide.
+        injector = BancDeRecette.surLeChrome()
+                .taille(1180, 900)
+                .executeur(BancDeRecette.Executeur.SYNCHRONE)
+                .ouvrir(inj -> inj.getInstance(NavigationSites.class).ouvrirAccueil())
+                .montrer(stage);
     }
 
     @AfterEach

@@ -5,31 +5,25 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.inject.util.Modules;
-import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
-import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
-import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.commun.view.ExecuteurTache;
-import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
+import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
@@ -39,12 +33,10 @@ import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.SouhaitDeclaration;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -105,57 +97,47 @@ class ScenarioModaleCarreTest {
     private Injector injector;
 
     @Start
-    void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-scenario-modale-carre");
-        System.setProperty("vigiechiro.workspace", workspace.toString());
+    void start(Stage stage) throws IOException {
+        injector = BancDeRecette.surLeChrome()
+                .taille(1180, 900)
+                .executeur(BancDeRecette.Executeur.ASYNCHRONE)
+                .remplacer(liaison -> liaison.bind(ClientVigieChiro.class).toInstance(client), rapatriementBouchonne())
+                .semer(inj -> new UtilisateurDao(inj.getInstance(SourceDeDonnees.class))
+                        .insert(new Utilisateur(ID_USER, "Observateur")))
+                // ⚠️ Une connexion RÉELLE : depuis #4210, « Vérifier sur Vigie-Chiro » est fermé sans
+                // jeton. Ces scénarios jouent un utilisateur connecté ; ils doivent l'être pour de bon,
+                // au lieu de s'appuyer sur un bouton qui ne demandait rien à personne.
+                .connecte(ID_USER, "chiro", "observateur")
+                .ouvrir(inj -> inj.getInstance(NavigationSites.class).ouvrirAccueil())
+                .montrer(stage);
 
-        injector =
-                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(ExecuteurTache.class)
-                                .to(ExecuteurTacheAsynchrone.class)
-                                .in(Singleton.class);
-                        bind(ClientVigieChiro.class).toInstance(client);
-                    }
-
-                    // ⚠️ QUALIFIÉ : `RechercheCarreExistantModule` relie `Optional<RapatriementCarre>` à
-                    // ce nom, et un `@Provides` nu serait ignoré - le clic partirait alors au
-                    // rapatriement RÉEL, qui expire sans rien dire de plus.
-                    @Provides
-                    @Singleton
-                    @Named("vigiechiro-carre-existant")
-                    RapatriementCarre rapatriement(ImportSiteDistant importSiteDistant) {
-                        return new RapatriementCarre(client, importSiteDistant) {
-                            @Override
-                            public Resultat rapatrier(SouhaitDeclaration souhait) {
-                                return poserLeCarreEtSesPoints();
-                            }
-                        };
-                    }
-                }));
-
-        // ⚠️ Une connexion RÉELLE : depuis #4210, « Vérifier sur Vigie-Chiro » est fermé sans jeton.
-        // Ces scénarios jouent un utilisateur connecté ; ils doivent l'être pour de bon, au lieu de
-        // s'appuyer sur un bouton qui ne demandait rien à personne.
         // ⚠️ Le mock répond comme le VRAI client : `estConnecte()` demande « un jeton est-il
         // enregistré ? » et rien d'autre. Sans cela, le menu lit le stockage et dit « connecté »
         // pendant que « Récupérer depuis Vigie-Chiro » reste grisé en arrière-plan, parce que LUI
         // interroge le client. Le clip se contredisait à l'image, et c'est le produit qu'on accusait.
         StockageConnexion stockage = injector.getInstance(StockageConnexion.class);
         when(client.estConnecte()).thenAnswer(appel -> stockage.estConnecte());
+    }
 
-        seConnecter();
-
-        SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
-        new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Observateur"));
-
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
-        FenetreDuBanc.poser(stage, loader.load(), 1180, 900);
-        injector.getInstance(NavigationSites.class).ouvrirAccueil();
-        FenetreDuBanc.afficher(stage);
+    /// Le rapatriement, bouchonné et **qualifié**.
+    ///
+    /// ⚠️ `RechercheCarreExistantModule` relie `Optional<RapatriementCarre>` à ce nom, et un `@Provides`
+    /// nu serait ignoré - le clic partirait alors au rapatriement RÉEL, qui expire sans rien dire de
+    /// plus.
+    private Module rapatriementBouchonne() {
+        return new AbstractModule() {
+            @Provides
+            @Singleton
+            @Named("vigiechiro-carre-existant")
+            RapatriementCarre rapatriement(ImportSiteDistant importSiteDistant) {
+                return new RapatriementCarre(client, importSiteDistant) {
+                    @Override
+                    public Resultat rapatrier(SouhaitDeclaration souhait) {
+                        return poserLeCarreEtSesPoints();
+                    }
+                };
+            }
+        };
     }
 
     /// Enregistre une connexion, comme la modale de connexion le ferait.

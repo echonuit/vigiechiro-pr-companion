@@ -4,46 +4,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Singleton;
-import com.google.inject.util.Modules;
-import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
-import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
-import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.commun.view.ExecuteurTache;
-import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
+import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
@@ -86,23 +74,19 @@ class MesSitesViewTest {
     private final List<String> vuPendantLaSynchro = new ArrayList<>();
 
     @Start
-    void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-mes-sites");
-        System.setProperty("vigiechiro.workspace", workspace.toString());
-        // Composition réelle, mais exécuteur SYNCHRONE (#1212) : le chargement des cartes passe par
-        // l'occupation ; en asynchrone les assertions courraient contre le fil de chargement.
-        injector =
-                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(ExecuteurTache.class)
-                                .to(ExecuteurTacheSynchrone.class)
-                                .in(Singleton.class);
-                        // Client bouchonné : la synchronisation n'appelle rien, mais elle passe par lui -
-                        // c'est le seul endroit d'où observer l'écran PENDANT l'opération (#2606).
-                        bind(ClientVigieChiro.class).toInstance(client);
-                    }
-                }));
+    void start(Stage stage) throws IOException {
+        injector = BancDeRecette.surLeChrome()
+                .taille(1180, 900)
+                // SYNCHRONE (#1212) : le chargement des cartes passe par l'occupation ; en asynchrone
+                // les assertions courraient contre le fil de chargement.
+                .executeur(BancDeRecette.Executeur.SYNCHRONE)
+                // Client bouchonné : la synchronisation n'appelle rien, mais elle passe par lui - c'est
+                // le seul endroit d'où observer l'écran PENDANT l'opération (#2606).
+                .remplacer(liaison -> liaison.bind(ClientVigieChiro.class).toInstance(client))
+                .semer(this::seeder)
+                .ouvrir(inj -> inj.getInstance(NavigationSites.class).ouvrirAccueil())
+                .montrer(stage);
+
         // ⚠️ Le mock répond comme le VRAI client : `estConnecte()` demande « un jeton est-il
         // enregistré ? » et rien d'autre (`ClientVigieChiro:98`). Un clip peut donc MONTRER la
         // connexion rouvrir le geste, au lieu de basculer un booléen que le produit n'aurait pas vu
@@ -120,22 +104,12 @@ class MesSitesViewTest {
                         new SiteVigieChiro("vc-1", "Étang de la Tuilière", false, "640380", ID_USER, List.of()),
                         new SiteVigieChiro("vc-2", "ZAC Nord", false, "752204", ID_USER, List.of()))));
         when(client.mesParticipations()).thenReturn(ReponseApi.succes(List.of()));
-        SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
-        new MigrationSchema(source).migrer();
-        seeder(source);
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
-        Parent racine = loader.load();
-        // ⚠️ `Habillage` via `FenetreDuBanc`, et non `new Scene` : les six cas de cette classe sont
-        // FILMÉS, et une scène montée sans habillage porte la police de la MACHINE (#3773, #4149).
-        FenetreDuBanc.poser(stage, racine, 1180, 900);
-        injector.getInstance(NavigationSites.class).ouvrirAccueil();
-        FenetreDuBanc.afficher(stage);
     }
 
-    private void seeder(SourceDeDonnees source) {
+    private void seeder(Injector inj) {
+        SourceDeDonnees source = inj.getInstance(SourceDeDonnees.class);
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        ServiceSites service = injector.getInstance(ServiceSites.class);
+        ServiceSites service = inj.getInstance(ServiceSites.class);
         Site etang = service.creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
         service.ajouterPoint(etang.id(), "A1", 43.5, 5.4, "Chêne");
         Site zac = service.creerSite("752204", "ZAC Nord", Protocole.STANDARD, null, ID_USER);
