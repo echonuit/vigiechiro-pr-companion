@@ -89,6 +89,23 @@ données d'exemple ou de test.
 - Les workflows GitHub Actions tournent au **moindre privilège** (`maven.yml` : `permissions: contents:
   read`). N'élargir que là où c'est nécessaire (`contents: write` pour `capture-vues.yml`, qui pousse
   les aperçus).
+- **Un secret de plateforme ne se pose jamais dans l'`env:` d'un job** (#4303), et
+  `verifie-portee-des-secrets.sh` le refuse. Le mécanisme ne se voit pas en lisant le YAML :
+  `ConnexionModule.jetonPonctuel()` lit `System.getenv`, les **forks surefire héritent** de
+  l'environnement du job, et l'URL de base vaut la **production** par défaut. Posé trop haut, un jeton
+  Vigie-Chiro n'est pas offert au pas qui en a besoin mais à **toute la suite de tests**.
+
+    ⚠️ **Aucun rôle de la plateforme ne peut rattraper cela.** Le rôle `Lecteur` est déclaré dans
+    `ROLE_RULES` et **aucune route ne l'accepte** - `GET /sites`, `GET /participations`, `GET /donnees`
+    et jusqu'au `GET /moi` exigent `Observateur`. Un jeton en lecture seule n'existe pas : la lecture
+    seule ne tient que par la **portée** du secret et par le câblage du banc, qui lie sa propre source
+    de jeton plutôt que d'emprunter celle du processus (#4304, ADR 4134).
+
+    Le tournage connecté (`tournage-recette.yml`, drapeau `connecte`) emploie donc un secret **qui lui
+    est propre**, `VIGIECHIRO_TOKEN_TOURNAGE`, distinct de celui du contrat hebdomadaire. Ce qui les
+    sépare n'est pas l'accès - même compte, mêmes droits - mais le **cycle de vie** : celui du tournage
+    est **révoqué en fin de run** (`POST /logout`, #4305), parce qu'il produit une image que rien ne
+    masque et qui sera publiée. Le masquage de GitHub ne couvre que les **journaux**.
 
 ## Ce qui n'est pas protégé, et pourquoi
 

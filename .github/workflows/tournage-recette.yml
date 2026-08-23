@@ -11,11 +11,20 @@
 # gestionnaire de fenêtres - Windows et macOS compris, ce que le banc bash ne peut pas. Et il écrit
 # un fichier par test, donc restreindre le tournage se réduit à un `-Dtest=`.
 #
-# ## Ce qu'il ne fait pas
+# ## Ce qu'il publie, et ce qu'il ne publie pas
 #
-# ⚠️ Il ne PUBLIE pas. Les clips restent en artefact. La pré-version `clips-recette` reste alimentée
-# par `recette-filmee.yml`, et le sort du banc bash se décide à part, les deux bancs comparés sur la
-# même tournage. Deux dispositifs qui publieraient au même endroit se contrediraient tôt ou tard.
+# ⚠️ Il ne touche **jamais** à `clips-recette`, qui reste alimentée par `recette-filmee.yml`. Deux
+# dispositifs qui publieraient au même endroit se contrediraient tôt ou tard, et le sort du banc bash
+# se décide à part, les deux bancs comparés sur le même tournage.
+#
+# Il verse en revanche sur **deux** destinations qui lui sont propres :
+#
+#   - le TAG d'une version, préfixé `java-`, quand le train lui passe une version (#4258) ;
+#   - la pré-version `clips-connectes`, quand le tournage est CONNECTÉ (#4306). Celle-là ne se compare
+#     pas : ses clips suivent des données vivantes, et `comparer-tournages.yml` la refuse.
+#
+# ⚠️ Et « le reste demeure en artefact » n'est pas une protection : sur un dépôt public, un artefact se
+# télécharge SANS authentification (mesuré, cf. `dev-docs/spikes/tournage-contre-la-plateforme.md`).
 #
 # ## Le garde, et pourquoi il porte sur les CAS
 #
