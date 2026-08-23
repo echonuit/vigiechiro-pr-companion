@@ -30,7 +30,7 @@ Toutes les mesures datent du 2026-08-23, sur `echonuit/vigiechiro-pr-companion`,
 | Vers quel serveur pointe-t-on par défaut ? | `ConnexionModule.urlDeBase()` | la **production**, sauf `vigiechiro.url` / `VIGIECHIRO_URL` |
 | Quelle est la forme d'un jeton ? | `vigiechiro/xin/auth.py:212-213` | `[A-Z0-9]{32}`, tiré au hasard |
 | Un jeton se révoque-t-il ? | `vigiechiro/xin/auth.py:187-199` | `POST /logout`, `$unset` du jeton |
-| Existe-t-il un rôle sans écriture ? | `vigiechiro/settings.py:23-28` | `Lecteur`, qui n'inclut que `Lecteur` |
+| Existe-t-il un rôle sans écriture ? | `grep -rn "roles=.Lecteur" vigiechiro/` | **aucune route ne l'accepte**, `GET /moi` compris |
 
 Les quatre dernières lignes sont lues dans le code de la plateforme (backend Python-Eve), pas déduites
 de son comportement.
@@ -61,31 +61,43 @@ lit facilement comme une autorisation ; c'est pour cela que cette page l'écrit.
 
 ### Les options de transport, comparées
 
-| Option | Ce qui l'amène au job | Qui la pose | Ce qu'elle coûte | Verdict |
-|---|---|---|---|---|
-| **Entrée de `workflow_dispatch`** | `inputs.jeton` | quiconque peut lancer le workflow | rien à construire, mais la valeur est en clair dans les métadonnées, non masquée, et les journaux du run sont publics | **exclue** |
-| **Secret de dépôt** (`secrets.VIGIECHIRO_TOKEN`) | `env:` du pas | un mainteneur, par `gh secret set` | déjà en place pour `api-live.yml` ; masqué dans les journaux ; mais **partagé** avec le contrat hebdomadaire, qu'un jeton de tournage écraserait | possible, au prix d'un **second** secret |
-| **Secret d'environnement + règle de protection** | `environment:` déclaré par le job | un mainteneur, plus une règle d'approbation | isole le jeton au seul job qui déclare l'environnement, et un relecteur obligatoire fait du tournage connecté un geste approuvé ; aucun workflow du dépôt ne déclare `environment:` aujourd'hui, c'est donc de l'infrastructure neuve | **recommandée** |
-| **`secrets: inherit` en `workflow_call`** | l'appelant | l'appelant | commode le jour où le train appellera ce mode ; mais `inherit` passe **tous** les secrets, `FLATPAK_GPG_KEY` et `WINGET_TOKEN` compris, à un job qui exécute les tests du produit | à éviter ; déclarer le secret **nommément** sous `on.workflow_call.secrets` |
-| **Jeton court par échange OIDC** | `id-token: write` puis échange | personne, aujourd'hui | ce serait la bonne réponse : plus de secret au repos, une durée de vie de quelques minutes. La plateforme ne le permet pas (cf. ci-dessous) | **impossible sans travail côté plateforme** |
+⚠️ **L'axe n'est pas l'accès, c'est le cycle de vie.** Un secret de dépôt est lisible par **tous** les
+workflows du dépôt : un second secret de dépôt n'isole donc rien, et l'invoquer comme une séparation
+serait faux. Ce qui sépare réellement les deux usages est qu'ils veulent des durées différentes. Le
+contrat hebdomadaire veut un jeton **qui dure** et sait vivre avec son expiration ; le tournage veut un
+jeton **qui meurt** à la fin du run, parce qu'il produit une image que rien ne masque.
 
-**Recommandation : un secret d'environnement, nommé distinctement de celui du contrat, déclaré
-nommément à l'appel, et révoqué en fin de run.**
+| Option | Ce qui l'amène au job | Ce qu'elle coûte | Verdict |
+|---|---|---|---|
+| **Entrée de `workflow_dispatch`** | `inputs.jeton` | rien à construire, mais la valeur est en clair dans les métadonnées, non masquée, et les journaux du run sont publics | **exclue** |
+| **Réemploi de `VIGIECHIRO_TOKEN`** | `env:` du pas | rien à poser : le secret existe, l'objet est le même, le compte et les droits aussi. Mais le **révoquer en fin de run tue le contrat hebdomadaire** : le lundi suivant, `GET /moi` échoue, le run reste vert avec un avertissement, et la veille de fraîcheur commence son décompte vers le rouge à trois semaines | écartée pour son **cycle de vie**, non pour son accès |
+| **Un second secret, même compte, révoqué à chaque run** | `env:` du pas | un aller-retour navigateur et un `gh secret set` avant chaque tournage connecté. La plateforme stocke une **carte** de jetons par compte, donc les deux coexistent et révoquer l'un n'atteint pas l'autre | **retenue** |
+| **`secrets: inherit` en `workflow_call`** | l'appelant | commode le jour où le train appellera ce mode ; mais `inherit` passe **tous** les secrets, `FLATPAK_GPG_KEY` et `WINGET_TOKEN` compris, à un job qui exécute les tests du produit | à éviter ; déclarer le secret **nommément** sous `on.workflow_call.secrets` |
+| **Jeton court par échange OIDC** | `id-token: write` puis échange | ce serait la bonne réponse : plus de secret au repos, une durée de vie de quelques minutes. La plateforme ne le permet pas (cf. ci-dessous) | **impossible sans travail côté plateforme** |
 
-L'argument tient en trois points.
+**Recommandation : un second secret, frappé sur le même compte que celui du contrat, déclaré nommément
+à l'appel, et révoqué en fin de run.**
 
-Le **secret de dépôt seul** ne suffit pas parce que `VIGIECHIRO_TOKEN` est déjà pris : il alimente
-`api-live.yml`, dont la veille de fraîcheur rougit au bout de trois semaines sans vérification réelle.
-Un tournage qui poserait son jeton au même endroit rendrait cette veille inintelligible, et son
-expiration ferait passer le contrat hebdomadaire pour sauté. Deux usages, deux secrets.
+L'argument ne porte pas sur les droits. Il n'y a rien à séparer de ce côté : le compte est le même, les
+droits sont les mêmes, et il ne peut pas en être autrement puisqu'aucun rôle en lecture seule n'existe
+(cf. § 3). L'objet des deux usages est bien le même, « vérifier de temps en temps que l'application
+tient toujours face à la plateforme ».
 
-L'**environnement** apporte ce que le secret de dépôt ne peut pas donner : le jeton n'est visible que du
-job qui déclare l'environnement, et la règle de protection oblige à une approbation avant que ce job ne
-démarre. Un tournage connecté n'est pas une opération de routine ; qu'il demande un geste explicite est
-une propriété, pas une friction. Le coût est réel et il faut le dire : c'est le premier `environment:`
-du dépôt, donc une notion de plus à comprendre pour le prochain qui lira les workflows.
+Il porte sur ce qu'il advient du jeton **après**. Le tournage produit une image, et une image ne se
+masque pas ; à terme elle sera publiée, et une fuite sur un tag de version est définitive. Un jeton
+qu'on peut détruire à la fin du run est donc la dernière barrière quand les deux premières ont manqué,
+et c'est la seule qui ne dépende d'aucune relecture de YAML. Poser ce geste **dès le début** évite de
+l'ajouter le jour où la publication commencera, c'est-à-dire le jour où on l'oubliera.
 
-La **révocation** est ce qui rend le jeton réellement jetable, et la plateforme la donne (cf. § suivant).
+Son prix est une commande. C'est peu au regard de ce qu'il achète.
+
+⚠️ Ce que ce second secret **ne fait pas** : il n'isole rien. Tout workflow du dépôt peut le lire, comme
+il peut lire l'autre. Le confondre avec un cloisonnement rendrait la suite du raisonnement fausse.
+
+!!! note "Une règle d'approbation, si on la veut, se pose à part"
+    Un `environment:` déclaré par le job **sans y ranger aucun secret** suffit à exiger une approbation
+    avant qu'il ne démarre. C'est orthogonal au transport, et cela laisse `VIGIECHIRO_TOKEN` là où il
+    est. Aucun workflow du dépôt ne déclare `environment:` aujourd'hui : ce serait le premier.
 
 ### Ce que la plateforme permet, et qui ferme la porte OIDC
 
@@ -113,8 +125,9 @@ propriétés en découlent, et elles sont exactement ce qu'il faut ici :
 
 - **révoquer est une seule requête**, donc une étape `if: always()` en fin de tournage borne
   l'exposition à la durée du run, quelles que soient les fuites en aval ;
-- **révoquer n'affecte pas les autres jetons du compte**, donc la personne qui a posé le secret ne se
-  fait pas déconnecter de son navigateur.
+- **révoquer n'affecte pas les autres jetons du compte**, puisqu'un compte en porte une carte. Ni le
+  navigateur de qui a posé le secret, ni le jeton du contrat hebdomadaire ne sont atteints. C'est cette
+  propriété, et elle seule, qui rend le second secret possible sans rien coûter à `api-live.yml`.
 
 C'est ce qui rend « jeton jetable » autre chose qu'une formule.
 
@@ -212,15 +225,34 @@ Un mode connecté n'arme donc pas un scénario. Sans précaution, **il arme la s
 - **`env:` au pas, jamais au job.** La portée d'un secret est la première décision, pas la dernière.
 - **`VIGIECHIRO_URL` déclarée explicitement**, même quand elle vaut la production. Un défaut implicite
   qui pointe sur la production est un défaut qu'on oublie de relire.
-- **Un compte dédié, rétrogradé au rôle `Lecteur`.** `ROLE_RULES` donne à `Lecteur` le seul rôle
-  `Lecteur`, et toutes les routes d'écriture relevées portent `@requires_auth(roles='Observateur')` au
-  minimum. Un jeton de `Lecteur` rend l'écriture impossible **par le serveur**, et non par notre
-  discipline. C'est la seule parade qui survive à une erreur de câblage.
+- **La révocation en fin de run**, qui ne rend pas l'écriture impossible mais borne à la durée du run
+  ce qu'un jeton fuité permettrait.
 
-⚠️ Deux réserves honnêtes : rétrograder un compte demande un administrateur de la plateforme, donc une
-démarche auprès du MNHN/CESCO ; et le relevé des rôles est lu dans un code que nous ne contrôlons pas
-et qui peut changer. Une sonde qui vérifie qu'une écriture est bien refusée vaut mieux qu'une lecture
-de source.
+### La parade structurelle n'existe pas, et il faut le dire
+
+Une troisième parade avait été proposée ici, puis **retirée après vérification** : un compte dédié
+rétrogradé au rôle `Lecteur`, pour que ce soit le **serveur** qui refuse d'écrire, et non notre
+discipline.
+
+Elle ne marche pas. Le rôle `Lecteur` existe bien dans `ROLE_RULES`, mais **aucune route ne l'accepte** :
+
+```
+grep -rn "roles=.Lecteur" vigiechiro/   →   (vide)
+```
+
+`GET /sites`, `GET /participations`, `GET /donnees` et jusqu'au `GET /moi` dont `api-live.yml` se sert
+pour distinguer « jeton mort » de « contrat cassé » portent tous
+`@requires_auth(roles='Observateur')`. Un jeton de `Lecteur` ne lirait rien.
+
+⚠️ **Comment l'erreur s'est produite**, parce qu'elle se reproduira : le relevé de départ ne portait
+que sur les routes d'**écriture**, et il était juste. « Toutes les routes d'écriture exigent
+`Observateur` » est vrai, et ne dit rien du fait que les routes de **lecture** l'exigent aussi. Une
+mesure exacte sur une population choisie répond à une question qu'on n'a pas posée.
+
+**Conséquence, et c'est le vrai résultat de cette section** : la lecture seule ne peut être tenue que
+par le **câblage**. La règle « `env:` au pas, jamais au job » cesse d'être une bonne pratique pour
+devenir la seule protection contre une suite entière armée face à la production. Dans ce dépôt, une
+propriété qui ne tient que par la discipline appelle un garde ; sa forme se décidera au chantier.
 
 ### Si des écritures devenaient nécessaires
 
@@ -307,9 +339,9 @@ Elle trancherait trois choses :
 1. **la destination**, distincte, et le préfixe qui l'accompagne, pour que la comparaison de tournages
    ne mélange jamais deux populations de clips ;
 2. **la portée du secret**, au pas et non au job, parce que la portée par défaut arme la suite entière
-   contre la production ;
-3. **la lecture seule structurelle**, tenue par le rôle du compte et non par la discipline de celui qui
-   écrit le YAML.
+   contre la production, et qu'aucun rôle de la plateforme ne peut le rattraper ;
+3. **la durée de vie du jeton** : un jeton de tournage se révoque à la fin du run, donc il ne peut pas
+   être celui du contrat hebdomadaire, qui vit de durer.
 
 Elle s'écrira en passe 10, comme le veut le cycle, et portera le numéro de son chantier : **ADR 4291**.
 
