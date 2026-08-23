@@ -435,6 +435,21 @@ jobs:
         # commentaire pour qu'il ne la compte pas. Il ferme le trou de la passe 6 de clôture.
         run: python3 scripts/adr/verifie_scripts.py
 
+      - name: "Auto-test des passes du graphe de connaissance (bloquant, #4231)"
+        # Ces deux scripts n'avaient aucun dispositif, et les deux annonçaient des chiffres
+        # qu'aucune donnée ne soutenait : une couverture CLI de « 128/69 », et un rapport ouvrant
+        # sur « 0 files · ~0 words » suivi de « corpus is large enough ». Le premier était visible
+        # parce qu'un ratio au-dessus de 1 crève les yeux ; il aurait tout aussi bien pu rendre
+        # « 65/69 », faux, plausible, et cru sur parole.
+        #
+        # Les auto-tests n'ont besoin d'aucune dépendance : `graphify` n'est pas installé sur le
+        # runner, et le cas qui prouve que la détection vient bien de lui injecte un faux module
+        # plutôt que de balayer le disque. Coût mesuré : 0,03 s pour les deux.
+        run: |
+          set -euo pipefail
+          python3 scripts/graphify/pont_ressources.py --auto-test
+          python3 scripts/graphify/rebuild.py --auto-test
+
       - name: Auto-test de la veille des plateformes (bloquant, #3526)
         # Le verdict rougit dans le train de publication ; l'auto-test du JUGE tourne ici, à chaque PR.
         # Un juge qui aurait cessé de juger laisserait partir le train sur une preuve absente, et son
