@@ -38,8 +38,9 @@ adresses ne changent pas. C'est ce qui permet à cette page de les écrire en du
 
 ### Et une copie sur le tag de chaque version
 
-Depuis #4258, le tournage du train verse **aussi** ses clips sur le tag de la version qu'il vient de
-filmer, préfixés `bash-`. Les deux destinations ne servent pas à la même chose :
+Depuis #4258, le train fait tourner **les deux bancs** sur la version qu'il vient de publier, et verse
+leurs clips sur son **tag** : préfixés `bash-` pour le banc historique, `java-` pour le banc en Java
+pur. Les deux destinations ne servent pas à la même chose :
 
 | | `clips-recette` | le tag `vX.Y.Z` |
 |---|---|---|
@@ -62,9 +63,21 @@ reconstituera après coup**.
     pré-version du spike avaient été reversées par-dessus, et la date de publication d'une pré-version
     ne dit rien de la date de son contenu.
 
-⚠️ Le préfixe `bash-` réserve la place du banc Java, dont les clips portent **exactement les mêmes
-noms** : 50 sur 51 sont communs aux deux bancs. Les verser tous deux sans préfixe les ferait s'écraser
-en silence.
+⚠️ Les préfixes ne sont pas décoratifs. Les deux bancs nomment leurs pièces **exactement pareil** :
+50 sur 51 sont communes. Sans préfixe, le second versement écraserait le premier **en silence**.
+
+!!! tip "Pourquoi les deux bancs, et pas encore l'un ou l'autre"
+
+    C'est la transition qui se prépare. Tant que le sort du banc bash n'est pas tranché, chaque
+    version porte les deux tournages : ils se comparent alors sur le produit du jour, au lieu de se
+    comparer sur une page datée qui mourra avec la décision. Le jour venu, il n'y aura qu'un des deux
+    appels à retirer de `release.yml`.
+
+    ⚠️ Une différence compte dès aujourd'hui : le banc Java compare les cas **obtenus** aux cas
+    **attendus** et échoue s'il en manque un, si bien qu'un tournage amputé ne peut pas se graver sur
+    un tag. Le banc bash n'a pas cet oracle, son artefact n'emportant pas le compte attendu ; son
+    index versé dit donc en tête ce qu'il contient, pour qu'un trou se constate au lieu de se
+    deviner.
 
 ## Produire un tournage complet
 
