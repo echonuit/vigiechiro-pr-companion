@@ -42,7 +42,7 @@ Ce qu'il vaut la peine de comparer, dans cet ordre :
 !!! warning "Deux tournages, deux dates"
 
     Le banc bash alimente `clips-recette` par le flux **recette filmée** ; le banc Java a versé sur
-    `clips-java-planche` le 22 août 2026, à la main, depuis l'artefact du tournage
+    `clips-java` le 22 août 2026, à la main, depuis l'artefact du tournage
     [32599101955](https://github.com/echonuit/vigiechiro-pr-companion/actions/runs/32599101955).
     Un lecteur vide d'un côté dit que ce banc-là n'a pas retourné ce cas depuis qu'il existe.
 
@@ -51,238 +51,238 @@ Ce qu'il vaut la peine de comparer, dans cet ordre :
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifIssuesConnexionTest.les_trois_etapes_de_la_modale.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioPerceptifIssuesConnexionTest.les_trois_etapes_de_la_modale.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioPerceptifIssuesConnexionTest.les_trois_etapes_de_la_modale.mp4"></video></td>
 </tr></table>
 
 ### S1-11 · `la_deconnexion_demande_confirmation`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifIssuesConnexionTest.la_deconnexion_demande_confirmation.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioPerceptifIssuesConnexionTest.la_deconnexion_demande_confirmation.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioPerceptifIssuesConnexionTest.la_deconnexion_demande_confirmation.mp4"></video></td>
 </tr></table>
 
 ### S1-01 · `chaque_carte_ouvre_ce_qu_elle_annonce`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce.mp4"></video></td>
 </tr></table>
 
 ### S1-28 · `le_menu_ne_porte_plus_la_fiche_espece`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioAccueilTest.le_menu_ne_porte_plus_la_fiche_espece.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioAccueilTest.le_menu_ne_porte_plus_la_fiche_espece.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioAccueilTest.le_menu_ne_porte_plus_la_fiche_espece.mp4"></video></td>
 </tr></table>
 
 ### S1-01 · `accueil_regroupe_en_deux_prismes`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MainViewTest.accueil_regroupe_en_deux_prismes.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MainViewTest.accueil_regroupe_en_deux_prismes.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MainViewTest.accueil_regroupe_en_deux_prismes.mp4"></video></td>
 </tr></table>
 
 ### S1-02 · `bandeau_masque_si_base_vide`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MainViewTest.bandeau_masque_si_base_vide.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MainViewTest.bandeau_masque_si_base_vide.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MainViewTest.bandeau_masque_si_base_vide.mp4"></video></td>
 </tr></table>
 
 ### S1-03 · `ctrl_f_active_la_recherche`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MainViewTest.ctrl_f_active_la_recherche.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MainViewTest.ctrl_f_active_la_recherche.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MainViewTest.ctrl_f_active_la_recherche.mp4"></video></td>
 </tr></table>
 
 ### S1-03 · `fil_ariane_reflete_le_parcours`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MainViewTest.fil_ariane_reflete_le_parcours.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MainViewTest.fil_ariane_reflete_le_parcours.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MainViewTest.fil_ariane_reflete_le_parcours.mp4"></video></td>
 </tr></table>
 
 ### S1-09 · `bandeau_suit_une_mutation_sans_navigation`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MainViewTest.bandeau_suit_une_mutation_sans_navigation.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MainViewTest.bandeau_suit_une_mutation_sans_navigation.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MainViewTest.bandeau_suit_une_mutation_sans_navigation.mp4"></video></td>
 </tr></table>
 
 ### S1-10 · `bandeau_suit_une_restauration_sans_navigation`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MainViewTest.bandeau_suit_une_restauration_sans_navigation.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MainViewTest.bandeau_suit_une_restauration_sans_navigation.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MainViewTest.bandeau_suit_une_restauration_sans_navigation.mp4"></video></td>
 </tr></table>
 
 ### S1-29 · `menu_reglages_ouvre_l_ecran`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MainViewTest.menu_reglages_ouvre_l_ecran.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MainViewTest.menu_reglages_ouvre_l_ecran.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MainViewTest.menu_reglages_ouvre_l_ecran.mp4"></video></td>
 </tr></table>
 
 ### S1-12 · `l_etat_vide_explique_le_prerequis`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesEtatVideViewTest.l_etat_vide_explique_le_prerequis.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MesSitesEtatVideViewTest.l_etat_vide_explique_le_prerequis.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MesSitesEtatVideViewTest.l_etat_vide_explique_le_prerequis.mp4"></video></td>
 </tr></table>
 
 ### S1-12 · `l_etat_vide_parait_sur_une_base_vierge`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesEtatVideViewTest.l_etat_vide_parait_sur_une_base_vierge.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MesSitesEtatVideViewTest.l_etat_vide_parait_sur_une_base_vierge.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MesSitesEtatVideViewTest.l_etat_vide_parait_sur_une_base_vierge.mp4"></video></td>
 </tr></table>
 
 ### S1-12 · `l_etat_vide_porte_sa_porte_de_sortie`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesEtatVideViewTest.l_etat_vide_porte_sa_porte_de_sortie.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MesSitesEtatVideViewTest.l_etat_vide_porte_sa_porte_de_sortie.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MesSitesEtatVideViewTest.l_etat_vide_porte_sa_porte_de_sortie.mp4"></video></td>
 </tr></table>
 
 ### S1-13 · `creer_s_ouvre_au_sixieme_chiffre_et_ajoute_le_carre`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.creer_s_ouvre_au_sixieme_chiffre_et_ajoute_le_carre.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioModaleCarreTest.creer_s_ouvre_au_sixieme_chiffre_et_ajoute_le_carre.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioModaleCarreTest.creer_s_ouvre_au_sixieme_chiffre_et_ajoute_le_carre.mp4"></video></td>
 </tr></table>
 
 ### S1-23 · `renommer_le_carre_met_a_jour_l_entete`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete.mp4"></video></td>
 </tr></table>
 
 ### S1-25 · `annuler_ne_change_rien_a_la_liste`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.annuler_ne_change_rien_a_la_liste.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioModaleCarreTest.annuler_ne_change_rien_a_la_liste.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioModaleCarreTest.annuler_ne_change_rien_a_la_liste.mp4"></video></td>
 </tr></table>
 
 ### S1-14 · `affiche_les_cartes`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.affiche_les_cartes.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MesSitesViewTest.affiche_les_cartes.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MesSitesViewTest.affiche_les_cartes.mp4"></video></td>
 </tr></table>
 
 ### S1-15 · `entree_ouvre_le_detail`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.entree_ouvre_le_detail.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MesSitesViewTest.entree_ouvre_le_detail.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MesSitesViewTest.entree_ouvre_le_detail.mp4"></video></td>
 </tr></table>
 
 ### S1-15 · `espace_ouvre_le_detail`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.espace_ouvre_le_detail.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MesSitesViewTest.espace_ouvre_le_detail.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MesSitesViewTest.espace_ouvre_le_detail.mp4"></video></td>
 </tr></table>
 
 ### S1-15 · `une_carte_est_atteignable_au_clavier`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.une_carte_est_atteignable_au_clavier.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MesSitesViewTest.une_carte_est_atteignable_au_clavier.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MesSitesViewTest.une_carte_est_atteignable_au_clavier.mp4"></video></td>
 </tr></table>
 
 ### S1-16 · `hors_connexion_la_recuperation_est_fermee`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.hors_connexion_la_recuperation_est_fermee.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MesSitesViewTest.hors_connexion_la_recuperation_est_fermee.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MesSitesViewTest.hors_connexion_la_recuperation_est_fermee.mp4"></video></td>
 </tr></table>
 
 ### S1-16 · `une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MesSitesViewTest.une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MesSitesViewTest.une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte.mp4"></video></td>
 </tr></table>
 
 ### S1-17 · `overlay_occupation_masque_apres_chargement`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.overlay_occupation_masque_apres_chargement.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/MesSitesViewTest.overlay_occupation_masque_apres_chargement.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/MesSitesViewTest.overlay_occupation_masque_apres_chargement.mp4"></video></td>
 </tr></table>
 
 ### S1-18 · `le_bandeau_dit_l_identite_du_carre`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.le_bandeau_dit_l_identite_du_carre.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioFicheSiteTest.le_bandeau_dit_l_identite_du_carre.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioFicheSiteTest.le_bandeau_dit_l_identite_du_carre.mp4"></video></td>
 </tr></table>
 
 ### S1-19 · `les_boutons_disent_ce_qui_les_empeche`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.les_boutons_disent_ce_qui_les_empeche.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioFicheSiteTest.les_boutons_disent_ce_qui_les_empeche.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioFicheSiteTest.les_boutons_disent_ce_qui_les_empeche.mp4"></video></td>
 </tr></table>
 
 ### S1-20 · `les_cartes_de_points_portent_gps_et_distance`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.les_cartes_de_points_portent_gps_et_distance.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioFicheSiteTest.les_cartes_de_points_portent_gps_et_distance.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioFicheSiteTest.les_cartes_de_points_portent_gps_et_distance.mp4"></video></td>
 </tr></table>
 
 ### S1-21 · `le_tableau_des_passages_porte_ses_sept_colonnes`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.le_tableau_des_passages_porte_ses_sept_colonnes.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioFicheSiteTest.le_tableau_des_passages_porte_ses_sept_colonnes.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioFicheSiteTest.le_tableau_des_passages_porte_ses_sept_colonnes.mp4"></video></td>
 </tr></table>
 
 ### S1-35 · `le_carre_rattache_porte_son_badge`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge.mp4"></video></td>
 </tr></table>
 
 ### S1-22 · `renommer_le_carre_met_a_jour_l_entete`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete.mp4"></video></td>
 </tr></table>
 
 ### S1-24 · `ajouter_un_point_le_fait_paraitre_sur_la_fiche`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.ajouter_un_point_le_fait_paraitre_sur_la_fiche.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioFicheSiteTest.ajouter_un_point_le_fait_paraitre_sur_la_fiche.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioFicheSiteTest.ajouter_un_point_le_fait_paraitre_sur_la_fiche.mp4"></video></td>
 </tr></table>
 
 ### S1-30 · `le_carre_libre_s_annonce_libre`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.le_carre_libre_s_annonce_libre.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioModaleCarreTest.le_carre_libre_s_annonce_libre.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioModaleCarreTest.le_carre_libre_s_annonce_libre.mp4"></video></td>
 </tr></table>
 
 ### S1-31 · `le_carre_deja_declare_nomme_le_site`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.le_carre_deja_declare_nomme_le_site.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioModaleCarreTest.le_carre_deja_declare_nomme_le_site.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioModaleCarreTest.le_carre_deja_declare_nomme_le_site.mp4"></video></td>
 </tr></table>
 
 ### S1-32 · `corriger_un_chiffre_efface_le_verdict`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.corriger_un_chiffre_efface_le_verdict.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioModaleCarreTest.corriger_un_chiffre_efface_le_verdict.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioModaleCarreTest.corriger_un_chiffre_efface_le_verdict.mp4"></video></td>
 </tr></table>
 
 ### S1-33 · `hors_connexion_verifier_est_ferme_mais_declarer_reste_possible`
@@ -301,14 +301,14 @@ Ce qu'il vaut la peine de comparer, dans cet ordre :
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.recuperer_ferme_la_modale_et_rend_compte.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioModaleCarreTest.recuperer_ferme_la_modale_et_rend_compte.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioModaleCarreTest.recuperer_ferme_la_modale_et_rend_compte.mp4"></video></td>
 </tr></table>
 
 ### S1-36 · `creer_reste_ferme_puis_se_rouvre`
 
 <table style="width:100%; table-layout:fixed"><tr>
 <td style="width:50%; padding:0 6px 0 0"><strong>bash</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.creer_reste_ferme_puis_se_rouvre.mp4"></video></td>
-<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java-planche/ScenarioModaleCarreTest.creer_reste_ferme_puis_se_rouvre.mp4"></video></td>
+<td style="width:50%; padding:0 0 0 6px"><strong>Java</strong><br><video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-java/ScenarioModaleCarreTest.creer_reste_ferme_puis_se_rouvre.mp4"></video></td>
 </tr></table>
 
 ## Ce que la comparaison ne couvre pas
