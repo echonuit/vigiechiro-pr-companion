@@ -94,7 +94,13 @@ public class ConnexionModule extends ModuleDeFeature {
 
     /// Jeton fourni **hors connexion enregistrée**, consulté à chaque requête (surchargeable en cours
     /// d'exécution) : propriété système d'abord, variable d'environnement ensuite ; vide sinon.
-    static Optional<String> jetonPonctuel() {
+    ///
+    /// ⚠️ **Publique, et pour une seule raison** : `recette.BancDeRecette` doit pouvoir lire ce jeton
+    /// pour le déposer dans sa propre réserve quand un scénario déclare vouloir la plateforme réelle
+    /// (#4304). Il ne le lit pas pour s'en servir directement, il le lit pour **choisir** de s'en
+    /// servir. Recopier ces deux lignes là-bas donnerait deux portes pour un même secret, justes le
+    /// jour où on les écrit et divergentes ensuite.
+    public static Optional<String> jetonPonctuel() {
         return Optional.ofNullable(System.getProperty("vigiechiro.token"))
                 .filter(jeton -> !jeton.isBlank())
                 .or(() -> Optional.ofNullable(System.getenv("VIGIECHIRO_TOKEN")).filter(jeton -> !jeton.isBlank()));
