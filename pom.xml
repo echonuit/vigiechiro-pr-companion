@@ -107,10 +107,14 @@
         <jacoco.haltOnFailure>false</jacoco.haltOnFailure>
 
         <!-- Sélection des tags JUnit 5 par Surefire, pilotée par propriété (override fiable en profil).
-             Par défaut : on N'inclut aucun tag précis (tout tourne) SAUF `api-live`, exclu du build/CI.
-             Le profil -Papi-live inverse ces deux propriétés pour ne lancer QUE la suite de contrat. -->
+             Par défaut : on N'inclut aucun tag précis (tout tourne) SAUF deux familles qui exigent la
+             plateforme RÉELLE et qui échoueraient sans jeton.
+             Le profil -Papi-live inverse ces deux propriétés pour ne lancer QUE la suite de contrat.
+             Le tournage connecté (#4307) fait de même avec `recette-connectee` : il passe
+             -Dsurefire.groups=recette-connectee, et ne joue donc QUE les scénarios écrits pour la
+             plateforme, jamais les autres. -->
         <surefire.groups></surefire.groups>
-        <surefire.excludedGroups>api-live</surefire.excludedGroups>
+        <surefire.excludedGroups>api-live,recette-connectee</surefire.excludedGroups>
 
         <!-- Forks Surefire parallèles : une JVM par cœur (1C). Le toolkit JavaFX est un
              singleton PAR JVM : la parallélisation intra-JVM est impossible pour les tests
@@ -701,8 +705,11 @@
                     <forkCount>${surefire.forkCount}</forkCount>
                     <reuseForks>true</reuseForks>
                     <!-- La suite de contrat API (@Tag("api-live")) tape l'API VigieChiro réelle : JAMAIS
-                         dans le build/CI par défaut (surefire.excludedGroups=api-live). On la lance à la
-                         main via le profil -Papi-live, qui inverse ces deux propriétés. -->
+                         dans le build/CI par défaut. On la lance à la main via le profil -Papi-live, qui
+                         inverse ces deux propriétés.
+                         Même parti pour @Tag("recette-connectee") : ces scénarios filment l'application
+                         face à la vraie plateforme et REFUSENT de monter sans jeton (#4304). Les laisser
+                         dans le build par défaut le ferait rougir sur chaque PR. -->
                     <groups>${surefire.groups}</groups>
                     <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                     <!-- Headless Platform JavaFX 26 (Gluon) : plateforme Glass logicielle, sans

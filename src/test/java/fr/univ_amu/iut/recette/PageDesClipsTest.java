@@ -44,13 +44,26 @@ class PageDesClipsTest {
 
     private static final Path PAGE_ASSERTES = Path.of("dev-docs", "recette", "clips-assertes.md");
 
+    /// La page des clips tournés contre la VRAIE plateforme (#4306). Ce n'est pas une troisième
+    /// famille de cas : ce sont les MÊMES cas, vus contre une autre frontière, et leurs pièces vivent
+    /// sur une autre pré-version parce que des données vivantes ne se comparent pas.
+    ///
+    /// ⚠️ Elle compte pour ce garde au même titre que les deux autres. Un clip qu'aucune page ne
+    /// montre est un clip que personne ne verra, et la source ne change rien à cela.
+    private static final Path PAGE_CONNECTES = Path.of("dev-docs", "recette", "clips-connectes.md");
+
     private static final Path SESSIONS = Path.of("dev-docs", "recette", "sessions");
 
     private static final Path SOURCES_DE_TEST = Path.of("src", "test", "java");
 
-    /// L'adresse d'un clip dans la page : `.../clips-recette/<Classe>.<methode>.mp4`.
+    /// L'adresse d'un clip dans une page : `.../clips-recette/<Classe>.<methode>.mp4`, ou la même
+    /// sous `clips-connectes` pour un clip tourné contre la plateforme (#4306).
+    ///
+    /// ⚠️ Les deux pré-versions, et pas un motif ouvert sur n'importe quelle destination : une
+    /// adresse qui pointerait ailleurs - un tag de version, par exemple - montrerait un clip figé
+    /// pendant que la page prétend montrer le tournage courant.
     private static final Pattern CLIP =
-            Pattern.compile("/releases/download/clips-recette/([A-Za-z0-9]+)\\.([a-z0-9_]+)\\.mp4");
+            Pattern.compile("/releases/download/(?:clips-recette|clips-connectes)/([A-Za-z0-9]+)\\.([a-z0-9_]+)\\.mp4");
 
     /// Le titre d'une section de cas : `### S6-27 · ...`.
     private static final Pattern SECTION = Pattern.compile("^### (S\\d+-\\d+) ·", Pattern.MULTILINE);
@@ -81,7 +94,7 @@ class PageDesClipsTest {
     }
 
     @Test
-    @DisplayName("#4056 : chaque adresse écrite dans les DEUX pages désigne une méthode qui existe")
+    @DisplayName("#4056 : chaque adresse écrite dans les pages de clips désigne une méthode qui existe")
     void chaque_adresse_designe_une_methode_qui_existe() {
         Map<String, String> introuvables = new TreeMap<>();
         // ⚠️ Les DEUX pages. Ce garde s'appelait « chaque adresse » et ne lisait que celle des cas
@@ -93,7 +106,7 @@ class PageDesClipsTest {
         // Le sens de la vérification n'est pas symétrique : le voisin part des TESTS et vérifie qu'ils
         // sont annoncés ; celui-ci part des ADRESSES et vérifie qu'elles mènent quelque part. Un test
         // renommé casse le second, pas le premier.
-        Matcher m = CLIP.matcher(lire(PAGE) + "\n" + lire(PAGE_ASSERTES));
+        Matcher m = CLIP.matcher(lire(PAGE) + "\n" + lire(PAGE_ASSERTES) + "\n" + lire(PAGE_CONNECTES));
         while (m.find()) {
             String classe = m.group(1);
             String methode = m.group(2);
@@ -110,9 +123,9 @@ class PageDesClipsTest {
     }
 
     @Test
-    @DisplayName("#4056 : tout test qui cite un cas a son clip sur l'une des deux pages")
+    @DisplayName("#4056 : tout test qui cite un cas a son clip sur l'une des pages")
     void tout_test_qui_cite_un_cas_est_sur_une_page() {
-        String pages = lire(PAGE) + lire(PAGE_ASSERTES);
+        String pages = lire(PAGE) + lire(PAGE_ASSERTES) + lire(PAGE_CONNECTES);
         Set<String> absents = new TreeSet<>();
         for (String joue : testsQuiCitentUnCas()) {
             if (!pages.contains(joue + ".mp4")) {
