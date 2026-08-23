@@ -2,6 +2,7 @@ package fr.univ_amu.iut.passage.model.dao;
 
 import fr.univ_amu.iut.commun.persistence.DaoGenerique;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
+import fr.univ_amu.iut.commun.persistence.LotsDeParametres;
 import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.EmpreinteContenu;
@@ -10,7 +11,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /// DAO de l'entité [SequenceDEcoute] (table `listening_sequence`).
 ///
@@ -82,6 +87,24 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
     /// Séquences d'une session, triées par nom de fichier.
     public List<SequenceDEcoute> findBySession(Long idSession) {
         return query("SELECT * FROM listening_sequence WHERE session_id = ? ORDER BY file_name", MAPPER, idSession);
+    }
+
+    /// Les séquences de **plusieurs identifiants à la fois**, indexées par identifiant (#4289).
+    ///
+    /// L'export des observations et de leurs sons lisait une séquence par son emballé, puis sa session
+    /// pour résoudre un chemin relatif : deux requêtes par cri exporté, et un export porte volontiers
+    /// plusieurs milliers de cris.
+    ///
+    /// Découpé en tranches ([LotsDeParametres]) : SQLite refuse au-delà de quelques centaines de
+    /// paramètres liés, et un export volumineux dépasserait la borne là où la boucle, elle, marchait.
+    public Map<Long, SequenceDEcoute> findParIds(Collection<Long> ids) {
+        Map<Long, SequenceDEcoute> parId = new HashMap<>();
+        for (List<Long> tranche : LotsDeParametres.decouper(ids)) {
+            String trous = tranche.stream().map(id -> "?").collect(Collectors.joining(", "));
+            query("SELECT * FROM listening_sequence WHERE id IN (" + trous + ")", MAPPER, tranche.toArray())
+                    .forEach(sequence -> parId.put(sequence.id(), sequence));
+        }
+        return parId;
     }
 
     /// Séquences issues d'un même enregistrement original, triées par index dans le source.
