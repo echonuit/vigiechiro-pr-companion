@@ -15,7 +15,7 @@
 #
 # ⚠️ Il ne PUBLIE pas. Les clips restent en artefact. La pré-version `clips-recette` reste alimentée
 # par `recette-filmee.yml`, et le sort du banc bash se décide à part, les deux bancs comparés sur la
-# même planche. Deux dispositifs qui publieraient au même endroit se contrediraient tôt ou tard.
+# même tournage. Deux dispositifs qui publieraient au même endroit se contrediraient tôt ou tard.
 #
 # ## Le garde, et pourquoi il porte sur les CAS
 #
@@ -32,7 +32,7 @@ on:
   workflow_dispatch:
     inputs:
       session:
-        description: "Session à filmer (« toutes » pour la planche entière)"
+        description: "Session à filmer (« toutes » pour tous les cas cités)"
         type: choice
         default: "S6"
         options:
