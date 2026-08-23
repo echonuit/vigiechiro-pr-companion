@@ -337,6 +337,19 @@ jobs:
           ./.github/scripts/verifie-inventaires-ci.sh --auto-test
           ./.github/scripts/verifie-inventaires-ci.sh
 
+      - name: "Un nom d'étape dit en entier ce qu'il écrit (bloquant, #4255)"
+        # Un `#` précédé d'une espace ouvre un commentaire YAML, y compris au milieu d'un nom non
+        # cité : `name: Auto-test des scripts ADR (bloquant, #2467)` valait `… (bloquant,`. Six
+        # étapes de `lint.yml` et `maven.yml` perdaient ainsi leur numéro d'issue - c'est-à-dire ce
+        # qui sert à retrouver pourquoi elles existent. Le fichier avait raison, l'interface
+        # tronquait, et rien ne signalait l'écart.
+        #
+        # L'auto-test d'abord : une garde qui aurait cessé de voir laisserait revenir la troncature
+        # sur un dépôt propre, et son silence passerait pour un feu vert.
+        run: |
+          set -euo pipefail
+          ./.github/scripts/verifie-noms-d-etapes.sh --auto-test
+          ./.github/scripts/verifie-noms-d-etapes.sh
       - name: Aucun jeton VigieChiro en clair
         # Le scan de secrets de GitHub ne reconnaît que les motifs de FOURNISSEURS ; un jeton
         # VigieChiro est une chaîne opaque qu'aucun catalogue ne connaît, et les motifs
@@ -427,7 +440,7 @@ jobs:
           done
           exit "$echec"
 
-      - name: Auto-test des scripts ADR (bloquant, #2467)
+      - name: "Auto-test des scripts ADR (bloquant, #2467)"
         # L'étape précédente échoue quand un script SUR-compte (un cas s'ajoute). Elle ne voit pas la
         # déflation : un script qui, par régression, CESSERAIT de détecter ferait baisser son compte
         # sous le cliquet, et resterait vert pendant qu'une vraie violation passe - un faux vert.
@@ -450,19 +463,19 @@ jobs:
           python3 scripts/graphify/pont_ressources.py --auto-test
           python3 scripts/graphify/rebuild.py --auto-test
 
-      - name: Auto-test de la veille des plateformes (bloquant, #3526)
+      - name: "Auto-test de la veille des plateformes (bloquant, #3526)"
         # Le verdict rougit dans le train de publication ; l'auto-test du JUGE tourne ici, à chaque PR.
         # Un juge qui aurait cessé de juger laisserait partir le train sur une preuve absente, et son
         # silence passerait pour un feu vert - c'est le patron de `veille-contrat-api.sh`.
         run: bash .github/scripts/veille-plateformes.sh --auto-test
 
-      - name: Auto-test du garde de durée du portail (bloquant, #3661)
+      - name: "Auto-test du garde de durée du portail (bloquant, #3661)"
         # Il est arrivé avec un fichier `bats` plutôt qu'un auto-test - la seule exception des onze
         # scripts -, ce qui faisait attendre à ses cas l'assemblage d'un fat-jar de 80 Mo dont ils
         # n'ont aucun besoin. Rentré dans le rang, il s'exécute ici, sans rien construire.
         run: bash .github/scripts/mesure-duree-portail.sh --auto-test
 
-      - name: Auto-test du garde de titre de PR (bloquant, #2947)
+      - name: "Auto-test du garde de titre de PR (bloquant, #2947)"
         # Même raisonnement que l'étape précédente, appliqué au garde qui vit hors de `scripts/adr`.
         # Il refuse deux choses : un titre hors Conventional Commits, et un tiret cadratin. La seconde
         # règle compte doublement, parce que ce titre devient la ligne du CHANGELOG à la fusion en

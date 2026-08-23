@@ -101,10 +101,18 @@ if bloc is None:
 # elle ne regardait pas là. Un inventaire aveugle à un dossier annonce la complétude qu'il n'a pas
 # (#4013).
 autotestes = set()
+# ⚠️ Et pas seulement le shell. Le tableau porte `scripts/adr/verifie_scripts.py` de longue date,
+# mais ces motifs s'arrêtaient à `*.sh` : les deux gardes du graphe (#4231) y sont entrées parce que
+# leur auteur savait qu'il fallait le faire, pas parce que la garde l'a exigé. Aveugle à un dossier
+# hier (#4013), aveugle à une EXTENSION aujourd'hui - le même défaut, et toujours sous la forme d'un
+# vert (#4255).
 motifs = [
     os.path.join(racine, ".github", "scripts", "*.sh"),
+    os.path.join(racine, ".github", "scripts", "*.py"),
     os.path.join(racine, ".github", "assets", "*.sh"),
+    os.path.join(racine, ".github", "assets", "*.py"),
     os.path.join(racine, "scripts", "**", "*.sh"),
+    os.path.join(racine, "scripts", "**", "*.py"),
 ]
 for motif in motifs:
     for chemin in glob.glob(motif, recursive=True):
@@ -236,6 +244,22 @@ DOC
     # qu'un laissait `check-captures.sh` et ses voisins hors de portée.
     monter && printf 'echo --auto-test\n' > "${bac}/depot/.github/assets/check-oublie.sh"
     verifie 1 "une garde autotestée de assets/ est vue aussi" "check-oublie.sh"
+
+    # ⚠️ Le même cas en Python. Le tableau porte `scripts/adr/verifie_scripts.py` depuis longtemps,
+    # mais les motifs ne balayaient que le shell : les deux gardes du graphe (#4231) y sont entrées
+    # parce que leur auteur savait qu'il fallait le faire, pas parce que la garde l'a exigé. Une
+    # exigence tenue de mémoire finit par tomber - c'est la raison d'être de ce script.
+    monter && mkdir -p "${bac}/depot/scripts/outil" \
+        && printf "if '--auto-test' in argv:\n    pass\n" > "${bac}/depot/scripts/outil/garde_oubliee.py"
+    verifie 1 "une garde autotestée en Python est vue aussi" "garde_oubliee.py"
+
+    # Et son pendant : inscrite au tableau, elle ne doit plus rien reprocher. Une regle qui
+    # refuse tout est aussi inutile qu'une regle qui accepte tout.
+    monter && mkdir -p "${bac}/depot/scripts/outil" \
+        && printf "if '--auto-test' in argv:\n    pass\n" > "${bac}/depot/scripts/outil/garde_oubliee.py" \
+        && sed -i 's@^## Suite$@| `scripts/outil/garde_oubliee.py` | un autre truc | `lint.yml` |\n\n## Suite@' \
+            "${bac}/depot/dev-docs/ci-cd-release.md"
+    verifie 0 "la même garde Python, inscrite au tableau, repasse au vert"
 
     monter && sed -i "s/-Dtest='UnTest'/-Dtest='AutreTest'/" "${bac}/depot/.github/workflows/maven.yml"
     verifie 1 "une classe jouée dont le fichier n'est pas surveillé est vue" "AutreTest"
