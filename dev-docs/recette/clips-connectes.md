@@ -5,11 +5,12 @@ ses fixtures. Ils vivent à part, sur la pré-version
 [`clips-connectes`](https://github.com/echonuit/vigiechiro-pr-companion/releases/tag/clips-connectes),
 et cette page dit pourquoi et comment les lire.
 
-!!! warning "La pré-version est encore vide, et ce n'est pas une panne"
+!!! warning "Un lecteur vide dit « pas encore tourné », jamais « le produit est cassé »"
 
-    Aucun scénario n'appelle `BancDeRecette.connecteALaPlateforme()` à ce jour : le dispositif existe,
-    les scénarios viennent avec #4307. Un lecteur vide sur cette page signifie donc « pas encore
-    tourné », jamais « le produit est cassé ».
+    La pré-version se peuple par un **tournage**, qui est manuel : tant qu'aucun tournage connecté n'a
+    eu lieu depuis qu'un scénario existe, son lecteur reste vide. C'est la même règle que pour les deux
+    autres pages, et `PageDesClipsTest` garde la correspondance entre les cas et les adresses, pas la
+    présence des fichiers.
 
 ## Ce qu'un clip connecté prouve, et qu'un autre ne peut pas
 
@@ -62,6 +63,35 @@ https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-conn
 ⚠️ Les pièces ne portent **aucun préfixe**, contrairement à celles d'un tag de version. La séparation
 est portée par la pré-version elle-même : un préfixe sert à distinguer deux populations rangées au même
 endroit, et il n'y en a qu'une ici.
+
+## Les clips
+
+<!-- Les adresses sont gardées par `PageDesClipsTest` : chacune doit désigner un test qui existe, et
+     tout test citant un cas doit figurer sur l'une des pages de clips. Une adresse morte rend un
+     lecteur vide, et un lecteur vide se lit comme un défaut du produit. -->
+
+### S8-05 · l'avancement paraît dans la modale
+
+> L'avancement paraît **dans** la modale de connexion, sans seconde fenêtre, et « Fermer » y est grisé.
+
+Ce que ce clip montre et qu'un clip bouchonné ne montrerait pas : la progression suit une **vraie**
+latence réseau, celle du `GET /moi` puis des rapprocheurs. Bouchonnée, elle n'est qu'une temporisation
+choisie pour qu'il y ait quelque chose à filmer.
+
+<video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteConnexionTest.l_avancement_parait_dans_la_modale.mp4"></video>
+
+### S8-06 · la modale annonce l'identité
+
+> À la fin, la modale de connexion annonce l'identité **et** le résumé de ce qui a été récupéré.
+
+Le pseudo affiché est celui que la plateforme a rendu. Le résumé, lui, dépend de ce que le compte de
+tournage contient : c'est la première chose que ce clip apprendra.
+
+⚠️ Ce cas n'asserte que l'**identité**. Le résumé fait partie de ce que la case demande, mais son
+contenu dépend du compte : l'asserter aujourd'hui figerait une attente qu'aucune mesure ne soutient
+encore.
+
+<video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteConnexionTest.la_modale_annonce_l_identite.mp4"></video>
 
 ## Comment en produire
 

@@ -207,13 +207,21 @@ jobs:
         shell: bash
         env:
           SESSION: ${{ inputs.session }}
+          CONNECTE: ${{ inputs.connecte }}
         run: |
           set -euo pipefail
           ./mvnw -B -q test --file pom.xml -Dtest=CorrespondanceRecetteTest -DfailIfNoTests=false
           derive=target/recette/sessions-a-filmer.tsv
           [ -s "${derive}" ] || { echo "::error::${derive} est absent ou vide : la dérivation n'a rien produit."; exit 1; }
 
-          if [ "${SESSION}" = "toutes" ]; then
+          # ⚠️ En connecté, la dérivation par session ne s'applique pas : le corpus connecté est
+          # choisi par un TAG, pas par une session, et le compte de la session mélangerait les
+          # scénarios bouchonnés avec les autres. L'oracle exhaustif est donc remplacé, plus bas, par
+          # un contrôle plus faible - et qui le DIT.
+          if [ "${CONNECTE}" = "true" ]; then
+            classes=""
+            attendus=0
+          elif [ "${SESSION}" = "toutes" ]; then
             classes=$(awk -F'\t' '{print $3}' "${derive}" | tr ',' '\n' | sort -u | paste -sd,)
             attendus=$(awk -F'\t' '{s += $2} END {print s + 0}' "${derive}")
           else
@@ -287,8 +295,16 @@ jobs:
           VIGIECHIRO_URL: ${{ inputs.connecte && 'https://vigiechiro.herokuapp.com/api/v1' || '' }}
         run: |
           set -uo pipefail
+          # ⚠️ Connecté, le tournage ne joue QUE les scénarios écrits pour la plateforme
+          # (`@Tag("recette-connectee")`), et il les joue TOUS, sans se restreindre à une session. Le
+          # tag est exclu du build par défaut : sans jeton, ces scénarios refusent de monter, et les
+          # laisser dans la suite ordinaire la ferait rougir sur chaque PR (#4307).
+          selection=(-Dtest="${{ steps.liste.outputs.classes }}")
+          if [ "${{ inputs.connecte }}" = "true" ]; then
+            selection=(-Dsurefire.groups=recette-connectee)
+          fi
           ./mvnw -B test --file pom.xml \
-            -Dtest='${{ steps.liste.outputs.classes }}' \
+            "${selection[@]}" \
             -DfailIfNoTests=false \
             -Dmaven.test.failure.ignore=true \
             -Djunit.jupiter.extensions.autodetection.enabled=true \
@@ -303,6 +319,7 @@ jobs:
         env:
           SESSION: ${{ inputs.session }}
           ATTENDUS: ${{ steps.liste.outputs.attendus }}
+          CONNECTE: ${{ inputs.connecte }}
         run: |
           set -uo pipefail
           index=target/recette/clips/index.md
@@ -331,6 +348,26 @@ jobs:
           } >> "${GITHUB_STEP_SUMMARY}"
 
           echo "cas obtenus : ${obtenus} / ${ATTENDUS}, clips : ${clips}"
+
+          # ⚠️ Connecté, ce garde est PLUS FAIBLE, et il faut le savoir plutôt que de le découvrir.
+          # Le corpus connecté se choisit par un tag, et rien ne dérive encore le nombre de cas qu'il
+          # cite : on ne peut donc pas dire « il en manque un ». On vérifie qu'il a produit quelque
+          # chose, ce qui attrape un tournage entièrement mort, et rien de plus. Dériver ce compte est
+          # une suite (#4307).
+          if [ "${CONNECTE}" = "true" ]; then
+            {
+              echo
+              echo "⚠️ Tournage connecté : l'oracle exhaustif ne s'applique pas. Le corpus est choisi"
+              echo "par un tag, pas par une session, et son nombre de cas n'est pas dérivé. Ce passage"
+              echo "vérifie seulement qu'au moins un cas est sorti."
+            } >> "${GITHUB_STEP_SUMMARY}"
+            [ "${obtenus}" -ge 1 ] || {
+              echo "::error::Aucun cas indexé : le tournage connecté n'a rien produit."
+              exit 1
+            }
+            exit 0
+          fi
+
           [ "${obtenus}" -eq "${ATTENDUS}" ] || {
             echo "::error::${obtenus} cas sur ${ATTENDUS} : le tournage est incomplet."
             exit 1
