@@ -712,6 +712,32 @@ PMD / ArchUnit ne se désactivent **jamais** pour « faire passer » un build (c
   Sans lui, il mesure la police de la **machine hôte** au lieu de celle du produit, et son verdict
   dépend de ce qui a tourné avant lui dans le même fork. `ScenesHabilleesTest` le garde (#3773).
 
+### Un cas de recette montre un état ET son contraire
+
+Un bouton grisé, un bandeau masqué, un voile qui a cédé, une liste qui n'a pas changé : ce sont des
+**absences**, et une absence n'a pas d'image. Un cas qui fait juger un état montre donc **aussi** le
+moment où la chose est là - sinon le spectateur regarde un écran immobile en cherchant ce qu'il devrait
+y voir.
+
+Trois formes, selon ce que le cas éprouve :
+
+| Forme | Exemple |
+|---|---|
+| le contraire **dans le temps** | `S1-19` ouvre sur le carré où les deux commandes sont actives, avant celui où elles ne le sont pas |
+| le contraire **par le voisinage** | `S1-16` montre « Récupérer » grisé contre « + Nouveau site » en couleur |
+| le **jumeau**, dans un autre cas | `S1-25` montre qu'annuler n'ajoute rien, `S1-13` que valider ajoute |
+
+Corollaire : **un clip qui remplace le geste par son effet ne montre pas le produit.** Il montre une
+conséquence dont la cause est hors champ. D'où la règle que le pointeur **s'arrête** sur sa cible avant
+d'appuyer (`GesteVisible`), et que le motif d'un blocage **paraît** au lieu d'être lu par programme
+([ADR 4234](decisions/4234-un-motif-de-blocage-se-montre-il-ne-se-lit-pas.md)).
+
+⚠️ La règle n'oblige pas à **fabriquer** le contraire. Quand il semble introuvable, la question est
+d'abord « sur quelles données ai-je mesuré ? ». `S1-17` a été déclaré infilmable au vu d'une fixture de
+deux sites ; sur cent cinquante carrés, le voile dure un demi-seconde.
+
+Voir [ADR 4166](decisions/4166-un-etat-ne-se-juge-que-contre-son-contraire.md).
+
 ### ⚠️ Certains défauts ne se voient pas depuis ce poste - il faut les sonder
 
 Quatre fois sur la campagne #3802, une mesure locale a rendu **vert** sans rien dire : `Noto Sans` est
