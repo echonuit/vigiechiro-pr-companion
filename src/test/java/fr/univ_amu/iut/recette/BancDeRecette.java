@@ -4,9 +4,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
@@ -14,6 +16,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.connexion.di.ConnexionModule;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import java.io.IOException;
@@ -91,6 +94,7 @@ public final class BancDeRecette {
     private Semis semis = injecteur -> {};
     private Consumer<Injector> ouverture = injecteur -> {};
     private ProfilVigieChiro profilConnecte;
+    private boolean surLaPlateforme;
 
     /// Ce qu'un scénario écrit avant que l'écran ne s'ouvre.
     ///
@@ -145,9 +149,42 @@ public final class BancDeRecette {
     /// ⚠️ Posée AVANT le chargement du chrome : c'est à la construction du menu que
     /// `NavigationConnexion.libelleMenu()` est lu, et une connexion posée après laisserait l'entrée
     /// afficher « Se connecter à Vigie-Chiro… » pendant que la scène joue un utilisateur connecté.
+    /// ⚠️ **Factice veut dire factice**, y compris pendant un tournage connecté : le banc lie sa propre
+    /// source de jeton et ignore celui du processus (cf. [#montrer(Stage)]).
     public BancDeRecette connecte(String id, String pseudo, String role) {
+        if (surLaPlateforme) {
+            throw new IllegalStateException(exclusion());
+        }
         this.profilConnecte = new ProfilVigieChiro(id, pseudo, role);
         return this;
+    }
+
+    /// Enregistre le jeton **réel** du tournage connecté, sans profil, et **sans le faire paraître**.
+    ///
+    /// ## Pourquoi sans profil
+    ///
+    /// `ConnexionViewModel.jetonAVerifier()` rend le jeton enregistré tant que le profil est vide
+    /// (#1369), et la modale le **revérifie à son ouverture, sans geste**, progression comprise. C'est
+    /// ce qui permet de filmer la connexion à la plateforme réelle sans jamais coller un caractère dans
+    /// le champ - lequel est un `TextField` et non un `PasswordField`, donc lisible sur le clip.
+    ///
+    /// ## Pourquoi il refuse plutôt que de se dégrader
+    ///
+    /// Sans jeton, ce banc filmerait un écran hors ligne parfaitement convaincant, et le cas serait
+    /// **muet sur son propre objet** (ADR 4142). Un scénario qui déclare vouloir la plateforme et ne la
+    /// trouve pas n'a rien à montrer : il s'arrête, et il dit quoi poser.
+    public BancDeRecette connecteALaPlateforme() {
+        if (profilConnecte != null) {
+            throw new IllegalStateException(exclusion());
+        }
+        this.surLaPlateforme = true;
+        return this;
+    }
+
+    private static String exclusion() {
+        return "Un banc est connecté en factice ou à la plateforme réelle, jamais les deux : le premier"
+                + " montre un écran, le second éprouve une frontière. Choisir lequel des deux ce"
+                + " scénario est.";
     }
 
     /// L'écran par lequel le scénario commence.
@@ -178,6 +215,24 @@ public final class BancDeRecette {
                         .in(Singleton.class);
             }
         });
+        // ⚠️ Le banc LIE SA PROPRE SOURCE DE JETON, et c'est la figure de l'ADR 4134 d'un cran plus
+        // haut : là c'était la fenêtre primaire de TestFX, ici c'est l'environnement du processus.
+        //
+        // `ConnexionModule` lie `() -> jetonPonctuel().or(stockage::token)`, où le jeton ponctuel -
+        // propriété `vigiechiro.token`, sinon variable `VIGIECHIRO_TOKEN` - L'EMPORTE. C'est juste pour
+        // la CLI, à qui `--token` sert précisément à passer outre. Ce ne l'est pas ici : un scénario qui
+        // a demandé une connexion FACTICE parlerait à la plateforme réelle dès que le pas qui filme
+        // porte le secret, avec un écran gardant l'apparence du profil semé et rien pour le signaler.
+        //
+        // Le banc lit donc SA réserve, et elle seule. Ce qu'il y met est la seule différence entre les
+        // deux modes ci-dessous.
+        surcharges.add(new AbstractModule() {
+            @Provides
+            @Singleton
+            FournisseurToken sourceDuBanc(StockageConnexion reserve) {
+                return reserve::token;
+            }
+        });
         surcharges.addAll(remplacements);
         Injector injecteur =
                 Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(surcharges));
@@ -186,6 +241,17 @@ public final class BancDeRecette {
         semis.semer(injecteur);
         if (profilConnecte != null) {
             injecteur.getInstance(StockageConnexion.class).enregistrer("jeton-de-recette", profilConnecte);
+            injecteur.getInstance(RefletDuJeton.class).relire();
+        } else if (surLaPlateforme) {
+            // Sans profil : la modale le revérifiera d'elle-même à l'ouverture (#1369), ce qui filme la
+            // connexion réelle sans qu'un caractère du jeton passe par le champ.
+            String jeton = ConnexionModule.jetonPonctuel()
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Ce scénario a déclaré vouloir la plateforme réelle et aucun jeton n'est là."
+                                    + " Poser VIGIECHIRO_TOKEN dans l'env du PAS qui filme, jamais dans"
+                                    + " celui du job. Sans jeton, ce banc filmerait un écran hors ligne"
+                                    + " convaincant et muet sur son propre objet."));
+            injecteur.getInstance(StockageConnexion.class).enregistrer(jeton, null);
             injecteur.getInstance(RefletDuJeton.class).relire();
         }
 

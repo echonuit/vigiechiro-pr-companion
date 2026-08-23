@@ -26,7 +26,10 @@
 
 name: tournage de recette
 
-run-name: "tournage ${{ inputs.session }} sur ${{ inputs.plateforme }}"
+# ⚠️ Le `run-name` est PUBLIC : sur ce dépôt, le `display_title` d'un run se lit sans authentification
+# (mesuré, cf. `dev-docs/spikes/tournage-contre-la-plateforme.md`). On y met donc des choix, jamais une
+# valeur. « connecté » est un fait utile à lire dans la liste des runs ; le jeton, lui, n'y passe pas.
+run-name: "tournage ${{ inputs.session }} sur ${{ inputs.plateforme }}${{ inputs.connecte && ' · connecté' || '' }}"
 
 on:
   workflow_dispatch:
@@ -56,6 +59,10 @@ on:
           - "ubuntu"
           - "windows"
           - "macos"
+      connecte:
+        description: "Parler à la VRAIE plateforme Vigie-Chiro (lecture seule) au lieu des fixtures"
+        type: boolean
+        default: false
 
   # ⚠️ Un second bloc, et non le même : `workflow_call` ne connaît pas `type: choice`. Les valeurs
   # possibles restent celles de la liste ci-dessus, et c'est l'appelant qui en répond.
@@ -78,6 +85,18 @@ on:
         description: "Le tag de la version que ces clips montrent. Vide : rien n'est versé."
         type: string
         default: ""
+      connecte:
+        description: "Parler à la VRAIE plateforme Vigie-Chiro (lecture seule) au lieu des fixtures"
+        type: boolean
+        default: false
+
+    # ⚠️ Déclaré NOMMÉMENT, et surtout pas `secrets: inherit`. L'héritage passerait aussi
+    # `FLATPAK_GPG_KEY` et `WINGET_TOKEN` à un job qui exécute les tests du produit, c'est-à-dire du
+    # code qui change à chaque PR, pour la commodité de ne pas écrire trois lignes.
+    secrets:
+      VIGIECHIRO_TOKEN_TOURNAGE:
+        description: "Jeton du tournage connecté. Frappé sur le même compte que celui du contrat, mais SIEN : il est révoqué en fin de run (#4305), ce que le jeton du contrat hebdomadaire ne supporterait pas."
+        required: false
 
 permissions:
   contents: read
@@ -231,8 +250,41 @@ jobs:
       # Ce qui la rend sûre est ailleurs : `EnregistreurDeFilm.aFilmer` écarte les tests qui ne
       # citent aucun cas (#4162). Sans ce filtre, la même ligne rendrait des centaines de clips de
       # carton.
+      # ⚠️ Le tournage connecté REFUSE de partir sans son jeton, plutôt que de filmer hors ligne. Un
+      # écran déconnecté est parfaitement convaincant : le clip ne serait pas faux, il serait muet sur
+      # son propre objet (ADR 4142), et on le regarderait en croyant savoir. Le banc porte le même
+      # refus (`BancDeRecette#connecteALaPlateforme`) ; celui-ci arrive plus tôt et coûte moins cher.
+      - name: Le tournage connecté a-t-il son jeton ?
+        if: ${{ inputs.connecte }}
+        shell: bash
+        env:
+          JETON: ${{ secrets.VIGIECHIRO_TOKEN_TOURNAGE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${JETON}" ]; then
+            echo "::error::Tournage connecté demandé, secret VIGIECHIRO_TOKEN_TOURNAGE absent. Le poser :"
+            echo "::error::gh secret set VIGIECHIRO_TOKEN_TOURNAGE (jeton Vigie-Chiro, 14 jours, révoqué en fin de run)."
+            exit 1
+          fi
+          echo "Jeton présent : le tournage parlera à la plateforme réelle, en lecture." >> "${GITHUB_STEP_SUMMARY}"
+
+      # ⚠️ Le secret vit dans l'`env:` de CE PAS, jamais dans celui du job, et
+      # `verifie-portee-des-secrets.sh` (#4303) le refuse ailleurs. La raison n'est pas cosmétique :
+      # `ConnexionModule.jetonPonctuel()` lit `System.getenv`, les forks surefire héritent de
+      # l'environnement du job, et l'URL de base vaut la production par défaut.
+      #
+      # ⚠️ Et ce pas-ci lance TOUTE la liste de classes, qui partagent donc cet environnement. Ce qui
+      # empêche un scénario non connecté de s'en servir n'est pas la portée du secret mais le banc
+      # lui-même : depuis #4304 il lie sa propre source de jeton, et seul `connecteALaPlateforme()`
+      # va chercher celui du processus.
+      #
+      # ⚠️ `VIGIECHIRO_URL` est DÉCLARÉE, même quand elle vaut la production. Un défaut implicite qui
+      # pointe sur la production est un défaut qu'on oublie de relire.
       - name: Filmer
         shell: bash
+        env:
+          VIGIECHIRO_TOKEN: ${{ inputs.connecte && secrets.VIGIECHIRO_TOKEN_TOURNAGE || '' }}
+          VIGIECHIRO_URL: ${{ inputs.connecte && 'https://vigiechiro.herokuapp.com/api/v1' || '' }}
         run: |
           set -uo pipefail
           ./mvnw -B test --file pom.xml \
