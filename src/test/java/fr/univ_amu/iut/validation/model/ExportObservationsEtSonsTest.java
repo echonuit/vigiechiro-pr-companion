@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
 
 /// Export ZIP « observations + sons » (#2792) : CSV octet-identique à l'export CSV seul, séquences
 /// dédupliquées, son introuvable compté sans bloquer, sessions homonymes départagées, annulation
@@ -309,5 +310,36 @@ class ExportObservationsEtSonsTest {
                 null,
                 0,
                 "Aix-en-Provence");
+    }
+
+    @Test
+    @DisplayName("#4289 : l'export lit les séquences par LOT, pas un son à la fois")
+    void l_export_lit_par_lot() throws IOException {
+        List<LigneObservationAudio> lignes = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            long id = creerSequence("Car640380-2026-Pass" + (i + 1) + "-Z1", "s" + i + ".wav", new byte[] {1});
+            lignes.add(ligne(id, "s" + i + ".wav"));
+        }
+        SequenceDao sequencesSurveillees = Mockito.spy(sequenceDao);
+        SessionDao sessionsSurveillees = Mockito.spy(new SessionDao(source));
+        Mockito.clearInvocations(sequencesSurveillees, sessionsSurveillees);
+
+        new ExportObservationsEtSons(sequencesSurveillees, sessionsSurveillees)
+                .exporter(
+                        lignes,
+                        workspace.resolve("lot.zip"),
+                        taxon -> false,
+                        progression -> {},
+                        JetonAnnulation.neutre());
+
+        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : la machine des relevés portait un banc
+        // filmé (charge 12), et tout chronométrage y variait du simple au double.
+        //
+        // Le défaut (#4289) : deux requêtes par son exporté - la séquence, puis sa session pour résoudre
+        // un chemin relatif. Un export de plusieurs milliers de cris en faisait autant.
+        Mockito.verify(sequencesSurveillees, Mockito.never()).findById(Mockito.any());
+        Mockito.verify(sequencesSurveillees, Mockito.times(1)).findParIds(Mockito.any());
+        Mockito.verify(sessionsSurveillees, Mockito.never()).findById(Mockito.any());
+        Mockito.verify(sessionsSurveillees, Mockito.times(1)).findAll();
     }
 }
