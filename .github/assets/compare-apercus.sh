@@ -40,13 +40,24 @@ part_changee() {
   # `compare -metric AE` écrit son compte sur la SORTIE D'ERREUR et rend 1 dès qu'il y a une
   # différence : sans `|| true`, `set -e` ferait passer une mesure réussie pour un échec.
   pixels=$(compare -metric AE "$avant" "$apres" null: 2>&1 || true)
-  pixels=${pixels%%[^0-9]*}
+  # ⚠️ Le PREMIER MOT, lu par `awk`. Au-delà du million, `compare` rend la NOTATION SCIENTIFIQUE -
+  # « 1.2034e+06 (1) » - et un découpage sur les chiffres s'arrête au point : il rendait « 1 », soit
+  # 0,00 % là où tout l'écran avait changé (#4274).
+  pixels=${pixels%% *}
   [ -n "$pixels" ] || { printf '?'; return; }
 
   local total
-  total=$(identify -format '%[fx:w*h]' "$apres" 2>/dev/null) || { printf '?'; return; }
-  [ "$total" -gt 0 ] 2>/dev/null || { printf '?'; return; }
-  awk -v p="$pixels" -v t="$total" 'BEGIN { printf "%.2f", 100 * p / t }'
+  # ⚠️ `%w %h` et non `%[fx:w*h]`, pour la même raison à l'autre bout du calcul : sur les 33 captures
+  # qui dépassent le million de pixels - `apercu-import-assistant.png` fait 1100 × 1094 - le produit
+  # s'écrit « 1.2034e+06 », que le test d'entier refusait. Ces écrans-là, les plus riches, rendaient
+  # « ? » au lieu d'un chiffre. L'auto-test ne pouvait pas le voir avec ses images de 80 × 40.
+  total=$(identify -format '%w %h' "$apres" 2>/dev/null) || { printf '?'; return; }
+  LC_ALL=C awk -v p="$pixels" -v wh="$total" 'BEGIN {
+    split(wh, d, " ")
+    t = d[1] * d[2]
+    if (t <= 0 || p "" !~ /^[0-9]/) { printf "?"; exit }
+    printf "%.2f", 100 * (p + 0) / t
+  }'
 }
 
 ### Compose l'avant et l'après côte à côte. Rend 1 si l'une des deux images manque.
@@ -183,8 +194,21 @@ if [ "${1:-}" = "--auto-test" ]; then
   sortie=$(cd "$depot" && "$MOI" "$bac/absent" .github/assets/ecran.png .github/assets/fantome.png 2>&1) || true
   verifie "un fichier absent est signalé" "1 problème(s)" "$sortie"
 
+  # 5. Une GRANDE capture, celle que les quatre cas précédents ne peuvent pas voir.
+  #
+  # ⚠️ Trente-trois captures du dépôt dépassent le million de pixels, et sur celles-là ImageMagick
+  # écrit ses comptes en notation scientifique. Le calcul rendait « ? », ou pire 0,00 % quand plus d'un
+  # million de pixels changeaient. Des images de 80 × 40 ne peuvent PAS montrer ce défaut : la taille
+  # est le cœur de ce cas, pas un détail de mise en scène.
+  convert -size 1100x1094 xc:white "$depot/.github/assets/grand.png"
+  git -C "$depot" add -A && git -C "$depot" commit -qm "grand avant"
+  convert -size 1100x1094 xc:black "$depot/.github/assets/grand.png"
+  sortie=$(cd "$depot" && "$MOI" "$bac/grand" .github/assets/grand.png 2>&1)
+  verifie "une grande capture est comparée" "1 écran(s) comparé(s), 0 problème(s)" "$sortie"
+  verifie "et son écart vaut 100, pas « ? » ni 0" "100.00 %" "$(cat "$bac/grand/index.md")"
+
   if [ "$echecs" = 0 ]; then
-    echo "Auto-test de la comparaison des aperçus : OK (8 cas, dont 1 rouge vérifié sur son message)."
+    echo "Auto-test de la comparaison des aperçus : OK (10 cas, dont la grande capture et 1 rouge vérifié)."
   else
     echo "Auto-test de la comparaison des aperçus : ÉCHEC."
   fi
