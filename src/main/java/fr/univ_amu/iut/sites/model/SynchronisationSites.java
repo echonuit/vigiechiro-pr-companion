@@ -39,14 +39,6 @@ public final class SynchronisationSites {
     /// Rejoue la structure des sites **puis** ses dépendants (dans cet ordre), et rend un compte-rendu par
     /// rapprocheur ayant quelque chose à dire (les autres restent silencieux). À appeler **hors du fil
     /// JavaFX** (réseau + écritures base).
-    /// Y a-t-il de quoi synchroniser, c'est-à-dire un jeton ?
-    ///
-    /// ⚠️ Sans jeton, `RapprochementSites` rend `Optional.empty()` : le geste ne rapatrie rien **et ne
-    /// dit rien**. C'est ce silence que l'écran doit empêcher plutôt que subir (#4194, affordance #789).
-    public boolean estConnecte() {
-        return client.estConnecte();
-    }
-
     public List<RapportSynchro> synchroniser() {
         return synchroniser(progres -> {}, JetonAnnulation.neutre());
     }
