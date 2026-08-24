@@ -163,15 +163,16 @@ destinations qui lui sont propres.
 
 ### Les parades, dans l'ordre où elles doivent être posées
 
-**Le jeton n'entre pas par l'écran.** `ConnexionModule.jetonPonctuel()` lit la propriété système
-`vigiechiro.token`, sinon la variable d'environnement `VIGIECHIRO_TOKEN`, et ce jeton ponctuel
-**l'emporte** sur la connexion enregistrée. Un tournage connecté doit donc l'injecter par là, jamais
-par le champ.
+**Le jeton entre par l'écran, et il meurt avec le run.** C'était la parade proposée ici : ne jamais
+coller le jeton devant la caméra, en le déposant en coulisse pour que la modale se vérifie seule.
 
-⚠️ **Ce que cette parade coûte, et il faut l'assumer** : le cas qui vaudrait le plus, celui de la
-connexion elle-même (coller un jeton et voir le badge passer au vert), devient précisément celui qu'on
-ne peut pas filmer connecté. Un tournage connecté montre l'application **déjà** connectée. La connexion
-reste filmée avec un jeton bouchonné, et son clip garde alors sa réserve.
+⚠️ **Elle a été retirée à l'usage** (#4324). Le clip montrait alors une modale qui se connectait toute
+seule, sans qu'on voie ce qui l'avait connectée : illisible, et donc sans valeur de recette. Or le
+jeton est révoqué en fin de run, et un jeton mort n'est pas un secret. La parade coûtait le clip pour
+un risque que la révocation avait déjà supprimé.
+
+Ce qui la remplace tient en une dépendance : le versement des clips n'a lieu que si la plateforme a
+**confirmé** le retrait. « Le jeton est mort » cesse d'être un espoir pour devenir une condition.
 
 **Le jeton a une forme, contrairement à ce que nous croyions.** `verifie-jeton.sh` explique qu'un jeton
 VigieChiro est « une chaîne opaque, sans préfixe distinctif, qu'aucun catalogue de fournisseur ne

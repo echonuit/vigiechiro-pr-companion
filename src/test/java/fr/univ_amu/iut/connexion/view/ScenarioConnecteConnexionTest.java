@@ -12,12 +12,18 @@ import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.TextInputControl;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -27,43 +33,67 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
-/// La connexion à la **vraie** plateforme, filmée (#4307, lot 5 du chantier #4291).
+/// La connexion à la **vraie** plateforme, filmée comme un utilisateur la fait (#4324, chantier #4291).
 ///
-/// ## Ce que ce scénario apporte, et qu'un bouchon ne peut pas donner
+/// ## Un seul clip, parce que c'est un seul geste
 ///
-/// `ScenarioPerceptifConnexionTest` filme la même modale contre un `ClientVigieChiro` bouchonné, et
-/// c'est juste : il montre que le geste a lieu. Mais l'objet de `S8` est **ce que la plateforme
-/// répond**, et un bouchon répond ce que nous croyons qu'elle répond. Le clip y serait convaincant et
-/// **creux** - muet sur son propre objet (ADR 4142).
+/// `S8-01`, `S8-05` et `S8-06` sont trois constats d'un **même parcours** : coller le jeton, voir
+/// l'avancement, lire l'identité. Trois clips en referaient trois fois le préambule et couperaient
+/// l'histoire en trois ; un seul la raconte.
 ///
-/// Ici la latence est réelle, la progression suit un vrai balayage, et l'identité affichée à la fin est
-/// celle que `GET /moi` a rendue.
+/// ## Quatre temps, dont trois que l'ADR 4188 exige
 ///
-/// ## Pourquoi ces deux cas-là, et pas les six de l'étape 1
+/// Une modale se filme avec l'écran d'où elle part et celui où elle rend
+/// ([ADR 4188](../../../../../../dev-docs/decisions/4188-une-modale-se-filme-avec-son-ecran.md)). Ici
+/// c'est **le même écran**, l'accueil - mais il n'y revient pas identique.
 ///
-/// `S8-02` demande que le libellé nomme la nuit en cours (« Nuits k / N »), `S8-03` qu'une estimation
-/// paraisse. Les deux **supposent que le compte porte des nuits** : sur un compte qui n'en a pas, il n'y
-/// a rien à voir, et le cas rougirait pour une raison qui n'est pas le produit.
+/// | Temps | Ce que le clip montre |
+/// |---|---|
+/// | 1 · l'écran de départ | l'accueil **sans** bandeau de compteurs, et le geste qui ouvre la modale |
+/// | 2 · la modale | le jeton collé, l'avancement, « Fermer » grisé, puis l'identité et le résumé |
+/// | 3 · l'écran d'arrivée | l'accueil retrouvé, où le **bandeau de compteurs a paru** (#1376) |
+/// | 4 · le menu rouvert | l'entrée qui nomme désormais qui est connecté |
 ///
-/// `S8-05` et `S8-06` tiennent quel que soit le contenu du compte, puisque `GET /moi` répond toujours.
-/// Ce sont donc les deux par lesquels commencer. Les autres viendront quand on saura, d'un premier tir,
-/// ce que le compte de tournage contient.
+/// Le quatrième n'est pas exigé par l'ADR : c'est une **confirmation de plus** que la connexion a eu
+/// lieu, et ce qui permet de voir ses conséquences de bout en bout, sur les **deux** surfaces qu'elle
+/// change.
 ///
-/// ## ⚠️ Le jeton ne passe jamais par l'écran
+/// ## ⚠️ Le jeton PARAÎT à l'écran, et c'est délibéré
 ///
-/// Le champ du jeton est un `TextField`, pas un `PasswordField` : ce qu'on y colle **se lit**, et le
-/// banc photographie le graphe de scène. Ce scénario ne colle donc rien. `connecteALaPlateforme()`
-/// dépose le jeton dans `StockageConnexion` **sans profil**, et la modale le revérifie d'elle-même à son
-/// ouverture (#1369). C'est le seul chemin qui filme la connexion réelle sans la graver dans un clip
-/// destiné à être publié.
+/// La première version évitait la saisie pour qu'aucun jeton ne soit filmé : elle déposait le jeton en
+/// coulisse et laissait la modale se vérifier seule. Le clip montrait alors une modale **qui se
+/// connectait toute seule**, sans qu'on voie ce qui l'avait connectée.
 ///
-/// Corollaire assumé : `S8-01`, « coller le jeton », restera hors de portée de ce banc.
+/// C'était de la surqualité, et elle coûtait le clip. Le jeton est **révoqué en fin de run** (#4305,
+/// vérifié deux fois en production : `POST /logout` rend `200`), donc ce que le clip montre ne vaut
+/// plus rien avant même d'être regardé. **Un jeton mort n'est pas un secret ; un clip incompréhensible
+/// est un problème.**
+///
+/// Et ce n'est pas une hypothèse laissée en l'air : le versement sur `clips-connectes` n'a lieu que si
+/// la révocation a **confirmé** le retrait. Sans confirmation, le clip n'est pas publié.
+///
+/// C'est aussi l'idiome des scénarios bouchonnés voisins - `ScenarioPerceptifConnexionTest` et
+/// `ScenarioPerceptifIssuesConnexionTest` collent tous deux leur jeton à l'écran. S'en écarter faisait
+/// diverger le pendant connecté de ses jumeaux pour rien.
+///
+/// ## Ce que le premier tir a appris, et qui tient toujours
+///
+/// **Une attente satisfaite avant que l'opération commence.** Attendre que la progression *disparaisse*
+/// est vrai à `t=0`. On attend son **apparition puis** sa disparition, dans cet ordre.
+///
+/// **Une assertion que rien ne pouvait faire rougir.** `ConnexionViewModel` pose « Jeton enregistré,
+/// non vérifié » dès qu'un jeton est déposé sans profil : un `isNotBlank()` passait réseau débranché.
+/// On asserte ce que le produit **réserve** au succès - la classe `badge-succes`, et le bandeau
+/// « Connexion réussie ».
+///
+/// **Une caméra qui s'arrêtait sur le geste.** Sur 35 images, 34 sans modale. Le scénario **tient donc
+/// l'écran** après chaque assertion, par [Respiration], qui ne coûte rien hors séance filmée.
 ///
 /// ## ⚠️ Exclu du build par défaut
 ///
 /// `@Tag("recette-connectee")`, exclu par `surefire.excludedGroups`. Sans jeton le banc **refuse** de
-/// monter, comme il doit : laisser ces scénarios dans la suite ordinaire la ferait rougir sur chaque PR.
-/// Le tournage connecté les rappelle par `-Dsurefire.groups=recette-connectee`.
+/// monter, comme il doit. Le tournage connecté inverse les **deux** propriétés : poser `groups` seul ne
+/// lève pas l'exclusion, et le premier tir l'a appris en rendant « Tests run: 0 » sur un build vert.
 @Tag("recette-connectee")
 @ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class})
 class ScenarioConnecteConnexionTest {
@@ -76,10 +106,29 @@ class ScenarioConnecteConnexionTest {
 
     private static final String LIBELLE_ENTREE_MENU = "Se connecter à Vigie-Chiro…";
 
-    /// La vérification traverse le réseau puis rejoue les rapprocheurs : plus long qu'un bouchon, et
-    /// c'est le sujet. Large, parce qu'un compte fourni prend du temps et qu'un butoir trop court
-    /// rougirait sur la taille du compte plutôt que sur le produit.
-    private static final int ATTENTE_SECONDES = 120;
+    /// Ce que devient cette même entrée une fois connecté : `NavigationConnexion#libelleMenu` rend
+    /// « Vigie-Chiro : &lt;pseudo&gt; (&lt;rôle&gt;) ».
+    ///
+    /// Le **préfixe seul** : le pseudo dépend du compte, et un test qui l'épinglerait rougirait au
+    /// prochain compte de tournage pour une raison qui n'est pas le produit.
+    private static final String PREFIXE_ENTREE_CONNECTEE = "Vigie-Chiro : ";
+
+    /// Ce que le produit met sur le badge d'identité **quand la plateforme a répondu**, et lui seul.
+    /// L'état initial porte `badge-neutre` : c'est ce qui distingue un succès d'un jeton simplement
+    /// enregistré.
+    private static final String BADGE_CONNECTE = "badge-succes";
+
+    /// La progression **paraît** vite : c'est le premier aller-retour réseau. Une attente courte suffit,
+    /// et une attente longue masquerait un écran qui ne s'ouvre pas.
+    private static final int APPARITION_SECONDES = 60;
+
+    /// ⚠️ La **fin**, elle, est bien plus lente que ce qu'un bouchon laissait croire. Mesuré au premier
+    /// tir : à **23 secondes**, les rapprocheurs tournaient encore - se connecter rejoue le
+    /// rapatriement des nuits du compte (#2557), donc la durée suit la taille du compte.
+    ///
+    /// Si ce butoir est atteint, la conclusion n'est **pas** « le produit est cassé » mais « le compte
+    /// de tournage est plus gros que ce banc ne le prévoit ». Le message le dit.
+    private static final int FIN_SECONDES = 240;
 
     @Start
     void start(Stage stage) throws IOException {
@@ -88,9 +137,9 @@ class ScenarioConnecteConnexionTest {
                 // ASYNCHRONE : la progression est le sujet, et en synchrone le fil JavaFX est bloqué,
                 // donc aucune image n'est rendue pendant l'opération.
                 .executeur(BancDeRecette.Executeur.ASYNCHRONE)
-                // ⚠️ Aucun `ClientVigieChiro` remplacé, et c'est tout l'intérêt : la frontière réseau
-                // reste celle de la production.
-                .connecteALaPlateforme()
+                // ⚠️ Ni `connecte(...)` ni `connecteALaPlateforme()` : ce scénario part DÉCONNECTÉ,
+                // parce que c'est la connexion elle-même qu'il filme. Le banc lie quand même sa propre
+                // source de jeton, donc rien de l'environnement ne s'invite dans la réserve (ADR 4134).
                 .remplacer(new AbstractModule() {
                     @Provides
                     OuvreurDeLien ouvreurDeLien() {
@@ -102,17 +151,60 @@ class ScenarioConnecteConnexionTest {
     }
 
     @Test
-    @CasDeRecette(value = "S8-05", portee = Portee.A_L_ECRAN)
-    @DisplayName("S8-05 · l'avancement paraît dans la modale, sans seconde fenêtre, et « Fermer » y est grisé")
-    void l_avancement_parait_dans_la_modale(FxRobot robot) throws TimeoutException {
+    @CasDeRecette(
+            value = {"S8-01", "S8-05", "S8-06"},
+            portee = Portee.A_L_ECRAN)
+    @DisplayName("S8-01, S8-05, S8-06 · coller le jeton, voir l'avancement, lire l'identité rendue")
+    void coller_le_jeton_puis_lire_l_identite(FxRobot robot) throws TimeoutException {
+        // ⚠️ Lu AVANT d'ouvrir quoi que ce soit : sans jeton, ce scénario n'a rien à montrer, et il
+        // vaut mieux qu'il le dise avant d'avoir filmé huit secondes d'écran inutile.
+        String jeton = BancDeRecette.jetonDeLaPlateforme();
+
         Respiration.avantLeGeste(robot);
-        ouvrirLaModaleParLeMenu(robot);
 
-        // La zone de progression est celle de la modale elle-même (#2642) : elle s'y greffe, plutôt
-        // que d'ouvrir une seconde fenêtre par-dessus. Un aperçu rend une scène, pas une pile de
-        // fenêtres, et deux fenêtres pour un seul geste ne se jugeraient sur aucune image.
-        WaitForAsyncUtils.waitFor(ATTENTE_SECONDES, TimeUnit.SECONDS, () -> visible(robot, "#zoneProgression"));
+        // ─── Temps 1 · l'écran de départ (ADR 4188) ───────────────────────────────────────────────
+        // ⚠️ Constaté AVANT, pour que l'après veuille dire quelque chose. Le banc part d'un espace de
+        // travail vierge : `AccueilViewModel.aDesDonnees()` est faux, et le bandeau de compteurs est
+        // donc masqué. C'est ce contraste que le clip doit rendre lisible.
+        assertThat(visible(robot, "#bandeauIndicateurs"))
+                .as("l'accueil part SANS compteurs : sur un espace de travail vierge il n'y a rien à"
+                        + " compter. Si le bandeau était déjà là, l'apparition qui suit ne prouverait rien")
+                .isFalse();
 
+        // `GesteVisible.choisir` plutôt qu'un `clickOn` nu : le banc rend le graphe de scène, où le
+        // pointeur n'existe pas. C'est lui qui dessine le halo de l'appui, sans quoi la modale
+        // s'ouvrirait sans qu'on voie ce qui l'a ouverte (ADR 4248).
+        GesteVisible.choisir(robot, "#menuOutils", LIBELLE_ENTREE_MENU);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.leTempsDeLire(robot);
+
+        // ─── S8-01 · coller le jeton ──────────────────────────────────────────────────────────────
+        assertThat(texte(robot, "#champToken"))
+                .as("le parcours part d'un champ VIDE : c'est l'état que la case décrit, et celui qui"
+                        + " rend la suite lisible")
+                .isEmpty();
+
+        robot.clickOn("#champToken").write(jeton);
+        WaitForAsyncUtils.waitForFxEvents();
+        // Le jeton doit rester à l'écran assez longtemps pour qu'on voie D'OÙ vient la connexion.
+        Respiration.leTempsDeLire(robot);
+
+        assertThat(texte(robot, "#champToken"))
+                .as("le jeton collé doit être dans le champ : c'est ce que la case demande de constater,"
+                        + " et sans lui le clic suivant n'aurait aucune cause visible")
+                .isEqualTo(jeton);
+
+        GesteVisible.cliquer(robot, "#boutonConnecter");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // ─── S8-05 · l'avancement paraît DANS la modale ───────────────────────────────────────────
+        attendre(
+                APPARITION_SECONDES,
+                () -> visible(robot, "#zoneProgression"),
+                "la progression n'a jamais paru dans la modale");
+
+        // ⚠️ On asserte AVANT de tenir l'écran. L'état est celui de l'instant où la progression paraît,
+        // donc déterministe ; le maintien qui suit sert la caméra, pas l'assertion.
         assertThat(fenetresOuvertes())
                 .as("l'avancement doit paraître DANS la modale : une seconde fenêtre par-dessus"
                         + " montrerait deux fenêtres pour un seul geste, et aucun clip n'en rendrait compte")
@@ -121,38 +213,104 @@ class ScenarioConnecteConnexionTest {
                 .as("« Fermer » reste grisé tant que l'opération tourne : la fermer en cours laisserait"
                         + " un jeton à moitié vérifié et une modale qu'on croit close")
                 .isTrue();
-    }
 
-    @Test
-    @CasDeRecette(value = "S8-06", portee = Portee.A_L_ECRAN)
-    @DisplayName("S8-06 · à la fin, la modale annonce l'identité rendue par la plateforme")
-    void la_modale_annonce_l_identite(FxRobot robot) throws TimeoutException {
-        Respiration.avantLeGeste(robot);
-        ouvrirLaModaleParLeMenu(robot);
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
 
-        // ⚠️ On attend que la progression RETOMBE, et non qu'un libellé paraisse : un texte cherché
-        // trop tôt se trouve parfois avant que l'opération soit finie, et le cas serait vert sur un
-        // écran à moitié construit.
-        WaitForAsyncUtils.waitFor(ATTENTE_SECONDES, TimeUnit.SECONDS, () -> !visible(robot, "#zoneProgression"));
+        assertThat(visible(robot, "#zoneProgression"))
+                .as("la progression doit avoir été à l'écran ASSEZ LONGTEMPS pour être filmée. Si elle a"
+                        + " disparu pendant ce maintien, c'est que l'opération est plus rapide que le"
+                        + " temps de lecture, et ce cas n'a rien montré")
+                .isTrue();
+
+        // ─── S8-06 · l'identité et le résumé, à la fin ────────────────────────────────────────────
+        attendre(
+                FIN_SECONDES,
+                () -> !visible(robot, "#zoneProgression"),
+                "l'opération n'a pas fini dans le temps imparti. À lire comme « le compte de tournage est"
+                        + " plus gros que ce banc ne le prévoit », pas comme un défaut du produit :"
+                        + " se connecter rejoue le rapatriement des nuits du compte");
         WaitForAsyncUtils.waitForFxEvents();
 
+        // ⚠️ On asserte le SUCCÈS, pas la non-vacuité : `identiteProperty` porte « Jeton enregistré, non
+        // vérifié » dès le premier instant d'un jeton sans profil.
+        assertThat(classes(robot, "#labelIdentite"))
+                .as(
+                        "le badge d'identité passe à « %s » quand la plateforme a répondu, et reste"
+                                + " « badge-neutre » sinon. C'est le seul signal que l'état initial ne porte pas",
+                        BADGE_CONNECTE)
+                .contains(BADGE_CONNECTE);
         assertThat(texte(robot, "#labelIdentite"))
-                .as("la plateforme a répondu : la modale doit nommer QUI est connecté. Un libellé vide"
-                        + " après une vérification réussie voudrait dire que l'identité n'est pas"
-                        + " redescendue jusqu'à l'écran")
-                .isNotBlank();
+                .as("le badge doit nommer QUI est connecté, pas rappeler qu'un jeton attend d'être vérifié")
+                .isNotBlank()
+                .doesNotContain("non vérifié");
+        assertThat(texte(robot, "#bandeauStatut"))
+                .as("la case demande l'identité ET le résumé. Le bandeau les annonce ensemble :"
+                        + " « Connexion réussie · référentiel à jour : … ». Le CONTENU du résumé dépend du"
+                        + " compte, donc seule son annonce est assertée ici")
+                .startsWith("Connexion réussie");
+        assertThat(texte(robot, "#champToken"))
+                .as("le champ se vide à la connexion réussie : le jeton n'a pas à rester affiché une fois"
+                        + " qu'il a servi")
+                .isEmpty();
+
+        Respiration.leTempsDeLire(robot);
+
+        // ─── Temps 3 · l'écran d'arrivée, et ce qui y a changé (ADR 4188) ────────────────────────
+        // ⚠️ Une modale se filme avec l'écran d'où elle part ET celui où elle rend. Ici c'est le même,
+        // l'accueil - mais il n'y revient pas identique : `MainController` pose que « le bandeau suit
+        // désormais la DONNÉE (#1376) », et qu'« une synchronisation déroulée par-dessus l'accueil se
+        // voit sans qu'on ait navigué ». Les rapprocheurs de la connexion en sont une.
+        GesteVisible.cliquer(robot, "#boutonFermer");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        attendre(
+                APPARITION_SECONDES,
+                () -> visible(robot, "#bandeauIndicateurs"),
+                "le bandeau de compteurs n'est jamais apparu sur l'accueil. La connexion a pourtant"
+                        + " synchronisé sites et taxons : si rien ne paraît, c'est le bandeau qui ne suit"
+                        + " pas la donnée, et non ce cas qui se trompe");
+        Respiration.leTempsDeLire(robot);
+
+        assertThat(pastilles(robot))
+                .as("le bandeau doit porter au moins un compteur : il paraît parce qu'il y a désormais"
+                        + " quelque chose à compter. Un bandeau visible et VIDE serait un cadre sans"
+                        + " contenu, ce qui est pire qu'un bandeau masqué")
+                .isNotEmpty();
+
+        // ─── Temps 4 · ce que le menu dit maintenant ──────────────────────────────────────────────
+        // Un QUATRIÈME temps, et non une extension du troisième : l'ADR 4188 est déjà satisfaite par
+        // l'accueil retrouvé et tenu. Celui-ci est une confirmation DE PLUS que la connexion a bien eu
+        // lieu, et il complète le clip - on y voit alors les conséquences d'une connexion de bout en
+        // bout, sur les deux surfaces qu'elle change : le bandeau de l'accueil et l'entrée de menu.
+        // Les libellés du menu sont réévalués à chaque ouverture (`ConstructeurMenuOutils.setOnShowing`).
+        GesteVisible.cliquer(robot, "#menuOutils");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.leTempsDeLire(robot);
+
+        assertThat(libelleAffiche(robot, PREFIXE_ENTREE_CONNECTEE))
+                .as(
+                        "l'entrée de menu disait « %s » au départ ; connecté, elle doit nommer l'identité"
+                                + " (« %s… »). C'est le second effet visible de la connexion, et il ne se"
+                                + " constate qu'en rouvrant le menu",
+                        LIBELLE_ENTREE_MENU, PREFIXE_ENTREE_CONNECTEE)
+                .isPresent();
+
+        robot.press(KeyCode.ESCAPE).release(KeyCode.ESCAPE);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.apresLeGeste(robot);
     }
 
     // --------------------------------------------------------------------------------------------
 
-    /// Ouvre la modale **par le menu**, et non dans le `@Start` : les repères de la séance filmée sont
-    /// posés autour du test, si bien qu'une ouverture antérieure n'apparaîtrait sur aucune image.
-    private void ouvrirLaModaleParLeMenu(FxRobot robot) throws TimeoutException {
-        // `GesteVisible.choisir` plutôt qu'un `clickOn` nu : le banc rend le graphe de scène, où le
-        // pointeur n'existe pas. C'est lui qui dessine le halo de l'appui, sans quoi la modale
-        // s'ouvrirait sans qu'on voie ce qui l'a ouverte (ADR 4248).
-        GesteVisible.choisir(robot, "#menuOutils", LIBELLE_ENTREE_MENU);
-        WaitForAsyncUtils.waitForFxEvents();
+    /// Une attente qui **dit ce qu'elle attendait** quand elle échoue. `WaitForAsyncUtils` rend sinon un
+    /// `TimeoutException` nu, et le lecteur d'un tournage raté n'a que la ligne pour comprendre.
+    private static void attendre(int secondes, Callable<Boolean> condition, String quoi) throws TimeoutException {
+        try {
+            WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, condition);
+        } catch (TimeoutException _) {
+            throw new TimeoutException(quoi + " (au bout de " + secondes + " s)");
+        }
     }
 
     private static boolean visible(FxRobot robot, String selecteur) {
@@ -165,14 +323,43 @@ class ScenarioConnecteConnexionTest {
         return noeud instanceof Button bouton && bouton.isDisabled();
     }
 
+    /// Le texte d'un nœud, qu'il soit un libellé ou une saisie : le champ du jeton est un
+    /// `TextInputControl`, pas un `Labeled`, et le confondre rendrait « vide » un champ rempli.
     private static String texte(FxRobot robot, String selecteur) {
         Node noeud = robot.lookup(selecteur).tryQuery().orElse(null);
+        if (noeud instanceof TextInputControl saisie) {
+            return saisie.getText() == null ? "" : saisie.getText();
+        }
         return noeud instanceof Labeled libelle && libelle.getText() != null ? libelle.getText() : "";
     }
 
+    /// Le premier libellé **rendu** qui commence par `prefixe`, s'il y en a un.
+    ///
+    /// ⚠️ Une entrée de menu n'est pas un `Node` : c'est le menu ouvert qui en rend un. On cherche
+    /// donc dans la scène ce qui s'AFFICHE, et non dans le modèle ce qui devrait s'afficher - c'est
+    /// la différence entre « le produit le sait » et « on le voit », et l'ADR 4188 porte sur la
+    /// seconde.
+    private static java.util.Optional<String> libelleAffiche(FxRobot robot, String prefixe) {
+        return robot.lookup((Node noeud) -> noeud instanceof Labeled libelle
+                        && libelle.getText() != null
+                        && libelle.getText().startsWith(prefixe))
+                .tryQuery()
+                .map(noeud -> ((Labeled) noeud).getText());
+    }
+
+    /// Les compteurs **rendus** dans le bandeau de l'accueil. `MainController#peuplerIndicateurs`
+    /// y pose une pastille par compteur, et vide le conteneur quand il n'y a rien à compter.
+    private static List<Node> pastilles(FxRobot robot) {
+        Node bandeau = robot.lookup("#bandeauIndicateurs").tryQuery().orElse(null);
+        return bandeau instanceof Parent conteneur ? List.copyOf(conteneur.getChildrenUnmodifiable()) : List.of();
+    }
+
+    private static List<String> classes(FxRobot robot, String selecteur) {
+        Node noeud = robot.lookup(selecteur).tryQuery().orElse(null);
+        return noeud == null ? List.of() : List.copyOf(noeud.getStyleClass());
+    }
+
     private static long fenetresOuvertes() {
-        return javafx.stage.Window.getWindows().stream()
-                .filter(javafx.stage.Window::isShowing)
-                .count();
+        return Window.getWindows().stream().filter(Window::isShowing).count();
     }
 }
