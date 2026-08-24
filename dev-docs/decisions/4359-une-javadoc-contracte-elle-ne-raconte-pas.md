@@ -21,13 +21,13 @@ generated:
 
 ## Contexte
 
-Le code de production porte **26 814 lignes de prose en javadoc pour 77 891 lignes de code**. Les
-étiquettes de contrat - `@param`, `@return`, `@throws` - n'en font que **7 %**. Le reste est du
+Le code de production porte **33 410 lignes de prose en javadoc pour 78 496 lignes de code**. Les
+étiquettes de contrat - `@param`, `@return`, `@throws` - n'en font que **5,7 %**. Le reste est du
 récit.
 
-La lecture des blocs les plus longs donne la même chose chaque fois : un bloc de 89 lignes racontant
-l'implémentation qu'il avait remplacée, un autre de 49 lignes pour une **interface vide** qui
-recopiait une ADR du corpus.
+La lecture des blocs les plus longs donne la même chose chaque fois : un bloc de 86 lignes qui
+raconte écran par écran ce que l'outil rend, un autre de 49 lignes pour une **interface vide**, qui
+recopie une ADR du corpus.
 
 ## Le défaut
 
@@ -73,15 +73,16 @@ tenir une autre.
 mécaniquement. Un record de trente champs n'est pas un suspect : les étiquettes de contrat sont
 exclues, avec leurs suites, et deux cas du banc le tiennent.
 
-**Cent trente-six blocs lus**, 2 936 lignes de prose devenues 1 769, cliquet à **2 532**. Une ADR y
-était recopiée **quatre fois dans le même bloc**. Le registre attendu est écrit dans
-`CONTRIBUTING.md` : il n'existait nulle part.
+**Le cliquet ouvre à 3 641**, sur 713 blocs dans 572 fichiers, et aucune tranche n'a encore été
+relue : c'est la valeur du premier relevé, celle d'où la résorption partira. Le registre attendu est
+écrit dans `CONTRIBUTING.md` : il n'existait nulle part.
 
-**Un second garde, déterministe.** Une ligne de javadoc répétée juste après elle-même est une coupe
-ratée. Le défaut est arrivé quinze fois d'un coup, et il a passé la compilation, spotless et les
-tests : le lecteur voyait la phrase deux fois, aucun garde ne la voyait. Il a une seconde forme,
-trouvée trois fois ensuite : la ligne d'avant n'est pas identique, elle est le début tronqué de la
-suivante. `verifie_javadoc_sans_doublon.py` refuse les deux, sur tout le code Java du dépôt.
+**Un second garde reste à écrire.** Une ligne de javadoc répétée juste après elle-même est une coupe
+ratée, et elle passe la compilation, spotless et les tests : le lecteur voit la phrase deux fois,
+aucun garde ne la voit. Elle a une seconde forme, plus discrète : la ligne d'avant n'est pas
+identique, elle est le début tronqué de la suivante. Rien ne refuse ni l'une ni l'autre ici. Le
+dépôt jumeau a rencontré les deux en résorbant sa dette (#4334), ce qui dit quand ce garde devient
+nécessaire : au moment où les coupes commencent, pas avant.
 
 **Et tout n'est pas du récit.** `ParserCsvTadarida` documente un format et un mapping de colonnes,
 `TransformationAudio` l'arithmétique du découpage. Ces blocs dépassent le seuil et le méritent : le

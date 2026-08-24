@@ -21,7 +21,7 @@ generated:
 
 ## Contexte
 
-Le corpus porte 160 décisions. Beaucoup portent sur l'usage : ce qu'un écran montre, ce qu'il
+Le corpus porte 201 décisions. Beaucoup portent sur l'usage : ce qu'un écran montre, ce qu'il
 refuse, ce qu'il fait attendre, ce qu'il groupe. Chacune déclare son article de la constitution,
 qui dit ce que **le dépôt** tient - une preuve, un état, un compte rendu - et jamais ce que
 **l'utilisateur** rencontre.
@@ -45,15 +45,16 @@ heuristiques qu'elle sert. **Toujours une liste**, même à une seule entrée, e
 confrontée séparément au vocabulaire.
 
 Le vocabulaire est **clos** et vit dans [l'annexe](../ergonomie/heuristiques.md) : les dix
-heuristiques de Nielsen, l'affordance et le signifiant de Norman, six lois de la Gestalt. Dix-huit
-clés, avec leurs sources et une version. Une clé nouvelle est une décision, pas une improvisation.
+heuristiques de Nielsen, l'affordance et le signifiant de Norman, six lois de la Gestalt et cinq
+critères WCAG. Vingt-trois clés, avec leurs sources et une version. Une clé nouvelle est une
+décision, pas une improvisation.
 
-Rien de tout ceci n'entre dans le corps des ADR. Le cliquet de longueur est à 50 pour un seuil de
-800 mots, et deux ADR l'ont franchi le 2026-08-22 en gagnant un seul paragraphe : un rattachement
-qui coûterait cent mots par décision ne serait pas posé.
+Rien de tout ceci n'entre dans le corps des ADR : un rattachement qui coûterait cent mots par
+décision ne serait pas posé. Rien ne borne aujourd'hui la longueur d'une ADR dans ce dépôt, et
+l'en-tête reste donc le seul endroit où le rattachement tienne sans peser.
 
 Trois contrôles, dans `verifie_okf.py`, et leurs trois sévérités sont voulues. Une clé hors
-vocabulaire est **refusée** : une faute de frappe qui passerait créerait une dix-neuvième
+vocabulaire est **refusée** : une faute de frappe qui passerait créerait une vingt-quatrième
 heuristique en silence. Une décision rattachée à l'un des huit articles d'usage qui ne déclare rien
 est un **suspect sous cliquet**, car un refus sec le jour de la pose rendrait le garde rouge sur
 tout le corpus, et il serait désactivé dans la semaine. Une heuristique que rien ne sert est
@@ -63,11 +64,13 @@ La matrice est **engendrée** par `scripts/methode/matrice-ergonomie.py`, jamais
 Elle annonce **deux nombres**, rattachements et ADR : une décision peut servir plusieurs
 heuristiques, et confondre les deux ferait croire à une couverture qui n'existe pas.
 
-Le cliquet part de la mesure : **63** décisions concernées, ramenées à **3** le jour même, chacune
-ouverte et lue. Jamais par mots-clés :
+Le cliquet part de la mesure : **71** décisions concernées, dont aucune ne nommait d'heuristique le
+jour de la pose. Elles descendront chantier par chantier, chacune ouverte et lue. Jamais par
+mots-clés :
 sur un problème plus facile - retrouver l'ADR derrière un numéro - la ressemblance de vocabulaire
-s'est trompée cinq fois sur soixante-dix-neuf. Ici l'erreur n'attribuerait pas une adresse, elle
-attribuerait une **intention**.
+s'est trompée cinq fois sur soixante-dix-neuf. Cette mesure vient du dépôt jumeau (#4334) et n'a pas
+été refaite ici : elle est citée pour ce qu'elle montre, pas comme un relevé local. Ici l'erreur
+n'attribuerait pas une adresse, elle attribuerait une **intention**.
 
 ## Conséquences
 
@@ -99,9 +102,9 @@ que ce vocabulaire fait apparaître, et il n'aurait pas de nom sans lui.
 ## Alternatives écartées
 
 - **Rattacher automatiquement par mots-clés.** Mesuré faux cinq fois sur soixante-dix-neuf sur un
-  problème plus simple.
-- **Écrire l'heuristique en prose dans le corps.** Le cliquet de longueur l'interdit de fait, et
-  une prose ne se compte pas.
+  problème plus simple, dans le dépôt jumeau.
+- **Écrire l'heuristique en prose dans le corps.** Une prose ne se compte pas : ni la matrice ni le
+  cliquet ne sauraient la lire.
 - **Un article de constitution par heuristique.** Ce ne sont pas des règles opposables mais un
   vocabulaire, et dix-huit articles de plus rendraient la page illisible.
 - **Un vocabulaire ouvert.** Chacun nommerait la même chose autrement, et le regroupement cesserait
