@@ -47,6 +47,7 @@
 #         JETON=<jeton> ./.github/scripts/revoque-jeton.sh
 set -uo pipefail
 
+ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE="${VIGIECHIRO_URL:-https://vigiechiro.herokuapp.com/api/v1}"
 
 # Le verdict, séparé de l'appel : c'est la partie qui porte la règle, donc la seule qu'on puisse
@@ -72,21 +73,11 @@ verdict() { # <code http>
     esac
 }
 
-# L'appel, séparé du verdict : c'est la partie que l'auto-test peut éprouver en la lançant contre un
-# port mort de la boucle locale. Rend le code HTTP sur la sortie standard.
-#
-# ⚠️ `-o /dev/null` : la réponse ne nous apprend rien de plus que son code, et l'imprimer ferait passer
-# le corps d'une réponse d'erreur dans un journal public.
-#
-# ⚠️ `|| code=000` et surtout PAS `|| echo 000` : quand la connexion échoue - injoignable, DNS, TLS -
-# curl écrit DÉJÀ « 000 » et sort non nul. Les deux se concaténaient, et l'avertissement annonçait
-# « HTTP 000000 » (#4328). Le classement restait juste, le nombre affiché non - et c'est le genre de
-# ligne qui fait douter de tout le reste au moment où on la lit.
+# L'appel descend dans `interroge-le-jeton.sh` (#4385), partagé avec les deux autres appelants. Il ne
+# juge rien, et c'est ce qui permet de le partager : ici un `401` vaut SUCCÈS - le jeton ne sert plus
+# à personne, c'était le but - alors qu'il refuse le départ d'un tournage.
 interroger() { # -> code http
-    local code
-    code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -u "${JETON}:" "${BASE}/logout") || code=000
-    [ -n "${code}" ] || code=000
-    echo "${code}"
+    JETON="${JETON:-}" VIGIECHIRO_URL="${BASE}" "${ICI}/interroge-le-jeton.sh" /logout POST
 }
 
 auto_test() {
@@ -117,14 +108,14 @@ auto_test() {
     essai 302 incertain "302 : réponse inattendue, on ne sait pas"
 
 
-    # ⚠️ Le seul cas qui éprouve l'APPEL et non le verdict. Un port mort de la boucle locale suffit, et
-    # n'a besoin d'aucun réseau pour rougir : c'est ainsi qu'on a vu le « HTTP 000000 ».
+    # Le cas qui exerçait l'APPEL vit désormais chez `interroge-le-jeton.sh` (#4385). Celui-ci
+    # vérifie seulement que le chemin d'appel de CE script y mène bien.
     total=$((total + 1))
-    obtenu=$(JETON=zzz BASE=http://127.0.0.1:1 interroger)
+    obtenu=$(JETON=zzz VIGIECHIRO_URL=http://127.0.0.1:1 "${ICI}/interroge-le-jeton.sh" /logout POST)
     if [ "${obtenu}" = "000" ]; then
-        printf '  [OK   ] %-58s -> %s\n' "l appel rend un code et un seul quand rien ne répond" "${obtenu}"
+        printf '  [OK   ] %-58s -> %s\n' "la sonde partagée rend bien un code, et un seul" "${obtenu}"
     else
-        printf '  [ÉCHEC] %-58s -> %s (attendu 000)\n' "l appel rend un code et un seul quand rien ne répond" "${obtenu}"
+        printf '  [ÉCHEC] %-58s -> %s (attendu 000)\n' "la sonde partagée rend bien un code, et un seul" "${obtenu}"
         echecs=$((echecs + 1))
     fi
 

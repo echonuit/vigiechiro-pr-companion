@@ -133,6 +133,13 @@ données d'exemple ou de test.
   rien tant que l'**appelant** hérite, et `verifie-portee-des-secrets.sh` tient désormais les deux
   bouts.
 
+- **Un seul appel, trois lectures** (#4385). Le contrôle du jeton, sa révocation et le pas
+  « Jeton valide ? » d'`api-live.yml` posaient la même question par trois `curl` recopiés :
+  c'est ainsi que le défaut du « HTTP 000000 » s'est retrouvé aux trois. La mesure vit
+  désormais dans `interroge-le-jeton.sh`, qui **ne juge pas** - un `401` refuse le départ d'un
+  tournage, avertit chez `api-live`, et vaut succès pour la révocation. Les faire converger
+  casserait l'une des trois en silence.
+
 ## Ce qui n'est pas protégé, et pourquoi
 
 Une page de sécurité qui n'énumère que ses protections se lit comme une promesse. Voici la liste
