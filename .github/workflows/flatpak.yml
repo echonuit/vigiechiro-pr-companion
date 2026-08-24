@@ -90,6 +90,21 @@ on:
         type: boolean
         default: false
 
+    # Déclarés NOMMÉMENT, parce que l'appelant ne peut plus se contenter de `secrets: inherit` :
+    # l'héritage donnait AUSSI ces deux clés au job qui exécute les tests du produit, et à tout ce
+    # que le train appelle (#4349).
+    #
+    # `required: true` : sans eux, ce workflow construit un paquet qu'il ne saura ni signer ni
+    # publier. Mieux vaut que l'appel refuse tout de suite que de découvrir le manque à la
+    # publication, qui est le pire moment.
+    secrets:
+      FLATPAK_GPG_KEY:
+        description: "Clé de signature du dépôt Flatpak auto-hébergé."
+        required: true
+      FLATPAK_DEPLOY_TOKEN:
+        description: "Jeton d'écriture vers le dépôt qui héberge le Flatpak."
+        required: true
+
 permissions:
   contents: write
   pull-requests: write
