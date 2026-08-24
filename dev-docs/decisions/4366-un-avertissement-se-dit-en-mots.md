@@ -9,7 +9,7 @@ decided_at: 2026-08-24
 verification: probable
 enforced_by:
   - "scripts/adr/4366-avertissement-en-pictogramme.py"
-ratchet: 1493
+ratchet: 1485
 verified:
   - by: machine:suspects
     at: 2026-08-24
@@ -22,7 +22,7 @@ generated:
 
 ## Contexte
 
-Le corpus porte **1 975 pictogrammes d'alerte**, répartis dans **617 fichiers**. La densité, plus
+Le corpus porte **1967 pictogrammes d'alerte**, répartis dans **617 fichiers**. La densité, plus
 que le total, dit ce qui s'est passé :
 
 | Fichier | Pictogrammes | Densité |
@@ -69,7 +69,7 @@ Toutes disent la même chose : effacer y serait falsifier.
   libellés commençaient par un ⚠ » parle du caractère, il ne s'en sert pas pour alerter. L'effacer
   ne raccourcirait pas la phrase, il la rendrait fausse.
 
-Sur 1 975 occurrences, le garde en retient **<!--inv:cliquet-pictogramme-->1 493<!--/inv-->**. Les 482 autres sont du contenu montré, des
+Sur 1967 occurrences, le garde en retient **<!--inv:cliquet-pictogramme-->1 485<!--/inv-->**. Les 482 autres sont du contenu montré, des
 blocs de code, des messages émis par le programme ou le caractère cité, et il ne les compte pas. Le
 cliquet a ouvert à 1 539 ; il descend au fil des tranches que d'autres chantiers résorbent.
 
