@@ -331,7 +331,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
 10. **ADR du chantier écrites** (`dev-docs/decisions/`), pour toute **décision structurante**. Le numéro
     **ne se choisit pas** : c'est celui de l'issue qui porte la décision (le lot, à défaut l'EPIC) ; le
     compteur séquentiel est clos à 0048, voir le [journal](dev-docs/decisions/index.md). Chaque ADR
-    **déclare comment elle est vérifiée** (puce `**Vérification** : certaine | probable | humaine`,
+    **déclare comment elle est vérifiée** (champ `verification: certaine | probable | humaine` de son en-tête OKF,
     [ADR 2465](dev-docs/decisions/2465-une-adr-declare-comment-elle-est-verifiee.md)) : un garde-fou fait
     rougir la CI si elle manque. **Ici et non en passe 3**, parce que les passes 4 à 9 **produisent** des
     décisions : sur le chantier #3151, les cinq ADR sont nées après la passe 3, aucune à l'endroit prévu.

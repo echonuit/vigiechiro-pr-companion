@@ -376,6 +376,19 @@ Une doc qui ment est **pire** qu'une doc absente : on la croit. Le dépôt l'ava
 | Les fiches présentes sur le disque | La `nav` de `mkdocs.yml` **et** le tableau de `docs/ecrans/index.md` | Une page que le site ne publie pas, ou qu'on ne peut atteindre depuis l'index de sa section |
 | Les **chiffres balisés** `<!--inv:clé-->N<!--/inv-->` (#2385) | L'**inventaire réel du code** (contrats `Ouvrir*`, états de `StatutWorkflow`, features, sous-commandes, **catalogues de critères de filtre**) | Un décompte **figé dans la prose** qui dérive après un ajout : « 43 sous-commandes » quand le code en câble 44 |
 
+Depuis #4336, les confrontations qui portent sur les ADR lisent leur **en-tête OKF** et non plus des
+puces : `article:`, `verification:`, `enforced_by:` ou `loupe:`, `chantier:`. Une confrontation s'y
+est ajoutée, et elle vaut d'être dite parce qu'elle a servi deux fois dans la semaine de sa pose :
+
+| Ce qui est confronté | À quoi | Ce que ça empêche |
+|---|---|---|
+| Le champ `title:` de l'en-tête d'une ADR | Le titre de page de la même ADR | Deux titres pour une seule décision : le premier alimente le site et les matrices, le second la lecture |
+
+**Et un avertissement, payé une fois.** Ce test avait cessé de vérifier quoi que ce soit après la
+conversion des en-têtes : son motif ne trouvait plus rien, et son `continue` sur absence de
+déclaration avalait les 194 ADR. Il passait au **vert**. Un garde qui cesse de détecter ne rougit
+pas, il se tait ; c'est pourquoi ses confrontations sont éprouvées et non supposées.
+
 Deux détails qui comptent :
 
 - Les commandes sont lues **sur l'annotation**, par réflexion - jamais instanciées. Leurs constructeurs
