@@ -1,0 +1,696 @@
+---
+name: humaniseur
+description: Use when writing or reviewing French prose that may carry LLM writing patterns - inflated claims, sales language, vague sources, heavy connectors, anglicisms, stock words, filler, chatbot residue, reflexive bold. French counterpart of the English humanizer skill, based on Wikipedia's "Signs of AI writing" and its French equivalent "Aide:Identifier l'usage d'une IA generative".
+license: GPL-3.0-or-later
+metadata:
+  langue: fr
+  origine: CONTRIBUTING.md, section « Le registre »
+---
+
+# Humaniseur
+
+## Loi d'airain
+
+```
+ON RETIRE L EMBALLAGE, JAMAIS LE FAIT
+```
+
+Réécrire un texte pour qu'il sonne humain ne change pas ce qu'il dit. Chaque affirmation, chiffre,
+nom, date, citation et source survit à la réécriture. Rien ne s'invente pour combler un trou.
+
+## Annoncer
+
+« J'utilise la compétence humaniseur pour <le texte>. »
+
+## Quand elle s'ouvre, dans ce dépôt
+
+L'article A31 la rend obligatoire pour toute **prose visible** : ce qu'un humain lira hors de
+l'échange qui l'a produite. La javadoc et les commentaires, la documentation, les ADR, les
+compétences, les libellés montrés à l'utilisateur dans l'interface comme en ligne de commande, les
+messages de commit et les titres de demande de fusion.
+
+Une réponse d'agent dans un fil et un fichier de bloc-notes n'en sont pas.
+
+Les sept tics de `CONTRIBUTING.md` sont le sous-ensemble **opposable** de cette grille : ils servent
+à refuser une relecture, quand la grille sert à relire.
+
+## Fonction de garde
+
+```
+1. REPERER   les motifs de la grille ci-dessous, en OUVRANT les lignes qu un motif designe.
+2. CONSERVER chaque affirmation. Raccourcir, fusionner, deplacer : oui. Retirer un fait : non.
+3. N INVENTER RIEN. Pas un nom, pas un chiffre, pas une source. S il manque un detail,
+             le demander ou ecrire une phrase plus simple.
+4. GARDER    la voix de l auteur. Un echantillon de son ecriture prime sur cette grille.
+5. RELIRE    le resultat contre la grille : une reecriture ecrit souvent ses propres tics.
+```
+
+## L'échantillon prime sur la grille
+
+Si l'auteur fournit un texte de lui, le lire d'abord et relever ses habitudes : longueur des
+phrases, ouvertures de paragraphe, ponctuation, formules qui reviennent. Les respecter ensuite,
+même quand elles figurent dans la grille. Un auteur qui emploie le tiret cadratin en garde le même
+taux ; la règle 20 ne devient pas une interdiction.
+
+## La personnalité s'ajoute où elle a sa place
+
+Un billet, un essai, un texte personnel gardent les opinions, les hésitations, l'humour et les
+apartés de leur auteur. Un texte de référence, technique, juridique ou factuel reste neutre : on
+n'y ajoute ni avis ni première personne. Dans les deux cas, aucun fait ne s'invente pour faire plus
+vivant.
+
+---
+
+# La grille
+
+Quarante et un motifs. Les trente-cinq premiers viennent de
+[« Signs of AI writing »](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) (WikiProject
+AI Cleanup) et sont adaptés au français. Les six derniers, notés `FR`, viennent de sources
+françaises et n'ont pas d'équivalent dans la liste anglaise :
+[« Aide:Identifier l'usage d'une IA générative »](https://fr.wikipedia.org/wiki/Aide:Identifier_l%27usage_d%27une_IA_g%C3%A9n%C3%A9rative)
+et trois relevés de tics de ChatGPT en français.
+
+Un motif absent de votre corpus se garde quand même dans la grille : une règle ne se juge pas à sa
+fréquence du jour.
+
+## Contenu
+
+### 1. L'importance gonflée
+
+**Mots à surveiller** : marque un tournant, joue un rôle clé / central / majeur, témoigne de,
+souligne l'importance de, s'inscrit dans une démarche / dynamique plus large, constitue une étape,
+ouvre la voie à, marque un jalon, profondément ancré, laisse une empreinte durable.
+
+Un détail ordinaire est présenté comme un basculement historique.
+
+> L'Institut de statistique de Catalogne a été officiellement créé en 1989, marquant un tournant
+> décisif dans l'évolution des statistiques régionales en Espagne, et s'inscrivant dans un mouvement
+> plus large de décentralisation.
+
+> L'Institut de statistique de Catalogne a été créé en 1989, dans le cadre de la décentralisation
+> administrative espagnole.
+
+### 2. Les noms cités pour prouver l'importance
+
+**Mots à surveiller** : reprise dans les médias nationaux, couverture indépendante, ouvrage rédigé
+par un expert reconnu, forte présence sur les réseaux sociaux, suivi par des milliers de.
+
+Une liste de titres de presse ou un nombre d'abonnés remplace ce que la personne a dit. Garder la
+citation quand la source dit **quoi** et **où** ; ne jamais fabriquer ce contexte pour raccourcir.
+
+### 3. L'analyse creuse en participe présent
+
+**Mots à surveiller** : soulignant, mettant en évidence, permettant ainsi, garantissant, reflétant,
+témoignant de, illustrant, favorisant, contribuant à, englobant, assurant ainsi.
+
+Le participe présent ajoute une profondeur que le fait n'a pas.
+
+> La palette bleu, vert et or du temple résonne avec la beauté naturelle de la région, symbolisant
+> les lupins du Texas et le golfe du Mexique, reflétant l'attachement de la communauté à sa terre.
+
+> Le temple est peint en bleu, vert et or, couleurs choisies pour évoquer les lupins du Texas et le
+> golfe du Mexique.
+
+### 4. La langue de la brochure
+
+**Mots à surveiller** : niché au cœur de, véritable, riche (au figuré), authentique, incontournable,
+emblématique, à couper le souffle, cadre exceptionnel, savoir-faire, engagement, fleuron, joyau.
+
+Le texte décrit un lieu, un produit ou une organisation comme une plaquette publicitaire.
+
+> Niché au cœur de la magnifique région du Gondar en Éthiopie, Alamata Raya Kobo est une ville
+> vibrante au riche patrimoine culturel et à la beauté naturelle saisissante.
+
+> Alamata Raya Kobo est une ville de la région du Gondar, en Éthiopie.
+
+### 5. La source vague
+
+**Mots à surveiller** : les experts estiment, certains observateurs, plusieurs sources, des études
+montrent, il est admis que, des rapports du secteur, la communauté scientifique s'accorde.
+
+Une affirmation est attribuée à des experts, des critiques ou des rapports que personne ne nomme.
+Nommer la source réelle quand le texte source en donne une ; sinon retirer l'affirmation. Ne jamais
+inventer de source.
+
+### 6. La section « défis et perspectives »
+
+**Mots à surveiller** : malgré ces défis, n'est pas exempt de difficultés, Défis et héritage,
+Perspectives d'avenir, continue de se développer, l'avenir s'annonce.
+
+Une section finale répète des généralités au lieu d'ajouter des faits. Elle se retire, sauf si elle
+porte des dates ou des actes que la source établit.
+
+---
+
+## Langue
+
+### 7. Les mots surchargés
+
+**En anglais** : delve, crucial, pivotal, tapestry, testament, landscape, showcase, underscore,
+foster, garner, intricate, vibrant.
+
+**En français** : crucial, essentiel, primordial, fondamental, notable, significatif, majeur, riche,
+dynamique, approfondi, paysage (au figuré), tapisserie (au figuré), fascinant, captivant,
+passionnant, révolutionnaire, transformateur, disruptif, incontournable.
+
+Le tic est le **groupe**, pas le mot isolé. Un « essentiel » ne prouve rien ; trois dans un
+paragraphe se voient.
+
+### 8. Le verbe simple évité
+
+**Mots à surveiller** : constitue, se veut, fait office de, revêt, s'avère, représente un, demeure
+un, se présente comme, dispose de, se compose de.
+
+*Être*, *avoir* et *faire* sont remplacés par des périphrases.
+
+> La galerie 825 se veut l'espace d'exposition de la LAAA. Elle dispose de quatre salles et fait
+> office de vitrine sur plus de 280 m².
+
+> La galerie 825 est l'espace d'exposition de la LAAA. Elle a quatre salles, soit 280 m².
+
+### 9. L'antithèse et la chute tronquée
+
+**Mots à surveiller** : ce n'est pas X, c'est Y ; non seulement X mais aussi Y ; bien plus qu'un X,
+un véritable Y ; loin d'être un simple X.
+
+L'antithèse ne se justifie que si un lecteur pouvait vraiment confondre les deux termes. Quand
+personne n'a proposé Y, elle emballe.
+
+> Ce n'est pas qu'une chanson, c'est une déclaration. Ce n'est pas le rythme sous la voix, c'est
+> l'atmosphère elle-même.
+
+> Le rythme appuyé renforce le ton agressif.
+
+La chute tronquée est la même faute en plus court : « les options viennent de l'élément choisi, pas
+de devinette » se réécrit « les options viennent de l'élément choisi, sans que l'utilisateur ait à
+deviner ».
+
+### 10. Le tricolon forcé
+
+Trois membres dont le troisième n'ajoute rien, pour faire complet.
+
+> L'événement propose des conférences, des tables rondes et des occasions de réseautage. Les
+> participants y trouveront innovation, inspiration et perspectives.
+
+> L'événement propose des conférences et des tables rondes, avec du temps libre entre les sessions.
+
+### 11. Le renommage et l'ouverture répétée
+
+Le même sujet reçoit trois noms successifs, ou trois phrases s'ouvrent sur le même mot. Employer un
+seul nom ; pour les ouvertures, fusionner les phrases ou commencer par l'action.
+
+> Le protagoniste affronte des épreuves. Le personnage principal doit surmonter des obstacles. Le
+> héros finit par triompher.
+
+> Le protagoniste affronte des épreuves, puis finit par triompher.
+
+La répétition voulue se garde : « Elle vint. Elle vit. Elle vainquit. »
+
+### 12. La fausse gamme
+
+**Mots à surveiller** : de X à Y, de Z à W, quand X et Y ne forment pas un intervalle.
+
+> Notre voyage nous a menés de la singularité du Big Bang à la toile cosmique, de la naissance des
+> étoiles à la danse énigmatique de la matière noire.
+
+> Le livre traite du Big Bang, de la formation des étoiles et des théories sur la matière noire.
+
+### 13. Le passif et le sujet absent
+
+**Mots à surveiller** : il est procédé à, il convient d'effectuer, aucune configuration n'est
+requise, les résultats sont conservés.
+
+Qui agit disparaît. Rendre l'acteur quand cela éclaire.
+
+> Aucun fichier de configuration n'est requis. Les résultats sont conservés automatiquement.
+
+> Vous n'avez pas besoin de fichier de configuration. Le système conserve les résultats.
+
+---
+
+## Forme
+
+### 14. Le tiret cadratin et le tiret demi-cadratin
+
+Le texte final ne porte ni `—` ni `–`, sauf si l'échantillon de l'auteur en emploie. Les remplacer
+par un point, une virgule, un deux-points ou une parenthèse. Surveiller aussi le tiret entouré
+d'espaces et le double trait d'union employé comme tiret.
+
+En français, le deux-points fait presque toujours le travail du cadratin, et il se lit mieux.
+
+### 15. Le gras à répétition
+
+Le gras marque ce qui se lit de travers sans lui. Quand une ligne sur trois en porte, il ne marque
+plus rien.
+
+Distinguer deux emplois avant de couper. Le gras **code** quelque chose quand il désigne un libellé
+d'interface, un nom de colonne, un terme du domaine défini, une contrainte forte, ou qu'il ouvre un
+paragraphe en énonçant sa règle. Il **emballe** quand il tombe sur un mot ordinaire : « deux chemins
+**distincts** », « un critère **booléen** ». Seul le second se retire.
+
+Aucun contrôle mécanique ne fait cette différence : la syntaxe voit le gras, pas son utilité.
+
+### 16. La liste à mini-titres gras
+
+Une liste dont chaque entrée ouvre sur un mot en gras suivi d'un deux-points est un paragraphe
+qu'on a découpé.
+
+> - **Expérience utilisateur** : l'interface a été significativement améliorée.
+> - **Performance** : les temps de chargement ont été optimisés.
+> - **Sécurité** : le chiffrement de bout en bout a été renforcé.
+
+> La mise à jour revoit l'interface, accélère le chargement et ajoute le chiffrement de bout en
+> bout.
+
+Un cas reste légitime : l'étiquette **structurelle** d'un document de référence, répétée à
+l'identique sur chaque entrée, qui sépare deux natures de contenu. Cette page en emploie une,
+« Mots à surveiller », pour distinguer le lexique de l'explication. Le critère est la répétition
+identique et la fonction : une étiquette qui change à chaque entrée n'en est pas une, c'est un
+paragraphe découpé.
+
+### 17. La capitale à chaque mot d'un titre
+
+Le français ne capitalise que le premier mot et les noms propres. Un titre entièrement capitalisé
+est un calque de l'anglais, et il se voit d'autant plus qu'il est rare.
+
+> ## Négociations Stratégiques Et Partenariats Mondiaux
+
+> ## Négociations stratégiques et partenariats mondiaux
+
+Attention aux faux positifs : un titre plein d'acronymes ou de noms de produit paraît capitalisé
+sans l'être.
+
+### 18. Les pictogrammes décoratifs
+
+Un emoji posé devant un titre ou une puce comme ornement. Le retirer. Un pictogramme qui **porte**
+une information est autre chose, et il se juge sur ce qu'il porte.
+
+> 🚀 **Lancement** : le produit sort au troisième trimestre
+> 💡 **Enseignement** : les utilisateurs préfèrent la simplicité
+
+> Le produit sort au troisième trimestre. L'étude montre une préférence pour la simplicité.
+
+### 19. Les guillemets et l'apostrophe
+
+En anglais, le tic est le guillemet courbe là où l'auteur écrit droit. En français, la question se
+pose autrement : les guillemets français `« »` sont la forme attendue, et le tic est le **mélange**
+des formes dans un même texte.
+
+L'apostrophe suit la même règle : choisir la droite `'` ou la courbe `’`, et ne jamais mêler les
+deux. Un mélange se voit surtout quand le texte alimente une interface, où deux écrans affichent
+alors deux apostrophes différentes.
+
+---
+
+## Restes de conversation
+
+### 20. Le texte d'assistant laissé dans la réponse
+
+**Mots à surveiller** : j'espère que cela vous aidera, bien sûr !, tout à fait !, vous avez
+parfaitement raison, souhaitez-vous que, voulez-vous que je, dois-je continuer, n'hésitez pas,
+voici un, voici la liste.
+
+> Voici un aperçu de la Révolution française. J'espère que cela vous aidera ! N'hésitez pas si vous
+> voulez que je développe une section.
+
+> La Révolution française commence en 1789, quand la crise financière et les pénuries alimentaires
+> provoquent des troubles.
+
+### 21. L'aveu de limite et la conjecture qui le comble
+
+**Mots à surveiller** : à ma connaissance, jusqu'à ma dernière mise à jour, les informations
+disponibles sont limitées, d'après les sources accessibles, non rendu public, reste discret,
+préserve sa vie privée, il semble que, vraisemblablement, on peut supposer.
+
+Le modèle dit qu'il n'a pas trouvé, puis comble le trou par une supposition plausible. Écrire ce que
+la source ne montre pas, ou retirer la phrase. Ne jamais présenter une conjecture comme un fait.
+
+> Les informations sur ses débuts ne sont pas publiques, ce qui suggère qu'elle préserve sa vie
+> privée. Elle a vraisemblablement grandi dans un milieu modeste, ce qui explique son intérêt pour
+> l'éducation.
+
+> Ses débuts ne sont pas documentés dans les sources disponibles.
+
+### 22. Le ton complaisant
+
+**Mots à surveiller** : excellente question, vous avez tout à fait raison, c'est un point très
+pertinent, quelle bonne idée.
+
+> Excellente question ! Vous avez tout à fait raison, c'est un sujet complexe. Votre remarque sur
+> les facteurs économiques est très pertinente.
+
+> Les facteurs économiques que vous mentionnez comptent ici.
+
+---
+
+## Remplissage et nuances
+
+### 23. Les formules de remplissage
+
+**En français** : afin de pouvoir, dans le but de, du fait que, à l'heure actuelle, dans le cas où,
+il est important de noter que, il convient de souligner que, on notera que, il est à préciser que,
+il importe de garder à l'esprit que, force est de constater que, a la capacité de, a la possibilité
+de.
+
+> Afin de pouvoir atteindre cet objectif → Pour atteindre cet objectif
+> Du fait qu'il pleuvait → Parce qu'il pleuvait
+> À l'heure actuelle → Aujourd'hui
+> Il est important de noter que les données montrent → Les données montrent
+> Le système a la capacité de traiter → Le système traite
+
+### 24. L'empilement de nuances
+
+**Mots à surveiller** : pour être honnête, il se pourrait que, potentiellement, on pourrait
+éventuellement, dans certains cas il se peut que, cela reste une hypothèse.
+
+Une relecture après l'autre ajoute un correctif, jusqu'à ce que plus rien ne soit affirmé. Garder la
+nuance que la source appuie et que le sens réclame ; retirer celles qui ne font que rattraper une
+exagération précédente.
+
+> On pourrait éventuellement soutenir que la mesure aurait peut-être un certain effet.
+
+> La mesure peut avoir un effet.
+
+### 25. La clôture optimiste
+
+Le texte se termine sur un souhait au lieu du dernier fait utile.
+
+> L'avenir s'annonce prometteur pour l'entreprise. De belles perspectives se dessinent sur le chemin
+> de l'excellence.
+
+Retirer le paragraphe. Si la source donne des projets réels, écrire les projets.
+
+### 26. Les paires à trait d'union
+
+**En anglais** : data-driven, cross-functional, end-to-end, real-time, long-term.
+
+En français, le tic prend une autre forme : le calque non traduit (« une approche data-driven »,
+« un suivi end-to-end », « une solution clé-en-main ») là où un mot français existe. Le remplacer.
+
+---
+
+## Rhétorique
+
+### 27. La fausse révélation
+
+**Mots à surveiller** : au fond, en réalité, la vraie question est, ce qui compte vraiment,
+fondamentalement, le véritable enjeu, le cœur du sujet, tout l'enjeu est là.
+
+Une remarque ordinaire est présentée comme une vérité cachée.
+
+> La vraie question est de savoir si les équipes peuvent s'adapter. Au fond, ce qui compte vraiment,
+> c'est la maturité de l'organisation.
+
+> La question est de savoir si les équipes peuvent s'adapter, ce qui dépend surtout de la capacité
+> de l'organisation à changer ses habitudes.
+
+### 28. L'annonce avant la chose
+
+**Mots à surveiller** : entrons dans le vif du sujet, voyons cela de plus près, décortiquons,
+voici ce qu'il faut savoir, sans plus attendre, petit point, deux choses méritent d'être dites,
+et c'est instructif.
+
+Le registre familier ne rachète pas l'annonce : « un truc qui m'a bien piégé » a le même défaut.
+
+> Voyons de plus près comment fonctionne le cache dans Next.js. Voici ce qu'il faut savoir.
+
+> Next.js met en cache à plusieurs niveaux : mémoïsation des requêtes, cache de données, cache du
+> routeur.
+
+### 29. Le titre répété par sa première phrase
+
+Un titre suivi d'une phrase qui ne fait que le redire. Retirer la phrase.
+
+> ## Performance
+>
+> La vitesse compte.
+>
+> Une page lente fait partir les visiteurs.
+
+> ## Performance
+>
+> Une page lente fait partir les visiteurs.
+
+### 30. La version précédente racontée
+
+**Mots à surveiller** : auparavant, jusqu'ici, jadis, naguère, autrefois, à l'époque, avant elle,
+anciennement, désormais, dorénavant.
+
+Une documentation et un commentaire décrivent le comportement d'aujourd'hui. Le passé a ses lieux :
+l'historique de version, le journal des changements, la section des alternatives écartées d'une
+décision d'architecture.
+
+> Cette fonction a été ajoutée pour remplacer l'ancienne approche qui parcourait tous les éléments,
+> ce qui coûtait O(n²).
+
+> Cette fonction emploie une table de hachage, avec une recherche en O(1).
+
+### 31. La chute dramatique et le fragment
+
+Chaque phrase devient une clôture. Une phrase courte appuie ; une suite de fragments courts sonne
+faux.
+
+> Puis AlphaEvolve est arrivé. Aucune préférence pour la symétrie. Aucun a priori esthétique. Aucune
+> nostalgie du goût humain. Les anciennes règles n'existaient plus.
+
+> AlphaEvolve a changé la recherche parce qu'il ne privilégiait ni la symétrie ni les formes
+> familières, ce qui a rendu certaines hypothèses anciennes moins utiles.
+
+### 32. La formule toute faite
+
+**Mots à surveiller** : X est le Y de Z, X devient un piège, X n'est pas un outil mais un miroir,
+le langage de, la monnaie de, l'architecture de, le nerf de la guerre.
+
+Une affirmation ordinaire prend la forme d'un aphorisme et perd son détail.
+
+> La symétrie est le langage de la confiance. L'efficacité devient un piège quand les équipes
+> oublient la couche humaine.
+
+> Une disposition symétrique paraît souvent plus prévisible. Les équipes peuvent optimiser un
+> processus au point de perdre de vue son usage réel.
+
+Attention aux faux positifs : « l'abscisse est le nombre de minutes depuis 18 h » est du français
+ordinaire, pas une formule.
+
+### 33. La fausse candeur
+
+**Mots à surveiller** : honnêtement ?, soyons clairs, disons-le, le fait est, voici la chose, pour
+être franc, entre nous.
+
+Le tic est l'ouverture théâtrale, pas le mot. « Dire honnêtement de quand il date » n'a rien à voir.
+
+> Est-ce que ça vaut le prix ? Honnêtement ? Ça dépend de la fréquence d'usage.
+
+> Que cela vaille le prix dépend de la fréquence d'usage.
+
+### 34. L'objection que personne n'a soulevée
+
+**Mots à surveiller** : ce n'est pas tant une question de, je ne dis pas que, qu'on ne s'y trompe
+pas, loin de moi l'idée de, on pourrait croire que, certains diront que.
+
+Le texte répond à une objection qui n'apparaît nulle part ailleurs. Retirer la défense ; si elle
+porte une affirmation réelle, écrire l'affirmation.
+
+Garder l'objection quand le texte nomme qui la porte, ou qu'il y répond entièrement. Une affirmation
+directe comme « cette API n'est pas thread-safe » n'est pas ce motif.
+
+### 35. La fausse alternative écartée
+
+**Mots à surveiller** : une solution tentante serait, on aurait pu, il serait tentant de, une
+approche évidente consisterait à, on pourrait penser que, certains suggéreraient.
+
+Une option que personne n'envisagerait est introduite, écartée en une proposition, puis jamais
+reprise. C'est souvent le reste d'une version antérieure du texte.
+
+> Les jetons de session sont renouvelés toutes les 24 heures. Une solution tentante serait de
+> redémarrer le service d'authentification par une tâche planifiée, mais cela couperait toutes les
+> sessions actives. Le renouvellement se fait en place.
+
+> Les jetons de session sont renouvelés en place toutes les 24 heures, et les clients rafraîchissent
+> sans interruption.
+
+Une alternative réelle se garde : dans un document de conception ou un tutoriel, le lecteur peut
+vraiment l'envisager. Plusieurs rejets courts et sans suite dans le même texte sont le signal.
+
+---
+
+## Les six motifs propres au français
+
+### FR1. Les connecteurs lourds en ouverture de phrase
+
+**Mots à surveiller** : Cependant, Toutefois, Néanmoins, Par ailleurs, En outre, De surcroît, Par
+conséquent, En conséquence, De ce fait, Dès lors, En effet, En somme, En résumé, En définitive, De
+plus, D'une part / D'autre part, Force est de constater, À cet égard.
+
+C'est le tic français le plus cité, et le plus mécanique : chaque phrase reçoit son connecteur, si
+bien que le texte annonce en permanence sa propre logique.
+
+Le mot n'est pas en cause. Le tic est la **position** et le **taux** : un connecteur en tête de
+phrase, phrase après phrase. Employé au milieu d'une phrase, il est du français ordinaire.
+
+> Le seuil ne tient pas. Cependant, la mesure reste utile. Par ailleurs, elle est peu coûteuse. En
+> outre, elle se rejoue. Par conséquent, on la garde.
+
+> Le seuil ne tient pas, mais la mesure reste utile : elle coûte peu et se rejoue.
+
+Pour mesurer : compter ces mots **en tête de phrase**, pas n'importe où, et éprouver le compteur sur
+une phrase témoin fabriquée avant de conclure sur un zéro.
+
+### FR2. Les calques de l'anglais
+
+**Mots à surveiller** : faire du sens, adresser un problème, supporter (au sens de prendre en
+charge), initier (au sens de lancer), opportunité (au sens d'occasion), digital (au sens de
+numérique), en termes de, basé sur (au sens de fondé sur), au final, définitivement (au sens de
+certainement), éventuellement (au sens de finalement), compléter (au sens d'achever).
+
+Le calque passe d'autant mieux que le mot existe en français avec un autre sens. « Il supporte le
+format WAV » se lit comme « il le tolère ».
+
+### FR3. Les formules creuses françaises
+
+**Mots à surveiller** : mettre en place, mettre en œuvre, permettre de, dans ce cadre, dans ce
+contexte, il convient de, en d'autres termes, à l'ère de, à l'heure de, dans un monde, dans le monde
+trépidant de, besoin urgent, en conclusion.
+
+Elles remplacent un verbe précis par une périphrase administrative.
+
+> La mise en place d'un dispositif permettant de procéder à la vérification des accès.
+
+> Un dispositif vérifie les accès.
+
+### FR4. La nominalisation administrative
+
+Le verbe devient un nom, et la phrase perd son sujet.
+
+> La réalisation de l'analyse des données a permis l'identification des anomalies.
+
+> L'analyse des données a montré les anomalies.
+
+Repérer les suites de noms reliés par « de » : trois « de » dans une phrase courte signalent presque
+toujours une nominalisation à défaire.
+
+### FR5. Le « nous » de commentaire
+
+**Mots à surveiller** : nous avons choisi, nous devons, nous pouvons voir, nous allons, on notera
+que, comme nous l'avons vu.
+
+Dans un texte technique de référence, ce « nous » n'a pas de référent : ni l'auteur ni le lecteur.
+Écrire ce que le code ou le dispositif fait.
+
+> Nous avons choisi de conserver les fichiers plutôt que de les déplacer.
+
+> Les fichiers sont copiés, jamais déplacés.
+
+### FR6. Le style homogène de bout en bout
+
+Le registre ne varie pas : même longueur de phrase, même plan sur chaque section, même densité de
+vocabulaire du début à la fin. Un auteur humain fatigue, s'emballe, coupe court.
+
+Ce motif ne se corrige pas mot à mot. Il se corrige en variant réellement : une phrase courte après
+trois longues, un paragraphe qui s'arrête plus tôt que prévu, un aparté.
+
+---
+
+# Ce que cette grille ne peut pas voir
+
+Une grille de motifs mesure sa **précision**, jamais son **rappel**. Lire les lignes qu'un motif
+désigne dit combien sont fautives ; cela ne dit rien de celles qu'aucun motif ne désigne.
+
+Ce qui échappe n'est pas lexical, c'est **relationnel** :
+
+- une documentation qui paraphrase la signature sans rien ajouter : « Cette méthode permet
+  d'effectuer le calcul de la richesse spécifique au sein d'une zone délimitée » au-dessus de
+  `calculerRichesseSpecifique(Zone)` ;
+- une garantie annoncée que le code ne tient pas : « garantit la cohérence des détections » pour une
+  méthode qui trie une liste ;
+- une unité qui ne correspond pas : `@return la fréquence en Hz` sur un calcul en kHz ;
+- un comportement décrit qui n'existe pas : une gestion d'exception ou un traitement asynchrone
+  absents du code.
+
+Aucune de ces lignes ne porte un mot suspect. Le défaut est dans l'écart entre le texte et ce qu'il
+décrit, et il faut les lire ensemble.
+
+La même limite vaut pour les traces **distribuées** : un plan identique sur chaque section, des
+synonymes alternés mécaniquement, un commentaire complet sur ce qui est trivial et muet sur ce qui
+est difficile. Chaque occurrence isolée paraît correcte ; c'est leur répétition qui est le signe.
+
+Un échantillon **non déclenché par les motifs**, tiré au hasard et lu contre le sujet, est le seul
+moyen de voir ces deux familles.
+
+---
+
+# Les faux positifs
+
+Aucun élément ci-dessous ne prouve quoi que ce soit à lui seul.
+
+- **Une grammaire parfaite.** Beaucoup de gens écrivent bien, ou sont relus.
+- **Un style mêlant familier et soutenu.** Cela tient au métier, à l'âge, aux habitudes.
+- **Une prose plate.** L'écriture générée a des marques précises. La platitude sans ces marques est
+  de la platitude.
+- **Un mot soutenu isolé.** La règle 7 vise des groupes, pas chaque mot rare.
+- **Un connecteur isolé.** Un « cependant » ne dit rien. C'est l'empilement qui parle.
+- **Un cadratin isolé.** Beaucoup de rédacteurs en emploient. Il compte avec d'autres marques.
+- **Une phrase courte pour appuyer.** Le fragment se signale en série.
+- **Une ouverture répétée voulue.** « Elle vint. Elle vit. Elle vainquit. »
+- **Un « honnêtement » ou un « au fond » au milieu d'une phrase.** Le tic est l'ouverture théâtrale.
+- **Les limites et avertissements utiles.** Un périmètre, une mention légale, une correction réelle,
+  une objection nommée et une réponse de foire aux questions se gardent.
+- **Une alternative réelle.** Dans un document de conception, le lecteur peut vraiment l'envisager.
+- **L'absence de sources.** La plupart des textes n'en portent pas.
+- **Un formatage propre.** Les éditeurs visuels en produisent sans aucune IA.
+- **Une tournure citée.** Ne jamais réécrire un motif à l'intérieur d'une citation, d'un titre
+  d'œuvre, d'un nom propre ou d'un exemple qui sert précisément à le montrer.
+- **Un terme du domaine qui ressemble à un tic.** « La richesse d'un carré » est un nombre d'espèces,
+  pas de la publicité. Ouvrir les lignes avant de retenir un motif.
+
+## Ce qui porte la voix et se garde
+
+- **Un détail précis et inattendu** : une adresse réelle, une citation étrange, « l'avocat qui
+  travaillait au-dessus de mon dentiste ».
+- **Un sentiment mêlé, non résolu** : « je crois que c'est plutôt bien, mais ça me gêne, et je ne
+  sais pas dire pourquoi ».
+- **Une référence datée** : un mot d'argot, une allusion qui situe une année et un milieu.
+- **Un choix de première personne assumé**, quand l'auteur peut dire pourquoi il est là.
+- **La variété des longueurs de phrase.** L'écriture réelle alterne.
+- **Un aparté ou une autocorrection** : « (je veux écrire "presque" à chaque fois, mais c'était
+  certain) ».
+
+---
+
+# Comment rendre le résultat
+
+**Texte collé, par défaut.** Rendre le brouillon, la liste courte des motifs qui restent, puis la
+version finale.
+
+**Fichier nommé.** Faire la réécriture complète mais n'écrire que le texte final dans le fichier. Ne
+toucher qu'à la prose : les blocs de code, les en-têtes de métadonnées, les données et les cibles de
+liens restent tels quels. Rendre ensuite un résumé court.
+
+**Appel depuis une autre tâche** (message de commit, corps de demande de fusion, document) : rendre
+le texte final seul.
+
+## La relecture finale
+
+1. Relire à voix haute. Vérifier le rythme, les verbes simples, le niveau de langue.
+2. Se poser deux questions : **qu'est-ce qui sonne encore artificiel ?** et **la réécriture a-t-elle
+   ajouté ou retiré un fait, un nom, un chiffre, une date, une citation ou une source ?** Toute
+   addition non appuyée et toute perte sont des erreurs.
+3. Chercher `—`, `–`, et les apostrophes de l'autre forme. Les retirer, sauf si l'échantillon de
+   l'auteur les emploie.
+4. Relire le texte produit contre la grille : une réécriture écrit souvent ses propres tics, et
+   l'aphorisme de clôture est celui qui revient le plus.
+
+## Source
+
+Trente-cinq motifs de [« Signs of AI writing »](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing),
+tenu par WikiProject AI Cleanup. Six motifs français de
+[« Aide:Identifier l'usage d'une IA générative »](https://fr.wikipedia.org/wiki/Aide:Identifier_l%27usage_d%27une_IA_g%C3%A9n%C3%A9rative)
+et de trois relevés de tics de ChatGPT en français
+([Daria décrypte l'IA](https://dariadecrypteia.substack.com/p/les-tics-de-langage-de-chatgpt),
+[Flint](https://generationia.flint.media/p/dejouer-tics-langage-chatgpt),
+[Projet Voltaire](https://www.projet-voltaire.fr/ressources/detecter-texte-chatgpt-ia-generative/)).
+
+Ce que ce dépôt en retient comme règles opposables, et les mesures qui les fondent, sont dans la
+section « Le registre » de [CONTRIBUTING.md](../../../CONTRIBUTING.md). Sept tics y sont retenus sur
+les quarante et un de cette grille : ils servent à refuser une relecture, quand la grille sert à
+relire.
