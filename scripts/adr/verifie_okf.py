@@ -11,7 +11,7 @@ approximatif « lisible », donc vert, et la conformité ne voudrait plus rien d
 lecteur EST le premier des huit contrôles. Aucune dépendance hors stdlib, comme ses voisins :
 `lint.yml` n'installe rien, et un garde qui exige un paquet absent ne garde rien du tout.
 
-Les huit refus, et ce qui prouve qu'ils manquaient :
+Les neuf refus, et ce qui prouve qu'ils manquaient :
 
 | Refus | Ce qu'il attrape | Pourquoi il manquait |
 |---|---|---|
@@ -23,12 +23,19 @@ Les huit refus, et ce qui prouve qu'ils manquaient :
 | atteignabilité | une ADR absente de `index.md` ou de la nav | 172 fichiers, aucun contrôle |
 | liens | un renvoi croisé vers un fichier absent | OKF le tolère, le dépôt ne doit pas |
 | cliquet de corpus | une disparition silencieuse d'ADR | une consolidation peut perdre une décision |
+| heuristiques | une clé hors du vocabulaire clos, ou déclarée en scalaire | une faute de frappe créait une heuristique de plus, en silence |
+
+Le garde porte aussi deux CONSTATS, qui ne refusent pas : les heuristiques que rien ne sert, et les
+ADR d'un article d'usage qui n'en déclarent aucune. Le second est sous cliquet (article A29).
 """
 
 import argparse
 import pathlib
 import re
 import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from _commun import rapporte  # noqa: E402
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
@@ -42,6 +49,26 @@ RESERVES = {"index.md", "log.md"}
 PLANCHER_CORPUS = 194
 
 ARTICLE = re.compile(r"^###\s+(A\d+)\s*:", re.M)
+
+# L annexe close des heuristiques d ergonomie. Le vocabulaire vit LA et nulle part ailleurs : le
+# garde le lit plutot que d en tenir une copie, sans quoi les deux listes deriveraient l une de
+# l autre sans que rien ne le dise.
+ANNEXE_HEURISTIQUES = RACINE / "dev-docs" / "ergonomie" / "heuristiques.md"
+
+# Une cle du vocabulaire, telle que l annexe la pose : premiere colonne, entre accents graves.
+CLE_HEURISTIQUE = re.compile(r"^\| `([a-z0-9-]+)` \|", re.M)
+
+# Le debut de la matrice engendree par `matrice-ergonomie.py`, ecrit dans la meme annexe. Le
+# vocabulaire se lit AVANT elle : elle repete les memes cles sous la meme forme.
+DEBUT_MATRICE = "<!-- matrice engendree : ne pas editer a la main -->"
+
+# Les huit articles qui touchent l USAGE. Une ADR rattachee a l un d eux et qui ne declare aucune
+# heuristique est un SUSPECT, pas une faute : un refus sec rendrait le garde rouge sur tout le
+# corpus le jour de sa pose, et il serait desactive dans la semaine (article A9).
+ARTICLES_D_USAGE = {"A12", "A13", "A14", "A15", "A18", "A19", "A23", "A28"}
+
+# Le numero de l ADR qui porte ce cliquet. Ici l identite d une ADR est son numero, non son slug.
+ADR_ERGONOMIE = "4342"
 RENVOI = re.compile(r"\]\((\d[a-z0-9-]*\.md)(?:#[^)]*)?\)")
 # Les verbes qui DÉPASSENT une décision, par opposition à ceux qui la citent ou la prolongent.
 DEPASSEMENT = {"renverse", "remplace", "annule"}
@@ -130,15 +157,97 @@ def articles(chemin: pathlib.Path = None) -> set[str]:
     return set(ARTICLE.findall((chemin or CONSTITUTION).read_text(encoding="utf-8")))
 
 
+def heuristiques_connues(annexe: pathlib.Path = None) -> list[str]:
+    """Le vocabulaire clos, dans l ordre de l annexe. Liste vide si l annexe manque.
+
+    La lecture s arrete au marqueur de la matrice engendree : celle-ci porte les memes cles entre
+    accents graves, et sans cette borne le vocabulaire doublait - 36 cles pour 18. Le compte annonce
+    dans les refus devenait faux, et chaque heuristique apparaissait deux fois dans le rapport.
+    """
+    annexe = annexe or ANNEXE_HEURISTIQUES
+    if not annexe.exists():
+        return []
+    texte = annexe.read_text(encoding="utf-8")
+    if DEBUT_MATRICE in texte:
+        texte = texte[: texte.index(DEBUT_MATRICE)]
+    return CLE_HEURISTIQUE.findall(texte)
+
+
+def _articles_de(entete: dict) -> set[str]:
+    """L article de rattachement, et ceux qu une fusion a fait entrer."""
+    codes = {entete.get("article")} if entete.get("article") else set()
+    return codes | set(entete.get("articles_absorbes") or [])
+
+
+def _entetes(decisions: pathlib.Path = None) -> dict[str, dict]:
+    """Les en-tetes lisibles du corpus, par nom de fichier."""
+    lus = {}
+    for f in sorted((decisions or DECISIONS).glob("*.md")):
+        if f.name in RESERVES:
+            continue
+        try:
+            lus[f.name] = lit_entete(f.read_text(encoding="utf-8"))
+        except EnteteInvalide:
+            continue
+    return lus
+
+
+def suspects_ergonomie(decisions: pathlib.Path = None) -> list[str]:
+    """Les ADR d un article d usage qui ne declarent aucune heuristique.
+
+    Un suspect par ADR. Le grain compte : le cliquet doit descendre d un cran par decision lue,
+    pas par paquet de fichiers.
+    """
+    trouves = []
+    for nom, e in sorted(_entetes(decisions).items()):
+        if _articles_de(e) & ARTICLES_D_USAGE and not e.get("heuristiques"):
+            article = e.get("article") or "?"
+            trouves.append(f"{nom}  ({article})")
+    return trouves
+
+
+def heuristiques_sans_emploi(decisions: pathlib.Path = None,
+                             annexe: pathlib.Path = None) -> list[str]:
+    """Les heuristiques du vocabulaire qu aucune decision ne sert.
+
+    Ce n est PAS une faute : le jour ou le produit n a rien a decider sur l aide et la
+    documentation, le silence est la bonne reponse. Encore faut-il le voir.
+    """
+    servies = set()
+    for e in _entetes(decisions).values():
+        for cle in e.get("heuristiques") or []:
+            servies.add(cle)
+    return [c for c in heuristiques_connues(annexe) if c not in servies]
+# Un renvoi vers une ADR VOISINE : aucune barre oblique, donc le meme dossier. Depuis que
+# l identite est le slug, il ne commence plus par un chiffre ; exiger un chiffre rendrait
+# « 0 renvoi » sur un corpus qui n en manque aucun, soit la forme exacte du succes.
+RENVOI = re.compile(r"\]\(([a-z0-9][a-z0-9-]*\.md)(?:#[^)]*)?\)")
+# Les verbes qui DÉPASSENT une décision, par opposition à ceux qui la citent ou la prolongent.
+DEPASSEMENT = {"renverse", "remplace", "annule"}
+
+
+class EnteteInvalide(ValueError):
+    """L'en-tête sort de la forme que le dépôt écrit."""
+
+
 def verifie(decisions: pathlib.Path = None, constitution: pathlib.Path = None,
-            nav: pathlib.Path = None, plancher: int = None) -> list[str]:
+            nav: pathlib.Path = None, plancher: int = None,
+            annexe: pathlib.Path = None) -> list[str]:
     """Les manquements du paquet, un par ligne. Liste vide : le paquet est conforme."""
     decisions = decisions or DECISIONS
     plancher = PLANCHER_CORPUS if plancher is None else plancher
     connus = articles(constitution)
+    vocabulaire = heuristiques_connues(annexe)
     fichiers = sorted(f for f in decisions.glob("*.md") if f.name not in RESERVES)
     noms = {f.name for f in fichiers}
     fautes: list[str] = []
+
+    # Sans annexe, le contrôle des clés serait vide et ne dirait rien. Un dispositif qui peut ne
+    # rien vérifier le dit (article A3), et ici il refuse plutôt que de passer au vert.
+    if not vocabulaire:
+        fautes.append(
+            "annexe : le vocabulaire des heuristiques est introuvable ou vide ; "
+            "le contrôle des clés ne vérifierait rien")
 
     # 8. Cliquet de corpus : une décision ne disparaît pas sans qu'on l'ait décidé.
     if len(fichiers) < plancher:
@@ -176,6 +285,22 @@ def verifie(decisions: pathlib.Path = None, constitution: pathlib.Path = None,
             fautes.append(f"{f.name} : « humaine » qui nomme un applicateur ; est-ce une loupe ?")
         if not e.get("verified"):
             fautes.append(f"{f.name} : aucune trace de vérification")
+        # 9. Les heuristiques déclarées appartiennent au vocabulaire CLOS de l'annexe, et se
+        #    déclarent en LISTE, même à une seule entrée. Une faute de frappe qui passerait
+        #    créerait une heuristique de plus en silence, et le regroupement, seul service rendu,
+        #    cesserait de fonctionner.
+        brut = e.get("heuristiques")
+        if brut is not None:
+            if not isinstance(brut, list):
+                fautes.append(
+                    f"{f.name} : « heuristiques » doit être une liste, même à une seule entrée")
+            else:
+                for cle in brut:
+                    if cle not in vocabulaire:
+                        fautes.append(
+                            f"{f.name} : heuristique « {cle} » hors du vocabulaire clos ; "
+                            f"l'annexe en tient {len(vocabulaire)}")
+
         # 4. Succession : une décision dépassée nomme ce qui la remplace.
         if e.get("status") == "deprecated":
             liens = e.get("relations") or {}
@@ -210,7 +335,7 @@ def verifie(decisions: pathlib.Path = None, constitution: pathlib.Path = None,
     return fautes
 
 
-def _fixture(d: str, documents: dict[str, str], plancher: int) -> list[str]:
+def _fixture(d: str, documents: dict[str, str], plancher: int, annexe: bool = True) -> list[str]:
     """Monte un paquet jetable et rend les manquements que le garde y voit.
 
     La constitution et la navigation vivent HORS du dossier des décisions, comme dans le dépôt.
@@ -228,7 +353,14 @@ def _fixture(d: str, documents: dict[str, str], plancher: int) -> list[str]:
     const.write_text("### A1 : Un témoin\n", encoding="utf-8")
     nav = racine / "nav.yml"
     nav.write_text("".join(f"  - x: decisions/{n}\n" for n in documents), encoding="utf-8")
-    return verifie(decisions, const, nav, plancher=plancher)
+    # L annexe des heuristiques, sous la MEME forme que la vraie : le controle des cles lit sa
+    # premiere colonne. `annexe=False` monte le cas ou elle manque, qui doit refuser.
+    fichier_annexe = racine / "heuristiques.md"
+    if annexe:
+        fichier_annexe.write_text(
+            "| Clé | Nom |\n|---|---|\n| `nielsen-1` | Un témoin |\n| `gestalt-cloture` | Un autre |\n",
+            encoding="utf-8")
+    return verifie(decisions, const, nav, plancher=plancher, annexe=fichier_annexe)
 
 
 MODELE = (
@@ -241,7 +373,7 @@ MODELE = (
 def auto_test() -> int:
     """Casse à la main ce que chaque refus prétend attraper, et exige qu'il rougisse.
 
-    Sans ce banc, les huit refus seraient huit affirmations. Un garde qui n'a jamais été vu rouge sur
+    Sans ce banc, chaque refus serait une affirmation. Un garde qui n'a jamais été vu rouge sur
     sa propre mutation ne dit pas ce qu'il vérifie : il dit seulement qu'il a tourné.
 
     Le dernier cas est le contrôle de non-vacuité : un paquet SAIN doit rester vert. Un garde qui
@@ -249,9 +381,10 @@ def auto_test() -> int:
     """
     echecs = []
 
-    def cas(titre: str, documents: dict[str, str], attendu: str | None, plancher: int = 1) -> None:
+    def cas(titre: str, documents: dict[str, str], attendu: str | None, plancher: int = 1,
+            annexe: bool = True) -> None:
         with tempfile.TemporaryDirectory() as d:
-            fautes = _fixture(d, documents, plancher)
+            fautes = _fixture(d, documents, plancher, annexe=annexe)
         vu = any(attendu in f for f in fautes) if attendu else not fautes
         etat = ("rouge" if vu else "VERT, ce qui est le défaut") if attendu else (
             "vert" if vu else f"ROUGE sans motif : {fautes[:2]}")
@@ -286,12 +419,45 @@ def auto_test() -> int:
          "0002-s.md": MODELE.replace("verified:", "relations:\n  renverse: [\"0001\"]\nverified:")},
         "encore « stable »", plancher=2)
     cas("corpus sous son plancher", {"0001-t.md": MODELE}, "plancher", plancher=2)
+    cas("heuristique hors du vocabulaire clos",
+        {"0001-t.md": MODELE.replace("article: A1", 'heuristiques: ["nielsen-42"]\narticle: A1')},
+        "hors du vocabulaire clos")
+    cas("heuristiques déclarées en scalaire",
+        {"0001-t.md": MODELE.replace("article: A1", 'heuristiques: "nielsen-1"\narticle: A1')},
+        "doit être une liste")
+    # Le vocabulaire vit dans l annexe. Sans elle, le controle des cles laisserait tout passer :
+    # un garde qui peut ne rien verifier le dit, et ici il refuse.
+    cas("annexe des heuristiques absente",
+        {"0001-t.md": MODELE}, "le contrôle des clés ne vérifierait rien", annexe=False)
+    cas("une clé du vocabulaire est acceptée",
+        {"0001-t.md": MODELE.replace("article: A1", 'heuristiques: ["gestalt-cloture"]\narticle: A1')},
+        None)
     cas("corpus sain", {"0001-t.md": MODELE, "0002-s.md": MODELE}, None, plancher=2)
 
     if echecs:
         print(f"\n{len(echecs)} cas en échec : {', '.join(echecs)}", file=sys.stderr)
         return 1
-    print("\nAuto-test concluant : les huit refus rougissent, et un paquet sain reste vert.")
+    # Les deux controles qui ne passent pas par `verifie()` : l un rend des suspects sous cliquet,
+    # l autre un simple constat. Ils s eprouvent donc sur un corpus jetable, faute de quoi ils ne
+    # seraient tenus par rien.
+    def sonde(titre: str, obtenu, attendu) -> None:
+        ok = obtenu == attendu
+        print(f"  {'✔' if ok else '✘'} {titre:32} -> {'vert' if ok else f'{obtenu} au lieu de {attendu}'}")
+        if not ok:
+            echecs.append(titre)
+
+    with tempfile.TemporaryDirectory() as d:
+        r = pathlib.Path(d) / "decisions"
+        r.mkdir(parents=True)
+        (r / "sans-heuristique.md").write_text(MODELE.replace("article: A1", "article: A12"),
+                                               encoding="utf-8")
+        (r / "hors-usage.md").write_text(MODELE, encoding="utf-8")
+        sonde("suspects : l'ADR d'usage nue est vue",
+              [s.split("  ")[0] for s in suspects_ergonomie(r)], ["sans-heuristique.md"])
+        sonde("suspects : l'ADR hors usage est épargnée",
+              len(suspects_ergonomie(r)), 1)
+
+    print("\nAuto-test concluant : chaque refus rougit sur sa propre violation, et un paquet sain reste vert.")
     return 0
 
 
@@ -309,7 +475,20 @@ def main() -> int:
         return 1
     total = len([f for f in DECISIONS.glob("*.md") if f.name not in RESERVES])
     print(f"{total} ADR conformes : en-tête, rattachement, confiance, atteignabilité, liens.")
-    return 0
+
+    # Contrôle 2 : ce que le vocabulaire couvre, et ce que rien ne sert. Sans rougir : c'est un
+    # manque à connaître, pas une faute à corriger.
+    connues = heuristiques_connues()
+    orphelines = heuristiques_sans_emploi()
+    print(f"\nErgonomie : {len(connues) - len(orphelines)} heuristique(s) servie(s) sur "
+          f"{len(connues)}.")
+    if orphelines:
+        print("  Aucune décision ne sert : " + ", ".join(orphelines))
+
+    # Contrôle 3 : les ADR d'un article d'usage qui ne déclarent rien, sous cliquet.
+    print()
+    return rapporte(ADR_ERGONOMIE, "ADR d'un article d'usage sans heuristique déclarée",
+                    suspects_ergonomie(), apercu=12)
 
 
 if __name__ == "__main__":

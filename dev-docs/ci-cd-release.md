@@ -607,6 +607,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `scripts/graphify/rebuild.py` | `GRAPH_REPORT.md` annonce le corpus réel, et non un corpus vide suivi d'un verdict qui le contredit | `lint.yml` |
 | `scripts/adr/verifie_okf.py` | chaque ADR porte un en-tête typé, se rattache à un article de la constitution, et gage le niveau de vérification qu'elle déclare : une « humaine » qui nomme un applicateur n'en est pas une, et le corpus ne descend pas sous son plancher | `lint.yml` |
 | `scripts/methode/matrice-constitution.py` | la matrice de [la constitution](constitution.md) concorde avec les en-têtes des ADR, et **nomme les articles que rien ne tient** : c'est la liste des gardes qui restent à écrire | `lint.yml` |
+| `scripts/methode/matrice-ergonomie.py` | la matrice de [l'annexe des heuristiques](ergonomie/heuristiques.md) concorde avec les en-têtes, et **nomme les heuristiques que rien ne sert** | `lint.yml` |
 | `scripts/methode/synchronise-adaptateurs.py` | `.claude/skills/` est une copie à jour de `.agents/skills/` : une compétence corrigée à la source ne laisse pas un agent lire l'ancienne version | `lint.yml` |
 
 ### Et un analyseur les lit tous (#4108)

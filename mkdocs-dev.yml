@@ -65,6 +65,7 @@ nav:
   - Ajouter une fonctionnalité: ajouter-une-fonctionnalite.md
   - Cycle de vie d'un chantier: cycle-de-chantier.md
   - Constitution: constitution.md
+  - Heuristiques d'ergonomie: ergonomie/heuristiques.md
   - Décisions (ADR):
     - Journal: decisions/index.md
     - 0001 · Réactivation d'un passage reconstruit: decisions/0001-reactivation-passage-reconstruit-identite-structurelle.md
@@ -256,6 +257,7 @@ nav:
     - 4274 · On compare la dernière image d'un clip, pas son chemin: decisions/4274-on-compare-la-derniere-image-pas-le-chemin.md
     - 4287 · Un écart se lit contre le plancher de son propre cas: decisions/4287-un-ecart-se-lit-contre-le-plancher-de-son-cas.md
     - 4296 · On compare les deux bouts du clip: decisions/4296-on-compare-les-deux-bouts-du-clip.md
+    - 4342 · L'ergonomie se rattache à une heuristique nommée: decisions/4342-l-ergonomie-se-rattache-a-une-heuristique-nommee.md
     - 4359 · Une javadoc contracte, elle ne raconte pas: decisions/4359-une-javadoc-contracte-elle-ne-raconte-pas.md
     - 4249 · Un fichier écrit par plusieurs JVM se reconstruit: decisions/4249-un-fichier-ecrit-par-plusieurs-jvm-se-reconstruit.md
     - 4251 · Une lecture de masse se fait par lot: decisions/4251-une-lecture-de-masse-se-fait-par-lot-et-se-garde-en-comptant-des-requetes.md
