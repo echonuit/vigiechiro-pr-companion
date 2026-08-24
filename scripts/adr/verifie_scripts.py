@@ -396,6 +396,24 @@ def test_3947_message_enveloppe() -> None:
         _verifie("3947 voit les trois formes, ignore le remède et le commentaire", n, 3)
 
 
+def test_4359_javadoc_narratif() -> None:
+    m = _charge("4359-javadoc-narratif.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        # Trois fixtures pour trois comportements, et un compte EXACT qui les separe. Un temoin
+        # unique dirait « il detecte » sans dire ce qu il epargne, or c est l epargne qui se casse :
+        # compter les etiquettes de contrat comme de la prose penaliserait un record bien documente,
+        # ce que l ADR refuse explicitement.
+        long_ = "\n".join(f"/// Ligne {i}." for i in range(m.SEUIL + 3))
+        court = "\n".join(f"/// Ligne {i}." for i in range(m.SEUIL))
+        contrat = "\n".join(f"/// @param p{i} le parametre {i}" for i in range(m.SEUIL + 5))
+        _ecrire(racine, "fr/univ_amu/iut/a/Bavard.java", long_ + "\nclass Bavard {}\n")
+        _ecrire(racine, "fr/univ_amu/iut/a/Sobre.java", court + "\nclass Sobre {}\n")
+        _ecrire(racine, "fr/univ_amu/iut/a/Contrat.java", contrat + "\nclass Contrat {}\n")
+        n = len(m.suspects(racine=racine))
+        _verifie("4359 compte la prose au-dela du seuil, epargne le bloc court et les etiquettes", n, 3)
+
+
 def test_rapport_et_resserrement() -> None:
     rapport = _charge("rapport.py")
     # Le parsing : une ligne normalisée doit être reconnue.
@@ -511,6 +529,7 @@ if __name__ == "__main__":
         test_2493_modale_suit_croissance,
         test_2635_refus_sans_surface,
         test_3947_message_enveloppe,
+        test_4359_javadoc_narratif,
         test_loupe_0020,
         test_loupe_0044,
         test_rapport_et_resserrement,

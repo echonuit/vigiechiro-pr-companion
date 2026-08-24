@@ -4,7 +4,7 @@ Les règles non négociables de ce dépôt et du produit qu'il livre. Une règle
 elle est **opposable** : quelque chose la refuse mécaniquement, ou son absence d'applicateur est
 déclarée.
 
-**Comment lire ce document.** Vingt-six articles tiennent en une page ; ils suffisent à travailler.
+**Comment lire ce document.** Vingt-sept articles tiennent en une page ; ils suffisent à travailler.
 Sous chacun vit sa **jurisprudence** : les décisions d'architecture qui l'ont produit, une par cas,
 dans `dev-docs/decisions/`. On lit les articles ; on ne descend dans les cas que lorsqu'on en a
 besoin. Chaque ADR déclare son article en en-tête, et un garde refuse celle qui n'en déclare pas.
@@ -183,6 +183,18 @@ le code tiers ne s'exécute pas avec les droits de publication.
 Chaque décision porte qui l'a produite et qui l'a relue. L'assistance par agents est déclarée, pas
 déduite. L'identité de distribution est distincte de celle de l'auteur et de celle de la plateforme.
 
+### A30 : Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi
+
+Trois endroits, un rôle chacun. Le **code** porte l'intention : un nom qui la dit, une fonction qui
+tient dans un écran, un type qui rend l'erreur impossible. Un commentaire qui explique un nom est un
+nom à changer ; un commentaire qui paraphrase la ligne suivante s'enlève. La **javadoc** dit le
+contrat - ce qu'on fournit, ce qu'on obtient, ce qui peut être nul - et s'adresse à qui appelle.
+L'**ADR** dit pourquoi, et la javadoc la **cite** au lieu de la redire.
+
+Ce qui est caduc s'enlève : `git log` garde l'histoire pour qui la cherche, et une javadoc dont une
+moitié est périmée ne se lit plus du tout. Un bloc de plus de huit lignes de prose est un suspect
+sous cliquet, dans le code de production ; un garde, lui, doit dire ce qu'il vérifie.
+
 ---
 
 <!-- matrice engendree : ne pas editer a la main -->
@@ -219,8 +231,9 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A24 · La langue du dépôt est le français | 1 | 1 | `.github/scripts/verifie-titre-pr.sh` |
 | A25 · Le travail de branche est isolé | 3 | 1 | `.github/scripts/verifie-epinglage.sh` |
 | A26 · La provenance se déclare | 3 | 2 | `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`, `DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier` |
+| A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 1 | 0 | `scripts/adr/4359-javadoc-narratif.py` |
 
-**4 article(s) sur 26 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
+**4 article(s) sur 27 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
 
 - A1 · La preuve précède l'affirmation
 - A8 · La mutation mesure dès qu'un comportement est complet
