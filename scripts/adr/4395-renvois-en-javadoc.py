@@ -2,16 +2,17 @@
 """Plancher sur les renvois d issue portes par la javadoc de production.
 
 Un bloc de javadoc qui cite `#3498` donne au lecteur l acces a la discussion qui a produit la regle
-qu il documente. La javadoc de production en porte 4 076, dans 983 fichiers. Une resorption qui
-raccourcit ce bloc peut en emporter sans que rien ne le voie : un renvoi perdu ne casse pas la
-compilation, ne fait pas rougir un test, et ne se remarque pas. Il cesse simplement d ouvrir.
+qu il documente. La javadoc de production cite 3 111 issues distinctes, dans 983 fichiers. Une
+resorption qui raccourcit ce bloc peut en emporter sans que rien ne le voie : un renvoi perdu ne
+casse pas la compilation, ne fait pas rougir un test, et ne se remarque pas. Il cesse simplement
+d ouvrir.
 
 **Pourquoi ce garde existe maintenant.** Le lot 2 du portage (#4394) va relire 713 blocs. La ligne
 d origine a deja fait ce travail sur un arbre dont 367 fichiers ont ici un code identique a l octet
 pres, et sa javadoc contractee sert de reference de redaction. Mais elle ne porte AUCUN renvoi : sa
 rupture les a tous retires, parce qu ils n ouvraient plus rien la-bas. Mesure : reprendre cette
-javadoc en bloc effacerait 1 882 renvois qui, ici, ouvrent de vraies issues. C est ce garde qui rend
-la reference utilisable sans danger.
+javadoc en bloc effacerait 1 572 de ces renvois, qui ouvrent ici de vraies issues. C est ce garde
+qui rend la reference utilisable sans danger.
 
 **La polarite est celle d un PLANCHER, pas d un cliquet.** Un cliquet compte ce qu on tolere et doit
 descendre ; celui-ci compte ce qu on possede et doit monter. `_commun.rapporte_plancher` porte cette
@@ -19,11 +20,16 @@ inversion, et le champ de l en-tete s appelle `floor` pour que le sens se voie s
 
 **Ce qu il ne lit pas, et pourquoi.**
 
-- **Le compte est global, pas par fichier.** Un plancher par fichier demanderait de figer 983 valeurs
-  et de les tenir a chaque edition legitime de javadoc, ce qui ferait payer la discipline au mauvais
-  endroit. Il s ensuit qu il ne verrait pas dix renvois perdus dans un fichier compenses par dix
-  ajoutes dans un autre. Ce n est pas la menace : la menace est la perte EN MASSE, celle qu une
-  reprise de tranche produit, et un plancher global la voit au premier passage.
+- **Le compte est global, et par renvoi DISTINCT.** Un fichier qui cite `#3068` deux fois compte
+  pour un : ce qui se perd, c est qu un fichier cesse d ouvrir une discussion, pas qu il l ouvre une
+  fois au lieu de deux. La premiere version comptait les occurrences, et sa premiere application l a
+  refutee - une reecriture qui gardait le renvoi mais supprimait son doublon la faisait rougir sans
+  que rien ne soit perdu (#4398).
+- **Le total est global, pas fige par fichier.** Figer 983 valeurs et les tenir a chaque edition
+  legitime ferait payer la discipline au mauvais endroit. Il s ensuit que dix renvois perdus dans un
+  fichier, compenses par dix ajoutes dans un autre, echapperaient. Ce n est pas la menace : la
+  menace est la perte EN MASSE, celle qu une reprise de tranche produit, et un plancher globale la
+  voit au premier passage.
 - **`src/test/java` est hors champ**, comme pour le cliquet de l article A30 auquel ce garde
   s adosse. La javadoc de test n a pas encore de decision.
 - **Seules les lignes `///` comptent.** Un renvoi dans un commentaire d implementation releve du code
@@ -80,7 +86,11 @@ def fichiers(racine: pathlib.Path = None) -> list[str]:
 
 
 def par_fichier(racine: pathlib.Path = None) -> dict[str, int]:
-    """Le nombre de renvois porte par la javadoc de chaque fichier qui en porte."""
+    """Le nombre d issues DISTINCTES que la javadoc de chaque fichier cite.
+
+    Distinctes, et non occurrences : un fichier qui cite `#3068` deux fois pointe vers une seule
+    discussion, et supprimer le doublon ne retire rien a personne. Voir la cecite declaree en tete.
+    """
     base = racine or RACINE
     comptes = {}
     for chemin in fichiers(base):
@@ -88,18 +98,17 @@ def par_fichier(racine: pathlib.Path = None) -> dict[str, int]:
             texte = (base / chemin).read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
             continue
-        n = sum(
-            len(RENVOI.findall(ligne))
-            for ligne in texte.split("\n")
-            if ligne.strip().startswith("///")
-        )
-        if n:
-            comptes[chemin] = n
+        vus = set()
+        for ligne in texte.split("\n"):
+            if ligne.strip().startswith("///"):
+                vus.update(RENVOI.findall(ligne))
+        if vus:
+            comptes[chemin] = len(vus)
     return comptes
 
 
 def renvois(racine: pathlib.Path = None) -> int:
-    """Le nombre total de renvois d issue portes par la javadoc de production."""
+    """Le nombre d issues distinctes citees, somme sur les fichiers de production."""
     return sum(par_fichier(racine).values())
 
 
@@ -147,6 +156,12 @@ def _auto_test() -> int:
             "/// Voir {@link Decoupage#applique} pour le detail.\nclass A {}\n",
             0,
         ),
+        (
+            "le meme renvoi deux fois dans un bloc compte pour un (#4398)",
+            "/// Le delai fixe est remplace par une condition (#3068).\n"
+            "/// C est assume (#3068), les tuiles etant une entree exterieure.\nclass A {}\n",
+            1,
+        ),
     ]
 
     echecs = 0
@@ -170,4 +185,4 @@ def _auto_test() -> int:
 if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
-    sys.exit(rapporte_plancher(ADR, "renvois d issue portes par la javadoc", renvois(), "renvois"))
+    sys.exit(rapporte_plancher(ADR, "issues citees par la javadoc", renvois(), "renvois"))

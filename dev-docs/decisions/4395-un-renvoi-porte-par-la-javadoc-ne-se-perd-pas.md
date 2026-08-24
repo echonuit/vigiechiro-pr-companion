@@ -8,7 +8,7 @@ decided_at: 2026-08-24
 verification: certaine
 enforced_by:
   - "scripts/adr/4395-renvois-en-javadoc.py"
-floor: 4076
+floor: 3111
 verified:
   - by: machine:ci
     at: 2026-08-24
@@ -23,7 +23,7 @@ generated:
 
 L'article A30 pose que l'ADR dit pourquoi, et que **la javadoc la cite au lieu de la redire**. Le
 renvoi `#N` est cette citation : il donne au lecteur d'un contrat l'accès à la discussion qui a
-produit la règle. La javadoc de production en porte **4 076**, dans 983 fichiers.
+produit la règle. La javadoc de production cite **3 111 issues distinctes**, dans 983 fichiers.
 
 Le même article ouvre un cliquet de 3 641 lignes de prose narrative, sur 713 blocs. Les résorber
 demande de raccourcir ces blocs, et c'est là que les deux exigences se croisent : **la citation vit
@@ -41,16 +41,20 @@ sa javadoc contractée est donc une référence de rédaction directement applic
 dette. Mais elle ne porte **aucun** renvoi. Sa rupture les a tous retirés, parce qu'ils n'ouvraient
 plus rien dans un dépôt détaché de ses issues.
 
-**Reprendre cette javadoc en bloc effacerait 1 882 renvois qui, ici, ouvrent de vraies issues.**
+**Reprendre cette javadoc en bloc effacerait 1 572 de ces renvois, qui ouvrent ici de vraies issues.**
 C'est la perte que l'ADR [4334](4334-ce-que-le-portage-a-decide-de-ne-pas-porter.md) a refusée au
 grain du commit, revenue au grain du bloc de javadoc.
 
 ## Décision
 
-Le nombre de renvois `#N` portés par les lignes `///` de `src/main/java` **ne descend pas**. Il est
-tenu par un plancher déclaré, que `scripts/adr/4395-renvois-en-javadoc.py` vérifie à chaque passage.
+Le nombre d'issues **distinctes** que cite la javadoc de chaque fichier de `src/main/java`, sommé
+sur le dépôt, **ne descend pas**. Il est tenu par un plancher déclaré, que
+`scripts/adr/4395-renvois-en-javadoc.py` vérifie à chaque passage.
 
-Le plancher ouvre à **4 076**, mesuré sur `9da19a6f7`. Il se relève de ce qu'un chantier ajoute.
+Distinctes, et non occurrences : ce qui se perd est qu'un fichier **cesse d'ouvrir** une discussion,
+pas qu'il l'ouvre une fois au lieu de deux.
+
+Le plancher ouvre à **3 111**, mesuré sur `845240252`. Il se relève de ce qu'un chantier ajoute.
 L'abaisser est possible, et c'est une décision : la justifier dans cette ADR, comme on justifie un
 cliquet qui monte.
 
@@ -63,11 +67,21 @@ la bonne nouvelle est de le relever. Les deux ne peuvent pas partager un champ s
 pressé lise le mauvais sens, d'où `floor` à côté de `ratchet` dans l'en-tête, et
 `rapporte_plancher` à côté de `rapporte` dans le socle.
 
-**Le compte est global, pas par fichier.** Un plancher par fichier demanderait de figer 983 valeurs
-et de les tenir à chaque édition légitime de javadoc : la discipline se paierait à chaque geste
-honnête, pour attraper une faute qui ne se commet qu'en masse. Le garde ne verrait donc pas dix
-renvois perdus dans un fichier compensés par dix ajoutés dans un autre. Ce n'est pas la menace ; la
-menace est la reprise de tranche, et un plancher global la voit au premier passage.
+**Le total est global, pas figé par fichier.** Figer 983 valeurs et les tenir à chaque édition
+légitime ferait payer la discipline à chaque geste honnête, pour attraper une faute qui ne se commet
+qu'en masse. Le garde ne voit donc pas dix renvois perdus dans un fichier compensés par dix ajoutés
+dans un autre. Ce n'est pas la menace ; la menace est la reprise de tranche, et un plancher global la
+voit au premier passage.
+
+**Ce que la première application a corrigé.** La version posée comptait les **occurrences**. Elle a
+été réfutée par le premier fichier où elle pouvait l'être, dans l'heure : `AttenteTuiles.java` citait
+`#3068` deux fois dans un bloc, la version contractée le cite une fois, et le garde a rougi sur une
+réécriture qui ne perdait rien. Mesuré sur les deux états : 4 076 occurrences contre 4 075, et
+**3 111 renvois distincts dans les deux cas**. Le plancher est passé de 4 076 à 3 111 sans qu'aucun
+renvoi ne disparaisse - les deux nombres ne mesurent pas la même chose, et il faut le dire pour qu'on
+ne lise pas cette baisse comme une perte. C'est #4398, et c'est
+[2941](2941-un-cliquet-s-apprend-en-l-appliquant.md) à la lettre : sa première application est ce qui
+révèle sa définition.
 
 **Seules les lignes `///` comptent.** Déplacer un renvoi d'un `///` vers un commentaire
 d'implémentation sera compté comme une perte, alors que ce n'est qu'un choix de rédaction. La
@@ -82,7 +96,7 @@ renvoi est là ou il n'y est pas.
 
 ## Alternatives écartées
 
-- **Compter par fichier, en figeant 983 valeurs.** Plus fin, et plus fragile : la table périmerait à
+- **Figer une valeur par fichier, 983 en tout.** Plus fin, et plus fragile : la table périmerait à
   chaque édition légitime, et une table qu'on met à jour sans la lire ne garde plus rien.
 - **Comparer au commit de base plutôt qu'à un plancher.** Cela verrait la perte au fichier près, mais
   ferait dépendre le garde d'une référence git que le poste local n'a pas toujours. Un garde qui ne

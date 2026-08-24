@@ -461,9 +461,10 @@ def test_4395_renvois_en_javadoc() -> None:
         racine = pathlib.Path(d)
         # Le detecteur compte ; ce qui se casse, c est son EPARGNE. Une couleur CSS a six chiffres
         # etait comptee comme un renvoi `#4` avant que la borne haute ne soit posee, et le corpus en
-        # portait une. Un compte de 3 separe les trois renvois reels des quatre pieges - couleur,
-        # lien javadoc vers un membre, commentaire d implementation, zone de test. Un compte de 6
-        # voudrait dire que le garde a cesse de faire la difference.
+        # portait une. Un compte de 3 separe les trois issues citees des cinq pieges - couleur, lien
+        # javadoc vers un membre, commentaire d implementation, zone de test, et le DOUBLON, qui
+        # pointe la meme discussion et ne compte donc pas deux fois (#4398). Un compte de 7 voudrait
+        # dire que le garde a cesse de faire la difference.
         _ecrire(
             racine,
             "src/main/java/fr/univ_amu/iut/a/Contrat.java",
@@ -471,6 +472,7 @@ def test_4395_renvois_en_javadoc() -> None:
             "/// La teinte de fond vaut #123456 dans la palette.\n"
             "/// Voir {@link Decoupage#applique} pour le detail.\n"
             "/// Le verrou de navigation vient de #54.\n"
+            "/// Le decoupage, encore lui (#504) : le doublon compte pour un.\n"
             "// vient de #4040, mais en commentaire d implementation\n"
             "class Contrat {}\n",
         )
@@ -480,8 +482,8 @@ def test_4395_renvois_en_javadoc() -> None:
             "/// Eprouve #4040, hors champ declare.\nclass ContratTest {}\n",
         )
         _verifie(
-            "4395 compte les renvois de la javadoc, epargne la couleur, le lien, le commentaire "
-            "et la zone de test",
+            "4395 compte les issues citees, epargne la couleur, le lien, le commentaire, la zone "
+            "de test et le doublon",
             m.renvois(racine),
             3,
         )
