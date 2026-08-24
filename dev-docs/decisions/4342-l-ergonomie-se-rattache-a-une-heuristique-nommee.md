@@ -1,6 +1,6 @@
 ---
 type: adr
-title: "L'ergonomie se rattache à une heuristique nommée"
+title: "L'ergonomie se rattache à une heuristique nommée, et le vocabulaire est clos"
 status: stable
 article: A29
 chantier: "#4342 (l'article de l'ergonomie, chantier #4334)"
