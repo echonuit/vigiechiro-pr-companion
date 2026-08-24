@@ -580,6 +580,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
 | `verifie-portee-des-secrets.sh` | aucun secret `VIGIECHIRO_*` dans l'`env:` d'un **job** ni d'un workflow : la forme juste est l'`env:` d'un **pas**. Posé plus haut, il est offert à toute la suite de tests, que `ConnexionModule` pointe alors sur la production. Aucun rôle de la plateforme ne peut le rattraper - `Lecteur` est déclaré et aucune route ne l'accepte (#4303) | `lint.yml` |
 | `revoque-jeton.sh` | le jeton d un tournage connecté est rendu inutilisable en fin de run (`POST /logout`), et la règle qui compte est que **`404` et `401` valent succès** : le but n est pas « le serveur a répondu 200 » mais « ce jeton ne sert plus à personne ». Il ne fait jamais rougir le run, l incertitude sort en avertissement (#4305) | `tournage-recette.yml` (autotest : `lint.yml`) |
+| `verifie-jeton-vivant.sh` | le jeton du tournage connecté est-il encore **valide**, et non seulement présent. Le tournage révoque le sien en fin de run sans retirer le secret : après un tournage il a l air parfaitement valide et ne vaut plus rien, et le scénario rougissait vingt minutes plus tard à trois pas de sa cause (#4328). ⚠️ Il rend **trois** verdicts et non deux, parce que « la plateforme ne répond pas » n appelle pas le même geste que « le jeton est mort ». ⚠️ C est la table de `revoque-jeton.sh` lue à l ENVERS : ici `401` est un refus | `tournage-recette.yml` (autotest : `lint.yml`) |
 | `verdict-du-tournage.sh` | ce qu'un tournage a vraiment donné : combien de cas ont **rougi**, lu dans les rapports **XML** de surefire et jamais dans les `.txt`, qui mentent sur les `@Nested`. Le tournage tourne sous `failure.ignore` - on veut les clips d'un cas qui rougit -, si bien qu'un scénario rouge laissait le job vert et son clip se versait sans marque (#4351). Il **rapporte**, il ne juge pas | `tournage-recette.yml` (autotest : `lint.yml`) |
 | `verifie-butoirs.sh` | tout job porte un `timeout-minutes` : sans butoir, GitHub laisse courir six heures ([ADR 4028](decisions/4028-tout-job-de-ci-porte-un-butoir.md)) | `lint.yml` |
 | `installer-paquets.sh` | la porte d'installation : elle écarte ce qui est déjà présent, borne et reprend, et câble le cache des `.deb` ([ADR 4034](decisions/4034-les-paquets-passent-par-une-porte.md)) | `lint.yml` (ses cas) et les cinq workflows qui installent |
@@ -610,7 +611,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 
 ### Et un analyseur les lit tous (#4108)
 
-Ces gardes sont elles-mêmes du shell, et le dépôt en compte **38 scripts** hors `node_modules`. Le
+Ces gardes sont elles-mêmes du shell, et le dépôt en compte **39 scripts** hors `node_modules`. Le
 job `lint` les passe tous à `shellcheck`.
 
 Les **réglages** vivent dans `.shellcheckrc`, à la racine, et non dans le YAML : un contributeur qui

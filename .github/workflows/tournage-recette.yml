@@ -275,19 +275,20 @@ jobs:
       # écran déconnecté est parfaitement convaincant : le clip ne serait pas faux, il serait muet sur
       # son propre objet (ADR 4142), et on le regarderait en croyant savoir. Le banc porte le même
       # refus (`BancDeRecette#connecteALaPlateforme`) ; celui-ci arrive plus tôt et coûte moins cher.
-      - name: Le tournage connecté a-t-il son jeton ?
+      #
+      # ⚠️ Et il ÉPROUVE le jeton, il ne constate pas sa présence (#4328). Le tournage révoque le sien
+      # en fin de run (#4305) sans retirer le secret : après un tournage, `VIGIECHIRO_TOKEN_TOURNAGE`
+      # a l'air parfaitement valide et ne vaut plus rien. Vingt minutes plus tard un scénario rougit
+      # sur « le libellé d'identité est vide », c'est-à-dire à trois pas de sa cause.
+      - name: Le jeton du tournage est-il encore vivant ?
         if: ${{ inputs.connecte }}
         shell: bash
         env:
           JETON: ${{ secrets.VIGIECHIRO_TOKEN_TOURNAGE }}
+          VIGIECHIRO_URL: https://vigiechiro.herokuapp.com/api/v1
         run: |
-          set -euo pipefail
-          if [ -z "${JETON}" ]; then
-            echo "::error::Tournage connecté demandé, secret VIGIECHIRO_TOKEN_TOURNAGE absent. Le poser :"
-            echo "::error::gh secret set VIGIECHIRO_TOKEN_TOURNAGE (jeton Vigie-Chiro, 14 jours, révoqué en fin de run)."
-            exit 1
-          fi
-          echo "Jeton présent : le tournage parlera à la plateforme réelle, en lecture." >> "${GITHUB_STEP_SUMMARY}"
+          chmod +x .github/scripts/verifie-jeton-vivant.sh
+          ./.github/scripts/verifie-jeton-vivant.sh
 
       # ⚠️ Le secret vit dans l'`env:` de CE PAS, jamais dans celui du job, et
       # `verifie-portee-des-secrets.sh` (#4303) le refuse ailleurs. La raison n'est pas cosmétique :

@@ -31,6 +31,11 @@
 # C'est exactement le genre de règle qu'une relecture distraite retourne, d'où l'auto-test : le verdict
 # se prononce dans une fonction, et cette fonction passe par des codes connus à chaque exécution.
 #
+# ⚠️ **Et `verifie-jeton-vivant.sh` lit la MÊME table à l'envers** (#4328). Chez lui, `401` est un
+# refus : il demande « ce jeton sert-il encore ? » AVANT de filmer. Ici on demande « ne sert-il
+# vraiment plus ? » APRÈS. Les deux scripts sont voisins, se ressemblent, et traitent le même code de
+# façon opposée : les harmoniser « pour la cohérence » casserait l'un des deux en silence.
+#
 # ## Il ne fait JAMAIS rougir le run
 #
 # Le tournage, lui, a réussi. Un rouge ici ferait lire un échec pour une raison qui n'est pas celle
