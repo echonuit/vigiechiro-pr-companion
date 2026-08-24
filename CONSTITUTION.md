@@ -4,18 +4,15 @@ Les règles non négociables de ce dépôt et du produit qu'il livre. Une règle
 elle est **opposable** : quelque chose la refuse mécaniquement, ou son absence d'applicateur est
 déclarée.
 
-**Comment lire ce document.** Vingt-neuf articles tiennent en une page ; ils suffisent à travailler.
+**Comment lire ce document.** Trente articles tiennent en une page ; ils suffisent à travailler.
 Sous chacun vit sa **jurisprudence** : les décisions d'architecture qui l'ont produit, une par cas,
 dans `dev-docs/decisions/`. On lit les articles ; on ne descend dans les cas que lorsqu'on en a
 besoin. Chaque ADR déclare son article en en-tête, et un garde refuse celle qui n'en déclare pas.
 
-**Deux numéros manquent, et c'est voulu.** La numérotation saute de A26 à A29. A27 et A28 existent
-dans la ligne d'où vient cette constitution : le premier interdit un renvoi qui ne résout que dans un
-dépôt disparu, ce qui n'a pas d'objet ici où les renvois résolvent ; le second veut qu'un
-avertissement se dise en mots plutôt qu'en pictogramme, et ce dépôt en porte 1 259 dans 361 fichiers,
-ce qui demande sa propre mesure avant sa propre règle. Les numéros ne sont pas réattribués : une ADR
-qui cite un article le cite par son numéro, et un numéro qui change de sens est pire qu'un numéro
-absent.
+**Un numéro manque, et c'est voulu.** La numérotation saute de A26 à A28. A27 existe dans la ligne
+d'où vient cette constitution : il interdit un renvoi qui ne résout que dans un dépôt disparu, ce qui
+n'a pas d'objet ici, où les renvois résolvent. Le numéro n'est pas réattribué : une ADR cite un
+article par son numéro, et un numéro qui change de sens est pire qu'un numéro absent.
 
 **Ce que la jurisprudence a révélé.** Les 194 ADR se replient sur vingt-trois articles. Les trois
 autres n'ont produit aucune décision : la preuve qui précède l'affirmation (A1), la mutation qui
@@ -191,6 +188,13 @@ le code tiers ne s'exécute pas avec les droits de publication.
 Chaque décision porte qui l'a produite et qui l'a relue. L'assistance par agents est déclarée, pas
 déduite. L'identité de distribution est distincte de celle de l'auteur et de celle de la plateforme.
 
+### A28 : Un avertissement se dit en mots
+
+Un pictogramme d'alerte n'apporte pas l'information : il annonce qu'il y en a une. Posé sur 1 187
+lignes et dans 459 fichiers, il ne distingue plus rien. Ce qui doit alerter se dit dans la phrase, ou
+dans l'encart que le format prévoit. Le pictogramme ne subsiste que là où il est le contenu montré :
+une maquette qui rend ce que l'écran affiche, un message que le programme émet.
+
 ### A29 : L'ergonomie se rattache à une heuristique nommée
 
 Une décision qui porte sur l'usage - ce qu'un écran montre, ce qu'il refuse, ce qu'il fait attendre -
@@ -259,11 +263,12 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A24 · La langue du dépôt est le français | 1 | 1 | `.github/scripts/verifie-titre-pr.sh` |
 | A25 · Le travail de branche est isolé | 3 | 1 | `.github/scripts/verifie-epinglage.sh` |
 | A26 · La provenance se déclare | 3 | 2 | `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`, `DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier` |
+| A28 · Un avertissement se dit en mots | 1 | 0 | `scripts/adr/4366-avertissement-en-pictogramme.py` |
 | A29 · L'ergonomie se rattache à une heuristique nommée | 1 | 0 | `scripts/adr/verifie_okf.py` |
 | A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 1 | 0 | `scripts/adr/4359-javadoc-narratif.py` |
 | A31 · La prose visible se relit à l'humaniseur | 1 | 0 | **relecture seule** |
 
-**5 article(s) sur 29 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
+**5 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
 
 - A1 · La preuve précède l'affirmation
 - A8 · La mutation mesure dès qu'un comportement est complet
