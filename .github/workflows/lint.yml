@@ -305,6 +305,18 @@ jobs:
           chmod +x .github/scripts/revoque-jeton.sh
           ./.github/scripts/revoque-jeton.sh --auto-test
 
+      - name: Le contrôle du jeton sépare ses deux causes
+        # ⚠️ Trois verdicts et non deux, et c'est tout l'objet de cet auto-test : « pas 200 » recouvre
+        # un jeton mort - on en pose un frais - et une plateforme muette - poser un jeton frais n'y
+        # changerait rien. Les fondre referait, un cran plus loin, le défaut de #4328.
+        #
+        # ⚠️ Sa table est celle de `revoque-jeton.sh` LUE À L'ENVERS : `401` est un refus ici, un
+        # succès là-bas. Les deux passent par leurs codes connus à chaque lint, parce que deux
+        # scripts voisins qui se contredisent finissent par s'harmoniser par erreur.
+        run: |
+          chmod +x .github/scripts/verifie-jeton-vivant.sh
+          ./.github/scripts/verifie-jeton-vivant.sh --auto-test
+
       - name: La porte d installation porte ses cas
         # ⚠️ Elle est en travers du chemin de tous les workflows, y compris ceux qui publient : un
         # défaut y serait indiscernable d'une panne de miroir.
