@@ -4,7 +4,7 @@ Les règles non négociables de ce dépôt et du produit qu'il livre. Une règle
 elle est **opposable** : quelque chose la refuse mécaniquement, ou son absence d'applicateur est
 déclarée.
 
-**Comment lire ce document.** Vingt-sept articles tiennent en une page ; ils suffisent à travailler.
+**Comment lire ce document.** Vingt-huit articles tiennent en une page ; ils suffisent à travailler.
 Sous chacun vit sa **jurisprudence** : les décisions d'architecture qui l'ont produit, une par cas,
 dans `dev-docs/decisions/`. On lit les articles ; on ne descend dans les cas que lorsqu'on en a
 besoin. Chaque ADR déclare son article en en-tête, et un garde refuse celle qui n'en déclare pas.
@@ -183,6 +183,17 @@ le code tiers ne s'exécute pas avec les droits de publication.
 Chaque décision porte qui l'a produite et qui l'a relue. L'assistance par agents est déclarée, pas
 déduite. L'identité de distribution est distincte de celle de l'auteur et de celle de la plateforme.
 
+### A29 : L'ergonomie se rattache à une heuristique nommée
+
+Une décision qui porte sur l'usage - ce qu'un écran montre, ce qu'il refuse, ce qu'il fait attendre -
+déclare par le champ `heuristiques:` de son en-tête la ou les heuristiques qu'elle sert. Le
+vocabulaire est **clos** : dix heuristiques de Nielsen, l'affordance et le signifiant de Norman, six
+lois de la Gestalt, tenues par `dev-docs/ergonomie/heuristiques.md`. Une clé hors vocabulaire est
+refusée. Une décision rattachée à A12, A13, A14, A15, A18, A19, A23 ou A28 qui ne déclare rien est un
+**suspect sous cliquet**, pas un refus : le rattachement se fait par tranches, chaque décision ouverte
+et lue, jamais par ressemblance de mots. Une heuristique que rien ne sert est dite dans le rapport,
+sans faire rougir : c'est un manque à connaître, pas une faute à corriger.
+
 ### A30 : Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi
 
 Trois endroits, un rôle chacun. Le **code** porte l'intention : un nom qui la dit, une fonction qui
@@ -231,9 +242,10 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A24 · La langue du dépôt est le français | 1 | 1 | `.github/scripts/verifie-titre-pr.sh` |
 | A25 · Le travail de branche est isolé | 3 | 1 | `.github/scripts/verifie-epinglage.sh` |
 | A26 · La provenance se déclare | 3 | 2 | `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`, `DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier` |
+| A29 · L'ergonomie se rattache à une heuristique nommée | 1 | 0 | `scripts/adr/verifie_okf.py` |
 | A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 1 | 0 | `scripts/adr/4359-javadoc-narratif.py` |
 
-**4 article(s) sur 27 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
+**4 article(s) sur 28 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
 
 - A1 · La preuve précède l'affirmation
 - A8 · La mutation mesure dès qu'un comportement est complet

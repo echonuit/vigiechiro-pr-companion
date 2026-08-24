@@ -564,7 +564,7 @@ jobs:
         # déclare. Avant ce garde, 194 documents se disaient tous « Accepté » et rien ne pouvait le
         # contredire.
         # L'auto-test tourne d'abord, comme pour ses voisins : il casse à la main ce que chacun des
-        # huit refus prétend attraper, et exige de le voir rougir. Le dernier cas est le contrôle de
+        # refus prétend attraper, et exige de le voir rougir. Le dernier cas est le contrôle de
         # non-vacuité, un paquet sain qui doit rester vert : un garde qui rougit de toute façon
         # rougirait aussi sur les mutations, et son rouge ne prouverait rien.
         run: |
@@ -580,6 +580,14 @@ jobs:
         run: |
           python3 scripts/methode/matrice-constitution.py --auto-test
           python3 scripts/methode/matrice-constitution.py --verifie
+
+      - name: La matrice des heuristiques d'ergonomie est à jour (bloquant)
+        # Même idée que la matrice de la constitution, sur l'annexe des heuristiques : la ligne qui
+        # vaut le déplacement est celle qui rend zéro, car elle nomme ce dont personne n'a décidé.
+        # Elle est engendrée depuis les en-têtes des ADR, jamais saisie.
+        run: |
+          python3 scripts/methode/matrice-ergonomie.py --auto-test
+          python3 scripts/methode/matrice-ergonomie.py --verifie
 
       - name: Les adaptateurs de compétences suivent leur source (bloquant)
         # Le fonds des compétences vit dans `.agents/skills/`, hors de tout dossier de marque, et
