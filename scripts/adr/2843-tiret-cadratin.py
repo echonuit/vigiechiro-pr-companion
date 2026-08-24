@@ -106,6 +106,11 @@ ZONES_NETTOYEES = (
     ("feuilles de style", pathlib.Path("src/main/java"), (), "*.css"),
     ("migrations de schéma", pathlib.Path("src/main/resources/db/migration"), (), "*.sql"),
     ("scripts", pathlib.Path("scripts"), (), "*.py"),
+    # Les competences d agent (#4337). Elles arrivent propres, et c est justement pourquoi la
+    # zone se pose maintenant : le regime de couverture ne signale que les fichiers qui PORTENT
+    # deja un cadratin, donc un corpus neuf et propre lui est invisible. Seule la SOURCE est
+    # gardee : `.claude/skills` en est une copie, tenue identique par le garde des adaptateurs.
+    ("competences d agent", pathlib.Path(".agents/skills"), (), "*.md"),
     ("gardes de capture", pathlib.Path(".github/assets"), (), "*.sh"),
     # Les scripts d'atelier, dont le garde de titre de PR. Cette zone manquait, et le régime de
     # couverture l'a signalée dès que ce garde a porté sa première ligne de prose (#2947).
