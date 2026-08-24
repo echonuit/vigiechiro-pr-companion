@@ -424,10 +424,16 @@ jobs:
     if: ${{ always() && inputs.connecte }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # ⚠️ Le verdict sort du job, parce que le versement en dépend : depuis #4324 le clip MONTRE le
+    # jeton, et ce qui rend cela sans conséquence est qu'il soit mort. « Mort » doit donc être un fait
+    # confirmé par la plateforme, pas une hypothèse sur ce que le job a probablement fait.
+    outputs:
+      revoque: ${{ steps.retrait.outputs.revoque }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Rendre le jeton inutilisable
+        id: retrait
         shell: bash
         env:
           JETON: ${{ secrets.VIGIECHIRO_TOKEN_TOURNAGE }}
@@ -445,8 +451,12 @@ jobs:
   # mourir dans tous les cas ; un tournage amputé, lui, n'a pas à se publier.
   publier-connecte:
     name: Verser les clips connectés sur leur pré-version
-    needs: filmer
-    if: ${{ success() && inputs.connecte }}
+    # ⚠️ Il attend AUSSI la révocation, et pas seulement le tournage. Depuis #4324 le clip montre le
+    # jeton collé - c'est ce qui le rend lisible, et c'est sans conséquence tant que le jeton est mort.
+    # Publier avant d'en être sûr échangerait un clip illisible contre un secret vivant sur une
+    # pré-version publique.
+    needs: [filmer, revoquer]
+    if: ${{ success() && inputs.connecte && needs.revoquer.outputs.revoque == 'oui' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

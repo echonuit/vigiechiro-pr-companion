@@ -70,28 +70,33 @@ endroit, et il n'y en a qu'une ici.
      tout test citant un cas doit figurer sur l'une des pages de clips. Une adresse morte rend un
      lecteur vide, et un lecteur vide se lit comme un défaut du produit. -->
 
-### S8-05 · l'avancement paraît dans la modale
+### S8-01, S8-05, S8-06 · coller le jeton, voir l'avancement, lire l'identité
 
-> L'avancement paraît **dans** la modale de connexion, sans seconde fenêtre, et « Fermer » y est grisé.
+> **S8-01** Coller le jeton : l'avancement de la récupération s'affiche.
+> **S8-05** L'avancement paraît **dans** la modale, sans seconde fenêtre, et « Fermer » y est grisé.
+> **S8-06** À la fin, la modale annonce l'identité **et** le résumé de ce qui a été récupéré.
 
-Ce que ce clip montre et qu'un clip bouchonné ne montrerait pas : la progression suit une **vraie**
-latence réseau, celle du `GET /moi` puis des rapprocheurs. Bouchonnée, elle n'est qu'une temporisation
-choisie pour qu'il y ait quelque chose à filmer.
+Un seul clip pour les trois, parce que c'est un seul geste : les couper en trois referait trois fois le
+préambule et casserait l'histoire.
 
-<video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteConnexionTest.l_avancement_parait_dans_la_modale.mp4"></video>
+Il se déroule en **quatre temps**, dont trois que l'[ADR 4188](../decisions/4188-une-modale-se-filme-avec-son-ecran.md)
+exige - une modale se filme avec l'écran d'où elle part et celui où elle rend. Ici c'est le **même**
+écran, l'accueil, mais il n'y revient pas identique :
 
-### S8-06 · la modale annonce l'identité
+| Temps | Ce qu'on voit |
+|---|---|
+| 1 · l'écran de départ | l'accueil **sans** bandeau de compteurs, et le geste qui ouvre la modale |
+| 2 · la modale | le jeton collé, l'avancement, « Fermer » grisé, puis l'identité et le résumé |
+| 3 · l'écran d'arrivée | l'accueil retrouvé, où le **bandeau de compteurs a paru** : il suit la donnée, et une synchronisation déroulée par-dessus l'accueil s'y voit sans qu'on ait navigué (#1376) |
+| 4 · le menu rouvert | l'entrée qui nomme désormais qui est connecté |
 
-> À la fin, la modale de connexion annonce l'identité **et** le résumé de ce qui a été récupéré.
+Le quatrième n'est pas exigé par l'ADR : c'est une **confirmation de plus** que la connexion a eu lieu,
+et ce qui permet de voir ses conséquences **de bout en bout**, sur les deux surfaces qu'elle change.
 
-Le pseudo affiché est celui que la plateforme a rendu. Le résumé, lui, dépend de ce que le compte de
-tournage contient : c'est la première chose que ce clip apprendra.
+Ce qu'il montre et qu'un clip bouchonné ne montrerait pas : la progression suit une **vraie** latence
+réseau, et l'identité affichée à la fin est celle que `GET /moi` a rendue.
 
-⚠️ Ce cas n'asserte que l'**identité**. Le résumé fait partie de ce que la case demande, mais son
-contenu dépend du compte : l'asserter aujourd'hui figerait une attente qu'aucune mesure ne soutient
-encore.
-
-<video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteConnexionTest.la_modale_annonce_l_identite.mp4"></video>
+<video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteConnexionTest.coller_le_jeton_puis_lire_l_identite.mp4"></video>
 
 ## ⚠️ Ce que ces clips publient, et le compte que cela engage
 
@@ -124,10 +129,14 @@ clips d'un écran hors ligne, convaincants et muets sur leur objet.
 
 Trois barrières, et chacune tient quand la précédente a manqué.
 
-**Il n'entre pas par l'écran.** Le champ du jeton est un `TextField` et non un `PasswordField` : ce
-qu'on y colle se lit, et le banc photographie le graphe de scène. Le jeton passe donc par
-`StockageConnexion`, déposé **sans profil**, ce qui fait revérifier la modale à son ouverture sans
-geste (#1369). Seul le geste de **coller** reste infilmable.
+**Il paraît à l'écran, et il y meurt.** Le champ du jeton est un `TextField` et non un
+`PasswordField` : ce qu'on y colle se lit, et le banc photographie le graphe de scène. Le scénario
+**colle donc son jeton devant la caméra**, parce qu'une modale qui se connecte toute seule ne montre
+pas ce qui l'a connectée, et qu'un clip incompréhensible ne remplit pas son office.
+
+Ce qui rend cela sans conséquence est la **révocation** : le jeton ne vaut plus rien avant même que le
+clip soit regardé. Et ce n'est pas une hypothèse laissée en l'air - le versement n'a lieu que si la
+plateforme a **confirmé** le retrait (#4324). Sans confirmation, le clip n'est pas publié.
 
 **Il ne dépasse pas son pas.** Posé dans l'`env:` d'un job, un jeton serait offert à toute la suite de
 tests, que `ConnexionModule` pointe alors sur la production. `verifie-portee-des-secrets.sh` le refuse

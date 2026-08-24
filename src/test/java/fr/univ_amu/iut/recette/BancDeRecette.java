@@ -187,6 +187,35 @@ public final class BancDeRecette {
                 + " scénario est.";
     }
 
+    /// Le jeton du tournage connecté, **rendu au scénario** au lieu d'être déposé pour lui.
+    ///
+    /// ## Pourquoi les deux voies existent
+    ///
+    /// [#connecteALaPlateforme()] dépose le jeton et laisse la modale le revérifier seule : c'est ce
+    /// qu'il faut à un scénario qui doit **partir connecté**, sans refaire la connexion à chaque cas.
+    ///
+    /// Celle-ci ne dépose rien. Elle sert au scénario qui filme la connexion **comme un utilisateur la
+    /// fait** : coller le jeton dans le champ, puis cliquer. C'est ce que font déjà les scénarios
+    /// bouchonnés, et s'en écarter rendait leur pendant connecté illisible - une modale qui se connecte
+    /// toute seule ne montre pas ce qui l'a connectée.
+    ///
+    /// ⚠️ Le jeton **paraît donc à l'écran**, et le clip est publié. C'est assumé : il est révoqué en
+    /// fin de run (#4305), et un jeton mort n'est pas un secret. La publication n'a d'ailleurs lieu que
+    /// si la révocation a **confirmé** son retrait, sans quoi l'hypothèse « il est mort » ne serait
+    /// qu'un espoir.
+    ///
+    /// Refuse, comme l'autre voie, plutôt que de rendre vide : un scénario qui déclare vouloir la
+    /// plateforme et ne la trouve pas n'a rien à montrer.
+    public static String jetonDeLaPlateforme() {
+        return ConnexionModule.jetonPonctuel().orElseThrow(() -> new IllegalStateException(SANS_JETON));
+    }
+
+    private static final String SANS_JETON =
+            "Ce scénario a déclaré vouloir la plateforme réelle et aucun jeton n'est là. Poser"
+                    + " VIGIECHIRO_TOKEN dans l'env du PAS qui filme, jamais dans celui du job. Sans"
+                    + " jeton, ce banc filmerait un écran hors ligne convaincant et muet sur son propre"
+                    + " objet.";
+
     /// L'écran par lequel le scénario commence.
     public BancDeRecette ouvrir(Consumer<Injector> ouverture) {
         this.ouverture = Objects.requireNonNull(ouverture, "ouverture");
@@ -245,12 +274,7 @@ public final class BancDeRecette {
         } else if (surLaPlateforme) {
             // Sans profil : la modale le revérifiera d'elle-même à l'ouverture (#1369), ce qui filme la
             // connexion réelle sans qu'un caractère du jeton passe par le champ.
-            String jeton = ConnexionModule.jetonPonctuel()
-                    .orElseThrow(() -> new IllegalStateException(
-                            "Ce scénario a déclaré vouloir la plateforme réelle et aucun jeton n'est là."
-                                    + " Poser VIGIECHIRO_TOKEN dans l'env du PAS qui filme, jamais dans"
-                                    + " celui du job. Sans jeton, ce banc filmerait un écran hors ligne"
-                                    + " convaincant et muet sur son propre objet."));
+            String jeton = jetonDeLaPlateforme();
             injecteur.getInstance(StockageConnexion.class).enregistrer(jeton, null);
             injecteur.getInstance(RefletDuJeton.class).relire();
         }

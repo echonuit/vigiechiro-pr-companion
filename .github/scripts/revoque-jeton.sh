@@ -121,6 +121,15 @@ code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -u "${JETON}:" "${BASE}/lo
 
 verdict "${code}" | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
 
+# ⚠️ Le verdict sort AUSSI en sortie de pas, parce que quelqu'un en dépend : le versement des clips
+# connectés n'a lieu que si le retrait est CONFIRMÉ. Depuis #4324 le clip montre le jeton - un jeton
+# mort n'est pas un secret, mais « il est mort » doit être un fait, pas un espoir.
+if verdict "${code}" >/dev/null 2>&1; then
+    echo "revoque=oui" >> "${GITHUB_OUTPUT:-/dev/null}"
+else
+    echo "revoque=incertain" >> "${GITHUB_OUTPUT:-/dev/null}"
+fi
+
 # ⚠️ Toujours 0. Le tournage a réussi ; un rouge ici ferait lire un échec pour une raison qui n'est pas
 # celle qu'on regarde. L'incertitude est portée par l'avertissement ci-dessous, pas par le code de
 # sortie.
