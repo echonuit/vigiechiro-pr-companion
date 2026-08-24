@@ -168,6 +168,8 @@ retenu comme règle, et cette mesure est ce qui le dit.
 Ces règles viennent de deux inventaires : [« Signs of AI writing »](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing)
 (WikiProject AI Cleanup, 35 motifs) et son équivalent français,
 [« Aide:Identifier l'usage d'une IA générative »](https://fr.wikipedia.org/wiki/Aide:Identifier_l%27usage_d%27une_IA_g%C3%A9n%C3%A9rative).
+Ce qui n'a pas été retenu l'a été après mesure, pas par goût, et
+[dev-docs/registre-editorial.md](dev-docs/registre-editorial.md) le dit motif par motif.
 
 Les sept tics ci-dessus sont ce que ce dépôt retient. La grille complète, quarante et un motifs avec
 leurs exemples et leurs faux positifs, est dans la compétence `humaniseur`
