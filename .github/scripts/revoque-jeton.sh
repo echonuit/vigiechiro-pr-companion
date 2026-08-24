@@ -72,8 +72,25 @@ verdict() { # <code http>
     esac
 }
 
+# L'appel, séparé du verdict : c'est la partie que l'auto-test peut éprouver en la lançant contre un
+# port mort de la boucle locale. Rend le code HTTP sur la sortie standard.
+#
+# ⚠️ `-o /dev/null` : la réponse ne nous apprend rien de plus que son code, et l'imprimer ferait passer
+# le corps d'une réponse d'erreur dans un journal public.
+#
+# ⚠️ `|| code=000` et surtout PAS `|| echo 000` : quand la connexion échoue - injoignable, DNS, TLS -
+# curl écrit DÉJÀ « 000 » et sort non nul. Les deux se concaténaient, et l'avertissement annonçait
+# « HTTP 000000 » (#4328). Le classement restait juste, le nombre affiché non - et c'est le genre de
+# ligne qui fait douter de tout le reste au moment où on la lit.
+interroger() { # -> code http
+    local code
+    code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -u "${JETON}:" "${BASE}/logout") || code=000
+    [ -n "${code}" ] || code=000
+    echo "${code}"
+}
+
 auto_test() {
-    local total=0 echecs=0 surs=0
+    local total=0 echecs=0 surs=0 obtenu
     echo "AUTO-TEST"
 
     essai() { # <code> <sur|incertain> <libellé>
@@ -99,6 +116,18 @@ auto_test() {
     essai 000 incertain "000 : injoignable, on ne sait pas"
     essai 302 incertain "302 : réponse inattendue, on ne sait pas"
 
+
+    # ⚠️ Le seul cas qui éprouve l'APPEL et non le verdict. Un port mort de la boucle locale suffit, et
+    # n'a besoin d'aucun réseau pour rougir : c'est ainsi qu'on a vu le « HTTP 000000 ».
+    total=$((total + 1))
+    obtenu=$(JETON=zzz BASE=http://127.0.0.1:1 interroger)
+    if [ "${obtenu}" = "000" ]; then
+        printf '  [OK   ] %-58s -> %s\n' "l appel rend un code et un seul quand rien ne répond" "${obtenu}"
+    else
+        printf '  [ÉCHEC] %-58s -> %s (attendu 000)\n' "l appel rend un code et un seul quand rien ne répond" "${obtenu}"
+        echecs=$((echecs + 1))
+    fi
+
     echo
     echo "${total} cas, dont ${surs} qui doivent conclure « hors d'usage »."
     if [ "$echecs" -ne 0 ]; then
@@ -119,10 +148,7 @@ if [ -z "${JETON:-}" ]; then
     exit 0
 fi
 
-# ⚠️ `-o /dev/null` : la réponse ne nous apprend rien de plus que son code, et l'imprimer ferait passer
-# le corps d'une réponse d'erreur dans un journal public. Le `|| echo 000` couvre l'échec de curl
-# lui-même - injoignable, DNS, TLS - que le cas par défaut traitera comme une incertitude.
-code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -u "${JETON}:" "${BASE}/logout" || echo "000")
+code=$(interroger)
 
 verdict "${code}" | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
 

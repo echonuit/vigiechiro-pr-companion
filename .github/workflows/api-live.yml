@@ -58,8 +58,15 @@ jobs:
             echo "Secret \`VIGIECHIRO_TOKEN\` absent. Le poser : \`gh secret set VIGIECHIRO_TOKEN\` (jeton VigieChiro, validité 14 jours)." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+          # ⚠️ `|| statut=000` et surtout PAS `|| echo "000"` : quand la connexion échoue, curl
+          # écrit DÉJÀ « 000 » et sort non nul. Les deux se concaténaient, et l'avertissement
+          # annonçait « HTTP 000000 » (#4328). Le tri restait juste, le nombre affiché non.
+          #
+          # ⚠️ Cet appel-ci est en ligne dans le workflow : contrairement à ses deux voisins de
+          # `.github/scripts/`, aucun auto-test ne l'exerce, et la correction repose sur la lecture.
           statut=$(curl -s -o /dev/null -w "%{http_code}" -u "$VIGIECHIRO_TOKEN:" \
-            https://vigiechiro.herokuapp.com/api/v1/moi || echo "000")
+            https://vigiechiro.herokuapp.com/api/v1/moi) || statut=000
+          [ -n "$statut" ] || statut=000
           if [ "$statut" = "200" ]; then
             echo "valide=true" >> "$GITHUB_OUTPUT"
           else
