@@ -9,6 +9,14 @@ Sous chacun vit sa **jurisprudence** : les décisions d'architecture qui l'ont p
 dans `dev-docs/decisions/`. On lit les articles ; on ne descend dans les cas que lorsqu'on en a
 besoin. Chaque ADR déclare son article en en-tête, et un garde refuse celle qui n'en déclare pas.
 
+**Deux numéros manquent, et c'est voulu.** La numérotation saute de A26 à A29. A27 et A28 existent
+dans la ligne d'où vient cette constitution : le premier interdit un renvoi qui ne résout que dans un
+dépôt disparu, ce qui n'a pas d'objet ici où les renvois résolvent ; le second veut qu'un
+avertissement se dise en mots plutôt qu'en pictogramme, et ce dépôt en porte 1 259 dans 361 fichiers,
+ce qui demande sa propre mesure avant sa propre règle. Les numéros ne sont pas réattribués : une ADR
+qui cite un article le cite par son numéro, et un numéro qui change de sens est pire qu'un numéro
+absent.
+
 **Ce que la jurisprudence a révélé.** Les 194 ADR se replient sur vingt-trois articles. Les trois
 autres n'ont produit aucune décision : la preuve qui précède l'affirmation (A1), la mutation qui
 mesure dès qu'un comportement est complet (A8), et l'interdiction de supprimer un avertissement
