@@ -880,7 +880,7 @@ derrière elles.
 
 Une **synthèse** courte : ce qui a été livré, la **dette restante**, les **décisions** prises et leur
 pourquoi. Elle se dépose dans le corps de l'EPIC (au moment de le clore) et, si elle change une
-règle du dépôt, se répercute dans `CLAUDE.md` / `CONTRIBUTING.md`. Le bilan **renvoie** aux
+règle du dépôt, se répercute dans `AGENTS.md` / `CONTRIBUTING.md`. Le bilan **renvoie** aux
 [ADR](decisions/index.md) écrites en passe 10 plutôt que de redérouler le raisonnement des décisions -
 c'est la raison pour laquelle il vient **après** elles et non l'inverse.
 

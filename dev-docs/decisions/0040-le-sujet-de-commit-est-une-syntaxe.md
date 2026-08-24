@@ -74,7 +74,7 @@ donc plus long et moins homogène que d'habitude. C'est le prix du rattrapage, p
 et simple de deux jours d'historique.
 
 **Ce qui reste ouvert.** Le contrôle ne s'applique qu'aux PR. Un push direct sur `main` y échapperait,
-mais c'est déjà interdit par ailleurs (`CLAUDE.md`, garde-fous non négociables).
+mais c'est déjà interdit par ailleurs (`AGENTS.md`, garde-fous non négociables).
 
 **Une leçon plus générale.** Ce chantier a été ouvert sur trois autres sujets - artefacts autonomes,
 découpage de la CI, montée de version - et a trouvé celui-ci en cartographiant. Un pipeline dont la
