@@ -612,6 +612,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `scripts/methode/matrice-constitution.py` | la matrice de [la constitution](constitution.md) concorde avec les en-têtes des ADR, et **nomme les articles que rien ne tient** : c'est la liste des gardes qui restent à écrire | `lint.yml` |
 | `scripts/methode/matrice-ergonomie.py` | la matrice de [l'annexe des heuristiques](ergonomie/heuristiques.md) concorde avec les en-têtes, et **nomme les heuristiques que rien ne sert** | `lint.yml` |
 | `scripts/methode/mesure-registre.py` | aucun connecteur lourd n'ouvre une phrase : c'est le **motif d'écartement** que [le registre éditorial](registre-editorial.md) invoque pour ne pas en faire une règle, et il se retournerait en silence | `lint.yml` |
+| `scripts/mkdocs/bandeau_adr.py` | le bandeau d'une page d'ADR porte statut, article, chantier et vérification, se pose **sous** le titre, et **arrête la construction** sur un article que la constitution ne déclare pas | `lint.yml` |
 | `scripts/methode/synchronise-adaptateurs.py` | `.claude/skills/` est une copie à jour de `.agents/skills/` : une compétence corrigée à la source ne laisse pas un agent lire l'ancienne version | `lint.yml` |
 
 ### Et un analyseur les lit tous (#4108)
