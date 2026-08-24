@@ -8,6 +8,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
@@ -210,6 +211,11 @@ public final class BancDeRecette {
         return ConnexionModule.jetonPonctuel().orElseThrow(() -> new IllegalStateException(SANS_JETON));
     }
 
+    /// L URL d un banc qui n a declare aucun serveur : le port 1 ne repond jamais, donc toute reponse
+    /// devient `Injoignable`. C est l idiome hors-ligne deja employe par `CapturePassage` et
+    /// `CaptureValidationTadarida`.
+    private static final String URL_HORS_LIGNE = "http://localhost:1";
+
     private static final String SANS_JETON =
             "Ce scénario a déclaré vouloir la plateforme réelle et aucun jeton n'est là. Poser"
                     + " VIGIECHIRO_TOKEN dans l'env du PAS qui filme, jamais dans celui du job. Sans"
@@ -262,9 +268,34 @@ public final class BancDeRecette {
                 return reserve::token;
             }
         });
-        surcharges.addAll(remplacements);
-        Injector injecteur =
-                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(surcharges));
+
+        // ⚠️ Et il lie AUSSI son client, pour la même raison un champ plus loin (#4332).
+        //
+        // `ConnexionModule#fournirClient` prend son URL dans `vigiechiro.url`, sinon `VIGIECHIRO_URL`.
+        // Un scénario qui ne remplace pas son client - huit des treize, mesuré - parlait donc à ce que
+        // l'environnement désignait : le bouchon qu'un `cli-reseau.bats` a laissé exporté, ou la
+        // production. Le banc pose sa propre valeur, et `http://localhost:1` est l'idiome hors-ligne
+        // déjà employé par les outils de capture : les réponses deviennent `Injoignable`, ce qui est le
+        // comportement juste d'un scénario qui n'a déclaré aucun serveur.
+        //
+        // ⚠️ SAUF pour un scénario connecté, qui garde le câblage de production - c'est-à-dire l'URL
+        // ambiante, qu'il a précisément demandée. Ne rien lier est ici plus juste que lier la valeur par
+        // défaut : le tournage connecté déclare `VIGIECHIRO_URL`, et un jour un serveur de recette.
+        if (!surLaPlateforme) {
+            surcharges.add(new AbstractModule() {
+                @Provides
+                @Singleton
+                ClientVigieChiro clientDuBanc(FournisseurToken jetons) {
+                    return new ClientVigieChiro(URL_HORS_LIGNE, jetons);
+                }
+            });
+        }
+
+        // ⚠️ DEUX surcharges emboîtées, et non une liste à plat : le banc surcharge la production, puis
+        // le scénario surcharge le banc. À plat, les cinq scénarios qui lient déjà `ClientVigieChiro`
+        // entreraient en collision avec la liaison ci-dessus, et Guice refuserait le doublon.
+        Module socleDuBanc = Modules.override(RacineInjecteur.modules()).with(surcharges);
+        Injector injecteur = Guice.createInjector(Modules.override(socleDuBanc).with(remplacements));
 
         new MigrationSchema(injecteur.getInstance(SourceDeDonnees.class)).migrer();
         semis.semer(injecteur);
