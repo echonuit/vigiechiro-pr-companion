@@ -612,6 +612,16 @@ jobs:
           python3 scripts/methode/matrice-ergonomie.py --auto-test
           python3 scripts/methode/matrice-ergonomie.py --verifie
 
+      - name: Le registre éditorial ne se retourne pas en silence (bloquant)
+        # `dev-docs/registre-editorial.md` écarte le connecteur lourd AU MOTIF qu'il rend zéro en
+        # ouverture de phrase. Un motif d'écartement qui cesse d'être vrai ne rougit nulle part : la
+        # page continue de dire pourquoi la règle n'existe pas, et la raison a disparu.
+        # L'auto-test éprouve d'abord le compteur : un zéro rendu par un compteur cassé se lit comme
+        # un zéro rendu par un corpus propre.
+        run: |
+          python3 scripts/methode/mesure-registre.py --auto-test
+          python3 scripts/methode/mesure-registre.py --verifie
+
       - name: Les adaptateurs de compétences suivent leur source (bloquant)
         # Le fonds des compétences vit dans `.agents/skills/`, hors de tout dossier de marque, et
         # `.claude/skills/` n'en est qu'une copie. Sans ce garde, une compétence corrigée à la
