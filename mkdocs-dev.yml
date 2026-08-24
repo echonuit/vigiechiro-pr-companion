@@ -64,6 +64,7 @@ nav:
   - Chercher dans le dépôt: chercher-dans-le-depot.md
   - Ajouter une fonctionnalité: ajouter-une-fonctionnalite.md
   - Cycle de vie d'un chantier: cycle-de-chantier.md
+  - Constitution: constitution.md
   - Décisions (ADR):
     - Journal: decisions/index.md
     - 0001 · Réactivation d'un passage reconstruit: decisions/0001-reactivation-passage-reconstruit-identite-structurelle.md
@@ -332,6 +333,7 @@ plugins:
 # retire du corps rendu.
 hooks:
   - scripts/mkdocs/bandeau_adr.py
+  - scripts/mkdocs/expose_constitution.py
 
 extra_css:
   - stylesheets/extra.css
