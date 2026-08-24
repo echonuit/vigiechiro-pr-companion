@@ -5,6 +5,11 @@ agents, et rien d'important n'est répété ici.
 
 Ce fichier ne porte que ce qui est propre à Claude Code.
 
+## Les compétences
+
+Elles sont découvertes dans `.claude/skills/`, qui est une **copie** de `.agents/skills/`. Le fonds
+est dans `.agents/` : une compétence se corrige là, et la copie suit.
+
 ## Au commencement de CHAQUE issue : UN bloc, puis TU T'ARRÊTES
 
 **Consigne d'agent, pas règle du dépôt.** Elle n'a pas d'équivalent dans `CONTRIBUTING.md` et n'a pas à en avoir : elle règle la façon dont nous travaillons ensemble.

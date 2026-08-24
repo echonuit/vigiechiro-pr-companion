@@ -56,6 +56,33 @@ décisions se cadrent pour l'**utilisateur final**, pas pour un contexte pédago
 - **Pas de tiret cadratin** ; noms de classes **en français sans accents** ; doc-comments `///` (JEP 467).
 - Jamais `@SuppressWarnings` / `//NOPMD` pour taire un warning qualité : **refactorer** (Extract Class/Method).
 
+## Les compétences
+
+Le procédural vit dans `.agents/skills/<nom>/SKILL.md`, au format ouvert **Agent Skills**. Chacune
+porte une **loi d'airain**, une fonction de garde, et les échecs réels qui l'ont produite. Elles ne
+remplacent pas ce document : il se lit au début, une compétence s'ouvre au moment du geste.
+
+| Compétence | Quand l'ouvrir |
+|---|---|
+| `triage` | avant d'ouvrir un chantier, pour décider s'il y a lieu |
+| `ouvrir-une-issue` | ce qu'il faut avoir mesuré, vérifié et compris avant la première ligne |
+| `worktree` | avant tout travail de branche, et avant de construire pendant que l'appli tourne |
+| `tdd` | la boucle rouge, vert, refactor, et son échelle |
+| `deboguer` | sur un défaut : cause racine avant correctif, le premier test reproduit |
+| `mutation` | dès qu'un comportement est complet, et pour tout garde qu'on écrit |
+| `recette-filmee` | le banc, le seuil, l'auto-test, le témoin |
+| `revue-visuelle` | la planche avant/après |
+| `ecrire-une-adr` | format, statut, chaînage, et l'article auquel elle se rattache |
+| `clore-une-issue` | ce qu'on laisse derrière soi |
+| `clore-un-chantier` | les douze passes de clôture |
+
+**Le fonds est dans `.agents/skills/`, hors de tout dossier de marque.** `.claude/skills/` n'en est
+qu'une copie, pour que Claude Code les découvre. Servir un autre agent, c'est ajouter une copie : on
+ne touche pas au fonds.
+
+On copie plutôt qu'on ne lie : sous Windows, sans `core.symlinks`, git écrit un fichier texte
+contenant le chemin, et la découverte casse en silence.
+
 ## Cycle de vie d'un chantier
 
 Un **chantier** est un lot de travail d'ampleur **EPIC**, réparti sur plusieurs PR (ex. l'EPIC « Réglages auto-découverts »). Tout chantier suit ce cycle.
