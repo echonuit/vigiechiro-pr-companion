@@ -265,6 +265,7 @@ nav:
     - 4343 · La prose visible se relit à l'humaniseur: decisions/4343-la-prose-visible-se-relit-a-l-humaniseur.md
     - 4366 · Un avertissement se dit en mots: decisions/4366-un-avertissement-se-dit-en-mots.md
     - 4368 · L'apostrophe d'un libellé est droite: decisions/4368-l-apostrophe-d-un-libelle-est-droite.md
+    - 4395 · Un renvoi porté par la javadoc ne se perd pas: decisions/4395-un-renvoi-porte-par-la-javadoc-ne-se-perd-pas.md
     - 4249 · Un fichier écrit par plusieurs JVM se reconstruit: decisions/4249-un-fichier-ecrit-par-plusieurs-jvm-se-reconstruit.md
     - 4251 · Une lecture de masse se fait par lot: decisions/4251-une-lecture-de-masse-se-fait-par-lot-et-se-garde-en-comptant-des-requetes.md
     - 4264 · Un helper partagé route vers le fil de l'application: decisions/4264-un-helper-partage-route-vers-le-fil-de-l-application.md
