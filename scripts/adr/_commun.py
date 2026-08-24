@@ -52,7 +52,7 @@ def cliquet(numero: str) -> int:
     return int(trouve.group(1))
 
 
-def rapporte(numero: str, titre: str, suspects: list[str]) -> int:
+def rapporte(numero: str, titre: str, suspects: list[str], apercu: int | None = None) -> int:
     """Affiche les suspects, confronte leur nombre au cliquet, et rend le code de sortie.
 
     Dépasser le cliquet est un échec : c'est une régression, quelqu'un a ajouté un cas.
@@ -62,8 +62,12 @@ def rapporte(numero: str, titre: str, suspects: list[str]) -> int:
     """
     marge = cliquet(numero)
     print(f"ADR {numero} - {titre}")
-    for suspect in suspects:
+    montres = suspects if apercu is None else suspects[:apercu]
+    for suspect in montres:
         print(f"  {suspect}")
+    # Un apercu qui ne dit pas ce qu il tait est un compte rendu partiel qui se donne pour complet.
+    if len(montres) < len(suspects):
+        print(f"  … et {len(suspects) - len(montres)} autres, non montrés (aperçu borné à {apercu})")
 
     verdict = "ok"
     if len(suspects) > marge:
