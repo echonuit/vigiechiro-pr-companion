@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""Plancher sur les renvois d issue portes par la javadoc de production.
+
+Un bloc de javadoc qui cite `#3498` donne au lecteur l acces a la discussion qui a produit la regle
+qu il documente. La javadoc de production en porte 4 076, dans 983 fichiers. Une resorption qui
+raccourcit ce bloc peut en emporter sans que rien ne le voie : un renvoi perdu ne casse pas la
+compilation, ne fait pas rougir un test, et ne se remarque pas. Il cesse simplement d ouvrir.
+
+**Pourquoi ce garde existe maintenant.** Le lot 2 du portage (#4394) va relire 713 blocs. La ligne
+d origine a deja fait ce travail sur un arbre dont 367 fichiers ont ici un code identique a l octet
+pres, et sa javadoc contractee sert de reference de redaction. Mais elle ne porte AUCUN renvoi : sa
+rupture les a tous retires, parce qu ils n ouvraient plus rien la-bas. Mesure : reprendre cette
+javadoc en bloc effacerait 1 882 renvois qui, ici, ouvrent de vraies issues. C est ce garde qui rend
+la reference utilisable sans danger.
+
+**La polarite est celle d un PLANCHER, pas d un cliquet.** Un cliquet compte ce qu on tolere et doit
+descendre ; celui-ci compte ce qu on possede et doit monter. `_commun.rapporte_plancher` porte cette
+inversion, et le champ de l en-tete s appelle `floor` pour que le sens se voie sans lire le script.
+
+**Ce qu il ne lit pas, et pourquoi.**
+
+- **Le compte est global, pas par fichier.** Un plancher par fichier demanderait de figer 983 valeurs
+  et de les tenir a chaque edition legitime de javadoc, ce qui ferait payer la discipline au mauvais
+  endroit. Il s ensuit qu il ne verrait pas dix renvois perdus dans un fichier compenses par dix
+  ajoutes dans un autre. Ce n est pas la menace : la menace est la perte EN MASSE, celle qu une
+  reprise de tranche produit, et un plancher global la voit au premier passage.
+- **`src/test/java` est hors champ**, comme pour le cliquet de l article A30 auquel ce garde
+  s adosse. La javadoc de test n a pas encore de decision.
+- **Seules les lignes `///` comptent.** Un renvoi dans un commentaire d implementation releve du code
+  et non du contrat ; le deplacer d un `///` vers un `//` est une decision de redaction, pas une
+  perte, mais ce garde la comptera comme telle. La contrepartie est assumee : elle pousse a garder le
+  renvoi la ou le lecteur du contrat le trouve.
+
+**La cecite declaree.** Le motif est `#` suivi d au plus cinq chiffres, borne a droite. La borne
+haute n est pas theorique : sans elle, `#4a90d9` - une couleur CSS citee dans un bloc - se comptait
+comme un renvoi `#4`. Elle a ete posee apres l avoir mesuree. La borne basse est absente parce que
+cinquante renvois du corpus tiennent en un ou deux chiffres - `#12`, `#28`, `#29`, `#33`, `#54` - et
+ouvrent tous une vraie issue.
+
+Ce que le garde ne saurait pas voir : un renvoi remplace par un autre, valide mais faux. Il compte,
+il ne resout pas. La resolution est le travail de `verifie_okf.py` pour les ADR ; rien ne le fait
+pour les issues, et une issue supprimee ne se distingue pas d une issue jamais ouverte.
+"""
+
+import pathlib
+import re
+import subprocess
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from _commun import rapporte_plancher  # noqa: E402
+
+ADR = "4395"
+RACINE = pathlib.Path(__file__).resolve().parents[2]
+
+ZONE = "src/main/java"
+
+# `#` puis un a cinq chiffres, borne a droite. Voir la cecite declaree en tete.
+RENVOI = re.compile(r"#\d{1,5}\b")
+
+
+def fichiers(racine: pathlib.Path = None) -> list[str]:
+    """Les fichiers Java de production, relatifs a `racine`.
+
+    Sur le depot, la liste vient de `git ls-files` : les fichiers SUIVIS. Sur une fixture, qui n est
+    pas un depot, elle vient du parcours de l arbre. Sans cette seconde branche, `renvois(racine=...)`
+    accepterait un chemin et lirait quand meme le depot reel, et son cas temoin passerait au vert sur
+    une fixture qu il ne lit pas. Le defaut a deja ete commis une fois, sur le garde 4368.
+    """
+    racine = racine or RACINE
+    if (racine / ".git").exists() or racine == RACINE:
+        sortie = subprocess.run(
+            ["git", "-C", str(racine), "ls-files", "-z", ZONE], capture_output=True, check=True
+        ).stdout.decode()
+        noms = [c for c in sortie.split("\0") if c]
+    else:
+        zone = racine / ZONE
+        noms = [str(f.relative_to(racine)) for f in sorted(zone.rglob("*.java")) if f.is_file()]
+    return sorted(n for n in noms if n.endswith(".java"))
+
+
+def par_fichier(racine: pathlib.Path = None) -> dict[str, int]:
+    """Le nombre de renvois porte par la javadoc de chaque fichier qui en porte."""
+    base = racine or RACINE
+    comptes = {}
+    for chemin in fichiers(base):
+        try:
+            texte = (base / chemin).read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        n = sum(
+            len(RENVOI.findall(ligne))
+            for ligne in texte.split("\n")
+            if ligne.strip().startswith("///")
+        )
+        if n:
+            comptes[chemin] = n
+    return comptes
+
+
+def renvois(racine: pathlib.Path = None) -> int:
+    """Le nombre total de renvois d issue portes par la javadoc de production."""
+    return sum(par_fichier(racine).values())
+
+
+def _auto_test() -> int:
+    """Le garde voit-il une perte, et epargne-t-il ce qui n en est pas une ?
+
+    Un plancher qui ne sait que reussir ne garde rien. Le cas temoin retire un renvoi d un bloc et
+    exige que le compte baisse ; les autres cas tiennent les bords ou il se tromperait.
+    """
+    import tempfile
+
+    def ecrire(racine: pathlib.Path, nom: str, contenu: str) -> None:
+        p = racine / ZONE / nom
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(contenu, encoding="utf-8")
+
+    cas = [
+        (
+            "un bloc qui cite deux issues",
+            "/// Le decoupage suit #504, et le cas limite vient de #33.\nclass A {}\n",
+            2,
+        ),
+        (
+            "le renvoi retire du bloc : c est la perte que ce garde existe pour voir",
+            "/// Le decoupage suit la regle, et le cas limite est traite.\nclass A {}\n",
+            0,
+        ),
+        (
+            "un renvoi en commentaire d implementation ne compte pas",
+            "// vient de #504\nclass A {}\n",
+            0,
+        ),
+        (
+            "une couleur hexadecimale a six chiffres n est pas un renvoi",
+            "/// La teinte de fond vaut #123456 dans la palette.\nclass A {}\n",
+            0,
+        ),
+        (
+            "un renvoi a un ou deux chiffres compte : cinquante du corpus en sont",
+            "/// Le verrou de navigation vient de #54, la progression de #33.\nclass A {}\n",
+            2,
+        ),
+        (
+            "un lien javadoc vers un membre n est pas un renvoi",
+            "/// Voir {@link Decoupage#applique} pour le detail.\nclass A {}\n",
+            0,
+        ),
+    ]
+
+    echecs = 0
+    for titre, contenu, attendu in cas:
+        with tempfile.TemporaryDirectory() as d:
+            racine = pathlib.Path(d)
+            ecrire(racine, "A.java", contenu)
+            obtenu = renvois(racine)
+        marque = "ok  " if obtenu == attendu else "ECHEC"
+        if obtenu != attendu:
+            echecs += 1
+        print(f"  {marque} {titre} : attendu {attendu}, obtenu {obtenu}")
+
+    if echecs:
+        print(f"\nÉCHEC : {echecs} cas sur {len(cas)}.", file=sys.stderr)
+        return 1
+    print(f"\nAuto-test concluant : le garde voit la perte, et epargne les {len(cas) - 2} bords.")
+    return 0
+
+
+if __name__ == "__main__":
+    if "--auto-test" in sys.argv:
+        sys.exit(_auto_test())
+    sys.exit(rapporte_plancher(ADR, "renvois d issue portes par la javadoc", renvois(), "renvois"))

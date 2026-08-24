@@ -455,6 +455,38 @@ def test_4368_apostrophe_en_libelle() -> None:
                  len(m.suspects(racine=racine)), 2)
 
 
+def test_4395_renvois_en_javadoc() -> None:
+    m = _charge("4395-renvois-en-javadoc.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        # Le detecteur compte ; ce qui se casse, c est son EPARGNE. Une couleur CSS a six chiffres
+        # etait comptee comme un renvoi `#4` avant que la borne haute ne soit posee, et le corpus en
+        # portait une. Un compte de 3 separe les trois renvois reels des quatre pieges - couleur,
+        # lien javadoc vers un membre, commentaire d implementation, zone de test. Un compte de 6
+        # voudrait dire que le garde a cesse de faire la difference.
+        _ecrire(
+            racine,
+            "src/main/java/fr/univ_amu/iut/a/Contrat.java",
+            "/// Le decoupage suit #504, et le cas limite vient de #33.\n"
+            "/// La teinte de fond vaut #123456 dans la palette.\n"
+            "/// Voir {@link Decoupage#applique} pour le detail.\n"
+            "/// Le verrou de navigation vient de #54.\n"
+            "// vient de #4040, mais en commentaire d implementation\n"
+            "class Contrat {}\n",
+        )
+        _ecrire(
+            racine,
+            "src/test/java/fr/univ_amu/iut/a/ContratTest.java",
+            "/// Eprouve #4040, hors champ declare.\nclass ContratTest {}\n",
+        )
+        _verifie(
+            "4395 compte les renvois de la javadoc, epargne la couleur, le lien, le commentaire "
+            "et la zone de test",
+            m.renvois(racine),
+            3,
+        )
+
+
 def test_rapport_et_resserrement() -> None:
     rapport = _charge("rapport.py")
     # Le parsing : une ligne normalisée doit être reconnue.
@@ -573,6 +605,7 @@ if __name__ == "__main__":
         test_4359_javadoc_narratif,
         test_4366_avertissement_en_pictogramme,
         test_4368_apostrophe_en_libelle,
+        test_4395_renvois_en_javadoc,
         test_loupe_0020,
         test_loupe_0044,
         test_rapport_et_resserrement,

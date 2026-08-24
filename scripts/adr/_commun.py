@@ -52,6 +52,73 @@ def cliquet(numero: str) -> int:
     return int(trouve.group(1))
 
 
+# Le PLANCHER est l'inverse du cliquet, et il a son propre champ pour que la polarité se voie dans
+# l'en-tête. Un cliquet borne ce qu'on tolère et doit descendre ; un plancher garde ce qu'on possède
+# et doit monter. Les confondre dans un même champ ferait qu'un lecteur pressé lirait le mauvais sens.
+PLANCHER = re.compile(r"^floor:\s*(\d+)\s*$", re.M)
+
+
+def plancher(numero: str) -> int:
+    """Le plancher déclaré par l'ADR `numero`, lu dans son en-tête OKF."""
+    fichiers = sorted(DECISIONS.glob(f"{numero}-*.md"))
+    if not fichiers:
+        raise SystemExit(f"ADR {numero} introuvable sous {DECISIONS}")
+    trouve = PLANCHER.search(entete(fichiers[0]))
+    if not trouve:
+        raise SystemExit(
+            f"ADR {numero} ne déclare aucun plancher lisible. Attendu, dans son en-tête :\n"
+            f"  verification: certaine\n"
+            f"  enforced_by:\n"
+            f"    - \"chemin/du/script\"\n"
+            f"  floor: N"
+        )
+    return int(trouve.group(1))
+
+
+def rapporte_plancher(numero: str, titre: str, mesure: int, unite: str) -> int:
+    """Confronte une mesure à son plancher, et rend le code de sortie.
+
+    **La polarité est l'inverse de `rapporte`, et c'est voulu.** Un cliquet compte ce qu'on tolère :
+    monter est une régression. Un plancher compte ce qu'on possède : **descendre** est la perte, et
+    monter est la bonne nouvelle. Le même code ne peut pas servir les deux sans que l'un des deux
+    sens se lise de travers.
+
+    Ce que le plancher garde ne se recompte pas non plus de la même façon. Un suspect se liste, parce
+    qu'un humain le trie ; ce qui a disparu ne se liste pas, justement parce qu'il n'est plus là. La
+    sortie annonce donc un nombre et un manque, pas une énumération.
+
+    Sortie normalisée, pour que le rapport hebdomadaire puisse agréger sans deviner :
+
+        PLANCHER 4395 | mesure=4026 | plancher=4026 | verdict=ok
+    """
+    seuil = plancher(numero)
+    print(f"ADR {numero} - {titre}")
+
+    verdict = "ok"
+    if mesure < seuil:
+        verdict = "perte"
+    elif mesure > seuil:
+        verdict = "a-relever"
+
+    print(f"\nPLANCHER {numero} | mesure={mesure} | plancher={seuil} | verdict={verdict}")
+
+    if verdict == "perte":
+        print(
+            f"\nÉCHEC : {mesure} {unite} pour un plancher de {seuil}. Il en manque {seuil - mesure}.\n"
+            f"Un renvoi perdu ne casse rien : il cesse simplement d'ouvrir, et personne ne le voit.\n"
+            f"Rendez-les, ou justifiez la perte et abaissez le plancher dans l'ADR - mais un plancher\n"
+            f"qui descend est une décision, pas une formalité.",
+            file=sys.stderr,
+        )
+        return 1
+    if verdict == "a-relever":
+        print(
+            f"Le dépôt en porte plus que son plancher ({mesure} > {seuil}) : relevez-le à {mesure}\n"
+            f"dans l'ADR, sinon ce qui vient d'être gagné se reperdra en silence."
+        )
+    return 0
+
+
 def rapporte(numero: str, titre: str, suspects: list[str], apercu: int | None = None) -> int:
     """Affiche les suspects, confronte leur nombre au cliquet, et rend le code de sortie.
 
