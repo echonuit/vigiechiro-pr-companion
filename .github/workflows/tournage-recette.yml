@@ -521,6 +521,33 @@ jobs:
           fi
           echo "${#clips[@]} clip(s) versé(s) sur « clips-connectes »." >> "${GITHUB_STEP_SUMMARY}"
 
+      # ⚠️ `--clobber` remplace et ajoute ; il ne retire RIEN. Un cas renommé laisse donc son clip en
+      # ligne, et ce clip continue de montrer un comportement que le produit n'a plus. C'est arrivé
+      # ici même : le passage de deux scénarios à un seul (#4324) a laissé deux pièces orphelines sur
+      # cette pré-version, que la page continuait de proposer.
+      #
+      # `clips-orphelins.sh` porte déjà ce calcul pour `clips-recette`, et il est agnostique de la
+      # pré-version : il prend le dossier tourné et lit la liste en ligne sur son entrée. Le brancher
+      # ici coûte huit lignes ; ne pas le brancher coûte un clip qui ment.
+      - name: Retirer les clips connectés dont le cas a disparu
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          chmod +x .github/scripts/clips-orphelins.sh
+          orphelins=$(gh release view clips-connectes --json assets --jq '.assets[].name' \
+            | ./.github/scripts/clips-orphelins.sh repris/target/recette/clips)
+          if [ -z "$orphelins" ]; then
+            echo "Aucun clip orphelin : la pré-version ne porte que des cas qui existent."
+            exit 0
+          fi
+          while IFS= read -r nom; do
+            [ -n "$nom" ] || continue
+            echo "Retrait de « $nom » : aucun cas de recette ne porte plus ce nom."
+            gh release delete-asset clips-connectes "$nom" --yes
+          done <<< "$orphelins"
+
   publier:
     name: Verser les clips Java sur le tag de la version
     needs: filmer
