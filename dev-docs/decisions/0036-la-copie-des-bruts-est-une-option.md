@@ -1,8 +1,18 @@
-# ADR 0036 - La copie des enregistrements bruts est une option de ré-analyse, pas un défaut
+---
+type: adr
+title: "La copie des enregistrements bruts est une option de ré-analyse, pas un défaut"
+status: stable
+article: A18
+chantier: "EPIC #2061 (lots #2062 à #2064)"
+decided_at: 2026-07-20
+verification: humaine
+verification_note: "la copie des bruts comme option non par défaut est un arbitrage produit, vérifié en revue et par les tests d'import"
+verified:
+  - by: human:nedseb
+    at: 2026-07-20
+---
 
-- **Statut** : Accepté - 2026-07-20
-- **Chantier** : EPIC #2061 (lots #2062 à #2064)
-- **Vérification** : humaine - la copie des bruts comme option non par défaut est un arbitrage produit, vérifié en revue et par les tests d'import
+# La copie des enregistrements bruts est une option de ré-analyse, pas un défaut
 
 ## Contexte
 

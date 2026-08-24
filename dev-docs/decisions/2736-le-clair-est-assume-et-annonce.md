@@ -1,10 +1,18 @@
-# ADR 2736 - Les secrets locaux restent en clair, **assumé et annoncé**, plutôt que protégés à côté de ce qui compte
+---
+type: adr
+title: "Les secrets locaux restent en clair, **assumé et annoncé**, plutôt que protégés à côté de ce qui compte"
+status: stable
+article: A11
+chantier: "#2736, lot 2 (#2722) du chantier de dette #2720"
+decided_at: 2026-08-04
+verification: humaine
+verification_note: "une décision de périmètre ne se prouve pas par un scan ; ce qu'elle"
+verified:
+  - by: human:nedseb
+    at: 2026-08-04
+---
 
-- **Statut** : Accepté - 2026-08-04
-- **Chantier** : #2736, lot 2 (#2722) du chantier de dette #2720
-- **Vérification** : humaine - une décision de périmètre ne se prouve pas par un scan ; ce qu'elle
-  produit, en revanche, l'est : le garde `SecretsEcritsProtegesTest` tient l'écriture du jeton (#2735)
-  et l'avertissement de sauvegarde a son issue d'implémentation.
+# Les secrets locaux restent en clair, **assumé et annoncé**, plutôt que protégés à côté de ce qui compte
 
 ## Contexte
 

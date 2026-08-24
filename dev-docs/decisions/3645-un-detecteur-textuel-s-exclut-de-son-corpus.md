@@ -1,12 +1,19 @@
-# ADR 3645 - Un détecteur textuel s'exclut de son propre corpus
+---
+type: adr
+title: "Un détecteur textuel s'exclut de son propre corpus"
+status: stable
+article: A2
+chantier: "#3645, suites du chantier #3536"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - "src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3645, suites du chantier #3536
-- **Vérification** : certaine - `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`
-
-Vue rouge par une mutation à la main, dans les deux sens et sur la même garde retirée : **sans**
-l'exclusion, le détecteur reste vert ; **avec**, il nomme `BaseNeuve`. C'est la seule mesure qui prouve
-que l'exclusion porte quelque chose.
+# Un détecteur textuel s'exclut de son propre corpus
 
 ## Contexte
 

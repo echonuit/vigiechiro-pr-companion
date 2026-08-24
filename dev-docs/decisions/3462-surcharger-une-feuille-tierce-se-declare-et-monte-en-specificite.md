@@ -1,9 +1,21 @@
-# ADR 3462 - Surcharger une feuille de style tierce se déclare, et monte en spécificité
+---
+type: adr
+title: "Surcharger une feuille de style tierce se déclare, et monte en spécificité"
+status: stable
+article: A20
+chantier: "#3462, finitions de recette avant la campagne 2 (#3424)"
+decided_at: 2026-08-18
+verification: certaine
+enforced_by:
+  - "ContrasteVueAudioTest#les_commandes_se_detachent_de_la_barre"
+verified:
+  - by: machine:ci
+    at: 2026-08-18
+relations:
+  prolonge: ["0046"]
+---
 
-- **Statut** : Accepté - 2026-08-18
-- **Chantier** : #3462, finitions de recette avant la campagne 2 (#3424)
-- **Prolonge** : [ADR 0046](0046-une-classe-css-a-une-seule-feuille.md)
-- **Vérification** : certaine - `ContrasteVueAudioTest#les_commandes_se_detachent_de_la_barre`
+# Surcharger une feuille de style tierce se déclare, et monte en spécificité
 
 ## Contexte
 

@@ -1,13 +1,21 @@
-# ADR 3990 - Le texte se lit, le JSON se parse : une commande écrit sa date deux fois différemment
+---
+type: adr
+title: "Le texte se lit, le JSON se parse : une commande écrit sa date deux fois différemment"
+status: stable
+article: A16
+chantier: "#3990, passe 9 de la clôture des suites des finitions de recette (#3424)"
+decided_at: 2026-08-18
+verification: certaine
+enforced_by:
+  - "StatutPassageTest#json_passage_complet"
+verified:
+  - by: machine:ci
+    at: 2026-08-18
+relations:
+  prolonge: ["3828"]
+---
 
-- **Statut** : Accepté - 2026-08-18
-- **Chantier** : #3990, passe 9 de la clôture des suites des finitions de recette (#3424)
-- **Prolonge** : [ADR 3828](3828-une-decision-d-affichage-se-prend-elle-ne-se-deduit-pas.md)
-- **Vérification** : certaine - `StatutPassageTest#json_passage_complet`
-
-> C'est ce test-là qui est nommé, et non celui du texte : il garde la décision de **ne pas**
-> franciser le JSON, c'est-à-dire celle que rien ne rougissait quand on la défaisait.
-> `StatutPassageTest#texte_passage_complet` tient l'autre versant.
+# Le texte se lit, le JSON se parse : une commande écrit sa date deux fois différemment
 
 ## Contexte
 

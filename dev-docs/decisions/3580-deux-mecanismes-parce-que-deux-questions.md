@@ -1,9 +1,21 @@
-# ADR 3580 - Deux mécanismes de rafraîchissement, parce que ce sont deux questions
+---
+type: adr
+title: "Deux mécanismes de rafraîchissement, parce que ce sont deux questions"
+status: stable
+article: A15
+chantier: "#3580 (lot 4 du chantier #3536)"
+decided_at: 2026-08-13
+verification: certaine
+enforced_by:
+  - "ServicePassageTest#poser_verdict_n_annonce_pas_de_mutation_structurelle"
+verified:
+  - by: machine:ci
+    at: 2026-08-13
+relations:
+  prolonge: ["3537"]
+---
 
-- **Statut** : Accepté - 2026-08-13
-- **Chantier** : #3580 (lot 4 du chantier #3536)
-- **Vérification** : certaine - `ServicePassageTest#poser_verdict_n_annonce_pas_de_mutation_structurelle`
-- **Prolonge** : [ADR 3537](3537-un-signal-se-pose-a-l-ecriture.md)
+# Deux mécanismes de rafraîchissement, parce que ce sont deux questions
 
 ## Contexte
 

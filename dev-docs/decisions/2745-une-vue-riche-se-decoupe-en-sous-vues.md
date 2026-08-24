@@ -1,8 +1,19 @@
-# ADR 2745 - Une vue riche se découpe en **sous-vues**, et la sous-vue reçoit son modèle
+---
+type: adr
+title: "Une vue riche se découpe en **sous-vues**, et la sous-vue reçoit son modèle"
+status: stable
+article: A23
+chantier: "#2745, lot 4 (#2724) du chantier de dette #2720"
+decided_at: 2026-08-05
+verification: certaine
+enforced_by:
+  - "DecisionsRespecteesTest#une_sous_vue_ne_se_procure_pas_ce_qui_doit_etre_unique"
+verified:
+  - by: machine:ci
+    at: 2026-08-05
+---
 
-- **Statut** : Accepté - 2026-08-05
-- **Chantier** : #2745, lot 4 (#2724) du chantier de dette #2720
-- **Vérification** : certaine - `DecisionsRespecteesTest#une_sous_vue_ne_se_procure_pas_ce_qui_doit_etre_unique`
+# Une vue riche se découpe en **sous-vues**, et la sous-vue reçoit son modèle
 
 ## Contexte
 

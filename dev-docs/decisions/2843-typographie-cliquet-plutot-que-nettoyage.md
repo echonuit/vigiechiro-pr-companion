@@ -1,8 +1,20 @@
-# ADR 2843 - Une convention typographique se tient par un cliquet, pas par un nettoyage
+---
+type: adr
+title: "Une convention typographique se tient par un cliquet, pas par un nettoyage"
+status: stable
+article: A9
+chantier: "#2843, suite de la clôture du chantier #2348 et de #2813"
+decided_at: 2026-07-29
+verification: probable
+enforced_by:
+  - "scripts/adr/2843-tiret-cadratin.py"
+ratchet: 1
+verified:
+  - by: machine:suspects
+    at: 2026-07-29
+---
 
-- **Statut** : Accepté - 2026-07-29, **amendé** par [ADR 2941](2941-un-cliquet-s-apprend-en-l-appliquant.md) (#2941)
-- **Chantier** : #2843, suite de la clôture du chantier #2348 et de #2813
-- **Vérification** : probable - `scripts/adr/2843-tiret-cadratin.py` (cliquet : 1)
+# Une convention typographique se tient par un cliquet, pas par un nettoyage
 
 ## Contexte
 

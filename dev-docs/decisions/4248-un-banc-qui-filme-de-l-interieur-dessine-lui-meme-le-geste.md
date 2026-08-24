@@ -1,8 +1,19 @@
-# ADR 4248 - Un banc qui filme de l'intérieur dessine lui-même le geste
+---
+type: adr
+title: "Un banc qui filme de l'intérieur dessine lui-même le geste"
+status: stable
+article: A23
+chantier: "#4248, EPIC #4133"
+decided_at: 2026-08-23
+verification: certaine
+enforced_by:
+  - "CalqueDesGestesTest#la_fleche_se_voit_et_sa_pointe_tombe_sur_la_position"
+verified:
+  - by: machine:ci
+    at: 2026-08-23
+---
 
-- **Statut** : Accepté - 2026-08-23
-- **Chantier** : #4248, EPIC #4133
-- **Vérification** : certaine - `CalqueDesGestesTest#la_fleche_se_voit_et_sa_pointe_tombe_sur_la_position`
+# Un banc qui filme de l'intérieur dessine lui-même le geste
 
 ## Contexte
 

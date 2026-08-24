@@ -1,8 +1,19 @@
-# ADR 4235 - Le garde d'abord, l'abstraction ensuite
+---
+type: adr
+title: "Le garde d'abord, l'abstraction ensuite"
+status: stable
+article: A7
+chantier: "#4235, EPIC #4133"
+decided_at: 2026-08-23
+verification: certaine
+enforced_by:
+  - "BancDesClipsTest#une_classe_filmee_neuve_declare_son_banc"
+verified:
+  - by: machine:ci
+    at: 2026-08-23
+---
 
-- **Statut** : Accepté - 2026-08-23
-- **Chantier** : #4235, EPIC #4133
-- **Vérification** : certaine - `BancDesClipsTest#une_classe_filmee_neuve_declare_son_banc`
+# Le garde d'abord, l'abstraction ensuite
 
 ## Contexte
 

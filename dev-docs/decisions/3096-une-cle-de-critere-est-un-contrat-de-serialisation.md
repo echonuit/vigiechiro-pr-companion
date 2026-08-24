@@ -1,14 +1,19 @@
-# ADR 3096 - Une clé de critère est un **contrat de sérialisation** : un concept, un endroit, et un renommage sans migration
+---
+type: adr
+title: "Une clé de critère est un **contrat de sérialisation** : un concept, un endroit, et un renommage sans migration"
+status: stable
+article: A16
+chantier: "#3096, palier 3 du chantier #3092"
+decided_at: 2026-08-04
+verification: certaine
+enforced_by:
+  - "ClesCriteresTest#aucune_cle_publiee_deux_fois"
+verified:
+  - by: machine:ci
+    at: 2026-08-04
+---
 
-- **Statut** : Accepté - 2026-08-04
-- **Chantier** : #3096, palier 3 du chantier #3092
-- **Vérification** : certaine - `ClesCriteresTest#aucune_cle_publiee_deux_fois`
-
-!!! note "Sa jumelle : la **valeur**, quand celle-ci porte sur la **clé**"
-    Une vue sauvegardée persiste deux choses, et deux ADR nées la même semaine en traitent une chacune :
-    la **clé** du critère (celle-ci, chantier #3092) et la **valeur** cochée, qui se rattrape par
-    dimension ([ADR 3158](3158-une-valeur-memorisee-se-rattrape-par-dimension.md), chantier #3151).
-    Écrites en parallèle, elles ne se citaient pas ; le rapprochement a été fait à la clôture de #3151.
+# Une clé de critère est un **contrat de sérialisation** : un concept, un endroit, et un renommage sans migration
 
 ## Contexte
 

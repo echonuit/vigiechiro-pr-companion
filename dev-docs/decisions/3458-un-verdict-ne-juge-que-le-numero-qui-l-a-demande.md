@@ -1,13 +1,19 @@
-# ADR 3458 - Un verdict ne juge que ce qu'on lui a demandé
+---
+type: adr
+title: "Un verdict ne juge que ce qu'on lui a demandé"
+status: stable
+article: A3
+chantier: "#3458 (versant IHM du besoin 1)"
+decided_at: 2026-08-15
+verification: certaine
+enforced_by:
+  - "SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte"
+verified:
+  - by: machine:ci
+    at: 2026-08-15
+---
 
-- **Statut** : Accepté - 2026-08-15
-- **Chantier** : #3458 (versant IHM du besoin 1)
-- **Vérification** : certaine - `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`
-
-> L'en-tête ne nomme qu'un test, c'est le format qu'impose le garde. Le **premier** mécanisme
-> (l'effacement au changement de numéro) a le sien dans la même classe :
-> `changer_le_carre_perime_le_verdict`, doublé côté vue par
-> `ModaleSiteVerifierCarreViewTest#corriger_le_carre_efface_le_verdict`.
+# Un verdict ne juge que ce qu'on lui a demandé
 
 ## Contexte
 

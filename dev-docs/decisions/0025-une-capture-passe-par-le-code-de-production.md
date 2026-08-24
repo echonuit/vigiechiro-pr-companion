@@ -1,8 +1,18 @@
-# ADR 0025 - Une capture passe par le code de production, elle ne le reconstruit pas
+---
+type: adr
+title: "Une capture passe par le code de production, elle ne le reconstruit pas"
+status: stable
+article: A4
+chantier: "#1468, #1865 (suites de la clôture de #1838)"
+decided_at: 2026-07-18
+verification: humaine
+verification_note: "qu'une capture appelle le code de production plutôt qu'un fac-similé est une discipline de conception, jugée en revue"
+verified:
+  - by: human:nedseb
+    at: 2026-07-18
+---
 
-- **Statut** : Accepté - 2026-07-18
-- **Chantier** : #1468, #1865 (suites de la clôture de #1838)
-- **Vérification** : humaine - qu'une capture appelle le code de production plutôt qu'un fac-similé est une discipline de conception, jugée en revue
+# Une capture passe par le code de production, elle ne le reconstruit pas
 
 ## Contexte
 

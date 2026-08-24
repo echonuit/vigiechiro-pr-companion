@@ -1,9 +1,21 @@
-# ADR 0047 - L'identité de distribution est le projet Echonuit, distincte de l'auteur et de la plateforme
+---
+type: adr
+title: "L'identité de distribution est le projet Echonuit, distincte de l'auteur et de la plateforme"
+status: stable
+article: A26
+chantier: "#2240 (issu de #2213 winget, #2111 Flatpak)"
+decided_at: 2026-07-21
+verification: certaine
+enforced_by:
+  - "DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit"
+verified:
+  - by: machine:ci
+    at: 2026-07-21
+relations:
+  fait évoluer: ["0045"]
+---
 
-- **Statut** : Accepté - 2026-07-21
-- **Chantier** : #2240 (issu de #2213 winget, #2111 Flatpak)
-- **Vérification** : certaine - `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`
-- **Fait évoluer** : [ADR 0045](0045-l-upgradecode-windows-est-une-constante-d-identite.md), dont les exemples d'identifiant winget sont remplacés ; prolonge la logique de #2108.
+# L'identité de distribution est le projet Echonuit, distincte de l'auteur et de la plateforme
 
 ## Contexte
 

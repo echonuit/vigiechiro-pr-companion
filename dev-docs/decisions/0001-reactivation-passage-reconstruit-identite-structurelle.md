@@ -1,8 +1,18 @@
-# ADR 0001 - Identité d'un passage reconstruit : régénération structurelle, l'acoustique en indice
+---
+type: adr
+title: "Identité d'un passage reconstruit : régénération structurelle, l'acoustique en indice"
+status: stable
+article: A5
+chantier: "EPIC #1653 (réactiver un passage reconstruit depuis les bruts)"
+decided_at: 2026-07-17
+verification: humaine
+verification_note: "l'identité d'une tranche reconstruite (régénération structurelle vs empreinte) est une règle de reconstruction, vérifiée en revue et par les tests de réactivation"
+verified:
+  - by: human:nedseb
+    at: 2026-07-17
+---
 
-- **Statut** : Accepté - 2026-07-17
-- **Chantier** : EPIC #1653 (réactiver un passage reconstruit depuis les bruts)
-- **Vérification** : humaine - l'identité d'une tranche reconstruite (régénération structurelle vs empreinte) est une règle de reconstruction, vérifiée en revue et par les tests de réactivation
+# Identité d'un passage reconstruit : régénération structurelle, l'acoustique en indice
 
 ## Contexte
 

@@ -1,8 +1,19 @@
-# ADR 3764 - Un cas joué n'est pas un cas prouvé : la recette a trois états, pas deux
+---
+type: adr
+title: "Un cas joué n'est pas un cas prouvé : la recette a trois états, pas deux"
+status: stable
+article: A4
+chantier: "#3764, tranche (a) de l'EPIC #3667"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - "CorrespondanceRecetteTest#le_script_et_le_code_s_accordent_sur_le_juge"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3764, tranche (a) de l'EPIC #3667
-- **Vérification** : certaine - `CorrespondanceRecetteTest#le_script_et_le_code_s_accordent_sur_le_juge`
+# Un cas joué n'est pas un cas prouvé : la recette a trois états, pas deux
 
 ## Contexte
 

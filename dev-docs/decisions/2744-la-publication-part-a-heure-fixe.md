@@ -1,9 +1,18 @@
-# ADR 2744 - La publication part à **heure fixe**, pas à chaque fusion
+---
+type: adr
+title: "La publication part à **heure fixe**, pas à chaque fusion"
+status: stable
+article: A25
+chantier: "#2744, lot 3 (#2723) du chantier de dette #2720"
+decided_at: 2026-08-05
+verification: humaine
+verification_note: "le premier train du mercredi suivant, dont les notes doivent agréger la"
+verified:
+  - by: human:nedseb
+    at: 2026-08-05
+---
 
-- **Statut** : Accepté - 2026-08-05, **amendé** par [ADR 3561](3561-une-garde-obligatoire-inventorie-les-chemins-qu-elle-ferme.md) (#3561) : le `workflow_dispatch` reste, mais se passer de la preuve des plateformes demande une raison écrite
-- **Chantier** : #2744, lot 3 (#2723) du chantier de dette #2720
-- **Vérification** : humaine - le premier train du mercredi suivant, dont les notes doivent agréger la
-  semaine et non un seul commit
+# La publication part à **heure fixe**, pas à chaque fusion
 
 ## Contexte
 

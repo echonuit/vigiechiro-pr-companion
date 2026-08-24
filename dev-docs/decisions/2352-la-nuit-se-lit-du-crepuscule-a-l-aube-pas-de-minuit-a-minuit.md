@@ -1,8 +1,19 @@
-# ADR 2352 - La nuit se lit du crépuscule à l'aube, pas de minuit à minuit
+---
+type: adr
+title: "La nuit se lit du crépuscule à l'aube, pas de minuit à minuit"
+status: stable
+article: A21
+chantier: "#2352 (lot 2 de l'EPIC #2348)"
+decided_at: 2026-07-26
+verification: certaine
+enforced_by:
+  - "AgregationActiviteTest#l_export_date_ses_lignes_par_la_nuit_biologique"
+verified:
+  - by: machine:ci
+    at: 2026-07-26
+---
 
-- **Statut** : Accepté - 2026-07-26
-- **Chantier** : #2352 (lot 2 de l'EPIC #2348)
-- **Vérification** : certaine - `AgregationActiviteTest#l_export_date_ses_lignes_par_la_nuit_biologique`
+# La nuit se lit du crépuscule à l'aube, pas de minuit à minuit
 
 ## Contexte
 

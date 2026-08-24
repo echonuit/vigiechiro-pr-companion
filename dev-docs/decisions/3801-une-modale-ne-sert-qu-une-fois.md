@@ -1,9 +1,19 @@
-# ADR 3801 - Une modale ne sert qu'une fois, et le dit
+---
+type: adr
+title: "Une modale ne sert qu'une fois, et le dit"
+status: stable
+article: A23
+chantier: "#3801, dette de la clôture des suites de #3458"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - "SiteEditCycleDeVieTest#une_seconde_preparation_est_refusee"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3801, dette de la clôture des suites de #3458
-- **Renverse** : le contrat de réutilisation d'un ViewModel de modale, éprouvé depuis #1380
-- **Vérification** : certaine - `SiteEditCycleDeVieTest#une_seconde_preparation_est_refusee`
+# Une modale ne sert qu'une fois, et le dit
 
 ## Contexte
 

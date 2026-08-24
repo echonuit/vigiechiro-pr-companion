@@ -1,8 +1,18 @@
-# ADR 0033 - Une fenêtre bornée, pas un pipeline unitaire, et deux seuils disque au lieu d'un
+---
+type: adr
+title: "Une fenêtre bornée, pas un pipeline unitaire, et deux seuils disque au lieu d'un"
+status: stable
+article: A15
+chantier: "#1991 (lots #1993 à #1999)"
+decided_at: 2026-07-19
+verification: humaine
+verification_note: "la fenêtre bornée et les deux seuils disque sont un choix d'architecture du dépôt, non réductible à un motif observable"
+verified:
+  - by: human:nedseb
+    at: 2026-07-19
+---
 
-- **Statut** : Accepté - 2026-07-19
-- **Chantier** : #1991 (lots #1993 à #1999)
-- **Vérification** : humaine - la fenêtre bornée et les deux seuils disque sont un choix d'architecture du dépôt, non réductible à un motif observable
+# Une fenêtre bornée, pas un pipeline unitaire, et deux seuils disque au lieu d'un
 
 ## Contexte
 

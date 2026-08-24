@@ -1,8 +1,18 @@
-# ADR 0022 - Le verbe d'un geste dit le sens réel de l'échange
+---
+type: adr
+title: "Le verbe d'un geste dit le sens réel de l'échange"
+status: stable
+article: A14
+chantier: "#1855, #1866 (suites de l'EPIC #1662 et du chantier #1838)"
+decided_at: 2026-07-18
+verification: humaine
+verification_note: "que le verbe d'un geste dise le sens réel de l'échange porte sur le vocabulaire de l'IHM, qu'aucun motif ne juge"
+verified:
+  - by: human:nedseb
+    at: 2026-07-18
+---
 
-- **Statut** : Accepté - 2026-07-18
-- **Chantier** : #1855, #1866 (suites de l'EPIC #1662 et du chantier #1838)
-- **Vérification** : humaine - que le verbe d'un geste dise le sens réel de l'échange porte sur le vocabulaire de l'IHM, qu'aucun motif ne juge
+# Le verbe d'un geste dit le sens réel de l'échange
 
 ## Contexte
 

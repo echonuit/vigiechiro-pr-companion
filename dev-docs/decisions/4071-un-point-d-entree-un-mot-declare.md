@@ -1,8 +1,19 @@
-# ADR 4071 - Un point d'entrée, un mot déclaré ; la console reste à Windows
+---
+type: adr
+title: "Un point d'entrée, un mot déclaré ; la console reste à Windows"
+status: stable
+article: A19
+chantier: "#4071, suite de #619 et de #2104"
+decided_at: 2026-08-20
+verification: certaine
+enforced_by:
+  - "DecisionsRespecteesTest#le_lanceur_de_ligne_de_commande_est_declare"
+verified:
+  - by: machine:ci
+    at: 2026-08-20
+---
 
-- **Statut** : Accepté - 2026-08-20
-- **Chantier** : #4071, suite de #619 et de #2104
-- **Vérification** : certaine - `DecisionsRespecteesTest#le_lanceur_de_ligne_de_commande_est_declare`
+# Un point d'entrée, un mot déclaré ; la console reste à Windows
 
 ## Contexte
 

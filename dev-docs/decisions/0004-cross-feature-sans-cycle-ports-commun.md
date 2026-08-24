@@ -1,8 +1,17 @@
-# ADR 0004 - Pas de cycle entre features : les ponts passent par un port dans `commun`
+---
+type: adr
+title: "Pas de cycle entre features : les ponts passent par un port dans `commun`"
+status: stable
+article: A22
+chantier: "garde-fou `ArchitectureTest.features_sans_cycle`"
+verification: certaine
+enforced_by:
+  - "DecisionsRespecteesTest#aucun_cycle_entre_les_features"
+verified:
+  - by: machine:ci
+---
 
-- **Statut** : Accepté - rétroactif
-- **Chantier** : garde-fou `ArchitectureTest.features_sans_cycle`
-- **Vérification** : certaine - `DecisionsRespecteesTest#aucun_cycle_entre_les_features`
+# Pas de cycle entre features : les ponts passent par un port dans `commun`
 
 ## Contexte
 

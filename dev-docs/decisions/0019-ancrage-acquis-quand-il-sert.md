@@ -1,8 +1,18 @@
-# ADR 0019 - L'ancrage s'acquiert quand il sert, pas à un moment décrété
+---
+type: adr
+title: "L'ancrage s'acquiert quand il sert, pas à un moment décrété"
+status: stable
+article: A15
+chantier: "#1838 (amende [ADR 0016](0016-synchro-rapatrie-des-squelettes-hydrates-a-la-demande.md))"
+decided_at: 2026-07-18
+verification: humaine
+verification_note: "l'acquisition de l'ancrage au moment où il sert est une règle temporelle du déroulé, pas un invariant statique"
+verified:
+  - by: human:nedseb
+    at: 2026-07-18
+---
 
-- **Statut** : Accepté - 2026-07-18
-- **Chantier** : #1838 (amende [ADR 0016](0016-synchro-rapatrie-des-squelettes-hydrates-a-la-demande.md))
-- **Vérification** : humaine - l'acquisition de l'ancrage au moment où il sert est une règle temporelle du déroulé, pas un invariant statique
+# L'ancrage s'acquiert quand il sert, pas à un moment décrété
 
 ## Contexte
 

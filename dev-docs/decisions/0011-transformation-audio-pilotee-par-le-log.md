@@ -1,8 +1,16 @@
-# ADR 0011 - La transformation audio est pilotée par le log (fréquence réelle), pas par l'en-tête du WAV
+---
+type: adr
+title: "La transformation audio est pilotée par le log (fréquence réelle), pas par l'en-tête du WAV"
+status: stable
+article: A5
+chantier: "import Tadarida (unités CSV), bruts PR expansés (`FrequenceAcquisition`)"
+verification: humaine
+verification_note: "que la transformation lise la fréquence dans le log et non l'en-tête WAV est un comportement, gardé par les tests de transformation"
+verified:
+  - by: human:nedseb
+---
 
-- **Statut** : Accepté - rétroactif
-- **Chantier** : import Tadarida (unités CSV), bruts PR expansés (`FrequenceAcquisition`)
-- **Vérification** : humaine - que la transformation lise la fréquence dans le log et non l'en-tête WAV est un comportement, gardé par les tests de transformation
+# La transformation audio est pilotée par le log (fréquence réelle), pas par l'en-tête du WAV
 
 ## Contexte
 

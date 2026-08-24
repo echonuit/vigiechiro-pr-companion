@@ -1,9 +1,18 @@
-# ADR 2753 - Une règle absente et assumée vaut mieux qu'une règle contournée
+---
+type: adr
+title: "Une règle absente et assumée vaut mieux qu'une règle contournée"
+status: stable
+article: A11
+chantier: "#2753, lot #2725 du chantier #2720"
+decided_at: 2026-08-06
+verification: humaine
+verification_note: "aucune règle technique n'est posée, c'est précisément l'objet de la"
+verified:
+  - by: human:nedseb
+    at: 2026-08-06
+---
 
-- **Statut** : Accepté - 2026-08-06
-- **Chantier** : #2753, lot #2725 du chantier #2720
-- **Vérification** : humaine - aucune règle technique n'est posée, c'est précisément l'objet de la
-  décision ; la case du gabarit de PR se lit, elle ne se mesure pas
+# Une règle absente et assumée vaut mieux qu'une règle contournée
 
 ## Contexte
 

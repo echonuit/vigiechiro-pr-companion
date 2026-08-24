@@ -1,8 +1,19 @@
-# ADR 2353 - L'enjeu de conservation est celui que le plan national désigne, pas celui qu'on déduit
+---
+type: adr
+title: "L'enjeu de conservation est celui que le plan national désigne, pas celui qu'on déduit"
+status: stable
+article: A5
+chantier: "#2353 (lot 3 de l'EPIC #2348)"
+decided_at: 2026-07-28
+verification: certaine
+enforced_by:
+  - "EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues"
+verified:
+  - by: machine:ci
+    at: 2026-07-28
+---
 
-- **Statut** : Accepté - 2026-07-28
-- **Chantier** : #2353 (lot 3 de l'EPIC #2348)
-- **Vérification** : certaine - `EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues`
+# L'enjeu de conservation est celui que le plan national désigne, pas celui qu'on déduit
 
 ## Contexte
 

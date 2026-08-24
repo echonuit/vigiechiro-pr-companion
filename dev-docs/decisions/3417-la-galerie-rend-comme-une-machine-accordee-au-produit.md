@@ -1,9 +1,20 @@
-# ADR 3417 - La galerie rend comme une machine accordée au produit
+---
+type: adr
+title: "La galerie rend comme une machine accordée au produit"
+status: stable
+article: A4
+chantier: "#3417, suite de l'[ADR 3389](3389-ce-que-l-application-affiche-tient-dans-la-police-embarquee.md)"
+decided_at: 2026-08-06
+verification: humaine
+loupe:
+  - "capture-vues.yml"
+verification_note: "l'étape « Aligner la police système » de `capture-vues.yml` journalise"
+verified:
+  - by: human:nedseb
+    at: 2026-08-06
+---
 
-- **Statut** : Accepté - 2026-08-06
-- **Chantier** : #3417, suite de l'[ADR 3389](3389-ce-que-l-application-affiche-tient-dans-la-police-embarquee.md)
-- **Vérification** : humaine - l'étape « Aligner la police système » de `capture-vues.yml` journalise
-  `fc-match sans-serif` à chaque exécution ; un changement d'image de runner s'y verrait
+# La galerie rend comme une machine accordée au produit
 
 ## Contexte
 

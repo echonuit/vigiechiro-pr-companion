@@ -1,9 +1,19 @@
-# ADR 3769 - Une option qui ne veut plus rien dire se refuse, elle ne s'ignore pas
+---
+type: adr
+title: "Une option qui ne veut plus rien dire se refuse, elle ne s'ignore pas"
+status: stable
+article: A13
+chantier: "#3769, suites de #3458"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - "ListerSitesVigieChiroTest#tout_avec_carre_est_refuse"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3769, suites de #3458
-- **Suite de** : #1277, où un `max_results` au-delà de 100 rendait des listes **vides en silence**
-- **Vérification** : certaine - `ListerSitesVigieChiroTest#tout_avec_carre_est_refuse`
+# Une option qui ne veut plus rien dire se refuse, elle ne s'ignore pas
 
 ## Contexte
 

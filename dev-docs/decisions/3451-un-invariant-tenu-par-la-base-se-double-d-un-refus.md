@@ -1,8 +1,19 @@
-# ADR 3451 - Un invariant tenu par la base se double d'un refus dans le code
+---
+type: adr
+title: "Un invariant tenu par la base se double d'un refus dans le code"
+status: stable
+article: A16
+chantier: "#3451, suite de l'[ADR 3406](3406-une-nuit-porte-le-fuseau-de-son-site.md)"
+decided_at: 2026-08-07
+verification: certaine
+enforced_by:
+  - "CorrespondanceParticipationTest#une_borne_manquante_refuse_le_depot"
+verified:
+  - by: machine:ci
+    at: 2026-08-07
+---
 
-- **Statut** : Accepté - 2026-08-07
-- **Chantier** : #3451, suite de l'[ADR 3406](3406-une-nuit-porte-le-fuseau-de-son-site.md)
-- **Vérification** : certaine - `CorrespondanceParticipationTest#une_borne_manquante_refuse_le_depot`
+# Un invariant tenu par la base se double d'un refus dans le code
 
 ## Contexte
 

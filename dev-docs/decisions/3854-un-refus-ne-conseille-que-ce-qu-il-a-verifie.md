@@ -1,9 +1,21 @@
-# ADR 3854 - Un refus ne conseille que ce qu'il a vérifié applicable
+---
+type: adr
+title: "Un refus ne conseille que ce qu'il a vérifié applicable"
+status: stable
+article: A13
+chantier: "#3854, clôture des suites de #3458"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - "SynchronisationParticipationTest#refus_ne_tranche_pas_quand_la_plateforme_est_injoignable"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+relations:
+  prolonge: ["3458"]
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3854, clôture des suites de #3458
-- **Prolonge** : [ADR 3458](3458-un-verdict-ne-juge-que-le-numero-qui-l-a-demande.md)
-- **Vérification** : certaine - `SynchronisationParticipationTest#refus_ne_tranche_pas_quand_la_plateforme_est_injoignable`
+# Un refus ne conseille que ce qu'il a vérifié applicable
 
 ## Contexte
 

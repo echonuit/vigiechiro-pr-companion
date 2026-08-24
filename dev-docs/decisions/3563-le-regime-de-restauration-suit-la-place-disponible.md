@@ -1,9 +1,21 @@
-# ADR 3563 - Le régime de restauration suit la place disponible
+---
+type: adr
+title: "Le régime de restauration suit la place disponible"
+status: stable
+article: A15
+chantier: "#3563, lot 1 (#3559) du chantier #3518 ; trouvé à la passe 3 de la clôture du lot"
+decided_at: 2026-08-10
+verification: certaine
+enforced_by:
+  - "BesoinDePlaceTest#la_borne_de_la_plus_grosse_est_inclusive"
+verified:
+  - by: machine:ci
+    at: 2026-08-10
+relations:
+  amende: ["2727"]
+---
 
-- **Statut** : Accepté - 2026-08-10
-- **Chantier** : #3563, lot 1 (#3559) du chantier #3518 ; trouvé à la passe 3 de la clôture du lot
-- **Amende** : [ADR 2727](2727-une-restauration-verifie-en-place-et-replace-ou-cest-possible.md)
-- **Vérification** : certaine - `BesoinDePlaceTest#la_borne_de_la_plus_grosse_est_inclusive`
+# Le régime de restauration suit la place disponible
 
 ## Contexte
 

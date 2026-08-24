@@ -1,8 +1,19 @@
-# ADR 3572 - Une sauvegarde ne porte son nom qu'une fois complète
+---
+type: adr
+title: "Une sauvegarde ne porte son nom qu'une fois complète"
+status: stable
+article: A17
+chantier: "#3572, suite de la clôture du lot 1 (#3559)"
+decided_at: 2026-08-11
+verification: certaine
+enforced_by:
+  - "ServiceSauvegardeTest#interrompue_elle_ne_se_fait_pas_passer_pour_complete"
+verified:
+  - by: machine:ci
+    at: 2026-08-11
+---
 
-- **Statut** : Accepté - 2026-08-11
-- **Chantier** : #3572, suite de la clôture du lot 1 (#3559)
-- **Vérification** : certaine - `ServiceSauvegardeTest#interrompue_elle_ne_se_fait_pas_passer_pour_complete`
+# Une sauvegarde ne porte son nom qu'une fois complète
 
 ## Contexte
 

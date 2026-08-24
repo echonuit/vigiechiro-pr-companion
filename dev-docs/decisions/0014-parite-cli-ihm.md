@@ -1,8 +1,16 @@
-# ADR 0014 - Toute capacité métier est offerte aussi en ligne de commande (parité CLI ↔ IHM)
+---
+type: adr
+title: "Toute capacité métier est offerte aussi en ligne de commande (parité CLI ↔ IHM)"
+status: stable
+article: A19
+chantier: "CLI socle #619/#659 ; parité #1304 ; passe 2 du cycle de chantier"
+verification: humaine
+verification_note: "la parité CLI/IHM est une passe de clôture (passe 2), une obligation de processus, pas un invariant du code à un instant donné"
+verified:
+  - by: human:nedseb
+---
 
-- **Statut** : Accepté - rétroactif
-- **Chantier** : CLI socle #619/#659 ; parité #1304 ; passe 2 du cycle de chantier
-- **Vérification** : humaine - la parité CLI/IHM est une passe de clôture (passe 2), une obligation de processus, pas un invariant du code à un instant donné
+# Toute capacité métier est offerte aussi en ligne de commande (parité CLI ↔ IHM)
 
 ## Contexte
 

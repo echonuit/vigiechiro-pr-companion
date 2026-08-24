@@ -1,8 +1,19 @@
-# ADR 3412 - Un alias n'est pas une police
+---
+type: adr
+title: "Un alias n'est pas une police"
+status: stable
+article: A23
+chantier: "#3412, suite de l'[ADR 3361](3361-la-typographie-est-embarquee.md)"
+decided_at: 2026-08-06
+verification: certaine
+enforced_by:
+  - "PoliceCouvreLIhmTest#aucune_feuille_ne_s_en_remet_a_un_alias"
+verified:
+  - by: machine:ci
+    at: 2026-08-06
+---
 
-- **Statut** : Accepté - 2026-08-06
-- **Chantier** : #3412, suite de l'[ADR 3361](3361-la-typographie-est-embarquee.md)
-- **Vérification** : certaine - `PoliceCouvreLIhmTest#aucune_feuille_ne_s_en_remet_a_un_alias`
+# Un alias n'est pas une police
 
 ## Contexte
 

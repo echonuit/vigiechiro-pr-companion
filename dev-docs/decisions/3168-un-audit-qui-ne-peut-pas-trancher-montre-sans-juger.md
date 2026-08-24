@@ -1,13 +1,19 @@
-# ADR 3168 - Un audit qui ne peut pas trancher **montre sans juger**, et s'abstient plutôt que d'inventer
+---
+type: adr
+title: "Un audit qui ne peut pas trancher **montre sans juger**, et s'abstient plutôt que d'inventer"
+status: stable
+article: A13
+chantier: "#3168, lot 4 du chantier #3151"
+decided_at: 2026-08-04
+verification: certaine
+enforced_by:
+  - "AuditDepartementDuPointTest#legitime_et_suspecte_indiscernables"
+verified:
+  - by: machine:ci
+    at: 2026-08-04
+---
 
-- **Statut** : Accepté - 2026-08-04
-- **Chantier** : #3168, lot 4 du chantier #3151
-- **Vérification** : certaine - `AuditDepartementDuPointTest#legitime_et_suspecte_indiscernables`
-
-> Les trois volets de la décision sont tenus par trois tests distincts : celui cité ci-dessus pour
-> l'indiscernabilité, `AuditDepartementDuPointTest#severite_informative` pour le contrat de sortie, et
-> `RegionsFrancaisesTest#abstentions` pour l'abstention d'écriture. Le garde des ADR n'accepte qu'une
-> référence ; la décision en a plusieurs.
+# Un audit qui ne peut pas trancher **montre sans juger**, et s'abstient plutôt que d'inventer
 
 ## Contexte
 

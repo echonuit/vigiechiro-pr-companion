@@ -1,8 +1,19 @@
-# ADR 2351 - Un nombre de contacts se lit contre un référentiel cité, et on retient le plus fiable avant le plus fin
+---
+type: adr
+title: "Un nombre de contacts se lit contre un référentiel cité, et on retient le plus fiable avant le plus fin"
+status: stable
+article: A5
+chantier: "#2351 (lot 1 de l'EPIC #2348)"
+decided_at: 2026-07-29
+verification: certaine
+enforced_by:
+  - "ReferentielActiviteTest#precise_mais_peu_fiable_ecartee"
+verified:
+  - by: machine:ci
+    at: 2026-07-29
+---
 
-- **Statut** : Accepté - 2026-07-29
-- **Chantier** : #2351 (lot 1 de l'EPIC #2348)
-- **Vérification** : certaine - `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`
+# Un nombre de contacts se lit contre un référentiel cité, et on retient le plus fiable avant le plus fin
 
 ## Contexte
 

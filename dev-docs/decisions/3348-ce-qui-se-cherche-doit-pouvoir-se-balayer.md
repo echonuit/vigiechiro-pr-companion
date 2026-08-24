@@ -1,8 +1,19 @@
-# ADR 3348 - Ce qui se cherche doit pouvoir se **balayer**, pas seulement s'atteindre
+---
+type: adr
+title: "Ce qui se cherche doit pouvoir se **balayer**, pas seulement s'atteindre"
+status: stable
+article: A23
+chantier: "#3348, suite de la clôture du chantier #3151"
+decided_at: 2026-08-06
+verification: certaine
+enforced_by:
+  - "SonsValidationViewTest#le_texte_du_commentaire_a_sa_colonne"
+verified:
+  - by: machine:ci
+    at: 2026-08-06
+---
 
-- **Statut** : Accepté - 2026-08-06
-- **Chantier** : #3348, suite de la clôture du chantier #3151
-- **Vérification** : certaine - `SonsValidationViewTest#le_texte_du_commentaire_a_sa_colonne`
+# Ce qui se cherche doit pouvoir se **balayer**, pas seulement s'atteindre
 
 ## Contexte
 

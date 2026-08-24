@@ -1,10 +1,19 @@
-# ADR 4013 - Un banc qui filme éprouve ses gestes ET son résultat
+---
+type: adr
+title: "Un banc qui filme éprouve ses gestes ET son résultat"
+status: stable
+article: A4
+chantier: "#4013, suite de #3887"
+decided_at: 2026-08-20
+verification: certaine
+enforced_by:
+  - "scripts/doc-video/filme-un-parcours.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-20
+---
 
-- **Statut** : Accepté - 2026-08-20
-- **Chantier** : #4013, suite de #3887
-- **Vérification** : certaine - `scripts/doc-video/filme-un-parcours.sh`
-
-Le cas qui tient cette décision : « une exigence non satisfaite refuse », dans l'auto-test du banc.
+# Un banc qui filme éprouve ses gestes ET son résultat
 
 ## Contexte
 

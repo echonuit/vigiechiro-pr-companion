@@ -1,11 +1,19 @@
-# ADR 3018 - Un outil compose son injecteur depuis la racine, jamais à la main
+---
+type: adr
+title: "Un outil compose son injecteur depuis la racine, jamais à la main"
+status: stable
+article: A20
+chantier: "#3018, finit #2669 et #333"
+decided_at: 2026-07-31
+verification: certaine
+enforced_by:
+  - "CliquetInjecteurALaMainTest#la_dette_ne_peut_que_retrecir"
+verified:
+  - by: machine:ci
+    at: 2026-07-31
+---
 
-- **Statut** : Accepté - 2026-07-31
-- **Chantier** : #3018, finit #2669 et #333
-- **Vérification** : certaine - `CliquetInjecteurALaMainTest#la_dette_ne_peut_que_retrecir`
-
-Second rideau, non déclaré ici parce qu'une ADR ne nomme qu'une garde : `CablageInjecteursCaptureTest`
-construit **chaque** injecteur d'outil sans rendre un pixel, donc un binding manquant rougit dès la PR.
+# Un outil compose son injecteur depuis la racine, jamais à la main
 
 ## Contexte
 

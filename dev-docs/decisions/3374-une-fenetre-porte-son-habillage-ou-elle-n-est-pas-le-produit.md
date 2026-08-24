@@ -1,8 +1,19 @@
-# ADR 3374 - Une fenêtre porte son habillage, ou elle ne montre pas le produit
+---
+type: adr
+title: "Une fenêtre porte son habillage, ou elle ne montre pas le produit"
+status: stable
+article: A23
+chantier: "#3374, suite de l'[ADR 3361](3361-la-typographie-est-embarquee.md)"
+decided_at: 2026-08-06
+verification: certaine
+enforced_by:
+  - "ScenesHabilleesTest#toutes_les_scenes_passent_par_habillage"
+verified:
+  - by: machine:ci
+    at: 2026-08-06
+---
 
-- **Statut** : Accepté - 2026-08-06
-- **Chantier** : #3374, suite de l'[ADR 3361](3361-la-typographie-est-embarquee.md)
-- **Vérification** : certaine - `ScenesHabilleesTest#toutes_les_scenes_passent_par_habillage`
+# Une fenêtre porte son habillage, ou elle ne montre pas le produit
 
 ## Contexte
 

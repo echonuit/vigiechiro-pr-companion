@@ -1,8 +1,20 @@
-# ADR 0035 - Un pictogramme d'IHM est une icône ; un caractère dans une phrase reste un caractère
+---
+type: adr
+title: "Un pictogramme d'IHM est une icône ; un caractère dans une phrase reste un caractère"
+status: stable
+article: A23
+chantier: "#1933 (lots #1989, #2011, #2016, #2024, #2026), suite de #700"
+decided_at: 2026-07-19
+verification: probable
+enforced_by:
+  - "scripts/adr/0035-pictogramme-caractere.py"
+ratchet: 0
+verified:
+  - by: machine:suspects
+    at: 2026-07-19
+---
 
-- **Statut** : Accepté - 2026-07-19
-- **Chantier** : #1933 (lots #1989, #2011, #2016, #2024, #2026), suite de #700
-- **Vérification** : probable - `scripts/adr/0035-pictogramme-caractere.py` (cliquet : 0)
+# Un pictogramme d'IHM est une icône ; un caractère dans une phrase reste un caractère
 
 ## Contexte
 

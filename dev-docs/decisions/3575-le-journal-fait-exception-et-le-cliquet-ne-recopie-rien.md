@@ -1,9 +1,21 @@
-# ADR 3575 - Le journal fait exception, et le cliquet ne recopie rien
+---
+type: adr
+title: "Le journal fait exception, et le cliquet ne recopie rien"
+status: stable
+article: A9
+chantier: "#3575, suite de la clôture du lot 1 (#3559)"
+decided_at: 2026-08-12
+verification: certaine
+enforced_by:
+  - "ClassementLectureEcritureTest#aucune_commande_n_est_sans_classement"
+verified:
+  - by: machine:ci
+    at: 2026-08-12
+relations:
+  amende: ["3498"]
+---
 
-- **Statut** : Accepté - 2026-08-12
-- **Chantier** : #3575, suite de la clôture du lot 1 (#3559)
-- **Amende** : [ADR 3498](3498-la-declaration-porte-sur-les-lectrices.md)
-- **Vérification** : certaine - `ClassementLectureEcritureTest#aucune_commande_n_est_sans_classement`
+# Le journal fait exception, et le cliquet ne recopie rien
 
 ## Contexte
 

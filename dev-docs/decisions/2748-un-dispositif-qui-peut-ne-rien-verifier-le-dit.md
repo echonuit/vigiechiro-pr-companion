@@ -1,8 +1,19 @@
-# ADR 2748 - Un dispositif qui peut ne rien vérifier le dit
+---
+type: adr
+title: "Un dispositif qui peut ne rien vérifier le dit"
+status: stable
+article: A3
+chantier: "#2748, lot #2724 du chantier #2720 ; couvre #2887, #3287, #3345, #3382"
+decided_at: 2026-08-06
+verification: certaine
+enforced_by:
+  - ".github/scripts/veille-contrat-api.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-06
+---
 
-- **Statut** : Accepté - 2026-08-06
-- **Chantier** : #2748, lot #2724 du chantier #2720 ; couvre #2887, #3287, #3345, #3382
-- **Vérification** : certaine - `.github/scripts/veille-contrat-api.sh`
+# Un dispositif qui peut ne rien vérifier le dit
 
 ## Contexte
 

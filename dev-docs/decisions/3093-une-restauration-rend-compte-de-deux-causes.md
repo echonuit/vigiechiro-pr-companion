@@ -1,8 +1,19 @@
-# ADR 3093 - Une restauration de filtres **rend compte**, et distingue une valeur disparue d'un critère absent
+---
+type: adr
+title: "Une restauration de filtres **rend compte**, et distingue une valeur disparue d'un critère absent"
+status: stable
+article: A12
+chantier: "#3093, palier 1 du chantier #3092"
+decided_at: 2026-08-04
+verification: certaine
+enforced_by:
+  - "RetourOperationTest#les_deux_causes_ne_se_melangent_pas"
+verified:
+  - by: machine:ci
+    at: 2026-08-04
+---
 
-- **Statut** : Accepté - 2026-08-04
-- **Chantier** : #3093, palier 1 du chantier #3092
-- **Vérification** : certaine - `RetourOperationTest#les_deux_causes_ne_se_melangent_pas`
+# Une restauration de filtres **rend compte**, et distingue une valeur disparue d'un critère absent
 
 ## Contexte
 

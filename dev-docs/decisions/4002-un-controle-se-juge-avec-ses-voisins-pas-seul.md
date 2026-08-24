@@ -1,8 +1,22 @@
-# ADR 4002 - Un contrôle se juge avec ses voisins, et aucun garde ne sait le faire
+---
+type: adr
+title: "Un contrôle se juge avec ses voisins, et aucun garde ne sait le faire"
+status: stable
+article: A2
+chantier: "#4002, passes 7 à 10 de la clôture des suites des finitions de recette (#3424)"
+decided_at: 2026-08-18
+verification: humaine
+loupe:
+  - "ContrasteAATest"
+  - "LisibiliteCapture"
+  - "ScenesHabilleesTest"
+verification_note: "la cohérence entre deux contrôles voisins n'est pas assertable ; ce que le dépôt peut tenir, il le tient déjà (`ContrasteAATest`, `LisibiliteCapture`, `ScenesHabilleesTest`), et cette ADR existe pour dire ce qu'ils **ne** couvrent pas"
+verified:
+  - by: human:nedseb
+    at: 2026-08-18
+---
 
-- **Statut** : Accepté - 2026-08-18
-- **Chantier** : #4002, passes 7 à 10 de la clôture des suites des finitions de recette (#3424)
-- **Vérification** : humaine - la cohérence entre deux contrôles voisins n'est pas assertable ; ce que le dépôt peut tenir, il le tient déjà (`ContrasteAATest`, `LisibiliteCapture`, `ScenesHabilleesTest`), et cette ADR existe pour dire ce qu'ils **ne** couvrent pas
+# Un contrôle se juge avec ses voisins, et aucun garde ne sait le faire
 
 ## Le fait
 

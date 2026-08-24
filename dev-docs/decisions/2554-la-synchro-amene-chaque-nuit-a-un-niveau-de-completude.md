@@ -1,9 +1,18 @@
-# ADR 2554 - La synchro amène chaque nuit à un niveau de complétude, et le dit sans supposer
+---
+type: adr
+title: "La synchro amène chaque nuit à un niveau de complétude, et le dit sans supposer"
+status: stable
+article: A12
+chantier: "EPIC #2554 (#2555, #2557, #2558)"
+decided_at: 2026-07-27
+verification: humaine
+verification_note: "« à quel niveau chaque nuit doit être amenée » est une politique de récupération, arbitrée par le coût réseau du moment ; aucun motif statique ne la capture. Les invariants qui en découlent sont, eux, tenus par des tests (ventilation exhaustive du bilan, idempotence, reprise après annulation)"
+verified:
+  - by: human:nedseb
+    at: 2026-07-27
+---
 
-- **Statut** : Accepté - 2026-07-27
-- **Chantier** : EPIC #2554 (#2555, #2557, #2558)
-- **Amende** : ADR 0016
-- **Vérification** : humaine - « à quel niveau chaque nuit doit être amenée » est une politique de récupération, arbitrée par le coût réseau du moment ; aucun motif statique ne la capture. Les invariants qui en découlent sont, eux, tenus par des tests (ventilation exhaustive du bilan, idempotence, reprise après annulation)
+# La synchro amène chaque nuit à un niveau de complétude, et le dit sans supposer
 
 ## Contexte
 

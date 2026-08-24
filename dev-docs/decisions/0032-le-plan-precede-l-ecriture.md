@@ -1,8 +1,18 @@
-# ADR 0032 - Le plan de dépôt précède l'écriture des archives
+---
+type: adr
+title: "Le plan de dépôt précède l'écriture des archives"
+status: stable
+article: A17
+chantier: "#1991 (lots #1993 à #1999)"
+decided_at: 2026-07-19
+verification: humaine
+verification_note: "que le plan de dépôt précède l'écriture des archives est un ordonnancement du moteur, vérifié par ses tests, pas par un motif"
+verified:
+  - by: human:nedseb
+    at: 2026-07-19
+---
 
-- **Statut** : Accepté - 2026-07-19
-- **Chantier** : #1991 (lots #1993 à #1999)
-- **Vérification** : humaine - que le plan de dépôt précède l'écriture des archives est un ordonnancement du moteur, vérifié par ses tests, pas par un motif
+# Le plan de dépôt précède l'écriture des archives
 
 ## Contexte
 

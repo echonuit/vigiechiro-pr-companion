@@ -1,8 +1,19 @@
-# ADR 2792 - L'archive d'export range les sons par session, le CSV fait foi
+---
+type: adr
+title: "L'archive d'export range les sons par session, le CSV fait foi"
+status: stable
+article: A17
+chantier: "#2792 (lot A de l'EPIC #2790)"
+decided_at: 2026-07-30
+verification: certaine
+enforced_by:
+  - "ExportObservationsEtSonsTest#nominal_avec_deduplication"
+verified:
+  - by: machine:ci
+    at: 2026-07-30
+---
 
-- **Statut** : Accepté - 2026-07-30
-- **Chantier** : #2792 (lot A de l'EPIC #2790)
-- **Vérification** : certaine - `ExportObservationsEtSonsTest#nominal_avec_deduplication`
+# L'archive d'export range les sons par session, le CSV fait foi
 
 ## Contexte
 

@@ -1,9 +1,21 @@
-# ADR 2750 - Un chiffre que le code sait recalculer ne s'écrit pas à la main, et un chiffre qu'il ignore ne s'écrit pas du tout
+---
+type: adr
+title: "Un chiffre que le code sait recalculer ne s'écrit pas à la main, et un chiffre qu'il ignore ne s'écrit pas du tout"
+status: stable
+article: A5
+chantier: "#2750 (garde-fous documentaires) ; lot 5 de l'EPIC #2720, clôture #2725"
+decided_at: 2026-08-07
+verification: certaine
+enforced_by:
+  - "DocumentationAJourTest#chaque_chiffre_balise_egale_l_inventaire_reel"
+verified:
+  - by: machine:ci
+    at: 2026-08-07
+relations:
+  amende: ["2385"]
+---
 
-- **Statut** : Accepté - 2026-08-07
-- **Chantier** : #2750 (garde-fous documentaires) ; lot 5 de l'EPIC #2720, clôture #2725
-- **Vérification** : certaine - `DocumentationAJourTest#chaque_chiffre_balise_egale_l_inventaire_reel`
-- **Amende** : [ADR 2385](2385-la-doc-chiffree-est-adossee-au-code.md), sur le **caractère facultatif** du balisage ; sa décision reste entière, c'est sa réserve qui tombe.
+# Un chiffre que le code sait recalculer ne s'écrit pas à la main, et un chiffre qu'il ignore ne s'écrit pas du tout
 
 ## Contexte
 

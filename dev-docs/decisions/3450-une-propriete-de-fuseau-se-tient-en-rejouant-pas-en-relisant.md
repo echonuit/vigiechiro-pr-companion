@@ -1,8 +1,19 @@
-# ADR 3450 - Une propriété de fuseau se tient en rejouant, pas en relisant
+---
+type: adr
+title: "Une propriété de fuseau se tient en rejouant, pas en relisant"
+status: stable
+article: A4
+chantier: "#3450, suite de l'[ADR 3406](3406-une-nuit-porte-le-fuseau-de-son-site.md)"
+decided_at: 2026-08-07
+verification: certaine
+enforced_by:
+  - "FuseauDExecutionTest#le_fuseau_annonce_est_celui_qui_tourne"
+verified:
+  - by: machine:ci
+    at: 2026-08-07
+---
 
-- **Statut** : Accepté - 2026-08-07
-- **Chantier** : #3450, suite de l'[ADR 3406](3406-une-nuit-porte-le-fuseau-de-son-site.md)
-- **Vérification** : certaine - `FuseauDExecutionTest#le_fuseau_annonce_est_celui_qui_tourne`
+# Une propriété de fuseau se tient en rejouant, pas en relisant
 
 ## Contexte
 

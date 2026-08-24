@@ -1,11 +1,19 @@
-# ADR 3689 - Un refus définitif se réarme sur ce qui a levé sa cause, et sur rien d'autre
+---
+type: adr
+title: "Un refus définitif se réarme sur ce qui a levé sa cause, et sur rien d'autre"
+status: stable
+article: A13
+chantier: "#3689, dernière suite de l'EPIC #3900"
+decided_at: 2026-08-18
+verification: certaine
+enforced_by:
+  - "DepotUniteDaoTest#le_rearmement_ne_touche_que_les_refus_d_authentification"
+verified:
+  - by: machine:ci
+    at: 2026-08-18
+---
 
-- **Statut** : Accepté - 2026-08-18
-- **Chantier** : #3689, dernière suite de l'EPIC #3900
-- **Vérification** : certaine - `DepotUniteDaoTest#le_rearmement_ne_touche_que_les_refus_d_authentification`
-
-Vue rouge en retirant le filtre sur la cause : le réarmement touche alors **deux** unités au lieu d'une,
-et ramène un contenu refusé que rien n'a réparé.
+# Un refus définitif se réarme sur ce qui a levé sa cause, et sur rien d'autre
 
 ## Contexte
 

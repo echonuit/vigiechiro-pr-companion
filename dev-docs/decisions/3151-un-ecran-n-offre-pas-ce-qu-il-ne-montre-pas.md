@@ -1,10 +1,19 @@
-# ADR 3151 - Un écran n'offre pas un lieu qu'il ne **montre** pas, et le chemin d'accès compte
+---
+type: adr
+title: "Un écran n'offre pas un lieu qu'il ne **montre** pas, et le chemin d'accès compte"
+status: stable
+article: A23
+chantier: "#3151"
+decided_at: 2026-08-05
+verification: certaine
+enforced_by:
+  - "SaisonViewTest#colonne_carre_montre_les_deux_etiquettes"
+verified:
+  - by: machine:ci
+    at: 2026-08-05
+---
 
-- **Statut** : Accepté - 2026-08-05
-- **Chantier** : #3151
-- **Vérification** : certaine - `SaisonViewTest#colonne_carre_montre_les_deux_etiquettes`
-
-> La règle est tenue sur cinq écrans par autant de gardes : `MultisiteViewTest#colonne_commune_visible_et_vide_si_non_resolue`, `ColonnesAudioContexteTest#nom_du_carre_disponible_mais_masque`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SaisonViewTest#colonne_commune`. Le garde des ADR n'accepte qu'une référence, la décision en a cinq.
+# Un écran n'offre pas un lieu qu'il ne **montre** pas, et le chemin d'accès compte
 
 ## Contexte
 

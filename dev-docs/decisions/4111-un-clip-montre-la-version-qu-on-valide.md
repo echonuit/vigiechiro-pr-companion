@@ -1,9 +1,21 @@
-# ADR 4111 - Un clip montre la version qu'on valide, et le dit
+---
+type: adr
+title: "Un clip montre la version qu'on valide, et le dit"
+status: stable
+article: A5
+chantier: "#4111, suite de #4103"
+decided_at: 2026-08-21
+verification: certaine
+enforced_by:
+  - ".github/scripts/verifie-conditions-de-job.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-21
+relations:
+  prolonge: ["4013"]
+---
 
-- **Statut** : Accepté - 2026-08-21
-- **Chantier** : #4111, suite de #4103
-- **Prolonge** : [ADR 4013](4013-un-banc-qui-filme-eprouve-son-resultat.md)
-- **Vérification** : certaine - `.github/scripts/verifie-conditions-de-job.sh`
+# Un clip montre la version qu'on valide, et le dit
 
 ## Contexte
 

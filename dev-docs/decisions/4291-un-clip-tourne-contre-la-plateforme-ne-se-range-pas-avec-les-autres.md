@@ -1,9 +1,21 @@
-# ADR 4291 - Un clip tourné contre la plateforme ne se range pas avec les autres
+---
+type: adr
+title: "Un clip tourné contre la plateforme ne se range pas avec les autres"
+status: stable
+article: A5
+chantier: "#4291"
+decided_at: 2026-08-24
+verification: certaine
+enforced_by:
+  - ".github/scripts/verifie-portee-des-secrets.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-24
+relations:
+  prolonge: ["4142", "4134"]
+---
 
-- **Statut** : Accepté - 2026-08-24
-- **Chantier** : #4291
-- **Prolonge** : [ADR 4142](4142-un-cas-dit-ou-se-lit-son-verdict.md), [ADR 4134](4134-un-banc-n-emprunte-pas-l-etat-partage-il-ouvre-le-sien.md)
-- **Vérification** : certaine - `.github/scripts/verifie-portee-des-secrets.sh`
+# Un clip tourné contre la plateforme ne se range pas avec les autres
 
 ## Contexte
 

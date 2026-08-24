@@ -1,13 +1,19 @@
-# ADR 3095 - Un domaine de filtre se calcule **sans son propre critère**, et une facette cascade là où un sélecteur ne cascade pas
+---
+type: adr
+title: "Un domaine de filtre se calcule **sans son propre critère**, et une facette cascade là où un sélecteur ne cascade pas"
+status: stable
+article: A15
+chantier: "#3095, palier 2 du chantier #3092"
+decided_at: 2026-08-03
+verification: certaine
+enforced_by:
+  - "FiltresTest#sauf_lui_ignore_le_critere_nomme"
+verified:
+  - by: machine:ci
+    at: 2026-08-03
+---
 
-- **Statut** : Accepté - 2026-08-03
-- **Chantier** : #3095, palier 2 du chantier #3092
-- **Vérification** : certaine - `FiltresTest#sauf_lui_ignore_le_critere_nomme`
-
-> Les deux autres règles de cette ADR ont leurs propres gardes, dans
-> `CritereListeCascadeTest#une_valeur_cochee_devenue_impossible_est_conservee` et
-> `MultisiteVueIntegrationTest#la_puce_lieu_ne_s_auto_effondre_pas` : le garde des ADR n'accepte
-> qu'une référence, la décision en a trois.
+# Un domaine de filtre se calcule **sans son propre critère**, et une facette cascade là où un sélecteur ne cascade pas
 
 ## Contexte
 

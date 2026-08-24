@@ -1,8 +1,19 @@
-# ADR 2354 - Le réessai réseau est gradué par profil, jamais aveugle, toujours jitteré
+---
+type: adr
+title: "Le réessai réseau est gradué par profil, jamais aveugle, toujours jitteré"
+status: stable
+article: A15
+chantier: "#2354 (lot 1 de l'EPIC #2350)"
+decided_at: 2026-07-26
+verification: certaine
+enforced_by:
+  - "PolitiqueReessaiTest#refus_definitif_ne_reessaie_pas"
+verified:
+  - by: machine:ci
+    at: 2026-07-26
+---
 
-- **Statut** : Accepté - 2026-07-26
-- **Chantier** : #2354 (lot 1 de l'EPIC #2350)
-- **Vérification** : certaine - `PolitiqueReessaiTest#refus_definitif_ne_reessaie_pas`
+# Le réessai réseau est gradué par profil, jamais aveugle, toujours jitteré
 
 ## Contexte
 

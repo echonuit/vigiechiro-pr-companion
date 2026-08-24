@@ -1,8 +1,19 @@
-# ADR 3048 - La parité d'une sortie machine est de **dire**, pas de retirer (précise 0014)
+---
+type: adr
+title: "La parité d'une sortie machine est de **dire**, pas de retirer (précise 0014)"
+status: stable
+article: A19
+chantier: "#3048, suites de la clôture #3018"
+decided_at: 2026-07-31
+verification: certaine
+enforced_by:
+  - "ExportSyntheseCsvTest#referentiel_indisponible_conserve_les_colonnes"
+verified:
+  - by: machine:ci
+    at: 2026-07-31
+---
 
-- **Statut** : Accepté - 2026-07-31
-- **Chantier** : #3048, suites de la clôture #3018
-- **Vérification** : certaine - `ExportSyntheseCsvTest#referentiel_indisponible_conserve_les_colonnes`
+# La parité d'une sortie machine est de **dire**, pas de retirer (précise 0014)
 
 ## Contexte
 

@@ -1,9 +1,20 @@
-# ADR 0018 - La synchro rapatrie aussi l'identité de la nuit
+---
+type: adr
+title: "La synchro rapatrie aussi l'identité de la nuit"
+status: stable
+article: A21
+chantier: "#1814 (suite de l'EPIC #1662)"
+decided_at: 2026-07-18
+verification: humaine
+verification_note: "que la synchro pose l'identité réelle de la nuit relève du déroulé réseau, vérifié par les tests de synchro"
+verified:
+  - by: human:nedseb
+    at: 2026-07-18
+relations:
+  amende: ["0016"]
+---
 
-- **Statut** : Accepté - 2026-07-18
-- **Chantier** : #1814 (suite de l'EPIC #1662)
-- **Vérification** : humaine - que la synchro pose l'identité réelle de la nuit relève du déroulé réseau, vérifié par les tests de synchro
-- **Amende** : [ADR 0016](0016-synchro-rapatrie-des-squelettes-hydrates-a-la-demande.md)
+# La synchro rapatrie aussi l'identité de la nuit
 
 ## Contexte
 

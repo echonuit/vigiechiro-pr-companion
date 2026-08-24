@@ -1,8 +1,19 @@
-# ADR 3483 - Un aperçu pose ce qu'il ne peut pas reproduire
+---
+type: adr
+title: "Un aperçu pose ce qu'il ne peut pas reproduire"
+status: stable
+article: A13
+chantier: "#3483, suite de l'[ADR 3439](3439-un-masque-se-derive-de-la-scene-il-ne-se-recopie-pas.md)"
+decided_at: 2026-08-07
+verification: certaine
+enforced_by:
+  - "ArchitectureTest#capture_pose_son_temps_ecoule"
+verified:
+  - by: machine:ci
+    at: 2026-08-07
+---
 
-- **Statut** : Accepté - 2026-08-07
-- **Chantier** : #3483, suite de l'[ADR 3439](3439-un-masque-se-derive-de-la-scene-il-ne-se-recopie-pas.md)
-- **Vérification** : certaine - `ArchitectureTest#capture_pose_son_temps_ecoule`
+# Un aperçu pose ce qu'il ne peut pas reproduire
 
 ## Contexte
 

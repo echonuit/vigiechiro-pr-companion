@@ -1,8 +1,20 @@
-# ADR 0037 - Une barre d'actions plie, elle ne tronque pas ; et tout texte coupé n'est pas une barre qui ne plie pas
+---
+type: adr
+title: "Une barre d'actions plie, elle ne tronque pas ; et tout texte coupé n'est pas une barre qui ne plie pas"
+status: stable
+article: A23
+chantier: "#2012, #2046 ; analyse de #1641, #1701, #1873, #1579"
+decided_at: 2026-07-20
+verification: probable
+enforced_by:
+  - "scripts/adr/0037-slot-actions-hbox.py"
+ratchet: 2
+verified:
+  - by: machine:suspects
+    at: 2026-07-20
+---
 
-- **Statut** : Accepté - 2026-07-20
-- **Chantier** : #2012, #2046 ; analyse de #1641, #1701, #1873, #1579
-- **Vérification** : probable - `scripts/adr/0037-slot-actions-hbox.py` (cliquet : 2)
+# Une barre d'actions plie, elle ne tronque pas ; et tout texte coupé n'est pas une barre qui ne plie pas
 
 ## Contexte
 

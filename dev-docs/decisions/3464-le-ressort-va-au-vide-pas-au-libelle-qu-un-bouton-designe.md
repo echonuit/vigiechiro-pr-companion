@@ -1,10 +1,18 @@
-# ADR 3464 - Le ressort va au vide, pas au libellé qu'un bouton désigne
+---
+type: adr
+title: "Le ressort va au vide, pas au libellé qu'un bouton désigne"
+status: stable
+article: A23
+chantier: "#3464, finitions de recette avant la campagne 2 (#3424)"
+decided_at: 2026-08-18
+verification: humaine
+verification_note: "aucun test ne voit un bouton loin de son texte ; c'est la revue visuelle"
+verified:
+  - by: human:nedseb
+    at: 2026-08-18
+---
 
-- **Statut** : Accepté - 2026-08-18
-- **Chantier** : #3464, finitions de recette avant la campagne 2 (#3424)
-- **Vérification** : humaine - aucun test ne voit un bouton loin de son texte ; c'est la revue visuelle
-  (passe 8) qui l'attrape, et elle l'a fait **trois fois**. Loupe :
-  `.github/assets/apercu-lot-televerser.png` et `apercu-reglages-emplacements.png`
+# Le ressort va au vide, pas au libellé qu'un bouton désigne
 
 ## Contexte
 

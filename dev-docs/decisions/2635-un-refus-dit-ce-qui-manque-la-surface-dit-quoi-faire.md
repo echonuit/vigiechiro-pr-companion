@@ -1,8 +1,20 @@
-# ADR 2635 - Un refus dit ce qui manque, la surface dit quoi faire
+---
+type: adr
+title: "Un refus dit ce qui manque, la surface dit quoi faire"
+status: stable
+article: A13
+chantier: "#2635 (suite de l'EPIC #2554, passe 7)"
+decided_at: 2026-07-28
+verification: probable
+enforced_by:
+  - "scripts/adr/2635-refus-sans-surface.py"
+ratchet: 0
+verified:
+  - by: machine:suspects
+    at: 2026-07-28
+---
 
-- **Statut** : Accepté - 2026-07-28
-- **Chantier** : #2635 (suite de l'EPIC #2554, passe 7)
-- **Vérification** : probable - `scripts/adr/2635-refus-sans-surface.py` (cliquet : 0)
+# Un refus dit ce qui manque, la surface dit quoi faire
 
 ## Contexte
 

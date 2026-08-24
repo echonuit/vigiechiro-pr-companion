@@ -1,8 +1,19 @@
-# ADR 3406 - Une nuit porte le fuseau de son site, pas celui du poste
+---
+type: adr
+title: "Une nuit porte le fuseau de son site, pas celui du poste"
+status: stable
+article: A21
+chantier: "#3406, trouvé à la clôture des suites du chantier #3151"
+decided_at: 2026-08-07
+verification: certaine
+enforced_by:
+  - "CorrespondanceParticipationTest#le_depot_ne_depend_pas_du_poste"
+verified:
+  - by: machine:ci
+    at: 2026-08-07
+---
 
-- **Statut** : Accepté - 2026-08-07
-- **Chantier** : #3406, trouvé à la clôture des suites du chantier #3151
-- **Vérification** : certaine - `CorrespondanceParticipationTest#le_depot_ne_depend_pas_du_poste`
+# Une nuit porte le fuseau de son site, pas celui du poste
 
 ## Contexte
 

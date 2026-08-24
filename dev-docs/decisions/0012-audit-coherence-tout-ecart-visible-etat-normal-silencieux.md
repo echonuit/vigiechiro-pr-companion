@@ -1,8 +1,16 @@
-# ADR 0012 - L'audit de cohérence rend tout écart visible, mais un état normal ne crie pas
+---
+type: adr
+title: "L'audit de cohérence rend tout écart visible, mais un état normal ne crie pas"
+status: stable
+article: A12
+chantier: "EPIC #1154 (cohérence disque ↔ base ↔ serveur)"
+verification: humaine
+verification_note: "que l'audit rende tout écart visible mais qu'un état normal ne crie pas est une règle de restitution, jugée en revue et par les tests d'audit"
+verified:
+  - by: human:nedseb
+---
 
-- **Statut** : Accepté - rétroactif
-- **Chantier** : EPIC #1154 (cohérence disque ↔ base ↔ serveur)
-- **Vérification** : humaine - que l'audit rende tout écart visible mais qu'un état normal ne crie pas est une règle de restitution, jugée en revue et par les tests d'audit
+# L'audit de cohérence rend tout écart visible, mais un état normal ne crie pas
 
 ## Contexte
 

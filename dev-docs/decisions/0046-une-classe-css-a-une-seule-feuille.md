@@ -1,8 +1,19 @@
-# ADR 0046 - Une classe CSS a une seule feuille pour maison
+---
+type: adr
+title: "Une classe CSS a une seule feuille pour maison"
+status: stable
+article: A20
+chantier: "#1974"
+decided_at: 2026-07-21
+verification: certaine
+enforced_by:
+  - "DoublonsFeuillesDeStyleTest#chaque_classe_a_une_seule_feuille"
+verified:
+  - by: machine:ci
+    at: 2026-07-21
+---
 
-- **Statut** : Accepté - 2026-07-21
-- **Chantier** : #1974
-- **Vérification** : certaine - `DoublonsFeuillesDeStyleTest#chaque_classe_a_une_seule_feuille`
+# Une classe CSS a une seule feuille pour maison
 
 ## Contexte
 

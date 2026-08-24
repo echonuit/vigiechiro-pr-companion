@@ -1,9 +1,21 @@
-# ADR 4166 - Un état ne se juge que contre son contraire, et dans le même clip
+---
+type: adr
+title: "Un état ne se juge que contre son contraire, et dans le même clip"
+status: stable
+article: A4
+chantier: "#4166, EPIC #4133"
+decided_at: 2026-08-23
+verification: certaine
+enforced_by:
+  - "MesSitesViewTest#hors_connexion_la_recuperation_est_fermee"
+verified:
+  - by: machine:ci
+    at: 2026-08-23
+relations:
+  prolonge: ["4142"]
+---
 
-- **Statut** : Accepté - 2026-08-23
-- **Chantier** : #4166, EPIC #4133
-- **Prolonge** : [ADR 4142](4142-un-cas-dit-ou-se-lit-son-verdict.md)
-- **Vérification** : certaine - `MesSitesViewTest#hors_connexion_la_recuperation_est_fermee`
+# Un état ne se juge que contre son contraire, et dans le même clip
 
 ## Contexte
 

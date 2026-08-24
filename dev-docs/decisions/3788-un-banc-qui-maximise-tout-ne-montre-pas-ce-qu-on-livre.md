@@ -1,8 +1,19 @@
-# ADR 3788 - Un banc qui maximise tout ne montre pas ce qu'on livre
+---
+type: adr
+title: "Un banc qui maximise tout ne montre pas ce qu'on livre"
+status: stable
+article: A4
+chantier: "#3788, trouvé pendant la tranche (c) de l'EPIC #3667"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - ".github/scripts/lance-test-filme.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3788, trouvé pendant la tranche (c) de l'EPIC #3667
-- **Vérification** : certaine - `.github/scripts/lance-test-filme.sh`
+# Un banc qui maximise tout ne montre pas ce qu'on livre
 
 ## Contexte
 

@@ -1,8 +1,19 @@
-# ADR 4021 - Un aperçu montre ce que l'action produira, pas ce qu'elle écartera
+---
+type: adr
+title: "Un aperçu montre ce que l'action produira, pas ce qu'elle écartera"
+status: stable
+article: A23
+chantier: "#4021, trouvé en filmant le parcours du mélange pour #4013"
+decided_at: 2026-08-20
+verification: certaine
+enforced_by:
+  - "RattachementImportViewModelTest#l_apercu_ne_montre_pas_un_fichier_ecarte"
+verified:
+  - by: machine:ci
+    at: 2026-08-20
+---
 
-- **Statut** : Accepté - 2026-08-20
-- **Chantier** : #4021, trouvé en filmant le parcours du mélange pour #4013
-- **Vérification** : certaine - `RattachementImportViewModelTest#l_apercu_ne_montre_pas_un_fichier_ecarte`
+# Un aperçu montre ce que l'action produira, pas ce qu'elle écartera
 
 ## Contexte
 

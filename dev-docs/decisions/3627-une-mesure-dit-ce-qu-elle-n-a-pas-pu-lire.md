@@ -1,9 +1,21 @@
-# ADR 3627 - Une mesure dit ce qu'elle n'a pas pu lire
+---
+type: adr
+title: "Une mesure dit ce qu'elle n'a pas pu lire"
+status: stable
+article: A3
+chantier: "#3627 puis #3634, suites de la sauvegarde (#3624)"
+decided_at: 2026-08-12
+verification: certaine
+enforced_by:
+  - "ServiceSauvegardeTest#dossier_illisible_est_un_refus_et_non_un_incident"
+verified:
+  - by: machine:ci
+    at: 2026-08-12
+relations:
+  prolonge: ["2213"]
+---
 
-- **Statut** : Accepté - 2026-08-12
-- **Chantier** : #3627 puis #3634, suites de la sauvegarde (#3624)
-- **Prolonge** : [ADR 2213](2213-un-dispositif-rapporte-avant-de-conclure.md)
-- **Vérification** : certaine - `ServiceSauvegardeTest#dossier_illisible_est_un_refus_et_non_un_incident`
+# Une mesure dit ce qu'elle n'a pas pu lire
 
 ## Contexte
 

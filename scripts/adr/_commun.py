@@ -19,21 +19,35 @@ import sys
 
 DECISIONS = pathlib.Path("dev-docs/decisions")
 
-# Le séparateur accepte le tiret simple ET le cadratin : #2365 migre le format des en-têtes d'ADR,
-# et un analyseur tolérant rend chaque état intermédiaire sûr, y compris une migration interrompue.
-CLIQUET = re.compile(r"^- \*\*Vérification\*\* : probable [-—] `[^`]+` \(cliquet : (\d+)\)$", re.M)
+# Le cliquet est un CHAMP de l'en-tête OKF, plus une valeur noyée dans une phrase (chantier A).
+# L'ancienne forme à puces se lisait par une expression qui devait tolérer deux séparateurs ; un
+# champ typé n'a pas ce problème, et il se relit de la même façon par `graphify` et par le site.
+CLIQUET = re.compile(r"^ratchet:\s*(\d+)\s*$", re.M)
+
+# L'en-tête s'arrête au premier `---` fermant : une valeur qui ressemblerait à un champ, plus bas
+# dans la prose, ne doit pas être lue comme une déclaration.
+ENTETE = re.compile(r"\A---\n(.*?)\n---\n", re.S)
+
+
+def entete(chemin: pathlib.Path) -> str:
+    """L'en-tête YAML d'une ADR, ou une chaîne vide si elle n'en porte pas."""
+    trouve = ENTETE.match(chemin.read_text(encoding="utf-8"))
+    return trouve.group(1) if trouve else ""
 
 
 def cliquet(numero: str) -> int:
-    """Le cliquet déclaré par l'ADR `numero`, lu dans son en-tête."""
+    """Le cliquet déclaré par l'ADR `numero`, lu dans son en-tête OKF."""
     fichiers = sorted(DECISIONS.glob(f"{numero}-*.md"))
     if not fichiers:
         raise SystemExit(f"ADR {numero} introuvable sous {DECISIONS}")
-    trouve = CLIQUET.search(fichiers[0].read_text(encoding="utf-8"))
+    trouve = CLIQUET.search(entete(fichiers[0]))
     if not trouve:
         raise SystemExit(
             f"ADR {numero} ne déclare aucun cliquet lisible. Attendu, dans son en-tête :\n"
-            f"  - **Vérification** : probable - `chemin/du/script` (cliquet : N)"
+            f"  verification: probable\n"
+            f"  enforced_by:\n"
+            f"    - \"chemin/du/script\"\n"
+            f"  ratchet: N"
         )
     return int(trouve.group(1))
 

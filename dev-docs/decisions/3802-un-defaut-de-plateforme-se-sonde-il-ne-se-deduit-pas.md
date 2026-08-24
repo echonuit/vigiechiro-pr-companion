@@ -1,9 +1,21 @@
-# ADR 3802 - Un défaut de plateforme se sonde, il ne se déduit pas
+---
+type: adr
+title: "Un défaut de plateforme se sonde, il ne se déduit pas"
+status: stable
+article: A4
+chantier: "#3802, suites du chantier #3518"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - ".github/workflows/suite-sous-windows-et-macos.yml"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+relations:
+  prolonge: ["3664"]
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3802, suites du chantier #3518
-- **Prolonge** : [ADR 3664](3664-un-releve-qui-n-a-pas-ouvert-les-fichiers-est-une-hypothese.md)
-- **Vérification** : certaine - `.github/workflows/suite-sous-windows-et-macos.yml`
+# Un défaut de plateforme se sonde, il ne se déduit pas
 
 ## Contexte
 

@@ -1,10 +1,21 @@
-# ADR 0038 - L'échelle de sévérité compte quatre niveaux, et son ordre de déclaration porte la sémantique
+---
+type: adr
+title: "L'échelle de sévérité compte quatre niveaux, et son ordre de déclaration porte la sémantique"
+status: stable
+article: A16
+chantier: "EPIC #1990 / sous-EPIC #2004 (#2045, #2050)"
+decided_at: 2026-07-19
+verification: certaine
+enforced_by:
+  - "DecisionsRespecteesTest#l_echelle_de_severite_a_quatre_niveaux_dans_l_ordre"
+verified:
+  - by: machine:ci
+    at: 2026-07-19
+relations:
+  applique: ["0035"]
+---
 
-- **Statut** : Accepté - 2026-07-19
-- **Chantier** : EPIC #1990 / sous-EPIC #2004 (#2045, #2050)
-- **Vérification** : certaine - `DecisionsRespecteesTest#l_echelle_de_severite_a_quatre_niveaux_dans_l_ordre`
-- **Applique** : [ADR 0035](0035-un-pictogramme-est-une-icone-pas-un-caractere.md) point 5, dont elle fournit le garde-fou.
-- **Amendée le 2026-07-20** (#2159) : le contexte ci-dessous était écrit depuis **une** des deux échelles de sévérité de l'application. Voir « Ce que cette ADR ignorait ».
+# L'échelle de sévérité compte quatre niveaux, et son ordre de déclaration porte la sémantique
 
 ## Contexte
 

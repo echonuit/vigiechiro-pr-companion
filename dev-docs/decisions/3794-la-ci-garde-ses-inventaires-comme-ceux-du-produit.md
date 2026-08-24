@@ -1,9 +1,21 @@
-# ADR 3794 - La CI garde ses inventaires comme ceux du produit
+---
+type: adr
+title: "La CI garde ses inventaires comme ceux du produit"
+status: stable
+article: A5
+chantier: "#3794, lot 2 des suites #3802"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - ".github/scripts/verifie-inventaires-ci.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+relations:
+  prolonge: ["3661"]
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3794, lot 2 des suites #3802
-- **Prolonge** : [ADR 3661](3661-un-garde-de-ci-porte-ses-propres-cas.md)
-- **Vérification** : certaine - `.github/scripts/verifie-inventaires-ci.sh`
+# La CI garde ses inventaires comme ceux du produit
 
 ## Contexte
 

@@ -1,8 +1,19 @@
-# ADR 3361 - La typographie est **embarquée**, pas empruntée à la machine
+---
+type: adr
+title: "La typographie est **embarquée**, pas empruntée à la machine"
+status: stable
+article: A23
+chantier: "#3361, suite de la clôture du chantier #3151"
+decided_at: 2026-08-05
+verification: certaine
+enforced_by:
+  - "TypographieTest#les_fichiers_sont_embarques"
+verified:
+  - by: machine:ci
+    at: 2026-08-05
+---
 
-- **Statut** : Accepté - 2026-08-05
-- **Chantier** : #3361, suite de la clôture du chantier #3151
-- **Vérification** : certaine - `TypographieTest#les_fichiers_sont_embarques`
+# La typographie est **embarquée**, pas empruntée à la machine
 
 ## Contexte
 

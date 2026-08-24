@@ -1,8 +1,19 @@
-# ADR 2729 - Un script de migration **publié ne se modifie plus**, et la base s'en souvient
+---
+type: adr
+title: "Un script de migration **publié ne se modifie plus**, et la base s'en souvient"
+status: stable
+article: A17
+chantier: "#2729, lot 1 (#2721) du chantier de dette #2720"
+decided_at: 2026-08-03
+verification: certaine
+enforced_by:
+  - "EmpreinteMigrationsTest#script_modifie_apres_coup_fait_refuser"
+verified:
+  - by: machine:ci
+    at: 2026-08-03
+---
 
-- **Statut** : Accepté - 2026-08-03
-- **Chantier** : #2729, lot 1 (#2721) du chantier de dette #2720
-- **Vérification** : certaine - `EmpreinteMigrationsTest#script_modifie_apres_coup_fait_refuser`
+# Un script de migration **publié ne se modifie plus**, et la base s'en souvient
 
 ## Contexte
 

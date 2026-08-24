@@ -1,11 +1,22 @@
-# ADR 2213 - Un dispositif rapporte ce qu'il a vu avant de conclure
+---
+type: adr
+title: "Un dispositif rapporte ce qu'il a vu avant de conclure"
+status: stable
+article: A12
+chantier: "#2213 (winget), lot 5 (#2110) de l'EPIC #2104 ; PR #3594, #3597, #3598, #3601, #3603"
+decided_at: 2026-08-11
+verification: certaine
+enforced_by:
+  - ".github/scripts/verifie-secret-winget.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-11
+relations:
+  fait évoluer: ["3501"]
+  prolonge: ["2748"]
+---
 
-- **Statut** : Accepté - 2026-08-11
-- **Chantier** : #2213 (winget), lot 5 (#2110) de l'EPIC #2104 ; PR #3594, #3597, #3598, #3601, #3603
-- **Vérification** : certaine - `.github/scripts/verifie-secret-winget.sh`
-- **Fait évoluer** : [ADR 3501](3501-le-code-tiers-ne-s-execute-pas-avec-les-droits-de-publication.md),
-  sur deux points nommés plus bas
-- **Prolonge** : [ADR 2748](2748-un-dispositif-qui-peut-ne-rien-verifier-le-dit.md)
+# Un dispositif rapporte ce qu'il a vu avant de conclure
 
 ## Contexte
 

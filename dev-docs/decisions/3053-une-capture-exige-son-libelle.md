@@ -1,8 +1,20 @@
-# ADR 3053 - Une capture exige son libellé plutôt que de s'abstenir (amende 0025)
+---
+type: adr
+title: "Une capture exige son libellé plutôt que de s'abstenir (amende 0025)"
+status: stable
+article: A4
+chantier: "#3053, clôture des suites de #2967"
+decided_at: 2026-07-31
+verification: probable
+enforced_by:
+  - "scripts/adr/3053-capture-libelle.py"
+ratchet: 0
+verified:
+  - by: machine:suspects
+    at: 2026-07-31
+---
 
-- **Statut** : Accepté - 2026-07-31
-- **Chantier** : #3053, clôture des suites de #2967
-- **Vérification** : probable - `scripts/adr/3053-capture-libelle.py` (cliquet : 0)
+# Une capture exige son libellé plutôt que de s'abstenir (amende 0025)
 
 ## Contexte
 

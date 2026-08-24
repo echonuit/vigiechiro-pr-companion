@@ -1,8 +1,19 @@
-# ADR 2385 - Les chiffres et les relations de la documentation sont adossés au code
+---
+type: adr
+title: "Les chiffres et les relations de la documentation sont adossés au code"
+status: stable
+article: A5
+chantier: "#2385 (adosser les chiffres) ; étendu par #2386 (règles métier, statut des ADR) ; clôture de l'EPIC #2367"
+decided_at: 2026-07-24
+verification: certaine
+enforced_by:
+  - "DocumentationAJourTest#chaque_chiffre_balise_egale_l_inventaire_reel"
+verified:
+  - by: machine:ci
+    at: 2026-07-24
+---
 
-- **Statut** : Accepté - 2026-07-24, **amendé** par [ADR 2750](2750-un-chiffre-que-le-code-sait-recalculer-ne-s-ecrit-pas-a-la-main.md) (la réserve « poser une balise n'est pas obligatoire partout » tombe ; la décision reste entière)
-- **Chantier** : #2385 (adosser les chiffres) ; étendu par #2386 (règles métier, statut des ADR) ; clôture de l'EPIC #2367
-- **Vérification** : certaine - `DocumentationAJourTest#chaque_chiffre_balise_egale_l_inventaire_reel`
+# Les chiffres et les relations de la documentation sont adossés au code
 
 ## Contexte
 

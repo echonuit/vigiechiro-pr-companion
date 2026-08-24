@@ -1,8 +1,19 @@
-# ADR 2581 - Un état qu'on observe pour décider se déclare quand il faut l'afficher
+---
+type: adr
+title: "Un état qu'on observe pour décider se déclare quand il faut l'afficher"
+status: stable
+article: A15
+chantier: "#2581 (lot 1, #2772) - suite de l'EPIC #2554"
+decided_at: 2026-07-29
+verification: certaine
+enforced_by:
+  - "MigrationV37StatutRecupereTest#v37_dit_la_meme_chose_que_le_code"
+verified:
+  - by: machine:ci
+    at: 2026-07-29
+---
 
-- **Statut** : Accepté - 2026-07-29
-- **Chantier** : #2581 (lot 1, #2772) - suite de l'EPIC #2554
-- **Vérification** : certaine - `MigrationV37StatutRecupereTest#v37_dit_la_meme_chose_que_le_code`
+# Un état qu'on observe pour décider se déclare quand il faut l'afficher
 
 ## Contexte
 

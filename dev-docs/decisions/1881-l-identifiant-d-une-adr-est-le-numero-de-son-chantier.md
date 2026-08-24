@@ -1,8 +1,19 @@
-# ADR 1881 - Le numéro d'une ADR est celui de son chantier, pas un compteur
+---
+type: adr
+title: "Le numéro d'une ADR est celui de son chantier, pas un compteur"
+status: stable
+article: A26
+chantier: "#1881 (numérotation des ADR : collision systématique entre chantiers parallèles)"
+decided_at: 2026-07-22
+verification: certaine
+enforced_by:
+  - "DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier"
+verified:
+  - by: machine:ci
+    at: 2026-07-22
+---
 
-- **Statut** : Accepté - 2026-07-22
-- **Chantier** : #1881 (numérotation des ADR : collision systématique entre chantiers parallèles)
-- **Vérification** : certaine - `DocumentationAJourTest#l_entete_d_une_adr_porte_son_numero`
+# Le numéro d'une ADR est celui de son chantier, pas un compteur
 
 ## Contexte
 

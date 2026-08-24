@@ -1,9 +1,21 @@
-# ADR 3960 - Un garde dit la couverture qu'il a, et rend l'état qu'il emprunte
+---
+type: adr
+title: "Un garde dit la couverture qu'il a, et rend l'état qu'il emprunte"
+status: stable
+article: A3
+chantier: "#3960, clôture du lot #3900"
+decided_at: 2026-08-18
+verification: certaine
+enforced_by:
+  - "FilArianeElisionTest#aucun_segment_rendu_n_est_coupe"
+verified:
+  - by: machine:ci
+    at: 2026-08-18
+relations:
+  prolonge: ["3645", "2748"]
+---
 
-- **Statut** : Accepté - 2026-08-18
-- **Chantier** : #3960, clôture du lot #3900
-- **Prolonge** : [ADR 3645](3645-un-detecteur-textuel-s-exclut-de-son-corpus.md), [ADR 2748](2748-un-dispositif-qui-peut-ne-rien-verifier-le-dit.md)
-- **Vérification** : certaine - `FilArianeElisionTest#aucun_segment_rendu_n_est_coupe`
+# Un garde dit la couverture qu'il a, et rend l'état qu'il emprunte
 
 ## Contexte
 

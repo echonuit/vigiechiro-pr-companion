@@ -1,8 +1,18 @@
-# ADR 3667 - Ce que la clôture a décidé de ne pas faire, et pourquoi
+---
+type: adr
+title: "Ce que la clôture a décidé de ne pas faire, et pourquoi"
+status: stable
+article: A11
+chantier: "#3667, à la clôture de l'EPIC"
+decided_at: 2026-08-16
+verification: humaine
+verification_note: "deux abstentions de méthode : ni la portée de PIT ni la fusion de deux auto-tests ne s'observent dans le code, et un test qui prétendrait les prouver mesurerait autre chose"
+verified:
+  - by: human:nedseb
+    at: 2026-08-16
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3667, à la clôture de l'EPIC
-- **Vérification** : humaine - deux abstentions de méthode : ni la portée de PIT ni la fusion de deux auto-tests ne s'observent dans le code, et un test qui prétendrait les prouver mesurerait autre chose
+# Ce que la clôture a décidé de ne pas faire, et pourquoi
 
 ## Contexte
 

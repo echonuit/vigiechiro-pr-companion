@@ -1,8 +1,19 @@
-# ADR 3501 - Le code tiers ne s'exécute pas avec les droits de publication
+---
+type: adr
+title: "Le code tiers ne s'exécute pas avec les droits de publication"
+status: stable
+article: A25
+chantier: "#3501, décision prise au lot 3 (#2723) du chantier #2720 et restée non écrite ; issues #2737, #2738, #2739"
+decided_at: 2026-08-07
+verification: certaine
+enforced_by:
+  - ".github/scripts/verifie-epinglage.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-07
+---
 
-- **Statut** : Accepté - 2026-08-07
-- **Chantier** : #3501, décision prise au lot 3 (#2723) du chantier #2720 et restée non écrite ; issues #2737, #2738, #2739
-- **Vérification** : certaine - `.github/scripts/verifie-epinglage.sh`
+# Le code tiers ne s'exécute pas avec les droits de publication
 
 ## Contexte
 

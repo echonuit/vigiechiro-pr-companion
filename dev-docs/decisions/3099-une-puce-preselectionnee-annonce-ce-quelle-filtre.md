@@ -1,8 +1,20 @@
-# ADR 3099 - Deux puces filtrent dès leur ajout, et c'est **acceptable parce qu'elles l'annoncent**
+---
+type: adr
+title: "Deux puces filtrent dès leur ajout, et c'est **acceptable parce qu'elles l'annoncent**"
+status: stable
+article: A11
+chantier: "#3099, palier 4 du chantier #3092"
+decided_at: 2026-08-04
+verification: humaine
+loupe:
+  - "apercu-sons-validation-filtres.png"
+verification_note: "la capture `apercu-sons-validation-filtres.png` montre la puce « Taxon parent » portant sa valeur (« Chiroptères ») sans qu'on la déplie ; c'est ce que l'argument repose sur, et aucun test ne peut l'établir à sa place."
+verified:
+  - by: human:nedseb
+    at: 2026-08-04
+---
 
-- **Statut** : Accepté - 2026-08-04
-- **Chantier** : #3099, palier 4 du chantier #3092
-- **Vérification** : humaine - la capture `apercu-sons-validation-filtres.png` montre la puce « Taxon parent » portant sa valeur (« Chiroptères ») sans qu'on la déplie ; c'est ce que l'argument repose sur, et aucun test ne peut l'établir à sa place.
+# Deux puces filtrent dès leur ajout, et c'est **acceptable parce qu'elles l'annoncent**
 
 ## Contexte
 

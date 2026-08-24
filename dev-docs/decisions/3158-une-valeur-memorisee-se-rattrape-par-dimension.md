@@ -1,20 +1,19 @@
-# ADR 3158 - Une valeur mémorisée se rattrape **par dimension**, jamais par ressemblance
+---
+type: adr
+title: "Une valeur mémorisée se rattrape **par dimension**, jamais par ressemblance"
+status: stable
+article: A16
+chantier: "#3158, lot 1 du chantier #3151"
+decided_at: 2026-08-04
+verification: certaine
+enforced_by:
+  - "CritereLieuTest#un_carre_memorise_nu_se_replace_malgre_ses_points"
+verified:
+  - by: machine:ci
+    at: 2026-08-04
+---
 
-- **Statut** : Accepté - 2026-08-04
-- **Chantier** : #3158, lot 1 du chantier #3151
-- **Vérification** : certaine - `CritereLieuTest#un_carre_memorise_nu_se_replace_malgre_ses_points`
-
-> Le garde d'abstention - deux candidates ne cochent rien - est tenu par
-> `CritereLieuTest#deux_entrees_candidates_ne_rattrapent_rien` : le garde des ADR n'accepte qu'une
-> référence, la décision en a deux.
-
-!!! note "Sa jumelle : la **clé**, quand celle-ci porte sur la **valeur**"
-    Une vue sauvegardée persiste deux choses, et deux ADR nées la même semaine en traitent une chacune :
-    la **clé** du critère (`lieu`, `statut`) est un contrat de sérialisation
-    ([ADR 3096](3096-une-cle-de-critere-est-un-contrat-de-serialisation.md), chantier #3092), et la
-    **valeur** cochée se rattrape par dimension (celle-ci, chantier #3151). Écrites en parallèle, elles
-    ne se citaient pas ; le rapprochement a été fait à la clôture de #3151. Les lire ensemble avant de
-    toucher à `vue_sauvegardee`.
+# Une valeur mémorisée se rattrape **par dimension**, jamais par ressemblance
 
 ## Contexte
 

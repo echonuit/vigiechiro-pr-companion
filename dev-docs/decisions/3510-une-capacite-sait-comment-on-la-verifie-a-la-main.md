@@ -1,10 +1,18 @@
-# ADR 3510 - Une capacité sait comment on la vérifie à la main
+---
+type: adr
+title: "Une capacité sait comment on la vérifie à la main"
+status: stable
+article: A6
+chantier: "#3510, suite de l'[ADR 3505](3505-le-cycle-decrit-aussi-le-travail-pas-seulement-sa-cloture.md)"
+decided_at: 2026-08-08
+verification: humaine
+verification_note: "la complétude d'une recette ne se prouve pas par un scan. Le contrôle est"
+verified:
+  - by: human:nedseb
+    at: 2026-08-08
+---
 
-- **Statut** : Accepté - 2026-08-08
-- **Chantier** : #3510, suite de l'[ADR 3505](3505-le-cycle-decrit-aussi-le-travail-pas-seulement-sa-cloture.md)
-- **Vérification** : humaine - la complétude d'une recette ne se prouve pas par un scan. Le contrôle est
-  la case `6b` du modèle de clôture, et le constat le plus lisible reste l'inventaire de statut de
-  l'[index de la recette](../recette/index.md), qui dit ce qui n'a jamais été joué.
+# Une capacité sait comment on la vérifie à la main
 
 ## Contexte
 

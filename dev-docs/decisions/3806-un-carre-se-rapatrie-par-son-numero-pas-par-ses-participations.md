@@ -1,9 +1,21 @@
-# ADR 3806 - Un carré se rapatrie par son numéro, pas par ses participations
+---
+type: adr
+title: "Un carré se rapatrie par son numéro, pas par ses participations"
+status: stable
+article: A17
+chantier: "#3806, suites de #3458"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - "RapatriementCarreTest#entre_plusieurs_protocoles_on_prend_le_point_fixe"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+relations:
+  prolonge: ["3458"]
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3806, suites de #3458
-- **Prolonge** : [ADR 3458](3458-un-verdict-ne-juge-que-le-numero-qui-l-a-demande.md)
-- **Vérification** : certaine - `RapatriementCarreTest#entre_plusieurs_protocoles_on_prend_le_point_fixe`
+# Un carré se rapatrie par son numéro, pas par ses participations
 
 ## Contexte
 

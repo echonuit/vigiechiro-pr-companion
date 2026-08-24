@@ -1,8 +1,17 @@
-# ADR 0015 - Cartes SD de recette : specs déclaratives + générateur déterministe
+---
+type: adr
+title: "Cartes SD de recette : specs déclaratives + générateur déterministe"
+status: stable
+article: A5
+chantier: "P5 - générateur de cartes SD de recette (#1749, #1758, #1767, #1769 ; contribue à #1363)"
+verification: certaine
+enforced_by:
+  - "GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue"
+verified:
+  - by: machine:ci
+---
 
-- **Statut** : Accepté
-- **Chantier** : P5 - générateur de cartes SD de recette (#1749, #1758, #1767, #1769 ; contribue à #1363)
-- **Vérification** : certaine - `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`
+# Cartes SD de recette : specs déclaratives + générateur déterministe
 
 ## Contexte
 
