@@ -5,23 +5,15 @@ import fr.univ_amu.iut.commun.view.LibellesCriteres;
 import java.util.ArrayList;
 import java.util.List;
 
-/// Retour d'une **opération** d'un écran (import CSV, export, valider, corriger, action refusée…) :
-/// un texte + une **sévérité**, exposé par le ViewModel dans une propriété distincte du message
-/// d'**état vide** de la table.
+/// Retour d'une **opération** d'un écran (import, export, valider, action refusée…) : un texte et une
+/// **sévérité**, exposé dans une propriété distincte du message d'**état vide** de la table.
 ///
-/// La distinction est délibérée : avant, erreurs d'opération et indice « aucune observation »
-/// partageaient la même propriété, donc une erreur d'import s'affichait dans le placeholder gris de la
-/// table, indistinguable de « pas de données » (incident « For input string: SUR » invisible). En
-/// séparant les deux, la vue rend le retour d'opération dans un **bandeau toujours visible**, coloré
-/// selon la sévérité, là où le placeholder gris reste réservé au seul état vide.
-///
-/// Né dans la vue audio, remonté dans `commun` quand l'Inventaire a eu besoin du même canal (#1837) :
-/// « rendre compte sans bloquer » n'a rien de propre à un écran. Se rend avec
-/// [fr.univ_amu.iut.commun.view.BandeauRetour].
-///
-/// La sévérité ne s'écrit **pas** dans le texte : elle se rend une fois, par le composant, en couleur
-/// et en icône (#1933). Un pictogramme collé au message le disait une seconde fois, et dépendait des
-/// polices de la machine - sur celles qui ne le portent pas, il ne s'affichait pas du tout.
+/// La distinction est délibérée : les deux partageaient la même propriété, si bien qu'une erreur
+/// d'import s'affichait dans le placeholder gris, indistinguable de « pas de données ». La vue rend
+/// donc le retour dans un **bandeau toujours visible** ([fr.univ_amu.iut.commun.view.BandeauRetour]),
+/// le placeholder restant au seul état vide. Né dans la vue audio, remonté dans `commun` quand
+/// l'Inventaire a eu besoin du même canal (#1837). La sévérité ne s'écrit **pas** dans le texte :
+/// elle se rend en couleur et en icône (#1933) plutôt que dans la chaîne.
 ///
 /// @param texte message présenté à l'utilisateur (vide = aucun retour à afficher)
 /// @param severite gravité du message, portée par [Severite] (socle, #2159)
@@ -32,19 +24,12 @@ public record RetourOperation(String texte, Severite severite) {
 
     /// Refuse un message qui **ouvre par un glyphe de sévérité**.
     ///
-    /// La sévérité est portée par [#severite()], et la vue la rend deux fois - en couleur et en icône
-    /// ([fr.univ_amu.iut.commun.view.BandeauRetour], [fr.univ_amu.iut.commun.view.LibelleRetour]). Un
-    /// « ⚠ » dans la chaîne la dirait une troisième fois, sans que rien ne garantisse l'accord entre les
-    /// trois : un message « ⚠ … » posé en `Severite.ERREUR` s'afficherait en rouge avec un cercle barré
-    /// et un triangle dans le texte.
-    ///
-    /// Ce n'est pas une précaution théorique. Avant #2052, faute d'un niveau `AVERTISSEMENT`, huit
-    /// propriétés avaient **quitté ce type** pour redevenir des chaînes libres portant leur glyphe
-    /// (#2050) - et une fois dehors, plus rien ne bornait leur longueur : trois y joignaient des listes.
-    /// La garde ferme la porte par laquelle elles sont sorties.
-    ///
-    /// Elle ne couvre **que** ce type. Les propriétés `String` ad hoc restent libres d'écrire ce qu'elles
-    /// veulent : c'est le trou que #2050 achève de combler, propriété par propriété.
+    /// La sévérité est portée par [#severite()] et la vue la rend déjà en couleur et en icône ; un
+    /// « ⚠ » dans la chaîne la dirait une troisième fois sans garantir l'accord. Avant #2052, faute
+    /// d'un niveau `AVERTISSEMENT`, huit propriétés avaient **quitté ce type** pour redevenir des
+    /// chaînes libres portant leur glyphe (#2050), et plus rien ne bornait alors leur longueur. La
+    /// garde ferme cette porte, mais **seulement pour ce type** : les propriétés `String` ad hoc
+    /// restent libres, et c'est le trou que #2050 comble propriété par propriété.
     public RetourOperation {
         if (texte != null && !texte.isEmpty() && GLYPHES_DE_SEVERITE.indexOf(texte.charAt(0)) >= 0) {
             throw new IllegalArgumentException(
@@ -75,20 +60,12 @@ public record RetourOperation(String texte, Severite severite) {
         return new RetourOperation(texte, Severite.AVERTISSEMENT);
     }
 
-    /// Retour d'**erreur** (rouge) : l'opération a échoué.
-    /// Refus ou échec **remonté d'une exception** : le message y gagne le **geste attendu** quand le
-    /// modèle a nommé ce qui manque (#2635). Sans besoin, c'est le message tel quel.
-    ///
-    /// C'est l'unique endroit où l'IHM ajoute son « comment » : le modèle ne connaît pas les menus, et la
-    /// ligne de commande en dit un autre.
     /// Une **vue mémorisée rejouée amputée** de ce qui n'a pas pu être replacé (#3056, puis #3093).
     ///
     /// Le cas se produit quand les libellés offerts ont changé - « Z1 » est devenu « 640380 · Z1 » en
-    /// #2995 - ou quand une valeur mémorisée est absente du jeu courant (une espèce qu'on n'a pas
-    /// contactée cette fois-ci). La vue s'ouvre quand même, mais elle **filtre moins large** qu'à son
-    /// enregistrement : le taire laisserait croire le contraire.
-    ///
-    /// Avertissement et non erreur : rien n'a échoué, et l'utilisateur n'a rien à réparer.
+    /// #2995 - ou quand une valeur mémorisée est absente du jeu courant. La vue s'ouvre quand même,
+    /// mais elle **filtre moins large** qu'à son enregistrement : le taire laisserait croire le
+    /// contraire. Avertissement et non erreur : rien n'a échoué, et l'utilisateur n'a rien à réparer.
     public static RetourOperation vueAmputee(String nomVue, ResteDeRestauration reste) {
         return avertissement("La vue « " + nomVue + " » a été rejouée sans " + laisseDeCote(reste)
                 + " : elle filtre donc moins large qu'à son enregistrement.");
@@ -97,13 +74,11 @@ public record RetourOperation(String texte, Severite severite) {
     /// Des filtres **transportés d'un écran à l'autre** (« Voir sur la carte », #476) que l'écran
     /// d'arrivée n'a pas su reprendre (#3093).
     ///
-    /// Ce n'est pas une vue nommée : la phrase ne peut donc pas s'appuyer sur un nom, et doit dire
-    /// **d'où** vient l'écart. Le cas est ordinaire et non exceptionnel : Sons & validation offre dix
-    /// critères, l'analyse cinq, donc resserrer sur la probabilité puis basculer sur la carte élargit
-    /// forcément le résultat.
-    /// ⚠️ L'ouverture ne dit **pas** « Cet écran a repris vos filtres » : le fragment des critères
-    /// nomme déjà l'écran, et la phrase le répétait deux fois. Vu en régénérant la capture, pas en
-    /// relisant le code.
+    /// Ce n'est pas une vue nommée : la phrase ne peut pas s'appuyer sur un nom et doit dire **d'où**
+    /// vient l'écart. Le cas est ordinaire : Sons & validation offre dix critères, l'analyse cinq.
+    /// L'ouverture ne dit **pas** « Cet écran a repris vos filtres » - le fragment des critères nomme
+    /// déjà l'écran, et la phrase le répétait deux fois. Vu en régénérant la capture, pas en relisant
+    /// le code.
     public static RetourOperation filtresNonRepris(ResteDeRestauration reste) {
         return avertissement("Vos filtres ont été repris sans " + laisseDeCote(reste)
                 + " : la liste est donc plus large que celle d'où vous venez.");
@@ -151,18 +126,13 @@ public record RetourOperation(String texte, Severite severite) {
                 : valeurs.size() + " valeurs qui n'existent plus (" + String.join(", ", valeurs) + ")";
     }
 
-    /// Les critères que cet écran n'offre pas, **accordés**. Nommés par leur **clé** : l'écran ne connaît
-    /// pas ces critères, donc n'a pas leur intitulé (cf. [ResteDeRestauration]).
     /// Les critères que cet écran n'offre pas, **nommés comme leur puce les nomme**.
     ///
     /// Deux corrections issues de la revue visuelle du chantier #3092, trouvées en ouvrant la capture :
-    ///
-    /// - les clés sortaient **telles quelles** (« references », « non_identifie »), tiret bas et
-    ///   accents manquants compris, ce qui se lit comme une faute de frappe au milieu d'une phrase
-    ///   française. Elles passent par [LibellesCriteres] ;
-    /// - « qu'**il** n'offre pas » n'avait d'antécédent que dans un des deux messages. Dans
-    ///   [#vueAmputee], le sujet est « La vue », et le pronom ne renvoyait à rien. La formule nomme
-    ///   donc l'écran, ce qui reste juste dans les deux.
+    /// les clés sortaient **telles quelles** (« references », « non_identifie »), ce qui se lit comme
+    /// une faute de frappe au milieu d'une phrase française - elles passent par [LibellesCriteres] ;
+    /// et « qu'**il** n'offre pas » n'avait d'antécédent que dans un des deux messages, la formule
+    /// nommant donc l'écran, ce qui reste juste dans les deux.
     private static String criteresAbsents(List<String> criteres) {
         List<String> nommes = criteres.stream().map(LibellesCriteres::de).toList();
         return nommes.size() == 1
@@ -170,6 +140,10 @@ public record RetourOperation(String texte, Severite severite) {
                 : nommes.size() + " critères que cet écran n'offre pas (" + String.join(", ", nommes) + ")";
     }
 
+    /// Refus ou échec **remonté d'une exception** : le message y gagne le **geste attendu** quand le
+    /// modèle a nommé ce qui manque (#2635). Sans besoin, c'est le message tel quel. C'est l'unique
+    /// endroit où l'IHM ajoute son « comment » : le modèle ne connaît pas les menus, et la ligne de
+    /// commande en dit un autre.
     public static RetourOperation erreur(Throwable refus) {
         return erreur(borner(GesteAttendu.message(refus)));
     }
@@ -191,16 +165,11 @@ public record RetourOperation(String texte, Severite severite) {
 
     /// Borne un message **que nous n'avons pas écrit** (#2076).
     ///
-    /// Le bandeau **n'a pas de troncature** : son libellé porte `wrapText`, donc un long message enroule
-    /// et fait grandir le bandeau. Mesuré : un message de pilote SQLite rappelant sa requête (379
-    /// caractères) le porte à 106 px, un collage de 625 caractères à 186 px - contre 56 px nominal.
-    ///
-    /// Borné **ici seulement**, et c'est le point : ce qui passe par [#erreur(String)] est écrit par nous,
-    /// et sa longueur est notre responsabilité. Ce qui arrive par un [Throwable] vient du pilote SQLite,
-    /// d'une réponse HTTP ou d'une trace réseau - personne ne l'a relu.
-    ///
-    /// Le détail complet n'est pas perdu : le journal le consigne (#1845), et c'est là qu'on va le
-    /// chercher pour diagnostiquer. Le bandeau, lui, dit ce qui s'est passé sans déverser.
+    /// Le bandeau **n'a pas de troncature** : son libellé porte `wrapText`, donc un long message
+    /// enroule et fait grandir le bandeau - mesuré, 379 caractères le portent à 106 px et 625 à
+    /// 186 px, contre 56 px nominal. Borné **ici seulement** : ce qui passe par [#erreur(String)] est
+    /// écrit par nous, ce qui arrive par un [Throwable] vient du pilote SQLite ou d'une trace réseau.
+    /// Le détail complet n'est pas perdu, le journal le consigne (#1845).
     private static String borner(String message) {
         if (message == null || message.length() <= LONGUEUR_MAX_EXTERNE) {
             return message;
@@ -208,6 +177,7 @@ public record RetourOperation(String texte, Severite severite) {
         return message.substring(0, LONGUEUR_MAX_EXTERNE).stripTrailing() + "… (détail dans le journal)";
     }
 
+    /// Retour d'**erreur** (rouge) : l'opération a échoué.
     public static RetourOperation erreur(String texte) {
         return new RetourOperation(texte == null ? "Une erreur est survenue." : texte, Severite.ERREUR);
     }

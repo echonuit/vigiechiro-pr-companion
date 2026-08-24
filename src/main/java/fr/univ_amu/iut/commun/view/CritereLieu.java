@@ -8,40 +8,15 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-/// Fabrique du critère **« Lieu »** (#3097) : plusieurs dimensions géographiques confrontées à une même
-/// liste à cocher.
+/// Fabrique du critère **« Lieu »** (#3097) : plusieurs dimensions géographiques confrontées à une
+/// même liste à cocher, que quatre catalogues écrivaient à l'identique (#2794). Ce qui varie d'un
+/// écran à l'autre est la liste des dimensions offertes.
 ///
-/// Quatre catalogues écrivaient ce critère à l'identique, et `CriteresAnalyse` le disait déjà de
-/// lui-même : « C'est la jumelle de `CriteresAudio.lieu` (#2794), dont elle reprend le libellé et
-/// l'ordre ». Ce qui variait tenait à **une** chose : quelles dimensions l'écran offre.
-///
-/// ## Trois niveaux, dont un porte deux étiquettes
-///
-/// Le domaine n'a que **trois** niveaux géographiques, et non quatre : la **commune** (dérivée du GPS
-/// du point, ADR 2791), le **carré** et le **point d'écoute**. Ce qui ressemblait à une quatrième
-/// dimension, le « site », est le **nom convivial du carré** : `monitoring_site` porte
-/// `square_number` et `friendly_name` sur la même ligne.
-///
-/// Les deux s'offrent donc dans **une seule entrée** ([#carres]), « 640380 · Vallon », et non dans deux
-/// groupes qui retenaient les mêmes lignes (#3157, chantier #3151).
-///
-/// ## Pourquoi les dimensions restent un paramètre
-///
-/// Les quatre écrans offrent aujourd'hui les **trois** niveaux (#3161 a comblé le dernier écart, sur
-/// Espèces & observations). Elles restent un paramètre pour autant : c'est l'usage d'un écran qui
-/// décide de ce qu'il offre, et un écran futur pourra légitimement s'en tenir à moins. Ce qui ne doit
-/// plus arriver, c'est qu'une dimension manque **sans que personne l'ait décidé** - le cas que le
-/// chantier #3151 a corrigé, où une colonne non remontée passait pour un choix d'ergonomie.
-///
-/// ## Sémantique
-///
-/// Une ligne passe si **l'une** de ses dimensions figure parmi les valeurs cochées. Rien de coché
-/// n'écarte rien.
-///
-/// Les valeurs sont **groupées** par dimension, chaque groupe précédé de son titre en en-tête non
-/// cliquable (#2992) : une liste plate mêlant communes, carrés et points ne dit pas de quelle nature
-/// est une entrée, et il faut la connaître pour choisir. Un groupe **sans valeur** n'affiche pas son
-/// en-tête, qui ne renseignerait sur rien et ferait croire à une liste tronquée.
+/// **Trois niveaux, dont un porte deux étiquettes** : la commune (dérivée du GPS, ADR 2791), le carré
+/// et le point. Le « site » n'est pas un quatrième niveau mais le nom convivial du carré, les deux
+/// s'offrant dans une seule entrée ([#carres]) « 640380 · Vallon » (#3157, chantier #3151). **Les
+/// dimensions restent un paramètre** (#3161), mais aucune ne doit manquer sans qu'on l'ait décidé.
+/// Une ligne passe si **l'une** est cochée ; les valeurs sont groupées par dimension, titrées (#2992).
 public final class CritereLieu {
 
     private CritereLieu() {}
@@ -129,16 +104,11 @@ public final class CritereLieu {
     /// L'entrée qui est l'**écriture d'aujourd'hui** de `memorisee`, s'il n'y en a qu'une.
     ///
     /// Chaque dimension est interrogée sur **ses propres** valeurs, du côté qu'elle déclare : le carré
-    /// reconnaît « 640380 » en tête de « 640380 · Vallon », le point reconnaît « A1 » en queue de
-    /// « 640380 · A1 ». C'est ce cloisonnement qui rend la réponse univoque, là où un « un segment
-    /// quelque part » trouvait toujours deux prétendants, le point étant qualifié **par** son carré.
-    ///
-    /// La comparaison porte sur des **segments entiers**, jamais sur un fragment : « 6403 » ne désigne
-    /// pas « 640380 · Vallon ». Une valeur mémorisée est un lieu qui a existé, pas une amorce de
-    /// recherche.
-    ///
-    /// **Deux candidates ne donnent rien** : deviner entre deux lieux reviendrait à filtrer sur celui
-    /// que l'utilisateur n'a pas choisi. #3093 dit alors ce qui n'a pas été replacé.
+    /// reconnaît « 640380 » en tête, le point « A1 » en queue de « 640380 · A1 ». C'est ce
+    /// cloisonnement qui rend la réponse univoque, le point étant qualifié **par** son carré. La
+    /// comparaison porte sur des **segments entiers** : « 6403 » ne désigne pas « 640380 · Vallon ».
+    /// **Deux candidates ne donnent rien** - deviner reviendrait à filtrer sur le lieu que
+    /// l'utilisateur n'a pas choisi -, et #3093 dit alors ce qui n'a pas été replacé.
     private static <T> Optional<String> rattraper(String memorisee, List<T> lignes, List<Dimension<T>> dimensions) {
         List<String> candidates = dimensions.stream()
                 .filter(dimension -> dimension.ecritureAncienne() != null)

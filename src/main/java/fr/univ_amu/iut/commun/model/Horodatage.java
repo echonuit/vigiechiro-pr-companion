@@ -9,42 +9,15 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Locale;
 import java.util.Optional;
 
-/// Comment le produit écrit une **date et une heure** à l'utilisateur (#3821).
+/// Comment le produit écrit une **date et une heure** à l'utilisateur (#3821). Le produit en écrivait
+/// trois formes sans que personne l'ait décidé, mesurées à la clôture du lot 4 de #3802 sur 35
+/// `DateTimeFormatter.ofPattern`, dont 21 sans locale.
 ///
-/// ## Le défaut
-///
-/// Le produit en écrivait **trois** formes, dans le même logiciel, sans que personne l'ait décidé :
-/// `03/07/2026 21:00` (4 sites), `03/07/2026 à 21:00` (2), `03/07/2026 à 21h00` (1). Mesuré à la
-/// clôture du lot 4 de #3802, sur 35 `DateTimeFormatter.ofPattern` répartis dans `src/main`, dont
-/// **21 sans aucune locale**.
-///
-/// ## Pourquoi DEUX formes, et pas une
-///
-/// Regardées en contexte plutôt qu'en liste, les divergences n'étaient pas une négligence : le « à »
-/// lit bien **dans une phrase** et mal **dans une colonne**, où la date est déjà comprise comme un
-/// instant. Et les quatre sites sans « à » sont précisément des **tableaux**.
-///
-/// Forcer une forme unique aurait donc été mauvais quelque part. Le besoin était réel ; ce qui manquait
-/// était de le **nommer**.
-///
-/// ⚠️ C'est le **nom** qui empêche de se tromper, pas la discipline. `LISIBLE`, `QUAND` ou `FORMAT_NUIT`
-/// - les noms qu'on trouvait sur ces constantes - n'apprennent rien à celui qui choisit.
-/// [#dansUnTableau] dit où il va.
-///
-/// ## Ce que cette classe ne couvre PAS, et il faut le lire avant d'y toucher
-///
-/// Deux autres familles de formateurs vivent dans le produit, avec des exigences **opposées** :
-///
-/// - **noms de fichiers** (`yyyyMMdd_HHmmss`, `yyyyMMdd-HHmmss`) : ils doivent rester **stables** et
-///   trier lexicalement. Leur donner une locale française casserait le tri ;
-/// - **lecture de fichiers tiers** (ThLog en `Locale.ROOT`) : ils doivent rester fidèles au
-///   **producteur**, pas à nous. Les changer casserait l'import ;
-/// - **sorties `--json` de la ligne de commande** (#3990) : ce sont des **contrats de script**, et
-///   l'ISO y est la forme attendue. La même commande écrit donc sa date **deux fois différemment** -
-///   en français dans son texte, en ISO dans son JSON - parce que les deux sorties n'ont pas le même
-///   lecteur. Ce n'est pas une incohérence, c'est la distinction qu'il faut tenir.
-///
-/// Les rapatrier ici serait un défaut, pas un remède.
+/// **Deux formes, pas une** : le « à » se lit bien dans une phrase et mal dans une colonne. C'est le
+/// **nom** de la constante qui empêche de se tromper, pas la discipline - [#dansUnTableau] dit où
+/// elle va. **Trois familles restent dehors** et les rapatrier serait un défaut : les noms de
+/// fichiers, qui doivent trier lexicalement ; la lecture de fichiers tiers, fidèle au producteur ;
+/// les sorties `--json` (#3990), contrats de script où l'ISO est attendue.
 public final class Horodatage {
 
     /// ⚠️ Locale **explicite**, alors que le motif est purement numérique et n'en aurait presque jamais
@@ -87,19 +60,11 @@ public final class Horodatage {
     /// L'instant que la plateforme renvoie (`2026-07-03T19:00:00+00:00`), ramené à **l'heure murale du
     /// site** ; vide s'il est absent ou illisible.
     ///
-    /// ## Pourquoi une conversion, et pas une troncature
-    ///
-    /// ⚠️ Couper la chaîne au `T` paraît suffire et **change la date** dès que le décalage traverse
-    /// minuit : une nuit commencée à 21:00 dans un fuseau à `-03:00` arrive en `2026-07-04T00:00:00Z`,
-    /// et la troncature annonce le **4** pour une nuit du **3**. C'est ce que faisait
-    /// `lister-participations-vigiechiro` (#4017).
-    ///
-    /// ## Pourquoi ici
-    ///
-    /// L'écriture convertit déjà dans ce sens ([ADR 3406], [ADR 3442]) : les deux moitiés de la boucle
-    /// doivent parler le même fuseau, sans quoi chaque cycle « reconstruire puis envoyer » déplace la
-    /// nuit - le cliquet de #1860. La conversion vivait dans `passage.model`, hors de portée de la CLI ;
-    /// une seconde copie aurait dérivé de la première.
+    /// Couper la chaîne au `T` paraît suffire et **change la date** dès que le décalage traverse
+    /// minuit : une nuit commencée à 21:00 dans un fuseau à `-03:00` arrive en `2026-07-04T00:00:00Z`
+    /// (#4017). L'écriture convertit déjà dans ce sens ([ADR 3406], [ADR 3442]) et les deux moitiés de
+    /// la boucle doivent parler le même fuseau, sans quoi chaque cycle déplace la nuit - le cliquet de
+    /// #1860.
     ///
     /// @param borne l'instant tel que l'API le donne, ou `null`
     /// @param fuseau le fuseau du site - `FuseauDuPoint.pour(idPoint)` quand le point est connu,

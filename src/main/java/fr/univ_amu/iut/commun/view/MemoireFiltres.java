@@ -14,41 +14,14 @@ import javafx.scene.control.TableColumn.SortType;
 import javafx.scene.control.TableView;
 
 /// Mémoire **de session** des écrans à barre de filtres (#484, généralisée en #3098) : reprendre le
-/// travail là où on l'a laissé, sans tout re-régler.
+/// travail là où on l'a laissé. Les controllers étant recréés à chaque ouverture, cet état vit dans
+/// un singleton Guice, rangé par **clé d'écran** - le tri de l'inventaire ne s'applique pas au
+/// tableau des passages.
 ///
-/// Les controllers et view-models étant recréés à chaque ouverture, cet état vit dans un **singleton
-/// de session** (Guice). Les états sont rangés par **clé d'écran**, la même que celle des vues
-/// sauvegardées : le tri de l'inventaire n'a aucune raison de s'appliquer au tableau des passages.
-///
-/// ## Deux mémoires, et pourquoi elles sont séparées
-///
-/// La version née dans Sons & validation mémorisait **les filtres et le tri d'une table** en un seul
-/// geste. Cette forme n'était pas généralisable, et ne s'est révélée telle qu'en câblant les autres
-/// écrans :
-///
-/// | Écran | Tables |
-/// |---|---|
-/// | Sons & validation | 1 |
-/// | Carte & passages | 1 |
-/// | Espèces & observations | **3** (espèces, carrés, observations) |
-/// | Activité de la nuit | **0** - c'est un graphe |
-///
-/// Les **filtres** valent pour les quatre écrans ; le **tri** n'a de sens que là où il y a une table, et
-/// il en faut autant que de tables. Forcer une table sur Activité n'aurait aucun sens, et en choisir une
-/// sur trois pour l'analyse aurait été un arbitraire non écrit.
-///
-/// D'où deux entrées distinctes : [#installer] pour les filtres, [#memoriserTri] pour chaque table, à
-/// appeler autant de fois que nécessaire.
-///
-/// ## Ce que la mémoire doit dire
-///
-/// Restaurer peut échouer en partie : une valeur mémorisée peut avoir disparu du jeu courant, ou un
-/// critère du catalogue. `compteRendu` reçoit alors ce qui n'a pas été replacé (#3093).
-///
-/// C'est le chemin le plus **discret** des trois : personne n'a rien demandé, l'écran se rouvre
-/// simplement. Le taire laisserait croire qu'on reprend exactement là où on s'était arrêté, alors que
-/// l'écran filtre moins large. C'est aussi ce qui rend l'extension à trois écrans **sûre** : sans ce
-/// compte rendu, on aurait propagé un défaut au lieu de combler un manque.
+/// **Deux entrées, parce que les écrans n'ont pas tous une table** : Espèces & observations en a
+/// trois, Activité de la nuit aucune. Les filtres valent pour tous, le tri se mémorise par table,
+/// d'où [#installer] et [#memoriserTri]. **Une restauration peut échouer en partie** - une valeur
+/// mémorisée peut avoir disparu -, et `compteRendu` reçoit ce qui n'a pas été replacé (#3093).
 @Singleton
 public class MemoireFiltres {
 
