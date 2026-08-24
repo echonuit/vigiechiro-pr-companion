@@ -6,40 +6,15 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/// Applique une [ActionGroupee] à une suite de passages (#2357), **un à la fois**, et rend compte de
-/// chacun.
+/// Applique une [ActionGroupee] à une suite de passages (#2357), **un à la fois**. **Séquentiel** :
+/// les gestes enchaînés parallélisent déjà en interne, et lancer N passages multiplierait ce plafond.
 ///
-/// ## Séquentiel, délibérément
-///
-/// Le moteur ne parallélise **rien**. Les gestes qu'il enchaîne parallélisent déjà en interne quand
-/// c'est utile : le dépôt téléverse cinq unités de front, plafond calqué sur le front web. Lancer N
-/// passages simultanément multiplierait ce plafond par N et transformerait un confort en rafale que
-/// le serveur rejette. Le parallélisme reste donc **à l'intérieur** d'un passage, jamais entre eux.
-///
-/// ## L'annulation s'arrête *entre* deux passages
-///
-/// Le jeton est consulté **avant** chaque passage, jamais pendant. Un passage commencé va donc au
-/// bout, et tout passage non commencé est rendu [IssueTraitement.Statut#NON_TRAITE] : chacun est soit
-/// dans son état d'avant, soit dans son état d'après, **jamais entre les deux**. C'est le contrat qui
-/// rend un lot interrompu reprenable, et il est tenu par construction, pas par vigilance.
-///
-/// ## Un échec n'arrête pas le lot
-///
-/// Une action qui lève est enregistrée en échec **avec son motif**, et le lot continue : rentrer de
-/// terrain avec six cartes et voir cinq passages abandonnés parce que le premier a échoué serait le
-/// contraire du service rendu.
-///
-/// ## Le motif d'échec est **rédigé par la surface**
-///
-/// Un refus a deux moitiés (ADR 2635) : le **fait**, que le modèle énonce, et le **geste** qui le lève,
-/// que seule la surface connaît. Prendre `getMessage()` ne garde que la première - un jeton expiré au
-/// septième passage donnerait treize lignes disant « l'application n'est pas connectée » et aucune
-/// disant où se reconnecter, là où la même erreur sur une seule nuit le dit.
-///
-/// Le moteur ne formate donc rien lui-même : il applique la rédaction qu'on lui a donnée, à la fois au
-/// journal et au compte rendu. L'application lui passe `commun.viewmodel.GesteAttendu::message`, la
-/// ligne de commande passerait `cli.GesteAttenduCli::message`, et un appelant qui n'en veut pas garde
-/// le fait seul.
+/// **L'annulation s'arrête entre deux passages** - le jeton est consulté avant chacun, jamais
+/// pendant -, un passage non commencé étant rendu [IssueTraitement.Statut#NON_TRAITE] : chacun est
+/// dans son état d'avant ou d'après, ce qui rend un lot interrompu reprenable. **Un échec n'arrête
+/// pas le lot** : l'action qui lève est enregistrée avec son motif. **Le motif est rédigé par la
+/// surface** (ADR 2635) : `getMessage()` ne garderait que le fait, et treize lignes diraient « pas
+/// connectée » sans dire où se reconnecter.
 public final class MoteurTraitementGroupe {
 
     /// Journal muet, pour les appelants qui n'en veulent pas (tests, CLI silencieux).

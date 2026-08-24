@@ -7,38 +7,12 @@ import java.util.Objects;
 /// **Compte rendu d'une opération** : ce qui est revenu et sur quelle preuve, ce qui a été refusé et
 /// pourquoi, ce qui manque et de quel manque il s'agit (ADR 0031).
 ///
-/// À distinguer du [RetourOperation], qui dit un fait **borné** et clos (« Passage enregistré. ») et se
-/// rend au bandeau. Un compte rendu est **extensible par nature** : il grandit avec ce qu'il y a à dire.
-/// Celui de la réactivation a gagné deux sections en une seule session. Le loger dans un bandeau
-/// reviendrait à le tronquer, donc à retirer ce qui permet à l'utilisateur de savoir quoi faire.
-///
-/// ## Une structure, pas un texte
-///
-/// Quatre écrans l'assemblaient au `StringBuilder`, chacun à sa façon. Le résultat tenait dans un `Label`
-/// unique, ce qui interdit de styler une rubrique, d'en masquer une, ou de l'indenter (#1987 en découle
-/// directement) - et oblige les tests à chercher des sous-chaînes dans un pavé.
-///
-/// La grammaire retenue est celle que ces écrans employaient déjà sans la nommer :
-///
-/// ```
-/// Réactivation partielle                                   <- titre
-///
-/// Ce dossier ne contenait que vos enregistrements bruts…    <- préambule
-///
-/// 4229 séquence(s) réactivée(s) (identité vérifiée : forte) <- constat
-/// 7 séquence(s) restent introuvables dans ce dossier        <- constat
-///   • X.wav : enregistrement absent du dossier              <- détail
-///   • Y.wav : tranche non régénérée                         <- détail
-///
-/// L'audio reste incomplet : 4229 séquence(s) sur 4236       <- conclusion
-/// ```
-///
-/// ## Le plafond d'affichage n'est pas ici
-///
-/// Le modèle porte **tous** les détails. C'est la surface qui décide d'en montrer cinq puis de résumer
-/// (une modale doit rester lisible) ou de tout rendre (une sortie de commande se filtre). Auparavant le
-/// plafond était cuit dans la construction du texte, ce qui obligeait la CLI et l'IHM à dupliquer la mise
-/// en forme pour diverger sur ce seul point - et à diverger sur le reste par accident.
+/// À distinguer du [RetourOperation], qui dit un fait borné et se rend au bandeau. Un compte rendu
+/// est **extensible** : le loger dans un bandeau reviendrait à le tronquer. C'est une **structure**
+/// - titre, préambule, constats avec leurs détails, conclusion - et non un texte : un `Label` unique
+/// interdirait de styler une rubrique ou d'en masquer une (#1987), et obligerait les tests à chercher
+/// des sous-chaînes dans un pavé. **Le plafond d'affichage n'est pas ici** : le modèle porte tous les
+/// détails, la surface décide d'en montrer cinq puis de résumer, ou de tout rendre.
 ///
 /// @param titre ce que l'opération a produit, en une ligne (« Passage réactivé », « Réactivation partielle »)
 /// @param preambule mise en contexte facultative, vide si l'opération n'en demande pas

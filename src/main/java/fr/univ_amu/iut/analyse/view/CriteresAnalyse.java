@@ -37,23 +37,15 @@ final class CriteresAnalyse {
 
     private CriteresAnalyse() {}
 
-    /// Vues **par défaut** (lecture seule) de l'inventaire analyse, rendues comme onglets avant les vues de
-    /// l'utilisateur (#623), sur le modèle de `CriteresAudio` :
-    /// - **« Tout »** (aucun filtre) : active au chargement, n'écarte rien ;
-    /// - **« À valider »** (statut À revoir, le cœur de la revue) ;
-    /// - **« Validées »** (statut Validée : ce qui est déjà traité) ;
-    /// - **« Chiroptères »** (groupe Chiroptères, #471).
+    /// Vues **par défaut** (lecture seule) de l'inventaire analyse, rendues comme onglets avant celles
+    /// de l'utilisateur (#623), sur le modèle de `CriteresAudio` : « Tout », les deux angles de revue
+    /// (« À valider », « Validées »), la partition par catégorie du référentiel (« Chiroptères » #471,
+    /// « Autres » cumulant les non-chiroptères depuis #2615) et « Espèces prioritaires » (#2353).
+    /// Tadarida ne détecte pas que des chauves-souris : sans cette partition, orthoptères et
+    /// micromammifères s'intercalent au même rang que les chiroptères.
     ///
-    /// Chaque descripteur est sérialisé exactement comme [GestionnaireFiltres#decrire()] le produirait, pour
-    /// que rejouer la vue laisse un état « non modifié ».
-    /// Onglets **par défaut** : les deux angles de revue (à valider, validées) et la partition par
-    /// **catégorie du référentiel**, alignée sur l'écran Activité de la nuit. Tadarida ne détecte pas
-    /// que des chauves-souris : sans ces onglets, orthoptères et micromammifères s'intercalent dans
-    /// l'inventaire au même rang que les chiroptères.
-    ///
-    /// « Autres » cumule toutes les catégories non-chiroptères ([#HORS_CHIROPTERES]) depuis #2615 : les
-    /// deux écrans offrent donc la même partition, un onglet ne portant plus le nom d'une seule catégorie
-    /// pour en désigner plusieurs.
+    /// Chaque descripteur est sérialisé exactement comme [GestionnaireFiltres#decrire()] le produirait,
+    /// pour que rejouer la vue laisse un état « non modifié ».
     static List<VueSauvegardee> vuesParDefaut() {
         return List.of(
                 vueParDefaut("Tout"),
@@ -87,12 +79,6 @@ final class CriteresAnalyse {
                 statut -> observation -> observation.statut() == statut);
     }
 
-    /// Critère **Taxon parent** (groupe, #518) : éditeur à **choix multiple** sur les groupes présents
-    /// dans l'inventaire, sans présélection. Le multiple sert l'onglet « Autres », qui cumule les
-    /// catégories non-chiroptères (#2615).
-    /// Critère **Nature de la nuit** (#2614) : protocole ou participation opportuniste (#2525). Même
-    /// dimension et mêmes libellés que sur l'écran Activité de la nuit : une nuit opportuniste ne compte
-    /// pas de la même façon, et se mêlait jusqu'ici sans le dire aux nuits du protocole.
     /// Critère **Espèces à enjeu** (#2353) : garde les observations dont le taxon retenu est une espèce
     /// **prioritaire** au sens du Plan National d'Actions Chiroptères. Critère **sans éditeur** (booléen) :
     /// la présence de la puce active le filtre, comme sur l'écran de revue.
@@ -103,6 +89,9 @@ final class CriteresAnalyse {
         return CritereBooleen.de(ClesCriteres.A_ENJEU, "Espèces à enjeu", estPrioritaire);
     }
 
+    /// Critère **Nature de la nuit** (#2614) : protocole ou participation opportuniste (#2525). Même
+    /// dimension et mêmes libellés que sur l'écran Activité de la nuit : une nuit opportuniste ne compte
+    /// pas de la même façon, et se mêlait jusqu'ici sans le dire aux nuits du protocole.
     static CritereFiltre<ObservationAnalyse> natureNuit(Supplier<Set<Long>> opportunistes) {
         return CritereListe.simple(
                 "natureNuit",
@@ -119,6 +108,9 @@ final class CriteresAnalyse {
         return ValeursPresentes.de(observations, ObservationAnalyse::groupe);
     }
 
+    /// Critère **Taxon parent** (groupe, #518) : éditeur à **choix multiple** sur les groupes présents
+    /// dans l'inventaire, sans présélection. Le multiple sert l'onglet « Autres », qui cumule les
+    /// catégories non-chiroptères (#2615).
     static CritereFiltre<ObservationAnalyse> groupe(Supplier<? extends List<String>> groupesPresents) {
         return CritereListe.multiple(
                 ClesCriteres.GROUPE,
@@ -130,19 +122,12 @@ final class CriteresAnalyse {
 
     /// Critère **Lieu** (#2966, chantier #2790) : liste à cocher des lieux **présents dans les
     /// observations filtrées**, dans l'ordre commune, carré, point. Une observation passe si **l'une**
-    /// de ses dimensions figure parmi les valeurs cochées ([CritereListe#multipleParmi]) ; rien de coché
-    /// n'écarte rien.
+    /// de ses dimensions est cochée ([CritereListe#multipleParmi]) ; rien de coché n'écarte rien.
     ///
-    /// C'est la jumelle de `CriteresAudio.lieu` (#2794), dont elle reprend le libellé et l'ordre des
-    /// dimensions à dessein : le vocabulaire d'un critère se lit d'un écran à l'autre, et deux ordres
-    /// différents pour la même puce se paieraient à chaque va-et-vient.
-    ///
-    /// Le carré porte son **nom convivial** quand il en a un (« 640380 · Vallon », #3157). Le groupe
-    /// « Sites » qui doublait le groupe « Carrés » a disparu : les deux désignaient le même objet.
-    ///
-    /// Le **point** a manqué ici jusqu'à #3161, et l'écran s'en trouvait contredit : sa table
-    /// Observations affichait un code de point sur lequel on ne pouvait pas filtrer. La cause n'était
-    /// pas ergonomique mais tenait à une colonne non remontée, que #3160 a corrigée.
+    /// Jumelle de `CriteresAudio.lieu` (#2794), dont elle reprend le libellé et l'ordre à dessein : le
+    /// vocabulaire d'un critère se lit d'un écran à l'autre. Le carré porte son **nom convivial**
+    /// quand il en a un (#3157). Le **point** a manqué ici jusqu'à #3161, la table affichant un code
+    /// sur lequel on ne pouvait pas filtrer - une colonne non remontée, que #3160 a corrigée.
     static CritereFiltre<ObservationAnalyse> lieu(Supplier<? extends List<ObservationAnalyse>> observationsFiltrees) {
         return CritereLieu.de(
                 observationsFiltrees::get,
@@ -161,20 +146,15 @@ final class CriteresAnalyse {
                 : LieuQualifie.qualifier(observation.numeroCarre(), observation.codePoint());
     }
 
-    /// **Recherche texte** de la barre : vrai si un des champs cherchables d'une observation contient
-    /// l'aiguille, insensible à la casse et aux accents. Ce sont **les colonnes en texte libre de
-    /// l'écran**, ce que la documentation promet : taxon retenu, nom vernaculaire, nom latin, n° de
-    /// carré, nom du carré, commune et **code du point**.
+    /// **Recherche texte** de la barre : vrai si un des champs cherchables contient l'aiguille,
+    /// insensible à la casse et aux accents. Ce sont les colonnes en texte libre de l'écran - taxon
+    /// retenu, nom vernaculaire, nom latin, n° et nom de carré, commune et **code du point**, qui
+    /// manquait jusqu'à #3151 alors que la table l'affiche. La commune avait rejoint la recherche
+    /// avec #2840 sans que la phrase suive.
     ///
-    /// Le code du point manquait (#3151, passe 4 de la clôture) : la table l'affiche, les quatre autres
-    /// écrans le cherchent, et la promesse était donc fausse ici seule. La commune, elle, avait rejoint
-    /// la recherche avec #2840 sans que cette phrase suive.
-    ///
-    /// ⚠️ Ne pas transposer l'arbitrage de `FiltresLieu`, qui écarte le point **en ligne de commande**
-    /// parce qu'un code seul est ambigu entre carrés et qu'une commande n'a pas de liste sous les yeux.
-    /// Ici la table montre le carré sur chaque ligne : une recherche « A1 » qui remonte plusieurs carrés
-    /// se lit sans ambiguïté.
-    /// Fournie au [fr.univ_amu.iut.commun.view.GestionnaireFiltres], qui l'applique au champ permanent.
+    /// Ne pas transposer l'arbitrage de `FiltresLieu`, qui écarte le point **en ligne de commande**
+    /// faute d'une liste sous les yeux : ici la table montre le carré sur chaque ligne, et « A1 » qui
+    /// remonte plusieurs carrés se lit sans ambiguïté.
     static BiPredicate<ObservationAnalyse, String> rechercheTexte() {
         return CriteresAnalyse::correspond;
     }
