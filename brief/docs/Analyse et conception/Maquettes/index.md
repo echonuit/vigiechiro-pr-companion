@@ -2,7 +2,7 @@
 
 Cette section regroupe les **maquettes basse fidélité** de l'application *VigieChiro Companion*. Chaque maquette est décrite par :
 
-- une **maquette SVG** présentant l’agencement final attendu (cadre fenêtre, barre de navigation, contenu, pied de page) ;
+- une **maquette SVG** présentant l'agencement final attendu (cadre fenêtre, barre de navigation, contenu, pied de page) ;
 - la liste des **composants** affichés et leurs **données** d'exemple ;
 - les **interactions clés** entre éléments ;
 - les **variantes** (état vide, modales, panneaux dépliés, écrans intermédiaires) regroupées dans le même fichier ;
@@ -171,7 +171,7 @@ L'[accueil](M-Accueil.md) ajoute, sous le bandeau, un **bandeau nocturne** (titr
 
 **Cohérence entre écrans similaires** :
 
-- [M-Qualification](M-Qualification.md) et [M-SonsValidation](M-SonsValidation.md) partagent le **même squelette « liste + écoute »** (une liste pilote un panneau d'écoute `AudioView` commun). Il n’y a qu’un seul patron de « lieu d’écoute » à implémenter, qui se décline pour les deux modes : **vérification** par échantillonnage d'une part, **validation** taxonomique d'autre part.
+- [M-Qualification](M-Qualification.md) et [M-SonsValidation](M-SonsValidation.md) partagent le **même squelette « liste + écoute »** (une liste pilote un panneau d'écoute `AudioView` commun). Il n'y a qu'un seul patron de « lieu d’écoute » à implémenter, qui se décline pour les deux modes : **vérification** par échantillonnage d'une part, **validation** taxonomique d'autre part.
 - [M-Sites](M-Sites.md) et [M-Site-detail](M-Site-detail.md) utilisent le **même style de cards** pour les sites et les points d'écoute.
 - [M-MultiSite](M-MultiSite.md), [M-Analyse](M-Analyse.md) et [M-SonsValidation](M-SonsValidation.md) partagent le **même socle de tableau réactif**, décrit **une seule fois ici** (chaque fiche y renvoie plutôt que de le redécrire à sa façon) :
     - des **onglets de vues mémorisées** (« à la Notion ») en tête de tableau, pas un sous-menu du ☰ ;

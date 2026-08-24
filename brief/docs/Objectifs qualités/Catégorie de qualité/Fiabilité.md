@@ -1,6 +1,6 @@
 # Fiabilité
 
-> Ce critère permet d’évaluer la capacité d’un logiciel à fonctionner correctement lors de fortes contraintes (fort trafic, panne matérielle, etc…) et suite à celles-ci.
+> Ce critère permet d'évaluer la capacité d'un logiciel à fonctionner correctement lors de fortes contraintes (fort trafic, panne matérielle, etc…) et suite à celles-ci.
 
 ## Critères de qualité associés
 

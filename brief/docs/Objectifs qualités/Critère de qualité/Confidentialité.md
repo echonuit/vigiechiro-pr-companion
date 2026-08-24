@@ -1,6 +1,6 @@
 # Confidentialité
 
-> capacité d’un logiciel à s’assurer que les données ne sont accessibles que par les personnes autorisées.
+> capacité d'un logiciel à s'assurer que les données ne sont accessibles que par les personnes autorisées.
 
 ## Catégorie
 

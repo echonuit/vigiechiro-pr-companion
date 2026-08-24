@@ -1,6 +1,6 @@
 # Exactitude fonctionnelle
 
-> capacité d’un logiciel à donner le résultat correct avec le degré de précision attendu.
+> capacité d'un logiciel à donner le résultat correct avec le degré de précision attendu.
 
 ## Catégorie
 

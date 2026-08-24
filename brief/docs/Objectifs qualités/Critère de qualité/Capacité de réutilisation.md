@@ -1,6 +1,6 @@
 # Capacité de réutilisation
 
-> capacité d’une ressource à être utilisée dans plusieurs systèmes ou dans la construction d’autres ressources.
+> capacité d'une ressource à être utilisée dans plusieurs systèmes ou dans la construction d'autres ressources.
 
 ## Catégorie
 

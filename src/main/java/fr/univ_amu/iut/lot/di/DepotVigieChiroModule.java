@@ -47,7 +47,7 @@ public class DepotVigieChiroModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), DepotVigieChiro.class)
                 .setBinding()
                 .to(Key.get(DepotVigieChiro.class, Names.named(QUALIFIANT)));
-        // Vérification a posteriori d’un dépôt (#1132) : même montage, consommée par la CLI.
+        // Vérification a posteriori d'un dépôt (#1132) : même montage, consommée par la CLI.
         OptionalBinder.newOptionalBinder(binder(), VerificationDepot.class)
                 .setBinding()
                 .to(Key.get(VerificationDepot.class, Names.named(QUALIFIANT)));

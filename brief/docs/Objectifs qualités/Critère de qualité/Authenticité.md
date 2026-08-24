@@ -1,6 +1,6 @@
 # Authenticité
 
-> capacité d’un logiciel à identifier une personne ou une ressource.
+> capacité d'un logiciel à identifier une personne ou une ressource.
 
 ## Catégorie
 

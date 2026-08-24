@@ -91,7 +91,7 @@ comptage.
 | tiret cadratin | `scripts/adr/2843-tiret-cadratin.py` | dix-sept zones à tolérance zéro, cliquet à 1 |
 | pictogramme d'alerte | `scripts/adr/4366-avertissement-en-pictogramme.py`, article A28 | cliquet à 1 539 |
 | javadoc narrative | `scripts/adr/4359-javadoc-narratif.py`, article A30 | cliquet à 3 641 |
-| apostrophe mêlée | `scripts/adr/4368-apostrophe-en-libelle.py` | zéro dans les libellés ; 176 ailleurs, hors champ |
+| apostrophe mêlée | `scripts/adr/4368-apostrophe-en-libelle.py`, `verifie-titre-pr.sh` | zéro partout, trois exemptions déclarées |
 | source vague, conjecture présentée en fait | article A5 | la mesure fait foi et dit d'où elle vient |
 | section « défis et perspectives » | le gabarit d'ADR | contexte, décision, conséquences, alternatives |
 
@@ -116,8 +116,9 @@ et le relevé des faits avant et après a prouvé qu'aucun mot n'avait disparu.
 ## Ce que les sources françaises ont ajouté
 
 L'**apostrophe mêlée** ne figure dans aucune des trente-cinq. Elle est venue du second passage, sur
-les relevés de tics de ChatGPT en français, et elle a rendu 188 occurrences dont douze atteignaient
-un écran. C'est le seul motif de cette page trouvé par la seconde liste et pas par la première.
+les relevés de tics de ChatGPT en français, et elle a rendu 220 occurrences suivies, dont douze
+atteignaient un écran. C'est le seul motif de cette page trouvé par la seconde liste et pas par la
+première, et le seul dont la règle a été élargie après coup : ce dépôt n'écrit que l'ASCII.
 
 Les **connecteurs lourds** en viennent aussi, et ils rendent zéro. Une liste qui apporte un motif
 utile et un motif vide vaut d'être lue en entier.

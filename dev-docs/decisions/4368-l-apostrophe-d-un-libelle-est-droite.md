@@ -64,3 +64,27 @@ une fois et pas deux.
 
 Les 176 restantes ne sont pas une dette tenue par un cliquet : elles sont hors du champ de cette
 décision, et le disent.
+
+## Amendement du 2026-08-24 : la règle vaut partout
+
+La décision ci-dessus bornait le garde aux chaînes littérales de `src/main/java`, au motif que douze
+apostrophes seulement atteignaient un écran et qu'un cliquet à 188 aurait fait porter une relecture
+de 68 fichiers à un défaut qui n'en concernait que trois.
+
+**Sébastien a tranché autrement le jour même : ce dépôt n'écrit que l'apostrophe ASCII, partout.**
+L'alternative « un cliquet à 188 » reste écartée pour la raison donnée, mais la conclusion change :
+il ne s'agit plus de tenir une dette, il s'agit de normaliser d'un coup et de tenir zéro.
+
+172 occurrences normalisées dans 67 fichiers, plus un nom de fichier,
+« Capacité d'analyse.md », dont la citation suit.
+
+Trois exemptions restent, et aucune n'est un renoncement :
+
+| Exempté | Pourquoi |
+|---|---|
+| `CHANGELOG.md` | engendré par semantic-release ; le corriger falsifierait le compte rendu, et sa **source** est le titre de PR, désormais gardé |
+| les trois SVG de Mocodo | mesuré : leurs sources `.mcd` portent l'apostrophe **droite**, et l'outil substitue au rendu. Corriger le rendu serait défait à la régénération |
+| le signe **cité** plutôt qu'employé | `COURBE = "’"`, une classe de caractères, « choisir la droite ou la courbe » : ces lignes parlent du caractère. L'effacer les rendrait fausses ([ADR 3645](3645-un-detecteur-textuel-s-exclut-de-son-corpus.md)) |
+
+Le titre de PR est gardé à son tour, par `verifie-titre-pr.sh` : c'est la seule source du CHANGELOG,
+et le raisonnement est celui que l'ADR 2843 tient déjà pour le cadratin.

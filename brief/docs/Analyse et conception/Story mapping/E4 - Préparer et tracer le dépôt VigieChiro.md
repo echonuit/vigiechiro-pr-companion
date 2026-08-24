@@ -94,14 +94,14 @@
 **Critères d'acceptation** :
 
 - [x] La fiche détail d'un passage affiche **clairement** le statut d'avancement courant (badge coloré).
-- [x] Un mini-bandeau visuel (type indicateur d’étapes horizontal) montre les **5 statuts du cycle** avec le statut courant mis en évidence et les précédents marqués comme franchis.
+- [x] Un mini-bandeau visuel (type indicateur d'étapes horizontal) montre les **5 statuts du cycle** avec le statut courant mis en évidence et les précédents marqués comme franchis.
 - [ ] Pour chaque transition franchie, on voit **la date** de la transition (ex. « Importé le 15/06, Transformé le 15/06, Vérifié le 16/06 avec verdict OK, Déposé le 17/06 »).
 - [x] Si le passage est bloqué (verdict `Inexploitable`, vérifications échouées en [E4.S1](#e4s1)), un indicateur explicite signale la raison du blocage.
 - [x] Dans la vue tabulaire multi-sites (cf. [E5](index.md)), le statut est une colonne triable et filtrable.
 - [ ] Le statut courant et l'historique sont **persistés** en BD et survivent aux redémarrages.
 
 **Parcours rattaché** : [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) (transverse - pertinent aussi pour P2, P3 et P5)<br>
-**Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) (indicateur d’étapes de statut + chronologie), [M-MultiSite](../Maquettes/M-MultiSite.md) (colonne statut filtrable)<br>
+**Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) (indicateur d'étapes de statut + chronologie), [M-MultiSite](../Maquettes/M-MultiSite.md) (colonne statut filtrable)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3)<br>
 
 ---

@@ -57,7 +57,7 @@ public final class RecupererVigieChiro implements Callable<Integer> {
 
     /// Résolu **paresseusement** : picocli instancie toutes les sous-commandes à la construction de
     /// la CLI, avant la migration du schéma : or résoudre les rapprocheurs déclenche le provider de
-    /// l’utilisateur courant, qui touche la base. On ne les demande qu’à l’exécution.
+    /// l'utilisateur courant, qui touche la base. On ne les demande qu'à l'exécution.
     private final Provider<Set<RapprochementVigieChiro>> rapprocheurs;
 
     @Inject

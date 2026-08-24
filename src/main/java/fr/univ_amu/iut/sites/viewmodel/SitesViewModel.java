@@ -95,8 +95,8 @@ public class SitesViewModel {
 
     /// Rejoue le pull depuis VigieChiro (#1045) : sites **puis** ce qui en dépend, dont les squelettes de
     /// nuits (#1662). À appeler **hors du fil JavaFX** (réseau + écritures base) ; best-effort, sémantique
-    /// conservatrice de [SynchronisationSites] (jamais d’écrasement local). Un compte-rendu par rapprocheur
-    /// ayant du neuf à annoncer ; liste vide si la passerelle est absente ou n’a rien récupéré.
+    /// conservatrice de [SynchronisationSites] (jamais d'écrasement local). Un compte-rendu par rapprocheur
+    /// ayant du neuf à annoncer ; liste vide si la passerelle est absente ou n'a rien récupéré.
     public List<RapportSynchro> synchroniserDepuisVigieChiro() {
         return synchroniserDepuisVigieChiro(progres -> {}, JetonAnnulation.neutre());
     }
@@ -149,7 +149,7 @@ public class SitesViewModel {
                 + " la prochaine synchronisation reprendra le reste.");
     }
 
-    /// Message de résultat de la synchronisation à la demande, vide tant qu’aucune n’a eu lieu.
+    /// Message de résultat de la synchronisation à la demande, vide tant qu'aucune n'a eu lieu.
     public ReadOnlyStringProperty messageSynchroProperty() {
         return messageSynchro.getReadOnlyProperty();
     }

@@ -1,6 +1,6 @@
 # Facilité de remplacement
 
-> capacité d’un logiciel à remplacer un autre logiciel spécifique ayant un but similaire dans le même environnement.
+> capacité d'un logiciel à remplacer un autre logiciel spécifique ayant un but similaire dans le même environnement.
 
 ## Catégorie
 

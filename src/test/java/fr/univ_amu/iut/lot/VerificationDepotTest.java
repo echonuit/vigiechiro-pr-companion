@@ -22,10 +22,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// **Vérification a posteriori d’un dépôt** ([VerificationDepot], #1132) sur collaborateurs mockés
+/// **Vérification a posteriori d'un dépôt** ([VerificationDepot], #1132) sur collaborateurs mockés
 /// (aucun réseau ni base) : appariement du plan local avec le journal de traitement (WAV nommés par
-/// TadaridaD, ZIP nommés à l’extraction) et les titres des `donnees` (sans extension), refus durs
-/// quand il n’y a rien à vérifier. Extrait de journal calqué sur le réel (participation `6a4961f5…`).
+/// TadaridaD, ZIP nommés à l'extraction) et les titres des `donnees` (sans extension), refus durs
+/// quand il n'y a rien à vérifier. Extrait de journal calqué sur le réel (participation `6a4961f5…`).
 class VerificationDepotTest {
 
     private static final String JOURNAL = """
@@ -50,7 +50,7 @@ class VerificationDepotTest {
     }
 
     @Test
-    @DisplayName("WAV nommé par TadaridaD et ZIP nommé à l’extraction → retrouvés, bilan complet")
+    @DisplayName("WAV nommé par TadaridaD et ZIP nommé à l'extraction → retrouvés, bilan complet")
     void journal_apparie_wav_et_zip() {
         when(participations.participationDe(42L)).thenReturn(Optional.of("part-1"));
         when(depotUnites.parPassage(42L))
@@ -79,7 +79,7 @@ class VerificationDepotTest {
         assertThat(bilan.journalDisponible()).isFalse();
         assertThat(bilan.retrouvees()).containsExactly("seq_000.wav");
         assertThat(bilan.manquantes())
-                .as("un ZIP n’est pas appariable sans journal")
+                .as("un ZIP n'est pas appariable sans journal")
                 .containsExactly("Car-1.zip");
         assertThat(bilan.estComplet()).isFalse();
         assertThat(bilan.nombreDonnees()).isEqualTo(1);
@@ -92,7 +92,7 @@ class VerificationDepotTest {
         // et un dépôt parfaitement sain ressemblait à un dépôt perdu.
         when(participations.participationDe(42L)).thenReturn(Optional.of("part-1"));
         when(depotUnites.parPassage(42L)).thenReturn(List.of(unite("seq_000.wav", TypeDepotUnite.WAV)));
-        when(client.journalTraitement("part-1")).thenReturn(ReponseApi.injoignable("délai d’attente dépassé"));
+        when(client.journalTraitement("part-1")).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
 
         assertThatThrownBy(() -> verification.verifier(42L))
                 .isInstanceOf(RegleMetierException.class)

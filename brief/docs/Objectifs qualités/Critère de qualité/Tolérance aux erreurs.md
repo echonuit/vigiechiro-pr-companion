@@ -1,6 +1,6 @@
 # Tolérance aux erreurs
 
-> capacité d’un logiciel à fonctionner correctement malgré la présence d’une erreur matérielle ou logicielle.
+> capacité d'un logiciel à fonctionner correctement malgré la présence d'une erreur matérielle ou logicielle.
 
 ## Catégorie
 

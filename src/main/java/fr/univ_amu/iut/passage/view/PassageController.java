@@ -94,9 +94,9 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     /// charge hors du fil JavaFX ([IndicateurOccupation], patron #1014).
     private IndicateurOccupation occupation;
 
-    /// URL de la participation liée sur le portail (#1124), vide tant que le passage n’est pas lié.
+    /// URL de la participation liée sur le portail (#1124), vide tant que le passage n'est pas lié.
     /// Rafraîchie à chaque [#ouvrirSur] / retour : un lien posé entre-temps (import connecté, dépôt)
-    /// est vu au retour sur l’écran.
+    /// est vu au retour sur l'écran.
     private final SimpleStringProperty lienParticipation = new SimpleStringProperty(this, "lienParticipation", "");
 
     /// Contexte du passage (carré / point / numéro), déporté en zone gauche de la barre de statut (#693)

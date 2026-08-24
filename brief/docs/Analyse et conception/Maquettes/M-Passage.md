@@ -4,7 +4,7 @@
 > **Persona principal** : tous. C'est l'écran pivot qui agrège les fonctionnalités liées à une nuit d'enregistrement spécifique.
 > **Parcours couverts** : transverse - point d'entrée vers [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md), [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md), [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md).
 
-C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une seule page, sans onglets). Il agrège, de haut en bas : l'en-tête (titre identifiant + actions sur le passage), un **bandeau d'identité** (date/plage, enregistreur, statut, verdict), le **indicateur d’étapes de statut d'avancement**, un **résumé de la nuit** (statistiques) et un jeu de **cartes d'actions « avancer »** vers les écrans spécialisés : [M-Qualification](M-Qualification.md) (vérifier), [M-Diagnostic](M-Diagnostic.md) (diagnostiquer), [M-Lot](M-Lot.md) (préparer le dépôt) et [M-SonsValidation](M-SonsValidation.md) (valider, verrouillée tant que le passage n'est pas déposé).
+C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une seule page, sans onglets). Il agrège, de haut en bas : l'en-tête (titre identifiant + actions sur le passage), un **bandeau d'identité** (date/plage, enregistreur, statut, verdict), le **indicateur d'étapes de statut d'avancement**, un **résumé de la nuit** (statistiques) et un jeu de **cartes d'actions « avancer »** vers les écrans spécialisés : [M-Qualification](M-Qualification.md) (vérifier), [M-Diagnostic](M-Diagnostic.md) (diagnostiquer), [M-Lot](M-Lot.md) (préparer le dépôt) et [M-SonsValidation](M-SonsValidation.md) (valider, verrouillée tant que le passage n'est pas déposé).
 
 > **Navigation** : le **retour** (← écran précédent) et le **fil d'Ariane** (emplacement hiérarchique cliquable `🏠 Accueil › Mes sites › Carré N › Détails du passage N° X`) sont portés par le **chrome** de l'application (cadre commun), pas par cet écran. M-Passage ne porte donc plus de fil d'Ariane interne ni d'onglets : il déclare seulement son emplacement, que le chrome rend dans la barre de navigation.
 
@@ -88,7 +88,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
   <text x="900" y="174" class="info-label">VERDICT</text>
   <text x="900" y="195" class="info-value">OK</text>
 
-  <!-- Indicateur d’étapes de statut (5 étapes) -->
+  <!-- Indicateur d'étapes de statut (5 étapes) -->
   <text x="40" y="244" class="section">Statut du workflow</text>
   <line x1="130" y1="276" x2="350" y2="276" class="sl-done"/>
   <line x1="370" y1="276" x2="590" y2="276" class="sl-done"/>
@@ -132,7 +132,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 
     L'écran ci-dessus montre l'état **Vérifié** (pas encore déposé) : seules les **trois actions permanentes** s'y affichent.
 - **Bandeau d'identité** : 4 cellules condensées (date/plage horaire, enregistreur en monospace, statut d'avancement, verdict de vérification).
-- **Indicateur d’étapes du statut** : 5 étapes `Importé › Transformé › Vérifié › Prêt à déposer › Déposé`. Vert = franchi, bleu = étape courante, gris = à venir.
+- **Indicateur d'étapes du statut** : 5 étapes `Importé › Transformé › Vérifié › Prêt à déposer › Déposé`. Vert = franchi, bleu = étape courante, gris = à venir.
 - **Résumé de la nuit** : 4 statistiques clés (volume bruts, volume transformé, durée enregistrée, nombre de séquences). La **durée enregistrée** est la durée réelle captée par l'enregistreur (somme des durées des séquences), pas la durée d'écoute : les séquences étant ralenties ×10, les réécouter intégralement prend dix fois plus longtemps.
 - **Actions** : 4 **cartes** « avancer ». Une seule porte le **liseré « recommandée »** (prochaine étape du cycle), qui **se déplace au fil de l'avancement** : Vérifier (à `Transformé`) → Préparer le dépôt (à `Vérifié` / `Prêt à déposer`, état montré ici) → Validation Tadarida (à `Déposé`). `Diagnostic matériel` est une action transverse, toujours disponible mais jamais « recommandée ». `Validation Tadarida` est **verrouillée** (carte grisée, non cliquable) tant que le passage n'est pas `Déposé`. Un **indice contextuel** sous les cartes explique l'action attendue / les conditions de déverrouillage.
 
@@ -170,7 +170,7 @@ Le bouton **✏ Modifier le passage** ouvre une **modale** d'édition de l'**ide
 
 - **Pivot à plat** : une seule page (`BorderPane` → `top` en-tête/bandeau/indicateur d'étapes, `center` résumé + cartes), sans `TabPane`. Le retrait des onglets supprime la redondance « onglet-lanceur ↔ carte d'action » : chaque facette du passage (vérification, diagnostic, dépôt, validation) est un **écran spécialisé** ouvert par une carte via un contrat socle (`Ouvrir*`), avec retour assuré par le chrome.
 - **Navigation portée par le chrome** : M-Passage implémente le contrat `EmplacementNavigation` pour déclarer son chemin (`Mes sites › Carré N › Détails du passage N° X`) ; le chrome en dérive le fil d'Ariane et conserve l'historique pour le bouton Retour. Aucun fil ni retour interne à l'écran.
-- **Indicateur d’étapes de statut** : 5 étapes, statut courant calculé depuis l'attribut d'avancement du passage.
+- **Indicateur d'étapes de statut** : 5 étapes, statut courant calculé depuis l'attribut d'avancement du passage.
 - **États des cartes** : `Vérifier` activée dès `Transformé` ; `Préparer le dépôt` activée à `Vérifié`/`Prêt à déposer` ; `Validation Tadarida` verrouillée tant que ≠ `Déposé`. Les états sont liés aux propriétés du ViewModel (`verificationDisponible`, `depotDisponible`, `validationVerrouillee`).
 - **Mise en avant dynamique** : la carte de la prochaine étape porte une pseudo-classe CSS `recommandee` (liseré bleu), pilotée par `actionRecommandee` (dérivée du statut). La mise en avant se déplace donc avec l'avancement, au lieu de rester figée sur la première action.
 - **Icônes** : `FontIcon` (Ikonli FontAwesome5) pour un rendu net, y compris en capture headless.

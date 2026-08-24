@@ -157,9 +157,11 @@ Un commentaire décrit le comportement d'aujourd'hui. « Jusqu'ici », « aupara
 « désormais » annoncent presque toujours le contraire, et 146 lignes de javadoc en portent encore.
 L'historique a ses lieux : `git log`, le CHANGELOG, la section « Alternatives écartées » d'une ADR.
 
-**Une seule apostrophe, la droite** (`'`). Le dépôt en porte 47 799 contre 174 courbes, soit un cas
-sur 275 : mêler les deux formes se voit surtout dans les chaînes montrées à l'utilisateur, où deux
-écrans affichent alors deux apostrophes différentes.
+**Une seule apostrophe, l'ASCII** (`'`). Le dépôt en portait 220 courbes le 2026-08-24 ; elles sont
+normalisées, et `scripts/adr/4368-apostrophe-en-libelle.py` tient la règle à zéro. Trois exemptions,
+toutes déclarées dans son en-tête : le `CHANGELOG.md`, qui est engendré, les SVG rendus par Mocodo,
+qui substitue à la source droite, et le signe cité plutôt qu'employé. Le titre de PR est gardé lui
+aussi, parce qu'il devient une ligne du CHANGELOG publié.
 
 Le connecteur lourd en tête de phrase, « Cependant », « Par ailleurs », « En outre », est le tic
 français le plus cité. Mesuré ici : **zéro** sur 46 932 lignes de documentation. Il n'est donc pas

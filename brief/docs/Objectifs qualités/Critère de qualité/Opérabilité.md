@@ -1,6 +1,6 @@
 # Opérabilité
 
-> facilité d’utilisation du logiciel.
+> facilité d'utilisation du logiciel.
 
 ## Catégorie
 

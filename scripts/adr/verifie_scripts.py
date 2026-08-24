@@ -437,20 +437,22 @@ def test_4368_apostrophe_en_libelle() -> None:
     C = chr(0x2019)
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
-        # La MEME apostrophe, dans une chaine et dans le commentaire de la meme ligne. C est toute
-        # la valeur de ce garde : il ne compte que ce qui sort du depot. Un compte de 1 separe les
-        # deux ; un compte de 2 voudrait dire qu il a cesse de faire la difference.
+        # La regle est « rien que l ASCII, partout » : le commentaire compte autant que la chaine.
+        # Ce que le garde doit EPARGNER, ce sont les lignes qui NOMMENT le caractere, et c est la
+        # qu il se tromperait. Un compte de 2 separe les deux emplois des trois mentions ; un compte
+        # de 5 voudrait dire qu il a cesse de faire la difference.
         _ecrire(
             racine,
-            "fr/univ_amu/iut/a/Ecran.java",
+            "Ecran.java",
             "class Ecran {\n"
             f'  String a() {{ return "l{C}audio est parti"; }} // l{C}appel vient d ailleurs\n'
-            f"  // l{C}ancien libelle, garde en commentaire\n"
-            '  String b() { return "sans apostrophe"; }\n'
+            f"  // on ecrit `{C}` ou l ASCII, jamais les deux\n"
+            f'  static final String COURBE = "{C}";\n'
+            f'  static final String CLASSE = "[\'{C}]";\n'
             "}\n",
         )
-        _verifie("4368 compte la chaine, epargne le commentaire de la meme ligne",
-                 len(m.suspects(racine=racine)), 1)
+        _verifie("4368 compte les emplois, epargne les mentions",
+                 len(m.suspects(racine=racine)), 2)
 
 
 def test_rapport_et_resserrement() -> None:

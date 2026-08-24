@@ -1,6 +1,6 @@
 # Efficience des performances
 
-> L’efficience des performance évalue si le besoin en ressources de l’application est acceptable pour répondre aux contraintes fixées.
+> L'efficience des performance évalue si le besoin en ressources de l'application est acceptable pour répondre aux contraintes fixées.
 
 ## Critères de qualité associés
 
