@@ -283,6 +283,16 @@ jobs:
           ./.github/scripts/verifie-portee-des-secrets.sh --auto-test
           ./.github/scripts/verifie-portee-des-secrets.sh
 
+      - name: Le verdict du tournage lit le XML, pas le texte
+        # ⚠️ Les rapports `.txt` de surefire annoncent « Tests run: 0 » sur une classe à `@Nested` et
+        # rendent 0 : un compteur qui les lirait dirait « aucun échec » sur un tournage à moitié rouge.
+        # Ses deux contrôles négatifs comptent autant que le reste : « aucun rapport » n'est pas
+        # « aucun échec », et une ERREUR compte autant qu'une défaillance - c'est par une erreur qu'un
+        # banc refusant faute de jeton se signale.
+        run: |
+          chmod +x .github/scripts/verdict-du-tournage.sh
+          ./.github/scripts/verdict-du-tournage.sh --auto-test
+
       - name: La révocation du jeton sait ce qui vaut succès
         # ⚠️ Sa règle est de celles qu'une relecture distraite retourne : `404` et `401` sont des
         # SUCCÈS, parce que l'objectif n'est pas « le serveur a répondu 200 » mais « ce jeton ne sert
