@@ -53,6 +53,7 @@ décisions se cadrent pour l'**utilisateur final**, pas pour un contexte pédago
 - Avant tout commit : `git config user.email` = `sebastien.nedjar@univ-amu.fr`.
 - Avant de committer : **tests ciblés** + `./mvnw spotless:apply` + `./mvnw -Pquality-gate pmd:check` (PMD strict, dont GodClass). Le **gate complet** `-Pquality-gate verify` seulement si nécessaire (la CI reste autoritaire).
 - **Conventional Commits en français**, petits commits par préoccupation ; **petites PR** séquentielles.
+- **`Closes #N` dans le corps de la PR**, pour que l'issue se ferme à la fusion. Le mot-clé reste anglais : « Ferme #N » ne ferme rien et ne le dit pas. Une PR qui renvoie à une issue sans la clore écrit « Rattaché à #N ».
 - **Pas de tiret cadratin** ; noms de classes **en français sans accents** ; doc-comments `///` (JEP 467).
 - Jamais `@SuppressWarnings` / `//NOPMD` pour taire un warning qualité : **refactorer** (Extract Class/Method).
 

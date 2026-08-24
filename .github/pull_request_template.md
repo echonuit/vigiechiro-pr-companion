@@ -3,6 +3,19 @@
   techniquement, elle se lit au moment où l'on agit. Cocher « sans objet » est une réponse valide.
 -->
 
+## L'issue que cette PR ferme
+
+<!--
+  `Closes #N` (ou `Fixes`, ou `Resolves`). Le mot-clé reste ANGLAIS, seul GitHub le lit, et il n'a
+  pas d'équivalent français : « Ferme #N » ne ferme rien. La PR fusionne, le train est vert, et
+  l'issue reste ouverte sans que rien ne le signale. Vécu sur #4335.
+
+  Quand la PR renvoie à une issue SANS la clore, par exemple un lot dans un EPIC : écrire
+  « Rattaché à #N », qui ne prétend rien.
+-->
+
+Closes #
+
 ## Ce que fait cette PR
 
 <!-- Une phrase dans les termes du problème, pas de la solution. -->
