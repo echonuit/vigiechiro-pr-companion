@@ -16,7 +16,7 @@ Avant la première ligne de code, produire **un seul bloc** - il vaut réservati
 **Ce qu'il y a à faire** : <une phrase, dans les termes du problème>
 **Pourquoi maintenant** : <ce qui la rend traitable ou urgente>
 **Dans quelle continuité** : <le chantier d'où elle vient, l'issue qu'elle suit, ce qu'elle permet ensuite>
-**Périmètre** : <ce que je touche> — **hors périmètre** : <ce que je ne touche pas, et qui pourrait tenter>
+**Périmètre** : <ce que je touche> ; **hors périmètre** : <ce que je ne touche pas, et qui pourrait tenter>
 **Plan** : <3 à 6 étapes>
 **Ce que je vérifierai** : <le dispositif, et comment je le verrai rouge>
 **Question ouverte** : <s'il y en a une ; sinon retirer la ligne>
