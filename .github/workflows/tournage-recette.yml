@@ -150,6 +150,10 @@ jobs:
     # pas de machine où tourner, donc il ne doit pas démarrer.
     runs-on: ${{ needs.choisir.outputs.runner }}
     timeout-minutes: 90
+    # ⚠️ Le verdict des tests sort du job, parce que la pré-version doit le porter : un clip de cas
+    # échoué s'y verse comme les autres, et rien ne l'en distinguait (#4351).
+    outputs:
+      verdict: ${{ steps.oracle.outputs.verdict }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -328,6 +332,7 @@ jobs:
       # ⚠️ Le garde porte sur les CAS, pas sur le nombre de fichiers. Un tournage qui rend « des
       # clips » peut en avoir perdu la moitié, et un compte de fichiers ne le dirait pas.
       - name: Chaque cas de la session a sa ligne
+        id: oracle
         shell: bash
         env:
           SESSION: ${{ inputs.session }}
@@ -355,27 +360,47 @@ jobs:
             clips=$((clips + 1))
           done
 
+          # ⚠️ Ce que les tests ont DONNÉ, et pas seulement ce que le tournage a indexé. Le tournage
+          # tourne sous `-Dmaven.test.failure.ignore=true` - on veut les clips d'un cas qui rougit -,
+          # si bien qu'un scénario rouge laisse le job VERT. Mesuré sur le run 32696587259 : le seul
+          # endroit où l'échec existait était une ligne de Maven dans un journal de trois mille.
+          chmod +x .github/scripts/verdict-du-tournage.sh
+          verdict=$(./.github/scripts/verdict-du-tournage.sh target/surefire-reports)
+          printf '%s\n' "${verdict}"
+
           {
             echo "- cas obtenus : ${obtenus} / ${ATTENDUS}"
             echo "- clips : ${clips}"
+            echo
+            printf '%s\n' "${verdict}"
           } >> "${GITHUB_STEP_SUMMARY}"
+
+          # Repris par le job qui verse, pour que la pré-version le dise à son tour.
+          printf 'verdict<<FIN\n%s\nFIN\n' "${verdict}" >> "${GITHUB_OUTPUT}"
 
           echo "cas obtenus : ${obtenus} / ${ATTENDUS}, clips : ${clips}"
 
-          # ⚠️ Connecté, ce garde est PLUS FAIBLE, et il faut le savoir plutôt que de le découvrir.
-          # Le corpus connecté se choisit par un tag, et rien ne dérive encore le nombre de cas qu'il
-          # cite : on ne peut donc pas dire « il en manque un ». On vérifie qu'il a produit quelque
-          # chose, ce qui attrape un tournage entièrement mort, et rien de plus. Dériver ce compte est
-          # une suite (#4307).
+          # ⚠️ Connecté, le compte attendu ne vient PAS de la session : le corpus se choisit par un
+          # tag, et ses cas appartiennent aux sessions ordinaires. Il est dérivé à part par
+          # `CorrespondanceRecetteTest`, dans `cas-connectes.txt` (#4326).
+          #
+          # Jusqu'ici ce passage se contentait de « au moins un cas est sorti ». C'était assumé et
+          # écrit, mais c'est le genre de garde qui cesse de garder dès que le corpus dépasse un
+          # scénario : dix cas dont neuf perdus seraient passés au vert.
           if [ "${CONNECTE}" = "true" ]; then
+            derive=target/recette/cas-connectes.txt
+            [ -s "${derive}" ] || {
+              echo "::error::${derive} est absent : la dérivation du corpus connecté n'a rien produit."
+              exit 1
+            }
+            attendus_connectes=$(tr -d '[:space:]' < "${derive}")
             {
               echo
-              echo "⚠️ Tournage connecté : l'oracle exhaustif ne s'applique pas. Le corpus est choisi"
-              echo "par un tag, pas par une session, et son nombre de cas n'est pas dérivé. Ce passage"
-              echo "vérifie seulement qu'au moins un cas est sorti."
+              echo "- cas connectés attendus : ${attendus_connectes}"
             } >> "${GITHUB_STEP_SUMMARY}"
-            [ "${obtenus}" -ge 1 ] || {
-              echo "::error::Aucun cas indexé : le tournage connecté n'a rien produit."
+            echo "cas connectés : ${obtenus} / ${attendus_connectes}"
+            [ "${obtenus}" -eq "${attendus_connectes}" ] || {
+              echo "::error::${obtenus} cas sur ${attendus_connectes} : le tournage connecté est incomplet."
               exit 1
             }
             exit 0
@@ -474,6 +499,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           SESSION: ${{ inputs.session }}
           PLATEFORME: ${{ inputs.plateforme }}
+          VERDICT: ${{ needs.filmer.outputs.verdict }}
         run: |
           set -euo pipefail
           corps=$(cat <<'FIN'
@@ -491,6 +517,9 @@ jobs:
           FIN
           )
           corps="${corps}"$'\n\n'"Dernier versement : ${SESSION} sur ${PLATEFORME}, le $(date -u +%F) à $(date -u +%H:%M) UTC."
+          # ⚠️ Et ce que les tests ont donné. C'est ici que le lecteur d'un clip arrive, donc ici que
+          # « ce clip montre un cas qui a rougi » doit se lire - pas dans un journal de run (#4351).
+          corps="${corps}"$'\n\n'"${VERDICT}"
           if gh release view clips-connectes >/dev/null 2>&1; then
             gh release edit clips-connectes --notes "${corps}"
           else

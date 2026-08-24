@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /// Le garde de correspondance entre les sessions de recette et le code qui les couvre (#3728).
@@ -102,6 +103,19 @@ class CorrespondanceRecetteTest {
     /// ferait filmer des classes dont le nom porterait un numéro de session.
     private static final Path SESSIONS_A_FILMER = Path.of("target", "recette", "sessions-a-filmer.tsv");
 
+    /// Le nombre de cas que cite le corpus **connecté**, dérivé comme les autres (#4326).
+    ///
+    /// ⚠️ Un fichier à part, et non une colonne de plus : le corpus connecté se choisit par un TAG, pas
+    /// par une session, et ses cas appartiennent aux sessions ordinaires. Les mêler ferait compter deux
+    /// fois un cas joué des deux façons.
+    ///
+    /// Sans lui, le tournage connecté ne pouvait vérifier que « au moins un cas est sorti » - le genre
+    /// de garde qui ne garde rien dès que le corpus dépasse un scénario.
+    private static final Path CAS_CONNECTES = Path.of("target", "recette", "cas-connectes.txt");
+
+    /// L'étiquette qui désigne un scénario tourné contre la plateforme réelle (#4307).
+    private static final String TAG_CONNECTE = "recette-connectee";
+
     /// Le motif vit dans [MotifDeCas] : trois lecteurs de ces fichiers coexistent, et deux ont
     /// découvert séparément que certaines sessions cochent leurs puces.
     private static final Pattern CAS = MotifDeCas.CAS;
@@ -114,6 +128,9 @@ class CorrespondanceRecetteTest {
 
     /// Les cas cités par le code, et par quel test.
     private static Map<String, Set<String>> cites;
+
+    /// Ceux d'entre eux que cite une classe portant [#TAG_CONNECTE].
+    private static Set<String> casConnectes;
 
     /// Ce que les tests qui les citent prétendent prouver.
     private static Map<String, Set<Jugement>> jugements;
@@ -142,6 +159,7 @@ class CorrespondanceRecetteTest {
         perimetre = PerimetreDesSessions.analyser(casParFichier, MUETTES_ADMISES.keySet());
 
         cites = new LinkedHashMap<>();
+        casConnectes = new LinkedHashSet<>();
         jugements = new LinkedHashMap<>();
         citations = new ArrayList<>();
         lireLeCode();
@@ -155,6 +173,7 @@ class CorrespondanceRecetteTest {
         retirerLesClassesAFilmer();
         deposerLesClassesAFilmer();
         deposerLesSessionsAFilmer();
+        deposerLesCasConnectes();
     }
 
     @Test
@@ -460,6 +479,20 @@ class CorrespondanceRecetteTest {
         }
     }
 
+    /// Dépose le nombre de cas que cite le corpus connecté, et eux seuls (#4326).
+    ///
+    /// Un seul nombre, sur une ligne : c'est tout ce dont le tournage a besoin pour dire s'il a rendu
+    /// ce qu'il devait rendre. Zéro est une valeur légitime - aucun scénario connecté n'existe encore
+    /// dans certaines branches - et le tournage la lit comme telle.
+    private static void deposerLesCasConnectes() {
+        try {
+            Files.createDirectories(CAS_CONNECTES.getParent());
+            Files.write(CAS_CONNECTES, List.of(String.valueOf(casConnectes.size())));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Compte des cas connectés impossible à écrire", e);
+        }
+    }
+
     /// Dépose les classes qui citent au moins un cas, une par ligne, triées.
     private static void deposerLesClassesAFilmer() {
         try {
@@ -527,11 +560,19 @@ class CorrespondanceRecetteTest {
             if (classe.isAnnotatedWith(FixtureDeRecette.class)) {
                 return;
             }
+            // ⚠️ Lu sur la CLASSE, parce que c'est là que vit `@Tag` : surefire sélectionne par
+            // classe, et un tag posé sur une méthode ne dirait pas ce que le tournage jouera.
+            boolean connectee = classe.tryGetAnnotationOfType(Tag.class)
+                    .map(tag -> TAG_CONNECTE.equals(tag.value()))
+                    .orElse(false);
             classe.getMethods()
                     .forEach(methode -> methode.tryGetAnnotationOfType(CasDeRecette.class)
                             .ifPresent(annotation -> {
                                 String nom = classe.getSimpleName() + "." + methode.getName();
                                 for (String id : List.of(annotation.value())) {
+                                    if (connectee) {
+                                        casConnectes.add(id);
+                                    }
                                     cites.computeIfAbsent(id, k -> new LinkedHashSet<>())
                                             .add(nom);
                                     jugements
