@@ -3,7 +3,7 @@ type: adr
 title: "Un garde exécute la règle qu'il juge, il ne la relit pas"
 status: stable
 article: A1
-chantier: "#4291"
+chantier: "#4331 (passe 10 du lot de suites du chantier #4291)"
 decided_at: 2026-08-24
 verification: certaine
 enforced_by:
