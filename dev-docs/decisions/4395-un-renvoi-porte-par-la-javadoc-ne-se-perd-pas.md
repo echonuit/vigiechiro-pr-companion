@@ -54,7 +54,7 @@ sur le dépôt, **ne descend pas**. Il est tenu par un plancher déclaré, que
 Distinctes, et non occurrences : ce qui se perd est qu'un fichier **cesse d'ouvrir** une discussion,
 pas qu'il l'ouvre une fois au lieu de deux.
 
-Le plancher ouvre à **3 111**, mesuré sur `845240252`. Il se relève de ce qu'un chantier ajoute.
+Le plancher vaut **<!--inv:plancher-renvois-->3 111<!--/inv-->**, mesuré sur `845240252`. Il se relève de ce qu'un chantier ajoute.
 L'abaisser est possible, et c'est une décision : la justifier dans cette ADR, comme on justifie un
 cliquet qui monte.
 
