@@ -75,6 +75,7 @@ remplacent pas ce document : il se lit au début, une compétence s'ouvre au mom
 | `ecrire-une-adr` | format, statut, chaînage, et l'article auquel elle se rattache |
 | `clore-une-issue` | ce qu'on laisse derrière soi |
 | `clore-un-chantier` | les douze passes de clôture |
+| `openspec-propose`, `-apply-change`, `-update-change`, `-sync-specs`, `-archive-change`, `-explore` | le cycle d'un changement dans la spécification vivante |
 
 **Le fonds est dans `.agents/skills/`, hors de tout dossier de marque.** `.claude/skills/` n'en est
 qu'une copie, pour que Claude Code les découvre. Servir un autre agent, c'est ajouter une copie : on
@@ -82,6 +83,22 @@ ne touche pas au fonds.
 
 On copie plutôt qu'on ne lie : sous Windows, sans `core.symlinks`, git écrit un fichier texte
 contenant le chemin, et la découverte casse en silence.
+
+## La spécification vivante
+
+`openspec/` est le cadre où se pose **ce qu'on est en train de changer**, entre ce que le produit
+fait (`dev-docs/`) et ce qu'on a décidé (`dev-docs/decisions/`). Un changement porte ses delta
+specs, et l'archivage les fusionne dans les specs principales.
+
+**Ce que le cadre contient aujourd'hui : sa configuration, et rien d'autre.** Il n'y a pas encore de
+`openspec/specs/`, aucun changement proposé ni archivé. Le cadre est posé pour le premier chantier
+qui en aura besoin, et cette page dira ce qu'il porte quand il portera quelque chose. Un dossier
+vide présenté comme un point de départ enverrait un repreneur nulle part.
+
+Le cycle, quand il servira : `openspec-propose` ouvre le changement, `openspec-apply-change` le
+réalise, `openspec-archive-change` le clôt en mettant à jour la spécification. `openspec-explore`
+sert à instruire avant de proposer. La langue des artefacts est déclarée dans `openspec/config.yaml`,
+et c'est le français.
 
 ## Cycle de vie d'un chantier
 

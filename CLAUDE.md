@@ -10,6 +10,12 @@ Ce fichier ne porte que ce qui est propre à Claude Code.
 Elles sont découvertes dans `.claude/skills/`, qui est une **copie** de `.agents/skills/`. Le fonds
 est dans `.agents/` : une compétence se corrige là, et la copie suit.
 
+Le garde `scripts/methode/synchronise-adaptateurs.py --verifie` refuse une copie absente ou périmée.
+Après avoir touché une compétence, lancer le script sans argument.
+
+Les six compétences OpenSpec sont en plus exposées en commandes : `/opsx:propose`, `/opsx:apply`,
+`/opsx:update`, `/opsx:sync`, `/opsx:archive`, `/opsx:explore`.
+
 ## Au commencement de CHAQUE issue : UN bloc, puis TU T'ARRÊTES
 
 **Consigne d'agent, pas règle du dépôt.** Elle n'a pas d'équivalent dans `CONTRIBUTING.md` et n'a pas à en avoir : elle règle la façon dont nous travaillons ensemble.
