@@ -122,6 +122,58 @@ pas de release.
 
 ---
 
+### Le registre : direct, et rien de plus
+
+La règle vaut pour tout ce qui s'écrit ici : commentaires, ADR, documentation, messages de commit.
+
+Écrivez la chose, pas son emballage. Une phrase dit un fait ; si elle dit surtout comment le fait
+est amené, elle s'enlève.
+
+Sept tics reviennent :
+
+| Tic | Exemple | À la place |
+|---|---|---|
+| l'antithèse | « c'est X, pas Y » quand personne n'a proposé Y | « c'est X » |
+| l'annonce | « deux choses méritent d'être dites », « et c'est instructif » | dire les deux choses |
+| le tricolon | trois membres dont le troisième n'ajoute rien | deux membres |
+| l'aphorisme final | une formule qui referme un paragraphe | rien |
+| l'objection inventée | « ce n'est pas tant X », « je ne dis pas que Y » | la phrase que ça défend |
+| la fausse alternative | « on aurait pu faire Z, mais » quand Z n'a jamais été envisagé | la contrainte réelle |
+| le gras réflexe | un mot sur trois lignes en gras | rien |
+
+Un titre de section pour deux paragraphes est un titre de trop. Une explication qui commence par
+« pourquoi » raconte souvent une décision : c'est une ADR, et on la **cite**.
+
+Le gras marque ce qui se lit de travers sans lui. `dev-docs` et `docs` en portent 11 995 emplois
+pour 36 377 lignes, soit un tiers de ligne : à ce taux il ne marque plus rien. Aucun contrôle
+mécanique ne fera le tri, parce que la syntaxe voit le gras et non son utilité. Un gras **code**
+quelque chose quand il désigne un libellé d'interface, un nom de colonne ou une contrainte forte
+comme « hors fil JavaFX » ; il **emballe** quand il tombe sur un mot ordinaire. Seul le second se
+retire, et c'est la relecture qui tient la règle. Une liste dont chaque entrée ouvre sur un
+mini-titre en gras suivi d'un deux-points est le même défaut, un paragraphe qu'on a découpé : il y
+en a 214.
+
+Un commentaire décrit le comportement d'aujourd'hui. « Jusqu'ici », « auparavant », « naguère »,
+« désormais » annoncent presque toujours le contraire, et 146 lignes de javadoc en portent encore.
+L'historique a ses lieux : `git log`, le CHANGELOG, la section « Alternatives écartées » d'une ADR.
+
+**Une seule apostrophe, la droite** (`'`). Le dépôt en porte 47 799 contre 174 courbes, soit un cas
+sur 275 : mêler les deux formes se voit surtout dans les chaînes montrées à l'utilisateur, où deux
+écrans affichent alors deux apostrophes différentes.
+
+Le connecteur lourd en tête de phrase, « Cependant », « Par ailleurs », « En outre », est le tic
+français le plus cité. Mesuré ici : **zéro** sur 46 932 lignes de documentation. Il n'est donc pas
+retenu comme règle, et cette mesure est ce qui le dit.
+
+Ces règles viennent de deux inventaires : [« Signs of AI writing »](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing)
+(WikiProject AI Cleanup, 35 motifs) et son équivalent français,
+[« Aide:Identifier l'usage d'une IA générative »](https://fr.wikipedia.org/wiki/Aide:Identifier_l%27usage_d%27une_IA_g%C3%A9n%C3%A9rative).
+
+Les sept tics ci-dessus sont ce que ce dépôt retient. La grille complète, quarante et un motifs avec
+leurs exemples et leurs faux positifs, est dans la compétence `humaniseur`
+(`.agents/skills/humaniseur/SKILL.md`) : elle sert à relire, pas à trancher un commit. L'article A31
+de la [constitution](CONSTITUTION.md) la rend obligatoire pour toute prose visible.
+
 ## 4. Workflow de contribution
 
 ```bash

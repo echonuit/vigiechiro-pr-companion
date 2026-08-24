@@ -4,7 +4,7 @@ Les règles non négociables de ce dépôt et du produit qu'il livre. Une règle
 elle est **opposable** : quelque chose la refuse mécaniquement, ou son absence d'applicateur est
 déclarée.
 
-**Comment lire ce document.** Vingt-huit articles tiennent en une page ; ils suffisent à travailler.
+**Comment lire ce document.** Vingt-neuf articles tiennent en une page ; ils suffisent à travailler.
 Sous chacun vit sa **jurisprudence** : les décisions d'architecture qui l'ont produit, une par cas,
 dans `dev-docs/decisions/`. On lit les articles ; on ne descend dans les cas que lorsqu'on en a
 besoin. Chaque ADR déclare son article en en-tête, et un garde refuse celle qui n'en déclare pas.
@@ -206,6 +206,15 @@ Ce qui est caduc s'enlève : `git log` garde l'histoire pour qui la cherche, et 
 moitié est périmée ne se lit plus du tout. Un bloc de plus de huit lignes de prose est un suspect
 sous cliquet, dans le code de production ; un garde, lui, doit dire ce qu'il vérifie.
 
+### A31 : La prose visible se relit à l'humaniseur
+
+Toute prose qu'un humain lira hors de l'échange qui l'a produite - javadoc, documentation, ADR,
+libellés d'interface et de ligne de commande, messages de commit - passe la grille de la compétence
+`humaniseur` avant d'être commise. Les sept tics de `CONTRIBUTING.md` en sont le sous-ensemble
+opposable : la grille sert à relire, les sept servent à refuser. Rien ne mécanise le reste, et c'est
+dit : aucun motif textuel ne décide si une emphase informe, ni si une javadoc paraphrase la
+signature qu'elle surmonte.
+
 ---
 
 <!-- matrice engendree : ne pas editer a la main -->
@@ -244,12 +253,14 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A26 · La provenance se déclare | 3 | 2 | `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`, `DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier` |
 | A29 · L'ergonomie se rattache à une heuristique nommée | 1 | 0 | `scripts/adr/verifie_okf.py` |
 | A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 1 | 0 | `scripts/adr/4359-javadoc-narratif.py` |
+| A31 · La prose visible se relit à l'humaniseur | 1 | 0 | **relecture seule** |
 
-**4 article(s) sur 28 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
+**5 article(s) sur 29 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
 
 - A1 · La preuve précède l'affirmation
 - A8 · La mutation mesure dès qu'un comportement est complet
 - A10 · Jamais de suppression d'avertissement
 - A11 · L'assumé se déclare, il ne se contourne pas
+- A31 · La prose visible se relit à l'humaniseur
 
 <!-- fin de la matrice engendree -->

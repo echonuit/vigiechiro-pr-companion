@@ -259,6 +259,7 @@ nav:
     - 4296 · On compare les deux bouts du clip: decisions/4296-on-compare-les-deux-bouts-du-clip.md
     - 4342 · L'ergonomie se rattache à une heuristique nommée: decisions/4342-l-ergonomie-se-rattache-a-une-heuristique-nommee.md
     - 4359 · Une javadoc contracte, elle ne raconte pas: decisions/4359-une-javadoc-contracte-elle-ne-raconte-pas.md
+    - 4343 · La prose visible se relit à l'humaniseur: decisions/4343-la-prose-visible-se-relit-a-l-humaniseur.md
     - 4249 · Un fichier écrit par plusieurs JVM se reconstruit: decisions/4249-un-fichier-ecrit-par-plusieurs-jvm-se-reconstruit.md
     - 4251 · Une lecture de masse se fait par lot: decisions/4251-une-lecture-de-masse-se-fait-par-lot-et-se-garde-en-comptant-des-requetes.md
     - 4264 · Un helper partagé route vers le fil de l'application: decisions/4264-un-helper-partage-route-vers-le-fil-de-l-application.md
