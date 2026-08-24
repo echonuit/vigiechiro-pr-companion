@@ -22,12 +22,12 @@ generated:
 
 ## Contexte
 
-Le corpus porte **2 044 pictogrammes d'alerte**, répartis dans **624 fichiers**. La densité, plus
+Le corpus porte **1 996 pictogrammes d'alerte**, répartis dans **624 fichiers**. La densité, plus
 que le total, dit ce qui s'est passé :
 
 | Fichier | Pictogrammes | Densité |
 | --- | ---: | --- |
-| `dev-docs/decisions/index.md` | 106 | un toutes les **3 lignes** |
+| `dev-docs/decisions/index.md` | 105 | un toutes les **3 lignes** |
 | `scripts/doc-video/filme-un-parcours.sh` | 119 | un toutes les 17 lignes |
 | `dev-docs/ci-cd-release.md` | 46 | un toutes les 29 lignes |
 
@@ -69,9 +69,9 @@ Toutes disent la même chose : effacer y serait falsifier.
   libellés commençaient par un ⚠ » parle du caractère, il ne s'en sert pas pour alerter. L'effacer
   ne raccourcirait pas la phrase, il la rendrait fausse.
 
-Sur 2 044 occurrences, le garde en retient **1 553**. Les 491 autres sont du contenu montré, des
+Sur 1 996 occurrences, le garde en retient **1 505**. Les 491 autres sont du contenu montré, des
 blocs de code, des messages émis par le programme ou le caractère cité, et il ne les compte pas. Le
-cliquet ouvre donc à 1 553, et la résorption reste entière.
+cliquet a ouvert à 1 539 ; il vaut 1 505 depuis qu'un chantier voisin en a retiré une tranche.
 
 Cette valeur est celle de **cet** arbre. La décision vient d'un dépôt où le nettoyage avait déjà eu
 lieu et où le cliquet valait zéro ; elle a été remesurée en arrivant ici, comme

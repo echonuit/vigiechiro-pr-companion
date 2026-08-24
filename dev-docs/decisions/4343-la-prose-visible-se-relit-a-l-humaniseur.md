@@ -23,8 +23,8 @@ generated:
 
 ## Contexte
 
-Une grande part de la prose du dépôt a été écrite avec l'assistance d'un LLM : 31 634 lignes de
-commentaire dans le code de production, 31 327 lignes de documentation. Le registre attendu était
+Une grande part de la prose du dépôt a été écrite avec l'assistance d'un LLM : 37 511 lignes de
+commentaire dans le code de production, 36 868 lignes de documentation. Le registre attendu était
 écrit dans `CONTRIBUTING.md`, sous forme de sept tics, et tenu par la seule relecture.
 
 Cette relecture ne s'appuyait sur rien : les sept tics avaient été relevés à la main, au fil des
@@ -63,19 +63,19 @@ qu'il lui faut.
 ## Conséquences
 
 **Le niveau est `humaine`, et le motif est mesuré.** Aucune expression régulière ne décide si une
-emphase informe : sur quarante emplois de gras lus, onze codent quelque chose et vingt-neuf portent
-sur un mot ordinaire, et la syntaxe ne distingue pas les deux. Le défaut le plus coûteux échappe de
-la même façon : une javadoc qui paraphrase la signature sans rien ajouter, une garantie annoncée que
-le code ne tient pas, une unité qui ne correspond pas. Il est dans l'écart entre le texte et ce
-qu'il décrit, et il faut les lire ensemble.
+emphase informe : sur quarante emplois de gras lus dans le dépôt jumeau (#4334), onze codent quelque
+chose et vingt-neuf portent sur un mot ordinaire, et la syntaxe ne distingue pas les deux. Le défaut
+le plus coûteux échappe de la même façon : une javadoc qui paraphrase la signature sans rien
+ajouter, une garantie annoncée que le code ne tient pas, une unité qui ne correspond pas. Il est
+dans l'écart entre le texte et ce qu'il décrit, et il faut les lire ensemble.
 
 **La loupe existe et couvre le sous-ensemble mécanique** : le tiret cadratin en tolérance zéro, le
-pictogramme employé comme caractère, la ligne de javadoc répétée, et la javadoc qui raconte au lieu
-de contracter. Ces quatre gardes tiennent ce qu'un motif textuel peut tenir ; le reste est la
-relecture, et cette ADR le déclare plutôt que de le taire.
+pictogramme employé comme caractère, et la javadoc qui raconte au lieu de contracter. Ces trois
+gardes tiennent ce qu'un motif textuel peut tenir ; le reste est la relecture, et cette ADR le
+déclare plutôt que de le taire. Un quatrième reste à écrire, sur la ligne de javadoc répétée.
 
 **La grille garde les motifs que ce dépôt ne porte pas.** Les connecteurs lourds en ouverture de
-phrase rendent zéro sur 51 175 lignes, et ils restent dans la grille : une règle ne se juge pas à sa
+phrase rendent zéro sur 47 564 lignes, et ils restent dans la grille : une règle ne se juge pas à sa
 fréquence du jour, et le corpus qui la rend inutile aujourd'hui peut la rendre nécessaire demain.
 `dev-docs/registre-editorial.md` rend compte de ce que ce dépôt a mesuré, un motif à la fois.
 
