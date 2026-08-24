@@ -2,7 +2,11 @@
 
 Ce document s'adresse à toute personne, et à tout agent, qui contribue à ce dépôt. Il vaut pour
 Claude Code, Codex, Copilot, Cursor, Gemini CLI et les autres : le fonds est ici, les fichiers
-propres à chaque outil n'en sont que des adaptateurs.
+propres à chaque outil n'en sont que des adaptateurs, et ils renvoient tous ici.
+
+Les adaptateurs en place : [CLAUDE.md](CLAUDE.md) pour Claude Code,
+[.github/copilot-instructions.md](.github/copilot-instructions.md) pour GitHub Copilot. En servir un
+autre, c'est ajouter un fichier qui renvoie à celui-ci, pas recopier la méthode.
 
 Application **JavaFX 26 / MVVM / package-by-feature**, produit open source pour les naturalistes du
 protocole Vigie-Chiro. Née de la SAÉ 2.01, mais ce dépôt n'est plus « le dépôt de la SAÉ » : les
