@@ -278,8 +278,8 @@ jobs:
       #
       # ⚠️ Et il ÉPROUVE le jeton, il ne constate pas sa présence (#4328). Le tournage révoque le sien
       # en fin de run (#4305) sans retirer le secret : après un tournage, `VIGIECHIRO_TOKEN_TOURNAGE`
-      # a l'air parfaitement valide et ne vaut plus rien. Vingt minutes plus tard un scénario rougit
-      # sur « le libellé d'identité est vide », c'est-à-dire à trois pas de sa cause.
+      # a l'air parfaitement valide et ne vaut plus rien. Un scénario rougit alors sur « le libellé
+      # d'identité est vide », c'est-à-dire à trois pas de sa cause - et le run, lui, finit VERT.
       - name: Le jeton du tournage est-il encore vivant ?
         if: ${{ inputs.connecte }}
         shell: bash

@@ -7,11 +7,13 @@
 # tournage, `VIGIECHIRO_TOKEN_TOURNAGE` a donc l'air parfaitement valide et ne vaut plus rien.
 #
 # Le pas de contrôle vérifiait que le secret était non vide, ce qu'il est. Le tournage partait, le banc
-# déposait le jeton mort, la modale le soumettait, et la plateforme répondait `401`. Vingt minutes plus
-# tard un scénario rougissait sur « le libellé d'identité est vide » : le symptôme à trois pas de la
-# cause, et c'est ce qui coûte une demi-heure à quelqu'un.
+# déposait le jeton mort, la modale le soumettait, et la plateforme répondait `401`. Un scénario
+# rougissait alors sur « le libellé d'identité est vide » : le symptôme à trois pas de la cause, et
+# c'est ce qui coûte une demi-heure à quelqu'un - pas au runner, à la personne qui lit.
 #
-# Vécu deux fois, dont une exprès : le run 32696587259.
+# ⚠️ Et le coût n'est PAS le temps perdu : mesuré sur le run 32696587259, tiré exprès avec un jeton
+# révoqué, tout tenait en 2 min 14 s. Le coût est que ce run finissait **VERT** - le tournage tourne
+# sous `failure.ignore` - et versait son clip hors ligne comme s'il montrait la plateforme.
 #
 # ## Trois verdicts, et pas deux
 #
