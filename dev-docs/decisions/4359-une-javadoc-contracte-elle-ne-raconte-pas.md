@@ -8,7 +8,7 @@ decided_at: 2026-08-24
 verification: probable
 enforced_by:
   - "scripts/adr/4359-javadoc-narratif.py"
-ratchet: 3641
+ratchet: 3477
 verified:
   - by: machine:suspects
     at: 2026-08-24
@@ -73,8 +73,8 @@ tenir une autre.
 mécaniquement. Un record de trente champs n'est pas un suspect : les étiquettes de contrat sont
 exclues, avec leurs suites, et deux cas du banc le tiennent.
 
-**Le cliquet ouvre à 3 641**, sur 713 blocs dans 572 fichiers, et aucune tranche n'a encore été
-relue : c'est la valeur du premier relevé, celle d'où la résorption partira. Le registre attendu est
+**Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut **3 477** sur 704 blocs
+dans 566 fichiers depuis la première tranche, qui a relu six blocs (#4397). Le registre attendu est
 écrit dans `CONTRIBUTING.md` : il n'existait nulle part.
 
 **Un second garde reste à écrire.** Une ligne de javadoc répétée juste après elle-même est une coupe

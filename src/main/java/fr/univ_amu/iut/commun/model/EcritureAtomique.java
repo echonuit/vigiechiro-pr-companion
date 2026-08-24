@@ -11,49 +11,15 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
 
-/// Écrit un fichier **d'un seul coup** : un lecteur y voit l'ancien contenu ou le nouveau, **jamais un
-/// fichier tronqué** (#2735, généralisée à la clôture du lot #2722).
+/// Écrit un fichier **d'un seul coup** : un lecteur y voit l'ancien contenu ou le nouveau, jamais un
+/// fichier tronqué (#2735, généralisée à la clôture du lot #2722). Le contenu part dans un
+/// temporaire du **même dossier**, déplacé sur la cible par un `ATOMIC_MOVE`.
 ///
-/// ## Le remplacement est atomique
-///
-/// Le contenu part dans un temporaire du **même dossier** - donc du même système de fichiers - déplacé
-/// sur la cible par un `ATOMIC_MOVE`. Une interruption en cours d'écriture laissait auparavant un
-/// fichier coupé : un `connexion.json` tronqué que le lecteur traduit en « non connecté » (une
-/// déconnexion inexpliquée plutôt qu'une erreur), ou un manifeste de sauvegarde que la restauration
-/// refuse.
-///
-/// ## Et pour un secret, les permissions dès la création
-///
-/// [#ecrireSecret] pose en plus les permissions **à la création du temporaire**. Écrire puis
-/// restreindre laisserait une **fenêtre** : entre les deux appels, le fichier existe avec celles de
-/// l'umask, souvent `644`, et le secret est lisible par les autres comptes de la machine. Elle se
-/// rouvre à **chaque création** du fichier, donc à chaque reconnexion, puisque se déconnecter le
-/// supprime.
-///
-/// Le déplacement conserve les permissions du temporaire : la cible hérite donc de `600`, y compris si
-/// le fichier remplacé était plus permissif.
-///
-/// ⚠️ **Les deux donnent le même fichier sur les JDK actuels**, et c'est mesuré : `Files.createTempFile`
-/// sans attribut crée déjà `rw-------`. Ce qui les distingue n'est donc pas le résultat observé mais la
-/// **garantie** : [#ecrireSecret] l'exige et le resterait si le JDK changeait son défaut, [#ecrire] s'en
-/// remet à lui. C'est aussi pourquoi PIT ne peut pas distinguer les deux chemins - un mutant
-/// **équivalent par construction**, pas une couverture manquante.
-///
-/// Le choix de la méthode reste donc porteur de sens **au point d'appel** : il dit si le fichier est un
-/// secret, ce qu'aucune permission ne dira jamais à sa place.
-///
-/// ## Ce qu'un arrêt brutal peut laisser
-///
-/// Le temporaire est supprimé sur toute erreur. Une coupure de courant entre sa création et le
-/// déplacement peut en revanche en laisser un dans le dossier. Quand il porte un secret, il porte aussi
-/// **ses permissions restreintes** : c'est un résidu à balayer, pas une fuite.
-///
-/// ## Windows
-///
-/// `PosixFilePermissions` n'existe pas sur un système de fichiers non POSIX. Le temporaire y est créé
-/// sans attribut, et le fichier reste protégé par les **ACL du profil utilisateur** : le dossier de
-/// travail vit sous le profil, dont les autres comptes non administrateurs n'ont pas la clé. C'est une
-/// protection réelle mais **différente**, et c'est pourquoi elle est écrite ici plutôt que sous-entendue.
+/// [#ecrireSecret] pose en plus les permissions **à la création** du temporaire : écrire puis
+/// restreindre laisserait une fenêtre en `644`, rouverte à chaque reconnexion. Le déplacement les
+/// conserve, donc la cible hérite de `600`. Les JDK actuels créent déjà le temporaire ainsi : ce qui
+/// distingue les deux méthodes est la **garantie**, et le fait que l'appel dise si c'est un secret.
+/// Hors POSIX, sans attribut, la protection vient des **ACL du profil** - réelle mais différente.
 public final class EcritureAtomique {
 
     /// Lecture et écriture pour le seul propriétaire (`600`).
@@ -112,22 +78,13 @@ public final class EcritureAtomique {
 
     /// Déplace, et **réessaie** tant que la cible est tenue par quelqu'un d'autre.
     ///
-    /// ## Pourquoi une reprise, et pourquoi elle est bornée
-    ///
-    /// Mesuré sous Windows Server 2025 (#3777) : **n'importe quel** lecteur concurrent fait échouer le
-    /// remplacement en `AccessDeniedException` - un `Files.newInputStream` suffit, il n'y a pas besoin
-    /// d'un verrou. Or c'est le chemin d'écriture du fichier d'**amorçage** (#3507), et les tenues
-    /// concurrentes y sont **ordinaires** : un antivirus qui analyse le fichier au moment où on le
-    /// remplace, un outil de sauvegarde, une seconde instance qui lit.
-    ///
-    /// Insister quelques centaines de millisecondes traverse la tenue **transitoire**, qui est le cas
-    /// mesuré. Insister sans fin masquerait le cas **durable** - une seconde instance ouverte - qui, lui,
-    /// demande une action de l'utilisateur : d'où le butoir, et un refus qui **nomme** la situation.
-    ///
-    /// ⚠️ La reprise ne regarde pas le système d'exploitation. Sous POSIX, une `AccessDeniedException`
-    /// est un vrai refus de droits : elle coûtera le butoir avant d'échouer, et c'est le prix assumé
-    /// pour ne pas déduire un comportement d'un nom de plateforme - ce que [fr.univ_amu.iut.cli.CouleurCli]
-    /// a appris à ne plus faire.
+    /// Mesuré sous Windows Server 2025 (#3777) : n'importe quel lecteur concurrent fait échouer le
+    /// remplacement en `AccessDeniedException`, un `Files.newInputStream` suffit. Or c'est le chemin
+    /// d'écriture du fichier d'**amorçage** (#3507), où les tenues concurrentes sont ordinaires.
+    /// Insister quelques centaines de millisecondes traverse la tenue **transitoire** ; insister sans
+    /// fin masquerait la tenue **durable**, qui demande une action de l'utilisateur - d'où le butoir
+    /// et un refus qui **nomme** la situation. La reprise ne regarde pas le système : sous POSIX le
+    /// butoir se paiera avant l'échec, prix assumé pour ne rien déduire d'un nom de plateforme.
     private static void deplacerEnInsistant(Path temporaire, Path cible, Deplacement deplacement, Attente attente)
             throws IOException {
         AccessDeniedException dernier = null;

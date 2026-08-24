@@ -14,44 +14,13 @@ import javafx.scene.layout.HBox;
 /// Le fil d'Ariane du chrome : il **élide des segments entiers** quand la place manque, au lieu de
 /// laisser chacun de ses libellés se faire couper (#3798).
 ///
-/// ## Pourquoi ce n'est pas une `HBox` ordinaire
-///
 /// L'[ADR 3760](../../../../../../../dev-docs/decisions/3760-le-deficit-se-porte-il-ne-se-repartit-pas.md)
-/// a désigné le fil comme **porteur déclaré** du déficit de la barre du haut, pour que le titre et le
-/// bouton ← Retour restent entiers. Mais une `HBox` **répartit** ce déficit entre ses enfants : à 900,
-/// les cinq segments de l'écran le plus profond perdaient **39 px chacun**, et « Accueil » 65 % de sa
-/// largeur. Le principe de l'ADR était tenu à l'étage de la barre et enfreint un cran plus bas.
+/// désigne le fil comme porteur du déficit de la barre. Une `HBox` le **répartirait** : à 900 les cinq
+/// segments perdaient 39 px chacun, et une amputation égale en pixels est inégale en information.
 ///
-/// Une répartition égale en pixels est une amputation **inégale** en information : ce qui reste de
-/// « Détails du passage N° 1 » se lit encore, ce qui reste d'« Accueil » est un « A… ».
-///
-/// ## Ce qui est gardé, et dans quel ordre
-///
-/// Le **dernier** segment dit où l'on est : il est gardé quoi qu'il arrive. On remonte ensuite vers ses
-/// ancêtres tant qu'ils tiennent. Le milieu retiré devient un menu « … ».
-///
-/// L'**ancre** (« Accueil ») passe en **dernier**, et se fait lâcher la première. Elle a un recours que
-/// les autres n'ont pas : le titre de l'application et le bouton ← Retour y mènent déjà, et le menu
-/// « … » la garde de toute façon. La mesure a tranché cet ordre plutôt qu'un avis : à 900, servir
-/// l'ancre d'abord rendait `Accueil › … › Diagnostic matériel` ; servir les proches d'abord rend
-/// `… › Détails du passage N° 1 › Diagnostic matériel`, dans le même espace.
-///
-/// Un schéma **fixe** ne pouvait pas convenir, et la mesure l'a montré aussi : « le premier et les deux
-/// derniers », proposé à l'ouverture de #3798, demande 380 px là où il n'y en a que 351. Ce qui tient
-/// dépend de la place, donc de la largeur de la fenêtre.
-///
-/// Le résultat se lit comme une descente régulière, sur l'écran le plus profond :
-///
-/// | Largeur | Fil rendu |
-/// |---|---|
-/// | 1100 | `Accueil › Mes sites › Carré 640380 › Détails du passage N° 1 › Diagnostic matériel` |
-/// | 1000 | `… › Carré 640380 › Détails du passage N° 1 › Diagnostic matériel` |
-/// | 900 | `… › Détails du passage N° 1 › Diagnostic matériel` |
-///
-/// ## Rien ne disparaît sans recours
-///
-/// Le « … » n'est pas un texte mais un **menu** : chaque segment retiré y garde son libellé entier et
-/// son action. Un ancêtre change de forme, jamais d'existence.
+/// Le **dernier** segment est gardé quoi qu'il arrive, puis les ancêtres tant qu'ils tiennent ;
+/// l'**ancre** passe en dernier, ayant un recours que les autres n'ont pas. Le milieu devient un menu
+/// « … » qui garde chaque libellé entier et son action : un ancêtre change de forme, jamais d'existence.
 public final class FilAriane extends HBox {
 
     private static final String SEPARATEUR = "›";
@@ -64,13 +33,11 @@ public final class FilAriane extends HBox {
     /// Les nœuds du fil, **construits une seule fois** par pose de segments : un libellé par segment, un
     /// séparateur devant chacun, et le menu d'élision avec le sien.
     ///
-    /// ⚠️ Ils restent tous enfants, et l'ajustement à la largeur ne fait que basculer leur `managed` et
-    /// leur `visible`. La première version reconstruisait la liste des enfants et appelait `applyCss()`
-    /// **depuis l'écouteur de largeur** - lequel se déclenche à l'intérieur de `Region.resize`, donc au
-    /// milieu de la mise en page en cours. Muter la scène et forcer un passage CSS à ce moment-là laisse
-    /// des nœuds voisins non disposés : trois exécutions de la CI ont rendu, dans des classes de test
-    /// sans rapport avec le fil, des « nœud present mais non visible » qui n'apparaissaient ni en local
-    /// ni sur les autres branches.
+    /// Ils restent tous enfants, et l'ajustement à la largeur ne fait que basculer leur `managed` et
+    /// leur `visible`. Reconstruire la liste et forcer `applyCss()` **depuis l'écouteur de largeur** -
+    /// donc au milieu de `Region.resize` - laissait des nœuds voisins non disposés : trois exécutions
+    /// de la CI ont rendu, dans des classes sans rapport avec le fil, des « nœud present mais non
+    /// visible » absents en local comme sur les autres branches.
     private List<Labeled> noeuds = List.of();
 
     private List<Label> separateurs = List.of();
