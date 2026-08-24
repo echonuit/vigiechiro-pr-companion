@@ -635,6 +635,15 @@ jobs:
           python3 scripts/methode/mesure-registre.py --auto-test
           python3 scripts/methode/mesure-registre.py --verifie
 
+      - name: Le bandeau des ADR rend ce qu'il promet (bloquant)
+        # `scripts/mkdocs/bandeau_adr.py` redessine le statut, le chantier et la vérification en tête
+        # de chaque page d'ADR : la conversion OKF les a fait passer en front-matter, que MkDocs
+        # retire du corps rendu. Sans lui, elle serait un recul pour le lecteur humain.
+        # Son absence de couverture était MUETTE : s'il cessait de reconnaître l'en-tête, il rendrait
+        # le markdown inchangé, 199 pages sortiraient sans bandeau, et `mkdocs --strict` ne dirait
+        # rien. Trois mutations plantées le font rougir (#4379).
+        run: python3 scripts/mkdocs/bandeau_adr.py --auto-test
+
       - name: Les adaptateurs de compétences suivent leur source (bloquant)
         # Le fonds des compétences vit dans `.agents/skills/`, hors de tout dossier de marque, et
         # `.claude/skills/` n'en est qu'une copie. Sans ce garde, une compétence corrigée à la
