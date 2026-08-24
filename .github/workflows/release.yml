@@ -560,7 +560,11 @@ jobs:
       pull-requests: write
       checks: write
     uses: ./.github/workflows/flatpak.yml
-    secrets: inherit
+    # Les deux clés dont il se sert, et rien d'autre. `secrets: inherit` lui passait aussi les deux
+    # jetons Vigie-Chiro, `WINGET_TOKEN` et `DOCS_DEPLOY_TOKEN`, dont il n'a que faire (#4349).
+    secrets:
+      FLATPAK_GPG_KEY: ${{ secrets.FLATPAK_GPG_KEY }}
+      FLATPAK_DEPLOY_TOKEN: ${{ secrets.FLATPAK_DEPLOY_TOKEN }}
 
   # Les clips de recette se tournent AVEC le train, sur la version qui vient d'être
   # publiée (#4111).
@@ -599,7 +603,8 @@ jobs:
       # La version que ces clips montrent, écrite dans la pré-version : sans elle, celui qui joue une
       # session ne sait pas si ce qu'il regarde est bien ce qu'il valide.
       version: ${{ needs.release.outputs.tag }}
-    secrets: inherit
+    # Aucun secret transmis : ce banc ne lit que `GITHUB_TOKEN`, qui est fourni d'office à un
+    # workflow appelé. `secrets: inherit` lui passait tout le trousseau du dépôt pour rien (#4349).
 
   # Le banc en Java pur filme la MÊME version, et verse ses clips sur le MÊME tag, préfixés `java-`
   # là où le banc bash pose les siens en `bash-` (#4258).
@@ -633,4 +638,10 @@ jobs:
       session: toutes
       plateforme: ubuntu
       version: ${{ needs.release.outputs.tag }}
-    secrets: inherit
+    # Aucun secret transmis. Sur le chemin du train, ce tournage n'est PAS connecté - `connecte` vaut
+    # son défaut, faux - et `VIGIECHIRO_TOKEN_TOURNAGE` est déclaré `required: false` chez lui. Il ne
+    # lit donc que `GITHUB_TOKEN`, fourni d'office.
+    #
+    # C'est le trou que #4304 avait laissé : la règle « jamais `secrets: inherit` » y était écrite
+    # côté APPELÉ, et l'appelant héritait quand même. Une déclaration nominale n'achète rien tant que
+    # l'appelant hérite (#4349).

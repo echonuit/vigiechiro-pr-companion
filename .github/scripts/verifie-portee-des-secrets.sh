@@ -37,6 +37,19 @@
 # sortie (ADR 3479). Le préfixe, plutôt qu'un nom, pour que le second secret du tournage connecté
 # (#4304) soit couvert le jour où il naîtra, sans qu'on ait à y penser.
 #
+# ## Le second contrôle : `secrets: inherit` (#4349)
+#
+# Une déclaration nominale côté APPELÉ n'achète rien tant que l'appelant hérite. `release.yml` passait
+# `secrets: inherit` à trois workflows appelés, dont un qui exécute les tests du produit : tous les
+# secrets du dépôt - les deux clés Flatpak, `WINGET_TOKEN`, `DOCS_DEPLOY_TOKEN`, les deux jetons
+# Vigie-Chiro - lui étaient offerts. Aucun n'était lu ; ce n'était pas une fuite, c'était une surface.
+#
+# Le raisonnement est celui de #2739, qui a retiré les droits d'écriture du plancher de `release.yml`
+# pour les déclarer job par job : n'accorder que ce qui sert, là où ça sert.
+#
+# `GITHUB_TOKEN` n'entre pas dans ce compte : il est fourni d'office à un workflow appelé, sans
+# héritage. Un appel qui ne lit que lui n'a donc rien à transmettre du tout.
+#
 # ## Ce qu'elle NE voit PAS, dit ici plutôt que supposé
 #
 # Elle lit du YAML. Un secret qu'un `run:` exporterait lui-même (`echo "X=..." >> "$GITHUB_ENV"`) lui
@@ -65,6 +78,7 @@ flux = sys.argv[1]
 SECRET = re.compile(r"secrets\.(VIGIECHIRO_[A-Za-z0-9_]*)")
 
 fautives = []
+heritages = []
 legitimes = 0
 
 
@@ -93,6 +107,11 @@ for fichier in sorted(os.listdir(flux)):
             continue
         for nom in secrets_de(job.get("env") or {}):
             fautives.append(f"{fichier} · `env:` du job « {identifiant} » · secrets.{nom}")
+
+        # `secrets: inherit` se lit comme la CHAÎNE « inherit », là où la forme juste est une table.
+        # C'est ce qui permet de les distinguer sans deviner.
+        if job.get("secrets") == "inherit":
+            heritages.append(f"{fichier} · job « {identifiant} » · secrets: inherit")
         # ⚠️ Tout le reste du job est LÉGITIME et doit le rester : `secrets:` qui transmet à un
         # workflow appelé, `with:` d'un pas, `env:` d'un pas, interpolation dans un `run:`. Un garde
         # qui refuserait ces formes-là interdirait la seule façon juste de se servir d'un secret, et
@@ -102,6 +121,19 @@ for fichier in sorted(os.listdir(flux)):
             for etape in pas:
                 if isinstance(etape, dict):
                     legitimes += len(secrets_de(etape))
+
+if heritages:
+    print(f"✗ {len(heritages)} appel(s) transmettant TOUT le trousseau du dépôt :")
+    for h in heritages:
+        print(f"   · {h}")
+    print()
+    print("  `secrets: inherit` passe au workflow appelé TOUS les secrets du dépôt, y compris ceux")
+    print("  qu'il ne lit pas et ceux qui naîtront après. Sur un appelé qui exécute les tests du")
+    print("  produit, c'est-à-dire du code qui change à chaque PR, la surface est celle du trousseau")
+    print("  entier pour la commodité de ne pas écrire trois lignes.")
+    print("  Les nommer : `secrets:` suivi de ce dont l'appelé se sert, et de rien d'autre.")
+    print("  S'il ne lit que `GITHUB_TOKEN`, il n'y a RIEN à transmettre : celui-là est fourni d'office.")
+    sys.exit(1)
 
 if fautives:
     print(f"✗ {len(fautives)} secret(s) de plateforme posé(s) trop haut :")
@@ -198,6 +230,22 @@ jobs:
       WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
     steps:
       - run: gh release list'
+
+    # Le contrôle de #4349 : l'appelant qui hérite de tout.
+    essai "un appel qui hérite de TOUT le trousseau est refusé"    rouge \
+'jobs:
+  a:
+    uses: ./.github/workflows/appele.yml
+    secrets: inherit'
+
+    # Et son contrôle négatif : un appel qui ne transmet RIEN est la forme juste quand l'appelé ne
+    # lit que `GITHUB_TOKEN`, fourni d'office. Le refuser aurait poussé à écrire `inherit` par dépit.
+    essai "un appel qui ne transmet aucun secret passe"            vert \
+'jobs:
+  a:
+    uses: ./.github/workflows/appele.yml
+    with:
+      version: v1.0.0'
 
     echo
     echo "${total} cas, dont ${rouges} qui DOIVENT rougir."
