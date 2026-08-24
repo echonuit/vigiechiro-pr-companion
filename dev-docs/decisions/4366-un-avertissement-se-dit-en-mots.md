@@ -1,6 +1,6 @@
 ---
 type: adr
-title: "Un avertissement se dit en mots, pas en pictogramme"
+title: "Un avertissement se dit en mots"
 status: stable
 heuristiques: ["nielsen-2", "nielsen-8", "gestalt-similarite"]
 article: A28
