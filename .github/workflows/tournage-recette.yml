@@ -412,8 +412,30 @@ jobs:
             exit 1
           }
 
-      - name: Garder les clips en artefact
+      # ⚠️ ICI, et pas dans le job qui verse. L'idée de le mettre plus tard paraît plus sûre - plus
+      # près de la publication - et c'est l'inverse : sur un dépôt PUBLIC, un artefact d'Actions se
+      # télécharge sans authentification. Quand `publier-connecte` le reprend, il est déjà dehors.
+      #
+      # ⚠️ `always()` : un tournage qui a échoué laisse quand même son artefact - c'est fait exprès,
+      # on veut les clips d'un cas rouge - donc le balayage doit passer là aussi.
+      #
+      # ⚠️ Et il ne balaie QUE les textes. L'image n'est couverte par personne, le garde le dit lui-
+      # même dans son compte rendu plutôt que de laisser croire le canal fermé (#4327).
+      - name: Aucun texte du tournage n a la forme d un jeton
+        id: formes
         if: ${{ always() }}
+        shell: bash
+        run: |
+          chmod +x .github/scripts/verifie-forme-du-jeton.sh
+          ./.github/scripts/verifie-forme-du-jeton.sh target/recette/clips tournage.log \
+            | tee -a "${GITHUB_STEP_SUMMARY}"
+
+      # ⚠️ L'envoi DÉPEND du balayage, et c'est le seul agencement qui serve à quelque chose : garder
+      # `always()` seul enverrait l'artefact malgré la trouvaille, et le garde n'aurait fait que
+      # l'annoncer. Le prix est assumé - une suspicion coûte les clips du run - et il est le bon :
+      # un artefact de dépôt public ne se reprend pas.
+      - name: Garder les clips en artefact
+        if: ${{ always() && steps.formes.outcome == 'success' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: clips-${{ inputs.session }}-${{ inputs.plateforme }}

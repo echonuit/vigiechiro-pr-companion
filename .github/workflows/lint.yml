@@ -305,6 +305,17 @@ jobs:
           chmod +x .github/scripts/revoque-jeton.sh
           ./.github/scripts/revoque-jeton.sh --auto-test
 
+      - name: La forme d un jeton se cherche, et le garde avoue ce qu il ne lit pas
+        # ⚠️ Trois de ses six cas doivent rester VERTS : empreintes, identifiants et longueurs
+        # voisines ne sont pas des jetons, et une IMAGE portant le motif ne doit pas le faire rougir -
+        # il ne sait pas la lire, et prétendre le contraire serait pire que ne rien faire.
+        #
+        # ⚠️ Un quatrième vérifie qu'il NOMME le fichier qu'il a écarté. C'est ce qui l'empêche d'être
+        # un faux vert : sans cette phrase, on croirait le canal des clips couvert.
+        run: |
+          chmod +x .github/scripts/verifie-forme-du-jeton.sh
+          ./.github/scripts/verifie-forme-du-jeton.sh --auto-test
+
       - name: Le contrôle du jeton sépare ses deux causes
         # ⚠️ Trois verdicts et non deux, et c'est tout l'objet de cet auto-test : « pas 200 » recouvre
         # un jeton mort - on en pose un frais - et une plateforme muette - poser un jeton frais n'y
