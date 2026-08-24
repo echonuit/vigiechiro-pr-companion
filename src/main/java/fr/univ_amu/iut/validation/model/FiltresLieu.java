@@ -8,53 +8,15 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-/// Restreindre des observations à un ou plusieurs **lieux**, en ligne de commande (#2971).
+/// Restreindre des observations à un ou plusieurs **lieux**, en ligne de commande (#2971). Pendant
+/// CLI de la puce « Lieu » de l'écran, avec trois écarts assumés.
 ///
-/// Pendant CLI de la puce « Lieu » de l'écran, avec **trois écarts assumés** que la conception a
-/// arbitrés parce qu'ils ne se déduisent pas de l'IHM.
-///
-/// ## Les trois niveaux, parce que la sortie désambiguïse (#3350)
-///
-/// Le domaine a **trois** niveaux : la commune, le carré (dont le nom convivial n'est que la seconde
-/// étiquette, #3157) et le point. Les trois se comparent.
-///
-/// Ce n'était pas le cas : le point avait été écarté au motif qu'un code seul (« A1 ») désigne autant
-/// de lieux qu'il y a de carrés - le schéma pose `UNIQUE(site_id, code)` - et qu'une ligne de commande
-/// n'a pas, contrairement à l'écran, de liste sous les yeux pour lever l'ambiguïté.
-///
-/// **L'inventaire a démenti la prémisse.** Toutes les sorties concernées portent le carré **et** le
-/// point : `lister-passages` sur chaque ligne, les CSV d'`exporter-sons` (colonnes « Carré », « Point »)
-/// et d'`exporter-activite` (idem), `solde-saison` en colonne. Un `--lieu A1` qui remonte les A1 de
-/// plusieurs carrés se lit donc sans ambiguïté, sur la sortie elle-même.
-///
-/// La règle qui en sort tient en une phrase : **c'est la sortie qui désambiguïse, pas le critère qui se
-/// restreint.** Corollaire pour la suite - une commande qui offre `--lieu` doit montrer le lieu ; c'est
-/// la thèse de l'[ADR 3151] appliquée à la ligne de commande, et `lister-observations` y manquait.
-///
-/// Le point se compare **qualifié par son carré** (« 640380 · A1 », #2992), comme
-/// `ListerPassages#dimensionsDuLieu` le faisait déjà : la correspondance étant partielle, `--lieu A1`
-/// et `--lieu 640380` retiennent l'un et l'autre ce qu'il faut.
-///
-/// ## Le carré se compare qualifié, mais se tape comme on veut
-///
-/// Ce que le **refus** nomme doit se recopier tel quel dans la commande suivante ; il liste donc les
-/// carrés comme l'écran les montre, « 640380 · Vallon » (#3159). Personne n'est pour autant obligé de
-/// taper un point médian : la correspondance étant partielle, `--lieu 640380` et `--lieu vallon`
-/// retiennent ce même carré, comme avant.
-///
-/// ## La correspondance est partielle
-///
-/// À l'écran on **coche dans une liste fermée** : la valeur est toujours exacte. En ligne de commande on
-/// tape à l'aveugle, sans rien pour rappeler l'orthographe ni les accents. `--lieu aix` trouve donc
-/// « Aix-en-Provence ». C'est déjà le comportement de `--campagne` côté multisite, pour la même raison.
-///
-/// ## Ne rien retenir est un refus, pas un résultat
-///
-/// Une valeur qui ne correspond à rien **arrête** la commande en nommant les lieux disponibles, plutôt
-/// que de rendre un ensemble vide. Une archive vide en code 0 est un succès qui ne contient rien : un
-/// script enchaînerait sans voir la faute de frappe, et l'expert recevrait un ZIP creux. C'est la forme
-/// que demande l'ADR 2635, un refus dit ce qui manque, et c'est déjà la règle de
-/// [SelectionObservations] pour un lot vide.
+/// **Les trois niveaux se comparent** : commune, carré - dont le nom convivial n'est que la seconde
+/// étiquette (#3157) - et point, qualifié par son carré (« 640380 · A1 », #2992). C'est la sortie
+/// qui désambiguïse, pas le critère qui se restreint (#3350). **La correspondance est partielle**,
+/// parce qu'on tape à l'aveugle : `--lieu aix` trouve « Aix-en-Provence », `--lieu 640380` comme
+/// `--lieu vallon` retiennent le même carré, que le refus liste comme l'écran le montre (#3159).
+/// **Ne rien retenir est un refus** au sens de l'ADR 2635, pas une archive vide en code 0.
 public final class FiltresLieu {
 
     private FiltresLieu() {}

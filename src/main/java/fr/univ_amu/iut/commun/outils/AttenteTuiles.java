@@ -13,53 +13,15 @@ import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
 import javafx.stage.Window;
 
-/// Attente des tuiles OpenStreetMap avant une capture d'écran comportant une carte.
+/// Attente des tuiles OpenStreetMap avant une capture comportant une carte, née deux fois : carte
+/// des points d'écoute (#152), modale GPS (#153).
 ///
-/// Le besoin est né deux fois de façon indépendante, sur la carte des points d'écoute (#152) puis
-/// sur la modale de saisie GPS (#153), et a produit deux fois le même code. La provenance est
-/// conservée ici parce qu'elle dit ce que l'attente sert : n'importe quelle capture affichant un
-/// fond cartographique, quel que soit l'écran.
-///
-/// Les tuiles se téléchargent en arrière-plan (réseau) puis se peignent sur le fil JavaFX. Sans
-/// attente, la capture fige la carte avant l'arrivée du fond. On pompe donc les évènements FX par une
-/// **boucle d'évènements imbriquée** ([Platform#enterNestedEventLoop]) : bloquer le fil JavaFX
-/// empêcherait justement le peinturage qu'on attend.
-///
-/// ## Pourquoi une condition, et non plus un délai (#3068)
-///
-/// Cette classe attendait **six secondes fixes**, puis photographiait quoi qu'il arrive. C'était une
-/// course contre le réseau, et le dépôt en payait le prix : quatre aperçus de carte changeaient d'un
-/// build à l'autre **sans qu'aucun code ne change**, parce qu'un nombre différent de tuiles avait eu le
-/// temps d'arriver.
-///
-/// Rien ne l'atténuait au fil des exécutions : Gluon Maps cache ses tuiles dans un répertoire
-/// **temporaire propre à chaque JVM** (`/tmp/.gluonmapsNNNN`). Chaque run repart donc d'un cache vide
-/// et rejoue la course en entier - ce qui explique aussi pourquoi le défaut est **intermittent** :
-/// selon le réseau, la course se gagne ou se perd.
-///
-/// ⚠️ **Cela ne rend pas les captures identiques au bit près**, et c'est mesuré : après ce correctif,
-/// les quatre aperçus de carte varient toujours d'un run à l'autre, sur **0,34 %** des pixels, en
-/// suivant les tracés fins des routes. Porter la quiétude exigée de 0,75 s à 3 s n'y change rien : ce
-/// sont les **tuiles elles-mêmes** qui diffèrent, et aucune attente ne corrigera cela.
-///
-/// **C'est assumé** (#3068). Le déterminisme est une règle sur ce que le **produit rend** ; les tuiles
-/// sont une entrée **extérieure** au dépôt. Ces captures valent parce qu'elles montrent une *vraie*
-/// carte - figer la source les rendrait plus stables et moins vraies. Détail dans `dev-docs/captures.md`.
-///
-/// Ce qui est corrigé ici est donc réel mais **distinct** de la variabilité : la course contre le réseau
-/// se perdait au hasard, et une capture pouvait partir avec des tuiles **manquantes**, ce qui n'est pas
-/// une nuance de rendu mais un fond absent. Gain annexe net : 8 captures en **10 s** au lieu de 48.
-///
-/// L'attente observe désormais l'**état du graphe de scène** : elle rend la main quand plus aucune
-/// image ne se charge et que leur nombre a cessé de bouger. Le délai n'est plus qu'un **plafond**.
-///
-/// **Best-effort, comme avant** : hors-ligne, le plafond s'écoule et la capture reste lisible (carrés,
-/// points ou marqueurs sur fond clair), seul le fond photographique manque. Aucun échec n'est levé.
-///
-/// À passer comme `preparation` de [ApercuFx#capturerApresPreparation] : cette méthode montre le
-/// Stage **avant** d'exécuter l'attente, ce qui rend la boucle imbriquée sans danger. Appelée hors
-/// de ce cadre, elle laisserait le toolkit dans un état où un `new Stage()` ultérieur échoue sous la
-/// Headless Platform de JavaFX 26 (même défaut que celui documenté sur [AttenteAudio]).
+/// Les tuiles arrivent en arrière-plan et se peignent sur le fil JavaFX ; sans attente la capture
+/// fige la carte avant le fond. D'où une **boucle imbriquée** ([Platform#enterNestedEventLoop]) qui
+/// observe l'**état du graphe** plutôt qu'un délai fixe (#3068), le délai n'étant plus qu'un
+/// plafond ; la variabilité résiduelle des tuiles est assumée (`dev-docs/captures.md`). À passer
+/// comme `preparation` de [ApercuFx#capturerApresPreparation] : hors de ce cadre, un `new Stage()`
+/// ultérieur échoue sous la Headless Platform.
 public final class AttenteTuiles {
 
     /// **Plafond**, en millisecondes : au-delà, on photographie ce qu'on a. C'est le cas hors-ligne, où
@@ -79,19 +41,12 @@ public final class AttenteTuiles {
     /// Attend que les tuiles soient arrivées, ou que le plafond soit atteint, en laissant tourner le
     /// fil JavaFX. À appeler **sur le thread JavaFX**.
     ///
-    /// ## Deux contraintes qui se contredisent, et comment elles se concilient
-    ///
-    /// Le **rythme** ne peut pas venir du fil JavaFX : celui-ci est bloqué dans la boucle imbriquée, et
-    /// sous la *Headless Platform* aucune pulsation d'animation ne le réveille. Une [javafx.animation.Timeline]
-    /// n'y tique **jamais** : essayée, elle a produit un interblocage franc, la capture ne rendant plus
-    /// jamais la main.
-    ///
-    /// La **mesure**, elle, ne peut pas venir d'un fil de veille : le graphe de scène n'est pas
-    /// thread-safe, et le lire depuis l'extérieur reviendrait à échantillonner une structure que le fil
-    /// JavaFX est en train de modifier.
-    ///
-    /// D'où ce partage : un fil de veille **compte le temps**, et fait exécuter chaque observation
-    /// **sur le fil JavaFX** par `runLater` - que la boucle imbriquée dépile, c'est justement son rôle.
+    /// Le **rythme** ne peut pas venir du fil JavaFX : il est bloqué dans la boucle imbriquée, et sous
+    /// la *Headless Platform* aucune pulsation ne le réveille - une [javafx.animation.Timeline] n'y
+    /// tique jamais, et l'essai a produit un interblocage franc. La **mesure**, elle, ne peut pas
+    /// venir d'un fil de veille : le graphe de scène n'est pas thread-safe. D'où le partage - un fil
+    /// de veille compte le temps, et fait exécuter chaque observation sur le fil JavaFX par
+    /// `runLater`, que la boucle imbriquée dépile.
     public static void attendre() {
         Object cle = new Object();
         Thread veilleur = Thread.ofVirtual().unstarted(() -> {
