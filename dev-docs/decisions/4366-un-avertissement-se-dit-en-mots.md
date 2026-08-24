@@ -22,16 +22,16 @@ generated:
 
 ## Contexte
 
-Le corpus porte **1 177 pictogrammes d'alerte**, répartis dans **459 fichiers**. La densité, plus
+Le corpus porte **2 044 pictogrammes d'alerte**, répartis dans **624 fichiers**. La densité, plus
 que le total, dit ce qui s'est passé :
 
 | Fichier | Pictogrammes | Densité |
 | --- | ---: | --- |
-| `dev-docs/decisions/index.md` | 67 | un toutes les **4 lignes** |
-| `scripts/doc-video/filme-un-parcours.sh` | 100 | un toutes les 17 lignes |
-| `dev-docs/ci-cd-release.md` (avant découpage) | 33 | un toutes les 37 lignes |
+| `dev-docs/decisions/index.md` | 106 | un toutes les **3 lignes** |
+| `scripts/doc-video/filme-un-parcours.sh` | 119 | un toutes les 17 lignes |
+| `dev-docs/ci-cd-release.md` | 46 | un toutes les 29 lignes |
 
-Sur une page où une ligne sur quatre commence par « attention », le lecteur cesse de voir le signe.
+Sur une page où une ligne sur trois commence par « attention », le lecteur cesse de voir le signe.
 Il ne hiérarchise plus rien. Le défaut est difficile à repérer : une page saturée de marqueurs a la
 même apparence qu'une page où chaque marqueur compte.
 
@@ -69,8 +69,13 @@ Toutes disent la même chose : effacer y serait falsifier.
   libellés commençaient par un ⚠ » parle du caractère, il ne s'en sert pas pour alerter. L'effacer
   ne raccourcirait pas la phrase, il la rendrait fausse.
 
-Sur 1 177 occurrences, 1 105 ont été retirées. Les 72 restantes sont des citations du caractère ou
-des messages émis par le programme, et le garde ne les compte pas. Le cliquet est donc à zéro.
+Sur 2 044 occurrences, le garde en retient **1 553**. Les 491 autres sont du contenu montré, des
+blocs de code, des messages émis par le programme ou le caractère cité, et il ne les compte pas. Le
+cliquet ouvre donc à 1 553, et la résorption reste entière.
+
+Cette valeur est celle de **cet** arbre. La décision vient d'un dépôt où le nettoyage avait déjà eu
+lieu et où le cliquet valait zéro ; elle a été remesurée en arrivant ici, comme
+[4334](4334-ce-que-le-portage-a-decide-de-ne-pas-porter.md) le demande de tout dispositif porté.
 
 Deux bornes tiennent ces cécités, parce qu'une exemption sans borne devient une zone franche. Le
 voisinage d'un autre marqueur se mesure à **32 caractères** de part et d'autre, et non sur la ligne
