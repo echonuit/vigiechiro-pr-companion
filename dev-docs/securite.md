@@ -113,6 +113,26 @@ données d'exemple ou de test.
     est **révoqué en fin de run** (`POST /logout`, #4305), parce qu'il produit une image que rien ne
     masque et qui sera publiée. Le masquage de GitHub ne couvre que les **journaux**.
 
+    Cette révocation a une conséquence qu'il faut connaître : **après un tournage, le secret est posé
+    et ne vaut plus rien**. Le tournage l'**éprouve** donc par un `GET /moi` avant de filmer plutôt que
+    de constater sa présence, et refuse en nommant la cause - « la plateforme refuse ce jeton » plutôt
+    qu'un scénario qui rougit trois pas plus loin (#4328, `verifie-jeton-vivant.sh`). Il sépare
+    « jeton mort » de « plateforme muette », qui n'appellent pas le même geste : poser un jeton frais
+    pendant une panne d'Heroku ne servirait à rien.
+
+- **Les textes d'un tournage sont balayés avant de partir en artefact** (#4327,
+  `verifie-forme-du-jeton.sh`). Un jeton Vigie-Chiro a une forme exacte - trente-deux caractères de
+  `[A-Z0-9]`, mesuré dans `auth.py` - et le balayage a lieu **avant** l'envoi, l'envoi en dépendant :
+  sur un dépôt public, un artefact d'Actions se télécharge sans authentification, et le reprendre plus
+  tard serait déjà trop tard.
+
+- **Un appel de workflow ne transmet que ce dont l'appelé se sert** (#4349). `release.yml` passait
+  `secrets: inherit` à trois workflows appelés, dont un qui exécute les tests du produit : tout le
+  trousseau du dépôt leur était offert. Aucun n'était lu - ce n'était pas une fuite, c'était une
+  surface, et le raisonnement est celui de #2739. Une déclaration nominale côté **appelé** n'achète
+  rien tant que l'**appelant** hérite, et `verifie-portee-des-secrets.sh` tient désormais les deux
+  bouts.
+
 ## Ce qui n'est pas protégé, et pourquoi
 
 Une page de sécurité qui n'énumère que ses protections se lit comme une promesse. Voici la liste
@@ -124,6 +144,7 @@ complémentaire, celle des **non-protections assumées** ([ADR 2736](decisions/2
 | Le **jeton** de session | `connexion.json`, restreint à `600` | Session de ~14 jours, révocable ; un attaquant local qui le lit lit tout aussi bien la base d'à côté |
 | Les **sauvegardes** (base + audio) | là où l'utilisateur les range | Une sauvegarde chiffrée dont on perd la clé est perdue **au moment précis où elle sert** |
 | Les **exports** (CSV, sons) | fichier choisi par l'utilisateur | Ils sont faits pour être ouverts ailleurs : les chiffrer les rendrait inutilisables |
+| L'**image** d'un clip de recette | pré-version `clips-connectes`, tag d'une version | Le balayage de #4327 lit les **textes** et le dit : une image n'est lue par aucun garde, et le masquage de GitHub ne couvre que les journaux. Ce qui protège un clip est en **amont** - le jeton n'entre pas par l'écran, et il est révoqué en fin de tournage |
 
 **Pourquoi la clé est le vrai obstacle.** Dérivée d'un mot de passe, elle transforme la sauvegarde en
 piège. Stockée à côté de l'archive, elle ne protège de rien. Confiée à un coffre système, elle rend la

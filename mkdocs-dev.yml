@@ -270,6 +270,7 @@ nav:
     - 4264 · Un helper partagé route vers le fil de l'application: decisions/4264-un-helper-partage-route-vers-le-fil-de-l-application.md
     - 4291 · Un clip tourné contre la plateforme ne se range pas avec les autres: decisions/4291-un-clip-tourne-contre-la-plateforme-ne-se-range-pas-avec-les-autres.md
     - 4079 · Une condition de job nomme l'état qu'elle attend: decisions/4079-une-condition-de-job-nomme-l-etat-qu-elle-attend.md
+    - 4331 · Un garde exécute la règle qu'il juge: decisions/4331-un-garde-execute-la-regle-qu-il-juge.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

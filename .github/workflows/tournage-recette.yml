@@ -13,7 +13,7 @@
 #
 # ## Ce qu'il publie, et ce qu'il ne publie pas
 #
-# ⚠️ Il ne touche **jamais** à `clips-recette`, qui reste alimentée par `recette-filmee.yml`. Deux
+# Il ne touche **jamais** à `clips-recette`, qui reste alimentée par `recette-filmee.yml`. Deux
 # dispositifs qui publieraient au même endroit se contrediraient tôt ou tard, et le sort du banc bash
 # se décide à part, les deux bancs comparés sur le même tournage.
 #
@@ -23,19 +23,19 @@
 #   - la pré-version `clips-connectes`, quand le tournage est CONNECTÉ (#4306). Celle-là ne se compare
 #     pas : ses clips suivent des données vivantes, et `comparer-tournages.yml` la refuse.
 #
-# ⚠️ Et « le reste demeure en artefact » n'est pas une protection : sur un dépôt public, un artefact se
+# Et « le reste demeure en artefact » n'est pas une protection : sur un dépôt public, un artefact se
 # télécharge SANS authentification (mesuré, cf. `dev-docs/spikes/tournage-contre-la-plateforme.md`).
 #
 # ## Le garde, et pourquoi il porte sur les CAS
 #
-# ⚠️ Compter les clips ne prouverait rien : un tournage qui rend « des clips » peut en avoir perdu la
+# Compter les clips ne prouverait rien : un tournage qui rend « des clips » peut en avoir perdu la
 # moitié. Ce qui se vérifie, c'est que chaque cas CITÉ de la session a bien sa ligne dans l'index.
 # Le nombre attendu ne se devine pas non plus : il est dérivé par `CorrespondanceRecetteTest`, qui
 # balaie le classpath, et déposé dans `sessions-a-filmer.tsv` à côté des classes.
 
 name: tournage de recette
 
-# ⚠️ Le `run-name` est PUBLIC : sur ce dépôt, le `display_title` d'un run se lit sans authentification
+# Le `run-name` est PUBLIC : sur ce dépôt, le `display_title` d'un run se lit sans authentification
 # (mesuré, cf. `dev-docs/spikes/tournage-contre-la-plateforme.md`). On y met donc des choix, jamais une
 # valeur. « connecté » est un fait utile à lire dans la liste des runs ; le jeton, lui, n'y passe pas.
 run-name: "tournage ${{ inputs.session }} sur ${{ inputs.plateforme }}${{ inputs.connecte && ' · connecté' || '' }}"
@@ -73,7 +73,7 @@ on:
         type: boolean
         default: false
 
-  # ⚠️ Un second bloc, et non le même : `workflow_call` ne connaît pas `type: choice`. Les valeurs
+  # Un second bloc, et non le même : `workflow_call` ne connaît pas `type: choice`. Les valeurs
   # possibles restent celles de la liste ci-dessus, et c'est l'appelant qui en répond.
   #
   # Le train appelle ce workflow pour PRÉPARER LA TRANSITION vers le banc Java : les deux bancs
@@ -99,7 +99,7 @@ on:
         type: boolean
         default: false
 
-    # ⚠️ Déclaré NOMMÉMENT, et surtout pas `secrets: inherit`. L'héritage passerait aussi
+    # Déclaré NOMMÉMENT, et surtout pas `secrets: inherit`. L'héritage passerait aussi
     # `FLATPAK_GPG_KEY` et `WINGET_TOKEN` à un job qui exécute les tests du produit, c'est-à-dire du
     # code qui change à chaque PR, pour la commodité de ne pas écrire trois lignes.
     secrets:
@@ -111,7 +111,7 @@ permissions:
   contents: read
 
 jobs:
-  # ⚠️ Le runner se CALCULE, il ne se filtre pas. Une matrice filtrée par `if:` laisserait des jobs
+  # Le runner se CALCULE, il ne se filtre pas. Une matrice filtrée par `if:` laisserait des jobs
   # démarrer pour ne rien faire, et une pastille verte qui ne dit pas si la plateforme a été
   # éprouvée ou seulement visitée. Même parti que `suite-sous-windows-et-macos.yml`.
   choisir:
@@ -126,7 +126,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # ⚠️ Le cas par défaut REFUSE, il ne se rabat pas. Tant que ce workflow n'était appelé qu'à
+          # Le cas par défaut REFUSE, il ne se rabat pas. Tant que ce workflow n'était appelé qu'à
           # la main, la liste de choix rendait une valeur inconnue impossible. Depuis qu'il est
           # appelable (`workflow_call`), l'entrée est une chaîne libre : un `*) ubuntu` filmerait
           # alors sur Linux une demande de tournage Windows, et le rapport dirait « windows » dans son
@@ -146,11 +146,11 @@ jobs:
   filmer:
     name: Filmer ${{ inputs.session }}
     needs: choisir
-    # ⚠️ `needs.choisir.result == 'success'` est implicite ici : sans le runner calculé, ce job n'a
+    # `needs.choisir.result == 'success'` est implicite ici : sans le runner calculé, ce job n'a
     # pas de machine où tourner, donc il ne doit pas démarrer.
     runs-on: ${{ needs.choisir.outputs.runner }}
     timeout-minutes: 90
-    # ⚠️ Le verdict des tests sort du job, parce que la pré-version doit le porter : un clip de cas
+    # Le verdict des tests sort du job, parce que la pré-version doit le porter : un clip de cas
     # échoué s'y verse comme les autres, et rien ne l'en distinguait (#4351).
     outputs:
       verdict: ${{ steps.oracle.outputs.verdict }}
@@ -166,7 +166,7 @@ jobs:
           check-latest: false
           cache: maven
 
-      # ⚠️ On CONSTATE avant d'installer. Aucune des trois images GitHub ne porte `ffmpeg`, mais
+      # On CONSTATE avant d'installer. Aucune des trois images GitHub ne porte `ffmpeg`, mais
       # cela peut changer, et un pas d'installation qui devient inutile se voit ici plutôt que de
       # coûter vingt secondes à chaque tournage sans que personne ne le sache.
       - name: ffmpeg est-il déjà là ?
@@ -199,7 +199,7 @@ jobs:
           path: ${{ runner.temp }}/apt-vigiechiro
           key: apt-${{ runner.os }}-tournage-recette
 
-      # ⚠️ `installer-paquets.sh`, et non `apt-get` en direct : `verifie-apt.sh` refuse la seconde
+      # `installer-paquets.sh`, et non `apt-get` en direct : `verifie-apt.sh` refuse la seconde
       # forme, et exige le cache ci-dessus avec son `APT_CACHE`.
       - name: Installer ffmpeg (Linux)
         if: ${{ steps.ffmpeg.outputs.installe == 'manquant' && runner.os == 'Linux' }}
@@ -209,11 +209,11 @@ jobs:
         run: bash .github/scripts/installer-paquets.sh ffmpeg
 
       # La liste ne se maintient pas à la main : elle est DÉRIVÉE du classpath, cas par cas.
-      # ⚠️ Les entrées passent par `env:` et non par interpolation dans le shell. Elles viennent
+      # Les entrées passent par `env:` et non par interpolation dans le shell. Elles viennent
       # d'une liste fermée, donc rien ne peut s'y glisser aujourd'hui ; l'habitude, elle, se prend
       # avant le jour où quelqu'un rendra l'entrée libre.
       #
-      # ⚠️ Tout se lit en `awk` : `bc` n'existe pas sur le Git Bash des runners Windows, et une
+      # Tout se lit en `awk` : `bc` n'existe pas sur le Git Bash des runners Windows, et une
       # tabulation littérale dans un motif `grep` ne survit pas au YAML.
       - name: Dériver les classes de la session
         id: liste
@@ -227,7 +227,7 @@ jobs:
           derive=target/recette/sessions-a-filmer.tsv
           [ -s "${derive}" ] || { echo "::error::${derive} est absent ou vide : la dérivation n'a rien produit."; exit 1; }
 
-          # ⚠️ En connecté, la dérivation par session ne s'applique pas : le corpus connecté est
+          # En connecté, la dérivation par session ne s'applique pas : le corpus connecté est
           # choisi par un TAG, pas par une session, et le compte de la session mélangerait les
           # scénarios bouchonnés avec les autres. L'oracle exhaustif est donc remplacé, plus bas, par
           # un contrôle plus faible - et qui le DIT.
@@ -240,7 +240,7 @@ jobs:
           else
             classes=$(awk -F'\t' -v s="${SESSION}" '$1 == s {print $3}' "${derive}")
             attendus=$(awk -F'\t' -v s="${SESSION}" '$1 == s {print $2}' "${derive}")
-            # ⚠️ Une session SANS cas cité n'est pas une panne du dispositif : c'est l'état du
+            # Une session SANS cas cité n'est pas une panne du dispositif : c'est l'état du
             # dépôt, et la plupart des sessions y sont encore. On le dit et on s'arrête, plutôt que
             # de lancer un tournage qui rendrait zéro clip et un garde qui ne saurait quoi conclure.
             [ -n "${classes}" ] || { echo "::error::${SESSION} ne cite aucun cas : il n'y a rien à filmer."; exit 1; }
@@ -255,14 +255,14 @@ jobs:
             echo "- classes : \`${classes}\`"
           } >> "${GITHUB_STEP_SUMMARY}"
 
-      # ⚠️ `failure.ignore` : on veut les CLIPS. Un cas qui rougit produit son clip comme les autres,
+      # `failure.ignore` : on veut les CLIPS. Un cas qui rougit produit son clip comme les autres,
       # et c'est même celui-là qu'on veut regarder. Subordonner le tournage au vert de la session
       # rendrait les clips otages d'une condition sans rapport avec ce qu'ils servent à juger.
       #
       # Aucun `forkCount` imposé : filmer le graphe de scène n'exige pas un écran unique, et
       # `IndexDesCas` fusionne les fragments de toutes les JVM.
       #
-      # ⚠️ La détection automatique n'est pas un détail de confort : sans elle, seules les classes
+      # La détection automatique n'est pas un détail de confort : sans elle, seules les classes
       # qui portent encore `@ExtendWith(EnregistreurDeFilm.class)` sont filmées, c'est-à-dire les
       # quatre scénarios perceptifs de #3791. Mesuré sur le premier tournage de `S1` : **3 cas sur
       # 37**. Ni `S6` ni `S4` ne pouvaient le révéler - leurs seules classes sont justement celles
@@ -271,12 +271,12 @@ jobs:
       # Ce qui la rend sûre est ailleurs : `EnregistreurDeFilm.aFilmer` écarte les tests qui ne
       # citent aucun cas (#4162). Sans ce filtre, la même ligne rendrait des centaines de clips de
       # carton.
-      # ⚠️ Le tournage connecté REFUSE de partir sans son jeton, plutôt que de filmer hors ligne. Un
+      # Le tournage connecté REFUSE de partir sans son jeton, plutôt que de filmer hors ligne. Un
       # écran déconnecté est parfaitement convaincant : le clip ne serait pas faux, il serait muet sur
       # son propre objet (ADR 4142), et on le regarderait en croyant savoir. Le banc porte le même
       # refus (`BancDeRecette#connecteALaPlateforme`) ; celui-ci arrive plus tôt et coûte moins cher.
       #
-      # ⚠️ Et il ÉPROUVE le jeton, il ne constate pas sa présence (#4328). Le tournage révoque le sien
+      # Et il ÉPROUVE le jeton, il ne constate pas sa présence (#4328). Le tournage révoque le sien
       # en fin de run (#4305) sans retirer le secret : après un tournage, `VIGIECHIRO_TOKEN_TOURNAGE`
       # a l'air parfaitement valide et ne vaut plus rien. Un scénario rougit alors sur « le libellé
       # d'identité est vide », c'est-à-dire à trois pas de sa cause - et le run, lui, finit VERT.
@@ -290,17 +290,17 @@ jobs:
           chmod +x .github/scripts/verifie-jeton-vivant.sh
           ./.github/scripts/verifie-jeton-vivant.sh
 
-      # ⚠️ Le secret vit dans l'`env:` de CE PAS, jamais dans celui du job, et
+      # Le secret vit dans l'`env:` de CE PAS, jamais dans celui du job, et
       # `verifie-portee-des-secrets.sh` (#4303) le refuse ailleurs. La raison n'est pas cosmétique :
       # `ConnexionModule.jetonPonctuel()` lit `System.getenv`, les forks surefire héritent de
       # l'environnement du job, et l'URL de base vaut la production par défaut.
       #
-      # ⚠️ Et ce pas-ci lance TOUTE la liste de classes, qui partagent donc cet environnement. Ce qui
+      # Et ce pas-ci lance TOUTE la liste de classes, qui partagent donc cet environnement. Ce qui
       # empêche un scénario non connecté de s'en servir n'est pas la portée du secret mais le banc
       # lui-même : depuis #4304 il lie sa propre source de jeton, et seul `connecteALaPlateforme()`
       # va chercher celui du processus.
       #
-      # ⚠️ `VIGIECHIRO_URL` est DÉCLARÉE, même quand elle vaut la production. Un défaut implicite qui
+      # `VIGIECHIRO_URL` est DÉCLARÉE, même quand elle vaut la production. Un défaut implicite qui
       # pointe sur la production est un défaut qu'on oublie de relire.
       - name: Filmer
         shell: bash
@@ -309,13 +309,13 @@ jobs:
           VIGIECHIRO_URL: ${{ inputs.connecte && 'https://vigiechiro.herokuapp.com/api/v1' || '' }}
         run: |
           set -uo pipefail
-          # ⚠️ Connecté, le tournage ne joue QUE les scénarios écrits pour la plateforme
+          # Connecté, le tournage ne joue QUE les scénarios écrits pour la plateforme
           # (`@Tag("recette-connectee")`), et il les joue TOUS, sans se restreindre à une session. Le
           # tag est exclu du build par défaut : sans jeton, ces scénarios refusent de monter, et les
           # laisser dans la suite ordinaire la ferait rougir sur chaque PR (#4307).
           selection=(-Dtest="${{ steps.liste.outputs.classes }}")
           if [ "${{ inputs.connecte }}" = "true" ]; then
-            # ⚠️ Les DEUX propriétés, et c'est le défaut que le premier tir a trouvé : poser
+            # Les DEUX propriétés, et c'est le défaut que le premier tir a trouvé : poser
             # `groups` seul ne lève pas l'exclusion, et surefire n'a rien sélectionné. Le tournage
             # a rendu « Tests run: 0 », un build VERT, et n'a échoué qu'à l'étape suivante sur un
             # index absent. C'est ce que fait le profil `-Papi-live` : il inverse les deux.
@@ -330,7 +330,7 @@ jobs:
             2>&1 | tee tournage.log
           echo "Maven a rendu ${PIPESTATUS[0]} ; le verdict est pris à l'étape suivante."
 
-      # ⚠️ Le garde porte sur les CAS, pas sur le nombre de fichiers. Un tournage qui rend « des
+      # Le garde porte sur les CAS, pas sur le nombre de fichiers. Un tournage qui rend « des
       # clips » peut en avoir perdu la moitié, et un compte de fichiers ne le dirait pas.
       - name: Chaque cas de la session a sa ligne
         id: oracle
@@ -350,7 +350,7 @@ jobs:
             motif="^${SESSION}-"
           fi
           # La première colonne du tableau, dédoublonnée : un cas joué par deux tests a deux lignes.
-          # ⚠️ La sortie est CAPTURÉE avant d'être comptée : sous `pipefail`, un `grep` en bout de
+          # La sortie est CAPTURÉE avant d'être comptée : sous `pipefail`, un `grep` en bout de
           # tube ne dit rien du code de ce qui est à sa gauche, et un index illisible se compterait
           # comme un index vide.
           colonne=$(grep -E '^\| S' "${index}" | cut -d'|' -f2 | tr -d ' ' || true)
@@ -361,7 +361,7 @@ jobs:
             clips=$((clips + 1))
           done
 
-          # ⚠️ Ce que les tests ont DONNÉ, et pas seulement ce que le tournage a indexé. Le tournage
+          # Ce que les tests ont DONNÉ, et pas seulement ce que le tournage a indexé. Le tournage
           # tourne sous `-Dmaven.test.failure.ignore=true` - on veut les clips d'un cas qui rougit -,
           # si bien qu'un scénario rouge laisse le job VERT. Mesuré sur le run 32696587259 : le seul
           # endroit où l'échec existait était une ligne de Maven dans un journal de trois mille.
@@ -381,7 +381,7 @@ jobs:
 
           echo "cas obtenus : ${obtenus} / ${ATTENDUS}, clips : ${clips}"
 
-          # ⚠️ Connecté, le compte attendu ne vient PAS de la session : le corpus se choisit par un
+          # Connecté, le compte attendu ne vient PAS de la session : le corpus se choisit par un
           # tag, et ses cas appartiennent aux sessions ordinaires. Il est dérivé à part par
           # `CorrespondanceRecetteTest`, dans `cas-connectes.txt` (#4326).
           #
@@ -412,14 +412,14 @@ jobs:
             exit 1
           }
 
-      # ⚠️ ICI, et pas dans le job qui verse. L'idée de le mettre plus tard paraît plus sûre - plus
+      # ICI, et pas dans le job qui verse. L'idée de le mettre plus tard paraît plus sûre - plus
       # près de la publication - et c'est l'inverse : sur un dépôt PUBLIC, un artefact d'Actions se
       # télécharge sans authentification. Quand `publier-connecte` le reprend, il est déjà dehors.
       #
-      # ⚠️ `always()` : un tournage qui a échoué laisse quand même son artefact - c'est fait exprès,
+      # `always()` : un tournage qui a échoué laisse quand même son artefact - c'est fait exprès,
       # on veut les clips d'un cas rouge - donc le balayage doit passer là aussi.
       #
-      # ⚠️ Et il ne balaie QUE les textes. L'image n'est couverte par personne, le garde le dit lui-
+      # Et il ne balaie QUE les textes. L'image n'est couverte par personne, le garde le dit lui-
       # même dans son compte rendu plutôt que de laisser croire le canal fermé (#4327).
       - name: Aucun texte du tournage n a la forme d un jeton
         id: formes
@@ -430,7 +430,7 @@ jobs:
           ./.github/scripts/verifie-forme-du-jeton.sh target/recette/clips tournage.log \
             | tee -a "${GITHUB_STEP_SUMMARY}"
 
-      # ⚠️ L'envoi DÉPEND du balayage, et c'est le seul agencement qui serve à quelque chose : garder
+      # L'envoi DÉPEND du balayage, et c'est le seul agencement qui serve à quelque chose : garder
       # `always()` seul enverrait l'artefact malgré la trouvaille, et le garde n'aurait fait que
       # l'annoncer. Le prix est assumé - une suspicion coûte les clips du run - et il est le bon :
       # un artefact de dépôt public ne se reprend pas.
@@ -449,20 +449,20 @@ jobs:
   # les tests du produit, donc du code qui change à chaque PR. Lui donner le droit d'écrire dans le
   # dépôt élargirait la surface pour une commodité. Celui-ci ne fait que reprendre l'artefact.
   #
-  # ⚠️ Il ne verse QUE sur le tag, jamais sur une pré-version roulante. `clips-java` est un
+  # Il ne verse QUE sur le tag, jamais sur une pré-version roulante. `clips-java` est un
   # INSTANTANÉ daté, celui que la page de comparaison des deux bancs interroge : la faire écraser par
   # le train rendrait cette page fausse du jour au lendemain (#4258).
   #
-  # ⚠️ Et il ne s'exécute que si `filmer` a réussi. C'est ce qui donne au banc Java la garantie que le
+  # Et il ne s'exécute que si `filmer` a réussi. C'est ce qui donne au banc Java la garantie que le
   # banc bash ne sait pas donner : son étape « Chaque cas de la session a sa ligne » compare les cas
   # OBTENUS aux cas ATTENDUS et échoue s'il en manque un. Un tournage amputé ne peut donc pas se
   # graver sur un tag immuable.
   # ------------------------------------------------------------------------------------------------
-  # ⚠️ Un JOB, et non un pas du job qui filme. Un pas ne s'exécute pas quand le job qui le porte a été
+  # Un JOB, et non un pas du job qui filme. Un pas ne s'exécute pas quand le job qui le porte a été
   # ANNULÉ ou a atteint son butoir de quatre-vingt-dix minutes - deux cas où le jeton a pourtant vécu,
   # et où il resterait valide ses quatorze jours.
   #
-  # ⚠️ `always()`, et non `success()` : le run qu'on ira regarder est justement celui qui a mal tourné,
+  # `always()`, et non `success()` : le run qu'on ira regarder est justement celui qui a mal tourné,
   # donc celui dont l'artefact sera ouvert. Et la condition NOMME cet état plutôt que de le laisser
   # deviner : sans fonction d'état, GitHub enveloppe la condition en `success() && (...)` sur tout le
   # graphe amont, et ce job serait sauté le jour où il sert le plus (ADR 4079, la 2.186.0).
@@ -472,7 +472,7 @@ jobs:
     if: ${{ always() && inputs.connecte }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # ⚠️ Le verdict sort du job, parce que le versement en dépend : depuis #4324 le clip MONTRE le
+    # Le verdict sort du job, parce que le versement en dépend : depuis #4324 le clip MONTRE le
     # jeton, et ce qui rend cela sans conséquence est qu'il soit mort. « Mort » doit donc être un fait
     # confirmé par la plateforme, pas une hypothèse sur ce que le job a probablement fait.
     outputs:
@@ -490,16 +490,16 @@ jobs:
           ./.github/scripts/revoque-jeton.sh
 
   # ------------------------------------------------------------------------------------------------
-  # ⚠️ Une pré-version À PART, et c'est tout l'objet de #4306. Des données vivantes font bouger l'écran
+  # Une pré-version À PART, et c'est tout l'objet de #4306. Des données vivantes font bouger l'écran
   # sans qu'aucun commit ait changé : le plancher de bruit de `compare-tournages.sh` mesurerait alors la
   # plateforme et non le rendu. Verser ces clips sur `clips-recette` ou à côté des `java-` d'un tag
   # ferait se contredire deux dispositifs EN SILENCE, puisque tous deux produisent des clips valides.
   #
-  # ⚠️ Et contrairement à la révocation, ce job ne part QUE si le tournage a réussi. Un jeton doit
+  # Et contrairement à la révocation, ce job ne part QUE si le tournage a réussi. Un jeton doit
   # mourir dans tous les cas ; un tournage amputé, lui, n'a pas à se publier.
   publier-connecte:
     name: Verser les clips connectés sur leur pré-version
-    # ⚠️ Il attend AUSSI la révocation, et pas seulement le tournage. Depuis #4324 le clip montre le
+    # Il attend AUSSI la révocation, et pas seulement le tournage. Depuis #4324 le clip montre le
     # jeton collé - c'est ce qui le rend lisible, et c'est sans conséquence tant que le jeton est mort.
     # Publier avant d'en être sûr échangerait un clip illisible contre un secret vivant sur une
     # pré-version publique.
@@ -540,7 +540,7 @@ jobs:
           FIN
           )
           corps="${corps}"$'\n\n'"Dernier versement : ${SESSION} sur ${PLATEFORME}, le $(date -u +%F) à $(date -u +%H:%M) UTC."
-          # ⚠️ Et ce que les tests ont donné. C'est ici que le lecteur d'un clip arrive, donc ici que
+          # Et ce que les tests ont donné. C'est ici que le lecteur d'un clip arrive, donc ici que
           # « ce clip montre un cas qui a rougi » doit se lire - pas dans un journal de run (#4351).
           corps="${corps}"$'\n\n'"${VERDICT}"
           if gh release view clips-connectes >/dev/null 2>&1; then
@@ -564,7 +564,7 @@ jobs:
             find repris -type f | head -20
             exit 1
           }
-          # ⚠️ Pas de préfixe, et ce n'est pas un oubli : la SÉPARATION est portée par la pré-version
+          # Pas de préfixe, et ce n'est pas un oubli : la SÉPARATION est portée par la pré-version
           # elle-même. Un préfixe servirait à distinguer deux populations rangées au même endroit ;
           # ici il n'y en a qu'une, et le nom nu garde les adresses lisibles depuis la page.
           gh release upload clips-connectes "${clips[@]}" --clobber
@@ -573,7 +573,7 @@ jobs:
           fi
           echo "${#clips[@]} clip(s) versé(s) sur « clips-connectes »." >> "${GITHUB_STEP_SUMMARY}"
 
-      # ⚠️ `--clobber` remplace et ajoute ; il ne retire RIEN. Un cas renommé laisse donc son clip en
+      # `--clobber` remplace et ajoute ; il ne retire RIEN. Un cas renommé laisse donc son clip en
       # ligne, et ce clip continue de montrer un comportement que le produit n'a plus. C'est arrivé
       # ici même : le passage de deux scénarios à un seul (#4324) a laissé deux pièces orphelines sur
       # cette pré-version, que la page continuait de proposer.
@@ -628,7 +628,7 @@ jobs:
             exit 1
           fi
 
-          # ⚠️ `target/recette/clips/`, et non `clips/`. L'action d'envoi range les fichiers sous leur
+          # `target/recette/clips/`, et non `clips/`. L'action d'envoi range les fichiers sous leur
           # plus petit ancêtre commun, et `tournage.log` vit à la racine du workspace : l'archive
           # conserve donc le chemin entier. Vérifié sur un artefact rapatrié, pas déduit.
           clips=(repris/target/recette/clips/*.mp4)
@@ -638,7 +638,7 @@ jobs:
             exit 1
           }
 
-          # ⚠️ Le PRÉFIXE. Les deux bancs nomment leurs pièces à l'identique - 50 noms communs sur 51,
+          # Le PRÉFIXE. Les deux bancs nomment leurs pièces à l'identique - 50 noms communs sur 51,
           # mesuré - et les verser tous deux sans préfixe les ferait s'écraser EN SILENCE.
           rm -rf versionnes && mkdir -p versionnes
           for clip in "${clips[@]}"; do
