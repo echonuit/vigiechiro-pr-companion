@@ -99,3 +99,15 @@ cliquet ne descendra pas à zéro, il compte une dette, pas une faute.
   bloc de 50 lignes réécrit en 22.
 - **Une passe mécanique de suppression.** Le motif est trivial à trouver, le remède ne l'est pas.
 - **Interdire la prose en javadoc.** Une classe difficile mérite un paragraphe.
+
+## La jurisprudence du cliquet
+
+Le cliquet de cette décision suit deux ADR antérieures.
+[2867](2867-une-dette-se-tient-par-un-cliquet.md) pose qu'une dette se tient par un compteur qui ne
+remonte pas, plutôt que par un nettoyage qu'on remet.
+[2941](2941-un-cliquet-s-apprend-en-l-appliquant.md) ajoute que sa valeur d'ouverture se mesure, et
+que le resserrer est un geste distinct de le poser.
+
+[3540](3540-un-cliquet-qui-compte-n-est-pas-la-preuve-de-la-regle.md) dit la limite : un compteur qui
+ne monte pas prouve que rien ne s'ajoute, pas que la règle est comprise. C'est pourquoi le garde rend
+des suspects et non des fautes.

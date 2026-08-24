@@ -243,7 +243,7 @@ def verifie(decisions: pathlib.Path = None, constitution: pathlib.Path = None,
     fautes: list[str] = []
 
     # Sans annexe, le contrôle des clés serait vide et ne dirait rien. Un dispositif qui peut ne
-    # rien vérifier le dit (article A3), et ici il refuse plutôt que de passer au vert.
+    # rien vérifier le dit (article A3, ADR 2748), et ici il refuse plutôt que de passer au vert.
     if not vocabulaire:
         fautes.append(
             "annexe : le vocabulaire des heuristiques est introuvable ou vide ; "
