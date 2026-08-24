@@ -414,6 +414,24 @@ def test_4359_javadoc_narratif() -> None:
         _verifie("4359 compte la prose au-dela du seuil, epargne le bloc court et les etiquettes", n, 3)
 
 
+def test_4366_avertissement_en_pictogramme() -> None:
+    m = _charge("4366-avertissement-en-pictogramme.py")
+    A = chr(0x26A0) + chr(0xFE0F)
+    # Le detecteur est trivial, son EPARGNE ne l est pas : c est la qu il se trompe s il se trompe.
+    # Un cas par cecite declaree en tete du script, plus le cas positif qui les rend non vides.
+    cas = [
+        ("prose : le signe alerte", f"{A} ne pas redemarrer entre deux passages.", ".md", False, 1),
+        ("cite entre accents graves", f"les libelles commencaient par un `{A}`.", ".md", False, 0),
+        ("cite entre guillemets francais", f"le signe « {A} » ouvrait la ligne.", ".md", False, 0),
+        ("voisin d un autre marqueur", f"un \u2717 interdit ; un {A} laisse deposer.", ".md", False, 0),
+        ("dans un bloc de code markdown", f"{A} sortie du programme", ".md", True, 0),
+        ("chaine litterale d un fichier de code", f'echo "{A} rien n a ete filme"', ".sh", False, 0),
+        ("noeud montre d une maquette", f"<text x=\"10\">{A} attention</text>", ".svg", False, 0),
+    ]
+    for titre, ligne, suffixe, bloc, attendu in cas:
+        _verifie(f"4366 {titre}", len(m.alertes(ligne, suffixe, bloc)), attendu)
+
+
 def test_rapport_et_resserrement() -> None:
     rapport = _charge("rapport.py")
     # Le parsing : une ligne normalisée doit être reconnue.
@@ -530,6 +548,7 @@ if __name__ == "__main__":
         test_2635_refus_sans_surface,
         test_3947_message_enveloppe,
         test_4359_javadoc_narratif,
+        test_4366_avertissement_en_pictogramme,
         test_loupe_0020,
         test_loupe_0044,
         test_rapport_et_resserrement,
