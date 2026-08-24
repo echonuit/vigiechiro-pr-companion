@@ -547,3 +547,26 @@ jobs:
         # squash, et que le CHANGELOG est le seul fichier que la typographie ne peut pas rattraper
         # après coup. Un garde qui cesserait de détecter laisserait la source se rouvrir en silence.
         run: bash .github/scripts/verifie-titre-pr.sh --auto-test
+
+      - name: Le paquet OKF des décisions est conforme (bloquant)
+        # `dev-docs/decisions` est un paquet OKF depuis #4336 : chaque ADR porte un en-tête typé, se
+        # rattache à un article de la constitution, et gage le niveau de vérification qu'elle
+        # déclare. Avant ce garde, 194 documents se disaient tous « Accepté » et rien ne pouvait le
+        # contredire.
+        # L'auto-test tourne d'abord, comme pour ses voisins : il casse à la main ce que chacun des
+        # huit refus prétend attraper, et exige de le voir rougir. Le dernier cas est le contrôle de
+        # non-vacuité, un paquet sain qui doit rester vert : un garde qui rougit de toute façon
+        # rougirait aussi sur les mutations, et son rouge ne prouverait rien.
+        run: |
+          python3 scripts/adr/verifie_okf.py --auto-test
+          python3 scripts/adr/verifie_okf.py
+
+      - name: La matrice de la constitution est à jour (bloquant)
+        # La matrice relie chaque article à ce qui l'applique, et NOMME les articles que rien ne
+        # tient. C'est cette dernière colonne qui vaut le déplacement : elle est la liste des
+        # chantiers de garde restants, et un article qui y séjourne est une dette, pas une fatalité.
+        # Elle est engendrée depuis les en-têtes des ADR : un chiffre que le code sait recalculer ne
+        # s'écrit pas à la main (ADR 2750).
+        run: |
+          python3 scripts/methode/matrice-constitution.py --auto-test
+          python3 scripts/methode/matrice-constitution.py --verifie

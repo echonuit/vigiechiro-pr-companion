@@ -327,6 +327,12 @@ plugins:
   - search:
       lang: fr
 
+# Redessine le bandeau des ADR depuis leur en-tete OKF (#4336). Sans lui, le statut, le chantier et
+# la verification cessent d etre visibles : ils sont passes des puces au frontmatter, que MkDocs
+# retire du corps rendu.
+hooks:
+  - scripts/mkdocs/bandeau_adr.py
+
 extra_css:
   - stylesheets/extra.css
 
