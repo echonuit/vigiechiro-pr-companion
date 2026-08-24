@@ -538,6 +538,29 @@ Le workflow fait trois choses avant de soumettre, et la deuxième est celle qui 
        section « Toute garde de CI porte sa propre preuve » combat - il se trouve seulement qu'ici,
        c'est la garde elle-même qui en était atteinte.
 
+## Ce que les ateliers exigent, relevé plutôt que recopié (#4340)
+
+Un secret absent ne fait pas rougir un atelier : il fait **sauter** l'étape qui en dépend, en gris.
+Une variable absente est pire, parce qu'elle éteint un job entier : `ENABLE_RELEASE`, `ENABLE_PAGES`
+et `ENABLE_FLATPAK_REPO` sont des interrupteurs. Dans les deux cas, une pastille verte couvre ce qui
+n'a pas eu lieu, et la section winget ci-dessus en raconte un cas mesuré.
+
+```bash
+python3 scripts/methode/releve-des-secrets.py            # le relevé, lu dans .github/workflows/
+python3 scripts/methode/releve-des-secrets.py --compare  # et l'écart avec ce que le dépôt porte
+```
+
+`--compare` rend 1 quand un nom exigé n'est pas posé. Il signale aussi ce qui est posé sans être
+demandé, ce qui n'est pas une faute mais mérite une question.
+
+Une liste de secrets recopiée dans une page vieillit au premier atelier ajouté, et son
+vieillissement est silencieux. Celle-ci est lue dans les ateliers à chaque exécution.
+
+**Ce n'est pas un garde, et il n'a donc pas d'`--auto-test`.** Il relève et confronte ; il ne refuse
+rien, et `verifie-inventaires-ci.sh` ne l'attend pas au tableau des gardes. En faire un garde
+bloquant est une question ouverte : au 2026-08-24 le relevé et le dépôt concordent, 6 secrets et
+3 variables, donc rien à refuser aujourd'hui.
+
 ## Toute garde de CI porte sa propre preuve (#2947, #3293)
 
 Une garde qui **accepte à tort ne rougit pas** : elle passe au vert, sur un dépôt propre, exactement
