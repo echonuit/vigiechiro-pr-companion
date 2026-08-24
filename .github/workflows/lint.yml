@@ -570,3 +570,14 @@ jobs:
         run: |
           python3 scripts/methode/matrice-constitution.py --auto-test
           python3 scripts/methode/matrice-constitution.py --verifie
+
+      - name: Les adaptateurs de compétences suivent leur source (bloquant)
+        # Le fonds des compétences vit dans `.agents/skills/`, hors de tout dossier de marque, et
+        # `.claude/skills/` n'en est qu'une copie. Sans ce garde, une compétence corrigée à la
+        # source laisserait un agent lire l'ancienne version, sans que rien ne rougisse : une copie
+        # périmée se lit exactement comme une copie à jour.
+        # L'auto-test monte trois états cassés sur une copie jetable et exige de rougir sur chacun,
+        # puis le garde mesure l'arbre réel. Un garde vert n'est pas un garde vérifié.
+        run: |
+          python3 scripts/methode/synchronise-adaptateurs.py --auto-test
+          python3 scripts/methode/synchronise-adaptateurs.py --verifie
