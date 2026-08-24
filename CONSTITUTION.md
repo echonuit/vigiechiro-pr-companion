@@ -237,7 +237,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 
 | Article | Jurisprudence | Dont mécanisée | Tenu par |
 |---|---:|---:|---|
-| A1 · La preuve précède l'affirmation | 0 | 0 | **relecture seule** |
+| A1 · La preuve précède l'affirmation | 1 | 1 | `.github/scripts/verifie-decisions-du-tournage-connecte.sh`, `.github/scripts/verifie-jeton-vivant.sh`, `.github/scripts/revoque-jeton.sh` |
 | A2 · Un garde est vu rouge sur sa propre mutation | 5 | 3 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure-duree-portail.sh` |
 | A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 10 | 10 | `.github/scripts/veille-contrat-api.sh`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 7 autres |
 | A4 · Un cas joué n'est pas un cas prouvé | 20 | 14 | `ApercuFxElisionTest#bouton_tronque_refuse`, `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`, `scripts/adr/3053-capture-libelle.py`, et 11 autres |
@@ -268,9 +268,8 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 1 | 0 | `scripts/adr/4359-javadoc-narratif.py` |
 | A31 · La prose visible se relit à l'humaniseur | 1 | 0 | **relecture seule** |
 
-**5 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
+**4 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
 
-- A1 · La preuve précède l'affirmation
 - A8 · La mutation mesure dès qu'un comportement est complet
 - A10 · Jamais de suppression d'avertissement
 - A11 · L'assumé se déclare, il ne se contourne pas

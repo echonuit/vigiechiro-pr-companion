@@ -96,8 +96,17 @@ avait échoué**, et la plateforme a rendu `200`.
 
 ## Ce qui n'est pas gardé, et qui le sait
 
-⚠️ La décision **1** ne l'est pas. Le refus de `clips-connectes` vit dans un `if:` de workflow, et rien
-ne rougirait si on le retirait : la comparaison recommencerait à mesurer la plateforme en croyant
-mesurer le rendu. C'est le plus sournois des trois trous relevés en passe 6, et il est suivi par #4331.
-
 Les décisions **2** et **3** portent chacune leur garde autotesté, vues rouges sur mutation.
+
+La décision **1** ne l'était pas quand cette ADR a été écrite, et c'était le plus sournois des trois
+trous relevés en passe 6 : le refus de `clips-connectes` vivait dans un `if:` de workflow, et rien
+n'aurait rougi si on l'avait retiré - la comparaison serait revenue mesurer la plateforme en croyant
+mesurer le rendu.
+
+Elle l'est depuis #4331. `verifie-decisions-du-tournage-connecte.sh` tient les trois décisions de
+cette ADR, et il ne **relit** pas le refus : celui-ci vit dans un `run:`, donc du shell, et le garde
+l'extrait et le **lance** contre la source `clips-connectes` pour lire son message.
+
+Cette section est laissée telle qu'elle a été pensée, au passé, plutôt que supprimée : ce qu'elle
+disait était vrai, et un lecteur qui arrive par #4331 doit pouvoir retrouver pourquoi ce garde
+existe.
