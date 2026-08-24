@@ -110,7 +110,16 @@ ZONES_NETTOYEES = (
     # zone se pose maintenant : le regime de couverture ne signale que les fichiers qui PORTENT
     # deja un cadratin, donc un corpus neuf et propre lui est invisible. Seule la SOURCE est
     # gardee : `.claude/skills` en est une copie, tenue identique par le garde des adaptateurs.
-    ("competences d agent", pathlib.Path(".agents/skills"), (), "*.md"),
+    #
+    # Les six competences OpenSpec sont EXCLUES (#4339). Elles sont reprises verbatim de l outil
+    # amont, en anglais, et en portent dix-sept cadratins. Les reecrire les ferait diverger de leur
+    # source, et la premiere mise a jour de l outil rendrait la correction : on ne reecrit pas ce
+    # qu on n a pas ecrit. L exclusion nomme les six dossiers un a un plutot qu un prefixe, pour
+    # qu une septieme competence amont fasse ROUGIR le garde au lieu d etre exemptee en silence.
+    ("competences d agent", pathlib.Path(".agents/skills"), (
+        "openspec-propose", "openspec-apply-change", "openspec-update-change",
+        "openspec-sync-specs", "openspec-archive-change", "openspec-explore",
+    ), "*.md"),
     ("gardes de capture", pathlib.Path(".github/assets"), (), "*.sh"),
     # Les scripts d'atelier, dont le garde de titre de PR. Cette zone manquait, et le régime de
     # couverture l'a signalée dès que ce garde a porté sa première ligne de prose (#2947).
@@ -185,7 +194,24 @@ def prose(
 # Les fichiers **délibérément** hors couverture, avec leur motif. Un fichier généré depuis des sujets de
 # commits déjà fusionnés ne se corrige pas : la ligne réécrite falsifierait le compte rendu de ce qui a
 # été livré, et reviendrait à la génération suivante.
-HORS_COUVERTURE = {"CHANGELOG.md": "généré par semantic-release depuis les sujets de commits fusionnés"}
+# Les trois compétences OpenSpec qui portent un cadratin, leurs adaptateurs engendrés, et les
+# commandes qui les exposent. Neuf fichiers pour trois sources : le générateur et les commandes
+# recopient le texte amont, donc l exemption se déclare aux trois endroits ou elle ne dirait
+# rien du troisième.
+AMONT = "repris verbatim de l'outil OpenSpec : le réécrire le ferait diverger de sa source (#4339)"
+
+HORS_COUVERTURE = {
+    "CHANGELOG.md": "généré par semantic-release depuis les sujets de commits fusionnés",
+    ".agents/skills/openspec-archive-change/SKILL.md": AMONT,
+    ".agents/skills/openspec-explore/SKILL.md": AMONT,
+    ".agents/skills/openspec-sync-specs/SKILL.md": AMONT,
+    ".claude/commands/opsx/archive.md": AMONT,
+    ".claude/commands/opsx/explore.md": AMONT,
+    ".claude/commands/opsx/sync.md": AMONT,
+    ".claude/skills/openspec-archive-change/SKILL.md": AMONT,
+    ".claude/skills/openspec-explore/SKILL.md": AMONT,
+    ".claude/skills/openspec-sync-specs/SKILL.md": AMONT,
+}
 
 
 def couvert(chemin: pathlib.Path) -> bool:
