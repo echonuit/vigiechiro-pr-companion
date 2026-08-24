@@ -6,10 +6,10 @@ import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import java.util.Objects;
 import java.util.Optional;
 
-/// **Pages du portail Vigie-Chiro** (#1124) : construit l’URL publique de l’entité **rattachée**
-/// (référence locale → `objectid` via la table des liens), pour l’ouvrir dans le navigateur et
-/// vérifier le rattachement d’un coup d’œil. Résolution purement **locale** : aucun appel réseau,
-/// le portail gère lui-même l’authentification. Vide si l’entité n’est pas rattachée : l’action IHM
+/// **Pages du portail Vigie-Chiro** (#1124) : construit l'URL publique de l'entité **rattachée**
+/// (référence locale → `objectid` via la table des liens), pour l'ouvrir dans le navigateur et
+/// vérifier le rattachement d'un coup d'œil. Résolution purement **locale** : aucun appel réseau,
+/// le portail gère lui-même l'authentification. Vide si l'entité n'est pas rattachée : l'action IHM
 /// correspondante reste alors désactivée avec explication (patron [ConstructeurLienEspece]).
 ///
 /// Routes vérifiées dans le bundle Angular du portail : `#/sites/{id}`, `#/participations/{id}`
@@ -17,7 +17,7 @@ import java.util.Optional;
 @Singleton
 public final class PortailVigieChiro {
 
-    /// URL publique du portail (page d’accueil) : aussi ouverte par la modale de connexion.
+    /// URL publique du portail (page d'accueil) : aussi ouverte par la modale de connexion.
     public static final String URL_PORTAIL = "https://vigiechiro.herokuapp.com";
 
     private final LienVigieChiroDao liens;

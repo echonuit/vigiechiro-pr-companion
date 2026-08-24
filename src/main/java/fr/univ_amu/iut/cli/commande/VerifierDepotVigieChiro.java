@@ -13,14 +13,14 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/// `verifier-depot-vigiechiro` (#1132) : confronte le plan de dépôt local d’un passage à ce que la
+/// `verifier-depot-vigiechiro` (#1132) : confronte le plan de dépôt local d'un passage à ce que la
 /// plateforme a **réellement traité** : journal de traitement de la participation (archives
-/// extraites, WAV passés à Tadarida) et titres des `donnees`. Lecture seule : rien n’est modifié.
+/// extraites, WAV passés à Tadarida) et titres des `donnees`. Lecture seule : rien n'est modifié.
 /// Compagnon naturel de `deposer-vigiechiro` : après le traitement serveur (24-48 h), cette commande
 /// donne le verdict fichier par fichier.
 ///
-/// **Jeton** : `--token`, sinon la variable d’environnement `VIGIECHIRO_TOKEN`, sinon la connexion
-/// enregistrée dans l’application.
+/// **Jeton** : `--token`, sinon la variable d'environnement `VIGIECHIRO_TOKEN`, sinon la connexion
+/// enregistrée dans l'application.
 ///
 /// Code retour `0` seulement si **toutes** les unités du plan local sont retrouvées côté plateforme
 /// (scriptable) ; `1` sinon (fichiers manquants, ou journal pas encore disponible pour un dépôt ZIP).
@@ -29,7 +29,7 @@ import picocli.CommandLine.Spec;
         description = "Vérifie côté plateforme (journal de traitement + données) qu'un dépôt a bien été traité.")
 public final class VerifierDepotVigieChiro implements Callable<Integer>, LectureSeule {
 
-    /// Limite d’affichage des fichiers manquants (au-delà : « … et N autres »).
+    /// Limite d'affichage des fichiers manquants (au-delà : « … et N autres »).
     private static final int MANQUANTES_AFFICHEES = 20;
 
     @Option(names = "--passage", required = true, paramLabel = "<id>", description = "Passage à vérifier.")

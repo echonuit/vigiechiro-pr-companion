@@ -1,6 +1,6 @@
 # Adéquation fonctionnelle
 
-> L’adéquation fonctionnelle permet d’évaluer si la solution présentée est conforme aux attentes implicites et explicites de l’utilisateur.
+> L'adéquation fonctionnelle permet d'évaluer si la solution présentée est conforme aux attentes implicites et explicites de l'utilisateur.
 
 ## Critères de qualité associés
 

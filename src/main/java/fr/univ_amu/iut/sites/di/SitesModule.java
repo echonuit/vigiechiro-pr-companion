@@ -122,7 +122,7 @@ public class SitesModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), OuvrirImportation.class);
         // Synchronisation des sites à la demande (#1045) : OptionalBinder VIDE, patron de
         // SynchronisationParticipation (#937). SynchronisationSitesModule fait `setBinding` dans
-        // l’app complète ; sinon l’Optional reste vide et M-Sites masque le bouton.
+        // l'app complète ; sinon l'Optional reste vide et M-Sites masque le bouton.
         OptionalBinder.newOptionalBinder(binder(), SynchronisationSites.class);
         // Contrôle du carré STOC (#733) : il lit la grille nationale sur la plateforme, donc il a besoin de
         // la connexion. ControleCarreStocModule fait `setBinding` dans l'app complète ; sinon l'Optional

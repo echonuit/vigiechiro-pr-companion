@@ -1,6 +1,6 @@
 # Imputabilité
 
-> capacité d’un logiciel à tracer les actions d’une entité en particulier.
+> capacité d'un logiciel à tracer les actions d'une entité en particulier.
 
 ## Catégorie
 

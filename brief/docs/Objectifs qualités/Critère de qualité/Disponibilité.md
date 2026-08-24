@@ -1,6 +1,6 @@
 # Disponibilité
 
-> capacité d’un logiciel à être accessible et opérationnel lorsqu’il doit être utilisé.
+> capacité d'un logiciel à être accessible et opérationnel lorsqu'il doit être utilisé.
 
 ## Catégorie
 

@@ -1,6 +1,6 @@
 # Non-répudiation
 
-> capacité d’un logiciel à enregistrer les actions ou les évènements qui ont eu lieu.
+> capacité d'un logiciel à enregistrer les actions ou les évènements qui ont eu lieu.
 
 ## Catégorie
 

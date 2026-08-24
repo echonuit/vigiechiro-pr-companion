@@ -5,11 +5,11 @@ import fr.univ_amu.iut.commun.view.OngletReglages;
 import fr.univ_amu.iut.lot.model.ModeDepot;
 import java.util.List;
 
-/// Onglet « Dépôt » de l’écran Réglages (#1047) : **forme du dépôt** (archives ZIP ou séquences WAV,
+/// Onglet « Dépôt » de l'écran Réglages (#1047) : **forme du dépôt** (archives ZIP ou séquences WAV,
 /// #1997) et plafond de taille des archives, contribués par le module `lot`.
 ///
 /// Le réglage pilote le [fr.univ_amu.iut.lot.model.CompacteurDepot] via `LotModule` : relu à chaque
-/// **génération d’archives** (pas de redémarrage nécessaire). La propriété système
+/// **génération d'archives** (pas de redémarrage nécessaire). La propriété système
 /// `vigiechiro.depot.taille-max-mo` reste prioritaire (tests/outils). Le défaut et la borne haute
 /// sont la contrainte de la plateforme (700 Mo, base 1000).
 public final class OngletReglagesDepot implements OngletReglages {

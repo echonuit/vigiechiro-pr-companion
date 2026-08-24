@@ -1,6 +1,6 @@
 # Capacité
 
-> les limites en deçà desquelles le logiciel fonctionne correctement (nombre d’utilisateurs simultanés par exemple).
+> les limites en deçà desquelles le logiciel fonctionne correctement (nombre d'utilisateurs simultanés par exemple).
 
 ## Catégorie
 

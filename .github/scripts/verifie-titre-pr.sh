@@ -19,6 +19,9 @@ TITRE="${1-}"
 # l'idiome de `verifie_scripts.py`, dont les fixtures bâtissent le cadratin par `chr(0x2014)`.
 # Sans cela, le garde des cadratins compterait la prose de son propre garde.
 CADRATIN=$(printf '\u2014')
+# Meme idiome pour l apostrophe courbe : ce fichier ne doit pas en porter, sans quoi le garde des
+# fichiers le compterait comme un emploi (#4377).
+COURBE=$(printf '\u2019')
 
 # Types réellement pratiqués dans le dépôt. `feat` -> mineure, `fix`/`perf` -> patch ; les autres ne
 # déclenchent pas de version (cf. CONTRIBUTING.md §3).
@@ -54,6 +57,9 @@ if [ "${TITRE}" = "--auto-test" ]; then
     # règles fera d'abord rougir ce cas, et lira la raison juste au-dessus.
     verifie 1 "fix(audio): le glyphe « — » ne se rend plus" "aucune exemption de citation dans un titre"
     verifie 1 "docs(adr): 2843 renvoie vers l amendement" "une élision sans apostrophe est refusée"
+    # L apostrophe courbe, meme raison que le cadratin : le titre part tel quel dans le CHANGELOG.
+    verifie 1 "fix(cli): le jeton d${COURBE}un tournage expire" "une apostrophe courbe est refusée"
+    verifie 0 "fix(cli): le jeton d'un tournage expire" "l'apostrophe ASCII passe"
     verifie 1 "fix(cli): d une nuit a l autre" "plusieurs élisions, même refus"
     # Contrôles NÉGATIFS : la règle doit rester étroite. Un code de point, un numéro et une élision
     # correcte ne déclenchent pas, faute d'une lettre après l'espace ou faute d'espace.
@@ -85,6 +91,19 @@ echo "Titre : ${TITRE}"
 # devient une ligne de journal : qui doit vraiment parler du glyphe écrit « le glyphe de valeur
 # absente ». La règle stricte s'explique en une phrase, là où reconnaître une citation en bash
 # demanderait de découper des guillemets multi-octets pour un cas qui ne s'est jamais présenté.
+# L apostrophe courbe (#4377). Meme raison que le cadratin, et elle est ecrite juste au-dessus : le
+# titre devient le sujet du squash, puis une ligne du CHANGELOG publie. Mesure du 2026-08-24 : 28 des
+# 250 derniers titres portaient la courbe, 78 la droite, et le CHANGELOG en portait 25. Le corriger
+# dans le CHANGELOG falsifierait le compte rendu ; sa SOURCE est ce titre.
+if printf '%s' "${TITRE}" | grep -qF "${COURBE}"; then
+    echo "::error::Le titre de la PR contient une apostrophe courbe."
+    echo
+    echo "  écrit : ${TITRE}"
+    echo
+    echo "Écrivez l'apostrophe ASCII. Le titre part tel quel dans le CHANGELOG publié."
+    exit 1
+fi
+
 if printf '%s' "${TITRE}" | grep -qF "${CADRATIN}"; then
     echo "::error::Le titre de la PR contient un tiret cadratin."
     echo

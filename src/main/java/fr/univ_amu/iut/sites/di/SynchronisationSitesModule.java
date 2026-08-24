@@ -18,9 +18,9 @@ import java.util.Set;
 
 /// Liaison **réelle** de la passerelle [SynchronisationSites] (#1045), patron de
 /// `SynchronisationParticipationModule` : chargée seulement dans `RacineInjecteur` (app complète,
-/// `ConnexionModule` présent), elle fournit l’instance qualifiée `@Named("vigiechiro")` et la pose sur
-/// l’`OptionalBinder` déclaré vide par `SitesModule`. Le qualificateur évite l’auto-référence
-/// (`RecursiveBinding`). Hors connexion (injecteurs partiels, tests), l’`Optional` reste vide et
+/// `ConnexionModule` présent), elle fournit l'instance qualifiée `@Named("vigiechiro")` et la pose sur
+/// l'`OptionalBinder` déclaré vide par `SitesModule`. Le qualificateur évite l'auto-référence
+/// (`RecursiveBinding`). Hors connexion (injecteurs partiels, tests), l'`Optional` reste vide et
 /// M-Sites masque le bouton.
 public class SynchronisationSitesModule extends ModuleDeFeature {
 

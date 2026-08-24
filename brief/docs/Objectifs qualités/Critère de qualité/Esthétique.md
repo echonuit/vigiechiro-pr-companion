@@ -1,6 +1,6 @@
 # Esthétique
 
-> capacité d’un logiciel à fournir une expérience plaisante à l’utilisateur.
+> capacité d'un logiciel à fournir une expérience plaisante à l'utilisateur.
 
 ## Catégorie
 

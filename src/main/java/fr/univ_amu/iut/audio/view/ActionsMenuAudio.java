@@ -14,7 +14,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 
-/// Regroupe les actions « externes » du menu ☰ de Sons & validation (fiche d’espèce #847, données
+/// Regroupe les actions « externes » du menu ☰ de Sons & validation (fiche d'espèce #847, données
 /// Vigie-Chiro #1124) : objet-paramètre qui garde le constructeur de [SonsValidationController]
 /// sous le plafond `ExcessiveParameterList`, patron des objets `Campagne*`.
 final class ActionsMenuAudio {

@@ -15,16 +15,16 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/// **Vérification a posteriori d’un dépôt** (#1132) : confronte le plan local (`depot_unite`) à ce
+/// **Vérification a posteriori d'un dépôt** (#1132) : confronte le plan local (`depot_unite`) à ce
 /// que la plateforme a **réellement traité**, via deux sources en lecture seule :
 ///
 ///  - le **journal de traitement** de la participation ([ClientVigieChiro#journalTraitement]) : il
-///    nomme chaque archive extraite (avec inventaire) et chaque WAV passé à Tadarida ; c’est la
+///    nomme chaque archive extraite (avec inventaire) et chaque WAV passé à Tadarida ; c'est la
 ///    seule source capable de vérifier un dépôt en **ZIP** ;
 ///  - les **titres des `donnees`** Tadarida (nom du WAV **sans extension**), en recoupement.
 ///
-/// Limite (comme la réconciliation #1046) : ces traces n’existent qu’**après** le traitement
-/// serveur : un fichier téléversé mais pas encore traité est « manquant » jusqu’au prochain passage
+/// Limite (comme la réconciliation #1046) : ces traces n'existent qu'**après** le traitement
+/// serveur : un fichier téléversé mais pas encore traité est « manquant » jusqu'au prochain passage
 /// du pipeline. La vérification ne modifie **rien** (ni localement, ni côté plateforme).
 public final class VerificationDepot {
 
@@ -42,10 +42,10 @@ public final class VerificationDepot {
         this.depotUnites = Objects.requireNonNull(depotUnites, "depotUnites");
     }
 
-    /// Vérifie le dépôt du passage `idPassage` et renvoie le bilan (rien n’est modifié).
+    /// Vérifie le dépôt du passage `idPassage` et renvoie le bilan (rien n'est modifié).
     ///
-    /// @throws RegleMetierException si le passage n’est pas lié à une participation, ou si aucun
-    ///     plan de dépôt local n’existe (dépôt fait hors de l’application)
+    /// @throws RegleMetierException si le passage n'est pas lié à une participation, ou si aucun
+    ///     plan de dépôt local n'existe (dépôt fait hors de l'application)
     public BilanVerification verifier(Long idPassage) {
         Objects.requireNonNull(idPassage, "idPassage");
         String participationId = participations

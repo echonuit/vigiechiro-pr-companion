@@ -1,6 +1,6 @@
 # Complétude fonctionnelle
 
-> capacité d’un logiciel à répondre à toutes les spécifications fonctionnelles et besoins de l’utilisateur.
+> capacité d'un logiciel à répondre à toutes les spécifications fonctionnelles et besoins de l'utilisateur.
 
 ## Catégorie
 

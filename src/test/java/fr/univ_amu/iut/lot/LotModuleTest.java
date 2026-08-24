@@ -76,7 +76,7 @@ class LotModuleTest {
                 bind(DepotPlanDao.class).toInstance(new DepotPlanDao(source));
                 bind(MoteurWorkflowPassage.class).toInstance(new MoteurWorkflowPassage());
                 bind(Horloge.class).toInstance(new HorlogeFigee(LocalDate.of(2026, 5, 31)));
-                // ServiceLot lit désormais le plafond d’archive dans les réglages (#1047).
+                // ServiceLot lit désormais le plafond d'archive dans les réglages (#1047).
                 bind(Reglages.class).toInstance(new Reglages(new ReglagesDao(source)));
             }
         });

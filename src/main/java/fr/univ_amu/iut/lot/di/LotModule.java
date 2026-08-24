@@ -93,7 +93,7 @@ public class LotModule extends ModuleDeFeature {
         // résolvent `Optional<SuiviTraitement>` à vide sans binding manquant. La liaison réelle est posée par
         // `ConnexionModule`, où vit le client HTTP.
         OptionalBinder.newOptionalBinder(binder(), SuiviTraitement.class);
-        // Onglet « Dépôt » de l’écran Réglages (#1047) : plafond des archives.
+        // Onglet « Dépôt » de l'écran Réglages (#1047) : plafond des archives.
         ongletReglages(OngletReglagesDepot.class);
     }
 
@@ -112,9 +112,9 @@ public class LotModule extends ModuleDeFeature {
     }
 
     /// Plafond (octets) des archives de dépôt (#110, #1047), par priorité : propriété système
-    /// `vigiechiro.depot.taille-max-mo` (tests/outils), sinon le réglage persisté de l’écran
-    /// Réglages, sinon 700 Mo (contrainte plateforme). Relu à **chaque génération** d’archives
-    /// (fournisseur dans [ServiceLot]) : un changement de réglage s’applique sans redémarrage.
+    /// `vigiechiro.depot.taille-max-mo` (tests/outils), sinon le réglage persisté de l'écran
+    /// Réglages, sinon 700 Mo (contrainte plateforme). Relu à **chaque génération** d'archives
+    /// (fournisseur dans [ServiceLot]) : un changement de réglage s'applique sans redémarrage.
     static long plafondArchiveOctets(Reglages reglages) {
         String surcharge = System.getProperty("vigiechiro.depot.taille-max-mo");
         long plafondMo = surcharge != null && !surcharge.isBlank()

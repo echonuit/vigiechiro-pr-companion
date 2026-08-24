@@ -22,7 +22,7 @@ Les **31 critères de qualité** définis par la norme **ISO/IEC 25010**, regrou
 ## Convivialité
 
 - [Reconnaissance de pertinence](Critère%20de%20qualité/Reconnaissance%20de%20pertinence.md)
-- [Facilité d'apprentissage](Critère%20de%20qualité/Facilité%20d’apprentissage.md)
+- [Facilité d'apprentissage](Critère%20de%20qualité/Facilité%20d'apprentissage.md)
 - [Opérabilité](Critère%20de%20qualité/Opérabilité.md)
 - [Protection contre les erreurs utilisateur](Critère%20de%20qualité/Protection%20contre%20les%20erreurs%20utilisateur.md)
 - [Esthétique](Critère%20de%20qualité/Esthétique.md)
@@ -47,12 +47,12 @@ Les **31 critères de qualité** définis par la norme **ISO/IEC 25010**, regrou
 
 - [Modularité](Critère%20de%20qualité/Modularité.md)
 - [Capacité de réutilisation](Critère%20de%20qualité/Capacité%20de%20réutilisation.md)
-- [Capacité d'analyse](Critère%20de%20qualité/Capacité%20d’analyse.md)
+- [Capacité d'analyse](Critère%20de%20qualité/Capacité%20d'analyse.md)
 - [Facilité de modification](Critère%20de%20qualité/Facilité%20de%20modification.md)
 - [Testabilité](Critère%20de%20qualité/Testabilité.md)
 
 ## Portabilité
 
-- [Facilité d'adaptation](Critère%20de%20qualité/Facilité%20d’adaptation.md)
-- [Facilité d'installation](Critère%20de%20qualité/Facilité%20d’installation.md)
+- [Facilité d'adaptation](Critère%20de%20qualité/Facilité%20d'adaptation.md)
+- [Facilité d'installation](Critère%20de%20qualité/Facilité%20d'installation.md)
 - [Facilité de remplacement](Critère%20de%20qualité/Facilité%20de%20remplacement.md)

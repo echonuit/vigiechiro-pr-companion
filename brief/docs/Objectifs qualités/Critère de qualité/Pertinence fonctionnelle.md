@@ -1,6 +1,6 @@
 # Pertinence fonctionnelle
 
-> capacité d’un logiciel à faciliter l’accomplissement des tâches spécifiées et des objectifs.
+> capacité d'un logiciel à faciliter l'accomplissement des tâches spécifiées et des objectifs.
 
 ## Catégorie
 

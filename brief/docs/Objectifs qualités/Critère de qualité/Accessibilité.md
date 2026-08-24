@@ -1,6 +1,6 @@
 # Accessibilité
 
-> capacité d’un logiciel à être utilisé par des utilisateurs présentant diverses caractéristiques (daltoniens, malvoyants par exemple).
+> capacité d'un logiciel à être utilisé par des utilisateurs présentant diverses caractéristiques (daltoniens, malvoyants par exemple).
 
 ## Catégorie
 

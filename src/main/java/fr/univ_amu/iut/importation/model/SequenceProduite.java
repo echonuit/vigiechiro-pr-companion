@@ -15,8 +15,8 @@ import java.nio.file.Path;
 /// @param offsetSourceSecondes position de la séquence dans le signal source, **avant** le ×10
 /// @param octets taille du fichier écrit, en octets
 /// @param empreinte empreinte courte de contenu du fichier écrit (#1299, cf.
-/// [fr.univ_amu.iut.commun.model.Empreintes#empreinteCourte]), preuve d’identité persistée pour
-/// la réactivation d’un passage archivé
+/// [fr.univ_amu.iut.commun.model.Empreintes#empreinteCourte]), preuve d'identité persistée pour
+/// la réactivation d'un passage archivé
 public record SequenceProduite(
         int index,
         String nomFichier,

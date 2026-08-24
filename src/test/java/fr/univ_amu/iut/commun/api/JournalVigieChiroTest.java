@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// Parseur du **journal de traitement** ([JournalVigieChiro], #1132) : extraction de l’id du
-/// document `fichiers` (`participation.logs`) et de l’URL S3 signée (`/fichiers/{id}/acces`),
-/// best-effort (vide si absent, indisponible ou illisible : jamais d’exception).
+/// Parseur du **journal de traitement** ([JournalVigieChiro], #1132) : extraction de l'id du
+/// document `fichiers` (`participation.logs`) et de l'URL S3 signée (`/fichiers/{id}/acces`),
+/// best-effort (vide si absent, indisponible ou illisible : jamais d'exception).
 class JournalVigieChiroTest {
 
     @Test

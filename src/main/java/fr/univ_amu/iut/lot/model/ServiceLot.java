@@ -61,8 +61,8 @@ public class ServiceLot {
     private final Horloge horloge;
 
     /// Compacteur des archives de dépôt (#110). **Fournisseur** (et non instance) pour que son plafond
-    /// soit relu à chaque génération : le réglage de l’écran Réglages (#1047) ou la propriété système,
-    /// assemblés par [fr.univ_amu.iut.lot.di.LotModule], s’appliquent sans redémarrage.
+    /// soit relu à chaque génération : le réglage de l'écran Réglages (#1047) ou la propriété système,
+    /// assemblés par [fr.univ_amu.iut.lot.di.LotModule], s'appliquent sans redémarrage.
     private final Supplier<CompacteurDepot> compacteur;
     private final DepotUniteDao depotUnites;
     private final DepotPlanDao depotPlans;

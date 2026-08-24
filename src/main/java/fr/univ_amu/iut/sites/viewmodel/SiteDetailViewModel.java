@@ -132,8 +132,8 @@ public class SiteDetailViewModel {
         return compteRendu;
     }
 
-    /// URL de la page du site sur le portail Vigie-Chiro (#1124), vide tant que le site n’est pas
-    /// rattaché (l’action « Ouvrir sur Vigie-Chiro » reste alors désactivée avec explication).
+    /// URL de la page du site sur le portail Vigie-Chiro (#1124), vide tant que le site n'est pas
+    /// rattaché (l'action « Ouvrir sur Vigie-Chiro » reste alors désactivée avec explication).
     public ReadOnlyStringProperty lienPortailProperty() {
         return lienPortail.getReadOnlyProperty();
     }
