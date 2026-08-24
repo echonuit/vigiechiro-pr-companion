@@ -1,12 +1,21 @@
-# ADR 3978 - Un point de passage garantit l'ENSEMBLE, jamais la présence d'un de ses membres
+---
+type: adr
+title: "Un point de passage garantit l'ENSEMBLE, jamais la présence d'un de ses membres"
+status: stable
+article: A16
+chantier: "#3978 et #3985, passes 0 et 7 de la clôture des suites des finitions de recette (#3424)"
+decided_at: 2026-08-18
+verification: certaine
+enforced_by:
+  - "HabillageTest#poser_garantit_le_trio_meme_si_base_est_deja_la"
+verified:
+  - by: machine:ci
+    at: 2026-08-18
+relations:
+  prolonge: ["3374"]
+---
 
-- **Statut** : Accepté - 2026-08-18
-- **Chantier** : #3978 et #3985, passes 0 et 7 de la clôture des suites des finitions de recette (#3424)
-- **Prolonge** : [ADR 3374](3374-une-fenetre-porte-son-habillage-ou-elle-n-est-pas-le-produit.md)
-- **Vérification** : certaine - `HabillageTest#poser_garantit_le_trio_meme_si_base_est_deja_la`
-
-> Son jumeau `HabillageTest#poser_ne_double_pas_une_feuille_deja_posee` tient l'autre moitié : le
-> trio posé **une seule fois**. Les deux ensemble disent que `poser` rend l'ensemble, ni moins ni plus.
+# Un point de passage garantit l'ENSEMBLE, jamais la présence d'un de ses membres
 
 ## Contexte
 

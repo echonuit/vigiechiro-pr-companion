@@ -1,9 +1,21 @@
-# ADR 4103 - Un canal de distribution ne dépend pas d'un geste qu'on peut oublier
+---
+type: adr
+title: "Un canal de distribution ne dépend pas d'un geste qu'on peut oublier"
+status: stable
+article: A20
+chantier: "#4103, suite de #4071"
+decided_at: 2026-08-21
+verification: certaine
+enforced_by:
+  - ".github/scripts/verifie-conditions-de-job.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-21
+relations:
+  prolonge: ["2744"]
+---
 
-- **Statut** : Accepté - 2026-08-21
-- **Chantier** : #4103, suite de #4071
-- **Prolonge** : [ADR 2744](2744-la-publication-part-a-heure-fixe.md)
-- **Vérification** : certaine - `.github/scripts/verifie-conditions-de-job.sh`
+# Un canal de distribution ne dépend pas d'un geste qu'on peut oublier
 
 ## Contexte
 

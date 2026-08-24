@@ -1,12 +1,21 @@
-# ADR 4287 - Un écart se lit contre le plancher de son propre cas
+---
+type: adr
+title: "Un écart se lit contre le plancher de son propre cas"
+status: stable
+article: A5
+chantier: "#4287, EPIC #4295"
+decided_at: 2026-08-23
+verification: certaine
+enforced_by:
+  - ".github/assets/compare-tournages.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-23
+relations:
+  prolonge: ["4274"]
+---
 
-- **Statut** : Accepté - 2026-08-23
-- **Chantier** : #4287, EPIC #4295
-- **Prolonge** : [ADR 4274](4274-on-compare-la-derniere-image-pas-le-chemin.md)
-- **Vérification** : certaine - `.github/assets/compare-tournages.sh`
-
-Son `--auto-test` porte le cas qui l'éprouve : **« un écart égal à son plancher ne le dépasse pas »**. Il a été vu rougir sur sa propre
-mutation avant d'être déclaré ici.
+# Un écart se lit contre le plancher de son propre cas
 
 ## Contexte
 

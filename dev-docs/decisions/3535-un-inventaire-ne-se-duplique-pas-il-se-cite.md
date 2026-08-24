@@ -1,10 +1,18 @@
-# ADR 3535 - Un inventaire ne se duplique pas, il se cite
+---
+type: adr
+title: "Un inventaire ne se duplique pas, il se cite"
+status: stable
+article: A5
+chantier: "#3535, clôture du chantier « le cycle et sa vérification » (#3505, #3510)"
+decided_at: 2026-08-09
+verification: humaine
+verification_note: "aucun invariant mécanique ne couvre les quatre formes d'écriture d'une"
+verified:
+  - by: human:nedseb
+    at: 2026-08-09
+---
 
-- **Statut** : Accepté - 2026-08-09
-- **Chantier** : #3535, clôture du chantier « le cycle et sa vérification » (#3505, #3510)
-- **Vérification** : humaine - aucun invariant mécanique ne couvre les quatre formes d'écriture d'une
-  même liste. La loupe existante est `DocumentationAJourTest`, qui applique déjà ce principe aux ADR et
-  aux commandes CLI ; l'étendre aux cartes d'accueil est le périmètre de #3535.
+# Un inventaire ne se duplique pas, il se cite
 
 ## Contexte
 

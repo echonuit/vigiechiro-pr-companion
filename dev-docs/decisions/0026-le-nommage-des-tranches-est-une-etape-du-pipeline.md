@@ -1,9 +1,18 @@
-# 0026 - Le nommage des tranches est une étape du pipeline, pas un détail de la découpe
+---
+type: adr
+title: "Le nommage des tranches est une étape du pipeline, pas un détail de la découpe"
+status: stable
+article: A17
+chantier: "EPIC #1944 (#1932, #1947, #1948, #1956)"
+decided_at: 2026-07-19
+verification: humaine
+verification_note: "que le nommage des tranches soit une étape du pipeline traversée par tout chemin est un comportement, non un invariant statique"
+verified:
+  - by: human:nedseb
+    at: 2026-07-19
+---
 
-- **Statut** : Accepté
-- **Date** : 2026-07-19
-- **Chantier** : EPIC #1944 (#1932, #1947, #1948, #1956)
-- **Vérification** : humaine - que le nommage des tranches soit une étape du pipeline traversée par tout chemin est un comportement, non un invariant statique
+# Le nommage des tranches est une étape du pipeline, pas un détail de la découpe
 
 ## Contexte
 

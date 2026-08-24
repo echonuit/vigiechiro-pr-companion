@@ -1,8 +1,19 @@
-# ADR 2867 - Une dette qu'on migre au fil de l'eau se tient par un cliquet
+---
+type: adr
+title: "Une dette qu'on migre au fil de l'eau se tient par un cliquet"
+status: stable
+article: A9
+chantier: "#2867 (axe 5 du chantier #1771)"
+decided_at: 2026-07-30
+verification: certaine
+enforced_by:
+  - "PatronDuCliquetTest#tout_cliquet_passe_par_le_patron"
+verified:
+  - by: machine:ci
+    at: 2026-07-30
+---
 
-- **Statut** : Accepté - 2026-07-30
-- **Chantier** : #2867 (axe 5 du chantier #1771)
-- **Vérification** : certaine - `PatronDuCliquetTest#tout_cliquet_passe_par_le_patron`
+# Une dette qu'on migre au fil de l'eau se tient par un cliquet
 
 ## Contexte
 

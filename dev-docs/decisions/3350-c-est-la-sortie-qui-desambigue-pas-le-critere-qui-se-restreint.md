@@ -1,8 +1,19 @@
-# ADR 3350 - C'est la sortie qui désambiguïse, pas le critère qui se restreint
+---
+type: adr
+title: "C'est la sortie qui désambiguïse, pas le critère qui se restreint"
+status: stable
+article: A13
+chantier: "#3350, suite de la clôture du chantier #3151"
+decided_at: 2026-08-06
+verification: certaine
+enforced_by:
+  - "FiltresLieuTest#le_point_est_filtrable"
+verified:
+  - by: machine:ci
+    at: 2026-08-06
+---
 
-- **Statut** : Accepté - 2026-08-06
-- **Chantier** : #3350, suite de la clôture du chantier #3151
-- **Vérification** : certaine - `FiltresLieuTest#le_point_est_filtrable`
+# C'est la sortie qui désambiguïse, pas le critère qui se restreint
 
 ## Contexte
 

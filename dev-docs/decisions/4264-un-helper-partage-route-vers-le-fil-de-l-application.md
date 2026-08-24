@@ -1,8 +1,19 @@
-# ADR 4264 - Un helper partagé route lui-même vers le fil de l'application
+---
+type: adr
+title: "Un helper partagé route lui-même vers le fil de l'application"
+status: stable
+article: A16
+chantier: "#4264, EPIC #4133"
+decided_at: 2026-08-23
+verification: certaine
+enforced_by:
+  - "ScenesHabilleesTest#un_helper_qui_lit_la_scene_passe_par_le_fil_fx"
+verified:
+  - by: machine:ci
+    at: 2026-08-23
+---
 
-- **Statut** : Accepté - 2026-08-23
-- **Chantier** : #4264, EPIC #4133
-- **Vérification** : certaine - `ScenesHabilleesTest#un_helper_qui_lit_la_scene_passe_par_le_fil_fx`
+# Un helper partagé route lui-même vers le fil de l'application
 
 ## Contexte
 

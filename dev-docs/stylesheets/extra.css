@@ -20,3 +20,26 @@
   fill: #fff !important;
   -webkit-text-fill-color: #fff !important;
 }
+
+/* Bandeau des ADR, redessine par `scripts/mkdocs/bandeau_adr.py` depuis l'en-tete OKF.
+   Une seule feuille pour maison (ADR 0046) : ces classes ne vivent qu'ici. */
+.adr-bandeau {
+  border-left: 4px solid var(--md-accent-fg-color, #4051b5);
+  background: var(--md-code-bg-color, #f5f5f5);
+  padding: 0.6rem 0.9rem;
+  margin: 0 0 1.2rem;
+  border-radius: 0.15rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.adr-bandeau__ligne { display: flex; gap: 0.6rem; align-items: baseline; }
+.adr-bandeau__ligne + .adr-bandeau__ligne { margin-top: 0.2rem; }
+.adr-bandeau__cle {
+  flex: 0 0 9.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.68rem;
+  opacity: 0.75;
+}
+.adr-bandeau__valeur { flex: 1 1 auto; }

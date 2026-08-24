@@ -1,12 +1,21 @@
-# ADR 3540 - Un cliquet qui compte n'est pas la preuve de la règle qu'il escorte
+---
+type: adr
+title: "Un cliquet qui compte n'est pas la preuve de la règle qu'il escorte"
+status: stable
+article: A2
+chantier: "#3540, clôture du lot 3 du chantier #3536"
+decided_at: 2026-08-14
+verification: humaine
+verification_note: "l'inventaire des 63 sites publié en commentaire de #3547 : un site, un"
+verified:
+  - by: human:nedseb
+    at: 2026-08-14
+relations:
+  amende: ["3547"]
+  prolonge: ["3624"]
+---
 
-- **Statut** : Accepté - 2026-08-14
-- **Chantier** : #3540, clôture du lot 3 du chantier #3536
-- **Amende** : [ADR 3547](3547-un-binding-declare-ce-qu-il-lit.md)
-- **Prolonge** : [ADR 3624](3624-un-fait-que-rien-ne-peut-faire-rougir-s-ancre-autrement.md)
-- **Vérification** : humaine - l'inventaire des 63 sites publié en commentaire de #3547 : un site, un
-  verdict, une raison quand le verdict n'est pas « complet ». Aucun dispositif mécanique ne peut le
-  refaire, et c'est précisément ce que cette ADR tranche.
+# Un cliquet qui compte n'est pas la preuve de la règle qu'il escorte
 
 ## Contexte
 

@@ -1,8 +1,18 @@
-# ADR 3068 - Le déterminisme des captures porte sur ce que le **produit** rend
+---
+type: adr
+title: "Le déterminisme des captures porte sur ce que le **produit** rend"
+status: stable
+article: A4
+chantier: "#3068, suites de la clôture #3018"
+decided_at: 2026-08-01
+verification: humaine
+verification_note: "l'arbitrage porte sur ce qu'on accepte de voir varier ; aucun scan ne distingue une variation tolérée d'une régression"
+verified:
+  - by: human:nedseb
+    at: 2026-08-01
+---
 
-- **Statut** : Accepté - 2026-08-01
-- **Chantier** : #3068, suites de la clôture #3018
-- **Vérification** : humaine - l'arbitrage porte sur ce qu'on accepte de voir varier ; aucun scan ne distingue une variation tolérée d'une régression
+# Le déterminisme des captures porte sur ce que le **produit** rend
 
 ## Contexte
 

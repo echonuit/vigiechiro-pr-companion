@@ -1,8 +1,19 @@
-# ADR 3828 - Une décision d'affichage se prend, elle ne se déduit pas
+---
+type: adr
+title: "Une décision d'affichage se prend, elle ne se déduit pas"
+status: stable
+article: A15
+chantier: "#3828, lot 4 des suites #3802"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - "EtatTraitementVigieChiroInstantTest#le_fuseau_du_lecteur_compte"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3828, lot 4 des suites #3802
-- **Vérification** : certaine - `EtatTraitementVigieChiroInstantTest#le_fuseau_du_lecteur_compte`
+# Une décision d'affichage se prend, elle ne se déduit pas
 
 ## Contexte
 

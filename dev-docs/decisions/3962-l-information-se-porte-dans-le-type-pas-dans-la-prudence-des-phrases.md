@@ -1,9 +1,21 @@
-# ADR 3962 - L'information se porte dans le type, pas dans la prudence des phrases
+---
+type: adr
+title: "L'information se porte dans le type, pas dans la prudence des phrases"
+status: stable
+article: A16
+chantier: "#3962, clôture du lot #3900"
+decided_at: 2026-08-18
+verification: certaine
+enforced_by:
+  - "CompteRenduChiffreDepotTest#un_refus_definitif_n_est_plus_promis"
+verified:
+  - by: machine:ci
+    at: 2026-08-18
+relations:
+  prolonge: ["3854", "3689"]
+---
 
-- **Statut** : Accepté - 2026-08-18
-- **Chantier** : #3962, clôture du lot #3900
-- **Prolonge** : [ADR 3854](3854-un-refus-ne-conseille-que-ce-qu-il-a-verifie.md), [ADR 3689](3689-un-refus-se-rearme-sur-ce-qui-l-a-leve.md)
-- **Vérification** : certaine - `CompteRenduChiffreDepotTest#un_refus_definitif_n_est_plus_promis`
+# L'information se porte dans le type, pas dans la prudence des phrases
 
 ## Contexte
 

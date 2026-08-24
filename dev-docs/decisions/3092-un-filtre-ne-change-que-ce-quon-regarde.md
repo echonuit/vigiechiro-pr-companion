@@ -1,8 +1,19 @@
-# ADR 3092 - Un filtre ne change que **ce qu'on regarde**, jamais le verdict porté sur l'ensemble
+---
+type: adr
+title: "Un filtre ne change que **ce qu'on regarde**, jamais le verdict porté sur l'ensemble"
+status: stable
+article: A15
+chantier: "#3092, passe 2 de la clôture"
+decided_at: 2026-08-04
+verification: certaine
+enforced_by:
+  - "CliAuditTest#audit_filtre_par_gravite"
+verified:
+  - by: machine:ci
+    at: 2026-08-04
+---
 
-- **Statut** : Accepté - 2026-08-04
-- **Chantier** : #3092, passe 2 de la clôture
-- **Vérification** : certaine - `CliAuditTest#audit_filtre_par_gravite`
+# Un filtre ne change que **ce qu'on regarde**, jamais le verdict porté sur l'ensemble
 
 ## Contexte
 

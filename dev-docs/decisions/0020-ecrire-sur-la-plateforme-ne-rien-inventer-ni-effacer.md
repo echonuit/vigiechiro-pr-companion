@@ -1,8 +1,20 @@
-# ADR 0020 - Écrire sur la plateforme : ne rien inventer, ne rien effacer
+---
+type: adr
+title: "Écrire sur la plateforme : ne rien inventer, ne rien effacer"
+status: stable
+article: A17
+chantier: "#1828, #1844 (suites de l'EPIC #1662)"
+decided_at: 2026-07-18
+verification: humaine
+loupe:
+  - "scripts/adr/loupe-0020-ecritures-plateforme.py"
+verification_note: "les trois règles d'écriture serveur (ne rien inventer ni effacer) portent sur la sémantique des requêtes, jugée en revue Loupe : `scripts/adr/loupe-0020-ecritures-plateforme.py`"
+verified:
+  - by: human:nedseb
+    at: 2026-07-18
+---
 
-- **Statut** : Accepté - 2026-07-18
-- **Chantier** : #1828, #1844 (suites de l'EPIC #1662)
-- **Vérification** : humaine - les trois règles d'écriture serveur (ne rien inventer ni effacer) portent sur la sémantique des requêtes, jugée en revue Loupe : `scripts/adr/loupe-0020-ecritures-plateforme.py`
+# Écrire sur la plateforme : ne rien inventer, ne rien effacer
 
 ## Contexte
 

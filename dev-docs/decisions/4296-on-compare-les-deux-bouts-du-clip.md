@@ -1,13 +1,21 @@
-# ADR 4296 - On compare les deux bouts du clip, parce que le début ne bruite pas
+---
+type: adr
+title: "On compare les deux bouts du clip, parce que le début ne bruite pas"
+status: stable
+article: A5
+chantier: "#4296, EPIC #4295"
+decided_at: 2026-08-23
+verification: certaine
+enforced_by:
+  - ".github/assets/compare-tournages.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-23
+relations:
+  prolonge: ["4274"]
+---
 
-- **Statut** : Accepté - 2026-08-23
-- **Chantier** : #4296, EPIC #4295
-- **Prolonge** : [ADR 4274](4274-on-compare-la-derniere-image-pas-le-chemin.md)
-- **Vérification** : certaine - `.github/assets/compare-tournages.sh`
-
-Son `--auto-test` porte les deux cas qui l'éprouvent : **« la dernière image est bien la fin : 0 % »**
-et **« et la première est bien le début : 100 % »**, sur un clip qui vire du blanc au noir comparé à un
-clip noir de bout en bout. Inverser les deux extractions, ou n'en garder qu'une, les fait rougir.
+# On compare les deux bouts du clip, parce que le début ne bruite pas
 
 ## Contexte
 

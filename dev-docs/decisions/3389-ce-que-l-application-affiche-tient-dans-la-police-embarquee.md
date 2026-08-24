@@ -1,8 +1,19 @@
-# ADR 3389 - Ce que l'application affiche tient dans la police embarquée
+---
+type: adr
+title: "Ce que l'application affiche tient dans la police embarquée"
+status: stable
+article: A23
+chantier: "#3389, suite de l'[ADR 3361](3361-la-typographie-est-embarquee.md)"
+decided_at: 2026-08-06
+verification: certaine
+enforced_by:
+  - "PoliceCouvreLIhmTest#la_police_couvre_tout_ce_qui_s_affiche"
+verified:
+  - by: machine:ci
+    at: 2026-08-06
+---
 
-- **Statut** : Accepté - 2026-08-06
-- **Chantier** : #3389, suite de l'[ADR 3361](3361-la-typographie-est-embarquee.md)
-- **Vérification** : certaine - `PoliceCouvreLIhmTest#la_police_couvre_tout_ce_qui_s_affiche`
+# Ce que l'application affiche tient dans la police embarquée
 
 ## Contexte
 

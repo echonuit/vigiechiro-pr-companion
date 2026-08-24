@@ -1,8 +1,19 @@
-# ADR 3573 - Les octets se comptent en base 1000, à un seul endroit
+---
+type: adr
+title: "Les octets se comptent en base 1000, à un seul endroit"
+status: stable
+article: A5
+chantier: "#3573, suite de la clôture du lot 1 (#3559)"
+decided_at: 2026-08-11
+verification: certaine
+enforced_by:
+  - "FormatsTest#octets_lisibles_en_base_1000"
+verified:
+  - by: machine:ci
+    at: 2026-08-11
+---
 
-- **Statut** : Accepté - 2026-08-11
-- **Chantier** : #3573, suite de la clôture du lot 1 (#3559)
-- **Vérification** : certaine - `FormatsTest#octets_lisibles_en_base_1000`
+# Les octets se comptent en base 1000, à un seul endroit
 
 ## Contexte
 

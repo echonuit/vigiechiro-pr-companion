@@ -1,11 +1,19 @@
-# ADR 4274 - On compare la dernière image d'un clip, pas son chemin
+---
+type: adr
+title: "On compare la dernière image d'un clip, pas son chemin"
+status: stable
+article: A5
+chantier: "#4274, EPIC #4295"
+decided_at: 2026-08-23
+verification: certaine
+enforced_by:
+  - ".github/assets/compare-tournages.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-23
+---
 
-- **Statut** : Accepté - 2026-08-23
-- **Chantier** : #4274, EPIC #4295
-- **Vérification** : certaine - `.github/assets/compare-tournages.sh`
-
-Son `--auto-test` porte le cas qui l'éprouve : **« la dernière image est comparée, pas la première »**. Il a été vu rougir sur sa propre
-mutation avant d'être déclaré ici.
+# On compare la dernière image d'un clip, pas son chemin
 
 ## Contexte
 

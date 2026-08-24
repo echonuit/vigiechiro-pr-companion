@@ -1,9 +1,21 @@
-# ADR 3651 - Un cycle de vie qu'on peut oublier est mal placé
+---
+type: adr
+title: "Un cycle de vie qu'on peut oublier est mal placé"
+status: stable
+article: A22
+chantier: "#3651, passe 7 de la clôture du lot 4 (#3580)"
+decided_at: 2026-08-13
+verification: certaine
+enforced_by:
+  - "NavigateurTest#relibeller_ne_reabonne_pas"
+verified:
+  - by: machine:ci
+    at: 2026-08-13
+relations:
+  prolonge: ["3580"]
+---
 
-- **Statut** : Accepté - 2026-08-13
-- **Chantier** : #3651, passe 7 de la clôture du lot 4 (#3580)
-- **Vérification** : certaine - `NavigateurTest#relibeller_ne_reabonne_pas`
-- **Prolonge** : [ADR 3580](3580-deux-mecanismes-parce-que-deux-questions.md)
+# Un cycle de vie qu'on peut oublier est mal placé
 
 ## Contexte
 

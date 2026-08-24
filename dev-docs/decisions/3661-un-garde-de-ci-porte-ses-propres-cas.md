@@ -1,9 +1,21 @@
-# ADR 3661 - Un garde de CI porte ses propres cas, et rien d'autre ne les porte
+---
+type: adr
+title: "Un garde de CI porte ses propres cas, et rien d'autre ne les porte"
+status: stable
+article: A2
+chantier: "#3661, suites des lots 1 et 2 (#3664)"
+decided_at: 2026-08-13
+verification: certaine
+enforced_by:
+  - ".github/scripts/mesure-duree-portail.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-13
+relations:
+  amende: ["3560"]
+---
 
-- **Statut** : Accepté - 2026-08-13
-- **Chantier** : #3661, suites des lots 1 et 2 (#3664)
-- **Amende** : [ADR 3560](3560-tourner-sans-conclure-a-trois-formes.md)
-- **Vérification** : certaine - `.github/scripts/mesure-duree-portail.sh`
+# Un garde de CI porte ses propres cas, et rien d'autre ne les porte
 
 ## Contexte
 

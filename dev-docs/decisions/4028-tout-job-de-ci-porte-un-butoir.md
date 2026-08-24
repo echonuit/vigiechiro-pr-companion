@@ -1,8 +1,19 @@
-# ADR 4028 - Tout job de CI porte un butoir
+---
+type: adr
+title: "Tout job de CI porte un butoir"
+status: stable
+article: A12
+chantier: "#4028, clôture du chantier des films et de la CI (#4013)"
+decided_at: 2026-08-20
+verification: certaine
+enforced_by:
+  - ".github/scripts/verifie-butoirs.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-20
+---
 
-- **Statut** : Accepté - 2026-08-20
-- **Chantier** : #4028, clôture du chantier des films et de la CI (#4013)
-- **Vérification** : certaine - `.github/scripts/verifie-butoirs.sh`
+# Tout job de CI porte un butoir
 
 ## Contexte
 

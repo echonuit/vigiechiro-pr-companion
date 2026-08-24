@@ -1,9 +1,20 @@
-# ADR 0031 - Un retour d'opération n'est pas un compte rendu : le mot « compte rendu » se libère pour l'extensible
+---
+type: adr
+title: "Un retour d'opération n'est pas un compte rendu : le mot « compte rendu » se libère pour l'extensible"
+status: stable
+article: A14
+chantier: "EPIC #1990 (#2000)"
+decided_at: 2026-07-19
+verification: humaine
+verification_note: "distinguer un retour d'opération d'un compte rendu tient au sens du message, non à sa forme"
+verified:
+  - by: human:nedseb
+    at: 2026-07-19
+relations:
+  amende: ["0023", "0028"]
+---
 
-- **Statut** : Accepté - 2026-07-19
-- **Chantier** : EPIC #1990 (#2000)
-- **Vérification** : humaine - distinguer un retour d'opération d'un compte rendu tient au sens du message, non à sa forme
-- **Amende** : [ADR 0023](0023-rendre-compte-bandeau-par-defaut-modal-si-irreversible.md) et [ADR 0028](0028-un-etat-n-est-pas-un-compte-rendu.md), sur le **vocabulaire** ; leurs décisions restent entières.
+# Un retour d'opération n'est pas un compte rendu : le mot « compte rendu » se libère pour l'extensible
 
 ## Contexte
 

@@ -1,8 +1,19 @@
-# ADR 2731 - Un seul processus écrit dans un dossier de travail, et la seconde instance est **refusée**
+---
+type: adr
+title: "Un seul processus écrit dans un dossier de travail, et la seconde instance est **refusée**"
+status: stable
+article: A17
+chantier: "#2731, lot 1 (#2721) du chantier de dette #2720"
+decided_at: 2026-08-03
+verification: certaine
+enforced_by:
+  - "ReservationWorkspaceTest#seconde_instance_refusee"
+verified:
+  - by: machine:ci
+    at: 2026-08-03
+---
 
-- **Statut** : Accepté - 2026-08-03
-- **Chantier** : #2731, lot 1 (#2721) du chantier de dette #2720
-- **Vérification** : certaine - `ReservationWorkspaceTest#seconde_instance_refusee`
+# Un seul processus écrit dans un dossier de travail, et la seconde instance est **refusée**
 
 ## Contexte
 

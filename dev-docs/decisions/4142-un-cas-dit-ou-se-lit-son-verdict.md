@@ -1,9 +1,21 @@
-# ADR 4142 - Un cas dit où se lit son verdict, et ce que son clip ne prouve pas
+---
+type: adr
+title: "Un cas dit où se lit son verdict, et ce que son clip ne prouve pas"
+status: stable
+article: A3
+chantier: "#4142, EPIC #4133"
+decided_at: 2026-08-22
+verification: certaine
+enforced_by:
+  - "CorrespondanceRecetteTest#la_reserve_accompagne_la_portee"
+verified:
+  - by: machine:ci
+    at: 2026-08-22
+relations:
+  prolonge: ["3764"]
+---
 
-- **Statut** : Accepté - 2026-08-22
-- **Chantier** : #4142, EPIC #4133
-- **Prolonge** : [ADR 3764](3764-un-cas-joue-n-est-pas-un-cas-prouve.md)
-- **Vérification** : certaine - `CorrespondanceRecetteTest#la_reserve_accompagne_la_portee`
+# Un cas dit où se lit son verdict, et ce que son clip ne prouve pas
 
 ## Contexte
 

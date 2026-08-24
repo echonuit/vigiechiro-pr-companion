@@ -1,10 +1,21 @@
-# ADR 2433 - Un dossier de transformés déjà présents s'importe par référence, sans brut
+---
+type: adr
+title: "Un dossier de transformés déjà présents s'importe par référence, sans brut"
+status: stable
+article: A18
+chantier: "#2258 (l'application cesse de posséder l'audio), lot #2433"
+decided_at: 2026-07-23
+verification: certaine
+enforced_by:
+  - "ServiceImportReferenceTest#reference_pose_identite_et_placeholder"
+verified:
+  - by: machine:ci
+    at: 2026-07-23
+relations:
+  complète: ["0048"]
+---
 
-- **Statut** : Accepté - 2026-07-23
-- **Chantier** : #2258 (l'application cesse de posséder l'audio), lot #2433
-- **Vérification** : certaine - `ServiceImportReferenceTest#reference_pose_identite_et_placeholder`
-- **Complète** : #2255 (dont la clôture avait replié le versant « import » sur la réactivation) ; prolonge [ADR 0048](0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md)
-- **Quatrième couture** : rejoint import groupé, reconstruction par CSV (#1305) et hydratation (#1571) sous le concept unique d'import (#1662)
+# Un dossier de transformés déjà présents s'importe par référence, sans brut
 
 ## Contexte
 

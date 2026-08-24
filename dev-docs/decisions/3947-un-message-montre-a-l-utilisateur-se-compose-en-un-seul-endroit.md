@@ -1,9 +1,22 @@
-# ADR 3947 - Un message montré à l'utilisateur se compose en un seul endroit, et ce n'est pas une vue
+---
+type: adr
+title: "Un message montré à l'utilisateur se compose en un seul endroit, et ce n'est pas une vue"
+status: stable
+article: A14
+chantier: "#3947, passe 7 de la clôture des finitions de recette (#3424)"
+decided_at: 2026-08-18
+verification: probable
+enforced_by:
+  - "scripts/adr/3947-message-enveloppe.py"
+ratchet: 2
+verified:
+  - by: machine:suspects
+    at: 2026-08-18
+relations:
+  prolonge: ["3470"]
+---
 
-- **Statut** : Accepté - 2026-08-18
-- **Chantier** : #3947, passe 7 de la clôture des finitions de recette (#3424)
-- **Prolonge** : [ADR 3470](3470-un-message-d-erreur-ne-montre-jamais-le-nom-de-son-enveloppe.md)
-- **Vérification** : probable - `scripts/adr/3947-message-enveloppe.py` (cliquet : 2)
+# Un message montré à l'utilisateur se compose en un seul endroit, et ce n'est pas une vue
 
 ## Contexte
 

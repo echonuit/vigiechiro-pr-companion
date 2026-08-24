@@ -1,14 +1,20 @@
-# ADR 3668 : Un E2E attend le signal du callback asynchrone, pas le retour du geste qui l'a déclenché
+---
+type: adr
+title: "Un E2E attend le signal du callback asynchrone, pas le retour du geste qui l'a déclenché"
+status: stable
+article: A4
+chantier: "#3668 (PR #3716, #3722 ; audit #3717)"
+decided_at: 2026-08-14
+verification: humaine
+loupe:
+  - "robot.interact(...)"
+verification_note: "revue de code : tout `robot.interact(...)` (ou appel direct dans"
+verified:
+  - by: human:nedseb
+    at: 2026-08-14
+---
 
-- **Statut** : Accepté - 2026-08-14
-- **Chantier** : #3668 (PR #3716, #3722 ; audit #3717)
-- **Vérification** : humaine - revue de code : tout `robot.interact(...)` (ou appel direct dans
-  `@Start`) qui déclenche `occupation.occuper(...)` sur un test câblé au vrai `RacineInjecteur`
-  doit être suivi d'un `WaitForAsyncUtils.waitFor(timeout, TimeUnit, prédicat)` sur l'état attendu
-  avant toute assertion qui en dépend. Aucun scan mécanique ne peut distinguer un `interact` suivi
-  d'une attente correcte d'un `interact` suivi d'une attente insuffisante (`waitForFxEvents()` est
-  légitime ailleurs, quand rien d'asynchrone n'est en jeu) : c'est une décision de méthode, pas un
-  invariant qui se prouve par grep.
+# Un E2E attend le signal du callback asynchrone, pas le retour du geste qui l'a déclenché
 
 ## Contexte
 

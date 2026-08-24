@@ -1,8 +1,18 @@
-# ADR 2525 - Un fait booléen d'une entité centrale vit dans une table latérale, pas dans une colonne
+---
+type: adr
+title: "Un fait booléen d'une entité centrale vit dans une table latérale, pas dans une colonne"
+status: stable
+article: A16
+chantier: "#2525 (participations opportunistes), EPIC #2349"
+decided_at: 2026-07-27
+verification: humaine
+verification_note: "le compromis se juge à la **revue d'une migration** : combien de sites de construction l'entité a-t-elle, et le fait concerne-t-il une minorité de lignes ? Aucun scan ne répond à la seconde question, et un test qui figerait le nombre de composantes d'un record serait un contrôle creux, cassé au premier ajout légitime."
+verified:
+  - by: human:nedseb
+    at: 2026-07-27
+---
 
-- **Statut** : Accepté - 2026-07-27
-- **Chantier** : #2525 (participations opportunistes), EPIC #2349
-- **Vérification** : humaine - le compromis se juge à la **revue d'une migration** : combien de sites de construction l'entité a-t-elle, et le fait concerne-t-il une minorité de lignes ? Aucun scan ne répond à la seconde question, et un test qui figerait le nombre de composantes d'un record serait un contrôle creux, cassé au premier ajout légitime.
+# Un fait booléen d'une entité centrale vit dans une table latérale, pas dans une colonne
 
 ## Contexte
 

@@ -1,9 +1,20 @@
-# ADR 0034 - La forme du dépôt se choisit, elle ne se déduit pas de la place disponible
+---
+type: adr
+title: "La forme du dépôt se choisit, elle ne se déduit pas de la place disponible"
+status: stable
+article: A15
+chantier: "#1991 (lots #1993 à #1999)"
+decided_at: 2026-07-19
+verification: humaine
+verification_note: "que la forme du dépôt se choisisse (réglage) plutôt qu'elle ne se déduise de la place est une règle de comportement"
+verified:
+  - by: human:nedseb
+    at: 2026-07-19
+relations:
+  amende: ["0006"]
+---
 
-- **Statut** : Accepté - 2026-07-19
-- **Chantier** : #1991 (lots #1993 à #1999)
-- **Amende** : [ADR 0006](0006-depot-zip-par-defaut-perte-audio-serveur-assumee.md), sur la mécanique de contrepartie (le repli WAV ne se déduit plus de la place) ; sa décision de fond, le ZIP par défaut, reste entière.
-- **Vérification** : humaine - que la forme du dépôt se choisisse (réglage) plutôt qu'elle ne se déduise de la place est une règle de comportement
+# La forme du dépôt se choisit, elle ne se déduit pas de la place disponible
 
 ## Contexte
 

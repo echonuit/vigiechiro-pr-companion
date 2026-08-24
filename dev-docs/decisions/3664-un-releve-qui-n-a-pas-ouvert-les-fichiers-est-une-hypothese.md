@@ -1,8 +1,19 @@
-# ADR 3664 - Un relevé qui n'a pas ouvert les fichiers est une hypothèse
+---
+type: adr
+title: "Un relevé qui n'a pas ouvert les fichiers est une hypothèse"
+status: stable
+article: A5
+chantier: "#3664, suites des lots 1 et 2 du chantier #3518"
+decided_at: 2026-08-13
+verification: certaine
+enforced_by:
+  - "ParcoursDeDossierTest#tout_parcours_rattrape_l_echec_de_parcours"
+verified:
+  - by: machine:ci
+    at: 2026-08-13
+---
 
-- **Statut** : Accepté - 2026-08-13
-- **Chantier** : #3664, suites des lots 1 et 2 du chantier #3518
-- **Vérification** : certaine - `ParcoursDeDossierTest#tout_parcours_rattrape_l_echec_de_parcours`
+# Un relevé qui n'a pas ouvert les fichiers est une hypothèse
 
 ## Contexte
 

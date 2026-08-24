@@ -1,8 +1,19 @@
-# ADR 2941 - Un cliquet s'apprend en l'appliquant (amende 2843)
+---
+type: adr
+title: "Un cliquet s'apprend en l'appliquant (amende 2843)"
+status: stable
+article: A9
+chantier: "#2941, clôture du chantier #2365"
+decided_at: 2026-07-30
+verification: certaine
+enforced_by:
+  - "scripts/adr/verifie_scripts.py"
+verified:
+  - by: machine:ci
+    at: 2026-07-30
+---
 
-- **Statut** : Accepté - 2026-07-30
-- **Chantier** : #2941, clôture du chantier #2365
-- **Vérification** : certaine - `scripts/adr/verifie_scripts.py`
+# Un cliquet s'apprend en l'appliquant (amende 2843)
 
 ## Contexte
 

@@ -1,8 +1,19 @@
-# ADR 3269 - Un ensemble **vide au départ** se constate avant de filtrer (précise 3082)
+---
+type: adr
+title: "Un ensemble **vide au départ** se constate avant de filtrer (précise 3082)"
+status: stable
+article: A15
+chantier: "#3269, clôture des suites du chantier #3092"
+decided_at: 2026-08-05
+verification: certaine
+enforced_by:
+  - "CliInventaireTest#base_vide_ne_se_lit_pas_comme_un_lieu_absent"
+verified:
+  - by: machine:ci
+    at: 2026-08-05
+---
 
-- **Statut** : Accepté - 2026-08-05
-- **Chantier** : #3269, clôture des suites du chantier #3092
-- **Vérification** : certaine - `CliInventaireTest#base_vide_ne_se_lit_pas_comme_un_lieu_absent`
+# Un ensemble **vide au départ** se constate avant de filtrer (précise 3082)
 
 ## Contexte
 

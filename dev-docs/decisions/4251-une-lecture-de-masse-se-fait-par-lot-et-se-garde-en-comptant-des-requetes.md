@@ -1,8 +1,19 @@
-# ADR 4251 - Une lecture de masse se fait par lot, et se garde en comptant des requêtes
+---
+type: adr
+title: "Une lecture de masse se fait par lot, et se garde en comptant des requêtes"
+status: stable
+article: A9
+chantier: "#4251, #4271, #4278, #4283, #4286, #4289, #4293"
+decided_at: 2026-08-23
+verification: certaine
+enforced_by:
+  - "RequetesDeLAuditTest#les_requetes_ne_suivent_pas_les_nuits"
+verified:
+  - by: machine:ci
+    at: 2026-08-23
+---
 
-- **Statut** : Accepté - 2026-08-23
-- **Chantier** : #4251, #4271, #4278, #4283, #4286, #4289, #4293
-- **Vérification** : certaine - `RequetesDeLAuditTest#les_requetes_ne_suivent_pas_les_nuits`
+# Une lecture de masse se fait par lot, et se garde en comptant des requêtes
 
 ## Contexte
 

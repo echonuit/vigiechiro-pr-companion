@@ -1,9 +1,21 @@
-# ADR 3760 - Le déficit de place se porte, il ne se répartit pas
+---
+type: adr
+title: "Le déficit de place se porte, il ne se répartit pas"
+status: stable
+article: A15
+chantier: "#3760 et #3743, suites de la clôture du lot 3 (#3540) du chantier #3536"
+decided_at: 2026-08-15
+verification: certaine
+enforced_by:
+  - "BudgetHorizontalChromeTest#le_chrome_tient_son_budget"
+verified:
+  - by: machine:ci
+    at: 2026-08-15
+relations:
+  prolonge: ["0042", "0039"]
+---
 
-- **Statut** : Accepté - 2026-08-15
-- **Chantier** : #3760 et #3743, suites de la clôture du lot 3 (#3540) du chantier #3536
-- **Vérification** : certaine - `BudgetHorizontalChromeTest#le_chrome_tient_son_budget`
-- **Prolonge** : [ADR 0042](0042-un-apercu-qui-ment-est-refuse.md) et [ADR 0039](0039-une-barre-de-statut-est-neutre.md)
+# Le déficit de place se porte, il ne se répartit pas
 
 ## Contexte
 

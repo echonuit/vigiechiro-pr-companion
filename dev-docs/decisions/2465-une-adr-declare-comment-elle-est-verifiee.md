@@ -1,8 +1,19 @@
-# ADR 2465 - Une ADR déclare comment elle est vérifiée, sur trois niveaux
+---
+type: adr
+title: "Une ADR déclare comment elle est vérifiée, sur trois niveaux"
+status: stable
+article: A6
+chantier: "EPIC #2465"
+decided_at: 2026-07-23
+verification: certaine
+enforced_by:
+  - "DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment"
+verified:
+  - by: machine:ci
+    at: 2026-07-23
+---
 
-- **Statut** : Accepté - 2026-07-23
-- **Chantier** : EPIC #2465
-- **Vérification** : certaine - `DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment`
+# Une ADR déclare comment elle est vérifiée, sur trois niveaux
 
 ## Contexte
 

@@ -1,9 +1,21 @@
-# ADR 3826 - Un test qui mesure monte une scène habillée
+---
+type: adr
+title: "Un test qui mesure monte une scène habillée"
+status: stable
+article: A4
+chantier: "#3826, lot 1 des suites #3802"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - "ScenesHabilleesTest#les_tests_qui_mesurent_montent_une_scene_habillee"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+relations:
+  prolonge: ["3374"]
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3826, lot 1 des suites #3802
-- **Prolonge** : [ADR 3374](3374-une-fenetre-porte-son-habillage-ou-elle-n-est-pas-le-produit.md)
-- **Vérification** : certaine - `ScenesHabilleesTest#les_tests_qui_mesurent_montent_une_scene_habillee`
+# Un test qui mesure monte une scène habillée
 
 ## Contexte
 

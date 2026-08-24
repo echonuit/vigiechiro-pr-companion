@@ -1,8 +1,20 @@
-# ADR 0010 - Les dialogues bloquants (confirmation, compte rendu) sont des ports injectables
+---
+type: adr
+title: "Les dialogues bloquants (confirmation, compte rendu) sont des ports injectables"
+status: stable
+article: A22
+chantier: "#789/#790 (affordance et validation), socle occupation #1014, notificateur #1405"
+decided_at: 2026-08-05
+verification: probable
+enforced_by:
+  - "scripts/adr/0010-dialogue-hors-port.py"
+ratchet: 4
+verified:
+  - by: machine:suspects
+    at: 2026-08-05
+---
 
-- **Statut** : Accepté - rétroactif
-- **Chantier** : #789/#790 (affordance et validation), socle occupation #1014, notificateur #1405
-- **Vérification** : probable - `scripts/adr/0010-dialogue-hors-port.py` (cliquet : 4)
+# Les dialogues bloquants (confirmation, compte rendu) sont des ports injectables
 
 ## Contexte
 

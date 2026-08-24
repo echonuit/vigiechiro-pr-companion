@@ -1,8 +1,19 @@
-# ADR 3560 - « Tourner sans conclure » a trois formes, et la mesure les départage
+---
+type: adr
+title: "« Tourner sans conclure » a trois formes, et la mesure les départage"
+status: stable
+article: A3
+chantier: "#3560, lot 2 du chantier #3518"
+decided_at: 2026-08-13
+verification: certaine
+enforced_by:
+  - ".github/scripts/mesure-duree-portail.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-13
+---
 
-- **Statut** : Accepté - 2026-08-13, **amendé** par [ADR 3661](3661-un-garde-de-ci-porte-ses-propres-cas.md)
-- **Chantier** : #3560, lot 2 du chantier #3518
-- **Vérification** : certaine - `.github/scripts/mesure-duree-portail.sh`
+# « Tourner sans conclure » a trois formes, et la mesure les départage
 
 ## Contexte
 

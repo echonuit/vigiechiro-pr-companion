@@ -1,8 +1,19 @@
-# ADR 3500 - Le code de sortie distingue le manque du déplacement
+---
+type: adr
+title: "Le code de sortie distingue le manque du déplacement"
+status: stable
+article: A13
+chantier: "#3500, lot 1 du chantier #3518 ; défaut trouvé à la passe 2 de la clôture de #2720"
+decided_at: 2026-08-09
+verification: certaine
+enforced_by:
+  - "CliSauvegardeTest#restaurer_une_sauvegarde_amputee"
+verified:
+  - by: machine:ci
+    at: 2026-08-09
+---
 
-- **Statut** : Accepté - 2026-08-09
-- **Chantier** : #3500, lot 1 du chantier #3518 ; défaut trouvé à la passe 2 de la clôture de #2720
-- **Vérification** : certaine - `CliSauvegardeTest#restaurer_une_sauvegarde_amputee`
+# Le code de sortie distingue le manque du déplacement
 
 ## Contexte
 

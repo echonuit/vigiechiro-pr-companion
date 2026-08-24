@@ -1,8 +1,18 @@
-# ADR 0027 - Une attente porte toujours un nom, et c'est l'étape qui va attendre qui le pose
+---
+type: adr
+title: "Une attente porte toujours un nom, et c'est l'étape qui va attendre qui le pose"
+status: stable
+article: A4
+chantier: "#1931, #1935, #1940, #1946, #1951, #1959"
+decided_at: 2026-07-19
+verification: humaine
+verification_note: "qu'aucune opération longue ne laisse l'écran muet est une propriété temporelle du déroulé, pas un invariant statique"
+verified:
+  - by: human:nedseb
+    at: 2026-07-19
+---
 
-- **Statut** : Accepté - 2026-07-19
-- **Chantier** : #1931, #1935, #1940, #1946, #1951, #1959
-- **Vérification** : humaine - qu'aucune opération longue ne laisse l'écran muet est une propriété temporelle du déroulé, pas un invariant statique
+# Une attente porte toujours un nom, et c'est l'étape qui va attendre qui le pose
 
 ## Contexte
 

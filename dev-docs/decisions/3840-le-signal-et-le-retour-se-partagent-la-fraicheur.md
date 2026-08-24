@@ -1,13 +1,21 @@
-# ADR 3840 - Le signal couvre ce qui change sans qu'on parte ; le retour couvre le reste
+---
+type: adr
+title: "Le signal couvre ce qui change sans qu'on parte ; le retour couvre le reste"
+status: stable
+article: A15
+chantier: "#3840, trouvaille consignée pendant #3645"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - "ParcoursAnalyseVersValidationE2ETest#un_taxon_remplace_est_relu_au_retour"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+relations:
+  amende: ["3537"]
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3840, trouvaille consignée pendant #3645
-- **Amende** : [ADR 3537](3537-un-signal-se-pose-a-l-ecriture.md)
-- **Vérification** : certaine - `ParcoursAnalyseVersValidationE2ETest#un_taxon_remplace_est_relu_au_retour`
-
-Vue rouge en neutralisant `rafraichirAuRetour()` sur `AnalyseController` : l'écran reste sur
-`["Nyclei", "Pippip"]`, c'est-à-dire exactement à la dernière écriture **qui a annoncé**, et manque le
-remplacement qui a suivi.
+# Le signal couvre ce qui change sans qu'on parte ; le retour couvre le reste
 
 ## Contexte
 

@@ -1,8 +1,19 @@
-# ADR 3006 - Le groupe `api` est borné, et ne dispense pas des commandes métier
+---
+type: adr
+title: "Le groupe `api` est borné, et ne dispense pas des commandes métier"
+status: stable
+article: A19
+chantier: "#3006 (lot 4 de l'EPIC #2999)"
+decided_at: 2026-07-31
+verification: certaine
+enforced_by:
+  - "ArchitectureTest#lecture_brute_reservee_au_groupe_api"
+verified:
+  - by: machine:ci
+    at: 2026-07-31
+---
 
-- **Statut** : Accepté - 2026-07-31
-- **Chantier** : #3006 (lot 4 de l'EPIC #2999)
-- **Vérification** : certaine - `ArchitectureTest#lecture_brute_reservee_au_groupe_api`
+# Le groupe `api` est borné, et ne dispense pas des commandes métier
 
 ## Contexte
 

@@ -1,8 +1,19 @@
-# ADR 2348 - Un export d'image se redessine, il ne se capture pas
+---
+type: adr
+title: "Un export d'image se redessine, il ne se capture pas"
+status: stable
+article: A4
+chantier: "EPIC #2348 (Lire ce que la nuit contient)"
+decided_at: 2026-07-26
+verification: certaine
+enforced_by:
+  - "ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine"
+verified:
+  - by: machine:ci
+    at: 2026-07-26
+---
 
-- **Statut** : Accepté - 2026-07-26
-- **Chantier** : EPIC #2348 (Lire ce que la nuit contient)
-- **Vérification** : certaine - `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`
+# Un export d'image se redessine, il ne se capture pas
 
 ## Contexte
 

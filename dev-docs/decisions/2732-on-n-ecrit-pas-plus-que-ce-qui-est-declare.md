@@ -1,12 +1,19 @@
-# ADR 2732 - On n'écrit jamais plus que ce qui est **déclaré**, et le taux de compression ne décide de rien
+---
+type: adr
+title: "On n'écrit jamais plus que ce qui est **déclaré**, et le taux de compression ne décide de rien"
+status: stable
+article: A17
+chantier: "#2732, lot 2 (#2722) du chantier de dette #2720"
+decided_at: 2026-08-04
+verification: certaine
+enforced_by:
+  - "ExtracteurZipQuotasTest#archive_menteuse_arretee_pendant_la_copie"
+verified:
+  - by: machine:ci
+    at: 2026-08-04
+---
 
-- **Statut** : Accepté - 2026-08-04
-- **Chantier** : #2732, lot 2 (#2722) du chantier de dette #2720
-- **Vérification** : certaine - `ExtracteurZipQuotasTest#archive_menteuse_arretee_pendant_la_copie`
-
-> Le versant « un contenu très compressible passe » est tenu par
-> `ExtracteurZipQuotasTest#un_contenu_tres_compressible_passe` : le garde des ADR n'accepte qu'une
-> référence, la décision en a deux.
+# On n'écrit jamais plus que ce qui est **déclaré**, et le taux de compression ne décide de rien
 
 ## Contexte
 

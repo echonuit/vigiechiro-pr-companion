@@ -1,8 +1,19 @@
-# ADR 2746 - Le produit ne dépend pas de son outillage
+---
+type: adr
+title: "Le produit ne dépend pas de son outillage"
+status: stable
+article: A20
+chantier: "#2746, lot #2724 du chantier #2720"
+decided_at: 2026-08-06
+verification: certaine
+enforced_by:
+  - "ArchitectureTest#produit_sans_outillage"
+verified:
+  - by: machine:ci
+    at: 2026-08-06
+---
 
-- **Statut** : Accepté - 2026-08-06
-- **Chantier** : #2746, lot #2724 du chantier #2720
-- **Vérification** : certaine - `ArchitectureTest#produit_sans_outillage`
+# Le produit ne dépend pas de son outillage
 
 ## Contexte
 

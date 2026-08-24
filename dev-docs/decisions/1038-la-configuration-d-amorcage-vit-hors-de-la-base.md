@@ -1,10 +1,21 @@
-# ADR 1038 - La seule configuration qui vive hors de la base est celle qui dit où la base se trouve
+---
+type: adr
+title: "La seule configuration qui vive hors de la base est celle qui dit où la base se trouve"
+status: stable
+article: A18
+chantier: "#1038 (choisir où vit la base `.db`, sans déménager l'audio), dernier lot de l'EPIC #2258"
+decided_at: 2026-07-22
+verification: certaine
+enforced_by:
+  - "WorkspaceTest#resolu_lit_la_configuration_persistee"
+verified:
+  - by: machine:ci
+    at: 2026-07-22
+relations:
+  suit: ["0048"]
+---
 
-- **Statut** : Accepté - 2026-07-22
-- **Chantier** : #1038 (choisir où vit la base `.db`, sans déménager l'audio), dernier lot de l'EPIC #2258
-- **Vérification** : certaine - `WorkspaceTest#resolu_lit_la_configuration_persistee`
-- **Suit** : [ADR 0048](0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md), qui a réduit ce chantier à la base seule
-- **Absorbe** : #2187 (les drapeaux de fonctionnalités sont lus avant les migrations)
+# La seule configuration qui vive hors de la base est celle qui dit où la base se trouve
 
 ## Contexte
 

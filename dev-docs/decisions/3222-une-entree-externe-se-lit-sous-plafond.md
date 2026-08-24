@@ -1,12 +1,19 @@
-# ADR 3222 - Une entrée externe se lit **sous plafond**, et le plafond vient d'une **mesure**
+---
+type: adr
+title: "Une entrée externe se lit **sous plafond**, et le plafond vient d'une **mesure**"
+status: stable
+article: A17
+chantier: "#3222, suite de la passe 7 du lot 2 (#2722) du chantier de dette #2720"
+decided_at: 2026-08-04
+verification: certaine
+enforced_by:
+  - "LectureBorneeTest#texte_refuse_avant_d_avoir_tout_lu"
+verified:
+  - by: machine:ci
+    at: 2026-08-04
+---
 
-- **Statut** : Accepté - 2026-08-04
-- **Chantier** : #3222, suite de la passe 7 du lot 2 (#2722) du chantier de dette #2720
-- **Vérification** : certaine - `LectureBorneeTest#texte_refuse_avant_d_avoir_tout_lu`
-
-> Ce test est le seul qui distingue borner une lecture de **constater** qu'elle était trop grosse : il
-> compte les octets réellement demandés à la source. Déplacer le contrôle après la boucle le fait
-> rougir, alors que le refus, lui, tombe toujours.
+# Une entrée externe se lit **sous plafond**, et le plafond vient d'une **mesure**
 
 ## Contexte
 

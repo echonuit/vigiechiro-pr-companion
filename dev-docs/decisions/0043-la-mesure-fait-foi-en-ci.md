@@ -1,8 +1,18 @@
-# ADR 0043 - La mesure fait foi en CI, pas sur le poste (amende 0037)
+---
+type: adr
+title: "La mesure fait foi en CI, pas sur le poste (amende 0037)"
+status: stable
+article: A5
+chantier: "#1641, #1873, #1579, #2129"
+decided_at: 2026-07-20
+verification: humaine
+verification_note: "que la mesure fasse foi en CI plutôt qu'une observation locale est une discipline de méthode, non observable dans le code"
+verified:
+  - by: human:nedseb
+    at: 2026-07-20
+---
 
-- **Statut** : Accepté - 2026-07-20
-- **Chantier** : #1641, #1873, #1579, #2129
-- **Vérification** : humaine - que la mesure fasse foi en CI plutôt qu'une observation locale est une discipline de méthode, non observable dans le code
+# La mesure fait foi en CI, pas sur le poste (amende 0037)
 
 ## Contexte
 

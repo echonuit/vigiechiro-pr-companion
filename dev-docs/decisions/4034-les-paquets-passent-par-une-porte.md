@@ -1,8 +1,19 @@
-# ADR 4034 - Les paquets passent par une porte, et le cache de fichiers a un périmètre
+---
+type: adr
+title: "Les paquets passent par une porte, et le cache de fichiers a un périmètre"
+status: stable
+article: A3
+chantier: "#4034, clôture du chantier des films et de la CI (#4013)"
+decided_at: 2026-08-20
+verification: certaine
+enforced_by:
+  - ".github/scripts/verifie-apt.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-20
+---
 
-- **Statut** : Accepté - 2026-08-20
-- **Chantier** : #4034, clôture du chantier des films et de la CI (#4013)
-- **Vérification** : certaine - `.github/scripts/verifie-apt.sh`
+# Les paquets passent par une porte, et le cache de fichiers a un périmètre
 
 ## Contexte
 

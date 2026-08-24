@@ -1,13 +1,21 @@
-# ADR 3798 - Un fil d'Ariane élide des segments, il ne rogne pas des libellés
+---
+type: adr
+title: "Un fil d'Ariane élide des segments, il ne rogne pas des libellés"
+status: stable
+article: A23
+chantier: "#3798, dernière suite du chantier #3536"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - "src/test/java/fr/univ_amu/iut/commun/view/FilArianeElisionTest.java"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+relations:
+  complète: ["3760"]
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3798, dernière suite du chantier #3536
-- **Complète** : [ADR 3760](3760-le-deficit-se-porte-il-ne-se-repartit-pas.md)
-- **Vérification** : certaine - `src/test/java/fr/univ_amu/iut/commun/view/FilArianeElisionTest.java`
-
-Vue rouge par trois mutations distinctes, une par promesse : élision neutralisée (les segments sont
-nommés un par un comme coupés), exemption `abregeable` remise (le juge est de nouveau mis en sourdine),
-et une entrée retirée du menu (un ancêtre manque à l'appel).
+# Un fil d'Ariane élide des segments, il ne rogne pas des libellés
 
 ## Contexte
 

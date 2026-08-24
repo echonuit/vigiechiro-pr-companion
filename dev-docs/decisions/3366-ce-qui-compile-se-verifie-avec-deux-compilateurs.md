@@ -1,8 +1,19 @@
-# ADR 3366 - Ce qui compile se vérifie avec deux compilateurs
+---
+type: adr
+title: "Ce qui compile se vérifie avec deux compilateurs"
+status: stable
+article: A4
+chantier: "#3366, suite de #3228, lot #2724 du chantier #2720"
+decided_at: 2026-08-06
+verification: certaine
+enforced_by:
+  - ".github/workflows/maven.yml"
+verified:
+  - by: machine:ci
+    at: 2026-08-06
+---
 
-- **Statut** : Accepté - 2026-08-06
-- **Chantier** : #3366, suite de #3228, lot #2724 du chantier #2720
-- **Vérification** : certaine - `.github/workflows/maven.yml`
+# Ce qui compile se vérifie avec deux compilateurs
 
 ## Contexte
 

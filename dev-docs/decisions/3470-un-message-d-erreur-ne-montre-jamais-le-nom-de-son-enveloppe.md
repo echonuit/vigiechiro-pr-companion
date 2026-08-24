@@ -1,9 +1,21 @@
-# ADR 3470 - Un message d'erreur ne montre jamais le nom de son enveloppe
+---
+type: adr
+title: "Un message d'erreur ne montre jamais le nom de son enveloppe"
+status: stable
+article: A14
+chantier: "#3470, finitions de recette avant la campagne 2 (#3424)"
+decided_at: 2026-08-18
+verification: certaine
+enforced_by:
+  - "CauseLisibleTest#l_enveloppe_de_reflexion_ne_masque_pas_la_panne"
+verified:
+  - by: machine:ci
+    at: 2026-08-18
+relations:
+  prolonge: ["2635"]
+---
 
-- **Statut** : Accepté - 2026-08-18
-- **Chantier** : #3470, finitions de recette avant la campagne 2 (#3424)
-- **Prolonge** : [ADR 2635](2635-un-refus-dit-ce-qui-manque-la-surface-dit-quoi-faire.md)
-- **Vérification** : certaine - `CauseLisibleTest#l_enveloppe_de_reflexion_ne_masque_pas_la_panne`
+# Un message d'erreur ne montre jamais le nom de son enveloppe
 
 ## Contexte
 

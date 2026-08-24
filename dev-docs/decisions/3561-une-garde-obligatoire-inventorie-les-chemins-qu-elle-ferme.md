@@ -1,14 +1,22 @@
-# ADR 3561 - Une garde obligatoire inventorie les chemins qu'elle ferme
+---
+type: adr
+title: "Une garde obligatoire inventorie les chemins qu'elle ferme"
+status: stable
+article: A3
+chantier: "#3561, lot 3 du chantier #3518"
+decided_at: 2026-08-15
+verification: certaine
+enforced_by:
+  - ".github/scripts/veille-plateformes.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-15
+relations:
+  amende: ["2744"]
+  applique: ["0041"]
+---
 
-- **Statut** : Accepté - 2026-08-15
-- **Chantier** : #3561, lot 3 du chantier #3518
-- **Amende** : [ADR 2744](2744-la-publication-part-a-heure-fixe.md)
-- **Applique** : [ADR 0041](0041-un-check-requis-gouverne-la-branche.md)
-- **Vérification** : certaine - `.github/scripts/veille-plateformes.sh`
-
-⚠️ L'auto-test de ce script couvre dix cas, dont l'issue de secours et le marqueur absent. Mais le
-**câblage** du job, lui, ne s'exécutera qu'au jour où `ENABLE_RELEASE` passe à `true` : le script est
-éprouvé, le graphe de jobs ne l'est pas.
+# Une garde obligatoire inventorie les chemins qu'elle ferme
 
 ## Contexte
 

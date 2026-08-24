@@ -1,8 +1,19 @@
-# ADR 4079 - Une condition de job nomme l'état qu'elle attend
+---
+type: adr
+title: "Une condition de job nomme l'état qu'elle attend"
+status: stable
+article: A15
+chantier: "#4079, EPIC livraison (#2104)"
+decided_at: 2026-08-21
+verification: certaine
+enforced_by:
+  - ".github/scripts/verifie-conditions-de-job.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-21
+---
 
-- **Statut** : Accepté - 2026-08-21
-- **Chantier** : #4079, EPIC livraison (#2104)
-- **Vérification** : certaine - `.github/scripts/verifie-conditions-de-job.sh`
+# Une condition de job nomme l'état qu'elle attend
 
 ## Contexte
 

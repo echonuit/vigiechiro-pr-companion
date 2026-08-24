@@ -1,14 +1,19 @@
-# ADR 2357 - Un traitement en lot compose des gestes unitaires, il n'en invente pas un nouveau
+---
+type: adr
+title: "Un traitement en lot compose des gestes unitaires, il n'en invente pas un nouveau"
+status: stable
+article: A17
+chantier: "#2357 (lot 3 de l'EPIC #2349)"
+decided_at: 2026-07-28
+verification: certaine
+enforced_by:
+  - "MoteurTraitementGroupeTest#annulation_apres_le_passage_courant"
+verified:
+  - by: machine:ci
+    at: 2026-07-28
+---
 
-- **Statut** : Accepté - 2026-07-28
-- **Chantier** : #2357 (lot 3 de l'EPIC #2349)
-- **Vérification** : certaine - `MoteurTraitementGroupeTest#annulation_apres_le_passage_courant`
-
-> Le contrat d'annulation est celui qui rend le reste tenable, et c'est le seul qui se prouve d'un
-> test. Les autres conséquences ont les leurs, dans la même veine :
-> `LancementCalculGroupeTest#ne_force_jamais` et `ImportResultatsGroupeTest` tiennent l'absence des
-> options destructrices, `TraitementLotTest#annonce_les_ecartes_avant_de_lancer` tient l'annonce
-> préalable, et `TraiterPassagesTest#ecartes_annonces_sans_etre_tentes` la tient côté terminal.
+# Un traitement en lot compose des gestes unitaires, il n'en invente pas un nouveau
 
 ## Contexte
 

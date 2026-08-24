@@ -1,12 +1,19 @@
-# ADR 3482 - L'audit ramasse ce qu'une suppression laisse, et une confirmation dit aussi ce qu'elle ne fait pas
+---
+type: adr
+title: "L'audit ramasse ce qu'une suppression laisse, et une confirmation dit aussi ce qu'elle ne fait pas"
+status: stable
+article: A12
+chantier: "#3482, relevé au test manuel de la campagne de recette 2 (#3424)"
+decided_at: 2026-08-08
+verification: certaine
+enforced_by:
+  - "AuditRetraitOrphelinsViewTest#accepter_retire_et_rend_compte"
+verified:
+  - by: machine:ci
+    at: 2026-08-08
+---
 
-- **Statut** : Accepté - 2026-08-08, **amendé** par [ADR 3624](3624-un-fait-que-rien-ne-peut-faire-rougir-s-ancre-autrement.md)
-- **Chantier** : #3482, relevé au test manuel de la campagne de recette 2 (#3424)
-- **Vérification** : certaine - `AuditRetraitOrphelinsViewTest#accepter_retire_et_rend_compte`
-
-Le test de vérification retire de **vrais dossiers** d'un temporaire et constate qu'ils ont disparu : rien
-d'autre ne prouve qu'une suppression a eu lieu. Le second volet - la confirmation qui dit la vérité - est
-tenu par `PassageActionsFicheViewTest#suppression_dit_que_les_fichiers_restent`, vu rouge avant correctif.
+# L'audit ramasse ce qu'une suppression laisse, et une confirmation dit aussi ce qu'elle ne fait pas
 
 ## Contexte
 

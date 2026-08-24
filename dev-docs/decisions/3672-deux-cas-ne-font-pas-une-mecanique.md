@@ -1,9 +1,21 @@
-# ADR 3672 - Deux cas ne font pas une mécanique : un libellé dérivé se relibelle
+---
+type: adr
+title: "Deux cas ne font pas une mécanique : un libellé dérivé se relibelle"
+status: stable
+article: A16
+chantier: "#3672 (lot 2 du chantier #3536), après #3455"
+decided_at: 2026-08-14
+verification: certaine
+enforced_by:
+  - "SiteDetailRenommageViewTest#renommer_relibelle_l_etape"
+verified:
+  - by: machine:ci
+    at: 2026-08-14
+relations:
+  prolonge: ["3539"]
+---
 
-- **Statut** : Accepté - 2026-08-14
-- **Chantier** : #3672 (lot 2 du chantier #3536), après #3455
-- **Vérification** : certaine - `SiteDetailRenommageViewTest#renommer_relibelle_l_etape`
-- **Prolonge** : [ADR 3539](3539-un-etat-de-controle-se-lie-il-ne-se-photographie-pas.md)
+# Deux cas ne font pas une mécanique : un libellé dérivé se relibelle
 
 ## Contexte
 

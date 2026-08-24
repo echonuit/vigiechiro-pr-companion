@@ -1,8 +1,19 @@
-# ADR 0042 - Un aperçu qui ment est refusé, et l'exception se déclare dans la vue
+---
+type: adr
+title: "Un aperçu qui ment est refusé, et l'exception se déclare dans la vue"
+status: stable
+article: A4
+chantier: "#2049, #1641, #1873, #1579, #2129"
+decided_at: 2026-07-20
+verification: certaine
+enforced_by:
+  - "ApercuFxElisionTest#bouton_tronque_refuse"
+verified:
+  - by: machine:ci
+    at: 2026-07-20
+---
 
-- **Statut** : Accepté - 2026-07-20
-- **Chantier** : #2049, #1641, #1873, #1579, #2129
-- **Vérification** : certaine - `ApercuFxElisionTest#bouton_tronque_refuse`
+# Un aperçu qui ment est refusé, et l'exception se déclare dans la vue
 
 ## Contexte
 

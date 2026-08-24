@@ -1,8 +1,18 @@
-# ADR 2951 - Une exclusion nomme son repreneur, ou c'est un trou (amende 2867)
+---
+type: adr
+title: "Une exclusion nomme son repreneur, ou c'est un trou (amende 2867)"
+status: stable
+article: A11
+chantier: "#2951, chantier #1771"
+decided_at: 2026-07-30
+verification: humaine
+verification_note: "le motif dit **pourquoi** ; aucun scan ne distingue une exclusion justifiée d'une exclusion tacite"
+verified:
+  - by: human:nedseb
+    at: 2026-07-30
+---
 
-- **Statut** : Accepté - 2026-07-30
-- **Chantier** : #2951, chantier #1771
-- **Vérification** : humaine - le motif dit **pourquoi** ; aucun scan ne distingue une exclusion justifiée d'une exclusion tacite
+# Une exclusion nomme son repreneur, ou c'est un trou (amende 2867)
 
 ## Contexte
 

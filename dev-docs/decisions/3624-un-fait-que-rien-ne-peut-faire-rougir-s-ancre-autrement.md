@@ -1,14 +1,21 @@
-# ADR 3624 - Un fait que rien ne peut faire rougir s'ancre autrement
+---
+type: adr
+title: "Un fait que rien ne peut faire rougir s'ancre autrement"
+status: stable
+article: A2
+chantier: "#3624, clôture des suites du lot 1 (#3559)"
+decided_at: 2026-08-13
+verification: certaine
+enforced_by:
+  - "src/test/bats/cli.bats"
+verified:
+  - by: machine:ci
+    at: 2026-08-13
+relations:
+  amende: ["3482"]
+---
 
-- **Statut** : Accepté - 2026-08-13
-- **Chantier** : #3624, clôture des suites du lot 1 (#3559)
-- **Amende** : [ADR 3482](3482-l-audit-ramasse-ce-qu-une-suppression-laisse.md)
-- **Vérification** : certaine - `src/test/bats/cli.bats`
-
-Le test qui la tient est « la trace retirée de la console est bien dans le journal, et emplacements dit
-où (#3624) », **vu rouge** en neutralisant l'amorçage de la journalisation : sans cette mutation à la
-main, il rendrait le même vert qu'une journalisation cassée. Le versant Java est
-`CliEmplacementsTest#afficher_nomme_le_dossier_des_journaux`.
+# Un fait que rien ne peut faire rougir s'ancre autrement
 
 ## Contexte
 

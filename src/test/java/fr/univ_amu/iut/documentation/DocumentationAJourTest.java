@@ -352,7 +352,7 @@ class DocumentationAJourTest {
     /// Deux formes coexistent dans le journal (`# ADR 0035 : …` et `# 0026 - …`) et le test **tolère les
     /// deux** : il garde le **numéro**, pas le style de titre. Le rendre strict sur la forme le ferait
     /// rougir sur une variation de rédaction, ce qui est le meilleur moyen de le faire désactiver.
-    private static final Pattern ENTETE_ADR = Pattern.compile("^#\\s+(?:ADR\\s+)?(\\d{4,})\\b");
+    private static final Pattern TITRE_ADR = Pattern.compile("^title: \"(.+)\"$", Pattern.MULTILINE);
 
     @Test
     @DisplayName("Deux ADR ne portent jamais le même numéro")
@@ -383,24 +383,28 @@ class DocumentationAJourTest {
     }
 
     @Test
-    @DisplayName("Le numéro écrit dans l'en-tête d'une ADR est celui de son nom de fichier")
-    void l_entete_d_une_adr_porte_son_numero() {
+    @DisplayName("Le titre déclaré par l'en-tête d'une ADR est celui de son titre de page")
+    void l_entete_d_une_adr_porte_son_titre() {
+        // Le numéro ne s'écrit plus dans le corps : il vit dans le nom du fichier, et l'en-tête OKF
+        // porte le titre. La dérive à guetter n'a pas changé de nature, seulement de champ : une
+        // reprise faite à moitié laisse `title:` dire autre chose que le titre de niveau 1, et
+        // l'ADR se met à porter deux titres - dont l'un alimente le site et l'autre la lecture.
         SoftAssertions verifs = new SoftAssertions();
         for (String fichier : fichiersAdr()) {
-            Matcher nom = FICHIER_ADR.matcher(fichier);
-            if (!nom.matches()) {
-                continue;
-            }
-            String premiereLigne =
-                    lire(DECISIONS.resolve(fichier)).lines().findFirst().orElse("");
-            Matcher entete = ENTETE_ADR.matcher(premiereLigne);
-            verifs.assertThat(entete.find() ? entete.group(1) : null)
+            String texte = lireNormalise(DECISIONS.resolve(fichier));
+            Matcher champ = TITRE_ADR.matcher(texte);
+            String titrePage = texte.lines()
+                    .filter(ligne -> ligne.startsWith("# "))
+                    .findFirst()
+                    .map(ligne -> ligne.substring(2).trim())
+                    .orElse("");
+            verifs.assertThat(champ.find() ? champ.group(1) : null)
                     .as(
-                            "%s : l'en-tête annonce « %s » au lieu du numéro du fichier. C'est le piège d'une "
-                                    + "renumérotation faite à moitié : le fichier change de nom, l'en-tête reste, "
-                                    + "et l'ADR se met à porter deux numéros.",
-                            fichier, premiereLigne)
-                    .isEqualTo(nom.group(1));
+                            "%s : le champ « title » et le titre de page ne disent pas la même chose. "
+                                    + "Le premier alimente le site et la matrice, le second la lecture : "
+                                    + "les laisser diverger fait porter deux titres à une seule décision.",
+                            fichier)
+                    .isEqualTo(titrePage);
         }
         verifs.assertAll();
     }
@@ -443,8 +447,14 @@ class DocumentationAJourTest {
     private static final Set<String> NIVEAUX_DE_VERIFICATION = Set.of("certaine", "probable", "humaine");
 
     /// La puce d'en-tête qui déclare le niveau, à côté de `Statut` et `Chantier`.
-    private static final Pattern VERIFICATION_ADR =
-            Pattern.compile("^- \\*\\*Vérification\\*\\* : (\\w+) [-—] (.+)$", Pattern.MULTILINE);
+    private static final Pattern VERIFICATION_ADR = Pattern.compile(
+            "^verification: (\\w+)$(?:\\R(?:enforced_by|loupe):\\R\\s*- \"([^\"]+)\")?", Pattern.MULTILINE);
+
+    /// Le cliquet declare par l en-tete OKF, quand il y en a un.
+    private static final Pattern RATCHET_ADR = Pattern.compile("^ratchet: (\\d+)$", Pattern.MULTILINE);
+
+    /// La note qui dit POURQUOI aucun controle mecanique n est possible, pour une ADR « humaine ».
+    private static final Pattern NOTE_ADR = Pattern.compile("^verification_note: \"(.+)\"$", Pattern.MULTILINE);
 
     /// Une vérification `certaine` nomme son test : `ClasseDeTest#nom_de_la_methode`.
     private static final Pattern REFERENCE_TEST = Pattern.compile("^`(\\w+)#([a-z0-9_]+)`$");
@@ -534,9 +544,9 @@ class DocumentationAJourTest {
                     continue; // Classement à venir, tracé dans la liste décroissante.
                 }
                 verifs.fail(
-                        "%s : aucune puce « **Vérification** » dans l'en-tête. Une ADR dont personne ne sait "
+                        "%s : aucun champ « verification » dans l'en-tête. Une ADR dont personne ne sait "
                                 + "si elle est tenue finit par n'être tenue par personne. Déclarez son niveau "
-                                + "(%s) à côté de **Statut** et **Chantier**.",
+                                + "(%s) à côté de « status » et « chantier ».",
                         fichier, NIVEAUX_DE_VERIFICATION);
                 continue;
             }
@@ -547,6 +557,36 @@ class DocumentationAJourTest {
                     .isIn(NIVEAUX_DE_VERIFICATION);
         }
         verifs.assertAll();
+    }
+
+    /// L applicateur declare par l en-tete OKF, rendu sous la forme que lisaient les trois
+    /// verificateurs quand il vivait dans une puce. Les reecrire n aurait rien prouve de plus, et
+    /// aurait perdu leurs messages, qui disent quoi faire.
+    private static String referenceLegacy(Path fichier, Matcher declaration) {
+        String applicateur =
+                declaration.group(2) == null ? "" : declaration.group(2).trim();
+        String texte = lireNormalise(fichier);
+        // Le motif d une verification humaine vit dans `verification_note`, ou la loupe est deja
+        // nommee quand il y en a une. Les 45 ADR humaines SANS loupe ont quand meme un motif : les
+        // ecarter parce qu elles ne nomment aucun script rendrait ce test muet sur les deux tiers
+        // du corpus humain.
+        if ("humaine".equals(declaration.group(1))) {
+            Matcher note = NOTE_ADR.matcher(texte);
+            if (note.find()) {
+                return note.group(1);
+            }
+            return applicateur.isEmpty() ? "" : "Loupe : `" + applicateur + "`";
+        }
+        if (applicateur.isEmpty()) {
+            return "";
+        }
+        if ("probable".equals(declaration.group(1))) {
+            Matcher cliquet = RATCHET_ADR.matcher(texte);
+            if (cliquet.find()) {
+                return "`" + applicateur + "` (cliquet : " + cliquet.group(1) + ")";
+            }
+        }
+        return "`" + applicateur + "`";
     }
 
     @Test
@@ -562,7 +602,10 @@ class DocumentationAJourTest {
             if (!declaration.find()) {
                 continue; // Absence déjà signalée par le test précédent.
             }
-            String reference = declaration.group(2).trim();
+            String reference = referenceLegacy(DECISIONS.resolve(fichier), declaration);
+            if (reference.isEmpty()) {
+                continue; // Aucun applicateur nomme : le test precedent le signale deja.
+            }
             switch (declaration.group(1)) {
                 case "certaine" -> verifierReferenceCertaine(verifs, fichier, reference);
                 case "probable" -> verifierScriptNomme(verifs, fichier, reference);
@@ -828,7 +871,7 @@ class DocumentationAJourTest {
             }
             String chantier = lire(DECISIONS.resolve(fichier))
                     .lines()
-                    .filter(ligne -> ligne.startsWith("- **Chantier**"))
+                    .filter(ligne -> ligne.startsWith("chantier:"))
                     .findFirst()
                     .orElse("");
             verifs.assertThat(chantier)
@@ -1141,8 +1184,7 @@ class DocumentationAJourTest {
             Pattern.compile("^-\\s*\\*\\*(?:Amende|Amendée|Remplace|Remplacée)\\*\\*\\s*:\\s*(.+)$", Pattern.MULTILINE);
 
     /// La ligne « Statut » d'une ADR.
-    private static final Pattern STATUT_ADR =
-            Pattern.compile("^-\\s*\\*\\*Statut\\*\\*\\s*:\\s*(.+)$", Pattern.MULTILINE);
+    private static final Pattern STATUT_ADR = Pattern.compile("^status:\\s*(.+)$", Pattern.MULTILINE);
 
     /// Un numéro d'ADR (au moins 4 chiffres) cité dans un texte : `ADR 0048`.
     private static final Pattern NUMERO_ADR_CITE = Pattern.compile("ADR\\s*(\\d{4,})");
@@ -1151,8 +1193,7 @@ class DocumentationAJourTest {
     private static final Pattern PREMIER_MOT = Pattern.compile("^\\s*(\\p{L}+)");
 
     /// Le vocabulaire attendu pour le premier mot d'un statut d'ADR.
-    private static final Set<String> VOCABULAIRE_STATUT =
-            Set.of("Accepté", "Proposé", "Rejeté", "Remplacé", "Déprécié");
+    private static final Set<String> VOCABULAIRE_STATUT = Set.of("stable", "draft", "deprecated", "superseded");
 
     @Test
     @DisplayName("#2386 : chaque règle métier est définie une fois, gras et ancre concordent, sans trou")

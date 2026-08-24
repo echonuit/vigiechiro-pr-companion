@@ -24,16 +24,24 @@ def appliquer() -> list[str]:
     for num, nouvelle in rapport.resserrements(cliquets):
         fichier = sorted(DECISIONS.glob(f"{num}-*.md"))[0]
         texte = fichier.read_text(encoding="utf-8")
-        # On ne baisse que la valeur du cliquet, dans la ligne de vérification de CETTE ADR.
+        # On ne baisse que le champ `ratchet` de CETTE ADR, dans son en-tête.
         nouveau, n = re.subn(
-            r"(- \*\*Vérification\*\* : probable [-—] `[^`]+` \(cliquet : )\d+(\))",
-            lambda m: f"{m.group(1)}{nouvelle}{m.group(2)}",
+            r"^ratchet:\s*\d+\s*$",
+            f"ratchet: {nouvelle}",
             texte,
             count=1,
+            flags=re.M,
         )
         if n == 1 and nouveau != texte:
             fichier.write_text(nouveau, encoding="utf-8")
             faits.append(f"ADR {num} → cliquet {nouvelle}")
+        elif n == 0:
+            # Sans ceci, un en-tête que l'expression ne reconnaît plus ferait rendre « 0 cliquet
+            # resserré », c'est-à-dire un vert qui ressemble à « rien à faire ». Article A12.
+            raise SystemExit(
+                f"ADR {num} : aucun champ `ratchet:` trouvé dans l'en-tête. "
+                f"Le resserrement à {nouvelle} n'a pas été écrit."
+            )
     return faits
 
 

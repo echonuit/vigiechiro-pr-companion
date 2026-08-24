@@ -580,6 +580,8 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `scripts/adr/verifie_scripts.py` | chaque détecteur ADR voit sa violation témoin et ignore la même en commentaire, et **aucun détecteur n'est sans cas** | `lint.yml` |
 | `scripts/graphify/pont_ressources.py` | l'index de classe Java préfère la **classe** à la page `X.java`, et le compte des commandes CLI couvertes reste borné par le nombre de commandes | `lint.yml` |
 | `scripts/graphify/rebuild.py` | `GRAPH_REPORT.md` annonce le corpus réel, et non un corpus vide suivi d'un verdict qui le contredit | `lint.yml` |
+| `scripts/adr/verifie_okf.py` | chaque ADR porte un en-tête typé, se rattache à un article de la constitution, et gage le niveau de vérification qu'elle déclare : une « humaine » qui nomme un applicateur n'en est pas une, et le corpus ne descend pas sous son plancher | `lint.yml` |
+| `scripts/methode/matrice-constitution.py` | la matrice de [la constitution](constitution.md) concorde avec les en-têtes des ADR, et **nomme les articles que rien ne tient** : c'est la liste des gardes qui restent à écrire | `lint.yml` |
 
 ### Et un analyseur les lit tous (#4108)
 

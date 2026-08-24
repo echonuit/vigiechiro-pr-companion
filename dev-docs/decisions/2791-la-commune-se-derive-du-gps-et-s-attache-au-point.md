@@ -1,8 +1,19 @@
-# ADR 2791 - La commune se dérive du GPS et s'attache au point, jamais au carré
+---
+type: adr
+title: "La commune se dérive du GPS et s'attache au point, jamais au carré"
+status: stable
+article: A15
+chantier: "#2791 (lot 0 de l'EPIC #2790)"
+decided_at: 2026-07-29
+verification: certaine
+enforced_by:
+  - "MigrationSchemaTest#table_commune_du_point_creee"
+verified:
+  - by: machine:ci
+    at: 2026-07-29
+---
 
-- **Statut** : Accepté - 2026-07-29
-- **Chantier** : #2791 (lot 0 de l'EPIC #2790)
-- **Vérification** : certaine - `MigrationSchemaTest#table_commune_du_point_creee`
+# La commune se dérive du GPS et s'attache au point, jamais au carré
 
 ## Contexte
 

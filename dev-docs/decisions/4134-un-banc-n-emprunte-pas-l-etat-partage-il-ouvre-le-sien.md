@@ -1,9 +1,21 @@
-# ADR 4134 - Un banc n'emprunte pas l'état partagé du harnais, il ouvre le sien
+---
+type: adr
+title: "Un banc n'emprunte pas l'état partagé du harnais, il ouvre le sien"
+status: stable
+article: A4
+chantier: "#4134, clôture de l'EPIC #4133"
+decided_at: 2026-08-22
+verification: certaine
+enforced_by:
+  - "AppTest#le_stage_partage_reste_ajustable"
+verified:
+  - by: machine:ci
+    at: 2026-08-22
+relations:
+  prolonge: ["3960"]
+---
 
-- **Statut** : Accepté - 2026-08-22
-- **Chantier** : #4134, clôture de l'EPIC #4133
-- **Prolonge** : [ADR 3960](3960-un-garde-dit-la-couverture-qu-il-a-et-rend-l-etat-qu-il-emprunte.md)
-- **Vérification** : certaine - `AppTest#le_stage_partage_reste_ajustable`
+# Un banc n'emprunte pas l'état partagé du harnais, il ouvre le sien
 
 ## Contexte
 

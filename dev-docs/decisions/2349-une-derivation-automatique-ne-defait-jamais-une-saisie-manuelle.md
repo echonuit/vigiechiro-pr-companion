@@ -1,8 +1,19 @@
-# ADR 2349 - Une dérivation automatique ne défait jamais une saisie manuelle
+---
+type: adr
+title: "Une dérivation automatique ne défait jamais une saisie manuelle"
+status: stable
+article: A15
+chantier: "EPIC #2349 (du passage à la saison), décidé dans #2525"
+decided_at: 2026-07-27
+verification: certaine
+enforced_by:
+  - "RapprochementNuitsOpportunistesTest#ne_demarque_jamais_une_saisie_manuelle"
+verified:
+  - by: machine:ci
+    at: 2026-07-27
+---
 
-- **Statut** : Accepté - 2026-07-27
-- **Chantier** : EPIC #2349 (du passage à la saison), décidé dans #2525
-- **Vérification** : certaine - `RapprochementNuitsOpportunistesTest#ne_demarque_jamais_une_saisie_manuelle`
+# Une dérivation automatique ne défait jamais une saisie manuelle
 
 ## Contexte
 

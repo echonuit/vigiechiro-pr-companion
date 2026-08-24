@@ -1,13 +1,19 @@
-# ADR 2861 - Une donnée de **point** ne se montre pas sur une ligne **agrégée**, et chaque table garde sa marque d'absence
+---
+type: adr
+title: "Une donnée de **point** ne se montre pas sur une ligne **agrégée**, et chaque table garde sa marque d'absence"
+status: stable
+article: A3
+chantier: "#2861, lot 3 du chantier #3151"
+decided_at: 2026-08-04
+verification: certaine
+enforced_by:
+  - "AnalyseViewTest#colonne_commune_sur_la_table_des_observations"
+verified:
+  - by: machine:ci
+    at: 2026-08-04
+---
 
-- **Statut** : Accepté - 2026-08-04
-- **Chantier** : #2861, lot 3 du chantier #3151
-- **Vérification** : certaine - `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`
-
-> La seconde moitié de la règle - chaque table garde sa marque d'absence - est tenue par
-> `MultisiteViewTest#colonne_commune_visible_et_vide_si_non_resolue` (cellule vide) et
-> `ColonnesAudioContexteTest` (tiret, et masquage sur passage unique) : le garde des ADR n'accepte
-> qu'une référence, la décision en a plusieurs.
+# Une donnée de **point** ne se montre pas sur une ligne **agrégée**, et chaque table garde sa marque d'absence
 
 ## Contexte
 

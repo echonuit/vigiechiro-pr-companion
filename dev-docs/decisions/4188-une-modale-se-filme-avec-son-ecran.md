@@ -1,9 +1,21 @@
-# ADR 4188 - Une modale se filme avec l'écran d'où elle part et celui où elle rend
+---
+type: adr
+title: "Une modale se filme avec l'écran d'où elle part et celui où elle rend"
+status: stable
+article: A4
+chantier: "#4188, EPIC #4133"
+decided_at: 2026-08-22
+verification: certaine
+enforced_by:
+  - "ClipDeModaleTest#aucun_cas_ne_monte_une_modale_seule"
+verified:
+  - by: machine:ci
+    at: 2026-08-22
+relations:
+  prolonge: ["4142"]
+---
 
-- **Statut** : Accepté - 2026-08-22
-- **Chantier** : #4188, EPIC #4133
-- **Prolonge** : [ADR 4142](4142-un-cas-dit-ou-se-lit-son-verdict.md)
-- **Vérification** : certaine - `ClipDeModaleTest#aucun_cas_ne_monte_une_modale_seule`
+# Une modale se filme avec l'écran d'où elle part et celui où elle rend
 
 ## Contexte
 

@@ -1,8 +1,19 @@
-# ADR 4249 - Un fichier écrit par plusieurs JVM se reconstruit, il ne s'ajoute pas
+---
+type: adr
+title: "Un fichier écrit par plusieurs JVM se reconstruit, il ne s'ajoute pas"
+status: stable
+article: A17
+chantier: "#4249, EPIC #4133"
+decided_at: 2026-08-23
+verification: certaine
+enforced_by:
+  - "IndexDesCasTest#deux_jvm_de_meme_pid_ne_s_effacent_pas"
+verified:
+  - by: machine:ci
+    at: 2026-08-23
+---
 
-- **Statut** : Accepté - 2026-08-23
-- **Chantier** : #4249, EPIC #4133
-- **Vérification** : certaine - `IndexDesCasTest#deux_jvm_de_meme_pid_ne_s_effacent_pas`
+# Un fichier écrit par plusieurs JVM se reconstruit, il ne s'ajoute pas
 
 ## Contexte
 

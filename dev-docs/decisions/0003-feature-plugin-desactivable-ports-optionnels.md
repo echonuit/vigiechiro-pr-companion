@@ -1,8 +1,16 @@
-# ADR 0003 - Une feature est un plugin désactivable ; ses dépendances entre features sont des ports optionnels
+---
+type: adr
+title: "Une feature est un plugin désactivable ; ses dépendances entre features sont des ports optionnels"
+status: stable
+article: A22
+chantier: "EPIC #923 (« feature = plugin ») et EPIC #1057 (feature-flags)"
+verification: humaine
+verification_note: "la discipline du port optionnel (OptionalBinder, Optional<Port>) se juge en revue ; aucun motif ne distingue un port d'une dépendance en dur"
+verified:
+  - by: human:nedseb
+---
 
-- **Statut** : Accepté - rétroactif (chantiers #923, #1057)
-- **Chantier** : EPIC #923 (« feature = plugin ») et EPIC #1057 (feature-flags)
-- **Vérification** : humaine - la discipline du port optionnel (OptionalBinder, Optional<Port>) se juge en revue ; aucun motif ne distingue un port d'une dépendance en dur
+# Une feature est un plugin désactivable ; ses dépendances entre features sont des ports optionnels
 
 ## Contexte
 

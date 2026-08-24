@@ -1,12 +1,19 @@
-# ADR 3157 - Un carré a un **identifiant** et une **étiquette**, pas deux dimensions
+---
+type: adr
+title: "Un carré a un **identifiant** et une **étiquette**, pas deux dimensions"
+status: stable
+article: A16
+chantier: "#3157, lot 1 du chantier #3151"
+decided_at: 2026-08-04
+verification: certaine
+enforced_by:
+  - "CritereLieuTest#un_carre_une_entree_deux_etiquettes"
+verified:
+  - by: machine:ci
+    at: 2026-08-04
+---
 
-- **Statut** : Accepté - 2026-08-04
-- **Chantier** : #3157, lot 1 du chantier #3151
-- **Vérification** : certaine - `CritereLieuTest#un_carre_une_entree_deux_etiquettes`
-
-> Le corollaire - deux carrés homonymes restent distincts - est tenu par
-> `CritereLieuTest#deux_carres_homonymes_restent_distincts` : le garde des ADR n'accepte qu'une
-> référence, la décision en a deux.
+# Un carré a un **identifiant** et une **étiquette**, pas deux dimensions
 
 ## Contexte
 

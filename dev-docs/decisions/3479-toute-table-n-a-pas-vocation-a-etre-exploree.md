@@ -1,8 +1,18 @@
-# ADR 3479 - Toute table n'a pas vocation à être explorée : trois natures d'écran, un seul contrat
+---
+type: adr
+title: "Toute table n'a pas vocation à être explorée : trois natures d'écran, un seul contrat"
+status: stable
+article: A23
+chantier: "#3479, extrait de l'audit des filtres tabulaires du 31 juillet 2026 ([trace de conception](../audit-filtres-vues-tabulaires.md))"
+decided_at: 2026-08-07
+verification: humaine
+verification_note: "décider si une table est exploratoire, bornée ou opérationnelle est un jugement sur son usage, pas un motif dans le code"
+verified:
+  - by: human:nedseb
+    at: 2026-08-07
+---
 
-- **Statut** : Accepté - 2026-08-07
-- **Chantier** : #3479, extrait de l'audit des filtres tabulaires du 31 juillet 2026 ([trace de conception](../audit-filtres-vues-tabulaires.md))
-- **Vérification** : humaine - décider si une table est exploratoire, bornée ou opérationnelle est un jugement sur son usage, pas un motif dans le code
+# Toute table n'a pas vocation à être explorée : trois natures d'écran, un seul contrat
 
 ## Contexte
 

@@ -1,8 +1,18 @@
-# ADR 0021 - Le double-clic est le miroir de l'action principale, et il rend compte quand il n'aboutit pas
+---
+type: adr
+title: "Le double-clic est le miroir de l'action principale, et il rend compte quand il n'aboutit pas"
+status: stable
+article: A12
+chantier: "EPIC #1792 (#1794, #1834, #1837)"
+decided_at: 2026-07-18
+verification: humaine
+verification_note: "que le double-clic soit le miroir de l'action principale et rende compte de son échec se juge à l'usage, aucun motif ne le voit"
+verified:
+  - by: human:nedseb
+    at: 2026-07-18
+---
 
-- **Statut** : Accepté - 2026-07-18
-- **Chantier** : EPIC #1792 (#1794, #1834, #1837)
-- **Vérification** : humaine - que le double-clic soit le miroir de l'action principale et rende compte de son échec se juge à l'usage, aucun motif ne le voit
+# Le double-clic est le miroir de l'action principale, et il rend compte quand il n'aboutit pas
 
 ## Contexte
 

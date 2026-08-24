@@ -1,8 +1,19 @@
-# ADR 2614 - Une nuit hors protocole se filtre, au lieu de se fondre dans le lot
+---
+type: adr
+title: "Une nuit hors protocole se filtre, au lieu de se fondre dans le lot"
+status: stable
+article: A21
+chantier: "#2614 (suite du lot 2 de l'EPIC #2348)"
+decided_at: 2026-07-28
+verification: certaine
+enforced_by:
+  - "NatureNuitTest#un_passage_marque_est_une_participation_opportuniste"
+verified:
+  - by: machine:ci
+    at: 2026-07-28
+---
 
-- **Statut** : Accepté - 2026-07-28
-- **Chantier** : #2614 (suite du lot 2 de l'EPIC #2348)
-- **Vérification** : certaine - `NatureNuitTest#un_passage_marque_est_une_participation_opportuniste`
+# Une nuit hors protocole se filtre, au lieu de se fondre dans le lot
 
 ## Contexte
 

@@ -1,9 +1,21 @@
-# ADR 3539 - Un état de contrôle se lie, il ne se photographie pas
+---
+type: adr
+title: "Un état de contrôle se lie, il ne se photographie pas"
+status: stable
+article: A15
+chantier: "#3539 (lot 2 du chantier #3536)"
+decided_at: 2026-08-14
+verification: certaine
+enforced_by:
+  - "OngletReglagesEmplacementsTest#appliquer_allume_retablir"
+verified:
+  - by: machine:ci
+    at: 2026-08-14
+relations:
+  prolonge: ["3095"]
+---
 
-- **Statut** : Accepté - 2026-08-14
-- **Chantier** : #3539 (lot 2 du chantier #3536)
-- **Vérification** : certaine - `OngletReglagesEmplacementsTest#appliquer_allume_retablir`
-- **Prolonge** : [ADR 3095](3095-un-domaine-se-calcule-sans-son-propre-critere.md)
+# Un état de contrôle se lie, il ne se photographie pas
 
 ## Contexte
 

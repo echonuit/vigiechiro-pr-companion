@@ -1,9 +1,21 @@
-# ADR 4234 - Un motif de blocage se montre, il ne se lit pas
+---
+type: adr
+title: "Un motif de blocage se montre, il ne se lit pas"
+status: stable
+article: A13
+chantier: "#4234, EPIC #4133"
+decided_at: 2026-08-23
+verification: certaine
+enforced_by:
+  - "ScenarioFicheSiteTest#les_boutons_disent_ce_qui_les_empeche"
+verified:
+  - by: machine:ci
+    at: 2026-08-23
+relations:
+  prolonge: ["4142"]
+---
 
-- **Statut** : Accepté - 2026-08-23
-- **Chantier** : #4234, EPIC #4133
-- **Prolonge** : [ADR 4142](4142-un-cas-dit-ou-se-lit-son-verdict.md)
-- **Vérification** : certaine - `ScenarioFicheSiteTest#les_boutons_disent_ce_qui_les_empeche`
+# Un motif de blocage se montre, il ne se lit pas
 
 ## Contexte
 

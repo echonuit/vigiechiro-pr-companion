@@ -1,8 +1,19 @@
-# ADR 3574 - Un effacement dit son contrat dans son nom
+---
+type: adr
+title: "Un effacement dit son contrat dans son nom"
+status: stable
+article: A17
+chantier: "#3574, suite de la clôture du lot 1 (#3559)"
+decided_at: 2026-08-11
+verification: certaine
+enforced_by:
+  - "ArborescenceFichiersTest#efface_au_mieux_continue_apres_un_echec"
+verified:
+  - by: machine:ci
+    at: 2026-08-11
+---
 
-- **Statut** : Accepté - 2026-08-11
-- **Chantier** : #3574, suite de la clôture du lot 1 (#3559)
-- **Vérification** : certaine - `ArborescenceFichiersTest#efface_au_mieux_continue_apres_un_echec`
+# Un effacement dit son contrat dans son nom
 
 ## Contexte
 

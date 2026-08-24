@@ -1,8 +1,20 @@
-# ADR 0044 - Le mécanisme de parallélisme se choisit sur la nature de l'attente, la borne se chiffre sur autre chose
+---
+type: adr
+title: "Le mécanisme de parallélisme se choisit sur la nature de l'attente, la borne se chiffre sur autre chose"
+status: stable
+article: A15
+chantier: "#2040 (EPIC #2116)"
+decided_at: 2026-07-20
+verification: humaine
+loupe:
+  - "scripts/adr/loupe-0044-mecanisme-parallelisme.py"
+verification_note: "le choix du mécanisme de parallélisme selon la nature de l'attente est un jugement de conception, non observable dans le code. Loupe : `scripts/adr/loupe-0044-mecanisme-parallelisme.py`"
+verified:
+  - by: human:nedseb
+    at: 2026-07-20
+---
 
-- **Statut** : Accepté - 2026-07-20
-- **Chantier** : #2040 (EPIC #2116)
-- **Vérification** : humaine - le choix du mécanisme de parallélisme selon la nature de l'attente est un jugement de conception, non observable dans le code. Loupe : `scripts/adr/loupe-0044-mecanisme-parallelisme.py`
+# Le mécanisme de parallélisme se choisit sur la nature de l'attente, la borne se chiffre sur autre chose
 
 ## Contexte
 

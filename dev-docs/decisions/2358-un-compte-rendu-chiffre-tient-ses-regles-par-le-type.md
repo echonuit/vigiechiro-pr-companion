@@ -1,15 +1,21 @@
-# ADR 2358 - Un compte rendu d'opération lourde se rend en proportions, et ses règles sont tenues par le type
+---
+type: adr
+title: "Un compte rendu d'opération lourde se rend en proportions, et ses règles sont tenues par le type"
+status: stable
+article: A14
+chantier: "#2358 (lot 2 de l'EPIC #2350)"
+decided_at: 2026-07-28
+verification: certaine
+enforced_by:
+  - "CompteRenduChiffreTest#ventilation_non_exhaustive_refusee"
+verified:
+  - by: machine:ci
+    at: 2026-07-28
+relations:
+  prolonge: ["0031"]
+---
 
-- **Statut** : Accepté - 2026-07-28
-- **Chantier** : #2358 (lot 2 de l'EPIC #2350)
-- **Prolonge** : [ADR 0031](0031-un-retour-n-est-pas-un-compte-rendu.md)
-- **Vérification** : certaine - `CompteRenduChiffreTest#ventilation_non_exhaustive_refusee`
-
-> La règle d'exhaustivité est celle que le **type** tient : la construction refuse un total que ses
-> segments ne font pas. Les deux autres règles ont leurs propres tests, dans la même veine :
-> `PanneauCompteRenduTest#largeurs_proportionnelles_aux_quantites` mesure les largeurs **après mise en
-> page** plutôt que de relire la formule, et `PanneauCompteRenduTest#action_suivante_est_cablee`
-> vérifie que le pied mène quelque part.
+# Un compte rendu d'opération lourde se rend en proportions, et ses règles sont tenues par le type
 
 ## Contexte
 

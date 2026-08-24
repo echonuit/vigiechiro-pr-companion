@@ -1,8 +1,19 @@
-# ADR 3439 - Un masque se dérive de la scène, il ne se recopie pas
+---
+type: adr
+title: "Un masque se dérive de la scène, il ne se recopie pas"
+status: stable
+article: A4
+chantier: "#3439, suite de l'[ADR 3068](3068-le-determinisme-porte-sur-ce-que-le-produit-rend.md)"
+decided_at: 2026-08-07
+verification: certaine
+enforced_by:
+  - "ZoneCarteApercuTest#le_rectangle_epouse_la_carte"
+verified:
+  - by: machine:ci
+    at: 2026-08-07
+---
 
-- **Statut** : Accepté - 2026-08-07
-- **Chantier** : #3439, suite de l'[ADR 3068](3068-le-determinisme-porte-sur-ce-que-le-produit-rend.md)
-- **Vérification** : certaine - `ZoneCarteApercuTest#le_rectangle_epouse_la_carte`
+# Un masque se dérive de la scène, il ne se recopie pas
 
 ## Contexte
 

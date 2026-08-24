@@ -1,11 +1,18 @@
-# ADR 3505 - Le cycle décrit aussi le travail, pas seulement sa clôture
+---
+type: adr
+title: "Le cycle décrit aussi le travail, pas seulement sa clôture"
+status: stable
+article: A26
+chantier: "#3505"
+decided_at: 2026-08-08
+verification: humaine
+verification_note: "une méthode de travail ne se teste pas ; le contrôle est la relecture du"
+verified:
+  - by: human:nedseb
+    at: 2026-08-08
+---
 
-- **Statut** : Accepté - 2026-08-08
-- **Chantier** : #3505
-- **Vérification** : humaine - une méthode de travail ne se teste pas ; le contrôle est la relecture du
-  [cycle](../cycle-de-chantier.md) à chaque clôture. Deux points sont toutefois **mesurables** et le
-  sont ci-dessous : la position de « Tester » dans la page d'ajout de fonctionnalité, et la mention
-  « suite de » portée par les ADR d'un chantier.
+# Le cycle décrit aussi le travail, pas seulement sa clôture
 
 ## Contexte
 

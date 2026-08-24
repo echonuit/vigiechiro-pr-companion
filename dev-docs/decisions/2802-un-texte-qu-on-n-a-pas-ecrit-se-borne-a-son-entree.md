@@ -1,9 +1,19 @@
-# ADR 2802 - Un texte qu'on n'a pas écrit se borne à son entrée
+---
+type: adr
+title: "Un texte qu'on n'a pas écrit se borne à son entrée"
+status: stable
+article: A17
+chantier: "#2802 (suites de la clôture de l'EPIC #2350, passe 3)"
+decided_at: 2026-07-29
+verification: certaine
+enforced_by:
+  - "MessageExterneBorneTest#aucun_retour_ne_renvoie_un_message_nu"
+verified:
+  - by: machine:ci
+    at: 2026-07-29
+---
 
-- **Statut** : Accepté - 2026-07-29
-- **Chantier** : #2802 (suites de la clôture de l'EPIC #2350, passe 3)
-- **Vérification** : certaine - `MessageExterneBorneTest#aucun_retour_ne_renvoie_un_message_nu`
-  (une garde par surface : voir aussi `aucune_commande_n_affiche_un_refus_sans_son_geste` pour la CLI)
+# Un texte qu'on n'a pas écrit se borne à son entrée
 
 ## Contexte
 

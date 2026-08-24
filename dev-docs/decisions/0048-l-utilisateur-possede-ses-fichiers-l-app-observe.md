@@ -1,10 +1,20 @@
-# ADR 0048 - L'utilisateur possède ses fichiers : l'application observe leur disponibilité, elle ne les archive plus
+---
+type: adr
+title: "L'utilisateur possède ses fichiers : l'application observe leur disponibilité, elle ne les archive plus"
+status: stable
+article: A18
+chantier: "#1038 (reformulé), né de l'exploration « import et réactivation par référence, sans copie »"
+decided_at: 2026-07-21
+verification: humaine
+verification_note: "que l'application observe la disponibilité des fichiers sans les archiver est un comportement, non un invariant statique"
+verified:
+  - by: human:nedseb
+    at: 2026-07-21
+relations:
+  amende: ["0005"]
+---
 
-- **Statut** : Accepté - 2026-07-21
-- **Chantier** : #1038 (reformulé), né de l'exploration « import et réactivation par référence, sans copie »
-- **Vérification** : humaine - que l'application observe la disponibilité des fichiers sans les archiver est un comportement, non un invariant statique
-- **Reformule** : #1038 (chemin du workspace configurable) ; rend sans objet le geste d'archivage de l'EPIC #1297 ; résout #2028 (« Libérer l'espace disque ») par conséquence.
-- **Amende** : [ADR 0005](0005-reactivation-cascade-de-preuves-archive-etat-observe.md), dont elle retire le geste d'archivage : « archivé » n'est plus un statut à écrire, seulement un état observé.
+# L'utilisateur possède ses fichiers : l'application observe leur disponibilité, elle ne les archive plus
 
 ## Contexte
 

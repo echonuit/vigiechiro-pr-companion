@@ -1,8 +1,19 @@
-# ADR 3774 - Le clip se taille sur le test, et son contrôle porte sur la couverture
+---
+type: adr
+title: "Le clip se taille sur le test, et son contrôle porte sur la couverture"
+status: stable
+article: A4
+chantier: "#3774, tranche (b) de l'EPIC #3667"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - ".github/scripts/lance-test-filme.sh"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3774, tranche (b) de l'EPIC #3667
-- **Vérification** : certaine - `.github/scripts/lance-test-filme.sh`
+# Le clip se taille sur le test, et son contrôle porte sur la couverture
 
 ## Contexte
 

@@ -1,11 +1,19 @@
-# ADR 3082 - Un critère qui **désigne** refuse, un critère qui **qualifie** rend vide (précise 0014)
+---
+type: adr
+title: "Un critère qui **désigne** refuse, un critère qui **qualifie** rend vide (précise 0014)"
+status: stable
+article: A19
+chantier: "#3082, suites de la clôture de #2967"
+decided_at: 2026-07-31
+verification: certaine
+enforced_by:
+  - "FiltresActiviteTest#ce_qui_qualifie_rend_vide_sans_refuser"
+verified:
+  - by: machine:ci
+    at: 2026-07-31
+---
 
-- **Statut** : Accepté - 2026-07-31
-- **Chantier** : #3082, suites de la clôture de #2967
-- **Vérification** : certaine - `FiltresActiviteTest#ce_qui_qualifie_rend_vide_sans_refuser`
-
-> La moitié « refuse » de la règle est tenue par le test jumeau du même fichier,
-> `#ce_qui_designe_refuse_et_nomme` : le garde des ADR n'accepte qu'une référence, la règle en a deux.
+# Un critère qui **désigne** refuse, un critère qui **qualifie** rend vide (précise 0014)
 
 ## Contexte
 

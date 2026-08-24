@@ -1,8 +1,19 @@
-# ADR 3507 - L'amorçage s'écrit d'un seul coup, et se relit en octets
+---
+type: adr
+title: "L'amorçage s'écrit d'un seul coup, et se relit en octets"
+status: stable
+article: A17
+chantier: "#3507, lot 1 (#3559) du chantier #3518 ; ADR écrite à la passe 10 de la clôture du lot"
+decided_at: 2026-08-10
+verification: certaine
+enforced_by:
+  - "SecretsEcritsProtegesTest#aucun_fichier_d_amorcage_ecrit_en_direct"
+verified:
+  - by: machine:ci
+    at: 2026-08-10
+---
 
-- **Statut** : Accepté - 2026-08-10
-- **Chantier** : #3507, lot 1 (#3559) du chantier #3518 ; ADR écrite à la passe 10 de la clôture du lot
-- **Vérification** : certaine - `SecretsEcritsProtegesTest#aucun_fichier_d_amorcage_ecrit_en_direct`
+# L'amorçage s'écrit d'un seul coup, et se relit en octets
 
 ## Contexte
 

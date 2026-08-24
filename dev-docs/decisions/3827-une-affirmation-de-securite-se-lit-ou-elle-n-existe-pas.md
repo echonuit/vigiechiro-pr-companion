@@ -1,9 +1,21 @@
-# ADR 3827 - Une affirmation de sécurité se lit, ou elle n'existe pas
+---
+type: adr
+title: "Une affirmation de sécurité se lit, ou elle n'existe pas"
+status: stable
+article: A6
+chantier: "#3827, lot 3 des suites #3802"
+decided_at: 2026-08-16
+verification: certaine
+enforced_by:
+  - "EcritureAtomiqueTest#creation_restreinte"
+verified:
+  - by: machine:ci
+    at: 2026-08-16
+relations:
+  prolonge: ["3507"]
+---
 
-- **Statut** : Accepté - 2026-08-16
-- **Chantier** : #3827, lot 3 des suites #3802
-- **Prolonge** : [ADR 3507](3507-l-amorcage-s-ecrit-d-un-seul-coup.md)
-- **Vérification** : certaine - `EcritureAtomiqueTest#creation_restreinte`
+# Une affirmation de sécurité se lit, ou elle n'existe pas
 
 ## Contexte
 
