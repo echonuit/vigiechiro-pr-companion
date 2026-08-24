@@ -104,7 +104,7 @@ on:
     # code qui change à chaque PR, pour la commodité de ne pas écrire trois lignes.
     secrets:
       VIGIECHIRO_TOKEN_TOURNAGE:
-        description: "Jeton du tournage connecté. Frappé sur le même compte que celui du contrat, mais SIEN : il est révoqué en fin de run (#4305), ce que le jeton du contrat hebdomadaire ne supporterait pas."
+        description: "Jeton du tournage connecté. Frappé sur le même compte que celui du contrat, mais SIEN : il est révoqué en fin de run (#4305). ⚠️ Le compte engage plus que son accès : les clips publient l identite qu il rend et le resume de ce qu il contient. Le compte du mainteneur est le compte de tournage, et poser ici le jeton d un TIERS publierait son nom (#4345)."
         required: false
 
 permissions:

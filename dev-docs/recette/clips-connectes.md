@@ -93,6 +93,25 @@ encore.
 
 <video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteConnexionTest.la_modale_annonce_l_identite.mp4"></video>
 
+## ⚠️ Ce que ces clips publient, et le compte que cela engage
+
+`S8-06` montre l'identité que la plateforme a rendue. Un clip connecté porte donc, **en clair et sur
+une pré-version publique**, le nom du titulaire du compte employé et le résumé de ce que ce compte
+contient - combien de sites, combien de nuits, combien en attente d'analyse.
+
+Ce n'est pas un effet de bord : c'est **exactement ce que la case demande**, et un clip qui le
+masquerait ne montrerait plus son cas.
+
+**La décision (#4345) : le compte du mainteneur EST le compte de tournage dédié.** Son nom figure déjà
+dans chaque commit de ce dépôt, donc la publication n'ajoute rien à ce qu'il révèle déjà de cette
+personne-là.
+
+⚠️ **Et la propriété ne tient qu'à ce choix.** Le jour où un tournage connecté emploierait le compte de
+quelqu'un d'autre - un étudiant, un observateur qui prête son accès - le clip publierait un nom que
+rien n'oblige à être public, et le résumé décrirait des données qui ne sont pas les nôtres. Poser
+`VIGIECHIRO_TOKEN_TOURNAGE` avec le jeton d'un tiers **n'est donc pas** un geste anodin, et rien dans
+le dispositif ne s'y oppose : c'est une règle, pas un garde.
+
 ## Comment en produire
 
 Le flux **tournage de recette** (`tournage-recette.yml`, `workflow_dispatch`), avec le drapeau

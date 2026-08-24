@@ -14,6 +14,12 @@ développeur de
     - **aucune coordonnée GPS** de site sensible ;
     - **aucune donnée personnelle** d'observateur.
 
+    ⚠️ **Une exception, assumée et bornée** (#4345) : les clips du tournage connecté montrent
+    l'identité que la plateforme rend, parce que c'est ce que la case `S8-06` demande de constater. Le
+    compte employé est celui du **mainteneur**, dont le nom figure déjà dans chaque commit ; la
+    publication n'ajoute donc rien le concernant. Employer le jeton d'un **tiers** rendrait cette
+    exception fausse, et rien dans le dispositif ne l'empêche.
+
     En cas de doute sur la diffusion d'une donnée ou d'une coordonnée : **on s'abstient et on demande**.
 
 ## Le jeu de données d'exemple
