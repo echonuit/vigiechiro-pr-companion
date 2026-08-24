@@ -23,7 +23,7 @@
 # Et la suite doit faire trente-deux caractères EXACTEMENT, bornes comprises : une empreinte SHA-256
 # en majuscules en fait soixante-quatre, et on ne veut pas y découper un faux positif.
 #
-# ## ⚠️ IL NE PROTÈGE PAS L'IMAGE, ET IL LE DIT
+# ## IL NE PROTÈGE PAS L'IMAGE, ET IL LE DIT
 #
 # C'est la partie qui compte le plus. Un garde qui rougirait sur `tournage.log` en laissant passer un
 # clip ferait croire le canal couvert alors que **le seul qui compte** - celui que le masquage de
@@ -53,7 +53,7 @@ set -uo pipefail
 # qu'on veut, mais il faut le DEMANDER, sinon un fichier à octets NUL rend un silence qu'on lirait
 # comme « rien trouvé » (déjà vécu ailleurs dans ce dépôt).
 est_du_texte() { # <fichier>
-    # ⚠️ Un fichier VIDE n'est pas un binaire. `grep -qI .` n'y trouve aucune ligne et rend 1, ce qui
+    # Un fichier VIDE n'est pas un binaire. `grep -qI .` n'y trouve aucune ligne et rend 1, ce qui
     # le rangeait parmi les écartés : le compte de ce que le garde NE COUVRE PAS s'en trouvait gonflé.
     # Mesuré sur un vrai artefact, où `index.lock` pèse zéro octet. Il errait du bon côté, mais un
     # nombre qu'on ne peut pas croire ne sert à rien.
@@ -63,7 +63,7 @@ est_du_texte() { # <fichier>
 
 # Les suites suspectes d'un fichier, une par ligne : « numéro de ligne <TAB> les 4 premiers ».
 #
-# ⚠️ awk et non `grep -oE` : il faut la longueur EXACTE de la suite, et `grep -o` découperait
+# awk et non `grep -oE` : il faut la longueur EXACTE de la suite, et `grep -o` découperait
 # trente-deux caractères dans une suite de soixante-quatre.
 suspectes() { # <fichier>
     LC_ALL=C awk '
@@ -110,7 +110,7 @@ balayer() { # <répertoire...>
     echo
     echo "Textes lus : ${lus}."
 
-    # ⚠️ Le passage qui empêche ce garde d'être un faux vert. Il ne dit pas « rien trouvé », il dit ce
+    # Le passage qui empêche ce garde d'être un faux vert. Il ne dit pas « rien trouvé », il dit ce
     # qu'il a regardé ET ce qu'il n'a pas pu regarder.
     if [ "${ecartes}" -gt 0 ]; then
         echo "Fichiers ÉCARTÉS parce qu'ils ne sont pas du texte : ${ecartes}."
@@ -149,7 +149,7 @@ auto_test() {
         fi
     }
 
-    # ⚠️ Les trois cas qui suivent lisent la SORTIE du balayage, capturée d'abord.
+    # Les trois cas qui suivent lisent la SORTIE du balayage, capturée d'abord.
     #
     # Écrits `balayer ... | grep -q ...`, ils ne prouvaient rien : sous `pipefail`, le code d'un tube
     # est celui du membre le plus à gauche qui échoue, et `balayer` rend 1 dès qu'il trouve quelque
@@ -187,7 +187,7 @@ auto_test() {
     rm -f "${racine}/tournage.log"
     {
         printf 'empreinte 9f2c1ab34de5678901234567890abcdef1234567890abcdef1234567890abcd\n'
-        # ⚠️ EXACTEMENT 32 caractères, et rien que de l'hexadécimal : c'est le seul contrôle qui
+        # EXACTEMENT 32 caractères, et rien que de l'hexadécimal : c'est le seul contrôle qui
         # exerce la règle « au moins une lettre hors de A-F ». Il en faisait 33 à l'écriture, et
         # la mutation qui retire cette règle ne faisait alors RIEN rougir.
         printf 'empreinte MD5 majuscule 9F2C1AB34DE5678901234567890ABCDE\n'
@@ -205,7 +205,7 @@ auto_test() {
         "Aucun fichier écarté" "compté" "ÉCARTÉ À TORT"
     rm -f "${racine}/index.lock"
 
-    # ⚠️ LE contrôle de ce garde. Une image qui contient le motif dans ses octets doit le laisser
+    # LE contrôle de ce garde. Une image qui contient le motif dans ses octets doit le laisser
     # VERT : il ne sait pas lire une image, et prétendre le contraire serait pire que ne rien faire.
     printf '\211PNG\r\n\032\n\000\000K3QZ7M2XW9PD4BVN6TRY8CHJ5FGL0SAU\000\000' > "${racine}/clip.png"
     essai vert "une image portant le motif ne rougit pas : il ne sait pas la lire"
