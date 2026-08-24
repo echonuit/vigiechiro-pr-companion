@@ -21,7 +21,7 @@ generated:
 
 ## Contexte
 
-Le corpus porte 201 décisions. Beaucoup portent sur l'usage : ce qu'un écran montre, ce qu'il
+Le corpus porte 202 décisions. Beaucoup portent sur l'usage : ce qu'un écran montre, ce qu'il
 refuse, ce qu'il fait attendre, ce qu'il groupe. Chacune déclare son article de la constitution,
 qui dit ce que **le dépôt** tient - une preuve, un état, un compte rendu - et jamais ce que
 **l'utilisateur** rencontre.

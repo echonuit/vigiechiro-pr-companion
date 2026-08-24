@@ -24,7 +24,7 @@ generated:
 ## Contexte
 
 Une grande part de la prose du dépôt a été écrite avec l'assistance d'un LLM : 37 511 lignes de
-commentaire dans le code de production, 36 743 lignes de documentation. Le registre attendu était
+commentaire dans le code de production, 36 868 lignes de documentation. Le registre attendu était
 écrit dans `CONTRIBUTING.md`, sous forme de sept tics, et tenu par la seule relecture.
 
 Cette relecture ne s'appuyait sur rien : les sept tics avaient été relevés à la main, au fil des
@@ -75,7 +75,7 @@ gardes tiennent ce qu'un motif textuel peut tenir ; le reste est la relecture, e
 déclare plutôt que de le taire. Un quatrième reste à écrire, sur la ligne de javadoc répétée.
 
 **La grille garde les motifs que ce dépôt ne porte pas.** Les connecteurs lourds en ouverture de
-phrase rendent zéro sur 47 438 lignes, et ils restent dans la grille : une règle ne se juge pas à sa
+phrase rendent zéro sur 47 564 lignes, et ils restent dans la grille : une règle ne se juge pas à sa
 fréquence du jour, et le corpus qui la rend inutile aujourd'hui peut la rendre nécessaire demain.
 `dev-docs/registre-editorial.md` rend compte de ce que ce dépôt a mesuré, un motif à la fois.
 
