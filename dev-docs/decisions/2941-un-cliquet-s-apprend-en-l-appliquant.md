@@ -8,6 +8,8 @@ decided_at: 2026-07-30
 verification: certaine
 enforced_by:
   - "scripts/adr/verifie_scripts.py"
+relations:
+  amende: ["2843"]
 verified:
   - by: machine:ci
     at: 2026-07-30
