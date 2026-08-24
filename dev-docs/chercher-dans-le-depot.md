@@ -11,7 +11,7 @@ erreur visible : cela coûte une réponse **fausse et plausible**, ce qui est pi
 
 ## Le graphe d'abord
 
-C'est la règle du dépôt, et elle est dans `CLAUDE.md` : quand `graphify-out/graph.json` existe,
+C'est la règle du dépôt, et elle est dans `AGENTS.md` : quand `graphify-out/graph.json` existe,
 `graphify query "<question>"` passe avant tout le reste. Il oriente ; les deux autres outils
 précisent ensuite.
 
