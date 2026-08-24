@@ -259,7 +259,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A20 · Le produit ne dépend pas de son outillage | 6 | 6 | `DecisionsRespecteesTest#l_installeur_windows_porte_ses_constantes_d_identite`, `DoublonsFeuillesDeStyleTest#chaque_classe_a_une_seule_feuille`, `ArchitectureTest#produit_sans_outillage`, et 3 autres |
 | A21 · La nuit, du crépuscule à l'aube, est l'unité de traitement | 6 | 3 | `AgregationActiviteTest#l_export_date_ses_lignes_par_la_nuit_biologique`, `NatureNuitTest#un_passage_marque_est_une_participation_opportuniste`, `CorrespondanceParticipationTest#le_depot_ne_depend_pas_du_poste` |
 | A22 · Une feature est un plugin désactivable, et rien ne cycle entre elles | 4 | 2 | `DecisionsRespecteesTest#aucun_cycle_entre_les_features`, `scripts/adr/0010-dialogue-hors-port.py`, `NavigateurTest#relibeller_ne_reabonne_pas` |
-| A23 · Ce qui s'affiche est embarqué et montré en entier, et rien ne s'offre qui ne se montre | 16 | 11 | `scripts/adr/0035-pictogramme-caractere.py`, `scripts/adr/0037-slot-actions-hbox.py`, `scripts/adr/2493-modale-suit-croissance.py`, et 11 autres |
+| A23 · Ce qui s'affiche est embarqué et montré en entier, et rien ne s'offre qui ne se montre | 17 | 11 | `scripts/adr/0035-pictogramme-caractere.py`, `scripts/adr/0037-slot-actions-hbox.py`, `scripts/adr/2493-modale-suit-croissance.py`, et 12 autres |
 | A24 · La langue du dépôt est le français | 1 | 1 | `.github/scripts/verifie-titre-pr.sh` |
 | A25 · Le travail de branche est isolé | 3 | 1 | `.github/scripts/verifie-epinglage.sh` |
 | A26 · La provenance se déclare | 3 | 2 | `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`, `DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier` |

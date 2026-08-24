@@ -60,7 +60,7 @@ class OngletReglagesDepotTest {
                         .orElseThrow();
 
         assertThat(mode.aide())
-                .contains("supprime l’archive")
+                .contains("supprime l'archive")
                 .contains("relancée")
                 .contains("reste en ligne");
     }

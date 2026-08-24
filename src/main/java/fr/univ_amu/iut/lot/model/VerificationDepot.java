@@ -51,12 +51,12 @@ public final class VerificationDepot {
         String participationId = participations
                 .participationDe(idPassage)
                 .orElseThrow(() -> new RegleMetierException(
-                        "Ce passage n’est lié à aucune participation Vigie-Chiro : rien à vérifier"
-                                + " (déposez-le d’abord)."));
+                        "Ce passage n'est lié à aucune participation Vigie-Chiro : rien à vérifier"
+                                + " (déposez-le d'abord)."));
         List<DepotUnite> unites = depotUnites.parPassage(idPassage);
         if (unites.isEmpty()) {
             throw new RegleMetierException("Aucun plan de dépôt local pour ce passage (dépôt fait hors de"
-                    + " l’application ?) : rien à comparer.");
+                    + " l'application ?) : rien à comparer.");
         }
 
         // #1284 : « vérification impossible » n'est plus rendu comme « tout manquant ». Hors ligne ou
