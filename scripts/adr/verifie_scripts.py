@@ -432,6 +432,27 @@ def test_4366_avertissement_en_pictogramme() -> None:
         _verifie(f"4366 {titre}", len(m.alertes(ligne, suffixe, bloc)), attendu)
 
 
+def test_4368_apostrophe_en_libelle() -> None:
+    m = _charge("4368-apostrophe-en-libelle.py")
+    C = chr(0x2019)
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        # La MEME apostrophe, dans une chaine et dans le commentaire de la meme ligne. C est toute
+        # la valeur de ce garde : il ne compte que ce qui sort du depot. Un compte de 1 separe les
+        # deux ; un compte de 2 voudrait dire qu il a cesse de faire la difference.
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/a/Ecran.java",
+            "class Ecran {\n"
+            f'  String a() {{ return "l{C}audio est parti"; }} // l{C}appel vient d ailleurs\n'
+            f"  // l{C}ancien libelle, garde en commentaire\n"
+            '  String b() { return "sans apostrophe"; }\n'
+            "}\n",
+        )
+        _verifie("4368 compte la chaine, epargne le commentaire de la meme ligne",
+                 len(m.suspects(racine=racine)), 1)
+
+
 def test_rapport_et_resserrement() -> None:
     rapport = _charge("rapport.py")
     # Le parsing : une ligne normalisée doit être reconnue.
@@ -549,6 +570,7 @@ if __name__ == "__main__":
         test_3947_message_enveloppe,
         test_4359_javadoc_narratif,
         test_4366_avertissement_en_pictogramme,
+        test_4368_apostrophe_en_libelle,
         test_loupe_0020,
         test_loupe_0044,
         test_rapport_et_resserrement,

@@ -26,7 +26,7 @@ import picocli.CommandLine.Spec;
 /// (scriptable) ; `1` sinon (fichiers manquants, ou journal pas encore disponible pour un dépôt ZIP).
 @Command(
         name = "verifier-depot-vigiechiro",
-        description = "Vérifie côté plateforme (journal de traitement + données) qu’un dépôt a bien été traité.")
+        description = "Vérifie côté plateforme (journal de traitement + données) qu'un dépôt a bien été traité.")
 public final class VerifierDepotVigieChiro implements Callable<Integer>, LectureSeule {
 
     /// Limite d’affichage des fichiers manquants (au-delà : « … et N autres »).
@@ -39,7 +39,7 @@ public final class VerifierDepotVigieChiro implements Callable<Integer>, Lecture
             names = "--token",
             paramLabel = "<jeton>",
             description = "Jeton Vigie-Chiro ponctuel (sinon : variable VIGIECHIRO_TOKEN, sinon la connexion"
-                    + " enregistrée dans l’application).")
+                    + " enregistrée dans l'application).")
     private String token;
 
     @Spec
@@ -55,7 +55,7 @@ public final class VerifierDepotVigieChiro implements Callable<Integer>, Lecture
     @Override
     public Integer call() {
         VerificationDepot moteur = verification.orElseThrow(
-                () -> new RegleMetierException("Vérification Vigie-Chiro indisponible dans ce contexte d’exécution."));
+                () -> new RegleMetierException("Vérification Vigie-Chiro indisponible dans ce contexte d'exécution."));
         if (token != null && !token.isBlank()) {
             System.setProperty("vigiechiro.token", token);
         }

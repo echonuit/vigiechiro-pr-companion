@@ -53,10 +53,10 @@ public final class OngletReglagesDepot implements OngletReglages {
                 new DescripteurReglage.Enumeration(
                         CLE_MODE_DEPOT,
                         "Forme du dépôt",
-                        "En archives ZIP, la plateforme extrait puis supprime l’archive sans conserver les"
-                                + " sons : l’audio n’est plus téléchargeable depuis Vigie-Chiro, et la"
+                        "En archives ZIP, la plateforme extrait puis supprime l'archive sans conserver les"
+                                + " sons : l'audio n'est plus téléchargeable depuis Vigie-Chiro, et la"
                                 + " participation ne pourra pas être relancée. En séquences WAV, chaque son"
-                                + " reste en ligne et la participation reste relançable, au prix d’un dépôt"
+                                + " reste en ligne et la participation reste relançable, au prix d'un dépôt"
                                 + " plus long.",
                         List.of(
                                 new DescripteurReglage.Enumeration.Option(
@@ -66,10 +66,10 @@ public final class OngletReglagesDepot implements OngletReglages {
                         ModeDepot.ARCHIVES_ZIP.valeur()),
                 new DescripteurReglage.Entier(
                         CLE_TAILLE_MAX,
-                        "Taille maximale d’une archive (Mo)",
+                        "Taille maximale d'une archive (Mo)",
                         "Plafond de découpe des archives ZIP générées pour le dépôt (base 1000 : 700 Mo"
                                 + " = 700 000 000 octets, la limite acceptée par la plateforme). Appliqué à la"
-                                + " prochaine génération d’archives.",
+                                + " prochaine génération d'archives.",
                         DEFAUT_TAILLE_MAX_MO,
                         MIN_TAILLE_MAX_MO,
                         MAX_TAILLE_MAX_MO));

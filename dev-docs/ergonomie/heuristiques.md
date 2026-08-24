@@ -100,14 +100,14 @@ voisines de sujet sans être des doublons. Toute fusion se décide par paire, et
 
 Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.py`, et gardée par lui.
 
-**3 rattachement(s), portés par 1 décision(s).** Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.
+**4 rattachement(s), portés par 2 décision(s).** Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.
 
 | Clé | Heuristique | ADR | Lesquelles |
 |---|---|---:|---|
 | `nielsen-1` | Visibilité de l'état du système | 0 | **aucune** |
 | `nielsen-2` | Correspondance avec le monde réel | 1 | [4366-un-avertissement-se-dit-en-mots](../decisions/4366-un-avertissement-se-dit-en-mots.md) |
 | `nielsen-3` | Contrôle et liberté | 0 | **aucune** |
-| `nielsen-4` | Cohérence et standards | 0 | **aucune** |
+| `nielsen-4` | Cohérence et standards | 1 | [4368-l-apostrophe-d-un-libelle-est-droite](../decisions/4368-l-apostrophe-d-un-libelle-est-droite.md) |
 | `nielsen-5` | Prévention de l'erreur | 0 | **aucune** |
 | `nielsen-6` | Reconnaissance plutôt que rappel | 0 | **aucune** |
 | `nielsen-7` | Flexibilité et efficience | 0 | **aucune** |
@@ -128,11 +128,10 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.p
 | `wcag-focus-visible` | 2.4.7 | 0 | **aucune** |
 | `wcag-cible` | 2.5.8 | 0 | **aucune** |
 
-**20 heuristique(s) sur 23 que rien ne sert.** Ce n'est pas une faute : c'est ce dont personne n'a eu à décider, et il faut le voir pour savoir si c'est un choix ou un angle mort.
+**19 heuristique(s) sur 23 que rien ne sert.** Ce n'est pas une faute : c'est ce dont personne n'a eu à décider, et il faut le voir pour savoir si c'est un choix ou un angle mort.
 
 - `nielsen-1` · Visibilité de l'état du système
 - `nielsen-3` · Contrôle et liberté
-- `nielsen-4` · Cohérence et standards
 - `nielsen-5` · Prévention de l'erreur
 - `nielsen-6` · Reconnaissance plutôt que rappel
 - `nielsen-7` · Flexibilité et efficience
