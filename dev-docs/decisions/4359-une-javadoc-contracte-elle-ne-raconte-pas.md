@@ -73,7 +73,7 @@ tenir une autre.
 mécaniquement. Un record de trente champs n'est pas un suspect : les étiquettes de contrat sont
 exclues, avec leurs suites, et deux cas du banc le tiennent.
 
-**Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut **3 248** sur 680 blocs
+**Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut **<!--inv:cliquet-javadoc-->3 248<!--/inv-->** sur 680 blocs
 dans 554 fichiers après deux tranches, qui ont relu dix-huit fichiers (#4397, #4401). Le registre attendu est
 écrit dans `CONTRIBUTING.md` : il n'existait nulle part.
 

@@ -904,7 +904,7 @@ class DocumentationAJourTest {
     /// `<!--inv:clé-->N<!--/inv-->`. Le `N` reste **visible** (un commentaire HTML ne s'affiche pas), donc
     /// la doc se lit normalement ; ce test relit `N` et le confronte au code. Convention détaillée dans
     /// `dev-docs/tests-et-qualite.md`.
-    private static final Pattern BALISE_INVENTAIRE = Pattern.compile("<!--inv:([a-z-]+)-->(\\d+)<!--/inv-->");
+    private static final Pattern BALISE_INVENTAIRE = Pattern.compile("<!--inv:([a-z-]+)-->([\\d ]+)<!--/inv-->");
 
     /// Les clés d'inventaire connues (une par décompte que le code sait recalculer).
     private static final Set<String> CLES_INVENTAIRE = Set.of(
@@ -921,7 +921,29 @@ class DocumentationAJourTest {
             "criteres-analyse",
             "criteres-activite",
             "criteres-multisite",
-            "criteres-audit");
+            "criteres-audit",
+            "cliquet-javadoc",
+            "cliquet-pictogramme",
+            "cliquet-heuristique",
+            "cliquet-cadratin",
+            "plancher-renvois");
+
+    /// Les seuils declares par une ADR dans son en-tete OKF, par cle d'inventaire (#4392).
+    ///
+    /// Un cliquet est un chiffre que le code sait recalculer : c'est donc, au sens de l'article A5 et
+    /// de l'ADR 2750, un inventaire, et la prose qui le cite doit le porter en balise. Sans cela le
+    /// chiffre se recopie a la main dans trois textes a chaque tranche resorbee, et il a derive trois
+    /// fois dans la seule journee du 2026-08-24.
+    ///
+    /// La valeur lue est le CHAMP de l'en-tete, pas ce que le garde compte aujourd'hui : c'est
+    /// exactement ce qu'on veut. Un garde qui compterait moins que son cliquet rend « a-resserrer »,
+    /// et la prose doit annoncer le seuil en vigueur, pas la mesure du jour.
+    private static final Map<String, String> SEUILS_D_ADR = Map.of(
+            "cliquet-javadoc", "4359:ratchet",
+            "cliquet-pictogramme", "4366:ratchet",
+            "cliquet-heuristique", "4342:ratchet",
+            "cliquet-cadratin", "2843:ratchet",
+            "plancher-renvois", "4395:floor");
 
     /// Les catalogues de critères de filtre (#3105), par clé d'inventaire. Chaque écran à barre de
     /// filtres ancre son décompte dans sa fiche : sans cela, un critère ajouté au code reste invisible
@@ -967,7 +989,7 @@ class DocumentationAJourTest {
             Matcher balise = BALISE_INVENTAIRE.matcher(lire(fichier));
             while (balise.find()) {
                 String cle = balise.group(1);
-                int annonce = Integer.parseInt(balise.group(2));
+                int annonce = Integer.parseInt(balise.group(2).replace(" ", ""));
                 if (!CLES_INVENTAIRE.contains(cle)) {
                     verifs.assertThat(CLES_INVENTAIRE)
                             .as("%s : clé d'inventaire inconnue « %s »", fichier, cle)
@@ -1036,8 +1058,36 @@ class DocumentationAJourTest {
                 (int) fichiersDe(Path.of("docs", "ecrans"), nom -> nom.endsWith(".md") && !"index.md".equals(nom));
             case String catalogue
             when CATALOGUES_CRITERES.containsKey(catalogue) -> criteresDuCatalogue(CATALOGUES_CRITERES.get(catalogue));
+            case String seuil when SEUILS_D_ADR.containsKey(seuil) -> seuilDeclare(SEUILS_D_ADR.get(seuil));
             default -> throw new AssertionError("clé d'inventaire inconnue : " + cle);
         };
+    }
+
+    /// Le seuil qu'une ADR declare dans son en-tete OKF, designe par « numero:champ ».
+    ///
+    /// Lit le champ dans le PREMIER bloc `---` du fichier, et nulle part ailleurs : une valeur qui
+    /// ressemblerait a un champ, plus bas dans la prose, n'est pas une declaration. C'est la meme
+    /// borne que `scripts/adr/_commun.py`, pour que les deux lisent le meme endroit.
+    private static int seuilDeclare(String designation) throws IOException {
+        String[] parts = designation.split(":", 2);
+        Path adr;
+        try (Stream<Path> fichiers = Files.list(Path.of("dev-docs", "decisions"))) {
+            adr = fichiers.filter(f -> f.getFileName().toString().startsWith(parts[0] + "-"))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("ADR " + parts[0] + " introuvable"));
+        }
+        String texte = lire(adr);
+        Matcher entete =
+                Pattern.compile("\\A---\\n(.*?)\\n---\\n", Pattern.DOTALL).matcher(texte);
+        if (!entete.find()) {
+            throw new AssertionError("ADR " + parts[0] + " n'a pas d'en-tete analysable");
+        }
+        Matcher champ = Pattern.compile("^" + parts[1] + ": *(\\d+) *$", Pattern.MULTILINE)
+                .matcher(entete.group(1));
+        if (!champ.find()) {
+            throw new AssertionError("ADR " + parts[0] + " ne declare pas de champ « " + parts[1] + " »");
+        }
+        return Integer.parseInt(champ.group(1));
     }
 
     /// Les tables du schéma **courant**, obtenues en appliquant les migrations puis en interrogeant

@@ -64,7 +64,7 @@ La matrice est **engendrée** par `scripts/methode/matrice-ergonomie.py`, jamais
 Elle annonce **deux nombres**, rattachements et ADR : une décision peut servir plusieurs
 heuristiques, et confondre les deux ferait croire à une couverture qui n'existe pas.
 
-Le cliquet part de la mesure : **71** décisions concernées, dont aucune ne nommait d'heuristique le
+Le cliquet part de la mesure : **<!--inv:cliquet-heuristique-->71<!--/inv-->** décisions concernées, dont aucune ne nommait d'heuristique le
 jour de la pose. Elles descendront chantier par chantier, chacune ouverte et lue. Jamais par
 mots-clés :
 sur un problème plus facile - retrouver l'ADR derrière un numéro - la ressemblance de vocabulaire
