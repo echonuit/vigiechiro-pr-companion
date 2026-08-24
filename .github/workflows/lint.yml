@@ -306,11 +306,11 @@ jobs:
           ./.github/scripts/revoque-jeton.sh --auto-test
 
       - name: Les décisions du tournage connecté tiennent encore
-        # ⚠️ Le refus de `clips-connectes` par `comparer-tournages.yml` EST un garde, et rien ne le
+        # Le refus de `clips-connectes` par `comparer-tournages.yml` EST un garde, et rien ne le
         # gardait : un `if` mal écrit le neutraliserait sans que rien ne rougisse, et la comparaison
         # recommencerait à mesurer la plateforme en croyant mesurer le rendu.
         #
-        # ⚠️ Ce refus n'est pas RELU, il est LANCÉ : il vit dans un `run:`, donc du shell. Un garde
+        # Ce refus n'est pas relu, il est LANCÉ : il vit dans un `run:`, donc du shell. Un garde
         # qu'on exécute vaut mieux qu'un garde qu'on relit - la technique a sorti un défaut réel
         # d'`api-live.yml` le jour où elle a été essayée (#4328).
         run: |

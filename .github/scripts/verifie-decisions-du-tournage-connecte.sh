@@ -8,7 +8,7 @@
 # chaque `lint` ; ces trois-là n'en avaient pas, et la différence n'était pas la volonté : leur
 # logique vit dans un `if:` de workflow, pas dans un script.
 #
-# ⚠️ La première est la plus sournoise : **elle EST un garde**. Un `if` mal écrit la neutraliserait
+# La première est la plus sournoise, parce qu'elle EST un garde. Un `if` mal écrit la neutraliserait
 # sans que rien ne rougisse, et la comparaison des tournages recommencerait à mesurer la plateforme
 # en croyant mesurer le rendu.
 #
@@ -26,7 +26,7 @@
 #   3. Le contrôle du jeton vient AVANT le pas qui filme. L'ordre est une propriété que le YAML perd
 #      en silence : sonder après avoir filmé ne coûte rien et ne sert à rien.
 #
-# ## ⚠️ Le refus n'est pas RELU, il est LANCÉ
+# ## Le refus n'est pas relu, il est LANCÉ
 #
 # Il ne vit pas dans un `if:` de YAML mais dans un `run:`, c'est-à-dire du shell. On l'extrait donc et
 # on l'exécute pour de bon, avec `gh` remplacé par un leurre pour que rien ne dépende du réseau. Un
@@ -88,7 +88,7 @@ PY
     sortie=$(cd "${bac}" && PATH="${bac}/bin:${PATH}" AVANT=clips-connectes APRES=v1.0.0 \
         bash "${bloc}" 2>&1)
 
-    # ⚠️ On juge sur le MESSAGE. Le leurre fait échouer toutes les sources : un verdict pris sur le
+    # On juge sur le MESSAGE, et il faut y tenir. Le leurre fait échouer toutes les sources : un verdict pris sur le
     # code de sortie serait vert quoi qu'il arrive.
     if ! printf '%s' "${sortie}" | grep -q "ne se compare pas"; then
         echo "❌ comparer-tournages.yml n a pas refusé la source « clips-connectes »."
@@ -134,7 +134,7 @@ if "filmer" not in besoins:
     sys.exit(1)
 
 condition = str(job.get("if", ""))
-# ⚠️ La fonction d'état, et non la condition elle-même. Sans elle, GitHub enveloppe la condition en
+# La fonction d'état, et non la condition elle-même. Sans elle, GitHub enveloppe la condition en
 # `success() && (...)` sur TOUT le graphe amont : la porte qu'on croit avoir écrite n'est jamais
 # évaluée, rien ne rougit, et le job est simplement sauté.
 if not re.search(r"\b(always|success|failure|cancelled)\s*\(\s*\)", condition):
@@ -227,7 +227,7 @@ PY
 
     essai sain vert "les workflows tels qu ils sont"
 
-    # ⚠️ Les trois cassures. Chacune retire UNE décision, et rien d'autre.
+    # Les trois cassures, et c'est là que ce fichier gagne son verdict. Chacune retire UNE décision, et rien d'autre.
     fabriquer sans-refus '
 import io, os, re
 p = os.path.join(sys.argv[1], "comparer-tournages.yml")
