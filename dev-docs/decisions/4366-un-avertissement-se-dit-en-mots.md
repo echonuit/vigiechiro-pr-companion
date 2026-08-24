@@ -85,3 +85,15 @@ Cette décision ne porte pas sur les pictogrammes de l'interface, qui relèvent 
 [« Un pictogramme est une icône, pas un caractère »](0035-un-pictogramme-est-une-icone-pas-un-caractere.md).
 Les deux demandent la même chose : un signe qui porte du sens doit être un objet qu'on peut nommer,
 mesurer et remplacer.
+
+## La jurisprudence du cliquet
+
+Le cliquet de cette décision suit deux ADR antérieures.
+[2867](2867-une-dette-se-tient-par-un-cliquet.md) pose qu'une dette se tient par un compteur qui ne
+remonte pas, plutôt que par un nettoyage qu'on remet.
+[2941](2941-un-cliquet-s-apprend-en-l-appliquant.md) ajoute que sa valeur d'ouverture se mesure, et
+que le resserrer est un geste distinct de le poser.
+
+[3540](3540-un-cliquet-qui-compte-n-est-pas-la-preuve-de-la-regle.md) dit la limite : un compteur qui
+ne monte pas prouve que rien ne s'ajoute, pas que la règle est comprise. C'est pourquoi le garde rend
+des suspects et non des fautes.

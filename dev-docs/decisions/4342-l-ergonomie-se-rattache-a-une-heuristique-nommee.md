@@ -106,3 +106,15 @@ que ce vocabulaire fait apparaître, et il n'aurait pas de nom sans lui.
   vocabulaire, et dix-huit articles de plus rendraient la page illisible.
 - **Un vocabulaire ouvert.** Chacun nommerait la même chose autrement, et le regroupement cesserait
   de fonctionner.
+
+## La jurisprudence du cliquet
+
+Le cliquet de cette décision suit deux ADR antérieures.
+[2867](2867-une-dette-se-tient-par-un-cliquet.md) pose qu'une dette se tient par un compteur qui ne
+remonte pas, plutôt que par un nettoyage qu'on remet.
+[2941](2941-un-cliquet-s-apprend-en-l-appliquant.md) ajoute que sa valeur d'ouverture se mesure, et
+que le resserrer est un geste distinct de le poser.
+
+[3540](3540-un-cliquet-qui-compte-n-est-pas-la-preuve-de-la-regle.md) dit la limite : un compteur qui
+ne monte pas prouve que rien ne s'ajoute, pas que la règle est comprise. C'est pourquoi le garde rend
+des suspects et non des fautes.

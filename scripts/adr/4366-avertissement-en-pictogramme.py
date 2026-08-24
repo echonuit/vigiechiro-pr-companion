@@ -75,7 +75,7 @@ REPRIS = (".agents/skills/openspec-", ".claude/skills/openspec-", ".claude/comma
 
 # Les trois textes qui doivent PORTER le signe pour l enoncer : la decision, le garde, ses cas.
 # L exemption est nominative et tient a trois chemins, pour qu elle ne puisse pas s elargir en
-# silence.
+# silence. C est l ADR 3645, « un detecteur textuel s exclut de son propre corpus ».
 TEXTES_DU_MOTIF = (
     "dev-docs/decisions/4366-un-avertissement-se-dit-en-mots.md",
     "scripts/adr/4366-avertissement-en-pictogramme.py",

@@ -31,6 +31,10 @@ ZONES = ("dev-docs", "docs", "brief")
 # elle-meme, et chaque chiffre monte du nombre de fois qu il est illustre : la premiere mesure a
 # rendu 7 « mise en place » pour 6 reels, et 134 connecteurs pour 116. Un compteur qui lit sa
 # propre demonstration mesure sa demonstration.
+#
+# C est la regle de l ADR 3645, « un detecteur textuel s exclut de son propre corpus », etablie sur
+# un cas ou un detecteur certifiait gardees les cinq classes que sa propre documentation nommait.
+# Le defaut a ete re-decouvert ici avant d etre reconnu : la decision existait.
 TEXTES_DU_MOTIF = ("dev-docs/registre-editorial.md",)
 
 CONNECTEURS = [

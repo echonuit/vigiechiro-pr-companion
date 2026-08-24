@@ -17,7 +17,9 @@ Un comptage seul ne décide de rien : il désigne où regarder.
 Le corpus mesuré : **47 119 lignes** de `dev-docs`, `docs` et `brief`, dans 415 fichiers. Mesures du
 2026-08-24, refaites par `scripts/methode/mesure-registre.py`.
 
-**Cette page ne se compte pas elle-même**, et il a fallu s'en apercevoir. Elle cite les motifs en
+**Cette page ne se compte pas elle-même**, et il a fallu s'en apercevoir alors que la décision
+existait : l'[ADR 3645](decisions/3645-un-detecteur-textuel-s-exclut-de-son-corpus.md) l'a établie sur
+un détecteur qui certifiait gardées les cinq classes que sa propre documentation nommait. Elle cite les motifs en
 exemple : à la première mesure, elle rendait sept « mise en place » pour six réels et 134 connecteurs
 pour 116. Un compteur qui lit sa propre démonstration mesure sa démonstration. L'exemption est
 nominative, dans le script.
