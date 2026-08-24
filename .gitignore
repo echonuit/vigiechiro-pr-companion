@@ -98,11 +98,14 @@ site-brief/
 # et dans le SVG) : rien a versionner en plus des deux fichiers qu'il sert a produire.
 *_geo.json
 
-# ========== Agents IA (instructions locales, non versionnées) ==========
-# CLAUDE.md contient les consignes agent (cf. CONTRIBUTING.md + dev-docs pour la
-# version versionnée destinée aux humains). Reste local, propre à chaque poste.
-CLAUDE.md
-.claude/
+# ========== Agents IA ==========
+# La méthode est PUBLIQUE : AGENTS.md la porte, CLAUDE.md y ajoute ce qui est propre
+# à Claude Code, et .claude/ n'est qu'un adaptateur. Le dépôt montrait les effets du
+# dispositif sans montrer le dispositif ; il le montre.
+# Seuls les réglages propres à un poste restent locaux : settings.json cite des chemins
+# absolus de la machine, settings.local.json les permissions accordées sur ce poste.
+.claude/settings.json
+.claude/settings.local.json
 
 # ========== Données de travail de l'app (JAMAIS versionnées) ==========
 # Base SQLite locale (artefact de travail régénérable) et connexion VigieChiro
