@@ -36,6 +36,12 @@
 
 set -uo pipefail
 
+# ⟨locale⟩ Le verdict de ce script ne doit pas dependre de l endroit d ou on l appelle. `grep -E` fait
+# entrer `e` dans la plage `[a-z]` sous une locale francaise et l en sort sous `C` : le meme titre
+# passait en local et echouait en CI (#4456). `C.UTF-8` fixe les deux.
+export LC_ALL=C.UTF-8
+
+
 # Se relancer SANS WAYLAND_DISPLAY plutôt que d'exiger que l'appelant y pense : l'objet de ce
 # script est de tenir en une commande. La vérification qui suit garde tout son sens, puisqu'elle
 # porte sur l'environnement réellement remis à Maven, et non sur une intention.

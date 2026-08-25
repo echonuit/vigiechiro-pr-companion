@@ -40,6 +40,12 @@
 # Usage : verifie-corps-pr.sh "<corps>"   (sortie 0 si conforme, 1 sinon)
 set -euo pipefail
 
+
+# ⟨locale⟩ Le verdict de ce garde ne doit pas dependre de l endroit d ou on l appelle. `grep -E` fait
+# entrer `e` dans la plage `[a-z]` sous une locale francaise et l en sort sous `C` : le meme titre
+# passait en local et echouait en CI (#4456). `C.UTF-8` fixe les deux : collation deterministe, et
+# les octets multi-octets restent lisibles la ou le motif en a besoin.
+export LC_ALL=C.UTF-8
 CORPS="${1-}"
 
 if [ "${CORPS}" = "--auto-test" ]; then
