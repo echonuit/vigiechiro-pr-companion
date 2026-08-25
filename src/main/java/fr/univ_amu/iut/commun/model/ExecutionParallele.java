@@ -14,34 +14,30 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 
 /// Applique une transformation à chaque élément d'une liste **en parallèle** (un thread virtuel par
-/// élément, Java 25), la concurrence étant **bornée** par un [Semaphore] (`parallelisme`). Utile quand
-/// chaque tâche charge beaucoup en mémoire ou sur disque (transformation audio, régénération de séquences) :
-/// sans plafond, une grosse nuit tiendrait trop de fichiers en vol → saturation. Pic borné ≈ `parallelisme`,
-/// sans brider le débit CPU.
+/// élément, Java 25), la concurrence étant **bornée** par un [Semaphore] (`parallelisme`). Sans
+/// plafond, une grosse nuit tiendrait trop de fichiers en vol et saturerait ; le pic reste
+/// ≈ `parallelisme` sans brider le débit CPU. Patron extrait de
+/// `importation.model.DecoupageParallele` (#12), la **réactivation** régénérant elle aussi des
+/// séquences (#1779).
 ///
-/// Patron extrait de `importation.model.DecoupageParallele` (#12), la **réactivation** régénérant elle
-/// aussi des séquences (#1779).
+/// Deux formes, selon que l'opération est tout le travail ou une phase :
 ///
-/// ## Deux formes, selon que l'opération est tout le travail ou une phase
+/// - **autonome** ([#cartographier(List, String, Function, Consumer, JetonAnnulation)]) : le libellé
+///   est `« préfixe k/N »`, la fraction vaut `k/N`, et le dernier élément terminé amène la barre à
+///   100 % ;
+/// - **phase de pipeline** ([#cartographier(List, Function, EchelleProgression, BiFunction, Consumer,
+///   JetonAnnulation)]) : l'appelant fournit le libellé, l'[EchelleProgression] du pipeline entier et
+///   reçoit l'index. L'import (#2039) en a besoin, lui qui copie puis transforme : la copie doit
+///   s'arrêter à mi-barre, et rien dans la liste traitée ne le dit.
 ///
-/// - **Autonome** : [#cartographier(List, String, Function, Consumer, JetonAnnulation)]. Le libellé est
-///   `« préfixe k/N »`, la fraction vaut `k/N`, et le dernier élément terminé amène la barre à 100 %.
-/// - **Phase de pipeline** : [#cartographier(List, Function, EchelleProgression, BiFunction, Consumer,
-///   JetonAnnulation)]. L'appelant fournit le libellé, l'[EchelleProgression] du pipeline entier, et
-///   reçoit l'index de l'élément.
+/// **Ordre préservé** : les résultats sont rendus dans l'ordre de la liste d'entrée, donc
+/// déterministes malgré le parallélisme. **Progression thread-safe** : un point par tâche terminée,
+/// sous verrou et compteur atomique pour rester monotone (#146). **Annulation** : le jeton est
+/// consulté en tête de chaque tâche, et à la première demande les restantes sont annulées,
+/// l'[OperationAnnuleeException] propageant.
 ///
-/// La seconde forme sert quand l'opération n'est qu'une **phase** : l'import (#2039) copie puis
-/// transforme, la copie doit donc s'arrêter à mi-barre, et rien dans la liste traitée ne le dit.
-///
-/// - **Ordre préservé** : les résultats sont rendus **dans l'ordre de la liste d'entrée** (les `Future` sont
-///   récupérés dans l'ordre de soumission) → résultat déterministe malgré le parallélisme.
-/// - **Progression thread-safe** : un point « libellé k/N » par tâche **terminée**, émis sous verrou +
-///   compteur atomique pour rester monotone et appelé un à un (#146).
-/// - **Annulation** : le `jeton` est consulté en tête de chaque tâche ; à la première demande, les tâches
-///   restantes sont annulées et l'[OperationAnnuleeException] propage.
-///
-/// Une tâche qui lève une [RuntimeException] (hors annulation) propage son échec ; les autres tâches déjà
-/// soumises s'achèvent (fermeture de l'exécuteur) avant que l'exception ne remonte.
+/// Une tâche qui lève une [RuntimeException] propage son échec ; les autres déjà soumises s'achèvent
+/// avant que l'exception ne remonte.
 public final class ExecutionParallele {
 
     private final int parallelisme;
