@@ -30,30 +30,23 @@ import java.util.logging.Logger;
 /// observations, **en place**, sans toucher à son identité.
 ///
 /// La synchro « mes sites » rapatrie l'historique des nuits en **squelettes** (ADR 0016) : point, date,
-/// identité de l'enregistreur, mais **aucune séquence**. Trois niveaux de complétude se sont ainsi
-/// installés - structure, identité (#1814), contenu - et le troisième n'était atteignable que par la
-/// modale « Reconstruire un passage manquant ». Une nuit fraîchement synchronisée était donc un
-/// **cul-de-sac** : sa fiche grisait « Réactiver ce passage », faute de séquences à confronter au dossier
-/// désigné, et le seul recours s'annonçait comme concernant des nuits « qui n'existent pas sur cette
-/// machine » - ce qu'un squelette n'est pas.
+/// identité de l'enregistreur, mais **aucune séquence**. Une nuit en reste au niveau « identité »
+/// (#1814) tant que rien ne l'hydrate, et « Réactiver ce passage » y est grisé faute de séquences à
+/// confronter au dossier désigné.
 ///
-/// Ce collaborateur compose les coutures que l'ADR 0016 annonçait « réutilisables et composables », sans
-/// rien dupliquer : la source distante ([PlateformeReconstruction]), la création des séquences
-/// ([CreationPassageArchive#hydraterSequences]) et l'import des observations ([ImportObservations]).
+/// Trois coutures composées, rien de dupliqué : la source distante ([PlateformeReconstruction]), la
+/// création des séquences ([CreationPassageArchive#hydraterSequences]) et l'import des observations
+/// ([ImportObservations]).
 ///
 /// ## En place, pas remplacé
 ///
 /// La reconstruction, elle, **supprime** le squelette pour le recréer entier
-/// ([ServiceReconstructionPassages#reconstruire]). Ce n'est pas jouable ici, pour deux raisons qui
-/// n'existaient pas quand l'ADR 0016 a écarté l'hydratation en place :
+/// ([ServiceReconstructionPassages#reconstruire]). Deux raisons l'interdisent ici :
 ///
 /// - un **écran est ouvert** sur cet `idPassage` (on hydrate au moment où l'utilisateur réactive) ;
 /// - un squelette porte peut-être des **saisies manuelles** que la plateforme ignore - n° de série
 ///   (#1828), météo (#1688), heures de nuit tant qu'aucun fichier ne les atteste - qu'un delete + recreate
 ///   écraserait en silence.
-///
-/// L'objection de duplication de l'ADR 0016 est quant à elle tombée : `creerSequences` a depuis été
-/// factorisée, il n'y a plus de chemin de création à réécrire.
 ///
 /// ## Deux sources, selon qui appelle
 ///

@@ -5,21 +5,11 @@ import java.util.Set;
 
 /// Ce qu'une alerte d'incident **montre** d'une exception (#3470).
 ///
-/// ## Le défaut : un message exact et inutile
-///
-/// Un utilisateur a vu, en désignant la racine de sa carte SD :
-///
-/// > **Une erreur inattendue est survenue**
-/// > `java.lang.reflect.InvocationTargetException`
-///
-/// La chaîne n'était pas absente, elle était **exacte et sans valeur** : elle nommait le mécanisme de
-/// transport, jamais la panne. C'est pourquoi rien ne rougissait - un texte non vide a l'air d'un
-/// message.
-///
-/// D'où elle venait : quand FXML invoque un `onAction="#methode"` par réflexion, ce qui est levé dedans
-/// part en `InvocationTargetException`, puis est relancé en `RuntimeException(cette enveloppe)`. Or
-/// `RuntimeException(Throwable)` pose comme message `cause.toString()`. Le filet global affichait ce
-/// message-là.
+/// Une exception arrive au filet global **emballée** : quand FXML invoque un `onAction="#methode"` par
+/// réflexion, ce qui est levé dedans part en `InvocationTargetException`, relancée en
+/// `RuntimeException(cette enveloppe)` - et `RuntimeException(Throwable)` pose comme message
+/// `cause.toString()`. Afficher ce message-là nomme le **transport**, jamais la panne : une chaîne
+/// exacte, sans valeur, et que rien ne fait rougir puisqu'elle n'est pas vide.
 ///
 /// ## La règle : le message le plus profond QUI PARLE
 ///

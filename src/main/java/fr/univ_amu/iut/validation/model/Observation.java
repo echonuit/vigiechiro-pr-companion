@@ -17,9 +17,8 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 ///   plateforme (#1417, V26).
 ///
 /// Ce sont les **trois avis** que VigieChiro distingue sur une même détection : Tadarida *propose*,
-/// l'observateur *corrige*, le validateur *tranche*. Le troisième arrivait déjà dans la réponse de
-/// `GET /participations/{id}/donnees` : l'application le jetait, et présentait donc la correction de
-/// l'observateur comme le dernier mot alors qu'un expert avait pu la réviser.
+/// l'observateur *corrige*, le validateur *tranche*. Le dernier mot est donc celui du validateur, pas
+/// celui de l'observateur.
 ///
 /// L'avis du validateur est en **lecture seule** : le serveur refuse (403) qu'un jeton de rôle
 /// `Observateur` le pose (spike de #724). Il est donc toujours un **reflet** du serveur, rafraîchi à
@@ -29,10 +28,10 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 /// [ModeValidation#NON_VALIDE]). Les colonnes numériques optionnelles (`REAL` / `INTEGER`
 /// nullable) sont des types wrapper, `null` si absentes.
 ///
-/// Depuis #1139, l'observation porte aussi son **ancrage plateforme** (couple `idDonneeVigieChiro`
-/// + `indiceVigieChiro`, cible du `PATCH /donnees/{id}/observations/{index}` du contrat #1203) et la
+/// L'observation porte aussi son **ancrage plateforme** (#1139 : couple `idDonneeVigieChiro` +
+/// `indiceVigieChiro`, cible du `PATCH /donnees/{id}/observations/{index}` du contrat #1203) et la
 /// **certitude observateur** ([Certitude], déclaration manuelle à la revue, distincte de
-/// `probObservateur` qui reste la confiance numérique Tadarida recopiée à la validation).
+/// `probObservateur`, confiance numérique Tadarida recopiée à la validation).
 ///
 /// @param id clé technique, `null` avant insertion
 /// @param idSequence séquence d'écoute source (FK → `listening_sequence.id`, obligatoire)

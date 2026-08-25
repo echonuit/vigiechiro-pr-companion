@@ -25,10 +25,8 @@ import java.util.Optional;
 
 /// **Bilan de récupérabilité** : ce que deviendrait chaque nuit si l'on repartait d'une base neuve (#1151).
 ///
-/// C'est le garde-fou du reset, et l'issue est explicite sur sa forme : *« ne plus refuser en bloc quand
-/// des originaux sont purgés ; établir plutôt, **avant d'écrire quoi que ce soit**, un bilan de
-/// récupérabilité par nuit (disque / serveur / perdu) et ne demander confirmation que s'il existe au
-/// moins une nuit en “perdu” »*.
+/// C'est le garde-fou du reset : il n'interdit rien, il établit **avant toute écriture** un état par
+/// nuit, et ne fait demander confirmation que s'il existe au moins une nuit « perdu ».
 ///
 /// **Ce qui revient toujours** : les métadonnées et les observations, que le serveur rend (#1050, prouvé
 /// de bout en bout). **Ce qui ne revient pas forcément** : l'audio. D'où ce bilan.
@@ -43,12 +41,9 @@ import java.util.Optional;
 /// 3. **Perdu**, ni l'un ni l'autre. Un dépôt **ZIP** ne laisse **aucun** audio côté serveur : les
 ///    archives sont détruites après extraction et les WAV extraits ne sont jamais montés sur S3.
 ///
-/// ## « Perdu » n'est plus une impasse
-///
-/// Avant #1297, cette branche était un cul-de-sac dont on ne savait que faire. Elle a désormais un nom et
-/// un comportement : la nuit devient un **passage archivé**, observations et vérifications consultables,
-/// écoute impossible, **réactivable** si l'utilisateur retrouve un jour ses fichiers. La perte reste une
-/// perte, mais elle est **assumée et navigable**. Ce bilan sert donc à la *dire avant*, pas à interdire.
+/// « Perdu » n'est pas une impasse (#1297) : la nuit devient un **passage archivé**, observations et
+/// vérifications consultables, écoute impossible, **réactivable** si l'utilisateur retrouve un jour ses
+/// fichiers. Ce bilan sert donc à dire la perte *avant*, pas à l'interdire.
 ///
 /// ⚠️ Le mode de dépôt est **lu dans le plan** (`depot_unite.type`), jamais présumé : une nuit déposée
 /// avant #984 n'a pas de plan du tout, et une nuit jamais déposée non plus. Dans les deux cas : perdu.
