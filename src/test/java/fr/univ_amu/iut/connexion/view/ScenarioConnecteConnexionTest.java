@@ -230,6 +230,11 @@ class ScenarioConnecteConnexionTest {
                         + " se connecter rejoue le rapatriement des nuits du compte");
         WaitForAsyncUtils.waitForFxEvents();
 
+        // Ce que la synchro a fait, imprime plutot que suppose. Le resume ne porte que des
+        // COMPTES, donc rien d'identifiant : publiable dans un journal de run, et c'est la seule
+        // trace qui explique pourquoi une connexion a ete longue ou breve.
+        System.out.printf("  synchro de la connexion : %s%n", texte(robot, "#bandeauStatut"));
+
         // ⚠️ On asserte le SUCCÈS, pas la non-vacuité : `identiteProperty` porte « Jeton enregistré, non
         // vérifié » dès le premier instant d'un jeton sans profil.
         assertThat(classes(robot, "#labelIdentite"))
@@ -242,11 +247,6 @@ class ScenarioConnecteConnexionTest {
                 .as("le badge doit nommer QUI est connecté, pas rappeler qu'un jeton attend d'être vérifié")
                 .isNotBlank()
                 .doesNotContain("non vérifié");
-        // Ce que la synchro a fait, imprime plutot que suppose. Le resume ne porte que des
-        // COMPTES, donc rien d'identifiant : publiable dans un journal de run, et c'est la seule
-        // trace qui explique pourquoi une connexion a ete longue ou breve.
-        System.out.printf("  synchro de la connexion : %s%n", texte(robot, "#bandeauStatut"));
-
         assertThat(texte(robot, "#bandeauStatut"))
                 .as("la case demande l'identité ET le résumé. Le bandeau les annonce ensemble :"
                         + " « Connexion réussie · référentiel à jour : … ». Le CONTENU du résumé dépend du"
@@ -333,6 +333,9 @@ class ScenarioConnecteConnexionTest {
 
         // Le premier relevé, pris au plus tôt : il sert de point de comparaison.
         double fractionInitiale = fraction(robot);
+        // Releve AU PREMIER INSTANT, et garde. Le prendre plus tard ne dit rien : sur une
+        // connexion breve la zone a deja disparu, et le releve rend une chaine vide.
+        String avancementInitial = texte(robot, "#" + SuiviProgression.ID_MESSAGE);
 
         Respiration.surLeMomentCle(robot);
         Respiration.leTempsDeLire(robot);
@@ -347,7 +350,7 @@ class ScenarioConnecteConnexionTest {
         // pour une couverture.
         // Imprime AVANT la precondition : c'est justement quand le geste est ABANDONNE qu'on veut
         // savoir pourquoi. L'avancement au moment du releve dit combien de nuits restaient.
-        System.out.printf("  avancement au moment du releve : %s%n", texte(robot, "#" + SuiviProgression.ID_MESSAGE));
+        System.out.printf("  avancement au premier instant : %s%n", avancementInitial);
 
         Assumptions.assumeTrue(
                 visible(robot, "#zoneProgression"),
