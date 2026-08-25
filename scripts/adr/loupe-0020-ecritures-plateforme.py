@@ -17,7 +17,14 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from _commun import loupe  # noqa: E402
 
-API = pathlib.Path("src/main/java/fr/univ_amu/iut/commun/api")
+# Les DEUX arbres (ADR 4488). Une loupe aveugle a la moitie du code a le meme defaut qu un garde
+# qui l est : elle surfacerait moins sans jamais le dire. Mesure d ouverture, les deux repertoires
+# de test existant bel et bien (23 et 797 fichiers) : ZERO candidat cote test, l extension ne coute
+# donc rien et ferme la question.
+PRODUCTION = pathlib.Path("src/main/java/fr/univ_amu/iut/commun/api")
+TESTS = pathlib.Path("src/test/java/fr/univ_amu/iut/commun/api")
+RACINES = (PRODUCTION, TESTS)
+API = PRODUCTION
 
 # Verbes d'écriture, dans le nom d'une méthode publique du client.
 ECRITURE = re.compile(
@@ -28,11 +35,12 @@ ECRITURE = re.compile(
 )
 
 
-def candidats(api: pathlib.Path = API) -> list[str]:
+def candidats(api: pathlib.Path | None = None) -> list[str]:
     trouves = []
-    if not api.exists():
-        return trouves
-    for source in sorted(api.rglob("*.java")):
+    # Le retour anticipe sur un repertoire absent devient un FILTRE : avec deux arbres, l un peut
+    # manquer sans que l autre cesse d etre lu, et une racine de temoin n a pas a exister non plus.
+    arbres = [api] if api else list(RACINES)
+    for source in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
         for numero, ligne in enumerate(source.read_text(encoding="utf-8").splitlines(), 1):
             if ECRITURE.search(ligne):
                 trouves.append(f"{source}:{numero}  {ligne.strip()[:100]}")
