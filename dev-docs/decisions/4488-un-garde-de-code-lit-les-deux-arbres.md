@@ -34,6 +34,8 @@ Sept gardes rejoignent le corpus complet : `0010-dialogue-hors-port`, `0035-pict
 
 **`2635-refus-sans-surface` reste bornée à la production**, et c'est une décision. Ses trois suspects sont dans `MoteurTraitementGroupeTest`, le test qui prouve l'ADR 2635 : il doit citer le glyphe du menu pour vérifier que la rédaction de la surface atteint le compte rendu **et** le journal. L'y étendre interdirait aux tests d'affirmer les chaînes mêmes que la règle produit. C'est l'article A2 d'un cran plus loin : un détecteur textuel s'exclut de son propre corpus, et le test qui prouve sa règle en fait partie.
 
+Les deux **loupes** de code suivent la même règle : `loupe-0020-ecritures-plateforme` et `loupe-0044-mecanisme-parallelisme`. Une loupe aveugle à la moitié du code surfacerait moins sans jamais le dire, ce qui est le même défaut en plus silencieux : une loupe ne rend aucun verdict, donc rien ne la trahit. Là encore, zéro candidat côté test, et les deux répertoires visés existent bel et bien, 23 et 797 fichiers, si bien que ce zéro est une mesure et non une absence de corpus.
+
 ## Conséquences
 
 - Un cas de `verifie_scripts.py` tient la liste des gardes à deux arbres. Il tient le **corpus**, là où le témoin propre à chaque garde tient sa **détection** : les deux se cassent séparément, et un garde qui continuerait de détecter parfaitement sur l'arbre qu'on lui laisse ne rougirait pas.

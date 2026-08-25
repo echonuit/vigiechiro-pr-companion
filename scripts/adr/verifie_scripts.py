@@ -708,6 +708,10 @@ GARDES_DEUX_ARBRES = (
     "3053-capture-libelle.py",
     "3947-message-enveloppe.py",
     "4476-javadoc-raconte-son-extraction.py",
+    # Les LOUPES aussi : une loupe aveugle a la moitie du code surfacerait moins sans jamais le
+    # dire, ce qui est le meme defaut en plus silencieux, faute de verdict pour le trahir.
+    "loupe-0020-ecritures-plateforme.py",
+    "loupe-0044-mecanisme-parallelisme.py",
 )
 
 
@@ -726,8 +730,11 @@ def test_les_gardes_de_code_lisent_les_deux_arbres() -> None:
     for nom in GARDES_DEUX_ARBRES:
         m = _charge(nom)
         racines = getattr(m, "RACINES", ())
-        _verifie(f"{nom[:4]} : l arbre de test est dans son corpus",
-                 any(str(r).endswith("src/test/java") for r in racines), True)
+        # Le chemin CONTIENT `src/test/java`, il ne s y termine pas forcement : une loupe peut etre
+        # bornee a un paquet, et `src/test/java/fr/univ_amu/iut/commun/api` est un corpus de test
+        # tout autant que l arbre entier. Exiger la fin excluait les deux loupes a tort.
+        _verifie(f"{nom.removesuffix('.py')} : l arbre de test est dans son corpus",
+                 any("src/test/java" in str(r) for r in racines), True)
 
 
 def test_rapport_et_resserrement() -> None:
