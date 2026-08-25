@@ -562,6 +562,23 @@ def test_loupe_4359_javadoc_vieillie() -> None:
                                         [100] * len(long_) + [999, 100])), 0)
 
 
+def test_4472_commentaire_en_corps() -> None:
+    m = _charge("4472-commentaire-en-corps.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        # Le cas qui compte : le MEME bloc de commentaires, hors d un corps de methode puis dedans.
+        # Hors d un corps, c est de l en-tete de fichier et ce cliquet n a rien a en dire ; dedans,
+        # c est la population qu il tient. Un garde qui confondrait les deux compterait les licences.
+        bloc = "\n".join(f"        // Ligne {i}." for i in range(m.SEUIL + 3))
+        _ecrire(racine, "fr/univ_amu/iut/a/Dedans.java",
+                "class Dedans {\n    void faire() {\n" + bloc + "\n        int x = 1;\n    }\n}\n")
+        _verifie("4472 un bloc long DANS un corps est compte", len(m.suspects(racine)), 3)
+
+        entete = "\n".join(f"// Ligne {i}." for i in range(m.SEUIL + 3))
+        _ecrire(racine, "fr/univ_amu/iut/a/Dedans.java", entete + "\nclass Dehors {}\n")
+        _verifie("4472 le meme bloc HORS d un corps ne coute rien", len(m.suspects(racine)), 0)
+
+
 def test_rapport_et_resserrement() -> None:
     rapport = _charge("rapport.py")
     # Le parsing : une ligne normalisée doit être reconnue.
@@ -685,6 +702,7 @@ if __name__ == "__main__":
         test_loupe_4359_javadoc_vieillie,
         test_loupe_0020,
         test_loupe_0044,
+        test_4472_commentaire_en_corps,
         test_rapport_et_resserrement,
     ):
         essai()

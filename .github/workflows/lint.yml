@@ -614,6 +614,13 @@ jobs:
         # la citation, ce qui est pire que muet.
         run: bash .github/scripts/verifie-corps-pr.sh --auto-test
 
+      - name: "Auto-test du cliquet de commentaire en corps de methode (bloquant, #4472)"
+        # Ce cliquet tient une population que le cliquet 4359 ne voit pas. Le cas qui compte est
+        # celui du MEME bloc hors puis dans un corps de methode : hors, c'est de l'en-tete de fichier
+        # et il n'a rien a en dire ; dedans, c'est ce qu'il tient. Un garde qui confondrait les deux
+        # compterait les licences, et sa liste grossirait sans qu'un commentaire ait bouge.
+        run: python3 scripts/adr/4472-commentaire-en-corps.py --auto-test
+
       - name: Le paquet OKF des décisions est conforme (bloquant)
         # `dev-docs/decisions` est un paquet OKF depuis #4336 : chaque ADR porte un en-tête typé, se
         # rattache à un article de la constitution, et gage le niveau de vérification qu'elle
