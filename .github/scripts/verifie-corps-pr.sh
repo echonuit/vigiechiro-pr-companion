@@ -89,6 +89,14 @@ ${TROISQUOTES}" "un bloc de code cloture est épargné"
     verifie 0 "Le point C3 et le carre A1 sont distincts." "un code de point ne déclenche pas"
     verifie 0 "Le n° 4 est traite." "un numéro ne déclenche pas"
     verifie 0 "Deux semeurs prennent l'entree legere." "une élision correcte ne déclenche pas"
+    # #4483. Une lettre isolee employee comme SYMBOLE n est pas une elision. Les quatre formes
+    # mesurees sur les 21 234 lignes de prose du depot, ou elles valaient 50 faux positifs sur 120.
+    verifie 0 "Le decoupage se fait a 5 s reelles, mesure a 10,5 s." "un symbole d'unité après un nombre ne déclenche pas"
+    verifie 0 "Un ecran qui compose N lignes paie N requetes." "une majuscule-symbole au fil d'une phrase ne déclenche pas"
+    verifie 0 "    participant S as Service" "un alias de diagramme ne déclenche pas"
+    verifie 0 "Le seuil est -S info, et non warning." "un drapeau de commande ne déclenche pas"
+    # La contrepartie : en TETE de phrase la majuscule reste vue, sinon « L ADR » redeviendrait muet.
+    verifie 1 "Le garde tient. L amendement le dit." "une élision majuscule en tête de phrase reste refusée"
 
     # Épingle une DÉCISION, pas un comportement : un corps vide PASSE. Qui voudra le refuser fera
     # d'abord rougir ce cas, et lira dans l'en-tête pourquoi ce garde ne tranche pas cette
@@ -123,7 +131,14 @@ CITE = re.compile(
         re.escape(OUVRANT) + r"\s*" + re.escape(CADRATIN) + r"\s*" + re.escape(FERMANT),
     ])
 )
-ELISION = re.compile(r"(^|[^\w'" + COURBE + r"])([LlDdNnSsCcJjMmTt]|[Qq]u) +[^\W\d_]")
+# L elision sans apostrophe, MEME regle que le garde du titre, et meme retrecissement (#4483) :
+# une lettre isolee precedee d un NOMBRE est un symbole d unite (« 143 s la »), et une MAJUSCULE
+# isolee au fil d une phrase est un symbole (« les N fichiers »), jamais une elision. La majuscule
+# n est donc vue qu apres une espace elle-meme precedee d un caractere non alphanumerique, soit la
+# tete de phrase. Le detail de la mesure est dans `verifie-titre-pr.sh`, qui porte la regle mere.
+BORNE = r"[^\w'" + COURBE + r"]"
+ELISION_MIN = re.compile(r"(^" + BORNE + r"?|[^\d]" + BORNE + r")([ldnscjmt]|qu) +[^\W\d_]")
+ELISION_MAJ = re.compile(r"(^" + BORNE + r"?|[^\w]\s)([LDNSCJMT]|Qu) +[^\W\d_]")
 
 fautes = []
 dans_un_bloc = False
@@ -138,7 +153,7 @@ for numero, ligne in enumerate(corps.splitlines(), 1):
         fautes.append((numero, "tiret cadratin", ligne.strip()))
     if COURBE in prose:
         fautes.append((numero, "apostrophe courbe", ligne.strip()))
-    if ELISION.search(prose):
+    if ELISION_MIN.search(prose) or ELISION_MAJ.search(prose):
         fautes.append((numero, "élision sans apostrophe", ligne.strip()))
 
 if not fautes:
