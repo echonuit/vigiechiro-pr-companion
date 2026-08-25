@@ -64,9 +64,9 @@ exigent un redémarrage et le disent.
 
 ### Étape 1 · L'écran s'ouvre et se peuple
 
-- [ ] **S7-01** · Ouvrir les Réglages : l'écran affiche un bandeau d'onglets, pas un cadre vide.
-- [ ] **S7-02** · Chaque onglet visible porte un **titre** et, s'il en a une, son **icône**.
-- [ ] **S7-03** · Chaque réglage affiche son **libellé** et sa **description** : aucun n'est nu.
+- [ ] **S7-01** · *geste: ouvrir-les-reglages* · Ouvrir les Réglages : l'écran affiche un bandeau d'onglets, pas un cadre vide.
+- [ ] **S7-02** · *geste: ouvrir-les-reglages* · Chaque onglet visible porte un **titre** et, s'il en a une, son **icône**.
+- [ ] **S7-03** · *geste: ouvrir-les-reglages* · Chaque réglage affiche son **libellé** et sa **description** : aucun n'est nu.
 
 > S7-03 n'est pas cosmétique. Un commutateur sans description oblige à deviner ce qu'il fait, et c'est
 > sur ce genre de devinette qu'un utilisateur coche « conserver les originaux » sans savoir qu'il double
@@ -74,34 +74,34 @@ exigent un redémarrage et le disent.
 
 ### Étape 2 · Général : un réglage à effet immédiat
 
-- [ ] **S7-04** · Onglet **Général**, basculer « Fiches espèces sur Wikipédia (sinon GBIF) ».
-- [ ] **S7-05** · **Sans redémarrer**, ouvrir une fiche d'espèce hors chiroptères : la source consultée
+- [ ] **S7-04** · *geste: basculer-la-source-des-fiches-especes* · Onglet **Général**, basculer « Fiches espèces sur Wikipédia (sinon GBIF) ».
+- [ ] **S7-05** · *geste: basculer-la-source-des-fiches-especes* · **Sans redémarrer**, ouvrir une fiche d'espèce hors chiroptères : la source consultée
       est bien celle qu'on vient de choisir.
-- [ ] **S7-06** · Rebasculer, rouvrir une fiche : la source a changé **dans l'autre sens**.
+- [ ] **S7-06** · *geste: basculer-la-source-des-fiches-especes* · Rebasculer, rouvrir une fiche : la source a changé **dans l'autre sens**.
 
 > S7-06 est le garde-fou de S7-05 : un réglage figé sur la bonne valeur passe le premier cas et rate le
 > second. Les deux positions, toujours.
 
 ### Étape 3 · Audio : ce qui change l'écoute
 
-- [ ] **S7-07** · Activer « Lecture automatique à la sélection », ouvrir une nuit, sélectionner une
+- [ ] **S7-07** · *geste: regler-l-ecoute* · Activer « Lecture automatique à la sélection », ouvrir une nuit, sélectionner une
       séquence : la lecture **démarre seule**.
-- [ ] **S7-08** · Activer « Lecture en boucle » : la séquence en cours **se répète**.
-- [ ] **S7-09** · Activer « Spectrogramme adapté au daltonisme » : la palette du spectrogramme **change**.
-- [ ] **S7-10** · Activer « Inclure le mode de validation à l'export _Vu », exporter : le CSV porte une
+- [ ] **S7-08** · *geste: regler-l-ecoute* · Activer « Lecture en boucle » : la séquence en cours **se répète**.
+- [ ] **S7-09** · *geste: regler-l-ecoute* · Activer « Spectrogramme adapté au daltonisme » : la palette du spectrogramme **change**.
+- [ ] **S7-10** · *geste: inclure-le-mode-de-validation-a-l-export* · Activer « Inclure le mode de validation à l'export _Vu », exporter : le CSV porte une
       colonne « mode de validation ».
-- [ ] **S7-11** · Désactiver ce dernier, réexporter : la colonne **a disparu**.
+- [ ] **S7-11** · *geste: inclure-le-mode-de-validation-a-l-export* · Désactiver ce dernier, réexporter : la colonne **a disparu**.
 
 > S7-10 et S7-11 se lisent dans le **fichier produit**, jamais à l'écran : c'est le seul endroit où ce
 > réglage a un effet observable.
 
 ### Étape 4 · Import : le réglage lu au moment de s'en servir (#3471)
 
-- [ ] **S7-12** · Onglet **Import**, cocher « Conserver les originaux ». Importer `sd-nominale` : le
+- [ ] **S7-12** · *geste: conserver-les-originaux-a-l-import* · Onglet **Import**, cocher « Conserver les originaux ». Importer `sd-nominale` : le
       dossier de la nuit contient un sous-dossier `bruts/` **non vide**.
-- [ ] **S7-13** · **Sans quitter l'application**, décocher le réglage. Réimporter : il n'y a **pas** de
+- [ ] **S7-13** · *geste: conserver-les-originaux-a-l-import* · **Sans quitter l'application**, décocher le réglage. Réimporter : il n'y a **pas** de
       `bruts/`.
-- [ ] **S7-14** · Recocher, réimporter une troisième fois : `bruts/` est **de retour**.
+- [ ] **S7-14** · *geste: conserver-les-originaux-a-l-import* · Recocher, réimporter une troisième fois : `bruts/` est **de retour**.
 
 > ⚠️ **Ne pas redémarrer entre S7-12 et S7-13.** C'est tout l'objet de #3471 : le réglage était lu une
 > fois au démarrage et mémorisé, donc le changer en cours de session ne changeait rien. Un redémarrage
@@ -112,29 +112,29 @@ exigent un redémarrage et le disent.
 
 ### Étape 5 · Dépôt : une énumération et un entier
 
-- [ ] **S7-15** · Onglet **Dépôt**, « Forme du dépôt » propose **deux** formes (archives ZIP, séquences
+- [ ] **S7-15** · *geste: regler-la-forme-du-depot* · Onglet **Dépôt**, « Forme du dépôt » propose **deux** formes (archives ZIP, séquences
       WAV) et retient celle qu'on choisit.
-- [ ] **S7-16** · « Taille maximale d'une archive (Mo) » accepte une valeur, et la **refuse** si elle
+- [ ] **S7-16** · *geste: regler-la-forme-du-depot* · « Taille maximale d'une archive (Mo) » accepte une valeur, et la **refuse** si elle
       est absurde (zéro, négative, texte) en le disant plutôt qu'en l'ignorant.
-- [ ] **S7-17** · Rouvrir les Réglages : les deux valeurs choisies sont **toujours là**.
+- [ ] **S7-17** · *geste: regler-la-forme-du-depot* · Rouvrir les Réglages : les deux valeurs choisies sont **toujours là**.
 
 > S7-16 est le seul champ **libre** de l'écran, donc le seul endroit où une saisie invalide peut
 > exister. Un champ qui avale une valeur absurde sans rien dire est le mode de panne à guetter ici.
 
 ### Étape 6 · Fonctionnalités : les interrupteurs, et ce qu'ils ne coupent pas
 
-- [ ] **S7-18** · Onglet **Fonctionnalités** : chaque fonctionnalité **désactivable** porte un
+- [ ] **S7-18** · *geste: lire-les-interrupteurs-de-fonctionnalites* · Onglet **Fonctionnalités** : chaque fonctionnalité **désactivable** porte un
       interrupteur.
-- [ ] **S7-18b** · La liste se lit dans l'**ordre alphabétique des libellés affichés** (#3833) : rien ne
+- [ ] **S7-18b** · *geste: lire-les-interrupteurs-de-fonctionnalites* · La liste se lit dans l'**ordre alphabétique des libellés affichés** (#3833) : rien ne
       paraît rangé au hasard. Un libellé accentué est à sa lettre - « Étang » entre « Analyse » et
       « Zone », jamais après le Z.
-- [ ] **S7-19** · Une fonctionnalité **du cœur** n'en porte **pas** : elle est présentée comme toujours
+- [ ] **S7-19** · *geste: lire-les-interrupteurs-de-fonctionnalites* · Une fonctionnalité **du cœur** n'en porte **pas** : elle est présentée comme toujours
       active, sans commutateur à actionner.
-- [ ] **S7-20** · Désactiver une fonctionnalité optionnelle : un message annonce que l'effet arrive **au
+- [ ] **S7-20** · *geste: desactiver-une-fonctionnalite* · Désactiver une fonctionnalité optionnelle : un message annonce que l'effet arrive **au
       prochain démarrage**.
-- [ ] **S7-21** · Quitter, relancer : l'entrée correspondante a **disparu** du menu ☰ ou de l'écran qui
+- [ ] **S7-21** · *geste: desactiver-une-fonctionnalite* · *carton: l'application est quittée puis relancée* · Quitter, relancer : l'entrée correspondante a **disparu** du menu ☰ ou de l'écran qui
       la portait.
-- [ ] **S7-22** · La réactiver, quitter, relancer : l'entrée est **revenue**, et l'écran fonctionne.
+- [ ] **S7-22** · *geste: desactiver-une-fonctionnalite* · *carton: l'application est quittée puis relancée* · La réactiver, quitter, relancer : l'entrée est **revenue**, et l'écran fonctionne.
 
 > S7-19 mérite d'être joué même s'il paraît trivial : une fonctionnalité socle dont d'autres dépendent
 > ne doit pas offrir un interrupteur qui ne coupe rien. Un commutateur sans effet est pire qu'une
@@ -145,21 +145,21 @@ exigent un redémarrage et le disent.
 
 ### Étape 7 · Emplacements : ce que le réglage fait, et ce qu'il ne fait pas
 
-- [ ] **S7-23** · Onglet **Emplacements** : le **dossier de travail** et la **base de données** sont
+- [ ] **S7-23** · *geste: lire-les-emplacements* · Onglet **Emplacements** : le **dossier de travail** et la **base de données** sont
       affichés, chacun avec son emplacement courant et son défaut.
-- [ ] **S7-38** · Chaque chemin porte, **à côté de lui**, un bouton « Copier » ; le cliquer place ce
+- [ ] **S7-38** · *geste: lire-les-emplacements* · Chaque chemin porte, **à côté de lui**, un bouton « Copier » ; le cliquer place ce
       chemin dans le presse-papier, et ce qui s'y trouve est **exactement** ce que l'écran affiche
       (le coller dans un éditeur pour le lire). Les deux rangées l'offrent (#3882).
 
     ⚠️ Le numéro sort de la suite : les cases de S7 vont jusqu'à **S7-37**, et les renuméroter
     rendrait faux les renvois que ce script porte déjà entre ses propres cases (S7-24 est cité par
     S7-27, par exemple).
-- [ ] **S7-24** · L'écran annonce que choisir un emplacement change **où l'application ira lire au
+- [ ] **S7-24** · *geste: changer-le-dossier-de-travail* · L'écran annonce que choisir un emplacement change **où l'application ira lire au
       prochain démarrage**, et **ne déplace pas** les données existantes.
-- [ ] **S7-25** · Choisir un nouveau dossier de travail : un **avis de redémarrage** apparaît, et il est
+- [ ] **S7-25** · *geste: changer-le-dossier-de-travail* · Choisir un nouveau dossier de travail : un **avis de redémarrage** apparaît, et il est
       difficile à manquer.
-- [ ] **S7-26** · Quitter, relancer, rouvrir les Réglages : l'emplacement affiché est bien le **nouveau**.
-- [ ] **S7-27** · Vérifier l'ancien dossier sur le disque : les données y sont **toujours**, conformément
+- [ ] **S7-26** · *geste: changer-le-dossier-de-travail* · *carton: l'application est quittée puis relancée* · Quitter, relancer, rouvrir les Réglages : l'emplacement affiché est bien le **nouveau**.
+- [ ] **S7-27** · *hors-portée: un fait de DISQUE : ce que le cas observe est que les données sont toujours dans l'ancien dossier, et l'écran ne le montre pas* · Vérifier l'ancien dossier sur le disque : les données y sont **toujours**, conformément
       à ce qu'annonçait S7-24.
 
 > ⚠️ S7-25 et S7-27 portent le constat qui a motivé #3459 : un utilisateur au disque saturé cherche à
@@ -169,12 +169,12 @@ exigent un redémarrage et le disent.
 
 ### Étape 8 · Le chrome : les fenêtres que l'application ouvre
 
-- [ ] **S7-28** · Provoquer une confirmation (supprimer un passage, par exemple) : la fenêtre porte la
+- [ ] **S7-28** · *geste: l-habillage-des-fenetres-de-l-application* · Provoquer une confirmation (supprimer un passage, par exemple) : la fenêtre porte la
       **typographie et les couleurs du produit**, pas celles du système.
-- [ ] **S7-29** · Elle n'affiche **aucune icône système** (le point d'interrogation ou l'avertissement
+- [ ] **S7-29** · *geste: l-habillage-des-fenetres-de-l-application* · Elle n'affiche **aucune icône système** (le point d'interrogation ou l'avertissement
       du bureau).
-- [ ] **S7-30** · Son bouton par défaut se **distingue** visuellement de l'autre.
-- [ ] **S7-31** · Provoquer un message d'erreur et un message d'information : ils portent le même
+- [ ] **S7-30** · *geste: l-habillage-des-fenetres-de-l-application* · Son bouton par défaut se **distingue** visuellement de l'autre.
+- [ ] **S7-31** · *geste: l-habillage-des-fenetres-de-l-application* · Provoquer un message d'erreur et un message d'information : ils portent le même
       habillage, et leur **sévérité** se lit.
 
 > Le chrome appartient à cette session parce qu'il n'appartient à aucun écran : il apparaît **par-dessus**
@@ -182,9 +182,9 @@ exigent un redémarrage et le disent.
 
 ### Étape 9 · États dégradés
 
-- [ ] **S7-32** 🔒 · Hors connexion, ouvrir les Réglages : l'écran s'ouvre, et ce qui dépend du réseau
+- [ ] **S7-32** · *geste: les-reglages-hors-connexion* · 🔒 Hors connexion, ouvrir les Réglages : l'écran s'ouvre, et ce qui dépend du réseau
       le **dit** plutôt que de rester muet ou de faire attendre.
-- [ ] **S7-33** · Rendre le dossier de travail inaccessible (le renommer hors de l'application), puis
+- [ ] **S7-33** · *geste: les-reglages-sans-dossier-de-travail* · *carton: le dossier de travail est rendu inaccessible hors de l'application* · Rendre le dossier de travail inaccessible (le renommer hors de l'application), puis
       ouvrir les Réglages : l'écran **dit** que l'emplacement est introuvable, et propose d'en choisir
       un autre.
 
@@ -201,16 +201,16 @@ livrée et testée, sans qu'aucun script ne dise comment la vérifier à la main
 de recette importée deux fois suffit), et un **support amovible** pour les deux derniers cas - une clé
 USB dont on remplit l'espace libre avec des fichiers quelconques jusqu'au seuil voulu.
 
-- [ ] **S7-34** · ☰ > « Sauvegarde complète (base + audio)… » : la demande de confirmation annonce le
+- [ ] **S7-34** · *geste: sauvegarder-et-restaurer* · ☰ > « Sauvegarde complète (base + audio)… » : la demande de confirmation annonce le
       **volume** et rappelle que l'archive porte les localisations **en clair**, avant de copier.
-- [ ] **S7-35** · Renommer un dossier de nuit hors de l'application, puis restaurer cette sauvegarde
+- [ ] **S7-35** · *geste: sauvegarder-et-restaurer* · *carton: un dossier de nuit est renommé hors de l'application* · Renommer un dossier de nuit hors de l'application, puis restaurer cette sauvegarde
       complète : le compte rendu **nomme la nuit déplacée** et dit où elle a atterri. Rouvrir l'écoute
       de cette nuit : l'audio est retrouvé.
-- [ ] **S7-36** · Pointer le dossier de travail vers un support dont l'espace libre est **inférieur au
+- [ ] **S7-36** · *hors-portée: un support dont l'espace libre est mesurable et insuffisant : le banc ne sait pas fabriquer un disque presque plein* · Pointer le dossier de travail vers un support dont l'espace libre est **inférieur au
       total** des nuits de la sauvegarde mais **supérieur à la plus grosse**, puis restaurer : la
       restauration aboutit, et le compte rendu dit que les nuits ont été remises **une nuit à la
       fois**.
-- [ ] **S7-37** · Remplir le support jusqu'à laisser **moins que la plus grosse nuit**, puis
+- [ ] **S7-37** · *hors-portée: un support rempli jusqu'à laisser moins que la plus grosse nuit, même raison* · Remplir le support jusqu'à laisser **moins que la plus grosse nuit**, puis
       restaurer : refus qui dit **combien libérer et où**. Vérifier ensuite que l'audio local et la
       base sont **ceux d'avant** : rien n'a été touché.
 
