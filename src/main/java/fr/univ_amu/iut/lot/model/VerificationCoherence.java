@@ -34,11 +34,13 @@ import java.util.stream.Collectors;
 /// - **R14** (bloquant) : un passage au verdict [Verdict#A_JETER] ne peut pas rejoindre un
 ///   lot. Restitué ici comme alerte bloquante pour l'affichage ; le refus dur est levé par
 ///   [ServiceLot].
-/// - **Transformation** (bloquant, R10) : une session existe, des séquences d'écoute sont
-///   présentes et **chaque** enregistrement original a été transformé en au moins une
-///   séquence.
-/// - **Préfixe** (bloquant, R6/R7/R8) : tous les enregistrements originaux et toutes les
-///   séquences portent le préfixe attendu `Car<carré>-<année>-Pass<n>-<point>-`.
+/// - **Session d'enregistrement** (bloquant) : une session est rattachée au passage. Celui-ci
+///   **arrête le parcours** - sans session, aucun des contrôles suivants n'est calculable, et la
+///   liste rendue s'arrête là plutôt que d'être incomplète.
+/// - **Transformation des enregistrements** (bloquant, R10) : des séquences d'écoute sont présentes
+///   et **chaque** enregistrement original a été transformé en au moins une séquence.
+/// - **Nommage des fichiers** (bloquant, R6/R7/R8) : tous les enregistrements originaux et toutes
+///   les séquences portent le préfixe attendu `Car<carré>-<année>-Pass<n>-<point>-`.
 /// - **Journal du capteur** (bloquant) : un `sensor_log` accompagne la session.
 /// - **Relevé climatique** (soft, R20) : son absence est *signalée sans bloquer* (sonde non
 ///   installée ou défaillante) ; le dépôt reste possible.
