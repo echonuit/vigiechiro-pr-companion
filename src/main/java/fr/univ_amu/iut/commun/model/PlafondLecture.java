@@ -5,13 +5,8 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 /// Taille au-delà de laquelle on **refuse de lire** une entrée externe (#3222), et message de refus
 /// associé.
 ///
-/// ## Pourquoi un plafond, alors que les tailles réelles sont modestes
-///
-/// Le lot #2722 a borné la décompression d'une archive en ressources (#2732) : plus rien ne s'écrit
-/// sans qu'on ait accepté combien. L'audit d'harmonisation a trouvé la même forme ailleurs, en
-/// **mémoire** cette fois : le corps d'une réponse réseau et le journal du capteur étaient avalés en
-/// entier avant qu'on sache s'ils étaient exploitables. Ni l'un ni l'autre n'est exploitable par un
-/// tiers, mais tous deux viennent du dehors, et une entrée externe se borne.
+/// Le corps d'une réponse réseau et le journal du capteur viennent du dehors : ils se bornent, comme
+/// une archive se borne en ressources (lot #2722, #2732).
 ///
 /// ## Les défauts viennent d'une mesure, pas d'une intuition
 ///
@@ -30,13 +25,10 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 /// [#DEFAUT_CORPS] (147 fois le plus gros corps mesuré). Un plafond posé sans cette mesure refuserait
 /// du légitime, comme le plafond de taux de compression de #2732 l'a fait.
 ///
-/// ## Surchargeable, mais pas un réglage
-///
 /// Chaque plafond se surcharge par **propriété système**, comme les bornes de
-/// [fr.univ_amu.iut.importation.model.BornesExtraction]. Il n'y a délibérément pas de réglage dans
-/// l'écran Réglages : un naturaliste n'a pas à choisir une taille de corps de réponse. C'est le
-/// **message de refus** qui doit nommer la limite atteinte et la surcharge, sans quoi la seule issue
-/// serait de renoncer au fichier.
+/// [fr.univ_amu.iut.importation.model.BornesExtraction], jamais par l'écran Réglages. Le **message de
+/// refus** doit nommer la limite atteinte et la surcharge, sans quoi la seule issue serait de renoncer
+/// au fichier.
 ///
 /// @param cle la borne au registre des réglages, qui porte son nom court et la propriété système
 /// @param octets plafond effectif, en octets

@@ -11,3 +11,5 @@
 # memoire de revue en desserrement, et le depot distingue precisement les deux gestes.
 1f097fab88185082	src/main/java/fr/univ_amu/iut/validation/model/ParserCsvTadarida.java	documente un format de fichier tiers et son mapping de colonnes
 34a41d5c10c241b5	src/main/java/fr/univ_amu/iut/importation/model/TransformationAudio.java	documente l arithmetique du decoupage
+6fdb7c52a69b01e8	src/main/java/fr/univ_amu/iut/validation/model/ServiceValidation.java	enumere les responsabilites du service et les regles R qu elles portent
+586cc08828f06a76	src/main/java/fr/univ_amu/iut/importation/model/ServiceImport.java	enumere les cinq etapes du parcours P2 et le moteur de chacune
