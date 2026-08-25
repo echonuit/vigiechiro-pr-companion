@@ -13,6 +13,12 @@
 # Usage : verifie-titre-pr.sh "<titre>"   (sortie 0 si conforme, 1 sinon)
 set -euo pipefail
 
+
+# ⟨locale⟩ Le verdict de ce garde ne doit pas dependre de l endroit d ou on l appelle. `grep -E` fait
+# entrer `e` dans la plage `[a-z]` sous une locale francaise et l en sort sous `C` : le meme titre
+# passait en local et echouait en CI (#4456). `C.UTF-8` fixe les deux : collation deterministe, et
+# les octets multi-octets restent lisibles la ou le motif en a besoin.
+export LC_ALL=C.UTF-8
 TITRE="${1-}"
 
 # Le glyphe se CONSTRUIT plutôt que de s'écrire, pour que ce fichier n'en porte aucun : c'est
@@ -66,6 +72,10 @@ if [ "${TITRE}" = "--auto-test" ]; then
     verifie 0 "fix(passage): le point C3 et le carre A1 sont distincts" "un code de point ne déclenche pas"
     verifie 0 "feat(cli): le n° 4 est traite" "un numéro ne déclenche pas"
     verifie 0 "test(fixture): deux semeurs prennent l'entree legere" "une élision correcte ne déclenche pas"
+    # Le SCOPE est en ASCII, et ce cas le tient contre la locale : `[a-z0-9._-]` fait entrer
+    # « e » sous une locale francaise et l en sort sous `C`. Sans l epinglage en tete de ce
+    # fichier, ce cas passerait en local et rougirait en CI - ce qui est arrive (#4456).
+    verifie 1 "feat(m$(printf '\u00e9')thode): sujet" "un scope hors ASCII est refuse, quelle que soit la locale"
 
     echo
     if [ "${rouges}" -eq 1 ]; then verbe=DOIT; else verbe=DOIVENT; fi
