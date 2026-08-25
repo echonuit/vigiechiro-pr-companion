@@ -35,10 +35,16 @@ population. La ligne d origine leur donne un garde dedie ; ce depot ne l a pas e
 c est une CECITE, pas une exemption : rien ici ne remarque un recit qui descend de la javadoc vers
 le corps de la methode.
 
-**Ce qu il ne compte pas non plus, et c est une decision.** La javadoc des TESTS. La ligne d origine
-l a fait entrer dans la meme population ; ici le corpus reste la production, parce qu un garde DOIT
-declarer ce qu il verifie (article A2) et que sa propre javadoc est cette declaration. Etendre le
-compte aux tests est une decision qui n a pas ete prise.
+**Les TESTS sont dans la meme population**, et ce n a pas toujours ete le cas. Le corpus s est
+d abord borne a la production, au motif qu un garde DOIT declarer ce qu il verifie (article A2) et
+que sa javadoc est cette declaration. Le motif ne tenait pas : un commentaire de classe de test se
+lit comme un autre et vieillit pareil, et l exclure du compte revenait a dire qu il n a pas a etre
+juste.
+
+Les gardes ecrits en Java - `ContrasteAATest`, `DoublonsFeuillesDeStyleTest`,
+`DocumentationAJourTest` - gardent leur declaration entiere : elle est du CONTRAT, et le registre
+`4359-blocs-relus.tsv` est fait pour l inscrire une fois lue. Une exception qui sort du corpus est
+un angle mort ; une exception INSCRITE reste comptee et se relit.
 
 **Pourquoi « probable » et non « certaine ».** La longueur se compte, ce qu il faut couper ne se
 decide pas mecaniquement. Trois natures se melangent dans un bloc trop long, et seule la lecture les
@@ -59,6 +65,11 @@ ADR = "4359"
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 PRODUCTION = RACINE / "src" / "main" / "java"
+TESTS = RACINE / "src" / "test" / "java"
+# Les DEUX arbres Java. Un commentaire de classe de test se lit comme un autre, et vieillit
+# pareil : rien ne justifiait de le sortir du compte. Les distributions des deux arbres sont du
+# reste les memes - 9e decile a 14 pour les types, a 5 pour les methodes - donc les memes seuils.
+RACINES = (PRODUCTION, TESTS)
 
 # Au-dela, chaque ligne de prose compte une. Chaque seuil est pose au-dessus du 9e decile de sa
 # nature, mesure sur le depot : il laisse passer le regime normal et signale ce qui en sort.
@@ -194,9 +205,9 @@ def suspects(racine: pathlib.Path = None) -> list[str]:
     Un bloc sous le seuil de sa nature ne coute rien : une classe difficile merite un paragraphe,
     un accesseur non.
     """
-    racine = racine or PRODUCTION
+    racines = [racine] if racine else list(RACINES)
     trouves = []
-    for f in sorted(racine.rglob("*.java")):
+    for f in sorted(f for r in racines for f in r.rglob("*.java")):
         # Le chemin est relatif a la RACINE du depot, et non a l arbre : sans quoi un suspect ne
         # dirait pas de quel arbre il vient, et deux homonymes se confondraient. Les temoins, eux,
         # montent un arbre jetable et n ont que leur nom de fichier.
