@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Applique dans les ADR les resserrements de cliquet que le rapport a détectés.
+"""Applique dans les ADR les resserrements de cliquet, et repose les balises sur ce qui est mesuré.
+
+**Deux gestes, et les confondre coûte cher.** RESORBER descend un seuil ; MESURER rend la prose
+conforme à l'en-tête. La version précédente ne faisait le second qu'à l'intérieur du premier :
+une valeur qui MONTE - un corpus qu'on élargit, un garde qui cesse d'être aveugle - ou qui ne
+bouge pas laissait ses balises telles quelles, et le script annonçait « 0 cliquet resserré », ce
+qui se lit comme « rien à écrire ». Trois chiffres périmés en une seule journée, chaque fois vus
+par `DocumentationAJourTest`, donc par un test Java, donc après le seul job que personne ne
+relance quand il expire (#4469).
 
 C'est la calibration « sur la base de la réalité » : quand le dépôt fait mieux que la marge, on ramène
 le cliquet à la réalité, jamais l'inverse. Desserrer reste un geste humain, explicite, dans une PR -
@@ -71,6 +79,37 @@ def _formate(ancien: str, valeur: int) -> str:
     return f"{valeur:,}".replace(",", " ") if " " in ancien else str(valeur)
 
 
+SEUIL_DECLARE = re.compile(r"^(?:ratchet|floor):\s*(\d+)\s*$", re.M)
+
+
+def aligner_les_balises() -> list[str]:
+    """Repose chaque balise sur la valeur que SON ADR declare, quel que soit le sens du mouvement.
+
+    Resserrer et MESURER sont deux gestes, et les confondre a laisse trois chiffres perimes derriere
+    en une seule journee (#4469). L ancienne version n ecrivait les balises que dans la boucle des
+    resserrements : une valeur qui MONTE - un corpus qu on elargit, un garde qui cesse d etre aveugle
+    - ou qui ne bouge pas laissait ses balises telles quelles, et le script annoncait « 0 cliquet
+    resserre », ce qui se lit comme « rien a ecrire ».
+
+    Cette passe-ci ne juge rien : elle rend la prose conforme a l en-tete. C est
+    `DocumentationAJourTest` qui refusait l ecart, donc un test Java, donc apres le seul job que
+    personne ne relance quand il expire.
+    """
+    faits = []
+    for fichier in sorted(DECISIONS.glob("[0-9]*.md")):
+        texte = fichier.read_text(encoding="utf-8")
+        cle = cle_de(texte)
+        if not cle:
+            continue
+        declare = SEUIL_DECLARE.search(texte)
+        if not declare:
+            continue
+        touches = ecrire_les_balises(cle, int(declare.group(1)))
+        if touches:
+            faits.append(f"balise `{cle}` reposee a {declare.group(1)} dans {len(touches)} fichier(s)")
+    return faits
+
+
 def appliquer() -> list[str]:
     cliquets, _ = rapport.collecter()
     faits = []
@@ -105,4 +144,9 @@ if __name__ == "__main__":
     faits = appliquer()
     for f in faits:
         print(f)
-    print(f"\n{len(faits)} cliquet(s) resserré(s).")
+    # MESURER vient apres RESORBER, et se dit a part : une passe qui ne resserre rien peut avoir
+    # des balises a reposer, et « 0 cliquet resserré » ne doit plus se lire comme « rien à faire ».
+    reposees = aligner_les_balises()
+    for f in reposees:
+        print(f)
+    print(f"\n{len(faits)} cliquet(s) resserré(s), {len(reposees)} balise(s) reposée(s).")
