@@ -69,10 +69,14 @@ def sans_encart(texte: str) -> str:
     return texte[:debut] + "\n".join(lignes[fin:])
 
 
-def suspects() -> list[str]:
-    """Les ADR dont le corps depasse le seuil, de la plus longue a la plus courte."""
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
+    """Les ADR dont le corps depasse le seuil, de la plus longue a la plus courte.
+
+    `racine` n existe que pour le temoin, qui a besoin d un corpus qu il maitrise : mesurer sur le
+    depot ne separerait pas ce que le garde compte de ce qu il epargne.
+    """
     mesures = []
-    for f in sorted(DECISIONS.glob("*.md")):
+    for f in sorted((racine or DECISIONS).glob("*.md")):
         if f.name in RESERVES:
             continue
         mots = len(corps(f).split())

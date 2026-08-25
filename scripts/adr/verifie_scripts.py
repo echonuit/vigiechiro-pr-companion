@@ -663,8 +663,37 @@ def test_4476_javadoc_raconte_son_extraction() -> None:
 
 
 def test_4477_longueur_des_adr() -> None:
+    """Le temoin d origine n affirmait que `isinstance(suspects(), list)`.
+
+    Un garde qui aurait cesse de detecter le passait, ce qui est exactement le faux vert que cette
+    suite existe pour interdire - et la phrase de cloture affirmait pourtant que les scripts
+    detectent leur violation temoin. Trouve par mutation en passe 6 : neutraliser la detection ne
+    faisait pas rougir la suite.
+
+    Quatre fixtures pour quatre comportements, et un compte EXACT de 1. Ce que le garde EPARGNE est
+    ce qui se casse : un en-tete OKF bavard ou un encart de revision long feraient rougir une ADR
+    dont la DECISION tient en trois lignes, et c est la decision que le seuil borne.
+    """
     m = _charge("4477-longueur-des-adr.py")
-    _verifie("4477 le depot rend un compte fini", isinstance(m.suspects(), list), True)
+    entete = "---\ntype: adr\ntitle: \"Une decision\"\n---\n"
+    long_ = " ".join(f"mot{i}" for i in range(m.SEUIL + 100))
+    court = " ".join(f"mot{i}" for i in range(100))
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(racine, "0001-longue.md", entete + "# Titre\n\n" + long_ + "\n")
+        _ecrire(racine, "0002-courte.md", entete + "# Titre\n\n" + court + "\n")
+        # L encart de revision est retire AVANT la mesure : ses lignes sont indentees de quatre
+        # espaces, et l admonition s arrete a la premiere ligne non indentee.
+        encart = m.ENCART + "\n" + "\n".join("    " + l for l in long_.split(" "))
+        _ecrire(racine, "0003-encart.md", entete + "# Titre\n\n" + encart + "\n\n" + court + "\n")
+        # Le sommaire et le journal sont reserves : ils ne portent pas de decision.
+        _ecrire(racine, "index.md", entete + "# Sommaire\n\n" + long_ + "\n")
+        n = len(m.suspects(racine=racine))
+        _verifie(
+            "4477 compte l ADR longue, epargne la courte, l encart de revision et le sommaire",
+            n,
+            1,
+        )
 
 
 def test_rapport_et_resserrement() -> None:
