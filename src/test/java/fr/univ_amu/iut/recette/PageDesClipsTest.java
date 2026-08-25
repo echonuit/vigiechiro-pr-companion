@@ -180,7 +180,11 @@ class PageDesClipsTest {
         for (Path fichier : sessions()) {
             Matcher m = MotifDeCas.CAS.matcher(lire(fichier));
             while (m.find()) {
-                if (m.group(2) != null) {
+                // Le groupe 2 porte désormais TOUTE la suite de marqueurs (#4417), et non le
+                // seul `*perceptif*` : un cas qui déclare son geste passerait pour perceptif si
+                // on se contentait de le tester non nul. C'est le troisième lecteur des
+                // sessions, et MotifDeCas existe pour qu'il ne réinvente pas la lecture.
+                if (MotifDeCas.marqueurs(m.group(2)).containsKey(MotifDeCas.PERCEPTIF)) {
                     perceptifs.add(m.group(1));
                 }
             }
