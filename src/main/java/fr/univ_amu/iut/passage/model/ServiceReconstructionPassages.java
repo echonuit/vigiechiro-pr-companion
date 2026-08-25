@@ -34,29 +34,24 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /// **Reconstruit un passage jamais importé sur cette machine** (#1305, EPIC #1297), à partir de ce que
-/// la plateforme VigieChiro en sait.
+/// VigieChiro en sait.
 ///
-/// Les passages sans audio local forment **deux populations**, et les issues A à G n'en traitaient qu'une :
+/// Deux populations sans audio local : **archivé par purge** (#1300), qu'on a eu puis supprimé et
+/// qui existe en base ; et **jamais local**, dont la participation existe sur la plateforme mais dont
+/// rien n'est en base ici. Ce service traite la seconde.
 ///
-/// 1. **archivé par purge** : on l'a eu, on l'a supprimé (#1300, #1302), le passage existe en base ;
-/// 2. **jamais local** : la participation existe **sur la plateforme** (déposée depuis un autre poste,
-///    avant l'application, ou après une réinstallation) mais **rien** n'est en base ici.
-///
-/// C'est la seconde qui réalise vraiment la promesse du chantier : « voir l'historique de ses passages
-/// même sans avoir conservé les données d'origine ». [#reconstruire] recrée un passage local **en état
-/// archivé** : ses lignes de séquences existent (sans fichier), ses observations sont rapatriées, il se
-/// consulte comme tout passage archivé (#1301) et se réactive si l'utilisateur retrouve ses fichiers
-/// (#1302).
+/// [#reconstruire] recrée un passage local **en état archivé** : ses lignes de séquences existent sans
+/// fichier, ses observations sont rapatriées, il se consulte comme tout archivé (#1301) et se réactive (#1302)
+/// si l'utilisateur retrouve ses fichiers.
 ///
 /// **Pourquoi recréer les séquences.** L'import d'observations rattache chaque ligne à la séquence de
-/// **même nom** et **ignore** celles qu'il ne trouve pas : sans lignes de séquences, un passage
-/// reconstruit n'aurait aucune observation. On les crée donc à partir des `titre` des données
-/// distantes : ce sont exactement les noms de fichiers attendus.
+/// **même nom** et ignore celles qu'il ne trouve pas : sans lignes de séquences, un passage reconstruit
+/// n'aurait aucune observation. Elles viennent des `titre` des données distantes, qui sont exactement
+/// les noms de fichiers attendus.
 ///
 /// **Ce qui manque est dit, pas deviné** ([RapportReconstruction#lacunesConnues]) : ni journal du
-/// capteur, ni relevé climatique, ni séquences non identifiées (le serveur ne les connaît pas), ni
-/// empreintes (elles se posent à l'import local, qui n'a jamais eu lieu). Une réactivation s'appuiera
-/// donc sur la **cascade** (#1309) : noms, durées, et surtout les **cris eux-mêmes**.
+/// capteur, ni relevé climatique, ni séquences non identifiées, ni empreintes. Une réactivation
+/// s'appuiera donc sur la **cascade** (#1309) : noms, durées, et surtout les cris eux-mêmes.
 ///
 /// Les DAO sont construits depuis la [SourceDeDonnees] (fins adaptateurs sans état), comme
 /// `ServiceAuditCoherence` : le constructeur reste court et le service testable sur une base jetable.
@@ -131,9 +126,8 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     /// dont le passage local n'est qu'un **squelette** rapatrié par la synchro (#1707) : point + date, sans
     /// séquences, qu'il reste à **hydrater** (#1710). Chacune dit si son point est déjà connu localement.
     ///
-    /// Depuis #1707, la synchro consomme en squelettes les orphelines « jamais vues » ; sans les inclure
-    /// ici, la liste de reconstruction serait vide juste après une synchro, et les nuits rapatriées
-    /// resteraient inhydratables.
+    /// Les squelettes en font partie : les en exclure viderait la liste de reconstruction juste après une
+    /// synchro, et les nuits rapatriées y resteraient inhydratables.
     ///
     /// @throws RegleMetierException hors connexion, ou si la plateforme est injoignable (avec la cause)
     public List<ParticipationOrpheline> orphelines() {
@@ -160,20 +154,17 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         return parParticipation;
     }
 
-    /// **Rapprocheur de structure** (#1707, EPIC #1662) : à la synchronisation « mes sites », rapatrie sous
-    /// forme de **squelette** (point + date + n°, sans observations) chaque participation de la plateforme
-    /// dont le point est déjà local mais qui n'a **pas encore** de passage ici. Ainsi la synchro ne ramène
-    /// plus seulement les sites, mais aussi l'**historique des nuits** ; l'utilisateur les hydrate ensuite à
-    /// la demande (reconstruction/réactivation, #1710).
+    /// **Rapprocheur de structure** : rapatrie sous forme de **squelette** (point, date, numéro, sans
+    /// observations) chaque participation de la plateforme dont le point est déjà local et qui n'a pas
+    /// encore de passage ici. L'utilisateur les hydrate ensuite à la demande.
     ///
-    /// Contrat **best-effort** du port : ne lève jamais. Hors connexion ou plateforme injoignable, silence
-    /// légitime (le rapprocheur des sites porte déjà le souci dans le même geste). Renvoie un rapport
-    /// seulement s'il y a du neuf à annoncer.
+    /// Contrat **best-effort** du port : ne lève jamais. Hors connexion ou plateforme injoignable, le
+    /// silence est légitime, le rapprocheur des sites portant déjà le souci dans le même geste. Rend un
+    /// rapport seulement s'il y a du neuf à annoncer.
     ///
-    /// **Ordre.** Ne crée un squelette que pour les points **déjà** locaux. Ce rapprocheur est donc en
-    /// [Phase#DEPENDANTE] : la synchro le rejoue **après** le rapprocheur des sites (#1776), si bien qu'un
-    /// site tout juste synchronisé voit ses passages **dès ce tour**. La synchro reste idempotente :
-    /// relancée, elle ne recrée pas ce qui est déjà rattaché.
+    /// **Ordre.** Ne crée un squelette que pour les points **déjà** locaux, d'où [Phase#DEPENDANTE] : la
+    /// synchro le rejoue après le rapprocheur des sites, si bien qu'un site tout juste synchronisé voit
+    /// ses passages dès ce tour. Relancée, elle ne recrée pas ce qui est déjà rattaché.
     @Override
     public Optional<RapportSynchro> synchroniser(ClientVigieChiro client) {
         return synchroniser(client, progres -> {}, JetonAnnulation.neutre());
@@ -292,31 +283,18 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         return Phase.DEPENDANTE;
     }
 
-    /// Crée un passage archivé pour chaque participation **sans passage local**, dont le point est déjà
-    /// local et la nuit datable ; les autres sont **ignorées** (déjà rapatriées, ou pas encore situables).
+    /// Amène chaque nuit du compte au niveau **contenu**, en deux temps.
     ///
-    /// Depuis #1814, la synchro remonte l'**identité** de la nuit (enregistreur, météo, micro, dateFin) et
-    /// pas seulement sa structure : elle paie un **appel de détail par nuit nouvelle**. En trois temps :
+    /// **Créer** d'abord les nuits absentes : une participation sans passage local, dont le point est déjà
+    /// local et la nuit datable. Les autres sont ignorées, déjà rapatriées ou pas encore situables. En
+    /// trois passes : les candidats (lectures), leur détail par nuit nouvelle (#1814), via
+    /// [PlateformeReconstruction#detailsBestEffort] (best-effort, un détail absent n'écarte pas la nuit),
+    /// puis la création dans l'ordre, pour que [#premierNumeroLibre] s'enchaîne.
     ///
-    /// 1. **candidats** (lectures) : les nuits nouvelles, point + date résolus ;
-    /// 2. **détails** ([PlateformeReconstruction#detailsBestEffort]) : le détail de chaque nuit, best-effort
-    ///    (indisponible → vide, la nuit n'est pas écartée pour autant) ;
-    /// 3. **création** (écritures) : dans l'ordre, pour que [#premierNumeroLibre] s'enchaîne (numéros
-    ///    successifs pour un même point/année), via [CreationPassageArchive#creerNuitRapatriee] : avec
-    ///    identité si le détail est là, repli sur le squelette nu (INCONNU) sinon.
-    ///
-    /// **Depuis #2557, la synchro ne s'arrête plus à la structure** : elle amène chaque nuit au niveau
-    /// **contenu**, en deux temps.
-    ///
-    /// D'abord créer les nuits absentes (ci-dessous). Puis **hydrater toutes celles qui n'ont pas de
-    /// séquences** - les nuits qu'on vient de créer, mais aussi les squelettes **déjà là**. Ce second point
-    /// est celui qui compte : sans lui, le piège de #1814 se rejoue à l'identique. La création saute toute
-    /// nuit ayant déjà un passage local, ce qui rend la synchro idempotente mais condamnerait les nuits
-    /// rapatriées avant ce correctif à rester vides **à vie**. Un second clic doit réparer une base
-    /// existante.
-    ///
-    /// Le balayage lui-même vit dans [HydratationSquelette#completerLesSquelettes] : ce service est au
-    /// plafond God Class (PMD `NcssCount`, déjà franchi une fois par #1814).
+    /// **Hydrater** ensuite toutes les nuits sans séquences, celles qu'on vient de créer **comme les
+    /// squelettes déjà là** : sans ce second point, un squelette rapatrié resterait vide à vie, et un
+    /// second clic doit réparer une base existante. Le balayage vit dans
+    /// [HydratationSquelette#completerLesSquelettes].
     ///
     /// @return ce que le tour a fait des nuits du compte
     BilanTour synchroniserStructure(Consumer<Progression> suivi, JetonAnnulation jeton) {
@@ -414,19 +392,16 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
                 orpheline.idParticipation(), orpheline.numeroCarre(), orpheline.codePoint(), progres, jeton);
     }
 
-    /// **Import groupé** (#1708) : reconstruit **toutes** les nuits de `aTraiter`, l'une après l'autre. Le
-    /// geste - boucle, best-effort par nuit, accumulation d'un bilan - vit **ici**, au service, et les deux
-    /// surfaces (IHM et CLI) l'appellent en ne gardant que leur **rendu** (barres de progression / lignes) via
-    /// les rappels. C'est l'harmonisation de la passe 7 : un seul endroit porte la **politique best-effort**.
+    /// **Import groupé** : reconstruit toutes les nuits de `aTraiter`, l'une après l'autre. La boucle et
+    /// la politique best-effort vivent ici ; les deux surfaces n'en gardent que leur rendu, via les rappels.
     ///
-    /// - `progresGlobal` : émis **avant** chaque nuit (« Nuit X / N »), pour la barre du **lot** (IHM) ;
-    /// - `progresParNuit` : émis **pendant** chaque nuit, pour la barre de la **nuit courante** (IHM) ;
-    /// - `issueParNuit` : émis **après** chaque nuit, son issue (reconstruite/ignorée), pour la **ligne** CLI ;
+    /// - `progresGlobal` : émis **avant** chaque nuit, pour la barre du lot ;
+    /// - `progresParNuit` : émis **pendant** chaque nuit, pour la barre de la nuit courante ;
+    /// - `issueParNuit` : émis **après** chaque nuit, son issue, reconstruite ou ignorée ;
     /// - `jeton` : consulté entre chaque nuit et à l'intérieur.
     ///
-    /// **Best-effort par nuit** : une nuit qui échoue pour une raison métier est **comptée « ignorée » et
-    /// sautée**, le lot continue. Une **annulation** ([OperationAnnuleeException]) arrête tout le lot (geste
-    /// délibéré). Réutilise [#reconstruire] par nuit : aucune logique d'import dupliquée.
+    /// **Best-effort par nuit** : une nuit qui échoue pour une raison métier est comptée « ignorée » et
+    /// sautée, le lot continue. Une annulation ([OperationAnnuleeException]) arrête tout le lot.
     public BilanReconstructionGroupe reconstruireTout(
             List<ParticipationOrpheline> aTraiter,
             Consumer<Progression> progresGlobal,
@@ -471,10 +446,8 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     /// (best-effort : point d'écoute inconnu ici, analyse non terminée), les totaux de séquences et
     /// d'observations rapatriées, et si le lot a été **interrompu**.
     ///
-    /// Le lot **rend son bilan même interrompu** (harmonisation, clôture du lot 3). Il levait auparavant,
-    /// si bien qu'annuler pendant la quatrième nuit affichait « aucune nuit n'a été complétée » alors que
-    /// trois l'étaient, sans recharger la liste : les trois restaient offertes à la complétion. Chaque nuit
-    /// est **soit avant, soit après** - même contrat que
+    /// Le lot **rend son bilan même interrompu** : chaque nuit est soit avant, soit après l'arrêt, et ce
+    /// qui a été fait avant est annoncé. Même contrat que
     /// [fr.univ_amu.iut.commun.model.MoteurTraitementGroupe].
     public record BilanReconstructionGroupe(
             int reussies, int ignorees, long sequences, long observations, boolean interrompu) {}
@@ -593,23 +566,16 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
 
     // --- Lectures distantes et helpers -------------------------------------------------------------
 
-    /// Si la participation est déjà rattachée à un passage local, deux cas (#1710) :
+    /// Si la participation est déjà rattachée à un passage local, deux cas :
     ///
-    /// - **squelette** (rapatrié par la synchro #1707, sans séquence) : on le **complète en place**, par le
-    ///   même geste que la réactivation ([HydratationSquelette]) ;
+    /// - **squelette**, sans séquence : on le **complète en place**, par le même geste que la
+    ///   réactivation ([HydratationSquelette]) ;
     /// - **déjà pourvu** de son contenu : il n'y a rien à compléter, on refuse.
     ///
-    /// ## Pourquoi ce n'est plus un delete + recreate (#2554, passe 7)
-    ///
-    /// Jusqu'ici, un squelette était **supprimé** puis recréé depuis la plateforme. C'était défendable
-    /// quand un squelette ne portait rien : ce n'est plus vrai. Il peut porter des **saisies manuelles**
-    /// que la plateforme ignore - heures de nuit corrigées (#1892, le seul cas où l'application les rend
-    /// modifiables), n° de série (#1828), météo (#1688) - et le geste s'appelle désormais « Compléter »,
-    /// ce qui promet précisément de ne pas les perdre.
-    ///
-    /// Deux gestes agissaient donc sur la même nuit avec des politiques **opposées** : « Réactiver ce
-    /// passage » hydratait en place pour préserver ces saisies, « Compléter cette nuit » les écrasait.
-    /// L'identifiant du passage changeait en plus sous un écran éventuellement ouvert.
+    /// Compléter en place, et non supprimer puis recréer : un squelette peut porter des **saisies
+    /// manuelles** que la plateforme ignore (#2554) : heures de nuit corrigées (#1892), numéro de série
+    /// (#1828), météo (#1688). Le geste
+    /// s'appelle « Compléter », ce qui promet de ne pas les perdre.
     private Optional<RapportReconstruction> completerSiSquelette(
             String idParticipation, Consumer<Progression> progres, JetonAnnulation jeton) {
         Optional<Long> idPassageLie = passageRattache(idParticipation);
