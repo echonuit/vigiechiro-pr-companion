@@ -11,7 +11,7 @@ enforced_by:
   - "scripts/adr/4359-blocs-relus.py"
 loupe:
   - "scripts/adr/loupe-4359-javadoc-vieillie.py"
-ratchet: 2873
+ratchet: 891
 inv_key: cliquet-javadoc
 verified:
   - by: machine:suspects
@@ -61,11 +61,29 @@ qui est garanti. Elle s'adresse à qui appelle, pas à qui a écrit.
 
 **L'ADR dit pourquoi**, et la javadoc la **cite** au lieu de la redire.
 
-Le seuil est de **8 lignes de prose** par bloc, et le compte est en **lignes au-delà** : un bloc de
-huit lignes ou moins ne coûte rien, une classe difficile méritant un paragraphe. Le grain de la
-ligne a été choisi après coup, au grain du **bloc** un bloc de 50 lignes réécrit en 22 ne bougeant
-pas le compte, ce qui poussait à couper du **contrat** pour passer sous le seuil. Le cliquet descend
-par tranches, chaque bloc **lu**.
+**Le seuil dépend de ce que le bloc surmonte**, et le compte est en **lignes au-delà**. Un seuil
+unique mesurait mal : c'est dans la javadoc de classe que le pourquoi a sa place, et un seuil taillé
+pour une méthode l'y comptait comme de la dette.
+
+| nature | blocs | médiane | 9ᵉ décile | seuil |
+|---|---:|---:|---:|---:|
+| type (classe, record, enum, interface) | 1 411 | 7 | 14 | **15** |
+| méthode | 4 809 | 2 | 5 | **8** |
+| champ | 836 | 2 | 3 | **8** |
+| constante d'enum | 127 | 1 | 3 | **8** |
+| autre | 38 | 2 | 4 | **8** |
+
+Chaque seuil est posé **au-dessus du 9ᵉ décile de sa nature** : il laisse passer le régime normal du
+dépôt et ne signale que ce qui en sort. Un seuil de 8 sur les types signalait **495** blocs ici,
+contre **104** au seuil de 15 : quatre blocs sur cinq relevaient du régime normal d'une classe.
+
+Ces seuils viennent de la ligne d'origine. Ils sont repris parce que la distribution mesurée **ici**
+les confirme - 9ᵉ décile à 14 pour les types, à 5 pour les méthodes - et non parce qu'ils y étaient.
+Deux corpus indépendants tombent au même endroit.
+
+Le grain de la **ligne** a été choisi après coup : au grain du bloc, un bloc de 50 lignes réécrit en
+22 ne bougeait pas le compte, ce qui poussait à couper du **contrat** pour passer sous le seuil. Le
+cliquet descend par tranches, chaque bloc **lu**.
 
 ## Conséquences
 
@@ -77,7 +95,7 @@ tenir une autre.
 mécaniquement. Un record de trente champs n'est pas un suspect : les étiquettes de contrat sont
 exclues, avec leurs suites, et deux cas du banc le tiennent.
 
-**Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut **<!--inv:cliquet-javadoc-->2 873<!--/inv-->** sur 669 blocs
+**Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut **<!--inv:cliquet-javadoc-->891<!--/inv-->** sur 669 blocs
 dans 545 fichiers après trois tranches (#4397, #4401, #4424). Le registre attendu est
 écrit dans `CONTRIBUTING.md` : il n'existait nulle part.
 

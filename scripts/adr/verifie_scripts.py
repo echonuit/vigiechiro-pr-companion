@@ -400,18 +400,33 @@ def test_4359_javadoc_narratif() -> None:
     m = _charge("4359-javadoc-narratif.py")
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
-        # Trois fixtures pour trois comportements, et un compte EXACT qui les separe. Un temoin
+        # Quatre fixtures pour quatre comportements, et un compte EXACT qui les separe. Un temoin
         # unique dirait « il detecte » sans dire ce qu il epargne, or c est l epargne qui se casse :
         # compter les etiquettes de contrat comme de la prose penaliserait un record bien documente,
         # ce que l ADR refuse explicitement.
-        long_ = "\n".join(f"/// Ligne {i}." for i in range(m.SEUIL + 3))
-        court = "\n".join(f"/// Ligne {i}." for i in range(m.SEUIL))
-        contrat = "\n".join(f"/// @param p{i} le parametre {i}" for i in range(m.SEUIL + 5))
+        #
+        # Le QUATRIEME cas est celui du seuil PAR NATURE, et il est le plus fragile : le meme bloc,
+        # au meme nombre de lignes, doit compter au-dessus d une methode et ne rien couter au-dessus
+        # d une classe. Un seuil redevenu unique le ferait rougir des deux cotes.
+        sur_type = m.SEUILS["type"]
+        sur_methode = m.SEUILS["methode"]
+        long_ = "\n".join(f"/// Ligne {i}." for i in range(sur_type + 3))
+        court = "\n".join(f"/// Ligne {i}." for i in range(sur_type))
+        contrat = "\n".join(f"/// @param p{i} le parametre {i}" for i in range(sur_type + 5))
+        entre_deux = "\n".join(f"/// Ligne {i}." for i in range(sur_methode + 2))
         _ecrire(racine, "fr/univ_amu/iut/a/Bavard.java", long_ + "\nclass Bavard {}\n")
         _ecrire(racine, "fr/univ_amu/iut/a/Sobre.java", court + "\nclass Sobre {}\n")
         _ecrire(racine, "fr/univ_amu/iut/a/Contrat.java", contrat + "\nclass Contrat {}\n")
+        _ecrire(racine, "fr/univ_amu/iut/a/SousClasse.java", entre_deux + "\nclass SousClasse {}\n")
         n = len(m.suspects(racine=racine))
-        _verifie("4359 compte la prose au-dela du seuil, epargne le bloc court et les etiquettes", n, 3)
+        _verifie("4359 compte au-dela du seuil, epargne le bloc court et les etiquettes", n, 3)
+
+        # Le MEME bloc, pose au-dessus d une methode : il coute, la ou il ne coutait rien au-dessus
+        # d une classe. C est tout ce que le seuil par nature apporte, et rien d autre ne le tient.
+        _ecrire(racine, "fr/univ_amu/iut/a/SousClasse.java",
+                "class SousClasse {\n" + entre_deux + "\n    void faire() {}\n}\n")
+        n = len(m.suspects(racine=racine))
+        _verifie("4359 compte au-dessus d une methode ce qu il epargne au-dessus d une classe", n, 5)
 
 
 def test_4366_avertissement_en_pictogramme() -> None:
