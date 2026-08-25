@@ -9,6 +9,7 @@ verification: probable
 enforced_by:
   - "scripts/adr/2843-tiret-cadratin.py"
 ratchet: 1
+inv_key: cliquet-cadratin
 verified:
   - by: machine:suspects
     at: 2026-07-29

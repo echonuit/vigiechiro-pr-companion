@@ -9,6 +9,7 @@ verification: probable
 enforced_by:
   - "scripts/adr/4359-javadoc-narratif.py"
 ratchet: 3248
+inv_key: cliquet-javadoc
 verified:
   - by: machine:suspects
     at: 2026-08-24

@@ -921,12 +921,7 @@ class DocumentationAJourTest {
             "criteres-analyse",
             "criteres-activite",
             "criteres-multisite",
-            "criteres-audit",
-            "cliquet-javadoc",
-            "cliquet-pictogramme",
-            "cliquet-heuristique",
-            "cliquet-cadratin",
-            "plancher-renvois");
+            "criteres-audit");
 
     /// Les seuils declares par une ADR dans son en-tete OKF, par cle d'inventaire (#4392).
     ///
@@ -938,12 +933,44 @@ class DocumentationAJourTest {
     /// La valeur lue est le CHAMP de l'en-tete, pas ce que le garde compte aujourd'hui : c'est
     /// exactement ce qu'on veut. Un garde qui compterait moins que son cliquet rend « a-resserrer »,
     /// et la prose doit annoncer le seuil en vigueur, pas la mesure du jour.
-    private static final Map<String, String> SEUILS_D_ADR = Map.of(
-            "cliquet-javadoc", "4359:ratchet",
-            "cliquet-pictogramme", "4366:ratchet",
-            "cliquet-heuristique", "4342:ratchet",
-            "cliquet-cadratin", "2843:ratchet",
-            "plancher-renvois", "4395:floor");
+    /// La cle de balise qu une ADR declare pour SA valeur, dans son en-tete.
+    private static final Pattern CLE_BALISE_ADR = Pattern.compile("^inv_key: ([a-z-]+)$", Pattern.MULTILINE);
+
+    /// Le seuil declare par une ADR : `ratchet` pour un cliquet, `floor` pour un plancher.
+    private static final Pattern SEUIL_ADR = Pattern.compile("^(?:ratchet|floor): (\\d+)$", Pattern.MULTILINE);
+
+    /// Les seuils declares par les ADR, par cle d inventaire, DERIVES de leurs en-tetes (#4407).
+    ///
+    /// La carte n est plus ecrite ici. Chaque ADR declare sa propre cle dans son champ `inv_key`, a
+    /// cote du seuil, et c est la meme source pour `resserre_cliquets.py`, qui ECRIT la valeur, et
+    /// pour ce test, qui la VERIFIE.
+    ///
+    /// Tenue a deux endroits, elle a coute exactement ce qu on pouvait prevoir : le script ne
+    /// connaissait que l en-tete, un resserrement a laisse trois balises derriere lui, et son compte
+    /// rendu annoncait « 1 cliquet resserre » - un vert qui se lit « c est fait ».
+    private static Map<String, Integer> seuilsDeclares() throws IOException {
+        Map<String, Integer> seuils = new java.util.LinkedHashMap<>();
+        try (Stream<Path> fichiers = Files.list(Path.of("dev-docs", "decisions"))) {
+            for (Path adr : fichiers.filter(f -> f.getFileName().toString().endsWith(".md"))
+                    .toList()) {
+                String entete = enteteDe(lire(adr));
+                Matcher cle = CLE_BALISE_ADR.matcher(entete);
+                Matcher seuil = SEUIL_ADR.matcher(entete);
+                if (cle.find() && seuil.find()) {
+                    seuils.put(cle.group(1), Integer.parseInt(seuil.group(1)));
+                }
+            }
+        }
+        return seuils;
+    }
+
+    /// L en-tete YAML d une ADR, ou une chaine vide. Meme borne que `scripts/adr/_commun.py` : une
+    /// valeur qui ressemblerait a un champ, plus bas dans la prose, n est pas une declaration.
+    private static String enteteDe(String texte) {
+        Matcher entete =
+                Pattern.compile("\\A---\\n(.*?)\\n---\\n", Pattern.DOTALL).matcher(texte);
+        return entete.find() ? entete.group(1) : "";
+    }
 
     /// Les catalogues de critères de filtre (#3105), par clé d'inventaire. Chaque écran à barre de
     /// filtres ancre son décompte dans sa fiche : sans cela, un critère ajouté au code reste invisible
@@ -990,7 +1017,7 @@ class DocumentationAJourTest {
             while (balise.find()) {
                 String cle = balise.group(1);
                 int annonce = Integer.parseInt(balise.group(2).replace(" ", ""));
-                if (!CLES_INVENTAIRE.contains(cle)) {
+                if (!CLES_INVENTAIRE.contains(cle) && !seuilsDeclares().containsKey(cle)) {
                     verifs.assertThat(CLES_INVENTAIRE)
                             .as("%s : clé d'inventaire inconnue « %s »", fichier, cle)
                             .contains(cle);
@@ -1007,10 +1034,13 @@ class DocumentationAJourTest {
                         .isEqualTo(reel);
             }
         }
+        Set<String> toutesLesCles = new TreeSet<>(CLES_INVENTAIRE);
+        toutesLesCles.addAll(seuilsDeclares().keySet());
         verifs.assertThat(clesRencontrees)
                 .as("Chaque inventaire vérifiable doit rester ancré par au moins une balise dans la doc,"
-                        + " sinon la garde ne protège plus rien.")
-                .containsAll(CLES_INVENTAIRE);
+                        + " sinon la garde ne protège plus rien. Les seuils déclarés par une ADR (`inv_key`)"
+                        + " en font partie sans avoir à être réinscrits ici.")
+                .containsAll(toutesLesCles);
         verifs.assertAll();
     }
 
@@ -1058,36 +1088,10 @@ class DocumentationAJourTest {
                 (int) fichiersDe(Path.of("docs", "ecrans"), nom -> nom.endsWith(".md") && !"index.md".equals(nom));
             case String catalogue
             when CATALOGUES_CRITERES.containsKey(catalogue) -> criteresDuCatalogue(CATALOGUES_CRITERES.get(catalogue));
-            case String seuil when SEUILS_D_ADR.containsKey(seuil) -> seuilDeclare(SEUILS_D_ADR.get(seuil));
+            case String seuil
+            when seuilsDeclares().containsKey(seuil) -> seuilsDeclares().get(seuil);
             default -> throw new AssertionError("clé d'inventaire inconnue : " + cle);
         };
-    }
-
-    /// Le seuil qu'une ADR declare dans son en-tete OKF, designe par « numero:champ ».
-    ///
-    /// Lit le champ dans le PREMIER bloc `---` du fichier, et nulle part ailleurs : une valeur qui
-    /// ressemblerait a un champ, plus bas dans la prose, n'est pas une declaration. C'est la meme
-    /// borne que `scripts/adr/_commun.py`, pour que les deux lisent le meme endroit.
-    private static int seuilDeclare(String designation) throws IOException {
-        String[] parts = designation.split(":", 2);
-        Path adr;
-        try (Stream<Path> fichiers = Files.list(Path.of("dev-docs", "decisions"))) {
-            adr = fichiers.filter(f -> f.getFileName().toString().startsWith(parts[0] + "-"))
-                    .findFirst()
-                    .orElseThrow(() -> new AssertionError("ADR " + parts[0] + " introuvable"));
-        }
-        String texte = lire(adr);
-        Matcher entete =
-                Pattern.compile("\\A---\\n(.*?)\\n---\\n", Pattern.DOTALL).matcher(texte);
-        if (!entete.find()) {
-            throw new AssertionError("ADR " + parts[0] + " n'a pas d'en-tete analysable");
-        }
-        Matcher champ = Pattern.compile("^" + parts[1] + ": *(\\d+) *$", Pattern.MULTILINE)
-                .matcher(entete.group(1));
-        if (!champ.find()) {
-            throw new AssertionError("ADR " + parts[0] + " ne declare pas de champ « " + parts[1] + " »");
-        }
-        return Integer.parseInt(champ.group(1));
     }
 
     /// Les tables du schéma **courant**, obtenues en appliquant les migrations puis en interrogeant

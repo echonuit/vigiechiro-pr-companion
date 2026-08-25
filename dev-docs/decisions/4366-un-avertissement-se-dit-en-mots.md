@@ -10,6 +10,7 @@ verification: probable
 enforced_by:
   - "scripts/adr/4366-avertissement-en-pictogramme.py"
 ratchet: 1477
+inv_key: cliquet-pictogramme
 verified:
   - by: machine:suspects
     at: 2026-08-24
