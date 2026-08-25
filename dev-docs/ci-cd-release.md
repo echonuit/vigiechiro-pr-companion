@@ -575,6 +575,9 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `4472-commentaire-en-corps.py` | les blocs de `//` qui débordent dans un corps de méthode, population que le cliquet 4359 ne voit pas | `lint.yml` (cliquets ADR, autotest dédié) |
 | `loupe-4472-densite-de-commentaire.py` | la densité de commentaire par classe et par méthode ; signale, ne bloque pas | `adr-rapport.yml` |
 | `4468-javadoc-non-relue.py` | les fichiers Java dont la javadoc n'a jamais été relue, ou l'a été puis réécrite : l'empreinte du manifeste `scripts/methode/relus.txt` en fait foi | `lint.yml` (cliquets ADR, autotest dédié) |
+| `4475-stage-non-dimensionne.py` | un test TestFX qui pose une scène dimensionnée sans faire suivre son stage, alors que le stage primaire est partagé dans un fork | `lint.yml` (cliquets ADR) |
+| `4476-javadoc-raconte-son-extraction.py` | une javadoc qui nomme dans la même phrase le verbe d'extraction et l'outil d'analyse qui l'a exigée | `lint.yml` (cliquets ADR) |
+| `4477-longueur-des-adr.py` | une ADR qui raconte plus que sa décision et l'incident qui l'a produite | `lint.yml` (cliquets ADR) |
 | `verifie-epinglage.sh` | actions figées sur un SHA, aucune divergence de version | `lint.yml` |
 | `verifie-jeton.sh` | aucun jeton VigieChiro en clair | `lint.yml` |
 | `check-captures.sh` | chaque vue a une capture, chaque capture existe et est présentée | `lint.yml` |
