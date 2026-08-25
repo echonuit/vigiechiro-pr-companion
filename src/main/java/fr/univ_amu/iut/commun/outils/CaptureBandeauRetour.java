@@ -19,18 +19,10 @@ import javafx.scene.layout.VBox;
 
 /// Aperçus du **bandeau de retour** portant un message *venu d'ailleurs* (#2852).
 ///
-/// ## Pourquoi ces aperçus manquaient
-///
-/// [#2076](https://github.com/echonuit/vigiechiro-pr-companion/issues/2076) puis
-/// [#2841](https://github.com/echonuit/vigiechiro-pr-companion/issues/2841) ont corrigé vingt-neuf
-/// appels pour qu'une exception arrive dans le bandeau **enrichie du geste attendu** et **bornée**. Sur
-/// cent quatorze aperçus, aucun ne montrait le résultat : les écrans concernés n'étaient capturés qu'en
-/// état nominal, et le seul bandeau capturé portait un message que nous avions écrit nous-mêmes.
-///
-/// Or la borne existe pour un **effet de mise en page**. Le libellé porte `wrapText`, donc rien n'est
-/// tronqué : un long message **enroule**, le bandeau grandit, et il pousse le contenu vers le bas. Un
-/// test peut affirmer que la chaîne fait 240 caractères ; il ne dit pas à quoi ressemble un bandeau de
-/// 240 caractères au-dessus d'une liste.
+/// La borne du message (#2076, #2841) existe pour un **effet de mise en page**. Le libellé porte `wrapText`,
+/// donc rien n'est tronqué : un long message **enroule**, le bandeau grandit, et il pousse le contenu
+/// vers le bas. Un test peut affirmer que la chaîne fait 240 caractères ; il ne dit pas à quoi
+/// ressemble un bandeau de 240 caractères au-dessus d'une liste.
 ///
 /// ## Ce que chaque aperçu montre
 ///
@@ -48,12 +40,9 @@ import javafx.scene.layout.VBox;
 ///
 /// Le contenu sous le bandeau n'est pas décoratif : c'est lui qui rend visible ce que la borne protège.
 ///
-/// ## Ce qui distingue cet outil de [MesureBandeauRetour]
-///
-/// Le mesureur construit le bandeau **à la main** (un `Label` dans un `HBox` portant les bonnes classes)
-/// et relève des hauteurs. Il répond à « de combien ça grandit ». Ces aperçus, eux, passent par le vrai
-/// [BandeauRetour] - donc par sa sévérité, son icône et sa liaison au [RetourOperation] - et répondent à
-/// « est-ce que ça reste lisible ».
+/// [MesureBandeauRetour] construit le bandeau **à la main** et répond à « de combien ça grandit ». Ces
+/// aperçus passent par le vrai [BandeauRetour], donc par sa sévérité, son icône et sa liaison au
+/// [RetourOperation], et répondent à « est-ce que ça reste lisible ».
 ///
 /// Lancement : `./mvnw exec:exec` avec cette classe en `mainClass` (headless, cf. capture-screenshots.sh).
 public final class CaptureBandeauRetour {

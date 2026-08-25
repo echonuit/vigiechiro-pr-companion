@@ -140,28 +140,17 @@ public final class ApercuFx {
     /// reconstruction à l'identique ne garantirait pas (ADR 0025 : une capture passe par le code de
     /// production, elle ne le reconstruit pas).
     ///
-    /// Le menu source **n'est pas altéré** : mesure faite, ajouter des [MenuItem] à un [ContextMenu] ne
-    /// les retire pas de la liste du [MenuButton] d'origine, les deux listes étant indépendantes. Le code
-    /// dont cette méthode est extraite affirmait le contraire (« le menu d'origine s'en trouve vidé, sans
-    /// conséquence : le processus se termine après »), ce qui le rendait inutilisable par un appelant qui
-    /// capture autre chose ensuite - `CaptureMultisite` est précisément dans ce cas. La copie défensive
-    /// et [ApercuFxMenuTest] tiennent la propriété.
+    /// Le menu source **n'est pas altéré**, ce que la copie défensive et [ApercuFxMenuTest] tiennent :
+    /// un appelant peut capturer autre chose ensuite, et `CaptureMultisite` le fait.
     ///
     /// En *headless*, un popup peut ne pas se rendre. La méthode renvoie alors `false` sans rien écrire,
     /// à charge pour l'appelant de le dire et de continuer : un aperçu manquant ne doit pas faire échouer
     /// tout un job de capture.
     ///
-    /// ## La feuille de style suit le menu (#3169, relevé à la passe 8)
-    ///
-    /// Le popup se rend dans la scène de son **hôte**, et cet hôte était une scène nue : aucune règle de
-    /// `design.css` ne s'y appliquait. Tant qu'un menu ne portait que du texte ordinaire, le rendu par
-    /// défaut passait pour juste. Le jour où une entrée a porté un **sens** par sa classe CSS - la valeur
-    /// « hors jeu », grisée et en italique - la capture a montré une entrée strictement identique aux
-    /// autres, sous une légende qui la disait grisée.
-    ///
-    /// Le garde de l'appelant ne pouvait pas le voir : il vérifie que la **classe** est posée, pas que
-    /// quelque chose a changé à l'écran. C'est le même piège que celui des dialogues, dont la méthode
-    /// voisine prend ses feuilles en paramètre depuis longtemps.
+    /// Le popup se rend dans la scène de son **hôte** : les feuilles de style du menu y sont reportées
+    /// (#3169), sans quoi une entrée qui porte son sens par une classe CSS - « hors jeu », grisée et en
+    /// italique - se capture identique aux autres. Un garde d'appelant ne voit pas cet écart : il
+    /// vérifie que la classe est posée, pas que quelque chose a changé à l'écran.
     ///
     /// @param menu le bouton de menu dont on veut montrer le contenu déployé
     /// @param fichier le PNG à écrire

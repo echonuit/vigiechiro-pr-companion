@@ -35,53 +35,14 @@ import javafx.scene.Scene;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Rend l'écran **Synthèse de la nuit** (#2351) hors écran en PNG. La nuit montre **les quatre messages**
-/// que la colonne « Activité » sait écrire, plus le bouclier PNA : une classe avec ses quantiles à côté,
-/// la même classe marquée *(indicatif)* quand la déclinaison est peu fiable, « Pas de seuil pour ce
-/// contexte » quand l'espèce est connue mais pas dans ce contexte, et « Non couvert par le référentiel »
-/// quand elle lui est étrangère. Jamais de cellule vide : l'absence a un sens, et il diffère selon le cas.
-///
-/// ## La nuit est semée, pas fabriquée (#3018)
-///
-/// Cet outil substituait autrefois un `ServiceSynthese` anonyme dont les trois lectures étaient
-/// surchargées : l'écran affichait des lignes écrites en dur, et le DAO qu'on lui passait portait une
-/// source **nulle**. Rien de ce qui est montré ne venait du produit.
-///
-/// ⚠️ Cette substitution cachait une **contradiction** : le contexte passé à l'écran citait le carré
-/// `640380` (Nouvelle-Aquitaine) pendant que les seuils affirmaient « region Corse » et que le site
-/// s'appelait « Étang de Biguglia ». Personne ne pouvait la voir, puisque le service bouchonné ignorait
-/// le carré qu'on lui donnait. La région se **déduit** désormais du carré, et la saison de la nuit.
-///
-/// ## Pourquoi la Provence, et pourquoi 718
-///
-/// **718 contacts de Pipistrelle de Kuhl** n'est pas un nombre de démonstration : c'est la question
-/// fondatrice de l'écran, citée par l'[ADR 2351], dessinée dans la maquette `M-Synthese` et reprise en
-/// tête de la fiche utilisateur. Trois documents s'y appuient, la capture doit donc la **produire**.
-///
-/// Encore faut-il que 718 tombe bien en « Forte », ce qui dépend de la déclinaison : en Corse l'été,
-/// `q98` vaut 518, et 718 la dépasse - l'écran dirait **Très forte**. Le carré est donc en
-/// Bouches-du-Rhône (`13…`, donc `region:Provence-Alpes-Cote dAzur`), seule façon de garder à la fois
-/// le nombre fondateur et la classe que le récit lui associe.
-///
-/// ⚠️ Les quantiles cités par ces trois documents - `Q75 = 480 · Q98 = 1 240` - n'existent **dans aucune
-/// déclinaison** de Pipkuh : ils avaient été inventés pour la maquette. La fiche et la maquette portent
-/// désormais ceux du référentiel réel ; l'ADR 2351, immuable, garde les siens.
-///
-/// ## Pourquoi le printemps (#3051)
-///
-/// Le quatrième message, « Pas de seuil pour ce contexte », n'était montré par aucune capture. Il ne
-/// pouvait pas l'être ici : **aucun** des 98 taxons du référentiel n'est orphelin en
-/// `region:Provence-Alpes-Cote dAzur` / `ete`, tous ayant au moins une ligne `national` qui sert de
-/// repli. L'état existe pourtant, dans 507 combinaisons (taxon, région, saison) - simplement pas
-/// celle-là.
-///
-/// La nuit passe donc au **printemps**, l'un des 25 contextes où les cinq états coexistent **sans**
-/// perdre 718 en « Forte ». Le carré et le site ne bougent pas.
+/// Rend l'écran **Synthèse de la nuit** (#2351) hors écran en PNG. La capture doit montrer **les
+/// quatre messages** que la colonne « Activité » sait écrire, plus le bouclier PNA. Jamais de cellule
+/// vide : l'absence a un sens, et il diffère selon le cas.
 ///
 /// ## Ce que les nombres visent
 ///
-/// Les contacts sont choisis pour tomber dans les bandes du référentiel embarqué, déclinaison
-/// `region:Provence-Alpes-Cote dAzur` / `printemps` - la classe est donc **calculée**, plus décrétée :
+/// Les contacts tombent dans les bandes du référentiel embarqué, déclinaison
+/// `region:Provence-Alpes-Cote dAzur` / `printemps` : la classe est **calculée**, jamais décrétée.
 ///
 /// | Taxon | q25 | q75 | q98 | confiance | contacts | ce que la colonne écrit |
 /// |---|---|---|---|---|---|---|
@@ -91,32 +52,27 @@ import javafx.scene.Scene;
 /// | `Cicorn` Cigale grise | — | — | — | **aucune déclinaison applicable** | 1 | « Pas de seuil pour ce contexte » |
 /// | `Antcho` Antaxie catalane | — | — | — | **absente du référentiel** | 40 | « Non couvert par le référentiel » |
 ///
-/// Deux choix méritent d'être dits.
+/// Le message ne dépend **pas du groupe taxonomique**, contrairement à ce que laisse croire la fiche :
+/// `LigneSynthese.libelleClasse()` se décide sur `referentiel.couvre(codeTaxon)`, donc sur la présence
+/// du code dans le CSV. Une cigale peut dire « Pas de seuil », et c'est ce qu'elle fait ici.
 ///
-/// Le cas *(indicatif)* porte sur un **chiroptère**, et non plus sur une cigale : le référentiel ne parle
-/// que de chauves-souris, et « Forte *(indicatif)* » se lit alors juste sous une « Forte » fiable, ce qui
-/// montre exactement ce que la mention ajoute.
+/// ## Ce qui contraint le carré et la nuit
 ///
-/// La **Cigale grise ne quitte pas la démonstration, elle change de case** : sa seule déclinaison est
-/// `national` / `ete`, donc au printemps plus rien ne la couvre. La même espèce, au même endroit, passe
-/// de « Moyenne (indicatif) » à « Pas de seuil pour ce contexte » parce que la **saison** a changé. C'est
-/// la démonstration la plus courte de ce que le contexte décide.
+/// Les deux constantes se tiennent, et les changer casse la démonstration. Le carré doit être en
+/// **Provence** pour que 718 tombe en « Forte » : en Corse l'été, `q98` vaut 518 et l'écran dirait
+/// « Très forte ». La nuit doit être au **printemps** parce que c'est l'un des 25 contextes où les cinq
+/// états coexistent (#3051) ; en `Provence` / `ete`, aucun des 98 taxons n'est orphelin, et « Pas de
+/// seuil pour ce contexte » ne serait montré par aucune capture.
 ///
-/// Le message ne dépend d'ailleurs **pas du groupe taxonomique**, contrairement à ce que laisse croire la
-/// fiche : `LigneSynthese.libelleClasse()` se décide sur `referentiel.couvre(codeTaxon)`, c'est-à-dire la
-/// présence du code dans le CSV. Une cigale peut donc dire « Pas de seuil », et c'est ce qu'elle fait ici.
-///
-/// ⚠️ Les deux derniers **ne sont pas ceux de l'ancienne démonstration**, et c'est instructif. Elle
-/// montrait une Barbastelle marquée *(indicatif)* et une Sauterelle verte « hors référentiel » : le
-/// référentiel embarqué dit le contraire des deux. La Barbastelle a une déclinaison **nationale d'été
-/// très fiable**, et `ReferentielActivite` s'arrête à la première fiable - elle n'est donc jamais
-/// indicative ; la Sauterelle verte, elle, a bel et bien une déclinaison `region:Corse` / `ete`.
-///
-/// Deux cas d'écran affichés depuis des données que le produit ne peut pas produire. C'est ce que
-/// permet un service bouchonné, et c'est pourquoi il fallait le retirer.
+/// ⚠️ Les quantiles cités par l'[ADR 2351], `Q75 = 480 · Q98 = 1 240`, n'existent dans **aucune**
+/// déclinaison de Pipkuh : ils avaient été inventés pour la maquette. La fiche et `M-Synthese` portent
+/// désormais ceux du référentiel réel ; l'ADR, immuable, garde les siens. Qui compare les trois lira
+/// donc deux jeux de nombres.
 ///
 /// Les codes de taxon suivent la **casse du référentiel** (`Pipkuh`, et non `PIPKUH`) : c'est le piège
 /// relevé à la clôture du lot #2353, où une démo en majuscules montrait un écran sans son repère.
+///
+/// Ce que l'outil ne fait plus, et pourquoi il ne doit pas y revenir : voir #3018.
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureSynthese {
