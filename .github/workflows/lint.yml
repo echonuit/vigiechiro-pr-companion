@@ -329,6 +329,17 @@ jobs:
           chmod +x .github/scripts/verifie-forme-du-jeton.sh
           ./.github/scripts/verifie-forme-du-jeton.sh --auto-test
 
+      - name: La sonde partagée rend un code et ne le juge pas
+        # Les trois appelants la partagent, et leurs verdicts sur un `401` diffèrent - refuser,
+        # avertir, ou conclure au succès. C'est pourquoi seule la MESURE descend ici.
+        #
+        # Le cas central est celui qui vérifie qu'elle NE JUGE PAS : le `run:` d'`api-live.yml`
+        # tourne sous `bash -e`, donc une sonde jugeante ferait échouer son pas sur un jeton expiré,
+        # ce que son tri refuse explicitement. Trouvé par mutation : rien ne le gardait.
+        run: |
+          chmod +x .github/scripts/interroge-le-jeton.sh
+          ./.github/scripts/interroge-le-jeton.sh --auto-test
+
       - name: Le contrôle du jeton sépare ses deux causes
         # ⚠️ Trois verdicts et non deux, et c'est tout l'objet de cet auto-test : « pas 200 » recouvre
         # un jeton mort - on en pose un frais - et une plateforme muette - poser un jeton frais n'y

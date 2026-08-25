@@ -58,15 +58,15 @@ jobs:
             echo "Secret \`VIGIECHIRO_TOKEN\` absent. Le poser : \`gh secret set VIGIECHIRO_TOKEN\` (jeton VigieChiro, validité 14 jours)." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          # ⚠️ `|| statut=000` et surtout PAS `|| echo "000"` : quand la connexion échoue, curl
-          # écrit DÉJÀ « 000 » et sort non nul. Les deux se concaténaient, et l'avertissement
-          # annonçait « HTTP 000000 » (#4328). Le tri restait juste, le nombre affiché non.
+          # La mesure descend dans `interroge-le-jeton.sh`, partagée avec le contrôle du tournage et
+          # sa révocation (#4385). Elle ne juge rien, et c'est ce qui permet de la partager : le
+          # verdict d'un `401` diffère aux trois endroits, et il reste chez chacun.
           #
-          # ⚠️ Cet appel-ci est en ligne dans le workflow : contrairement à ses deux voisins de
-          # `.github/scripts/`, aucun auto-test ne l'exerce, et la correction repose sur la lecture.
-          statut=$(curl -s -o /dev/null -w "%{http_code}" -u "$VIGIECHIRO_TOKEN:" \
-            https://vigiechiro.herokuapp.com/api/v1/moi) || statut=000
-          [ -n "$statut" ] || statut=000
+          # Ce qu'on y gagne : un seul `curl` à corriger. Le défaut du « HTTP 000000 » vivait aux
+          # trois, parce que la ligne avait été recopiée (#4328) - et ici, aucun auto-test ne
+          # l'exerçait. Il en a un, désormais, chez la sonde.
+          chmod +x .github/scripts/interroge-le-jeton.sh
+          statut=$(JETON="$VIGIECHIRO_TOKEN" ./.github/scripts/interroge-le-jeton.sh /moi GET)
           if [ "$statut" = "200" ]; then
             echo "valide=true" >> "$GITHUB_OUTPUT"
           else

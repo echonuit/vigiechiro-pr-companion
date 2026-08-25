@@ -50,6 +50,7 @@
 #         JETON=<jeton> ./.github/scripts/verifie-jeton-vivant.sh
 set -uo pipefail
 
+ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE="${VIGIECHIRO_URL:-https://vigiechiro.herokuapp.com/api/v1}"
 
 # Le verdict, séparé de l'appel : c'est la partie qui porte la règle, donc la seule qu'on puisse
@@ -76,22 +77,13 @@ verdict() { # <code http>
     esac
 }
 
-# L'appel, séparé lui aussi : c'est la seule partie que l'auto-test puisse éprouver, en la lançant
-# contre un port mort de la boucle locale. Rend le code HTTP sur la sortie standard.
+# L'appel descend dans `interroge-le-jeton.sh` (#4385), que les trois appelants partagent. Il rend un
+# code et ne juge rien : le verdict reste ici, parce que les trois n'ont pas le même - un `401`
+# refuse ici, avertit chez `api-live.yml`, et vaut succès pour la révocation.
 #
-# ⚠️ `-o /dev/null` : le corps ne nous apprend rien de plus que le code, et l'imprimer ferait passer la
-# réponse d'une erreur - ou l'identité du compte - dans un journal public.
-#
-# ⚠️ `GET /moi` et rien d'autre : c'est une LECTURE, elle ne consomme pas le jeton et ne touche à
-# aucune donnée. C'est déjà ce qu'`api-live.yml` interroge pour le même départage.
-#
-# ⚠️ `|| code=000` et surtout PAS `|| echo 000` : quand la connexion échoue, curl écrit DÉJÀ « 000 »
-# et sort non nul. Les deux se concaténaient, et le message annonçait « HTTP 000000 ».
+# `GET /moi` est une LECTURE : elle ne consomme pas le jeton et ne touche à aucune donnée.
 interroger() { # -> code http
-    local code
-    code=$(curl -s -o /dev/null -w '%{http_code}' -u "${JETON}:" "${BASE}/moi") || code=000
-    [ -n "${code}" ] || code=000
-    echo "${code}"
+    JETON="${JETON:-}" VIGIECHIRO_URL="${BASE}" "${ICI}/interroge-le-jeton.sh" /moi GET
 }
 
 auto_test() {
@@ -127,15 +119,14 @@ auto_test() {
     essai 403 muette "403 : refus d'une autre nature, on ne conclut pas sur le jeton"
 
 
-    # ⚠️ Le seul cas qui éprouve l'APPEL et non le verdict, et il a servi dès sa première exécution :
-    # le message annonçait « HTTP 000000 » sur une plateforme injoignable. Un port mort de la boucle
-    # locale suffit, et n'a besoin d'aucun réseau pour rougir.
+    # Le cas qui exerçait l'APPEL vit désormais chez `interroge-le-jeton.sh`, avec ceux des deux
+    # autres appelants : c'est là qu'est le code partagé, donc là qu'il doit rougir (#4385).
     total=$((total + 1))
-    obtenu=$(JETON=zzz BASE=http://127.0.0.1:1 interroger)
+    obtenu=$(JETON=zzz VIGIECHIRO_URL=http://127.0.0.1:1 "${ICI}/interroge-le-jeton.sh" /moi GET)
     if [ "${obtenu}" = "000" ]; then
-        printf '  [OK   ] %-62s -> %s\n' "l appel rend un code et un seul quand rien ne répond" "${obtenu}"
+        printf '  [OK   ] %-62s -> %s\n' "la sonde partagée rend bien un code, et un seul" "${obtenu}"
     else
-        printf '  [ÉCHEC] %-62s -> %s (attendu 000)\n' "l appel rend un code et un seul quand rien ne répond" "${obtenu}"
+        printf '  [ÉCHEC] %-62s -> %s (attendu 000)\n' "la sonde partagée rend bien un code, et un seul" "${obtenu}"
         echecs=$((echecs + 1))
     fi
 
