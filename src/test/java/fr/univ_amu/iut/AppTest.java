@@ -41,8 +41,8 @@ class AppTest {
         new App().start(stage);
     }
 
-    /// Les entrées de la mesure, portées par le message d'échec (#3622) : un « 846 attendu >= 1336 » nu
-    /// oblige à deviner ce qui a été mesuré, et c'est ce qui a fait chercher ailleurs pendant des jours.
+    /// Les entrées de la mesure, portées par le message d'échec : un « 846 attendu >= 1336 » nu oblige
+    /// à deviner ce qui a été mesuré.
     private record Mesure(double largeur, double hauteur, double contenu, double champ) {
 
         String detail() {
@@ -50,41 +50,16 @@ class AppTest {
         }
     }
 
-    /// Met la mise en page à la taille d'ouverture **sans toucher au Stage**, et rend le contenu et le
-    /// champ visible du défilement central.
+    /// Met la mise en page à la taille d'ouverture **voulue** et rend le contenu et le champ visible
+    /// du défilement central. Le Stage n'est pas touché.
     ///
-    /// ## Pourquoi on ne redimensionne pas la fenêtre
+    /// ⚠️ Redimensionner le Stage le figerait en dimensionnement explicite, définitivement et pour
+    /// toutes les classes du même fork ; le défaut est revenu quatre fois (#1940, #1967, #4130, #4145).
+    /// Voir l'[ADR
+    /// 4134](../../../../../../dev-docs/decisions/4134-un-banc-n-emprunte-pas-l-etat-partage-il-ouvre-le-sien.md).
     ///
-    /// ⚠️ `setWidth`/`setHeight` font passer un Stage en dimensionnement **explicite** : il cesse
-    /// **définitivement** de s'ajuster aux scènes qu'on lui pose ensuite. Sans conséquence pour une
-    /// fenêtre qu'on jette, mais le Stage du harnais TestFX est **partagé par toutes les classes d'un
-    /// même fork** : figé ici, il fait échouer les suivantes sur des noeuds « invisibles », très loin
-    /// de la cause et seulement selon l'ordre d'exécution.
-    ///
-    /// C'est exactement le défaut de #1940, que #1967 avait prédit revenir : « rien ne l'empêche […]
-    /// aucun test ne rougit si on la réécrit ». Il est revenu par **ici**, en corrigeant #3452 : le
-    /// garde posé alors surveille `Modales`, pas une classe de test qui fige le Stage elle-même.
-    ///
-    /// La mesure porte donc sur la **mise en page** : on redimensionne la racine, on force une passe,
-    /// on lit. C'est ce que #3452 veut savoir - à cette taille, l'accueil coupe-t-il ses activités ? -
-    /// et cela ne laisse aucune trace derrière.
-    ///
-    /// ## À la taille d'ouverture **voulue**, et non à celle que ce poste-ci ouvrirait (#3622)
-    ///
-    /// Le garde lisait `Screen.getPrimary().getVisualBounds()` puis bornait la taille dessus. Son
-    /// attente dépendait donc de l'écran du **runner**, qui n'est ni le poste de développement ni la
-    /// machine de l'utilisateur : deux exécutions du **même commit** ont rendu deux verdicts opposés,
-    /// avec un contenu mesuré à **846 px** ici et à **1336** là - l'écart d'une grille de cartes qui se
-    /// replie sur davantage de rangs faute de largeur.
-    ///
-    /// Ce que le garde veut dire est dans son titre : « à la taille d'ouverture ». C'est une valeur que
-    /// le produit **décide** (`TailleOuverture.LARGEUR_VOULUE`), pas une que la machine lui impose.
-    ///
-    /// ⚠️ Ce que la borne couvrait est **perdu**, et il faut le dire : sur un écran plus petit que la
-    /// taille voulue, l'application ouvre plus petit et l'accueil y est coupé. Mesuré, à 900x600 - le
-    /// minimum autorisé - il ne tient pas. Ce n'est pas un défaut de ce garde-ci, c'est une question de
-    /// produit, qui mérite d'être posée pour elle-même plutôt que tenue par un test dont personne ne
-    /// contrôle l'entrée.
+    /// La taille est celle que le produit **décide** (`TailleOuverture.LARGEUR_VOULUE`), jamais celle
+    /// de l'écran du runner : lue sur l'écran, elle rendait deux verdicts opposés au même commit (#3622).
     private Mesure mesurerADimensionDOuverture(FxRobot robot) {
         TailleOuverture ouverture =
                 TailleOuverture.bornee(TailleOuverture.LARGEUR_VOULUE, TailleOuverture.HAUTEUR_VOULUE);
@@ -127,36 +102,12 @@ class AppTest {
 
     /// Vérifie que cette classe rend le Stage partagé **tel qu'elle l'a reçu** : ajustable.
     ///
-    /// ## Ce que ce garde remplace, et pourquoi il fallait le remplacer
+    /// La propriété se **mesure**, elle ne se lit pas dans les sources : le garde de l'[ADR
+    /// 4134](../../../../../../dev-docs/decisions/4134-un-banc-n-emprunte-pas-l-etat-partage-il-ouvre-le-sien.md)
+    /// attrape la forme connue, `alias.setWidth(`, et ne peut rien contre une fenêtre figée autrement.
     ///
-    /// Ce texte-ci vivait au-dessus de `le_chrome_principal_est_affiche`, qui lit un libellé. Il
-    /// annonçait donc une propriété qu'aucune assertion ne touchait : `queryAs` trouve un noeud quelle
-    /// que soit sa position, et un Stage figé affiche son titre aussi bien qu'un Stage ajustable
-    /// (#4145).
-    ///
-    /// C'est ce doc-comment qui a fait croire que le trou de #1967 était bouché. Il ne l'était pas : le
-    /// défaut est revenu une **quatrième** fois par #4130, et c'est `ordre-alternatif` qui l'a signalé.
-    ///
-    /// ## Pourquoi une mesure, quand #4134 a déjà posé un garde
-    ///
-    /// #4134 lit les **sources** : aucune classe de test ne fige un Stage qu'elle a reçu. Il attrape la
-    /// forme connue du défaut, `alias.setWidth(`. Il ne peut pas attraper une fenêtre figée par un autre
-    /// chemin. La propriété se **mesure** : on pose une scène nettement plus haute, et la fenêtre doit
-    /// suivre.
-    ///
-    /// ## Les deux tailles ne sont pas prises au hasard
-    ///
-    /// `App.start` pose un **plancher** de 600 px de haut (#3452). Mesuré : une scène de huit lignes
-    /// laisse la fenêtre à 600 - le plancher, pas la scène - et une scène de quarante la porte à 720.
-    /// Le premier jet visait 8 puis 24 lignes : les deux tenaient **sous** le plancher, la fenêtre
-    /// restait à 600 dans les deux cas, et le garde rougissait sur du code sain.
-    ///
-    /// La seconde scène franchit donc le plancher. C'est ce qui rend la mesure lisible **sans** toucher
-    /// à la configuration réelle de l'application : relâcher le plancher pour mesurer aurait éprouvé un
-    /// Stage que le produit ne pose jamais.
-    ///
-    /// ⚠️ Les deux scènes restent **sous les 1000 px** de l'écran du banc headless : au-delà, le `blit`
-    /// déborde et l'échec parle d'autre chose que du Stage.
+    /// ⚠️ Les deux scènes **encadrent** le plancher de 600 px (#3452) et restent sous les 1 000 px de
+    /// l'écran du banc : sous le plancher la mesure est aveugle, au-dessus l'échec parle d'autre chose.
     @Test
     @DisplayName("#4145 : le Stage partagé suit encore les scènes qu'on lui pose")
     void le_stage_partage_reste_ajustable(FxRobot robot) {
