@@ -696,6 +696,40 @@ def test_4477_longueur_des_adr() -> None:
         )
 
 
+# Les gardes de code dont le corpus est LES DEUX ARBRES, decidees en passe 7 de la cloture de
+# #4462. La mesure d ouverture avait rendu ZERO suspect cote test pour chacune : l extension ne
+# deplace aucun cliquet, elle empeche l angle mort de se remplir.
+GARDES_DEUX_ARBRES = (
+    "0008-echec-silencieux.py",
+    "0010-dialogue-hors-port.py",
+    "0035-pictogramme-caractere.py",
+    "0037-slot-actions-hbox.py",
+    "2493-modale-suit-croissance.py",
+    "3053-capture-libelle.py",
+    "3947-message-enveloppe.py",
+    "4476-javadoc-raconte-son-extraction.py",
+)
+
+
+def test_les_gardes_de_code_lisent_les_deux_arbres() -> None:
+    """Ce cas tient le CORPUS, la ou le temoin propre a chaque garde tient sa DETECTION.
+
+    Les deux se cassent separement : un garde peut continuer de detecter parfaitement sur l arbre
+    qu on lui laisse, et avoir cesse de lire l autre. Rien ne le montrerait, puisque le compte
+    baisserait sans jamais rougir - un cliquet ne se plaint pas qu on lui retire du corpus.
+
+    `2635-refus-sans-surface.py` n est PAS dans cette liste, et c est une decision : le test qui
+    prouve l ADR 2635 doit citer le glyphe du menu pour verifier que la redaction de la surface
+    atteint le compte rendu. L y etendre interdirait aux tests d affirmer les chaines memes que la
+    regle produit.
+    """
+    for nom in GARDES_DEUX_ARBRES:
+        m = _charge(nom)
+        racines = getattr(m, "RACINES", ())
+        _verifie(f"{nom[:4]} : l arbre de test est dans son corpus",
+                 any(str(r).endswith("src/test/java") for r in racines), True)
+
+
 def test_rapport_et_resserrement() -> None:
     rapport = _charge("rapport.py")
     # Le parsing : une ligne normalisée doit être reconnue.
@@ -840,6 +874,7 @@ if __name__ == "__main__":
         test_4475_stage_non_dimensionne,
         test_4476_javadoc_raconte_son_extraction,
         test_4477_longueur_des_adr,
+        test_les_gardes_de_code_lisent_les_deux_arbres,
         test_rapport_et_resserrement,
     ):
         essai()

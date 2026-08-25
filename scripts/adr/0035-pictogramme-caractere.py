@@ -21,17 +21,25 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from _commun import rapporte, sans_commentaires_xml  # noqa: E402
 
-SOURCES = pathlib.Path("src/main/java")
+# Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne
+# avant que la question ne se pose. La dette de qualite ne connait pas de code de seconde zone, et
+# la mesure d ouverture a rendu ZERO suspect dans l arbre de test - l extension ne coute donc rien
+# et ferme la question pour de bon, la ou la laisser ouverte laissait un angle mort grandir.
+PRODUCTION = pathlib.Path("src/main/java")
+TESTS = pathlib.Path("src/test/java")
+RACINES = (PRODUCTION, TESTS)
+SOURCES = PRODUCTION
 
 # Émoticônes, symboles divers, fléchages décoratifs.
 PICTOGRAMME = re.compile("[\U0001f300-\U0001faff←-⇿☀-➿⬀-⯿]")
 
 
-def suspects(sources: pathlib.Path = SOURCES) -> list[str]:
+def suspects(sources: pathlib.Path | None = None) -> list[str]:
     # Un commentaire est de la prose : le `↔` qui y décrit une barre « à rallonge » est le cas que
     # l'ADR autorise. On le retire donc d'abord (helper mutualisé dans _commun).
     trouves = []
-    for vue in sorted(sources.rglob("*.fxml")):
+    arbres = [sources] if sources else list(RACINES)
+    for vue in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.fxml")):
         contenu = sans_commentaires_xml(vue.read_text(encoding="utf-8"))
         for numero, ligne in enumerate(contenu.splitlines(), 1):
             for signe in PICTOGRAMME.findall(ligne):

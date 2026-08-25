@@ -20,7 +20,14 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from _commun import rapporte, sans_commentaires_java  # noqa: E402
 
-SOURCES = pathlib.Path("src/main/java")
+# Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne
+# avant que la question ne se pose. La dette de qualite ne connait pas de code de seconde zone, et
+# la mesure d ouverture a rendu ZERO suspect dans l arbre de test - l extension ne coute donc rien
+# et ferme la question pour de bon, la ou la laisser ouverte laissait un angle mort grandir.
+PRODUCTION = pathlib.Path("src/main/java")
+TESTS = pathlib.Path("src/test/java")
+RACINES = (PRODUCTION, TESTS)
+SOURCES = PRODUCTION
 
 # Le paquet des adaptateurs de ports : c'est leur rôle d'ouvrir un dialogue.
 ADAPTATEURS = "fr/univ_amu/iut/commun/view/"
@@ -28,11 +35,12 @@ ADAPTATEURS = "fr/univ_amu/iut/commun/view/"
 APPEL = re.compile(r"new Alert\(|\.showAndWait\(\)")
 
 
-def suspects(sources: pathlib.Path = SOURCES) -> list[str]:
+def suspects(sources: pathlib.Path | None = None) -> list[str]:
     # Les commentaires sont retirés d'abord : un `///` qui CITE `Alert.showAndWait()` en expliquant un
     # bug passé n'est pas un appel (faux positif trouvé en clôture). Retrait mutualisé dans _commun.
     trouves = []
-    for source in sorted(sources.rglob("*.java")):
+    arbres = [sources] if sources else list(RACINES)
+    for source in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
         if ADAPTATEURS in source.as_posix():
             continue
         lignes = sans_commentaires_java(source.read_text(encoding="utf-8")).splitlines()
