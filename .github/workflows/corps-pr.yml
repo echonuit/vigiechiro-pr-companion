@@ -1,0 +1,34 @@
+# Garde-fou de la prose publiée sur la forge : le corps de la PR est ce qu'atteint quiconque remonte
+# depuis `git log`, et il n'est jamais commis, donc aucun garde du dépôt ne pouvait le refuser. La
+# règle et son pourquoi sont dans .github/scripts/verifie-corps-pr.sh et l'ADR 4453.
+name: Corps de PR
+
+on:
+  pull_request:
+    # `edited` est indispensable : sans lui, corriger le corps d'une PR déjà ouverte ne relancerait
+    # jamais le contrôle, et la PR resterait rouge sur un corps devenu conforme. C'est le même
+    # raisonnement que pour le titre, et le même piège.
+    types: [opened, edited, reopened, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  corps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Le corps suit la grille de prose
+        env:
+          # Passé par l'environnement plutôt qu'interpolé dans le script : un corps de PR est une
+          # donnée non fiable, et il porte par nature des backticks, des quotes et des `$(...)`.
+          CORPS: ${{ github.event.pull_request.body }}
+        run: |
+          chmod +x .github/scripts/verifie-corps-pr.sh
+          ./.github/scripts/verifie-corps-pr.sh "${CORPS}"

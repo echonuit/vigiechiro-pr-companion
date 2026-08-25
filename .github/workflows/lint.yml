@@ -605,6 +605,15 @@ jobs:
         # après coup. Un garde qui cesserait de détecter laisserait la source se rouvrir en silence.
         run: bash .github/scripts/verifie-titre-pr.sh --auto-test
 
+      - name: "Auto-test du garde de corps de PR (bloquant, #4453)"
+        # Le corps de la PR est de la prose visible au sens de l'article A31, et il n'est jamais
+        # commis : aucun garde de fichiers ne pouvait l'atteindre. Celui-ci refuse ce qu'un motif
+        # sait voir - cadratin, apostrophe courbe, élision sans apostrophe - et laisse le reste de la
+        # grille à la relecture. Ses onze cas comptent trois rouges et quatre contrôles négatifs :
+        # un garde qui cesserait d'épargner un bloc de code se ferait contourner par suppression de
+        # la citation, ce qui est pire que muet.
+        run: bash .github/scripts/verifie-corps-pr.sh --auto-test
+
       - name: Le paquet OKF des décisions est conforme (bloquant)
         # `dev-docs/decisions` est un paquet OKF depuis #4336 : chaque ADR porte un en-tête typé, se
         # rattache à un article de la constitution, et gage le niveau de vérification qu'elle

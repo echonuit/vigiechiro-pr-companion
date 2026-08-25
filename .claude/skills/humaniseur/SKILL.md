@@ -27,9 +27,13 @@ nom, date, citation et source survit à la réécriture. Rien ne s'invente pour 
 L'article A31 la rend obligatoire pour toute **prose visible** : ce qu'un humain lira hors de
 l'échange qui l'a produite. La javadoc et les commentaires, la documentation, les ADR, les
 compétences, les libellés montrés à l'utilisateur dans l'interface comme en ligne de commande, les
-messages de commit et les titres de demande de fusion.
+messages de commit, les titres de demande de fusion et les **corps** d'issue et de pull request.
+Ces deux corps-là sont ce qui se relit dans six mois sans le fil, et l'article les couvre depuis
+qu'il déclenche sur la publication plutôt que sur le commit.
 
-Une réponse d'agent dans un fil et un fichier de bloc-notes n'en sont pas.
+Une réponse d'agent dans un fil et un fichier de bloc-notes n'en sont pas. Un **commentaire** d'issue
+ou de pull request non plus : il porte le journal, que le corps résume, et `clore-une-issue` dit
+pourquoi le fil ne fait pas foi.
 
 Les sept tics de `CONTRIBUTING.md` sont le sous-ensemble **opposable** de cette grille : ils servent
 à refuser une relecture, quand la grille sert à relire.

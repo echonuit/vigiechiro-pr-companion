@@ -38,7 +38,9 @@ qui est la plus à même de casser un écran sans casser un test. On regarde don
 3. REGENERER   les captures concernees.
 4. OUVRIR      chacune, une par une. Les ouvrir, pas les lister.
 5. RECADRER    et agrandir avant toute affirmation d absence ou de troncature.
-6. CORRIGER    ce qui se corrige ; le reste part en issue a la passe suivante.
+6. RELIRE      les libelles que la capture montre. L article A31 les couvre, et
+               l ecran est le seul endroit ou on les lit comme l utilisateur.
+7. CORRIGER    ce qui se corrige ; le reste part en issue a la passe suivante.
 ```
 
 ## Ce qu'on cherche, par ordre de fréquence constatée

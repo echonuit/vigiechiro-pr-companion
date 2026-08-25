@@ -53,6 +53,8 @@ sans référence nommée est refusé.
 2. ECRIRE     une ADR par decision. Le contexte, la decision, ses consequences.
 3. DECLARER   le niveau de verification et ce qui le tient.
 4. CHAINER    si le chantier a depasse une ADR existante, l ecrire des deux cotes.
+5. RELIRE     a la grille humaniseur avant de commettre. Une ADR est de la prose
+              visible au sens de l article A31, et c est ici qu elle s ecrit.
 ```
 
 ## Pourquoi en passe 10, et pas en passe 3

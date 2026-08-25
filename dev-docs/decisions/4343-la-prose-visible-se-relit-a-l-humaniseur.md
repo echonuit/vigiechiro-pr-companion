@@ -6,6 +6,8 @@ article: A31
 chantier: "#4343 (l'article du registre, chantier #4334)"
 decided_at: 2026-08-24
 verification: humaine
+relations:
+  amendee_par: ["4453-la-prose-publiee-sur-la-forge-releve-de-la-meme-grille"]
 loupe:
   - "scripts/adr/2843-tiret-cadratin.py"
   - "scripts/adr/4359-javadoc-narratif.py"
@@ -20,6 +22,11 @@ generated:
 ---
 
 # La prose visible se relit à l'humaniseur avant d'être commise
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-08-25** par [ADR 4453](4453-la-prose-publiee-sur-la-forge-releve-de-la-meme-grille.md) :
+    l'énumération gagne le corps d'issue et le corps de pull request, et le déclencheur devient la
+    publication plutôt que le commit.
 
 ## Contexte
 

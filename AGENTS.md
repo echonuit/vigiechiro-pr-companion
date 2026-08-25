@@ -60,8 +60,9 @@ décisions se cadrent pour l'**utilisateur final**, pas pour un contexte pédago
 ## Ce qui s'écrit se relit
 
 L'article A31 le rend obligatoire : toute prose qu'un humain lira hors de l'échange qui l'a produite,
-javadoc, documentation, ADR, libellés d'interface et de ligne de commande, messages de commit, passe
-la grille de la compétence `humaniseur` avant d'être commise.
+javadoc, documentation, ADR, libellés d'interface et de ligne de commande, messages de commit, corps
+d'issue et de pull request, passe la grille de la compétence `humaniseur` avant d'être **publiée**,
+par un commit comme sur la forge.
 
 Les sept tics de la section « Le registre » de [CONTRIBUTING.md](CONTRIBUTING.md) en sont le
 sous-ensemble **opposable** : la grille sert à relire, les sept servent à refuser une relecture.
@@ -86,7 +87,7 @@ remplacent pas ce document : il se lit au début, une compétence s'ouvre au mom
 | `clore-une-issue` | ce qu'on laisse derrière soi |
 | `clore-un-chantier` | les douze passes de clôture |
 | `humaniseur` | relire une prose française qui porte des marques d'écriture par LLM |
-| `audit-croise` | confronter un arbitrage à un second lecteur, sans lui faire dire une mesure |
+| `audit-croise` | confronter un arbitrage à trois lecteurs, sans leur faire dire une mesure |
 | `openspec-propose`, `-apply-change`, `-update-change`, `-sync-specs`, `-archive-change`, `-explore` | le cycle d'un changement dans la spécification vivante |
 
 **Le fonds est dans `.agents/skills/`, hors de tout dossier de marque.** `.claude/skills/` n'en est

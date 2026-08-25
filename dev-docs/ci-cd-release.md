@@ -16,6 +16,7 @@ publication.
 | [lint.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml) | push `main` + PR | « Quality gate » (statique) : `spotless:check` + complétude des captures + `./mvnw -Pquality-gate compile pmd:check` (**PMD bloquant**) | **Oui** |
 | [docs.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/docs.yml) | push/PR sur la doc | Construit les **deux** sites MkDocs (`--strict`) ; déploie Pages (dormant tant que `ENABLE_PAGES` ≠ true) | Build oui |
 | [titre-pr.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/titre-pr.yml) | PR (dont `edited`) | Le **titre de la PR** suit Conventional Commits (c'est lui que semantic-release lira, cf. ci-dessous) | Non - **informatif**, et volontairement (cf. ci-dessous) |
+| [corps-pr.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/corps-pr.yml) | PR (dont `edited`) | Le **corps de la PR** passe la part mécanisable de la grille de prose : cadratin, apostrophe courbe, élision sans apostrophe. Ce corps n'est jamais commis, et c'est pourquoi aucun garde de fichiers ne l'atteignait ; il est pourtant publié dès qu'il part ([ADR 4453](decisions/4453-la-prose-publiee-sur-la-forge-releve-de-la-meme-grille.md)) | Non - **informatif**, comme le titre |
 | [capture-vues.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/capture-vues.yml) | push `main` | Régénère les aperçus PNG (cf. [Captures](captures.md)) | — |
 | [release.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/release.yml) | **hebdomadaire (mercredi 6 h UTC)** + manuel | Version + Release + installeurs natifs (dormant tant que `ENABLE_RELEASE` ≠ true). Le **train de publication** depuis l'ADR 2744 - la ligne disait encore « push `main` » neuf jours après le changement. Ne part pas sans preuve fraîche des plateformes, sauf contournement écrit (cf. plus bas) | — |
 | [api-live.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/api-live.yml) | hebdomadaire (lundi) + manuel | Contrat de l'API Vigie-Chiro, **en lecture seule** ; sépare « jeton mort » (warning) de « contrat cassé » (rouge), et **rougit au bout de trois semaines sans vérification réelle** (cf. ci-dessous) | — |
@@ -570,6 +571,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | Garde | Ce qu'elle vérifie | Où elle tourne |
 |---|---|---|
 | `verifie-titre-pr.sh` | Conventional Commits, cadratin, élision sans apostrophe | `titre-pr.yml` |
+| `verifie-corps-pr.sh` | cadratin, apostrophe courbe et élision sans apostrophe dans le corps d'une PR | `corps-pr.yml` (autotest : `lint.yml`) |
 | `verifie-epinglage.sh` | actions figées sur un SHA, aucune divergence de version | `lint.yml` |
 | `verifie-jeton.sh` | aucun jeton VigieChiro en clair | `lint.yml` |
 | `check-captures.sh` | chaque vue a une capture, chaque capture existe et est présentée | `lint.yml` |
