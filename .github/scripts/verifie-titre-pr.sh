@@ -72,6 +72,15 @@ if [ "${TITRE}" = "--auto-test" ]; then
     verifie 0 "fix(passage): le point C3 et le carre A1 sont distincts" "un code de point ne déclenche pas"
     verifie 0 "feat(cli): le n° 4 est traite" "un numéro ne déclenche pas"
     verifie 0 "test(fixture): deux semeurs prennent l'entree legere" "une élision correcte ne déclenche pas"
+    # #4483. La lettre isolee employee comme SYMBOLE n est pas une elision, et le motif d origine
+    # confondait les deux. Ces quatre cas sont les quatre formes mesurees sur la prose du depot.
+    verifie 0 "fix(ci): le job a dure 143 s la ou il en prenait 1200" "un symbole d'unité après un nombre ne déclenche pas"
+    verifie 0 "docs(adr): les N fichiers de la tranche sont relus" "une majuscule-symbole au fil d'une phrase ne déclenche pas"
+    verifie 0 "test(banc): participant S as Service, dans le diagramme" "un alias de diagramme ne déclenche pas"
+    verifie 0 "refactor(api): Succes<T>(T valeur) perd son enveloppe" "un paramètre générique ne déclenche pas"
+    # Et la contrepartie : la majuscule reste vue LA OU une phrase commence, sinon le retrecissement
+    # aurait rendu le garde aveugle a « L ADR », qui est le defaut d origine.
+    verifie 1 "docs(adr): L amendement 2843 est cite" "une élision majuscule en tête de phrase reste refusée"
     # Le SCOPE est en ASCII, et ce cas le tient contre la locale : `[a-z0-9._-]` fait entrer
     # « e » sous une locale francaise et l en sort sous `C`. Sans l epinglage en tete de ce
     # fichier, ce cas passerait en local et rougirait en CI - ce qui est arrive (#4456).
@@ -133,16 +142,32 @@ fi
 # une fois la contrainte disparue. Le titre part ensuite tel quel dans le CHANGELOG publié.
 #
 # La règle est étroite à dessein : un mot d'UNE lettre élidable (ou « qu ») suivi d'une espace puis
-# d'une lettre. Mesurée sur les 250 derniers titres fusionnés du dépôt, elle en touche 12, et les 12
-# sont de vrais défauts : aucun faux positif. Les codes de point (« A1 », « C3 »), les numéros
-# (« n° 4 ») et les élisions correctes (« l'entrée », « qu'il ») ne déclenchent pas, faute d'une lettre
-# après l'espace ou d'une espace tout court.
+# d'une lettre. Les codes de point (« A1 », « C3 »), les numéros (« n° 4 ») et les élisions correctes
+# (« l'entrée », « qu'il ») ne déclenchent pas, faute d'une lettre après l'espace ou d'une espace.
+#
+# Deux formes lui ressemblent à s'y méprendre et n'en sont PAS (#4483) :
+#
+#   - « 143 s là », « 5 s réelles » : la lettre est un SYMBOLE D'UNITÉ, et ce qui la précède est un
+#     nombre. D'où la minuscule refusée quand un chiffre la précède.
+#   - « les N fichiers », « paie N requêtes », « participant S as Service » : la lettre est un
+#     SYMBOLE, et une majuscule ne s'élide qu'en TÊTE de phrase, jamais au fil de l'une. D'où la
+#     majuscule acceptée seulement après une espace précédée d'un caractère non alphanumérique.
+#
+# Mesure du 2026-08-26, sur les 21 234 lignes de prose de `dev-docs/` : le motif d'origine en
+# désignait 120, celui-ci 70. Les 50 écartées ont été ouvertes une par une, et les 50 sont des faux
+# positifs des deux formes ci-dessus. Aucune ligne nouvelle n'est désignée, et les 400 derniers
+# titres fusionnés restent à zéro sous les deux motifs.
+#
+# Le trou qui reste, assumé : une majuscule-symbole posée juste après une ponctuation de phrase
+# (« Dépôt préparé : N séquences ») passe. Le fermer coûterait la détection de « : L audit », qui
+# est un vrai défaut. Dans le même corpus, le trou vaut UNE ligne et la détection en vaut HUIT.
 #
 # Ce qu'elle ne voit PAS, et c'est assumé : un accent manquant sur un mot qui existe aussi sans accent
 # (« garde » / « gardé », « complete » / « complète »). Aucun motif ne tranche sans dictionnaire, et un
 # garde à faux positifs se contourne. Pour ceux-là, il reste la relecture.
-ELISION="(^|[^[:alnum:]'’])([LlDdNnSsCcJjMmTt]|[Qq]u) +[[:alpha:]]"
-if printf '%s' "${TITRE}" | grep -qE "${ELISION}"; then
+ELISION_MIN="(^[^[:alnum:]_'’]?|[^[:digit:]][^[:alnum:]_'’])([ldnscjmt]|qu) +[[:alpha:]]"
+ELISION_MAJ="(^[^[:alnum:]_'’]?|[^[:alnum:]_][[:space:]])([LDNSCJMT]|Qu) +[[:alpha:]]"
+if printf '%s' "${TITRE}" | grep -qE "${ELISION_MIN}|${ELISION_MAJ}"; then
     echo "::error::Le titre de la PR contient une élision sans apostrophe."
     echo
     echo "  écrit : ${TITRE}"
