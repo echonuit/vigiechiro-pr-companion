@@ -20,16 +20,24 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from _commun import rapporte, sans_commentaires_xml  # noqa: E402
 
 # La styleClass ou l'fx:id, porté par la balise HBox elle-même, évoque un slot d'actions.
-SOURCES = pathlib.Path("src/main/java")
+# Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne
+# avant que la question ne se pose. La dette de qualite ne connait pas de code de seconde zone, et
+# la mesure d ouverture a rendu ZERO suspect dans l arbre de test - l extension ne coute donc rien
+# et ferme la question pour de bon, la ou la laisser ouverte laissait un angle mort grandir.
+PRODUCTION = pathlib.Path("src/main/java")
+TESTS = pathlib.Path("src/test/java")
+RACINES = (PRODUCTION, TESTS)
+SOURCES = PRODUCTION
 
 SLOT = re.compile(r'<HBox\b[^>]*(?:styleClass|fx:id)="[^"]*action[^"]*"', re.I | re.S)
 
 
-def suspects(sources: pathlib.Path = SOURCES) -> list[str]:
+def suspects(sources: pathlib.Path | None = None) -> list[str]:
     # Commentaires FXML retirés d'abord : un <HBox ...action...> en commentaire serait un faux positif.
     # Retrait mutualisé dans _commun (défaut trouvé sur 0010/0046 en clôture).
     trouves = []
-    for f in sorted(sources.rglob('*.fxml')):
+    arbres = [sources] if sources else list(RACINES)
+    for f in sorted(f for a in arbres if a.is_dir() for f in a.rglob('*.fxml')):
         texte = sans_commentaires_xml(f.read_text(encoding="utf-8"))
         for balise in SLOT.finditer(texte):
             ligne = texte[: balise.start()].count("\n") + 1

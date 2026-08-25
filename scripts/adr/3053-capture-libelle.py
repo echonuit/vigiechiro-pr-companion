@@ -23,7 +23,14 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from _commun import rapporte, sans_commentaires_java  # noqa: E402
 
-SOURCES = pathlib.Path("src/main/java")
+# Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne
+# avant que la question ne se pose. La dette de qualite ne connait pas de code de seconde zone, et
+# la mesure d ouverture a rendu ZERO suspect dans l arbre de test - l extension ne coute donc rien
+# et ferme la question pour de bon, la ou la laisser ouverte laissait un angle mort grandir.
+PRODUCTION = pathlib.Path("src/main/java")
+TESTS = pathlib.Path("src/test/java")
+RACINES = (PRODUCTION, TESTS)
+SOURCES = PRODUCTION
 
 # La forme exacte qu'avaient les quatre outils : on cherche, et on ne fait rien si on ne trouve pas.
 ABSTENTION = re.compile(r"\.findFirst\(\)\s*\.ifPresent\(", re.S)
@@ -38,11 +45,12 @@ def est_outil_de_capture(source: pathlib.Path) -> bool:
     return source.name.startswith("Capture") and source.parent.name == "outils"
 
 
-def suspects(sources: pathlib.Path = SOURCES) -> list[str]:
+def suspects(sources: pathlib.Path | None = None) -> list[str]:
     # Commentaires retirés d'abord : un exemple cité dans un Javadoc n'est pas du code (c'est le cas de
     # l'en-tête d'ApercuFx, qui décrit précisément le motif qu'il remplace).
     trouves = []
-    for source in sorted(sources.rglob("*.java")):
+    arbres = [sources] if sources else list(RACINES)
+    for source in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
         if not est_outil_de_capture(source):
             continue
         texte = sans_commentaires_java(source.read_text(encoding="utf-8"))

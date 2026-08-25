@@ -280,6 +280,7 @@ nav:
     - 4475 · Un test dimensionne son stage, il n'hérite pas du fork: decisions/4475-un-test-dimensionne-son-stage-il-n-herite-pas-du-fork.md
     - 4476 · Une javadoc ne raconte pas le refactoring qui l'a produite: decisions/4476-une-javadoc-ne-raconte-pas-le-refactoring-qui-l-a-produite.md
     - 4477 · Une ADR dit sa décision et l'incident qui l'a produite: decisions/4477-une-adr-dit-sa-decision-et-l-incident-qui-l-a-produite.md
+    - 4488 · Un garde de code lit les deux arbres: decisions/4488-un-garde-de-code-lit-les-deux-arbres.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
