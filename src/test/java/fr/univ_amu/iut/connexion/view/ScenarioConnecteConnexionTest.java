@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.SuiviProgression;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
@@ -21,6 +22,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
@@ -153,9 +155,9 @@ class ScenarioConnecteConnexionTest {
 
     @Test
     @CasDeRecette(
-            value = {"S8-01", "S8-05", "S8-06"},
+            value = {"S8-01", "S8-02", "S8-03", "S8-05", "S8-06"},
             portee = Portee.A_L_ECRAN)
-    @DisplayName("S8-01, S8-05, S8-06 · coller le jeton, voir l'avancement, lire l'identité rendue")
+    @DisplayName("S8-01 à S8-06 · coller le jeton, suivre l'avancement nuit par nuit, lire l'identité")
     void coller_le_jeton_puis_lire_l_identite(FxRobot robot) throws TimeoutException {
         // ⚠️ Lu AVANT d'ouvrir quoi que ce soit : sans jeton, ce scénario n'a rien à montrer, et il
         // vaut mieux qu'il le dise avant d'avoir filmé huit secondes d'écran inutile.
@@ -215,6 +217,10 @@ class ScenarioConnecteConnexionTest {
                         + " un jeton à moitié vérifié et une modale qu'on croit close")
                 .isTrue();
 
+        // ─── S8-02 · la barre AVANCE, et son libellé nomme la nuit ───────────────────────────────
+        // Le premier relevé, pris au plus tôt : c'est lui qui sert de point de comparaison.
+        double fractionInitiale = fraction(robot);
+
         Respiration.surLeMomentCle(robot);
         Respiration.leTempsDeLire(robot);
 
@@ -223,6 +229,39 @@ class ScenarioConnecteConnexionTest {
                         + " disparu pendant ce maintien, c'est que l'opération est plus rapide que le"
                         + " temps de lecture, et ce cas n'a rien montré")
                 .isTrue();
+
+        // « Il ne reste pas figé » ne se constate pas sur UN instantané : une barre arrêtée et une barre
+        // qui progresse s'y ressemblent. On compare donc DEUX relevés séparés par le maintien ci-dessus.
+        attendre(
+                APPARITION_SECONDES,
+                () -> fraction(robot) > fractionInitiale,
+                "la barre n'a pas bougé entre deux relevés : elle est restée figée à sa valeur"
+                        + " d'ouverture, ce que la case S8-02 interdit explicitement");
+
+        assertThat(texte(robot, "#" + SuiviProgression.ID_MESSAGE))
+                .as("le libellé doit NOMMER la nuit en cours, sous la forme « Nuits k / N » que"
+                        + " SuiviTraitement compose. Un libellé simplement non vide ne dirait pas où en"
+                        + " est l'opération, et c'est ce que la case demande de constater")
+                .containsPattern("Nuits\\s+\\d+\\s*/\\s*\\d+");
+
+        // ─── S8-03 · l'estimation du temps restant ───────────────────────────────────────────────
+        // « une fois l'avancement mesurable » : ProgressionOperation extrapole le restant depuis le
+        // temps écoulé, donc elle ne peut rien annoncer au premier instant. On l'attend au lieu de la
+        // supposer présente.
+        attendre(
+                APPARITION_SECONDES,
+                () -> texte(robot, "#" + SuiviProgression.ID_MESSAGE).contains("restant"),
+                "aucune estimation du temps restant n'a paru dans le libellé d'avancement. Elle"
+                        + " s'extrapole du temps écoulé : si elle manque, c'est que l'opération n'a jamais"
+                        + " été mesurable, et la case S8-03 n'a rien à montrer");
+
+        assertThat(texte(robot, "#" + SuiviProgression.ID_MESSAGE))
+                .as("l'estimation s'ajoute au libellé sous la forme « … · ~X s restant » :"
+                        + " ProgressionOperation la compose ainsi, et c'est ce que le spectateur lit")
+                .contains("restant")
+                .containsPattern("~\\s*\\d+");
+
+        Respiration.leTempsDeLire(robot);
 
         // ─── S8-06 · l'identité et le résumé, à la fin ────────────────────────────────────────────
         attendre(
@@ -312,6 +351,15 @@ class ScenarioConnecteConnexionTest {
         } catch (TimeoutException _) {
             throw new TimeoutException(quoi + " (au bout de " + secondes + " s)");
         }
+    }
+
+    /// L'avancement de la barre, ou -1 si elle n'est pas là.
+    ///
+    /// -1 plutôt que 0 : une barre absente et une barre à zéro ne sont pas le même fait, et les
+    /// confondre ferait passer « la progression a disparu » pour « elle n'a pas encore commencé ».
+    private static double fraction(FxRobot robot) {
+        Node noeud = robot.lookup("#" + SuiviProgression.ID_BARRE).tryQuery().orElse(null);
+        return noeud instanceof ProgressBar barre ? barre.getProgress() : -1;
     }
 
     private static boolean visible(FxRobot robot, String selecteur) {
