@@ -3,33 +3,15 @@ package fr.univ_amu.iut.validation.model;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 
-/// Projection d'une **ligne** du CSV Tadarida, avant persistance (résultat de
-/// `ParserCsvTadarida`). C'est l'image fidèle d'une ligne, indépendante de la base : elle porte
-/// le **nom de la séquence** source (colonne `nom du fichier`) plutôt qu'une clé technique
-/// `idSequence`, car le parseur ne connaît pas encore la base.
+/// Projection d'une ligne du CSV Tadarida avant persistance (résultat de `ParserCsvTadarida`) :
+/// l'image fidèle d'une ligne, indépendante de la base. Elle porte le **nom de la séquence** et non
+/// une clé technique, le parseur ne connaissant pas encore la base ; `ServiceValidation` la convertit
+/// en [Observation], `ExportVuCsv` fait l'inverse.
 ///
-/// Le service `ServiceValidation` convertit ensuite chaque [LigneObservation] en une
-/// [Observation] complète une fois la séquence (`listening_sequence`) et les résultats
-/// (`identification_results`) résolus en base. Inversement, l'export `ExportVuCsv` reconstitue
-/// des [LigneObservation] à partir des [Observation] relues (le nom de séquence est restitué
-/// depuis la `SequenceDao`).
-///
-/// Conventions de nullité (alignées sur les colonnes nullable du schéma) :
-///
-/// - `taxonAutreTadarida` : conservé **tel quel**, y compris quand Tadarida propose une liste de
-///   candidats séparés par des virgules (ex. `"Tetvir, Pippip, Phogri"`) ; `null` si la colonne
-///   est vide. (La persistance en [Observation] ne retient qu'un code FK unique : la conversion
-///   incombe au service.)
-/// - `taxonObservateur` / `probObservateur` : `null` tant que l'observateur n'a pas tranché (cas
-///   d'un fichier Brut ou d'une ligne non touchée, R17).
-/// - `frequenceMedianeKHz` : [Integer] (la colonne `median_freq_khz` est `INTEGER`) ; un éventuel
-///   `"153.0"` du CSV est arrondi à l'entier le plus proche.
-/// - `idDonneeVigieChiro` / `indiceVigieChiro` : **ancrage plateforme** (#1139), renseigné
-///   uniquement par l'import VigieChiro (`ConversionDonneesVigieChiro`) ; `null` pour un CSV.
-/// - `certitudeObservateur` : certitude déclarée (#1139), lue du serveur ou du jeton
-///   `SUR|PROBABLE|POSSIBLE` d'un CSV `_Vu` ; `null` = non renseignée.
-/// - `taxonValidateur` / `certitudeValidateur` : **avis du validateur** (#1417), reflet du serveur en
-///   lecture seule ; toujours `null` pour un CSV.
+/// Nullité alignée sur les colonnes nullable du schéma, et détaillée par les étiquettes ci-dessous.
+/// `taxonAutreTadarida` est conservé **tel quel**, plusieurs candidats compris : [Observation] n'en
+/// retient qu'un, la conversion incombe au service. `frequenceMedianeKHz` est un [Integer], un
+/// `"153.0"` du CSV étant arrondi. L'ancrage plateforme (#1139) ne vient que de l'import VigieChiro.
 ///
 /// @param nomSequence nom de fichier de la séquence d'écoute source (sans clé technique)
 /// @param debutS temps de début dans la séquence en secondes (optionnel)

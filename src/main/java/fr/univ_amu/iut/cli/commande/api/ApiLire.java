@@ -18,25 +18,14 @@ import picocli.CommandLine.Spec;
 
 /// `vigiechiro api lire --chemin <chemin>` : un **GET** sur l'API, dont le corps sort tel quel.
 ///
-/// ## Ce qu'elle refuse, et pourquoi
+/// Un tuyau générique rend à l'utilisateur les pièges que le client encapsule, et deux d'entre eux
+/// ne préviennent pas : `max_results` au-delà de **100**, que le serveur **rejette** en `422` plutôt
+/// que de tronquer - une collection entière revenait vide quand le transport dégradait les échecs en
+/// silence (#1277) - et `where=`, que le serveur **accepte puis ignore**, si bien que le filtre ne
+/// filtre rien. Cette commande les **refuse avant d'émettre**, en disant lequel et pourquoi : c'est
+/// la condition qui rend l'échappatoire acceptable.
 ///
-/// Un tuyau générique rend à l'utilisateur les pièges que le client encapsule. Deux d'entre eux ne
-/// **préviennent pas** quand on tombe dedans, et c'est précisément ce qui les rend coûteux :
-///
-/// - `max_results` au-delà de **100** : le serveur ne tronque pas, il **rejette** (`422`). Quand le
-///   transport dégradait les échecs en silence, une collection entière revenait vide (#1277) ;
-/// - `where=` : le serveur l'**accepte puis l'ignore**. Le filtre ne filtre rien, le total annoncé ne
-///   bouge pas, et l'on croit avoir isolé ce qu'on cherchait.
-///
-/// Cette commande les **refuse avant d'émettre**, en disant lequel des deux et pourquoi. C'est la
-/// condition qui rend l'échappatoire acceptable : elle rend la main sur les chemins, pas sur les
-/// pièges.
-///
-/// ## Ce qu'elle ne fait pas
-///
-/// Aucun verbe configurable : **GET seulement** (ADR 0020, « écrire sur la plateforme : ne rien
-/// inventer ni effacer »). Aucun sondage répété non plus (#1338) : on interroge le serveur quand
-/// l'utilisateur le demande, pas en boucle.
+/// **GET seulement** (ADR 0020), et aucun sondage répété (#1338).
 @Command(name = "lire", description = "Lit un chemin de l'API (GET) et rend le corps tel quel.")
 public final class ApiLire implements Callable<Integer>, LectureSeule {
 

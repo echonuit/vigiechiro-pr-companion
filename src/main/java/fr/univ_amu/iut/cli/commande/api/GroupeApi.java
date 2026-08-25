@@ -8,26 +8,14 @@ import picocli.CommandLine.Spec;
 
 /// `vigiechiro api …` : l'**interrogation brute** de l'API VigieChiro, en lecture seule.
 ///
-/// ## La frontière que ce groupe matérialise
+/// La CLI parle deux langages, et la structure le dit. **Sous `api`**, celui de l'API : des chemins,
+/// des pages, des `_items` ; le JSON sort tel quel et rien n'écrit. **Au premier niveau**, celui du
+/// produit : des sites, des carrés, des points, avec leurs projections. Ce n'est donc pas la façon
+/// d'ajouter une capacité - une commande métier encode une fois pour toutes ce qu'il faut savoir de
+/// l'API, pièges compris, quand ce groupe rend la main à l'utilisateur.
 ///
-/// La CLI parle deux langages, et la structure le dit :
-///
-/// - **sous `api`**, on parle celui de l'**API** : des chemins, des pages, des `_items`. Le JSON sort
-///   tel quel, et rien ici n'écrit ;
-/// - **au premier niveau** (`lister-sites-vigiechiro`, `lister-participations-vigiechiro`…), on parle
-///   celui du **produit** : des sites, des carrés, des points, avec des projections, un recensement, un
-///   dénominateur.
-///
-/// ## Ce que ce groupe n'est pas
-///
-/// Ce n'est pas la façon d'ajouter une capacité. Une commande métier encode, une fois pour toutes, ce
-/// qu'il faut savoir de l'API - les pièges compris ; le groupe `api` rend la main à l'utilisateur. S'en
-/// servir comme raccourci ferait cesser de grandir la couche qui protège tout le monde.
-///
-/// Ses sous-commandes sont **volontairement discrètes** : elles ne figurent pas au catalogue des
-/// commandes (`dev-docs/cli.md` n'a qu'une ligne pour le groupe) et leur détail vit dans
-/// `dev-docs/api-vigiechiro.md`. Contrepartie : le groupe reste **strictement borné**, et ne grossit
-/// pas sans décision (cf. l'ADR du chantier #2999).
+/// Ses sous-commandes sont **discrètes** - hors du catalogue de `dev-docs/cli.md`, détaillées dans
+/// `dev-docs/api-vigiechiro.md`. Contrepartie : le groupe reste **strictement borné** (#2999).
 @Command(
         name = "api",
         description = "Interrogation brute de l'API Vigie-Chiro (lecture seule, exploration).",

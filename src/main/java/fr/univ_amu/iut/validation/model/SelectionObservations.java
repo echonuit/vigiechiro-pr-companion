@@ -5,22 +5,14 @@ import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import java.util.List;
 import java.util.Objects;
 
-/// **Désigner** les observations sur lesquelles agir (#1311) - la vraie difficulté de la parité CLI.
+/// **Désigner** les observations sur lesquelles agir (#1311), par **filtres** - la moitié que la
+/// ligne de commande n'avait pas, l'autre étant la désignation par identifiants, portée par les
+/// commandes.
 ///
-/// L'écran raisonne par **sélection dans une table** : on voit les lignes, on en surligne quelques-unes,
-/// on agit. La ligne de commande n'a pas de table. Elle offre donc **deux** manières de désigner, et une
-/// seule règle :
-///
-/// 1. **Par identifiants** (`--observation 12,13,14`) : le geste chirurgical, sur des lignes qu'on a
-///    **lues** (c'est `lister-observations` qui les donne). Un identifiant inconnu **arrête tout** - le lot
-///    est atomique, on ne valide pas 2 lignes sur 3 en laissant l'utilisateur deviner laquelle a échoué.
-/// 2. **Par filtres** (`--passage 3 --statut a-revoir`) : le geste scripté, reproductible, sur un
-///    sous-ensemble décrit.
-///
-/// **La règle** : c'est le **même** code qui choisit, pour lister et pour agir. `lister-observations
-/// --passage 3 --statut a-revoir` et `valider-observations --passage 3 --statut a-revoir` voient
-/// **exactement** le même ensemble. Sans ça, un geste irréversible piloté par un filtre serait un pari :
-/// on ne saurait pas ce qu'on touche avant de l'avoir touché.
+/// L'écran raisonne par sélection dans une table ; la ligne de commande n'en a pas. **La règle** :
+/// c'est le **même** code qui choisit, pour lister et pour agir. `lister-observations --passage 3
+/// --statut a-revoir` et `valider-observations --passage 3 --statut a-revoir` voient **exactement**
+/// le même ensemble - sans quoi un geste irréversible piloté par un filtre serait un pari.
 public class SelectionObservations {
 
     private final ProjectionsAudioDao projections;
