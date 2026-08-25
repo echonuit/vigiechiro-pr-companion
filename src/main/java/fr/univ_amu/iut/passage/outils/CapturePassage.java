@@ -102,16 +102,9 @@ import javafx.scene.control.TextField;
 ///   VigieChiro » et « Envoyer vers VigieChiro » apparaissent (#1839) ;
 /// - `apercu-passage-reactivation.png` : la modale « Réactiver ce passage » et ses deux barres (#1780) ;
 /// - `apercu-passage-squelette.png` : la fiche d'une nuit **rapatriée de Vigie-Chiro**, connecté :
-///   audio absente, et « Réactiver ce passage » **actif** (#2554). C'est l'écran du défaut d'origine,
-///   où le bouton était grisé et ne disait pas pourquoi.
+///   audio absente, et « Réactiver ce passage » **actif** (#2554).
 ///
-/// On seede une base SQLite temporaire (un utilisateur, un site/point, deux passages vérifié/déposé
-/// avec leur session de 60 séquences). On fabrique le [ServicePassage] via Guice (socle + passage),
-/// puis on charge `Passage.fxml` / `RattachementModale.fxml` avec une `controllerFactory` qui injecte
-/// un [PassageViewModel] connu et des contrats de navigation neutres (la capture ne navigue pas).
-/// Les vues sont rendues hors-écran par [ApercuFx].
-///
-/// Le site et le point (cibles de clé étrangère) sont insérés en SQL brut, sans les DAO de la
+/// À ne pas « corriger » : le site et le point (cibles de clé étrangère) sont insérés en SQL brut, sans les DAO de la
 /// feature `sites` : `passage` ne doit pas en dépendre (cycle ArchUnit `features_sans_cycle`, et
 /// `sites` dépend déjà de `passage`).
 ///

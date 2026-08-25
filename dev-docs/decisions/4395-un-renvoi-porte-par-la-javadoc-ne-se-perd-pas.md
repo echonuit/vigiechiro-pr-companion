@@ -8,7 +8,7 @@ decided_at: 2026-08-24
 verification: certaine
 enforced_by:
   - "scripts/adr/4395-renvois-en-javadoc.py"
-floor: 3111
+floor: 3112
 inv_key: plancher-renvois
 verified:
   - by: machine:ci
@@ -55,7 +55,9 @@ sur le dépôt, **ne descend pas**. Il est tenu par un plancher déclaré, que
 Distinctes, et non occurrences : ce qui se perd est qu'un fichier **cesse d'ouvrir** une discussion,
 pas qu'il l'ouvre une fois au lieu de deux.
 
-Le plancher vaut **<!--inv:plancher-renvois-->3 111<!--/inv-->**, mesuré sur `845240252`. Il se relève de ce qu'un chantier ajoute.
+Le plancher vaut **<!--inv:plancher-renvois-->3 112<!--/inv-->**, mesuré sur `845240252`, puis relevé
+d'une unité en remplissant un `(#…)` de `PreparationOriginaux` par le numéro que son commit nommait
+(#641, cf. #4441). Il se relève de ce qu'un chantier ajoute.
 L'abaisser est possible, et c'est une décision : la justifier dans cette ADR, comme on justifie un
 cliquet qui monte.
 

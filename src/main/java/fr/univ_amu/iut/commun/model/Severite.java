@@ -2,17 +2,11 @@ package fr.univ_amu.iut.commun.model;
 
 /// **La** gravité de ce que l'application a à dire, quelle que soit la surface qui le dit.
 ///
-/// L'application en comptait **deux** échelles sans lien entre elles : celle-ci, née dans
-/// `RetourOperation` côté `viewmodel`, et `SeveriteConstat` côté `audit.model`. Aucune conversion, aucun
-/// renvoi documentaire, aucune mention de l'une dans l'autre (#2159).
+/// C'est **la seule** échelle de gravité de l'application, `RetourOperation` et `SeveriteConstat` ayant
+/// été unifiés ici (#2159, [ADR
+/// 0038](../../../../../../../dev-docs/decisions/0038-l-echelle-de-severite-a-quatre-niveaux.md)).
 ///
-/// La duplication n'était pas anodine. L'[ADR
-/// 0038](../../../../../../../dev-docs/decisions/0038-l-echelle-de-severite-a-quatre-niveaux.md)
-/// raconte l'ajout d'un niveau `AVERTISSEMENT` **manquant** - ce qui était vrai de l'échelle du
-/// `viewmodel`, et faux de l'application : `SeveriteConstat` le portait depuis toujours. Une analyse
-/// écrite depuis un seul des deux angles.
-///
-/// Elle vit donc en `commun.model`, la couche que **tout le monde** peut citer : un modèle qui qualifie
+/// Elle vit en `commun.model`, la couche que **tout le monde** peut citer : un modèle qui qualifie
 /// la gravité d'un constat n'a pas à dépendre d'un type de présentation, et une vue n'a pas à traduire
 /// entre deux vocabulaires qui disent la même chose.
 ///

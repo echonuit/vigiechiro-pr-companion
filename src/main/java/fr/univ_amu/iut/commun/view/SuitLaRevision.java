@@ -2,26 +2,20 @@ package fr.univ_amu.iut.commun.view;
 
 /// Contrat **optionnel** d'un écran central : suivre la **donnée**, et pas seulement la navigation.
 ///
-/// ## Ce qu'il couvre, et pourquoi [RafraichirAuRetour] n'y suffisait pas
-///
-/// `RafraichirAuRetour` répond à « une sous-activité a travaillé pendant que j'étais masqué ». Il ne
-/// dit rien de ce qui arrive **pendant** qu'on regarde : un import, une synchronisation lancée depuis
-/// le menu ☰, une restauration. Ces écritures-là ne provoquent aucun retour de navigation, donc aucun
-/// rechargement, et l'écran reste sur des chiffres périmés sous les yeux de l'utilisateur.
-///
-/// Les deux contrats **coexistent** parce qu'ils ne couvrent pas les mêmes écritures : le retour voit
-/// les `update` (un verdict, un dépôt), la révision voit les `insert` / `delete`. Un écran d'inventaire
-/// déclare donc les deux.
+/// Il **complète** [RafraichirAuRetour] sans le remplacer, les deux ne couvrant pas les mêmes
+/// écritures : le retour voit les `update` (un verdict, un dépôt) au moment où l'on revient sur
+/// l'écran ; la révision voit les `insert` / `delete` **pendant** qu'on le regarde - un import, une
+/// synchronisation lancée depuis le menu ☰, une restauration, qui ne provoquent aucun retour de
+/// navigation et laisseraient donc l'écran sur des chiffres périmés. Un écran d'inventaire déclare
+/// les deux.
 ///
 /// ## Pourquoi c'est le [Navigateur] qui pose et rend l'abonnement
 ///
-/// Les cinq premiers écrans à suivre la révision l'ont fait chacun de leur côté : un champ
-/// `ChangeListener`, un `addListener` dans `initialize()`, un `removeListener` dans `auDepartEcran()`.
-/// Trois lignes, cinq fois, dont **une seule** empêchait une fuite - `RevisionDonnees` est un
-/// singleton, un écran ne l'est pas, et un abonnement non rendu fait recharger une vue que plus
+/// Un abonnement posé par l'écran lui-même **fuit** dès qu'il n'est pas rendu : `RevisionDonnees` est
+/// un singleton, un écran ne l'est pas, et un abonnement survivant fait recharger une vue que plus
 /// personne ne regarde.
 ///
-/// Ce n'est pas un travail d'écran : c'est un cycle de vie, et le `Navigateur` porte déjà celui des
+/// Ce n'est donc pas un travail d'écran, c'est un cycle de vie, et le `Navigateur` porte déjà celui des
 /// quatre autres contrats. Il pose l'abonnement quand l'étape entre dans l'historique et le rend quand
 /// elle en sort, **au même endroit** que [AuDepartEcran]. Un écran qui déclare ce contrat n'a donc plus
 /// besoin de connaître [fr.univ_amu.iut.commun.viewmodel.RevisionDonnees] : ni champ, ni écouteur, ni

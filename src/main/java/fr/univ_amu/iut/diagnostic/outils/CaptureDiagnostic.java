@@ -59,15 +59,7 @@ import javafx.scene.Scene;
 ///   renseigné » et l'encart cohérence horaires disparaît (calcul impossible sans coordonnées) ;
 /// - `apercu-diagnostic-hors-nuit.png` : **enregistrement hors nuit** (démarrage avant le coucher et
 ///   arrêt après le lever du soleil), l'alerte de cohérence horaire s'affiche - couleur et icône
-///   posées par `LibelleRetour` depuis la sévérité, un état migré par #2050 que rien ne montrait de
-///   façon dédiée (#2222).
-///
-/// On seede une base SQLite temporaire via les **DAO réels** (`diagnostic → passage/sites`, autorisé)
-/// : un point géolocalisé et un point sans GPS, trois passages déposés avec leur session et leur
-/// journal du capteur ; les passages « avec relevé » et « sans GPS » reçoivent en plus un **THLog
-/// synthétique** (écrit dans le workspace, relu par le service comme à l'import). Chaque vue est
-/// chargée via une `controllerFactory` Guice (socle + sites + passage + diagnostic) et rendue
-/// hors-écran par [ApercuFx].
+///   posées par `LibelleRetour` depuis la sévérité (#2050, #2222).
 ///
 /// **Déterminisme** : l'écran n'affiche que la série climatique, les anomalies et le GPS, aucun
 /// chemin de fichier, donc aucune dépendance au dossier temporaire.
