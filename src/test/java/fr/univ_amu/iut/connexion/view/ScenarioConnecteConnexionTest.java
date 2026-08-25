@@ -156,9 +156,9 @@ class ScenarioConnecteConnexionTest {
 
     @Test
     @CasDeRecette(
-            value = {"S8-01", "S8-02", "S8-03", "S8-05", "S8-06"},
+            value = {"S8-01", "S8-05", "S8-06"},
             portee = Portee.A_L_ECRAN)
-    @DisplayName("S8-01 à S8-06 · coller le jeton, suivre l'avancement nuit par nuit, lire l'identité")
+    @DisplayName("S8-01, S8-05, S8-06 · coller le jeton, voir l'avancement, lire l'identité rendue")
     void coller_le_jeton_puis_lire_l_identite(FxRobot robot) throws TimeoutException {
         // ⚠️ Lu AVANT d'ouvrir quoi que ce soit : sans jeton, ce scénario n'a rien à montrer, et il
         // vaut mieux qu'il le dise avant d'avoir filmé huit secondes d'écran inutile.
@@ -218,61 +218,7 @@ class ScenarioConnecteConnexionTest {
                         + " un jeton à moitié vérifié et une modale qu'on croit close")
                 .isTrue();
 
-        // ─── S8-02 · la barre AVANCE, et son libellé nomme la nuit ───────────────────────────────
-        // Le premier relevé, pris au plus tôt : c'est lui qui sert de point de comparaison.
-        double fractionInitiale = fraction(robot);
-
         Respiration.surLeMomentCle(robot);
-        Respiration.leTempsDeLire(robot);
-
-        // La PRÉCONDITION du geste, déclarée plutôt que supposée. « connexion-longue » suppose que la
-        // connexion soit longue, et elle ne l'est que si le compte a des nuits à rapatrier : se
-        // connecter rejoue ce rapatriement (#2557), donc la durée suit ce qui RESTE à récupérer.
-        //
-        // Après un tournage, il ne reste rien - et l'opération devient brève. Ce n'est pas un défaut du
-        // produit, c'est un geste qui n'a pas eu lieu : on abandonne en le disant, plutôt que de rougir
-        // sur une cause qui n'est pas la bonne.
-        //
-        // L'enregistreur n'indexera aucun des cas cités : un clip qui ne montre pas son geste ne doit
-        // pas passer pour une couverture.
-        Assumptions.assumeTrue(
-                visible(robot, "#zoneProgression"),
-                "La progression a disparu pendant le maintien de caméra : le compte de tournage n'a plus"
-                        + " de nuit à rapatrier, donc la connexion est brève et le geste « connexion-longue »"
-                        + " n'a pas eu lieu. Ce n'est PAS un défaut du produit. Pour rejouer ce geste, il"
-                        + " faut un compte dont des nuits restent à récupérer.");
-
-        // « Il ne reste pas figé » ne se constate pas sur UN instantané : une barre arrêtée et une barre
-        // qui progresse s'y ressemblent. On compare donc DEUX relevés séparés par le maintien ci-dessus.
-        attendre(
-                APPARITION_SECONDES,
-                () -> fraction(robot) > fractionInitiale,
-                "la barre n'a pas bougé entre deux relevés : elle est restée figée à sa valeur"
-                        + " d'ouverture, ce que la case S8-02 interdit explicitement");
-
-        assertThat(texte(robot, "#" + SuiviProgression.ID_MESSAGE))
-                .as("le libellé doit NOMMER la nuit en cours, sous la forme « Nuits k / N » que"
-                        + " SuiviTraitement compose. Un libellé simplement non vide ne dirait pas où en"
-                        + " est l'opération, et c'est ce que la case demande de constater")
-                .containsPattern("Nuits\\s+\\d+\\s*/\\s*\\d+");
-
-        // ─── S8-03 · l'estimation du temps restant ───────────────────────────────────────────────
-        // « une fois l'avancement mesurable » : ProgressionOperation extrapole le restant depuis le
-        // temps écoulé, donc elle ne peut rien annoncer au premier instant. On l'attend au lieu de la
-        // supposer présente.
-        attendre(
-                APPARITION_SECONDES,
-                () -> texte(robot, "#" + SuiviProgression.ID_MESSAGE).contains("restant"),
-                "aucune estimation du temps restant n'a paru dans le libellé d'avancement. Elle"
-                        + " s'extrapole du temps écoulé : si elle manque, c'est que l'opération n'a jamais"
-                        + " été mesurable, et la case S8-03 n'a rien à montrer");
-
-        assertThat(texte(robot, "#" + SuiviProgression.ID_MESSAGE))
-                .as("l'estimation s'ajoute au libellé sous la forme « … · ~X s restant » :"
-                        + " ProgressionOperation la compose ainsi, et c'est ce que le spectateur lit")
-                .contains("restant")
-                .containsPattern("~\\s*\\d+");
-
         Respiration.leTempsDeLire(robot);
 
         // ─── S8-06 · l'identité et le résumé, à la fin ────────────────────────────────────────────
@@ -362,6 +308,99 @@ class ScenarioConnecteConnexionTest {
 
     /// Une attente qui **dit ce qu'elle attendait** quand elle échoue. `WaitForAsyncUtils` rend sinon un
     /// `TimeoutException` nu, et le lecteur d'un tournage raté n'a que la ligne pour comprendre.
+
+    @Test
+    @CasDeRecette(
+            value = {"S8-02", "S8-03"},
+            portee = Portee.A_L_ECRAN)
+    @DisplayName("S8-02, S8-03 · la barre avance nuit par nuit, et annonce le temps restant")
+    void la_barre_avance_nuit_par_nuit(FxRobot robot) throws TimeoutException {
+        String jeton = BancDeRecette.jetonDeLaPlateforme();
+
+        Respiration.avantLeGeste(robot);
+        GesteVisible.choisir(robot, "#menuOutils", LIBELLE_ENTREE_MENU);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.clickOn("#champToken").write(jeton);
+        WaitForAsyncUtils.waitForFxEvents();
+        GesteVisible.cliquer(robot, "#boutonConnecter");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        attendre(
+                APPARITION_SECONDES,
+                () -> visible(robot, "#zoneProgression"),
+                "la progression n'a jamais paru dans la modale");
+
+        // Le premier relevé, pris au plus tôt : il sert de point de comparaison.
+        double fractionInitiale = fraction(robot);
+
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+
+        // La PRÉCONDITION de ce geste, déclarée plutôt que supposée. Se connecter rejoue le
+        // rapatriement des nuits du compte (#2557), donc la durée suit ce qui RESTE à récupérer -
+        // une participation sans passage local, ou un passage réduit à un squelette
+        // (`ServiceReconstructionPassages#aReconstruire`). Sur un compte à jour, il n'y a ni barre qui
+        // avance ni temps à estimer : le geste n'a pas lieu, et on le DIT au lieu de rougir.
+        //
+        // L'enregistreur n'indexera aucun cas : un clip qui ne montre pas son geste ne doit pas passer
+        // pour une couverture.
+        // Imprime AVANT la precondition : c'est justement quand le geste est ABANDONNE qu'on veut
+        // savoir pourquoi. L'avancement au moment du releve dit combien de nuits restaient.
+        System.out.printf("  avancement au moment du releve : %s%n", texte(robot, "#" + SuiviProgression.ID_MESSAGE));
+
+        Assumptions.assumeTrue(
+                visible(robot, "#zoneProgression"),
+                "Le compte de tournage n'a plus de nuit à rapatrier : la connexion est brève, et le geste"
+                        + " « rapatrier les nuits du compte » n'a pas eu lieu. Ce n'est PAS un défaut du"
+                        + " produit. Pour le rejouer, il faut une participation sans passage local, ou un"
+                        + " passage réduit à un squelette.");
+
+        // ─── S8-02 · la barre AVANCE, et son libellé nomme la nuit ───────────────────────────────
+        // « Il ne reste pas figé » ne se constate pas sur UN instantané : une barre arrêtée et une
+        // barre qui progresse s'y ressemblent. On compare donc DEUX relevés.
+        attendre(
+                APPARITION_SECONDES,
+                () -> fraction(robot) > fractionInitiale,
+                "la barre n'a pas bougé entre deux relevés : elle est restée figée à sa valeur"
+                        + " d'ouverture, ce que la case S8-02 interdit explicitement");
+
+        assertThat(texte(robot, "#" + SuiviProgression.ID_MESSAGE))
+                .as("le libellé doit NOMMER la nuit en cours, sous la forme « Nuits k / N » que"
+                        + " SuiviTraitement compose. Un libellé simplement non vide ne dirait pas où en"
+                        + " est l'opération, et c'est ce que la case demande de constater")
+                .containsPattern("Nuits\\s+\\d+\\s*/\\s*\\d+");
+
+        // ─── S8-03 · l'estimation du temps restant ───────────────────────────────────────────────
+        // « une fois l'avancement mesurable » : ProgressionOperation extrapole le restant depuis le
+        // temps écoulé, donc elle ne peut rien annoncer au premier instant.
+        attendre(
+                APPARITION_SECONDES,
+                () -> texte(robot, "#" + SuiviProgression.ID_MESSAGE).contains("restant"),
+                "aucune estimation du temps restant n'a paru dans le libellé d'avancement. Elle"
+                        + " s'extrapole du temps écoulé : si elle manque, c'est que l'opération n'a jamais"
+                        + " été mesurable, et la case S8-03 n'a rien à montrer");
+
+        assertThat(texte(robot, "#" + SuiviProgression.ID_MESSAGE))
+                .as("l'estimation s'ajoute au libellé sous la forme « … · ~X s restant » :"
+                        + " ProgressionOperation la compose ainsi, et c'est ce que le spectateur lit")
+                .contains("restant")
+                .containsPattern("~\\s*\\d+");
+
+        Respiration.leTempsDeLire(robot);
+
+        // Le geste se termine où l'opération se termine : on laisse la barre finir plutôt que de
+        // couper le clip au milieu.
+        attendre(
+                FIN_SECONDES,
+                () -> !visible(robot, "#zoneProgression"),
+                "l'opération n'a pas fini dans le temps imparti. À lire comme « le compte de tournage est"
+                        + " plus gros que ce banc ne le prévoit », pas comme un défaut du produit");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Respiration.leTempsDeLire(robot);
+    }
+
     private static void attendre(int secondes, Callable<Boolean> condition, String quoi) throws TimeoutException {
         try {
             WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, condition);

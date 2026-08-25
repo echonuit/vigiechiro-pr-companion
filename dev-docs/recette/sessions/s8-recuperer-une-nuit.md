@@ -28,8 +28,8 @@ vraie carte SD soit reconnue.
 **Étape 1 · La connexion devient une opération longue**
 
 - **S8-01** · *geste: connexion-longue* · Coller le jeton : l'avancement de la récupération s'affiche.
-- **S8-02** · *geste: connexion-longue* · La barre **avance** et son libellé nomme la nuit en cours (« Nuits k / N »), il ne reste pas figé.
-- **S8-03** · *geste: connexion-longue* · Une **estimation du temps restant** apparaît une fois l'avancement mesurable.
+- **S8-02** · *geste: rapatrier-les-nuits-du-compte* · La barre **avance** et son libellé nomme la nuit en cours (« Nuits k / N »), il ne reste pas figé.
+- **S8-03** · *geste: rapatrier-les-nuits-du-compte* · Une **estimation du temps restant** apparaît une fois l'avancement mesurable.
 - **S8-04** · *geste: annuler-pendant-la-recuperation* · Le bouton **Annuler** est atteignable pendant toute l'opération (pas masqué, pas hors fenêtre).
 - **S8-05** · *geste: connexion-longue* · L'avancement paraît **dans** la modale de connexion, sans seconde fenêtre, et « Fermer » y est grisé
   tant que l'opération tourne (#2642).
