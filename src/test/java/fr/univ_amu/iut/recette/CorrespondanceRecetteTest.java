@@ -126,6 +126,25 @@ class CorrespondanceRecetteTest {
     /// Ceux d'entre eux que le script marque `*perceptif*`.
     private static Set<String> perceptifs;
 
+    /// Ceux que le script déclare hors de portée d'un banc, vers le motif qu'il en donne (#4417).
+    ///
+    /// Un fait, pas une dette : le marqueur dit qu'il n'y aura JAMAIS de clip. C'est pourquoi il
+    /// doit se justifier, et pourquoi il rougit le jour où un test se met à citer le cas.
+    private static Map<String, String> horsDePortee;
+
+    /// Ceux dont une ÉTAPE ne s'enregistre pas, vers ce que le carton descriptif dira à sa place.
+    ///
+    /// Le geste, lui, se filme ENTIER : c'est toute la différence avec [#horsDePortee], et c'est ce
+    /// qui évite qu'une étape muette condamne un geste complet.
+    private static Map<String, String> cartons;
+
+    /// Le geste auquel un cas appartient, vers les cas qui le composent (#4417).
+    ///
+    /// Déclaré, et non déduit de l'étape de session. Une déduction ne laisserait rien à
+    /// confronter : un clip qui prétend porter un geste ne pourrait pas être pris en défaut d'en
+    /// oublier un cas.
+    private static Map<String, Set<String>> gestes;
+
     /// Les cas cités par le code, et par quel test.
     private static Map<String, Set<String>> cites;
 
@@ -154,6 +173,9 @@ class CorrespondanceRecetteTest {
     static void lire() {
         declares = new LinkedHashMap<>();
         perceptifs = new LinkedHashSet<>();
+        horsDePortee = new LinkedHashMap<>();
+        cartons = new LinkedHashMap<>();
+        gestes = new LinkedHashMap<>();
         casParFichier = new LinkedHashMap<>();
         lireLesScripts();
         perimetre = PerimetreDesSessions.analyser(casParFichier, MUETTES_ADMISES.keySet());
@@ -223,6 +245,86 @@ class CorrespondanceRecetteTest {
                         declares.get(cas),
                         cites.containsKey(cas) ? "joué par " + joindre(cites.get(cas)) : "à jouer"));
         tri.nonCouverts().forEach(cas -> System.out.printf("  non couvert · %s · %s%n", cas, declares.get(cas)));
+    }
+
+    @Test
+    @DisplayName("#4417 : un cas hors de portée le reste, ou son marqueur tombe")
+    void un_cas_hors_de_portee_n_est_pas_cite() {
+        SoftAssertions verifs = new SoftAssertions();
+        horsDePortee.forEach((cas, motif) -> verifs.assertThat(cites.containsKey(cas))
+                .as(
+                        "%s est marqué *hors-portée: %s* dans %s, et pourtant %s le cite. Le marqueur"
+                                + " porte un FAIT - « il n'y aura jamais de clip » - et il vient d'être"
+                                + " démenti : le retirer, plutôt que de laisser une déclaration périmée"
+                                + " faire croire à un arbitrage qui n'a plus cours.",
+                        cas, motif, declares.get(cas), cites.containsKey(cas) ? joindre(cites.get(cas)) : "?")
+                .isFalse());
+        verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("#4417 : un marqueur qui porte un fait porte aussi son motif")
+    void un_marqueur_de_fait_se_justifie() {
+        SoftAssertions verifs = new SoftAssertions();
+        horsDePortee.forEach((cas, motif) -> verifs.assertThat(motif)
+                .as(
+                        "%s est marqué *hors-portée* sans motif dans %s. Un marqueur sans raison est un"
+                                + " tapis : il retire le cas du décompte sans que personne puisse dire"
+                                + " si c'est encore vrai.",
+                        cas, declares.get(cas))
+                .isNotBlank());
+        cartons.forEach((cas, texte) -> verifs.assertThat(texte)
+                .as(
+                        "%s est marqué *carton* sans dire ce que le carton annoncera, dans %s. Le"
+                                + " carton REMPLACE une étape à l'écran : son texte est ce que le"
+                                + " spectateur lira à la place.",
+                        cas, declares.get(cas))
+                .isNotBlank());
+        verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("#4417 : les gestes sont comptés, et ceux qu'un clip coupe sont nommés")
+    void les_gestes_sont_comptes() {
+        // Ce test ne réclame PAS qu'un geste soit entier : il l'affiche, comme son voisin le fait
+        // de la couverture. Un geste à moitié filmé est une DETTE, et la dette se lit.
+        //
+        // Le premier contact avec de vraies données l'a montré : le geste « connexion-longue » compte
+        // cinq cas, et le clip qui existe en cite trois. Les deux manquants SE PRODUISENT pendant ce
+        // clip - la barre avance, l'estimation paraît - mais rien ne les asserte. Les citer sans les
+        // asserter serait un mensonge, et faire rougir ici reviendrait à l'exiger.
+        //
+        // Il n'échoue que si le garde lui-même ne lit plus rien, sans quoi il rendrait vert sur un
+        // dépôt sans aucun geste déclaré.
+        assertThat(declares)
+                .as("Aucun cas de recette n'a été lu sous %s : le garde ne garde plus rien.", SESSIONS)
+                .isNotEmpty();
+
+        Map<String, Set<String>> coupes = new LinkedHashMap<>();
+        int entiers = 0;
+        for (Map.Entry<String, Set<String>> geste : gestes.entrySet()) {
+            Set<String> manquants = geste.getValue().stream()
+                    .filter(cas -> !cites.containsKey(cas))
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            if (manquants.isEmpty()) {
+                entiers++;
+            } else if (manquants.size() < geste.getValue().size()) {
+                coupes.put(geste.getKey(), manquants);
+            }
+        }
+
+        System.out.printf(
+                "%nGestes déclarés : %d, dont %d filmés entiers, %d coupés, %d sans aucun clip.%n",
+                gestes.size(), entiers, coupes.size(), gestes.size() - entiers - coupes.size());
+        coupes.forEach((geste, manquants) -> System.out.printf(
+                "  geste coupé · %s · un clip en porte une partie, il manque %s%n", geste, joindre(manquants)));
+
+        // Ce que le décompte apprend, et qui décide du palier suivant : combien de CLIPS il faudrait,
+        // au lieu de combien de cas.
+        long casGroupes = gestes.values().stream().mapToLong(Set::size).sum();
+        System.out.printf(
+                "  %d cas se regroupent en %d gestes, soit %.1f cas par clip au lieu de 1.%n",
+                casGroupes, gestes.size(), gestes.isEmpty() ? 0 : (double) casGroupes / gestes.size());
     }
 
     @Test
@@ -541,8 +643,21 @@ class CorrespondanceRecetteTest {
                         while (m.find()) {
                             declares.putIfAbsent(m.group(1), nom);
                             casParFichier.merge(nom, 1, Integer::sum);
-                            if (m.group(2) != null) {
-                                perceptifs.add(m.group(1));
+                            String cas = m.group(1);
+                            Map<String, String> marques = MotifDeCas.marqueurs(m.group(2));
+                            if (marques.containsKey(MotifDeCas.PERCEPTIF)) {
+                                perceptifs.add(cas);
+                            }
+                            if (marques.containsKey(MotifDeCas.HORS_PORTEE)) {
+                                horsDePortee.put(cas, marques.get(MotifDeCas.HORS_PORTEE));
+                            }
+                            if (marques.containsKey(MotifDeCas.CARTON)) {
+                                cartons.put(cas, marques.get(MotifDeCas.CARTON));
+                            }
+                            String geste = marques.get(MotifDeCas.GESTE);
+                            if (geste != null && !geste.isBlank()) {
+                                gestes.computeIfAbsent(geste, g -> new LinkedHashSet<>())
+                                        .add(cas);
                             }
                         }
                     });
