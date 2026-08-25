@@ -8,31 +8,20 @@ import java.util.logging.Logger;
 
 /// Le **filet global** : journalise un incident, puis tente de le montrer à l'utilisateur (#795, #1523).
 ///
-/// ## Pourquoi cette pièce existe, plutôt qu'une lambda dans `App`
+/// Une classe plutôt qu'une lambda dans `App`, parce qu'elle a bouclé **16 217 fois** en production
+/// (#3700) et qu'une lambda posée dans `start` ne s'éprouve pas. Le cycle : un `target/classes` périmé
+/// fait échouer le chargement d'un écran avec un message juste ; le filet l'attrape et demande une
+/// alerte ; habiller cette alerte lit une feuille de style **absente pour la même raison**, d'où une
+/// `NullPointerException` ; celle-là est non capturée sur le fil FX, donc le filet la reprend.
 ///
-/// Parce qu'elle a bouclé sur elle-même en production (#3700), et qu'une lambda posée dans `start` ne
-/// s'éprouve pas. Le scénario, relevé sur une exécution réelle :
-///
-/// | | |
-/// |---|---|
-/// | 1 | un `target/classes` périmé fait échouer le chargement d'un écran, avec un message **juste**, qui nomme la
-/// cause et le remède |
-/// | 2 | le filet l'attrape et demande l'affichage d'une alerte |
-/// | 3 | habiller cette alerte lit une feuille de style **absente pour la même raison** : `NullPointerException` |
-/// | 4 | cette exception-là est **non capturée sur le fil FX**, donc le filet la reprend |
-/// | 5 | retour à l'étape 2 - **16 217 fois** |
-///
-/// ⚠️ L'utilisateur ne voyait **aucune** alerte : chacune mourait avant d'être affichée. Le dispositif
-/// censé rendre l'incident visible le rendait **invisible**, et noyait le seul message utile sous quatre
+/// L'utilisateur ne voyait **aucune** alerte : chacune mourait avant d'être affichée. Le dispositif
+/// censé rendre l'incident visible le rendait invisible, et noyait le seul message utile sous quatre
 /// fichiers de journal.
 ///
-/// ## Les deux règles qui en découlent
-///
-/// **Un échec pendant le signalement ne se signale pas par le même chemin.** Il est journalisé, et là
-/// s'arrête : sinon on rejoue exactement ce qui vient d'échouer.
-///
-/// **Un signalement à la fois.** Le drapeau évite qu'une rafale d'incidents empile autant de fenêtres
-/// modales - chacune bloquante - devant un utilisateur qui n'en fermera jamais la fin.
+/// Deux règles en découlent. **Un échec pendant le signalement ne se signale pas par le même chemin** :
+/// il est journalisé, et là s'arrête, sinon on rejoue ce qui vient d'échouer. **Un signalement à la
+/// fois** : le drapeau évite qu'une rafale empile autant de fenêtres modales bloquantes devant un
+/// utilisateur qui n'en fermera jamais la fin.
 public final class SignalementIncident implements Thread.UncaughtExceptionHandler {
 
     private final Logger journal;
