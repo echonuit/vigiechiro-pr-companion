@@ -22,18 +22,28 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from _commun import rapporte, sans_commentaires_java  # noqa: E402
 
-SOURCES = pathlib.Path("src/main/java")
+# Les DEUX arbres. Un test qui avale son echec ment de la meme facon qu une classe de production :
+# il rend vert sans avoir rien prouve, et c est precisement le defaut que l ADR 0008 nomme. La
+# production seule etait le corpus d origine, sans qu aucune decision ne l ait restreinte a elle -
+# le garde est simplement ne avant que la question ne se pose. Les quatre catch vides que l arbre de
+# test porte ont ete arbitres un par un a leur entree : une exception ATTENDUE dans une auto-garde,
+# deux boucles de reprise dont l assertion de l appelant tranche, une fermeture de banc. Aucun n est
+# un echec avale, et c est pourquoi ils entrent dans le cliquet plutot que de le faire rougir.
+PRODUCTION = pathlib.Path("src/main/java")
+TESTS = pathlib.Path("src/test/java")
+RACINES = (PRODUCTION, TESTS)
 
 # Un bloc catch sans accolade imbriquée : suffisant pour repérer les corps vides ou quasi vides.
 CATCH = re.compile(r"catch\s*\([^)]*\)\s*\{([^{}]*)\}", re.S)
 
 
-def suspects(sources: pathlib.Path = SOURCES) -> list[str]:
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
     # Les commentaires sont retirés du fichier ENTIER d'abord (helper mutualisé) : le corps devient
     # vide s'il ne portait qu'un « // ignoré volontairement », et un catch écrit dans un commentaire ne
     # se fait pas prendre pour du code. L'ADR veut une trace observable À L'EXÉCUTION, pas une note.
+    arbres = [racine / a for a in RACINES] if racine else list(RACINES)
     trouves = []
-    for source in sorted(sources.rglob("*.java")):
+    for source in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
         texte = sans_commentaires_java(source.read_text(encoding="utf-8"))
         for bloc in CATCH.finditer(texte):
             if not bloc.group(1).strip():

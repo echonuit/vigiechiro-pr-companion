@@ -67,7 +67,7 @@ def test_0008_echec_silencieux() -> None:
         racine = pathlib.Path(d)
         _ecrire(
             racine,
-            "Exemple.java",
+            "src/main/java/Exemple.java",
             "class E {\n"
             "  void a() { try { x(); } catch (Exception e) { } }\n"  # vide -> compte
             "  void b() { try { x(); } catch (Exception e) { log(e); } }\n"  # tracé -> non
@@ -75,8 +75,17 @@ def test_0008_echec_silencieux() -> None:
             "  /* void mort() { try{}catch(E e){} } */\n"  # catch EN commentaire -> non
             "}\n",
         )
-        n = len(m.suspects(sources=racine))
-        _verifie("0008 détecte les catch vides (vide + commentaire-seul)", n, 2)
+        # L arbre de TEST est dans la meme population, et ce cas est ce qui le tient. Le compte de 3
+        # separe les deux arbres : retirer `TESTS` de `RACINES` le ramenerait a 2, et le temoin
+        # rougirait. Un temoin pose sur la seule production aurait laisse passer ce retrait en
+        # silence, ce qui est exactement le faux vert que cette suite existe pour interdire.
+        _ecrire(
+            racine,
+            "src/test/java/ExempleTest.java",
+            "class ET { void d() { try { x(); } catch (Exception e) { } } }\n",
+        )
+        n = len(m.suspects(racine=racine))
+        _verifie("0008 détecte les catch vides dans les DEUX arbres, production et test", n, 3)
 
 
 def test_3053_capture_libelle() -> None:
