@@ -19,8 +19,8 @@ import java.util.stream.IntStream;
 /// sans plafond, une grosse nuit tiendrait trop de fichiers en vol → saturation. Pic borné ≈ `parallelisme`,
 /// sans brider le débit CPU.
 ///
-/// Patron extrait de `importation.model.DecoupageParallele` (#12) pour être réutilisé hors de l'import - la
-/// **réactivation** régénère elle aussi des séquences, jusque-là séquentiellement et donc lentement (#1779).
+/// Patron extrait de `importation.model.DecoupageParallele` (#12), la **réactivation** régénérant elle
+/// aussi des séquences (#1779).
 ///
 /// ## Deux formes, selon que l'opération est tout le travail ou une phase
 ///
@@ -30,9 +30,8 @@ import java.util.stream.IntStream;
 ///   JetonAnnulation)]. L'appelant fournit le libellé, l'[EchelleProgression] du pipeline entier, et
 ///   reçoit l'index de l'élément.
 ///
-/// La seconde forme existe parce que la première ne suffisait pas à l'import (#2039), qui copie puis
-/// transforme : la copie doit s'arrêter à mi-course, et rien dans la liste traitée ne le dit. Faute de
-/// ce point d'extension, l'import avait réécrit deux copies du moteur.
+/// La seconde forme sert quand l'opération n'est qu'une **phase** : l'import (#2039) copie puis
+/// transforme, la copie doit donc s'arrêter à mi-barre, et rien dans la liste traitée ne le dit.
 ///
 /// - **Ordre préservé** : les résultats sont rendus **dans l'ordre de la liste d'entrée** (les `Future` sont
 ///   récupérés dans l'ordre de soumission) → résultat déterministe malgré le parallélisme.

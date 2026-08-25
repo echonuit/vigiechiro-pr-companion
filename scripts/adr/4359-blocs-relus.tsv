@@ -13,3 +13,6 @@
 34a41d5c10c241b5	src/main/java/fr/univ_amu/iut/importation/model/TransformationAudio.java	documente l arithmetique du decoupage
 6fdb7c52a69b01e8	src/main/java/fr/univ_amu/iut/validation/model/ServiceValidation.java	enumere les responsabilites du service et les regles R qu elles portent
 586cc08828f06a76	src/main/java/fr/univ_amu/iut/importation/model/ServiceImport.java	enumere les cinq etapes du parcours P2 et le moteur de chacune
+a63f7ef771163dad	src/main/java/fr/univ_amu/iut/commun/model/SaisonActivite.java	bornes issues d une publication citee : la provenance ne se resume pas
+78d802cfad76199c	src/main/java/fr/univ_amu/iut/analyse/outils/CaptureSynthese.java	contracte tranche 4 ; le reste specifie ce que la capture doit montrer
+04ef6cb56493dcf7	src/main/java/fr/univ_amu/iut/lot/outils/CaptureLot.java	contracte tranche 4 ; le reste enumere les dix apercus et leur etat

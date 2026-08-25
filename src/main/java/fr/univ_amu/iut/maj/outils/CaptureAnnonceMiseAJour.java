@@ -26,21 +26,15 @@ import javafx.scene.Parent;
 
 /// Aperçu de l'annonce de mise à jour **dans sa variante Windows** (#3876), la plus longue.
 ///
-/// ## Pourquoi cette capture existe, à côté de celle du socle
-///
 /// [fr.univ_amu.iut.commun.outils.CaptureBandeauAnnonce] montre déjà le bandeau, mais avec un message
-/// **figé écrit à la main**, et sans conseil. Depuis #3457, ce n'est plus le seul message possible :
-/// sous Windows, l'annonce porte en plus « fermez l'application avant d'installer » et le geste
-/// winget, ce qui la fait environ **tripler** de longueur.
+/// **figé écrit à la main**. Sous Windows, l'annonce porte en plus « fermez l'application avant
+/// d'installer » et le geste winget (#3457), ce qui la fait environ **tripler** : c'est la seule
+/// variante où le libellé enroule sur deux lignes et pousse la hauteur du bandeau.
 ///
-/// C'est cette variante-là qu'il faut regarder, parce que c'est la seule où le libellé peut enrouler
-/// sur deux lignes et pousser la hauteur du bandeau.
-///
-/// ⚠️ **Elle ne pouvait pas vivre dans le socle**, et la tentative a été faite : `CaptureBandeauAnnonce`
-/// est dans `commun`, et lui faire composer son message par `ConseilDeMiseAJour` crée le cycle
-/// `commun -> maj -> commun` qu'ArchUnit interdit. Le socle a raison de rester ignorant : son aperçu
-/// doit valoir même quand la feature `maj` est désactivée. L'aperçu d'un message appartient donc à la
-/// feature qui le **produit**.
+/// ⚠️ **Cet aperçu ne peut pas vivre dans le socle.** Faire composer son message à
+/// `CaptureBandeauAnnonce`, qui est dans `commun`, crée le cycle `commun -> maj -> commun`
+/// qu'ArchUnit interdit ; et l'aperçu du socle doit valoir même quand la feature `maj` est désactivée.
+/// L'aperçu d'un message appartient à la feature qui le **produit**.
 ///
 /// ## Ce qui est bouchonné, et ce qui ne l'est pas
 ///

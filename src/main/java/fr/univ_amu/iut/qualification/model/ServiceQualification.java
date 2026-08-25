@@ -41,10 +41,8 @@ import java.util.regex.Pattern;
 ///
 /// - reçoit ses dépendances par constructeur (DAO + moteurs + [UniteDeTravail]), assemblées
 ///   par `QualificationModule` ; reste un objet Java ordinaire, sans annotation d'injection.
-///   L'[fr.univ_amu.iut.commun.model.Horloge] du patron de référence n'est pas injectée ici :
-///   la feature `qualification` n'écrit aucune colonne de date (le verdict ne s'horodate pas
-///   dans le schéma ; `deposited_at` relève de la feature `lot`). Elle sera ajoutée le jour où
-///   une colonne `verified_at` apparaîtra ;
+///   Pas d'[fr.univ_amu.iut.commun.model.Horloge] : cette feature n'écrit aucune colonne de
+///   date, le verdict ne s'horodatant pas dans le schéma ;
 /// - n'écrit aucun SQL : il orchestre les DAO et délègue les règles pures aux moteurs
 ///   ([GenerateurSelection], [PreCheckNuit]) ;
 /// - **aucun import JavaFX** (logique métier pure, testable en JUnit) ;
@@ -58,12 +56,9 @@ import java.util.regex.Pattern;
 /// cycle, contrôlé par `ArchitectureTest`).
 ///
 /// **Atomicité (R12).** Constituer une sélection écrit dans deux tables (`listening_selection`
-/// + N × `selection_sequence`) : l'opération est enveloppée dans une [UniteDeTravail] via les
-/// surcharges « connection-aware » de [SelectionDao] (tout ou rien). Le drapeau dénormalisé
-/// `listening_sequence.in_selection` n'est volontairement pas mis à jour ici : la table de
-/// jonction est la source de vérité, et maintenir cette dénormalisation supposerait une
-/// méthode transactionnelle dans `SequenceDao` (feature `passage`, hors périmètre de
-/// modification).
+/// + N × `selection_sequence`), enveloppées dans une [UniteDeTravail] (tout ou rien). Le drapeau
+/// dénormalisé `listening_sequence.in_selection` n'est **pas** mis à jour ici : la table de jonction
+/// est la source de vérité.
 public class ServiceQualification {
 
     /// Horodatage de l'enregistreur dans le nom de fichier (R7) : `_AAAAMMJJ_HHMMSS`.
