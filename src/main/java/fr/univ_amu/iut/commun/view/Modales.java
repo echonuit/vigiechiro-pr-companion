@@ -107,37 +107,31 @@ public final class Modales {
     /// Fait suivre à la fenêtre la **croissance** de son contenu.
     ///
     /// Une modale est dimensionnée à son ouverture, sur le contenu visible **à cet instant**. Tout ce qui
-    /// paraît ensuite - une seconde barre de phase qui se révèle, un compte rendu de fin - agrandit la mise
-    /// en page sans agrandir la fenêtre, et le bas passe sous la ligne de flottaison. Le compte rendu de la
-    /// reconstruction en avait souffert le premier (#1534) ; chaque modale s'était alors rattrapée pour son
-    /// seul cas connu, si bien que la réactivation poussait toujours ses **boutons** hors de la fenêtre dès
-    /// que la barre d'ancrage paraissait.
+    /// paraît ensuite - une seconde barre de phase qui se révèle, un compte rendu de fin (#1534) -
+    /// agrandit la mise en page sans agrandir la fenêtre, et le bas passe sous la ligne de flottaison.
     ///
     /// L'ajustement se fait par `sizeToScene()`, donc la fenêtre est **refaite à la taille de son
-    /// contenu** : une fenêtre que l'utilisateur aurait agrandie à la main y perd sa taille. Une première
-    /// version gardait le maximum entre l'ancienne taille et la nouvelle, pour ne jamais rétrécir. Elle a
-    /// été retirée : `setWidth`/`setHeight` font passer un Stage en dimensionnement **explicite**, et il
-    /// cesse alors définitivement de s'ajuster à ses scènes suivantes. Sans effet pour une modale, que
-    /// l'on jette après usage - mais le Stage du harnais TestFX, lui, est **partagé par toutes les classes
-    /// de test d'un même fork** : figé à 600 px de large, il faisait échouer les classes suivantes sur des
-    /// noeuds « invisibles », très loin de leur cause et seulement selon l'ordre d'exécution.
+    /// contenu** : une fenêtre agrandie à la main y perd sa taille. Garder le maximum entre l'ancienne
+    /// taille et la nouvelle a été essayé, puis retiré : `setWidth`/`setHeight` font passer un Stage en
+    /// dimensionnement **explicite**, et il cesse alors définitivement de s'ajuster à ses scènes
+    /// suivantes. Sans effet pour une modale qu'on jette après usage, mais le Stage du harnais TestFX
+    /// est **partagé par toutes les classes de test d'un même fork** : figé à 600 px de large, il
+    /// faisait échouer les classes suivantes sur des noeuds « invisibles », très loin de leur cause et
+    /// seulement selon l'ordre d'exécution.
+    ///
+    /// **Déclarez CHAQUE révélation**, ou la propriété qui la pilote. C'est la seule règle de cet appel,
+    /// et elle s'oublie en silence : une zone non déclarée fait déborder le contenu **pendant tout le
+    /// transitoire**, puis tout se recale d'un coup à la première révélation surveillée. L'utilisateur
+    /// voit un sursaut, et aucune capture ne le montre puisqu'elle photographie un état stabilisé. Le
+    /// défaut a été trouvé **trois fois** (#3453), chaque fois avec un argument de moins que de zones
+    /// qui paraissent.
+    ///
+    /// **Aucun garde-fou ne le vérifie, et c'est délibéré** : distinguer « surveillé directement » de
+    /// « surveillé par son moteur » demanderait d'analyser les liaisons JavaFX, et une règle plus
+    /// grossière rendrait une majorité de candidats légitimes - la loupe bruyante que l'ADR 3479 écarte.
     ///
     /// @param racine la racine de la modale, celle que porte la scène
     /// @param revelations les propriétés dont un changement fait paraître du contenu
-    /// ⚠️ **Déclarez CHAQUE révélation** - ou la propriété qui la pilote. C'est la seule règle de cet
-    /// appel, et elle s'oublie en silence : une zone non déclarée fait déborder le contenu **pendant tout
-    /// le transitoire**, puis tout se recale d'un coup à la première révélation surveillée. L'utilisateur
-    /// voit un sursaut ; aucune capture ne le montre, puisqu'elle photographie un état stabilisé et
-    /// jamais le chemin pour y arriver.
-    ///
-    /// Le défaut a été trouvé **trois fois** (#3453) : la zone de progression de la connexion, la ligne
-    /// « Communication avec Vigie-Chiro… » du rattachement, et le message d'erreur de la réactivation.
-    /// Les trois avaient un argument de moins que de zones qui paraissent.
-    ///
-    /// Aucun garde-fou ne le vérifie, et c'est **délibéré** : distinguer « surveillé directement » de
-    /// « surveillé par son moteur » demanderait d'analyser les liaisons JavaFX, et une règle plus grossière
-    /// rendrait une majorité de candidats légitimes - la loupe bruyante que le dépôt écarte (ADR 3479).
-    /// La règle vit donc ici, là où on l'appelle.
     public static void suivreLaCroissance(Region racine, ObservableValue<?>... revelations) {
         Objects.requireNonNull(racine, "racine");
         for (ObservableValue<?> revelation : revelations) {

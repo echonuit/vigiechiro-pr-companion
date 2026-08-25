@@ -6,36 +6,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-/// Le dossier d'exemple d'une capture : un journal, un relevé, des WAV, sous un chemin **déterministe**.
+/// Le dossier d'exemple d'une capture : un journal, un relevé, des WAV, sous un chemin imprévisible.
 ///
-/// ## Pourquoi une classe, et pas une méthode privée de [CaptureImport]
+/// C'est une classe et non une méthode privée de [CaptureImport] parce que son geste central n'était
+/// éprouvé par rien et ne pouvait pas l'être : il vivait dans un `private static` d'un outil qui, pour
+/// tourner, monte une scène JavaFX entière (#4044).
 ///
-/// Parce que son geste central - **vider avant d'écrire** - n'était éprouvé par rien, et ne pouvait pas
-/// l'être : il vivait dans une méthode `private static` d'un outil qui, pour tourner, monte une scène
-/// JavaFX entière (#4044). Extraire nomme le concept **et** le rend atteignable par un test.
+/// **Un dossier neuf à chaque appel.** Le chemin était d'abord déterministe, sous `java.io.tmpdir`, ce
+/// que CodeQL a signalé (`java/local-temp-file-or-directory-information-disclosure`, #4049) : un
+/// chemin prévisible y est lisible **et inscriptible** par les autres utilisateurs locaux. Le risque
+/// n'est pas théorique ici, cet outil fabriquant des images **publiées** - un tiers qui devine le
+/// chemin peut y déposer ce qu'il veut avant le rendu, et la documentation montrerait son contenu.
+/// `Files.createTempDirectory` rend un nom imprévisible et, sur POSIX, aux droits du seul propriétaire.
 ///
-/// ## Un dossier NEUF à chaque appel, et pourquoi ce n'est pas qu'une affaire de sécurité
-///
-/// Le chemin était d'abord **déterministe**, sous `java.io.tmpdir`. CodeQL l'a signalé
-/// (`java/local-temp-file-or-directory-information-disclosure`, #4049) : un chemin prévisible dans le
-/// répertoire temporaire est lisible **et inscriptible** par les autres utilisateurs locaux.
-///
-/// ⚠️ Le risque n'est pas théorique pour cet outil-ci : il fabrique des images **publiées**. Un tiers
-/// qui devine le chemin peut y déposer ce qu'il veut avant que la capture ne soit rendue, et la
-/// documentation montrerait son contenu.
-///
-/// `Files.createTempDirectory` rend un dossier au nom imprévisible et, sur POSIX, aux droits du seul
-/// propriétaire.
-///
-/// ⚠️ **Et cela règle par construction ce qu'un nettoyage gardait.** Le chemin déterministe obligeait à
-/// vider avant d'écrire, sans quoi les fichiers d'une exécution précédente restaient et la capture
-/// montrait leur **somme** - « 4 enregistrement(s) WAV détecté(s) » pour une fixture qui en déclare
-/// deux. Un dossier neuf n'a rien à vider. Le garde disparaît avec le défaut qu'il gardait, ce qui vaut
-/// mieux que de le conserver.
-///
-/// ⚠️ Ce que le nom aléatoire ne coûte PAS : l'identité au bit près des captures. Le champ « Dossier
-/// source » se lie à `source().libelleProperty()`, que cet outil ne pose pas ; le chemin ne paraît donc
-/// sur aucune image. Vérifié avant de changer, la galerie promettant des PNG identiques au bit près.
+/// Cela règle par construction ce qu'un nettoyage gardait : le chemin déterministe obligeait à vider
+/// avant d'écrire, sans quoi les fichiers d'une exécution précédente restaient et la capture montrait
+/// leur **somme**, « 4 enregistrement(s) WAV détecté(s) » pour une fixture qui en déclare deux. Un
+/// dossier neuf n'a rien à vider.
 final class DossierDeFixture {
 
     private static final String NOM_JOURNAL = "LogPR1925492.txt";

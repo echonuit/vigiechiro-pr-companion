@@ -10,36 +10,23 @@ import java.util.Optional;
 
 /// Décide si une **URL pré-signée** rendue par le serveur peut être suivie (#2734).
 ///
-/// ## Pourquoi il faut la regarder
-///
 /// Une URL signée décide **où partent les données** : c'est elle qu'on télécharge, et c'est vers elle
-/// qu'on téléverse les enregistrements d'une nuit. Elle était passée telle quelle à `URI.create`, en
-/// lecture comme en écriture : le client faisait donc confiance au serveur sur ce champ précis. Une API
-/// compromise ou mal configurée pouvait envoyer les données ailleurs, éventuellement en clair.
+/// qu'on téléverse les enregistrements d'une nuit. La passer telle quelle à `URI.create` revient à
+/// faire confiance au serveur sur ce champ ; une API compromise ou mal configurée pourrait les
+/// envoyer ailleurs, éventuellement en clair.
 ///
-/// ## La forme de référence n'est pas devinée
+/// La forme de référence vient du miroir de l'API
+/// (`vigiechiro-api/vigiechiro/resources/fichiers.py:188`), qui construit **toutes** les URL signées
+/// avec un schéma codé en dur et un hôte sous-domaine de `s3.amazonaws.com`. Une URL d'une autre
+/// forme ne vient pas du chemin nominal.
 ///
-/// Le miroir de l'API (`vigiechiro-api/vigiechiro/resources/fichiers.py:188`) construit **toutes** les
-/// URL signées ainsi :
+/// Le serveur sait aussi renvoyer autre chose : `DEV_FAKE_S3_URL` (`fichiers.py:125`) produit
+/// n'importe quel hôte, et une liste figée rendrait l'application inutilisable contre une instance de
+/// développement. D'où la propriété système [#PROPRIETE_HOTES], qui **remplace** la liste sans
+/// l'ouvrir à tout, et un refus qui nomme l'hôte observé **et** la propriété : un changement
+/// d'hébergement doit être une ligne à ajouter, pas un mur.
 ///
-/// ```python
-/// s3_url = 'https://{}.s3.amazonaws.com/{}'.format(AWS_S3_BUCKET, object_name)
-/// ```
-///
-/// Le schéma y est **codé en dur**, et l'hôte est toujours un sous-domaine de `s3.amazonaws.com`. Une
-/// URL d'une autre forme ne vient pas du chemin nominal.
-///
-/// ## L'échappatoire, et pourquoi elle existe
-///
-/// Le serveur sait aussi renvoyer autre chose : quand `DEV_FAKE_S3_URL` est configuré
-/// (`fichiers.py:125`), l'URL signée devient cette valeur suivie du nom d'objet, donc n'importe quel
-/// hôte. Une liste figée rendrait l'application inutilisable contre une instance de développement.
-///
-/// D'où la propriété système [#PROPRIETE_HOTES], qui **remplace** la liste (elle ne l'élargit pas à
-/// tout), et un message de refus qui nomme l'hôte observé **et** la propriété : un changement
-/// d'hébergement côté plateforme doit être une ligne à ajouter, pas un mur.
-///
-/// Le schéma, lui, n'est pas surchargeable. Ouvrir un hôte n'ouvre pas le HTTP en clair.
+/// Le schéma n'est pas surchargeable : ouvrir un hôte n'ouvre pas le HTTP en clair.
 public final class UrlSigneeAdmise {
 
     /// Liste des hôtes admis, séparés par des virgules, en remplacement des hôtes par défaut.
