@@ -15,10 +15,9 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
-/// Détermine la liste des originaux à transformer selon le choix de **conservation** (#…), en
-/// découplant le chemin physiquement lu de son nom logique R6 (cf. [SourceOriginal]). Concern extrait
-/// de [ServiceImport] (Extract Class) pour garder l'orchestrateur cohésif : la **politique copie ou
-/// non** est une préoccupation autonome, ici collaborant avec [CopieProtegee] (R9) et [Renommeur] (R6).
+/// Détermine la liste des originaux à transformer selon le choix de **conservation** (#641), en
+/// découplant le chemin physiquement lu de son nom logique R6 (cf. [SourceOriginal]). Collabore avec
+/// [CopieProtegee] (R9) et [Renommeur] (R6).
 ///
 /// - **conservation** : copie protégée dans `bruts/` (R9, reprise #231) puis renommage R6/R7 ; la
 ///   lecture se fait ensuite sur ces copies (dont le nom est déjà le nom R6) ;
@@ -27,10 +26,7 @@ import java.util.stream.IntStream;
 ///
 /// La copie est **parallèle** (#948) et confiée au socle [ExecutionParallele] (#2039), qui porte les
 /// threads virtuels, la borne de concurrence, l'ordre des résultats, la progression monotone et
-/// l'annulation coopérative. Cette classe n'écrit plus ce moteur : elle en écrivait une **copie**, à
-/// l'identique de celle du découpage.
-///
-/// Ce qui reste ici est ce qui lui appartient vraiment :
+/// l'annulation coopérative. Ce qui reste ici lui appartient en propre :
 ///
 /// - **la borne a une raison propre** : chaque copie lit et hache jusqu'à deux SHA-256 (E/S + CPU) ;
 ///   sans plafond, des centaines de lectures simultanées feraient s'écrouler le débit du support source ;
