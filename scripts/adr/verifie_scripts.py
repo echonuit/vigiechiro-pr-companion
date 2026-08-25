@@ -577,6 +577,27 @@ def test_4472_commentaire_en_corps() -> None:
         entete = "\n".join(f"// Ligne {i}." for i in range(m.SEUIL + 3))
         _ecrire(racine, "fr/univ_amu/iut/a/Dedans.java", entete + "\nclass Dehors {}\n")
         _verifie("4472 le meme bloc HORS d un corps ne coute rien", len(m.suspects(racine)), 0)
+def test_4468_javadoc_non_relue() -> None:
+    m = _charge("4468-javadoc-non-relue.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(racine, "fr/univ_amu/iut/a/Lu.java", "/// Le contrat de A.\nclass Lu {}\n")
+        _ecrire(racine, "fr/univ_amu/iut/a/Jamais.java", "/// Le contrat de B.\nclass Jamais {}\n")
+
+        # Sans manifeste, TOUT est suspect : c est le premier des deux faits que le cliquet tient.
+        _verifie("4468 sans manifeste, aucun fichier n est blanchi", len(m.suspects(racine, {})), 2)
+
+        # Inscrit avec l empreinte du jour, un fichier sort de la liste.
+        lu = racine / "fr/univ_amu/iut/a/Lu.java"
+        # L empreinte vient du COMPTEUR, que le garde emprunte plutot que de la redire : le temoin
+        # emprunte la meme, sans quoi il eprouverait une troisieme definition.
+        table = {"fr/univ_amu/iut/a/Lu.java": m.empreinte(lu)}
+        _verifie("4468 un fichier inscrit sort de la liste", len(m.suspects(racine, table)), 1)
+
+        # LE SECOND FAIT, celui qui distingue ce cliquet d une case cochee : la javadoc change, donc
+        # elle n a pas ete relue SOUS SA FORME ACTUELLE, et le fichier redevient suspect.
+        lu.write_text("/// Le contrat de A, reecrit en douce.\nclass Lu {}\n", encoding="utf-8")
+        _verifie("4468 une javadoc reecrite en douce redevient suspecte", len(m.suspects(racine, table)), 2)
 
 
 def test_rapport_et_resserrement() -> None:
@@ -703,6 +724,7 @@ if __name__ == "__main__":
         test_loupe_0020,
         test_loupe_0044,
         test_4472_commentaire_en_corps,
+        test_4468_javadoc_non_relue,
         test_rapport_et_resserrement,
     ):
         essai()

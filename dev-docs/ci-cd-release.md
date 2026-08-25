@@ -574,6 +574,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie-corps-pr.sh` | cadratin, apostrophe courbe et élision sans apostrophe dans le corps d'une PR | `corps-pr.yml` (autotest : `lint.yml`) |
 | `4472-commentaire-en-corps.py` | les blocs de `//` qui débordent dans un corps de méthode, population que le cliquet 4359 ne voit pas | `lint.yml` (cliquets ADR, autotest dédié) |
 | `loupe-4472-densite-de-commentaire.py` | la densité de commentaire par classe et par méthode ; signale, ne bloque pas | `adr-rapport.yml` |
+| `4468-javadoc-non-relue.py` | les fichiers Java dont la javadoc n'a jamais été relue, ou l'a été puis réécrite : l'empreinte du manifeste `scripts/methode/relus.txt` en fait foi | `lint.yml` (cliquets ADR, autotest dédié) |
 | `verifie-epinglage.sh` | actions figées sur un SHA, aucune divergence de version | `lint.yml` |
 | `verifie-jeton.sh` | aucun jeton VigieChiro en clair | `lint.yml` |
 | `check-captures.sh` | chaque vue a une capture, chaque capture existe et est présentée | `lint.yml` |

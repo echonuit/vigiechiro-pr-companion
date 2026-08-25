@@ -1,0 +1,8 @@
+# Fichiers Java dont TOUS les blocs de javadoc ont ete ouverts et juges.
+# Une ligne par fichier : <empreinte>  <chemin relatif a la racine du depot>.
+# L empreinte est celle de la javadoc RELUE : si elle change, le fichier redevient a relire.
+# Voir couverture-relecture.py et scripts/adr/4468-javadoc-non-relue.py.
+#
+# Il part VIDE, et ce n est pas un oubli. Les douze tranches de #4394 ont lu des BLOCS choisis pour
+# leur poids, jamais tous les blocs d un fichier : les inscrire reviendrait a affirmer une lecture
+# qui n a pas eu lieu, et c est la seule chose que ce dispositif pretend tenir.
