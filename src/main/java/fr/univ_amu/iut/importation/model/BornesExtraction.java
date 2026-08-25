@@ -8,47 +8,21 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /// Ce qui borne la décompression d'une archive en **ressources** (#2732), là où la garde « zip-slip »
-/// la bornait déjà en **chemins**.
+/// la bornait déjà en **chemins**. Sans elles, `transferTo` écrit jusqu'à saturer le volume, sur lequel
+/// vit aussi la base SQLite du workspace.
 ///
-/// Sans bornes, `transferTo` écrivait jusqu'à la fin de l'entrée ou la saturation du disque. L'erreur
-/// « Aucun espace disponible » était bien exposée, mais **après** la saturation, qui met en difficulté
-/// tout le poste : la base SQLite du workspace vit sur le même volume. #2041 avait posé ce contrôle
-/// pour l'import, une étape en aval, et sa Javadoc nommait le trou restant.
-///
-/// ## Deux gardes, parce qu'un seul se ferait berner
-///
-/// 1. **Avant d'écrire le premier octet**, sur l'inventaire **annoncé** ([#verifierAvantExtraction]) :
-///    nombre d'entrées, taille de la plus grosse, total, et espace disque disponible avec marge.
-/// 2. **Pendant la copie**, sur les octets **réellement** écrits ([#exigerCumulSousLePlafond]) : une
-///    bombe ZIP ment précisément sur ce que le premier garde lit. Le second la confronte à **sa propre
-///    déclaration**, celle sur laquelle l'espace disque a été validé, et n'a donc besoin d'aucune
-///    constante arbitraire.
-///
-/// Ensemble, ils tiennent une garantie simple : **on n'écrit jamais plus que ce qui a été déclaré, et
-/// on n'accepte jamais une déclaration qui ne tient pas.**
-///
-/// ## Pourquoi il n'y a pas de plafond de taux de compression
-///
-/// C'est le garde classique contre les bombes ZIP, et il a été écrit ici avant d'être **retiré**. Il ne
-/// sépare pas les deux populations dans ce domaine : les fixtures de recette, produites par le
-/// générateur de cartes SD, se décompressent **137 fois**, et un enregistrement réellement silencieux
-/// fait bien davantage. Or de l'audio silencieux et une bombe sont **les mêmes octets** : aucun seuil
-/// ne distingue l'un de l'autre.
-///
-/// Il n'apporte de toute façon rien à la garantie ci-dessus. Un taux énorme ne nuit que s'il aboutit à
-/// beaucoup d'octets écrits, ce que le total annoncé, le contrôle d'espace disque et le second garde
-/// bornent déjà. Le conserver, c'était payer des refus injustifiés pour une protection qu'on avait par
-/// ailleurs.
-///
-/// ## Des défauts larges, surchargeables, mais pas un réglage
-///
-/// Une vraie nuit fait quelques milliers de fichiers et une dizaine de gigaoctets : elle doit passer
-/// **sans que personne ait rien à régler**. Les défauts sont donc un à deux ordres de grandeur au-dessus.
+/// Deux gardes tiennent une seule garantie : **on n'écrit jamais plus que ce qui a été déclaré, et on
+/// n'accepte jamais une déclaration qui ne tient pas.** Le premier lit l'inventaire **annoncé** avant
+/// le premier octet ([#verifierAvantExtraction]) ; le second compte les octets **réellement** écrits
+/// ([#exigerCumulSousLePlafond]) et confronte l'archive à sa propre déclaration, celle sur laquelle
+/// l'espace disque a été validé.
 ///
 /// Chaque borne se surcharge par **propriété système** (patron de `vigiechiro.depot.taille-max-mo`),
-/// pour l'archive légitime mais inhabituelle. Il n'y a délibérément **pas** de réglage dans l'écran
-/// Réglages : un naturaliste n'a pas à choisir un plafond d'entrées. C'est le **message de refus** qui
-/// doit nommer la limite atteinte, sans quoi la seule issue serait de renoncer à l'archive.
+/// jamais par l'écran Réglages. Le **message de refus** doit nommer la limite atteinte, sans quoi la
+/// seule issue serait de renoncer à l'archive.
+///
+/// L'[ADR 2732] porte le reste, et notamment pourquoi il n'y a **pas** de plafond de taux de
+/// compression : de l'audio silencieux et une bombe ZIP sont les mêmes octets.
 ///
 /// @param maxEntrees nombre d'entrées « fichier » au-delà duquel l'archive est refusée
 /// @param maxOctetsParEntree taille décompressée annoncée maximale d'une entrée

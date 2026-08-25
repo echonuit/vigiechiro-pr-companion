@@ -104,14 +104,8 @@ import javafx.scene.Scene;
 ///   `PUT` a rencontré une coupure momentanée : sa ligne porte la mention discrète « Nouvelle tentative
 ///   dans N s… » à côté de la barre, l'unité restant « en cours ».
 ///
-/// Les deux aperçus **connectés** comblent un angle mort : l'étape ③ et le second mode du bouton ④ ne
-/// se rendent que si `Optional<DepotVigieChiro>` est non vide, ce que l'injecteur de capture ne
-/// fournissait pas. La moitié connectée de l'écran n'était donc relue par personne.
-///
-/// On seede une base SQLite temporaire (deux passages sur un même point : un cohérent, un
-/// incohérent), puis on charge l'écran via une `controllerFactory` Guice (socle + sites + passage +
-/// lot) et on le rend hors-écran par [ApercuFx]. La feature `lot` dépendant déjà de `sites`
-/// (vérification de cohérence), le seed utilise directement les DAO `sites`.
+/// Les aperçus **connectés** ont besoin d'un `Optional<DepotVigieChiro>` non vide : sans lui, l'étape ③
+/// et le second mode du bouton ④ ne se rendent pas du tout.
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureLot {

@@ -26,10 +26,9 @@ import java.util.function.Consumer;
 /// retrouvé ses fichiers, et l'application rebranche, **fichier par fichier**, uniquement ce qu'elle a
 /// pu **vérifier**.
 ///
-/// Le risque à fermer n'est pas de recopier des fichiers, c'est de recopier les **mauvais** : deux jeux
-/// peuvent porter les mêmes noms sans être les mêmes (redécoupe, autre expansion, autre nuit du même
-/// carré). Rebrancher des observations sur le mauvais audio produit un résultat **scientifiquement faux,
-/// et silencieux** : l'utilisateur validerait un cri en écoutant autre chose. La garde
+/// Deux jeux de fichiers peuvent porter les mêmes noms sans être les mêmes (redécoupe, autre expansion,
+/// autre nuit du même carré). Rebrancher des observations sur le mauvais audio produit un résultat
+/// **scientifiquement faux, et silencieux** : on validerait un cri en écoutant autre chose. La garde
 /// ([RebranchementSequences], cascade #1309) ne laisse donc **jamais** passer un fichier non vérifié : il
 /// est compté, motivé, rapporté.
 ///
@@ -50,15 +49,10 @@ import java.util.function.Consumer;
 /// depuis le dossier source (jamais déplacés), et ni les observations ni les vérifications ne sont
 /// touchées - on rebranche des chemins, on ne recalcule rien.
 ///
-/// **Une des trois coutures d'un même concept d'import** (#1662, EPIC B). La reconstruction (#1305,
-/// [ServiceReconstructionPassages], hydratation d'un squelette #1710) et l'import groupé (#1708)
-/// rapatrient les **observations** d'une nuit depuis la plateforme, mais *sans audio ni ancrage*
-/// (`idDonneeVigieChiro` null) : le passage devient **consultable**. La réactivation est la variante
-/// « **observations + audio + ancrage** », celle qui **complète** les deux autres : elle rebranche les
-/// **fichiers** (le passage devient **écoutable**) et, sur un passage reconstruit, rapatrie les `donnees`
-/// pour **acquérir l'ancrage différé** ([#acquerirAncrageSiNecessaire], #1571). Les trois partagent la
-/// même exigence - ne rebrancher que ce qui est **vérifié**, et **dire** ce qui manque - et la même
-/// surface : hors du fil JavaFX, progression, annulation, rapport honnête (jamais un simple « c'est fait »).
+/// **Une des trois coutures d'un même concept d'import** (#1662, EPIC B, [ADR 0016]). La reconstruction
+/// ([ServiceReconstructionPassages], squelette hydraté #1710) et l'import groupé (#1708) rendent un
+/// passage **consultable** : les observations, sans audio ni ancrage. Celle-ci le rend **écoutable**,
+/// et sur un passage reconstruit acquiert l'ancrage différé ([#acquerirAncrageSiNecessaire], #1571).
 public class ServiceReactivationPassage {
 
     /// Ce que fait la phase disque quand une nuit **reconstruite** vient d'être hydratée : inscrire en base
