@@ -12,32 +12,23 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-/// Restreindre des [ContactHoraire] **en ligne de commande** (#3059), aux mêmes conditions que la barre
-/// de filtres de l'écran Activité.
+/// Restreindre des [ContactHoraire] **en ligne de commande** (#3059), aux mêmes conditions que la
+/// barre de filtres de l'écran Activité. Les **cinq** critères de l'écran sont offerts : le **lieu**
+/// par [fr.univ_amu.iut.validation.model.FiltresLieu] généralisé, les quatre autres ici. N'en livrer
+/// qu'un ou deux reproduirait la parité de façade que #2971 a déjà coûtée, vraie sur le cas qu'on
+/// regarde et fausse dès qu'on resserre.
 ///
-/// ## Parité stricte, et pourquoi
+/// Le **point** n'est pas une dimension de lieu en ligne de commande : le schéma pose
+/// `UNIQUE(site_id, code)`, donc un code seul désigne autant de lieux qu'il y a de carrés. L'écran
+/// s'en tire en l'affichant qualifié (« 640380 · A1 », #2992), ce qui suppose une liste sous les
+/// yeux ; reproduire cette forme imposerait un point médian dans une valeur d'option, à échapper dans
+/// chaque script. Même arbitrage que `exporter-sons`, et deux commandes qui traiteraient le lieu
+/// différemment seraient pires que la limite.
 ///
-/// L'écran offre cinq critères ; `exporter-activite` n'en offrait **aucun**, sachant exporter une nuit ou
-/// toutes et rien entre les deux. N'en livrer qu'un ou deux aurait reproduit la **parité de façade** que
-/// #2971 a déjà coûtée : vraie sur le cas qu'on regarde, fausse dès qu'on resserre comme on le fait en
-/// vrai. Les cinq sont donc offerts, le **lieu** par [fr.univ_amu.iut.validation.model.FiltresLieu]
-/// généralisé, les quatre autres ici.
-///
-/// ## Un écart assumé, le même qu'en revue audio
-///
-/// Le **point** n'est pas une dimension de lieu en ligne de commande. Le schéma pose
-/// `UNIQUE(site_id, code)` : un code seul désigne autant de lieux qu'il y a de carrés. L'écran s'en tire
-/// en l'affichant **qualifié** (« 640380 · A1 », #2992), ce qui suppose une liste sous les yeux ;
-/// reproduire cette forme imposerait un point médian dans une valeur d'option, à échapper dans chaque
-/// script. C'est mot pour mot l'arbitrage de `exporter-sons`, et deux commandes qui traitent le lieu
-/// différemment seraient pires que la limite elle-même.
-///
-/// ## Ce qui refuse, et ce qui rend vide
-///
-/// Un critère qui **désigne** quelque chose refuse quand ce quelque chose n'existe pas, en nommant ce qui
-/// est présent : une archive vide en code 0 est un succès qui ne contient rien, et le script enchaîne.
-/// Un critère qui **qualifie** (la nature d'une nuit, l'enjeu d'une espèce) rend légitimement un ensemble
-/// vide : « aucune nuit opportuniste » est une réponse, pas une faute de frappe.
+/// Un critère qui **désigne** quelque chose refuse quand ce quelque chose n'existe pas, en nommant ce
+/// qui est présent : une archive vide en code 0 est un succès qui ne contient rien, et le script
+/// enchaîne. Un critère qui **qualifie** - la nature d'une nuit, l'enjeu d'une espèce - rend
+/// légitimement un ensemble vide : « aucune nuit opportuniste » est une réponse.
 public final class FiltresActivite {
 
     private FiltresActivite() {}
