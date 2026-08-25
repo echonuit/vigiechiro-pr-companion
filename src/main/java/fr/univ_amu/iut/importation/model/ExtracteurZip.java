@@ -19,21 +19,14 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-/// Décompresse une **archive `.zip`** de carte SD vers un **dossier temporaire**, pour que l'import
-/// (#139) accepte un zip aussi bien qu'un dossier déjà décompressé. La source d'origine n'est jamais
-/// modifiée (cohérent R9 : on lit le zip, on écrit ailleurs).
+/// Décompresse une **archive `.zip`** de carte SD vers un dossier temporaire, pour que l'import
+/// (#139) accepte un zip aussi bien qu'un dossier déjà décompressé. La source n'est jamais modifiée.
 ///
-/// **Sur disque, pas en RAM** : le dossier d'extraction est créé **sous le workspace** (passé en
-/// paramètre), et non dans `java.io.tmpdir`. Sur la plupart des postes `/tmp` est un *tmpfs* monté en
-/// RAM, souvent borné à quelques Go : une vraie nuit de terrain (~10 Go décompressés) le saturerait et
-/// l'extraction échouerait en `ENOSPC`. Le workspace vit sur le disque, là où l'import recopie ensuite
-/// les fichiers : l'extraction et l'import partagent donc le même volume.
-///
-/// **Mémoire bornée** (#104) : chaque entrée est recopiée en **flux** ([CopieInterruptible], tampon
-/// explicite), jamais chargée entière en mémoire : un zip volumineux ne sature donc pas le tas.
-///
-/// **Garde « zip-slip »** : une entrée dont le chemin s'évaderait du dossier d'extraction (`../…`) est
-/// refusée, pour ne pas écrire hors de la zone temporaire.
+/// **Sur disque, pas en RAM** : le dossier d'extraction naît **sous le workspace** et non dans
+/// `java.io.tmpdir`, souvent un *tmpfs* borné à quelques Go qu'une nuit de terrain (~10 Go) ferait
+/// déborder en `ENOSPC`. Extraction et import partagent ainsi le même volume. **Mémoire bornée**
+/// (#104) : chaque entrée est recopiée en flux ([CopieInterruptible]), jamais chargée entière. Une
+/// entrée dont le chemin s'évaderait du dossier (`../…`) est **refusée** - garde « zip-slip ».
 public final class ExtracteurZip {
 
     private ExtracteurZip() {}
@@ -54,23 +47,14 @@ public final class ExtracteurZip {
         return extraireVersDossierTemporaire(archiveZip, dossierBase, surProgression, JetonAnnulation.neutre());
     }
 
-    /// Extrait `archiveZip` vers un **dossier temporaire neuf créé sous `dossierBase`** (le workspace,
-    /// sur disque) et renvoie ce dossier (à inspecter puis importer comme une carte SD). En cas d'échec
-    /// **ou d'annulation**, le dossier partiellement extrait est nettoyé.
+    /// Extrait `archiveZip` vers un **dossier neuf créé sous `dossierBase`** et rend ce dossier. En
+    /// cas d'échec ou d'annulation, le dossier partiellement extrait est nettoyé.
     ///
-    /// **Progression déterminée** (#146) : le nombre total de fichiers est lu d'abord dans l'index du zip
-    /// (`ZipFile`, instantané : seul le répertoire central en fin d'archive est lu, pas les 10 Go), puis
-    /// `surProgression` est notifié après chaque fichier extrait (« Décompression : X / N fichiers… »).
-    /// Le callback peut être invoqué **hors du fil JavaFX** : l'appelant le marshale lui-même.
-    ///
-    /// **Annulation** (#146, #2733) : `jeton` est vérifié avant chaque entrée, et **pendant** la copie de
-    /// chacune ([CopieInterruptible]) : une entrée de plusieurs Go rendait auparavant « Annuler »
-    /// inopérant pendant toute sa durée. Une annulation lève [OperationAnnuleeException] et le temporaire
-    /// partiel est supprimé (cf. `catch RuntimeException`).
-    ///
-    /// **Signe de vie sur une grosse entrée** (#2733) : le compteur « X / N fichiers » ne bouge pas tant
-    /// qu'un fichier n'est pas achevé. `surProgression` est donc aussi notifié par paliers **à
-    /// l'intérieur** d'une entrée, avec le volume déjà écrit.
+    /// **Progression déterminée** (#146) : le total est lu d'abord dans l'index du zip (`ZipFile`,
+    /// instantané - seul le répertoire central est lu), puis `surProgression` est notifié après chaque
+    /// fichier, et **par paliers à l'intérieur** d'une grosse entrée (#2733), sans quoi le compteur ne
+    /// bougerait pas de toute sa durée. Le callback peut être invoqué **hors du fil JavaFX**.
+    /// **Annulation** : `jeton` est vérifié avant chaque entrée et **pendant** la copie de chacune.
     ///
     /// @param dossierBase volume d'accueil de l'extraction (workspace disque), créé s'il manque
     /// @param surProgression notifié à chaque fichier extrait (avancement déterminé)

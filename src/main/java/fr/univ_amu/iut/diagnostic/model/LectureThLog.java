@@ -11,23 +11,14 @@ import java.util.List;
 import java.util.Locale;
 
 /// Lecture du relevé climatique brut `PaRecPR<sn>_THLog.csv` (C10) en une série de
-/// [MesureClimatique], via l'utilitaire partagé [LecteurCsv] (séparateur tabulation).
+/// [MesureClimatique], via [LecteurCsv] en séparateur tabulation - colonnes `Date`, `Hour`,
+/// `Temperature`, `Humidity`.
 ///
-/// Pourquoi relire le fichier plutôt que la colonne JSON `climate_log.measurements` ? L'import
-/// persiste aujourd'hui le relevé en ne renseignant que son `file_path` (la colonne
-/// `measurements` reste `null`, cf. `ServiceImport`). La source canonique de la série est donc le
-/// THLog lui-même, exactement l'option « relecture brute via `LecteurCsv` » du cahier des
-/// charges.
+/// Le fichier est relu plutôt que la colonne JSON `climate_log.measurements` : l'import ne renseigne
+/// aujourd'hui que le `file_path`, la colonne restant `null`. La source canonique est donc le THLog.
 ///
-/// Format observé (entête comprise) :
-///
-/// ```
-/// Date        Hour       Temperature  Humidity
-/// 22/04/2026  16:02:21   +23.9        64
-/// ```
-///
-/// Tolérant (R19) : une ligne mal formée (journal circulaire tronqué, champ illisible) est
-/// **ignorée** sans interrompre la lecture. Déterministe : l'ordre du fichier est préservé.
+/// **Tolérant** (R19) : une ligne mal formée - journal circulaire tronqué, champ illisible - est
+/// ignorée sans interrompre la lecture. **Déterministe** : l'ordre du fichier est préservé.
 public final class LectureThLog {
 
     private static final DateTimeFormatter DATE_THLOG = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ROOT);

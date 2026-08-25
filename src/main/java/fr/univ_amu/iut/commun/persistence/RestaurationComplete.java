@@ -18,14 +18,11 @@ import java.util.stream.Stream;
 /// Remet en place les dossiers de son d'une **sauvegarde complète**, et corrige la base pour qu'elle
 /// les désigne là où ils sont réellement (#2727).
 ///
-/// Jusqu'ici la restauration déversait les dossiers à la racine du workspace et ne touchait pas aux
+/// La restauration déversait auparavant les dossiers à la racine du workspace sans toucher aux
 /// `root_path` : la base restaurée continuait de pointer vers les chemins d'origine, qui peuvent ne
-/// plus exister sur la machine cible. La promesse « la restauration remet la base et les dossiers de
-/// son » ne tenait donc que si l'on restaurait sur la machine et l'arborescence d'origine.
-///
-/// L'ordre compte : **on vérifie tout avant de toucher à quoi que ce soit**. La confrontation de
-/// chaque dossier de la sauvegarde à l'inventaire du manifeste a lieu en premier ; une seule
-/// discordance et rien n'est écrit, ni la base ni les dossiers en place.
+/// plus exister sur la machine cible. **L'ordre compte** - la confrontation de chaque dossier à
+/// l'inventaire du manifeste a lieu **en premier**, et une seule discordance suffit pour que rien ne
+/// soit écrit, ni la base ni les dossiers en place.
 class RestaurationComplete {
 
     private static final String SOUS_DOSSIER_SESSIONS = "sessions";
@@ -63,19 +60,11 @@ class RestaurationComplete {
     /// Replace les dossiers et corrige la base. À appeler **après** [#verifierLaSauvegarde] et après
     /// la restauration de la base : les `root_path` réécrits sont ceux de la base restaurée.
     ///
-    /// ## Tout copier, tout vérifier, puis basculer
-    ///
-    /// Les copies se font **à côté** de leur destination, sous un suffixe `.en-cours`, et rien ne
-    /// prend sa place définitive avant que **toutes** aient été copiées et vérifiées. Une panne
-    /// d'écriture - disque plein, permission, disque débranché - ne laisse alors que des temporaires,
-    /// balayés dans la foulée, et l'état local est celui d'avant (#3514).
-    ///
-    /// ⚠️ **Ce n'est pas de l'atomicité, et il ne faut pas le dire.** Basculer trois dossiers, ce sont
-    /// trois renommages, et aucune astuce ne les rendra indivisibles. Ce qu'on gagne est de ramener la
-    /// fenêtre d'une **copie complète** - des minutes, des gigaoctets - à une **suite de renommages**,
-    /// des millisecondes ; et de rendre l'échec réparable plutôt que muet. Un journal de bascule
-    /// relu au démarrage supprimerait l'état mixte résiduel, au prix d'un dispositif dont la panne
-    /// serait du même genre que celle qu'il répare : écarté à l'ouverture de l'issue.
+    /// Les copies se font **à côté** de leur destination, sous un suffixe `.en-cours`
+    /// ([BasculeRacines]), et rien ne prend sa place avant que **toutes** aient été copiées et
+    /// vérifiées : une panne d'écriture ne laisse alors que des temporaires, balayés dans la foulée
+    /// (#3514). **Ce n'est pas de l'atomicité** - basculer trois dossiers, ce sont trois renommages.
+    /// Ce qu'on gagne est de ramener la fenêtre d'une copie complète à une suite de renommages.
     BilanRestauration replacer(Path dossierBackup, ManifesteSauvegarde manifeste) {
         // AVANT toute réécriture : une fois les racines déplacées, plus aucune ne correspondrait à
         // son origine dans le manifeste, et la nuit qu'on vient de restaurer serait annoncée absente.
