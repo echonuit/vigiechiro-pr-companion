@@ -14,15 +14,11 @@ import java.util.Objects;
 /// l'utilisateur a marquées comme « séquence de référence » pendant la validation taxonomique
 /// (P7).
 ///
-/// Suit le patron du service de référence `ServiceSites` : pure Java testable, dépendances reçues
-/// par constructeur (avec `requireNonNull`), **aucun import JavaFX**, le SQL reste dans les DAO.
-/// La feature est en **lecture seule** : pas d'écriture, donc pas de transaction multi-tables
-/// (`UniteDeTravail`) ni de moteur de workflow, et, point important pour le déterminisme exigé
-/// sur le CSV exporté (SERVICE-CONVENTIONS §5), **pas d'`Horloge`** : la sortie ne porte ni
-/// horodatage ni hash.
+/// La feature est en **lecture seule** : ni transaction multi-tables ni moteur de workflow, et
+/// **pas d'`Horloge`** : le CSV exporté doit être déterministe, il ne porte donc ni horodatage ni
+/// hash.
 ///
-/// **Dépendances inter-features** assumées (sens autorisé, graphe acyclique vérifié par
-/// `ArchitectureTest`) :
+/// **Dépendances inter-features** :
 ///
 /// - `bibliotheque → validation.model` : [Observation] + [ObservationDao] pour sélectionner les
 ///   observations `is_reference` ;

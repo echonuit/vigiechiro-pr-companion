@@ -21,11 +21,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /// Service métier de la feature `importation` : orchestre le parcours d'import P2 d'une nuit
-/// d'enregistrement, de la carte SD jusqu'à l'agrégat persisté. Calqué sur le service de référence
-/// `ServiceSites` (cf. SERVICE-CONVENTIONS).
+/// d'enregistrement, de la carte SD jusqu'à l'agrégat persisté.
 ///
-/// **Enchaînement** (chaque étape est déléguée à un moteur dédié, le service ne fait
-/// qu'orchestrer) :
+/// **Enchaînement**, chaque étape déléguée à un moteur dédié :
 ///
 /// 1. **Inspecter** ([InspecteurDossier]) : lecture seule de la SD (R9), parsing du journal LogPR,
 /// détection des originaux et du relevé climatique.
@@ -39,11 +37,8 @@ import java.util.function.Consumer;
 /// micro, journal, relevé) est écrit **tout ou rien** dans une [UniteDeTravail] (O7), via
 /// [AgregatImportDao] (écritures « connection-aware »).
 ///
-/// **Découplage inter-feature.** Le service dépend de `commun..` et des entités/DAO de `passage`
-/// (cf. ArchUnit). Il **ne dépend pas** de `sites` : c'est l'appelant (le `viewmodel`, qui connaît
-/// le site et le point courants) qui construit le [Prefixe] R6 (carré + année + n° de passage +
-/// code de point) et fournit l'`idPoint`. Même philosophie que `ServicePassage`, qui reçoit le
-/// `Protocole` en paramètre pour éviter une arête `passage → sites`.
+/// **Ne dépend pas de `sites`**, et ne doit pas le faire : c'est l'appelant (le `viewmodel`, qui
+/// connaît le site et le point courants) qui construit le [Prefixe] R6 et fournit l'`idPoint`.
 ///
 /// **Statuts (workflow).** Un passage naît [StatutWorkflow#IMPORTE] ; comme l'import inclut la
 /// transformation réussie, l'agrégat est committé directement au statut

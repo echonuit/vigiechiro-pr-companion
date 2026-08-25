@@ -22,11 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /// Service métier de la feature `validation` : valide les résultats d'identification Tadarida
-/// (parcours P7, épopée E7). Suit le patron du service de référence `ServiceSites` : pure Java
-/// testable, dépendances reçues par constructeur, distinction règles soft / règles dures, dates
-/// via [Horloge].
-///
-/// ## Responsabilités
+/// (parcours P7, épopée E7).
 ///
 /// - **Import en masse** ([#importer(Long, Path)]) : parse un CSV Tadarida via
 ///   [ParserCsvTadarida], crée le [ResultatsIdentification] (format détecté + horodatage), résout
@@ -42,19 +38,10 @@ import java.util.Set;
 ///   via [ExportVuCsv], les lignes non touchées conservant leurs colonnes Tadarida à l'identique.
 /// - **Statut dérivé** ([#statut(Observation)]) : NON_TOUCHEE / VALIDEE / CORRIGEE.
 ///
-/// ## Dépendances inter-features
-///
-/// Le service lit les DAO de la feature `passage` ([SessionDao], [SequenceDao]) pour raccrocher
-/// les observations à leurs séquences. Le sens `validation → passage` reste acyclique (contrôlé
-/// par `ArchitectureTest`).
-///
-/// ## Import tolérant et règles dures
-///
-/// L'import ([#importer(Long, Path)]) est **tolérant** : les lignes dont la séquence audio est absente de
-/// la base sont **ignorées**, et les taxons Tadarida hors référentiel sont **auto-enregistrés en souches**
-/// plutôt que de lever (cf. la méthode pour le détail). Restent **durs** (lèvent une [RegleMetierException],
-/// rien n'est laissé à demi-écrit) : un **passage sans session** et un CSV dont **aucune** ligne n'est
-/// importable.
+/// **Import tolérant** : une ligne dont la séquence audio est absente de la base est **ignorée**, un
+/// taxon Tadarida hors référentiel est **auto-enregistré en souche**. Restent **durs**, et lèvent une
+/// [RegleMetierException] sans rien laisser à demi-écrit : un **passage sans session**, et un CSV dont
+/// **aucune** ligne n'est importable.
 public class ServiceValidation implements CompteurValidations {
 
     /// Fin de citation `« … ».` des messages d'erreur métier (guillemet fermant + point).

@@ -20,25 +20,16 @@ import java.util.Optional;
 import java.util.Set;
 
 /// Service métier central de la feature `passage` : lecture/détail d'un passage, création,
-/// vérifications de protocole (R3/R4/R5), pilotage du workflow et pose du verdict. Calqué sur le
-/// service de référence `ServiceSites` (cf. SERVICE-CONVENTIONS).
+/// vérifications de protocole (R3/R4/R5), pilotage du workflow et pose du verdict.
 ///
 /// Les responsabilités voisines vivent dans leurs services dédiés (#1192) : les **conditions de la
 /// nuit** (météo, matériel du micro) dans [ServiceConditionsPassage], le **rattachement rétroactif**
 /// (re-préfixage disque + base) dans [ServiceRattachement]. La règle R5, partagée avec le
 /// rattachement, vit dans [UniciteQuadruplet].
 ///
-/// Principes repris du patron :
-///
-/// - **Pure Java, sans aucun import JavaFX** : la logique vit en `passage.model`, l'IHM viendra
-/// par-dessus (contrôlé par `ArchitectureTest`).
-/// - **Reçoit ses dépendances par constructeur** ([PassageDao], [MoteurWorkflowPassage],
-/// [Horloge]), assemblées par `PassageModule` en production et instanciées à la main dans les
-/// tests.
-/// - **Distingue règles soft et dures** : R5 (unicité du quadruplet) et les transitions de
-/// workflow interdites lèvent une [RegleMetierException] ; R3 (fenêtre saisonnière) et R4
-/// (intervalle < 1 mois) renvoient un [ResultatVerification] d'alertes **non bloquantes**.
-/// - **Dates via l'[Horloge] injectée** : aucune `LocalDate.now()` en dur (tests déterministes).
+/// **Règles dures et souples.** R5 (unicité du quadruplet) et les transitions de workflow interdites
+/// lèvent une [RegleMetierException] ; R3 (fenêtre saisonnière) et R4 (intervalle < 1 mois) renvoient
+/// un [ResultatVerification] d'alertes **non bloquantes**.
 ///
 /// **Découplage inter-feature assumé.** Les règles R3/R4 ne concernent que les sites en mode
 /// [Protocole#STANDARD] (`PointFixeStandard`). Le service **ne résout pas** le protocole en
