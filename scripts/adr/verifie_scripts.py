@@ -635,6 +635,21 @@ def test_rapport_et_resserrement() -> None:
     props2 = rapport.resserrements([("0099", 5, 5, "ok")])
     _verifie("rapport.py ne resserre pas une marge exacte", props2, [])
 
+    # MESURER n est pas RESORBER, et le confondre a laisse trois chiffres perimes en une journee
+    # (#4469). Une valeur qui MONTE ou qui ne bouge pas ne passe par aucun resserrement : la passe
+    # d alignement doit malgre tout reposer les balises sur ce que l en-tete declare.
+    resserre = _charge("resserre_cliquets.py")
+    _verifie(
+        "resserre_cliquets expose une passe d alignement, distincte du resserrement",
+        callable(getattr(resserre, "aligner_les_balises", None)),
+        True,
+    )
+    _verifie(
+        "l alignement lit `ratchet:` comme `floor:` - les deux polarites vivent en balise",
+        bool(resserre.SEUIL_DECLARE.search("floor: 7\n")) and bool(resserre.SEUIL_DECLARE.search("ratchet: 7\n")),
+        True,
+    )
+
 
 def _completude(dossier: pathlib.Path | None = None, charges: set[str] | None = None) -> list[str]:
     """Les detecteurs que l'etape « Cliquets ADR » lance et que ce harnais n'exerce pas.
