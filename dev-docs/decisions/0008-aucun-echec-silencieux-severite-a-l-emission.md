@@ -7,7 +7,7 @@ chantier: "EPIC #1523 (observabilité)"
 verification: probable
 enforced_by:
   - "scripts/adr/0008-echec-silencieux.py"
-ratchet: 12
+ratchet: 16
 verified:
   - by: machine:suspects
 ---
@@ -31,6 +31,21 @@ Des échecs disparaissaient sans laisser de trace : `catch` muets, tâches longu
 - Les refus et annulations **n'encombrent pas** le journal d'erreurs : il reste lisible.
 - La règle vaut à **chaque surface** : l'IHM route ses `Throwable` via un helper partagé ; la CLI applique la même distinction dans son handler d'exécution (un refus de validation n'y est plus une trace SEVERE).
 - Corollaire outillage : un menu « Ouvrir le dossier des journaux » rend la trace accessible sans fouiller le disque.
+
+## Le corpus du garde : les deux arbres (#4462)
+
+Le garde n'a jamais lu que `src/main/java`, et **aucune décision ne l'y avait restreint** : il est né avant que la question ne se pose. Un test qui avale son échec ment pourtant de la même façon qu'une classe de production, et plus mal : il rend vert sans avoir rien prouvé. Le corpus est donc les deux arbres.
+
+Les **quatre** `catch` au corps vide de `src/test/java` ont été arbitrés un par un avant d'entrer dans le cliquet, qui passe de 12 à 16 :
+
+| Endroit | Ce que le catch vide y fait |
+|---|---|
+| `SondeAccessibiliteTest:70` | l'exception est le comportement **attendu** : elle prouve que le dossier n'est pas inscriptible |
+| `ParcoursMultisiteVersPassageE2ETest:216` | boucle de reprise ; l'assertion de l'appelant tranche si les trois essais échouent |
+| `ParcoursSitesVersPassageE2ETest:144` | même boucle, même arbitrage |
+| `BancDeRecetteUrlTest:110` | fermeture d'un guichet qui ne vit que le temps du cas |
+
+Aucun n'est un échec avalé, et c'est pourquoi ils entrent dans le cliquet plutôt que de le faire rougir.
 
 ## Alternatives écartées
 
