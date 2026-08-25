@@ -218,7 +218,7 @@ public final class CompacteurDepot {
 
     /// Estimation de l'espace disque nécessaire pour les archives d'un volume source `volumeSourceOctets`
     /// de séquences WAV : `volume × [#RATIO_COMPRESSION_ESTIME] + [#MARGE_SECURITE_OCTETS]`. Exposée pour
-    /// que l'IHM anticipe (bouton/alerte) avec **le même calcul** que le garde-fou avant écriture (#…).
+    /// que l'IHM anticipe (bouton/alerte) avec **le même calcul** que le garde-fou avant écriture (#808).
     public static long estimationTailleDepot(long volumeSourceOctets) {
         return (long) (volumeSourceOctets * RATIO_COMPRESSION_ESTIME) + MARGE_SECURITE_OCTETS;
     }

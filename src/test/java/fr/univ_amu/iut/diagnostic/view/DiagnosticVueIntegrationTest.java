@@ -54,7 +54,7 @@ import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// Tests d'**intégration TestFX** de l'écran **M-Diagnostic** centrés sur le câblage réel
-/// Vue ↔ ViewModel : chaque test fait un **vrai lookup des `fx:id`** (`robot.lookup("#…")`) puis
+/// Vue ↔ ViewModel : chaque test fait un **vrai lookup des `fx:id`** (`robot.lookup("#166")`) puis
 /// vérifie que l'état affiché reflète le [DiagnosticViewModel] et qu'un **changement de passage**
 /// (réinvocation de `ouvrirSur(...)` sur le fil JavaFX) propage le bon effet à l'écran. Un écran
 /// resté à l'état de placeholder (sans `fx:id` ni bindings) échouerait donc ici, là où une lecture

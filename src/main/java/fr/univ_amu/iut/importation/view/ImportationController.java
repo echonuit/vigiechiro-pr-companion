@@ -576,7 +576,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 viewModel.inspection().questionNuitDejaImportee())) {
             return;
         }
-        // Carte laissée tourner plusieurs nuits (#…) : un passage par nuit incluse (chemin multi-nuits),
+        // Carte laissée tourner plusieurs nuits (#664) : un passage par nuit incluse (chemin multi-nuits),
         // sinon l'import mono-nuit historique.
         if (viewModel.inspection().plusieursNuits()) {
             lancerImportNuitsHorsFil();

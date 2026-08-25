@@ -188,14 +188,14 @@ class CompacteurDepotTest {
     }
 
     @Test
-    @DisplayName("#… : estimationTailleDepot = volume source × ratio de compression + marge")
+    @DisplayName("#808 : estimationTailleDepot = volume source × ratio de compression + marge")
     void estimation_taille_depot() {
         assertThat(CompacteurDepot.estimationTailleDepot(10_000_000_000L))
                 .isEqualTo((long) (10_000_000_000L * CompacteurDepot.RATIO_COMPRESSION_ESTIME) + 100_000_000L);
     }
 
     @Test
-    @DisplayName("#… : le garde-fou disque utilise l'estimation COMPRESSÉE (ne bloque pas sur la taille source)")
+    @DisplayName("#808 : le garde-fou disque utilise l'estimation COMPRESSÉE (ne bloque pas sur la taille source)")
     void garde_fou_disque_compression_aware() throws IOException {
         Path f1 = Files.write(dossier.resolve("a.wav"), octets(100_000, (byte) 1));
         Path f2 = Files.write(dossier.resolve("b.wav"), octets(100_000, (byte) 2));

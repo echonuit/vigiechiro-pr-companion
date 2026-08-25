@@ -241,7 +241,7 @@ public class PassageViewModel {
                         ? "Verdict figé : cette nuit est déposée, son verdict ne change plus."
                         : nuitTransformee ? "" : "La vérification sera possible une fois la nuit transformée.";
         validationVerrouillee.set(!surLaPlateforme);
-        // Accès à l'écran de dépôt (M-Lot) dès le passage vérifié ET **même une fois déposé** (#…) : on doit
+        // Accès à l'écran de dépôt (M-Lot) dès le passage vérifié ET **même une fois déposé** (#805) : on doit
         // pouvoir y revenir pour consulter les archives ou les supprimer, sans avoir à annuler le dépôt.
         // Une nuit récupérée n'a **rien à préparer** : elle est déjà sur la plateforme, et la préparation
         // la refuse (« déjà déposé »). Elle n'a pas non plus d'archives locales à consulter - elle n'a
