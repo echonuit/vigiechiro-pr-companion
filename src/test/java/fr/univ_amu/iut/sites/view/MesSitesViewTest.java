@@ -23,6 +23,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
@@ -59,7 +60,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// d'affichage capable de synthétiser des entrées (il se bloque sous Wayland et ne route pas
 /// fiablement les clics sous un xvfb sans gestionnaire de fenêtres). On teste ainsi le câblage
 /// réel (handler de carte → navigation) de façon déterministe dans tous les environnements.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class MesSitesViewTest {
 
     private static final String ID_USER = "u-test";

@@ -44,7 +44,7 @@ import org.testfx.framework.junit5.Start;
 /// [fr.univ_amu.iut.connexion.di.ConnexionModule] lit les deux par le **même** chemin, la propriété
 /// d'abord. Éprouver la première branche éprouve donc la porte, et c'est la seule des deux qu'un test
 /// peut ouvrir.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class BancDeRecetteJetonTest {
 
     /// Trente-deux caractères en majuscules et chiffres : la forme exacte d'un jeton Vigie-Chiro, que

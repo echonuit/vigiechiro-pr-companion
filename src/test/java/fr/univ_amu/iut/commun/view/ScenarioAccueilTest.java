@@ -8,6 +8,7 @@ import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +73,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Le cas fait juger que « fiche espèce » **n'est plus** dans le menu (#1375). Une absence se prouve mal
 /// seule : sur un menu vide, l'assertion serait verte et le produit cassé. Le cas vérifie donc aussi que
 /// les autres entrées sont là - c'est le garde-fou, et il vaut plus que l'assertion qu'il protège.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class ScenarioAccueilTest {
 
     /// L'entrée retirée du menu par #1375 : sa source vit dans **Réglages ▸ Général**.

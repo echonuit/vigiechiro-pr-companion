@@ -34,7 +34,7 @@ import org.testfx.framework.junit5.Start;
 /// Sans jeton, ce banc filmerait un écran hors ligne parfaitement convaincant. Le clip ne serait pas
 /// faux, il serait **muet sur son propre objet** (ADR 4142), ce qui est pire parce qu'on le regarde en
 /// croyant savoir.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class BancDeRecettePlateformeTest {
 
     /// La forme exacte d'un jeton Vigie-Chiro : trente-deux caractères tirés dans `A-Z0-9`.

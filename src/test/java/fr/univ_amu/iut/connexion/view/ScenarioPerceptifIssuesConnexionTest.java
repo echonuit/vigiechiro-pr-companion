@@ -25,6 +25,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,7 +85,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// Que le message est **dans le cadre** ([CadreVisible]). Un clip qui ne montre pas son objet ne fait
 /// rien juger, et `lookup` ne le dit pas : c'est le défaut qui a échappé deux fois à `S4-33`.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class ScenarioPerceptifIssuesConnexionTest {
 
     private static final int LARGEUR = 1100;
