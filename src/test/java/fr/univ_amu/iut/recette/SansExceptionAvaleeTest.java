@@ -17,7 +17,7 @@ import org.testfx.util.WaitForAsyncUtils;
 
 /// Ce que [SansExceptionAvalee] attrape, et ce qu il epargne (#4409).
 ///
-/// ⚠️ Un garde qui ne sait que reussir ne garde rien. Ce cas plante une exception dans le fil JavaFX
+/// Un garde qui ne sait que reussir ne garde rien. Ce cas plante une exception dans le fil JavaFX
 /// et exige que le garde la voie ; le second exige qu il se taise quand il n y a rien.
 @ExtendWith(ApplicationExtension.class)
 class SansExceptionAvaleeTest {

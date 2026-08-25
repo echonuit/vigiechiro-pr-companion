@@ -69,7 +69,7 @@ public final class SansExceptionAvalee implements BeforeEachCallback, AfterEachC
 
     /// Execute `action` SUR le fil de JavaFX et attend qu elle soit faite.
     ///
-    /// ⚠️ Attendre n est pas une precaution : `Thread.currentThread()` ne designe le fil JavaFX que
+    /// Attendre n est pas une precaution : `Thread.currentThread()` ne designe le fil JavaFX que
     /// depuis lui-meme, et rendre la main avant que l action soit passee poserait le gestionnaire
     /// apres le premier geste du cas.
     private static void surLeFilFx(Runnable action) {
