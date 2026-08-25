@@ -9,7 +9,7 @@ decided_at: 2026-08-24
 verification: probable
 enforced_by:
   - "scripts/adr/4366-avertissement-en-pictogramme.py"
-ratchet: 1485
+ratchet: 1477
 verified:
   - by: machine:suspects
     at: 2026-08-24
