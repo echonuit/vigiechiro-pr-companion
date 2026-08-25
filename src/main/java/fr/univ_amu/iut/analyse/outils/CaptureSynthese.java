@@ -35,44 +35,33 @@ import javafx.scene.Scene;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Rend l'écran **Synthèse de la nuit** (#2351) hors écran en PNG. La capture doit montrer **les
-/// quatre messages** que la colonne « Activité » sait écrire, plus le bouclier PNA. Jamais de cellule
-/// vide : l'absence a un sens, et il diffère selon le cas.
+/// Rend l'écran **Synthèse de la nuit** (#2351) hors écran en PNG. La nuit semée produit les quatre
+/// messages de la colonne « Activité » et le bouclier PNA : jamais de cellule vide, l'absence a un
+/// sens et il diffère selon le cas.
 ///
-/// ## Ce que les nombres visent
-///
-/// Les contacts tombent dans les bandes du référentiel embarqué, déclinaison
-/// `region:Provence-Alpes-Cote dAzur` / `printemps` : la classe est **calculée**, jamais décrétée.
+/// Deux contraintes fixent le carré et la saison, et les changer casse la démonstration. Un carré en
+/// Bouches-du-Rhône (`region:Provence-Alpes-Cote dAzur`), car ailleurs 718 dépasse `q98` et l'écran
+/// écrit « Très forte ». Une nuit au **printemps** (#3051), car en été aucun des 98 taxons n'est
+/// orphelin en Provence, donc « Pas de seuil pour ce contexte » ne peut pas s'afficher.
 ///
 /// | Taxon | q25 | q75 | q98 | confiance | contacts | ce que la colonne écrit |
 /// |---|---|---|---|---|---|---|
 /// | `Pipkuh` Pipistrelle de Kuhl | 23 | 261 | 1804 | Bonne | 718 | **Forte** |
 /// | `Pippip` Pipistrelle commune | 9 | 221 | 1858 | Bonne | 120 | **Moyenne**, et le bouclier PNA |
 /// | `Myodas` Murin des marais | 1 | 2 | 11 | **Faible** | 5 | **Forte *(indicatif)*** |
-/// | `Cicorn` Cigale grise | — | — | — | **aucune déclinaison applicable** | 1 | « Pas de seuil pour ce contexte » |
-/// | `Antcho` Antaxie catalane | — | — | — | **absente du référentiel** | 40 | « Non couvert par le référentiel » |
+/// | `Cicorn` Cigale grise | — | — | — | aucune déclinaison applicable | 1 | « Pas de seuil pour ce contexte » |
+/// | `Antcho` Antaxie catalane | — | — | — | absente du référentiel | 40 | « Non couvert par le référentiel » |
 ///
 /// Le message ne dépend **pas du groupe taxonomique**, contrairement à ce que laisse croire la fiche :
 /// `LigneSynthese.libelleClasse()` se décide sur `referentiel.couvre(codeTaxon)`, donc sur la présence
-/// du code dans le CSV. Une cigale peut dire « Pas de seuil », et c'est ce qu'elle fait ici.
+/// du code dans le CSV. Une cigale peut dire « Pas de seuil ».
 ///
-/// ## Ce qui contraint le carré et la nuit
+/// Les quantiles cités par l'ADR 2351, `Q75 = 480 · Q98 = 1 240`, n'existent dans **aucune**
+/// déclinaison de Pipkuh : ils avaient été inventés pour la maquette. Qui compare l'écran, la fiche et
+/// l'ADR lira donc deux jeux de nombres.
 ///
-/// Les deux constantes se tiennent, et les changer casse la démonstration. Le carré doit être en
-/// **Provence** pour que 718 tombe en « Forte » : en Corse l'été, `q98` vaut 518 et l'écran dirait
-/// « Très forte ». La nuit doit être au **printemps** parce que c'est l'un des 25 contextes où les cinq
-/// états coexistent (#3051) ; en `Provence` / `ete`, aucun des 98 taxons n'est orphelin, et « Pas de
-/// seuil pour ce contexte » ne serait montré par aucune capture.
-///
-/// ⚠️ Les quantiles cités par l'[ADR 2351], `Q75 = 480 · Q98 = 1 240`, n'existent dans **aucune**
-/// déclinaison de Pipkuh : ils avaient été inventés pour la maquette. La fiche et `M-Synthese` portent
-/// désormais ceux du référentiel réel ; l'ADR, immuable, garde les siens. Qui compare les trois lira
-/// donc deux jeux de nombres.
-///
-/// Les codes de taxon suivent la **casse du référentiel** (`Pipkuh`, et non `PIPKUH`) : c'est le piège
-/// relevé à la clôture du lot #2353, où une démo en majuscules montrait un écran sans son repère.
-///
-/// Ce que l'outil ne fait plus, et pourquoi il ne doit pas y revenir : voir #3018.
+/// Codes de taxon à la casse du référentiel : `Pipkuh`, et non `PIPKUH` (piège relevé au lot #2353).
+/// Ce que l'outil ne fait plus, et ne doit pas refaire : voir #3018.
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureSynthese {

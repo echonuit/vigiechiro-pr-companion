@@ -16,50 +16,31 @@ import java.util.Map;
 import java.util.Objects;
 
 /// Parseur d'un fichier de résultats Tadarida (parcours P7, étape E7 ; règle R17). Lit un CSV
-/// d'observations (séparateur `;`) et le projette en [ResultatParseTadarida] : le
-/// [FormatTadarida] détecté + une [LigneObservation] par ligne.
+/// d'observations (séparateur `;`) et le projette en [ResultatParseTadarida] : le [FormatTadarida]
+/// détecté, plus une [LigneObservation] par ligne. La lecture brute est déléguée à [LecteurCsv]
+/// (RFC 4180 : guillemets, sauts de ligne Unix et Windows).
 ///
-/// **Classe `model` pure** : aucune dépendance JavaFX ni SQL. La lecture brute du CSV est
-/// déléguée à l'utilitaire commun [LecteurCsv] (gestion RFC 4180 des guillemets, `\n` et `\r\n`).
-/// Le parseur ajoute par-dessus la **détection de format** et le
-/// **mapping des colonnes Tadarida**.
+/// **Brut ou Vu** : même entête, mêmes colonnes ; seule la forme diffère. Dans un Brut
+/// (`*-observations.csv`) tous les champs sont guillemetés, l'entête commence donc par
+/// `"nom du fichier"…`, et les colonnes observateur sont vides. Un Vu (`*-observations_Vu.csv`) a
+/// l'entête nu, ne guillemette qu'au besoin, et peut porter les décisions de l'observateur. La
+/// détection porte sur **les guillemets de l'entête**, jamais sur le suffixe `_Vu` du nom de
+/// fichier, peu fiable.
 ///
-/// ## Détection Brut vs Vu
+/// **Champ vide** : chaîne vide dans un Brut ; parfois, dans un Vu réinjecté, un guillemet littéral
+/// seul. Les deux se normalisent en `null` ([#estVide(String)]), pour que Brut et Vu se parsent en
+/// observations équivalentes.
 ///
-/// Les deux fichiers ont la **même entête** et les mêmes colonnes ; ils ne diffèrent que par la
-/// forme :
+/// **Colonnes repérées par leur nom d'entête**, jamais par position, pour rester robuste à un
+/// réordonnancement : `nom du fichier`, `temps_debut`, `temps_fin`, `frequence_mediane`,
+/// `tadarida_taxon`, `tadarida_probabilite`, `tadarida_taxon_autre`, `observateur_taxon`,
+/// `observateur_probabilite`. `validation_mode` (R24) est facultative.
 ///
-/// - **Brut** (`*-observations.csv`) : **tous** les champs sont guillemetés, l'entête commence
-///   donc par `"nom du fichier"…`. Les colonnes observateur sont vides (`""`).
-/// - **Vu** (`*-observations_Vu.csv`) : entête nu (`nom du fichier;…`), champs guillemetés
-///   seulement si nécessaire. Réinjectable, il peut porter les décisions de l'observateur.
-///
-/// On détecte donc sur la **présence de guillemets autour de l'entête** (et non sur le suffixe
-/// `_Vu` du nom de fichier, peu fiable).
-///
-/// ## Champ « vide »
-///
-/// Dans un Brut un champ vide est `""` (chaîne vide après déguillemetage). Dans certains Vu
-/// réinjectés un champ vide a été ré-encodé en un guillemet littéral seul (`""""` dans le
-/// fichier, qui se relit en un caractère `"`). Les deux représentations sont normalisées en
-/// `null` (cf. [#estVide(String)]), pour que Brut et Vu se parsent en observations équivalentes.
-///
-/// ## Mapping des colonnes
-///
-/// Les colonnes sont repérées **par leur nom d'entête** (et non par position) pour rester robuste
-/// à un éventuel réordonnancement. Colonnes attendues : `nom du fichier`, `temps_debut`,
-/// `temps_fin`, `frequence_mediane`, `tadarida_taxon`, `tadarida_probabilite`,
-/// `tadarida_taxon_autre`, `observateur_taxon`, `observateur_probabilite`. La colonne
-/// `validation_mode` (R24) est facultative.
-///
-/// ## Probabilités non numériques
-///
-/// Les colonnes `*_probabilite` d'un _Vu réel ne contiennent pas toujours un flottant : l'observateur
-/// peut y avoir saisi un **code de confiance textuel** (p. ex. `SUR` pour « sûr »). Une telle valeur
-/// est tolérée et lue comme une **probabilité inconnue** (`null`) plutôt que de faire échouer tout
-/// l'import (cf. [#probabilite(String)]). Cette tolérance est **limitée aux colonnes de probabilité** :
-/// `temps_debut`, `temps_fin` et `frequence_mediane` restent en lecture stricte (une valeur malformée
-/// y lève, plutôt que d'être avalée silencieusement).
+/// **Probabilité non numérique tolérée** : un Vu réel peut porter un code de confiance textuel
+/// (`SUR`), lu comme probabilité inconnue plutôt que de faire échouer tout l'import
+/// ([#probabilite(String)]). La tolérance s'arrête là : `temps_debut`, `temps_fin` et
+/// `frequence_mediane` restent en lecture stricte, une valeur malformée y levant plutôt que d'être
+/// avalée.
 public final class ParserCsvTadarida {
 
     static final String COL_NOM = "nom du fichier";
