@@ -592,6 +592,19 @@ jobs:
           python3 scripts/adr/verifie_scripts.py --auto-test
           python3 scripts/adr/verifie_scripts.py
 
+      - name: "Aucun temoin de la suite n'est decoratif (bloquant, #4490)"
+        # La suite ci-dessus clot sur « les N scripts charges DETECTENT leur violation temoin ». La
+        # phrase affirmait plus que ce qu'elle verifie : un temoin peut exister, s'executer, passer,
+        # et ne rien tenir. Celui du cliquet de longueur d'ADR n'affirmait que
+        # `isinstance(suspects(), list)`, et un garde ayant cesse de detecter le passait (#4487).
+        #
+        # Ce garde-ci rend l'article A2 mecanique : chaque garde perd sa detection, la suite doit
+        # rougir. Cout mesure, 1,2 s pour 23 gardes. Il vient APRES la suite, dont il depend.
+        run: |
+          set -euo pipefail
+          python3 scripts/adr/verifie_temoins_non_decoratifs.py --auto-test
+          python3 scripts/adr/verifie_temoins_non_decoratifs.py
+
       - name: "Auto-test des passes du graphe de connaissance (bloquant, #4231)"
         # Ces deux scripts n'avaient aucun dispositif, et les deux annonçaient des chiffres
         # qu'aucune donnée ne soutenait : une couverture CLI de « 128/69 », et un rapport ouvrant
