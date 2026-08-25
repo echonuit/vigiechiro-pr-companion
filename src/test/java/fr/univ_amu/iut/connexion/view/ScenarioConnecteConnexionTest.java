@@ -296,6 +296,11 @@ class ScenarioConnecteConnexionTest {
                 .as("le badge doit nommer QUI est connecté, pas rappeler qu'un jeton attend d'être vérifié")
                 .isNotBlank()
                 .doesNotContain("non vérifié");
+        // Ce que la synchro a fait, imprime plutot que suppose. Le resume ne porte que des
+        // COMPTES, donc rien d'identifiant : publiable dans un journal de run, et c'est la seule
+        // trace qui explique pourquoi une connexion a ete longue ou breve.
+        System.out.printf("  synchro de la connexion : %s%n", texte(robot, "#bandeauStatut"));
+
         assertThat(texte(robot, "#bandeauStatut"))
                 .as("la case demande l'identité ET le résumé. Le bandeau les annonce ensemble :"
                         + " « Connexion réussie · référentiel à jour : … ». Le CONTENU du résumé dépend du"
