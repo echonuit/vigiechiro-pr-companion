@@ -340,7 +340,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                         .not()
                         .or(viewModel.generationEnCoursProperty())
                         .or(viewModel.espaceDepotSuffisantProperty().not()));
-        // Alerte espace disque (#…) : bandeau rouge affiché sous le bouton quand la place manque, pour
+        // Alerte espace disque (#808) : bandeau rouge affiché sous le bouton quand la place manque, pour
         // expliquer AVANT le clic pourquoi « Générer » est désactivé (pas seulement un message discret après).
         lblEspaceInsuffisant.textProperty().bind(viewModel.raisonEspaceInsuffisantProperty());
         lblEspaceInsuffisant
@@ -382,7 +382,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                                 ligne -> chemin(viewModel.cheminDepotProperty().get()))));
         tableArchives.setItems(viewModel.suiviLignes().lignes());
 
-        // Nettoyage post-dépôt (#…) : « Supprimer les archives » actif seulement une fois le passage déposé
+        // Nettoyage post-dépôt (#784) : « Supprimer les archives » actif seulement une fois le passage déposé
         // et s'il reste des archives ZIP sur disque (le VM lit le disque à chaque chargement d'état).
         btnSupprimerArchives
                 .disableProperty()
@@ -591,7 +591,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         return valeur == null ? "" : valeur;
     }
 
-    /// Supprime les archives ZIP de dépôt (#…) **après confirmation**, une fois le passage déposé, pour
+    /// Supprime les archives ZIP de dépôt (#784) **après confirmation**, une fois le passage déposé, pour
     /// libérer l'espace disque (régénérables au besoin). La confirmation passe par [#confirmateur]
     /// (injectable), et le bouton n'est actif que dans l'état adéquat.
     @FXML

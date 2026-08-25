@@ -198,7 +198,7 @@ class ImportationVueIntegrationTest {
     @DisplayName("#108 : saisir un n° déjà pris affiche l'avertissement ; « Utiliser ce n° » corrige et le masque")
     void doublon_affiche_avertissement_puis_bouton_corrige(FxRobot robot) {
         // Un passage n° 1 existe déjà pour le point A1 (année courante). À la sélection du point, le n° est
-        // pré-rempli au prochain libre (2, source unique #…) : PAS d'avertissement au départ. C'est en
+        // pré-rempli au prochain libre (2, source unique #904) : PAS d'avertissement au départ. C'est en
         // SAISISSANT le n° 1 (déjà pris) que le pré-contrôle R5 (#108) doit se déclencher.
         semerPassageExistant(1);
 

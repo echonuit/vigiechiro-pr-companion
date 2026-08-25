@@ -240,7 +240,7 @@ class ServiceLotTest {
     }
 
     @Test
-    @DisplayName("#… : sur un passage déposé, supprimerArchivesDepot efface les .zip et renvoie l'espace libéré")
+    @DisplayName("#784 : sur un passage déposé, supprimerArchivesDepot efface les .zip et renvoie l'espace libéré")
     void supprimer_archives_depot_libere_l_espace() throws IOException {
         Passage passage = creerPassage(Verdict.OK);
         creerSessionCoherente(passage.id());
@@ -265,7 +265,7 @@ class ServiceLotTest {
     }
 
     @Test
-    @DisplayName("#… : supprimerArchivesDepot refuse un passage non encore déposé")
+    @DisplayName("#784 : supprimerArchivesDepot refuse un passage non encore déposé")
     void supprimer_archives_refuse_si_non_depose() {
         Passage passage = creerPassage(Verdict.OK);
         creerSessionCoherente(passage.id());
@@ -277,7 +277,7 @@ class ServiceLotTest {
     }
 
     @Test
-    @DisplayName("#… : archivesDepot liste les .zip présents sur disque (vide si aucun)")
+    @DisplayName("#784 : archivesDepot liste les .zip présents sur disque (vide si aucun)")
     void archives_depot_liste_les_zip_du_disque() throws IOException {
         Passage passage = creerPassage(Verdict.OK);
         creerSessionCoherente(passage.id());
@@ -300,7 +300,7 @@ class ServiceLotTest {
     }
 
     @Test
-    @DisplayName("#… : espaceDisqueDisponible > 0 pour un dossier réel, 0 si chemin nul ; estimation = ratio + marge")
+    @DisplayName("#808 : espaceDisqueDisponible > 0 pour un dossier réel, 0 si chemin nul ; estimation = ratio + marge")
     void espace_disque_et_estimation() {
         assertThat(service.espaceDisqueDisponible(null)).isZero();
         assertThat(service.espaceDisqueDisponible(dossier.toString())).isPositive();

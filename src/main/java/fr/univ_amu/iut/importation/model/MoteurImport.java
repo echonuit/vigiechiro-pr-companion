@@ -201,7 +201,7 @@ final class MoteurImport {
 
             // 3) Transformation R10/R11 (découpée en parallèle, #12, résiliente #155 : un original invalide
             //    est rejeté et consigné, pas bloquant).
-            // Garde-fou double expansion (#…) : la fréquence d'acquisition du log (Fe…kHz) fait foi pour
+            // Garde-fou double expansion (#664) : la fréquence d'acquisition du log (Fe…kHz) fait foi pour
             // rejeter une source déjà ralentie ; null en mode dégradé (pas de journal → seuil absolu).
             resultatsDecoupage = decoupage.decouper(
                     sources,

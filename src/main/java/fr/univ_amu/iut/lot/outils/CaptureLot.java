@@ -394,7 +394,7 @@ public final class CaptureLot {
         // Capture hors-chrome : le fil d'Ariane n'est pas rendu ; le contexte n'a donc pas à être réel.
         controleur.ouvrirSur(new ContextePassage(idPassage, 1, new ContexteSite(NUMERO_CARRE, CODE_POINT, null)));
         pilote.accept(vm, depotVm);
-        // Hauteur généreuse : le flux ordonné à 4 étapes (#251) + la carte « Libérer l'espace disque » (#…)
+        // Hauteur généreuse : le flux ordonné à 4 étapes (#251) + la carte « Libérer l'espace disque » (#805)
         // sont hauts ; à l'écran ça défile dans le chrome, mais la capture hors-chrome doit tout rendre
         // (dont le bouton « Supprimer les archives ») sans écraser la zone d'alertes (R14).
         ApercuFx.enregistrerPng(new Scene(vue, 980, hauteur), fichier);

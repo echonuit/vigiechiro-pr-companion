@@ -71,7 +71,7 @@ public class InspectionImportViewModel {
     /// inspection réussie. L'orchestrateur le compose avec l'erreur d'exécution dans son message unifié.
     private final ReadOnlyStringWrapper messageErreur = new ReadOnlyStringWrapper(this, "messageErreur", "");
 
-    /// **Nuits détectées** dans le dossier (#…) : une carte laissée tourner plusieurs nuits en produit
+    /// **Nuits détectées** dans le dossier (#664) : une carte laissée tourner plusieurs nuits en produit
     /// plusieurs (une ligne [NuitVM] par nuit), sinon une seule. Repeuplée à chaque inspection. La vue
     /// n'affiche la table que lorsqu'il y en a plusieurs ([#plusieursNuitsProperty()]).
     private final ObservableList<NuitVM> nuits = FXCollections.observableArrayList();

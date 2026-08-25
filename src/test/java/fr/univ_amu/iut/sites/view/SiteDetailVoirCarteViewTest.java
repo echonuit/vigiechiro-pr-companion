@@ -72,7 +72,7 @@ class SiteDetailVoirCarteViewTest {
                 .point("A1")
                 .position(43.4031, -1.5708)
                 .semerSiteEtPoint();
-        // Point SANS GPS (lat/lon nuls) : doit proposer un lien « placer sur la carte » (#…). La fixture
+        // Point SANS GPS (lat/lon nuls) : doit proposer un lien « placer sur la carte » (#2882). La fixture
         // ne pose pas de position quand on ne lui en donne pas, ce qui est exactement le cas voulu.
         JeuDeDonneesPassage.dans(source)
                 .utilisateur(ID_USER)

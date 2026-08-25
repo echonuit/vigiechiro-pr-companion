@@ -66,7 +66,7 @@ public class LotViewModel {
     private final SuiviEtapesLot suiviEtapes =
             new SuiviEtapesLot(() -> !suiviLignes.lignes().isEmpty());
 
-    /// Suppression des archives possible (#…) : **liaison vivante** sur les lignes, vraie dès qu'il existe
+    /// Suppression des archives possible (#2916) : **liaison vivante** sur les lignes, vraie dès qu'il existe
     /// des archives (régénérables), recalculée quand la liste change (génération, réhydratation, suppression).
     /// Un simple `set()` dans `appliquer` restait périmé après une génération en session, laissant le bouton
     /// inactif à tort.
@@ -258,7 +258,7 @@ public class LotViewModel {
         cheminDepot.set(dossier.isEmpty() ? "" : dossier + "/depot");
         recap.set(FormatsLot.recapLisible(etat));
         controles.setAll(etat.controles());
-        // Réhydrate la table des archives depuis le DISQUE (#…) : à la réouverture d'un passage déjà généré,
+        // Réhydrate la table des archives depuis le DISQUE (#820) : à la réouverture d'un passage déjà généré,
         // on réaffiche les archives présentes dans depot/ (lignes « terminées » : réactive « Ouvrir le
         // dossier » / « Supprimer »), là où l'ancienne liste, seulement peuplée en session, restait vide.
         suiviLignes.afficherTerminees(service.archivesDepot(etat.cheminDossier()));
@@ -357,7 +357,7 @@ public class LotViewModel {
         return peutGenererArchives.getReadOnlyProperty();
     }
 
-    /// `true` si l'espace disque estimé suffit pour générer les archives (#…) ; faux → « Générer » désactivé
+    /// `true` si l'espace disque estimé suffit pour générer les archives (#808) ; faux → « Générer » désactivé
     /// et [#raisonEspaceInsuffisantProperty] explique pourquoi.
     public ReadOnlyBooleanProperty espaceDepotSuffisantProperty() {
         return espaceDisque.suffisantProperty();

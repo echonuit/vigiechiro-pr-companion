@@ -57,7 +57,7 @@ public class ImportationViewModel {
     /// cochée. Collaborateur extrait (cf. [MarquageNuitsImportees]).
     private final MarquageNuitsImportees marquageNuits;
 
-    /// Préférence **« conserver les originaux »** (#…), extraite dans un collaborateur partagé : le VM la
+    /// Préférence **« conserver les originaux »** (#641), extraite dans un collaborateur partagé : le VM la
     /// lit au lancement de l'import (et l'y mémorise) ; la vue lie la case à sa propriété. Cf.
     /// [PreferenceConservation].
     private final PreferenceConservation conservation;
@@ -109,7 +109,7 @@ public class ImportationViewModel {
     /// Recalculé à chaque changement de point / année / n° de passage du rattachement.
     private final ControleNumeroPassage controleNumeroPassage;
 
-    /// Coordination de l'import **multi-nuits** (#…) extraite dans un collaborateur dédié
+    /// Coordination de l'import **multi-nuits** (#664) extraite dans un collaborateur dédié
     /// ([CoordinationNuits]) : auto-numérotation des nuits incluses + préparation/exécution de la demande.
     /// Il s'abonne lui-même au rattachement et à la table des nuits ; l'orchestrateur compose sa validité
     /// dans `peutImporter`.
@@ -146,7 +146,7 @@ public class ImportationViewModel {
                 marquageOpportuniste, rattachement::estOpportuniste, campagnes, rattachement::idCampagneRetenue);
         // Pré-contrôle R5 proactif (#108) : observe lui-même le rattachement et entretient son état.
         this.controleNumeroPassage = new ControleNumeroPassage(serviceImport, rattachement, inspection::identiteNuit);
-        // Coordination multi-nuits (#…) : s'abonne au rattachement et à la table des nuits pour
+        // Coordination multi-nuits (#664) : s'abonne au rattachement et à la table des nuits pour
         // auto-numéroter les nuits incluses et exposer la validité de cette numérotation.
         this.coordinationNuits = new CoordinationNuits(serviceImport, inspection, rattachement);
         this.execution = new ExecutionImport(serviceImport);
@@ -422,7 +422,7 @@ public class ImportationViewModel {
     ///     transformer directement depuis la source sans les copier (économie d'espace).
     public record DemandeImport(Path dossier, Long idPoint, Prefixe prefixe, boolean conserverOriginaux) {}
 
-    /// Coordination de l'import **multi-nuits** (#…) : la vue s'y adresse pour préparer la demande
+    /// Coordination de l'import **multi-nuits** (#664) : la vue s'y adresse pour préparer la demande
     /// (nuits incluses + n° proposés) et l'exécuter hors-thread. Extraite pour garder l'orchestrateur
     /// mince (cf. [CoordinationNuits]).
     public CoordinationNuits coordinationNuits() {
@@ -453,7 +453,7 @@ public class ImportationViewModel {
         nettoyerTemporaireZip(); // les fichiers ont été copiés (R9) : le temporaire du zip n'est plus utile (#139)
     }
 
-    /// Applique un import **multi-nuits** réussi (#…) : expose le résultat agrégé (un passage par nuit),
+    /// Applique un import **multi-nuits** réussi (#664) : expose le résultat agrégé (un passage par nuit),
     /// pointe [#resultatProperty()] sur la première nuit (compatibilité), agrège les fichiers rejetés de
     /// **toutes** les nuits, état `TERMINE`. À appeler sur le fil JavaFX (depuis un callback du socle).
     public void marquerTermineNuits(ResultatImportMultiNuits resultatMultiNuits) {

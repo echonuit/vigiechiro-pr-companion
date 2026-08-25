@@ -16,7 +16,7 @@ import java.util.List;
 /// @param sansJournal `true` si le journal est un repli synthétique (aucun `LogPR` présent)
 /// @param dossierSource racine de la carte SD (lecture seule, R9)
 /// @param idPoint point d'écoute de rattachement (commun à toutes les nuits)
-/// @param conserverOriginaux `true` = copie protégée dans `bruts/` ; `false` = lecture en place (#…)
+/// @param conserverOriginaux `true` = copie protégée dans `bruts/` ; `false` = lecture en place (#664)
 /// @param ecraser `true` = remplacement d'un passage existant au même quadruplet (#214), jamais en multi-nuits
 /// @param jeton jeton d'annulation coopératif (#146)
 /// @param suiviFichiers suivi par fichier (#947), replanifié à chaque nuit ; [SuiviFichiers#inerte()] sans IHM

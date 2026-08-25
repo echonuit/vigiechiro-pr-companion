@@ -65,7 +65,7 @@ import org.testfx.framework.junit5.Start;
 /// (volume lisible avec bascule Mo, garde `null`), le parcours **Marquer déposé** (état `Prêt à
 /// déposer`) et le message de l'état terminal `Déposé`.
 ///
-/// Chaque test fait un **vrai lookup** des contrôles par `fx:id` (`robot.lookup("#…")`) puis exerce
+/// Chaque test fait un **vrai lookup** des contrôles par `fx:id` (`robot.lookup("#166")`) puis exerce
 /// soit un toggle de visibilité, soit une **interaction** (clic). Un écran resté à l'état placeholder
 /// (sans `@FXML` ni `onAction`) échoue donc, contrairement aux tests qui ne liraient que les
 /// propriétés du ViewModel. L'état affiché provient du [ServiceLot] mocké : pour exercer un autre
@@ -325,7 +325,7 @@ class LotVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#… : « Supprimer les archives » est désactivé quand il n'y a aucune archive sur disque")
+    @DisplayName("#805 : « Supprimer les archives » est désactivé quand il n'y a aucune archive sur disque")
     void supprimer_archives_desactive_sans_archives(FxRobot robot) {
         // État initial de start() = Vérifié, aucune archive sur disque → suppression indisponible.
         Button supprimer = robot.lookup("#btnSupprimerArchives").queryAs(Button.class);
@@ -334,7 +334,7 @@ class LotVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#… : à la réouverture d'un passage déjà généré, la table se recharge et « Supprimer » s'active")
+    @DisplayName("#805 : à la réouverture d'un passage déjà généré, la table se recharge et « Supprimer » s'active")
     void archives_rechargees_a_la_reouverture_et_suppression_active(FxRobot robot) {
         when(service.archivesDepot("/ws/session-42"))
                 .thenReturn(List.of(
@@ -478,7 +478,7 @@ class LotVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#… : en Déposé avec archives, « Supprimer les archives » déclenche la suppression (confirmée)")
+    @DisplayName("#805 : en Déposé avec archives, « Supprimer les archives » déclenche la suppression (confirmée)")
     void supprimer_archives_declenche_la_suppression(FxRobot robot) {
         when(service.archivesDepot("/ws/session-42"))
                 .thenReturn(List.of(new ArchiveDepot(Path.of("/ws/session-42/depot/Car-1.zip"), 1, 2048L, 2)));
@@ -494,7 +494,8 @@ class LotVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#… : espace disque insuffisant → « Générer les archives » désactivé + alerte visible sous le bouton")
+    @DisplayName(
+            "#808 : espace disque insuffisant → « Générer les archives » désactivé + alerte visible sous le bouton")
     void espace_insuffisant_desactive_generer_et_affiche_alerte(FxRobot robot) {
         when(service.espaceDisqueDisponible("/ws/session-42")).thenReturn(5_000_000_000L); // 5 Go dispo
         when(service.estimationTailleDepotOctets(anyLong())).thenReturn(9_000_000_000L); // 9 Go estimés

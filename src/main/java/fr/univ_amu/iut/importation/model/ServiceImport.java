@@ -159,7 +159,7 @@ public class ServiceImport {
         return importer(dossierSource, idPoint, prefixe, progres, jeton, true);
     }
 
-    /// Variante avec choix de **conservation des originaux** (#…) : quand `conserverOriginaux` est
+    /// Variante avec choix de **conservation des originaux** (#641) : quand `conserverOriginaux` est
     /// `false`, les WAV ne sont **pas copiés** dans `bruts/` : ils sont lus et transformés directement
     /// depuis la source (R9, lecture seule), afin d'économiser l'espace disque (une nuit d'originaux peut
     /// peser plusieurs Go). `true` reproduit le comportement historique (copie protégée dans `bruts/`).
@@ -255,7 +255,7 @@ public class ServiceImport {
 
     /// Premier **bloc de `taille` n° de passage consécutifs libres** pour ce point et cette année : n° de
     /// départ N tel que N..N+taille-1 soient tous libres. Sert à proposer une base d'auto-numérotation en
-    /// import **multi-nuits** (n° consécutifs) qui **comble les trous** sans collision (#…).
+    /// import **multi-nuits** (n° consécutifs) qui **comble les trous** sans collision (#909).
     public int prochainBlocPassagesLibre(Long idPoint, int annee, int taille) {
         return agregatDao.prochainBlocPassagesLibre(idPoint, annee, taille);
     }

@@ -25,13 +25,13 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 
-/// Coordination de l'import **multi-nuits** côté ViewModel (#…), extraite de [ImportationViewModel]
+/// Coordination de l'import **multi-nuits** côté ViewModel (#664), extraite de [ImportationViewModel]
 /// (Extract Class) sur le modèle de [ControleNumeroPassage] : l'orchestrateur reste mince (façade), ce
 /// collaborateur porte l'**auto-numérotation** des nuits et la préparation/exécution de la demande.
 ///
 /// Il **s'abonne lui-même** au rattachement (point / année / **n° de passage**) et à la table des nuits
 /// (ajout/retrait, (dé)coche) pour recalculer, à chaque changement, les n° de passage proposés : la table
-/// **suit le n° de passage du formulaire** (source unique #…), chaque nuit **incluse** (ordre des dates)
+/// **suit le n° de passage du formulaire** (source unique #904), chaque nuit **incluse** (ordre des dates)
 /// recevant un n° **consécutif** à partir de ce n° saisi. À chaque changement de contexte, il **pré-remplit**
 /// ce n° de base avec le premier **bloc de N n° consécutifs libres** (N = nombre de nuits), comblant les
 /// trous sans casser la consécutivité (p. ex. 1,3,5,7 existants + 3 nuits → 8,9,10). Il expose la
@@ -101,7 +101,7 @@ public final class CoordinationNuits {
     }
 
     /// Pré-remplit le n° de passage du formulaire avec le premier bloc de N n° consécutifs libres (source
-    /// unique #… : la table suit ce n°). Sans point sélectionné, ne fait rien.
+    /// unique #909 : la table suit ce n°). Sans point sélectionné, ne fait rien.
     private void proposerNumeroDeBase() {
         PointDEcoute point = rattachement.pointSelectionneProperty().get();
         if (point == null) {
@@ -129,7 +129,7 @@ public final class CoordinationNuits {
     }
 
     /// Recalcule les **n° de passage proposés** : la nuit **incluse** (ordre des dates) part du **n° de
-    /// passage saisi dans le formulaire** (source unique #…) et les suivantes reçoivent des n° **consécutifs**
+    /// passage saisi dans le formulaire** (source unique #904) et les suivantes reçoivent des n° **consécutifs**
     /// ; les nuits exclues repassent à 0. Met à jour la validité (≥ 1 nuit incluse **et** tous les n° proposés
     /// libres, R5). Sans rattachement complet ou hors multi-nuits, ne propose rien.
     private void renumeroter() {

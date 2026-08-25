@@ -13,7 +13,7 @@ public final class FormatsLot {
 
     private FormatsLot() {}
 
-    /// Alerte « espace disque insuffisant » (gigaoctets base 1000) affichée AVANT génération (#…) : volume
+    /// Alerte « espace disque insuffisant » (gigaoctets base 1000) affichée AVANT génération (#808) : volume
     /// estimé des archives (compression comprise) vs espace disponible.
     ///
     /// Sans le « ⚠ » d'antan (#2221) : le libellé s'affiche dans un bandeau `badge-danger`, et un **badge**

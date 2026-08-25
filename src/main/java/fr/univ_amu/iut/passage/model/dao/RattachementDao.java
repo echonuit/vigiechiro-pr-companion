@@ -74,8 +74,8 @@ public class RattachementDao {
     /// via [ReprefixeurSession#cheminApres] et, si `avecNom`, le `file_name` **logique** via [#reprefixerNom].
     /// Les deux sont indépendants : un fichier référencé **hors session** (import sans copie, brut sur la carte
     /// SD, jamais déplacé) garde son `file_path`, mais son **nom logique** doit tout de même suivre le nouveau
-    /// préfixe (#…). La ligne n'est mise à jour que si le chemin **ou** le nom change (`selectSql` doit alors lire
-    /// `id, file_path[, file_name]`).
+    /// préfixe (#1118). La ligne n'est mise à jour que si le chemin **ou** le nom change (`selectSql`
+    /// doit alors lire `id, file_path[, file_name]`).
     private static void reprefixerTable(
             Connection cx,
             TablesAChemin.TableAChemin table,

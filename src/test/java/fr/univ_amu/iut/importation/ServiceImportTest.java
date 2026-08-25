@@ -942,7 +942,7 @@ class ServiceImportTest {
 
     @Test
     @DisplayName(
-            "#… : prochainBlocPassagesLibre, 1,3,5,7 pris → premier bloc de N consécutifs libres, sans casser la consécutivité")
+            "#2931 : prochainBlocPassagesLibre, 1,3,5,7 pris → premier bloc de N consécutifs libres, sans casser la consécutivité")
     void prochain_bloc_consecutif_libre_evite_les_trous() {
         for (int numero : new int[] {1, 3, 5, 7}) {
             JeuDeDonneesPassage.dans(source)

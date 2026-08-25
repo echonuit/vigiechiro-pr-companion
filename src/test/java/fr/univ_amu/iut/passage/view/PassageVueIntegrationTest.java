@@ -201,7 +201,7 @@ class PassageVueIntegrationTest {
     void etats_actions_depose(FxRobot robot) {
         Parent vue = chargerSurFx(robot, StatutWorkflow.DEPOSE, 1);
 
-        // #… : le dépôt reste accessible même une fois déposé, pour revenir consulter/supprimer les archives.
+        // #805 : le dépôt reste accessible même une fois déposé, pour revenir consulter/supprimer les archives.
         assertThat(bouton(vue, "#boutonDepot").isDisabled()).isFalse();
         assertThat(bouton(vue, "#boutonValidation").isDisabled()).isFalse();
         // #1514 : une nuit déposée a un verdict figé → « Vérifier » est bloqué, avec l'explication affichée.

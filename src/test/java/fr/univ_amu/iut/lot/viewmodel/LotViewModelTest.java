@@ -45,7 +45,7 @@ class LotViewModelTest {
     }
 
     @Test
-    @DisplayName("#… : en Déposé, peutSupprimerArchives suit la présence d'archives sur disque")
+    @DisplayName("#784 : en Déposé, peutSupprimerArchives suit la présence d'archives sur disque")
     void peut_supprimer_en_depose_selon_volume() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.DEPOSE, List.of(), "2026-06-22"));
         when(service.archivesDepot("/ws/session-42"))
@@ -59,7 +59,7 @@ class LotViewModelTest {
     }
 
     @Test
-    @DisplayName("#… : dès que des archives existent (même « Prêt à déposer »), la suppression est possible")
+    @DisplayName("#805 : dès que des archives existent (même « Prêt à déposer »), la suppression est possible")
     void peut_supprimer_des_archives_meme_avant_depot() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
         when(service.archivesDepot("/ws/session-42"))
@@ -71,7 +71,7 @@ class LotViewModelTest {
     }
 
     @Test
-    @DisplayName("#… : sans archives sur disque, la suppression est désactivée")
+    @DisplayName("#805 : sans archives sur disque, la suppression est désactivée")
     void pas_de_suppression_sans_archives() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
         when(service.archivesDepot("/ws/session-42")).thenReturn(List.of());
@@ -82,7 +82,7 @@ class LotViewModelTest {
     }
 
     @Test
-    @DisplayName("#… : supprimerArchives appelle le service, recharge l'état et annonce l'espace libéré")
+    @DisplayName("#784 : supprimerArchives appelle le service, recharge l'état et annonce l'espace libéré")
     void supprimer_archives_appelle_le_service_et_recharge() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.DEPOSE, List.of(), "2026-06-22"));
         when(service.archivesDepot("/ws/session-42"))
@@ -101,7 +101,7 @@ class LotViewModelTest {
     }
 
     @Test
-    @DisplayName("#… : espace disque insuffisant → génération bloquée + raison expliquée (compression comprise)")
+    @DisplayName("#808 : espace disque insuffisant → génération bloquée + raison expliquée (compression comprise)")
     void espace_insuffisant_bloque_et_explique() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
         when(service.espaceDisqueDisponible("/ws/session-42")).thenReturn(5_000_000_000L); // 5 Go dispo
@@ -119,7 +119,7 @@ class LotViewModelTest {
     }
 
     @Test
-    @DisplayName("#… : espace disque suffisant → génération possible, aucune alerte")
+    @DisplayName("#808 : espace disque suffisant → génération possible, aucune alerte")
     void espace_suffisant_pas_d_alerte() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
         when(service.espaceDisqueDisponible("/ws/session-42")).thenReturn(20_000_000_000L);

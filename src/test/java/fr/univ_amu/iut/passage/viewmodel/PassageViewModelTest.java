@@ -180,7 +180,7 @@ class PassageViewModelTest {
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
         assertThat(viewModel.depotDisponibleProperty().get()).isFalse(); // trop tôt (pas encore vérifié)
 
-        // #… : même une fois DÉPOSÉ, on peut revenir sur M-Lot (consulter/supprimer les archives) sans
+        // #805 : même une fois DÉPOSÉ, on peut revenir sur M-Lot (consulter/supprimer les archives) sans
         // avoir à annuler le dépôt.
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);

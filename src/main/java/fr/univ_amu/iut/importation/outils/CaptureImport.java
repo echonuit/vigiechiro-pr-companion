@@ -308,7 +308,7 @@ public final class CaptureImport {
         vm.inspecter();
         rendre(scene, sortie.resolve("apercu-import-prefixe.png"));
 
-        // État « plusieurs nuits » (#…) : une carte laissée tourner plusieurs nuits (3 dates) → la table
+        // État « plusieurs nuits » (#4144) : une carte laissée tourner plusieurs nuits (3 dates) → la table
         // des nuits s'affiche, une ligne par nuit (inclure, date, fichiers, état, n° de passage proposé,
         // auto-numéroté). Le rattachement (site/point) reste sélectionné, donc les n° 1/2/3 apparaissent.
         vm.inspection().dossierSourceProperty().set(creerDossierMultiNuits());
