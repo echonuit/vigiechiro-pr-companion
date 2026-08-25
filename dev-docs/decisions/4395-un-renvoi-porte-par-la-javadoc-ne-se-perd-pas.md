@@ -9,6 +9,7 @@ verification: certaine
 enforced_by:
   - "scripts/adr/4395-renvois-en-javadoc.py"
 floor: 3111
+inv_key: plancher-renvois
 verified:
   - by: machine:ci
     at: 2026-08-24

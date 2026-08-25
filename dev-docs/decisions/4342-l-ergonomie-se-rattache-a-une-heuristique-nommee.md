@@ -9,6 +9,7 @@ verification: probable
 enforced_by:
   - "scripts/adr/verifie_okf.py"
 ratchet: 71
+inv_key: cliquet-heuristique
 verified:
   - by: machine:suspects
     at: 2026-08-24
