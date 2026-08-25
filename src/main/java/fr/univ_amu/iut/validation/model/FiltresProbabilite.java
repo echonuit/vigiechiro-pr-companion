@@ -7,35 +7,25 @@ import java.util.Objects;
 import java.util.Optional;
 
 /// Restreindre des observations par **seuil de probabilité Tadarida**, en ligne de commande (#2971).
-///
 /// Pendant CLI de la puce « Proba » de l'écran, dont il reprend la règle **exactement**, y compris sur
 /// le cas qui surprend.
 ///
-/// ## Les détections sans probabilité sont conservées
+/// **Les détections sans probabilité sont conservées** : elles n'ont pas de confiance comparable au
+/// seuil, et les écarter reviendrait à décider qu'elles sont mauvaises alors qu'on n'en sait rien -
+/// en perdant justement une ligne qu'il faut aller revoir. Toute autre règle ferait diverger les deux
+/// surfaces sur le même mot.
 ///
-/// C'est la règle de la puce, et elle mérite d'être dite : une détection sans probabilité n'a pas de
-/// confiance **comparable** au seuil. L'écarter reviendrait à décider qu'elle est mauvaise alors qu'on
-/// n'en sait rien, et à perdre une ligne qu'il faut justement aller revoir. Toute autre règle ferait
-/// diverger les deux surfaces sur le même mot.
+/// **L'échelle est 0..1**, pas le pourcentage de l'écran : le curseur de l'IHM est déjà un
+/// `Slider(0, 1, 0.5)`, et `lister-observations` imprime `probTadarida` brut. Entrée et sortie d'un
+/// même appel parlent ainsi la même langue.
 ///
-/// ## L'échelle est 0..1, pas le pourcentage de l'écran
+/// **Hors bornes, c'est un refus** : `--proba-min 90` est le réflexe du pourcentage, et borner en
+/// silence rendrait zéro ligne sans dire pourquoi. Le refus nomme la plage **et** la raison, l'erreur
+/// venant d'une confusion d'unité et non d'une faute de frappe.
 ///
-/// L'IHM affiche « 74 % » mais son curseur est un `Slider(0, 1, 0.5)` : l'échelle interne est déjà
-/// celle-ci. Surtout, `lister-observations` **imprime déjà** `probTadarida` brut (`0.74`). Entrée et
-/// sortie d'un même appel parlent ainsi la même langue, là où accepter `90` obligerait à convertir
-/// mentalement entre ce qu'on demande et ce qu'on lit.
-///
-/// ## Hors bornes, c'est un refus
-///
-/// `--proba-min 90` est le réflexe du pourcentage, et borner en silence rendrait zéro ligne sans dire
-/// pourquoi. Le refus nomme la plage **et** la raison, parce que l'erreur vient d'une confusion d'unité
-/// et non d'une faute de frappe.
-///
-/// ## Ce qu'il ne fait pas, contrairement à [FiltresLieu]
-///
-/// Un résultat **vide** n'est pas un refus ici. Un seuil est un nombre : il ne peut pas désigner
-/// quelque chose qui n'existe pas, et « aucune détection au-dessus de 0,99 » est une réponse, pas une
-/// faute. Un nom de lieu, lui, se tape de travers, et c'est ce qui justifiait le refus là-bas.
+/// **Un résultat vide n'est pas un refus**, contrairement à [FiltresLieu] : un seuil est un nombre, il
+/// ne peut pas désigner ce qui n'existe pas, et « aucune détection au-dessus de 0,99 » est une réponse.
+/// Un nom de lieu, lui, se tape de travers.
 public final class FiltresProbabilite {
 
     private FiltresProbabilite() {}

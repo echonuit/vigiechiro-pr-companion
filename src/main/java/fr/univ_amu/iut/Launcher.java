@@ -9,14 +9,9 @@ import java.util.function.Consumer;
 ///
 /// [App] étend `javafx.application.Application` : la lancer directement depuis un fat-jar (JavaFX sur
 /// le *classpath*, pas sur le *module-path*) provoque l'erreur « JavaFX runtime components are
-/// missing ». Cette classe, qui **n'étend pas** `Application`, sert de `main-class` aux emballages :
-/// elle délègue à [App#main(String[])], ce qui contourne le contrôle de JavaFX.
-///
-/// Côté développement, on continue de lancer l'application via `./mvnw javafx:run` ([App] reste le
-/// point d'entrée) et la ligne de commande via [Cli] : ce `Launcher` n'est utilisé que pour les
-/// artefacts distribués.
-///
-/// ## Le mot est écrit quelque part, il ne se devine pas
+/// missing ». Cette classe, qui **n'étend pas** `Application`, sert de `main-class` aux emballages et
+/// délègue à [App#main(String[])], ce qui contourne le contrôle. En développement on lance toujours
+/// par `./mvnw javafx:run` ou par [Cli] ; ce `Launcher` ne sert qu'aux artefacts distribués.
 ///
 /// [#MOT_FENETRE] déclare l'ouverture de l'interface graphique ; **tout le reste** part à [Cli], qui
 /// rend son code de sortie au shell. Le mot n'est pas à la charge de qui double-clique : chaque
@@ -25,11 +20,9 @@ import java.util.function.Consumer;
 ///
 /// Une invocation **sans aucun argument** n'ouvre donc pas la fenêtre : elle rend l'usage de la ligne
 /// de commande, parce que personne n'a demandé de fenêtre. C'est un changement pour `java -jar
-/// vigiechiro-*-shaded.jar`, qui ouvrait l'interface et demande désormais `ihm` (#4071).
-///
-/// ⚠️ C'est la différence entre **déclarer** et **déduire** (ADR 3828). « Zéro argument, donc
-/// fenêtre » serait une condition ambiante tenant lieu de déclaration : la même famille de défaut que
-/// l'aide colorisée sous Windows et nue sous Linux, que l'ADR nomme et refuse.
+/// vigiechiro-*-shaded.jar`, qui ouvrait l'interface et demande désormais `ihm` (#4071). C'est la
+/// différence entre **déclarer** et **déduire** (ADR 3828) : « zéro argument, donc fenêtre » serait une
+/// condition ambiante tenant lieu de déclaration.
 public final class Launcher {
 
     /// Le mot qui déclare l'ouverture de la fenêtre. C'est une surface **publique** : il est écrit

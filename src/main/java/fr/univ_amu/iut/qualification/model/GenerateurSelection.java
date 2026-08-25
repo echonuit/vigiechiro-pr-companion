@@ -9,32 +9,23 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
-/// Moteur de constitution d'une sélection d'écoute (R12). À partir de l'ensemble des
-/// séquences d'une nuit, il en retient un sous-ensemble selon une [MethodeSelection] et une
-/// taille cible.
+/// Moteur de constitution d'une sélection d'écoute (R12) : à partir des séquences d'une nuit, en
+/// retient un sous-ensemble selon une [MethodeSelection] et une taille cible.
 ///
-/// **Pourquoi un moteur séparé du service ?** La logique de « comment choisir les séquences »
-/// est une règle pure (pas de base, pas d'IHM) : on l'isole pour la tester sans persistance
-/// et la réutiliser (objectif réutilisation O6). C'est `ServiceQualification` qui l'alimente
-/// avec les séquences lues en base et persiste le résultat.
+/// Séparé du service parce que « comment choisir les séquences » est une règle pure, testable sans
+/// persistance et réutilisable (O6). `ServiceQualification` l'alimente avec les séquences lues en base
+/// et persiste le résultat.
 ///
-/// **« Réparti uniformément sur la nuit, par horodatage de l'original source » (R12).** Les
-/// conventions de nommage R6/R7/R8 garantissent que le nom de fichier d'une séquence vaut
-/// `Car<carré>-<année>-Pass<n>-<point>-PaRecPR<sn>_<AAAAMMJJ>_<HHMMSS>_NNN.wav`. À
-/// l'intérieur d'une même session, le préfixe et le numéro de série sont constants : la
-/// seule partie variable est l'horodatage de l'enregistreur (zéro-paddé, largeur fixe) suivi
-/// de l'index de tranche. **L'ordre lexicographique du nom de fichier coïncide donc
-/// exactement avec l'ordre chronologique de l'original source** (c'est d'ailleurs la
-/// convention déjà retenue par `SequenceDao#findBySession`, qui trie par `file_name`). Le
-/// moteur trie défensivement sur le nom de fichier puis échantillonne, sans avoir à parser
-/// l'horodatage.
+/// **Réparti uniformément sur la nuit, par horodatage de l'original source** (R12). Les conventions
+/// R6/R7/R8 font que, dans une même session, la seule partie variable du nom de fichier est
+/// l'horodatage zéro-paddé suivi de l'index de tranche : **l'ordre lexicographique du nom coïncide
+/// donc avec l'ordre chronologique**, ce dont `SequenceDao#findBySession` se sert déjà en triant par
+/// `file_name`. Le moteur trie sur le nom puis échantillonne, sans parser l'horodatage.
 ///
-/// **Déterminisme.** La méthode [MethodeSelection#REPARTITION_TEMPORELLE] (défaut R12) est
-/// strictement déterministe : pour les mêmes séquences et la même taille, elle renvoie
-/// toujours la même sélection. La méthode [MethodeSelection#ALEATOIRE] dépend d'un [Random]
-/// (injectable pour les tests via [#aleatoire(List, int, Random)]). La méthode
-/// [MethodeSelection#MANUEL] considère la liste fournie comme le choix explicite de
-/// l'utilisateur.
+/// **Déterminisme** : [MethodeSelection#REPARTITION_TEMPORELLE], le défaut de R12, rend toujours la
+/// même sélection pour les mêmes entrées. [MethodeSelection#ALEATOIRE] dépend d'un [Random] injectable
+/// ([#aleatoire(List, int, Random)]), et [MethodeSelection#MANUEL] prend la liste fournie comme choix
+/// explicite de l'utilisateur.
 public class GenerateurSelection {
 
     /// Borne basse conseillée pour la taille d'une sélection (R12 : « 10 à 30 séquences »).

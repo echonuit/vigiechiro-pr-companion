@@ -113,26 +113,18 @@ final class CriteresMultisite {
     /// **l'une** de ses dimensions figure parmi les valeurs cochées ([CritereListe#multipleParmi]) ; rien
     /// de coché n'écarte rien.
     ///
-    /// **Trois dimensions, et c'est le compte** : le domaine n'a que trois niveaux géographiques. Ce que
-    /// cet écran paraissait devoir à la vue audio, un groupe « Sites », n'était pas un niveau de plus
-    /// mais le **nom convivial du carré** ; les deux s'offrent désormais dans une entrée unique
-    /// (« 640380 · Vallon », #3157), ici comme ailleurs. L'écart relevé par #3145 n'en était pas un.
+    /// **Trois dimensions, et c'est le compte** : le domaine n'a que trois niveaux géographiques. Un
+    /// groupe « Sites » n'en serait pas un quatrième, mais le **nom convivial du carré** ; les deux
+    /// s'offrent dans une entrée unique, « 640380 · Vallon » (#3157). L'écart relevé par #3145 n'en était
+    /// pas un.
     ///
-    /// **Le critère « Carré » subsiste à côté**, et ce n'est pas un doublon oublié. La raison invoquée
-    /// jusqu'ici était la migration des vues mémorisées ; elle était vraie mais secondaire, et l'audit des
-    /// quatre barres de filtres (#2967) en a exhumé une plus forte, qui tient même quand les vues stockées
-    /// ne comptent pas.
-    ///
-    /// **« Carré » est la cible du clic sur la carte**, et c'est le seul critère de cet écran capable de
-    /// recevoir une valeur **arbitraire**. La carte affiche l'agrégat **non filtré** des sites de
-    /// l'utilisateur, passages ou non ; « Lieu » ne propose que les lieux **présents dans les passages
-    /// filtrés**. Router le clic vers « Lieu » marcherait pour un carré qui a des passages, et **ne ferait
-    /// rien du tout** pour un carré qui n'en a pas : [CritereListe#multipleParmi] ne coche que ce que sa
-    /// liste contient. Un clic sans effet est pire que le filtre à zéro ligne d'aujourd'hui, qui apprend
-    /// au moins que ce carré n'a rien.
-    ///
-    /// Le champ texte n'est donc pas une redondance à résorber : c'est la porte d'entrée d'une valeur qui
-    /// vient d'ailleurs que d'une liste.
+    /// **Le critère « Carré » subsiste à côté**, et ce n'est pas un doublon (#2967) : c'est la cible du
+    /// clic sur la carte, et le seul critère de cet écran capable de recevoir une valeur **arbitraire**.
+    /// La carte affiche l'agrégat **non filtré** des sites, passages ou non, là où « Lieu » ne propose que
+    /// les lieux présents dans les passages filtrés. Router le clic vers « Lieu » ne ferait **rien du
+    /// tout** pour un carré sans passage, [CritereListe#multipleParmi] ne cochant que ce que sa liste
+    /// contient. Un clic sans effet est pire qu'un filtre à zéro ligne, qui apprend au moins que ce
+    /// carré n'a rien.
     static CritereFiltre<LignePassage> lieu(Supplier<? extends List<LignePassage>> passagesFiltres) {
         return CritereLieu.de(
                 passagesFiltres::get,
