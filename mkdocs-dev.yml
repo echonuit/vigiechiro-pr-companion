@@ -276,6 +276,7 @@ nav:
     - 4444 · Un back local étalonne les sondes, il ne tourne aucun clip: decisions/4444-un-back-local-etalonne-les-sondes-il-ne-tourne-aucun-clip.md
     - 4453 · La prose publiée sur la forge relève de la même grille: decisions/4453-la-prose-publiee-sur-la-forge-releve-de-la-meme-grille.md
     - 4472 · Un commentaire long en corps de méthode est un signal: decisions/4472-un-commentaire-long-en-corps-de-methode-est-un-signal.md
+    - 4468 · Une javadoc non relue est une dette, tenue par son empreinte: decisions/4468-une-javadoc-non-relue-est-une-dette-tenue-par-son-empreinte.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

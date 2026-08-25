@@ -620,6 +620,12 @@ jobs:
         # et il n'a rien a en dire ; dedans, c'est ce qu'il tient. Un garde qui confondrait les deux
         # compterait les licences, et sa liste grossirait sans qu'un commentaire ait bouge.
         run: python3 scripts/adr/4472-commentaire-en-corps.py --auto-test
+      - name: "Auto-test du cliquet de javadoc non relue (bloquant, #4468)"
+        # Ce cliquet tient DEUX faits, et le second est celui qui le distingue d'une case cochée :
+        # une javadoc réécrite sous une entrée existante voit son empreinte changer, donc le fichier
+        # redevient suspect. Un garde qui ne tiendrait que le premier laisserait passer exactement le
+        # geste qu'on veut empêcher, et resterait vert. Ses neuf cas portent les deux.
+        run: python3 scripts/adr/4468-javadoc-non-relue.py --auto-test
 
       - name: Le paquet OKF des décisions est conforme (bloquant)
         # `dev-docs/decisions` est un paquet OKF depuis #4336 : chaque ADR porte un en-tête typé, se
