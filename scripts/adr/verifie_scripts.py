@@ -489,6 +489,31 @@ def test_4395_renvois_en_javadoc() -> None:
         )
 
 
+def test_4359_blocs_relus() -> None:
+    m = _charge("4359-blocs-relus.py")
+    corpus = {"aaaa": "src/main/java/A.java", "bbbb": "src/main/java/B.java"}
+
+    _verifie("4359 registre : une entree qui correspond n est pas perimee",
+             len(m.perimees([("aaaa", "src/main/java/A.java", "motif")], corpus)), 0)
+    _verifie("4359 registre : une entree qui ne correspond a rien est perimee",
+             len(m.perimees([("zzzz", "src/main/java/Fantome.java", "motif")], corpus)), 1)
+    _verifie("4359 registre : un registre vide ne perime rien",
+             len(m.perimees([], corpus)), 0)
+    # L EMPREINTE fait l identite, pas le chemin : un bloc deplace d un fichier a l autre reste relu.
+    # C est un choix, et il est ici pour qu on le voie plutot que de le decouvrir.
+    _verifie("4359 registre : l empreinte fait l identite, pas le chemin",
+             len(m.perimees([("aaaa", "src/main/java/Ailleurs.java", "motif")], corpus)), 0)
+
+    # Une REINDENTATION ne doit pas invalider une lecture qui reste valable.
+    bloc = ["    /// Premiere ligne.", "    /// Seconde ligne."]
+    decale = ["        /// Premiere ligne.", "        /// Seconde ligne."]
+    _verifie("4359 registre : une reindentation ne change pas l empreinte",
+             m.empreinte(bloc), m.empreinte(decale))
+    # Mais une EDITION, si : c est tout le propos.
+    _verifie("4359 registre : un mot change invalide l empreinte",
+             m.empreinte(bloc) != m.empreinte(["    /// Premiere ligne.", "    /// Autre chose."]), True)
+
+
 def test_loupe_4359_javadoc_vieillie() -> None:
     m = _charge("loupe-4359-javadoc-vieillie.py")
     long_ = [f"/// Ligne {i}." for i in range(m.SEUIL + 1)]
@@ -638,6 +663,7 @@ if __name__ == "__main__":
         test_4366_avertissement_en_pictogramme,
         test_4368_apostrophe_en_libelle,
         test_4395_renvois_en_javadoc,
+        test_4359_blocs_relus,
         test_loupe_4359_javadoc_vieillie,
         test_loupe_0020,
         test_loupe_0044,

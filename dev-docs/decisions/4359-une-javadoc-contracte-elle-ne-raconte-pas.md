@@ -8,6 +8,7 @@ decided_at: 2026-08-24
 verification: probable
 enforced_by:
   - "scripts/adr/4359-javadoc-narratif.py"
+  - "scripts/adr/4359-blocs-relus.py"
 loupe:
   - "scripts/adr/loupe-4359-javadoc-vieillie.py"
 ratchet: 3248
@@ -79,6 +80,30 @@ exclues, avec leurs suites, et deux cas du banc le tiennent.
 **Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut **<!--inv:cliquet-javadoc-->3 248<!--/inv-->** sur 680 blocs
 dans 554 fichiers après deux tranches, qui ont relu dix-huit fichiers (#4397, #4401). Le registre attendu est
 écrit dans `CONTRIBUTING.md` : il n'existait nulle part.
+
+**Un bloc relu et gardé volontairement s'inscrit, et son inscription se périme** (#4414). Cette
+décision dit plus haut que le cliquet ne descendra pas à zéro. Rien ne distinguait pourtant un bloc
+qu'on avait ouvert et décidé de garder d'un bloc qu'on n'avait jamais lu : chaque tranche rouvrait
+les deux. `scripts/adr/4359-blocs-relus.tsv` mémorise la lecture, et
+`scripts/adr/4359-blocs-relus.py` la tient honnête.
+
+**Le registre ne fait pas baisser le cliquet, et c'est la décision.** La dette reste annoncée en
+entier. Il dit « ce bloc a été lu », pas « cette dette n'existe plus » : confondre les deux
+transformerait une **mémoire de revue** en **desserrement**, et ferait descendre le compteur sans
+qu'une seule ligne ait été corrigée.
+
+**Un bloc s'identifie par l'empreinte de son texte.** Trois autres formes ont été confrontées, et
+chacune produit un faux vert : une entrée `Fichier.java:120` se fait détourner par une insertion en
+amont, qui donne l'exemption à un autre bloc ; une entrée par nom de membre est héritée par une
+surcharge que personne n'a relue ; une marque dans le bloc voyage par copier-coller sans que la
+demande de fusion ne touche le garde, donc sans le signal central que l'ADR
+[4339](4339-un-arbre-repris-d-un-outil-amont-se-declare.md) exige. L'empreinte est insensible aux
+deux premiers et invalidée par toute édition - une prose réécrite n'a pas été relue sous sa forme
+actuelle. Mesuré avant d'être retenu : **680 blocs sous cliquet, 680 empreintes distinctes, aucune
+collision**. Une réindentation, elle, ne l'invalide pas : les marges sont retirées avant le calcul.
+
+**Ce que le registre ne voit pas**, et qui recoupe la loupe ci-dessous : un bloc devenu faux parce
+que le **code** a changé sous lui garde son empreinte. Les deux dispositifs se lisent ensemble.
 
 **Une loupe dit où regarder avant de couper** (#4415). Contracter un bloc **déjà faux** ne le
 corrige pas : il le préserve, en plus court et donc plus crédible. `loupe-4359-javadoc-vieillie.py`

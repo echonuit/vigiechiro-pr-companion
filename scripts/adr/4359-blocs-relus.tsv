@@ -1,0 +1,13 @@
+# Blocs de javadoc RELUS et gardes volontairement (#4414).
+#
+# empreinte<TAB>chemin<TAB>motif
+#
+# L empreinte porte sur le TEXTE du bloc, pas sur sa position ni sur le nom du membre qu il
+# surmonte : une insertion en amont ne la deplace pas, une surcharge n en herite pas, et toute
+# edition du bloc l invalide - ce qui force une nouvelle lecture au lieu de la presumer.
+#
+# Ce registre NE FAIT PAS BAISSER LE CLIQUET. Il memorise « ce bloc a ete lu », pas « cette dette
+# n existe plus » : la dette reste annoncee en entier. Confondre les deux transformerait une
+# memoire de revue en desserrement, et le depot distingue precisement les deux gestes.
+1f097fab88185082	src/main/java/fr/univ_amu/iut/validation/model/ParserCsvTadarida.java	documente un format de fichier tiers et son mapping de colonnes
+34a41d5c10c241b5	src/main/java/fr/univ_amu/iut/importation/model/TransformationAudio.java	documente l arithmetique du decoupage
