@@ -620,6 +620,42 @@ def test_4468_javadoc_non_relue() -> None:
         # elle n a pas ete relue SOUS SA FORME ACTUELLE, et le fichier redevient suspect.
         lu.write_text("/// Le contrat de A, reecrit en douce.\nclass Lu {}\n", encoding="utf-8")
         _verifie("4468 une javadoc reecrite en douce redevient suspecte", len(m.suspects(racine, table)), 2)
+def test_4475_stage_non_dimensionne() -> None:
+    m = _charge("4475-stage-non-dimensionne.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        # Le cas qui compte : la MEME classe, avec puis sans le geste qui fait suivre le stage. Le
+        # garde accepte trois formes, et `sizeToScene` est celle que `FenetreDuBanc` prescrit ici :
+        # un garde qui n accepterait que `setWidth` pousserait a figer le stage, donc au defaut.
+        nu = ("class Nu {\n    @Start\n    void start(Stage fenetre) {\n"
+              "        fenetre.setScene(new Scene(racine, 980, 980));\n    }\n}\n")
+        _ecrire(racine, "fr/univ_amu/iut/a/NuTest.java", nu)
+        _verifie("4475 une scene dimensionnee sans stage dimensionne est vue", len(m.suspects(racine)), 1)
+        _ecrire(racine, "fr/univ_amu/iut/a/NuTest.java",
+                nu.replace("    }\n}", "        fenetre.sizeToScene();\n    }\n}"))
+        _verifie("4475 sizeToScene suffit, comme FenetreDuBanc le prescrit", len(m.suspects(racine)), 0)
+
+
+def test_4476_javadoc_raconte_son_extraction() -> None:
+    m = _charge("4476-javadoc-raconte-son-extraction.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        # Le cliquet ne vise pas toute mention d extraction, mais celle qui nomme l OUTIL qui l a
+        # exigee : c est ce voisinage-la qui fait le recit, « on a scinde parce que PMD a rougi ».
+        _ecrire(racine, "fr/univ_amu/iut/a/Recit.java",
+                "/// Collaborateur extrait de ServiceImport (plafond NcssCount).\nclass Recit {}\n")
+        _verifie("4476 un recit qui nomme l outil qui l a exige est vu", len(m.suspects(racine)), 1)
+        # LA BORNE QUI COMPTE : le verbe et l outil dans DEUX phrases distinctes sont une mention
+        # legitime. Un cliquet qui elargirait le voisinage au bloc entier les compterait, et sa liste
+        # grossirait sans qu une javadoc ait change.
+        _ecrire(racine, "fr/univ_amu/iut/a/Recit.java",
+                "/// Ce que la classe garantit.\n///\n/// Voir ServiceImport pour le parcours complet.\nclass Recit {}\n")
+        _verifie("4476 le nom de l outil seul, hors du verbe, est epargne", len(m.suspects(racine)), 0)
+
+
+def test_4477_longueur_des_adr() -> None:
+    m = _charge("4477-longueur-des-adr.py")
+    _verifie("4477 le depot rend un compte fini", isinstance(m.suspects(), list), True)
 
 
 def test_rapport_et_resserrement() -> None:
@@ -763,6 +799,9 @@ if __name__ == "__main__":
         test_loupe_0044,
         test_4472_commentaire_en_corps,
         test_4468_javadoc_non_relue,
+        test_4475_stage_non_dimensionne,
+        test_4476_javadoc_raconte_son_extraction,
+        test_4477_longueur_des_adr,
         test_rapport_et_resserrement,
     ):
         essai()

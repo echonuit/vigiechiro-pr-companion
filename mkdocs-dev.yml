@@ -277,6 +277,9 @@ nav:
     - 4453 · La prose publiée sur la forge relève de la même grille: decisions/4453-la-prose-publiee-sur-la-forge-releve-de-la-meme-grille.md
     - 4472 · Un commentaire long en corps de méthode est un signal: decisions/4472-un-commentaire-long-en-corps-de-methode-est-un-signal.md
     - 4468 · Une javadoc non relue est une dette, tenue par son empreinte: decisions/4468-une-javadoc-non-relue-est-une-dette-tenue-par-son-empreinte.md
+    - 4475 · Un test dimensionne son stage, il n'hérite pas du fork: decisions/4475-un-test-dimensionne-son-stage-il-n-herite-pas-du-fork.md
+    - 4476 · Une javadoc ne raconte pas le refactoring qui l'a produite: decisions/4476-une-javadoc-ne-raconte-pas-le-refactoring-qui-l-a-produite.md
+    - 4477 · Une ADR dit sa décision et l'incident qui l'a produite: decisions/4477-une-adr-dit-sa-decision-et-l-incident-qui-l-a-produite.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
