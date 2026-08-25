@@ -141,9 +141,14 @@ class ScenarioConnecteConnexionTest {
                 // ASYNCHRONE : la progression est le sujet, et en synchrone le fil JavaFX est bloqué,
                 // donc aucune image n'est rendue pendant l'opération.
                 .executeur(BancDeRecette.Executeur.ASYNCHRONE)
-                // ⚠️ Ni `connecte(...)` ni `connecteALaPlateforme()` : ce scénario part DÉCONNECTÉ,
+                // Ni `connecte(...)` ni `connecteALaPlateforme()` : ce scénario part DÉCONNECTÉ,
                 // parce que c'est la connexion elle-même qu'il filme. Le banc lie quand même sa propre
                 // source de jeton, donc rien de l'environnement ne s'invite dans la réserve (ADR 4134).
+                //
+                // ⚠️ Mais il DÉCLARE parler à la plateforme, sinon son client repart sur
+                // `http://localhost:1` : prendre le jeton ne dit pas au banc vers qui parler. Trois
+                // tournages ont filmé un écran hors ligne avant que le relevé ne le dise.
+                .parleALaPlateforme()
                 .remplacer(new AbstractModule() {
                     @Provides
                     OuvreurDeLien ouvreurDeLien() {
