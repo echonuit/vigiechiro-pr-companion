@@ -683,6 +683,18 @@ jobs:
           python3 scripts/adr/verifie_taille_des_cibles.py --auto-test
           python3 scripts/adr/verifie_taille_des_cibles.py
 
+      - name: "Aucun lien de javadoc que le formateur casserait (bloquant, #4493)"
+        # Palantir replie une ligne trop longue a la derniere espace qui tient. Si cette espace tombe
+        # DANS le texte d'un lien markdown, il coupe le lien et NE REPOSE PAS le prefixe `///` : la
+        # continuation devient du code, et le fichier cesse de compiler. Mesure du 2026-08-26 :
+        # `spotless:apply` sort ensuite en erreur sur le fichier qu'il vient d'ecrire lui-meme.
+        #
+        # Tolerance zero, et gratuite : zero ligne du depot est dans ce cas a l'ouverture du garde.
+        run: |
+          set -euo pipefail
+          python3 scripts/adr/verifie_lien_javadoc_formatable.py --auto-test
+          python3 scripts/adr/verifie_lien_javadoc_formatable.py
+
       - name: La matrice de la constitution est à jour (bloquant)
         # La matrice relie chaque article à ce qui l'applique, et NOMME les articles que rien ne
         # tient. C'est cette dernière colonne qui vaut le déplacement : elle est la liste des

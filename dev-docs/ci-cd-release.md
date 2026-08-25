@@ -581,6 +581,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie_javadoc_sans_doublon.py` | deux lignes de javadoc identiques et consécutives, ou un bloc recopié sur le membre suivant : une coupe ratée, jamais une intention | `lint.yml` |
 | `verifie_encart_de_revision.py` | une ADR dépassée le dit sous son titre, et l'encart n'annonce que ce que son en-tête déclare | `lint.yml` |
 | `verifie_taille_des_cibles.py` | une cible cliquable déclarée fait au moins 24 x 24 px (WCAG 2.5.8, niveau AA) | `lint.yml` |
+| `verifie_lien_javadoc_formatable.py` | une ligne `///` de plus de 120 caractères portant un lien markdown à texte espacé : le formateur la casserait en perdant le préfixe | `lint.yml` |
 | `verifie-epinglage.sh` | actions figées sur un SHA, aucune divergence de version | `lint.yml` |
 | `verifie-jeton.sh` | aucun jeton VigieChiro en clair | `lint.yml` |
 | `check-captures.sh` | chaque vue a une capture, chaque capture existe et est présentée | `lint.yml` |
