@@ -16,9 +16,7 @@ import java.util.Objects;
 
 /// Service métier de la feature `diagnostic` (parcours P6, épopée E6) : lit l'état
 /// matériel/technique d'une nuit **déjà importée** et l'expose pour l'onglet « Diagnostic » de la
-/// fiche passage. Suit le patron du service de référence `ServiceSites` : pure Java testable,
-/// dépendances (DAO + [Horloge]) reçues par constructeur avec `requireNonNull`, assemblé par le
-/// `*Module` de la feature.
+/// fiche passage.
 ///
 /// **Lecture seule, sans re-parsing lourd** : le service ne relit ni les originaux ni le journal
 /// `LogPR` brut ; il exploite ce qui a été persisté à l'import :
@@ -28,10 +26,8 @@ import java.util.Objects;
 /// - la série climatique relue du fichier `THLog` via [LectureThLog] (R20) ;
 /// - les coordonnées GPS du point d'écoute via le [PointDao] de la feature `sites`.
 ///
-/// **Dépendances inter-features** (sens autorisé, graphe acyclique) :
-/// `diagnostic → passage.model.dao` (passage, session, journal, relevé) et
-/// `diagnostic → sites.model.dao` (point/GPS), toutes en lecture seule. Aucune arête inverse
-/// n'est créée.
+/// **Dépendances inter-features**, toutes en lecture seule : `diagnostic → passage.model.dao`
+/// (passage, session, journal, relevé) et `diagnostic → sites.model.dao` (point/GPS).
 public class ServiceDiagnostic {
 
     private final PassageDao passageDao;

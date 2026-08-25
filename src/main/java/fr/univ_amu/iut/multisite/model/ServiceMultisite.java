@@ -30,8 +30,7 @@ import java.util.stream.Collectors;
 
 /// Service métier de la feature `multisite` : construit la **vue agrégée multi-sites** du
 /// parcours P5 (épopée E5), un tableau haute densité listant tous les passages de tous les sites
-/// d'un utilisateur avec leurs informations clés. Suit le patron du service de référence
-/// `ServiceSites` : pure Java testable, dépendances reçues par constructeur, aucun import JavaFX.
+/// d'un utilisateur avec leurs informations clés.
 ///
 /// Deux responsabilités :
 ///
@@ -43,14 +42,10 @@ import java.util.stream.Collectors;
 /// Les **vues sauvegardées** ne sont plus gérées ici (#537 étape 6b) : elles passent par le composant
 /// partagé `commun.view.GestionnaireVues` (onglets « à la Notion », table `saved_filter_view`).
 ///
-/// Dépendances inter-features (lecture seule des DAO, jamais des vues) : `multisite → sites`,
-/// `multisite → passage` et, depuis #1338, `multisite → validation` (les résultats d'identification déjà
-/// importés, qui disent si une nuit reste « à importer »). Aucune feature ne dépendant de `multisite`, le
-/// graphe reste acyclique (contrôlé par `ArchitectureTest`).
+/// Lit les DAO de `sites`, de `passage` et, depuis #1338, de `validation` (les résultats
+/// d'identification déjà importés, qui disent si une nuit reste « à importer »). Jamais leurs vues.
 ///
-/// L'[Horloge] est reçue par constructeur (patron du service de référence) et sert à la vue
-/// « saison courante » ([#listerPassagesDeLaSaison(String)]), pour rester déterministe en test
-/// plutôt que d'appeler `LocalDate.now()`.
+/// L'[Horloge] sert à la vue « saison courante » ([#listerPassagesDeLaSaison(String)]).
 public class ServiceMultisite {
 
     /// En-tête du tableau / export CSV : ordre stable des colonnes (P5-CA2). `analyse` et

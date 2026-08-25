@@ -23,9 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /// Service métier de la feature `lot` : prépare et trace le dépôt d'un passage sur
-/// Vigie-Chiro (parcours P4, épopée E4). Suit le patron du service de référence
-/// `ServiceSites` : pure Java testable, dépendances reçues par constructeur, distinction
-/// règles soft / règles dures.
+/// Vigie-Chiro (parcours P4, épopée E4).
 ///
 /// Deux étapes du parcours P4 :
 ///

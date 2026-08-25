@@ -37,23 +37,12 @@ import java.util.regex.Pattern;
 /// **vérification d'enregistrement par échantillonnage** (parcours P3), de l'ouverture de la
 /// vue jusqu'au verdict.
 ///
-/// Calqué sur le service de référence `ServiceSites` (cf. SERVICE-CONVENTIONS) :
+/// Les règles pures sont déléguées aux moteurs ([GenerateurSelection], [PreCheckNuit]). **Pas
+/// d'[fr.univ_amu.iut.commun.model.Horloge]** : cette feature n'écrit aucune colonne de date, le
+/// verdict ne s'horodatant pas dans le schéma.
 ///
-/// - reçoit ses dépendances par constructeur (DAO + moteurs + [UniteDeTravail]), assemblées
-///   par `QualificationModule` ; reste un objet Java ordinaire, sans annotation d'injection.
-///   Pas d'[fr.univ_amu.iut.commun.model.Horloge] : cette feature n'écrit aucune colonne de
-///   date, le verdict ne s'horodatant pas dans le schéma ;
-/// - n'écrit aucun SQL : il orchestre les DAO et délègue les règles pures aux moteurs
-///   ([GenerateurSelection], [PreCheckNuit]) ;
-/// - **aucun import JavaFX** (logique métier pure, testable en JUnit) ;
-/// - règles dures (intégrité, refus) ⇒ [RegleMetierException] ; saisie mal formée ⇒
-///   [IllegalArgumentException] ; règles soft ⇒
-///   [fr.univ_amu.iut.commun.model.ResultatVerification] (ici via [PreCheckNuit]).
-///
-/// Dépendances inter-features assumées et acycliques : `qualification → passage` (séquences,
-/// sessions, originaux, passage) et `qualification → sites` (carré du site et code du point,
-/// pour vérifier le préfixe R6). Aucune feature ne dépend de `qualification` (graphe sans
-/// cycle, contrôlé par `ArchitectureTest`).
+/// Dépendances inter-features : `qualification → passage` (séquences, sessions, originaux, passage)
+/// et `qualification → sites` (carré du site et code du point, pour vérifier le préfixe R6).
 ///
 /// **Atomicité (R12).** Constituer une sélection écrit dans deux tables (`listening_selection`
 /// + N × `selection_sequence`), enveloppées dans une [UniteDeTravail] (tout ou rien). Le drapeau
