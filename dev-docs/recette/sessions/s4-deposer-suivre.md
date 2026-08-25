@@ -121,23 +121,23 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 
 **Bloc B · Dépôt réel (130711, nuit du 05/07, ZIP, calcul lancé)**
 
-- **S4-37** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Réactivation : réimport de la nuit depuis la carte SD → empreinte vérifiée → passage réactivé.
-- **S4-38** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Qualification : verdict OK posé.
-- **S4-39** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Réglages ▸ Dépôt : plafond d'archive abaissé (~50 Mo) pour obtenir plusieurs archives.
-- **S4-40** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · La table de dépôt affiche une ligne par archive (en attente → en cours → déposé).
-- **S4-41** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Cinq lignes sont « en cours » simultanément (parallélisme de 5).
-- **S4-42** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Une barre de progression par archive reflète les octets envoyés.
+- **S4-37** · *prérequis: une base de départ où la nuit est un passage archivé, audio purgé, que la carte SD réactive (générateur de bases déclarées de #4325)* · Réactivation : réimport de la nuit depuis la carte SD → empreinte vérifiée → passage réactivé.
+- **S4-38** · Qualification : verdict OK posé.
+- **S4-39** · Réglages ▸ Dépôt : plafond d'archive abaissé (~50 Mo) pour obtenir plusieurs archives.
+- **S4-40** · *hors-portée: un serveur qui accepte réellement des archives. Ce que le cas observe est la table qui se remplit ligne à ligne, donc le transfert et non son résultat* · La table de dépôt affiche une ligne par archive (en attente → en cours → déposé).
+- **S4-41** · *hors-portée: cinq transferts qui progressent VRAIMENT de front. Sur un lien local on verrait cinq tâches planifiées, ce qui n'est pas la même chose* · Cinq lignes sont « en cours » simultanément (parallélisme de 5).
+- **S4-42** · *hors-portée: des octets qui partent sur un vrai lien. Sur un lien local, la barre mesurerait la remise à un tampon et non un envoi* · Une barre de progression par archive reflète les octets envoyés.
 - **S4-43** · *hors-portée: une manipulation du réseau en cours d'opération - coupure, bridage à quelques dizaines de ko/s - que le banc ne sait pas provoquer sans mentir sur la cause* · Couper le réseau pendant le dépôt : échecs avec raison au survol, le bouton devient « ↻ Reprendre le
   dépôt ».
-- **S4-44** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Reprendre ne renvoie que les archives manquantes.
-- **S4-45** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Fermer puis rouvrir l'écran : la table se réhydrate.
-- **S4-46** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Le passage ne devient « Déposé » que lorsque **toutes** les unités le sont.
-- **S4-47** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · « 🚀 Lancer la participation » : la carte « Traitement Vigie-Chiro » apparaît (« Analyse planifiée »).
-- **S4-48** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · « 🔄 Actualiser » relève l'état, **sans polling** automatique.
+- **S4-44** · *hors-portée: un serveur qui a réellement gardé une partie des archives, et qui dit lesquelles : la reprise se juge sur ce qu'il en reste chez LUI* · Reprendre ne renvoie que les archives manquantes.
+- **S4-45** · *prérequis: une base de départ où un dépôt est en cours, une partie des unités déposées et le reste non (générateur de bases déclarées de #4325)* · Fermer puis rouvrir l'écran : la table se réhydrate.
+- **S4-46** · *hors-portée: toutes les unités réellement déposées, donc autant de transferts menés à bout* · Le passage ne devient « Déposé » que lorsque **toutes** les unités le sont.
+- **S4-47** · *hors-portée: la plateforme qui accepte un calcul et rend son état. « Analyse planifiée » est SA réponse, pas la nôtre* · « 🚀 Lancer la participation » : la carte « Traitement Vigie-Chiro » apparaît (« Analyse planifiée »).
+- **S4-48** · *hors-portée: un état de traitement qui bouge côté serveur entre deux relevés, sans quoi « Actualiser » ne relève rien* · « 🔄 Actualiser » relève l'état, **sans polling** automatique.
 - **S4-49** · *hors-portée: une manipulation du réseau en cours d'opération - coupure, bridage à quelques dizaines de ko/s - que le banc ne sait pas provoquer sans mentir sur la cause* · Hors connexion, « Actualiser » dit « Impossible de joindre Vigie-Chiro » **sans effacer** le dernier
   état connu.
-- **S4-50** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Fermer/rouvrir l'application : le dernier état connu est réaffiché avec sa date, sans réseau.
-- **S4-51** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · **Noter l'identifiant de la participation** (nettoyage manuel éventuel + matériau de S5).
+- **S4-50** · *prérequis: une base de départ portant un état de traitement déjà relevé, avec sa date (générateur de bases déclarées de #4325)* · Fermer/rouvrir l'application : le dernier état connu est réaffiché avec sa date, sans réseau.
+- **S4-51** · *hors-portée: rien à observer. C'est une consigne à l'opérateur pour la suite, pas un fait d'écran* · **Noter l'identifiant de la participation** (nettoyage manuel éventuel + matériau de S5).
 
 ### Traitement en lot : ce qu'un seul poste ne peut pas prouver (#2357)
 
@@ -240,22 +240,22 @@ Ce bloc ne s'automatise pas : il mesure des **durées réelles** contre la plate
 annulation interrompt vraiment un téléchargement en cours. Les tests couvrent la logique ; ils ne
 peuvent pas dire si le premier import « paraît instantané » ni si « Annuler » rend la main.
 
-- **S4-84** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Sur la nuit analysée, « ☰ → Importer depuis Vigie-Chiro… » ramène les observations **sans fenêtre de
+- **S4-84** · *hors-portée: une durée réelle mesurée contre la plateforme. « Paraît instantané » ne veut plus rien dire quand tout l'est* · Sur la nuit analysée, « ☰ → Importer depuis Vigie-Chiro… » ramène les observations **sans fenêtre de
   progression paginée** (voie CSV) : noter la durée observée.
-- **S4-85** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Les observations sont à l'écran, colonne « Avis validateur » **vide** (le CSV ne la porte pas).
-- **S4-86** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · « ☰ → Publier les corrections… » est **actif** (non grisé) sur cette nuit tout juste importée.
-- **S4-87** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Après avoir corrigé une observation et déclaré sa certitude, la confirmation annonce « N prête(s) à
+- **S4-85** · *prérequis: une base de départ où les observations d'une nuit sont importées par la voie CSV (générateur de bases déclarées de #4325)* · Les observations sont à l'écran, colonne « Avis validateur » **vide** (le CSV ne la porte pas).
+- **S4-86** · *prérequis: une base de départ où une nuit vient d'être importée (générateur de bases déclarées de #4325)* · « ☰ → Publier les corrections… » est **actif** (non grisé) sur cette nuit tout juste importée.
+- **S4-87** · *prérequis: une base de départ où des observations importées portent des corrections, les unes ancrées et les autres non (générateur de bases déclarées de #4325)* · Après avoir corrigé une observation et déclaré sa certitude, la confirmation annonce « N prête(s) à
   partir, et M à ancrer d'abord ».
-- **S4-88** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · À l'accord, une fenêtre « Récupération des identifiants et des échanges avec le validateur… (page x/y) » s'affiche et
+- **S4-88** · *hors-portée: une pagination qui prend réellement du temps : ce que le cas note est la durée et la progression, pas le résultat* · À l'accord, une fenêtre « Récupération des identifiants et des échanges avec le validateur… (page x/y) » s'affiche et
   **progresse** : noter la durée totale.
-- **S4-89** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Le bouton **Annuler** de cette fenêtre rend la main **avant** la fin, et le bandeau n'annonce aucune
+- **S4-89** · *hors-portée: une récupération assez longue pour que « Annuler » puisse rendre la main AVANT la fin. Sans durée, il n'y a rien à interrompre* · Le bouton **Annuler** de cette fenêtre rend la main **avant** la fin, et le bandeau n'annonce aucune
   publication.
-- **S4-90** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Après une publication menée à son terme, le bandeau annonce les corrections envoyées **sans écart
+- **S4-90** · *hors-portée: des corrections réellement publiées, et un bandeau qui rend compte de ce que la plateforme en a fait* · Après une publication menée à son terme, le bandeau annonce les corrections envoyées **sans écart
   « sans ancrage »**.
 - **S4-91** · *hors-portée: la fiche WEB de la plateforme, dans un navigateur. Aucun carton n'y peut rien : il remplace une ÉTAPE muette, pas l'observable lui-même* · Sur le portail Vigie-Chiro, l'observation porte le taxon et la certitude déclarés ici.
-- **S4-92** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · Republier immédiatement : la publication repart **sans** repasser par la récupération des
+- **S4-92** · *hors-portée: une première publication réelle, sans quoi la seconde n'a aucun identifiant en base à ne pas récupérer deux fois* · Republier immédiatement : la publication repart **sans** repasser par la récupération des
   identifiants (ils sont désormais en base).
-- **S4-93** · *hors-portée: un dépôt RÉEL sur la plateforme, c'est-à-dire une ÉCRITURE que le banc s'interdit : c'est ce qui protège les données de terrain* · « ☰ → Réimporter depuis Vigie-Chiro… » repasse, lui, par la fenêtre **paginée**, et la colonne « Avis
+- **S4-93** · *hors-portée: le verdict d'un validateur du MNHN. Aucun dispositif ne le fabrique : il faut qu'un humain ait tranché* · « ☰ → Réimporter depuis Vigie-Chiro… » repasse, lui, par la fenêtre **paginée**, et la colonne « Avis
   validateur » se **remplit** si le MNHN a tranché.
 
 ## Constats candidats (desk-check, à confirmer en séance)

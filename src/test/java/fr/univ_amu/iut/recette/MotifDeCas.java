@@ -69,6 +69,21 @@ public final class MotifDeCas {
     /// dette ; celui-ci dit qu'il n'y en aura jamais, et il doit donc se justifier.
     public static final String HORS_PORTEE = "hors-portée";
 
+    /// Le cas se filmera, mais pas avant qu'un prérequis **nommé** existe, et le motif le nomme.
+    ///
+    /// C'est le mot qui manquait, et son absence a produit une dérive mesurée (#4458). Le
+    /// vocabulaire n'offrait que deux états à un cas sans clip : rien du tout, c'est-à-dire une
+    /// dette qu'aucun texte n'explique, ou [#HORS_PORTEE], qui affirme qu'il n'y aura **jamais** de
+    /// clip. Les vingt-deux cas d'écriture de `S4` ont donc reçu le motif de leur bloc, et huit
+    /// d'entre eux se sont retrouvés rangés avec la carte SD réelle et le validateur du MNHN, qui
+    /// eux ne se débloqueront pas.
+    ///
+    /// La différence avec [#HORS_PORTEE] est celle du **jamais** et du **pas encore**, et elle se
+    /// tient à ce que le motif nomme : un prérequis dont l'existence est **décidée**, pas espérée.
+    /// « attend le générateur de bases déclarées (#4325) » se vérifie, « attend qu'on trouve une
+    /// solution » ne dit rien et retombe dans le tapis que [#HORS_PORTEE] sans motif était déjà.
+    public static final String PREREQUIS = "prérequis";
+
     private MotifDeCas() {}
 
     /// Les marqueurs d'un cas, du groupe 2 de [#CAS] vers `nom -> argument`.

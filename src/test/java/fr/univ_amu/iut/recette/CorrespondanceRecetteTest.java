@@ -132,6 +132,14 @@ class CorrespondanceRecetteTest {
     /// doit se justifier, et pourquoi il rougit le jour où un test se met à citer le cas.
     private static Map<String, String> horsDePortee;
 
+    /// Ceux qui se filmeront, mais pas avant qu'un prérequis nommé existe, vers ce prérequis (#4458).
+    ///
+    /// Une dette DÉCLARÉE, là où [#horsDePortee] porte un fait définitif. Les deux se ressemblent à
+    /// l'œil et ne se ressemblent pas du tout : l'un attend quelque chose de nommé, l'autre n'attend
+    /// rien. Les confondre a rangé huit cas avec la carte SD réelle, et personne ne les a cherchés
+    /// là (#4458).
+    private static Map<String, String> prerequis;
+
     /// Ceux dont une ÉTAPE ne s'enregistre pas, vers ce que le carton descriptif dira à sa place.
     ///
     /// Le geste, lui, se filme ENTIER : c'est toute la différence avec [#horsDePortee], et c'est ce
@@ -174,6 +182,7 @@ class CorrespondanceRecetteTest {
         declares = new LinkedHashMap<>();
         perceptifs = new LinkedHashSet<>();
         horsDePortee = new LinkedHashMap<>();
+        prerequis = new LinkedHashMap<>();
         cartons = new LinkedHashMap<>();
         gestes = new LinkedHashMap<>();
         casParFichier = new LinkedHashMap<>();
@@ -280,7 +289,57 @@ class CorrespondanceRecetteTest {
                                 + " spectateur lira à la place.",
                         cas, declares.get(cas))
                 .isNotBlank());
+        prerequis.forEach((cas, attendu) -> verifs.assertThat(attendu)
+                .as(
+                        "%s est marqué *prérequis* sans nommer ce qu'il attend, dans %s. Un prérequis"
+                                + " anonyme ne se vérifie pas : personne ne peut dire s'il est arrivé,"
+                                + " donc le marqueur ne tombera jamais et le cas dormira.",
+                        cas, declares.get(cas))
+                .isNotBlank());
         verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("#4458 : un cas attend un prérequis OU n'aura jamais de clip, jamais les deux")
+    void prerequis_et_hors_portee_s_excluent() {
+        SoftAssertions verifs = new SoftAssertions();
+        prerequis.forEach((cas, attendu) -> verifs.assertThat(horsDePortee)
+                .as(
+                        "%s est à la fois marqué *prérequis: %s* et *hors-portée: %s* dans %s. Les deux"
+                                + " se contredisent : l'un dit que le cas attend quelque chose de nommé,"
+                                + " l'autre qu'il n'y aura jamais de clip. Choisir, sans quoi le lecteur"
+                                + " prend celui qui l'arrange.",
+                        cas, attendu, horsDePortee.get(cas), declares.get(cas))
+                .doesNotContainKey(cas));
+        verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("#4458 : un cas qui attendait est couvert, ou son marqueur tombe")
+    void un_cas_a_prerequis_couvert_perd_son_marqueur() {
+        SoftAssertions verifs = new SoftAssertions();
+        prerequis.forEach((cas, attendu) -> verifs.assertThat(cites.containsKey(cas))
+                .as(
+                        "%s est marqué *prérequis: %s* dans %s, et pourtant %s le cite. Le prérequis est"
+                                + " donc arrivé : retirer le marqueur, plutôt que de laisser une dette"
+                                + " déclarée compter un cas qui est couvert.",
+                        cas, attendu, declares.get(cas), cites.containsKey(cas) ? joindre(cites.get(cas)) : "?")
+                .isFalse());
+        verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("#4458 : le marqueur de prérequis sert, ou le garde le dit")
+    void le_marqueur_de_prerequis_n_est_pas_lettre_morte() {
+        // Article A3 : un dispositif qui peut ne rien vérifier le dit. Les trois gardes ci-dessus
+        // seraient VERTS sur un corpus où plus personne n'écrit *prérequis*, et ce vert-là ne
+        // vaudrait rien. Celui-ci rougit le jour où le mot disparaît, pour qu'on le retire du
+        // vocabulaire au lieu de le laisser dormir.
+        assertThat(prerequis)
+                .as("Aucun cas ne porte *prérequis* : soit le mot ne sert plus et il faut le retirer"
+                        + " de MotifDeCas avec ses gardes, soit une réécriture vient de l'effacer"
+                        + " par mégarde. Les trois gardes de #4458 ne vérifient plus rien.")
+                .isNotEmpty();
     }
 
     @Test
@@ -650,6 +709,9 @@ class CorrespondanceRecetteTest {
                             }
                             if (marques.containsKey(MotifDeCas.HORS_PORTEE)) {
                                 horsDePortee.put(cas, marques.get(MotifDeCas.HORS_PORTEE));
+                            }
+                            if (marques.containsKey(MotifDeCas.PREREQUIS)) {
+                                prerequis.put(cas, marques.get(MotifDeCas.PREREQUIS));
                             }
                             if (marques.containsKey(MotifDeCas.CARTON)) {
                                 cartons.put(cas, marques.get(MotifDeCas.CARTON));
