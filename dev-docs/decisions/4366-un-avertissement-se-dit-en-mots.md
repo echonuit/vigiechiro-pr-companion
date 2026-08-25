@@ -9,7 +9,7 @@ decided_at: 2026-08-24
 verification: probable
 enforced_by:
   - "scripts/adr/4366-avertissement-en-pictogramme.py"
-ratchet: 1468
+ratchet: 1799
 inv_key: cliquet-pictogramme
 verified:
   - by: machine:suspects
@@ -70,9 +70,20 @@ Toutes disent la même chose : effacer y serait falsifier.
   libellés commençaient par un ⚠ » parle du caractère, il ne s'en sert pas pour alerter. L'effacer
   ne raccourcirait pas la phrase, il la rendrait fausse.
 
-Sur 1967 occurrences, le garde en retient **<!--inv:cliquet-pictogramme-->1 468<!--/inv-->**. Les 482 autres sont du contenu montré, des
-blocs de code, des messages émis par le programme ou le caractère cité, et il ne les compte pas. Le
-cliquet a ouvert à 1 539 ; il descend au fil des tranches que d'autres chantiers résorbent.
+Le garde en retient **<!--inv:cliquet-pictogramme-->1 799<!--/inv-->**. Le reste est du contenu
+montré, des blocs de code, des messages émis par le programme ou le caractère cité, et il ne les
+compte pas. Le cliquet a ouvert à 1 539 ; il descend au fil des tranches que d'autres chantiers
+résorbent.
+
+**Il est monté une fois, et pour une raison qui n'est pas de la dette.** Il valait 1 468 tant que la
+règle des mentions se contentait d'« un délimiteur de chaque côté ». Cette formulation laissait
+passer la forme **la plus courante** d'un avertissement réel : `⚠️ **texte**` a un côté gauche vide,
+que la règle acceptait, et un `*` à droite. En javadoc c'était pire, `///` fournissant le `/` à
+gauche. **264 avertissements échappaient ainsi au compte.**
+
+Une mention est **encadrée** : le même délimiteur ouvre et ferme, `« ⚠️ »` ou `` `⚠️` ``. C'est cette
+règle-là qui s'applique désormais, et la montée à 1 799 est de la dette qui devient visible, jamais
+de la dette ajoutée (#4464).
 
 Cette valeur est celle de **cet** arbre. La décision vient d'un dépôt où le nettoyage avait déjà eu
 lieu et où le cliquet valait zéro ; elle a été remesurée en arrivant ici, comme

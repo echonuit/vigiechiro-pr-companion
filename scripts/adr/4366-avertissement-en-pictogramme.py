@@ -57,6 +57,10 @@ MARQUEURS = set("✓✗❌✅⛔❗→←▸☰≥≤−·✎💾ℹ🗑")
 # Ce qui borne un jeton : ni lettre ni chiffre.
 DELIMITEURS = set("`«»()*,;/|·\"'[]")
 
+# Les paires qui ENCADRENT une mention. Un signe entoure du meme delimiteur est cite ; un signe
+# precede d un delimiteur quelconque et suivi d un autre est employe, et le compte le veut.
+PAIRES = {"`": "`", "«": "»", "(": ")", "[": "]", '"': '"', "'": "'", "*": "*", "|": "|"}
+
 # La demi-fenetre du voisinage, en caracteres.
 VOISINAGE = 32
 
@@ -114,7 +118,15 @@ def citee(ligne: str, position: int) -> bool:
         return True
     gauche = ligne[:position].rstrip()
     droite = ligne[position + 1 :].lstrip("️").lstrip()
-    return (not gauche or gauche[-1] in DELIMITEURS) and (not droite or droite[0] in DELIMITEURS)
+    # Une mention est ENCADREE : le meme delimiteur ouvre et ferme. « Un delimiteur de chaque cote »
+    # ne suffisait pas, et laissait passer la forme la PLUS courante d un avertissement reel :
+    # `⚠️ **texte**` avait un gauche vide (donc accepte) et un `*` a droite, donc il ne comptait pas.
+    # En javadoc c etait pire encore, `///` fournissant le `/` a gauche. 264 avertissements
+    # echappaient ainsi au compte, sur 1 468 comptes (#4464).
+    if not gauche or not droite:
+        return False
+    ouvrant = gauche[-1]
+    return ouvrant in PAIRES and droite[0] == PAIRES[ouvrant]
 
 
 def alertes(ligne: str, suffixe: str, dans_bloc: bool) -> list[int]:
