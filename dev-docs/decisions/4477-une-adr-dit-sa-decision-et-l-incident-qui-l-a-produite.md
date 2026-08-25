@@ -9,6 +9,7 @@ verification: probable
 enforced_by:
   - "scripts/adr/4477-longueur-des-adr.py"
 ratchet: 58
+inv_key: cliquet-longueur-adr
 verified:
   - by: machine:suspects
     at: 2026-08-25
