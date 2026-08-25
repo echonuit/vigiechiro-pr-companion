@@ -27,13 +27,15 @@ bloc suivant.
 
 ## Sa cécité, déclarée
 
-- Elle ne lit que `src/main/java`, comme le cliquet auquel elle s'adosse.
+- Elle lit les **deux** arbres Java, comme le cliquet auquel elle s'adosse : un commentaire de
+  classe de test vieillit comme un autre.
 - Elle ne voit pas un bloc **faux dès le premier jour** : les deux dates sont alors les mêmes, et
   c'est le cas de plus de la moitié du corpus. C'est la limite qui compte, et elle est réelle.
 - Une javadoc corrigée **après** le code sort de la liste, à juste titre - mais rien ne dit qu'elle a
   été corrigée POUR le suivre.
 """
 
+import importlib.util
 import pathlib
 import re
 import subprocess
@@ -45,19 +47,27 @@ from _commun import loupe  # noqa: E402
 ADR = "4359"
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 
-PRODUCTION = "src/main/java"
+ARBRES = ("src/main/java", "src/test/java")
 
-# Le seuil de prose au-delà duquel un bloc entre dans le cliquet de l'ADR 4359. Repris de son garde
-# plutôt que redéfini : deux seuils qui dériveraient feraient regarder ailleurs que ce qui est compté.
-SEUIL = 8
+# Les seuils de prose au-delà desquels un bloc entre dans le cliquet de l'ADR 4359, **importés** de
+# son garde et non recopiés. La version précédente écrivait `SEUIL = 8` en dur sous un commentaire
+# qui affirmait l'inverse : la loupe regardait donc déjà autre chose que ce qui était compté, et le
+# seuil par nature n'a fait qu'aggraver l'écart.
+_garde = importlib.util.spec_from_file_location(
+    "cliquet4359", pathlib.Path(__file__).parent / "4359-javadoc-narratif.py"
+)
+_cliquet = importlib.util.module_from_spec(_garde)
+_garde.loader.exec_module(_cliquet)
+SEUILS = _cliquet.SEUILS
+nature = _cliquet.nature
 
 HORODATAGE = re.compile(r"^author-time (\d+)$", re.M)
 
 
 def fichiers(racine: pathlib.Path) -> list[str]:
-    """Les fichiers Java de production, suivis par git."""
+    """Les fichiers Java des deux arbres, suivis par git."""
     sortie = subprocess.run(
-        ["git", "-C", str(racine), "ls-files", "-z", PRODUCTION], capture_output=True, check=True
+        ["git", "-C", str(racine), "ls-files", "-z", *ARBRES], capture_output=True, check=True
     ).stdout.decode()
     return sorted(c for c in sortie.split("\0") if c.endswith(".java"))
 
@@ -119,7 +129,9 @@ def candidats_du_fichier(chemin: str, lignes: list[str], temps: list[int]) -> li
         k = j
         while k < len(lignes) and not lignes[k].strip().startswith("///"):
             k += 1
-        if prose(lignes[i:j]) > SEUIL:
+        # La nature de ce que le bloc surmonte decide de son seuil, comme dans le cliquet.
+        declaration = next((l for l in lignes[j:k] if l.strip()), "")
+        if prose(lignes[i:j]) > SEUILS[nature(declaration)]:
             doc = max(temps[i:j], default=0)
             code = max((t for t, l in zip(temps[j:k], lignes[j:k]) if l.strip()), default=0)
             if code > doc:

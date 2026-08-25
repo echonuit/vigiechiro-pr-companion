@@ -90,7 +90,7 @@ comptage.
 |---|---|---|
 | tiret cadratin | `scripts/adr/2843-tiret-cadratin.py` | dix-sept zones à tolérance zéro, cliquet à <!--inv:cliquet-cadratin-->1<!--/inv--> |
 | pictogramme d'alerte | `scripts/adr/4366-avertissement-en-pictogramme.py`, article A28 | cliquet à <!--inv:cliquet-pictogramme-->1 468<!--/inv--> |
-| javadoc narrative | `scripts/adr/4359-javadoc-narratif.py`, article A30 | cliquet à <!--inv:cliquet-javadoc-->891<!--/inv--> |
+| javadoc narrative | `scripts/adr/4359-javadoc-narratif.py`, article A30 | cliquet à <!--inv:cliquet-javadoc-->1 533<!--/inv--> |
 | apostrophe mêlée | `scripts/adr/4368-apostrophe-en-libelle.py`, `verifie-titre-pr.sh` | zéro partout, trois exemptions déclarées |
 | source vague, conjecture présentée en fait | article A5 | la mesure fait foi et dit d'où elle vient |
 | section « défis et perspectives » | le gabarit d'ADR | contexte, décision, conséquences, alternatives |

@@ -11,7 +11,7 @@ enforced_by:
   - "scripts/adr/4359-blocs-relus.py"
 loupe:
   - "scripts/adr/loupe-4359-javadoc-vieillie.py"
-ratchet: 891
+ratchet: 1533
 inv_key: cliquet-javadoc
 verified:
   - by: machine:suspects
@@ -87,15 +87,31 @@ cliquet descend par tranches, chaque bloc **lu**.
 
 ## Conséquences
 
-**Le code de production seulement.** Un garde doit dire ce qu'il vérifie - c'est l'article A2, et sa
-javadoc est sa déclaration. Compter les tests demanderait au dépôt de renoncer à une règle pour en
-tenir une autre.
+**Les deux arbres Java**, production et tests. Le cliquet s'est d'abord borné à la production, au
+motif qu'« un garde doit dire ce qu'il vérifie, c'est l'article A2, et sa javadoc est cette
+déclaration ».
+
+**Ce motif attribuait à A2 ce qu'il ne dit pas.** A2 énonce qu'un garde est vu rouge sur sa propre
+mutation, et sa seule clause d'exclusion est étroite : « un détecteur textuel s'exclut de son propre
+corpus » - le garde des cadratins ne compte pas les cadratins de son source. Rien n'y exempte la
+javadoc d'un garde de la discipline de longueur, et rien n'y parle du code de test. **A2 n'est donc
+pas en cause, son usage l'était.**
+
+Un commentaire de classe de test se lit comme un autre et vieillit pareil. L'exclure du compte
+revenait à dire qu'il n'a pas à être juste, et la maîtrise de la dette vaut pour les tests comme
+pour le reste. Les distributions des deux arbres sont d'ailleurs les mêmes - 9ᵉ décile à 14 pour les
+types, à 5 pour les méthodes - donc les mêmes seuils, sans réglage propre aux tests.
+
+Les gardes écrits en Java, `ContrasteAATest`, `DoublonsFeuillesDeStyleTest`,
+`DocumentationAJourTest`, gardent leur déclaration entière : c'est du **contrat**, et le registre
+`4359-blocs-relus.tsv` est fait pour l'inscrire une fois lue. Une exception qui **sort du corpus**
+est un angle mort ; une exception **inscrite** reste comptée et se relit.
 
 **Le niveau est `probable`.** La longueur se compte ; ce qu'il faut couper ne se décide pas
 mécaniquement. Un record de trente champs n'est pas un suspect : les étiquettes de contrat sont
 exclues, avec leurs suites, et deux cas du banc le tiennent.
 
-**Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut **<!--inv:cliquet-javadoc-->891<!--/inv-->** sur 669 blocs
+**Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut **<!--inv:cliquet-javadoc-->1 533<!--/inv-->** sur 669 blocs
 dans 545 fichiers après trois tranches (#4397, #4401, #4424). Le registre attendu est
 écrit dans `CONTRIBUTING.md` : il n'existait nulle part.
 

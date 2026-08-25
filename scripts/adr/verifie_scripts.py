@@ -531,8 +531,11 @@ def test_4359_blocs_relus() -> None:
 
 def test_loupe_4359_javadoc_vieillie() -> None:
     m = _charge("loupe-4359-javadoc-vieillie.py")
-    long_ = [f"/// Ligne {i}." for i in range(m.SEUIL + 1)]
-    court = [f"/// Ligne {i}." for i in range(m.SEUIL - 1)]
+    # La loupe importe desormais ses seuils du cliquet, par nature. Les fixtures surmontent une
+    # classe, donc c est le seuil `type` qui les departage.
+    seuil = m.SEUILS["type"]
+    long_ = [f"/// Ligne {i}." for i in range(seuil + 1)]
+    court = [f"/// Ligne {i}." for i in range(seuil - 1)]
     corps = ["class A {}", ""]
 
     # Le cas positif : bloc sous cliquet, code plus recent que lui.

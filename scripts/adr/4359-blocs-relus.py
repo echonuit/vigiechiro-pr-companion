@@ -81,7 +81,11 @@ def blocs_du_corpus(racine: pathlib.Path = None) -> dict[str, str]:
     """Empreinte -> chemin, pour chaque bloc SOUS CLIQUET du code de production."""
     base = racine or RACINE
     trouves = {}
-    for fichier in sorted((base / "src/main/java").rglob("*.java")):
+    # Les DEUX arbres, comme le cliquet qu il accompagne : un registre qui ne couvrirait que la
+    # production laisserait un bloc de test compte dans la dette sans pouvoir jamais etre inscrit
+    # comme relu. Le registre suit le corpus, sinon il en exclut une part en silence.
+    arbres = [base / "src/main/java", base / "src/test/java"]
+    for fichier in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
         lignes = fichier.read_text(encoding="utf-8").split("\n")
         for depart, prose in _garde.blocs(fichier):
             if prose <= _garde.SEUIL:
