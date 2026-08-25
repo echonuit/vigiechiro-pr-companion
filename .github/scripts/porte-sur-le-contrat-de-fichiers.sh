@@ -62,8 +62,19 @@ FIN
 # parce qu'un `merge-base` qui échoue (historique tronqué) ne doit pas tuer le job avant qu'il juge -
 # dans ce cas on préfère TOUT vérifier plutôt que de conclure « rien à faire » depuis une erreur.
 base=""
-if [ -n "${GITHUB_BASE_REF:-}" ]; then
-    git fetch --no-tags --depth=1 origin "${GITHUB_BASE_REF}" >/dev/null 2>&1 || true
+# ⟨profondeur⟩ On demande a GitHub le SHA de base de la PR plutot que de le CALCULER par
+# `merge-base`. Le calcul exigeait l historique des DEUX cotes, donc un `fetch-depth: 0` au
+# checkout - et ce clone integral partait en vrille jusqu a epuiser les vingt minutes du job,
+# 1 199 s et 1 200 s le meme jour sur ubuntu ET macos, quand l etape prend 3 s a profondeur 1
+# (#4440). Le SHA, lui, se recupere seul et se rapatrie a profondeur 1.
+if [ -n "${GITHUB_BASE_SHA:-}" ]; then
+    git fetch --no-tags --depth=1 origin "${GITHUB_BASE_SHA}" >/dev/null 2>&1 || true
+    git cat-file -e "${GITHUB_BASE_SHA}^{commit}" 2>/dev/null && base="${GITHUB_BASE_SHA}"
+fi
+# Repli sur le calcul, hors PR ou si le SHA n arrive pas. La profondeur peut alors ne pas suffire,
+# et l absence de base fait VERIFIER TOUT plus bas plutot que conclure au silence.
+if [ -z "${base}" ] && [ -n "${GITHUB_BASE_REF:-}" ]; then
+    git fetch --no-tags --depth=50 origin "${GITHUB_BASE_REF}" >/dev/null 2>&1 || true
     base=$(git merge-base HEAD "origin/${GITHUB_BASE_REF}" 2>/dev/null || true)
 fi
 [ -n "${base}" ] || base=$(git rev-parse HEAD~1 2>/dev/null || true)

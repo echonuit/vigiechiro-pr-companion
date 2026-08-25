@@ -431,8 +431,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          fetch-depth: 0
+        # ⟨profondeur⟩ Plus de `fetch-depth: 0`. Le clone integral ne servait qu au `merge-base` du
+        # script de portee, qui lit desormais le SHA de base que GitHub fournit. Il partait en vrille
+        # jusqu a epuiser les vingt minutes du job - 1 199 s et 1 200 s le meme jour, sur ubuntu ET
+        # macos, quand l etape prend 3 s a profondeur 1 (#4440). Le butoir d etape nomme la cause.
+        timeout-minutes: 5
 
       - name: Set up JDK 25
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
@@ -445,6 +448,10 @@ jobs:
       - name: Ce diff touche-t-il le contrat de système de fichiers ?
         id: portee
         shell: bash
+        env:
+          # Le SHA de base de la PR, que GitHub connait deja : il evite le `merge-base`, donc le
+          # clone integral. Vide hors PR, et le script verifie alors TOUT plutot que conclure.
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: ./.github/scripts/porte-sur-le-contrat-de-fichiers.sh
 
       - name: Le contrat tient-il sur cette plateforme ?
