@@ -24,10 +24,11 @@ import javafx.scene.control.MenuItem;
 ///
 /// ## Ce que la capture doit établir
 ///
-/// Que les valeurs sont **groupées et nommées** (Communes, Carrés, Points, Sites), là où une liste plate
+/// Que les valeurs sont **groupées et nommées** (Communes, Carrés, Points), là où une liste plate
 /// ne disait pas si « Ahetze » était une commune ou un site ; et que le point paraît sous la forme
 /// **« carré · point »**, le schéma posant `UNIQUE(site_id, code)` : un code seul désigne autant de lieux
 /// qu'il y a de carrés, et la puce les confondait silencieusement.
+
 ///
 /// Le seed est celui de [GraineSonsValidation]. Un `main` distinct (donc une JVM par PNG) car un seul
 /// état « audio chargé » est possible par processus.

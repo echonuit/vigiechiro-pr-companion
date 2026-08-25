@@ -36,10 +36,12 @@ import java.util.Set;
 /// `UniteDeTravail.executer(cx -> …)`. Le SQL reste dans `model.dao` (convention IMPL §3), et la
 /// feature `passage` n'est pas modifiée.
 ///
-/// Toutes les méthodes d'écriture prennent une [Connection] et déclarent `throws SQLException` :
-/// elles sont conçues pour être appelées **à l'intérieur** du bloc `UniteDeTravail.executer`. La
-/// seule lecture ([#passageExistePour]) ouvre sa propre connexion (pré-contrôle R5 avant d'engager
-/// l'import) et n'entre donc pas dans la transaction.
+/// **La frontière se lit dans la signature**, et c'est voulu : une méthode qui prend une
+/// [Connection] en premier paramètre est **transactionnelle** - elle déclare `throws SQLException`
+/// et s'appelle à l'intérieur du bloc `UniteDeTravail.executer`. Une méthode qui n'en prend pas
+/// **ouvre la sienne** et reste hors transaction : ce sont les lectures de pré-contrôle, appelées
+/// avant d'engager l'import.
+
 public class AgregatImportDao {
 
     private final SourceDeDonnees source;
