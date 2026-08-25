@@ -61,8 +61,19 @@ for chemin in fichiers:
     if echecs:
         fautives.append(f"{racine.get('name')} : {echecs} sur {tests}")
 
+if rouges == 0 and not fautives and sautes == 0:
+    print(f"✓ {total} cas joués, aucun rouge.")
+    raise SystemExit(0)
+
 if rouges == 0 and not fautives:
-    print(f"✓ {total} cas joués, aucun rouge ({sautes} sauté(s)).")
+    # Pas de ✓ : un cas SAUTÉ n'a rien montré. Depuis #4447 un scénario peut abandonner quand la
+    # précondition de son geste manque - le compte n'a plus de nuit à rapatrier, par exemple - et
+    # mener avec un ✓ ferait lire « tout a été montré » à qui s'arrête au premier signe.
+    print(f"◻ {total} cas joués, aucun rouge, mais {sautes} SAUTÉ(S) : leur geste n'a pas eu lieu.")
+    print()
+    print("Un cas sauté n'est ni un succès ni un défaut : c'est un geste que le banc n'a pas pu")
+    print("jouer, et dont le clip ne montre donc pas ce que le cas promet. Le journal du pas de")
+    print("tournage en donne la raison, et l'index ne les compte pas comme couverts.")
     sys.exit(0)
 
 print(f"⚠️ **{rouges} cas ont ROUGI** sur {total} joués ({sautes} sauté(s)).")
@@ -106,6 +117,16 @@ auto_test() {
     # `failures`.
     essai "une erreur compte autant qu'une défaillance" "1 cas ont ROUGI" \
 '<testsuite name="fr.essai.Erreur" tests="2" failures="0" errors="1" skipped="0"/>'
+
+    # Le cas du geste ABANDONNÉ (#4447). Un scénario dont la précondition manque saute au lieu de
+    # rougir - le compte n'a plus de nuit à rapatrier, donc « connexion-longue » n'a pas eu lieu.
+    # Mener avec un ✓ ferait lire « tout a été montré » à qui s'arrête au premier signe.
+    essai "un cas sauté ne mène pas avec un ✓" "SAUTÉ(S)" \
+'<testsuite name="fr.essai.Saute" tests="1" failures="0" errors="0" skipped="1"/>'
+
+    # Et le contrôle de l'autre bord : sans saut, le ✓ revient.
+    essai "sans saut, le tournage garde son ✓" "✓" \
+'<testsuite name="fr.essai.ToutVert" tests="2" failures="0" errors="0" skipped="0"/>'
 
     # ⚠️ Le contrôle qui empêche ce script de rassurer sur du vide.
     essai "aucun rapport n'est pas aucun échec" "AUCUN rapport" ""

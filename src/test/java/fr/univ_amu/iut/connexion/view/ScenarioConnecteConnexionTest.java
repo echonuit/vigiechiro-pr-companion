@@ -27,6 +27,7 @@ import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -224,11 +225,22 @@ class ScenarioConnecteConnexionTest {
         Respiration.surLeMomentCle(robot);
         Respiration.leTempsDeLire(robot);
 
-        assertThat(visible(robot, "#zoneProgression"))
-                .as("la progression doit avoir été à l'écran ASSEZ LONGTEMPS pour être filmée. Si elle a"
-                        + " disparu pendant ce maintien, c'est que l'opération est plus rapide que le"
-                        + " temps de lecture, et ce cas n'a rien montré")
-                .isTrue();
+        // La PRÉCONDITION du geste, déclarée plutôt que supposée. « connexion-longue » suppose que la
+        // connexion soit longue, et elle ne l'est que si le compte a des nuits à rapatrier : se
+        // connecter rejoue ce rapatriement (#2557), donc la durée suit ce qui RESTE à récupérer.
+        //
+        // Après un tournage, il ne reste rien - et l'opération devient brève. Ce n'est pas un défaut du
+        // produit, c'est un geste qui n'a pas eu lieu : on abandonne en le disant, plutôt que de rougir
+        // sur une cause qui n'est pas la bonne.
+        //
+        // L'enregistreur n'indexera aucun des cas cités : un clip qui ne montre pas son geste ne doit
+        // pas passer pour une couverture.
+        Assumptions.assumeTrue(
+                visible(robot, "#zoneProgression"),
+                "La progression a disparu pendant le maintien de caméra : le compte de tournage n'a plus"
+                        + " de nuit à rapatrier, donc la connexion est brève et le geste « connexion-longue »"
+                        + " n'a pas eu lieu. Ce n'est PAS un défaut du produit. Pour rejouer ce geste, il"
+                        + " faut un compte dont des nuits restent à récupérer.");
 
         // « Il ne reste pas figé » ne se constate pas sur UN instantané : une barre arrêtée et une barre
         // qui progresse s'y ressemblent. On compare donc DEUX relevés séparés par le maintien ci-dessus.
