@@ -165,9 +165,31 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        # ⟨profondeur⟩ Le checkout ne prend QUE la pointe. L historique entier, dont
+        # `semantic-release` a besoin, arrive a l etape suivante - la ou une reprise est possible,
+        # ce que `actions/checkout` n offre pas. Ce clone-la partait en vrille assez souvent pour
+        # avoir bloque quatre PR le 2026-08-25 (#4440). Le butoir reste, en dernier recours.
+        timeout-minutes: 5
         with:
-          fetch-depth: 0 # semantic-release lit l'historique et les tags
+          fetch-depth: 1 # l'historique vient a l'etape suivante, avec reprise (#4440)
 
+      - name: Rapatrier l'historique et les tags, avec reprise
+        # `semantic-release` a besoin de l'historique entier. Le demander au checkout n'offre AUCUNE
+        # reprise, et ce clone part en vrille assez souvent pour avoir bloque quatre PR le meme jour
+        # (#4440). Ici la vrille coute une minute et non quinze : on reessaie, et la mediane des
+        # memes fetch est de trente secondes.
+        shell: bash
+        run: |
+          for essai in 1 2 3; do
+            if timeout 120 git fetch --unshallow --tags origin 2>/dev/null \
+               || timeout 120 git fetch --tags origin 2>/dev/null; then
+              echo "historique rapatrie a l'essai ${essai}"
+              exit 0
+            fi
+            echo "::warning::essai ${essai} de rapatriement d'historique sans succes, on reessaie"
+          done
+          echo "::error::trois essais de rapatriement d'historique ont echoue (#4440)"
+          exit 1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "24"
