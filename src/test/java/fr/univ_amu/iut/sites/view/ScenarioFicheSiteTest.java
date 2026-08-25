@@ -21,6 +21,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -85,7 +86,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// sert donc à rien aujourd'hui, et retirer les appels à `amener` ne fait rougir aucun des quatre cas.
 /// Ce n'est pas une raison de les retirer : c'est ce qui garde vraie la phrase « tout est à l'image » le
 /// jour où la fiche gagne une section, où la fixture gagne des passages, ou où l'écran rétrécit.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class ScenarioFicheSiteTest {
 
     private static final String ID_USER = "u-fiche";

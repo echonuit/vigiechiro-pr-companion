@@ -19,6 +19,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -60,7 +61,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// portés par le chrome donc présents sur tous les écrans) reflète l'historique et l'emplacement,
 /// permet de revenir à l'écran précédent réel et de sauter à un ancêtre du fil, et respecte le verrou
 /// (#54). Couvre #22 et #140.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class MainViewTest {
 
     private Injector injector;

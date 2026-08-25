@@ -50,7 +50,7 @@ import org.testfx.framework.junit5.Start;
 /// la commodité de l'éprouver. Le cas monte une prise TCP sur un port éphémère, la désigne
 /// par `vigiechiro.url`, et compte les connexions reçues. **Zéro connexion** est la propriété ; une
 /// connexion dirait que le banc a composé l'ambiante.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class BancDeRecetteUrlTest {
 
     private final AtomicInteger recues = new AtomicInteger();

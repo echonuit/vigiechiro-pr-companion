@@ -19,6 +19,7 @@ import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.Seance;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import java.io.IOException;
@@ -71,7 +72,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// L'ouverture reproduit donc `NavigationConnexion.ouvrir()`, du chargement FXML jusqu'à
 /// [Habillage#scene(Parent)] - qui n'est pas un détail : c'est ce qui embarque la typographie, et
 /// donc ce qui fait que le clip montre l'application telle qu'elle est livrée.
-@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class})
+@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
 class ScenarioPerceptifConnexionTest {
 
     /// ⚠️ Une LATENCE simulée, et non un temps d'arrêt. La récupération doit prendre du temps, sans
