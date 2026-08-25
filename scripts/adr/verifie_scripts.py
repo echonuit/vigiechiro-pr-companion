@@ -447,6 +447,28 @@ def test_4366_avertissement_en_pictogramme() -> None:
         _verifie(f"4366 {titre}", len(m.alertes(ligne, suffixe, bloc)), attendu)
 
 
+def test_4366_pictogramme_en_tete_de_ligne() -> None:
+    """LE cas que la regle des « delimiteurs de chaque cote » laissait passer.
+
+    Un avertissement s ecrit `⚠️ **texte**`, et c est la forme la plus courante du depot. Le cote
+    gauche est vide - ce que l ancienne regle acceptait comme un delimiteur - et le `*` de l emphase
+    fournissait le cote droit. 264 avertissements reels echappaient ainsi au compte. Une mention est
+    ENCADREE : le meme delimiteur ouvre et ferme.
+    """
+    m = _charge("4366-avertissement-en-pictogramme.py")
+    alerte = m.ALERTE if isinstance(m.ALERTE, str) else "\u26a0\ufe0f"
+    import re as _re
+
+    def compte(ligne, suffixe=".md"):
+        pos = _re.search(m.ALERTE, ligne)
+        return 0 if pos is None else len(m.alertes(ligne, suffixe, False))
+
+    _verifie("4366 en tete de ligne, suivi de gras : compte", compte(f"{alerte} **Attention.**"), 1)
+    _verifie("4366 en javadoc, suivi de gras : compte", compte(f"/// {alerte} **Attention.**", ".java"), 1)
+    _verifie("4366 encadre de guillemets francais : epargne", compte(f"Le signe « {alerte} » se cite."), 0)
+    _verifie("4366 encadre de parentheses : epargne", compte(f"Le pictogramme ({alerte}) est cite."), 0)
+
+
 def test_4368_apostrophe_en_libelle() -> None:
     m = _charge("4368-apostrophe-en-libelle.py")
     C = chr(0x2019)
@@ -696,6 +718,7 @@ if __name__ == "__main__":
         test_3947_message_enveloppe,
         test_4359_javadoc_narratif,
         test_4366_avertissement_en_pictogramme,
+        test_4366_pictogramme_en_tete_de_ligne,
         test_4368_apostrophe_en_libelle,
         test_4395_renvois_en_javadoc,
         test_4359_blocs_relus,
