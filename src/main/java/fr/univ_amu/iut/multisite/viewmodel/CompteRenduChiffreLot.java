@@ -17,18 +17,11 @@ import java.util.Map;
 
 /// Traduit le résultat d'un **traitement en lot** en compte rendu chiffré (#2757).
 ///
-/// ## Ce que la phrase perdait
-///
-/// Le lot rendait compte par `TexteCompteRendu`, faute d'un port capable de transporter autre chose
-/// qu'une chaîne : « 14 réussi(s), 6 non traité(s) », suivi d'une ligne par passage. Trois pertes.
-///
-/// La **proportion** ne se voyait pas : sur vingt nuits, « 14 réussi(s) » demande de soustraire pour
-/// savoir ce qui reste. Le **reliquat** était muet dans le sens rassurant : « 6 non traité(s) » agrège
-/// un écarté (« dépôt déjà préparé », bénin) et un échec (« la plateforme a refusé », à reprendre), qui
-/// n'appellent pas la même conduite. Et les **motifs** se répétaient : une ligne par nuit, là où trois
-/// nuits partagent le même motif.
-///
-/// ## Des parts qui couvrent le tout, dans une seule unité
+/// Un compte rendu chiffré dit trois choses qu'une phrase perd : la **proportion**, sur vingt nuits
+/// « 14 réussi(s) » demandant de soustraire ; le **reliquat**, où « non traité » agrège un écarté
+/// (« dépôt déjà préparé », bénin) et un échec (« la plateforme a refusé », à reprendre) qui
+/// n'appellent pas la même conduite ; et les **motifs**, une ligne par nuit là où trois nuits
+/// partagent le même.
 ///
 /// [IssueTraitement.Statut] les énumère, et elles couvrent le tout : c'est la forme que le constructeur de
 /// [Ventilation] sait exiger. Les teintes suivent la **conduite attendue** et non la mécanique : un écarté

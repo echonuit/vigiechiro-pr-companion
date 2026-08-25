@@ -3,27 +3,16 @@ package fr.univ_amu.iut.commun.view;
 /// Les **clés des critères de filtre** partagés entre écrans (#3096), et le concept que chacune
 /// désigne.
 ///
-/// ## Pourquoi un porteur unique
+/// Une clé n'est pas un détail local : c'est le **contrat de sérialisation** des vues mémorisées
+/// (`vue_sauvegardee.descripteur_json`) et la base du **transport** des filtres d'un écran à l'autre
+/// (« Voir sur la carte », #476). **Deux écrans qui filtrent le même concept la partagent ; deux
+/// concepts distincts ne la partagent jamais**, sous peine qu'un filtre transporté se restaure en
+/// autre chose, ou soit jeté en silence.
 ///
-/// Une clé n'est pas un détail d'implémentation local. C'est le **contrat de sérialisation** des vues
-/// mémorisées (`vue_sauvegardee.descripteur_json`) et la base du **transport** des filtres d'un écran à
-/// l'autre (« Voir sur la carte », #476). Deux écrans qui filtrent le même concept doivent donc la
-/// partager, et deux concepts différents ne doivent jamais la partager.
-///
-/// Avant cette classe, `lieu` était déclaré **quatre** fois, `groupe` trois, et l'écran audio écrivait
-/// les siennes en littéraux. Rien n'empêchait un cinquième écran de nommer le même concept « lieux »,
-/// ni deux écrans de nommer deux concepts « statut » : c'est précisément ce qui était arrivé.
-///
-/// ## Le cas qui a motivé le renommage
-///
-/// `statut` désignait le **statut d'observation** (à revoir / validée / corrigée) en audio et en
-/// analyse, et le **statut de workflow** (importé / déposé / vérifié) en multisite. Les vues étant
-/// persistées par écran, rien ne cassait ; mais le mécanisme de transport arme exactement ce piège, et
-/// le jour où un écran enverrait ses filtres vers Carte & passages, un statut d'observation se
-/// restaurerait en statut de workflow, ou serait jeté en silence.
-///
-/// D'où deux clés distinctes, dont les noms disent le concept. La rétrocompatibilité des vues déjà
-/// enregistrées est assurée par [CritereFiltre#nomsHerites()], sans migration de base.
+/// C'est pourquoi le statut d'**observation** (à revoir / validée / corrigée) et le statut de
+/// **workflow** (importé / déposé / vérifié) portent deux clés distinctes, dont les noms disent le
+/// concept. La rétrocompatibilité des vues déjà enregistrées passe par
+/// [CritereFiltre#nomsHerites()], sans migration de base.
 ///
 /// ## Ce que le contrat garantit
 ///
