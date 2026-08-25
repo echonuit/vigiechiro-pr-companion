@@ -36,36 +36,36 @@ Consignées lors de la clôture du lot E (#2796), CLI sur machine de développem
 
 **Étape 1 · Isoler le sous-ensemble (vue audio)**
 
-- **S5-01** · Depuis « Espèces & observations », un clic sur l'espèce ouvre la vue audio sur elle (toutes nuits).
-- **S5-02** · La puce « Lieu » liste communes, carrés et points réellement présents, dans cet ordre ; un carré
+- **S5-01** · *geste: filtrer-les-observations-par-lieu* · Depuis « Espèces & observations », un clic sur l'espèce ouvre la vue audio sur elle (toutes nuits).
+- **S5-02** · *geste: filtrer-les-observations-par-lieu* · La puce « Lieu » liste communes, carrés et points réellement présents, dans cet ordre ; un carré
   nommé paraît sous ses deux étiquettes, « 640380 · Vallon », et un carré sans nom sous son numéro
   seul.
-- **S5-03** · Cocher une commune restreint la table ; la barre de statut suit le sous-ensemble affiché.
+- **S5-03** · *geste: filtrer-les-observations-par-lieu* · Cocher une commune restreint la table ; la barre de statut suit le sous-ensemble affiché.
 
 **Étape 2 · Exporter (menu principal (☰))**
 
-- **S5-04** · L'item « Exporter les observations et les sons (ZIP)… » est actif dès qu'une observation est
+- **S5-04** · *geste: exporter-observations-et-sons* · L'item « Exporter les observations et les sons (ZIP)… » est actif dès qu'une observation est
   affichée, et grisé avec explication quand la table est vide.
-- **S5-05** · La première ligne de la fenêtre de progression annonce le contenu (« N observation(s) ·
+- **S5-05** · *geste: exporter-observations-et-sons* · La première ligne de la fenêtre de progression annonce le contenu (« N observation(s) ·
   M son(s) · ~X Mo ») **avant** toute copie.
-- **S5-06** · La barre avance fichier par fichier, le nom du son en cours se lit.
-- **S5-07** · Pendant l'export (plusieurs minutes sur une saison), la fenêtre reste vivante et « Annuler »
+- **S5-06** · *geste: exporter-observations-et-sons* · La barre avance fichier par fichier, le nom du son en cours se lit.
+- **S5-07** · *hors-portée: la durée réelle d'un export sur une saison entière - « plusieurs minutes » - que l'objectif de la session nomme lui-même comme ce qu'aucun test ne peut affirmer. Un export de fixture dure une seconde, et une fenêtre vivante pendant une seconde ne prouve rien* · Pendant l'export (plusieurs minutes sur une saison), la fenêtre reste vivante et « Annuler »
   reste cliquable.
-- **S5-08** · Annuler en cours de copie : aucun fichier partiel ne subsiste à la destination.
-- **S5-09** · Relancer et laisser finir : le compte rendu chiffre observations, sons copiés, sons introuvables
+- **S5-08** · *hors-portée: un fait de DISQUE que l'écran ne montre pas : ce que le cas observe est le contenu de la destination, pas ce que l'application affiche* · Annuler en cours de copie : aucun fichier partiel ne subsiste à la destination.
+- **S5-09** · *geste: exporter-observations-et-sons* · Relancer et laisser finir : le compte rendu chiffre observations, sons copiés, sons introuvables
   et taille de l'archive.
 
 **Étape 3 · Ouvrir l'archive hors application**
 
-- **S5-10** · L'archive s'ouvre avec l'outil d'archive du système (double-clic), sans avertissement.
-- **S5-11** · `observations.csv` s'ouvre dans un tableur, accents corrects, colonne « Commune » remplie là où
+- **S5-10** · *hors-portée: un outil du système - archiveur, tableur, lecteur audio - hors du banc* · L'archive s'ouvre avec l'outil d'archive du système (double-clic), sans avertissement.
+- **S5-11** · *hors-portée: un outil du système - archiveur, tableur, lecteur audio - hors du banc* · `observations.csv` s'ouvre dans un tableur, accents corrects, colonne « Commune » remplie là où
   le lot 0 a résolu.
-- **S5-12** · Les sons sont rangés par dossier de nuit ; un WAV pris au hasard s'écoute avec le lecteur du
+- **S5-12** · *hors-portée: un outil du système - archiveur, tableur, lecteur audio - hors du banc* · Les sons sont rangés par dossier de nuit ; un WAV pris au hasard s'écoute avec le lecteur du
   système et correspond à sa ligne CSV (nom de fichier).
-- **S5-13** · Les sons introuvables annoncés sont bien **absents** de `sons/` mais **présents** dans le CSV.
+- **S5-13** · *hors-portée: un fait de DISQUE que l'écran ne montre pas : ce que le cas observe est le contenu de la destination, pas ce que l'application affiche* · Les sons introuvables annoncés sont bien **absents** de `sons/` mais **présents** dans le CSV.
 
 **Étape 4 · Parité CLI**
 
-- **S5-14** · `vigiechiro exporter-sons --espece <code> --sortie <zip>` produit une archive de même structure
+- **S5-14** · *hors-portée: une réponse en texte dans un terminal : le banc filme une scène JavaFX, pas un shell* · `vigiechiro exporter-sons --espece <code> --sortie <zip>` produit une archive de même structure
   (mêmes dossiers, même CSV) que le geste IHM sur le même sous-ensemble.
-- **S5-15** · `--passage` + `--espece` simultanés : refus expliqué, code 2, rien d'écrit.
+- **S5-15** · *hors-portée: une réponse en texte dans un terminal : le banc filme une scène JavaFX, pas un shell* · `--passage` + `--espece` simultanés : refus expliqué, code 2, rien d'écrit.
