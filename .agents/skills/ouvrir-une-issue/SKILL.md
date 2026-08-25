@@ -32,7 +32,10 @@ ce qu'il faut avoir posé avant de commencer, et refuse de démarrer tant que ce
 3. SITUER   dans quelle continuite elle s inscrit : de quel chantier elle vient,
             quelle issue elle suit, ce qu elle rend possible ensuite.
 4. DEPOSER  ces trois phrases EN COMMENTAIRE sur l issue, avec le remede envisage.
-5. ASSIGNER l issue a qui la prend.
+5. RELIRE   a la grille humaniseur ce qui part sur la forge. Le corps de l issue
+            est de la prose publiee, et l article A31 le couvre depuis qu il ne
+            declenche plus sur le commit.
+6. ASSIGNER l issue a qui la prend.
 ```
 
 Sauter l'étape 3, c'est produire un correctif isolé dont personne ne saura s'il a été fini. C'est

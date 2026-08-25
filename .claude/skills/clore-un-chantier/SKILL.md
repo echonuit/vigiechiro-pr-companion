@@ -29,15 +29,18 @@ passe suivante devait trouver.
 | 0 | Relecture des ADR existantes | la liste des décisions que le chantier a contredites | `ecrire-une-adr` |
 | 1 | Audit d'intégration | ce que `main` a changé pendant le chantier | |
 | 2 | Cohérence CLI et IHM | la commande manquante, ou son absence justifiée | |
-| 3 | Doc développeur | `dev-docs/` recolle au code livré | |
-| 4 | Doc utilisateur | `docs/` et ses captures | `revue-visuelle` |
-| 5 | Brief projet | parcours, maquettes, modèle conceptuel | |
+| 3 | Doc développeur | `dev-docs/` recolle au code livré | `humaniseur` |
+| 4 | Doc utilisateur | `docs/` et ses captures | `revue-visuelle`, `humaniseur` |
+| 5 | Brief projet | parcours, maquettes, modèle conceptuel | `humaniseur` |
 | 6 | Tests | chaque usage introduit est couvert | `tdd`, `mutation` |
 | 7 | Harmonisation | l'application entière, pas le delta | |
 | 8 | Revue visuelle | chaque **état** de chaque écran touché | `revue-visuelle` |
 | 9 | Nouveaux chantiers | les issues cadrées pendant que le contexte est frais | `triage` |
 | 10 | ADR du chantier | une décision structurante, une ADR | `ecrire-une-adr` |
-| 11 | Bilan | livré, dette restante, décisions et leur pourquoi | |
+| 11 | Bilan | livré, dette restante, décisions et leur pourquoi | `humaniseur` |
+
+Quatre passes ne produisent que de la prose, et c'est pourquoi elles nomment `humaniseur` : ce
+qu'elles écrivent est lu hors de l'échange qui l'a produit, donc l'article A31 s'y applique.
 
 ## Pourquoi cet ordre
 

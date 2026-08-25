@@ -42,7 +42,9 @@ Deux textes, relus dans six mois **sans le fil** : le corps de l'issue, et celui
 3. RELIRE   le corps de la PR : dit-il ce qui a ete fait et pourquoi, sans retracer
             les hesitations ?
 4. VERIFIER le titre de la PR : il devient le sujet du squash.
-5. LIRE A FROID les deux, comme quelqu un qui n a pas suivi.
+5. PASSER   les deux corps a la grille humaniseur. Ils sont publies et non commis,
+            et l article A31 les couvre depuis qu il declenche sur la publication.
+6. LIRE A FROID les deux, comme quelqu un qui n a pas suivi.
 ```
 
 ## Deux dettes réelles, laissées dans le dépôt
@@ -69,3 +71,4 @@ Ce n'est pas de la cosmétique. C'est la seule trace qui survive.
 | « Le corps est un peu périmé, ce n'est pas grave » | C'est ce que lira le repreneur |
 | « Le fil explique tout » | Le fil disparaît. Le corps reste |
 | « Le titre de la PR, on s'en fiche » | Il devient la ligne du CHANGELOG, que la typographie ne rattrape pas après coup |
+| « La typographie du corps, ça n'engage rien » | `corps-pr.yml` refuse le cadratin, l'apostrophe courbe et l'élision sans apostrophe. Le reste de la grille est à vous, et ce corps est publié dès qu'il part |

@@ -274,6 +274,7 @@ nav:
     - 4331 · Un garde exécute la règle qu'il juge: decisions/4331-un-garde-execute-la-regle-qu-il-juge.md
     - 4406 · L'état de départ d'un cas se déclare, il ne s'enregistre pas: decisions/4406-l-etat-de-depart-d-un-cas-se-declare-il-ne-s-enregistre-pas.md
     - 4444 · Un back local étalonne les sondes, il ne tourne aucun clip: decisions/4444-un-back-local-etalonne-les-sondes-il-ne-tourne-aucun-clip.md
+    - 4453 · La prose publiée sur la forge relève de la même grille: decisions/4453-la-prose-publiee-sur-la-forge-releve-de-la-meme-grille.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

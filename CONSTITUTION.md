@@ -221,8 +221,9 @@ sous cliquet, dans le code de production ; un garde, lui, doit dire ce qu'il vé
 ### A31 : La prose visible se relit à l'humaniseur
 
 Toute prose qu'un humain lira hors de l'échange qui l'a produite - javadoc, documentation, ADR,
-libellés d'interface et de ligne de commande, messages de commit - passe la grille de la compétence
-`humaniseur` avant d'être commise. Les sept tics de `CONTRIBUTING.md` en sont le sous-ensemble
+libellés d'interface et de ligne de commande, messages de commit, corps d'issue et de pull request -
+passe la grille de la compétence `humaniseur` avant d'être **publiée**, par un commit comme sur la
+forge. Les sept tics de `CONTRIBUTING.md` en sont le sous-ensemble
 opposable : la grille sert à relire, les sept servent à refuser. Rien ne mécanise le reste, et c'est
 dit : aucun motif textuel ne décide si une emphase informe, ni si une javadoc paraphrase la
 signature qu'elle surmonte.
@@ -266,7 +267,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A28 · Un avertissement se dit en mots | 1 | 0 | `scripts/adr/4366-avertissement-en-pictogramme.py` |
 | A29 · L'ergonomie se rattache à une heuristique nommée | 1 | 0 | `scripts/adr/verifie_okf.py` |
 | A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 2 | 1 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py` |
-| A31 · La prose visible se relit à l'humaniseur | 1 | 0 | **relecture seule** |
+| A31 · La prose visible se relit à l'humaniseur | 2 | 0 | **relecture seule** |
 
 **4 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
 
