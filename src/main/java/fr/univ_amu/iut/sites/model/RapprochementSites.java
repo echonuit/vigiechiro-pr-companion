@@ -38,7 +38,8 @@ public class RapprochementSites implements RapprochementVigieChiro {
     /// Libellé du compte-rendu (pluriel, cf. RapportSynchro#libelle).
     private static final String LIBELLE_SITES = "sites";
 
-    /// Libellé du compte-rendu (pluriel, cf. RapportSynchro#libelle).
+    /// Les liens entre un site local et son homologue distant : c'est par eux qu'on sait ce qui est
+    /// déjà rapproché, et donc ce qui reste à importer.
     private final LienVigieChiroDao liens;
 
     /// La mécanique d'import d'un site distant, partagée avec le rapatriement à la demande (#3806).

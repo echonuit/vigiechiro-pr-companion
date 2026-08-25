@@ -662,6 +662,27 @@ jobs:
           python3 scripts/adr/verifie_okf.py --auto-test
           python3 scripts/adr/verifie_okf.py
 
+      - name: "Trois refus portes par la ligne d'origine (bloquant, #4462)"
+        # Trois zones a TOLERANCE ZERO, chacune avec son auto-test avant son passage sur le depot.
+        #
+        # `verifie_javadoc_sans_doublon` : deux lignes de javadoc identiques et consecutives sont une
+        # coupe ratee, jamais une intention. Il a trouve deux defauts reels a son arrivee, tous deux
+        # des copier-coller qui decrivaient le champ d'a cote.
+        #
+        # `verifie_encart_de_revision` : une ADR depassee le dit SOUS SON TITRE, et l'encart n'annonce
+        # que ce que son en-tete declare. Un encart qui inventerait une relation serait pire que pas
+        # d'encart du tout, puisqu'on le lit pour savoir ce qui fait foi.
+        #
+        # `verifie_taille_des_cibles` : une cible cliquable declaree fait au moins 24 x 24 px, seuil
+        # WCAG 2.5.8 niveau AA. Il ne voit que les dimensions DECLAREES, ce que sa javadoc dit.
+        run: |
+          python3 scripts/adr/verifie_javadoc_sans_doublon.py --auto-test
+          python3 scripts/adr/verifie_javadoc_sans_doublon.py
+          python3 scripts/adr/verifie_encart_de_revision.py --auto-test
+          python3 scripts/adr/verifie_encart_de_revision.py
+          python3 scripts/adr/verifie_taille_des_cibles.py --auto-test
+          python3 scripts/adr/verifie_taille_des_cibles.py
+
       - name: La matrice de la constitution est à jour (bloquant)
         # La matrice relie chaque article à ce qui l'applique, et NOMME les articles que rien ne
         # tient. C'est cette dernière colonne qui vaut le déplacement : elle est la liste des

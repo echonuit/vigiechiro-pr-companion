@@ -65,8 +65,8 @@ public class PointEditViewModel {
     private final ReadOnlyObjectWrapper<RetourOperation> retour =
             new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
 
-    /// Ce que la grille STOC dit de la position saisie (#733) : vide tant qu'on ne sait rien.
-    /// Ce que la grille STOC dit de la position, avec sa gravité (#733, #2159).
+    /// Ce que la grille STOC dit de la position saisie, avec sa gravité (#733, #2159) : vide tant
+    /// qu'on ne sait rien.
     private final ReadOnlyObjectWrapper<RetourOperation> retourCarre =
             new ReadOnlyObjectWrapper<>(this, "retourCarre", RetourOperation.AUCUN);
 
