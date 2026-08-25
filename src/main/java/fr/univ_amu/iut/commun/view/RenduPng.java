@@ -12,29 +12,19 @@ import javax.imageio.ImageIO;
 
 /// Écrit une [Scene] JavaFX en PNG, hors écran (#2746).
 ///
-/// ## Pourquoi cette classe existe, et pourquoi ici
+/// Le geste vit ici et non dans l'**outillage** de capture, parce que la production s'en sert :
+/// [ExportGraphe] écrit la courbe d'activité (#2352) et la courbe climatique du diagnostic (#2618).
+/// L'y laisser empêcherait de poser la règle ArchUnit qui interdit ce franchissement, comme de
+/// retirer l'outillage du binaire distribué.
 ///
-/// Le geste vivait dans `commun.outils.ApercuFx`, c'est-à-dire dans l'**outillage** de capture de la
-/// documentation. Or la production s'en sert : l'export d'image de la courbe d'activité (#2352) et
-/// celui de la courbe climatique du diagnostic (#2618) passent par [ExportGraphe], qui appelait donc
-/// une classe d'outillage.
-///
-/// C'était le seul franchissement de cette frontière, et il empêchait à la fois de poser la règle
-/// ArchUnit qui l'interdit et de retirer l'outillage du binaire distribué.
-///
-/// ## Ce que cette classe ne fait PAS, et c'est délibéré
-///
-/// `ApercuFx.enregistrerPng` refuse une image dont un libellé est tronqué
-/// ([LisibiliteCapture#refuserToutTexteIllisible]). C'est juste pour une capture de documentation :
-/// une image fausse ne doit pas partir dans la doc.
-///
-/// Ce garde-fou **ne s'applique pas ici**, et pas par oubli. [ExportGraphe] **redessine** le graphe
-/// dans une scène transitoire que l'utilisateur ne voit jamais (ADR 2348) : une troncature s'y
-/// produirait dans une mise en page qu'il ne peut ni observer ni corriger. Faire échouer son export
-/// là-dessus le laisserait sans recours, pour un défaut dont il n'est pas l'auteur.
-///
-/// Le souci que l'ADR 2348 nomme - « un export qui échoue en silence tout en produisant un fichier
-/// d'apparence normale » - est réglé par le redessin lui-même, pas par ce garde-fou.
+/// **Le refus de troncature ne s'applique pas ici**, et pas par oubli. `ApercuFx.enregistrerPng`
+/// refuse une image dont un libellé est tronqué ([LisibiliteCapture#refuserToutTexteIllisible]), ce
+/// qui est juste pour une capture de documentation : une image fausse ne doit pas partir dans la doc.
+/// Mais [ExportGraphe] **redessine** le graphe dans une scène transitoire que l'utilisateur ne voit
+/// jamais (ADR 2348) : une troncature s'y produirait dans une mise en page qu'il ne peut ni observer
+/// ni corriger, et faire échouer son export là-dessus le laisserait sans recours. Ce que l'ADR 2348
+/// nomme, un export qui échoue en silence en produisant un fichier d'apparence normale, est réglé par
+/// le redessin lui-même.
 public final class RenduPng {
 
     private RenduPng() {}

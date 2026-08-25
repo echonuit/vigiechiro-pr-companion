@@ -9,31 +9,20 @@ import javafx.scene.layout.Region;
 
 /// Ce qu'une fenêtre de l'application porte **toujours** : sa police et ses feuilles de socle.
 ///
-/// ## Le défaut : `base.css` était déclarée à la main, donc oubliée
+/// Embarquer une police ne la **sélectionne** pas : c'est `base.css` qui la demande. Déclarée à la
+/// main dans chaque FXML, elle manquait aux dix fenêtres qui naissent d'un `new Scene(vue)` - modales
+/// de point, de site, de rattachement, de connexion, de qualification, dialogues de progression -
+/// lesquelles rendaient avec la police par défaut de JavaFX, différente de celle du chrome et
+/// différente d'une machine à l'autre. C'est le défaut que [Typographie] visait, resté entier à côté.
 ///
-/// Seuls `MainView.fxml` et `EcranReglages.fxml` déclaraient `base.css`. La fenêtre **principale** la
-/// portait donc, et toute vue de fonctionnalité en héritait : elle s'affiche *dans* le chrome. Mais
-/// les **dix autres fenêtres** de l'application - modales de point, de site, de rattachement, de
-/// connexion, de qualification, dialogues de progression - naissent d'un `new Scene(vue)` sur un FXML
-/// qui déclare `palette.css` et `design.css`, jamais `base.css`.
+/// La déclarer partout à la main marcherait, et se déferait à la fenêtre suivante : c'est le
+/// raisonnement de [Modales] pour la fermeture par Échap. Un seul patron, appelé à la création de
+/// chaque fenêtre, et `ScenesHabilleesTest` verrouille l'invariant.
 ///
-/// Conséquence : elles rendaient avec la police **par défaut de JavaFX**, différente de celle de la
-/// fenêtre qui les portait, et différente d'une machine à l'autre. Exactement le défaut que
-/// [Typographie] visait, resté entier à côté : embarquer une police ne la **sélectionne** pas, c'est
-/// `base.css` qui la demande.
-///
-/// ## Pourquoi ici, et pas dans chaque FXML
-///
-/// Ajouter `@base.css` aux dix FXML aurait marché, et se serait défait au onzième. C'est le
-/// raisonnement de [Modales] pour la fermeture par Échap : un seul patron, appelé à la création de
-/// chaque fenêtre, plutôt qu'une consigne recopiée. `ScenesHabilleesTest` verrouille l'invariant.
-///
-/// ## Les captures s'en servent aussi, et ce n'est pas un détail
-///
-/// Les outils de capture montent leurs scènes **sans** le chrome. En passant par le même habillage,
-/// un aperçu montre l'écran tel que l'utilisateur le voit - par construction, et non parce qu'on y a
-/// pensé. Mesuré : la CI et un poste de développement rendent alors le **même fichier, octet pour
-/// octet**, ce qui supprime les allers-retours du garde de troncature (ADR 3374).
+/// **Les captures s'en servent aussi.** Elles montent leurs scènes sans le chrome ; en passant par le
+/// même habillage, un aperçu montre l'écran tel que l'utilisateur le voit, par construction. La CI et
+/// un poste rendent alors le même fichier octet pour octet, ce qui supprime les allers-retours du
+/// garde de troncature (ADR 3374).
 public final class Habillage {
 
     /// Les couleurs « looked-up » du module, que [#FEUILLE_DE_BASE] consomme.
