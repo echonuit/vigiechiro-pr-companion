@@ -8,6 +8,8 @@ decided_at: 2026-08-24
 verification: probable
 enforced_by:
   - "scripts/adr/4359-javadoc-narratif.py"
+loupe:
+  - "scripts/adr/loupe-4359-javadoc-vieillie.py"
 ratchet: 3248
 inv_key: cliquet-javadoc
 verified:
@@ -77,6 +79,21 @@ exclues, avec leurs suites, et deux cas du banc le tiennent.
 **Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut **<!--inv:cliquet-javadoc-->3 248<!--/inv-->** sur 680 blocs
 dans 554 fichiers après deux tranches, qui ont relu dix-huit fichiers (#4397, #4401). Le registre attendu est
 écrit dans `CONTRIBUTING.md` : il n'existait nulle part.
+
+**Une loupe dit où regarder avant de couper** (#4415). Contracter un bloc **déjà faux** ne le
+corrige pas : il le préserve, en plus court et donc plus crédible. `loupe-4359-javadoc-vieillie.py`
+liste les blocs sous cliquet dont le **code** a bougé après eux - 116 des 680 au jour de sa pose.
+
+Le signal est grossier, et c'est assumé : un commit qui n'a touché qu'une accolade fait remonter la
+date sans rien invalider. Elle ne bloque donc rien et ne porte pas de cliquet. Sa vraie limite est
+ailleurs, et elle compte : un bloc **faux dès le premier jour** porte la même date que son code, et
+plus de la moitié du corpus est dans ce cas. La loupe hiérarchise une revue, elle ne la remplace pas.
+
+Ce qui l'a motivée est mesuré. Sur soixante fichiers porteurs de dette, 27 % avaient vu leur code
+bouger après leur javadoc. Et la première tranche de douze fichiers ouverts en a trouvé **deux**
+qui mentaient - l'un annonçant quatre onglets là où le code en rend six, l'autre décrivant le
+comportement d'avant sa propre correction. Tous deux attrapés **par accident**, parce qu'ils se
+contredisaient eux-mêmes ; un bloc faux et cohérent serait passé.
 
 **Un second garde reste à écrire.** Une ligne de javadoc répétée juste après elle-même est une coupe
 ratée, et elle passe la compilation, spotless et les tests : le lecteur voit la phrase deux fois,

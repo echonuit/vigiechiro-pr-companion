@@ -489,6 +489,36 @@ def test_4395_renvois_en_javadoc() -> None:
         )
 
 
+def test_loupe_4359_javadoc_vieillie() -> None:
+    m = _charge("loupe-4359-javadoc-vieillie.py")
+    long_ = [f"/// Ligne {i}." for i in range(m.SEUIL + 1)]
+    court = [f"/// Ligne {i}." for i in range(m.SEUIL - 1)]
+    corps = ["class A {}", ""]
+
+    # Le cas positif : bloc sous cliquet, code plus recent que lui.
+    lignes = long_ + corps
+    temps = [100] * len(long_) + [200, 200]
+    _verifie("loupe 4359 voit un bloc dont le code a bouge apres lui",
+             len(m.candidats_du_fichier("A.java", lignes, temps)), 1)
+
+    # Le code est PLUS ANCIEN : la javadoc a ete corrigee depuis, rien a signaler.
+    _verifie("loupe 4359 epargne un bloc plus recent que son code",
+             len(m.candidats_du_fichier("A.java", lignes, [200] * len(long_) + [100, 100])), 0)
+
+    # Meme date : c est plus de la moitie du corpus, et la loupe est aveugle a ce cas - declare.
+    _verifie("loupe 4359 epargne un bloc du meme commit que son code",
+             len(m.candidats_du_fichier("A.java", lignes, [100] * (len(long_) + 2))), 0)
+
+    # Sous le seuil : le bloc n est pas dans le cliquet, donc pas dans la surface de revue.
+    _verifie("loupe 4359 epargne un bloc court, meme avec du code plus recent",
+             len(m.candidats_du_fichier("A.java", court + corps, [100] * len(court) + [200, 200])), 0)
+
+    # Une ligne VIDE plus recente ne compte pas : sans cela un simple retour a la ligne suffirait.
+    _verifie("loupe 4359 ne compte pas une ligne vide comme du code",
+             len(m.candidats_du_fichier("A.java", long_ + ["", "class A {}"],
+                                        [100] * len(long_) + [999, 100])), 0)
+
+
 def test_rapport_et_resserrement() -> None:
     rapport = _charge("rapport.py")
     # Le parsing : une ligne normalisée doit être reconnue.
@@ -608,6 +638,7 @@ if __name__ == "__main__":
         test_4366_avertissement_en_pictogramme,
         test_4368_apostrophe_en_libelle,
         test_4395_renvois_en_javadoc,
+        test_loupe_4359_javadoc_vieillie,
         test_loupe_0020,
         test_loupe_0044,
         test_rapport_et_resserrement,
