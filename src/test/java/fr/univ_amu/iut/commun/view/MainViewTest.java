@@ -233,10 +233,17 @@ class MainViewTest {
         // Les deux raccourcis de navigation sont enregistrés sur la scène du chrome.
         assertThat(scene.getAccelerators()).containsKeys(altGauche, altDebut);
 
-        // Navigation profonde : Accueil › Mes sites › Carré 640380.
+        // Navigation profonde : Accueil › Mes sites › Carré 640380. Le focus sort du champ de
+        // recherche, qui le porte par défaut : sous macOS, Option+← y est la navigation par mot, et le
+        // champ CONSOMME la frappe. Mesuré (run 32943631805) : le filtre de la scène voit le
+        // KEY_PRESSED de LEFT et `match` y vaut vrai, mais un seul des deux événements ressort en
+        // remontée, et l'accélérateur ne s'exécute jamais. Alt+Début agit depuis le champ, d'où un
+        // seul des deux raccourcis rouge. Poser le focus sur la racine est le geste réel : on ne
+        // revient pas en arrière au milieu d'une saisie (#4522).
         robot.interact(() -> {
             navigateur.afficher(new Group(), "sites", "Mes sites");
             navigateur.afficher(new Group(), "site-detail", "Carré 640380");
+            scene.getRoot().requestFocus();
         });
 
         // On PRESSE les touches, on ne lance pas le `Runnable` de l'accélérateur. Lancer le
