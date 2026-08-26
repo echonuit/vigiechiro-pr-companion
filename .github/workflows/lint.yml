@@ -665,6 +665,13 @@ jobs:
         # déclarait « complet », sans échec, et rendait 0. Rien ne pouvait le voir.
         run: bash .github/scripts/trie-les-echecs-de-plateforme.sh --auto-test
 
+      - name: "Auto-test du garde de verdict avant fusion (bloquant, #4571)"
+        # Ce garde-ci ne tourne PAS en CI : il se lance à la main avant de fusionner, parce qu'en
+        # faire un check requis repaierait ce que l'ADR 0041 a déjà mesuré - deux chemins d'écriture
+        # vers `main` cassés en une heure, dont la chaîne de publication. Seuls ses cas tournent ici,
+        # et c'est le seul endroit où il peut être vu rougir.
+        run: bash .github/scripts/verifie-verdict-avant-fusion.sh --auto-test
+
       - name: "Auto-test du garde de durée du portail (bloquant, #3661)"
         # Il est arrivé avec un fichier `bats` plutôt qu'un auto-test - la seule exception des onze
         # scripts -, ce qui faisait attendre à ses cas l'assemblage d'un fat-jar de 80 Mo dont ils
