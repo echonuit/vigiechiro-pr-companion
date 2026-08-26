@@ -38,6 +38,9 @@ contraire.
   réponse et non comme une panne. Les carrés d'outre-mer sont numérotés `00xxxx`, constat de
   [#3298](https://github.com/echonuit/vigiechiro-pr-companion/issues/3298), et la grille STOC ne les
   porte pas.
+- Le numéro rendu par la grille est **rembourré à six chiffres**. Mesuré le 2026-08-26 : la grille
+  rend « 40110 » là où le catalogue déclare « Point Fixe-040110 », et `GET /sites?q=40110` ne trouve
+  rien. R1 est juste, c'est la grille qui ampute le zéro des départements 01 à 09.
 - **La vérification reste un geste séparé.** Situer une position remplit le champ du carré, rien de
   plus. « Vérifier sur Vigie-Chiro » garde son clic, ses conditions d'ouverture et son verdict.
 
@@ -63,6 +66,7 @@ il n'a rien à modifier.
 | Fichier | Ce qui bouge |
 |---|---|
 | `commun/api/ClientVigieChiro.java` | `carreStoc` prend un rayon en paramètre ; l'appelant existant garde les 10 000 m |
+| `commun/api/ReponsesVigieChiro.java` | `numeroCarreStoc` rembourre le numéro à six chiffres |
 | `sites/model/` | Un analyseur de position collée, classe pure, et un service qui enchaîne analyse puis `carreStoc` |
 | `sites/viewmodel/SiteEditViewModel.java` | Le champ de position, son verdict, et le dépôt du numéro dans le champ du carré |
 | `sites/view/ModaleSiteController.java` | Le champ, son bouton et le libellé du verdict |
@@ -80,6 +84,12 @@ Aucune. L'analyse de la position est locale, et le seul appel réseau existe dé
 
 **Ce qui ne bouge pas**
 
-`ControleCarreStoc` et son verdict `Concorde` / `Diverge` / `HorsGrille` restent tels quels : ils
-gardent le rayon de 10 000 m et leur rôle de confort en aval. Le catalogue `CatalogueApi` ne change
-pas. Aucune migration de base.
+Le **code** de `ControleCarreStoc` ne change pas : il garde son rayon de 10 000 m, ses trois verdicts
+et son rôle de confort en aval. Le catalogue `CatalogueApi` ne change pas non plus, et il n'y a aucune
+migration de base.
+
+Son **comportement**, lui, change, et il faut le dire plutôt que de laisser lire l'inverse. Il
+comparait « 40110 » à « 040110 » par `equals` et rendait donc `Diverge` à tort dans les départements
+01 à 09. Le rembourrage le répare par ricochet. La garde qui aurait dû l'attraper, et la sonde live
+aveugle qui l'a laissé passer, vivent en
+[#4592](https://github.com/echonuit/vigiechiro-pr-companion/issues/4592) : hors de ce changement.

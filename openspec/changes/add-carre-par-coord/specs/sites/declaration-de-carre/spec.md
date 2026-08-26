@@ -153,3 +153,30 @@ de position. Il n'existe pas ; ce changement le crée.
 - **THEN** le champ du carré est rempli
 - **AND** aucun verdict d'existence sur Vigie-Chiro n'est affiché tant qu'il n'a pas cliqué
   « Vérifier sur Vigie-Chiro »
+
+### Requirement: Le numéro déduit porte six chiffres, département en tête
+
+La grille nationale rend le numéro **sans son zéro de gauche** dans les départements 01 à 09.
+L'application MUST le rembourrer à six chiffres avant de le rendre à qui que ce soit.
+
+Six chiffres est la forme que R1 impose et que le catalogue des sites respecte. Un numéro à cinq
+chiffres ne remplit pas le champ, n'ouvre pas la vérification, et ne désigne aucun site du catalogue.
+
+**Vérifié par** : des tests unitaires sur la lecture de la réponse de la grille, dont un cas de
+département à un chiffre. Le cas existant n'éprouve que le département 13, qui ne perd aucun zéro.
+
+#### Scenario: Un carré de département à un chiffre
+
+- **WHEN** la grille rend « 40110 » pour la position donnée
+- **THEN** le numéro rendu à l'écran est « 040110 »
+
+#### Scenario: Un carré de département à deux chiffres passe inchangé
+
+- **WHEN** la grille rend « 130711 »
+- **THEN** le numéro rendu est « 130711 »
+
+#### Scenario: Le champ accepte un numéro déduit en Alpes-de-Haute-Provence
+
+- **WHEN** la position collée tombe dans un carré du département 04
+- **THEN** le champ des six chiffres est complet
+- **AND** « Vérifier sur Vigie-Chiro » est ouvert

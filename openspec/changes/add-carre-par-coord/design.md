@@ -130,6 +130,27 @@ Le service qui enchaîne analyse puis appel se lie par `OptionalBinder`, et le c
 le geste quand il est absent. C'est le montage déjà tenu par `ControleCarreStocModule`,
 `PublicationPointModule` et `RechercheCarreExistantModule` : même raison d'être, même clé qualifiée.
 
+### D10. Le rembourrage du zéro se fait à l'entrée, une seule fois
+
+Mesuré le 2026-08-26 : la grille rend « 40110 » là où le catalogue des sites déclare
+« Vigiechiro - Point Fixe-040110 », et `GET /sites?q=40110` ne trouve rien. R1 est juste, c'est la
+grille qui ampute le zéro de gauche des départements 01 à 09.
+
+Le rembourrage se fait dans `numeroCarreStoc`, à l'endroit unique où ce numéro entre dans
+l'application.
+
+**Écarté : rembourrer au point de comparaison**, dans `ControleCarreStoc`. Cela réparerait le
+symptôme observé et laisserait le défaut intact pour le lecteur suivant. Il y en a un, et c'est
+précisément la proposition que ce changement ajoute.
+
+**Écarté : rembourrer dans le viewmodel.** Le format d'un numéro de carré est une règle du domaine,
+R1, et non une affaire d'affichage. Un modèle qui rend un numéro invalide et compte sur la vue pour
+le rattraper déplace la règle hors de sa place.
+
+Ce rembourrage répare aussi un défaut de production : `ControleCarreStoc` comparait « 40110 » à
+« 040110 » par `equals`, donc rendait `Diverge` à tort dans neuf départements. Sa garde et la cécité
+de la sonde qui l'a laissé passer vivent en #4592, hors de ce changement.
+
 ### D9. Ce que cette note ne fait pas
 
 Le « pourquoi » durable de D1 et D2 - le rayon d'une proposition n'est pas celui d'un contrôle - est

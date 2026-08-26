@@ -31,6 +31,10 @@
       vrai serveur. **Fait quand** : une sonde live confronte une position hors grille au serveur réel
       et constate une réponse vide, distincte d'une panne, à côté de la sonde qui existe déjà pour le
       cas nominal.
+- [ ] 3.3 Le numéro que rend la grille n'a pas le format que le reste de l'application exige : cinq
+      chiffres contre six, dans les départements 01 à 09. **Fait quand** : un test unitaire sur un
+      carré de département à un chiffre rougit si on retire le rembourrage, et la sonde live de #4574
+      continue de passer.
 
 ## 4. Le geste dans l'écran de déclaration
 
