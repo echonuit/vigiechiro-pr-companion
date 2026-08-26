@@ -41,7 +41,9 @@ Deux textes, relus dans six mois **sans le fil** : le corps de l'issue, et celui
             d avoir corrige en commentaire.
 3. RELIRE   le corps de la PR : dit-il ce qui a ete fait et pourquoi, sans retracer
             les hesitations ?
-4. VERIFIER le titre de la PR : il devient le sujet du squash.
+4. LANCER   .github/scripts/verifie-titre-pr.sh "<le titre>" AVANT gh pr create.
+            Le titre devient le sujet du squash, et le garde de CI ne mord
+            qu une fois la PR ouverte.
 5. PASSER   les deux corps a la grille de la competence humaniser. Ils sont publies et non commis,
             et l article A31 les couvre depuis qu il declenche sur la publication.
 6. LIRE A FROID les deux, comme quelqu un qui n a pas suivi.
@@ -55,6 +57,32 @@ une autre issue.
 
 Qui ouvre ces issues aujourd'hui lit **d'abord l'erreur**, et la correction ensuite, s'il descend
 jusque-là.
+
+## Le titre se vérifie avant l'ouverture, pas après
+
+`titre-pr.yml` refuse un titre non conforme, et il le fait bien : les 100 dernières PR fusionnées
+suivent toutes la convention. Il ne peut mordre qu'une fois la PR ouverte, et cela coûte une PR à
+ré-éditer puis une vérification à relancer. Le même script tourne en local, sur la chaîne que vous
+vous apprêtez à taper :
+
+```bash
+./.github/scripts/verifie-titre-pr.sh "fix(passage): le pivot se relit"
+```
+
+Le défaut n'entre pas au commit. Les quatre PR rouges du 2026-08-26, #4570, #4588, #4589 et #4591,
+partaient toutes d'une branche aux sujets de commit conformes, et 286 des 297 sujets de branche
+hors `main` le sont aussi. Trois de ces quatre titres sont le sujet du commit retapé avec ses
+accents, le quatrième est le titre de l'issue #4574 recopié tel quel. Le défaut entre à la frappe
+du titre : en écrivant du français correct, la main applique la typographie française, et l'espace
+avant le deux-points que Conventional Commits interdit vient avec.
+
+Ce qui décide de la frappe est le nombre de commits. `gh pr create --fill` reprend le sujet quand la
+branche n'en porte qu'un, et titre la PR avec le **nom de branche** au-delà, forme que le garde
+refuse. Les quatre PR rouges avaient toutes trois commits ou plus : leur titre ne pouvait pas être
+rempli, il devait être écrit.
+
+La règle est dans `CONTRIBUTING.md` depuis longtemps, avec sa raison et son coût. Les quatre PR
+l'ont manquée le même jour. Le script, lui, rend un verdict.
 
 ## Le test de lecture à froid
 
@@ -71,4 +99,5 @@ Ce n'est pas de la cosmétique. C'est la seule trace qui survive.
 | « Le corps est un peu périmé, ce n'est pas grave » | C'est ce que lira le repreneur |
 | « Le fil explique tout » | Le fil disparaît. Le corps reste |
 | « Le titre de la PR, on s'en fiche » | Il devient la ligne du CHANGELOG, que la typographie ne rattrape pas après coup |
+| « Je relis le titre, ça suffit » | Quatre titres relus ont rougi le même jour. Le script rend un verdict, la relecture rend un avis |
 | « La typographie du corps, ça n'engage rien » | `corps-pr.yml` refuse le cadratin, l'apostrophe courbe et l'élision sans apostrophe. Le reste de la grille est à vous, et ce corps est publié dès qu'il part |
