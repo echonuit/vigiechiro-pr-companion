@@ -159,6 +159,28 @@ public sealed interface ReponseApi<T> {
             return new Refuse<>(statut, corps);
         }
 
+        /// Ce que ce refus demande de faire, quand son statut ne suffit pas a le dire (#4524).
+        ///
+        /// La plateforme rend deux `422` de sens oppose a l'ecriture, et le geste differe : l'un se
+        /// corrige chez nous, l'autre pas du tout. Le statut est le meme ; c'est la FORME du corps
+        /// qui porte le sens.
+        ///
+        /// Ce qui n'est ni l'un ni l'autre rend [MotifDeRefus#AUTRE], et c'est un refus de ranger
+        /// plutot qu'un fourre-tout : designer un geste precis sur un refus inedit serait pire que
+        /// n'en designer aucun.
+        public MotifDeRefus motif() {
+            if (statut != 422) {
+                return MotifDeRefus.AUTRE;
+            }
+            if (corps.contains("invalid field")) {
+                return MotifDeRefus.CHAMP_INCONNU;
+            }
+            if (corps.contains("field is read-only")) {
+                return MotifDeRefus.CHAMP_FERME;
+            }
+            return MotifDeRefus.AUTRE;
+        }
+
         @Override
         public Optional<String> echec() {
             return Optional.of("HTTP " + statut + " : " + corps);
