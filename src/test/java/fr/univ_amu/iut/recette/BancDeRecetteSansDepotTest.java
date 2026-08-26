@@ -97,7 +97,9 @@ class BancDeRecetteSansDepotTest {
                 guichet.close();
             }
         } catch (IOException fermeture) {
-            // Rien à réparer : le guichet n'existe que le temps du cas.
+            // Rien à réparer, mais rien à taire non plus : un guichet qui ne se referme pas laisse un
+            // port ouvert pour toute la suite du fork, et l'ADR 0008 refuse qu'un échec s'évapore.
+            System.out.printf("  guichet non refermé : %s%n", fermeture.getMessage());
         }
     }
 

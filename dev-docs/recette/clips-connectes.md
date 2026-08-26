@@ -98,6 +98,44 @@ réseau, et l'identité affichée à la fin est celle que `GET /moi` a rendue.
 
 <video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteConnexionTest.coller_le_jeton_puis_lire_l_identite.mp4"></video>
 
+### S8-02, S8-03 · la barre avance nuit par nuit, et annonce le temps restant
+
+> **S8-02** La barre **avance** et son libellé nomme la nuit en cours (« Nuits k / N »).
+> **S8-03** Une **estimation du temps restant** apparaît une fois l'avancement mesurable.
+
+Ces deux cas se produisaient **pendant** le clip précédent sans que rien ne les asserte. Les y laisser
+paraissait économique : un seul geste, un seul préambule, cinq cas cités.
+
+C'était une erreur, et le premier tournage l'a dite. Les cinq cas n'ont pas la même condition
+d'existence. Se connecter s'observe toujours. Voir une barre avancer suppose des **nuits à
+rapatrier** : se connecter rejoue le rapatriement des nuits du compte (#2557), donc la durée suit ce
+qui reste à récupérer. Sur un compte à jour, il n'y a ni barre qui avance ni temps à estimer.
+
+Un test ne peut pas abandonner à moitié. Abandonner le geste entier perdait donc trois cas
+parfaitement observables, et c'est ce qui est arrivé : **zéro cas sur cinq** au lieu de trois.
+
+Deux clips au lieu d'un. Le décompte y perd, et c'est le bon prix : un geste qui n'a pas lieu ne doit
+pas emporter trois cas qui, eux, ont lieu.
+
+!!! warning "Ce lecteur peut rester vide sans qu'aucun défaut n'existe"
+
+    Le scénario déclare sa précondition plutôt que de la supposer. Quand le compte de tournage n'a plus
+    rien à rapatrier, il **abandonne** en le disant, n'indexe aucun cas, et son clip n'est pas versé.
+    Le verdict du tournage compte alors trois cas sur cinq, et c'est exact.
+
+    Pour rejouer ce geste, il faut une participation sans passage local, ou un passage réduit à un
+    squelette.
+
+Ce que le dernier tournage a mesuré, et qui explique sa durée :
+
+```
+Connexion réussie · référentiel à jour : 1 site, 199 taxons,
+2 nuit(s) récupérée(s) (sur 4, dont 2 en attente d'analyse Vigie-Chiro),
+4 nuits opportunistes.
+```
+
+<video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteConnexionTest.la_barre_avance_nuit_par_nuit.mp4"></video>
+
 ## ⚠️ Ce que ces clips publient, et le compte que cela engage
 
 `S8-06` montre l'identité que la plateforme a rendue. Un clip connecté porte donc, **en clair et sur
