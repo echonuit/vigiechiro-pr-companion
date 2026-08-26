@@ -216,11 +216,18 @@ git checkout -b feat/<feature>
 ./mvnw verify                      # 0 échec, 0 skip indésirable
 git commit ...                     # le hook formate le code
 
-# 3. Poussez et ouvrez une PR vers la branche par défaut
+# 3. Poussez, vérifiez le titre, puis ouvrez la PR vers la branche par défaut
 git push -u origin feat/<feature>
+./.github/scripts/verifie-titre-pr.sh "feat(passage): écran pivot d'une nuit"
 gh pr create --fill
 ```
 
+- **Vérifiez le titre avant d'ouvrir la PR**, pas après. `titre-pr.yml` refuse un titre non
+  conforme, et le script ci-dessus est exactement celui qu'il lance : le passer en local coûte une
+  frappe, le découvrir en CI coûte une PR à ré-éditer et une vérification à relancer. Le défaut
+  n'entre pas au commit, il entre à la frappe du titre. Les quatre PR rouges du 2026-08-26
+  partaient toutes d'une branche aux sujets de commit conformes, et le titre y avait été retapé en
+  français accentué, espace avant le deux-points compris.
 - La PR cible la **branche par défaut** du dépôt (`gh pr create --fill` la sélectionne
   automatiquement). `@nedseb` est ajouté en reviewer automatiquement ([CODEOWNERS](.github/CODEOWNERS)).
 - Privilégier des **PR petites et séquentielles** (par exemple : ViewModel + tests, puis vue

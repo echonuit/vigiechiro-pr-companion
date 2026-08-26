@@ -844,3 +844,20 @@ jobs:
         run: |
           python3 scripts/methode/verifie-renvois-competences.py --auto-test
           python3 scripts/methode/verifie-renvois-competences.py --verifie
+
+      - name: "La méthode nomme le garde du titre, et ce garde refuse encore l'espace (bloquant, #4598)"
+        # Le dépôt pratique deux conventions de titre à un caractère d'écart, et c'est la plus
+        # écrite qui est fausse en PR : 62 des 100 derniers titres d'issue portent l'espace avant
+        # les deux-points, quand les 100 dernières PR fusionnées sont à zéro. La seconde colonne
+        # est propre parce que `titre-pr.yml` refuse, pas parce que la main écrit juste.
+        # Le défaut n'entre pas au commit : les quatre PR rouges du 2026-08-26 partaient toutes
+        # d'une branche aux sujets de commit conformes, et 286 des 297 sujets de branche le sont.
+        # Il entre à la frappe du titre, quand la main écrit du français correct et lui applique la
+        # typographie française. Le remède ne crée aucune règle, il fait lancer `verifie-titre-pr.sh`
+        # avant l'ouverture de la PR ; ce garde tient les trois documents qui le nomment.
+        # Il RELANCE le script cité sur deux titres témoins, l'un fautif et l'autre conforme : une
+        # méthode qui nommerait une commande devenue permissive vaut moins que rien, son vert
+        # rassurant. L'auto-test l'éprouve sur sept états cassés, dont ce desserrage.
+        run: |
+          python3 scripts/methode/verifie-controle-du-titre.py --auto-test
+          python3 scripts/methode/verifie-controle-du-titre.py --verifie
