@@ -979,7 +979,7 @@ a8eaf78c837a  src/main/java/fr/univ_amu/iut/passage/model/ServicePassage.java
 24493cd0b728  src/main/java/fr/univ_amu/iut/passage/model/ServiceReconstructionPassages.java
 311edadbba1e  src/main/java/fr/univ_amu/iut/passage/model/SessionDEnregistrement.java
 642311752ffe  src/main/java/fr/univ_amu/iut/passage/model/SortieDeRecuperation.java
-df37c04769d3  src/main/java/fr/univ_amu/iut/passage/model/SynchronisationParticipation.java
+078c630ba344  src/main/java/fr/univ_amu/iut/passage/model/SynchronisationParticipation.java
 7f2837d0c5ef  src/main/java/fr/univ_amu/iut/passage/model/UniciteQuadruplet.java
 156e4487d4f8  src/main/java/fr/univ_amu/iut/passage/model/Vent.java
 870b2c48c322  src/main/java/fr/univ_amu/iut/passage/model/VerdictIdentite.java

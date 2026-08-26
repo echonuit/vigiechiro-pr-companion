@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -196,6 +197,28 @@ class SynchronisationParticipationTest {
 
         assertThat(sync.pousserVers(42L).ecriture().id()).contains("part-1");
         verify(client).modifierParticipation(eq("part-1"), eq("e-frais"), any());
+    }
+
+    @Test
+    @DisplayName("#4552 : la participation a bougé entre la lecture et l'envoi → aucun PATCH")
+    void pousser_vers_renonce_si_le_distant_a_bouge() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // Un autre poste a ecrit entre notre lecture et notre envoi : la relecture ne rend plus le meme etag.
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detail("e-lu")))
+                .thenReturn(ReponseApi.succes(detail("e-bouge")));
+        // Permissif : ce doublage sert a laisser le flux aller jusqu'au bout tant que la garde n'existe
+        // pas. Une fois la garde posee, plus rien ne l'appelle, et c'est exactement ce qu'on verifie.
+        lenient()
+                .when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        sync.pousserVers(42L);
+
+        verify(client, never()).modifierParticipation(anyString(), anyString(), any());
     }
 
     @Test
