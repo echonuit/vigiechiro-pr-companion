@@ -1719,6 +1719,7 @@ d49c5a1ab907  src/test/java/fr/univ_amu/iut/importation/view/ConfirmationsImport
 0767238fef45  src/test/java/fr/univ_amu/iut/importation/view/ImportationControllerGardeTest.java
 cd9c38553ff2  src/test/java/fr/univ_amu/iut/importation/view/ImportationViewTest.java
 60355cb5f0f7  src/test/java/fr/univ_amu/iut/importation/view/ImportationVueIntegrationTest.java
+8ffdac54cb48  src/test/java/fr/univ_amu/iut/importation/view/PreambuleImport.java
 de261e43385f  src/test/java/fr/univ_amu/iut/importation/view/ScenarioImportNominalTest.java
 fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
 140614766d08  src/test/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixeTest.java
@@ -1856,6 +1857,7 @@ cbf696adf24a  src/test/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleV
 1223d0b3a4bf  src/test/java/fr/univ_amu/iut/passage/view/RattachementModaleFermetureViewTest.java
 3d6110c2ae06  src/test/java/fr/univ_amu/iut/passage/view/RattachementModaleViewTest.java
 cbc014bf6958  src/test/java/fr/univ_amu/iut/passage/view/ReactivationModaleViewTest.java
+4017a53e53c1  src/test/java/fr/univ_amu/iut/passage/view/ScenarioPassagePivotTest.java
 cd203af38495  src/test/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduRattachementTest.java
 1b869e0cc43b  src/test/java/fr/univ_amu/iut/passage/viewmodel/CorrectionPointTest.java
 1933f68af71f  src/test/java/fr/univ_amu/iut/passage/viewmodel/GestionCampagnesViewModelTest.java

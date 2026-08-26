@@ -196,6 +196,10 @@
           </graphic>
         </Button>
         </StackPane>
+        <!-- Enveloppe : un bouton désactivé ne reçoit plus le survol, donc son tooltip ne paraîtrait
+             jamais. `IndicateurBlocage` pose l'explication sur ce StackPane, comme pour les six
+             autres cartes qui peuvent être fermées (#2581). -->
+        <StackPane fx:id="enveloppeValidation" HBox.hgrow="ALWAYS" maxWidth="Infinity" maxHeight="Infinity">
         <Button fx:id="boutonValidation" styleClass="carte-action"
                 onAction="#validerTadarida" contentDisplay="GRAPHIC_ONLY"
                 accessibleText="Sons et validation : écouter et valider les sons du passage"
@@ -208,6 +212,7 @@
             </VBox>
           </graphic>
         </Button>
+        </StackPane>
         <Button fx:id="boutonSynthese" styleClass="carte-action"
                 onAction="#voirSynthese" contentDisplay="GRAPHIC_ONLY"
                 accessibleText="Synthèse de la nuit : ce que chaque espèce a produit, comparé au référentiel d'activité"

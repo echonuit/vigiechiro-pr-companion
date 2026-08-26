@@ -37,6 +37,7 @@ final class CartesActionPassage {
             Button validation,
             Button depot,
             StackPane enveloppeDepot,
+            StackPane enveloppeValidation,
             Button supprimer,
             StackPane enveloppeSupprimer,
             Button ouvrirPortail,
@@ -73,6 +74,16 @@ final class CartesActionPassage {
         afficher(cartes.activite(), dispo.activite());
         afficher(cartes.synthese(), dispo.synthese());
         cartes.validation().disableProperty().bind(viewModel.validationVerrouilleeProperty());
+
+        // Elle explique son grisé, comme les six autres cartes qui peuvent être fermées. Elle était la
+        // seule à ne rien dire : `validationVerrouillee` vaut `!surLaPlateforme`, donc la carte reste
+        // close tant que la nuit n'est pas déposée - un fait parfaitement normal, qui se lisait comme
+        // une panne faute d'être écrit (#4557, S2-21).
+        IndicateurBlocage.expliquer(
+                cartes.enveloppeValidation(),
+                Bindings.when(viewModel.validationVerrouilleeProperty())
+                        .then("Sons & validation : disponible une fois la nuit déposée sur Vigie-Chiro.")
+                        .otherwise("Sons & validation : écouter et valider les sons du passage."));
     }
 
     /// « Préparer le dépôt » : présente si la feature `lot` l'est, active une fois la nuit vérifiée.

@@ -195,6 +195,9 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private Button boutonValidation;
 
     @FXML
+    private StackPane enveloppeValidation;
+
+    @FXML
     private Button boutonDepot;
 
     /// Enveloppe porteuse du tooltip de « Préparer le dépôt » (#2581) : une carte désactivée n'en affiche
@@ -337,6 +340,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                         boutonValidation,
                         boutonDepot,
                         enveloppeDepot,
+                        enveloppeValidation,
                         boutonSupprimer,
                         enveloppeSupprimer,
                         boutonOuvrirPortail,
