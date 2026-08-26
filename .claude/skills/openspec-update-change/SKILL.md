@@ -56,6 +56,9 @@ vague ou ambigu, **demander** plutôt que de choisir.
 qu'il existe. Sinon, `openspec status --change "<nom>" --json` donne l'artefact suivant, et
 `openspec instructions "<artifact-id>" --change "<nom>" --json` dit comment le créer.
 
+`/opsx:new` est un flux optionnel de la même famille. S'il manque, `openspec new change
+"<nouveau-nom>"` crée le changement sous un nom neuf.
+
 ## Fonction de garde
 
 ```

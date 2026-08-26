@@ -76,6 +76,11 @@ tâches, et une instruction calculée depuis l'état courant.
 **Trois états, trois conduites** : `blocked` signale des artefacts manquants, on renvoie vers
 `/opsx:continue` ; `all_done` appelle l'archivage ; sinon on réalise.
 
+`/opsx:continue` est un flux optionnel qui peut ne pas être installé. Avant de le suggérer, vérifier
+qu'il existe. Sinon, `openspec status --change "<nom>" --json` donne l'artefact suivant, et
+`openspec instructions "<artifact-id>" --change "<nom>" --json` dit comment le créer. Sans ce repli,
+le renvoi tombe au moment précis où l'agent est bloqué, et l'envoie nulle part.
+
 **`context` et `operationGuidance` ne sont pas des preuves.** Le premier est une entrée obligatoire
 qui porte les faits, conventions et contraintes du projet. Le second est un conseil additif dont on
 suit les entrées applicables. Ni l'un ni l'autre ne remplace l'instruction calculée, ne prouve
