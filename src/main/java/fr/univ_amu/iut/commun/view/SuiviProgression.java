@@ -58,16 +58,6 @@ public abstract class SuiviProgression implements SuiviOperation {
         executer(retrait, jeton, progression, travail, succes, annule, echec);
     }
 
-    /// Le **contenu** du suivi, **sans son support** : titre, barre liée à la progression, libellé d'étape
-    /// et bouton « Annuler ».
-    ///
-    /// Séparé de [#lancer] pour la même raison que `ConfirmationNavigation#dialogue` (#1468) : une capture
-    /// de documentation doit pouvoir montrer **ce contenu-ci**, celui que l'utilisateur verra, sans ouvrir
-    /// de fenêtre ni lancer de travail. Reconstruire un fac-similé dans l'outil de capture n'engagerait
-    /// personne - c'est ainsi que des dialogues documentés ont dérivé du produit.
-    ///
-    /// Le contenu est **inerte** tant que rien n'alimente `progression` : c'est l'appelant qui pose l'état,
-    /// que ce soit le travail réel ou une capture qui fige une étape.
     /// La barre elle-même, nommée pour que la recette puisse constater qu'elle **avance**.
     ///
     /// Un cas de recette qui l'atteindrait par son type et sa position dans le `VBox` se casserait en
@@ -79,6 +69,16 @@ public abstract class SuiviProgression implements SuiviOperation {
     /// et l'estimation du temps restant que [ProgressionOperation] y ajoute (`S8-02`, `S8-03`).
     public static final String ID_MESSAGE = "messageProgression";
 
+    /// Le **contenu** du suivi, **sans son support** : titre, barre liée à la progression, libellé d'étape
+    /// et bouton « Annuler ».
+    ///
+    /// Séparé de [#lancer] pour la même raison que `ConfirmationNavigation#dialogue` (#1468) : une capture
+    /// de documentation doit pouvoir montrer **ce contenu-ci**, celui que l'utilisateur verra, sans ouvrir
+    /// de fenêtre ni lancer de travail. Reconstruire un fac-similé dans l'outil de capture n'engagerait
+    /// personne - c'est ainsi que des dialogues documentés ont dérivé du produit.
+    ///
+    /// Le contenu est **inerte** tant que rien n'alimente `progression` : c'est l'appelant qui pose l'état,
+    /// que ce soit le travail réel ou une capture qui fige une étape.
     static VBox contenu(String titre, ProgressionOperation progression, JetonAnnulation jeton) {
         Label lblTitre = new Label(titre);
         lblTitre.setStyle("-fx-font-weight: bold;");

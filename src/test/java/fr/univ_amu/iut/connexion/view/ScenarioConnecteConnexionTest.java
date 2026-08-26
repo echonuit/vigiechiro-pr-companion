@@ -353,6 +353,7 @@ class ScenarioConnecteConnexionTest {
         //
         // L'enregistreur n'indexera aucun cas : un clip qui ne montre pas son geste ne doit pas passer
         // pour une couverture.
+
         // Imprime AVANT la precondition : c'est justement quand le geste est ABANDONNE qu'on veut
         // savoir pourquoi. L'avancement au moment du releve dit combien de nuits restaient.
         System.out.printf("  avancement au premier instant : %s%n", avancementInitial);

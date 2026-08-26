@@ -13,34 +13,18 @@ import org.junit.jupiter.api.Test;
 
 /// Un scénario connecté déclare vers QUI son banc parle (#4447).
 ///
-/// ## Le défaut que ce cas ferme
+/// `@Tag("recette-connectee")` décide de la **sélection** ; le **câblage**, lui, se déclare au banc, par
+/// [BancDeRecette#parleALaPlateforme()] ou [BancDeRecette#connecteALaPlateforme()]. Deux interrupteurs
+/// pour une seule intention, et `ScenarioConnecteConnexionTest` n'en avait levé qu'un : trois tournages
+/// ont filmé un écran hors ligne sans que rien ne le dise. La mesure est chez [BancDeRecetteSansDepotTest].
 ///
-/// `@Tag("recette-connectee")` décide de la **sélection** : le tournage connecté ne joue que les
-/// classes qui le portent. Il ne décide de rien d'autre. Le **câblage**, lui, se déclare au banc, par
-/// [BancDeRecette#parleALaPlateforme()] ou [BancDeRecette#connecteALaPlateforme()] ; sans quoi le banc
-/// lie le client hors ligne de #4332, sur `http://localhost:1`.
+/// Ce voisin éprouve que la déclaration **produit** le bon câblage. Il ne peut rien dire de la classe qui
+/// ne la fait pas : elle monte un banc valide, simplement hors ligne. Cette propriété-là porte sur
+/// l'ENSEMBLE des scénarios connectés, et se lit dans les sources.
 ///
-/// Deux interrupteurs pour une seule intention, et `ScenarioConnecteConnexionTest` n'en a levé qu'un.
-/// Il avait un jeton réel, une URL réelle dans son environnement, et parlait au port 1. Trois
-/// tournages ont filmé cet écran hors ligne sans que rien ne le dise : la connexion paraissait
-/// simplement brève, et le badge d'identité restait gris. Le défaut n'est apparu qu'en imprimant le
-/// bandeau de statut, sur le tir 32894626486 :
-///
-/// ```
-/// synchro de la connexion : Vigie-Chiro est injoignable (ConnectException)
-/// ```
-///
-/// ## Pourquoi un relevé de sources, et pas un cas d'exécution
-///
-/// [BancDeRecetteSansDepotTest] éprouve que la déclaration **produit** le bon câblage. Il ne peut rien
-/// dire de la classe qui ne la fait pas : elle monte un banc parfaitement valide, simplement hors
-/// ligne. Ce qui manque est une propriété sur l'ENSEMBLE des scénarios connectés, et elle se lit dans
-/// les sources.
-///
-/// La déclaration se cherche comme un APPEL, en tête de ligne, et non comme un texte présent
-/// quelque part dans le fichier. `ScenarioConnecteConnexionTest` porte en commentaire la phrase « Ni
-/// `connecte(...)` ni `connecteALaPlateforme()` » : un relevé qui se contenterait de chercher le nom
-/// aurait été vert sur le fichier même qui portait le défaut.
+/// La déclaration s'y cherche comme un APPEL, en tête de ligne. `ScenarioConnecteConnexionTest` porte en
+/// commentaire la phrase « Ni `connecte(...)` ni `connecteALaPlateforme()` » : un relevé qui aurait
+/// cherché le nom aurait été vert sur le fichier même qui portait le défaut.
 class DeclarationDeLaPlateformeTest {
 
     private static final Path SOURCES = Path.of("src", "test", "java");

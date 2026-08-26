@@ -20,32 +20,18 @@ import org.testfx.framework.junit5.Start;
 
 /// La seconde voie vers la plateforme réelle : `parleALaPlateforme()`, qui **ne dépose rien**.
 ///
-/// ## Le défaut qu'elle vient de fermer
+/// Deux voies y mènent, et elles ne diffèrent que par le dépôt du jeton. Un seul drapeau portait
+/// pourtant les deux sens, et seule [BancDeRecette#connecteALaPlateforme()] le levait : un scénario passé
+/// par [BancDeRecette#jetonDeLaPlateforme()] tombait dans le client hors ligne que #4332 lie à tout banc
+/// n'ayant déclaré aucun serveur. Jeton réel, URL réelle dans l'environnement, appel au port 1, et sur le
+/// tir 32894626486 : `Vigie-Chiro est injoignable (ConnectException)`.
 ///
-/// Deux voies mènent à la plateforme, et elles ne diffèrent que par le dépôt du jeton :
-/// [BancDeRecette#connecteALaPlateforme()] le dépose et laisse la modale le revérifier seule ;
-/// [BancDeRecette#jetonDeLaPlateforme()] le rend au scénario, qui le collera comme un utilisateur le
-/// fait. Un seul drapeau portait pourtant les deux sens, et seule la première voie le levait.
+/// C'est l'écran hors ligne convaincant et **muet sur son propre objet** que l'ADR 4142 interdit. Rien ne
+/// le disait : la connexion paraissait brève, et le badge d'identité restait gris.
 ///
-/// Un scénario passé par la seconde tombait donc dans le client hors ligne que #4332 lie à tout banc
-/// n'ayant déclaré aucun serveur. Il avait un jeton réel, une URL réelle dans son environnement, et
-/// parlait à `http://localhost:1`. Mesuré sur le tir 32894626486, après trois tournages :
-///
-/// ```
-/// synchro de la connexion : Vigie-Chiro est injoignable (ConnectException)
-/// ```
-///
-/// C'est très exactement l'écran hors ligne convaincant et **muet sur son propre objet** que l'ADR 4142
-/// interdit, et que [BancDeRecette#connecteALaPlateforme()] refuse explicitement de produire. Rien ne
-/// le disait : la connexion paraissait simplement brève, et le badge d'identité restait gris.
-///
-/// ## Ce que ces cas mesurent
-///
-/// Le symétrique de [BancDeRecetteUrlTest] : là-bas, un banc qui n'a rien déclaré ne doit recevoir
-/// **aucune** connexion ; ici, un banc qui a déclaré doit en recevoir **au moins une**. Le premier
-/// garde contre l'URL qui s'invite, le second contre le hors-ligne qui s'installe. Même prise TCP sur
-/// un port éphémère, pour la raison écrite là-bas : compter les connexions dit si le banc a composé
-/// cette adresse, et n'ouvre pas la production pour la commodité de l'éprouver.
+/// Ces cas sont le symétrique de [BancDeRecetteUrlTest] : là-bas, un banc qui n'a rien déclaré ne doit
+/// recevoir **aucune** connexion ; ici, un banc qui a déclaré doit en recevoir **au moins une**. Même
+/// prise TCP sur port éphémère, pour la raison écrite là-bas.
 @ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class BancDeRecetteSansDepotTest {
 

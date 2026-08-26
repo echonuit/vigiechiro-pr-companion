@@ -195,16 +195,12 @@ public final class BancDeRecette {
     /// Garde le cablage de production **sans rien deposer** : le scenario collera le jeton lui-meme,
     /// avec [#jetonDeLaPlateforme()].
     ///
-    /// ## Pourquoi elle doit se declarer
+    /// Prendre le jeton ne suffit pas a dire au banc vers QUI parler : depuis #4332 le banc lie un client
+    /// hors ligne a tout scenario n'ayant declare aucun serveur, et cette voie-la ne levait rien. Elle
+    /// filmait donc l'ecran hors ligne que [#connecteALaPlateforme()] refuse de produire.
     ///
-    /// Prendre le jeton ne suffit pas a dire au banc vers QUI parler. Depuis #4332 le banc lie un client
-    /// hors ligne a tout scenario qui n'a declare aucun serveur, et un scenario qui se contentait
-    /// d'appeler [#jetonDeLaPlateforme()] tombait dans ce cas : jeton reel, URL reelle dans
-    /// l'environnement, et un `ConnectException` sur `http://localhost:1`.
-    ///
-    /// Il filmait alors l'ecran hors ligne convaincant et muet sur son propre objet que
-    /// [#connecteALaPlateforme()] refuse explicitement de produire. Mesure du tir 32894626486, sur trois
-    /// tournages : le badge d'identite restait gris, et la connexion etait instantanee.
+    /// `BancDeRecetteSansDepotTest` porte la mesure, et `DeclarationDeLaPlateformeTest` exige la
+    /// declaration de tout scenario connecte.
     public BancDeRecette parleALaPlateforme() {
         if (profilConnecte != null) {
             throw new IllegalStateException(exclusion());
