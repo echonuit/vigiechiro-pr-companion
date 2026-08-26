@@ -367,19 +367,22 @@ public final class ClientVigieChiro {
     }
 
     /// **Met à jour** une participation existante (`PATCH /participations/#id`, axe 4) : n'émet que les
-    /// métadonnées synchronisables (dates, météo, configuration ; cf. [RequetesVigieChiro#miseAJourParticipation]),
-    /// avec l'en-tête `If-Match: <etag>` exigé par Eve (concurrence optimiste). L'`etag` frais se lit via
-    /// [#participation]. Renvoie l'`_id` en cas de succès, ou le **détail de l'échec** (statut + corps) : un
-    /// refus doit être expliqué. Prérequis : `etag` courant (sinon `412 Precondition Failed`).
+    /// métadonnées synchronisables (dates, météo, configuration ; cf. [RequetesVigieChiro#miseAJourParticipation]).
+    /// Renvoie l'`_id` en cas de succès, ou le **détail de l'échec** (statut + corps) : un refus doit être
+    /// expliqué.
+    ///
+    /// `etag` n'est **plus envoyé** : mesuré le 2026-08-26, cette route rend `200` sans en-tête comme
+    /// avec un étiquetage faux (#4523). Il reste au contrat parce qu'une concurrence optimiste côté
+    /// client, sur le patron de `PublicationPoint`, en aurait besoin.
     public ResultatEcriture modifierParticipation(String id, String etag, ParticipationADeposer miseAJour) {
         // Pas de rejeu (#2677) : l'`If-Match` protège du doublon, mais pas du malentendu. Si la première
-        // tentative aboutit et que la réponse se perd, l'`_etag` a changé et le rejeu revient en `412` -
-        // l'utilisateur lirait « échec » sur une modification qui a bien eu lieu.
+        // rejeu peut ECRASER en silence l'écriture d'un autre poste : la plateforme ignore l'en-tête,
+        // donc rien ne protège cet appel de la concurrence (#4523).
         String echec = echecDe(transport.ecrire(
                 "PATCH",
                 CHEMIN_PARTICIPATIONS + id,
                 RequetesVigieChiro.miseAJourParticipation(miseAJour),
-                etag,
+                null,
                 TransportVigieChiro.Rejeu.INTERDIT));
         return echec == null ? ResultatEcriture.reussie() : ResultatEcriture.echouee(echec);
     }

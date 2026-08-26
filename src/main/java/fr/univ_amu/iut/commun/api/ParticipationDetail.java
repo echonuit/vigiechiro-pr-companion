@@ -9,7 +9,8 @@ import java.util.Map;
 /// préparé sur le web) et à préparer une mise à jour.
 ///
 /// @param id `_id` de la participation
-/// @param etag `_etag` courant (en-tête `If-Match` du PATCH), ou `null` si absent
+/// @param etag `_etag` courant, ou `null` si absent. La plateforme ne le lit PAS en `If-Match` sur
+///     le `PATCH` d'une participation (#4523) : il sert à comparer, pas à conditionner
 /// @param point code de la localité (`point`), ou `null`
 /// @param dateDebut début de nuit, ISO 8601 (`date_debut`), ou `null`
 /// @param dateFin fin de nuit, ISO 8601 (`date_fin`), ou `null`
