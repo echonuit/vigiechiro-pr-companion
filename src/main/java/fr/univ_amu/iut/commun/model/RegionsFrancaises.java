@@ -60,21 +60,14 @@ public final class RegionsFrancaises {
 
     /// Deux écritures de département désignent-elles **le même** ? (#2848)
     ///
-    /// Le produit lit un département de deux façons - par le numéro d'un carré ([RegionDuCarre], deux
-    /// chiffres) et par un code INSEE ([Commune#departement], deux ou trois caractères) - et ces deux
-    /// écritures ne se comparent pas à l'égalité de chaînes :
+    /// Le produit lit un département de deux façons, par le numéro d'un carré ([RegionDuCarre], deux
+    /// chiffres) et par un code INSEE ([Commune#departement]), et ces écritures ne se comparent pas à
+    /// l'égalité de chaînes : un carré corse porte `20` quand l'INSEE écrit `2A` ou `2B`, un carré
+    /// d'outre-mer porte `97` quand l'INSEE écrit `971`, `972`, `974`. Le numéro ne dit pas lequel.
     ///
-    /// - **Corse** : un carré porte `20`, l'INSEE écrit `2A` ou `2B`. Le numéro ne dit **pas lequel des
-    ///   deux**, et la table n'est indexée que sur `20` ;
-    /// - **outre-mer** : un carré porte `97`, l'INSEE écrit `971`, `972`, `974`… Là non plus le numéro
-    ///   ne dit pas lequel.
-    ///
-    /// Dans ces deux cas la méthode rend `true`, et c'est une **abstention**, pas une équivalence : deux
-    /// lectures qu'on ne sait pas départager ne sont pas une divergence à signaler. Le seul écart qu'elle
-    /// affirme est celui qu'elle sait démontrer.
-    ///
-    /// Un code nul ou trop court rend `false` : il n'y a rien à confronter, et l'appelant écarte le cas
-    /// avant d'appeler plutôt que de lire une réponse dans une absence.
+    /// La méthode rend alors `true`, et c'est une **abstention**, pas une équivalence : deux lectures qu'on
+    /// ne sait pas départager ne sont pas une divergence à signaler, et le seul écart qu'elle affirme est
+    /// celui qu'elle sait démontrer. Un code nul ou trop court rend `false`, n'ayant rien à confronter.
     public static boolean memeDepartement(String a, String b) {
         if (a == null || b == null || a.length() < 2 || b.length() < 2) {
             return false;

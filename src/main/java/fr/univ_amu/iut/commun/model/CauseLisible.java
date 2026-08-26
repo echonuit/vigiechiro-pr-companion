@@ -32,20 +32,14 @@ public final class CauseLisible {
 
     /// Le libellé de l'entrée de menu qui ouvre le dossier des journaux.
     ///
-    /// **Il vit ICI, et la vue le cite** - l'inverse de ce que #3470 avait posé. La raison est
-    /// arrivée avec #3947 : ce message est composé par le filet global des **deux** surfaces, et une
-    /// surface headless qui va chercher une constante dans un paquet `view` lit mal. Ce qui faisait
-    /// tenir le montage précédent n'était pas une propriété d'architecture, c'était l'**inlining** par
-    /// javac d'une constante de compilation - retirer le `final` l'aurait cassé sans rien faire rougir.
+    /// **Il vit ici, et la vue le cite** (#3947) : ce message est composé par le filet global des **deux**
+    /// surfaces, et une surface headless qui va chercher une constante dans un paquet `view` lit mal. Ce qui
+    /// faisait tenir le montage de #3470 n'était pas une propriété d'architecture mais l'inlining d'une
+    /// constante de compilation, que retirer le `final` aurait cassé sans rien faire rougir.
     ///
     /// La citation reste un lien de compilation, donc l'**ADR 3854** tient par construction : renommer
-    /// l'entrée de menu renomme ce que le message dit d'aller chercher. La première rédaction disait
-    /// « Journaux », entrée qui n'existe pas.
-    ///
-    /// **Et « menu principal », pas le pictogramme ☰.** Une rédaction l'employait ; le garde
-    /// `PoliceCouvreLIhmTest` l'a refusée, à juste titre : ce caractère n'est pas dans la Noto Sans
-    /// embarquée, il partirait en repli vers une police du système et deux utilisateurs ne verraient
-    /// pas le même glyphe (ADR 0035).
+    /// l'entrée de menu renomme ce que le message dit d'aller chercher. Et « menu principal », pas le
+    /// pictogramme ☰, absent de la Noto Sans embarquée : il partirait en repli vers le système (ADR 0035).
     public static final String LIBELLE_ENTREE_JOURNAUX = "Ouvrir le dossier des journaux";
 
     /// Où regarder **à l'écran** : l'entrée de menu, nommée telle qu'elle s'écrit.
