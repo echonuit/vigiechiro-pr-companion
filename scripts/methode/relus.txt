@@ -1188,7 +1188,7 @@ ea16054bb589  src/main/java/fr/univ_amu/iut/validation/model/dao/ResultatsIdenti
 41507b6de8d4  src/main/java/fr/univ_amu/iut/validation/view/NavigationValidation.java
 4b4df031a0dc  src/main/java/fr/univ_amu/iut/validation/viewmodel/IndicateurObservations.java
 6f27abfa62c5  src/main/java/module-info.java
-c990fc59ae2b  src/test/java/fr/univ_amu/iut/AppTest.java
+6e42dd900326  src/test/java/fr/univ_amu/iut/AppTest.java
 2dadd80c4bb2  src/test/java/fr/univ_amu/iut/LauncherTest.java
 3b9a9d7be23e  src/test/java/fr/univ_amu/iut/analyse/AnalyseViewModelTest.java
 8f6fce411861  src/test/java/fr/univ_amu/iut/analyse/di/ActiviteModuleTest.java
