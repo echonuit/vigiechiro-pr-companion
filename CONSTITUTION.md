@@ -267,13 +267,12 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A28 · Un avertissement se dit en mots | 1 | 0 | `scripts/adr/4366-avertissement-en-pictogramme.py` |
 | A29 · L'ergonomie se rattache à une heuristique nommée | 1 | 0 | `scripts/adr/verifie_okf.py` |
 | A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 4 | 1 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py`, et 2 autres |
-| A31 · La prose visible se relit à l'humaniseur | 2 | 0 | **relecture seule** |
+| A31 · La prose visible se relit à l'humaniseur | 3 | 1 | `.github/scripts/verifie-corps-pr.sh` |
 
-**4 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
+**3 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
 
 - A8 · La mutation mesure dès qu'un comportement est complet
 - A10 · Jamais de suppression d'avertissement
 - A11 · L'assumé se déclare, il ne se contourne pas
-- A31 · La prose visible se relit à l'humaniseur
 
 <!-- fin de la matrice engendree -->
