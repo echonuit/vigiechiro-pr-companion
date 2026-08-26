@@ -995,6 +995,26 @@ class ContratApiVigieChiroLiveTest {
                 .isPositive();
     }
 
+    @Test
+    @DisplayName("GET /grille_stoc/cercle (#4576) : hors de la grille, la réponse est VIDE, et c'est une"
+            + " réponse et non une panne")
+    void grille_stoc_hors_grille_rend_une_reponse_vide() {
+        ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
+
+        // Plein Atlantique, à mi-chemin de l'Amérique : aucun carroyage national ne l'atteindra jamais.
+        // Ces coordonnées-là ne périment pas, à la différence de celles d'un site du compte.
+        ReponseApi<Optional<String>> reponse = client.carreStoc(45.0, -20.0, 1_500);
+
+        // Le tri compte autant que le résultat. « Vide » et « injoignable » se confondent pour qui ne
+        // regarde que l'Optional, et l'écran dirait « aucun carré ici » sur une panne de réseau.
+        assertThat(reponse)
+                .as("une position hors grille est une RÉPONSE du serveur, pas une issue non-succès")
+                .isInstanceOf(ReponseApi.Succes.class);
+        assertThat(reponse.enOptionnel().orElseThrow())
+                .as("aucun carré ne couvre le milieu de l'Atlantique")
+                .isEmpty();
+    }
+
     /// `_id` de la première donnée de [#participationTraitee].
     private static String idPremiereDonnee() {
         return api().when()

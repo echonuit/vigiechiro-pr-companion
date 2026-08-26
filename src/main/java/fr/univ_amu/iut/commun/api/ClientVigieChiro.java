@@ -127,7 +127,23 @@ public final class ClientVigieChiro {
     /// Issue **triée** (#1284) : hors connexion, panne et refus restent distincts d'une position sans
     /// carré : c'est ce qui permet à l'appelant de se taire au lieu d'accuser à tort.
     public ReponseApi<Optional<String>> carreStoc(double latitude, double longitude) {
-        String requete = "/grille_stoc/cercle?lng=" + longitude + "&lat=" + latitude + "&r=" + RAYON_CARRE_STOC_METRES;
+        return carreStoc(latitude, longitude, RAYON_CARRE_STOC_METRES);
+    }
+
+    /// Le même carré, au **rayon qu'on choisit** (#4576). Le rayon de [#RAYON_CARRE_STOC_METRES] a été
+    /// taillé pour un **contrôle** : un humain y a déjà tapé la vérité à côté, et rendre le carré voisin
+    /// plutôt que rien ne fait que nuancer. Une **proposition** se valide sans se relire, et le voisin y
+    /// devient un numéro faux et plausible, qui contaminerait ensuite le préfixe `Car######` de tous les
+    /// fichiers de la nuit.
+    ///
+    /// Le serrage se demande au **serveur**, et ne se calcule pas ici : `r` est le `$maxDistance` de son
+    /// `$near`. Filtrer soi-même obligerait à lire `centre`, donc à trancher la convention de coordonnées
+    /// que [ReponsesVigieChiro#numeroCarreStoc] s'abstient de trancher.
+    ///
+    /// Une seule implémentation, pour que les deux appels ne puissent pas diverger ailleurs que sur ce
+    /// rayon.
+    public ReponseApi<Optional<String>> carreStoc(double latitude, double longitude, int rayonMetres) {
+        String requete = "/grille_stoc/cercle?lng=" + longitude + "&lat=" + latitude + "&r=" + rayonMetres;
         return transport.lire(requete).transformer(ReponsesVigieChiro::numeroCarreStoc);
     }
 

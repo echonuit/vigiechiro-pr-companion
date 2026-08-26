@@ -173,7 +173,7 @@ prévenir : celle-ci rougit.
 | `protocoles` | `/protocoles[/liste]`, `/protocoles/{id}[/observateurs]`, `/moi/protocoles` | le protocole détermine la forme des localités d'un site |
 | `utilisateurs` | `/utilisateurs`, `/utilisateurs/{id}`, `/moi` | `/moi` valide le jeton |
 | `fichiers` | `/fichiers/{id}`, `/fichiers/{id}/acces` | **aucune route de collection** : `/fichiers` n'existe pas en lecture, d'où son refus |
-| `grille_stoc` | `/grille_stoc/rectangle`, `/grille_stoc/cercle` | **aucune route de collection** : s'interroge par emprise |
+| `grille_stoc` | `/grille_stoc/rectangle`, `/grille_stoc/cercle` | **aucune route de collection** : s'interroge par emprise. Une maille est un **`Point`**, son centre, et ses `coordinates` sont en **`[lon, lat]`** - l'ordre GeoJSON, à rebours des localités d'un site. Son `numero` est amputé de son zéro de gauche dans les départements 01 à 09 : la grille rend `40110` là où le catalogue déclare `040110`. Mesuré le 2026-08-26 (#4576) |
 | `actualites` | `/moi/actualites`, `/actualites/validations` | **aucune route de collection** |
 
 **Toutes** les lectures exigent le même rôle (`Observateur`) : le source ne distingue les rôles qu'en

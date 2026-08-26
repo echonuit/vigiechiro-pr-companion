@@ -92,6 +92,30 @@ class ReponsesVigieChiroTest {
     }
 
     @Test
+    @DisplayName("numeroCarreStoc : la grille ampute le zéro des départements 01 à 09, on le rembourre (#4576)")
+    void numero_carre_stoc_rembourre_le_zero_de_gauche() {
+        // Mesuré le 2026-08-26 sur 44.44674980384396, 6.298116860416506 : la grille rend « 40110 »
+        // quand le catalogue déclare « Vigiechiro - Point Fixe-040110 », et « GET /sites?q=40110 » ne
+        // trouve rien. R1 est juste - six chiffres, département en tête - c'est la grille qui ampute.
+        // Cinq chiffres ne remplissent pas le champ, n'ouvrent pas la vérification, et ne désignent
+        // aucun site.
+        String corps = "{\"_items\":["
+                + "{\"_id\":\"g1\",\"numero\":\"40110\",\"centre\":{\"type\":\"Point\","
+                + "\"coordinates\":[6.293767361,44.44544392]}}"
+                + "],\"_meta\":{\"total\":1}}";
+
+        assertThat(ReponsesVigieChiro.numeroCarreStoc(corps)).contains("040110");
+    }
+
+    @Test
+    @DisplayName("numeroCarreStoc : un département à deux chiffres passe inchangé, sans rembourrage parasite")
+    void numero_carre_stoc_laisse_six_chiffres_intacts() {
+        String corps = "{\"_items\":[{\"_id\":\"g1\",\"numero\":\"130711\"}],\"_meta\":{\"total\":1}}";
+
+        assertThat(ReponsesVigieChiro.numeroCarreStoc(corps)).contains("130711");
+    }
+
+    @Test
     @DisplayName("numeroCarreStoc : le PREMIER élément (GET /grille_stoc/cercle rend les carrés triés par distance)")
     void numero_carre_stoc() {
         // Réponse Eve paginée du backend (`$near` : distance croissante), le premier item est le carré de

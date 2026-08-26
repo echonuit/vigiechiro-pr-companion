@@ -69,9 +69,17 @@ final class ReponsesVigieChiro {
     /// croissante**. Le premier élément est donc le carré de la position demandée ; les suivants sont ses
     /// voisins, dont nous n'avons que faire.
     ///
-    /// On ne lit **que** le `numero`, jamais le `centre` : la plateforme mélange les conventions de
-    /// coordonnées (les localités d'un site sont stockées `[lat, lon]`, à rebours du GeoJSON, cf.
-    /// `ParticipationsVigieChiro#coordonnees`), et rien n'oblige à trancher ce débat pour lire un numéro.
+    /// On ne lit **que** le `numero`, jamais le `centre` : le numéro suffit, et rien n'oblige à lire le
+    /// reste pour l'obtenir.
+    ///
+    /// Ce fut d'abord une abstention faute de savoir : la plateforme mélange les conventions, les
+    /// localités d'un site étant stockées `[lat, lon]` à rebours du GeoJSON (cf.
+    /// `ParticipationsVigieChiro#coordonnees`). La mesure du 2026-08-26 a tranché pour cet endpoint
+    /// (#4576). Interrogée à `lat=44.4467, lng=6.2981`, la grille rend un centre de type `Point` dont
+    /// les `coordinates` valent `[6.293767361, 44.44544392]` : la longitude d'abord, donc l'ordre
+    /// **`[lon, lat]`**, celui de GeoJSON. L'autre lecture placerait ce centre à 5 626 km.
+    ///
+    /// L'abstention reste, elle est désormais un **choix** et non une ignorance.
     ///
     /// Aucun carré (mer, hors de France) ou corps illisible → vide : ce n'est pas une erreur, c'est une
     /// réponse.
@@ -80,11 +88,33 @@ final class ReponsesVigieChiro {
             if (element.isJsonObject()) {
                 String numero = texte(element.getAsJsonObject(), "numero");
                 if (numero != null && !numero.isBlank()) {
-                    return Optional.of(numero);
+                    return Optional.of(surSixChiffres(numero));
                 }
             }
         }
         return Optional.empty();
+    }
+
+    /// Le numéro de carré **sur six chiffres**, département en tête, forme qu'impose la règle métier R1 et
+    /// que respecte le catalogue des sites.
+    ///
+    /// La grille, elle, ampute le zéro de gauche des départements 01 à 09. Mesuré le 2026-08-26 sur la
+    /// position `44.44674980384396, 6.298116860416506` (#4576) : `/grille_stoc/cercle` rend `40110` quand
+    /// `GET /sites?q=040110` trouve « Vigiechiro - Point Fixe-040110 » et que `GET /sites?q=40110` ne
+    /// trouve rien.
+    ///
+    /// Le rembourrage vit **ici**, au point unique où ce numéro entre dans l'application, et non chez
+    /// celui qui compare : réparé là-bas, le défaut resterait entier pour le lecteur suivant.
+    ///
+    /// Un numéro plus long que six chiffres passe **tel quel**. Ce n'est pas à cette lecture d'inventer ce
+    /// qu'il faudrait en faire.
+    ///
+    /// Écrit sans conditionnelle à dessein. La forme `length() >= 6 ? numero : ...` portait un mutant
+    /// **équivalent** : muter la borne en `> 6` rend `"0".repeat(0) + numero`, soit le même résultat, et
+    /// aucun test ne pouvait le tuer. Le `Math.max` dit la même chose sans borne à muter, et protège du
+    /// `repeat` négatif qu'un numéro plus long provoquerait.
+    private static String surSixChiffres(String numero) {
+        return "0".repeat(Math.max(0, 6 - numero.length())) + numero;
     }
 
     /// Identifiant du document **créé** par une écriture Eve (`POST` renvoyant le document), ou vide si le
