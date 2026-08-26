@@ -12,6 +12,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.io.TempDir;
 
 /// Le refus d'encoder quand l'encodeur n'est pas là.
@@ -91,13 +92,29 @@ class EncodeurTest {
 
     @Test
     @DisplayName("#4522 : sous POSIX, c'est le bit d'exécution qui décide")
+    @EnabledIf("fr.univ_amu.iut.recette.film.EncodeurTest#posixDisponible")
     void sous_posix_le_bit_decide(@TempDir Path dossier) throws IOException {
+        // `@EnabledIf`, et non la couture qui rend la branche Windows jouable depuis Linux : celle-ci
+        // ne peut pas l'être en sens inverse. La branche POSIX délègue à `Files.isExecutable`, qui est
+        // précisément la primitive dont la réponse change de système - sous Windows elle rend `true`
+        // pour tout fichier existant. Forcer le drapeau à `true` sur une machine Windows n'y rejoue
+        // donc pas POSIX : cela pose la question à Windows en prétendant parler à POSIX, et le cas
+        // rougissait pour cette raison (run 32945079829).
+        //
+        // Déclaratif plutôt qu'un `assumeTrue` en cours de route : la même raison qu'`EcritureAtomiqueTest`
+        // a écrite avant nous, un saut qui se voit dans le rapport et qui ne coupe pas un cas au milieu
+        // de ses assertions.
         Path inerte = Files.writeString(dossier.resolve("inerte.bat"), "pas un programme");
 
         assertFalse(
                 Encodeur.VersFfmpeg.estExecutable(inerte, true, ".BAT"),
                 "sous POSIX un suffixe ne rend rien exécutable");
         assertTrue(Encodeur.VersFfmpeg.estExecutable(executable(dossier.resolve("vrai")), true, ""));
+    }
+
+    /// La vue POSIX est-elle celle de cette machine ? Condition de [#sous_posix_le_bit_decide].
+    static boolean posixDisponible() {
+        return Encodeur.VersFfmpeg.vuePosixDisponible();
     }
 
     /// Un fichier réellement exécutable, ou le test n'éprouverait que `Files.exists`.
