@@ -254,7 +254,7 @@ dc00d22288af  src/main/java/fr/univ_amu/iut/cli/model/ErreurUsage.java
 0ebcb1e9dfb6  src/main/java/fr/univ_amu/iut/cli/model/RegistrePassages.java
 afd418f97e22  src/main/java/fr/univ_amu/iut/commun/api/CatalogueApi.java
 8cff5613e037  src/main/java/fr/univ_amu/iut/commun/api/ClientGbif.java
-adebae909cf2  src/main/java/fr/univ_amu/iut/commun/api/ClientVigieChiro.java
+ba7393b8e0ee  src/main/java/fr/univ_amu/iut/commun/api/ClientVigieChiro.java
 ead5f91ebcf9  src/main/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgression.java
 06f404203a9c  src/main/java/fr/univ_amu/iut/commun/api/CorpsReponse.java
 55f6b2e2c266  src/main/java/fr/univ_amu/iut/commun/api/DonneeVigieChiro.java
@@ -286,7 +286,7 @@ f88e99f1c20a  src/main/java/fr/univ_amu/iut/commun/api/PiecesJointesVigieChiro.j
 21c04a1d1c8d  src/main/java/fr/univ_amu/iut/commun/api/RapportSynchro.java
 330cebbb90e4  src/main/java/fr/univ_amu/iut/commun/api/RapprochementVigieChiro.java
 9c08aa69d1d6  src/main/java/fr/univ_amu/iut/commun/api/ReponseApi.java
-7832d8a10cb7  src/main/java/fr/univ_amu/iut/commun/api/ReponsesVigieChiro.java
+a8df12e4de57  src/main/java/fr/univ_amu/iut/commun/api/ReponsesVigieChiro.java
 7c590bd68e1d  src/main/java/fr/univ_amu/iut/commun/api/RequetesVigieChiro.java
 ecd041bacd9f  src/main/java/fr/univ_amu/iut/commun/api/ResolveurCommuneApiGeo.java
 7b1aee9ffe9c  src/main/java/fr/univ_amu/iut/commun/api/ResultatEcriture.java

@@ -127,7 +127,17 @@ public final class ClientVigieChiro {
     /// Issue **triée** (#1284) : hors connexion, panne et refus restent distincts d'une position sans
     /// carré : c'est ce qui permet à l'appelant de se taire au lieu d'accuser à tort.
     public ReponseApi<Optional<String>> carreStoc(double latitude, double longitude) {
-        String requete = "/grille_stoc/cercle?lng=" + longitude + "&lat=" + latitude + "&r=" + RAYON_CARRE_STOC_METRES;
+        return carreStoc(latitude, longitude, RAYON_CARRE_STOC_METRES);
+    }
+
+    /// Le même carré, au **rayon qu'on choisit** (#4576). [#RAYON_CARRE_STOC_METRES] a été taillé pour un
+    /// **contrôle**, où un humain a déjà tapé la vérité à côté et où le voisin ne fait que nuancer. Une
+    /// **proposition** se valide sans se relire : le voisin y devient un numéro faux et plausible.
+    ///
+    /// Le serrage se demande au **serveur** : `r` est le `$maxDistance` de son `$near`. Filtrer soi-même
+    /// obligerait à lire `centre`, ce dont [ReponsesVigieChiro#numeroCarreStoc] se dispense.
+    public ReponseApi<Optional<String>> carreStoc(double latitude, double longitude, int rayonMetres) {
+        String requete = "/grille_stoc/cercle?lng=" + longitude + "&lat=" + latitude + "&r=" + rayonMetres;
         return transport.lire(requete).transformer(ReponsesVigieChiro::numeroCarreStoc);
     }
 

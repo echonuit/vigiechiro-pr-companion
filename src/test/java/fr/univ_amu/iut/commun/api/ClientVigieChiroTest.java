@@ -265,6 +265,44 @@ class ClientVigieChiroTest {
                 .contains("/sites?max_results=100&page=1");
     }
 
+    @Test
+    @DisplayName("#4576 : carreStoc demande le rayon qu'on lui donne, et non celui du contrôle")
+    void carre_stoc_demande_le_rayon_donne() throws Exception {
+        // Le rayon de 10 000 m a été choisi pour un CONTRÔLE, où un humain a déjà tapé la vérité à côté
+        // et où le carré voisin ne fait que nuancer. Une PROPOSITION se valide sans se relire : le
+        // voisin y devient un numéro faux et plausible. Le rayon doit donc pouvoir se serrer.
+        List<String> chemins = new ArrayList<>();
+        HttpClient http = mock(HttpClient.class);
+        when(http.send(any(), any())).thenAnswer(appel -> {
+            chemins.add(((HttpRequest) appel.getArgument(0)).uri().toString());
+            return reponse(200, "{\"_meta\":{\"total\":0},\"_items\":[]}", Map.of());
+        });
+
+        clientAvec(http).carreStoc(43.296482, 5.369780, 1_500);
+
+        assertThat(chemins.get(0))
+                .as("le rayon demandé part tel quel dans « r », le $maxDistance du $near")
+                .contains("r=1500");
+    }
+
+    @Test
+    @DisplayName("#4576 : sans rayon, carreStoc demande toujours les 10 000 m du contrôle")
+    void carre_stoc_sans_rayon_garde_celui_du_controle() throws Exception {
+        // `ControleCarreStoc` appelle sans rayon et doit continuer d'obtenir le sien. La surcharge
+        // délègue : si elle déléguait avec une autre constante, le contrôle se mettrait à se taire là
+        // où il parlait, sans qu'aucun de ses propres tests ne bronche - ils bouchonnent le client.
+        List<String> chemins = new ArrayList<>();
+        HttpClient http = mock(HttpClient.class);
+        when(http.send(any(), any())).thenAnswer(appel -> {
+            chemins.add(((HttpRequest) appel.getArgument(0)).uri().toString());
+            return reponse(200, "{\"_meta\":{\"total\":0},\"_items\":[]}", Map.of());
+        });
+
+        clientAvec(http).carreStoc(43.296482, 5.369780);
+
+        assertThat(chemins.get(0)).contains("r=10000");
+    }
+
     /// Client sur un transport à `HttpClient` mocké et politique sans vraie attente (tests instantanés).
     private static ClientVigieChiro clientAvec(HttpClient http) {
         return new ClientVigieChiro(new TransportVigieChiro(

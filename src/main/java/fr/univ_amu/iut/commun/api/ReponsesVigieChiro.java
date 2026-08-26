@@ -69,9 +69,9 @@ final class ReponsesVigieChiro {
     /// croissante**. Le premier élément est donc le carré de la position demandée ; les suivants sont ses
     /// voisins, dont nous n'avons que faire.
     ///
-    /// On ne lit **que** le `numero`, jamais le `centre` : la plateforme mélange les conventions de
-    /// coordonnées (les localités d'un site sont stockées `[lat, lon]`, à rebours du GeoJSON, cf.
-    /// `ParticipationsVigieChiro#coordonnees`), et rien n'oblige à trancher ce débat pour lire un numéro.
+    /// On ne lit **que** le `numero`, jamais le `centre` : le numéro suffit. Ce fut d'abord une abstention
+    /// faute de savoir quelle convention la plateforme emploie là ; #4576 l'a mesurée et
+    /// `dev-docs/api-vigiechiro.md` la porte. L'abstention est donc un **choix**.
     ///
     /// Aucun carré (mer, hors de France) ou corps illisible → vide : ce n'est pas une erreur, c'est une
     /// réponse.
@@ -80,11 +80,24 @@ final class ReponsesVigieChiro {
             if (element.isJsonObject()) {
                 String numero = texte(element.getAsJsonObject(), "numero");
                 if (numero != null && !numero.isBlank()) {
-                    return Optional.of(numero);
+                    return Optional.of(surSixChiffres(numero));
                 }
             }
         }
         return Optional.empty();
+    }
+
+    /// Le numéro sur **six chiffres**, département en tête : la forme qu'impose R1 et que respecte le
+    /// catalogue. La grille ampute le zéro de gauche des départements 01 à 09 (#4576).
+    ///
+    /// Le rembourrage vit **ici**, au point unique où ce numéro entre dans l'application : réparé chez
+    /// celui qui compare, le défaut resterait entier pour le lecteur suivant. Un numéro plus long passe
+    /// tel quel.
+    ///
+    /// Sans conditionnelle à dessein : `length() >= 6 ? ...` portait un mutant **équivalent**, la borne
+    /// mutée en `> 6` rendant le même résultat.
+    private static String surSixChiffres(String numero) {
+        return "0".repeat(Math.max(0, 6 - numero.length())) + numero;
     }
 
     /// Identifiant du document **créé** par une écriture Eve (`POST` renvoyant le document), ou vide si le
