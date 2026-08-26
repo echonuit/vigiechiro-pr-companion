@@ -1083,8 +1083,10 @@ caedbc158715  src/main/java/fr/univ_amu/iut/sites/model/AppariementPoints.java
 639f7cdc0b1b  src/main/java/fr/univ_amu/iut/sites/model/CommuneDuPoint.java
 8278c1c35952  src/main/java/fr/univ_amu/iut/sites/model/ControleCarreStoc.java
 b86cd45c26c9  src/main/java/fr/univ_amu/iut/sites/model/ImportSiteDistant.java
+b8ca5156a810  src/main/java/fr/univ_amu/iut/sites/model/LecturePosition.java
 34db4c9a40fe  src/main/java/fr/univ_amu/iut/sites/model/PointDEcoute.java
 da30c90666bf  src/main/java/fr/univ_amu/iut/sites/model/PointLocalParLocalite.java
+8b68be26f4dc  src/main/java/fr/univ_amu/iut/sites/model/PositionCollee.java
 656bd2d79e66  src/main/java/fr/univ_amu/iut/sites/model/PublicationPoint.java
 78d6cdc5a89a  src/main/java/fr/univ_amu/iut/sites/model/RapatriementCarre.java
 0c989e27531c  src/main/java/fr/univ_amu/iut/sites/model/RapprochementNuitsOpportunistes.java
@@ -1922,6 +1924,7 @@ bd7d2b209501  src/test/java/fr/univ_amu/iut/sites/SiteDaoTest.java
 2b00cd974aab  src/test/java/fr/univ_amu/iut/sites/SiteTiersDaoTest.java
 fdb1347ad0fe  src/test/java/fr/univ_amu/iut/sites/model/AppariementPointsTest.java
 38bbdcd226aa  src/test/java/fr/univ_amu/iut/sites/model/ControleCarreStocTest.java
+e3b0c44298fc  src/test/java/fr/univ_amu/iut/sites/model/PositionColleeTest.java
 429fe4271b74  src/test/java/fr/univ_amu/iut/sites/model/PublicationPointTest.java
 dbadf15443b0  src/test/java/fr/univ_amu/iut/sites/model/RapatriementCarreTest.java
 0fb886281376  src/test/java/fr/univ_amu/iut/sites/model/RapprochementNuitsOpportunistesTest.java
