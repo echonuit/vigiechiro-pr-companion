@@ -1,5 +1,5 @@
 ---
-name: recette-filmee
+name: filmer-une-recette
 description: Use when a user journey must be proven to actually run, not merely to pass. Covers the filmed bench, the luminance threshold, the auto-test, and the negative control that makes the whole verdict meaningful.
 license: GPL-3.0-or-later
 metadata:
@@ -20,7 +20,7 @@ affiché. Le banc filme l'exécution réelle **et** prouve d'abord qu'il sait é
 
 ## Annoncer
 
-« J'utilise la compétence recette-filmee pour <le parcours>. »
+« J'utilise la compétence filmer-une-recette pour <le parcours>. »
 
 ## Le témoin, qui est la pièce maîtresse
 

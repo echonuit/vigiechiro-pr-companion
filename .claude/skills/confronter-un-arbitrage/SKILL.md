@@ -1,5 +1,5 @@
 ---
-name: audit-croise
+name: confronter-un-arbitrage
 description: Use when a judgement call has to be defended before it becomes an ADR or a commit - a threshold, a granularity, a deliberate exception, a rule left to human review. Covers what may leave the repository, how to phrase a question that refutes instead of validating, how to run the three CLI auditors available here, and the measurement that must confirm the answer before anything is written down.
 license: GPL-3.0-or-later
 metadata:
@@ -20,13 +20,13 @@ preuve fraîche avant toute affirmation.
 
 ## Annoncer
 
-« J'utilise la compétence audit-croise pour confronter <l'arbitrage>. »
+« J'utilise la compétence confronter-un-arbitrage sur <l'arbitrage>. »
 
 ## Fonction de garde
 
 ```
 0. CHERCHER  ce que le depot repond deja. Une page, une ADR, un cliquet. Voir la
-             competence triage. Un audit lance sans cette etape refait un travail fait.
+             competence trier-les-issues. Un audit lance sans cette etape refait un travail fait.
 1. TRIER     un arbitrage se confronte, une correction se mesure. Si un test ou un
              script repond a la question, le lancer et s arreter la.
 2. COMPOSER  la question dans le bloc-notes, hors du depot. Elle porte l extrait

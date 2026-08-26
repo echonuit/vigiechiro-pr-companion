@@ -21,9 +21,17 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte, sans_commentaires_java  # noqa: E402
+from _commun import PRODUCTION, rapporte, sans_commentaires_java  # noqa: E402
 
-SOURCES = pathlib.Path("src/main/java")
+# LA PRODUCTION SEULE, et c'est une exception assumee (ADR 4586).
+#
+# Mesure du 2026-08-26 : 0 suspect en production, 3 dans l arbre de test, et les trois sont
+# des MENTIONS. `MoteurTraitementGroupeTest` porte un double qui simule ce que fait
+# l application, et deux assertions qui citent le message attendu. Etendre ce garde aux tests
+# leur interdirait d affirmer les chaines memes que la regle produit, ce qui est la confusion
+# usage / mention que `PatronDuCliquetTest` nomme comme l un des deux pieges du premier
+# cliquet du depot.
+SOURCES = PRODUCTION
 
 # Chaînes littérales Java, échappements compris.
 LITTERAL = re.compile(r'"((?:[^"\\]|\\.)*)"')

@@ -61,7 +61,7 @@ décisions se cadrent pour l'**utilisateur final**, pas pour un contexte pédago
 
 L'article A31 le rend obligatoire : toute prose qu'un humain lira hors de l'échange qui l'a produite,
 javadoc, documentation, ADR, libellés d'interface et de ligne de commande, messages de commit, corps
-d'issue et de pull request, passe la grille de la compétence `humaniseur` avant d'être **publiée**,
+d'issue et de pull request, passe la grille de la compétence `humaniser` avant d'être **publiée**,
 par un commit comme sur la forge.
 
 Les sept tics de la section « Le registre » de [CONTRIBUTING.md](CONTRIBUTING.md) en sont le
@@ -75,19 +75,19 @@ remplacent pas ce document : il se lit au début, une compétence s'ouvre au mom
 
 | Compétence | Quand l'ouvrir |
 |---|---|
-| `triage` | avant d'ouvrir un chantier, pour décider s'il y a lieu |
+| `trier-les-issues` | avant d'ouvrir un chantier, pour décider s'il y a lieu |
 | `ouvrir-une-issue` | ce qu'il faut avoir mesuré, vérifié et compris avant la première ligne |
 | `worktree` | avant tout travail de branche, et avant de construire pendant que l'appli tourne |
 | `tdd` | la boucle rouge, vert, refactor, et son échelle |
 | `deboguer` | sur un défaut : cause racine avant correctif, le premier test reproduit |
 | `mutation` | dès qu'un comportement est complet, et pour tout garde qu'on écrit |
-| `recette-filmee` | le banc, le seuil, l'auto-test, le témoin |
-| `revue-visuelle` | la planche avant/après |
+| `filmer-une-recette` | le banc, le seuil, l'auto-test, le témoin |
+| `revoir-les-ecrans` | la planche avant/après |
 | `ecrire-une-adr` | format, statut, chaînage, et l'article auquel elle se rattache |
 | `clore-une-issue` | ce qu'on laisse derrière soi |
 | `clore-un-chantier` | les douze passes de clôture |
-| `humaniseur` | relire une prose française qui porte des marques d'écriture par LLM |
-| `audit-croise` | confronter un arbitrage à trois lecteurs, sans leur faire dire une mesure |
+| `humaniser` | relire une prose française qui porte des marques d'écriture par LLM |
+| `confronter-un-arbitrage` | soumettre un arbitrage à trois lecteurs, sans leur faire dire une mesure |
 | `openspec-propose`, `-apply-change`, `-update-change`, `-sync-specs`, `-archive-change`, `-explore` | le cycle d'un changement dans la spécification vivante |
 
 **Le fonds est dans `.agents/skills/`, hors de tout dossier de marque.** `.claude/skills/` n'en est

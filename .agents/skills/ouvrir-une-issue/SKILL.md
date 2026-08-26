@@ -15,7 +15,7 @@ metadata:
 PAS UNE LIGNE DE CODE AVANT QUE LE POURQUOI SOIT ÉCRIT SUR L'ISSUE
 ```
 
-Cette compétence est distincte de `triage` : le triage décide s'il y a lieu d'ouvrir, celle-ci dit
+Cette compétence est distincte de `trier-les-issues` : le triage décide s'il y a lieu d'ouvrir, celle-ci dit
 ce qu'il faut avoir posé avant de commencer, et refuse de démarrer tant que ce n'est pas fait.
 
 ## Annoncer
@@ -32,7 +32,7 @@ ce qu'il faut avoir posé avant de commencer, et refuse de démarrer tant que ce
 3. SITUER   dans quelle continuite elle s inscrit : de quel chantier elle vient,
             quelle issue elle suit, ce qu elle rend possible ensuite.
 4. DEPOSER  ces trois phrases EN COMMENTAIRE sur l issue, avec le remede envisage.
-5. RELIRE   a la grille humaniseur ce qui part sur la forge. Le corps de l issue
+5. RELIRE   a la grille de la competence humaniser ce qui part sur la forge. Le corps de l issue
             est de la prose publiee, et l article A31 le couvre depuis qu il ne
             declenche plus sur le commit.
 6. ASSIGNER l issue a qui la prend.
@@ -67,7 +67,7 @@ coûteux du dépôt : deux issues sur le même sujet, écrites depuis deux angle
 et aucune n'était assignée.
 
 Le signalement est un **filet**, pas une garantie. Il repose sur la discipline, et la discipline
-lâche exactement quand ça va vite, c'est-à-dire quand les collisions arrivent. Il complète `triage`,
+lâche exactement quand ça va vite, c'est-à-dire quand les collisions arrivent. Il complète `trier-les-issues`,
 il ne le remplace pas.
 
 ## Signaux d'alerte : on s'arrête
