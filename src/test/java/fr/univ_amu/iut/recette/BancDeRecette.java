@@ -97,6 +97,15 @@ public final class BancDeRecette {
     private ProfilVigieChiro profilConnecte;
     private boolean surLaPlateforme;
 
+    /// Deposer le jeton avant l'ouverture, ou le laisser au scenario.
+    ///
+    /// SEPARE de [#surLaPlateforme] depuis le tir 32894626486, et c'est le defaut qu'il a
+    /// trouve : les deux voies vers la plateforme reelle ne different que par le depot, mais un
+    /// seul drapeau portait les deux sens. La voie qui ne depose rien ne levait donc pas le
+    /// cablage, et son client repartait sur `http://localhost:1` - un vrai jeton, une vraie URL
+    /// dans l'environnement, et un `ConnectException` sur le port 1.
+    private boolean deposerLeJeton;
+
     /// Ce qu'un scénario écrit avant que l'écran ne s'ouvre.
     ///
     /// ⚠️ Il peut **lever** : un semis qui pose des fichiers de nuit fait des entrées/sorties, et un
@@ -175,6 +184,24 @@ public final class BancDeRecette {
     /// **muet sur son propre objet** (ADR 4142). Un scénario qui déclare vouloir la plateforme et ne la
     /// trouve pas n'a rien à montrer : il s'arrête, et il dit quoi poser.
     public BancDeRecette connecteALaPlateforme() {
+        if (profilConnecte != null) {
+            throw new IllegalStateException(exclusion());
+        }
+        this.surLaPlateforme = true;
+        this.deposerLeJeton = true;
+        return this;
+    }
+
+    /// Garde le cablage de production **sans rien deposer** : le scenario collera le jeton lui-meme,
+    /// avec [#jetonDeLaPlateforme()].
+    ///
+    /// Prendre le jeton ne suffit pas a dire au banc vers QUI parler : depuis #4332 le banc lie un client
+    /// hors ligne a tout scenario n'ayant declare aucun serveur, et cette voie-la ne levait rien. Elle
+    /// filmait donc l'ecran hors ligne que [#connecteALaPlateforme()] refuse de produire.
+    ///
+    /// `BancDeRecetteSansDepotTest` porte la mesure, et `DeclarationDeLaPlateformeTest` exige la
+    /// declaration de tout scenario connecte.
+    public BancDeRecette parleALaPlateforme() {
         if (profilConnecte != null) {
             throw new IllegalStateException(exclusion());
         }
@@ -302,7 +329,7 @@ public final class BancDeRecette {
         if (profilConnecte != null) {
             injecteur.getInstance(StockageConnexion.class).enregistrer("jeton-de-recette", profilConnecte);
             injecteur.getInstance(RefletDuJeton.class).relire();
-        } else if (surLaPlateforme) {
+        } else if (deposerLeJeton) {
             // Sans profil : la modale le revérifiera d'elle-même à l'ouverture (#1369), ce qui filme la
             // connexion réelle sans qu'un caractère du jeton passe par le champ.
             String jeton = jetonDeLaPlateforme();

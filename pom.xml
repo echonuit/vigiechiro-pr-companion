@@ -68,6 +68,7 @@
         <testfx.version>4.0.18</testfx.version>
 
         <junit.jupiter.version>6.1.2</junit.jupiter.version>
+        <opentest4j.version>1.3.0</opentest4j.version>
         <assertj.version>3.27.7</assertj.version>
         <mockito.version>5.23.0</mockito.version>
         <slf4j.version>2.0.18</slf4j.version>
@@ -206,6 +207,18 @@
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-engine</artifactId>
             <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Déclarée bien qu'apportée par JUnit : `EnregistreurDeFilm` nomme `TestAbortedException`
+             en propre. C'est le signal qu'un geste a été ABANDONNÉ - une précondition déclarée qui ne
+             tient pas - et l'enregistreur s'en sert pour n'indexer aucun cas, plutôt que de laisser un
+             clip passer pour une couverture. Même raison que `junit-platform-engine` ci-dessus :
+             `analyze-only` refuse la transitivité, et une montée de JUnit pourrait retirer celle-ci
+             sous nos pieds. -->
+        <dependency>
+            <groupId>org.opentest4j</groupId>
+            <artifactId>opentest4j</artifactId>
+            <version>${opentest4j.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.SuiviProgression;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
@@ -21,10 +22,12 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -138,9 +141,14 @@ class ScenarioConnecteConnexionTest {
                 // ASYNCHRONE : la progression est le sujet, et en synchrone le fil JavaFX est bloqué,
                 // donc aucune image n'est rendue pendant l'opération.
                 .executeur(BancDeRecette.Executeur.ASYNCHRONE)
-                // ⚠️ Ni `connecte(...)` ni `connecteALaPlateforme()` : ce scénario part DÉCONNECTÉ,
+                // Ni `connecte(...)` ni `connecteALaPlateforme()` : ce scénario part DÉCONNECTÉ,
                 // parce que c'est la connexion elle-même qu'il filme. Le banc lie quand même sa propre
                 // source de jeton, donc rien de l'environnement ne s'invite dans la réserve (ADR 4134).
+                //
+                // ⚠️ Mais il DÉCLARE parler à la plateforme, sinon son client repart sur
+                // `http://localhost:1` : prendre le jeton ne dit pas au banc vers qui parler. Trois
+                // tournages ont filmé un écran hors ligne avant que le relevé ne le dise.
+                .parleALaPlateforme()
                 .remplacer(new AbstractModule() {
                     @Provides
                     OuvreurDeLien ouvreurDeLien() {
@@ -218,12 +226,6 @@ class ScenarioConnecteConnexionTest {
         Respiration.surLeMomentCle(robot);
         Respiration.leTempsDeLire(robot);
 
-        assertThat(visible(robot, "#zoneProgression"))
-                .as("la progression doit avoir été à l'écran ASSEZ LONGTEMPS pour être filmée. Si elle a"
-                        + " disparu pendant ce maintien, c'est que l'opération est plus rapide que le"
-                        + " temps de lecture, et ce cas n'a rien montré")
-                .isTrue();
-
         // ─── S8-06 · l'identité et le résumé, à la fin ────────────────────────────────────────────
         attendre(
                 FIN_SECONDES,
@@ -232,6 +234,11 @@ class ScenarioConnecteConnexionTest {
                         + " plus gros que ce banc ne le prévoit », pas comme un défaut du produit :"
                         + " se connecter rejoue le rapatriement des nuits du compte");
         WaitForAsyncUtils.waitForFxEvents();
+
+        // Ce que la synchro a fait, imprime plutot que suppose. Le resume ne porte que des
+        // COMPTES, donc rien d'identifiant : publiable dans un journal de run, et c'est la seule
+        // trace qui explique pourquoi une connexion a ete longue ou breve.
+        System.out.printf("  synchro de la connexion : %s%n", texte(robot, "#bandeauStatut"));
 
         // ⚠️ On asserte le SUCCÈS, pas la non-vacuité : `identiteProperty` porte « Jeton enregistré, non
         // vérifié » dès le premier instant d'un jeton sans profil.
@@ -306,12 +313,118 @@ class ScenarioConnecteConnexionTest {
 
     /// Une attente qui **dit ce qu'elle attendait** quand elle échoue. `WaitForAsyncUtils` rend sinon un
     /// `TimeoutException` nu, et le lecteur d'un tournage raté n'a que la ligne pour comprendre.
+
+    @Test
+    @CasDeRecette(
+            value = {"S8-02", "S8-03"},
+            portee = Portee.A_L_ECRAN)
+    @DisplayName("S8-02, S8-03 · la barre avance nuit par nuit, et annonce le temps restant")
+    void la_barre_avance_nuit_par_nuit(FxRobot robot) throws TimeoutException {
+        String jeton = BancDeRecette.jetonDeLaPlateforme();
+
+        Respiration.avantLeGeste(robot);
+        GesteVisible.choisir(robot, "#menuOutils", LIBELLE_ENTREE_MENU);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.clickOn("#champToken").write(jeton);
+        WaitForAsyncUtils.waitForFxEvents();
+        GesteVisible.cliquer(robot, "#boutonConnecter");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        attendre(
+                APPARITION_SECONDES,
+                () -> visible(robot, "#zoneProgression"),
+                "la progression n'a jamais paru dans la modale");
+
+        // Le premier relevé, pris au plus tôt : il sert de point de comparaison.
+        double fractionInitiale = fraction(robot);
+        // Releve AU PREMIER INSTANT, et garde. Le prendre plus tard ne dit rien : sur une
+        // connexion breve la zone a deja disparu, et le releve rend une chaine vide.
+        String avancementInitial = texte(robot, "#" + SuiviProgression.ID_MESSAGE);
+
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+
+        // La PRÉCONDITION de ce geste, déclarée plutôt que supposée. Se connecter rejoue le
+        // rapatriement des nuits du compte (#2557), donc la durée suit ce qui RESTE à récupérer -
+        // une participation sans passage local, ou un passage réduit à un squelette
+        // (`ServiceReconstructionPassages#aReconstruire`). Sur un compte à jour, il n'y a ni barre qui
+        // avance ni temps à estimer : le geste n'a pas lieu, et on le DIT au lieu de rougir.
+        //
+        // L'enregistreur n'indexera aucun cas : un clip qui ne montre pas son geste ne doit pas passer
+        // pour une couverture.
+
+        // Imprime AVANT la precondition : c'est justement quand le geste est ABANDONNE qu'on veut
+        // savoir pourquoi. L'avancement au moment du releve dit combien de nuits restaient.
+        System.out.printf("  avancement au premier instant : %s%n", avancementInitial);
+
+        Assumptions.assumeTrue(
+                visible(robot, "#zoneProgression"),
+                "Le compte de tournage n'a plus de nuit à rapatrier : la connexion est brève, et le geste"
+                        + " « rapatrier les nuits du compte » n'a pas eu lieu. Ce n'est PAS un défaut du"
+                        + " produit. Pour le rejouer, il faut une participation sans passage local, ou un"
+                        + " passage réduit à un squelette.");
+
+        // ─── S8-02 · la barre AVANCE, et son libellé nomme la nuit ───────────────────────────────
+        // « Il ne reste pas figé » ne se constate pas sur UN instantané : une barre arrêtée et une
+        // barre qui progresse s'y ressemblent. On compare donc DEUX relevés.
+        attendre(
+                APPARITION_SECONDES,
+                () -> fraction(robot) > fractionInitiale,
+                "la barre n'a pas bougé entre deux relevés : elle est restée figée à sa valeur"
+                        + " d'ouverture, ce que la case S8-02 interdit explicitement");
+
+        assertThat(texte(robot, "#" + SuiviProgression.ID_MESSAGE))
+                .as("le libellé doit NOMMER la nuit en cours, sous la forme « Nuits k / N » que"
+                        + " SuiviTraitement compose. Un libellé simplement non vide ne dirait pas où en"
+                        + " est l'opération, et c'est ce que la case demande de constater")
+                .containsPattern("Nuits\\s+\\d+\\s*/\\s*\\d+");
+
+        // ─── S8-03 · l'estimation du temps restant ───────────────────────────────────────────────
+        // « une fois l'avancement mesurable » : ProgressionOperation extrapole le restant depuis le
+        // temps écoulé, donc elle ne peut rien annoncer au premier instant.
+        attendre(
+                APPARITION_SECONDES,
+                () -> texte(robot, "#" + SuiviProgression.ID_MESSAGE).contains("restant"),
+                "aucune estimation du temps restant n'a paru dans le libellé d'avancement. Elle"
+                        + " s'extrapole du temps écoulé : si elle manque, c'est que l'opération n'a jamais"
+                        + " été mesurable, et la case S8-03 n'a rien à montrer");
+
+        assertThat(texte(robot, "#" + SuiviProgression.ID_MESSAGE))
+                .as("l'estimation s'ajoute au libellé sous la forme « … · ~X s restant » :"
+                        + " ProgressionOperation la compose ainsi, et c'est ce que le spectateur lit")
+                .contains("restant")
+                .containsPattern("~\\s*\\d+");
+
+        Respiration.leTempsDeLire(robot);
+
+        // Le geste se termine où l'opération se termine : on laisse la barre finir plutôt que de
+        // couper le clip au milieu.
+        attendre(
+                FIN_SECONDES,
+                () -> !visible(robot, "#zoneProgression"),
+                "l'opération n'a pas fini dans le temps imparti. À lire comme « le compte de tournage est"
+                        + " plus gros que ce banc ne le prévoit », pas comme un défaut du produit");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Respiration.leTempsDeLire(robot);
+    }
+
     private static void attendre(int secondes, Callable<Boolean> condition, String quoi) throws TimeoutException {
         try {
             WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, condition);
         } catch (TimeoutException _) {
             throw new TimeoutException(quoi + " (au bout de " + secondes + " s)");
         }
+    }
+
+    /// L'avancement de la barre, ou -1 si elle n'est pas là.
+    ///
+    /// -1 plutôt que 0 : une barre absente et une barre à zéro ne sont pas le même fait, et les
+    /// confondre ferait passer « la progression a disparu » pour « elle n'a pas encore commencé ».
+    private static double fraction(FxRobot robot) {
+        Node noeud = robot.lookup("#" + SuiviProgression.ID_BARRE).tryQuery().orElse(null);
+        return noeud instanceof ProgressBar barre ? barre.getProgress() : -1;
     }
 
     private static boolean visible(FxRobot robot, String selecteur) {

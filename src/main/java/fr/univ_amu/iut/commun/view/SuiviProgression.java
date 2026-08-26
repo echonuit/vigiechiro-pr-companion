@@ -58,6 +58,17 @@ public abstract class SuiviProgression implements SuiviOperation {
         executer(retrait, jeton, progression, travail, succes, annule, echec);
     }
 
+    /// La barre elle-même, nommée pour que la recette puisse constater qu'elle **avance**.
+    ///
+    /// Un cas de recette qui l'atteindrait par son type et sa position dans le `VBox` se casserait en
+    /// silence le jour où un nœud passerait devant : il lirait un autre nœud sans le dire. Un nœud
+    /// qu'une case doit observer porte donc un nom (`S8-02`).
+    public static final String ID_BARRE = "barreProgression";
+
+    /// Le libellé d'avancement, qui porte DEUX faits de recette : la nuit en cours - « Nuits k / N » -
+    /// et l'estimation du temps restant que [ProgressionOperation] y ajoute (`S8-02`, `S8-03`).
+    public static final String ID_MESSAGE = "messageProgression";
+
     /// Le **contenu** du suivi, **sans son support** : titre, barre liée à la progression, libellé d'étape
     /// et bouton « Annuler ».
     ///
@@ -72,9 +83,11 @@ public abstract class SuiviProgression implements SuiviOperation {
         Label lblTitre = new Label(titre);
         lblTitre.setStyle("-fx-font-weight: bold;");
         ProgressBar barre = new ProgressBar();
+        barre.setId(ID_BARRE);
         barre.setMaxWidth(Double.MAX_VALUE);
         barre.progressProperty().bind(progression.fractionProperty());
         Label lblMessage = new Label();
+        lblMessage.setId(ID_MESSAGE);
         lblMessage.setWrapText(true);
         lblMessage.textProperty().bind(progression.messageProperty());
         Button annuler = new Button("Annuler");

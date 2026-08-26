@@ -9,6 +9,7 @@ import java.util.List;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.opentest4j.TestAbortedException;
 
 /// Démarre un enregistrement au début de chaque test et l'arrête à sa fin.
 ///
@@ -88,6 +89,22 @@ public final class EnregistreurDeFilm implements BeforeTestExecutionCallback, Af
         }
         Enregistrement.Bilan bilan = seance.arreter();
         System.out.printf("  film : %s · %s%n", bilan.fichier().getFileName(), bilan.resume());
+
+        // Un test ABANDONNÉ n'indexe rien. Le clip existe - il a filmé ce qui s'est passé avant
+        // l'abandon - mais il ne montre pas le geste que ses cas décrivent, et l'indexer les ferait
+        // passer pour couverts. C'est le faux vert le plus facile à produire ici : une case cochée
+        // par un clip qui ne montre pas son cas.
+        //
+        // Un test en ÉCHEC, lui, indexe : son clip montre le geste ET son défaut, et c'est
+        // justement celui-là qu'on veut regarder (`failure.ignore` est là pour ça).
+        if (contexte.getExecutionException()
+                .filter(TestAbortedException.class::isInstance)
+                .isPresent()) {
+            System.out.printf(
+                    "  film : %s · ABANDONNÉ, aucun cas indexé - le geste n'a pas eu lieu%n",
+                    bilan.fichier().getFileName());
+            return;
+        }
 
         IndexDesCas index = index(contexte);
         String test = nomDuTest(contexte);
