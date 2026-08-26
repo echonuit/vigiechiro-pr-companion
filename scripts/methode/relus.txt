@@ -1362,7 +1362,7 @@ ffd3c4583804  src/test/java/fr/univ_amu/iut/cliquet/CliquetFixturePassageTest.ja
 388fa846d818  src/test/java/fr/univ_amu/iut/cliquet/CliquetJournalEnDurTest.java
 77c08e374838  src/test/java/fr/univ_amu/iut/cliquet/CliquetSemisTopologieTest.java
 692877e36345  src/test/java/fr/univ_amu/iut/cliquet/CliquetWriterWavTest.java
-e7740e1423ee  src/test/java/fr/univ_amu/iut/cliquet/PatronDuCliquetTest.java
+248d7440f943  src/test/java/fr/univ_amu/iut/cliquet/PatronDuCliquetTest.java
 57514ed01e2f  src/test/java/fr/univ_amu/iut/commun/SeveriteTest.java
 662d57b062f5  src/test/java/fr/univ_amu/iut/commun/api/CatalogueApiTest.java
 80a2127fd522  src/test/java/fr/univ_amu/iut/commun/api/ClientGbifTest.java
