@@ -23,12 +23,10 @@ import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -248,7 +246,7 @@ class ImportationVueIntegrationTest {
         //
         // Trouvé quand #4011 a donné aux contrôles la hauteur du socle : l'assistant a grandi de
         // quelques pixels par ligne de formulaire, et ce bouton est passé sous le bord.
-        amenerDansLeCadre(robot, "#boutonNumeroLibre");
+        fr.univ_amu.iut.recette.GesteVisible.amenerDansLeCadre(robot, "#boutonNumeroLibre");
         robot.clickOn("#boutonNumeroLibre");
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -390,24 +388,5 @@ class ImportationVueIntegrationTest {
         assertThat(labelApercu.getText())
                 .as("modifier l'année doit recalculer l'aperçu du préfixe (R6)")
                 .contains("Car640380-2099-Pass1-A1-");
-    }
-    /// Fait défiler le `ScrollPane` du chrome jusqu'à ce que `selecteur` soit dans le cadre.
-    ///
-    /// `Node::isVisible` répond `true` pour un nœud sous le bord : c'est une propriété du nœud, pas de
-    /// ce qu'on voit. Seul TestFX distingue les deux, et il le dit par un refus de clic.
-    private static void amenerDansLeCadre(FxRobot robot, String selecteur) {
-        Node cible = robot.lookup(selecteur).query();
-        ScrollPane defilement = robot.lookup(".scroll-pane").queryAs(ScrollPane.class);
-        robot.interact(() -> {
-            double hauteurContenu = defilement.getContent().getBoundsInLocal().getHeight();
-            double hauteurVue = defilement.getViewportBounds().getHeight();
-            double y = cible.localToScene(cible.getBoundsInLocal()).getMinY();
-            double yContenu = defilement
-                    .getContent()
-                    .localToScene(defilement.getContent().getBoundsInLocal())
-                    .getMinY();
-            defilement.setVvalue((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue));
-        });
-        WaitForAsyncUtils.waitForFxEvents();
     }
 }

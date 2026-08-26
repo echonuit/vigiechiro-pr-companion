@@ -39,6 +39,19 @@ import (copie protégée + renommage + transformation), puis les cas dégradés 
 - **S2-11** · *geste: rattacher-la-nuit-a-son-point* · Le formulaire ne porte **plus** de case « Conserver les originaux » : le réglage a rejoint
   **Réglages ▸ Import** (#3471), où [S7](s7-reglages.md) le déroule. Ici on vérifie seulement
   qu'il n'en reste pas de trace, et que rien ne demande deux fois la même chose.
+!!! warning "Le clip de S2-12 à S2-16 est FREINÉ, et ne dit rien de la vitesse du produit"
+
+    Ces cinq cas portent sur ce qui se passe **pendant** l'import. Sur les cartes de recette, qui sont
+    générées, l'opération dure des **millisecondes** : mesuré sur `sd-nominale` (6 wav) comme sur
+    `sd-grosse` (60 wav), le compte rendu de fin est déjà là à l'instruction qui suit le clic. Grossir
+    la carte ne change rien, c'est le travail lui-même qui est court.
+
+    Le banc freine donc son exécuteur, d'environ une seconde par fichier
+    (`ExecuteurTacheRalenti`). Le clip montre par conséquent une lenteur que le produit n'a pas.
+
+    Ce qu'il démontre : ces cinq surfaces existent et s'enchaînent. Ce qu'il ne démontre **pas** :
+    combien de temps un import prend. Sur une vraie carte SD, la durée se juge en séance, pas au clip.
+
 - **S2-12** · *geste: importer-la-nuit* · « Importer cette nuit » affiche une barre de progression déterminée.
 - **S2-13** · *geste: importer-la-nuit* · Une estimation de temps restant s'affiche.
 - **S2-14** · *geste: importer-la-nuit* · Un bouton « Annuler » est disponible pendant l'import.
