@@ -11,7 +11,7 @@ enforced_by:
   - "scripts/adr/4359-blocs-relus.py"
 loupe:
   - "scripts/adr/loupe-4359-javadoc-vieillie.py"
-ratchet: 1474
+ratchet: 1459
 inv_key: cliquet-javadoc
 verified:
   - by: machine:suspects
@@ -111,7 +111,7 @@ est un angle mort ; une exception **inscrite** reste comptée et se relit.
 mécaniquement. Un record de trente champs n'est pas un suspect : les étiquettes de contrat sont
 exclues, avec leurs suites, et deux cas du banc le tiennent.
 
-**Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut **<!--inv:cliquet-javadoc-->1 474<!--/inv-->** sur 669 blocs
+**Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut **<!--inv:cliquet-javadoc-->1 459<!--/inv-->** sur 669 blocs
 dans 545 fichiers après trois tranches (#4397, #4401, #4424). Le registre attendu est
 écrit dans `CONTRIBUTING.md` : il n'existait nulle part.
 
