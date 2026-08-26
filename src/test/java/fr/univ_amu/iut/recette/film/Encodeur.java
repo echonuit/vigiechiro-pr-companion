@@ -5,6 +5,7 @@ import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -83,7 +84,7 @@ public interface Encodeur extends AutoCloseable {
             String impose = System.getProperty("recette." + programme);
             if (impose != null) {
                 Path chemin = Path.of(impose);
-                if (!Files.isExecutable(chemin)) {
+                if (!estExecutable(chemin, vuePosixDisponible(), System.getenv("PATHEXT"))) {
                     throw new IOException(
                             "recette." + programme + " désigne " + chemin + ", qui n'est pas un exécutable.");
                 }
@@ -93,12 +94,8 @@ public interface Encodeur extends AutoCloseable {
             List<String> noms = new ArrayList<>();
             noms.add(programme);
             String suffixes = System.getenv("PATHEXT");
-            if (suffixes != null) {
-                for (String suffixe : suffixes.split(File.pathSeparator.equals(";") ? ";" : ":")) {
-                    if (!suffixe.isBlank()) {
-                        noms.add(programme + suffixe.toLowerCase(Locale.ROOT));
-                    }
-                }
+            for (String suffixe : decouperPathext(suffixes)) {
+                noms.add(programme + suffixe);
             }
             String chemins = System.getenv("PATH");
             for (String dossier : (chemins == null ? "" : chemins).split(File.pathSeparator)) {
@@ -107,7 +104,7 @@ public interface Encodeur extends AutoCloseable {
                 }
                 for (String nom : noms) {
                     Path candidat = Path.of(dossier, nom);
-                    if (Files.isExecutable(candidat) && !Files.isDirectory(candidat)) {
+                    if (estExecutable(candidat, vuePosixDisponible(), suffixes)) {
                         return candidat;
                     }
                 }
@@ -115,6 +112,43 @@ public interface Encodeur extends AutoCloseable {
             throw new IOException(programme + " est introuvable sur PATH. Le banc filmé en a besoin"
                     + " pour encoder. Installez-le, ou désignez-le par -Drecette." + programme
                     + "=<chemin>.");
+        }
+
+        /// La vue POSIX est-elle là ? C'est elle qui décide de la façon dont on juge l'exécutabilité.
+        static boolean vuePosixDisponible() {
+            return FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+        }
+
+        /// Ce chemin désigne-t-il un exécutable ?
+        ///
+        /// `Files.isExecutable` ne tranche rien hors POSIX : sous Windows Server 2025 il rend `true`
+        /// pour tout fichier existant, sans suffixe comme avec `.txt` (run 32942466901). Le refus d'un
+        /// chemin imposé s'y réduisait à « le fichier existe ». Hors POSIX la question porte donc sur
+        /// le suffixe, celui que `PATHEXT` déclare, comme la recherche sur `PATH` juste au-dessus.
+        ///
+        /// Ses deux dépendances sont en paramètre : sans cela un poste Linux ne jouerait jamais la
+        /// branche Windows, couture que l'ADR 3802 demande (#4522).
+        static boolean estExecutable(Path chemin, boolean vuePosix, String pathext) {
+            if (!Files.isRegularFile(chemin)) {
+                return false;
+            }
+            if (vuePosix) {
+                return Files.isExecutable(chemin);
+            }
+            String nom = chemin.getFileName().toString().toLowerCase(Locale.ROOT);
+            return decouperPathext(pathext).stream().anyMatch(nom::endsWith);
+        }
+
+        /// Les suffixes de `PATHEXT`, en minuscules. Une valeur absente rend une liste vide, ce qui
+        /// ferme [#estExecutable] hors POSIX plutôt que de l'ouvrir à tout.
+        static List<String> decouperPathext(String pathext) {
+            List<String> suffixes = new ArrayList<>();
+            for (String suffixe : (pathext == null ? "" : pathext).split(";")) {
+                if (!suffixe.isBlank()) {
+                    suffixes.add(suffixe.trim().toLowerCase(Locale.ROOT));
+                }
+            }
+            return suffixes;
         }
 
         /// L'image DOIT être en `TYPE_3BYTE_BGR` : son tampon est alors exactement le

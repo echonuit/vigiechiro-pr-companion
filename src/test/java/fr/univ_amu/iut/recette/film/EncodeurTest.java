@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.recette.film;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -64,15 +65,54 @@ class EncodeurTest {
         }
     }
 
+    @Test
+    @DisplayName("#4522 : hors POSIX, c'est le suffixe de PATHEXT qui dit si un fichier est un programme")
+    void hors_posix_le_suffixe_decide(@TempDir Path dossier) throws IOException {
+        // La branche Windows, jouée depuis un poste POSIX : sans cette couture elle ne serait
+        // éprouvée qu'une fois par semaine, sur la machine où elle a rougi (ADR 3802).
+        // `PATHEXT` est celui que la sonde a lu sous Windows Server 2025 (run 32942466901).
+        String pathext = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC";
+        Path sansSuffixe = Files.writeString(dossier.resolve("inerte"), "pas un programme");
+        Path texte = Files.writeString(dossier.resolve("inerte.txt"), "pas un programme");
+        Path lot = Files.writeString(dossier.resolve("vrai.bat"), "@echo off\n");
+
+        assertFalse(
+                Encodeur.VersFfmpeg.estExecutable(sansSuffixe, false, pathext),
+                "c'est ce fichier-là que Windows tenait pour exécutable, et le refus ne partait pas");
+        assertFalse(Encodeur.VersFfmpeg.estExecutable(texte, false, pathext));
+        assertTrue(Encodeur.VersFfmpeg.estExecutable(lot, false, pathext));
+        assertFalse(
+                Encodeur.VersFfmpeg.estExecutable(lot, false, null),
+                "un PATHEXT absent ferme la question au lieu de l'ouvrir à tout");
+        assertFalse(
+                Encodeur.VersFfmpeg.estExecutable(dossier, false, pathext),
+                "un dossier n'est pas un programme, et Windows le tient pourtant pour exécutable");
+    }
+
+    @Test
+    @DisplayName("#4522 : sous POSIX, c'est le bit d'exécution qui décide")
+    void sous_posix_le_bit_decide(@TempDir Path dossier) throws IOException {
+        Path inerte = Files.writeString(dossier.resolve("inerte.bat"), "pas un programme");
+
+        assertFalse(
+                Encodeur.VersFfmpeg.estExecutable(inerte, true, ".BAT"),
+                "sous POSIX un suffixe ne rend rien exécutable");
+        assertTrue(Encodeur.VersFfmpeg.estExecutable(executable(dossier.resolve("vrai")), true, ""));
+    }
+
     /// Un fichier réellement exécutable, ou le test n'éprouverait que `Files.exists`.
+    ///
+    /// Le nom prend un suffixe hors POSIX : c'est là ce qui fait qu'un fichier est un programme, et
+    /// le rendu porte donc le chemin construit plutôt que celui qu'on a demandé.
     private static Path executable(Path chemin) throws IOException {
-        Files.writeString(chemin, "#!/bin/sh\n");
+        Path cible = Encodeur.VersFfmpeg.vuePosixDisponible() ? chemin : Path.of(chemin + ".bat");
+        Files.writeString(cible, "#!/bin/sh\n");
         try {
             Files.setPosixFilePermissions(
-                    chemin, Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE));
+                    cible, Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE));
         } catch (UnsupportedOperationException horsPosix) {
-            chemin.toFile().setExecutable(true);
+            cible.toFile().setExecutable(true);
         }
-        return chemin;
+        return cible;
     }
 }
