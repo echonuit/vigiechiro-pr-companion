@@ -122,6 +122,14 @@ jobs:
           else
             ./mvnw -B test --file pom.xml -Dglass.platform=Headless -Dmaven.test.failure.ignore=true
           fi
+          # Le temoin que la suite est allee AU BOUT, et il n'est ecrit qu'ici. Un job coupe par
+          # `timeout-minutes` meurt pendant Maven, donc avant cette ligne : son absence est le seul
+          # fait qui distingue un passage entier d'un passage tronque. Sans lui, le tri annoncait
+          # « toutes les classes de test » sur 618 des 758, sans un echec, et rendait 0 (#4544).
+          #
+          # `-Dmaven.test.failure.ignore=true` ne le gene pas : Maven va au bout et rend 0 meme quand
+          # des cas rougissent, donc un passage complet ET rouge porte bien son temoin.
+          : > target/suite-est-allee-au-bout
 
       # `always()` : c'est justement quand la suite s'est mal passée qu'on veut le tri. Une étape de
       # compte rendu qui ne tourne qu'au vert ne rend compte de rien.
