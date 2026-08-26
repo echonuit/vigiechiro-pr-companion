@@ -814,3 +814,18 @@ jobs:
         run: |
           python3 scripts/methode/verifie-adoption-openspec.py --auto-test
           python3 scripts/methode/verifie-adoption-openspec.py --verifie
+
+      - name: "Un renvoi cite par une competence a une cible ou un repli (bloquant, #4564)"
+        # Une competence qui renvoie vers `/realiser` promet qu'une commande de ce nom existe. Le
+        # garde de #4514 lit les invocations de la LIGNE DE COMMANDE, `openspec <sous-commande>` ;
+        # celui-ci lit les commandes barre-oblique du CLIENT, qui sont une autre famille. Rien ne
+        # reliait un `/nom` cite a l'existence du fichier correspondant, et c'est ce qui a laisse
+        # passer le renvoi vers `/opsx:continue` au moment precis ou l'agent est bloque.
+        # Deux cas acceptes, et deux seulement : la commande existe, ou la competence declare le
+        # flux optionnel et donne le repli. Le second porte le seul usage legitime, un flux amont
+        # que ce depot n'installe pas.
+        # Le motif a ete EPROUVE avant d'etre cru : exiger l'apostrophe fermante juste apres le nom
+        # manquait quatre `/realiser <autre>`, et `/tmp` se presentait comme une commande absente.
+        run: |
+          python3 scripts/methode/verifie-renvois-competences.py --auto-test
+          python3 scripts/methode/verifie-renvois-competences.py --verifie
