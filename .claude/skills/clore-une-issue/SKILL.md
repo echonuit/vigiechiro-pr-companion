@@ -76,6 +76,11 @@ accents, le quatrième est le titre de l'issue #4574 recopié tel quel. Le défa
 du titre : en écrivant du français correct, la main applique la typographie française, et l'espace
 avant le deux-points que Conventional Commits interdit vient avec.
 
+Ce qui décide de la frappe est le nombre de commits. `gh pr create --fill` reprend le sujet quand la
+branche n'en porte qu'un, et titre la PR avec le **nom de branche** au-delà, forme que le garde
+refuse. Les quatre PR rouges avaient toutes trois commits ou plus : leur titre ne pouvait pas être
+rempli, il devait être écrit.
+
 La règle est dans `CONTRIBUTING.md` depuis longtemps, avec sa raison et son coût. Les quatre PR
 l'ont manquée le même jour. Le script, lui, rend un verdict.
 

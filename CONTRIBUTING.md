@@ -216,18 +216,26 @@ git checkout -b feat/<feature>
 ./mvnw verify                      # 0 échec, 0 skip indésirable
 git commit ...                     # le hook formate le code
 
-# 3. Poussez, vérifiez le titre, puis ouvrez la PR vers la branche par défaut
+# 3. Poussez, puis ouvrez la PR vers la branche par défaut
 git push -u origin feat/<feature>
-./.github/scripts/verifie-titre-pr.sh "feat(passage): écran pivot d'une nuit"
+
+# Un seul commit : --fill reprend son sujet, déjà conforme.
 gh pr create --fill
+
+# Plusieurs commits : --fill titre la PR avec le NOM DE BRANCHE, que le garde refuse.
+# Le titre s'écrit alors à la main, et c'est là qu'il se vérifie.
+TITRE="feat(passage): écran pivot d'une nuit"
+./.github/scripts/verifie-titre-pr.sh "$TITRE" && gh pr create --title "$TITRE" --body-file corps.md
 ```
 
-- **Vérifiez le titre avant d'ouvrir la PR**, pas après. `titre-pr.yml` refuse un titre non
-  conforme, et le script ci-dessus est exactement celui qu'il lance : le passer en local coûte une
-  frappe, le découvrir en CI coûte une PR à ré-éditer et une vérification à relancer. Le défaut
-  n'entre pas au commit, il entre à la frappe du titre. Les quatre PR rouges du 2026-08-26
-  partaient toutes d'une branche aux sujets de commit conformes, et le titre y avait été retapé en
-  français accentué, espace avant le deux-points compris.
+- **`gh pr create --fill` ne convient qu'à une branche d'un seul commit.** Au-delà, `gh` titre la
+  PR avec le nom de branche, `feat/1234-mon-sujet`, que `titre-pr.yml` refuse. Mesuré le
+  2026-08-26 sur les 30 dernières PR fusionnées : 20 tenaient en un commit, 10 en plusieurs.
+- **Vérifiez le titre avant d'ouvrir la PR**, pas après. Le script ci-dessus est exactement celui
+  que lance `titre-pr.yml` : le passer en local coûte une frappe, le découvrir en CI coûte une PR à
+  ré-éditer et une vérification à relancer. Le défaut n'entre pas au commit mais à la frappe du
+  titre, et les deux se mesurent : les quatre PR rouges du 2026-08-26 avaient toutes trois commits
+  ou plus, donc un titre tapé à la main, quand leurs sujets de commit étaient tous conformes.
 - La PR cible la **branche par défaut** du dépôt (`gh pr create --fill` la sélectionne
   automatiquement). `@nedseb` est ajouté en reviewer automatiquement ([CODEOWNERS](.github/CODEOWNERS)).
 - Privilégier des **PR petites et séquentielles** (par exemple : ViewModel + tests, puis vue

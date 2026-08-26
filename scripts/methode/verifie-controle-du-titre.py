@@ -13,7 +13,11 @@ Trois des quatre sont le sujet du commit reecrit avec ses accents, le quatrieme 
 l issue #4574 recopie tel quel, espace compris. Sur 297 sujets de commit de branche hors `main`,
 286 sont conformes et aucun n est hors Conventional Commits. Le defaut n entre pas au commit, il
 entre a la frappe du titre, quand la main ecrit du francais correct et lui applique la typographie
-francaise que la syntaxe interdit.
+francaise que la syntaxe interdit. Ce qui decide de la frappe est le nombre de commits :
+`gh pr create --fill` reprend le sujet quand la branche n en porte qu un, et titre la pull request
+avec le NOM DE BRANCHE au-dela, forme que `titre-pr.yml` refuse. Mesure du 2026-08-26 sur les 30
+dernieres pull requests fusionnees : 20 tenaient en un commit, 10 en plusieurs, et les quatre rouges
+etaient toutes dans la seconde famille.
 
 Le remede ne cree aucune regle : il lance le garde qui existe deja, `verifie-titre-pr.sh`, au
 moment ou le titre s ecrit. Ce garde-ci tient ce remede en place, et il ne se contente pas de
