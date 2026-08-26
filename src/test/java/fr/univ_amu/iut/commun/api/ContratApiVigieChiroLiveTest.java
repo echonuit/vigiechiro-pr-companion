@@ -232,17 +232,12 @@ class ContratApiVigieChiroLiveTest {
         SiteVigieChiro site = siteGeolocalise.get();
         PointVigieChiro point = site.points().getFirst();
 
-        // Les paliers descendent sous la demi-diagonale d'un carré de 2 km - 1000 x racine(2), soit
-        // environ 1 414 m - jusqu'à 1 m. C'est le dernier qui tranche, et il tranche par ou-exclusif :
-        //
-        //   - grille stockée en POINTS (les centres) : un point d'écoute est à des centaines de mètres
-        //     de son centre, donc r = 1 m ne peut RIEN rendre ;
-        //   - grille stockée en POLYGONES : « $near » mesure au point le plus proche de la géométrie, et
-        //     un point d'écoute est DANS son carré, donc à distance zéro : r = 1 m rend quand même le
-        //     carré, et aucun rayon ne le refoulerait jamais.
-        //
-        // La seconde géométrie tuerait le serrage du rayon, donc la décision D2 du changement
-        // « add-carre-par-coord » et le lot #4576 qui en dépend.
+        // Les paliers descendent jusqu'à 1 m, et c'est le dernier qui tranche, par ou-exclusif. Une
+        // grille stockée en POINTS met un point d'écoute à des centaines de mètres de son centre,
+        // donc r = 1 m ne peut rien rendre. Une grille stockée en POLYGONES le met DANS son carré,
+        // donc à distance zéro, et r = 1 m rend quand même le carré : aucun rayon ne le refoulerait
+        // alors jamais, et le serrage du rayon n'existerait pas. C'est de cette géométrie que dépend
+        // le lot #4576.
         List<Integer> paliers = List.of(10_000, 5_000, 2_000, 1_500, 1_414, 1_000, 500, 100, 1);
         List<String> observation = new ArrayList<>();
         int plusPetitRayonRendantSonCarre = -1;
