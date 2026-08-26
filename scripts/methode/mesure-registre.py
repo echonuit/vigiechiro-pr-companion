@@ -25,7 +25,15 @@ import re
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
-ZONES = ("dev-docs", "docs", "brief")
+# `openspec` entre ici avant de porter quoi que ce soit (#4513). La mesure qui l a decide : deux
+# connecteurs lourds en ouverture, places dans `openspec/`, laissaient `--verifie` au VERT, quand le
+# meme texte place dans `dev-docs/` le faisait rougir en nommant les deux occurrences. Le temoin
+# positif est ce qui distingue un compteur aveugle d un corpus propre : sans lui, les deux rendent
+# la meme sortie.
+#
+# La zone ne mesurera rien jusqu au premier artefact, et c est assume : le moment ou il arrive est
+# precisement celui ou personne ne pensera a l ajouter.
+ZONES = ("dev-docs", "docs", "brief", "openspec")
 
 # La page que ce script alimente CITE les motifs en exemple. Sans cette exemption elle se compte
 # elle-meme, et chaque chiffre monte du nombre de fois qu il est illustre : la premiere mesure a

@@ -120,6 +120,17 @@ ZONES_NETTOYEES = (
         "openspec-propose", "openspec-apply-change", "openspec-update-change",
         "openspec-sync-specs", "openspec-archive-change", "openspec-explore",
     ), "*.md"),
+    # La spécification vivante (#4513). Elle se déclare **avant** de porter quoi que ce soit, et
+    # c'est tout l'objet de l'entrée : le régime de couverture voit un fichier qui PORTE déjà un
+    # cadratin, mais son refus propose deux issues, « ajoutez la zone » ou « inscrivez-les dans
+    # HORS_COUVERTURE ». Le premier artefact écrit ici trouverait donc la porte de l'exemption
+    # ouverte devant lui. La zone posée d'avance n'en laisse qu'une : réécrire le texte.
+    #
+    # Glob total, pour la raison des tests de paquet plus bas, et pour une seconde qui se mesure :
+    # `openspec/` ne contient aujourd'hui que `config.yaml`, aucun `.md`. Une entrée en `*.md`
+    # ferait donc LEVER `prose()` au lieu de garder le dossier. Le glob couvre la configuration
+    # maintenant et les artefacts quand ils arriveront, sans seconde entrée à tenir.
+    ("spécification vivante", pathlib.Path("openspec"), (), "*"),
     ("gardes de capture", pathlib.Path(".github/assets"), (), "*.sh"),
     # Les scripts d'atelier, dont le garde de titre de PR. Cette zone manquait, et le régime de
     # couverture l'a signalée dès que ce garde a porté sa première ligne de prose (#2947).

@@ -1,28 +1,78 @@
 schema: spec-driven
 
+# `context` s'applique à TOUS les artefacts, et c'est le seul endroit qui le puisse : `rules` est
+# indexé par artefact, et il n'existe pas de clé « tous ».
 context: |
   Language: fr
   All artifacts must be written in fr.
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Le registre éditorial du dépôt s'applique à cette prose comme au reste. Les sept tics
+  opposables sont dans la section « Le registre » de CONTRIBUTING.md, et un garde les mesure :
+  pas de connecteur lourd en ouverture de phrase (« Cependant », « Par ailleurs », « En
+  outre »...), pas de formule creuse, pas de mot surchargé, pas de calque de l'anglais.
+  Écrire court, les faits d'abord. Ni tiret cadratin ni apostrophe courbe : le dépôt n'écrit
+  que le tiret simple et l'apostrophe ASCII, et deux gardes le refusent.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+# Les clés de `rules` doivent être des identifiants d'artefact du schéma, ici EXACTEMENT
+# `proposal`, `specs`, `design` et `tasks`. Une clé inconnue de tous les schémas ne fait pas
+# échouer la commande : elle émet un avertissement, et sa règle se perd en silence.
+#
+# Chaque entrée est un scalaire bloc `>-` et non une chaîne simple : la typographie française
+# sème des « : » suivis d'une espace, que YAML lit comme une clé de mapping. Écrites en clair,
+# ces règles rendaient le fichier illisible pour l'outil, qui refusait TOUTE commande.
+rules:
+  proposal:
+    - >-
+      Le corps de l'EPIC ou de l'issue GitHub porte le « pourquoi » public. Y renvoyer par son
+      numéro plutôt que de le recopier : deux sources de vérité finissent par diverger, et c'est
+      la copie qu'on lit en premier.
+    - >-
+      Toute affirmation chiffrée dit comment elle a été mesurée. Un comptage n'est pas une
+      lecture.
+  specs:
+    - >-
+      Chaque exigence SHALL nomme le dispositif qui la vérifie : test, garde, script, cas de
+      recette. Quand aucun n'existe encore, le dire explicitement plutôt que de laisser le
+      lecteur le supposer.
+    - >-
+      Une exigence décrit un comportement observable, pas une implémentation. Si elle ne peut
+      pas se constater de l'extérieur, elle relève de design.md.
+  design:
+    - >-
+      Le « pourquoi » durable d'une décision va dans une ADR de dev-docs/decisions/, numérotée
+      par son issue. Cette note prépare l'ADR, elle ne la remplace pas.
+    - >-
+      Nommer les options écartées et le motif de leur rejet. Une décision dont on ne voit pas
+      les alternatives se relit comme une évidence, et se rouvre au premier doute.
+  tasks:
+    - >-
+      Chaque tâche devient une issue GitHub rattachée à l'EPIC du chantier. La formuler dans les
+      termes du problème, pas de la solution.
+    - >-
+      Une tâche dit à quoi on verra qu'elle est faite, et par quel dispositif.
+
+# `operations` n'accepte que deux opérations, `apply` et `archive`. Il n'y a AUCUN point
+# d'accroche pour `propose` ni pour `explore` : la doctrine des gestes d'ouverture ne peut donc
+# pas passer par ce fichier, et vit dans AGENTS.md et dans les compétences.
+operations:
+  apply:
+    guidance:
+      - >-
+        Le test précède le code (article A7). Sur un défaut, le premier test reproduit le défaut
+        avant qu'aucun correctif ne soit écrit.
+      - >-
+        Le refactor est la troisième phase de chaque tour de boucle, pas une étape de fin de
+        tâche. Ce qui déborde se note pour la passe d'harmonisation.
+      - >-
+        Un comportement complet appelle PIT sur les classes pures livrées, survivants lus un par
+        un. Un garde neuf se voit rouge sur sa propre mutation avant d'être cru.
+  archive:
+    guidance:
+      - >-
+        L'archivage est un acte de clôture de chantier, pas de fin d'issue. Il se fait quand le
+        chantier entier est livré.
+      - >-
+        Vérifier que openspec/specs/ porte bien le delta fusionné et que openspec/changes/ ne le
+        porte plus. Un archivage qu'on croit fait laisse la spécification principale muette sur
+        ce qui vient de changer.
