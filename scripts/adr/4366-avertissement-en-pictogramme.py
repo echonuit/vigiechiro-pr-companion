@@ -75,7 +75,10 @@ BINAIRES = {
 
 CODE = {".java", ".py", ".sh", ".bash", ".yml", ".yaml", ".fxml", ".css", ".bats"}
 
-REPRIS = (".agents/skills/openspec-", ".claude/skills/openspec-", ".claude/commands/opsx/")
+# Les competences OpenSpec ont ete adoptees et reecrites ici (#4515) : elles ne sont plus
+# reprises, et sortent de cette liste. Les commandes `opsx` restent amont jusqu au lot qui
+# les rendra derivees des competences.
+REPRIS = (".claude/commands/opsx/",)
 
 # Les trois textes qui doivent PORTER le signe pour l enoncer : la decision, le garde, ses cas.
 # L exemption est nominative et tient a trois chemins, pour qu elle ne puisse pas s elargir en

@@ -8,175 +8,192 @@ metadata:
   author: openspec
   version: "1.0"
   generatedBy: "1.10.0"
+  langue: fr
+  origine: adoptee de l'outil OpenSpec, puis reecrite ici (ADR 4515)
 ---
 
-Archive a completed change in the experimental workflow.
+# Archiver un changement OpenSpec
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `schemas`, `view`). Once selected, treat `--store <id>` as sticky for the rest of the workflow. Every unscoped example of those commands below is shorthand: before running it, append the flag. For example, run `openspec status --change "<name>" --json --store "<id>"`, not the unscoped form shown below. Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+## Loi d'airain
 
-`<capability-path>` is the spec directory relative to `specs/` (for example, `user-auth` or `identity/user-auth`). Preserve the full path from each delta spec when resolving its main spec.
-
-**Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
-
-**Steps**
-
-1. **Select the change**
-
-   If a name is provided, use it. Otherwise:
-   - Infer from conversation context if the user mentioned a change
-   - Auto-select if only one active change exists
-   - If ambiguous, run `openspec list --json` to get available changes and ask the user to select one
-
-   When prompting, show only active changes (not already archived).
-   Include the schema used for each change if available.
-
-   Always announce: "Using change: <name>" and how to override (e.g., `/openspec-archive-change <other>`).
-
-   **Load current archive inputs before the existing archive checks:**
-
-   After resolving the selected change and planning root, run:
-   ```bash
-   openspec instructions archive --change "<name>" --json
-   ```
-   Keep the same selected-root flags on this command. This lookup is advisory and
-   optional: it only supplies extra prompt inputs, so it must never block archiving.
-   If it exits non-zero or returns invalid JSON — for example on an older CLI that
-   does not support this command yet — continue the archive workflow with no
-   context and no operation guidance. Do not report an error and do not stop.
-
-   A successful response may omit both optional fields. Treat `context` as a
-   required prompt-level input: read and consider it, and apply relevant project
-   facts, conventions, and constraints. Treat `operationGuidance` as optional
-   additive advice: read and consider every entry, and follow entries that are
-   applicable and compatible with the built-in archive workflow.
-
-   Keep both fields separate from built-in steps, explicit user choices, resolved
-   paths, CLI checks, and command contracts. If context conflicts with one of those
-   controlling inputs, report the conflict and preserve the controlling value. If
-   guidance is inapplicable or conflicts with a controlling input, do not follow it
-   and explain why. Do not infer replacement paths, skipped prompts, or flags from
-   either field, and do not copy their text verbatim into specs, change artifacts,
-   or archive summaries unless the user separately asks for it. These are
-   prompt-level behavior contracts, not enforceable checks.
-
-2. **Check artifact completion status**
-
-   Run `openspec status --change "<name>" --json` to check artifact completion.
-
-   Parse the JSON to understand:
-   - `schemaName`: The workflow being used
-   - `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`: path and scope context
-   - `artifacts`: List of artifacts with their status (`done`, `skipped`, or other)
-
-   **If any artifacts are neither `done` nor `skipped`** (skipped artifacts satisfy the requirement - the change declares skip_specs):
-   - Display warning listing incomplete artifacts
-   - Ask the user to confirm they want to proceed
-   - Proceed if user confirms
-
-3. **Check task completion status**
-
-   Read the tasks file (typically `tasks.md`) to check for incomplete tasks.
-
-   Count tasks marked with `- [ ]` (incomplete) vs `- [x]` (complete).
-
-   **If incomplete tasks found:**
-   - Display warning showing count of incomplete tasks
-   - Ask the user to confirm they want to proceed
-   - Proceed if user confirms
-
-   **If no tasks file exists:** Proceed without task-related warning.
-
-4. **Assess delta spec sync state**
-
-   Use `artifactPaths.specs.existingOutputPaths` from status JSON as the only
-   delta-spec source. If the `specs` entry is missing or
-   `existingOutputPaths` is empty, proceed without a sync prompt and do not infer
-   delta specs from other artifacts.
-
-   **If delta specs exist:**
-   - Compare each delta spec with its corresponding main spec at `<planningHome.root>/openspec/specs/<capability-path>/spec.md` (use the store-aware `planningHome.root` from step 2, not a hardcoded repo path)
-   - Determine what changes would be applied (adds, modifications, removals, renames)
-   - Show a combined summary before prompting
-
-   **Prompt options:**
-   - If changes needed: "Sync now (recommended)", "Archive without syncing"
-   - If already synced: "Archive now", "Sync anyway", "Cancel"
-
-   Route on the answer:
-   - "Cancel" — stop, do not archive
-   - "Archive without syncing" or "Archive now" — proceed to archive
-   - "Sync now" or "Sync anyway" — sync, then verify (below)
-   - Anything else — ask again rather than archiving
-
-   Before a selected sync writes any main spec, run
-   `openspec instructions specs --change "<name>" --json` once with the same
-   selected-root flags. Require a zero exit status and valid artifact-instruction
-   JSON. If the lookup fails or returns invalid JSON, report the error and stop
-   before writing any main spec or moving the change. A valid response with omitted
-   `rules` is the no-rules case. Apply returned `rules` only to the content and
-   form of main specs produced by this merge; do not use them as archive guidance,
-   change CLI behavior, or copy the rule text into any output file.
-
-   Then run the `openspec-sync-specs` workflow inline (agent-driven intelligent merge) for change '<name>', passing the delta spec analysis and the fetched specs-rule snapshot from above, and wait for it to finish. The inline sync must reuse that snapshot without fetching `specs` instructions again. Do not delegate it to a background task — step 5 would move `changeRoot` out from under a sync that is still reading it, leaving the change archived and the main specs never updated. If your agent can only run it by delegation, delegate synchronously and wait for the result.
-
-   Then re-run the comparison from the top of this step against every capability that has a delta spec in `artifactPaths.specs.existingOutputPaths` — not only the ones the sync reports it touched. A successful sync leaves nothing left to apply, so each capability must now read as already synced:
-   - ADDED requirements present
-   - MODIFIED requirements carrying the scenario and description changes named in the delta, with their other scenarios intact
-   - REMOVED requirements gone — and where this sync retired a capability (removed its last requirement, leaving `## Requirements` empty), its main spec deleted rather than left empty; a spec the sync deliberately kept and reported is also a match
-   - RENAMED requirements present under the new name and absent under the old one
-
-   If the sync failed, or any capability does not match, report what differs and stop — do not archive. Nothing has moved and `changeRoot` is intact, so the user can fix the mismatch or re-run the sync and start the archive again.
-
-5. **Perform the archive**
-
-   Create an `archive` directory under `planningHome.changesDir` if it doesn't exist:
-   ```bash
-   mkdir -p "<planningHome.changesDir>/archive"
-   ```
-
-   Generate the target name: use the change name as-is when it already starts with a `YYYY-MM-DD-` prefix; otherwise prepend the current date as `YYYY-MM-DD-<change-name>`. Never stack a second date (same rule as `openspec archive`).
-
-   **Check if target already exists:**
-   - If yes: Fail with error, suggest renaming existing archive or using different date
-   - If no: Move `changeRoot` to the archive directory
-
-   ```bash
-   mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
-   ```
-
-6. **Display summary**
-
-   Show archive completion summary including:
-   - Change name
-   - Schema that was used
-   - Archive location
-   - Whether specs were synced (if applicable)
-   - Note about any warnings (incomplete artifacts/tasks)
-
-**Output On Success**
-
-```markdown
-## Archive Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** the archive path derived from `planningHome.changesDir`/<target-name>/
-**Specs:** <"✓ Synced to main specs" only if the step 4 verification passed; otherwise "No delta specs" or "Sync skipped">
-
-<"All artifacts complete. All tasks complete." — or, if archived with warnings, list them instead (e.g. "Archived with 2 incomplete tasks")>
+```
+ON NE DEPLACE RIEN TANT QUE LA FUSION DES SPECS N EST PAS VERIFIEE
 ```
 
-**Guardrails**
-- Announce the selected change; prompt for selection when it is ambiguous
-- Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
-- Preserve .openspec.yaml when moving to archive (it moves with the directory)
-- Show clear summary of what happened
-- If sync is requested, run the `openspec-sync-specs` workflow inline (agent-driven)
-- Never archive while a spec sync is still in flight — run the sync inline and verify the main specs before moving `changeRoot`
-- If delta specs exist, always run the sync assessment and show the combined summary before prompting
-- Apply relevant runtime context and report conflicts; operation guidance remains advisory
-- Consider every guidance entry and explain any inapplicable or conflicting advice
-- Existing CLI checks, resolved paths, prompts, and command contracts are unchanged
-- Artifact rules constrain only the specs being written and are never operation guidance
-- Never copy runtime context, operation guidance, or artifact-rule text verbatim into output files
+Archiver déplace `changeRoot`. Le faire pendant qu'une fusion de specs le lit encore laisse le
+changement archivé et les specs principales jamais mises à jour, sans que rien ne le dise.
+
+## Annoncer
+
+« J'utilise la compétence openspec-archive-change pour archiver le changement <nom>. »
+
+## Choisir la réserve, s'il y en a une
+
+Une **réserve** est un dépôt OpenSpec autonome enregistré sur la machine. Si l'utilisateur en nomme
+une, ou si le travail y vit, lister les identifiants par `openspec store list --json`, puis passer
+`--store <id>` sur les commandes qui lisent ou écrivent des specs et des changements : `new change`,
+`status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `schemas`,
+`view`. Une fois choisie, la réserve colle au reste du travail. Sans réserve, les commandes agissent
+sur la racine `openspec/` la plus proche.
+
+Le `<capability-path>` est le dossier de spec relatif à `specs/`, par exemple `user-auth` ou
+`identity/user-auth`. Conserver le chemin **entier** de chaque delta spec pour retrouver sa spec
+principale.
+
+## Entrée
+
+Le nom du changement est facultatif. S'il manque, le déduire du fil. S'il reste vague, demander.
+
+## Fonction de garde
+
+```
+1. CHOISIR    le changement, et charger les entrees d archivage (facultatif, jamais bloquant).
+2. VERIFIER   les artefacts, puis les taches. Un manque AVERTIT, il ne refuse pas.
+3. EVALUER    l ecart entre chaque delta spec et sa spec principale, et le MONTRER avant de demander.
+4. FUSIONNER  en ligne si l utilisateur le choisit, puis RE-COMPARER toutes les capacites.
+5. DEPLACER   `changeRoot` sous l archive, une fois et une seule.
+6. RENDRE     compte de ce qui a ete fusionne, et de ce qui a ete archive malgre un avertissement.
+```
+
+## 1. Choisir le changement, et charger les entrées
+
+Si un nom est fourni, le prendre. Sinon, le déduire du fil, ou choisir d'office s'il n'y a qu'un
+changement actif. Si c'est ambigu, `openspec list --json` donne les candidats : ne montrer que les
+changements **actifs**, pas ceux déjà archivés, avec leur schéma quand il est connu.
+
+Annoncer toujours : « Changement retenu : <nom> », et comment le remplacer, par exemple
+`/opsx:archive <autre>`.
+
+Puis, une fois le changement et la racine résolus :
+
+```bash
+openspec instructions archive --change "<nom>" --json
+```
+
+**Cette lecture est facultative et ne doit jamais bloquer l'archivage.** Si elle sort non nulle ou
+rend du JSON invalide, par exemple sur une version plus ancienne de l'outil, continuer sans contexte
+ni consigne. Ne pas signaler d'erreur, ne pas s'arrêter.
+
+Une réponse valide peut omettre les deux champs facultatifs. `context` est une entrée obligatoire
+qui porte les faits et contraintes du projet. `operationGuidance` est un conseil additif dont on
+suit les entrées applicables. Ni l'un ni l'autre ne remplace une étape, un choix explicite de
+l'utilisateur, un chemin résolu ou un contrat de commande : en cas de conflit, **signaler et garder
+la valeur qui commande**. Ne déduire d'eux ni chemin de remplacement, ni question sautée, ni
+drapeau, et ne pas recopier leur texte dans les specs, les artefacts ou le compte rendu.
+
+## 2. Vérifier les artefacts, puis les tâches
+
+```bash
+openspec status --change "<nom>" --json
+```
+
+Le JSON porte `schemaName`, le contexte de chemins (`planningHome`, `changeRoot`, `artifactPaths`,
+`actionContext`) et `artifacts` avec leur statut.
+
+**Si un artefact n'est ni `done` ni `skipped`**, un artefact `skipped` satisfaisant l'exigence
+puisque le changement déclare `skip_specs` : afficher l'avertissement, demander confirmation,
+continuer si l'utilisateur confirme.
+
+Puis lire le fichier de tâches, typiquement `tasks.md`, et compter les `- [ ]` face aux `- [x]`. Des
+tâches inachevées **avertissent** et n'empêchent pas : afficher le compte, demander confirmation.
+Sans fichier de tâches, continuer sans avertissement.
+
+## 3. Évaluer l'écart avec les specs principales
+
+`artifactPaths.specs.existingOutputPaths` est la **seule** source de delta specs. Si l'entrée
+`specs` manque ou que la liste est vide, continuer sans proposer de fusion, et ne pas déduire des
+delta specs depuis d'autres artefacts.
+
+Quand des delta specs existent, comparer chacune à sa spec principale sous
+`<planningHome.root>/openspec/specs/<capability-path>/spec.md`, en utilisant le `planningHome.root`
+rendu à l'étape 2 et non un chemin écrit en dur. Déterminer ce qui serait appliqué : ajouts,
+modifications, retraits, renommages. **Montrer un résumé combiné avant de demander.**
+
+Les réponses possibles : quand il y a des changements, « fusionner maintenant (recommandé) » ou
+« archiver sans fusionner » ; quand tout est déjà fusionné, « archiver maintenant », « fusionner
+quand même » ou « annuler ». Toute autre réponse fait reposer la question plutôt qu'archiver.
+
+## 4. Fusionner en ligne, puis re-comparer
+
+Avant qu'une fusion n'écrive la moindre spec principale :
+
+```bash
+openspec instructions specs --change "<nom>" --json
+```
+
+Exiger un code de sortie nul et un JSON d'instructions valide. En cas d'échec, signaler et
+**s'arrêter avant d'écrire** ou de déplacer quoi que ce soit. Une réponse valide sans `rules` est le
+cas « aucune règle ». Les `rules` rendues ne s'appliquent qu'au contenu et à la forme des specs
+principales produites par cette fusion : ni consigne d'archivage, ni modification du comportement de
+l'outil, ni texte à recopier.
+
+Lancer ensuite le flux `openspec-sync-specs` **en ligne** pour le changement, en lui passant
+l'analyse des delta specs et l'instantané de règles ci-dessus, et attendre qu'il finisse. La fusion
+en ligne réutilise cet instantané sans redemander les instructions `specs`. **Ne pas la déléguer à
+une tâche de fond** : l'étape 5 déplacerait `changeRoot` sous une fusion qui le lit encore. Si votre
+agent ne sait la lancer que par délégation, déléguer de façon synchrone et attendre le résultat.
+
+Puis **re-comparer depuis le début de l'étape 3**, contre **toutes** les capacités portant une delta
+spec, et pas seulement celles que la fusion dit avoir touchées. Une fusion réussie ne laisse rien à
+appliquer, donc chaque capacité doit se lire comme déjà fusionnée :
+
+- les exigences ADDED sont présentes ;
+- les exigences MODIFIED portent les changements de scénario et de description nommés dans le delta,
+  leurs autres scénarios intacts ;
+- les exigences REMOVED ont disparu, et là où la fusion a retiré la dernière exigence d'une capacité,
+  laissant `## Requirements` vide, sa spec principale est **supprimée** plutôt que laissée vide. Une
+  spec que la fusion a délibérément conservée et signalée convient aussi ;
+- les exigences RENAMED sont présentes sous le nouveau nom et absentes sous l'ancien.
+
+Si la fusion a échoué, ou si une capacité ne correspond pas, dire ce qui diffère et **s'arrêter**.
+Rien n'a bougé, `changeRoot` est intact, et la reprise reste possible.
+
+## 5. Déplacer
+
+Créer le dossier d'archive s'il manque, puis déplacer :
+
+```bash
+mkdir -p "<planningHome.changesDir>/archive"
+mv "<changeRoot>" "<planningHome.changesDir>/archive/<nom-cible>"
+```
+
+Le nom cible garde le nom du changement quand il commence déjà par `YYYY-MM-DD-`, sinon on préfixe
+la date du jour. **Jamais deux dates empilées**, c'est la règle d'`openspec archive`. Si la cible
+existe déjà, échouer et proposer de renommer l'archive existante ou de changer de date.
+
+Le fichier `.openspec.yaml` suit le dossier : il n'y a rien à préserver à la main.
+
+## 6. Rendre compte
+
+```markdown
+## Archivage terminé
+
+**Changement :** <nom>
+**Schéma :** <schema-name>
+**Archivé sous :** le chemin dérivé de `planningHome.changesDir`/<nom-cible>/
+**Specs :** « fusionnées dans les specs principales » seulement si la vérification de l'étape 4 est
+passée ; sinon « aucune delta spec » ou « fusion écartée »
+```
+
+Et la ligne des avertissements : « tous les artefacts et toutes les tâches sont complets », ou la
+liste de ce qui ne l'était pas, par exemple « archivé avec 2 tâches inachevées ».
+
+## Ce que ce dépôt ajoute au flux de l'outil
+
+**L'archivage est un acte de clôture de chantier, pas de fin d'issue.** Il se fait quand le chantier
+entier est livré, à la passe de clôture qui le porte, et non à chaque PR fusionnée.
+
+**Il ne remplace pas l'écriture des ADR.** La spec principale dit ce que le produit doit faire ;
+l'ADR dit pourquoi on l'a décidé, avec son article et son niveau de vérification. Les deux se
+tiennent, aucune ne se substitue à l'autre.
+
+## Signaux d'alerte : on s'arrête
+
+| Pensée | Réalité |
+|---|---|
+| « La fusion tourne, j'archive en parallèle » | Le déplacement de `changeRoot` la casse en silence. Fusion en ligne, puis vérification, puis déplacement. |
+| « La fusion dit avoir touché deux capacités, je vérifie ces deux-là » | On re-compare **toutes** les capacités portant une delta spec. |
+| « Des tâches restent, j'arrête » | Un manque avertit et se confirme, il ne refuse pas. |
+| « `openspec instructions archive` a échoué, j'abandonne » | Cette lecture est facultative. On continue sans contexte. |
+| « La capacité n'a plus d'exigence, je laisse la spec vide » | Elle se supprime, sauf si la fusion l'a délibérément gardée et l'a dit. |
+| « Je préfixe la date pour être sûr » | Jamais deux dates empilées. |

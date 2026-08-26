@@ -8,84 +8,165 @@ metadata:
   author: openspec
   version: "1.0"
   generatedBy: "1.10.0"
+  langue: fr
+  origine: adoptee de l'outil OpenSpec, puis reecrite ici (ADR 4515)
 ---
 
-Revise a change's existing planning artifacts and keep them coherent. Never edit code.
+# Reprendre un changement OpenSpec
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `schemas`, `view`). Once selected, treat `--store <id>` as sticky for the rest of the workflow. Every unscoped example of those commands below is shorthand: before running it, append the flag. For example, run `openspec status --change "<name>" --json --store "<id>"`, not the unscoped form shown below. Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+## Loi d'airain
 
-**Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+```
+ON REVISE LE PLAN, JAMAIS LE CODE
+```
 
-`/openspec-continue-change` is an optional workflow and may not be installed. Before suggesting it anywhere below, verify that it is available. If it is unavailable, `openspec status --change "<name>" --json` shows the next artifact and `openspec instructions "<artifact-id>" --change "<name>" --json` explains how to create it.
+Si le plan revise implique de toucher au code, on s'arrete et on renvoie vers `/opsx:apply`.
 
-**Steps**
+## Annoncer
 
-1. **Select the change**
+« J'utilise la compétence openspec-update-change pour reprendre le changement <nom>. »
 
-   If a name is provided, use it. Otherwise:
-   - Infer from conversation context if the user mentioned a change
-   - Auto-select if only one active change exists
-   - If ambiguous, run `openspec list --json` to get available changes sorted by most recently modified, and ask the user to select one
+## Ce que cette compétence fait, et ce qu'elle ne fait pas
 
-   When prompting, present the top 3-4 most recently modified changes as options, showing:
-   - Change name
-   - Schema (from `schema` field if present, otherwise "spec-driven")
-   - Status (e.g., "0/5 tasks", "complete", "no tasks")
-   - How recently it was modified (from `lastModified` field)
+Elle révise les artefacts de planification d'un changement **qui existent déjà**, et les tient
+cohérents entre eux. Elle ne crée aucun artefact, n'ouvre aucun fichier sous un artefact glob, et
+n'écrit pas une ligne de code.
 
-   Mark the most recently modified change as "(Recommended)" since it's likely what the user wants to update.
+## Choisir la réserve, s'il y en a une
 
-   Always announce: "Using change: <name>" and how to override (e.g., `/openspec-update-change <other>`).
+Une **réserve** est un dépôt OpenSpec autonome enregistré sur la machine. Si l'utilisateur en nomme
+une, ou si le travail y vit, lister les identifiants enregistrés :
 
-2. **Get the change's artifacts**
-   ```bash
-   openspec status --change "<name>" --json
-   ```
-   Parse the JSON to understand current state. The response includes:
-   - `schemaName`: The workflow schema being used (e.g., "spec-driven")
-   - `artifacts`: Array of artifacts with their status ("done", "skipped", "ready", "blocked")
-   - `isPlanningComplete`: Boolean indicating if all planning artifacts are complete. Older CLI versions expose the same value as `isComplete`.
-   - `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`: path and scope context. Use these instead of assuming repo-local paths.
+```bash
+openspec store list --json
+```
 
-   The artifact ids and paths come from the active schema - do NOT assume them, and do NOT branch on hardcoded artifact names. Custom schemas must work unchanged.
+Puis passer `--store <id>` sur les commandes qui lisent ou écrivent des specs et des changements :
+`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`,
+`schemas`, `view`. Une fois choisie, la réserve **colle** au reste du travail : chaque exemple non
+qualifié ci-dessous est un raccourci, et le drapeau se rajoute avant de lancer. Les autres commandes
+ne le prennent pas. Sans réserve, les commandes agissent sur la racine `openspec/` la plus proche.
 
-   The files to edit are `artifactPaths.<id>.existingOutputPaths` - the concrete files that exist on disk, already glob-expanded for glob artifacts (e.g. `specs/**/*.md`). Do NOT write to `resolvedOutputPath`: for a glob artifact it is still the glob pattern, not a real file.
+## Entrée
 
-3. **Understand the request**
-   - If the user asked for a specific revision ("the design now uses X"), that is the starting edit.
-   - If they only said "update" / "make this coherent", treat it as a coherence review: read the existing artifacts and check them against each other for contradictions, gaps, and duplication.
+Le nom du changement est facultatif. S'il manque, le déduire du fil de la conversation. S'il reste
+vague ou ambigu, **demander** plutôt que de choisir.
 
-4. **Read and reconcile**
-   - Read the artifact(s) the request touches and the change's other existing artifacts.
-   - Apply the requested edit. Then check every other existing artifact against it - in ANY direction: an edit to a later artifact may require revising an earlier one, not only the other way around. Build order is a useful reading order, not a constraint on which artifacts may be revised.
-   - Note everything that is now inconsistent, missing, or contradictory.
-   - Revise only files that already exist (`existingOutputPaths`). Do NOT create artifacts that don't exist yet, and do NOT invent new files under a glob artifact - note them and point the user to `/openspec-continue-change` to create them.
-   - If the change is already coherent, say so and make no edits.
+`/opsx:continue` est un flux optionnel qui peut ne pas être installé. Avant de le suggérer, vérifier
+qu'il existe. Sinon, `openspec status --change "<nom>" --json` donne l'artefact suivant, et
+`openspec instructions "<artifact-id>" --change "<nom>" --json` dit comment le créer.
 
-5. **Confirm and apply, one artifact at a time**
-   - Show each proposed revision and why. Write only after the user confirms.
-   - If the user rejects a revision, do not write it - leave that artifact unchanged.
-   - When a substantial rewrite is needed, get that artifact's rules and template first:
-     ```bash
-     openspec instructions "<artifact-id>" --change "<name>" --json
-     ```
+## Fonction de garde
 
-6. **Point to the next step (guidance only - NEVER act on it)**
-   - Artifacts still missing -> suggest `/openspec-continue-change` to create them.
-   - Change already implemented (tasks checked off / already applied) -> the code may no longer match the revised plan; suggest `/openspec-apply-change` to carry the delta into code.
-   - Everything done and implemented -> suggest `/openspec-archive-change`.
+```
+1. CHOISIR    le changement, et l annoncer avec la facon de le remplacer.
+2. LIRE       l etat par `openspec status --json`, sans jamais deviner les identifiants
+              d artefacts ni les chemins.
+3. COMPRENDRE la demande : une revision precise, ou une revue de coherence.
+4. RAPPROCHER chaque artefact existant de l edit demande, DANS LES DEUX SENS.
+5. CONFIRMER  chaque revision AVANT de l ecrire, une par une.
+6. RENVOYER   vers l etape suivante, sans jamais l executer.
+```
 
-**Output**
+## 1. Choisir le changement
 
-After each invocation, show:
-- Which artifacts were revised (and which proposed revisions were rejected)
-- Anything deferred to `/openspec-continue-change` (not-yet-created artifacts or files)
-- Where the change stands and the recommended next command
+Si un nom est fourni, le prendre. Sinon : le déduire du fil, ou choisir d'office s'il n'y a qu'un
+seul changement actif. Si c'est ambigu, lister les candidats :
 
-**Guardrails**
-- Planning artifacts only - NEVER edit implementation code. If the revised plan implies code changes, stop and point to `/openspec-apply-change`.
-- Use the artifact ids and paths reported by `openspec status`; never branch on hardcoded artifact names.
-- Edit only the concrete files in `existingOutputPaths`; never write to a glob `resolvedOutputPath`.
-- Do not advance the build frontier: no new artifacts, no new files under glob artifacts - that is `/openspec-continue-change`'s job.
-- Confirm every edit with the user before writing.
-- If the request changes the change's *intent* rather than refining it, first verify whether the optional `/openspec-new-change` workflow is available. If it is, recommend starting fresh with `/openspec-new-change` (the "Update vs. Start Fresh" heuristic). If it is unavailable, ask for a distinct unused change name and recommend `openspec new change "<new-change-name>"` instead.
+```bash
+openspec list --json
+```
+
+Présenter les trois ou quatre changements les plus récemment modifiés, avec pour chacun son nom, son
+schéma (champ `schema`, sinon « spec-driven »), son avancement (« 0/5 tâches », « complet », « aucune
+tâche ») et sa fraîcheur (champ `lastModified`). Marquer le plus récent « (recommandé) ».
+
+Annoncer toujours : « Changement retenu : <nom> », et comment le remplacer, par exemple
+`/opsx:update <autre>`.
+
+## 2. Lire l'état, sans rien supposer
+
+```bash
+openspec status --change "<nom>" --json
+```
+
+Le JSON porte `schemaName`, `artifacts` avec leur statut (`done`, `skipped`, `ready`, `blocked`),
+`isPlanningComplete` (les versions plus anciennes de l'outil rendent la même valeur sous
+`isComplete`), et le contexte de chemins : `planningHome`, `changeRoot`, `artifactPaths`,
+`actionContext`.
+
+**Les identifiants d'artefacts et les chemins viennent du schéma actif.** Ne pas les supposer, ne pas
+brancher sur des noms d'artefacts écrits en dur : un schéma personnalisé doit fonctionner sans
+retouche.
+
+Les fichiers à éditer sont ceux de `artifactPaths.<id>.existingOutputPaths`, déjà développés pour un
+artefact glob. **Ne jamais écrire dans `resolvedOutputPath`** : pour un artefact glob, c'est encore le
+motif, pas un fichier.
+
+## 3. Comprendre la demande
+
+Une demande précise (« la conception passe à X ») est le point de départ de l'édition. Un « mets ça
+au propre » est une **revue de cohérence** : lire les artefacts existants et les confronter les uns
+aux autres, en cherchant contradictions, manques et redites.
+
+## 4. Rapprocher, dans les deux sens
+
+Lire l'artefact que la demande touche, et les autres artefacts existants du changement. Appliquer
+l'édition demandée, puis confronter chaque autre artefact à cette édition, **dans les deux sens** :
+une édition d'un artefact tardif peut obliger à revoir un artefact antérieur, et pas seulement
+l'inverse. L'ordre de construction est un ordre de lecture commode, pas une contrainte sur ce qui
+peut être révisé.
+
+Réviser uniquement les fichiers qui existent (`existingOutputPaths`). Ne pas créer d'artefact
+absent, ne pas inventer de fichier sous un artefact glob : les signaler et renvoyer vers
+`/opsx:continue`.
+
+Si le changement est déjà cohérent, le dire et ne rien éditer.
+
+## 5. Confirmer, puis écrire, un artefact à la fois
+
+Montrer chaque révision proposée et sa raison. **N'écrire qu'après accord.** Un refus laisse
+l'artefact inchangé. Pour une réécriture substantielle, récupérer d'abord les règles et le gabarit
+de l'artefact :
+
+```bash
+openspec instructions "<artifact-id>" --change "<nom>" --json
+```
+
+## 6. Renvoyer vers la suite, sans l'exécuter
+
+- Artefacts encore absents : `/opsx:continue` pour les créer.
+- Changement déjà réalisé, tâches cochées : le code peut ne plus correspondre au plan révisé,
+  renvoyer vers `/opsx:apply`.
+- Tout fait et tout réalisé : renvoyer vers `/opsx:archive`.
+
+## Ce que ce dépôt ajoute au flux de l'outil
+
+**Le corps de l'EPIC et celui de l'issue portent la vérité publique.** Une révision qui change la
+lecture d'une issue se répercute **dans le corps de l'issue**, pas seulement dans l'artefact. Le
+dépôt en porte la trace : #3451 et #3439 ont laissé une prémisse démentie en commentaire, et c'est
+l'erreur qu'on lit en premier.
+
+**Le « pourquoi » durable ne vit pas dans `design.md`.** Il va dans une ADR de
+`dev-docs/decisions/`, numérotée par son issue. La note de conception prépare l'ADR ; elle ne la
+remplace pas. Une révision qui renverse une décision déjà prise appelle donc une ADR, pas seulement
+une édition.
+
+**Une tâche est une issue.** Réviser `tasks.md` sans toucher aux issues rattachées à l'EPIC laisse
+deux découpages divergents, et c'est la forge qui fait foi pour ce qui est pris et par qui.
+
+## Compte rendu
+
+Après chaque passage, dire : quels artefacts ont été révisés et lesquels ont été refusés ; ce qui a
+été renvoyé vers `/opsx:continue` ; où en est le changement et quelle commande vient ensuite.
+
+## Signaux d'alerte : on s'arrête
+
+| Pensée | Réalité |
+|---|---|
+| « L'artefact `tasks` existe forcément » | Les identifiants viennent du schéma. Lire `openspec status --json`. |
+| « J'écris dans `resolvedOutputPath` » | Pour un artefact glob, c'est le motif, pas un fichier. |
+| « Le plan change, donc j'ajuste le code » | Jamais ici. On s'arrête et on renvoie vers `/opsx:apply`. |
+| « Cet artefact manque, je le crée » | C'est le travail de `/opsx:continue`. Le signaler, pas le combler. |
+| « J'ai révisé, je confirmerai à la fin » | Chaque édition se confirme avant d'être écrite. |
+| « La demande change le but du changement » | Ce n'est plus une révision. Vérifier si `/opsx:new` existe, sinon proposer `openspec new change "<nouveau-nom>"`. |
