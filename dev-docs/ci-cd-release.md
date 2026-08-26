@@ -609,6 +609,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie-secret-winget.sh` | `WINGET_TOKEN` est posé, propre, et **utilisable** avant qu'une soumission ne parte | `winget.yml` (autotest : `lint.yml`) |
 | `verifie-demarrage-emballage.sh` | un emballage de distribution, une fois **ouvert**, démarre et ne lève aucune erreur de chargement | `maven.yml` et `release.yml` (autotest : `lint.yml`) |
 | `veille-plateformes.sh` | la suite a été éprouvée sous Windows et macOS il y a moins de 10 jours, par un passage **programmé** | `release.yml` (autotest : `lint.yml`) |
+| `trie-les-echecs-de-plateforme.sh` | ce que la suite donne sur une plateforme, TestFX à part, et si le passage est bien **allé au bout** : un job coupé par `timeout-minutes` rendait le même tableau sous le titre « toutes les classes de test », 618 sur 758, sans un échec et avec un code 0 (#4544) | `suite-sous-windows-et-macos.yml` (autotest : `lint.yml`) |
 | `veille-contrat-api.sh` | le contrat d'API a **réellement** tourné il y a moins de trois semaines | `api-live.yml` (autotest : `lint.yml`) |
 | `verifie-fraicheur-actions.sh` | un épinglage **cohérent** peut être **périmé** : il date les SHA épinglés | `securite-dependances.yml` et `winget.yml` (autotest : `lint.yml`) |
 | `verifie-affichage-flatpak.sh` | le Flatpak déclare ce qu'il faut pour démarrer **sur un bureau Wayland** | `flatpak.yml` (autotest : `lint.yml`) |

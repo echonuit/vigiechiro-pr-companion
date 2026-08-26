@@ -644,6 +644,12 @@ jobs:
         # silence passerait pour un feu vert - c'est le patron de `veille-contrat-api.sh`.
         run: bash .github/scripts/veille-plateformes.sh --auto-test
 
+      - name: "Auto-test du tri des échecs de plateforme (bloquant, #4544)"
+        # Le juge du passage hebdomadaire n'avait AUCUN témoin, l'un des trois scripts de
+        # `.github/scripts` dans ce cas. Le défaut a vécu là : un passage coupé par son plafond se
+        # déclarait « complet », sans échec, et rendait 0. Rien ne pouvait le voir.
+        run: bash .github/scripts/trie-les-echecs-de-plateforme.sh --auto-test
+
       - name: "Auto-test du garde de durée du portail (bloquant, #3661)"
         # Il est arrivé avec un fichier `bats` plutôt qu'un auto-test - la seule exception des onze
         # scripts -, ce qui faisait attendre à ses cas l'assemblage d'un fat-jar de 80 Mo dont ils
