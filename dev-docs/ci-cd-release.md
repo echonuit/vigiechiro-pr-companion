@@ -571,7 +571,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | Garde | Ce qu'elle vérifie | Où elle tourne |
 |---|---|---|
 | `verifie-titre-pr.sh` | Conventional Commits, cadratin, élision sans apostrophe | `titre-pr.yml` |
-| `verifie-corps-pr.sh` | cadratin, apostrophe courbe et élision sans apostrophe dans le corps d'une PR | `corps-pr.yml` (autotest : `lint.yml`) |
+| `verifie-corps-pr.sh` | cadratin, apostrophe courbe, élision sans apostrophe, et fermeture écrite en français (« Ferme #N ») dans le corps d'une PR | `corps-pr.yml` (autotest : `lint.yml`) |
 | `4472-commentaire-en-corps.py` | les blocs de `//` qui débordent dans un corps de méthode, population que le cliquet 4359 ne voit pas | `lint.yml` (cliquets ADR, autotest dédié) |
 | `loupe-4472-densite-de-commentaire.py` | la densité de commentaire par classe et par méthode ; signale, ne bloque pas | `adr-rapport.yml` |
 | `4468-javadoc-non-relue.py` | les fichiers Java dont la javadoc n'a jamais été relue, ou l'a été puis réécrite : l'empreinte du manifeste `scripts/methode/relus.txt` en fait foi | `lint.yml` (cliquets ADR, autotest dédié) |
