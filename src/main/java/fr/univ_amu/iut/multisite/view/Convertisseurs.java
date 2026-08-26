@@ -3,8 +3,7 @@ package fr.univ_amu.iut.multisite.view;
 import java.util.function.Function;
 import javafx.util.StringConverter;
 
-/// Fabriques de [StringConverter] pour les listes (ComboBox) de l'écran multisite. Extraites de
-/// [MultisiteController] pour garder ce dernier sous le seuil PMD `NcssCount`.
+/// Fabriques de [StringConverter] pour les listes (ComboBox) de l'écran multisite.
 final class Convertisseurs {
 
     private Convertisseurs() {}

@@ -45,9 +45,8 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// aussi ([#definirSortie]) : `Platform.exit()` en dur tuerait le runtime TestFX.
 public final class OngletReglagesEmplacements implements OngletReglagesPersonnalise {
 
-    /// La classe du socle que portent les trois boutons de cet onglet : « Copier », « Choisir… »
-    /// et « Rétablir les emplacements par défaut ». Extraite parce que PMD refuse le littéral
-    /// répété, et le dépôt refuse qu'on le taise (#4002).
+    /// La classe du socle que portent les trois boutons de cet onglet : « Copier », « Choisir… » et
+    /// « Rétablir les emplacements par défaut ». Nommée ici plutôt que répétée trois fois (#4002).
     private static final String BOUTON_SECONDAIRE = "bouton-secondaire";
 
     private final ServiceEmplacements service;

@@ -14,11 +14,10 @@ import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-/// Actions de revue de la vue audio, **unitaires** (sur la sélection) et **en lot** (#479), extraites du
-/// [AudioViewModel] pour qu'il garde la seule responsabilité d'orchestrer la revue (cohésion, seuil PMD
-/// GodClass). Chaque action délègue au service ([ServiceValidation] pour l'unitaire, [RevueEnLot] pour les
-/// lots atomiques), **recharge** la source et publie un **retour** via [MessagesAudio] ; les erreurs métier
-/// sont restituées dans le bandeau sans lever.
+/// Actions de revue de la vue audio, **unitaires** (sur la sélection) et **en lot** (#479). Chaque
+/// action délègue au service ([ServiceValidation] pour l'unitaire, [RevueEnLot] pour les lots
+/// atomiques), **recharge** la source et publie un **retour** via [MessagesAudio] ; les erreurs
+/// métier sont restituées dans le bandeau sans lever.
 public final class ActionsRevueAudio {
 
     private final ServiceValidation service;

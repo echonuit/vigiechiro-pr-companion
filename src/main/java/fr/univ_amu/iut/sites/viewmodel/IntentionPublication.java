@@ -13,8 +13,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 /// L'intention de **publier un point qu'on est en train de créer** (#3458) : la case à cocher de la
 /// modale, ce qui la grise, et ce qu'elle décide au moment d'enregistrer.
 ///
-/// Extraite de [PointEditViewModel], qui franchissait le seuil God-class en l'absorbant : cette modale
-/// porte déjà la saisie, ses quatre validités, le contrôle du carré STOC et la résolution de commune.
+/// Tenue hors de [PointEditViewModel], qui porte déjà la saisie, ses quatre validités, le contrôle
+/// du carré STOC et la résolution de commune.
 ///
 /// L'état GPS n'est pas dupliqué ici : il est **demandé** au ViewModel par `gpsRenseigne`, qui seul sait
 /// lire ses champs de saisie. En recopier une version locale ferait deux vérités à tenir d'accord.

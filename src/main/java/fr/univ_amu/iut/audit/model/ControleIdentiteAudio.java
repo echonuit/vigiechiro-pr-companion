@@ -12,8 +12,8 @@ import java.util.Map;
 /// ADR 0048). La comparaison elle-même vit dans [IdentiteSequence], parce que l'écran d'écoute en a
 /// besoin aussi et que le graphe de slices refuse les cycles entre features.
 ///
-/// Extrait de [ServiceAuditCoherence] pour qu'il garde la seule responsabilité d'orchestrer les
-/// contrôles (PMD GodClass), comme l'ont été [BalayageDisque] et [AuditEnLigne].
+/// [ServiceAuditCoherence] garde la seule responsabilité d'orchestrer les contrôles, comme face à
+/// [BalayageDisque] et [AuditEnLigne].
 ///
 /// Une divergence est le **seul** écart de disponibilité qui reste une [Severite#ERREUR] : l'absence
 /// d'un fichier est un état observé, sa **substitution** est un conflit.

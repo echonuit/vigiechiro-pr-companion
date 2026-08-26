@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/// Réconciliation serveur (#1046), **extraite de [DepotVigieChiro]** pour la cohésion (seuil GodClass) :
-/// marque `depose` les unités **WAV** dont le contenu est **déjà traité** côté plateforme (titre de
-/// `donnees` = nom de fichier **sans extension**), pour ne jamais les re-téléverser.
+/// Réconciliation serveur (#1046) : marque `depose` les unités **WAV** dont le contenu est **déjà
+/// traité** côté plateforme (titre de `donnees` = nom de fichier **sans extension**), pour ne
+/// jamais les re-téléverser.
 ///
 /// Limites (documentées) : `donnees` n'existe qu'après traitement (un fichier téléversé mais pas encore
 /// traité reste invisible et sera re-téléversé, idempotent côté plateforme) ; une archive **ZIP** n'est

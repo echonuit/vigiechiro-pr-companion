@@ -13,8 +13,7 @@ import javafx.scene.control.TableView;
 /// gestes de revue déjà offerts par les boutons et le clavier (valider, corriger, certitude, référence,
 /// douteux), en réutilisant [ActionsSelectionAudio] (aiguillage unitaire vs lot selon la sélection).
 ///
-/// Extrait du controller, qui est à son plafond `NcssCount` : le controller se contente de passer le menu
-/// construit ici au menu contextuel de la table.
+/// Le controller se contente de passer le menu construit ici au menu contextuel de la table.
 final class MenuValidationAudio {
 
     private MenuValidationAudio() {}

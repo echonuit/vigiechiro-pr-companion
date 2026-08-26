@@ -9,9 +9,8 @@ import fr.univ_amu.iut.importation.viewmodel.CompteRenduImport;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.sites.model.Site;
 
-/// Libellés et statut **purs** de l'assistant d'import : libellé d'un site (combo de rattachement), état
-/// de nommage inspecté, phrase de statut du wizard, et zones de la barre de statut (#1024). Extrait de
-/// [ImportationController] (déjà volumineux) pour le garder sous le plafond de taille (PMD `NcssCount`).
+/// Libellés et statut **purs** de l'assistant d'import : libellé d'un site (combo de rattachement),
+/// état de nommage inspecté, phrase de statut du wizard, et zones de la barre de statut (#1024).
 final class FormatsImport {
 
     private FormatsImport() {}

@@ -9,11 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/// Lecture des réponses de `GET /moi/participations` (extrait de [ReponsesVigieChiro] pour ne pas l'enfler
-/// en God Class, comme [DonneesVigieChiro] l'a été pour `/donnees`). Deux projections d'un même corps :
-/// les **sites** rattachés (dérivés des participations, #718) et les **participations** elles-mêmes (axe
-/// 4.2, rattachement manuel). Fonctions pures et tolérantes ; réutilise les helpers `items` / `texte` de
-/// [ReponsesVigieChiro].
+/// Lecture des réponses de `GET /moi/participations`, à côté de [DonneesVigieChiro] qui lit
+/// `/donnees`. Deux projections d'un même corps : les **sites** rattachés (dérivés des
+/// participations, #718) et les **participations** elles-mêmes (axe 4.2, rattachement manuel).
+/// Fonctions pures et tolérantes ; réutilise les helpers `items` / `texte` de [ReponsesVigieChiro].
 final class ParticipationsVigieChiro {
 
     /// Clé de l'identifiant MongoDB (`_id`).

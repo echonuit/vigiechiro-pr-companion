@@ -5,8 +5,7 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.EtatLot;
 
 /// Formatage **textuel** pur des éléments de l'écran M-Lot (récapitulatif, message d'état, ligne
-/// d'archive), extrait de [LotViewModel] pour l'alléger (cohésion / seuil GodClass). Sans état ni
-/// dépendance JavaFX : directement testable.
+/// d'archive). Sans état ni dépendance JavaFX : directement testable.
 public final class FormatsLot {
 
     private static final String SEPARATEUR = " · ";

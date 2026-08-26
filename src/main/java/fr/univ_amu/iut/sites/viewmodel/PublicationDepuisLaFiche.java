@@ -13,10 +13,9 @@ import java.util.Set;
 /// Tout ce que la **fiche site** sait de la publication d'un point vers Vigie-Chiro (#3458) : ce qui
 /// l'empêche, ce qu'elle retient, et comment la déclencher.
 ///
-/// Extrait de [SiteDetailViewModel], qui franchissait le seuil God-class en l'absorbant : la fiche
-/// portait déjà le bandeau d'identité, les cartes de points, le tableau des passages et les
-/// suppressions. La publication est une préoccupation à part entière, avec ses propres règles et ses
-/// propres raisons de refuser.
+/// Tenu hors de [SiteDetailViewModel], qui porte déjà le bandeau d'identité, les cartes de points,
+/// le tableau des passages et les suppressions. La publication est une préoccupation à part
+/// entière, avec ses propres règles et ses propres raisons de refuser.
 ///
 /// **Ce qui n'est pas ici, et n'y sera pas** : un garde sur le verrouillage du carré. La plateforme
 /// refuse le propriétaire d'un carré verrouillé, mais accepte un participant validé sur le protocole,

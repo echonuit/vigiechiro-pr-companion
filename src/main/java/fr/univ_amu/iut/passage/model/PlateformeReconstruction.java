@@ -16,11 +16,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-/// Ce que la **plateforme VigieChiro** sait d'une reconstruction : la liste des participations, le détail
-/// d'une nuit, et surtout la **source des observations** : le CSV téléchargé d'un coup (#1565) si la
-/// plateforme l'expose, sinon la pagination `donnees` (repli). Extraite de [ServiceReconstructionPassages]
-/// (plafond God Class) : toutes les lectures distantes et leur traduction en refus **motivé** (#1284)
-/// vivent ici, sans aucune écriture locale.
+/// Ce que la **plateforme VigieChiro** sait d'une reconstruction : la liste des participations, le
+/// détail d'une nuit, et surtout la **source des observations** : le CSV téléchargé d'un coup
+/// (#1565) si la plateforme l'expose, sinon la pagination `donnees` (repli). Toutes les lectures
+/// distantes et leur traduction en refus **motivé** (#1284) vivent ici, sans aucune écriture
+/// locale.
 final class PlateformeReconstruction {
 
     /// Nombre d'appels de détail menés **de front** (#1814). C'est une borne d'**entrée/sortie**, pas de

@@ -4,9 +4,9 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.Comparator;
 
-/// Comparateurs de tri des colonnes de la table audio dont l'**affichage est une chaîne formatée** : sans
-/// eux, le tri serait alphabétique (« 100 % » précèderait « 83 % », « N°10 » précèderait « N°2 »). Extrait
-/// de [FormatLigneAudio] pour garder chaque classe sous les seuils de cohésion PMD.
+/// Comparateurs de tri des colonnes de la table audio dont l'**affichage est une chaîne formatée**
+/// : sans eux, le tri serait alphabétique (« 100 % » précèderait « 83 % », « N°10 » précèderait «
+/// N°2 »).
 public final class ComparateursAudio {
 
     private ComparateursAudio() {}

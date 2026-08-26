@@ -14,14 +14,13 @@ import javafx.scene.control.Tooltip;
 /// l'état ne doit pas être encodé par la seule teinte (lisibilité daltoniens, #801).
 ///
 /// Le pictogramme était un caractère écrit dans le libellé (`« ✓ » + texte`). Il dépendait donc des
-/// polices installées et ne se teintait pas avec le texte, ce qui affaiblissait précisément la garantie
-/// qu'il servait à donner ([ADR
-/// 0035](../../../../../../dev-docs/decisions/0035-un-pictogramme-est-une-icone-pas-un-caractere.md), #2036).
-/// Le glyphe vient désormais d'[IconesSeverite], la table partagée avec le bandeau, le compte rendu et
-/// l'encart : un même niveau a partout la même forme. L'infobulle
-/// **explique** désormais la mesure et l'écart (#1506) : son texte vient du ViewModel et est suivi en
-/// direct, au lieu du « conforme / à surveiller / anomalie » générique d'avant. Extrait de
-/// [QualificationController] pour garder le contrôleur sous le plafond de taille (PMD `NcssCount`).
+/// polices installées et ne se teintait pas avec le texte, ce qui affaiblissait précisément la
+/// garantie qu'il servait à donner ([ADR
+/// 0035](../../../../../../dev-docs/decisions/0035-un-pictogramme-est-une-icone-pas-un-caractere.md),
+/// #2036). Le glyphe vient désormais d'[IconesSeverite], la table partagée avec le bandeau, le
+/// compte rendu et l'encart : un même niveau a partout la même forme. L'infobulle **explique**
+/// désormais la mesure et l'écart (#1506) : son texte vient du ViewModel et est suivi en direct, au
+/// lieu du « conforme / à surveiller / anomalie » générique d'avant.
 final class Feux {
 
     private Feux() {}

@@ -23,8 +23,7 @@ import javafx.scene.layout.HBox;
 /// opérations ne se concluent jamais en même temps, et la plus récente est celle que l'utilisateur
 /// vient de déclencher. Les ViewModels continuent de s'ignorer l'un l'autre.
 ///
-/// Extrait de [LotController] pour qu'il reste du **pur câblage** (plafond `NcssCount` du portail
-/// qualité), au même titre que [EtapeDeposerUI].
+/// Le [LotController] reste du **pur câblage**, au même titre que devant [EtapeDeposerUI].
 final class BandeauLotUI {
 
     private BandeauLotUI() {}

@@ -6,8 +6,8 @@ import java.util.Optional;
 
 /// Lecture des réponses JSON menant au **journal de traitement** d'une participation (#1132) :
 /// `participation.logs` → id du document `fichiers`, puis `GET /fichiers/{id}/acces` → URL S3
-/// signée. Extrait de [ParticipationsVigieChiro] (plafond God Class) : même style **best-effort**
-/// (jamais d'exception, vide si absent/illisible), aucune E/S ici.
+/// signée. Même style que [ParticipationsVigieChiro] : **best-effort** (jamais d'exception, vide si
+/// absent/illisible), aucune E/S ici.
 final class JournalVigieChiro {
 
     private static final String CLE_LOGS = "logs";

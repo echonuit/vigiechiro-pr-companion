@@ -13,9 +13,8 @@ import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import java.util.List;
 import java.util.Optional;
 
-/// Chrome de la vue audio unifiée, **piloté par la source** (#1194) : le fil d'Ariane et les zones de
-/// la barre de statut de [SonsValidationController], extraits en unité cohésive (fonctions pures de la
-/// source et du comptage) pour garder le contrôleur sous le plafond de concentration (`NcssCount`).
+/// Chrome de la vue audio unifiée, **piloté par la source** (#1194) : le fil d'Ariane et les zones
+/// de la barre de statut, fonctions pures de la source et du comptage.
 final class ChromeAudio {
 
     private ChromeAudio() {

@@ -60,8 +60,8 @@ public final class ClientVigieChiro {
     private static final String CHEMIN_FICHIERS = "/fichiers";
 
     /// Méthode HTTP des écritures qui **remplacent** : localités d'un site, message, partie
-    /// multipart. Extraite parce que PMD compte les littéraux, et parce qu'un « PUT » qui traîne
-    /// en trois exemplaires se transforme un jour en « PATCH » à deux endroits sur trois.
+    /// multipart. Nommée ici plutôt que répétée : un « PUT » qui traîne en trois exemplaires se
+    /// transforme un jour en « PATCH » à deux endroits sur trois.
     private static final String PUT = "PUT";
 
     private final FournisseurToken fournisseurToken;

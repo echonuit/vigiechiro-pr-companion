@@ -13,9 +13,8 @@ import javafx.scene.layout.VBox;
 
 /// Câblage des items du menu « ☰ » de « Sons & validation » **propres au workflow et à la source**
 /// (#1194) : libellés dynamiques Importer/Réimporter, activation des exports, case « inclure
-/// validation_mode » persistée, et visibilité par source. Extrait de [SonsValidationController]
-/// (unité cohésive) pour garder le contrôleur sous le plafond de concentration (`NcssCount`). Les
-/// items restent injectés par le FXML dans le contrôleur, qui les passe ici regroupés.
+/// validation_mode » persistée, et visibilité par source. Les items restent injectés par le FXML
+/// dans le contrôleur, qui les passe ici regroupés.
 final class MenuAudio {
 
     /// Items du ☰ pilotés par le workflow / la source, regroupés en objet-paramètre (patron

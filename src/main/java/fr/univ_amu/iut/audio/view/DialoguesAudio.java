@@ -10,9 +10,8 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import javafx.stage.Window;
 
-/// Les **porteurs de dialogue** de la vue audio, réunis (#1431). Extraits de [SonsValidationController]
-/// pour le garder sous son plafond de taille (PMD `NcssCount`) - et parce qu'ils forment bel et bien une
-/// unité : ce sont les trois endroits où l'écran **demande quelque chose à l'utilisateur**.
+/// Les **porteurs de dialogue** de la vue audio, réunis (#1431). Ils forment une unité : ce sont
+/// les trois endroits où l'écran **demande quelque chose à l'utilisateur**.
 ///
 /// - le **oui/non** ([ConfirmateurModifiable], #1013) : réimporter par-dessus des validations, publier
 ///   des corrections - des gestes qui écrasent quelque chose ;

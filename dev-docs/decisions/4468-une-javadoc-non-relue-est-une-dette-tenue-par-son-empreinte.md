@@ -8,7 +8,7 @@ decided_at: 2026-08-25
 verification: probable
 enforced_by:
   - "scripts/adr/4468-javadoc-non-relue.py"
-ratchet: 1979
+ratchet: 0
 inv_key: cliquet-relecture
 verified:
   - by: machine:ci
@@ -85,10 +85,12 @@ qu'expose l'ADR 4359 : un commentaire de classe de test se lit comme un autre et
 Les clés du manifeste sont relatives à la racine du dépôt, pour qu'une entrée dise de quel arbre elle
 vient.
 
-**Le cliquet ouvre à <!--inv:cliquet-relecture-->1 979<!--/inv--> fichiers**, soit la totalité :
-**32 158 lignes de prose** restent à juger, et le manifeste part **vide**.
+**Le cliquet ouvre à 1 979 fichiers**, soit la totalité : **32 158 lignes de prose** restent à
+juger, et le manifeste part **vide**. Il est aujourd'hui à
+<!--inv:cliquet-relecture-->0<!--/inv--> : tout l'arbre courant a été ouvert et jugé, et toucher à
+l'une de ses javadoc rougit tant qu'elle n'a pas été relue.
 
-Il part vide et ce n'est pas un oubli. Les douze tranches de #4394 ont lu des **blocs** choisis pour
+Il partait vide et ce n'est pas un oubli. Les douze tranches de #4394 ont lu des **blocs** choisis pour
 leur poids, jamais tous les blocs d'un fichier. Les inscrire reviendrait à affirmer une lecture qui
 n'a pas eu lieu, c'est-à-dire à mentir sur la seule chose que ce dispositif prétend tenir.
 

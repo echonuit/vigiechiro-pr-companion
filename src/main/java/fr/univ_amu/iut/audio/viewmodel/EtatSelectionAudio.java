@@ -4,9 +4,9 @@ import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 
-/// État **dérivé de la sélection** de la table audio, extrait du [AudioViewModel] (cohésion, seuil PMD
-/// GodClass). Cinq drapeaux observables, recalculés à chaque changement de ligne sélectionnée, qui pilotent
-/// l'**activation** et les **libellés** des boutons de la barre d'actions :
+/// État **dérivé de la sélection** de la table audio. Cinq drapeaux observables, recalculés à
+/// chaque changement de ligne sélectionnée, qui pilotent l'**activation** et les **libellés** des
+/// boutons de la barre d'actions :
 ///
 /// - `presente` : une ligne est sélectionnée ;
 /// - `avecObservation` : la ligne est une **observation** (`idObservation` non nul, ≠ séquence non identifiée) ;

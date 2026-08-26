@@ -60,9 +60,9 @@ import javafx.stage.Window;
 ///
 /// Câble la fiche d'identité (bandeau) et le tableau des passages aux propriétés du
 /// [SiteDetailViewModel] ; le tableau des passages est piloté par les `cellValueFactory`, avec un
-/// badge coloré (couleur **dérivée** du statut/verdict) pour les colonnes Statut et Verdict. Le rendu
-/// des cartes de points (nombre variable, reconstruites à chaque changement de la liste observable) est
-/// délégué à [CartesPointsSite] (extrait, seuil de cohésion PMD, #1087).
+/// badge coloré (couleur **dérivée** du statut/verdict) pour les colonnes Statut et Verdict. Le
+/// rendu des cartes de points (nombre variable, reconstruites à chaque changement de la liste
+/// observable) est délégué à [CartesPointsSite] (#1087).
 ///
 /// L'écran délègue toute navigation à [NavigationSites] : retour à l'accueil (fil d'Ariane),
 /// ouverture des modales de point, retour à l'accueil après suppression du site.

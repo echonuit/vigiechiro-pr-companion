@@ -5,9 +5,8 @@ import fr.univ_amu.iut.validation.model.Taxon;
 import java.util.function.Function;
 import javafx.util.StringConverter;
 
-/// Libellés et convertisseurs des `ComboBox` de la vue audio (mode de revue, taxon). Extraits du
-/// controller [SonsValidationController] (pur câblage, qui frôlait le plafond God-class) : ce sont des
-/// fonctions **pures** d'affichage, sans état ni dépendance JavaFX autre que [StringConverter], donc
+/// Libellés et convertisseurs des `ComboBox` de la vue audio (mode de revue, taxon) : des fonctions
+/// **pures** d'affichage, sans état ni dépendance JavaFX autre que [StringConverter], donc
 /// testables et réutilisables indépendamment du controller.
 final class LibellesAudio {
 

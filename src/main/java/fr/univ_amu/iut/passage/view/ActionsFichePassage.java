@@ -20,8 +20,8 @@ import java.util.function.LongSupplier;
 /// purger les originaux. Chacune confirme, délègue au [PassageViewModel], puis recharge l'écran (ou
 /// revient à l'accueil pour la suppression) ; un refus métier est présenté sans quitter l'écran.
 ///
-/// Extraites de [PassageController] pour qu'il reste du **pur câblage** (PMD GodClass), au même
-/// titre que [ActionReactivation] (#1302).
+/// Le [PassageController] reste du **pur câblage**, au même titre que devant [ActionReactivation]
+/// (#1302).
 ///
 /// Le refus passe par le port `Notificateur` (#1405) et non plus par un `Alert` en dur : c'est ce qui
 /// rend ces trois gestes **cliquables dans un test**. Jusqu'ici on ne vérifiait que la **présence** de

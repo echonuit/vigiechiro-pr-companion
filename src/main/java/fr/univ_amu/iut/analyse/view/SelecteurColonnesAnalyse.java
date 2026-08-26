@@ -14,9 +14,9 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableView;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-/// Sélecteur de colonnes de l'écran « Espèces & observations » (EPIC #914, #994), **extrait** du controller
-/// (God-class) pour concentrer le câblage des colonnes de ses **trois** tables : l'inventaire par espèce,
-/// l'inventaire par carré (exclusifs, même emplacement) et le détail des observations.
+/// Sélecteur de colonnes de l'écran « Espèces & observations » (EPIC #914, #994) : il concentre le
+/// câblage des colonnes de ses **trois** tables : l'inventaire par espèce, l'inventaire par carré
+/// (exclusifs, même emplacement) et le détail des observations.
 ///
 /// - **Clic droit « Colonnes… »** sur chaque table (celui des espèces reçoit en plus « Fiche de l'espèce »).
 /// - L'unique **☰ « outils »** ouvre le panneau de la table maître **visible** (espèces ou carrés selon le

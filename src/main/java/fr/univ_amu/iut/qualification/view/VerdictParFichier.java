@@ -14,8 +14,7 @@ import javafx.scene.control.TableColumn;
 /// boutons « Bon / Mauvais / Inexploitable » qui jugent la **séquence courante**, et le badge de la
 /// colonne « Verdict » de la liste de sélection.
 ///
-/// Extrait de [QualificationController] pour garder le contrôleur sous le plafond de taille (PMD
-/// `NcssCount` / GodClass), sur le patron déjà en service de [Feux]. Aucune logique métier : le
+/// Tenu hors du contrôleur, sur le patron déjà en service de [Feux]. Aucune logique métier : le
 /// verdict est enregistré par [SelectionEcouteViewModel#marquerVerdictCourante], ce câblage ne fait
 /// que relier les contrôles au ViewModel et refléter son état en retour.
 final class VerdictParFichier {

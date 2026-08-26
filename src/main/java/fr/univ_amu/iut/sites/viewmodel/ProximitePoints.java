@@ -4,9 +4,9 @@ import fr.univ_amu.iut.commun.model.DistanceGeo;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import java.util.List;
 
-/// Calcul de **proximité entre points d'écoute** d'un même site (#154). Extrait de [SiteDetailViewModel]
-/// pour garder le ViewModel sous le seuil de cohésion (PMD `GodClass`) : la géométrie n'est pas de l'état
-/// de présentation. Repose sur [DistanceGeo] (Haversine).
+/// Calcul de **proximité entre points d'écoute** d'un même site (#154). Tenu hors de
+/// [SiteDetailViewModel] : la géométrie n'est pas de l'état de présentation. Repose sur
+/// [DistanceGeo] (Haversine).
 final class ProximitePoints {
 
     private ProximitePoints() {}

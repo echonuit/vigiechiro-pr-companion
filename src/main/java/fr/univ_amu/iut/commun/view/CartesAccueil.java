@@ -16,10 +16,9 @@ import javafx.scene.text.Text;
 import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-/// Fabriques de nœuds du **tableau de bord d'accueil** : la pastille d'un indicateur (compteur) et la
-/// carte d'une activité (feature). Construction pure, sans état du chrome : extraite de
-/// [MainController] pour garder ce dernier centré sur navigation/menu et sous le seuil de God Class
-/// (NcssCount) (#789).
+/// Fabriques de nœuds du **tableau de bord d'accueil** : la pastille d'un indicateur (compteur) et
+/// la carte d'une activité (feature). Construction pure, sans état du chrome : le [MainController]
+/// reste centré sur la navigation et le menu (#789).
 final class CartesAccueil {
 
     /// Largeur d'enroulement du texte d'une carte d'activité, en pixels. Partagée par le titre et la

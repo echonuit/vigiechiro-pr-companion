@@ -13,7 +13,7 @@ import javafx.scene.control.MenuItem;
 /// page des **données de la participation** liée au passage courant, pour comparer le local et la
 /// plateforme. Item visible seulement quand la source cible un passage, et **désactivé avec le
 /// motif dans le libellé** quand le passage n'est pas lié (un `MenuItem` n'a pas de tooltip, patron
-/// « Fiche de l’espèce »). Collaborateur extrait de [SonsValidationController] (plafond NcssCount).
+/// « Fiche de l’espèce »).
 final class ActionDonneesVigieChiro {
 
     private static final String LIBELLE = "Ouvrir les données sur Vigie-Chiro";

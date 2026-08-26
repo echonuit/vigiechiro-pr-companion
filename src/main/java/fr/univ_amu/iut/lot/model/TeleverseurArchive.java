@@ -11,10 +11,9 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.DoubleConsumer;
 
-/// Téléverse **une archive** vers Vigie-Chiro (#984, #2354), extrait de [DepotVigieChiro] (Extract
-/// Class, plafond God Class) : le dépôt orchestre le plan **par unité** ; ce téléverseur sait envoyer
-/// une archive - **d'un bloc** si elle est petite, **en parties réessayables** au-delà du seuil, avec le
-/// réessai porté par le transport (#2354).
+/// Téléverse **une archive** vers Vigie-Chiro (#984, #2354) : le dépôt orchestre le plan **par
+/// unité** ; ce téléverseur sait envoyer une archive - **d'un bloc** si elle est petite, **en
+/// parties réessayables** au-delà du seuil, avec le réessai porté par le transport (#2354).
 final class TeleverseurArchive {
 
     private final ClientVigieChiro client;

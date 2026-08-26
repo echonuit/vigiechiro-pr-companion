@@ -923,31 +923,21 @@ class DocumentationAJourTest {
             "criteres-multisite",
             "criteres-audit");
 
-    /// Les seuils declares par une ADR dans son en-tete OKF, par cle d'inventaire (#4392).
-    ///
-    /// Un cliquet est un chiffre que le code sait recalculer : c'est donc, au sens de l'article A5 et
-    /// de l'ADR 2750, un inventaire, et la prose qui le cite doit le porter en balise. Sans cela le
-    /// chiffre se recopie a la main dans trois textes a chaque tranche resorbee, et il a derive trois
-    /// fois dans la seule journee du 2026-08-24.
-    ///
-    /// La valeur lue est le CHAMP de l'en-tete, pas ce que le garde compte aujourd'hui : c'est
-    /// exactement ce qu'on veut. Un garde qui compterait moins que son cliquet rend « a-resserrer »,
-    /// et la prose doit annoncer le seuil en vigueur, pas la mesure du jour.
-    /// La cle de balise qu une ADR declare pour SA valeur, dans son en-tete.
+    /// La clé de balise qu'une ADR déclare pour SA valeur, dans son en-tête.
     private static final Pattern CLE_BALISE_ADR = Pattern.compile("^inv_key: ([a-z-]+)$", Pattern.MULTILINE);
 
     /// Le seuil declare par une ADR : `ratchet` pour un cliquet, `floor` pour un plancher.
     private static final Pattern SEUIL_ADR = Pattern.compile("^(?:ratchet|floor): (\\d+)$", Pattern.MULTILINE);
 
-    /// Les seuils declares par les ADR, par cle d inventaire, DERIVES de leurs en-tetes (#4407).
+    /// Les seuils déclarés par les ADR, par clé d'inventaire, DÉRIVÉS de leurs en-têtes (#4392, #4407).
     ///
-    /// La carte n est plus ecrite ici. Chaque ADR declare sa propre cle dans son champ `inv_key`, a
-    /// cote du seuil, et c est la meme source pour `resserre_cliquets.py`, qui ECRIT la valeur, et
-    /// pour ce test, qui la VERIFIE.
+    /// Un cliquet est un chiffre que le code sait recalculer, donc un inventaire au sens de l'article
+    /// A5 et de l'ADR 2750 : la prose qui le cite le porte en balise, et la carte n'est plus écrite
+    /// ici. Chaque ADR déclare sa clé dans `inv_key`, à côté du seuil, et c'est la même source pour
+    /// `resserre_cliquets.py`, qui ÉCRIT la valeur, et pour ce test, qui la VÉRIFIE.
     ///
-    /// Tenue a deux endroits, elle a coute exactement ce qu on pouvait prevoir : le script ne
-    /// connaissait que l en-tete, un resserrement a laisse trois balises derriere lui, et son compte
-    /// rendu annoncait « 1 cliquet resserre » - un vert qui se lit « c est fait ».
+    /// La valeur lue est le CHAMP de l'en-tête, jamais la mesure du jour : un garde qui compte moins
+    /// que son cliquet rend « à resserrer », et la prose doit annoncer le seuil en vigueur.
     private static Map<String, Integer> seuilsDeclares() throws IOException {
         Map<String, Integer> seuils = new java.util.LinkedHashMap<>();
         try (Stream<Path> fichiers = Files.list(Path.of("dev-docs", "decisions"))) {

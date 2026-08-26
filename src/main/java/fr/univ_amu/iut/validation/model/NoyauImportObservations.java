@@ -20,13 +20,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/// **Noyau d'import des observations** d'un passage, extrait de [ServiceValidation] (cohésion, plafond
-/// GodClass) : le cœur commun à toutes les sources d'observations (CSV Tadarida local ou résultats
-/// VigieChiro). Rattache chaque ligne à la séquence d'écoute de **même nom** (les lignes sans séquence en
-/// base ou sans taxon Tadarida sont ignorées), auto-crée les taxons hors référentiel, et écrit le jeu de
-/// résultats + les observations dans **une seule transaction** - en préservant les validations observateur
-/// d'un jeu précédent lors d'un remplacement. Calque les collaborateurs [PreservationValidations],
-/// [FilsDiscussionVigieChiro] et [EtatAncragePassage] : pure Java testable, DAO reçus par constructeur.
+/// **Noyau d'import des observations** d'un passage : le cœur commun à toutes les sources
+/// d'observations (CSV Tadarida local ou résultats VigieChiro). Rattache chaque ligne à la séquence
+/// d'écoute de **même nom** (les lignes sans séquence en base ou sans taxon Tadarida sont
+/// ignorées), auto-crée les taxons hors référentiel, et écrit le jeu de résultats + les
+/// observations dans **une seule transaction** - en préservant les validations observateur d'un jeu
+/// précédent lors d'un remplacement. Calque les collaborateurs [PreservationValidations],
+/// [FilsDiscussionVigieChiro] et [EtatAncragePassage] : pure Java testable, DAO reçus par
+/// constructeur.
 ///
 /// ## Invariant « un seul jeu par passage »
 ///
