@@ -1867,7 +1867,7 @@ d074a44cd5f7  src/test/java/fr/univ_amu/iut/recette/JournalDesReperes.java
 a8ebe81a91bf  src/test/java/fr/univ_amu/iut/recette/Jugement.java
 73eb48583391  src/test/java/fr/univ_amu/iut/recette/LecteurSpec.java
 1af59295a807  src/test/java/fr/univ_amu/iut/recette/MotifDeCas.java
-20273dbef879  src/test/java/fr/univ_amu/iut/recette/PageDesClipsTest.java
+abcaaa0a6792  src/test/java/fr/univ_amu/iut/recette/PageDesClipsTest.java
 a5d5dc3a5941  src/test/java/fr/univ_amu/iut/recette/PerimetreDesSessions.java
 a371b59567a4  src/test/java/fr/univ_amu/iut/recette/PerimetreDesSessionsTest.java
 1fa606665207  src/test/java/fr/univ_amu/iut/recette/Portee.java

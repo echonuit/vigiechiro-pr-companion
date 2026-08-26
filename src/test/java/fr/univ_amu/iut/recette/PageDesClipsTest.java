@@ -139,7 +139,39 @@ class PageDesClipsTest {
                 .isEmpty();
     }
 
+    @Test
+    @DisplayName("#4522 : l'exclusion de l'outillage ne dépend pas du séparateur du système")
+    void l_exclusion_ne_depend_pas_du_separateur() {
+        // Ce cas existe parce que la suite hebdomadaire a rougi sous Windows là où Linux et macOS
+        // étaient verts : l'exclusion comparait à « /iut/recette/ », séparateur codé en dur, et les
+        // deux annotations d'exemple de `ReperesDeSeanceTest` entraient dans la population.
+        assertThat(dansOutillageDeRecette("src/test/java/fr/univ_amu/iut/recette/ReperesDeSeanceTest.java"))
+                .as("chemin POSIX")
+                .isTrue();
+        assertThat(dansOutillageDeRecette("src\\test\\java\\fr\\univ_amu\\iut\\recette\\ReperesDeSeanceTest.java"))
+                .as("le même chemin sous Windows : c'est ce cas qui rougissait en intégration")
+                .isTrue();
+        assertThat(dansOutillageDeRecette("src/test/java/fr/univ_amu/iut/sites/view/ScenarioFicheSiteTest.java"))
+                .as("hors de l'outillage, dans les deux écritures")
+                .isFalse();
+        assertThat(dansOutillageDeRecette(
+                        "src\\test\\java\\fr\\univ_amu\\iut\\sites\\view\\ScenarioFicheSiteTest.java"))
+                .isFalse();
+    }
+
     // --------------------------------------------------------------------------------------------
+
+    /// Ce chemin est-il dans l'outillage de recette, quel que soit le séparateur du système ?
+    ///
+    /// `Path.toString()` rend `...\iut\recette\...` sous Windows, où comparer à `/iut/recette/` ne
+    /// trouve jamais rien : le filtre ne s'appliquait pas, et les deux annotations d'exemple entraient
+    /// dans la population (#4522). Prend une `String` et non un `Path` pour rester **éprouvable
+    /// partout**, un `Path.of` construit sous Linux ne portant jamais d'antislash : c'est la couture
+    /// que l'ADR 3802 exige, et l'idiome qu'[fr.univ_amu.iut.architecture.AnnonceDesMutationsTest]
+    /// porte déjà (#3645).
+    static boolean dansOutillageDeRecette(String chemin) {
+        return chemin.replace('\\', '/').contains("/iut/recette/");
+    }
 
     /// Les `Classe.methode` des tests qui citent un cas de recette, lus dans les sources.
     ///
@@ -158,7 +190,7 @@ class PageDesClipsTest {
                     //
                     // Une règle sur le paquet plutôt qu'une liste de noms : la liste vieillirait, et
                     // le prochain exemple de l'outillage y manquerait sans que rien ne le dise.
-                    .filter(f -> !f.toString().contains("/iut/recette/"))
+                    .filter(f -> !dansOutillageDeRecette(f.toString()))
                     .toList()) {
                 String classe = source.getFileName().toString().replace(".java", "");
                 String contenu = lire(source);

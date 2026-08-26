@@ -2,12 +2,11 @@ package fr.univ_amu.iut.importation.outils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.ProtectionFichier;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,17 +37,17 @@ class DossierDeFixtureTest {
     void le_dossier_n_est_lisible_que_par_son_proprietaire() throws IOException {
         Path sd = DossierDeFixture.preparer("sd-droits", LOG, List.of("a.wav"));
 
-        Set<PosixFilePermission> droits = Files.getPosixFilePermissions(sd);
-
-        assertThat(droits)
+        // La propriété passe par [ProtectionFichier], et non par `Files.getPosixFilePermissions`, qui
+        // lève `UnsupportedOperationException` hors POSIX : la suite hebdomadaire rougissait dessus
+        // sous Windows (#4522). Cette couture existe pour cette raison (#3778), elle couvre POSIX et
+        // ACL, et elle est plus stricte que l'assertion qu'elle remplace, laquelle tolérait
+        // `GROUP_READ`.
+        assertThat(ProtectionFichier.restreinteAuProprietaire(sd))
                 .as("cet outil fabrique des images PUBLIÉES : un dossier que les autres peuvent écrire"
                         + " laisse un tiers y déposer ce qu'il veut avant le rendu, et la documentation"
                         + " montrerait son contenu (CodeQL"
                         + " java/local-temp-file-or-directory-information-disclosure)")
-                .doesNotContain(
-                        PosixFilePermission.OTHERS_READ,
-                        PosixFilePermission.OTHERS_WRITE,
-                        PosixFilePermission.GROUP_WRITE);
+                .isTrue();
     }
 
     @Test
