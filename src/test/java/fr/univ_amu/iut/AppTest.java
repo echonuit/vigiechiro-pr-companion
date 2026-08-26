@@ -118,15 +118,41 @@ class AppTest {
         robot.interact(() -> stage.setScene(Habillage.scene(lignes(8))));
         WaitForAsyncUtils.waitForFxEvents();
         double aLOuverture = stage.getHeight();
+        double contenuBas = hauteurDuContenu();
 
         robot.interact(() -> stage.setScene(Habillage.scene(lignes(40))));
         WaitForAsyncUtils.waitForFxEvents();
+        double contenuHaut = hauteurDuContenu();
 
         assertThat(stage.getHeight())
-                .as("une scène trois fois plus haute est posée : un Stage ajustable la suit, un Stage"
-                        + " passé en dimensionnement explicite reste où il est - et fait alors échouer"
-                        + " toutes les classes qui passent après celle-ci dans le fork")
+                .as(
+                        "une scène trois fois plus haute est posée : un Stage ajustable la suit, un Stage"
+                                + " passé en dimensionnement explicite reste où il est - et fait alors échouer"
+                                + " toutes les classes qui passent après celle-ci dans le fork.%n%s",
+                        geometrie(aLOuverture, contenuBas, contenuHaut))
                 .isGreaterThan(aLOuverture);
+    }
+
+    /// La hauteur que le contenu de la scène courante réclame, une fois la mise en page faite.
+    private double hauteurDuContenu() {
+        return stage.getScene().getRoot().getBoundsInLocal().getHeight();
+    }
+
+    /// Ce que le rouge doit dire, et que « 600 n'est pas supérieur à 600 » ne dit pas (#4504).
+    ///
+    /// Deux causes produisent le même chiffre, et l'assertion seule ne les sépare pas. Le **Stage
+    /// figé** : le contenu réclame sa hauteur, la fenêtre ne suit plus. La **scène qui n'a pas
+    /// grandi** : le contenu lui-même reste sous le plancher de 600, et c'est alors la mesure qui est
+    /// en cause, pas le voisin de fork. Sans les deux hauteurs, un journal de CI ne permet de trancher
+    /// ni l'une ni l'autre, et deux diagnostics faux ont déjà été rendus sur ce défaut.
+    ///
+    /// Le plancher figure aussi : il vaut 600 tant que `App.start` l'a posé, et c'est lui qui remonte
+    /// la petite scène à 600. Le lire évite de conclure au figement sur une fenêtre simplement bornée.
+    private String geometrie(double aLOuverture, double contenuBas, double contenuHaut) {
+        return "  plancher %.0f | 8 lignes : fenêtre %.0f, contenu %.0f | 40 lignes : fenêtre %.0f, contenu %.0f%n"
+                        .formatted(stage.getMinHeight(), aLOuverture, contenuBas, stage.getHeight(), contenuHaut)
+                + "  Si le contenu à 40 lignes dépasse la fenêtre, le Stage est FIGÉ par une classe du"
+                + " même fork ; s'il reste sous 600, c'est la scène qui n'a pas grandi.";
     }
 
     /// Une racine de `combien` lignes, assez basse pour tenir sous l'écran du banc.
