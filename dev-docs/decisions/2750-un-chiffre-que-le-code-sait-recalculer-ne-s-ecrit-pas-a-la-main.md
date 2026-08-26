@@ -65,7 +65,7 @@ migrations donne un faux : une reconstruction de table crée une jumelle tempora
 l'originale et **renomme**. Le `CREATE` et le `DROP` ne se compensent que par hasard, et
 l'`ALTER TABLE ... RENAME` n'apparaît dans aucun des deux.
 
-⚠️ Sur ce schéma, le comptage statique tombait **juste par coïncidence** - la pire situation pour un
+Sur ce schéma, le comptage statique tombait **juste par coïncidence** - la pire situation pour un
 garde, puisque rien ne signale qu'il mesure la mauvaise chose. Le décompte se prend donc en
 appliquant les migrations et en interrogeant `sqlite_master`.
 

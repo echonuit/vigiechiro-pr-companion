@@ -24,7 +24,7 @@ final class RequetesVigieChiro {
 
     /// Corps de `PUT /sites/#id/localites` (#3458) : `{"localites": [...]}`.
     ///
-    /// ⚠️ Les localités sont **recopiées telles quelles**, sans passer par Gson ni par un record : le
+    /// Les localités sont **recopiées telles quelles**, sans passer par Gson ni par un record : le
     /// backend **remplace la liste entière**, donc tout champ qu'on normaliserait au passage serait
     /// effacé pour toutes les autres localités du site. C'est précisément ce que fait le client
     /// officiel, qui reconstruit chaque localité sur trois champs et perd `habitats`.
@@ -36,7 +36,7 @@ final class RequetesVigieChiro {
 
     /// Une localité au format de la plateforme : `nom`, `geometries`, `representatif`.
     ///
-    /// ⚠️ **L'ordre des coordonnées est `[latitude, longitude]`**, à rebours du GeoJSON. Le dépôt l'a
+    /// **L'ordre des coordonnées est `[latitude, longitude]`**, à rebours du GeoJSON. Le dépôt l'a
     /// déjà payé une fois (#1277) : une inversion rend un point « parfaitement plausible », et personne
     /// ne s'en aperçoit avant le terrain. `representatif` vaut `false`, comme le pose le client officiel.
     static JsonObject localite(PointVigieChiro point) {

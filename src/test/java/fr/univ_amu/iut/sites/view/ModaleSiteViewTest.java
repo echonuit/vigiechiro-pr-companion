@@ -54,7 +54,7 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class ModaleSiteViewTest {
 
-    // ⚠️ Cette classe ne cite plus de cas de recette, et ce n'est pas un oubli. Elle monte
+    // Cette classe ne cite plus de cas de recette, et ce n'est pas un oubli. Elle monte
     // `ModaleSite.fxml` SEULE : ses clips montraient une modale flottant sur du noir, où « annuler ne
     // crée rien » n'avait aucun endroit où se voir ([ADR 4188]). Les cas sont joués par
     // `ScenarioModaleCarreTest` et `ScenarioFicheSiteTest`, sur la fenêtre réelle.
@@ -95,7 +95,7 @@ class ModaleSiteViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        // ⚠️ `Habillage`, et non `new Scene` : les trois cas de cette classe sont FILMÉS, et une scène
+        // `Habillage`, et non `new Scene` : les trois cas de cette classe sont FILMÉS, et une scène
         // montée sans habillage porte la police de la MACHINE (#3773, #4149).
         stage.setScene(Habillage.scene(vue));
         stage.show();
@@ -146,7 +146,7 @@ class ModaleSiteViewTest {
                 .isTrue();
         Respiration.avantLeGeste(robot);
 
-        // ⚠️ Les chiffres se TAPENT, un par un. Avec `setText`, le champ passait de vide à « 6403 »
+        // Les chiffres se TAPENT, un par un. Avec `setText`, le champ passait de vide à « 6403 »
         // puis à « 640380 » d'un coup : le clip montrait un bouton qui change d'état sans qu'on voie
         // ce qui le fait changer, et c'est justement la validation EN DIRECT que ce cas fait juger.
         TextField carre = robot.lookup("#champCarre").queryAs(TextField.class);

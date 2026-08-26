@@ -18,14 +18,14 @@ import picocli.CommandLine;
 /// jamais su que la question se posait, et une commande de lecture verrouillée est une gêne qu'on
 /// découvre en production.
 ///
-/// ⚠️ Ce garde ne dit **pas** si le classement est juste : aucun signal statique ne le sait
+/// Ce garde ne dit **pas** si le classement est juste : aucun signal statique ne le sait
 /// (`supprimer-site` n'atteint aucune primitive d'écriture par un chemin qu'une analyse d'appels
 /// retrouve, `lister-carres` en atteint une, légitimement, pour écrire son CSV hors du dossier de
 /// travail). Il dit qu'un **choix a été fait** : la commande porte le marqueur, ou elle est écrite
 /// noir sur blanc ci-dessous. C'est l'oubli silencieux qu'il rend impossible, pas l'erreur de
 /// jugement - celle-là se corrige en revue, et se paie du bon côté ([LectureSeule]).
 ///
-/// ⚠️ Le cliquet est un **compteur**, et non la liste des écrivaines qu'il portait d'abord (#3575).
+/// Le cliquet est un **compteur**, et non la liste des écrivaines qu'il portait d'abord (#3575).
 /// Cette liste était **intégralement dérivable** : les deux assertions d'alors se refermaient l'une sur
 /// l'autre - toute commande non marquée devait y figurer, et elle ne pouvait contenir que des commandes
 /// non marquées - si bien qu'elle valait exactement l'ensemble que le code déclare déjà. Ce qui force

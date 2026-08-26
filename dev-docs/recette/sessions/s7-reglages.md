@@ -26,7 +26,7 @@ par hasard.
 
 ## L'écran ne se déroule pas depuis cette page
 
-⚠️ **Les onglets sont contribués par les features**, et n'apparaissent que s'ils ont quelque chose à
+**Les onglets sont contribués par les features**, et n'apparaissent que s'ils ont quelque chose à
 montrer (`EcranReglagesController.estAffichable`). La liste **change** quand une feature est ajoutée ou
 désactivée, et c'est voulu.
 
@@ -51,7 +51,7 @@ env -u DISPLAY ./mvnw -q test-compile exec:java@generer-sd \
 Une carte **`sd-nominale`** suffit : elle ne sert qu'à l'étape 4, pour observer l'effet d'un réglage
 d'import. Il faut aussi une **nuit déjà importée** pour l'étape 3 (on n'écoute pas sans séquences).
 
-⚠️ **Lancer l'application sans AUCUNE propriété `-Dvigiechiro.*`.** Ce n'est pas une précaution de
+**Lancer l'application sans AUCUNE propriété `-Dvigiechiro.*`.** Ce n'est pas une précaution de
 forme : sur ce chemin précis, une propriété système **gagne en silence** sur le réglage persisté. C'est
 vrai de l'emplacement de travail (elle a produit un faux positif à l'instruction de #3459) **et** des
 fonctionnalités, dont la résolution consulte `vigiechiro.feature.<id>` **avant** le réglage enregistré.
@@ -103,7 +103,7 @@ exigent un redémarrage et le disent.
       `bruts/`.
 - [ ] **S7-14** · *geste: conserver-les-originaux-a-l-import* · Recocher, réimporter une troisième fois : `bruts/` est **de retour**.
 
-> ⚠️ **Ne pas redémarrer entre S7-12 et S7-13.** C'est tout l'objet de #3471 : le réglage était lu une
+> **Ne pas redémarrer entre S7-12 et S7-13.** C'est tout l'objet de #3471 : le réglage était lu une
 > fois au démarrage et mémorisé, donc le changer en cours de session ne changeait rien. Un redémarrage
 > masquerait exactement le défaut que ces trois cases existent pour attraper.
 >
@@ -151,7 +151,7 @@ exigent un redémarrage et le disent.
       chemin dans le presse-papier, et ce qui s'y trouve est **exactement** ce que l'écran affiche
       (le coller dans un éditeur pour le lire). Les deux rangées l'offrent (#3882).
 
-    ⚠️ Le numéro sort de la suite : les cases de S7 vont jusqu'à **S7-37**, et les renuméroter
+    Le numéro sort de la suite : les cases de S7 vont jusqu'à **S7-37**, et les renuméroter
     rendrait faux les renvois que ce script porte déjà entre ses propres cases (S7-24 est cité par
     S7-27, par exemple).
 - [ ] **S7-24** · *geste: changer-le-dossier-de-travail* · L'écran annonce que choisir un emplacement change **où l'application ira lire au
@@ -162,7 +162,7 @@ exigent un redémarrage et le disent.
 - [ ] **S7-27** · *hors-portée: un fait de DISQUE : ce que le cas observe est que les données sont toujours dans l'ancien dossier, et l'écran ne le montre pas* · Vérifier l'ancien dossier sur le disque : les données y sont **toujours**, conformément
       à ce qu'annonçait S7-24.
 
-> ⚠️ S7-25 et S7-27 portent le constat qui a motivé #3459 : un utilisateur au disque saturé cherche à
+> S7-25 et S7-27 portent le constat qui a motivé #3459 : un utilisateur au disque saturé cherche à
 > **déplacer**, là où le réglage **repointe**. Les deux cases vérifient que l'écran ne laisse pas croire
 > autre chose. Le déplacement effectif des fichiers est un besoin distinct (#3486), pas un défaut de
 > cet écran.
@@ -231,6 +231,6 @@ Une case rouge se qualifie avant d'ouvrir une issue :
 3. **le cas était mal écrit** - il supposait un onglet, une fonctionnalité ou une donnée qu'on n'avait
    pas.
 
-⚠️ **Avant d'ouvrir une issue sur un réglage qui « ne marche pas », vérifier qu'aucune propriété
+**Avant d'ouvrir une issue sur un réglage qui « ne marche pas », vérifier qu'aucune propriété
 système ne le surcharge.** C'est la première hypothèse à écarter sur cet écran, et celle qui a déjà
 coûté une instruction complète.

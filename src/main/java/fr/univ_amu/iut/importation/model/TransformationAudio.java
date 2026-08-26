@@ -31,7 +31,7 @@ import java.util.Objects;
 ///    ×10 ; un brut PR déjà expansé est simplement réécrit à sa fréquence (aucune ré-expansion). Une
 ///    tranche de 5 s réelles s'écoute donc en **50 s**.
 ///
-/// ⚠️ **Piège évité** : découper au rythme de l'**en-tête** d'un brut PR déjà expansé donnerait des
+/// **Piège évité** : découper au rythme de l'**en-tête** d'un brut PR déjà expansé donnerait des
 /// tranches **10× trop courtes** (0,5 s réelle), désalignées des temps de l'`observations.csv` (en
 /// secondes réelles dans une tranche de 5 s). On découpe au rythme d'**acquisition** `Fe`.
 ///

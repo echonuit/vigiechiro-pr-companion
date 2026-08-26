@@ -34,7 +34,7 @@ public final class ColonneDate {
 
     /// Variante qui **nomme la marque d'absence**.
     ///
-    /// ⚠️ Elle existe parce que la table audio a sa propre règle, et qu'elle est écrite : « carré, point,
+    /// Elle existe parce que la table audio a sa propre règle, et qu'elle est écrite : « carré, point,
     /// commune, date et fichier : cinq colonnes, une seule règle » (#3236, cadratin et non tiret tapé à la
     /// main). Une colonne de date qui se viderait là où ses quatre voisines marquent l'absence romprait une
     /// convention **déjà décidée** - et c'est son test qui l'a rappelé, en rougissant.
@@ -63,7 +63,7 @@ public final class ColonneDate {
     /// Le libellé français d'une chaîne ISO - `22/06/2026` - ou la chaîne telle quelle si elle est
     /// illisible.
     ///
-    /// ⚠️ Exposé pour les **filtres** : la recherche texte du multisite cherche dans la date de la
+    /// Exposé pour les **filtres** : la recherche texte du multisite cherche dans la date de la
     /// ligne, et elle cherchait dans l'ISO. Franciser l'affichage sans elle aurait fait taper
     /// `2026-06-22` à qui lit `22/06/2026`.
     public static String libelle(String iso) {

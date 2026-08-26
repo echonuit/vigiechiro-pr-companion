@@ -332,7 +332,7 @@ class ExportObservationsEtSonsTest {
                         progression -> {},
                         JetonAnnulation.neutre());
 
-        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : la machine des relevés portait un banc
+        // Le garde compte des REQUÊTES, pas des millisecondes : la machine des relevés portait un banc
         // filmé (charge 12), et tout chronométrage y variait du simple au double.
         //
         // Le défaut (#4289) : deux requêtes par son exporté - la séquence, puis sa session pour résoudre

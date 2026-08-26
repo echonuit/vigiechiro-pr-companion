@@ -73,7 +73,7 @@ Le compte rendu porte le régime employé, et les deux surfaces l'affichent. San
 l'utilisateur croit avoir eu la garantie forte, et un incident ultérieur le trouverait sans
 explication.
 
-⚠️ **Dès la première bascule, « rien n'a été touché » cesse d'être vrai.** Un refus survenu ensuite est
+**Dès la première bascule, « rien n'a été touché » cesse d'être vrai.** Un refus survenu ensuite est
 requalifié en incident : le laisser passer pour un refus donnerait à un script un code de sortie qui
 promet un état intact au-dessus d'un état partiel (convention #2294).
 

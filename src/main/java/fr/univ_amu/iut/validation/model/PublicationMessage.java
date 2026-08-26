@@ -13,7 +13,7 @@ import java.util.Optional;
 /// **Poster un message** dans le fil de discussion d'une observation (#1418, axe 4.4) : le seul geste de
 /// ce chantier qui **écrit** chez VigieChiro sur des données partagées avec un validateur du MNHN.
 ///
-/// ⚠️ **Ce qui part ne se retire pas.** Le serveur ajoute par `$push`, et **aucune route ne permet de
+/// **Ce qui part ne se retire pas.** Le serveur ajoute par `$push`, et **aucune route ne permet de
 /// supprimer ni de modifier un message** (spike de #724). Ce n'est pas un détail d'implémentation : c'est
 /// la propriété qui gouverne tout le reste. L'appelant IHM doit faire **confirmer explicitement**, et le
 /// dire : un message envoyé par erreur restera visible pour l'expert, indéfiniment.

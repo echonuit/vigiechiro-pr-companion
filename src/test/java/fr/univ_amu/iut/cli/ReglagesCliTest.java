@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 /// hors bornes sur un vrai processus.
 class ReglagesCliTest {
 
-    /// ⚠️ Les propriétés posées par un test survivraient à la JVM de test et fausseraient les suivants :
+    /// Les propriétés posées par un test survivraient à la JVM de test et fausseraient les suivants :
     /// une borne abaissée ici ferait refuser une archive légitime ailleurs, et le rouge tomberait très
     /// loin de sa cause.
     @AfterEach
@@ -46,7 +46,7 @@ class ReglagesCliTest {
     @Test
     @DisplayName("Une clé inconnue est refusée, et le refus nomme celles qui existent")
     void une_cle_inconnue_nomme_les_admises() {
-        // ⚠️ Le refus ne se contente pas de dire non : sans la liste, l'utilisateur n'a aucun moyen de
+        // Le refus ne se contente pas de dire non : sans la liste, l'utilisateur n'a aucun moyen de
         // trouver le nom juste - ces clés ne sont écrites nulle part ailleurs que dans le registre.
         Optional<String> refus = Cli.poserLesReglages(List.of("import.zip.max-entrée=5000"));
 
@@ -120,7 +120,7 @@ class ReglagesCliTest {
     @Test
     @DisplayName("Aucun message du produit ne conseille une propriété JVM")
     void aucun_message_ne_conseille_une_propriete_jvm() throws IOException {
-        // ⚠️ Le défaut que #4075 corrige n'était pas une borne mal réglée : c'était un CONSEIL
+        // Le défaut que #4075 corrige n'était pas une borne mal réglée : c'était un CONSEIL
         // impossible. Trois refus disaient « relancez avec -Dvigiechiro.… », geste qu'un produit
         // installé ne permet pas - le lanceur passe ses arguments à `main`, jamais à la machine
         // virtuelle. Un message exact et inapplicable est la famille de défaut que l'ADR 3470 combat.

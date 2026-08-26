@@ -66,7 +66,7 @@ l'outillage ne dépend pas de Gluon Maps.
 Un rectangle dérivé ne peut pas se démoder. La question « les autres sont-ils justes ? » cesse de se
 poser, puisque plus personne ne les écrit.
 
-## ⚠️ Ce que la mesure a coûté d'apprendre : où déposer le fichier
+## Ce que la mesure a coûté d'apprendre : où déposer le fichier
 
 Une première version appelait `ZoneCarteApercu` avec la scène, **juste après le `snapshot`**. Le
 raisonnement paraissait solide : l'image est déjà prise, rien de ce qui suit ne peut la changer.

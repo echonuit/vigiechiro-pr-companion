@@ -80,7 +80,7 @@ final class LecteurSpec {
 
     /// Les redémarrages supplémentaires déclarés par `sessions:` (#3898), ou aucun.
     ///
-    /// ⚠️ **L'absence de la clé rend une liste vide, jamais une erreur** : huit specs ne la portent pas,
+    /// **L'absence de la clé rend une liste vide, jamais une erreur** : huit specs ne la portent pas,
     /// et elles doivent continuer à produire exactement le même journal.
     private static List<Session> lireSessions(Object brut) {
         if (!(brut instanceof List<?> entrees)) {

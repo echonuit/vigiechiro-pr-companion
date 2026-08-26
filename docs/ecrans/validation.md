@@ -361,9 +361,9 @@ ont été écartées. Le reste tient en mentions, chacune à son registre :
 
 | Mention | Ce qu'elle veut dire |
 |---|---|
-| **validations perdues** ⚠ | des corrections, marquages ou commentaires que vous aviez saisis n'ont pas retrouvé d'observation correspondante dans le nouveau jeu. **Ce travail est définitivement perdu.** |
+| **validations perdues** | des corrections, marquages ou commentaires que vous aviez saisis n'ont pas retrouvé d'observation correspondante dans le nouveau jeu. **Ce travail est définitivement perdu.** |
 | **validations préservées** | vos saisies ont été réattachées aux nouvelles observations : un réimport ne vous coûte pas votre revue |
-| **lignes ignorées** ⚠ | leur séquence audio est absente, ou la ligne n'a pas de taxon. Si ce sont les séquences qui manquent, importez d'abord la nuit de ce passage |
+| **lignes ignorées** | leur séquence audio est absente, ou la ligne n'a pas de taxon. Si ce sont les séquences qui manquent, importez d'abord la nuit de ce passage |
 | **taxons hors référentiel** | des codes inconnus du référentiel ont été enregistrés en souches : leurs observations sont bien importées, il n'y a rien à faire |
 | **échanges avec le validateur** | des observations portent un message du Muséum. La mention est là pour que vous ne les découvriez pas par hasard, en ouvrant la bonne ligne |
 

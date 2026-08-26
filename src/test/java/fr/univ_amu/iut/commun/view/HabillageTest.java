@@ -118,7 +118,7 @@ class HabillageTest {
     @Test
     @DisplayName("#3978 : une racine qui déclare palette + base reçoit quand même design.css")
     void poser_garantit_le_trio_meme_si_base_est_deja_la() {
-        // ⚠️ `poser` se désistait dès qu'il voyait `base.css`, en prenant sa présence pour preuve que
+        // `poser` se désistait dès qu'il voyait `base.css`, en prenant sa présence pour preuve que
         // le TRIO était là. C'était vrai de `MainView.fxml`, qui déclare les trois ; c'était faux
         // d'`EcranReglages.fxml`, seul FXML du dépôt à déclarer `palette + base` sans `design`.
         //
@@ -144,7 +144,7 @@ class HabillageTest {
         // La troisième branche de `poser` - ni base, ni palette - ajoutait le trio SANS regarder ce
         // qui était déjà là, quand les deux autres vérifient depuis #3978.
         //
-        // ⚠️ `idempotent()` ne l'attrape pas : il rejoue `poser` sur une scène DÉJÀ habillée. Ici le
+        // `idempotent()` ne l'attrape pas : il rejoue `poser` sur une scène DÉJÀ habillée. Ici le
         // doublon naît au PREMIER appel.
         StackPane racine = new StackPane();
         racine.getStylesheets().add(url(DESIGN));

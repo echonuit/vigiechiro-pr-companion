@@ -21,7 +21,7 @@ package fr.univ_amu.iut.recette;
 /// dans cette définition. Il rend le regard bon marché, il ne le remplace pas - et au moment où
 /// cette énumération est écrite, aucun film n'existe encore.
 ///
-/// ## ⚠️ Ce n'est pas la même chose que la marque du script
+/// ## Ce n'est pas la même chose que la marque du script
 ///
 /// La marque `*perceptif*` d'un script qualifie le **cas** : on l'y pose en passe 6, quand on
 /// constate qu'aucune assertion ne le tranchera, donc **avant** qu'un test existe. Cette

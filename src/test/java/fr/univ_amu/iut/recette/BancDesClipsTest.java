@@ -35,12 +35,12 @@ class BancDesClipsTest {
 
     private static final Path SOURCES = Path.of("src", "test", "java");
 
-    /// ⚠️ Ce fichier-ci cite les motifs qu'il traque, et se signalerait lui-même (ADR 3645).
+    /// Ce fichier-ci cite les motifs qu'il traque, et se signalerait lui-même (ADR 3645).
     private static final String MOI = "BancDesClipsTest.java";
 
     /// Les classes qui montent une vue SEULE, en attendant d'être portées sur le chrome.
     ///
-    /// ⚠️ Une liste, pas un interrupteur : elle est **nommée et finie**, le garde rougit dès qu'elle
+    /// Une liste, pas un interrupteur : elle est **nommée et finie**, le garde rougit dès qu'elle
     /// s'allonge, et chaque entrée dit son issue. Un cas de recette doit montrer la fonctionnalité
     /// **et le chemin pour y accéder** ; une vue montée seule ne montre pas comment on y arrive.
     private static final Set<String> SANS_CHROME_EN_ATTENTE = Set.of("ScenarioPerceptifFiltresTest.java");
@@ -76,7 +76,7 @@ class BancDesClipsTest {
 
     /// Les classes qui montent encore leur banc à la main, en attendant [BancDeRecette].
     ///
-    /// ⚠️ Nommée et finie, comme [#SANS_CHROME_EN_ATTENTE] : le garde rougit dès qu'elle s'allonge, et
+    /// Nommée et finie, comme [#SANS_CHROME_EN_ATTENTE] : le garde rougit dès qu'elle s'allonge, et
     /// la migration se compte au lieu de se promettre. Une classe NEUVE ne peut donc pas repartir d'un
     /// copier-coller de préambule - c'est tout l'objet de #4133.
     ///
@@ -115,7 +115,7 @@ class BancDesClipsTest {
         List<String> sansChrome = new ArrayList<>();
         for (Path source : classesFilmees()) {
             String nom = source.getFileName().toString();
-            // ⚠️ Deux façons de monter le chrome, et le garde doit connaître les deux : nommer le
+            // Deux façons de monter le chrome, et le garde doit connaître les deux : nommer le
             // FXML, ou passer par `BancDeRecette.surLeChrome()` qui le nomme à sa place. Le premier jet
             // ne cherchait que la chaîne « MainView.fxml » et a déclaré fautive la première classe
             // migrée sur le banc - un garde qui mesure un PROXY plutôt que la propriété se trompe dès

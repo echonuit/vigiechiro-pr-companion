@@ -48,7 +48,7 @@ Deux familles, et la seconde n'avait pas de nom :
   où `javac` assigne sans broncher à `List<Map<String, ?>>`. Deux occurrences, corrigées par un
   **témoin de type explicite**.
 
-⚠️ La quatrième n'est apparue qu'**après** avoir mis `module-info.java` de côté : ecj s'arrêtait avant
+La quatrième n'est apparue qu'**après** avoir mis `module-info.java` de côté : ecj s'arrêtait avant
 d'atteindre les sources de test. Une mesure interrompue n'est pas une mesure.
 
 ## Décision
@@ -73,7 +73,7 @@ appris ; un compilateur voit ce qu'il refuse.**
   personne - c'est exactement le défaut que l'[ADR 2748](2748-un-dispositif-qui-peut-ne-rien-verifier-le-dit.md)
   et #3382 viennent de traiter.
 
-### ⚠️ `module-info.java` est exclu de cette passe
+### `module-info.java` est exclu de cette passe
 
 Sous `plexus-compiler-eclipse`, ecj ne résout ni les modules automatiques (`com.google.gson`,
 `info.picocli`) ni `org.xerial.sqlitejdbc`, et rendait **six erreurs qui ne disent rien du code** ;

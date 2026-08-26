@@ -112,7 +112,7 @@ for fichier in sorted(os.listdir(flux)):
         # C'est ce qui permet de les distinguer sans deviner.
         if job.get("secrets") == "inherit":
             heritages.append(f"{fichier} · job « {identifiant} » · secrets: inherit")
-        # ⚠️ Tout le reste du job est LÉGITIME et doit le rester : `secrets:` qui transmet à un
+        # Tout le reste du job est LÉGITIME et doit le rester : `secrets:` qui transmet à un
         # workflow appelé, `with:` d'un pas, `env:` d'un pas, interpolation dans un `run:`. Un garde
         # qui refuserait ces formes-là interdirait la seule façon juste de se servir d'un secret, et
         # se ferait contourner plutôt que corriger.
@@ -200,7 +200,7 @@ jobs:
     steps:
       - run: ./mvnw test'
 
-    # ⚠️ Contrôle négatif, et c est le cas qui empêche ce garde de tout refuser : la forme JUSTE.
+    # Contrôle négatif, et c est le cas qui empêche ce garde de tout refuser : la forme JUSTE.
     # Sans lui, la règle interdirait la seule manière correcte de se servir du secret.
     essai "dans l env d un PAS, la forme juste passe"             vert \
 'jobs:

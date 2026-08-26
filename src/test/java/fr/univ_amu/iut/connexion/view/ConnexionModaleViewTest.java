@@ -45,12 +45,12 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class ConnexionModaleViewTest {
 
-    // ⚠️ Cette classe ne cite plus `S1-04`, et ce n'est pas un oubli. Elle monte `ConnexionModale.fxml`
+    // Cette classe ne cite plus `S1-04`, et ce n'est pas un oubli. Elle monte `ConnexionModale.fxml`
     // SEULE : son clip montrait une modale sur fond noir, sans l'écran d'où part le geste ni celui où
     // l'on retombe ([ADR 4188]). Le cas est joué par `ScenarioPerceptifIssuesConnexionTest`, qui ouvre
     // la modale depuis le menu principal.
     //
-    // ⚠️ Le garde `ClipDeModaleTest` ne l'avait pas vue : son motif ancrait « Modale » au DÉBUT du nom
+    // Le garde `ClipDeModaleTest` ne l'avait pas vue : son motif ancrait « Modale » au DÉBUT du nom
     // de fichier, et `ConnexionModale.fxml` lui échappait. Il regardait deux fichiers sur quatre et se
     // déclarait vert.
     //
@@ -109,7 +109,7 @@ class ConnexionModaleViewTest {
     @Test
     @DisplayName("Étape 1 : « Ouvrir Vigie-Chiro » ouvre la plateforme dans le navigateur")
     void ouvrir_site(FxRobot robot) {
-        // ⚠️ Ce cas est le seul des trois dont le verdict n'est PAS à l'écran : ce qui compte est
+        // Ce cas est le seul des trois dont le verdict n'est PAS à l'écran : ce qui compte est
         // l'adresse ouverte dans le navigateur, et aucun navigateur ne s'ouvre sur le banc. Le clip
         // montre donc le geste, et la modale au repos autour de lui - pas son effet.
         //

@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 /// le point se **compare** mais ne s'**énumère** pas au refus. Les redécouvrir par accident coûterait
 /// plus cher que de les lire ici.
 ///
-/// ⚠️ Le point était **exclu** jusqu'à #3350, et deux cas l'affirmaient. L'argument - « une ligne de
+/// Le point était **exclu** jusqu'à #3350, et deux cas l'affirmaient. L'argument - « une ligne de
 /// commande n'a pas de liste sous les yeux pour distinguer les A1 de deux carrés » - a été démenti par
 /// l'inventaire : toutes les sorties qui offrent `--lieu` portent le carré. Ce n'est pas le critère qui
 /// doit se restreindre, c'est la sortie qui désambiguïse.

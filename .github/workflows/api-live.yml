@@ -13,7 +13,7 @@
 #     crie pas au loup, mais le résumé du run dit quoi faire ;
 #   - ROUGE  : le serveur répond et le contrat ne tient plus → à regarder vite.
 #
-# ⚠️ Ce vert-là a un angle mort, mesuré en #2748 : il ne distingue pas « contrat vérifié » de
+# Ce vert-là a un angle mort, mesuré en #2748 : il ne distingue pas « contrat vérifié » de
 # « contrat sauté ». Deux passages verts d'affilée n'avaient rien vérifié, la dernière exécution
 # réelle remontant à 16 jours, et personne ne l'avait vu parce qu'il n'y avait rien à voir. D'où un
 # QUATRIÈME état, porté par l'étape de veille en fin de job : ROUGE au-delà de trois semaines sans
@@ -89,7 +89,7 @@ jobs:
         # Jamais -Dvigiechiro.write=true ici : les probes d'écriture restent un geste humain
         # opt-in (participation de rebut, cf. dev-docs/api-vigiechiro.md).
         #
-        # ⚠️ Le NOM de cette étape est lu par la veille ci-dessous pour reconnaître, dans
+        # Le NOM de cette étape est lu par la veille ci-dessous pour reconnaître, dans
         # l'historique, un passage qui a réellement vérifié. Le renommer sans reporter le nouveau
         # nom dans ETAPE_CONTRAT (.github/scripts/veille-contrat-api.sh) casserait la détection ;
         # la veille refuse de conclure dans ce cas plutôt que d'annoncer un « jamais joué ».

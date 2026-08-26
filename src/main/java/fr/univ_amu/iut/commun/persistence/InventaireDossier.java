@@ -45,7 +45,7 @@ record InventaireDossier(int fichiers, long octets, String empreinte) {
                 lignes.add(relatifNormalise(racine, chemin) + "\t" + taille);
             }
         } catch (UncheckedIOException parcours) {
-            // ⚠️ `Files.walk` n'annonce pas l'échec de parcours en `IOException` : il l'enveloppe dans
+            // `Files.walk` n'annonce pas l'échec de parcours en `IOException` : il l'enveloppe dans
             // une `UncheckedIOException` levée pendant l'itération, qui n'hérite pas d'`IOException` et
             // traverserait donc la signature déclarée - le diagnostic de l'appelant ne s'appliquerait
             // jamais (#3632). On la ramène au type annoncé.

@@ -52,7 +52,7 @@ branché. Le juger « créable » y déverserait des gigaoctets sur le disque sy
 vrai disque **masquerait** ensuite : l'utilisateur verrait ses nuits disparaître en rebranchant son
 disque.
 
-⚠️ **Conséquence assumée** : restaurer une nuit qu'on vient de **supprimer** la remet dans le dossier
+**Conséquence assumée** : restaurer une nuit qu'on vient de **supprimer** la remet dans le dossier
 de travail et non à sa place, puisque sa place n'existe plus. Le compte rendu le dit, et la base
 pointe au bon endroit.
 
@@ -78,7 +78,7 @@ n'a pas bougé, et le rebaser désignerait un fichier qui n'a jamais été là.
   « restauré ».
 - Une sauvegarde **antérieure au manifeste** se restaure comme avant, et le bilan le dit plutôt que
   de laisser croire à mieux.
-- ⚠️ L'inventaire des six tables est énuméré **deux fois** dans le code, ici et dans
+- L'inventaire des six tables est énuméré **deux fois** dans le code, ici et dans
   `RattachementDao.reprefixerChemins`, le socle ne pouvant pas dépendre d'une feature. Une septième
   table à chemin devra être ajoutée aux deux endroits : c'est le sujet de #3133.
 

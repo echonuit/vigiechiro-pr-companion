@@ -200,7 +200,7 @@ class DecisionsRespecteesTest {
         // ligne décide seule de ce que fait `flatpak run <app-id>` sans argument - donc de ce que fait
         // l'entrée de menu. Repassée à `"$@"`, elle rendrait l'aide de la CLI au double-clic.
         //
-        // ⚠️ Rien d'autre ne le verrait. Le garde voisin, `verifie-affichage-flatpak.sh`, ne regarde que
+        // Rien d'autre ne le verrait. Le garde voisin, `verifie-affichage-flatpak.sh`, ne regarde que
         // les sockets d'affichage, et le paquet lui-même n'est construit ni sur les PR ni sur `main` :
         // il l'est chez Flathub, à partir du `.deb` publié. Le défaut ne se découvrirait donc que sur le
         // poste d'un utilisateur.
@@ -236,7 +236,7 @@ class DecisionsRespecteesTest {
                         + "doit continuer d'être installée ici.")
                 .contains("xdg-desktop-menu install");
 
-        // ⚠️ Et l'appel doit être TOLÉRÉ, pas nu (#4081). Sous `set -e`, son code 3 - rendu partout où
+        // Et l'appel doit être TOLÉRÉ, pas nu (#4081). Sous `set -e`, son code 3 - rendu partout où
         // aucun menu système n'est inscriptible - laissait le paquet en `half-configured` : installé,
         // non configuré, bloquant les opérations `apt` suivantes. Un geste d'affichage n'a pas à
         // décider du sort de l'installation entière.
@@ -250,7 +250,7 @@ class DecisionsRespecteesTest {
                         + "quoi le `.deb` n'installe aucun exécutable hors de /opt.")
                 .contains("ln -sf /opt/vigiechirocompanion/bin/vigiechiro /usr/bin/vigiechiro");
 
-        // ⚠️ L'ordre est un fait mesuré, pas une préférence : sur un système sans dossier de menus
+        // L'ordre est un fait mesuré, pas une préférence : sur un système sans dossier de menus
         // inscriptible, `xdg-desktop-menu` rend 3 et le `set -e` arrête le script sur-le-champ. Le lien
         // placé après n'était alors pas posé, et l'installation rendait une commande absente.
         assertThat(postinst.indexOf("ln -sf /opt/vigiechirocompanion/bin/vigiechiro"))
@@ -371,7 +371,7 @@ class DecisionsRespecteesTest {
         // Rien ne rougit : ça compile, la vue se charge, l'écran s'affiche. La table est simplement
         // vide et les actions ne portent sur rien.
         //
-        // ⚠️ Le ViewModel n'est qu'un cas (#3335). Un PORTEUR de dialogue en est un autre, et il est
+        // Le ViewModel n'est qu'un cas (#3335). Un PORTEUR de dialogue en est un autre, et il est
         // plus piégeux parce qu'il ne s'injecte pas : le dépôt le fabrique en initialiseur de champ
         // (`new ConfirmateurModifiable()`, neuf contrôleurs le font). Or l'ADR 0010 en fait un point de
         // SUBSTITUTION pour les tests, et un point de substitution n'en est un que s'il est unique : un

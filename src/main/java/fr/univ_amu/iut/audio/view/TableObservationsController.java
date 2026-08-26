@@ -22,7 +22,7 @@ import javafx.scene.control.TableView;
 /// Tout ce qui a besoin de la table **et** d'autre chose (panneau d'écoute, menu ☰, barre de filtres,
 /// gestionnaire de colonnes) reste câblé par le parent, qui obtient la table par [#table()].
 ///
-/// ⚠️ Cette classe existe pour une raison **mesurée**, pas esthétique : `NcssCount` compte les
+/// Cette classe existe pour une raison **mesurée**, pas esthétique : `NcssCount` compte les
 /// déclarations de champs, et les 82 champs `@FXML` du parent pesaient 67 de ses 199 points, à un
 /// plafond de 200. Aucun regroupement de méthodes ne pouvait les déplacer. Voir
 /// `dev-docs/decisions/2745-une-vue-riche-se-decoupe-en-sous-vues.md`.
@@ -117,7 +117,7 @@ public class TableObservationsController {
 
     /// Câble la table sur le modèle **du parent**, appelée par [SonsValidationController#initialize()].
     ///
-    /// ⚠️ Ce câblage ne peut pas vivre dans un `initialize()` avec un [AudioViewModel] injecté : ce
+    /// Ce câblage ne peut pas vivre dans un `initialize()` avec un [AudioViewModel] injecté : ce
     /// modèle est délibérément **non-singleton** (`AudioModule`, « un VM frais par chargement d'écran »),
     /// si bien qu'une injection ici rendrait un **second** modèle, vide. L'écran compilait, se chargeait
     /// et s'affichait ; la table restait simplement vide et les actions ne portaient sur rien. Seuls les

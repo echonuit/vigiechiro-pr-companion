@@ -48,7 +48,7 @@ public final class ClientVigieChiro {
     /// Combien de sites au plus une recherche de carré rapporte (#3458).
     ///
     /// Un même carré porte un site **par protocole** : quelques-uns au grand maximum, jamais une page.
-    /// ⚠️ Ce backend refuse `max_results` au delà de 100 (422), et rend alors des listes vides **en
+    /// Ce backend refuse `max_results` au delà de 100 (422), et rend alors des listes vides **en
     /// silence** : la borne est basse à dessein, et ne doit pas être élargie sans mesure.
     private static final int RESULTATS_RECHERCHE_CARRE = 20;
 
@@ -93,7 +93,7 @@ public final class ClientVigieChiro {
     /// Un jeton est-il disponible ? **Sans appel réseau** : la question se pose pour décider ce qu'un
     /// écran offre, et une affordance ne se paie pas d'un aller-retour.
     ///
-    /// ⚠️ Un jeton présent ne dit pas qu'il est **valide** - seul [#moi()] le sait. C'est suffisant pour
+    /// Un jeton présent ne dit pas qu'il est **valide** - seul [#moi()] le sait. C'est suffisant pour
     /// ce à quoi cela sert : empêcher un geste qui ne peut RIEN faire faute de jeton (#4194).
     public boolean estConnecte() {
         return fournisseurToken.token().isPresent();
@@ -156,7 +156,7 @@ public final class ClientVigieChiro {
     /// annoncé ne bouge même pas), si bien qu'un filtre encodé ainsi ne filtrerait rien tout en le
     /// laissant croire. Le tri se fait chez l'appelant, sur ce qu'il a réellement lu.
     ///
-    /// ⚠️ **Cela ne vaut que pour `where=`.** Le paramètre `q`, lui, filtre réellement - voir
+    /// **Cela ne vaut que pour `where=`.** Le paramètre `q`, lui, filtre réellement - voir
     /// [#chercherCarre] : qui cherche **un** carré n'a pas à payer deux cents pages.
     public ReponseApi<LotPagine<SiteVigieChiro>> sitesPlateforme(int pages, SuiviPagination suivi) {
         int bornees = Math.clamp(pages, 1, PAGES_MAX);
@@ -171,7 +171,7 @@ public final class ClientVigieChiro {
     /// l'index texte **existe** : le total annoncé passe de 20 767 à 1 pour `q=130711`, et à 0 pour un
     /// numéro qui n'existe pas. Ce n'est donc **pas** un paramètre accepté puis ignoré comme `where=`.
     ///
-    /// ⚠️ **`$text` cherche des mots entiers, jamais des préfixes** : `13071` ne ramène pas `130711`.
+    /// **`$text` cherche des mots entiers, jamais des préfixes** : `13071` ne ramène pas `130711`.
     /// C'est exactement ce qu'il faut pour un numéro de carré - aucun faux positif par troncature - mais
     /// cela **interdit** de bâtir une recherche partielle là-dessus. Le titre d'un site
     /// (`Vigiechiro - Point Fixe-130711`) indexe le numéro comme un mot à lui seul, le tiret servant de
@@ -195,7 +195,7 @@ public final class ClientVigieChiro {
 
     /// Remplace **toute** la liste des localités d'un site (`PUT /sites/{id}/localites`, #3458).
     ///
-    /// ⚠️ **Aucun `If-Match` n'est envoyé, et ce n'est pas un oubli** : `set_localite` appelle
+    /// **Aucun `If-Match` n'est envoyé, et ce n'est pas un oubli** : `set_localite` appelle
     /// `sites.update(...)` **sans `if_match`** côté backend, si bien que l'en-tête n'y changerait rien -
     /// le serveur retente jusqu'à passer. La protection contre l'écrasement concurrent est donc
     /// **entièrement côté client**, dans [fr.univ_amu.iut.sites.model.PublicationPoint], qui relit
@@ -213,7 +213,7 @@ public final class ClientVigieChiro {
 
     /// **Lecture brute** d'un chemin de l'API, réservée à l'exploration (`vigiechiro api lire`).
     ///
-    /// ⚠️ Cette méthode est la seule qui **ne nomme pas** ce qu'elle lit : elle rend le corps tel quel,
+    /// Cette méthode est la seule qui **ne nomme pas** ce qu'elle lit : elle rend le corps tel quel,
     /// sans projection ni interprétation. C'est délibérément une **échappatoire**, pas une porte
     /// d'entrée. Tout le reste de ce client existe parce qu'un point d'accès nommé encode, une fois
     /// pour toutes, ce qu'il faut savoir avant d'appeler - le plafond de pagination, l'ordre inversé
@@ -415,7 +415,7 @@ public final class ClientVigieChiro {
     /// donnée, donc un jeton d'`Observateur` suffit : contrairement à l'avis de validateur, qu'il refuse
     /// (403) et que l'application ne peut donc que lire (#1417).
     ///
-    /// ⚠️ **Écriture définitive.** Le serveur ajoute par `$push`, et **aucune route ne permet de supprimer
+    /// **Écriture définitive.** Le serveur ajoute par `$push`, et **aucune route ne permet de supprimer
     /// ni de modifier un message**. Ce qui part ne se retire pas, et part sur des données partagées avec
     /// un validateur du MNHN. L'appelant **doit** l'avoir fait confirmer explicitement.
     ///

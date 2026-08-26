@@ -260,7 +260,7 @@ public class ServiceSauvegarde {
     /// petite - ne le faisait pas (#3572). Elle copiait jusqu'à saturation, échouait à mi-parcours, et
     /// laissait un dossier qui ressemblait à une sauvegarde.
     ///
-    /// ⚠️ Le besoin se mesure **sur le disque** ici, contrairement à la restauration où le manifeste le
+    /// Le besoin se mesure **sur le disque** ici, contrairement à la restauration où le manifeste le
     /// portait déjà : les racines existent, il n'y a pas encore de manifeste à lire. Une racine
     /// inaccessible ne compte pas - elle ne sera pas copiée, et la sauvegarde l'annonce (#1346).
     private void refuserSiLaPlaceManque(Path dossierDestination) throws IOException, SQLException {

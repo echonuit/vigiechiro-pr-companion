@@ -53,7 +53,7 @@ localités avec coordonnées.
 **Un carré se rapatrie par son numéro**, depuis la fenêtre de déclaration, via `GET /sites?q=`. Le site
 arrive rattaché, avec ses points positionnés, **avant** tout dépôt.
 
-⚠️ **Et l'on n'élargit pas la synchronisation à `/moi/sites`.** C'est une décision **de ne pas faire**,
+**Et l'on n'élargit pas la synchronisation à `/moi/sites`.** C'est une décision **de ne pas faire**,
 et elle est la plus coûteuse à refaire : elle a demandé un jeton, une sonde sur compte réel, et elle a
 retourné l'intuition de départ. Sans cette ADR, la piste se rouvrirait au premier lecteur qui remarque
 que la route existe.
@@ -90,11 +90,11 @@ la même règle interdirait de modifier un site correctement rattaché.
 - **Un seul mécanisme d'écriture** : `ImportSiteDistant` est **extrait** de `RapprochementSites`, pas
   réécrit. Un carré arrivé par la synchronisation périodique et un carré rapatrié à la demande laissent
   le **même état local**.
-- ⚠️ **Une différence est assumée** : la synchronisation connaît **tous** les sites et peut purger les
+- **Une différence est assumée** : la synchronisation connaît **tous** les sites et peut purger les
   correspondances qu'elle ne cite plus ; le rapatriement n'en connaît **qu'un** et se contente d'un
   `upsert`. Purger depuis une vue partielle effacerait des liens valides.
 - **Le refus de dépôt s'appuie sur cette route** ([ADR 3854](3854-un-refus-ne-conseille-que-ce-qu-il-a-verifie.md)).
-- ⚠️ **Le geste reste absent de la ligne de commande** (#3856) : `creer-site` fabrique encore le doublon
+- **Le geste reste absent de la ligne de commande** (#3856) : `creer-site` fabrique encore le doublon
   que l'écran empêche. La parité n'est donc pas tenue, et c'est écrit plutôt que tu.
 
 ## Alternatives écartées

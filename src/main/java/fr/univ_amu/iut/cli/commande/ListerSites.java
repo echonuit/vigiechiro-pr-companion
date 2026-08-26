@@ -64,7 +64,7 @@ public final class ListerSites implements Callable<Integer>, LectureSeule {
             return 0;
         }
         sortie.println(sites.size() + " site(s) :");
-        // ⚠️ Points lus **par lot** : la boucle en lançait une requête par site. L'IHM lit ainsi depuis
+        // Points lus **par lot** : la boucle en lançait une requête par site. L'IHM lit ainsi depuis
         // #4251 ; laisser la CLI boucler aurait fait payer à `vigiechiro sites lister` ce que « Mes
         // sites » ne paie plus - une asymétrie créée par le chantier lui-même (ADR 0014).
         Map<Long, List<PointDEcoute>> pointsParSite = pointsDe(sites);

@@ -66,7 +66,7 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
     /// lie au lieu d'être grisé une fois pour toutes au montage : sa valeur d'alors ne se reprenait
     /// jamais, `formulairePersonnalise()` mettant sa racine en cache.
     ///
-    /// ⚠️ Elle ne se dérive **pas** des chemins choisis. Avant « Appliquer », ceux-ci ne sont qu'une
+    /// Elle ne se dérive **pas** des chemins choisis. Avant « Appliquer », ceux-ci ne sont qu'une
     /// intention, et un bouton lié à eux s'allumerait sur un choix que rien n'a écrit. Elle bascule
     /// donc dans [#appliquer()] et [#reinitialiser()], **après** que le service a rendu la main.
     private final BooleanProperty configurationPersonnalisee = new SimpleBooleanProperty();
@@ -177,7 +177,7 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
         // servent pour retrouver ces boutons ; elle ne porte aucun style, et ne doit pas en porter.
         // `bouton-secondaire` est la classe du socle, celle que le jumeau du Lot emploie déjà.
         //
-        // ⚠️ Elle n'aurait rien fait avant #3966 : cet écran était le seul des 24 à ne pas charger
+        // Elle n'aurait rien fait avant #3966 : cet écran était le seul des 24 à ne pas charger
         // `design.css`, où elle est définie. La poser plus tôt aurait donné une classe inerte, qu'un
         // test aurait certifiée.
         copier.getStyleClass().addAll("emplacements-copier", BOUTON_SECONDAIRE);
@@ -193,7 +193,7 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
         choisir.getStyleClass().addAll("emplacements-choisir", BOUTON_SECONDAIRE);
         choisir.setOnAction(evenement -> choisir(titre, choix));
 
-        // ⚠️ C'est ce Region qui absorbe la place restante, et non le libellé. Donné au libellé - comme
+        // C'est ce Region qui absorbe la place restante, et non le libellé. Donné au libellé - comme
         // il l'était avant #3882 - le `hgrow` lui faisait occuper toute la rangée et rejetait les
         // boutons contre le bord droit. « Choisir… » peut se le permettre, il ne désigne rien ;
         // « Copier » non, il doit se lire contre le chemin qu'il copie. C'est le défaut trouvé en

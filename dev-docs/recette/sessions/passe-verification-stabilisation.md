@@ -25,7 +25,7 @@ l'angle mort du découpage par écran**, et cette passe ne regarde qu'elles.
 > Une case ici ne demande jamais « est-ce que X marche ? » - sa session le demande déjà. Elle demande
 > « **est-ce que X marche encore quand on y arrive par Y ?** ».
 
-⚠️ Cette passe ne remplace pas la campagne 2 : elle en est la **condition**. Jouer une campagne
+Cette passe ne remplace pas la campagne 2 : elle en est la **condition**. Jouer une campagne
 d'acceptation sur une base dont on ne sait pas si elle tient produirait des constats qu'on ne saurait
 pas attribuer.
 
@@ -58,7 +58,7 @@ env -u DISPLAY ./mvnw -q test-compile exec:java@generer-sd \
 Une seule carte suffit : **`sd-nominale`**. Le parcours n'exerce pas de cas dégradé - c'est l'objet de
 S2 - mais son **enchaînement**.
 
-⚠️ **Lancer l'application SANS `-Dvigiechiro.workspace`.** Cette propriété gagne en silence sur le
+**Lancer l'application SANS `-Dvigiechiro.workspace`.** Cette propriété gagne en silence sur le
 réglage persisté, et c'est précisément ce qui a produit un faux positif lors de l'instruction de #3459 :
 le mécanisme était sain, le harnais le contredisait. Un dispositif de vérification fait partie de ce
 qu'il faut vérifier.

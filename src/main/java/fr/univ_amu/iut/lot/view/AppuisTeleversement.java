@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 /// constructions, et une signature de huit paramètres du même genre (deux ViewModels, deux ports,
 /// deux fonctions) se remplit un jour dans le désordre sans que rien ne le dise.
 ///
-/// ⚠️ Ces appuis **viennent du parent**, jamais d'une injection propre à la sous-vue : les ViewModel du
+/// Ces appuis **viennent du parent**, jamais d'une injection propre à la sous-vue : les ViewModel du
 /// dépôt sont non-singleton, et se les injecter en donnerait de nouveaux, vides (ADR 2745, gardé par
 /// `DecisionsRespecteesTest#une_sous_vue_ne_s_injecte_pas_son_modele`).
 ///

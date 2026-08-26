@@ -21,7 +21,7 @@ package fr.univ_amu.iut.commun.view;
 /// besoin de connaître [fr.univ_amu.iut.commun.viewmodel.RevisionDonnees] : ni champ, ni écouteur, ni
 /// constructeur à rallonger.
 ///
-/// ⚠️ L'abonnement est posé **par vue**, pas par étape : `actualiserLibelleCourant` (#1213) remplace
+/// L'abonnement est posé **par vue**, pas par étape : `actualiserLibelleCourant` (#1213) remplace
 /// une étape par sa jumelle relibellée, et un `setAll` retire puis replace l'accueil. Dans les deux
 /// cas la vue est la même et l'écran n'a **pas** été quitté.
 public interface SuitLaRevision {

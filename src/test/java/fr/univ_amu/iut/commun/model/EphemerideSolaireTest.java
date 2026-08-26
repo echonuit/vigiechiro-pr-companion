@@ -194,7 +194,7 @@ class EphemerideSolaireTest {
         // mise en œuvre NOAA indépendante, au même seuil d'horizon (-0,833°). Une valeur reprise de
         // notre sortie ne prouverait que notre accord avec nous-mêmes.
         //
-        // ⚠️ La tolérance est de CINQ minutes, et non d'une, parce que la mesure l'impose : l'écart
+        // La tolérance est de CINQ minutes, et non d'une, parce que la mesure l'impose : l'écart
         // atteint 3 min 38 s sur le lever du 25 mars. La formule du lever simplifiée est précise à la
         // minute près des solstices - là où les autres tests l'éprouvent - et à quelques minutes près
         // des équinoxes. Resserrer ferait échouer le test contre l'algorithme, pas contre un défaut.

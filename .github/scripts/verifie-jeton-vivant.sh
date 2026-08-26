@@ -11,7 +11,7 @@
 # rougissait alors sur « le libellé d'identité est vide » : le symptôme à trois pas de la cause, et
 # c'est ce qui coûte une demi-heure à quelqu'un - pas au runner, à la personne qui lit.
 #
-# ⚠️ Et le coût n'est PAS le temps perdu : mesuré sur le run 32696587259, tiré exprès avec un jeton
+# Et le coût n'est PAS le temps perdu : mesuré sur le run 32696587259, tiré exprès avec un jeton
 # révoqué, tout tenait en 2 min 14 s. Le coût est que ce run finissait **VERT** - le tournage tourne
 # sous `failure.ignore` - et versait son clip hors ligne comme s'il montrait la plateforme.
 #
@@ -26,7 +26,7 @@
 # Les fondre referait, un cran plus loin, le défaut qu'on corrige : on irait frapper un jeton pendant
 # une panne d'Heroku, et on chercherait pourquoi le neuf ne marche pas mieux que l'ancien.
 #
-# ## ⚠️ La même table que `revoque-jeton.sh`, lue à l'ENVERS
+# ## La même table que `revoque-jeton.sh`, lue à l'ENVERS
 #
 # Là-bas, `401` est un **succès** : le jeton ne vaut plus rien, c'était le but. Ici c'est un **refus**.
 # Deux scripts voisins qui traitent le même code de façon opposée finissent par s'harmoniser un jour
@@ -108,9 +108,9 @@ auto_test() {
     }
 
     essai 200 vivant "200 : la plateforme reconnaît le jeton"
-    # ⚠️ Le cas de l'issue. Un contrôle qui ne regardait que la présence du secret le laissait passer.
+    # Le cas de l'issue. Un contrôle qui ne regardait que la présence du secret le laissait passer.
     essai 401 mort "401 : jeton expiré ou révoqué par le tournage précédent"
-    # ⚠️ Et les trois qui séparent les deux causes. Sans eux, un verdict qui rendrait « mort » pour tout
+    # Et les trois qui séparent les deux causes. Sans eux, un verdict qui rendrait « mort » pour tout
     # ce qui n'est pas 200 passerait, et on irait frapper un jeton pendant une panne de la plateforme.
     essai 000 muette "000 : injoignable, ce n'est pas le jeton"
     essai 503 muette "503 : la plateforme est en panne, ce n'est pas le jeton"
@@ -144,7 +144,7 @@ if [ "${1:-}" = "--auto-test" ]; then
     exit $?
 fi
 
-# ⚠️ L'absence du secret garde son message à elle : « le poser » et « en poser un frais » envoient au
+# L'absence du secret garde son message à elle : « le poser » et « en poser un frais » envoient au
 # même endroit, mais ne racontent pas la même histoire à qui lit le journal.
 if [ -z "${JETON:-}" ]; then
     echo "::error::Tournage connecté demandé, secret VIGIECHIRO_TOKEN_TOURNAGE absent. Le poser :"

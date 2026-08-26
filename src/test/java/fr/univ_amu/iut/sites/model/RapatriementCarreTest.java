@@ -270,7 +270,7 @@ class RapatriementCarreTest {
         when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.refuse(401, "jeton expiré"));
         String refuse = rapatriement.rapatrier(souhait).message();
 
-        // ⚠️ Le message nommait DEUX causes à la fois - « Vigie-Chiro est injoignable ou vous n'êtes pas
+        // Le message nommait DEUX causes à la fois - « Vigie-Chiro est injoignable ou vous n'êtes pas
         // connecté » - alors que le `switch` les distingue depuis toujours. Il faisait douter d'une
         // connexion qui était bonne, et laissait l'utilisateur trancher ce que le programme savait déjà.
         assertThat(sansJeton).contains("pas connecté").doesNotContain("injoignable");

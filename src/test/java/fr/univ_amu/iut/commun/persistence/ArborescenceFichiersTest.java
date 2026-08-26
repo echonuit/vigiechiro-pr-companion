@@ -24,7 +24,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// si bien qu'une copie faite depuis le mauvais modèle changeait le comportement en cas de panne sans
 /// rien casser de visible.
 ///
-/// ⚠️ Ce qui rend ces tests possibles : un dossier **en lecture seule** refuse qu'on retire ce qu'il
+/// Ce qui rend ces tests possibles : un dossier **en lecture seule** refuse qu'on retire ce qu'il
 /// contient. C'est la seule façon portable de fabriquer un fichier qui résiste, et elle vaut aussi pour
 /// le cas réel - un support monté en lecture seule, un droit retiré.
 class ArborescenceFichiersTest {
@@ -156,7 +156,7 @@ class ArborescenceFichiersTest {
 
     /// Une pesée qui échoue sur un fichier précis, et se comporte normalement sur les autres.
     ///
-    /// ⚠️ C'est le port qui rend ce test possible : `Files.size` ne lève pas sur commande. Un dossier
+    /// C'est le port qui rend ce test possible : `Files.size` ne lève pas sur commande. Un dossier
     /// en `chmod 000` ferait échouer le **parcours** avant la pesée, et un lien mort est écarté par
     /// `isRegularFile` - la panne réelle n'a pas d'équivalent portable qu'on puisse fabriquer.
     private TailleFichier illisible(Path interdit) {
@@ -218,7 +218,7 @@ class ArborescenceFichiersTest {
 
     /// Des gestes réels, sauf sur `interdit` que la suppression refuse.
     ///
-    /// ⚠️ Fabriqué plutôt que demandé au système : `File.setWritable(false)` n'empêche pas la
+    /// Fabriqué plutôt que demandé au système : `File.setWritable(false)` n'empêche pas la
     /// suppression sous Windows, et sept tests de cette classe le disaient en échouant au premier
     /// passage de la matrice trois plateformes (#3525). Un test qui ne prouve rien hors POSIX ne prouve
     /// rien sur la plateforme qui a le plus de façons de refuser un accès.
@@ -236,7 +236,7 @@ class ArborescenceFichiersTest {
 
     /// Des gestes réels, sauf le parcours, qui échoue **pendant l'itération**.
     ///
-    /// ⚠️ C'est le point du défaut #3632 : `Files.walk` n'annonce pas l'échec de parcours à la
+    /// C'est le point du défaut #3632 : `Files.walk` n'annonce pas l'échec de parcours à la
     /// construction du flux mais à sa **consommation**, enveloppé dans une `UncheckedIOException` que
     /// le `catch (IOException)` voisin ne voit pas. Un double qui lèverait tout de suite éprouverait
     /// autre chose.
@@ -254,7 +254,7 @@ class ArborescenceFichiersTest {
 
     /// Des gestes réels, sauf le listage de `interdit`, qui refuse de s'ouvrir.
     ///
-    /// ⚠️ L'échec arrive à l'**ouverture** et non pendant l'itération, contrairement à
+    /// L'échec arrive à l'**ouverture** et non pendant l'itération, contrairement à
     /// [#parcoursQuiEchoue] : c'est ce qui distingue une pesée, qui note et continue, d'un parcours
     /// récursif, qui s'arrête.
     private static GestesFichiers listageQuiRefuse(Path interdit) {

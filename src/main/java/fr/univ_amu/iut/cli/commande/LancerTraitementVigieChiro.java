@@ -27,7 +27,7 @@ import picocli.CommandLine.Spec;
 /// serveur a refusé la relance, et **`2`** pour un refus métier en amont (dépôt indisponible, ou aucune
 /// participation liée au passage : déposer d'abord), qui remonte via le handler central (#2294).
 ///
-/// ⚠️ **Une nuit déjà analysée n'est pas relancée** : le serveur supprimerait ses observations pour les
+/// **Une nuit déjà analysée n'est pas relancée** : le serveur supprimerait ses observations pour les
 /// recalculer, or l'audio d'un dépôt en archives ZIP n'est pas récupérable (#1244, #1261). L'option
 /// `--forcer` lève cette garde, en connaissance de cause : typiquement après un **échec**, où il n'y a
 /// plus rien à perdre.

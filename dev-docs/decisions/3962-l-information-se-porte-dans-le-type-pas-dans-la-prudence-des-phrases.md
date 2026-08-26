@@ -42,7 +42,7 @@ alors que `resultat.definitif()` **et** `resultat.cause()` sont disponibles à c
 par `TeleverseurArchive.Resultat` depuis #3688 et #3689. `BilanDepot.echecs` était une
 `List<String>` : l'information était jetée **à l'endroit exact où elle existait**.
 
-⚠️ C'est la **même forme** que le défaut de #3688, où le PUT S3 d'un seul bloc perdait le statut de sa
+C'est la **même forme** que le défaut de #3688, où le PUT S3 d'un seul bloc perdait le statut de sa
 réponse. Corrigé une fois en amont, le motif survivait en aval - et deux surfaces le payaient.
 
 ## Décision
@@ -69,7 +69,7 @@ entièrement, alors que se reconnecter réparait deux archives sur trois.
 **Se taire quand le geste s'applique à une part, c'est perdre un geste vérifié.** La phrase dit donc
 le compte : « 2 d'entre elles tenaient à vos droits : reconnectez-vous ».
 
-⚠️ **Ce cas-là ne s'est pas trouvé en relisant le code.** Il s'est vu **en ouvrant l'aperçu**, à la
+**Ce cas-là ne s'est pas trouvé en relisant le code.** Il s'est vu **en ouvrant l'aperçu**, à la
 passe 8, sur une bande où seize tests étaient verts.
 
 ## Le titre disait « déposée » quand il manquait trois archives

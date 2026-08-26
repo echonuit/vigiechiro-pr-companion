@@ -33,7 +33,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// D'où l'insistance sur le **contenu** du message de confirmation, et non sur le fait qu'un dialogue
 /// s'ouvre : un « êtes-vous sûr ? » générique ne serait pas un consentement.
 ///
-/// ⚠️ **Aucune écriture réelle n'est tirée.** Une sonde live sur cette route serait irréversible.
+/// **Aucune écriture réelle n'est tirée.** Une sonde live sur cette route serait irréversible.
 @ExtendWith(ApplicationExtension.class)
 class EnvoiMessageTest {
 

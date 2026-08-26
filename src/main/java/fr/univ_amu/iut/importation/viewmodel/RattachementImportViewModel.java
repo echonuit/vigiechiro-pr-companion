@@ -210,7 +210,7 @@ public class RattachementImportViewModel {
 
     /// Les mêmes, en distinguant ceux que l'import **retiendra** (#4021).
     ///
-    /// ⚠️ Pourquoi deux listes. L'aperçu montre ce que deviendront les fichiers ; l'avertissement de
+    /// Pourquoi deux listes. L'aperçu montre ce que deviendront les fichiers ; l'avertissement de
     /// discordance (#111) porte sur l'ensemble du dossier. Sur une carte qui mélange deux
     /// enregistreurs, l'aperçu prenait `nomsOriginaux.get(0)` - le premier dans l'ordre des noms - et
     /// désignait donc, une fois sur deux, un fichier que l'import allait **écarter**. Mesuré sur
@@ -288,7 +288,7 @@ public class RattachementImportViewModel {
     }
 
     private void majApercu() {
-        // ⚠️ Un RETENU, jamais un écarté. Et si rien n'est retenu, aucun exemple : promettre le nom
+        // Un RETENU, jamais un écarté. Et si rien n'est retenu, aucun exemple : promettre le nom
         // d'un fichier qu'on n'écrira pas est précisément le défaut de #4021, et le faire quand on
         // n'écrira rien du tout serait le pire des deux.
         String exemple = nomsRetenus.isEmpty() ? null : nomsRetenus.get(0);

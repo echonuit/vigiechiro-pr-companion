@@ -29,7 +29,7 @@ son branchement :
 Cette condition est levée : l'EPIC #3667 est clos, #4056 a publié les clips, et
 `CorrespondanceRecetteTest` lit **11 sessions et 403 cas**.
 
-⚠️ Le défaut est celui de l'[ADR 4103](4103-un-canal-de-distribution-ne-depend-pas-d-un-geste.md), sur
+Le défaut est celui de l'[ADR 4103](4103-un-canal-de-distribution-ne-depend-pas-d-un-geste.md), sur
 un autre dispositif : une version publiée sans tournage laisse en ligne les clips d'une version
 antérieure, et c'est un état parfaitement **vert**. Pire que pour un paquet : un clip **a toujours
 l'air juste**, puisqu'il montre bien un produit qui fonctionne. Rien, en le regardant, ne dit de
@@ -58,7 +58,7 @@ Son corps annonçait « elle ne marque aucune version du produit ». C'était ex
 tournage : la version filmée, ou le SHA court quand le tournage est manuel - auquel cas il le **dit**
 plutôt que de laisser croire à une correspondance.
 
-⚠️ C'est la moitié qui compte. Automatiser sans nommer la version aurait produit des clips justes et
+C'est la moitié qui compte. Automatiser sans nommer la version aurait produit des clips justes et
 **indatables** : le défaut d'origine déplacé d'un cran, pas corrigé.
 
 ### 3. Le coût ne décide pas
@@ -70,7 +70,7 @@ qui décide du moment, pas la durée.
 
 **`capture-vues.yml`**, qui produit les PNG d'aperçu.
 
-⚠️ **La première rédaction disait qu'il « pose exactement la même question ». C'est faux, et la mesure
+**La première rédaction disait qu'il « pose exactement la même question ». C'est faux, et la mesure
 l'a dit le jour même** : il n'est pas manuel. Il tourne sur `push: main` **et** sur chaque
 `pull_request`, en cinq minutes, et publie ses aperçus par une PR auto-mergée. Le défaut que cette ADR
 corrige - un dispositif qui dépend d'un geste que rien ne réclame - ne l'atteint donc pas.
@@ -90,7 +90,7 @@ suit le code, un artefact publié à côté suit les versions.
 ## Conséquences
 
 - Le train gagne un second `workflow_call`, en parallèle du premier : environ cinq minutes de plus.
-- ⚠️ **Le chaînage ne s'observe qu'au premier train** : `release.yml` ne s'exécute pas sur les PR. Ce
+- **Le chaînage ne s'observe qu'au premier train** : `release.yml` ne s'exécute pas sur les PR. Ce
   qui est vérifié avant fusion se limite au montage - conditions de job, butoirs, renvois, YAML.
 - Un tournage manuel reste possible, et se distingue désormais d'un tournage de publication dans le
   corps de la pré-version.

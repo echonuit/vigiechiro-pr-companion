@@ -213,7 +213,7 @@ public class ServiceLot {
         // Le plan repart a neuf : oublier son empreinte evite que le prochain depot se compare a un lot
         // revolu et se croie incoherent (#1994).
         depotPlans.supprimerPlan(idPassage);
-        // ⚠️ « Récupéré » est délibérément ABSENT de cette liste (#2581), et ce n'est pas un oubli : la
+        // « Récupéré » est délibérément ABSENT de cette liste (#2581), et ce n'est pas un oubli : la
         // remise à « Prêt à déposer » rendrait une nuit déjà sur la plateforme prête à y repartir, donc
         // à s'y dédoubler. C'est exactement le geste que #2771 a fermé côté fiche.
         if (passage.statutWorkflow() == StatutWorkflow.DEPOSE

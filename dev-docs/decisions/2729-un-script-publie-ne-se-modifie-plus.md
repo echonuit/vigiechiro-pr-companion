@@ -53,7 +53,7 @@ dont un script a dérivé ne doit pas recevoir en plus les migrations suivantes.
 - Un script publié devient **immuable**. Une correction se fait par une **nouvelle** migration.
 - Un démarrage peut échouer sur un refus que seul un développeur comprendra. C'est assumé : le
   message nomme le fichier, et cette situation ne se produit que sur une base de développement.
-- ⚠️ **Les migrations appliquées avant la mise en place des empreintes n'en ont aucune.** Elles sont
+- **Les migrations appliquées avant la mise en place des empreintes n'en ont aucune.** Elles sont
   **étalonnées** au premier lancement, sur le contenu actuel des scripts : l'empreinte fige le
   présent, elle ne juge pas le passé. Si un script avait **déjà** été modifié sur une base existante,
   l'étalonnage enregistrera la version modifiée et personne ne le saura. C'est irrattrapable, rien

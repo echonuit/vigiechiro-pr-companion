@@ -56,7 +56,7 @@ class BancDeRecetteJetonTest {
 
     @Start
     void start(Stage stage) throws IOException {
-        // ⚠️ Posée ICI, et non dans un `@BeforeEach` : l'extension TestFX appelle `@Start` depuis son
+        // Posée ICI, et non dans un `@BeforeEach` : l'extension TestFX appelle `@Start` depuis son
         // propre `beforeEach`, que JUnit exécute AVANT les `@BeforeEach` de la classe. Une propriété
         // posée là arriverait après que le banc a déjà construit son injecteur, et le cas serait vert
         // sans avoir rien éprouvé.
@@ -67,7 +67,7 @@ class BancDeRecetteJetonTest {
                 .montrer(stage);
     }
 
-    /// ⚠️ Le fork est partagé et réutilisé (`reuseForks`), donc une propriété laissée derrière soi
+    /// Le fork est partagé et réutilisé (`reuseForks`), donc une propriété laissée derrière soi
     /// servirait à toutes les classes qui passent après, dans l'ordre où la répartition les a mises.
     /// C'est le défaut même que ce cas décrit, retourné contre le reste de la suite.
     @AfterEach

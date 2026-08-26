@@ -20,7 +20,7 @@ verified:
 Le banc de documentation vérifie chaque geste avant de l'exécuter : `viser` lit le libellé à l'endroit
 visé, et refuse si ce n'est pas lui. C'était censé garantir qu'un film montre le parcours annoncé.
 
-⚠️ **Ce n'était pas suffisant, et le banc a rendu ✅ sur un film où rien n'arrive.** Un `viser` réussi
+**Ce n'était pas suffisant, et le banc a rendu ✅ sur un film où rien n'arrive.** Un `viser` réussi
 prouve qu'un bouton était là et qu'on a cliqué dessus. Il ne prouve **jamais** que le clic a fait
 quelque chose.
 
@@ -58,7 +58,7 @@ ferait de toute façon.
 quatre pixels et annonce l'écart retenu. Refuser à chaque changement de deux lignes de CSS ne sert
 personne ; l'absorber en silence laisse les scénarios pourrir sans que personne ne le sache.
 
-⚠️ Le pas est de **quatre** pixels, pas huit : mesuré, un bouton se trouvait à dix pixels du point
+Le pas est de **quatre** pixels, pas huit : mesuré, un bouton se trouvait à dix pixels du point
 visé ; à l'écart +8 la fenêtre de lecture le rognait et rendait « uler | | », à +10 elle rendait
 « + Ajouter ». Deux pixels séparaient le refus de la lecture juste.
 

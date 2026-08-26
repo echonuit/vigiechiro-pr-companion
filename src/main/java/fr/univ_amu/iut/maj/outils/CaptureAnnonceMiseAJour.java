@@ -31,7 +31,7 @@ import javafx.scene.Parent;
 /// d'installer » et le geste winget (#3457), ce qui la fait environ **tripler** : c'est la seule
 /// variante où le libellé enroule sur deux lignes et pousse la hauteur du bandeau.
 ///
-/// ⚠️ **Cet aperçu ne peut pas vivre dans le socle.** Faire composer son message à
+/// **Cet aperçu ne peut pas vivre dans le socle.** Faire composer son message à
 /// `CaptureBandeauAnnonce`, qui est dans `commun`, crée le cycle `commun -> maj -> commun`
 /// qu'ArchUnit interdit ; et l'aperçu du socle doit valoir même quand la feature `maj` est désactivée.
 /// L'aperçu d'un message appartient à la feature qui le **produit**.
@@ -47,7 +47,7 @@ import javafx.scene.Parent;
 /// prévu pour ça, son doc-comment le dit |
 /// | `os.name` | le conseil n'existe que sous Windows, et la CI rend sous Linux |
 ///
-/// ⚠️ **Le système est nommé en dur plutôt que lu**, comme le fuseau et la locale que le script de
+/// **Le système est nommé en dur plutôt que lu**, comme le fuseau et la locale que le script de
 /// capture impose déjà : un aperçu dont le contenu dépend du poste qui le rend ne se compare plus d'une
 /// campagne à l'autre. La propriété est restaurée après le rendu, pour ne rien laisser derrière.
 public final class CaptureAnnonceMiseAJour {
@@ -64,7 +64,7 @@ public final class CaptureAnnonceMiseAJour {
 
     /// La version « installée » que l'aperçu affiche.
     ///
-    /// ⚠️ **Elle doit être figée, et pas seulement pour le déterminisme.** Hors d'un jar - ce qui est
+    /// **Elle doit être figée, et pas seulement pour le déterminisme.** Hors d'un jar - ce qui est
     /// le cas d'un outil de capture - `VersionApplication.versionEmpaquetee()` rend un `Optional`
     /// vide, et `VerificateurMiseAJour` renonce alors sans rien proposer. Sans cette valeur, l'aperçu
     /// rendait le chrome **sans aucun bandeau** : mesuré en le regardant, pas déduit.
@@ -99,7 +99,7 @@ public final class CaptureAnnonceMiseAJour {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        // ⚠️ La base est migrée AVANT de mentir sur le système, et l'ordre n'est pas cosmétique : le
+        // La base est migrée AVANT de mentir sur le système, et l'ordre n'est pas cosmétique : le
         // pilote SQLite lit `os.name` pour choisir sa bibliothèque native, et se voir répondre
         // « Windows » sur une machine Linux le fait échouer sur
         // `NativeLibraryNotFoundException: No native library found for os.name=Windows`.

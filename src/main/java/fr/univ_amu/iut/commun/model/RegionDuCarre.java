@@ -22,7 +22,7 @@ public final class RegionDuCarre {
     /// La région du carré, ou **vide** si le numéro ne permet pas de conclure : nul, trop court, ou
     /// département inconnu (outre-mer, saisie erronée). Le référentiel retombe alors sur `national`,
     /// ce qui est une lecture plus large mais jamais fausse.
-    /// ⚠️ La valeur rendue est une **clé de référentiel** (`Provence-Alpes-Cote dAzur`), sans accents
+    /// La valeur rendue est une **clé de référentiel** (`Provence-Alpes-Cote dAzur`), sans accents
     /// ni apostrophe. Pour l'afficher à un utilisateur, passer par
     /// [LibellesReferentiel#region(String)] : c'est l'oubli de cette traduction qui a fait lire
     /// « region Provence-Alpes-Cote dAzur » en pied d'écran pendant des mois (#3049).
@@ -48,7 +48,7 @@ public final class RegionDuCarre {
     /// n'aurait pu la faire taire. Un préfixe qui ne désigne pas de département ne porte donc **pas de
     /// lecture**, exactement comme un numéro trop court.
     ///
-    /// ⚠️ Ce n'est pas le code **officiel** pour autant : la Corse porte `20`, là où l'INSEE écrit
+    /// Ce n'est pas le code **officiel** pour autant : la Corse porte `20`, là où l'INSEE écrit
     /// `2A`/`2B`. Pour confronter cette écriture à celle d'un code INSEE, passer par
     /// [RegionsFrancaises#memeDepartement].
     public static Optional<String> departement(String numeroCarre) {

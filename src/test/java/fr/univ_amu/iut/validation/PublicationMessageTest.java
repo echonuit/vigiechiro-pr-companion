@@ -31,7 +31,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// **Poster un message au validateur** ([PublicationMessage], #1418) : la seule écriture **définitive** de
 /// ce chantier : le serveur ajoute par `$push` et n'offre aucune route de suppression.
 ///
-/// ⚠️ Tous ces tests tournent sur une **API bouchonnée**. Aucune écriture réelle n'est tirée : une sonde
+/// Tous ces tests tournent sur une **API bouchonnée**. Aucune écriture réelle n'est tirée : une sonde
 /// live sur cette route serait irréversible, et reste soumise à un accord explicite.
 ///
 /// Ce qu'ils protègent : que **rien ne parte** quand ça ne doit pas partir, et que **rien ne soit écrit en

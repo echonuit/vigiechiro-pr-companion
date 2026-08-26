@@ -67,7 +67,7 @@ public final class ApercuFx {
         stageTransitoire.show();
         scene.getRoot().applyCss();
         scene.getRoot().layout();
-        // ⚠️ Ce contrôle reste ICI et n'a pas suivi dans [RenduPng] (#2746) : une capture de
+        // Ce contrôle reste ICI et n'a pas suivi dans [RenduPng] (#2746) : une capture de
         // documentation ne doit jamais partir avec un libellé tronqué, mais un export utilisateur
         // porte sur une scène redessinée que personne ne peut corriger. Voir RenduPng.
         LisibiliteCapture.refuserToutTexteIllisible(scene);
@@ -259,7 +259,7 @@ public final class ApercuFx {
 
     /// Capture un [javafx.scene.control.DialogPane] hors-ecran, sur un fond qui simule la modalite.
     ///
-    /// ⚠️ Cette methode prenait la liste des feuilles de style en parametre, et ses huit appelants y
+    /// Cette methode prenait la liste des feuilles de style en parametre, et ses huit appelants y
     /// passaient tous le meme couple `palette.css` + `base.css`, recopie chez chacun. Depuis #3374,
     /// [Habillage] pose cette paire lui-meme, **au niveau ou la palette vit** - ce que huit copies
     /// independantes ne pouvaient pas garantir. Le parametre n'offrait donc plus qu'une facon de se

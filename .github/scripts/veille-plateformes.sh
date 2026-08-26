@@ -22,7 +22,7 @@
 #
 #     dateISO<TAB>conclusion<TAB>titre du run
 #
-# ⚠️ Seules les exécutions **complètes** comptent. Une exécution peut être **ciblée** depuis #3754 -
+# Seules les exécutions **complètes** comptent. Une exécution peut être **ciblée** depuis #3754 -
 # deux classes au lieu de 4600 -, et l'API des runs ne dit pas quelles entrées ont été passées à un
 # `workflow_dispatch`. La compter certifierait la fraîcheur de la suite entière sur la preuve de deux
 # classes ; c'est le malentendu que l'en-tête du tri évite un étage plus bas. Vu en branchant la veille
@@ -73,7 +73,7 @@ juger() {
         return 1
     fi
 
-    # ⚠️ Aucun titre marqué du tout = le `run-name:` a été renommé, ou tous les runs le précèdent. On
+    # Aucun titre marqué du tout = le `run-name:` a été renommé, ou tous les runs le précèdent. On
     # refuse en disant que c'est la VEILLE qui est en cause, plutôt que d'annoncer « jamais éprouvé » -
     # même raisonnement que `ETAPE_CONTRAT` dans `veille-contrat-api.sh`.
     # `-F` : les crochets d'un marqueur sont une CLASSE DE CARACTÈRES en expression rationnelle, donc
@@ -117,7 +117,7 @@ juger() {
 
     if [ "${age}" -gt "${jours_max}" ]; then
         echo "❌ Dernière preuve réelle il y a ${age} jours (${derniere}), au-delà des ${jours_max} tolérés."
-        # ⚠️ Guillemets SIMPLES : entre guillemets doubles, les accents graves ouvraient une
+        # Guillemets SIMPLES : entre guillemets doubles, les accents graves ouvraient une
         # substitution de commande. Le message s'affichait « Le  du mardi », le mot `schedule`
         # avalé, avec un « commande introuvable » sur la sortie d'erreur - et cela se lisait
         # justement au moment où la veille est en retard. Trouvé par shellcheck (SC2006).
@@ -133,7 +133,7 @@ juger() {
 if [ "${AUTO_TEST:-non}" = "oui" ]; then
     echecs=0
     MAINTENANT=$(date -u -d "2026-08-14T12:00:00Z" +%s)
-    # ⚠️ Le 4e argument, facultatif, est un motif que la SORTIE doit contenir. Sans lui, un cas ne juge
+    # Le 4e argument, facultatif, est un motif que la SORTIE doit contenir. Sans lui, un cas ne juge
     # que le code de retour - et deux refus pour des raisons opposées se ressemblent alors trait pour
     # trait. Vu en éprouvant cet autotest : en retirant la garde du marqueur absent, AUCUN cas n'a
     # rougi, parce que le refus tombait quand même, en accusant la suite au lieu de la veille.
@@ -160,12 +160,12 @@ if [ "${AUTO_TEST:-non}" = "oui" ]; then
 
     verifie 0 "une preuve d'hier est fraîche" "$(printf '2026-08-13T06:00:00Z\tsuccess\t%s' "$C")"
     verifie 1 "une preuve de trois semaines ne l'est plus" "$(printf '2026-07-24T06:00:00Z\tsuccess\t%s' "$C")"
-    # ⚠️ Les refus explicites, ceux qu'on oublie : sans eux, la veille rendrait un « 0 jour » rassurant
+    # Les refus explicites, ceux qu'on oublie : sans eux, la veille rendrait un « 0 jour » rassurant
     # là où elle ne sait rien. Une mesure vide n'est pas un zéro.
     verifie 1 "un historique vide est un refus, pas un zéro" "" "Historique vide"
     verifie 1 "aucune exécution réussie est un refus" \
         "$(printf '2026-08-13T06:00:00Z\tfailure\t%s\n2026-08-06T06:00:00Z\tfailure\t%s' "$C" "$C")"
-    # ⚠️ Le cas qui a motivé le marqueur : un passage CIBLÉ, réussi et tout frais, ne prouve rien - il ne
+    # Le cas qui a motivé le marqueur : un passage CIBLÉ, réussi et tout frais, ne prouve rien - il ne
     # portait que quelques classes. Sans cette ligne, la veille certifiait la suite entière sur lui.
     verifie 1 "un passage ciblé, même réussi et récent, n'est pas une preuve" \
         "$(printf '2026-08-14T06:00:00Z\tsuccess\t%s' "$K")" \
@@ -174,7 +174,7 @@ if [ "${AUTO_TEST:-non}" = "oui" ]; then
     # complet lancé À LA MAIN vaut preuve. Sans lui, un mardi rouge bloquerait le train une semaine.
     verifie 0 "un passage complet lancé à la main vaut preuve" \
         "$(printf '2026-08-13T18:00:00Z\tsuccess\t%s' "$C")"
-    # ⚠️ Le marqueur a disparu (run-name renommé) : refuser en accusant la VEILLE, et surtout ne pas
+    # Le marqueur a disparu (run-name renommé) : refuser en accusant la VEILLE, et surtout ne pas
     # prendre le premier succès venu - sans quoi le renommage ferait passer un ciblé pour un complet.
     verifie 1 "un historique sans aucun marqueur accuse la veille" \
         "$(printf '2026-08-14T06:00:00Z\tsuccess\tSuite sous Windows et macOS')" \

@@ -94,7 +94,7 @@ réintroduisant l'ancien appel, il nomme le fichier, la méthode et la ligne.
 `..perf..` en est exclu à dessein. Un banc de mesure lit l'horloge parce que **mesurer la machine** est
 sa raison d'être, et il ne publie pas d'image.
 
-## ⚠️ Ce que le test a appris : la séquence compte
+## Ce que le test a appris : la séquence compte
 
 En figeant les trois états, le test a **échoué** : le troisième annonçait « ~10 s » et non « ~17 s ».
 

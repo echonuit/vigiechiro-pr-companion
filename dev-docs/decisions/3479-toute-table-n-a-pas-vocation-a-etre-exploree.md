@@ -22,7 +22,7 @@ L'audit a montré que c'en était un **en partie seulement**. Sept contrats tech
 
 Sans décision écrite, la question se repose à chaque nouvelle `TableView`, et la réponse par défaut est l'**imitation** : on regarde l'écran d'à côté et on copie. C'est le chemin qui mène à équiper une table transitoire d'un catalogue de critères que personne n'ouvrira, en ajoutant de la surface technique sans améliorer le parcours.
 
-⚠️ Le standard existait déjà, mais dans un **audit**. Un audit se lit une fois, au moment où on le reçoit ; un contrat se relit chaque fois qu'on ajoute un écran. C'est toute la différence, et c'est pour ça que cette ADR existe.
+Le standard existait déjà, mais dans un **audit**. Un audit se lit une fois, au moment où on le reçoit ; un contrat se relit chaque fois qu'on ajoute un écran. C'est toute la différence, et c'est pour ça que cette ADR existe.
 
 ## Décision
 
@@ -65,7 +65,7 @@ Un **raccourci fréquent** se porte par une vue par défaut, pas par une présé
 - Les dix points ne sont pas une cible : ils sont **acquis** au moment de cette ADR. « Tout effacer » vit dans onze fichiers, `GestionnaireFiltres` documente le compteur sur le sous-ensemble, `ActiviteViewModel` distingue les causes d'un état vide, l'export audio porte les observations affichées, et `aaa963e82` a rendu la restauration bavarde. Cette ADR **écrit ce qui est garanti**, elle ne demande pas un chantier.
 - Les catalogues de critères sont ancrés au code par les balises `<!--inv:criteres-*-->` : le point 10 a déjà sa part vérifiée automatiquement.
 
-⚠️ **Aucune loupe, délibérément.** Une vérification `humaine` peut s'adjoindre une **loupe** ([ADR 2465](2465-une-adr-declare-comment-elle-est-verifiee.md)) : un script qui surface une surface de revue sans jamais bloquer. Ici, lister les `TableView` sans barre de filtres rendrait une demi-douzaine de candidats, **tous légitimes**. C'est la loupe bruyante que la discipline du dépôt écarte (#2468) : un listing que personne ne lit est un faux vert. Le jugement de nature reste humain parce qu'il porte sur l'**usage**, que le code ne montre pas.
+**Aucune loupe, délibérément.** Une vérification `humaine` peut s'adjoindre une **loupe** ([ADR 2465](2465-une-adr-declare-comment-elle-est-verifiee.md)) : un script qui surface une surface de revue sans jamais bloquer. Ici, lister les `TableView` sans barre de filtres rendrait une demi-douzaine de candidats, **tous légitimes**. C'est la loupe bruyante que la discipline du dépôt écarte (#2468) : un listing que personne ne lit est un faux vert. Le jugement de nature reste humain parce qu'il porte sur l'**usage**, que le code ne montre pas.
 
 ## Alternatives écartées
 

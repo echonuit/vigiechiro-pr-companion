@@ -22,7 +22,7 @@ Elle ne l'affirme pas, elle donne de quoi trancher - les mêmes cas, filmés par
 | Le pointeur de la souris | dessiné par `x11grab` | dessiné par le banc, avec le halo du clic et le badge des raccourcis |
 | Ses gardes | **50 cas** d'auto-test, dont **14 rouges attendus** | 35 cas unitaires |
 
-⚠️ Les deux durées ci-dessus sont sur la **même plateforme** et le **même périmètre**. Elles ne se
+Les deux durées ci-dessus sont sur la **même plateforme** et le **même périmètre**. Elles ne se
 comparent pas clip par clip : les cas perceptifs, qui portent des temps d'arrêt délibérés, coûtent le
 même prix aux deux bancs.
 
@@ -34,7 +34,7 @@ même prix aux deux bancs.
   qui vérifie que la référence nommée existe. Il faut donc décider ce que deviennent ces deux
   vérifications **avant** de retirer quoi que ce soit.
 
-    ⚠️ Cette page a d'abord annoncé **trois**, en comptant l'ADR 3794. C'était un comptage fait sur
+    Cette page a d'abord annoncé **trois**, en comptant l'ADR 3794. C'était un comptage fait sur
     les fichiers qui *contiennent* la chaîne, et non sur ceux dont la **puce de vérification** la
     nomme : 3794 se vérifie par `verifie-inventaires-ci.sh`. L'ADR 4013 cite elle aussi un banc, mais
     c'est `filme-un-parcours.sh`, celui des films de **documentation** - un dispositif distinct, que
@@ -59,7 +59,7 @@ Ce qu'il vaut la peine de comparer, dans cet ordre :
     Elle existe pour **trancher une fois** : adopter le banc Java, ou non. Elle n'est pas un état
     courant du dépôt, et elle ne le deviendra pas.
 
-    ⚠️ **Les deux colonnes ne vieillissent pas à la même vitesse.** `clips-recette` est alimentée par
+    **Les deux colonnes ne vieillissent pas à la même vitesse.** `clips-recette` est alimentée par
     le flux **recette filmée**, branché sur le train de publication ; `clips-java` est versée **à la
     main**, depuis l'artefact d'un tournage. Un test écrit après le dernier versement manuel apparaît
     donc à gauche et manque à droite - ce n'est pas une lacune du banc, c'est un décalage de dates.
@@ -323,13 +323,13 @@ Ce qu'il vaut la peine de comparer, dans cet ordre :
 
 <video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.hors_connexion_verifier_est_ferme_mais_declarer_reste_possible.mp4"></video>
 
-> ⚠️ Pas de clip côté Java : ce test est **plus récent que le tournage** de comparaison.
+> Pas de clip côté Java : ce test est **plus récent que le tournage** de comparaison.
 
 ### S1-33 · `plateforme_injoignable_l_encart_ne_nie_pas_le_carre`
 
 <video controls muted playsinline preload="none" width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.plateforme_injoignable_l_encart_ne_nie_pas_le_carre.mp4"></video>
 
-> ⚠️ Pas de clip côté Java : ce test est **plus récent que le tournage** de comparaison.
+> Pas de clip côté Java : ce test est **plus récent que le tournage** de comparaison.
 
 ### S1-34 · `recuperer_ferme_la_modale_et_rend_compte`
 

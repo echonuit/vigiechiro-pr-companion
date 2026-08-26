@@ -57,7 +57,7 @@ Relevé du 24/08/2026, sur la topologie par défaut : **40 carrés de 10 points*
     Le jeu sème désormais `perf.sites` carrés (défaut **40**), et `JeuDuBancTest` refuse qu'il retombe à
     un. Les chiffres ci-dessus sont ceux de cette topologie-là.
 
-    ⚠️ Ils sont plus **hauts** que les anciens (34 contre 25, 26 contre 18) et c'est attendu : le jeu est
+    Ils sont plus **hauts** que les anciens (34 contre 25, 26 contre 18) et c'est attendu : le jeu est
     quarante fois plus large. Ils restent très en deçà des cibles, et surtout ils mesurent enfin la
     dimension où le coût vivait.
 
@@ -171,12 +171,12 @@ Mesuré sur six chemins (#4251, #4271, #4278, #4280, #4283, #4286, #4293), à ce
 depuis un `findAll()` quand la table porte une ligne par entité. Les lectures par identifiants passent
 par `LotsDeParametres.decouper`, qui borne la **taille de la requête**.
 
-⚠️ Cette page a d'abord justifié ce découpage par un refus de SQLite au-delà de « quelques centaines »
+Cette page a d'abord justifié ce découpage par un refus de SQLite au-delà de « quelques centaines »
 de paramètres liés. C'est faux pour le pilote embarqué ici : **cinquante mille passent**, mesuré. Le
 découpage reste - une requête de cent kilo-octets de marqueurs ne se justifie pas davantage - mais il
 n'évite aucun échec, et le dire autrement ferait croire à une protection qui n'existe pas.
 
-⚠️ **Ce qui ne se lit pas par lot.** Les tables de **volume** - originaux, séquences d'écoute - restent
+**Ce qui ne se lit pas par lot.** Les tables de **volume** - originaux, séquences d'écoute - restent
 lues par session. Une nuit en porte des milliers : les charger toutes d'un bloc échangerait un défaut de
 lenteur contre un défaut de mémoire.
 

@@ -29,7 +29,7 @@ public enum Portee {
 
     /// Le verdict se lit **hors de l'application**, et le scénario ne peut qu'en jouer le bord.
     ///
-    /// ⚠️ Un clip reste utile - montrer le geste côté produit a de la valeur - mais il faut dire ce
+    /// Un clip reste utile - montrer le geste côté produit a de la valeur - mais il faut dire ce
     /// qu'il laisse dehors. `S4-33` le fait de lui-même depuis #4126, et c'est le modèle : « il ne
     /// prouve pas que l'écran **atteint** cet état ».
     HORS_APPLICATION

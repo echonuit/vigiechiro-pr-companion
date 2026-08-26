@@ -37,11 +37,11 @@ les deux tournages, l'**image finale** elle-même avec sa carte des différences
 
 ## Conséquences
 
-⚠️ **On compare la destination, pas le chemin.** Un cas dont l'objet est une transition garderait une
+**On compare la destination, pas le chemin.** Un cas dont l'objet est une transition garderait une
 fin identique alors que son milieu aurait bougé. La durée est le seul garde-fou bon marché contre cela,
 et il est grossier.
 
-⚠️ **Et cette limite mord précisément là où l'[ADR 4166](4166-un-etat-ne-se-juge-que-contre-son-contraire.md)
+**Et cette limite mord précisément là où l'[ADR 4166](4166-un-etat-ne-se-juge-que-contre-son-contraire.md)
 demande le plus.** Cette décision-là exige qu'un cas qui fait juger un état montre **cet état et son
 contraire dans le même clip** : le geste offert puis empêché, le bouton grisé à côté d'un bouton actif.
 Pour ces cas, ce qui fait le cas est le **contraste entre deux moments**, et l'image finale n'en garde

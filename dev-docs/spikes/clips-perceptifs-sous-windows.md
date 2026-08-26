@@ -16,7 +16,7 @@
     dessiner le pointeur : ce sont donc les premiers clips de cette page où l'on voit le **geste** et
     non seulement son effet.
 
-    ⚠️ Aucun workflow n'alimente `clips-windows-spike` depuis le retrait de celui du spike, et
+    Aucun workflow n'alimente `clips-windows-spike` depuis le retrait de celui du spike, et
     `tournage-recette.yml` ne publie **délibérément** nulle part, pour qu'un second dispositif ne
     puisse pas contredire `recette-filmee.yml`. La date que portent ces clips est donc celle d'une
     **main**, pas d'un dispositif : si le banc change encore, cette page gèle sans que rien ne le
@@ -261,7 +261,7 @@ fichier unique vers le numéro de processus, sans la retirer : un identifiant qu
 n'identifie pas. L'identité porte désormais le `pid`, qui se lit et se rattache à une ligne de
 journal, suivi d'un UUID.
 
-⚠️ Un cas de garde **verrouillait** le défaut. Il rejouait deux fois la même identité et affirmait
+Un cas de garde **verrouillait** le défaut. Il rejouait deux fois la même identité et affirmait
 qu'une seule ligne devait rester : il présentait donc l'écrasement comme le comportement voulu. Il
 porte maintenant sur la déduplication par cas et test, qui est la vraie promesse de l'index.
 
@@ -322,13 +322,13 @@ existe pour cela. **Mêmes classes, mêmes neuf cas, mêmes respirations, même 
 respirations**, que les deux bancs paient à l'identique. Le temps d'un tournage perceptif n'est pas
 du calcul, c'est de l'attente délibérée. Aucun choix d'implémentation ne la rendra.
 
-⚠️ Ces deux colonnes sont mesurées **à une seule JVM des deux côtés**, pour que la comparaison ne
+Ces deux colonnes sont mesurées **à une seule JVM des deux côtés**, pour que la comparaison ne
 porte que sur le banc. C'est une contrainte du banc bash, pas du banc Java : une fois `IndexDesCas`
 corrigé, celui-ci tourne au `forkCount=1C` du dépôt, et les quatre classes descendent alors à
 1 min 54 s sous Linux. Sur neuf cas dont l'essentiel du temps est du sommeil, le parallélisme ne
 rapporte presque rien ; sur un tournage complet, c'est l'inverse.
 
-⚠️ Ne pas conclure « les deux bancs se valent » : ils ne coûtent pareil qu'**à périmètre égal**, et
+Ne pas conclure « les deux bancs se valent » : ils ne coûtent pareil qu'**à périmètre égal**, et
 c'est le périmètre qui diffère.
 
 | | banc bash | banc Java |

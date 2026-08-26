@@ -63,7 +63,7 @@ class CauseLisibleTest {
 
         assertThat(message).contains("IllegalStateException").contains("journal");
         assertThat(message).doesNotContain("null");
-        // ⚠️ Le geste conseillé doit être celui qui existe dans le menu, pas une paraphrase. La
+        // Le geste conseillé doit être celui qui existe dans le menu, pas une paraphrase. La
         // première rédaction disait « ☰ → Journaux » ; l'entrée s'appelle « Ouvrir le dossier des
         // journaux ». Un message qui envoie chercher une ligne inexistante est le défaut que
         // l'ADR 3854 ferme, et ce test l'empêche de revenir par recopie.

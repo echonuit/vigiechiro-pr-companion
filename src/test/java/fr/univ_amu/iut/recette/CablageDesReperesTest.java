@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 /// tournerait, le film sortirait, et le journal serait **vide** - indiscernable d'une séance où
 /// aucun test ne cite de cas.
 ///
-/// ⚠️ Ce garde lit des fichiers de configuration, pas du comportement. Il ne remplace donc pas une
+/// Ce garde lit des fichiers de configuration, pas du comportement. Il ne remplace donc pas une
 /// séance filmée réelle ; il attrape la faute d'inattention entre deux séances, qui sont rares.
 class CablageDesReperesTest {
 
@@ -43,7 +43,7 @@ class CablageDesReperesTest {
                 .contains("<recette.reperes>${project.build.directory}/recette-filmee/reperes.tsv</recette.reperes>");
     }
 
-    /// ⚠️ DEUX extensions, et une seule ligne les sépare d'un tournage muet.
+    /// DEUX extensions, et une seule ligne les sépare d'un tournage muet.
     ///
     /// Le nom vient des classes elles-mêmes : en renommer une sans toucher au fichier rougit ici,
     /// plutôt que de rendre une séance muette.
@@ -63,7 +63,7 @@ class CablageDesReperesTest {
 
     /// Ce qui empêche les DEUX bancs de filmer le même tournage.
     ///
-    /// ⚠️ L'ouverture de #4162 annonçait le contraire : « le profil demande déjà la détection
+    /// L'ouverture de #4162 annonçait le contraire : « le profil demande déjà la détection
     /// automatique, les deux bancs tourneraient ensemble ». Vérification faite, c'est faux, et
     /// c'est cette propriété-ci qui le garantit. Le profil pose `recette.autodetection`, donc
     /// l'extension du banc Java est bien CHARGÉE ; elle ne fait rien parce que `recette.film` reste

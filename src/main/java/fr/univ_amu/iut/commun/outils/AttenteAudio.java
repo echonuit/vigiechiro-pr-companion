@@ -15,7 +15,7 @@ import javafx.application.Platform;
 /// continue de pomper les évènements FX : le chargement aboutit pendant l'attente. Un secours de 8 s
 /// sort de la boucle si l'audio ne se charge jamais (WAV illisible), pour ne pas bloquer.
 ///
-/// ⚠️ **À n'appeler que pour la DERNIÈRE capture d'un outil** : la boucle imbriquée déstabilise la
+/// **À n'appeler que pour la DERNIÈRE capture d'un outil** : la boucle imbriquée déstabilise la
 /// Headless Platform JavaFX 26 (ré-entrée du toolkit via `NestedRunnableProcessor`) et fait crasher
 /// un `new Stage()` rendu **ultérieurement** dans le même JVM. Tant que plus aucune scène n'est
 /// rendue après l'attente, c'est sans danger (cf. `CaptureValidation`, `CaptureBibliotheque`).

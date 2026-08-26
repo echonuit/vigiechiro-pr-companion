@@ -35,7 +35,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// ## Le défaut qu'il empêche de revenir, et qui est arrivé en l'écrivant
 ///
-/// ⚠️ La première version de la règle nommait `.combo-box-base` en croyant couvrir les listes. Une
+/// La première version de la règle nommait `.combo-box-base` en croyant couvrir les listes. Une
 /// `ChoiceBox` **ne dérive pas** de `ComboBoxBase` et ne porte donc pas cette classe : sur le même
 /// rendu, la liste de tri du multisite (une `ComboBox`) était habillée, « 30 min » et « National
 /// (aucun milieu) » (des `ChoiceBox`) restaient des contrôles de plateforme. Le défaut a été trouvé

@@ -119,7 +119,7 @@ public final class Cli {
         if (!parseResult.hasSubcommand()) {
             return new CommandLine.RunLast().execute(parseResult);
         }
-        // ⚠️ Le gestionnaire d'exceptions de picocli ne voit QUE ce que lève la commande. Un refus né
+        // Le gestionnaire d'exceptions de picocli ne voit QUE ce que lève la commande. Un refus né
         // ici - migration ou verrou - lui échappe et retombait en code 1, « échec, état incertain »,
         // alors que rien n'a été touché. On le traduit donc sur place (#3498).
         try {
@@ -193,7 +193,7 @@ public final class Cli {
     /// besoin **avant** que picocli n'existe (#3570) ; ici on ne fait qu'imprimer et journaliser.
     ///
     /// On imprime le **message**, jamais la trace : elle parasiterait la sortie d'un script, et elle
-    /// reste inspectable dans `<workspace>/logs/`. ⚠️ Ce n'était vrai qu'à moitié jusqu'à #3570 : la JVM
+    /// reste inspectable dans `<workspace>/logs/`. Ce n'était vrai qu'à moitié jusqu'à #3570 : la JVM
     /// installe un `ConsoleHandler` que personne ne retirait, si bien que le `SEVERE` reversait la pile
     /// entière sur la sortie d'erreur. La CLI le retire désormais au démarrage.
     private static int gererErreurExecution(Exception exception, CommandLine ligne, ParseResult parseResult) {
@@ -243,7 +243,7 @@ public final class Cli {
 
     /// Ce que `main` fait vraiment, séparé pour que son **échec** ait un gestionnaire.
     ///
-    /// ⚠️ Les deux appels ci-dessous s'exécutent **avant** que picocli n'existe, donc hors de son
+    /// Les deux appels ci-dessous s'exécutent **avant** que picocli n'existe, donc hors de son
     /// gestionnaire d'erreurs. Sans ce `catch`, leurs exceptions sortaient par la JVM :
     /// `Exception in thread "main"`, la pile entière, et le code `1` - y compris pour un
     /// `RefusAvantEcriture`, que #3498 avait pourtant appris à traduire en `2`. `dev-docs/cli.md`
@@ -273,7 +273,7 @@ public final class Cli {
     /// Retire les options globales `--reglage <cle>=<valeur>` (répétables, où qu'elles soient) et rend
     /// leurs paires, en accumulant les autres jetons dans `restants`.
     ///
-    /// ⚠️ Elles sont retirées **avant** picocli, comme `--workspace` : elles ne visent aucune
+    /// Elles sont retirées **avant** picocli, comme `--workspace` : elles ne visent aucune
     /// sous-commande en particulier, et les laisser passer ferait rougir l'analyse d'arguments sur une
     /// option que la commande ne déclare pas.
     static List<String> extraireReglages(List<String> args, List<String> restants) {
@@ -291,7 +291,7 @@ public final class Cli {
 
     /// Pose les réglages demandés, ou rend le **message de refus** qui nomme ce qui existe.
     ///
-    /// ⚠️ La clé est cherchée au registre, jamais posée telle quelle : `--reglage` écrit une propriété
+    /// La clé est cherchée au registre, jamais posée telle quelle : `--reglage` écrit une propriété
     /// système, et sans registre elle en écrirait **n'importe laquelle**, y compris celles de la
     /// plateforme. Le registre est aussi ce qui permet au refus de nommer les clés admises plutôt que
     /// de laisser chercher.

@@ -199,7 +199,7 @@ class ParcoursValidationExpertE2ETest {
     /// La plateforme telle qu'elle répond quand un expert du MNHN est passé : il **contredit** la
     /// correction de l'observateur, et lui a écrit.
     ///
-    /// ⚠️ Depuis #1284, un retour `ReponseApi` non bouchonné vaut **`null`** : chaque appel du parcours doit
+    /// Depuis #1284, un retour `ReponseApi` non bouchonné vaut **`null`** : chaque appel du parcours doit
     /// être stubé.
     private static ClientVigieChiro plateformeBouchonnee() {
         ClientVigieChiro client = mock(ClientVigieChiro.class);

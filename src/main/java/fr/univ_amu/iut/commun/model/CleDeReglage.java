@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 /// La seule issue chez l'utilisateur était de renoncer au fichier, ce que le doc-comment de
 /// [PlafondLecture] voulait précisément éviter.
 ///
-/// ⚠️ **Ce registre ne rend pas ces bornes « réglables ».** Il n'y a toujours pas d'entrée dans l'écran
+/// **Ce registre ne rend pas ces bornes « réglables ».** Il n'y a toujours pas d'entrée dans l'écran
 /// Réglages, et cette décision-là tient : un naturaliste n'a pas à choisir une taille de corps de
 /// réponse. Ce qui change est qu'une limite atteinte **nomme la porte de sortie**, et que cette porte
 /// existe là où l'utilisateur se trouve.
@@ -76,7 +76,7 @@ public enum CleDeReglage {
 
     /// La propriété système correspondante.
     ///
-    /// ⚠️ C'est une **méthode** et non une constante : une constante de compilation serait inlinée par
+    /// C'est une **méthode** et non une constante : une constante de compilation serait inlinée par
     /// javac chez ses appelants, et la valeur du registre cesserait d'être la source (ADR 3947).
     public String propriete() {
         return PREFIXE + nom;
@@ -95,7 +95,7 @@ public enum CleDeReglage {
 
     /// La phrase qui dit comment relever cette borne, telle qu'elle s'écrit dans un refus.
     ///
-    /// ⚠️ Elle est la **même** pour les deux surfaces, et c'est délibéré. La ligne de commande est le
+    /// Elle est la **même** pour les deux surfaces, et c'est délibéré. La ligne de commande est le
     /// seul endroit où ces bornes se relèvent ; l'écran n'en offre pas, et lui inventer une consigne
     /// propre reviendrait à promettre un geste qui n'existe pas. Dire « en ligne de commande » à
     /// l'écran reste vrai et actionnable pour qui a un terminal - ce que l'ADR 3947 appelle un repli

@@ -26,7 +26,7 @@ Cette dichotomie allait produire un faux vert, et on savait exactement lequel. L
 script. Le garde l'aurait donc compté parmi les couverts, et le rapport aurait annoncé deux cas
 prouvés **que personne n'avait regardés**.
 
-⚠️ Le défaut n'aurait pas eu de symptôme. Le compteur aurait monté, la CI serait restée verte, et la
+Le défaut n'aurait pas eu de symptôme. Le compteur aurait monté, la CI serait restée verte, et la
 seule trace du problème aurait été un chiffre légèrement trop flatteur.
 
 ## Décision

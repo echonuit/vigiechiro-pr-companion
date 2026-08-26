@@ -28,7 +28,7 @@ nom ne voulait pas dire la même chose. Relevé en les ouvrant une par une :
 | **avale** : best-effort assumé | `ExtracteurZip`, `DossierTemporaire` |
 | **rend un compte rendu** de ce qui a résisté | `NettoyageDossiersOrphelins` |
 
-⚠️ Quatre comportements, pas deux comme l'issue le supposait. Et `supprimerRecursivement` désignait à
+Quatre comportements, pas deux comme l'issue le supposait. Et `supprimerRecursivement` désignait à
 la fois le premier et le troisième : **une copie faite depuis le mauvais modèle changeait le
 comportement en cas de panne sans rien casser de visible.**
 
@@ -72,7 +72,7 @@ qu'une fois.
 - Le contrôle porte sur le **geste** - `Files.walk(...).sorted(reverseOrder())` - et non sur le nom de
   méthode : c'est justement le nom qui mentait.
 
-⚠️ **Le premier test « continue après un échec » était creux**, et c'est la mutation qui l'a dit : il
+**Le premier test « continue après un échec » était creux**, et c'est la mutation qui l'a dit : il
 opérait sur deux dossiers **séparés**, donc il ne prouvait rien du parcours. Arrêter au premier échec le
 laissait vert. Refait sur un arbre mixte - un fichier effaçable et un sous-dossier verrouillé dans la
 même arborescence - il tombe.

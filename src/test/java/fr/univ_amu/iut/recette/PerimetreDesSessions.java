@@ -37,7 +37,7 @@ import java.util.TreeSet;
 /// | session admise muette qui **rend des cas** | rouge : elle est lue, retirez-la de la liste |
 /// | session admise qui **n'existe plus** | rouge : la liste a dérivé |
 ///
-/// ⚠️ Les deux derniers sens sont ce qui distingue ce garde d'un inventaire. Sans eux, la liste des
+/// Les deux derniers sens sont ce qui distingue ce garde d'un inventaire. Sans eux, la liste des
 /// admises deviendrait à son tour une prose qui dérive - c'est-à-dire #3885, reproduit à l'intérieur
 /// du remède.
 ///
@@ -66,7 +66,7 @@ public record PerimetreDesSessions(
 
     /// Confronte ce que le dossier rend à ce que le code admet.
     ///
-    /// ⚠️ `casParFichier` porte **toutes** les sessions balayées, y compris celles dont le compte
+    /// `casParFichier` porte **toutes** les sessions balayées, y compris celles dont le compte
     /// est zéro. Ne lui passer que les sessions fructueuses rendrait les muettes invisibles, ce qui
     /// est précisément le défaut d'origine : le silence ne se déduit pas de ce qui parle.
     ///

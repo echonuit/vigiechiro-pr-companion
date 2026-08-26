@@ -139,7 +139,7 @@ class NettoyageDossiersOrphelinsTest {
         Path ferme = Files.createDirectories(dossier.resolve("ferme"));
         Files.writeString(ferme.resolve("tenu.wav"), "abc");
 
-        // ⚠️ L'illisibilité est FABRIQUÉE et non demandée au système : `File.setReadable(false)` rend
+        // L'illisibilité est FABRIQUÉE et non demandée au système : `File.setReadable(false)` rend
         // `false` sous Windows, et ce test échouait donc là-bas avant même d'éprouver quoi que ce soit
         // (#3526). Même couture que `GestesFichiers` pour #3525.
         long taille = NettoyageDossiersOrphelins.tailleDe(dossier, new GestesFichiers() {
@@ -162,7 +162,7 @@ class NettoyageDossiersOrphelinsTest {
     @DisplayName("La raison qui remonte jusqu'à l'utilisateur (#3681)")
     class LaRaison {
 
-        // ⚠️ Ce maillon est celui que l'ADR 3574 tient pour la justification de TOUT le contrat « au
+        // Ce maillon est celui que l'ADR 3574 tient pour la justification de TOUT le contrat « au
         // mieux » : la raison est portée parce qu'un appelant en rend compte à l'utilisateur. Une
         // mesure de mutation (#3664) y laissait pourtant survivre quatre mutants - `premierEchec` et
         // `raisonLisible` pouvaient rendre `""` sans qu'un seul test s'en aperçoive. On avait livré la
@@ -179,7 +179,7 @@ class NettoyageDossiersOrphelinsTest {
             assertThat(bilan.resistants().getFirst().raison())
                     .as("une raison vide vaut le silence que le contrat existe pour éviter")
                     .isNotBlank()
-                    // ⚠️ On n'attend PAS « Permission denied » : le message du système dépend de la
+                    // On n'attend PAS « Permission denied » : le message du système dépend de la
                     // locale et du noyau. Ce qui se vérifie est que la raison TRAVERSE, pas son libellé.
                     .contains("refusée");
         }
@@ -244,7 +244,7 @@ class NettoyageDossiersOrphelinsTest {
 
     /// Des gestes réels, sauf la suppression sous `interdit`, qui refuse **avec un message**.
     ///
-    /// ⚠️ Fabriqué plutôt que demandé au système : `File.setWritable(false)` n'empêche pas la
+    /// Fabriqué plutôt que demandé au système : `File.setWritable(false)` n'empêche pas la
     /// suppression sous Windows, et un `chmod` rendrait ce test inerte là où la suite le joue chaque
     /// mardi (#3526). Même patron que `ArborescenceFichiersTest`.
     private static GestesFichiers suppressionQuiResiste(Path interdit) {

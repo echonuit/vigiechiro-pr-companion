@@ -51,14 +51,14 @@ class AttenteAvantClicTest {
                 .as("le rapport doit distinguer « absent » de « présent mais hors cadre »")
                 .hasMessageContaining("HORS CADRE")
                 .hasMessageContaining("visible=true")
-                // ⚠️ Un MOTIF, ni un littéral ni une lecture de la scène.
+                // Un MOTIF, ni un littéral ni une lecture de la scène.
                 //
                 // La ligne disait `scène 400x300`, recopié du `new Scene(racine, 400, 300)` ci-dessus.
                 // Les 400 demandés ne sont pas ceux qu'on obtient partout : sur un runner la fenêtre
                 // est rabattue à `TailleOuverture.LARGEUR_MINIMALE` (900), et le test rougissait sur
                 // « scène 900x300 » là où il attendait « scène 400x300 » - vert en local, rouge en CI.
                 //
-                // ⚠️ Interroger la scène sur sa largeur au moment d'asserter aurait déplacé le défaut
+                // Interroger la scène sur sa largeur au moment d'asserter aurait déplacé le défaut
                 // sans le
                 // supprimer : cette lecture se fait depuis le fil de TEST, alors qu'AttenteAvantClic
                 // prend soin de lire ses bornes sur le fil JavaFX, « des bornes lues depuis le fil de

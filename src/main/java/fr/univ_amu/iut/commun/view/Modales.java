@@ -32,7 +32,7 @@ public final class Modales {
     /// noeud pas encore attaché lève une `NullPointerException`, ce qui a poussé plusieurs écrans à
     /// renoncer purement et simplement au propriétaire.
     ///
-    /// ⚠️ Rendre `null` est un résultat **normal**, pas un échec : l'écran peut ne pas encore être
+    /// Rendre `null` est un résultat **normal**, pas un échec : l'écran peut ne pas encore être
     /// affiché quand on construit son notificateur. C'est pourquoi le propriétaire se demande **au
     /// moment d'ouvrir**, par un `Supplier`, et non une fois pour toutes à la construction.
     public static Window fenetreDe(Node noeud) {
@@ -44,12 +44,12 @@ public final class Modales {
 
     /// Pose `modale` au centre de son propriétaire, une fois qu'elle connaît sa taille.
     ///
-    /// ⚠️ **Le produit place lui-même ses modales.** Sans cela le placement est celui du gestionnaire
+    /// **Le produit place lui-même ses modales.** Sans cela le placement est celui du gestionnaire
     /// de fenêtres, et il n'est le même nulle part : la même modale, au même commit, s'ouvrait centrée
     /// sur un poste et en (0, 0) barre de titre hors champ en intégration continue. Un utilisateur n'a
     /// pas plus de garantie qu'un runner.
     ///
-    /// ⚠️ **Au `setOnShown`, et non avant `show()`.** Avant l'affichage `getWidth()` rend `NaN` :
+    /// **Au `setOnShown`, et non avant `show()`.** Avant l'affichage `getWidth()` rend `NaN` :
     /// centrer sur une largeur inconnue pose la fenêtre n'importe où sans rien signaler. Et
     /// `setOnShown` n'admet qu'un seul gestionnaire, donc cet appel remplace celui posé avant lui.
     ///
@@ -102,7 +102,7 @@ public final class Modales {
     /// explicite, définitivement, et le Stage du harnais TestFX est partagé par tout un fork, ce que
     /// l'ADR 4134 détaille.
     ///
-    /// ⚠️ **Déclarez chaque révélation**, ou la propriété qui la pilote. Une zone non déclarée fait
+    /// **Déclarez chaque révélation**, ou la propriété qui la pilote. Une zone non déclarée fait
     /// déborder le contenu pendant tout le transitoire, puis tout se recale d'un coup : l'utilisateur
     /// voit un sursaut qu'aucune capture ne montre, une capture photographiant un état stabilisé.
     /// Trouvé trois fois (#3453), et aucun garde ne le vérifie : séparer « surveillé directement » de

@@ -63,7 +63,7 @@ reconstituera après coup**.
     pré-version du spike avaient été reversées par-dessus, et la date de publication d'une pré-version
     ne dit rien de la date de son contenu.
 
-⚠️ Les préfixes ne sont pas décoratifs. Les deux bancs nomment leurs pièces **exactement pareil** :
+Les préfixes ne sont pas décoratifs. Les deux bancs nomment leurs pièces **exactement pareil** :
 50 sur 51 sont communes. Sans préfixe, le second versement écraserait le premier **en silence**.
 
 !!! tip "Pourquoi les deux bancs, et pas encore l'un ou l'autre"
@@ -73,7 +73,7 @@ reconstituera après coup**.
     comparer sur une page datée qui mourra avec la décision. Le jour venu, il n'y aura qu'un des deux
     appels à retirer de `release.yml`.
 
-    ⚠️ Une différence compte dès aujourd'hui : le banc Java compare les cas **obtenus** aux cas
+    Une différence compte dès aujourd'hui : le banc Java compare les cas **obtenus** aux cas
     **attendus** et échoue s'il en manque un, si bien qu'un tournage amputé ne peut pas se graver sur
     un tag. Le banc bash n'a pas cet oracle, son artefact n'emportant pas le compte attendu ; son
     index versé dit donc en tête ce qu'il contient, pour qu'un trou se constate au lieu de se
@@ -97,7 +97,7 @@ avec le banc en Java pur, qui n'a besoin ni de serveur X ni de gestionnaire de f
 C'est le flux à prendre quand on travaille une session et qu'on veut revoir ses clips sans refaire les
 quatre cents autres, ou quand on veut savoir à quoi le produit ressemble sur un autre système.
 
-⚠️ Son garde compte les **cas**, pas les fichiers : un tournage qui rend « des clips » peut en avoir
+Son garde compte les **cas**, pas les fichiers : un tournage qui rend « des clips » peut en avoir
 perdu la moitié, et un compte de fichiers ne le dirait pas.
 
 ## Deux familles, deux pages

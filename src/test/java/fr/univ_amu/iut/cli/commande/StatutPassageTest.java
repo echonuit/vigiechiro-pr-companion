@@ -122,7 +122,7 @@ class StatutPassageTest {
                 .containsEntry("resultatsTadarida", true)
                 .containsEntry("heuresProuvees", true)
                 .containsEntry("cheminResultatsTadarida", "transformes/passage2_Vu.csv")
-                // ⚠️ #3990 : le JSON garde l'ISO, et rien ne l'assertait. Le texte, lui, se lit
+                // #3990 : le JSON garde l'ISO, et rien ne l'assertait. Le texte, lui, se lit
                 // en français depuis cette issue - les deux sorties ont des lecteurs
                 // différents. Franciser ces deux clés casserait tout script en aval, et sans
                 // ces deux lignes, personne ne s'en apercevrait avant l'utilisateur.

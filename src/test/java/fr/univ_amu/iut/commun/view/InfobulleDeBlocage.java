@@ -45,7 +45,7 @@ public final class InfobulleDeBlocage {
 
     /// **Fait paraître** l'infobulle de `enveloppe` en la survolant, et rend son texte.
     ///
-    /// ⚠️ [#texteDe] lit le motif **par programme** : un clip qui s'en contente montre un bouton gris
+    /// [#texteDe] lit le motif **par programme** : un clip qui s'en contente montre un bouton gris
     /// et n'explique rien. Or ces cas-là existent pour montrer que le blocage **dit ce qui manque** -
     /// la moitié qui compte reste alors hors de l'image. Constaté en ouvrant les images de S1-16 et
     /// S1-33 : le geste fermé était net, son motif introuvable.

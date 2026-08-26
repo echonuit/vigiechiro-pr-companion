@@ -38,15 +38,15 @@ public record RapportInspection(
     /// série du journal (#1492). Sans journal, tout est retenu - on n'écarte rien au nom d'une
     /// référence qu'on n'a pas.
     ///
-    /// ⚠️ La règle n'est pas réécrite ici : c'est [TriParSerie], celle-là même que `ServiceImport`
+    /// La règle n'est pas réécrite ici : c'est [TriParSerie], celle-là même que `ServiceImport`
     /// emploie. Deux copies d'une règle de tri finissent par diverger, et c'est l'écran qui le dit en
     /// dernier - trop tard.
     ///
-    /// ⚠️ Rend des NOMS, pas des chemins, et c'est délibéré : le rattachement s'en sert pour composer
+    /// Rend des NOMS, pas des chemins, et c'est délibéré : le rattachement s'en sert pour composer
     /// un aperçu, et lui passer des `Path` le coupleraient à l'arborescence de la carte. C'est la
     /// raison qui fait déjà passer `nomsOriginaux` en `String` d'un sous-VM à l'autre.
     ///
-    /// ⚠️ Cette méthode vit ICI et non sur le sous-VM d'inspection : l'y ajouter a fait basculer
+    /// Cette méthode vit ICI et non sur le sous-VM d'inspection : l'y ajouter a fait basculer
     /// `InspectionImportViewModel` en God Class au portail PMD (WMC 48). Le rapport connaît déjà ses
     /// originaux et son journal ; c'est chez lui que la question a sa réponse.
     public List<String> nomsRetenus() {

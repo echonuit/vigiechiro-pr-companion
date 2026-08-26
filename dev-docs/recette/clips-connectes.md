@@ -29,7 +29,7 @@ que notre client parle à **notre idée** de la plateforme.
 
 ## Pourquoi ils ne sont pas rangés avec les autres
 
-⚠️ **Un clip connecté ne se compare pas.**
+**Un clip connecté ne se compare pas.**
 
 Son écran dépend de **données vivantes**. Deux tournages du même commit peuvent différer parce qu'une
 nuit a été traitée entre les deux, et le plancher de bruit établi en #4287 - médiane 0,008 %, pire cas
@@ -60,7 +60,7 @@ L'adresse d'un clip se déduit de son nom, comme ailleurs :
 https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/<Classe>.<test>.mp4
 ```
 
-⚠️ Les pièces ne portent **aucun préfixe**, contrairement à celles d'un tag de version. La séparation
+Les pièces ne portent **aucun préfixe**, contrairement à celles d'un tag de version. La séparation
 est portée par la pré-version elle-même : un préfixe sert à distinguer deux populations rangées au même
 endroit, et il n'y en a qu'une ici.
 
@@ -136,7 +136,7 @@ Connexion réussie · référentiel à jour : 1 site, 199 taxons,
 
 <video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteConnexionTest.la_barre_avance_nuit_par_nuit.mp4"></video>
 
-## ⚠️ Ce que ces clips publient, et le compte que cela engage
+## Ce que ces clips publient, et le compte que cela engage
 
 `S8-06` montre l'identité que la plateforme a rendue. Un clip connecté porte donc, **en clair et sur
 une pré-version publique**, le nom du titulaire du compte employé et le résumé de ce que ce compte
@@ -149,7 +149,7 @@ masquerait ne montrerait plus son cas.
 dans chaque commit de ce dépôt, donc la publication n'ajoute rien à ce qu'il révèle déjà de cette
 personne-là.
 
-⚠️ **Et la propriété ne tient qu'à ce choix.** Le jour où un tournage connecté emploierait le compte de
+**Et la propriété ne tient qu'à ce choix.** Le jour où un tournage connecté emploierait le compte de
 quelqu'un d'autre - un étudiant, un observateur qui prête son accès - le clip publierait un nom que
 rien n'oblige à être public, et le résumé décrirait des données qui ne sont pas les nôtres. Poser
 `VIGIECHIRO_TOKEN_TOURNAGE` avec le jeton d'un tiers **n'est donc pas** un geste anodin, et rien dans
@@ -190,6 +190,6 @@ Le détail de ces mesures vit dans
 
 ## Ce qu'ils ne remplacent pas
 
-⚠️ Le contrat d'API (`api-live.yml`, hebdomadaire) éprouve le **contrat** et rougit quand il dérive ;
+Le contrat d'API (`api-live.yml`, hebdomadaire) éprouve le **contrat** et rougit quand il dérive ;
 un tournage connecté éprouve le **parcours** et produit une image. Le premier fait foi, le second se
 regarde. Deux dispositifs, deux objets.

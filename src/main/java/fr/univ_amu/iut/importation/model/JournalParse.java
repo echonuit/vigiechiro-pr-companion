@@ -64,7 +64,7 @@ public record JournalParse(
     /// correspondant à la nuit qu'on charge »* - et non « la dernière du fichier », qui serait fausse
     /// pour toutes les nuits sauf une.
     ///
-    /// ⚠️ **Repli sur la plus ancienne connue** quand aucune ne précède `nuit`. Le journal est
+    /// **Repli sur la plus ancienne connue** quand aucune ne précède `nuit`. Le journal est
     /// **circulaire** (R19) : ses premières entrées peuvent avoir disparu, et une nuit se retrouve alors
     /// sans configuration antérieure. La plus ancienne disponible vaut mieux qu'un vide silencieux ;
     /// c'est un repli assumé, pas une certitude, et c'est exactement le comportement d'avant #3460

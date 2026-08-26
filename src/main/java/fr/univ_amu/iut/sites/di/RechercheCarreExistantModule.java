@@ -31,7 +31,7 @@ public class RechercheCarreExistantModule extends ModuleDeFeature {
     /// récupération, sans rien empêcher - déclarer le carré à la main et aller le chercher sur le portail
     /// reste le repli, et c'est précisément le détour que cette feature évite (retour du 2026-08-07).
     ///
-    /// ⚠️ **Une seule feature pour les deux gestes**, à dessein. Le rapatriement n'existe que comme suite
+    /// **Une seule feature pour les deux gestes**, à dessein. Le rapatriement n'existe que comme suite
     /// du verdict : les séparer permettrait un état où la modale annonce « ce carré existe déjà » sans
     /// pouvoir rien en faire, ce qui est pire que de ne pas poser la question. L'identifiant reste
     /// `carre-existant` pour que les réglages déjà enregistrés ne se perdent pas.

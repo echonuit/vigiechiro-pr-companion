@@ -52,7 +52,7 @@ class CliquetSemisTopologieTest {
     /// migrent vers deux entrées différentes de la fixture, et les mélanger rendrait chaque compte
     /// illisible. Cette **partition** est délibérée et reste.
     ///
-    /// ⚠️ Ce qui ne restait pas, c'est le **court-circuit** qui l'accompagnait : le détecteur rendait
+    /// Ce qui ne restait pas, c'est le **court-circuit** qui l'accompagnait : le détecteur rendait
     /// aussi `false` dès qu'un fichier nommait `JeuDeDonneesPassage`, c'est-à-dire dès qu'il était
     /// **partiellement** migré. Il devenait donc aveugle exactement là où il devait parler, ce que
     /// l'ADR 2867 nomme comme le premier piège du patron - corrigé sur le cliquet des fixtures par #2714,

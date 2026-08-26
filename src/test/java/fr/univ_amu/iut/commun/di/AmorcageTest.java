@@ -25,7 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// donc le contrat de chaque entrée sur une base **absente** : l'application graphique la crée, la CLI
 /// ne la crée pas. C'est cette différence qui garantit qu'une aide CLI ne laisse aucun fichier.
 ///
-/// ⚠️ Les assertions qui interrogent l'injecteur restent **dans** la portée de la propriété
+/// Les assertions qui interrogent l'injecteur restent **dans** la portée de la propriété
 /// `vigiechiro.workspace`. `CommunModule` résout `Workspace` **paresseusement** (`Workspace.resolu()`
 /// au premier `getInstance`) : hors de cette portée, l'injecteur retomberait sur le workspace par
 /// défaut - c'est-à-dire la vraie base de qui lance le build. En production la propriété est posée une

@@ -35,10 +35,10 @@ Les deux règles étaient justes séparément, et ne se parlaient pas :
 - `RattachementImportViewModel.majApercu` prenait `nomsOriginaux.get(0)`, sans savoir lequel serait
   retenu.
 
-⚠️ **Ce n'est pas un hasard de fixture.** « 1648011 » précède « 1925492 » dans l'ordre des noms :
+**Ce n'est pas un hasard de fixture.** « 1648011 » précède « 1925492 » dans l'ordre des noms :
 l'aperçu tombait **systématiquement** sur la série écartée. Une carte mélangée sur deux le fera.
 
-⚠️ **Et l'écran avait l'air juste.** Le carré, le passage, le point, le préfixe : tout était correct.
+**Et l'écran avait l'air juste.** Le carré, le passage, le point, le préfixe : tout était correct.
 Seul le fichier d'exemple ne l'était pas. Sur le seul écran où l'utilisateur a besoin de comprendre
 ce qui sera pris et ce qui sera laissé, l'aperçu désignait précisément ce qui serait laissé.
 
@@ -55,7 +55,7 @@ n'écrira pas est le défaut d'ici ; le faire quand on n'écrira **rien** serait
 par `TriParSerie`, celle-là même que `ServiceImport` emploie. Deux copies d'une règle de tri finissent
 par diverger, et c'est l'écran qui le dit en dernier - trop tard.
 
-⚠️ **La méthode vit sur le RAPPORT, pas sur le sous-VM d'inspection.** L'y poser a fait basculer
+**La méthode vit sur le RAPPORT, pas sur le sous-VM d'inspection.** L'y poser a fait basculer
 `InspectionImportViewModel` en God Class au portail PMD (WMC 48). Le rapport connaît déjà ses
 originaux et son journal : c'est chez lui que la question a sa réponse.
 

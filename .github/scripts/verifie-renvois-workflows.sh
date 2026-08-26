@@ -90,7 +90,7 @@ FIN
 
 if [ "${1:-}" = "--auto-test" ]; then
   echecs=0
-  # ⚠️ On exige le MESSAGE de la garde, pas seulement son code de sortie. Un `exit 1` peut venir d'un
+  # On exige le MESSAGE de la garde, pas seulement son code de sortie. Un `exit 1` peut venir d'un
   # PyYAML absent, d'une erreur de syntaxe Python ou d'un bac mal monté : ces rouges-là ne prouvent
   # rien de la règle. Vécu le même jour sur #3335, où une compilation cassée a servi de fausse preuve.
   # Le compte des cas et de ceux qui DOIVENT rougir (#3886).

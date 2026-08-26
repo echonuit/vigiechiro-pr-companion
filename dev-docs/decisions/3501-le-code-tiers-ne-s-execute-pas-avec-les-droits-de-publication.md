@@ -31,7 +31,7 @@ nôtre, au moment exact où nos droits sont maximaux, et sans qu'aucun diff du d
 Un tag se déplace sans que rien ne bouge ici ; `npx --yes` résout ses versions à chaque exécution ;
 et le job qui publie exécutait tout le reste.
 
-⚠️ Le point aveugle est là : les trois se lisent comme des choix de commodité, et aucun ne produit de
+Le point aveugle est là : les trois se lisent comme des choix de commodité, et aucun ne produit de
 symptôme tant que rien ne se passe. Une chaîne de publication non durcie ne rougit jamais.
 
 ## Décision

@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
 /// 2. les cas que **rien** ne couvre sont **listés** ;
 /// 3. le script et le code disent la **même chose** du juge (#3764).
 ///
-/// ⚠️ Sans le deuxième, un garde qui ne trouve rien à redire est **indiscernable** d'un garde qui ne
+/// Sans le deuxième, un garde qui ne trouve rien à redire est **indiscernable** d'un garde qui ne
 /// lit pas le document. Le premier devoir seul serait vert sur un dépôt où aucun test ne cite quoi
 /// que ce soit.
 ///
@@ -68,14 +68,14 @@ class CorrespondanceRecetteTest {
 
     /// Les sessions dont ce garde ne lit aucun cas, et dont le silence est assumé (#3884).
     ///
-    /// ⚠️ Cette liste est une **dette chiffrée**, pas une dispense. Chaque ligne dit pourquoi la
+    /// Cette liste est une **dette chiffrée**, pas une dispense. Chaque ligne dit pourquoi la
     /// session échappe à la regex, et disparaîtra le jour où elle adoptera le format `- **Sxx-NN** ·`.
     /// Le garde refuse qu'on l'oublie dans les deux sens : une session muette absente d'ici rougit,
     /// une ligne d'ici dont la session s'est mise à parler rougit aussi.
     ///
     /// Le travail de conversion est le point 2 de #3884, et il se fait session par session.
     ///
-    /// ⚠️ `Map.ofEntries` et non `Map.of` : ce dernier plafonne à **dix** paires, et la liste en
+    /// `Map.ofEntries` et non `Map.of` : ce dernier plafonne à **dix** paires, et la liste en
     /// compte exactement dix. La onzième session muette - celle que ce garde existe pour attraper -
     /// aurait cassé la **compilation** au lieu de rougir avec son message. Un garde qui échoue par
     /// erreur de build ne dit pas ce qu'il a trouvé, et c'est ce qui est arrivé en écrivant ceci.
@@ -88,7 +88,7 @@ class CorrespondanceRecetteTest {
     /// Les classes à filmer pour une **tournage complet** (#3835), déposées là où le script de
     /// séance ira les chercher.
     ///
-    /// ⚠️ Cette liste se DÉRIVE, elle ne se tient pas à la main. Un `grep` sur `@CasDeRecette`
+    /// Cette liste se DÉRIVE, elle ne se tient pas à la main. Un `grep` sur `@CasDeRecette`
     /// ramène deux faux positifs sur dix-huit - l'annotation elle-même, qui contient un exemple
     /// dans sa documentation, et les fixtures de [ReperesDeSeanceTest]. Le balayage du classpath,
     /// lui, voit les annotations compilées et honore [FixtureDeRecette].
@@ -98,14 +98,14 @@ class CorrespondanceRecetteTest {
 
     /// Les classes à filmer, rangées par SESSION (#4163).
     ///
-    /// ⚠️ Un fichier à part, et non une colonne de plus dans le précédent : celui-ci est lu par
+    /// Un fichier à part, et non une colonne de plus dans le précédent : celui-ci est lu par
     /// `lance-test-filme.sh --planche`, qui le passe tel quel à `paste -sd,`. Y ajouter une colonne
     /// ferait filmer des classes dont le nom porterait un numéro de session.
     private static final Path SESSIONS_A_FILMER = Path.of("target", "recette", "sessions-a-filmer.tsv");
 
     /// Le nombre de cas que cite le corpus **connecté**, dérivé comme les autres (#4326).
     ///
-    /// ⚠️ Un fichier à part, et non une colonne de plus : le corpus connecté se choisit par un TAG, pas
+    /// Un fichier à part, et non une colonne de plus : le corpus connecté se choisit par un TAG, pas
     /// par une session, et ses cas appartiennent aux sessions ordinaires. Les mêler ferait compter deux
     /// fois un cas joué des deux façons.
     ///
@@ -197,7 +197,7 @@ class CorrespondanceRecetteTest {
 
         tri = RepartitionDesCas.repartir(declares.keySet(), perceptifs, jugements);
 
-        // ⚠️ Retirée AVANT d'être réécrite, en deux gestes distincts. Le fichier survit d'un
+        // Retirée AVANT d'être réécrite, en deux gestes distincts. Le fichier survit d'un
         // lancement à l'autre : sans ce retrait, une dérivation qui cesserait de tourner
         // laisserait la liste d'hier en place, et son garde resterait vert dessus. Retirer
         // l'appel qui suit fait maintenant rougir, ce qu'on a vérifié.
@@ -238,7 +238,7 @@ class CorrespondanceRecetteTest {
                 tri.perceptifs().size(),
                 tri.nonCouverts().size());
 
-        // ⚠️ Les muettes s'affichent AVANT les cas. Le lecteur qui s'arrête à la première ligne doit
+        // Les muettes s'affichent AVANT les cas. Le lecteur qui s'arrête à la première ligne doit
         // déjà savoir ce que le décompte ne couvre pas ; les mettre en pied de sortie reviendrait à
         // les réserver à qui lit tout, c'est-à-dire à personne.
         perimetre
@@ -446,10 +446,10 @@ class CorrespondanceRecetteTest {
 
     /// Ce que les deux pages de clips écrivent **sous la section de CE clip**, jusqu'à la suivante.
     ///
-    /// ⚠️ On lit la section, pas la page entière : une réserve écrite ailleurs sur la page ne borne pas
+    /// On lit la section, pas la page entière : une réserve écrite ailleurs sur la page ne borne pas
     /// le clip qu'on regarde, et le garde la compterait pourtant.
     ///
-    /// ⚠️ Et on vise la section du **test**, pas celle du cas. Un cas couvert par plusieurs tests a
+    /// Et on vise la section du **test**, pas celle du cas. Un cas couvert par plusieurs tests a
     /// plusieurs sections - `S1-04` en a trois, une par geste de la modale - et chercher la première
     /// venue faisait lire la réserve d'un autre clip. Le garde refusait alors une réserve pourtant
     /// posée, ce qui aurait fait la recopier partout (#4158).
@@ -541,7 +541,7 @@ class CorrespondanceRecetteTest {
 
     /// Le garde du rangement PAR SESSION, dont dépend le tournage d'une seule session (#4163).
     ///
-    /// ⚠️ Les deux assertions ne disent pas la même chose, et il faut les deux. La première dit
+    /// Les deux assertions ne disent pas la même chose, et il faut les deux. La première dit
     /// qu'aucune classe ne se perd en chemin : un tournage session par session doit couvrir
     /// exactement ce qu'un tournage complet couvre, sans quoi des cas cesseraient d'être filmés
     /// sans que personne ne l'ait décidé. La seconde dit que le compte des cas est juste, et c'est
@@ -666,7 +666,7 @@ class CorrespondanceRecetteTest {
 
     private static String explication(String cas, Jugement ceQueDitLeCode) {
         String tests = joindre(cites.getOrDefault(cas, Set.of()));
-        // ⚠️ Les parenthèses ne sont pas décoratives : sans elles, `.formatted` ne s'applique qu'au
+        // Les parenthèses ne sont pas décoratives : sans elles, `.formatted` ne s'applique qu'au
         // DERNIER fragment de la concaténation, et le message part avec ses `%s` intacts. Le témoin
         // du chantier l'a montré avant qu'un lecteur ait à le subir.
         if (ceQueDitLeCode == Jugement.AUTOMATIQUE) {
@@ -694,7 +694,7 @@ class CorrespondanceRecetteTest {
                     .sorted()
                     .forEach(f -> {
                         String nom = f.getFileName().toString();
-                        // ⚠️ Posé à zéro AVANT de lire, pour que les sessions dont la regex ne tire
+                        // Posé à zéro AVANT de lire, pour que les sessions dont la regex ne tire
                         // rien figurent quand même au périmètre. Ne compter que ce qui parle rendrait
                         // le silence indiscernable de l'absence : le défaut même de #3884.
                         casParFichier.put(nom, 0);
@@ -737,7 +737,7 @@ class CorrespondanceRecetteTest {
             if (classe.isAnnotatedWith(FixtureDeRecette.class)) {
                 return;
             }
-            // ⚠️ Lu sur la CLASSE, parce que c'est là que vit `@Tag` : surefire sélectionne par
+            // Lu sur la CLASSE, parce que c'est là que vit `@Tag` : surefire sélectionne par
             // classe, et un tag posé sur une méthode ne dirait pas ce que le tournage jouera.
             boolean connectee = classe.tryGetAnnotationOfType(Tag.class)
                     .map(tag -> TAG_CONNECTE.equals(tag.value()))

@@ -63,7 +63,7 @@ final class LocalitesVigieChiro {
     }
 
     /// Coordonnées `[latitude, longitude]` d'une localité (`geometries.geometries[0].coordinates`).
-    /// ⚠️ VigieChiro stocke l'ordre **[lat, lon]** (et non le [lon, lat] GeoJSON). Malformé → `null`.
+    /// VigieChiro stocke l'ordre **[lat, lon]** (et non le [lon, lat] GeoJSON). Malformé → `null`.
     private static double[] coordonnees(JsonObject localite) {
         try {
             JsonArray geometries = localite.getAsJsonObject("geometries").getAsJsonArray("geometries");

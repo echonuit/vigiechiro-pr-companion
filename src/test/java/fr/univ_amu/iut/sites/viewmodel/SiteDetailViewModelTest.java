@@ -422,7 +422,7 @@ class SiteDetailViewModelTest {
         vm.chargerSite(site);
         assertThat(vm.points()).hasSize(12);
 
-        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
+        // Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
         // variance de la machine. Le défaut mesuré (#4285) : une requête par point, 0,7 ms chacune, soit
         // 40-55 ms sur un carré dont la grille STOC rapatriée compte des dizaines de points (ADR 0017).
         Mockito.verify(passagesSurveilles, Mockito.never()).findByPoint(Mockito.any());

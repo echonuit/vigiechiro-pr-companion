@@ -26,7 +26,7 @@ import javafx.scene.layout.StackPane;
 /// « Fiche de l'espèce ») ont besoin de la sélection de l'inventaire, qui vit là-haut. Ils arrivent
 /// donc ici en fonctions plutôt qu'en dépendances.
 ///
-/// ⚠️ Elle reçoit ses appuis du parent et n'injecte rien : les ViewModel du dépôt sont non-singleton
+/// Elle reçoit ses appuis du parent et n'injecte rien : les ViewModel du dépôt sont non-singleton
 /// (ADR 2745, gardé par `DecisionsRespecteesTest#une_sous_vue_ne_s_injecte_pas_son_modele`).
 public class DetailObservationsController {
 

@@ -215,7 +215,7 @@ geste que l'import, le lot et la restauration, que la sauvegarde était seule à
 Elle se construit ensuite sous un nom de **chantier** (`en-chantier-vigiechiro-sauvegarde-complete-…`)
 et n'est **renommée** qu'après l'écriture du manifeste.
 
-⚠️ Le renommage ferme ce qu'un nettoyage à l'échec ne fermerait pas : une coupure de courant ou un
+Le renommage ferme ce qu'un nettoyage à l'échec ne fermerait pas : une coupure de courant ou un
 `kill -9` ne laissent tourner aucun code. Sans lui, un dossier interrompu portait le nom d'une
 sauvegarde complète, `InventaireSauvegardes` le listait comme telle - il classe sur le **préfixe** du
 nom - et le restaurer empruntait `replacerSansManifeste`, le chemin d'avant #2726 : dossiers déversés à
@@ -230,7 +230,7 @@ Le transport distingue déjà un incident rejouable d'un refus définitif : `Rep
 dont `PolitiqueReessai` se sert pour renoncer tout de suite sur un `4xx`. Depuis `V39__echec_definitif.sql`
 (#3469), le **plan** le retient aussi : `depot_unite.echec_definitif` porte ce que l'appel savait.
 
-⚠️ **Une colonne, et non un statut `refuse` à côté de `echec`.** Le réflexe serait le statut, et il serait
+**Une colonne, et non un statut `refuse` à côté de `echec`.** Le réflexe serait le statut, et il serait
 dangereux : `DepotUniteDao.restantes()` rend « tout sauf `depose` », et `toutesDeposees()` vaut
 « `restantes()` est vide ». Retirer les unités refusées de `restantes()` ferait donc basculer le passage
 en **Déposé** alors qu'il manque des sons. Avec une colonne, la mécanique de reprise ne bouge pas : c'est
@@ -245,7 +245,7 @@ Le garde pèse les racines de session avec `ArborescenceFichiers.peser`, qui ren
 ce qu'elle n'a pas pu ouvrir**. Si la liste des illisibles n'est pas vide, il refuse **avant** de
 comparer à la place libre, en nommant le dossier et sa cause système.
 
-⚠️ Le refus tombe avant la comparaison, pas après : annoncer « il manque N Go » sur une mesure
+Le refus tombe avant la comparaison, pas après : annoncer « il manque N Go » sur une mesure
 incomplète enverrait l'utilisateur libérer de l'espace pour un problème de **droits**.
 
 La même pesée sert `InventaireSauvegardes`, qui **ignore** les illisibles et affiche ce qu'il sait :
@@ -253,7 +253,7 @@ un affichage n'a pas à se briser parce qu'un dossier a résisté. Un geste, deu
 l'appelant qui tranche - comme `supprimerRecursivement` et `effacerAuMieux`
 ([ADR 3627](decisions/3627-une-mesure-dit-ce-qu-elle-n-a-pas-pu-lire.md), [ADR 3574](decisions/3574-un-effacement-dit-son-contrat-dans-son-nom.md)).
 
-⚠️ Le parcours est une **file explicite** et non `Files.walk` : `walk` lève sur le premier dossier
+Le parcours est une **file explicite** et non `Files.walk` : `walk` lève sur le premier dossier
 interdit et interrompt tout, alors qu'on veut mesurer le reste et rapporter ce qui a résisté.
 
 ### Partout ailleurs, qui parcourt rattrape ce que le parcours lève
@@ -321,7 +321,7 @@ le problème une fois la base remplacée.
 L'étalement ramène la fenêtre d'une **copie complète** - des minutes, des gigaoctets - à une **suite
 de renommages**. Il se paie en place : la copie coexiste avec l'original jusqu'à la bascule.
 
-⚠️ C'est exactement ce que l'[ADR 2727](decisions/2727-une-restauration-verifie-en-place-et-replace-ou-cest-possible.md)
+C'est exactement ce que l'[ADR 2727](decisions/2727-une-restauration-verifie-en-place-et-replace-ou-cest-possible.md)
 avait refusé, en chiffrant le cas ordinaire (« restaurer 40 Go par-dessus ses propres 40 Go
 demanderait 80 Go libres ») et en concluant qu'« un dispositif de sûreté qui empêche l'usage normal
 n'est pas un dispositif de sûreté ». Le reproche reste juste ; ce qui change, c'est qu'on n'est plus
@@ -338,7 +338,7 @@ Le besoin est compté **par dossier d'accueil**, et non en un total unique : une
 externe est rebranché y retourne, les autres vont dans le dossier de travail. Un total unique
 confronté à la seule place du dossier de travail se tromperait **dans le sens dangereux**.
 
-⚠️ En régime dégradé, **dès la première bascule, « rien n'a été touché » cesse d'être vrai**. Un refus
+En régime dégradé, **dès la première bascule, « rien n'a été touché » cesse d'être vrai**. Un refus
 survenu ensuite est donc requalifié en incident : le laisser passer pour un refus donnerait à un
 script un code qui promet un état intact au-dessus d'un état partiel.
 
@@ -483,7 +483,7 @@ route ». Un script qui enchaîne ne peut agir que s'il sait lequel des deux s'e
     technique de persistance ». Réutiliser l'une pour l'autre brouillerait les deux notions : il
     manquait un **troisième** mot, pas un synonyme.
 
-⚠️ La même vérification peut être un refus **ou** une panne selon **quand** elle a lieu. Confronter
+La même vérification peut être un refus **ou** une panne selon **quand** elle a lieu. Confronter
 un dossier à son inventaire avant toute écriture est un refus ; l'y confronter après l'avoir copié
 est un incident. `RestaurationComplete.Moment` porte cette distinction plutôt que de la laisser au
 hasard d'un site de levée.

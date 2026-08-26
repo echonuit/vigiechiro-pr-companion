@@ -91,7 +91,7 @@ permissions:
 # verts. C'est rare (84 vérifications de PR du 13 au 16/08, aucune annulée) mais silencieux et sans
 # rattrapage, et la règle de fusion des PR documentaires s'appuie sur ce check.
 concurrency:
-  # ⚠️ Les trois lignes sont au MÊME retrait : `>-` ne replie en espaces que des lignes de même
+  # Les trois lignes sont au MÊME retrait : `>-` ne replie en espaces que des lignes de même
   # indentation. Plus indentées, elles forment un bloc et leurs retours à la ligne sont CONSERVÉS
   # dans la chaîne - le groupe contiendrait alors des sauts de ligne.
   group: >-
@@ -137,7 +137,7 @@ jobs:
       - name: Construire le site utilisateur (strict)
         run: mkdocs build --strict
       - name: Les parcours filmés résolvent dans le site construit
-        # ⚠️ APRÈS la construction, et c'est tout l'intérêt : MkDocs ne réécrit pas les chemins du
+        # APRÈS la construction, et c'est tout l'intérêt : MkDocs ne réécrit pas les chemins du
         # HTML brut. Un `<source src>` d'un cran trop haut donne une page valide, un lecteur vidéo
         # vide, et aucune erreur de build. Seul le site construit le dit.
         run: bash .github/assets/check-doc-videos.sh --site site

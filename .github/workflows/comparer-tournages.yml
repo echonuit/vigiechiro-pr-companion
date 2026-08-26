@@ -65,7 +65,7 @@ jobs:
           reprendre() { # <source> <dossier>
             local source="$1" dossier="$2" clip nu
             mkdir -p "$dossier"
-            # ⚠️ `clips-connectes` est REFUSÉE, et pas parce qu'elle serait introuvable : elle existe,
+            # `clips-connectes` est REFUSÉE, et pas parce qu'elle serait introuvable : elle existe,
             # et c'est précisément le piège. Ses clips sont tournés contre la vraie plateforme, donc
             # leur écran dépend de données vivantes. Deux tournages du même commit y diffèrent parce
             # qu'une nuit a été traitée entre les deux, et le plancher de bruit mesuré en #4287
@@ -87,7 +87,7 @@ jobs:
             # si le premier n'a rien ramené - le cas d'une pré-version roulante, dont les pièces ne
             # portent aucun préfixe.
             #
-            # ⚠️ Enchaîner les deux inconditionnellement ramènerait, sur un tag qui porte les DEUX
+            # Enchaîner les deux inconditionnellement ramènerait, sur un tag qui porte les DEUX
             # bancs, les clips de l'autre banc par-dessus. La normalisation qui suit les renommerait
             # tous pareil, et « bash-Truc.mp4 » puis « java-Truc.mp4 » deviendraient le même fichier :
             # une comparaison qui mélange les deux bancs en ayant l'air juste.
@@ -97,7 +97,7 @@ jobs:
               gh release download "$source" --dir "$dossier" --pattern "*.mp4" --clobber 2>/dev/null || true
             fi
 
-            # ⚠️ La normalisation. Sans elle, `bash-Truc.mp4` et `Truc.mp4` sont deux cas différents,
+            # La normalisation. Sans elle, `bash-Truc.mp4` et `Truc.mp4` sont deux cas différents,
             # et la comparaison annoncerait tout le monde apparu et tout le monde disparu.
             for clip in "$dossier"/*.mp4; do
               [ -e "$clip" ] || continue
@@ -129,7 +129,7 @@ jobs:
           key: apt-${{ runner.os }}-comparer-tournages-ffmpeg-imagemagick
 
       - name: Installer de quoi lire les clips et comparer les images
-        # ⚠️ Cette étape manquait, et le workflow rendait quand même un job VERT. `compare` était
+        # Cette étape manquait, et le workflow rendait quand même un job VERT. `compare` était
         # introuvable, la part de pixels valait « ? », et les cinquante cas d'un vrai tournage se
         # rangeaient en « mesure impossible » (run 32640637929). Le compteur de mesures impossibles
         # l'a dit ; sans lui, le résumé aurait annoncé « aucun cas ne bouge ».

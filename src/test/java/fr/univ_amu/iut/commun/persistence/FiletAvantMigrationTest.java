@@ -131,7 +131,7 @@ class FiletAvantMigrationTest {
     /// Ramène la base à l'état « V37 et suivantes pas encore appliquées » : on retire leurs versions du
     /// registre et on **défait ce qu'elles avaient fait**.
     ///
-    /// ⚠️ Cette méthode gagne une ligne à **chaque migration ajoutée** au-delà de V37, sans quoi la
+    /// Cette méthode gagne une ligne à **chaque migration ajoutée** au-delà de V37, sans quoi la
     /// remontée rejoue une migration sur un schéma qui la porte déjà - et échoue sur un
     /// « duplicate column » très loin de sa cause. C'est le prix du point de rebroussement figé à V37 ;
     /// il se paie au moment d'écrire la migration, jamais après.

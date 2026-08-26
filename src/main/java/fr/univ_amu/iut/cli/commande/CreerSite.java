@@ -88,7 +88,7 @@ public final class CreerSite implements Callable<Integer> {
     ///
     /// ## Ce qui se passe quand on ne peut pas demander
     ///
-    /// ⚠️ **Une plateforme injoignable n'empêche pas de créer.** L'application sert sur le terrain, hors
+    /// **Une plateforme injoignable n'empêche pas de créer.** L'application sert sur le terrain, hors
     /// connexion : refuser faute d'avoir pu vérifier rendrait la commande inutilisable là où elle est le
     /// plus utile. Mais la sortie **dit** que la vérification n'a pas eu lieu, plutôt que de laisser
     /// croire qu'elle a réussi - c'est la règle de l'ADR 3854, appliquée dans l'autre sens.

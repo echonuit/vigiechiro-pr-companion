@@ -18,7 +18,7 @@ import picocli.CommandLine.Spec;
 /// mal formé (R1) et le carré déjà déclaré par un **autre** site de l'utilisateur (R5) sont refusés
 /// par [ServiceSites#modifierSite], et sortent en **refus métier** (code 2, état intact).
 ///
-/// ⚠️ Le protocole omis **conserve** celui du site, il ne retombe pas sur un défaut : c'est le
+/// Le protocole omis **conserve** celui du site, il ne retombe pas sur un défaut : c'est le
 /// comportement du service, et le taire ici ferait diverger les deux surfaces.
 @Command(
         name = "modifier-site",

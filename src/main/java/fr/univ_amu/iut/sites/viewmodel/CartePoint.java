@@ -15,7 +15,7 @@ import java.util.Optional;
 /// @param nombrePassages nombre de passages rattachés à ce point
 /// @param distanceProcheMetres distance (m) au point géolocalisé le plus proche du même site, ou `null` si
 ///     ce point n'a pas de GPS ou qu'aucun autre point géolocalisé n'existe
-/// @param publie `true` si **nous** avons poussé ce point sur la plateforme (#3458). ⚠️ À ne pas confondre
+/// @param publie `true` si **nous** avons poussé ce point sur la plateforme (#3458). À ne pas confondre
 ///     avec `PointDEcoute#synchronise`, qui dit l'inverse : *rapatrié de* la plateforme
 public record CartePoint(PointDEcoute point, int nombrePassages, Double distanceProcheMetres, boolean publie) {
 

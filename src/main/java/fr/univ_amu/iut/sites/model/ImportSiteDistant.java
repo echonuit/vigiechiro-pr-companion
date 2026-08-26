@@ -150,13 +150,13 @@ public class ImportSiteDistant {
 
     /// Complète un site **déjà relié** avec les points distants qui lui manquent (#3458).
     ///
-    /// ⚠️ **On n'écrit que ce qui manque.** Un point de même code déjà local est laissé **intact** :
+    /// **On n'écrit que ce qui manque.** Un point de même code déjà local est laissé **intact** :
     /// c'est de la donnée saisie par l'utilisateur, et un import n'a pas à déplacer son point ni à le
     /// requalifier en « rapatrié ». Le rapprochement entre un point local et son homologue distant de
     /// mêmes coordonnées sous un autre nom est une **fusion**, qui demande un choix explicite et vient à
     /// part (#3750).
     ///
-    /// ⚠️ **Le filtre par code n'est pas ce qui protège cette saisie**, et la mutation l'a montré : le
+    /// **Le filtre par code n'est pas ce qui protège cette saisie**, et la mutation l'a montré : le
     /// retirer laisse le test passer, parce que `ajouterPoint` lève déjà sur l'unicité et que le
     /// best-effort avale. Il est là pour que la protection soit **explicite** plutôt qu'accidentelle, et
     /// pour ne pas produire quarante et une exceptions avalées à chaque import - un journal qui crie

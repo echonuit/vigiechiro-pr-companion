@@ -14,7 +14,7 @@ développeur de
     - **aucune coordonnée GPS** de site sensible ;
     - **aucune donnée personnelle** d'observateur.
 
-    ⚠️ **Une exception, assumée et bornée** (#4345) : les clips du tournage connecté montrent
+    **Une exception, assumée et bornée** (#4345) : les clips du tournage connecté montrent
     l'identité que la plateforme rend, parce que c'est ce que la case `S8-06` demande de constater. Le
     compte employé est celui du **mainteneur**, dont le nom figure déjà dans chaque commit ; la
     publication n'ajoute donc rien le concernant. Employer le jeton d'un **tiers** rendrait cette
@@ -42,7 +42,7 @@ données d'exemple ou de test.
   **ACL du profil utilisateur** : le dossier de travail vit sous le profil, dont les autres comptes non
   administrateurs n'ont pas la clé. Protection réelle, mais **de nature différente**.
 
-    ⚠️ **Cette phrase a été affirmée pendant des mois sans que personne la vérifie**, et l'audit de
+    **Cette phrase a été affirmée pendant des mois sans que personne la vérifie**, et l'audit de
     dette du 2026-07-28 le relevait : le code « se repose sur les ACL du profil **sans les contrôler
     explicitement** ». Mesuré depuis (#3778), par sonde sous Windows Server 2025 : le fichier porte
     exactement **trois** entrées `ALLOW` - son propriétaire, `NT AUTHORITY\SYSTEM` et
@@ -51,11 +51,11 @@ données d'exemple ou de test.
 
     La propriété est désormais **lue**, et non plus affirmée :
     `commun.model.ProtectionFichier.restreinteAuProprietaire` l'exprime sur les deux systèmes -
-    permissions POSIX ici, ACL là-bas -, et `EcritureAtomiqueTest` l'éprouve. ⚠️ Ni POSIX ni ACL fait
+    permissions POSIX ici, ACL là-bas -, et `EcritureAtomiqueTest` l'éprouve. Ni POSIX ni ACL fait
     **lever** plutôt que rendre `true` : annoncer une protection depuis une ignorance serait le faux
     vert que tout ce dispositif existe pour éviter.
 
-    ⚠️ La protection reste **héritée** du dossier de profil, pas posée par le produit. Elle est réelle
+    La protection reste **héritée** du dossier de profil, pas posée par le produit. Elle est réelle
     et elle peut changer sans que rien ne le dise - d'où la lecture, et le test qui s'en sert chaque
     mardi (#3526).
 
@@ -67,7 +67,7 @@ données d'exemple ou de test.
     cible par un `ATOMIC_MOVE` - ce qui corrige au passage un `connexion.json` tronqué par une
     interruption, que le lecteur traduisait en « non connecté » sans rien dire.
 
-    ⚠️ **Sous Windows, ce déplacement échoue dès qu'un lecteur tient la cible** - mesuré par sonde sur
+    **Sous Windows, ce déplacement échoue dès qu'un lecteur tient la cible** - mesuré par sonde sur
     Windows Server 2025 (#3777) : `Files.newInputStream`, `FileChannel`, `RandomAccessFile` et
     `FileChannel.lock()` provoquent **tous** une `AccessDeniedException`. Un simple lecteur suffit, il
     n'y a pas besoin d'un verrou. Or c'est le chemin du fichier d'amorçage, et les tenues concurrentes
@@ -101,7 +101,7 @@ données d'exemple ou de test.
   l'environnement du job, et l'URL de base vaut la **production** par défaut. Posé trop haut, un jeton
   Vigie-Chiro n'est pas offert au pas qui en a besoin mais à **toute la suite de tests**.
 
-    ⚠️ **Aucun rôle de la plateforme ne peut rattraper cela.** Le rôle `Lecteur` est déclaré dans
+    **Aucun rôle de la plateforme ne peut rattraper cela.** Le rôle `Lecteur` est déclaré dans
     `ROLE_RULES` et **aucune route ne l'accepte** - `GET /sites`, `GET /participations`, `GET /donnees`
     et jusqu'au `GET /moi` exigent `Observateur`. Un jeton en lecture seule n'existe pas : la lecture
     seule ne tient que par la **portée** du secret et par le câblage du banc, qui lie sa propre source
@@ -163,7 +163,7 @@ décider à la place de l'utilisateur où elles peuvent être rangées (#3212). 
 surfaces**, l'IHM la disant dans sa confirmation ou son compte rendu, la CLI sur sa sortie standard.
 Deux copies d'un même avertissement divergent (ADR 0014).
 
-⚠️ **Ce que cela suppose du contexte** : le produit vise le **poste personnel** d'un naturaliste, pas
+**Ce que cela suppose du contexte** : le produit vise le **poste personnel** d'un naturaliste, pas
 un terminal partagé en environnement hostile. Un poste compromis expose les données locales et le
 jeton. Si le produit venait à stocker un secret **ré-utilisable ailleurs** (mot de passe, clé d'API
 personnelle), ou si la plateforme délivrait un jeton de longue durée, l'arbitrage serait à rouvrir.
@@ -221,7 +221,7 @@ gigaoctets) et chacun se surcharge par propriété système (`vigiechiro.import.
 dans l'écran Réglages : un naturaliste n'a pas à choisir un plafond d'entrées. C'est le message de
 refus qui nomme la limite atteinte et l'échappatoire.
 
-⚠️ Ces bornes protègent l'**import par l'IHM**, seul chemin qui accepte aujourd'hui une archive : la
+Ces bornes protègent l'**import par l'IHM**, seul chemin qui accepte aujourd'hui une archive : la
 CLI ne prend qu'un dossier.
 
 ### Le même raisonnement, en mémoire (#3222)

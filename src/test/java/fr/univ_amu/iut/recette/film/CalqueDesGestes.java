@@ -9,7 +9,7 @@ import java.awt.RenderingHints;
 
 /// Ce que le banc AJOUTE à l'image, par-dessus le produit.
 ///
-/// ⚠️ Tout ce qui est dessiné ici n'existe pas dans l'application. C'est assumé, et c'est la raison
+/// Tout ce qui est dessiné ici n'existe pas dans l'application. C'est assumé, et c'est la raison
 /// d'être de cette classe séparée : un lecteur qui se demande « d'où sort ce halo ? » doit trouver
 /// la réponse en un seul fichier, et la revue doit pouvoir dire d'un coup d'oeil ce que le banc
 /// pose sur l'écran qu'il filme.
@@ -20,7 +20,7 @@ import java.awt.RenderingHints;
 /// - le badge se pose dans la **bande basse de la toile**, toujours au même endroit, pour qu'on
 ///   sache où le chercher sans le chercher.
 ///
-/// ⚠️ Cette bande est de la MARGE quand la fenêtre en laisse. Les scénarios perceptifs ouvrent des
+/// Cette bande est de la MARGE quand la fenêtre en laisse. Les scénarios perceptifs ouvrent des
 /// fenêtres de 1000 × 700 sur une toile de 1280 × 900 : le badge y flotte dans le noir sans rien
 /// masquer. Mais une fenêtre peut remplir la toile - `CarteSitesTest` a été mesuré à 1280 × 900 -
 /// et le badge recouvre alors le bas de l'application pendant les 800 ms où il vit.
@@ -65,7 +65,7 @@ final class CalqueDesGestes {
         }
         int rayon = (int) Math.round(RAYON_MIN + (RAYON_MAX - RAYON_MIN) * (1 - reste));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        // ⚠️ DEUX traits, pour la même raison que la flèche a un corps sombre et un liseré clair.
+        // DEUX traits, pour la même raison que la flèche a un corps sombre et un liseré clair.
         // Relu sur un vrai clip, un anneau cyan seul se noie dans une table blanche : il était là,
         // et il ne se voyait pas. Le trait sombre au-dessous le détache de tout fond.
         g.setColor(new Color(0x11, 0x11, 0x16, (int) Math.round(150 * reste)));
@@ -79,7 +79,7 @@ final class CalqueDesGestes {
 
     /// La flèche, pointe exactement sur la position rapportée.
     ///
-    /// ⚠️ Corps sombre et liseré clair, et non l'inverse : un clip traverse des fonds blancs (une
+    /// Corps sombre et liseré clair, et non l'inverse : un clip traverse des fonds blancs (une
     /// table) et des fonds noirs (un spectrogramme). Une flèche d'une seule couleur disparaît dans
     /// l'un des deux, et c'est toujours celui qu'on regarde.
     static void fleche(Graphics2D g, int x, int y) {

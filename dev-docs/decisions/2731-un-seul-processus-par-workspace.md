@@ -82,10 +82,10 @@ fin de l'opération ne le relâche pas.
 - Une opération exclusive pendant qu'un autre processus travaille : refus explicite, avec le nom de
   l'occupant, plutôt qu'un échec SQLite tardif au milieu d'une écriture.
 - Un plantage ne laisse aucun verrou derrière lui.
-- ⚠️ **Ce que le verrou ne protège pas** : deux dossiers de travail **différents** pointant vers la
+- **Ce que le verrou ne protège pas** : deux dossiers de travail **différents** pointant vers la
   même base (possible depuis #1038, où l'emplacement de la base est configurable). Le verrou porte
   sur le dossier de travail, pas sur le fichier de base. C'est une limite assumée, et non un oubli.
-- ⚠️ Le verrou ne sérialise pas les écritures **à l'intérieur** d'un processus : ce n'est pas son
+- Le verrou ne sérialise pas les écritures **à l'intérieur** d'un processus : ce n'est pas son
   rôle, c'est celui des transactions.
 
 ## Vérification

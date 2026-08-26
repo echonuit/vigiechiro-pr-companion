@@ -145,7 +145,7 @@ public class SaisonController implements RafraichirAuRetour, SuitLaRevision {
         // signalement restent calculés sur le solde entier. Chercher un lieu ne change pas ce qu'il y a
         // à faire cette année.
         //
-        // ⚠️ La `FilteredList` est non modifiable : posée telle quelle, `TableView` renonce à trier et
+        // La `FilteredList` est non modifiable : posée telle quelle, `TableView` renonce à trier et
         // vide son `sortOrder` en silence. D'où la `SortedList` par-dessus, comme sur les cinq écrans à
         // barre de filtres.
         SortedList<LigneSaison> lignesTriees = new SortedList<>(viewModel.lignesFiltrees());
@@ -308,7 +308,7 @@ public class SaisonController implements RafraichirAuRetour, SuitLaRevision {
 
     /// `null` quand la saisie ne cherche rien : le filtre est alors **retiré**, pas neutralisé.
     ///
-    /// ⚠️ La différence n'est pas observable depuis l'écran - un prédicat neutre l'est par définition -
+    /// La différence n'est pas observable depuis l'écran - un prédicat neutre l'est par définition -
     /// et aucun test ne la garde donc. C'est un choix de cohérence avec le socle, où un critère sans
     /// valeur n'est pas un critère posé : le jour où cet écran gagnerait des puces ou `saufLui`, un
     /// filtre « recherche » enregistré mais neutre s'y afficherait comme actif.

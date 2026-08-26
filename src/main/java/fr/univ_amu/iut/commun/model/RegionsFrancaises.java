@@ -49,7 +49,7 @@ public final class RegionsFrancaises {
     /// [RegionDuCarre#departement] demande pour ne pas prendre le préfixe d'un carré d'outre-mer pour un
     /// numéro de département.
     ///
-    /// ⚠️ **Métropole seulement.** Un vrai département d'outre-mer (`971`…`976`) rend `false` ici, parce
+    /// **Métropole seulement.** Un vrai département d'outre-mer (`971`…`976`) rend `false` ici, parce
     /// qu'il n'a pas de déclinaison régionale dans le référentiel d'activité et n'entre donc pas dans
     /// cette table. Ce n'est pas gênant pour l'usage prévu - c'est le préfixe d'un **numéro de carré**
     /// qu'on lui soumet, or ces numéros sont faits de chiffres et ne portent jamais `971` sur deux

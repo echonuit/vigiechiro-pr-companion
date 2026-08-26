@@ -126,7 +126,7 @@ public class MaFeatureController {
     1. le **ViewModel** expose deux listes - `trucs()` (tout) et `trucsFiltres()` (une `FilteredList`) -
        plus son `Filtres<Truc>` ;
     2. la **table** se pose sur une `SortedList` **par-dessus** la liste filtrée, comparateur lié à celui
-       de la table. ⚠️ Une `FilteredList` posée nue est **non modifiable** : `TableView` renonce alors à
+       de la table. Une `FilteredList` posée nue est **non modifiable** : `TableView` renonce alors à
        trier et **vide son `sortOrder` en silence** ;
     3. un **catalogue** `CriteresMaFeature` déclare les critères (`CritereListe`, `CritereBooleen`,
        `CritereLieu`) ; les clés **partagées** viennent de `ClesCriteres`, les clés propres restent chez

@@ -37,7 +37,7 @@ Elle devient : **ne touche ni la base ni les dossiers de session**, et l'excepti
 ne fait que lire, et deux processus qui écrivent chacun ses lignes dans un journal ne se corrompent
 pas - ce que deux processus qui écrivent la même base feraient.
 
-⚠️ Ce qui est corrigé est la **formulation**, pas la décision. Une définition qui promet plus qu'elle ne
+Ce qui est corrigé est la **formulation**, pas la décision. Une définition qui promet plus qu'elle ne
 tient s'use vite : le premier lecteur qui remarque l'écart cesse de croire le reste.
 
 ## Décision 2 - Le cliquet est un compteur, pas une liste

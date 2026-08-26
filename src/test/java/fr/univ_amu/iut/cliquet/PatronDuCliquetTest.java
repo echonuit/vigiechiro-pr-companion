@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// ## La limite, écrite
 ///
-/// ⚠️ **Le nom est le contrat.** Un garde-fou qui fait le travail d'un cliquet sans en porter le nom
+/// **Le nom est le contrat.** Un garde-fou qui fait le travail d'un cliquet sans en porter le nom
 /// échappe à ce test : `DocumentationAJourTest` et les cliquets d'ADR (ADR 2465) sont dans ce cas,
 /// délibérément - ils sont antérieurs et inspectent la documentation, pas les sources Java.
 ///

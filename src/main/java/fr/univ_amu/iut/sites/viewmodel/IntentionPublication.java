@@ -71,7 +71,7 @@ public class IntentionPublication {
 
     /// Le point qui vient d'être enregistré doit-il partir sur la plateforme ?
     ///
-    /// ⚠️ On **redemande** le motif, au lieu de relire celui qui est affiché. Ce dernier ne se recalcule
+    /// On **redemande** le motif, au lieu de relire celui qui est affiché. Ce dernier ne se recalcule
     /// qu'à la saisie des coordonnées ; or la session peut expirer, ou le lien du carré disparaître, sans
     /// qu'aucun champ ne bouge. Relire l'affichage rendrait ce garde d'accord avec un écran périmé.
     public Optional<Long> pointAPublier(Long idPointEnregistre) {

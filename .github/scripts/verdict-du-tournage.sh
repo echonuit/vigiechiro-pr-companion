@@ -13,7 +13,7 @@
 #
 # Ce script ne juge pas - il RAPPORTE, là où on regarde.
 #
-# ## ⚠️ Il lit le XML, jamais le `.txt`
+# ## Il lit le XML, jamais le `.txt`
 #
 # Les rapports `.txt` de surefire mentent sur les classes à `@Nested` : ils annoncent « Tests run: 0 »
 # et rendent 0 alors que des cas ont tourné. Le XML porte les attributs `tests`, `failures`, `errors`
@@ -39,7 +39,7 @@ dossier = sys.argv[1]
 fichiers = sorted(glob.glob(os.path.join(dossier, "TEST-*.xml")))
 
 if not fichiers:
-    # ⚠️ « Aucun rapport » n'est PAS « aucun échec ». Un tournage dont les tests n'ont pas démarré
+    # « Aucun rapport » n'est PAS « aucun échec ». Un tournage dont les tests n'ont pas démarré
     # rendrait sinon le même texte qu'un tournage parfait, ce qui est exactement le faux vert que ce
     # script existe pour empêcher.
     print("⚠️ AUCUN rapport de test : impossible de dire ce que ce tournage a donné.")
@@ -112,7 +112,7 @@ auto_test() {
     essai "un échec est compté et nommé" "1 cas ont ROUGI" \
 '<testsuite name="fr.essai.Rouge" tests="3" failures="1" errors="0" skipped="0"/>'
 
-    # ⚠️ Une ERREUR n'est pas une défaillance pour surefire, et c'est ainsi qu'un cas qui explose au
+    # Une ERREUR n'est pas une défaillance pour surefire, et c'est ainsi qu'un cas qui explose au
     # montage - le banc qui refuse faute de jeton - passerait sous un compteur qui ne lirait que
     # `failures`.
     essai "une erreur compte autant qu'une défaillance" "1 cas ont ROUGI" \
@@ -128,7 +128,7 @@ auto_test() {
     essai "sans saut, le tournage garde son ✓" "✓" \
 '<testsuite name="fr.essai.ToutVert" tests="2" failures="0" errors="0" skipped="0"/>'
 
-    # ⚠️ Le contrôle qui empêche ce script de rassurer sur du vide.
+    # Le contrôle qui empêche ce script de rassurer sur du vide.
     essai "aucun rapport n'est pas aucun échec" "AUCUN rapport" ""
 
     essai "un rapport illisible se dit" "illisible" \

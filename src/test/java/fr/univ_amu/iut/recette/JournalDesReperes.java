@@ -18,7 +18,7 @@ import java.util.Optional;
 /// trancher un cas. Ce journal est ce pont : il consigne des instants d'horloge, et c'est le montage
 /// qui les ramènera à des positions dans la vidéo.
 ///
-/// ## ⚠️ L'horloge, et pourquoi c'est celle-là
+/// ## L'horloge, et pourquoi c'est celle-là
 ///
 /// Les instants sont des **millisecondes depuis l'époque** ([System#currentTimeMillis()]), la même
 /// grandeur que `date +%s%3N` côté script. Surtout pas [System#nanoTime()], qui ne se compare à

@@ -12,7 +12,7 @@ Vérifier ce qu'aucun test ne peut atteindre : que le paquet winget **s'installe
 d'administration**, que l'application **démarre** ensuite, et surtout que `winget upgrade`
 **remplace** la version en place au lieu de s'installer à côté d'elle.
 
-⚠️ Ce dernier point est le **motif d'origine** du chantier winget. L'`UpgradeCode` a été figé et le
+Ce dernier point est le **motif d'origine** du chantier winget. L'`UpgradeCode` a été figé et le
 scope fixé à `user` **avant** la première soumission (ADR 0045) précisément pour que la mise à jour
 remplace ; sans quoi « la première mise à jour livrée aux utilisateurs casse ». Cette propriété n'a
 **jamais été observée** : elle demande deux versions servies et une vraie machine Windows.
@@ -63,7 +63,7 @@ le **lance 45 s** sur un runner Windows, journal relu. Ce que la machine réelle
   **fermer l'application avant d'installer** (#3457). Sans cette phrase, l'installation lancée
   fenêtre ouverte ne se termine pas, et rien n'en donne la raison.
 
-    ⚠️ Le numéro sort de la suite volontairement : les cases 06 à 13 sont citées ailleurs (#3621
+    Le numéro sort de la suite volontairement : les cases 06 à 13 sont citées ailleurs (#3621
     tranche sur **S9-07**), et les renuméroter rendrait ces renvois faux en silence.
 
 **Étape 3 · La mise à jour REMPLACE, elle ne double pas**

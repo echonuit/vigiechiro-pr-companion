@@ -185,7 +185,7 @@ class ParcoursResetE2ETest {
         }));
     }
 
-    /// ⚠️ Depuis #1284, un retour `ReponseApi` non bouchonné vaut **`null`** : chaque appel du parcours
+    /// Depuis #1284, un retour `ReponseApi` non bouchonné vaut **`null`** : chaque appel du parcours
     /// doit être stubé, y compris [ClientVigieChiro#moi] : c'est lui, ici, qui atteste que la plateforme
     /// répond avant qu'on ose détruire quoi que ce soit.
     private static ClientVigieChiro plateformeBouchonnee() {

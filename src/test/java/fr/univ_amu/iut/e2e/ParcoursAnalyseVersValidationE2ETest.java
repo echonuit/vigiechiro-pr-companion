@@ -146,7 +146,7 @@ class ParcoursAnalyseVersValidationE2ETest {
         // ceci. L'IHM de la revue est couverte par le test voisin ; ce qui est en jeu ici est la
         // FRAÎCHEUR de l'écran qu'on a quitté.
         //
-        // ⚠️ **Deux validations, et c'est tout le sujet.** Une observation « manuelle » est celle dont
+        // **Deux validations, et c'est tout le sujet.** Une observation « manuelle » est celle dont
         // `results_id` est nul : la séquence semée en portant un, la PREMIÈRE validation en *insère* une
         // nouvelle - et cette écriture-là, structurelle, annonce. Seule la SECONDE remplace un taxon par
         // un `update`, et c'est celle-là qui ne signale rien. Ma première version de ce test n'en faisait
@@ -154,7 +154,7 @@ class ParcoursAnalyseVersValidationE2ETest {
         ValidationManuelle validation = injector.getInstance(ValidationManuelle.class);
         robot.interact(() -> validation.valider(idSequenceSemee, "Nyclei"));
 
-        // ⚠️ **Cette attente est le test.** L'insertion annonce, et Analyse - toujours dans l'historique,
+        // **Cette attente est le test.** L'insertion annonce, et Analyse - toujours dans l'historique,
         // donc toujours abonnée - se recharge en tâche de fond. Sans attendre que ce rechargement ait
         // abouti, le remplacement qui suit tombe pendant la lecture et se fait relire **par elle** : le
         // test passe alors sans que le retour y soit pour rien, et reste vert même en retirant
@@ -191,7 +191,7 @@ class ParcoursAnalyseVersValidationE2ETest {
         long idResultats;
         try (Connection cx = source.getConnection()) {
             // Site, point et enregistreur viennent de la fixture, avec le passage.
-            // ⚠️ Le SQL d'origine écrivait le protocole « Point fixe standard », un libellé que
+            // Le SQL d'origine écrivait le protocole « Point fixe standard », un libellé que
             // `Protocole` ne connaît plus (il stocke « PointFixeStandard ») : la ligne était illisible par
             // `SiteDao`, et ce test ne relisait jamais le site.
             long idPassage = JeuDeDonneesPassage.dans(source)

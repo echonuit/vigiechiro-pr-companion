@@ -78,7 +78,7 @@ class ScenesHabilleesTest {
                 .isEmpty();
     }
 
-    /// ⚠️ **Le pendant côté tests**, et il ne vise PAS les mêmes fichiers que ci-dessus.
+    /// **Le pendant côté tests**, et il ne vise PAS les mêmes fichiers que ci-dessus.
     ///
     /// `new Scene(` apparaît dans une centaine de tests, et l'immense majorité a raison de l'écrire :
     /// ils vérifient un **comportement** - un clic, un intitulé, une navigation - et se moquent de la
@@ -97,11 +97,11 @@ class ScenesHabilleesTest {
     /// fait une seule fois**, et un test qui ne l'appelle pas voit la police embarquée **si un voisin
     /// l'a installée avant lui**.
     ///
-    /// ⚠️ Et **sur un poste de développement Linux**, rien de tout cela ne se voit : `Noto Sans` y est
+    /// Et **sur un poste de développement Linux**, rien de tout cela ne se voit : `Noto Sans` y est
     /// une police **système** (219 entrées sous `/usr/share/fonts/truetype/noto/`), donc trouvée
     /// installée ou non. Une mesure locale de ce défaut est aveugle par construction.
     ///
-    /// ⚠️ **Sur le runner, c'est différent, et j'avais écrit trop large.** L'ADR 3361 l'a mesuré avant
+    /// **Sur le runner, c'est différent, et j'avais écrit trop large.** L'ADR 3361 l'a mesuré avant
     /// moi : l'alias `sans-serif` se résout « **Noto Sans sur un poste, une police plus large sur le
     /// runner** ». Ce que la CI Ubuntu voit exactement n'a pas été remesuré ici (#3826, passe 0).
     ///
@@ -127,7 +127,7 @@ class ScenesHabilleesTest {
                 .isEmpty();
     }
 
-    /// ⚠️ Contrôle de non-vacuité **fabriqué**, et il le faut : une fois les dix corrigés, plus aucun
+    /// Contrôle de non-vacuité **fabriqué**, et il le faut : une fois les dix corrigés, plus aucun
     /// fichier du dépôt ne correspond au motif. Le test ci-dessus certifierait alors une absence qu'il
     /// ne saurait plus constater - exactement le défaut qu'il est censé empêcher, appliqué à lui-même.
     @Test
@@ -184,7 +184,7 @@ class ScenesHabilleesTest {
     /// #4187). `e2e.AttenteAvantClic` faisait bien depuis toujours : sa lecture vit dans une méthode
     /// appelée uniquement depuis `robot.interact(...)`.
     ///
-    /// ⚠️ **La propriété est inter-procédurale, et ce garde ne l'est pas.** `AttenteAvantClic` route
+    /// **La propriété est inter-procédurale, et ce garde ne l'est pas.** `AttenteAvantClic` route
     /// dans une méthode et lit dans une autre : aucune lecture des sources ne peut relier les deux sans
     /// devenir un analyseur de flot. Ce garde vérifie donc une propriété plus FAIBLE mais vraie : un
     /// helper qui lit le graphe de scène **route quelque part**. Il attrape le cas qui s'est produit -
@@ -207,7 +207,7 @@ class ScenesHabilleesTest {
                 .sorted()
                 .toList();
 
-        // ⚠️ Un garde vert qui n'a rien lu est le faux vert le plus difficile à voir, et celui-ci l'a
+        // Un garde vert qui n'a rien lu est le faux vert le plus difficile à voir, et celui-ci l'a
         // été : son premier jet filtrait sur un chemin déjà amputé de son préfixe, n'inspectait AUCUN
         // fichier, et restait vert quand on retirait le routage de `CadreVisible`.
         assertThat(inspectes)
@@ -261,9 +261,9 @@ class ScenesHabilleesTest {
     /// Un fichier de `recette/` ou `e2e/` qui n'est pas lui-même un test : du code appelé sans que
     /// l'appelant sache sur quel fil il se trouve.
     ///
-    /// ⚠️ Un `AnimationTimer` est dispensé : sa méthode `handle` est appelée par la pulsation de
+    /// Un `AnimationTimer` est dispensé : sa méthode `handle` est appelée par la pulsation de
     /// JavaFX, donc sur le bon fil par construction.
-    /// ⚠️ Sur le chemin BRUT, pas sur [#normaliser]. Celui-ci retire le préfixe
+    /// Sur le chemin BRUT, pas sur [#normaliser]. Celui-ci retire le préfixe
     /// `src/test/java/fr/univ_amu/iut/`, si bien que `CadreVisible` s'y écrit `recette/CadreVisible.java`
     /// et qu'un test sur `"/recette/"` y est faux pour TOUS les fichiers. Écrit ainsi au premier jet, ce
     /// garde n'inspectait rien et rendait vert : c'est exactement le faux vert que son compteur de

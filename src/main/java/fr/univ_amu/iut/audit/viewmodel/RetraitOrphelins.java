@@ -21,7 +21,7 @@ public final class RetraitOrphelins {
 
     /// Les dossiers désignés par les constats **de catégorie [CategorieConstat#DOSSIER_ORPHELIN]**.
     ///
-    /// ⚠️ Le filtre sur la catégorie n'est pas une commodité : le champ `cible` d'un constat porte tantôt
+    /// Le filtre sur la catégorie n'est pas une commodité : le champ `cible` d'un constat porte tantôt
     /// un dossier, tantôt un **fichier** ([CategorieConstat#DISQUE_MANQUANT] cite un `.wav`). Élargir la
     /// sélection reviendrait à effacer le dossier d'un passage vivant.
     public static List<Path> dossiers(List<ConstatAudit> constats) {

@@ -52,7 +52,7 @@ public record ConfigurationAcquisition(
     /// La **nuit** à laquelle cette configuration se rattache, par la bascule de midi de
     /// [PartitionNuits#nuitDe].
     ///
-    /// ⚠️ C'est bien la nuit et non la date calendaire, et l'écart n'est pas théorique : le capteur est
+    /// C'est bien la nuit et non la date calendaire, et l'écart n'est pas théorique : le capteur est
     /// posé et configuré l'**après-midi** pour la nuit qui suit. Une configuration du 22 à 16 h régit
     /// donc la nuit du 22 au 23, ce que la même règle dit déjà des réveils et des mises en veille.
     public java.time.LocalDate nuit() {

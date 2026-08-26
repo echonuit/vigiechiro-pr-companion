@@ -20,7 +20,7 @@ verified:
 Le banc de recette filmée employait `matchbox-window-manager`, choisi parce qu'il est minuscule et
 démarre sans configuration.
 
-⚠️ **Il maximise tout ce qu'il affiche.** C'est son parti pris - il est fait pour de petits écrans -
+**Il maximise tout ce qu'il affiche.** C'est son parti pris - il est fait pour de petits écrans -
 et il a fait mentir **deux** dispositifs pendant des mois, chacun d'une façon qui ne ressemblait pas
 à la cause.
 
@@ -49,7 +49,7 @@ sous matchbox, **sans qu'une ligne de l'application ait changé**.
 Les 216-226 sur lesquels il était calibré étaient ceux d'une fenêtre **plein écran**. À taille réelle,
 la même modale rend 69, et le fond seul 16.
 
-⚠️ 69 passait encore un seuil à 50, mais de justesse, et le calcul dit que ça ne tient pas : une boîte
+69 passait encore un seuil à 50, mais de justesse, et le calcul dit que ça ne tient pas : une boîte
 de dialogue de 400 × 250 sur 1280 × 900 couvre 8,7 % de la surface, donc rend
 `0,087 × 243 + 0,913 × 16 ≈ 36`. Elle aurait été déclarée « rien à l'écran », la coupe aurait refusé,
 et la couverture se serait effondrée **sur un banc pourtant juste**.

@@ -173,7 +173,7 @@ class CliEmplacementsTest {
         // dans ce dossier. L'IHM l'ouvre depuis son menu ; la CLI n'a que cette commande pour le dire.
         // Ne pas le nommer laisse le seul exemplaire du diagnostic à un endroit qu'on ne peut deviner.
         //
-        // ⚠️ On vérifie la RELATION (les journaux sont sous le dossier de travail annoncé), pas un
+        // On vérifie la RELATION (les journaux sont sous le dossier de travail annoncé), pas un
         // chemin absolu : `preparer()` efface `vigiechiro.workspace`, donc `Workspace.resolu()` écrit
         // ici désignerait le vrai dossier de la machine et le test passerait pour de mauvaises raisons.
         int codeTexte = cli.executer(new String[] {"emplacements"}, sortie, erreur);

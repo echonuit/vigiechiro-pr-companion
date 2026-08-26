@@ -302,7 +302,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
     @FXML
     private void initialize() {
 
-        // ⚠️ La fiche SUIT le jeton (#4219). « Publier sur Vigie-Chiro » se grise faute de connexion et
+        // La fiche SUIT le jeton (#4219). « Publier sur Vigie-Chiro » se grise faute de connexion et
         // son motif dit « Connectez-vous à Vigie-Chiro pour publier ce point » ; mais `setDisable` est
         // posé UNE FOIS, à la construction de la carte, et les cartes ne se reconstruisent que sur une
         // mutation de la base. Se connecter n'en est pas une : le lien restait fermé, à conseiller un
@@ -509,7 +509,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         colStatut.setCellValueFactory(cd -> valeur(cd.getValue().statutLibelle()));
         colVerdict.setCellValueFactory(cd -> valeur(cd.getValue().verdictLibelle()));
         colEnregistreur.setCellValueFactory(cd -> valeur(cd.getValue().enregistreur()));
-        // ⚠️ Le cadratin est passé explicitement pour « Déposé le » : le ViewModel y met déjà
+        // Le cadratin est passé explicitement pour « Déposé le » : le ViewModel y met déjà
         // `Formats.VALEUR_ABSENTE` quand la nuit n'est pas déposée (`LignePassage` : « ou `—` si non
         // déposé »). Sans lui, la cellule se serait VIDÉE là où la colonne disait « rien à cette date »,
         // et c'est l'aperçu régénéré qui l'a montré, pas la lecture du code.

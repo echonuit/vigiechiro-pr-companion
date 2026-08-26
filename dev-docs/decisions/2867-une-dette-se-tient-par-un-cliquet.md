@@ -61,7 +61,7 @@ Un commentaire qui annonce un chiffre est déjà faux (celui du premier cliquet 
 La brique canonique fait, par métier, exactement ce que le détecteur cherche : la fixture sème, le harnais
 capture, le journal partagé écrit un journal. La compter serait absurde.
 
-⚠️ **L'exclusion manque toujours au début**, et pour une raison structurelle : au moment où le cliquet est
+**L'exclusion manque toujours au début**, et pour une raison structurelle : au moment où le cliquet est
 posé, la brique **n'existe pas encore**. Rien ne rappelle d'y penser le jour où elle naît. C'est arrivé
 trois fois de suite (#2714, #2904, #2909), la troisième fois en connaissant les deux précédentes.
 

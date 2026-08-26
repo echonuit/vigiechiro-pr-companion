@@ -32,13 +32,13 @@ setup() {
   [[ "${output}" == *"reactiver"* ]]
 }
 
-# ⚠️ Le seul endroit qui éprouve la couleur SUR LA SORTIE RÉELLE. `CouleurCliTest` vérifie la
+# Le seul endroit qui éprouve la couleur SUR LA SORTIE RÉELLE. `CouleurCliTest` vérifie la
 # décision - « terminal interactif et pas de NO_COLOR » - sur des entrées injectées ; il ne dit rien
 # de son CÂBLAGE, qui tient en une ligne (`Cli.executer`). Le défaut de #3738 vivait précisément là :
 # picocli colorisait l'aide sous Windows et pas sous Linux, sans que personne l'ait choisi, et aucun
 # test in-process ne pouvait le voir.
 #
-# ⚠️ Il faut un VRAI pseudo-terminal, et c'est ce que `script -qec` fournit. Sans lui, deux des trois
+# Il faut un VRAI pseudo-terminal, et c'est ce que `script -qec` fournit. Sans lui, deux des trois
 # cas sont indiscernables : sous `run`, la sortie est redirigée, donc nue **de toute façon** - un test
 # « NO_COLOR éteint la couleur » y serait vert sans rien prouver, puisqu'il n'y avait pas de couleur à
 # éteindre. Vu en éprouvant ces tests : neutraliser la détection de terminal n'en faisait rougir qu'un.
@@ -64,7 +64,7 @@ echappement() { printf '\033'; }
   [[ "${output}" == *"$(echappement)"* ]]
 }
 
-# ⚠️ Le seul cas où la sortie est REDIRIGÉE et la couleur attendue quand même : c'est exactement la
+# Le seul cas où la sortie est REDIRIGÉE et la couleur attendue quand même : c'est exactement la
 # situation que #3796 corrige - un pager, un journal de CI qui rend l'ANSI, un enrobage `script`. Sans
 # `FORCE_COLOR`, le produit refusait la couleur à quelqu'un qui la demandait explicitement.
 @test "aide : FORCE_COLOR allume la couleur même redirigée (#3796)" {
@@ -916,7 +916,7 @@ EOF
   run cli lister-sites
   [ "${status}" -eq 0 ] # la base est migrée : sans ça le refus viendrait de la migration
 
-  # ⚠️ `flock(1)` ne conviendrait pas : il pose un verrou flock(2), indépendant des verrous POSIX que
+  # `flock(1)` ne conviendrait pas : il pose un verrou flock(2), indépendant des verrous POSIX que
   # `FileChannel.tryLock` utilise. Le test serait vert sans rien bloquer.
   python3 - "${BATS_TEST_TMPDIR}/.verrou" "${BATS_TEST_TMPDIR}/.pris" << 'FIN' &
 import fcntl, pathlib, sys, time

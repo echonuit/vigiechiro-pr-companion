@@ -25,7 +25,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// câblage de la table de dépôt. La carte est une unité de sens à elle seule : une étape du workflow,
 /// sa table, ses actions et son compte rendu de fin.
 ///
-/// ⚠️ Elle reçoit ses appuis du parent ([#installer(AppuisTeleversement)]) et n'injecte rien : les
+/// Elle reçoit ses appuis du parent ([#installer(AppuisTeleversement)]) et n'injecte rien : les
 /// ViewModel du dépôt sont non-singleton, et se les procurer en donnerait de nouveaux, vides. La règle
 /// est gardée par `DecisionsRespecteesTest#une_sous_vue_ne_s_injecte_pas_son_modele` (ADR 2745).
 public class EtapeTeleversementController {
@@ -228,7 +228,7 @@ public class EtapeTeleversementController {
 
     /// Copie le chemin du sous-dossier `depot/` dans le presse-papier (#3464).
     ///
-    /// ⚠️ Ce qui part dans le presse-papier est **ce que le libellé affiche**, pas une valeur
+    /// Ce qui part dans le presse-papier est **ce que le libellé affiche**, pas une valeur
     /// recomposée à côté : une copie qui diverge de ce qu'on lit à l'écran serait pire que pas de
     /// copie, puisqu'on la collerait sans la relire.
     @FXML

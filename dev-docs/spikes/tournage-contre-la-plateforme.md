@@ -56,12 +56,12 @@ et dans le contexte `github.event.inputs`.
 **Et les journaux sont publics.** Mesuré ci-dessus : `HTTP 200` sans jeton d'API. Le seul lecteur qu'on
 imaginait, celui qui a accès au dépôt, n'est pas le seul lecteur.
 
-⚠️ La documentation GitHub ne porte **aucun avertissement** sur ce point. L'absence d'avertissement se
+La documentation GitHub ne porte **aucun avertissement** sur ce point. L'absence d'avertissement se
 lit facilement comme une autorisation ; c'est pour cela que cette page l'écrit.
 
 ### Les options de transport, comparées
 
-⚠️ **L'axe n'est pas l'accès, c'est le cycle de vie.** Un secret de dépôt est lisible par **tous** les
+**L'axe n'est pas l'accès, c'est le cycle de vie.** Un secret de dépôt est lisible par **tous** les
 workflows du dépôt : un second secret de dépôt n'isole donc rien, et l'invoquer comme une séparation
 serait faux. Ce qui sépare réellement les deux usages est qu'ils veulent des durées différentes. Le
 contrat hebdomadaire veut un jeton **qui dure** et sait vivre avec son expiration ; le tournage veut un
@@ -91,7 +91,7 @@ l'ajouter le jour où la publication commencera, c'est-à-dire le jour où on l'
 
 Son prix est une commande. C'est peu au regard de ce qu'il achète.
 
-⚠️ Ce que ce second secret **ne fait pas** : il n'isole rien. Tout workflow du dépôt peut le lire, comme
+Ce que ce second secret **ne fait pas** : il n'isole rien. Tout workflow du dépôt peut le lire, comme
 il peut lire l'autre. Le confondre avec un cloisonnement rendrait la suite du raisonnement fausse.
 
 !!! note "Une règle d'approbation, si on la veut, se pose à part"
@@ -114,7 +114,7 @@ Lu dans `vigiechiro/xin/auth.py` :
 Conséquence : l'échange OIDC n'est pas une option qu'on aurait négligée, c'est une option qui n'existe
 pas de notre côté. La proposer supposerait un travail côté MNHN/CESCO, et il faudrait le demander.
 
-⚠️ La contrepartie du parcours OAuth est qu'un jeton **s'obtient à la main**, dans un navigateur. Le
+La contrepartie du parcours OAuth est qu'un jeton **s'obtient à la main**, dans un navigateur. Le
 secret devra donc être reposé régulièrement, comme celui du contrat, et ce mode ne sera jamais
 entièrement automatique.
 
@@ -156,7 +156,7 @@ les en-têtes et le corps envoyé.
 | Pré-version roulante `clips-recette` | tout le monde | jusqu'au tournage suivant |
 | Tag de version, clips préfixés `java-` | tout le monde | **pour toujours**, le tag ne bouge pas |
 
-⚠️ L'en-tête de `tournage-recette.yml` disait « il ne PUBLIE pas, les clips restent en artefact ».
+L'en-tête de `tournage-recette.yml` disait « il ne PUBLIE pas, les clips restent en artefact ».
 C'était vrai du versement, et faux de la confidentialité : sur un dépôt public, un artefact est public.
 **La phrase a été corrigée** à la clôture du chantier, et le workflow verse désormais sur deux
 destinations qui lui sont propres.
@@ -166,7 +166,7 @@ destinations qui lui sont propres.
 **Le jeton entre par l'écran, et il meurt avec le run.** C'était la parade proposée ici : ne jamais
 coller le jeton devant la caméra, en le déposant en coulisse pour que la modale se vérifie seule.
 
-⚠️ **Elle a été retirée à l'usage** (#4324). Le clip montrait alors une modale qui se connectait toute
+**Elle a été retirée à l'usage** (#4324). Le clip montrait alors une modale qui se connectait toute
 seule, sans qu'on voie ce qui l'avait connectée : illisible, et donc sans valeur de recette. Or le
 jeton est révoqué en fin de run, et un jeton mort n'est pas un secret. La parade coûtait le clip pour
 un risque que la révocation avait déjà supprimé.
@@ -181,7 +181,7 @@ exactement 32 caractères : `[A-Z0-9]{32}` est une forme, et elle ne ressemble n
 SHA-256 du dépôt (minuscules, 64 caractères) ni aux identifiants Mongo (hexadécimal minuscule, 24). Un
 garde qui balaie les **textes** de l'artefact avant publication est donc possible, et bon marché.
 
-⚠️ Il ne protège pas l'image. Un garde qui rougirait sur `tournage.log` en laissant passer un clip
+Il ne protège pas l'image. Un garde qui rougirait sur `tournage.log` en laissant passer un clip
 serait exactement le dispositif rassurant que ce dépôt s'interdit : s'il est écrit, il doit dire ce
 qu'il ne couvre pas.
 
@@ -246,7 +246,7 @@ grep -rn "roles=.Lecteur" vigiechiro/   →   (vide)
 pour distinguer « jeton mort » de « contrat cassé » portent tous
 `@requires_auth(roles='Observateur')`. Un jeton de `Lecteur` ne lirait rien.
 
-⚠️ **Comment l'erreur s'est produite**, parce qu'elle se reproduira : le relevé de départ ne portait
+**Comment l'erreur s'est produite**, parce qu'elle se reproduira : le relevé de départ ne portait
 que sur les routes d'**écriture**, et il était juste. « Toutes les routes d'écriture exigent
 `Observateur` » est vrai, et ne dit rien du fait que les routes de **lecture** l'exigent aussi. Une
 mesure exacte sur une population choisie répond à une question qu'on n'a pas posée.
@@ -275,7 +275,7 @@ touche tous les trois, et pas au même endroit.
 | Le plancher de bruit de `compare-tournages.sh` | deux tournages du même commit diffèrent de ≤ 0,01 % à 5 % de tolérance | des données vivantes changent l'écran sans qu'aucun commit ait bougé. Le plancher mesure alors la plateforme, pas le rendu |
 | La comparaison « dernière version contre tournante » | les deux côtés montrent le même produit sur les mêmes données | un cas « bouge » parce qu'une nuit a été traitée entre les deux tournages. Le signal le plus fiable, la **présence** du cas, tient encore ; l'image finale et la durée ne veulent plus rien dire |
 
-⚠️ Le plancher par cas de #4287 aggrave le problème plutôt qu'il ne le règle : il classe chaque cas par
+Le plancher par cas de #4287 aggrave le problème plutôt qu'il ne le règle : il classe chaque cas par
 le rapport de son écart à son propre bruit. Un cas connecté aurait un bruit énorme et se retrouverait
 durablement en bas du classement, c'est-à-dire invisible, y compris le jour où il change pour une vraie
 raison.
@@ -307,7 +307,7 @@ Le bouchon `stub_vigiechiro.py` fait 135 lignes et ne sert que la ressource `sit
 d'aujourd'hui ne dit donc **rien** de ces cinq lignes : il dit que notre client parle à notre idée de
 la plateforme.
 
-⚠️ Et c'est exactement pourquoi le mode connecté ne remplace pas `api-live.yml`. Le contrat
+Et c'est exactement pourquoi le mode connecté ne remplace pas `api-live.yml`. Le contrat
 hebdomadaire éprouve le **contrat** et rougit quand il dérive ; un tournage connecté éprouve le
 **parcours** et produit une image. Le premier fait foi, le second se regarde. Deux dispositifs, deux
 objets.
@@ -327,7 +327,7 @@ objets.
 | `DocumentationAJourTest` | le compteur balisé `inv:workflows-ci`, qui ne bouge que si un **fichier** de workflow s'ajoute |
 | `verifie-jeton.sh` | rien de neuf, et c'est le point : son motif cherche `vigiechiro.token` ou `auth-session-token` **affectés dans un fichier versionné**. Il ne regarde ni les artefacts, ni les clips, ni les journaux de run |
 
-⚠️ Un mode porté par un **drapeau** sur `tournage-recette.yml` ne fait pas bouger le compteur des
+Un mode porté par un **drapeau** sur `tournage-recette.yml` ne fait pas bouger le compteur des
 workflows : celui-ci compte des fichiers. Ce n'est pas un oubli du compteur, c'est ce qu'il mesure.
 
 ## 7. La décision à écrire
@@ -347,7 +347,7 @@ Elle trancherait trois choses :
 
 Elle a été écrite en passe 10 : **[ADR 4291](../decisions/4291-un-clip-tourne-contre-la-plateforme-ne-se-range-pas-avec-les-autres.md)**.
 
-⚠️ Ce que cette page ne disait pas, faute de l'avoir mesuré, **a été mesuré depuis** : le tri des deux
+Ce que cette page ne disait pas, faute de l'avoir mesuré, **a été mesuré depuis** : le tri des deux
 scripts de session, cas par cas, donne **29 cas de S8 sur 38** atteignables, et **S4 hors de portée** -
 elle écrit sans qu'aucun `DELETE` client ne le défasse, demande une carte SD réelle et attend deux
 heures le calcul Tadarida. Le détail vit dans l'EPIC #4291.

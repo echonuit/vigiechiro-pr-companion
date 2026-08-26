@@ -47,7 +47,7 @@ export LC_ALL=C.UTF-8
 # porte sur l'environnement réellement remis à Maven, et non sur une intention.
 # Le drapeau évite une boucle si l'environnement le repose (ce qu'aucun cas connu ne fait, mais
 # une relance infinie serait un défaut bien plus coûteux que cette ligne).
-# ⚠️ `BANC_SOURCE_SEULEMENT` court-circuite aussi CE point : qui source ne veut rien lancer, et la
+# `BANC_SOURCE_SEULEMENT` court-circuite aussi CE point : qui source ne veut rien lancer, et la
 # relance est un lancement. Sans cela, `source ce-script` sur une session Wayland `exec`ute une
 # copie qui repart au début - le garde du bas n'est alors jamais atteint.
 if [ -z "${BANC_SOURCE_SEULEMENT:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -z "${RECETTE_RELANCE:-}" ]; then
@@ -62,7 +62,7 @@ TAILLE="1280x900x24"
 # La police du carton. DejaVu est présente sur les runners GitHub comme sur les postes de
 # développement ; `carton_de_titre` échoue proprement si elle manque, et le clip se produit sans
 # carton plutôt que pas du tout.
-# ⚠️ La police du carton se RÉSOUT. Le chemin DejaVu ci-dessous est celui des postes de dev et des
+# La police du carton se RÉSOUT. Le chemin DejaVu ci-dessous est celui des postes de dev et des
 # images GitHub, mais aucun paquet du banc ne le garantit : `fc-match` sert de recours plutôt que de
 # rendre un carton vide sur une machine autrement équipée.
 POLICE_CARTON="${POLICE_CARTON:-/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf}"
@@ -88,7 +88,7 @@ verifier_profil() {
         || manques+=("recette.testfx.robot devrait valoir awt")
     printf '%s' "$bloc" | grep -q '<recette.awt.headless>false<' \
         || manques+=("recette.awt.headless devrait valoir false")
-    # ⚠️ UN SEUL fork, et c'est la condition même du filmage. Le réglage ordinaire du dépôt est `1C`,
+    # UN SEUL fork, et c'est la condition même du filmage. Le réglage ordinaire du dépôt est `1C`,
     # un fork par cœur : plusieurs classes tournent alors en parallèle, ce qui est bon pour la durée
     # du build et fatal ici. Un tournage n'a qu'UN écran et qu'UN pointeur ; deux forks les pilotent
     # en même temps, et les clics d'une classe tombent dans les fenêtres d'une autre.
@@ -105,7 +105,7 @@ verifier_profil() {
 
 # La configuration du gestionnaire de fenêtres du banc est-elle là ?
 #
-# ⚠️ Sans elle, openbox lit `/etc/xdg/openbox/rc.xml` et ne dit rien : il se rabat sur les défauts de
+# Sans elle, openbox lit `/etc/xdg/openbox/rc.xml` et ne dit rien : il se rabat sur les défauts de
 # la distribution, qui ne sont pas les mêmes partout. Le poste de développement centre les fenêtres,
 # l'image des runners ne les centrait pas - et la modale corrigée par #4074 paraissait centrée en
 # local et collée en haut à gauche sur le clip PUBLIÉ. Même code, même commit, deux placements.
@@ -196,10 +196,10 @@ verifier_tout() {
 #     908 images à 16,01   (le noir)
 #      22 images à 216-226 (l'application)
 #
-# Aucune valeur entre les deux. ⚠️ Une image noire vaut 16 et NON zéro : « différent de zéro »
+# Aucune valeur entre les deux. Une image noire vaut 16 et NON zéro : « différent de zéro »
 # ne marcherait pas.
 #
-# ## ⚠️ Le seuil a dû BAISSER quand le banc a cessé de maximiser (#3788)
+# ## Le seuil a dû BAISSER quand le banc a cessé de maximiser (#3788)
 #
 # Les 216-226 ci-dessus sont ceux d'une fenêtre PLEIN ÉCRAN : c'est ce que faisait matchbox de
 # tout ce qu'il affichait. Avec openbox, une fenêtre occupe sa taille réelle, et la moyenne de
@@ -271,7 +271,7 @@ couper_par_luminance() {
         -vf "select='${filtre}',setpts=N/FRAME_RATE/TB" -an \
         -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$sortie" >/dev/null 2>&1
 
-    # ⚠️ LE CONTRÔLE, sur la même grandeur que la coupe. Une coupe qui vise à côté rend un
+    # LE CONTRÔLE, sur la même grandeur que la coupe. Une coupe qui vise à côté rend un
     # fichier COURT, donc d'apparence saine : seule cette mesure la démasque.
     #
     # Le seuil est à 0,6, et non plus haut, parce que 100 % est INATTEIGNABLE : le segment
@@ -312,7 +312,7 @@ couper_par_luminance() {
 # la durée du fichier obtenu : l'image 0 est donc à `arrêt - durée`, quelle qu'ait été la
 # latence de démarrage. Rien n'est supposé.
 #
-# ⚠️ Se tromper ici ne produit pas de panne. Les clips s'ouvrent, montrent une interface, et ne
+# Se tromper ici ne produit pas de panne. Les clips s'ouvrent, montrent une interface, et ne
 # montrent pas le bon geste. C'est le motif exact que cet EPIC combat, d'où le contrôle qui suit.
 #
 # ## Le contrôle : la COUVERTURE, et non la clarté de chaque clip
@@ -326,7 +326,7 @@ couper_par_luminance() {
 # couverture s'effondre - alors qu'une séance sans aucune fenêtre n'a rien à couvrir et ne
 # déclenche rien.
 #
-# ⚠️ LES PLAGES SONT CELLES DE TOUS LES TESTS, pas seulement des tests cités. La première séance
+# LES PLAGES SONT CELLES DE TOUS LES TESTS, pas seulement des tests cités. La première séance
 # filmée réelle a refusé un alignement correct pour cette raison : `ConnexionModaleViewTest`
 # compte dix tests dont trois annotés, et les sept autres ouvrent aussi des fenêtres. Le contrôle
 # jugeait donc hors sujet les cinq sixièmes de ce qu'il voyait, et annonçait 16 %.
@@ -340,7 +340,7 @@ couper_par_luminance() {
 #     repères décalés de 3 s  -> couverture 0,00
 #
 # Les deux modes sont aux extrémités, et le seuil est loin des deux : il ne se règle pas au
-# millimètre. ⚠️ Le nombre d'images utiles est rendu avec la couverture, et non déduit : une
+# millimètre. Le nombre d'images utiles est rendu avec la couverture, et non déduit : une
 # couverture parfaite sur ZÉRO image utile serait un vert creux, indiscernable d'un contrôle qui
 # ne s'est pas exécuté.
 CLIP_MARGE=0.5           # un peu avant et après : ne pas couper au ras du geste
@@ -370,7 +370,7 @@ couverture_des_plages() {
 
 # L'instant courant en millisecondes depuis l'époque, sur treize chiffres.
 #
-# ⚠️ `date +%s%3N` n'est PAS portable, et son échec ne se voit pas. Le modificateur de largeur `3`
+# `date +%s%3N` n'est PAS portable, et son échec ne se voit pas. Le modificateur de largeur `3`
 # est ignoré par certaines versions de `date` : `%N` sort alors ses neuf chiffres entiers, et
 # l'instant vaut un MILLION de fois trop. Mesuré sur un poste de développement, où `date +%s%3N`
 # rend `1787247026506300185` au lieu de `1787247026506`.
@@ -390,7 +390,7 @@ instant_en_millisecondes() {
 
 # Les plages « test début fin cas », en secondes depuis le début du brut.
 plages_du_journal() {
-    # ⚠️ La marge ne s'ajoute PAS à l'aveugle : elle est bornée par le cas voisin (#4113).
+    # La marge ne s'ajoute PAS à l'aveugle : elle est bornée par le cas voisin (#4113).
     #
     # Ajoutée sans regarder, elle fait finir un clip sur l'écran du cas SUIVANT. Constaté à l'image :
     # S6-28 se terminait sur la modale de connexion d'une autre classe, et un clip perceptif existe
@@ -399,7 +399,7 @@ plages_du_journal() {
     # Là où le voisin est loin, la marge reste entière : c'est elle qui empêche de couper au ras du
     # geste, et la raboter partout coûterait la respiration qu'elle donne.
     #
-    # ⚠️ Et le repère ne suffit PAS. Borner sur le `debut` du cas suivant laisse encore passer sa
+    # Et le repère ne suffit PAS. Borner sur le `debut` du cas suivant laisse encore passer sa
     # fenêtre : elle paraît pendant son montage (`@Start`), donc AVANT que son repère soit écrit. La
     # première version de ce bornage a raccourci le clip de S6-28 de 0,2 s et la modale de connexion y
     # est restée - vérifié à l'image sur le tournage qui a suivi.
@@ -449,7 +449,7 @@ plages_du_journal() {
                     if (a < 0) a = 0
                     b = fin[i] + m
                     if (i < NR && b > deb[i + 1]) b = deb[i + 1]
-                    # ⚠️ Le bornage a l image AFFINE, il ne doit jamais APPAUVRIR. Un test tres rapide
+                    # Le bornage a l image AFFINE, il ne doit jamais APPAUVRIR. Un test tres rapide
                     # nouvre aucune fenetre : son ecran est noir des le depart, la premiere image noire
                     # tombe avant sa propre fin, et la plage seffondre. Onze clips ont ainsi disparu de
                     # la pre-version, laissant onze lecteurs vides sur les pages de la doc.
@@ -480,7 +480,7 @@ montage_par_cas() {
     local duree t0 plages mesure couverture utiles
     duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$brut" 2>/dev/null)
     [ -n "$duree" ] || { echo "⚠️ durée du brut illisible : pas de montage"; return 1; }
-    # ⚠️ Un instant hors de portée se REFUSE ici, au lieu de traverser le calcul. Sans ce contrôle,
+    # Un instant hors de portée se REFUSE ici, au lieu de traverser le calcul. Sans ce contrôle,
     # une horloge d'un million de fois trop grande rendait des plages négatives, et le banc concluait
     # « les repères ne décrivent pas CE film » : il accusait les repères d'un défaut de l'horloge.
     # Treize chiffres, c'est l'époque en millisecondes de 2001 à 2286.
@@ -530,13 +530,13 @@ montage_par_cas() {
         ffmpeg -nostdin -loglevel error -i "$brut" -ss "$deb" -to "$fin" -an \
             -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$clip" >/dev/null 2>&1
 
-        # ⚠️ Le carton d'ouverture (#4053). Sans lui, un clip démarre sur l'application en mouvement
+        # Le carton d'ouverture (#4053). Sans lui, un clip démarre sur l'application en mouvement
         # et le lien avec le cas vit dans `index.md`, à côté. Retour de la première revue humaine.
         #
         # Si le collage échoue - police absente sur ce poste - le clip reste tel quel : un extrait
         # sans titre vaut mieux qu'un extrait manquant.
         #
-        # ⚠️ La part d'images utiles se mesure AVANT le collage, et l'ordre n'est pas indifférent.
+        # La part d'images utiles se mesure AVANT le collage, et l'ordre n'est pas indifférent.
         # Le carton porte du texte clair sur fond sombre : ses images comptent pour utiles. Mesurée
         # après, un test qui ne montre RIEN - un ViewModel, par exemple - passerait de 0 % à un tiers,
         # et l'index le proposerait « en regardant » alors qu'il n'y a rien à regarder. La part décrit
@@ -547,7 +547,7 @@ montage_par_cas() {
         # pour un test qui n'ouvre pas de fenêtre. Ce qui est exigé vaut pour la séance entière,
         # et c'est le contrôle de couverture ci-dessus.
         #
-        # ⚠️ Elle décide en revanche de la MANIÈRE d'auditer (#3835). La frontière est « aucune
+        # Elle décide en revanche de la MANIÈRE d'auditer (#3835). La frontière est « aucune
         # image utile », et non un seuil réglé : soit quelque chose a paru à l'écran, soit rien.
         # Un nombre choisi à la main aurait rangé un cas du mauvais côté sans qu'on le sache.
         printf '%s\t%s\t%s\t%s\t%s\n' "$cas" "$test" "$(basename "$clip")" \
@@ -562,11 +562,11 @@ montage_par_cas() {
 Un clip par **test**, parce que c'est ce que la JVM sait borner ; cet index se lit par **cas**,
 parce que c'est ce qu'on cherche. Un cas couvert par plusieurs tests a donc plusieurs lignes.
 
-⚠️ Aucune position dans le film livré n'est donnée, et c'est volontaire : ce film est écourté par
+Aucune position dans le film livré n'est donnée, et c'est volontaire : ce film est écourté par
 luminance, si bien qu'une position calculée sur le brut y serait fausse. Le clip est le point
 d'entrée.
 
-## ⚠️ Comment auditer : en regardant, ou en lisant
+## Comment auditer : en regardant, ou en lisant
 
 Cet index sert à relire ce que les annotations affirment - le garde vérifie qu'un identifiant cité
 **existe**, jamais que le test **fait ce que le cas décrit**.
@@ -636,7 +636,7 @@ lancer() {
     # d'arrêt alors qu'il s'initialise encore, et rend un fichier vide. Filmer tôt lui laisse le
     # temps ; la coupe se fait au montage, où rien ne court après rien.
     #
-    # ⚠️ L'ARRÊT NE PASSE PAS PAR UN SIGNAL. Un travail lancé en arrière-plan depuis un shell
+    # L'ARRÊT NE PASSE PAS PAR UN SIGNAL. Un travail lancé en arrière-plan depuis un shell
     # NON INTERACTIF ignore SIGINT (c'est POSIX), et SIGTERM n'a pas mieux marché ici. Trois
     # stratégies de signal ont échoué, dont deux en laissant croire au succès.
     # On emploie donc l'arrêt DOCUMENTÉ de ffmpeg : la commande `q` sur son entrée standard,
@@ -706,7 +706,7 @@ lancer() {
 # `-Dtest=A,B,C` rend donc, d'un coup, un index qui les couvre toutes : il n'y a rien à fusionner.
 # Seize séances auraient donné seize artefacts et une comptabilité à tenir de tête.
 #
-# ## ⚠️ La liste se DÉRIVE, elle ne se tient pas à la main
+# ## La liste se DÉRIVE, elle ne se tient pas à la main
 #
 # Un `grep` sur `@CasDeRecette` ramène deux faux positifs sur dix-huit : l'annotation elle-même,
 # dont la documentation contient un exemple, et les fixtures qui imitent un test sans rien couvrir.
@@ -745,7 +745,7 @@ planche() {
 
 # Les dimensions d'un film, pour que le carton soit taillé comme lui.
 #
-# ⚠️ `concat -c copy` exige des flux identiques : un carton d'une autre taille ferait échouer le
+# `concat -c copy` exige des flux identiques : un carton d'une autre taille ferait échouer le
 # recollage, et le clip repartirait sans titre sans qu'on sache pourquoi.
 dimensions_du_film() { # <film>
     ffprobe -v error -select_streams v:0 -show_entries stream=width,height \
@@ -754,7 +754,7 @@ dimensions_du_film() { # <film>
 
 # Le libellé d'un cas, tel que sa session le formule.
 #
-# ⚠️ Une puce de session se REPLIE sur plusieurs lignes physiques, avec deux espaces d'indentation
+# Une puce de session se REPLIE sur plusieurs lignes physiques, avec deux espaces d'indentation
 # pour la suite. Un `grep` n'en ramène que le premier morceau : la première revue du carton affichait
 # « ... rien ne se », qui s'arrête juste avant le verbe et annonce le contraire du cas. On recolle
 # donc la puce entière avant de la lire.
@@ -773,14 +773,14 @@ libelle_du_cas() { # <identifiant, ex. S1-26>
 
 # Abrège un texte sans couper un mot, et le DIT quand il abrège.
 #
-# ⚠️ Une coupe brutale s'est vue sur le premier clip réel : le carton de S6-27 finissait sur
+# Une coupe brutale s'est vue sur le premier clip réel : le carton de S6-27 finissait sur
 # « habituelle. L'aper ». Un titre tronqué en plein mot se lit comme un défaut de rendu, et le
 # lecteur ne sait pas s'il manque trois lettres ou trois phrases. Les points de suspension le disent.
 abreger_sur_un_mot() { # <longueur maximale>  (texte sur l'entrée standard)
     awk -v n="$1" '{
         if (length($0) <= n) { print; next }
         court = substr($0, 1, n - 1)
-        # ⚠️ On ne recule d un mot QUE si la coupe en tranche un. Quand elle tombe pile sur une fin
+        # On ne recule d un mot QUE si la coupe en tranche un. Quand elle tombe pile sur une fin
         # de mot - le caractère suivant est un espace - reculer perdrait un mot entier pour rien.
         if (substr($0, n, 1) != " ") {
             espace = match(court, /[ ][^ ]*$/)
@@ -794,7 +794,7 @@ abreger_sur_un_mot() { # <longueur maximale>  (texte sur l'entrée standard)
 # Le carton d'ouverture d'un clip : son identifiant, ce qu'il montre, et la classe qui le filme.
 # Colle le carton d'ouverture devant un clip, EN PLACE.
 #
-# ⚠️ Cette fonction existe parce que le collage était écrit dans la boucle de montage, et que le cas
+# Cette fonction existe parce que le collage était écrit dans la boucle de montage, et que le cas
 # d'auto-test qui le gardait le réécrivait à côté - avec un nom de sortie différent. Le cas passait,
 # le code échouait, et l'écart tenait à une extension : la boucle écrivait dans « <clip>.titre »,
 # que ffmpeg refuse (« Unable to choose an output format ») faute d'extension connue. Le carton n'a
@@ -812,7 +812,7 @@ coller_le_carton() { # <clip> <cas> <test>
     if carton_de_titre "$cas" "$(libelle_du_cas "$cas")" "$test" \
         "$(dimensions_du_film "$clip")" "$carton"; then
         printf "file '%s'\nfile '%s'\n" "$carton" "$clip" > "$liste"
-        # ⚠️ Le carton est produit aux réglages du clip : `concat -c copy` recolle sans ré-encoder,
+        # Le carton est produit aux réglages du clip : `concat -c copy` recolle sans ré-encoder,
         # donc sans coûter une génération de qualité à l'extrait.
         if ffmpeg -nostdin -loglevel error -f concat -safe 0 -i "$liste" -c copy \
             -y "$monte" >/dev/null 2>&1; then
@@ -832,7 +832,7 @@ carton_de_titre() { # <cas> <libellé> <classe> <largeur>x<hauteur> <sortie>
     local hauteur="${taille#*x}" atelier filtre="" total=0 y i=0 corps couleur ligne
     local -a lignes=() corps_de=() couleur_de=()
 
-    # ⚠️ UNE ligne par fichier, et un `drawtext` par ligne. Un seul `drawtext` nourri d'un texte à
+    # UNE ligne par fichier, et un `drawtext` par ligne. Un seul `drawtext` nourri d'un texte à
     # sauts de ligne paraissait plus simple - c'est ce que faisait la première version - mais il
     # DESSINE le saut de ligne : la première revue montrait un tofu en bout de chaque ligne. Un
     # filtre par ligne n'a aucun saut à dessiner, et centre chaque ligne pour elle-même au lieu de
@@ -840,9 +840,9 @@ carton_de_titre() { # <cas> <libellé> <classe> <largeur>x<hauteur> <sortie>
     atelier=$(mktemp -d)
 
     lignes+=("$cas");            corps_de+=(46); couleur_de+=("0xffffff")
-    # ⚠️ Le libellé se REPLIE, il ne se tronque pas. Coupé à la largeur, il s'arrêtait en plein mot :
+    # Le libellé se REPLIE, il ne se tronque pas. Coupé à la largeur, il s'arrêtait en plein mot :
     # un titre tronqué annonce autre chose que ce que le clip montre.
-    # ⚠️ `|| [ -n "$ligne" ]` : `fold` ne termine pas sa DERNIÈRE ligne par un saut, et `read` rend
+    # `|| [ -n "$ligne" ]` : `fold` ne termine pas sa DERNIÈRE ligne par un saut, et `read` rend
     # alors 1 tout en ayant rempli la variable. Sans ce garde, le carton perdait la fin du libellé -
     # il affichait « ... la saisie » et s'arrêtait là, sans rien signaler.
     while IFS= read -r ligne || [ -n "$ligne" ]; do
@@ -910,10 +910,10 @@ auto_test() {
     essai "profil entièrement absent" rouge env POM_A_VERIFIER="$tmp/sans-profil.xml" bash -c 'source "$0"; verifier_profil' "${BASH_SOURCE[0]}"
 
     # --- le carton d'ouverture d'un clip (#4053) ---
-    # ⚠️ Retour de la première revue humaine des clips : « ça montre bien ce qui est attendu, mais il
+    # Retour de la première revue humaine des clips : « ça montre bien ce qui est attendu, mais il
     # faudrait une diapo de titre pour comprendre ce qu'on regarde ».
     #
-    # ⚠️ DEUX pièges à la fois, et les cas voisins les évitaient sans que la raison soit écrite.
+    # DEUX pièges à la fois, et les cas voisins les évitaient sans que la raison soit écrite.
     #
     # `RECETTE_RELANCE=1` d'abord : sans lui, sur une session Wayland, la copie sourcée atteint la
     # relance de la ligne 44 et s'EXEC elle-même. Le shell appelant est remplacé, et rien après
@@ -926,7 +926,7 @@ auto_test() {
     essai "le libellé d un cas se lit dans sa session" vert \
         env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
             case "$(libelle_du_cas S1-26)" in *"sans saut"*) exit 0 ;; *) exit 1 ;; esac' "${BASH_SOURCE[0]}"
-    # ⚠️ Un cas peut être annoté avant d'être rédigé : le libellé manque alors, et le montage doit
+    # Un cas peut être annoté avant d'être rédigé : le libellé manque alors, et le montage doit
     # continuer. Un carton sans phrase vaut mieux qu'un clip qui n'existe pas.
     essai "un cas sans libellé ne fait pas échouer" vert \
         env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1; libelle_du_cas S9-99 >/dev/null' "${BASH_SOURCE[0]}"
@@ -938,7 +938,7 @@ auto_test() {
             carton_de_titre "S1-26" "La modale s ouvre sans saut" "ScenarioPerceptifConnexionTest" 320x180 "$d/c.mkv" || exit 1
             duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$d/c.mkv")
             awk -v x="$duree" "BEGIN{exit !(x > 1.5 && x < 2.5)}"' "${BASH_SOURCE[0]}"
-    # ⚠️ LE cas qui porte le carton : il doit montrer QUELQUE CHOSE. Un carton noir - police absente,
+    # LE cas qui porte le carton : il doit montrer QUELQUE CHOSE. Un carton noir - police absente,
     # texte non rendu - passerait un contrôle d'existence et ne dirait rien à qui regarde.
     essai "et il n est pas vide : du texte y paraît" vert \
         env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
@@ -946,7 +946,7 @@ auto_test() {
             carton_de_titre "S1-26" "La modale s ouvre sans saut" "Scenario" 320x180 "$d/c.mkv" || exit 1
             awk -v p="$(part_utile "$d/c.mkv")" "BEGIN{exit !(p > 0)}"' "${BASH_SOURCE[0]}"
 
-    # ⚠️ Les deux cas ci-dessus ont laissé passer TROIS cartons faux : un avec un tofu en bout de
+    # Les deux cas ci-dessus ont laissé passer TROIS cartons faux : un avec un tofu en bout de
     # chaque ligne, un dont le libellé s'arrêtait en plein mot, un qui perdait sa dernière ligne de
     # repli. Tous les trois duraient deux secondes et portaient des pixels clairs. Compter des pixels
     # dit qu'il y a de l'encre, pas ce qui est écrit : ce cas RELIT le carton.
@@ -960,7 +960,7 @@ auto_test() {
             ffmpeg -nostdin -loglevel error -i "$d/c.mkv" -vframes 1 -y "$d/c.png" >/dev/null 2>&1
             tesseract "$d/c.png" - --psm 6 -l fra 2>/dev/null | grep -q "apr.s coup"' "${BASH_SOURCE[0]}"
 
-    # ⚠️ L abrègement ne coupe pas un mot, et il le DIT. Vu sur le premier clip réel : le carton de
+    # L abrègement ne coupe pas un mot, et il le DIT. Vu sur le premier clip réel : le carton de
     # S6-27 finissait sur « habituelle. L aper ». Un titre tronqué en plein mot se lit comme un
     # défaut de rendu, et rien ne dit s il manque trois lettres ou trois phrases.
     essai "un libellé long s abrège sur un mot entier"    vert \
@@ -972,12 +972,12 @@ auto_test() {
             [ "$(printf "court" | abreger_sur_un_mot 40)" = "court" ]' "${BASH_SOURCE[0]}"
 
     # --- le fork unique (#4056) ---
-    # ⚠️ Le cas qui manquait au profil, et qui a coûté quatorze rouges. Un pom qui laisse `1C` fait
+    # Le cas qui manquait au profil, et qui a coûté quatorze rouges. Un pom qui laisse `1C` fait
     # tourner les classes en parallèle sur un écran unique : les clips existent, les tests rougissent,
     # et le banc n'a aucune raison de soupçonner le pom.
     sed 's|<surefire.forkCount>1<|<surefire.forkCount>1C<|' "$POM" > "$tmp/forks-multiples.xml"
     # --- la configuration du gestionnaire de fenêtres (#4075) ---
-    # ⚠️ Sans elle, openbox reprend les défauts de la distribution et place les fenêtres autrement
+    # Sans elle, openbox reprend les défauts de la distribution et place les fenêtres autrement
     # d'une machine à l'autre : la modale de S1-26 paraissait centrée en local et collée en haut à
     # gauche sur le clip publié, à partir du MÊME commit.
     essai "la configuration du banc est présente"        vert \
@@ -991,7 +991,7 @@ auto_test() {
         bash -c 'source "$0"; verifier_profil' "${BASH_SOURCE[0]}"
 
     # --- l'horloge du banc (#4056) ---
-    # ⚠️ LE cas qui manquait, et qui a coûté un tournage. `date +%s%3N` n'est pas portable : certaines
+    # LE cas qui manquait, et qui a coûté un tournage. `date +%s%3N` n'est pas portable : certaines
     # versions ignorent le modificateur de largeur et rendent les neuf chiffres de `%N`, soit un
     # instant un MILLION de fois trop grand. Le banc n'échouait pas pour autant - il calculait des
     # plages négatives et concluait « les repères ne décrivent pas CE film », accusant les repères
@@ -1000,14 +1000,14 @@ auto_test() {
         env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
             i=$(instant_en_millisecondes)
             [ "${#i}" = 13 ]' "${BASH_SOURCE[0]}"
-    # ⚠️ Et qu il soit plausible, pas seulement long : treize chiffres au hasard passeraient le cas
+    # Et qu il soit plausible, pas seulement long : treize chiffres au hasard passeraient le cas
     # ci-dessus. On le compare aux secondes de l horloge, la seule référence disponible.
     essai "et il vaut bien les secondes fois mille"       vert \
         env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
             i=$(instant_en_millisecondes); s=$(date +%s)
             awk -v i="$i" -v s="$s" "BEGIN{ d = i / 1000 - s; exit !(d >= -2 && d <= 2) }"' "${BASH_SOURCE[0]}"
 
-    # ⚠️ Et celui-ci éprouve le collage TEL QU'IL SE FAIT, en appelant `coller_le_carton` et non en
+    # Et celui-ci éprouve le collage TEL QU'IL SE FAIT, en appelant `coller_le_carton` et non en
     # rejouant ses gestes à côté. Sa première version les rejouait, avec un nom de sortie différent :
     # elle passait au vert pendant que le code échouait, parce que la boucle écrivait dans
     # « <clip>.titre », sans extension connue de ffmpeg. Le carton n'a jamais été collé sur un vrai
@@ -1027,7 +1027,7 @@ auto_test() {
             set -- $(ffmpeg -nostdin -loglevel error -i "$clip" -vframes 1 -vf scale=1:1 \
                 -f rawvideo -pix_fmt rgb24 - 2>/dev/null | od -An -tu1)
             [ "$1" -lt 60 ] && [ "$2" -lt 60 ] && [ "$3" -gt "$2" ]' "${BASH_SOURCE[0]}"
-    # ⚠️ Et il ne laisse RIEN derrière lui : un carton ou une liste oubliés dans le dossier des clips
+    # Et il ne laisse RIEN derrière lui : un carton ou une liste oubliés dans le dossier des clips
     # partiraient dans l'artefact et dans la publication, sous un nom que personne n'attend.
     essai "et il ne laisse aucun fichier de travail"      vert \
         env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
@@ -1039,7 +1039,7 @@ auto_test() {
             [ "$(ls -A "$d" | wc -l)" = 1 ]' "${BASH_SOURCE[0]}"
 
     # --- la RELANCE elle-même (#4047) ---
-    # ⚠️ Le cas ci-dessous éprouve le contrôle ; celui-ci éprouve la RELANCE, qui n'était gardée par
+    # Le cas ci-dessous éprouve le contrôle ; celui-ci éprouve la RELANCE, qui n'était gardée par
     # rien. C'est pourtant elle qui a rendu « WAYLAND_DISPLAY posé » faussement vert : la copie
     # sourcée se relançait, et le contrôle ne voyait plus rien à signaler.
     #
@@ -1048,17 +1048,17 @@ auto_test() {
     # plainte Wayland. Si la relance cessait d'opérer, la plainte reviendrait - et c'est exactement
     # ce que ce cas verrait.
     #
-    # ⚠️ On lit la SORTIE, pas le code de retour : `--verifier` rougit aussi pour un serveur X
+    # On lit la SORTIE, pas le code de retour : `--verifier` rougit aussi pour un serveur X
     # absent, ce qui est le cas sur un poste de développement. Un cas qui lirait le code confondrait
     # les deux causes.
-    # ⚠️ `env -u RECETTE_RELANCE` : l'environnement de l'auto-test PORTE déjà le drapeau, si bien
+    # `env -u RECETTE_RELANCE` : l'environnement de l'auto-test PORTE déjà le drapeau, si bien
     # qu'un cas qui ne le retire pas hérite de la condition qu'il prétend poser - et observe donc
     # l'absence de relance en croyant observer sa présence. C'est le piège de #3883 exactement, une
     # génération plus loin : un cas doit poser son point de départ, jamais en hériter.
     essai "la relance retire WAYLAND_DISPLAY" vert \
         bash -c 'sortie=$(env -u RECETTE_RELANCE WAYLAND_DISPLAY=wayland-cas bash "$0" --verifier 2>&1)
             case "$sortie" in *"WAYLAND_DISPLAY est posé"*) exit 1 ;; *) exit 0 ;; esac' "${BASH_SOURCE[0]}"
-    # ⚠️ Et le témoin : avec le drapeau DÉJÀ posé, la relance ne doit pas avoir lieu, donc la plainte
+    # Et le témoin : avec le drapeau DÉJÀ posé, la relance ne doit pas avoir lieu, donc la plainte
     # doit paraître. Sans ce second cas, le premier passerait aussi si la relance retirait la
     # variable pour une raison étrangère - ou si plus rien ne la posait jamais.
     essai "sans relance, la plainte Wayland paraît" rouge \
@@ -1067,7 +1067,7 @@ auto_test() {
 
     # --- WAYLAND_DISPLAY ---
     essai "WAYLAND_DISPLAY retiré" vert  env -u WAYLAND_DISPLAY bash -c 'source "$0"; verifier_wayland' "${BASH_SOURCE[0]}"
-    # ⚠️ `RECETTE_RELANCE=1` est INDISPENSABLE, et son absence a rendu ce cas vert pendant tout ce
+    # `RECETTE_RELANCE=1` est INDISPENSABLE, et son absence a rendu ce cas vert pendant tout ce
     # temps sans qu'il éprouve quoi que ce soit. `source` rejoue le script depuis le début, donc la
     # relance de la ligne 44 : avec WAYLAND_DISPLAY posé et le drapeau absent, la copie sourcée
     # s'exec elle-même SANS WAYLAND_DISPLAY, si bien que `verifier_wayland` ne voyait plus rien à
@@ -1180,7 +1180,7 @@ auto_test() {
 
     # --- les bornes d'un extrait, contre son voisin (#4113) ---
     #
-    # ⚠️ La marge existe pour ne pas couper au ras du geste. Ajoutée à l'aveugle, elle fait finir un
+    # La marge existe pour ne pas couper au ras du geste. Ajoutée à l'aveugle, elle fait finir un
     # clip sur l'écran du cas SUIVANT : constaté à l'image sur S6-28, qui se terminait sur la modale
     # de connexion d'une autre classe. Les trois cas ci-dessous tiennent les deux moitiés de la
     # règle - borner quand le voisin est proche, et garder la marge entière quand il est loin.
@@ -1201,10 +1201,10 @@ auto_test() {
     essai "ni en arriere sur la fin du cas precedent" vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_du_journal 0 "$1" | tail -1 | cut -f2)" = 2.00 ]' \
         "${BASH_SOURCE[0]}" "$tmp/journal-serre.tsv"
-    # ⚠️ Le cas qui MANQUAIT, et dont l'absence a coûté un tournage entier. Deux cas collés - la fin
+    # Le cas qui MANQUAIT, et dont l'absence a coûté un tournage entier. Deux cas collés - la fin
     # de l'un est le début de l'autre - donnaient une plage de durée nulle ; ffmpeg écrivait un fichier
     # vide, et le remuxage s'arrêtait dessus. Le banc n'a publié aucun clip.
-    # ⚠️ Un cas COURT coince entre deux autres : c'est LUI qui s'effondre. Mon premier jeu d'essai
+    # Un cas COURT coince entre deux autres : c'est LUI qui s'effondre. Mon premier jeu d'essai
     # posait deux cas simplement adjacents, et il ne s'effondrait pas - le cas restait vert sans la
     # garde, donc il ne gardait rien. Mesure avant conclusion, ici comme ailleurs.
     printf '%s\n' \
@@ -1221,7 +1221,7 @@ auto_test() {
 
     # --- la queue s'arrete a l'IMAGE, pas au repere (#4122) ---
     #
-    # ⚠️ Le defaut que ce cas garde : la fenetre du cas SUIVANT parait pendant son montage, donc avant
+    # Le defaut que ce cas garde : la fenetre du cas SUIVANT parait pendant son montage, donc avant
     # que son repere soit ecrit. Borner sur le repere laissait la modale de connexion a la fin de
     # S6-28. Le profil dit ou l ecran devient noir, cest-a-dire ou la fenetre du cas a disparu.
     #
@@ -1237,7 +1237,7 @@ auto_test() {
     essai "sans profil, la marge entiere est gardee" vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_du_journal 0 "$1" | cut -f3)" = 2.50 ]' \
         "${BASH_SOURCE[0]}" "$tmp/journal-seul.tsv"
-    # ⚠️ Le cas qui MANQUAIT, et dont l absence a coute onze clips. Un test tres rapide nouvre aucune
+    # Le cas qui MANQUAIT, et dont l absence a coute onze clips. Un test tres rapide nouvre aucune
     # fenetre : son ecran est noir des le depart. Si la coupe a limage sappliquait, sa plage tomberait
     # a 0,01 s, il serait ecarte, et son lecteur pointerait dans le vide sur la page de la doc.
     #
@@ -1260,7 +1260,7 @@ auto_test() {
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_du_journal 0 "$1" "$2" | cut -f3)" = 2.20 ]' \
         "${BASH_SOURCE[0]}" "$tmp/journal-seul.tsv" "$tmp/profil.tsv"
 
-    # ⚠️ Sans ce cas, un correctif qui raboterait TOUTES les queues passerait au vert, et la
+    # Sans ce cas, un correctif qui raboterait TOUTES les queues passerait au vert, et la
     # respiration que la marge existe pour donner disparaitrait sans qu'aucun test ne le dise.
     essai "un voisin eloigne laisse la marge entiere" vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_du_journal 0 "$1" | head -1 | cut -f3)" = 2.50 ]' \
@@ -1277,7 +1277,7 @@ auto_test() {
 
 # --------------------------------------------------------------------------------------------
 
-# ⚠️ Un fichier qui se source doit dire ce qu'il fait à ce moment-là : ici, RIEN. Sans ce garde,
+# Un fichier qui se source doit dire ce qu'il fait à ce moment-là : ici, RIEN. Sans ce garde,
 # `source ce-script` lançait un tournage complet - vécu, y compris depuis la copie principale du
 # dépôt, et les cas d'auto-test qui se sourcent en déclenchaient un chacun.
 #

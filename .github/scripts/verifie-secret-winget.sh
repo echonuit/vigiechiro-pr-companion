@@ -54,7 +54,7 @@ SONDE="${WINGET_SONDE:-gh}"
 
 ### Contrôle 3, en ligne. Rend 0 si le jeton s'authentifie ET voit le paquet.
 ###
-### ⚠️ Il RAPPORTE la réponse de l'API, il ne l'avale pas. La première version faisait
+### Il RAPPORTE la réponse de l'API, il ne l'avale pas. La première version faisait
 ### `2>/dev/null` : un 404, un 401, un dépassement de quota et un hoquet réseau y devenaient le même
 ### silence, et la garde en tirait un diagnostic unique (« le jeton ne voit pas le paquet ») qu'elle
 ### n'avait pas les moyens de porter. Un dispositif qui cache sa propre preuve fait exactement ce
@@ -213,7 +213,7 @@ FIN
     echecs=1
   fi
 
-  # ⚠️ Le cas qui manquait, et son absence a coûté un faux diagnostic : la garde doit RAPPORTER la
+  # Le cas qui manquait, et son absence a coûté un faux diagnostic : la garde doit RAPPORTER la
   # réponse de l'API, pas seulement rougir. Sans lui, elle rougissait aussi bien sur un 404 que sur
   # un hoquet réseau, en attribuant les deux au jeton.
   sortie_aveugle=$(WINGET_TOKEN=ghp_x WINGET_SONDE="$bac/sonde-aveugle" "$MOI" --verifie-l-acces 2>&1)

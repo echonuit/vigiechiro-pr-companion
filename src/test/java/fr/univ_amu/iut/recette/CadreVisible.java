@@ -22,11 +22,11 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// ## Les deux pièges, mesurés
 ///
-/// ⚠️ **La scène n'est pas le cadre.** Comparer aux bornes de la scène laisse passer un noeud caché
+/// **La scène n'est pas le cadre.** Comparer aux bornes de la scène laisse passer un noeud caché
 /// derrière la barre de statut : à y = 870 dans une scène de 900, « maxY <= hauteur » est vrai et le
 /// noeud est invisible. La référence est la zone d'affichage du [ScrollPane] qui le porte.
 ///
-/// ⚠️ **Et c'est cette référence qui fait tout le travail, pas une marge.** La première version ajoutait
+/// **Et c'est cette référence qui fait tout le travail, pas une marge.** La première version ajoutait
 /// vingt-quatre pixels d'air de chaque côté, au nom de la lisibilité. Deux défauts en sont sortis, aux
 /// deux bouts : le **premier** élément d'une liste ne peut rien avoir au-dessus de lui quand le
 /// défilement est en butée haute, et le **dernier** rien en dessous quand il est en butée basse.
@@ -36,7 +36,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// **805 px sur une scène de 900** - elle exclut déjà le chrome et la barre de statut. Ce qui corrigeait
 /// #4128 était de comparer au **viewport** ; l'air en plus n'ajoutait qu'un faux négatif.
 ///
-/// ⚠️ **La molette ne suffit pas.** `robot.scroll` n'a pas déplacé le contenu d'un pixel quand le
+/// **La molette ne suffit pas.** `robot.scroll` n'a pas déplacé le contenu d'un pixel quand le
 /// pointeur n'était pas au-dessus du bon panneau. Le défilement se pilote.
 public final class CadreVisible {
 
@@ -66,7 +66,7 @@ public final class CadreVisible {
     ///
     /// ## Pourquoi une lecture a besoin d'un fil
     ///
-    /// ⚠️ `getBoundsInLocal()` n'est pas un accesseur : quand les bornes sont **sales**, il déclenche
+    /// `getBoundsInLocal()` n'est pas un accesseur : quand les bornes sont **sales**, il déclenche
     /// leur recalcul - `Parent.recomputeBounds`, puis la mise en page du texte - sur le fil qui
     /// appelle. Lire depuis le fil du test fait donc travailler DEUX fils sur le même graphe.
     ///
@@ -105,7 +105,7 @@ public final class CadreVisible {
 
     /// Fait défiler jusqu'à ce que `cible` entre dans le cadre, ou échoue en le nommant.
     ///
-    /// ⚠️ Viser la ZONE qui contient ce qu'on veut voir ne suffit pas : amener son bord haut dans le
+    /// Viser la ZONE qui contient ce qu'on veut voir ne suffit pas : amener son bord haut dans le
     /// cadre laisse son contenu sous le pli. On vise le noeud qu'on veut lire.
     public static void amener(Node cible, FxRobot robot) {
         ScrollPane cadre = surLeFilFx(() -> cadreDefilant(cible));

@@ -296,11 +296,11 @@ public final class CaptureImport {
         // État « déjà préfixés » (#4141) : les bruts portent le préfixe `Car…` qu'un import précédent a
         // posé → « État du nommage : fichiers déjà préfixés (seront copiés et transformés) ».
         //
-        // ⚠️ Ce qui ne rejoue pas est le RENOMMAGE, et non la transformation. La phrase des bruts dit
+        // Ce qui ne rejoue pas est le RENOMMAGE, et non la transformation. La phrase des bruts dit
         // « copiés, renommés et transformés » ; celle-ci retire le seul mot « renommés ». #4055 écrivait
         // « la transformation ne rejoue pas » : l'écran dit le contraire, et c'est lui qui fait foi.
         //
-        // ⚠️ Le préfixe est celui d'un AUTRE carré que le rattachement choisi, comme dans la fixture de
+        // Le préfixe est celui d'un AUTRE carré que le rattachement choisi, comme dans la fixture de
         // recette `sd-prefixee` (Car130711-…-Z1). C'est le cas réel : on récupère une carte déjà traitée
         // ailleurs. L'import est alors BLOQUÉ, et l'aperçu montre les deux à la fois - l'état de nommage,
         // et le refus qui nomme le préfixe attendu.

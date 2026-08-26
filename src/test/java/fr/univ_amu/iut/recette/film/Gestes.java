@@ -19,7 +19,7 @@ import javafx.scene.input.MouseEvent;
 ///
 /// ## Ce qui est dessiné, et ce que ce n'est pas
 ///
-/// ⚠️ Ce qui est reconstruit ici est ce que **JavaFX a reçu**, et non ce que le système a émis. La
+/// Ce qui est reconstruit ici est ce que **JavaFX a reçu**, et non ce que le système a émis. La
 /// nuance est à l'avantage du procédé : un pointeur reconstruit ne peut pas se désynchroniser de ce
 /// que l'application a effectivement traité, là où un pointeur filmé du dehors montre parfois un
 /// clic qui n'est jamais arrivé - c'est exactement le défaut que le banc bash a payé (#3696). Mais
@@ -53,7 +53,7 @@ final class Gestes {
 
     /// Faut-il montrer cette frappe ?
     ///
-    /// ⚠️ La distinction n'est pas la touche, c'est ce qu'elle fait : on **tape**, ou on
+    /// La distinction n'est pas la touche, c'est ce qu'elle fait : on **tape**, ou on
     /// **commande**. Les raccourcis de l'écran d'écoute sont des lettres nues - `R` référence, `D`
     /// douteux, `N` suivant, `1/2/3` certitude - si bien qu'une règle « seulement les touches
     /// modifiées ou nommées » raterait précisément ce que la session S3 vient juger. À l'inverse,
@@ -82,7 +82,7 @@ final class Gestes {
 
     /// Ce qu'il reste du halo, de 1 à l'appui jusqu'à 0 au bout de sa durée.
     ///
-    /// ⚠️ Bornée des DEUX côtés. Au-delà de la durée, un clip long rallumerait un halo éteint ; en
+    /// Bornée des DEUX côtés. Au-delà de la durée, un clip long rallumerait un halo éteint ; en
     /// deçà de zéro - l'horloge peut rendre un instant antérieur entre deux images - le halo
     /// grossirait au-delà de lui-même.
     static double resorption(long ageMs, long dureeMs) {
@@ -131,7 +131,7 @@ final class Gestes {
 
     /// Pose les filtres sur une scène, une fois pour toutes.
     ///
-    /// ⚠️ Des FILTRES, et rien n'y est consommé : un banc qui change ce que le test reçoit ne filme
+    /// Des FILTRES, et rien n'y est consommé : un banc qui change ce que le test reçoit ne filme
     /// plus le produit, il filme sa propre présence.
     void observer(Scene scene) {
         scene.addEventFilter(MouseEvent.ANY, evenement -> {

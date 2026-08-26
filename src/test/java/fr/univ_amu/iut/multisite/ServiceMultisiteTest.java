@@ -423,7 +423,7 @@ class ServiceMultisiteTest {
         surveille.listerPassages(ID_USER, FiltresMultisite.aucun(), TriMultisite.PAR_ANNEE);
         surveille.agregerPourCarte(ID_USER);
 
-        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
+        // Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
         // variance de la machine. Le défaut mesuré (#4271) : une requête par site pour ses points, puis
         // une par point pour ses passages, dans les DEUX lectures - 160 ms à soixante carrés, 360 ms à
         // cent cinquante, là où la lecture par lot ne bouge pas.

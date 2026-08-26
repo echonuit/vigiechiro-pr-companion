@@ -92,7 +92,7 @@ class NavigationAudioViewTest {
         // sinon « ← Retour » ramènerait sur la nuit qu'on regardait avant, sans rapport avec le corpus.
         // Depuis une nuit, au contraire, l'écran s'empile pour qu'on puisse y revenir.
         Navigateur navigateur = injector.getInstance(Navigateur.class);
-        // ⚠️ Deux précautions, trouvées en voyant le mutant survivre deux fois. D'abord repartir de
+        // Deux précautions, trouvées en voyant le mutant survivre deux fois. D'abord repartir de
         // l'accueil : « audio » est déjà dans la pile depuis le démarrage, et l'anti-ré-entrance ferait
         // dépiler `empiler` jusqu'à lui - donnant exactement le même résultat que `ouvrirRacine`.
         // Ensuite intercaler un écran : depuis la racine nue, les deux branches sont indiscernables.

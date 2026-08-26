@@ -75,7 +75,7 @@ class LauncherTest {
     @Test
     @DisplayName("Sans aucun argument, personne n'a demandé de fenêtre : c'est la ligne de commande qui répond")
     void sans_argument_c_est_la_ligne_de_commande() {
-        // ⚠️ Le cas qui décide de la conception (ADR 3828) : traiter l'absence d'argument comme une
+        // Le cas qui décide de la conception (ADR 3828) : traiter l'absence d'argument comme une
         // demande de fenêtre serait une déduction ambiante. Les emballages ÉCRIVENT `ihm` pour le
         // double-clic, personne n'a donc à le deviner ici.
         Launcher.aiguiller(new String[0], fenetre, texte);
@@ -92,7 +92,7 @@ class LauncherTest {
         // aucun lien pour le lanceur graphique. Qui découvre la commande n'apprend donc à ouvrir la
         // fenêtre que si son aide le dit.
         //
-        // ⚠️ Ce test tient un lien que le compilateur ne peut pas tenir. Le mot est écrit en dur dans
+        // Ce test tient un lien que le compilateur ne peut pas tenir. Le mot est écrit en dur dans
         // l'annotation `@Command`, parce qu'une constante de compilation y serait INLINÉE : renommer
         // `MOT_FENETRE` laisserait le texte de l'aide inchangé, et l'aide mentirait sans que rien ne
         // rougisse (la figure de l'ADR 3947). L'annotation est donc lue par réflexion et confrontée à

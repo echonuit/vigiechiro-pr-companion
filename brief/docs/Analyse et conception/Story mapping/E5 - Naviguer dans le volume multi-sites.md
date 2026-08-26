@@ -88,7 +88,7 @@
 **Critères d'acceptation** :
 
 - [ ] Un bouton « Filtres avancés » ouvre un panneau de composition de filtres avec une logique ET entre les critères, OU à l'intérieur d'une même catégorie.
-- [x] Critères couverts : site et point (par la puce **Lieu**), année, statut, verdict - plus deux que ce critère n'annonçait pas, **campagne** et **état d'analyse**. ⚠️ En **mono**-sélection, non multi. **Manquent vraiment** : les plages de dates (enregistrement, dépôt), la plage de n° de passage (seule l'égalité existe) et l'**enregistreur** par n° de série. Ces quatre-là restent des **cibles**, ni livrées ni abandonnées.
+- [x] Critères couverts : site et point (par la puce **Lieu**), année, statut, verdict - plus deux que ce critère n'annonçait pas, **campagne** et **état d'analyse**. En **mono**-sélection, non multi. **Manquent vraiment** : les plages de dates (enregistrement, dépôt), la plage de n° de passage (seule l'égalité existe) et l'**enregistreur** par n° de série. Ces quatre-là restent des **cibles**, ni livrées ni abandonnées.
 - [x] Un compteur en bas de panneau indique « N passages correspondent à ces critères ».
 - [x] Rafraîchissement livré **sans bouton** : les puces s'appliquent à la volée. Un bouton « Appliquer » supposait un panneau de composition, que la barre à puces remplace.
 - [x] Bouton « Sauvegarder cette vue » : permet de nommer le jeu de filtres et de le retrouver dans un menu de « Vues sauvegardées ».

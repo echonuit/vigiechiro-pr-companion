@@ -32,7 +32,7 @@ Le cadrage initial du chantier a conclu qu'il fallait **deux lanceurs**, et que 
 | `jpackage --arguments ihm` | `[ArgOptions] arguments=ihm` dans le `.cfg`, passé à `main` **seulement** si personne n'a donné d'argument |
 | un second lanceur sans clé `arguments` | il **hérite** de l'`ihm` du principal |
 
-⚠️ La contrainte du sous-système graphique est **propre à Windows** : elle est inscrite dans l'en-tête
+La contrainte du sous-système graphique est **propre à Windows** : elle est inscrite dans l'en-tête
 PE à l'édition de liens, aucun code Java ne la reprend à l'exécution. Sous Linux et macOS il n'y a pas
 d'en-tête PE, donc pas de dilemme. C'est bien pour cette raison que le JDK livre `java` **et** `javaw`.
 
@@ -47,7 +47,7 @@ argument, tous vus rouges sur deux mutations avant d'être crus.
 mot n'est à la charge de personne : `jpackage --arguments ihm` l'écrit dans le `.cfg`, le script
 Flatpak porte le même défaut avec `"${@:-ihm}"`.
 
-⚠️ **Une invocation sans aucun argument rend l'usage de la ligne de commande, elle n'ouvre pas la
+**Une invocation sans aucun argument rend l'usage de la ligne de commande, elle n'ouvre pas la
 fenêtre.** Traiter l'absence comme une demande d'interface serait une condition ambiante tenant lieu
 de déclaration, la figure que ferme l'ADR 3828 - laquelle autorise en retour ce qui est décidé « sur
 des entrées **fournies** », et un mot en est une.
@@ -58,7 +58,7 @@ des entrées **fournies** », et un mot en est une.
 `win-console=true` que sous Windows ; le lanceur graphique ne gagne aucune console, sans quoi le menu
 Démarrer en ouvrirait une noire à chaque lancement.
 
-⚠️ Son fichier de propriétés porte `arguments=--help` **obligatoirement** : sans cette clé, le lanceur
+Son fichier de propriétés porte `arguments=--help` **obligatoirement** : sans cette clé, le lanceur
 hérite de l'`ihm` du principal et `vigiechiro` tapé seul dans une console ouvre la fenêtre.
 
 ### 3. Le nom exposé est en minuscules, et ce n'est pas le nom du produit
@@ -84,7 +84,7 @@ seule raison qu'un `bin/VigieChiroCompanion` ne se tape pas sous Unix.
 - **Le harnais `bats` peut viser le lanceur réel** au lieu de la classe, et faire passer les 66
   commandes par le chemin de l'utilisateur, runtime jlink compris - celui où #2299 avait laissé partir
   un paquet incapable de démarrer.
-- ⚠️ **Un cas n'a pas d'équivalent sur ce chemin** : `cli_avec_option_jvm` abaisse une borne par `-D`
+- **Un cas n'a pas d'équivalent sur ce chemin** : `cli_avec_option_jvm` abaisse une borne par `-D`
   pour éprouver un refus (#2732). Le lanceur n'accepte aucune option JVM ; le test **saute en le
   disant** plutôt que de rendre un vert qui n'aurait rien éprouvé (ADR 2748). C'est ce trou qui a fait
   ouvrir #4075.

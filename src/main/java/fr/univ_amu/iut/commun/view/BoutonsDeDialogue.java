@@ -16,7 +16,7 @@ import javafx.scene.control.ButtonType;
 /// Vu sur un clip de recette, tourné sur un runner en anglais : le film montrait un produit que
 /// personne n'utilise.
 ///
-/// ⚠️ Le `ButtonData` est **conservé** : c'est lui, et non le libellé, qui dit à JavaFX lequel est le
+/// Le `ButtonData` est **conservé** : c'est lui, et non le libellé, qui dit à JavaFX lequel est le
 /// bouton par défaut, lequel ferme la fenêtre sur Échap, et dans quel ordre les poser selon la
 /// plateforme. Changer le texte sans garder la donnée casserait ces trois comportements en silence.
 public final class BoutonsDeDialogue {

@@ -582,7 +582,7 @@
                                      binaire d'un naturaliste, et ils sont déjà exclus de la couverture
                                      (`**/outils/**`, cf. le greffon JaCoCo).
 
-                                     ⚠️ Le motif est la SURFACE, pas le poids. Mesuré : l'outillage pèse
+                                     Le motif est la SURFACE, pas le poids. Mesuré : l'outillage pèse
                                      600 Ko décompressés quand `org/sqlite` en pèse 21,6 Mo. Le jar ne
                                      maigrira pas visiblement, et ce n'est pas le but.
 
@@ -963,7 +963,7 @@
                - glass.platform=Headless laisse le test passer, simplement sans fenêtre ;
                - java.awt.headless=true lève une HeadlessException, donc rougit ;
                - testfx.robot=glass appelle le portail RemoteDesktop et s'y BLOQUE.
-             ⚠️ Ce profil ne suffit PAS. Deux conditions ne sont pas des propriétés Maven et
+             Ce profil ne suffit PAS. Deux conditions ne sont pas des propriétés Maven et
              vivent dans `.github/scripts/lance-test-filme.sh`, qui les vérifie avant de lancer :
                - `WAYLAND_DISPLAY` doit être RETIRÉ de l'environnement, sans quoi le java.awt.Robot
                  du JDK route par le portail : le clic est émis et n'atterrit jamais, sans erreur ;
@@ -1255,7 +1255,7 @@
                                              dossier remplace le postinst (entrée de menu, puis le lien)
                                              et le postrm (retrait du lien), les autres ressources
                                              restant celles de jpackage.
-                                             ⚠️ Ce dossier ne sert QUE sous Linux : il est ici, et pas
+                                             Ce dossier ne sert QUE sous Linux : il est ici, et pas
                                              dans le profil `installer`, parce que ses scripts sont ceux
                                              d'un paquet Debian. -->
                                         <argument>--resource-dir</argument>
@@ -1366,7 +1366,7 @@
         <!-- Profil mutation : PIT (org.pitest). NON exécuté par défaut.
              Lancer explicitement via ./mvnw -Pmutation test (lent).
 
-             ⚠️ TOUJOURS enchaîner une PHASE avant le but, p. ex. :
+             TOUJOURS enchaîner une PHASE avant le but, p. ex. :
                  ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage -DtargetClasses=…
              Le but seul n'exécute aucune phase : `jacocoArgLine` (jacoco:prepare-agent) et
              ${net.bytebuddy:byte-buddy-agent:jar} (dependency:properties, phase initialize) restent alors
@@ -1399,7 +1399,7 @@
                                  impossible à mutation-tester. Le bloc `systemPropertyVariables` de surefire
                                  est donc reproduit ici, EN ENTIER.
 
-                                 ⚠️ Il l'a longtemps été à moitié : les quatre premières lignes seulement.
+                                 Il l'a longtemps été à moitié : les quatre premières lignes seulement.
                                  Les deux butoirs manquaient, et `ButoirsTestFxTest` (dont c'est très
                                  exactement le rôle) le disait à chaque exécution. Le premier passage de
                                  PIT sur le dépôt entier a donc échoué sur une suite rouge, non sur les

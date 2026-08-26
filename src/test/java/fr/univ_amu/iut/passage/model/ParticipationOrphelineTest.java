@@ -23,7 +23,7 @@ class ParticipationOrphelineTest {
         // 19:00 UTC = 21:00 à Paris en juillet. Avant #1860 le code rendait 19:00 : l'observateur voyait
         // sa nuit commencer deux heures trop tôt.
         //
-        // ⚠️ L'attente est ÉCRITE, plus calculée depuis `ZoneId.systemDefault()`. Elle l'était, et le
+        // L'attente est ÉCRITE, plus calculée depuis `ZoneId.systemDefault()`. Elle l'était, et le
         // cas devenait alors tautologique : il vérifiait que la conversion emploie le fuseau de la
         // machine, ce qui restait vrai même quand ce n'était plus la bonne règle (#3406).
         assertThat(lu).contains(LocalDateTime.of(2026, 7, 4, 21, 0));

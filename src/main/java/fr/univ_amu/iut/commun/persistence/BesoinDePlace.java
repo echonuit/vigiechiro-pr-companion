@@ -61,7 +61,7 @@ record BesoinDePlace(Map<Path, Besoin> parDossierDAccueil) {
     /// garantie plutôt que l'usage**. Quand la place manque pour tout étaler, on étale une nuit à la
     /// fois - chacune reste tout-ou-rien, l'ensemble ne l'est plus - et **on le dit**.
     ///
-    /// ⚠️ Le refus du dernier rang n'est pas une rigidité de plus : en dessous de la plus grosse nuit,
+    /// Le refus du dernier rang n'est pas une rigidité de plus : en dessous de la plus grosse nuit,
     /// aucun régime ne tient. Le seul plus permissif serait la copie en place, qui rendrait à
     /// l'utilisateur la destination à moitié écrite dont ce chemin vient de le débarrasser.
     ///

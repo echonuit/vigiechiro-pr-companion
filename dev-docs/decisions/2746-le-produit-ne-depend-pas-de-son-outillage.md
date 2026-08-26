@@ -25,7 +25,7 @@ Ils partaient aussi chez l'utilisateur. Mesuré sur le jar distribué : **80 cla
 **47 points d'entrée `main`** en plus des trois du produit. Un naturaliste recevait donc cinquante
 manières de démarrer autre chose que son application.
 
-⚠️ **Le motif n'est pas le poids**, et l'issue le croyait d'abord. L'outillage pèse 600 Ko
+**Le motif n'est pas le poids**, et l'issue le croyait d'abord. L'outillage pèse 600 Ko
 décompressés quand `org/sqlite` en pèse 21,6 Mo : le jar ne maigrit pas visiblement. Ce qui se réduit
 est la **surface** livrée.
 
@@ -61,7 +61,7 @@ l'inverse.** Trois pièces, dans cet ordre, parce que chacune rend la suivante s
 - les 43 noms de classes en dur du script de captures restent valides : **aucune source n'est
   déplacée**.
 
-### ⚠️ Le contrôle de lisibilité ne suit pas dans `RenduPng`, et ce n'est pas un oubli
+### Le contrôle de lisibilité ne suit pas dans `RenduPng`, et ce n'est pas un oubli
 
 `ApercuFx.enregistrerPng` refuse une image dont un libellé est tronqué
 ([`LisibiliteCapture#refuserToutTexteIllisible`]). C'est juste pour une **capture de documentation** :

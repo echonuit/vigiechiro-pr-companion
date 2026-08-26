@@ -50,7 +50,7 @@ public final class ProtectionFichier {
 
         AclFileAttributeView acl = Files.getFileAttributeView(fichier, AclFileAttributeView.class);
         if (acl == null) {
-            // ⚠️ Ni POSIX ni ACL : on ne SAIT pas. Rendre `true` ici annoncerait une protection depuis
+            // Ni POSIX ni ACL : on ne SAIT pas. Rendre `true` ici annoncerait une protection depuis
             // une ignorance, ce qui est exactement le faux vert que cette classe existe pour éviter.
             throw new IOException("Ni permissions POSIX ni ACL sur « " + fichier + " » : la protection du fichier "
                     + "ne peut pas être établie sur ce système de fichiers.");

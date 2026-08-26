@@ -15,7 +15,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /// Le jeu du banc doit faire varier **la topologie**, pas seulement les passages.
 ///
-/// ⚠️ Ce test existe parce que le banc a été **vert et aveugle**. Il semait **un** carré de dix points
+/// Ce test existe parce que le banc a été **vert et aveugle**. Il semait **un** carré de dix points
 /// pour mille passages, et annonçait 18 ms sous une cible de 200. Les écrans lançaient pourtant une
 /// requête par site puis une par point : sur cette topologie-là, onze requêtes, invisibles. Un
 /// coordinateur départemental - cent cinquante carrés - en payait plus de quatre cents, et aucun relevé

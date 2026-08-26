@@ -8,7 +8,7 @@ Un fichier audio dérivé d'un enregistrement original par **découpage régulie
 
     La **durée** stockée pour une séquence est la durée **réelle** (au plus 5 s), pas la durée d'écoute. C'est cette durée qui est cumulée pour donner la **durée enregistrée** d'un passage ([M-Passage](../Maquettes/M-Passage.md)).
 
-    ⚠️ Cette durée **ne se déduit pas du nombre de séquences**. La dernière tranche de chaque enregistrement est partielle, et beaucoup d'enregistrements durent moins de 5 s : la nuit de référence porte **2 109 séquences pour 1 h 58 min enregistrées**, là où 2 109 × 5 s en annoncerait 2 h 56. Compter les séquences dit le volume à écouter, pas la durée captée.
+    Cette durée **ne se déduit pas du nombre de séquences**. La dernière tranche de chaque enregistrement est partielle, et beaucoup d'enregistrements durent moins de 5 s : la nuit de référence porte **2 109 séquences pour 1 h 58 min enregistrées**, là où 2 109 × 5 s en annoncerait 2 h 56. Compter les séquences dit le volume à écouter, pas la durée captée.
 
 | Attribut | Type | Contraintes | Notes |
 |---|---|---|---|

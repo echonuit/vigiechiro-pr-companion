@@ -51,7 +51,7 @@ import java.util.stream.Stream;
 ///  - `perf.import.secondes` : durée d'un WAV (défaut 5.0) ;
 ///  - `perf.import.frequenceHz` : fréquence d'échantillonnage, multiple de 10 (défaut 384000).
 ///
-/// ⚠️ L'import recopie puis transforme les WAV : prévoir ~2 à 3× la taille source en espace disque.
+/// L'import recopie puis transforme les WAV : prévoir ~2 à 3× la taille source en espace disque.
 public final class BancImport {
 
     private static final String SERIE = "1925492";
@@ -240,7 +240,7 @@ public final class BancImport {
                     }
                 });
             } catch (UncheckedIOException parcours) {
-                // ⚠️ La branche `Files.delete` ci-dessus enveloppe déjà, mais `Files.walk` lève la
+                // La branche `Files.delete` ci-dessus enveloppe déjà, mais `Files.walk` lève la
                 // sienne PENDANT l'itération, avec le message du JDK et sans dire quel dossier a
                 // résisté. On la ré-habille de la même phrase, pour que le banc dise la même chose
                 // quel que soit l'étage où le nettoyage a échoué (#3632).

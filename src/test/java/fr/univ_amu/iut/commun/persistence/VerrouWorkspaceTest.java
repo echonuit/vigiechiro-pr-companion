@@ -36,7 +36,7 @@ class VerrouWorkspaceTest {
     @DisplayName("Le repli de lecture, celui que seul Windows emprunte")
     class ApresLOctetDuVerrou {
 
-        // ⚠️ Ces trois cas existent parce que PIT rendait QUATRE mutants sans couverture ici, dont la
+        // Ces trois cas existent parce que PIT rendait QUATRE mutants sans couverture ici, dont la
         // borne `<= 0` et la soustraction (#3561, passe 6). La raison n'était pas un oubli : le repli
         // ne s'exécute que sous Windows, seul système où le verrou est impératif, donc aucune mesure
         // faite sous Linux ne pouvait l'atteindre. Le passage hebdomadaire sous Windows éprouve le
@@ -113,7 +113,7 @@ class VerrouWorkspaceTest {
     void le_fichier_dit_qui_occupe() throws Exception {
         try (VerrouWorkspace verrou = VerrouWorkspace.prendre(workspace()).orElseThrow()) {
             assertThat(verrou.detenu()).isTrue();
-            // ⚠️ Par `occupant` et non par `Files.readString` : cette dernière lit depuis l'octet 0,
+            // Par `occupant` et non par `Files.readString` : cette dernière lit depuis l'octet 0,
             // donc traverse la zone verrouillée, et échoue sous Windows où un verrou est impératif
             // (#3693). Lire le fichier « en direct » ici éprouvait une capacité que le produit n'a pas.
             String contenu = VerrouWorkspace.occupant(workspace());

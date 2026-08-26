@@ -22,7 +22,7 @@ relations:
 L'[ADR 4274](4274-on-compare-la-derniere-image-pas-le-chemin.md) ne retenait que l'image finale, et
 écrivait sa contrepartie : on compare la destination, pas le chemin.
 
-⚠️ Cette limite mordait précisément là où l'[ADR 4166](4166-un-etat-ne-se-juge-que-contre-son-contraire.md)
+Cette limite mordait précisément là où l'[ADR 4166](4166-un-etat-ne-se-juge-que-contre-son-contraire.md)
 demande le plus. Celle-ci exige qu'un cas qui fait juger un état montre **cet état et son contraire dans
 le même clip** : le geste offert puis empêché, le bouton grisé à côté d'un bouton actif. Pour ces cas,
 ce qui fait le cas est le contraste entre deux moments, et l'image finale n'en gardait qu'un. **Plus un
@@ -40,7 +40,7 @@ Sur la paire de tournages du même commit qui avait servi à l'ADR 4287, 51 cas 
 La première image est donc **plus stable que la dernière**, sur les 51 cas sans exception. L'application
 vient de se monter, aucune animation n'a commencé.
 
-⚠️ **Stable ne suffisait pas.** Une mesure toujours nulle peut être parfaitement fidèle ou parfaitement
+**Stable ne suffisait pas.** Une mesure toujours nulle peut être parfaitement fidèle ou parfaitement
 aveugle, et les deux se lisent pareil. Vérifié : les premières images de deux cas **différents**
 diffèrent de 2,4 à 3 %. Elles distinguent donc bien les cas, au lieu de montrer le même écran d'accueil
 à tout le monde.
@@ -59,7 +59,7 @@ bout remonte.
 
 ## Conséquences
 
-⚠️ **Les images du début ne sont produites que si le début a bougé.** Son plancher valant 0,000 % sur
+**Les images du début ne sont produites que si le début a bougé.** Son plancher valant 0,000 % sur
 les 51 cas, les produire systématiquement ferait cinquante montages strictement identiques - du bruit
 qui noierait les deux ou trois qui comptent. Vérifié sur une comparaison réelle : 51 montages de fin,
 **zéro** montage de début.

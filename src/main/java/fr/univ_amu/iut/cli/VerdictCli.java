@@ -38,7 +38,7 @@ record VerdictCli(Nature nature, String phrase) {
         INCIDENT
     }
 
-    /// ⚠️ `RefusAvantEcriture` rejoint les refus (#3146), alors qu'il **hérite** de
+    /// `RefusAvantEcriture` rejoint les refus (#3146), alors qu'il **hérite** de
     /// `DataAccessException` : il est émis avant d'avoir écrit quoi que ce soit. L'ordre des tests
     /// compte donc, et c'est le genre de détail qu'un remaniement casse sans rien faire rougir - d'où
     /// le test qui le nomme.

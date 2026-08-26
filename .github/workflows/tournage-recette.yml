@@ -533,7 +533,7 @@ jobs:
           corps=$(cat <<'FIN'
           Clips tournés contre la **vraie** plateforme Vigie-Chiro, en lecture seule.
 
-          ⚠️ **Ils ne se comparent pas aux autres.** Leur écran dépend de données vivantes : deux
+          **Ils ne se comparent pas aux autres.** Leur écran dépend de données vivantes : deux
           tournages du même commit peuvent différer parce qu'une nuit a été traitée entre les deux.
           `comparer-tournages.yml` refuse donc cette source, et c'est délibéré.
 

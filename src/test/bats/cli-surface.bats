@@ -137,7 +137,7 @@ COMMANDES_LOCALES_SANS_ARG=(
   [ "${status}" -eq 2 ]
   [[ "${output}" == *"jeton"* ]]
   [[ "${output}" != *"Exception"* ]]
-  # ⚠️ Le mot « jeton » ne suffit pas, et c'est ce qui a laissé passer #3963 : le refus conseillait
+  # Le mot « jeton » ne suffit pas, et c'est ce qui a laissé passer #3963 : le refus conseillait
   # « vigiechiro connexion --token <jeton> », commande qui n'a jamais existé. La phrase contenait le
   # mot, donc le garde était vert. On vérifie donc le GESTE : le refus nomme les voies réelles.
   [[ "${output}" == *"--token"* ]]
@@ -256,7 +256,7 @@ COMMANDES_LOCALES_SANS_ARG=(
   # produit et partait AVEC lui : 80 classes et 47 points d'entrée `main` dans le binaire d'un
   # naturaliste. Le greffon `shade` les exclut désormais.
   #
-  # ⚠️ `ArchitectureTest#produit_sans_outillage` garde la DÉPENDANCE, pas l'EMPAQUETAGE. Retirer le
+  # `ArchitectureTest#produit_sans_outillage` garde la DÉPENDANCE, pas l'EMPAQUETAGE. Retirer le
   # `<filter>` du pom laisserait cette règle verte, et le jar repartirait chargé sans que rien ne le
   # dise. Le compte à zéro de la PR #3373 avait été fait à la main : ce test le rejoue.
   local classes

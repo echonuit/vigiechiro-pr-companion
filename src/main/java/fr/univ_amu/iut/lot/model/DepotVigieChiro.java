@@ -120,7 +120,7 @@ public final class DepotVigieChiro {
 
     /// Lance le traitement serveur, en autorisant éventuellement une **relance**.
     ///
-    /// ⚠️ **Une relance n'est pas un simple « réessayer ».** À chaque compute, le serveur **supprime toutes
+    /// **Une relance n'est pas un simple « réessayer ».** À chaque compute, le serveur **supprime toutes
     /// les `donnees` avant de recalculer** (`task_participation.py:726-731`). Sur une nuit déposée en
     /// **archives ZIP** (le mode par défaut depuis #984) les WAV extraits ne sont pas conservés sur S3
     /// (#1244) : le recalcul ne peut donc pas les relire, et les observations sont **définitivement

@@ -30,7 +30,7 @@ import org.testfx.framework.junit5.Start;
 /// l'[ADR 4134](../../../../../../dev-docs/decisions/4134-un-banc-n-emprunte-pas-l-etat-partage-il-ouvre-le-sien.md) :
 /// **un banc n'emprunte pas l'état partagé, il ouvre le sien.**
 ///
-/// ⚠️ Ce n'était pas théorique. `cli-reseau.bats` exporte `VIGIECHIRO_URL` pour pointer sur son
+/// Ce n'était pas théorique. `cli-reseau.bats` exporte `VIGIECHIRO_URL` pour pointer sur son
 /// bouchon ; une session shell qui l'a gardée faisait parler **tous** les scénarios de banc dessus.
 /// Mesuré à l'écriture de ce cas : sur les treize classes qui montent le banc, **huit** ne remplacent
 /// pas leur client, donc huit suivaient l'ambiante.
@@ -63,9 +63,9 @@ class BancDeRecetteUrlTest {
 
     @Start
     void start(Stage stage) throws IOException {
-        // ⚠️ Monté et désigné AVANT le banc, comme la propriété du jeton : `@Start` s'exécute avant les
+        // Monté et désigné AVANT le banc, comme la propriété du jeton : `@Start` s'exécute avant les
         // `@BeforeEach`, et une URL posée plus tard arriverait après la construction de l'injecteur.
-        // ⚠️ Une simple prise TCP, et non un serveur HTTP : `com.sun.net.httpserver` vit dans le module
+        // Une simple prise TCP, et non un serveur HTTP : `com.sun.net.httpserver` vit dans le module
         // `jdk.httpserver`, que le `module-info.java` de production ne lit pas. L'y ajouter pour un test
         // élargirait la surface du produit pour la commodité de l'éprouver. Or compter les CONNEXIONS
         // suffit : ce qu'on veut savoir est si le banc a composé cette adresse, pas ce qu'il y a dit.
@@ -92,7 +92,7 @@ class BancDeRecetteUrlTest {
                 .montrer(stage);
     }
 
-    /// ⚠️ Le fork est partagé et réutilisé : une propriété laissée derrière soi servirait à toutes les
+    /// Le fork est partagé et réutilisé : une propriété laissée derrière soi servirait à toutes les
     /// classes qui passent après, dans l'ordre où la répartition les a mises. C'est le défaut même que
     /// ce cas décrit, retourné contre le reste de la suite.
     @AfterEach

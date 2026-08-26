@@ -173,7 +173,7 @@ jobs:
           Write-Output "Journal présent, aucune erreur de chargement."
 
       - name: Soumettre à winget-pkgs
-        # ⚠️ Épinglé sur `main`, et non sur le tag `v2` : ce tag n'a jamais bougé depuis un commit de
+        # Épinglé sur `main`, et non sur le tag `v2` : ce tag n'a jamais bougé depuis un commit de
         # NOVEMBRE 2024, alors que l'action installe `komac` à sa DERNIÈRE version (2.16.0, mars 2026).
         # Vingt et un mois d'écart entre la colle et l'outil qu'elle pilote. Deux conséquences vécues :
         # `release-notes-url` n'existe pas dans la v2 et y était silencieusement ignoré (le journal du

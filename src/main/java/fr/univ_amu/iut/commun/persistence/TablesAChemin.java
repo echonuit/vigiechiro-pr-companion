@@ -19,7 +19,7 @@ import java.util.List;
 /// de la connaissance métier : sa place est ici, et ce que chacun **fait** de chaque table reste chez
 /// lui.
 ///
-/// ⚠️ `recording_session` n'y figure pas : sa colonne s'appelle `root_path` et non `file_path`, et
+/// `recording_session` n'y figure pas : sa colonne s'appelle `root_path` et non `file_path`, et
 /// c'est **elle** que les autres suivent. Elle se traite à part, avant les autres.
 ///
 /// `TablesACheminTest` confronte cette liste aux colonnes de chemin déclarées par les migrations :

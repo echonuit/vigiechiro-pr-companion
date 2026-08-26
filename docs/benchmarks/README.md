@@ -28,7 +28,7 @@ export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-open
 Volumes paramétrables : `-Dperf.sites=...`, `-Dperf.passages=...`, `-Dperf.observations=...` (à ajouter
 dans `exec.args`).
 
-> ⚠️ **`perf.sites` est la dimension qu'on oublie.** Le jeu a longtemps semé **un** carré, quelle que soit
+> **`perf.sites` est la dimension qu'on oublie.** Le jeu a longtemps semé **un** carré, quelle que soit
 > la valeur de `perf.passages` : les relevés O5 étaient donc aveugles aux requêtes lancées **par site** ou
 > **par point**, qui sont exactement celles qui coûtent à un observateur ayant beaucoup de carrés. Un
 > test (`JeuDuBancTest`) refuse désormais que le jeu retombe à un seul carré.
@@ -50,7 +50,7 @@ plus `-Dperf.import.secondes` (déf. 5.0) et `-Dperf.import.frequenceHz` (déf. 
 Sortie : taille, temps total décomposé en **copie (R9) / transformation (#12) / persistance (O7)**,
 débit, nb séquences, **mémoire crête**.
 
-> ⚠️ L'import recopie puis transforme : prévoir **2 à 3× la taille source** en espace disque. Pour viser
+> L'import recopie puis transforme : prévoir **2 à 3× la taille source** en espace disque. Pour viser
 > 20 Gio à 384 kHz / 5 s, c'est ~5500 fichiers ; commencer petit (`-Dperf.import.fichiers=100`) pour
 > calibrer le temps, puis monter. Le `vigiechiro.workspace` est un **dossier jetable, réinitialisé à
 > chaque lancement** (n'y pointez pas un vrai workspace).

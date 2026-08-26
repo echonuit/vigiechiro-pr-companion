@@ -66,7 +66,7 @@ public final class CompteRenduChiffreDepot {
 
     /// Le titre dit **l'état réel**, pas l'intention.
     ///
-    /// ⚠️ Il valait « Nuit déposée sur Vigie-Chiro » dès que le plan n'était pas *interrompu* : une nuit
+    /// Il valait « Nuit déposée sur Vigie-Chiro » dès que le plan n'était pas *interrompu* : une nuit
     /// à 11 archives sur 14, dont trois refusées, s'annonçait donc **déposée**, en gras et en tête du
     /// compte rendu. Trouvé en passe 8 de la clôture #3900, **en ouvrant l'aperçu** - aucun test ne
     /// regardait ce titre, et la ventilation juste en dessous disait pourtant le contraire.
@@ -158,7 +158,7 @@ public final class CompteRenduChiffreDepot {
         long parDroits =
                 refuses.stream().filter(EchecUnite::seRearmeParUneReconnexion).count();
         if (parDroits == 0) {
-            // ⚠️ Le geste est nommé parce qu'il est VÉRIFIÉ (#3946) : régénérer produit des archives de
+            // Le geste est nommé parce qu'il est VÉRIFIÉ (#3946) : régénérer produit des archives de
             // mêmes identifiants, la synchronisation du plan conserve les lignes, et le téléversement
             // suivant les retente - `restantes()` rend « tout sauf déposé », et le moteur n'écarte
             // jamais une unité sur son drapeau `definitif`. Ce que #3687 a retiré, c'est la PROMESSE
@@ -168,7 +168,7 @@ public final class CompteRenduChiffreDepot {
         if (parDroits == refuses.size()) {
             return debut + " Reconnectez-vous : elles redeviendront reprenables.";
         }
-        // ⚠️ Le cas mêlé, trouvé en ouvrant l'aperçu : deux refus de droits et un contenu refusé. La
+        // Le cas mêlé, trouvé en ouvrant l'aperçu : deux refus de droits et un contenu refusé. La
         // première rédaction se taisait dès qu'une seule archive n'était pas réparable, et perdait un
         // geste **vérifié** pour les autres. L'ADR 3854 demande de ne nommer que ce qui s'applique, pas
         // de se taire quand cela s'applique à une partie.
@@ -196,7 +196,7 @@ public final class CompteRenduChiffreDepot {
             avertissements.add(Avertissement.de("Vous avez arrêté le dépôt. « Reprendre le dépôt » ne renverra"
                     + " que les " + Math.max(0, total - plan.enLigne()) + " archive(s) manquante(s)."));
         } else if (!bilan.echecs().isEmpty()) {
-            // ⚠️ Deux phrases et non une. Annoncer « « Reprendre le dépôt » ne renverra que celles-là »
+            // Deux phrases et non une. Annoncer « « Reprendre le dépôt » ne renverra que celles-là »
             // sur un refus définitif nommait un geste que le produit ne propose plus : dans cet état, le
             // bouton s'intitule « Téléverser sur Vigie-Chiro » (#3687). Le compte rendu citait donc un
             // bouton absent de l'écran, ce que l'ADR 3854 proscrit (#3962).

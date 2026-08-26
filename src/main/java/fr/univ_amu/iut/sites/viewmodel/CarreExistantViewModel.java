@@ -122,7 +122,7 @@ public final class CarreExistantViewModel {
     /// Affiche le compte rendu du rapatriement, **sur le fil JavaFX**.
     public void appliquerRapatriement(RapatriementCarre.Resultat resultat) {
         retour.set(new RetourOperation(resultat.message(), resultat.severite()));
-        // ⚠️ Une panne **ne referme pas** le geste, et ne rouvre pas la déclaration.
+        // Une panne **ne referme pas** le geste, et ne rouvre pas la déclaration.
         //
         // Le geste ne se referme que lorsqu'il n'y a effectivement plus rien à récupérer : le carré
         // existe sous un autre protocole. Sur une plateforme injoignable, on sait toujours que le carré

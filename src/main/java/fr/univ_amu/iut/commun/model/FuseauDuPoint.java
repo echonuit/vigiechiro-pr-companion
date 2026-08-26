@@ -20,7 +20,7 @@ import java.util.Objects;
 /// implémentation du port : aucun de ces cas ne dégrade quoi que ce soit, ils ne précisent simplement
 /// pas.
 ///
-/// ⚠️ **L'écriture et la lecture d'une même nuit doivent employer le MÊME fuseau.** Corriger un seul
+/// **L'écriture et la lecture d'une même nuit doivent employer le MÊME fuseau.** Corriger un seul
 /// des deux côtés déplace la nuit à chaque aller-retour : c'est le défaut que #1860 a payé de 21:00
 /// descendu à 15:00 en quatre cycles, et que la CI a rattrapé sur #3434 quand la première version du
 /// correctif de fuseau n'avait traité que l'écriture.

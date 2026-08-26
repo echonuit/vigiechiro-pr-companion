@@ -32,7 +32,7 @@ import javafx.scene.layout.VBox;
 /// formes : `CaptureCompteRendu` rend la bande du socle sur des mentions génériques, et les aperçus de
 /// l'écran d'import s'arrêtent avant la fin.
 ///
-/// ⚠️ #3473 a **presque doublé** la longueur de cette mention. C'est exactement le contenu où la revue
+/// #3473 a **presque doublé** la longueur de cette mention. C'est exactement le contenu où la revue
 /// visuelle trouve ses défauts, et la bande vit dans des largeurs très différentes (ADR 2358). Une
 /// mesure faite à la clôture dit qu'elle s'enroule correctement de 900 à 480 px ; cet aperçu est ce qui
 /// le **montre**, et ce que le garde anti-troncature contrôlera à chaque build.

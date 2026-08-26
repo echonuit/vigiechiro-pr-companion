@@ -58,7 +58,7 @@ public final class EcritureAtomique {
 
     /// [#ecrire(Path,String,boolean)], avec le déplacement et l'attente **injectés**.
     ///
-    /// ⚠️ Sans cette couture, la reprise n'est éprouvable **nulle part** : le cas qu'elle traverse ne se
+    /// Sans cette couture, la reprise n'est éprouvable **nulle part** : le cas qu'elle traverse ne se
     /// produit que sous Windows, où un lecteur concurrent bloque le remplacement, et sous POSIX le
     /// déplacement **réussit** quoi qu'on tienne ouvert. Mesuré par sonde (#3777). Même raison que
     /// `GestesFichiers` (#3525), `TailleFichier` (#3627) et `CouleurCli` (#3738).
@@ -113,7 +113,7 @@ public final class EcritureAtomique {
 
     /// Le refus, quand la cible reste tenue : il **nomme** la cause et dit quoi faire.
     ///
-    /// ⚠️ Sans cela l'utilisateur lirait « accès refusé » sur un fichier dont il est propriétaire, ce
+    /// Sans cela l'utilisateur lirait « accès refusé » sur un fichier dont il est propriétaire, ce
     /// qui l'enverrait chercher un problème de droits qui n'existe pas.
     private static IOException refusCible(Path cible, AccessDeniedException cause) {
         IOException refus =

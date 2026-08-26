@@ -63,11 +63,11 @@ public final class Fonctionnalites {
     /// libellés le fassent, si bien que « Vérifier et récupérer un carré » se rangeait entre
     /// « Campagnes de suivi » et « Contrôle du carré STOC ».
     ///
-    /// ⚠️ Un `String::compareTo` ne suffit pas : il compare des points de code, où `'É'` (U+00C9) est
+    /// Un `String::compareTo` ne suffit pas : il compare des points de code, où `'É'` (U+00C9) est
     /// au-delà de `'Z'` (U+005A) - « Étang » se rangerait **après** « Zone ». Le [Collator] français
     /// range les accents à leur lettre.
     ///
-    /// ⚠️ Un `Collator` **n'est pas sûr en concurrence**, et le tri est déterministe précisément parce
+    /// Un `Collator` **n'est pas sûr en concurrence**, et le tri est déterministe précisément parce
     /// que l'aperçu des Réglages doit sortir identique au bit près. Chaque appel rend donc son propre
     /// comparateur plutôt qu'une constante partagée.
     static Comparator<Fonctionnalite> parLibelle() {

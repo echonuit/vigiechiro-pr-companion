@@ -104,7 +104,7 @@ class RestaurationComplete {
     /// Le régime dégradé, quand la place ne permet pas d'étaler tout le monde : une nuit est étalée,
     /// vérifiée, basculée, puis on passe à la suivante (#3563).
     ///
-    /// ⚠️ **Dès la première bascule, « rien n'a été touché » cesse d'être vrai.** Un refus survenu
+    /// **Dès la première bascule, « rien n'a été touché » cesse d'être vrai.** Un refus survenu
     /// ensuite ne peut donc plus se présenter comme un refus : il deviendrait un code de sortie qui
     /// promet un état intact au-dessus d'un état mixte. Il est requalifié en incident, ce qu'il est.
     private List<PlacementRacine> uneNuitALaFois(Path dossierBackup, ManifesteSauvegarde manifeste) {

@@ -50,7 +50,7 @@ public final class CompteRenduImport {
         // écrire la date de la même façon. Sans cela, la même nuit se lirait « 22/04/2026 » dans la
         // bande chiffrée et « 2026-04-22 » dans la barre de statut, sur le MÊME écran (#3950).
         //
-        // ⚠️ Le commentaire d'origine disait « le compte rendu que la ligne de commande rend ».
+        // Le commentaire d'origine disait « le compte rendu que la ligne de commande rend ».
         // C'était faux : cette classe n'a aucun consommateur côté CLI, elle alimente
         // `FormatsImport.libelle`, donc la barre de statut du wizard. Corrigé en #3991.
         String premiere = Horodatage.dateSeule(passages.getFirst().passage().dateEnregistrement());

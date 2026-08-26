@@ -61,7 +61,7 @@ accesseurs. Une sous-vue n'est pas une frontière étanche : c'est un regroupeme
 
 ## La conséquence qui n'était pas prévue, et qu'il faut connaître
 
-⚠️ **Une sous-vue ne se procure rien de ce qui doit être unique : elle le reçoit de son parent.**
+**Une sous-vue ne se procure rien de ce qui doit être unique : elle le reçoit de son parent.**
 
 > *Règle élargie le 2026-08-05 (#3335).* Elle a d'abord été écrite « une sous-vue ne doit pas injecter
 > son **ViewModel** », d'après le seul cas rencontré. Le ViewModel n'en est qu'un ; le **porteur de

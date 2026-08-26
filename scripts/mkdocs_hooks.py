@@ -17,7 +17,7 @@ Les parcours filmés `.github/assets/parcours-*.mp4` suivent le même chemin, so
 pilote le fat-jar avec `xdotool` et vérifie le libellé visé avant chaque clic ; leur garde-fou est
 `.github/assets/check-doc-videos.sh`.
 
-⚠️ Le montage est en MP4 là où le tournage est en MKV : aucun navigateur n'affiche le Matroska, et
+Le montage est en MP4 là où le tournage est en MKV : aucun navigateur n'affiche le Matroska, et
 le MKV ne protège que le tournage (un `ffmpeg` tué laisse un MP4 sans index).
 """
 

@@ -40,7 +40,7 @@ Fait après coup, l'inventaire tient en deux lignes : le `schedule` du mercredi,
 correctif urgent n'attend pas le train. » Le job `preuve-des-plateformes` ne portait aucun `if`
 distinguant les déclencheurs : il gardait les deux.
 
-⚠️ Ce qui a tranché n'est pas le retard - un passage complet lancé à la main coûte ~50 min. C'est qu'un
+Ce qui a tranché n'est pas le retard - un passage complet lancé à la main coûte ~50 min. C'est qu'un
 **test instable et sans rapport** aurait retenu un correctif de sécurité. Ce n'est pas une hypothèse :
 la même clôture a mesuré dix tests dont le verdict dépend de l'ordre d'exécution (#3773), et l'un d'eux
 a rendu **vert à 8 h 14 et rouge à 15 h 34 sur le même commit et la même image**.
@@ -71,7 +71,7 @@ classes au lieu de 4600 - et l'API des runs ne dit pas quelles entrées ont ét�
 `workflow_dispatch`. Le workflow porte donc son périmètre dans son `run-name` : `[complet]` ou
 `[ciblé]`.
 
-⚠️ Filtrer sur le **déclencheur** aurait été plus simple, et c'est ce qui a été écrit d'abord. C'est
+Filtrer sur le **déclencheur** aurait été plus simple, et c'est ce qui a été écrit d'abord. C'est
 précisément ce filtre qui fermait le chemin du correctif urgent : un passage manuel *complet* est une
 preuve tout aussi bonne qu'un passage programmé ; c'est le passage *ciblé* qui n'en est pas une.
 
@@ -99,7 +99,7 @@ Le reste de l'ADR 2744 est inchangé : cadence hebdomadaire, mercredi, `semantic
   illisible. Trois refus distincts plutôt qu'un silence.
 - **Un contournement est visible pour toujours** dans l'historique des runs, sans qu'il faille ouvrir
   un job. C'est ce qui rend l'exception supportable : elle ne s'oublie pas.
-- ⚠️ **Le câblage n'a jamais tourné.** `release.yml` est dormant (`ENABLE_RELEASE != 'true'`). Le
+- **Le câblage n'a jamais tourné.** `release.yml` est dormant (`ENABLE_RELEASE != 'true'`). Le
   script est éprouvé sur les données réelles du dépôt et les expressions sont validées par
   `actionlint`, mais le graphe de jobs s'exécutera pour la première fois le jour de l'activation. Cela
   se dit, plutôt que de laisser croire que le dispositif a été vu à l'œuvre.

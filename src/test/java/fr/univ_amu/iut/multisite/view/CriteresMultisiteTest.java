@@ -42,7 +42,7 @@ class CriteresMultisiteTest {
                 .as("un carré se cherche par son nom comme par son numéro")
                 .isTrue();
 
-        // ⚠️ #4019 : depuis que la colonne rend « 20/06/2026 », chercher ce qu'on LIT doit marcher. La
+        // #4019 : depuis que la colonne rend « 20/06/2026 », chercher ce qu'on LIT doit marcher. La
         // forme ISO reste acceptée - elle vit encore dans les exports et dans le JSON de la CLI - mais
         // c'est la forme affichée qui décide, parce que c'est celle qu'on recopie de l'écran.
         assertThat(CriteresMultisite.rechercheTexte().test(ligne, "20/06/2026"))

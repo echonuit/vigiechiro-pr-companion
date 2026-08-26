@@ -60,7 +60,7 @@ sous-estimait l'amplitude réelle. Une tuile absente en ferait 9,5 % : il ne s'a
 chargement incomplet, mais du **rendu servi par OpenStreetMap**, qui n'est pas identique à chaque
 requête.
 
-⚠️ Cette même matrice montre que les versions **n'errent pas au hasard** : 30 versions se réduisent à
+Cette même matrice montre que les versions **n'errent pas au hasard** : 30 versions se réduisent à
 **18 états distincts**, dont un revenant **7 fois** à des dates non consécutives. La variation est donc
 **discrète**, ce qu'un bruit de rendu continu ne produirait jamais.
 
@@ -176,10 +176,10 @@ La liste tenue à la main s'était démodée dans les trois sens à la fois : el
 autre chose - une estimation de temps restant, corrigée depuis à sa source
 ([ADR 3483](decisions/3483-un-apercu-pose-ce-qu-il-ne-peut-pas-reproduire.md)).
 
-⚠️ Ce que le masque ne voit pas : un changement **à l'intérieur** de la carte - un marqueur déplacé,
+Ce que le masque ne voit pas : un changement **à l'intérieur** de la carte - un marqueur déplacé,
 un carré recoloré. C'est l'arbitrage de l'ADR 3068, réduit au seul rectangle au lieu de toute l'image.
 
-⚠️ `apercu-passage-rattachement.png` bougeait aussi sans porter de carte, et la cause est désormais
+`apercu-passage-rattachement.png` bougeait aussi sans porter de carte, et la cause est désormais
 connue : **écrire sur disque entre le `snapshot` et la fermeture du stage** laisse passer une
 validation de formulaire, ce qui change les captures **suivantes** du même outil - mesuré à
 40 543 pixels. La mesure se fait pendant que la scène est montée, l'écriture après `RenduPng.ecrire`.

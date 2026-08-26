@@ -23,7 +23,7 @@ Le garde d'espace de la sauvegarde (#3572) mesure ce qu'elle emportera avant de 
 sur `ArborescenceFichiers.octets`, qui parcourt l'arborescence et compte **zéro** pour un fichier dont
 la taille ne se lit pas.
 
-⚠️ **Le constat de départ de #3627 était partiellement faux, et le sonder l'a montré.** Il annonçait
+**Le constat de départ de #3627 était partiellement faux, et le sonder l'a montré.** Il annonçait
 qu'un droit refusé comptait pour zéro. Mesuré :
 
 ```
@@ -66,7 +66,7 @@ n'apprend ni ce que pèse le reste, ni combien de dossiers ont résisté. Le par
 explicite, qui note le dossier fermé et continue - même choix que `effacerAuMieux`, qui ne s'arrête pas
 au premier récalcitrant.
 
-⚠️ Le test « est-ce un dossier ? » porte `NOFOLLOW_LINKS`, et lui seul. C'est ce que fait `Files.walk`
+Le test « est-ce un dossier ? » porte `NOFOLLOW_LINKS`, et lui seul. C'est ce que fait `Files.walk`
 par défaut, et sans lui **un lien vers un dossier ancêtre ferait tourner ce parcours sans fin**.
 
 ## Conséquences
@@ -79,7 +79,7 @@ par défaut, et sans lui **un lien vers un dossier ancêtre ferait tourner ce pa
   pas sur commande, un dossier en `chmod 000` fait échouer le parcours et non la pesée, et un lien mort
   est écarté par `isRegularFile` avant qu'on l'atteigne. Sans lui le test serait conditionnel, et un
   test qui s'abstient rend le même vert que celui qui s'exécute.
-- ⚠️ Une décision **de ne pas faire** : la mesure ne relit pas ce qu'elle a manqué, et n'essaie pas de
+- Une décision **de ne pas faire** : la mesure ne relit pas ce qu'elle a manqué, et n'essaie pas de
   distinguer un droit refusé d'un support démonté. La cause système est rapportée telle quelle ; c'est
   elle qui dit à l'utilisateur quoi débloquer.
 - Une mesure partielle qui se présenterait comme complète est ce que l'[ADR 2748](2748-un-dispositif-qui-peut-ne-rien-verifier-le-dit.md)

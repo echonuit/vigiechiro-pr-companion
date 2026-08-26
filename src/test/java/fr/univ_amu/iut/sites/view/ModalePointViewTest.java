@@ -48,7 +48,7 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class ModalePointViewTest {
 
-    // ⚠️ Cette classe ne cite plus `S1-24`, et ce n'est pas un oubli.
+    // Cette classe ne cite plus `S1-24`, et ce n'est pas un oubli.
     // Elle monte `ModalePoint.fxml` seule : rien ne montrait que le point venait de la modale, faute
     // de voir la fiche AVANT (#4175). Le cas est joué par `ScenarioFicheSiteTest`, depuis la fiche.
     //
@@ -72,7 +72,7 @@ class ModalePointViewTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        // ⚠️ `Habillage` via `FenetreDuBanc` : ce cas est FILMÉ (#3773, #4149).
+        // `Habillage` via `FenetreDuBanc` : ce cas est FILMÉ (#3773, #4149).
         FenetreDuBanc.poser(stage, racine, 1180, 900);
         injector.getInstance(NavigationSites.class).ouvrirDetail(site);
         FenetreDuBanc.afficher(stage);
@@ -91,7 +91,7 @@ class ModalePointViewTest {
         TextField champCode = robot.lookup("#champCode").queryAs(TextField.class);
         Respiration.avantLeGeste(robot);
 
-        // ⚠️ Le code se TAPE : ce cas fait juger un bouton qui s'active à la saisie, et `setText` posait
+        // Le code se TAPE : ce cas fait juger un bouton qui s'active à la saisie, et `setText` posait
         // le code d'un coup - le bouton changeait d'état sans qu'on voie ce qui le fait changer (#4149).
         robot.clickOn(champCode).write("B2");
         WaitForAsyncUtils.waitForFxEvents();

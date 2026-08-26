@@ -41,7 +41,7 @@ ce défaut : la cause et le symptôme n'ont aucun rapport, et le symptôme se d�
 Sa troisième règle disait : **un banc rend l'état partagé tel qu'il l'a trouvé**. Les deux bancs
 concernés l'appliquaient, et le documentaient :
 
-> ⚠️ On REND la fenêtre telle qu'on l'a trouvée. TestFX réutilise la **fenêtre primaire** dans un fork
+> On REND la fenêtre telle qu'on l'a trouvée. TestFX réutilise la **fenêtre primaire** dans un fork
 > unique […] C'est ce que le job `ordre-alternatif` a attrapé - et il avait raison (#3960).
 
 Ils reposaient la **largeur** d'entrée. Mesuré : cela ne rend pas la fenêtre. `setWidth` fait passer un
@@ -82,16 +82,16 @@ depuis #1940.
 
 ## Ce que cette décision a coûté à apprendre
 
-⚠️ **`sizeToScene` défige.** C'est ce qui en fait le bon geste - et ce qui rend aveugle tout garde qui
+**`sizeToScene` défige.** C'est ce qui en fait le bon geste - et ce qui rend aveugle tout garde qui
 l'appelle avant de mesurer. Le premier jet du garde de propriété le faisait : son mutant a **survécu**,
 le garde défaisant le défaut avant de le chercher. `setScene` suffit, et c'est justement lui qui reste
 sans effet sur une fenêtre figée.
 
-⚠️ **Le plancher masque la mesure.** `App.start` pose 600 px de haut minimum (#3452). Deux scènes
+**Le plancher masque la mesure.** `App.start` pose 600 px de haut minimum (#3452). Deux scènes
 choisies **sous** ce plancher laissent la fenêtre à 600 dans les deux cas, et le garde rougit sur du
 code sain. La seconde scène doit franchir le plancher.
 
-⚠️ **La classe qui garde était la cinquième fautive.** `ModalesTest` héberge le garde de #1940 depuis
+**La classe qui garde était la cinquième fautive.** `ModalesTest` héberge le garde de #1940 depuis
 le début, et prenait le Stage du harnais **comme modale** - qu'un de ses tests ferme. Après elle, une
 scène de quarante lignes laissait la fenêtre au plancher, là où elle la portait à 720 quand la classe
 tournait seule.

@@ -25,7 +25,7 @@ public enum StatutWorkflow {
     /// rattachement, pas son audio. Hors de la file linéaire ; sa seule suite est [#DEPOSE], quand la
     /// réactivation lui rend son son.
     ///
-    /// ⚠️ **Déclaré en dernier, et ce n'est pas indifférent.** Plusieurs endroits comparent les statuts
+    /// **Déclaré en dernier, et ce n'est pas indifférent.** Plusieurs endroits comparent les statuts
     /// par `ordinal()` (« au moins vérifié », « au moins transformé »). Insérer cette valeur au milieu
     /// aurait décalé ces comparaisons **en silence** : elles n'auraient rien levé, elles auraient
     /// simplement répondu autre chose.

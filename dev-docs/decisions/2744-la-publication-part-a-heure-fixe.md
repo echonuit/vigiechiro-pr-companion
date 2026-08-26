@@ -39,7 +39,7 @@ trois choses.
    publie entre 3 et 37 fois par jour, soit autant de constructions complètes du SDK et autant
    de commits de mise à jour sur `main` ».
 
-   ⚠️ **Cette raison-là n'est pas la principale, et il faut le dire pour ne pas se tromper de
+   **Cette raison-là n'est pas la principale, et il faut le dire pour ne pas se tromper de
    conclusion** : le dépôt Flatpak n'existait **pas encore** à cette date (#2111), et le même fichier
    note qu'un déclenchement sur `release: released` ne partirait de toute façon **jamais** (l'événement
    est produit avec le `GITHUB_TOKEN`, qui ne déclenche aucun workflow). Les canaux ne sont donc pas
@@ -91,7 +91,7 @@ exercé.
   numéros, elle ne suppose rien de leur fréquence.
 - **Un mercredi sans rien à publier ne publie rien** : `semantic-release` ne crée pas de version sans
   commit qui la justifie, et le job des installeurs est déjà conditionné au tag (`if: tag != ''`).
-- ⚠️ **Le délai entre fusion et disponibilité passe de quelques minutes à sept jours au pire.** C'est
+- **Le délai entre fusion et disponibilité passe de quelques minutes à sept jours au pire.** C'est
   le prix assumé, et c'est exactement ce que `workflow_dispatch` rachète quand il le faut.
 
 ## Alternatives écartées

@@ -42,7 +42,7 @@ L'en-tête d'`Horodatage` déclare donc le JSON aux côtés des deux familles qu
 pas - les noms de fichiers, qui doivent trier, et la lecture de fichiers tiers, qui doit rester fidèle
 au producteur.
 
-## ⚠️ Ce que le garde protège, et qui n'était gardé par rien
+## Ce que le garde protège, et qui n'était gardé par rien
 
 Le test du `--json` assertait huit clés et **ni `date` ni `deposeLe`**. Rien n'empêchait quelqu'un de
 franciser le JSON par souci de cohérence, et **rien ne l'aurait signalé** : les tests seraient restés
@@ -56,7 +56,7 @@ de ne **pas** changer quelque chose n'est tenue que si un test rougit quand on l
 Deux commandes portent, sous le même nom `dateDebut`, des **datetimes avec décalage** venus de l'API
 (`2026-07-03T22:00:00+02:00`) : `reconstruire-passage` et `lister-participations-vigiechiro`.
 
-⚠️ **`Horodatage.dateSeule` ne les parse pas et les rendrait inchangés, en silence** - un correctif qui
+**`Horodatage.dateSeule` ne les parse pas et les rendrait inchangés, en silence** - un correctif qui
 se présente en succès sans rien corriger. Et le fond y est autre : afficher un instant portant un
 décalage est une décision de **fuseau**, pas de format, sur un terrain qui a déjà mordu
 ([ADR 3406](3406-une-nuit-porte-le-fuseau-de-son-site.md) : trois machines, trois instants envoyés).

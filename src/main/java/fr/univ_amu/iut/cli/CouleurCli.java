@@ -23,7 +23,7 @@ public final class CouleurCli {
 
     /// La décision, sur des entrées **fournies** plutôt que lues du système.
     ///
-    /// ⚠️ Sans cette couture, la règle ne serait éprouvable qu'en manipulant la console et
+    /// Sans cette couture, la règle ne serait éprouvable qu'en manipulant la console et
     /// l'environnement du processus de test - c'est-à-dire pas du tout. Même raison que `TailleFichier`
     /// (#3627) et `GestesFichiers` (#3525) : ce qui ne se fabrique pas de façon portable s'injecte.
     ///

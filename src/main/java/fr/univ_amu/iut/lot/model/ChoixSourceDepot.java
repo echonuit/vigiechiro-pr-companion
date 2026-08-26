@@ -26,7 +26,7 @@ import java.util.function.ToLongFunction;
 /// dossier, donc des archives effacees ne font plus basculer le depot en mode WAV ni perdre la
 /// progression deja acquise.
 ///
-/// ⚠️ Ce choix n'est pas qu'une question de place : en mode ZIP, la plateforme detruit l'archive apres
+/// Ce choix n'est pas qu'une question de place : en mode ZIP, la plateforme detruit l'archive apres
 /// extraction et ne remonte pas les WAV sur S3 (#1244), donc l'audio n'est pas recuperable cote serveur
 /// et la participation ne peut pas etre relancee. C'est pourquoi il se choisit desormais.
 final class ChoixSourceDepot {

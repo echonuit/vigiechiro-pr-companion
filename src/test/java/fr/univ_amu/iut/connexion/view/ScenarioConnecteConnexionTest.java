@@ -62,7 +62,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// lieu, et ce qui permet de voir ses conséquences de bout en bout, sur les **deux** surfaces qu'elle
 /// change.
 ///
-/// ## ⚠️ Le jeton PARAÎT à l'écran, et c'est délibéré
+/// ## Le jeton PARAÎT à l'écran, et c'est délibéré
 ///
 /// La première version évitait la saisie pour qu'aucun jeton ne soit filmé : elle déposait le jeton en
 /// coulisse et laissait la modale se vérifier seule. Le clip montrait alors une modale **qui se
@@ -93,7 +93,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// **Une caméra qui s'arrêtait sur le geste.** Sur 35 images, 34 sans modale. Le scénario **tient donc
 /// l'écran** après chaque assertion, par [Respiration], qui ne coûte rien hors séance filmée.
 ///
-/// ## ⚠️ Exclu du build par défaut
+/// ## Exclu du build par défaut
 ///
 /// `@Tag("recette-connectee")`, exclu par `surefire.excludedGroups`. Sans jeton le banc **refuse** de
 /// monter, comme il doit. Le tournage connecté inverse les **deux** propriétés : poser `groups` seul ne
@@ -126,7 +126,7 @@ class ScenarioConnecteConnexionTest {
     /// et une attente longue masquerait un écran qui ne s'ouvre pas.
     private static final int APPARITION_SECONDES = 60;
 
-    /// ⚠️ La **fin**, elle, est bien plus lente que ce qu'un bouchon laissait croire. Mesuré au premier
+    /// La **fin**, elle, est bien plus lente que ce qu'un bouchon laissait croire. Mesuré au premier
     /// tir : à **23 secondes**, les rapprocheurs tournaient encore - se connecter rejoue le
     /// rapatriement des nuits du compte (#2557), donc la durée suit la taille du compte.
     ///
@@ -145,7 +145,7 @@ class ScenarioConnecteConnexionTest {
                 // parce que c'est la connexion elle-même qu'il filme. Le banc lie quand même sa propre
                 // source de jeton, donc rien de l'environnement ne s'invite dans la réserve (ADR 4134).
                 //
-                // ⚠️ Mais il DÉCLARE parler à la plateforme, sinon son client repart sur
+                // Mais il DÉCLARE parler à la plateforme, sinon son client repart sur
                 // `http://localhost:1` : prendre le jeton ne dit pas au banc vers qui parler. Trois
                 // tournages ont filmé un écran hors ligne avant que le relevé ne le dise.
                 .parleALaPlateforme()
@@ -165,14 +165,14 @@ class ScenarioConnecteConnexionTest {
             portee = Portee.A_L_ECRAN)
     @DisplayName("S8-01, S8-05, S8-06 · coller le jeton, voir l'avancement, lire l'identité rendue")
     void coller_le_jeton_puis_lire_l_identite(FxRobot robot) throws TimeoutException {
-        // ⚠️ Lu AVANT d'ouvrir quoi que ce soit : sans jeton, ce scénario n'a rien à montrer, et il
+        // Lu AVANT d'ouvrir quoi que ce soit : sans jeton, ce scénario n'a rien à montrer, et il
         // vaut mieux qu'il le dise avant d'avoir filmé huit secondes d'écran inutile.
         String jeton = BancDeRecette.jetonDeLaPlateforme();
 
         Respiration.avantLeGeste(robot);
 
         // ─── Temps 1 · l'écran de départ (ADR 4188) ───────────────────────────────────────────────
-        // ⚠️ Constaté AVANT, pour que l'après veuille dire quelque chose. Le banc part d'un espace de
+        // Constaté AVANT, pour que l'après veuille dire quelque chose. Le banc part d'un espace de
         // travail vierge : `AccueilViewModel.aDesDonnees()` est faux, et le bandeau de compteurs est
         // donc masqué. C'est ce contraste que le clip doit rendre lisible.
         assertThat(visible(robot, "#bandeauIndicateurs"))
@@ -212,7 +212,7 @@ class ScenarioConnecteConnexionTest {
                 () -> visible(robot, "#zoneProgression"),
                 "la progression n'a jamais paru dans la modale");
 
-        // ⚠️ On asserte AVANT de tenir l'écran. L'état est celui de l'instant où la progression paraît,
+        // On asserte AVANT de tenir l'écran. L'état est celui de l'instant où la progression paraît,
         // donc déterministe ; le maintien qui suit sert la caméra, pas l'assertion.
         assertThat(fenetresOuvertes())
                 .as("l'avancement doit paraître DANS la modale : une seconde fenêtre par-dessus"
@@ -240,7 +240,7 @@ class ScenarioConnecteConnexionTest {
         // trace qui explique pourquoi une connexion a ete longue ou breve.
         System.out.printf("  synchro de la connexion : %s%n", texte(robot, "#bandeauStatut"));
 
-        // ⚠️ On asserte le SUCCÈS, pas la non-vacuité : `identiteProperty` porte « Jeton enregistré, non
+        // On asserte le SUCCÈS, pas la non-vacuité : `identiteProperty` porte « Jeton enregistré, non
         // vérifié » dès le premier instant d'un jeton sans profil.
         assertThat(classes(robot, "#labelIdentite"))
                 .as(
@@ -265,7 +265,7 @@ class ScenarioConnecteConnexionTest {
         Respiration.leTempsDeLire(robot);
 
         // ─── Temps 3 · l'écran d'arrivée, et ce qui y a changé (ADR 4188) ────────────────────────
-        // ⚠️ Une modale se filme avec l'écran d'où elle part ET celui où elle rend. Ici c'est le même,
+        // Une modale se filme avec l'écran d'où elle part ET celui où elle rend. Ici c'est le même,
         // l'accueil - mais il n'y revient pas identique : `MainController` pose que « le bandeau suit
         // désormais la DONNÉE (#1376) », et qu'« une synchronisation déroulée par-dessus l'accueil se
         // voit sans qu'on ait navigué ». Les rapprocheurs de la connexion en sont une.
@@ -449,7 +449,7 @@ class ScenarioConnecteConnexionTest {
 
     /// Le premier libellé **rendu** qui commence par `prefixe`, s'il y en a un.
     ///
-    /// ⚠️ Une entrée de menu n'est pas un `Node` : c'est le menu ouvert qui en rend un. On cherche
+    /// Une entrée de menu n'est pas un `Node` : c'est le menu ouvert qui en rend un. On cherche
     /// donc dans la scène ce qui s'AFFICHE, et non dans le modèle ce qui devrait s'afficher - c'est
     /// la différence entre « le produit le sait » et « on le voit », et l'ADR 4188 porte sur la
     /// seconde.

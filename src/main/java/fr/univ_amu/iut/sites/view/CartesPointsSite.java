@@ -235,7 +235,7 @@ final class CartesPointsSite {
     /// sans connexion), le point **vient de** la plateforme (l'y renvoyer n'a pas de sens), ou il y a
     /// **déjà été poussé** - et c'est alors un état qui s'affiche, pas une action.
     ///
-    /// ⚠️ **Le carré verrouillé n'est pas grisé**, alors que c'est lui qui refusera son propriétaire.
+    /// **Le carré verrouillé n'est pas grisé**, alors que c'est lui qui refusera son propriétaire.
     /// `PUT /sites/{id}/localites` accepte un participant validé sur le protocole même verrouillé, et
     /// refuse le propriétaire dès qu'il l'est ; les liens de site venant de `GET /moi/participations`
     /// (#718), Companion ne sait pas dans quel cas il se trouve. Le refus est donc **rendu compte**,
@@ -281,7 +281,7 @@ final class CartesPointsSite {
     /// Second point d'entrée du même geste : un seul compte rendu pour les deux chemins, plutôt que
     /// deux qui finiraient par diverger.
     ///
-    /// ⚠️ Le point introuvable **se dit**. Un `ifPresent` muet laisserait l'utilisateur avec une case
+    /// Le point introuvable **se dit**. Un `ifPresent` muet laisserait l'utilisateur avec une case
     /// cochée, une modale fermée, et rien : le silence se lirait comme une réussite.
     void publierPointCree(long idPoint) {
         Optional<CartePoint> carte = viewModel.points().stream()

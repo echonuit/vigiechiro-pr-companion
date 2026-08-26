@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// ## Ce que ce garde ne dit pas
 ///
-/// ⚠️ Il vérifie qu'un cas **s'arrête**, pas qu'il montre quelque chose. Un arrêt sur un écran immobile
+/// Il vérifie qu'un cas **s'arrête**, pas qu'il montre quelque chose. Un arrêt sur un écran immobile
 /// reste un clip qu'on ne comprend pas - c'est ce qu'était `S1-02` avant qu'on lui donne son contraste,
 /// et `S1-03` avant qu'une frappe suive son raccourci. La question reste **ce que le clip doit faire
 /// voir** ; ce garde ne tient que sa condition la plus grossière, celle qu'une machine peut lire.
@@ -49,7 +49,7 @@ class RespirationDesClipsTest {
 
     /// Une annotation de cas **réelle** : en tête de ligne, hors commentaire et hors littéral.
     ///
-    /// ⚠️ On ne cherche PAS la méthode par une expression rationnelle qui traverserait les annotations
+    /// On ne cherche PAS la méthode par une expression rationnelle qui traverserait les annotations
     /// intermédiaires. La première version le faisait, et un `@DisplayName` contenant une parenthèse
     /// suffisait à la faire échouer **en silence** : le garde inspectait 50 cas sur 54 et se déclarait
     /// vert. Un garde qui en regarde moins qu'il n'annonce est exactement ce que ce chantier combat.
@@ -57,7 +57,7 @@ class RespirationDesClipsTest {
 
     /// Le nom d'une méthode : le dernier identifiant avant la parenthèse ouvrante.
     ///
-    /// ⚠️ On n'exige PAS l'accolade sur la même ligne. Une signature longue est repliée par le
+    /// On n'exige PAS l'accolade sur la même ligne. Une signature longue est repliée par le
     /// formateur - `void le_bandeau_dit_l_identite_du_carre(FxRobot robot) throws TimeoutException {`
     /// tient sur une ligne, d'autres non - et l'exiger faisait échouer la lecture sur des cas
     /// parfaitement ordinaires.
@@ -69,7 +69,7 @@ class RespirationDesClipsTest {
 
     /// N'importe quelle méthode du fichier, pour suivre un temps d'arrêt posé dans un utilitaire.
     ///
-    /// ⚠️ Le nom accepte les **majuscules**. La première version ne prenait que `[a-z_0-9]`, ce qui
+    /// Le nom accepte les **majuscules**. La première version ne prenait que `[a-z_0-9]`, ce qui
     /// suffisait pour les méthodes de test - elles sont en `serpent_minuscule` - et manquait TOUS les
     /// utilitaires, qui sont en `casseChameau`. Le garde déclarait alors muets neuf cas qui posaient
     /// leur arrêt dans `verifierLeCarre` ou `jouerLaConnexion`.
@@ -98,7 +98,7 @@ class RespirationDesClipsTest {
             }
         }
 
-        // ⚠️ Le garde dit combien de cas il a regardés, et refuse d'en perdre en route. Sans ce
+        // Le garde dit combien de cas il a regardés, et refuse d'en perdre en route. Sans ce
         // recoupement, une annotation qu'il ne sait pas lire le rend VERT sur un cas qu'il n'a pas vu.
         assertThat(inspectes)
                 .as("le garde n'a inspecté aucun cas : il ne garde plus rien")
@@ -133,7 +133,7 @@ class RespirationDesClipsTest {
             if (!lignes[i].strip().startsWith(ANNOTATION)) {
                 continue;
             }
-            // ⚠️ On saute l'annotation en suivant ses PARENTHÈSES, pas ses lignes. Une annotation
+            // On saute l'annotation en suivant ses PARENTHÈSES, pas ses lignes. Une annotation
             // repliée sur cinq lignes - `@CasDeRecette(value = …, portee = …, reserve = …)` - a des
             // lignes de continuation qui ressemblent à tout sauf à une annotation, et un filtre
             // ligne à ligne prenait la première pour une déclaration de méthode (#4158).
@@ -201,7 +201,7 @@ class RespirationDesClipsTest {
 
     /// Les méthodes qui s'arrêtent, **directement ou par un utilitaire du même fichier**.
     ///
-    /// ⚠️ L'indirection compte : six cas de `ModaleSiteVerifierCarreViewTest` posent leur arrêt dans
+    /// L'indirection compte : six cas de `ModaleSiteVerifierCarreViewTest` posent leur arrêt dans
     /// `verifierLeCarre`, et un garde qui ne regarderait que le corps du test les déclarerait muets.
     private static Set<String> methodesQuiRespirent(Map<String, String> corps) {
         Set<String> directes = new LinkedHashSet<>();

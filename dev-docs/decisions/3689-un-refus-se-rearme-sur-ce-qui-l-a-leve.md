@@ -24,7 +24,7 @@ Mais **rien ne les réarme**. Seule une tentative réussie effaçait le drapeau 
 tentative qu'on n'offre plus. Une nuit dont toutes les archives ont été refusées reste donc coincée,
 sans recours et sans que rien ne le dise.
 
-⚠️ L'issue avait anticipé ce moment : « c'est acceptable aujourd'hui, parce que la reprise est encore
+L'issue avait anticipé ce moment : « c'est acceptable aujourd'hui, parce que la reprise est encore
 offerte ; ça ne le sera plus le jour où elle cessera de l'être ». #3687 est ce jour-là.
 
 ## Les trois pistes écartées
@@ -62,7 +62,7 @@ Distinguer les deux familles demandait donc une **colonne** (`cause_refus`, migr
 l'émission depuis le statut HTTP. C'est une migration et un champ de plus ; c'était l'arbitrage, et il a
 été pris explicitement plutôt que contourné par une lecture de chaîne.
 
-⚠️ Une **colonne** et non un statut, pour la raison que V39 développe déjà : `restantes()` rend « tout
+Une **colonne** et non un statut, pour la raison que V39 développe déjà : `restantes()` rend « tout
 sauf déposé », et `toutesDeposees()` vaut « `restantes()` est vide ». Un statut ferait basculer le
 passage en DÉPOSÉ alors qu'il manque des sons.
 
@@ -99,7 +99,7 @@ mécanisme ne remet à zéro. Il ne vaut **pas** pour l'unité, qui repart au d�
 Mesuré par `DepotVigieChiroTest#un_refus_definitif_repart_au_depot_suivant` : un 422, puis une archive
 régénérée que la plateforme accepte, et l'unité passe DÉPOSÉ au second dépôt.
 
-⚠️ **Ce que #3687 a retiré, c'est la PROMESSE d'une reprise, pas la POSSIBILITÉ d'un nouvel essai.**
+**Ce que #3687 a retiré, c'est la PROMESSE d'une reprise, pas la POSSIBILITÉ d'un nouvel essai.**
 Confondre les deux a produit une issue, un avertissement faux dans la documentation utilisateur, et
 une assertion de test qui verrouillait la confusion - tous trois corrigés par #3946.
 

@@ -102,7 +102,7 @@ class SiteEditPorteeTest {
     @Test
     @DisplayName("#1380 : une déclaration ne parle pas de portée")
     void creation_ne_dit_rien() {
-        // ⚠️ Ce cas prouvait la portée effacée en **rejouant** `preparerCreation` sur une instance déjà
+        // Ce cas prouvait la portée effacée en **rejouant** `preparerCreation` sur une instance déjà
         // passée par l'édition. Ce chemin est refusé depuis #3801 : la modale est mono-usage, et son
         // refus est éprouvé par `SiteEditCycleDeVieTest`. Ce qui reste à garantir ici est le fait
         // lui-même - une déclaration ne parle pas de portée -, et il se lit sur un ViewModel neuf,

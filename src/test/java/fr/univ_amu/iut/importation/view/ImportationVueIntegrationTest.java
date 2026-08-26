@@ -240,7 +240,7 @@ class ImportationVueIntegrationTest {
         assertThat(robot.lookup("#boutonOuvrirNuit").queryAs(Button.class).isVisible())
                 .isFalse();
 
-        // ⚠️ Amener le bouton DANS LE CADRE avant de cliquer. Le chrome monte le contenu dans un
+        // Amener le bouton DANS LE CADRE avant de cliquer. Le chrome monte le contenu dans un
         // `ScrollPane` permanent, et l'assistant d'import est plus haut que la scène de ce test : le
         // bouton existe, il est `visible`, et il est simplement sous le bord. TestFX refuse alors de
         // cliquer - « returned 1 nodes, but no nodes were visible » - ce qui se lit comme une absence

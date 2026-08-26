@@ -537,12 +537,12 @@ et `SequenceDao#findParIds` - et rendent leur résultat **déjà groupé**. Quan
 ligne par entité (journal, relevé, commune, rapprochement), un `findAll()` indexé en mémoire suffit :
 c'est ce que fait `ContexteAudit` pour l'audit complet, et `RegistrePassages` côté CLI depuis l'origine.
 
-⚠️ **Les lectures par identifiants passent par `LotsDeParametres.decouper`.** SQLite refuse au-delà de
+**Les lectures par identifiants passent par `LotsDeParametres.decouper`.** SQLite refuse au-delà de
 quelques centaines de paramètres liés : sans découpage, un inventaire un peu large ferait **échouer**
 l'appel là où la boucle, elle, marchait. Un remède contre la lenteur ne doit pas introduire un défaut de
 justesse.
 
-⚠️ **Ce qui ne se lit pas par lot** : les tables de **volume** (originaux, séquences d'écoute) restent
+**Ce qui ne se lit pas par lot** : les tables de **volume** (originaux, séquences d'écoute) restent
 lues par session. Une nuit en porte des milliers ; les charger d'un bloc échangerait un défaut de
 lenteur contre un défaut de mémoire.
 
@@ -783,7 +783,7 @@ fichier tronqué**. Deux points d'entrée, et le choix dit ce qu'on écrit :
 - `ecrireSecret(cible, contenu)` pour un secret : le temporaire est **créé d'emblée** restreint au
   propriétaire, donc le secret n'existe à aucun instant dans un fichier plus permissif que lui.
 
-⚠️ **Sur les JDK actuels, les deux donnent le même fichier**, et c'est mesuré : `Files.createTempFile`
+**Sur les JDK actuels, les deux donnent le même fichier**, et c'est mesuré : `Files.createTempFile`
 sans attribut crée déjà `rw-------`. Ce qui les distingue est la **garantie**, pas le résultat observé -
 `ecrireSecret` l'exige et la garderait si le JDK changeait son défaut. C'est aussi pourquoi PIT ne peut
 pas distinguer les deux chemins : équivalence par construction, pas couverture manquante.
@@ -859,7 +859,7 @@ puisque le point est qualifié par lui.
 clés : un écran qui rend compte d'un critère qu'il n'offre pas nomme précisément celles qu'il ne
 connaît pas.
 
-⚠️ Un catalogue ne réécrit **jamais** une clé partagée en littéral : `ClesCriteresTest` le refuse. Sans
+Un catalogue ne réécrit **jamais** une clé partagée en littéral : `ClesCriteresTest` le refuse. Sans
 cette garde, un cinquième écran nommerait « lieux » ce que quatre autres nomment « lieu », ou deux
 écrans nommeraient deux concepts « statut » - ce qui était arrivé.
 
@@ -873,7 +873,7 @@ le compte rendu de restauration deviendrait muet sur de vraies clés inconnues.
 Depuis #3095, la liste de valeurs d'une puce se calcule sur les lignes que les **autres** critères
 laissent passer, via `Filtres.saufLui(cle)`, et se recalcule **à l'ouverture** du menu.
 
-⚠️ **Le piège** : passer la `FilteredList` de l'écran fait s'auto-effondrer la puce. Cette liste est
+**Le piège** : passer la `FilteredList` de l'écran fait s'auto-effondrer la puce. Cette liste est
 déjà filtrée par **tous** les critères, y compris celui qu'on peuple : une fois « Aix » coché, le menu
 n'offrirait plus qu'« Aix », et l'on ne pourrait jamais cocher une seconde commune. Un critère à
 domaine consomme donc `saufLui`, jamais la liste affichée.
@@ -929,7 +929,7 @@ la ligne de commande **et** par un catalogue d'écran ; un catalogue de `view` q
 copie finirait par diverger - c'est arrivé le jour même où #3219 a ajouté la recherche par nom de carré
 à « Ma saison ».
 
-⚠️ La comparaison de texte insensible à la casse et aux accents vit dans
+La comparaison de texte insensible à la casse et aux accents vit dans
 `commun.model.NormalisationTexte.contient`, et nulle part ailleurs. Six catalogues en avaient
 re-déclaré une copie privée identique - dont deux écrites par ce chantier même. La méthode partagée
 **normalise elle-même** l'aiguille et refuse une aiguille **vide**, là où les copies laissaient tout
@@ -950,7 +950,7 @@ distinctes** :
 « Activité de la nuit » **aucune** - c'est un graphe. Une mémoire unique aurait confondu les trois
 tables de l'analyse et réclamé une table à un écran qui n'en a pas.
 
-⚠️ La restauration des filtres **rend compte** de ce qu'elle n'a pas su replacer : c'est le chemin le
+La restauration des filtres **rend compte** de ce qu'elle n'a pas su replacer : c'est le chemin le
 plus discret des trois, puisque personne n'a rien demandé
 ([ADR 3093](decisions/3093-une-restauration-rend-compte-de-deux-causes.md)).
 
@@ -964,7 +964,7 @@ réouverture, et le bouton paraît n'avoir pas pris.
 Un écran sans table (« Activité de la nuit ») n'efface évidemment pas de tri, et son `accessibleText`
 le dit : « Effacer tous les filtres », sans « et le tri ».
 
-⚠️ « Carte & passages » a porté le libellé « Réinitialiser » jusqu'à la clôture de #3092 - le geste y
+« Carte & passages » a porté le libellé « Réinitialiser » jusqu'à la clôture de #3092 - le geste y
 était pourtant déjà identique. C'est l'écran **d'origine** du geste, resté sous l'ancien nom quand il
 s'est généralisé : un cas d'école de divergence par ancienneté, qu'aucun test ne signale.
 
@@ -992,7 +992,7 @@ Une réserve, que le tableau ne montre pas : le critère **Lieu** a trois dimens
 carré, point) et **deux** en ligne de commande, un code de point seul désignant autant de lieux qu'il y
 a de carrés. Écart assumé, porté par la clôture de #3151.
 
-⚠️ **Lire l'inventaire dans les deux sens.** La question habituelle - *chaque critère de l'écran a-t-il
+**Lire l'inventaire dans les deux sens.** La question habituelle - *chaque critère de l'écran a-t-il
 son option ?* - rate par construction l'asymétrie inverse. C'est ainsi qu'on a trouvé
 `lister-observations --certitude`, qui filtrait sans que l'écran offre la puce correspondante (#3336,
 livrée : Sons & validation passe de 10 à 11 critères). Rien ne dit que ce soit la dernière.
@@ -1012,7 +1012,7 @@ sixième écran :
 
 - **Ses clés restent chez lui.** `gravite`, `categorie` et `passage` ne sont partagées avec aucun autre
   écran : elles vivent dans `CriteresAudit`, pas dans `ClesCriteres`, dont le contrat ne porte que les
-  clés réellement communes. ⚠️ `categorie` n'a **rien à voir** avec le `groupe` taxonomique des autres
+  clés réellement communes. `categorie` n'a **rien à voir** avec le `groupe` taxonomique des autres
   écrans - c'est précisément la collision que `ClesCriteres` existe pour empêcher.
 - **Un écran doit pouvoir rendre compte avant de recevoir des filtres.** Celui-ci n'avait aucun bandeau
   de retour. Le lui ajouter n'était pas de la décoration : sans lui, la mémoire de session aurait remis
@@ -1116,7 +1116,7 @@ un changement fait paraître du contenu ; la fenêtre s'ajuste à chacune. À po
 `Modales.fermerParEchap`, qui répond à la même histoire (un comportement transverse que chaque modale
 réinventait).
 
-⚠️ **Ajuster, oui ; figer, non.** L'implémentation appelle `sizeToScene()` et **rien d'autre**. Une version
+**Ajuster, oui ; figer, non.** L'implémentation appelle `sizeToScene()` et **rien d'autre**. Une version
 qui gardait `max(taille avant, taille après)` pour « ne jamais rétrécir » a fait passer le `Stage` en
 dimensionnement **explicite** : il cesse alors définitivement de s'ajuster à ses scènes suivantes. Sans
 effet pour une modale que l'on jette après usage - mais le `Stage` du harnais TestFX est **partagé par
@@ -1326,7 +1326,7 @@ analyse, fiche site, qualification) sur un socle `commun/view`.
   [`Habillage`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/Habillage.java)
   (plus de CSS de statut recopié par feature).
 
-    ⚠️ **Le mécanisme est `Habillage`, pas la déclaration du FXML.** Cette page a longtemps écrit
+    **Le mécanisme est `Habillage`, pas la déclaration du FXML.** Cette page a longtemps écrit
     « chargée par tous les FXML » : c'était vrai à 23 exemplaires sur 24, et surtout ça désignait le
     mauvais endroit. L'[ADR 3374](decisions/3374-une-fenetre-porte-son-habillage-ou-elle-n-est-pas-le-produit.md)
     écarte explicitement la déclaration par FXML, qui « se serait défaite au onzième ». La plupart des
@@ -1444,7 +1444,7 @@ réparé.
   (`ContrasteVueAudioTest`). WCAG §1.4.11 accepte que le contraste vienne de la surface **ou** du
   contour : le test retient `max(surface, contour)`, sans quoi il refuserait une correction valide.
 
-⚠️ **C'est un dépassement assumé de l'[ADR 0046](decisions/0046-une-classe-css-a-une-seule-feuille.md)**
+**C'est un dépassement assumé de l'[ADR 0046](decisions/0046-une-classe-css-a-une-seule-feuille.md)**
 (« une classe CSS se définit dans une seule feuille »), et **son garde ne peut pas le voir** :
 `DoublonsFeuillesDeStyleTest` balaie `src/main/java/fr/univ_amu/iut`, or la feuille tierce vit dans un
 jar. Sans l'ADR, ce dépassement ne laisserait **aucune trace**. Le remède de 0046 - désambiguïser les
@@ -1582,7 +1582,7 @@ les mélange finit par mentir. L'EPIC #1870 a migré onze écrans et en a trouv�
 | **Compte rendu chiffré** | ce qui *vient de se passer* d'une **opération lourde**, en **proportions** | `CompteRenduChiffre` + `PanneauCompteRendu`, dans sa propre zone | non, il se remplace |
 | **Travail en cours** | ce qui *se passe* | barre de progression, `IndicateurOccupation`, barre de statut | sans objet |
 
-⚠ **Le mot « compte rendu » a changé de sens** avec l'[ADR 0031](decisions/0031-un-retour-n-est-pas-un-compte-rendu.md). Il désignait ici ce qui s'appelle désormais **retour d'opération**. Le critère qui les sépare n'est pas la longueur actuelle mais l'**extensibilité** : un message qui concatène une partie variable est déjà un compte rendu, et un compte rendu n'a **jamais** sa place dans un bandeau - l'y loger revient à le tronquer.
+**Le mot « compte rendu » a changé de sens** avec l'[ADR 0031](decisions/0031-un-retour-n-est-pas-un-compte-rendu.md). Il désignait ici ce qui s'appelle désormais **retour d'opération**. Le critère qui les sépare n'est pas la longueur actuelle mais l'**extensibilité** : un message qui concatène une partie variable est déjà un compte rendu, et un compte rendu n'a **jamais** sa place dans un bandeau - l'y loger revient à le tronquer.
 
 **Comment choisir.** Si ce qu'il y a à dire peut grandir - une liste de refus, de fichiers, de passages -
 c'est un compte rendu. Si c'est une phrase dont la forme est connue d'avance, c'est un retour.
@@ -1599,7 +1599,7 @@ La règle est donc : **ce qui vient d'ailleurs se borne à sa porte d'entrée**,
 endroit où on peut l'enrichir. `RetourOperation.erreur(Throwable)` ajoute le geste attendu (ADR 2635)
 puis borne ; `erreur(String)` laisse passer entier, parce que nous l'avons écrit.
 
-⚠ **Passer `refus.getMessage()` contourne les deux.** C'est ce que faisaient dix-sept appels, dont
+**Passer `refus.getMessage()` contourne les deux.** C'est ce que faisaient dix-sept appels, dont
 quatorze perdaient au passage le « où le régler ». `MessageExterneBorneTest` refuse désormais cette
 forme, en lisant le source. Voir [ADR 2802](decisions/2802-un-texte-qu-on-n-a-pas-ecrit-se-borne-a-son-entree.md).
 
@@ -1890,12 +1890,12 @@ que la précédente n'est pas appliquée. Deux cent cinquante signaux, un révei
 au lieu d'une vigilance dans chaque appelant. Voir
 [ADR 3537](decisions/3537-un-signal-se-pose-a-l-ecriture.md).
 
-⚠️ **Ce qui émet, et ce qui n'émet pas.** Seules les mutations **structurelles** : celles qui peuvent
+**Ce qui émet, et ce qui n'émet pas.** Seules les mutations **structurelles** : celles qui peuvent
 changer l'inventaire affiché (sites, points, passages, observations). Une validation, un verdict, une
 disposition de colonnes ne changent aucun de ces nombres, et les annoncer ferait relire quatre
 `COUNT(*)` pour un affichage identique.
 
-⚠️ **Un `grep` ne suffit pas à trouver les écritures.** Deux inventaires successifs en ont manqué :
+**Un `grep` ne suffit pas à trouver les écritures.** Deux inventaires successifs en ont manqué :
 `CreationPassageArchive` nomme son DAO sur une ligne et appelle `insert` sur la suivante ;
 `MoteurImport` écrit le passage en **SQL brut**, hors de `PassageDao`. C'est le même constat que
 l'[ADR 3498](decisions/3498-la-declaration-porte-sur-les-lectrices.md) fait sur les commandes CLI :
@@ -1919,13 +1919,13 @@ Il ne connaît ni `RevisionDonnees`, ni écouteur, ni `addListener` : le `Naviga
 quand l'étape entre dans l'historique et le **rend** quand elle en sort, au même endroit que
 [`AuDepartEcran`](navigation.md#les-contrats-optionnels-dun-ecran).
 
-⚠️ **Pourquoi le cycle a quitté les écrans.** Les cinq premiers l'ont porté eux-mêmes : un champ
+**Pourquoi le cycle a quitté les écrans.** Les cinq premiers l'ont porté eux-mêmes : un champ
 `ChangeListener`, un `addListener`, un `removeListener`. Trois lignes, cinq fois, dont **une seule**
 empêchait une fuite : `RevisionDonnees` est un singleton, un écran ne l'est pas, et un abonnement non
 rendu survit à sa vue. Un cycle de vie qu'on peut oublier est un cycle de vie mal placé. Le
 `Navigateur` porte déjà celui des quatre autres contrats ; celui-ci l'a rejoint.
 
-⚠️ **L'abonnement se repère par la VUE, pas par l'étape.** Une étape est un record remplaçable :
+**L'abonnement se repère par la VUE, pas par l'étape.** Une étape est un record remplaçable :
 `actualiserLibelleCourant` (#1213) la remplace par sa jumelle relibellée, un `setAll` retire puis
 replace l'accueil. Dans les deux cas l'écran n'a pas bougé, et ré-abonner ferait relire la base deux
 fois pour un seul import (`NavigateurTest#relibeller_ne_reabonne_pas`).
@@ -1981,14 +1981,14 @@ etatConnexion.ifPresent(etat ->
         etat.connecteProperty().addListener((obs, avant, apres) -> rafraichirDepuisLaDonnee()));
 ```
 
-⚠️ **`Optional` chez les consommateurs, et non chez l'émetteur.** La source de vérité
+**`Optional` chez les consommateurs, et non chez l'émetteur.** La source de vérité
 (`FournisseurToken`) n'est liée que par `ConnexionModule` : un injecteur partiel (outils de capture) n'a
 aucun jeton, et « pas d'état de connexion » y est la réponse juste - un geste qui touche la plateforme
 s'y ferme, ce qui est prudent. La modale de connexion, elle, **exige** le reflet : elle ne s'ouvre que
 là où le module est chargé, et un `ifPresent` silencieux y rendrait l'application muette sur l'arrivée
 du jeton sans que rien ne rougisse.
 
-⚠️ **`OptionalBinder` veut un port, pas une classe concrète.** `newOptionalBinder(binder(), X.class)`
+**`OptionalBinder` veut un port, pas une classe concrète.** `newOptionalBinder(binder(), X.class)`
 suivi de `setBinding().to(X.class)` fait pointer la liaison sur elle-même, et Guice refuse de démarrer.
 C'est la raison de la paire port/implémentation ici, et non un goût pour les interfaces.
 
@@ -2009,11 +2009,11 @@ la photo.
 Une propriété porte l'état, le contrôle s'y lie (`disableProperty().bind(...)`,
 `VisibiliteGeree.lier(...)`), et ce qui l'alimente est réinterrogé au bon moment.
 
-⚠️ **Ne pas dériver l'état de ce qui est affiché.** Avant « Appliquer », les chemins sélectionnés ne
+**Ne pas dériver l'état de ce qui est affiché.** Avant « Appliquer », les chemins sélectionnés ne
 sont pas encore la configuration persistée : un bouton lié à eux s'allumerait sur une **intention**.
 Ce qui décide, c'est ce qui a été **écrit** (#3543).
 
-⚠️ **Recalculer ne doit pas défaire un choix de l'utilisateur** ([ADR 3095](decisions/3095-un-domaine-se-calcule-sans-son-propre-critere.md)).
+**Recalculer ne doit pas défaire un choix de l'utilisateur** ([ADR 3095](decisions/3095-un-domaine-se-calcule-sans-son-propre-critere.md)).
 Repeupler la liste d'un `ComboBox` par `clear()` puis `addAll()` remet sa valeur à `null`, et une
 liaison bidirectionnelle propage ce `null` jusqu'au ViewModel : le filtre disparaît à chaque retour
 sur l'écran. `setAll` remplace le contenu sans passer par la liste vide (#3544).
@@ -2109,7 +2109,7 @@ n'a franchi aucune des étapes ci-dessus, elle est arrivée par une autre porte.
 rend son audio. `suivant(RECUPERE)` est **vide** : sa suite dépend d'un événement, pas d'une place dans la
 file. Voir [ADR 2581](decisions/2581-un-etat-qui-decide-de-l-affichage-se-declare.md).
 
-⚠️ **Le rang de tri n'est pas l'`ordinal()`.** `RECUPERE` est déclaré **en dernier** dans l'énum, pour ne
+**Le rang de tri n'est pas l'`ordinal()`.** `RECUPERE` est déclaré **en dernier** dans l'énum, pour ne
 pas décaler les comparaisons existantes (« au moins vérifié »). Trier sur `ordinal()` le rangerait donc
 après « Déposé », par pur effet de bord de ce choix : `StatutWorkflow.rangDeProgression()` existe pour ça.
 
@@ -2147,11 +2147,11 @@ raison. Il ne cesse de l'être que le jour où l'ordre des écritures change.
 appelle**. C'est là que les trois défauts du chantier #3536 se cachaient : le calcul était une référence
 de méthode, et la lecture deux niveaux plus bas.
 
-⚠️ **Une lambda qui lit un champ n'a pas une dépendance manquante**, elle a une dépendance **absente du
+**Une lambda qui lit un champ n'a pas une dépendance manquante**, elle a une dépendance **absente du
 modèle**. Les deux se ressemblent à la lecture, et le remède diffère : rendre la valeur observable, puis
 la déclarer. Trois écrans y sont passés (#3548), un quatrième ensuite (#3752).
 
-⚠️ **Attention aux valeurs constantes reposées.** `comptage.set(ComptageAudio.VIDE)` sur une propriété
+**Attention aux valeurs constantes reposées.** `comptage.set(ComptageAudio.VIDE)` sur une propriété
 qui vaut déjà cette **instance** n'émet rien : `ObjectPropertyBase.set` compare par référence. Un chemin
 d'erreur qui « réinitialise » peut donc n'invalider **aucune** de ses dépendances déclarées.
 

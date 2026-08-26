@@ -149,18 +149,18 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
         // Bouton relâché par binding sur l'occupation (#1254) : plus de setDisable posé à la main de
         // part et d'autre du travail, plus de bouton figé si le travail échoue.
-        // ⚠️ Fermé aussi TANT QU'AUCUN JETON n'est disponible (#4194). Sans cela le geste était offert,
+        // Fermé aussi TANT QU'AUCUN JETON n'est disponible (#4194). Sans cela le geste était offert,
         // ouvrait son dialogue de progression, ne rapatriait rien - `RapprochementSites` rend
         // `Optional.empty()` sur `NonConnecte` - et l'écran ne disait pas pourquoi. C'est exactement ce
         // que l'affordance #789 refuse : on EMPÊCHE, au lieu d'avertir après coup. La commande voisine
         // « Ouvrir sur Vigie-Chiro », sur la fiche du site, l'appliquait déjà.
         //
-        // ⚠️ Et l'écran SUIT le jeton (#4205) : la question se LIE, elle ne se relit pas à chaque
+        // Et l'écran SUIT le jeton (#4205) : la question se LIE, elle ne se relit pas à chaque
         // chargement. Le motif conseille « Connectez-vous depuis le menu principal » ; on suivait ce
         // conseil, on revenait, et le bouton répétait le même conseil, faute d'un chargement pour le
         // relire. Un écran qui donne un conseil doit voir qu'on l'a suivi.
         //
-        // ⚠️ Et c'est le MÊME lecteur que les deux autres écrans qui ferment un geste de plateforme
+        // Et c'est le MÊME lecteur que les deux autres écrans qui ferment un geste de plateforme
         // (la fiche, la modale de carré). La réponse passait ici par `SitesViewModel.connecte` →
         // `SynchronisationSites.estConnecte()` → le client : trois maillons pour une question à
         // laquelle `EtatConnexion` répond, et un instantané là où il faut une liaison.
@@ -186,7 +186,7 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
     /// d'avant. `CarteSite` porte trois compteurs et le site lui-même - nom, carré, protocole - donc
     /// tout y est périssable (#3644).
     ///
-    /// ⚠️ Ce contrat-ci est **nécessaire même quand [#rafraichirDepuisLaDonnee()] existe** : renommer un
+    /// Ce contrat-ci est **nécessaire même quand [#rafraichirDepuisLaDonnee()] existe** : renommer un
     /// site est un `update`, aucun des quatre comptes de l'accueil ne bouge, et rien n'annonce - c'est
     /// l'ADR 3840. Les deux ne sont pas redondants ; retirer celui-ci casserait la fraîcheur en silence.
     @Override
@@ -243,7 +243,7 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
     /// l'ADR 0023 réserve le modal à l'irréversible. Le résultat porte déjà le message **et** la
     /// sévérité : rien n'est décidé ici de ce qui doit être dit, ni de quelle couleur.
     ///
-    /// ⚠️ **Aucun rafraîchissement ici**, et ce n'est pas un oubli. Cet écran déclare [SuitLaRevision] :
+    /// **Aucun rafraîchissement ici**, et ce n'est pas un oubli. Cet écran déclare [SuitLaRevision] :
     /// le `Navigateur` le recharge dès qu'un `insert` est validé, et un rapatriement en fait deux, le
     /// carré et ses points. Une première version rappelait `rafraichir()` par prudence ; le test est
     /// resté vert quand on l'a retirée, ce qui a montré que le mécanisme du socle suffisait. Doubler un

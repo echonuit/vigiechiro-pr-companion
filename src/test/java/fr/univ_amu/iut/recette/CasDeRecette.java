@@ -60,7 +60,7 @@ public @interface CasDeRecette {
 
     /// **Où se lit le verdict** du cas, et donc ce qu'un clip peut en prouver.
     ///
-    /// ⚠️ **Sans valeur par défaut, et c'est délibéré.** Le [Jugement] en porte une parce qu'une
+    /// **Sans valeur par défaut, et c'est délibéré.** Le [Jugement] en porte une parce qu'une
     /// seconde source - la marque `*perceptif*` du script - vient la contredire quand elle est
     /// fausse. La portée n'a pas cette seconde source : un défaut la rendrait invisible, et la
     /// question ne se poserait plus jamais. C'est donc le **compilateur** qui la pose, à l'écriture

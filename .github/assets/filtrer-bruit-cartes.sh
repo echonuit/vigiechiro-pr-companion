@@ -27,7 +27,7 @@
 # C'est strictement mieux que le seuil : avec lui, un diff sur ces fichiers n'était un signal nulle
 # part ; avec le masque, il redevient un signal **partout sauf dans le rectangle de la carte**.
 #
-# ⚠️ Ce que le masque ne voit pas : un changement **à l'intérieur** de la carte - un marqueur déplacé,
+# Ce que le masque ne voit pas : un changement **à l'intérieur** de la carte - un marqueur déplacé,
 # un carré recoloré. C'est le prix, et c'est l'arbitrage déjà écrit dans l'ADR 3068 (« sur ces
 # fichiers, la revue se fait à l'œil, pas au `cmp` ») - sauf qu'il ne porte désormais que sur le
 # rectangle, et non sur toute l'image.
@@ -79,7 +79,7 @@ if [ "${1:-}" = "--auto-test" ]; then
 
     # Le compte des cas et de ceux qui DOIVENT être gardés (#3886).
     #
-    # ⚠️ « Rougir » ne veut rien dire ici : ce script n'est pas un garde qui refuse, c'est un FILTRE
+    # « Rougir » ne veut rien dire ici : ce script n'est pas un garde qui refuse, c'est un FILTRE
     # qui distingue le bruit d'un vrai changement. Son équivalent du rouge est `gardee` - le
     # changement compte et ne doit pas être avalé. Plaquer le vocabulaire des autres auto-tests
     # rendrait la ligne fausse en la rendant uniforme.
@@ -112,7 +112,7 @@ if [ "${1:-}" = "--auto-test" ]; then
         "${bac}/depot/.github/assets/apercu-test-carte.png"
     verifie gardee "du bruit de carte NE MASQUE PAS un changement hors carte"
 
-    # ⚠️ Le compte se DÉRIVE. Cette ligne disait « les trois cas passent » en toutes lettres : elle
+    # Le compte se DÉRIVE. Cette ligne disait « les trois cas passent » en toutes lettres : elle
     # aurait continué à le dire sur un quatrième cas.
     echo
     echo "${cas} cas, dont ${gardes} où le changement DOIT être gardé."
@@ -169,7 +169,7 @@ fi
 # regroupe tous les outils sous `magick`, la **6** - celle du paquet `imagemagick` d'Ubuntu 24.04, donc
 # du runner - expose `compare` et `convert` comme commandes propres, et n'a pas de `magick`.
 #
-# ⚠️ La première version de ce script exigeait `magick` : elle passait sur un poste en ImageMagick 7 et
+# La première version de ce script exigeait `magick` : elle passait sur un poste en ImageMagick 7 et
 # échouait en CI. Le garde était juste, l'exigence non (#3370).
 if command -v magick > /dev/null 2>&1; then
   comparer() { magick compare "$@"; }

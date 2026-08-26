@@ -123,7 +123,7 @@ importer_une_nuit_sur_a() {
   # test vérifie, c'est qu'il ne gêne personne ensuite, et que le fichier nomme bien un occupant :
   # c'est de ce fichier que se tire le message affiché à qui se voit refuser l'entrée.
   #
-  # ⚠️ Il ne prouve PAS que close() relâche le verrou : le système le relâche de toute façon à la mort
+  # Il ne prouve PAS que close() relâche le verrou : le système le relâche de toute façon à la mort
   # du processus. C'est VerrouWorkspaceTest, dans une seule JVM où le système n'aide pas, qui le
   # prouve. Un test bats qui s'en attribuerait le mérite serait un faux témoin.
   run cli_sur "${MACHINE_A}" lister-sites

@@ -111,7 +111,7 @@ public class MultisiteViewModel {
     /// le fournit est **composé** dans cette application. La vue n'offre l'action que dans ce cas
     /// (sinon, il n'y a rien à interroger).
     ///
-    /// ⚠️ Ce n'est **pas** un état de session : la valeur est fixée à la construction de l'injecteur et
+    /// Ce n'est **pas** un état de session : la valeur est fixée à la construction de l'injecteur et
     /// ne bouge plus. Le mot « connecté » figurait ici et se lisait comme le contraire (#3545).
     public boolean releveAnalysesDisponible() {
         return suivi.isPresent();

@@ -209,7 +209,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
     juge des deux côtés, aucune règle n'est réécrite. C'est l'écran de pilotage de la saison, donc celui
     qu'un script de suivi veut interroger.
 
-    ⚠️ `--analyse` porte un état **déduit**, jamais lu en base. Et une base sans aucun passage le dit
+    `--analyse` porte un état **déduit**, jamais lu en base. Et une base sans aucun passage le dit
     **avant** tout filtrage, sinon `--lieu` refuserait le lieu là où la vérité est qu'il n'y a rien
     ([ADR 3269](https://companion-dev.echonuit.fr/decisions/3269-un-ensemble-vide-se-constate-avant-de-filtrer/)).
 

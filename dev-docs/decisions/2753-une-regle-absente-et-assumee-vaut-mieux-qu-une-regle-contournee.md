@@ -19,7 +19,7 @@ verified:
 Ce dépôt a **un mainteneur**. Mesuré sur les quarante dernières PR : 25 fusionnées par une personne,
 15 par un bot. `CODEOWNERS` se réduit à `* @nedseb`.
 
-⚠️ Et une mesure a recadré le constat d'origine. L'issue supposait que les chemins sensibles
+Et une mesure a recadré le constat d'origine. L'issue supposait que les chemins sensibles
 « fusionnent avec la même revue que le reste ». En réalité :
 
 ```
@@ -53,7 +53,7 @@ par semaine. Le gabarit de PR y consacre une section - avec « sans objet » com
 Elle ne bloque rien, et ce n'est pas un demi-remède : elle se lit **au moment où l'on agit**, ce qu'une
 protection de branche ne fait pas.
 
-⚠️ **Écarté : un garde automatique** qui aurait exigé une preuve dans le corps de la PR. Il aurait été
+**Écarté : un garde automatique** qui aurait exigé une preuve dans le corps de la PR. Il aurait été
 plus dur à contourner, mais serait devenu un **dispositif de plus à surveiller**, avec son autotest et
 sa non-vacuité - exactement ce contre quoi
 [l'ADR 2748](2748-un-dispositif-qui-peut-ne-rien-verifier-le-dit.md) met en garde. À un mainteneur, le

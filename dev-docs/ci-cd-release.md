@@ -11,8 +11,8 @@ publication.
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `paquet` | push `main` + PR | Assemblage du fat-jar (`package -DskipTests`), smoke-test, idempotence, app-image, puis **E2E CLI bats sur le lanceur empaqueté**. **En parallèle** de `build` | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `second-compilateur` | push `main` + PR | Recompile **tout** avec le compilateur **Eclipse** (`-Pecj`), sans les tests : ce que `javac` accepte, un autre compilateur conforme ne l'accepte pas forcément (cf. plus bas). **En parallèle** des deux autres | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `fuseau-alternatif` | push `main` + PR | Rejoue **toute** la suite sous `America/Cayenne` : *ce que le produit calcule pour une nuit ne dépend pas du fuseau de la machine* ([ADR 3450](decisions/3450-une-propriete-de-fuseau-se-tient-en-rejouant-pas-en-relisant.md)). `TZ` passe par l'**environnement**, hérité des forks surefire, et `FuseauDExecutionTest` vérifie depuis l'intérieur que la zone est bien appliquée | **Oui** |
-| [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `duree-du-portail` | push `main` + PR | Compare la **médiane** des 12 dernières exécutions réussies sur `main` à celle des 12 d'avant, et **avertit** au-delà de 20 % d'écart. Une CI riche se dégrade par accumulation, jamais d'un coup : chaque ajout coûte trente secondes que personne ne remarque. ⚠️ Deux **médianes**, et non une exécution contre un seuil : sur trente exécutions, deux durent le double des autres, et un butoir aurait rougi sans qu'aucune PR soit fautive (#3508) | Non - il avertit |
-| [suite-sous-windows-et-macos.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/suite-sous-windows-et-macos.yml) | **hebdomadaire (mardi 6 h UTC)** + manuel | Lance la suite **entière** sous Windows et macOS, et **conclut** : rouge dès le premier échec, TestFX compté à part. Manuel jusqu'à #3526, le temps de savoir ce que la suite y donnait - 11 échecs sous Windows au premier relevé, 0 sous macOS. Programmé la **veille** du train de publication, dont il est désormais la condition (cf. plus bas). ⚠️ En manuel il peut être **ciblé** sur quelques classes (#3754, 2 min contre 48) : un passage ciblé sert à instruire, jamais à prouver | **Oui** |
+| [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `duree-du-portail` | push `main` + PR | Compare la **médiane** des 12 dernières exécutions réussies sur `main` à celle des 12 d'avant, et **avertit** au-delà de 20 % d'écart. Une CI riche se dégrade par accumulation, jamais d'un coup : chaque ajout coûte trente secondes que personne ne remarque. Deux **médianes**, et non une exécution contre un seuil : sur trente exécutions, deux durent le double des autres, et un butoir aurait rougi sans qu'aucune PR soit fautive (#3508) | Non - il avertit |
+| [suite-sous-windows-et-macos.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/suite-sous-windows-et-macos.yml) | **hebdomadaire (mardi 6 h UTC)** + manuel | Lance la suite **entière** sous Windows et macOS, et **conclut** : rouge dès le premier échec, TestFX compté à part. Manuel jusqu'à #3526, le temps de savoir ce que la suite y donnait - 11 échecs sous Windows au premier relevé, 0 sous macOS. Programmé la **veille** du train de publication, dont il est désormais la condition (cf. plus bas). En manuel il peut être **ciblé** sur quelques classes (#3754, 2 min contre 48) : un passage ciblé sert à instruire, jamais à prouver | **Oui** |
 | [lint.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml) | push `main` + PR | « Quality gate » (statique) : `spotless:check` + complétude des captures + `./mvnw -Pquality-gate compile pmd:check` (**PMD bloquant**) | **Oui** |
 | [docs.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/docs.yml) | push/PR sur la doc | Construit les **deux** sites MkDocs (`--strict`) ; déploie Pages (dormant tant que `ENABLE_PAGES` ≠ true) | Build oui |
 | [titre-pr.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/titre-pr.yml) | PR (dont `edited`) | Le **titre de la PR** suit Conventional Commits (c'est lui que semantic-release lira, cf. ci-dessous) | Non - **informatif**, et volontairement (cf. ci-dessous) |
@@ -20,16 +20,16 @@ publication.
 | [capture-vues.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/capture-vues.yml) | push `main` | Régénère les aperçus PNG (cf. [Captures](captures.md)) | — |
 | [release.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/release.yml) | **hebdomadaire (mercredi 6 h UTC)** + manuel | Version + Release + installeurs natifs (dormant tant que `ENABLE_RELEASE` ≠ true). Le **train de publication** depuis l'ADR 2744 - la ligne disait encore « push `main` » neuf jours après le changement. Ne part pas sans preuve fraîche des plateformes, sauf contournement écrit (cf. plus bas) | — |
 | [api-live.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/api-live.yml) | hebdomadaire (lundi) + manuel | Contrat de l'API Vigie-Chiro, **en lecture seule** ; sépare « jeton mort » (warning) de « contrat cassé » (rouge), et **rougit au bout de trois semaines sans vérification réelle** (cf. ci-dessous) | — |
-| [codeql.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/codeql.yml) | push `main` + PR + hebdomadaire (lundi 5 h UTC) | Analyse statique de sécurité **CodeQL** sur le code Java (cf. plus bas). ⚠️ Le `schedule` n'est pas décoratif : les requêtes CodeQL évoluent, donc **une base de code inchangée peut devenir signalable** sans qu'aucun commit l'ait touchée | **Oui** sur PR |
-| [securite-dependances.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/securite-dependances.yml) | hebdomadaire (lundi 6 h UTC) + PR sur `pom.xml` | Rapport de vulnérabilités des dépendances livrées (cf. plus bas). ⚠️ Le filtre de chemins inclut le workflow lui-même : une étape que **seul un `schedule` exerce** peut être fusionnée cassée, et ce chemin la fait tourner sur la PR qui la modifie | — |
+| [codeql.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/codeql.yml) | push `main` + PR + hebdomadaire (lundi 5 h UTC) | Analyse statique de sécurité **CodeQL** sur le code Java (cf. plus bas). Le `schedule` n'est pas décoratif : les requêtes CodeQL évoluent, donc **une base de code inchangée peut devenir signalable** sans qu'aucun commit l'ait touchée | **Oui** sur PR |
+| [securite-dependances.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/securite-dependances.yml) | hebdomadaire (lundi 6 h UTC) + PR sur `pom.xml` | Rapport de vulnérabilités des dépendances livrées (cf. plus bas). Le filtre de chemins inclut le workflow lui-même : une étape que **seul un `schedule` exerce** peut être fusionnée cassée, et ce chemin la fait tourner sur la PR qui la modifie | — |
 | [adr-rapport.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/adr-rapport.yml) | hebdomadaire + manuel | Rapport ADR (calibration des cliquets et des loupes) | — |
 | [mutation-model.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-model.yml) | quotidien (3 h UTC) + manuel | Mesure de mutation PIT sur **un paquet `model` par tour** (rotation sans état, cycle de 17 jours), **E2E et `commun.api` exclus** : bilan dans le résumé du job, rapport détaillé en artefact | — |
 | [mutation-ihm.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-ihm.yml) | quotidien (5 h UTC) + manuel | Mesure de mutation PIT sur les vues d'**une feature par tour** (rotation sans état, cycle de 15 jours), **E2E exclus** | — |
 | [flatpak.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/flatpak.yml) | **appelé par le train** (`workflow_call` depuis `release.yml`), ou manuel | Paquet Flatpak (cf. plus bas) | — |
 | [winget.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/winget.yml) | **manuel** (`workflow_dispatch`) | Soumission d'une version choisie à winget-pkgs (cf. plus bas) | — |
 | [recette-filmee.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/recette-filmee.yml) | **manuel** (`workflow_dispatch`) | Éprouve qu'un runner **pilote** un test filmé, et pas seulement qu'il l'exécute. Porte son **témoin** : sans gestionnaire de fenêtres, le lancement doit être refusé (cf. plus bas). Avec `publier_les_clips`, il verse le tournage complet sur `clips-recette` **et**, quand le train lui passe une version, une copie préfixée `bash-` sur le **tag** de cette version, qui lui ne bougera jamais (#4258) | — |
-| [tournage-recette.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/tournage-recette.yml) | **manuel** (`workflow_dispatch`) | Tourne les clips d'**une session**, sur la plateforme de son choix - `ubuntu`, `windows` ou `macos`, le banc en Java pur n'ayant besoin d'aucun écran. Répond à la limite que l'EPIC #4133 se donnait : « à 400 clips, ce serait des heures par passage ». La liste des classes est **dérivée** par `CorrespondanceRecetteTest`, jamais tenue à la main. Appelé **aussi par le train** (`workflow_call`), il verse alors ses clips préfixés `java-` sur le **tag** de la version, à côté de ceux du banc bash : c'est la transition qui se prépare, et le jour venu il n'y aura qu'un des deux appels à retirer (#4258). ⚠️ Il ne touche **jamais** à une pré-version roulante : `clips-java` est un instantané daté que la page de comparaison interroge. ⚠️ Depuis #4304 il porte un drapeau **`connecte`** : le tournage parle alors à la VRAIE plateforme, en lecture, avec un secret **propre au tournage** posé dans l'`env:` du seul pas qui filme. Sans le secret il **refuse de partir**, un écran hors ligne étant convaincant et muet sur son objet | — |
-| [comparer-tournages.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/comparer-tournages.yml) | **manuel** (`workflow_dispatch`) | Dit ce qui a changé entre **deux tournages** : présence du cas, image finale accolée, carte des différences, durée. Prend deux sources - un tag de version ou `clips-recette` - et **normalise les préfixes de banc**, sans quoi `bash-Truc.mp4` et `Truc.mp4` passeraient pour deux cas différents. ⚠️ À la demande et non committé : la comparaison « dernière version contre tournante » change dès que l'un des deux bouge (#4274) | — |
+| [tournage-recette.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/tournage-recette.yml) | **manuel** (`workflow_dispatch`) | Tourne les clips d'**une session**, sur la plateforme de son choix - `ubuntu`, `windows` ou `macos`, le banc en Java pur n'ayant besoin d'aucun écran. Répond à la limite que l'EPIC #4133 se donnait : « à 400 clips, ce serait des heures par passage ». La liste des classes est **dérivée** par `CorrespondanceRecetteTest`, jamais tenue à la main. Appelé **aussi par le train** (`workflow_call`), il verse alors ses clips préfixés `java-` sur le **tag** de la version, à côté de ceux du banc bash : c'est la transition qui se prépare, et le jour venu il n'y aura qu'un des deux appels à retirer (#4258). Il ne touche **jamais** à une pré-version roulante : `clips-java` est un instantané daté que la page de comparaison interroge. Depuis #4304 il porte un drapeau **`connecte`** : le tournage parle alors à la VRAIE plateforme, en lecture, avec un secret **propre au tournage** posé dans l'`env:` du seul pas qui filme. Sans le secret il **refuse de partir**, un écran hors ligne étant convaincant et muet sur son objet | — |
+| [comparer-tournages.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/comparer-tournages.yml) | **manuel** (`workflow_dispatch`) | Dit ce qui a changé entre **deux tournages** : présence du cas, image finale accolée, carte des différences, durée. Prend deux sources - un tag de version ou `clips-recette` - et **normalise les préfixes de banc**, sans quoi `bash-Truc.mp4` et `Truc.mp4` passeraient pour deux cas différents. À la demande et non committé : la comparaison « dernière version contre tournante » change dès que l'un des deux bouge (#4274) | — |
 
 !!! note "L'image devcontainer pré-buildée a été retirée"
     Un workflow `devcontainer-image.yml` publiait une image sur GHCR pour accélérer le démarrage des
@@ -58,7 +58,7 @@ publication.
     `actions: read`. Un fichier commité, un artefact (90 jours) ou un cache (7 jours) deviendraient
     chacun une seconde chose à surveiller, dont la première panne serait, ici encore, un silence.
 
-    ⚠️ Elle reconnaît un passage vérifié au **nom** de son étape (`Contrat API (lecture seule)`).
+    Elle reconnaît un passage vérifié au **nom** de son étape (`Contrat API (lecture seule)`).
     Renommer cette étape sans reporter le nom dans `ETAPE_CONTRAT` casserait la détection : la veille
     refuse alors de conclure et dit que c'est **elle** qui est en cause, plutôt que d'annoncer un
     rassurant « jamais joué ». Son autotest tourne à chaque PR dans `lint.yml`, seul endroit où on la
@@ -100,7 +100,7 @@ Or ces étapes ne dépendent pas de la suite de tests, mais de ce qu'on **emball
 | `build` | la suite de tests | le comportement, et la couverture au seuil |
 | `paquet` | l'assemblage, puis l'app-image | que le jar **démarre**, que la CLI répond **depuis le lanceur livré**, que le shade est idempotent |
 
-⚠️ Les <!--inv:tests-bats-->111<!--/inv--> tests bats visaient le fat-jar par `java -cp` jusqu'à #4071,
+Les <!--inv:tests-bats-->111<!--/inv--> tests bats visaient le fat-jar par `java -cp` jusqu'à #4071,
 c'est-à-dire un chemin qu'**aucun utilisateur n'emprunte**. Ils visent désormais `bin/vigiechiro` de
 l'app-image construite au-dessus, donc le runtime jlink réellement livré. Ils viennent pour cette
 raison **après** le garde-fou app-image, et non plus juste après le `package` - sans que rien ne change
@@ -374,15 +374,15 @@ paquet reconstruit et démarré avec succès.
 retiré le brouillon de la Release. Publier une version ne demande donc aucun geste côté paquet, ce qui
 n'était vrai qu'en théorie tant que le déclenchement restait manuel.
 
-⚠️ **C'est un `workflow_call`, et pas un `release: released`.** Ce dernier ne partirait jamais : la
+**C'est un `workflow_call`, et pas un `release: released`.** Ce dernier ne partirait jamais : la
 Release est dé-brouillonnée avec le `GITHUB_TOKEN`, et GitHub ne déclenche aucun workflow sur un
 événement produit par ce jeton. Un workflow appelé n'est pas un événement - il s'exécute dans le run de
 l'appelant - donc l'obstacle ne s'y applique pas. C'est le premier `workflow_call` du dépôt.
 
-⚠️ **Le job dépend de `publish`, pas d'`installers`** : le checker interroge `releases/latest`, qui
+**Le job dépend de `publish`, pas d'`installers`** : le checker interroge `releases/latest`, qui
 ignore les brouillons. Téléverser les assets ne suffit pas ; il faut que la Release en soit sortie.
 
-⚠️ **Ce que le retard coûtait**, avant : le paquet publié pouvait rester plusieurs versions en arrière
+**Ce que le retard coûtait**, avant : le paquet publié pouvait rester plusieurs versions en arrière
 sans que rien ne le dise. Mesuré le 2026-08-21 - manifeste sur le `.deb` 2.185.0 quand la 2.187.0 était
 publiée, donc la ligne de commande de #4071 absente du paquet pendant que la documentation
 l'annonçait.
@@ -593,9 +593,9 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
 | `verifie-portee-des-secrets.sh` | aucun secret `VIGIECHIRO_*` dans l'`env:` d'un **job** ni d'un workflow : la forme juste est l'`env:` d'un **pas**. Posé plus haut, il est offert à toute la suite de tests, que `ConnexionModule` pointe alors sur la production. Aucun rôle de la plateforme ne peut le rattraper - `Lecteur` est déclaré et aucune route ne l'accepte (#4303). **Second contrôle** : aucun appel de workflow ne transmet le trousseau entier par héritage. Une déclaration nominale côté appelé n achète rien tant que l appelant hérite, et `release.yml` le faisait pour trois appels dont un qui exécute les tests du produit (#4349) | `lint.yml` |
 | `revoque-jeton.sh` | le jeton d un tournage connecté est rendu inutilisable en fin de run (`POST /logout`), et la règle qui compte est que **`404` et `401` valent succès** : le but n est pas « le serveur a répondu 200 » mais « ce jeton ne sert plus à personne ». Il ne fait jamais rougir le run, l incertitude sort en avertissement (#4305) | `tournage-recette.yml` (autotest : `lint.yml`) |
-| `verifie-jeton-vivant.sh` | le jeton du tournage connecté est-il encore **valide**, et non seulement présent. Le tournage révoque le sien en fin de run sans retirer le secret : après un tournage il a l air parfaitement valide et ne vaut plus rien, et le scénario rougissait à trois pas de sa cause, sur un run qui finissait vert (#4328). ⚠️ Il rend **trois** verdicts et non deux, parce que « la plateforme ne répond pas » n appelle pas le même geste que « le jeton est mort ». ⚠️ C est la table de `revoque-jeton.sh` lue à l ENVERS : ici `401` est un refus | `tournage-recette.yml` (autotest : `lint.yml`) |
+| `verifie-jeton-vivant.sh` | le jeton du tournage connecté est-il encore **valide**, et non seulement présent. Le tournage révoque le sien en fin de run sans retirer le secret : après un tournage il a l air parfaitement valide et ne vaut plus rien, et le scénario rougissait à trois pas de sa cause, sur un run qui finissait vert (#4328). Il rend **trois** verdicts et non deux, parce que « la plateforme ne répond pas » n appelle pas le même geste que « le jeton est mort ». C est la table de `revoque-jeton.sh` lue à l ENVERS : ici `401` est un refus | `tournage-recette.yml` (autotest : `lint.yml`) |
 | `interroge-le-jeton.sh` | un appel a la plateforme et son code HTTP, rien d autre. Les TROIS appelants le partagent - le controle du jeton, sa revocation, et le pas « Jeton valide ? » d `api-live.yml` - parce que la ligne recopiee est ce qui a mis le defaut du « HTTP 000000 » aux trois endroits (#4328). **Il ne juge pas**, et un cas le garde : les trois lectures d un `401` different, dont deux s opposent, et le `run:` d `api-live` tourne sous `bash -e` (#4385) | `api-live.yml`, `tournage-recette.yml` (autotest : `lint.yml`) |
-| `verifie-forme-du-jeton.sh` | les TEXTES d un tournage - `tournage.log`, l index - avant qu ils ne partent en artefact. Un jeton Vigie-Chiro fait exactement 32 caractères de `[A-Z0-9]` (mesuré dans `auth.py`), et on exige au moins une lettre hors de `A-F` pour ne pas confondre avec une empreinte hexadécimale. Il tourne AVANT l envoi, parce qu un artefact de dépôt public se télécharge sans authentification, et l envoi en dépend. ⚠️ Il NE COUVRE PAS l image, et il le DIT dans son compte rendu : un garde muet sur sa portée est un faux vert avec des étapes en plus (#4327) | `tournage-recette.yml` (autotest : `lint.yml`) |
+| `verifie-forme-du-jeton.sh` | les TEXTES d un tournage - `tournage.log`, l index - avant qu ils ne partent en artefact. Un jeton Vigie-Chiro fait exactement 32 caractères de `[A-Z0-9]` (mesuré dans `auth.py`), et on exige au moins une lettre hors de `A-F` pour ne pas confondre avec une empreinte hexadécimale. Il tourne AVANT l envoi, parce qu un artefact de dépôt public se télécharge sans authentification, et l envoi en dépend. Il NE COUVRE PAS l image, et il le DIT dans son compte rendu : un garde muet sur sa portée est un faux vert avec des étapes en plus (#4327) | `tournage-recette.yml` (autotest : `lint.yml`) |
 | `verifie-decisions-du-tournage-connecte.sh` | trois décisions du tournage connecté qui vivaient dans du YAML que rien ne gardait (#4331) : `comparer-tournages.yml` REFUSE la source `clips-connectes`, `publier-connecte` dépend de `filmer` et porte une fonction d état, et le contrôle du jeton vient AVANT le pas qui filme. Le refus n est pas relu mais LANCÉ - il vit dans un `run:`, donc du shell - et le verdict se prend sur le MESSAGE, pas sur le code de sortie. Son auto-test fabrique trois copies cassées, une par décision | `lint.yml` (autotest : `lint.yml`) |
 | `verdict-du-tournage.sh` | ce qu'un tournage a vraiment donné : combien de cas ont **rougi**, lu dans les rapports **XML** de surefire et jamais dans les `.txt`, qui mentent sur les `@Nested`. Le tournage tourne sous `failure.ignore` - on veut les clips d'un cas qui rougit -, si bien qu'un scénario rouge laissait le job vert et son clip se versait sans marque (#4351). Il **rapporte**, il ne juge pas | `tournage-recette.yml` (autotest : `lint.yml`) |
 | `verifie-butoirs.sh` | tout job porte un `timeout-minutes` : sans butoir, GitHub laisse courir six heures ([ADR 4028](decisions/4028-tout-job-de-ci-porte-un-butoir.md)) | `lint.yml` |
@@ -611,8 +611,8 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `veille-contrat-api.sh` | le contrat d'API a **réellement** tourné il y a moins de trois semaines | `api-live.yml` (autotest : `lint.yml`) |
 | `verifie-fraicheur-actions.sh` | un épinglage **cohérent** peut être **périmé** : il date les SHA épinglés | `securite-dependances.yml` et `winget.yml` (autotest : `lint.yml`) |
 | `verifie-affichage-flatpak.sh` | le Flatpak déclare ce qu'il faut pour démarrer **sur un bureau Wayland** | `flatpak.yml` (autotest : `lint.yml`) |
-| `mesure-duree-portail.sh` | l'**allongement** du portail qualité, médiane contre médiane | `maven.yml` - ⚠️ il **avertit**, il ne bloque pas (autotest : `lint.yml`) |
-| `lance-test-filme.sh` | un runner **pilote** un test filmé, et refuse de le lancer sans gestionnaire de fenêtres | `recette-filmee.yml` - ⚠️ workflow **manuel** |
+| `mesure-duree-portail.sh` | l'**allongement** du portail qualité, médiane contre médiane | `maven.yml` - il **avertit**, il ne bloque pas (autotest : `lint.yml`) |
+| `lance-test-filme.sh` | un runner **pilote** un test filmé, et refuse de le lancer sans gestionnaire de fenêtres | `recette-filmee.yml` - workflow **manuel** |
 | `filtrer-bruit-cartes.sh` | rend leur version committée aux aperçus de carte dont **seul le fond** a changé | `capture-vues.yml` |
 | `compare-apercus.sh` | montre, sur une PR, les écrans qu'elle change : avant/après accolés, part de pixels, et le **dit** quand aucun ne change | `capture-vues.yml` (autotest : `lint.yml`) |
 | `compare-tournages.sh` | montre ce qui a changé entre **deux tournages** : présence du cas, image finale accolée, carte des différences, durée. Le chiffre **trie**, la carte **localise** ; une mesure impossible se compte au lieu de passer pour « rien n'a changé » | `comparer-tournages.yml` (autotest : `lint.yml`) |
@@ -652,17 +652,17 @@ défaut dans `clips-orphelins.sh` (#4106). Un seuil qui laisse passer le défaut
 rien. Le seuil est un drapeau et non un réglage parce que `severity=` **n'est pas lu** depuis
 `.shellcheckrc` - vérifié.
 
-⚠️ **La parité porte sur les réglages, pas sur la version.** Mesuré en branchant ce pas : le runner
+**La parité porte sur les réglages, pas sur la version.** Mesuré en branchant ce pas : le runner
 a signalé un `SC2015` que shellcheck 0.11.0 ne signale plus en local. C'est donc la CI qui fait foi,
 et un poste plus récent peut être plus **permissif** - l'inverse du sens rassurant. Vérifier
 `shellcheck --version` avant de conclure d'un vert local.
 
-⚠️ **Ce qui reste dehors**, nommé plutôt que tu : **trois notes de style**, deux `SC2001` (un `sed`
+**Ce qui reste dehors**, nommé plutôt que tu : **trois notes de style**, deux `SC2001` (un `sed`
 là où une expansion suffirait, mais où l'expansion serait moins lisible) et un `SC2129` (des
 redirections successives dans une fixture d'auto-test). Un lancement à la main les montre ; la CI ne
 les impose pas.
 
-⚠️ **Cinq neutralisations locales**, chacune avec sa raison écrite sur place, et aucune globale :
+**Cinq neutralisations locales**, chacune avec sa raison écrite sur place, et aucune globale :
 deux `SC2064`/`SC2046` où l'expansion immédiate et le découpage sont le **remède** et non le défaut
 (le `trap` du banc de recette, le trajet du pointeur du banc de documentation), un `SC2020` où le
 doublon de `\n` est voulu, et deux `SC2094` où shellcheck croit voir une écriture qui vit dans une
@@ -744,7 +744,7 @@ La suite tourne donc le **mardi**, veille du train, et le train en fait sa condi
 preuve remonte à plus de **10 jours** (un passage hebdomadaire manqué, plus la marge d'un `schedule`
 retardé).
 
-⚠️ **Seuls les passages complets comptent.** Depuis #3754 un passage peut être **ciblé** sur quelques
+**Seuls les passages complets comptent.** Depuis #3754 un passage peut être **ciblé** sur quelques
 classes, et l'API des runs ne dit pas quelles entrées ont été passées à un `workflow_dispatch` : le
 compter certifierait la suite entière sur la preuve de deux classes. Cette distinction n'est pas
 théorique - au moment d'écrire ces lignes, l'historique du dépôt contenait deux passages `success`,
@@ -757,7 +757,7 @@ train **sans issue de secours** : un mardi rouge sur une instabilité aurait blo
 jusqu'au mardi suivant, aucun passage manuel ne pouvant produire de preuve. Un passage complet lancé à
 la main vaut donc preuve ; c'est le passage ciblé qui n'en est pas une.
 
-### ⚠️ Et une voie de secours, motivée par écrit (#3561)
+### Et une voie de secours, motivée par écrit (#3561)
 
 Poser cette condition contredisait deux décisions, et la clôture du lot 3 l'a relevé :
 
@@ -776,7 +776,7 @@ défaut. Renseignée, elle saute la garde, et la raison part **dans le titre du 
 l'historique des exécutions, pas seulement dans le log d'un job - puis dans son résumé. En dessous de
 **20 caractères**, elle est refusée : un contournement dont la trace est « x » n'en laisse pas.
 
-⚠️ Deux pièges, écrits sur place dans le workflow parce qu'ils se reproduisent :
+Deux pièges, écrits sur place dans le workflow parce qu'ils se reproduisent :
 
 - tester `inputs.raison_du_contournement == ''` **seul** aurait désarmé la garde sur le `schedule` :
   `inputs` y est **null**, et une expression GitHub coule deux types différents en nombre, donc
@@ -786,7 +786,7 @@ l'historique des exécutions, pas seulement dans le log d'un job - puis dans son
   sur `.result != 'failure'`, le contournement aurait **empêché** la publication au lieu de la
   permettre.
 
-⚠️ Comme `ETAPE_CONTRAT` un cran plus haut, la détection repose sur un **nom**. Si aucun run examiné
+Comme `ETAPE_CONTRAT` un cran plus haut, la détection repose sur un **nom**. Si aucun run examiné
 ne porte de marqueur, la veille refuse en disant que c'est **elle** qui est en cause - et distingue
 les deux causes : des exécutions toutes antérieures à la pose du marqueur (qui se résout seule), ou un
 `run-name:` renommé sans report.
@@ -798,7 +798,7 @@ dans trois cas où un dispositif naïf rendrait un « 0 jour » rassurant : hist
 question n'a pas été posée), aucune exécution programmée réussie (preuve **absente**, pas périmée),
 date **illisible**. Son autotest tourne à chaque PR dans `lint.yml`.
 
-⚠️ Une différence avec la veille du contrat d'API, et elle compte : là-bas un `failure` **prouve** que
+Une différence avec la veille du contrat d'API, et elle compte : là-bas un `failure` **prouve** que
 le contrat a été exercé ; ici le job de plateformes **conclut**, donc un `failure` est l'inverse d'une
 preuve. Le compter rendrait la veille verte au moment précis où la suite est cassée.
 
@@ -825,7 +825,7 @@ sont exclus - attester une empreinte de trois lignes n'apprend rien.
 construit, `attestations: write` n'écrit que dans le magasin d'attestations du dépôt. Ni l'un ni
 l'autre ne touche au code, aux issues ou aux pull requests - le moindre privilège de #2739 tient.
 
-⚠️ **Elle ne remplace pas la signature des installeurs** (#2112, EPIC #2104) : la signature parle aux
+**Elle ne remplace pas la signature des installeurs** (#2112, EPIC #2104) : la signature parle aux
 systèmes d'exploitation (SmartScreen, Gatekeeper), l'attestation parle à qui veut auditer. Les deux
 sont complémentaires, aucune ne rend l'autre inutile.
 
@@ -866,7 +866,7 @@ au-dessus d'un lot d'alertes déjà présentes ne bloque jamais rien.
     quand même contrainte à `33.4.8-jre` dans le `dependencyManagement` : un inventaire qui signale ce
     qu'on ne corrige pas cesse d'être lu.
 
-    ⚠️ **Le premier `grep` de vérification était faux** : `Files.createTempDir` correspond aussi au
+    **Le premier `grep` de vérification était faux** : `Files.createTempDir` correspond aussi au
     début de `Files.createTempDirectory`, celui du **JDK**, employé par les outils de capture. Il
     annonçait trois appels là où il n'y en avait aucun. La question « est-ce que ça nous concerne ? »
     se pose sur les **imports**, pas sur la ressemblance des noms.
@@ -919,7 +919,7 @@ Les seuils sont **calibrés sur une mesure**, pas choisis : au moment de la pose
 était de **143 jours** (`anchore/scan-action`). La garde est donc muette sur l'état sain du jour, et le
 cas qui lui avait échappé (608 jours) est rouge.
 
-⚠️ **Un épinglage hors tag reste licite**, et c'est ce que winget-releaser exige désormais : le
+**Un épinglage hors tag reste licite**, et c'est ce que winget-releaser exige désormais : le
 commentaire dit alors l'intention (`# main @ 2026-07-28`). La garde distingue trois cas, parce que
 confondre les deux derniers reviendrait à se rassurer :
 
@@ -933,7 +933,7 @@ L'asymétrie est délibérée. L'amont publie pour des raisons qui ne nous regar
 chaque release amont s'apprendrait à ignorer aussi vite qu'un garde muet. Une majeure de retard, elle,
 n'est pas du bruit de fond - c'est le cas qui a échappé à tout le monde pendant six mois.
 
-⚠️ **Trois tentatives, parce que l'API bafouille.** Vu en écrivant le garde : un appel qui rend la
+**Trois tentatives, parce que l'API bafouille.** Vu en écrivant le garde : un appel qui rend la
 liste attendue, rejoué à l'identique, revient vide. Sans reprise, ce hoquet se lirait « version
 indéterminée », donc rouge. Un échec qui **persiste** reste rouge, et c'est voulu : un SHA qui ne porte
 plus aucun tag est en soi une nouvelle - le tag a été déplacé ou supprimé en amont.
@@ -982,7 +982,7 @@ voit que ce qu'on lui a appris ; un compilateur voit ce qu'il refuse.
 Ce ne sont pas des défauts. Un job qui rougirait dessus serait désactivé en trois semaines, et on
 serait revenu au point de départ en ayant payé le trajet. **Seules les erreurs bloquent.**
 
-### ⚠️ `module-info.java` est exclu de cette passe, et c'est un renoncement assumé
+### `module-info.java` est exclu de cette passe, et c'est un renoncement assumé
 
 Sous `plexus-compiler-eclipse`, ecj ne résout ni les modules automatiques (`com.google.gson`,
 `info.picocli`) ni `org.xerial.sqlitejdbc`, et rendait **six erreurs qui ne disent rien du code** -
@@ -1022,7 +1022,7 @@ Deux choix qui méritent d'être dits :
 | `secret_scanning_non_provider_patterns` | ❌ indisponible | GitHub Advanced Security |
 | `secret_scanning_validity_checks` | ❌ indisponible | GitHub Advanced Security |
 
-⚠️ **L'API accepte d'activer les deux derniers et ne le fait pas** : elle rend `200` en les laissant à
+**L'API accepte d'activer les deux derniers et ne le fait pas** : elle rend `200` en les laissant à
 `disabled`. Il faut **relire l'état** pour s'en apercevoir - un appel qui réussit n'est pas un réglage
 qui s'applique. L'organisation est au plan `free`, où `advanced_security_enabled` vaut `false`.
 
@@ -1050,7 +1050,7 @@ cinq usages légitimes - par le **même** motif que le balayage, et la CI lance 
 cela, un motif relâché passerait au vert sur un dépôt propre sans que rien ne le dise. Éprouvé :
 en portant le seuil de 12 à 40 caractères, l'autotest signale les quatre fuites non détectées.
 
-⚠️ Elle lit le contenu **versionné** (`git grep`) : un fichier non suivi lui échappe. C'est le bon
+Elle lit le contenu **versionné** (`git grep`) : un fichier non suivi lui échappe. C'est le bon
 périmètre pour une garde de CI - ce qui part chez tout le monde - mais ce n'est pas un filet local.
 
 ## Les droits de publication sont déclarés par job (#2739)
@@ -1078,7 +1078,7 @@ liste attendue par job - #2742 a dû ajouter `id-token` et `attestations` pour l
 liste figée aurait rougi sur un ajout voulu, puis se serait fait élargir machinalement. Un workflow
 **mono-job** garde son plancher : plancher et job y désignent la même chose.
 
-⚠️ **Ce que cela ne fait pas** : `semantic-release` s'exécute toujours dans un job en écriture. L'en
+**Ce que cela ne fait pas** : `semantic-release` s'exécute toujours dans un job en écriture. L'en
 sortir suppose de réimplémenter en `git` + `gh` ce que font ses greffons d'écriture ; l'arbitrage,
 rendu, est consigné sur #2739.
 
@@ -1114,7 +1114,7 @@ ne se verrait qu'à la **prochaine release**.
 Elle ne peut pas publier : `--dry-run` n'écrit rien, et la configuration d'analyse n'embarque **aucun**
 greffon d'écriture.
 
-⚠️ **Ce qu'elle prouve dépend du déclencheur** (#3345), et il faut le savoir avant de lire son vert :
+**Ce qu'elle prouve dépend du déclencheur** (#3345), et il faut le savoir avant de lire son vert :
 
 | Déclencheur | Jusqu'où va `semantic-release` | Ce que le vert dit |
 |---|---|---|
@@ -1128,7 +1128,7 @@ quand un checkout devenu obsolète le faisait sortir plus tôt : le vert signifi
 sauté ». Ce cas de sortie anticipée subsiste les jours de fusion dense ; le `concurrency` du workflow
 le borne sans le supprimer.
 
-⚠️ **Le binaire se lance depuis la racine pour publier** (`./.github/release/node_modules/.bin/semantic-release`) :
+**Le binaire se lance depuis la racine pour publier** (`./.github/release/node_modules/.bin/semantic-release`) :
 c'est `.releaserc.json` qui fait alors foi. Lancé **depuis `.github/release/`**, c'est la configuration
 d'analyse que cosmiconfig trouve en premier. Les deux ont été vérifiées en local, greffon par greffon.
 
@@ -1150,12 +1150,12 @@ hautes)** à **7 (2 hautes)**. Il **réduit sans résoudre** : les deux hautes r
 npm@… · It cannot be fixed automatically`). Aucune version de `semantic-release` ne les corrige : il
 faut que `npm` publie, et que `semantic-release` reprenne.
 
-⚠️ **Un compte d'alertes Dependabot n'est pas une mesure d'exposition.** GitHub **auto-écarte** les
+**Un compte d'alertes Dependabot n'est pas une mesure d'exposition.** GitHub **auto-écarte** les
 avis de portée `development`, ce qu'est tout cet arbre : au 2026-08-04, quatre avis
 (`brace-expansion` ×3, `picomatch`) l'ont été sans que le compte affiché bouge. Pour cet arbre, c'est
 `npm audit` qui fait foi.
 
-### ⚠️ Le train ne commente pas les issues, et c'est le train qui l'impose
+### Le train ne commente pas les issues, et c'est le train qui l'impose
 
 `@semantic-release/github` commente par défaut chaque issue et PR incluse dans une version. Le premier
 départ du train, déclenché à la main le 2026-08-06 sur **104 commits**, est tombé exactement là :
@@ -1178,7 +1178,7 @@ mercredi**, à 6 h UTC, sans personne pour le voir.
 `successCommentCondition: false` supprime l'appel. Le commentaire perdu n'était de toute façon pas
 souhaitable ici : il aurait notifié une centaine d'issues à chaque train.
 
-⚠️ **Ce que cet échec laisse derrière lui** est le vrai enseignement : le tag `v2.184.0` avait été
+**Ce que cet échec laisse derrière lui** est le vrai enseignement : le tag `v2.184.0` avait été
 créé et la Release déposée en brouillon **avant** l'étape qui a échoué. Le job `release` étant rouge,
 `installers` et `publish` ont été **sautés** - donc ni binaires attachés, ni brouillon levé. Une
 version peut donc exister à moitié. C'est ce qu'il faut regarder d'abord quand un train échoue :
@@ -1193,7 +1193,7 @@ Un lancement filmé tient à cinq conditions (cf. `lance-test-filme.sh`), dont d
 **machine** : un gestionnaire de fenêtres doit tourner sur le `DISPLAY` visé, et `WAYLAND_DISPLAY`
 doit être absent.
 
-⚠️ Sans gestionnaire de fenêtres, le pointeur ne bouge pas - **même pour `xdotool`** - et pourtant
+Sans gestionnaire de fenêtres, le pointeur ne bouge pas - **même pour `xdotool`** - et pourtant
 les tests s'exécutent sans erreur. Ils passent ou échouent pour de mauvaises raisons. Pire,
 certains passent **avec un robot mort** : un test qui affirme qu'une valeur reste inchangée est
 vrai si l'on ne clique nulle part.
@@ -1205,7 +1205,7 @@ verdict** :
 dans ce mode, un lancement réussi devient un **échec** du workflow, puisqu'il prouverait que la
 vérification du pointeur ne garde rien.
 
-### ⚠️ Le gestionnaire choisi n'est pas neutre : openbox, et non matchbox (#3788)
+### Le gestionnaire choisi n'est pas neutre : openbox, et non matchbox (#3788)
 
 `matchbox-window-manager` **maximise tout** ce qu'il affiche - c'est son parti pris, il est fait pour
 de petits écrans. Le banc en a menti deux fois avant qu'on le voie :
@@ -1241,13 +1241,13 @@ La séance dépose donc, à côté de la vidéo, un **journal de repères**
 Les instants sont des **millisecondes depuis l'époque**, la même grandeur que `date +%s%3N` : c'est
 ce qui permet au montage de les ramener à des positions dans la vidéo.
 
-⚠️ **Tous** les tests sont encadrés, y compris ceux qui ne citent aucun cas - leur colonne de cas est
+**Tous** les tests sont encadrés, y compris ceux qui ne citent aucun cas - leur colonne de cas est
 alors vide. Ce n'était pas le cas d'abord, et la première séance filmée réelle a montré pourquoi il
 le faut : le contrôle du montage vérifie que ce qui apparaît à l'écran tombe dans une plage connue,
 et un test non annoté qui ouvre une fenêtre lui semblait hors sujet. C'est l'**index**, et non ce
 journal, qui ne retient que les cas.
 
-⚠️ Deux propriétés vont ensemble, et seul le profil `recette-filmee` les pose :
+Deux propriétés vont ensemble, et seul le profil `recette-filmee` les pose :
 `recette.autodetection` charge l'extension, `recette.reperes` lui dit où écrire. Un `mvn test`
 ordinaire ne voit ni l'une ni l'autre, ne charge donc rien et n'écrit rien. `CablageDesReperesTest`
 garde ce câblage, parce qu'il casserait **en silence** : une extension que le moteur n'appelle pas
@@ -1262,7 +1262,7 @@ L'artefact contient `clips/`, un extrait par test cité, et son `index.md`, qui 
 Un cas couvert par plusieurs tests a plusieurs lignes ; le clip, lui, est taillé sur le **test**,
 parce que c'est ce que la JVM sait borner.
 
-⚠️ **L'index ne donne aucune position dans le film livré**, et c'est volontaire : ce film est
+**L'index ne donne aucune position dans le film livré**, et c'est volontaire : ce film est
 écourté par luminance, si bien qu'une position calculée sur le brut y serait fausse. Le clip est le
 point d'entrée, pas un horodatage.
 
@@ -1276,7 +1276,7 @@ ferait rougir un test de ViewModel, qui cite des cas et n'ouvre légitimement au
 est exigé : les images où quelque chose est à l'écran doivent tomber **dans** les plages calculées.
 Un `t0` faux les fait toutes tomber à côté.
 
-⚠️ Les plages sont celles de **tous** les tests, pas seulement des tests cités. La première séance
+Les plages sont celles de **tous** les tests, pas seulement des tests cités. La première séance
 réelle a refusé un alignement correct pour cette raison : `ConnexionModaleViewTest` compte dix tests
 dont trois annotés, et les sept autres ouvrent aussi des fenêtres - le contrôle jugeait hors sujet
 les cinq sixièmes de ce qu'il voyait, et annonçait 16 %. C'était le même travers que celui qu'il
@@ -1301,7 +1301,7 @@ Le montage taille déjà un clip par **test** et indexe par **cas**. Passer les 
 à un même `-Dtest=A,B,C` rend donc, d'un coup, un index qui les couvre toutes : il n'y a rien à
 fusionner, là où seize séances auraient donné seize artefacts et une comptabilité à tenir de tête.
 
-⚠️ **La liste se dérive, elle ne se tient pas à la main.** Un `grep` sur `@CasDeRecette` ramène deux
+**La liste se dérive, elle ne se tient pas à la main.** Un `grep` sur `@CasDeRecette` ramène deux
 faux positifs sur dix-huit : l'annotation elle-même, dont la documentation contient un exemple, et
 les fixtures qui imitent un test sans rien couvrir. C'est `CorrespondanceRecetteTest` qui dépose la
 liste sous `target/recette/classes-citantes.txt`, parce qu'il balaie les annotations **compilées** et
@@ -1319,7 +1319,7 @@ Deux refus, pour que le vide ne passe pas pour un résultat :
 **fait ce que le cas décrit**. Le tournage complet rend cette relecture possible en regardant, plutôt qu'en
 relisant seize classes.
 
-⚠️ **Mais tous les cas ne s'auditent pas en regardant**, et l'index le dit ligne par ligne. Un
+**Mais tous les cas ne s'auditent pas en regardant**, et l'index le dit ligne par ligne. Un
 ViewModel cite des cas et n'ouvre aucune fenêtre : son clip est noir, et c'est le résultat **juste**.
 Cocher « vu » dessus serait un mensonge - un mensonge que le tournage complet aurait encouragé si elle avait
 proposé la même case à tout le monde.

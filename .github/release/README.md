@@ -53,7 +53,7 @@ Ce qui reste **ne se corrige pas ici**, à aucune version de `semantic-release` 
 automatically`. Elles partiront quand `npm` publiera une version qui les embarque corrigées, et que
 `semantic-release` la reprendra.
 
-⚠️ **Ne pas lire un nombre d'alertes Dependabot comme une mesure de l'exposition.** GitHub
+**Ne pas lire un nombre d'alertes Dependabot comme une mesure de l'exposition.** GitHub
 **auto-écarte** les avis de portée `development`, ce qu'est tout cet arbre : au 2026-08-04, quatre avis
 ont été écartés ainsi sans que le compte affiché bouge. Et la montée en `semantic-release@25` a fait
 passer `npm audit` de 18 paquets à 7, **sans changer le compte d'alertes** (6 avant, 6 après) - seule
@@ -74,7 +74,7 @@ fait qui se vérifie en trois points :
 Le CLI `npm` que `semantic-release` embarque est donc **installé et jamais invoqué**. `undici` et
 `ip-address`, qui vivent dedans, ne sont jamais chargés.
 
-⚠️ Écarter n'est pas ignorer : un avis **futur** sur ces paquets ouvrira une alerte neuve. Et si
+Écarter n'est pas ignorer : un avis **futur** sur ces paquets ouvrira une alerte neuve. Et si
 `@semantic-release/npm` entrait un jour dans la configuration, la justification tomberait avec - c'est
 la première chose à rouvrir dans ce cas.
 

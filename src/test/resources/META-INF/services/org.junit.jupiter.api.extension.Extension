@@ -1,10 +1,10 @@
 # Extensions JUnit détectées automatiquement (#3774, #4163).
 #
-# ⚠️ Ce fichier ne suffit PAS à activer quoi que ce soit : la détection automatique doit être
+# Ce fichier ne suffit PAS à activer quoi que ce soit : la détection automatique doit être
 # demandée par ailleurs, et seul le profil `recette-filmee` la demande. Un `mvn test` ordinaire ne
 # charge donc rien d'ici. CablageDesReperesTest garde ce câblage.
 #
-# ⚠️ Les deux lignes ci-dessous n'ouvrent pas la même porte, et il faut le savoir avant d'en ajouter
+# Les deux lignes ci-dessous n'ouvrent pas la même porte, et il faut le savoir avant d'en ajouter
 # une troisième. Chargée, une extension ne fait encore rien : il lui faut SA propre clé.
 #
 #   ReperesDeSeance      consigne les repères du banc bash        -> `recette.reperes`

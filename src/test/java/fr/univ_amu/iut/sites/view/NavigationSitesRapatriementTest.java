@@ -59,7 +59,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// du besoin :
 ///
 /// 1. rester sur l'écran. Sans lui, on retomberait dans la navigation d'avant ;
-/// 2. voir le carré dans la liste. ⚠️ Ce brin ne garde **pas** un appel à `rafraichir()` : l'écran
+/// 2. voir le carré dans la liste. Ce brin ne garde **pas** un appel à `rafraichir()` : l'écran
 ///    déclare [fr.univ_amu.iut.commun.view.SuitLaRevision], donc le socle le recharge de lui-même sur
 ///    l'`insert`. Il garde que cet écran suit bien la révision - retirer le contrat le ferait rougir.
 ///    C'est une mesure qui a corrigé une intention : la première version appelait `rafraichir()`, et le
@@ -82,7 +82,7 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class NavigationSitesRapatriementTest {
 
-    // ⚠️ Cette classe ne cite plus `S1-34`, et ce n'est pas un oubli. Elle APPELLE `rapatrierLeCarre()`
+    // Cette classe ne cite plus `S1-34`, et ce n'est pas un oubli. Elle APPELLE `rapatrierLeCarre()`
     // puis annonce le résultat : aucun bouton n'était cliqué à l'image, et la revue l'a vu - « pas clair
     // que l'on a cliqué sur le bouton de récupération » (#4181).
     //

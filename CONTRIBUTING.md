@@ -223,7 +223,7 @@ angles, ne se ressemblent pas, et le recoupement se découvre alors au **conflit
 Le balayage **par concept** ne se fait pas au `grep`, qui ne sait chercher que des chaînes. Le dépôt se
 donne un **graphe de connaissances** (`graphify-out/`, hors suivi Git : code, workflows, `bats`, docs et
 brief mêlés) qu'on interroge par `graphify query "<question>" --budget 2500`. Il répond à « qui d'autre
-fait X ? » quand X est une idée, et donne les appelants réels au niveau **méthode**. ⚠️ Il ne modélise
+fait X ? » quand X est une idée, et donne les appelants réels au niveau **méthode**. Il ne modélise
 **que notre code** (rien du JDK ni des bibliothèques) et sa traversée est **bruitée** : sa sortie est une
 **hypothèse à confirmer**, jamais un inventaire.
 
@@ -250,7 +250,7 @@ qu'on puisse rendre rouge puis vert (« le refus quand la date manque »), pas l
 Le test s'écrit **avant** le code, et sur un défaut le premier test **reproduit** le défaut. C'est la
 règle « un garde-fou se vérifie en le voyant rouge » déplacée là où elle est gratuite : après coup, il
 faut réintroduire le défaut à la main pour obtenir le même rouge. Un test qui échoue **pour une autre
-raison que prévu** est une **trouvaille** : lire le message avant de corriger. ⚠️ **Si le rouge dure**
+raison que prévu** est une **trouvaille** : lire le message avant de corriger. **Si le rouge dure**
 plus de quelques minutes, le pas était trop gros : revenir au dernier vert et le couper en deux.
 
 **Le REFACTOR est la troisième phase de CHAQUE tour**, pas une étape de fin d'issue ni la seule passe 7 :
@@ -279,7 +279,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
 2. **Cohérence CLI ↔ UI** : quand le chantier ajoute/change une **capacité métier**, la **CLI**
    (`fr.univ_amu.iut.cli`) doit exposer l'équivalent (même comportement) ; aligner si petit, sinon
    ouvrir une issue. « Sans objet » si le chantier est purement présentationnel.
-3. **Doc développeur** (site `dev-docs/`) à jour. ⚠️ Chercher aussi **ce qui est devenu FAUX**, pas
+3. **Doc développeur** (site `dev-docs/`) à jour. Chercher aussi **ce qui est devenu FAUX**, pas
    seulement ce qu'il y a à ajouter : une page qui décrit fidèlement un mécanisme **remplacé** ne rougit
    nulle part et se lit comme vraie. Partir des **fichiers touchés** et chercher qui les **cite** dans
    `docs/`, `dev-docs/` et `brief/`, plutôt que de partir de sa mémoire. Les **ADR s'écrivent en passe
@@ -292,11 +292,11 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
 6. **Tests** : chaque usage couvert par des tests d'**intégration** (TestFX) et **E2E**. L'inventaire
    se fait **depuis le diff** du chantier, pas de mémoire : pour chaque capacité ajoutée, quel test la
    couvre et à quel niveau (les angles morts sont les **chemins non nominaux**, la **parité CLI ↔ IHM**
-   et le **cas réel**). ⚠️ Un « aucun test » sorti d'un `grep` n'est qu'une **hypothèse** : l'inventaire
+   et le **cas réel**). Un « aucun test » sorti d'un `grep` n'est qu'une **hypothèse** : l'inventaire
    par motif se trompe dans les **deux sens** (homonymes, tests qui pilotent le service sans porter la
    clé de vue, commande invoquée en kebab-case vs classe instanciée). **Confirmer chaque zéro à la
    main** avant d'en faire une issue. Un E2E vaut par ce qu'il **traverse** : **fusionner** deux scénarios quand le
-   défaut probable est **entre** eux. ⚠️ **La recette se prépare, elle ne se remplit pas des restes** :
+   défaut probable est **entre** eux. **La recette se prépare, elle ne se remplit pas des restes** :
    **toute capacité ajoutée** a sa case `Sxx-NN` dans sa **session propriétaire**
    (`dev-docs/recette/sessions/`), parce qu'une capacité dont personne ne sait comment la vérifier à la
    main n'est pas finie. Une case est terminée quand elle est **rejouable** par quelqu'un qui n'était
@@ -305,10 +305,10 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    donnée bricolée à la main ne revient pas à la campagne suivante. Une case = **un fait observable**,
    jamais un contrôle groupé. Session **partielle ou jamais jouée** (état dans
    `dev-docs/recette/index.md`, seule source) : **le dire en issue**, sinon la capacité est réputée
-   vérifiable par un script qui ne la couvre pas. ⚠️ Un **garde-fou de non-régression se vérifie en le voyant rouge** : **PIT ciblé**
+   vérifiable par un script qui ne la couvre pas. Un **garde-fou de non-régression se vérifie en le voyant rouge** : **PIT ciblé**
    (`-Pmutation`, exhaustif sur une classe et rapide) pour le code Java, **mutation à la main** pour ce
    que PIT ne mute pas (attribut d'annotation, câblage, FXML, sonde réseau). Un test vert n'est qu'une
-   **hypothèse** sur ce qu'il couvre. ⚠️ Et **un dispositif n'est pas toujours un test** : la même règle
+   **hypothèse** sur ce qu'il couvre. Et **un dispositif n'est pas toujours un test** : la même règle
    vaut pour un **job de CI** ou un **script**, là où le faux vert se voit le moins. Vécu : un job écrit
    pour rejouer la suite sous un autre fuseau passait celui-ci par `-D` sur la ligne Maven, que les forks
    surefire n'héritent pas - il aurait été vert en ne vérifiant rien. **Ce vert existerait-il si c'était
@@ -335,7 +335,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
     [ADR 2465](dev-docs/decisions/2465-une-adr-declare-comment-elle-est-verifiee.md)) : un garde-fou fait
     rougir la CI si elle manque. **Ici et non en passe 3**, parce que les passes 4 à 9 **produisent** des
     décisions : sur le chantier #3151, les cinq ADR sont nées après la passe 3, aucune à l'endroit prévu.
-    ⚠️ Une décision **de ne pas faire** est une décision, et c'est celle qu'on oublie : elle ne laisse pas
+    Une décision **de ne pas faire** est une décision, et c'est celle qu'on oublie : elle ne laisse pas
     de code derrière elle.
 11. **Bilan** : ce qui a été livré, dette restante, décisions (qui **renvoient aux ADR** de la passe 10).
     **Et il se montre** : la passe 11 produit un **artefact visuel avant / après**, une ligne par

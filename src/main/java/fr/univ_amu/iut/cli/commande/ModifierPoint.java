@@ -17,7 +17,7 @@ import picocli.CommandLine.Spec;
 /// [ServiceSites#modifierPoint] sortent en **refus métier** (code 2, état intact) : code mal formé (R2), point
 /// n'appartenant pas au site, et code déjà pris par un **autre** point du site.
 ///
-/// ⚠️ `--site` est requis bien que l'identifiant du point suffise techniquement : le service s'en sert
+/// `--site` est requis bien que l'identifiant du point suffise techniquement : le service s'en sert
 /// pour **vérifier l'appartenance**. Le rendre optionnel supprimerait ce garde-fou, et une faute de
 /// frappe sur `--point` corrigerait alors un point d'un autre site sans rien dire.
 @Command(

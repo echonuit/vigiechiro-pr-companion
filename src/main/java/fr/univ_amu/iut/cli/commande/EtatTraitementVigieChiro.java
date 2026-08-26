@@ -51,7 +51,7 @@ import picocli.CommandLine.Spec;
                 + " 1 = en échec, 4 = jamais lancée, 2 = indisponible)")
 public final class EtatTraitementVigieChiro implements Callable<Integer>, LectureSeule {
 
-    /// ⚠️ Motif **purement numérique**, donc insensible à la locale : c'est justement le « Fri » et le
+    /// Motif **purement numérique**, donc insensible à la locale : c'est justement le « Fri » et le
     /// « Jul » du serveur qu'on remplace. `'à'` plutôt qu'un espace, parce que la valeur atterrit au
     /// milieu d'une phrase.
     private static final DateTimeFormatter AFFICHAGE = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
@@ -170,17 +170,17 @@ public final class EtatTraitementVigieChiro implements Callable<Integer>, Lectur
     /// `analyse EN COURS (le Fri, 3 Jul 2026 19:00:00 GMT). Patientez.` - jour et mois en anglais,
     /// heure en UTC, format d'en-tête HTTP (#3678).
     ///
-    /// ⚠️ L'UTC n'est pas un détail de présentation : « le 3 juillet à 19 h » n'est pas la même heure
+    /// L'UTC n'est pas un détail de présentation : « le 3 juillet à 19 h » n'est pas la même heure
     /// pour l'observateur que pour le serveur, et c'est l'observateur qui décide s'il attend ou s'il
     /// revient demain.
     ///
-    /// ⚠️ La plateforme rend **deux** formes, vues l'une et l'autre dans les fixtures : RFC 1123 et ISO
+    /// La plateforme rend **deux** formes, vues l'une et l'autre dans les fixtures : RFC 1123 et ISO
     /// avec décalage. Les deux sont acceptées ; une seule l'aurait été en se fiant à un exemple.
     ///
-    /// ⚠️ **Ce qu'on ne sait pas lire reste affiché tel quel.** Perdre l'information vaudrait moins que
+    /// **Ce qu'on ne sait pas lire reste affiché tel quel.** Perdre l'information vaudrait moins que
     /// l'afficher mal : un lecteur peut interpréter une chaîne étrange, jamais une absence.
     ///
-    /// ⚠️ Le fuseau est un **paramètre** plutôt que `systemDefault()` en dur : `fuseau-alternatif`
+    /// Le fuseau est un **paramètre** plutôt que `systemDefault()` en dur : `fuseau-alternatif`
     /// rejoue toute la suite sous `America/Cayenne` (ADR 3450), et un test qui figerait « 21:00 » y
     /// rougirait sans qu'aucun défaut soit en cause.
     static String depuis(String date, ZoneId fuseau) {

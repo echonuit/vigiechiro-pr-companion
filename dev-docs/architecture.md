@@ -56,7 +56,7 @@ Chaque feature (ex. `sites/`) suit le même découpage, **du métier vers l'IHM*
     (`IntegerProperty`, `ObservableList`…) sans toucher aux composants graphiques ; la `view`
     **observe** le viewmodel par *data binding* JavaFX.
 
-    ⚠️ **Ce qui est garanti n'est pas ce que ce schéma suggère.** ArchUnit interdit à une `view` de
+    **Ce qui est garanti n'est pas ce que ce schéma suggère.** ArchUnit interdit à une `view` de
     toucher **JDBC** - ni `model.dao`, ni `java.sql` - pas de nommer un type de `model`. En pratique
     **beaucoup** de classes de `view` importent un paquet `model`, pour y lire un *record* ou un enum,
     et c'est accepté : faire transiter chaque type métier par le viewmodel produirait une couche de

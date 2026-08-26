@@ -310,7 +310,7 @@ public class SyntheseController implements EmplacementNavigation, RafraichirAuRe
     /// `Synthèse → Passage → Validation → retour → retour` corrige des observations et revient sur des
     /// chiffres calculés **avant** la correction, sans que rien ne le dise.
     ///
-    /// ⚠️ Et `SuitLaRevision` ne conviendrait pas : la validation écrit des `update`, que l'ADR 3840
+    /// Et `SuitLaRevision` ne conviendrait pas : la validation écrit des `update`, que l'ADR 3840
     /// exclut délibérément du signal - « l'élargir aux `update` ferait relire cinq écrans pour un
     /// changement qu'aucun compte ne reflète ». C'est bien le **retour** qui porte ce cas-là.
     @Override

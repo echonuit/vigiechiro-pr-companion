@@ -103,7 +103,7 @@ public final class CaptureMenuLigne {
         // Habillage commun (#3374). L'ancien helper `styles()` posait bien palette+base, mais
         // n'installait PAS la police embarquee : `base.css` demandait alors une famille non
         // enregistree, et le popup rendait avec celle du systeme.
-        // ⚠️ Trop tard pour la TAILLE. Le popup se dimensionne a `show()`, **avant** qu'aucune feuille
+        // Trop tard pour la TAILLE. Le popup se dimensionne a `show()`, **avant** qu'aucune feuille
         // ne lui soit attachee ; `applyCss` + `layout` repeignent ensuite dans la bonne police sans
         // redimensionner la fenetre. Le menu se mesure donc dans une police et se peint dans une autre.
         //

@@ -530,7 +530,7 @@ désignent les pages à ouvrir.
     page que ce chantier avait rendue fausse et qu'il a fallu corriger. L'instrument de la passe 3
     manquait donc exactement ce que la passe 3 existe pour trouver.
 
-    ⚠️ **Et le remède évident était pire que le mal.** Retirer l'extension partout fait chercher
+    **Et le remède évident était pire que le mal.** Retirer l'extension partout fait chercher
     « base » pour `base.css` : **122** pages au lieu de 7, et « navigation » pour `navigation.md` : 39
     au lieu de 5. Le correctif ne vaut que pour les fichiers dont le nom **est un identifiant**, d'où
     le `case` ci-dessus. Un instrument qui noie sa sortie ne ment pas moins qu'un qui rend zéro.
@@ -704,7 +704,7 @@ Quatre gestes, donc, dans cette passe.
 ailleurs il n'est qu'écran de transit. Une case déposée dans la mauvaise session sera jouée deux fois ou
 jamais. La table des sessions vit dans l'[index de la recette](recette/index.md).
 
-⚠️ **Toutes les sessions ne sont pas au même état** : certaines sont partielles, d'autres écrites mais
+**Toutes les sessions ne sont pas au même état** : certaines sont partielles, d'autres écrites mais
 jamais jouées. Quand le chantier touche un de ces écrans, cela se **dit** - une issue, pas un silence :
 sinon la capacité est réputée vérifiable par un script qui ne la couvre pas.
 
@@ -871,7 +871,7 @@ sources reviennent :
 - la **passe 7**, où un refactoring de conceptualisation tranche presque toujours quelque chose ;
 - la **passe 8**, où l'on découvre ce qu'aucun test ne dit.
 
-⚠️ Une décision **de ne pas faire** est une décision. « On garde la dépendance aux tuiles
+Une décision **de ne pas faire** est une décision. « On garde la dépendance aux tuiles
 OpenStreetMap », « on n'ajoute aucune protection de branche », « la Polynésie reste hors de la table de
 dérivation » : ce sont des ADR, et ce sont celles qu'on oublie, parce qu'elles ne laissent pas de code
 derrière elles.

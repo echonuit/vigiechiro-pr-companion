@@ -8,7 +8,7 @@ import picocli.CommandLine.Help.Ansi;
 
 /// Le mode couleur de la CLI (#3738).
 ///
-/// ⚠️ La règle est éprouvée sur des **entrées fournies** et non sur la console du processus de test :
+/// La règle est éprouvée sur des **entrées fournies** et non sur la console du processus de test :
 /// manipuler la console et l'environnement d'une JVM en cours n'est pas portable, et c'est précisément
 /// la non-portabilité qui a créé ce défaut.
 class CouleurCliTest {
@@ -43,7 +43,7 @@ class CouleurCliTest {
         assertThat(CouleurCli.choisie(true, "", null)).isEqualTo(Ansi.ON);
     }
 
-    // ⚠️ Le dernier mot n'etait donne que dans UN sens : `NO_COLOR` eteignait, rien n'allumait. Trois
+    // Le dernier mot n'etait donne que dans UN sens : `NO_COLOR` eteignait, rien n'allumait. Trois
     // situations ordinaires en souffraient - un pager qui rend l'ANSI, un journal de CI qui
     // l'interprete, un enrobage `script`/`unbuffer` - et dans les trois l'utilisateur VEUT la couleur,
     // la console SAIT l'afficher, et le produit refusait (#3796).

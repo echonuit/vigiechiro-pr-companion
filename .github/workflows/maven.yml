@@ -8,7 +8,7 @@
 # - `paquet` : tout ce qui dépend de ce qu'on EMBALLE et non de ce qu'on teste - smoke-test du
 #              fat-jar, idempotence du packaging, app-image, puis les E2E CLI `bats`. Ces étapes n'ont
 #              besoin ni de la suite de tests ni de la couverture.
-#              ⚠️ Les E2E viennent APRÈS l'app-image depuis #4071, parce qu'ils visent désormais son
+#              Les E2E viennent APRÈS l'app-image depuis #4071, parce qu'ils visent désormais son
 #              lanceur `bin/vigiechiro` et non plus `java -cp <fat-jar>` : ils n'attendent donc plus un
 #              simple `package`. Rien n'a changé de job pour autant - l'app-image était déjà construite
 #              ici, et le coût est le même.
@@ -104,7 +104,7 @@ jobs:
   # seulement l'heure ; et il n'observe PAS l'heure d'été, là où Europe/Paris l'observe - un décalage
   # fixe se comporte autrement qu'un décalage saisonnier.
   #
-  # ⚠️ Ce que ce job NE voit pas : un défaut qui donnerait le même résultat sous les deux fuseaux.
+  # Ce que ce job NE voit pas : un défaut qui donnerait le même résultat sous les deux fuseaux.
   # Il compare deux points, il ne balaie pas l'espace des fuseaux.
   fuseau-alternatif:
     name: fuseau-alternatif
@@ -154,7 +154,7 @@ jobs:
   # | les tailles minimales posées par `App.start` (#3607) | la modale de la classe suivante |
   # | `setWidth`/`setHeight` dans `AppTest` (#3452) | `LotDepotConnecteViewTest`, puis deux E2E |
   #
-  # ⚠️ Chaque fois, `main` était VERT - par chance de répartition des classes entre forks. #1967 avait
+  # Chaque fois, `main` était VERT - par chance de répartition des classes entre forks. #1967 avait
   # prédit le retour du défaut et proposé ce job ; il avait raison sur les deux.
   #
   # ## Pourquoi un seul fork
@@ -177,7 +177,7 @@ jobs:
   # directionnelles : A casse B, mais B ne casse pas A. Inverser expose l'autre sens, et c'est
   # effectivement dans ce sens-là que la deuxième a été trouvée.
   #
-  # ⚠️ Ce que ce job NE voit pas : une fuite qui ne mord que dans l'ordre NORMAL à fork unique, et une
+  # Ce que ce job NE voit pas : une fuite qui ne mord que dans l'ordre NORMAL à fork unique, et une
   # fuite entre deux classes qu'aucun des deux ordres ne met dans cette séquence. Il éprouve deux
   # ordres, il ne balaie pas leurs permutations.
   ordre-alternatif:
@@ -233,7 +233,7 @@ jobs:
           set -euo pipefail
           ./mvnw -B -Pecj clean test-compile --file pom.xml | tee /tmp/ecj.log
 
-          # ⚠️ Sans ce controle, une faute dans le profil ferait retomber le build sur JAVAC et le
+          # Sans ce controle, une faute dans le profil ferait retomber le build sur JAVAC et le
           # job resterait VERT en n'ayant rien compare. C'est la panne que #3345 a apprise ici :
           # un vert qui ne dit pas qu'il n'a rien verifie.
           passes=$(grep -c "Compiling with eclipse" /tmp/ecj.log || true)
@@ -313,7 +313,7 @@ jobs:
           echo "app-image construite : $(ls -d target/dist/VigieChiroCompanion)"
 
       - name: Installer bats
-        # ⚠️ Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
+        # Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
         # parce que ces paquets ne sont que des fichiers ; les polices et flatpak gardent
         # `installer-paquets.sh`, dont le post-install fait foi.
         uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
@@ -326,7 +326,7 @@ jobs:
         # VRAI processus - ce que les tests Java in-process (CliTest & co.) ne voient pas. Amorce du
         # harnais (#1572, chantier #1565).
         #
-        # ⚠️ Ils visaient `java -cp <fat-jar> …cli.Cli`, c'est-à-dire un chemin qu'AUCUN utilisateur
+        # Ils visaient `java -cp <fat-jar> …cli.Cli`, c'est-à-dire un chemin qu'AUCUN utilisateur
         # n'emprunte : les 66 commandes étaient éprouvées à côté de la porte par laquelle on entre. Ils
         # visent maintenant le lanceur de l'app-image construite juste au-dessus, donc le runtime jlink
         # réellement livré - celui où #2299 avait laissé partir un paquet incapable de démarrer.
@@ -386,7 +386,7 @@ jobs:
   # Surveille l'ALLONGEMENT du portail, que rien ne mesurait (#3508). Il AVERTIT, il ne bloque pas :
   # un rouge se relève, un avertissement qui porte la comparaison en clair s'instruit.
   #
-  # ⚠️ `needs: build` sans condition de branche, donc exercé par CHAQUE PR. Une étape réservée à
+  # `needs: build` sans condition de branche, donc exercé par CHAQUE PR. Une étape réservée à
   # `main` n'est jamais jouée avant sa fusion, et peut être fusionnée cassée - le dépôt l'a déjà payé.
   # Rien n'est écrit ici, donc rien n'exige d'être réservé à `main` : la série lue est de toute façon
   # celle de `main`, et une PR y lit la même tendance que lui.
@@ -412,12 +412,12 @@ jobs:
   # MSI, DMG et DEB ; ses tests ne tournaient que sous Linux - 21 jobs contre un, et ce dernier lance
   # `msiexec`, pas la suite. Le premier contact du code avec Windows avait donc lieu APRÈS la fusion.
   #
-  # ⚠️ Ciblé, et non la suite entière : le gate dure onze minutes, et les minutes Windows coûtent le
+  # Ciblé, et non la suite entière : le gate dure onze minutes, et les minutes Windows coûtent le
   # double, macOS dix fois. Ce qui mérite les trois plateformes, c'est ce qui touche le disque -
   # renommage atomique, verrou, ZIP, copie entre volumes, emplacement de la configuration -, pas l'IHM
   # ni le domaine.
   #
-  # ⚠️ Il s'exécute sur CHAQUE PR et décide lui-même s'il a quelque chose à vérifier. Un filtre
+  # Il s'exécute sur CHAQUE PR et décide lui-même s'il a quelque chose à vérifier. Un filtre
   # `paths:` l'aurait rendu ABSENT du récapitulatif la plupart du temps - et dans un dépôt sans
   # protection de branche, un job absent se lit exactement comme un job vert (ADR 2748). Ici son
   # silence est explicite : il le dit et il finit vert.

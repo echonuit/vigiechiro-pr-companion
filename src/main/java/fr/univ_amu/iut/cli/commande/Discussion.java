@@ -24,7 +24,7 @@ import picocli.CommandLine.Spec;
 /// Parité CLI de ce que « Sons & validation » offre à l'écran depuis #1417 / #1418. Sans elle, deux
 /// capacités métier n'existeraient que d'un seul côté.
 ///
-/// ⚠️ **Répondre est définitif.** Le serveur ajoute par `$push` et n'offre **aucune** route de suppression
+/// **Répondre est définitif.** Le serveur ajoute par `$push` et n'offre **aucune** route de suppression
 /// ni de modification : un message posté ne se retire pas, et il est lu par un expert du MNHN. D'où
 /// `--confirmer`, **obligatoire** : on n'écrit pas l'irréversible par une option qu'on aurait pu laisser
 /// traîner dans un script.

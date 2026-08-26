@@ -25,15 +25,15 @@ jobs:
     # (`scripts/doc-video/filme-un-parcours.sh`, #3887). Ils partagent leur outillage d'affichage,
     # donc ils partagent ce job.
     #
-    # ⚠️ Le second n'était lancé NULLE PART. Il figurait dans les chemins déclencheurs de `docs.yml`
+    # Le second n'était lancé NULLE PART. Il figurait dans les chemins déclencheurs de `docs.yml`
     # - le modifier réveillait le workflow - mais aucune étape n'exécutait ses cas. C'est exactement
     # le défaut que #3883 avait fermé pour le premier banc, refait dans l'outil bâti pour le
     # combattre : un garde de soixante-cinq cas dont personne ne vérifiait qu'il passe.
     #
-    # ⚠️ Et `verifie-inventaires-ci.sh` ne pouvait pas le dire : il ne regarde que
+    # Et `verifie-inventaires-ci.sh` ne pouvait pas le dire : il ne regarde que
     # `.github/scripts` et `.github/assets`. Un banc rangé sous `scripts/` lui est invisible.
     #
-    # ⚠️ Ils n'avaient JAMAIS tourné en CI. Quatorze scripts lancent leur `--auto-test` dans le job
+    # Ils n'avaient JAMAIS tourné en CI. Quatorze scripts lancent leur `--auto-test` dans le job
     # `lint` ci-dessous ; celui-ci n'y était pas, faute d'outillage - et `recette-filmee.yml`, qui
     # l'installe, est à déclenchement MANUEL. Entre deux séances, rien n'exerçait le garde du banc.
     #
@@ -52,7 +52,7 @@ jobs:
     # L'intention de l'ADR 3661 - les cas d'un garde de CI sont lancés par `lint.yml` - est donc
     # tenue sans en payer le prix sur le job rapide.
     runs-on: ubuntu-latest
-    # ⚠️ Un butoir, parce que l'absence de butoir a bloqué une PR pendant **quarante minutes** sans
+    # Un butoir, parce que l'absence de butoir a bloqué une PR pendant **quarante minutes** sans
     # rien apprendre à personne. Le miroir Ubuntu d'Azure a rendu `fonts-urw-base35` (11 Mo) à une
     # poignée de kilo-octets par seconde ; l'installation, mesurée à 34 s la veille, n'était toujours
     # pas finie. Sans butoir, GitHub laisse courir six heures.
@@ -60,7 +60,7 @@ jobs:
     # Un garde qui peut bloquer indéfiniment est pire qu'un garde qui échoue : il ne dit rien, et il
     # retient tout le monde.
     #
-    # ⚠️ Douze minutes n'étaient plus vingt fois la mesure nominale, elles étaient devenues trop
+    # Douze minutes n'étaient plus vingt fois la mesure nominale, elles étaient devenues trop
     # justes. L'outillage pèse **91,2 Mo** : à 2,7 Mo/s - le miroir en forme - c'est 34 s ; à
     # 0,2 Mo/s - le miroir de ce soir - c'est huit minutes rien que pour le téléchargement, et le
     # job mourait au butoir sans avoir lancé un seul cas. Vingt-cinq minutes couvrent le miroir
@@ -71,19 +71,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Cache des .deb (le dépaquetage, lui, se refait)
-        # ⚠️ Ce cache-ci porte sur les `.deb`, pas sur l'état installé : `dpkg` tourne donc à chaque
+        # Ce cache-ci porte sur les `.deb`, pas sur l'état installé : `dpkg` tourne donc à chaque
         # run, et avec lui les scripts post-installation - `fc-cache` compris. On perd le temps du
         # dépaquetage ; on garde des polices réellement enregistrées.
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/apt-vigiechiro
-          # ⚠️ La clé NOMME ce qu'elle contient. Ajouter un paquet sans la changer ferait servir un
+          # La clé NOMME ce qu'elle contient. Ajouter un paquet sans la changer ferait servir un
           # cache d'avant, et le défaut n'apparaîtrait qu'au second passage - celui qui TROUVE le
           # cache, pas celui qui le remplit.
           key: apt-${{ runner.os }}-banc-filme-imagemagick
 
       - name: Installer de quoi afficher et filmer
-        # ⚠️ PAS le cache de fichiers, et c'est une leçon payée. `awalsh128/cache-apt-pkgs-action`
+        # PAS le cache de fichiers, et c'est une leçon payée. `awalsh128/cache-apt-pkgs-action`
         # restaure des fichiers sans rejouer les scripts post-installation ; j'avais jugé ffmpeg
         # « paquet de fichiers », et c'est faux : sa fermeture de dépendances tire DIX paquets de
         # polices - fonts-droid-fallback, fonts-noto-mono… - et `fc-cache` ne tourne pas.
@@ -105,7 +105,7 @@ jobs:
           ./.github/scripts/lance-test-filme.sh --auto-test
 
       - name: Le banc de documentation, ses cas et ses rouges attendus
-        # ⚠️ Sans `udisks2`, `dosfstools` ni `mtools`, et c'est voulu : l'auto-test ne monte aucune
+        # Sans `udisks2`, `dosfstools` ni `mtools`, et c'est voulu : l'auto-test ne monte aucune
         # carte, il éprouve les REFUS du montage - étiquette étrangère, point vide, source sans
         # brut - qui sont du raisonnement pur. Le banc distingue depuis #4013 les outils qu'il lui
         # faut toujours de ceux qu'un parcours à carte réclame, ce qui évite d'installer un service
@@ -113,7 +113,7 @@ jobs:
         run: bash scripts/doc-video/filme-un-parcours.sh --auto-test
 
       - name: Installer ImageMagick, que le runner ne fournit pas
-        # ⚠️ « L'image `ubuntu-latest` ne fournit AUCUN ImageMagick », comme le dit déjà
+        # « L'image `ubuntu-latest` ne fournit AUCUN ImageMagick », comme le dit déjà
         # `capture-vues.yml`. Mesuré ici en le supposant présent : l'étape suivante a rendu
         # « ImageMagick requis pour l'auto-test » et le job entier avec.
         #
@@ -124,7 +124,7 @@ jobs:
         run: bash .github/scripts/installer-paquets.sh --avec-recommandations imagemagick
 
       - name: Les deux comparaisons visuelles, et leurs grandes images
-        # ⚠️ `compare-apercus.sh` avait un `--auto-test` de huit cas qui ne tournait NULLE PART. Le
+        # `compare-apercus.sh` avait un `--auto-test` de huit cas qui ne tournait NULLE PART. Le
         # même défaut que celui décrit plus haut pour le banc de documentation, dans un autre outil :
         # un garde dont personne ne vérifie qu'il passe.
         #
@@ -146,7 +146,7 @@ jobs:
     # publication, donc une erreur d'installation ou de configuration ne se verrait qu'à la prochaine
     # release - c'est-à-dire en production, sur un dépôt qui publie à chaque fusion (#2738).
     #
-    # ⚠️ Ce que ce job prouve DÉPEND du déclencheur, et c'est à savoir avant de lire son vert (#3345) :
+    # Ce que ce job prouve DÉPEND du déclencheur, et c'est à savoir avant de lire son vert (#3345) :
     #   - sur une PR, `semantic-release` s'arrête sur « triggered by a pull request » APRÈS avoir chargé
     #     les greffons mais AVANT d'analyser l'historique. Le vert dit « ça s'installe et ça se charge » ;
     #   - sur `main`, il va jusqu'à l'analyse et au calcul de version. C'est là que le contrôle est réel.
@@ -293,12 +293,12 @@ jobs:
           ./.github/scripts/verifie-permissions.sh
 
       - name: Un secret de plateforme ne dépasse pas son pas
-        # ⚠️ Posé dans l'`env:` d'un JOB, un jeton Vigie-Chiro n'est pas offert au pas qui en a
+        # Posé dans l'`env:` d'un JOB, un jeton Vigie-Chiro n'est pas offert au pas qui en a
         # besoin : il l'est à tout ce que le job exécute. `ConnexionModule` lit `System.getenv`, les
         # forks surefire héritent de l'environnement du job, et l'URL de base vaut la production : la
         # suite de tests entière serait armée face à la plateforme réelle.
         #
-        # ⚠️ Et rien côté serveur ne peut le rattraper : le rôle `Lecteur` est déclaré mais AUCUNE
+        # Et rien côté serveur ne peut le rattraper : le rôle `Lecteur` est déclaré mais AUCUNE
         # route ne l'accepte, `GET /moi` compris. La lecture seule ne tient que par cette portée.
         run: |
           chmod +x .github/scripts/verifie-portee-des-secrets.sh
@@ -306,7 +306,7 @@ jobs:
           ./.github/scripts/verifie-portee-des-secrets.sh
 
       - name: Le verdict du tournage lit le XML, pas le texte
-        # ⚠️ Les rapports `.txt` de surefire annoncent « Tests run: 0 » sur une classe à `@Nested` et
+        # Les rapports `.txt` de surefire annoncent « Tests run: 0 » sur une classe à `@Nested` et
         # rendent 0 : un compteur qui les lirait dirait « aucun échec » sur un tournage à moitié rouge.
         # Ses deux contrôles négatifs comptent autant que le reste : « aucun rapport » n'est pas
         # « aucun échec », et une ERREUR compte autant qu'une défaillance - c'est par une erreur qu'un
@@ -316,7 +316,7 @@ jobs:
           ./.github/scripts/verdict-du-tournage.sh --auto-test
 
       - name: La révocation du jeton sait ce qui vaut succès
-        # ⚠️ Sa règle est de celles qu'une relecture distraite retourne : `404` et `401` sont des
+        # Sa règle est de celles qu'une relecture distraite retourne : `404` et `401` sont des
         # SUCCÈS, parce que l'objectif n'est pas « le serveur a répondu 200 » mais « ce jeton ne sert
         # plus à personne ». Les lire comme des échecs ferait avertir à chaque tournage dont le jeton
         # avait déjà expiré, et on apprendrait à ignorer la ligne.
@@ -341,11 +341,11 @@ jobs:
           ./.github/scripts/verifie-decisions-du-tournage-connecte.sh
 
       - name: La forme d un jeton se cherche, et le garde avoue ce qu il ne lit pas
-        # ⚠️ Trois de ses six cas doivent rester VERTS : empreintes, identifiants et longueurs
+        # Trois de ses six cas doivent rester VERTS : empreintes, identifiants et longueurs
         # voisines ne sont pas des jetons, et une IMAGE portant le motif ne doit pas le faire rougir -
         # il ne sait pas la lire, et prétendre le contraire serait pire que ne rien faire.
         #
-        # ⚠️ Un quatrième vérifie qu'il NOMME le fichier qu'il a écarté. C'est ce qui l'empêche d'être
+        # Un quatrième vérifie qu'il NOMME le fichier qu'il a écarté. C'est ce qui l'empêche d'être
         # un faux vert : sans cette phrase, on croirait le canal des clips couvert.
         run: |
           chmod +x .github/scripts/verifie-forme-du-jeton.sh
@@ -363,11 +363,11 @@ jobs:
           ./.github/scripts/interroge-le-jeton.sh --auto-test
 
       - name: Le contrôle du jeton sépare ses deux causes
-        # ⚠️ Trois verdicts et non deux, et c'est tout l'objet de cet auto-test : « pas 200 » recouvre
+        # Trois verdicts et non deux, et c'est tout l'objet de cet auto-test : « pas 200 » recouvre
         # un jeton mort - on en pose un frais - et une plateforme muette - poser un jeton frais n'y
         # changerait rien. Les fondre referait, un cran plus loin, le défaut de #4328.
         #
-        # ⚠️ Sa table est celle de `revoque-jeton.sh` LUE À L'ENVERS : `401` est un refus ici, un
+        # Sa table est celle de `revoque-jeton.sh` LUE À L'ENVERS : `401` est un refus ici, un
         # succès là-bas. Les deux passent par leurs codes connus à chaque lint, parce que deux
         # scripts voisins qui se contredisent finissent par s'harmoniser par erreur.
         run: |
@@ -375,12 +375,12 @@ jobs:
           ./.github/scripts/verifie-jeton-vivant.sh --auto-test
 
       - name: La porte d installation porte ses cas
-        # ⚠️ Elle est en travers du chemin de tous les workflows, y compris ceux qui publient : un
+        # Elle est en travers du chemin de tous les workflows, y compris ceux qui publient : un
         # défaut y serait indiscernable d'une panne de miroir.
         run: bash .github/scripts/installer-paquets.sh --auto-test
 
       - name: Aucun workflow n appelle apt-get directement
-        # ⚠️ Trois étapes de trois workflows ont pendu le même jour sur `apt-get update`, jusqu'au
+        # Trois étapes de trois workflows ont pendu le même jour sur `apt-get update`, jusqu'au
         # butoir de leur job et jusque sur `main`. Le remède avait été appliqué à UNE des trois.
         run: |
           chmod +x .github/scripts/verifie-apt.sh
@@ -388,7 +388,7 @@ jobs:
           ./.github/scripts/verifie-apt.sh
 
       - name: Tout job porte un butoir
-        # ⚠️ Un job sans `timeout-minutes` que GitHub laisse courir SIX HEURES a bloqué une PR
+        # Un job sans `timeout-minutes` que GitHub laisse courir SIX HEURES a bloqué une PR
         # 4 h 15 sur un `apt-get install` de police, en `-qq` donc sans une ligne de log. Le butoir
         # de #3883 avait été apprécié pour le seul `banc-filme` ; vingt-six autres jobs n'en avaient
         # aucun, dont ceux qui publient.
@@ -398,7 +398,7 @@ jobs:
           ./.github/scripts/verifie-butoirs.sh
 
       - name: Une entrée booléenne ne se compare pas à une chaîne
-        # ⚠️ `inputs.x == 'true'` vaut TOUJOURS faux, et `!= 'true'` TOUJOURS vrai : une entrée
+        # `inputs.x == 'true'` vaut TOUJOURS faux, et `!= 'true'` TOUJOURS vrai : une entrée
         # `type: boolean` arrive comme un vrai booléen, et comparer deux types différents les casse
         # tous les deux en nombres. Mesuré sur le run 32395513266 : le remuxage des clips était sauté
         # alors que le film existait, et le témoin « sans gestionnaire de fenêtres » installait quand
@@ -412,7 +412,7 @@ jobs:
           ./.github/scripts/clips-orphelins.sh --auto-test
 
       - name: Les scripts shell passent shellcheck
-        # ⚠️ Les RÉGLAGES (exclusions) vivent dans `.shellcheckrc`, pas ici : un contributeur qui
+        # Les RÉGLAGES (exclusions) vivent dans `.shellcheckrc`, pas ici : un contributeur qui
         # lance `shellcheck son-script.sh` doit voir la même chose que ce pas. Seul le SEUIL est un
         # drapeau, parce que `severity=` n'est pas lu depuis le fichier de réglages - vérifié, et
         # non supposé : les notes continuaient de sortir.
@@ -422,7 +422,7 @@ jobs:
         # vrai défaut dans `clips-orphelins.sh` (#4106). Un garde qui manquerait le défaut qui l'a
         # fait naître ne garderait pas grand-chose.
         #
-        # ⚠️ La PARITÉ porte sur les réglages, PAS sur la version. Mesuré sur ce pas même : le
+        # La PARITÉ porte sur les réglages, PAS sur la version. Mesuré sur ce pas même : le
         # runner a signalé un `SC2015` que shellcheck 0.11.0 ne signale plus en local. C'est donc la
         # CI qui fait foi, et un poste plus récent peut être plus PERMISSIF - l'inverse de ce que
         # j'avais d'abord écrit ici. `shellcheck --version` avant de conclure d'un vert local.
@@ -439,7 +439,7 @@ jobs:
           shellcheck --shell=bash -S info "${scripts[@]}"
 
       - name: La condition d'un job appuyé sur un « needs » nomme l'état qu'elle attend
-        # ⚠️ GitHub saute un job dès qu'un ANCÊTRE a été sauté, sauf si son `if:` porte une fonction
+        # GitHub saute un job dès qu'un ANCÊTRE a été sauté, sauf si son `if:` porte une fonction
         # d'état : sans elle, la condition est enveloppée en `success() && (...)` sur tout le graphe
         # amont, et la porte qu'on croit tenir n'est jamais évaluée. Mesuré sur le run 32224321373 :
         # la 2.186.0 a eu son tag, son CHANGELOG et sa Release, puis aucun installeur - `installers`
@@ -460,7 +460,7 @@ jobs:
           ./.github/scripts/verifie-renvois-workflows.sh
 
       - name: Les inventaires que la CI tient sur elle-même concordent
-        # ⚠️ Ce dépôt exige de son PRODUIT que ses inventaires soient prouvés - commandes CLI contre
+        # Ce dépôt exige de son PRODUIT que ses inventaires soient prouvés - commandes CLI contre
         # `dev-docs/cli.md`, vues contre captures, ADR contre index et nav. De sa propre description, il
         # n'exigeait rien, et les trois inventaires avaient dérivé : deux workflows absents du tableau -
         # les deux de SÉCURITÉ -, six gardes autotestées absentes de l'autre (#3771, #3794).
@@ -583,7 +583,7 @@ jobs:
         # Cet auto-test plante une violation témoin par script et exige qu'il la voie, et la même en
         # commentaire pour qu'il ne la compte pas. Il ferme le trou de la passe 6 de clôture.
         #
-        # ⚠️ Et le harnais lui-même a désormais son auto-test, lancé d'abord (#4268). Il prouvait que
+        # Et le harnais lui-même a désormais son auto-test, lancé d'abord (#4268). Il prouvait que
         # chaque détecteur détecte, sans que rien ne prouve qu'il les exerce TOUS : `2635` et `3947`
         # n'avaient aucun cas témoin, et n'étaient donc tenus que par leur cliquet - c'est-à-dire par
         # un compte qui ne monte pas, le trou exact que ce mécanisme existe pour fermer.

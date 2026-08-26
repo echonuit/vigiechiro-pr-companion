@@ -53,7 +53,7 @@ attend.
 plus difficile à voir : personne ne relit un test qui passe. Cf.
 [ADR 2748](2748-un-dispositif-qui-peut-ne-rien-verifier-le-dit.md).
 
-⚠️ **Et il mesure la propriété, pas un proxy.** Le premier jet cherchait la chaîne `MainView.fxml` pour
+**Et il mesure la propriété, pas un proxy.** Le premier jet cherchait la chaîne `MainView.fxml` pour
 décider qu'une classe montait le chrome. Il a déclaré fautive la première classe migrée sur
 `BancDeRecette` - qui monte le chrome sans le nommer, puisque le banc le nomme pour elle. Un garde qui
 mesure un proxy se trompe dès que le proxy change.

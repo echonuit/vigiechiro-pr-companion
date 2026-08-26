@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 /// Les tests le disaient en **échouant** plutôt qu'en passant, ce qui est le bon sens d'échec - mais
 /// ils ne prouvaient rien hors POSIX, sur la plateforme qui a le plus de façons de refuser un accès.
 ///
-/// ⚠️ Trois gestes, pas une façade du système de fichiers. Ce qui entre ici est ce dont on a **besoin
+/// Trois gestes, pas une façade du système de fichiers. Ce qui entre ici est ce dont on a **besoin
 /// de fabriquer l'échec** : le parcours, dont l'`UncheckedIOException` traverse les `catch` (#3632) ;
 /// la suppression d'une entrée, sur laquelle repose la distinction entre les deux contrats d'effacement
 /// (#3574) ; et le listage d'un dossier, dont l'échec est ce que la pesée doit rapporter sans s'arrêter
@@ -29,7 +29,7 @@ public interface GestesFichiers {
 
     /// Le flux des chemins sous `racine`, `racine` comprise.
     ///
-    /// ⚠️ Son échec de parcours arrive **pendant l'itération**, enveloppé dans une
+    /// Son échec de parcours arrive **pendant l'itération**, enveloppé dans une
     /// `UncheckedIOException` - c'est le contrat de `Files.walk`, et c'est le piège de #3632. Un double
     /// qui veut l'éprouver doit donc lever **à la consommation**, pas à la construction du flux.
     default Stream<Path> parcourir(Path racine) throws IOException {
@@ -43,7 +43,7 @@ public interface GestesFichiers {
 
     /// Les entrées directes d'un dossier, sans descendre.
     ///
-    /// ⚠️ Distinct de [#parcourir] : c'est celui-ci qui échoue quand un dossier **ne se laisse pas
+    /// Distinct de [#parcourir] : c'est celui-ci qui échoue quand un dossier **ne se laisse pas
     /// lister**, et cette panne-là ne s'annonce pas pendant l'itération mais à l'ouverture. La pesée
     /// s'en sert pour continuer et rapporter (#3634) ; le parcours récursif, lui, s'arrête.
     default Stream<Path> lister(Path dossier) throws IOException {
@@ -52,7 +52,7 @@ public interface GestesFichiers {
 
     /// Les vrais gestes, sur le vrai disque.
     ///
-    /// ⚠️ Les trois méthodes portent leur implémentation réelle **par défaut**, et un double n'écrase
+    /// Les trois méthodes portent leur implémentation réelle **par défaut**, et un double n'écrase
     /// que celle dont il veut fabriquer l'échec. Sans cela, ajouter un geste à cette interface ferait
     /// rougir tous les doubles existants pour une raison qui ne les concerne pas - c'est arrivé dès le
     /// troisième, et la friction se paie à chaque ajout suivant.

@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 ///
 /// ## Pourquoi il y a des fragments, et pas un seul fichier
 ///
-/// ⚠️ Une session JUnit n'est pas une JVM. Surefire tourne à `forkCount=1C`, soit une JVM par cœur,
+/// Une session JUnit n'est pas une JVM. Surefire tourne à `forkCount=1C`, soit une JVM par cœur,
 /// et chacune tient son propre index. La première version écrivait `index.md` directement : la
 /// dernière JVM à finir effaçait le travail des autres.
 ///
@@ -45,7 +45,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 /// liste avant qu'une autre ne dépose son fragment écrirait, après elle, un index plus pauvre : le
 /// défaut d'origine reviendrait, en plus rare et donc en pire.
 ///
-/// ⚠️ Limite assumée : un dossier de tournage RÉUTILISÉ garde les fragments du tournage précédent,
+/// Limite assumée : un dossier de tournage RÉUTILISÉ garde les fragments du tournage précédent,
 /// et l'index les compterait. C'est le prix d'une identité qui ne se réemploie jamais, et c'est le
 /// bon prix : le défaut inverse EFFACE des lignes, celui-ci en montre de trop. Le nombre de
 /// fragments fusionnés est annoncé à chaque écriture, si bien qu'un total surprenant se voit au lieu
@@ -106,7 +106,7 @@ public final class IndexDesCas implements ExtensionContext.Store.CloseableResour
 
     /// L'identité de CETTE JVM, unique même parmi celles qui ne vivent pas en même temps.
     ///
-    /// ⚠️ Le numéro de processus ne suffit pas, et c'est macOS qui l'a dit. La première version
+    /// Le numéro de processus ne suffit pas, et c'est macOS qui l'a dit. La première version
     /// nommait le fragment d'après le seul `pid`. Sous Linux et Windows les forks vivaient
     /// ensemble, donc leurs numéros différaient et rien ne paraissait. Sur un runner macOS, moins
     /// de coeurs : les forks se sont ENCHAÎNÉS, le système a recyclé un numéro libéré, et la JVM de
@@ -122,12 +122,12 @@ public final class IndexDesCas implements ExtensionContext.Store.CloseableResour
         return ProcessHandle.current().pid() + "-" + UUID.randomUUID();
     }
 
-    /// ⚠️ L'identité est un paramètre pour que le défaut d'origine soit REPRODUCTIBLE. Il ne se
+    /// L'identité est un paramètre pour que le défaut d'origine soit REPRODUCTIBLE. Il ne se
     /// produit qu'entre deux JVM, et un test ne peut pas en démarrer une seconde : sans cette
     /// couture, la seule façon de voir l'index amputé serait de lancer un tournage entier, ce qui
     /// revient à ne jamais le voir.
     ///
-    /// ⚠️ Elle sert à ORDONNER les fragments dans les cas de garde, jamais à leur donner un nom
+    /// Elle sert à ORDONNER les fragments dans les cas de garde, jamais à leur donner un nom
     /// stable : deux séances qui se disent la même identité s'effacent, et c'est précisément le
     /// défaut que [#identiteParDefaut()] existe pour empêcher.
     IndexDesCas(Path fichier, String identite) {
@@ -148,7 +148,7 @@ public final class IndexDesCas implements ExtensionContext.Store.CloseableResour
         Files.createDirectories(fragments);
         deposer(fragments);
 
-        // ⚠️ Le verrou porte sur la SUITE lecture-puis-écriture, pas sur l'écriture seule.
+        // Le verrou porte sur la SUITE lecture-puis-écriture, pas sur l'écriture seule.
         Path verrouillage = fragments.resolve("index.lock");
         try (FileChannel canal = FileChannel.open(verrouillage, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
                 FileLock verrou = canal.lock()) {

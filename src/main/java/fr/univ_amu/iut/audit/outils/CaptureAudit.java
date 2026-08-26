@@ -176,7 +176,7 @@ public final class CaptureAudit {
         // réels (`VerificationDepot`, `AuditPointsServeur`) que la substitution locale forçait à
         // `Optional.empty()`.
         //
-        // ⚠️ L'aperçu ne change pas pour autant : vérifié image contre image, les mêmes deux écarts
+        // L'aperçu ne change pas pour autant : vérifié image contre image, les mêmes deux écarts
         // s'affichent. La nuit semée ici n'exerce simplement aucune des deux sources. La substitution
         // n'amputait donc rien de VISIBLE - elle amputait la possibilité de le voir un jour.
         return Guice.createInjector(

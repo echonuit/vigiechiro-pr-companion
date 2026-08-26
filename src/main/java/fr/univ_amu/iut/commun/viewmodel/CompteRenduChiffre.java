@@ -204,7 +204,7 @@ public record CompteRenduChiffre(
         PRINCIPALE,
         /// La part secondaire d'un volume écrit (les séquences produites).
         ///
-        /// ⚠ Elle **partage la couleur** de [#RETENU], parce qu'elle est la seconde part d'un couple de
+        /// Elle **partage la couleur** de [#RETENU], parce qu'elle est la seconde part d'un couple de
         /// même nature - « bruts + séquences » se lit comme un tout. L'employer dans une **ventilation**,
         /// où chaque part a un sens distinct, fait lire cette part comme une réussite : c'est arrivé au
         /// branchement du dépôt, où « sans ancrage » ressortait du même vert que « publiées ».

@@ -51,7 +51,7 @@ class ValidationManuelleTest {
         new MigrationSchema(source).migrer();
         try (Connection cx = source.getConnection()) {
             // Utilisateur, site, point et enregistreur viennent de la fixture, avec le passage.
-            // ⚠️ Le SQL d'origine écrivait le protocole « Point fixe standard », un libellé que
+            // Le SQL d'origine écrivait le protocole « Point fixe standard », un libellé que
             // `Protocole` ne connaît plus (il stocke « PointFixeStandard ») : la ligne était illisible par
             // `SiteDao`, et personne ne s'en apercevait parce que ce test ne relisait jamais le site.
             long idPassage = JeuDeDonneesPassage.dans(source)

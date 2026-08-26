@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 /// Un contre-exemple qui se dégraderait en silence ferait perdre le repère. Ce garde compte donc des
 /// **connexions** à deux tailles de jeu, et exige que le nombre ne suive pas celui des nuits.
 ///
-/// ⚠️ Sa première version résolvait la source **par l'injecteur** : Guice en fabriquait une autre, le
+/// Sa première version résolvait la source **par l'injecteur** : Guice en fabriquait une autre, le
 /// compteur restait à zéro, et « zéro requête » se lit comme une excellente nouvelle. C'est l'assertion
 /// de non-vacuité qui l'a dit. La source est désormais construite à la main.
 class AuditGlobalDesLecturesTest {
@@ -64,7 +64,7 @@ class AuditGlobalDesLecturesTest {
 
     private int requetes(int nuits) throws Exception {
         Path espace = Files.createTempDirectory("audit7-" + nuits);
-        // ⚠️ La source est construite À LA MAIN, pas résolue par l'injecteur : Guice en fabrique une
+        // La source est construite À LA MAIN, pas résolue par l'injecteur : Guice en fabrique une
         // autre, et le compteur restait à zéro - un « zéro requête » qui se lit comme une bonne
         // nouvelle. C'est l'assertion de non-vacuité qui l'a dit.
         SourceComptee source = new SourceComptee(new Workspace(espace));

@@ -53,7 +53,7 @@ class UrlSigneeAdmiseTest {
 
         assertThat(motif).isPresent();
         // Sans ces deux informations, un changement d'hébergement côté plateforme devient un mur.
-        // ⚠️ Et le geste nommé doit être ATTEIGNABLE : le refus citait la propriété JVM, qu'un produit
+        // Et le geste nommé doit être ATTEIGNABLE : le refus citait la propriété JVM, qu'un produit
         // installé ne permet pas de poser (#4075). Il nomme désormais l'option de la ligne de commande.
         assertThat(motif.orElseThrow())
                 .contains("ailleurs.example")

@@ -56,7 +56,7 @@ public record ParticipationOrpheline(
     /// l'enregistreur, et c'est ce que [CorrespondanceParticipation] reconvertit en UTC à l'envoi. La
     /// conversion doit donc **préserver l'instant** et changer de repère.
     ///
-    /// ⚠️ **#1860** : ce code appelait `toLocalDateTime()`, qui **jette le décalage** au lieu de convertir -
+    /// **#1860** : ce code appelait `toLocalDateTime()`, qui **jette le décalage** au lieu de convertir -
     /// `19:00+00:00` devenait `19:00` local au lieu de `21:00` à Paris. L'erreur ne s'arrêtait pas là :
     /// l'envoi retraduit ensuite l'heure locale en UTC, si bien que **chaque cycle
     /// reconstruire → envoyer retranchait un décalage horaire**. Une nuit de 21 h était descendue à
@@ -64,7 +64,7 @@ public record ParticipationOrpheline(
     /// fenêtre du passage). Un cliquet, pas un décalage ponctuel.
     /// Variante **historique**, qui lit dans le fuseau de la métropole.
     ///
-    /// ⚠️ À n'employer que là où le point n'est pas connu. Partout où il l'est, passer par
+    /// À n'employer que là où le point n'est pas connu. Partout où il l'est, passer par
     /// [#horodatage(String, ZoneId)] : depuis #3442, l'écriture emploie le fuseau du **territoire** du
     /// site, et relire dans un autre casserait le point fixe décrit ci-dessus.
     static Optional<LocalDateTime> horodatage(String borne) {

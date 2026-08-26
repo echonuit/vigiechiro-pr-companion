@@ -471,7 +471,7 @@ class CliTest {
     @Test
     @DisplayName("#3738 : une sortie redirigée ne porte aucune séquence ANSI, sur aucune plateforme")
     void aucune_couleur_quand_la_sortie_est_redirigee() {
-        // ⚠️ C'est l'invariant que Windows violait, et que rien ne surveillait : picocli colorisait son
+        // C'est l'invariant que Windows violait, et que rien ne surveillait : picocli colorisait son
         // aide là-bas et pas sous Linux, si bien que `contains("Usage: vigiechiro recuperer-vigiechiro")`
         // échouait sur une chaîne où `ESC[1m` s'était glissé après « Usage: ».
         //

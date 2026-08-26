@@ -244,7 +244,7 @@ public final class CompteRenduChiffreImport {
         // ne connaît pas (météo saisie, matériel, commentaires). L'utilisateur qui a produit ce retour
         // demandait exactement cette phrase-là : « pensez à remplir les informations complémentaires ».
         //
-        // ⚠️ Cette suite n'a pu être ajoutée qu'APRÈS #3448. Ce message s'affichait auparavant alors
+        // Cette suite n'a pu être ajoutée qu'APRÈS #3448. Ce message s'affichait auparavant alors
         // qu'aucune participation n'avait été créée : l'enrichir l'aurait rendu plus convaincant, pas
         // plus vrai.
         if (contexte.participations() == 1) {

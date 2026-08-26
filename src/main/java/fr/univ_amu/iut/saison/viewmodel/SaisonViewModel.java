@@ -98,7 +98,7 @@ public class SaisonViewModel {
     /// Peuple la liste des campagnes proposées, sentinelle « toutes » en tête. Vide si la
     /// fonctionnalité est coupée : la vue n'affiche alors pas le sélecteur.
     ///
-    /// ⚠️ **`setAll`, et surtout pas `clear()` puis `addAll()`.** La différence n'est pas
+    /// **`setAll`, et surtout pas `clear()` puis `addAll()`.** La différence n'est pas
     /// stylistique, elle est **mesurée** : la liste est celle du `ComboBox` du filtre, et un
     /// `clear()` remet sa valeur à `null`. La liaison bidirectionnelle propage alors ce `null`
     /// jusqu'ici, et la saison se recharge **sans filtre** - le tableau se rouvre en grand sous les

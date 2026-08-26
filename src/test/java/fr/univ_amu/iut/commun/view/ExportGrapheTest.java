@@ -26,7 +26,7 @@ import org.testfx.framework.junit5.Start;
 /// comme « ce qu'on joint à un signalement d'anomalie », et n'avait **aucun test** : la seule mention
 /// de [ExportGraphe] dans `src/test` était un commentaire.
 ///
-/// ⚠️ Ces tests ne rétablissent **pas** un refus. Le contrôle de lisibilité ne suit pas dans
+/// Ces tests ne rétablissent **pas** un refus. Le contrôle de lisibilité ne suit pas dans
 /// [RenduPng], et c'est un arbitrage tenu ([ADR 2746]) : une troncature surviendrait dans une scène
 /// transitoire hors écran que l'utilisateur ne voit ni ne peut corriger, et faire échouer son export
 /// là-dessus le laisserait sans recours. Ce qui manquait n'était pas un garde, c'était de **regarder
@@ -89,7 +89,7 @@ class ExportGrapheTest {
         // La documentation promet que l'image « porte son contexte, inscrit SOUS le graphe » : sans
         // ces mentions, une courbe collée dans un compte rendu ne dit plus de quelle nuit elle parle.
         //
-        // ⚠️ On ne lit pas le texte - ce serait de l'OCR - et une première version de ce test comparait
+        // On ne lit pas le texte - ce serait de l'OCR - et une première version de ce test comparait
         // l'encre de la bande basse avec et sans légende, en attendant « plus avec ». Mesuré : 168
         // pixels avec, 281 sans. Le graphe porte `Vgrow.ALWAYS` : sans lignes de légende il s'étend
         // jusqu'en bas, et la bande contient alors les GRADUATIONS de l'axe, plus encrées que deux

@@ -246,7 +246,7 @@ class PublicationPointTest {
 
     /// Une localité **posée quelque part**, dans la forme exacte de la plateforme.
     ///
-    /// ⚠️ Le JSON est écrit **à la main**, et non fabriqué par `LocalitesDuSite#avecEnPlus`. Le construire
+    /// Le JSON est écrit **à la main**, et non fabriqué par `LocalitesDuSite#avecEnPlus`. Le construire
     /// avec le code de production ferait un aller-retour qui se refermerait sur lui-même : l'ordre
     /// `[latitude, longitude]` - à rebours du GeoJSON - serait faux des deux côtés, et le test resterait
     /// vert pendant que la plateforme comprendrait autre chose.

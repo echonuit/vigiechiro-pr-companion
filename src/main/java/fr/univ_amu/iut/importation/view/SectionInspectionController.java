@@ -21,7 +21,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// (mesuré : ses champs n'étaient lus que par son propre câblage, là où ceux du rattachement
 /// débordaient dans la construction de l'import).
 ///
-/// ⚠️ Elle reçoit son modèle du parent et n'injecte rien : les ViewModel sont non-singleton, se les
+/// Elle reçoit son modèle du parent et n'injecte rien : les ViewModel sont non-singleton, se les
 /// procurer en donnerait de nouveaux, vides (ADR 2745, gardé par
 /// `DecisionsRespecteesTest#une_sous_vue_ne_s_injecte_pas_son_modele`).
 public class SectionInspectionController {

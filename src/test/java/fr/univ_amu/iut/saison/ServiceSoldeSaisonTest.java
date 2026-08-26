@@ -452,7 +452,7 @@ class ServiceSoldeSaisonTest {
 
         assertThat(surveille.soldePour(ID_USER, 2026).lignes()).isNotEmpty();
 
-        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
+        // Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
         // variance de la machine. Le défaut mesuré (#4278) : une requête par site pour ses points, puis
         // jusqu'à CINQ par point - deux cases, la commune, et une par passage trouvé pour l'opportunisme.
         // 400 ms à cent cinquante carrés, contre 8 ms une fois lu par lot.

@@ -60,7 +60,7 @@ Interroger le réseau, ou écrire **hors** du dossier de travail, reste de la le
 protège le dossier de travail, pas le disque. La **configuration d'amorçage** en fait partie - elle
 vit dans le dossier de configuration et se protège toute seule, en s'écrivant d'un seul coup (#3507).
 
-⚠️ Cette frontière n'est pas une commodité, et elle a coûté un aller-retour. `emplacements` avait
+Cette frontière n'est pas une commodité, et elle a coûté un aller-retour. `emplacements` avait
 d'abord été classée écrivaine, au motif qu'elle écrit la configuration d'amorçage ; sept tests ont
 rougi en intégration continue. Le remède n'était pas de les isoler : la commande sert à **repointer**
 le dossier de travail, et la verrouiller revient à refuser de déménager à qui déménage justement parce
@@ -77,7 +77,7 @@ la commande - un refus né dans la stratégie d'exécution lui échappait et ret
 ou elle figure dans la liste des écrivaines, tenue dans le test. Il vérifie aussi que cette liste ne
 garde pas d'entrée périmée, qui ferait passer pour classée une commande renommée.
 
-⚠️ **Il ne dit pas si le classement est juste.** Il dit qu'un choix a été fait. C'est l'oubli
+**Il ne dit pas si le classement est juste.** Il dit qu'un choix a été fait. C'est l'oubli
 silencieux qu'il rend impossible, pas l'erreur de jugement - et l'erreur de jugement, ici, se paie du
 bon côté.
 

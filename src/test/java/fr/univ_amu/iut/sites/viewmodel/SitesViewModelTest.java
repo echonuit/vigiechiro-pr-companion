@@ -402,7 +402,7 @@ class SitesViewModelTest {
                 Optional.empty());
         assertThat(vm.charger().cartes()).hasSize(12);
 
-        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
+        // Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
         // variance de la machine, et rougirait un jour de charge sans qu'aucun code ait bougé.
         //
         // Le défaut mesuré (#4251) : une requête par site pour ses points, puis une par point pour ses

@@ -70,7 +70,7 @@ public class NuitRecupereeDao {
 
     /// Ce passage précis est-il une nuit **récupérée**, au sens du critère observé ?
     ///
-    /// ⚠️ **Ce n'est plus une garde de production.** Depuis #2772 l'état est porté par le passage
+    /// **Ce n'est plus une garde de production.** Depuis #2772 l'état est porté par le passage
     /// (`StatutWorkflow.RECUPERE`), et les gardes le lisent là - entretenir deux chemins vers la même
     /// vérité, c'est se donner deux réponses possibles.
     ///

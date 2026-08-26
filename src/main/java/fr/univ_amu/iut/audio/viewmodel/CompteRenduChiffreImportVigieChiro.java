@@ -75,7 +75,7 @@ public final class CompteRenduChiffreImportVigieChiro {
         // (séquence absente, ou pas de taxon). Annoncer « le devenir de 140 observations » quand 12 n'en
         // ont jamais été promettrait un objet qui n'existe pas.
         //
-        // ⚠️ Ce libellé n'est aujourd'hui **affiché nulle part** : `PanneauCompteRendu` ne lit pas
+        // Ce libellé n'est aujourd'hui **affiché nulle part** : `PanneauCompteRendu` ne lit pas
         // `Ventilation.libelle`, et les quatre traductions le composent pour rien (#2694). On l'écrit
         // juste quand même - le jour où la bande le rendra, ou le portera en texte accessible, il ne
         // faudra pas relire quatre traductions pour découvrir qu'elles se sont contredites.

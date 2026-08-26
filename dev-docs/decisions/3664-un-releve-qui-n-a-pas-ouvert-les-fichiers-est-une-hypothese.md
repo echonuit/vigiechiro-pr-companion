@@ -76,7 +76,7 @@ décision porte donc sur le geste, pas sur une case.
   sur ce que cette ADR dit vraiment.
 - L'[ADR 3661](3661-un-garde-de-ci-porte-ses-propres-cas.md) amende l'[ADR 3560] : un garde de CI porte
   ses cas, et la seconde façon de faire que j'avais introduite est annulée.
-- ⚠️ **Trois trous restent ouverts**, tous trouvés par un dispositif et non par une relecture :
+- **Trois trous restent ouverts**, tous trouvés par un dispositif et non par une relecture :
   #3678 (la CLI affiche l'instant du serveur en anglais et en UTC - le jumeau de #3640, sur une autre
   surface), #3681 (la **raison** d'un effacement qui résiste n'est vérifiée par rien, alors que
   l'ADR 3574 en fait la justification de tout son contrat), et les deux constats de l'ADR 3661 sur

@@ -145,7 +145,7 @@ class NavigateurTest {
 
         assertThat(navigateur.getVueCentrale()).isSameAs(passage);
 
-        // ⚠️ L'assertion qui MORD est celle-ci, et elle a été trouvée en mutant à la main : relâcher la
+        // L'assertion qui MORD est celle-ci, et elle a été trouvée en mutant à la main : relâcher la
         // borne (`>=` en `>`) laisse passer l'index de l'écran courant, mais la boucle de dépilage ne
         // retire alors rien - l'historique reste identique et les assertions ci-dessus restent vertes.
         // Le seul effet observable est le hook de retour, déclenché sur un écran qu'on n'a jamais quitté :

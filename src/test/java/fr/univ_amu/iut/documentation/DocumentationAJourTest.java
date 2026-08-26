@@ -713,7 +713,7 @@ class DocumentationAJourTest {
 
     /// Cherche un fichier par son nom sous `racine`, **sans se briser sur ce qui bouge**.
     ///
-    /// ⚠️ `Files.walk` interrompt tout au premier chemin dont il ne peut pas lire les attributs, et il y
+    /// `Files.walk` interrompt tout au premier chemin dont il ne peut pas lire les attributs, et il y
     /// en a : la suite tourne avec `forkCount=1C`, et six tests d'approbation déposent puis effacent un
     /// `.received` **dans cette arborescence** pendant qu'on la parcourt. Le fichier est listé, puis
     /// disparaît avant qu'on lise ses attributs, et le garde s'écroule en annonçant un
@@ -761,7 +761,7 @@ class DocumentationAJourTest {
     @Test
     @DisplayName("#3642 : chercher une source ne s'écroule pas sur un chemin devenu illisible")
     void la_recherche_de_source_tolere_ce_qui_bouge(@TempDir Path racine) throws IOException {
-        // ⚠️ POSIX seulement, et **assumé** plutôt qu'injecté. `File.setReadable(false)` rend `false`
+        // POSIX seulement, et **assumé** plutôt qu'injecté. `File.setReadable(false)` rend `false`
         // sous Windows : ce test y échouait avant d'éprouver quoi que ce soit (#3526).
         //
         // Ailleurs, la réponse a été de rendre l'échec injectable (`GestesFichiers`, `TailleFichier`) -
@@ -782,7 +782,7 @@ class DocumentationAJourTest {
                 .isTrue();
 
         try {
-            // ⚠️ C'est le nom ABSENT qui rend ce test déterministe. Cherchant un fichier qui existe,
+            // C'est le nom ABSENT qui rend ce test déterministe. Cherchant un fichier qui existe,
             // `Files.walk` s'arrête au premier trouvé : selon l'ordre de listage du système de fichiers,
             // il peut ne jamais atteindre le dossier illisible, et le test serait vert une fois sur
             // deux. Cherchant ce qui n'existe pas, il doit parcourir TOUT, donc buter à coup sûr.
@@ -989,7 +989,7 @@ class DocumentationAJourTest {
     /// l'écran courant. Elle mérite sa fiche - l'utilisateur la voit et s'en sert - mais elle n'a ni vue
     /// FXML ni contrôleur, donc [#FICHE_PAR_ECRAN] ne peut pas la porter.
     ///
-    /// ⚠️ Sans cette liste, les deux inventaires d'écrans **divergent en silence** : `FICHE_PAR_ECRAN`
+    /// Sans cette liste, les deux inventaires d'écrans **divergent en silence** : `FICHE_PAR_ECRAN`
     /// en connaît 15, `docs/ecrans/` en porte 16, et rien ne dit lequel a raison. Déclarer l'écart le
     /// rend intentionnel, et rend le compte de `<!--inv:ecrans-->` vérifiable de bout en bout.
     private static final Set<String> FICHES_SANS_ECRAN_FXML = Set.of("recherche");
@@ -1097,7 +1097,7 @@ class DocumentationAJourTest {
     /// Les tables du schéma **courant**, obtenues en appliquant les migrations puis en interrogeant
     /// `sqlite_master`.
     ///
-    /// ⚠️ Compter les `CREATE TABLE` des migrations donnerait un faux : une reconstruction de table
+    /// Compter les `CREATE TABLE` des migrations donnerait un faux : une reconstruction de table
     /// crée une jumelle temporaire (`observation_v13`), copie, supprime l'originale et **renomme**.
     /// Le `CREATE` et le `DROP` ne se compensent que par hasard, et un `ALTER TABLE ... RENAME`
     /// n'apparaît dans aucun des deux. Seul le schéma appliqué dit la vérité - c'est ce qui a laissé

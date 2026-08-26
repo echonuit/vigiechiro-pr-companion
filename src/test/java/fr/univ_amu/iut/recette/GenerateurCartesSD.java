@@ -163,7 +163,7 @@ public final class GenerateurCartesSD {
         // enregistreur fait - il n'ouvre pas un nouveau fichier, il continue le sien. Une ligne
         // « Paramètres » de plus par session, donc, avec sa fréquence à elle.
         //
-        // ⚠️ Sans `sessions:`, la boucle ne tourne pas et le journal produit est identique à l'octet
+        // Sans `sessions:`, la boucle ne tourne pas et le journal produit est identique à l'octet
         // près à celui d'avant. C'est ce qui permet aux huit specs existantes de ne pas bouger.
         for (SpecCarteSd.Session session : journal.sessions()) {
             lignes.addAll(JournalDeCapteur.lignes(

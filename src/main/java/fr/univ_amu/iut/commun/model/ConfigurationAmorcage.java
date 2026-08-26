@@ -134,7 +134,7 @@ public record ConfigurationAmorcage(Optional<Path> espaceDeTravail, Optional<Pat
 
     /// Le texte exact que `Properties.store` aurait écrit dans un flux d'octets.
     ///
-    /// ⚠️ Le détour par un flux d'octets n'est pas une lourdeur : `store(OutputStream)` écrit en
+    /// Le détour par un flux d'octets n'est pas une lourdeur : `store(OutputStream)` écrit en
     /// **ISO-8859-1** et échappe tout caractère non ASCII en séquence Unicode à quatre chiffres
     /// hexadécimaux, quand `store(Writer)` écrirait le texte brut. (La séquence ne peut pas être citée
     /// ici : Java l'interprète jusque dans les commentaires, et un exemple ferait échouer la

@@ -151,23 +151,23 @@
  * Ce que les deux partagent, et qui est le sujet : la meme HAUTEUR (`-hauteur-controle-barre`) et le
  * meme rayon. C'est ce qui fait qu'une rangee s'aligne, cf. l'ADR 4002.
  *
- * ⚠️ Cette famille est declaree ICI, AVANT `.menu-ajout-filtre` et `.menu-actions` : ces deux classes
+ * Cette famille est declaree ICI, AVANT `.menu-ajout-filtre` et `.menu-actions` : ces deux classes
  * portent le meme poids de specificite (une classe), et a poids egal c'est la DERNIERE declaration qui
  * gagne. Les remonter au-dessus les ferait perdre leur apparence propre.
  *
- * ⚠️ `.text-field` est dans la liste, et ce n'est pas un elargissement du perimetre : c'est ce qui
+ * `.text-field` est dans la liste, et ce n'est pas un elargissement du perimetre : c'est ce qui
  * empeche le remede de deplacer le defaut. Mesure a la deuxieme passe, sur « Modifier le passage » :
  * la liste « Vent » rendait 34 px a cote du champ « Temperature debut » reste a 26, et les deux
  * n'etaient plus alignes. On avait accorde la barre en desaccordant le formulaire. Une hauteur de
  * controle est une propriete du PARC, pas d'une famille : la tenir sur quatre familles sur cinq, c'est
  * ne pas la tenir.
  *
- * ⚠️ `.choice-box` est nommee SEPAREMENT de `.combo-box-base` : une `ChoiceBox` ne derive pas de
+ * `.choice-box` est nommee SEPAREMENT de `.combo-box-base` : une `ChoiceBox` ne derive pas de
  * `ComboBoxBase` et ne porte donc PAS cette classe. Mesure a la premiere passe : la liste de tri du
  * multisite (une `ComboBox`) etait habillee, « 30 min » et « National (aucun milieu) » (des
  * `ChoiceBox`) restaient des controles de plateforme sur le meme rendu.
  *
- * ⚠️ Aucun `-fx-padding` n'est pose sur `.menu-button` : « + Filtre » vit dans un `FlowPane` dont la
+ * Aucun `-fx-padding` n'est pose sur `.menu-button` : « + Filtre » vit dans un `FlowPane` dont la
  * largeur decide du repli des puces, et 20 px de plus l'ont deja fait renvoyer a la ligne (#4003).
  */
 .combo-box-base,
@@ -232,7 +232,7 @@
     -fx-border-color: -couleur-primaire;
 }
 
-/* ⚠️ La liste DEROULEE compte autant que la facade : s'arreter au controle ferme, c'est habiller la
+/* La liste DEROULEE compte autant que la facade : s'arreter au controle ferme, c'est habiller la
    devanture et laisser la plateforme derriere des qu'on clique. */
 .combo-box-popup > .list-view {
     -fx-background-color: -couleur-texte-clair;
@@ -490,7 +490,7 @@
     /* Le fond neutre était si proche du blanc de la ligne que la pastille disparaissait : il ne restait
        qu'un mot, aligné avec des voisins encadrés (#2628). L'œil lisait « il y a un état » puis « il n'y
        a pas d'état », alors que les deux en ont un.
-       ⚠️ La border seule ne suffisait pas : elle donnait EXACTEMENT le vocabulaire de
+       La border seule ne suffisait pas : elle donnait EXACTEMENT le vocabulaire de
        `.badge-non-planifie` (fond neutre + bordure), c'est-à-dire celui d'une nuit qui N'EXISTE PAS.
        Pleine, donc : la nuit est là, même si elle n'a encore rien franchi. Vu en regardant Ma saison,
        où les deux se côtoient - aucun test ne peut rougir là-dessus. */
@@ -1216,7 +1216,7 @@
    menu ouvert, et decale la hauteur du bouton d'environ 1px - imperceptible, verifie a la capture. */
 .menu-actions {
     -fx-font-size: 14px;
-    /* ⚠️ L'apparence, ajoutée en #4002. Cette classe ne portait qu'une TAILLE : le ☰ de réglage des
+    /* L'apparence, ajoutée en #4002. Cette classe ne portait qu'une TAILLE : le ☰ de réglage des
        tables rendait donc le MenuButton par défaut de la plateforme, sans fond ni contour. Tant que
        ses voisins étaient nus eux aussi, rien ne se voyait ; en les rendant au produit, on l'a laissé
        seul. Il reprend donc le traitement de `bouton-secondaire`, qui est ce qu'il côtoie dans la
@@ -1228,7 +1228,7 @@
     -fx-background-radius: 4;
     -fx-padding: 0 3 0 3;
     -fx-cursor: hand;
-    /* ⚠️ Hauteur ALIGNÉE sur les boutons de la barre, mesurée et non estimée : sans elle, la police de
+    /* Hauteur ALIGNÉE sur les boutons de la barre, mesurée et non estimée : sans elle, la police de
        14 px ci-dessus faisait rendre ce ☰ à 42 px quand ses voisins tenaient en 34. Il dépassait donc
        de huit pixels, et c'est ce qui sautait aux yeux une fois qu'il avait un contour. */
     -fx-min-height: -hauteur-controle-barre;

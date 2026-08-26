@@ -43,7 +43,7 @@ déclarer `palette + base` sans `design`. Mesuré :
 
 ## Ce que le défaut a coûté, et pourquoi il est instructif
 
-⚠️ **Il a produit un diagnostic faux, et un correctif qui contredisait l'ADR 3374 en silence.**
+**Il a produit un diagnostic faux, et un correctif qui contredisait l'ADR 3374 en silence.**
 
 Le symptôme visible était un bouton primaire rendu en gris dans la galerie. On en a conclu à un défaut
 du **produit**, et on a ajouté `@design.css` au FXML - la route que 3374 écarte.
@@ -65,7 +65,7 @@ La présence d'un membre ne vaut jamais preuve de l'ensemble.
 et le cliquet qui l'accompagnait avec elle : il exigeait des vues ce que l'ADR 3374 leur refuse. Un
 garde qui impose l'inverse de la règle est pire qu'aucun garde.
 
-**3. ⚠️ Le garde vit sur le point de passage, pas sur ses appelants.** C'est ce qui distingue ce
+**3. Le garde vit sur le point de passage, pas sur ses appelants.** C'est ce qui distingue ce
 correctif du précédent : vérifier que 24 FXML déclarent une feuille, c'est garder la copie ; vérifier
 que `poser` rend le trio, c'est garder la règle.
 
@@ -79,7 +79,7 @@ C'est la **troisième** occurrence du même motif sur cette classe, chaque fois 
 | #3978 | la **présence** de `base` | l'**ensemble** dont elle fait partie |
 | #3985 | que le trio soit **posé** | qu'il ne le soit pas **deux fois** |
 
-⚠️ Et le garde d'idempotence existant n'a attrapé **aucune** des deux dernières : il rejoue `poser` sur
+Et le garde d'idempotence existant n'a attrapé **aucune** des deux dernières : il rejoue `poser` sur
 une scène **déjà habillée**, quand les deux défauts naissent au **premier** appel, sur des formes
 d'entrée que personne n'avait inventoriées. Un garde peut couvrir la bonne propriété sur les mauvaises
 entrées, et son vert ne dit alors rien.

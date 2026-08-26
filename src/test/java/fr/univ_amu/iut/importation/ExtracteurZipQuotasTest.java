@@ -121,7 +121,7 @@ class ExtracteurZipQuotasTest {
                 .hasMessageContaining("5 fichiers")
                 .hasMessageContaining("3 admis")
                 // Sans échappatoire nommée, la seule issue serait de renoncer à une archive légitime.
-                // ⚠️ Et l'échappatoire doit être ATTEIGNABLE : le refus nommait `-Dvigiechiro.…`, geste
+                // Et l'échappatoire doit être ATTEIGNABLE : le refus nommait `-Dvigiechiro.…`, geste
                 // qu'un produit installé ne permet pas (#4075). Il nomme désormais l'option de la ligne
                 // de commande, qui existe là où l'utilisateur se trouve.
                 .hasMessageContaining("--reglage import.zip.max-entrees=")

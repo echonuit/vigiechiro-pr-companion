@@ -17,7 +17,7 @@
   panneau portait à lui seul quinze champs @FXML et leur câblage.
   Voir dev-docs/decisions/2745-une-vue-riche-se-decoupe-en-sous-vues.md.
 
-  ⚠️ Le parent RETIRE ce panneau du SplitPane hors regroupement « Par espèce » : il a donc besoin du
+  Le parent RETIRE ce panneau du SplitPane hors regroupement « Par espèce » : il a donc besoin du
   nœud autant que du controller. L'inclusion garde le fx:id `panneauDetail`, si bien que le champ du
   parent et sa méthode d'affichage n'ont pas eu à changer.
 -->

@@ -70,13 +70,13 @@ on:
 
   # APPELÉ PAR LE TRAIN, après que la Release a cessé d'être un brouillon (#4103).
   #
-  # ⚠️ `workflow_call` et non `release: released` : ce dernier ne partirait jamais, la
+  # `workflow_call` et non `release: released` : ce dernier ne partirait jamais, la
   # Release étant dé-brouillonnée avec le `GITHUB_TOKEN`, et GitHub ne déclenche aucun
   # workflow sur un événement produit par ce jeton. Un workflow APPELÉ, lui, n'est pas
   # un événement : il s'exécute dans le run de l'appelant, donc rien n'a à être
   # déclenché.
   #
-  # ⚠️ Ce qui a changé depuis l'ADR 2744, qui avait tranché « rien à rebrancher » : le
+  # Ce qui a changé depuis l'ADR 2744, qui avait tranché « rien à rebrancher » : le
   # dépôt publiait alors 3 à 37 fois par jour, et le déclenchement automatique était
   # réputé impossible. Le train hebdomadaire a réglé le premier point, `workflow_call`
   # le second - et le coût de l'attente a été MESURÉ depuis : le manifeste extrayait
@@ -156,7 +156,7 @@ jobs:
           fi
 
       - name: Cache des paquets APT (flatpak, flatpak-builder, xvfb…)
-        # ⚠️ Le seul levier qui reste quand l'hébergeur ralentit : ne pas retélécharger. Les
+        # Le seul levier qui reste quand l'hébergeur ralentit : ne pas retélécharger. Les
         # runners traînent AVANT de bloquer, donc la panne est en amont ; borner et reprendre
         # évite de pendre, cela ne fait pas descendre 91 Mo plus vite.
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -256,7 +256,7 @@ jobs:
         #
         # Il tourne maintenant sur un VRAI serveur X, et exige une fenêtre mappée.
         #
-        # ⚠️ Ce qu'il ne prouve toujours PAS : le runner n'a pas de session Wayland,
+        # Ce qu'il ne prouve toujours PAS : le runner n'a pas de session Wayland,
         # donc `fallback-x11` y accorderait X11 et le manifeste fautif passerait ici.
         # C'est `verifie-affichage-flatpak.sh` (lint.yml) qui garde ce cas-là, sur la
         # politique déclarée. Les deux sont complémentaires, aucun ne suffit.
@@ -316,13 +316,13 @@ jobs:
         # des 66 commandes. Les autres emballages sont désormais interrogés par
         # `verifie-demarrage-emballage.sh --cli` ; le Flatpak, lui, ne l'était pas.
         #
-        # ⚠️ On interroge par le chemin de l'UTILISATEUR - `flatpak run <app-id>
+        # On interroge par le chemin de l'UTILISATEUR - `flatpak run <app-id>
         # --version` - et non par `--command=`, qui court-circuite le script de
         # lancement. C'est précisément ce script qui déclare le mot `ihm` et fait
         # partir tout le reste vers la CLI : le contourner reviendrait à vérifier
         # autre chose que ce qu'on livre.
         #
-        # ⚠️ Et « rend 0 » ne suffit pas : un lanceur qui ouvrirait la fenêtre au lieu
+        # Et « rend 0 » ne suffit pas : un lanceur qui ouvrirait la fenêtre au lieu
         # de répondre finirait aussi par rendre 0. On exige donc d'avoir LU la version.
         run: |
           set -euo pipefail

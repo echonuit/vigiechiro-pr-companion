@@ -13,7 +13,7 @@ référence structurée ; le repo-root garde un mémo
 | `./mvnw test -Dtest=SitesViewModelTest#charger_lit_par_lot` | Une seule **méthode** |
 | `./mvnw verify` | Build complet : tests + couverture + contrôles (PMD/JaCoCo **non** bloquants) |
 | `./mvnw -Pquality-gate verify` | **Portail qualité** : PMD `failOnViolation` + seuils JaCoCo **bloquants** |
-| `env -u DISPLAY ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage -DtargetClasses=… -DtargetTests=…` | Tests de **mutation** PIT (lent, ciblé, à la demande). ⚠️ `-Pmutation test` **ne mute rien** : le profil n'a aucune liaison de phase, donc le goal n'est jamais invoqué - la commande lance toute la suite et rend zéro rapport, sans le dire. |
+| `env -u DISPLAY ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage -DtargetClasses=… -DtargetTests=…` | Tests de **mutation** PIT (lent, ciblé, à la demande). `-Pmutation test` **ne mute rien** : le profil n'a aucune liaison de phase, donc le goal n'est jamais invoqué - la commande lance toute la suite et rend zéro rapport, sans le dire. |
 | `./mvnw pmd:check` | Rapport PMD seul (rapide) |
 | `./mvnw spotless:check` / `spotless:apply` | Vérifie / applique le formatage |
 | `./mvnw javafx:run` | Lance l'application |
@@ -69,7 +69,7 @@ headless vient de `glass.platform=Headless`, pas de TestFX. Le `argLine` ajoute 
         accusait Guava : c'est cette erreur qui a fait attendre une montée de Guava, laquelle a bien eu
         lieu (33.4.8-jre, #2740) **sans rien changer** - elle ne pouvait pas.
 
-        ⚠️ **Ce n'est pas « rien à faire pour l'instant », c'est une échéance.** La JEP 498 retirera
+        **Ce n'est pas « rien à faire pour l'instant », c'est une échéance.** La JEP 498 retirera
         l'accès, et `--sun-misc-unsafe-memory-access=allow` (posé au `pom.xml` pour `javafx:run` et le
         lanceur jpackage, et au manifeste Flatpak) ne fait que la repousser. Le jour où le drapeau
         disparaît, l'application ne démarre plus.
@@ -249,7 +249,7 @@ son montage et son index en Java :
 | `Gestes` + `CalqueDesGestes` | observent les événements et dessinent le halo, la flèche et le badge (ADR 4248) |
 | `PoliceDuBanc` | la typographie du produit, chargée dans AWT depuis le jar |
 
-⚠️ **Lequel des deux tourne n'est pas encore tranché.** Le comparatif des deux bancs est dans
+**Lequel des deux tourne n'est pas encore tranché.** Le comparatif des deux bancs est dans
 [Comparer les deux bancs](recette/comparer-les-deux-bancs.md), et cette page-là est datée : elle
 mourra avec la décision.
 
@@ -257,11 +257,11 @@ Ce qui lui survivra, c'est [Comparer deux tournages](recette/comparer-deux-tourn
 chaque version porte les clips des deux bancs sur son tag, la comparaison se refait à la demande sur le
 produit du jour, au lieu d'être figée dans une page.
 
-⚠️ **Trois états, pas deux.** Un cas « perceptif » n'est ni couvert ni à couvrir : le script le
+**Trois états, pas deux.** Un cas « perceptif » n'est ni couvert ni à couvrir : le script le
 marque `*perceptif*`, et le mot « couvert » reste réservé à ce que la CI prouve. Compter un scénario
 joué parmi les couverts fabriquerait exactement le vert creux que ce harnais combat.
 
-⚠️ **Un calcul alimenté par le classpath ne se voit pas rougir.** `CorrespondanceRecetteTest` balaie
+**Un calcul alimenté par le classpath ne se voit pas rougir.** `CorrespondanceRecetteTest` balaie
 les annotations compilées : on ne peut lui présenter aucun jeu fabriqué, donc rien ne prouve qu'il
 range un cas du bon côté. Le tri vit pour cette raison dans `RepartitionDesCas`, qui reçoit des
 ensembles ordinaires - et ses tests lui montrent les situations que le dépôt ne contient pas, et ne
@@ -418,7 +418,7 @@ l'application compte **<!--inv:features-->N<!--/inv--> features** métier
     (#2749). Et personne n'avait mal fait : un chiffre juste le jour où on l'écrit devient faux tout
     seul.
 
-    ⚠️ Trois, et non deux : la correction n'en avait trouvé que deux, et le troisième a survécu une
+    Trois, et non deux : la correction n'en avait trouvé que deux, et le troisième a survécu une
     journée de plus, dans un encadré du même fichier. **Un chiffre faux a des jumeaux**, et le
     balayage qui corrige n'est pas celui qui compte - c'est l'audit d'harmonisation de la clôture qui
     a rendu le troisième.
@@ -432,7 +432,7 @@ l'application compte **<!--inv:features-->N<!--/inv--> features** métier
     - **le chiffre est une mesure datée** (« 66 aperçus sur 138 différaient le 6 août ») → il reste en
       dur, et c'est **juste** : ce n'est pas un inventaire, c'est un constat, et un constat a une date.
 
-    ⚠️ Le troisième cas se confond avec le premier au premier coup d'œil. Un balayage a compté « 51,
+    Le troisième cas se confond avec le premier au premier coup d'œil. Un balayage a compté « 51,
     66, 108 aperçus » comme des inventaires divergents : c'étaient trois **deltas** d'ADR, et le total,
     138, était juste partout. Lire la phrase entière avant de conclure à une dérive.
 
@@ -537,7 +537,7 @@ l'écart tient en trois lignes, le bloc ci-dessus suffit.
         -DtargetTests=fr.univ_amu.iut.passage.viewmodel.SaisieHorairesNuitTest
     ```
 
-⚠️ **`test-compile` n'est pas une commodité, c'est ce qui fait démarrer le minion.** PIT hérite de
+**`test-compile` n'est pas une commodité, c'est ce qui fait démarrer le minion.** PIT hérite de
 l'`argLine` de Surefire, qui contient deux valeurs posées par des greffons liés à des **phases** :
 `@{jacocoArgLine}` (`jacoco:prepare-agent`) et `${net.bytebuddy:byte-buddy-agent:jar}`
 (`dependency:properties`, phase `initialize`). Invoquer le **but seul**
@@ -635,7 +635,7 @@ survivants**.
     périmètre des vues, **1 expiration sur 280 mutants**. C'est le périmètre qu'il fallait corriger, pas
     le butoir (#2768).
 
-⚠️ **PIT n'a plus d'analyse incrémentale.** Depuis la version 1.25.x, le stockage de l'historique est un
+**PIT n'a plus d'analyse incrémentale.** Depuis la version 1.25.x, le stockage de l'historique est un
 greffon **commercial** (arcmutate). Les options `historyInputFile`/`historyOutputFile` figurent toujours
 au descripteur du greffon Maven, mais les passer sans lui ne les fait pas ignorer : PIT **refuse de
 démarrer**. Le descripteur dit que l'option existe, pas que la fonction est là (#2768).
@@ -649,7 +649,7 @@ python3 scripts/qualite/rapport_mutation.py --markdown
 Il trie les classes par nombre de survivants plutôt que d'afficher un pourcentage : le score situe, la
 liste travaille.
 
-⚠️ **Lire le rapport, pas le résumé.** `target/pit-reports/mutations.xml` écrit ses attributs en
+**Lire le rapport, pas le résumé.** `target/pit-reports/mutations.xml` écrit ses attributs en
 **apostrophes simples** (`status='SURVIVED'`). Un filtre écrit en guillemets doubles ne matche rien et
 annonce « 0 survivant » sur n'importe quel rapport - y compris sur une classe dont sept mutants
 survivaient. Le résumé imprimé en fin de course (`Generated N Killed M`) est la référence à recouper.
@@ -705,7 +705,7 @@ liaisons résolues à l'exécution ni les artefacts résolus avec un classifieur
 exclusions du `pom.xml` nomment chacune sa raison ; une exclusion sans motif est le même bruit sous un
 autre nom.
 
-⚠️ Ne pas mêler une **déclaration** à une **montée de version** : les deux dans la même PR rendent un
+Ne pas mêler une **déclaration** à une **montée de version** : les deux dans la même PR rendent un
 éventuel rouge illisible.
 
 `lint.yml` vérifie aussi la **complétude des captures** (cf. [Captures](captures.md)). Une PR doit
@@ -749,13 +749,13 @@ conséquence dont la cause est hors champ. D'où la règle que le pointeur **s'a
 d'appuyer (`GesteVisible`), et que le motif d'un blocage **paraît** au lieu d'être lu par programme
 ([ADR 4234](decisions/4234-un-motif-de-blocage-se-montre-il-ne-se-lit-pas.md)).
 
-⚠️ La règle n'oblige pas à **fabriquer** le contraire. Quand il semble introuvable, la question est
+La règle n'oblige pas à **fabriquer** le contraire. Quand il semble introuvable, la question est
 d'abord « sur quelles données ai-je mesuré ? ». `S1-17` a été déclaré infilmable au vu d'une fixture de
 deux sites ; sur cent cinquante carrés, le voile dure un demi-seconde.
 
 Voir [ADR 4166](decisions/4166-un-etat-ne-se-juge-que-contre-son-contraire.md).
 
-### ⚠️ Certains défauts ne se voient pas depuis ce poste - il faut les sonder
+### Certains défauts ne se voient pas depuis ce poste - il faut les sonder
 
 Quatre fois sur la campagne #3802, une mesure locale a rendu **vert** sans rien dire : `Noto Sans` est
 une police **système** sous Linux, `ATOMIC_MOVE` y réussit quoi qu'on tienne ouvert, la vue **ACL** n'y
@@ -764,12 +764,12 @@ existe pas, et PIT y tourne - donc laisse sans couverture toute branche que seul
 La méthode qui marche, et qui coûte trois minutes depuis #3754 : une **sonde jetable** qui **rapporte**
 au lieu de juger, dispatchée sur la plateforme concernée, lue, **puis** traduite en assertion.
 
-⚠️ Les deux sondes de cette campagne ont **contredit** l'hypothèse qui les demandait. Une sonde qui
+Les deux sondes de cette campagne ont **contredit** l'hypothèse qui les demandait. Une sonde qui
 aurait asserté l'hypothèse serait passée au rouge sans qu'on sache pourquoi.
 
 Détail : [ADR 3802](decisions/3802-un-defaut-de-plateforme-se-sonde-il-ne-se-deduit-pas.md).
 
-### ⚠️ La police d'un test n'est pas celle du produit, sauf si on la lui donne
+### La police d'un test n'est pas celle du produit, sauf si on la lui donne
 
 `Typographie.installer()` garde un `static boolean` : l'enregistrement de la police embarquée est
 **global au JVM et fait une seule fois**. Un test qui monte sa scène à la main voit donc la police du
@@ -780,7 +780,7 @@ Mesuré (#3773) : `CartesAccueilTest` a rendu **vert à 8 h 14 et rouge à 15 h 
 commit** et la **même image** `macos-26-arm64`. Puis, joué **seul** sous macOS - donc sans voisin -, il
 échoue. L'écart tient à 20,43 px contre 17,666 px selon la police effectivement rendue.
 
-⚠️ **Ce défaut ne se voit pas depuis un poste Linux** : `Noto Sans` y est une police système, donc
+**Ce défaut ne se voit pas depuis un poste Linux** : `Noto Sans` y est une police système, donc
 trouvée installée ou non. Une suite locale verte ne dit rien de cette propriété. Sur le runner Ubuntu,
 l'ADR 3361 note que `sans-serif` se résout en « une police plus large » - ce que la CI voit exactement
 n'a pas été mesuré.
@@ -798,7 +798,7 @@ pose le trio du chrome.
 
     Le défaut est revenu **cinq fois** : #1940, #1967, #3452, #4130, #4145.
 
-    ⚠️ **Rendre la valeur ne rend pas la propriété.** `setWidth` fait passer un Stage en
+    **Rendre la valeur ne rend pas la propriété.** `setWidth` fait passer un Stage en
     dimensionnement **explicite**, et reposer la largeur d'entrée ne l'en fait pas sortir : il cesse
     définitivement de suivre les scènes qu'on lui pose. Deux bancs appliquaient consciencieusement
     cette restauration-là, en citant #3960 en commentaire, et figeaient quand même.
@@ -831,7 +831,7 @@ pose le trio du chrome.
     Un test `*E2ETest` monte le **vrai** `RacineInjecteur`, pas le module de test qui rebranche
     `ExecuteurTacheSynchrone` (#793).
 
-    ⚠️ **Ce n'est plus une propriété des seuls E2E** (#3667). Un test de vue peut brancher
+    **Ce n'est plus une propriété des seuls E2E** (#3667). Un test de vue peut brancher
     `ExecuteurTacheAsynchrone` **délibérément** : `ScenarioPerceptifConnexionTest` le fait, parce que
     le transitoire qu'il donne à voir - la zone de progression seule, avant le bandeau - n'existe pas
     autrement. En synchrone, la récupération occupe le fil JavaFX : aucune image n'est rendue pendant

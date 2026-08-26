@@ -59,7 +59,7 @@ public final class SortieCapturee {
     /// Pour les tests qui ne se soucient pas de savoir par où un message est sorti : ils passaient
     /// autrefois **un seul tampon** aux deux flux, ce qui les mêlait dans l'ordre chronologique.
     ///
-    /// ⚠️ La différence est réelle et se voit sur un seul cas : l'**entrelacement**. Un tampon unique rend
+    /// La différence est réelle et se voit sur un seul cas : l'**entrelacement**. Un tampon unique rend
     /// « A(std) B(err) C(std) » ; cette méthode rend « A C B ». Un `contains` sur un fragment n'y voit
     /// rien ; une comparaison au texte entier, si. Les tests migrés relèvent tous du premier cas, sauf
     /// l'approbation de recette - dont le golden, inchangé, prouve que rien n'est parti sur l'erreur.
@@ -69,7 +69,7 @@ public final class SortieCapturee {
 
     /// Remet **les deux** tampons à zéro, pour enchaîner une seconde invocation sur la même instance.
     ///
-    /// ⚠️ Les deux, et pas seulement la sortie standard : un test qui vidait `tamponSortie` seul et
+    /// Les deux, et pas seulement la sortie standard : un test qui vidait `tamponSortie` seul et
     /// affirmait ensuite quelque chose sur l'erreur *cumulée* des deux invocations changerait de sens. Ce
     /// cas n'existe pas dans les fichiers migrés, il a été cherché fichier par fichier.
     public void vider() {

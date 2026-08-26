@@ -93,7 +93,7 @@ import org.junit.jupiter.api.Test;
 /// La plateforme est bouchonnée ([ClientVigieChiro] mocké, substitué dans l'injecteur **réel** par
 /// `Modules.override`) : tout le reste est le vrai câblage de l'application.
 ///
-/// ⚠️ Ce que le test **ne** prouve **pas**, parce que c'est faux : que l'audio revienne. Un dépôt ZIP (le
+/// Ce que le test **ne** prouve **pas**, parce que c'est faux : que l'audio revienne. Un dépôt ZIP (le
 /// mode par défaut) ne laisse **aucun** audio sur le serveur ; le passage restauré est **ABSENTE** :
 /// consultable, non écoutable, réactivable en réimportant les fichiers d'origine (#1302).
 class ParcoursRestaurationDepuisVigieChiroE2ETest {
@@ -378,7 +378,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
 
     /// La plateforme telle qu'elle répond à un observateur qui a déposé une nuit depuis un autre poste.
     ///
-    /// ⚠️ Depuis #1284, un retour `ReponseApi` non bouchonné vaut **`null`** (et non plus une liste vide) :
+    /// Depuis #1284, un retour `ReponseApi` non bouchonné vaut **`null`** (et non plus une liste vide) :
     /// chaque appel que le parcours déclenche doit être stubé explicitement : y compris [ClientVigieChiro#taxons],
     /// que le rapprocheur des taxons appelle en même temps que celui des sites.
     private static ClientVigieChiro plateformeBouchonnee() {

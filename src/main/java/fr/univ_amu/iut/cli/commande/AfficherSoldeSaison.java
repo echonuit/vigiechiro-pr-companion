@@ -250,7 +250,7 @@ public final class AfficherSoldeSaison implements Callable<Integer>, LectureSeul
 
     /// Une chaîne vide (champ de passage absent) devient `null` en JSON, plus juste pour un script.
     ///
-    /// ⚠️ Elle accepte aussi le `null` d'entrée depuis #3313. Les champs de passage venaient toujours
+    /// Elle accepte aussi le `null` d'entrée depuis #3313. Les champs de passage venaient toujours
     /// non nuls ; le **nom du carré** (#3289) et la **commune** (#3313), eux, sont absents quand
     /// l'utilisateur n'en a pas donné ou que la résolution n'a pas eu lieu. Sans cette garde, un carré
     /// sans nom faisait échouer `--format json` sur un NullPointerException - un défaut latent que

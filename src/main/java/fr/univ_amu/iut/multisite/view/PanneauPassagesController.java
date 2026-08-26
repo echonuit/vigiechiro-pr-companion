@@ -23,7 +23,7 @@ import javafx.scene.control.TableView;
 /// double-clic appellent des gestes de l'écran (ouvrir le passage, l'écouter). Aucun nœud du parent
 /// n'entre donc ici, et aucun rappel non plus.
 ///
-/// ⚠️ Elle reçoit ce dont elle a besoin du parent et n'injecte rien (ADR 2745, gardé par
+/// Elle reçoit ce dont elle a besoin du parent et n'injecte rien (ADR 2745, gardé par
 /// `DecisionsRespecteesTest#une_sous_vue_ne_se_procure_pas_ce_qui_doit_etre_unique`).
 public class PanneauPassagesController {
 

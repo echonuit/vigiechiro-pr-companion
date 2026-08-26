@@ -17,7 +17,7 @@
 #   | lancements ayant mappé une fenêtre | 2 sur 5 | 3 sur 3 |
 #   | version filmée | celle installée sur la machine | celle du dépôt qu'on documente |
 #
-# ⚠️ Ce que ce choix abandonne : les défauts propres à l'emballage (police absente du Flatpak, module
+# Ce que ce choix abandonne : les défauts propres à l'emballage (police absente du Flatpak, module
 # oublié au jlink). Ils restent couverts par `verifie-demarrage-emballage.sh` et
 # `verifie-affichage-flatpak.sh`, et par elles seules.
 #
@@ -49,7 +49,7 @@ ECRAN_DU_TOURNAGE=":87"
 
 # Ce que le banc réclame, en DEUX listes.
 #
-# ⚠️ Une seule liste coûtait cher au mauvais endroit. `udisksctl` vient du paquet `udisks2`, qui
+# Une seule liste coûtait cher au mauvais endroit. `udisksctl` vient du paquet `udisks2`, qui
 # n'a rien à faire sur un runner : l'auto-test ne monte aucune carte, il éprouve les REFUS du
 # montage - étiquette étrangère, point vide, source sans brut - qui sont du raisonnement pur. Exiger
 # l'outil pour lancer les cas revenait à installer un service de disques pour vérifier des chaînes
@@ -61,7 +61,7 @@ ECRAN_DU_TOURNAGE=":87"
 OUTILS_DU_BANC="Xvfb xdotool ffmpeg xdpyinfo openbox tesseract"
 OUTILS_DE_LA_CARTE="udisksctl mkfs.vfat mcopy"
 
-# ⚠️ Le remède doit couvrir CE qui manque. Le message ne nommait que les paquets de la première
+# Le remède doit couvrir CE qui manque. Le message ne nommait que les paquets de la première
 # liste, en vérifiant les neuf outils : à qui manquait `mcopy`, il conseillait d'installer
 # tesseract. Un message qui nomme le problème sans nommer son remède fait chercher ailleurs.
 verifier_outils() { # [--avec-carte]
@@ -79,7 +79,7 @@ verifier_outils() { # [--avec-carte]
     return 1
 }
 
-# ⚠️ openbox, et NON matchbox : matchbox MAXIMISE tout ce qu'il affiche (#3788). Une vidéo de
+# openbox, et NON matchbox : matchbox MAXIMISE tout ce qu'il affiche (#3788). Une vidéo de
 # documentation tournée sous matchbox montrerait une mise en page que personne ne verra jamais.
 # On ne se contente pas de vérifier qu'un gestionnaire tourne : on vérifie qu'il HONORE la taille
 # demandée, ce qu'un contrôle de présence ne dirait pas.
@@ -119,21 +119,21 @@ verifier_le_jar() {
     return 0
 }
 
-# ⚠️ La condition NEUVE, que la recette filmée n'avait pas. Elle pilote une JVM de test ; celui-ci
+# La condition NEUVE, que la recette filmée n'avait pas. Elle pilote une JVM de test ; celui-ci
 # pilote le produit livré, qui écrit dans l'espace de travail RÉEL de l'utilisateur
 # (`~/Documents/VigieChiro-Companion`). Filmer un parcours d'importation y toucherait de vraies
 # nuits. `Workspace.resolu()` donne la priorité à la propriété système, ce qui permet de l'écarter
 # sans toucher au produit.
 # L'environnement dans lequel le produit est lancé pour un tournage.
 #
-# ⚠️ Pourquoi HOME doit être jetable, et pas seulement l'espace de travail. Le sélecteur de dossier
+# Pourquoi HOME doit être jetable, et pas seulement l'espace de travail. Le sélecteur de dossier
 # est un sélecteur GTK ordinaire : il ouvre sur le dossier courant, liste le dossier personnel, et
 # sa barre latérale porte les emplacements de l'utilisateur. La première sonde de cet écran a filmé
 # en clair « nedjar », « sandbox », « R202 », « CLAUDE.md », « maj-notes-scodoc.py », « plop.md » et
 # les dossiers de cours. Un film publié dans `docs/` aurait montré l'arborescence privée de qui l'a
 # tourné - et rien dans le banc ne l'aurait dit, le fichier étant par ailleurs parfait.
 #
-# ⚠️ Ce qu'un HOME jetable ne cache PAS, et il faut le savoir avant de tourner : les VOLUMES MONTÉS
+# Ce qu'un HOME jetable ne cache PAS, et il faut le savoir avant de tourner : les VOLUMES MONTÉS
 # restent dans la barre latérale. Celui du banc, mais aussi ceux de l'utilisateur, sous leur
 # étiquette de volume - « Volume de 31 GB » sur le poste où ceci est écrit. C'est un nom générique,
 # sans rien du contenu, et démonter les cartes de l'utilisateur pour tourner serait pire que le mal.
@@ -164,7 +164,7 @@ verifier_bac_jetable() {
     return 0
 }
 
-# ⚠️ La condition qui porte tout le reste. Un film sans fenêtre est un fichier valide et VIDE -
+# La condition qui porte tout le reste. Un film sans fenêtre est un fichier valide et VIDE -
 # c'est le faux vert que #3707 a corrigé pour la recette, et il se reproduirait ici sans ce contrôle.
 attendre_la_fenetre() {
     local ecran="$1" secondes="${2:-40}" i
@@ -187,7 +187,7 @@ attendre_la_fenetre() {
 ZONE_L=200
 ZONE_H=26
 
-# ⚠️ `--psm 6` (bloc de texte uniforme), et non le mode par défaut. `--psm 3` est taillé pour des
+# `--psm 6` (bloc de texte uniforme), et non le mode par défaut. `--psm 3` est taillé pour des
 # documents : sur une capture d'interface il lisait 66 mots au lieu de 117, et manquait les titres
 # de cartes. Mesuré, pas supposé (#3887).
 #
@@ -195,7 +195,7 @@ ZONE_H=26
 # haut, très en dessous de ce que tesseract lit correctement.
 lire_zone() { # <image> <x> <y> [largeur] [hauteur]
     local image="$1" x="$2" y="$3" l="${4:-$ZONE_L}" h="${5:-$ZONE_H}" tmp
-    # ⚠️ Une image absente rendait une chaîne VIDE, indiscernable de « rien d'écrit à cet endroit ».
+    # Une image absente rendait une chaîne VIDE, indiscernable de « rien d'écrit à cet endroit ».
     # J'ai calibré six mesures sur un fichier qui n'existait pas et conclu que le texte n'y était
     # pas. Une mesure vide n'est pas un zéro : elle doit se signaler.
     if [ ! -f "$image" ]; then
@@ -211,7 +211,7 @@ lire_zone() { # <image> <x> <y> [largeur] [hauteur]
 
 # Compare un libellé lu à celui qu'on attendait, en ignorant les espaces.
 #
-# ⚠️ Ce n'est pas une facilité : à la taille d'une interface, l'OCR PERD les espaces. Mesuré sur le
+# Ce n'est pas une facilité : à la taille d'une interface, l'OCR PERD les espaces. Mesuré sur le
 # fil d'Ariane du produit, qui affiche « Accueil › Mes sites » et se lit :
 #
 #     [VigieChiro Companion Accueil Accueil » Messites]
@@ -234,7 +234,7 @@ libelle_correspond() { # <lu> <attendu>
     [ -n "$attendu" ] && [[ "$lu" == *"$attendu"* ]]
 }
 
-# ⚠️ Pourquoi ce contrôle existe, et ce qu'il ne fait PAS.
+# Pourquoi ce contrôle existe, et ce qu'il ne fait PAS.
 #
 # Les scénarios de #2191 cliquaient à des coordonnées nues : `g 203 811`. Au premier changement de
 # mise en page, le clic tombe à côté **sans rien dire**, et le film montre un parcours qui n'a pas
@@ -250,7 +250,7 @@ libelle_correspond() { # <lu> <attendu>
 # le répare pas - et c'est le bon partage pour un banc dont le péché serait de filmer du faux.
 # Les décalages verticaux essayés quand la lecture au point visé ne correspond pas.
 #
-# ⚠️ Pourquoi un balayage, et pourquoi il se DIT. Une feuille de style du socle (#4023) a rehaussé
+# Pourquoi un balayage, et pourquoi il se DIT. Une feuille de style du socle (#4023) a rehaussé
 # l'en-tête de huit pixels : « Mes sites », visé en y=454, s'est retrouvé en y=462, et la zone lue
 # ramassait le bas de l'icône - « | Mecs citec » au lieu de « Mes sites ». Le scénario était juste,
 # le libellé était là, et le tournage s'arrêtait.
@@ -259,7 +259,7 @@ libelle_correspond() { # <lu> <attendu>
 # absorberait le glissement en SILENCE laisserait ses scénarios pourrir sans que personne ne le
 # sache : au bout de quelques décalages, les coordonnées ne veulent plus rien dire. Il balaie donc,
 # et il ANNONCE l'écart qu'il a dû prendre.
-# ⚠️ Le pas est de QUATRE pixels, pas de huit. Mesuré : le bouton « + Ajouter » du modal était à
+# Le pas est de QUATRE pixels, pas de huit. Mesuré : le bouton « + Ajouter » du modal était à
 # dix pixels du point visé ; à l'écart +8 la fenêtre de lecture le rognait et rendait « uler | | »,
 # à +10 elle rendait « + Ajouter ». Deux pixels séparaient le refus de la lecture juste, parce que
 # la fenêtre ne fait que 26 px de haut pour un libellé de 13. Un pas trop grand ne balaie rien.
@@ -267,7 +267,7 @@ DECALAGES_ESSAYES="0 -4 4 -8 8 -12 12 -16 16 -20 20 -24 24"
 
 # L'ordonnée RÉELLE d'un libellé, corrigée du glissement de la mise en page.
 #
-# ⚠️ Extraite de `viser` pour le parcours « multi-nuits », qui doit LIRE à un endroit et CLIQUER à un
+# Extraite de `viser` pour le parcours « multi-nuits », qui doit LIRE à un endroit et CLIQUER à un
 # autre : la case « Importer » d'une ligne de la table des nuits n'a aucun texte, donc rien à viser.
 # La recopier dans le parcours aurait donné deux balayages à maintenir, et celui du parcours aurait
 # vieilli en silence.
@@ -292,7 +292,7 @@ ordonnee_du_libelle() { # <écran> <x> <y> <libellé attendu> [largeur de la zon
 
     if [ -z "$trouve" ]; then
         echo "   - le geste visait « $attendu » en ($x, $y) ; l'écran y porte « $lu »" >&2
-        # ⚠️ Distinguer les deux causes, parce qu'elles ne se corrigent pas pareil. Un libellé plus
+        # Distinguer les deux causes, parce qu'elles ne se corrigent pas pareil. Un libellé plus
         # long que la zone lue est TRONQUÉ, et le refus accuserait alors le scénario d'être périmé
         # alors qu'il est juste - mesuré sur « + Ajouter mon premier site de suivi », rendu
         # « uter mon premier site de: » dans une zone de 200 px.
@@ -344,7 +344,7 @@ viser_a_cote_de() { # <écran> <x du libellé> <y> <libellé attendu> <x du clic
 
 # Exige qu'un libellé SOIT à l'écran, sans rien cliquer.
 #
-# ⚠️ Pourquoi cette fonction existe, et ce qu'elle répare. Le banc ne vérifiait que ses GESTES : un
+# Pourquoi cette fonction existe, et ce qu'elle répare. Le banc ne vérifiait que ses GESTES : un
 # `viser` réussi prouve que le bouton était là et qu'on a cliqué dessus, jamais que le clic a **fait
 # quelque chose**. Le premier tournage « sans journal » a rendu ✅ sur un film où rien n'arrive : la
 # liste des points s'ouvrait, le clic sur son item tombait à côté - le seul geste du parcours qui ne
@@ -354,7 +354,7 @@ viser_a_cote_de() { # <écran> <x du libellé> <y> <libellé attendu> <x du clic
 # Un banc qui éprouve les gestes et pas les RÉSULTATS produit exactement le genre de faux qu'il
 # existe pour empêcher. Chaque parcours doit donc exiger ce qu'il a promis de montrer.
 #
-# ⚠️ UNE exigence par parcours, à la fin, et non une par geste. J'ai d'abord voulu contrôler aussi
+# UNE exigence par parcours, à la fin, et non une par geste. J'ai d'abord voulu contrôler aussi
 # le choix du point d'écoute en cours de route ; il a fallu trois réglages de coordonnées, parce que
 # la cible se déplace avec le défilement et que la valeur d'une liste - « A1 » - fait deux
 # caractères dont l'OCR ne tire rien. Or l'exigence finale la SUBSUME : sans point rattaché, l'import
@@ -384,7 +384,7 @@ exiger_a_l_ecran() { # <écran> <x> <y> <libellé attendu> [largeur]
 
 # Relit, SUR L'ÉCRAN DU PRODUIT, le dossier que le sélecteur a retenu.
 #
-# ⚠️ Pourquoi ce contrôle existe. Un premier essai désignait la carte en tapant son chemin dans la
+# Pourquoi ce contrôle existe. Un premier essai désignait la carte en tapant son chemin dans la
 # barre d'emplacement du sélecteur (`Ctrl+L`) : le dialogue ENTRAIT dans le dossier et repartait
 # avec son premier enfant, `…/sd-nominale/bruts`, un cran trop bas. Le film montrait alors une
 # importation parfaitement valide, sur le mauvais dossier, et rien ne le disait. Choisir la carte
@@ -422,7 +422,7 @@ taper() { # <écran> <texte>
 # Un marqueur : l'instant où l'on passe, et son nom. Le montage s'en sert pour savoir ce qu'il peut
 # accélérer, et l'index pour dire où commence quoi.
 #
-# ⚠️ L'instant est celui de l'HORLOGE, pas une position dans le film. La conversion se fait après
+# L'instant est celui de l'HORLOGE, pas une position dans le film. La conversion se fait après
 # coup, `t0` étant mesuré comme « instant d'arrêt moins durée du fichier » - jamais postulé, comme
 # le fait `lance-test-filme.sh`. `monter.py` de #2191 supposait un décalage de 1,5 s ; le banc de
 # recette a montré que cette latence varie.
@@ -433,7 +433,7 @@ marque() { # <fichier de marques> <nom>
 
 # Le mode de calage : une image de l'écran à chaque repère, dans le dossier que CALAGE_BANC désigne.
 #
-# ⚠️ Il existe parce qu'écrire un scénario demande de connaître des COORDONNÉES, et qu'on ne les
+# Il existe parce qu'écrire un scénario demande de connaître des COORDONNÉES, et qu'on ne les
 # connaît qu'en regardant l'écran du tournage. Les deux premiers parcours ont été calés en insérant
 # un `ffmpeg` à la main dans le corps de la fonction, puis en le déplaçant, puis en le retirant avant
 # de committer - trois tournages pour deux mesures, et une fois l'insertion posée dans le mauvais
@@ -442,7 +442,7 @@ marque() { # <fichier de marques> <nom>
 # Chaque repère donne son image. Écrire un scénario devient : poser les repères, tourner une fois,
 # ouvrir les images, écrire les coordonnées.
 #
-# ⚠️ Sans la variable, cette fonction ne fait RIEN et ne coûte rien : pas de saisie d'écran, pas de
+# Sans la variable, cette fonction ne fait RIEN et ne coûte rien : pas de saisie d'écran, pas de
 # fichier. Un tournage ordinaire ne doit pas payer un outil de mise au point.
 calage() { # <nom du repère>
     [ -n "${CALAGE_BANC:-}" ] || return 0
@@ -450,7 +450,7 @@ calage() { # <nom du repère>
     saisir_ecran "$CALAGE_BANC/$1.png"
 }
 
-# ⚠️ La saisie est une fonction à part, et pas une ligne dans `calage`, pour que le cas puisse la
+# La saisie est une fonction à part, et pas une ligne dans `calage`, pour que le cas puisse la
 # REMPLACER. Sa première version éprouvait « sans la variable, aucun fichier n apparaît » : c était
 # un faux vert, parce que sans écran `ffmpeg` échoue de toute façon et qu aucun fichier n apparaît
 # non plus quand le garde a disparu. L absence d effet ne prouve pas l absence de décision. Le cas
@@ -491,7 +491,7 @@ parcours_declarer_un_carre() {
     respirer_doc 1.2
 
     DISPLAY="$ecran" xdotool mousemove 640 348 click 1
-    # ⚠️ « Mare » et non « Étang », qui est pourtant l'exemple du produit : `xdotool type` a rendu
+    # « Mare » et non « Étang », qui est pourtant l'exemple du produit : `xdotool type` a rendu
     # « étang » minuscule sur le premier tournage - il perd la MAJUSCULE ACCENTUÉE. Un film de
     # documentation ne doit pas montrer une saisie que l'utilisateur n'obtiendrait pas.
     taper "$ecran" "Mare de la Tuiliere"
@@ -508,7 +508,7 @@ parcours_declarer_un_carre() {
 
 # La préparation du parcours d'importation. Elle N'EST PAS FILMÉE.
 #
-# ⚠️ Pourquoi une préparation séparée, et non un film qui montre tout. L'importation a besoin d'un
+# Pourquoi une préparation séparée, et non un film qui montre tout. L'importation a besoin d'un
 # carré ET d'un point d'écoute - l'assistant refuse de rattacher une nuit sans point. Filmer les
 # deux déclarations avant d'arriver au sujet donnerait un film qui met une minute à commencer, et
 # qui redit ce que `declarer-un-carre.mkv` montre déjà. Les gestes sont donc joués caméra éteinte.
@@ -527,11 +527,11 @@ preparation_importer_une_nuit() { # <écran>
     viser "$ecran" 324 237 "Ajouter un point" || return 1
     sleep 1.5
     DISPLAY="$ecran" xdotool mousemove 549 143 click 1
-    # ⚠️ « A1 » sans accent ni minuscule accentuée : `xdotool type` perd les MAJUSCULES ACCENTUÉES,
+    # « A1 » sans accent ni minuscule accentuée : `xdotool type` perd les MAJUSCULES ACCENTUÉES,
     # mesuré sur « Étang » rendu « étang » au premier tournage.
     taper "$ecran" "A1"
     sleep 0.8
-    # ⚠️ Zone de 110 px, et non les 200 par défaut. À 200 elle englobe « Annuler » juste à côté :
+    # Zone de 110 px, et non les 200 par défaut. À 200 elle englobe « Annuler » juste à côté :
     # l'OCR en mode bloc reçoit alors deux fonds - texte sombre sur blanc ET texte blanc sur indigo -
     # et rend une bouillie qui ne contient ni l'un ni l'autre. Une zone qui chevauche deux contrôles
     # n'en lit aucun.
@@ -568,7 +568,7 @@ parcours_importer_une_nuit() { # <écran> <marques> <point de montage de la cart
     marque "$marques" selecteur
     respirer_doc 2.0                                   # le sélecteur s'ouvre sur un dossier vide
 
-    # ⚠️ La carte se prend dans la BARRE LATÉRALE, sous son étiquette, et non en tapant son chemin :
+    # La carte se prend dans la BARRE LATÉRALE, sous son étiquette, et non en tapant son chemin :
     # c'est le geste réel, et c'est celui qui retient le bon niveau (cf. `verifier_dossier_retenu`).
     viser "$ecran" 168 178 "$ETIQUETTE_CARTE" 0.6 150 || return 1
     respirer_doc 1.6
@@ -581,11 +581,11 @@ parcours_importer_une_nuit() { # <écran> <marques> <point de montage de la cart
     verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
     respirer_doc 2.5                                   # l'étape 2 paraît, et dit ce qu'elle a trouvé
 
-    # ⚠️ Zone élargie à 230 px : « Choisissez un point » déborde des 200 px par défaut et se lit
+    # Zone élargie à 230 px : « Choisissez un point » déborde des 200 px par défaut et se lit
     # « hoisissez un point ». Mesuré au premier tournage, pas supposé.
     viser "$ecran" 801 562 "Choisissez un point" 0.55 230 || return 1
     respirer_doc 1.2
-    # ⚠️ Au CLAVIER, et non au pixel. Le clic sur l'item d'une liste déroulante était le seul geste
+    # Au CLAVIER, et non au pixel. Le clic sur l'item d'une liste déroulante était le seul geste
     # du parcours à ne pas passer par un libellé vérifié : sa position dépend de celle de la liste,
     # qui dépend de la hauteur de tout ce qui la précède. Une feuille de style du socle (#4023) a
     # déplacé la liste de quelques pixels, le clic est tombé à côté, et le film a montré
@@ -607,7 +607,7 @@ parcours_importer_une_nuit() { # <écran> <marques> <point de montage de la cart
     marque "$marques" import_debut
     respirer_doc 8.0                                   # la machine travaille
     marque "$marques" import_fin
-    # ⚠️ La BARRE D'ÉTAT, en pied de fenêtre : elle ne défile pas. Exiger le compte rendu dans le
+    # La BARRE D'ÉTAT, en pied de fenêtre : elle ne défile pas. Exiger le compte rendu dans le
     # corps de la page dépendrait de la position du défilement, donc du contenu - un contrôle qui
     # varierait avec ce qu'il contrôle.
     exiger_a_l_ecran "$ecran" 640 829 "Import termin" 460 || return 1
@@ -629,7 +629,7 @@ parcours_importer_une_nuit() { # <écran> <marques> <point de montage de la cart
 #
 # ## Les coordonnées ne sont PAS celles du parcours nominal
 #
-# ⚠️ Le bandeau ajoute de la hauteur : la liste des points d'écoute descend de 562 à 636. Un
+# Le bandeau ajoute de la hauteur : la liste des points d'écoute descend de 562 à 636. Un
 # scénario recopié tel quel viserait le vide - ou pire, le bon libellé au mauvais endroit. C'est la
 # raison pour laquelle chaque `viser` porte son libellé attendu.
 parcours_melange_de_capteurs() { # <écran> <marques> <point de montage de la carte>
@@ -656,7 +656,7 @@ parcours_melange_de_capteurs() { # <écran> <marques> <point de montage de la ca
 
     verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
 
-    # ⚠️ Le cœur du film. Le bandeau doit être LU, pas entrevu : c'est la seule chose que ce
+    # Le cœur du film. Le bandeau doit être LU, pas entrevu : c'est la seule chose que ce
     # parcours apporte, et un spectateur qui le manque a regardé un import ordinaire.
     viser "$ecran" 393 437 "mélange plusieurs enregistreurs" 0.7 420 || return 1
     marque "$marques" melange_annonce
@@ -664,7 +664,7 @@ parcours_melange_de_capteurs() { # <écran> <marques> <point de montage de la ca
 
     viser "$ecran" 801 636 "Choisissez un point" 0.55 230 || return 1
     respirer_doc 1.2
-    # ⚠️ Au CLAVIER, et non au pixel. Le clic sur l'item d'une liste déroulante était le seul geste
+    # Au CLAVIER, et non au pixel. Le clic sur l'item d'une liste déroulante était le seul geste
     # du parcours à ne pas passer par un libellé vérifié : sa position dépend de celle de la liste,
     # qui dépend de la hauteur de tout ce qui la précède. Une feuille de style du socle (#4023) a
     # déplacé la liste de quelques pixels, le clic est tombé à côté, et le film a montré
@@ -682,13 +682,13 @@ parcours_melange_de_capteurs() { # <écran> <marques> <point de montage de la ca
     DISPLAY="$ecran" xdotool click --repeat 10 5
     respirer_doc 2.0
 
-    # ⚠️ Et l'import se fait. C'est le fait que la documentation peine à rendre : l'avertissement
+    # Et l'import se fait. C'est le fait que la documentation peine à rendre : l'avertissement
     # n'interdit rien, il informe. Un film qui s'arrêterait au bandeau dirait le contraire.
     viser "$ecran" 201 769 "Importer cette nuit" || return 1
     marque "$marques" import_debut
     respirer_doc 8.0
     marque "$marques" import_fin
-    # ⚠️ La BARRE D'ÉTAT, en pied de fenêtre : elle ne défile pas. Exiger le compte rendu dans le
+    # La BARRE D'ÉTAT, en pied de fenêtre : elle ne défile pas. Exiger le compte rendu dans le
     # corps de la page dépendrait de la position du défilement, donc du contenu - un contrôle qui
     # varierait avec ce qu'il contrôle.
     exiger_a_l_ecran "$ecran" 640 829 "Import termin" 460 || return 1
@@ -730,10 +730,10 @@ parcours_sans_journal() { # <écran> <marques> <point de montage de la carte>
 
     verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
 
-    # ⚠️ Le cœur du film, et il tient en une ligne d'écran : l'avertissement dit « mode dégradé »
+    # Le cœur du film, et il tient en une ligne d'écran : l'avertissement dit « mode dégradé »
     # pendant que les deux autres contrôles restent au vert. Un spectateur qui ne le lit pas a
     # regardé un import ordinaire - or c'est précisément la différence qu'il est venu voir.
-    # ⚠️ On vise un FRAGMENT, pas la phrase entière. « Aucun journal LogPR : import en mode dégradé
+    # On vise un FRAGMENT, pas la phrase entière. « Aucun journal LogPR : import en mode dégradé
     # (enregistreur déduit des fichiers, paramètres limités) » fait 657 px : une fenêtre de 420
     # centrée sur elle en rate le début et lit « PR : import en mode dégradé… ». Élargir la fenêtre
     # jusqu'à 700 px la ferait déborder sur les contrôles voisins - le défaut d'à côté. Un fragment
@@ -744,7 +744,7 @@ parcours_sans_journal() { # <écran> <marques> <point de montage de la carte>
 
     viser "$ecran" 801 562 "Choisissez un point" 0.55 230 || return 1
     respirer_doc 1.2
-    # ⚠️ Au CLAVIER, et non au pixel. Le clic sur l'item d'une liste déroulante était le seul geste
+    # Au CLAVIER, et non au pixel. Le clic sur l'item d'une liste déroulante était le seul geste
     # du parcours à ne pas passer par un libellé vérifié : sa position dépend de celle de la liste,
     # qui dépend de la hauteur de tout ce qui la précède. Une feuille de style du socle (#4023) a
     # déplacé la liste de quelques pixels, le clic est tombé à côté, et le film a montré
@@ -763,12 +763,12 @@ parcours_sans_journal() { # <écran> <marques> <point de montage de la carte>
     DISPLAY="$ecran" xdotool click --repeat 10 5
     respirer_doc 2.0
 
-    # ⚠️ Et l'import se fait. C'est tout ce que ce film a à dire : l'avertissement n'interdit rien.
+    # Et l'import se fait. C'est tout ce que ce film a à dire : l'avertissement n'interdit rien.
     viser "$ecran" 201 769 "Importer cette nuit" || return 1
     marque "$marques" import_debut
     respirer_doc 8.0
     marque "$marques" import_fin
-    # ⚠️ La BARRE D'ÉTAT, en pied de fenêtre : elle ne défile pas. Exiger le compte rendu dans le
+    # La BARRE D'ÉTAT, en pied de fenêtre : elle ne défile pas. Exiger le compte rendu dans le
     # corps de la page dépendrait de la position du défilement, donc du contenu - un contrôle qui
     # varierait avec ce qu'il contrôle.
     exiger_a_l_ecran "$ecran" 640 829 "Import termin" 460 || return 1
@@ -780,7 +780,7 @@ parcours_sans_journal() { # <écran> <marques> <point de montage de la carte>
 
 # Les parcours d'import qui n'exigent RIEN de leur résultat, nommés.
 #
-# ⚠️ Ce garde remplace un compteur verrouillé qui cherchait « exiger_a_l_ecran … 640 829 » et exigeait
+# Ce garde remplace un compteur verrouillé qui cherchait « exiger_a_l_ecran … 640 829 » et exigeait
 # d'en trouver exactement trois. Il disait donc « trois parcours ont une exigence à cette
 # coordonnée-là », ce qui n'est pas la règle qu'on voulait tenir, et il rougissait dès qu'un parcours
 # en portait DEUX - ce que fait « multi-nuits », qui exige l'import ET le compte de passages.
@@ -806,7 +806,7 @@ parcours_sans_exigence() { # <fichier du banc>
 #
 # ## Ce qu'il montre, et ce qu'il devait montrer
 #
-# ⚠️ #4013 attendait de ce cas « la progression et le parallélisme, invisibles sur une capture ».
+# #4013 attendait de ce cas « la progression et le parallélisme, invisibles sur une capture ».
 # Cette attente est FAUSSE, et c'est le tournage qui l'a montrée : entre le clic sur « Importer » et
 # une demi-seconde plus tard, le compte rendu affiche déjà 60/60 (100 %) et les deux barres pleines.
 # Mesuré en échantillonnant le film brut toutes les demi-secondes, pas déduit.
@@ -820,7 +820,7 @@ parcours_sans_exigence() { # <fichier du banc>
 # la carte comme écrit sur le disque. Un lecteur qui s'attend à patienter apprend qu'il n'a pas à le
 # faire.
 #
-# ⚠️ Ses repères d'import s'appellent tout de même `import_commence` et `import_acheve`, et non
+# Ses repères d'import s'appellent tout de même `import_commence` et `import_acheve`, et non
 # `import_debut` / `import_fin` : le montage accélère les plages déclarées par une paire
 # `<nom>_debut` / `<nom>_fin`, et accélérer un import déjà instantané le rendrait invisible.
 # L'inspection, elle, garde sa paire - scruter soixante fichiers est une attente qui n'apprend rien.
@@ -848,7 +848,7 @@ parcours_grosse_carte() { # <écran> <marques> <point de montage de la carte>
 
     verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
 
-    # ⚠️ Le volume, annoncé par l'inspection. Le fragment se vise à SON abscisse, pas au centre de sa
+    # Le volume, annoncé par l'inspection. Le fragment se vise à SON abscisse, pas au centre de sa
     # ligne : c'est le piège qui a fait rougir deux exigences du parcours « multi-nuits » alors que
     # l'écran portait bien ce qu'elles attendaient.
     exiger_a_l_ecran "$ecran" 224 393 "60 enregistrement" 220 || return 1
@@ -872,7 +872,7 @@ parcours_grosse_carte() { # <écran> <marques> <point de montage de la carte>
     respirer_doc 6.0
     marque "$marques" import_acheve
 
-    # ⚠️ On redescend sur le compte rendu. Sans ce défilement, le film se terminait sur le haut de la
+    # On redescend sur le compte rendu. Sans ce défilement, le film se terminait sur le haut de la
     # page et la seule ligne de la barre d'état : le lecteur voyait « Import terminé » sans voir le
     # décompte ni les volumes, c'est-à-dire sans voir ce que ce cas-ci a d'intéressant. La barre
     # d'état ne défile pas, donc les exigences ci-dessous restent justes.
@@ -905,7 +905,7 @@ parcours_grosse_carte() { # <écran> <marques> <point de montage de la carte>
 # de la ligne - « 2026-07-04 », que rien d'autre ne porte à l'écran - et clique à l'abscisse de la
 # case, à l'ordonnée corrigée du même balayage que `viser`. Si la table glisse, la ligne suit.
 #
-# ⚠️ Le balayage vaut 24 px de part et d'autre, pour un pas de ligne de 32 : il pourrait donc lire
+# Le balayage vaut 24 px de part et d'autre, pour un pas de ligne de 32 : il pourrait donc lire
 # une ligne voisine. Il ne s'y trompe pas parce que les trois dates DIFFÈRENT - c'est ce qui rend ce
 # repérage sûr ici, et ce qui ne le rendrait pas sûr sur une colonne aux valeurs répétées.
 #
@@ -939,10 +939,10 @@ parcours_multi_nuits() { # <écran> <marques> <point de montage de la carte>
 
     verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
 
-    # ⚠️ La phrase qui annonce le découpage, avant la table elle-même. Elle est longue - « Plusieurs
+    # La phrase qui annonce le découpage, avant la table elle-même. Elle est longue - « Plusieurs
     # nuits détectées sur cette carte : chacune deviendra un passage distinct… » - donc on en vise un
     # fragment court et distinctif, comme pour le mode dégradé.
-    # ⚠️ Le fragment se vise à SON abscisse, pas au centre de sa ligne. La phrase « Plusieurs nuits
+    # Le fragment se vise à SON abscisse, pas au centre de sa ligne. La phrase « Plusieurs nuits
     # détectées sur cette carte : chacune deviendra un passage distinct… » fait 969 px de large. Une
     # fenêtre de 420 px centrée au milieu de la ligne lit « sur cette carte : chacune deviendra » et
     # ne voit jamais le début : le premier tournage a refusé pour ça, en accusant le geste précédent
@@ -956,7 +956,7 @@ parcours_multi_nuits() { # <écran> <marques> <point de montage de la carte>
     exiger_a_l_ecran "$ecran" 248 558 "2026-07-05" 150 || return 1
     respirer_doc 2.5
 
-    # ⚠️ Le point d'écoute AVANT le décochage, et l'ordre n'est pas indifférent. Tant qu'aucun point
+    # Le point d'écoute AVANT le décochage, et l'ordre n'est pas indifférent. Tant qu'aucun point
     # n'est choisi, la colonne « Passage n° » porte « — » sur les trois lignes : il n'y a pas encore
     # de numéro à attribuer, donc rien à renuméroter. Décocher d'abord aurait filmé un tiret qui
     # remplace un tiret. Mesuré sur une capture du tournage, pas déduit.
@@ -968,7 +968,7 @@ parcours_multi_nuits() { # <écran> <marques> <point de montage de la carte>
     marque "$marques" point_choisi
     respirer_doc 3.0
 
-    # ⚠️ LE geste du film : décocher la nuit du milieu, repérée par SA date. La case n'a aucun texte,
+    # LE geste du film : décocher la nuit du milieu, repérée par SA date. La case n'a aucun texte,
     # donc `viser_a_cote_de` lit « 2026-07-04 » et clique à l'abscisse de la case, à l'ordonnée que le
     # balayage a corrigée.
     viser_a_cote_de "$ecran" 248 526 "2026-07-04" 172 0.7 150 || return 1
@@ -984,10 +984,10 @@ parcours_multi_nuits() { # <écran> <marques> <point de montage de la carte>
     respirer_doc 10.0
     marque "$marques" import_fin
 
-    # ⚠️ DEUX exigences, et la seconde porte tout. « Import terminé » prouve que l'import a eu lieu ;
+    # DEUX exigences, et la seconde porte tout. « Import terminé » prouve que l'import a eu lieu ;
     # « 2 passage » prouve que le décochage a PORTÉ. Sans elle, un clic tombé à côté de la case
     # publierait un film où trois nuits s'importent sous un titre qui promet qu'on en retire une.
-    # ⚠️ Et le MÊME piège qu'en haut, une seconde fois dans le même parcours : la fenêtre de lecture
+    # Et le MÊME piège qu'en haut, une seconde fois dans le même parcours : la fenêtre de lecture
     # est centrée sur l'abscisse qu'on lui donne. Le compte rendu multi-nuits est long - « Import
     # terminé : 2 passage(s) créé(s) (nuits du 03/07/2026 au 05/07/2026), 4 séquence(s) produite(s). »
     # - et commence à 358 px. Une fenêtre de 460 px centrée au milieu de la barre lit à partir de
@@ -1009,11 +1009,11 @@ parcours_multi_nuits() { # <écran> <marques> <point de montage de la carte>
 # elle **refuse**, et c'est ce refus qu'il faut montrer - l'étape « 2. Inspection » ne paraît même
 # pas, l'assistant reste à « 1 » puis « 3 », et le bouton d'import demeure fermé.
 #
-# ⚠️ Son exigence de fin n'est donc pas « Import terminé » mais le message de refus lui-même. Un
+# Son exigence de fin n'est donc pas « Import terminé » mais le message de refus lui-même. Un
 # parcours qui exigerait l'import ici échouerait toujours ; un parcours qui n'exigerait rien
 # publierait un film montrant un écran quelconque.
 #
-# ⚠️ Une observation à ne pas perdre : le motif du refus s'affiche à côté du BOUTON, tout en bas,
+# Une observation à ne pas perdre : le motif du refus s'affiche à côté du BOUTON, tout en bas,
 # à quelque sept cents pixels sous la zone d'inspection où l'utilisateur vient de regarder. Qui
 # désigne sa carte et lit le haut de la page voit « 1. » puis « 3. » sans explication. Ce n'est pas
 # l'objet de ce film ; c'est noté ici pour qui passera après.
@@ -1042,7 +1042,7 @@ parcours_journal_illisible() { # <écran> <marques> <point de montage de la cart
     verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
     respirer_doc 2.0                                   # l'étape 2 ne paraît pas : elle a échoué
 
-    # ⚠️ Le cœur du film, et l'exigence de ce parcours : le motif du refus, nommé.
+    # Le cœur du film, et l'exigence de ce parcours : le motif du refus, nommé.
     exiger_a_l_ecran "$ecran" 515 828 "inexploitable" 460 || return 1
     marque "$marques" refus_annonce
     respirer_doc 5.0                                   # le temps de lire ce qui cloche
@@ -1061,7 +1061,7 @@ respirer_doc() {
 # Le tournage
 # ---------------------------------------------------------------------------------------------
 
-# ⚠️ Durée FIXÉE d'avance, et non un signal d'arrêt. Un `ffmpeg` en MP4 tué sans ménagement ne
+# Durée FIXÉE d'avance, et non un signal d'arrêt. Un `ffmpeg` en MP4 tué sans ménagement ne
 # finalise pas son index : le fichier est irrécupérable. C'est le piège que le tournage de #2191
 # avait rencontré, et la raison du MKV ici.
 filmer() {
@@ -1082,7 +1082,7 @@ parcours_ouverture() {
 # Ce que le banc sait tourner. Un parcours porte son nom de fichier, la durée de pellicule qu'on
 # lui accorde, et s'il lui faut une carte SD montée.
 #
-# ⚠️ La pellicule est FIXÉE d'avance et généreuse : un `ffmpeg` tué sans ménagement ne finalise pas
+# La pellicule est FIXÉE d'avance et généreuse : un `ffmpeg` tué sans ménagement ne finalise pas
 # son index, et le film est alors irrécupérable. Le montage coupera ce qui dépasse.
 parcours_connu() { # <nom>
     case "$1" in
@@ -1148,7 +1148,7 @@ tourner() { # [nom du parcours] [sortie]
     local wm=$!
     sleep 1
 
-    # ⚠️ Dans un SOUS-SHELL : `poser_environnement_jetable` exporte HOME et change de dossier, et
+    # Dans un SOUS-SHELL : `poser_environnement_jetable` exporte HOME et change de dossier, et
     # le banc lui-même a besoin des siens - ne serait-ce que pour écrire le film à sa destination.
     (
         poser_environnement_jetable "$bac" || exit 1
@@ -1162,7 +1162,7 @@ tourner() { # [nom du parcours] [sortie]
         local marques="${sortie%.mkv}.marques.tsv"
         : > "$marques"
 
-        # ⚠️ La préparation tourne CAMÉRA ÉTEINTE, et son refus arrête le tournage avant qu'une
+        # La préparation tourne CAMÉRA ÉTEINTE, et son refus arrête le tournage avant qu'une
         # pellicule soit entamée - le bon moment pour s'arrêter.
         if [ "$code" -eq 0 ] && [ "$spec_carte" != non ]; then
             echo "   … préparation (non filmée) : un carré et son point d'écoute"
@@ -1182,14 +1182,14 @@ tourner() { # [nom du parcours] [sortie]
                 grosse-carte) parcours_grosse_carte "$ecran" "$marques" "$point" || code=1 ;;
             esac
             wait "$camera"
-            # ⚠️ APRÈS `wait`, et l'ordre est tout. `t0` se calcule « instant d'arrêt moins durée du
+            # APRÈS `wait`, et l'ordre est tout. `t0` se calcule « instant d'arrêt moins durée du
             # fichier » : il faut donc l'instant où la CAMÉRA s'est arrêtée, pas celui où le parcours
             # s'est terminé. Marqué avant le `wait`, les repères se convertissaient en 21,3 s à 45,0 s -
             # un parcours qui n'aurait commencé qu'à la moitié d'un film qu'il occupe en entier. Le
             # montage aurait coupé les mauvaises plages, et le film serait resté parfaitement valide.
             marque "$marques" arret
 
-            # ⚠️ Le montage sort en MP4, le brut reste en MKV, et ce n'est pas une inconséquence.
+            # Le montage sort en MP4, le brut reste en MKV, et ce n'est pas une inconséquence.
             # Le MKV protège le TOURNAGE : un `ffmpeg` tué sans ménagement laisse un MP4 sans index,
             # donc irrécupérable - le piège de #2191. Le montage, lui, est un ré-encodage propre qui
             # va jusqu'à son terme, et il doit se lire dans un navigateur : aucun n'affiche le
@@ -1221,7 +1221,7 @@ tourner() { # [nom du parcours] [sortie]
 # La carte SD du parcours d'importation
 # ---------------------------------------------------------------------------------------------
 
-# ⚠️ La spec de carte est une propriété du PARCOURS, pas du banc. Elle a d'abord été un global
+# La spec de carte est une propriété du PARCOURS, pas du banc. Elle a d'abord été un global
 # (`SPEC_CARTE`), ce qui convenait tant qu'un seul film montait une carte ; le deuxième l'aurait
 # fait mentir en silence - le film du mélange aurait été tourné sur la carte nominale, et rien
 # n'aurait signalé qu'il ne montre pas ce que son nom annonce. Elle se lit maintenant dans
@@ -1235,17 +1235,17 @@ tourner() { # [nom du parcours] [sortie]
 # La vidéo de #2191 filmait une **vraie** carte, montée par `udisksctl` sous `/media`. C'était le bon
 # choix pour convaincre un relecteur Flathub : la scène montrait le geste réel d'un naturaliste.
 #
-# ⚠️ Pour un banc versionné, c'est l'inverse qu'il faut : une carte qu'on refabrique à l'identique.
+# Pour un banc versionné, c'est l'inverse qu'il faut : une carte qu'on refabrique à l'identique.
 # `GenerateurCartesSD` rend les mêmes octets d'une exécution à l'autre. Depuis #3996 ces octets
 # sont versés dans une image FAT montée en boucle, pour que le film montre le chemin qu'un
 # naturaliste voit vraiment : les deux se cumulent, la fixture reste déterministe.
 #
-# ⚠️ J'avais chiffré ce travail à « trois mécanismes neufs » avant de regarder. Le pom porte le goal
+# J'avais chiffré ce travail à « trois mécanismes neufs » avant de regarder. Le pom porte le goal
 # `generer-sd` depuis longtemps, documenté dans `dev-docs/recette/fixtures.md`. Un coût supposé, et
 # faux d'un ordre de grandeur.
 # Le contrôle, SÉPARÉ de la fabrication pour pouvoir être éprouvé sans lancer Maven.
 #
-# ⚠️ Il porte sur ce qui EXISTE, pas sur le code de retour de Maven : `exec:java` rend zéro sur bien
+# Il porte sur ce qui EXISTE, pas sur le code de retour de Maven : `exec:java` rend zéro sur bien
 # des façons de ne rien produire. Une carte utilisable a un dossier, des bruts, et au moins un WAV -
 # sans quoi le film montrerait une importation qui ne trouve rien, et le fichier serait valide.
 carte_utilisable() { # <dossier de destination>
@@ -1293,7 +1293,7 @@ preparer_la_carte() { # <dossier de destination> <spec, relative à la racine>
 # plausible, et à ce que le démontage ne s'en prenne qu'à elle.
 ETIQUETTE_CARTE="VIGIECHIRO"
 
-# ⚠️ Pourquoi monter, plutôt que de désigner un dossier.
+# Pourquoi monter, plutôt que de désigner un dossier.
 #
 # Un banc de recette se moque de l'endroit : il vérifie un comportement. Un film de documentation,
 # lui, EST le livrable, et son réalisme en fait partie. Un naturaliste branche sa carte et la voit
@@ -1304,7 +1304,7 @@ ETIQUETTE_CARTE="VIGIECHIRO"
 # on les verse dans une image FAT étiquetée, et `udisksctl` la monte là où une vraie carte se monte.
 image_de_la_carte() { # <dossier de la carte> <image à écrire>
     local carte="$1" image="$2" bruts
-    # ⚠️ Vérifier la SOURCE avant de fabriquer. Sans ce contrôle, une carte absente - `/tmp` nettoyé
+    # Vérifier la SOURCE avant de fabriquer. Sans ce contrôle, une carte absente - `/tmp` nettoyé
     # entre deux tournages, cela s'est produit - donne une image FAT parfaitement valide et VIDE.
     # Le film montrerait alors « 0 enregistrement détecté », et le fichier serait irréprochable.
     if [ ! -d "$carte" ]; then
@@ -1326,7 +1326,7 @@ image_de_la_carte() { # <dossier de la carte> <image à écrire>
     return 0
 }
 
-# ⚠️ Le garde qui protège les cartes de l'utilisateur.
+# Le garde qui protège les cartes de l'utilisateur.
 #
 # Cette machine porte de VRAIES cartes montées - au moment d'écrire ceci, `/run/media/<user>/72CA-9E54`.
 # Un banc qui démonterait « le dernier volume apparu » pourrait s'en prendre à elles. On n'agit donc
@@ -1362,7 +1362,7 @@ monter_la_carte() { # <image>
     return 0
 }
 
-# ⚠️ On démonte, on ne DÉTACHE pas. `udisksctl loop-delete` réclame une élévation par polkit : sur
+# On démonte, on ne DÉTACHE pas. `udisksctl loop-delete` réclame une élévation par polkit : sur
 # un poste graphique, il fait surgir une boîte d'authentification chez qui travaille - vécu. Et il
 # est inutile : `loop-setup` pose l'autoclear, le périphérique s'en va de lui-même au démontage.
 demonter_la_carte() { # <point de montage> <périphérique>
@@ -1385,7 +1385,7 @@ demonter_la_carte() { # <point de montage> <périphérique>
 # depuis openbox).
 part_utile() { # <film>
     local mesures total claires
-    # ⚠️ PAS de `-v error` ici, et c'est un piège coûteux : `metadata=print` écrit au niveau INFO,
+    # PAS de `-v error` ici, et c'est un piège coûteux : `metadata=print` écrit au niveau INFO,
     # si bien qu'abaisser la verbosité fait disparaître la mesure elle-même. On lit alors zéro image
     # partout - un film blanc et un film noir rendent le même verdict.
     mesures=$(ffmpeg -nostdin -i "$1" -vf "signalstats,metadata=print" -f null - 2>&1 \
@@ -1398,7 +1398,7 @@ part_utile() { # <film>
 
 # `t0` : l'instant, sur l'horloge, de la première image du film.
 #
-# ⚠️ Il se MESURE - « instant d'arrêt moins durée du fichier » - et ne se postule pas. `monter.py`
+# Il se MESURE - « instant d'arrêt moins durée du fichier » - et ne se postule pas. `monter.py`
 # de #2191 écrivait `DECALAGE = 1.5` ; mesurée ici, la latence d'initialisation d'ffmpeg vaut 0,3 s.
 # Un facteur cinq sur une constante en dur, et personne ne l'aurait vu : un montage décalé rend un
 # film parfaitement valide, qui montre autre chose que ce que son index annonce.
@@ -1418,16 +1418,16 @@ instant_du_repere() { # <fichier de marques> <t0> <nom>
 # machine : la création est instantanée, et les seuls temps morts sont les respirations posées POUR
 # le spectateur - les comprimer irait contre leur raison d'être.
 #
-# ⚠️ Écrire l'accélération maintenant produirait un dispositif qu'aucun cas ne peut faire rougir,
+# Écrire l'accélération maintenant produirait un dispositif qu'aucun cas ne peut faire rougir,
 # ce que #3886 vient de reprocher à seize auto-tests. Elle viendra avec le parcours d'importation,
 # qui a de vraies attentes : la scrutation de la carte et l'import.
 # Les plages où l'on regarde la machine travailler, accélérées au montage.
 #
-# ⚠️ Pourquoi celles-là et pas le reste. Un film de documentation se juge au temps qu'il réclame.
+# Pourquoi celles-là et pas le reste. Un film de documentation se juge au temps qu'il réclame.
 # Les gestes doivent garder leur rythme - le spectateur les refera -, mais l'inspection de la carte
 # et l'import lui-même n'apprennent rien en temps réel : ce sont des barres qui avancent.
 #
-# ⚠️ Elles s'accélèrent, elles ne se COUPENT PAS. Un import qui disparaîtrait au montage laisserait
+# Elles s'accélèrent, elles ne se COUPENT PAS. Un import qui disparaîtrait au montage laisserait
 # croire qu'il est instantané ; le lecteur qui attend huit secondes devant son écran croirait alors
 # que quelque chose ne va pas chez lui.
 FACTEUR_ACCELERATION=4
@@ -1461,7 +1461,7 @@ plages_a_accelerer() { # <marques> <t0> <coupe>
 # Le filtre qui coupe le film et accélère ses plages de machine. Vide s'il n'y a rien à accélérer :
 # le montage reprend alors sa coupe simple, plus rapide et plus sûre.
 #
-# ⚠️ Il découpe en segments ALTERNÉS - normal, accéléré, normal… - et les recolle. Une seule passe,
+# Il découpe en segments ALTERNÉS - normal, accéléré, normal… - et les recolle. Une seule passe,
 # donc pas de fichiers intermédiaires : le brut n'est lu qu'une fois, et c'est ce que `concat`
 # attend.
 filtre_de_montage() { # <début> <fin> <plages>
@@ -1519,7 +1519,7 @@ monter() { # <brut> <marques> <sortie>
             -y "$sortie" 2>/dev/null
     fi
 
-    # ⚠️ Le contrôle, et il porte sur le RÉSULTAT, pas sur les repères. Un montage qui viserait à
+    # Le contrôle, et il porte sur le RÉSULTAT, pas sur les repères. Un montage qui viserait à
     # côté rendrait un film noir - valide, lisible, et vide. C'est la seule chose qu'on ne peut pas
     # laisser passer en silence.
     part=$(part_utile "$sortie")
@@ -1528,7 +1528,7 @@ monter() { # <brut> <marques> <sortie>
             "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
         return 1
     fi
-    # ⚠️ La durée annoncée se MESURE sur le fichier produit. Calculée comme « fin moins début »,
+    # La durée annoncée se MESURE sur le fichier produit. Calculée comme « fin moins début »,
     # elle ignorait l'accélération des plages de machine et annonçait un film plus long que celui
     # qu'on venait d'écrire - un chiffre faux sur la ligne même qui dit que le montage a réussi.
     local montee accelerees
@@ -1551,12 +1551,12 @@ monter() { # <brut> <marques> <sortie>
 # marqueurs, la part d'images utiles de la mesure. C'est la leçon de #3885, où une page portait
 # trois inventaires du même fait et où deux avaient dérivé.
 #
-# ⚠️ Ce que l'index dit de lui-même compte autant que ce qu'il liste. Un lecteur doit savoir que ce
+# Ce que l'index dit de lui-même compte autant que ce qu'il liste. Un lecteur doit savoir que ce
 # film prouve un ENCHAÎNEMENT et rien d'autre : qu'il soit clair, lisible, bien rythmé, aucune
 # machine ne le dit. C'est le troisième état de l'ADR 3764, transposé à la documentation.
 # La position d'un repère dans le film MONTÉ, une fois les plages de machine accélérées.
 #
-# ⚠️ Sans cette conversion, l'index pointe APRÈS la fin du film. Mesuré : il annonçait « fin à
+# Sans cette conversion, l'index pointe APRÈS la fin du film. Mesuré : il annonçait « fin à
 # 39,8 s » sur un fichier de 31,2 s. C'est une page dont tout l'objet est de dire où regarder, et
 # elle envoyait le lecteur dans le vide - en ayant l'air, comme toujours, parfaitement calculée.
 position_dans_le_montage() { # <position dans la coupe> <plages> <facteur>
@@ -1576,7 +1576,7 @@ position_dans_le_montage() { # <position dans la coupe> <plages> <facteur>
 
 # Le titre et la page de documentation qu'un parcours illustre.
 #
-# ⚠️ Cette table existe parce que l'index a menti. Écrit pour un seul parcours, il titrait
+# Cette table existe parce que l'index a menti. Écrit pour un seul parcours, il titrait
 # « Déclarer un carré » au-dessus du film d'IMPORTATION, et le renvoyait vers `sites.md`. Une page
 # dérivée qui se trompe de sujet est pire qu'une page absente : elle a l'air d'avoir été vérifiée.
 fiche_du_parcours() { # <nom>
@@ -1620,7 +1620,7 @@ section_du_parcours() { # <dossier> <nom>
     echo "### Où en est le parcours"
     echo
     printf '| étape | dans le film |\n|---|---|\n'
-    # ⚠️ Les positions se comptent dans le film MONTÉ, pas dans le brut. Le montage a coupé au
+    # Les positions se comptent dans le film MONTÉ, pas dans le brut. Le montage a coupé au
     # repère « debut » : il faut donc retrancher cette origine, sans quoi l'index annonce un
     # « debut » à -0,2 s dans un film qui commence à zéro - une petite fausseté, sur la page
     # dont tout l'intérêt est de dire où regarder.
@@ -1638,7 +1638,7 @@ section_du_parcours() { # <dossier> <nom>
     echo
 }
 
-# ⚠️ L'index décrit TOUS les films présents, pas seulement celui qu'on vient de tourner. Écrit pour
+# L'index décrit TOUS les films présents, pas seulement celui qu'on vient de tourner. Écrit pour
 # le seul dernier tournage, il effaçait le parcours précédent à chaque passage : la page annonçait
 # un dépôt qui n'aurait filmé qu'un parcours, alors que les deux films étaient là, côte à côte.
 ecrire_index() { # <dossier> <index>
@@ -1708,7 +1708,7 @@ auto_test() {
     # --- l'environnement jetable du produit ---
     essai "l'environnement jetable pose HOME dans le bac"   vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; poser_environnement_jetable "$1"; [ "$HOME" = "$1/home" ]' "${BASH_SOURCE[0]}" "$bac"
-    # ⚠️ LE cas qui porte ce dispositif : si l'export disparaît, HOME reste celui de l'utilisateur et
+    # LE cas qui porte ce dispositif : si l'export disparaît, HOME reste celui de l'utilisateur et
     # le sélecteur filme son arborescence. Le vert ne le dirait pas ; ce rouge-là, si.
     essai "le HOME réel ne survit pas à l'environnement jetable" rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; reel="$HOME"; source "$0"; poser_environnement_jetable "$1"; [ "$HOME" = "$reel" ]' "${BASH_SOURCE[0]}" "$bac"
@@ -1720,19 +1720,19 @@ auto_test() {
     # --- les parcours que le banc sait tourner ---
     essai "le parcours de déclaration est connu"           vert  parcours_connu declarer-un-carre
     essai "le parcours d'importation est connu"            vert  parcours_connu importer-une-nuit
-    # ⚠️ Sans ce cas, une faute de frappe tournerait le parcours par défaut sous le nom demandé : un
+    # Sans ce cas, une faute de frappe tournerait le parcours par défaut sous le nom demandé : un
     # film juste, portant le nom d'un autre.
     essai "un parcours inconnu est refusé"                 rouge parcours_connu importer-une-nuits
     essai "le parcours du mélange est connu"               vert  parcours_connu melange-de-capteurs
     essai "le parcours du journal illisible est connu"     vert  parcours_connu journal-illisible
-    # ⚠️ Ce parcours ne se termine PAS par un import : son exigence de fin est le motif du refus.
+    # Ce parcours ne se termine PAS par un import : son exigence de fin est le motif du refus.
     # L'y attendre « Import terminé » le ferait échouer à tous les coups ; ne rien exiger publierait
     # un film montrant un écran quelconque.
     essai "le refus a sa propre exigence de fin"           vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1
             [ "$(grep -c "^    exiger_a_l_ecran .* \"inexploitable\"" "$0")" = 1 ]' "${BASH_SOURCE[0]}"
     essai "le parcours sans journal est connu"             vert  parcours_connu sans-journal
-    # ⚠️ Le montage doit sortir un MP4 qui commence à jouer AVANT d'être entièrement chargé. Sans
+    # Le montage doit sortir un MP4 qui commence à jouer AVANT d'être entièrement chargé. Sans
     # `+faststart`, l'atome `moov` reste en fin de fichier et le navigateur doit aller le chercher
     # là-bas : la page rend un lecteur qui ne démarre pas tout de suite, sans une erreur.
     essai "le montage pose l index en TÊTE du fichier"     vert \
@@ -1750,7 +1750,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(parcours_connu importer-une-nuit | cut -f2)" = "recette/fixtures/spec/sd-nominale.yaml" ]' "${BASH_SOURCE[0]}"
     essai "celui de déclaration n'en réclame pas"          vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(parcours_connu declarer-un-carre | cut -f2)" = non ]' "${BASH_SOURCE[0]}"
-    # ⚠️ LE cas qui porte le passage d'un global à une propriété : deux parcours qui monteraient la
+    # LE cas qui porte le passage d'un global à une propriété : deux parcours qui monteraient la
     # MÊME carte donneraient un film juste sous un nom faux, et rien ne le dirait.
     essai "deux parcours ne partagent pas leur carte"      vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
@@ -1764,7 +1764,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; preparer_la_carte "$1" ""' "${BASH_SOURCE[0]}" "$bac"
 
     # --- la relecture du dossier retenu par le sélecteur ---
-    # ⚠️ La fixture rend le chemin tel que l'écran le porte, et les cas éprouvent le DÉFAUT CONNU :
+    # La fixture rend le chemin tel que l'écran le porte, et les cas éprouvent le DÉFAUT CONNU :
     # un cran trop bas doit être refusé, sans quoi le film montrerait l'import du mauvais dossier.
     ffmpeg -v error -y -f lavfi -i "color=c=white:s=420x40" \
         -vf "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='/run/media/x/VIGIECHIRO':fontcolor=black:fontsize=18:x=10:y=10" \
@@ -1775,12 +1775,12 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "$(lire_zone "$1" 0 0 420 40)" "bruts"' "${BASH_SOURCE[0]}" "$bac/chemin.png"
 
     # --- la fenêtre ---
-    # ⚠️ Le cas qui porte le banc : sans écran, aucune fenêtre ne peut paraître, et l'attente doit
+    # Le cas qui porte le banc : sans écran, aucune fenêtre ne peut paraître, et l'attente doit
     # le DIRE plutôt que laisser filmer six secondes de néant.
     essai "sans écran, l'attente de fenêtre refuse"      rouge attendre_la_fenetre ":89" 2
 
     # --- lire un libellé à l'écran ---
-    # ⚠️ La fixture se FABRIQUE : un banc dont l'auto-test dépendrait d'une capture committée
+    # La fixture se FABRIQUE : un banc dont l'auto-test dépendrait d'une capture committée
     # rougirait au premier changement de style, pour une raison étrangère à ce qu'il éprouve.
     ffmpeg -v error -y -f lavfi -i "color=c=white:s=400x60" \
         -vf "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Mes sites':fontcolor=black:fontsize=22:x=20:y=18" \
@@ -1789,7 +1789,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(lire_zone "$1" 0 0 400 60)" = "Mes sites" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
     essai "une zone vide ne rend aucun libellé"         vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ -z "$(lire_zone "$1" 300 0 90 60)" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
-    # ⚠️ Le cas qui porte le contrôle : lire le MAUVAIS libellé doit échouer, sinon `viser` laisserait
+    # Le cas qui porte le contrôle : lire le MAUVAIS libellé doit échouer, sinon `viser` laisserait
     # partir n'importe quel clic.
     essai "un libellé ABSENT ne se lit pas quand même"  rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(lire_zone "$1" 0 0 400 60)" = "Importer une nuit" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
@@ -1797,32 +1797,32 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
     # --- l'appariement des libellés ---
     essai "un libellé identique correspond"              vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "Mes sites" "Mes sites"' "${BASH_SOURCE[0]}"
-    # ⚠️ Le cas mesuré sur le produit : l'OCR rend « Messites » sans son espace.
+    # Le cas mesuré sur le produit : l'OCR rend « Messites » sans son espace.
     essai "un espace perdu par l'OCR correspond quand même" vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "Accueil » Messites" "Mes sites"' "${BASH_SOURCE[0]}"
     essai "un libellé DIFFÉRENT ne correspond pas"        rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "Mes sites" "Importer une nuit"' "${BASH_SOURCE[0]}"
-    # ⚠️ Sans ce cas, un attendu vide correspondrait à tout, et « viser » laisserait partir n'importe
+    # Sans ce cas, un attendu vide correspondrait à tout, et « viser » laisserait partir n'importe
     # quel clic sur un scénario mal écrit.
     essai "un attendu VIDE ne correspond à rien"          rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "Mes sites" ""' "${BASH_SOURCE[0]}"
 
-    # ⚠️ Le cas qui a coûté un aller-retour : un libellé plus large que la zone est tronqué, et le
+    # Le cas qui a coûté un aller-retour : un libellé plus large que la zone est tronqué, et le
     # refus doit le DIRE au lieu d'accuser le scénario.
     # --- le balayage vertical, et ce qu'il ne doit PAS absorber ---
-    # ⚠️ La fixture rend le libellé DÉCALÉ de 8 px, comme la feuille de style du socle l'a fait
+    # La fixture rend le libellé DÉCALÉ de 8 px, comme la feuille de style du socle l'a fait
     # (#4023). Le geste doit le retrouver ; sans balayage, le tournage s'arrêtait sur un scénario
     # pourtant juste.
     ffmpeg -v error -y -f lavfi -i "color=c=white:s=400x80" \
         -vf "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Mes sites':fontcolor=black:fontsize=22:x=20:y=46" \
         -frames:v 1 "$bac/decale.png" </dev/null 2>/dev/null
-    # ⚠️ Ce que ce cas garde : le banc ne doit pas rendre ✅ sur un film où rien n'arrive. Le premier
+    # Ce que ce cas garde : le banc ne doit pas rendre ✅ sur un film où rien n'arrive. Le premier
     # tournage « sans journal » l'a fait - tous les `viser` passaient, le seul clic aveugle tombait à
     # côté, et le film montrait trente-quatre secondes d'un formulaire jamais rempli.
     essai "une exigence non satisfaite refuse"           rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; exiger_a_l_ecran ":91" 100 100 "Import termin"' "${BASH_SOURCE[0]}"
     # --- le mode de calage (#4055) ---
-    # ⚠️ Le cas qui compte n'est pas « il sait saisir un écran » - il n'y a pas d'écran ici - mais
+    # Le cas qui compte n'est pas « il sait saisir un écran » - il n'y a pas d'écran ici - mais
     # « il ne fait RIEN sans sa variable ». Un outil de mise au point qui saisirait l'écran à chaque
     # repère d'un tournage ordinaire coûterait douze saisies par film, pour personne.
     essai "sans CALAGE_BANC, aucune saisie n est TENTÉE"  vert \
@@ -1832,7 +1832,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
             unset CALAGE_BANC
             calage un_repere
             [ ! -s "$d/temoin" ]' "${BASH_SOURCE[0]}"
-    # ⚠️ Et son jumeau positif : AVEC la variable, la saisie doit être tentée. Sans ce cas-ci, un
+    # Et son jumeau positif : AVEC la variable, la saisie doit être tentée. Sans ce cas-ci, un
     # calage qui ne ferait jamais rien passerait le cas précédent sans faillir.
     essai "avec CALAGE_BANC, la saisie est tentée"        vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
@@ -1840,7 +1840,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
             saisir_ecran() { printf appel >> "$d/temoin"; }
             CALAGE_BANC="$d/images" calage un_repere
             [ -s "$d/temoin" ] && [ -d "$d/images" ]' "${BASH_SOURCE[0]}"
-    # ⚠️ Et le repère lui-même s écrit dans les deux cas : le calage est un supplément, pas un
+    # Et le repère lui-même s écrit dans les deux cas : le calage est un supplément, pas un
     # détour. S il remplaçait la ligne du repère, le montage perdrait ses plages.
     essai "le repère s écrit, calage ou non"              vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
@@ -1852,7 +1852,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
     essai "tout parcours d import exige son résultat"     vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
             [ -z "$(parcours_sans_exigence "$0")" ]' "${BASH_SOURCE[0]}"
-    # ⚠️ Et le garde du garde, sur une fixture FAUTIVE : un parcours qui désigne une carte sans rien
+    # Et le garde du garde, sur une fixture FAUTIVE : un parcours qui désigne une carte sans rien
     # exiger doit être NOMMÉ. Sans ce cas, une fonction d'inventaire qui ne rend jamais rien passerait
     # pour un banc sain - c'est exactement le vert que le compteur précédent rendait.
     printf '%s\n' 'parcours_fautif() {' '    verifier_dossier_retenu "$e" 1 1 "$c"' '}' > "$bac/fautif.sh"
@@ -1866,7 +1866,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
                 libelle_correspond "$(lire_zone "$1" 0 $((40 + ecart - ZONE_H / 2)) 400)" "Mes sites" && exit 0
             done
             exit 1' "${BASH_SOURCE[0]}" "$bac/decale.png"
-    # ⚠️ Et le cas qui empêche le balayage de tout accepter : un libellé ABSENT reste absent, si
+    # Et le cas qui empêche le balayage de tout accepter : un libellé ABSENT reste absent, si
     # loin qu'on le cherche. Sans lui, `viser` finirait par trouver n'importe quoi ailleurs.
     essai "un libellé ABSENT ne se trouve à aucun écart"  rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
@@ -1885,14 +1885,14 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
         bash -c '[ "$(python3 "$(dirname "$0")/trajet.py" 40 40 41 40 0.3)" = "mousemove 41 40" ]' "${BASH_SOURCE[0]}"
 
     # --- le montage ---
-    # ⚠️ Les repères se fabriquent, avec un « arret » qui sait où est la fin : c'est la grandeur
+    # Les repères se fabriquent, avec un « arret » qui sait où est la fin : c'est la grandeur
     # dont tout le montage dépend, et la seule que #2191 postulait.
     printf '1000.0\tdebut\n1002.0\tfin\n1010.0\tarret\n' > "$bac/m.tsv"
     essai "t0 se mesure : arret moins duree"             vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(origine_du_film "$1" 10)" = "1000.000" ]' "${BASH_SOURCE[0]}" "$bac/m.tsv"
     essai "un repere se convertit en position de film"   vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(instant_du_repere "$1" 1000 fin)" = "2.000" ]' "${BASH_SOURCE[0]}" "$bac/m.tsv"
-    # ⚠️ Sans repere « arret », t0 est indéterminable : le montage doit refuser, pas deviner.
+    # Sans repere « arret », t0 est indéterminable : le montage doit refuser, pas deviner.
     printf '1000.0\tdebut\n1002.0\tfin\n' > "$bac/sans-arret.tsv"
     essai "sans repere « arret », t0 est refuse"         rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ -n "$(origine_du_film "$1" 10)" ]' "${BASH_SOURCE[0]}" "$bac/sans-arret.tsv"
@@ -1905,7 +1905,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(part_utile "$1")" = "0.00" ]' "${BASH_SOURCE[0]}" "$bac/noir.mkv"
 
     # --- l'index ---
-    # ⚠️ Le cas qui garde l'honnêteté de la page. « Ce que ce film ne prouve pas » est la première
+    # Le cas qui garde l'honnêteté de la page. « Ce que ce film ne prouve pas » est la première
     # section qu'on retire quand on veut faire propre, et c'est la seule qui empêche de lire l'index
     # comme un certificat. Un index sans elle annoncerait « 100 % d'images utiles » à un lecteur qui
     # comprendrait « ce film est bon ».
@@ -1914,7 +1914,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
     printf '1000.0\tdebut\n1004.0\tinspection_debut\n1008.0\tinspection_fin\n1020.0\tfin\n1030.0\tarret\n' > "$bac/acc.tsv"
     essai "une plage jumelée est trouvée"                  vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_a_accelerer "$1" 1000 0 | wc -l)" = 1 ]' "${BASH_SOURCE[0]}" "$bac/acc.tsv"
-    # ⚠️ Un `_debut` orphelin doit être IGNORÉ, pas accéléré jusqu'à la fin : un film au rythme réel
+    # Un `_debut` orphelin doit être IGNORÉ, pas accéléré jusqu'à la fin : un film au rythme réel
     # vaut mieux qu'un montage qui emballe tout sur un repère manquant.
     printf '1000.0\tdebut\n1004.0\timport_debut\n1020.0\tfin\n1030.0\tarret\n' > "$bac/orphelin.tsv"
     essai "un repere de debut ORPHELIN est ignoré"         vert \
@@ -1924,7 +1924,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
     essai "le filtre alterne normal et accéléré"           vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(filtre_de_montage 0 20 "$(printf "4.000\t8.000\n")" | grep -o "concat=n=3")" = "concat=n=3" ]' "${BASH_SOURCE[0]}"
 
-    # ⚠️ LE cas qui porte l'accélération, et il se mesure sur un VRAI fichier : le même parcours,
+    # LE cas qui porte l'accélération, et il se mesure sur un VRAI fichier : le même parcours,
     # monté avec et sans sa plage de machine, doit rendre un film plus court. Un filtre qui ne
     # s'appliquerait pas laisserait les deux durées égales - et la ligne « montage » resterait
     # verte, puisqu'elle ne compare rien.
@@ -1943,7 +1943,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(position_dans_le_montage 3.0 "$(printf "10.0\t14.0\n")" 4)" = "3.0" ]' "${BASH_SOURCE[0]}"
     essai "une position APRÈS une plage recule"            vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(position_dans_le_montage 20.0 "$(printf "10.0\t14.0\n")" 4)" = "17.0" ]' "${BASH_SOURCE[0]}"
-    # ⚠️ LE cas, et c'est celui que le dépôt a vécu : l'index annonçait « fin à 39,8 s » sur un
+    # LE cas, et c'est celui que le dépôt a vécu : l'index annonçait « fin à 39,8 s » sur un
     # fichier de 31,2 s. Une page dont tout l'objet est de dire où regarder envoyait dans le vide,
     # en ayant l'air parfaitement calculée. Le garde compare la dernière étape à la durée MESURÉE.
     mkdir -p "$bac/verif"
@@ -1969,7 +1969,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
     essai "l index nomme la fiche d ecran illustree"     vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; grep -q "docs/ecrans/importation.md" "$2"' \
         "${BASH_SOURCE[0]}" "$bac/films" "$bac/i.md"
-    # ⚠️ LE cas qui a manqué : l'index titrait « Déclarer un carré » au-dessus du film
+    # LE cas qui a manqué : l'index titrait « Déclarer un carré » au-dessus du film
     # d'importation. Une page dérivée qui se trompe de sujet a l'air d'avoir été vérifiée.
     essai "l index titre le parcours qu il décrit"       vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; grep -q "^## Importer une nuit" "$2"' \
@@ -1977,7 +1977,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
     essai "il ne titre PAS un parcours absent"           rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; grep -q "^## Déclarer un carré" "$2"' \
         "${BASH_SOURCE[0]}" "$bac/films" "$bac/i.md"
-    # ⚠️ Et le cas inverse : les DEUX films présents doivent tenir sur la même page. Écrit pour le
+    # Et le cas inverse : les DEUX films présents doivent tenir sur la même page. Écrit pour le
     # seul dernier tournage, l'index effaçait le parcours précédent à chaque passage.
     cp "$bac/films/importer-une-nuit.mkv" "$bac/films/declarer-un-carre.mkv"
     cp "$bac/films/importer-une-nuit.mkv" "$bac/films/declarer-un-carre-monte.mp4"
@@ -1987,7 +1987,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
         "${BASH_SOURCE[0]}" "$bac/films" "$bac/i.md"
 
     # --- la carte SD ---
-    # ⚠️ On n'appelle pas Maven ici : l'auto-test doit rester en secondes. Ce qu'on éprouve, c'est le
+    # On n'appelle pas Maven ici : l'auto-test doit rester en secondes. Ce qu'on éprouve, c'est le
     # CONTRÔLE - qu'une carte absente, vide ou sans bruts soit refusée, puisque c'est le seul rempart
     # entre un tournage et un film où l'importation ne trouve rien.
     mkdir -p "$bac/carte-vide"
@@ -2001,7 +2001,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
     essai "une carte avec ses bruts est acceptée"        vert  carte_utilisable "$bac/carte-bonne"
 
     # --- la carte montée ---
-    # ⚠️ Le garde qui compte : cette machine porte de vraies cartes montées. Un banc qui démonterait
+    # Le garde qui compte : cette machine porte de vraies cartes montées. Un banc qui démonterait
     # au jugé pourrait s'en prendre à elles.
     essai "notre étiquette est reconnue"                 vert  notre_montage "/run/media/moi/VIGIECHIRO"
     essai "la carte d un tiers est refusée"              rouge notre_montage "/run/media/moi/72CA-9E54"
@@ -2012,17 +2012,17 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
 
     # --- les outils ---
     essai "les outils du banc sont là"                   vert  verifier_outils
-    # ⚠️ Le cas qui porte la séparation des deux listes : un outil de la CARTE manquant ne doit pas
+    # Le cas qui porte la séparation des deux listes : un outil de la CARTE manquant ne doit pas
     # refuser un parcours qui n'en monte pas. C'est ce qui permet à la CI de lancer ces 60 cas sans
     # installer un service de disques.
     essai "un outil de carte absent ne bloque pas le banc"  vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; OUTILS_DE_LA_CARTE="outil-qui-nexiste-pas"; verifier_outils' "${BASH_SOURCE[0]}"
     essai "mais il bloque un tournage AVEC carte"        rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; OUTILS_DE_LA_CARTE="outil-qui-nexiste-pas"; verifier_outils --avec-carte' "${BASH_SOURCE[0]}"
-    # ⚠️ Et le remède doit nommer ce qui manque : le message ne citait que tesseract quand `mcopy`
+    # Et le remède doit nommer ce qui manque : le message ne citait que tesseract quand `mcopy`
     # manquait.
     #
-    # ⚠️ La sortie se CAPTURE, elle ne se traverse pas par un tube. Ce banc pose `pipefail` : dans
+    # La sortie se CAPTURE, elle ne se traverse pas par un tube. Ce banc pose `pipefail` : dans
     # `verifier_outils … | grep -q`, le code du pipeline est celui de `verifier_outils` - un échec,
     # puisqu'un outil manque - et non celui du `grep`. Le cas rougissait pour une raison étrangère à
     # ce qu'il éprouve, et il aurait aussi bien pu verdir pour une autre.
@@ -2042,7 +2042,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
     return 1
 }
 
-# ⚠️ Rien ne s'exécute quand ce fichier est SOURCÉ, et ce garde n'est pas décoratif : l'auto-test
+# Rien ne s'exécute quand ce fichier est SOURCÉ, et ce garde n'est pas décoratif : l'auto-test
 # ci-dessus se source lui-même pour éprouver `resoudre_le_jar` en isolation. Sans cette condition,
 # ce `source` déclencherait un tournage - six secondes de film au milieu d'un auto-test.
 #
@@ -2050,7 +2050,7 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
 # « WAYLAND_DISPLAY posé » se sourçait et relançait le script, si bien qu'il n'éprouvait plus rien
 # hors d'une session Wayland (#3883). Un fichier qui se source doit dire ce qu'il fait à ce
 # moment-là : ici, rien.
-# ⚠️ Le drapeau, et non « $0 vaut BASH_SOURCE ». Cette comparaison ne dit PAS ce qu'on croit :
+# Le drapeau, et non « $0 vaut BASH_SOURCE ». Cette comparaison ne dit PAS ce qu'on croit :
 # sous `bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"' /chemin/du/banc`, `$0` EST le chemin du banc, donc les deux sont
 # égaux et le garde conclut « lancé directement ». L'auto-test déclenchait alors un tournage à
 # chaque cas qui se source - il s'est mis à figer dès que les prérequis ont grandi.

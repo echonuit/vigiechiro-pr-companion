@@ -71,12 +71,12 @@ seraient défaits au prochain `needs` ajouté en amont - c'est exactement ainsi 
 
 ## Conséquences
 
-⚠️ **Le mode de défaillance corrigé se présentait comme un succès.** C'est la même famille que les
+**Le mode de défaillance corrigé se présentait comme un succès.** C'est la même famille que les
 ADR portant sur les gardes qui acceptent à tort : rien ne rougit, rien ne lève, et seul l'inventaire
 des assets trahit que la chaîne s'est arrêtée au milieu. Un tableau de bord qui ne regarde que les
 runs rouges ne l'aurait jamais montré.
 
-⚠️ **Ajouter un `needs` en amont d'un job change le comportement de tout son aval**, y compris de
+**Ajouter un `needs` en amont d'un job change le comportement de tout son aval**, y compris de
 jobs qu'on ne touche pas et qu'on ne relit pas. #3770 était une bonne décision, correctement mise en
 œuvre pour le job qu'elle visait ; le dégât s'est produit deux crans plus bas.
 
