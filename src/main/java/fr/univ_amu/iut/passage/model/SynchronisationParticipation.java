@@ -128,8 +128,16 @@ public final class SynchronisationParticipation {
         return resultat;
     }
 
-    /// Pousse les métadonnées locales (météo / config / dates) vers la participation liée (PATCH `If-Match`,
-    /// etag relu juste avant). [RegleMetierException] si non lié / introuvable.
+    /// Pousse les métadonnées locales (météo / config / dates) vers la participation liée
+    /// (`PATCH /participations/#id`). [RegleMetierException] si non lié / introuvable.
+    ///
+    /// **Aucun `If-Match` n'est envoyé** : la plateforme l'ignore sur cette route (#4523). La
+    /// concurrence est tenue ici, sur le patron de [fr.univ_amu.iut.sites.model.PublicationPoint] :
+    /// on relit juste avant d'écrire, et on renonce si l'`_etag` a bougé (#4552).
+    ///
+    /// **La fenêtre ne se ferme pas** : sur une collision exacte, entre la relecture et l'envoi, on
+    /// écrase sans le savoir. Seul le serveur pourrait l'empêcher, et il ne le fait pas. Risque
+    /// assumé, pas oubli.
     public EnvoiParticipation pousserVers(Long idPassage) {
         Passage declare = chargerPassage(idPassage);
         String objectid = participationDe(idPassage).orElseThrow(() -> new RegleMetierException(NON_LIE));
@@ -148,9 +156,16 @@ public final class SynchronisationParticipation {
                 materielDao.pour(idPassage),
                 distant.configuration(),
                 fuseaux.pour(passage.idPoint()));
+        // La relecture est le coeur de la garde (#4552) : entre la lecture du haut et maintenant, un autre
+        // poste a pu écrire. Envoyer par-dessus effacerait son travail sans que rien ne le dise.
+        ParticipationDetail juste =
+                client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
+        if (!juste.etag().equals(distant.etag())) {
+            return new EnvoiParticipation.ModifieEntreTemps(realignementEntre(declare, passage));
+        }
         ResultatEcriture ecriture = client.modifierParticipation(objectid, distant.etag(), maj);
         // #1885 : le réalignement a modifié les données de l'utilisateur, il ne peut pas rester tacite.
-        return new EnvoiParticipation(ecriture, realignementEntre(declare, passage));
+        return EnvoiParticipation.ecrit(ecriture, realignementEntre(declare, passage));
     }
 
     /// Le réalignement survenu entre le passage **déclaré** et le passage **envoyé**, ou vide si les heures

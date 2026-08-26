@@ -131,7 +131,7 @@ class RattachementModaleFermetureViewTest {
     @DisplayName("#1885 : envoi accepté MAIS heures réalignées → la modale reste ouverte pour le dire")
     void realignement_laisse_la_modale_ouverte(FxRobot robot) {
         when(synchronisation.pousserVers(7L))
-                .thenReturn(new EnvoiParticipation(
+                .thenReturn(EnvoiParticipation.ecrit(
                         ResultatEcriture.reussie(),
                         Optional.of(
                                 new EnvoiParticipation.Realignement("15:00:00", "15:00:00", "21:30:00", "06:15:00"))));

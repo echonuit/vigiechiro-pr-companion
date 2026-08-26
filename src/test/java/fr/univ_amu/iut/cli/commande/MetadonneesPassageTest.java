@@ -81,7 +81,7 @@ class MetadonneesPassageTest {
     @DisplayName("#1861 --passage --envoyer : signale le réalignement des heures (#1885)")
     void envoyer_dit_le_realignement() {
         when(synchronisation.pousserVers(1L))
-                .thenReturn(new EnvoiParticipation(
+                .thenReturn(EnvoiParticipation.ecrit(
                         ResultatEcriture.reussie(),
                         Optional.of(new EnvoiParticipation.Realignement("15:00", "15:00", "21:00", "06:00"))));
         StringWriter sortie = new StringWriter();
@@ -104,6 +104,19 @@ class MetadonneesPassageTest {
 
         assertThat(code).isEqualTo(1);
         assertThat(sortie.toString()).contains("Envoi refusé").contains("412");
+    }
+
+    @Test
+    @DisplayName("#4552 : la nuit a bougé → sortie 1, et le motif n'accuse PAS la plateforme")
+    void envoi_renonce_quand_la_nuit_a_bouge() {
+        when(synchronisation.pousserVers(1L)).thenReturn(new EnvoiParticipation.ModifieEntreTemps(Optional.empty()));
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(sortie).execute("--passage", "1", "--envoyer");
+
+        // Sortie 1 comme un refus : un script ne doit pas prendre un non-envoi pour un envoi.
+        assertThat(code).isEqualTo(1);
+        assertThat(sortie.toString()).doesNotContain("Envoi refusé").contains("Vigie-Chiro");
     }
 
     @Test

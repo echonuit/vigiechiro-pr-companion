@@ -447,7 +447,7 @@ class RattachementViewModelTest {
     void realignement_est_signale() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         when(sync.pousserVers(ID))
-                .thenReturn(new EnvoiParticipation(
+                .thenReturn(EnvoiParticipation.ecrit(
                         ResultatEcriture.reussie(),
                         Optional.of(
                                 new EnvoiParticipation.Realignement("15:00:00", "15:00:00", "21:30:00", "06:15:00"))));
@@ -530,6 +530,53 @@ class RattachementViewModelTest {
         assertThat(issue.retour().texte()).contains("refusé").contains("412");
         avecSync.signalerEnvoi(issue);
         assertThat(avecSync.retourProperty().get().texte()).contains("412");
+    }
+
+    @Test
+    @DisplayName("#4552 : la nuit a bougé sur la plateforme → le motif n'accuse PAS Vigie-Chiro")
+    void pousser_vers_vigiechiro_modifiee_entre_temps() {
+        SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
+        when(sync.pousserVers(ID)).thenReturn(new EnvoiParticipation.ModifieEntreTemps(Optional.empty()));
+        RattachementViewModel avecSync = new RattachementViewModel(
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.of(sync),
+                Optional.empty(),
+                numeroCarre -> java.util.List.of());
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
+        avecSync.ouvrirSur(ID, "040962", "A1");
+
+        RattachementViewModel.Envoi issue = avecSync.pousserVersVigieChiro();
+
+        assertThat(issue).isInstanceOf(RattachementViewModel.Envoi.Empeche.class);
+        assertThat(issue.retour().texte()).doesNotContain("a refusé").contains("Vigie-Chiro");
+        assertThat(issue.peutFermer()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#4552 : on renonce, mais le réalignement déjà écrit en base est DIT quand même")
+    void pousser_vers_vigiechiro_modifiee_entre_temps_dit_le_realignement() {
+        SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
+        when(sync.pousserVers(ID))
+                .thenReturn(new EnvoiParticipation.ModifieEntreTemps(Optional.of(
+                        new EnvoiParticipation.Realignement("15:00:00", "15:00:00", "21:30:00", "06:15:00"))));
+        RattachementViewModel avecSync = new RattachementViewModel(
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.of(sync),
+                Optional.empty(),
+                numeroCarre -> java.util.List.of());
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
+        avecSync.ouvrirSur(ID, "040962", "A1");
+
+        RattachementViewModel.Envoi issue = avecSync.pousserVersVigieChiro();
+
+        // Les heures ont bougé en base même si rien n'est parti : le taire corrigerait sa nuit dans son dos.
+        assertThat(issue.retour().texte()).contains("réalignées").contains("21:30:00");
     }
 
     @Test
