@@ -1,8 +1,7 @@
 package fr.univ_amu.iut.recette;
 
-import fr.univ_amu.iut.commun.view.Habillage;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import javafx.scene.Parent;
-import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 
 /// Ouvre la fenêtre d'un scénario filmé **à la taille voulue, sans figer le Stage du harnais**.
@@ -40,16 +39,12 @@ public final class FenetreDuBanc {
     /// ce qui doit précéder l'affichage - typiquement ouvrir son écran, pour que le clip ne commence pas
     /// sur l'accueil (#4126).
     public static void poser(Stage stage, Parent racine, double largeur, double hauteur) {
-        if (racine instanceof Region region) {
-            region.setPrefSize(largeur, hauteur);
-        }
-        stage.setScene(Habillage.scene(racine, largeur, hauteur));
+        FenetreAjustable.poserHabillee(stage, racine, largeur, hauteur);
     }
 
     /// Affiche la fenêtre et la met à la taille de sa scène, en la laissant **ajustable** pour les
     /// classes de test qui hériteront de ce Stage.
     public static void afficher(Stage stage) {
-        stage.show();
-        stage.sizeToScene();
+        FenetreAjustable.afficher(stage);
     }
 }

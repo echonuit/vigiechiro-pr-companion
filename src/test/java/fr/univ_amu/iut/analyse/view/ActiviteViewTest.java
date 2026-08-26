@@ -14,8 +14,8 @@ import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
-import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -118,8 +118,8 @@ class ActiviteViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        stage.setScene(Habillage.scene(vue, 960, 640));
-        stage.show();
+        FenetreAjustable.poserHabillee(stage, vue, 960, 640);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

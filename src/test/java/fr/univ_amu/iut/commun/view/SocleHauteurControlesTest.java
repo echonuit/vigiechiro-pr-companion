@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -65,8 +66,8 @@ class SocleHauteurControlesTest {
     @Start
     void start(Stage stage) {
         racine = new StackPane();
-        stage.setScene(Habillage.scene(racine, 640, 200));
-        stage.show();
+        FenetreAjustable.poserHabillee(stage, racine, 640, 200);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test
