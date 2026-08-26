@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.TailleOuverture;
 import java.nio.file.Files;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
@@ -122,6 +124,16 @@ class AppTest {
 
         robot.interact(() -> stage.setScene(Habillage.scene(lignes(40))));
         WaitForAsyncUtils.waitForFxEvents();
+        // `waitForFxEvents` rend la main quand la file d'événements est vide, ce qui n'est pas la
+        // même chose que « la mise en page de la nouvelle scène est faite ». Sous la charge des forks
+        // parallèles, la lecture partait avant, et le contenu mesuré était encore celui de la petite
+        // scène : la fenêtre valait 600, le contenu 600, et le garde accusait un figement qui n'avait
+        // pas eu lieu (#4504).
+        //
+        // On attend donc que le CONTENU ait grandi, et on affirme ensuite que la FENÊTRE a suivi. Les
+        // deux propriétés sont distinctes : un Stage figé laisse le contenu passer 600 sans bouger,
+        // et l'assertion rougit toujours. Attendre la fenêtre, elle, serait tautologique.
+        attendreLaMiseEnPage(aLOuverture);
         double contenuHaut = hauteurDuContenu();
 
         assertThat(stage.getHeight())
@@ -136,6 +148,25 @@ class AppTest {
     /// La hauteur que le contenu de la scène courante réclame, une fois la mise en page faite.
     private double hauteurDuContenu() {
         return stage.getScene().getRoot().getBoundsInLocal().getHeight();
+    }
+
+    /// Attend que la mise en page de la scène posée ait dépassé `plancher`, et dit ce qu'elle a vu si
+    /// elle expire.
+    ///
+    /// Le mécanisme du figement a été cherché là où il ne pouvait pas être : la suite entière jouée
+    /// dans un fork unique, les 813 classes avant celle-ci, rend `AppTest` **vert**. Aucune classe du
+    /// dépôt ne laisse donc le Stage en dimensionnement explicite ; c'est la mesure qui partait trop
+    /// tôt.
+    private void attendreLaMiseEnPage(double plancher) {
+        try {
+            WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> hauteurDuContenu() > plancher);
+        } catch (TimeoutException expiration) {
+            throw new AssertionError(
+                    "la scène de 40 lignes n'a pas dépassé " + plancher + " en 5 s : contenu "
+                            + hauteurDuContenu() + ". Ce n'est pas un Stage figé, c'est une mise en page"
+                            + " qui n'a pas eu lieu.",
+                    expiration);
+        }
     }
 
     /// Ce que le rouge doit dire, et que « 600 n'est pas supérieur à 600 » ne dit pas (#4504).
