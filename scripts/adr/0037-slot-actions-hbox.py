@@ -17,16 +17,13 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte, sans_commentaires_xml  # noqa: E402
+from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_xml  # noqa: E402
 
 # La styleClass ou l'fx:id, porté par la balise HBox elle-même, évoque un slot d'actions.
 # Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne
 # avant que la question ne se pose. La dette de qualite ne connait pas de code de seconde zone, et
 # la mesure d ouverture a rendu ZERO suspect dans l arbre de test - l extension ne coute donc rien
 # et ferme la question pour de bon, la ou la laisser ouverte laissait un angle mort grandir.
-PRODUCTION = pathlib.Path("src/main/java")
-TESTS = pathlib.Path("src/test/java")
-RACINES = (PRODUCTION, TESTS)
 SOURCES = PRODUCTION
 
 SLOT = re.compile(r'<HBox\b[^>]*(?:styleClass|fx:id)="[^"]*action[^"]*"', re.I | re.S)

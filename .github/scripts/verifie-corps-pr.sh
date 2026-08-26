@@ -256,7 +256,7 @@ for defaut in dict.fromkeys(d for _, d, _ in fautes):
     print(f"  {defaut} : {REMEDES[defaut]}")
     print()
 print("Ce corps est de la prose visible au sens de l'article A31 : il se relit dans six mois sans le")
-print("fil, et il est publié dès qu'il part. La grille complète est dans la compétence humaniseur ;")
+print("fil, et il est publié dès qu'il part. La grille complète est dans la compétence humaniser ;")
 print("ce garde ne tient que ce qu'un motif peut voir.")
 sys.exit(1)
 FIN

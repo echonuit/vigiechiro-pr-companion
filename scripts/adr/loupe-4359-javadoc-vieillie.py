@@ -42,12 +42,12 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import loupe  # noqa: E402
+from _commun import RACINES, loupe  # noqa: E402
 
 ADR = "4359"
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 
-ARBRES = ("src/main/java", "src/test/java")
+ARBRES = tuple(arbre.as_posix() for arbre in RACINES)
 
 # Les seuils de prose au-delà desquels un bloc entre dans le cliquet de l'ADR 4359, **importés** de
 # son garde et non recopiés. La version précédente écrivait `SEUIL = 8` en dur sous un commentaire

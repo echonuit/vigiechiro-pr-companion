@@ -90,7 +90,7 @@ comptage.
 |---|---|---|
 | tiret cadratin | `scripts/adr/2843-tiret-cadratin.py` | dix-sept zones à tolérance zéro, cliquet à <!--inv:cliquet-cadratin-->1<!--/inv--> |
 | pictogramme d'alerte | `scripts/adr/4366-avertissement-en-pictogramme.py`, article A28 | cliquet à <!--inv:cliquet-pictogramme-->0<!--/inv--> |
-| javadoc narrative | `scripts/adr/4359-javadoc-narratif.py`, article A30 | cliquet à <!--inv:cliquet-javadoc-->743<!--/inv--> |
+| javadoc narrative | `scripts/adr/4359-javadoc-narratif.py`, article A30 | cliquet à <!--inv:cliquet-javadoc-->742<!--/inv--> |
 | apostrophe mêlée | `scripts/adr/4368-apostrophe-en-libelle.py`, `verifie-titre-pr.sh` | zéro partout, trois exemptions déclarées |
 | élision sans apostrophe | `.github/scripts/verifie-titre-pr.sh` et `verifie-corps-pr.sh` | tolérance zéro sur le titre ET le corps d'une PR ; la lettre isolée employée comme symbole en est sortie (#4483) |
 | javadoc jamais relue | `scripts/adr/4468-javadoc-non-relue.py`, article A31 | cliquet à <!--inv:cliquet-relecture-->0<!--/inv--> fichier : tout le corpus est relu, et une javadoc réécrite y retombe |

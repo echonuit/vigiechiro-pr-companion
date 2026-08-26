@@ -262,6 +262,7 @@ nav:
     - 4339 · Un arbre repris d'un outil amont se déclare: decisions/4339-un-arbre-repris-d-un-outil-amont-se-declare.md
     - 4515 · Adopter un arbre amont quand il doit parler notre cycle: decisions/4515-adopter-un-arbre-amont-quand-il-doit-parler-notre-cycle.md
     - 4516 · Une commande nomme un geste, et cite la compétence: decisions/4516-une-commande-nomme-un-geste.md
+    - 4565 · Le nom d'une compétence dit le geste: decisions/4565-un-nom-de-competence-dit-le-geste.md
     - 4342 · L'ergonomie se rattache à une heuristique nommée: decisions/4342-l-ergonomie-se-rattache-a-une-heuristique-nommee.md
     - 4359 · Une javadoc contracte, elle ne raconte pas: decisions/4359-une-javadoc-contracte-elle-ne-raconte-pas.md
     - 4343 · La prose visible se relit à l'humaniseur: decisions/4343-la-prose-visible-se-relit-a-l-humaniseur.md
@@ -285,6 +286,7 @@ nav:
     - 4488 · Un garde de code lit les deux arbres: decisions/4488-un-garde-de-code-lit-les-deux-arbres.md
     - 4490 · Un témoin se prouve par mutation, et la mutation est mécanique: decisions/4490-un-temoin-se-prouve-par-mutation-mecaniquement.md
     - 4546 · Un corps de pull request ne promet pas ce que la forge ne fera pas: decisions/4546-un-corps-de-pr-ne-promet-pas-ce-que-la-forge-ne-fera-pas.md
+    - 4586 · Le corpus d'un garde se déclare une fois, et sa liste se dérive: decisions/4586-le-corpus-d-un-garde-se-declare-une-fois.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

@@ -20,7 +20,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte, sans_commentaires_java  # noqa: E402
+from _commun import RACINES, rapporte, sans_commentaires_java  # noqa: E402
 
 # Les DEUX arbres. Un test qui avale son echec ment de la meme facon qu une classe de production :
 # il rend vert sans avoir rien prouve, et c est precisement le defaut que l ADR 0008 nomme. La
@@ -29,9 +29,6 @@ from _commun import rapporte, sans_commentaires_java  # noqa: E402
 # test porte ont ete arbitres un par un a leur entree : une exception ATTENDUE dans une auto-garde,
 # deux boucles de reprise dont l assertion de l appelant tranche, une fermeture de banc. Aucun n est
 # un echec avale, et c est pourquoi ils entrent dans le cliquet plutot que de le faire rougir.
-PRODUCTION = pathlib.Path("src/main/java")
-TESTS = pathlib.Path("src/test/java")
-RACINES = (PRODUCTION, TESTS)
 
 # Un bloc catch sans accolade imbriquée : suffisant pour repérer les corps vides ou quasi vides.
 CATCH = re.compile(r"catch\s*\([^)]*\)\s*\{([^{}]*)\}", re.S)

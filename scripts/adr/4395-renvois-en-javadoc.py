@@ -54,12 +54,18 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte_plancher  # noqa: E402
+from _commun import PRODUCTION, rapporte_plancher  # noqa: E402
 
 ADR = "4395"
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 
-ZONE = "src/main/java"
+# LA PRODUCTION SEULE, et c'est un TROU connu, pas une exception justifiee (ADR 4586).
+#
+# Mesure du 2026-08-26 : 976 renvois distincts vivent dans la javadoc de l arbre de test,
+# contre 3 134 en production. Ils ne sont proteges par rien et peuvent disparaitre sans
+# qu aucun plancher ne rougisse. Combler demande de LIRE les 976 avant de relever le
+# plancher, donc sa propre mesure et sa propre mutation : c est #4587.
+ZONE = PRODUCTION.as_posix()
 
 # `#` puis un a cinq chiffres, borne a droite. Voir la cecite declaree en tete.
 RENVOI = re.compile(r"#\d{1,5}\b")

@@ -57,19 +57,16 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import RACINES_ANCREES, RACINE_DEPOT, rapporte  # noqa: E402
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero, et `_commun.py` la
 # retrouve par `dev-docs/decisions/{numero}-*.md`.
 ADR = "4359"
 
-RACINE = pathlib.Path(__file__).resolve().parents[2]
-PRODUCTION = RACINE / "src" / "main" / "java"
-TESTS = RACINE / "src" / "test" / "java"
 # Les DEUX arbres Java. Un commentaire de classe de test se lit comme un autre, et vieillit
 # pareil : rien ne justifiait de le sortir du compte. Les distributions des deux arbres sont du
 # reste les memes - 9e decile a 14 pour les types, a 5 pour les methodes - donc les memes seuils.
-RACINES = (PRODUCTION, TESTS)
+RACINES = RACINES_ANCREES
 
 # Au-dela, chaque ligne de prose compte une. Chaque seuil est pose au-dessus du 9e decile de sa
 # nature, mesure sur le depot : il laisse passer le regime normal et signale ce qui en sort.
@@ -208,10 +205,10 @@ def suspects(racine: pathlib.Path = None) -> list[str]:
     racines = [racine] if racine else list(RACINES)
     trouves = []
     for f in sorted(f for r in racines for f in r.rglob("*.java")):
-        # Le chemin est relatif a la RACINE du depot, et non a l arbre : sans quoi un suspect ne
+        # Le chemin est relatif a la RACINE_DEPOT du depot, et non a l arbre : sans quoi un suspect ne
         # dirait pas de quel arbre il vient, et deux homonymes se confondraient. Les temoins, eux,
         # montent un arbre jetable et n ont que leur nom de fichier.
-        nom = f.relative_to(RACINE) if f.is_relative_to(RACINE) else f.name
+        nom = f.relative_to(RACINE_DEPOT) if f.is_relative_to(RACINE_DEPOT) else f.name
         for depart, n, quoi in blocs_par_nature(f):
             seuil = SEUILS[quoi]
             for i in range(n - seuil):

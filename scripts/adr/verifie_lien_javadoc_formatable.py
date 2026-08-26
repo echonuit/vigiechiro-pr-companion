@@ -45,8 +45,11 @@ import re
 import sys
 import tempfile
 
-RACINE = pathlib.Path(__file__).resolve().parents[2]
-ARBRES = ("src/main/java", "src/test/java")
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from _commun import RACINES, RACINE_DEPOT  # noqa: E402
+
+RACINE_DEPOT = pathlib.Path(__file__).resolve().parents[2]
+ARBRES = RACINES
 
 # La borne du formateur, telle que `pom.xml` la configure pour palantir-java-format.
 BORNE = 120
@@ -58,7 +61,7 @@ LIEN_COUPABLE = re.compile(r"\[[^\]\n]* [^\]\n]*\]\(")
 
 def a_risque(racine: pathlib.Path = None) -> list[str]:
     """Les lignes `///` que le formateur casserait, une par entree."""
-    base = racine or RACINE
+    base = racine or RACINE_DEPOT
     trouves = []
     for arbre in ARBRES:
         dossier = base / arbre
