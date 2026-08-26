@@ -85,11 +85,19 @@ public final class GenerateurJeuDeDonnees {
     /// Bilan d'une génération (nombres de lignes effectivement insérées).
     public record Bilan(int passages, int observations) {}
 
+    /// L'espace de travail du banc : celui qu'on lui impose, ou un dossier temporaire à nous seuls.
+    ///
+    /// `createTempDirectory` crée en `0700` là où le système le permet, quand `java.io.tmpdir` reste
+    /// lisible par tout utilisateur local (#4509). Le nom cesse d'être stable d'une passe à l'autre,
+    /// et cela ne coûte rien : le banc réinitialise son dossier à chaque fois. Qui veut un chemin
+    /// fixe le donne par `-Dvigiechiro.workspace`.
+    private static Path espaceDeTravail() throws IOException {
+        String impose = System.getProperty("vigiechiro.workspace");
+        return impose != null ? Path.of(impose) : Files.createTempDirectory("vigiechiro-bench-");
+    }
+
     public static void main(String[] args) throws IOException {
-        Path racine = Path.of(System.getProperty(
-                "vigiechiro.workspace",
-                Path.of(System.getProperty("java.io.tmpdir"), "vigiechiro-bench")
-                        .toString()));
+        Path racine = espaceDeTravail();
         int nbPassages = Integer.getInteger("perf.passages", PASSAGES_DEFAUT);
         int nbObservations = Integer.getInteger("perf.observations", OBSERVATIONS_DEFAUT);
 
