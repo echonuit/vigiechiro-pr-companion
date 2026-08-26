@@ -14,29 +14,19 @@ import java.util.Optional;
 /// et son rattachement, mais **sans son audio** (#2580, #2581).
 ///
 /// C'est l'état que produit la synchro depuis #2557, et il change deux choses. Une carte SD qui rapporte
-/// la même nuit doit la **réactiver**, pas la réimporter (#2580). Et la fiche d'une telle nuit ne doit pas
-/// se refermer sur les gardes de « Déposé », qui protègent une nuit **que nous avons déposée** (#2581).
+/// la même nuit doit la **réactiver**, pas la réimporter. Et la fiche d'une telle nuit ne doit pas se
+/// refermer sur les gardes de « Déposé », qui protègent une nuit que nous avons déposée.
 ///
-/// ## Le critère
-///
-/// Rien de « déclaré » ici : l'état est **observé**, comme le veut l'ADR 0048. Une nuit est récupérée
-/// quand elle réunit deux faits :
-///
-///  - elle est **rattachée à une participation** - donc elle vient de la plateforme, elle n'a pas été
-///    importée ici ;
-///  - **aucun de ses originaux ne porte de fréquence d'échantillonnage** - donc aucun WAV n'a jamais été
-///    posé : ce sont des emplacements vides, pas des fichiers.
-///
-/// Une nuit importée puis déposée réunit le premier fait, jamais le second. C'est ce qui fait tenir la
-/// distinction sans colonne supplémentaire.
-///
-/// ## Pourquoi dans le socle
+/// Rien de « déclaré » ici : l'état est **observé** (ADR 0048), et une nuit est récupérée quand elle
+/// réunit deux faits. Elle est **rattachée à une participation**, donc elle vient de la plateforme. Et
+/// **aucun de ses originaux ne porte de fréquence d'échantillonnage**, donc aucun WAV n'a jamais été
+/// posé : ce sont des emplacements vides. Une nuit importée puis déposée réunit le premier fait, jamais
+/// le second, et c'est ce qui fait tenir la distinction sans colonne supplémentaire.
 ///
 /// **Deux features posent la même question sous deux angles.** L'import demande « la nuit que je
-/// m'apprête à importer est-elle déjà là ? », et la connaît par son identité `(enregistreur, date)`. La
-/// fiche du passage demande « celle que j'affiche vient-elle de la plateforme sans que rien n'y ait été
-/// fait ici ? », et la connaît par son identifiant. Même critère, deux clés d'entrée : le loger dans
-/// l'une des deux features ferait dépendre l'autre d'elle sans raison.
+/// m'apprête à importer est-elle déjà là ? » et la connaît par `(enregistreur, date)` ; la fiche demande
+/// « celle que j'affiche vient-elle de la plateforme ? » et la connaît par son identifiant. Le loger
+/// dans l'une des deux ferait dépendre l'autre d'elle sans raison.
 public class NuitRecupereeDao {
 
     /// Le critère, une seule fois. Les deux questions n'en changent que la clé d'entrée - les garder sur

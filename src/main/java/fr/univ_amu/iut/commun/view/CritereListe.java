@@ -386,20 +386,17 @@ public final class CritereListe {
 
             /// Les valeurs **réellement montrées** par l'éditeur, telles qu'il les a reçues.
             ///
-            /// Gardées ici plutôt que relues du domaine à chaque appel : le fournisseur dépend des lignes
-            /// courantes, et une relecture pourrait rendre une autre liste que celle qu'on a sous les yeux.
+            /// Gardées ici plutôt que relues à chaque appel : le fournisseur dépend des lignes
+            /// courantes, et une relecture pourrait rendre une autre liste. Elles servent à
+            /// **retyper** la valeur choisie, que l'éditeur ne rend qu'en `Object`, seul moyen
+            /// d'appliquer [Domaine#cle()] sans transtypage non vérifié.
             ///
-            /// Elles servent à **retyper** la valeur choisie, que l'éditeur ne rend que sous forme
-            /// d'`Object` : c'est le seul moyen d'appliquer [Domaine#cle()] sans transtypage non vérifié.
-            /// Elles ne servent **plus** à la désigner par son rang (#3128) : une valeur se retrouve par
-            /// ce qu'elle est. Lire par position supposait que cette liste et celle affichée restent
-            /// alignées, ce qui tenait tant qu'aucune des deux ne bougeait ; le jour où le domaine se
-            /// recalcule (#3095), le rang désigne une autre valeur et la vue enregistrée rejoue un autre
-            /// filtre, sans que rien ne casse bruyamment.
+            /// Elles ne servent **plus** à la désigner par son rang (#3128) : lire par position
+            /// supposait cette liste et celle affichée alignées, et le jour où le domaine se
+            /// recalcule (#3095), le rang désigne une autre valeur, sans rien casser bruyamment.
             ///
-            /// **Invariant à tenir** quand les domaines deviendront cascadés : cette liste et les entrées
-            /// de l'éditeur se refont **ensemble, depuis la même source**. Une valeur affichée qui n'y
-            /// figurerait pas cesserait d'être lisible.
+            /// **Invariant à tenir** quand les domaines seront cascadés : cette liste et les
+            /// entrées de l'éditeur se refont ensemble, depuis la même source.
             private List<T> offertes = List.of();
 
             @Override

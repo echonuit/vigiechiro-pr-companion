@@ -11,7 +11,7 @@ enforced_by:
   - "scripts/adr/4359-blocs-relus.py"
 loupe:
   - "scripts/adr/loupe-4359-javadoc-vieillie.py"
-ratchet: 765
+ratchet: 743
 inv_key: cliquet-javadoc
 verified:
   - by: machine:suspects
@@ -112,7 +112,7 @@ mécaniquement. Un record de trente champs n'est pas un suspect : les étiquette
 exclues, avec leurs suites, et deux cas du banc le tiennent.
 
 **Le cliquet a ouvert à 3 641**, sur 713 blocs dans 572 fichiers. Il vaut
-**<!--inv:cliquet-javadoc-->765<!--/inv-->** sur 319 blocs dans 254 fichiers, après les tranches
+**<!--inv:cliquet-javadoc-->743<!--/inv-->** sur 319 blocs dans 254 fichiers, après les tranches
 #4397, #4401, #4424 et celle de #4502. Le registre attendu est écrit dans `CONTRIBUTING.md` : il
 n'existait nulle part.
 

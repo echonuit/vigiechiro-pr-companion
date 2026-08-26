@@ -42,21 +42,16 @@ final class ControleursReglages {
         return boite;
     }
 
-    /// Une ligne de réglage : la case à cocher porte déjà son libellé ; les autres contrôles sont
-    /// précédés d'un libellé sur une ligne dédiée. **L'aide suit le contrôle, visible** (#2085).
+    /// Une ligne de réglage : la case à cocher porte déjà son libellé ; les autres contrôles sont précédés
+    /// d'un libellé sur une ligne dédiée. **L'aide suit le contrôle, visible** (#2085).
     ///
-    /// Elle n'était rendue qu'en infobulle : le libellé s'affichait, la conséquence non. Or plusieurs
-    /// réglages portent dans leur aide un **arbitrage** que l'utilisateur doit connaître avant de
-    /// choisir : la forme du dépôt décide si l'audio reste récupérable côté serveur
-    /// ([ADR 0034](../../../../../../dev-docs/decisions/0034-la-forme-du-depot-se-choisit.md)), la
-    /// conservation des originaux coûte plusieurs Go par nuit
-    /// ([ADR 0036](../../../../../../dev-docs/decisions/0036-la-copie-des-bruts-est-une-option.md)).
-    /// Un texte qu'il faut survoler pour lire n'est pas lu : c'est un geste qu'on ne fait pas si on
-    /// ignore qu'il y a quelque chose à lire, et qui n'existe pas au tactile.
-    ///
-    /// **Visible pour tous les réglages, pas seulement ceux qu'on juge importants** : cette sélection
-    /// demanderait d'arbitrer réglage par réglage et dériverait. Une aide qui ne mérite pas d'être
-    /// montrée ne mérite pas d'être écrite.
+    /// Rendue en infobulle, elle laissait s'afficher le libellé et pas la conséquence. Or plusieurs réglages
+    /// portent dans leur aide un **arbitrage** : la forme du dépôt décide si l'audio reste récupérable
+    /// ([ADR 0034](../../../../../../dev-docs/decisions/0034-la-forme-du-depot-se-choisit.md)), garder les
+    /// originaux coûte plusieurs Go par nuit
+    /// ([ADR 0036](../../../../../../dev-docs/decisions/0036-la-copie-des-bruts-est-une-option.md)). Un
+    /// texte qu'il faut survoler n'est pas lu, et n'existe pas au tactile. Visible pour **tous** les
+    /// réglages : une aide qui ne mérite pas d'être montrée ne mérite pas d'être écrite.
     private static Node ligne(DescripteurReglage descripteur, ReglagesReactifs reactifs) {
         Control controle = controle(descripteur, reactifs);
         VBox ligne = new VBox();
