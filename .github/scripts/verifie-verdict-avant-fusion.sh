@@ -29,11 +29,16 @@
 #
 # ## Ce qui le tient
 #
-# Sept cas, dont quatre contrôles négatifs - le témoin vert, la porte `[skip ci]`, et les deux
-# réponses illisibles. Les quatre mutations montées contre lui (retirer la distinction entre
-# conclusion probante et fin de course, le refus, la porte `[skip ci]`, le fail-closed) le font
-# rougir. Éprouvé sur les 40 dernières PR fusionnées, chacune jugée dans l'état où elle était à
-# l'instant de sa fusion : il en refuse une, #4560, et accepte les 39 autres.
+# Huit cas, dont quatre contrôles négatifs - le témoin vert, la porte `[skip ci]`, et les deux
+# réponses illisibles. Les cinq mutations montées contre lui (retirer la distinction entre
+# conclusion probante et fin de course, le refus quand rien n'a conclu, celui quand des runs courent
+# encore, la porte `[skip ci]`, le fail-closed) le font rougir. Éprouvé sur les 40 dernières PR
+# fusionnées, chacune jugée dans l'état où elle était à l'instant de sa fusion : il en refuse une,
+# #4560, et accepte les 39 autres.
+#
+# Il exige que TOUT ait conclu, et non qu'un seul run ait parlé. Cette seconde version lui vient de
+# sa propre demande : lancé dessus, il l'acceptait sur la foi de `Titre de PR` pendant que les
+# gardes bloquants couraient encore. Exiger le tout n'a refusé aucune PR de plus sur les 40.
 set -euo pipefail
 export LC_ALL=C
 
@@ -66,8 +71,15 @@ auto_test() {
         '{"workflow_runs":[{"name":"Quality gate","status":"completed","conclusion":"success"}]}'
     # Le contrôle qui empêche de rejouer l'ADR 0041 : les PR d'aperçus n'ont AUCUN run, par
     # construction, et les refuser casserait le chemin d'écriture que cette ADR a mesuré.
-    essai "un commit [skip ci] est accepté sans aucun run" "aucun run attendu" 0 \
+    essai "un commit [skip ci] est accepté, et dit la CI éteinte" "CI est ÉTEINTE" 0 \
         '{"workflow_runs":[]}' "chore(captures): mise à jour des aperçus des vues [skip ci]"
+    # Trouvé en lançant ce garde sur SA PROPRE demande : un run léger avait conclu, `Quality gate`
+    # et `Java CI` couraient encore, et il disait « verdict rendu ». Fusionner là refaisait #4560 à
+    # une nuance près. Mesuré ensuite sur les 40 dernières PR : exiger que TOUT ait conclu n'en
+    # refuse pas une de plus, la pratique du dépôt étant déjà celle-là. Le durcissement est gratuit.
+    essai "un verdict ne suffit pas si le reste court encore" "PAS TOUT CONCLU" 1 \
+        '{"workflow_runs":[{"name":"Titre de PR","status":"completed","conclusion":"success"},
+                           {"name":"Quality gate","status":"in_progress","conclusion":null}]}'
     # Le cas de #4560 au plus près : le commit de tête n'avait PAS UN SEUL run à 17:13:02Z.
     essai "aucun run du tout, sans [skip ci], est REFUSÉ" "AUCUN VERDICT" 1 \
         '{"workflow_runs":[]}'
@@ -129,7 +141,13 @@ MESSAGE="${2:-}"
 # exactement dans ce cas. Les refuser reviendrait à casser un chemin d'écriture vers `main`, ce que
 # l'ADR 0041 a déjà mesuré et payé.
 if printf '%s' "${MESSAGE}" | grep -qF '[skip ci]'; then
-    echo "Commit marqué [skip ci] : aucun run attendu ici, son absence ne prouve rien de fâcheux."
+    # Dire que la CI est ÉTEINTE, et non que tout va bien. GitHub lit le message entier, titre et
+    # corps : un commit qui se contente de PARLER de la marque l'active pour de bon. Vu sur ce
+    # dépôt - un corps de commit citant « hors [skip ci] » a valu zéro run là où le commit
+    # precedent en avait sept. Une PR muette ressemble alors à une PR qui attend.
+    echo "Aucun run attendu : ce commit porte la marque [skip ci], donc la CI est ÉTEINTE pour lui."
+    echo "Si ce n'était pas voulu, la marque est quelque part dans le message - GitHub lit le corps"
+    echo "autant que le titre - et il faut la retirer pour que les workflows repartent."
     exit 0
 fi
 
@@ -157,6 +175,16 @@ read -r verdicts steriles attente <<< "${comptes}"
 
 if [ "${verdicts}" -eq 0 ]; then
     echo "::error title=AUCUN VERDICT sur le commit de tête::rien n'a conclu sur ce commit : ${attente} run(s) en cours ou en attente, ${steriles} terminé(s) sans rien juger. Fusionner ici, ce n'est pas passer outre un rouge, c'est fusionner sans avoir rien vu."
+    exit 1
+fi
+
+# Un verdict partiel n'est pas un verdict. Ce garde a été trouvé trop indulgent en le lançant sur sa
+# propre demande : `Titre de PR` avait conclu, `Quality gate` et `Java CI` couraient encore, et il
+# annonçait « verdict rendu ». Fusionner là aurait refait #4560 à une nuance près - et c'est le
+# workflow lent qui porte les gardes bloquants, jamais le rapide. Mesuré sur les 40 dernières PR
+# fusionnées : exiger que tout ait conclu n'en refuse pas une de plus.
+if [ "${attente}" -gt 0 ]; then
+    echo "::error title=PAS TOUT CONCLU sur le commit de tête::${verdicts} run(s) ont rendu un verdict, mais ${attente} court(ent) encore. Ce sont les workflows lents qui portent les gardes bloquants."
     exit 1
 fi
 

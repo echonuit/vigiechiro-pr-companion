@@ -46,7 +46,11 @@ elle n'a cédé qu'où elle n'a aucun appui, le jour où le vert ne pouvait pas 
 
 ## Décision
 
-**Une fusion sans verdict se refuse ; une fusion en rouge reste un choix.**
+**Une fusion sans verdict complet se refuse ; une fusion en rouge reste un choix.**
+
+Sans verdict **complet** : un seul run conclu ne suffit pas tant que d'autres courent, parce que ce
+sont les workflows lents qui portent les gardes bloquants. Exiger le tout ne refuse aucune des 40
+demandes mesurées de plus qu'exiger un seul : la pratique du dépôt est déjà celle-là.
 
 Les deux se ressemblent dans leur résultat et ne se corrigent pas pareil. Passer outre un rouge
 engage celui qui le fait : il a lu, il a tranché. Fusionner quand rien n'a conclu n'engage personne,
@@ -80,6 +84,6 @@ même raison.
 désignée : un ruleset **d'organisation** restreint à ce dépôt, avec l'application GitHub Actions en
 contournement.
 
-**Comment on le voit rouge.** Sept cas, dont quatre contrôles négatifs, tournent dans `lint.yml`.
-Quatre mutations le font rougir. Et il a été confronté au cas d'origine : reconstitué depuis l'API à
+**Comment on le voit rouge.** Huit cas, dont quatre contrôles négatifs, tournent dans `lint.yml`.
+Cinq mutations le font rougir. Et il a été confronté au cas d'origine : reconstitué depuis l'API à
 la minute de la fusion, `909aeafa8` le fait sortir en code 1.
