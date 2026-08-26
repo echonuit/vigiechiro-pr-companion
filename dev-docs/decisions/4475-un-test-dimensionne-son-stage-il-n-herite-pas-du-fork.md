@@ -68,11 +68,24 @@ rendu la cause lisible**. Les appels `attendreCliquable` sont conservés à ce t
 ## La dette, et qui la tient
 
 87 classes posent une scène dimensionnée ; **2** dimensionnent leur stage - celles que la mutation a
-rendues rouges. Les 85 autres portent le même défaut latent.
+rendues rouges. Le cliquet est posé à **85**.
 
-Elles ne sont pas corrigées en bloc, et c'est délibéré : une boîte de dialogue de 300 px tient dans
-600 et ne verra jamais rien, tandis qu'un test qui compte sur une petite fenêtre changerait de
-comportement. Le cliquet est posé à **85**, et chaque classe se solde quand on la touche.
+**Ce qu'il compte, et ce qu'il ne prouve pas** (#4545). Il compte une **forme** : une taille affirmée
+sur la scène sans que la fenêtre la tienne. Poser une scène dimensionnée ne fige rien ; ces classes
+ne sont donc pas celles qui figeraient le Stage, ce sont celles qui **subiraient** un figement posé
+ailleurs.
+
+Or personne ne le pose. La suite entière jouée dans un **fork unique**, ordre inverse, les 813
+classes du dépôt avant `AppTest`, rend 5 099 tests et 0 échec : c'est la configuration la plus
+contaminante qui existe, et le garde d'ajustabilité y reste vert. Une première rédaction disait que
+les 85 autres portaient « le même défaut latent ». Le mécanisme est réel, deux mutations le
+reproduisent, mais aucune classe ne le déclenche aujourd'hui.
+
+Le cliquet reste, et c'est son office qui se nomme mieux : il empêche la 88e classe d'entrer, comme
+celui de l'ADR 4472 sur une population que le dépôt n'a pas non plus. Les 85 ne sont pas corrigées en
+bloc, et c'est délibéré : une boîte de dialogue de 300 px tient dans 600 et ne verra jamais rien,
+tandis qu'un test qui compte sur une petite fenêtre changerait de comportement. Chaque classe se
+solde quand on la touche.
 
 ## Conséquences
 
