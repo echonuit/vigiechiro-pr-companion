@@ -128,11 +128,19 @@ public final class BancImport {
         }
     }
 
+    /// L'espace de travail du banc : celui qu'on lui impose, ou un dossier temporaire à nous seuls.
+    ///
+    /// `createTempDirectory` crée en `0700` là où le système le permet, quand `java.io.tmpdir` reste
+    /// lisible par tout utilisateur local (#4509). Le nom cesse d'être stable d'une passe à l'autre,
+    /// et cela ne coûte rien : le banc réinitialise son dossier à chaque fois. Qui veut un chemin
+    /// fixe le donne par `-Dvigiechiro.workspace`.
+    private static Path espaceDeTravail() throws IOException {
+        String impose = System.getProperty("vigiechiro.workspace");
+        return impose != null ? Path.of(impose) : Files.createTempDirectory("vigiechiro-bench-import-");
+    }
+
     public static void main(String[] args) throws IOException {
-        Path racine = Path.of(System.getProperty(
-                "vigiechiro.workspace",
-                Path.of(System.getProperty("java.io.tmpdir"), "vigiechiro-bench-import")
-                        .toString()));
+        Path racine = espaceDeTravail();
         double secondes = Double.parseDouble(System.getProperty("perf.import.secondes", "5.0"));
         int frequenceHz = Integer.getInteger("perf.import.frequenceHz", 384_000);
         long octetsParWav = (long) (44 + (long) frequenceHz * OCTETS_PAR_TRAME * secondes);

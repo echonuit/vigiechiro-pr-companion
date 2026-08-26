@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
@@ -362,10 +363,14 @@ class ServiceSauvegardeTest {
     /// inaccessible : une carte SD retirée laisse exactement cette trace en base.
     private void declarerSession(Path racine, int idPassage) throws IOException {
         try (Connection cx = source.getConnection();
-                Statement st = cx.createStatement()) {
+                Statement st = cx.createStatement();
+                PreparedStatement insertion =
+                        cx.prepareStatement("INSERT INTO recording_session(root_path, originals_total_bytes,"
+                                + " sequences_total_bytes, passage_id) VALUES (?, 0, 0, ?)")) {
             st.execute("PRAGMA foreign_keys = OFF");
-            st.execute("INSERT INTO recording_session(root_path, originals_total_bytes, sequences_total_bytes,"
-                    + " passage_id) VALUES ('" + racine.toString().replace("'", "''") + "', 0, 0, " + idPassage + ")");
+            insertion.setString(1, racine.toString());
+            insertion.setInt(2, idPassage);
+            insertion.executeUpdate();
         } catch (SQLException echec) {
             throw new IOException(echec);
         }
