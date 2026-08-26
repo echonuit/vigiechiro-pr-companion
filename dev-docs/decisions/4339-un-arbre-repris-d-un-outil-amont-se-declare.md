@@ -84,3 +84,9 @@ compétences OpenSpec de la zone des compétences. Chacun nomme sa raison.
 
 Cette décision se relira le jour où un troisième outil entrera. Le geste sera le même : mesurer que
 la substitution vient de l'outil, nommer les fichiers, écrire le motif.
+
+## Ce que la suite a montré
+
+La règle vaut toujours pour ce qui reste amont, et elle a rencontré sa limite au chantier #4511. Six des neuf fichiers qu'elle exemptait devaient porter le cycle de ce dépôt, et le canal prévu pour l'y injecter sans les toucher ne pouvait pas le faire.
+
+L'[ADR 4515](4515-adopter-un-arbre-amont-quand-il-doit-parler-notre-cycle.md) dit à quelle condition un arbre amont s'adopte plutôt que de rester exempté, et ce que l'adoption coûte. Les six compétences OpenSpec sont sorties de la table des exemptions ; les six commandes `opsx` et les trois diagrammes Mocodo y restent.
