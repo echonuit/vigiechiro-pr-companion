@@ -81,6 +81,17 @@ pas cette ambiguïté, et un point de coin exact n'arrive pas d'une position rel
 carré de la position, pour tout point intérieur. Serrer le rayon ne change pas cette lecture, il change
 seulement ce que le serveur consent à rendre.
 
+**L'abstention devient un choix documenté, et non une ignorance.** La javadoc de `numeroCarreStoc`
+disait ne pas lire `centre` pour éviter de trancher la convention de coordonnées de la plateforme. La
+réponse brute du 2026-08-26 la tranche gratuitement : `grille_stoc` rend
+`"centre": {"coordinates": [6.293767361, 44.44544392], "type": "Point"}` pour une interrogation à
+`lat=44.4467, lng=6.2981`, donc l'ordre **`[lon, lat]`**, celui de GeoJSON. L'autre lecture placerait
+ce centre à 5 626 km. Les localités d'un site, elles, restent en `[lat, lon]` : la plateforme mélange
+bien les deux conventions, et on sait désormais laquelle est où.
+
+On continue de ne pas lire `centre`, parce que le numéro suffit. La différence est qu'on ne le fait
+plus faute de savoir.
+
 ### D4. L'analyseur de position est une classe pure
 
 Lire un texte collé et en tirer une paire de nombres ne demande aucun réseau. Cette lecture vit dans

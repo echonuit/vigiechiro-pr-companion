@@ -35,6 +35,12 @@
       chiffres contre six, dans les départements 01 à 09. **Fait quand** : un test unitaire sur un
       carré de département à un chiffre rougit si on retire le rembourrage, et la sonde live de #4574
       continue de passer.
+- [ ] 3.4 La convention de coordonnées de `grille_stoc` était réputée indécidable, et elle est
+      mesurée : `[lon, lat]`, celle de GeoJSON, là où les localités d'un site sont en `[lat, lon]`.
+      Le savoir vit dans une réponse brute que personne ne relira. **Fait quand** :
+      `dev-docs/api-vigiechiro.md` porte la convention dans sa carte des ressources, la javadoc de
+      `numeroCarreStoc` dit que ne pas lire `centre` reste un choix et non une ignorance, et le garde
+      de documentation à jour est vert.
 
 ## 4. Le geste dans l'écran de déclaration
 
