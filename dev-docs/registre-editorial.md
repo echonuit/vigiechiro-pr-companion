@@ -90,10 +90,10 @@ comptage.
 |---|---|---|
 | tiret cadratin | `scripts/adr/2843-tiret-cadratin.py` | dix-sept zones à tolérance zéro, cliquet à <!--inv:cliquet-cadratin-->1<!--/inv--> |
 | pictogramme d'alerte | `scripts/adr/4366-avertissement-en-pictogramme.py`, article A28 | cliquet à <!--inv:cliquet-pictogramme-->1 798<!--/inv--> |
-| javadoc narrative | `scripts/adr/4359-javadoc-narratif.py`, article A30 | cliquet à <!--inv:cliquet-javadoc-->1 459<!--/inv--> |
+| javadoc narrative | `scripts/adr/4359-javadoc-narratif.py`, article A30 | cliquet à <!--inv:cliquet-javadoc-->1 455<!--/inv--> |
 | apostrophe mêlée | `scripts/adr/4368-apostrophe-en-libelle.py`, `verifie-titre-pr.sh` | zéro partout, trois exemptions déclarées |
 | élision sans apostrophe | `.github/scripts/verifie-titre-pr.sh` et `verifie-corps-pr.sh` | tolérance zéro sur le titre ET le corps d'une PR ; la lettre isolée employée comme symbole en est sortie (#4483) |
-| javadoc jamais relue | `scripts/adr/4468-javadoc-non-relue.py`, article A31 | cliquet à <!--inv:cliquet-relecture-->1 980<!--/inv--> fichiers, soit tout le corpus : la relecture est le chantier, pas l'acquis |
+| javadoc jamais relue | `scripts/adr/4468-javadoc-non-relue.py`, article A31 | cliquet à <!--inv:cliquet-relecture-->1 979<!--/inv--> fichiers, soit tout le corpus : la relecture est le chantier, pas l'acquis |
 | commentaire long en corps de méthode | `scripts/adr/4472-commentaire-en-corps.py`, article A30 | cliquet à <!--inv:cliquet-commentaire-corps-->79<!--/inv-->, plus une loupe de densité qui ne bloque pas |
 | javadoc qui raconte son extraction | `scripts/adr/4476-javadoc-raconte-son-extraction.py`, article A30 | cliquet à <!--inv:cliquet-javadoc-extraction-->62<!--/inv--> |
 | ADR qui raconte plus que sa décision | `scripts/adr/4477-longueur-des-adr.py`, article A30 | cliquet à <!--inv:cliquet-longueur-adr-->58<!--/inv--> |
