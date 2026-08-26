@@ -75,7 +75,7 @@ vérifier.
 Aucun changement au signal. Un test de parcours tient désormais la promesse, et l'ADR 3537 est amendée :
 son critère décrit ce que le **signal** couvre, pas ce que le **produit** garantit.
 
-⚠️ Ce qui n'est pas couvert, et qui n'est pas atteignable aujourd'hui : un remplacement de taxon
+Ce qui n'est pas couvert, et qui n'est pas atteignable aujourd'hui : un remplacement de taxon
 survenant **pendant** qu'un écran suiveur est affiché. Tous les chemins d'`update` partent de la CLI -
 un autre processus - ou du modèle de vue audio, qui est l'écran affiché quand il s'exécute. Si un
 traitement de fond venait à en remplacer un, la décision se rouvrirait.
@@ -92,7 +92,7 @@ et l'ADR ci-dessus donnait le critère pour trancher chacun.
 | `Audit` | il audite la base, que tout écran qui écrit périme : `RafraichirAuRetour` |
 | `Importation` | **laissé tel quel** : il porte `AuDepartEcran`, donc il se recharge déjà |
 
-⚠️ **`Importation` est le point de cet amendement.** Ajouté « par symétrie », le contrat l'aurait fait
+**`Importation` est le point de cet amendement.** Ajouté « par symétrie », le contrat l'aurait fait
 relire deux fois à chaque entrée, sans qu'aucun test ne s'en plaigne. C'est en ouvrant le fichier
 qu'on voit qu'un autre mécanisme le couvre.
 
@@ -110,6 +110,6 @@ infobulles - est parti dans `CourbesActivite`. Il n'avait déjà plus sa place d
 `versSeries` était appelée par `ExportImageActivite`, `texteInfobulle` par son test. **Un morceau
 qu'on appelle du dehors n'appartient pas à l'écran qui le contenait.**
 
-⚠️ En le déplaçant, j'ai d'abord réécrit `minutesDepuis18h` de mémoire au lieu de le reprendre tel
+En le déplaçant, j'ai d'abord réécrit `minutesDepuis18h` de mémoire au lieu de le reprendre tel
 quel - exactement la divergence contre laquelle le doc-comment de la nouvelle classe met en garde.
 Un déplacement se fait par copie littérale, puis vérification.

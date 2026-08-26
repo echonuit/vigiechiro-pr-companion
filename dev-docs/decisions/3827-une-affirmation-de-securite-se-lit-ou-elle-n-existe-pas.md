@@ -28,7 +28,7 @@ Deux affirmations vivaient dans le dépôt depuis des mois, l'une dans un doc-co
   2026-07-28 l'avait déjà relevé : le code « se repose sur les ACL du profil **sans les contrôler
   explicitement** ».
 
-⚠️ Les deux portaient sur le **chemin d'amorçage** de l'application, et sur le fichier qui contient le
+Les deux portaient sur le **chemin d'amorçage** de l'application, et sur le fichier qui contient le
 **jeton**.
 
 ## Ce que les sondes ont mesuré, et qui contredit les deux issues
@@ -45,7 +45,7 @@ de tenir la cible provoquent l'`AccessDeniedException`, y compris `Files.newInpu
 propriétaire, `NT AUTHORITY\SYSTEM`, `BUILTIN\Administrators`. C'est l'équivalent de `600` sous POSIX,
 où **root** lit aussi. **La doc disait vrai.**
 
-⚠️ Ce qu'on ignorait n'était donc pas si la protection existe : c'est qu'**on n'en savait rien**.
+Ce qu'on ignorait n'était donc pas si la protection existe : c'est qu'**on n'en savait rien**.
 
 ## Décision
 
@@ -54,7 +54,7 @@ pas.** `ProtectionFichier.restreinteAuProprietaire` dit « aucun autre compte ne
 - permissions POSIX ici, ACL là-bas. Le conditionnel quitte le test pour vivre dans un seul endroit
 éprouvé.
 
-⚠️ **Ni POSIX ni ACL fait lever**, plutôt que rendre `true`. Annoncer une protection depuis une
+**Ni POSIX ni ACL fait lever**, plutôt que rendre `true`. Annoncer une protection depuis une
 **ignorance** serait exactement le faux vert que ce dispositif existe pour empêcher.
 
 ### Et l'écriture insiste, plutôt que d'échouer ou de renoncer
@@ -65,7 +65,7 @@ pour qu'un utilisateur croie l'application figée. Au-delà, un refus qui **nomm
 Trois options étaient sur la table ; le porteur a tranché pour la reprise après que la mesure a montré
 que le cas n'est pas rare mais **ordinaire** sous Windows.
 
-⚠️ **La reprise ne regarde pas le système d'exploitation.** Sous POSIX, une `AccessDeniedException` est
+**La reprise ne regarde pas le système d'exploitation.** Sous POSIX, une `AccessDeniedException` est
 un vrai refus de droits : elle coûtera le butoir avant d'échouer. C'est le prix assumé pour ne pas
 déduire un comportement d'un nom de plateforme - ce que [ADR 3738 / `CouleurCli`] a appris à ne plus
 faire.
@@ -83,10 +83,10 @@ Le cas qui exige vraiment POSIX - sa fixture *crée* un fichier `rw-rw-rw-` - po
 
 - **La garantie est éprouvée chaque mardi** sous Windows, au lieu d'être écrite.
 - **Le refus de l'écriture est actionnable** : il nomme la tenue au lieu de parler de droits.
-- ⚠️ **La branche ACL est inatteignable sous Linux** : PIT y laisse 8 mutants sans couverture, comme le
+- **La branche ACL est inatteignable sous Linux** : PIT y laisse 8 mutants sans couverture, comme le
   repli de lecture du verrou (#3714). C'est structurel, pas une lacune - la branche est exercée par le
   passage sous Windows, et le dire évite qu'on la croie non testée.
-- ⚠️ **Un test de câblage ne prouve pas la plateforme.** Le cas qui traverse le vrai déplacement avec un
+- **Un test de câblage ne prouve pas la plateforme.** Le cas qui traverse le vrai déplacement avec un
   vrai lecteur passe sur les deux systèmes : son vert ne dit **pas** que Windows a emprunté la branche
   de reprise. C'est la **sonde** qui l'établit, et elle est citée dans le doc-comment pour qu'on n'ait
   pas à la refaire.

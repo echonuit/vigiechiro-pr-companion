@@ -124,7 +124,7 @@ class ConfirmationNavigationTest {
                         .map(ButtonType::getText)
                         .toList()));
 
-        // ⚠️ `ButtonType.OK` et `ButtonType.CANCEL` portent un libellé que JAVAFX traduit depuis la
+        // `ButtonType.OK` et `ButtonType.CANCEL` portent un libellé que JAVAFX traduit depuis la
         // locale de la MACHINE. Tout le reste de cette interface est en français écrit en dur : un
         // utilisateur français sur un système anglais lisait « Se déconnecter effacera le jeton… » et
         // cliquait « Cancel ». Vu sur un clip de recette, tourné sur un runner en anglais - le film
@@ -137,7 +137,7 @@ class ConfirmationNavigationTest {
     @Test
     @DisplayName("#4229 : le rôle des boutons est conservé, pas seulement leur texte")
     void le_role_des_boutons_est_conserve() {
-        // ⚠️ Le `ButtonData` dit à JavaFX lequel est le bouton par défaut, lequel ferme sur Échap, et
+        // Le `ButtonData` dit à JavaFX lequel est le bouton par défaut, lequel ferme sur Échap, et
         // dans quel ordre les poser selon la plateforme. Renommer sans le conserver casserait ces trois
         // comportements EN SILENCE : le dialogue paraîtrait juste et se comporterait mal.
         assertThat(BoutonsDeDialogue.CONFIRMER.getButtonData()).isEqualTo(ButtonData.OK_DONE);

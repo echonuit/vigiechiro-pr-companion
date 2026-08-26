@@ -213,7 +213,7 @@ public class PassageViewModel {
         dureeEnregistree.set(Formats.dureeLisible(detail.dureeEnregistreeSecondes()));
         nombreSequences.set(detail.nombreSequences());
         etapes.setAll(EtapesWorkflow.construire(detail.statut()));
-        // ⚠️ Comparaison par ordinal : elle ne vaut QUE pour les statuts de la file. « Récupéré » est
+        // Comparaison par ordinal : elle ne vaut QUE pour les statuts de la file. « Récupéré » est
         // hors file et déclaré en dernier (ADR 2581), donc il passerait ce test sans rien avoir
         // parcouru - une nuit rapatriée n'a jamais été transformée ICI. Le dire, plutôt que de laisser
         // la position dans l'énumération répondre à notre place.
@@ -224,7 +224,7 @@ public class PassageViewModel {
         // charger, au lieu de redemander au service - une requête sur trois tables à chaque ouverture
         // de fiche, pour une réponse qu'il tenait déjà.
         boolean nuitRecuperee = detail.statut() == StatutWorkflow.RECUPERE;
-        // ⚠️ « Récupéré » et « Déposé » sont désormais EXCLUSIFS. Toute garde qui disait « sauf quand
+        // « Récupéré » et « Déposé » sont désormais EXCLUSIFS. Toute garde qui disait « sauf quand
         // c'est déposé » cessait donc de couvrir ces nuits, en silence, alors qu'elle les couvrait la
         // veille - le statut a changé sous elles. Chacune est reprise ci-dessous avec ce que la nuit
         // est vraiment : sur la plateforme, quel que soit celui de nous deux qui l'y a mise.
@@ -248,7 +248,7 @@ public class PassageViewModel {
         // jamais été déposée d'ici. La carte se ferme donc, avec son motif, plutôt que de conduire à un
         // refus découvert après coup (#789).
         //
-        // ⚠️ La comparaison par ordinal ne vaut que pour les statuts de la file : « Récupéré », déclaré
+        // La comparaison par ordinal ne vaut que pour les statuts de la file : « Récupéré », déclaré
         // en dernier, y répondrait « oui » par sa seule position (ADR 2581).
         depotDisponible.set(detail.statut() != StatutWorkflow.RECUPERE
                 && detail.statut().ordinal() >= StatutWorkflow.VERIFIE.ordinal());

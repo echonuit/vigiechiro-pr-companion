@@ -198,7 +198,7 @@ public final class JeuDeDonneesPassage {
     /// points et veut rattacher sa nuit à l'un d'eux ne pouvait pas le dire (#2989). Ici, le site est
     /// déduit du point.
     ///
-    /// ⚠️ Les réglages `carre`, `nomSite`, `point` et `position` deviennent alors **sans effet** : le point
+    /// Les réglages `carre`, `nomSite`, `point` et `position` deviennent alors **sans effet** : le point
     /// existe, la fixture ne le retouche pas.
     public JeuDeDonneesPassage surLePoint(long idPoint) {
         this.idPointImpose = idPoint;
@@ -308,7 +308,7 @@ public final class JeuDeDonneesPassage {
     /// session : passage jamais importé »), et `AuditNavigationViewTest` l'éprouve. Ce barreau est le seul
     /// moyen de le semer par la fixture.
     ///
-    /// ⚠️ J'avais écrit que poser une session à ce test le laisserait « passer en n'éprouvant plus rien ».
+    /// J'avais écrit que poser une session à ce test le laisserait « passer en n'éprouvant plus rien ».
     /// **C'est faux, et la sonde l'a dit** : avec `semerSquelette()`, il rougit (1 échec + 1 erreur). La
     /// crainte était raisonnable, elle n'était pas vérifiée. Le barreau se justifie parce que ces tests en
     /// ont besoin, pas parce que leur absence serait silencieuse.

@@ -114,7 +114,7 @@ S'ajoutent des tables techniques : `saved_view` (vues sauvegardées de M-Multisi
     créé ici a été **poussé** vers la plateforme (`PUT /sites/{id}/localites`). Sans cette mémoire,
     l'écran reproposerait le geste indéfiniment.
 
-    ⚠️ **À ne pas confondre avec `listening_point.synchronise`** (#1738), qui dit l'inverse :
+    **À ne pas confondre avec `listening_point.synchronise`** (#1738), qui dit l'inverse :
     « **rapatrié de** la plateforme », et sert à masquer les points rapatriés inutilisés. Réutiliser
     ce drapeau ferait disparaître de la fiche un point qu'on vient de créer pour s'en servir, et
     mentirait sur sa provenance. Deux faits distincts, deux endroits.
@@ -271,7 +271,7 @@ mocodo -i nuit-de-capture.mcd -t arrange:wide=8 --colors ocean   # agencement au
 git checkout -- nuit-de-capture.mcd      # cf. ci-dessous : l'agencement réécrit la source
 ```
 
-⚠️ `arrange` **réécrit `nuit-de-capture.mcd`** sous sa forme agencée (les boîtes réparties en grille,
+`arrange` **réécrit `nuit-de-capture.mcd`** sous sa forme agencée (les boîtes réparties en grille,
 entités et associations entremêlées). Cette forme est illisible à la relecture et impossible à
 compléter à la main : ce dépôt versionne donc la forme **linéaire** (toutes les entités, puis toutes
 les associations) et ne garde l'agencement que dans le SVG. D'où le `git checkout` ci-dessus, à faire

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 /// Le découpage des lectures par lot (#4251).
 ///
-/// ⚠️ Elle n'avait **aucun test**, et son commentaire annonçait une raison **fausse** : que SQLite
+/// Elle n'avait **aucun test**, et son commentaire annonçait une raison **fausse** : que SQLite
 /// refuserait au-delà de quelques centaines de paramètres liés. Mesuré sur le pilote embarqué,
 /// cinquante mille passent. Le découpage borne la **taille de la requête**, rien de plus.
 ///
@@ -60,7 +60,7 @@ class LotsDeParametresTest {
         void les_tranches_restent_bornees() {
             List<List<Long>> tranches = LotsDeParametres.decouper(suite(5000));
 
-            // ⚠️ Ce cas affirmait « ne dépasse pas ce que SQLite accepte de lier », avec 999 pour borne.
+            // Ce cas affirmait « ne dépasse pas ce que SQLite accepte de lier », avec 999 pour borne.
             // Il encodait une hypothèse au lieu de l'éprouver, et l'hypothèse était fausse : le pilote
             // embarqué accepte cinquante mille paramètres. Ce qu'on garde ici est la seule propriété que
             // la classe promet vraiment - des tranches bornées, donc des requêtes de taille bornée.

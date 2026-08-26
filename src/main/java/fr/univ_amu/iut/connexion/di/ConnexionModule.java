@@ -95,7 +95,7 @@ public class ConnexionModule extends ModuleDeFeature {
     /// Jeton fourni **hors connexion enregistrée**, consulté à chaque requête (surchargeable en cours
     /// d'exécution) : propriété système d'abord, variable d'environnement ensuite ; vide sinon.
     ///
-    /// ⚠️ **Publique, et pour une seule raison** : `recette.BancDeRecette` doit pouvoir lire ce jeton
+    /// **Publique, et pour une seule raison** : `recette.BancDeRecette` doit pouvoir lire ce jeton
     /// pour le déposer dans sa propre réserve quand un scénario déclare vouloir la plateforme réelle
     /// (#4304). Il ne le lit pas pour s'en servir directement, il le lit pour **choisir** de s'en
     /// servir. Recopier ces deux lignes là-bas donnerait deux portes pour un même secret, justes le

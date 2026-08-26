@@ -9,7 +9,7 @@ import java.util.zip.ZipFile;
 /// des matières écrite en fin d'archive, que `ZipFile` lit sans décompresser un seul octet. Une nuit de
 /// 10 Go s'inventorie donc instantanément.
 ///
-/// ⚠️ **Déclaré n'est pas constaté.** Une archive piégée ment dans ses en-têtes : c'est la définition
+/// **Déclaré n'est pas constaté.** Une archive piégée ment dans ses en-têtes : c'est la définition
 /// même d'une bombe ZIP, qui annonce quelques kilooctets et en écrit quelques gigaoctets. Cet
 /// inventaire sert donc à **refuser tôt** ce qui s'annonce déjà hors bornes, et à donner un plafond que
 /// [BornesExtraction] confronte ensuite aux octets **réellement** écrits.

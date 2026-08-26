@@ -157,7 +157,7 @@ public class AuditController implements RafraichirAuRetour {
         // La table montre les constats **que la barre laisse passer** (#3100) ; le résumé et le verdict
         // restent calculés sur l'audit entier. Filtrer masque des lignes, cela ne rend pas l'écran sain.
         //
-        // ⚠️ La `FilteredList` est **non modifiable** : posée telle quelle, `TableView` renonce à trier et
+        // La `FilteredList` est **non modifiable** : posée telle quelle, `TableView` renonce à trier et
         // **vide le sortOrder en silence** - la table cesse d'être triable sans que rien ne le dise. Le
         // `SortedList` par-dessus, comparateur lié à celui de la table, est le même montage que les
         // quatre autres écrans.

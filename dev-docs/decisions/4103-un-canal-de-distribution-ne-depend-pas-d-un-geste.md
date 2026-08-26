@@ -27,7 +27,7 @@ manifeste extrayait encore le `.deb` **2.185.0** alors que la **2.187.0** était
 veille. La commande n'existait donc pas dans le paquet installé, pendant que la documentation
 utilisateur l'annonçait.
 
-⚠️ **Le retard n'est pas le défaut, il en est le symptôme.** Le défaut est qu'un canal de distribution
+**Le retard n'est pas le défaut, il en est le symptôme.** Le défaut est qu'un canal de distribution
 dépende d'un geste que rien ne réclame : une publication réussie qui laisse le Flatpak où il était est
 un état parfaitement **vert**. Aucun dispositif ne pouvait rougir, parce qu'aucun ne regardait là.
 
@@ -85,7 +85,7 @@ existe, pas avant.
 
 - **Premier `workflow_call` du dépôt.** Les dix-huit autres workflows restent indépendants.
 - **Le train s'allonge** d'une quinzaine de minutes le mercredi.
-- ⚠️ **Le chaînage ne s'observe qu'au premier train** : `release.yml` ne s'exécute pas sur les PR, donc
+- **Le chaînage ne s'observe qu'au premier train** : `release.yml` ne s'exécute pas sur les PR, donc
   aucune PR ne peut prouver que l'appel part. Ce qui est vérifié avant fusion se limite à la validité
   du montage - conditions de job, butoirs, renvois, YAML. Le reste se constate mercredi.
 

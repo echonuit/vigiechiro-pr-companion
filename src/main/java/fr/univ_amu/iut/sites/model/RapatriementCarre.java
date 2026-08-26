@@ -110,9 +110,9 @@ public class RapatriementCarre {
         /// On n'a pas pu demander, et `cause` dit **laquelle** des trois raisons : pas de jeton,
         /// plateforme injoignable, ou refus.
         ///
-        /// ⚠️ **Rien n'a été créé**, et surtout rien ne laisse croire que le carré a été récupéré.
+        /// **Rien n'a été créé**, et surtout rien ne laisse croire que le carré a été récupéré.
         ///
-        /// ⚠️ Le message nommait les deux premières **à la fois** - « Vigie-Chiro est injoignable ou vous
+        /// Le message nommait les deux premières **à la fois** - « Vigie-Chiro est injoignable ou vous
         /// n'êtes pas connecté » - alors que le `switch` ci-dessous les distingue depuis toujours. Il
         /// faisait donc douter d'une connexion qui était bonne, et laissait l'utilisateur trancher ce que
         /// le programme savait déjà (#4233). `AuditPointsServeur` faisait la distinction depuis #718 :

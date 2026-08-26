@@ -107,7 +107,7 @@ class ContrasteVueAudioTest {
                         pour atteindre 3:1 dénaturerait une vue sombre à dessein - un spectrogramme se
                         lit sur du noir.
 
-                        ⚠️ Ces boutons appartiennent à `fr.nedjar.vigiechiro:audio-view`, dont la
+                        Ces boutons appartiennent à `fr.nedjar.vigiechiro:audio-view`, dont la
                         feuille est déclarée SUR SA PROPRE RACINE (`AudioView.fxml`), donc plus
                         profond que les feuilles de l'écran. Une surcharge à spécificité égale perd :
                         il faut monter à trois classes (`.audio-view .audio-view-toolbar .button`).

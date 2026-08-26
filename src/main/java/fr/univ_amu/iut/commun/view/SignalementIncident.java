@@ -51,7 +51,7 @@ public final class SignalementIncident implements Thread.UncaughtExceptionHandle
             try {
                 montrer.accept(erreur);
             } catch (RuntimeException echecDAffichage) {
-                // ⚠️ Journalisé, et **pas** relancé : relancer ferait reprendre ce même filet, qui
+                // Journalisé, et **pas** relancé : relancer ferait reprendre ce même filet, qui
                 // redemanderait le même affichage, qui échouerait pour la même raison. C'est la boucle
                 // de #3700. Deux lignes dans le journal valent mieux que seize mille.
                 journal.log(
@@ -67,7 +67,7 @@ public final class SignalementIncident implements Thread.UncaughtExceptionHandle
 
     /// Écrit l'incident, **sans faire confiance à celui qui le raconte**.
     ///
-    /// ⚠️ Le message d'une exception peut lever à la lecture, et c'est le cas courant ici : sous
+    /// Le message d'une exception peut lever à la lecture, et c'est le cas courant ici : sous
     /// Java 25, `ProvisionException.getMessage()` cherche les numéros de ligne, lit du bytecode
     /// major 69 avec l'ASM de Guice 7.0.0, et rend `IllegalArgumentException` (#3956). Le formateur
     /// du journal appelle ce message ; la panne remonte donc **dans le filet**, qui est la dernière

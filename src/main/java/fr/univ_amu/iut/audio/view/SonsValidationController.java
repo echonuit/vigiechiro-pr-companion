@@ -313,7 +313,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // dans la sous-vue TableObservations.fxml (#2745). Ce controller n'en garde que ce qui a besoin
         // d'elle ET d'un nœud d'ici : panneau d'écoute, menu ☰, filtres, gestionnaire de colonnes.
         //
-        // ⚠️ La sous-vue reçoit NOTRE modèle, elle ne se l'injecte pas : AudioViewModel est non-singleton
+        // La sous-vue reçoit NOTRE modèle, elle ne se l'injecte pas : AudioViewModel est non-singleton
         // (« un VM frais par chargement d'écran »), et une injection lui en donnerait un second, vide.
         tableauController.installer(viewModel, appuis);
         TableView<LigneObservationAudio> table = tableauController.table();

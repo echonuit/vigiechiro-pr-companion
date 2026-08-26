@@ -33,7 +33,7 @@ y passe tel quel.
 L'obstacle supposé était une règle d'architecture : `CauseLisible` vivait dans `commun.view`, donc la
 ligne de commande ne pouvait pas l'appeler.
 
-⚠️ **C'était faux.** La règle `ArchitectureTest.pas_de_dependance_inter_feature_vers_la_vue` **exclut
+**C'était faux.** La règle `ArchitectureTest.pas_de_dependance_inter_feature_vers_la_vue` **exclut
 explicitement le socle `commun`**. Rien n'aurait rougi.
 
 Ce qui faisait tenir le montage n'était pas une propriété d'architecture, c'était un **détail de
@@ -54,7 +54,7 @@ l'inverse de ce que #3470 avait posé, et c'est le point qui rend le déplacemen
 (« un message qui renvoie vers une entrée de menu doit la nommer telle qu'elle s'écrit ») tient
 toujours par construction, puisque la citation reste un lien de compilation.
 
-**3. ⚠️ Le repli « où regarder » est un paramètre, pas une constante.**
+**3. Le repli « où regarder » est un paramètre, pas une constante.**
 
 C'est la décision qui a le plus failli manquer. Le repli de #3470 dit :
 
@@ -82,7 +82,7 @@ cliquet qu'on apprend à ignorer.
 - Huit sites composaient leur message à la main ; **six sont alignés**, et les deux restants
   (`RestaurationBase:172`, `MoteurTraitementGroupe:116`) sont **comptés par le cliquet** plutôt que
   corrigés en silence hors du périmètre soumis.
-- ⚠️ Le cliquet **ne peut pas voir** la forme nue. Son en-tête le dit, plutôt que d'emprunter la
+- Le cliquet **ne peut pas voir** la forme nue. Son en-tête le dit, plutôt que d'emprunter la
   solidité du voisin ([ADR 3540](3540-un-cliquet-qui-compte-n-est-pas-la-preuve-de-la-regle.md)).
 - Le script s'**exclut de son corpus** : `CauseLisible` porte les trois motifs dans sa documentation et
   se compterait elle-même, défaut mesuré par l'[ADR 3645](3645-un-detecteur-textuel-s-exclut-de-son-corpus.md).

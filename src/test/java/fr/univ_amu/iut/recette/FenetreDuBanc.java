@@ -13,7 +13,7 @@ import javafx.stage.Stage;
 /// cadre trop étroit repousse hors de l'image ce que le cas fait juger. Le réflexe est d'écrire
 /// `stage.setWidth(...)`, et c'est précisément ce qu'il ne faut pas faire.
 ///
-/// ⚠️ `setWidth` / `setHeight` font passer un Stage en dimensionnement **explicite** : il cesse
+/// `setWidth` / `setHeight` font passer un Stage en dimensionnement **explicite** : il cesse
 /// **définitivement** de s'ajuster aux scènes qu'on lui pose ensuite. Sur une fenêtre que l'on jette,
 /// aucune conséquence. Mais le Stage du harnais TestFX est **partagé par toutes les classes d'un même
 /// fork** : figé par une classe, il fait échouer les suivantes sur des noeuds « invisibles », très

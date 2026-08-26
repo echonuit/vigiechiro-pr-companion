@@ -77,7 +77,7 @@ class ListerParticipationsVigieChiroTest {
         // 23:30 UTC le 3 juillet, c'est 01:30 le 4 à Paris : la nuit est celle du 4. La version
         // précédente coupait la chaîne au « T » et annonçait le 3.
         //
-        // ⚠️ Ce test tient le FUSEAU, pas le format : chercher un « / » dans la sortie passerait sous
+        // Ce test tient le FUSEAU, pas le format : chercher un « / » dans la sortie passerait sous
         // trois fuseaux différents, et c'est justement ce que le job `fuseau-alternatif` rejoue.
         when(client.mesParticipations())
                 .thenReturn(ReponseApi.succes(List.of(new ParticipationVigieChiro(

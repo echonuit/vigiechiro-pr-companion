@@ -153,7 +153,7 @@ public class SiteDetailViewModel {
 
     /// Relit le **site lui-même** puis recharge le reste (#3672).
     ///
-    /// ⚠️ [#rafraichir()] ne suffit pas après une modification. Il recharge points, passages, bandeau
+    /// [#rafraichir()] ne suffit pas après une modification. Il recharge points, passages, bandeau
     /// et statut, mais le champ `site` est un **record détenu**, posé une seule fois par
     /// [#chargerSite(Site)] : il garde donc l'ancien numéro de carré, l'ancien nom et l'ancien
     /// protocole. Or c'est de lui que dérivent le numéro affiché, le département, le titre, le
@@ -166,7 +166,7 @@ public class SiteDetailViewModel {
     /// Recharge points et passages depuis la base et met à jour toutes les propriétés observables.
     public void rafraichir() {
         List<PointDEcoute> pointsDuSite = service.listerPoints(site.id());
-        // ⚠️ Les passages des points en UNE requête (#4285). La boucle en lançait une par point, et le
+        // Les passages des points en UNE requête (#4285). La boucle en lançait une par point, et le
         // commentaire de `mettreAJourCartesPoints` disait déjà pourquoi il ne fallait pas : « une requête
         // par carte ferait N requêtes pour afficher un écran qui n'en demande qu'une ». Il valait pour la
         // table des points publiés, pas pour les passages. Mesuré : 0,7 ms par point, soit 40-55 ms sur

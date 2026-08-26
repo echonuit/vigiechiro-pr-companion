@@ -69,7 +69,7 @@ public final class VersionApplication {
     /// peut s'exercer. L'aperçu de l'annonce de mise à jour en dépendait : sans version locale, le
     /// vérificateur ne propose rien et le bandeau ne s'affiche pas. Mesuré en rendant un aperçu vide.
     ///
-    /// ⚠️ **Ce n'est pas un moyen de forcer la version affichée en production.** Ce que l'application
+    /// **Ce n'est pas un moyen de forcer la version affichée en production.** Ce que l'application
     /// dit d'elle-même doit venir de son empaquetage, sans quoi un « À propos » pourrait mentir.
     ///
     /// @param version la version à rendre, telle qu'un manifeste l'écrirait (ex. `2.21.3`)

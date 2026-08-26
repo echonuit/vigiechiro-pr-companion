@@ -247,7 +247,7 @@ public final class GestionnaireColonnes {
     /// **rendu sans fenêtre flottante** : par les tests et par les outils de capture d'écran (le `Popup`
     /// n'est pas capturé par le `snapshot` de scène ; on rend donc directement ce `VBox`).
     ///
-    /// ⚠️ Le bouton « Fermer » est assemblé **ici**, et non chez l'appelant : il l'était dans [#ouvrir], si
+    /// Le bouton « Fermer » est assemblé **ici**, et non chez l'appelant : il l'était dans [#ouvrir], si
     /// bien que la capture de documentation - qui appelle cette méthode - montrait un panneau **sans** le
     /// bouton que le produit affiche. Une capture reconstruite au lieu d'être rendue finit toujours par
     /// mentir (#1468) ; l'assemblage partagé est ce qui l'en empêche. `fermeture` est le geste de

@@ -36,7 +36,7 @@ final class FormatsImport {
     /// lieu : des fichiers déjà préfixés ne sont pas renommés, les annoncer tels remplacerait une phrase
     /// trompeuse par une autre.
     ///
-    /// ⚠️ Vaut pour le chemin de **l'assistant**. « J'ai déjà les transformés… » est une action séparée
+    /// Vaut pour le chemin de **l'assistant**. « J'ai déjà les transformés… » est une action séparée
     /// ([ActionImportTransformes]) qui ne passe pas par cette inspection, donc jamais par ce libellé.
     static String libelleNommage(EtatNommage etat) {
         if (etat == null) {

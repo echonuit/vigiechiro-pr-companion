@@ -156,7 +156,7 @@ public class ServiceConditionsPassage {
     /// du passage. **Jamais bloquant** : [Optional#empty()] si le point n'a pas de GPS, si les
     /// horodatages sont illisibles, ou si le service est indisponible (hors-ligne).
     ///
-    /// ⚠️ **Opération réseau** : à appeler **hors du fil JavaFX** (l'IHM la lance en tâche de fond).
+    /// **Opération réseau** : à appeler **hors du fil JavaFX** (l'IHM la lance en tâche de fond).
     ///
     /// @param idPassage passage cible
     /// @return le relevé météo récupéré (grandeurs éventuellement partielles), ou vide

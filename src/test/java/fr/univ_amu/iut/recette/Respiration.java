@@ -21,7 +21,7 @@ import org.testfx.api.FxRobot;
 /// enregistrer un état. Une seconde en fait dix, ce qui suffit à un oeil qui sait déjà quoi chercher,
 /// et pas à un relecteur qui découvre.
 ///
-/// ⚠️ Ces arrêts ne coûtent qu'à une **séance filmée**. Hors tournage, [Seance#filmee()] est faux et
+/// Ces arrêts ne coûtent qu'à une **séance filmée**. Hors tournage, [Seance#filmee()] est faux et
 /// rien ne dort : la suite ordinaire ne paie pas la lisibilité des films.
 public final class Respiration {
 

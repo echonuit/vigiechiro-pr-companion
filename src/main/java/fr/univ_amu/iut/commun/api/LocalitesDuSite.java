@@ -16,7 +16,7 @@ import java.util.Optional;
 /// champ qu'on ne saurait pas relire serait effacé pour toutes les autres localités du site, qui
 /// appartiennent souvent à un autre observateur.
 ///
-/// ⚠️ **C'est le défaut du client officiel**, lu dans sa source : il reconstruit chaque localité à partir
+/// **C'est le défaut du client officiel**, lu dans sa source : il reconstruit chaque localité à partir
 /// de `nom`, `geometries` et `representatif`, et **perd `habitats`** - un champ que le schéma du backend
 /// porte pourtant. Mesuré sur 6 440 localités réparties dans la collection, aucun n'en portait
 /// aujourd'hui : le défaut est donc latent là-bas, et ce n'est pas une raison de le reproduire ici.
@@ -45,7 +45,7 @@ public record LocalitesDuSite(String etag, JsonArray brutes) {
 
     /// Vrai si une localité porte déjà ce nom : la plateforme impose leur unicité (`unique_field: nom`).
     ///
-    /// ⚠️ Question **strictement nominale**, et qui doit le rester. La déduire de [#localite(String)]
+    /// Question **strictement nominale**, et qui doit le rester. La déduire de [#localite(String)]
     /// serait un piège : une localité dont la géométrie est illisible rendrait `false` ici, on enverrait
     /// un doublon de nom, et la plateforme le refuserait pour une raison sans rapport avec la cause.
     public boolean contient(String nom) {
@@ -54,7 +54,7 @@ public record LocalitesDuSite(String etag, JsonArray brutes) {
 
     /// La localité de ce nom, **avec sa position**, si elle existe et qu'on sait la lire.
     ///
-    /// ⚠️ Le nom ne suffit pas à conclure que c'est le même point. Une localité homonyme peut être posée
+    /// Le nom ne suffit pas à conclure que c'est le même point. Une localité homonyme peut être posée
     /// **ailleurs**, et la confondre avec la nôtre serait grave : une participation nomme sa localité
     /// (`'point': {'type': 'string'}` au schéma des participations), donc toute nuit déposée sur ce point
     /// se rattacherait à la position distante, pas à la sienne.

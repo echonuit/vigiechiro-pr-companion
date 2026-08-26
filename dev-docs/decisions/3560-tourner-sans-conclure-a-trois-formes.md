@@ -58,7 +58,7 @@ Les deux dispositifs du lot tournent sur les PR. Une étape réservée à `main`
 avant sa fusion**, et peut donc être fusionnée cassée. Pour la mesure de durée, rien n'est écrit :
 rien n'exigeait de la réserver.
 
-### ⚠️ La garde de dépendances bloque aussi en local, contrairement à PMD et JaCoCo
+### La garde de dépendances bloque aussi en local, contrairement à PMD et JaCoCo
 
 Le dépôt tient un principe écrit : ces deux-là restent tolérants en build local nu, « la CI fait foi ».
 `failOnWarning` s'en écarte, délibérément, pour trois raisons :
@@ -103,5 +103,5 @@ n'éprouverait que lui-même. Le vrai dispositif est le build de la CI, exercé 
   d'analyse à zéro écart, `failOnWarning` actif.
 - `maven.yml` : job `duree-du-portail`, non bloquant, exercé par chaque PR.
 - `src/test/bats/scripts-ci.bats` : quatre cas, dont la série réelle du dépôt qui doit rester muette.
-- ⚠️ **Un seul script de CI sur onze est éprouvé.** Les dix autres rendent des jugements que rien ne
+- **Un seul script de CI sur onze est éprouvé.** Les dix autres rendent des jugements que rien ne
   vérifie, et deux pannes vécues sur l'un d'eux ne vivent qu'en commentaire. Consigné en #3661.

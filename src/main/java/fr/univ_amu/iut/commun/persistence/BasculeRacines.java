@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 /// dossiers venus de la sauvegarde, trois d'avant, et des `root_path` jamais réécrits - que rien ne
 /// décrivait.
 ///
-/// ⚠️ **Ce n'est pas de l'atomicité, et il ne faut pas le dire.** Basculer trois dossiers, ce sont
+/// **Ce n'est pas de l'atomicité, et il ne faut pas le dire.** Basculer trois dossiers, ce sont
 /// trois renommages. Ce qu'on gagne est de ramener la fenêtre d'une **copie complète** - des minutes,
 /// des gigaoctets - à une **suite de renommages**, des millisecondes ; et de rendre l'échec réparable
 /// plutôt que muet.
@@ -86,7 +86,7 @@ final class BasculeRacines {
     /// L'intention se garde, le moment change : on refuse **avant** d'avoir rien touché, ce qui rend
     /// le refus actionnable (code de sortie 2) au lieu d'être une panne au milieu du gué.
     ///
-    /// ⚠️ Supprimer ces fichiers en silence aurait été un effet de bord : restaurer ne doit pas
+    /// Supprimer ces fichiers en silence aurait été un effet de bord : restaurer ne doit pas
     /// devenir un moyen détourné d'effacer ce que l'utilisateur avait posé là.
     void refuserSiLaDestinationPorteAutreChose(EnAttente attente) {
         Path destination = attente.destination();
@@ -125,7 +125,7 @@ final class BasculeRacines {
                     .map(chemin -> racine.relativize(chemin).toString())
                     .collect(Collectors.toCollection(HashSet::new));
         } catch (UncheckedIOException parcours) {
-            // ⚠️ `Files.walk` n'annonce pas l'échec de parcours en `IOException` : il l'enveloppe dans
+            // `Files.walk` n'annonce pas l'échec de parcours en `IOException` : il l'enveloppe dans
             // une `UncheckedIOException` levée pendant l'itération, qui n'hérite pas d'`IOException` et
             // traverserait donc la signature déclarée - le diagnostic de l'appelant ne s'appliquerait
             // jamais (#3632). On la ramène au type annoncé.

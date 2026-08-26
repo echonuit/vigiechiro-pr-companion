@@ -76,7 +76,7 @@ class ParcoursMultisiteVersPassageE2ETest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        // ⚠️ 900, et non 1280 : c'est `TailleOuverture.LARGEUR_MINIMALE`, le plancher que l'application
+        // 900, et non 1280 : c'est `TailleOuverture.LARGEUR_MINIMALE`, le plancher que l'application
         // s'autorise et la largeur à laquelle les runners tournent réellement - l'écran headless étant
         // plus petit que la scène demandée, la fenêtre y est rabattue. Déclarer 1280 ne le donnait pas :
         // cela rendait seulement le défaut INTERMITTENT, selon que le rabattement s'appliquait ou non.
@@ -189,7 +189,7 @@ class ParcoursMultisiteVersPassageE2ETest {
     /// peut lever `FxRobotException` (« returned no nodes ») avant même le premier essai. On attend donc
     /// que la cellule soit effectivement interrogeable avant de cliquer, à chaque essai.
     ///
-    /// ⚠️ **Épuiser les essais lève, au lieu de rendre la main.** Le helper abandonnait en **silence**
+    /// **Épuiser les essais lève, au lieu de rendre la main.** Le helper abandonnait en **silence**
     /// après trois tentatives : l'appelant asserta alors `vueCourante`, et l'échec se présentait comme
     /// « attendu passage, obtenu multisite » - un bug de navigation apparent, là où le robot n'avait
     /// simplement pas abouti. Deux échecs de cette classe ont été lus ainsi (#3823).
@@ -200,12 +200,12 @@ class ParcoursMultisiteVersPassageE2ETest {
         TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
         for (int essai = 1; essai <= 3; essai++) {
             try {
-                // ⚠️ Attendre ce que le clic EXIGE, et non la simple présence du nœud (#3906, jumeau de
+                // Attendre ce que le clic EXIGE, et non la simple présence du nœud (#3906, jumeau de
                 // #3836). `doubleClickOn` filtre par `NodeQueryUtils.isVisible()`, qui demande en plus
                 // que le nœud **intersecte le rectangle de la scène** - une cellule déjà dans le graphe
                 // mais encore hors cadre passait donc cette attente, et le clic échouait.
                 //
-                // ⚠️ Attendre le bon prédicat ne suffisait pas : l'attente expirait sans que la cellule
+                // Attendre le bon prédicat ne suffisait pas : l'attente expirait sans que la cellule
                 // entre jamais dans le cadre (#3932). Il faut donc l'y AMENER, et c'est le point de
                 // détail qui a coûté un essai : le défilement n'est pas celui du chrome.
                 amenerLaColonneDate(robot, table);
@@ -216,7 +216,7 @@ class ParcoursMultisiteVersPassageE2ETest {
             } catch (AssertionError | TimeoutException reessai) {
                 // Cellule pas encore rendue ou navigation pas encore aboutie : on retente.
                 //
-                // ⚠️ `AssertionError` est rattrapée parce qu'`attendreCliquable` lève cela, et non une
+                // `AssertionError` est rattrapée parce qu'`attendreCliquable` lève cela, et non une
                 // `TimeoutException` : elle joint son rapport d'état à l'expiration. Ne rattraper que
                 // la seconde ferait sortir la première du premier coup, et cette boucle de reprise
                 // n'aurait plus que l'apparence d'une reprise. Aucune autre assertion ne vit dans ce
@@ -258,7 +258,7 @@ class ParcoursMultisiteVersPassageE2ETest {
     /// même conclusion que #3925, qui avait d'abord été prise pour un défaut produit avant d'être
     /// fermée.
     ///
-    /// ⚠️ Mais **pas le même défilement**. Le premier correctif essayé ici passait le port
+    /// Mais **pas le même défilement**. Le premier correctif essayé ici passait le port
     /// `DefilementChrome` (#1486) à [AttenteAvantClic#attendreCliquable], comme #3929 l'a fait pour
     /// l'accueil : **il n'a rien changé**, et l'échec s'est reproduit à l'identique. Le chrome fait
     /// défiler *sa* zone centrale ; une colonne hors cadre vit dans le viewport **interne** de la

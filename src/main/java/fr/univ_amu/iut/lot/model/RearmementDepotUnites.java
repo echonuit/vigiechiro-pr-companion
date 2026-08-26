@@ -12,7 +12,7 @@ import java.util.Objects;
 /// cet événement pouvait lever la cause. Un contenu refusé (400 / 422) reste refusé, parce que rien
 /// dans une reconnexion ne le change.
 ///
-/// ⚠️ C'est ce filtre qui distingue ce réarmement d'un « forcer la reprise ». Réarmer tout ramènerait
+/// C'est ce filtre qui distingue ce réarmement d'un « forcer la reprise ». Réarmer tout ramènerait
 /// exactement le bouton que #3687 vient de faire taire : celui qui promet une reprise vouée à échouer.
 public final class RearmementDepotUnites implements RearmementDepot {
 

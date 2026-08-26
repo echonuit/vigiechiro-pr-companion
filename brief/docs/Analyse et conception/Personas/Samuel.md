@@ -50,7 +50,7 @@ L'écosystème **logiciel** autour du PR est en revanche encore rudimentaire : p
 
 ## Ce qu'il attend de l'application
 
-> ⚠️ Cette liste a été reconstituée à partir du profil de Samuel et de sa publication 2025.
+> Cette liste a été reconstituée à partir du profil de Samuel et de sa publication 2025.
 
 - Un **format d'export propre, documenté, reproductible** : si on relance l'export, on doit obtenir le même fichier au bit près.
 - L'**intégrité totale** des annotations : aucune action de l'application ne doit modifier ou écraser les validations sans consentement explicite.

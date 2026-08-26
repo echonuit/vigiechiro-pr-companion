@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 /// `CompteRenduChiffreImportTest` asserte le titre complet « Import terminé - nuit du 22/04/2026 »,
 /// qui traverse cette méthode. Le vérifier une seconde fois n'apprendrait rien.
 ///
-/// ⚠️ Ce sont les **branches défensives** qui manquaient, et une mesure de mutation l'a dit : à la
+/// Ce sont les **branches défensives** qui manquaient, et une mesure de mutation l'a dit : à la
 /// clôture des suites, `dateSeule` ligne 74 - le `return dateIso` du `catch` - ressortait
 /// `NO_COVERAGE`, y compris après élargissement du ciblage. J'avais écrit un repli pour une donnée
 /// abîmée sans jamais l'exercer.

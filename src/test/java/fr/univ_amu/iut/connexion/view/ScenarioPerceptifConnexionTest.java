@@ -47,7 +47,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// qui se replace, elle voit un contenu correct une fois posé. C'est pourquoi ils portent
 /// `jugement = HUMAIN` : le verdict revient à qui regarde le clip.
 ///
-/// ## ⚠️ Pourquoi l'exécuteur asynchrone, alors que les tests emploient le synchrone
+/// ## Pourquoi l'exécuteur asynchrone, alors que les tests emploient le synchrone
 ///
 /// `S1-27` porte sur un **transitoire** : la zone de progression paraît seule, et le bandeau n'arrive
 /// qu'à la fin. Avec l'exécuteur synchrone que `@ImplementedBy` donne par défaut aux tests, la
@@ -57,12 +57,12 @@ import org.testfx.util.WaitForAsyncUtils;
 /// C'est l'exact contraire du besoin des captures, qui exigent le synchrone pour ne pas photographier
 /// un « Chargement… ». Ici, ce chargement **est** le sujet.
 ///
-/// ⚠️ L'assertion de jeu n'est pas décorative. Un scénario qui n'assert rien du tout **échouerait en
+/// L'assertion de jeu n'est pas décorative. Un scénario qui n'assert rien du tout **échouerait en
 /// silence** : robot mort, clip noir, et le contrôle de couverture du montage n'y verrait qu'une
 /// fenêtre de moins - ce qui est parfaitement légitime pour un test sans interface. `HUMAIN` dit qui
 /// rend le verdict, pas qu'on ne vérifie rien.
 ///
-/// ## ⚠️ Pourquoi la modale n'est PAS ouverte dans le `@Start`
+/// ## Pourquoi la modale n'est PAS ouverte dans le `@Start`
 ///
 /// [ConnexionModaleViewTest] la montre dans son `@Start`, ce qui est juste pour asserter un état.
 /// Ici ce serait fatal : les repères de la séance filmée sont posés **autour du test**, si bien que
@@ -75,13 +75,13 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
 class ScenarioPerceptifConnexionTest {
 
-    /// ⚠️ Une LATENCE simulée, et non un temps d'arrêt. La récupération doit prendre du temps, sans
+    /// Une LATENCE simulée, et non un temps d'arrêt. La récupération doit prendre du temps, sans
     /// quoi la zone de progression paraîtrait et disparaîtrait entre deux images : il n'y aurait
     /// rien à voir. Elle vit ici, et non dans [Respiration], parce qu'elle décrit ce que
     /// l'application FAIT et non ce que le film montre.
     /// La fenêtre de l'application, plus PETITE que l'écran du banc (1280x900).
     ///
-    /// ⚠️ Elle valait d'abord 1280x860, soit la largeur exacte de l'écran. Avec ses décorations, la
+    /// Elle valait d'abord 1280x860, soit la largeur exacte de l'écran. Avec ses décorations, la
     /// fenêtre débordait alors, et la modale ouverte par-dessus atterrissait en (0,0), barre de
     /// titre hors champ - sur le clip PUBLIÉ, alors qu'elle se centrait en local.
     ///
@@ -118,7 +118,7 @@ class ScenarioPerceptifConnexionTest {
 
         injector = BancDeRecette.surLeChrome()
                 .taille(LARGEUR, HAUTEUR)
-                // ⚠️ ASYNCHRONE, celui de la production. Le transitoire de S1-27 n'existe que hors du fil
+                // ASYNCHRONE, celui de la production. Le transitoire de S1-27 n'existe que hors du fil
                 // JavaFX : en synchrone, la récupération bloque le fil, aucune image n'est rendue pendant
                 // ce temps, et il n'y aurait rien à filmer. C'est l'exact contraire du besoin des
                 // captures (#3242), qui exigent le synchrone pour ne pas photographier un « Chargement… ».
@@ -190,7 +190,7 @@ class ScenarioPerceptifConnexionTest {
 
     /// Ouvre la modale comme un utilisateur : le menu ☰, puis l'entrée qui la nomme.
     ///
-    /// ⚠️ La version précédente appelait `ActionConnexion.executer(fenetre)` directement. C'était le
+    /// La version précédente appelait `ActionConnexion.executer(fenetre)` directement. C'était le
     /// bon chemin de code, et un mauvais film : la modale paraissait sans qu'aucun geste ne
     /// l'explique. Retour de la revue : « on ne comprend pas comment on arrive sur la modale ».
     ///
@@ -198,7 +198,7 @@ class ScenarioPerceptifConnexionTest {
     /// menu et le laisse voir ; le clic sur l'entrée l'ouvre. Ce sont deux gestes, et le film les
     /// montre tous les deux.
     ///
-    /// ⚠️ On clique l'entrée par son LIBELLÉ, tel que `NavigationConnexion.libelleMenu()` le rend
+    /// On clique l'entrée par son LIBELLÉ, tel que `NavigationConnexion.libelleMenu()` le rend
     /// pour un profil absent. Le viser par sa position dans le menu se casserait au premier ajout
     /// d'entrée, sans que le film le dise - il montrerait un autre écran s'ouvrir.
     private void ouvrirLaModaleParLeMenu(FxRobot robot) throws TimeoutException {

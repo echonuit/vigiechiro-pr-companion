@@ -180,7 +180,7 @@ class ContratApiVigieChiroLiveTest {
                 .map(site -> site.get("_id") + " · " + site.get("titre"))
                 .toList();
 
-        // ⚠️ La RÉPONSE de la sonde s'imprime, elle ne s'assère pas : sa valeur dépend du compte, et exiger
+        // La RÉPONSE de la sonde s'imprime, elle ne s'assère pas : sa valeur dépend du compte, et exiger
         // une liste non vide rendrait rouge un compte qui n'a simplement aucun carré neuf. Ce qui s'assère
         // ci-dessous est le CONTRAT : l'endpoint répond, et ses items portent de quoi construire l'union.
         System.out.printf(
@@ -276,7 +276,7 @@ class ContratApiVigieChiroLiveTest {
                 .as("état reconnu parmi les 5 valeurs du backend (participations.py:73)")
                 .isIn((Object[]) EtatTraitement.values());
 
-        // ⚠️ Ne PAS exiger `date_planification` : le serveur **remplace** tout le sous-document
+        // Ne PAS exiger `date_planification` : le serveur **remplace** tout le sous-document
         // `traitement` à chaque étape (`p_resource.update(id, {'traitement': …})`), il ne le complète pas.
         // Dès qu'un worker démarre, le bloc devient {etat, date_debut} et la date de planification
         // **disparaît**. Constaté en réel sur la participation canonique (FINI, sans date_planification) :
@@ -529,7 +529,7 @@ class ContratApiVigieChiroLiveTest {
 
     /// Identifiant d'un protocole, qu'Eve l'ait **embarqué** ou laissé en référence nue.
     ///
-    /// ⚠️ Le premier jet de cette sonde comparait `String.valueOf(...)` à un identifiant : sur
+    /// Le premier jet de cette sonde comparait `String.valueOf(...)` à un identifiant : sur
     /// `GET /moi`, `protocole` est un **objet embarqué**, si bien que la comparaison portait sur le
     /// `toString()` d'une Map et rendait toujours faux. La sonde a rougi, et **ce n'était pas le fait
     /// qu'elle mesurait** : c'était elle. Vérifier le dispositif avant de lire son verdict, y compris
@@ -544,7 +544,7 @@ class ContratApiVigieChiroLiveTest {
     @DisplayName("#3694 : la précondition du push point→site (validé sur le protocole du site) est"
             + " lisible, et c'est tout ce qui s'éprouve sans risque")
     void precondition_du_push_point_vers_site() {
-        // ⚠️ Cette sonde REMPLACE `probe_patch_site_localites`, qui visait `PATCH /sites/{id}` et en
+        // Cette sonde REMPLACE `probe_patch_site_localites`, qui visait `PATCH /sites/{id}` et en
         // concluait « push point→site abandonné ». Sa mesure était juste - 403 - et sa conclusion fausse :
         // le portail passe par `PUT /sites/{id}/localites`, une AUTRE route, à la politique d'accès
         // différente. Un dispositif qui vise à côté et conclut fermement referme une piste ouverte ; celui

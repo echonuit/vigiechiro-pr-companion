@@ -21,7 +21,7 @@ Une PR est restée bloquée **4 h 15** sur l'étape « Aligner la police systèm
 Le miroir du runner ne répondait plus, apt basculait sur l'archive amont, et le job n'avait aucun
 `timeout-minutes` : GitHub laisse courir **six heures**.
 
-⚠️ L'étape était en `-qq`. Aucune ligne de log ne disait ce qui traînait.
+L'étape était en `-qq`. Aucune ligne de log ne disait ce qui traînait.
 
 Un butoir avait pourtant été posé sur `banc-filme` (#3883), avec le raisonnement exact : *« un garde
 qui peut bloquer indéfiniment est pire qu'un garde qui échoue : il ne dit rien, et il retient tout le
@@ -52,13 +52,13 @@ manquerait.
 
 ## Conséquences
 
-⚠️ **Un butoir rend la panne visible et bornée ; il ne la corrige pas.** Sitôt posé, il a montré que
+**Un butoir rend la panne visible et bornée ; il ne la corrige pas.** Sitôt posé, il a montré que
 trois étapes de trois workflows pendaient sur le même `apt-get update` - ce que personne ne voyait,
 parce qu'elles portaient des noms parlant d'autre chose : « Aligner la police système », « Installer
 de quoi afficher et filmer », « E2E CLI (bats) sur le fat-jar ». Lu de loin, le rouge accusait le code
 de la PR. C'est ce qui a conduit à [ADR 4034](4034-les-paquets-passent-par-une-porte.md).
 
-⚠️ **Un dépassement se présente en `cancelled`, pas en `failure`.** Un filtre de surveillance qui ne
+**Un dépassement se présente en `cancelled`, pas en `failure`.** Un filtre de surveillance qui ne
 regarde que les échecs ne verra jamais un job qui pend.
 
 ## Ce que cette garde ne dit PAS

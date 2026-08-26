@@ -47,7 +47,7 @@ import javafx.stage.Stage;
 ///
 /// ## Ce qu'il ne fait pas
 ///
-/// ⚠️ **« Pas de surcharge » ne veut pas dire « synchrone ».** `RacineInjecteur` lie l'exécuteur de
+/// **« Pas de surcharge » ne veut pas dire « synchrone ».** `RacineInjecteur` lie l'exécuteur de
 /// PRODUCTION, donc l'asynchrone : une classe qui ne surchargeait rien tournait en asynchrone. La
 /// migration de trois classes a posé SYNCHRONE par erreur en lisant « exécuteur par défaut » dans un
 /// inventaire, et trois cas ont rougi en « Not on FX application thread ». C'est une raison de plus
@@ -108,7 +108,7 @@ public final class BancDeRecette {
 
     /// Ce qu'un scénario écrit avant que l'écran ne s'ouvre.
     ///
-    /// ⚠️ Il peut **lever** : un semis qui pose des fichiers de nuit fait des entrées/sorties, et un
+    /// Il peut **lever** : un semis qui pose des fichiers de nuit fait des entrées/sorties, et un
     /// `Consumer` l'aurait obligé à emballer son exception dans une non vérifiée - c'est-à-dire à cacher
     /// ce que le banc doit laisser remonter. Constaté à la migration de `ScenarioPerceptifRefusDepotTest`.
     @FunctionalInterface
@@ -145,7 +145,7 @@ public final class BancDeRecette {
 
     /// Les données que ce scénario suppose, écrites après les migrations.
     ///
-    /// ⚠️ Le semis reçoit **l'injecteur en paramètre**, et doit s'en servir : le champ que
+    /// Le semis reçoit **l'injecteur en paramètre**, et doit s'en servir : le champ que
     /// [#montrer(Stage)] rendra n'est pas encore affecté quand le semis tourne. Une méthode de semis
     /// migrée telle quelle, qui lisait un champ `injector`, part en `NullPointerException` - c'est
     /// arrivé à la première classe migrée.
@@ -156,10 +156,10 @@ public final class BancDeRecette {
 
     /// Enregistre une connexion, **comme la modale de connexion le ferait**.
     ///
-    /// ⚠️ Posée AVANT le chargement du chrome : c'est à la construction du menu que
+    /// Posée AVANT le chargement du chrome : c'est à la construction du menu que
     /// `NavigationConnexion.libelleMenu()` est lu, et une connexion posée après laisserait l'entrée
     /// afficher « Se connecter à Vigie-Chiro… » pendant que la scène joue un utilisateur connecté.
-    /// ⚠️ **Factice veut dire factice**, y compris pendant un tournage connecté : le banc lie sa propre
+    /// **Factice veut dire factice**, y compris pendant un tournage connecté : le banc lie sa propre
     /// source de jeton et ignore celui du processus (cf. [#montrer(Stage)]).
     public BancDeRecette connecte(String id, String pseudo, String role) {
         if (surLaPlateforme) {
@@ -227,7 +227,7 @@ public final class BancDeRecette {
     /// bouchonnés, et s'en écarter rendait leur pendant connecté illisible - une modale qui se connecte
     /// toute seule ne montre pas ce qui l'a connectée.
     ///
-    /// ⚠️ Le jeton **paraît donc à l'écran**, et le clip est publié. C'est assumé : il est révoqué en
+    /// Le jeton **paraît donc à l'écran**, et le clip est publié. C'est assumé : il est révoqué en
     /// fin de run (#4305), et un jeton mort n'est pas un secret. La publication n'a d'ailleurs lieu que
     /// si la révocation a **confirmé** son retrait, sans quoi l'hypothèse « il est mort » ne serait
     /// qu'un espoir.
@@ -277,7 +277,7 @@ public final class BancDeRecette {
                         .in(Singleton.class);
             }
         });
-        // ⚠️ Le banc LIE SA PROPRE SOURCE DE JETON, et c'est la figure de l'ADR 4134 d'un cran plus
+        // Le banc LIE SA PROPRE SOURCE DE JETON, et c'est la figure de l'ADR 4134 d'un cran plus
         // haut : là c'était la fenêtre primaire de TestFX, ici c'est l'environnement du processus.
         //
         // `ConnexionModule` lie `() -> jetonPonctuel().or(stockage::token)`, où le jeton ponctuel -
@@ -296,7 +296,7 @@ public final class BancDeRecette {
             }
         });
 
-        // ⚠️ Et il lie AUSSI son client, pour la même raison un champ plus loin (#4332).
+        // Et il lie AUSSI son client, pour la même raison un champ plus loin (#4332).
         //
         // `ConnexionModule#fournirClient` prend son URL dans `vigiechiro.url`, sinon `VIGIECHIRO_URL`.
         // Un scénario qui ne remplace pas son client - huit des treize, mesuré - parlait donc à ce que
@@ -305,7 +305,7 @@ public final class BancDeRecette {
         // déjà employé par les outils de capture : les réponses deviennent `Injoignable`, ce qui est le
         // comportement juste d'un scénario qui n'a déclaré aucun serveur.
         //
-        // ⚠️ SAUF pour un scénario connecté, qui garde le câblage de production - c'est-à-dire l'URL
+        // SAUF pour un scénario connecté, qui garde le câblage de production - c'est-à-dire l'URL
         // ambiante, qu'il a précisément demandée. Ne rien lier est ici plus juste que lier la valeur par
         // défaut : le tournage connecté déclare `VIGIECHIRO_URL`, et un jour un serveur de recette.
         if (!surLaPlateforme) {
@@ -318,7 +318,7 @@ public final class BancDeRecette {
             });
         }
 
-        // ⚠️ DEUX surcharges emboîtées, et non une liste à plat : le banc surcharge la production, puis
+        // DEUX surcharges emboîtées, et non une liste à plat : le banc surcharge la production, puis
         // le scénario surcharge le banc. À plat, les cinq scénarios qui lient déjà `ClientVigieChiro`
         // entreraient en collision avec la liaison ci-dessus, et Guice refuserait le doublon.
         Module socleDuBanc = Modules.override(RacineInjecteur.modules()).with(surcharges);

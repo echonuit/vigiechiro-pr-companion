@@ -24,7 +24,7 @@ import picocli.CommandLine.Command;
 /// Cette commande **n'a jamais existé** : la frapper répond « Commande inconnue ». Le conseil menait
 /// donc droit dans une erreur, sur trois commandes réseau qui lèvent ce besoin.
 ///
-/// ⚠️ **Pourquoi aucun garde ne l'a vu.** Le test `bats` qui exerce ce chemin affirmait
+/// **Pourquoi aucun garde ne l'a vu.** Le test `bats` qui exerce ce chemin affirmait
 /// `[[ "${output}" == *"jeton"* ]]` : il vérifiait un **mot**, pas un geste. La phrase fausse contenait
 /// le mot, donc le garde était vert.
 ///

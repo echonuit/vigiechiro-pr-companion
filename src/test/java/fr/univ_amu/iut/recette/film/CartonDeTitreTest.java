@@ -25,7 +25,7 @@ class CartonDeTitreTest {
     private static final String LIBELLE =
             "La modale de connexion s'ouvre sans saut visuel et rend la saisie au premier champ";
 
-    /// ⚠️ La police du PRODUIT, la même que celle dont `CartonDeTitre` se sert. Ce test mesurait avec
+    /// La police du PRODUIT, la même que celle dont `CartonDeTitre` se sert. Ce test mesurait avec
     /// une police **logique** : il était donc d'accord avec le code quelle que soit la police que la
     /// machine servait, et il n'a pas vu le carton se rendre en serif pendant tout le chantier (#4241).
     private static FontMetrics metrique() {

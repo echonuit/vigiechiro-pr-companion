@@ -5,12 +5,12 @@
 # l'exécution, brancher le train de publication - dépendent toutes du chiffre qu'il produit, et les
 # décider avant de l'avoir serait décider sans savoir.
 #
-# ⚠️ Il était manuel au départ, délibérément : un `schedule` posé avant le tri aurait rougi dès sa
+# Il était manuel au départ, délibérément : un `schedule` posé avant le tri aurait rougi dès sa
 # première nuit sur du bruit de fixture, et un dispositif qui commence par du bruit devient un onglet
 # qu'on ferme. Les onze échecs relevés à l'étape 1 sont corrigés, donc il se programme (#3526).
 name: Suite complète sous Windows et macOS
 
-# ⚠️ Le titre du run porte le **marqueur** que la veille du train lit (`veille-plateformes.sh`). Il
+# Le titre du run porte le **marqueur** que la veille du train lit (`veille-plateformes.sh`). Il
 # distingue un passage complet d'un passage ciblé, ce que l'API des runs ne permet pas autrement :
 # elle ne rend pas les entrées d'un `workflow_dispatch`.
 #
@@ -28,7 +28,7 @@ run-name: >-
       || format('[ciblé] {0}', inputs.classes) }}
 
 on:
-  # ⚠️ Le MARDI, la veille du train du mercredi 6 h. La preuve est ainsi fraîche de moins de 24 h **au
+  # Le MARDI, la veille du train du mercredi 6 h. La preuve est ainsi fraîche de moins de 24 h **au
   # moment précis où elle sert de condition** - et non « quotidienne » comme l'issue le proposait
   # d'abord : chaque passage coûte ~1 h 40 de machine (48 min par plateforme), et une preuve d'hier ne
   # vaut pas mieux qu'une preuve d'avant-hier si le train ne part que le lendemain.
@@ -64,7 +64,7 @@ permissions:
   contents: read
 
 jobs:
-  # ⚠️ La matrice se calcule, elle ne se filtre pas. Un `if:` sur les étapes laisserait le job démarrer
+  # La matrice se calcule, elle ne se filtre pas. Un `if:` sur les étapes laisserait le job démarrer
   # pour ne rien faire - une machine allumée, un artefact vide, et une pastille verte qui ne dit pas si
   # la plateforme a été éprouvée ou seulement visitée.
   choisir:
@@ -105,9 +105,9 @@ jobs:
           check-latest: false
           cache: maven
 
-      # ⚠️ `failure.ignore` : on veut le DÉNOMBREMENT, pas le premier échec. Sans lui la suite
+      # `failure.ignore` : on veut le DÉNOMBREMENT, pas le premier échec. Sans lui la suite
       # s'arrête et ne rend qu'une moitié de compte rendu, c'est-à-dire aucun.
-      # ⚠️ `-Dtest=` seulement quand des classes sont demandées : passer `-Dtest=` vide ne veut pas dire
+      # `-Dtest=` seulement quand des classes sont demandées : passer `-Dtest=` vide ne veut pas dire
       # « tout » pour surefire, il n'exécute alors plus rien. Le DÉFAUT reste la suite entière - c'est
       # lui que l'étape 3 de #3526 programmera, et une valeur par défaut qui rétrécit sans le dire
       # serait la pire des économies.

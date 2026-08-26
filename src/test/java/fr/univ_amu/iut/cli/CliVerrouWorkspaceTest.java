@@ -24,7 +24,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// **une IHM et une CLI**, ou une restauration pendant un import ». L'application graphique réserve le
 /// dossier pour toute sa durée ; la CLI ne le demandait jamais, et écrivait donc par-dessus.
 ///
-/// ⚠️ Le verrou est **réentrant dans un processus** (`DETENUS`) : le prendre ici par
+/// Le verrou est **réentrant dans un processus** (`DETENUS`) : le prendre ici par
 /// `VerrouWorkspace.prendre` rendrait celui de la CLI factice, et le test ne prouverait rien. On pose
 /// donc le verrou de fichier **brut**, ce que la CLI verra comme un chevauchement - exactement ce
 /// qu'elle voit quand une autre instance le détient.
@@ -58,7 +58,7 @@ class CliVerrouWorkspaceTest {
     @Test
     @DisplayName("une commande qui écrit est refusée quand le dossier est déjà occupé")
     void une_commande_d_ecriture_est_refusee_sur_un_dossier_occupe() throws IOException {
-        // ⚠️ La base doit exister ET être à jour AVANT de verrouiller. Sur un workspace neuf, la
+        // La base doit exister ET être à jour AVANT de verrouiller. Sur un workspace neuf, la
         // migration est en attente et prend le verrou d'elle-même : le refus viendrait d'elle, pas de
         // la commande, et le test passerait au vert sans rien prouver du défaut.
         cli.executer(new String[] {"lister-sites"}, sortie, erreur);

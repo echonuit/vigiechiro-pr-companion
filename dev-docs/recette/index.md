@@ -21,14 +21,14 @@ valider). Règle d'unicité : un écran est déroulé **en entier** dans **une s
 ailleurs il n'est qu'écran de transit (seule la fluidité de la transition est notée). La base de recette
 **vit d'une session à l'autre**.
 
-⚠️ **Ce tableau est le seul inventaire des sessions**, état compris. Il ne se recopie nulle part, pas
+**Ce tableau est le seul inventaire des sessions**, état compris. Il ne se recopie nulle part, pas
 même plus bas dans cette page : c'est ainsi que « les huit sessions existent » a survécu à l'arrivée
 de la neuvième et de la dixième (#3885). Un test le confronte au dossier dans les deux sens
 (`InventaireDesSessionsTest`).
 
 | # | Session (~1 h) | État | Écrans propriétaires |
 |---|---|---|---|
-| S1 | [Premier contact](sessions/s1-premier-contact.md) (base vierge, connexion, déclarer un site) | **jouée** ⚠️ | accueil (dont le **bandeau de compteurs vivant**, #1376), Connexion, Mes sites, carré, Point |
+| S1 | [Premier contact](sessions/s1-premier-contact.md) (base vierge, connexion, déclarer un site) | **jouée** | accueil (dont le **bandeau de compteurs vivant**, #1376), Connexion, Mes sites, carré, Point |
 | S2 | [Importer une nuit](sessions/s2-importer.md) (carte SD vers le pivot) | **jouée** | importation (+ cas dégradés), Rattachement, passage, diagnostic |
 | S3 | [Vérifier](sessions/s3-verifier.md) (pré-check + écoute + verdict) | à **rejouer au delta** | qualification (+ raccourcis clavier) |
 | S4 | [Déposer et suivre](sessions/s4-deposer-suivre.md) (lot, dépôt réel, suivi) | écrite, **à jouer** | lot |
@@ -40,7 +40,7 @@ de la neuvième et de la dixième (#3885). Un test le confronte au dossier dans 
 | S10 | [Le poste Windows](sessions/s10-le-poste-windows.md) (verrou du dossier de travail, couleur en console) | écrite, **à jouer** | aucun : comportements de **plateforme** |
 | S11 | [La commande sur un poste Linux](sessions/s11-la-commande-sur-un-poste-linux.md) (`.deb`, Flatpak, AppImage) | écrite, **à jouer** (#4071) | aucun : ce qui se joue est l'**exposition** de la commande et l'entrée de menu, hors de l'application |
 
-⚠️ **« Jouée » se dit de la session telle qu'elle était.** S1 porte **huit cases écrites après sa
+**« Jouée » se dit de la session telle qu'elle était.** S1 porte **huit cases écrites après sa
 dernière exécution** - S1-30 à S1-33 (#3458) et S1-34 à S1-37 (#3806), dont une perceptive : elles
 n'ont **jamais** été exercées à la main. Une session ne se re-marque pas « à jouer » pour autant, mais
 la campagne suivante doit savoir par où reprendre, faute de quoi une capacité passe pour vérifiée par
@@ -85,7 +85,7 @@ Une case est dans l'une de **trois** situations. Les réduire à deux fabrique u
 | **Perceptif** | un humain, en regardant | la case porte la marque `*perceptif*`, posée en passe 6 |
 | **Non couvert** | personne | ni l'une, ni l'autre |
 
-⚠️ Le deuxième état n'est **pas** une couverture, et c'est tout l'enjeu. Un scénario qui *joue* un cas
+Le deuxième état n'est **pas** une couverture, et c'est tout l'enjeu. Un scénario qui *joue* un cas
 perceptif le cite comme n'importe quel test - c'est le seul lien vers le script - si bien que sans
 distinction il gonflerait le compte des couverts d'un cas que **personne n'a regardé**. Un tel
 scénario se déclare donc `@CasDeRecette(value = "S1-26", jugement = HUMAIN, portee = A_L_ECRAN)`.
@@ -110,7 +110,7 @@ devient muet sur son propre objet, ce qui est pire parce qu'on le regarde en cro
 `HORS_APPLICATION`, et elle doit **figurer sur la page du clip**. Une réserve qui ne vit que dans le code
 ne borne rien : personne ne lit une annotation en regardant une vidéo.
 
-⚠️ Un seul cas cité porte aujourd'hui `HORS_APPLICATION` : **S1-04**, « ouvrir le site sur la
+Un seul cas cité porte aujourd'hui `HORS_APPLICATION` : **S1-04**, « ouvrir le site sur la
 plateforme », dont le geste se termine dans un navigateur que le clip ne peut pas montrer. Sa réserve le
 dit, sur la page du clip. Le reste est à l'écran, et ce n'est pas un hasard : ce qui a été couvert
 jusqu'ici est précisément ce qui se filme sans réserve. Les quelque 220 cas dont le verdict est hors de
@@ -154,7 +154,7 @@ cas** : on saute à l'extrait plutôt que de regarder trente minutes.
 .github/scripts/lance-test-filme.sh --planche                 # tout ce qui cite un cas
 ```
 
-⚠️ **L'index dit par quel moyen chaque cas s'audite**, et c'est ce qui l'empêche d'inviter à cocher
+**L'index dit par quel moyen chaque cas s'audite**, et c'est ce qui l'empêche d'inviter à cocher
 n'importe quoi : « en regardant » quand quelque chose a paru à l'écran, « en lisant le test » quand
 rien n'a paru. Un test de ViewModel cite des cas et n'ouvre aucune fenêtre - son clip est noir, et
 c'est le résultat **juste**.
@@ -162,7 +162,7 @@ c'est le résultat **juste**.
 Le mode d'emploi et les pièges du banc vivent dans
 [CI/CD](../ci-cd-release.md#un-runner-qui-execute-nest-pas-un-runner-qui-pilote-3710).
 
-⚠️ **Le clip ne rend pas le verdict, il le rend possible.** Filmer une application cassée produit une
+**Le clip ne rend pas le verdict, il le rend possible.** Filmer une application cassée produit une
 vidéo parfaitement valide : ce qui fait foi reste l'assertion pour un cas asserté, et le **regard
 d'un humain** pour un cas perceptif.
 
@@ -270,12 +270,12 @@ Pour **revalider** aux jalons suivants sans tout re-piloter à la main, on rejou
   liste et leur état sont dans le tableau de la section « Le déroulé d'une campagne », en tête de
   cette page, et **nulle part ailleurs**.
 
-    ⚠️ **Cet inventaire est la seule source.** Il a été recopié ailleurs - dans le cycle de chantier et
+    **Cet inventaire est la seule source.** Il a été recopié ailleurs - dans le cycle de chantier et
     dans `CONTRIBUTING.md` - et les trois copies ont divergé en **quelques heures** : S7 a été écrite
     (#3517) le jour même où les deux autres affirmaient qu'elle n'existait pas. Les renvois pointent
     désormais ici plutôt que de répéter la liste.
 
-    ⚠️ Et cette page s'était recopiée **elle-même** : ce paragraphe énumérait les sessions et leur
+    Et cette page s'était recopiée **elle-même** : ce paragraphe énumérait les sessions et leur
     état, en s'arrêtant à huit alors que le tableau en portait dix. Un avertissement qui ne surveille
     que l'extérieur ne voit pas le doublon qu'il abrite. La liste a donc été **supprimée d'ici**
     plutôt que corrigée - on ne garde pas un doublon, on le retire (#3885).

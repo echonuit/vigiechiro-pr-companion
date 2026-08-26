@@ -12,7 +12,7 @@
   tableau portait douze champs @FXML (la table et ses onze colonnes) sur trente-neuf.
   Voir dev-docs/decisions/2745-une-vue-riche-se-decoupe-en-sous-vues.md.
 
-  ⚠️ L'inclusion garde le fx:id `panneauTableau` : la barre du bas replie ce panneau (#328, #370), le
+  L'inclusion garde le fx:id `panneauTableau` : la barre du bas replie ce panneau (#328, #370), le
   parent a donc besoin du nœud autant que du controller.
 -->
 <VBox xmlns="http://javafx.com/javafx"

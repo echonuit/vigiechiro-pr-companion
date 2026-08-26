@@ -20,7 +20,7 @@ import java.util.Optional;
 /// les sorties `--json` (#3990), contrats de script où l'ISO est attendue.
 public final class Horodatage {
 
-    /// ⚠️ Locale **explicite**, alors que le motif est purement numérique et n'en aurait presque jamais
+    /// Locale **explicite**, alors que le motif est purement numérique et n'en aurait presque jamais
     /// besoin. « Presque jamais » est exactement la formule qui a produit la police système de #3773 et
     /// la couleur ANSI de #3738 : le dépôt épingle déjà locale et fuseau pour ses captures, pour que
     /// l'aperçu montre le produit et non la machine.
@@ -33,7 +33,7 @@ public final class Horodatage {
     /// La **date seule**, pour un titre ou une phrase qui parle d'une nuit et non d'un instant
     /// (#3950). « nuit du 22/04/2026 ».
     ///
-    /// ⚠️ Elle ne remplace pas [#dansUnTableau] dans une **colonne** de date. Ces colonnes rendent une
+    /// Elle ne remplace pas [#dansUnTableau] dans une **colonne** de date. Ces colonnes rendent une
     /// chaîne ISO venue de la base, et une colonne de chaînes trie **lexicalement** : l'ISO est le seul
     /// format où ce tri reste chronologique. Les convertir demande un comparateur, et un filtre qui
     /// cherche dans le texte affiché suivrait. C'est un autre travail, délibérément hors de #3950.
@@ -88,7 +88,7 @@ public final class Horodatage {
 
     /// « 03/07/2026 21:00 » - l'instant de la plateforme, lisible, dans le fuseau du site.
     ///
-    /// ⚠️ Rend la chaîne **telle quelle** quand elle est illisible, plutôt qu'un vide : une donnée
+    /// Rend la chaîne **telle quelle** quand elle est illisible, plutôt qu'un vide : une donnée
     /// abîmée doit se voir, et un affichage qui l'escamote se présenterait en succès.
     public static String heureMuraleLisible(String borne, ZoneId fuseau) {
         if (borne == null || borne.isBlank()) {
@@ -99,7 +99,7 @@ public final class Horodatage {
 
     /// « 03/07/2026 » - la **date** de l'instant que la plateforme renvoie, lue dans le fuseau du site.
     ///
-    /// ⚠️ Convertir **puis** couper, et non l'inverse. Couper d'abord donne un jour faux dès que le
+    /// Convertir **puis** couper, et non l'inverse. Couper d'abord donne un jour faux dès que le
     /// décalage traverse minuit, et c'est le défaut de #4017 : `2026-07-03T23:30:00Z` est une nuit du
     /// **4** à Paris, la troncature annonçait le 3.
     public static String dateMuraleLisible(String borne, ZoneId fuseau) {
@@ -118,7 +118,7 @@ public final class Horodatage {
 
     /// « 03/07/2026 21:00 » - pour une **colonne**, où le « à » alourdit sans rien apprendre.
     ///
-    /// ⚠️ Et pour tout ce qui doit **s'aligner** sur une colonne vue ailleurs. Le refus du verrou de
+    /// Et pour tout ce qui doit **s'aligner** sur une colonne vue ailleurs. Le refus du verrou de
     /// workspace l'emploie bien qu'il vive dans une phrase : #3640 l'avait délibérément aligné sur la
     /// table de choix d'une sauvegarde, « deux écrans plus loin ». Le nom seul ne suffisait pas à le
     /// deviner - c'est son test qui l'a rappelé, en rougissant.

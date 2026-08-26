@@ -72,10 +72,10 @@ jobs:
       # arbitraire est celle où les deux coïncident, c'est-à-dire une machine dont la police système
       # EST celle que l'application déclare.
       #
-      # ⚠️ Ce n'est pas un correctif du produit : chez un utilisateur dont le système résout `System`
+      # Ce n'est pas un correctif du produit : chez un utilisateur dont le système résout `System`
       # autrement, ce contrôle reste plus large de 4 px. Le sujet est suivi en #3417.
       - name: Cache des paquets APT (fonts-noto-core, imagemagick)
-        # ⚠️ Le seul levier qui reste quand l'hébergeur ralentit : ne pas retélécharger. Les
+        # Le seul levier qui reste quand l'hébergeur ralentit : ne pas retélécharger. Les
         # runners traînent AVANT de bloquer, donc la panne est en amont ; borner et reprendre
         # évite de pendre, cela ne fait pas descendre 91 Mo plus vite.
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -87,7 +87,7 @@ jobs:
         env:
           APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: |
-          # ⚠️ Sans `-qq`, et avec des délais bornés. Cette ligne a pendu 4 h 15 : le miroir du
+          # Sans `-qq`, et avec des délais bornés. Cette ligne a pendu 4 h 15 : le miroir du
           # runner ne répondait plus, apt basculait sur l'archive amont, et `-qq` ne laissait AUCUNE
           # trace pour le dire. Un `Acquire::Retries` reprend les téléchargements coupés ; les délais
           # font échouer vite plutôt que traîner jusqu'au butoir du job.
@@ -134,12 +134,12 @@ jobs:
       - name: Montrer les écrans que cette PR change (#4119)
         # Uniquement sur une PR : sur `main`, c'est le commit d'aperçus qui montre le changement.
         #
-        # ⚠️ Ce pas ne juge RIEN et ne bloque rien. Un écran qui change est le résultat normal d'une PR
+        # Ce pas ne juge RIEN et ne bloque rien. Un écran qui change est le résultat normal d'une PR
         # qui touche l'interface ; ce qui manquait était de le MONTRER. Jusqu'ici, la liste des écrans
         # modifiés était calculée par le filtrage ci-dessus, puis jetée : le seul endroit où l'on voyait
         # un changement visuel était le commit `chore(captures)`, c'est-à-dire APRÈS la fusion.
         #
-        # ⚠️ Le filtrage du bruit doit avoir eu lieu AVANT : sans lui, les aperçus de carte
+        # Le filtrage du bruit doit avoir eu lieu AVANT : sans lui, les aperçus de carte
         # apparaîtraient à chaque fois, et une vraie régression deviendrait indiscernable du bruit de
         # tuiles - jusqu'à 23,8 % d'une image (cf. `filtrer-bruit-cartes.sh`).
         if: github.event_name == 'pull_request'

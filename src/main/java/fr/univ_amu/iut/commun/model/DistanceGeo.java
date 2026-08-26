@@ -19,7 +19,7 @@ public final class DistanceGeo {
     /// déclarait deux points identiques pendant que la publication les disait distincts - et
     /// réciproquement selon la latitude. L'utilisateur aurait lu les deux verdicts sur le même écran.
     ///
-    /// ⚠️ **Le degré n'est pas une unité de distance** : `1e-4` degré de longitude vaut ~11 m à
+    /// **Le degré n'est pas une unité de distance** : `1e-4` degré de longitude vaut ~11 m à
     /// l'équateur, ~7,8 m à 45° N et ~5,6 m à 60° N. Une tolérance exprimée ainsi se resserre à mesure
     /// qu'on monte vers le nord, sans que personne ne l'ait décidé. La comparaison passe donc par
     /// [#metresEntre], qui ne varie pas.

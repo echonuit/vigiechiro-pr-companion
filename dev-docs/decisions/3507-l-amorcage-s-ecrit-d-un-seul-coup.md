@@ -40,7 +40,7 @@ piloter l'ordonnanceur. Le garde vérifie donc que ces fichiers **passent par** 
 c'est-à-dire la seule chose qui soit vérifiable de l'extérieur. `SecretsEcritsProtegesTest` porte une
 seconde liste pour cela, à côté de celle des secrets.
 
-⚠️ C'est un garde de **moyen**, pas de fin. Il est assumé comme tel : le moyen est ici la seule preuve
+C'est un garde de **moyen**, pas de fin. Il est assumé comme tel : le moyen est ici la seule preuve
 accessible, et l'absence de preuve directe ne vaut pas dispense de garde.
 
 ### Le détour par un flux d'octets n'est pas une lourdeur
@@ -53,7 +53,7 @@ accentué venu** - un dossier « Données », un utilisateur « Benoît ».
 Le rendu obtenu par le flux est purement **ASCII**, donc identique en UTF-8 : il traverse
 `EcritureAtomique`, qui travaille sur du texte, sans rien perdre.
 
-⚠️ Un lecteur futur trouvera ce détour inutilement compliqué et voudra le simplifier. C'est
+Un lecteur futur trouvera ce détour inutilement compliqué et voudra le simplifier. C'est
 précisément pourquoi cette ADR existe : la simplification est silencieuse à l'écriture et ne se
 manifeste qu'à la relecture, sur un poste dont le nom d'utilisateur porte un accent.
 

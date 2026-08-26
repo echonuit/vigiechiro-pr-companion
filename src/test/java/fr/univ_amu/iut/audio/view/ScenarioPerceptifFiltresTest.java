@@ -93,7 +93,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// se distingue à l'œil d'une valeur ordinaire, à taille d'écran habituelle, est un jugement d'humain
 /// et pas une assertion sur une classe de style. D'où `Jugement.HUMAIN`.
 ///
-/// ⚠️ Les assertions ne sont pas décoratives pour autant. Un scénario qui n'assert rien échouerait en
+/// Les assertions ne sont pas décoratives pour autant. Un scénario qui n'assert rien échouerait en
 /// **silence** : robot mort, clip noir, et le contrôle de couverture du montage n'y verrait qu'une
 /// fenêtre de moins.
 ///
@@ -137,7 +137,7 @@ class ScenarioPerceptifFiltresTest {
                         ligne(3, 12, "Barbar", "Barbastelle d'Europe", LIEU_A_REVOIR, StatutObservation.NON_TOUCHEE),
                         ligne(4, 13, "Pippip", "Pipistrelle commune", LIEU_A_REVOIR, StatutObservation.NON_TOUCHEE)));
         DepotVues depotVues = mock(DepotVues.class);
-        // ⚠️ Une vue enregistrée qui référence un lieu ABSENT des données. C'est l'état de `S6-28` :
+        // Une vue enregistrée qui référence un lieu ABSENT des données. C'est l'état de `S6-28` :
         // rejouer une vue dont une valeur a disparu doit faire paraître le bandeau, et la phrase doit
         // nommer la valeur manquante. Le carré est inventé pour cette raison précise, et c'est écrit
         // ici pour qu'on ne le « corrige » pas en croyant à une coquille.
@@ -213,7 +213,7 @@ class ScenarioPerceptifFiltresTest {
         Parent vue = loader.load();
         SonsValidationController controleur = loader.getController();
         controleur.ouvrirSur(new SourceObservations.References("u-1"));
-        // ⚠️ `Habillage.scene`, et non `new Scene` : c'est lui qui embarque la typographie du produit.
+        // `Habillage.scene`, et non `new Scene` : c'est lui qui embarque la typographie du produit.
         // Un clip tourné sans lui montrerait l'application dans une police qu'elle n'a jamais.
         FenetreDuBanc.poser(stage, vue, 1000, 700);
         FenetreDuBanc.afficher(stage);
@@ -255,7 +255,7 @@ class ScenarioPerceptifFiltresTest {
         Respiration.leTempsDeLire(robot);
         replier(robot, especes);
 
-        // ⚠️ « Statut » filtre DÈS SON AJOUT, et c'est voulu : il s'ouvre présélectionné sur « à revoir »
+        // « Statut » filtre DÈS SON AJOUT, et c'est voulu : il s'ouvre présélectionné sur « à revoir »
         // (ADR 3099). C'est justement ce qui resserre le domaine de l'autre critère sans qu'on ait rien
         // d'autre à faire, donc ce qui rend ce cas-ci observable.
         ajouterLaPuce(robot, "Statut");
@@ -281,7 +281,7 @@ class ScenarioPerceptifFiltresTest {
     @CasDeRecette(value = "S6-27", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S6-27 · une valeur cochée devenue impossible reste cochée : à regarder, elle se distingue")
     void une_valeur_cochee_devenue_impossible_se_distingue(FxRobot robot) {
-        // ⚠️ « Lieu » est le SEUL critère à cocher de cet écran ; les autres sont des listes déroulantes,
+        // « Lieu » est le SEUL critère à cocher de cet écran ; les autres sont des listes déroulantes,
         // où une valeur devenue impossible n'aurait pas de case à garder. Mesuré en faisant dire à
         // l'écran, puce par puce, quel contrôle il pose - et non déduit du nom des critères.
         ajouterLaPuce(robot, "Lieu");
@@ -305,7 +305,7 @@ class ScenarioPerceptifFiltresTest {
         assertThat(valeurs(lieux))
                 .as("elle reste visible, sans quoi on ne saurait pas pourquoi la table est vide")
                 .contains(lieuCoche);
-        // ⚠️ L'assertion qui porte le cas, et qui manquait. Les deux ci-dessus sont vraies d'une valeur
+        // L'assertion qui porte le cas, et qui manquait. Les deux ci-dessus sont vraies d'une valeur
         // qui n'est JAMAIS devenue impossible : mutées sur le lieu qui reste dans le jeu, elles
         // passaient toutes les deux. Le cas ne vérifiait donc pas ce que son nom annonce.
         //
@@ -369,7 +369,7 @@ class ScenarioPerceptifFiltresTest {
                 .as("la phrase nomme la vue rejouée et la valeur qui manque")
                 .contains(VUE_ENREGISTREE)
                 .contains(LIEU_DISPARU);
-        // ⚠️ « sans jargon ni clé technique » : la clé de sérialisation du critère n'a rien à faire
+        // « sans jargon ni clé technique » : la clé de sérialisation du critère n'a rien à faire
         // dans une phrase lue par un utilisateur. C'est la moitié du cas, et sans cette assertion il
         // resterait vert sur « la vue Mes carrés a été rejouée sans lieu=649999 ».
         assertThat(phrase.getText())
@@ -445,7 +445,7 @@ class ScenarioPerceptifFiltresTest {
 
     /// Ajoute une puce comme un utilisateur : le bouton « + Filtre », puis l'entrée qui la nomme.
     ///
-    /// ⚠️ La première version faisait `itemParLibelle(...).fire()`, et je l'avais choisi exprès pour
+    /// La première version faisait `itemParLibelle(...).fire()`, et je l'avais choisi exprès pour
     /// ne pas dépendre de l'endroit où le système pose la fenêtre du menu. Ce raisonnement servait la
     /// robustesse du test et DÉTRUISAIT le film : les puces apparaissaient seules, sans qu'aucun
     /// geste ne les explique. Retour de la revue de `S1-26`, qui vaut pour ces cinq cas aussi.
@@ -460,7 +460,7 @@ class ScenarioPerceptifFiltresTest {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
-    /// ⚠️ On déroule par `show()` et non par un clic. Une liste déroulante s'affiche dans une **fenêtre
+    /// On déroule par `show()` et non par un clic. Une liste déroulante s'affiche dans une **fenêtre
     /// à part** ; TestFX sait cliquer sur le contrôle, mais la position des entrées dépend alors de
     /// l'endroit où le système a posé cette fenêtre. `show()` déroule la même liste sans en dépendre.
     /// Déroule une liste par un CLIC, pour que le film montre le geste.

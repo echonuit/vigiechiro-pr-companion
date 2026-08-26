@@ -9,7 +9,7 @@ decided_at: 2026-08-24
 verification: probable
 enforced_by:
   - "scripts/adr/4366-avertissement-en-pictogramme.py"
-ratchet: 1798
+ratchet: 0
 inv_key: cliquet-pictogramme
 verified:
   - by: machine:suspects
@@ -70,7 +70,7 @@ Toutes disent la même chose : effacer y serait falsifier.
   libellés commençaient par un ⚠ » parle du caractère, il ne s'en sert pas pour alerter. L'effacer
   ne raccourcirait pas la phrase, il la rendrait fausse.
 
-Le garde en retient **<!--inv:cliquet-pictogramme-->1 798<!--/inv-->**. Le reste est du contenu
+Le garde en retient **<!--inv:cliquet-pictogramme-->0<!--/inv-->**. Le reste est du contenu
 montré, des blocs de code, des messages émis par le programme ou le caractère cité, et il ne les
 compte pas. Le cliquet a ouvert à 1 539 ; il descend au fil des tranches que d'autres chantiers
 résorbent.

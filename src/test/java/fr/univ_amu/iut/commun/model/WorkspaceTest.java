@@ -72,7 +72,7 @@ class WorkspaceTest {
     void base_deplacee() {
         Workspace deplace = new Workspace(Path.of("relatif/ws"), Path.of("/coffre/vigiechiro.db"));
 
-        // ⚠️ `.toAbsolutePath()` des deux côtés : sous Windows, `Path.of("/coffre")` n'a **pas de
+        // `.toAbsolutePath()` des deux côtés : sous Windows, `Path.of("/coffre")` n'a **pas de
         // lettre de lecteur** alors que le chemin résolu par la production en a une (`D:\coffre`). Les
         // deux formes ne sont donc pas comparables, et ce n'est pas une affaire de séparateur (#3526).
         assertThat(deplace.cheminBaseDeDonnees())

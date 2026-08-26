@@ -116,7 +116,7 @@ public class ConnexionModaleController {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
-        // ⚠️ Exigé, et non optionnel : cette modale ne s'ouvre que là où `ConnexionModule` est chargé,
+        // Exigé, et non optionnel : cette modale ne s'ouvre que là où `ConnexionModule` est chargé,
         // donc là où le reflet existe. Un `ifPresent` silencieux rendrait l'application muette sur
         // l'arrivée du jeton (#4205) sans que rien ne rougisse - un signal partiel est pire que pas
         // de signal.
@@ -139,7 +139,7 @@ public class ConnexionModaleController {
         // l'arrivée du bandeau - ce que l'utilisateur voit comme un sursaut, et qu'aucune capture ne
         // montre : elle photographie un état stabilisé, jamais le chemin pour y arriver.
         Modales.suivreLaCroissance(racine, bandeauStatut.managedProperty(), zoneProgression.managedProperty());
-        // ⚠️ C'est d'ICI que le reste de l'application apprend qu'un jeton est arrivé, ou parti
+        // C'est d'ICI que le reste de l'application apprend qu'un jeton est arrivé, ou parti
         // (#4205). Cette modale est le seul endroit de l'IHM où le jeton stocké change, et
         // `jetonEnregistre` bouge à chaque `rafraichir()` : un branchement, un seul, plutôt qu'un
         // rappel à recopier dans les cinq chemins qui rafraîchissent (connexion, échec, refus,

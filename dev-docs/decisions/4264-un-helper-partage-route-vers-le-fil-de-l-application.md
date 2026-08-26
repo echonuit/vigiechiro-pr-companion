@@ -45,7 +45,7 @@ fichier dont le corps en contient un** - c'est ainsi que le `surLeFilFx` de `Cad
 un. Une lecture est en règle si elle est dans une région routée, ou si le nom de la méthode qui la
 contient est cité dans une région.
 
-⚠️ **Ce garde a été faux deux fois avant d'être juste**, et les deux erreurs valent d'être connues
+**Ce garde a été faux deux fois avant d'être juste**, et les deux erreurs valent d'être connues
 parce qu'elles se reproduiront ailleurs :
 
 1. **Vert sans rien inspecter.** Il filtrait sur un chemin déjà amputé de son préfixe

@@ -158,7 +158,7 @@ public final class GestionnaireFiltres<T> {
     /// utilisateur : p. ex. le multisite filtre par le carré **cliqué sur la carte** (#152/#476). Sans
     /// effet si `nom` n'appartient pas au catalogue des critères.
     ///
-    /// ⚠️ Une valeur que le critère **n'offre pas** est ignorée en silence : `restaurerValeurs` la rend,
+    /// Une valeur que le critère **n'offre pas** est ignorée en silence : `restaurerValeurs` la rend,
     /// et cet appel la jette. Aujourd'hui sans conséquence, son unique appelant visant un **champ
     /// libre**, qui accepte tout. Cela cesserait d'être vrai le jour où l'on poserait une valeur sur un
     /// critère à liste : la puce apparaîtrait vide, et comme rien de coché n'écarte rien, l'écran

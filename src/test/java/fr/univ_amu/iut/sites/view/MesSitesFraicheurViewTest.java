@@ -44,7 +44,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// ## Pourquoi renommer, et pas ajouter un point
 ///
-/// ⚠️ Ajouter un point **annonce** une mutation structurelle, donc `SuitLaRevision` suffirait à
+/// Ajouter un point **annonce** une mutation structurelle, donc `SuitLaRevision` suffirait à
 /// rafraîchir l'écran et ce test passerait **sans rien dire du retour**. C'est le piège que
 /// l'[ADR 3840](../../../../../../../dev-docs/decisions/3840-le-signal-et-le-retour-se-partagent-la-fraicheur.md)
 /// a nommé la veille : un fait tenu par un autre dispositif que celui qu'on croit.

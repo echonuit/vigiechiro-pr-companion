@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Garde-fou : un nom d'étape ou de job dit à l'écran ce qu'il écrit dans le fichier.
 #
-# ⚠️ En YAML, un `#` précédé d'une espace ouvre un commentaire, y compris au milieu d'un scalaire
+# En YAML, un `#` précédé d'une espace ouvre un commentaire, y compris au milieu d'un scalaire
 # non cité. Un nom d'étape écrit
 #
 #     - name: Auto-test des scripts ADR (bloquant, #2467)
@@ -10,7 +10,7 @@
 # ne voie quoi que ce soit. Six étapes de ce dépôt étaient dans ce cas (#4255), quatre dans
 # `lint.yml` et deux dans `maven.yml`.
 #
-# ⚠️ Ce qui rend le défaut durable : le fichier a raison. On relit le YAML, on y voit le numéro,
+# Ce qui rend le défaut durable : le fichier a raison. On relit le YAML, on y voit le numéro,
 # et on conclut que c'est l'interface qui coupe à l'affichage. Rien ne rougit, rien ne prévient, et
 # ce qu'on perd est précisément ce qui sert à retrouver POURQUOI une étape existe.
 #

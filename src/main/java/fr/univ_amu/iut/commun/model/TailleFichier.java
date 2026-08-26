@@ -17,7 +17,7 @@ import java.nio.file.Path;
 /// Sans ce port, le test du garde serait soit impossible, soit **conditionnel** - et un test qui
 /// s'abstient rend le même vert que celui qui s'exécute.
 ///
-/// ⚠️ Contrairement à [EspaceDisque], l'échec n'a **qu'une** lecture ici : il est toujours rapporté à
+/// Contrairement à [EspaceDisque], l'échec n'a **qu'une** lecture ici : il est toujours rapporté à
 /// l'appelant, jamais traduit en `0`. C'est tout l'objet de #3627 - un zéro venu d'un silence se
 /// confondait avec un fichier vide, et le garde en concluait qu'il y avait la place.
 @FunctionalInterface

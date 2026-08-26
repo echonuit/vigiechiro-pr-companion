@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 /// Contrôle du carré STOC (#733) : la plateforme est bouchonnée, on vérifie le **verdict** rendu et, avec
 /// lui, ce que l'observateur va lire.
 ///
-/// ⚠️ Depuis #1284, un retour `ReponseApi` non bouchonné vaut **`null`** : chaque cas stube explicitement.
+/// Depuis #1284, un retour `ReponseApi` non bouchonné vaut **`null`** : chaque cas stube explicitement.
 class ControleCarreStocTest {
 
     private static final String CARRE_DECLARE = "130711";

@@ -20,7 +20,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 ///
 /// ## Pourquoi cette classe ne cite plus `S1-13`
 ///
-/// ⚠️ **Aucune scène affichée** veut dire : rien à filmer. Le banc produisait pourtant deux clips pour
+/// **Aucune scène affichée** veut dire : rien à filmer. Le banc produisait pourtant deux clips pour
 /// ces deux tests, et c'étaient les plus vides du dépôt - 17 Ko chacun, contre 110 Ko à 1,3 Mo pour un
 /// clip qui montre quelque chose. La page de recette les annonçait avec un lecteur (#4149).
 ///
@@ -92,7 +92,7 @@ class ValidationFormulaireTest {
 
     /// Fait tourner le ramasse-miettes **pour de bon**.
     ///
-    /// ⚠️ `System.gc()` n'est qu'une **suggestion** : un test qui suppose qu'il a tourné ne prouve rien
+    /// `System.gc()` n'est qu'une **suggestion** : un test qui suppose qu'il a tourné ne prouve rien
     /// et passerait au vert sur le code défectueux. On pose donc un témoin faible et on insiste jusqu'à
     /// ce qu'il soit réellement collecté, puis on l'affirme.
     private static void forcerLeRamasseMiettes() {

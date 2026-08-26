@@ -22,7 +22,7 @@ public enum CauseRefus {
     /// 401 / 403 : jeton mort, droits S3 manquants, URL signée expirée. **Une reconnexion réussie peut
     /// lever cette cause** : ces unités se réarment.
     ///
-    /// ⚠️ C'est ici, et **seulement** ici, que la règle est écrite. Une méthode `leveeParUneReconnexion()`
+    /// C'est ici, et **seulement** ici, que la règle est écrite. Une méthode `leveeParUneReconnexion()`
     /// la disait aussi, et personne ne l'appelait : `RearmementDepotUnites` passe la constante en dur au
     /// DAO. Deux expressions d'une même règle, dont l'inerte **se lisait** comme l'autorité - un lecteur
     /// qui l'aurait modifiée aurait cru changer le comportement (#3961).
@@ -34,7 +34,7 @@ public enum CauseRefus {
 
     /// La cause d'un refus, ou `null` si la réponse n'est pas un refus définitif.
     ///
-    /// ⚠️ Un `429` ou un `5xx` **n'arrive pas ici** : `ReponseApi.estReessayable()` les juge rejouables,
+    /// Un `429` ou un `5xx` **n'arrive pas ici** : `ReponseApi.estReessayable()` les juge rejouables,
     /// donc l'unité n'est jamais marquée définitive et n'a pas de cause à porter.
     public static CauseRefus de(ReponseApi<?> reponse) {
         if (!(reponse instanceof ReponseApi.Refuse<?> refus) || reponse.estReessayable()) {

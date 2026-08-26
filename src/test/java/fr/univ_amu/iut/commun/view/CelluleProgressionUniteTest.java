@@ -23,7 +23,7 @@ import org.testfx.framework.junit5.Start;
 /// traite, icône et libellé sinon - et elle réagit **en place**, le travail amont pouvant être
 /// parallèle (#814).
 ///
-/// ⚠️ Ce qu'une absence de test laisse passer ici n'est pas un rendu faux : c'est une cellule qui
+/// Ce qu'une absence de test laisse passer ici n'est pas un rendu faux : c'est une cellule qui
 /// **cesse de suivre sa ligne**, ou qui suit **celle d'avant**. `TableView` recycle ses cellules ; sans
 /// le désabonnement de `updateItem`, une cellule réaffectée continue d'écouter la ligne qu'elle
 /// n'affiche plus. Rien à l'écran ne le dit tant que l'ancienne ligne ne bouge pas.

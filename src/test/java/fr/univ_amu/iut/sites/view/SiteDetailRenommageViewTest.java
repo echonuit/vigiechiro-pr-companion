@@ -46,7 +46,7 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class SiteDetailRenommageViewTest {
 
-    // ⚠️ Cette classe ne cite plus `S1-22`, et ce n'est pas un oubli.
+    // Cette classe ne cite plus `S1-22`, et ce n'est pas un oubli.
     // Elle remplaçait la modale d'édition par un double qui écrivait le nouveau numéro : le clip
     // montrait un clic sur « Modifier » puis un numéro qui change, sans qu'aucune modale ne paraisse
     // (#4174). Le cas est joué par `ScenarioFicheSiteTest`, où la vraie modale s'ouvre.
@@ -98,7 +98,7 @@ class SiteDetailRenommageViewTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injecteur::getInstance);
         Parent racine = loader.load();
-        // ⚠️ `Habillage` via `FenetreDuBanc` : ce cas est FILMÉ (#3773, #4149).
+        // `Habillage` via `FenetreDuBanc` : ce cas est FILMÉ (#3773, #4149).
         FenetreDuBanc.poser(stage, racine, 1180, 900);
         injecteur.getInstance(NavigationSites.class).ouvrirDetail(site);
         FenetreDuBanc.afficher(stage);

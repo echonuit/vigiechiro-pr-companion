@@ -32,7 +32,7 @@ fichier disparaît sans avoir été nommé.
 `restaurer` ne doit pas devenir un moyen détourné d'effacer ce qui traînait là. La bascule **refuse
 avant d'écrire** quand la destination porte quelque chose d'inconnu de la sauvegarde.
 
-⚠️ Le refus porte sur les **fichiers**, pas sur les dossiers : un dossier vide supplémentaire n'est pas
+Le refus porte sur les **fichiers**, pas sur les dossiers : un dossier vide supplémentaire n'est pas
 une donnée à protéger, et refuser dessus rendrait la restauration capricieuse pour rien.
 
 Ce cas a été découvert par un test qui **est passé au vert tout seul** : écrit pour vérifier autre
@@ -56,7 +56,7 @@ ramène le risque d'une copie de plusieurs minutes à une suite de renommages de
 millisecondes. Ce n'est **pas de l'atomicité**, et il ne faut pas le dire : basculer trois dossiers,
 ce sont trois renommages, et aucune astuce ne les rendra indivisibles.
 
-⚠️ Cette décision est celle qu'un lecteur futur défera le plus volontiers, parce qu'un journal se
+Cette décision est celle qu'un lecteur futur défera le plus volontiers, parce qu'un journal se
 conçoit facilement et que son absence ne laisse aucune trace dans le code. Elle est donc écrite ici,
 avec sa raison.
 

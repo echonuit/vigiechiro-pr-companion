@@ -65,7 +65,7 @@ class CompteRenduImportTest {
 
     /// La branche **multi-nuits**, que rien n'exerçait (#3991).
     ///
-    /// ⚠️ Une mesure de mutation de la clôture des suites a désigné `statutNuits` : ses deux lignes en
+    /// Une mesure de mutation de la clôture des suites a désigné `statutNuits` : ses deux lignes en
     /// `NO_COVERAGE`, y compris après élargissement du ciblage. Les cas ci-dessus couvraient le
     /// mono-nuit et les états ; le chemin d'un import **découpé** ne l'était pas, alors que c'est
     /// précisément celui que #3950 venait de modifier.

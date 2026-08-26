@@ -40,7 +40,7 @@ test, lui, est ce que la JVM sait **borner**. L'index fait la correspondance, et
 Les clips se taillent dans le **brut**, avant la coupe par luminance : sinon il faudrait propager le
 décalage qu'elle introduit, et l'oublier ne produirait pas de panne mais des extraits pris à côté.
 
-**3. ⚠️ Le contrôle porte sur la COUVERTURE, pas sur la clarté des clips.** Exiger qu'un clip soit
+**3. Le contrôle porte sur la COUVERTURE, pas sur la clarté des clips.** Exiger qu'un clip soit
 clair ferait rougir un test de ViewModel, qui cite des cas et n'ouvre légitimement aucune fenêtre :
 un garde qui crie sur du bon travail est un garde qu'on apprend à ignorer.
 
@@ -66,7 +66,7 @@ La première séance **réelle** a refusé un alignement pourtant correct : 16 %
 plages ne venaient alors que des tests cités, alors que `ConnexionModaleViewTest` compte dix tests
 dont trois annotés - les sept autres ouvrent aussi des fenêtres.
 
-⚠️ C'était **le travers que ce même contrôle évitait par ailleurs**, revenu par la fenêtre du
+C'était **le travers que ce même contrôle évitait par ailleurs**, revenu par la fenêtre du
 dénominateur. Aucun film fabriqué ne pouvait le montrer : l'auto-test fournissait un journal où tous
 les tests étaient cités.
 

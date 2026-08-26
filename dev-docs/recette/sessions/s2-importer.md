@@ -140,7 +140,7 @@ la lisibilité du bandeau qui se juge ici, pas la règle.
   réellement sur la plateforme (« Voir la participation » l'ouvre). #3448
 - **S2-60** · *geste: ce-que-l-import-annonce-connecte* · La même annonce dit **ce qu'il reste à faire** : « pensez à la compléter sur le portail (météo,
   matériel, commentaires) ». Sans cette suite, une création se lit comme une fiche terminée (#3473).
-  ⚠️ Numéro hors suite : les points 60 à 64 sont écrits, les renuméroter décalerait la section.
+  Numéro hors suite : les points 60 à 64 sont écrits, les renuméroter décalerait la section.
 - **S2-61** · *geste: ce-que-l-import-annonce-deconnecte* · 🔒 Déconnecté, importer : le compte rendu **ne prétend pas** avoir créé de participation.
 - **S2-62** · *geste: ce-que-le-rattachement-annonce-des-renommages* · Rattacher une nuit dont des séquences doivent être renommées : le compte rendu **chiffre** les
   séquences renommées. #3449

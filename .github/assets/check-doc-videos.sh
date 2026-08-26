@@ -8,7 +8,7 @@
 # EST dans le banc (`parcours_connu`), et c'est elle qu'on interroge. Un film qui
 # survivrait au renommage de son parcours serait sinon publié indéfiniment.
 #
-# ⚠️ Ce qu'il ne vérifie PAS, et il faut le savoir : qu'un parcours connu du banc ait
+# Ce qu'il ne vérifie PAS, et il faut le savoir : qu'un parcours connu du banc ait
 # son film. Tourner demande un serveur d'affichage, openbox et une carte montée ;
 # l'exiger de toute PR qui ajoute un scénario coûterait plus qu'il ne rapporte. Ce
 # garde attrape la référence morte et le film orphelin, pas la publication en retard.
@@ -20,7 +20,7 @@ ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Mode --site : vérifie que les chemins RÉSOLVENT dans le site construit.
 #
-# ⚠️ Pourquoi ce mode existe. La première version de ce garde vérifiait que le film existait dans
+# Pourquoi ce mode existe. La première version de ce garde vérifiait que le film existait dans
 # .github/assets/ - et elle est restée VERTE pendant que le site était cassé. MkDocs ne réécrit pas
 # les chemins du HTML brut, seulement ceux du Markdown : un `<source src="../assets/...">` reste
 # littéral et pointe un cran trop haut. La page rendait un lecteur vidéo vide, sans une erreur.
@@ -110,7 +110,7 @@ BANC
     : > "$bac/.github/assets/parcours-declarer-un-carre.mp4"
     verifie 0 "un film référencé et présent est accepté"
 
-    # ⚠️ Le cas qui porte ce garde : un film dont le parcours n'existe plus.
+    # Le cas qui porte ce garde : un film dont le parcours n'existe plus.
     : > "$bac/.github/assets/parcours-ancien-nom.mp4"
     verifie 1 "un film ORPHELIN de son parcours est refusé"
     rm "$bac/.github/assets/parcours-ancien-nom.mp4"
@@ -138,7 +138,7 @@ BANC
     printf '<video><source src="../../assets/parcours/parcours-declarer-un-carre.mp4"></video>\n' \
         > "$bac/site/ecrans/sites/index.html"
     verifie_site 0 "un chemin qui RÉSOUT est accepté"
-    # ⚠️ LE cas : c'est ce chemin-là qui a été livré, et le garde d'alors le laissait passer.
+    # LE cas : c'est ce chemin-là qui a été livré, et le garde d'alors le laissait passer.
     printf '<video><source src="../assets/parcours/parcours-declarer-un-carre.mp4"></video>\n' \
         > "$bac/site/ecrans/sites/index.html"
     verifie_site 1 "un chemin d un cran trop haut est refusé"

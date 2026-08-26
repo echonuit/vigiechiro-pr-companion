@@ -185,7 +185,7 @@ final class CorrespondanceParticipation {
     /// (ex. `Fri, 04 Jul 2026 19:00:00 GMT`). Eve refuse l'ISO 8601 en entrée (vérifié en réel) et
     /// stocke en UTC.
     ///
-    /// ⚠️ Le fuseau vient de [FuseauDuSite], pas de `ZoneId.systemDefault()`. Ces heures sont produites
+    /// Le fuseau vient de [FuseauDuSite], pas de `ZoneId.systemDefault()`. Ces heures sont produites
     /// par l'enregistreur **posé sur le site**, pas par la personne qui dépouille : les convertir avec
     /// le fuseau du poste faisait partir un instant différent selon la machine - `19:00 GMT` depuis
     /// Paris, `21:00 GMT` depuis un poste en UTC, et depuis Cayenne un **changement de date** (#3406).

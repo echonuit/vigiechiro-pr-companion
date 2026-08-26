@@ -34,7 +34,7 @@ Ce que la vérification a montré dépasse le manque de garde, et c'est la vraie
 restaurait en mode dégradé sans que personne ne l'ait décidé. L'absence de manifeste voulait dire deux
 choses opposées, et rien ne les distinguait.
 
-⚠️ L'[ADR 3514](3514-restaurer-n-efface-pas-ce-que-la-sauvegarde-ignore.md) avait pourtant tranché le
+L'[ADR 3514](3514-restaurer-n-efface-pas-ce-que-la-sauvegarde-ignore.md) avait pourtant tranché le
 cas voisin : un manifeste **présent mais abîmé** est un refus explicite. Le manifeste **absent** n'avait
 jamais été interrogé.
 
@@ -70,6 +70,6 @@ dispositif inopérant sans que rien ne le signale.
 - La mesure d'un dossier vient d'`ArborescenceFichiers.octets`, remontée depuis `InventaireSauvegardes`
   où elle était privée. Une seconde implémentation aurait été la **huitième** variante du même parcours
   d'arborescence dans ce dépôt (#3574).
-- ⚠️ Le garde d'espace n'a **pas** de test `bats` : il dépend de la place réellement libre, que le
+- Le garde d'espace n'a **pas** de test `bats` : il dépend de la place réellement libre, que le
   harnais ne peut pas contraindre, et injecter un faux espace par propriété système serait une porte
   dérobée en production. Le renommage, lui, y est éprouvé.

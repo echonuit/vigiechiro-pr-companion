@@ -74,7 +74,7 @@ class MainViewTest {
         injector = BancDeRecette.surLeChrome()
                 .taille(1180, 900)
                 .executeur(BancDeRecette.Executeur.ASYNCHRONE)
-                // ⚠️ `ActionRestaurer` en singleton, POUR LE BANC SEULEMENT. Sans cela l'injecteur en
+                // `ActionRestaurer` en singleton, POUR LE BANC SEULEMENT. Sans cela l'injecteur en
                 // rend une instance neuve à chaque demande - mesuré - et les dialogues bouchonnés par le
                 // test s'appliquent à un jetable pendant que le menu en garde un autre : le clic
                 // ouvrirait alors le sélecteur natif, qui fige le banc. La portée est le seul écart avec
@@ -130,11 +130,11 @@ class MainViewTest {
                 .findFirst()
                 .orElseThrow();
 
-        // ⚠️ Le menu s'OUVRE avant qu'on choisisse. `fire()` sur l'entrée saute cette moitié : l'écran
+        // Le menu s'OUVRE avant qu'on choisisse. `fire()` sur l'entrée saute cette moitié : l'écran
         // changeait sans que rien ne l'explique, et le clip ne montrait pas d'où venait le geste (#4149).
         Respiration.avantLeGeste(robot);
 
-        // ⚠️ Le pointeur VA sur l'entrée et s'y arrête avant de cliquer (#4177). Remplacer `fire()` par
+        // Le pointeur VA sur l'entrée et s'y arrête avant de cliquer (#4177). Remplacer `fire()` par
         // un vrai clic (#4158) était nécessaire et pas suffisant : `clickOn(libellé)` téléporte le
         // pointeur et clique dans la foulée, le menu se referme, et l'instant du choix n'existe sur
         // aucune trame. Mesuré en extrayant les images autour du clic.
@@ -160,7 +160,7 @@ class MainViewTest {
                 .extracting(Label::getText)
                 .containsExactlyInAnyOrder("Collecte & passages", "Espèces & biodiversité");
 
-        // ⚠️ Ce cas fait juger un REGROUPEMENT : il ne se lit qu'en voyant les deux titres, chacun à
+        // Ce cas fait juger un REGROUPEMENT : il ne se lit qu'en voyant les deux titres, chacun à
         // l'image et assez longtemps pour être lu. Le clip précédent traversait cet écran en une
         // fraction de seconde - « ne s'arrête pas assez longtemps pour qu'on voie ce qu'il montre »
         // (#4149).
@@ -179,7 +179,7 @@ class MainViewTest {
     @CasDeRecette(value = "S1-03", portee = Portee.A_L_ECRAN)
     @DisplayName("Le fil d'Ariane reflète le parcours ; cliquer un ancêtre y ramène")
     void fil_ariane_reflete_le_parcours(FxRobot robot) throws TimeoutException {
-        // ⚠️ De VRAIS écrans, atteints par des CLICS. Ce test naviguait sur deux `Group` vides : il
+        // De VRAIS écrans, atteints par des CLICS. Ce test naviguait sur deux `Group` vides : il
         // prouvait le câblage du fil d'Ariane - c'est légitime - mais son clip montrait un fil au-dessus
         // d'un écran BLANC. Le produit qu'il filmait n'existait pas, d'où « incompréhensible » (#4149),
         // et aucun temps d'arrêt n'y aurait rien changé.
@@ -187,7 +187,7 @@ class MainViewTest {
         Respiration.leTempsDeLire(robot);
 
         robot.clickOn(carteDAccueil(robot, "Mes sites"));
-        // ⚠️ L'écran « Mes sites » se peuple par l'exécuteur ASYNCHRONE du vrai injecteur : au retour du
+        // L'écran « Mes sites » se peuple par l'exécuteur ASYNCHRONE du vrai injecteur : au retour du
         // clic il ne porte encore que son voile d'occupation. `waitForFxEvents` vide la file du fil FX,
         // il n'attend pas le thread qui la remplira - on attend donc la carte elle-même.
         WaitForAsyncUtils.waitFor(
@@ -239,7 +239,7 @@ class MainViewTest {
             navigateur.afficher(new Group(), "site-detail", "Carré 640380");
         });
 
-        // ⚠️ On PRESSE les touches, on ne lance pas le `Runnable` de l'accélérateur. Lancer le
+        // On PRESSE les touches, on ne lance pas le `Runnable` de l'accélérateur. Lancer le
         // `Runnable` prouve que le `Runnable` fait son travail ; presser prouve que le raccourci est
         // CÂBLÉ, ce qui est la question. Et sans frappe réelle, aucun `KeyEvent` n'atteint la scène,
         // donc le calque des gestes n'a rien à dessiner et le clip ne montre pas le raccourci (#4242).
@@ -281,7 +281,7 @@ class MainViewTest {
                 .isFalse();
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ Une absence NE SE VOIT PAS. Un arrêt sur un accueil sans bandeau montre un accueil, et rien
+        // Une absence NE SE VOIT PAS. Un arrêt sur un accueil sans bandeau montre un accueil, et rien
         // ne dit ce qu'on est censé ne pas y voir (#4149). Elle se lit par CONTRASTE : on donne à la
         // base de quoi remplir le bandeau, puis on le lui retire.
         //
@@ -328,7 +328,7 @@ class MainViewTest {
     @DisplayName("#1405 : les compteurs suivent une RESTAURATION, sans qu'on ait quitté l'accueil")
     void bandeau_suit_une_restauration_sans_navigation(FxRobot robot, @TempDir Path sauvegardes)
             throws TimeoutException {
-        // ⚠️ Ce cas n'est PAS celui de S1-09, et la nuance décide de son existence. Là-bas, la
+        // Ce cas n'est PAS celui de S1-09, et la nuance décide de son existence. Là-bas, la
         // mutation est un `creerSite`, qui annonce lui-même sa révision. Ici, la base ENTIÈRE est
         // remplacée par le contenu d'un fichier : c'est un tout autre chemin, et rien ne garantit a
         // priori qu'il emprunte le même canal d'annonce. S'il ne l'empruntait pas, les compteurs
@@ -353,7 +353,7 @@ class MainViewTest {
         // L'état de repos, avant le geste : sans lui on ne peut pas dire que quelque chose a changé.
         Respiration.avantLeGeste(robot);
 
-        // ⚠️ Le geste RÉEL, par le menu. Le test appelait `sauvegarde.restaurer(fichier)` : le clip
+        // Le geste RÉEL, par le menu. Le test appelait `sauvegarde.restaurer(fichier)` : le clip
         // montrait un bandeau qui se vide puis se remplit sans aucune cause visible, ce qu'un
         // spectateur attentif prend pour un défaut du produit (#4158).
         //
@@ -366,7 +366,7 @@ class MainViewTest {
         dialogues.confirmateur().definir(message -> true);
         dialogues.notificateur().definir((niveau, entete, message) -> {});
 
-        // ⚠️ Le pointeur s'arrête SUR l'entrée avant de cliquer (#4177) : sans quoi le clip montre le
+        // Le pointeur s'arrête SUR l'entrée avant de cliquer (#4177) : sans quoi le clip montre le
         // menu, puis les compteurs qui changent, et jamais ce qui a été choisi entre les deux.
         GesteVisible.choisir(robot, "#menuOutils", entree.libelle());
         Respiration.surLeMomentCle(robot);
@@ -392,7 +392,7 @@ class MainViewTest {
         // Le geste réel de #1376 : la connexion s'ouvre PAR-DESSUS l'accueil et sa synchronisation
         // importe des sites. On ne quitte pas l'accueil, et on n'y revient pas : c'est précisément
         // l'aller-retour de `bandeau_affiche_compteurs_apres_donnees` qui masquait le défaut.
-        // ⚠️ On ne poste PAS le signal à la main ici. `creerSite` l'émet lui-même, et c'est ce maillon
+        // On ne poste PAS le signal à la main ici. `creerSite` l'émet lui-même, et c'est ce maillon
         // que ce test doit tenir : avec une annonce explicite en plus, il resterait vert même si le
         // service cessait d'annoncer, c'est-à-dire précisément quand le défaut #1376 reviendrait.
         robot.interact(() -> {
@@ -434,7 +434,7 @@ class MainViewTest {
 
         TextField champ = robot.lookup("#champRecherche").queryAs(TextField.class);
 
-        // ⚠️ Le focus est REMIS AILLEURS d'abord, et sans cela ce test ne prouvait rien : mesuré,
+        // Le focus est REMIS AILLEURS d'abord, et sans cela ce test ne prouvait rien : mesuré,
         // `#champRecherche` porte déjà le focus au démarrage, si bien que l'assertion « Ctrl+F donne le
         // focus » était vraie AVANT que le raccourci ne soit lancé. Son mutant survivait (#4149).
         robot.interact(
@@ -445,7 +445,7 @@ class MainViewTest {
                 .isFalse();
         Respiration.avantLeGeste(robot);
 
-        // ⚠️ On PRESSE Ctrl+F. Lancer le `Runnable` de l'accélérateur donnait bien le focus, mais
+        // On PRESSE Ctrl+F. Lancer le `Runnable` de l'accélérateur donnait bien le focus, mais
         // aucun `KeyEvent` n'atteignait la scène : le clip de ce cas ne montrait AUCUN raccourci, et sa
         // bande de badge restait immobile à la troisième décimale sur les 49 images utiles (#4242).
         robot.push(KeyCode.CONTROL, KeyCode.F);
@@ -455,7 +455,7 @@ class MainViewTest {
                 .as("Ctrl+F ramène le focus sur le champ de recherche")
                 .isTrue();
 
-        // ⚠️ Un focus NE SE VOIT PAS : le clip montrait un écran immobile, et le cas restait
+        // Un focus NE SE VOIT PAS : le clip montrait un écran immobile, et le cas restait
         // incompréhensible (#4149). On tape derrière le raccourci - c'est ce que fait quelqu'un qui
         // vient de le presser, et c'est la seule façon de montrer que le champ est vivant.
         //
@@ -586,7 +586,7 @@ class MainViewTest {
 
     /// L'entrée du menu ☰ de ce type, telle que l'injecteur la fournit au chrome.
     ///
-    /// ⚠️ C'est **la même instance** que celle que le menu porte : bouchonner ses dialogues sur une
+    /// C'est **la même instance** que celle que le menu porte : bouchonner ses dialogues sur une
     /// autre ne changerait rien, et le clic ouvrirait un sélecteur natif qui fige le banc.
     private <T extends ActionMenu> T actionDuMenu(Class<T> type) {
         return injector.getInstance(Key.get(new TypeLiteral<Set<ActionMenu>>() {})).stream()
@@ -598,7 +598,7 @@ class MainViewTest {
 
     /// L'utilisateur **courant**, auto-créé au démarrage.
     ///
-    /// ⚠️ Les écrans filtrent par lui. Semer sous un identifiant à soi remplit bien la base et les
+    /// Les écrans filtrent par lui. Semer sous un identifiant à soi remplit bien la base et les
     /// compteurs, mais « Mes sites » reste vide : le site existe et l'écran ne le liste pas.
     private String utilisateurCourant() {
         return injector.getInstance(Key.get(String.class, Names.named("idUtilisateurCourant")));
@@ -618,7 +618,7 @@ class MainViewTest {
 
     /// La carte d'accueil portant `intitule`, ou une erreur qui la nomme.
     ///
-    /// ⚠️ Le titre d'une carte est un `Text`, non un `Label` : `CartesAccueil` l'a changé en #2046 pour
+    /// Le titre d'une carte est un `Text`, non un `Label` : `CartesAccueil` l'a changé en #2046 pour
     /// que l'enroulement soit fiable.
     private static Node carteDAccueil(FxRobot robot, String intitule) {
         return robot.lookup(".carte-activite").queryAll().stream()

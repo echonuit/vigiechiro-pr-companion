@@ -72,7 +72,7 @@ class ReprefixeurSessionTest {
                         nouvelle,
                         ANCIEN.prefixeFichier(),
                         NOUVEAU.prefixeFichier()))
-                // ⚠️ L'attendu passe par `Path` : `cheminApres` compose avec les outils du système, donc
+                // L'attendu passe par `Path` : `cheminApres` compose avec les outils du système, donc
                 // rend `\` sous Windows. Comparer à un littéral en `/` éprouvait le séparateur de la
                 // machine, pas la relocalisation (#3526).
                 .isEqualTo(Path.of("/ws/Car040962-2026-Pass2-A1/bruts/Car040962-2026-Pass2-A1-x.wav")
@@ -85,7 +85,7 @@ class ReprefixeurSessionTest {
                         nouvelle,
                         ANCIEN.prefixeFichier(),
                         NOUVEAU.prefixeFichier()))
-                // ⚠️ Le jumeau de l'assertion ci-dessus, laissé en littéral lors de la première passe :
+                // Le jumeau de l'assertion ci-dessus, laissé en littéral lors de la première passe :
                 // il n'a rougi qu'au dispatch complet, cinq lignes plus bas que sa correction (#3526).
                 .isEqualTo(Path.of("/ws/Car040962-2026-Pass2-A1/foo_LogPR.txt").toString());
     }

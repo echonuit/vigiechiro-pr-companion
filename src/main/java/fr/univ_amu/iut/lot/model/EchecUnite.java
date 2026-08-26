@@ -12,7 +12,7 @@ package fr.univ_amu.iut.lot.model;
 /// pour des archives que la reprise ne reprendrait jamais, et la CLI disait « relancez la commande »
 /// dans le même cas. Un conseil que le produit ne peut pas tenir, ce que l'ADR 3854 proscrit.
 ///
-/// ⚠️ C'est la **même forme** que le défaut de #3688, où le PUT S3 d'un seul bloc perdait le statut de
+/// C'est la **même forme** que le défaut de #3688, où le PUT S3 d'un seul bloc perdait le statut de
 /// sa réponse. Corrigé une fois en amont, le motif survivait en aval : c'est pourquoi le remède est un
 /// type qui porte l'information, et non deux phrases rendues prudentes.
 ///

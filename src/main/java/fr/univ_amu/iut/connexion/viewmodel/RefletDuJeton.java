@@ -33,7 +33,7 @@ public final class RefletDuJeton implements EtatConnexion {
     public RefletDuJeton(FournisseurToken jetons, Executor filAffichage) {
         this.jetons = Objects.requireNonNull(jetons, "jetons");
         this.filAffichage = Objects.requireNonNull(filAffichage, "filAffichage");
-        // ⚠️ La valeur initiale se lit au berceau, et non à la première connexion : un jeton déjà
+        // La valeur initiale se lit au berceau, et non à la première connexion : un jeton déjà
         // enregistré au démarrage doit ouvrir les gestes SANS qu'on ait à se reconnecter. Partir de
         // `false` grisserait tout jusqu'à la première ouverture de la modale.
         this.connecte =

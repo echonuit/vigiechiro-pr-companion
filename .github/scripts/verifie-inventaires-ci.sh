@@ -16,10 +16,10 @@
 # | tableau des gardes autotestées | 6 absents (#3771) |
 # | chemins surveillés ↔ classes jouées | à vérifier ici |
 #
-# ⚠️ Les deux workflows absents étaient **ceux de sécurité**. Ce n'est pas un hasard : un inventaire
+# Les deux workflows absents étaient **ceux de sécurité**. Ce n'est pas un hasard : un inventaire
 # non gardé perd d'abord ce qu'on regarde le moins.
 #
-# ⚠️ Et le défaut se reproduit **pendant qu'on le décrit** : #3771 annonçait cinq gardes manquantes, il
+# Et le défaut se reproduit **pendant qu'on le décrit** : #3771 annonçait cinq gardes manquantes, il
 # y en avait six. Les cinq avaient été listées à l'œil ; la sixième est sortie d'un comptage. C'est la
 # raison d'être de ce script - obtenir la liste plutôt que la refaire.
 #
@@ -72,7 +72,7 @@ def bloc_de(titre):
 
 
 # ─── 1. Les workflows ────────────────────────────────────────────────────────────────────────────
-# ⚠️ On compare des FICHIERS CITÉS, jamais un nombre de lignes : `maven.yml` occupe cinq lignes du
+# On compare des FICHIERS CITÉS, jamais un nombre de lignes : `maven.yml` occupe cinq lignes du
 # tableau, une par job, et une garde qui compterait rougirait sur un tableau juste.
 cites = set(re.findall(r"blob/main/\.github/workflows/([A-Za-z0-9_.-]+\.yml)", texte))
 reels = {os.path.basename(p) for p in glob.glob(os.path.join(workflows, "*.yml"))}
@@ -95,13 +95,13 @@ if bloc is None:
     print("   C'est la GARDE qui est en cause : la section a-t-elle été renommée ?")
     sys.exit(1)
 
-# ⚠️ Le périmètre inclut `scripts/**`, et pas seulement `.github/`. Il s'est arrêté à `.github/`
+# Le périmètre inclut `scripts/**`, et pas seulement `.github/`. Il s'est arrêté à `.github/`
 # pendant tout le temps où les gardes y vivaient - puis un banc de soixante-cinq cas est arrivé sous
 # `scripts/doc-video/`, il n'était lancé par aucun workflow, et cette garde ne pouvait pas le dire :
 # elle ne regardait pas là. Un inventaire aveugle à un dossier annonce la complétude qu'il n'a pas
 # (#4013).
 autotestes = set()
-# ⚠️ Et pas seulement le shell. Le tableau porte `scripts/adr/verifie_scripts.py` de longue date,
+# Et pas seulement le shell. Le tableau porte `scripts/adr/verifie_scripts.py` de longue date,
 # mais ces motifs s'arrêtaient à `*.sh` : les deux gardes du graphe (#4231) y sont entrées parce que
 # leur auteur savait qu'il fallait le faire, pas parce que la garde l'a exigé. Aveugle à un dossier
 # hier (#4013), aveugle à une EXTENSION aujourd'hui - le même défaut, et toujours sous la forme d'un
@@ -224,7 +224,7 @@ DOC
         fi
     }
 
-    # ⚠️ Le contrôle NÉGATIF d'abord, et il est le plus important : une règle qui refuse tout est aussi
+    # Le contrôle NÉGATIF d'abord, et il est le plus important : une règle qui refuse tout est aussi
     # inutile qu'une règle qui accepte tout. Un dépôt cohérent - `maven.yml` cité DEUX fois, une ligne
     # par job - doit rester vert.
     monter
@@ -240,12 +240,12 @@ DOC
     monter && printf 'echo --auto-test\n' > "${bac}/depot/.github/scripts/verifie-oublie.sh"
     verifie 1 "une garde autotestée absente du tableau est vue" "verifie-oublie.sh"
 
-    # ⚠️ Le même cas depuis `.github/assets/` : les deux dossiers portent des gardes, et n'en balayer
+    # Le même cas depuis `.github/assets/` : les deux dossiers portent des gardes, et n'en balayer
     # qu'un laissait `check-captures.sh` et ses voisins hors de portée.
     monter && printf 'echo --auto-test\n' > "${bac}/depot/.github/assets/check-oublie.sh"
     verifie 1 "une garde autotestée de assets/ est vue aussi" "check-oublie.sh"
 
-    # ⚠️ Le même cas en Python. Le tableau porte `scripts/adr/verifie_scripts.py` depuis longtemps,
+    # Le même cas en Python. Le tableau porte `scripts/adr/verifie_scripts.py` depuis longtemps,
     # mais les motifs ne balayaient que le shell : les deux gardes du graphe (#4231) y sont entrées
     # parce que leur auteur savait qu'il fallait le faire, pas parce que la garde l'a exigé. Une
     # exigence tenue de mémoire finit par tomber - c'est la raison d'être de ce script.
@@ -268,7 +268,7 @@ DOC
         "${bac}/depot/.github/scripts/porte-sur-le-contrat-de-fichiers.sh"
     verifie 1 "un test surveillé que la matrice ne joue pas est vu" "PasJoueTest"
 
-    # ⚠️ Les refus qui accusent la GARDE, et non ce qu'elle surveille. Sans eux, un renommage de
+    # Les refus qui accusent la GARDE, et non ce qu'elle surveille. Sans eux, un renommage de
     # section rendrait un vert rassurant là où plus rien n'est confronté.
     monter && sed -i 's/^## Toute garde de CI porte sa propre preuve$/## Autre titre/' \
         "${bac}/depot/dev-docs/ci-cd-release.md"

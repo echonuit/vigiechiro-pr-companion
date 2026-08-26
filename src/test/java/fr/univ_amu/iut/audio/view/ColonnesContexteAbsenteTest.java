@@ -132,7 +132,7 @@ class ColonnesContexteAbsenteTest {
                         valeurAffichee(col.fichier())))
                 .as("carré, point, commune et fichier : une seule règle")
                 .containsOnly(Formats.VALEUR_ABSENTE);
-        // ⚠️ La colonne « date » suit la MEME règle, par un autre mécanisme depuis #4019 : sa valeur est
+        // La colonne « date » suit la MEME règle, par un autre mécanisme depuis #4019 : sa valeur est
         // une `LocalDate` (pour que le tri reste chronologique), et le cadratin est rendu par la
         // CELLULE. On l'interroge donc là où il vit. La règle n'a pas changé, sa mise en oeuvre si -
         // et un test qui aurait continué de lire la valeur aurait rougi sur un comportement correct.

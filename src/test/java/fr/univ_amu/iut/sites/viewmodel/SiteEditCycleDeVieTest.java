@@ -150,7 +150,7 @@ class SiteEditCycleDeVieTest {
         when(service.creerSite(any(), any(), any(), any(), any()))
                 .thenThrow(new RegleMetierException("carré déjà déclaré"));
         viewModel.enregistrer();
-        // ⚠️ Il faut un retour à effacer. La première version de ce cas partait d'un carré invalide :
+        // Il faut un retour à effacer. La première version de ce cas partait d'un carré invalide :
         // `enregistrer` refusait AVANT d'écrire quoi que ce soit, si bien que le test comparait AUCUN
         // à AUCUN. PIT l'a pris - la ligne d'effacement se supprimait sans faire rougir personne.
         assertThat(viewModel.retourProperty().get()).isNotEqualTo(RetourOperation.AUCUN);

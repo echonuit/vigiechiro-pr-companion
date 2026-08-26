@@ -24,7 +24,7 @@
 # l'autre compare deux instants différents. À la fin, le scénario est POSÉ, et c'est le seul moment où
 # les deux sont comparables sans dépendre de leur cadence.
 #
-# ⚠️ **Contrepartie assumée : on compare la destination, pas le chemin.** Un cas dont l'objet est une
+# **Contrepartie assumée : on compare la destination, pas le chemin.** Un cas dont l'objet est une
 # transition - « la modale s'ouvre sans saut » - garderait une fin identique alors que son milieu
 # aurait bougé. La durée est le seul garde-fou bon marché contre ça, et il est grossier.
 #
@@ -38,12 +38,12 @@
 # Avec `-fuzz 5%`, ce même plancher tombe sous **0,01 %**, et l'instrument n'en devient pas aveugle :
 # un chiffre changé rend 0,021 %, un mot 0,101 %, un libellé 0,364 %, un encart 4,2 %.
 #
-# ⚠️ Ces 5 % valent pour une machine et sept cas. `--plancher` remesure le plancher sur place, en
+# Ces 5 % valent pour une machine et sept cas. `--plancher` remesure le plancher sur place, en
 # comparant deux tournages qu'on sait identiques : une tolérance figée finirait par mentir.
 #
 # ## Ce qu'il ne fait pas
 #
-# ⚠️ **Il ne juge rien et ne bloque rien.** Un écran qui change est le résultat NORMAL d'un chantier
+# **Il ne juge rien et ne bloque rien.** Un écran qui change est le résultat NORMAL d'un chantier
 # qui touche l'interface. Et le chiffre TRIE, il ne prouve pas : sous un mot changé on est à deux fois
 # le plancher.
 #
@@ -52,7 +52,7 @@
 # Mesuré sur 51 cas, deux tournages du même commit sur deux runners : la médiane du plancher vaut
 # 0,008 %, 48 cas sur 51 sont sous 0,05 %, et TROIS dépassent - jusqu'à 0,809 %.
 #
-# ⚠️ Un seuil unique mentirait donc dans les deux sens. Le pire plancher aveuglerait 48 cas pour se
+# Un seuil unique mentirait donc dans les deux sens. Le pire plancher aveuglerait 48 cas pour se
 # protéger de trois ; la médiane ferait crier ces trois-là à chaque tournage. Un écart se lit contre
 # le plancher de SON cas, et c'est à quoi sert le fichier de planchers (#4287).
 #
@@ -70,7 +70,7 @@ MOI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}
 
 ### Refuse de commencer sans ses outils, en NOMMANT ceux qui manquent.
 ###
-### ⚠️ Sans cette garde, l'absence d'un outil ne se voyait pas : `compare` introuvable écrivait son
+### Sans cette garde, l'absence d'un outil ne se voyait pas : `compare` introuvable écrivait son
 ### « command not found » dans la sortie que la mesure capture, la part de pixels devenait « ? », et
 ### les cinquante cas d'un vrai tournage se rangeaient en « mesure impossible » sans qu'une seule
 ### ligne ne dise POURQUOI. Mesuré sur le run 32640637929, où le job restait vert.
@@ -104,7 +104,7 @@ derniere_image() {
 ### celui de la dernière image monte à 0,809 % sur son pire cas. L'application vient de se monter et
 ### rien n'a encore bougé.
 ###
-### ⚠️ Stable ne suffisait pas : une mesure toujours nulle peut aussi être AVEUGLE. Vérifié - les
+### Stable ne suffisait pas : une mesure toujours nulle peut aussi être AVEUGLE. Vérifié - les
 ### premières images de deux cas différents diffèrent de 2,4 à 3 %, donc elles distinguent bien les cas
 ### au lieu de montrer le même écran d'accueil à tout le monde (#4296).
 premiere_image() {
@@ -117,7 +117,7 @@ duree() {
   local d
   d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$1" 2>/dev/null) || { printf '?'; return; }
   [ -n "$d" ] || { printf '?'; return; }
-  # ⚠️ `LC_ALL=C` : sur une machine en français, `printf` refuse « 6.5 » que `ffprobe` rend toujours
+  # `LC_ALL=C` : sur une machine en français, `printf` refuse « 6.5 » que `ffprobe` rend toujours
   # avec un point. Mesuré en écrivant ce script.
   LC_ALL=C awk -v d="$d" 'BEGIN { printf "%.1f", d }'
 }
@@ -148,7 +148,7 @@ comparer() {
   # Les planchers par cas, s'ils sont fournis : un écart se lit contre le bruit de SON cas (#4287).
   local -A sol_deb sol_fin nbp
   if [ -n "$planchers" ]; then
-    # ⚠️ Un fichier ANNONCÉ mais absent ne se lit pas comme « aucun plancher connu » : c'est une
+    # Un fichier ANNONCÉ mais absent ne se lit pas comme « aucun plancher connu » : c'est une
     # erreur de chemin, et sans ce message les cinquante cas diraient tous « plancher inconnu » sans
     # que personne ne cherche le fichier.
     if [ ! -f "$planchers" ]; then
@@ -178,7 +178,7 @@ comparer() {
   local noms
   noms=$( { cas_du_dossier "$avant_dir"; cas_du_dossier "$apres_dir"; } | LC_ALL=C sort -u)
 
-  # ⚠️ Aucun clip des deux côtés n'est PAS un résultat : c'est une comparaison qui n'a rien eu à
+  # Aucun clip des deux côtés n'est PAS un résultat : c'est une comparaison qui n'a rien eu à
   # comparer, et les deux se lisent pareil si on ne le dit pas.
   if [ -z "$noms" ]; then
     {
@@ -229,12 +229,12 @@ comparer() {
 
     convert "$fa" "$fb" +append "${sortie}/${nom}.avant-apres.png" 2>/dev/null
     compare "$fa" "$fb" -highlight-color red -lowlight-color white "${sortie}/${nom}.ou.png" 2>/dev/null
-    # ⚠️ Les fichiers ne répètent PAS le nom du cas : il est déjà en première colonne, et le
+    # Les fichiers ne répètent PAS le nom du cas : il est déjà en première colonne, et le
     # répéter deux fois de plus faisait des lignes de trois cents caractères que personne ne lit
     # (revue visuelle, passe 8). Les fichiers de l'artefact sont nommés « <cas>.<suffixe> ».
     geste="montage + carte"
 
-    # ⚠️ Les images du DÉBUT ne sont produites que s'il a bougé. Mesuré : son plancher vaut 0,000 %
+    # Les images du DÉBUT ne sont produites que s'il a bougé. Mesuré : son plancher vaut 0,000 %
     # sur les 51 cas, donc en temps normal ce montage serait cinquante fichiers strictement
     # identiques - du bruit qui noierait les deux ou trois qui comptent.
     if [ "$p_deb" != "?" ] && awk -v p="$p_deb" 'BEGIN { exit !(p + 0 > 0) }' 2>/dev/null; then
@@ -244,7 +244,7 @@ comparer() {
     fi
     rm -f "$fa" "$fb" "$da_" "$db_"
 
-    # ⚠️ Une mesure qui ÉCHOUE ne se range pas parmi les cas qui ne bougent pas. Ce défaut a été
+    # Une mesure qui ÉCHOUE ne se range pas parmi les cas qui ne bougent pas. Ce défaut a été
     # commis en écrivant ce script : les sept mesures rendaient « ? », et l'index annonçait
     # tranquillement « aucun cas ne bouge ». Un instrument cassé qui se présente en succès est pire
     # que pas d'instrument (ADR 2748).
@@ -284,7 +284,7 @@ comparer() {
       fi
     fi
     printf '%s\t%s\t%s\t%s\n' "$cle" "$nom" "$cellule" "${da} s → ${db} s · ${geste}" >> "$lignes"
-    # ⚠️ Le comptage se fait sur une comparaison NUMÉRIQUE, pas sur la chaîne : « 10.000 » est plus
+    # Le comptage se fait sur une comparaison NUMÉRIQUE, pas sur la chaîne : « 10.000 » est plus
     # grand que « 9.000 », et un tri de texte dirait l'inverse.
     awk -v a="$p_deb" -v b="$p_fin" 'BEGIN { exit !(a + 0 > 0 || b + 0 > 0) }' 2>/dev/null && bouges=$((bouges + 1))
   done
@@ -339,10 +339,10 @@ comparer() {
 ### Avec un troisième argument, écrit le plancher PAR CAS dans un fichier et l'ACCUMULE : relancer sur
 ### une autre paire garde le PIRE plancher observé et compte une paire de plus.
 ###
-### ⚠️ Le pire, et non la moyenne : un plancher qui sous-estime le bruit fabrique des faux positifs,
+### Le pire, et non la moyenne : un plancher qui sous-estime le bruit fabrique des faux positifs,
 ### c'est-à-dire exactement ce qu'on cherche à éviter.
 ###
-### ⚠️ Le compte de paires est écrit parce qu'un plancher tiré d'UNE paire ne prouve rien. Un cas dont
+### Le compte de paires est écrit parce qu'un plancher tiré d'UNE paire ne prouve rien. Un cas dont
 ### le plancher est ressorti à 0,000 % n'est pas stable : il l'était cette fois-là (#4287).
 plancher() {
   local a="$1" b="$2" fichier="${3:-}" bac pire=0
@@ -380,7 +380,7 @@ plancher() {
 
     if [ -n "$fichier" ]; then
       local vu_f="${sol_fin[$nom]:-}" vu_d="${sol_deb[$nom]:-}" compte="${nbp[$nom]:-0}"
-      # ⚠️ Le PIRE observé, et non la dernière valeur vue : sous-estimer le bruit fabrique des faux
+      # Le PIRE observé, et non la dernière valeur vue : sous-estimer le bruit fabrique des faux
       # positifs. Un plancher ne redescend jamais.
       if [ -n "$vu_f" ]; then
         sol_fin["$nom"]=$(awk -v x="$vu_f" -v y="$f_fin" 'BEGIN { print (y + 0 > x + 0) ? y : x }')
@@ -418,7 +418,7 @@ plancher() {
 # ---------------------------------------------------------------------------------------------
 # Auto-test : des clips fabriqués sur place, pour éprouver les cinq cas sans dépendre d'un tournage.
 #
-# ⚠️ Le premier cas est le plus important : deux dossiers vides doivent être une PANNE, et non un
+# Le premier cas est le plus important : deux dossiers vides doivent être une PANNE, et non un
 # « rien n'a changé ». Sans cette distinction, une comparaison qui a échoué à récupérer ses clips se
 # lirait comme un produit stable (ADR 2748).
 # ---------------------------------------------------------------------------------------------
@@ -485,7 +485,7 @@ if [ "${1:-}" = "--auto-test" ]; then
 
   # 6. Une GRANDE image, celle qui a fait tomber la première version.
   #
-  # ⚠️ Ce cas ne ressemble aux autres qu'en apparence. `identify -format '%[fx:w*h]'` rend le produit
+  # Ce cas ne ressemble aux autres qu'en apparence. `identify -format '%[fx:w*h]'` rend le produit
   # en NOTATION SCIENTIFIQUE dès qu'il dépasse le million - « 1.152e+06 » - et le test d'entier qui le
   # suivait refusait alors la mesure. Les sept cas d'un vrai tournage rendaient « ? », et l'index
   # annonçait « aucun cas ne bouge ». Des clips de 160 × 120 ne peuvent PAS voir ce défaut : leur
@@ -501,7 +501,7 @@ if [ "${1:-}" = "--auto-test" ]; then
 
   # 7. Un OUTIL ABSENT, et c'est le cas qui compte le plus.
   #
-  # ⚠️ Sans lui, la garde d'outils ne serait elle-même gardée par rien. Le défaut qu'elle ferme s'est
+  # Sans lui, la garde d'outils ne serait elle-même gardée par rien. Le défaut qu'elle ferme s'est
   # produit pour de vrai : `comparer-tournages.yml` n'installait pas ImageMagick, `compare` était
   # introuvable, et les cinquante cas d'un vrai tournage se rangeaient en « mesure impossible » sans
   # qu'une ligne ne dise pourquoi - le job restant vert (run 32640637929).
@@ -518,7 +518,7 @@ if [ "${1:-}" = "--auto-test" ]; then
 
   # 8. Le fichier de planchers : écrit, puis ACCUMULÉ en gardant le PIRE.
   #
-  # ⚠️ La deuxième paire est volontairement BRUYANTE là où la première était muette. Deux paires
+  # La deuxième paire est volontairement BRUYANTE là où la première était muette. Deux paires
   # identiques ne prouveraient que le compteur ; il faut un écart qui monte pour prouver que c'est bien
   # le maximum qui est retenu, et non la dernière valeur vue.
   mkdir -p "$bac/p1a" "$bac/p1b" "$bac/p2a" "$bac/p2b"
@@ -557,7 +557,7 @@ if [ "${1:-}" = "--auto-test" ]; then
 
   # 12. C'est bien la DERNIÈRE image qui est comparée, et non la première.
   #
-  # ⚠️ Rien ne l'affirmait jusqu'ici. Le clip « virage » commence BLANC et finit NOIR ; le clip
+  # Rien ne l'affirmait jusqu'ici. Le clip « virage » commence BLANC et finit NOIR ; le clip
   # « noir » est noir de bout en bout. Comparer les dernières images doit donc rendre 0 %, quand
   # comparer les premières rendrait 100 %. Un jour où quelqu'un échantillonnera le milieu du clip pour
   # « mieux voir la transition », ce cas dira ce qui se casse (ADR 4274).
@@ -570,7 +570,7 @@ if [ "${1:-}" = "--auto-test" ]; then
   cp "$bac/noir.mp4" "$bac/d2/virage.mp4"
 
   #
-  # ⚠️ Depuis #4296 ce cas prouve les DEUX bouts d'un seul coup, et c'est ce qui le rend décisif :
+  # Depuis #4296 ce cas prouve les DEUX bouts d'un seul coup, et c'est ce qui le rend décisif :
   # « virage » commence blanc et finit noir, « noir » est noir de bout en bout. La fin doit donc valoir
   # 0 % et le début 100 %. Un jour où quelqu'un inverserait les deux extractions, ou n'en comparerait
   # qu'une, ce cas le dirait - ce qu'une simple assertion « 0 qui bougent » ne faisait pas.

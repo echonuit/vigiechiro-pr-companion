@@ -60,7 +60,7 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class ModaleSiteVerifierCarreViewTest {
 
-    // ⚠️ Cette classe ne cite plus de cas de recette, et ce n'est pas un oubli. Elle monte
+    // Cette classe ne cite plus de cas de recette, et ce n'est pas un oubli. Elle monte
     // `ModaleSite.fxml` SEULE : ses clips montraient une modale flottant sur du noir, où « la fenêtre se
     // ferme, la fiche s'ouvre » n'avait aucun écran d'arrivée à montrer (#4180). Les six cas sont joués
     // par `ScenarioModaleCarreTest`, sur la fenêtre réelle et par des gestes.
@@ -72,7 +72,7 @@ class ModaleSiteVerifierCarreViewTest {
 
     /// Le carré **libre**, celui que le script de `S1-30` nomme.
     ///
-    /// ⚠️ Il fallait un numéro à lui. `S1-30` saisissait le même `640380` que `S1-31`, si bien que deux
+    /// Il fallait un numéro à lui. `S1-30` saisissait le même `640380` que `S1-31`, si bien que deux
     /// clips voisins rendaient des verdicts OPPOSÉS sur le même carré - « n'existe pas encore » ici,
     /// « déjà déclaré » là - parce que la plateforme est bouchonnée par test. Vu de la page, c'est le
     /// produit qui se contredit (#4166). Et le script disait `999999` depuis le début.
@@ -118,7 +118,7 @@ class ModaleSiteVerifierCarreViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        // ⚠️ `Habillage`, et non `new Scene` : les six cas de cette classe sont FILMÉS, et une scène
+        // `Habillage`, et non `new Scene` : les six cas de cette classe sont FILMÉS, et une scène
         // montée sans habillage porte la police de la MACHINE, pas celle du produit (#3773, #4149).
         stage.setScene(Habillage.scene(vue));
         stage.show();
@@ -145,7 +145,7 @@ class ModaleSiteVerifierCarreViewTest {
 
     /// Le numéro se **tape**, chiffre à chiffre, dans le champ qu'on vient de cliquer.
     ///
-    /// ⚠️ `setText` posait les six chiffres d'un coup. Ce que ces cas font juger est un enchaînement vu
+    /// `setText` posait les six chiffres d'un coup. Ce que ces cas font juger est un enchaînement vu
     /// de l'extérieur - on saisit, on vérifie, l'encart répond - et un champ qui se remplit tout seul
     /// n'en fait pas partie : le clip était incompréhensible (#4149). Même correction que sur `S1-37`.
     private void saisirCarre(FxRobot robot, String carre) {
@@ -262,7 +262,7 @@ class ModaleSiteVerifierCarreViewTest {
 
         seDeconnecter();
 
-        // ⚠️ Ce cas jouait autrefois un client qui répond `nonConnecte()` PENDANT que l'application
+        // Ce cas jouait autrefois un client qui répond `nonConnecte()` PENDANT que l'application
         // avait un jeton : la fixture se contredisait, et le vert existait quoi qu'il arrive. Depuis
         // #4210, l'absence de jeton se voit AVANT le clic - c'est ce qu'on éprouve ici.
         assertThat(verifier(robot).isDisabled())
@@ -274,7 +274,7 @@ class ModaleSiteVerifierCarreViewTest {
                 .contains("pas connecté")
                 .contains("Se connecter à Vigie-Chiro");
 
-        // ⚠️ Le pendant : seule la VÉRIFICATION se ferme. Déclarer un carré hors ligne reste possible.
+        // Le pendant : seule la VÉRIFICATION se ferme. Déclarer un carré hors ligne reste possible.
         assertThat(robot.lookup("#boutonValider").queryAs(Button.class).isDisabled())
                 .as("déclarer reste possible hors connexion")
                 .isFalse();
@@ -318,7 +318,7 @@ class ModaleSiteVerifierCarreViewTest {
         assertThat(message(robot).isVisible()).isTrue();
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ On corrige UN CHIFFRE, ce que le script demande : « changer un chiffre du carré ».
+        // On corrige UN CHIFFRE, ce que le script demande : « changer un chiffre du carré ».
         // `saisirCarre` vide le champ et retape tout, si bien que le clip montrait le verdict
         // disparaître au VIDAGE - un champ qui se vide seul, puis un numéro qui se réécrit, et
         // l'encart parti entre les deux. On ne voyait pas la correction (#4166).

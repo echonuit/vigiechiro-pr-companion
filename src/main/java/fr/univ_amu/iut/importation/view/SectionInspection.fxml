@@ -13,7 +13,7 @@
   carte la moins dispersée de l'écran, mesuré avant de couper.
   Voir dev-docs/decisions/2745-une-vue-riche-se-decoupe-en-sous-vues.md.
 
-  ⚠️ L'inclusion garde le fx:id `sectionInspection` : le parent lie la visibilité de la section entière
+  L'inclusion garde le fx:id `sectionInspection` : le parent lie la visibilité de la section entière
   à l'état « dossier inspecté », il a donc besoin du nœud autant que du controller.
 -->
 <VBox xmlns="http://javafx.com/javafx"

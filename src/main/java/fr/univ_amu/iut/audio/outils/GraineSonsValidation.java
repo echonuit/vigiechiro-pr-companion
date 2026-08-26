@@ -200,7 +200,7 @@ final class GraineSonsValidation {
         // d'actions - la legende des raccourcis clavier finissant coupee par le bord (#2129). Un
         // composant qui peint hors de la boite qu'on lui laisse ne se comprime pas, il deborde.
         //
-        // ⚠️ 860 tenait a 0 px pres, et le chantier #4002 l'a fait ceder : la barre du haut a grandi de
+        // 860 tenait a 0 px pres, et le chantier #4002 l'a fait ceder : la barre du haut a grandi de
         // 2 px (le bouton ☰ passe sur le jeton `-hauteur-controle-barre`), le panneau audio a commence
         // 2 px plus bas, et la barre de transport s'est retrouvee rognee par le haut - « Freq. » y
         // perdait ses accents sur SIX apercus. Mesure a la regeneration : 860 rogne, 862 rogne encore,

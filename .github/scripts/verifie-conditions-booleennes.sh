@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Garde-fou : une entrée `type: boolean` ne se compare jamais à une CHAÎNE dans un `if:`.
 #
-# ⚠️ Pourquoi cette garde existe, et ce qu'elle a coûté. Une entrée `type: boolean` de
+# Pourquoi cette garde existe, et ce qu'elle a coûté. Une entrée `type: boolean` de
 # `workflow_dispatch` arrive dans le contexte `inputs` comme un VRAI booléen. Les expressions GitHub
 # comparent deux types différents en les cassant tous les deux en nombres : `true` vaut 1, et
 # `'true'` n'est pas un nombre. Toute comparaison avec NaN est fausse.
@@ -17,7 +17,7 @@
 #      d'installation était gardée par `!= 'true'`. Ce témoin est la garde qui prouve que la
 #      vérification du pointeur garde quelque chose : elle n'a donc jamais rien gardé elle-même.
 #
-# ⚠️ Ce qui a rendu le défaut invisible : l'interpolation dans un `run:` marche. `"${{ inputs.x }}"`
+# Ce qui a rendu le défaut invisible : l'interpolation dans un `run:` marche. `"${{ inputs.x }}"`
 # rend le texte `true`, et le test shell se comporte comme attendu. Les étapes en `run:` faisaient
 # donc ce qu'on croyait, pendant que les `if:` faisaient le contraire.
 #
@@ -106,7 +106,7 @@ jobs:
       - if: ${{ !inputs.drapeau }}
         run: echo'
 
-    # ⚠️ Le cas qui a manqué au premier jet : la comparaison peut vivre AILLEURS que dans un `if:`.
+    # Le cas qui a manqué au premier jet : la comparaison peut vivre AILLEURS que dans un `if:`.
     # Celle-ci nommait un artefact, le nom était donc toujours celui du mode « une classe », et le
     # job de publication cherchait un artefact qui n'existait pas.
     essai "une comparaison dans un « name: » est refusée"  rouge \
@@ -124,7 +124,7 @@ jobs:
         with:
           name: film-${{ inputs.drapeau == '"'"'true'"'"' && '"'"'tout'"'"' || '"'"'un'"'"' }}'
 
-    # ⚠️ Le cas qui empêche la garde de tout refuser : une entrée de type CHAÎNE se compare
+    # Le cas qui empêche la garde de tout refuser : une entrée de type CHAÎNE se compare
     # légitimement à une chaîne. Sans lui, la garde interdirait une forme juste et se ferait
     # contourner plutôt que corriger.
     essai "une entrée de type chaîne se compare à une chaîne" vert \
@@ -141,7 +141,7 @@ jobs:
       - if: inputs.mode == '"'"'rapide'"'"'
         run: echo'
 
-    # ⚠️ Et celui qui garde l INTERPOLATION : dans un `run:`, comparer le texte à « true » est la
+    # Et celui qui garde l INTERPOLATION : dans un `run:`, comparer le texte à « true » est la
     # forme JUSTE, et la refuser reviendrait à casser ce qui marche.
     essai "l interpolation shell reste permise"              vert \
 'on:
@@ -203,7 +203,7 @@ for fichier in sorted(os.listdir(flux)):
     with open(chemin, encoding="utf-8") as f:
         for numero, ligne in enumerate(f, start=1):
             nue = ligne.strip()
-            # ⚠️ TOUTE ligne, et pas seulement les `if:`. La première version ne regardait que
+            # TOUTE ligne, et pas seulement les `if:`. La première version ne regardait que
             # celles-là, et la comparaison fautive suivante est passée dessous sans être vue :
             #
             #     name: recette-filmee-${{ inputs.publier_les_clips == 'true' && 'planche' || … }}
@@ -215,7 +215,7 @@ for fichier in sorted(os.listdir(flux)):
             # Une expression GitHub peut vivre dans n'importe quelle valeur : `name:`, `env:`, un
             # argument d'action. Restreindre aux `if:` était une supposition sur l'endroit du défaut.
             #
-            # ⚠️ L'interpolation shell reste permise, et le motif la laisse passer de lui-même : dans
+            # L'interpolation shell reste permise, et le motif la laisse passer de lui-même : dans
             # `[ "${{ inputs.x }}" = "true" ]`, `inputs.x` est suivi de `}}`, jamais de `==`. Le cas
             # de non-régression le garde.
             # Ne compter que ce qui parle d'une entrée : « 700 lignes examinées » ne renseigne

@@ -171,7 +171,7 @@ qui le dérivent de la donnée :
     **même** libellé figé. Les deux s'accordent alors **sur la mauvaise valeur**, et rien n'alerte.
     C'est pourquoi #3672 n'a été trouvée que par un balayage, pas par l'usage.
 
-    ⚠️ Corollaire : déclarer `EmplacementNavigation` sur un écran dont le libellé d'étape est figé
+    Corollaire : déclarer `EmplacementNavigation` sur un écran dont le libellé d'étape est figé
     **fabrique** la contradiction au lieu de la corriger. Les deux se posent ensemble.
 
 ### Convention de la barre de statut (`ResumeStatut`)

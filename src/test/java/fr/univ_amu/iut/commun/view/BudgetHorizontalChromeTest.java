@@ -51,7 +51,7 @@ class BudgetHorizontalChromeTest {
 
     /// Les **deux** largeurs livrées : celle d'ouverture, et la minimale imposée par `TailleOuverture`.
     ///
-    /// ⚠️ Le nom de ce test annonçait « à 1100 comme à 900 » depuis #3760, et c'était **faux** : la
+    /// Le nom de ce test annonçait « à 1100 comme à 900 » depuis #3760, et c'était **faux** : la
     /// largeur venait d'un `System.getProperty("chrome.largeur", "1100")` que **rien** ne posait. Le
     /// garde ne s'est jamais exécuté à 900, c'est-à-dire jamais au cas qu'il nomme (#3960).
     private static final double[] LARGEURS_LIVREES = {TailleOuverture.LARGEUR_VOULUE, TailleOuverture.LARGEUR_MINIMALE};
@@ -59,7 +59,7 @@ class BudgetHorizontalChromeTest {
     /// L'état vivant le plus long que la barre de statut sache produire : l'espace disque insuffisant,
     /// dans sa forme courte (#3743).
     ///
-    /// ⚠️ **Ce garde tient la mise en page, pas la copie.** La chaîne est écrite ici : rallonger le
+    /// **Ce garde tient la mise en page, pas la copie.** La chaîne est écrite ici : rallonger le
     /// message du produit ne le fera pas rougir. C'est le test d'intégration de M-Lot
     /// (`zone_droite_annonce_l_espace_insuffisant`) qui garde ce que l'écran met vraiment dans la
     /// zone. Les deux vont ensemble et aucun ne remplace l'autre - vérifié en injectant ici la forme
@@ -85,7 +85,7 @@ class BudgetHorizontalChromeTest {
         // chaque verification, donc son verdict depend de la police reellement rendue (ADR 3773).
         // `ScenesHabilleesTest` l'a refuse des le premier passage en integration, a juste titre.
         scene = Habillage.scene(racine, LARGEURS_LIVREES[0], 720);
-        // ⚠️ Une fenêtre À SOI, et non celle du harnais. Ce banc dimensionne sa fenêtre à la main, et
+        // Une fenêtre À SOI, et non celle du harnais. Ce banc dimensionne sa fenêtre à la main, et
         // `setWidth` fait passer un Stage en dimensionnement EXPLICITE : il cesse définitivement de
         // s'ajuster aux scènes qu'on lui pose ensuite. Le Stage du harnais TestFX est partagé par toutes
         // les classes d'un même fork - figé ici, il faisait échouer les suivantes sur des noeuds

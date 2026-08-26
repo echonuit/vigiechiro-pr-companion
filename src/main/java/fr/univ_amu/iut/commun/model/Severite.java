@@ -20,7 +20,7 @@ package fr.univ_amu.iut.commun.model;
 ///
 /// ## L'ordre porte la sémantique
 ///
-/// ⚠ [fr.univ_amu.iut.commun.viewmodel.CompteRendu#severite()] prend le **maximum** par `ordinal()` : la
+/// [fr.univ_amu.iut.commun.viewmodel.CompteRendu#severite()] prend le **maximum** par `ordinal()` : la
 /// position des constantes détermine quel constat qualifie un compte rendu entier. Réordonner cette
 /// énumération changerait ce comportement **sans qu'aucun test métier ne rougisse**. `SeveriteTest`
 /// l'épingle explicitement, et c'est la raison d'être de ce test.

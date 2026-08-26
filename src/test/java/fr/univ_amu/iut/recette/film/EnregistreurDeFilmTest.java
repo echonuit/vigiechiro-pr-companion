@@ -27,14 +27,14 @@ import org.junit.platform.testkit.engine.EngineTestKit;
 ///
 /// ## Pourquoi le cas NÉGATIF est le seul joué par le moteur
 ///
-/// ⚠️ Le banc a besoin de `ffmpeg`, que le build ordinaire n'installe pas. Un cas qui filmerait pour
+/// Le banc a besoin de `ffmpeg`, que le build ordinaire n'installe pas. Un cas qui filmerait pour
 /// de vrai serait donc rouge sur toute PR, ou vert par une hypothèse sautée - c'est-à-dire un vert
 /// qui ne prouve rien.
 ///
 /// Le refus, lui, s'éprouve **sans** `ffmpeg`, et c'est une propriété du remède et non une
 /// commodité : on refuse **avant** d'ouvrir l'encodeur.
 ///
-/// ⚠️ Le garde vise un dossier qui **n'existe pas encore**, et non un dossier vide. Sans cela il
+/// Le garde vise un dossier qui **n'existe pas encore**, et non un dossier vide. Sans cela il
 /// serait vert à vide sur toute machine sans `ffmpeg` : l'encodeur y échoue, donc aucun fichier
 /// n'apparaît, donc « aucun fichier » ne prouve rien. Or l'enregistrement crée son dossier
 /// **avant** de lancer l'encodeur : c'est cette création-là qui trahit une décision prise trop
@@ -72,7 +72,7 @@ class EnregistreurDeFilmTest {
 
     /// Le garde du CÂBLAGE, joué par le vrai moteur JUnit.
     ///
-    /// ⚠️ Il porte sur l'ABSENCE DE FICHIER, et non sur une ligne de journal. Un clip qui s'arrête à
+    /// Il porte sur l'ABSENCE DE FICHIER, et non sur une ligne de journal. Un clip qui s'arrête à
     /// son carton et un clip qui n'existe pas se ressemblent trait pour trait dans une sortie
     /// console : seul le dossier tranche.
     @Test
@@ -133,7 +133,7 @@ class EnregistreurDeFilmTest {
 
     /// Une séance d'exemple dont le seul test ne cite aucun cas.
     ///
-    /// ⚠️ Aucune classe d'exemple ne cite de cas ici, et c'est délibéré : filmer pour de vrai
+    /// Aucune classe d'exemple ne cite de cas ici, et c'est délibéré : filmer pour de vrai
     /// demanderait `ffmpeg`. Voir l'en-tête de ce fichier.
     @ExtendWith(EnregistreurDeFilm.class)
     static class SeanceSansCas {

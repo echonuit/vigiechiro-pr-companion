@@ -58,7 +58,7 @@ propriété « ce bouton se lit comme désignant ce texte » n'est pas assertabl
 C'est le constat qui a fondé la passe 8 - *« un geste testé n'est pas un écran regardé »* - et cette
 ADR en donne la forme concrète pour un cas qui revient : **trois occurrences en un seul chantier**.
 
-⚠️ L'[ADR 3672](3672-deux-cas-ne-font-pas-une-mecanique.md) refuse d'abstraire sur deux cas. Il y en a
+L'[ADR 3672](3672-deux-cas-ne-font-pas-une-mecanique.md) refuse d'abstraire sur deux cas. Il y en a
 trois, et le troisième n'a pas été trouvé en regardant mais **par un garde**, ce qui indique que la
 forme du défaut est stable.
 
@@ -71,7 +71,7 @@ forme du défaut est stable.
   chiffré le manque à **6 px** et refusé la capture ; la scène de `CaptureLot` est passée de 1180 à
   1200. Prendre la marge au-delà du strict nécessaire est délibéré : un aperçu qui tient à six pixels
   près rougira au premier mot ajouté ailleurs.
-- ⚠️ **Ce n'est pas une règle de mise en page générale.** Elle ne dit rien des rangées où aucun contrôle
+- **Ce n'est pas une règle de mise en page générale.** Elle ne dit rien des rangées où aucun contrôle
   ne désigne son voisin, ni des grilles. Elle porte sur un cas précis : `hgrow` sur un libellé **suivi
   d'un contrôle qui le désigne**.
 

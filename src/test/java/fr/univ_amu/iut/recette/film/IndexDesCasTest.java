@@ -15,11 +15,11 @@ import org.junit.jupiter.api.io.TempDir;
 /// version écrivait `index.md` directement, si bien que la dernière JVM à finir effaçait le travail
 /// des autres. Mesuré sur quatre forks et neuf cas : **cinq lignes sur neuf**.
 ///
-/// ⚠️ Ce défaut ne pouvait rougir nulle part. L'index gardait toutes ses colonnes, aucune de ses
+/// Ce défaut ne pouvait rougir nulle part. L'index gardait toutes ses colonnes, aucune de ses
 /// lignes n'était fausse, et rien n'annonçait qu'il en manquait quatre. Un index amputé se lit
 /// exactement comme un index complet.
 ///
-/// ⚠️ Et il a fallu s'y reprendre à deux fois. Le premier remède nommait le fragment d'après le
+/// Et il a fallu s'y reprendre à deux fois. Le premier remède nommait le fragment d'après le
 /// `pid`, ce qui suffit tant que les forks vivent ENSEMBLE. Sur un runner macOS ils se sont
 /// enchaînés, le système a recyclé un numéro, et un fragment en a effacé un autre : neuf clips,
 /// huit lignes, `S1-37` disparu. La collision avait changé de place, pas disparu. C'est pourquoi
@@ -53,7 +53,7 @@ class IndexDesCasTest {
                 .contains("| S6-25 |");
     }
 
-    /// ⚠️ L'ordre inverse compte autant. Si la reconstruction ne relisait que les fragments écrits
+    /// L'ordre inverse compte autant. Si la reconstruction ne relisait que les fragments écrits
     /// AVANT le sien, celle-ci passerait et l'autre pas, ou l'inverse selon l'implémentation.
     @Test
     @DisplayName("l'ordre d'arrivée des forks ne change pas l'index")
@@ -90,7 +90,7 @@ class IndexDesCasTest {
 
     /// LE second cas de non-régression, et c'est macOS qui l'a dicté.
     ///
-    /// ⚠️ Les deux index d'ici prennent leur identité PAR DÉFAUT, dans une seule JVM : ils
+    /// Les deux index d'ici prennent leur identité PAR DÉFAUT, dans une seule JVM : ils
     /// partagent donc le même numéro de processus. C'est exactement la situation de deux forks
     /// enchaînés dont le système a recyclé le numéro, et c'est ce qui a fait disparaître `S1-37`
     /// d'un tournage dont les neuf clips existaient pourtant.

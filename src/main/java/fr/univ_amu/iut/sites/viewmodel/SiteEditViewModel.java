@@ -115,7 +115,7 @@ public class SiteEditViewModel {
         // qui est à l'écran. Le laisser afficherait « ce carré n'existe pas encore » sous un carré que
         // personne n'a vérifié - la panne même de #3458, avec en plus la preuve visuelle du contraire.
         //
-        // ⚠️ Le jumeau `PointEditViewModel` n'a pas ce besoin : son contrôle du carré STOC est
+        // Le jumeau `PointEditViewModel` n'a pas ce besoin : son contrôle du carré STOC est
         // **automatique** et se relance à chaque frappe. Ici le geste est manuel - une requête réseau par
         // clic -, donc c'est l'effacement qui tient le rôle.
         // Composition d'observables plutôt qu'un calcul : chaque dépendance est déclarée par
@@ -299,7 +299,7 @@ public class SiteEditViewModel {
     /// Le numéro de carré a ses **six chiffres** : il y a donc quelque chose à chercher sur la
     /// plateforme (#3458).
     ///
-    /// ⚠️ Exposé à part de [#peutEnregistrer()], qui vaut la même chose **aujourd'hui**. Les deux
+    /// Exposé à part de [#peutEnregistrer()], qui vaut la même chose **aujourd'hui**. Les deux
     /// questions sont distinctes : « ce carré est-il cherchable » et « ce formulaire est-il
     /// enregistrable ». Les confondre ferait griser la recherche le jour où l'enregistrement gagnera une
     /// condition qui ne la concerne pas.

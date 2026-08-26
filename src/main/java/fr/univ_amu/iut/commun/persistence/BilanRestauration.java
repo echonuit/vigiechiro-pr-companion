@@ -39,7 +39,7 @@ public record BilanRestauration(
     /// nuit manque, la sauvegarde est trop ancienne pour qu'on sache la replacer, ou la garantie a été
     /// **dégradée** faute de place (#3563).
     ///
-    /// ⚠️ Le régime dégradé y figure parce que la capture de la passe 8 a montré l'inverse : le compte
+    /// Le régime dégradé y figure parce que la capture de la passe 8 a montré l'inverse : le compte
     /// rendu portait le paragraphe qui dit la garantie moindre, sous un titre « Sauvegarde restaurée »
     /// en information. Un paragraphe d'avertissement sous un titre rassurant ne se lit pas.
     public boolean appelleUnRegard() {
@@ -52,7 +52,7 @@ public record BilanRestauration(
     /// `true` si la restauration laisse un **manque** : on ne sait pas ce qu'on a remplacé, ou une nuit
     /// connue de la base n'était pas dans la sauvegarde.
     ///
-    /// ⚠️ Plus étroit qu'[#appelleUnRegard()], et volontairement : une nuit simplement **replacée
+    /// Plus étroit qu'[#appelleUnRegard()], et volontairement : une nuit simplement **replacée
     /// ailleurs** n'est pas un manque. C'est le cas normal d'une restauration sur une autre machine,
     /// c'est-à-dire l'usage principal de la sauvegarde complète - le compte rendu nomme déjà l'ancienne
     /// et la nouvelle adresse.

@@ -156,7 +156,7 @@ public class ServiceMultisite {
         for (CommuneDuPoint resolue : communesDao.findAll()) {
             communes.put(resolue.idPoint(), resolue.commune().nom());
         }
-        // ⚠️ Les points et les passages se lisent **par lot**, comme les quatre sources ci-dessus
+        // Les points et les passages se lisent **par lot**, comme les quatre sources ci-dessus
         // (#4271). Le commentaire d'à côté disait déjà le principe - « lues une seule fois, pas une par
         // ligne » - et il n'était pas appliqué ici : une requête par site, puis une par point. Mesuré à
         // chaud sur soixante carrés : cent vingt millisecondes, là où « Mes sites », qui lit le même
@@ -211,7 +211,7 @@ public class ServiceMultisite {
     /// couche `view` les traduit en marqueurs/emprises colorés.
     public List<CarreAgrege> agregerPourCarte(String idUtilisateur) {
         Objects.requireNonNull(idUtilisateur, "idUtilisateur");
-        // ⚠️ Même lecture par lot que [#listerPassages] (#4271) : la carte parcourt exactement la même
+        // Même lecture par lot que [#listerPassages] (#4271) : la carte parcourt exactement la même
         // topologie, et la parcourait avec les mêmes requêtes une par une.
         List<Site> sitesDuCarre = siteDao.findByUtilisateur(idUtilisateur);
         Map<Long, List<PointDEcoute>> pointsParSiteCarte =

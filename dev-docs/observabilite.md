@@ -113,7 +113,7 @@ compose par [`CauseLisible.messageDe`](https://github.com/echonuit/vigiechiro-pr
 La chaîne n'était pas absente, elle était **exacte et sans valeur**. Rien ne rougissait, parce qu'un
 texte non vide a l'air d'un message.
 
-⚠️ **Et ce n'est pas propre à la réflexion.** `RuntimeException(Throwable)` - comme **tous** les
+**Et ce n'est pas propre à la réflexion.** `RuntimeException(Throwable)` - comme **tous** les
 constructeurs `(Throwable)` de la bibliothèque standard - pose comme message le `toString()` de sa
 cause. La même chaîne inutile sort de n'importe quelle enveloppe.
 
@@ -123,7 +123,7 @@ profonde peut être un `NullPointerException` muet, et dérouler jusqu'au bout *
 en ayant l'air de la corriger. Quand toute la chaîne est muette, le repli nomme le **type court** et
 renvoie au journal, jamais `null` ni un nom pleinement qualifié.
 
-⚠️ **Deux formes à ne pas réécrire à la main**, parce qu'elles produisent exactement ce que la règle
+**Deux formes à ne pas réécrire à la main**, parce qu'elles produisent exactement ce que la règle
 interdit :
 
 ```java
@@ -135,7 +135,7 @@ echec.getCause() != null ? echec.getCause().getMessage() : ...           // ne d
 Elles sont **comptées** : `scripts/adr/3947-message-enveloppe.py` porte un cliquet, et il ne descend
 jamais tout seul.
 
-⚠️ **Chaque surface passe son « où regarder ».** Le repli qui nomme le journal renvoie vers
+**Chaque surface passe son « où regarder ».** Le repli qui nomme le journal renvoie vers
 `menu principal > Ouvrir le dossier des journaux` à l'écran, et vers le dossier `logs/` en ligne de
 commande. Un terminal n'a pas de menu principal : lui en désigner un produirait un message non vide,
 donc d'apparence correcte, et inapplicable. C'est le défaut de l'ADR 3470 déplacé d'un cran par sa
@@ -150,7 +150,7 @@ n'en offre pas : `ProvisionException.getMessage()` cherche les numéros de ligne
 rapport, lit du bytecode **major 69** avec l'ASM embarqué de Guice 7.0.0, et lève
 `IllegalArgumentException: Unsupported class file major version 69`.
 
-⚠️ **La pile se lit à l'envers de ce qu'on croit.** Guice a d'abord échoué à fournir quelque chose ;
+**La pile se lit à l'envers de ce qu'on croit.** Guice a d'abord échoué à fournir quelque chose ;
 c'est en **racontant** cet échec qu'il a explosé. Le message n'annonce pas le défaut, il annonce la
 panne du dispositif qui devait l'annoncer - et le vrai défaut est à trois `Caused by` de là. Guice le
 dit une ligne plus haut, et personne ne la lit :
@@ -184,7 +184,7 @@ cause immédiatement :
 ./mvnw javafx:run -Dguice_include_stack_traces=OFF
 ```
 
-⚠️ **Le défaut est en amont.** L'ASM de Guice 7.0.0 ne lit pas major 69 ; une version qui le lit
+**Le défaut est en amont.** L'ASM de Guice 7.0.0 ne lit pas major 69 ; une version qui le lit
 règle tout, et rien de ce qui précède n'est perdu - le repli ne se déclenche que si le formatage
 échoue.
 

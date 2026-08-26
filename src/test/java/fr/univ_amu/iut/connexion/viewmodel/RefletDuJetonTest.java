@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 /// Le reflet observable du jeton (#4205), éprouvé sans IHM : `RefletDuJeton` ne touche qu'une
 /// `Property` et un `Executor`, et les deux se pilotent depuis un test ordinaire.
 ///
-/// ⚠️ Cette classe est **construite** par sept tests de vue, et n'était **éprouvée par aucun**. Un
+/// Cette classe est **construite** par sept tests de vue, et n'était **éprouvée par aucun**. Un
 /// objet que tout le monde câble et que personne ne teste est un angle mort : chacun le croit couvert
 /// par le voisin.
 class RefletDuJetonTest {
@@ -68,7 +68,7 @@ class RefletDuJetonTest {
         reflet.relire();
         reflet.relire();
 
-        // ⚠️ C'est la différence avec `RevisionDonnees`, et elle est voulue : deux mutations
+        // C'est la différence avec `RevisionDonnees`, et elle est voulue : deux mutations
         // successives doivent réveiller deux fois, deux lectures qui rendent « connecté » ne sont pas
         // deux nouvelles. Un compteur ici ferait relire l'écran à chaque `rafraichir()` de la modale.
         assertThat(reveils)
@@ -85,7 +85,7 @@ class RefletDuJetonTest {
 
         reflet.relire();
 
-        // ⚠️ La connexion se termine sur un fil d'arrière-plan, et une `Property` JavaFX se mute sur le
+        // La connexion se termine sur un fil d'arrière-plan, et une `Property` JavaFX se mute sur le
         // fil JavaFX. Si `relire()` posait la valeur directement, le défaut ne se verrait qu'en
         // production, sous forme d'exception hors du fil - et jamais dans un test à exécuteur direct.
         assertThat(reflet.connecteProperty().get())

@@ -101,7 +101,7 @@ class ParcoursSitesVersPassageE2ETest {
         assertThat(navigation.getVueCourante()).isEqualTo("accueil");
 
         // 1) Carte « Mes sites » du tableau de bord → écran M-Sites.
-        // ⚠️ Attendre que la carte soit VISIBLE, pas seulement présente. Les cartes d'accueil sont
+        // Attendre que la carte soit VISIBLE, pas seulement présente. Les cartes d'accueil sont
         // peuplées section par section : celles de la seconde section sont posées en dernier, et un
         // clic immédiat les rate sous charge - « returned 1 nodes, but no nodes were visible ». Sept
         // occurrences en deux jours, toujours sur une carte tardive, jamais sur la première (#3823).

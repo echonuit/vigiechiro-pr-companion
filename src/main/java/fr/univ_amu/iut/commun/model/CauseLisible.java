@@ -13,7 +13,7 @@ import java.util.Set;
 ///
 /// ## La règle : le message le plus profond QUI PARLE
 ///
-/// ⚠️ Ce n'est **pas** « prendre la cause racine », et la nuance décide du résultat : la plus profonde
+/// Ce n'est **pas** « prendre la cause racine », et la nuance décide du résultat : la plus profonde
 /// peut être un `NullPointerException` muet, moins parlant que son parent. Dérouler jusqu'au bout
 /// rendrait l'alerte **plus pauvre** qu'avant, en ayant l'air de la corriger.
 ///
@@ -32,7 +32,7 @@ public final class CauseLisible {
 
     /// Le libellé de l'entrée de menu qui ouvre le dossier des journaux.
     ///
-    /// ⚠️ **Il vit ICI, et la vue le cite** - l'inverse de ce que #3470 avait posé. La raison est
+    /// **Il vit ICI, et la vue le cite** - l'inverse de ce que #3470 avait posé. La raison est
     /// arrivée avec #3947 : ce message est composé par le filet global des **deux** surfaces, et une
     /// surface headless qui va chercher une constante dans un paquet `view` lit mal. Ce qui faisait
     /// tenir le montage précédent n'était pas une propriété d'architecture, c'était l'**inlining** par
@@ -42,7 +42,7 @@ public final class CauseLisible {
     /// l'entrée de menu renomme ce que le message dit d'aller chercher. La première rédaction disait
     /// « Journaux », entrée qui n'existe pas.
     ///
-    /// ⚠️ **Et « menu principal », pas le pictogramme ☰.** Une rédaction l'employait ; le garde
+    /// **Et « menu principal », pas le pictogramme ☰.** Une rédaction l'employait ; le garde
     /// `PoliceCouvreLIhmTest` l'a refusée, à juste titre : ce caractère n'est pas dans la Noto Sans
     /// embarquée, il partirait en repli vers une police du système et deux utilisateurs ne verraient
     /// pas le même glyphe (ADR 0035).
@@ -54,7 +54,7 @@ public final class CauseLisible {
     /// Où regarder **en ligne de commande**. Elle n'a pas de menu, et lui en désigner un serait une
     /// consigne inapplicable : le seul repli honnête est le chemin du dossier.
     ///
-    /// ⚠️ C'est le piège qu'un alignement naïf aurait posé. Faire appeler `messageDe` par la CLI sans
+    /// C'est le piège qu'un alignement naïf aurait posé. Faire appeler `messageDe` par la CLI sans
     /// toucher à ce repli aurait mis « menu principal » dans une sortie de terminal, et le défaut
     /// n'aurait rien fait rougir : le message serait resté non vide, donc d'apparence correcte. C'est
     /// exactement la forme du défaut que l'ADR 3470 combat, déplacée d'un cran.
@@ -99,7 +99,7 @@ public final class CauseLisible {
         Set<Throwable> vus = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
         String retenu = null;
 
-        // ⚠️ Une chaîne de causes peut se REFERMER sur elle-même : `initCause` le permet, et un
+        // Une chaîne de causes peut se REFERMER sur elle-même : `initCause` le permet, et un
         // déroulement naïf y tourne sans fin. Le filet global est le dernier endroit où l'on peut se
         // le permettre : c'est déjà lui qui a bouclé en #3700.
         for (Throwable maillon = erreur; maillon != null && vus.add(maillon); maillon = maillon.getCause()) {
@@ -115,7 +115,7 @@ public final class CauseLisible {
     /// `true` si `message` n'est que le `toString()` de la cause de `maillon` - c'est-à-dire le message
     /// que la JDK **fabrique toute seule**, et non un message écrit par quelqu'un.
     ///
-    /// ⚠️ **C'est le cœur du défaut, et il se généralise.** `RuntimeException(Throwable)` - comme tous
+    /// **C'est le cœur du défaut, et il se généralise.** `RuntimeException(Throwable)` - comme tous
     /// les constructeurs `(Throwable)` de la JDK - pose comme message `cause.toString()`. Le
     /// « `java.lang.reflect.InvocationTargetException` » du retour de terrain n'était pas un cas
     /// particulier de la réflexion : c'était cette convention-là, et elle produit le même texte inutile

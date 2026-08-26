@@ -304,7 +304,7 @@ class ServiceImportTest {
     @DisplayName("Phase 1d-B : la participation Vigie-Chiro est créée à l'import (best-effort) pour le passage")
     void participation_creee_a_l_import() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
-        // ⚠️ Le stub est indispensable : sans lui le mock rend `null`, ce qui ne lève pas. Le test
+        // Le stub est indispensable : sans lui le mock rend `null`, ce qui ne lève pas. Le test
         // passait donc sur un contrat que la vraie classe n'honore jamais - c'est ce qui a laissé
         // #3448 vivre.
         when(sync.creerPour(anyLong())).thenReturn(ResultatEcriture.reussie("6a666e6b31218bab07d0c0ee"));

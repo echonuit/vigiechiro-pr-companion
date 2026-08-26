@@ -23,7 +23,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /// `discussion` (#1418) : la **parité CLI** du fil d'échange avec le validateur, le lire, et y répondre.
 ///
-/// ⚠️ Aucun envoi réel n'est tiré ici : l'injecteur applicatif n'est pas connecté, et le test s'arrête
+/// Aucun envoi réel n'est tiré ici : l'injecteur applicatif n'est pas connecté, et le test s'arrête
 /// **avant** l'appel réseau. Ce qu'il protège, c'est le garde-fou : **rien ne part sans `--confirmer`**,
 /// sur une route qui ne sait pas revenir en arrière.
 class CliDiscussionTest {

@@ -56,7 +56,7 @@ class RequetesDeListerSitesTest {
         int pourQuatre = requetesPour(4);
         int pourSeize = requetesPour(16);
 
-        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : la machine de mise au point portait un
+        // Le garde compte des REQUÊTES, pas des millisecondes : la machine de mise au point portait un
         // banc filmé, et tout chronométrage y variait du simple au double.
         int surcout = pourSeize - pourQuatre;
         assertThat(surcout)

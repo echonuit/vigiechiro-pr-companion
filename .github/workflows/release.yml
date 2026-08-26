@@ -27,7 +27,7 @@ name: release
 #
 # `workflow_dispatch` reste : un correctif urgent n'attend pas le train.
 #
-# ⚠️ CONTOURNEMENT DE LA GARDE DES PLATEFORMES (#3561, passe 0). L'ADR 0041 pose la règle qu'on avait
+# CONTOURNEMENT DE LA GARDE DES PLATEFORMES (#3561, passe 0). L'ADR 0041 pose la règle qu'on avait
 # sautée : « avant de rendre un check obligatoire, inventorier tous les chemins d'écriture vers `main`
 # [...] un chemin sans réponse est un blocage permanent ». L'inventaire tient en deux lignes - le train
 # du mercredi, et ce dispatch - et la seconde était vide : la garde de #3526 retenait aussi le
@@ -68,16 +68,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # ⚠️ Le train ne part pas sans preuve que la suite passe **sur les plateformes qu'on livre** (#3526).
+  # Le train ne part pas sans preuve que la suite passe **sur les plateformes qu'on livre** (#3526).
   #
   # Ce qu'on craint est de publier un MSI cassé sur sa propre plateforme, et l'empêcher de partir est
   # la seule sanction proportionnée : le train du mercredi est la dernière porte avant publication.
   #
-  # ⚠️ La veille garde le cas le plus sournois, celui qu'un simple « le job est vert » manquerait : un
+  # La veille garde le cas le plus sournois, celui qu'un simple « le job est vert » manquerait : un
   # job qui **ne tourne plus du tout**. Un `schedule` peut être retardé, sauté sous charge, et il est
   # désactivé après soixante jours sans activité. Son silence passerait pour un feu vert.
   #
-  # ⚠️ La condition est écrite « pas un dispatch, OU un dispatch sans raison », et surtout PAS
+  # La condition est écrite « pas un dispatch, OU un dispatch sans raison », et surtout PAS
   # « inputs.raison_du_contournement == '' » seul : sur un `schedule`, `inputs` est **null**, et une
   # expression GitHub compare deux types différents en les coulant en nombre - `null == ''` y est donc
   # **vrai**. Écrite naïvement, la garde se serait sautée toute seule le mercredi, c'est-à-dire
@@ -121,7 +121,7 @@ jobs:
           RAISON: ${{ inputs.raison_du_contournement }}
         run: |
           set -euo pipefail
-          # ⚠️ Une raison d'un caractère laisse une trace inutile, donc pas de trace du tout. Le refus
+          # Une raison d'un caractère laisse une trace inutile, donc pas de trace du tout. Le refus
           # est chiffré pour qu'il se corrige au lieu de se deviner.
           if [ "${#RAISON}" -lt 20 ]; then
             echo "::error title=Raison trop courte::${#RAISON} caractère(s), 20 au minimum."
@@ -137,7 +137,7 @@ jobs:
             echo "Lancer « Suite complète sous Windows et macOS » dès que possible (#3526)."
           } >> "${GITHUB_STEP_SUMMARY}"
 
-  # ⚠️ `needs` sur un job **sauté** saute le dépendant par défaut : sans ce `if`, le contournement
+  # `needs` sur un job **sauté** saute le dépendant par défaut : sans ce `if`, le contournement
   # empêcherait la publication au lieu de la permettre. On exige donc que la garde n'ait pas ÉCHOUÉ,
   # ce qui laisse passer « réussie » et « sautée » - et rien d'autre.
   release:
@@ -225,7 +225,7 @@ jobs:
       attestations: write
     # Seulement si semantic-release a réellement publié une version (tag non vide).
     #
-    # ⚠️ `!cancelled()` n'est pas décoratif (#4079). GitHub saute un job dès qu'un ANCÊTRE a été
+    # `!cancelled()` n'est pas décoratif (#4079). GitHub saute un job dès qu'un ANCÊTRE a été
     # sauté, et `release` descend de `contournement-declare`, qui ne tourne que sur un dispatch avec
     # raison : sur le train du mercredi, il est toujours sauté. Sans fonction d'état, la condition
     # ci-dessous est enveloppée en `success() && (...)` sur tout le graphe amont et n'est JAMAIS
@@ -331,7 +331,7 @@ jobs:
         # par les environnements de bureau) : d'où une construction qui passait en local et échouait
         # ici, sur la release v2.21.0.
         #
-        # ⚠️ Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
+        # Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
         # parce que ce paquet n'est que des fichiers ; les polices et flatpak gardent
         # `installer-paquets.sh`, dont le post-install fait foi.
         if: matrix.portable == 'linux'
@@ -387,7 +387,7 @@ jobs:
         # chacune a une façon connue de casser - le bit exécutable pour `tar.gz`, les liens
         # symboliques d'un bundle `.app` pour `ditto`, et l'AppImage a déjà fait échouer la v2.21.0.
         #
-        # ⚠️ Windows n'est pas couvert ici : le script est en bash et le suivi d'un lanceur en
+        # Windows n'est pas couvert ici : le script est en bash et le suivi d'un lanceur en
         # sous-système graphique depuis Git Bash n'a pas pu être éprouvé. Un faux échec y bloquerait
         # une publication. Le `.msi`, lui, est installé ET lancé par `winget.yml`.
         if: matrix.portable != 'windows'
@@ -411,7 +411,7 @@ jobs:
               # --appimage-extract-and-run : les runners n'ont pas toujours FUSE, ce dont une AppImage
               # a besoin pour se monter. Sans cette option, l'échec est obscur et sans rapport.
               #
-              # ⚠️ Le `--cli` de l'AppImage est l'AppImage ELLE-MÊME : `AppRun` passe ses arguments au
+              # Le `--cli` de l'AppImage est l'AppImage ELLE-MÊME : `AppRun` passe ses arguments au
               # lanceur, qui aiguille sur le mot reçu (#4071). Le `bin/vigiechiro` de l'app-image vit
               # bien dedans, mais personne ne l'atteint sans monter l'image : ce qu'on vérifie ici,
               # c'est ce que l'utilisateur tape.
@@ -524,7 +524,7 @@ jobs:
     # Retire l'état brouillon de la Release : une seule commande `gh`, aucun code tiers.
     permissions:
       contents: write
-    # ⚠️ Même garde qu'`installers`, et pour la même raison (#4079) : sans fonction d'état, le saut
+    # Même garde qu'`installers`, et pour la même raison (#4079) : sans fonction d'état, le saut
     # de `contournement-declare` se propage jusqu'ici et la Release reste en brouillon.
     if: >-
       ${{ !cancelled()
@@ -549,7 +549,7 @@ jobs:
   # était publiée : la ligne de commande livrée par #4071 n'existait pas dans le paquet
   # installé, pendant que la documentation utilisateur l'annonçait.
   #
-  # ⚠️ Le retard n'était pas le défaut, il en était le symptôme : un canal de
+  # Le retard n'était pas le défaut, il en était le symptôme : un canal de
   # distribution dépendait d'un geste que rien ne réclamait, et une publication réussie
   # qui laisse le Flatpak où il était est un état parfaitement vert.
   #
@@ -561,11 +561,11 @@ jobs:
   # s'exécute dans ce run-ci - donc l'obstacle ne s'applique pas. C'est le premier
   # `workflow_call` du dépôt.
   #
-  # ⚠️ `needs: publish`, et pas `installers` : le `flatpak-external-data-checker`
+  # `needs: publish`, et pas `installers` : le `flatpak-external-data-checker`
   # interroge `releases/latest`, qui IGNORE les brouillons. Dépendre de l'étape qui
   # téléverse les assets ne suffit donc pas ; il faut celle qui retire le brouillon.
   #
-  # ⚠️ La condition NOMME l'état attendu (ADR 4079). Sans `!cancelled()` ni
+  # La condition NOMME l'état attendu (ADR 4079). Sans `!cancelled()` ni
   # `needs.publish.result`, le « sauté » de `contournement-declare` se propagerait
   # jusqu'ici, et le train rendrait vert en n'ayant rien publié - le défaut même que
   # cette ADR a nommé.
@@ -609,7 +609,7 @@ jobs:
   # Cinq minutes, mesurées sur le tournage complet du 2026-08-20 (58 clips). Le job
   # ne dépend pas de `flatpak` : les deux partent ensemble après `publish`.
   #
-  # ⚠️ La condition NOMME l'état attendu (ADR 4079), comme celle du Flatpak : sans
+  # La condition NOMME l'état attendu (ADR 4079), comme celle du Flatpak : sans
   # `!cancelled()` ni `needs.publish.result`, le « sauté » de `contournement-declare`
   # se propagerait et le train rendrait vert sans avoir rien tourné.
   clips-de-recette:

@@ -52,7 +52,7 @@ class FilArianeElisionTest {
 
     /// Les **deux** largeurs que le produit livre, éprouvées par chaque test de ce fichier.
     ///
-    /// ⚠️ Elles y étaient déjà annoncées - « la CI rejoue le même fichier à 900 » - et c'était **faux** :
+    /// Elles y étaient déjà annoncées - « la CI rejoue le même fichier à 900 » - et c'était **faux** :
     /// la largeur venait d'un `System.getProperty("chrome.largeur", "1100")` que **rien** ne posait, ni
     /// le `pom.xml`, ni un atelier, ni un script. Les deux gardes de largeur ne tournaient donc jamais
     /// qu'à 1100, c'est-à-dire jamais à la largeur où l'élision sert (#3960).
@@ -82,7 +82,7 @@ class FilArianeElisionTest {
         // la police effectivement rendue (#3773). Recopier le banc voisin m'a fait hériter de sa dette :
         // lui ne mesure pas lui-même, il délègue à `LisibiliteCapture`, et le garde ne le vise pas.
         scene = Habillage.scene(racine, LARGEURS_LIVREES[0], 720);
-        // ⚠️ Une fenêtre À SOI, et non celle du harnais. Ce banc dimensionne sa fenêtre à la main, et
+        // Une fenêtre À SOI, et non celle du harnais. Ce banc dimensionne sa fenêtre à la main, et
         // `setWidth` fait passer un Stage en dimensionnement EXPLICITE : il cesse définitivement de
         // s'ajuster aux scènes qu'on lui pose ensuite. Le Stage du harnais TestFX est partagé par toutes
         // les classes d'un même fork - figé ici, il faisait échouer les suivantes sur des noeuds
@@ -173,7 +173,7 @@ class FilArianeElisionTest {
     /// Rejoue `verification` **à chaque largeur livrée**, et vérifie d'abord que la scène l'a
     /// réellement atteinte.
     ///
-    /// ⚠️ Ce contrôle-là n'est pas décoratif. Une fenêtre rabattue par la plateforme rendrait la boucle
+    /// Ce contrôle-là n'est pas décoratif. Une fenêtre rabattue par la plateforme rendrait la boucle
     /// muette sur le cas même qu'elle vise, et le garde annoncerait deux largeurs en n'en éprouvant
     /// qu'une - exactement le défaut que #3960 vient de corriger.
     private void aChaqueLargeurLivree(FxRobot robot, DoubleConsumer verification) {
@@ -201,7 +201,7 @@ class FilArianeElisionTest {
 
     /// Les libellés **rendus** du fil, séparateurs « › » exclus : eux ne portent aucune information.
     ///
-    /// ⚠️ Le filtre sur `isManaged` n'est pas décoratif : les segments élidés restent enfants du fil et
+    /// Le filtre sur `isManaged` n'est pas décoratif : les segments élidés restent enfants du fil et
     /// ne sont que démanagés. Les compter reviendrait à déclarer lisible ce qui ne s'affiche pas.
     private List<Labeled> segmentsRendus() {
         return enfantsDuFil().stream()

@@ -122,7 +122,7 @@ class TraiterPassagesTest {
         ligneDeCommande(Optional.of(action), sortie, new StringWriter())
                 .execute("--action", "televerser", "--passage", "1");
 
-        // ⚠️ Ce test exigeait « vigiechiro connexion --token », et VERROUILLAIT ainsi une commande qui
+        // Ce test exigeait « vigiechiro connexion --token », et VERROUILLAIT ainsi une commande qui
         // n'existe pas : la frapper repond « Commande inconnue ». Le garde de l'ADR 2635 - « un refus
         // porte la commande a taper, jamais un chemin de menu » - figeait donc le defaut qu'il devait
         // empecher. Il porte desormais sur le GESTE reel : l'option, la variable, ou l'application

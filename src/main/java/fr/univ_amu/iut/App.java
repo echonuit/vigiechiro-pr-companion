@@ -47,7 +47,7 @@ public class App extends Application {
         // Filet global (#795) : une exception non capturée (fil JavaFX ou tâche de fond) était jusqu'ici
         // perdue en console. On la signale à l'utilisateur par une alerte, et on la **journalise** avec sa
         // trace (#1523) : un incident laisse désormais une trace inspectable, même à message nul.
-        // ⚠️ Le filet vit dans sa propre classe depuis qu'il a bouclé sur lui-même (#3700) : habiller
+        // Le filet vit dans sa propre classe depuis qu'il a bouclé sur lui-même (#3700) : habiller
         // l'alerte échouait pour la raison même qu'elle rapportait, et l'échec repassait par ici.
         Thread.setDefaultUncaughtExceptionHandler(new SignalementIncident(LOG, Platform::runLater, erreur -> {
             Alert alerte = new Alert(Alert.AlertType.ERROR);

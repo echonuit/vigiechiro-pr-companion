@@ -25,7 +25,7 @@ import picocli.CommandLine;
 /// construction* aujourd'hui - encore faut-il que ça le reste. Le jour où quelqu'un compose le
 /// conseil dans un seul des deux, ces tests le disent.
 ///
-/// ⚠️ **Ce que ces tests prouvent dépend du système où ils tournent**, et il vaut mieux le savoir que
+/// **Ce que ces tests prouvent dépend du système où ils tournent**, et il vaut mieux le savoir que
 /// de lire leur vert de travers :
 ///
 /// - sous **Windows**, ils prouvent que les deux rendus portent le geste `winget` ;

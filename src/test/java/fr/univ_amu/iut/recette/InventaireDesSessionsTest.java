@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// `dev-docs/recette/index.md` porte cet avertissement :
 ///
-/// > ⚠️ **Cet inventaire est la seule source.** Il a été recopié ailleurs [...] et les trois copies
+/// > **Cet inventaire est la seule source.** Il a été recopié ailleurs [...] et les trois copies
 /// > ont divergé en **quelques heures**.
 ///
 /// Et la page portait pourtant **trois** inventaires. L'issue #3885 en signalait deux ; le troisième
@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 /// | « Les scripts de session », une liste à puces | S1, S2, S3, S4, S7 : **cinq sur dix** |
 ///
 /// Elle s'était recopiée **elle-même**, deux fois - ce que son avertissement ne pouvait pas
-/// envisager, puisqu'il ne surveillait que l'extérieur. ⚠️ **Une consigne n'est pas un garde.**
+/// envisager, puisqu'il ne surveillait que l'extérieur. **Une consigne n'est pas un garde.**
 ///
 /// ## Les deux premiers devoirs auraient laissé passer tout cela
 ///
@@ -126,7 +126,7 @@ class InventaireDesSessionsTest {
     @Test
     @DisplayName("Aucune session n'est énumérée ailleurs que dans le tableau")
     void le_tableau_est_le_seul_inventaire() {
-        // ⚠️ Le devoir qui manquait. Les deux précédents vérifient que le tableau est COMPLET ; ils
+        // Le devoir qui manquait. Les deux précédents vérifient que le tableau est COMPLET ; ils
         // seraient restés verts pendant que la page portait, plus bas, deux autres listes de
         // sessions - dont une qui s'arrêtait à huit sur dix et une autre à cinq sur dix. Une copie
         // incomplète ne se répare pas, elle se supprime : ce test rend la suppression obligatoire.

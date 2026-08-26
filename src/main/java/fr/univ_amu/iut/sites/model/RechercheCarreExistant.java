@@ -63,7 +63,7 @@ public class RechercheCarreExistant {
 
             /// Le message dit **quoi faire**, et non seulement ce qui est.
             ///
-            /// ⚠️ Il a dit deux fois le contraire de ce qu'il fallait, et les deux erreurs se corrigent
+            /// Il a dit deux fois le contraire de ce qu'il fallait, et les deux erreurs se corrigent
             /// ensemble (#3806) :
             ///
             /// - il renvoyait à « Mes sites », « Récupérer depuis Vigie-Chiro ». Cette synchronisation
@@ -88,12 +88,12 @@ public class RechercheCarreExistant {
 
         /// On ne sait pas : hors connexion, plateforme injoignable, ou refus.
         ///
-        /// ⚠️ **Ce n'est pas « il n'existe pas »**, et les confondre serait le pire des deux mondes :
+        /// **Ce n'est pas « il n'existe pas »**, et les confondre serait le pire des deux mondes :
         /// l'utilisateur déclarerait un carré déjà pris en croyant avoir vérifié. C'est exactement la
         /// panne que cette classe existe pour éviter.
         record Indisponible() implements Verdict {
 
-            /// ⚠️ Ce cas **parle**, là où [ControleCarreStoc] se tait. Le contrôle du carré STOC est
+            /// Ce cas **parle**, là où [ControleCarreStoc] se tait. Le contrôle du carré STOC est
             /// automatique : son silence est discret. Ici l'utilisateur a **cliqué** ; ne rien afficher
             /// lui ferait croire que le geste a échoué, ou pire, que le carré est libre.
             @Override

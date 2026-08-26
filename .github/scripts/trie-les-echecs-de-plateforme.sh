@@ -8,12 +8,12 @@
 # programmer quoi que ce soit, il faut un **chiffre** - combien d'échecs, et de quelle nature. Ce
 # script le rend, et rien d'autre : il ne corrige rien et ne juge rien.
 #
-# ⚠️ Deux comptes séparés, TestFX et le reste. Les 140 classes annotées
+# Deux comptes séparés, TestFX et le reste. Les 140 classes annotées
 # `@ExtendWith(ApplicationExtension.class)` sont 21 % de la suite, et leur comportement headless hors
 # Linux est la grande inconnue : si elles échouent en masse pour une raison unique, elles noieraient
 # le signal des autres. Les compter à part rend les deux lisibles sans rien exclure.
 #
-# ⚠️ Le tri se fait sur les **rapports** et non en relançant la suite par sous-ensembles : passer 536
+# Le tri se fait sur les **rapports** et non en relançant la suite par sous-ensembles : passer 536
 # noms de classes à `-Dtest=` dépasse la limite de ligne de commande de Windows, et un dispositif qui
 # se casse sur la plateforme qu'il vient mesurer ne mesure rien.
 set -euo pipefail
@@ -54,7 +54,7 @@ read -r cre ere rre <<< "$(compte reste)"
 {
     echo "### Ce que la suite donne sur ${RUNNER_OS:-cette plateforme}"
     echo
-    # ⚠️ Dire SUR QUOI le compte a porté. Sans cette ligne, « aucun échec » sur trois classes se relirait
+    # Dire SUR QUOI le compte a porté. Sans cette ligne, « aucun échec » sur trois classes se relirait
     # comme « aucun échec » tout court - et c'est le genre de malentendu qui fait programmer un train de
     # publication sur une preuve qui n'existe pas (#3754).
     if [ -n "${CLASSES:-}" ]; then
@@ -69,7 +69,7 @@ read -r cre ere rre <<< "$(compte reste)"
     echo "| Le reste | ${cre} | **${ere}** | **${rre}** |"
     echo
     if [ $((efx + rfx + ere + rre)) -eq 0 ]; then
-        # ⚠️ La conclusion suit le PÉRIMÈTRE. Dire « la suite passe » après un passage ciblé
+        # La conclusion suit le PÉRIMÈTRE. Dire « la suite passe » après un passage ciblé
         # contredisait l'en-tête posé trois lignes plus haut - et c'était la moitié rassurante de la
         # contradiction, donc celle qu'on retient. Vu sur la première utilisation réelle de l'outil.
         if [ -n "${CLASSES:-}" ]; then
@@ -98,7 +98,7 @@ cat "${compte_rendu}"
 [ -n "${GITHUB_STEP_SUMMARY:-}" ] && cat "${compte_rendu}" >> "${GITHUB_STEP_SUMMARY}"
 rm -f "${compte_rendu}"
 
-# ⚠️ Il CONCLUT désormais, il ne se contente plus de compter (#3526, étape 3).
+# Il CONCLUT désormais, il ne se contente plus de compter (#3526, étape 3).
 #
 # Tant qu'il rendait toujours 0, la couleur du job ne disait rien de ce qu'il avait trouvé - c'est le
 # motif que ce chantier corrige partout ailleurs. Et surtout, la veille de fraîcheur qui garde le train

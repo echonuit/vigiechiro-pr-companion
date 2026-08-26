@@ -17,7 +17,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 ///
 /// Elle ne filme pas, ne découpe pas, ne juge pas. Elle pose des instants, et c'est tout.
 ///
-/// ## ⚠️ Quand elle est active, et pourquoi jamais autrement
+/// ## Quand elle est active, et pourquoi jamais autrement
 ///
 /// Deux conditions, toutes deux posées par le seul profil `recette-filmee` :
 ///
@@ -51,7 +51,7 @@ public class ReperesDeSeance implements BeforeTestExecutionCallback, AfterTestEx
 
     /// Les cas cités, ou aucun.
     ///
-    /// ⚠️ Un test **sans** citation est consigné lui aussi, la colonne des cas restant vide. Ce
+    /// Un test **sans** citation est consigné lui aussi, la colonne des cas restant vide. Ce
     /// n'était pas le cas d'abord, et la première séance filmée réelle a montré pourquoi il le
     /// faut : `ConnexionModaleViewTest` compte dix tests dont trois annotés, et les sept autres
     /// ouvrent des fenêtres. Le montage, qui vérifie que ce qui apparaît à l'écran tombe dans une

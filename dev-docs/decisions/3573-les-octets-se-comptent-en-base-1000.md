@@ -27,7 +27,7 @@ base 1024 étiquetées « Mo » (`ExportBiblioSons`, `ExporterSons`, `ExportObse
 `ExporteurAudio`), deux en base 1000 rendant un nombre nu suivi d'un « Go » écrit à la main
 (`FormatsLot`, `MoteurImport`), plus `LotViewModel` qui divisait par un million pour son titre.
 
-⚠️ `Formats.octetsLisibles` n'avait **aucun test**. Le formateur le plus employé du produit était sans
+`Formats.octetsLisibles` n'avait **aucun test**. Le formateur le plus employé du produit était sans
 garde, ce qui est aussi la raison pour laquelle les bases ont pu diverger sans que rien ne le dise.
 
 ## Décision
@@ -56,7 +56,7 @@ qu'il ne déciderait à « 128 Go ».
 
 - Les valeurs affichées **changent partout**, légèrement : un fichier de 4,5 Gio passe de « 4,2 Go » à
   « 4,5 Go ». Quatorze attendus de tests ont suivi.
-- ⚠️ Deux d'entre eux étaient **pliés au formateur plutôt qu'à leur propre fixture** : le compte rendu
+- Deux d'entre eux étaient **pliés au formateur plutôt qu'à leur propre fixture** : le compte rendu
   de dépôt posait `4_500_000_000L` et attendait « 4,2 Go ». L'assertion redevient cohérente avec ce
   qu'elle décrit.
 - La justification écrite dans `LotViewModel` - « et non `Formats.octetsLisibles` qui raisonne en base

@@ -128,7 +128,7 @@ class SiteDetailPublierPointViewTest {
         injecteur.getInstance(RefletDuJeton.class).relire();
         WaitForAsyncUtils.waitForFxEvents();
 
-        // ⚠️ `setDisable(...)` est posé UNE FOIS, à la construction de la carte : c'est un instantané,
+        // `setDisable(...)` est posé UNE FOIS, à la construction de la carte : c'est un instantané,
         // pas une liaison. La fiche ne se reconstruit que sur une mutation de la base, et se connecter
         // n'en est pas une - le geste restait donc fermé, à conseiller un geste qu'on venait de faire.
         // Le même angle mort que #4205 sur « Mes sites », dans un troisième écran.

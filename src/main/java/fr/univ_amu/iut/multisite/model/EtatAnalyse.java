@@ -99,7 +99,7 @@ public enum EtatAnalyse {
     /// @param resultatsImportes des résultats d'identification existent-ils déjà en base pour cette nuit ?
     public static EtatAnalyse deduire(
             StatutWorkflow statut, Optional<ReleveTraitement> releve, boolean resultatsImportes) {
-        // ⚠️ « Sur la plateforme », pas « déposé par nous » (#2581). Avant le lot 1, une nuit rapatriée
+        // « Sur la plateforme », pas « déposé par nous » (#2581). Avant le lot 1, une nuit rapatriée
         // portait « Déposé » et son état d'analyse se calculait ; l'en sortir l'aurait rendue SANS_OBJET,
         // donc invisible dans la vue « Résultats à importer » - qui est précisément le chemin par lequel
         // on récupère les résultats Tadarida d'une nuit. Une régression que rien n'aurait signalée.

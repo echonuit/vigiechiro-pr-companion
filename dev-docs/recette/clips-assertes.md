@@ -26,7 +26,7 @@ depuis que ce cas existe, pas que le produit est cassé.
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifIssuesConnexionTest.les_trois_etapes_de_la_modale.mp4"></video>
 
-> ⚠️ Aucun navigateur ne s'ouvre sur le banc : ce clip montre le clic, pas la page qu'il ouvre. Ce qui se vérifie est l'adresse transmise au système, et cela se lit dans l'assertion, pas à l'image.
+> Aucun navigateur ne s'ouvre sur le banc : ce clip montre le clic, pas la page qu'il ouvre. Ce qui se vérifie est l'adresse transmise au système, et cela se lit dans l'assertion, pas à l'image.
 
 ### S1-11 · `la_deconnexion_demande_confirmation`
 

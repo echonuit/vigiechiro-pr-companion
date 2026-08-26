@@ -13,13 +13,13 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 /// Les **fonctionnalités** font exception, et le message le dit franchement : elles se règlent dans
 /// l'application, pas ici. Mieux vaut renvoyer à l'endroit qui existe que d'inventer une commande.
 ///
-/// ⚠️ Cette phrase était écrite ici, et ce fichier l'enfreignait. Le besoin de connexion conseillait
+/// Cette phrase était écrite ici, et ce fichier l'enfreignait. Le besoin de connexion conseillait
 /// « vigiechiro connexion --token <jeton> » : une commande qui **n'a jamais existé**, et dont la
 /// frappe répond « Commande inconnue ». Le vrai geste tient en trois voies, celles que décrit
 /// l'option `--token` de chaque commande réseau : l'option elle-même, la variable
 /// `VIGIECHIRO_TOKEN`, ou la connexion enregistrée dans l'application (#3963).
 ///
-/// ⚠️ Et « menu principal », pas le pictogramme ☰, pour la raison que l'ADR 3470 a fixée sur le
+/// Et « menu principal », pas le pictogramme ☰, pour la raison que l'ADR 3470 a fixée sur le
 /// message d'incident : l'application se désigne partout de la même façon.
 public final class GesteAttenduCli {
 

@@ -22,11 +22,11 @@ decouvrir_jar() {
   if [ -z "${JAR}" ] || [ ! -f "${JAR}" ]; then
     skip "fat-jar introuvable : lancer './mvnw -DskipTests package' d'abord (ou définir VIGIECHIRO_JAR)"
   fi
-  # ⚠️ Le fat-jar est exigé MÊME quand on vise le lanceur : l'app-image est faite de ce jar, et un test
+  # Le fat-jar est exigé MÊME quand on vise le lanceur : l'app-image est faite de ce jar, et un test
   # d'ici l'inspecte au `unzip` (aucune classe d'outillage embarquée, #2746). Les deux sont donc
   # présents ensemble, ou aucun des deux.
   #
-  # ⚠️ Et un lanceur DEMANDÉ mais introuvable est un ÉCHEC, jamais un `skip`. La nuance décide de ce
+  # Et un lanceur DEMANDÉ mais introuvable est un ÉCHEC, jamais un `skip`. La nuance décide de ce
   # qu'on apprend : sauté, `VIGIECHIRO_LANCEUR` mal orthographié rendrait 111 tests verts n'ayant rien
   # traversé - un vert creux, exactement ce que l'ADR 2748 refuse. Qui pose cette variable demande à
   # éprouver ce lanceur-là ; son absence est une panne du dispositif.
@@ -44,7 +44,7 @@ decouvrir_jar() {
 # Le paramètre existe pour les tests qui simulent DEUX machines (sauvegarde puis restauration
 # ailleurs) : le tmpdir d'un test ne suffit pas à représenter deux postes.
 #
-# ⚠️ Le workspace se pose en OPTION (`--workspace`) et non en propriété JVM quand on vise le lanceur
+# Le workspace se pose en OPTION (`--workspace`) et non en propriété JVM quand on vise le lanceur
 # empaqueté : celui-ci n'accepte aucun `-D`, et `JAVA_TOOL_OPTIONS` écrirait « Picked up… » sur la
 # sortie d'erreur, que des tests d'ici comparent.
 cli_sur() {
@@ -76,7 +76,7 @@ ligne_cli() {
   fi
 }
 
-# ⚠️ `cli_avec_option_jvm` et `exige_le_fat_jar` ont ete RETIREES (#4075). Elles n existaient que
+# `cli_avec_option_jvm` et `exige_le_fat_jar` ont ete RETIREES (#4075). Elles n existaient que
 # parce qu une borne ne se relevait que par propriete JVM, que le lanceur empaquete n accepte pas :
 # le cas devait donc viser le fat-jar, et le DIRE en sautant. Depuis que `--reglage` existe, la borne
 # se releve par la ligne de commande - donc sur le chemin reel de l utilisateur - et la suite entiere

@@ -14,7 +14,7 @@ import java.util.Locale;
 /// @param id identifiant VigieChiro (`_id`, 24 caractères hexadécimaux)
 /// @param titre titre du site (ex. `"Vigiechiro - Point Fixe-130711"`), base du rapprochement local
 /// @param verrouille `true` si le dépôt est possible : **toujours vrai** pour un site atteint via une
-///     participation (créer une participation exige un site verrouillé, cf. #142). ⚠️ **Faux ami** : ce
+///     participation (créer une participation exige un site verrouillé, cf. #142). **Faux ami** : ce
 ///     champ ne dit **rien** de la propriété du carré : c'est [#observateur] qui la porte.
 /// @param numeroCarre numéro de carré (6 chiffres) extrait du titre, ou `null` si absent
 /// @param observateur identifiant plateforme du **propriétaire** du carré (champ `observateur` du site,
@@ -47,7 +47,7 @@ public record SiteVigieChiro(
     /// `Vigie-chiro - Routier-…`). C'est la seule marque disponible : la recherche ne rend pas le
     /// protocole en clair, et le résoudre coûterait une requête de plus par site.
     ///
-    /// ⚠️ **`PointFixeStandard` et `PointFixeRecherche` sont tous deux du Point Fixe** : ce sont des
+    /// **`PointFixeStandard` et `PointFixeRecherche` sont tous deux du Point Fixe** : ce sont des
     /// variantes **locales** (R3/R4 muettes ou non), pas deux protocoles de la plateforme. Le filtre
     /// porte donc sur la famille, jamais sur la variante choisie par l'utilisateur.
     ///

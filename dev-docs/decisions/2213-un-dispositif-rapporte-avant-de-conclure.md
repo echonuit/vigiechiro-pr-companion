@@ -47,7 +47,7 @@ Ni les droits, ni la validité, ni la nature du jeton : sa **durée de vie**. Au
 hypothèses formulées ne l'envisageait, et le mainteneur a démenti deux fois, à raison, l'accusation
 portée contre son jeton.
 
-⚠️ **Le coût n'est pas le temps perdu, c'est la confiance mal placée.** Un dispositif qui conclut sans
+**Le coût n'est pas le temps perdu, c'est la confiance mal placée.** Un dispositif qui conclut sans
 preuve produit une affirmation qui *ressemble* à une mesure. On la croit, on cherche là où elle
 désigne, et on ne revient pas interroger l'instrument - c'est le dernier endroit qu'on soupçonne.
 
@@ -99,7 +99,7 @@ Les seuils sont **calibrés sur une mesure** et non choisis : le pire écart du 
 d'où 180 pour avertir et 365 pour rougir. La garde reste muette sur l'état sain du jour, et rouge sur
 le cas qui lui avait échappé.
 
-⚠️ Accepter « pas de tag » sans distinction rouvrirait le silence que l'ADR 3501 fermait. Trois cas,
+Accepter « pas de tag » sans distinction rouvrirait le silence que l'ADR 3501 fermait. Trois cas,
 donc, séparés par le **commentaire** : une version annoncée que le SHA ne porte plus est un tag déplacé
 en amont, donc **rouge** ; une branche annoncée est un épinglage assumé, seul l'âge juge ; un
 commentaire **absent** ne permet pas de trancher, donc **rouge** plutôt que rassurant.
@@ -112,7 +112,7 @@ commentaire **absent** ne permet pas de trancher, donc **rouge** plutôt que ras
 - **Un auto-test qui ne vérifie que des codes de sortie ne suffit pas.** Neutraliser la reconnaissance
   du 403 ne change pas le verdict - la garde rougit de toute façon par le chemin générique. Seul un
   test sur le **message** distingue « rouge pour la bonne raison » de « rouge en accusant autre chose ».
-- ⚠️ **Une neutralisation qui ne modifie rien rend un vert qui ne prouve rien.** Rencontré deux fois
+- **Une neutralisation qui ne modifie rien rend un vert qui ne prouve rien.** Rencontré deux fois
   pendant ce chantier, après #3293 : la première tentative n'avait pas appliqué sa substitution, et
   l'auto-test est resté vert. Vérifier que la ligne a **effectivement** changé fait partie de
   l'éprouvage.

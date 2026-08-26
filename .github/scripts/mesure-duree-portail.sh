@@ -11,7 +11,7 @@
 # On compare **deux médianes glissantes** - les FENETRE dernières exécutions réussies contre les
 # FENETRE d'avant - et non la durée d'une exécution à une médiane.
 #
-# ⚠️ C'est la mesure qui a imposé ce choix, contre ce que l'issue supposait. Sur trente exécutions :
+# C'est la mesure qui a imposé ce choix, contre ce que l'issue supposait. Sur trente exécutions :
 # médiane 10,9 min, vingt-huit entre 9,7 et 12,1 (écart-type 0,64)... et **deux à 21,8 et 23,7 min**,
 # soit le double. L'issue, mesurée sur sept exécutions, n'en avait attrapé aucune et concluait « la
 # variance est faible ». Un butoir sur « médiane + 30 % » aurait donc rougi deux fois sur trente sans
@@ -32,7 +32,7 @@
 # Usage : mesure-duree-portail.sh <depot> <fichier-workflow> [fenetre]
 set -euo pipefail
 
-# ⚠️ Locale numérique figée. Sans elle, `printf '%.1f'` refuse un point décimal sur un poste en
+# Locale numérique figée. Sans elle, `printf '%.1f'` refuse un point décimal sur un poste en
 # `fr_FR` (« nombre non valable ») : le script mourrait chez le développeur et marcherait en CI, ce qui
 # est la pire des deux façons de casser. Vu en le lançant la première fois.
 export LC_ALL=C
@@ -41,7 +41,7 @@ export LC_ALL=C
 # `lint.yml`. Ce script est arrivé avec un fichier `bats` à la place - la seule exception des onze -,
 # ce qui faisait attendre à ses cas l'assemblage d'un fat-jar de 80 Mo dont ils n'ont aucun besoin.
 #
-# ⚠️ Le premier cas est celui qui compte : la série RÉELLE du dépôt, ses deux aberrantes comprises,
+# Le premier cas est celui qui compte : la série RÉELLE du dépôt, ses deux aberrantes comprises,
 # doit rester muette. Un avertisseur qui crie sur l'historique existant s'apprend à ignorer dès le
 # premier jour, et c'est cette propriété-là qui décide s'il sera lu.
 if [ "${1-}" = "--auto-test" ]; then
@@ -51,7 +51,7 @@ if [ "${1-}" = "--auto-test" ]; then
 
     # Le compte des cas et de ceux qui doivent PARLER (#3886).
     #
-    # ⚠️ « Rougir » n'a pas de sens ici : cette mesure n'est pas un garde qui refuse, elle avertit ou
+    # « Rougir » n'a pas de sens ici : cette mesure n'est pas un garde qui refuse, elle avertit ou
     # se tait. Et elle porte TROIS états, pas deux - `court` n'est ni un silence ni une alerte, c'est
     # le refus de conclure faute d'historique. Les fondre en « rouges » ferait disparaître de la
     # ligne l'état le plus facile à casser sans le voir.
@@ -103,7 +103,7 @@ WORKFLOW="${2:?fichier de workflow attendu, ex. maven.yml}"
 FENETRE="${3:-12}"
 SEUIL_POURCENT=20
 
-# ⚠️ Trois tentatives : l'API bafouille, et un appel qui rend la liste attendue peut revenir vide
+# Trois tentatives : l'API bafouille, et un appel qui rend la liste attendue peut revenir vide
 # trente secondes plus tard. Sans reprise, ce hoquet se lirait « pas d'historique », donc silence -
 # et un dispositif muet qui se présente en succès est exactement ce que ce lot corrige (ADR 2748).
 insiste() {
@@ -130,7 +130,7 @@ besoin=$((FENETRE * 2))
 # Durées en minutes des exécutions RÉUSSIES sur `main`, de la plus récente à la plus ancienne. Les
 # échouées sont écartées : une suite qui s'arrête au premier rouge est courte pour une mauvaise raison.
 #
-# ⚠️ La série est INJECTABLE par `SERIE_DUREES_FICHIER` (un tableau JSON de minutes), et c'est ce qui
+# La série est INJECTABLE par `SERIE_DUREES_FICHIER` (un tableau JSON de minutes), et c'est ce qui
 # rend ce script éprouvable. Écrit sans cette couture, il allait chercher ses propres données : aucun
 # test ne pouvait lui en fabriquer, et sa vérification se réduisait à trois lancements à la main, qui
 # ne se rejouent pas. C'est exactement ce que l'ADR 3624 nomme - un fait que rien ne peut faire rougir.

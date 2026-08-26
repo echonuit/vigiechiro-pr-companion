@@ -1,7 +1,7 @@
 # Plancher de bruit PAR CAS, à 5 % de tolérance.
 # Colonnes : cas, plancher de la PREMIÈRE image, plancher de la DERNIÈRE, nombre de paires.
-# ⚠️ Le PIRE plancher observé est gardé : sous-estimer le bruit fabrique des faux positifs.
-# ⚠️ Un plancher tiré d'UNE seule paire ne prouve rien. Lire la quatrième colonne.
+# Le PIRE plancher observé est gardé : sous-estimer le bruit fabrique des faux positifs.
+# Un plancher tiré d'UNE seule paire ne prouve rien. Lire la quatrième colonne.
 MainViewTest.accueil_regroupe_en_deux_prismes	0.000	0.000	2
 MainViewTest.bandeau_masque_si_base_vide	0.000	0.000	2
 MainViewTest.bandeau_suit_une_mutation_sans_navigation	0.000	0.000	2

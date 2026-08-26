@@ -47,7 +47,7 @@ public final class CompteRenduEcran {
     /// a dit, et c'est la nuance qui manquait (#4099) : le corollaire de l'ADR 0023 vise ce qui **démarre**
     /// une opération, pas ce qui relit la donnée.
     ///
-    /// ⚠️ Mesuré sur le scénario de recette S1-37 : récupérer un carré écrit le carré **et** ses points,
+    /// Mesuré sur le scénario de recette S1-37 : récupérer un carré écrit le carré **et** ses points,
     /// donc autant d'`insert` que de rechargements déclenchés par la révision - cinq. Le compte rendu du
     /// geste était posé puis effacé cinq fois, avant d'avoir pu être lu, et rien ne le signalait.
     public void oublierUnEchec() {

@@ -55,7 +55,7 @@ WCAG 1.4.11 accepte explicitement les deux leviers, surface **ou** contour.
 seule déclaration sert donc les deux thèmes, et elle y survit : la bibliothèque ne pose de bordure dans
 aucun des deux, sa règle `:light` plus spécifique ne réécrivant que le fond et le texte.
 
-## ⚠️ Ce que cette décision dépasse, et qui ne doit pas rester tacite
+## Ce que cette décision dépasse, et qui ne doit pas rester tacite
 
 L'[ADR 0046](0046-une-classe-css-a-une-seule-feuille.md) pose qu'**une classe CSS se définit dans une
 seule feuille**, parce que *« la cascade CSS ne dit jamais laquelle gagne de façon évidente, et le
@@ -69,7 +69,7 @@ Le dépassement est **délibéré** : 0046 arbitre entre deux feuilles **que nou
 serait de corriger `audio-view` en amont, ce qui n'aurait rien livré à l'utilisateur avant une
 publication.
 
-⚠️ **Et son garde ne peut pas le voir.** `DoublonsFeuillesDeStyleTest` balaie
+**Et son garde ne peut pas le voir.** `DoublonsFeuillesDeStyleTest` balaie
 `src/main/java/fr/univ_amu/iut` : la feuille tierce vit dans un jar, hors de son champ. Le test est donc
 resté vert, et sans cette ADR le dépassement n'aurait laissé **aucune trace**.
 
@@ -79,7 +79,7 @@ resté vert, et sans cette ADR le dépassement n'aurait laissé **aucune trace**
   que le moteur CSS a effectivement appliquées aux nœuds. C'est ce que `ContrasteAATest` nomme
   lui-même comme son trou : *« seule une mesure sur rendu le donnerait »*. Un test qui lirait le CSS
   aurait rendu un **vert faux** sur une surcharge n'atteignant pas sa cible.
-- ⚠️ **Une montée de version d'`audio-view` peut déplacer la cible sans que rien ne le dise.** C'est le
+- **Une montée de version d'`audio-view` peut déplacer la cible sans que rien ne le dise.** C'est le
   risque que 0046 décrivait, reporté à la frontière du jar. La mesure sur rendu est la seule chose qui
   l'attrape : elle rougit si le contraste retombe sous 3:1, quelle qu'en soit la cause.
 - **Le défaut touchait deux écrans**, pas un. La règle vit donc dans `design.css` et non dans

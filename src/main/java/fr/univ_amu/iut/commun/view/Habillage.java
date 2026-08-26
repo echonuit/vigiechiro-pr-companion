@@ -53,7 +53,7 @@ public final class Habillage {
 
     /// Pose la police et les feuilles de socle sur une scène **déjà construite**.
     ///
-    /// ⚠️ L'ordre compte, et le mauvais échoue **en silence**. `MainView.fxml` déclare
+    /// L'ordre compte, et le mauvais échoue **en silence**. `MainView.fxml` déclare
     /// `palette.css, base.css, design.css` : `base.css` consomme `-couleur-fond`, défini par
     /// `palette.css`. Posée avant elle - ou sur la **scène** quand `palette.css` est sur le nœud
     /// racine - la couleur ne se résout pas, et JavaFX **avale la règle** en journalisant un
@@ -68,7 +68,7 @@ public final class Habillage {
         List<String> surLaRacine = scene.getRoot().getStylesheets();
         List<String> surLaScene = scene.getStylesheets();
 
-        // ⚠️ La présence de `base.css` ne prouve PAS celle du trio (#3978). Ce retour se contentait de
+        // La présence de `base.css` ne prouve PAS celle du trio (#3978). Ce retour se contentait de
         // la constater et s'arrêtait là : vrai de `MainView.fxml`, qui déclare les trois feuilles, faux
         // d'`EcranReglages.fxml`, seul FXML du dépôt à déclarer `palette + base` sans `design`. Une
         // scène montée sur cette racine n'obtenait jamais les composants partagés, et le symptôme ne
@@ -95,12 +95,12 @@ public final class Habillage {
             // Aucune des deux, nulle part : un contenu de dialogue monté seul. On pose alors le **trio
             // du chrome**, dans son ordre - `MainView.fxml` déclare `palette, base, design`.
             //
-            // ⚠️ Poser `base.css` sans `palette.css` la laisserait sans ses couleurs ; la poser sans
+            // Poser `base.css` sans `palette.css` la laisserait sans ses couleurs ; la poser sans
             // `design.css` prive la scène des composants partagés (badges, cartes-sections) que son
             // contenu utilise pourtant. Une scène nue n'est pas moins l'application qu'une autre.
             surLaRacine.add(0, url(FEUILLE_PALETTE));
             surLaRacine.add(1, base);
-            // ⚠️ Par `garantirDesign` et non par un `add(2, ...)` aveugle (#3985) : une racine peut
+            // Par `garantirDesign` et non par un `add(2, ...)` aveugle (#3985) : une racine peut
             // porter `design.css` sans porter ni `palette.css` ni `base.css` - c'est la forme de
             // `CapturePublicationCorrections` - et l'ajouter sans regarder la posait DEUX fois.
             garantirDesign(surLaRacine, base);
@@ -133,7 +133,7 @@ public final class Habillage {
     /// Deux classes posaient déjà ces feuilles à la main, **chacune sa copie de la même boucle**, et
     /// quatre autres ne les posaient pas du tout. Un seul point de passage, comme pour les fenêtres :
     /// `DialoguesHabillesTest` verrouille l'invariant.
-    /// ⚠️ **Attacher les feuilles ne suffit pas**, et l'oublier donne un correctif inerte qui se
+    /// **Attacher les feuilles ne suffit pas**, et l'oublier donne un correctif inerte qui se
     /// présente en succès. Aucune règle ne visait les dialogues : le premier essai a attaché les trois
     /// feuilles et la capture du dialogue est restée identique **au bit près**. `design.css` porte
     /// désormais les règles `.dialog-pane`, et ce point de passage retire en plus l'**icône système**
@@ -152,7 +152,7 @@ public final class Habillage {
 
     /// Retire l'icône que JavaFX pose sur un dialogue portant un en-tête.
     ///
-    /// ⚠️ `setGraphic(null)` ne retire **rien**, et c'est contre-intuitif : quand le graphique est nul,
+    /// `setGraphic(null)` ne retire **rien**, et c'est contre-intuitif : quand le graphique est nul,
     /// c'est le **skin** qui fournit l'icône par défaut de l'`AlertType`. Mettre `null` ne fait donc que
     /// laisser le thème décider. Un premier essai l'a cru, et « À propos » a garde son « i » pendant que
     /// les confirmations d'import perdaient leur « ? » - non pas grâce au correctif, mais parce qu'elles
@@ -176,7 +176,7 @@ public final class Habillage {
 
     /// URL d'une feuille du module, telle que `getStylesheets()` l'attend.
     ///
-    /// ⚠️ **Nomme la feuille manquante**, comme [ChargeurFxml] nomme son FXML (#3700). Sans cela, un
+    /// **Nomme la feuille manquante**, comme [ChargeurFxml] nomme son FXML (#3700). Sans cela, un
     /// `target/classes` périmé donnait ici une `NullPointerException` **nue** : aucune indication de la
     /// ressource en cause, et aucun remède. Pire, comme cette méthode sert à habiller l'alerte que le
     /// filet global affiche, l'incident se rejouait à l'infini - une exécution réelle a produit

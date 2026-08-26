@@ -75,7 +75,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// clips se regardent ensemble, et c'est leur écart qui dit la règle - un seul des deux ne montrerait
 /// qu'un écran, pas une garde.
 ///
-/// ## ⚠️ Ce que `lookup` ne dit pas, et où en est ce contrôle-ci
+/// ## Ce que `lookup` ne dit pas, et où en est ce contrôle-ci
 ///
 /// `lookup` trouve un noeud **quelle que soit sa position** : un cas peut passer toutes ses assertions
 /// et publier un clip qui ne montre pas son objet - vécu deux fois sur `S4-33` (#4126, #4128). Chaque
@@ -117,7 +117,7 @@ class ScenarioFicheSiteTest {
     void start(Stage stage) throws IOException {
         injector = BancDeRecette.surLeChrome()
                 .taille(1180, 900)
-                // ⚠️ ASYNCHRONE, celui que cette classe avait déjà : `RacineInjecteur` lie l'exécuteur
+                // ASYNCHRONE, celui que cette classe avait déjà : `RacineInjecteur` lie l'exécuteur
                 // de PRODUCTION, et « pas de surcharge » ne veut donc pas dire « synchrone ». Le premier
                 // jet de la migration a posé SYNCHRONE par erreur, et trois cas ont rougi en « Not on FX
                 // application thread » - le banc exige ce choix précisément parce qu'il ne se devine pas.
@@ -178,7 +178,7 @@ class ScenarioFicheSiteTest {
     @DisplayName(
             "S1-19 · les gardes des boutons : non relié grise « Ouvrir sur Vigie-Chiro », un passage grise « Supprimer »")
     void les_boutons_disent_ce_qui_les_empeche(FxRobot robot) throws TimeoutException {
-        // ⚠️ D'ABORD le carré où les deux commandes sont OFFERTES. Un grisé ne se juge que contre son
+        // D'ABORD le carré où les deux commandes sont OFFERTES. Un grisé ne se juge que contre son
         // contraire : le clip précédent montrait deux boutons ternes parmi quatre, et la revue l'a dit -
         // « ne montre pas ce qu'il doit » (#4173).
         ouvrirLaFiche(robot, TITRE_RATTACHE);
@@ -210,13 +210,13 @@ class ScenarioFicheSiteTest {
                 .as("les deux boutons grisés sont ce que ce cas fait juger : ils doivent être à l'image")
                 .isTrue();
 
-        // ⚠️ Et les motifs PARAISSENT, un par un. Ce cas s'appelle « les boutons disent ce qui les
+        // Et les motifs PARAISSENT, un par un. Ce cas s'appelle « les boutons disent ce qui les
         // empêche » et ne montrait que le gris : les deux motifs étaient lus par programme, donc absents
         // de l'image. Un spectateur voyait deux boutons ternes et aucune explication - « ne montre pas
         // ce qu'il doit » (#4173). L'attente de l'infobulle est une assertion : si elle ne vient pas, le
         // test échoue au lieu de filmer un écran muet.
 
-        // ⚠️ Et ce que ce cas fait juger, c'est ce qu'ils DISENT - donc les motifs PARAISSENT, un par
+        // Et ce que ce cas fait juger, c'est ce qu'ils DISENT - donc les motifs PARAISSENT, un par
         // un. Le test lisait `isDisabled()` puis le texte PAR PROGRAMME : les deux motifs étaient donc
         // absents de l'image, et le clip montrait deux boutons ternes sans un mot d'explication. « Ne
         // montre pas ce qu'il doit » (#4173).
@@ -263,7 +263,7 @@ class ScenarioFicheSiteTest {
         assertThat(robot.lookup(".carte-point").queryAll())
                 .as("trois points sont posés : deux géolocalisés et un sans GPS")
                 .hasSize(3);
-        // ⚠️ On compte les CARTES qui portent le repère, pas les noeuds qui portent la classe. Le badge
+        // On compte les CARTES qui portent le repère, pas les noeuds qui portent la classe. Le badge
         // la pose sur l'hyperlien ET sur son icône : compter les noeuds rendait deux par point, et
         // l'assertion aurait dit « quatre points géolocalisés » sur un carré qui n'en a que deux.
         assertThat(cartesPortant(robot, ".gps-ok"))
@@ -360,7 +360,7 @@ class ScenarioFicheSiteTest {
         // L'en-tête AVANT : sans elle, on ne peut pas dire que le numéro a changé.
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ La VRAIE modale d'édition, ouverte par le bouton. `SiteDetailRenommageViewTest` la
+        // La VRAIE modale d'édition, ouverte par le bouton. `SiteDetailRenommageViewTest` la
         // remplaçait par un double qui écrivait le nouveau numéro : le clip montrait un clic sur
         // « Modifier » puis un numéro qui change, sans qu'aucune modale ne paraisse (#4174).
         robot.clickOn("#boutonModifier");
@@ -415,7 +415,7 @@ class ScenarioFicheSiteTest {
         robot.clickOn(robot.lookup("#champCode").queryAs(TextField.class)).write("E5");
         WaitForAsyncUtils.waitForFxEvents();
 
-        // ⚠️ Le geste qu'un observateur de terrain fait vraiment : il relève sur son GPS de randonnée des
+        // Le geste qu'un observateur de terrain fait vraiment : il relève sur son GPS de randonnée des
         // degrés/minutes/secondes, et les colle dans une application qui parle en décimal. Le script
         // promet que les deux formats se synchronisent ; c'est la moitié du cas que personne ne filmait,
         // couverte en unitaire seulement (#4232).
@@ -434,7 +434,7 @@ class ScenarioFicheSiteTest {
                 () -> robot.lookup(".carte-point").queryAll().size() > 3);
         Respiration.surLeMomentCle(robot);
 
-        // ⚠️ Le verdict se lit SUR L'ÉCRAN, et non dans le ViewModel : une carte de point porte
+        // Le verdict se lit SUR L'ÉCRAN, et non dans le ViewModel : une carte de point porte
         // « GPS : voir sur la carte » quand elle a une position, et « GPS manquant : placer sur la
         // carte » sinon. Un point de PLUS qui se dit situé prouve que les degrés/minutes/secondes ont
         // été compris - et c'est ce que le spectateur peut juger.
@@ -447,7 +447,7 @@ class ScenarioFicheSiteTest {
 
     /// Combien de points se disent situés.
     ///
-    /// ⚠️ On compte les LIENS, pas les noeuds : `.gps-ok` est porté par l'hyperlien **et** par son
+    /// On compte les LIENS, pas les noeuds : `.gps-ok` est porté par l'hyperlien **et** par son
     /// icône, qui en hérite. Le premier jet comptait donc deux fois chaque point, et l'écart qu'il
     /// mesurait n'était pas celui qu'il croyait.
     private static int pointsSitues(FxRobot robot) {
@@ -462,7 +462,7 @@ class ScenarioFicheSiteTest {
     void ajouter_un_point_le_fait_paraitre_sur_la_fiche(FxRobot robot) throws TimeoutException {
         ouvrirLaFiche(robot, TITRE_CARRE);
 
-        // ⚠️ La fiche AVANT, avec ses trois points et pas un de plus. C'est ce que la revue réclamait :
+        // La fiche AVANT, avec ses trois points et pas un de plus. C'est ce que la revue réclamait :
         // « montrer la fenêtre avant d'ouvrir la modale pour bien montrer que le point a été créé par
         // l'action de la modale » (#4175). Sans cet état de départ, la carte qui paraît ne se rattache
         // à rien.
@@ -498,7 +498,7 @@ class ScenarioFicheSiteTest {
 
     /// Le geste que fait un observateur : depuis « Mes sites », cliquer la carte du carré.
     ///
-    /// ⚠️ La carte se cherche **par son titre**, et son absence est une erreur qui la nomme. Chercher
+    /// La carte se cherche **par son titre**, et son absence est une erreur qui la nomme. Chercher
     /// « la première carte » rendrait un clip juste sous une légende fausse le jour où la fixture en
     /// pose une seconde - c'est le défaut qu'`ApercuFx.exigerParLibelle` a corrigé côté aperçus.
     private void ouvrirLaFiche(FxRobot robot, String titre) throws TimeoutException {
@@ -537,7 +537,7 @@ class ScenarioFicheSiteTest {
 
     /// Le carré jugé, et son voisin de comparaison.
     ///
-    /// ⚠️ A1 et B2 sont séparés d'environ cent mètres, ce qui est **sous le seuil de proximité** : c'est
+    /// A1 et B2 sont séparés d'environ cent mètres, ce qui est **sous le seuil de proximité** : c'est
     /// ce qui fait paraître l'alerte que `S1-20` fait juger. Un écart choisi au hasard rendrait un clip
     /// vert et muet sur la moitié du cas.
     private void semerLesDeuxCarres(Injector inj, SourceDeDonnees source) {

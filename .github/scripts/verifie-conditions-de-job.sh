@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Garde-fou : la condition d'un job qui dépend d'un `needs` porte une FONCTION D'ÉTAT.
 #
-# ⚠️ Pourquoi cette garde existe, et ce qu'elle a coûté. Dans GitHub Actions, la propagation du
+# Pourquoi cette garde existe, et ce qu'elle a coûté. Dans GitHub Actions, la propagation du
 # « sauté » est TRANSITIVE : un job dont un ancêtre a été sauté est sauté à son tour, sauf si son
 # `if:` contient une fonction d'état (`always()`, `cancelled()`, `success()`, `failure()`). Sans
 # elle, la condition écrite est implicitement enveloppée en `success() && (...)`, et ce `success()`
@@ -21,7 +21,7 @@
 # train programmé, il est toujours sauté. Le saut s'est propagé jusqu'aux installeurs, qui n'ont
 # jamais tourné. La sortie `tag` valait pourtant bien `v2.186.0` - le journal du run le montre.
 #
-# ⚠️ Ce qui a rendu le défaut invisible : le run est VERT. Aucun job n'échoue, la Release existe, et
+# Ce qui a rendu le défaut invisible : le run est VERT. Aucun job n'échoue, la Release existe, et
 # seul l'absence d'assets trahit que la chaîne s'est arrêtée au milieu. La version 2.186.0 n'a
 # jamais été livrée et personne ne l'a vu pendant huit jours.
 #
@@ -207,7 +207,7 @@ jobs:
     steps:
       - run: echo'
 
-    # ⚠️ Le cas qui empeche la garde de tout refuser : sans ancetre sautable, une condition nue est
+    # Le cas qui empeche la garde de tout refuser : sans ancetre sautable, une condition nue est
     # une forme JUSTE. La refuser ferait contourner la garde au lieu de la corriger.
     essai "sans ancetre sautable, une condition nue est permise"   vert \
 'on: [push]
@@ -223,7 +223,7 @@ jobs:
     steps:
       - run: echo'
 
-    # ⚠️ Et celui qui garde le comportement PAR DEFAUT : un job sans `if:` est saute avec son
+    # Et celui qui garde le comportement PAR DEFAUT : un job sans `if:` est saute avec son
     # ancetre, et c'est ce qu'on attend de lui. L'exiger autrement serait un faux positif.
     essai "un job sans condition n est pas concerne"               vert \
 'on: [push]

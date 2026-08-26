@@ -96,7 +96,7 @@ public final class SynchronisationParticipation {
     /// Sans elle, il faudrait choisir entre deux conseils dont l'un serait faux, puisque « récupérez-le »
     /// n'a de sens que si le carré existe là-bas en Point Fixe.
     ///
-    /// ⚠️ **Injoignable ne tranche pas.** Ni « récupérez-le », ni « il n'existe pas » : le refus dit qu'il
+    /// **Injoignable ne tranche pas.** Ni « récupérez-le », ni « il n'existe pas » : le refus dit qu'il
     /// n'a pas pu vérifier, comme le verdict de la modale l'a appris (ADR 3458). Affirmer depuis une
     /// ignorance est le défaut que ce dépôt traque partout.
     private String conseilSiteNonRattache(String numeroCarre) {

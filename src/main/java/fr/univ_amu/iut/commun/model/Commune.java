@@ -29,7 +29,7 @@ public record Commune(String nom, String codeInsee) {
     }
 
     /// La région (clé de jointure du référentiel d'activité), ou vide hors métropole.
-    /// ⚠️ La valeur rendue est une **clé de référentiel** (`Provence-Alpes-Cote dAzur`), sans accents
+    /// La valeur rendue est une **clé de référentiel** (`Provence-Alpes-Cote dAzur`), sans accents
     /// ni apostrophe. Pour l'afficher à un utilisateur, passer par
     /// [LibellesReferentiel#region(String)] : c'est l'oubli de cette traduction qui a fait lire
     /// « region Provence-Alpes-Cote dAzur » en pied d'écran pendant des mois (#3049).

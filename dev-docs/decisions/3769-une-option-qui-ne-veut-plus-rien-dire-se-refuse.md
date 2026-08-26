@@ -35,7 +35,7 @@ effet.
 plus d'étendue à borner. Les accepter en silence serait exactement ce que ce dépôt reproche à `where=`
 côté plateforme - un paramètre qu'on croit avoir posé, et qui ne fait rien.
 
-⚠️ Le refus tombe **avant** toute lecture de jeton : un test `bats` exige que le message ne parle pas de
+Le refus tombe **avant** toute lecture de jeton : un test `bats` exige que le message ne parle pas de
 jeton, donc qu'aucun réseau n'a été touché.
 
 ### Le dénominateur ne disparaît pas, il change de nature
@@ -59,7 +59,7 @@ coup - c'est la même règle que ci-dessus, appliquée à nous-mêmes.
   la ligne de commande (#3769).
 - **Un usage devient impossible** : `--carre` ne peut plus servir à échantillonner. C'est voulu ; il ne
   le servait qu'en donnant une réponse fausse.
-- ⚠️ **`q` cherche des mots entiers, pas des préfixes** (`13071` ne ramène pas `130711`). Une éventuelle
+- **`q` cherche des mots entiers, pas des préfixes** (`13071` ne ramène pas `130711`). Une éventuelle
   recherche partielle ne pourra pas s'appuyer dessus.
 
 ## Alternatives écartées

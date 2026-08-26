@@ -104,7 +104,7 @@ class AuditPointsServeurTest {
         //  - +1,1e-4° ≈ 12,2 m : SOUS le seuil commun (15 m), donc le même endroit ;
         //  - +2,0e-4° ≈ 22,3 m : AU DESSUS, donc deux endroits.
         //
-        // ⚠️ Le premier cas est exactement celui que l'ancienne règle tranchait à l'envers : elle
+        // Le premier cas est exactement celui que l'ancienne règle tranchait à l'envers : elle
         // comparait axe par axe avec une tolérance de 1e-4 DEGRÉ, et 1,1e-4 la dépassait. L'audit
         // déclarait donc « position différente » là où la publication d'un point disait « déjà présent ».
         assertThat(auditPourDistantA(43.5 + 1.1e-4, 5.4))
@@ -259,7 +259,7 @@ class AuditPointsServeurTest {
         LienVigieChiroDao liensSurveilles = Mockito.spy(new LienVigieChiroDao(source));
         AuditPointsServeur surveille = new AuditPointsServeur(
                 client, new SiteDao(source), new PointDao(source), liensSurveilles, ID_USER, Optional.empty());
-        // ⚠️ Le serveur doit rendre des sites : une liste VIDE fait sortir `confronterTous` avant sa
+        // Le serveur doit rendre des sites : une liste VIDE fait sortir `confronterTous` avant sa
         // boucle, et le garde passerait alors même avec le défaut en place. Vérifié en remettant le
         // défaut : avec la liste vide il restait vert, avec ce site-ci il rougit.
         when(client.mesSites())
@@ -269,7 +269,7 @@ class AuditPointsServeurTest {
 
         assertThat(surveille.auditer()).isNotNull();
 
-        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes. Le défaut mesuré (#4283) : une lecture
+        // Le garde compte des REQUÊTES, pas des millisecondes. Le défaut mesuré (#4283) : une lecture
         // du rapprochement par site - 45 ms à cent cinquante carrés, modeste au regard de l'attente
         // réseau qui précède, mais `tous(...)` existait déjà et rendait la boucle inutile.
         Mockito.verify(liensSurveilles, Mockito.never()).objectidPour(Mockito.any(), Mockito.any());

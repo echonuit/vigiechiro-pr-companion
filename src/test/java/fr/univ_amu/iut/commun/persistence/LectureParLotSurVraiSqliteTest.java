@@ -18,7 +18,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /// La lecture par lot **au-delà de ce que SQLite accepte de lier**, sur une vraie base.
 ///
-/// ⚠️ `LotsDeParametresTest` affirme qu'aucune tranche ne dépasse 999 paramètres. C'est une **hypothèse
+/// `LotsDeParametresTest` affirme qu'aucune tranche ne dépasse 999 paramètres. C'est une **hypothèse
 /// sur SQLite encodée dans une assertion** : elle resterait verte si la vraie borne était plus basse, ou
 /// si le découpage était correct mais la requête mal recomposée. Ce test-ci ne suppose rien - il sème
 /// plus de mille sites et vérifie que **tout revient**.
@@ -38,7 +38,7 @@ class LectureParLotSurVraiSqliteTest {
         new UtilisateurDao(source).insert(new Utilisateur("u", "S"));
         PointDao pointDao = new PointDao(source);
 
-        // ⚠️ Semé par la FIXTURE, pas à la main : `CliquetSemisTopologieTest` épingle une dette soldée -
+        // Semé par la FIXTURE, pas à la main : `CliquetSemisTopologieTest` épingle une dette soldée -
         // treize fichiers créaient jadis site et point par DAO. M'y ajouter aurait rouvert ce que
         // quelqu'un a fini de payer, et `semerSiteEtPoint()` existe précisément pour ce besoin-là.
         List<Long> idsSites = new ArrayList<>();

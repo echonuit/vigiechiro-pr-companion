@@ -92,7 +92,7 @@ public final class ListerParticipationsVigieChiro implements Callable<Integer>, 
     /// c'est l'intention que portait déjà cette colonne. Ce qui change, c'est qu'on **convertit avant de
     /// couper**.
     ///
-    /// ⚠️ Cette méthode coupait la chaîne au `T`. C'est plus qu'un défaut de format : la troncature
+    /// Cette méthode coupait la chaîne au `T`. C'est plus qu'un défaut de format : la troncature
     /// change le **jour** dès que le décalage traverse minuit. `2026-07-03T23:30:00Z` est une nuit du
     /// **4** à Paris ; on annonçait le **3**.
     private static String date(String valeur) {

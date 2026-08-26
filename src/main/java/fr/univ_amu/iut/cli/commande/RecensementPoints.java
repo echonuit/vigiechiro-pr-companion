@@ -23,7 +23,7 @@ import java.util.Map;
 /// La commande qui l'affiche doit le dire, et c'est pourquoi ce calcul ne porte que des comptes
 /// bruts : il ne sait pas, lui, sur quoi il a travaillé.
 ///
-/// ⚠️ Le dénominateur exclut les sites **sans point ponctuel** (transects routiers), et cette
+/// Le dénominateur exclut les sites **sans point ponctuel** (transects routiers), et cette
 /// exclusion n'est pas cosmétique : sur trois pages du catalogue réel, 219 des 300 sites lus sont des
 /// transects. Les compter au dénominateur annoncerait « Z1 : 24 % » là où la proportion est de
 /// **90 %** parmi les sites qui pouvaient le porter - une sous-estimation d'un facteur presque

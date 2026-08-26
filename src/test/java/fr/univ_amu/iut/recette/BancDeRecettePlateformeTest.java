@@ -100,7 +100,7 @@ class BancDeRecettePlateformeTest {
     @DisplayName("#4304 : sans jeton, le banc refuse de monter et dit quoi poser")
     void sans_jeton_il_refuse() {
         System.clearProperty("vigiechiro.token");
-        // ⚠️ Contrôle de la condition AVANT de conclure. Si le poste qui lance ce cas porte lui-même
+        // Contrôle de la condition AVANT de conclure. Si le poste qui lance ce cas porte lui-même
         // `VIGIECHIRO_TOKEN`, le banc trouvera un jeton et ce cas passerait au vert sans avoir éprouvé
         // le refus. On le dit et on rougit, plutôt que de sauter en silence : un cas sauté ressemble
         // trop à un cas réussi.

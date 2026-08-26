@@ -131,7 +131,7 @@ class ParcoursFicheEspeceE2ETest {
     private static void semerReferenceChiroptere(SourceDeDonnees source) {
         try (Connection cx = source.getConnection();
                 Statement st = cx.createStatement()) {
-            // ⚠️ Le SQL d'origine écrivait le protocole « Point fixe standard », inconnu de `Protocole`.
+            // Le SQL d'origine écrivait le protocole « Point fixe standard », inconnu de `Protocole`.
             JeuDeDonneesPassage.dans(source)
                     .utilisateur("u-1")
                     .carre("640380")

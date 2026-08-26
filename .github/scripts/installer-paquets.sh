@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Installe des paquets APT sur un runner, sans pendre quand un miroir tombe.
 #
-# ⚠️ Pourquoi cette porte unique existe. Trois étapes de trois workflows différents ont pendu le
+# Pourquoi cette porte unique existe. Trois étapes de trois workflows différents ont pendu le
 # même jour, sur la même ligne : `apt-get update`. Le miroir Azure du runner rendait `Ign:` sur
 # toutes ses sources, APT basculait sur l'archive amont, et l'attente durait jusqu'au butoir du job -
 # 12 minutes pour `banc-filme`, 30 pour `capturer`, 40 pour `paquet`, y compris SUR `main`.
@@ -16,19 +16,19 @@
 # un téléchargement coupé. Elle ne rend pas un miroir mort vivant - un runner sans réseau échouera,
 # mais en une minute et en le DISANT, au lieu d'immobiliser une PR trois quarts d'heure.
 #
-# ⚠️ Jamais de `-qq` : c'est lui qui a rendu la première panne indéchiffrable. Une étape muette qui
+# Jamais de `-qq` : c'est lui qui a rendu la première panne indéchiffrable. Une étape muette qui
 # pend n'apprend rien à personne.
 #
 #   installer-paquets.sh [--avec-recommandations] <paquet>...
 set -euo pipefail
 
-# ⚠️ Cette porte est un UTILITAIRE, pas un garde : elle ne rend aucun verdict. L'ADR 3661 - « un garde
+# Cette porte est un UTILITAIRE, pas un garde : elle ne rend aucun verdict. L'ADR 3661 - « un garde
 # de CI porte ses propres cas » - ne s'y applique donc pas littéralement. Ce qui la rend quand même
 # digne de cas est son RAYON : elle est en travers du chemin de tous les workflows, y compris ceux qui
 # publient, et un défaut y serait indiscernable d'une panne de miroir - le symptôme que ce chantier a
 # passé une journée à démêler.
 #
-# ⚠️ Ce que ces cas n'éprouvent PAS : la reprise après un échec réseau, ni l'installation elle-même.
+# Ce que ces cas n'éprouvent PAS : la reprise après un échec réseau, ni l'installation elle-même.
 # Les deux demandent un vrai apt et un vrai miroir ; les feindre ferait un vert qui ne prouve rien.
 # C'est la CI qui les exerce, à chaque run.
 if [ "${1:-}" = "--auto-test" ]; then
@@ -56,7 +56,7 @@ if [ "${1:-}" = "--auto-test" ]; then
 
     echo "AUTO-TEST"
 
-    # ⚠️ Le cas qui empêche un appel vide de passer pour une installation réussie.
+    # Le cas qui empêche un appel vide de passer pour une installation réussie.
     essai "aucun paquet demandé est refusé"              rouge bash "$moi"
 
     # Des paquets que TOUT poste porte : on éprouve le saut, pas l'installation.
@@ -71,7 +71,7 @@ if [ "${1:-}" = "--auto-test" ]; then
         bash -c 'APT_CACHE="$1/cache" bash "$0" bash >/dev/null 2>&1; [ -d "$1/cache/partial" ]' "$moi" "$bac"
     essai "le cache annonce ce qu il porte déjà"          vert \
         bash -c 'sortie=$(APT_CACHE="$1/cache2" bash "$0" bash 2>&1); case "$sortie" in *"paquet(s) déjà là"*) exit 0 ;; *) exit 1 ;; esac' "$moi" "$bac"
-    # ⚠️ Sans APT_CACHE, la porte ne doit RIEN dire du cache : un message de cache sur un poste qui
+    # Sans APT_CACHE, la porte ne doit RIEN dire du cache : un message de cache sur un poste qui
     # n en a pas ferait croire à un gain qui n existe pas.
     essai "sans APT_CACHE, aucun message de cache"        rouge \
         bash -c 'sortie=$(bash "$0" bash 2>&1); case "$sortie" in *"cache APT"*) exit 0 ;; *) exit 1 ;; esac' "$moi"
@@ -105,7 +105,7 @@ fi
 # Bornes : au-delà, on préfère un échec net à une attente muette.
 BORNES=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
 
-# ⚠️ Le CACHE, et c'est lui qui règle le fond. Borner et reprendre évite de pendre ; cela ne fait pas
+# Le CACHE, et c'est lui qui règle le fond. Borner et reprendre évite de pendre ; cela ne fait pas
 # descendre 91 Mo plus vite. Les runners ralentissent avant de bloquer - la panne est en amont, chez
 # l'hébergeur - et le seul levier qui nous reste est de NE PAS RETÉLÉCHARGER.
 #
@@ -114,7 +114,7 @@ BORNES=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Ti
 # Absent, tout fonctionne comme avant - un poste de développement n'a pas besoin de ce détour.
 if [ -n "${APT_CACHE:-}" ]; then
     mkdir -p "$APT_CACHE/partial"
-    # ⚠️ APT tourne sous sudo : sans ces droits, il ne sait pas écrire dans un dossier du runner, et
+    # APT tourne sous sudo : sans ces droits, il ne sait pas écrire dans un dossier du runner, et
     # il retéléchargerait en silence - un cache qui a l'air d'un cache et n'en est pas. Le dossier
     # nous appartient (on vient de le créer), donc `chmod` nu suffit : réclamer sudo ici ferait
     # échouer le script sur un poste de développement sans terminal.
@@ -123,7 +123,7 @@ if [ -n "${APT_CACHE:-}" ]; then
     echo "→ cache APT : $APT_CACHE ($(find "$APT_CACHE" -maxdepth 1 -name '*.deb' 2>/dev/null | wc -l) paquet(s) déjà là)"
 fi
 
-# ⚠️ On n'installe pas ce qui est déjà là. Le runner GitHub porte déjà `xvfb` : le demander le
+# On n'installe pas ce qui est déjà là. Le runner GitHub porte déjà `xvfb` : le demander le
 # faisait résoudre, comparer, et parfois retélécharger des dépendances pour rien. Mesuré dans un log
 # de `banc-filme` : « xvfb is already the newest version ».
 manquants=()
@@ -144,7 +144,7 @@ essai=1
 while [ "$essai" -le 2 ]; do
     echo "→ apt-get update (essai $essai/2)"
     if sudo apt-get update "${BORNES[@]}"; then
-        # ⚠️ Le volume ne se recalcule PAS ici. Cette porte l'a annoncé un temps - « 87 Mo à
+        # Le volume ne se recalcule PAS ici. Cette porte l'a annoncé un temps - « 87 Mo à
         # télécharger » - en sommant la taille des paquets par `--print-uris`. Le chiffre était juste
         # comme POIDS et faux comme ANNONCE : le cache servant, APT n'en téléchargeait aucun, et la
         # ligne d'à côté disait « Need to get 0 B/91.2 MB ». Deux mesures voisines qui se
@@ -156,7 +156,7 @@ while [ "$essai" -le 2 ]; do
         echo "→ apt-get install : $*"
         # shellcheck disable=SC2086
         if sudo apt-get install -y $RECOMMANDATIONS "${BORNES[@]}" "$@"; then
-            # ⚠️ Les droits se remettent à plat APRÈS l'installation : `actions/cache` archive le
+            # Les droits se remettent à plat APRÈS l'installation : `actions/cache` archive le
             # dossier en tant qu'utilisateur ordinaire, et des `.deb` déposés par root sous des
             # droits stricts ne seraient pas lisibles - le cache se remplirait sans jamais servir.
             [ -n "${APT_CACHE:-}" ] && sudo chmod -R a+rX "$APT_CACHE"

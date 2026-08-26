@@ -35,7 +35,7 @@ import java.util.TreeSet;
 /// | `*perceptif*` | `AUTOMATIQUE` | perceptif | **oui** |
 /// | rien | `HUMAIN` | non couvert | **oui** |
 ///
-/// ⚠️ Un cas marqué perceptif ne rejoint **jamais** les assertés, quoi qu'en dise le code. La
+/// Un cas marqué perceptif ne rejoint **jamais** les assertés, quoi qu'en dise le code. La
 /// contradiction se signale, elle ne se résout pas en silence dans le sens qui arrange le compteur :
 /// c'est exactement le vert creux que ce dispositif combat.
 ///

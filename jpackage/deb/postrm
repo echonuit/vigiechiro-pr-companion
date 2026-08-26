@@ -6,7 +6,7 @@
 # sur le `.deb` publié. Le remplacer ne coûte donc aucun geste, contrairement au prerm, qui porte une
 # fonction et qu'on laisse tranquille.
 #
-# ⚠️ Sur `upgrade`, on ne retire rien : le postinst de la version entrante repose le lien juste après,
+# Sur `upgrade`, on ne retire rien : le postinst de la version entrante repose le lien juste après,
 # et un lien qui survit une montée de version ne gêne personne, là où un lien manquant se remarque.
 set -e
 

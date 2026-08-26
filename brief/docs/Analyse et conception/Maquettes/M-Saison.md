@@ -130,7 +130,7 @@ L'écran répond à une seule question, celle qu'un observateur se pose au milie
     aucune réponse directe. Un champ **« Chercher un lieu »** (`champRechercheLieu`) retient les points
     dont le carré, le nom qu'on lui a donné, le code du point ou la **commune** correspond ; une case **« Reste à faire »**
     (`caseResteAFaire`) ne garde que les points qui ne sont pas à jour - la raison d'être de l'écran.
-    ⚠️ Ces deux filtres ne touchent **que la liste des points** : le résumé d'en-tête continue de compter
+    Ces deux filtres ne touchent **que la liste des points** : le résumé d'en-tête continue de compter
     la **saison entière**. Filtrer change ce qu'on regarde, pas ce qu'il y a à faire
     ([ADR 3092](https://companion-dev.echonuit.fr/decisions/3092-un-filtre-ne-change-que-ce-quon-regarde/)).
     Les deux existent aussi en ligne de commande (`solde-saison --lieu`, `--reste-a-faire`), sur la même
@@ -142,7 +142,7 @@ L'écran répond à une seule question, celle qu'un observateur se pose au milie
   ([ADR 3151](https://companion-dev.echonuit.fr/decisions/3151-un-ecran-n-offre-pas-ce-qu-il-ne-montre-pas/)).
     Les deux cellules restent **vides** quand il n'y a rien à dire - un carré sans nom, un point dont la
     commune n'est pas résolue - comme « Hors protocole » quand aucune nuit opportuniste n'existe.
-    ⚠️ La **forme** de ces colonnes s'est jouée sur des captures, pas sur un raisonnement. Qualifier
+    La **forme** de ces colonnes s'est jouée sur des captures, pas sur un raisonnement. Qualifier
     « Carré » en « 640380 · Vallon », comme les entrées de puce des autres écrans, paraissait évident :
     l'aperçu régénéré montrait « 640380 · … ». Il a fallu une colonne dédiée, puis élargir l'aperçu, pour
     que le nom **et** « Reste à faire » tiennent ensemble. Le croquis ci-dessus, lui, date d'avant ces

@@ -93,7 +93,7 @@ public class ServiceAuditCoherence {
     public RapportAudit auditerTout() {
         List<ConstatAudit> constats = new ArrayList<>();
         Set<String> racinesConnues = new HashSet<>();
-        // ⚠️ Les quatre petites tables sont lues **en entier une fois** (#4286), pas une requête par
+        // Les quatre petites tables sont lues **en entier une fois** (#4286), pas une requête par
         // passage. Elles portent une ligne par session ou par passage : trois cents lignes pour trois
         // cents nuits. Les originaux et les séquences, eux, restent lus session par session - ce sont
         // les tables de volume, et les charger toutes d'un bloc échangerait un défaut de lenteur contre
@@ -299,7 +299,7 @@ public class ServiceAuditCoherence {
     /// C'est la règle déjà posée pour [CategorieConstat#AUDIO_INDISPONIBLE], appliquée ici : « un seul
     /// constat informatif portant le décompte, jamais une erreur par fichier ».
     ///
-    /// ⚠️ Agréger n'est pas taire. Quatre mille exemples n'aident pas, zéro non plus : le constat garde
+    /// Agréger n'est pas taire. Quatre mille exemples n'aident pas, zéro non plus : le constat garde
     /// le **compte** (l'ampleur), le **préfixe attendu** (ce qu'il faudrait) et **un exemple** (ce qu'on
     /// a). C'est ce qu'il faut pour décider d'un renommage.
     private static Optional<ConstatAudit> constatPrefixe(Long idPassage, List<String> fautifs, String prefixe) {

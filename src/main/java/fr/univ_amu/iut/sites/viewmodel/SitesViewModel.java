@@ -235,7 +235,7 @@ public class SitesViewModel {
         Map<String, String> sitesEnregistres = liens.tous(LienVigieChiro.ENTITE_SITE);
         Set<String> sitesVerrouilles = liens.verrouilles(LienVigieChiro.ENTITE_SITE);
         List<Site> sites = service.listerSites(idUtilisateur);
-        // ⚠️ DEUX lectures pour tout le lot, là où la boucle en lançait une par site puis une par point
+        // DEUX lectures pour tout le lot, là où la boucle en lançait une par site puis une par point
         // (#4251). Mesuré avec préchauffage, trois essais : 165-241 ms à cent cinquante carrés
         // avant, 6-8 ms après. Le coût d'avant CROISSAIT avec l'inventaire ; celui d'après ne bouge pas.
         // (Le « 487 ms » d'abord annoncé était une première mesure de processus, donc le démarrage de la

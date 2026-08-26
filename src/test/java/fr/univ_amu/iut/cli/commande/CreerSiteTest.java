@@ -31,7 +31,7 @@ import picocli.CommandLine;
 /// deux sites pour un même carré, dont le local n'est rattaché à rien, et la nuit déposée ensuite
 /// échouait loin de sa cause. `creer-site --carre 130711` le fabriquait encore **sans rien demander**.
 ///
-/// ⚠️ Le versant le plus facile à manquer n'est pas le refus, c'est ce qui arrive quand on **ne peut
+/// Le versant le plus facile à manquer n'est pas le refus, c'est ce qui arrive quand on **ne peut
 /// pas** demander : l'application sert sur le terrain, et refuser faute d'avoir pu vérifier la rendrait
 /// inutilisable là où elle sert le plus.
 class CreerSiteTest {

@@ -63,7 +63,7 @@ d'appuyer.
 Les clips s'allongent : montrer un état et son contraire, c'est jouer deux fois. C'est le prix de ce
 qu'un cas prétend faire juger, et il ne se paie qu'en séance filmée.
 
-⚠️ **Ce que la règle ne dit pas** : elle n'oblige pas à fabriquer le contraire. `S1-17` a été déclaré
+**Ce que la règle ne dit pas** : elle n'oblige pas à fabriquer le contraire. `S1-17` a été déclaré
 infilmable pendant un temps au motif que le voile ne durait pas - et c'était vrai d'une fixture de deux
 sites, faux du produit : sur cent cinquante carrés, le chargement prend un demi-seconde. Quand le
 contraire semble introuvable, la question à se poser est **d'abord** « sur quelles données ai-je

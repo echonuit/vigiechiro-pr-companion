@@ -38,7 +38,7 @@ Mesuré : `CartesAccueilTest` a rendu **vert à 8 h 14 et rouge à 15 h 34**, su
 **même image** `macos-26-arm64`. Puis, joué **seul** sous macOS - donc sans voisin -, il **échoue**.
 L'écart tient à 20,43 px contre 17,666 px selon la police rendue.
 
-⚠️ **Le défaut ne se voit pas depuis un poste Linux.** `Noto Sans` y est une police système : la suite
+**Le défaut ne se voit pas depuis un poste Linux.** `Noto Sans` y est une police système : la suite
 locale la trouve installée ou non. Une expérience d'isolement menée là est **aveugle par
 construction** - elle a été faite, elle n'a rien montré, et elle a failli servir de preuve.
 
@@ -69,11 +69,11 @@ pas, un en règle qui passe par `Habillage`.
 - **Le verdict de ces tests ne dépend plus de leurs voisins**, ni de la machine qui les joue.
 - **Ce que la règle coûte** : un test de mesure ne peut plus se contenter de `new Scene`. C'est une
   ligne de plus, et elle dit ce qu'elle fait.
-- ⚠️ **Le correctif est en grande partie prophylactique, et il faut le dire.** Les dix passaient sous
+- **Le correctif est en grande partie prophylactique, et il faut le dire.** Les dix passaient sous
   macOS : leurs assertions ont de la marge. Seul `CartesAccueilTest` était assez serré pour basculer.
   Ce qu'ils partagent est la **faiblesse de structure**, pas un défaut avéré - le jour où l'un resserre
   une assertion ou change un libellé, il bascule, et personne ne saura pourquoi.
-- ⚠️ **Ce que la CI voit exactement n'est pas mesuré.** L'ADR 3361 note que `sans-serif` se résout en
+- **Ce que la CI voit exactement n'est pas mesuré.** L'ADR 3361 note que `sans-serif` se résout en
   « une police plus large » sur le runner Ubuntu. Si ce n'est pas `Noto Sans`, ces dix tests pouvaient
   y basculer aussi - la question reste ouverte, faute d'avoir sondé le runner.
 

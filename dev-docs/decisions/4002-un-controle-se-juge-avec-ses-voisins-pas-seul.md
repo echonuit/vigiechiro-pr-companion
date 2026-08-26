@@ -30,7 +30,7 @@ deux, quatre correctifs successifs, et chacun a **révélé le suivant** :
 | habiller le ☰ | sa **hauteur** : 42 px quand ses voisins tenaient en 34 |
 | aligner les hauteurs | sa **largeur** : +20 px, qui faisaient envelopper les puces de filtre |
 
-⚠️ **Les quatre fois, la CI était verte.** Et les quatre fois, c'est un œil extérieur qui a vu le
+**Les quatre fois, la CI était verte.** Et les quatre fois, c'est un œil extérieur qui a vu le
 défaut - ni moi, ni les gardes.
 
 ## Ce que les gardes du dépôt savent dire, et ce qu'ils ne savent pas
@@ -68,14 +68,14 @@ ignorer ([ADR 3774](3774-le-clip-se-taille-sur-le-test.md), point 3).
 - une valeur choisie sur ce que les boutons **rendaient déjà** - 34 px - pour que l'alignement parte de
   l'existant et non d'une valeur inventée.
 
-**4. ⚠️ Une classe qui nomme une intention sans rien faire est pire qu'une absence de classe.** Cinq
+**4. Une classe qui nomme une intention sans rien faire est pire qu'une absence de classe.** Cinq
 boutons portaient `action-primaire` / `action-secondaire`, que **nulle feuille ne définit**. Un lecteur
 de la source les croyait stylés ; un bouton nu, lui, ne ment pas. Ces deux classes ont été remplacées
 par les réelles.
 
 ## Ce que la séquence a coûté, et qui est instructif
 
-⚠️ **Trois causes supposées ont été écartées par la mesure avant la bonne**, sur un seul aperçu refusé
+**Trois causes supposées ont été écartées par la mesure avant la bonne**, sur un seul aperçu refusé
 par le garde anti-troncature :
 
 | Cause supposée | Ce que la mesure a dit |

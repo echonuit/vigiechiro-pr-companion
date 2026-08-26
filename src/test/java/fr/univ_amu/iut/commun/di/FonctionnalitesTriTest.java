@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 /// ordre : « Vérifier et récupérer un carré » se rangeait entre « Campagnes de suivi » et « Contrôle du
 /// carré STOC ».
 ///
-/// ⚠️ Le déterminisme reste une **exigence** et non un confort : l'aperçu
+/// Le déterminisme reste une **exigence** et non un confort : l'aperçu
 /// `apercu-reglages-fonctionnalites.png` est régénéré à chaque build, et deux exécutions doivent rendre
 /// le même PNG au bit près. Trier sur le libellé est tout aussi déterministe - les libellés sont des
 /// constantes du code - et donne en plus l'ordre attendu.

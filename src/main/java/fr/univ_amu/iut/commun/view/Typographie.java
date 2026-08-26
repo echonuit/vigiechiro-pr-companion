@@ -72,7 +72,7 @@ public final class Typographie {
     /// retomberait alors sur la police du système, c'est-à-dire sur le comportement d'avant - dégradé,
     /// mais jamais bloquant. Un écran qui ne s'ouvre pas serait un remède pire que le mal.
     ///
-    /// ⚠️ Best-effort ne veut pas dire **muet** (ADR 0008) :
+    /// Best-effort ne veut pas dire **muet** (ADR 0008) :
     /// les trois façons d'échouer - ressource absente, police illisible, lecture impossible - sont
     /// **journalisées**. Sans cela, le produit reviendrait en silence au défaut que cette classe existe
     /// pour supprimer, et personne ne saurait pourquoi un libellé tronque sur une machine et pas sur une

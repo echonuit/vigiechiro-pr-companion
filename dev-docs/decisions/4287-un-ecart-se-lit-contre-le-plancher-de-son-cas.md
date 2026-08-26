@@ -58,14 +58,14 @@ une comparaison réelle, les deux cas au-dessus de 1 % se séparent : l'un vaut 
 l'image confirme un vrai changement, l'autre deux fois seulement et sa carte des différences ne montre
 que de l'anticrénelage.
 
-⚠️ **Le pire plancher est gardé, et non la moyenne.** Un plancher qui sous-estime le bruit fabrique des
+**Le pire plancher est gardé, et non la moyenne.** Un plancher qui sous-estime le bruit fabrique des
 faux positifs. Mieux vaut rater un petit changement sur un cas instable que crier au changement à
 chaque tournage.
 
-⚠️ **Un plancher tiré d'une seule paire ne prouve rien.** C'est pourquoi le compte de paires est écrit
+**Un plancher tiré d'une seule paire ne prouve rien.** C'est pourquoi le compte de paires est écrit
 dans le fichier et rappelé dans le résumé. Un cas dont le plancher est ressorti à 0,000 % n'est pas
 stable : il l'était cette fois-là. Le fichier livré avec cette décision ne porte **qu'une paire**, et
 il le dit.
 
-⚠️ **Un cas sans plancher connu se dit « plancher inconnu ».** Le prendre pour stable reviendrait à
+**Un cas sans plancher connu se dit « plancher inconnu ».** Le prendre pour stable reviendrait à
 inventer une mesure qui n'a pas été faite (ADR 2748).

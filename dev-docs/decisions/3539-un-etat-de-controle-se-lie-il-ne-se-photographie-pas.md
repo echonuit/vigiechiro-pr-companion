@@ -41,11 +41,11 @@ l'état, le contrôle s'y **lie**, et la source qui l'alimente est réinterrogé
 
 Deux précautions, chacune mesurée sur un cas réel :
 
-⚠️ **Ne pas dériver l'état de ce qui est affiché.** Avant « Appliquer », les chemins sélectionnés dans
+**Ne pas dériver l'état de ce qui est affiché.** Avant « Appliquer », les chemins sélectionnés dans
 les réglages ne sont pas encore la configuration persistée : un bouton lié à eux s'allumerait sur une
 **intention**. Ce qui décide, c'est ce qui a été **écrit** (#3543).
 
-⚠️ **Recalculer ne doit pas défaire un choix de l'utilisateur** (ADR 3095). Repeupler la liste d'un
+**Recalculer ne doit pas défaire un choix de l'utilisateur** (ADR 3095). Repeupler la liste d'un
 `ComboBox` par `clear()` puis `addAll()` remet sa valeur à `null`, et une liaison bidirectionnelle
 propage ce `null` jusqu'au ViewModel : la saison se recharge **sans filtre**, et le tableau se rouvre
 en grand sous les yeux de l'utilisateur. `setAll` remplace le contenu sans passer par la liste vide
@@ -83,7 +83,7 @@ Trois des quatre formes sont **invisibles au mot-clé** :
 
 ## Conséquences
 
-- ⚠️ **La mesure d'entrée d'un balayage oriente le regard, et peut l'orienter à côté.** Compter les
+- **La mesure d'entrée d'un balayage oriente le regard, et peut l'orienter à côté.** Compter les
   `setDisable` désignait 138 sites dont zéro défaut, et manquait le seul vrai. Ce sont les **lectures**
   des trois premiers cas qui ont donné la forme à chercher.
 - **Un relevé se rejoue** ([ADR 3664](3664-un-releve-qui-n-a-pas-ouvert-les-fichiers-est-une-hypothese.md)).

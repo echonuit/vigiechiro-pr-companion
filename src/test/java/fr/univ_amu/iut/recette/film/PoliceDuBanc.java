@@ -25,7 +25,7 @@ import java.io.InputStream;
 /// troque donc pas une garantie contre une autre : on ajoute la bonne typographie à celle qu'on avait.
 final class PoliceDuBanc {
 
-    /// ⚠️ Chargées une fois. `Font.createFont` lit le flux entier à chaque appel, et le banc dessine
+    /// Chargées une fois. `Font.createFont` lit le flux entier à chaque appel, et le banc dessine
     /// jusqu'à dix images par seconde de tournage.
     private static final Font GRASSE = charger("/fonts/NotoSans-Bold.ttf");
 
@@ -35,7 +35,7 @@ final class PoliceDuBanc {
 
     /// La graisse forte, au corps demandé.
     ///
-    /// ⚠️ Sans `Font.BOLD` : la fonte **est** la graisse forte, et redemander le style ferait épaissir
+    /// Sans `Font.BOLD` : la fonte **est** la graisse forte, et redemander le style ferait épaissir
     /// AWT par-dessus une fonte déjà grasse.
     static Font grasse(int corps) {
         return GRASSE.deriveFont((float) corps);
@@ -46,7 +46,7 @@ final class PoliceDuBanc {
         return NORMALE.deriveFont((float) corps);
     }
 
-    /// ⚠️ Échoue fort. Une police absente rendrait un clip lisible mais faux, et
+    /// Échoue fort. Une police absente rendrait un clip lisible mais faux, et
     /// [ADR 0008](../../../../../../../../dev-docs/decisions/0008-echec-silencieux.md) refuse qu'un
     /// dispositif se rabatte en silence sur autre chose que ce qu'on lui a demandé.
     private static Font charger(String ressource) {

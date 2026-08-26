@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Désigne les clips de la pré-version roulante que le DERNIER tournage n'a pas produits.
 #
-# ⚠️ Pourquoi ce calcul vit dans un script, et pas en trois lignes de YAML. Sa sortie sert à
+# Pourquoi ce calcul vit dans un script, et pas en trois lignes de YAML. Sa sortie sert à
 # **supprimer** des pièces publiées. Une erreur d'orientation ne rend pas une erreur : elle rend
 # l'exact contraire, la liste de ce qu'il fallait garder, et le job la supprime sans rien dire. Un
 # script se met à l'épreuve ; une ligne de `run:` ne s'éprouve qu'en production.
@@ -89,12 +89,12 @@ auto_test() {
     essai "l'index de la pré-version n'est jamais désigné" \
         "a.mp4" "a.mp4 index.md" ""
 
-    # ⚠️ Le cas qui garde l'ORIENTATION. Avec `comm -23` au lieu de `-13`, ce clip fraîchement tourné
+    # Le cas qui garde l'ORIENTATION. Avec `comm -23` au lieu de `-13`, ce clip fraîchement tourné
     # mais pas encore en ligne serait proposé à la suppression - donc exactement ce qu'il faut garder.
     essai "un clip tourné mais absent de la pré-version n'est pas désigné" \
         "a.mp4 tout-neuf.mp4" "a.mp4" ""
 
-    # ⚠️ Le cas le plus coûteux : un tournage qui n'a rien produit ne vide pas la pré-version.
+    # Le cas le plus coûteux : un tournage qui n'a rien produit ne vide pas la pré-version.
     essai "un dossier de tournage vide est refusé" \
         "" "a.mp4 b.mp4" "REFUS"
 

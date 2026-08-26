@@ -240,7 +240,7 @@ public final class CaptureDialogues {
     /// **natures** sont les trois réelles : c'est le filet de migration, celui que personne n'a demandé,
     /// qui explique le total.
     ///
-    /// ⚠️ Les volumes sont posés en **base 1000**, celle dans laquelle `Formats` les rend depuis
+    /// Les volumes sont posés en **base 1000**, celle dans laquelle `Formats` les rend depuis
     /// #3573. Écrits en base 1024, ils affichaient « 432 Mo » là où le littéral disait 412 : le
     /// chiffre publié n'était plus celui qu'on avait choisi, et aucun test ne rougit là-dessus.
     private static void enregistrerChoixSauvegarde(Path fichier) {

@@ -105,14 +105,14 @@ class ScenarioModaleCarreTest {
                 .remplacer(liaison -> liaison.bind(ClientVigieChiro.class).toInstance(client), rapatriementBouchonne())
                 .semer(inj -> new UtilisateurDao(inj.getInstance(SourceDeDonnees.class))
                         .insert(new Utilisateur(ID_USER, "Observateur")))
-                // ⚠️ Une connexion RÉELLE : depuis #4210, « Vérifier sur Vigie-Chiro » est fermé sans
+                // Une connexion RÉELLE : depuis #4210, « Vérifier sur Vigie-Chiro » est fermé sans
                 // jeton. Ces scénarios jouent un utilisateur connecté ; ils doivent l'être pour de bon,
                 // au lieu de s'appuyer sur un bouton qui ne demandait rien à personne.
                 .connecte(ID_USER, "chiro", "observateur")
                 .ouvrir(inj -> inj.getInstance(NavigationSites.class).ouvrirAccueil())
                 .montrer(stage);
 
-        // ⚠️ Le mock répond comme le VRAI client : `estConnecte()` demande « un jeton est-il
+        // Le mock répond comme le VRAI client : `estConnecte()` demande « un jeton est-il
         // enregistré ? » et rien d'autre. Sans cela, le menu lit le stockage et dit « connecté »
         // pendant que « Récupérer depuis Vigie-Chiro » reste grisé en arrière-plan, parce que LUI
         // interroge le client. Le clip se contredisait à l'image, et c'est le produit qu'on accusait.
@@ -122,7 +122,7 @@ class ScenarioModaleCarreTest {
 
     /// Le rapatriement, bouchonné et **qualifié**.
     ///
-    /// ⚠️ `RechercheCarreExistantModule` relie `Optional<RapatriementCarre>` à ce nom, et un `@Provides`
+    /// `RechercheCarreExistantModule` relie `Optional<RapatriementCarre>` à ce nom, et un `@Provides`
     /// nu serait ignoré - le clic partirait alors au rapatriement RÉEL, qui expire sans rien dire de
     /// plus.
     private Module rapatriementBouchonne() {
@@ -149,7 +149,7 @@ class ScenarioModaleCarreTest {
 
     /// Efface la connexion : le cas hors connexion se joue sur le produit, pas sur un drapeau.
     ///
-    /// ⚠️ Et le reflet est PUBLIÉ, comme la modale de connexion le fait après chaque `rafraichir()`
+    /// Et le reflet est PUBLIÉ, comme la modale de connexion le fait après chaque `rafraichir()`
     /// (#4205). Écrire dans le stockage sans le dire ne réveille personne : `RefletDuJeton` garde un
     /// reflet, il ne surveille pas le fichier. Sans cette ligne, ce cas verrait le geste encore ouvert
     /// et croirait tenir un défaut du produit.
@@ -225,7 +225,7 @@ class ScenarioModaleCarreTest {
         assertThat(verifier.isDisabled())
                 .as("sans jeton, la vérification ne peut rien demander : le geste est fermé (#4210)")
                 .isTrue();
-        // ⚠️ Le motif se FAIT PARAÎTRE : lu par programme, il ne serait pas à l'image, et « il dit ce
+        // Le motif se FAIT PARAÎTRE : lu par programme, il ne serait pas à l'image, et « il dit ce
         // qui manque » est justement ce que ce cas donne à juger.
         assertThat(InfobulleDeBlocage.montrerEtLire(
                         robot.lookup("#enveloppeVerifierCarre").query(), robot))
@@ -235,7 +235,7 @@ class ScenarioModaleCarreTest {
         Respiration.surLeMomentCle(robot);
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ Le pendant du cas, et le plus important : c'est la VÉRIFICATION qui se ferme, jamais la
+        // Le pendant du cas, et le plus important : c'est la VÉRIFICATION qui se ferme, jamais la
         // déclaration. Travailler hors ligne reste normal ; fermer les deux ferait de la plateforme une
         // condition pour saisir chez soi.
         assertThat(robot.lookup("#boutonValider").queryAs(Button.class).isDisabled())
@@ -281,11 +281,11 @@ class ScenarioModaleCarreTest {
                 10,
                 TimeUnit.SECONDS,
                 () -> robot.lookup("#btnRecupererCarre").tryQuery().isPresent());
-        // ⚠️ Le pointeur s'arrête SUR le bouton avant de cliquer (#4181). `clickOn` seul téléporte : le
+        // Le pointeur s'arrête SUR le bouton avant de cliquer (#4181). `clickOn` seul téléporte : le
         // geste décisif de ce cas - « on a cliqué sur Récupérer » - n'existait sur aucune image.
         GesteVisible.cliquer(robot, "#btnRecupererCarre");
 
-        // ⚠️ Ce que le cas existe pour montrer, et ce n'est PLUS ce que son script disait : depuis #4099
+        // Ce que le cas existe pour montrer, et ce n'est PLUS ce que son script disait : depuis #4099
         // le geste se termine là où il a commencé. La modale s'efface, « Mes sites » reste, le carré
         // paraît dans la liste et le bandeau dit ce qui vient d'être créé. Le script promettait la
         // fiche du carré ; c'est ce clip qui a montré qu'elle avait un chantier de retard (#4180).
@@ -296,7 +296,7 @@ class ScenarioModaleCarreTest {
                         .tryQueryAs(Label.class)
                         .filter(libelle -> libelle.getText().contains(CARRE_PRIS))
                         .isPresent());
-        // ⚠️ Et on attend la CARTE, pas seulement le bandeau. Les deux arrivent par des chemins
+        // Et on attend la CARTE, pas seulement le bandeau. Les deux arrivent par des chemins
         // différents - le bandeau est posé par le compte rendu, la liste se reconstruit après le signal
         // de mutation - et la liste arrive en dernier. Le test affirmait sur elle sans l'avoir attendue :
         // vert cent fois en local, rouge dans la suite complète, là où la machine est chargée. Une
@@ -331,7 +331,7 @@ class ScenarioModaleCarreTest {
         assertThat(creer.isDisabled())
                 .as("déclarer ici referait le doublon local qui a produit le dépôt manqué")
                 .isTrue();
-        // ⚠️ Le motif PARAÎT : « Créer » grisé sans explication ne dit pas pourquoi on ne peut plus
+        // Le motif PARAÎT : « Créer » grisé sans explication ne dit pas pourquoi on ne peut plus
         // déclarer, et c'est justement ce que ce cas fait juger.
         assertThat(InfobulleDeBlocage.montrerEtLire(
                         robot.lookup("#enveloppeValider").query(), robot))
@@ -339,7 +339,7 @@ class ScenarioModaleCarreTest {
                 .doesNotContain("6 chiffres");
         Respiration.surLeMomentCle(robot);
 
-        // ⚠️ La seconde moitié du cas, que le clip ne jouait pas : « corriger un chiffre du numéro le
+        // La seconde moitié du cas, que le clip ne jouait pas : « corriger un chiffre du numéro le
         // rouvre ». Sans elle, ce cas ne fait pas tout ce que son script annonce (#4182).
         corrigerLeDernierChiffre(robot, "1");
 
@@ -374,7 +374,7 @@ class ScenarioModaleCarreTest {
         assertThat(creer.isDisabled()).as("six chiffres : le geste s'ouvre").isFalse();
         Respiration.surLeMomentCle(robot);
 
-        // ⚠️ Et l'écran d'ARRIVÉE, sans quoi on ne voit pas ce que la modale a changé (ADR 4188).
+        // Et l'écran d'ARRIVÉE, sans quoi on ne voit pas ce que la modale a changé (ADR 4188).
         robot.clickOn(creer);
         WaitForAsyncUtils.waitFor(
                 10,
@@ -392,7 +392,7 @@ class ScenarioModaleCarreTest {
     @DisplayName("S1-25 · « Annuler » ne crée rien : la liste est la même après qu'avant")
     void annuler_ne_change_rien_a_la_liste(FxRobot robot) throws TimeoutException {
         List<String> avant = titresDesCartes(robot);
-        // ⚠️ La liste AVANT. Ce cas fait juger une ABSENCE de changement : sans point de comparaison à
+        // La liste AVANT. Ce cas fait juger une ABSENCE de changement : sans point de comparaison à
         // l'image, il n'y a rien à comparer, et le clip précédent montrait une modale sur du noir
         // (#4176, ADR 4188).
         Respiration.leTempsDeLire(robot);
@@ -444,7 +444,7 @@ class ScenarioModaleCarreTest {
 
     /// Remplace le dernier chiffre : fin de ligne, retour arrière, un chiffre.
     ///
-    /// ⚠️ C'est le geste que le script décrit - « changer un chiffre du carré ». Vider le champ et
+    /// C'est le geste que le script décrit - « changer un chiffre du carré ». Vider le champ et
     /// retaper montrerait le verdict disparaître au VIDAGE, ce qui n'est pas le cas jugé.
     private void corrigerLeDernierChiffre(FxRobot robot, String chiffre) {
         robot.clickOn(champCarre(robot));

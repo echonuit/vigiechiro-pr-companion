@@ -240,7 +240,7 @@ class AppariementPointsTest {
 
     /// Une localité au format **exact** de la plateforme, écrite à la main.
     ///
-    /// ⚠️ Ne pas la fabriquer avec le code de production : l'ordre `[latitude, longitude]` - à rebours du
+    /// Ne pas la fabriquer avec le code de production : l'ordre `[latitude, longitude]` - à rebours du
     /// GeoJSON - serait alors faux des deux côtés, et le test resterait vert pendant que la plateforme
     /// comprendrait autre chose.
     private static JsonObject localite(String nom, double latitude, double longitude) {

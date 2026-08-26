@@ -154,7 +154,7 @@ public class DepotUniteDao extends DaoGenerique<DepotUnite, Long> {
     /// Avancement d'une unité : nouveau statut, id distant du fichier créé (ou `null`), message
     /// d'erreur (ou `null`), horodatage. Committée immédiatement (persistance au fil de l'eau).
     ///
-    /// ⚠️ Elle **efface** le caractère définitif d'un refus précédent (#3469) : une unité qui repart
+    /// Elle **efface** le caractère définitif d'un refus précédent (#3469) : une unité qui repart
     /// « en cours » ou qui aboutit n'est plus refusée. Sans cette remise à zéro, une unité déposée
     /// avec succès après un refus continuerait d'être annoncée comme irrécupérable.
     public void mettreAJour(

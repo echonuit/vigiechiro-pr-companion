@@ -611,7 +611,7 @@ class LotVueIntegrationTest {
         // une barre de statut disant où l'on en est, pas quoi faire. L'encart, lui, garde la phrase
         // entière : c'est `lblEspaceInsuffisant`, gardé plus haut dans ce fichier.
         //
-        // ⚠️ Ce garde tient la **copie** ; que le texte tienne dans la zone est tenu ailleurs, par
+        // Ce garde tient la **copie** ; que le texte tienne dans la zone est tenu ailleurs, par
         // `BudgetHorizontalChromeTest`. Aucun des deux ne remplace l'autre.
         assertThat(controleur.zonesStatutProperty().get().droite())
                 .isEqualTo("Espace insuffisant : 9,0 Go requis, 5,0 Go libres");

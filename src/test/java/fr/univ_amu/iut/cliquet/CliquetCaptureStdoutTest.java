@@ -46,7 +46,7 @@ class CliquetCaptureStdoutTest {
 
     /// Un tampon **branché sur un flux d'impression** : c'est cela, capturer une sortie.
     ///
-    /// ⚠️ **Correction de la mesure, pas migration** (ADR 2867, la confusion usage / mention). La version
+    /// **Correction de la mesure, pas migration** (ADR 2867, la confusion usage / mention). La version
     /// précédente se contentait d'un tampon et d'un `@BeforeEach` quelque part dans le fichier, et
     /// comptait donc `TransformationAudioTest` - qui empile du **PCM audio** dans un
     /// `ByteArrayOutputStream` pour vérifier que la concaténation des séquences reconstitue la source. Ce

@@ -25,7 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// Écriture d'un secret sur disque (#2735) : jamais dans un fichier plus permissif que lui, jamais à
 /// moitié.
 ///
-/// ⚠️ Ces tests éprouvent l'état **final**, et la fenêtre que l'issue corrige est un état
+/// Ces tests éprouvent l'état **final**, et la fenêtre que l'issue corrige est un état
 /// **intermédiaire** : après coup, écrire-puis-restreindre laisse exactement le même fichier. C'est
 /// [fr.univ_amu.iut.architecture.SecretsEcritsProtegesTest] qui garde la forme d'écriture, faute de
 /// pouvoir garder l'instant.
@@ -55,7 +55,7 @@ class EcritureAtomiqueTest {
         EcritureAtomique.ecrireSecret(cible, "{\"token\":\"secret\"}");
 
         assertThat(cible).hasContent("{\"token\":\"secret\"}");
-        // ⚠️ La PROPRIÉTÉ, pas le mécanisme. L'ancienne forme lisait les permissions POSIX, et son
+        // La PROPRIÉTÉ, pas le mécanisme. L'ancienne forme lisait les permissions POSIX, et son
         // `assumeTrue` vivait dans le helper : sous Windows le test s'interrompait ICI, emportant
         // l'assertion suivante - qui n'a pourtant rien de POSIX. Un test PARTIEL qui se présentait
         // comme sauté (#3778).
@@ -69,7 +69,7 @@ class EcritureAtomiqueTest {
     @DisplayName("Réécriture par-dessus un fichier laissé permissif : le nouveau reste privé")
     @EnabledIf("fr.univ_amu.iut.commun.model.EcritureAtomiqueTest#posixDisponible")
     void reecriture_ne_herite_pas_des_permissions_laxistes() throws IOException {
-        // ⚠️ `@EnabledIf` plutôt qu'un `assumeTrue` en cours de route : la fixture elle-même exige
+        // `@EnabledIf` plutôt qu'un `assumeTrue` en cours de route : la fixture elle-même exige
         // POSIX (elle CRÉE un fichier `rw-rw-rw-`), donc le cas n'a pas de sens ailleurs. Déclaratif,
         // il se voit dans le rapport et ne peut pas interrompre un test au milieu.
         Path cible = dossier.resolve("connexion.json");
@@ -84,7 +84,7 @@ class EcritureAtomiqueTest {
         assertThat(temporairesResiduels()).isEmpty();
     }
 
-    // ⚠️ Le contrôle NÉGATIF de la propriété, et il manquait : sans lui, `restreinteAuProprietaire`
+    // Le contrôle NÉGATIF de la propriété, et il manquait : sans lui, `restreinteAuProprietaire`
     // pouvait rendre `true` en toute circonstance sans qu'aucun test s'en aperçoive - deux mutants PIT
     // y survivaient. Une propriété de sécurité qui ne sait pas dire « non » ne dit rien.
     @Test
@@ -133,7 +133,7 @@ class EcritureAtomiqueTest {
         return FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
     }
 
-    /// ⚠️ Plus d'`assumeTrue` ici : il interrompait le test APPELANT au milieu de ses assertions, et
+    /// Plus d'`assumeTrue` ici : il interrompait le test APPELANT au milieu de ses assertions, et
     /// emportait celles qui n'avaient rien de POSIX. Les cas qui appellent ce helper déclarent
     /// désormais leur condition avec `@EnabledIf`, qui se voit et n'interrompt rien (#3778).
     private static Set<PosixFilePermission> permissions(Path chemin) throws IOException {
@@ -153,7 +153,7 @@ class EcritureAtomiqueTest {
     @DisplayName("La cible tenue par un autre programme (#3777)")
     class CibleTenue {
 
-        // ⚠️ Le déplacement est INJECTÉ, et il le faut : ce cas ne se produit que sous Windows, où un
+        // Le déplacement est INJECTÉ, et il le faut : ce cas ne se produit que sous Windows, où un
         // lecteur concurrent bloque le remplacement. Sonde dispatchée sous Windows Server 2025 - un
         // simple `Files.newInputStream` suffit à provoquer l'`AccessDeniedException`, là où POSIX
         // renomme par-dessus un fichier ouvert quoi qu'il arrive. Sans cette couture, la reprise ne
@@ -185,7 +185,7 @@ class EcritureAtomiqueTest {
 
             assertThatThrownBy(() -> EcritureAtomique.ecrire(cible, "nouveau", false, TOUJOURS_TENU, millis -> {}))
                     .isInstanceOf(IOException.class)
-                    // ⚠️ On n'attend pas « Access denied » : l'utilisateur est PROPRIÉTAIRE du fichier,
+                    // On n'attend pas « Access denied » : l'utilisateur est PROPRIÉTAIRE du fichier,
                     // et ce message l'enverrait chercher un problème de droits qui n'existe pas.
                     .hasMessageContaining("tenu ouvert par un autre programme")
                     .hasMessageContaining("connexion.json")
@@ -254,7 +254,7 @@ class EcritureAtomiqueTest {
                     .isInstanceOf(IOException.class)
                     .hasMessageContaining("interrompue");
 
-            // ⚠️ Avaler une InterruptedException sans reposer le drapeau prive l'appelant de la seule
+            // Avaler une InterruptedException sans reposer le drapeau prive l'appelant de la seule
             // information qui lui dise d'arrêter : la fermeture demandée passerait inaperçue, et le
             // travail continuerait. `Thread.interrupted()` lit ET remet à zéro, ce qui laisse le test
             // suivant sur un thread propre.
@@ -266,7 +266,7 @@ class EcritureAtomiqueTest {
             assertThat(temporairesResiduels()).isEmpty();
         }
 
-        /// ⚠️ Le seul cas qui traverse le **vrai** déplacement, avec un **vrai** lecteur.
+        /// Le seul cas qui traverse le **vrai** déplacement, avec un **vrai** lecteur.
         ///
         /// Les quatre au-dessus éprouvent la LOGIQUE de reprise sur un déplacement fabriqué ; celui-ci
         /// éprouve le CÂBLAGE - que le refus du système soit bien une `AccessDeniedException`, et

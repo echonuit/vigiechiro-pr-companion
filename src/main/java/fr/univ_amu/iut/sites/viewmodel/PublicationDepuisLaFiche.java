@@ -18,7 +18,7 @@ import java.util.Set;
 /// suppressions. La publication est une préoccupation à part entière, avec ses propres règles et ses
 /// propres raisons de refuser.
 ///
-/// ⚠️ **Ce qui n'est pas ici, et n'y sera pas** : un garde sur le verrouillage du carré. La plateforme
+/// **Ce qui n'est pas ici, et n'y sera pas** : un garde sur le verrouillage du carré. La plateforme
 /// refuse le propriétaire d'un carré verrouillé, mais accepte un participant validé sur le protocole,
 /// verrouillé ou non ; et les liens de site venant de `GET /moi/participations` plutôt que de
 /// `/moi/sites` (#718), rien ici ne dit dans quel cas on se trouve. Le refus est **rendu compte avec son

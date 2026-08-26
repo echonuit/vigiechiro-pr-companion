@@ -31,7 +31,7 @@ class ReperesDeSeanceTest {
     @Test
     @DisplayName("Chaque test est encadré, celui qui ne cite rien avec une colonne de cas vide")
     void chaque_test_est_encadre(@TempDir Path dossier) throws IOException {
-        // ⚠️ Le test sans citation est là VOLONTAIREMENT. La première séance filmée réelle l'a
+        // Le test sans citation est là VOLONTAIREMENT. La première séance filmée réelle l'a
         // imposé : le montage vérifie que ce qui apparaît à l'écran tombe dans une plage connue,
         // et un test non annoté qui ouvre une fenêtre lui semblait alors hors sujet. Il refusait
         // ainsi un alignement correct.
@@ -50,7 +50,7 @@ class ReperesDeSeanceTest {
     @Test
     @DisplayName("Les instants sont ceux de l'horloge murale, la seule que le montage sache lire")
     void les_instants_sont_ceux_de_l_horloge_murale(@TempDir Path dossier) throws IOException {
-        // ⚠️ L'assertion qui compte : un `nanoTime` passerait tous les autres tests de ce fichier -
+        // L'assertion qui compte : un `nanoTime` passerait tous les autres tests de ce fichier -
         // deux lignes, dans l'ordre, avec les bonnes colonnes - et rendrait le montage incapable de
         // se raccrocher à quoi que ce soit. Le décalage ne se verrait pas : il produirait des
         // extraits plausibles pris au mauvais endroit.
@@ -135,7 +135,7 @@ class ReperesDeSeanceTest {
     // Les séances d'exemple. Imbriquées et statiques : le moteur les exécute sur demande, et
     // surefire ne les ramasse pas (leur nom ne finit pas par Test).
     //
-    // ⚠️ Elles portent de VRAIS identifiants de cas, sans quoi le premier devoir du garde de
+    // Elles portent de VRAIS identifiants de cas, sans quoi le premier devoir du garde de
     // correspondance - « tout identifiant cité existe » - les refuserait. Elles ne couvrent
     // évidemment rien, d'où @FixtureDeRecette, qui les retire du recensement. Que la seconde cite
     // S1-26, un cas perceptif, n'est pas un hasard : retirer l'exclusion fait alors rougir le

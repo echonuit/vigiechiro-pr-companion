@@ -76,7 +76,7 @@ public final class CaptureFicheEspece {
 
     /// Item de menu avec son icône, comme le socle en construit.
     ///
-    /// ⚠️ Ce menu est **reconstruit** ici, ce que l'ADR 0025 proscrit : il dérive du produit sans
+    /// Ce menu est **reconstruit** ici, ce que l'ADR 0025 proscrit : il dérive du produit sans
     /// que rien ne rougisse.
     /// C'est exactement ce qui vient de se produire : le passage des pictogrammes aux
     /// icônes (#1933) a laissé ici des libellés qui n'existent plus. Remis d'aplomb faute de
@@ -102,7 +102,7 @@ public final class CaptureFicheEspece {
             return;
         }
         // Habillage commun (#3374) : meme helper duplique, meme police manquante.
-        // ⚠️ Trop tard pour la TAILLE : le popup s'est dimensionne a `show()`, avec la police de
+        // Trop tard pour la TAILLE : le popup s'est dimensionne a `show()`, avec la police de
         // la scene qui l'a ouvert. C'est pour cela que la scene HOTE est habillee elle aussi -
         // sans quoi le menu se mesure dans une police et se peint dans une autre (#3414).
         Habillage.poser(scenePopup);

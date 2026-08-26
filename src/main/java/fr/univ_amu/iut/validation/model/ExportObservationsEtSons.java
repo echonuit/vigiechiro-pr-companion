@@ -70,7 +70,7 @@ public class ExportObservationsEtSons {
         List<EcrivainZip.EntreeFichier> sons = new ArrayList<>();
         List<String> introuvables = new ArrayList<>();
         Map<Long, String> dossiersParSession = new HashMap<>();
-        // ⚠️ Séquences et sessions lues **par lot** (#4289) : la boucle en faisait deux requêtes par son
+        // Séquences et sessions lues **par lot** (#4289) : la boucle en faisait deux requêtes par son
         // emballé - la séquence, puis sa session pour résoudre un chemin relatif. Un export porte
         // volontiers plusieurs milliers de cris.
         Set<Long> idsSequences = sequencesUniques(lignes);

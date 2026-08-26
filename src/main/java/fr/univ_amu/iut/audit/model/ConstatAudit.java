@@ -10,7 +10,7 @@ import fr.univ_amu.iut.commun.model.Severite;
 /// @param cible élément visé (chemin de fichier, nom logique, dossier)
 /// @param detail explication lisible destinée à l'utilisateur
 ///
-/// ⚠ La [Severite] du socle compte **quatre** niveaux ; l'audit n'en produit que trois. `SUCCES` est
+/// La [Severite] du socle compte **quatre** niveaux ; l'audit n'en produit que trois. `SUCCES` est
 /// donc atteignable par le type sans qu'aucun constat ne l'émette : un audit ne félicite pas, il relève
 /// ce qui cloche. Écrit ici pour que le prochain lecteur ne cherche pas où ce niveau est produit (#2159).
 public record ConstatAudit(

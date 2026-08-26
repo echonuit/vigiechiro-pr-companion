@@ -129,7 +129,7 @@ final class ColonnesAudio {
         // « Date » : même idiome que « Heure » juste en dessous, et pour la même raison (#4019). La
         // valeur est la DATE (tri chronologique par construction), l'affichage est français.
         //
-        // ⚠️ Le cadratin est passé explicitement : cette table a sa règle, « carré, point, commune, date
+        // Le cadratin est passé explicitement : cette table a sa règle, « carré, point, commune, date
         // et fichier : cinq colonnes, une seule règle » (#3236). Une cellule vide ici aurait rompu une
         // convention déjà décidée, et c'est son test qui l'a rappelé.
         ColonneDate.configurer(col.date(), LigneObservationAudio::dateEnregistrement, Formats.VALEUR_ABSENTE);

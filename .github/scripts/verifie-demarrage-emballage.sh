@@ -29,7 +29,7 @@
 # publication. Sortie en script, elle porte son `--auto-test`, joué à chaque PR par `lint.yml`, et
 # `maven.yml` l'exerce en vrai sur l'app-image Linux.
 #
-# ⚠️ **Bash seulement, donc Linux et macOS.** L'archive portable Windows n'est pas couverte ici : son
+# **Bash seulement, donc Linux et macOS.** L'archive portable Windows n'est pas couverte ici : son
 # lanceur est en sous-système graphique et le suivi de processus depuis Git Bash n'a pas pu être
 # éprouvé. Le `.msi`, lui, est installé ET lancé par `winget.yml`.
 #
@@ -97,7 +97,7 @@ verifier_le_demarrage() {
 
 ### Le lanceur de ligne de commande de l'emballage répond-il ? Rend 0 s'il rend sa version en code 0.
 ###
-### ⚠️ Un emballage peut ouvrir sa fenêtre et n'exposer AUCUNE commande : c'est l'état dans lequel le
+### Un emballage peut ouvrir sa fenêtre et n'exposer AUCUNE commande : c'est l'état dans lequel le
 ### produit a vécu jusqu'à #4071, et rien ici ne pouvait le dire - le contrôle du dessus n'ouvre que le
 ### lanceur graphique. On demande donc sa version au lanceur CLI, seule invocation qui ne touche ni la
 ### base, ni le réseau, ni le dossier de travail.
@@ -126,7 +126,7 @@ verifier_la_ligne_de_commande() {
     return 1
   fi
 
-  # ⚠️ Le cas qui justifie ce contrôle plutôt qu'un simple `$?`. Un lanceur bâti en sous-système
+  # Le cas qui justifie ce contrôle plutôt qu'un simple `$?`. Un lanceur bâti en sous-système
   # graphique n'écrit NULLE PART et rend 0 : sa panne est indiscernable d'un succès pour qui ne
   # regarde que le code de sortie. On exige donc d'avoir lu quelque chose.
   if [ -z "$(printf '%s' "$sortie" | tr -d '[:space:]')" ]; then
@@ -262,7 +262,7 @@ fi
 
 verifier_le_demarrage "$LANCEUR" "$SECONDES" "$LIBELLE" || exit 1
 
-# ⚠️ `--cli` est FACULTATIF, et son absence se dit : sans elle, ce script ne prouve rien de la ligne de
+# `--cli` est FACULTATIF, et son absence se dit : sans elle, ce script ne prouve rien de la ligne de
 # commande de l'emballage. Un appelant qui l'oublie doit le voir passer, sans quoi son vert répondrait
 # à une question qu'il n'a pas posée (ADR 2748).
 if [ -z "$CLI" ]; then

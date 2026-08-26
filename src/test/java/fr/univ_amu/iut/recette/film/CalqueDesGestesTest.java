@@ -65,7 +65,7 @@ class CalqueDesGestesTest {
         CalqueDesGestes.fleche(g, 400, 300);
         g.dispose();
 
-        // ⚠️ La tolérance n'est pas un arrondi commode : le liseré fait 2,5 px et se dessine À CHEVAL
+        // La tolérance n'est pas un arrondi commode : le liseré fait 2,5 px et se dessine À CHEVAL
         // sur le contour, donc il déborde de la pointe d'un peu plus d'un pixel, antialiasage
         // compris. Ce qui est éprouvé ici reste entier : la flèche est ANCRÉE par sa pointe et
         // s'étend vers le bas à droite. Une flèche centrée sur le point commencerait seize pixels
@@ -79,7 +79,7 @@ class CalqueDesGestesTest {
         assertThat(cadre[2] - cadre[0]).as("une flèche a une largeur lisible").isBetween(10, 40);
     }
 
-    /// ⚠️ Le cas qui empêche un halo perpétuel. Sans lui, un halo dessiné à `reste = 0` marquerait
+    /// Le cas qui empêche un halo perpétuel. Sans lui, un halo dessiné à `reste = 0` marquerait
     /// toutes les images qui suivent un clic, et un clip entier paraîtrait cliqué de bout en bout.
     @Test
     @DisplayName("un halo éteint ne peint rien du tout")
@@ -116,7 +116,7 @@ class CalqueDesGestesTest {
 
     /// Le badge tient dans la bande basse de la toile, sous la ligne des 800 pixels.
     ///
-    /// ⚠️ Cette page a d'abord affirmé que le badge « ne couvre jamais l'application », et c'était
+    /// Cette page a d'abord affirmé que le badge « ne couvre jamais l'application », et c'était
     /// FAUX. Ce n'est vrai que d'une fenêtre plus petite que la toile - les scénarios perceptifs
     /// ouvrent du 1000 × 700 sur du 1280 × 900. `CarteSitesTest`, mesuré sur un vrai clip, ouvre du
     /// **1280 × 900** : le badge y recouvre le bas de l'application pendant ses 800 ms.

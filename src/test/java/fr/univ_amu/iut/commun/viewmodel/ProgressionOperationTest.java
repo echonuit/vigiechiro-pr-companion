@@ -111,7 +111,7 @@ class ProgressionOperationTest {
         // six semaines plus tard. Les valeurs tombent juste : 10,0 - 14,0 - 17,3 s, loin d'un demi
         // arrondissable, donc à l'abri d'un basculement d'arrondi.
         //
-        // ⚠️ La séquence compte, et ce test l'a montré en échouant : posé tel quel à la suite des deux
+        // La séquence compte, et ce test l'a montré en échouant : posé tel quel à la suite des deux
         // premiers, le troisième état annonçait « ~10 s » et non « ~17 s ». La fraction est MONOTONE
         // (#814), donc 0,126 après 0,20 ne redescend pas et l'estimation se calcule sur 0,20. Dans la
         // capture, `marquerEnCours()` appelle `demarrer` entre les deux et remet la fraction à zéro -
@@ -148,7 +148,7 @@ class ProgressionOperationTest {
     @Test
     @DisplayName("#3505 : l'estimation se compte depuis demarrer(), pas depuis l'origine de l'horloge")
     void chemin_horloge_estime_depuis_la_reference_posee() {
-        // ⚠️ Premier jet faux, et c'est le test qui avait tort : j'attendais « aucune estimation », parce
+        // Premier jet faux, et c'est le test qui avait tort : j'attendais « aucune estimation », parce
         // que la Javadoc dit « trop récent pour estimer ». Le code n'exclut en réalité qu'un écoulé NUL -
         // quelques microsecondes donnent « ~0 s restant », pas l'absence de mention.
         //

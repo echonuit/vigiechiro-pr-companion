@@ -101,7 +101,7 @@ public final class PresenceFichiers {
     /// Balayage réel : listage du dossier via `Files.list`. Dossier absent ou illisible = aucun
     /// nom (les fichiers attendus dedans seront classés absents ou introuvables).
     ///
-    /// ⚠️ **Le repli « illisible = aucun nom » est une décision, et elle est tenue dans les deux cas**
+    /// **Le repli « illisible = aucun nom » est une décision, et elle est tenue dans les deux cas**
     /// d'échec - ce qui n'était pas vrai (#3795). `Files.list` peut échouer à **deux moments** : à
     /// l'ouverture, en `IOException` vérifiée, et **pendant l'itération**, en `UncheckedIOException`
     /// qui n'hérite pas d'`IOException` et traversait donc le `catch` ci-dessous. Le comportement
@@ -110,7 +110,7 @@ public final class PresenceFichiers {
     ///
     /// C'est la même forme que #3627 sur `Files.walk`, à ceci près qu'ici le repli est **voulu** :
     /// l'audit classera les fichiers « absents ou introuvables », ce que ses appelants savent lire.
-    /// ⚠️ Le geste de listage est **injecté** : un échec **pendant l'itération** ne se fabrique pas de
+    /// Le geste de listage est **injecté** : un échec **pendant l'itération** ne se fabrique pas de
     /// façon portable, et c'est précisément le cas que le repli ci-dessus doit couvrir. Même couture
     /// que `ArborescenceFichiers` (#3525) et `NettoyageDossiersOrphelins` (#3681) - sans elle, le
     /// remède serait livré sans qu'aucun test puisse le juger.

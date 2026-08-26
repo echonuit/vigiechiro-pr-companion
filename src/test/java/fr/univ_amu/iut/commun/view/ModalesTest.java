@@ -35,7 +35,7 @@ class ModalesTest {
 
     /// Ouvre une modale **à part**, propriétaire de celle du harnais.
     ///
-    /// ⚠️ Ce banc prenait le Stage du harnais lui-même, et l'un de ses tests le **ferme** - c'est ce que
+    /// Ce banc prenait le Stage du harnais lui-même, et l'un de ses tests le **ferme** - c'est ce que
     /// « Échap ferme la modale » veut dire. Or ce Stage est partagé par toutes les classes d'un même
     /// fork : fermé puis rouvert par la classe suivante, il cessait de suivre les scènes qu'on lui
     /// posait. Mesuré (#4145) : après cette classe, une scène de quarante lignes laissait la fenêtre au

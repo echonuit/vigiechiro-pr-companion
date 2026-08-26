@@ -330,7 +330,7 @@ public final class CaptureValidationTadarida {
         // (« Entree valider · R reference · D douteux… »), illisible sur l'apercu publie - le mode de
         // panne decrit en #2129, jamais corrige ICI parce que cette capture a sa propre scene.
         //
-        // ⚠️ Ce que la hauteur ne corrige PAS : les graduations de l'axe des temps restent peintes sous
+        // Ce que la hauteur ne corrige PAS : les graduations de l'axe des temps restent peintes sous
         // la barre d'actions, a 720 comme a 920 (mesure). L'`AudioView` peint hors de sa boite ; lui
         // donner plus de place deplace le debordement, elle ne le supprime pas.
         Scene scene = new Scene(vue, 1100, 872);

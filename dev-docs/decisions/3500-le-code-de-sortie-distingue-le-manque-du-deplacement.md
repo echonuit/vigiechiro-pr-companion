@@ -25,7 +25,7 @@ sans condition.
 La CLI est la surface **scriptable**. Un script qui restaure et teste `$?` recevait `0` sur une
 restauration amputée : le fait était bien imprimé, mais dans du texte qu'aucun script ne lit.
 
-⚠️ C'est très exactement le défaut que le lot 1 de #2720 existait pour tuer - « une sauvegarde ne peut
+C'est très exactement le défaut que le lot 1 de #2720 existait pour tuer - « une sauvegarde ne peut
 plus mentir » - réapparu sur l'autre surface. Devant un humain, elle ne ment plus. Devant un script,
 elle rendait `0`.
 

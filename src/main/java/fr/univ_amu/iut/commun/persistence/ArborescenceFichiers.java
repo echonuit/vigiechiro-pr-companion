@@ -43,7 +43,7 @@ public final class ArborescenceFichiers {
                     Files.copy(chemin, destination, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
-            // ⚠️ `Files.walk` n'annonce pas l'échec de parcours en `IOException` : il l'enveloppe dans une
+            // `Files.walk` n'annonce pas l'échec de parcours en `IOException` : il l'enveloppe dans une
             // `UncheckedIOException` levée PENDANT l'itération, qui n'hérite pas d'`IOException` et
             // traverserait donc la signature déclarée. On la ramène au type annoncé, sans quoi le
             // diagnostic de l'appelant ne s'applique jamais (#3632).
@@ -58,7 +58,7 @@ public final class ArborescenceFichiers {
     /// mesurer la place requise **avant** de copier (#3572), et une seconde implémentation aurait été
     /// la huitième variante du même parcours d'arborescence dans ce dépôt.
     ///
-    /// ⚠️ Un fichier illisible compte pour **zéro** : observer ne doit jamais être plus fragile que ce
+    /// Un fichier illisible compte pour **zéro** : observer ne doit jamais être plus fragile que ce
     /// qu'on observe, et refuser d'afficher une taille parce qu'un fichier a bougé serait absurde.
     /// C'est juste pour un **inventaire**, et faux pour une **décision** - un garde qui additionne ces
     /// zéros conclut « il y a la place » depuis un silence (#3627). Qui décide appelle [#peser].
@@ -77,7 +77,7 @@ public final class ArborescenceFichiers {
     /// second des deux besoins que #3574 avait déjà séparés pour l'effacement, et que la pesée
     /// confondait encore.
     ///
-    /// ⚠️ Elle ne **lève** pas pour autant. Une mesure qui s'interrompt au premier fichier illisible ne
+    /// Elle ne **lève** pas pour autant. Une mesure qui s'interrompt au premier fichier illisible ne
     /// dirait pas combien pèse le reste, et l'appelant qui veut refuser a besoin des deux : le total
     /// connu, et ce qui manque à ce total.
     ///
@@ -101,11 +101,11 @@ public final class ArborescenceFichiers {
 
     /// Pèse un dossier, empile ses sous-dossiers, et **note** celui qu'on n'a pas pu ouvrir.
     ///
-    /// ⚠️ Le parcours est explicite parce que `Files.walk` **lève** sur le premier dossier qu'il ne peut
+    /// Le parcours est explicite parce que `Files.walk` **lève** sur le premier dossier qu'il ne peut
     /// pas lister, et interrompt le flux : on n'apprend ni ce que pèse le reste, ni combien de dossiers
     /// ont résisté (#3634). Même choix que [#effacerAuMieux], qui continue après un récalcitrant.
     ///
-    /// ⚠️ `NOFOLLOW_LINKS` sur le test de dossier, et lui seul : c'est ce que fait `Files.walk` par
+    /// `NOFOLLOW_LINKS` sur le test de dossier, et lui seul : c'est ce que fait `Files.walk` par
     /// défaut, et sans lui un lien vers un dossier ancêtre ferait **tourner ce parcours sans fin**. Un
     /// lien vers un fichier, lui, reste pesé comme avant - `isRegularFile` suit le lien.
     private static long peserLeContenu(
@@ -169,7 +169,7 @@ public final class ArborescenceFichiers {
     /// échec. Mais il ne se tait pas non plus - la liste rendue dit ce qui reste, et l'appelant en fait
     /// ce qu'il veut : l'ignorer, ou le rapporter à l'utilisateur.
     ///
-    /// ⚠️ C'est le second des deux contrats, et le nom le dit (#3574). Sept variantes de ce geste
+    /// C'est le second des deux contrats, et le nom le dit (#3574). Sept variantes de ce geste
     /// vivaient dans le dépôt sous des noms qui se ressemblaient tous, avec **quatre** comportements en
     /// cas d'échec : lever, lever sans le déclarer, avaler, ou rapporter. Une copie faite depuis le
     /// mauvais modèle changeait le comportement en cas de panne sans rien casser de visible.
@@ -184,7 +184,7 @@ public final class ArborescenceFichiers {
     }
 
     /// [#effacerAuMieux(Path)], avec les gestes de disque injectés (#3525).
-    /// ⚠️ **Publique**, comme [#octets(Path,GestesFichiers)] et pour la même raison : un dossier qui
+    /// **Publique**, comme [#octets(Path,GestesFichiers)] et pour la même raison : un dossier qui
     /// **résiste** ne se fabrique pas de façon portable - `File.setWritable(false)` rend `false` sous
     /// Windows. `NettoyageDossiersOrphelins`, hors de ce paquet, est le seul appelant dont l'utilisateur
     /// attend la **raison** de l'échec (ADR 3574) : sans cette couture, ce chemin n'était éprouvable
@@ -205,7 +205,7 @@ public final class ArborescenceFichiers {
         } catch (IOException illisible) {
             restants.add(new EchecEffacement(cible, illisible));
         } catch (UncheckedIOException parcours) {
-            // ⚠️ Son contrat dit « ne lève jamais », et elle est appelée dans des `finally` : une
+            // Son contrat dit « ne lève jamais », et elle est appelée dans des `finally` : une
             // exception levée là REMPLACE le résultat de l'opération, si bien qu'un import réussi
             // ressortait en échec brut à cause de son ménage. `Files.walk` enveloppe son échec de
             // parcours dans une `UncheckedIOException`, que le `catch` ci-dessus ne voit pas (#3632).
@@ -226,7 +226,7 @@ public final class ArborescenceFichiers {
 
     /// Efface `cible` et tout ce qu'elle contient. Une cible absente n'est pas une erreur.
     ///
-    /// ⚠️ Elle **lève** plutôt que d'ignorer, contrairement aux suppressions best-effort du dépôt
+    /// Elle **lève** plutôt que d'ignorer, contrairement aux suppressions best-effort du dépôt
     /// (`ExtracteurZip`, `SupprimerSauvegarde`) : ici l'appelant a besoin de savoir. Une bascule de
     /// restauration qui ne parvient pas à retirer l'ancien dossier ne doit pas enchaîner sur le
     /// renommage comme si de rien n'était (#3514).

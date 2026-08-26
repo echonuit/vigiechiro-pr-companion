@@ -58,7 +58,7 @@ class ModalesCentrageTest {
 
     /// Ouvre l'hôte **à part**, propriétaire de la fenêtre du harnais.
     ///
-    /// ⚠️ Ce banc prenait le Stage du harnais et le **déplaçait** en (120, 60) sans jamais l'y remettre.
+    /// Ce banc prenait le Stage du harnais et le **déplaçait** en (120, 60) sans jamais l'y remettre.
     /// Sans conséquence mesurée aujourd'hui - vérifié en rejouant `AppTest` derrière lui - mais l'écran
     /// du banc headless fait 1000 x 1000 : une classe suivante qui pose une scène de 1180 px sur une
     /// fenêtre décalée de 120 la verrait déborder, et chercherait la cause ailleurs. C'est la forme que
@@ -78,7 +78,7 @@ class ModalesCentrageTest {
 
     /// Pose l'hôte **et attend que ce soit fait**, avant d'ouvrir quoi que ce soit par-dessus.
     ///
-    /// ⚠️ Poser la position dans le `@Start` ne suffit pas, et le test l'a montré en rougissant d'un
+    /// Poser la position dans le `@Start` ne suffit pas, et le test l'a montré en rougissant d'un
     /// écart de 120 px - exactement [#HOTE_X]. La modale se centrait sur un hôte encore en x = 0
     /// pendant que l'assertion lisait déjà 120 : le harnais déplace la fenêtre primaire après
     /// l'amorçage. Le test passait ou non selon l'ordre d'arrivée, ce qui est la pire des deux issues :

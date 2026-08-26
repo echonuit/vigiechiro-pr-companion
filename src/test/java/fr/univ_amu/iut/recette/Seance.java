@@ -9,13 +9,13 @@ package fr.univ_amu.iut.recette;
 /// voir si quelque chose se replace. Sans elles, le geste occupe une ou deux images et personne ne
 /// peut trancher.
 ///
-/// ⚠️ Ces respirations n'ont aucun sens hors d'une séance filmée : elles ne feraient qu'allonger
+/// Ces respirations n'ont aucun sens hors d'une séance filmée : elles ne feraient qu'allonger
 /// chaque build de quelques secondes pour rien. Le scénario les demande donc à cette classe plutôt
 /// que de les prendre toujours.
 ///
 /// ## Deux bancs, deux signaux, une seule question
 ///
-/// ⚠️ Il y a **deux** manières de filmer ce dépôt, et elles ne se reconnaissent pas au même signe.
+/// Il y a **deux** manières de filmer ce dépôt, et elles ne se reconnaissent pas au même signe.
 ///
 /// Le banc bash pose `recette.reperes`, la propriété qui dit où consigner les repères, et le profil
 /// `recette-filmee` est seul à la poser. Le banc en Java pur (`recette/film/`) n'a aucun repère à

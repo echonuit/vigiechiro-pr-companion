@@ -13,7 +13,7 @@ produisent mécaniquement ce que la règle interdit, quel que soit le contexte :
 2. le repli sur le nom de classe - même effet, en plus court ;
 3. le déroulement d'**un seul** cran - une enveloppe peut en emballer une autre.
 
-⚠️ Ce que ce cliquet ne peut pas voir, et qu'il faut savoir en le lisant : un
+Ce que ce cliquet ne peut pas voir, et qu'il faut savoir en le lisant : un
 `"Échec : " + echec.getMessage()` **nu** est tout aussi fautif, et il ne correspond à aucune des trois
 formes. Il y en a des dizaines dans le dépôt, dont la plupart sont des refus métier légitimes. Compter
 la forme nue rendrait un chiffre que personne ne saurait faire descendre, c'est-à-dire un cliquet qu'on
@@ -62,7 +62,7 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
         if fichier.name == "CauseLisible.java":
             continue
         contenu = sans_commentaires_java(fichier.read_text(encoding="utf-8"))
-        # ⚠️ Les formes tiennent souvent sur DEUX lignes : `spotless` coupe volontiers juste après le
+        # Les formes tiennent souvent sur DEUX lignes : `spotless` coupe volontiers juste après le
         # `?`. Chercher ligne à ligne en manquerait la moitié, et un cliquet qui rend un chiffre trop
         # bas est pire qu'un cliquet absent : il se lit comme une dette maîtrisée. On cherche donc sur
         # le texte entier, et on retrouve la ligne en comptant les sauts qui précèdent l'occurrence.

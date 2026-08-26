@@ -126,7 +126,7 @@ class ScenarioPerceptifRefusDepotTest {
                 .remplacer(new AbstractModule() {
                     @Override
                     protected void configure() {
-                        // ⚠️ Qualifiant intermédiaire, comme `DepotVigieChiroModule` : sans lui, la cible
+                        // Qualifiant intermédiaire, comme `DepotVigieChiroModule` : sans lui, la cible
                         // de l'`OptionalBinder` se référencerait elle-même.
                         OptionalBinder.newOptionalBinder(binder(), DepotVigieChiro.class)
                                 .setBinding()
@@ -137,7 +137,7 @@ class ScenarioPerceptifRefusDepotTest {
                     @Singleton
                     @Named(QUALIFIANT)
                     DepotVigieChiro depotQuiRefuse() {
-                        // ⚠️ `DepotVigieChiro` est final : pas de sous-classe possible. Le dépôt le mocke
+                        // `DepotVigieChiro` est final : pas de sous-classe possible. Le dépôt le mocke
                         // déjà ailleurs (`LotDepotConnecteViewTest`), et c'est la seule frontière truquée
                         // ici - tout le reste du chemin, écran compris, est celui de la production.
                         DepotVigieChiro faux = mock(DepotVigieChiro.class);
@@ -148,7 +148,7 @@ class ScenarioPerceptifRefusDepotTest {
                 .semer(inj -> contexte = semerUneNuitPreteADeposer(
                         inj.getInstance(SourceDeDonnees.class),
                         inj.getInstance(Workspace.class).racine()))
-                // ⚠️ L'écran du lot est ouvert AVANT `show()`. Ouvert après, l'accueil paraissait une
+                // L'écran du lot est ouvert AVANT `show()`. Ouvert après, l'accueil paraissait une
                 // fraction de seconde puis l'écran du lot surgissait sans qu'aucun geste ne l'explique :
                 // le clip commençait sur un écran qui n'a rien à voir avec le cas.
                 .ouvrir(inj -> inj.getInstance(NavigationLot.class).ouvrir(contexte))
@@ -164,7 +164,7 @@ class ScenarioPerceptifRefusDepotTest {
     @CasDeRecette(value = "S4-33", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S4-33 · le compte rendu dit le nombre de refus et conseille la reconnexion : à lire")
     void le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion(FxRobot robot) throws Exception {
-        // ⚠️ Le dépôt demande confirmation, et le dialogue réel fait `showAndWait`, qui fige TestFX
+        // Le dépôt demande confirmation, et le dialogue réel fait `showAndWait`, qui fige TestFX
         // headless : le film s'arrêterait là. Même remède que `LotDepotConnecteViewTest`. Ce qui se voit
         // reste juste, à une chose près qui ne se voit pas : la confirmation n'a pas été demandée.
         ecranDuLot().confirmateur().definir(message -> true);
@@ -175,7 +175,7 @@ class ScenarioPerceptifRefusDepotTest {
 
         robot.clickOn("#btnTeleverser");
         // L'exécuteur est asynchrone : le compte rendu n'est PAS là au retour du clic.
-        // ⚠️ On attend LA PHRASE QU'ON AFFIRME, et non un texte voisin. Attendre « Dépôt incomplet »
+        // On attend LA PHRASE QU'ON AFFIRME, et non un texte voisin. Attendre « Dépôt incomplet »
         // rendait la main dès le titre du compte rendu, alors que les avertissements paraissent à la
         // passe suivante : le test passait sur mon poste et rougissait sur le runner, sur la seule
         // différence de rythme. Une attente qui ne porte pas sur l'assertion ne garde rien.
@@ -183,7 +183,7 @@ class ScenarioPerceptifRefusDepotTest {
                 20, TimeUnit.SECONDS, () -> texteAffiche(robot).contains(REFUSEES + " archive(s) ont été refusées"));
         // Le moment que ce cas existe pour montrer : la phrase du compte rendu, dont c'est la
         // LISIBILITÉ qu'on juge. Elle demande d'être lue, pas aperçue.
-        // ⚠️ Le compte rendu paraît SOUS la ligne de flottaison, et l'écran est revenu en haut quand
+        // Le compte rendu paraît SOUS la ligne de flottaison, et l'écran est revenu en haut quand
         // sa zone est apparue. Sans ce défilement, le clip se termine sur les étapes 1 et 2 et ne
         // montre jamais la phrase qu'il fait juger - c'est ce que la relecture du clip publié a dit.
         CadreVisible.amener(libellePortant(robot, "Reconnectez-vous"), robot);
@@ -201,7 +201,7 @@ class ScenarioPerceptifRefusDepotTest {
                 .as("et le geste qui répare est nommé : ce refus-là tient aux droits, donc une reconnexion suffit")
                 .contains("Reconnectez-vous");
 
-        // ⚠️ Et la phrase doit être DANS LE CADRE, pas seulement dans la scène. `lookup` trouve un
+        // Et la phrase doit être DANS LE CADRE, pas seulement dans la scène. `lookup` trouve un
         // noeud quelle que soit sa position : le clip publié se terminait sur les étapes 1 et 2, la
         // phrase vivant sous la ligne de flottaison, et toutes les assertions ci-dessus passaient.
         // Un cas perceptif dont le clip ne montre pas son objet ne fait rien juger.
@@ -251,7 +251,7 @@ class ScenarioPerceptifRefusDepotTest {
         SequenceDao sequences = new SequenceDao(source);
         for (int index = 0; index < REFUSEES; index++) {
             String nom = PREFIXE.nommerSequence(NOM_ORIGINAL, index);
-            // ⚠️ Le fichier existe pour de vrai : la source de dépôt lit sa TAILLE (#1994). Son contenu,
+            // Le fichier existe pour de vrai : la source de dépôt lit sa TAILLE (#1994). Son contenu,
             // lui, n'est jamais lu - quelques octets suffisent, et le clip n'attend pas.
             Files.writeString(racine.resolve("transformes").resolve(nom), "sequence");
             sequences.insert(new SequenceDEcoute(
@@ -261,7 +261,7 @@ class ScenarioPerceptifRefusDepotTest {
         new JournalDuCapteurDao(source)
                 .insert(new JournalDuCapteur(null, "LogPR" + SERIE + ".txt", null, null, idSession));
 
-        // ⚠️ Sans lignes de suivi, `archivesGenerees` est faux et le bouton « Déposer » n'est pas le
+        // Sans lignes de suivi, `archivesGenerees` est faux et le bouton « Déposer » n'est pas le
         // geste primaire de l'écran (`LotController:440`). Le premier essai s'est arrêté là : l'écran
         // était juste, complet, et le dépôt ne partait pas.
         DepotUniteDao unites = new DepotUniteDao(source);

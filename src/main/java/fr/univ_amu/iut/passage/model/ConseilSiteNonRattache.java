@@ -23,7 +23,7 @@ public final class ConseilSiteNonRattache {
 
     /// Deux conseils, et un seul est applicable selon ce que la plateforme porte.
     ///
-    /// ⚠️ Un carré qui existe **sous un autre protocole** n'est pas récupérable : Companion ne gère que
+    /// Un carré qui existe **sous un autre protocole** n'est pas récupérable : Companion ne gère que
     /// le Point Fixe, et conseiller de le récupérer serait un geste impossible à suivre.
     public static String selonCeQuiExiste(String numeroCarre, List<SiteVigieChiro> trouves) {
         boolean enPointFixe = trouves.stream().anyMatch(SiteVigieChiro::estPointFixe);

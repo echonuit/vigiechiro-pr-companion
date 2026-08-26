@@ -69,7 +69,7 @@ frontières de modules la rendent coûteuse à défaire :
 - la voie douce - rediriger le cache de Gluon vers un dossier stable - est fermée elle aussi :
   `com.gluonhq.attach.storage` n'exporte son paquet d'implémentation qu'au module `attach.util`.
 
-⚠️ Une révision de cette ADR **ne serait pas absurde** le jour où l'une de ces contraintes tombe (un
+Une révision de cette ADR **ne serait pas absurde** le jour où l'une de ces contraintes tombe (un
 point d'injection du retriever côté application, ou un `StorageService` configurable). Le « non » est
 motivé par un rapport coût/bénéfice, pas par un principe.
 
@@ -99,7 +99,7 @@ Le corollaire se restreint donc au seul rectangle :
 Éprouvé : un changement de 40x12 px hors carte, sur l'aperçu où la carte couvre 72,9 % de l'image, est
 détecté - il pèse 0,07 %, qu'aucun seuil global n'aurait vu.
 
-⚠️ Un défaut **distinct** existait au même endroit, et a été corrigé : l'attente des tuiles était un
+Un défaut **distinct** existait au même endroit, et a été corrigé : l'attente des tuiles était un
 délai fixe de six secondes, donc une course contre le réseau. Une capture pouvait partir avec des tuiles
 **manquantes** - un fond absent, pas une nuance de rendu. C'est désormais une condition sur l'état du
 graphe de scène, et les captures de carte sont passées de 48 s à 10 s. Les deux sujets se ressemblent et

@@ -182,7 +182,7 @@ avertissement, sans bloquer l'import :
     Vos fichiers d'origine ne sont pas touchés : rien n'est déplacé ni supprimé sur la carte. Si les
     enregistrements écartés vous appartiennent aussi, importez-les à part, avec **leur** journal.
 
-⚠️ Cette règle s'applique à l'import d'**une nuit**. Sans journal (mode dégradé), rien n'est écarté :
+Cette règle s'applique à l'import d'**une nuit**. Sans journal (mode dégradé), rien n'est écarté :
 l'application ne peut pas décider laquelle des séries est la bonne quand la référence vient elle-même
 des fichiers.
 
@@ -244,7 +244,7 @@ d'autre ne change.
 
 ![Cas « déjà préfixés » : l'état du nommage bascule, et l'import est refusé parce que le préfixe désigne un autre carré que le rattachement choisi.](../assets/captures/apercu-import-prefixe.png)
 
-⚠️ **Si le préfixe désigne un autre rattachement que celui que vous avez choisi, l'import est refusé**,
+**Si le préfixe désigne un autre rattachement que celui que vous avez choisi, l'import est refusé**,
 et le message nomme le préfixe qu'il attendait. C'est voulu : sans ce refus, vos enregistrements
 partiraient au dépôt sous le nom d'un **autre carré**. Deux issues :
 

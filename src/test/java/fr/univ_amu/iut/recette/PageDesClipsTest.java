@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// Les deux cas ci-dessous gardent chacun l'une de ces dérives.
 ///
-/// ⚠️ Ce test ne vérifie **pas** que les fichiers sont en ligne : une pré-version se peuple par un
+/// Ce test ne vérifie **pas** que les fichiers sont en ligne : une pré-version se peuple par un
 /// tournage, qui est manuel. Un clip absent dit « le tournage n'a pas eu lieu depuis », pas « le
 /// produit est cassé », et la page le dit à son lecteur.
 class PageDesClipsTest {
@@ -48,7 +48,7 @@ class PageDesClipsTest {
     /// famille de cas : ce sont les MÊMES cas, vus contre une autre frontière, et leurs pièces vivent
     /// sur une autre pré-version parce que des données vivantes ne se comparent pas.
     ///
-    /// ⚠️ Elle compte pour ce garde au même titre que les deux autres. Un clip qu'aucune page ne
+    /// Elle compte pour ce garde au même titre que les deux autres. Un clip qu'aucune page ne
     /// montre est un clip que personne ne verra, et la source ne change rien à cela.
     private static final Path PAGE_CONNECTES = Path.of("dev-docs", "recette", "clips-connectes.md");
 
@@ -59,7 +59,7 @@ class PageDesClipsTest {
     /// L'adresse d'un clip dans une page : `.../clips-recette/<Classe>.<methode>.mp4`, ou la même
     /// sous `clips-connectes` pour un clip tourné contre la plateforme (#4306).
     ///
-    /// ⚠️ Les deux pré-versions, et pas un motif ouvert sur n'importe quelle destination : une
+    /// Les deux pré-versions, et pas un motif ouvert sur n'importe quelle destination : une
     /// adresse qui pointerait ailleurs - un tag de version, par exemple - montrerait un clip figé
     /// pendant que la page prétend montrer le tournage courant.
     private static final Pattern CLIP =
@@ -97,7 +97,7 @@ class PageDesClipsTest {
     @DisplayName("#4056 : chaque adresse écrite dans les pages de clips désigne une méthode qui existe")
     void chaque_adresse_designe_une_methode_qui_existe() {
         Map<String, String> introuvables = new TreeMap<>();
-        // ⚠️ Les DEUX pages. Ce garde s'appelait « chaque adresse » et ne lisait que celle des cas
+        // Les DEUX pages. Ce garde s'appelait « chaque adresse » et ne lisait que celle des cas
         // perceptifs : la page des cas assertés a nommé pendant un temps `S1-16 · bouton_synchro_visible`,
         // un test scindé en deux et qui n'existait plus, sans que rien ne rougisse. Le voisin
         // `tout_test_qui_cite_un_cas_est_sur_une_page` lit bien les deux ; celui-ci en avait oublié une,
@@ -143,14 +143,14 @@ class PageDesClipsTest {
 
     /// Les `Classe.methode` des tests qui citent un cas de recette, lus dans les sources.
     ///
-    /// ⚠️ Lus dans les SOURCES et non par réflexion : c'est le tournage qui produit les clips, et il
+    /// Lus dans les SOURCES et non par réflexion : c'est le tournage qui produit les clips, et il
     /// se règle sur ces annotations-là. Une annotation présente mais un test renommé donnerait un
     /// clip d'un autre nom, que les pages ne montreraient plus.
     private static Set<String> testsQuiCitentUnCas() {
         Set<String> joues = new TreeSet<>();
         try (Stream<Path> fichiers = Files.walk(SOURCES_DE_TEST)) {
             for (Path source : fichiers.filter(f -> f.toString().endsWith("Test.java"))
-                    // ⚠️ Les tests de l'outillage de recette lui-même sont écartés. Leurs annotations
+                    // Les tests de l'outillage de recette lui-même sont écartés. Leurs annotations
                     // sont des EXEMPLES : elles imitent un test qui cite un cas, sans rien couvrir.
                     // `CorrespondanceRecetteTest` les écarte déjà, et note qu'un balayage des sources
                     // « ramène deux faux positifs » - ce sont exactement ceux que ce cas a trouvés,

@@ -106,7 +106,7 @@ class LibelleDeNavigationTest {
 
     /// Découpe les arguments de **premier niveau**, parenthèses et chaînes comprises.
     ///
-    /// ⚠️ Une expression régulière ne suffit pas, et l'ouverture de #3702 s'y est prise les doigts : un
+    /// Une expression régulière ne suffit pas, et l'ouverture de #3702 s'y est prise les doigts : un
     /// motif qui compte les virgules à plat rend le **deuxième** argument pour le troisième, et désigne
     /// onze sites innocents au lieu de deux. Un garde qui rougit sur dix-sept écrans corrects se fait
     /// désarmer dans la semaine.

@@ -59,7 +59,7 @@ class LectureBorneeTest {
                 .hasMessageContaining("LogPR1925492.txt")
                 .hasMessageContaining("2,1 Mo")
                 .hasMessageContaining("1,0 Mo")
-                // ⚠️ Le contrat a changé (#4075) : le refus conseillait `-Dvigiechiro.…`, geste qu'un
+                // Le contrat a changé (#4075) : le refus conseillait `-Dvigiechiro.…`, geste qu'un
                 // produit installé ne permet PAS - le lanceur passe ses arguments à `main`, pas à la
                 // JVM. Il nomme désormais la porte qui existe là où l'utilisateur se trouve.
                 .hasMessageContaining("--reglage import.journal.max-octets=")

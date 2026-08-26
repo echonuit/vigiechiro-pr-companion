@@ -278,7 +278,7 @@ class DepotVigieChiroTest {
         // jamais une unité sur son drapeau `definitif`, et la synchronisation du plan conserve la ligne
         // quand l'identifiant subsiste. Régénérer l'archive puis relancer le téléversement suffit donc.
         //
-        // ⚠️ Ce que #3687 a retiré, c'est la PROMESSE d'une reprise, pas la POSSIBILITÉ d'un nouvel
+        // Ce que #3687 a retiré, c'est la PROMESSE d'une reprise, pas la POSSIBILITÉ d'un nouvel
         // essai. Confondre les deux est précisément l'erreur que portait #3946.
         Path archive = fichier(dossier, "nuit.wav");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));

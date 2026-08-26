@@ -18,13 +18,13 @@
 # résumé du job. Chaque ligne chiffre la part de pixels changés - le nombre ne juge pas, il oriente le
 # regard : 0,2 % sur un libellé n'est pas 12 % sur une mise en page.
 #
-# ⚠️ **Il ne juge rien et ne bloque rien.** Un écran qui change est le résultat NORMAL d'une PR qui
+# **Il ne juge rien et ne bloque rien.** Un écran qui change est le résultat NORMAL d'une PR qui
 # touche l'interface ; ce qui manquait était de le montrer. Un garde qui refuserait tout changement
 # visuel rendrait la CI rouge sur le travail attendu.
 #
 # ## Le cas qui compte autant que les autres
 #
-# ⚠️ **Aucun écran modifié se DIT.** Sans cette ligne, une PR sans changement d'écran serait
+# **Aucun écran modifié se DIT.** Sans cette ligne, une PR sans changement d'écran serait
 # indiscernable d'une comparaison qui a échoué à s'exécuter : deux silences identiques pour deux états
 # opposés (ADR 2748).
 #
@@ -54,7 +54,7 @@ comparer() {
   local index="${sortie}/index.md"
   : > "$index"
 
-  # ⚠️ Aucun fichier n'est PAS une panne : c'est le cas le plus fréquent, et il doit se lire comme tel.
+  # Aucun fichier n'est PAS une panne : c'est le cas le plus fréquent, et il doit se lire comme tel.
   if [ "$#" -eq 0 ]; then
     {
       echo "### Aperçus des écrans"
@@ -79,7 +79,7 @@ comparer() {
     nom=$(basename "$chemin" .png)
     avant="${sortie}/${nom}.avant.png"
 
-    # ⚠️ L'EXISTENCE se vérifie AVANT de chercher l'avant, et l'auto-test a payé l'ordre inverse : un
+    # L'EXISTENCE se vérifie AVANT de chercher l'avant, et l'auto-test a payé l'ordre inverse : un
     # fichier ni dans git ni sur le disque était annoncé « écran nouveau », c'est-à-dire présenté comme
     # un cas normal alors qu'il signale un plan de travail incohérent.
     if [ ! -f "$chemin" ]; then
@@ -176,7 +176,7 @@ if [ "${1:-}" = "--auto-test" ]; then
 
   # 5. Une GRANDE capture, celle que les quatre cas précédents ne peuvent pas voir.
   #
-  # ⚠️ Trente-trois captures du dépôt dépassent le million de pixels, et sur celles-là ImageMagick
+  # Trente-trois captures du dépôt dépassent le million de pixels, et sur celles-là ImageMagick
   # écrit ses comptes en notation scientifique. Le calcul rendait « ? », ou pire 0,00 % quand plus d'un
   # million de pixels changeaient. Des images de 80 × 40 ne peuvent PAS montrer ce défaut : la taille
   # est le cœur de ce cas, pas un détail de mise en scène.

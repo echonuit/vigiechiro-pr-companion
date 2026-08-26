@@ -67,7 +67,7 @@ class SecretsEcritsProtegesTest {
     /// qui arrive ensuite (coupure, disque plein, machine éteinte) laisse un fichier incomplet à sa
     /// place définitive.
     ///
-    /// ⚠️ Ce qui rend le cas de l'amorçage coûteux, c'est que **sa lecture pardonne**, et qu'elle a
+    /// Ce qui rend le cas de l'amorçage coûteux, c'est que **sa lecture pardonne**, et qu'elle a
     /// raison de pardonner : un fichier illisible rend une configuration vide plutôt que d'empêcher
     /// l'application de s'ouvrir. Les deux décisions sont bonnes séparément et forment ensemble un
     /// défaut muet - l'application redémarre sur les emplacements par défaut, et l'utilisateur retrouve

@@ -38,7 +38,7 @@ class CorrespondanceParticipationTest {
         assertThat(p.point()).isEqualTo("Z41");
         // Les dates se comparent EN DUR, telles qu'Eve les recevra (#3406).
         //
-        // ⚠️ Elles étaient vérifiées par un aller-retour vers le fuseau local, sous le motif
+        // Elles étaient vérifiées par un aller-retour vers le fuseau local, sous le motif
         // « déterministe quel que soit le fuseau ». Il l'était en effet - en reconvertissant avec le
         // MÊME `systemDefault()` qui avait produit la valeur, si bien que l'aller-retour s'annulait.
         // Ce cas restait vert alors que la donnée déposée était fausse : depuis un poste en UTC, cette

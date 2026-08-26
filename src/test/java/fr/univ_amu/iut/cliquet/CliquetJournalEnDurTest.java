@@ -31,7 +31,7 @@ class CliquetJournalEnDurTest {
     /// Le **préambule d'un journal, écrit à la main** : la ligne de démarrage ou celle des paramètres
     /// d'acquisition, horodatées comme les écrit un vrai enregistreur.
     ///
-    /// ⚠️ **Ce motif s'est trompé deux fois, dans le même sens** (ADR 2867, la confusion usage / mention).
+    /// **Ce motif s'est trompé deux fois, dans le même sens** (ADR 2867, la confusion usage / mention).
     ///
     /// **Premier essai : le nom du fichier** (`"LogPR…"`). Neuf fichiers comptés qui n'écrivent aucun
     /// journal :

@@ -44,7 +44,7 @@ class SaisieCertitudeTest {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         try (Connection cx = source.getConnection()) {
-            // ⚠️ Le SQL d'origine écrivait le protocole « Point fixe standard », inconnu de `Protocole`.
+            // Le SQL d'origine écrivait le protocole « Point fixe standard », inconnu de `Protocole`.
             long idPassage = JeuDeDonneesPassage.dans(source)
                     .utilisateur("u-1")
                     .carre("640380")

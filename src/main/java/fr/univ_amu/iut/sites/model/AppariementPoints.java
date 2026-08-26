@@ -69,7 +69,7 @@ public class AppariementPoints {
 
         /// Le point porte des nuits **déjà sur la plateforme** : son nom ne peut plus changer.
         ///
-        /// ⚠️ Ce n'est pas une précaution, c'est une impossibilité. `RequetesVigieChiro` retire `point`
+        /// Ce n'est pas une précaution, c'est une impossibilité. `RequetesVigieChiro` retire `point`
         /// du corps des mises à jour de participation, avec sa raison : *« la localité identifie la
         /// participation, elle ne se modifie pas depuis l'app »*. Renommer le point local le
         /// désolidariserait de ses propres participations, **sans aucun moyen de le réparer ensuite**.
@@ -146,7 +146,7 @@ public class AppariementPoints {
 
     /// Nuits de ce point **déjà sur la plateforme**.
     ///
-    /// ⚠️ `StatutWorkflow#estSurLaPlateforme` et non `== DEPOSE` : une nuit **récupérée** en vient aussi,
+    /// `StatutWorkflow#estSurLaPlateforme` et non `== DEPOSE` : une nuit **récupérée** en vient aussi,
     /// et son nom de localité est tout aussi scellé. Le prédicat existe précisément pour qu'on n'oublie
     /// pas le second cas (#2581).
     private int nuitsSurLaPlateforme(PointDEcoute local) {

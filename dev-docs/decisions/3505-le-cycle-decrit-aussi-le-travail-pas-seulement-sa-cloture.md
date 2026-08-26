@@ -105,10 +105,10 @@ Donc :
 - **passe 10, en queue** : écrire les ADR du chantier, en balayant les passes 0 à 9. Le **bilan** devient
   la passe 11, parce qu'il **renvoie** aux ADR et ne peut pas renvoyer à ce qui n'est pas écrit.
 
-⚠️ Une décision **de ne pas faire** est une décision, et c'est celle qu'on oublie : elle ne laisse pas de
+Une décision **de ne pas faire** est une décision, et c'est celle qu'on oublie : elle ne laisse pas de
 code derrière elle.
 
-## ⚠️ Pourquoi les passes 1 à 9 ne changent PAS de numéro
+## Pourquoi les passes 1 à 9 ne changent PAS de numéro
 
 C'est la contrainte qui a dicté la forme de la solution, et elle a été **mesurée avant** de choisir.
 

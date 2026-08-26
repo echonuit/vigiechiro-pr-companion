@@ -19,7 +19,7 @@ import java.util.Optional;
 /// point suppose donc de renvoyer tous les autres - souvent ceux d'un observateur qui n'est pas nous :
 /// le carré d'essai en porte quarante et un, et son propriétaire est quelqu'un d'autre.
 ///
-/// ⚠️ **Et le serveur ne protège pas cette écriture.** `set_localite` appelle `sites.update(...)` **sans
+/// **Et le serveur ne protège pas cette écriture.** `set_localite` appelle `sites.update(...)` **sans
 /// `if_match`**, là où `taxons.py` et `protocoles.py` en posent un ; le socle du backend le commente
 /// lui-même : *« No if_match, in case of race condition, repeatedly try the update »*. Une modification
 /// concurrente est donc écrasée **sans erreur et sans trace**. Le client officiel, lui, n'envoie aucun
@@ -30,7 +30,7 @@ import java.util.Optional;
 /// On lit, on construit l'union, puis on **relit juste avant d'écrire** : si l'`_etag` du site a bougé
 /// entre les deux, on renonce. La fenêtre tombe sous la seconde.
 ///
-/// ⚠️ **Elle ne se ferme pas.** Sur une collision exacte - une écriture concurrente entre notre relecture
+/// **Elle ne se ferme pas.** Sur une collision exacte - une écriture concurrente entre notre relecture
 /// et notre envoi - on écrase sans le savoir. Seul le serveur pourrait l'empêcher, et il ne le fait pas.
 /// C'est un risque **assumé**, pas un oubli : le dire ici vaut mieux que laisser croire à une garantie.
 public class PublicationPoint {
@@ -47,7 +47,7 @@ public class PublicationPoint {
 
     /// Un jeton est-il enregistré ? La **seule** condition d'échec qui se sache d'avance.
     ///
-    /// ⚠️ Ne pas chercher à en déduire davantage. Le refus d'écriture (403) dépend de choses que
+    /// Ne pas chercher à en déduire davantage. Le refus d'écriture (403) dépend de choses que
     /// Companion ne connaît pas : le propriétaire du carré, et la validation de l'observateur sur son
     /// protocole. Les liens de site viennent de `GET /moi/participations` et non de `/moi/sites` (#718,
     /// cf. [ClientVigieChiro#mesSites()]), donc un carré relié peut appartenir à quelqu'un d'autre.
@@ -90,11 +90,11 @@ public class PublicationPoint {
 
     /// Publie `point` sur le site distant `idSite`, et **retient** qu'il y est.
     ///
-    /// ⚠️ `idPointLocal` sert à cette mémoire, et à rien d'autre : sans elle, l'écran reproposerait le
+    /// `idPointLocal` sert à cette mémoire, et à rien d'autre : sans elle, l'écran reproposerait le
     /// geste indéfiniment. Le marquage suit la réussite - et **aussi** le cas « déjà présent », qui
     /// constate la même vérité : le point est en ligne.
     ///
-    /// ⚠️ [Resultat.AilleursSurLaPlateforme] n'est **pas** marqué, et c'est tout l'objet de sa
+    /// [Resultat.AilleursSurLaPlateforme] n'est **pas** marqué, et c'est tout l'objet de sa
     /// distinction : un homonyme posé ailleurs n'est pas notre point en ligne. Le marquer figerait la
     /// confusion, puisque le geste ne serait plus jamais reproposé.
     public Resultat publier(String idSite, PointVigieChiro point, long idPointLocal) {
@@ -163,7 +163,7 @@ public class PublicationPoint {
     /// | Non-propriétaire **validé** sur le protocole | autorisée, même verrouillé |
     /// | Non-propriétaire non validé | **403** |
     ///
-    /// ⚠️ La première version de ce message ne nommait que la seconde cause (« ce carré ne vous appartient
+    /// La première version de ce message ne nommait que la seconde cause (« ce carré ne vous appartient
     /// pas »). Pour le cas le plus courant - **son propre carré, verrouillé** - il était faux, et il
     /// envoyait vérifier une inscription qui n'y était pour rien. Les deux causes sont donc nommées, la
     /// plus probable d'abord.

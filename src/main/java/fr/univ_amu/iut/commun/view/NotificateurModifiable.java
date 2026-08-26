@@ -10,7 +10,7 @@ import java.util.Objects;
 /// confirmateur : c'est ce qui permet de cliquer réellement sur « Réactiver ce passage » dans un test et
 /// de vérifier **ce qui a été fait** autant que **ce qui a été dit**.
 ///
-/// ⚠️ **Pas de constructeur sans argument**, et c'est délibéré (#4092). Il en existait un, qui posait un
+/// **Pas de constructeur sans argument**, et c'est délibéré (#4092). Il en existait un, qui posait un
 /// [NotificationDialogue] sans propriétaire ; cinq écrans l'avaient pris pour le cas ordinaire, et leurs
 /// comptes rendus s'ouvraient donc là où le bureau voulait bien les mettre. Nommer sa fenêtre est
 /// désormais la seule façon d'en construire un, et le compilateur le rappelle.

@@ -9,7 +9,7 @@
 # (vrai trou, mutant équivalent, artefact de ciblage) : bloquer une fusion là-dessus ferait cocher au
 # hasard.
 #
-# ⚠️ PÉRIMÈTRE : **un paquet `model` par semaine**, et jamais les E2E ni la suite du réessai réseau
+# PÉRIMÈTRE : **un paquet `model` par semaine**, et jamais les E2E ni la suite du réessai réseau
 # côté tests. Chaque décision est mesurée, pas supposée (#2768) :
 #
 #   - le dépôt ENTIER n'a jamais fini : 1 h 54 sans aboutir, 19 expirations ;
@@ -33,7 +33,7 @@
 # Les classes de **vue** ont leur propre mesure : `mutation-ihm.yml`. Elles ne sont pas oubliées, elles
 # sont mesurées ailleurs, avec des tests qui les jugent.
 #
-# ⚠️ `commun.api` est écarté côté TESTS, et c'est une nuance qui compte : ce n'est pas une classe mutée,
+# `commun.api` est écarté côté TESTS, et c'est une nuance qui compte : ce n'est pas une classe mutée,
 # c'est la suite du **réessai gradué** (#2354), la plus lente du dépôt (5,5 s). Son sujet est l'attente :
 # tout mutant qui fait boucler le réessai une fois de plus dépasse le butoir de PIT (~11 s ici), et
 # l'expiration y est un **effet du sujet**, pas un défaut d'outillage. Les 16 expirations du run tué
@@ -42,11 +42,11 @@
 #
 # NON BLOQUANT, comme le rapport ADR dont ce workflow est le calque : ici on observe, on ne juge pas.
 #
-# ⚠️ Un bilan quotidien que personne ne lit vaut moins qu'un bilan hebdomadaire qu'on lit : la fréquence
+# Un bilan quotidien que personne ne lit vaut moins qu'un bilan hebdomadaire qu'on lit : la fréquence
 # ne crée pas l'attention. Le résumé du job reste le seul canal, délibérément - le rendre bloquant ferait
 # cocher au hasard, et le pousser ailleurs demanderait de décider qui le reçoit.
 #
-# ⚠️ Le `test-compile` avant le but n'est pas une commodité : sans phase, `@{jacocoArgLine}` et
+# Le `test-compile` avant le but n'est pas une commodité : sans phase, `@{jacocoArgLine}` et
 # `${net.bytebuddy:byte-buddy-agent:jar}` restent littérales dans l'argLine héritée de surefire, le
 # minion reçoit un `-javaagent` inexistant et meurt sur un `MINION_DIED` muet. Ce piège a fait conclure
 # une fois que PIT était incompatible avec ce dépôt (#2605).
@@ -140,7 +140,7 @@ jobs:
           # des systemPropertyVariables de surefire). Ne pas les repasser ici - `-DjvmArgs` REMPLACE
           # la liste du profil au lieu de s'y ajouter.
           #
-          # ⚠️ PAS d'analyse incrémentale. `historyInputFile`/`historyOutputFile` existent bien dans le
+          # PAS d'analyse incrémentale. `historyInputFile`/`historyOutputFile` existent bien dans le
           # descripteur du greffon Maven - c'est ce qui avait été vérifié - mais depuis PIT 1.25.x le
           # STOCKAGE de l'historique est un greffon **commercial** (arcmutate). Les passer sans lui ne
           # les fait pas ignorer : PIT **refuse de démarrer** sur « History has been enabled but no

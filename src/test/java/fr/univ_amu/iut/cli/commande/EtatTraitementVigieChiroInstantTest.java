@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 /// L'instant que le serveur rend, tel que l'utilisateur le lit (#3678).
 ///
-/// ⚠️ Le fuseau est **fourni** à chaque cas plutôt que pris du système : `fuseau-alternatif` rejoue
+/// Le fuseau est **fourni** à chaque cas plutôt que pris du système : `fuseau-alternatif` rejoue
 /// toute la suite sous `America/Cayenne` (ADR 3450), et figer « 21:00 » y ferait rougir un test qui ne
 /// constate aucun défaut. C'est la propriété qui compte - « converti dans le fuseau du lecteur » -,
 /// pas une heure en dur.

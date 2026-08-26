@@ -22,7 +22,7 @@ miroir du runner rendait `Ign:` sur toutes ses sources, APT basculait sur l'arch
 l'attente durait jusqu'au butoir du job - y compris **sur `main`**, où `paquet` a été annulé deux fois
 de suite à quarante minutes alors qu'il passait en onze minutes le matin même.
 
-⚠️ Le remède avait été appliqué à **une** des trois. Les deux autres ont continué de pendre le
+Le remède avait été appliqué à **une** des trois. Les deux autres ont continué de pendre le
 lendemain. C'est le motif de ce chantier : une leçon apprise à un seul endroit.
 
 ## Décision
@@ -42,7 +42,7 @@ vite. Le seul levier restant quand l'hébergeur ralentit est de ne pas retéléc
 restaure des fichiers **sans rejouer les scripts post-installation**. Il sert là où rien n'est rendu
 - `bats`, `desktop-file-utils` - et nulle part ailleurs.
 
-⚠️ **Ce qui compte n'est pas le paquet demandé, c'est ce qu'il TRAÎNE.** J'avais rangé `ffmpeg` parmi
+**Ce qui compte n'est pas le paquet demandé, c'est ce qu'il TRAÎNE.** J'avais rangé `ffmpeg` parmi
 les « paquets de fichiers » en regardant son nom ; sa fermeture de dépendances tire **dix paquets de
 polices**. Le premier run qui a trouvé le cache a fait tomber cinq cas du banc de recette - tous ceux
 qui écrivent du texte dans une vidéo, `drawtext` cherchant sa police par fontconfig.
@@ -51,7 +51,7 @@ qui écrivent du texte dans une vidéo, `drawtext` cherchant sa police par fontc
 
 ## Conséquences
 
-⚠️ **Un cache ne se prouve pas au run qui le REMPLIT.** Le run mesuré avant la fusion affichait
+**Un cache ne se prouve pas au run qui le REMPLIT.** Le run mesuré avant la fusion affichait
 `Cache not found` : il enregistrait. Le suivant, qui a trouvé la clé, est tombé. Un dispositif dont le
 défaut attend le second essai est exactement celui qu'une vérification unique laisse passer.
 

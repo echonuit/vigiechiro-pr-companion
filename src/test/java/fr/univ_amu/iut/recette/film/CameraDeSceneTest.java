@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 /// produit y était amputé, ce qui ne fait rougir aucun test : cela se voit sur le film, et
 /// seulement si quelqu'un le regarde.
 ///
-/// ⚠️ Le remède a produit le second défaut. Centrer est juste pour la fenêtre principale, et faux
+/// Le remède a produit le second défaut. Centrer est juste pour la fenêtre principale, et faux
 /// pour un menu : un [javafx.stage.PopupWindow] est une fenêtre à part entière, et la centrer la
 /// détache du bouton qui l'ouvre. Mesuré sur le clip de `S6-27`, le menu du bouton « + Filtre »
 /// tombait au centre exact de la toile, à 90 pixels de sa place.
@@ -94,7 +94,7 @@ class CameraDeSceneTest {
 
     /// Le geste dont la fenêtre a DISPARU entre-temps.
     ///
-    /// ⚠️ C'est le cas d'un clic sur une entrée de menu, et il n'a rien d'exotique : cliquer une
+    /// C'est le cas d'un clic sur une entrée de menu, et il n'a rien d'exotique : cliquer une
     /// entrée **referme le menu**. À l'image suivante, la fenêtre où le clic a eu lieu n'existe
     /// plus, et son décalage est introuvable.
     ///

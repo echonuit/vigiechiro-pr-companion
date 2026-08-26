@@ -98,6 +98,6 @@ rougit nulle part et se lit comme vraie.
 - Le compteur `<!--inv:tests-bats-->` passe à 100. C'est la garde qui l'a signalé, pas une relecture.
 - Les fixtures d'aperçu de `CaptureDialogues`, `CaptureLot` et `CapturePassage` sont en base 1000. Les
   PNG ne sont pas commités : `capture-vues.yml` les régénère au push sur `main`.
-- ⚠️ **Cette ADR ne dit pas qu'il faut un `bats` par promesse.** Elle dit qu'une promesse dont on
+- **Cette ADR ne dit pas qu'il faut un `bats` par promesse.** Elle dit qu'une promesse dont on
   **retire le témoin habituel** - ici la pile sur la console - doit voir son nouveau témoin vérifié.
   Retirer sans vérifier, c'est déplacer la preuve hors de portée en la croyant conservée.

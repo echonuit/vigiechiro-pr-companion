@@ -45,12 +45,12 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class ConnexionModaleConnecteeViewTest {
 
-    // ⚠️ Cette classe ne cite plus `S1-11`, et ce n'est pas un oubli. Elle monte `ConnexionModale.fxml`
+    // Cette classe ne cite plus `S1-11`, et ce n'est pas un oubli. Elle monte `ConnexionModale.fxml`
     // SEULE : son clip montrait une modale sur fond noir, sans l'écran d'où part le geste ni celui où
     // l'on retombe ([ADR 4188]). Le cas est joué par `ScenarioPerceptifIssuesConnexionTest`, qui ouvre
     // la modale depuis le menu principal.
     //
-    // ⚠️ Le garde `ClipDeModaleTest` ne l'avait pas vue : son motif ancrait « Modale » au DÉBUT du nom
+    // Le garde `ClipDeModaleTest` ne l'avait pas vue : son motif ancrait « Modale » au DÉBUT du nom
     // de fichier, et `ConnexionModale.fxml` lui échappait. Il regardait deux fichiers sur quatre et se
     // déclarait vert.
     //
@@ -90,7 +90,7 @@ class ConnexionModaleConnecteeViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        // ⚠️ `Habillage`, et non `new Scene` : ce cas est FILMÉ, et une scène montée sans habillage
+        // `Habillage`, et non `new Scene` : ce cas est FILMÉ, et une scène montée sans habillage
         // porte la police de la MACHINE (#3773, #4149).
         stage.setScene(Habillage.scene(vue));
         stage.show();
@@ -103,7 +103,7 @@ class ConnexionModaleConnecteeViewTest {
     @Test
     @DisplayName("#798 : « Se déconnecter » confirme avant d'effacer le jeton local")
     void deconnexion_confirme_avant_effacement(FxRobot robot) {
-        // ⚠️ Le dialogue DE LA PRODUCTION, ouvert sans bloquer. Le test le remplaçait par une lambda
+        // Le dialogue DE LA PRODUCTION, ouvert sans bloquer. Le test le remplaçait par une lambda
         // muette : rien ne paraissait, et la revue l'a vu - « la confirmation ne s'affiche pas » (#4170).
         //
         // `ConfirmationNavigation.dialogue(...)` existe précisément pour cela : même type, même

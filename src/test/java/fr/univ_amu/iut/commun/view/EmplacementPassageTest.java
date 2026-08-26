@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 /// synthèse, chrome audio - et sa raison d'être est que le fil soit **identique quelle que soit la
 /// route**. Aucun test ne l'atteignait : la mesure de mutation comptait 13 mutants sans couverture.
 ///
-/// ⚠️ Ce que l'absence de test laissait passer, ce n'est pas un fil mal formé - un écran l'aurait
+/// Ce que l'absence de test laissait passer, ce n'est pas un fil mal formé - un écran l'aurait
 /// montré - mais un fil **cliquable qui n'ouvre pas ce qu'il annonce**. Un segment porte un `Runnable` ;
 /// le supprimer ne change rien à l'affichage.
 class EmplacementPassageTest {

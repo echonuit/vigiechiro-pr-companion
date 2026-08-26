@@ -43,7 +43,7 @@ règle qu'il enfreint. Une zone à glob total (`*`) rouvrait le trou que l'ancra
 Concrètement, un banc qui vise deux largeurs **boucle** sur les deux, avec les constantes du produit
 (`TailleOuverture.LARGEUR_VOULUE`, `LARGEUR_MINIMALE`) plutôt que des littéraux.
 
-⚠️ **Une boucle plutôt qu'une seconde exécution en intégration.** Un garde qui ne rougirait qu'en CI
+**Une boucle plutôt qu'une seconde exécution en intégration.** Un garde qui ne rougirait qu'en CI
 ne protège pas celui qui écrit le code, et c'est précisément le régime dont ces deux-là sortaient.
 
 **2. La boucle vérifie d'abord qu'elle a obtenu ce qu'elle demandait.**
@@ -73,7 +73,7 @@ ordonnée 38 au lieu de 0.
 Ce qui a tranché n'est aucun raisonnement : c'est d'avoir **relancé la suite avec les propriétés
 exactes du job**. Rouge en local, de façon déterministe, en trois classes.
 
-⚠️ Et j'ai affirmé entre-temps que le rouge venait de `main`, sur la foi de deux `build` rouges qui
+Et j'ai affirmé entre-temps que le rouge venait de `main`, sur la foi de deux `build` rouges qui
 portaient en réalité sur **des tests différents**. Deux échecs simultanés ne font pas une cause
 commune.
 

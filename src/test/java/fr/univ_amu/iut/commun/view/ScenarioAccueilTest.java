@@ -46,7 +46,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// L'intitulé et la destination étaient gardés par `ContratCartesAccueilTest`, sur le contrat Guice.
 /// « Ouvre bien ce qu'elle annonce » ne l'était nulle part : c'est un **geste**, et il demande un écran.
 ///
-/// ⚠️ La liste ne se fige pas. Le scénario parcourt les cartes **telles qu'elles s'affichent** : nommer
+/// La liste ne se fige pas. Le scénario parcourt les cartes **telles qu'elles s'affichent** : nommer
 /// les sept d'aujourd'hui ferait rougir ce cas au premier module ajouté, ce que la session interdit
 /// explicitement. Ce qui est vérifié est une **propriété de chaque carte**, quel que soit leur nombre.
 ///
@@ -85,7 +85,7 @@ class ScenarioAccueilTest {
     void start(Stage stage) throws IOException {
         injector = BancDeRecette.surLeChrome()
                 .taille(1180, 900)
-                // ⚠️ ASYNCHRONE, celui que cette classe avait déjà : `RacineInjecteur` lie l'exécuteur
+                // ASYNCHRONE, celui que cette classe avait déjà : `RacineInjecteur` lie l'exécuteur
                 // de PRODUCTION, et « pas de surcharge » ne veut donc pas dire « synchrone ». Le premier
                 // jet de la migration a posé SYNCHRONE par erreur, et trois cas ont rougi en « Not on FX
                 // application thread » - le banc exige ce choix précisément parce qu'il ne se devine pas.
@@ -161,7 +161,7 @@ class ScenarioAccueilTest {
                 .filter(texte -> texte != null && !texte.isBlank())
                 .toList();
 
-        // ⚠️ D'abord ce qui rend l'absence significative. Sur un menu vide, l'assertion suivante serait
+        // D'abord ce qui rend l'absence significative. Sur un menu vide, l'assertion suivante serait
         // verte et le produit cassé : c'est le défaut « un test qui verrouille une erreur », et il se
         // prévient en nommant ce qui doit rester.
         assertThat(entrees)
@@ -180,7 +180,7 @@ class ScenarioAccueilTest {
 
     /// Attend que `predicat` soit vrai, et échoue en nommant ce qu'on attendait.
     ///
-    /// ⚠️ `waitForFxEvents()` ne suffit pas ici, et c'est mesuré (#4408). Il vide la file du fil FX ;
+    /// `waitForFxEvents()` ne suffit pas ici, et c'est mesuré (#4408). Il vide la file du fil FX ;
     /// il n'attend pas le thread d'arrière-plan qui la remplira. La carte « Sons & validation » est
     /// la seule des sept dont l'ouverture fasse de l'entrée-sortie avant d'afficher - une requête en
     /// base pour l'identifiant courant, puis `occuper(...)` pour charger les sons hors du fil JavaFX
@@ -201,7 +201,7 @@ class ScenarioAccueilTest {
     }
 
     private static List<String> intitulesDesCartes(FxRobot robot) {
-        // ⚠️ Le titre d'une carte est un `Text`, non un `Label` : `CartesAccueil` l'a changé en #2046
+        // Le titre d'une carte est un `Text`, non un `Label` : `CartesAccueil` l'a changé en #2046
         // pour que l'enroulement soit fiable, faute de quoi « Audit de cohére… » restait tronqué sur le
         // premier écran. Le lire comme un Label casse à la conversion.
         return robot.lookup(".carte-activite-titre").queryAllAs(Text.class).stream()
@@ -211,7 +211,7 @@ class ScenarioAccueilTest {
 
     /// La carte portant `intitule`, ou une erreur qui la nomme.
     ///
-    /// ⚠️ Par le libellé, jamais par le rang. Viser « la troisième carte » rendrait un clip juste sous
+    /// Par le libellé, jamais par le rang. Viser « la troisième carte » rendrait un clip juste sous
     /// une légende fausse le jour où une feature s'intercale, et les cartes sont contribuées.
     private static Node carteIntitulee(FxRobot robot, String intitule) {
         return robot.lookup(".carte-activite").queryAll().stream()
@@ -231,7 +231,7 @@ class ScenarioAccueilTest {
 
     /// Ce que le fil d'Ariane **écrit**, séparateurs et élisions compris.
     ///
-    /// ⚠️ On ramasse tous les noeuds étiquetés plutôt que de viser une classe CSS. Un sélecteur à
+    /// On ramasse tous les noeuds étiquetés plutôt que de viser une classe CSS. Un sélecteur à
     /// virgule (`.label, .hyperlink`) n'est pas interprété par le `lookup` de TestFX : il rendait une
     /// liste **vide**, et l'assertion échouait en accusant le produit alors que le fil disait bien
     /// « Accueil › … › Mes sites ».

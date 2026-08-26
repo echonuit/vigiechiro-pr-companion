@@ -24,7 +24,7 @@
 # mesure dit le contraire : E2E exclus, le périmètre des vues a produit **1 expiration sur 280
 # mutants**. Le butoir par défaut suffit.
 #
-# ⚠️ Et un butoir trop large serait pire que rien : PIT compte une expiration comme une DÉTECTION.
+# Et un butoir trop large serait pire que rien : PIT compte une expiration comme une DÉTECTION.
 # Vérifié en le rendant absurde sur une classe de vue - 21 mutants, 21 expirations, score annoncé
 # **100 %**, là où la mesure honnête donne 43 %. Un butoir mal calibré ne dégrade pas le chiffre, il
 # le rend faux dans le sens rassurant (#2768).

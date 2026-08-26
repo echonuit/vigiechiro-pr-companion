@@ -183,7 +183,7 @@ premières images de deux cas différents diffèrent de 2,4 à 3 %.
     Sur les 51 cas, 3 planchers diffèrent de plus de 0,1 % d'une paire à l'autre, 10 de 0,01 à 0,1 %, et
     38 de moins de 0,01 %.
 
-    ⚠️ La règle du **pire observé** garde 0,809 % pour ce cas, définitivement. C'est le prix assumé de
+    La règle du **pire observé** garde 0,809 % pour ce cas, définitivement. C'est le prix assumé de
     ne pas fabriquer de faux positifs : un plancher ne redescend jamais, donc **un seul mauvais tirage
     aveugle un cas pour de bon**. Avec assez de paires, un centile vaudrait mieux qu'un maximum ; avec
     deux, il n'y a pas de quoi le calculer.
@@ -196,7 +196,7 @@ montages de fin, **zéro** montage de début.
 
 ## Ce que la méthode ne voit pas
 
-⚠️ **L'image finale compare la destination, pas le chemin.**
+**L'image finale compare la destination, pas le chemin.**
 
 La dernière image est le seul instant où deux tournages sont comparables sans dépendre de leur cadence :
 au milieu, l'image n°40 de l'un et l'image n°40 de l'autre montrent deux moments différents. Mais un cas
@@ -208,10 +208,10 @@ un oubli.
 
 ## Une mesure impossible n'est pas « rien n'a changé »
 
-⚠️ Deux dossiers vides font **échouer** la comparaison au lieu de rendre « aucun cas ne bouge », et une
+Deux dossiers vides font **échouer** la comparaison au lieu de rendre « aucun cas ne bouge », et une
 mesure qui échoue se compte à part dans le résumé.
 
-⚠️ Et un **outil absent** est une panne d'installation, pas une mesure : le script refuse de commencer
+Et un **outil absent** est une panne d'installation, pas une mesure : le script refuse de commencer
 et nomme ce qui manque, au lieu de rendre cinquante « ? » qui se liraient comme cinquante cas stables.
 Les deux ne se réparent pas au même endroit, donc ils ne doivent pas se lire pareil.
 

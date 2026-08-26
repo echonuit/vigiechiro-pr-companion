@@ -53,7 +53,7 @@ class AppTest {
     /// Met la mise en page à la taille d'ouverture **voulue** et rend le contenu et le champ visible
     /// du défilement central. Le Stage n'est pas touché.
     ///
-    /// ⚠️ Redimensionner le Stage le figerait en dimensionnement explicite, définitivement et pour
+    /// Redimensionner le Stage le figerait en dimensionnement explicite, définitivement et pour
     /// toutes les classes du même fork ; le défaut est revenu quatre fois (#1940, #1967, #4130, #4145).
     /// Voir l'[ADR
     /// 4134](../../../../../../dev-docs/decisions/4134-un-banc-n-emprunte-pas-l-etat-partage-il-ouvre-le-sien.md).
@@ -79,7 +79,7 @@ class AppTest {
     @AfterEach
     void nettoyerWorkspace(FxRobot robot) {
         System.clearProperty("vigiechiro.workspace");
-        // ⚠️ TestFX RÉUTILISE le Stage primaire d'une classe de test à l'autre, dans le même fork. Les
+        // TestFX RÉUTILISE le Stage primaire d'une classe de test à l'autre, dans le même fork. Les
         // tailles minimales posées par App.start (#3452) y resteraient donc collées, et la modale de la
         // classe suivante hériterait d'un plancher qui l'empêche de grandir : son test de croissance
         // échouait sur « 600 n'est pas supérieur à 600 ».
@@ -106,12 +106,12 @@ class AppTest {
     /// 4134](../../../../../../dev-docs/decisions/4134-un-banc-n-emprunte-pas-l-etat-partage-il-ouvre-le-sien.md)
     /// attrape la forme connue, `alias.setWidth(`, et ne peut rien contre une fenêtre figée autrement.
     ///
-    /// ⚠️ Les deux scènes **encadrent** le plancher de 600 px (#3452) et restent sous les 1 000 px de
+    /// Les deux scènes **encadrent** le plancher de 600 px (#3452) et restent sous les 1 000 px de
     /// l'écran du banc : sous le plancher la mesure est aveugle, au-dessus l'échec parle d'autre chose.
     @Test
     @DisplayName("#4145 : le Stage partagé suit encore les scènes qu'on lui pose")
     void le_stage_partage_reste_ajustable(FxRobot robot) {
-        // ⚠️ `setScene` SUFFIT, et il ne faut surtout pas appeler `sizeToScene` ici. Poser une scène sur
+        // `setScene` SUFFIT, et il ne faut surtout pas appeler `sizeToScene` ici. Poser une scène sur
         // une fenêtre affichée la redimensionne - à moins qu'elle ne soit en dimensionnement explicite,
         // et c'est précisément ce qu'on mesure. `sizeToScene`, lui, DÉFIGE : le premier jet l'appelait,
         // et son mutant a survécu - le garde défaisait le défaut avant de le chercher.
@@ -141,7 +141,7 @@ class AppTest {
     @Test
     @DisplayName("#3452 : l'application pose le plancher en deçà duquel elle est inutilisable")
     void l_application_pose_les_tailles_minimales() {
-        // ⚠️ Ce test ne prouve PAS que la fenêtre s'ouvre à la taille voulue, et aucun test de cette
+        // Ce test ne prouve PAS que la fenêtre s'ouvre à la taille voulue, et aucun test de cette
         // classe ne le peut : une scène attachée à un Stage déjà affiché prend la taille du Stage, si
         // bien qu'il ne reste aucune trace lisible de celle qu'on lui avait demandée. Remplacer le
         // calcul de [App#start] par deux littéraux ne fait rougir personne ici - mesuré, pas supposé.

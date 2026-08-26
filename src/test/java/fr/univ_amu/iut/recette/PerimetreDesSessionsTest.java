@@ -76,7 +76,7 @@ class PerimetreDesSessionsTest {
     @Test
     @DisplayName("Sur un dossier vide, le garde ne se déclare pas satisfait en silence")
     void un_dossier_vide_ne_rassure_pas() {
-        // ⚠️ Le cas qui ment dans le sens rassurant : aucun silence non déclaré, aucune admission
+        // Le cas qui ment dans le sens rassurant : aucun silence non déclaré, aucune admission
         // périmée, et pourtant rien n'a été lu. C'est `assiette()` et `casLus()` qui doivent le
         // dire, et c'est pourquoi ils sont assertés ici plutôt que supposés.
         PerimetreDesSessions p = PerimetreDesSessions.analyser(Map.of(), Set.of());

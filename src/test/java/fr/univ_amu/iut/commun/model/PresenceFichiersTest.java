@@ -137,7 +137,7 @@ class PresenceFichiersTest {
         Path dossier = Files.createDirectories(workspace.resolve("bruts"));
         Files.writeString(dossier.resolve("un.wav"), "x");
 
-        // ⚠️ L'échec arrive à l'ITÉRATION, pas à l'ouverture : `Files.list` enveloppe alors la panne
+        // L'échec arrive à l'ITÉRATION, pas à l'ouverture : `Files.list` enveloppe alors la panne
         // dans une `UncheckedIOException`, qui n'hérite PAS d'`IOException` et traversait le `catch`.
         // Le doc-comment promettait « illisible = aucun nom » ; le code levait pour la moitié des cas.
         Set<String> noms = PresenceFichiers.listerNoms(dossier, new GestesFichiers() {

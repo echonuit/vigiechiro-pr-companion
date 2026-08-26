@@ -6,7 +6,7 @@
 # elles ne sont pas des propriétés Maven et dépendent de la MACHINE : un gestionnaire de fenêtres
 # doit tourner sur le DISPLAY visé, et `WAYLAND_DISPLAY` doit être absent.
 #
-# ⚠️ Sans gestionnaire de fenêtres, le pointeur ne bouge pas - même pour `xdotool` - et pourtant
+# Sans gestionnaire de fenêtres, le pointeur ne bouge pas - même pour `xdotool` - et pourtant
 # les tests s'EXÉCUTENT sans erreur. Ils passent ou échouent pour de mauvaises raisons. Pire,
 # certains passent avec un robot mort : `annuler_ne_transmet_rien` affirme qu'une valeur reste
 # « intact », ce qui est vrai si l'on ne clique nulle part. Se fier au verdict de Maven ne suffit
@@ -43,12 +43,12 @@ on:
 
   # APPELÉ PAR LE TRAIN, après que la Release a cessé d'être un brouillon (#4111).
   #
-  # ⚠️ L'en-tête de ce fichier disait « manuel seulement, POUR L'INSTANT : le branchement sur la
+  # L'en-tête de ce fichier disait « manuel seulement, POUR L'INSTANT : le branchement sur la
   # publication viendra avec le harnais de recette (EPIC #3667) ». Cette condition est levée -
   # l'EPIC est clos, et `CorrespondanceRecetteTest` lit 11 sessions et 403 cas. Il y a désormais
   # quelque chose à garder.
   #
-  # ⚠️ Après `publish`, et non la veille ni le matin. Les clips servent à jouer la recette d'UNE
+  # Après `publish`, et non la veille ni le matin. Les clips servent à jouer la recette d'UNE
   # version : tournés à date fixe, ils montreraient `main` à cette heure-là, c'est-à-dire un état
   # qui n'existe nulle part ailleurs. Le 2026-08-21, douze commits ont fusionné dans la journée -
   # « la veille » aurait filmé autre chose que ce qui est publié.
@@ -94,7 +94,7 @@ jobs:
           cache: maven
 
       - name: Cache des .deb (le dépaquetage, lui, se refait)
-        # ⚠️ Ce cache-ci porte sur les `.deb`, pas sur l'état installé : `dpkg` tourne donc à chaque
+        # Ce cache-ci porte sur les `.deb`, pas sur l'état installé : `dpkg` tourne donc à chaque
         # run, et avec lui les scripts post-installation - `fc-cache` compris. On perd le temps du
         # dépaquetage ; on garde des polices réellement enregistrées.
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -103,7 +103,7 @@ jobs:
           key: apt-${{ runner.os }}-recette-filmee
 
       - name: Installer de quoi afficher et filmer
-        # ⚠️ Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
+        # Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
         # parce que ces paquets ne sont que des fichiers ; les polices et flatpak gardent
         # `installer-paquets.sh`, dont le post-install fait foi.
         env:
@@ -111,7 +111,7 @@ jobs:
         run: |
           bash .github/scripts/installer-paquets.sh --avec-recommandations xvfb xdotool ffmpeg x11-utils
 
-      # ⚠️ `${{ !inputs.x }}`, et JAMAIS `inputs.x != 'true'`. Une entrée `type: boolean` de
+      # `${{ !inputs.x }}`, et JAMAIS `inputs.x != 'true'`. Une entrée `type: boolean` de
       # `workflow_dispatch` arrive comme un VRAI booléen, et comparer un booléen à une chaîne casse
       # les deux en nombres : `'true'` n'est pas un nombre, donc toute comparaison est fausse.
       # `!= 'true'` vaut donc TOUJOURS vrai, et `== 'true'` TOUJOURS faux.
@@ -129,7 +129,7 @@ jobs:
         # tout l'objet de `sans_gestionnaire_de_fenetres`, qui vérifie que le lancement filmé REFUSE
         # quand il manque.
         #
-        # ⚠️ openbox, et non matchbox (#3788). matchbox MAXIMISE tout ce qu'il affiche - c'est son
+        # openbox, et non matchbox (#3788). matchbox MAXIMISE tout ce qu'il affiche - c'est son
         # parti pris, il est fait pour de petits écrans - si bien que la modale de connexion
         # occupait 1280 × 900 sur le film, contenu tassé en haut. Deux conséquences, et la seconde
         # est la grave : les tests de croissance de fenêtre ne pouvaient pas passer (une fenêtre
@@ -143,14 +143,14 @@ jobs:
 
       - name: Annoncer le témoin sans gestionnaire de fenêtres
         if: ${{ inputs.sans_gestionnaire_de_fenetres }}
-        # ⚠️ Bloc littéral : la chaîne contient « : », que YAML lirait comme une association si elle
+        # Bloc littéral : la chaîne contient « : », que YAML lirait comme une association si elle
         # était nue.
         run: |
           echo "::warning::TÉMOIN : aucun gestionnaire de fenêtres, le lancement DOIT être refusé."
 
       - name: Filmer le test
         id: film
-        # ⚠️ Deux modes, et un seul dispositif. `--planche` dérive la liste des classes qui citent un
+        # Deux modes, et un seul dispositif. `--planche` dérive la liste des classes qui citent un
         # cas (`CorrespondanceRecetteTest`), les filme d'une traite et découpe un clip par test. Le
         # mode à une classe reste ce qu'il était : c'est lui le témoin, et c'est lui que
         # `sans_gestionnaire_de_fenetres` inverse.
@@ -169,11 +169,11 @@ jobs:
           fi
 
       - name: Remuxer les clips en mp4, pour qu'un navigateur les lise
-        # ⚠️ Le banc produit du `.mkv`, qu'aucun navigateur ne lit de façon fiable. Le flux est déjà
+        # Le banc produit du `.mkv`, qu'aucun navigateur ne lit de façon fiable. Le flux est déjà
         # du H.264 : `-c copy` change le conteneur sans ré-encoder, donc sans perte ni délai. Sans
         # cette étape, la page de la doc dev afficherait un lecteur vide - le défaut que
         # `check-doc-videos.sh --site` garde déjà pour les films de documentation.
-        # ⚠️ `always()` : cette étape est la CONDITION de la publication, pas sa conséquence. Sans
+        # `always()` : cette étape est la CONDITION de la publication, pas sa conséquence. Sans
         # elle, une étape précédente qui rougit la saute, et le tournage rend un artefact sans mp4 -
         # une absence qui se lit comme « le banc n'a rien filmé » alors qu'il a tout filmé.
         if: ${{ always() && inputs.publier_les_clips }}
@@ -190,7 +190,7 @@ jobs:
 
       # Le témoin inverse le verdict : dans ce mode, un succès est un ÉCHEC du dispositif.
       - name: Juger, témoin compris
-        # ⚠️ Le jugement dépend du MODE, parce que les deux modes ne répondent pas à la même question.
+        # Le jugement dépend du MODE, parce que les deux modes ne répondent pas à la même question.
         #
         # En témoin, la question est « le runner pilote-t-il ? », et sa réponse est un verdict : un
         # test rouge fait échouer le job, c'est tout l'objet du workflow.
@@ -240,7 +240,7 @@ jobs:
         if: ${{ always() && !inputs.sans_gestionnaire_de_fenetres }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          # ⚠️ Le nom porte le MODE, pas seulement la classe : le job de publication reprend cet
+          # Le nom porte le MODE, pas seulement la classe : le job de publication reprend cet
           # artefact par son nom, et « recette-filmee-EditeurCommentaireTest » ne lui dirait pas
           # qu'il s'agit de la planche entière.
           name: recette-filmee-${{ inputs.publier_les_clips && 'planche' || inputs.classe }}
@@ -260,12 +260,12 @@ jobs:
   # ------------------------------------------------------------------------------------------------
   # La publication des clips, dans un job SÉPARÉ.
   #
-  # ⚠️ Pourquoi séparé, et non deux étapes de plus dans le job précédent. Publier demande
+  # Pourquoi séparé, et non deux étapes de plus dans le job précédent. Publier demande
   # `contents: write` ; le job qui filme exécute les tests du produit, donc du code qui change à
   # chaque PR. Lui donner le droit d'écrire dans le dépôt élargirait la surface pour une commodité.
   # Ce job-ci ne fait qu'une chose : reprendre l'artefact et le verser sur la pré-version.
   #
-  # ⚠️ Une pré-version ROULANTE, `clips-recette`, et non une version par tournage. Les URL doivent
+  # Une pré-version ROULANTE, `clips-recette`, et non une version par tournage. Les URL doivent
   # être stables : la page `dev-docs/recette/clips.md` les écrit en dur, et une adresse qui change à
   # chaque tournage rendrait la page fausse le lendemain. `--clobber` remplace en place.
   #
@@ -293,7 +293,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ inputs.version }}
-        # ⚠️ Le corps se réécrit à CHAQUE tournage, et pas seulement à la création. La pré-version
+        # Le corps se réécrit à CHAQUE tournage, et pas seulement à la création. La pré-version
         # annonçait « elle ne marque aucune version du produit » : c'était exact tant que le tournage
         # était manuel, et ça devient faux depuis que le train l'appelle sur la version qu'il vient de
         # publier (#4111). Celui qui joue une session doit savoir si ce qu'il regarde est bien ce
@@ -328,7 +328,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          # ⚠️ `recette/clips/`, et non `clips/`. L'action d'envoi range les fichiers sous leur plus
+          # `recette/clips/`, et non `clips/`. L'action d'envoi range les fichiers sous leur plus
           # petit ancêtre commun : les trois chemins téléversés vivent sous `target/`, donc l'archive
           # contient `recette/…` et `recette-filmee/…`. Vérifié sur un artefact rapatrié, pas déduit.
           clips=(repris/recette/clips/*.mp4)
@@ -350,11 +350,11 @@ jobs:
       # pré-version du spike avaient été reversées par-dessus, et sa date de publication ne dit rien
       # de la date de son contenu.
       #
-      # ⚠️ Le PRÉFIXE n'est pas décoratif. Les deux bancs nomment leurs pièces à l'identique - 50 noms
+      # Le PRÉFIXE n'est pas décoratif. Les deux bancs nomment leurs pièces à l'identique - 50 noms
       # communs sur 51, mesuré - et les verser tous deux sur un même tag les ferait s'écraser EN
       # SILENCE. Le préfixe réserve la place du banc Java avant qu'il en ait besoin.
       #
-      # ⚠️ Ce qu'on ne sait pas encore vérifier : qu'AUCUN cas ne manque. Un tag est immuable, donc un
+      # Ce qu'on ne sait pas encore vérifier : qu'AUCUN cas ne manque. Un tag est immuable, donc un
       # tournage amputé y resterait, et un clip manquant se lit comme « ce cas n'existait pas ». Le
       # garde qui compte les CAS vit dans `tournage-recette.yml` ; ici, l'artefact n'emporte pas
       # `classes-citantes.txt`, donc le compte attendu n'est pas connu de ce job. En attendant, le
@@ -396,7 +396,7 @@ jobs:
       # `--clobber` remplace et ajoute ; il ne retire rien. Un cas renommé ou supprimé laissait donc
       # son clip en ligne, montrant un comportement que le produit n'a plus - constaté après #4099.
       #
-      # ⚠️ Le calcul vit dans un script à part parce que sa sortie SUPPRIME : une orientation inversée
+      # Le calcul vit dans un script à part parce que sa sortie SUPPRIME : une orientation inversée
       # ne rend pas une erreur, elle rend la liste de ce qu'il fallait garder. `clips-orphelins.sh`
       # refuse par ailleurs un dossier de tournage vide, et son auto-test garde les deux cas.
       - name: Retirer les clips dont le cas a disparu

@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 /// clips perceptifs ont été tournés sous Windows sans une seule respiration, chaque geste tenant en
 /// une ou deux images.
 ///
-/// ⚠️ Rien n'avait rougi, et rien ne pouvait rougir : les clips existaient, les tests passaient, et
+/// Rien n'avait rougi, et rien ne pouvait rougir : les clips existaient, les tests passaient, et
 /// l'index les comptait tous les neuf. Le seul endroit où ce défaut se voyait, c'est l'oeil de qui
 /// regarde. C'est exactement ce qu'un garde doit reprendre à l'oeil.
 class SeanceTest {
@@ -24,7 +24,7 @@ class SeanceTest {
 
     /// Les deux propriétés sont RELEVÉES puis effacées, et rendues après coup.
     ///
-    /// ⚠️ Sans cela, ce fichier serait faux précisément pendant un tournage : `recette.film` y est
+    /// Sans cela, ce fichier serait faux précisément pendant un tournage : `recette.film` y est
     /// posée pour de bon, et le cas « aucune propriété » n'aurait alors jamais l'état qu'il annonce.
     /// Un garde qui ment quand le dispositif qu'il garde fonctionne ne garde rien.
     @BeforeEach
@@ -63,7 +63,7 @@ class SeanceTest {
         assertThat(Seance.filmee()).isTrue();
     }
 
-    /// ⚠️ Le cas qui manquait. Neutraliser la reconnaissance de `recette.film` fait rougir celui-ci
+    /// Le cas qui manquait. Neutraliser la reconnaissance de `recette.film` fait rougir celui-ci
     /// et lui seul.
     @Test
     @DisplayName("le banc Java : la présence de recette.film suffit")

@@ -32,7 +32,7 @@ public class NettoyageDossiersOrphelins {
 
     /// [#retirer(List)], avec les gestes de disque injectés.
     ///
-    /// ⚠️ Même motif que [#tailleDe(Path,GestesFichiers)], et il vaut aussi pour la **suppression** : un
+    /// Même motif que [#tailleDe(Path,GestesFichiers)], et il vaut aussi pour la **suppression** : un
     /// dossier qui résiste ne se fabrique pas de façon portable - `File.setWritable(false)` rend `false`
     /// sous Windows, et un `chmod` rendrait le test **inerte** là où la suite le joue chaque mardi
     /// (#3526). Sans cette couture, la **raison** portée par le contrat « au mieux » n'était éprouvée
@@ -70,7 +70,7 @@ public class NettoyageDossiersOrphelins {
 
     /// Taille cumulée des fichiers sous `dossier`, déléguée à la mesure d'affichage du dépôt.
     ///
-    /// ⚠️ C'était une **neuvième** implémentation du même parcours, et elle ne tenait pas le contrat
+    /// C'était une **neuvième** implémentation du même parcours, et elle ne tenait pas le contrat
     /// que son propre commentaire annonçait : « un fichier illisible compte pour zéro plutôt que de
     /// faire échouer la mesure ». `Files.walk` enveloppe l'échec de parcours dans une
     /// `UncheckedIOException` que le `catch (IOException)` ne voyait pas, si bien qu'un sous-dossier

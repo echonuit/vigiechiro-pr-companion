@@ -194,7 +194,7 @@ public class PointEditViewModel {
     /// Les deux coordonnées sont-elles lisibles ? Seul ce ViewModel sait lire ses champs de saisie ;
     /// [IntentionPublication] le lui demande plutôt que d'en tenir une copie.
     ///
-    /// ⚠️ Il **s'appuie sur les validités déjà calculées** au lieu de réanalyser. La version précédente
+    /// Il **s'appuie sur les validités déjà calculées** au lieu de réanalyser. La version précédente
     /// rappelait `parserCoordonnee`, qui **lève** sur une saisie inanalysable - et comme cette méthode
     /// est appelée depuis un écouteur, à chaque frappe, une lettre parasite jetait un
     /// `NumberFormatException` non attrapé sur le fil JavaFX. Taper « lat 43,5 » ou coller un texte

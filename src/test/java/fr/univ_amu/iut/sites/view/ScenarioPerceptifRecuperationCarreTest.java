@@ -64,7 +64,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// l'enchaînement **a eu lieu de bout en bout** ; ce qu'il vaut à l'oeil revient à qui regarde le
 /// clip - d'où `jugement = HUMAIN`.
 ///
-/// ## ⚠️ La jonction n'était jouée nulle part
+/// ## La jonction n'était jouée nulle part
 ///
 /// Les deux moitiés étaient couvertes, jamais leur couture :
 ///
@@ -77,7 +77,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Or `S1-37` ne porte ni sur l'une ni sur l'autre : il porte sur le **passage** de la première à la
 /// seconde, qui est exactement ce qu'aucun des deux ne traverse.
 ///
-/// ## ⚠️ Ce que le clip montre autrement que la production
+/// ## Ce que le clip montre autrement que la production
 ///
 /// Le compte rendu réel appelle `showAndWait`, qui **fige** TestFX headless : le film s'arrêterait
 /// là. Ce scénario construit donc le dialogue **de la production** - même type, même habillage, même
@@ -132,7 +132,7 @@ class ScenarioPerceptifRecuperationCarreTest {
                 .ouvrir(inj -> inj.getInstance(NavigationSites.class).ouvrirAccueil())
                 .montrer(stage);
 
-        // ⚠️ Le client mocké répond comme le vrai : sans cela, le menu lit le stockage et dit
+        // Le client mocké répond comme le vrai : sans cela, le menu lit le stockage et dit
         // « connecté » pendant que « Récupérer depuis Vigie-Chiro » reste grisé derrière la modale,
         // parce que LUI interroge le client. Le clip montrerait deux réponses opposées à la même
         // question. Posé après le banc, qui fournit l'injecteur.
@@ -142,7 +142,7 @@ class ScenarioPerceptifRecuperationCarreTest {
 
     /// Le rapatriement, bouchonné et **qualifié**.
     ///
-    /// ⚠️ `RechercheCarreExistantModule` relie `Optional<RapatriementCarre>` à
+    /// `RechercheCarreExistantModule` relie `Optional<RapatriementCarre>` à
     /// `@Named("vigiechiro-carre-existant")` : un `@Provides RapatriementCarre` NU est donc ignoré. Le
     /// bouton paraît quand même, le clic part, et c'est le rapatriement RÉEL qui répond - le premier jet
     /// de ce scénario expirait ainsi, sans rien dire de plus qu'un `TimeoutException`.
@@ -180,7 +180,7 @@ class ScenarioPerceptifRecuperationCarreTest {
     void la_recuperation_ramene_sur_mes_sites(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
 
-        // ⚠️ D'abord ÊTRE CONNECTÉ, et le montrer. Un rapatriement suppose un jeton : le clip qui
+        // D'abord ÊTRE CONNECTÉ, et le montrer. Un rapatriement suppose un jeton : le clip qui
         // commence au « + Nouveau site » demande de le croire sur parole. L'entrée de menu porte le
         // pseudo une fois connecté et « Se connecter à Vigie-Chiro… » sinon : c'est le produit qui
         // établit la situation, pas une phrase posée par-dessus.
@@ -195,7 +195,7 @@ class ScenarioPerceptifRecuperationCarreTest {
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.entreDeuxGestes(robot);
 
-        // ⚠️ Le bouton, et non l'appel. La version précédente ouvrait la modale par
+        // Le bouton, et non l'appel. La version précédente ouvrait la modale par
         // `ouvrirModaleCreationSite(...)` : le bon chemin de code, et un mauvais film - la modale
         // paraissait sans qu'aucun geste ne l'explique. Retour de la revue de `S1-26`, qui vaut ici
         // aussi.
@@ -203,7 +203,7 @@ class ScenarioPerceptifRecuperationCarreTest {
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.entreDeuxGestes(robot);
 
-        // ⚠️ Et le numéro se TAPE, au lieu d'apparaître d'un coup par `setText`. Ce que le cas fait
+        // Et le numéro se TAPE, au lieu d'apparaître d'un coup par `setText`. Ce que le cas fait
         // juger, c'est un enchaînement vu de l'extérieur : un champ qui se remplit tout seul n'en
         // fait pas partie.
         robot.clickOn("#champCarre").write(CARRE);
@@ -241,7 +241,7 @@ class ScenarioPerceptifRecuperationCarreTest {
 
     /// Écrit ce que la vraie récupération écrirait : le carré, puis ses points d'écoute.
     ///
-    /// ⚠️ Le résultat annonce **ce que la base contient**, et non un nombre posé en dur. La version
+    /// Le résultat annonce **ce que la base contient**, et non un nombre posé en dur. La version
     /// précédente promettait quarante et un points sur un carré qui n'en avait aucun : le clip publié
     /// montrait un bandeau et un écran qui se contredisaient, ce qu'aucun utilisateur ne pourrait voir.
     private RapatriementCarre.Resultat.Rapatrie poserLeCarreEtSesPoints() {
@@ -259,7 +259,7 @@ class ScenarioPerceptifRecuperationCarreTest {
 
     /// Le compte rendu **de la production**, ouvert sans bloquer.
     ///
-    /// ⚠️ `NotificationDialogue` fait `showAndWait`, qui fige TestFX headless. Le dialogue est donc
+    /// `NotificationDialogue` fait `showAndWait`, qui fige TestFX headless. Le dialogue est donc
     /// construit par sa propre fabrique - même type, même habillage, même texte - puis ouvert en
     /// `show()`. Ce qui se voit est juste ; ce qui ne se voit pas, c'est qu'il ne bloque pas.
     private static final class CompteRenduVisible implements Notificateur {

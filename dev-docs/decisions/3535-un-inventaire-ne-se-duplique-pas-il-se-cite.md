@@ -50,7 +50,7 @@ renvoie pas à une page de documentation développeur, et un script de recette d
 séance. Dans ces cas, un garde compare la liste écrite à celle que le code déclare - c'est exactement
 ce que fait déjà `DocumentationAJourTest` pour les ADR et les commandes CLI.
 
-### ⚠️ Et souvent, la meilleure réponse est de SUPPRIMER l'inventaire
+### Et souvent, la meilleure réponse est de SUPPRIMER l'inventaire
 
 Elle n'a pas été trouvée en écrivant cette ADR, mais en la **confrontant** : deux personnes ont corrigé
 le même défaut le même jour, sans se voir, et la meilleure des deux corrections n'était ni de citer ni
@@ -88,7 +88,7 @@ scripts de recette.
 - avant d'écrire une liste dans une page, chercher si elle existe déjà ailleurs - et si oui, **citer** ;
 - une liste qui doit exister en plusieurs exemplaires est une **dette déclarée**, qui appelle un garde,
   pas un rappel de vigilance ;
-- ⚠️ **la règle ne s'applique pas à un chiffre daté.** L'[ADR 2750](2750-un-chiffre-que-le-code-sait-recalculer-ne-s-ecrit-pas-a-la-main.md)
+- **la règle ne s'applique pas à un chiffre daté.** L'[ADR 2750](2750-un-chiffre-que-le-code-sait-recalculer-ne-s-ecrit-pas-a-la-main.md)
   a déjà tranché ce cas voisin : une mesure prise un jour donné reste en dur, et c'est juste. C'est
   l'inventaire *courant* qui se cite, pas le relevé *historique*.
 

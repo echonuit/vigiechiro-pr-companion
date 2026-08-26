@@ -45,7 +45,7 @@ import java.util.Optional;
 /// vérifications consultables, écoute impossible, **réactivable** si l'utilisateur retrouve un jour ses
 /// fichiers. Ce bilan sert donc à dire la perte *avant*, pas à l'interdire.
 ///
-/// ⚠️ Le mode de dépôt est **lu dans le plan** (`depot_unite.type`), jamais présumé : une nuit déposée
+/// Le mode de dépôt est **lu dans le plan** (`depot_unite.type`), jamais présumé : une nuit déposée
 /// avant #984 n'a pas de plan du tout, et une nuit jamais déposée non plus. Dans les deux cas : perdu.
 ///
 /// Lecture seule, sans réseau. Les DAO sont construits depuis la [SourceDeDonnees], comme

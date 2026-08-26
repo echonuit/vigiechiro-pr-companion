@@ -20,11 +20,11 @@
 # dispositif ne serait jamais éprouvée par le dispositif.
 set -euo pipefail
 
-# Chemins surveillés, un par ligne. ⚠️ Le nom de CHAQUE entrée est une décision : ajouter une classe
+# Chemins surveillés, un par ligne. Le nom de CHAQUE entrée est une décision : ajouter une classe
 # ici, c'est déclarer que son comportement dépend du système. Le faire à la légère rallonge le gate de
 # trois plateformes ; l'oublier laisse un chemin de disque non vérifié.
 #
-# ⚠️ `GestesFichiers` et `TailleFichier` y figurent depuis #3794, et ils méritent un mot : ce ne sont
+# `GestesFichiers` et `TailleFichier` y figurent depuis #3794, et ils méritent un mot : ce ne sont
 # pas des classes qui *font* du disque, ce sont les **points d'injection** par lesquels tout le reste y
 # accède. Leurs implémentations par défaut - `Files.walk`, `Files.list`, `deleteIfExists`, la taille -
 # SONT le comportement réel du produit. Changer l'une d'elles change ce que font les huit classes

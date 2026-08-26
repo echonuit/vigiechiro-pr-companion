@@ -10,7 +10,7 @@ import java.util.List;
 ///
 /// Une lecture « par lot » remplace N requêtes par une seule `... IN (?, ?, …)`.
 ///
-/// ⚠️ **Ce commentaire a d'abord annoncé une raison fausse.** Il disait que SQLite refuse au-delà de
+/// **Ce commentaire a d'abord annoncé une raison fausse.** Il disait que SQLite refuse au-delà de
 /// « quelques centaines » de paramètres liés (`SQLITE_MAX_VARIABLE_NUMBER`, 999). C'est l'ancienne
 /// valeur par défaut : mesuré sur le pilote embarqué ici, une requête à **cinquante mille** paramètres
 /// passe sans broncher, et le découpage n'a donc **jamais** évité l'échec qu'on lui prêtait.

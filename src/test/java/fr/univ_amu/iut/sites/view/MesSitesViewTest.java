@@ -88,14 +88,14 @@ class MesSitesViewTest {
                 .ouvrir(inj -> inj.getInstance(NavigationSites.class).ouvrirAccueil())
                 .montrer(stage);
 
-        // ⚠️ Le mock répond comme le VRAI client : `estConnecte()` demande « un jeton est-il
+        // Le mock répond comme le VRAI client : `estConnecte()` demande « un jeton est-il
         // enregistré ? » et rien d'autre (`ClientVigieChiro:98`). Un clip peut donc MONTRER la
         // connexion rouvrir le geste, au lieu de basculer un booléen que le produit n'aurait pas vu
         // bouger. Le stockage est un fichier relu à chaque appel : la réponse suit le geste.
         StockageConnexion stockage = injector.getInstance(StockageConnexion.class);
         when(client.estConnecte()).thenAnswer(appel -> stockage.estConnecte());
         when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro(ID_USER, "chiro", "observateur")));
-        // ⚠️ Avec leur NUMÉRO DE CARRÉ, et le constructeur complet. La version courte laissait
+        // Avec leur NUMÉRO DE CARRÉ, et le constructeur complet. La version courte laissait
         // `numeroCarre` à `null` : le rapprochement ne reconnaissait aucun site local, rendait un
         // rapport vide, et l'écran repliait sur « Aucun site distant récupéré (non connecté, ou aucun
         // site sur Vigie-Chiro) ». Le clip montrait alors une connexion réussie surmontée d'un bandeau
@@ -153,7 +153,7 @@ class MesSitesViewTest {
     @CasDeRecette(value = "S1-16", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-16 · hors connexion, « Récupérer depuis Vigie-Chiro » est fermé et dit ce qui manque")
     void hors_connexion_la_recuperation_est_fermee(FxRobot robot) throws TimeoutException {
-        // ⚠️ Le clip commence par ÉTABLIR la situation, au lieu de la supposer. Le menu principal
+        // Le clip commence par ÉTABLIR la situation, au lieu de la supposer. Le menu principal
         // porte « Se connecter à Vigie-Chiro… » tant qu'aucun profil n'est enregistré, et le pseudo
         // ensuite (`NavigationConnexion.libelleMenu`) : c'est le produit qui dit qu'on n'est pas
         // connecté, le clip n'a rien à affirmer par-dessus. Demande de la revue (#4171) : « il
@@ -177,7 +177,7 @@ class MesSitesViewTest {
         assertThat(bouton.isDisabled())
                 .as("sans jeton, rien ne peut être récupéré : le geste est fermé (#4194)")
                 .isTrue();
-        // ⚠️ Le motif se FAIT PARAÎTRE, il ne se lit pas par programme. Les images du tournage
+        // Le motif se FAIT PARAÎTRE, il ne se lit pas par programme. Les images du tournage
         // précédent montraient un bouton gris impeccable et aucune explication : la moitié du cas -
         // « il dit ce qui manque » - restait hors de l'image.
         assertThat(InfobulleDeBlocage.montrerEtLire(
@@ -200,7 +200,7 @@ class MesSitesViewTest {
                 .isTrue();
         Respiration.avantLeGeste(robot);
 
-        // ⚠️ La connexion se JOUE, elle ne se pose pas dans le stockage à la main. La version
+        // La connexion se JOUE, elle ne se pose pas dans le stockage à la main. La version
         // précédente basculait un booléen du mock et sautait de « fermé » à « ouvert » sans rien
         // montrer : la revue n'y voyait pas ce qui avait changé l'état (#4171). Ici le jeton arrive
         // par le seul chemin qu'un utilisateur emprunte, et c'est LUI qui rouvre le bouton.
@@ -219,7 +219,7 @@ class MesSitesViewTest {
                 () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible());
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ ADR 4188 : une modale se filme avec son écran de départ ET son écran d'arrivée. On la
+        // ADR 4188 : une modale se filme avec son écran de départ ET son écran d'arrivée. On la
         // referme donc, et « Mes sites » revient : c'est là que le changement se lit.
         robot.clickOn("#boutonFermer");
         WaitForAsyncUtils.waitForFxEvents();
@@ -240,7 +240,7 @@ class MesSitesViewTest {
                 .as("la synchronisation rend compte : un bouton qui ne dit rien ne se distingue pas"
                         + " d'un bouton qui n'a rien fait")
                 .isTrue();
-        // ⚠️ L'assertion cherchait le mot « site », et « Aucun site distant récupéré (non connecté, ou
+        // L'assertion cherchait le mot « site », et « Aucun site distant récupéré (non connecté, ou
         // aucun site sur Vigie-Chiro) » le contient. Le clip publié montrait donc une connexion réussie
         // surmontée d'un bandeau disant « non connecté » : la scène et son compte rendu se
         // contredisaient, et rien ne rougissait. Une assertion assez lâche pour accepter le contraire de
@@ -251,7 +251,7 @@ class MesSitesViewTest {
                 .doesNotContain("Aucun")
                 .doesNotContain("non connecté");
 
-        // ⚠️ La respiration FINALE, et elle est longue exprès. Le bandeau est le résultat du cas :
+        // La respiration FINALE, et elle est longue exprès. Le bandeau est le résultat du cas :
         // un clip qui coupe à l'instant où il paraît ne le donne pas à lire (#4171).
         Respiration.surLeMomentCle(robot);
         Respiration.leTempsDeLire(robot);
@@ -275,11 +275,11 @@ class MesSitesViewTest {
                 .isNotEmpty();
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ Ce clip-ci ne montre pas le voile PENDANT qu'il paraît, et c'est voulu : il garde l'autre
+        // Ce clip-ci ne montre pas le voile PENDANT qu'il paraît, et c'est voulu : il garde l'autre
         // moitié du cas - l'écran chargé, ses cartes lisibles, et RIEN qui le voile. Un voile resté en
         // place bloquerait tout.
         //
-        // ⚠️ Deux erreurs successives méritent d'être notées ici, parce qu'elles se contredisent.
+        // Deux erreurs successives méritent d'être notées ici, parce qu'elles se contredisent.
         //
         // 1. J'ai d'abord écrit qu'AUCUN clip ne pouvait montrer le voile. C'était mesuré sur cette
         //    fixture-ci, deux sites, où `charger()` est instantané - j'avais conclu du PRODUIT ce qui
@@ -359,7 +359,7 @@ class MesSitesViewTest {
     void entree_ouvre_le_detail(FxRobot robot) {
         HBox carte = trouverCarte(robot, "Carré 640380");
 
-        // ⚠️ Une VRAIE frappe, sur une carte qui a le focus. Appeler `getOnKeyPressed().handle(...)`
+        // Une VRAIE frappe, sur une carte qui a le focus. Appeler `getOnKeyPressed().handle(...)`
         // prouve le gestionnaire et saute tout le reste : le clip montrait l'écran changer sans qu'aucun
         // geste ne l'explique (#4149). Et l'assertion y gagne - un gestionnaire câblé sur un noeud que
         // le clavier n'atteint jamais ne sert personne.
@@ -412,11 +412,11 @@ class MesSitesViewTest {
 
     /// Pose un jeton et provoque la relecture, comme le ferait une connexion depuis le menu ☰.
     ///
-    /// ⚠️ La connexion elle-même n'est pas jouée ici - elle a sa propre modale et ses propres cas
+    /// La connexion elle-même n'est pas jouée ici - elle a sa propre modale et ses propres cas
     /// (`S1-04` à `S1-08`). Ce qui est montré est son EFFET sur cet écran : le geste qui se rouvre.
     /// Se connecte **comme le produit le fait** : un jeton écrit dans le stockage, et le reflet publié.
     ///
-    /// ⚠️ Cette aide basculait un booléen du mock (`when(client.estConnecte()).thenReturn(true)`).
+    /// Cette aide basculait un booléen du mock (`when(client.estConnecte()).thenReturn(true)`).
     /// Depuis que l'écran lit `EtatConnexion` - le même lecteur que la fiche et la modale de carré -
     /// c'est le STOCKAGE qui fait foi, et un drapeau posé sur le client ne rouvrait plus rien. Un test
     /// qui simule autrement que le produit finit par mesurer sa simulation.

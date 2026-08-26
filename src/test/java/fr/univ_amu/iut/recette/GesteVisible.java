@@ -20,7 +20,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// curseur était encore sur le bouton du menu, et l'instant où il repose sur l'entrée n'existait sur
 /// **aucune** trame.
 ///
-/// ⚠️ Ce geste n'est pas neuf : `ScenarioPerceptifConnexionTest` l'avait inventé pour lui seul, après
+/// Ce geste n'est pas neuf : `ScenarioPerceptifConnexionTest` l'avait inventé pour lui seul, après
 /// un retour de revue - « on a l'impression que la modale apparaît par magie ». Il vit ici parce que
 /// deux implémentations d'une même doctrine finissent par diverger, et que la seconde n'aurait pas
 /// hérité de ce qu'a coûté la première.
@@ -33,7 +33,7 @@ public final class GesteVisible {
 
     /// Amène le pointeur sur `cible`, l'y laisse voir, puis clique.
     ///
-    /// ⚠️ `clickOn` seul **téléporte** le pointeur et clique dans la foulée : l'arrivée et l'appui
+    /// `clickOn` seul **téléporte** le pointeur et clique dans la foulée : l'arrivée et l'appui
     /// tombent sur la même trame, et le geste décisif d'un clip n'existe sur aucune image. Constaté sur
     /// « Récupérer ce carré » (#4181) comme sur les entrées de menu (#4177) - c'est le même défaut, et
     /// la doctrine n'est pas « le menu » mais « on doit voir le geste ».
@@ -67,7 +67,7 @@ public final class GesteVisible {
                 5, TimeUnit.SECONDS, () -> robot.lookup(libelle).tryQuery().isPresent());
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ Le pointeur VA sur l'entrée, et s'y arrête, AVANT de cliquer. Sans cet arrêt, le clic et la
+        // Le pointeur VA sur l'entrée, et s'y arrête, AVANT de cliquer. Sans cet arrêt, le clic et la
         // fermeture du menu tombent sur la même trame : on voit le menu, puis l'écran d'après, et jamais
         // le choix.
         cliquer(robot, libelle);

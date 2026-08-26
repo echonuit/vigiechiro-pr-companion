@@ -119,7 +119,7 @@ public class ModaleSiteController {
     /// Une recherche est en cours : le bouton se grise le temps de l'appel, sans quoi deux clics rapides
     /// en lanceraient deux.
     ///
-    /// ⚠️ **Une propriété, et non un `setDisable`** : `disableProperty` est **liée** au carré valide, et
+    /// **Une propriété, et non un `setDisable`** : `disableProperty` est **liée** au carré valide, et
     /// JavaFX refuse d'affecter une valeur liée (« A bound value cannot be set »). Le patron du dépôt est
     /// de faire entrer l'occupation **dans** le binding (#1254), pas de la poser par-dessus.
     private final BooleanProperty rechercheEnCours = new SimpleBooleanProperty(this, "rechercheEnCours", false);
@@ -252,16 +252,16 @@ public class ModaleSiteController {
         // Le fait qui la rend vraie ne peut pas changer pendant la vie de cette fenêtre.
         enveloppeVerifierCarre.setVisible(viewModel.carre().disponible());
         enveloppeVerifierCarre.setManaged(viewModel.carre().disponible());
-        // ⚠️ Fermé aussi TANT QU'AUCUN JETON n'est disponible (#4210). Sans cela le geste était offert :
+        // Fermé aussi TANT QU'AUCUN JETON n'est disponible (#4210). Sans cela le geste était offert :
         // on tapait six chiffres, on cliquait, on payait un aller-retour réseau, et l'encart répondait
         // « Vérification impossible » - alors que l'application savait avant le clic qu'elle n'avait pas
         // de jeton. Empêcher plutôt qu'avertir (#789, heuristique 5 de Nielsen), comme pour
         // « Récupérer depuis Vigie-Chiro » (#4194).
         //
-        // ⚠️ Seule la VÉRIFICATION se ferme. Déclarer un carré hors connexion reste possible : c'est le
+        // Seule la VÉRIFICATION se ferme. Déclarer un carré hors connexion reste possible : c'est le
         // travail hors ligne, et le fermer ferait de la plateforme une condition pour saisir chez soi.
         //
-        // ⚠️ Le script promettait l'inverse (« le bouton reste offert, non grisé »), au nom d'un
+        // Le script promettait l'inverse (« le bouton reste offert, non grisé »), au nom d'un
         // argument emprunté à `ControleCarreStoc` - le contrôle AUTOMATIQUE des coordonnées d'un point,
         // qui est en effet un confort. Ce bouton-ci passe par `chercherCarre`. Restait « on s'est
         // peut-être connecté entre-temps » : depuis #4205 le geste se rouvre tout seul dès qu'un jeton

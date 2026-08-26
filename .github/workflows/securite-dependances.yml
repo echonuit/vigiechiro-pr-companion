@@ -111,7 +111,7 @@ jobs:
           set -euo pipefail
           chmod +x .github/scripts/verifie-fraicheur-actions.sh
 
-          # ⚠️ Trois tentatives, parce que l'API bafouille. Vu en local : un appel qui rend la liste
+          # Trois tentatives, parce que l'API bafouille. Vu en local : un appel qui rend la liste
           # attendue, rejoué à l'identique trente secondes plus tard, revient vide. Sans reprise, ce
           # hoquet se lirait « version indéterminée », donc ROUGE, et un garde qui rougit au hasard
           # s'apprend à ignorer aussi vite qu'un garde qui se tait.
@@ -137,7 +137,7 @@ jobs:
             # On préfère le tag précis (vX.Y.Z) au tag flottant de majeure (vX), que certaines
             # actions sont seules à porter. Sans ce repli, elles seraient déclarées « indéterminées ».
             #
-            # ⚠️ `|| true` : un `grep` qui ne trouve rien rend 1, et sous `set -e` il tuerait le job
+            # `|| true` : un `grep` qui ne trouve rien rend 1, et sous `set -e` il tuerait le job
             # AVANT le jugement. Le cas se produit vraiment - `winget-releaser` ne porte que `v2`.
             # Vu en rejouant ce bloc en local, où il sortait sans afficher une seule ligne.
             epingle=$(printf '%s\n' "$tags" | grep -E '^v?[0-9]+\.[0-9]+' | head -1 || true)

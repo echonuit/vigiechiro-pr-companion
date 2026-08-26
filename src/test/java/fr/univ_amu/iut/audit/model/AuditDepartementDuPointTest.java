@@ -203,7 +203,7 @@ class AuditDepartementDuPointTest {
 
         surveille.auditer();
 
-        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
+        // Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
         // variance de la machine. Le défaut mesuré (#4281) : une requête par site pour ses points, puis
         // une par point pour sa commune - 130 ms à cent cinquante carrés, contre 3 ms lu par lot.
         Mockito.verify(points, Mockito.never()).findBySite(Mockito.any());

@@ -59,7 +59,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `ajouter-point` | `--site <id> --code <c> [--lat ..] [--lon ..] [--description ..]` | A10 | `ServiceSites.ajouterPoint` |
 | `modifier-point` | `--point <id> --site <id> --code <c> [--lat ..] [--lon ..] [--description ..]` | A10 | `ServiceSites.modifierPoint` |
 | `lister-sites` | `[--json]` | A10 | `ServiceSites` (lecture) |
-| `lister-sites-vigiechiro` | `[--portee mes\|plateforme] [--pages <n> \| --tout] [--point <code>] [--carre <n>] [--recenser] [--json] [--token <jeton>]` | #3003 | `ClientVigieChiro.sitesPlateforme` / `ClientVigieChiro.mesSites` / `ClientVigieChiro.chercherCarre`. Interroge le **catalogue de la plateforme** (20 767 sites au 2026-08-14) ou vos sites. `--recenser` compte les sites par **code de point** : c'est ainsi qu'on établit qu'un code comme `Z1` est porté par des centaines de carrés (#2993). Chaque sortie porte son **dénominateur** (« 300 lus sur 20517 annoncés, 3 pages sur 206 ») et signale les sites **sans point ponctuel** (transects routiers, dont les localités sont des lignes) : un échantillon ne doit jamais passer pour un recensement. ⚠️ **`--carre` fait exception depuis #3769** : il est porté par le **serveur** (`q=<numéro>`, filtre mesuré le 2026-08-14 - 20 767 → 1), donc en **une** requête au lieu de deux cents pages. Le gain n'est pas d'abord la vitesse : sans `--tout`, la commande lisait une page sur 208 et rendait un tableau **vide sur un carré qui existe**. Sa sortie annonce alors une **recherche** (« Recherche du carré 130711 sur toute la collection : 1 site(s) trouvé(s) ») et non une lecture partielle, et `--pages` / `--tout` sont **refusés** avec lui (exit 2) plutôt qu'acceptés sans effet. Les autres filtres (`--point`) restent appliqués **chez nous**, ce backend ignorant `where=` en silence |
+| `lister-sites-vigiechiro` | `[--portee mes\|plateforme] [--pages <n> \| --tout] [--point <code>] [--carre <n>] [--recenser] [--json] [--token <jeton>]` | #3003 | `ClientVigieChiro.sitesPlateforme` / `ClientVigieChiro.mesSites` / `ClientVigieChiro.chercherCarre`. Interroge le **catalogue de la plateforme** (20 767 sites au 2026-08-14) ou vos sites. `--recenser` compte les sites par **code de point** : c'est ainsi qu'on établit qu'un code comme `Z1` est porté par des centaines de carrés (#2993). Chaque sortie porte son **dénominateur** (« 300 lus sur 20517 annoncés, 3 pages sur 206 ») et signale les sites **sans point ponctuel** (transects routiers, dont les localités sont des lignes) : un échantillon ne doit jamais passer pour un recensement. **`--carre` fait exception depuis #3769** : il est porté par le **serveur** (`q=<numéro>`, filtre mesuré le 2026-08-14 - 20 767 → 1), donc en **une** requête au lieu de deux cents pages. Le gain n'est pas d'abord la vitesse : sans `--tout`, la commande lisait une page sur 208 et rendait un tableau **vide sur un carré qui existe**. Sa sortie annonce alors une **recherche** (« Recherche du carré 130711 sur toute la collection : 1 site(s) trouvé(s) ») et non une lecture partielle, et `--pages` / `--tout` sont **refusés** avec lui (exit 2) plutôt qu'acceptés sans effet. Les autres filtres (`--point`) restent appliqués **chez nous**, ce backend ignorant `where=` en silence |
 | `lister-participations-vigiechiro` | `[--json] [--token <jeton>]` | #3005 | `ClientVigieChiro.mesParticipations`. Vos nuits déposées, **avec leur identifiant** : c'est lui que réclament `importer-vigiechiro --participation` et `reconstruire-passage --participation`, et qu'aucune commande ne donnait. `reconstruire-passage` sans argument ne liste que les participations **orphelines** ; une nuit déjà rattachée n'apparaissait nulle part |
 | `api` | `lire --chemin <chemin> [--page <n>]`, `ressources [--sonder]` | #3006 | **Interrogation brute de l'API, en lecture seule.** Groupe volontairement discret : ses sous-commandes ne sont pas détaillées ici (elles parlent le langage de l'API, pas celui du produit) - le détail vit dans [api-vigiechiro.md](api-vigiechiro.md). `lire` refuse **avant d'émettre** les deux pièges qui ne préviennent pas (`max_results` au-delà de 100, `where=` que le serveur ignore) ; `ressources` affiche la carte des lectures et sait la confronter au serveur. Aucune écriture : [ADR 3006](decisions/3006-le-groupe-api-est-borne.md) |
 | `creer-campagne` | `--nom <n> [--annee N] [--commentaire ..]` | #2355 | `ServiceCampagne.creerCampagne` : crée une campagne (regroupement **facultatif** de passages). Année par défaut = année courante. Feature `campagne` (désactivable) |
@@ -67,7 +67,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `modifier-campagne` | `--campagne <id> --nom <n> --annee N [--commentaire ..]` | #2355 | `ServiceCampagne.modifierCampagne` : corrige nom, année et commentaire. Sans elle, corriger une campagne obligeait à la supprimer, donc à détacher tous ses passages |
 | `rattacher-campagne` | `--passage <id> [--campagne <id>]` | #2355 | `ServiceCampagne.rattacherPassage` : rattache un passage à une campagne, ou l'en **détache** si `--campagne` est omis. Supprimer la campagne détache aussi (`ON DELETE SET NULL`) |
 | `supprimer-campagne` | `--campagne <id>` | #2355 | `ServiceCampagne.supprimerCampagne` : supprime le **regroupement**, jamais les nuits, les passages rattachés sont détachés (`ON DELETE SET NULL`) |
-| `lister-passages` | `[--carre <n>] [--lieu <texte>…] [--annee <a>] [--statut <s>] [--verdict <v>] [--analyse <e>] [--campagne <nom>] [--json]` | P5, #3269 | `RegistrePassages` (lecture). Les **sept** filtres sont ceux de l'écran « Carte & passages » et passent par le **même prédicat** (`FiltresMultisite`, un record dont `accepte` ignore les critères non renseignés) ; `--lieu` lit `FiltresLieu`, comme `lister-observations`. Aucune règle n'est réécrite. ⚠️ `--analyse` porte un état **déduit** (`EtatAnalyse.deduire`) et non lu : « Déposé » sans relevé vaut `JAMAIS_RELEVE`, « Importé » vaut `SANS_OBJET`. Une base sans aucun passage le dit **avant** tout filtrage : sinon `--lieu` refuserait le lieu (ADR 3082) là où la vérité est qu'il n'y a rien. Un filtre qui ne retient rien le **dit** aussi |
+| `lister-passages` | `[--carre <n>] [--lieu <texte>…] [--annee <a>] [--statut <s>] [--verdict <v>] [--analyse <e>] [--campagne <nom>] [--json]` | P5, #3269 | `RegistrePassages` (lecture). Les **sept** filtres sont ceux de l'écran « Carte & passages » et passent par le **même prédicat** (`FiltresMultisite`, un record dont `accepte` ignore les critères non renseignés) ; `--lieu` lit `FiltresLieu`, comme `lister-observations`. Aucune règle n'est réécrite. `--analyse` porte un état **déduit** (`EtatAnalyse.deduire`) et non lu : « Déposé » sans relevé vaut `JAMAIS_RELEVE`, « Importé » vaut `SANS_OBJET`. Une base sans aucun passage le dit **avant** tout filtrage : sinon `--lieu` refuserait le lieu (ADR 3082) là où la vérité est qu'il n'y a rien. Un filtre qui ne retient rien le **dit** aussi |
 | `solde-saison` | `[--annee N] [--campagne <nom>] [--lieu <texte>] [--reste-a-faire] [--format texte\|csv\|json]` | #2356 | `ServiceSoldeSaison` (lecture) : ce qu'il reste à faire, point par point, pour une saison (règles R3/R4 restituées). `--lieu` et `--reste-a-faire` sont les **deux filtres de l'écran** « Ma saison » (#3103), portés ici à la clôture de #3092 et lus sur la même écriture (`FiltresSaison`). Ils ne touchent **que la liste des points** : l'en-tête continue d'annoncer le solde de la **saison entière**, comme à l'écran. Un filtre qui ne retient rien le **dit**. Même décompte que l'écran « Ma saison » (service partagé, parité IHM/CLI). `texte` par défaut, `csv`/`json` scriptables. Les trois sorties **montrent le nom du carré** (#3289), par lequel `--lieu` sait déjà chercher : le texte le qualifie (`640380 · Vallon`), le CSV a sa colonne « Nom du carré », le JSON sa clé `nom_site`. L'écran, lui, lui donne une **colonne** : qualifié dans « Carré », le nom s'y faisait tronquer. La **commune** suit le même chemin (#3313) : colonne à l'écran, `Commune` au CSV, `commune` en JSON, entre parenthèses en texte, et `--lieu` la retient |
 | `statut-passage` | `--passage <id> [--json]` | M-Passage, #1878 | `ServicePassage.detailPassage` + `ResultatsIdentificationDao` + `ServiceConditionsPassage.heuresProuvees` (lecture). La ligne « Nuit » dit l'**origine** de ses heures - `[attestées par les enregistrements]` ou `[déclarées, modifiables]` -, et le JSON porte `heuresProuvees` : un script sait ainsi **avant** d'essayer si `metadonnees-passage --heure-debut` sera refusé, au lieu de l'apprendre en échouant |
 | `verifier-maj` | *(aucune option)* | #2109 | `VerificateurMiseAJour` (lecture seule, réseau) : indique si une version plus récente est publiée. Pendant CLI de l'annonce au démarrage de l'IHM. **Trois codes de sortie**, parce qu'un script ne pilote pas « à jour » et « je n'ai pas pu savoir » de la même façon : `0` à jour, `10` mise à jour disponible, `1` vérification impossible (hors ligne, ou version locale inconnue car lancée hors d'un artefact publié). Se tait dès qu'un doute existe plutôt que d'annoncer à tort ; désactivable avec la feature `maj` |
@@ -101,7 +101,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `exporter-observations` | `--passage <id> --sortie <fichier>` | #149 | `ProjectionsAudioDao.lignesAudioDuPassage` + `ExportObservationsCsv` |
 | `exporter-sons` | `(--passage <id> \| --espece <code>) --sortie <zip> [--lieu <lieu>]… [--proba-min <0..1>]` | #2795 | `ProjectionsAudioDao.lignesAudioDuPassage` / `lignesAudioDeLEspece` + `ExportObservationsEtSons` (#2792). Parité CLI du geste « Exporter les observations et les sons » de la vue audio (#2793) : archive `observations.csv` + `sons/<session>/<fichier>`, sons introuvables comptés sans bloquer. `--passage` couvre le même sous-ensemble qu'`exporter-observations` (CSV identique) et refuse un passage inconnu (code 2) ; `--espece` couvre l'espèce sur tous les passages de l'utilisateur, tous statuts, et une espèce sans observation produit une archive au CSV d'en-têtes seuls |
 | `exporter-activite` | `(--passage <id> \| --tout) --sortie <fichier> [--tranche 15\|30\|60] [--format csv]` | #2352 | `ServiceActivite.contactsDuPassage` + `AgregationActivite.parEspece` + `ExportActiviteCsv`. Facette **données** de la courbe d'activité (pendant CLI de l'export image de l'IHM), rattachée à la nuit biologique. Une ligne par **(carré, point, nuit, espèce, tranche)** : chaque ligne porte son lieu, sans quoi un export couvrant plusieurs nuits ne se recouperait pas (#2613). `--tout` couvre la vue transverse de l'écran. **Non gouvernée par la fonctionnalité `activite-nuit`** : l'agrégation est une capacité stable de `analyse`, celle-ci ne gouvernant que l'accès à la vue |
-| `audit-coherence` | `[--passage <id>] [--gravite <niveau>] [--categorie <nature>] [--contient <texte>] [--json] [--online] [--token <jeton>]` | #1133, #1254, #1347 | `ServiceAuditCoherence` : confronte **disque, base et serveur**. `--gravite` et `--categorie` sont les **deux puces** de l'écran « Audit de cohérence » (#3100), portées ici à la clôture de #3092 ; chacune retient une valeur **exacte**. ⚠️ Elles filtrent **l'affichage seul** : le **code de sortie continue de juger le rapport entier**, sans quoi `--gravite INFO` sur un workspace abîmé rendrait `0` et un script d'intégration conclurait que tout va bien. Sans `--passage`, audite tout le workspace ; avec, une seule nuit (utile après l'avoir réparée). `--online` ajoute les constats qui demandent le réseau (dépôts, points). `0` ssi aucun constat d'erreur |
+| `audit-coherence` | `[--passage <id>] [--gravite <niveau>] [--categorie <nature>] [--contient <texte>] [--json] [--online] [--token <jeton>]` | #1133, #1254, #1347 | `ServiceAuditCoherence` : confronte **disque, base et serveur**. `--gravite` et `--categorie` sont les **deux puces** de l'écran « Audit de cohérence » (#3100), portées ici à la clôture de #3092 ; chacune retient une valeur **exacte**. Elles filtrent **l'affichage seul** : le **code de sortie continue de juger le rapport entier**, sans quoi `--gravite INFO` sur un workspace abîmé rendrait `0` et un script d'intégration conclurait que tout va bien. Sans `--passage`, audite tout le workspace ; avec, une seule nuit (utile après l'avoir réparée). `--online` ajoute les constats qui demandent le réseau (dépôts, points). `0` ssi aucun constat d'erreur |
 | `sauvegarder` | `[--complet] [--dossier <dir>]` | #148, #1346 | `ServiceSauvegarde` : instantané cohérent de la base (`VACUUM INTO`). `--complet` emporte **aussi l'audio** (dossiers de session), c'est la **seule sauvegarde qui protège vraiment**, la plateforme ne rendant pas l'audio d'un dépôt en archives. Le bilan **dit ce qui n'a pas pu être copié** (carte SD non montée) et sort en `2` : une sauvegarde qu'on croit complète et qui ne l'est pas vaut moins que pas de sauvegarde |
 | `restaurer` | `<chemin> [--complet] --confirmer` | #148, #1346 | `ServiceSauvegarde.restaurer` / `restaurerComplet` : remet la base (et, avec `--complet`, les dossiers de son, **remis là où ils étaient**, avec les `root_path` corrigés et un compte rendu de ce qui a changé de place, #2727). **Écrase l'état local** : `--confirmer` est obligatoire. La base courante est mise de côté (`vigiechiro.db.avant-restauration`). **Trois codes** : `0` restauration entière, **`10`** restaurée mais il manque quelque chose, `2` refus (#3500) |
 | `lister-sauvegardes` | `[--dossier <d>] [--json]` | #3197 | `InventaireSauvegardes.lire`. Ce que `sauvegardes/` contient : nom, date, taille, et le **total**. L'application y écrit un filet complet avant **chaque** migration de schéma et n'en supprime jamais aucun - délibérément (ADR 0048 : le filet appartient à l'utilisateur), mais jusqu'ici sans que rien ne dise combien il y en avait ni ce qu'ils pesaient. La commande **observe** : elle ne purge rien et ne conseille rien. Les sauvegardes complètes étant des **dossiers**, leur taille est celle de leur contenu - un inventaire qui ne verrait que les fichiers mentirait là où le chiffre compte |
@@ -116,7 +116,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `marquer-douteux` | `[--retirer] (--observation <ids> \| --passage <id> [filtres] [--confirmer])` | #160, #1311 | Lève (ou baisse) le drapeau **« douteuse »**. Ce drapeau ne dit **rien** du taxon : il dit « je ne sais pas », une **troisième** réponse qui n'est ni valider ni corriger. Réversible |
 | `marquer-reference` | `[--retirer] (--observation <ids> \| --passage <id> [filtres] [--confirmer])` | P10, #1311 | Verse (ou retire) les observations dans la **bibliothèque de sons de référence** - la source `References` de l'écran, et la matière de son export |
 | `poser-certitude` | `(--certitude <SUR\|PROBABLE\|POSSIBLE> \| --effacer) (--observation <ids> \| --passage <id> [filtres] [--confirmer])` | #1139, #1311 | Déclare la **certitude observateur**. Il faut **choisir explicitement** : elle ne se déduit **ni** de la probabilité Tadarida **ni** d'une validation, et reste **vide par défaut**. C'est un jugement, que la plateforme exigera avec le taxon (#723) et qu'un naturaliste lira comme la parole de l'observateur |
-| `discussion` | `--observation <id> [--message <texte> --confirmer]` | #1417, #1418 | Le **fil d'échange avec le validateur** du MNHN. Sans `--message`, le **lit** (le fil vient de la base, rafraîchi à chaque import). Avec, **y répond**, ⚠️ **écriture définitive** : le serveur ajoute par `$push` et n'offre aucune route de suppression. `--confirmer` est donc obligatoire, et le message n'est écrit localement **qu'après** que le serveur l'a accepté |
+| `discussion` | `--observation <id> [--message <texte> --confirmer]` | #1417, #1418 | Le **fil d'échange avec le validateur** du MNHN. Sans `--message`, le **lit** (le fil vient de la base, rafraîchi à chaque import). Avec, **y répond**, **écriture définitive** : le serveur ajoute par `$push` et n'offre aucune route de suppression. `--confirmer` est donc obligatoire, et le message n'est écrit localement **qu'après** que le serveur l'a accepté |
 | `emplacements` | `[--definir-travail <dir>] [--definir-base <dir>] [--reinitialiser] [--json]` | #1038 | Parité CLI de l'onglet « Emplacements » ([ADR 1038](decisions/1038-la-configuration-d-amorcage-vit-hors-de-la-base.md)) : `ServiceEmplacements`. Sans option, **affiche** où vivent le dossier de travail, la base et les **journaux** (et leurs défauts). Les journaux y figurent parce que la CLI n'imprime plus la pile d'un incident : le détail n'existe qu'une fois, dans ce dossier, et l'IHM est seule à savoir l'ouvrir (#3624). `--definir-*` **sonde** chaque dossier (un fichier ou un dossier non inscriptible est refusé, code `2` : rien n'est écrit) puis **écrit** le choix ; `--reinitialiser` l'efface. Ne déplace **rien** : change le pointeur lu au prochain démarrage, pas les données - une base pointée vers un dossier vide démarre neuve. `--reinitialiser` et `--definir-*` sont exclusifs (code `2`) |
 | `--help` / `-h`, `--version` / `-V`, ou aucun argument | — | — | — |
 
@@ -136,24 +136,24 @@ sens** :
 | `FORCE_COLOR` | **allume**, même sans console | usage répandu, non spécifié |
 
 Les deux comptent dès qu'elles sont **présentes et non vides**, quelle que soit leur valeur - une seule
-lecture à retenir pour deux variables voisines. ⚠️ **`NO_COLOR` l'emporte** quand les deux sont posées :
+lecture à retenir pour deux variables voisines. **`NO_COLOR` l'emporte** quand les deux sont posées :
 un refus explicite prime sur une demande explicite. Se tromper dans ce sens affiche du texte nu ; se
 tromper dans l'autre crache des séquences d'échappement chez quelqu'un qui a demandé qu'on ne le fasse
 pas.
 
-⚠️ `FORCE_COLOR` a été ajoutée parce que la règle précédente ne donnait le dernier mot que dans **un**
+`FORCE_COLOR` a été ajoutée parce que la règle précédente ne donnait le dernier mot que dans **un**
 sens (#3796). Trois situations ordinaires en souffraient, et elles ont un point commun : la sortie est
 **redirigée alors qu'un humain la lit** - `… | less -R`, un journal de CI qui **interprète** l'ANSI (les
 Actions GitHub le font), un enrobage `script`/`unbuffer`. Dans les trois, l'utilisateur veut la couleur,
 la console sait l'afficher, et le produit refusait.
 
-⚠️ La décision vit dans `CouleurCli`, sur des **entrées fournies** plutôt que lues du système : la
+La décision vit dans `CouleurCli`, sur des **entrées fournies** plutôt que lues du système : la
 console et l'environnement d'une JVM en cours ne se manipulent pas de façon portable, et c'est
 précisément cette non-portabilité qui avait créé le défaut. `cli.bats` garde par ailleurs les
 **quatre** cas sur la sortie réelle du binaire, dont deux qui n'existent que là : la couleur **s'allume**
 devant un vrai terminal, et `FORCE_COLOR` l'allume même redirigée.
 
-⚠️ Il faut un **vrai pseudo-terminal** (`script -qec`) pour les éprouver. Sans lui, deux cas sur quatre
+Il faut un **vrai pseudo-terminal** (`script -qec`) pour les éprouver. Sans lui, deux cas sur quatre
 sont indiscernables : sous une sortie redirigée, l'aide est nue **de toute façon**, donc « `NO_COLOR`
 éteint » y serait vert sans rien prouver.
 
@@ -184,7 +184,7 @@ appellent les services.
   (`RegleMetierException` ou l'`IllegalArgumentException` des validateurs) sort en `2` (état intact) ; toute
   autre exception (échec inattendu, état incertain) en `1` (message seul, jamais la trace).
 
-⚠️ **« Jamais la trace » n'était vrai qu'à moitié jusqu'à #3570**, et de deux façons. D'abord
+**« Jamais la trace » n'était vrai qu'à moitié jusqu'à #3570**, et de deux façons. D'abord
 `Cli.main` amorce la journalisation et migre la base **avant** d'entrer dans la commande, donc hors du
 gestionnaire de picocli : une exception née là sortait par la JVM, `Exception in thread "main"` et pile
 complète, en code `1` - y compris un `RefusAvantEcriture` que #3498 avait pourtant appris à traduire en
@@ -209,7 +209,7 @@ Sept bornes protègent la lecture d'une entrée externe : taille d'un fichier de
 réponse, contenu d'une archive, hôtes admis pour un lien signé. Elles se surchargeaient **par propriété
 JVM**, et trois refus le conseillaient : « relancez avec `-Dvigiechiro.…` ».
 
-⚠️ **Ce conseil était inapplicable pour qui installe le produit.** Le lanceur jpackage passe ses
+**Ce conseil était inapplicable pour qui installe le produit.** Le lanceur jpackage passe ses
 arguments à `main`, jamais à la machine virtuelle : `-D` n'y existe pas. La seule issue chez
 l'utilisateur était de renoncer au fichier, ce que le doc-comment de `PlafondLecture` voulait
 précisément éviter.
@@ -252,7 +252,7 @@ d'amorçage, qui vit ailleurs et s'écrit d'un seul coup (#3507). C'est pourquoi
 lectrice : elle sert à **repointer** le dossier de travail, et la verrouiller refuserait de déménager
 à qui déménage parce que la place actuelle est occupée.
 
-⚠️ **Le journal fait exception.** `Cli.main` amorce la journalisation avant tout, donc **toute**
+**Le journal fait exception.** `Cli.main` amorce la journalisation avant tout, donc **toute**
 commande crée et écrit `<dossier de travail>/logs` - les lectrices comprises. C'est voulu : un incident
 doit laisser une trace même sur une commande qui ne fait que lire, et deux processus qui écrivent
 chacun ses lignes dans un journal ne se corrompent pas, là où deux processus qui écrivent la même base
@@ -262,7 +262,7 @@ le feraient (#3575).
     rester trouvable sans le deviner. `cli.bats` le vérifie des deux bouts - la pile est dans le
     fichier, et la commande désigne le dossier réellement écrit.
 
-⚠️ La migration du schéma prend le verrou de son côté : une commande de lecture sur une base à mettre
+La migration du schéma prend le verrou de son côté : une commande de lecture sur une base à mettre
 à jour peut donc être refusée, et c'est voulu - mettre à jour le schéma est une écriture.
 
 `ClassementLectureEcritureTest` exige que **chaque** commande soit classée : elle porte le marqueur,
@@ -301,10 +301,10 @@ nuit manquait, puis sortait en `0` : le fait était dit dans un texte qu'un scri
 maintenant **`10`** quand la restauration laisse un **manque** - la sauvegarde ne dit pas d'où venaient
 les dossiers, ou une nuit connue de la base n'y était pas.
 
-⚠️ Pas `1` ni `2` : la restauration a **réussi**. Confondre « ça n'a pas marché » avec « ça a marché,
+Pas `1` ni `2` : la restauration a **réussi**. Confondre « ça n'a pas marché » avec « ça a marché,
 regarde quand même » est exactement ce que `verifier-maj` a payé avant elle.
 
-⚠️ Et pas sur les dossiers simplement **replacés ailleurs**, qui restent `0` : c'est le cas normal
+Et pas sur les dossiers simplement **replacés ailleurs**, qui restent `0` : c'est le cas normal
 d'une restauration sur une autre machine, l'usage principal de `--complet`, et le compte rendu nomme
 déjà l'ancienne et la nouvelle adresse. Un `10` permanent s'apprend à s'ignorer, et emporterait avec
 lui celui qui compte. L'IHM, elle, garde son avertissement sur les trois cas : elle parle à quelqu'un
@@ -486,7 +486,7 @@ VIGIECHIRO_LANCEUR=target/dist/VigieChiroCompanion/bin/vigiechiro \
   bats src/test/bats                                                       # sur le lanceur livré
 ```
 
-⚠️ Une invocation **sans aucun argument** rend l'usage de la ligne de commande, elle n'ouvre pas la
+Une invocation **sans aucun argument** rend l'usage de la ligne de commande, elle n'ouvre pas la
 fenêtre - y compris pour `java -jar vigiechiro-*-shaded.jar`, qui demande désormais `ihm`. Déduire une
 demande d'interface de l'absence d'arguments serait la figure que refuse l'ADR 3828 : une condition
 ambiante tenant lieu de déclaration.

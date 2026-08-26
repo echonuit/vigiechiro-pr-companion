@@ -46,7 +46,7 @@ Concrètement, le refus interroge `GET /sites?q=<carré>` et dit l'un des trois 
 | le carré n'y est **pas** en Point Fixe | l'**activer sur le portail** d'abord |
 | la plateforme **ne répond pas** | dire qu'on **n'a pas pu vérifier** |
 
-⚠️ **La troisième ligne est la règle, pas une commodité.** Ni « récupérez-le », ni « il n'existe pas » :
+**La troisième ligne est la règle, pas une commodité.** Ni « récupérez-le », ni « il n'existe pas » :
 affirmer depuis une **ignorance** est le défaut que l'ADR 3458 a fermé côté verdict. Un test l'exige en
 interdisant explicitement les mots des deux autres branches.
 
@@ -73,9 +73,9 @@ Deux choses ont donc changé de place :
   y renvoie.
 - **Un message d'erreur peut coûter une requête.** C'est nouveau dans ce dépôt, et borné : sur le chemin
   d'échec, jamais sur le nominal.
-- ⚠️ **Le socle porte désormais une règle de protocole plateforme** (`estPointFixe`). C'est le prix de
+- **Le socle porte désormais une règle de protocole plateforme** (`estPointFixe`). C'est le prix de
   l'acyclicité ; l'alternative était deux copies.
-- ⚠️ **La ligne de commande ne bénéficie pas de ce refus** : `creer-site` n'interroge rien (#3856).
+- **La ligne de commande ne bénéficie pas de ce refus** : `creer-site` n'interroge rien (#3856).
 
 ## Alternatives écartées
 

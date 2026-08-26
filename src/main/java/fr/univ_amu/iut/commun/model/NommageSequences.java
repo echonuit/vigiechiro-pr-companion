@@ -71,7 +71,7 @@ public final class NommageSequences {
     /// L'ordre chronologique se lit dans les **noms horodatés** des originaux. Trier sur le nom R6 ou sur
     /// le nom d'enregistreur donne le même ordre, le préfixe de session étant commun à tous.
     ///
-    /// ⚠️ L'entrée doit être **tous les originaux de la nuit**, pas seulement ceux qu'on a sous la main :
+    /// L'entrée doit être **tous les originaux de la nuit**, pas seulement ceux qu'on a sous la main :
     /// un original absent ne réserve pas ses noms, et l'arbitrage rendrait alors des noms différents de
     /// ceux que l'import a écrits. Côté réactivation, la liste vient donc de la **base**, jamais du
     /// dossier désigné par l'utilisateur.

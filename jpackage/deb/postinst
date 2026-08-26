@@ -5,7 +5,7 @@
 # `/opt/vigiechirocompanion`, si bien que la commande `vigiechiro` n'existait qu'en chemin complet.
 # Remplacer ce script par `--resource-dir` est la seule prise qu'il laisse.
 #
-# ⚠️ Ce fichier REMPLACE le gabarit de jpackage : tout ce que celui-ci faisait doit continuer d'être
+# Ce fichier REMPLACE le gabarit de jpackage : tout ce que celui-ci faisait doit continuer d'être
 # fait ici. Il en faisait une chose, l'entrée de menu, reprise à l'identique ci-dessous. Le rendu de
 # référence est le postinst du `.deb` publié, que `dpkg-deb -e <paquet> <dossier>` ressort tel quel.
 # `DecisionsRespecteesTest` garde les DEUX gestes, parce qu'en perdre un ne casserait rien de visible
@@ -17,13 +17,13 @@ case "$1" in
         # La commande dans le PATH, EN PREMIER. `-f` parce qu'une réinstallation par-dessus elle-même
         # doit retomber sur ses pieds ; le postrm retire le lien quand le paquet s'en va.
         #
-        # ⚠️ L'ordre n'est pas cosmétique, il vient d'une mesure. Sur un système sans dossier de menus
+        # L'ordre n'est pas cosmétique, il vient d'une mesure. Sur un système sans dossier de menus
         # inscriptible - un conteneur, un serveur - `xdg-desktop-menu` rend 3, et `set -e` arrête le
         # script AUSSITÔT : mise en second, la ligne ci-dessous ne s'exécutait pas, et la commande
         # n'était pas installée. Le geste qui ne peut pas échouer passe donc devant.
         ln -sf /opt/vigiechirocompanion/bin/vigiechiro /usr/bin/vigiechiro
 
-        # ⚠️ L'entrée de menu ne décide PAS du sort de l'installation. `xdg-desktop-menu` rend 3 là où
+        # L'entrée de menu ne décide PAS du sort de l'installation. `xdg-desktop-menu` rend 3 là où
         # aucun menu système n'est inscriptible - un conteneur, un serveur - et sous `set -e` ce 3
         # laissait le paquet en `half-configured` : installé, non configuré, et bloquant les opérations
         # `apt` suivantes (#4081). Le paquet publié 2.185.0 se comportait déjà ainsi ; ce n'est pas une

@@ -55,7 +55,7 @@ ViewModel (EPIC #4133).
 
 ## Ce qui rendait la règle applicable, et qu'on ne savait pas
 
-⚠️ **Il n'y avait pas d'obstacle technique.** Les modales du produit s'ouvrent en `show()`, jamais en
+**Il n'y avait pas d'obstacle technique.** Les modales du produit s'ouvrent en `show()`, jamais en
 `showAndWait` : `NavigationSites#afficherModale` le fait depuis toujours. Elles sont donc **pilotables
 en headless**, et la raison qu'on se donnait - « un dialogue fige TestFX » - ne valait que pour les
 `Alert` du socle, pas pour les modales de la feature.
@@ -69,7 +69,7 @@ Trois classes ont perdu leurs cas au profit de scénarios : `ModaleSiteVerifierC
 chrome et l'exécuteur **asynchrone** - en synchrone, le travail occupe le fil JavaFX et aucune image
 n'est rendue pendant l'attente que ces cas font juger.
 
-⚠️ Un clip qui montre les deux écrans est plus **long**. C'est le prix, et il est juste : la durée
+Un clip qui montre les deux écrans est plus **long**. C'est le prix, et il est juste : la durée
 n'était jamais le problème, l'absence de contexte l'était.
 
 ## Ce qui a été écarté

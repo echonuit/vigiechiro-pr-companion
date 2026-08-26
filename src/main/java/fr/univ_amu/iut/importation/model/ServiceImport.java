@@ -507,7 +507,7 @@ public class ServiceImport {
         return synchronisation
                 .map(sync -> {
                     try {
-                        // ⚠️ On lit le RÉSULTAT, pas l'absence d'exception (#3448). Ce transport rapporte
+                        // On lit le RÉSULTAT, pas l'absence d'exception (#3448). Ce transport rapporte
                         // ses échecs en **rendant** un `ResultatEcriture`, comme son propre doc-comment le
                         // dit : « le succès se lit sur echec, pas sur id ». Un refus de la plateforme (jeton
                         // absent, 401, site non verrouillé) revient donc normalement.

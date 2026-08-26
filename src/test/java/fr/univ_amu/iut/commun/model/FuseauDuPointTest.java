@@ -19,7 +19,7 @@ class FuseauDuPointTest {
     /// Un annuaire en dur, plutôt qu'un mock : le port est une fonction d'un argument, et le simuler
     /// ainsi dit mieux ce qu'on éprouve.
     ///
-    /// ⚠️ Le `idPoint == null` n'est pas une précaution décorative : la première version écrivait
+    /// Le `idPoint == null` n'est pas une précaution décorative : la première version écrivait
     /// `Optional.ofNullable(annuaire.get(idPoint))` et **levait** sur un identifiant nul, `Map.of`
     /// refusant les clés nulles. C'était le **double** qui violait le contrat du port - lequel promet
     /// un `Optional` vide - pas le code éprouvé. Un double qui ment sur son contrat fait échouer, ou

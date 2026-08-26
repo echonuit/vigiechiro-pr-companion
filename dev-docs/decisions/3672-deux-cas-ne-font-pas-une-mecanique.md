@@ -61,7 +61,7 @@ Rendre les libellés observables demanderait de transformer `EtapeNavigation` - 
 porteur de propriété, de faire suivre le chrome, et de tenir un cycle d'abonnement de plus. Pour
 **deux** écrans dont la correction locale tient en une méthode et un appel, c'est disproportionné.
 
-⚠️ Et la clause de réouverture ne se rejoue pas indéfiniment : à un **troisième** cas, la question
+Et la clause de réouverture ne se rejoue pas indéfiniment : à un **troisième** cas, la question
 redevient légitime, parce que la duplication du geste commencerait alors à coûter plus que la
 mécanique.
 
@@ -75,7 +75,7 @@ La fiche site ne le déclare pas : le fil retombe sur son repli historique et li
 figé. Les deux s'accordent alors **sur la mauvaise valeur**. Rien ne se contredit à l'écran, donc rien
 n'alerte : #3672 n'a été trouvée ni par l'usage ni par un test, mais par le balayage #3545.
 
-⚠️ **Corollaire, contre-intuitif** : déclarer `EmplacementNavigation` sur un écran dont le libellé
+**Corollaire, contre-intuitif** : déclarer `EmplacementNavigation` sur un écran dont le libellé
 d'étape est figé **fabrique** la contradiction au lieu de la corriger. Les deux se posent ensemble ou
 pas du tout.
 
@@ -85,7 +85,7 @@ pas du tout.
   relibellage, et nommera donc le troisième cas au lieu de le laisser passer inaperçu comme le second.
 - Un ViewModel qui **détient** un `record` d'entité doit le relire après toute écriture qui le touche.
   `rafraichir()` recharge des listes ; il ne rafraîchit pas ce qu'on tient déjà.
-- ⚠️ Le mécanisme correct **existait** dans `SiteDetailViewModel#modifierSite`, qui réassignait
+- Le mécanisme correct **existait** dans `SiteDetailViewModel#modifierSite`, qui réassignait
   l'agrégat depuis le retour du service. Il était **mort** depuis que #1431 avait déporté l'édition
   dans une modale portant son propre ViewModel, et sa doc-comment disait encore « bouton header
   ✏ Modifier ». Trois tests l'exerçaient et passaient : ils n'ont jamais pu rougir, et le défaut qu'ils

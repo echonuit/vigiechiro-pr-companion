@@ -32,7 +32,7 @@ refuser.
 Le onzième script, `mesure-duree-portail.sh`, est arrivé avec [ADR 3560] **hors de cette
 discipline** : ses cas vivaient dans `src/test/bats/scripts-ci.bats`, un fichier créé pour lui.
 
-⚠️ **La cause est un relevé faux, et il était de moi.** L'issue #3661 affirmait au départ que « onze
+**La cause est un relevé faux, et il était de moi.** L'issue #3661 affirmait au départ que « onze
 scripts rendent des jugements, un seul est éprouvé ». J'avais cherché les tests dans `src/test` et
 dans les chemins cités par les workflows ; je ne pouvais pas y voir une discipline qui vit **à
 l'intérieur** de chaque script. Un `grep` qui ne trouve rien est une hypothèse, jamais un constat.
@@ -81,6 +81,6 @@ aucun gain : leur discipline actuelle fonctionne et est éprouvée.
   la tient - et laisser ce pointeur cassé serait précisément « un rapport qu'aucun script n'alimente »,
   ce que la garde reproche. C'est elle qui a rendu cette ADR nécessaire, plutôt qu'un pointeur corrigé
   en silence.
-- ⚠️ **Deux constats restent ouverts**, et ils ne sont pas traités ici : `construit-appimage.sh` est le
+- **Deux constats restent ouverts**, et ils ne sont pas traités ici : `construit-appimage.sh` est le
   seul script sans aucun cas, et **quatre des dix auto-tests n'ont pas de contrôle négatif visible**.
   Un garde qui n'accepte jamais rien passe ses tests d'acceptation aussi bien qu'un garde juste.

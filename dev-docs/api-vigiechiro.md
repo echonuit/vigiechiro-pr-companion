@@ -106,7 +106,7 @@ c'est la **réponse** qui se perd.
 | `AUTORISE` | rejouer redonne le même état **et** la même réponse | correction d'observation (valeur absolue), suppression, demande d'URL de partie |
 | `INTERDIT` | rejouer **duplique** ou **trompe** | `POST` de création, message empilé par `$push`, `PATCH` protégé par `If-Match` |
 
-⚠ **Une règle par verbe HTTP serait fausse.** `PUT /donnees/…/messages` **empile** côté serveur : un
+**Une règle par verbe HTTP serait fausse.** `PUT /donnees/…/messages` **empile** côté serveur : un
 `PUT` peut parfaitement ne pas être idempotent. Et le `PATCH` avec `If-Match` ne duplique pas, mais
 rejoué après un succès dont la réponse s'est perdue il revient en `412` - l'utilisateur lirait « échec »
 sur une modification qui a bien eu lieu. L'arbitrage est **par appel**, écrit à côté de lui.
@@ -166,15 +166,15 @@ prévenir : celle-ci rougit.
 
 | Ressource | Lectures | À savoir |
 |---|---|---|
-| `sites` | `/sites`, `/sites/{id}`, `/sites/liste`, `/moi/sites`, `/protocoles/{id}/sites[/grille_stoc\|/tracet]` | catalogue entier lisible et paginé (**20 572 sites** au 2026-08-05, recensés page par page). ⚠️ `/sites/liste` trompe deux fois : chaque document est réduit à son `_id` (759 Ko, non paginé), et son enveloppe n'est **pas** celle d'Eve (`_items` contient les documents **puis le total**, en deux blocs). Elle ne dispense pas de paginer `/sites` pour recenser les points |
+| `sites` | `/sites`, `/sites/{id}`, `/sites/liste`, `/moi/sites`, `/protocoles/{id}/sites[/grille_stoc\|/tracet]` | catalogue entier lisible et paginé (**20 572 sites** au 2026-08-05, recensés page par page). `/sites/liste` trompe deux fois : chaque document est réduit à son `_id` (759 Ko, non paginé), et son enveloppe n'est **pas** celle d'Eve (`_items` contient les documents **puis le total**, en deux blocs). Elle ne dispense pas de paginer `/sites` pour recenser les points |
 | `participations` | `/participations`, `/participations/{id}[/pieces_jointes]`, `/moi/participations`, `/sites/{id}/participations` | `/moi/participations` embarque le site : c'est de là que le client dérive vos sites (#718) |
-| `donnees` | `/donnees`, `/donnees/{id}[/fichiers]`, `/participations/{id}/donnees` | ⚠️ la collection nue `/donnees` est déclarée mais **répond 503** en pratique : passer par la participation |
+| `donnees` | `/donnees`, `/donnees/{id}[/fichiers]`, `/participations/{id}/donnees` | la collection nue `/donnees` est déclarée mais **répond 503** en pratique : passer par la participation |
 | `taxons` | `/taxons`, `/taxons/{id}`, `/taxons/liste` | `/taxons/liste` rend le référentiel entier, sans pagination |
 | `protocoles` | `/protocoles[/liste]`, `/protocoles/{id}[/observateurs]`, `/moi/protocoles` | le protocole détermine la forme des localités d'un site |
 | `utilisateurs` | `/utilisateurs`, `/utilisateurs/{id}`, `/moi` | `/moi` valide le jeton |
-| `fichiers` | `/fichiers/{id}`, `/fichiers/{id}/acces` | ⚠️ **aucune route de collection** : `/fichiers` n'existe pas en lecture, d'où son refus |
-| `grille_stoc` | `/grille_stoc/rectangle`, `/grille_stoc/cercle` | ⚠️ **aucune route de collection** : s'interroge par emprise |
-| `actualites` | `/moi/actualites`, `/actualites/validations` | ⚠️ **aucune route de collection** |
+| `fichiers` | `/fichiers/{id}`, `/fichiers/{id}/acces` | **aucune route de collection** : `/fichiers` n'existe pas en lecture, d'où son refus |
+| `grille_stoc` | `/grille_stoc/rectangle`, `/grille_stoc/cercle` | **aucune route de collection** : s'interroge par emprise |
+| `actualites` | `/moi/actualites`, `/actualites/validations` | **aucune route de collection** |
 
 **Toutes** les lectures exigent le même rôle (`Observateur`) : le source ne distingue les rôles qu'en
 écriture. Un refus en lecture ne vient donc **pas** du rôle, mais d'une route qui n'existe pas.
@@ -196,7 +196,7 @@ mesuré, en lecture seule, le **2026-08-14** - six `GET` sur `/sites` :
 `_sites_generic_list` (`vigiechiro/resources/sites.py`) pose `lookup['$text'] = {'$search': q}` quand
 `q` est présent, et **l'index texte existe** : le total annoncé bouge, ce que `where=` ne fait jamais.
 
-⚠️ **`$text` cherche des mots entiers, pas des préfixes.** `13071` ne ramène pas `130711`. C'est ce
+**`$text` cherche des mots entiers, pas des préfixes.** `13071` ne ramène pas `130711`. C'est ce
 qu'il faut pour un numéro de carré - aucun faux positif par troncature - et cela **interdit** d'en tirer
 une recherche partielle. Le titre d'un site (`Vigiechiro - Point Fixe-130711`) indexe le numéro comme un
 mot à lui seul, le tiret servant de séparateur.
@@ -207,7 +207,7 @@ posent la question de cette façon** : la fenêtre de déclaration depuis #3787,
 depuis #3769 (`lister-sites-vigiechiro --carre`, qui refuse désormais `--pages` et `--tout` : il n'y a
 plus d'étendue à borner).
 
-⚠️ Un **troisième** appelant s'en sert pour autre chose que chercher : le refus « site non rattaché »
+Un **troisième** appelant s'en sert pour autre chose que chercher : le refus « site non rattaché »
 (`SynchronisationParticipation`, #3854) interroge `q` pour choisir son conseil - récupérer le carré, ou
 l'activer sur le portail. La requête ne part que sur ce chemin d'échec.
 
@@ -526,7 +526,7 @@ pas une erreur, un **état**.
 | `ERREUR` | échec après épuisement des essais (`message` = trace) | lire le motif |
 | `RETRY` | échec **rattrapé** : le serveur a relancé (`retry`) | patienter |
 
-⚠️ **Le serveur REMPLACE le bloc `traitement` à chaque étape**, il ne le complète pas : dès que le
+**Le serveur REMPLACE le bloc `traitement` à chaque étape**, il ne le complète pas : dès que le
 calcul démarre, `date_planification` **disparaît**. N'attendez jamais les trois dates ensemble
 (constaté en réel sur la participation canonique : `FINI` sans `date_planification`).
 
@@ -626,7 +626,7 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
   `PUT` S3 `application/zip`, finalisation : **verte**. Un rouge sur cette probe veut donc dire que **le
   mode de dépôt par défaut est cassé**, et non, comme son libellé le laissait croire, qu'il faudrait
   revenir au WAV.
-- **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur. ⚠️ **Ce verdict était exact et la conclusion
+- **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur. **Ce verdict était exact et la conclusion
   qu'on en tirait était fausse** (#3694). Il en avait été déduit que le « push point→site » était
   impossible ; la sonde éprouvait simplement **la mauvaise route**. Lecture de la source
   (`vigiechiro/resources/sites.py`) :
@@ -640,7 +640,7 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
     appartenant à un autre observateur (`Z41` sur 130711, le 2026-07-04, une semaine **avant** que la
     sonde ne rende son 403).
 
-    ⚠️ **Elle remplace la liste entière** : `mongo_update = {'$set': {'localites': payload['localites']}}`.
+    **Elle remplace la liste entière** : `mongo_update = {'$set': {'localites': payload['localites']}}`.
     Envoyer le seul point neuf **efface tous les autres** - 41 localités sur ce carré, sur la donnée d'un
     tiers. Même forme que le `PATCH` de `configuration` d'une participation (#1844) : on part du distant,
     on y ajoute, on renvoie l'ensemble.
@@ -666,7 +666,7 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
     Le **push** l'est depuis #3458 : `PublicationPoint`, offert sur la carte du point
     de la fiche site (passerelle `PublicationPoint` activée par `PublicationPointModule`).
 
-    ⚠️ **Le 403 de cette route n'est pas prédictible depuis Companion**, et c'est ce qui décide de la
+    **Le 403 de cette route n'est pas prédictible depuis Companion**, et c'est ce qui décide de la
     forme de l'action à l'écran. Deux cas y mènent, et rien ne les distingue dans la réponse :
 
     | Cas | Écriture des localités |
@@ -681,7 +681,7 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
     peut rouvrir un carré verrouillé. **`StatutPlateforme.VERROUILLE` s'inverse ici** : état favorable
     pour déposer une nuit, état refusé pour ajouter un point sur son propre carré.
 
-    ⚠️ **Un homonyme n'est pas le même point** (#3458). La plateforme impose l'unicité du `nom` d'une
+    **Un homonyme n'est pas le même point** (#3458). La plateforme impose l'unicité du `nom` d'une
     localité, et l'on pourrait croire qu'un nom déjà pris signifie « c'est déjà le nôtre ». Une
     participation **nomme** sa localité (`'point': {'type': 'string'}` au schéma des participations) :
     déplacer une localité déplacerait donc, sans préavis, toutes les nuits qui s'y rattachent, y compris

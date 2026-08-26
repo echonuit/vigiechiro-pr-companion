@@ -55,7 +55,7 @@ job exécute**. Trois pas, dont aucun ne se voit en lisant le YAML : `ConnexionM
 lit `System.getenv`, les forks surefire **héritent** de l'environnement du job, et
 `ConnexionModule.urlDeBase()` vaut la **production** par défaut.
 
-⚠️ Une parade structurelle a été cherchée, puis **retirée après mesure** : un compte rétrogradé au rôle
+Une parade structurelle a été cherchée, puis **retirée après mesure** : un compte rétrogradé au rôle
 `Lecteur`, pour que le serveur refuse d'écrire plutôt que notre discipline. `grep -rn "roles=.Lecteur"`
 est **vide**. Le rôle est déclaré dans `ROLE_RULES` et **aucune route ne l'accepte**, `GET /moi`
 compris. Un jeton en lecture seule **n'existe pas** sur cette plateforme.
@@ -78,7 +78,7 @@ d'exposition de quatorze jours à la durée d'un tournage. Un jeton révocable n
 contrat hebdomadaire, qui vit de durer : d'où un **second secret sur le même compte**, la plateforme
 stockant une carte de jetons par compte.
 
-⚠️ L'axe n'est **pas** l'accès. Même compte, mêmes droits, et un second secret de dépôt n'isole rien
+L'axe n'est **pas** l'accès. Même compte, mêmes droits, et un second secret de dépôt n'isole rien
 puisque tout workflow du dépôt lit tout secret du dépôt. L'axe est le **cycle de vie**, et c'est la
 seule raison qui justifie deux secrets.
 

@@ -11,7 +11,7 @@ import java.util.List;
 /// point est en ligne. Le cas courant - un point rapatrié de la plateforme, donc jamais publié par
 /// nous - ne coûte aucune ligne.
 ///
-/// ⚠️ **À ne pas confondre avec `PointDEcoute#synchronise`**, qui dit « rapatrié **de** la plateforme »
+/// **À ne pas confondre avec `PointDEcoute#synchronise`**, qui dit « rapatrié **de** la plateforme »
 /// et sert à masquer les points inutilisés (#1738). Un point publié va dans l'autre sens : c'est nous
 /// qui l'avons poussé, et il doit rester visible.
 public class PointPublieDao extends DaoGenerique<Long, Long> {

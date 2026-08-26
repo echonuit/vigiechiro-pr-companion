@@ -64,7 +64,7 @@ class CartesAccueilTest {
     /// « Espèces & observations » **tient** alors sur une ligne : le test mesurerait une carte qui
     /// n'existe pas, et resterait vert avec le défaut en place.
     ///
-    /// ⚠️ Les feuilles ne suffisent pas, et ce test l'a montré de la pire façon (#3526) : les poser à la
+    /// Les feuilles ne suffisent pas, et ce test l'a montré de la pire façon (#3526) : les poser à la
     /// main sans appeler [Typographie#installer] laisse la police embarquée **non enregistrée** auprès
     /// de JavaFX. `base.css` la demandait alors en vain, et le rendu retombait sur la police du système.
     ///
@@ -74,12 +74,12 @@ class CartesAccueilTest {
     /// l'avait installée avant lui**, et la police du système sinon - c'est l'ordre d'exécution qui
     /// décidait.
     ///
-    /// ⚠️ Et sous Linux, rien de tout cela ne se voit - non parce que le repli serait large, mais parce
+    /// Et sous Linux, rien de tout cela ne se voit - non parce que le repli serait large, mais parce
     /// que `Noto Sans` y est une police **système** (219 entrées sous `/usr/share/fonts/truetype/noto/`
     /// sur la machine de développement) : la suite locale la trouve **installée ou non**, et aucune
     /// mesure faite là ne peut juger ce défaut.
     ///
-    /// ⚠️ **Le runner Ubuntu, lui, n'a pas été mesuré**, et une première version de ce commentaire
+    /// **Le runner Ubuntu, lui, n'a pas été mesuré**, et une première version de ce commentaire
     /// l'affirmait quand même. L'ADR 3361 dit seulement que `sans-serif` s'y résout en « une police
     /// plus large » (#3826, passe 0). Sous macOS, en revanche, la mesure existe : `Noto Sans` n'y est
     /// pas, seul `installer()` la fournit, et le verdict bascule avec l'ordre.

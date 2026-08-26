@@ -29,7 +29,7 @@ passe 6 exige un PIT ciblé sur les classes pures livrées.
 y compris après avoir ajouté `${project.build.testOutputDirectory}` aux `mutableCodePaths` du profil.
 Le journal donne la cause probable dès sa première ligne : `Mutating from target/classes`.
 
-⚠️ **Ce qui n'est pas établi** : que ce soit la seule cause. Le troisième essai aurait dû lever
+**Ce qui n'est pas établi** : que ce soit la seule cause. Le troisième essai aurait dû lever
 l'obstacle s'il n'y avait que celui-là. Écrire « PIT ne mute pas le code de test » serait une
 hypothèse plausible présentée comme un fait.
 
@@ -52,7 +52,7 @@ partagé était le réflexe.
 Ce ne sont pas des doublons : l'un **construit un manifeste** depuis le corps du cas et le soumet au
 verdict, l'autre **lance une commande** quelconque. Le partagé se réduit à huit lignes de comptage.
 
-⚠️ Et surtout, [ADR 3661](3661-un-garde-de-ci-porte-ses-propres-cas.md) a délibérément **remis les cas
+Et surtout, [ADR 3661](3661-un-garde-de-ci-porte-ses-propres-cas.md) a délibérément **remis les cas
 à l'intérieur de leur garde**, en supprimant un fichier partagé. Un helper sourcé réintroduirait
 exactement la dépendance qu'elle venait de retirer.
 

@@ -53,7 +53,7 @@
  * ecrans a tables. Fond clair, coins arrondis en haut, et l'onglet actif distingue par le voile
  * indigo plus un trait de 2 px - pas par un relief.
  *
- * ⚠️ Ces onglets-la sont des `ToggleButton`, pas un `TabPane` : on transpose une apparence, on ne
+ * Ces onglets-la sont des `ToggleButton`, pas un `TabPane` : on transpose une apparence, on ne
  * partage pas une classe. Les faire dependre l'un de l'autre lierait deux composants qui n'ont en
  * commun que de ressembler.
  */
@@ -63,7 +63,7 @@
 
 .onglets-reglages .tab {
     -fx-background-color: #f0f2f5;
-    /* ⚠️ 3 px a droite, et non `0` : sans ce retrait, les fonds des six onglets se TOUCHENT et la
+    /* 3 px a droite, et non `0` : sans ce retrait, les fonds des six onglets se TOUCHENT et la
        rangee se lit comme une seule bande grise - on ne voit plus ou un onglet finit. Mesure a la
        premiere passe : la bande courait sans interruption sur 610 px. */
     -fx-background-insets: 0 3 0 0;
@@ -113,7 +113,7 @@
 }
 
 /* Formulaire : une colonne aérée, largeur bornée pour la lisibilité.
-   ⚠️ 640 et non 620 depuis #4002 : la rangée des emplacements porte un CHEMIN COMPLET suivi de deux
+   640 et non 620 depuis #4002 : la rangée des emplacements porte un CHEMIN COMPLET suivi de deux
    boutons, et c'est la seule ligne du formulaire dans ce cas. Une fois ses boutons stylés comme le
    reste du produit, elle manquait quelques pixels, et l'on avait commencé à rogner l'espacement à
    chaque fois - traiter le symptôme. Vingt pixels de plus tiennent la ligne sans desserrer la borne
@@ -204,7 +204,7 @@
     -fx-text-fill: -couleur-texte-discret;
 }
 
-/* ⚠️ L'espacement était descendu à 6 en #3952, puis on a voulu le descendre à 4 : à chaque bouton
+/* L'espacement était descendu à 6 en #3952, puis on a voulu le descendre à 4 : à chaque bouton
    stylé ajouté, la rangée manquait quelques pixels et on rognait l'espacement. C'était traiter le
    symptôme. La cause était la LARGEUR DE LA CAPTURE - 760 px, seule de tout le dépôt à ce format,
    quand les autres écrans se rendent de 980 à 1180. La rangée tient sans peine à la largeur réelle,

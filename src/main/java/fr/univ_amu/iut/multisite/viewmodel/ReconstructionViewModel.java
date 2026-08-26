@@ -73,7 +73,7 @@ public class ReconstructionViewModel {
     /// connexion est installé. Faux, l'appelant **retire** l'action plutôt que d'offrir un bouton qui
     /// échouerait.
     ///
-    /// ⚠️ Ce n'est **pas** un état de session : la valeur est fixée à la construction de l'injecteur et
+    /// Ce n'est **pas** un état de session : la valeur est fixée à la construction de l'injecteur et
     /// ne bouge plus. Le mot « connecté » figurait ici et se lisait comme le contraire, au point de
     /// faire suspecter un état photographié au montage lors du balayage #3545. C'est bien un invariant
     /// de composition, comme un drapeau de fonctionnalité.

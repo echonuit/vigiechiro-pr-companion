@@ -37,7 +37,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// leurs bornes dans la scène, leur drapeau `visible`, la taille de la scène et l'état de leur
 /// fenêtre. Il dira donc **laquelle** de ces conditions manquait.
 ///
-/// ⚠️ Augmenter le butoir serait le remède évident et le mauvais :
+/// Augmenter le butoir serait le remède évident et le mauvais :
 /// [ADR 3668](../../../../../../dev-docs/decisions/3668-un-e2e-attend-le-signal-du-callback-pas-le-retour-du-geste.md)
 /// demande au contraire qu'un délai surdimensionné continue d'échouer proprement plutôt que de masquer
 /// une course.
@@ -67,7 +67,7 @@ final class AttenteAvantClic {
     /// après défilement les sept cartes sont dans le cadre. Un utilisateur les atteint. C'est donc le
     /// test qui manquait un geste, pas le produit qui manquait une capacité.
     ///
-    /// ⚠️ J'ai d'abord conclu l'inverse, et ouvert une issue de défaut produit sur cette conclusion
+    /// J'ai d'abord conclu l'inverse, et ouvert une issue de défaut produit sur cette conclusion
     /// (#3925, fermée). Je l'avais tirée de la lecture de `MainView.fxml`, où la zone des cartes est un
     /// `FlowPane` dans un `VBox` : le `ScrollPane` central, lui, est installé **en code** par
     /// `MainController`. Lire le FXML ne disait pas ce que le chrome fait de sa zone centrale.

@@ -181,7 +181,7 @@ class ServiceSauvegardeTest {
         Path destination = workspaceDir.resolve("cle-usb");
         Files.createDirectories(destination);
 
-        // ⚠️ L'illisibilité est FABRIQUÉE : `File.setReadable(false)` rend `false` sous Windows, et ce
+        // L'illisibilité est FABRIQUÉE : `File.setReadable(false)` rend `false` sous Windows, et ce
         // test y échouait avant d'éprouver quoi que ce soit (#3526). Le geste `lister` est celui qui
         // échoue quand un dossier ne se laisse pas ouvrir - à l'ouverture, pas pendant l'itération.
         GestesFichiers dossierFerme = new GestesFichiers() {

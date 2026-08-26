@@ -39,7 +39,7 @@ Quand FXML invoque un `onAction="#methode"` par réflexion, la chaîne se constr
 | 2 | `InvocationTargetException(l'IOException)` | `null` |
 | 3 | `RuntimeException(l'InvocationTargetException)` | `java.lang.reflect.InvocationTargetException` |
 
-⚠️ **Ce n'est pas propre à la réflexion**, et c'est la trouvaille. `RuntimeException(Throwable)` - comme
+**Ce n'est pas propre à la réflexion**, et c'est la trouvaille. `RuntimeException(Throwable)` - comme
 **tous** les constructeurs `(Throwable)` de la bibliothèque standard - pose comme message le
 `toString()` de sa cause. La même chaîne inutile sort donc de n'importe quelle enveloppe.
 
@@ -78,7 +78,7 @@ test qui vérifiait tout autre chose.
 - **Le geste conseillé est cité, pas recopié.** Le repli renvoie vers le menu, et son libellé est lu
   depuis `ActionOuvrirJournaux.LIBELLE`. La première rédaction disait « Journaux », entrée qui n'existe
   pas : c'est l'[ADR 3854](3854-un-refus-ne-conseille-que-ce-qu-il-a-verifie.md) tenue par construction.
-- ⚠️ **Et sans pictogramme.** La deuxième rédaction employait « ☰ » ; `PoliceCouvreLIhmTest` l'a refusée,
+- **Et sans pictogramme.** La deuxième rédaction employait « ☰ » ; `PoliceCouvreLIhmTest` l'a refusée,
   ce caractère n'étant pas dans la Noto Sans embarquée. Il se rendait sur la machine qui l'écrivait,
   précisément parce qu'une police système le couvre, et aurait divergé ailleurs
   ([ADR 0035](0035-un-pictogramme-est-une-icone-pas-un-caractere.md)). La forme retenue est celle du

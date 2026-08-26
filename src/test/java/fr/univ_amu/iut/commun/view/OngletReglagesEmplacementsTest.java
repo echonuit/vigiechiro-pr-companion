@@ -94,7 +94,7 @@ class OngletReglagesEmplacementsTest {
         // Le même geste doit se reconnaître d'un écran à l'autre : #3464 l'a posé dans le Lot avec le
         // pictogramme de la copie, celui-ci n'en avait aucun. Seul l'aperçu le montrait.
         //
-        // ⚠️ La classe du socle n'est exigeable que depuis #3966 : avant, cet écran était le seul
+        // La classe du socle n'est exigeable que depuis #3966 : avant, cet écran était le seul
         // des 24 à ne pas charger `design.css`, et l'assertion aurait certifié une classe inerte.
         assertThat(copies)
                 .as("la classe de style vient du socle, à côté du sélecteur des tests")

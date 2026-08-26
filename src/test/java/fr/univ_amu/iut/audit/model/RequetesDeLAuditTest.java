@@ -44,7 +44,7 @@ class RequetesDeLAuditTest {
         int pourQuatre = requetesPour(4);
         int pourSeize = requetesPour(16);
 
-        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes - et pour cette mesure-ci c'était
+        // Le garde compte des REQUÊTES, pas des millisecondes - et pour cette mesure-ci c'était
         // indispensable : la machine qui a servi aux relevés portait un encodage vidéo à 676 % de CPU,
         // et les chronométrages allaient du simple au double d'un essai à l'autre. Un butoir en temps
         // n'aurait rien pu dire.

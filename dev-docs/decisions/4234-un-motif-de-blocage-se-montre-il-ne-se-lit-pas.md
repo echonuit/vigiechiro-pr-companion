@@ -56,7 +56,7 @@ passer sous un vert.
 
 Le clip s'allonge d'un temps de lecture par motif. C'est le prix de ce que le cas prétend faire juger.
 
-⚠️ `InfobulleDeBlocage.texteDe` reste, pour les tests **non filmés** : ils vérifient le texte, pas sa
+`InfobulleDeBlocage.texteDe` reste, pour les tests **non filmés** : ils vérifient le texte, pas sa
 venue, et leur faire payer un survol ne prouverait rien de plus.
 
 ## Alternatives écartées

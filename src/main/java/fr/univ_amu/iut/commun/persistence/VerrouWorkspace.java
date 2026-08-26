@@ -47,7 +47,7 @@ public final class VerrouWorkspace implements AutoCloseable {
 
     /// Le **seul** octet verrouillé, et le nom de l'occupant commence juste après.
     ///
-    /// ⚠️ Verrouiller le fichier entier rendait la fonctionnalité de #3571 **inerte sous Windows** :
+    /// Verrouiller le fichier entier rendait la fonctionnalité de #3571 **inerte sous Windows** :
     /// là-bas un verrou est **impératif**, et le second processus - celui qu'on refuse - ne pouvait
     /// pas relire le nom qu'il devait afficher. Sous POSIX il est consultatif, la lecture passait, et
     /// aucun test ne pouvait le voir avant la matrice trois plateformes de #3525.
@@ -140,7 +140,7 @@ public final class VerrouWorkspace implements AutoCloseable {
                 return "";
             }
             String contenu = lireLeContenu(fichier);
-            // ⚠️ Ce qui ne porte pas la sentinelle vient d'une version antérieure ou d'un outil tiers :
+            // Ce qui ne porte pas la sentinelle vient d'une version antérieure ou d'un outil tiers :
             // on le rend tel quel plutôt que d'en amputer le premier caractère. Même règle que #3640 -
             // ne transformer que ce qu'on reconnaît rend la compatibilité gratuite.
             return contenu.startsWith(SENTINELLE) ? contenu.substring(SENTINELLE.length()) : contenu;
@@ -151,7 +151,7 @@ public final class VerrouWorkspace implements AutoCloseable {
 
     /// Le contenu du fichier, en évitant l'octet que le détenteur verrouille.
     ///
-    /// ⚠️ Deux lectures, et l'ordre compte. `Files.readString` lit **tout le fichier depuis l'octet 0**,
+    /// Deux lectures, et l'ordre compte. `Files.readString` lit **tout le fichier depuis l'octet 0**,
     /// donc il traverse la zone verrouillée : sous Windows, où un verrou est impératif, il échoue même
     /// quand un seul octet est pris. Déplacer le contenu hors de cet octet ne suffisait pas - il fallait
     /// que le **lecteur** l'évite aussi : c'est la moitié du remède de #3693, désignée par la matrice
@@ -172,7 +172,7 @@ public final class VerrouWorkspace implements AutoCloseable {
 
     /// Le repli : relire en **sautant** l'octet que le détenteur verrouille.
     ///
-    /// ⚠️ Extrait du `catch` ci-dessus et **visible du paquet** pour une raison mesurée : ce chemin ne
+    /// Extrait du `catch` ci-dessus et **visible du paquet** pour une raison mesurée : ce chemin ne
     /// s'exécute que sous Windows, seul système où le verrou est impératif. Sous POSIX
     /// `Files.readString` réussit toujours, donc le `catch` y est inatteignable, et PIT tournant sous
     /// Linux rendait ici quatre mutants sans couverture, si bien que le remède de #3714 était livré
@@ -206,7 +206,7 @@ public final class VerrouWorkspace implements AutoCloseable {
 
     /// Ce qu'on écrit dans le refus : le nom quand on l'a, une formule **honnête** quand on ne l'a pas.
     ///
-    /// ⚠️ Des parenthèses vides promettent un nom et n'en donnent aucun, ce qui est pire que de ne
+    /// Des parenthèses vides promettent un nom et n'en donnent aucun, ce qui est pire que de ne
     /// rien promettre : le lecteur cherche l'information manquante au lieu d'agir (#3571). D'où la
     /// formule honnête quand le verrou vient d'ailleurs qu'un `VerrouWorkspace`.
     ///
@@ -232,7 +232,7 @@ public final class VerrouWorkspace implements AutoCloseable {
     /// une table qui écrit `01/08/2026 12:15` : l'y laisser en `2026-08-03T21:14:07` donnait à lire un
     /// format de machine au milieu du texte (#3640).
     ///
-    /// ⚠️ **Ne remplace que ce qu'elle reconnaît**, et c'est ce qui rend le repli gratuit : un verrou
+    /// **Ne remplace que ce qu'elle reconnaît**, et c'est ce qui rend le repli gratuit : un verrou
     /// écrit par une version antérieure, posé par un outil tiers ou tronqué ne porte aucun horodatage
     /// ISO valide, donc il ressort **verbatim** - exactement le comportement d'avant, sans une ligne de
     /// code de compatibilité. Une date impossible ne lève pas : elle n'est simplement pas reconnue.

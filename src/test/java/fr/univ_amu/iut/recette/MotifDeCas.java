@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 /// Un carton sans libellé ne fait rougir personne : il se constate à l'œil, et seulement si
 /// quelqu'un regarde le film.
 ///
-/// ⚠️ Le motif est donc **ici**, et le troisième lecteur ne le réécrit pas. `LibelleDesCas` a le sien
+/// Le motif est donc **ici**, et le troisième lecteur ne le réécrit pas. `LibelleDesCas` a le sien
 /// pour l'instant, parce qu'il en extrait aussi le libellé : les faire converger est une suite, pas
 /// un préalable à cette page.
 ///

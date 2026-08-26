@@ -62,7 +62,7 @@ public final class ConfigurationJournalisation {
     /// promet « message seul, jamais la trace » ; la promesse était fausse pour **tout** incident de la
     /// CLI, pas seulement pour ceux du démarrage.
     ///
-    /// ⚠️ Pour la CLI **seulement**, et c'est un arbitrage : l'IHM garde sa console, parce que personne
+    /// Pour la CLI **seulement**, et c'est un arbitrage : l'IHM garde sa console, parce que personne
     /// ne script sa sortie et qu'un développeur qui lance `javafx:run` y lit ses journaux. Le trajet des
     /// journaux est un choix de **surface**, pas un réglage global.
     ///

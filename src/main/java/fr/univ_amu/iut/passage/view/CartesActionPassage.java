@@ -18,7 +18,7 @@ import javafx.scene.layout.StackPane;
 ///  3. **Explication** : chaque grisage porte son motif sur l'**enveloppe** et non sur le bouton, un
 ///     Button désactivé n'affichant pas de tooltip (#789).
 ///
-/// ⚠️ Pourquoi une classe et non une sous-vue, contrairement aux quatre extractions précédentes du
+/// Pourquoi une classe et non une sous-vue, contrairement aux quatre extractions précédentes du
 /// lot : mesuré, le poids de `PassageController` était dans ses **méthodes** (47 points) plus que dans
 /// ses champs (32), et son FXML n'offrait aucun bloc cohésif de plus de onze `fx:id` - les actions y
 /// sont réparties entre l'en-tête et le bas d'écran. Un découpage de vue aurait déplacé peu de chose

@@ -1195,7 +1195,7 @@ class SonsValidationViewTest {
         });
         WaitForAsyncUtils.waitForFxEvents();
 
-        // ⚠️ La propriété se mesure sur le panneau, pas sur l'AudioView : celle-ci obtenait bien sa
+        // La propriété se mesure sur le panneau, pas sur l'AudioView : celle-ci obtenait bien sa
         // hauteur (mesuré : 340 pour un minimum de 340). C'est son PARENT qui manquait de place - 350
         // rendus pour 426 demandés - et qui empilait ses enfants les uns sur les autres.
         assertThat(panneau.getHeight())

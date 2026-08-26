@@ -66,7 +66,7 @@ désormais - et, accessoirement, ce que voit tout utilisateur d'un poste Linux c
   le verdict du garde de troncature cesse de dépendre de la machine qui l'a rendu ;
 - `fc-match` est **journalisé** à chaque exécution : le jour où l'image du runner change de police par
   défaut, la trace le dira au lieu de laisser 12 aperçus dériver en silence ;
-- ⚠️ **ce n'est pas un correctif du produit.** Chez un utilisateur dont le système résout `System`
+- **ce n'est pas un correctif du produit.** Chez un utilisateur dont le système résout `System`
   autrement, ce `ChoiceBox` reste plus large de 4 px. Le défaut est cosmétique et il est **connu** ;
   le figer dans les FXML (`prefWidth`) supposerait de trouver tous les contrôles concernés et de
   choisir une largeur qui tienne dans toutes les langues. Non fait, assumé.

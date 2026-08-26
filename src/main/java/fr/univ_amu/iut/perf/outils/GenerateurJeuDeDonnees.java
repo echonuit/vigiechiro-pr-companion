@@ -65,7 +65,7 @@ public final class GenerateurJeuDeDonnees {
 
     /// Nombre de **carrés** du jeu par défaut.
     ///
-    /// ⚠️ Il valait **1** jusqu'à la clôture du chantier des lectures répétées, et cette valeur rendait
+    /// Il valait **1** jusqu'à la clôture du chantier des lectures répétées, et cette valeur rendait
     /// le banc **aveugle à ce qu'il était censé mesurer**. Les écrans lançaient une requête par site puis
     /// une par point : sur un site et dix points, cela faisait onze requêtes, invisibles. Le relevé
     /// annonçait 18 ms pour mille passages, sous une cible de 200, pendant qu'un coordinateur

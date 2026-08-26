@@ -81,7 +81,7 @@ qu'on tient à la main.
 - les autotests hors ligne de ces gardes tournent dans `lint.yml` à **chaque PR** : c'est le seul
   endroit où on les voit à l'œuvre entre deux passages hebdomadaires.
 
-### ⚠️ Rougir trop s'apprend aussi vite que se taire
+### Rougir trop s'apprend aussi vite que se taire
 
 L'asymétrie de `verifie-fraicheur-actions.sh` est délibérée : **avertissement** sur un retard dans la
 même majeure, **rouge** sur une majeure entière. L'amont publie pour des raisons qui ne nous regardent

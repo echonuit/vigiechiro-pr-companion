@@ -9,14 +9,14 @@ import java.util.Optional;
 /// Une participation **jamais calculée** n'a pas de bloc `traitement` du tout : c'est [#absent()], que le
 /// parseur substitue au `null` pour épargner aux appelants un test de nullité de plus.
 ///
-/// ⚠️ **Une relance n'est pas anodine.** Le serveur remplace tout le bloc `traitement` au `compute`, et
+/// **Une relance n'est pas anodine.** Le serveur remplace tout le bloc `traitement` au `compute`, et
 /// surtout il **supprime toutes les `donnees` existantes** avant de recalculer
 /// (`task_participation.py:726-731`). Sur une nuit déposée en **archives ZIP**, notre mode par défaut
 /// depuis #984, les WAV extraits ne sont pas conservés sur S3 : le recalcul ne peut donc pas les relire,
 /// et les observations sont **définitivement perdues** (#1244). Un premier lancement est sûr ; une relance
 /// ne l'est pas.
 ///
-/// ⚠️ **Le serveur remplace ce bloc, il ne le complète pas** : à chaque étape il réécrit le sous-document
+/// **Le serveur remplace ce bloc, il ne le complète pas** : à chaque étape il réécrit le sous-document
 /// entier. Une fois le calcul démarré, le bloc devient `{etat, date_debut}` et la **date de planification
 /// disparaît** ; à la fin, `date_fin` s'ajoute. N'attendez donc jamais les trois dates à la fois : vérifié
 /// en réel sur la participation canonique (`FINI`, sans `date_planification`).

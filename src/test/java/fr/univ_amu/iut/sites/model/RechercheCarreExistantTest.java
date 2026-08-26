@@ -73,7 +73,7 @@ class RechercheCarreExistantTest {
         RechercheCarreExistant.Verdict verdict = recherche.chercher("130711");
         assertThat(verdict).isInstanceOf(RechercheCarreExistant.Verdict.Indisponible.class);
 
-        // ⚠️ Le titre de ce test promettait « on ne dit pas il est libre » ; seul le TYPE du verdict
+        // Le titre de ce test promettait « on ne dit pas il est libre » ; seul le TYPE du verdict
         // était contrôlé. Un message qui aurait ajouté « il n'existe pas encore » serait passé (#3914).
         assertThat(verdict.message())
                 .as("le texte doit dire l'ignorance, jamais l'absence")

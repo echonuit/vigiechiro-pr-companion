@@ -32,7 +32,7 @@ Quatre fois, sur cinq lots, le poste de développement était **aveugle par cons
 | la protection du jeton (#3778) | la vue **ACL** n'existe pas sur un système de fichiers POSIX |
 | le repli de lecture du verrou (#3714) | PIT tourne sous Linux, où la branche est **inatteignable** |
 
-⚠️ Dans les quatre cas, une suite locale **verte** ne disait rien. Et dans un cas, une expérience
+Dans les quatre cas, une suite locale **verte** ne disait rien. Et dans un cas, une expérience
 d'isolement menée sur le poste a rendu vert et a **failli servir de preuve**.
 
 ## Décision
@@ -58,7 +58,7 @@ en la confirmant par hasard.
 
 ### Ce que la sonde ne remplace pas
 
-⚠️ **Le test qui reste** doit être éprouvable **partout**, donc passer par une couture d'injection -
+**Le test qui reste** doit être éprouvable **partout**, donc passer par une couture d'injection -
 `GestesFichiers`, `TailleFichier`, `CouleurCli`, `Deplacement`, `ProtectionFichier`. La sonde établit
 **quel** comportement câbler ; l'injection le rend rejouable.
 
@@ -69,10 +69,10 @@ hebdomadaire éprouve le **câblage**, la couture éprouve la **borne**.
 
 - **La sonde est jetable, son résultat ne l'est pas.** Il vit dans le doc-comment du remède, avec le
   numéro du run - pour qu'on n'ait pas à la refaire.
-- ⚠️ **Une limite doit être écrite quand elle existe.** Trois remèdes de cette campagne portent une
+- **Une limite doit être écrite quand elle existe.** Trois remèdes de cette campagne portent une
   branche inatteignable sous Linux, et leurs ADR le disent : sans cela, on croirait la couverture
   complète en lisant un rapport PIT.
-- ⚠️ **Le vert d'un run ne vaut que si son tri conclut.** Deux fois dans cette campagne, un run marqué
+- **Le vert d'un run ne vaut que si son tri conclut.** Deux fois dans cette campagne, un run marqué
   `success` portait un tableau qui disait l'inverse - dont une sonde dont le verdict aurait fait écrire
   qu'un mécanisme démontré était réfuté. Lire le **tableau**, jamais la pastille.
 

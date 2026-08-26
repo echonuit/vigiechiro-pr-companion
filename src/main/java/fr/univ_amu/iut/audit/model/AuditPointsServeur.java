@@ -163,9 +163,9 @@ public final class AuditPointsServeur {
         }
         Map<String, SiteVigieChiro> parObjectid =
                 distants.stream().collect(Collectors.toMap(SiteVigieChiro::id, Function.identity(), (a, b) -> a));
-        // ⚠️ Points lus **par lot** (#4281) : la boucle en lançait une par site.
+        // Points lus **par lot** (#4281) : la boucle en lançait une par site.
         List<Site> locaux = siteDao.findByUtilisateur(idUtilisateur);
-        // ⚠️ Les rapprochements en UNE lecture (#4283) : la boucle appelait `objectidPour` une fois par
+        // Les rapprochements en UNE lecture (#4283) : la boucle appelait `objectidPour` une fois par
         // site. Mesuré, 45 ms à cent cinquante carrés - modeste au regard de l'attente réseau qui
         // précède, mais `tous(...)` existait déjà et « Mes sites » s'en servait déjà.
         Map<String, String> objectidParSite = liens.tous(LienVigieChiro.ENTITE_SITE);
@@ -213,7 +213,7 @@ public final class AuditPointsServeur {
 
     /// Les deux positions diffèrent-elles assez pour être **deux endroits** (#3750) ?
     ///
-    /// ⚠️ La comparaison se faisait **axe par axe, en degrés** (`1e-4`). Un degré n'est pas une distance :
+    /// La comparaison se faisait **axe par axe, en degrés** (`1e-4`). Un degré n'est pas une distance :
     /// la tolérance en longitude valait ~11 m à l'équateur mais ~7,8 m à 45° N, et l'audit se resserrait
     /// donc en montant vers le nord sans que personne ne l'ait voulu. Elle passe désormais par
     /// [DistanceGeo#memeEndroit], en mètres, avec **le seuil que la publication d'un point utilise

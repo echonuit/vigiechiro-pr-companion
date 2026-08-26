@@ -51,7 +51,7 @@ class ParcoursDeDossierTest {
                         + " qui s'en serait débarrassé")
                 .isNotEmpty();
 
-        // ⚠️ Aucune exclusion, et c'est délibéré. `BancImport` est de l'outillage de performance exclu
+        // Aucune exclusion, et c'est délibéré. `BancImport` est de l'outillage de performance exclu
         // du binaire livré (ADR 2746), donc un candidat naturel à la dispense - mais une garde sans
         // exception se relit sans se demander pourquoi celle-là, et le rattrapage y coûtait deux lignes.
         List<Path> sansRattrapage = parcourent.stream()
@@ -81,7 +81,7 @@ class ParcoursDeDossierTest {
 
     /// Vrai quand le fichier ne fait que **passer le flux** à un appelant, sans le consommer.
     ///
-    /// ⚠️ Ce cas a été révélé par le cliquet lui-même, en attrapant `GestesFichiers` - le port ajouté
+    /// Ce cas a été révélé par le cliquet lui-même, en attrapant `GestesFichiers` - le port ajouté
     /// par #3525 pour rendre l'échec de disque injectable. Il fait `return Files.walk(racine)` et rien
     /// d'autre : l'`UncheckedIOException` surviendra dans la **boucle de l'appelant**, pas ici, et lui
     /// demander de la rattraper serait lui demander l'impossible.

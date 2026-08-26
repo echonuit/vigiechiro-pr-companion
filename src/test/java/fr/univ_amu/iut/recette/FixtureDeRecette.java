@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
 /// regarder, et les compter gonflerait l'index de couverture de tests qui n'exercent que
 /// l'outillage.
 ///
-/// ## ⚠️ Ce qu'elle ne doit jamais servir à faire
+/// ## Ce qu'elle ne doit jamais servir à faire
 ///
 /// La poser sur un **vrai** test le retirerait du recensement en silence, et son cas retomberait
 /// dans les non couverts sans que personne comprenne pourquoi. Elle ne se pose que sur des classes

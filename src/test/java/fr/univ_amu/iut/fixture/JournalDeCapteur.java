@@ -30,7 +30,7 @@ import java.util.Locale;
 /// paramètres d'acquisition, réveil, mise en veille. C'est **plus** que ce que la plupart des tests
 /// écrivaient à la main - ils se contentaient des trois lignes dont l'analyseur tire la série et la date.
 ///
-/// ⚠️ Ce n'est donc **pas** une substitution neutre : un test qui affirme quelque chose sur le *contenu*
+/// Ce n'est donc **pas** une substitution neutre : un test qui affirme quelque chose sur le *contenu*
 /// du journal (résumé affiché, nombre de lignes) doit être relu, pas converti. Là où le journal n'est
 /// qu'un préalable à l'import, la bascule ne change rien d'observable.
 ///
@@ -115,7 +115,7 @@ public final class JournalDeCapteur {
     /// alarme, une coupure, une carte pleine. Le préambule reste partagé - c'est lui, la duplication - et
     /// l'anomalie reste écrite dans le test, à côté de ce qu'elle doit produire.
     ///
-    /// ⚠️ Les lignes sont **ajoutées à la fin**, après la mise en veille du matin. Si l'ordre
+    /// Les lignes sont **ajoutées à la fin**, après la mise en veille du matin. Si l'ordre
     /// chronologique compte pour ce que le test éprouve, il faut composer soi-même depuis [#lignes].
     public static Path ecrireAvec(Path racineSd, String serie, LocalDate nuit, List<String> lignesEnPlus)
             throws IOException {

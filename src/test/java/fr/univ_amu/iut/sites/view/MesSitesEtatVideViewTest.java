@@ -43,7 +43,7 @@ class MesSitesEtatVideViewTest {
 
     @Start
     void start(Stage stage) throws IOException {
-        // ⚠️ AUCUN semis, et c'est tout le sujet : la base est migrée, donc saine, et vide.
+        // AUCUN semis, et c'est tout le sujet : la base est migrée, donc saine, et vide.
         injector = BancDeRecette.surLeChrome()
                 .taille(1180, 900)
                 .executeur(BancDeRecette.Executeur.SYNCHRONE)

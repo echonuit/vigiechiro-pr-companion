@@ -64,7 +64,7 @@ public class PointDao extends DaoGenerique<PointDEcoute, Long> {
     /// carrés** à 6-8 ms. Le gain n'est pas un facteur, c'est une **pente qui disparaît** - le coût
     /// d'avant doublait de soixante à cent cinquante carrés, celui d'après ne bouge pas.
     ///
-    /// ⚠️ Ce commentaire a d'abord annoncé « 487 ms ». C'était la **première mesure de son processus**,
+    /// Ce commentaire a d'abord annoncé « 487 ms ». C'était la **première mesure de son processus**,
     /// et le démarrage d'une JVM coûte ~300 ms quelle que soit la taille des données.
     ///
     /// Le lot est découpé ([LotsDeParametres]), ce qui borne la **taille de la requête** - et non, comme

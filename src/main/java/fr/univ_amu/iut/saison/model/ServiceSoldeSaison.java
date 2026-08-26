@@ -132,7 +132,7 @@ public class ServiceSoldeSaison {
         // résoudre les noms de campagne (#2355) : pas une requête par point.
         Set<Long> tiers = carresDeTiers.tousLesIds();
         Map<Long, String> nomsCampagnes = nomsDesCampagnes();
-        // ⚠️ Les quatre sources restantes se lisent AUSSI par lot (#4278). Le commentaire ci-dessus
+        // Les quatre sources restantes se lisent AUSSI par lot (#4278). Le commentaire ci-dessus
         // énonçait déjà le principe - « pas une requête par point » - et ne le tenait que pour deux
         // tables : les points, les passages, l'opportunisme et les communes en faisaient chacun la leur.
         // Mesuré à chaud sur cent cinquante carrés : 400 ms, quand « Mes sites » (#4251) et « Carte &

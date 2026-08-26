@@ -17,7 +17,7 @@ de l'archive portable sont ouverts à chaque PR, leur version leur est demandée
 traversent le lanceur livré. Ce que la machine réelle ajoute tient en deux choses : un **bureau** avec
 un menu d'applications, et le **double-clic**, qui n'est pas un appel de programme.
 
-⚠️ Un défaut connu empêche la vérification en conteneur, et c'est pour cela que cette session existe :
+Un défaut connu empêche la vérification en conteneur, et c'est pour cela que cette session existe :
 `xdg-desktop-menu` échoue là où aucun menu n'est inscriptible, ce qui laisse le paquet en
 `half-configured` (#4081). Sur un vrai bureau, ce chemin fonctionne - mais personne ne l'a observé
 depuis que le postinst du dépôt a remplacé celui de jpackage.

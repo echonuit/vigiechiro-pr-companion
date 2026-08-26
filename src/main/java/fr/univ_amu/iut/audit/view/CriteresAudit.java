@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 /// ici, conformément au contrat de [fr.univ_amu.iut.commun.view.ClesCriteres] (#3096), qui ne porte que
 /// les clés réellement communes.
 ///
-/// ⚠️ `categorie` n'a rien à voir avec le taxon parent des autres écrans (`groupe`) : ce sont deux
+/// `categorie` n'a rien à voir avec le taxon parent des autres écrans (`groupe`) : ce sont deux
 /// concepts distincts, et c'est précisément pour éviter ce genre de collision que les clés partagées
 /// sont déclarées à un seul endroit.
 final class CriteresAudit {

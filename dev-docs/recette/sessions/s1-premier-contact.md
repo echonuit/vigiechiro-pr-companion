@@ -37,7 +37,7 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
   Avec **un seul** site, le bandeau écrit « 1 site » et non « 1 sites » (#1373).
 - **S1-09** · **Sans quitter l'accueil**, fermer la modale : le bandeau de compteurs, masqué à la case 2, est
   maintenant **visible** et annonce les sites rapatriés. On n'a navigué nulle part entre-temps.
-  ⚠️ C'est le défaut #1376 : avant, il fallait un aller-retour de navigation pour que les compteurs
+  C'est le défaut #1376 : avant, il fallait un aller-retour de navigation pour que les compteurs
   bougent. Une case qui navigue d'abord ne verrait rien.
 - **S1-10** · Menu ☰ → « Restaurer une sauvegarde », depuis l'accueil : après la restauration, les quatre
   compteurs reflètent la base restaurée, toujours **sans** avoir quitté l'accueil. Le retour à
@@ -66,13 +66,13 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
     carré n'a donc PAS été vérifié » - jamais « il n'existe pas » - et le bouton reste offert, pour
     réessayer sans quitter la fenêtre.
 
-    ⚠️ Cette case promettait « le bouton reste offert, non grisé » **hors connexion**, et personne ne le
+    Cette case promettait « le bouton reste offert, non grisé » **hors connexion**, et personne ne le
     vérifiait. Le produit le faisait pourtant : on tapait six chiffres, on cliquait, on payait un
     aller-retour réseau, et l'encart répondait « Vérification impossible » - alors que l'application
     savait avant le clic qu'elle n'avait pas de jeton. C'est contraire à l'affordance #789 (« empêcher
     plutôt qu'avertir ») et à l'heuristique 5 de Nielsen. La case a été renversée en #4210.
 
-    ⚠️ La défense de l'ancienne rédaction citait `ControleCarreStoc` (« un confort, jamais une
+    La défense de l'ancienne rédaction citait `ControleCarreStoc` (« un confort, jamais une
     condition ») : c'est le contrôle **automatique** des coordonnées d'un point, pas ce bouton-ci, qui
     passe par `chercherCarre`. Restait « on s'est peut-être connecté entre-temps » ; depuis #4205 le
     geste se rouvre tout seul dès qu'un jeton arrive.
@@ -81,7 +81,7 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
   « Carré <n°> récupéré depuis Vigie-Chiro : N point(s) d'écoute positionné(s) ». Les points portent
   leurs coordonnées, sans ressaisie - on le vérifie en ouvrant la fiche, ce qui est S1-35.
 
-    ⚠️ Cette case décrivait « la fiche du carré s'ouvre » jusqu'à #4099 : la même modale avait deux
+    Cette case décrivait « la fiche du carré s'ouvre » jusqu'à #4099 : la même modale avait deux
     issues selon qu'on déclarait ou qu'on récupérait, et rien ne justifiait la divergence. Le geste se
     termine désormais là où il a commencé. Le script a mis un chantier de retard sur le produit, et
     c'est le clip qui l'a montré (#4180).
@@ -103,21 +103,21 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
   Vigie-Chiro…" ». Se connecter le rouvre **sans quitter l'écran**, et la récupération rend compte dans
   le bandeau, qui nomme ce qui a été rapatrié.
 
-    ⚠️ Cette case disait **« masqué »**, et le produit ne le faisait ni dans un sens ni dans l'autre : le
+    Cette case disait **« masqué »**, et le produit ne le faisait ni dans un sens ni dans l'autre : le
     bouton restait offert, ouvrait son dialogue, ne rapatriait rien et ne disait pas pourquoi (#4194).
     En le corrigeant, il a fallu choisir entre les deux mots. C'est **grisé** qui l'emporte, parce que le
     dépôt l'a tranché : « désactivé, il documente ce qui manque (affordance #789) plutôt que de
     disparaître ». Un bouton qui disparaît n'apprend rien ; un bouton fermé qui dit pourquoi enseigne le
     geste. La case suit donc la doctrine, et non l'inverse.
 
-    ⚠️ « Se connecter le rouvre sans quitter l'écran » était écrit ici **avant** d'être vrai. Le produit
+    « Se connecter le rouvre sans quitter l'écran » était écrit ici **avant** d'être vrai. Le produit
     ne rouvrait rien : le motif conseillait de se connecter, on suivait ce conseil, on revenait, et le
     bouton restait grisé à répéter le même conseil (#4205). Il fallait quitter l'écran et y revenir.
     L'état de connexion n'était **observable** nulle part - on pouvait le demander, pas le suivre.
 - **S1-17** · L'écran chargé, ses cartes lisibles, et **rien qui le voile**. Un voile resté en place
   bloquerait tout.
 
-    ⚠️ Ce cas a montré le voile **paraître** pendant un temps, sur une base de cent cinquante carrés où
+    Ce cas a montré le voile **paraître** pendant un temps, sur une base de cent cinquante carrés où
     le chargement prenait un demi-seconde. Puis #4251 a fait lire l'écran **par lot** : le chargement ne
     dure plus - huit millisecondes à cent cinquante carrés comme à soixante - et le voile ne tient plus
     sur une seule image.
@@ -143,7 +143,7 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
   degrés/minutes/secondes qui valent une position - la carte du point neuf porte « GPS : voir sur la
   carte » et non « GPS manquant ».
 
-    ⚠️ La seconde moitié de cette case n'était filmée nulle part, couverte en unitaire seulement, alors
+    La seconde moitié de cette case n'était filmée nulle part, couverte en unitaire seulement, alors
     que c'est le geste d'un observateur de terrain : relever des DMS sur un GPS de randonnée et les
     coller dans une application qui parle en décimal (#4232).
 - **S1-25** · « Annuler » ne touche rien.

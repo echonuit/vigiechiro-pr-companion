@@ -74,7 +74,7 @@ D'où deux propriétés qui ne sont pas défensives mais nécessaires :
 - **Les tests d'écran doivent empiler leur vue dans un `Navigateur`** pour que l'abonnement existe.
   C'est plus lourd, et c'est le prix juste : un garde qui appelait `controleur.auDepartEcran()` à la
   main vérifiait que la méthode fait ce qu'elle dit, pas que quelqu'un l'appelle.
-- ⚠️ Corollaire mesuré à la même occasion : un écran **quitté** sort du graphe de scène, donc
+- Corollaire mesuré à la même occasion : un écran **quitté** sort du graphe de scène, donc
   `robot.lookup` ne le voit plus. Un test qui interroge la fenêtre après un départ compte zéro nœud
   et se croit vert pour la mauvaise raison. Les requêtes partent de la vue (`robot.from(vue)`).
 - Un écran **masqué mais toujours dans l'historique** reste abonné, et se recharge donc pendant

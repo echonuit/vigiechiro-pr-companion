@@ -38,7 +38,7 @@ class DialoguesHabillesTest {
     /// Ce qu'on cherche : une construction de dialogue, et le geste qui doit la suivre.
     private static final String CONSTRUCTION = "new Alert(";
 
-    /// ⚠️ Compter `Habillage.poser(` tout court **ne suffit pas** : il existe une surcharge qui prend
+    /// Compter `Habillage.poser(` tout court **ne suffit pas** : il existe une surcharge qui prend
     /// une `Scene`, et habiller la scene hote d un dialogue ne pose RIEN sur son panneau. Une premiere
     /// version de ce garde s y est laissee prendre - `ApercuFx` n appelait que la variante `Scene`, le
     /// garde etait vert, et la capture montrait encore l icone systeme.

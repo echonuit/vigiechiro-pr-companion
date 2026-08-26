@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 /// modale flottant sur du **noir** : « aucun carré ajouté » n'avait aucun endroit où se voir, et « la
 /// fenêtre se ferme, la fiche s'ouvre » aucun écran d'arrivée à montrer.
 ///
-/// ⚠️ Et il n'y avait **aucun obstacle technique** : les modales du produit s'ouvrent en `show()`,
+/// Et il n'y avait **aucun obstacle technique** : les modales du produit s'ouvrent en `show()`,
 /// jamais en `showAndWait`. La raison qu'on se donnait - « un dialogue fige TestFX headless » - ne vaut
 /// que pour les `Alert` du socle.
 ///
@@ -39,7 +39,7 @@ class ClipDeModaleTest {
     /// Le chargement direct d'une modale, **où que le mot se trouve dans le nom** :
     /// `ModaleSite.fxml`, `ModalePoint.fxml`, `ConnexionModale.fxml`.
     ///
-    /// ⚠️ La première version ancrait `Modale` au DÉBUT du nom. Elle ratait `ConnexionModale.fxml`, donc
+    /// La première version ancrait `Modale` au DÉBUT du nom. Elle ratait `ConnexionModale.fxml`, donc
     /// les deux cas de la modale de connexion - `S1-04` et `S1-11` - dont les clips montraient encore une
     /// modale sur fond noir. Le garde se déclarait vert en regardant deux fichiers sur quatre.
     private static final Pattern MODALE_CHARGEE = Pattern.compile("\"[A-Za-z]*Modale[A-Za-z]*\\.fxml\"");
@@ -53,7 +53,7 @@ class ClipDeModaleTest {
             if (!code.contains("@CasDeRecette(") || code.contains("@FixtureDeRecette")) {
                 continue;
             }
-            // ⚠️ Un détecteur textuel s'exclut de son corpus ([ADR 3645]). Sans cela ce fichier-ci se
+            // Un détecteur textuel s'exclut de son corpus ([ADR 3645]). Sans cela ce fichier-ci se
             // dénonce lui-même : son message d'échec cite les noms qu'il cherche, et son doc-comment
             // aussi. La première version se comptait donc parmi les fautifs.
             if (source.getFileName().toString().equals("ClipDeModaleTest.java")) {

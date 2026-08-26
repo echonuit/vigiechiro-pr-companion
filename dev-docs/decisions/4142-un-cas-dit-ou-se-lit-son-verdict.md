@@ -44,7 +44,7 @@ ferait réapparaître si elle disparaissait.
 **compilateur** qui pose la question, à l'écriture du test, quand celui qui écrit sait encore ce que son
 scénario truque.
 
-⚠️ C'est un écart assumé avec le `Jugement` voisin, qui porte un défaut. Le `Jugement` le peut parce
+C'est un écart assumé avec le `Jugement` voisin, qui porte un défaut. Le `Jugement` le peut parce
 qu'une **seconde source** vient le contredire quand il est faux : la marque `*perceptif*` du script, que
 le garde confronte au code. La portée n'a pas cette seconde source. Un défaut la rendrait invisible, et
 la question ne se poserait **plus jamais** - c'est ainsi qu'une catégorie déclarative meurt.
@@ -68,7 +68,7 @@ le plus utile de cette décision : ce qui a été couvert jusqu'ici est précis�
 réserve**. La difficulté est entière et elle est devant nous - dite maintenant par le dispositif, et non
 plus seulement par un EPIC.
 
-⚠️ Le compte n'est recopié nulle part : le garde l'imprime à chaque lancement. Un nombre écrit à la main
+Le compte n'est recopié nulle part : le garde l'imprime à chaque lancement. Un nombre écrit à la main
 dérive sans que rien ne le signale, ce qui a produit #3885.
 
 ## Portée de cette décision

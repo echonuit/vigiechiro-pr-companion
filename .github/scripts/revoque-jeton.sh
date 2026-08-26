@@ -20,7 +20,7 @@
 #
 # ## La règle qu'on inverse sans s'en apercevoir
 #
-# ⚠️ **`404` et `401` sont des SUCCÈS.** L'objectif n'est pas « le serveur a répondu 200 » mais « ce
+# **`404` et `401` sont des SUCCÈS.** L'objectif n'est pas « le serveur a répondu 200 » mais « ce
 # jeton ne sert plus à personne » :
 #
 #   200  le jeton a ete retire de la carte du compte
@@ -31,7 +31,7 @@
 # C'est exactement le genre de règle qu'une relecture distraite retourne, d'où l'auto-test : le verdict
 # se prononce dans une fonction, et cette fonction passe par des codes connus à chaque exécution.
 #
-# ⚠️ **Et `verifie-jeton-vivant.sh` lit la MÊME table à l'envers** (#4328). Chez lui, `401` est un
+# **Et `verifie-jeton-vivant.sh` lit la MÊME table à l'envers** (#4328). Chez lui, `401` est un
 # refus : il demande « ce jeton sert-il encore ? » AVANT de filmer. Ici on demande « ne sert-il
 # vraiment plus ? » APRÈS. Les deux scripts sont voisins, se ressemblent, et traitent le même code de
 # façon opposée : les harmoniser « pour la cohérence » casserait l'un des deux en silence.
@@ -98,7 +98,7 @@ auto_test() {
     }
 
     essai 200 sur "200 : le serveur a retiré le jeton"
-    # ⚠️ Les deux cas qui font tout l'intérêt de cet auto-test. Les lire comme des échecs ferait
+    # Les deux cas qui font tout l'intérêt de cet auto-test. Les lire comme des échecs ferait
     # avertir à chaque tournage dont le jeton avait déjà expiré, et on apprendrait à ignorer la ligne.
     essai 404 sur "404 : le jeton n'était plus dans la carte, donc mort"
     essai 401 sur "401 : le jeton n'était plus accepté, donc mort"
@@ -143,7 +143,7 @@ code=$(interroger)
 
 verdict "${code}" | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
 
-# ⚠️ Le verdict sort AUSSI en sortie de pas, parce que quelqu'un en dépend : le versement des clips
+# Le verdict sort AUSSI en sortie de pas, parce que quelqu'un en dépend : le versement des clips
 # connectés n'a lieu que si le retrait est CONFIRMÉ. Depuis #4324 le clip montre le jeton - un jeton
 # mort n'est pas un secret, mais « il est mort » doit être un fait, pas un espoir.
 if verdict "${code}" >/dev/null 2>&1; then
@@ -152,7 +152,7 @@ else
     echo "revoque=incertain" >> "${GITHUB_OUTPUT:-/dev/null}"
 fi
 
-# ⚠️ Toujours 0. Le tournage a réussi ; un rouge ici ferait lire un échec pour une raison qui n'est pas
+# Toujours 0. Le tournage a réussi ; un rouge ici ferait lire un échec pour une raison qui n'est pas
 # celle qu'on regarde. L'incertitude est portée par l'avertissement ci-dessous, pas par le code de
 # sortie.
 if ! verdict "${code}" >/dev/null 2>&1; then

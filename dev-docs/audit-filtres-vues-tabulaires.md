@@ -52,7 +52,7 @@ de durcir ses contrats**.
 | Unicité des clés d'un catalogue | **Ouvert** | [#3492](https://github.com/echonuit/vigiechiro-pr-companion/issues/3492) : `ClesCriteres` a levé l'ambiguïté entre écrans, mais rien ne refuse deux critères de même clé dans un même catalogue |
 | Fiche site sans filtre | **Surveillance** | volontaire tant que la liste des passages reste bornée ; une recherche légère avant d'introduire les vues mémorisées |
 
-⚠️ Ce tableau a lui-même sous-déclaré son avancement : deux lignes (Ma saison, tables opérationnelles)
+Ce tableau a lui-même sous-déclaré son avancement : deux lignes (Ma saison, tables opérationnelles)
 décrivaient des travaux **faits** que le suivi ne mentionnait pas, et l'unicité des clés, seul reste
 réel, n'y figurait pas du tout. Le vérifier a demandé d'ouvrir le code, pas de relire le tableau.
 

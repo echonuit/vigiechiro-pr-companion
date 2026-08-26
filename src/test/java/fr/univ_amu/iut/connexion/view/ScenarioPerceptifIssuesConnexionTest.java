@@ -77,7 +77,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// nomme - et c'est le clip qui la porte. Les deux ne s'excluent pas : l'assertion garde le texte, le
 /// clip montre ce qu'on en fait.
 ///
-/// ⚠️ L'exécuteur est **asynchrone**, celui de la production : en synchrone la vérification bloque le
+/// L'exécuteur est **asynchrone**, celui de la production : en synchrone la vérification bloque le
 /// fil JavaFX, aucune image n'est rendue pendant ce temps, et le passage à juger n'existerait sur
 /// aucune trame.
 ///
@@ -115,14 +115,14 @@ class ScenarioPerceptifIssuesConnexionTest {
                 .remplacer(new AbstractModule() {
                     @Override
                     protected void configure() {
-                        // ⚠️ Le contrôleur de la modale en SINGLETON, pour le banc seulement : sans cela
+                        // Le contrôleur de la modale en SINGLETON, pour le banc seulement : sans cela
                         // l'injecteur en rend une instance neuve à chaque demande, et le confirmateur
                         // bouchonné s'appliquerait à un jetable pendant que la modale affichée en
                         // garderait un autre. Mesuré sur `ActionRestaurer` (#4169).
                         bind(ConnexionModaleController.class).in(Singleton.class);
                     }
 
-                    // ⚠️ Le stockage vient de l'INJECTEUR, il ne se rebâtit pas à côté. La version
+                    // Le stockage vient de l'INJECTEUR, il ne se rebâtit pas à côté. La version
                     // précédente en construisait un second sur le même dossier : deux objets pour un
                     // fichier, ce qui marche tant que rien ne met d'état en mémoire, et cesse de
                     // marcher le jour où quelque chose y en met.
@@ -183,7 +183,7 @@ class ScenarioPerceptifIssuesConnexionTest {
 
         jouerLaConnexion(robot, JETON);
 
-        // ⚠️ La moitié du cas est là : avant #1284, une panne réseau s'affichait « Token invalide ou
+        // La moitié du cas est là : avant #1284, une panne réseau s'affichait « Token invalide ou
         // expiré », ce qui poussait l'observateur à jeter un jeton parfaitement valide.
         assertThat(statut(robot).getText())
                 .as("la cause est la plateforme, et le jeton est explicitement mis hors de cause")
@@ -200,7 +200,7 @@ class ScenarioPerceptifIssuesConnexionTest {
     @DisplayName("S1-08 · succès : le bandeau dit ce qui a été rapatrié, et l'identité paraît")
     void succes_dit_ce_qui_a_ete_rapatrie(FxRobot robot) throws TimeoutException {
         when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
-        // ⚠️ La surcharge à TROIS arguments : c'est celle que le ViewModel appelle. Bouchonner
+        // La surcharge à TROIS arguments : c'est celle que le ViewModel appelle. Bouchonner
         // `synchroniser(client)` laissait le résumé vide, et le bandeau disait « Connexion réussie. »
         // sans dire ce qui avait été rapatrié - la moitié du cas.
         when(rapprocheur.synchroniser(eq(client), any(), any()))
@@ -263,7 +263,7 @@ class ScenarioPerceptifIssuesConnexionTest {
         jouerLaConnexion(robot, JETON);
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ Le dialogue DE LA PRODUCTION, ouvert sans bloquer : `showAndWait` figerait le banc, et
+        // Le dialogue DE LA PRODUCTION, ouvert sans bloquer : `showAndWait` figerait le banc, et
         // `ConfirmationNavigation.dialogue(...)` existe pour cela - même type, même habillage, même
         // texte. Ce qui se voit est juste, à une chose près qui ne se voit pas : il ne bloque pas.
         List<Alert> ouverts = new ArrayList<>();
@@ -302,7 +302,7 @@ class ScenarioPerceptifIssuesConnexionTest {
         Respiration.entreDeuxGestes(robot);
 
         if (!jeton.isEmpty()) {
-            // ⚠️ Le jeton se TAPE. Un champ qui se remplit d'un coup par `setText` ne montre pas le
+            // Le jeton se TAPE. Un champ qui se remplit d'un coup par `setText` ne montre pas le
             // geste, et c'est le geste que ce cas fait juger autant que le message.
             robot.clickOn("#champToken").write(jeton);
             Respiration.entreDeuxGestes(robot);

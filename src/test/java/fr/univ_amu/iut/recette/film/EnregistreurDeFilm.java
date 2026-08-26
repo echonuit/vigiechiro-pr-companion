@@ -54,7 +54,7 @@ public final class EnregistreurDeFilm implements BeforeTestExecutionCallback, Af
             return;
         }
         List<String> cas = casCites(contexte);
-        // ⚠️ Le refus se prend ICI, avant tout le reste. Plus bas, l'enregistrement crée son dossier
+        // Le refus se prend ICI, avant tout le reste. Plus bas, l'enregistrement crée son dossier
         // puis lance l'encodeur : refuser après laisserait un dossier, et parfois un fichier vide,
         // pour un test qu'on a précisément décidé de ne pas filmer.
         if (!aFilmer(cas, tout())) {

@@ -29,7 +29,7 @@ class PassageDeLaNuitTest {
     /// Un journal de deux sessions, comme une carte laissée plusieurs nuits au même point : le capteur
     /// est repris entre les deux, reconfiguré à **256 kHz**, puis reposé.
     ///
-    /// ⚠️ Les lignes viennent de [JournalDeCapteur] et non d'un littéral, ce que `CliquetJournalEnDurTest`
+    /// Les lignes viennent de [JournalDeCapteur] et non d'un littéral, ce que `CliquetJournalEnDurTest`
     /// exige : vingt-neuf fichiers recopiaient ce format à la main avant #2868, autant d'endroits à
     /// retoucher le jour où un champ bouge. Concaténer deux nuits est exactement ce qu'un vrai journal
     /// contient, l'enregistreur y écrivant à la suite.

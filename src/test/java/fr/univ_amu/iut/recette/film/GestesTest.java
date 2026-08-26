@@ -19,7 +19,7 @@ class GestesTest {
 
     /// La règle qui distingue **taper** de **commander**.
     ///
-    /// ⚠️ C'est le point délicat de toute la fonctionnalité, et la règle naïve s'y casse. Les
+    /// C'est le point délicat de toute la fonctionnalité, et la règle naïve s'y casse. Les
     /// raccourcis de l'écran d'écoute sont des lettres NUES - `R` référence, `D` douteux, `N`
     /// suivant, `1/2/3` certitude. « N'afficher que les touches modifiées ou nommées » raterait
     /// donc exactement ce que la session S3 vient juger. Et tout afficher rendrait les dix-sept
@@ -77,7 +77,7 @@ class GestesTest {
         }
     }
 
-    /// ⚠️ Ces deux-là sont la raison d'être du halo. Un appui tient sur UNE image à dix images par
+    /// Ces deux-là sont la raison d'être du halo. Un appui tient sur UNE image à dix images par
     /// seconde : sans résorption, il faudrait tomber pile dessus pour le voir.
     @Nested
     @DisplayName("La résorption du halo")
@@ -138,7 +138,7 @@ class GestesTest {
             });
         }
 
-        /// ⚠️ La fenêtre est retenue AVEC la position, et c'est ce qui fait suivre un menu.
+        /// La fenêtre est retenue AVEC la position, et c'est ce qui fait suivre un menu.
         /// Une position de scène ne veut rien dire sans la scène à laquelle elle se rapporte :
         /// dessiner un point de menu dans le repère de la fenêtre principale le poserait ailleurs.
         @Test

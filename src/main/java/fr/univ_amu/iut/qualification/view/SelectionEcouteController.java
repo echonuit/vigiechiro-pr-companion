@@ -29,7 +29,7 @@ import javafx.scene.control.TableView;
 /// boutons de la colonne droite** ([VerdictParFichier]), qui jugent la séquence courante ; le parent
 /// l'obtient par [#colonneVerdict()].
 ///
-/// ⚠️ Les deux gestes de l'en-tête arrivent en **fonctions**, pas en dépendances : « Personnaliser… »
+/// Les deux gestes de l'en-tête arrivent en **fonctions**, pas en dépendances : « Personnaliser… »
 /// ouvre une modale que seul le parent sait situer, et « Régénérer » passe par le **confirmateur et le
 /// notificateur du parent**. Les fabriquer ici en donnerait de seconds, que les doubles des tests
 /// parents n'atteindraient pas (ADR 0010 et 2745, cf. #3335).

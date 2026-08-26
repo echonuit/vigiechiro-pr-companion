@@ -33,7 +33,7 @@ final class CameraDeScene extends AnimationTimer {
     /// La marque qui dit qu'une scène est déjà suivie, posée dans ses propriétés.
     private static final String SUIVI_POSE = "recette.film.suivi";
 
-    /// ⚠️ Trois images à dix par seconde : assez pour qu'un appui se voie, trop court pour
+    /// Trois images à dix par seconde : assez pour qu'un appui se voie, trop court pour
     /// qu'un clip entier paraisse cliqué.
     private static final long HALO_MS = 300;
 
@@ -63,7 +63,7 @@ final class CameraDeScene extends AnimationTimer {
         this.file = file;
     }
 
-    /// ⚠️ Les filtres se posent AVANT la première image, et non à la première image.
+    /// Les filtres se posent AVANT la première image, et non à la première image.
     ///
     /// La version précédente les posait dans `composer()`, donc à la première image composée. Entre
     /// le démarrage de l'enregistrement et cette image-là, il s'écoule une pulsation de JavaFX - et
@@ -115,7 +115,7 @@ final class CameraDeScene extends AnimationTimer {
     /// Compose toutes les fenêtres visibles sur une toile de taille fixe, chacune à sa position.
     /// Une modale par-dessus sa fenêtre parente donne donc la même image que la capture du bureau,
     /// sans le noir autour ni le décor du gestionnaire de fenêtres.
-    // ⚠️ Ne pas réutiliser une toile d'une image à l'autre pour économiser l'allocation. La file
+    // Ne pas réutiliser une toile d'une image à l'autre pour économiser l'allocation. La file
     // a une profondeur de 60 et le scribe écrit en différé : écrire par-dessus une toile encore en
     // attente remplacerait une image passée par une image présente, et le film serait faux sans
     // être plus court, donc sans signe. Un bassin de tampons rendus par le scribe après écriture
@@ -157,7 +157,7 @@ final class CameraDeScene extends AnimationTimer {
     /// Pose par-dessus le produit ce que le graphe de scène ne contient pas : le pointeur, son halo,
     /// et le raccourci frappé.
     ///
-    /// ⚠️ La position du pointeur est une coordonnée de SCÈNE, donc elle s'ajoute au décalage de la
+    /// La position du pointeur est une coordonnée de SCÈNE, donc elle s'ajoute au décalage de la
     /// fenêtre où le geste a eu lieu - celui-là même qui vient d'être calculé. C'est ce qui fait
     /// suivre le pointeur jusque sur un menu, et c'est encore la même leçon : l'absolu ment, le
     /// relatif non.
@@ -176,7 +176,7 @@ final class CameraDeScene extends AnimationTimer {
 
     /// Où poser le pointeur sur la toile, et que faire quand sa fenêtre n'y est plus.
     ///
-    /// ⚠️ Le cas de la fenêtre disparue n'a rien d'exotique : cliquer une entrée de menu **referme
+    /// Le cas de la fenêtre disparue n'a rien d'exotique : cliquer une entrée de menu **referme
     /// le menu**. À l'image suivante, la fenêtre où le clic a eu lieu n'existe plus.
     ///
     /// La première version rendait la main dans ce cas, par prudence - poser le pointeur dans un
@@ -223,7 +223,7 @@ final class CameraDeScene extends AnimationTimer {
 
     /// Vrai si les deux fenêtres ont une position exploitable.
     ///
-    /// ⚠️ On ne lit pas ces coordonnées pour ce qu'elles VALENT - sous Monocle elles situent la
+    /// On ne lit pas ces coordonnées pour ce qu'elles VALENT - sous Monocle elles situent la
     /// fenêtre sur un écran virtuel étranger à la toile, et c'est ce qui a coûté le bord amputé de
     /// cinquante pixels. On lit leur DIFFÉRENCE, qui est le même vecteur dans n'importe quel
     /// repère. L'absolu ment, le relatif non.

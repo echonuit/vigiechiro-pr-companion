@@ -2,7 +2,7 @@
 <!--
   La configuration du gestionnaire de fenêtres du banc filmé.
 
-  ⚠️ Elle existe parce que le banc en héritait, et que l'héritage n'est pas le même partout. Sans configuration explicite, openbox lit `/etc/xdg/openbox/rc.xml`, dont le contenu dépend de la distribution.
+  Elle existe parce que le banc en héritait, et que l'héritage n'est pas le même partout. Sans configuration explicite, openbox lit `/etc/xdg/openbox/rc.xml`, dont le contenu dépend de la distribution.
   Le poste de développement a `<center>yes</center>` ; l'image des runners GitHub ne place pas de la
   même façon.
 

@@ -58,10 +58,10 @@ class CadreVisibleTest {
         cadre.setPrefViewportHeight(HAUTEUR_CADRE);
         cadre.setFitToWidth(true);
 
-        // ⚠️ Une fenêtre À SOI : ce banc dimensionne, et le Stage du harnais est partagé ([ADR 4134]).
+        // Une fenêtre À SOI : ce banc dimensionne, et le Stage du harnais est partagé ([ADR 4134]).
         fenetre = new Stage();
         fenetre.initOwner(stage);
-        // ⚠️ `Habillage`, et non `new Scene` : ce banc MESURE des positions, donc son verdict dépend de
+        // `Habillage`, et non `new Scene` : ce banc MESURE des positions, donc son verdict dépend de
         // la police réellement rendue (#3773). `ScenesHabilleesTest` l'a refusé dès le premier passage
         // en intégration, à juste titre - et il l'a vu avant moi.
         fenetre.setScene(Habillage.scene(new VBox(cadre), 400, HAUTEUR_CADRE));

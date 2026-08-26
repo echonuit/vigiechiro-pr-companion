@@ -33,10 +33,10 @@ trois avaient dérivé - mesuré à la clôture du lot 3 de #3518 :
 | tableau des gardes autotestées | **6 absents** |
 | chemins surveillés ↔ classes jouées | concordait déjà |
 
-⚠️ **Les deux workflows absents étaient ceux de sécurité.** Ce n'est pas un hasard : un inventaire non
+**Les deux workflows absents étaient ceux de sécurité.** Ce n'est pas un hasard : un inventaire non
 gardé perd d'abord ce qu'on regarde le moins.
 
-⚠️ **Et le défaut se reproduit pendant qu'on le décrit** : l'issue #3771 annonçait cinq gardes
+**Et le défaut se reproduit pendant qu'on le décrit** : l'issue #3771 annonçait cinq gardes
 manquantes, il y en avait **six**. Les cinq avaient été listées à l'œil ; la sixième est sortie d'un
 comptage. C'est l'argument qui a fait écrire la garde **avant** les corrections - elle donne la liste
 au lieu de la refaire.
@@ -68,11 +68,11 @@ tableau juste, et se ferait retirer. Le premier cas de l'auto-test est ce **cont
 - **Le chiffre de l'ADR 3661 n'a plus à être tenu à la main.** Elle disait « dix scripts sur onze » ;
   ils sont dix-huit aujourd'hui. Le nombre n'était pas faux, il **datait** - et c'est exactement ce
   qu'une garde rend sans objet.
-- ⚠️ **Deux règles de l'auto-test ne sont attrapées que par la vérification du MOTIF de la sortie**,
+- **Deux règles de l'auto-test ne sont attrapées que par la vérification du MOTIF de la sortie**,
   pas du code de retour. Sans elle, retirer la détection d'un workflow fantôme et retirer le refus sur
   section renommée restaient **toutes deux vertes**, le refus tombant de toute façon pour une autre
   raison. Leçon de `veille-plateformes.sh` (#3526), appliquée dès l'écriture.
-- ⚠️ **La garde est elle-même un inventaire tenu à la main** : ses **trois** paires. Un quatrième
+- **La garde est elle-même un inventaire tenu à la main** : ses **trois** paires. Un quatrième
   inventaire qui apparaîtrait ne serait pas confronté, et rien ne le dirait. La régression est plus
   lente qu'avant, elle n'est pas impossible.
 

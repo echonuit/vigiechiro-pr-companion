@@ -33,7 +33,7 @@ import java.util.function.Function;
 /// Quatre de ces tables portent **une ligne par session ou par passage** : trois cents lignes pour trois
 /// cents nuits. Les lire en entier tient en mémoire sans y penser, et le contexte les sert ensuite.
 ///
-/// ⚠️ **Les originaux et les séquences n'y sont pas**, et c'est délibéré : ce sont les tables de
+/// **Les originaux et les séquences n'y sont pas**, et c'est délibéré : ce sont les tables de
 /// volume - une nuit porte des milliers de séquences. Les charger toutes d'un bloc échangerait un
 /// défaut de lenteur contre un défaut de mémoire, ce qui n'est pas un progrès. Elles restent lues
 /// session par session.

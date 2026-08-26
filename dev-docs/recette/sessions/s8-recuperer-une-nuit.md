@@ -20,7 +20,7 @@ vraie carte SD soit reconnue.
 - **Compte réel**, carré **130711**, point **Z41** (4 participations, dont 2 analysées et 2 non).
 - **Base neuve** (workspace de recette, jamais celui de production).
 - **Carte SD réelle** de l'enregistreur **PR1997632**.
-- ⚠️ Session **en lecture seule** côté plateforme : aucun dépôt, aucune écriture. Si un geste se met à
+- Session **en lecture seule** côté plateforme : aucun dépôt, aucune écriture. Si un geste se met à
   écrire, c'est un constat en soi.
 
 ## Le script (une case = un fait observable)

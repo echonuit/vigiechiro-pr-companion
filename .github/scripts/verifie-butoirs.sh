@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Garde-fou : tout job de workflow porte un `timeout-minutes`.
 #
-# ⚠️ Pourquoi cette garde existe. Un job sans butoir que GitHub laisse courir SIX HEURES a bloqué
+# Pourquoi cette garde existe. Un job sans butoir que GitHub laisse courir SIX HEURES a bloqué
 # une PR pendant 4 h 15 sur un `apt-get install` de police, en `-qq` - donc sans une ligne de log
 # pour dire ce qui traînait. Le butoir de 12 minutes posé sur `banc-filme` (#3883) avait été
 # apprécié pour ce seul job ; vingt-six autres n'en avaient aucun, dont ceux qui publient.
 #
 # Un job qui échoue apprend quelque chose. Un job qui pend n'apprend rien ET retient tout le monde.
 #
-# ⚠️ Ce que cette garde ne dit PAS : que le butoir soit bien choisi. Un butoir trop large ne protège
+# Ce que cette garde ne dit PAS : que le butoir soit bien choisi. Un butoir trop large ne protège
 # de rien, un butoir trop serré rend le rouge illisible. Les valeurs viennent d'une mesure - environ
 # quatre fois le maximum observé sur les quarante derniers runs réussis - et se révisent en mesurant
 # de nouveau, pas en discutant.
@@ -64,7 +64,7 @@ YML
     rm "$bac/.github/workflows/nu.yml"
     verifie 0 "le dépôt redevient conforme quand on le retire"
 
-    # ⚠️ Un job qui DÉLÈGUE (`uses:`) n'a pas de butoir à lui : c'est le workflow appelé qui le porte.
+    # Un job qui DÉLÈGUE (`uses:`) n'a pas de butoir à lui : c'est le workflow appelé qui le porte.
     cat > "$bac/.github/workflows/delegue.yml" <<'YML'
 name: delegue
 on: [push]

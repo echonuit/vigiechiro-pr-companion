@@ -331,7 +331,7 @@ final class CriteresMultisite {
         return NormalisationTexte.contient(ligne.numeroCarre(), aiguille)
                 || NormalisationTexte.contient(ligne.codePoint(), aiguille)
                 || NormalisationTexte.contient(ligne.dateEnregistrement(), aiguille)
-                // ⚠️ Et la forme AFFICHEE (#4019) : depuis que la colonne rend « 22/06/2026 »,
+                // Et la forme AFFICHEE (#4019) : depuis que la colonne rend « 22/06/2026 »,
                 // ne chercher que dans l'ISO ferait taper « 2026-06-22 » a qui lit l'autre.
                 || NormalisationTexte.contient(ColonneDate.libelle(ligne.dateEnregistrement()), aiguille)
                 || NormalisationTexte.contient(ligne.commune(), aiguille)

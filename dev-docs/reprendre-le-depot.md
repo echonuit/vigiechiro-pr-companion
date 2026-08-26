@@ -22,7 +22,7 @@ l'architecture et muette sur les accès.
 
 `GITHUB_TOKEN` est fourni par GitHub à chaque exécution : rien à créer.
 
-### ⚠️ Les deux secrets qui expirent
+### Les deux secrets qui expirent
 
 Ils n'expirent pas pour les mêmes raisons et ne se renouvellent pas au même rythme.
 
@@ -42,7 +42,7 @@ The 'Microsoft Open Source' enterprise forbids access via a personal access toke
 if the token's lifetime is greater than 8 days.
 ```
 
-⚠️ **Ce refus ne ressemble pas à un refus.** komac le traduit par « `Echonuit.VigieChiroCompanion`
+**Ce refus ne ressemble pas à un refus.** komac le traduit par « `Echonuit.VigieChiroCompanion`
 does not exist in microsoft/winget-pkgs », c'est-à-dire en accusant le paquet. Le diagnostic a coûté
 trois dispatchs, et l'erreur d'attribution a d'abord visé les droits du jeton, puis sa forme, avant
 que la sonde ne rapporte le message réel. `verifie-secret-winget.sh --verifie-l-acces` le nomme
@@ -52,7 +52,7 @@ désormais au début du workflow.
 version sur winget - la soumission est manuelle et rare, les deux gestes vont ensemble. Un jeton posé
 « pour plus tard » sera périmé au moment utile.
 
-### ⚠️ Le secret qui expire le plus souvent : `VIGIECHIRO_TOKEN`
+### Le secret qui expire le plus souvent : `VIGIECHIRO_TOKEN`
 
 Il vit **14 jours**. Il se récupère dans le navigateur, connecté à la plateforme, sous
 `localStorage['auth-session-token']`, puis :

@@ -26,7 +26,7 @@ public record DepotUnite(
     /// Unité **sans refus définitif** : la forme d'avant #3469, conservée parce qu'elle dit vrai pour
     /// tout ce qui n'a pas rencontré de refus.
     ///
-    /// ⚠️ Ce n'est pas un défaut implicite qu'on aurait glissé sous le tapis : un appelant qui veut
+    /// Ce n'est pas un défaut implicite qu'on aurait glissé sous le tapis : un appelant qui veut
     /// consigner un refus définitif passe par le constructeur canonique, et le dit. Celui-ci existe
     /// pour que les constructions qui n'ont **rien** à en dire n'aient pas à répondre à la question.
     public DepotUnite(
@@ -49,7 +49,7 @@ public record DepotUnite(
 
     /// Vrai quand cette unité a échoué sur un refus que **retenter ne lèvera pas** (#3469).
     ///
-    /// ⚠️ À ne pas confondre avec « le statut vaut `ECHEC` » : un incident réseau échoue aussi, et
+    /// À ne pas confondre avec « le statut vaut `ECHEC` » : un incident réseau échoue aussi, et
     /// celui-là mérite qu'on repropose la reprise. C'est la distinction que
     /// `ReponseApi.estReessayable()` porte le temps d'un appel, et que le plan perdait ensuite.
     public boolean refuseDefinitivement() {

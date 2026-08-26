@@ -47,7 +47,7 @@ Le contrat de réutilisation n'était donc pas une hypothèse à écarter : il �
 Le refus est **explicite** plutôt que silencieux : sans lui, une seconde préparation laisserait les
 champs de la précédente en place, et l'écran mentirait sans que rien ne le signale.
 
-⚠️ **Cela renverse #1380**, et ce renversement est le point de cette ADR. Ce que #1380 garantissait -
+**Cela renverse #1380**, et ce renversement est le point de cette ADR. Ce que #1380 garantissait -
 « une déclaration ne parle pas de portée » - reste garanti ; c'est le **chemin** par lequel il
 l'éprouvait qui disparaît, au profit de l'état où la production met réellement l'écran.
 
@@ -69,7 +69,7 @@ sujets qui n'ont rien à se dire.
 Le versant **« ce carré existe-t-il là-bas ? »** (deux ports optionnels, un verdict, un geste) est donc
 extrait dans `CarreExistantViewModel`. Il ne lit du formulaire que le numéro qu'on lui passe.
 
-⚠️ **Deux points d'entrée restent** côté ViewModel - `chercherCarreExistant` et `rapatrierCarre` -
+**Deux points d'entrée restent** côté ViewModel - `chercherCarreExistant` et `rapatrierCarre` -
 parce que c'est la **saisie** qui décide s'il y a lieu d'appeler le réseau : un carré incomplet ne fait
 partir aucune requête. Les déplacer aurait rendu cette garde inatteignable depuis les données qui la
 fondent.
@@ -78,11 +78,11 @@ fondent.
 
 - **PIT : 59/71 tués (83 %) → 72/74 (97 %)**, et les neuf mutants de réinitialisation ont disparu **avec
   le code**, ce qui vaut mieux que d'être tués.
-- ⚠️ **Un faux vert a été pris au passage, par la remesure et non par la relecture.** Un premier cas
+- **Un faux vert a été pris au passage, par la remesure et non par la relecture.** Un premier cas
   écrit pour `effacerRetour` partait d'un carré **invalide** : `enregistrer` refusait avant d'écrire, si
   bien que le test comparait `AUCUN` à `AUCUN`. Il passait, et la ligne qu'il prétendait tenir se
   supprimait sans faire rougir personne.
-- ⚠️ **Deux mutants restent, sur le rapatriement**, marqués `NO_COVERAGE` alors que
+- **Deux mutants restent, sur le rapatriement**, marqués `NO_COVERAGE` alors que
   `ModaleSiteVerifierCarreViewTest` les exerce : **PIT n'attribue pas ce qui s'exécute sur le fil
   JavaFX**. C'est un artefact de ciblage, pas une lacune - et le dire évite qu'on écrive un test creux
   pour faire tomber un chiffre.

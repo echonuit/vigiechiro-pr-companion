@@ -159,7 +159,7 @@ VIGIECHIRO_URL="http://127.0.0.1:$(cat /tmp/port)" ./mvnw javafx:run
 | `422` (ou `400`) | un **contenu** refusé : rien ne le répare, et le message ne conseille pas la reconnexion |
 | `0` ou absent | aucun refus, comportement nominal |
 
-⚠️ **Le refus ne porte que sur `/fichiers` et `/multipart`**, et c'est délibéré : refuser partout
+**Le refus ne porte que sur `/fichiers` et `/multipart`**, et c'est délibéré : refuser partout
 empêcherait de se connecter, donc d'**atteindre** le dépôt. Le cas à jouer est ce qui se passe *après*
 le refus, pas le refus lui-même.
 

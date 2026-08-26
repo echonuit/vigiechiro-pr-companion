@@ -171,7 +171,7 @@ class ConventionsDEcritureTest {
     /// Les noms sous lesquels un fichier de test désigne un Stage qu'il a **reçu** : les paramètres de
     /// type `Stage`, et les champs auxquels ils sont affectés.
     ///
-    /// ⚠️ Les champs comptent, et c'est par eux que le défaut est passé deux fois : `fenetre = stage`
+    /// Les champs comptent, et c'est par eux que le défaut est passé deux fois : `fenetre = stage`
     /// dans `start`, puis `fenetre.setWidth(...)` cinquante lignes plus bas. Ne regarder que le
     /// paramètre laisserait les deux classes fautives vertes.
     private static Set<String> nomsDesStagesRecus(String code) {

@@ -6,6 +6,6 @@ package fr.univ_amu.iut.commun.api;
 /// @param latitude latitude WGS84 (degrés décimaux)
 /// @param longitude longitude WGS84 (degrés décimaux)
 ///
-/// ⚠️ Les coordonnées VigieChiro sont stockées dans l'ordre **`[latitude, longitude]`** (et non le
+/// Les coordonnées VigieChiro sont stockées dans l'ordre **`[latitude, longitude]`** (et non le
 /// `[longitude, latitude]` du standard GeoJSON) : le parsing lit `coordinates[0]` = latitude.
 public record PointVigieChiro(String code, double latitude, double longitude) {}

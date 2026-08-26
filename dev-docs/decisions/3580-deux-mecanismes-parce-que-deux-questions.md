@@ -67,7 +67,7 @@ de plus de se tromper **en silence**, et le silence est précisément le mode de
 
 ## Conséquences
 
-- ⚠️ **Un lecteur futur verra cinq contrôleurs déclarer les deux contrats et conclura à une
+- **Un lecteur futur verra cinq contrôleurs déclarer les deux contrats et conclura à une
   migration inachevée.** C'est la raison d'être de cette ADR. Supprimer `RafraichirAuRetour` est un
   refactoring qui compile, qui laisse la suite verte sur les gardes du lot 4, et qui casse les cinq
   écrans sur les `update` - le défaut ne se verrait qu'en posant un verdict et en revenant.
