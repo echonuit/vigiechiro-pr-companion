@@ -514,6 +514,87 @@ class ContratApiVigieChiroLiveTest {
         return participation;
     }
 
+    @Test
+    @DisplayName("PROBE #4444 : le PATCH d'une participation IGNORE If-Match, mesuré le 2026-08-26."
+            + " Sans en-tête comme avec un étiquetage faux, la plateforme rend 200. Le client en"
+            + " envoie un pour rien, et le piège de #4356 n'existe pas sur cette route")
+    void probe_if_match_sur_une_participation() {
+        supposerEcritureAutorisee();
+        String participation = participationDeRebut();
+
+        // Mesuré le 2026-08-26 contre la participation de rebut, et prédit avant le tir par le banc
+        // d'étalonnage de l'ADR 4444. Trois écrits du dépôt affirment l'inverse : #4523 les traite.
+        int sansEntete = api().contentType("application/json")
+                .body(Map.of("commentaire", "Sonde de contrat (#4444) : lecture du contrat If-Match."))
+                .when()
+                .patch("/participations/{id}", participation)
+                .then()
+                .extract()
+                .statusCode();
+
+        int etiquetageFaux = api().contentType("application/json")
+                .header("If-Match", "0".repeat(32))
+                .body(Map.of("commentaire", "Sonde de contrat (#4444) : étiquetage délibérément faux."))
+                .when()
+                .patch("/participations/{id}", participation)
+                .then()
+                .extract()
+                .statusCode();
+
+        assertThat(sansEntete)
+                .as("PATCH d'une participation SANS If-Match : la plateforme accepte. Un 412 ici voudrait"
+                        + " dire qu'elle s'est mise à exiger l'en-tête, et il faudrait alors relire ce que"
+                        + " le client en fait")
+                .isEqualTo(200);
+
+        assertThat(etiquetageFaux)
+                .as("PATCH avec un If-Match FAUX : accepté aussi. C'est le contrôle qui donne son sens au"
+                        + " précédent. Un serveur qui exigerait l'en-tête sans le LIRE rendrait 200 ici et"
+                        + " 412 au-dessus ; les deux 200 disent qu'il ne le regarde pas du tout")
+                .isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("PROBE #4444 : `numero` est refusé à l'écriture d'une participation, en 422"
+            + " « invalid field ». Le témoin d'à côté écrit un champ valide, sans quoi un 422 partout"
+            + " se lirait comme « cette route refuse tout »")
+    void probe_numero_refuse_a_l_ecriture() {
+        supposerEcritureAutorisee();
+        String participation = participationDeRebut();
+
+        // La forme du corps compte autant que le statut : la plateforme rend deux 422 de sens opposé
+        // à l'écriture, et un tri sur le seul statut les confond (#4524).
+        var refus = api().contentType("application/json")
+                .body(Map.of("numero", 42))
+                .when()
+                .patch("/participations/{id}", participation)
+                .then()
+                .extract();
+
+        int temoin = api().contentType("application/json")
+                .body(Map.of("commentaire", "Sonde de contrat (#4444) : témoin du refus de numero."))
+                .when()
+                .patch("/participations/{id}", participation)
+                .then()
+                .extract()
+                .statusCode();
+
+        assertThat(refus.statusCode())
+                .as("`numero` n'est pas au schéma de la participation : Eve refuse le document entier")
+                .isEqualTo(422);
+
+        assertThat(refus.<String>path("_errors.numero"))
+                .as("la FORME du refus, et non son seul statut : « invalid field » désigne un champ que"
+                        + " le schéma ne connaît pas, là où « field is read-only » désignerait un champ"
+                        + " connu mais fermé. Les deux sont des 422 et n'appellent pas le même geste")
+                .isEqualTo("invalid field");
+
+        assertThat(temoin)
+                .as("Contrôle : la même route, avec un champ valide, écrit. Sans lui, le 422 ci-dessus"
+                        + " pourrait venir d'un refus global de la route et ne rien prouver du champ")
+                .isEqualTo(200);
+    }
+
     /// Identifiant d'un protocole, qu'Eve l'ait **embarqué** ou laissé en référence nue.
     ///
     /// Le premier jet de cette sonde comparait `String.valueOf(...)` à un identifiant : sur

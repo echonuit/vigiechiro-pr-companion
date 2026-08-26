@@ -5,10 +5,14 @@ status: stable
 article: A4
 chantier: "#4444 (EPIC #4416)"
 decided_at: 2026-08-25
-verification: humaine
+verification: certaine
+enforced_by:
+  - "BancDeRecetteUrlTest#le_banc_ignore_l_url_ambiante"
 verified:
   - by: humain
     at: 2026-08-25
+  - by: machine:ci
+    at: 2026-08-26
 relations:
   prolonge: ["4142", "4291", "4406"]
 generated:
@@ -172,14 +176,25 @@ détruit des archives.
 
 ## Vérification
 
-`humaine`, et le motif est daté : **le banc n'existe pas encore**, et aucun dispositif du dépôt ne
-pointe aujourd'hui vers un back local. Déclarer `certaine` en nommant un garde à écrire serait
-l'affirmation sans preuve que l'article A1 refuse, comme l'ADR 4406 l'a énoncé la veille pour son
-générateur.
+`certaine` depuis le 2026-08-26, et le garde n'a pas eu à être écrit : **il existait déjà**.
 
-Elle deviendra `certaine` le jour où le banc existera : un garde refusera alors qu'un scénario de
-recette filmé résolve son adresse de plateforme ailleurs que vers le bouchon ou vers la vraie
-plateforme, ce qui est la forme mécanisable de « il ne tourne aucun clip ».
+Cette section déclarait `humaine` avec un motif daté - le banc n'existait pas - et annonçait qu'un
+garde devrait refuser qu'un scénario de recette filmé résolve son adresse ailleurs que vers le
+bouchon ou la vraie plateforme. Le banc monté, la propriété s'est trouvée tenue par
+`BancDeRecetteUrlTest#le_banc_ignore_l_url_ambiante`, posé par #4332 pour une autre raison : un
+scénario qui n'a déclaré aucun serveur est épinglé sur `http://localhost:1`, l'idiome hors-ligne, et
+ses réponses deviennent `Injoignable`.
+
+Mesuré plutôt que déduit : la suite passe avec `VIGIECHIRO_URL=http://localhost:8080` - l'adresse du
+banc - réellement posée dans l'environnement, et elle **rougit** dès que l'épinglage est retiré. Le
+garde a donc été vu rouge sur la mutation qui le concerne, avec le banc en place.
+
+Un scénario connecté échappe à cet épinglage, et c'est voulu : il garde l'URL ambiante parce qu'il
+l'a précisément demandée. C'est le tournage connecté de l'ADR 4291, pas un clip qui s'égarerait.
+
+Ce qu'aucun garde ne tiendra, et qui reste une affaire de relecture : la frontière entre étalonner
+une sonde et s'appuyer sur elle. Une sonde écrite contre le banc et jamais tirée contre le rebut
+passerait au vert en n'ayant rien établi, et seul un lecteur peut le refuser.
 
 Ce qu'aucun garde ne tiendra, et qui restera une affaire de relecture : la frontière entre étalonner
 une sonde et s'appuyer sur elle. Une sonde écrite contre le banc et jamais tirée contre le rebut
