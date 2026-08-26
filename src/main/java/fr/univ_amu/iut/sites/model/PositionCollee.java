@@ -5,6 +5,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /// Lit une position **collée depuis une carte** (#4575), sans réseau.
+///
+/// Deux formes se lisent, les degrés décimaux et le degré-minute-seconde, toutes deux dans l'ordre
+/// **latitude puis longitude** : celui que produisent le « Copier les coordonnées » de Google Maps et
+/// le clic droit d'OpenStreetMap.
+///
+/// **L'ordre ne se devine pas.** Une latitude tient dans plus ou moins 90 et une longitude dans plus ou
+/// moins 180 : l'heuristique de plage ne tranche que si l'un des deux nombres dépasse 90. En France
+/// métropolitaine la latitude vaut environ 41 à 51 et la longitude environ -5 à 10, donc elle ne tranche
+/// jamais là où on en aurait besoin. Deviner par l'emprise du pays réordonnerait en silence une position
+/// réellement erronée, et un carré plausible et faux est précisément le défaut qu'on cherche à éviter.
+///
+/// Ce qui n'est ni l'une ni l'autre se refuse **avec son motif**, jamais en devinant.
 public final class PositionCollee {
 
     private static final Pattern DECIMAL =

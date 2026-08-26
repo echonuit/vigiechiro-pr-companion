@@ -17,7 +17,7 @@ public sealed interface LecturePosition {
         }
     }
 
-    /// Un **lien** de carte, et non une position. Refusé, jamais analysé (décision D6) : les liens
+    /// Un **lien** de carte, et non une position. Refusé, et jamais analysé : les liens
     /// courts `maps.app.goo.gl` ne portent aucune coordonnée tant qu'ils ne sont pas résolus, et les
     /// résoudre voudrait dire appeler Google. Accepter les liens longs et refuser les courts donnerait
     /// une lecture qui s'explique mal : deux liens copiés sur la même carte, l'un marche et l'autre non.
