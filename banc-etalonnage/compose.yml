@@ -1,0 +1,63 @@
+# Banc d'étalonnage des sondes d'écriture (ADR 4444).
+#
+# Il ne tourne AUCUN clip et rien du dépôt ne l'invoque : c'est la condition posée par l'ADR. On y
+# écrit et on y débogue hors ligne les sondes d'écriture qui manquent au contrat live, puis on les
+# tire UNE FOIS contre la participation de rebut réelle. L'écart entre les deux tirs est la mesure
+# de dérive ; le banc seul n'établit rien.
+#
+#   docker compose -f banc-etalonnage/compose.yml up -d --build
+#   docker compose -f banc-etalonnage/compose.yml down -v
+#
+# Pas de Redis : la CI amont n'en déclare pas, et le worker Celery du back tourne ailleurs (son
+# Procfile le dit). Le monter aurait été un décor.
+
+services:
+
+  mongo:
+    image: mongo:7
+    # Aucun volume nommé : le banc est jetable, et une base qui survit à un `down` ferait dériver
+    # l'état de départ d'un essai à l'autre sans que rien ne le dise.
+    tmpfs:
+      - /data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  faux-s3:
+    build:
+      context: .
+    # Le faux stockage d'objets est fourni par le back lui-même, dans ses tests. On le lance tel
+    # quel plutôt que d'en écrire un : ce qu'il accepte est ce que le back attend.
+    command: ["python", "tests/tadarida/fake_s3.py"]
+    working_dir: /back
+    ports:
+      - "8000:8000"
+
+  back:
+    build:
+      context: .
+    # `runserver.py` fait `app.run(debug=True, port=…)` sans hôte : Flask écoute alors sur 127.0.0.1
+    # DANS le conteneur, et la porte publiée ci-dessous ne mène à rien - la connexion est
+    # réinitialisée, ce qui ressemble à un back mort. On surcharge la commande plutôt que de toucher
+    # au source amont, qui n'est pas à nous.
+    #
+    # Le rechargeur est laissé de côté : il relance le processus sur chaque `stat`, et un banc qui
+    # redémarre au milieu d'une sonde rend un verdict qu'on ne sait pas lire.
+    command:
+      - python
+      - -c
+      - "from vigiechiro import app, settings; app.run(host='0.0.0.0', port=settings.PORT)"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      # Frappe un jeton sans OAuth. Le back le dit lui-même : « NO ACTUAL AUTH IS DONE ! ».
+      DEV_FAKE_AUTH: "true"
+      # Détourne le stockage d'objets vers le faux S3 ci-dessus.
+      DEV_FAKE_S3_URL: "http://faux-s3:8000"
+      MONGO_HOST: "mongodb://mongo:27017/vigiechiro"
+      BACKEND_PORT: "8080"
+    ports:
+      - "8080:8080"
