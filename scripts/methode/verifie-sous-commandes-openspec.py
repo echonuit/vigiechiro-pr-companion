@@ -52,13 +52,17 @@ import tempfile
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 BINAIRE_EPINGLE = pathlib.Path(".github") / "openspec" / "node_modules" / ".bin" / "openspec"
 
-# Les trois arbres qui decrivent le contrat. Les adaptateurs de `.claude/skills` sont des copies,
+# Les deux arbres qui decrivent le contrat. Les adaptateurs de `.claude/skills` sont des copies,
 # et les inclure ne coute rien : si l une d elles derivait, ce garde la verrait aussi, la ou
 # `synchronise-adaptateurs.py` la voit deja.
+#
+# Une troisieme entree, `.claude/commands/opsx`, a ete RETIREE par #4516 avec le dossier qu elle
+# nommait. Le retrait est ecrit plutot que laisse a la disparition du dossier : `fichiers()` saute
+# une entree absente sans rien dire, et le refus « corpus vide » plus bas ne mord que sur un total
+# nul. Un corpus reduit d un tiers serait donc reste vert. C est le defaut que #4566 traite ici.
 MOTIFS = (
     (pathlib.Path(".agents") / "skills", "openspec-*/SKILL.md"),
     (pathlib.Path(".claude") / "skills", "openspec-*/SKILL.md"),
-    (pathlib.Path(".claude") / "commands" / "opsx", "*.md"),
 )
 
 # `[ \t]` et NON `\s` : voir le faux positif documente en tete. Le second mot est optionnel, et il

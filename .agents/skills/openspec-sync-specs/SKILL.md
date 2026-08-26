@@ -62,7 +62,7 @@ changement actif. Si c'est ambigu, `openspec list --json` donne les candidats : 
 changements qui **portent des delta specs**.
 
 Annoncer toujours : « Changement retenu : <nom> », et comment le remplacer, par exemple
-`/opsx:sync <autre>`.
+`/fusionner <autre>`.
 
 ## 2. Résoudre le contexte
 

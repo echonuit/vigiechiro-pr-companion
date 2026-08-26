@@ -60,7 +60,7 @@ Si un nom est fourni, le prendre. Sinon, le déduire du fil, ou choisir d'office
 changement actif. Si c'est ambigu, `openspec list --json` donne les candidats.
 
 Annoncer toujours : « Changement retenu : <nom> », et comment le remplacer, par exemple
-`/opsx:apply <autre>`.
+`/realiser <autre>`.
 
 ## 2. Lire l'état, puis les instructions
 
@@ -128,7 +128,7 @@ Tâche faite.
 ```
 
 À la fin, ou à l'arrêt : les tâches faites dans la session, l'avancement chiffré, et la suite.
-Quand tout est fait, renvoyer vers `/opsx:archive`. Quand on s'arrête, dire pourquoi et proposer des
+Quand tout est fait, renvoyer vers `/archiver`. Quand on s'arrête, dire pourquoi et proposer des
 options plutôt qu'une seule voie.
 
 ## Ce que ce dépôt ajoute au flux de l'outil

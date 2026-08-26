@@ -13,8 +13,9 @@ est dans `.agents/` : une compétence se corrige là, et la copie suit.
 Le garde `scripts/methode/synchronise-adaptateurs.py --verifie` refuse une copie absente ou périmée.
 Après avoir touché une compétence, lancer le script sans argument.
 
-Les six compétences OpenSpec sont en plus exposées en commandes : `/opsx:propose`, `/opsx:apply`,
-`/opsx:update`, `/opsx:sync`, `/opsx:archive`, `/opsx:explore`.
+Les six compétences OpenSpec sont en plus exposées en commandes, nommées par le **geste** et non
+par le fournisseur : `/instruire`, `/proposer`, `/realiser`, `/reprendre`, `/fusionner`,
+`/archiver`. Chacune tient en une ligne et ne fait qu'ouvrir sa compétence, où vit le flux.
 
 ## Au commencement de CHAQUE issue : UN bloc, puis TU T'ARRÊTES
 

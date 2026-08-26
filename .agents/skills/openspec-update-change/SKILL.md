@@ -20,7 +20,7 @@ metadata:
 ON REVISE LE PLAN, JAMAIS LE CODE
 ```
 
-Si le plan revise implique de toucher au code, on s'arrete et on renvoie vers `/opsx:apply`.
+Si le plan revise implique de toucher au code, on s'arrete et on renvoie vers `/realiser`.
 
 ## Annoncer
 
@@ -82,7 +82,7 @@ schéma (champ `schema`, sinon « spec-driven »), son avancement (« 0/5 tâche
 tâche ») et sa fraîcheur (champ `lastModified`). Marquer le plus récent « (recommandé) ».
 
 Annoncer toujours : « Changement retenu : <nom> », et comment le remplacer, par exemple
-`/opsx:update <autre>`.
+`/reprendre <autre>`.
 
 ## 2. Lire l'état, sans rien supposer
 
@@ -137,8 +137,8 @@ openspec instructions "<artifact-id>" --change "<nom>" --json
 
 - Artefacts encore absents : `/opsx:continue` pour les créer.
 - Changement déjà réalisé, tâches cochées : le code peut ne plus correspondre au plan révisé,
-  renvoyer vers `/opsx:apply`.
-- Tout fait et tout réalisé : renvoyer vers `/opsx:archive`.
+  renvoyer vers `/realiser`.
+- Tout fait et tout réalisé : renvoyer vers `/archiver`.
 
 ## Ce que ce dépôt ajoute au flux de l'outil
 
@@ -166,7 +166,7 @@ Après chaque passage, dire : quels artefacts ont été révisés et lesquels on
 |---|---|
 | « L'artefact `tasks` existe forcément » | Les identifiants viennent du schéma. Lire `openspec status --json`. |
 | « J'écris dans `resolvedOutputPath` » | Pour un artefact glob, c'est le motif, pas un fichier. |
-| « Le plan change, donc j'ajuste le code » | Jamais ici. On s'arrête et on renvoie vers `/opsx:apply`. |
+| « Le plan change, donc j'ajuste le code » | Jamais ici. On s'arrête et on renvoie vers `/realiser`. |
 | « Cet artefact manque, je le crée » | C'est le travail de `/opsx:continue`. Le signaler, pas le combler. |
 | « J'ai révisé, je confirmerai à la fin » | Chaque édition se confirme avant d'être écrite. |
 | « La demande change le but du changement » | Ce n'est plus une révision. Vérifier si `/opsx:new` existe, sinon proposer `openspec new change "<nouveau-nom>"`. |

@@ -116,8 +116,9 @@ ZONES_NETTOYEES = (
     # dix-sept cadratins sont tombes a zero avec la reecriture, ce qui se mesure avant et apres.
     # L exclusion qui les nommait une a une a donc disparu, et la zone les couvre comme le reste.
     #
-    # Les six COMMANDES `.claude/commands/opsx/` restent amont et gardent leur exemption dans
-    # [#HORS_COUVERTURE], jusqu au lot qui les rendra derivees de ces competences.
+    # Les six COMMANDES `.claude/commands/opsx/` ont disparu (#4516) : six relais d une ligne
+    # les remplacent, nommes par le geste, ecrits ici et non repris. Leurs trois exemptions de
+    # [#HORS_COUVERTURE] sont tombees avec elles, et plus aucun texte OpenSpec n est amont.
     ("competences d agent", pathlib.Path(".agents/skills"), (), "*.md"),
     # La spécification vivante (#4513). Elle se déclare **avant** de porter quoi que ce soit, et
     # c'est tout l'objet de l'entrée : le régime de couverture voit un fichier qui PORTE déjà un
@@ -204,17 +205,11 @@ def prose(
 # Les fichiers **délibérément** hors couverture, avec leur motif. Un fichier généré depuis des sujets de
 # commits déjà fusionnés ne se corrige pas : la ligne réécrite falsifierait le compte rendu de ce qui a
 # été livré, et reviendrait à la génération suivante.
-# Les trois COMMANDES OpenSpec qui portent un cadratin. Les compétences dont elles dérivaient
-# ont été adoptées et réécrites en français (#4515), et sont sorties de cette table : neuf
-# entrées pour trois sources sont devenues trois pour trois. Les commandes, elles, restent du
-# texte amont jusqu au lot qui les rendra dérivées.
-AMONT = "repris verbatim de l'outil OpenSpec : le réécrire le ferait diverger de sa source (#4339)"
-
+# Les trois COMMANDES OpenSpec qui portaient un cadratin sont sorties de cette table avec le
+# dossier qui les portait (#4516). Le motif `AMONT` disparaît avec elles : plus aucun texte
+# OpenSpec n'est repris verbatim de l'outil, tout est écrit ici.
 HORS_COUVERTURE = {
     "CHANGELOG.md": "généré par semantic-release depuis les sujets de commits fusionnés",
-    ".claude/commands/opsx/archive.md": AMONT,
-    ".claude/commands/opsx/explore.md": AMONT,
-    ".claude/commands/opsx/sync.md": AMONT,
 }
 
 

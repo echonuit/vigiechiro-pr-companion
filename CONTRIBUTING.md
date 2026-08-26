@@ -40,7 +40,8 @@ C'est **PMD qui fait foi** : lui seul bloque la CI.
 ### La ligne de commande OpenSpec, si vous touchez à la spécification vivante
 
 Elle n'est pas nécessaire pour construire ni pour tester le produit. Elle l'est dès que vous ouvrez
-une des six compétences `openspec-*` ou une des six commandes `/opsx:`, parce que chacune de leurs
+une des six compétences `openspec-*` ou une des six commandes qui y mènent (`/instruire`,
+`/proposer`, `/realiser`, `/reprendre`, `/fusionner`, `/archiver`), parce que chacune de leurs
 étapes l'appelle.
 
 Le devcontainer l'installe et la met sur le `PATH`. Hors devcontainer :
