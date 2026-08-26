@@ -111,15 +111,14 @@ ZONES_NETTOYEES = (
     # deja un cadratin, donc un corpus neuf et propre lui est invisible. Seule la SOURCE est
     # gardee : `.claude/skills` en est une copie, tenue identique par le garde des adaptateurs.
     #
-    # Les six competences OpenSpec sont EXCLUES (#4339). Elles sont reprises verbatim de l outil
-    # amont, en anglais, et en portent dix-sept cadratins. Les reecrire les ferait diverger de leur
-    # source, et la premiere mise a jour de l outil rendrait la correction : on ne reecrit pas ce
-    # qu on n a pas ecrit. L exclusion nomme les six dossiers un a un plutot qu un prefixe, pour
-    # qu une septieme competence amont fasse ROUGIR le garde au lieu d etre exemptee en silence.
-    ("competences d agent", pathlib.Path(".agents/skills"), (
-        "openspec-propose", "openspec-apply-change", "openspec-update-change",
-        "openspec-sync-specs", "openspec-archive-change", "openspec-explore",
-    ), "*.md"),
+    # Les six competences OpenSpec ont ete ADOPTEES (#4515) : reecrites en francais et tissees au
+    # cycle de ce depot, elles ne sont plus du texte amont et n ont plus a etre exemptees. Leurs
+    # dix-sept cadratins sont tombes a zero avec la reecriture, ce qui se mesure avant et apres.
+    # L exclusion qui les nommait une a une a donc disparu, et la zone les couvre comme le reste.
+    #
+    # Les six COMMANDES `.claude/commands/opsx/` restent amont et gardent leur exemption dans
+    # [#HORS_COUVERTURE], jusqu au lot qui les rendra derivees de ces competences.
+    ("competences d agent", pathlib.Path(".agents/skills"), (), "*.md"),
     # La spécification vivante (#4513). Elle se déclare **avant** de porter quoi que ce soit, et
     # c'est tout l'objet de l'entrée : le régime de couverture voit un fichier qui PORTE déjà un
     # cadratin, mais son refus propose deux issues, « ajoutez la zone » ou « inscrivez-les dans
@@ -205,23 +204,17 @@ def prose(
 # Les fichiers **délibérément** hors couverture, avec leur motif. Un fichier généré depuis des sujets de
 # commits déjà fusionnés ne se corrige pas : la ligne réécrite falsifierait le compte rendu de ce qui a
 # été livré, et reviendrait à la génération suivante.
-# Les trois compétences OpenSpec qui portent un cadratin, leurs adaptateurs engendrés, et les
-# commandes qui les exposent. Neuf fichiers pour trois sources : le générateur et les commandes
-# recopient le texte amont, donc l exemption se déclare aux trois endroits ou elle ne dirait
-# rien du troisième.
+# Les trois COMMANDES OpenSpec qui portent un cadratin. Les compétences dont elles dérivaient
+# ont été adoptées et réécrites en français (#4515), et sont sorties de cette table : neuf
+# entrées pour trois sources sont devenues trois pour trois. Les commandes, elles, restent du
+# texte amont jusqu au lot qui les rendra dérivées.
 AMONT = "repris verbatim de l'outil OpenSpec : le réécrire le ferait diverger de sa source (#4339)"
 
 HORS_COUVERTURE = {
     "CHANGELOG.md": "généré par semantic-release depuis les sujets de commits fusionnés",
-    ".agents/skills/openspec-archive-change/SKILL.md": AMONT,
-    ".agents/skills/openspec-explore/SKILL.md": AMONT,
-    ".agents/skills/openspec-sync-specs/SKILL.md": AMONT,
     ".claude/commands/opsx/archive.md": AMONT,
     ".claude/commands/opsx/explore.md": AMONT,
     ".claude/commands/opsx/sync.md": AMONT,
-    ".claude/skills/openspec-archive-change/SKILL.md": AMONT,
-    ".claude/skills/openspec-explore/SKILL.md": AMONT,
-    ".claude/skills/openspec-sync-specs/SKILL.md": AMONT,
 }
 
 
