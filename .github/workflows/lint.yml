@@ -199,6 +199,24 @@ jobs:
         # ce qui s'installera au moment de publier est exactement ce que le dépôt déclare.
         run: npm ci --prefix .github/release
 
+      - name: "Les invocations d'OpenSpec citées dans nos fichiers existent (bloquant, #4514)"
+        # Ce pas vit dans CE job, et non dans `lint`, pour une raison matérielle : il a besoin de la
+        # ligne de commande OpenSpec, donc de Node, et `outillage-release` est le seul job qui en
+        # dispose déjà. L'y ajouter coûte une installation ; lui créer un job coûterait un checkout
+        # et un setup-node de plus.
+        #
+        # Ce que le garde tient : les dix-huit fichiers d'OpenSpec DÉCRIVENT le contrat de la ligne
+        # de commande, et une invocation approximative n'y casse rien. Elle attend dans le texte et
+        # échoue le jour où un agent suit l'instruction qui la cite, loin de sa cause.
+        #
+        # L'auto-test tourne d'abord, et son PREMIER cas est un témoin vert. Ce garde est vert sur
+        # le corpus d'aujourd'hui, où les neuf invocations citées existent toutes : un garde qui
+        # rougirait sur tout rougirait aussi sur ses états cassés, et ses rouges ne diraient rien.
+        run: |
+          npm ci --prefix .github/openspec
+          python3 scripts/methode/verifie-sous-commandes-openspec.py --auto-test
+          python3 scripts/methode/verifie-sous-commandes-openspec.py --verifie
+
       - name: La configuration d'analyse dérive bien de celle du dépôt
         # Elle ne recopie pas les parserOpts, elle les hérite : une copie divergerait, et la version
         # calculée en vérification ne serait plus celle que la publication calculera.
