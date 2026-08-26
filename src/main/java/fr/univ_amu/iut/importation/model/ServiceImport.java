@@ -20,35 +20,23 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-/// Service métier de la feature `importation` : orchestre le parcours d'import P2 d'une nuit
-/// d'enregistrement, de la carte SD jusqu'à l'agrégat persisté.
+/// Service métier de la feature `importation` : orchestre le parcours d'import P2 d'une nuit, de la
+/// carte SD jusqu'à l'agrégat persisté. Chaque étape est déléguée à un moteur.
 ///
-/// **Enchaînement**, chaque étape déléguée à un moteur dédié :
+/// 1. **Inspecter** ([InspecteurDossier]) : lecture seule de la SD (R9), journal LogPR, relevé climatique.
+/// 2. **Copier** ([CopieProtegee]) : vers le workspace, sans jamais écrire sur la source (R9, R22).
+/// 3. **Renommer** ([Renommeur]) : préfixe R6 sur les originaux copiés, R7 conservant le suffixe.
+/// 4. **Transformer** ([TransformationAudio]) : expansion ×10, séquences de 5 s, déterministe (R10/R11).
+/// 5. **Persister** : l'agrégat **tout ou rien** dans une [UniteDeTravail] (O7), via [AgregatImportDao].
 ///
-/// 1. **Inspecter** ([InspecteurDossier]) : lecture seule de la SD (R9), parsing du journal LogPR,
-/// détection des originaux et du relevé climatique.
-/// 2. **Copier** ([CopieProtegee]) : SD → workspace, sans jamais écrire sur la source (R9). Les
-/// originaux vont dans `bruts/`, le journal et le relevé à la racine de la session (R22).
-/// 3. **Renommer** ([Renommeur]) : préfixe R6 appliqué aux originaux copiés (R7 conserve le
-/// suffixe).
-/// 4. **Transformer** ([TransformationAudio]) : expansion ×10 et découpage en séquences de 5 s,
-/// déterministe (R10/R11), dans `transformes/`.
-/// 5. **Persister** : l'agrégat complet (passage, session, originaux, séquences, enregistreur,
-/// micro, journal, relevé) est écrit **tout ou rien** dans une [UniteDeTravail] (O7), via
-/// [AgregatImportDao] (écritures « connection-aware »).
+/// **Ne dépend pas de `sites`**, et ne doit pas : c'est l'appelant, qui connaît le site et le point
+/// courants, qui construit le [Prefixe] R6 et fournit l'`idPoint`. Un passage naît
+/// [StatutWorkflow#IMPORTE] et l'agrégat est committé en [StatutWorkflow#TRANSFORME], la vérification
+/// (R12/R13) le faisant avancer ensuite.
 ///
-/// **Ne dépend pas de `sites`**, et ne doit pas le faire : c'est l'appelant (le `viewmodel`, qui
-/// connaît le site et le point courants) qui construit le [Prefixe] R6 et fournit l'`idPoint`.
-///
-/// **Statuts (workflow).** Un passage naît [StatutWorkflow#IMPORTE] ; comme l'import inclut la
-/// transformation réussie, l'agrégat est committé directement au statut
-/// [StatutWorkflow#TRANSFORME] (état final d'un import complet). La vérification (R12/R13) le fera
-/// ensuite avancer.
-///
-/// **Limite connue (non transactionnelle côté disque).** Si la persistance échoue, la transaction
-/// SQL est annulée (base cohérente, O7), mais les fichiers déjà copiés/transformés restent dans le
-/// workspace. Ces opérations étant idempotentes et déterministes (R11), un réimport réécrit les
-/// mêmes fichiers sans dommage ; la base reste la source de vérité.
+/// **Limite connue, non transactionnelle côté disque** : si la persistance échoue, la transaction SQL
+/// est annulée (O7) mais les fichiers copiés restent. Ces opérations étant idempotentes et déterministes
+/// (R11), un réimport réécrit les mêmes fichiers, et la base reste la source de vérité.
 public class ServiceImport {
 
     /// Plafond de traitements de fichiers **simultanés** (#12 découpage, #948 copie protégée) : les

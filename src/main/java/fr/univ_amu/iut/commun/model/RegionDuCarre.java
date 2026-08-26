@@ -30,27 +30,15 @@ public final class RegionDuCarre {
         return departement(numeroCarre).flatMap(RegionsFrancaises::pourDepartement);
     }
 
-    /// Le **département** que porte le numéro de carré (ses deux premiers chiffres), ou **vide** quand
-    /// le numéro n'en désigne aucun : nul, trop court, ou **préfixe qui n'est pas un département**.
+    /// Le **département** que porte le numéro de carré (ses deux premiers chiffres), ou **vide** quand le
+    /// numéro n'en désigne aucun : nul, trop court, ou préfixe qui n'est pas un département. Rendu public
+    /// par #2848 ; la règle se réécrivait ailleurs en `substring(0, 2)`, ici elle vit avec son ADR.
     ///
-    /// Rendu public par #2848, qui confronte cette lecture à celle de la commune du point. La règle
-    /// « les deux premiers chiffres » se réécrivait ailleurs en `substring(0, 2)` ; ici elle vit avec
-    /// l'ADR qui l'établit.
-    ///
-    /// ## Tous les préfixes ne sont pas des départements (#3298)
-    ///
-    /// Le catalogue de la plateforme, recensé site par site, porte aussi des préfixes `00` (307 carrés),
-    /// `98` (313), `99` (127) et `96` (1) - **1 847 points, 3,5 % du total** - et **aucun `97`**. Les
-    /// carrés d'outre-mer sont numérotés `00xxxx` : `000294` est à Saint-Joseph, `001293` à Salazie.
-    ///
-    /// Rendre « 00 » comme s'il s'agissait d'un département faisait signaler à l'audit une divergence
-    /// **systématiquement fausse** - `00` ne sera jamais égal à `974`, et aucune vérification de terrain
-    /// n'aurait pu la faire taire. Un préfixe qui ne désigne pas de département ne porte donc **pas de
-    /// lecture**, exactement comme un numéro trop court.
-    ///
-    /// Ce n'est pas le code **officiel** pour autant : la Corse porte `20`, là où l'INSEE écrit
-    /// `2A`/`2B`. Pour confronter cette écriture à celle d'un code INSEE, passer par
-    /// [RegionsFrancaises#memeDepartement].
+    /// **Tous les préfixes ne sont pas des départements** (#3298). Le catalogue porte aussi `00`, `98`, `99`
+    /// et `96`, soit 1 847 points et 3,5 % du total, et aucun `97` : les carrés d'outre-mer sont numérotés
+    /// `00xxxx`. Rendre « 00 » ferait signaler à l'audit une divergence systématiquement fausse. Ce n'est
+    /// pas le code officiel pour autant, la Corse portant `20` quand l'INSEE écrit `2A`/`2B` : pour
+    /// confronter à un code INSEE, passer par [RegionsFrancaises#memeDepartement].
     public static Optional<String> departement(String numeroCarre) {
         if (numeroCarre == null || numeroCarre.length() < 2) {
             return Optional.empty();

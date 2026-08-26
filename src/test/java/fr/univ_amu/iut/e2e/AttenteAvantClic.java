@@ -53,24 +53,16 @@ final class AttenteAvantClic {
         attendreCliquable(robot, libelle, secondes, null);
     }
 
-    /// Même attente, mais en **faisant défiler** vers la cible tant qu'elle est hors du champ, par le
-    /// port de révélation du chrome (#1486).
+    /// Même attente, mais en **faisant défiler** vers la cible tant qu'elle est hors du champ, par le port
+    /// de révélation du chrome (#1486).
     ///
-    /// ## Pourquoi il faut défiler avant de conclure
-    ///
-    /// Mesuré sur l'échec de #3911 : sur un runner, l'écran headless est plus petit que la scène
-    /// demandée, la fenêtre est ramenée à `TailleOuverture.LARGEUR_MINIMALE` (900), et à cette largeur
-    /// le `FlowPane` des cartes d'accueil enroule sur une rangée de plus. La carte visée se retrouve à
-    /// `y=951` dans une scène haute de 860 : **hors cadre au repos**, donc jamais cliquable.
-    ///
-    /// Le contenu **défile** pourtant : la barre verticale du `ScrollPane` central est visible, et
-    /// après défilement les sept cartes sont dans le cadre. Un utilisateur les atteint. C'est donc le
-    /// test qui manquait un geste, pas le produit qui manquait une capacité.
-    ///
-    /// J'ai d'abord conclu l'inverse, et ouvert une issue de défaut produit sur cette conclusion
-    /// (#3925, fermée). Je l'avais tirée de la lecture de `MainView.fxml`, où la zone des cartes est un
-    /// `FlowPane` dans un `VBox` : le `ScrollPane` central, lui, est installé **en code** par
-    /// `MainController`. Lire le FXML ne disait pas ce que le chrome fait de sa zone centrale.
+    /// Mesuré sur l'échec de #3911 : sur un runner, l'écran headless est plus petit que la scène demandée,
+    /// la fenêtre est ramenée à `TailleOuverture.LARGEUR_MINIMALE`, et à cette largeur le `FlowPane` des
+    /// cartes d'accueil enroule sur une rangée de plus. La carte visée se retrouve à `y=951` dans une scène
+    /// haute de 860, **hors cadre au repos**, donc jamais cliquable. Le contenu défile pourtant, et après
+    /// défilement les sept cartes sont dans le cadre : c'est le test qui manquait un geste, pas le produit
+    /// qui manquait une capacité (#3925). La zone centrale du chrome est installée **en code** par
+    /// `MainController`, ce que la lecture de `MainView.fxml` ne dit pas.
     static void attendreCliquable(FxRobot robot, String libelle, int secondes, DefilementChrome revelateur) {
         try {
             WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, () -> {

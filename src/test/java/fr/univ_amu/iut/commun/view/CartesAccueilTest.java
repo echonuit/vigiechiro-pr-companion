@@ -59,42 +59,14 @@ class CartesAccueilTest {
                 .isLessThanOrEqualTo(description.getLayoutBounds().getWidth());
     }
 
-    /// Monte la carte dans une **scène habillée**, puis applique le CSS et la mise en page. Sans les
-    /// feuilles du chrome le titre garde la police par défaut (~13 px) au lieu de son `15px bold`, et
-    /// « Espèces & observations » **tient** alors sur une ligne : le test mesurerait une carte qui
-    /// n'existe pas, et resterait vert avec le défaut en place.
+    /// Monte la carte dans une **scène habillée**, puis applique le CSS et la mise en page.
     ///
-    /// Les feuilles ne suffisent pas, et ce test l'a montré de la pire façon (#3526) : les poser à la
-    /// main sans appeler [Typographie#installer] laisse la police embarquée **non enregistrée** auprès
-    /// de JavaFX. `base.css` la demandait alors en vain, et le rendu retombait sur la police du système.
+    /// `Habillage.scene(...)` fait les deux gestes que ce test exige : enregistrer la police embarquée
+    /// auprès de JavaFX, et poser le trio de feuilles du chrome. Une scène montée à la main en oublie
+    /// toujours une moitié, et le test mesure alors une carte qui n'existe pas en restant vert (#3526).
     ///
-    /// Ce n'était pas une différence de plateforme, contrairement à ce que le premier diagnostic disait.
-    /// `installer()` garde un `static boolean installee` : l'enregistrement est **global au JVM et fait
-    /// une seule fois**. Dans un fork surefire, ce test voyait donc « Noto Sans » **si un autre test
-    /// l'avait installée avant lui**, et la police du système sinon - c'est l'ordre d'exécution qui
-    /// décidait.
-    ///
-    /// Et sous Linux, rien de tout cela ne se voit - non parce que le repli serait large, mais parce
-    /// que `Noto Sans` y est une police **système** (219 entrées sous `/usr/share/fonts/truetype/noto/`
-    /// sur la machine de développement) : la suite locale la trouve **installée ou non**, et aucune
-    /// mesure faite là ne peut juger ce défaut.
-    ///
-    /// **Le runner Ubuntu, lui, n'a pas été mesuré**, et une première version de ce commentaire
-    /// l'affirmait quand même. L'ADR 3361 dit seulement que `sans-serif` s'y résout en « une police
-    /// plus large » (#3826, passe 0). Sous macOS, en revanche, la mesure existe : `Noto Sans` n'y est
-    /// pas, seul `installer()` la fournit, et le verdict bascule avec l'ordre.
-    ///
-    /// La preuve est au dossier, et elle a été refaite exprès (#3773) : le **même commit**, sur la
-    /// **même image** `macos-26-arm64` (`20260728.0273.1`), a rendu vert à 8 h 14 et rouge à 15 h 34.
-    /// Puis, joué **seul** sous macOS - donc sans aucun voisin pour installer la police -, ce test
-    /// **échoue**, avec les mêmes 17,666 px. Un test dont le verdict dépend de ses voisins, pas de ce
-    /// qu'il mesure.
-    ///
-    /// Le titre court mesure 20,43 px avec la police embarquée, contre 17,666 px relevés sous macOS avec
-    /// celle du système : c'est l'écart qui faisait tenir « Espèces & observations » sur une ligne.
-    ///
-    /// `Habillage.scene(...)` fait les deux - installer la police, poser le trio du chrome - et c'est
-    /// la raison d'être de ce patron : une scène montée à la main en oublie toujours une moitié.
+    /// L'enregistrement de la police est **global au JVM et fait une seule fois** : sans cet appel, le
+    /// verdict dépend du voisin qui a tourné avant dans le fork, et non de ce que le test mesure.
     private static VBox carte(String titre) {
         VBox carte = (VBox) CartesAccueil.carte(new ActiviteDeTest(titre));
         Scene scene = Habillage.scene(new StackPane(carte));

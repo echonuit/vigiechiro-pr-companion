@@ -48,25 +48,16 @@ public record ParticipationOrpheline(
         return trouve.find() ? trouve.group(1) : null;
     }
 
-    /// Date/heure **locale** d'une borne de nuit, tolérante au format ; vide si la borne est absente ou
-    /// illisible.
+    /// Date/heure **locale** d'une borne de nuit, variante **historique** qui lit dans le fuseau de la
+    /// métropole ; vide si la borne est absente ou illisible.
     ///
-    /// L'API rend un **instant** daté d'un décalage (`2026-07-04T19:00:00+00:00`) ; l'application, elle,
-    /// raisonne en **heure murale locale** : c'est ce que l'observateur a lu sur sa montre en posant
-    /// l'enregistreur, et c'est ce que [CorrespondanceParticipation] reconvertit en UTC à l'envoi. La
-    /// conversion doit donc **préserver l'instant** et changer de repère.
-    ///
-    /// **#1860** : ce code appelait `toLocalDateTime()`, qui **jette le décalage** au lieu de convertir -
-    /// `19:00+00:00` devenait `19:00` local au lieu de `21:00` à Paris. L'erreur ne s'arrêtait pas là :
-    /// l'envoi retraduit ensuite l'heure locale en UTC, si bien que **chaque cycle
-    /// reconstruire → envoyer retranchait un décalage horaire**. Une nuit de 21 h était descendue à
-    /// 15 h en quatre allers-retours, entraînant la météo avec elle (Open-Meteo est interrogé sur la
-    /// fenêtre du passage). Un cliquet, pas un décalage ponctuel.
-    /// Variante **historique**, qui lit dans le fuseau de la métropole.
+    /// L'API rend un **instant** daté d'un décalage (`2026-07-04T19:00:00+00:00`) quand l'application
+    /// raisonne en heure murale locale, celle que l'observateur a lue sur sa montre : la conversion préserve
+    /// l'instant et change de repère. `toLocalDateTime()`, qui jette le décalage, retranchait un décalage
+    /// horaire à **chaque cycle reconstruire puis envoyer** (#1860).
     ///
     /// À n'employer que là où le point n'est pas connu. Partout où il l'est, passer par
-    /// [#horodatage(String, ZoneId)] : depuis #3442, l'écriture emploie le fuseau du **territoire** du
-    /// site, et relire dans un autre casserait le point fixe décrit ci-dessus.
+    /// [#horodatage(String, ZoneId)] : l'écriture emploie le fuseau du **territoire** du site (#3442).
     static Optional<LocalDateTime> horodatage(String borne) {
         return horodatage(borne, FuseauDuSite.ZONE);
     }

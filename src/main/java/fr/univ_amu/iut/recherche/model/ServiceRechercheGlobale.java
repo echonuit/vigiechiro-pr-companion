@@ -183,23 +183,16 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
                 ligne.idPassage());
     }
 
-    /// Résultat **espèce** rattaché à un passage : libellé = nom (vernaculaire, sinon latin, sinon code)
-    /// + code entre parenthèses ; détail = le taxon parent (ex. « Chiroptères », si connu) puis la nuit où
-    /// elle a été observée. Cliquer ouvre ce passage (mêmes clés d'identité qu'un résultat passage).
-    /// Un résultat « espèce ».
+    /// Résultat **espèce** rattaché à un passage : libellé = nom (vernaculaire, sinon latin, sinon code) plus
+    /// le code entre parenthèses ; détail = le taxon parent puis la nuit où elle a été observée. Cliquer
+    /// ouvre ce passage, mêmes clés d'identité qu'un résultat passage.
     ///
-    /// ## Pourquoi la mention « espèce prioritaire » y figure (#2713)
-    ///
-    /// La question s'est posée de savoir si un résultat de **recherche** devait porter un statut de
-    /// conservation : la recherche sert à naviguer, pas à analyser, et charger ses résultats
-    /// d'annotations peut les rendre moins lisibles.
-    ///
-    /// Elle a été tranchée par **oui, en texte**. Le produit disait « cette espèce est à enjeu » sur
-    /// trois écrans et se taisait sur le quatrième : cet écart se remarque à l'usage et fait douter du
-    /// repère lui-même. La mention se glisse donc dans la ligne de détail, à côté du groupe
-    /// taxonomique : **sans icône**, pour ne pas banaliser un bouclier qui, sur les écrans de décision,
-    /// appelle une action ; et **sans composante nouvelle** sur [ResultatRecherche], qui en porte déjà
-    /// sept.
+    /// **La mention « espèce prioritaire » y figure** (#2713). La recherche sert à naviguer, pas à analyser,
+    /// et charger ses résultats d'annotations peut les rendre moins lisibles ; mais le produit disait
+    /// « cette espèce est à enjeu » sur trois écrans et se taisait sur le quatrième, écart qui fait douter
+    /// du repère lui-même. La mention se glisse dans la ligne de détail, **sans icône**, pour ne pas
+    /// banaliser un bouclier qui appelle une action ailleurs, et sans composante nouvelle sur
+    /// [ResultatRecherche].
     private ResultatRecherche resultatEspece(EspeceObservee espece) {
         String nom = premierNonVide(espece.nomVernaculaireFr(), espece.nomLatin(), espece.code());
         String libelle = nom + " (" + espece.code() + ")";

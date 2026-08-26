@@ -55,42 +55,28 @@ import org.testfx.util.WaitForAsyncUtils;
 
 /// Le scénario qui **joue** `S1-37`, pour qu'un humain le tranche en regardant (#3914, EPIC #3667).
 ///
-/// ## Ce que le cas demande, et pourquoi aucune assertion ne peut le rendre
-///
 /// > L'enchaînement « je récupère → la fenêtre se ferme → la fiche s'ouvre » paraît **naturel** : on
 /// > comprend où l'on a atterri et pourquoi, sans relire le dialogue deux fois.
 ///
-/// « Paraît naturel » et « on comprend » ne se mesurent pas. Ce que ce test prouve, c'est que
-/// l'enchaînement **a eu lieu de bout en bout** ; ce qu'il vaut à l'oeil revient à qui regarde le
-/// clip - d'où `jugement = HUMAIN`.
+/// « Paraît naturel » et « on comprend » ne se mesurent pas. Ce test prouve que l'enchaînement a eu lieu
+/// de bout en bout ; ce qu'il vaut à l'œil revient à qui regarde le clip, d'où `jugement = HUMAIN`.
 ///
-/// ## La jonction n'était jouée nulle part
+/// Les deux moitiés de `S1-34` étaient couvertes, jamais leur couture :
 ///
-/// Les deux moitiés étaient couvertes, jamais leur couture :
-///
-/// | Test (`S1-34`) | Ce qu'il prouve | Ce qu'il ne voit pas |
+/// | Test | Ce qu'il prouve | Ce qu'il ne voit pas |
 /// |---|---|---|
 /// | [ModaleSiteVerifierCarreViewTest] | le clic ferme la modale | ce que l'appelant fait du carré |
-/// | [NavigationSitesRapatriementTest] | la fiche s'ouvre, le compte rendu suit | la modale : il appelle
-/// `ouvrirDetailRapatrie` **directement** |
+/// | [NavigationSitesRapatriementTest] | la fiche s'ouvre et le compte rendu suit | la modale |
 ///
-/// Or `S1-37` ne porte ni sur l'une ni sur l'autre : il porte sur le **passage** de la première à la
-/// seconde, qui est exactement ce qu'aucun des deux ne traverse.
+/// `S1-37` porte sur le **passage** de la première à la seconde, ce qu'aucun des deux ne traverse.
 ///
-/// ## Ce que le clip montre autrement que la production
+/// Le compte rendu réel appelle `showAndWait`, qui fige TestFX headless : ce scénario construit donc le
+/// dialogue **de la production**, par [NotificationDialogue#dialogue], et l'ouvre en `show()`. Ce que
+/// montre le clip est juste à une chose près, qui ne se voit pas : la fenêtre ne bloque pas.
 ///
-/// Le compte rendu réel appelle `showAndWait`, qui **fige** TestFX headless : le film s'arrêterait
-/// là. Ce scénario construit donc le dialogue **de la production** - même type, même habillage, même
-/// texte, par [NotificationDialogue#dialogue] - et l'ouvre en `show()`, non bloquant.
-///
-/// Ce qui se voit sur le clip est donc juste, à une chose près qui ne se voit pas : la fenêtre ne
-/// **bloque** pas. Le dire ici plutôt que de laisser croire que tout est reproduit.
-///
-/// ## L'exécuteur asynchrone, celui de la production
-///
-/// Même raison qu'en [fr.univ_amu.iut.connexion.view.ScenarioPerceptifConnexionTest] : en synchrone,
-/// la récupération se ferait sur le fil JavaFX, aucune image ne serait rendue pendant ce temps, et le
-/// passage à juger n'existerait sur aucune trame.
+/// L'exécuteur est **asynchrone**, celui de la production, même raison qu'en
+/// [fr.univ_amu.iut.connexion.view.ScenarioPerceptifConnexionTest] : en synchrone aucune image ne serait
+/// rendue pendant la récupération, et le passage à juger n'existerait sur aucune trame.
 @ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
 class ScenarioPerceptifRecuperationCarreTest {
 

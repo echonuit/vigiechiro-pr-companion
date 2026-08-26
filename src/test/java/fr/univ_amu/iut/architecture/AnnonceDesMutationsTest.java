@@ -18,30 +18,21 @@ import org.junit.jupiter.api.Test;
 /// annonces, un **cliquet** sur les sites d'écriture.
 ///
 /// L'[ADR 3537](../../../../../../../dev-docs/decisions/3537-un-signal-se-pose-a-l-ecriture.md) veut que
-/// toute écriture **structurelle** validée - celle qui change l'un des quatre comptes de l'accueil :
-/// sites, points, passages, observations - appelle `JournalMutations.mutationStructurelleValidee()`.
+/// toute écriture **structurelle** validée, celle qui change l'un des quatre comptes de l'accueil,
+/// appelle `JournalMutations.mutationStructurelleValidee()`.
 ///
-/// ## Ce qu'aucun dispositif de ce fichier ne prouve
+/// **Ce qu'aucun des deux ne prouve, c'est que les bonnes opérations annoncent.** L'invariant lie deux
+/// populations qui ne se correspondent pas une pour une : l'ADR 3537 autorise qu'une seule annonce couvre
+/// une rafale, et `RapprochementSites` crée deux cent cinquante sites en appelant le même service qu'un
+/// ajout manuel. Une règle « qui appelle `insert` sur un DAO compté annonce aussi » serait en outre
+/// aveugle à un tiers de la population, vingt et une écritures passant par du SQL brut : un vert dessus
+/// affirmerait sans preuve (ADR 2213). La promesse tenue est plus faible et vérifiable : rien de nouveau
+/// n'entre sans être vu.
 ///
-/// **Que les bonnes opérations annoncent.** L'invariant lie deux populations qui ne se correspondent pas
-/// une pour une : l'ADR 3537 autorise explicitement qu'une **seule** annonce couvre une rafale, et
-/// `RapprochementSites` crée deux cent cinquante sites en appelant le même service qu'un ajout manuel.
-/// Comparer les deux comptes rougirait donc en permanence sur un dépôt correct.
-///
-/// **Et une règle « qui appelle `insert` sur un DAO compté annonce aussi » serait aveugle à un tiers de
-/// la population** : vingt et une écritures passent par du **SQL brut**, hors DAO. Un vert dessus
-/// affirmerait sans preuve, ce que l'ADR 2213 interdit.
-///
-/// Ces deux dispositifs tiennent donc une promesse **plus faible et vérifiable** : rien de nouveau
-/// n'entre sans être vu, ni du côté des annonces, ni du côté des écritures.
-///
-/// ## Le premier a commencé sa vie vacant
-///
-/// Livré le 15/08/2026 comme cliquet de dette à cinq, il parcourait tous les fichiers de test **y
-/// compris le sien**, dont la documentation nommait précisément les cinq débiteurs. Il les certifiait
-/// donc gardés : mesuré, il n'en nommait aucun, et rien n'aurait pu le faire rougir. Il s'exclut
-/// désormais de son corpus (ADR 3645), les cinq gardes ont été écrites, et le plafond de dette a laissé
-/// place à une invariante : la liste doit être **vide**.
+/// **Le premier a commencé sa vie vacant.** Cliquet de dette à cinq, il parcourait tous les fichiers de
+/// test **y compris le sien**, dont la documentation nommait les cinq débiteurs, et les certifiait ainsi
+/// gardés sans en nommer aucun. Il s'exclut de son corpus, les cinq gardes ont été écrites, et le
+/// plafond a laissé place à une invariante : la liste doit être vide.
 class AnnonceDesMutationsTest {
 
     private static final Path SOURCES = Path.of("src", "main", "java");

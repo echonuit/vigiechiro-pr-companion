@@ -78,34 +78,15 @@ class ScenesHabilleesTest {
                 .isEmpty();
     }
 
-    /// **Le pendant côté tests**, et il ne vise PAS les mêmes fichiers que ci-dessus.
+    /// **Le pendant côté tests**, et il ne vise pas les mêmes fichiers que ci-dessus.
     ///
-    /// `new Scene(` apparaît dans une centaine de tests, et l'immense majorité a raison de l'écrire :
-    /// ils vérifient un **comportement** - un clic, un intitulé, une navigation - et se moquent de la
-    /// police. Interdire la construction directe partout serait une règle fausse, donc une règle qu'on
-    /// désactive.
+    /// `new Scene(` apparaît dans une centaine de tests, et la plupart ont raison de l'écrire : ils
+    /// vérifient un comportement et se moquent de la police. Ceux qui **mesurent** sont autre chose : leur
+    /// verdict dépend de la police rendue, et sans habillage ils mesurent celle de la machine hôte.
     ///
-    /// Ceux qui **mesurent** sont autre chose : leur verdict dépend de la police effectivement rendue.
-    /// Sans habillage, ils mesurent celle de la **machine hôte** - qui n'est pas celle du produit, et
-    /// qui n'est pas la même partout.
-    ///
-    /// ## Ce que la mesure a montré, et que le diagnostic naturel manquait (#3773)
-    ///
-    /// `CartesAccueilTest` a rendu **vert à 8 h 14 et rouge à 15 h 34** sur le **même commit** et la
-    /// **même image** `macos-26-arm64`. Le diagnostic naturel - « macOS rend autrement » - est faux :
-    /// [Typographie#installer] garde un `static boolean`, donc l'enregistrement est **global au JVM et
-    /// fait une seule fois**, et un test qui ne l'appelle pas voit la police embarquée **si un voisin
-    /// l'a installée avant lui**.
-    ///
-    /// Et **sur un poste de développement Linux**, rien de tout cela ne se voit : `Noto Sans` y est
-    /// une police **système** (219 entrées sous `/usr/share/fonts/truetype/noto/`), donc trouvée
-    /// installée ou non. Une mesure locale de ce défaut est aveugle par construction.
-    ///
-    /// **Sur le runner, c'est différent.** L'ADR 3361 l'avait déjà mesuré : l'alias `sans-serif` se
-    /// résout « **Noto Sans sur un poste, une police plus large sur le runner** ». Ce que la CI Ubuntu
-    /// voit exactement n'a pas été remesuré ici (#3826, passe 0).
-    ///
-    /// C'est bien pourquoi ce garde vaut mieux qu'une exécution : **il ne dépend d'aucune machine**.
+    /// L'enregistrement de la police est global au JVM et fait une seule fois ([Typographie#installer]), si
+    /// bien qu'un test qui ne l'appelle pas voit la bonne police **si un voisin l'a installée avant lui**.
+    /// Ce garde ne dépend d'aucune machine, et c'est ce qui le rend meilleur qu'une exécution (#3773).
     @Test
     @DisplayName("#3773 : un test qui MESURE une géométrie monte une scène habillée")
     void les_tests_qui_mesurent_montent_une_scene_habillee() throws IOException {

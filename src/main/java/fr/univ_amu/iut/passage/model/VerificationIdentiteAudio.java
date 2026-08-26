@@ -14,31 +14,25 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.OptionalDouble;
 
-/// Vérifie qu'un fichier candidat est bien celui que la base décrit (#1309), par **cascade de
-/// preuves** : la meilleure disponible l'emporte, et le verdict dit laquelle a joué.
+/// Vérifie qu'un fichier candidat est bien celui que la base décrit (#1309), par **cascade de preuves** :
+/// la meilleure disponible l'emporte, et le verdict dit laquelle a joué.
 ///
-/// 1. **Empreinte** (#1299), si la séquence en porte une : identité au contenu près, [NiveauConfiance#CERTITUDE].
-/// 2. **Structurelle** : nom du fichier, durée **réelle** confrontée à l'en-tête WAV, taille si
-///    connue. Disponible pour **tous** les passages existants, sans migration.
-/// 3. **Acoustique** ([AnalyseAcoustique]) : les cris des observations sont-ils dans le fichier ?
-///    Preuve **indépendante** de la structurelle ; les deux concordantes valent une empreinte
-///    ([NiveauConfiance#CERTITUDE], et c'est expliqué à l'utilisateur). Une séquence sans
-///    observation n'est pas vérifiable ainsi, mais elle n'a **rien à corrompre** : structurelle
-///    seule, [NiveauConfiance#FORTE].
-/// 4. **Bruts** ([#verifierOriginal]) : quand l'utilisateur n'a gardé que ses originaux, leur
-///    `sha256` intégral (posé à l'import depuis toujours) prouve l'original ; la redécoupe étant
-///    déterministe au bit près (R11), les séquences re-produites héritent de cette identité.
+/// 1. **Empreinte** (#1299), si la séquence en porte une : [NiveauConfiance#CERTITUDE].
+/// 2. **Structurelle** : nom, durée réelle confrontée à l'en-tête WAV, taille si connue, disponible sans
+///    migration pour tous les passages existants.
+/// 3. **Acoustique** ([AnalyseAcoustique]) : les cris des observations sont-ils dans le fichier ? Preuve
+///    indépendante de la structurelle, les deux concordantes valant une empreinte ; une séquence sans
+///    observation n'a rien à corrompre, structurelle seule, [NiveauConfiance#FORTE].
+/// 4. **Bruts** ([#verifierOriginal]) : le `sha256` intégral prouve l'original, et la redécoupe étant
+///    déterministe au bit près (R11), les séquences re-produites en héritent.
 ///
-/// **Séquences régénérées d'un passage reconstruit** ([#verifierSequenceRegeneree], #1682) : un passage
-/// reconstruit n'a **pas d'empreinte**, et son audio régénéré est un extrait **verbatim** du brut désigné
-/// (transformation déterministe). L'identité tient donc à la régénération elle-même ; la concordance
-/// acoustique y est **mesurée en indice**, jamais en veto (le détecteur produit des faux négatifs sur des
-/// cris réels faibles, et refuser sur cette base écarterait le bon audio).
+/// **Séquences régénérées d'un passage reconstruit** ([#verifierSequenceRegeneree], #1682) : sans
+/// empreinte, l'audio régénéré est un extrait verbatim du brut désigné, donc l'identité tient à la
+/// régénération, et la concordance acoustique y est mesurée **en indice, jamais en veto**.
 ///
-/// Les seuils sont **permissifs** ([#TOLERANCE_DUREE_SECONDES], [#SEUIL_FRACTION_CRIS]) : un faux
-/// négatif (refuser le bon fichier) coûte plus cher à l'utilisateur qu'un faux positif quand
-/// plusieurs preuves concordent déjà. Le mode de défaillance réel est **systémique** (se tromper de
-/// dossier), pas ponctuel : c'est à l'orchestration de la réactivation (#1302) d'échantillonner.
+/// Les seuils sont **permissifs** ([#TOLERANCE_DUREE_SECONDES], [#SEUIL_FRACTION_CRIS]) : refuser le bon
+/// fichier coûte plus cher qu'un faux positif quand plusieurs preuves concordent, et le mode de
+/// défaillance réel est systémique, à charge pour la réactivation (#1302) d'échantillonner.
 public class VerificationIdentiteAudio {
 
     /// Facteur d'expansion du pipeline (cf. `TransformationAudio`) : l'en-tête d'une séquence porte

@@ -213,25 +213,15 @@ public class MultisiteViewModel {
     }
 
     /// Applique des données rechargées à la suite d'une mutation venue d'**ailleurs** (#3599) : une
-    /// synchronisation, un import, une restauration. Le tableau et la carte se mettent à jour ; le
+    /// synchronisation, un import, une restauration. Le tableau et la carte se mettent à jour, et le
     /// **compte rendu du relevé survit**.
     ///
-    /// ## Pourquoi cette exception à #2757
-    ///
-    /// [#publierLignes] efface le compte rendu à chaque reprojection, et c'est juste **quand
-    /// l'utilisateur a demandé le rechargement** : il a changé un filtre, il est revenu sur l'écran.
-    /// Ici il n'a rien demandé, et le compte rendu qu'on effacerait a été payé par une **attente
-    /// réseau** - le relevé groupé interroge la plateforme nuit par nuit. Le lui reprendre l'obligerait
-    /// à racheter son chiffre.
-    ///
-    /// Un compte rendu rapporte « ce qui vient de se passer »
-    /// ([ADR 0031](../../../../../../../dev-docs/decisions/0031-un-retour-n-est-pas-un-compte-rendu.md)) :
-    /// un fait passé, dont la vérité ne dépend pas de ce que l'écran montre ensuite. « 9 / 12 relevées »
-    /// porte son propre dénominateur - ce sont les nuits interrogées, pas les lignes du tableau.
-    ///
-    /// Le compte rendu est **repris par-dessus** la reprojection plutôt que conditionné dedans :
-    /// `publierLignes` est le rappel du socle de filtres, que tous les chemins traversent, et y glisser
-    /// un drapeau rendrait son comportement dépendant d'un état invisible.
+    /// [#publierLignes] efface le compte rendu à chaque reprojection, ce qui est juste quand l'utilisateur a
+    /// demandé le rechargement (#2757) ; ici il n'a rien demandé, et ce compte rendu a été payé par une
+    /// attente réseau. Un compte rendu rapporte un fait passé
+    /// ([ADR 0031](../../../../../../../dev-docs/decisions/0031-un-retour-n-est-pas-un-compte-rendu.md)),
+    /// dont « 9 / 12 relevées » porte son propre dénominateur. Il est donc **repris par-dessus** la
+    /// reprojection : un drapeau dans le rappel du socle rendrait celui-ci dépendant d'un état invisible.
     public void appliquerDepuisLaDonnee(DonneesMultisite donnees) {
         CompteRenduChiffre aConserver = compteRenduReleve.get();
         appliquer(donnees);

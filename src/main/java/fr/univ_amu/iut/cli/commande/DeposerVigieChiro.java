@@ -22,31 +22,23 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/// `deposer-vigiechiro` (#1043) : téléverse la nuit d'un passage sur la plateforme VigieChiro via le
-/// **moteur reprenable** ([DepotVigieChiro], #982) : participation créée ou réutilisée, plan
-/// `depot_unite` persisté, seuls les fichiers **manquants** sont (re)téléversés : la commande est
-/// **relançable** telle quelle après une coupure. À ne pas confondre avec `deposer`, le **marquage
-/// manuel** (téléversement fait sur le site web).
+/// `deposer-vigiechiro` (#1043) : téléverse la nuit d'un passage sur la plateforme via le **moteur
+/// reprenable** ([DepotVigieChiro], #982). Participation créée ou réutilisée, plan `depot_unite`
+/// persisté, seuls les fichiers manquants sont téléversés : la commande est **relançable** telle quelle
+/// après une coupure. À ne pas confondre avec `deposer`, le marquage manuel.
 ///
-/// **Ce qui est déposé** : le **même défaut que M-Lot**, c'est-à-dire le réglage `depot.mode` (#1997,
-/// Réglages ▸ Dépôt) : archives ZIP par défaut, ou séquences WAV. Ce n'est plus l'espace disque qui
-/// tranche : il ne fait plus que **refuser** un dépôt ZIP qu'il ne peut pas honorer. `--archives` et
-/// `--wav` priment sur le réglage pour un dépôt ponctuel.
+/// **Ce qui est déposé** suit le réglage `depot.mode` (#1997), comme M-Lot : archives ZIP par défaut, ou
+/// séquences WAV, `--archives` et `--wav` primant pour un dépôt ponctuel. L'espace disque ne tranche
+/// plus, il ne fait que **refuser** un dépôt ZIP qu'il ne peut pas honorer. Le mode n'est pas qu'une
+/// question de vitesse : en ZIP la plateforme détruit l'archive après extraction sans conserver les sons
+/// (#1244), donc l'audio n'est pas récupérable côté serveur.
 ///
-/// Le mode n'est pas qu'une question de vitesse : en ZIP, la plateforme détruit l'archive après
-/// extraction sans conserver les sons (#1244), donc l'audio n'est pas récupérable côté serveur et la
-/// participation ne pourra pas être relancée. Cf. [fr.univ_amu.iut.lot.model.ModeDepot].
+/// **Jeton** : `--token`, sinon `VIGIECHIRO_TOKEN`, sinon la connexion enregistrée dans l'application ;
+/// préférer la variable d'environnement, `--token` laissant le jeton dans l'historique du shell.
 ///
-/// **Jeton** : `--token`, sinon la variable d'environnement `VIGIECHIRO_TOKEN`, sinon la **connexion
-/// enregistrée** dans l'application (préférer la variable d'environnement à `--token`, qui laisse le
-/// jeton dans l'historique du shell).
-///
-/// Le dépôt **ne déclenche pas** le traitement serveur : lancer ensuite `lancer-traitement-vigiechiro`
-/// (équivalent du bouton « Lancer la participation »).
-///
-/// Sortie : une ligne par fichier téléversé (`+`) ou en échec (`!` + raison), puis le bilan. Code
-/// retour `0` seulement si le dépôt est **complet** (scriptable) ; `1` si des fichiers restent à
-/// reprendre.
+/// Le dépôt **ne déclenche pas** le traitement serveur : lancer ensuite `lancer-traitement-vigiechiro`.
+/// Sortie : une ligne par fichier (`+` ou `!` avec la raison), puis le bilan ; code `0` seulement si le
+/// dépôt est **complet**, `1` s'il reste à reprendre.
 @Command(
         name = "deposer-vigiechiro",
         description = "Téléverse un passage sur Vigie-Chiro (reprenable : seuls les fichiers manquants repartent).")

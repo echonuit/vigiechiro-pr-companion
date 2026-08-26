@@ -106,25 +106,16 @@ final class CriteresMultisite {
         return VuesParDefaut.vue("multisite", nom, criteres);
     }
 
-    /// Critère **Carré** : champ texte du n° de carré (ex. `640380`). Éditable au clavier **et** posé par la
-    /// carte (clic d'un carré, via [fr.univ_amu.iut.commun.view.GestionnaireFiltres#poser(String, List)]).
-    /// Critère **Lieu** (#2968, chantier #2790) : liste à cocher des lieux **présents dans les passages
-    /// filtrés**, toutes dimensions confondues, dans l'ordre commune, carré, point. Une ligne passe si
-    /// **l'une** de ses dimensions figure parmi les valeurs cochées ([CritereListe#multipleParmi]) ; rien
-    /// de coché n'écarte rien.
+    /// Critère **Carré** : champ texte du n° de carré, éditable au clavier **et** posé par la carte
+    /// ([fr.univ_amu.iut.commun.view.GestionnaireFiltres#poser(String, List)]). Critère **Lieu** (#2968,
+    /// chantier #2790) : liste à cocher des lieux présents dans les passages filtrés, dans l'ordre commune,
+    /// carré, point ; une ligne passe si **l'une** de ses dimensions est cochée, et rien de coché n'écarte
+    /// rien ([CritereListe#multipleParmi]).
     ///
-    /// **Trois dimensions, et c'est le compte** : le domaine n'a que trois niveaux géographiques. Un
-    /// groupe « Sites » n'en serait pas un quatrième, mais le **nom convivial du carré** ; les deux
-    /// s'offrent dans une entrée unique, « 640380 · Vallon » (#3157). L'écart relevé par #3145 n'en était
-    /// pas un.
-    ///
-    /// **Le critère « Carré » subsiste à côté**, et ce n'est pas un doublon (#2967) : c'est la cible du
-    /// clic sur la carte, et le seul critère de cet écran capable de recevoir une valeur **arbitraire**.
-    /// La carte affiche l'agrégat **non filtré** des sites, passages ou non, là où « Lieu » ne propose que
-    /// les lieux présents dans les passages filtrés. Router le clic vers « Lieu » ne ferait **rien du
-    /// tout** pour un carré sans passage, [CritereListe#multipleParmi] ne cochant que ce que sa liste
-    /// contient. Un clic sans effet est pire qu'un filtre à zéro ligne, qui apprend au moins que ce
-    /// carré n'a rien.
+    /// **Trois dimensions, et c'est le compte** : un groupe « Sites » serait le nom convivial du carré,
+    /// offert dans l'entrée unique « 640380 · Vallon » (#3157), et l'écart relevé par #3145 n'en était pas
+    /// un. Le critère « Carré » subsiste sans faire doublon (#2967) : cible du clic sur la carte, seul à
+    /// recevoir une valeur arbitraire, il vaut pour un carré sans passage que « Lieu » ne proposerait pas.
     static CritereFiltre<LignePassage> lieu(Supplier<? extends List<LignePassage>> passagesFiltres) {
         return CritereLieu.de(
                 passagesFiltres::get,

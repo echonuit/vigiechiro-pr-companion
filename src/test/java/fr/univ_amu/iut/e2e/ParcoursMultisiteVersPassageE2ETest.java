@@ -179,23 +179,17 @@ class ParcoursMultisiteVersPassageE2ETest {
                 .orElseThrow();
     }
 
-    /// Double-clic « robuste » de drill-down vers M-Passage. Sous charge (suite complète, forks
-    /// parallèles), TestFX peut ne pas enregistrer le double-clic ou naviguer avec un léger différé,
-    /// laissant l'écran sur la vue intermédiaire quand l'assertion tombe. On attend donc que la navigation
-    /// aboutisse réellement, avec quelques réessais ; l'assertion de l'appelant tranche clairement sinon.
+    /// Double-clic « robuste » de drill-down vers M-Passage. Sous charge, TestFX peut ne pas enregistrer le
+    /// double-clic ou naviguer avec un différé, laissant l'écran sur la vue intermédiaire quand l'assertion
+    /// tombe : on attend donc que la navigation aboutisse, avec quelques réessais.
     ///
-    /// Entre le moment où `table.getItems()` n'est plus vide et celui où TestFX peut localiser la cellule
-    /// correspondante, il reste une passe de layout JavaFX à consommer : sans l'attendre, `doubleClickOn`
-    /// peut lever `FxRobotException` (« returned no nodes ») avant même le premier essai. On attend donc
-    /// que la cellule soit effectivement interrogeable avant de cliquer, à chaque essai.
+    /// Entre le moment où `table.getItems()` n'est plus vide et celui où TestFX peut localiser la cellule, il
+    /// reste une passe de layout à consommer, faute de quoi `doubleClickOn` lève `FxRobotException` avant le
+    /// premier essai ; la cellule est donc attendue interrogeable à chaque essai.
     ///
-    /// **Épuiser les essais lève, au lieu de rendre la main.** Le helper abandonnait en **silence**
-    /// après trois tentatives : l'appelant asserta alors `vueCourante`, et l'échec se présentait comme
-    /// « attendu passage, obtenu multisite » - un bug de navigation apparent, là où le robot n'avait
-    /// simplement pas abouti. Deux échecs de cette classe ont été lus ainsi (#3823).
-    ///
-    /// C'est le motif de l'ADR 2213 : un dispositif qui ne peut pas conclure **rapporte ce qu'il a
-    /// vu**, il ne rend pas un verdict qui ressemble à autre chose.
+    /// **Épuiser les essais lève, au lieu de rendre la main.** L'abandon silencieux présentait l'échec comme
+    /// « attendu passage, obtenu multisite », un bug de navigation apparent là où le robot n'avait pas
+    /// abouti : deux échecs ont été lus ainsi (#3823). Motif de l'ADR 2213.
     private static void doubleClicVersPassage(FxRobot robot, NavigationViewModel navigation) {
         TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
         for (int essai = 1; essai <= 3; essai++) {
@@ -239,13 +233,10 @@ class ParcoursMultisiteVersPassageE2ETest {
                 + " abouti après un double-clic pourtant parti.");
     }
 
-    /// Amène la colonne « Date » dans le viewport de la table, sans quoi sa cellule reste hors cadre
-    /// et le double-clic ne peut pas partir (#3932).
+    /// Amène la colonne « Date » dans le viewport de la table, sans quoi sa cellule reste hors cadre et le
+    /// double-clic ne peut pas partir (#3932).
     ///
-    /// ## Ce que la mesure a montré, et ce qu'elle a écarté
-    ///
-    /// Scène ramenée à 900 - la largeur d'un runner headless, qui rabat la fenêtre sur
-    /// `TailleOuverture.LARGEUR_MINIMALE` - la table rend :
+    /// Scène ramenée à 900, la largeur d'un runner headless, la table rend :
     ///
     /// | Ce qu'on lit | Valeur |
     /// |---|---|
@@ -254,16 +245,10 @@ class ParcoursMultisiteVersPassageE2ETest {
     /// | barre horizontale | **visible**, `max=590`, `valeur=0` |
     /// | « Date » | 7ᵉ colonne, elle commence vers 485 dans un viewport de 497 |
     ///
-    /// Le contenu **défile** : ce n'est donc pas un défaut du produit, c'est au test d'amener sa cible -
-    /// même conclusion que #3925, qui avait d'abord été prise pour un défaut produit avant d'être
-    /// fermée.
-    ///
-    /// Mais **pas le même défilement**. Le premier correctif essayé ici passait le port
-    /// `DefilementChrome` (#1486) à [AttenteAvantClic#attendreCliquable], comme #3929 l'a fait pour
-    /// l'accueil : **il n'a rien changé**, et l'échec s'est reproduit à l'identique. Le chrome fait
-    /// défiler *sa* zone centrale ; une colonne hors cadre vit dans le viewport **interne** de la
-    /// `TableView`, que le `ScrollPane` du chrome ne commande pas. Le geste juste est
-    /// `scrollToColumn`.
+    /// Le contenu **défile** : c'est au test d'amener sa cible, même conclusion que #3925. Mais **pas le
+    /// même défilement** : passer le port `DefilementChrome` (#1486) à [AttenteAvantClic#attendreCliquable]
+    /// n'a rien changé ici. Le chrome fait défiler *sa* zone centrale, quand une colonne hors cadre vit dans
+    /// le viewport **interne** de la `TableView`. Le geste juste est `scrollToColumn`.
     private static void amenerLaColonneDate(FxRobot robot, TableView<?> table) {
         // `scrollToColumnIndex` et non `scrollToColumn` : le second réclame un
         // `TableColumn<S, ?>` accordé au paramètre de la table, que `TableView<?>` ne peut pas

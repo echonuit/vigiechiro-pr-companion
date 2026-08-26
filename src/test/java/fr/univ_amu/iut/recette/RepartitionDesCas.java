@@ -10,21 +10,16 @@ import java.util.TreeSet;
 
 /// Range chaque cas de recette dans l'un des trois bacs, et signale les désaccords (#3764).
 ///
-/// ## Pourquoi ce calcul ne vit pas dans le test qui l'utilise
+/// Ce calcul vivait dans le test qui l'utilise, où il était **invérifiable** :
+/// [CorrespondanceRecetteTest] alimente son décompte en balayant le classpath, on ne peut lui présenter
+/// aucun jeu d'annotations fabriqué, et rien ne prouvait qu'il rangerait un cas perceptif du bon côté.
+/// Un garde dont on ne peut pas voir le verdict basculer n'est pas un garde ; ici le tri reçoit des
+/// ensembles ordinaires, et [RepartitionDesCasTest] lui montre les situations que le dépôt ne contient
+/// pas encore.
 ///
-/// Il y vivait, et il y était **invérifiable**. [CorrespondanceRecetteTest] alimente son décompte en
-/// balayant le classpath : on ne peut lui présenter aucun jeu d'annotations fabriqué, donc rien ne
-/// prouvait qu'il rangerait un cas perceptif du bon côté. Un garde dont on ne peut pas voir le
-/// verdict basculer n'est pas un garde. Sorti ici, le tri reçoit des ensembles ordinaires, et
-/// [RepartitionDesCasTest] peut lui montrer les situations que le dépôt ne contient pas encore.
-///
-/// ## Qui décide de quoi
-///
-/// **Le script décide du bac.** La marque `*perceptif*` qualifie le cas, et elle se pose en passe 6,
-/// quand on constate qu'aucune assertion ne le tranchera - donc **avant** qu'un test existe. Le
-/// code, lui, dit seulement ce qu'il prétend prouver ([Jugement]).
-///
-/// Les deux parlent du même sujet, ce qui permet de les **confronter** :
+/// **Le script décide du bac.** La marque `*perceptif*` se pose en passe 6, quand on constate qu'aucune
+/// assertion ne tranchera le cas, donc **avant** qu'un test existe ; le code dit seulement ce qu'il
+/// prétend prouver ([Jugement]). Les deux parlant du même sujet, on les confronte :
 ///
 /// | Le script | Le code | Bac | Désaccord |
 /// |---|---|---|---|
@@ -35,17 +30,12 @@ import java.util.TreeSet;
 /// | `*perceptif*` | `AUTOMATIQUE` | perceptif | **oui** |
 /// | rien | `HUMAIN` | non couvert | **oui** |
 ///
-/// Un cas marqué perceptif ne rejoint **jamais** les assertés, quoi qu'en dise le code. La
-/// contradiction se signale, elle ne se résout pas en silence dans le sens qui arrange le compteur :
-/// c'est exactement le vert creux que ce dispositif combat.
+/// Un cas marqué perceptif ne rejoint **jamais** les assertés : la contradiction se signale, elle ne se
+/// résout pas dans le sens qui arrange le compteur.
 ///
-/// ## Ce qui reste ouvert
-///
-/// `HUMAIN` dit « le verdict repose sur un humain », et non « ce scénario apparaît dans le film ».
-/// La distinction ne coûte rien tant qu'un cas asserté n'est filmé que par son propre test
-/// d'assertion, ce qui est le cas aujourd'hui. Si l'index par cas amène un jour des scénarios de
-/// parcours qui traversent des cas déjà assertés, c'est ici qu'il faudra trancher, avec l'exemple
-/// sous les yeux plutôt qu'en le devinant.
+/// Reste ouvert : `HUMAIN` dit « le verdict repose sur un humain », non « ce scénario apparaît dans le
+/// film ». La distinction ne coûte rien tant qu'un cas asserté n'est filmé que par son propre test, et
+/// c'est ici qu'il faudra trancher si des scénarios de parcours traversent un jour des cas assertés.
 ///
 /// @param assertes les cas qu'une assertion tranche, et elle rougit quand le logiciel a tort
 /// @param perceptifs les cas que le script réserve au regard d'un humain

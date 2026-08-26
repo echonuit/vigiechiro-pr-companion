@@ -95,19 +95,12 @@ final class CriteresAudio {
     /// déclare lui-même (Sûr / Probable / Possible).
     ///
     /// Il filtre la certitude **de l'observateur** (`ligne.certitude()`), pas celle du validateur : c'est
-    /// celle que `lister-observations --certitude` retient déjà, et une puce qui viserait l'autre champ
-    /// donnerait une parité de façade - même nom, résultats différents.
+    /// celle que `lister-observations --certitude` retient déjà, et viser l'autre champ donnerait une parité
+    /// de façade, même nom et résultats différents. Une ligne sans certitude déclarée n'est retenue par
+    /// aucune valeur, ne rien déclarer n'étant pas un quatrième niveau.
     ///
-    /// Une ligne sans certitude déclarée n'est retenue par aucune valeur : ne rien déclarer n'est pas un
-    /// quatrième niveau, c'est l'absence de déclaration.
-    ///
-    /// ## Pourquoi cette puce existe
-    ///
-    /// L'inventaire de parité se lit d'habitude dans un seul sens - chaque critère de l'écran a-t-il son
-    /// option ? Pris dans l'autre sens à la clôture des suites de #3092, il a montré l'asymétrie
-    /// inverse : la ligne de commande savait filtrer là où l'écran ne le savait pas. La certitude est
-    /// pourtant une donnée que l'observateur pose **pour y revenir**, et « montre-moi ce que j'ai marqué
-    /// possible » est une question de fin de saison.
+    /// L'inventaire de parité, pris dans l'autre sens à la clôture des suites de #3092, a montré que la
+    /// ligne de commande savait filtrer là où l'écran ne le savait pas.
     static CritereFiltre<LigneObservationAudio> certitude() {
         return CritereListe.enumeration(
                 "certitude",

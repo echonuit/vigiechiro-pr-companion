@@ -17,30 +17,25 @@ import java.util.Objects;
 
 /// Parseur d'un fichier de résultats Tadarida (parcours P7, étape E7 ; règle R17). Lit un CSV
 /// d'observations (séparateur `;`) et le projette en [ResultatParseTadarida] : le [FormatTadarida]
-/// détecté, plus une [LigneObservation] par ligne. La lecture brute est déléguée à [LecteurCsv]
-/// (RFC 4180 : guillemets, sauts de ligne Unix et Windows).
+/// détecté, plus une [LigneObservation] par ligne. La lecture brute est déléguée à [LecteurCsv].
 ///
-/// **Brut ou Vu** : même entête, mêmes colonnes ; seule la forme diffère. Dans un Brut
-/// (`*-observations.csv`) tous les champs sont guillemetés, l'entête commence donc par
-/// `"nom du fichier"…`, et les colonnes observateur sont vides. Un Vu (`*-observations_Vu.csv`) a
-/// l'entête nu, ne guillemette qu'au besoin, et peut porter les décisions de l'observateur. La
-/// détection porte sur **les guillemets de l'entête**, jamais sur le suffixe `_Vu` du nom de
-/// fichier, peu fiable.
+/// **Brut ou Vu** : même entête, mêmes colonnes, seule la forme diffère. Dans un Brut tous les champs
+/// sont guillemetés et les colonnes observateur vides ; un Vu a l'entête nu, ne guillemette qu'au
+/// besoin, et peut porter les décisions de l'observateur. La détection porte sur **les guillemets de
+/// l'entête**, jamais sur le suffixe `_Vu` du nom de fichier, peu fiable.
 ///
-/// **Champ vide** : chaîne vide dans un Brut ; parfois, dans un Vu réinjecté, un guillemet littéral
-/// seul. Les deux se normalisent en `null` ([#estVide(String)]), pour que Brut et Vu se parsent en
+/// **Champ vide** : chaîne vide dans un Brut, parfois un guillemet littéral seul dans un Vu réinjecté ;
+/// les deux se normalisent en `null` ([#estVide(String)]), pour que Brut et Vu se parsent en
 /// observations équivalentes.
 ///
 /// **Colonnes repérées par leur nom d'entête**, jamais par position, pour rester robuste à un
 /// réordonnancement : `nom du fichier`, `temps_debut`, `temps_fin`, `frequence_mediane`,
 /// `tadarida_taxon`, `tadarida_probabilite`, `tadarida_taxon_autre`, `observateur_taxon`,
-/// `observateur_probabilite`. `validation_mode` (R24) est facultative.
+/// `observateur_probabilite`, et `validation_mode` (R24) facultative.
 ///
-/// **Probabilité non numérique tolérée** : un Vu réel peut porter un code de confiance textuel
-/// (`SUR`), lu comme probabilité inconnue plutôt que de faire échouer tout l'import
-/// ([#probabilite(String)]). La tolérance s'arrête là : `temps_debut`, `temps_fin` et
-/// `frequence_mediane` restent en lecture stricte, une valeur malformée y levant plutôt que d'être
-/// avalée.
+/// **Probabilité non numérique tolérée** : un Vu réel peut porter un code de confiance textuel, lu comme
+/// probabilité inconnue ([#probabilite(String)]). La tolérance s'arrête là, `temps_debut`, `temps_fin`
+/// et `frequence_mediane` restant en lecture stricte.
 public final class ParserCsvTadarida {
 
     static final String COL_NOM = "nom du fichier";

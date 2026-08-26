@@ -15,28 +15,22 @@ import java.util.Objects;
 /// Remplace le **placeholder** d'un passage reconstruit (#1305) par les **vrais originaux** régénérés
 /// depuis les bruts (#1651), une fois l'hydratation réussie.
 ///
-/// Un passage reconstruit ne portait qu'un original placeholder `reconstruit.wav` (sans fréquence, sans
-/// fichier). Après hydratation on connaît ses vrais originaux : chaque brut du dossier a un nom R6, une
-/// fréquence d'acquisition (du log) et une taille. On les inscrit, on y **rattache** leurs séquences, on
-/// supprime le placeholder devenu orphelin, et on **déclare les originaux purgés** : ils existent et sont
-/// prouvés par régénération, mais ne sont pas stockés localement (l'utilisateur garde ses bruts) - le même
-/// état qu'un passage archivé par purge. Sans ce marqueur, l'audit, une fois l'archivage levé, signalerait
-/// les originaux absents du disque.
+/// Un passage reconstruit ne portait qu'un placeholder `reconstruit.wav`. Après hydratation on connaît
+/// ses vrais originaux : chaque brut du dossier a un nom R6, une fréquence d'acquisition et une taille.
+/// On les inscrit, on y rattache leurs séquences, on supprime le placeholder orphelin, et on **déclare
+/// les originaux purgés**, prouvés par régénération mais non stockés localement. Sans ce marqueur,
+/// l'audit signalerait les originaux absents du disque une fois l'archivage levé.
 ///
-/// **En une seule transaction** pour les écritures de masse. Une nuit reconstruite compte des milliers de
-/// séquences : chaque `INSERT` et chaque rattachement auto-commité, c'est un `fsync` par ordre, et plus de
-/// deux minutes d'attente muette sur une nuit de 2000 bruts. Les écritures passent donc par une
-/// [fr.univ_amu.iut.commun.persistence.UniteDeTravail], comme le fait déjà l'import, qui écrit la même masse.
+/// **En une seule transaction** pour les écritures de masse : une nuit reconstruite compte des milliers
+/// de séquences, et chaque ordre auto-commité coûte un `fsync`, soit plus de deux minutes d'attente
+/// muette sur 2000 bruts. Les écritures passent par une
+/// [fr.univ_amu.iut.commun.persistence.UniteDeTravail], comme l'import.
 ///
-/// La sûreté **par l'ordre** est conservée, et renforcée : on rattache **toutes** les séquences avant de
-/// supprimer un placeholder, et on ne le supprime que s'il n'en porte plus aucune. Le nettoyage des
-/// placeholders reste **hors** de la transaction - il ne compte qu'une poignée d'ordres, et il doit lire ce
-/// que la transaction vient de valider. Une interruption entre les deux ne perd donc jamais de séquence :
-/// elle laisse au pire un placeholder vidé, que le nettoyage suivant emportera.
-///
-/// L'empreinte `sha256` des originaux est celle **capturée lors de la régénération** (#1726) : la
-/// transformation ayant déjà lu chaque brut pour la produire, l'inscrire ne coûte aucune re-lecture. Un
-/// original hydraté porte donc son empreinte, comme un import récent (#1299).
+/// La sûreté **par l'ordre** est conservée : toutes les séquences sont rattachées avant qu'un placeholder
+/// ne soit supprimé, et il ne l'est que s'il n'en porte plus aucune. Le nettoyage reste hors de la
+/// transaction, devant lire ce qu'elle vient de valider, et une interruption laisse au pire un
+/// placeholder vidé. L'empreinte `sha256` est celle capturée lors de la régénération (#1726) : un
+/// original hydraté porte la sienne comme un import récent (#1299).
 public class AdoptionOriginauxReconstruits {
 
     private static final String SOUS_DOSSIER_BRUTS = "bruts";

@@ -10,28 +10,23 @@ import java.util.function.Consumer;
 
 /// Point d'extension de **rapprochement** d'un référentiel local avec VigieChiro (#728, axe 1).
 ///
-/// Chaque feature qui possède des entités correspondant à des objets de la plateforme (les taxons
-/// pour `validation`, les sites pour `sites`) contribue un rapprocheur au `Multibinder`. À la
-/// connexion, la feature `connexion` les invoque tous pour amorcer / rafraîchir la table
-/// `vigiechiro_link` (cf. [fr.univ_amu.iut.commun.model.LienVigieChiro]).
+/// Chaque feature qui possède des entités correspondant à des objets de la plateforme contribue un
+/// rapprocheur au `Multibinder`. À la connexion, la feature `connexion` les invoque tous pour amorcer et
+/// rafraîchir la table `vigiechiro_link`.
 ///
-/// **Le client est passé en argument** (et non injecté dans l'implémentation) : un rapprocheur ne
-/// dépend ainsi que du DAO de sa feature et de la persistance du socle, jamais de la feature
-/// `connexion`. Les injecteurs autonomes des autres features (outils de capture, tests) restent donc
-/// valides sans charger `ConnexionModule`.
+/// **Le client est passé en argument** plutôt qu'injecté : un rapprocheur ne dépend ainsi que du DAO de
+/// sa feature et de la persistance du socle, jamais de la feature `connexion`, si bien que les
+/// injecteurs autonomes des autres features restent valides sans charger `ConnexionModule`.
 ///
-/// Contrat **best-effort** : `synchroniser` ne doit jamais lever d'exception vers l'appelant. Le
-/// client ([ClientVigieChiro]) dégrade déjà proprement (réseau/token indisponible → listes vides), et
-/// l'implémentation avale ses propres erreurs de rapprochement : un échec ne compromet ni la connexion
-/// ni les autres rapprocheurs.
+/// Contrat **best-effort** : `synchroniser` ne lève jamais vers l'appelant. Le client
+/// ([ClientVigieChiro]) dégrade proprement, et l'implémentation avale ses propres erreurs, un échec ne
+/// compromettant ni la connexion ni les autres rapprocheurs.
 ///
-/// **Ordre des rapprocheurs** (#1776) : le `Multibinder` est un ensemble **non ordonné**, or certains
-/// rapprocheurs **dépendent** du résultat d'un autre. Les passages, par exemple, ne se rapatrient que sur
-/// des **points d'écoute déjà locaux** ([Phase#DEPENDANTE]) - points que le rapprocheur des sites vient
-/// justement de créer ([Phase#STRUCTURE]). Sans ordre, un site tout juste créé ne verrait ses passages
-/// qu'à la synchro **suivante**. Les appelants (connexion, CLI) rejouent donc les rapprocheurs via
-/// [#ordonnes(Collection)], qui place la structure avant ce qui en dépend. Un rapprocheur qui ne dépend de
-/// rien n'a rien à déclarer : la phase par défaut est [Phase#STRUCTURE].
+/// **Ordre des rapprocheurs** (#1776) : le `Multibinder` est non ordonné, or les passages ne se
+/// rapatrient que sur des points d'écoute déjà locaux ([Phase#DEPENDANTE]), points que le rapprocheur
+/// des sites vient de créer ([Phase#STRUCTURE]). Sans ordre, un site tout juste créé ne verrait ses
+/// passages qu'à la synchro suivante ; les appelants passent donc par [#ordonnes(Collection)]. La phase
+/// par défaut est [Phase#STRUCTURE].
 @FunctionalInterface
 public interface RapprochementVigieChiro {
 

@@ -36,28 +36,16 @@ final class CriteresActivite {
 
     private CriteresActivite() {}
 
-    /// Critère **Lieu** (#2967) : liste à cocher des lieux **présents dans les contacts filtrés**, toutes
+    /// Critère **Lieu** (#2967) : liste à cocher des lieux présents dans les contacts filtrés, toutes
     /// dimensions confondues, dans l'ordre commune, carré, point. Un contact passe si **l'une** de ses
     /// dimensions figure parmi les valeurs cochées ([CritereListe#multipleParmi]) ; rien de coché n'écarte
-    /// rien.
+    /// rien. Le carré porte son nom convivial quand il en a un (« 640380 · Vallon », #3157), depuis que la
+    /// projection le remonte (#3175). C'est la jumelle de `CriteresAnalyse.lieu` et de `CriteresAudio.lieu`.
     ///
-    /// Le carré porte son **nom convivial** quand il en a un (« 640380 · Vallon », #3157), depuis que la
-    /// projection le remonte (#3175). L'écran l'ignorait, non par choix, mais faute de l'avoir en main.
-    ///
-    /// C'est la jumelle de `CriteresAnalyse.lieu` et de `CriteresAudio.lieu`, dont elle reprend le libellé
-    /// et l'ordre des dimensions : le vocabulaire d'un critère se lit d'un écran à l'autre.
-    ///
-    /// ## Elle remplace deux puces, et en fait davantage
-    ///
-    /// Avant elle, l'écran avait un **Carré** et un **Point**, tous deux à choix **unique**, et pas de
-    /// commune : c'était le seul écran où « ce que j'ai entendu sur cette commune » ne s'exprimait pas.
-    ///
-    /// On pouvait croire que remplacer deux puces par une seule perdait en précision, l'appartenance
-    /// (« l'un ou l'autre ») ne sachant pas dire ce que la conjonction de deux puces disait : « le point A1
-    /// **du** carré 640380 ». C'était vrai tant que le point paraissait nu. Depuis qu'il est **qualifié**
-    /// ([ContactHoraire#pointQualifie], règle de #2992), il n'existe plus de valeur « A1 » à cocher :
-    /// « 640380 · A1 » désigne exactement ce que la conjonction désignait. La puce est donc strictement
-    /// plus expressive, puisqu'elle sait en outre retenir **deux carrés**, ce que le choix unique interdisait.
+    /// Elle remplace un **Carré** et un **Point** à choix unique, sans commune. La conjonction de deux puces
+    /// disait « le point A1 du carré 640380 » ; depuis que le point est qualifié
+    /// ([ContactHoraire#pointQualifie], règle de #2992), « 640380 · A1 » désigne la même chose, et la puce
+    /// sait en outre retenir deux carrés.
     static CritereFiltre<ContactHoraire> lieu(Supplier<? extends List<ContactHoraire>> contactsFiltres) {
         return CritereLieu.de(
                 contactsFiltres::get,

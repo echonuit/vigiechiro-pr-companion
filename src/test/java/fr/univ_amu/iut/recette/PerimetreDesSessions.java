@@ -10,25 +10,15 @@ import java.util.TreeSet;
 
 /// Dit sur quelles sessions le décompte de recette porte, et sur lesquelles il ne porte pas (#3884).
 ///
-/// ## Le défaut que ceci corrige
+/// [CorrespondanceRecetteTest] annonçait « 51 cas déclarés, 33 assertés, 15 non couverts », phrase qui
+/// se lit comme un état de **la recette**. Elle ne portait que sur deux sessions sur douze, les dix
+/// autres numérotant leurs cas autrement, et rien dans la sortie ne le disait. Le chiffre a induit en
+/// erreur trois fois, dont le bilan de #3667 affirmant « S1 est couvert de bout en bout » quand `S1-33`
+/// n'avait pas de test : **un compte sans périmètre se recopie**.
 ///
-/// [CorrespondanceRecetteTest] annonçait « 51 cas déclarés, 33 assertés, 15 non couverts ». La
-/// phrase se lit comme un état de **la recette**. Elle ne portait que sur **deux sessions sur
-/// douze** : les dix autres numérotent leurs cas autrement (`22.`, `23.` dans S6) et la regex n'en
-/// voit aucun. Rien dans la sortie ne le disait.
-///
-/// Le chiffre a induit en erreur trois fois, dont une dans le bilan de #3667, qui affirmait « S1 est
-/// couvert de bout en bout » alors que `S1-33` n'avait pas de test. **Un compte sans périmètre se
-/// recopie**, et il vieillit sans prévenir.
-///
-/// ## Pourquoi une liste d'admises, et pas seulement un affichage
-///
-/// Afficher les sessions muettes aurait suffi à informer un lecteur attentif. Mais **une sortie ne
-/// rougit pas** : rien n'aurait empêché une onzième session d'arriver muette, ni signalé qu'une
-/// session convertie l'est enfin.
-///
-/// Le garde confronte donc deux lectures de la même chose - ce que le dossier rend, et ce que le
-/// code admet - dans les **deux** sens :
+/// Afficher les sessions muettes aurait informé un lecteur attentif, mais **une sortie ne rougit pas**.
+/// Le garde confronte donc deux lectures de la même chose, ce que le dossier rend et ce que le code
+/// admet, dans les **deux** sens :
 ///
 /// | Situation | Verdict |
 /// |---|---|
@@ -37,14 +27,9 @@ import java.util.TreeSet;
 /// | session admise muette qui **rend des cas** | rouge : elle est lue, retirez-la de la liste |
 /// | session admise qui **n'existe plus** | rouge : la liste a dérivé |
 ///
-/// Les deux derniers sens sont ce qui distingue ce garde d'un inventaire. Sans eux, la liste des
-/// admises deviendrait à son tour une prose qui dérive - c'est-à-dire #3885, reproduit à l'intérieur
-/// du remède.
-///
-/// ## Ce que ce garde ne demande pas
-///
-/// Que les dix sessions soient converties. C'est un travail à part, session par session, avec des
-/// renvois à ne pas casser. Le garde n'exige pas la couverture : **il interdit le silence.**
+/// Les deux derniers sens distinguent ce garde d'un inventaire : sans eux, la liste des admises
+/// deviendrait à son tour une prose qui dérive, soit #3885 reproduit à l'intérieur du remède. Il n'exige
+/// pas que les dix sessions soient converties, ni la couverture : **il interdit le silence.**
 ///
 /// @param lues les sessions dont au moins un cas a été lu, associées à ce nombre
 /// @param muettes les sessions dont aucun cas n'a été lu, admises ou non

@@ -14,30 +14,22 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 
 /// Applique une transformation à chaque élément d'une liste **en parallèle** (un thread virtuel par
-/// élément, Java 25), la concurrence étant **bornée** par un [Semaphore] (`parallelisme`). Sans
-/// plafond, une grosse nuit tiendrait trop de fichiers en vol et saturerait ; le pic reste
-/// ≈ `parallelisme` sans brider le débit CPU. Patron extrait de
-/// `importation.model.DecoupageParallele` (#12), la **réactivation** régénérant elle aussi des
-/// séquences (#1779).
+/// élément, Java 25), la concurrence étant **bornée** par un [Semaphore] (`parallelisme`). Sans plafond,
+/// une grosse nuit tiendrait trop de fichiers en vol et saturerait ; le pic reste ≈ `parallelisme` sans
+/// brider le débit CPU. Sert au découpage d'import (#12) comme à la réactivation (#1779).
 ///
-/// Deux formes, selon que l'opération est tout le travail ou une phase :
+/// Deux formes, selon que l'opération est tout le travail ou une phase. **Autonome**
+/// ([#cartographier(List, String, Function, Consumer, JetonAnnulation)]) : le libellé est
+/// `« préfixe k/N »`, la fraction vaut `k/N`, et le dernier terminé amène la barre à 100 %. **Phase de
+/// pipeline** ([#cartographier(List, Function, EchelleProgression, BiFunction, Consumer,
+/// JetonAnnulation)]) : l'appelant fournit le libellé, l'[EchelleProgression] du pipeline entier, et
+/// reçoit l'index. L'import (#2039) en a besoin, lui qui copie puis transforme, la copie devant
+/// s'arrêter à mi-barre.
 ///
-/// - **autonome** ([#cartographier(List, String, Function, Consumer, JetonAnnulation)]) : le libellé
-///   est `« préfixe k/N »`, la fraction vaut `k/N`, et le dernier élément terminé amène la barre à
-///   100 % ;
-/// - **phase de pipeline** ([#cartographier(List, Function, EchelleProgression, BiFunction, Consumer,
-///   JetonAnnulation)]) : l'appelant fournit le libellé, l'[EchelleProgression] du pipeline entier et
-///   reçoit l'index. L'import (#2039) en a besoin, lui qui copie puis transforme : la copie doit
-///   s'arrêter à mi-barre, et rien dans la liste traitée ne le dit.
-///
-/// **Ordre préservé** : les résultats sont rendus dans l'ordre de la liste d'entrée, donc
-/// déterministes malgré le parallélisme. **Progression thread-safe** : un point par tâche terminée,
-/// sous verrou et compteur atomique pour rester monotone (#146). **Annulation** : le jeton est
-/// consulté en tête de chaque tâche, et à la première demande les restantes sont annulées,
-/// l'[OperationAnnuleeException] propageant.
-///
-/// Une tâche qui lève une [RuntimeException] propage son échec ; les autres déjà soumises s'achèvent
-/// avant que l'exception ne remonte.
+/// **Ordre préservé**, les résultats étant rendus dans l'ordre d'entrée. **Progression thread-safe**, un
+/// point par tâche terminée, sous verrou et compteur atomique pour rester monotone (#146).
+/// **Annulation** : le jeton est consulté en tête de chaque tâche et les restantes sont annulées. Une
+/// tâche qui lève propage son échec, les autres déjà soumises s'achevant avant.
 public final class ExecutionParallele {
 
     private final int parallelisme;

@@ -24,32 +24,23 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/// Moteur de vérification de cohérence d'un passage avant préparation d'un lot (parcours
-/// P4, story E4.S1). Rejoue tous les contrôles affichés dans la maquette M-Lot et les
-/// restitue sous forme d'un [ResultatVerification] (cumul d'alertes) que l'IHM utilise pour
-/// afficher chaque ligne ✓/✗ et pour activer/désactiver le bouton de dépôt.
+/// Moteur de vérification de cohérence d'un passage avant préparation d'un lot (parcours P4, story
+/// E4.S1). Rejoue les contrôles de la maquette M-Lot et les restitue en [ResultatVerification] (cumul
+/// d'alertes), dont l'IHM tire chaque ligne ✓/✗ et l'activation du bouton de dépôt.
 ///
-/// Contrôles, dans l'ordre des règles métier :
-///
-/// - **R14** (bloquant) : un passage au verdict [Verdict#A_JETER] ne peut pas rejoindre un
-///   lot. Restitué ici comme alerte bloquante pour l'affichage ; le refus dur est levé par
-///   [ServiceLot].
-/// - **Session d'enregistrement** (bloquant) : une session est rattachée au passage. Celui-ci
-///   **arrête le parcours** - sans session, aucun des contrôles suivants n'est calculable, et la
-///   liste rendue s'arrête là plutôt que d'être incomplète.
-/// - **Transformation des enregistrements** (bloquant, R10) : des séquences d'écoute sont présentes
-///   et **chaque** enregistrement original a été transformé en au moins une séquence.
-/// - **Nommage des fichiers** (bloquant, R6/R7/R8) : tous les enregistrements originaux et toutes
-///   les séquences portent le préfixe attendu `Car<carré>-<année>-Pass<n>-<point>-`.
+/// - **R14** (bloquant) : un passage au verdict [Verdict#A_JETER] ne rejoint pas un lot. Restitué en
+///   alerte pour l'affichage ; le refus dur est levé par [ServiceLot].
+/// - **Session d'enregistrement** (bloquant) : sans session, aucun contrôle suivant n'est calculable, et
+///   la liste rendue **s'arrête là** plutôt que d'être incomplète.
+/// - **Transformation** (bloquant, R10) : des séquences existent, et chaque original a été transformé en
+///   au moins une séquence.
+/// - **Nommage** (bloquant, R6/R7/R8) : originaux et séquences portent le préfixe attendu
+///   `Car<carré>-<année>-Pass<n>-<point>-`.
 /// - **Journal du capteur** (bloquant) : un `sensor_log` accompagne la session.
-/// - **Relevé climatique** (soft, R20) : son absence est *signalée sans bloquer* (sonde non
-///   installée ou défaillante) ; le dépôt reste possible.
+/// - **Relevé climatique** (souple, R20) : son absence est signalée sans bloquer.
 ///
-/// Pure logique métier (aucun import JavaFX). Reçoit ses DAO par constructeur, à la manière
-/// du service de référence `ServiceSites`. Dépendances inter-feature en lecture seule
-/// autorisées : `lot → passage` (séquences, originaux, journal, relevé, session) et
-/// `lot → sites` (point et site, pour calculer le préfixe attendu) ; le graphe reste
-/// acyclique.
+/// Pure logique métier, DAO reçus par constructeur. Dépendances inter-feature en lecture seule
+/// autorisées, `lot → passage` et `lot → sites` ; le graphe reste acyclique.
 public class VerificationCoherence {
 
     private final SiteDao siteDao;

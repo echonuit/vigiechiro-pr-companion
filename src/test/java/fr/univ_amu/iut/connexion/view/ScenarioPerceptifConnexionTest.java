@@ -37,41 +37,24 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
-/// Les scénarios qui **jouent** `S1-26` et `S1-27`, pour qu'un humain les tranche en regardant
-/// (#3791, EPIC #3667).
-///
-/// ## Ce que ces tests prouvent, et ce qu'ils ne prouvent pas
+/// Les scénarios qui **jouent** `S1-26` et `S1-27`, pour qu'un humain les tranche en regardant (#3791,
+/// EPIC #3667).
 ///
 /// Ils prouvent que le geste **a eu lieu** : la modale est à l'écran, la récupération est allée à son
-/// terme. Ils ne prouvent **pas** que rien n'a sauté ni débordé - aucune assertion ne voit un contenu
-/// qui se replace, elle voit un contenu correct une fois posé. C'est pourquoi ils portent
-/// `jugement = HUMAIN` : le verdict revient à qui regarde le clip.
+/// terme. Ils ne prouvent pas que rien n'a sauté ni débordé, d'où `jugement = HUMAIN`, le verdict
+/// revenant à qui regarde le clip. L'assertion de jeu n'est pas décorative pour autant : un scénario qui
+/// n'assert rien échouerait en silence, robot mort et clip noir.
 ///
-/// ## Pourquoi l'exécuteur asynchrone, alors que les tests emploient le synchrone
+/// **L'exécuteur est celui de la production, asynchrone.** `S1-27` porte sur un transitoire : avec
+/// l'exécuteur synchrone que `@ImplementedBy` donne aux tests, la récupération se ferait sur le fil
+/// JavaFX, aucune image ne serait rendue, et il n'y aurait rien à filmer. C'est l'exact contraire du
+/// besoin des captures, qui exigent le synchrone pour ne pas photographier un « Chargement… ».
 ///
-/// `S1-27` porte sur un **transitoire** : la zone de progression paraît seule, et le bandeau n'arrive
-/// qu'à la fin. Avec l'exécuteur synchrone que `@ImplementedBy` donne par défaut aux tests, la
-/// récupération se ferait sur le fil JavaFX : aucune image ne serait rendue pendant ce temps, et il
-/// n'y aurait **rien à filmer**. Ces scénarios câblent donc l'exécuteur de la production.
-///
-/// C'est l'exact contraire du besoin des captures, qui exigent le synchrone pour ne pas photographier
-/// un « Chargement… ». Ici, ce chargement **est** le sujet.
-///
-/// L'assertion de jeu n'est pas décorative. Un scénario qui n'assert rien du tout **échouerait en
-/// silence** : robot mort, clip noir, et le contrôle de couverture du montage n'y verrait qu'une
-/// fenêtre de moins - ce qui est parfaitement légitime pour un test sans interface. `HUMAIN` dit qui
-/// rend le verdict, pas qu'on ne vérifie rien.
-///
-/// ## Pourquoi la modale n'est PAS ouverte dans le `@Start`
-///
-/// [ConnexionModaleViewTest] la montre dans son `@Start`, ce qui est juste pour asserter un état.
-/// Ici ce serait fatal : les repères de la séance filmée sont posés **autour du test**, si bien que
-/// l'ouverture tomberait avant le premier et n'apparaîtrait sur aucune image. Le clip raterait
-/// exactement ce qu'il faut juger.
-///
-/// L'ouverture reproduit donc `NavigationConnexion.ouvrir()`, du chargement FXML jusqu'à
-/// [Habillage#scene(Parent)] - qui n'est pas un détail : c'est ce qui embarque la typographie, et
-/// donc ce qui fait que le clip montre l'application telle qu'elle est livrée.
+/// **La modale n'est pas ouverte dans le `@Start`**, contrairement à [ConnexionModaleViewTest] : les
+/// repères de la séance filmée sont posés autour du test, donc l'ouverture tomberait avant le premier et
+/// n'apparaîtrait sur aucune image. Elle reproduit `NavigationConnexion.ouvrir()` jusqu'à
+/// [Habillage#scene(Parent)], qui embarque la typographie et fait que le clip montre l'application telle
+/// qu'elle est livrée.
 @ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
 class ScenarioPerceptifConnexionTest {
 

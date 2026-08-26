@@ -234,24 +234,17 @@ final class CameraDeScene extends AnimationTimer {
                 && !Double.isNaN(proprietaire.getY());
     }
 
-    /// Le décalage qui CENTRE une fenêtre sur la toile.
+    /// Le décalage qui **centre** une fenêtre sur la toile.
     ///
-    /// On ne lit pas les coordonnées de la fenêtre, et c'est le résultat d'une mesure. Sous
-    /// Monocle, `Window.getX()` situe la fenêtre sur un écran virtuel dont les dimensions ne sont
-    /// pas celles de la toile : une scène de 1100×720 était dessinée à **x = -51**, perdant ses
-    /// 51 premiers pixels tandis que 231 pixels de toile restaient vides à droite. Le clip montrait
-    /// alors « ieChiro Companion » au lieu de « VigieChiro Companion », et « gende » au lieu de
-    /// « Légende ».
+    /// On ne lit pas les coordonnées de la fenêtre, et c'est le résultat d'une mesure : sous Monocle,
+    /// `Window.getX()` situe la fenêtre sur un écran virtuel dont les dimensions ne sont pas celles de la
+    /// toile, si bien qu'une scène de 1100×720 était dessinée à **x = -51**, perdant ses 51 premiers pixels
+    /// quand 231 restaient vides à droite. Le clip montrait « ieChiro Companion ». Le décalage est modeste,
+    /// et c'est ce qui le rendait dangereux : un bord amputé se lit comme une mise en page.
     ///
-    /// Le décalage est modeste, et c'est ce qui le rendait dangereux : un bord amputé de cinquante
-    /// pixels se lit comme une mise en page, pas comme un défaut.
-    ///
-    /// Centrer reproduit fidèlement l'arrangement visuel : une modale se pose au milieu de sa
-    /// fenêtre parente, ce qui est exactement là où l'utilisateur la voit.
-    ///
-    /// Une fenêtre PLUS LARGE que la toile déborde alors des deux côtés à parts égales, plutôt que
-    /// de perdre un bord entier. C'est délibéré : un débordement symétrique se remarque, un bord
-    /// unique manquant se lit comme une mise en page.
+    /// Centrer reproduit l'arrangement visuel, une modale se posant au milieu de sa fenêtre parente. Une
+    /// fenêtre plus large que la toile déborde des deux côtés à parts égales, un débordement symétrique se
+    /// remarquant là où un bord unique manquant ne se remarque pas.
     static int decalage(int toile, int fenetre) {
         return (toile - fenetre) / 2;
     }

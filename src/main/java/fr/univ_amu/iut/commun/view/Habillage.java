@@ -124,20 +124,15 @@ public final class Habillage {
 
     /// Pose les feuilles de socle sur le panneau d'un **dialogue** (#1499).
     ///
-    /// Un `Alert` vit dans sa **propre scène** : il n'hérite pas des feuilles de la fenêtre qui l'ouvre.
-    /// Sans ce geste, la confirmation s'affiche avec le rendu par défaut de JavaFX - titre doublé, icône
-    /// « ? » système, boutons gris - au milieu d'une application entièrement habillée. C'est le même
-    /// mécanisme que pour les scènes, à ceci près qu'un dialogue n'a pas de nœud racine à nous : les
-    /// feuilles vont sur le `DialogPane` lui-même.
+    /// Un `Alert` vit dans sa **propre scène** et n'hérite pas des feuilles de la fenêtre qui l'ouvre : sans
+    /// ce geste, la confirmation s'affiche avec le rendu par défaut de JavaFX au milieu d'une application
+    /// habillée. Un dialogue n'ayant pas de nœud racine à nous, les feuilles vont sur le `DialogPane`
+    /// lui-même, en un seul point de passage que `DialoguesHabillesTest` verrouille.
     ///
-    /// Deux classes posaient déjà ces feuilles à la main, **chacune sa copie de la même boucle**, et
-    /// quatre autres ne les posaient pas du tout. Un seul point de passage, comme pour les fenêtres :
-    /// `DialoguesHabillesTest` verrouille l'invariant.
-    /// **Attacher les feuilles ne suffit pas**, et l'oublier donne un correctif inerte qui se
-    /// présente en succès. Aucune règle ne visait les dialogues : le premier essai a attaché les trois
-    /// feuilles et la capture du dialogue est restée identique **au bit près**. `design.css` porte
-    /// désormais les règles `.dialog-pane`, et ce point de passage retire en plus l'**icône système**
-    /// (le « ? ») que JavaFX pose sur une confirmation, laquelle ne s'enlève pas par le CSS.
+    /// **Attacher les feuilles ne suffit pas** : aucune règle ne visait les dialogues, et le premier essai a
+    /// laissé la capture identique au bit près. `design.css` porte les règles `.dialog-pane`, et ce point de
+    /// passage retire en plus l'**icône système** que JavaFX pose sur une confirmation, laquelle ne s'enlève
+    /// pas par le CSS.
     public static void poser(DialogPane panneau) {
         Typographie.installer();
         List<String> feuilles = panneau.getStylesheets();

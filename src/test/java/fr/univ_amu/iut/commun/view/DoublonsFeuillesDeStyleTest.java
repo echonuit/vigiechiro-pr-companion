@@ -20,42 +20,21 @@ import org.junit.jupiter.api.Test;
 
 /// **Cliquet d'unicité de style** (#1974) : une classe CSS a **une seule feuille pour maison**.
 ///
-/// ## Pourquoi ce test existe
+/// Un même nom dans deux feuilles finit toujours par dire deux choses. Les trois formes rencontrées :
+/// la **copie** (`.message-erreur`, `.field-label`, `.menu-actions` recopiés d'une feuille de feature
+/// vers l'autre), le **code mort** (`.fil-ariane`, reliquat d'un breadcrumb déplacé, ne ciblant plus
+/// rien), et la **collision** (`.carte-chevron`, dont le `-fx-opacity: 0` hérité de l'accueil a rendu
+/// invisible le chevron des cartes de sites). Une classe se définit dans la feuille partagée que les
+/// vues chargent, ou dans une seule feuille de feature. Jamais deux.
 ///
-/// Le défaut que #1974 a soldé revient tout seul : un même nom de classe vit dans deux feuilles, et
-/// tôt ou tard les deux disent des choses différentes sans que personne ne le voie. Trois formes,
-/// toutes rencontrées :
+/// `.root` est la seule entrée de [#EXCEPTIONS], et elle est structurelle : `palette.css` y pose les
+/// jetons, `base.css` la police et le fond. `palette.css` est chargée seule sur les scènes de capture,
+/// précisément pour que les jetons se résolvent partout.
 ///
-/// - la **copie** : `.message-erreur`, `.field-label`, `.menu-actions` recopiés à l'identique d'une
-///   feuille de feature vers l'autre, surchargeant sans rien changer, jusqu'au jour où l'une dérive ;
-/// - le **code mort** : `.fil-ariane` de la qualification, reliquat d'un breadcrumb déplacé dans le
-///   chrome, ne ciblant plus rien ;
-/// - la **collision** : `.entete`, deux écrans, deux paddings sous un même nom - et, pire,
-///   `.carte-chevron`, dont la collision avec la classe de l'accueil a rendu **invisible** le chevron
-///   des cartes de sites (un `-fx-opacity: 0` hérité).
-///
-/// Le point commun : **un même nom, deux feuilles**. Ce test refuse cela, quelle que soit la forme.
-/// Une classe se définit dans **la feuille partagée** que les vues chargent (`design.css` /
-/// `base.css`), ou dans **une seule** feuille de feature. Jamais deux.
-///
-/// ## La seule exception, et pourquoi elle est structurelle
-///
-/// `.root` : `palette.css` y pose les **jetons** de couleur, `base.css` la **police et le fond**.
-/// La séparation est voulue - `palette.css` est chargée seule sur les scènes de capture, sans
-/// `base.css`, précisément pour que les jetons se résolvent partout. Ce sont deux préoccupations sur
-/// le sélecteur racine de JavaFX, pas une copie. C'est la seule entrée de [#EXCEPTIONS].
-///
-/// ## L'angle mort qu'il a fallu boucher
-///
-/// Ce cliquet n'a longtemps regardé que « le même nom dans **deux feuilles** », et a donc laissé
-/// passer le même défaut **dans une seule** : `.compte-rendu`, défini une fois pour le compte rendu
-/// textuel ([VueCompteRendu]) puis une seconde fois, plus bas dans `design.css`, pour la bande chiffrée
-/// (#2358). À égalité de spécificité, c'est la dernière règle qui gagne : tous les comptes rendus
-/// textuels de l'application ont hérité en silence d'une carte blanche, d'une bordure et de 16 px de
-/// marge intérieure. Aucun test ne rougissait, et la seule chose qui l'a montré est une capture.
-///
-/// Une classe se définit donc **une fois**, dans une feuille et une seule : [#chaque_classe_a_une_seule_feuille]
-/// couvre la première moitié, [#aucune_classe_n_est_definie_deux_fois_dans_une_feuille] la seconde.
+/// Le même défaut existe **dans une seule feuille** : `.compte-rendu`, défini deux fois dans
+/// `design.css` (#2358), a donné en silence une carte blanche à tous les comptes rendus textuels, sans
+/// qu'aucun test rougisse. [#chaque_classe_a_une_seule_feuille] couvre la première moitié,
+/// [#aucune_classe_n_est_definie_deux_fois_dans_une_feuille] la seconde.
 class DoublonsFeuillesDeStyleTest {
 
     private static final Path RACINE = Path.of("src/main/java/fr/univ_amu/iut");

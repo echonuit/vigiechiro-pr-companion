@@ -120,21 +120,14 @@ public final class DepotVigieChiro {
 
     /// Lance le traitement serveur, en autorisant éventuellement une **relance**.
     ///
-    /// **Une relance n'est pas un simple « réessayer ».** À chaque compute, le serveur **supprime toutes
-    /// les `donnees` avant de recalculer** (`task_participation.py:726-731`). Sur une nuit déposée en
-    /// **archives ZIP** (le mode par défaut depuis #984) les WAV extraits ne sont pas conservés sur S3
-    /// (#1244) : le recalcul ne peut donc pas les relire, et les observations sont **définitivement
-    /// perdues**. Tant que la participation n'a **jamais** été calculée, le lancement est sûr ; ensuite, il
-    /// détruit. D'où la garde : `forcer` doit être demandé explicitement (option `--forcer`, #1265), en
-    /// connaissance de cause.
+    /// **Une relance n'est pas un simple « réessayer ».** À chaque compute le serveur supprime toutes les
+    /// `donnees` avant de recalculer, et sur une nuit déposée en archives ZIP (le mode par défaut depuis
+    /// #984) les WAV extraits ne sont pas conservés sur S3 (#1244) : le recalcul ne peut pas les relire, et
+    /// les observations sont **définitivement perdues**. Tant que la participation n'a jamais été calculée le
+    /// lancement est sûr ; ensuite il détruit, d'où `forcer`, demandé explicitement (`--forcer`, #1265).
     ///
-    /// La garde est **locale** : on relit l'état du traitement et on refuse de notre propre chef, sans rien
-    /// demander au serveur (qui, lui, accepterait : il l'accepte volontiers passé 24 h).
-    ///
-    /// **Fail-safe depuis #1284** : si l'état ne peut pas être **lu** (injoignable, refus), on ne lance
-    /// pas sans `forcer` : avant, un simple délai réseau au moment de la relecture faisait passer la
-    /// garde, et un compute parti malgré tout aurait détruit les observations d'une nuit ZIP. Ne pas
-    /// pouvoir prouver que le lancement est sûr, c'est ne pas lancer.
+    /// La garde est **locale** et **fail-safe** (#1284) : si l'état ne peut pas être lu, injoignable ou refus,
+    /// on ne lance pas sans `forcer`. Ne pas pouvoir prouver que le lancement est sûr, c'est ne pas lancer.
     public ResultatLancement lancerTraitement(Long idPassage, boolean forcer) {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         String participationId = participations

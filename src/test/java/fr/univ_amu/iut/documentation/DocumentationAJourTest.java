@@ -54,31 +54,20 @@ import picocli.CommandLine;
 /// Garde-fou de **documentation** (#1458) : une commande CLI sans ligne de doc, ou un écran sans fiche,
 /// font **rougir la CI**.
 ///
-/// ## Pourquoi ce test existe
+/// La clôture de l'EPIC #1154 a trouvé deux dérives que rien n'aurait signalées : `dev-docs/cli.md`
+/// documentait 22 commandes sur 29, et l'écran « Audit de cohérence » n'avait aucune fiche depuis sa
+/// livraison (#1133). Une relecture à la main les a vues, ce qu'on ne peut pas garantir.
 ///
-/// La clôture de l'EPIC #1154 a trouvé deux dérives que **rien** n'aurait signalées :
-/// `dev-docs/cli.md` documentait **22 commandes sur 29** (dont quatre livrées par le chantier même), et
-/// l'écran « Audit de cohérence » n'avait **aucune fiche** depuis sa livraison (#1133). Une relecture à
-/// la main les a vues. C'est précisément ce qu'on ne peut pas garantir.
+/// Le dépôt défend déjà ses **captures** par quatre garde-fous, au nom d'un principe tranché : une
+/// fonctionnalité visible sans capture est une fonctionnalité à moitié livrée. Les commandes et les
+/// écrans n'avaient rien, et ce test comble l'asymétrie.
 ///
-/// Le dépôt défend déjà ses **captures** par quatre garde-fous (`check-doc-images.sh`,
-/// `captures.manifest`, `check-captures.sh`, `check-capture-mains.sh`), au nom d'un principe qu'il a
-/// tranché : *« une fonctionnalité visible sans capture est une fonctionnalité à moitié livrée »*
-/// (`dev-docs/captures.md`). Les **commandes** et les **écrans**, eux, n'avaient rien. Ce test comble
-/// l'asymétrie : le même raisonnement vaut pour une commande sans ligne et pour un écran sans page.
-///
-/// ## Ce qu'il confronte
-///
-/// Le point de comparaison n'est **jamais une liste tenue à la main** (c'est exactement ce qui dérive),
-/// mais la **vérité du câblage** :
-///
-/// - les sous-commandes déclarées dans l'annotation `@Command` de [CommandeRacine] : lues par
-///   **réflexion sur l'annotation**, sans jamais instancier une commande (leurs constructeurs tirent des
-///   `Provider` qui ouvrent la base : les instancier ici ferait de l'E/S pour rien) ;
-/// - les [ActiviteAccueil] réellement liées dans le `Multibinder` de l'**injecteur**, pas les classes qui
-///   ressemblent à des activités.
-///
-/// Une doc qui ment est **pire** qu'une doc absente : on la croit.
+/// Le point de comparaison n'est **jamais une liste tenue à la main**, c'est exactement ce qui dérive,
+/// mais la vérité du câblage : les sous-commandes déclarées dans l'annotation `@Command` de
+/// [CommandeRacine], lues par réflexion sans jamais instancier une commande, dont les constructeurs
+/// ouvriraient la base ; et les [ActiviteAccueil] réellement liées dans le `Multibinder` de l'injecteur,
+/// pas les classes qui ressemblent à des activités. Une doc qui ment est **pire** qu'une doc absente :
+/// on la croit.
 class DocumentationAJourTest {
 
     /// Surefire s'exécute depuis la racine du projet (`${basedir}`) : les chemins sont relatifs à elle.
@@ -713,24 +702,14 @@ class DocumentationAJourTest {
 
     /// Cherche un fichier par son nom sous `racine`, **sans se briser sur ce qui bouge**.
     ///
-    /// `Files.walk` interrompt tout au premier chemin dont il ne peut pas lire les attributs, et il y
-    /// en a : la suite tourne avec `forkCount=1C`, et six tests d'approbation déposent puis effacent un
-    /// `.received` **dans cette arborescence** pendant qu'on la parcourt. Le fichier est listé, puis
-    /// disparaît avant qu'on lise ses attributs, et le garde s'écroule en annonçant un
-    /// `NoSuchFileException` sur un fichier que l'auteur de la PR n'a jamais vu (#3642).
+    /// `Files.walk` interrompt tout au premier chemin dont il ne peut pas lire les attributs, et il y en a :
+    /// la suite tourne avec `forkCount=1C`, et six tests d'approbation déposent puis effacent un `.received`
+    /// dans cette arborescence pendant qu'on la parcourt (#3642). `walkFileTree` appelle `visitFileFailed`
+    /// là où `walk` lève : le chemin est sauté, la recherche continue.
     ///
-    /// `walkFileTree` appelle `visitFileFailed` là où `walk` lève : le chemin est sauté, la recherche
-    /// continue.
-    ///
-    /// ## Pourquoi ce saut est SILENCIEUX, contrairement à l'ADR 3627
-    ///
-    /// Là-bas, ce qu'on n'avait pas pu lire devait être **rapporté**, parce qu'un garde d'espace en
-    /// tirait une décision. Ici on cherche une source **nommée** : un `.received` volatil n'est pas ce
-    /// qu'on cherche, et le rapporter serait la loupe bruyante que l'ADR 3479 écarte.
-    ///
-    /// Ce n'est pas une entorse à l'ADR 2213 : rien n'est conclu depuis ce silence. Si le parcours
-    /// ratait la vraie source, il le **dirait** - « aucune classe n'existe » - et le verdict pencherait
-    /// du côté sûr, un faux rouge plutôt qu'un faux vert.
+    /// Ce saut est **silencieux**, contrairement à l'ADR 3627, parce qu'on cherche ici une source **nommée**
+    /// et que rapporter un `.received` volatil serait la loupe bruyante que l'ADR 3479 écarte. Rien n'est
+    /// conclu depuis ce silence : si le parcours ratait la vraie source, il dirait « aucune classe n'existe ».
     ///
     /// @param racine paramètre plutôt que constante parce que l'échec de lecture ne se fabrique pas
     ///     autrement : on ne va pas retirer un droit dans `src/test/java` pour éprouver ce parcours

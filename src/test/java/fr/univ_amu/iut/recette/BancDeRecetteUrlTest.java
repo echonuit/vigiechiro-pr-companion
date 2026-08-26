@@ -19,37 +19,24 @@ import org.testfx.framework.junit5.Start;
 
 /// Vers quel serveur un banc parle (#4332).
 ///
-/// ## Le jumeau du défaut que #4304 avait fermé
-///
-/// #4304 a posé que le banc **lie sa propre source de jeton** au lieu d'emprunter celle du processus,
-/// parce qu'un scénario déclaré factice parlerait sinon à la plateforme réelle. Il ne l'avait pas fait
-/// pour l'**URL** : `ConnexionModule#fournirClient` la lit dans `vigiechiro.url`, sinon
-/// `VIGIECHIRO_URL`, et le banc ne surchargeait pas `ClientVigieChiro`.
-///
-/// C'est la même figure un champ plus loin, et c'est
-/// l'[ADR 4134](../../../../../../dev-docs/decisions/4134-un-banc-n-emprunte-pas-l-etat-partage-il-ouvre-le-sien.md) :
+/// #4304 a posé que le banc **lie sa propre source de jeton** au lieu d'emprunter celle du processus. Il
+/// ne l'avait pas fait pour l'**URL** : `ConnexionModule#fournirClient` la lit dans `vigiechiro.url`,
+/// sinon `VIGIECHIRO_URL`, et le banc ne remplaçait pas `ClientVigieChiro`. Même figure un champ plus
+/// loin, et même
+/// [ADR 4134](../../../../../../dev-docs/decisions/4134-un-banc-n-emprunte-pas-l-etat-partage-il-ouvre-le-sien.md) :
 /// **un banc n'emprunte pas l'état partagé, il ouvre le sien.**
 ///
-/// Ce n'était pas théorique. `cli-reseau.bats` exporte `VIGIECHIRO_URL` pour pointer sur son
-/// bouchon ; une session shell qui l'a gardée faisait parler **tous** les scénarios de banc dessus.
-/// Mesuré à l'écriture de ce cas : sur les treize classes qui montent le banc, **huit** ne remplacent
-/// pas leur client, donc huit suivaient l'ambiante.
+/// `cli-reseau.bats` exporte `VIGIECHIRO_URL` pour pointer sur son bouchon, et une session shell qui l'a
+/// gardée faisait parler tous les scénarios dessus : sur les treize classes qui montent le banc, huit ne
+/// remplacent pas leur client, donc huit suivaient l'ambiante.
 ///
-/// ## Pourquoi neutraliser plutôt que refuser
-///
-/// Refuser - s'arrêter quand une URL traîne dans l'environnement - aurait été plus bruyant et plus
-/// symétrique du refus qui garde `connecteALaPlateforme()`. Mais il aurait cassé ces huit classes sur
-/// tout poste ayant lancé `cli-reseau.bats`, pour une exposition qui n'est que latente. Le banc pose
-/// donc **sa** valeur, et `http://localhost:1` est l'idiome hors-ligne déjà employé par les outils de
-/// capture : les réponses deviennent `Injoignable`, ce qui est le comportement juste d'un scénario qui
-/// n'a pas déclaré vouloir un serveur.
-///
-/// ## Ce que ce cas mesure, et pourquoi pas la chaîne
+/// **Neutraliser plutôt que refuser**, un refus cassant ces huit classes sur tout poste ayant lancé
+/// `cli-reseau.bats` pour une exposition latente. Le banc pose sa valeur, `http://localhost:1`, l'idiome
+/// hors-ligne des outils de capture : les réponses deviennent `Injoignable`.
 ///
 /// `ClientVigieChiro` n'expose pas son URL, et l'exposer pour un test serait ouvrir la production pour
-/// la commodité de l'éprouver. Le cas monte une prise TCP sur un port éphémère, la désigne
-/// par `vigiechiro.url`, et compte les connexions reçues. **Zéro connexion** est la propriété ; une
-/// connexion dirait que le banc a composé l'ambiante.
+/// la commodité de l'éprouver. Le cas monte une prise TCP sur un port éphémère, la désigne par
+/// `vigiechiro.url`, et compte les connexions : **zéro** est la propriété.
 @ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class BancDeRecetteUrlTest {
 

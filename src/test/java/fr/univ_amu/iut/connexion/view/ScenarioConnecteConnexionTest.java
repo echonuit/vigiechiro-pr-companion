@@ -39,65 +39,30 @@ import org.testfx.util.WaitForAsyncUtils;
 
 /// La connexion à la **vraie** plateforme, filmée comme un utilisateur la fait (#4324, chantier #4291).
 ///
-/// ## Un seul clip, parce que c'est un seul geste
-///
-/// `S8-01`, `S8-05` et `S8-06` sont trois constats d'un **même parcours** : coller le jeton, voir
-/// l'avancement, lire l'identité. Trois clips en referaient trois fois le préambule et couperaient
-/// l'histoire en trois ; un seul la raconte.
-///
-/// ## Quatre temps, dont trois que l'ADR 4188 exige
-///
-/// Une modale se filme avec l'écran d'où elle part et celui où elle rend
-/// ([ADR 4188](../../../../../../dev-docs/decisions/4188-une-modale-se-filme-avec-son-ecran.md)). Ici
-/// c'est **le même écran**, l'accueil - mais il n'y revient pas identique.
+/// Un seul clip pour `S8-01`, `S8-05` et `S8-06` : trois constats d'un même parcours, coller le jeton,
+/// voir l'avancement, lire l'identité.
 ///
 /// | Temps | Ce que le clip montre |
 /// |---|---|
 /// | 1 · l'écran de départ | l'accueil **sans** bandeau de compteurs, et le geste qui ouvre la modale |
 /// | 2 · la modale | le jeton collé, l'avancement, « Fermer » grisé, puis l'identité et le résumé |
 /// | 3 · l'écran d'arrivée | l'accueil retrouvé, où le **bandeau de compteurs a paru** (#1376) |
-/// | 4 · le menu rouvert | l'entrée qui nomme désormais qui est connecté |
+/// | 4 · le menu rouvert | l'entrée qui nomme qui est connecté |
 ///
-/// Le quatrième n'est pas exigé par l'ADR : c'est une **confirmation de plus** que la connexion a eu
-/// lieu, et ce qui permet de voir ses conséquences de bout en bout, sur les **deux** surfaces qu'elle
-/// change.
+/// Les trois premiers temps sont ceux qu'exige
+/// [l'ADR 4188](../../../../../../dev-docs/decisions/4188-une-modale-se-filme-avec-son-ecran.md) ; le
+/// quatrième montre la seconde surface que la connexion change.
 ///
-/// ## Le jeton PARAÎT à l'écran, et c'est délibéré
+/// **Le jeton paraît à l'écran, et c'est délibéré.** Il est révoqué en fin de run (#4305), et le
+/// versement sur `clips-connectes` n'a lieu que si la révocation a confirmé le retrait : ce que le clip
+/// montre ne vaut plus rien quand il est publié.
 ///
-/// La première version évitait la saisie pour qu'aucun jeton ne soit filmé : elle déposait le jeton en
-/// coulisse et laissait la modale se vérifier seule. Le clip montrait alors une modale **qui se
-/// connectait toute seule**, sans qu'on voie ce qui l'avait connectée.
+/// Le scénario attend l'**apparition** de la progression puis sa disparition, dans cet ordre, tient
+/// l'écran après chaque assertion par [Respiration], et asserte ce que le produit réserve au succès :
+/// la classe `badge-succes` et le bandeau « Connexion réussie ».
 ///
-/// C'était de la surqualité, et elle coûtait le clip. Le jeton est **révoqué en fin de run** (#4305,
-/// vérifié deux fois en production : `POST /logout` rend `200`), donc ce que le clip montre ne vaut
-/// plus rien avant même d'être regardé. **Un jeton mort n'est pas un secret ; un clip incompréhensible
-/// est un problème.**
-///
-/// Et ce n'est pas une hypothèse laissée en l'air : le versement sur `clips-connectes` n'a lieu que si
-/// la révocation a **confirmé** le retrait. Sans confirmation, le clip n'est pas publié.
-///
-/// C'est aussi l'idiome des scénarios bouchonnés voisins - `ScenarioPerceptifConnexionTest` et
-/// `ScenarioPerceptifIssuesConnexionTest` collent tous deux leur jeton à l'écran. S'en écarter faisait
-/// diverger le pendant connecté de ses jumeaux pour rien.
-///
-/// ## Ce que le premier tir a appris, et qui tient toujours
-///
-/// **Une attente satisfaite avant que l'opération commence.** Attendre que la progression *disparaisse*
-/// est vrai à `t=0`. On attend son **apparition puis** sa disparition, dans cet ordre.
-///
-/// **Une assertion que rien ne pouvait faire rougir.** `ConnexionViewModel` pose « Jeton enregistré,
-/// non vérifié » dès qu'un jeton est déposé sans profil : un `isNotBlank()` passait réseau débranché.
-/// On asserte ce que le produit **réserve** au succès - la classe `badge-succes`, et le bandeau
-/// « Connexion réussie ».
-///
-/// **Une caméra qui s'arrêtait sur le geste.** Sur 35 images, 34 sans modale. Le scénario **tient donc
-/// l'écran** après chaque assertion, par [Respiration], qui ne coûte rien hors séance filmée.
-///
-/// ## Exclu du build par défaut
-///
-/// `@Tag("recette-connectee")`, exclu par `surefire.excludedGroups`. Sans jeton le banc **refuse** de
-/// monter, comme il doit. Le tournage connecté inverse les **deux** propriétés : poser `groups` seul ne
-/// lève pas l'exclusion, et le premier tir l'a appris en rendant « Tests run: 0 » sur un build vert.
+/// `@Tag("recette-connectee")`, exclu par `surefire.excludedGroups`. Le tournage connecté inverse les
+/// **deux** propriétés : poser `groups` seul ne lève pas l'exclusion.
 @Tag("recette-connectee")
 @ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
 class ScenarioConnecteConnexionTest {

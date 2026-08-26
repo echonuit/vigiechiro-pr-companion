@@ -137,25 +137,15 @@ final class CorrespondanceParticipation {
 
     /// Refuse d'assembler une participation dont les **bornes de nuit** manquent (#3451).
     ///
-    /// ## Pourquoi un refus, alors que le cas ne se produit pas
+    /// Le cas ne se produit pas aujourd'hui : `V01__schema.sql` déclare `recording_date`, `start_time` et
+    /// `end_time` en `TEXT NOT NULL`, et les deux chemins de dépôt chargent leur passage par le DAO.
+    /// L'invariant n'est donc tenu que par **SQLite**, et ce qui vivait ici était un `return null` silencieux
+    /// par borne. Le jour où un chemin contournerait la base, une nuit partirait sans ses bornes sur la
+    /// plateforme nationale sans que rien ne le dise, et la nuit est l'unité de traitement du produit
+    /// ([ADR 0009]) : une nuit sans bornes n'est pas une nuit.
     ///
-    /// Il ne se produit pas **aujourd'hui** : `V01__schema.sql` déclare `recording_date`, `start_time` et
-    /// `end_time` en `TEXT NOT NULL`, et les deux chemins de dépôt chargent leur passage par le DAO. La
-    /// seule substitution d'heures, `realignerSurLesPreuves`, écrit d'ailleurs en base **avant** l'envoi :
-    /// une valeur nulle buterait sur la contrainte bien avant d'atteindre la plateforme.
-    ///
-    /// L'invariant n'est donc tenu que par **SQLite**. Ce qui vivait ici avant était un `return null`
-    /// silencieux par borne : le champ disparaissait simplement du corps envoyé. Le jour où un chemin de
-    /// construction contournerait la base - un passage bâti depuis la plateforme, une entité en mémoire -
-    /// une nuit partirait **sans ses bornes** sur la plateforme nationale, et rien ne le dirait.
-    ///
-    /// Un silence ne se remarque pas ; un refus, si. La nuit est l'unité de traitement du produit
-    /// ([ADR 0009]) et ses heures décident de la partition : une nuit sans bornes n'est pas une nuit.
-    ///
-    /// ## Pourquoi ici et non chez les appelants
-    ///
-    /// [#versParticipation] est l'entonnoir **unique** des deux chemins d'écriture. Le garde y porte donc
-    /// sur la forme du défaut, et non sur la liste des appelants connus au moment de l'écrire.
+    /// [#versParticipation] est l'entonnoir **unique** des deux chemins d'écriture : le garde y porte sur la
+    /// forme du défaut, non sur la liste des appelants connus au moment de l'écrire.
     private static void exigerBornesDeNuit(Passage passage) {
         if (passage.dateEnregistrement() == null || passage.heureDebut() == null || passage.heureFin() == null) {
             throw new RegleMetierException("Cette nuit n'a pas de bornes complètes (date, heure de début et heure"

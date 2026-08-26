@@ -31,48 +31,23 @@ import org.testfx.util.WaitForAsyncUtils;
 
 /// Le **premier écran**, joué sur le vrai chrome : `S1-01` et `S1-28` (#4138).
 ///
-/// ## Ce que ces cas n'avaient pas
+/// Ces deux cas étaient portés par `AccueilApparenceTest`, `ContratCartesAccueilTest` et
+/// `ActionMenuWiringTest`, dont aucun n'ouvre de fenêtre : leurs lecteurs sur la page de recette
+/// montraient un rectangle noir.
 ///
-/// Ils étaient portés par `AccueilApparenceTest`, `ContratCartesAccueilTest` et `ActionMenuWiringTest`,
-/// dont aucun n'ouvre de fenêtre : leurs lecteurs sur la page de recette montraient un rectangle noir.
-/// Or c'est le premier écran du produit, celui que quelqu'un voit avant tout le reste.
+/// `S1-01` : la liste des cartes ne se fige pas, les features la contribuant. Le scénario parcourt les
+/// cartes **telles qu'elles s'affichent** et vérifie une propriété de chacune : elle quitte l'accueil,
+/// mène à un endroit qui se nomme, et deux cartes ne mènent pas au même. C'est cette dernière qui
+/// attrape un câblage manqué, la façon dont ce cas peut réellement casser.
 ///
-/// ## `S1-01` : la moitié qui manquait est le clic
+/// Le premier jet exigeait que le fil d'Ariane **nomme la carte**. Six des sept le font ; la vue audio
+/// est une et s'ouvre sur plusieurs corpus, donc son fil nomme le **contenu** regardé et non l'écran.
+/// L'assertion était en faute, pas la carte : exiger l'égalité aurait figé une règle que le socle ne
+/// promet pas.
 ///
-/// > Les cartes sont **contribuées par les features** : ne pas figer leur liste ici, mais vérifier que
-/// > chacune de celles qui s'affichent porte un intitulé, une destination annoncée, et **ouvre bien ce
-/// > qu'elle annonce**.
-///
-/// L'intitulé et la destination étaient gardés par `ContratCartesAccueilTest`, sur le contrat Guice.
-/// « Ouvre bien ce qu'elle annonce » ne l'était nulle part : c'est un **geste**, et il demande un écran.
-///
-/// La liste ne se fige pas. Le scénario parcourt les cartes **telles qu'elles s'affichent** : nommer
-/// les sept d'aujourd'hui ferait rougir ce cas au premier module ajouté, ce que la session interdit
-/// explicitement. Ce qui est vérifié est une **propriété de chaque carte**, quel que soit leur nombre.
-///
-/// ## Ce qui est vérifié, et ce qui ne peut pas l'être
-///
-/// Le premier jet exigeait que le fil d'Ariane **nomme la carte**. Mesuré, six des sept cartes le font :
-///
-/// | carte | fil d'Ariane |
-/// |---|---|
-/// | Mes sites, Carte & passages, Ma saison, Audit de cohérence, Espèces & observations | le même libellé |
-/// | Sons & validation | « Sons de référence » |
-///
-/// La septième n'est pas en faute, et l'assertion l'était. La vue audio est **une** et s'ouvre sur
-/// plusieurs corpus (un passage, un lot, une espèce, les références) : son fil nomme donc le **contenu**
-/// qu'on regarde, pas l'écran qui le porte. Exiger l'égalité aurait figé une règle que le socle ne
-/// promet pas, et il aurait fallu une liste d'exceptions - exactement ce que la session interdit.
-///
-/// Ce qui est vérifié est donc ce que le socle garantit vraiment : chaque carte **quitte l'accueil**,
-/// mène à un endroit **qui se nomme**, et deux cartes ne mènent pas au même. Cette dernière attrape un
-/// câblage manqué, qui est la façon dont ce cas peut réellement casser.
-///
-/// ## `S1-28` : une absence, et ce qui l'entoure
-///
-/// Le cas fait juger que « fiche espèce » **n'est plus** dans le menu (#1375). Une absence se prouve mal
-/// seule : sur un menu vide, l'assertion serait verte et le produit cassé. Le cas vérifie donc aussi que
-/// les autres entrées sont là - c'est le garde-fou, et il vaut plus que l'assertion qu'il protège.
+/// `S1-28` fait juger que « fiche espèce » n'est plus dans le menu (#1375). Une absence se prouve mal
+/// seule, sur un menu vide l'assertion serait verte et le produit cassé : le cas vérifie donc aussi que
+/// les autres entrées sont là.
 @ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class ScenarioAccueilTest {
 

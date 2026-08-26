@@ -166,23 +166,14 @@ public final class EtatTraitementVigieChiro implements Callable<Integer>, Lectur
 
     /// [#depuis(String)], dans un fuseau **fourni**.
     ///
-    /// L'instant du serveur était recopié **tel quel** au milieu d'une phrase française :
-    /// `analyse EN COURS (le Fri, 3 Jul 2026 19:00:00 GMT). Patientez.` - jour et mois en anglais,
-    /// heure en UTC, format d'en-tête HTTP (#3678).
+    /// L'instant du serveur était recopié tel quel au milieu d'une phrase française (#3678) : jour et mois
+    /// en anglais, heure en UTC, format d'en-tête HTTP. L'UTC n'est pas un détail de présentation, « le
+    /// 3 juillet à 19 h » n'étant pas la même heure pour l'observateur que pour le serveur, et c'est lui qui
+    /// décide s'il attend ou s'il revient demain.
     ///
-    /// L'UTC n'est pas un détail de présentation : « le 3 juillet à 19 h » n'est pas la même heure
-    /// pour l'observateur que pour le serveur, et c'est l'observateur qui décide s'il attend ou s'il
-    /// revient demain.
-    ///
-    /// La plateforme rend **deux** formes, vues l'une et l'autre dans les fixtures : RFC 1123 et ISO
-    /// avec décalage. Les deux sont acceptées ; une seule l'aurait été en se fiant à un exemple.
-    ///
-    /// **Ce qu'on ne sait pas lire reste affiché tel quel.** Perdre l'information vaudrait moins que
-    /// l'afficher mal : un lecteur peut interpréter une chaîne étrange, jamais une absence.
-    ///
-    /// Le fuseau est un **paramètre** plutôt que `systemDefault()` en dur : `fuseau-alternatif`
-    /// rejoue toute la suite sous `America/Cayenne` (ADR 3450), et un test qui figerait « 21:00 » y
-    /// rougirait sans qu'aucun défaut soit en cause.
+    /// La plateforme rend **deux** formes, RFC 1123 et ISO avec décalage, toutes deux acceptées. **Ce qu'on
+    /// ne sait pas lire reste affiché tel quel** : une chaîne étrange s'interprète, une absence non. Le
+    /// fuseau est un paramètre, `fuseau-alternatif` rejouant la suite sous `America/Cayenne` (ADR 3450).
     static String depuis(String date, ZoneId fuseau) {
         return date == null ? "" : " (le " + lisible(date, fuseau) + ")";
     }

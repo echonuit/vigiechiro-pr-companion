@@ -172,26 +172,16 @@ public final class VerrouWorkspace implements AutoCloseable {
 
     /// Le repli : relire en **sautant** l'octet que le détenteur verrouille.
     ///
-    /// Extrait du `catch` ci-dessus et **visible du paquet** pour une raison mesurée : ce chemin ne
-    /// s'exécute que sous Windows, seul système où le verrou est impératif. Sous POSIX
-    /// `Files.readString` réussit toujours, donc le `catch` y est inatteignable, et PIT tournant sous
-    /// Linux rendait ici quatre mutants sans couverture, si bien que le remède de #3714 était livré
-    /// sans qu'aucune mesure locale puisse le juger (#3561). Le passage hebdomadaire sous Windows exerce
-    /// **câblage**, cette couture rend la **borne** éprouvable partout, et l'une sans l'autre laisse la
-    /// moitié du remède non jugée.
+    /// Extrait du `catch` ci-dessus et visible du paquet pour une raison mesurée : ce chemin ne s'exécute
+    /// que sous Windows, seul système où le verrou est impératif. Sous POSIX `Files.readString` réussit
+    /// toujours, donc PIT tournant sous Linux rendait ici quatre mutants sans couverture et le remède de
+    /// #3714 était livré sans qu'aucune mesure locale puisse le juger (#3561). Le passage hebdomadaire sous
+    /// Windows exerce le câblage, cette couture rend la **borne** éprouvable partout.
     ///
-    /// Deux mutants survivent, **assumés** : l'arithmétique est défensive, pas sémantique, le contrat
-    /// observable étant « rendre tout ce qui suit l'octet 0 ». Ce sont des équivalents par construction
-    /// au sens de l'ADR 3624, pas une couverture manquante.
-    ///
-    /// - `restant <= 0` en `< 0` : pour un fichier d'un seul octet `restant` vaut 0, et
-    ///   `ByteBuffer.allocate(0)` puis une lecture à l'offset 1 rend `""`, ce que la garde rendait
-    ///   déjà. Elle ne sert vraiment qu'au fichier **vide**, où `restant` vaut -1 et où `allocate(-1)`
-    ///   lèverait ;
-    /// - `size() - 1` en `size() + 1` : sur-allouer ne change rien, `read` s'arrête à EOF et `flip()`
-    ///   borne le tampon à ce qui a été lu.
-    ///
-    /// Les écrire ainsi reste juste : `allocate` refuse une taille négative.
+    /// Deux mutants survivent, assumés comme équivalents par construction (ADR 3624), le contrat observable
+    /// étant « rendre tout ce qui suit l'octet 0 » : `restant <= 0` en `< 0` ne sert qu'au fichier vide, où
+    /// `restant` vaut -1 et où `allocate(-1)` lèverait ; `size() - 1` en `size() + 1` sur-alloue sans rien
+    /// changer, `read` s'arrêtant à EOF.
     static String apresLOctetDuVerrou(Path fichier) throws IOException {
         try (FileChannel canal = FileChannel.open(fichier, StandardOpenOption.READ)) {
             long restant = canal.size() - 1;

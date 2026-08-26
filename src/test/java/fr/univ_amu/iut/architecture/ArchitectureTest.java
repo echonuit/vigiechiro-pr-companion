@@ -19,38 +19,24 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// Règles d'architecture (ArchUnit) garanties dès la fondation, complétées par les règles de
-/// couches UI du socle MVVM (viewmodel sans JavaFX scene/fxml/stage, vue sans JDBC). Le point
-/// d'extension Protocole reste à verrouiller avec la feature correspondante.
+/// Règles d'architecture (ArchUnit) garanties dès la fondation, complétées par les règles de couches UI
+/// du socle MVVM : viewmodel sans JavaFX scene/fxml/stage, vue sans JDBC. Le point d'extension Protocole
+/// reste à verrouiller avec la feature correspondante.
 ///
-/// Dépendances inter-features : une feature PEUT dépendre du paquet `model` d'une autre
-/// feature (entités, `model.dao`, services métier), mais JAMAIS de son `view` ni de son
-/// `viewmodel`. Le graphe de slices `fr.univ_amu.iut.(*)` reste par ailleurs sans cycle.
+/// Une feature **peut** dépendre du paquet `model` d'une autre (entités, `model.dao`, services), jamais
+/// de son `view` ni de son `viewmodel`, et le graphe de slices `fr.univ_amu.iut.(*)` reste sans cycle.
+/// Écrit avec l'API core d'ArchUnit ([ClassFileImporter] + `@Test`) plutôt qu'avec `@AnalyzeClasses`,
+/// convention du projet (cf. IMPL-CONVENTIONS).
 ///
-/// Écrit avec l'API « core » d'ArchUnit ([ClassFileImporter] + `@Test`) plutôt
-/// qu'avec `@AnalyzeClasses`/`@ArchTest` : c'est la convention du projet (cf.
-/// IMPL-CONVENTIONS).
+/// **Ce que le vert de ces règles ne couvre pas** (#2181). ArchUnit lit le **bytecode**, et une
+/// dépendance qui se réduit à une constante compile-time n'y laisse aucune trace : le compilateur inline
+/// la valeur (JLS 13.1) et le `.class` ne référence jamais la classe qui la déclarait. Toutes les règles
+/// sont aveugles à cette **catégorie**, qui vaut pour toute `String`, `int` ou `boolean` constant.
+/// `cli.commande.Importer` a ainsi cité `importation.viewmodel` sans qu'aucune règle ne bronche.
 ///
-/// ## Ce que le vert de ces règles ne couvre PAS (#2181)
-///
-/// ArchUnit lit le **bytecode**. Une dépendance qui se réduit à une **constante compile-time** n'y laisse
-/// aucune trace : le compilateur inline la valeur sur le site d'appel (JLS 13.1, *constant variables*), et
-/// le `.class` ne référence jamais la classe qui la déclarait. **Toutes** les règles ci-dessous sont donc
-/// aveugles à ce cas - ce n'est pas un faux négatif isolé mais une **catégorie**, qui vaut pour toute
-/// `String`, `int` ou `boolean` constant.
-///
-/// Le défaut n'est pas théorique : `cli.commande.Importer` a cité `importation.viewmodel` pour une clé de
-/// réglage sans qu'aucune règle ne bronche (#2181). Mesuré de nouveau en juillet 2026 : en réintroduisant
-/// volontairement une telle dépendance, ces **six** règles restent **vertes** tandis que
-/// [IsolationFeatureSourcesTest] échoue.
-///
-/// Ce dernier est le **doublon au niveau des sources** de la règle d'isolation inter-feature : l'`import`
-/// est dans le `.java` quoi qu'en fasse le compilateur. Il ne couvre que **cette** règle ; les cinq autres
-/// restent sans jumeau, faute de cas réel observé (une constante compile-time exposée par JavaFX ou JDBC
-/// et importée pour elle seule reste possible, mais ne s'est jamais produite ici).
-///
-/// À retenir en lisant un vert d'ici : il dit « aucune dépendance **dans le bytecode** », pas « aucune
-/// dépendance ».
+/// [IsolationFeatureSourcesTest] est le doublon au niveau des **sources** de la règle d'isolation
+/// inter-feature : l'`import` est dans le `.java` quoi qu'en fasse le compilateur. Les cinq autres
+/// règles restent sans jumeau. Un vert d'ici dit « aucune dépendance dans le bytecode ».
 class ArchitectureTest {
 
     private static JavaClasses classes;

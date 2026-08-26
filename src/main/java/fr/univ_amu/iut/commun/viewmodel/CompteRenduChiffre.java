@@ -4,34 +4,23 @@ import fr.univ_amu.iut.commun.model.Severite;
 import java.util.List;
 import java.util.Objects;
 
-/// **Compte rendu chiffré** d'une opération lourde (#2358, chantier #2350) : ce qui est passé et ce qui a
-/// été écarté, **en proportions** et non en listes, puis l'action suivante.
+/// **Compte rendu chiffré** d'une opération lourde (#2358, chantier #2350) : ce qui est passé et ce qui
+/// a été écarté, **en proportions** et non en listes, puis l'action suivante.
 ///
-/// ## Pourquoi un second compte rendu
+/// [CompteRendu] (ADR 0031) porte des **phrases** et répond à « qu'est-ce qui s'est passé, précisément ».
+/// Celui-ci porte des **quantités** et répond à « dans quelles proportions », question à laquelle une
+/// énumération ne répond pas : à la fin d'un import, la liste des rejets dit lesquels, seule une barre
+/// dit s'ils sont trois ou la moitié de la nuit.
 ///
-/// [CompteRendu] (ADR 0031) porte des **phrases** : un titre, des constats, un détail par sujet. Il répond
-/// à « qu'est-ce qui s'est passé, précisément ». Ce modèle-ci porte des **quantités** : il répond à « dans
-/// quelles proportions », question à laquelle une énumération ne répond pas. À la fin d'un import, la
-/// liste des rejets dit *lesquels* ; seule une barre dit s'ils sont trois ou la moitié de la nuit. Les deux
-/// coexistent, et une même surface peut montrer l'un puis l'autre.
+/// Trois règles, tenues par le modèle. **Les proportions sont à l'échelle**, largeurs calculées sur les
+/// quantités réelles ([Ventilation#fraction], [#echelleDesVolumes]) : une barre qui ne respecte pas ce
+/// qu'elle représente donne une vue fausse avec l'autorité du visuel. **Un ensemble se ventile
+/// entièrement**, [Ventilation] refusant une somme de segments qui ne fait pas son total, ce qui
+/// contraint à nommer le reliquat. **Le compte rendu ne se termine pas sur « Fermer »**, [#actions]
+/// portant ce qu'on fait ensuite.
 ///
-/// ## Les trois règles, tenues par le modèle
-///
-/// 1. **Les proportions sont à l'échelle** : les largeurs se calculent sur les quantités réelles
-///    ([Ventilation#fraction] pour un ensemble, [#echelleDesVolumes] pour des volumes comparés), jamais sur une
-/// impression. Une barre qui ne respecte pas ce qu'elle représente
-///    est pire qu'un tableau : elle donne une vue fausse avec l'autorité du visuel.
-/// 2. **Un ensemble se ventile entièrement** : [Ventilation] **refuse** une somme de segments qui ne fait
-///    pas son total. L'appelant est ainsi contraint de **nommer** le reliquat, là où un « autres »
-///    silencieux masquerait précisément ce que l'utilisateur cherchait.
-/// 3. **Le compte rendu ne se termine pas sur « Fermer »** : [#actions] porte ce qu'on fait ensuite.
-///
-/// Modèle **présentationnel pur** : il ne va rien chercher et n'appartient à aucune feature. Chaque
-/// opération y projette ce qu'elle a déjà produit (rapport d'import, bilan de publication, rapport de
-/// réactivation) ; aucune donnée n'est créée ici.
-///
-/// Chaque bloc est **facultatif** : vide, il ne se rend pas. Un compte rendu sans rejet n'affiche pas un
-/// cadre vide intitulé « Motifs de rejet ».
+/// Modèle **présentationnel pur** : il ne va rien chercher, n'appartient à aucune feature, et chaque
+/// bloc facultatif vide ne se rend pas.
 ///
 /// @param titre l'opération et son objet, en une ligne (« Import terminé : nuit du 22/06/2026 »)
 /// @param resultat le résultat **chiffré** de la pastille (« 583 / 612 importés ») : un libellé, jamais

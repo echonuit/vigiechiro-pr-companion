@@ -16,32 +16,20 @@ import org.junit.platform.testkit.engine.EngineTestKit;
 
 /// Ce que le banc filme, et ce qu'il laisse passer (#4162).
 ///
-/// ## Pourquoi cette question se pose
-///
 /// Une seule ligne au fichier de services de JUnit rend l'extension active partout où la détection
-/// automatique est demandée : il n'y a pas trente classes à annoter pour couvrir tous les cas. Le
-/// revers est qu'ainsi branchée, elle filme **tous** les tests, y compris ceux qui ne citent aucun
-/// cas. Une sonde l'a mesuré sur une seule classe de service : **vingt clips de carton**, deux
-/// secondes chacun, que personne n'ouvrira - et l'index, qui se lit par cas, ne sait même pas les
-/// nommer.
+/// automatique est demandée, ce qui évite d'annoter trente classes. Le revers est qu'elle filme **tous**
+/// les tests, y compris ceux qui ne citent aucun cas : une sonde a mesuré vingt clips de carton sur une
+/// seule classe de service, deux secondes chacun, que l'index par cas ne sait même pas nommer.
 ///
-/// ## Pourquoi le cas NÉGATIF est le seul joué par le moteur
+/// **Le cas négatif est le seul joué par le moteur.** Le banc a besoin de `ffmpeg`, que le build
+/// ordinaire n'installe pas : un cas qui filmerait pour de vrai serait rouge sur toute PR, ou vert par
+/// une hypothèse sautée, c'est-à-dire un vert qui ne prouve rien. Le refus s'éprouve **sans** `ffmpeg`,
+/// et c'est une propriété du remède : on refuse avant d'ouvrir l'encodeur.
 ///
-/// Le banc a besoin de `ffmpeg`, que le build ordinaire n'installe pas. Un cas qui filmerait pour
-/// de vrai serait donc rouge sur toute PR, ou vert par une hypothèse sautée - c'est-à-dire un vert
-/// qui ne prouve rien.
-///
-/// Le refus, lui, s'éprouve **sans** `ffmpeg`, et c'est une propriété du remède et non une
-/// commodité : on refuse **avant** d'ouvrir l'encodeur.
-///
-/// Le garde vise un dossier qui **n'existe pas encore**, et non un dossier vide. Sans cela il
-/// serait vert à vide sur toute machine sans `ffmpeg` : l'encodeur y échoue, donc aucun fichier
-/// n'apparaît, donc « aucun fichier » ne prouve rien. Or l'enregistrement crée son dossier
-/// **avant** de lancer l'encodeur : c'est cette création-là qui trahit une décision prise trop
-/// tard, avec ou sans `ffmpeg` sur la machine.
-///
-/// Ce qui prouve l'autre moitié - qu'un test qui cite un cas produit bien son clip - est le tournage
-/// lui-même, qui rend neuf clips sur neuf sur trois plateformes.
+/// Le garde vise un dossier qui **n'existe pas encore**, et non un dossier vide : sans cela il serait
+/// vert à vide sur toute machine sans `ffmpeg`, où aucun fichier n'apparaît. L'enregistrement crée son
+/// dossier **avant** de lancer l'encodeur, et c'est cette création qui trahit une décision prise trop
+/// tard. L'autre moitié, qu'un test citant un cas produit bien son clip, est prouvée par le tournage.
 class EnregistreurDeFilmTest {
 
     @Test

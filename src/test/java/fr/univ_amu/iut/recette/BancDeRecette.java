@@ -33,33 +33,19 @@ import javafx.stage.Stage;
 
 /// Le banc d'un cas de recette, **déclaré** au lieu d'être recopié (#4133).
 ///
-/// ## Pourquoi il existe
+/// Monter un scénario filmé demande huit gestes toujours identiques, espace de travail jetable,
+/// injecteur, migrations, semis, chrome, fenêtre, ouverture, et quatre décisions qui varient vraiment :
+/// la **taille**, l'**exécuteur**, ce qu'on **remplace** dans l'injecteur, et l'écran d'**ouverture**. Ce
+/// préambule pesait 494 lignes pour cinquante cas, et les trois plus lourds de quarante-sept à
+/// soixante-neuf lignes pour un seul. Écrire un cas neuf revenait à recopier le préambule du voisin, et
+/// une copie hérite de la dette de son modèle.
 ///
-/// Monter un scénario filmé demande huit gestes toujours identiques - espace de travail jetable,
-/// injecteur, migrations, semis, chrome, fenêtre, ouverture - et quatre décisions qui, elles, varient
-/// vraiment : la **taille**, l'**exécuteur**, ce qu'on **remplace** dans l'injecteur, et l'écran
-/// d'**ouverture**. À la clôture de #4133, ce préambule pesait **494 lignes pour cinquante cas**, et
-/// les trois plus lourds coûtaient de quarante-sept à soixante-neuf lignes **pour un seul cas**.
-///
-/// Écrire un cas neuf revenait donc à recopier le préambule du voisin, et une copie hérite de la dette
-/// de son modèle : trois classes sur onze posaient encore leur fenêtre avec un idiome antérieur à
-/// [FenetreDuBanc], et deux tailles d'écran circulaient sans raison.
-///
-/// ## Ce qu'il ne fait pas
-///
-/// **« Pas de surcharge » ne veut pas dire « synchrone ».** `RacineInjecteur` lie l'exécuteur de
-/// PRODUCTION, donc l'asynchrone : une classe qui ne surchargeait rien tournait en asynchrone. La
-/// migration de trois classes a posé SYNCHRONE par erreur en lisant « exécuteur par défaut » dans un
-/// inventaire, et trois cas ont rougi en « Not on FX application thread ». C'est une raison de plus
-/// d'exiger le choix : il ne se devine pas depuis l'absence de surcharge.
-///
-/// Il ne choisit **pas** l'exécuteur à votre place. Synchrone ou asynchrone est une décision de fond,
-/// documentée cas par cas : le synchrone rend les assertions déterministes, l'asynchrone est le seul
-/// qui laisse voir un transitoire - une barre de progression, un voile - parce qu'en synchrone le fil
-/// JavaFX est bloqué et qu'aucune image n'est rendue pendant ce temps. Le banc **exige** donc qu'on le
-/// dise.
-///
-/// ## Usage
+/// Il ne choisit **pas** l'exécuteur à votre place, et l'exige : synchrone ou asynchrone est une
+/// décision de fond. Le synchrone rend les assertions déterministes ; l'asynchrone est le seul qui
+/// laisse voir un transitoire, une barre, un voile, parce qu'en synchrone le fil JavaFX est bloqué et
+/// qu'aucune image n'est rendue. « Pas de surcharge » ne veut pas dire « synchrone » : `RacineInjecteur`
+/// lie l'exécuteur de production, et trois cas ont rougi en « Not on FX application thread » pour avoir
+/// lu l'inverse dans un inventaire.
 ///
 /// ```java
 /// @Start
@@ -217,23 +203,14 @@ public final class BancDeRecette {
 
     /// Le jeton du tournage connecté, **rendu au scénario** au lieu d'être déposé pour lui.
     ///
-    /// ## Pourquoi les deux voies existent
+    /// [#connecteALaPlateforme()] dépose le jeton et laisse la modale le revérifier seule, ce qu'il faut à un
+    /// scénario qui doit **partir connecté**. Celle-ci ne dépose rien : elle sert au scénario qui filme la
+    /// connexion comme un utilisateur la fait, en collant le jeton dans le champ, car une modale qui se
+    /// connecte toute seule ne montre pas ce qui l'a connectée.
     ///
-    /// [#connecteALaPlateforme()] dépose le jeton et laisse la modale le revérifier seule : c'est ce
-    /// qu'il faut à un scénario qui doit **partir connecté**, sans refaire la connexion à chaque cas.
-    ///
-    /// Celle-ci ne dépose rien. Elle sert au scénario qui filme la connexion **comme un utilisateur la
-    /// fait** : coller le jeton dans le champ, puis cliquer. C'est ce que font déjà les scénarios
-    /// bouchonnés, et s'en écarter rendait leur pendant connecté illisible - une modale qui se connecte
-    /// toute seule ne montre pas ce qui l'a connectée.
-    ///
-    /// Le jeton **paraît donc à l'écran**, et le clip est publié. C'est assumé : il est révoqué en
-    /// fin de run (#4305), et un jeton mort n'est pas un secret. La publication n'a d'ailleurs lieu que
-    /// si la révocation a **confirmé** son retrait, sans quoi l'hypothèse « il est mort » ne serait
-    /// qu'un espoir.
-    ///
-    /// Refuse, comme l'autre voie, plutôt que de rendre vide : un scénario qui déclare vouloir la
-    /// plateforme et ne la trouve pas n'a rien à montrer.
+    /// Le jeton **paraît donc à l'écran** et le clip est publié : il est révoqué en fin de run (#4305), et la
+    /// publication n'a lieu que si la révocation a **confirmé** son retrait. Refuse, comme l'autre voie,
+    /// plutôt que de rendre vide.
     public static String jetonDeLaPlateforme() {
         return ConnexionModule.jetonPonctuel().orElseThrow(() -> new IllegalStateException(SANS_JETON));
     }

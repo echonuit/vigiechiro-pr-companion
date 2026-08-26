@@ -10,28 +10,22 @@ import java.util.function.Supplier;
 
 /// Politique de réessai des appels réseau (#2354, chantier #2350).
 ///
-/// Le transport persiste déjà un plan de dépôt reprenable (`depot_plan`/`depot_unite`, « Retenter les
-/// échecs ») : c'est le **filet** qui répare une panne. Cette politique est le **pare-chocs** qui
-/// l'évite - un paquet perdu sur une connexion mobile ne doit pas coûter une unité de dépôt et un geste
-/// humain pour un incident qui n'en méritait aucun.
-///
-/// Trois règles la gouvernent (ADR politique de réessai) :
+/// Le transport persiste déjà un plan de dépôt reprenable, le **filet** qui répare une panne ; cette
+/// politique est le **pare-chocs** qui l'évite, un paquet perdu sur une connexion mobile ne devant pas
+/// coûter une unité de dépôt et un geste humain.
 ///
 /// 1. **Le réessai n'est jamais aveugle.** Seul ce que [ReponseApi#estReessayable()] déclare rejouable
-///    est rejoué : un incident réseau ([ReponseApi.Injoignable]) ou un serveur temporairement
-///    indisponible ([ReponseApi.Refuse] `429`/`5xx`). Un `4xx` (URL signée expirée, corps refusé, jeton
-///    mort) ne deviendra jamais valide en réessayant : on renonce tout de suite.
+///    l'est : un incident réseau, ou un serveur temporairement indisponible (`429`/`5xx`). Un `4xx` ne
+///    deviendra jamais valide, on renonce tout de suite.
 /// 2. **Le réessai n'est pas uniforme.** Un appel que quelqu'un attend mérite d'insister
 ///    ([Profil#INSISTANT]) ; un sondage périodique renonce vite ([Profil#BREF]), sinon il transforme une
-///    lenteur serveur en rafale de requêtes et amplifie l'incident. Les profils sont nommés d'après **ce
-///    qu'ils font**, la situation qui les motive vivant dans leur documentation : c'est ce qui permet à un
-///    appelant de dire « j'insiste » sans avoir à justifier qu'il est bien « au premier plan ».
-/// 3. **La temporisation porte un aléa** (jitter) : sans lui, plusieurs unités qui échouent ensemble
-///    retentent ensemble et la rafale se reforme. Et **`Retry-After` fait autorité** quand le serveur
-///    l'envoie : c'est lui qui sait, pas nous.
+///    lenteur serveur en rafale. Les profils sont nommés d'après **ce qu'ils font**, ce qui permet de
+///    dire « j'insiste » sans justifier qu'on est au premier plan.
+/// 3. **La temporisation porte un aléa.** Sans lui, plusieurs unités qui échouent ensemble retentent
+///    ensemble et la rafale se reforme. **`Retry-After` fait autorité** quand le serveur l'envoie.
 ///
-/// L'endormissement et l'aléa sont **injectés** ([Temporisateur], [DoubleSupplier]) pour que les tests
-/// soient déterministes et instantanés : la production dort, le test enregistre.
+/// L'endormissement et l'aléa sont **injectés** ([Temporisateur], [DoubleSupplier]) : la production dort,
+/// le test enregistre.
 final class PolitiqueReessai {
 
     /// Combien insister, et jusqu'où espacer. Le choix n'est pas cosmétique : un relevé d'état qui

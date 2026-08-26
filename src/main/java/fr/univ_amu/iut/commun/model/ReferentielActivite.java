@@ -15,33 +15,21 @@ import java.util.Optional;
 /// Le **référentiel d'activité** ACTICHIRO / Vigie-Chiro (#2351) : pour une espèce, une saison et un
 /// contexte, les quantiles qui disent où se situe un nombre de contacts.
 ///
-/// ## La source, qui doit voyager avec la donnée
-///
 /// > Bas Y., Kerbiriou C., Roemer C. & Julien J.-F. (2020), *Bat reference scale of activity levels*
 /// > (v. 2020-04-10), Team-Chiro / CESCO, Muséum national d'Histoire naturelle.
 ///
-/// Données ouvertes, **libres d'usage avec citation obligatoire**. C'est pourquoi [#CITATION] est
-/// exposée : elle se recopie à l'écran et dans chaque export. Un référentiel scientifique qui voyage
-/// sans sa source est une donnée orpheline, et l'utilisateur n'a alors aucun moyen de contester ce
-/// qu'on lui affirme.
+/// Données ouvertes, **libres d'usage avec citation obligatoire** : [#CITATION] est exposée pour se
+/// recopier à l'écran et dans chaque export. Un référentiel scientifique qui voyage sans sa source est
+/// une donnée orpheline, et l'utilisateur n'a alors aucun moyen de contester ce qu'on lui affirme.
 ///
-/// ## La règle de repli
+/// **La règle de repli** cherche du plus précis au plus général, milieu puis région puis national, mais
+/// retient la **première déclinaison fiable** et non la plus fine : descendre vers un seuil peu fiable
+/// parce qu'il est plus spécifique produit une classe plus fausse. Quand aucune n'est fiable, on rend la
+/// plus précise des non fiables, que l'appelant affiche **marquée indicatif**
+/// ([SeuilsActivite#indicatif()]) ; ne rien dire ferait croire à une absence de données.
 ///
-/// On cherche du **plus précis au plus général** (milieu, puis région, puis national), mais on retient
-/// la **première déclinaison fiable**, pas la plus fine. Descendre vers un seuil peu fiable parce qu'il
-/// est plus spécifique produit une classe plus **fausse**, pas plus juste.
-///
-/// Quand aucune déclinaison fiable n'existe, on rend la plus précise des non fiables plutôt que rien :
-/// l'appelant l'affichera **marquée indicatif** ([SeuilsActivite#indicatif()]). Ne rien dire ferait
-/// croire à une absence de données là où il n'y a qu'une incertitude assumée.
-///
-/// ## Ce que ce référentiel ne couvre pas
-///
-/// Les taxons hors chiroptères (orthoptères, oiseaux, bruit) n'ont pas de seuils : la lecture rend
-/// alors **vide**, et l'écran doit écrire « non couvert par le référentiel » plutôt que de laisser une
-/// cellule blanche, qui se lirait comme une donnée manquante.
-///
-/// Sans dépendance JavaFX : cette classe se teste seule.
+/// Les taxons hors chiroptères n'ont pas de seuils : la lecture rend **vide**, et l'écran doit écrire
+/// « non couvert par le référentiel » plutôt que de laisser une cellule blanche.
 public final class ReferentielActivite {
 
     /// Citation **obligatoire**, à recopier partout où une classe d'activité s'affiche ou s'exporte.

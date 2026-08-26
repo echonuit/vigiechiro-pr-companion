@@ -64,23 +64,14 @@ public final class CadreVisible {
 
     /// Lit le graphe de scène **sur le fil de JavaFX**, et rend le résultat à l'appelant.
     ///
-    /// ## Pourquoi une lecture a besoin d'un fil
+    /// `getBoundsInLocal()` n'est pas un accesseur : quand les bornes sont sales, il déclenche leur recalcul
+    /// sur le fil qui appelle, si bien que lire depuis le fil du test fait travailler **deux fils sur le
+    /// même graphe**. Coût mesuré : un verdict faux une fois sur cinq (#4200), et plus rarement la
+    /// corruption du graphe lui-même (#4187), index de -1 ou tableau de segments nul, états que seule une
+    /// écriture concurrente produit et qui laissent la JVM abîmée pour les tests suivants du fork.
     ///
-    /// `getBoundsInLocal()` n'est pas un accesseur : quand les bornes sont **sales**, il déclenche
-    /// leur recalcul - `Parent.recomputeBounds`, puis la mise en page du texte - sur le fil qui
-    /// appelle. Lire depuis le fil du test fait donc travailler DEUX fils sur le même graphe.
-    ///
-    /// Ce que cela coûte, mesuré :
-    ///
-    /// - un verdict faux une fois sur cinq (#4200), quand les bornes lues sont à moitié calculées ;
-    /// - et, plus rarement, la corruption du graphe lui-même (#4187) :
-    ///   `ObservableListWrapper.get` avec un index de -1, `PrismTextLayout` dont le tableau de
-    ///   segments est nul. **Ces deux-là ne peuvent pas se produire depuis le fil de JavaFX** : ce
-    ///   sont des états que seule une écriture concurrente produit. La JVM reste ensuite abîmée pour
-    ///   les tests suivants du même fork, ce qui explique les classes sans rapport tombées avec.
-    ///
-    /// `amener` prenait déjà soin de faire la MUTATION par `robot.interact`. C'est la lecture qui
-    /// avait été jugée inoffensive, et elle ne l'est pas.
+    /// `amener` prenait déjà soin de faire la mutation par `robot.interact` ; c'est la lecture qui avait été
+    /// jugée inoffensive.
     private static <T> T surLeFilFx(Callable<T> lecture) {
         if (Platform.isFxApplicationThread()) {
             return appeler(lecture);

@@ -79,26 +79,14 @@ public final class SynchronisationParticipation {
 
     /// Le refus « site non rattaché », qui nomme le geste **qui marche** pour ce carré-là (#3854).
     ///
-    /// ## Pourquoi ce message a changé
+    /// Il conseillait « connectez-vous et synchronisez vos sites ». Or la synchronisation dérive les sites
+    /// de `GET /moi/participations` : elle n'atteint que les carrés où une nuit est **déjà** déposée, donc
+    /// le conseil était inapplicable à qui essaie d'en déposer une première. Mesuré par la sonde #3669 :
+    /// `/moi/sites` rend 0 pour un compte qui dépose depuis des mois, son carré appartenant à un tiers.
+    /// C'est le jumeau du défaut que #3806 a corrigé côté fenêtre de déclaration.
     ///
-    /// Il conseillait « connectez-vous et **synchronisez vos sites** ». Or la synchronisation dérive les
-    /// sites de `GET /moi/participations` : elle n'atteint que les carrés où une nuit est **déjà**
-    /// déposée. Le conseil était donc inapplicable à qui essaie d'en déposer une première - c'est-à-dire
-    /// à tous ceux qui lisent ce message. Mesuré par la sonde #3669 : `/moi/sites` rend **0** pour un
-    /// compte qui dépose depuis des mois, son carré appartenant à un tiers.
-    ///
-    /// C'est le jumeau du défaut que #3806 a corrigé côté fenêtre de déclaration : un message qui renvoie
-    /// vers un geste inopérant.
-    ///
-    /// ## Ce que coûte le conseil, et où
-    ///
-    /// Une requête, **sur le chemin d'échec uniquement** : un dépôt qui aboutit ne cherche aucun carré.
-    /// Sans elle, il faudrait choisir entre deux conseils dont l'un serait faux, puisque « récupérez-le »
-    /// n'a de sens que si le carré existe là-bas en Point Fixe.
-    ///
-    /// **Injoignable ne tranche pas.** Ni « récupérez-le », ni « il n'existe pas » : le refus dit qu'il
-    /// n'a pas pu vérifier, comme le verdict de la modale l'a appris (ADR 3458). Affirmer depuis une
-    /// ignorance est le défaut que ce dépôt traque partout.
+    /// Le conseil coûte une requête, **sur le chemin d'échec uniquement**. **Injoignable ne tranche pas** :
+    /// ni « récupérez-le », ni « il n'existe pas », le refus dit qu'il n'a pas pu vérifier (ADR 3458).
     private String conseilSiteNonRattache(String numeroCarre) {
         if (numeroCarre == null) {
             return ConseilSiteNonRattache.sansNumeroDeCarre();

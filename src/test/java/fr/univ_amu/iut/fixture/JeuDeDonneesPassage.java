@@ -29,21 +29,13 @@ import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-/// **La topologie d'une nuit, semée une bonne fois** (#1258) : utilisateur → site → point → enregistreur →
-/// passage → session → enregistrement original, puis autant de séquences et d'observations qu'on veut.
+/// **La topologie d'une nuit, semée une bonne fois** (#1258) : utilisateur → site → point → enregistreur
+/// → passage → session → enregistrement original, puis autant de séquences et d'observations qu'on veut.
 ///
-/// ## Pourquoi cette classe existe
-///
-/// **Soixante-quinze** fichiers de test resèment la même topologie à la main - l'audit de dette n'en
-/// annonçait qu'une dizaine. Chaque migration de schéma coûte donc autant de retouches que de copies, et
-/// une clé étrangère ajoutée casse des tests qui n'ont **rien** à voir avec elle.
-///
-/// Le coût est déjà payé plusieurs fois : `observation` référence `sequence` qui référence
-/// `recording_session` qui référence `passage`… Écrire un test sur une **observation** oblige à connaître
-/// six tables. Ce n'est pas de la rigueur, c'est du bruit : le test parle de la plomberie au lieu de parler
-/// de ce qu'il vérifie.
-///
-/// ## Comment s'en servir
+/// Soixante-quinze fichiers de test resèment la même topologie à la main. `observation` référence
+/// `sequence` qui référence `recording_session` qui référence `passage` : écrire un test sur une
+/// observation oblige à connaître six tables, et une clé étrangère ajoutée casse des tests qui n'ont
+/// rien à voir avec elle.
 ///
 /// ```java
 /// JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source).semer();
@@ -51,42 +43,22 @@ import java.util.Objects;
 /// long idValidee = jeu.ajouterObservationValidee("Nyclei");
 /// ```
 ///
-/// Les valeurs par défaut (utilisateur `u-1`, carré `640380`, point `A1`, enregistreur `SN-1`) sont celles
-/// que les tests existants utilisaient déjà. Tout se surcharge avant `semer()` :
+/// Les valeurs par défaut (utilisateur `u-1`, carré `640380`, point `A1`, enregistreur `SN-1`) sont
+/// celles que les tests employaient déjà, et tout se surcharge avant `semer()` :
 ///
 /// ```java
-/// JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
-///         .carre("130711")
-///         .point("Z41")
-///         .statut(StatutWorkflow.DEPOSE)
-///         .verdict(Verdict.OK)
-///         .semer();
+/// JeuDeDonneesPassage.dans(source).carre("130711").point("Z41")
+///         .statut(StatutWorkflow.DEPOSE).verdict(Verdict.OK).semer();
 /// ```
 ///
-/// ## Plusieurs passages, qui **partagent** ce qu'ils ont en commun
+/// Chaque `semer()` sème **un** passage. Pour plusieurs nuits, on rappelle la fabrique : l'utilisateur,
+/// l'enregistreur, le site et le point sont trouvés s'ils existent, créés sinon, si bien que deux nuits
+/// sur le même point le partagent réellement. Deux passages sur un même point diffèrent par (année, n°),
+/// règle d'unicité R5.
 ///
-/// Chaque `semer()` sème **un** passage. Pour une topologie à plusieurs nuits, on rappelle la fabrique :
-/// l'utilisateur, l'enregistreur, le site (par n° de carré) et le point (par code) sont **trouvés s'ils
-/// existent déjà, créés sinon**. Deux nuits sur le même point partagent donc réellement ce point, ce que
-/// les tests d'agrégation (statut dominant d'un point) exigent :
-///
-/// ```java
-/// JeuDeDonneesPassage.dans(source).point("A1").nuit(1, 2025, "2025-06-20").statut(TRANSFORME).verdict(OK).semer();
-/// JeuDeDonneesPassage.dans(source).point("A1").nuit(1, 2026, "2026-06-20").statut(VERIFIE).verdict(DOUTEUX).semer();
-/// ```
-///
-/// (Deux passages sur un même point doivent différer par (année, n°) - la règle d'unicité R5.)
-///
-/// ## Ce qu'elle ne fait pas
-///
-/// Elle ne **migre pas** le schéma : c'est au test de le faire (via `MigrationSchema` ou son injecteur),
-/// parce que tous ne l'obtiennent pas de la même façon.
-///
-/// Elle ne sème **aucun taxon** : le référentiel réel est déjà posé par la migration `V02__seed_taxons.sql`.
-/// `Pipkuh`, `Pippip`, `Nyclei` **existent** - les réinsérer viole la clé primaire (piège coûté une fois).
-///
-/// Et les **outils de capture** de `src/main/.../outils` restent **autonomes** : ce sont des exécutables
-/// indépendants, cette fixture de test ne leur est pas accessible, et on assume leur duplication.
+/// Elle ne migre pas le schéma, chaque test l'obtenant à sa façon, et ne sème **aucun taxon** : le
+/// référentiel est posé par `V02__seed_taxons.sql`, et réinsérer `Pipkuh` viole la clé primaire. Les
+/// outils de capture de `src/main/.../outils` restent autonomes, leur duplication assumée.
 public final class JeuDeDonneesPassage {
 
     private final SourceDeDonnees source;

@@ -20,30 +20,19 @@ import java.util.Optional;
 /// Confronte les **deux lectures** du département d'un point d'écoute (#2848), hors ligne.
 ///
 /// Depuis que chaque point porte sa commune (ADR 2791), son département se lit de deux façons qui
-/// peuvent se contredire :
+/// peuvent se contredire : par son **carré**, les deux premiers chiffres du numéro
+/// ([RegionDuCarre#departement], ADR 2351), lecture qu'affiche la fiche site ; ou par sa **commune**, le
+/// préfixe du code INSEE ([Commune#departement]).
 ///
-/// - par son **carré** : les deux premiers chiffres du numéro ([RegionDuCarre#departement], ADR 2351).
-///   C'est cette lecture qu'affiche la fiche site ;
-/// - par sa **commune** : le préfixe du code INSEE ([Commune#departement], ADR 2791).
+/// Le constat **montre** l'écart, il ne le juge pas. Un carré fait 2 km de côté (R26) et peut chevaucher
+/// deux départements dès qu'il touche une limite : la divergence est alors normale, et c'est le cas le
+/// plus fréquent. Elle peut aussi trahir un GPS mal pointé ou un numéro mal recopié, et rien ici ne
+/// départage. D'où [Severite#INFO], le seul niveau qui ne fasse pas rendre 1 à `audit-coherence`.
 ///
-/// ## Ce que le constat dit, et ce qu'il ne dit pas
-///
-/// Il **montre** l'écart, il ne le juge pas. Un carré fait 2 km de côté (R26) et peut chevaucher deux
-/// départements dès qu'il touche une limite : la divergence est alors parfaitement normale, et c'est même le cas le
-/// plus fréquent
-/// attendu. Elle peut aussi trahir un GPS pointé au mauvais endroit ou un numéro de carré mal recopié -
-/// mais rien ici ne permet de départager les deux, et personne ne peut le faire à la place de
-/// l'utilisateur qui connaît son terrain. D'où [Severite#INFO], le seul niveau qui ne fasse pas rendre
-/// 1 à `audit-coherence` : un carré de bord de département ne doit pas casser un script.
-///
-/// ## Les silences, qui sont des décisions
-///
-/// - un point **sans commune résolue** ne produit rien : il n'y a pas de seconde lecture à confronter,
-///   et l'absence de résolution est un état normal (point sans GPS, rattrapage jamais lancé) ;
-/// - un **numéro de carré illisible** (nul, trop court) ne produit rien non plus : il ne porte pas de
-///   première lecture, et son défaut relève d'un autre contrôle que celui-ci ;
-/// - une différence de **pure écriture** (Corse `20` contre `2A`, outre-mer `97` contre `971`) n'est
-///   pas une divergence : [RegionsFrancaises#memeDepartement] s'abstient plutôt que de trancher.
+/// Les silences sont des décisions : un point **sans commune résolue** n'a pas de seconde lecture à
+/// confronter, un **numéro illisible** pas de première, et une différence de pure écriture (Corse `20`
+/// contre `2A`, outre-mer `97` contre `971`) n'est pas une divergence,
+/// [RegionsFrancaises#memeDepartement] s'abstenant plutôt que de trancher.
 public final class AuditDepartementDuPoint {
 
     private final SiteDao siteDao;
