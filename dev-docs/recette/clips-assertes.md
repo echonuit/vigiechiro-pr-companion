@@ -263,3 +263,43 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.creer_reste_ferme_puis_se_rouvre.mp4"></video>
+
+
+## ScenarioImportNominalTest
+
+L'import nominal de `S2`, en trois gestes qui s'enchaînent sur une seule carte SD. Chacun repart du
+détail du carré 640380 et redésigne la carte : trois clips, trois histoires complètes. Un geste qui
+reprendrait l'écran laissé par le précédent ne montrerait pas d'où il part.
+
+La carte n'est pas versionnée. Elle est reconstruite depuis sa spec à chaque lancement, à l'octet
+près : aucune date tirée de l'horloge, aucun octet au hasard. Ce que le clip montre est donc une
+vraie inspection d'un vrai arbre de fichiers, et deux tournages du même commit rendent la même carte.
+
+### S2-01 à S2-07 · `designer_la_source_et_l_inspecter`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioImportNominalTest.designer_la_source_et_l_inspecter.mp4"></video>
+
+> `S2-02` porte un **carton** : le glisser-déposer d'un dossier ne s'enregistre pas, faute de pouvoir
+> forger un `Dragboard` hors d'un vrai geste système. La marche est décrite plutôt que montrée, et le
+> geste reste entier.
+
+### S2-08 à S2-11 · `rattacher_la_nuit_a_son_point`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioImportNominalTest.rattacher_la_nuit_a_son_point.mp4"></video>
+
+> Le point se choisit par le modèle de sélection : le popup d'un `ComboBox` ne se déroule pas de façon
+> fiable sur ce banc. Ce que le clip montre est la conséquence - la valeur qui paraît, et le marqueur
+> qui vire à l'indigo sur la carte de confirmation.
+
+### S2-12 à S2-17 · `importer_la_nuit`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioImportNominalTest.importer_la_nuit.mp4"></video>
+
+> **Ce clip est freiné, et ne dit rien de la vitesse du produit.** Sur des fixtures générées, l'import
+> dure des millisecondes - mesuré sur six wav comme sur soixante -, et les cinq cas qui portent sur ce
+> qui se passe pendant l'opération n'auraient rien à montrer. Le banc ralentit donc son exécuteur
+> d'environ une seconde par fichier. Ce que le clip démontre : ces cinq surfaces existent et
+> s'enchaînent. Ce qu'il ne démontre pas : combien de temps un import prend.

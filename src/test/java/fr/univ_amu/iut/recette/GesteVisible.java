@@ -3,6 +3,7 @@ package fr.univ_amu.iut.recette;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
+import javafx.scene.control.ScrollPane;
 import org.testfx.api.FxRobot;
 import org.testfx.util.WaitForAsyncUtils;
 
@@ -30,6 +31,31 @@ import org.testfx.util.WaitForAsyncUtils;
 public final class GesteVisible {
 
     private GesteVisible() {}
+
+    /// Fait défiler le `ScrollPane` du chrome jusqu'à ce que `selecteur` soit **dans le cadre**.
+    ///
+    /// `Node::isVisible` répond `true` pour un nœud sous le bord : c'est une propriété du nœud, pas de
+    /// ce qu'on voit. Seul TestFX distingue les deux, et il le dit par un refus de clic - « returned 1
+    /// nodes, but no nodes were visible ».
+    ///
+    /// Un geste hors du cadre n'est pas seulement incliquable : il serait **absent du clip**. C'est
+    /// pourquoi cette aide vit ici et non chez un scénario. Elle y était, en privé, et une seconde
+    /// copie aurait divergé de la première.
+    public static void amenerDansLeCadre(FxRobot robot, String selecteur) {
+        Node cible = robot.lookup(selecteur).query();
+        ScrollPane defilement = robot.lookup(".scroll-pane").queryAs(ScrollPane.class);
+        robot.interact(() -> {
+            double hauteurContenu = defilement.getContent().getBoundsInLocal().getHeight();
+            double hauteurVue = defilement.getViewportBounds().getHeight();
+            double y = cible.localToScene(cible.getBoundsInLocal()).getMinY();
+            double yContenu = defilement
+                    .getContent()
+                    .localToScene(defilement.getContent().getBoundsInLocal())
+                    .getMinY();
+            defilement.setVvalue((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+    }
 
     /// Amène le pointeur sur `cible`, l'y laisse voir, puis clique.
     ///
