@@ -1,5 +1,5 @@
 ---
-name: revue-visuelle
+name: revoir-les-ecrans
 description: Use at closure, right after the harmonisation pass, to inspect every visible consequence of the chantier state by state. A tested gesture is not a looked-at screen; five real UI defects were found by opening a capture and none by a test.
 license: GPL-3.0-or-later
 metadata:
@@ -20,7 +20,7 @@ dit.
 
 ## Annoncer
 
-« J'utilise la compétence revue-visuelle sur les conséquences visibles de <le chantier>. »
+« J'utilise la compétence revoir-les-ecrans sur les conséquences visibles de <le chantier>. »
 
 ## Pourquoi ici, et pas plus tôt
 

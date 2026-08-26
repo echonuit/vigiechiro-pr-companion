@@ -200,8 +200,8 @@ Ce qui n'a pas été retenu l'a été après mesure, pas par goût, et
 [dev-docs/registre-editorial.md](dev-docs/registre-editorial.md) le dit motif par motif.
 
 Les sept tics ci-dessus sont ce que ce dépôt retient. La grille complète, quarante et un motifs avec
-leurs exemples et leurs faux positifs, est dans la compétence `humaniseur`
-(`.agents/skills/humaniseur/SKILL.md`) : elle sert à relire, pas à trancher un commit. L'article A31
+leurs exemples et leurs faux positifs, est dans la compétence `humaniser`
+(`.agents/skills/humaniser/SKILL.md`) : elle sert à relire, pas à trancher un commit. L'article A31
 de la [constitution](CONSTITUTION.md) la rend obligatoire pour toute prose visible.
 
 ## 4. Workflow de contribution

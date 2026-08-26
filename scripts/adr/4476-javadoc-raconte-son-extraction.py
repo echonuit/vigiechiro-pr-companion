@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Cliquet sur la javadoc qui raconte le refactoring dont sa classe est nee.
 
-Le motif 30 de la grille `humaniseur` - « la version precedente racontee » - dit qu une javadoc
+Le motif 30 de la grille `humaniser` - « la version precedente racontee » - dit qu une javadoc
 decrit le comportement d aujourd hui, et que le passe a ses lieux : l historique, le journal des
 changements, la section « alternatives ecartees » d une ADR. Une classe extraite d un controleur
 trop gros en porte pourtant souvent le recit, et rien d autre :
