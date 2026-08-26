@@ -661,6 +661,14 @@ jobs:
         # redevient suspect. Un garde qui ne tiendrait que le premier laisserait passer exactement le
         # geste qu'on veut empêcher, et resterait vert. Ses neuf cas portent les deux.
         run: python3 scripts/adr/4468-javadoc-non-relue.py --auto-test
+      - name: "Auto-test du compteur qui ÉCRIT le manifeste (bloquant, #4527)"
+        # Le cliquet ci-dessus VÉRIFIE le manifeste ; ce compteur l'ÉCRIT, et il n'avait aucun cas.
+        # `--marque` acceptait n'importe quel fichier existant : l'entrée n'était ensuite ni relue,
+        # ni périmée, ni signalée, puisque le parcours ne lit que les deux arbres Java, et elle
+        # grossissait le total annoncé. Deux chiffres qui devraient dire la même chose divergeaient.
+        # Ses dix cas tiennent les deux portes, l'entrée et la sortie : ce qui n'a rien à faire au
+        # manifeste est refusé, et ce qui a cessé d'y correspondre est nommé.
+        run: python3 scripts/methode/couverture-relecture.py --auto-test
 
       - name: Le paquet OKF des décisions est conforme (bloquant)
         # `dev-docs/decisions` est un paquet OKF depuis #4336 : chaque ADR porte un en-tête typé, se
