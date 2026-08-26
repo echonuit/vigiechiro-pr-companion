@@ -35,7 +35,7 @@ passe suivante devait trouver.
 | 6 | Tests | chaque usage introduit est couvert | `tdd`, `mutation` |
 | 7 | Harmonisation | l'application entière, pas le delta | |
 | 8 | Revue visuelle | chaque **état** de chaque écran touché | `revue-visuelle` |
-| 9 | Nouveaux chantiers | les issues cadrées pendant que le contexte est frais | `triage` |
+| 9 | Suites consolidées | l'EPIC des suites relu et regroupé, les rattachements tranchés | `triage` |
 | 10 | ADR du chantier | une décision structurante, une ADR | `ecrire-une-adr` |
 | 11 | Bilan | livré, dette restante, décisions et leur pourquoi | `humaniseur` |
 
@@ -76,8 +76,12 @@ clôture où un garde de surface CLI avait été tenu à jour, mais pas le garde
 
 ## Les suites d'une clôture se closent aussi
 
-Les issues nées en passe 9 forment un chantier à part entière. Elles se closent par **les mêmes
-douze passes**, appliquées à leur seul delta. Le dépôt l'a appris trois fois.
+Les issues consolidées en passe 9 forment un chantier à part entière. Elles se closent par **les
+mêmes douze passes**, appliquées à leur seul delta. Le dépôt l'a appris trois fois.
+
+La passe 9 ne les **découvre** pas : chacune a été ouverte au moment où elle a été trouvée, et
+rattachée à l'EPIC du chantier ou à celui des suites (#4562). Arriver en passe 9 avec une page
+blanche est le signe que cette règle n'a pas été tenue, pas que le chantier n'a rien trouvé.
 
 ## Signaux d'alerte : on s'arrête
 

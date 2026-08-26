@@ -278,6 +278,14 @@ faut réintroduire le défaut à la main pour obtenir le même rouge. Un test qu
 raison que prévu** est une **trouvaille** : lire le message avant de corriger. **Si le rouge dure**
 plus de quelques minutes, le pas était trop gros : revenir au dernier vert et le couper en deux.
 
+**Une trouvaille s'ouvre en issue au moment où on la fait**, pas à la clôture et pas en commentaire.
+Elle se rattache à l'**EPIC du chantier** si elle est dans son périmètre, sinon à l'**EPIC des
+suites** ([#4562](https://github.com/echonuit/vigiechiro-pr-companion/issues/4562)) ; en cas de doute,
+les suites, car la passe 9 est faite pour corriger un rattachement et ne peut rien pour une trouvaille
+jamais écrite. Ce qui se perd n'est pas la trouvaille mais son **détail** : le chiffre, le numéro de
+run, le message littéral, c'est-à-dire ce qui la rend traitable. Un signalement en commentaire ou dans
+un compte rendu ne compte pas : il est réel, et il sort de la vue à la fusion.
+
 **Le REFACTOR est la troisième phase de CHAQUE tour**, pas une étape de fin d'issue ni la seule passe 7 :
 le moment le moins cher pour retravailler un code est celui où l'on s'en souvient, et ce moment dure un
 tour. Ce sont **deux échelles** et elles ne se croisent pas : le tour retravaille **le pas qu'on vient de
@@ -352,7 +360,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    coupé, un glyphe absent ou une régression de style ne font rougir aucun test. C'est la passe
    précédente (CSS, socle) qui est la plus à même de casser un écran sans casser un test, d'où cette
    relecture **juste après** elle.
-9. **Nouveaux chantiers** identifiés + **issues** créées.
+9. **Suites consolidées** : l'EPIC des suites relu, regroupé, les rattachements tranchés, et ce que la clôture a elle-même révélé ajouté.
 10. **ADR du chantier écrites** (`dev-docs/decisions/`), pour toute **décision structurante**. Le numéro
     **ne se choisit pas** : c'est celui de l'issue qui porte la décision (le lot, à défaut l'EPIC) ; le
     compteur séquentiel est clos à 0048, voir le [journal](dev-docs/decisions/index.md). Chaque ADR
@@ -368,8 +376,8 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
     à l'écran, et un bilan écrit demande qu'on le croie là où une capture le montre. Ce qui n'a **pas**
     été corrigé y figure aussi : une troncature montrée et assumée vaut mieux qu'une omission.
 
-**Les suites se closent aussi.** Les issues créées en passe 9, une fois livrées, forment un **nouveau
-delta** : il se clôt par les **mêmes 12 passes**, appliquées à lui seul. Et un bilan est une
+**Les suites se closent aussi.** Les issues consolidées en passe 9, une fois livrées, forment un
+**nouveau delta** : il se clôt par les **mêmes 12 passes**, appliquées à lui seul. Et un bilan est une
 **hypothèse** : quand une suite est traitée, relire ce que le bilan précédent en disait et le corriger
 s'il s'est trompé.
 
