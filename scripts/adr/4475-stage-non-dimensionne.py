@@ -23,13 +23,11 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import RACINE_DEPOT, TESTS_ANCRES, rapporte  # noqa: E402
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4475"
 
-RACINE = pathlib.Path(__file__).resolve().parents[2]
-TESTS = RACINE / "src" / "test" / "java"
 
 # Une scene posee AVEC des dimensions explicites : c est la seule forme ou le test AFFIRME une
 # taille. Une scene sans dimensions s en remet a son contenu, et n a rien a garantir.
@@ -49,7 +47,7 @@ def _dimensionne(texte: str, receveur: str) -> bool:
 
 
 def suspects(racine: pathlib.Path = None) -> list[str]:
-    racine = racine or TESTS
+    racine = racine or TESTS_ANCRES
     trouves = []
     for f in sorted(racine.rglob("*.java")):
         texte = f.read_text(encoding="utf-8")
@@ -60,7 +58,7 @@ def suspects(racine: pathlib.Path = None) -> list[str]:
             continue
         if _dimensionne(texte, pose.group(1)):
             continue
-        nom = f.relative_to(RACINE) if f.is_relative_to(RACINE) else f.name
+        nom = f.relative_to(RACINE_DEPOT) if f.is_relative_to(RACINE_DEPOT) else f.name
         trouves.append(f"{nom}  pose une scène dimensionnée, hérite du stage du fork")
     return trouves
 

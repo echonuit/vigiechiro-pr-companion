@@ -24,8 +24,10 @@ import re
 import sys
 import tempfile
 
-RACINE = pathlib.Path(__file__).resolve().parents[2]
-VUES = RACINE / "src" / "main" / "java"
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from _commun import PRODUCTION_ANCREE  # noqa: E402
+
+VUES = PRODUCTION_ANCREE
 
 SEUIL = 24.0
 

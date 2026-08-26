@@ -34,15 +34,12 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import RACINES_ANCREES, RACINE_DEPOT, rapporte  # noqa: E402
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4472"
 
-RACINE = pathlib.Path(__file__).resolve().parents[2]
-PRODUCTION = RACINE / "src" / "main" / "java"
-TESTS = RACINE / "src" / "test" / "java"
-RACINES = (PRODUCTION, TESTS)
+RACINES = RACINES_ANCREES
 
 # Le 9e decile du depot est a 4 lignes. Le seuil est pose a 8, soit le double : il laisse passer le
 # regime normal, et il ne signale que ce qui en sort franchement.
@@ -92,7 +89,7 @@ def suspects(racine: pathlib.Path = None) -> list[str]:
     racines = [racine] if racine else list(RACINES)
     trouves = []
     for f in sorted(f for r in racines for f in r.rglob("*.java")):
-        nom = f.relative_to(RACINE) if f.is_relative_to(RACINE) else f.name
+        nom = f.relative_to(RACINE_DEPOT) if f.is_relative_to(RACINE_DEPOT) else f.name
         for depart, compte, profondeur in blocs(f):
             if profondeur < PROFONDEUR_CORPS:
                 continue
