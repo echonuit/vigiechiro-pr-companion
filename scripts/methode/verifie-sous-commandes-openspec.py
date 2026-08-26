@@ -122,13 +122,45 @@ def corps(texte: str) -> str:
     return texte
 
 
-def fichiers(racine: pathlib.Path) -> list[pathlib.Path]:
-    trouves = []
+def entrees(racine: pathlib.Path) -> list[tuple[str, list[pathlib.Path]]]:
+    """Pour chaque entree du corpus, son libelle et les fichiers qu elle rend.
+
+    Une entree absente rend une liste VIDE plutot que d etre sautee : c est ce qui permet a
+    `corpus_incomplet` de refuser PAR ENTREE au lieu de refuser sur le total. Un corpus dont un
+    chemin a disparu rend encore des fichiers, et un refus sur le total resterait vert en n ayant
+    lu qu une partie de ce que le garde annonce. Article A3, ADR 2748 (#4566).
+    """
+    rendu = []
     for base, motif in MOTIFS:
         dossier = racine / base
-        if dossier.is_dir():
-            trouves.extend(sorted(dossier.glob(motif)))
-    return trouves
+        rendu.append((str(base), sorted(dossier.glob(motif)) if dossier.is_dir() else []))
+    return rendu
+
+
+def fichiers(racine: pathlib.Path) -> list[pathlib.Path]:
+    """Tous les fichiers du corpus, a plat."""
+    return [f for _, trouves in entrees(racine) for f in trouves]
+
+
+def corpus_incomplet(racine: pathlib.Path) -> list[str]:
+    """Les refus qui portent sur le CORPUS lui-meme, avant tout verdict sur son contenu."""
+    manques = []
+    comptes = []
+    for libelle, trouves in entrees(racine):
+        if not trouves:
+            manques.append(
+                f"{libelle} ne rend aucun fichier : cette entree du corpus est vide, donc le "
+                "garde ne verifie rien de ce cote"
+            )
+        else:
+            comptes.append((libelle, len(trouves)))
+    if len({n for _, n in comptes}) > 1:
+        detail = ", ".join(f"{libelle} en rend {n}" for libelle, n in comptes)
+        manques.append(
+            f"les entrees du corpus ne rendent pas le meme nombre de fichiers : {detail}. "
+            "La copie a derive du fonds, ou l une des deux a ete reecrite"
+        )
+    return manques
 
 
 def ecarts(racine: pathlib.Path) -> list[str]:
@@ -141,9 +173,11 @@ def ecarts(racine: pathlib.Path) -> list[str]:
     if not arbre:
         return ["l aide de l outil ne rend aucune commande : rien a comparer"]
 
+    incomplet = corpus_incomplet(racine)
+    if incomplet:
+        return incomplet
+
     vues = fichiers(racine)
-    if not vues:
-        return ["aucun fichier d OpenSpec trouve : le corpus du garde est vide, donc il ne verifie rien"]
 
     trouves = []
     for fichier in vues:
@@ -196,10 +230,20 @@ def auto_test() -> int:
     def sans_binaire(r: pathlib.Path) -> None:
         shutil.rmtree(r / ".github" / "openspec" / "node_modules", ignore_errors=True)
 
+    def entree_absente(r: pathlib.Path) -> None:
+        """UNE entree du corpus disparait. Les autres rendent encore des fichiers."""
+        shutil.rmtree(r / MOTIFS[1][0])
+
+    def arbre_ampute(r: pathlib.Path) -> None:
+        """Un arbre perd UNE competence : les entrees cessent de rendre le meme compte."""
+        shutil.rmtree(sorted((r / MOTIFS[1][0]).glob(MOTIFS[1][1]))[0].parent)
+
     cas = [
         ("commande inventee", commande_inventee, 1),
         ("sous-commande inventee", sous_commande_inventee, 1),
         ("binaire absent", sans_binaire, 1),
+        ("une entree du corpus absente", entree_absente, 1),
+        ("un arbre ampute d une competence", arbre_ampute, 1),
         ("en-tete YAML a cheval", entete_yaml, 0),
     ]
 
