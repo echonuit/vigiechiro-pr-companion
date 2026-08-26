@@ -2,6 +2,7 @@
 # Une ligne par fichier : <empreinte>  <chemin relatif a la racine du depot>.
 # L empreinte est celle de la javadoc RELUE : si elle change, le fichier redevient a relire.
 # Voir couverture-relecture.py et scripts/adr/cliquet-javadoc-non-relue.py.
+70f3c8e64f81  src/main/java/fr/univ_amu/iut/commun/persistence/VerrouWorkspace.java
 fd1939bb2628  src/main/java/fr/univ_amu/iut/commun/view/Modales.java
 24c5033ac197  src/main/java/fr/univ_amu/iut/passage/model/ServiceReconstructionPassages.java
 9c1f77b4c814  src/test/java/fr/univ_amu/iut/AppTest.java

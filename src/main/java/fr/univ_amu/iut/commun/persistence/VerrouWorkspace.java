@@ -21,10 +21,9 @@ import java.util.regex.Pattern;
 
 /// Le **verrou d'un workspace** : un seul processus à la fois y écrit (#2731).
 ///
-/// Rien ne l'empêchait jusqu'ici. Deux instances graphiques, une IHM et une CLI, ou une restauration
-/// pendant un import : la base était remplacée sous les pieds de celui qui écrivait. Toutes les
-/// garanties posées par ce lot (migration atomique #2728, filet #2729, restaurations vérifiées #2727
-/// et #2730) tombent si un second processus écrit pendant l'opération.
+/// Deux instances graphiques, une IHM et une CLI, ou une restauration pendant un import : sans lui la
+/// base est remplacée sous les pieds de celui qui écrit, et toutes les garanties du lot (migration
+/// atomique #2728, filet #2729, restaurations vérifiées #2727 et #2730) tombent avec elle.
 ///
 /// **Verrou de fichier système**, et non fichier de PID. La différence est décisive : le système
 /// d'exploitation **relâche** le verrou quand le processus meurt, donc un plantage ne condamne pas le
@@ -155,8 +154,8 @@ public final class VerrouWorkspace implements AutoCloseable {
     /// ⚠️ Deux lectures, et l'ordre compte. `Files.readString` lit **tout le fichier depuis l'octet 0**,
     /// donc il traverse la zone verrouillée : sous Windows, où un verrou est impératif, il échoue même
     /// quand un seul octet est pris. Déplacer le contenu hors de cet octet ne suffisait pas - il fallait
-    /// que le **lecteur** l'évite aussi. C'est la moitié du remède que le premier correctif de #3693
-    /// avait manquée, et que la matrice de #3525 a désignée.
+    /// que le **lecteur** l'évite aussi : c'est la moitié du remède de #3693, désignée par la matrice
+    /// trois plateformes de #3525.
     ///
     /// La lecture entière vient d'abord parce qu'elle est la seule qui rende un fichier **sans
     /// sentinelle** - version antérieure, outil tiers - dans son intégralité. Elle réussit toujours sous
@@ -173,31 +172,26 @@ public final class VerrouWorkspace implements AutoCloseable {
 
     /// Le repli : relire en **sautant** l'octet que le détenteur verrouille.
     ///
-    /// ⚠️ Extrait du `catch` ci-dessus, et **visible du paquet**, pour une raison mesurée : ce chemin ne
-    /// s'exécute que **sous Windows**, seul système où le verrou est impératif. Sous POSIX,
-    /// `Files.readString` réussit toujours, donc le `catch` est inatteignable - et PIT, qui tourne sous
-    /// Linux, rendait ici **quatre mutants sans couverture**, dont la borne `<= 0` et la soustraction.
-    /// Le remède de #3714 était livré sans qu'aucune mesure locale puisse le juger (#3561, passe 6).
+    /// ⚠️ Extrait du `catch` ci-dessus et **visible du paquet** pour une raison mesurée : ce chemin ne
+    /// s'exécute que sous Windows, seul système où le verrou est impératif. Sous POSIX
+    /// `Files.readString` réussit toujours, donc le `catch` y est inatteignable, et PIT tournant sous
+    /// Linux rendait ici quatre mutants sans couverture, si bien que le remède de #3714 était livré
+    /// sans qu'aucune mesure locale puisse le juger (#3561). Le passage hebdomadaire sous Windows exerce
+    /// **câblage**, cette couture rend la **borne** éprouvable partout, et l'une sans l'autre laisse la
+    /// moitié du remède non jugée.
     ///
-    /// Le passage hebdomadaire sous Windows exerce le **câblage** - que la lecture emprunte bien ce
-    /// repli quand le verrou est tenu. Cette couture-ci rend la **borne** éprouvable partout, et les
-    /// deux sont nécessaires : l'une sans l'autre laisse la moitié du remède non jugée.
+    /// Deux mutants survivent, **assumés** : l'arithmétique est défensive, pas sémantique, le contrat
+    /// observable étant « rendre tout ce qui suit l'octet 0 ». Ce sont des équivalents par construction
+    /// au sens de l'ADR 3624, pas une couverture manquante.
     ///
-    /// ## Deux survivants PIT, **assumés** et de la même famille
-    ///
-    /// L'arithmétique ci-dessous est **défensive**, pas sémantique : le contrat observable est « rendre
-    /// tout ce qui suit l'octet 0 ». Deux mutants y survivent donc, et aucun test ne peut les tuer.
-    ///
-    /// - `restant <= 0` en `< 0` : pour un fichier d'un seul octet, `restant` vaut 0, et
-    ///   `ByteBuffer.allocate(0)` suivi d'une lecture à l'offset 1 rend `""` - exactement ce que la
-    ///   garde rendait. La garde ne sert vraiment qu'au fichier **vide**, où `restant` vaut -1 et où
-    ///   `allocate(-1)` lèverait ;
+    /// - `restant <= 0` en `< 0` : pour un fichier d'un seul octet `restant` vaut 0, et
+    ///   `ByteBuffer.allocate(0)` puis une lecture à l'offset 1 rend `""`, ce que la garde rendait
+    ///   déjà. Elle ne sert vraiment qu'au fichier **vide**, où `restant` vaut -1 et où `allocate(-1)`
+    ///   lèverait ;
     /// - `size() - 1` en `size() + 1` : sur-allouer ne change rien, `read` s'arrête à EOF et `flip()`
     ///   borne le tampon à ce qui a été lu.
     ///
-    /// Comme pour `EcritureAtomique`, ce sont des **équivalents par construction**, pas une couverture
-    /// manquante. Les écrire ainsi reste juste : `allocate` refuse une taille négative, et un lecteur
-    /// comprend `<= 0` sans avoir à raisonner sur le cas 0.
+    /// Les écrire ainsi reste juste : `allocate` refuse une taille négative.
     static String apresLOctetDuVerrou(Path fichier) throws IOException {
         try (FileChannel canal = FileChannel.open(fichier, StandardOpenOption.READ)) {
             long restant = canal.size() - 1;
@@ -212,10 +206,9 @@ public final class VerrouWorkspace implements AutoCloseable {
 
     /// Ce qu'on écrit dans le refus : le nom quand on l'a, une formule **honnête** quand on ne l'a pas.
     ///
-    /// ⚠️ Le message affichait « déjà utilisé **()** » dès que le verrou venait d'ailleurs que d'un
-    /// `VerrouWorkspace` - un processus tiers, un fichier tronqué, une tentative morte. Des parenthèses
-    /// vides promettent un nom et n'en donnent aucun, ce qui est pire que de ne rien promettre : le
-    /// lecteur cherche l'information manquante au lieu d'agir (#3571).
+    /// ⚠️ Des parenthèses vides promettent un nom et n'en donnent aucun, ce qui est pire que de ne
+    /// rien promettre : le lecteur cherche l'information manquante au lieu d'agir (#3571). D'où la
+    /// formule honnête quand le verrou vient d'ailleurs qu'un `VerrouWorkspace`.
     ///
     /// Les deux formes disent la même chose à l'utilisateur - **quelqu'un d'autre est dans ce dossier,
     /// fermez-le** - et l'une lui donne en plus de quoi retrouver le coupable.
