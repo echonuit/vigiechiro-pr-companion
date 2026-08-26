@@ -90,20 +90,13 @@ class EncodeurTest {
                 "un dossier n'est pas un programme, et Windows le tient pourtant pour exécutable");
     }
 
+    /// La couture joue la branche Windows depuis Linux ; elle ne joue pas l'inverse. Cette branche-ci
+    /// délègue à `Files.isExecutable`, dont la réponse change de système : sous Windows elle rend
+    /// `true` pour tout fichier existant (run 32945079829).
     @Test
     @DisplayName("#4522 : sous POSIX, c'est le bit d'exécution qui décide")
     @EnabledIf("fr.univ_amu.iut.recette.film.EncodeurTest#posixDisponible")
     void sous_posix_le_bit_decide(@TempDir Path dossier) throws IOException {
-        // `@EnabledIf`, et non la couture qui rend la branche Windows jouable depuis Linux : celle-ci
-        // ne peut pas l'être en sens inverse. La branche POSIX délègue à `Files.isExecutable`, qui est
-        // précisément la primitive dont la réponse change de système - sous Windows elle rend `true`
-        // pour tout fichier existant. Forcer le drapeau à `true` sur une machine Windows n'y rejoue
-        // donc pas POSIX : cela pose la question à Windows en prétendant parler à POSIX, et le cas
-        // rougissait pour cette raison (run 32945079829).
-        //
-        // Déclaratif plutôt qu'un `assumeTrue` en cours de route : la même raison qu'`EcritureAtomiqueTest`
-        // a écrite avant nous, un saut qui se voit dans le rapport et qui ne coupe pas un cas au milieu
-        // de ses assertions.
         Path inerte = Files.writeString(dossier.resolve("inerte.bat"), "pas un programme");
 
         assertFalse(
