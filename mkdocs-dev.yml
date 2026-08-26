@@ -286,6 +286,7 @@ nav:
     - 4488 · Un garde de code lit les deux arbres: decisions/4488-un-garde-de-code-lit-les-deux-arbres.md
     - 4490 · Un témoin se prouve par mutation, et la mutation est mécanique: decisions/4490-un-temoin-se-prouve-par-mutation-mecaniquement.md
     - 4546 · Un corps de pull request ne promet pas ce que la forge ne fera pas: decisions/4546-un-corps-de-pr-ne-promet-pas-ce-que-la-forge-ne-fera-pas.md
+    - 4586 · Le corpus d'un garde se déclare une fois, et sa liste se dérive: decisions/4586-le-corpus-d-un-garde-se-declare-une-fois.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

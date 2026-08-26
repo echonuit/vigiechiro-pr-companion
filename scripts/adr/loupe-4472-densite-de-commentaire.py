@@ -32,12 +32,9 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import loupe  # noqa: E402
+from _commun import RACINES_ANCREES, RACINE_DEPOT, loupe  # noqa: E402
 
-RACINE = pathlib.Path(__file__).resolve().parents[2]
-PRODUCTION = RACINE / "src" / "main" / "java"
-TESTS = RACINE / "src" / "test" / "java"
-RACINES = (PRODUCTION, TESTS)
+RACINES = RACINES_ANCREES
 
 # Deux planchers, parce que les deux lectures n ont pas la meme echelle.
 #
@@ -133,7 +130,7 @@ def par_methode(fichier: pathlib.Path) -> list[tuple[str, int, int, int]]:
 
 def _ou(f: pathlib.Path) -> str:
     """Le chemin relatif a la racine du depot, ou le seul nom pour un arbre jetable de temoin."""
-    return str(f.relative_to(RACINE)) if f.is_relative_to(RACINE) else f.name
+    return str(f.relative_to(RACINE_DEPOT)) if f.is_relative_to(RACINE_DEPOT) else f.name
 
 
 def classes(racines=None) -> list[tuple[float, str, int, int]]:

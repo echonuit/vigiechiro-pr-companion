@@ -35,18 +35,15 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import RACINES_ANCREES, RACINE_DEPOT, rapporte  # noqa: E402
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4476"
 
-RACINE = pathlib.Path(__file__).resolve().parents[2]
 # Les DEUX arbres (#4462). Une javadoc de test raconte son extraction exactement comme une javadoc
 # de production, et la mesure d ouverture a rendu ZERO suspect cote test : l extension ne coute
 # rien, elle empeche seulement l angle mort de se remplir.
-PRODUCTION = RACINE / "src" / "main" / "java"
-TESTS = RACINE / "src" / "test" / "java"
-RACINES = (PRODUCTION, TESTS)
+RACINES = RACINES_ANCREES
 
 # Les noms sous lesquels le portail qualite mesure une classe. `WMC` et `God Class` s ecrivent de
 # plusieurs facons dans le depot ; les trois orthographes rencontrees sont couvertes.
@@ -94,7 +91,7 @@ def suspects(racine: pathlib.Path = None) -> list[str]:
             phrase = raconte(corps)
             if phrase:
                 extrait = phrase if len(phrase) <= 90 else phrase[:87] + "…"
-                trouves.append(f"{f.relative_to(racine or RACINE)}:{debut}  {extrait}")
+                trouves.append(f"{f.relative_to(racine or RACINE_DEPOT)}:{debut}  {extrait}")
     return trouves
 
 
