@@ -16,6 +16,7 @@ Aucune dépendance hors stdlib : lancé comme les scripts, `python3 scripts/adr/
 
 import importlib.util
 import pathlib
+import re
 import sys
 import tempfile
 
@@ -696,23 +697,35 @@ def test_4477_longueur_des_adr() -> None:
         )
 
 
-# Les gardes de code dont le corpus est LES DEUX ARBRES, decidees en passe 7 de la cloture de
-# #4462. La mesure d ouverture avait rendu ZERO suspect cote test pour chacune : l extension ne
-# deplace aucun cliquet, elle empeche l angle mort de se remplir.
-GARDES_DEUX_ARBRES = (
-    "0008-echec-silencieux.py",
-    "0010-dialogue-hors-port.py",
-    "0035-pictogramme-caractere.py",
-    "0037-slot-actions-hbox.py",
-    "2493-modale-suit-croissance.py",
-    "3053-capture-libelle.py",
-    "3947-message-enveloppe.py",
-    "4476-javadoc-raconte-son-extraction.py",
-    # Les LOUPES aussi : une loupe aveugle a la moitie du code surfacerait moins sans jamais le
-    # dire, ce qui est le meme defaut en plus silencieux, faute de verdict pour le trahir.
-    "loupe-0020-ecritures-plateforme.py",
-    "loupe-0044-mecanisme-parallelisme.py",
-)
+# Le motif d un import qui declare le corpus. `RACINES` et `RACINES_ANCREES` disent « les deux
+# arbres » ; `PRODUCTION` seule dit « la production, et voici pourquoi » dans le fichier qui
+# l importe.
+DECLARE_DEUX_ARBRES = re.compile(r"^from _commun import (.+)$", re.M)
+DEUX_ARBRES = re.compile(r"\bRACINES(?:_ANCREES)?\b")
+
+
+def gardes_deux_arbres() -> list[str]:
+    """Les gardes qui DECLARENT lire les deux arbres, derives et non enumeres (ADR 4586).
+
+    La forme precedente etait une liste ecrite a la main, et elle avait derive : dix entrees pour
+    quinze gardes portant le chemin de l arbre de test. Six lisaient donc les deux arbres sans que
+    rien ne le verifie, et l un d eux pouvait cesser d en lire un - son compte aurait baisse, et un
+    cliquet ne se plaint pas qu on lui retire du corpus.
+
+    Le depot connaissait deja le piege : `verifie_temoins_non_decoratifs.py` derive sa liste au lieu
+    de l enumerer, parce qu un garde neuf passerait au travers. La lecon vaut ici.
+
+    Ce qui rend la derivation fiable est le refus de `verifie_corpus_declare.py` : sans lui, un garde
+    neuf reecrirait le chemin en clair et redeviendrait invisible a cette liste.
+    """
+    trouves = []
+    for source in sorted(ICI.glob("*.py")):
+        if source.name == "_commun.py":
+            continue
+        imports = DECLARE_DEUX_ARBRES.search(source.read_text(encoding="utf-8"))
+        if imports and DEUX_ARBRES.search(imports.group(1)):
+            trouves.append(source.name)
+    return trouves
 
 
 def test_les_gardes_de_code_lisent_les_deux_arbres() -> None:
@@ -720,21 +733,25 @@ def test_les_gardes_de_code_lisent_les_deux_arbres() -> None:
 
     Les deux se cassent separement : un garde peut continuer de detecter parfaitement sur l arbre
     qu on lui laisse, et avoir cesse de lire l autre. Rien ne le montrerait, puisque le compte
-    baisserait sans jamais rougir - un cliquet ne se plaint pas qu on lui retire du corpus.
+    baisserait sans jamais rougir.
 
-    `2635-refus-sans-surface.py` n est PAS dans cette liste, et c est une decision : le test qui
-    prouve l ADR 2635 doit citer le glyphe du menu pour verifier que la redaction de la surface
-    atteint le compte rendu. L y etendre interdirait aux tests d affirmer les chaines memes que la
-    regle produit.
+    `2635-refus-sans-surface.py` et `4395-renvois-en-javadoc.py` n y sont pas, et ne s excluent plus
+    par une liste : ils importent `PRODUCTION` seule, et disent dans leur propre en-tete pourquoi.
+    Pour le premier c est une exception justifiee - le test qui prouve l ADR 2635 doit citer le
+    glyphe du menu, et l y etendre interdirait aux tests d affirmer les chaines que la regle produit.
+    Pour le second c est un trou connu, mesure a 976 renvois, et suivi par #4587.
     """
-    for nom in GARDES_DEUX_ARBRES:
+    derives = gardes_deux_arbres()
+    _verifie("la liste des gardes a deux arbres se derive, et n est pas vide", len(derives) > 10, True)
+    for nom in derives:
         m = _charge(nom)
-        racines = getattr(m, "RACINES", ())
+        # Le nom de l attribut varie : `RACINES` chez la plupart, `ARBRES` chez les loupes bornees a
+        # un paquet et chez les gardes qui composent leurs zones.
+        racines = getattr(m, "RACINES", None) or getattr(m, "ARBRES", ())
         # Le chemin CONTIENT `src/test/java`, il ne s y termine pas forcement : une loupe peut etre
-        # bornee a un paquet, et `src/test/java/fr/univ_amu/iut/commun/api` est un corpus de test
-        # tout autant que l arbre entier. Exiger la fin excluait les deux loupes a tort.
+        # bornee a un paquet, et son sous-arbre de test est un corpus de test tout autant.
         _verifie(f"{nom.removesuffix('.py')} : l arbre de test est dans son corpus",
-                 any("src/test/java" in str(r) for r in racines), True)
+                 any("test" in str(r) for r in racines), True)
 
 
 def test_rapport_et_resserrement() -> None:

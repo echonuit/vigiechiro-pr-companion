@@ -17,10 +17,8 @@ import org.junit.jupiter.api.Test;
 ///
 /// ## Pourquoi ce garde-fou
 ///
-/// Un cliquet écrit à la main est un cliquet qui perd la moitié de sa valeur. Le premier du dépôt en a
-/// fait la démonstration : son message n'était pas le problème (il était même excellent), mais ses deux
-/// pièges - le court-circuit et la confusion usage / mention - ont dû être retrouvés **une seconde fois**
-/// sur les cliquets suivants, faute d'un endroit unique où les corriger.
+/// Un cliquet écrit à la main perd la moitié de sa valeur : les deux pièges du premier du dépôt, le
+/// court-circuit et la confusion usage / mention, ont dû être retrouvés une seconde fois (ADR 2867).
 ///
 /// Le patron ne prétend pas mutualiser les détecteurs : ils inspectent des choses trop différentes, et
 /// « qu'est-ce qui compte ? » doit rester lisible dans chaque fichier. Ce qui est mutualisé, c'est le
@@ -30,7 +28,8 @@ import org.junit.jupiter.api.Test;
 ///
 /// **Le nom est le contrat.** Un garde-fou qui fait le travail d'un cliquet sans en porter le nom
 /// échappe à ce test : `DocumentationAJourTest` et les cliquets d'ADR (ADR 2465) sont dans ce cas,
-/// délibérément - ils sont antérieurs et inspectent la documentation, pas les sources Java.
+/// délibérément. Le motif est leur langage et non leur sujet : ce sont des scripts Python, dont la
+/// forme commune vit dans `scripts/adr/_commun.py` (ADR 4586).
 ///
 /// Ce test ne prouve donc pas « tous les cliquets du dépôt sont conformes ». Il prouve que **prendre le
 /// nom oblige à prendre la forme**, ce qui est le seul invariant qui tienne sans énumération.

@@ -19,6 +19,33 @@ import sys
 
 DECISIONS = pathlib.Path("dev-docs/decisions")
 
+# La racine du dépôt, pour les gardes qui s'ancrent au lieu de dépendre du répertoire courant.
+RACINE_DEPOT = pathlib.Path(__file__).resolve().parents[2]
+
+# LE CORPUS DES GARDES DE CODE, déclaré ici et nulle part ailleurs (ADR 4586).
+#
+# #4488 a décidé que les gardes de code lisent les DEUX arbres. La décision vivait en treize
+# littéraux recopiés, et `verifie_scripts.py` la tenait par une liste ÉNUMÉRÉE qui avait dérivé :
+# six gardes lisaient les deux arbres sans y figurer. Un corpus déclaré ici se LIT par le programme,
+# ce qui permet à cette liste de se dériver au lieu de s'énumérer.
+#
+# Les chemins sont RELATIFS, comme `DECISIONS` : un garde qui s'ancre écrit `RACINE_DEPOT / TESTS`,
+# et le rapport garde des chemins lisibles.
+#
+# Un garde qui lit délibérément la production seule importe `PRODUCTION` et dit pourquoi dans SA
+# javadoc : l'exception devient alors visible d'une commande, et sa raison se trouve là où on
+# l'ouvre. `verifie_corpus_declare.py` refuse qu'un garde réécrive ces chemins.
+PRODUCTION = pathlib.Path("src/main/java")
+TESTS = pathlib.Path("src/test/java")
+RACINES = (PRODUCTION, TESTS)
+
+# Les mêmes, ancrés sur la racine, pour les gardes qui ne veulent pas dépendre du répertoire
+# courant. Deux jeux de noms, un seul endroit où les segments du chemin sont écrits : c'est la
+# duplication du chemin qui coûtait, pas celle du nom.
+PRODUCTION_ANCREE = RACINE_DEPOT / PRODUCTION
+TESTS_ANCRES = RACINE_DEPOT / TESTS
+RACINES_ANCREES = (PRODUCTION_ANCREE, TESTS_ANCRES)
+
 # Le cliquet est un CHAMP de l'en-tête OKF, plus une valeur noyée dans une phrase (chantier A).
 # L'ancienne forme à puces se lisait par une expression qui devait tolérer deux séparateurs ; un
 # champ typé n'a pas ce problème, et il se relit de la même façon par `graphify` et par le site.

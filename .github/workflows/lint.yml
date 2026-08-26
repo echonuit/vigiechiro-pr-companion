@@ -623,6 +623,21 @@ jobs:
           python3 scripts/adr/verifie_temoins_non_decoratifs.py --auto-test
           python3 scripts/adr/verifie_temoins_non_decoratifs.py
 
+      - name: "Le corpus d'un garde se declare une fois (bloquant, #4586)"
+        # #4488 a decide que les gardes de code lisent les DEUX arbres. La decision etait tenue par
+        # une liste ECRITE A LA MAIN dans `verifie_scripts.py`, et cette liste avait derive : dix
+        # entrees pour quinze gardes portant le chemin de l'arbre de test. Six n'etaient verifies
+        # par rien, et un garde qui cesse de lire un arbre ne rougit pas - son compte baisse, et un
+        # cliquet ne se plaint pas qu'on lui retire du corpus.
+        #
+        # La liste se derive desormais de ce que chaque garde importe de `_commun`. Ce refus-ci est
+        # ce qui rend la derivation fiable : sans lui, un garde neuf reecrirait le chemin en clair
+        # et redeviendrait invisible a la liste. Cf. ADR 4586.
+        run: |
+          set -euo pipefail
+          python3 scripts/adr/verifie_corpus_declare.py --auto-test
+          python3 scripts/adr/verifie_corpus_declare.py
+
       - name: "Auto-test des passes du graphe de connaissance (bloquant, #4231)"
         # Ces deux scripts n'avaient aucun dispositif, et les deux annonçaient des chiffres
         # qu'aucune donnée ne soutenait : une couverture CLI de « 128/69 », et un rapport ouvrant
@@ -814,3 +829,18 @@ jobs:
         run: |
           python3 scripts/methode/verifie-adoption-openspec.py --auto-test
           python3 scripts/methode/verifie-adoption-openspec.py --verifie
+
+      - name: "Un renvoi cite par une competence a une cible ou un repli (bloquant, #4564)"
+        # Une competence qui renvoie vers `/realiser` promet qu'une commande de ce nom existe. Le
+        # garde de #4514 lit les invocations de la LIGNE DE COMMANDE, `openspec <sous-commande>` ;
+        # celui-ci lit les commandes barre-oblique du CLIENT, qui sont une autre famille. Rien ne
+        # reliait un `/nom` cite a l'existence du fichier correspondant, et c'est ce qui a laisse
+        # passer le renvoi vers `/opsx:continue` au moment precis ou l'agent est bloque.
+        # Deux cas acceptes, et deux seulement : la commande existe, ou la competence declare le
+        # flux optionnel et donne le repli. Le second porte le seul usage legitime, un flux amont
+        # que ce depot n'installe pas.
+        # Le motif a ete EPROUVE avant d'etre cru : exiger l'apostrophe fermante juste apres le nom
+        # manquait quatre `/realiser <autre>`, et `/tmp` se presentait comme une commande absente.
+        run: |
+          python3 scripts/methode/verifie-renvois-competences.py --auto-test
+          python3 scripts/methode/verifie-renvois-competences.py --verifie

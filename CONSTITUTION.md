@@ -222,7 +222,7 @@ sous cliquet, dans le code de production ; un garde, lui, doit dire ce qu'il vé
 
 Toute prose qu'un humain lira hors de l'échange qui l'a produite - javadoc, documentation, ADR,
 libellés d'interface et de ligne de commande, messages de commit, corps d'issue et de pull request -
-passe la grille de la compétence `humaniseur` avant d'être **publiée**, par un commit comme sur la
+passe la grille de la compétence `humaniser` avant d'être **publiée**, par un commit comme sur la
 forge. Les sept tics de `CONTRIBUTING.md` en sont le sous-ensemble
 opposable : la grille sert à relire, les sept servent à refuser. Rien ne mécanise le reste, et c'est
 dit : aucun motif textuel ne décide si une emphase informe, ni si une javadoc paraphrase la
@@ -240,7 +240,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 |---|---:|---:|---|
 | A1 · La preuve précède l'affirmation | 1 | 1 | `.github/scripts/verifie-decisions-du-tournage-connecte.sh`, `.github/scripts/verifie-jeton-vivant.sh`, `.github/scripts/revoque-jeton.sh` |
 | A2 · Un garde est vu rouge sur sa propre mutation | 6 | 4 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure-duree-portail.sh`, et 1 autre |
-| A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 11 | 11 | `.github/scripts/veille-contrat-api.sh`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 8 autres |
+| A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 12 | 11 | `.github/scripts/veille-contrat-api.sh`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 9 autres |
 | A4 · Un cas joué n'est pas un cas prouvé | 22 | 15 | `ApercuFxElisionTest#bouton_tronque_refuse`, `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`, `scripts/adr/3053-capture-libelle.py`, et 12 autres |
 | A5 · La mesure fait foi, et dit d'où elle vient | 23 | 16 | `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`, `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`, `EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues`, et 12 autres |
 | A6 · La vérification se déclare, sur trois niveaux | 3 | 2 | `DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment`, `EcritureAtomiqueTest#creation_restreinte` |
@@ -266,7 +266,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A26 · La provenance se déclare | 3 | 2 | `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`, `DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier` |
 | A28 · Un avertissement se dit en mots | 1 | 0 | `scripts/adr/4366-avertissement-en-pictogramme.py` |
 | A29 · L'ergonomie se rattache à une heuristique nommée | 1 | 0 | `scripts/adr/verifie_okf.py` |
-| A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 4 | 1 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py`, et 2 autres |
+| A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 5 | 1 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py`, et 2 autres |
 | A31 · La prose visible se relit à l'humaniseur | 3 | 1 | `.github/scripts/verifie-corps-pr.sh` |
 
 **3 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.

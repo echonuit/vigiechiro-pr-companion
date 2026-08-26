@@ -94,14 +94,45 @@ def version_epinglee(racine: pathlib.Path) -> tuple[str | None, str | None]:
     return demande, None
 
 
-def competences(racine: pathlib.Path) -> list[pathlib.Path]:
-    """Les SKILL.md des competences OpenSpec, dans les deux arbres, tries."""
-    trouves = []
+def entrees(racine: pathlib.Path) -> list[tuple[str, list[pathlib.Path]]]:
+    """Pour chaque entree du corpus, son libelle et les SKILL.md qu elle rend.
+
+    Une entree absente rend une liste VIDE plutot que d etre sautee : c est ce qui permet a
+    `corpus_incomplet` de refuser PAR ENTREE au lieu de refuser sur le total. Un corpus dont un
+    chemin a disparu rend encore des fichiers, et un refus sur le total resterait vert en n ayant
+    lu qu une partie de ce que le garde annonce. Article A3, ADR 2748 (#4566).
+    """
+    rendu = []
     for motif in MOTIFS:
         base = racine / motif
-        if base.is_dir():
-            trouves.extend(sorted(base.glob("openspec-*/SKILL.md")))
-    return trouves
+        rendu.append((str(motif), sorted(base.glob("openspec-*/SKILL.md")) if base.is_dir() else []))
+    return rendu
+
+
+def competences(racine: pathlib.Path) -> list[pathlib.Path]:
+    """Les SKILL.md des competences OpenSpec, dans les deux arbres, tries."""
+    return [f for _, trouves in entrees(racine) for f in trouves]
+
+
+def corpus_incomplet(racine: pathlib.Path) -> list[str]:
+    """Les refus qui portent sur le CORPUS lui-meme, avant tout verdict sur son contenu."""
+    manques = []
+    comptes = []
+    for libelle, trouves in entrees(racine):
+        if not trouves:
+            manques.append(
+                f"{libelle} ne rend aucune competence openspec-* : cette entree du corpus est "
+                "vide, donc le garde ne verifie rien de ce cote"
+            )
+        else:
+            comptes.append((libelle, len(trouves)))
+    if len({n for _, n in comptes}) > 1:
+        detail = ", ".join(f"{libelle} en rend {n}" for libelle, n in comptes)
+        manques.append(
+            f"les entrees du corpus ne rendent pas le meme nombre de competences : {detail}. "
+            "La copie a derive du fonds, ou l une des deux a ete reecrite"
+        )
+    return manques
 
 
 def ecarts(racine: pathlib.Path) -> list[str]:
@@ -120,12 +151,11 @@ def ecarts(racine: pathlib.Path) -> list[str]:
             f"le manifeste epingle {demandee}, le lockfile resout {resolue}"
         )
 
+    incomplet = corpus_incomplet(racine)
+    if incomplet:
+        return trouves + incomplet
+
     fichiers = competences(racine)
-    if not fichiers:
-        return trouves + [
-            "aucune competence openspec-* trouvee : le corpus du garde est vide, donc il ne "
-            "verifie rien"
-        ]
 
     for fichier in fichiers:
         trouve = ENTETE_VERSION.search(fichier.read_text(encoding="utf-8"))
@@ -168,11 +198,21 @@ def auto_test() -> int:
     def retire_lockfile(r: pathlib.Path) -> None:
         (r / DOSSIER_OUTIL / "package-lock.json").unlink()
 
+    def entree_absente(r: pathlib.Path) -> None:
+        """UNE entree du corpus disparait. L autre rend encore des fichiers."""
+        shutil.rmtree(r / MOTIFS[1])
+
+    def arbre_ampute(r: pathlib.Path) -> None:
+        """Un arbre perd UNE competence : les entrees cessent de rendre le meme compte."""
+        shutil.rmtree(sorted((r / MOTIFS[1]).glob("openspec-*/SKILL.md"))[0].parent)
+
     cas = [
         ("version du lockfile deplacee", casse_lockfile),
         ("generatedBy d une competence", casse_competence),
         ("epinglage relache en intervalle", relache_epinglage),
         ("lockfile absent", retire_lockfile),
+        ("une entree du corpus absente", entree_absente),
+        ("un arbre ampute d une competence", arbre_ampute),
     ]
 
     def copie_jetable(tmp: str) -> pathlib.Path:
