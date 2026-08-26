@@ -36,6 +36,18 @@
 # fusionnées, chacune jugée dans l'état où elle était à l'instant de sa fusion : il en refuse une,
 # #4560, et accepte les 39 autres.
 #
+# ## Ce qu'il ne tient pas, et qui est assumé
+#
+# **Une seule forme de la marque de saut.** GitHub en reconnaît plusieurs, dont `[ci skip]`. Ce
+# garde ne cherche que `[skip ci]`, mesuré comme la seule employée ici : 46 occurrences sur les 400
+# derniers commits de `main`, toutes sous cette forme, toutes produites par `capture-vues.yml`. Un
+# commit portant une autre variante serait donc REFUSÉ à tort. L'asymétrie est du bon côté - un
+# faux refus fait regarder, un faux vert laisse fusionner - et le cas ne s'est jamais produit.
+#
+# **`skipped` ne vaut pas verdict.** Un workflow filtré par chemins n'a rien jugé, et la conclusion
+# est fréquente (12 runs sur 100). Elle ne bloque jamais à elle seule, puisqu'elle est terminée :
+# son seul effet est de ne pas compter. Aucune des 40 PR mesurées n'a été refusée pour ce motif.
+#
 # Il exige que TOUT ait conclu, et non qu'un seul run ait parlé. Cette seconde version lui vient de
 # sa propre demande : lancé dessus, il l'acceptait sur la foi de `Titre de PR` pendant que les
 # gardes bloquants couraient encore. Exiger le tout n'a refusé aucune PR de plus sur les 40.
