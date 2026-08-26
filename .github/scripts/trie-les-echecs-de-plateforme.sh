@@ -19,8 +19,75 @@
 set -euo pipefail
 export LC_ALL=C
 
+# L'auto-test, avant tout le reste : ce script décide de la couleur du passage hebdomadaire, dont le
+# train de publication fait sa condition, et il était l'un des trois de `.github/scripts` à n'avoir
+# aucun témoin. Le défaut de #4544 a vécu là : rien ne pouvait le voir.
+#
+#     ./.github/scripts/trie-les-echecs-de-plateforme.sh --auto-test
+auto_test() {
+    local bac total=0 echecs=0
+    bac=$(mktemp -d)
+    # shellcheck disable=SC2064
+    trap "rm -rf '${bac}'" RETURN
+
+    mkdir -p "${bac}/sources"
+    # Une classe TestFX et une autre, pour que le tri des deux familles soit exercé.
+    printf '@ExtendWith(ApplicationExtension.class)\n' > "${bac}/sources/UneVueTest.java"
+    printf 'class UnModeleTest {}\n' > "${bac}/sources/UnModeleTest.java"
+
+    essai() { # <nom> <motif attendu> <code attendu> <marqueur: oui|non> <classes: valeur de CLASSES>
+        local nom="$1" motif="$2" code_attendu="$3" marqueur="$4" classes="$5" obtenu code
+        rm -rf "${bac:?}/rapports" && mkdir -p "${bac}/rapports"
+        printf '<testsuite name="fr.essai.UneVueTest" tests="2" failures="0" errors="0" skipped="0"/>\n' \
+            > "${bac}/rapports/TEST-fr.essai.UneVueTest.xml"
+        printf '<testsuite name="fr.essai.UnModeleTest" tests="3" failures="0" errors="0" skipped="0"/>\n' \
+            > "${bac}/rapports/TEST-fr.essai.UnModeleTest.xml"
+        rm -f "${bac}/temoin"
+        [ "${marqueur}" = "oui" ] && : > "${bac}/temoin"
+        obtenu=$(CLASSES="${classes}" GITHUB_STEP_SUMMARY="" \
+            bash "$0" "${bac}/rapports" "${bac}/sources" "${bac}/temoin" 2>&1) && code=0 || code=$?
+        total=$((total + 1))
+        if printf '%s' "${obtenu}" | grep -qF "${motif}" && [ "${code}" = "${code_attendu}" ]; then
+            printf '  [OK   ] %-58s -> %s\n' "${nom}" "code ${code}"
+        else
+            printf '  [ÉCHEC] %-58s -> code %s : %s\n' "${nom}" "${code}" "$(printf '%s' "${obtenu}" | tail -2 | head -1)"
+            echecs=$((echecs + 1))
+        fi
+    }
+
+    echo "AUTO-TEST"
+    # Le défaut de #4544, dans les deux sens. Sans marqueur, les mêmes rapports sans un seul échec
+    # doivent rougir : c'est tout l'objet du garde, puisqu'un passage tronqué rend zéro échec.
+    essai "sans témoin, un passage sans échec est REFUSÉ" "INTERROMPU" 1 non ""
+    essai "sans témoin, le journal nomme le nombre de classes lues" "2 classe(s) ont rendu un rapport" 1 non ""
+    # Le contrôle de l'autre bord, sans lequel le garde pourrait refuser TOUT et paraître bon.
+    essai "avec témoin, le même passage est accepté" "Aucun échec." 0 oui ""
+    essai "avec témoin, il se dit complet" "Passage **complet**" 0 oui ""
+    # Un passage ciblé n'a jamais prétendu être complet : le marqueur ne le concerne pas, et exiger
+    # le témoin l'aurait fait rougir sans raison.
+    essai "un passage ciblé passe sans témoin" "Passage ciblé" 0 non "UnModeleTest"
+    essai "un passage ciblé ne se déclare pas complet" "ne dit **rien** du reste" 0 non "UnModeleTest"
+
+    echo
+    echo "${total} cas, dont 4 contrôles négatifs."
+    if [ "${echecs}" -ne 0 ]; then
+        echo "AUTO-TEST EN ÉCHEC (${echecs}) : ne pas se fier au verdict de ce script."
+        return 1
+    fi
+    echo "Auto-test concluant."
+}
+
+if [ "${1:-}" = "--auto-test" ]; then
+    auto_test
+    exit $?
+fi
+
 RAPPORTS="${1:-target/surefire-reports}"
 SOURCES="${2:-src/test/java}"
+# Le témoin que la suite est allée AU BOUT. Le workflow ne l'écrit qu'après le retour de Maven : un
+# job coupé par `timeout-minutes` meurt avant, et son absence est alors le seul fait qui distingue un
+# passage entier d'un passage tronqué (#4544).
+MARQUEUR="${3:-target/suite-est-allee-au-bout}"
 
 [ -d "${RAPPORTS}" ] || { echo "Aucun rapport dans ${RAPPORTS} : la suite n'a pas produit de compte rendu."; exit 1; }
 
@@ -50,6 +117,7 @@ compte() { # <filtre: fx|reste> -> "classes echecs erreurs"
 
 read -r cfx efx rfx <<< "$(compte fx)"
 read -r cre ere rre <<< "$(compte reste)"
+lues=$((cfx + cre))
 
 {
     echo "### Ce que la suite donne sur ${RUNNER_OS:-cette plateforme}"
@@ -59,8 +127,16 @@ read -r cre ere rre <<< "$(compte reste)"
     # publication sur une preuve qui n'existe pas (#3754).
     if [ -n "${CLASSES:-}" ]; then
         echo "⚠️ **Passage ciblé** : \`${CLASSES}\`. Ce compte ne dit **rien** du reste de la suite."
-    else
+    elif [ -f "${MARQUEUR}" ]; then
         echo "Passage **complet** : toutes les classes de test."
+    else
+        # Le cas qui a motivé ce garde. Un job coupé à 92 minutes sur un plafond de 90 a rendu ce
+        # même tableau, avec 618 classes au lieu de 758, sous le titre « toutes les classes de
+        # test » et sans un échec. Le compte était exact ; la phrase au-dessus ne l'était pas, et
+        # c'est elle qu'on lit (#4544).
+        echo "⚠️ **Passage INTERROMPU** : la suite ne s'est pas terminée. Les ${lues} classes comptées"
+        echo "ci-dessous sont celles qui ont eu le temps de rendre un rapport. Ce compte ne dit **rien**"
+        echo "des autres, et un passage tronqué n'est pas une preuve."
     fi
     echo
     echo "| Famille | Classes | Échecs | Erreurs |"
@@ -107,6 +183,14 @@ rm -f "${compte_rendu}"
 #
 # `-Dmaven.test.failure.ignore=true` garde tout son sens : Maven va au bout et produit le compte
 # COMPLET, et c'est ce compte-là - pas le premier échec - qui décide ici.
+# L'interruption se juge AVANT les échecs, et c'est l'ordre qui compte : une suite coupée rend zéro
+# échec sur les classes qu'elle n'a pas atteintes, donc le test d'en dessous la laisserait passer en
+# vert. C'est exactement ce qui s'est produit (#4544).
+if [ -z "${CLASSES:-}" ] && [ ! -f "${MARQUEUR}" ]; then
+    echo "::error title=La suite a été interrompue sur ${RUNNER_OS:-cette plateforme}::${lues} classe(s) ont rendu un rapport, et la suite ne s'est pas terminée. Ce passage n'est pas une preuve."
+    exit 1
+fi
+
 total=$((efx + rfx + ere + rre))
 if [ "${total}" -gt 0 ]; then
     echo "::error title=La suite ne passe pas sur ${RUNNER_OS:-cette plateforme}::${total} échec(s) et erreur(s) - voir le tableau du résumé."
