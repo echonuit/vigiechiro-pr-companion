@@ -1,8 +1,10 @@
 package fr.univ_amu.iut.commun.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /// Le vocabulaire des issues d'appel (#1284) : quatre variantes scellées, un adaptateur vers le
@@ -69,5 +71,68 @@ class ReponseApiTest {
         // Bornes : 499 reste un 4xx, 500 et 599 sont des 5xx, 600 n'est plus un 5xx.
         assertThat(ReponseApi.refuse(499, "").estReessayable()).isFalse();
         assertThat(ReponseApi.refuse(600, "").estReessayable()).isFalse();
+    }
+
+    @Nested
+    @DisplayName("#4524 : deux 422 de sens oppose, et le refus dit lequel")
+    class MotifDUnRefus {
+
+        // Les trois formes sont MESUREES contre le back, avec leur temoin : un champ hors schema, un
+        // champ connu mais ferme, et un champ inscriptible qui passe. Elles sont recopiees telles
+        // quelles, corps compris, parce que c est la FORME du corps qui porte le sens - le statut est
+        // le meme dans les deux refus.
+
+        @Test
+        @DisplayName("un champ que le schema ne connait pas : notre correspondance est fautive")
+        void champ_inconnu() {
+            ReponseApi.Refuse<String> refus = new ReponseApi.Refuse<>(
+                    422, "{\"_errors\": {\"numero\": \"invalid field\"}, \"_status\": \"422 Unprocessable Entity\"}");
+
+            assertThat(refus.motif())
+                    .as("un champ hors schema : notre correspondance est fautive, elle se corrige ici")
+                    .isEqualTo(MotifDeRefus.CHAMP_INCONNU);
+        }
+
+        @Test
+        @DisplayName("un champ connu mais ferme : rien ne se corrige chez nous")
+        void champ_ferme() {
+            ReponseApi.Refuse<String> refus = new ReponseApi.Refuse<>(
+                    422,
+                    "{\"_errors\": {\"donnees_publiques\": \"field is read-only\"},"
+                            + " \"_status\": \"422 Unprocessable Entity\"}");
+
+            assertThat(refus.motif())
+                    .as("un champ connu mais ferme : notre correspondance est juste, rien a corriger ici")
+                    .isEqualTo(MotifDeRefus.CHAMP_FERME);
+        }
+
+        @Test
+        @DisplayName("le controle qui compte : un refus qui n est ni l un ni l autre ne se force pas")
+        void ni_l_un_ni_l_autre() {
+            // Sans ce cas, un classement binaire mentirait des le premier refus inconnu, et il
+            // mentirait dans le sens rassurant : il rangerait un 403 de droits ou un 422 de forme
+            // inedite dans une case qui appelle un geste precis.
+            assertThat(new ReponseApi.Refuse<String>(403, "{}").motif())
+                    .as("un 403 n est pas un refus de champ")
+                    .isEqualTo(MotifDeRefus.AUTRE);
+            assertThat(new ReponseApi.Refuse<String>(
+                                    422, "{\"_errors\": {\"date_debut\": \"must be of datetime type\"}}")
+                            .motif())
+                    .as("un 422 de FORME n est ni l un ni l autre : le ranger designerait un geste faux")
+                    .isEqualTo(MotifDeRefus.AUTRE);
+            assertThat(new ReponseApi.Refuse<String>(422, "").motif())
+                    .as("un corps vide ne se range pas non plus")
+                    .isEqualTo(MotifDeRefus.AUTRE);
+        }
+
+        @Test
+        @DisplayName("le motif s ajoute : statut, corps et message ne bougent pas")
+        void le_motif_n_efface_rien() {
+            ReponseApi.Refuse<String> refus =
+                    new ReponseApi.Refuse<>(422, "{\"_errors\": {\"numero\": \"invalid field\"}}");
+
+            assertThat(refus.statut()).as("le statut ne bouge pas").isEqualTo(422);
+            assertTrue(refus.echec().orElseThrow().startsWith("HTTP 422 : "));
+        }
     }
 }
