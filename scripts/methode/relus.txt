@@ -1898,7 +1898,7 @@ a24e19e1fce0  src/test/java/fr/univ_amu/iut/recette/film/CameraDeScene.java
 c26af7c98771  src/test/java/fr/univ_amu/iut/recette/film/GestesTest.java
 0e22f508eef9  src/test/java/fr/univ_amu/iut/recette/film/IndexDesCas.java
 8a5d0f001774  src/test/java/fr/univ_amu/iut/recette/film/IndexDesCasTest.java
-b7d55ff0bb91  src/test/java/fr/univ_amu/iut/recette/film/LibelleDesCas.java
+40331daf6ffc  src/test/java/fr/univ_amu/iut/recette/film/LibelleDesCas.java
 e3b0c44298fc  src/test/java/fr/univ_amu/iut/recette/film/LibelleDesCasTest.java
 4c71323ae5c4  src/test/java/fr/univ_amu/iut/recette/film/PoliceDuBanc.java
 5bd80d0a3d78  src/test/java/fr/univ_amu/iut/recette/film/PoliceDuBancTest.java

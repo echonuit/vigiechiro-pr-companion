@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.recette.film;
 
+import fr.univ_amu.iut.recette.MotifDeCas;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -28,11 +29,11 @@ public final class LibelleDesCas {
     /// sessions `s7-reglages` et `s10-le-poste-windows` écrivent
     /// `- [ ] **S10-01** · …`, forme que le motif d'origine ne reconnaissait pas. Le carton
     /// de ces cas serait alors sorti sans libellé, ce qui ne se voit qu'à l'œil sur le film.
-    private static final Pattern PUCE =
-            Pattern.compile("^- (?:\\[[ xX]\\]\\s+)?\\*\\*(?<cas>[A-Za-z0-9._-]+)\\*\\*\\s+(?<reste>.*)$");
-
-    /// La qualification qui précède parfois le libellé : `*perceptif* · `.
-    private static final Pattern QUALIFICATION = Pattern.compile("^\\*[^*]+\\*\\s*·\\s*");
+    /// La grammaire d'une puce est celle de [MotifDeCas], et non une seconde ecriture (#4465).
+    ///
+    /// Les marqueurs sont CONSOMMES par la grammaire au lieu d'etre nettoyes ensuite : le libelle
+    /// est ce qui la suit, quel qu'en soit le nombre. Il n'y a plus de nettoyage a rater.
+    private static final Pattern PUCE = MotifDeCas.CAS;
 
     private static final Pattern SEPARATEUR_INITIAL = Pattern.compile("^·\\s*");
     private static final Pattern LIEN = Pattern.compile("\\[([^\\]]*)\\]\\([^)]*\\)");
@@ -87,10 +88,12 @@ public final class LibelleDesCas {
 
         for (String ligne : lignes) {
             Matcher puce = PUCE.matcher(ligne);
-            if (puce.matches()) {
+            if (puce.lookingAt()) {
                 deposer(trouves, cas, texte);
-                cas = puce.group("cas");
-                texte = new StringBuilder(puce.group("reste"));
+                cas = puce.group(1);
+                // `lookingAt` et non `matches` : la grammaire partagee s'arrete a la fin des
+                // marqueurs, et le libelle est precisement ce qu'elle laisse derriere elle.
+                texte = new StringBuilder(ligne.substring(puce.end()));
                 continue;
             }
             if (cas != null && prolongeLaPuce(ligne)) {
@@ -128,7 +131,6 @@ public final class LibelleDesCas {
     private static String nettoyer(String brut) {
         String texte = brut.strip();
         texte = SEPARATEUR_INITIAL.matcher(texte).replaceFirst("");
-        texte = QUALIFICATION.matcher(texte).replaceFirst("");
         texte = LIEN.matcher(texte).replaceAll("$1");
         texte = texte.replace("**", "");
         texte = NUMERO_FINAL.matcher(texte).replaceFirst("");
