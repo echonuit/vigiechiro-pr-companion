@@ -514,6 +514,106 @@ class ContratApiVigieChiroLiveTest {
         return participation;
     }
 
+    @Test
+    @DisplayName("PROBE #4444 : le PATCH d'une participation IGNORE If-Match, mesuré le 2026-08-26."
+            + " Sans en-tête comme avec un étiquetage faux, la plateforme rend 200. Le client en"
+            + " envoie un pour rien, et le piège de #4356 n'existe pas sur cette route")
+    void probe_if_match_sur_une_participation() {
+        supposerEcritureAutorisee();
+        String participation = participationDeRebut();
+
+        // ⚠️ Cette sonde consigne un fait qui CONTREDIT trois écrits du dépôt, et c'est pour cela
+        // qu'elle existe. `ParticipationDetail` documente l'`_etag` comme « requis en en-tête If-Match
+        // pour un PATCH », `TransportVigieChiro` en envoie un, et #4356 range le piège parmi les cinq
+        // que le bouchon ignore. Les trois disent la même chose, et la plateforme dit l'inverse.
+        //
+        // Mesuré le 2026-08-26, contre la participation de rebut : 200 sans en-tête, 200 avec un
+        // étiquetage délibérément faux. L'en-tête n'est pas lu sur cette route.
+        //
+        // Le banc d'étalonnage local (révision 5e924b1) avait rendu le même verdict avant le tir, et
+        // pour une raison lisible dans le code : aucun des sept appels à `participations.update(...)`
+        // ne passe `if_match`. L'accord entre les deux est lui-même un résultat - sur ce contrat-là,
+        // notre copie ne dérive pas.
+        //
+        // Le jour où cette sonde rougira, la plateforme aura changé d'avis, et c'est exactement la
+        // mesure de dérive que l'ADR 4444 lui demande de porter.
+        int sansEntete = api().contentType("application/json")
+                .body(Map.of("commentaire", "Sonde de contrat (#4444) : lecture du contrat If-Match."))
+                .when()
+                .patch("/participations/{id}", participation)
+                .then()
+                .extract()
+                .statusCode();
+
+        int etiquetageFaux = api().contentType("application/json")
+                .header("If-Match", "0".repeat(32))
+                .body(Map.of("commentaire", "Sonde de contrat (#4444) : étiquetage délibérément faux."))
+                .when()
+                .patch("/participations/{id}", participation)
+                .then()
+                .extract()
+                .statusCode();
+
+        assertThat(sansEntete)
+                .as("PATCH d'une participation SANS If-Match : la plateforme accepte. Un 412 ici voudrait"
+                        + " dire qu'elle s'est mise à exiger l'en-tête, et il faudrait alors relire ce que"
+                        + " le client en fait")
+                .isEqualTo(200);
+
+        assertThat(etiquetageFaux)
+                .as("PATCH avec un If-Match FAUX : accepté aussi. C'est le contrôle qui donne son sens au"
+                        + " précédent. Un serveur qui exigerait l'en-tête sans le LIRE rendrait 200 ici et"
+                        + " 412 au-dessus ; les deux 200 disent qu'il ne le regarde pas du tout")
+                .isEqualTo(200);
+    }
+
+    @Test
+    @DisplayName("PROBE #4444 : `numero` est refusé à l'écriture d'une participation, en 422"
+            + " « invalid field ». Le témoin d'à côté écrit un champ valide, sans quoi un 422 partout"
+            + " se lirait comme « cette route refuse tout »")
+    void probe_numero_refuse_a_l_ecriture() {
+        supposerEcritureAutorisee();
+        String participation = participationDeRebut();
+
+        // Le second des deux comportements que #4356 exige d'établir avant d'enrichir le bouchon.
+        // Celui-ci, contrairement au premier, se confirme : `dev-docs/api-vigiechiro.md` l'annonçait,
+        // et la plateforme le fait.
+        //
+        // La forme du corps compte autant que le statut. La plateforme rend DEUX 422 de sens opposé à
+        // l'écriture : « invalid field » quand le champ n'existe pas - notre correspondance est
+        // fautive - et « field is read-only » quand il existe mais nous est fermé, auquel cas rien ne
+        // se corrige chez nous. Un tri sur le seul statut les confond (#4524).
+        var refus = api().contentType("application/json")
+                .body(Map.of("numero", 42))
+                .when()
+                .patch("/participations/{id}", participation)
+                .then()
+                .extract();
+
+        int temoin = api().contentType("application/json")
+                .body(Map.of("commentaire", "Sonde de contrat (#4444) : témoin du refus de numero."))
+                .when()
+                .patch("/participations/{id}", participation)
+                .then()
+                .extract()
+                .statusCode();
+
+        assertThat(refus.statusCode())
+                .as("`numero` n'est pas au schéma de la participation : Eve refuse le document entier")
+                .isEqualTo(422);
+
+        assertThat(refus.<String>path("_errors.numero"))
+                .as("la FORME du refus, et non son seul statut : « invalid field » désigne un champ que"
+                        + " le schéma ne connaît pas, là où « field is read-only » désignerait un champ"
+                        + " connu mais fermé. Les deux sont des 422 et n'appellent pas le même geste")
+                .isEqualTo("invalid field");
+
+        assertThat(temoin)
+                .as("Contrôle : la même route, avec un champ valide, écrit. Sans lui, le 422 ci-dessus"
+                        + " pourrait venir d'un refus global de la route et ne rien prouver du champ")
+                .isEqualTo(200);
+    }
+
     /// Identifiant d'un protocole, qu'Eve l'ait **embarqué** ou laissé en référence nue.
     ///
     /// Le premier jet de cette sonde comparait `String.valueOf(...)` à un identifiant : sur
