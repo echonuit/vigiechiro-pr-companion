@@ -161,12 +161,11 @@ public final class SynchronisationParticipation {
         ParticipationDetail juste =
                 client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
         if (!juste.etag().equals(distant.etag())) {
-            return new EnvoiParticipation(
-                    ResultatEcriture.echouee("modifiée entre-temps"), realignementEntre(declare, passage));
+            return new EnvoiParticipation.ModifieEntreTemps(realignementEntre(declare, passage));
         }
         ResultatEcriture ecriture = client.modifierParticipation(objectid, distant.etag(), maj);
         // #1885 : le réalignement a modifié les données de l'utilisateur, il ne peut pas rester tacite.
-        return new EnvoiParticipation(ecriture, realignementEntre(declare, passage));
+        return EnvoiParticipation.ecrit(ecriture, realignementEntre(declare, passage));
     }
 
     /// Le réalignement survenu entre le passage **déclaré** et le passage **envoyé**, ou vide si les heures

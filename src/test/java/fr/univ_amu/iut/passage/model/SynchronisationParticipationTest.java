@@ -195,7 +195,10 @@ class SynchronisationParticipationTest {
         when(client.modifierParticipation(eq("part-1"), eq("e-frais"), any()))
                 .thenReturn(ResultatEcriture.reussie("part-1"));
 
-        assertThat(sync.pousserVers(42L).ecriture().id()).contains("part-1");
+        EnvoiParticipation envoi = sync.pousserVers(42L);
+
+        assertThat(envoi).isInstanceOf(EnvoiParticipation.Ecrit.class);
+        assertThat(((EnvoiParticipation.Ecrit) envoi).ecriture().id()).contains("part-1");
         verify(client).modifierParticipation(eq("part-1"), eq("e-frais"), any());
     }
 
@@ -219,6 +222,22 @@ class SynchronisationParticipationTest {
         sync.pousserVers(42L);
 
         verify(client, never()).modifierParticipation(anyString(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("#4552 : renoncer n'est pas être refusé, et les deux ne se lisent pas pareil")
+    void pousser_vers_renoncement_est_un_etat_distinct() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detail("e-lu")))
+                .thenReturn(ReponseApi.succes(detail("e-bouge")));
+
+        EnvoiParticipation envoi = sync.pousserVers(42L);
+
+        assertThat(envoi).isInstanceOf(EnvoiParticipation.ModifieEntreTemps.class);
     }
 
     @Test

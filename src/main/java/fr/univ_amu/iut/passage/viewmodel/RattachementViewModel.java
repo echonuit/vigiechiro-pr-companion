@@ -6,7 +6,6 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.DetailPassage;
-import fr.univ_amu.iut.passage.model.EnvoiParticipation;
 import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
@@ -35,7 +34,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 public class RattachementViewModel {
 
     /// Sépare un avant et un après (récapitulatif de rattachement, réalignement d'heures).
-    private static final String VERS = " -> ";
 
     private final ServicePassage service;
     private final ServiceRattachement rattachement;
@@ -223,22 +221,7 @@ public class RattachementViewModel {
             return new Envoi.ALire("Non connecté à Vigie-Chiro : les métadonnées partiront au dépôt.");
         }
         try {
-            EnvoiParticipation envoi = synchronisation.get().pousserVers(idPassage);
-            // Le succès se lit sur l'échec, pas sur la présence d'un identifiant : un PATCH ne crée rien.
-            // L'ancien test `id().isPresent()` n'était vrai que parce que le client recopiait le paramètre
-            // dans le champ `id` pour le satisfaire.
-            if (!envoi.ecriture().estReussie()) {
-                return new Envoi.Empeche(
-                        "Vigie-Chiro a refusé l'envoi : " + envoi.ecriture().echec());
-            }
-            // #1885 : un réalignement a modifié les heures de la nuit. Le taire reviendrait à corriger sa
-            // saisie dans son dos, et à le priver du moyen de contester la correction si elle est fausse.
-            // Le témoin <Envoi> est nécessaire : sans lui, l'inférence retient `ALire` et refuse le
-            // `Abouti` du repli, alors que les deux sont des `Envoi`.
-            return envoi.realignement()
-                    .<Envoi>map(realignement ->
-                            new Envoi.ALire("Métadonnées envoyées à Vigie-Chiro. " + phrase(realignement)))
-                    .orElseGet(() -> new Envoi.Abouti("Métadonnées envoyées à Vigie-Chiro."));
+            return CompteRenduDEnvoi.de(synchronisation.get().pousserVers(idPassage));
         } catch (RegleMetierException empeche) {
             // La cause EST dite (non lié / participation introuvable / point d'écoute introuvable) au lieu
             // d'être supposée bénigne.
@@ -341,11 +324,6 @@ public class RattachementViewModel {
 
     /// Phrase décrivant un réalignement, avec l'**avant** et l'**après** : dire seulement la nouvelle heure
     /// n'apprendrait pas ce qui a été corrigé, ni de combien.
-    private static String phrase(EnvoiParticipation.Realignement realignement) {
-        return "Les heures de la nuit ont été réalignées sur ses enregistrements : "
-                + realignement.debutAvant() + VERS + realignement.debutApres() + " (début), "
-                + realignement.finAvant() + VERS + realignement.finApres() + " (fin).";
-    }
 
     /// **Tire** les métadonnées (météo / micro) de la participation VigieChiro vers le passage local (cas
     /// « participation préparée sur le site web »). À appeler **hors du fil JavaFX** (réseau) ; ne touche

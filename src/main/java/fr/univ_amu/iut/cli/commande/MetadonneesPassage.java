@@ -187,14 +187,29 @@ public final class MetadonneesPassage implements Callable<Integer> {
     /// d'exception, elle rend un résultat en échec ([ADR 0008], aucun échec silencieux). Sortie `1` alors,
     /// pour qu'un script ne prenne pas un refus pour un succès.
     private int envoyerUneNuit(PrintWriter sortie, Map<String, Object> compte) {
-        EnvoiParticipation envoi = passerelle().pousserVers(idPassage);
-        envoi.realignement()
+        EnvoiParticipation issue = passerelle().pousserVers(idPassage);
+        // Le réalignement se dit avant de trancher l'issue : il a eu lieu et il est persisté, même si
+        // rien ne part ensuite.
+        issue.realignement()
                 .ifPresent(realignement -> dire(
                         sortie,
                         compte,
                         "realignement",
                         "Attention, " + phrase(realignement) + ".",
                         phrase(realignement)));
+        if (!(issue instanceof EnvoiParticipation.Ecrit envoi)) {
+            // #4552 : sortie 1 comme un refus, car rien n'est parti, mais le motif ne met pas ce geste
+            // sur le compte de la plateforme : c'est nous qui renonçons.
+            dire(
+                    sortie,
+                    compte,
+                    "modifiee-entre-temps",
+                    "La nuit a changé sur Vigie-Chiro depuis sa lecture. Rien n'a été envoyé, pour ne pas"
+                            + " effacer ce qu'un autre poste y a écrit.",
+                    "modifiee-entre-temps");
+            rendre(sortie, compte);
+            return 1;
+        }
         if (!envoi.ecriture().estReussie()) {
             dire(
                     sortie,

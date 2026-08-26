@@ -100,7 +100,13 @@ public final class RattrapageMetadonnees {
             if (!envoyer) {
                 return new IssuePassage.Traite(idPassage, recuperer, false, Optional.empty());
             }
-            EnvoiParticipation envoi = synchronisation.pousserVers(idPassage);
+            EnvoiParticipation issue = synchronisation.pousserVers(idPassage);
+            if (!(issue instanceof EnvoiParticipation.Ecrit envoi)) {
+                // #4552 : ignorée, pas refusée. Une nuit qui a bougé se rejoue après relecture, et le
+                // lot continue : le renoncement porte sur elle seule.
+                return new IssuePassage.Ignore(
+                        idPassage, "la nuit a changé sur Vigie-Chiro depuis sa lecture, rien n'a été envoyé");
+            }
             if (!envoi.ecriture().estReussie()) {
                 return new IssuePassage.Ignore(idPassage, envoi.ecriture().echec());
             }

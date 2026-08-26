@@ -106,10 +106,26 @@ class RattrapageMetadonneesTest {
     }
 
     @Test
+    @DisplayName("#4552 : une nuit qui a bougé est ignorée, et le lot continue au lieu de tomber")
+    void nuit_modifiee_entre_temps_est_ignoree() {
+        when(synchronisation.pousserVers(1L)).thenReturn(new EnvoiParticipation.ModifieEntreTemps(Optional.empty()));
+        when(synchronisation.pousserVers(2L)).thenReturn(envoiReussi());
+        List<IssuePassage> vues = new ArrayList<>();
+
+        BilanRattrapage bilan = rattrapage.rattraper(List.of(1L, 2L), false, true, vues::add);
+
+        // La seconde nuit passe : un renoncement sur l'une n'emporte pas la saison entière.
+        assertThat(bilan).isEqualTo(new BilanRattrapage(1, 1, 0));
+        assertThat(((IssuePassage.Ignore) vues.get(0)).cause())
+                .doesNotContain("refus")
+                .contains("Vigie-Chiro");
+    }
+
+    @Test
     @DisplayName("#1861 les nuits réalignées sont comptées à part : elles disent l'ampleur de la dérive")
     void realignements_comptes_a_part() {
         when(synchronisation.pousserVers(1L))
-                .thenReturn(new EnvoiParticipation(
+                .thenReturn(EnvoiParticipation.ecrit(
                         ResultatEcriture.reussie(),
                         Optional.of(new EnvoiParticipation.Realignement("15:00", "15:00", "21:00", "06:00"))));
         when(synchronisation.pousserVers(2L)).thenReturn(envoiReussi());

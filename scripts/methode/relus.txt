@@ -929,7 +929,7 @@ b64615b6913e  src/main/java/fr/univ_amu/iut/passage/model/DetailPassage.java
 c19bf8bfec8a  src/main/java/fr/univ_amu/iut/passage/model/EmpreinteContenu.java
 cd43e1bc1cf4  src/main/java/fr/univ_amu/iut/passage/model/EnregistrementOriginal.java
 7c25f921e6c4  src/main/java/fr/univ_amu/iut/passage/model/Enregistreur.java
-919a78efc207  src/main/java/fr/univ_amu/iut/passage/model/EnvoiParticipation.java
+095d0d8d081d  src/main/java/fr/univ_amu/iut/passage/model/EnvoiParticipation.java
 128fb810bdc8  src/main/java/fr/univ_amu/iut/passage/model/FenetreObserveeNuit.java
 3702e675dbf8  src/main/java/fr/univ_amu/iut/passage/model/FenetreSaisonniere.java
 34ac47fee7f7  src/main/java/fr/univ_amu/iut/passage/model/FournisseurMeteo.java
@@ -1012,6 +1012,7 @@ a7447e62e1ac  src/main/java/fr/univ_amu/iut/passage/view/ReactivationModaleContr
 65a0d2a007e8  src/main/java/fr/univ_amu/iut/passage/viewmodel/ActionRecommandee.java
 ace9f3756eef  src/main/java/fr/univ_amu/iut/passage/viewmodel/ApercuRenommage.java
 7e7457954276  src/main/java/fr/univ_amu/iut/passage/viewmodel/ChoixDuPoint.java
+ac8db55d741b  src/main/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduDEnvoi.java
 15df1af71e57  src/main/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduRattachement.java
 6278de69f3ed  src/main/java/fr/univ_amu/iut/passage/viewmodel/EtapeWorkflow.java
 23453448942b  src/main/java/fr/univ_amu/iut/passage/viewmodel/EtapesWorkflow.java
