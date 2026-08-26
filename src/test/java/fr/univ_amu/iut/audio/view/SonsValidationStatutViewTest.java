@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
@@ -48,7 +49,6 @@ import java.util.Optional;
 import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -159,8 +159,8 @@ class SonsValidationStatutViewTest {
         Parent vue = loader.load();
         controleur = loader.getController();
         // On n'ouvre pas ici : chaque test choisit son chemin.
-        stage.setScene(new Scene(vue, 1000, 700));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1000, 700);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

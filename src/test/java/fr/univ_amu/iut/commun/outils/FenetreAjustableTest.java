@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -25,14 +26,24 @@ class FenetreAjustableTest {
     private Stage fenetre;
 
     @Start
-    void start(Stage stage) {
-        fenetre = stage;
-        FenetreAjustable.poser(stage, new VBox(new Label("premiere")), GRANDE, GRANDE);
-        FenetreAjustable.afficher(stage);
+    void start(Stage recu) {
+        // Une fenêtre À SOI, et c'est nécessaire : ce cas doit FIGER sa fenêtre pour prouver le
+        // remède, or figer un stage reçu est refusé par `ConventionsDEcritureTest` (#4134) - à
+        // raison, puisque le harnais TestFX le partage entre les classes d'un même fork. Le
+        // mécanisme, lui, ne tient pas au partage : il tient au dimensionnement explicite.
+        fenetre = new Stage();
+        fenetre.initOwner(recu);
+        FenetreAjustable.poser(fenetre, new VBox(new Label("premiere")), GRANDE, GRANDE);
+        FenetreAjustable.afficher(fenetre);
+    }
+
+    @AfterEach
+    void refermer(FxRobot robot) {
+        robot.interact(fenetre::close);
     }
 
     @Test
-    void la_premiere_scene_garde_la_taille_demandee() {
+    void la_premiere_scene_garde_la_taille_demandee(FxRobot robot) {
         assertThat(fenetre.getScene().getWidth())
                 .as("une scène posée à %s doit être lue à %s", GRANDE, GRANDE)
                 .isEqualTo(GRANDE);

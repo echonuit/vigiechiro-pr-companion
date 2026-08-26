@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.model.ConfianceReferentiel;
 import fr.univ_amu.iut.commun.model.ContexteActivite;
 import fr.univ_amu.iut.commun.model.SaisonActivite;
 import fr.univ_amu.iut.commun.model.SeuilsActivite;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -28,7 +29,6 @@ import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
@@ -115,8 +115,8 @@ class SyntheseViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        stage.setScene(new Scene(vue, 1100, 640));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1100, 640);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

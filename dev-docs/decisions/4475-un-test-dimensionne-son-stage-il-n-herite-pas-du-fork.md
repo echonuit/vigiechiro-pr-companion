@@ -8,7 +8,7 @@ decided_at: 2026-08-25
 verification: probable
 enforced_by:
   - "scripts/adr/4475-stage-non-dimensionne.py"
-ratchet: 82
+ratchet: 0
 verified:
   - by: humain:mutation
     at: 2026-08-25
@@ -51,14 +51,19 @@ seul est toujours vert - ce qui a fait conclure deux fois de suite qu'il n'y ava
 
 ## Décision
 
-**Un `@Start` qui affirme une taille de scène dimensionne aussi son stage.**
+**Un `@Start` qui affirme une taille de scène la fait tenir par sa fenêtre, sans la figer.**
 
 ```java
-stage.setScene(new Scene(vue, 980, 980));
-stage.setWidth(980);
-stage.setHeight(980);
-stage.show();
+FenetreAjustable.poser(stage, vue, 980, 980);
+FenetreAjustable.afficher(stage); // show(), puis sizeToScene()
 ```
+
+**La première rédaction prescrivait `setWidth` / `setHeight`, et c'était l'inverse** (#4582). Ces
+deux appels font passer un Stage en dimensionnement explicite : il cesse de s'ajuster aux scènes
+suivantes, donc il corrige la classe courante en contaminant celles d'après.
+`ConventionsDEcritureTest.aucun_stage_recu_n_est_fige` (#4134) le refuse, et depuis avant cette ADR.
+Appliqué aux 80 classes, le remède prescrit ici aurait fait rougir ce test 80 fois ; personne ne
+l'ayant appliqué en bloc, la contradiction n'a jamais rougi.
 
 **Attendre ne pouvait rien**, et c'est ce qui rend cette ADR nécessaire : un nœud à `y=774` dans une
 scène de 600 n'y entrera jamais. La première tentative de correctif - attendre le prédicat exact du
@@ -67,25 +72,21 @@ rendu la cause lisible**. Les appels `attendreCliquable` sont conservés à ce t
 
 ## La dette, et qui la tient
 
-87 classes posent une scène dimensionnée ; **2** dimensionnent leur stage - celles que la mutation a
-rendues rouges. Le cliquet est posé à **85**.
+**Zéro** (#4582). Les 80 classes qui posaient une scène dimensionnée sur le stage reçu passent par
+`FenetreAjustable`, et le cliquet est devenu un **refus** : l'article A9 veut qu'une zone au plancher
+soit gardée par un refus, faute de quoi le zéro ne reste pas zéro.
 
-**Ce qu'il compte, et ce qu'il ne prouve pas** (#4545). Il compte une **forme** : une taille affirmée
-sur la scène sans que la fenêtre la tienne. Poser une scène dimensionnée ne fige rien ; ces classes
-ne sont donc pas celles qui figeraient le Stage, ce sont celles qui **subiraient** un figement posé
-ailleurs.
+Deux suspects n'en étaient pas. `ModalesTest` et `ModalesCentrageTest` posent leur scène sur un
+`new Stage()` à elles, que rien ne partage - le cas que `ConventionsDEcritureTest` écarte déjà en
+disant qu'une fenêtre à soi n'est plus reçue. Le détecteur les exempte, et deux témoins tiennent
+l'exemption, dont celui qui la rend sûre : une pose privée ne masque pas la pose partagée qui la
+suit.
 
-Or personne ne le pose. La suite entière jouée dans un **fork unique**, ordre inverse, les 813
-classes du dépôt avant `AppTest`, rend 5 099 tests et 0 échec : c'est la configuration la plus
-contaminante qui existe, et le garde d'ajustabilité y reste vert. Une première rédaction disait que
-les 85 autres portaient « le même défaut latent ». Le mécanisme est réel, deux mutations le
-reproduisent, mais aucune classe ne le déclenche aujourd'hui.
-
-Le cliquet reste, et c'est son office qui se nomme mieux : il empêche la 88e classe d'entrer, comme
-celui de l'ADR 4472 sur une population que le dépôt n'a pas non plus. Les 85 ne sont pas corrigées en
-bloc, et c'est délibéré : une boîte de dialogue de 300 px tient dans 600 et ne verra jamais rien,
-tandis qu'un test qui compte sur une petite fenêtre changerait de comportement. Chaque classe se
-solde quand on la touche.
+Ce que le cliquet comptait est une **forme** : une taille affirmée sans que la fenêtre la tienne.
+Avant ce lot, la suite entière en fork unique et ordre inverse rendait déjà 5 099 tests et 0 échec
+(#4545) - le mécanisme est réel, deux mutations le reproduisent, aucune classe ne le déclenchait.
+Corriger la forme n'a donc pas réparé un défaut vivant : cela aligne le dépôt sur sa référence, qui
+compte zéro, et ferme la porte à la classe suivante.
 
 ## Conséquences
 

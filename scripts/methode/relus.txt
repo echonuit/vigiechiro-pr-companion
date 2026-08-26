@@ -1459,6 +1459,8 @@ e5deda0b5314  src/test/java/fr/univ_amu/iut/commun/outils/ApercuFxTest.java
 186287ceccce  src/test/java/fr/univ_amu/iut/commun/outils/AttenteTuilesTest.java
 adfdc6186592  src/test/java/fr/univ_amu/iut/commun/outils/CablageInjecteursCaptureTest.java
 9643153841c6  src/test/java/fr/univ_amu/iut/commun/outils/CodesTaxonFixturesCaptureTest.java
+76fe6a2ea7cc  src/test/java/fr/univ_amu/iut/commun/outils/FenetreAjustable.java
+1da657c435fa  src/test/java/fr/univ_amu/iut/commun/outils/FenetreAjustableTest.java
 8881e614c4fe  src/test/java/fr/univ_amu/iut/commun/outils/ZoneCarteApercuTest.java
 36ff8b6d8210  src/test/java/fr/univ_amu/iut/commun/persistence/ArborescenceFichiersTest.java
 ae2e0135d936  src/test/java/fr/univ_amu/iut/commun/persistence/BackfillVerdictMigrationTest.java

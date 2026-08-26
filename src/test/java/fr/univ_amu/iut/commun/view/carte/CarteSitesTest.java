@@ -3,13 +3,13 @@ package fr.univ_amu.iut.commun.view.carte;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -33,8 +33,8 @@ class CarteSitesTest {
     @Start
     void start(Stage stage) {
         carte = new CarteSites();
-        stage.setScene(new Scene(carte, 640, 480));
-        stage.show();
+        FenetreAjustable.poser(stage, carte, 640, 480);
+        FenetreAjustable.afficher(stage);
     }
 
     private static DonneesCarte deuxPointsUnCarre() {

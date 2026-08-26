@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import javafx.application.Platform;
-import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -24,8 +24,8 @@ class SansExceptionAvaleeTest {
 
     @Start
     void start(Stage stage) {
-        stage.setScene(new Scene(new StackPane(), 80, 60));
-        stage.show();
+        FenetreAjustable.poser(stage, new StackPane(), 80, 60);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

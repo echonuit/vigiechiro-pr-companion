@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.time.Instant;
-import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -32,8 +31,8 @@ class AttenteTuilesTest {
 
     @Start
     void start(Stage stage) {
-        stage.setScene(new Scene(new StackPane(), 200, 200));
-        stage.show();
+        FenetreAjustable.poser(stage, new StackPane(), 200, 200);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

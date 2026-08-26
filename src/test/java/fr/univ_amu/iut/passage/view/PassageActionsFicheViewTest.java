@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -44,7 +45,6 @@ import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -190,8 +190,8 @@ class PassageActionsFicheViewTest {
             annonces.add(entete + " | " + message);
         });
         controleur.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        stage.setScene(new Scene(vue, 1100, 700));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1100, 700);
+        FenetreAjustable.afficher(stage);
     }
 
     /// Passage de la fixture, dans le statut voulu : une nuit qui porte encore ses bruts (1 Go).

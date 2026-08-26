@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
@@ -17,7 +18,6 @@ import java.util.Optional;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
@@ -61,8 +61,8 @@ class GestionnaireFiltresTest {
         Filtres<LigneObservationAudio> filtres = new Filtres<>(affichees, () -> {});
         gestionnaire = new GestionnaireFiltres<>(
                 recherche, menu, puces, filtres, List.of(CriteresAudio.statut()), CriteresAudio.rechercheTexte());
-        stage.setScene(new Scene(new VBox(recherche, menu, puces), 400, 200));
-        stage.show();
+        FenetreAjustable.poser(stage, new VBox(recherche, menu, puces), 400, 200);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

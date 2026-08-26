@@ -18,6 +18,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -35,7 +36,6 @@ import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
@@ -162,8 +162,8 @@ class SaisonViewTest {
         controleur = loader.getController();
         navigateur = new Navigateur(new NavigationViewModel(), revision);
         navigateur.empiler(vue, "saison", "Ma saison", controleur);
-        stage.setScene(new Scene(vue, 1000, 600));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1000, 600);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

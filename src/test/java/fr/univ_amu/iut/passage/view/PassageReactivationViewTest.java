@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirActivite;
@@ -45,7 +46,6 @@ import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -206,8 +206,8 @@ class PassageReactivationViewTest {
             return laisserSurPlace;
         });
         controleur.ouvrirSur(ID_PASSAGE, new ContexteSite("640380", "A1", "Étang de la Tuilière"));
-        stage.setScene(new Scene(vue, 1100, 700));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1100, 700);
+        FenetreAjustable.afficher(stage);
     }
 
     private void cliquerReactiver(FxRobot robot) {

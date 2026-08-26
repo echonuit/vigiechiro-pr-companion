@@ -2,8 +2,8 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import javafx.geometry.Insets;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
@@ -40,8 +40,8 @@ class DefilementChromeTest {
         contenu.setPadding(new Insets(0));
         defilement = new ScrollPane(contenu);
         defilement.setFitToWidth(true);
-        stage.setScene(new Scene(defilement, 400, 200));
-        stage.show();
+        FenetreAjustable.poser(stage, defilement, 400, 200);
+        FenetreAjustable.afficher(stage);
     }
 
     /// Un bloc assez haut pour que le contenu dépasse largement la fenêtre : sans dépassement, il n'y a

@@ -2,8 +2,8 @@ package fr.univ_amu.iut.audio.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import java.util.concurrent.atomic.AtomicReference;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
@@ -25,8 +25,8 @@ class EditeurCommentaireTest {
     @Start
     void start(Stage stage) {
         ancre = new Button("ancre");
-        stage.setScene(new Scene(new VBox(ancre), 240, 120));
-        stage.show();
+        FenetreAjustable.poser(stage, new VBox(ancre), 240, 120);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

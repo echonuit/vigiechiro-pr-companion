@@ -27,6 +27,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
@@ -61,7 +62,6 @@ import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
@@ -240,8 +240,8 @@ class SonsValidationDepotViewTest {
             return choixParticipation;
         });
         controleur.ouvrirSur(PASSAGE);
-        stage.setScene(new Scene(vue, 1000, 700));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1000, 700);
+        FenetreAjustable.afficher(stage);
     }
 
     /// Rouvre l'écran sur un passage qui porte **déjà** un jeu de résultats : le prochain import devient un

@@ -20,6 +20,7 @@ import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
@@ -50,7 +51,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
@@ -196,8 +196,8 @@ class AnalyseViewTest {
                 return choixExport;
             }
         });
-        stage.setScene(new Scene(vue, 1000, 640));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1000, 640);
+        FenetreAjustable.afficher(stage);
     }
 
     /// Ce que le double de sélection répondra à l'export : vide = l'utilisateur a **annulé**.

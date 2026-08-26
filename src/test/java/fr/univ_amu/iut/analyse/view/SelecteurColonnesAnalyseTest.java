@@ -3,11 +3,11 @@ package fr.univ_amu.iut.analyse.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.DescripteurColonnes;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import javafx.scene.Scene;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
@@ -31,8 +31,8 @@ class SelecteurColonnesAnalyseTest {
     @Start
     void start(Stage stage) {
         racine = new StackPane();
-        stage.setScene(new Scene(racine, 300, 200));
-        stage.show();
+        FenetreAjustable.poser(stage, racine, 300, 200);
+        FenetreAjustable.afficher(stage);
     }
 
     private static TableView<String> tableAvec(String... entetes) {

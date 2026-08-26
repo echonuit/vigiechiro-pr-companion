@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.gluonhq.maps.MapLayer;
 import com.gluonhq.maps.MapPoint;
 import com.gluonhq.maps.MapView;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import javafx.geometry.Point2D;
-import javafx.scene.Scene;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
@@ -35,8 +35,8 @@ class GluonMapSpikeTest {
         carte.setCenter(new MapPoint(46.6, 2.5)); // centre France métropolitaine
         couche = new CoucheTest();
         carte.addLayer(couche);
-        stage.setScene(new Scene(carte, 640, 480));
-        stage.show();
+        FenetreAjustable.poser(stage, carte, 640, 480);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

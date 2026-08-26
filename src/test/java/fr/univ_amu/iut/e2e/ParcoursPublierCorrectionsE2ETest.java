@@ -25,6 +25,7 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -48,7 +49,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
@@ -114,8 +114,8 @@ class ParcoursPublierCorrectionsE2ETest {
         fr.univ_amu.iut.audio.view.SonsValidationController controleur = loader.getController();
         controleur.ouvrirSur(new SourceObservations.ParPassage(
                 new ContextePassage(idPassage, 1, new ContexteSite("130711", "Z41", "Étang"))));
-        stage.setScene(new Scene(vue, 1400, 800));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1400, 800);
+        FenetreAjustable.afficher(stage);
     }
 
     @AfterEach

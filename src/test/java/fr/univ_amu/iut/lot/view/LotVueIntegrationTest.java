@@ -14,6 +14,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.IconesSeverite;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.commun.view.Lieu;
@@ -39,7 +40,6 @@ import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
@@ -127,8 +127,8 @@ class LotVueIntegrationTest {
         controleur.ouvrirSur(CONTEXTE);
         // Scène haute : le flux ordonné à 4 étapes (#251) dépasse 640 px ; sans cela le bouton de
         // l'étape ④ (« Marquer déposé ») serait hors écran et non cliquable par le robot.
-        stage.setScene(new Scene(vue, 980, 980));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 980, 980);
+        FenetreAjustable.afficher(stage);
     }
 
     /// Re-stube `consulterLot` pour renvoyer `etat`, puis rouvre l'écran sur le même passage depuis
