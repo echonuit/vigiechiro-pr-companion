@@ -242,7 +242,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A2 · Un garde est vu rouge sur sa propre mutation | 6 | 4 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure-duree-portail.sh`, et 1 autre |
 | A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 11 | 11 | `.github/scripts/veille-contrat-api.sh`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 8 autres |
 | A4 · Un cas joué n'est pas un cas prouvé | 22 | 15 | `ApercuFxElisionTest#bouton_tronque_refuse`, `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`, `scripts/adr/3053-capture-libelle.py`, et 12 autres |
-| A5 · La mesure fait foi, et dit d'où elle vient | 22 | 15 | `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`, `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`, `EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues`, et 11 autres |
+| A5 · La mesure fait foi, et dit d'où elle vient | 23 | 16 | `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`, `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`, `EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues`, et 12 autres |
 | A6 · La vérification se déclare, sur trois niveaux | 3 | 2 | `DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment`, `EcritureAtomiqueTest#creation_restreinte` |
 | A7 · Le test précède le code | 1 | 1 | `BancDesClipsTest#une_classe_filmee_neuve_declare_son_banc` |
 | A8 · La mutation mesure dès qu'un comportement est complet | 0 | 0 | **relecture seule** |
@@ -267,13 +267,12 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A28 · Un avertissement se dit en mots | 1 | 0 | `scripts/adr/4366-avertissement-en-pictogramme.py` |
 | A29 · L'ergonomie se rattache à une heuristique nommée | 1 | 0 | `scripts/adr/verifie_okf.py` |
 | A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 4 | 1 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py`, et 2 autres |
-| A31 · La prose visible se relit à l'humaniseur | 2 | 0 | **relecture seule** |
+| A31 · La prose visible se relit à l'humaniseur | 3 | 1 | `.github/scripts/verifie-corps-pr.sh` |
 
-**4 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
+**3 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
 
 - A8 · La mutation mesure dès qu'un comportement est complet
 - A10 · Jamais de suppression d'avertissement
 - A11 · L'assumé se déclare, il ne se contourne pas
-- A31 · La prose visible se relit à l'humaniseur
 
 <!-- fin de la matrice engendree -->

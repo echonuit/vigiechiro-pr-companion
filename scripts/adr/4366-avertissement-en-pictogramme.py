@@ -75,10 +75,11 @@ BINAIRES = {
 
 CODE = {".java", ".py", ".sh", ".bash", ".yml", ".yaml", ".fxml", ".css", ".bats"}
 
-# Les competences OpenSpec ont ete adoptees et reecrites ici (#4515) : elles ne sont plus
-# reprises, et sortent de cette liste. Les commandes `opsx` restent amont jusqu au lot qui
-# les rendra derivees des competences.
-REPRIS = (".claude/commands/opsx/",)
+# Les prefixes d arbres REPRIS verbatim d un outil amont, exemptes parce que les reecrire les
+# ferait diverger de leur source. La liste est VIDE depuis #4516 : les competences OpenSpec ont
+# ete adoptees par #4515, et les six commandes `opsx` qui restaient amont ont disparu. Elle est
+# gardee, et non supprimee, pour que la prochaine reprise sache ou se declarer.
+REPRIS = ()
 
 # Les trois textes qui doivent PORTER le signe pour l enoncer : la decision, le garde, ses cas.
 # L exemption est nominative et tient a trois chemins, pour qu elle ne puisse pas s elargir en

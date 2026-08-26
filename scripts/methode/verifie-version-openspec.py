@@ -46,9 +46,10 @@ RACINE = pathlib.Path(__file__).resolve().parents[2]
 PAQUET = "@fission-ai/openspec"
 DOSSIER_OUTIL = pathlib.Path(".github") / "openspec"
 
-# Les deux arbres de competences. Les six commandes de `.claude/commands/opsx/` NE portent pas de
-# `generatedBy` : leur en-tete n en a jamais eu. Elles ne sont donc pas dans ce corpus, et le lot
-# qui les engendrera depuis les competences les y ramenera de fait.
+# Les deux arbres de competences. Les six commandes de `.claude/commands/opsx/` ont disparu avec
+# #4516, remplacees par six relais d une ligne qui deleguent a ces memes competences. Un relais ne
+# decrit aucun contrat de ligne de commande, donc il n a pas de `generatedBy` a tenir : ce corpus
+# reste celui des competences, et le lot qui devait l elargir a ete annule (ADR 4516).
 MOTIFS = (
     pathlib.Path(".agents") / "skills",
     pathlib.Path(".claude") / "skills",

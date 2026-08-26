@@ -62,7 +62,7 @@ changement actif. Si c'est ambigu, `openspec list --json` donne les candidats : 
 changements **actifs**, pas ceux déjà archivés, avec leur schéma quand il est connu.
 
 Annoncer toujours : « Changement retenu : <nom> », et comment le remplacer, par exemple
-`/opsx:archive <autre>`.
+`/archiver <autre>`.
 
 Puis, une fois le changement et la racine résolus :
 

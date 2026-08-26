@@ -205,7 +205,7 @@ jobs:
         # dispose déjà. L'y ajouter coûte une installation ; lui créer un job coûterait un checkout
         # et un setup-node de plus.
         #
-        # Ce que le garde tient : les dix-huit fichiers d'OpenSpec DÉCRIVENT le contrat de la ligne
+        # Ce que le garde tient : les douze fichiers d'OpenSpec DÉCRIVENT le contrat de la ligne
         # de commande, et une invocation approximative n'y casse rien. Elle attend dans le texte et
         # échoue le jour où un agent suit l'instruction qui la cite, loin de sa cause.
         #
@@ -801,3 +801,16 @@ jobs:
         run: |
           python3 scripts/methode/verifie-version-openspec.py --auto-test
           python3 scripts/methode/verifie-version-openspec.py --verifie
+
+      - name: "L'adoption des competences OpenSpec resiste a une regeneration (bloquant, #4516)"
+        # Les six competences ont ete ADOPTEES par #4515 : reecrites en francais, elles ne sont
+        # plus du texte amont. `openspec update --force` les rend a l'anglais amont, et la commande
+        # fait exactement ce qu'elle promet : c'est nous qui avons change de camp. Mesure du lot :
+        # apres un --force reel au foyer isole, le marqueur `langue: fr` retombe de 12/12 a 0/12 et
+        # ce garde passe au rouge ; SANS --force, l'outil repond « All tools up to date », ne
+        # reecrit rien, et le garde reste vert. Le controle negatif compte autant que le rouge,
+        # sans quoi le garde rougirait sur un geste anodin et serait desactive.
+        # Aucun besoin de Node ni de l'outil : le garde ne lit que l'en-tete des competences.
+        run: |
+          python3 scripts/methode/verifie-adoption-openspec.py --auto-test
+          python3 scripts/methode/verifie-adoption-openspec.py --verifie

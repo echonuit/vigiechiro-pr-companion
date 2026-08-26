@@ -168,7 +168,7 @@ openspec status --change "<nom>"
 
 Puis résumer : le nom et l'emplacement du changement ; la liste des artefacts créés avec une phrase
 chacun, plus tout artefact conditionnel sauté et pourquoi ; et la phrase qui conclut, « les artefacts
-sont prêts pour relecture ; quand tu veux, lance `/opsx:apply` ».
+sont prêts pour relecture ; quand tu veux, lance `/realiser` ».
 
 ## Ce que ce dépôt ajoute au flux de l'outil
 
