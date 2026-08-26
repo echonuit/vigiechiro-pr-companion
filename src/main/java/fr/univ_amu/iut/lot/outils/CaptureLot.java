@@ -78,36 +78,24 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
-/// Outil de capture/mesure, utilisable tel quel.
+/// Outil de capture : l'écran M-Lot en PNG, comparé à la maquette, étape par étape du dépôt (#251).
 ///
-/// Capture l'écran M-Lot en PNG pour le comparer à la maquette du brief, en illustrant **le workflow
-/// du dépôt étape par étape** (#251) :
+///  - `apercu-lot-preparer` : passage **Vérifié** cohérent, étape ① active ;
+///  - `apercu-lot-deposer` : **Prêt à déposer**, étape ② active ;
+///  - `apercu-lot-televerser-sans-archives` : **Prêt à déposer**, connecté, aucune archive, étape ③
+///    courante et étape ② qui n'est plus un passage obligé (#1998) ;
+///  - `apercu-lot-generation` : génération en cours, indicateur d'activité, bouton désactivé ;
+///  - `apercu-lot-archives` : archives générées, liste des ZIP, étape ③ courante ;
+///  - `apercu-lot-televerser` : mêmes archives, connecté, « Téléverser sur Vigie-Chiro » à côté du dépôt
+///    manuel (#1890) ;
+///  - `apercu-lot-depose` : **Déposé**, état final, toutes les étapes franchies ;
+///  - `apercu-lot-participation` : participation liée, le bouton ④ sur « Lancer la participation » ;
+///  - `apercu-lot-alertes` : **Vérifié incohérent**, zone d'alertes (R14), « Préparer le lot » désactivé ;
+///  - `apercu-lot-reprise` : dépôt en cours (#2354), une archive déposée, une autre dont le `PUT` a
+///    rencontré une coupure, en « Nouvelle tentative dans N s… ».
 ///
-/// - `apercu-lot-preparer.png` : passage **Vérifié** cohérent, étape ① « Vérifier et préparer le dépôt »
-///   active ;
-/// - `apercu-lot-deposer.png` : passage **Prêt à déposer** (après préparation), étape ② « Générer les
-///   archives » active ;
-/// - `apercu-lot-televerser-sans-archives.png` : passage **Prêt à déposer**, application **connectée**,
-///   **aucune archive** sur le disque : l'étape ③ « Téléverser » est courante et l'étape ② n'est plus un
-///   passage obligé (#1998) ;
-/// - `apercu-lot-generation.png` : **génération en cours**, indicateur d'activité, bouton désactivé ;
-/// - `apercu-lot-archives.png` : **archives générées**, liste des ZIP (redimensionnée à son contenu),
-///   « Ouvrir le dossier » et « Supprimer les archives » actifs, étape ③ « Téléverser » courante ;
-/// - `apercu-lot-televerser.png` : mêmes archives, **application connectée**, l'étape ③ expose enfin
-///   « Téléverser sur Vigie-Chiro » à côté du dépôt manuel (#1890) ;
-/// - `apercu-lot-depose.png` : passage **Déposé**, état final, toutes les étapes franchies ;
-/// - `apercu-lot-participation.png` : **participation liée**, le bouton de l'étape ④ bascule sur son
-///   second libellé, « Lancer la participation » (#1890) ;
-/// - `apercu-lot-alertes.png` : passage **Vérifié incohérent** (séquences/journal manquants), la
-///   zone d'alertes de cohérence (R14) apparaît et « Préparer le lot » est désactivé ;
-/// - `apercu-lot-reprise.png` : **dépôt en cours** (#2354), une archive déjà déposée, une autre dont le
-///   `PUT` a rencontré une coupure momentanée : sa ligne porte la mention discrète « Nouvelle tentative
-///   dans N s… » à côté de la barre, l'unité restant « en cours ».
-///
-/// Les aperçus **connectés** ont besoin d'un `Optional<DepotVigieChiro>` non vide : sans lui, l'étape ③
-/// et le second mode du bouton ④ ne se rendent pas du tout.
-///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Les aperçus connectés ont besoin d'un `Optional<DepotVigieChiro>` non vide, sans quoi l'étape ③ et le
+/// second mode du bouton ④ ne se rendent pas. Headless : `.github/assets/capture-screenshots.sh`.
 public final class CaptureLot {
 
     private static final String ID_UTILISATEUR = "demo-enseignant";

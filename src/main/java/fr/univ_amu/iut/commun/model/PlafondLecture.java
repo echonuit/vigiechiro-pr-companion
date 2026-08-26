@@ -3,32 +3,22 @@ package fr.univ_amu.iut.commun.model;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 
 /// Taille au-delà de laquelle on **refuse de lire** une entrée externe (#3222), et message de refus
-/// associé.
+/// associé. Le corps d'une réponse réseau et le journal du capteur viennent du dehors : ils se bornent,
+/// comme une archive se borne en ressources (lot #2722, #2732).
 ///
-/// Le corps d'une réponse réseau et le journal du capteur viennent du dehors : ils se bornent, comme
-/// une archive se borne en ressources (lot #2722, #2732).
+/// **Les défauts viennent d'une mesure.** Sur la carte réelle `Car640380-2026-Pass2-Z1`, une nuit
+/// complète de 4 031 observations : `LogPR1925492.txt` pèse **1 862 octets** et consigne des événements
+/// de session, pas un enregistrement par fichier, si bien qu'une saison de 250 nuits fait ~465 Ko et dix
+/// ans ~4,7 Mo ; le CSV d'observations rendu par la plateforme pèse **446 Kio**, le plus gros corps
+/// qu'un appel légitime rapporte.
 ///
-/// ## Les défauts viennent d'une mesure, pas d'une intuition
+/// D'où [#DEFAUT_JOURNAL], 17 000 fois une nuit réelle, et [#DEFAUT_CORPS], 147 fois le plus gros corps
+/// mesuré. Un plafond posé sans cette mesure refuserait du légitime, comme celui de taux de compression
+/// de #2732 l'a fait.
 ///
-/// Mesures prises sur la carte réelle `Car640380-2026-Pass2-Z1`, une nuit complète (4 031
-/// observations, la nuit de référence des bancs) :
-///
-/// - `LogPR1925492.txt`, le journal du capteur : **1 862 octets**, 22 lignes. Il consigne des
-/// événements de session (démarrage, mode, batterie, veille), **pas** un enregistrement par
-/// fichier : sa taille ne suit donc pas le nombre de séquences. Une saison de 250 nuits sur la
-/// même carte pèse ~465 Ko, dix ans d'exploitation continue ~4,7 Mo. Le « journal de saison »
-/// redouté est petit.
-/// - Le CSV d'observations rendu par la plateforme : **446 Kio**, 4 032 lignes. C'est le plus gros
-/// corps qu'un appel légitime rapporte, et c'est le cas dimensionnant, pas un cas favorable.
-///
-/// D'où [#DEFAUT_JOURNAL] (17 000 fois une nuit réelle, 70 fois une saison de dix ans) et
-/// [#DEFAUT_CORPS] (147 fois le plus gros corps mesuré). Un plafond posé sans cette mesure refuserait
-/// du légitime, comme le plafond de taux de compression de #2732 l'a fait.
-///
-/// Chaque plafond se surcharge par **propriété système**, comme les bornes de
-/// [fr.univ_amu.iut.importation.model.BornesExtraction], jamais par l'écran Réglages. Le **message de
-/// refus** doit nommer la limite atteinte et la surcharge, sans quoi la seule issue serait de renoncer
-/// au fichier.
+/// Chaque plafond se surcharge par **propriété système**, jamais par l'écran Réglages, et le message de
+/// refus nomme la limite atteinte et la surcharge, sans quoi la seule issue serait de renoncer au
+/// fichier.
 ///
 /// @param cle la borne au registre des réglages, qui porte son nom court et la propriété système
 /// @param octets plafond effectif, en octets

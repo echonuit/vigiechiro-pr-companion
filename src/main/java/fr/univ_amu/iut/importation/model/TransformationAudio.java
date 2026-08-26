@@ -13,44 +13,23 @@ import java.util.List;
 import java.util.Objects;
 
 /// Moteur de transformation audio (R10/R11) : le **point dur** de la feature import. Reproduit
-/// **fidèlement** la chaîne Vigie-Chiro/Tadarida, condition pour que l'`observations.csv` (produit par
-/// Tadarida sur les mêmes tranches) se raccroche à l'audio produit par l'application.
+/// fidèlement la chaîne Vigie-Chiro/Tadarida, condition pour que l'`observations.csv` produit par
+/// Tadarida se raccroche à l'audio produit par l'application.
 ///
-/// ## Vue d'ensemble : découper à 5 s réelles, à la cible d'expansion ×10
+/// Un brut est un ultrason mono 16 bits acquis à `Fe` (ex. 384 000 Hz), inaudible ; l'écoute se fait
+/// expansée ×10. **C'est `Fe`, issu du log, qui pilote l'arithmétique, pas l'en-tête WAV** : un
+/// enregistreur PR écrit ses bruts déjà expansés, en-tête à `Fe/10`, quand une source directe les porte
+/// à `Fe` (cf. [FrequenceAcquisition]). Découper au rythme de l'en-tête d'un brut PR donnerait des
+/// tranches dix fois trop courtes, désalignées des temps de l'`observations.csv`.
 ///
-/// Un enregistrement brut est un ultrason mono 16 bits acquis très vite (`Fe`, ex. 384 000 Hz), donc
-/// inaudible ; l'écoute Vigie-Chiro se fait **expansé ×10** (`Fe/10`, ex. 38 400 Hz). Point clé :
-/// **c'est la vraie fréquence d'acquisition `Fe` (issue du log) qui pilote l'arithmétique, pas
-/// l'en-tête WAV** : l'enregistreur PR écrit ses bruts **déjà expansés** (en-tête = `Fe/10`), tandis
-/// qu'une source « directe » les porte à `Fe` (cf. [FrequenceAcquisition]). La chaîne :
+/// La découpe rend `ceil(D / 5)` tranches de `5 × Fe` trames pour une durée d'acquisition `D`, la
+/// dernière plus courte. Chacune est écrite à `Fe / 10` **sans recalculer aucun échantillon** : une
+/// tranche de 5 s réelles s'écoute en 50 s. Le nommage est horodaté (R8) : l'horodatage de l'original
+/// est décalé de `index × 5 s`, suffixe toujours `_000`, ce qui donne la clé de jointure
+/// observation ↔ tranche, détaillée dans [Prefixe#nommerSequence(String, int, int)].
 ///
-/// 1. **Découpe** le brut en **tranches de 5 s réelles** : chaque tranche porte `5 × Fe` trames (la
-///    dernière peut être plus courte), quel que soit ce que dit l'en-tête.
-/// 2. **Écrit** chaque tranche à `frequenceSortie = Fe / 10` (ex. 38 400 Hz), **sans recalculer aucun
-///    échantillon** : les mêmes octets PCM sont conservés. Une source directe est ainsi réétiquetée
-///    ×10 ; un brut PR déjà expansé est simplement réécrit à sa fréquence (aucune ré-expansion). Une
-///    tranche de 5 s réelles s'écoute donc en **50 s**.
-///
-/// **Piège évité** : découper au rythme de l'**en-tête** d'un brut PR déjà expansé donnerait des
-/// tranches **10× trop courtes** (0,5 s réelle), désalignées des temps de l'`observations.csv` (en
-/// secondes réelles dans une tranche de 5 s). On découpe au rythme d'**acquisition** `Fe`.
-///
-/// Pour une durée d'acquisition `D` (secondes) : `nbSequences = ceil(D / 5)`.
-///
-/// ## Nommage HORODATÉ des tranches (R8, convention Tadarida)
-///
-/// Chaque tranche est nommée avec l'**heure réelle de son début**, pas un index : l'horodatage de
-/// l'original (`_AAAAMMJJ_HHMMSS`) est **décalé** de `index × 5 s`, et le suffixe est **toujours `_000`**.
-/// Exemple : `..._20260422_225849.wav` → tranches `..._225849_000`, `..._225854_000`, `..._225859_000`…
-/// C'est le nommage que porte l'`observations.csv` : c'est la **clé de jointure** observation ↔ tranche
-/// (cf. `ServiceValidation`). Détail dans [Prefixe#nommerSequence(String, int, int)].
-///
-/// ## Déterminisme (R11)
-///
-/// Mêmes octets en entrée ⇒ mêmes octets en sortie : le découpage est purement positionnel, les
-/// octets PCM sont copiés sans altération (aucun rééchantillonnage, donc aucun clipping
-/// introduit), et [FichierWav#ecrire] produit un en-tête canonique fixe. Relancer la
-/// transformation réécrit des fichiers identiques au bit près.
+/// Déterminisme (R11) : découpage positionnel, copie PCM sans rééchantillonnage donc sans clipping, et
+/// en-tête canonique fixe par [FichierWav#ecrire]. Relancer réécrit des fichiers identiques au bit près.
 public class TransformationAudio {
 
     /// Durée d'une séquence d'écoute, en secondes **réelles** (au rythme d'acquisition) : une tranche = 5 s

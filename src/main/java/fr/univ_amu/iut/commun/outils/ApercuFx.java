@@ -130,27 +130,13 @@ public final class ApercuFx {
 
     /// Capture un **menu ouvert** (le popup d'un [MenuButton]) hors-écran, et l'écrit en PNG.
     ///
-    /// Un `MenuButton` fermé n'affiche que son bouton : les entrées qu'il contient - leurs libellés, leurs
-    /// icônes, leurs grisages - ne se voient sur **aucun** aperçu. Or c'est là que se logent les défauts que
-    /// seule une capture révèle : un glyphe qui ne se rend pas, un libellé trop long, une entrée restée
-    /// active alors qu'elle devrait être grisée.
-    ///
-    /// Le menu montré est **le vrai** : ses items sont repris tels quels dans un [ContextMenu] transitoire,
-    /// jamais reconstruits. Textes, visibilités et grisages restent donc ceux de l'application, ce qu'une
-    /// reconstruction à l'identique ne garantirait pas (ADR 0025 : une capture passe par le code de
-    /// production, elle ne le reconstruit pas).
-    ///
-    /// Le menu source **n'est pas altéré**, ce que la copie défensive et [ApercuFxMenuTest] tiennent :
-    /// un appelant peut capturer autre chose ensuite, et `CaptureMultisite` le fait.
-    ///
-    /// En *headless*, un popup peut ne pas se rendre. La méthode renvoie alors `false` sans rien écrire,
-    /// à charge pour l'appelant de le dire et de continuer : un aperçu manquant ne doit pas faire échouer
-    /// tout un job de capture.
-    ///
-    /// Le popup se rend dans la scène de son **hôte** : les feuilles de style du menu y sont reportées
-    /// (#3169), sans quoi une entrée qui porte son sens par une classe CSS - « hors jeu », grisée et en
-    /// italique - se capture identique aux autres. Un garde d'appelant ne voit pas cet écart : il
-    /// vérifie que la classe est posée, pas que quelque chose a changé à l'écran.
+    /// Un `MenuButton` fermé n'affiche que son bouton : ses entrées, leurs libellés, leurs grisages ne se
+    /// voient sur aucun aperçu, et c'est là que se logent les défauts que seule une capture révèle. Le menu
+    /// montré est **le vrai**, ses items repris tels quels dans un [ContextMenu] transitoire (ADR 0025), et
+    /// le menu source n'est pas altéré, ce que la copie défensive et [ApercuFxMenuTest] tiennent. Le popup
+    /// se rend dans la scène de son hôte, feuilles de style reportées (#3169), sans quoi une entrée qui
+    /// porte son sens par une classe CSS se capturerait identique aux autres. En *headless* il peut ne pas
+    /// se rendre : la méthode renvoie alors `false` sans rien écrire.
     ///
     /// @param menu le bouton de menu dont on veut montrer le contenu déployé
     /// @param fichier le PNG à écrire

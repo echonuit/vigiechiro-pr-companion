@@ -40,45 +40,24 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
-/// La **couture** entre la modale de déclaration et l'écran qui l'a ouverte, quand un carré vient
-/// d'être récupéré (#3806), et l'écran sur lequel ce geste **se conclut** (#4099).
+/// La **couture** entre la modale de déclaration et l'écran qui l'a ouverte, quand un carré vient d'être
+/// récupéré (#3806), et l'écran sur lequel ce geste **se conclut** (#4099).
 ///
-/// ## Ce que ce test existe pour empêcher
+/// [ModaleSiteVerifierCarreViewTest] s'arrête une étape plus tôt : il vérifie que l'appelant reçoit le
+/// carré. Ce que l'appelant en fait n'était exercé nulle part, et le compte rendu retiré laissait 286
+/// tests verts, alors qu'il porte la seule phrase disant d'où sortent les points parus à l'écran.
 ///
-/// [ModaleSiteVerifierCarreViewTest] s'arrête une étape plus tôt : il vérifie que l'appelant **reçoit**
-/// le carré rapatrié. Ce que l'appelant en fait n'était exercé nulle part. Mesuré à la clôture des
-/// suites de #3458 : le compte rendu retiré, **286 tests restaient verts**. On pouvait donc supprimer
-/// la seule phrase qui explique à l'utilisateur d'où sortent les points apparus sur son écran.
+/// La modale s'ouvre depuis « Mes sites », donc le geste s'y conclut : liste rafraîchie et compte rendu
+/// au bandeau de cet écran (ADR 0023). Trois brins, chacun devant pouvoir rougir seul :
 ///
-/// ## Trois brins, et pourquoi il en faut trois
+/// 1. rester sur l'écran ;
+/// 2. voir le carré dans la liste. Ce brin garde que l'écran déclare
+///    [fr.univ_amu.iut.commun.view.SuitLaRevision], et non un appel à `rafraichir()` : le socle recharge
+///    de lui-même sur l'`insert`, et la première version restait verte quand on retirait l'appel ;
+/// 3. lire le compte rendu, sans quoi des points paraissent en silence.
 ///
-/// La modale s'ouvre depuis « Mes sites ». Le geste s'y conclut donc, liste rafraîchie et compte rendu
-/// au bandeau de cet écran (ADR 0023) - alors qu'il ouvrait la fiche du carré jusqu'à #4099.
-///
-/// Chacun des trois brins doit pouvoir rougir **seul**, parce que chacun garde une moitié différente
-/// du besoin :
-///
-/// 1. rester sur l'écran. Sans lui, on retomberait dans la navigation d'avant ;
-/// 2. voir le carré dans la liste. Ce brin ne garde **pas** un appel à `rafraichir()` : l'écran
-///    déclare [fr.univ_amu.iut.commun.view.SuitLaRevision], donc le socle le recharge de lui-même sur
-///    l'`insert`. Il garde que cet écran suit bien la révision - retirer le contrat le ferait rougir.
-///    C'est une mesure qui a corrigé une intention : la première version appelait `rafraichir()`, et le
-///    test est resté vert quand on l'a retiré ;
-/// 3. lire le compte rendu. Une liste rafraîchie **en silence** ferait paraître des points sans dire
-///    d'où ils viennent : c'est exactement le défaut que #3806 avait corrigé, et qu'un test des deux
-///    seuls premiers brins laisserait revenir au vert.
-///
-/// ## Le nombre de points est compté, pas posé
-///
-/// Le carré reçoit de vrais points, et le résultat annonce **ce que la base contient**. Un scénario qui
-/// promet quarante et un points sur un site qui n'en a aucun rend un écran impossible - le clip de
-/// recette S1-37 le montrait, bandeau et liste se contredisant à l'image.
-///
-/// ## Pourquoi la composition complète
-///
-/// L'écran est monté pour de vrai, et le test appelle la **méthode que la modale reçoit**, prise sur le
-/// contrôleur en place. Rejouer ses gestes à côté ferait dériver le test de la production sans que rien
-/// ne rougisse.
+/// Le nombre de points est **compté**, pas posé, et l'écran est monté pour de vrai : le test appelle la
+/// méthode que la modale reçoit, prise sur le contrôleur en place.
 @ExtendWith(ApplicationExtension.class)
 class NavigationSitesRapatriementTest {
 

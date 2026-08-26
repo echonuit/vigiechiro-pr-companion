@@ -29,34 +29,23 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
 /// `traiter-passages` (#2357, clôture du lot 3) : applique **une** action à **plusieurs** passages, avec
-/// l'écran d'éligibilité et le compte rendu par passage - l'équivalent en ligne de commande du menu
+/// l'écran d'éligibilité et le compte rendu par passage, équivalent en ligne de commande du menu
 /// « Traiter la sélection » de « Carte & passages ».
 ///
-/// ## Ce que cette commande apporte qu'une boucle shell n'apporte pas
+/// Les quatre gestes existent déjà un par un, et un terminal sait boucler ; ce qui manquait est de
+/// **savoir à l'avance lesquels sont éligibles**. Les règles du lot 3 ([ActionGroupee#motifNonEligible])
+/// lisent l'état du dépôt, le rattachement à une participation et la présence de résultats, rien de tout
+/// cela n'étant dans `lister-passages`. Un script qui boucle ne peut donc qu'essayer pour voir, et
+/// l'échec d'une nuit y ressemble à l'échec du lot. Ici les écartés sont annoncés avec leur motif sans
+/// être tentés, un échec n'arrête pas les suivants, et chaque passage a sa ligne.
 ///
-/// Les quatre gestes existent déjà un par un (`deposer`, `deposer-vigiechiro`, `importer-vigiechiro`,
-/// `lancer-traitement-vigiechiro`), et un terminal sait boucler. Ce qui manquait est ailleurs :
-/// **savoir à l'avance lesquels sont éligibles**. Les règles introduites par le lot 3
-/// ([ActionGroupee#motifNonEligible]) lisent l'état du dépôt, le rattachement à une participation et la
-/// présence de résultats - rien de tout cela n'est dans `lister-passages`. Un script qui boucle ne peut
-/// donc qu'**essayer pour voir**, et l'échec d'une nuit y ressemble à l'échec du lot.
+/// Ni `--forcer` ni `--remplacer` : ces options valent sur les commandes unitaires, où un humain décide
+/// pour **une** nuit. Relancer un calcul détruit les observations d'une nuit déposée en archives, et
+/// remplacer un jeu de résultats touche à ce que l'observateur a validé.
 ///
-/// Ici : les écartés sont **annoncés avec leur motif** sans être tentés, un échec **n'arrête pas** les
-/// suivants, et chaque passage a sa ligne dans le compte rendu.
-///
-/// ## Les garde-fous sont ceux de l'application, par construction
-///
-/// Ni `--forcer` ni `--remplacer` : ces options existent sur les commandes unitaires, où un humain décide
-/// pour **une** nuit en connaissance de cause. Les actions groupées ne les exposent pas - relancer un
-/// calcul détruit les observations d'une nuit déposée en archives, et remplacer un jeu de résultats touche
-/// à ce que l'observateur a validé. Vingt d'un coup ne serait pas un service.
-///
-/// ## Codes de sortie
-///
-/// **`0`** dès lors qu'aucun passage n'a échoué - les **écartés** en font partie, comme
-/// `lancer-traitement-vigiechiro` rend `0` sur « déjà en cours » : rejouer un lot déjà traité est le cas
-/// **idempotent**, pas une erreur. **`1`** si au moins un passage a échoué. **`2`** pour un refus en
-/// amont : action indisponible (fonctionnalité désactivée) ou identifiant de passage inconnu.
+/// Codes de sortie : **`0`** dès qu'aucun passage n'a échoué, les écartés en faisant partie, rejouer un
+/// lot déjà traité étant le cas idempotent ; **`1`** si au moins un a échoué ; **`2`** pour un refus en
+/// amont, action indisponible ou identifiant inconnu.
 @Command(
         name = "traiter-passages",
         description = "Applique une action à plusieurs passages : annonce les écartés, puis rend compte de chacun.")

@@ -23,33 +23,24 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-/// **Bilan de récupérabilité** : ce que deviendrait chaque nuit si l'on repartait d'une base neuve (#1151).
+/// **Bilan de récupérabilité** : ce que deviendrait chaque nuit si l'on repartait d'une base neuve
+/// (#1151). C'est le garde-fou du reset : il n'interdit rien, il établit **avant toute écriture** un état
+/// par nuit, et ne fait demander confirmation que s'il existe au moins une nuit « perdu ».
 ///
-/// C'est le garde-fou du reset : il n'interdit rien, il établit **avant toute écriture** un état par
-/// nuit, et ne fait demander confirmation que s'il existe au moins une nuit « perdu ».
+/// **Ce qui revient toujours** : les métadonnées et les observations, que le serveur rend (#1050). **Ce
+/// qui ne revient pas forcément** : l'audio. D'où ce bilan, et sa cascade.
 ///
-/// **Ce qui revient toujours** : les métadonnées et les observations, que le serveur rend (#1050, prouvé
-/// de bout en bout). **Ce qui ne revient pas forcément** : l'audio. D'où ce bilan.
-///
-/// ## La cascade, et pourquoi elle est courte
-///
-/// 1. **Disque** : les séquences sont là. Elles se réimportent, la nuit redevient complète. C'est le cas
-///    normal, et le seul rapide.
+/// 1. **Disque** : les séquences sont là, se réimportent, et la nuit redevient complète. Cas normal, et
+///    le seul rapide.
 /// 2. **Serveur** : le disque ne les a plus, mais la nuit a été déposée **en WAV** *et* rattachée à une
-///    participation. Alors, et alors seulement, le serveur les a gardées (un `POST /fichiers` pose un
-///    `s3_id` définitif). Cas **rare** : le mode de dépôt par défaut est le **ZIP** depuis #984.
-/// 3. **Perdu**, ni l'un ni l'autre. Un dépôt **ZIP** ne laisse **aucun** audio côté serveur : les
-///    archives sont détruites après extraction et les WAV extraits ne sont jamais montés sur S3.
+///    participation, seul cas où le serveur les a gardées (`POST /fichiers` pose un `s3_id` définitif).
+///    Rare, le mode par défaut étant le **ZIP** depuis #984.
+/// 3. **Perdu**, ni l'un ni l'autre : un dépôt ZIP ne laisse aucun audio côté serveur, les archives
+///    étant détruites après extraction.
 ///
-/// « Perdu » n'est pas une impasse (#1297) : la nuit devient un **passage archivé**, observations et
-/// vérifications consultables, écoute impossible, **réactivable** si l'utilisateur retrouve un jour ses
-/// fichiers. Ce bilan sert donc à dire la perte *avant*, pas à l'interdire.
-///
-/// Le mode de dépôt est **lu dans le plan** (`depot_unite.type`), jamais présumé : une nuit déposée
-/// avant #984 n'a pas de plan du tout, et une nuit jamais déposée non plus. Dans les deux cas : perdu.
-///
-/// Lecture seule, sans réseau. Les DAO sont construits depuis la [SourceDeDonnees], comme
-/// [ServiceAuditCoherence].
+/// « Perdu » n'est pas une impasse (#1297) : la nuit devient un **passage archivé**, consultable, non
+/// écoutable, réactivable si l'utilisateur retrouve ses fichiers. Le mode de dépôt est **lu dans le
+/// plan** (`depot_unite.type`), jamais présumé. Lecture seule, sans réseau.
 public class ServiceRecuperabilite {
 
     private final PassageDao passageDao;

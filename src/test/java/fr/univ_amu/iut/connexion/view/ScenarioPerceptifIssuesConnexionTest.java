@@ -49,42 +49,22 @@ import org.testfx.util.WaitForAsyncUtils;
 
 /// Les **quatre issues** de la connexion, jouées sur le vrai écran (`S1-05` à `S1-08`, #4130).
 ///
-/// ## Ce que ces cas demandent, et ce qu'ils n'avaient pas
+/// Elles étaient portées par `ConnexionViewModelTest`, qui n'ouvre aucune fenêtre : leur clip était un
+/// rectangle noir, alors que ces quatre cas sont **des messages qu'on lit sur un écran**, dont on juge
+/// la formulation et non la valeur que rend une méthode.
 ///
-/// Les quatre étaient portés par `ConnexionViewModelTest`, qui n'ouvre aucune fenêtre : leur clip
-/// était un rectangle noir, et la page de recette l'annonçait pourtant avec un lecteur. Or ces quatre
-/// cas sont **des messages qu'on lit sur un écran** - c'est leur formulation qu'on juge, pas la valeur
-/// que rend une méthode.
+/// La modale s'ouvre par l'**entrée du menu ☰**, comme un observateur le ferait, et non par un appel de
+/// navigation : c'est le retour de `S1-26`, « on ne comprend pas comment on arrive sur la modale ».
 ///
-/// > Les cas de recette doivent être des E2E qui montrent les fonctionnalités du produit et comment on
-/// > y accède.
-///
-/// ## Le chemin d'accès fait partie du cas
-///
-/// La modale s'ouvre par l'**entrée du menu ☰**, comme un observateur le ferait, et non par un appel
-/// de navigation. C'est le retour de `S1-26` : « on ne comprend pas comment on arrive sur la modale ».
-///
-/// ## Une seule frontière truquée
-///
-/// [ClientVigieChiro] est remplacé, et lui seul : le reste du câblage est celui du produit. Chaque cas
-/// pose sa réponse avant le geste, si bien que ce qui paraît à l'écran est ce que l'application fait
-/// d'une réponse réelle.
-///
-/// ## Pourquoi ces cas restent ASSERTÉS
-///
-/// Le script de session ne les dit pas perceptifs, et il a raison : leur texte s'assertit mot pour
-/// mot. Ce qui se regarde ici, c'est la **lisibilité** - qu'on comprenne le message et le geste qu'il
-/// nomme - et c'est le clip qui la porte. Les deux ne s'excluent pas : l'assertion garde le texte, le
-/// clip montre ce qu'on en fait.
-///
-/// L'exécuteur est **asynchrone**, celui de la production : en synchrone la vérification bloque le
-/// fil JavaFX, aucune image n'est rendue pendant ce temps, et le passage à juger n'existerait sur
+/// **Une seule frontière truquée**, [ClientVigieChiro] ; le reste du câblage est celui du produit, et
+/// chaque cas pose sa réponse avant le geste. Ces cas restent **assertés** : leur texte s'assertit mot
+/// pour mot, et le clip porte ce qui se regarde, la lisibilité. L'exécuteur est celui de la production,
+/// asynchrone : en synchrone la vérification bloque le fil JavaFX et le passage à juger n'existerait sur
 /// aucune trame.
 ///
-/// ## Ce que chaque cas vérifie en plus de son texte
-///
-/// Que le message est **dans le cadre** ([CadreVisible]). Un clip qui ne montre pas son objet ne fait
-/// rien juger, et `lookup` ne le dit pas : c'est le défaut qui a échappé deux fois à `S4-33`.
+/// Chaque cas vérifie en plus que le message est **dans le cadre** ([CadreVisible]). Un clip qui ne
+/// montre pas son objet ne fait rien juger, et `lookup` ne le dit pas : c'est le défaut qui a échappé
+/// deux fois à `S4-33`.
 @ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class ScenarioPerceptifIssuesConnexionTest {
 

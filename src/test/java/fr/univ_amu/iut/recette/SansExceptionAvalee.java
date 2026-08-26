@@ -11,36 +11,22 @@ import org.testfx.util.WaitForAsyncUtils;
 
 /// Fait rougir un cas quand une exception meurt dans un gestionnaire d evenement JavaFX (#4409).
 ///
-/// ## Ce qu il ferme
-///
 /// Une exception levee dans un `setOnMouseClicked`, un `setOnAction` ou un ecouteur de propriete ne
-/// remonte a personne : JavaFX la donne au gestionnaire d exception non capturee du fil, qui par
-/// defaut l imprime sur la sortie d erreur. Le geste n a pas lieu, et le test ne peut rapporter que
-/// l ABSENCE d effet.
-///
-/// C est ce qui a rendu #4408 indechiffrable. Le cas disait « la carte a-t-elle ouvert quoi que ce
-/// soit ? L accueil est encore la » - tout ce qu il savait dire. Or la chaine derriere ce clic a
-/// trois maillons qui peuvent lever : une requete en base, un `FXMLLoader.load()`, et la
-/// construction Guice du controleur. Le symptome d une exception y est IDENTIQUE a celui d une
-/// lenteur, et une occurrence n a donc rien appris de sa cause.
-///
+/// remonte a personne : JavaFX la donne au gestionnaire d exception non capturee du fil, qui l imprime
+/// sur la sortie d erreur. Le geste n a pas lieu, et le test ne peut rapporter que l ABSENCE d effet.
 /// C est l article A12 applique au banc : aucun echec silencieux.
 ///
-/// ## Ce qu il ne ferme pas
+/// C est ce qui a rendu #4408 indechiffrable. Le cas disait « la carte a-t-elle ouvert quoi que ce
+/// soit ? L accueil est encore la », alors que la chaine derriere ce clic a trois maillons qui peuvent
+/// lever, et que le symptome d une exception y est identique a celui d une lenteur.
 ///
-/// - **Une exception avalee par un `catch` du produit.** Elle n arrive jamais au fil, et c est le
-///   propos d un autre garde. Celui-ci voit ce qui SORT, pas ce qu on retient.
-/// - **Une exception levee hors du cas**, entre deux classes ou pendant l arret du toolkit. Le
-///   gestionnaire est pose au debut du cas et retire a sa fin, precisement pour ne pas faire porter
-///   a une classe ce qu une autre a laisse.
-/// - **Le fil du test lui-meme.** Une assertion qui echoue s occupe deja d elle-meme.
+/// Ce qu il ne ferme pas : une exception avalee par un `catch` du produit, qui n arrive jamais au fil et
+/// releve d un autre garde ; une exception levee hors du cas, le gestionnaire etant pose au debut et
+/// retire a la fin ; le fil du test lui-meme, une assertion qui echoue s occupant d elle-meme.
 ///
-/// ## Pourquoi il se pose et se retire a chaque cas
-///
-/// TestFX REUTILISE le Stage primaire d une classe a l autre dans un meme fork, et le fil JavaFX est
-/// donc partage. Un gestionnaire laisse en place ferait rougir la classe SUIVANTE pour l exception
-/// de la precedente - le defaut exact que le job `ordre-alternatif` existe pour attraper. Il est
-/// donc pose avant chaque cas et l ancien est rendu apres.
+/// Il se pose et se retire a CHAQUE cas parce que TestFX reutilise le Stage primaire d une classe a l
+/// autre dans un meme fork : un gestionnaire laisse en place ferait rougir la classe suivante pour l
+/// exception de la precedente, le defaut que le job `ordre-alternatif` existe pour attraper.
 public final class SansExceptionAvalee implements BeforeEachCallback, AfterEachCallback {
 
     /// Ce que le fil JavaFX a laisse tomber pendant le cas courant.

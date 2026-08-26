@@ -31,24 +31,15 @@ public final class ValidationFormulaire {
     /// Clé sous laquelle le nœud **retient** l'expression qu'on lui a confiée (cf. [#marquerInvalide]).
     private static final String CLE_CONDITION = "fr.univ_amu.iut.validation.condition-invalide";
 
-    /// Ajoute (ou retire) la classe [#CLASSE_CHAMP_INVALIDE] sur `champ` selon `invalide`, réactivement.
-    /// À alimenter avec une condition « saisi **mais** incorrect » : un champ encore vide ne doit pas
-    /// rougir avant toute saisie.
+    /// Ajoute (ou retire) la classe [#CLASSE_CHAMP_INVALIDE] sur `champ` selon `invalide`, réactivement. À
+    /// alimenter avec une condition « saisi **mais** incorrect » : un champ encore vide ne doit pas rougir
+    /// avant toute saisie.
     ///
-    /// ## Pourquoi la condition est rangée dans le nœud (#3647)
-    ///
-    /// Les appelants passent une expression **neuve** - `anneeValide.not()`, une variable locale - que
-    /// personne ne garde. Or une dépendance de binding JavaFX n'écoute son dérivé que **faiblement** :
-    /// l'expression devenait donc collectable dès le retour de cette méthode, et l'écouteur posé
-    /// ci-dessous disparaissait avec elle.
-    ///
-    /// Le champ restait alors sur l'état calculé **au câblage**. Vécu : à l'ouverture de « Modifier le
-    /// passage », le ViewModel est encore vide, l'année vaut 0, le rouge est posé ; un ramasse-miettes
-    /// passe avant que `demarrer` ne charge le passage, et l'année devenue 2026 ne l'efface plus. Un
-    /// aperçu publié a montré ce refus imaginaire sur deux champs corrects.
-    ///
-    /// Retenir la condition **ici** plutôt que chez l'appelant couvre les quatre sites d'un coup, et
-    /// ceux qu'on écrira ensuite : cette méthode reçoit une expression, elle en prend la garde.
+    /// **La condition est rangée dans le nœud** (#3647). Les appelants passent une expression neuve que
+    /// personne ne garde, et une dépendance de binding JavaFX n'écoute son dérivé que **faiblement** :
+    /// l'expression devenait collectable dès le retour, l'écouteur disparaissait avec elle, et le champ
+    /// restait sur l'état calculé au câblage. Vécu à l'ouverture de « Modifier le passage », l'année valant
+    /// 0 : le rouge est posé, un ramasse-miettes passe, et l'année devenue 2026 ne l'efface plus.
     public static void marquerInvalide(Node champ, ObservableBooleanValue invalide) {
         appliquer(champ, invalide.get());
         invalide.addListener((observable, avant, apres) -> appliquer(champ, apres));

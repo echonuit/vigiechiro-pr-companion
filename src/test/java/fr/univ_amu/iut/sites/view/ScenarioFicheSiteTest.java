@@ -49,20 +49,11 @@ import org.testfx.util.WaitForAsyncUtils;
 
 /// Les quatre zones de la **fiche d'un site**, jouées sur le vrai écran : `S1-18` à `S1-21` (#4132).
 ///
-/// ## Ce que ces cas n'avaient pas
-///
-/// Ils étaient portés par `SiteDetailViewModelTest`, qui n'ouvre aucune fenêtre. Leurs lecteurs sur la
-/// page de recette montraient donc un rectangle noir, et rien ne disait ce qu'un utilisateur voit ni
-/// comment il y arrive. Les assertions du ViewModel restent où elles sont - elles gardent le calcul -
-/// mais le **cas de recette** appartient au scénario qui le montre (EPIC #4133).
-///
-/// ## Le chemin fait partie du cas
-///
-/// Chaque test part de « Mes sites » et **clique la carte du carré**. C'est ce qu'un observateur fait,
-/// et c'est la moitié qu'on saute quand on appelle la navigation directement : le clip s'ouvrirait sur
-/// une fiche sans que rien n'explique d'où elle vient - reproche fait à `S1-26` puis à `S4-33`.
-///
-/// ## Trois carrés, et chacun sert
+/// Ces cas étaient portés par `SiteDetailViewModelTest`, qui n'ouvre aucune fenêtre : leurs lecteurs
+/// montraient un rectangle noir. Les assertions du ViewModel gardent le calcul, mais le **cas de
+/// recette** appartient au scénario qui le montre (EPIC #4133). Chaque test part donc de « Mes sites »
+/// et **clique la carte du carré**, la moitié qu'on saute en appelant la navigation directement,
+/// reproche fait à `S1-26` puis à `S4-33`.
 ///
 /// | carré | ce qu'il porte | ce qu'il montre |
 /// |---|---|---|
@@ -70,22 +61,16 @@ import org.testfx.util.WaitForAsyncUtils;
 /// | `752204` | un lien plateforme, aucun passage | `S1-35` |
 /// | `013570` | rien | que « Mes sites » est une **liste** |
 ///
-/// `S1-19` et `S1-35` font juger les **deux mêmes commandes** dans leurs deux états : empêchées sur un
-/// carré non relié qui porte des passages, offertes sur un carré rattaché qui n'en porte pas. Les deux
-/// clips se regardent ensemble, et c'est leur écart qui dit la règle - un seul des deux ne montrerait
-/// qu'un écran, pas une garde.
+/// `S1-19` et `S1-35` font juger les deux **mêmes** commandes dans leurs deux états : empêchées sur un
+/// carré non relié qui porte des passages, offertes sur un carré rattaché qui n'en porte pas. C'est leur
+/// écart qui dit la règle.
 ///
-/// ## Ce que `lookup` ne dit pas, et où en est ce contrôle-ci
-///
-/// `lookup` trouve un noeud **quelle que soit sa position** : un cas peut passer toutes ses assertions
-/// et publier un clip qui ne montre pas son objet - vécu deux fois sur `S4-33` (#4126, #4128). Chaque
-/// cas amène donc sa zone dans le cadre et vérifie qu'elle y est ([CadreVisible]).
-///
-/// Il faut dire dans quel état est ce contrôle **ici** : mesuré, à 1180 x 900 et avec cette fixture, la
-/// fiche entière tient dans la zone d'affichage - contenu 805 px pour un cadre de 805. Le défilement ne
-/// sert donc à rien aujourd'hui, et retirer les appels à `amener` ne fait rougir aucun des quatre cas.
-/// Ce n'est pas une raison de les retirer : c'est ce qui garde vraie la phrase « tout est à l'image » le
-/// jour où la fiche gagne une section, où la fixture gagne des passages, ou où l'écran rétrécit.
+/// `lookup` trouve un nœud **quelle que soit sa position** : un cas peut passer toutes ses assertions et
+/// publier un clip qui ne montre pas son objet, vécu deux fois sur `S4-33` (#4126, #4128). Chaque cas
+/// amène donc sa zone dans le cadre et vérifie qu'elle y est ([CadreVisible]). Mesuré, à 1180 x 900 avec
+/// cette fixture la fiche entière tient dans la zone : retirer les appels à `amener` ne fait rougir
+/// aucun des quatre cas aujourd'hui, et c'est ce qui garde vraie la phrase le jour où la fiche gagne une
+/// section.
 @ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class ScenarioFicheSiteTest {
 

@@ -43,41 +43,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// **Test E2E du parcours P9 « Regrouper les nuits successives par point »**, piloté **sans IHM** :
-/// on rejoue le parcours de Samuel **uniquement par la couche métier** (services réels +
-/// DAO réels câblés par l'injecteur applicatif [RacineInjecteur]), sur une **base SQLite jetable**
-/// (workspace temporaire + [MigrationSchema]). Aucun `FXMLLoader`, aucun `Stage`, aucun `FxRobot` :
-/// chaque jalon du parcours est vérifié par son **résultat métier** en base.
+/// **Test E2E du parcours P9 « Regrouper les nuits successives par point »**, piloté **sans IHM** : le
+/// parcours est rejoué par la seule couche métier, services et DAO réels câblés par [RacineInjecteur],
+/// sur une base SQLite jetable ([MigrationSchema]). Chaque jalon se vérifie par son résultat en base.
 ///
-/// **Mise en garde architecturale.** P9 est une cible **COULD** : il n'existe **aucun service ni
-/// ViewModel de « regroupement »** dans le code (pas de `ServiceRegroupement`, pas de méthode
-/// `validerSurPeriode(...)`). Ce test n'**invente** donc aucune API : il **orchestre les primitives
-/// réelles existantes** (`ServiceSites`, `ServiceValidation`, `PassageDao`) pour reconstituer, de
-/// bout en bout, le **résultat métier** que la future vue de validation regroupée produirait. La
-/// fusion par espèce et le compteur « N nuits / X espèces / Y observations » sont **calculés dans le
-/// test** à partir des observations réellement persistées par [ServiceValidation], faute de service
-/// dédié. Le jour où un service de regroupement existera, ces calculs glisseront dans le service et
-/// le test l'appellera directement.
+/// **P9 est une cible COULD, et aucun service de regroupement n'existe.** Ce test n'invente aucune API :
+/// il orchestre les primitives réelles (`ServiceSites`, `ServiceValidation`, `PassageDao`) et calcule
+/// lui-même la fusion par espèce et le compteur « N nuits / X espèces / Y observations ». Le jour où un
+/// service de regroupement existera, ces calculs y glisseront et le test l'appellera.
 ///
-/// Modélisation conforme à l'application : dans VigieChiro, **chaque nuit importée est un
-/// [Passage]** (clé d'unicité R5 = `point / année / n° de passage`). « 4 nuits successives sur un
-/// point » se traduit donc par **4 passages** (n° 1 à 4, dates croissantes) rattachés au **même
-/// point**. Les passages sont semés à l'état [StatutWorkflow#DEPOSE] (contexte post-P7 : la
-/// validation Tadarida n'est ouverte que sur une nuit déposée), avec leurs sessions / séquences /
-/// observations, exactement comme le fait le test d'intégration `ServiceValidationTest`.
+/// Chaque nuit importée est un [Passage] (unicité R5 : point / année / n° de passage), donc « 4 nuits
+/// successives sur un point » se sème en 4 passages n° 1 à 4, dates croissantes, même point, à l'état
+/// [StatutWorkflow#DEPOSE] : la validation Tadarida n'est ouverte que sur une nuit déposée.
 ///
-/// Jalons du brief P9 vérifiés :
-///
-/// 1. **Lister les nuits d'un point** : sélectionner un point fait apparaître ses passages de la
-///    saison, **ordonnés chronologiquement** ([PassageDao#findByPoint]), à l'exclusion des passages
-///    des autres points (regroupement **par point**).
-/// 2. **Sélectionner les nuits successives** : les 4 passages du point forment un **run contigu**
-///    (n° 1→4), candidats au regroupement.
-/// 3. **Regrouper pour validation** : les observations des 4 nuits sont **fusionnées et triées par
-///    espèce**, et le **compteur** « 4 nuits, X espèces détectées, Y observations » est exact.
-/// 4. **Valider une espèce sur toute la période** (R18, mode inventaire) : une espèce présente sur
-///    les 4 nuits est validée **une fois par nuit du regroupement** ; son verdict couvre alors la
-///    totalité de ses détections sur la période, les autres espèces restant non touchées.
+/// Les quatre jalons du brief : lister les passages du point, ordonnés et à l'exclusion des autres
+/// points ([PassageDao#findByPoint]) ; constater que les quatre forment un run contigu ; fusionner et
+/// trier leurs observations par espèce, compteur exact ; valider une espèce sur toute la période (R18,
+/// mode inventaire), une fois par nuit du regroupement, les autres espèces restant non touchées.
 class ParcoursRegrouperNuitsParPointE2ETest {
 
     private static final String ID_USER = "u-e2e-p9";

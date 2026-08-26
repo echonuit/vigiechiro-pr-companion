@@ -19,37 +19,23 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 /// L'index qui se lit par CAS, écrit une fois la session JUnit terminée.
 ///
-/// Il tient le même rôle que celui du script, à un point près : la colonne « comment auditer »
-/// ne se déduit plus d'une part d'images claires, mais du fait qu'une fenêtre a paru, mesuré par la
-/// caméra. La frontière reste « quelque chose a paru, ou rien », mais elle est CONSTATÉE au lieu
-/// d'être inférée.
+/// Il tient le même rôle que celui du script, à un point près : la colonne « comment auditer » ne se
+/// déduit plus d'une part d'images claires, mais du fait qu'une fenêtre a paru, mesuré par la caméra. La
+/// frontière reste « quelque chose a paru, ou rien », mais elle est **constatée** au lieu d'être inférée.
 ///
-/// ## Pourquoi il y a des fragments, et pas un seul fichier
+/// **Des fragments, et pas un seul fichier.** Une session JUnit n'est pas une JVM : surefire tourne à
+/// `forkCount=1C` et chacune tient son index. Écrire `index.md` directement laissait la dernière JVM
+/// effacer le travail des autres, mesuré sur quatre forks et neuf cas dont l'index final en portait
+/// cinq. Un index amputé se lit exactement comme un index complet, ce qui en fait la forme la plus
+/// dangereuse d'un défaut. Chaque JVM dépose donc son fragment dans `index.d/` puis reconstruit
+/// `index.md` à partir de **tous** les fragments présents.
 ///
-/// Une session JUnit n'est pas une JVM. Surefire tourne à `forkCount=1C`, soit une JVM par cœur,
-/// et chacune tient son propre index. La première version écrivait `index.md` directement : la
-/// dernière JVM à finir effaçait le travail des autres.
+/// Lire les fragments puis écrire l'index est **indivisible** : sans le verrou, une JVM qui a lu la
+/// liste trop tôt écrirait après les autres un index plus pauvre.
 ///
-/// Mesuré sur quatre forks, neuf cas : l'index final en portait **cinq**. Et un index amputé se lit
-/// exactement comme un index complet - il ne manque aucune colonne, aucune ligne n'est fausse, rien
-/// n'annonce qu'il en manque quatre. C'est la forme la plus dangereuse d'un défaut : celle qui
-/// ressemble au succès.
-///
-/// Chaque JVM dépose donc un **fragment** dans `index.d/`, sous un nom qui lui est propre, puis
-/// reconstruit `index.md` à partir de TOUS les fragments présents. La dernière à passer rend l'index
-/// entier, et les précédentes en rendent une version partielle mais jamais fausse.
-///
-/// ## Ce que le verrou garde
-///
-/// Lire les fragments puis écrire l'index doit être **indivisible**. Sans cela, une JVM qui a lu la
-/// liste avant qu'une autre ne dépose son fragment écrirait, après elle, un index plus pauvre : le
-/// défaut d'origine reviendrait, en plus rare et donc en pire.
-///
-/// Limite assumée : un dossier de tournage RÉUTILISÉ garde les fragments du tournage précédent,
-/// et l'index les compterait. C'est le prix d'une identité qui ne se réemploie jamais, et c'est le
-/// bon prix : le défaut inverse EFFACE des lignes, celui-ci en montre de trop. Le nombre de
-/// fragments fusionnés est annoncé à chaque écriture, si bien qu'un total surprenant se voit au lieu
-/// de se deviner. La CI part toujours d'un `target/` neuf.
+/// Limite assumée : un dossier de tournage réutilisé garde les fragments du précédent, et l'index les
+/// compterait. C'est le bon prix, le défaut inverse effaçant des lignes ; le nombre de fragments
+/// fusionnés est annoncé à chaque écriture, et la CI part d'un `target/` neuf.
 public final class IndexDesCas implements ExtensionContext.Store.CloseableResource {
 
     public record Ligne(String cas, String test, String clip, boolean fenetreVue) {

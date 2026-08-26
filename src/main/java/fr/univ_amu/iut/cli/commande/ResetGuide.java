@@ -24,28 +24,21 @@ import picocli.CommandLine.Spec;
 /// Commande `reset-guide` (#1151) : **ce que vous perdriez si vous repartiez d'une base neuve**, nuit par
 /// nuit, avant d'y toucher.
 ///
-/// La procédure de reset se compose de gestes qui existent déjà et qui sont testés :
+/// La procédure de reset se compose de gestes qui existent déjà et sont testés :
 ///
 /// 1. `sauvegarder --complet` : base **et** audio (#1346) ;
 /// 2. `exporter-observations` : les validations ;
 /// 3. base neuve ;
-/// 4. `recuperer-vigiechiro` puis `reconstruire-passage` : métadonnées, sites, points, observations
-///    reviennent du serveur (#1050, prouvé de bout en bout) ;
-/// 5. réimport de l'audio : depuis le disque (`importer`), ou `reactiver` pour un passage archivé ;
+/// 4. `recuperer-vigiechiro` puis `reconstruire-passage` : métadonnées, sites, points et observations
+///    reviennent du serveur (#1050) ;
+/// 5. réimport de l'audio, depuis le disque ou par `reactiver` pour un passage archivé ;
 /// 6. `audit-coherence` : le workspace doit être sain.
 ///
-/// Ce que la procédure **ne dit pas d'elle-même**, et que cette commande dit : *l'étape 5 va-t-elle
-/// aboutir ?* Les métadonnées et les observations reviennent toujours. **L'audio, non.** Une nuit déposée
-/// en **ZIP** (le mode par défaut) ne laisse **aucun** audio côté serveur : si le disque ne l'a plus, il
-/// est perdu.
-///
-/// D'où cette commande, **en lecture seule** : elle établit le bilan de récupérabilité *avant* qu'on
-/// écrive quoi que ce soit. Code de sortie **2** s'il existe au moins une nuit en « perdu » : un script
-/// peut ainsi refuser d'enchaîner.
-///
-/// « Perdu » n'est pas une impasse (#1297) : la nuit deviendra un **passage archivé**, consultable et non
-/// écoutable, réactivable si les fichiers réapparaissent. Mais c'est une perte, et elle doit être dite
-/// **avant**.
+/// Ce que la procédure ne dit pas d'elle-même, et que cette commande dit : **l'étape 5 va-t-elle
+/// aboutir ?** Une nuit déposée en ZIP, le mode par défaut, ne laisse aucun audio côté serveur. D'où
+/// cette commande, **en lecture seule**, qui établit le bilan avant qu'on écrive quoi que ce soit, et
+/// rend **2** s'il existe au moins une nuit en « perdu », pour qu'un script puisse refuser d'enchaîner.
+/// « Perdu » n'est pas une impasse (#1297), mais c'est une perte, et elle doit être dite avant.
 @Command(
         name = "reset-guide",
         description = "Établit, nuit par nuit, ce que deviendrait l'audio si l'on repartait d'une base neuve "

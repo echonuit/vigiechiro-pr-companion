@@ -92,22 +92,15 @@ public final class Modales {
 
     /// Fait suivre à la fenêtre la **croissance** de son contenu.
     ///
-    /// Une modale est dimensionnée à son ouverture, sur le contenu visible **à cet instant**. Ce qui
-    /// paraît ensuite (#1534) agrandit la mise en page sans agrandir la fenêtre, et le bas passe sous
-    /// la ligne de flottaison.
+    /// Une modale est dimensionnée à son ouverture, sur le contenu visible à cet instant ; ce qui paraît
+    /// ensuite (#1534) agrandit la mise en page sans agrandir la fenêtre. L'ajustement se fait par
+    /// `sizeToScene()`, et **ne se remplace jamais** par le maximum de l'ancienne et de la nouvelle taille :
+    /// `setWidth`/`setHeight` figent le Stage en dimensionnement explicite, définitivement, et celui du
+    /// harnais TestFX est partagé par tout un fork (ADR 4134).
     ///
-    /// L'ajustement se fait par `sizeToScene()` : la fenêtre est refaite à la taille de son contenu, et
-    /// une fenêtre agrandie à la main y perd sa taille. **Ne la remplacez jamais** par le maximum de
-    /// l'ancienne et de la nouvelle : `setWidth`/`setHeight` figent le Stage en dimensionnement
-    /// explicite, définitivement, et le Stage du harnais TestFX est partagé par tout un fork, ce que
-    /// l'ADR 4134 détaille.
-    ///
-    /// **Déclarez chaque révélation**, ou la propriété qui la pilote. Une zone non déclarée fait
-    /// déborder le contenu pendant tout le transitoire, puis tout se recale d'un coup : l'utilisateur
-    /// voit un sursaut qu'aucune capture ne montre, une capture photographiant un état stabilisé.
-    /// Trouvé trois fois (#3453), et aucun garde ne le vérifie : séparer « surveillé directement » de
-    /// « surveillé par son moteur » demanderait d'analyser les liaisons JavaFX, et une règle plus
-    /// grossière rendrait la loupe bruyante que l'ADR 3479 écarte.
+    /// **Déclarez chaque révélation**, ou la propriété qui la pilote : une zone non déclarée fait déborder
+    /// le contenu pendant tout le transitoire, sursaut qu'aucune capture ne montre. Trouvé trois fois
+    /// (#3453), et aucun garde ne le vérifie.
     ///
     /// @param racine la racine de la modale, celle que porte la scène
     /// @param revelations les propriétés dont un changement fait paraître du contenu

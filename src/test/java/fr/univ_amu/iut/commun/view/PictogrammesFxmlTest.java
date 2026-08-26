@@ -12,39 +12,24 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/// Garde-fou « un pictogramme d'IHM se pose en [org.kordamp.ikonli.javafx.FontIcon], pas en
-/// caractère », par analyse statique des `.fxml` (#1933, règle #700).
+/// Garde-fou « un pictogramme d'IHM se pose en [org.kordamp.ikonli.javafx.FontIcon], pas en caractère »,
+/// par analyse statique des `.fxml` (#1933, règle #700).
 ///
-/// Un caractère écrit dans un libellé dépend des **polices installées** sur la machine : selon le
-/// système il tombe en rectangle vide, en noir et blanc, ou en emoji couleur pleine taille qui
-/// déséquilibre la ligne - et il ne se **teinte** pas avec le texte, donc il ne peut pas suivre un
-/// état. Le chantier #1933 a converti 35 glyphes sur 17 vues ; sans cliquet, l'usage littéral
-/// reviendrait comme il était déjà revenu après #700.
+/// Un caractère écrit dans un libellé dépend des **polices installées** : selon le système il tombe en
+/// rectangle vide, en noir et blanc, ou en emoji pleine taille, et il ne se teinte pas avec le texte
+/// donc il ne suit aucun état. Le défaut ne se voit ni à la compilation ni à l'exécution sur la machine
+/// qui l'écrit : le `🔍` du champ de recherche s'affichait chez le développeur et manquait sur les
+/// aperçus régénérés en CI, sans que rien ne rougisse.
 ///
-/// Le défaut ne se voit ni à la compilation ni à l'exécution sur la machine qui l'écrit : c'est
-/// justement pourquoi il a besoin d'un test. La preuve tient en une capture - le `🔍` du champ de
-/// recherche s'affichait chez le développeur et **manquait** sur les aperçus régénérés en CI, sans
-/// que rien ne rougisse.
+/// **Où passe la frontière.** Ce qui désigne une action ou un objet est une icône ; ce qui vit dans une
+/// phrase reste un caractère. Les **flèches** (U+2190-U+21FF) et les **opérateurs mathématiques**
+/// (U+2200-U+22FF) sont de la typographie et restent tolérés, à condition de ne pas constituer à eux
+/// seuls le libellé : une flèche seule sur un bouton est une icône qui s'ignore. Tout le reste se pose
+/// en `FontIcon`.
 ///
-/// ## Où passe la frontière
-///
-/// Le chantier a tranché la question restée ouverte à son ouverture : ce qui **désigne une action ou
-/// un objet** est une icône ; ce qui **vit dans une phrase** reste un caractère. Mécaniquement :
-///
-///  - les **flèches** (U+2190-U+21FF) et les **opérateurs mathématiques** (U+2200-U+22FF) sont de la
-///    typographie : `A → B`, `≥ 1 mois`, une longitude négative. Ils sont tolérés **à condition de ne
-///    pas constituer à eux seuls le libellé** - une flèche seule sur un bouton est une icône qui
-///    s'ignore ;
-///  - tout le reste (`☰`, `✕`, `🔍`, `📤`, `♻`, `☁`, `✏`, `🗑`…) est un pictogramme, et se pose en
-///    `FontIcon`.
-///
-/// La frontière est volontairement tracée par **bloc Unicode** et non par liste de caractères : une
-/// liste ne dirait rien du caractère suivant, alors que la question « est-ce de la typographie ? » se
-/// repose à chaque ajout.
-///
-/// Ce garde-fou ne couvre que les **FXML**. Les libellés bâtis en Java restent à traiter (#1564), et
-/// la **CLI** est hors sujet : une console ne rend pas de `FontIcon`, `⚠` y est le seul moyen d'écrire
-/// un avertissement.
+/// La frontière est tracée par **bloc Unicode** et non par liste : une liste ne dirait rien du caractère
+/// suivant. Le garde ne couvre que les FXML ; les libellés bâtis en Java restent à traiter (#1564), et
+/// la CLI est hors sujet, une console ne rendant pas de `FontIcon`.
 class PictogrammesFxmlTest {
 
     private static final Path SOURCE = Path.of("src", "main", "java");

@@ -17,34 +17,25 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-/// Aperçus du **bandeau de retour** portant un message *venu d'ailleurs* (#2852).
+/// Aperçus du **bandeau de retour** portant un message venu d'ailleurs (#2852).
 ///
-/// La borne du message (#2076, #2841) existe pour un **effet de mise en page**. Le libellé porte `wrapText`,
-/// donc rien n'est tronqué : un long message **enroule**, le bandeau grandit, et il pousse le contenu
-/// vers le bas. Un test peut affirmer que la chaîne fait 240 caractères ; il ne dit pas à quoi
-/// ressemble un bandeau de 240 caractères au-dessus d'une liste.
+/// La borne du message (#2076, #2841) existe pour un **effet de mise en page** : le libellé porte
+/// `wrapText`, donc rien n'est tronqué, un long message enroule, le bandeau grandit et pousse le contenu
+/// vers le bas. Un test peut affirmer que la chaîne fait 240 caractères ; il ne dit pas à quoi ressemble
+/// un bandeau de 240 caractères au-dessus d'une liste.
 ///
-/// ## Ce que chaque aperçu montre
+/// - `apercu-bandeau-retour-refus` : un refus **que nous avons écrit**, une ligne, le cas courant.
+/// - `apercu-bandeau-retour-externe` : un échec réseau tel que la plateforme le rapporte, deux lignes.
+/// - `apercu-bandeau-retour-borne` : un message de pilote SQLite **coupé à la borne**, sans laquelle ce
+///   bandeau ferait trois fois cette hauteur.
+/// - `apercu-bandeau-vue-amputee` : une vue rejouée sans **une** valeur introuvable (#3056), cas courant
+///   après le renommage de #2995.
+/// - `apercu-bandeau-vue-amputee-longue` : la même chose avec **cinq** valeurs, seul moyen de savoir si
+///   l'énumération reste lisible.
 ///
-/// - `apercu-bandeau-retour-refus.png` : un refus **que nous avons écrit**, enrichi du geste attendu.
-///   Une ligne. C'est le cas courant, celui qui doit rester discret.
-/// - `apercu-bandeau-retour-externe.png` : un échec réseau **tel que la plateforme le rapporte**, passé
-///   par la porte qui l'enrichit. Deux lignes : le bandeau grandit déjà.
-/// - `apercu-bandeau-retour-borne.png` : un message de pilote SQLite, **coupé à la borne**, avec son
-///   « … (détail dans le journal) ». Sans la borne, ce bandeau ferait trois fois cette hauteur.
-/// - `apercu-bandeau-vue-amputee.png` : une vue mémorisée rejouée sans **une** valeur devenue
-///   introuvable (#3056). Le cas courant après le renommage de #2995 : une ligne, discret.
-/// - `apercu-bandeau-vue-amputee-longue.png` : la **même chose avec cinq valeurs**. C'est le cas qui
-///   se produit quand une vue traverse un renommage de plein fouet, et le seul moyen de savoir si
-///   l'énumération reste lisible ou s'il faudrait la résumer.
-///
-/// Le contenu sous le bandeau n'est pas décoratif : c'est lui qui rend visible ce que la borne protège.
-///
-/// [MesureBandeauRetour] construit le bandeau **à la main** et répond à « de combien ça grandit ». Ces
-/// aperçus passent par le vrai [BandeauRetour], donc par sa sévérité, son icône et sa liaison au
-/// [RetourOperation], et répondent à « est-ce que ça reste lisible ».
-///
-/// Lancement : `./mvnw exec:exec` avec cette classe en `mainClass` (headless, cf. capture-screenshots.sh).
+/// Le contenu sous le bandeau rend visible ce que la borne protège. [MesureBandeauRetour] le construit à
+/// la main et répond à « de combien ça grandit » ; ces aperçus passent par le vrai [BandeauRetour] et
+/// répondent à « est-ce que ça reste lisible ». Lancement : `./mvnw exec:exec` en headless.
 public final class CaptureBandeauRetour {
 
     /// Largeur d'un écran de l'application, celle à laquelle la borne a été mesurée (#2076).

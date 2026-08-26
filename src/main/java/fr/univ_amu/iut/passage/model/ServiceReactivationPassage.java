@@ -23,36 +23,25 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /// **Réactive un passage archivé** (#1302, EPIC #1297) : l'utilisateur désigne le dossier où il a
-/// retrouvé ses fichiers, et l'application rebranche, **fichier par fichier**, uniquement ce qu'elle a
-/// pu **vérifier**.
+/// retrouvé ses fichiers, et l'application rebranche, fichier par fichier, ce qu'elle a pu **vérifier**.
 ///
-/// Deux jeux de fichiers peuvent porter les mêmes noms sans être les mêmes (redécoupe, autre expansion,
-/// autre nuit du même carré). Rebrancher des observations sur le mauvais audio produit un résultat
-/// **scientifiquement faux, et silencieux** : on validerait un cri en écoutant autre chose. La garde
-/// ([RebranchementSequences], cascade #1309) ne laisse donc **jamais** passer un fichier non vérifié : il
-/// est compté, motivé, rapporté.
+/// Deux jeux de fichiers peuvent porter les mêmes noms sans être les mêmes, et rebrancher des
+/// observations sur le mauvais audio produit un résultat **scientifiquement faux, et silencieux**. La
+/// garde ([RebranchementSequences], cascade #1309) ne laisse jamais passer un fichier non vérifié.
 ///
-/// **Deux voies, une seule garde** (#1406). L'utilisateur désigne **un dossier** - une sauvegarde, un
-/// disque externe, une **carte SD entière contenant plusieurs nuits** - et ce service **reconnaît** ce
-/// qu'il contient, en confrontant les noms des fichiers à ceux qu'il a en base :
+/// **Deux voies, une seule garde** (#1406). L'utilisateur désigne un dossier, jusqu'à une carte SD
+/// entière, et ce service reconnaît ce qu'il contient en confrontant les noms à ceux qu'il a en base :
+/// les **séquences** présentes se rebranchent directement ; à défaut, [ReactivationDepuisBruts] régénère
+/// les **bruts** puis les soumet à la même garde ; sinon on le dit ([VoieReactivation#AUCUNE]). Les
+/// fichiers qui ne correspondent à aucun nom connu sont ignorés, ni lus, ni copiés.
 ///
-/// - les **séquences** y sont : on les rebranche directement (rien à recalculer) ;
-/// - seuls les **bruts** y sont : [ReactivationDepuisBruts] les régénère, puis les soumet à **la même
-///   garde**. La reproductibilité de la transformation est une **preuve**, pas un prérequis ;
-/// - ni les unes ni les autres : on le dit ([VoieReactivation#AUCUNE]), on n'invente rien.
-///
-/// Les fichiers qui ne correspondent à **aucun** nom connu de cette session - les autres nuits de la
-/// carte, par exemple - sont simplement **ignorés** : ni lus, ni copiés, ni touchés.
-///
-/// **Idempotent** : une séquence dont le fichier est déjà là est comptée `dejaPresentes` et laissée
-/// intacte ; rejouer la réactivation ne casse rien. **Non destructif** : les fichiers sont **copiés**
-/// depuis le dossier source (jamais déplacés), et ni les observations ni les vérifications ne sont
-/// touchées - on rebranche des chemins, on ne recalcule rien.
+/// **Idempotent et non destructif** : une séquence déjà là est comptée `dejaPresentes` et laissée
+/// intacte, les fichiers sont copiés et jamais déplacés, et rien n'est recalculé.
 ///
 /// **Une des trois coutures d'un même concept d'import** (#1662, EPIC B, [ADR 0016]). La reconstruction
 /// ([ServiceReconstructionPassages], squelette hydraté #1710) et l'import groupé (#1708) rendent un
-/// passage **consultable** : les observations, sans audio ni ancrage. Celle-ci le rend **écoutable**,
-/// et sur un passage reconstruit acquiert l'ancrage différé ([#acquerirAncrageSiNecessaire], #1571).
+/// passage consultable ; celle-ci le rend **écoutable**, et acquiert l'ancrage différé
+/// ([#acquerirAncrageSiNecessaire], #1571).
 public class ServiceReactivationPassage {
 
     /// Ce que fait la phase disque quand une nuit **reconstruite** vient d'être hydratée : inscrire en base

@@ -25,43 +25,30 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-/// **Suite de contrat API « vivante »** (#axe 4, dépôt VigieChiro) : documentation exécutable de notre
-/// compréhension actuelle de l'API REST VigieChiro (backend Python-Eve). Elle **tape l'API réelle** et
-/// vérifie deux choses d'un coup : (a) que l'API **n'a pas bougé** (schéma, formats, domaines de valeurs),
-/// et (b) que **notre client** (`ClientVigieChiro` + parseurs) la lit toujours correctement.
+/// **Suite de contrat API « vivante »** : documentation exécutable de notre compréhension de l'API REST
+/// VigieChiro (backend Python-Eve). Elle tape l'API réelle et vérifie d'un coup que l'API n'a pas bougé
+/// (schéma, formats, domaines) et que `ClientVigieChiro` et ses parseurs la lisent toujours.
 ///
-/// **Hors CI / hors build par défaut** : taguée `@Tag("api-live")`, exclue par `surefire.excludedGroups`.
-/// Lancement **manuel** :
+/// **Hors CI et hors build par défaut** : `@Tag("api-live")`, exclue par `surefire.excludedGroups`.
+///
 /// ```
 /// ./mvnw -Papi-live test -Dvigiechiro.token=XXXX
 /// ```
-/// Sans `-Dvigiechiro.token`, toute la suite se **skippe** proprement (`Assumptions`), jamais d'échec
-/// accidentel. Le token 14 j se récupère via le marque-page `localStorage['auth-session-token']`.
 ///
-/// Les `@DisplayName` **sont** la documentation. La forme précise des objets vit dans les JSON Schema
-/// partagés (`src/test/resources/vigiechiro/*.schema.json`), validés ici et réutilisés par la collection
-/// Postman (une seule source de vérité, pas de contrat dupliqué).
+/// Sans `-Dvigiechiro.token`, toute la suite se skippe par `Assumptions`. Le jeton de 14 jours se prend
+/// sur le marque-page `localStorage['auth-session-token']`. Les `@DisplayName` **sont** la documentation ;
+/// la forme des objets vit dans `src/test/resources/vigiechiro/*.schema.json`, validés ici et réutilisés
+/// par la collection Postman.
 ///
-/// Ce fichier couvre d'abord le **mode lecture** (idempotent, sûr). Les contrats d'**écriture** (POST/PATCH :
-/// probes ZIP, site et corrections d'observations) sont opt-in `-Dvigiechiro.write=true` ; les probes de
-/// corrections (#1203) exigent en plus une participation **banc d'essai** explicitement désignée
-/// (`-Dvigiechiro.participationEssai=<id>`), car une correction posée ne se retire pas.
+/// Le mode lecture est idempotent. Les écritures sont opt-in par `-Dvigiechiro.write=true`, et les probes
+/// de corrections (#1203) exigent en plus une participation de banc d'essai désignée par
+/// `-Dvigiechiro.participationEssai=<id>` : une correction posée ne se retire pas.
 ///
-/// ## La seule route qu'on ne peut pas défaire (#1456)
-///
-/// `PUT /donnees/{id}/observations/{index}/messages` est **à part**. Toutes les autres écritures se
-/// rattrapent : un `PATCH` de correction **remplace**, un `POST /participations` se re-modifie, un dépôt se
-/// réinitialise. Celle-ci, **non** : le serveur **ajoute** par `$push`, et **aucune route ne permet de
-/// supprimer ni de modifier un message**. Ce qu'elle écrit **reste**, sur des données que lit un validateur
-/// du MNHN. Il n'y a pas de « nettoyage après test ».
-///
-/// Elle exige donc **trois** verrous, et non deux : `-Dvigiechiro.write=true`,
-/// `-Dvigiechiro.participationEssai=<id>` **et** `-Dvigiechiro.message=true`. Le troisième existe pour une
-/// raison précise : sans lui, qui lance les probes d'écriture pour éprouver les **corrections** pousserait,
-/// sans le vouloir, une trace **définitive**.
-///
-/// Le contrat live **hebdomadaire** (`api-live.yml`) est en **lecture seule** et doit le rester : il ne
-/// passe aucun de ces trois drapeaux.
+/// **`PUT /donnees/{id}/observations/{index}/messages` ne se défait pas** (#1456). Le serveur ajoute par
+/// `$push`, et aucune route ne supprime ni ne modifie un message : ce qu'elle écrit reste, sur des
+/// données que lit un validateur du MNHN. Elle exige donc un **troisième** verrou,
+/// `-Dvigiechiro.message=true`, sans quoi qui éprouve les corrections pousserait une trace définitive
+/// sans le vouloir. Le contrat hebdomadaire (`api-live.yml`) est en lecture seule et n'en passe aucun.
 @Tag("api-live")
 @DisplayName("Contrat API Vigie-Chiro (live, lecture) : documentation vivante du schéma")
 class ContratApiVigieChiroLiveTest {

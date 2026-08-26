@@ -29,32 +29,20 @@ import java.util.logging.Logger;
 /// **Amène une nuit rapatriée au niveau « contenu »** (#2555) : lui crée ses séquences et rapatrie ses
 /// observations, **en place**, sans toucher à son identité.
 ///
-/// La synchro « mes sites » rapatrie l'historique des nuits en **squelettes** (ADR 0016) : point, date,
-/// identité de l'enregistreur, mais **aucune séquence**. Une nuit en reste au niveau « identité »
-/// (#1814) tant que rien ne l'hydrate, et « Réactiver ce passage » y est grisé faute de séquences à
-/// confronter au dossier désigné.
+/// La synchro « mes sites » rapatrie l'historique en **squelettes** (ADR 0016) : point, date, identité de
+/// l'enregistreur, mais aucune séquence. Une nuit en reste au niveau « identité » (#1814) tant que rien
+/// ne l'hydrate, et « Réactiver ce passage » y est grisé faute de séquences à confronter au dossier
+/// désigné. Trois coutures composées, rien de dupliqué : [PlateformeReconstruction],
+/// [CreationPassageArchive#hydraterSequences] et [ImportObservations].
 ///
-/// Trois coutures composées, rien de dupliqué : la source distante ([PlateformeReconstruction]), la
-/// création des séquences ([CreationPassageArchive#hydraterSequences]) et l'import des observations
-/// ([ImportObservations]).
+/// **En place, pas remplacé**, là où la reconstruction supprime le squelette pour le recréer entier
+/// ([ServiceReconstructionPassages#reconstruire]). Deux raisons l'interdisent : un écran est ouvert sur
+/// cet `idPassage`, et un squelette porte peut-être des saisies manuelles que la plateforme ignore,
+/// n° de série (#1828), météo (#1688), heures de nuit, qu'un delete puis recreate écraserait en silence.
 ///
-/// ## En place, pas remplacé
-///
-/// La reconstruction, elle, **supprime** le squelette pour le recréer entier
-/// ([ServiceReconstructionPassages#reconstruire]). Deux raisons l'interdisent ici :
-///
-/// - un **écran est ouvert** sur cet `idPassage` (on hydrate au moment où l'utilisateur réactive) ;
-/// - un squelette porte peut-être des **saisies manuelles** que la plateforme ignore - n° de série
-///   (#1828), météo (#1688), heures de nuit tant qu'aucun fichier ne les atteste - qu'un delete + recreate
-///   écraserait en silence.
-///
-/// ## Deux sources, selon qui appelle
-///
-/// Le repli sur la pagination `donnees` (une cinquantaine de pages par nuit) est acceptable sur **une**
-/// nuit que l'utilisateur a désignée ; il ne l'est pas sur un **balayage de compte**, où il ferait
-/// resurgir le coût qui avait justement fait écarter « tout rapatrier à la synchro ». D'où [Source].
-///
-/// **Hors du fil JavaFX** (réseau + écritures base).
+/// Le repli sur la pagination `donnees` est acceptable sur **une** nuit désignée, pas sur un balayage de
+/// compte où il ferait resurgir le coût qui avait écarté « tout rapatrier à la synchro ». D'où [Source].
+/// **Hors du fil JavaFX.**
 public final class HydratationSquelette {
 
     private static final Logger LOG = Logger.getLogger(HydratationSquelette.class.getName());
@@ -163,23 +151,14 @@ public final class HydratationSquelette {
 
     /// **Amène au niveau « contenu » toutes les nuits encore en squelette** parmi `idsPassage` (#2557).
     ///
-    /// C'est le geste de la synchro, et il vit ici plutôt qu'au service parce que
-    /// [ServiceReconstructionPassages] est au plafond God Class (PMD `NcssCount`, déjà franchi une fois par
-    /// #1814).
+    /// En trois temps, comme la synchro ([ServiceReconstructionPassages#synchroniserStructure]).
+    /// **Lectures** : ne retenir que les nuits réellement en squelette, et parmi elles celles qu'on sait
+    /// traiter, rattachées et au préfixe lisible. **Réseau, parallélisé** : le CSV de chacune, borne
+    /// d'entrée/sortie, best-effort, une nuit dont le CSV n'est pas exposé n'écartant pas les autres.
+    /// **Écritures, en série** : SQLite est mono-écrivain, et le parallélisme ne vaut que sur le temps réseau.
     ///
-    /// **En trois temps, comme la synchro elle-même** ([ServiceReconstructionPassages#synchroniserStructure]) :
-    ///
-    /// 1. **lectures** : ne retenir que les nuits réellement en squelette, et parmi elles celles qu'on sait
-    ///    traiter (rattachées, préfixe lisible) ;
-    /// 2. **réseau, parallélisé** : le CSV de chacune, borne d'**entrée/sortie** (ce sont des GET qui
-    ///    attendent), best-effort - une nuit dont le CSV n'est pas exposé n'écarte pas les autres ;
-    /// 3. **écritures, EN SÉRIE** : SQLite est **mono-écrivain**, et huit transactions concurrentes
-    ///    s'attendraient l'une l'autre au mieux, se disputeraient le verrou au pire. Le parallélisme n'a de
-    ///    valeur que sur le temps réseau, qui domine largement.
-    ///
-    /// **Best-effort par nuit** : une nuit qui échoue est comptée « restée incomplète » et **sautée**, le
-    /// balayage continue. Elle est rendue à son état de squelette (compensation d'[#ecrire]), donc reprenable
-    /// telle quelle au prochain tour.
+    /// **Best-effort par nuit** : une nuit qui échoue est comptée « restée incomplète » et rendue à son état
+    /// de squelette (compensation d'[#ecrire]), donc reprenable telle quelle au prochain tour.
     ///
     /// @param idsPassage les nuits locales rattachées à une participation, squelettes ou non
     /// @return combien ont été complétées, et combien restent en squelette

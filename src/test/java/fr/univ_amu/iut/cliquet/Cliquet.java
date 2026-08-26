@@ -12,41 +12,23 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/// **Le patron du cliquet** : une dette est épinglée dans une liste explicite, et cette liste ne peut que
-/// rétrécir (#2863).
+/// **Le patron du cliquet** : une dette est épinglée dans une liste explicite, et cette liste ne peut
+/// que rétrécir (#2863).
 ///
-/// ## Pourquoi ce patron existe
-///
-/// Une migration opportuniste (on bascule un fichier quand on le retouche) est une migration qu'on
-/// oublie, sauf si quelque chose la compte. Le dépôt en a la démonstration chiffrée : à l'ouverture du
-/// chantier #1771, le **seul** axe équipé d'un cliquet était le seul à avoir reculé depuis l'audit
-/// initial. Les trois autres avaient grossi.
+/// Une migration opportuniste est une migration qu'on oublie, sauf si quelque chose la compte. À
+/// l'ouverture du chantier #1771, le seul axe équipé d'un cliquet était le seul à avoir reculé ; les
+/// trois autres avaient grossi.
 ///
 /// > Ce qui n'est pas compté grandit.
 ///
-/// ## Les deux sens de variation, et pourquoi les deux sont rouges
+/// **Les deux sens de variation sont rouges.** La liste qui s'allonge dit qu'une copie de plus vient
+/// d'être ajoutée. La liste qui raccourcit dit soit qu'une migration a réussi, soit que le **détecteur**
+/// a changé : les deux se ressemblent, et le message les distingue.
 ///
-/// **La liste s'allonge** : quelqu'un vient d'ajouter une copie de plus. Le message doit renvoyer vers la
-/// brique canonique. C'est le cas qui compte le plus : sans lui, la dette repousse aussi vite qu'on la
-/// coupe.
-///
-/// **La liste raccourcit** : soit une migration a réussi - bravo, retirer le nom est le geste qui rend le
-/// progrès **visible** ; soit le **détecteur** a changé, et alors ce n'est pas un progrès mais une
-/// correction de la mesure. Les deux se ressemblent et ne valent pas la même chose : le message doit les
-/// distinguer, sous peine de faire passer l'un pour l'autre.
-///
-/// ## Les deux pièges du patron
-///
-/// Tous deux rencontrés pour de vrai sur le premier cliquet (#2714), et tous deux inhérents :
-///
-///  - **le court-circuit.** Dès qu'un détecteur cesse de regarder un objet parce qu'il le croit « déjà
-///    traité », il devient aveugle exactement sur ce qui est **en cours** de migration, c'est-à-dire là
-///    où il devrait parler. Son silence se lit alors comme un accord ;
-///  - **la confusion usage / mention.** Citer une brique ne prouve rien. Le premier cliquet comptait une
-///    **lecture** comme une écriture, et maintenait ainsi onze fichiers dans une liste où ils n'avaient
-///    plus leur place. Un cliquet qui surcompte se décrédibilise aussi sûrement qu'un qui sous-compte.
-///
-/// ## La valeur par défaut
+/// **Deux pièges, rencontrés sur le premier cliquet (#2714) et inhérents au patron.** Le
+/// **court-circuit** : un détecteur qui cesse de regarder un objet parce qu'il le croit déjà traité
+/// devient aveugle là où il devrait parler. La **confusion usage / mention** : compter une lecture pour
+/// une écriture a maintenu onze fichiers dans une liste où ils n'avaient plus leur place.
 ///
 /// Un objet est **hors** du dispositif tant qu'on ne l'y met pas, jamais l'inverse (#2833) : la bonne
 /// valeur par défaut est celle qui ne ment pas quand on l'oublie.

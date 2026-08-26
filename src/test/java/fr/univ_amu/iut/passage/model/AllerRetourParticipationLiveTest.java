@@ -23,54 +23,27 @@ import org.junit.jupiter.api.Test;
 /// **Sonde d'aller-retour** sur les écritures de participation (#1862) : écrire, **relire**, et comparer
 /// champ à champ ce qui est ressorti.
 ///
-/// ## Pourquoi une sonde de plus
+/// Un test qui bouchonne l'API vérifie ce que nous croyons envoyer, jamais ce que la plateforme en fait.
+/// Les quatre défauts d'écriture de l'EPIC #1662 (#1828, #1839, #1844, #1845) partagent une propriété
+/// qu'aucun bouchon ne voit : **ils réussissent tous**, `200 OK` compris. Seule une relecture du corps
+/// réel départage l'hypothèse juste de la fausse.
 ///
-/// Sur les sept défauts du train de suites de l'EPIC #1662, six ont été trouvés par l'usage réel, aucun
-/// par la suite de tests - qui était verte à chaque fois. Les quatre qui touchaient l'écriture vers la
-/// plateforme (#1828, #1839, #1844, #1845) partagent une propriété qu'aucun test bouchonné ne peut voir :
-/// **ils réussissent tous**. Publier une sentinelle « INCONNU » rend `200 OK`. Écrire le n° de série sous
-/// une clé que le formulaire web ne lit pas rend `200 OK`. Effacer par `PATCH` les champs distants que
-/// l'application ne modélise pas rend `200 OK`.
+/// Elles vérifient en réel les trois règles de l'[ADR 0020] - ne rien inventer, ne rien effacer, parler
+/// la langue du lecteur - plus la fidélité des dates (#1860). Si l'une tombe, c'est la décision qu'il
+/// faut rouvrir.
 ///
-/// Un test qui bouchonne l'API vérifie **ce que nous croyons envoyer**, jamais ce que la plateforme en
-/// **fait**. Les mocks ont donc confirmé nos hypothèses fausses avec la même conviction que les justes.
-/// Seule une relecture du corps réel départage les deux.
-///
-/// ## Ce que ces probes fixent
-///
-/// Elles vérifient en réel les trois règles de l'[ADR 0020] (ne rien inventer, ne rien effacer, parler la
-/// langue du lecteur), plus la fidélité des dates que #1860 avait prise en défaut. Chacune est un **fait
-/// de plateforme** sur lequel repose une décision de conception : si l'une tombe, c'est la décision
-/// qu'il faut rouvrir, pas le test qu'il faut ajuster.
-///
-/// ## Verrous
-///
-/// Ces probes **écrivent**. Elles exigent donc, comme celles de `ContratApiVigieChiroLiveTest` :
-/// `-Dvigiechiro.token=…`, `-Dvigiechiro.write=true`, et une participation **de rebut** explicitement
-/// désignée par `-Dvigiechiro.participationEssai=<id>`. Sans les trois, tout se skippe.
+/// **Elles écrivent**, donc elles exigent `-Dvigiechiro.token=…`, `-Dvigiechiro.write=true` et une
+/// participation de rebut désignée par `-Dvigiechiro.participationEssai=<id>`. Sans les trois, tout se
+/// skippe, et le contrat live hebdomadaire (`api-live.yml`), en lecture seule, ne les passe jamais.
 ///
 /// ```
 /// ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true \
 ///        -Dvigiechiro.participationEssai=YYYY -Dtest=AllerRetourParticipationLiveTest
 /// ```
 ///
-/// Le contrat live hebdomadaire (`api-live.yml`) est en **lecture seule** et ne passe aucun de ces
-/// drapeaux : ces probes n'y tournent jamais.
-///
-/// L'état de la participation d'essai (configuration **et** bornes de nuit) est **relu au début et
-/// restauré à la fin**, et la restauration est **vérifiée** : une sonde qui vérifie « ne rien effacer »
-/// n'a pas d'excuse pour laisser derrière elle un dictionnaire tronqué - ni pour croire sa propre remise
-/// en état sur parole.
-///
-/// ## Ce qu'elle ne voit pas
-///
-/// Le **rendu du formulaire web** lui-même : qu'une clé soit stockée ne prouve pas que le front l'affiche.
-/// C'est ce qui reste en recette (session S4, cases 43-53).
-///
-/// Vit dans `passage.model` et non aux côtés du contrat API : ces probes traversent
-/// [CorrespondanceParticipation], qui est de ce paquet. Une sonde d'aller-retour qui reconstruirait le
-/// corps à la main ne garderait plus le mapping - or c'est précisément là que #1844 et #1860 se
-/// jouaient.
+/// L'état de la participation d'essai, configuration **et** bornes de nuit, est relu, restauré, et la
+/// restauration **vérifiée**. Elles vivent dans `passage.model` parce qu'elles traversent
+/// [CorrespondanceParticipation], où #1844 et #1860 se jouaient ; le formulaire web reste en recette.
 @Tag("api-live")
 @DisplayName("Aller-retour d'écriture sur une participation (live) : ce que la plateforme en fait")
 class AllerRetourParticipationLiveTest {

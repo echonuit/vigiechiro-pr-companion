@@ -4,34 +4,22 @@ import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 
 /// Observation : une ligne du fichier de résultats Tadarida, soumise à validation (C13, table
-/// `observation`). Une séquence d'écoute peut générer plusieurs observations (1 ligne par espèce
-/// détectée, avec timing début/fin).
+/// `observation`). Une séquence d'écoute peut en générer plusieurs, une par espèce détectée.
 ///
-/// Point remarquable du MCD : l'observation porte **quatre** clés étrangères distinctes vers
-/// [Taxon] :
+/// Point remarquable du MCD : l'observation porte **quatre** clés étrangères vers [Taxon].
+/// `taxonTadarida` est obligatoire, la proposition de Tadarida ; `taxonAutreTadarida` en est la
+/// seconde ; `taxonObservateur` est saisi en validation ; `taxonValidateur` est **tranché par un expert
+/// du MNHN** (#1417, V26). Ce sont les **trois avis** que VigieChiro distingue sur une même détection :
+/// Tadarida propose, l'observateur corrige, le validateur tranche, et le dernier mot est le sien.
 ///
-/// - `taxonTadarida` (FK `taxon_tadarida`) : **obligatoire**, proposition de Tadarida ;
-/// - `taxonAutreTadarida` (FK `taxon_other_tadarida`) : optionnel, 2e proposition ;
-/// - `taxonObservateur` (FK `taxon_observer`) : optionnel, saisi en validation ;
-/// - `taxonValidateur` (FK `taxon_validator`) : optionnel, **tranché par un expert du MNHN** sur la
-///   plateforme (#1417, V26).
+/// L'avis du validateur est en **lecture seule**, le serveur refusant (403) qu'un jeton `Observateur` le
+/// pose (spike de #724) : il est toujours un reflet du serveur, rafraîchi à chaque import.
 ///
-/// Ce sont les **trois avis** que VigieChiro distingue sur une même détection : Tadarida *propose*,
-/// l'observateur *corrige*, le validateur *tranche*. Le dernier mot est donc celui du validateur, pas
-/// celui de l'observateur.
-///
-/// L'avis du validateur est en **lecture seule** : le serveur refuse (403) qu'un jeton de rôle
-/// `Observateur` le pose (spike de #724). Il est donc toujours un **reflet** du serveur, rafraîchi à
-/// chaque import : jamais une saisie locale, jamais préservé d'un import à l'autre.
-///
-/// Le `modeValidation` est mappé via [ModeValidation] (colonne `validation_mode` ; `null` →
-/// [ModeValidation#NON_VALIDE]). Les colonnes numériques optionnelles (`REAL` / `INTEGER`
-/// nullable) sont des types wrapper, `null` si absentes.
-///
-/// L'observation porte aussi son **ancrage plateforme** (#1139 : couple `idDonneeVigieChiro` +
-/// `indiceVigieChiro`, cible du `PATCH /donnees/{id}/observations/{index}` du contrat #1203) et la
-/// **certitude observateur** ([Certitude], déclaration manuelle à la revue, distincte de
-/// `probObservateur`, confiance numérique Tadarida recopiée à la validation).
+/// Le `modeValidation` est mappé via [ModeValidation] (`null` vaut [ModeValidation#NON_VALIDE]), et les
+/// colonnes numériques optionnelles sont des wrappers. L'observation porte aussi son **ancrage
+/// plateforme** (#1139 : `idDonneeVigieChiro` + `indiceVigieChiro`, cible du `PATCH` du contrat #1203) et
+/// la **certitude observateur** ([Certitude], distincte de `probObservateur`, confiance Tadarida
+/// recopiée à la validation).
 ///
 /// @param id clé technique, `null` avant insertion
 /// @param idSequence séquence d'écoute source (FK → `listening_sequence.id`, obligatoire)

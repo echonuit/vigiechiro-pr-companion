@@ -69,33 +69,23 @@ import org.junit.jupiter.api.Test;
 /// **Test E2E de restauration : une machine vierge se reconstruit depuis la plateforme** (#1050, EPIC
 /// #1154).
 ///
-/// C'est la promesse de l'issue G : *« sur une installation vierge (nouvelle machine, base perdue),
-/// reconstruire depuis la plateforme tout ce qu'elle connaît de l'observateur »*. Le code de cette
-/// promesse existe : la pagination des participations (#1150), le rapprochement des sites
-/// (`RapprochementSites`), la reconstruction des passages (#1305). Mais il a été livré **par morceaux,
-/// dans trois chantiers différents**, et **personne n'avait jamais exercé la chaîne entière**. Ce test
-/// est la preuve qui manquait, et il est le prérequis du reset guidé (#1151), dont il constitue
-/// l'étape 4.
+/// C'est la promesse de l'issue G : sur une installation vierge, reconstruire depuis la plateforme tout
+/// ce qu'elle connaît de l'observateur. Le code existe, pagination des participations (#1150),
+/// rapprochement des sites, reconstruction des passages (#1305), mais livré par morceaux dans trois
+/// chantiers, et personne n'avait exercé la chaîne entière. Ce test est le prérequis du reset guidé
+/// (#1151), dont il est l'étape 4.
 ///
-/// **Le parcours, sur une base réellement vide** (aucun site, aucun point, aucun passage) :
+/// Le parcours part d'une base réellement vide. **Synchroniser** : les rapprocheurs du socle créent les
+/// sites, leurs points, puis les passages archivés (#1707/#1814) avec leur identité, sans séquences ni
+/// observations. **Retrouver** : la nuit déposée est un passage local en squelette, listé « à
+/// reconstruire ». **Hydrater** : la reconstruction le remplace par un passage complet, séquences et
+/// observations rapatriées (#1710). **Auditer** : le workspace est sain, un passage sans audio étant
+/// archivé (#1297) et non cassé, ce dont l'audit informe (#1303, #1719).
 ///
-/// 1. **synchroniser** : les rapprocheurs du socle (`Set<RapprochementVigieChiro>`, ceux-là mêmes que
-///    déclenche la connexion) créent les **sites et leurs points** à partir des participations, puis les
-///    **passages archivés** (#1707/#1814) : point + date + n° + **identité** (enregistreur, météo, micro,
-///    lue dans le détail par nuit), mais sans séquences ni observations (elles viennent à la reconstruction) ;
-/// 2. **retrouver** : la nuit déposée sur la plateforme est un **passage local en squelette**, listé
-///    « à reconstruire » ;
-/// 3. **hydrater** : reconstruire la nuit **remplace** le squelette par un passage complet, séquences
-///    (lignes sans fichier) + observations rapatriées (#1710) ;
-/// 4. **auditer** : le workspace restauré est **sain**. Un passage sans audio n'est pas un passage cassé :
-///    c'est un passage **archivé** (#1297), et l'audit informe au lieu de crier (#1303, garde-fou #1719).
-///
-/// La plateforme est bouchonnée ([ClientVigieChiro] mocké, substitué dans l'injecteur **réel** par
-/// `Modules.override`) : tout le reste est le vrai câblage de l'application.
-///
-/// Ce que le test **ne** prouve **pas**, parce que c'est faux : que l'audio revienne. Un dépôt ZIP (le
-/// mode par défaut) ne laisse **aucun** audio sur le serveur ; le passage restauré est **ABSENTE** :
-/// consultable, non écoutable, réactivable en réimportant les fichiers d'origine (#1302).
+/// La plateforme est bouchonnée ([ClientVigieChiro] mocké, substitué dans l'injecteur réel par
+/// `Modules.override`) ; le reste est le vrai câblage. Le test ne prouve pas que l'audio revienne : un
+/// dépôt ZIP n'en laisse aucun sur le serveur, et le passage restauré est **ABSENTE**, consultable, non
+/// écoutable, réactivable en réimportant les fichiers (#1302).
 class ParcoursRestaurationDepuisVigieChiroE2ETest {
 
     private static final String PARTICIPATION = "6a53f5faae21902a597394d3";

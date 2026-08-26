@@ -17,53 +17,25 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /// **Cliquet de contraste** (#2115) : les couples texte / fond de la palette respectent le seuil WCAG
-/// AA, et la liste de ceux qui ne le respectent pas **ne peut que rétrécir**.
+/// AA, et la liste de ceux qui ne le respectent pas ne peut que rétrécir.
 ///
-/// ## Pourquoi ce test existe
+/// Le contraste ne se voit ni à la compilation ni à l'exécution sur la machine qui l'écrit : c'est
+/// pourquoi il a besoin d'un test, au même titre que les pictogrammes de [PictogrammesFxmlTest]. Le
+/// défaut de #2102, un gris à 4,45:1 pour un seuil de 4,5, avait été relevé à la main sur un aperçu.
 ///
-/// Rien ne mesurait le contraste dans ce dépôt. Le défaut de #2102 (le gris du texte discret à
-/// 4,45:1 pour un seuil de 4,5) a été trouvé **à la main**, en relevant les pixels d'un aperçu
-/// pendant une revue visuelle. Il aurait pu ne jamais l'être, et rien n'empêche un jeton corrigé de
-/// redériver ensuite.
-///
-/// C'est le même raisonnement que [PictogrammesFxmlTest] pose pour les pictogrammes : *le défaut ne
-/// se voit ni à la compilation ni à l'exécution sur la machine qui l'écrit, c'est justement pourquoi
-/// il a besoin d'un test.*
-///
-/// ## Un cliquet qui a fini de cliqueter
-///
-/// Trois jetons échouaient quand ce test a été écrit. Exiger la conformité d'un coup aurait rendu la
-/// suite rouge sans que personne n'ait rien cassé, et le test aurait été désactivé avant d'avoir
-/// servi : on a donc figé l'état, chaque correction se soldant en retirant sa ligne de
-/// [#SOUS_LE_SEUIL_AA].
-///
-/// **La liste est vide depuis #2115.** Le cliquet est devenu une exigence sèche, ce qui était son but :
-/// il n'autorise plus aucune violation, et la mécanique de dette ne reste que pour le jour où une
-/// correction demanderait à nouveau plusieurs étapes.
-///
-/// ## Deux seuils, et pourquoi le second n'est pas une porte de sortie
+/// **La liste [#SOUS_LE_SEUIL_AA] est vide.** Le cliquet n'autorise plus aucune violation ; sa mécanique
+/// de dette ne reste que pour le jour où une correction demanderait plusieurs étapes.
 ///
 /// WCAG demande 4,5:1 pour du petit texte et 3:1 pour un **élément d'interface**. Un jeton ne bénéficie
-/// du second qu'à la condition de **n'habiller aucun texte** : c'est ce qui a fait dédoubler l'ambre en
-/// #2115 plutôt que de le déclarer « icône » pour s'épargner l'assombrissement.
+/// du second qu'à la condition de n'habiller aucun texte.
 ///
-/// ## Ce qu'il couvre, en deux mécanismes complémentaires
+/// Deux mécanismes, et aucun ne suffit seul. Une **carte écrite à la main** ([#COUPLES]) couvre ce
+/// qu'aucune lecture de CSS ne devine : un texte dont le fond vient de la cascade. Un **balayage** (#322)
+/// dérive les couples de chaque règle qui pose elle-même les deux couleurs en littéral, et suit les
+/// règles qu'une feature ajoute.
 ///
-/// **Une carte écrite à la main** ([#COUPLES]) : les jetons de `palette.css` sur les fonds où ils
-/// sont attestés. Elle couvre ce qu'aucune lecture de CSS ne peut deviner : un texte dont le fond
-/// vient d'une règle parente, donc de la cascade.
-///
-/// **Un balayage qui dérive ses couples** (#322) : chaque règle qui pose elle-même la couleur du
-/// texte **et** celle du fond, les deux en littéral. Il se met à jour tout seul quand une feature
-/// ajoute une règle, là où la carte ne voit que ce qu'on y a mis.
-///
-/// Aucun des deux ne suffit. Une liste oublie ; un balayage statique ne voit pas la cascade.
-///
-/// ## Ce qu'il ne couvre toujours pas
-///
-/// Les couleurs littérales posées **sans leur fond** dans la même règle. Leur contraste dépend de
-/// l'écran, et seule une mesure sur rendu le donnerait : c'est ainsi que le défaut de #2102 a été
-/// trouvé. La question du périmètre reste donc ouverte pour #1974.
+/// Reste hors de portée : les couleurs littérales posées **sans leur fond** dans la même règle, dont le
+/// contraste ne se lit que sur un rendu (#1974).
 class ContrasteAATest {
 
     private static final Path PALETTE = Path.of("src/main/java/fr/univ_amu/iut/commun/view/palette.css");
