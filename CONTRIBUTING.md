@@ -37,6 +37,31 @@ pour une raison expliquée avec lui dans
 [dev-docs/tests-et-qualite.md](dev-docs/tests-et-qualite.md#sonarqube-for-ide-facultatif-à-configurer).
 C'est **PMD qui fait foi** : lui seul bloque la CI.
 
+### La ligne de commande OpenSpec, si vous touchez à la spécification vivante
+
+Elle n'est pas nécessaire pour construire ni pour tester le produit. Elle l'est dès que vous ouvrez
+une des six compétences `openspec-*` ou une des six commandes `/opsx:`, parce que chacune de leurs
+étapes l'appelle.
+
+Le devcontainer l'installe et la met sur le `PATH`. Hors devcontainer :
+
+```bash
+npm ci --prefix .github/openspec
+export PATH="$PWD/.github/openspec/node_modules/.bin:$PATH"
+openspec --version        # 1.10.0
+```
+
+**Le nom compte.** Les compétences déclarent `allowed-tools: Bash(openspec:*)`, un motif littéral
+qui n'autorise que les commandes commençant par le mot `openspec` : `npx @fission-ai/openspec` est
+refusé. C'est le lien `node_modules/.bin/openspec` qu'il faut exposer, sous ce nom exact.
+
+**Une installation globale divergente est le piège du dispositif**, et c'est celui qui a ouvert
+le chantier #4511 : l'outil ne vivait qu'à un endroit, hors du dépôt, dans une version que rien ne
+rapprochait de ce que les fichiers décrivaient. Si `which openspec` ne pointe pas dans
+`.github/openspec/node_modules/.bin`, vous n'utilisez pas la version du dépôt. Le garde
+`scripts/methode/verifie-version-openspec.py` tient l'égalité côté dépôt ; il ne peut rien pour le
+`PATH` de votre poste.
+
 ---
 
 ## 2. L'architecture : package-by-feature + MVVM

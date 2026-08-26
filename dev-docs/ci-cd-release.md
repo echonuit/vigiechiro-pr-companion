@@ -630,6 +630,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `scripts/methode/mesure-registre.py` | aucun connecteur lourd n'ouvre une phrase : c'est le **motif d'écartement** que [le registre éditorial](registre-editorial.md) invoque pour ne pas en faire une règle, et il se retournerait en silence | `lint.yml` |
 | `scripts/mkdocs/bandeau_adr.py` | le bandeau d'une page d'ADR porte statut, article, chantier et vérification, se pose **sous** le titre, et **arrête la construction** sur un article que la constitution ne déclare pas | `lint.yml` |
 | `scripts/methode/synchronise-adaptateurs.py` | `.claude/skills/` est une copie à jour de `.agents/skills/` : une compétence corrigée à la source ne laisse pas un agent lire l'ancienne version | `lint.yml` |
+| `scripts/methode/verifie-version-openspec.py` | la version d'OpenSpec **résolue par le lockfile** vaut le `generatedBy` que les douze fichiers de l'outil déclarent, et le manifeste l'épingle **exactement** : un intervalle laisserait le prochain `npm install` déplacer la version sans qu'aucun diff du manifeste ne le montre. Il lit le lockfile plutôt que d'appeler `openspec --version`, parce que c'est la version du dépôt qui fait foi et non celle du poste (#4512) | `lint.yml` |
 
 ### Et un analyseur les lit tous (#4108)
 

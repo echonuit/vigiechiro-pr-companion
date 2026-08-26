@@ -27,6 +27,13 @@
             "installGradle": "false"
         },
         "ghcr.io/devcontainers/features/github-cli:1": {},
+        // Node sert UNIQUEMENT a l'outillage de methode fige par lockfile : la ligne de
+        // commande OpenSpec (.github/openspec) et la repetition de publication
+        // (.github/release). Le produit, lui, ne depend pas de son outillage (article A20) :
+        // rien de ce qui est livre a un utilisateur ne passe par Node.
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "24"
+        },
         // Bureau léger + noVNC (port 6080) pour lancer l'application JavaFX
         // depuis un navigateur quand on travaille sans affichage local.
         "ghcr.io/devcontainers/features/desktop-lite:1": {
@@ -36,6 +43,13 @@
         }
     },
     "forwardPorts": [6080, 5901],
+    // Les six competences OpenSpec declarent `allowed-tools: Bash(openspec:*)`, un motif
+    // LITTERAL : il autorise les commandes qui commencent par le mot `openspec`, et rien
+    // d'autre. `npx @fission-ai/openspec` ne lui correspond pas et serait refuse. Le lien
+    // `node_modules/.bin/openspec` doit donc etre sur le PATH sous ce nom exact.
+    "remoteEnv": {
+        "PATH": "${containerWorkspaceFolder}/.github/openspec/node_modules/.bin:${containerEnv:PATH}"
+    },
     // onCreateCommand : pré-télécharge les dépendances (dependency:go-offline)
     // pour que le LSP Java et le premier build ne soient pas bloqués par le
     // réseau. bash -lc pour charger SDKMAN. On NE compile PAS au démarrage
@@ -47,7 +61,7 @@
     // `git config merge.ours.driver true` active le driver `merge=ours` declare
     // dans .gitattributes pour les apercus de captures (.github/assets/apercu-*.png) :
     // evite les conflits binaires impossibles a resoudre quand on merge `main`.
-    "onCreateCommand": "git config merge.ours.driver true; bash -lc './mvnw -q dependency:go-offline || true' && gh repo set-default \"$(git remote get-url origin | sed 's|.*github.com[:/]||' | sed 's|\\.git$||')\" 2>/dev/null || true",
+    "onCreateCommand": "git config merge.ours.driver true; npm ci --prefix .github/openspec || true; bash -lc './mvnw -q dependency:go-offline || true' && gh repo set-default \"$(git remote get-url origin | sed 's|.*github.com[:/]||' | sed 's|\\.git$||')\" 2>/dev/null || true",
     "customizations": {
         "vscode": {
             "settings": {
