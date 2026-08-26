@@ -9,9 +9,9 @@ import javafx.beans.InvalidationListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TableView;
 
-/// Correspondance **carré → richesse** (nombre d'espèces distinctes), dérivée de l'inventaire par carré
-/// de l'analyse. Extraite d'[AnalyseController] (plafond NcssCount) : la colonne « Espèces du carré »
-/// du détail lit cette richesse, tenue à jour à chaque changement de l'inventaire.
+/// Correspondance **carré → richesse** (nombre d'espèces distinctes), dérivée de l'inventaire par
+/// carré de l'analyse. La colonne « Espèces du carré » du détail lit cette richesse, tenue à jour à
+/// chaque changement de l'inventaire.
 final class RichesseParCarre {
 
     private final Map<String, Integer> parNumero = new HashMap<>();

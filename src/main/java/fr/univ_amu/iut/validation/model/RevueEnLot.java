@@ -10,9 +10,8 @@ import java.util.Objects;
 import java.util.function.UnaryOperator;
 
 /// Actions de revue **en lot** (#479) : valider / corriger / marquer référence sur une **liste**
-/// d'observations, en **une transaction atomique** (tout réussit ou tout est annulé). Extrait de
-/// [ServiceValidation] (qui reste dédié à l'import et à la revue **unitaire**) pour tenir les seuils de
-/// cohésion PMD.
+/// d'observations, en **une transaction atomique** (tout réussit ou tout est annulé).
+/// [ServiceValidation] reste dédié à l'import et à la revue **unitaire**.
 ///
 /// **Atomicité sans verrou SQLite** : les lectures (chargement des observations à transformer) sont faites
 /// **avant** la transaction (auto-commit) ; seules les **écritures** sont groupées atomiquement via

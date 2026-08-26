@@ -19,8 +19,8 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 /// changeait ce que voyait l'utilisateur. Un état n'est pas un compte rendu : il ne se ferme pas, et il
 /// ne doit ni recouvrir le résultat de l'action en cours ni s'en faire recouvrir.
 ///
-/// Extrait de [LotViewModel] pour lui rendre sa seule responsabilité d'orchestrer le dépôt (cohésion,
-/// et plafond `NcssCount` / `GodClass` du portail qualité). Agnostique de l'IHM (seuls `javafx.beans`).
+/// Le [LotViewModel] garde ainsi sa seule responsabilité, orchestrer le dépôt. Agnostique de l'IHM
+/// (seuls `javafx.beans`).
 final class MessagesLot {
 
     private final ReadOnlyStringWrapper etatLot = new ReadOnlyStringWrapper(this, "etatLot", "");

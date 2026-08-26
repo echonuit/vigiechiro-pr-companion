@@ -89,7 +89,7 @@ class ScenesHabilleesTest {
     /// Sans habillage, ils mesurent celle de la **machine hôte** - qui n'est pas celle du produit, et
     /// qui n'est pas la même partout.
     ///
-    /// ## Ce que la mesure a montré, et qui n'est pas ce que je croyais (#3773)
+    /// ## Ce que la mesure a montré, et que le diagnostic naturel manquait (#3773)
     ///
     /// `CartesAccueilTest` a rendu **vert à 8 h 14 et rouge à 15 h 34** sur le **même commit** et la
     /// **même image** `macos-26-arm64`. Le diagnostic naturel - « macOS rend autrement » - est faux :
@@ -101,9 +101,9 @@ class ScenesHabilleesTest {
     /// une police **système** (219 entrées sous `/usr/share/fonts/truetype/noto/`), donc trouvée
     /// installée ou non. Une mesure locale de ce défaut est aveugle par construction.
     ///
-    /// **Sur le runner, c'est différent, et j'avais écrit trop large.** L'ADR 3361 l'a mesuré avant
-    /// moi : l'alias `sans-serif` se résout « **Noto Sans sur un poste, une police plus large sur le
-    /// runner** ». Ce que la CI Ubuntu voit exactement n'a pas été remesuré ici (#3826, passe 0).
+    /// **Sur le runner, c'est différent.** L'ADR 3361 l'avait déjà mesuré : l'alias `sans-serif` se
+    /// résout « **Noto Sans sur un poste, une police plus large sur le runner** ». Ce que la CI Ubuntu
+    /// voit exactement n'a pas été remesuré ici (#3826, passe 0).
     ///
     /// C'est bien pourquoi ce garde vaut mieux qu'une exécution : **il ne dépend d'aucune machine**.
     @Test

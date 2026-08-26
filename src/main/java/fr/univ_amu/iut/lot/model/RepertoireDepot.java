@@ -10,9 +10,9 @@ import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
 /// Opérations **disque** sur le sous-dossier `depot/` d'une session (où vivent les archives ZIP à
-/// déposer) : localisation, listing, suppression, espace disponible. Extrait de [ServiceLot] (qui reste
-/// dédié au **workflow** de dépôt) pour la cohésion / le seuil GodClass. Sans état, lecture/écriture
-/// disque pure à partir du chemin de session déjà connu de l'appelant.
+/// déposer) : localisation, listing, suppression, espace disponible. [ServiceLot], lui, reste dédié
+/// au **workflow** de dépôt. Sans état, lecture/écriture disque pure à partir du chemin de session
+/// déjà connu de l'appelant.
 final class RepertoireDepot {
 
     /// Sous-dossier de la session où sont écrites les archives ZIP de dépôt (R22).

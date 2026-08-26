@@ -72,8 +72,8 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
 
     private final SequenceDao sequenceDao;
 
-    /// Toutes les lectures distantes de la reconstruction (participations, détail, source des observations
-    /// CSV #1565 / donnees), extraites dans un collaborateur dédié (plafond God Class).
+    /// Toutes les lectures distantes de la reconstruction (participations, détail, source des
+    /// observations CSV #1565 / donnees), tenues par un collaborateur dédié.
     private final PlateformeReconstruction plateforme;
 
     private final PointParLocalite pointParLocalite;

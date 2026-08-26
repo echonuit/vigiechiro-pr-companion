@@ -6,9 +6,9 @@ import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.Locale;
 
-/// Formatage des **libellés** de l'écran « Espèces & observations » (colonnes de tables, panneau détail,
-/// sélecteur de statut) : fonctions **pures**, extraites de [AnalyseController] pour alléger sa cohésion
-/// (garde-fou PMD GodClass), sur le modèle de `FormatLigneAudio` côté audio.
+/// Formatage des **libellés** de l'écran « Espèces & observations » (colonnes de tables, panneau
+/// détail, sélecteur de statut) : fonctions **pures**, sur le modèle de `FormatLigneAudio` côté
+/// audio.
 public final class FormatAnalyse {
 
     private FormatAnalyse() {}

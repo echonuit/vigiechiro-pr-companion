@@ -10,8 +10,7 @@ import java.util.List;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.scene.control.TableColumn;
 
-/// Câblage des **colonnes** du tableau multi-sites, extrait de [MultisiteController] (pur câblage, PMD
-/// NcssCount : le contrôleur était au plafond).
+/// Câblage des **colonnes** du tableau multi-sites, pur câblage tenu hors de [MultisiteController].
 ///
 /// Deux colonnes ne se contentent pas d'afficher une valeur :
 ///
@@ -120,8 +119,8 @@ final class ColonnesMultisite {
                 : texte + "\n\nDernier état connu le " + ligne.analyseReleveeLe() + ".";
     }
 
-    /// Le catalogue des colonnes pour le sélecteur (#919), extrait du contrôleur qui touchait le
-    /// plafond de God class (#3300). C'est de la connaissance sur les **colonnes**, pas sur l'écran.
+    /// Le catalogue des colonnes pour le sélecteur (#919), tenu hors du contrôleur (#3300) : c'est
+    /// de la connaissance sur les **colonnes**, pas sur l'écran.
     static List<GestionnaireColonnes.Colonne> pourLeSelecteur(Colonnes col) {
         return List.of(
                 new GestionnaireColonnes.Colonne(col.carre(), "Carré", true),

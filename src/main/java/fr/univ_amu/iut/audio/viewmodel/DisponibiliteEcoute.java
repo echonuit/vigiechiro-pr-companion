@@ -9,8 +9,7 @@ import java.util.function.Predicate;
 
 /// Disponibilité de l'audio pour la vue audio unifiée (#1301) : ré-observation du décompte à
 /// l'ouverture de l'écran, texte du bandeau « passage archivé / audio partiel », et présence du
-/// fichier de la séquence sélectionnée. Extrait d'[AudioViewModel] pour qu'il garde la seule
-/// orchestration de la revue (PMD GodClass).
+/// fichier de la séquence sélectionnée.
 final class DisponibiliteEcoute {
 
     private final ServiceDisponibiliteAudio disponibilite;

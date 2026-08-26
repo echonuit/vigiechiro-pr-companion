@@ -59,7 +59,7 @@ public class SiteDetailViewModel {
     private final LienVigieChiroDao liens;
 
     /// Publication d'un point vers la plateforme (#3458) : ses empêchements, sa mémoire, son
-    /// déclenchement. Extraite d'ici, où elle faisait franchir le seuil God-class.
+    /// déclenchement.
     private final PublicationDepuisLaFiche publication;
 
     private Site site;

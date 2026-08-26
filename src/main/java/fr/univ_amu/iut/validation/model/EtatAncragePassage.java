@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Objects;
 
 /// Questions d'**ancrage plateforme** d'un passage : ses observations portent-elles leur
-/// `idDonneeVigieChiro` (la cible du `PATCH /donnees/{id}/observations/{index}`, contrat #1203) ? Un
-/// passage **reconstruit par CSV** (#1565) n'a aucun ancrage tant qu'il n'a pas été **réactivé** (#1571 :
-/// l'audio revenu permet de le racquérir). Extrait de [ServiceValidation] (cohésion, plafond GodClass) :
-/// ces deux questions forment une unité, distincte de la revue et de l'import.
+/// `idDonneeVigieChiro` (la cible du `PATCH /donnees/{id}/observations/{index}`, contrat #1203) ?
+/// Un passage **reconstruit par CSV** (#1565) n'a aucun ancrage tant qu'il n'a pas été **réactivé**
+/// (#1571 : l'audio revenu permet de le racquérir). Ces deux questions forment une unité, distincte
+/// de la revue et de l'import que porte [ServiceValidation].
 public final class EtatAncragePassage {
 
     private final ResultatsIdentificationDao resultatsDao;

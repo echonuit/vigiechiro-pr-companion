@@ -61,8 +61,8 @@ public class ServiceValidation implements CompteurValidations {
     private final EtatAncragePassage ancrage;
     private final MessageObservationDao messageDao;
 
-    /// Cœur d'import, extrait pour cohésion (plafond GodClass) : porte l'invariant « un seul jeu par
-    /// passage » et l'orchestration transactionnelle. Le service n'en est plus qu'une façade.
+    /// Cœur d'import : il porte l'invariant « un seul jeu par passage » et l'orchestration
+    /// transactionnelle. Le service n'en est plus qu'une façade.
     private final NoyauImportObservations noyau;
 
     /// Les espèces à **enjeu de conservation** (#2353) : celles que le Plan National d'Actions

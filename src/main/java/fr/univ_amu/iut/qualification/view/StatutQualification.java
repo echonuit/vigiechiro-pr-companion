@@ -5,10 +5,9 @@ import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
 
-/// Compose les 3 zones de la barre de statut de **M-Qualification** (#1021, EPIC #1016), sur le même
-/// modèle que M-Lot : identité du passage à **gauche**, statut + volumétrie au **centre**, état vivant
-/// **prioritaire** à droite (anomalie de pré-check &gt; progression d'écoute). Extrait de
-/// [QualificationController] pour le garder sous le plafond de taille (PMD `NcssCount`).
+/// Compose les 3 zones de la barre de statut de **M-Qualification** (#1021, EPIC #1016), sur le
+/// même modèle que M-Lot : identité du passage à **gauche**, statut + volumétrie au **centre**,
+/// état vivant **prioritaire** à droite (anomalie de pré-check &gt; progression d'écoute).
 final class StatutQualification {
 
     private StatutQualification() {}

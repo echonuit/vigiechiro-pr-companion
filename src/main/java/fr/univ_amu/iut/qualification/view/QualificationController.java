@@ -449,9 +449,9 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         CompteRenduRegeneration.rendreCompte(notificateur, selectionVm);
     }
 
-    /// Câble le pré-check (R13, consultatif) : les 3 feux avec leur infobulle explicative (#1506) et la
-    /// barre de statut qui nomme le(s) feu(x) en cause. Extrait d'`initialize()` pour rester sous le
-    /// plafond PMD (NcssCount) une fois #1506 et #1509 réunis sur `main`.
+    /// Câble le pré-check (R13, consultatif) : les 3 feux avec leur infobulle explicative (#1506)
+    /// et la barre de statut qui nomme le(s) feu(x) en cause. Tenu hors d'`initialize()` depuis que
+    /// #1506 et #1509 se sont rejoints sur `main`.
     private void lierPrecheck() {
         Feux.lier(
                 feuCouverture,

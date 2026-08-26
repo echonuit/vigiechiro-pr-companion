@@ -28,11 +28,11 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-/// Câblage des **cartes de points d'écoute** de la fiche site (`cartesPoints`), extrait de
-/// [SiteDetailController] pour l'alléger (pur câblage, seuil de cohésion PMD, #1087). Reconstruit une
-/// carte par point d'écoute (code, description, badge GPS, compteur de passages, proximité, actions
-/// Modifier/Supprimer) à chaque changement de [SiteDetailViewModel#points()], et pilote le repli d'état
-/// vide (`lblAucunPoint`, #791) tant qu'aucune carte n'est affichée.
+/// Câblage des **cartes de points d'écoute** de la fiche site (`cartesPoints`), tenu hors de
+/// [SiteDetailController] (#1087). Reconstruit une carte par point d'écoute (code, description,
+/// badge GPS, compteur de passages, proximité, actions Modifier/Supprimer) à chaque changement de
+/// [SiteDetailViewModel#points()], et pilote le repli d'état vide (`lblAucunPoint`, #791) tant
+/// qu'aucune carte n'est affichée.
 final class CartesPointsSite {
 
     /// Classe de style des lignes secondaires d'une carte de point (description, compteur, distance).

@@ -165,7 +165,7 @@ public final class JeuDeDonneesPassage {
 
     /// Point **rapatrié de la plateforme** plutôt qu'ajouté à la main. `false` par défaut.
     ///
-    /// Un seul appelant aujourd'hui, et je l'ajoute quand même : c'est un **champ du point**, que la
+    /// Un seul appelant aujourd'hui, et le réglage existe quand même : c'est un **champ du point**, que la
     /// fixture construit déjà (à `false`), au même titre que [#nomPoint] ou [#position]. La règle du
     /// compte d'appelants vaut pour les options qui ajoutent de l'ambiguïté, pas pour les champs que le
     /// domaine porte de toute façon.
@@ -308,10 +308,9 @@ public final class JeuDeDonneesPassage {
     /// session : passage jamais importé »), et `AuditNavigationViewTest` l'éprouve. Ce barreau est le seul
     /// moyen de le semer par la fixture.
     ///
-    /// J'avais écrit que poser une session à ce test le laisserait « passer en n'éprouvant plus rien ».
-    /// **C'est faux, et la sonde l'a dit** : avec `semerSquelette()`, il rougit (1 échec + 1 erreur). La
-    /// crainte était raisonnable, elle n'était pas vérifiée. Le barreau se justifie parce que ces tests en
-    /// ont besoin, pas parce que leur absence serait silencieuse.
+    /// Poser une session à ces tests ne les laisse pas passer à vide : avec [#semerSquelette()] ils
+    /// rougissent. Le barreau se justifie parce qu'ils en ont besoin, pas parce que son absence serait
+    /// silencieuse.
     ///
     /// Après cet appel, [#idPassage()] répond ; [#idSession()] refuse.
     public JeuDeDonneesPassage semerPassage() {

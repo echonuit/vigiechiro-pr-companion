@@ -16,10 +16,9 @@ import java.util.Objects;
 
 /// Publication du **compte rendu chiffré** de fin d'import (#2358) dans la bande de l'écran.
 ///
-/// Extrait de [ImportationController], déjà volumineux, pour le garder sous le plafond de taille (PMD
-/// `NcssCount`), comme [FormatsImport] avant lui. Ce n'est pas qu'une question de mesure : brancher un
-/// compte rendu, c'est décider ce qu'il dit ET où mène son action suivante, deux choix qui se lisent
-/// mieux ensemble qu'éparpillés au milieu de quarante liaisons de contrôles.
+/// Voisin de [FormatsImport], et pour la même raison : brancher un compte rendu, c'est décider ce
+/// qu'il dit ET où mène son action suivante, deux choix qui se lisent mieux ensemble qu'éparpillés
+/// au milieu de quarante liaisons de contrôles.
 ///
 /// La bande **remplace trois surfaces** qui disaient la même chose en trois formes : la phrase de succès,
 /// le compte rendu textuel (#2004) et la liste des fichiers rejetés (#155), dont la dernière s'affichait

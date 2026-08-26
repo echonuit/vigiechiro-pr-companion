@@ -8,7 +8,7 @@ decided_at: 2026-08-25
 verification: probable
 enforced_by:
   - "scripts/adr/4476-javadoc-raconte-son-extraction.py"
-ratchet: 62
+ratchet: 0
 inv_key: cliquet-javadoc-extraction
 verified:
   - by: machine:ci

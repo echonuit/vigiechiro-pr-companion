@@ -15,9 +15,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /// Les exports du **sous-ensemble affiché** (CSV seul, ou archive « observations + sons » #2793),
-/// extraits du [AudioViewModel] (plafond God Class) et exposés par lui, comme la file de positions
-/// l'est par le ViewModel multisite : la vue les pilote, ils parlent au [ExporteurAudio] et
-/// restituent par les messages du VM.
+/// exposés par le [AudioViewModel] comme la file de positions l'est par le ViewModel multisite : la
+/// vue les pilote, ils parlent au [ExporteurAudio] et restituent par les messages du VM.
 ///
 /// Trois temps : [#preparer] sur le fil JavaFX (sous-ensemble figé + sonde de destination, #2426),
 /// [#exporter] **hors fil** dans la modale de progression, puis la restitution selon l'issue -

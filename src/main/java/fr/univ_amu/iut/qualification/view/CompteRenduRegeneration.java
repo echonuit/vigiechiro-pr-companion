@@ -6,9 +6,8 @@ import fr.univ_amu.iut.commun.view.Notificateur;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
 
 /// Compte rendu de la **régénération de la sélection d'écoute** (#1509/#1404). Sans retour, on ne
-/// savait pas si l'action avait eu lieu (sur une nuit courte, la sélection régénérée est identique).
-/// Extrait de [QualificationController] pour garder le contrôleur sous les plafonds PMD (GodClass /
-/// NcssCount), à la façon de [Feux].
+/// savait pas si l'action avait eu lieu (sur une nuit courte, la sélection régénérée est
+/// identique). Tenu hors du contrôleur, à la façon de [Feux].
 final class CompteRenduRegeneration {
 
     private CompteRenduRegeneration() {}

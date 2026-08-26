@@ -58,8 +58,7 @@ public class AudioViewModel {
 
     private final ServiceValidation service;
 
-    /// Disponibilité de l'audio pour l'écran (#1301) : bandeau, présence des fichiers. Collaborateur
-    /// cohésif, extrait pour la même raison que les autres (PMD GodClass).
+    /// Disponibilité de l'audio pour l'écran (#1301) : bandeau, présence des fichiers.
     private final DisponibiliteEcoute disponibiliteEcoute;
 
     private final ResolveurSourceAudio resolveur;
@@ -83,10 +82,8 @@ public class AudioViewModel {
     private final ObservableList<Taxon> taxons = FXCollections.observableArrayList();
 
     private final ObjectProperty<LigneObservationAudio> selection = new SimpleObjectProperty<>(this, "selection");
-    /// Vrai dès qu'une **ligne** est sélectionnée (observation ou séquence non identifiée). Pilote le bouton
-    /// État **dérivé de la sélection** (présence / observation / proposition Tadarida / référence / douteux),
-    /// extrait dans [EtatSelectionAudio] pour la cohésion (seuil PMD GodClass) : pilote l'activation et les
-    /// libellés des boutons de la barre d'actions.
+    /// État **dérivé de la sélection** (présence / observation / proposition Tadarida / référence /
+    /// douteux) : il pilote l'activation et les libellés des boutons de la barre d'actions.
     private final EtatSelectionAudio etatSelection = new EtatSelectionAudio();
     /// Ce que le panneau d'écoute doit savoir de la sélection : chemin servi, absence, divergence.
     private final EtatEcouteAudio etatEcoute = new EtatEcouteAudio();
@@ -371,15 +368,14 @@ public class AudioViewModel {
         return selection;
     }
 
-    /// État **dérivé de la sélection** (présence / observation / proposition Tadarida / référence / douteux),
-    /// où la barre d'actions branche l'activation et les libellés de ses boutons. Extrait dans
-    /// [EtatSelectionAudio] pour la cohésion (seuil PMD GodClass).
     /// Ce que le panneau d'écoute doit savoir de la sélection (chemin servi, absence, divergence),
     /// exposé en bloc comme [#etatSelection()] : un collaborateur, pas quatre accesseurs.
     public EtatEcouteAudio etatEcoute() {
         return etatEcoute;
     }
 
+    /// État **dérivé de la sélection** (présence / observation / proposition Tadarida / référence /
+    /// douteux), où la barre d'actions branche l'activation et les libellés de ses boutons.
     public EtatSelectionAudio etatSelection() {
         return etatSelection;
     }

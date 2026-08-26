@@ -9,11 +9,11 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import javafx.stage.Window;
 
-/// Action IHM « Réactiver ce passage » (#1302), extraite de [PassageController] (pur câblage, PMD
-/// GodClass) : demande le dossier des fichiers réimportés, puis ouvre la **modale de réactivation** (#1780).
-/// C'est elle qui lance l'opération **hors du fil JavaFX** et suit ses deux phases - régénération des
-/// séquences, puis acquisition de l'ancrage - sur deux barres distinctes, plutôt qu'une barre unique qui
-/// restait figée à 100 % pendant l'ancrage réseau.
+/// Action IHM « Réactiver ce passage » (#1302) : elle demande le dossier des fichiers réimportés,
+/// puis ouvre la **modale de réactivation** (#1780). C'est elle qui lance l'opération **hors du fil
+/// JavaFX** et suit ses deux phases - régénération des séquences, puis acquisition de l'ancrage -
+/// sur deux barres distinctes, plutôt qu'une barre unique qui restait figée à 100 % pendant
+/// l'ancrage réseau.
 ///
 /// Aucune confirmation destructive : l'opération **ajoute** de l'audio (les fichiers sont copiés, la
 /// sauvegarde de l'utilisateur reste intacte). Le compte rendu - ce qui est revenu et sur quelle preuve, ce

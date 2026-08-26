@@ -11,10 +11,9 @@ import javafx.scene.layout.VBox;
 /// Les **contrôles posés par-dessus la carte** de « Carte & passages » : légende en bas à gauche,
 /// recadrage en haut à droite, édition des positions en haut à gauche.
 ///
-/// Extrait de `MultisiteController` (#3300), qui touchait le plafond de God class du portail qualité.
-/// La coupure n'est pas arbitraire : ce bloc ne sait rien de l'écran ni de sa table, seulement de la
-/// carte et de ses commandes - le même découpage que [FocalisationCarte] et [ConstructeurDonneesCarte]
-/// dans ce paquet.
+/// Tenu hors de `MultisiteController` (#3300), et la coupure n'est pas arbitraire : ce bloc ne sait
+/// rien de l'écran ni de sa table, seulement de la carte et de ses commandes - le même découpage
+/// que [FocalisationCarte] et [ConstructeurDonneesCarte] dans ce paquet.
 ///
 /// Les deux boutons d'édition sont **rendus à l'appelant** : il les active et les désactive selon qu'on
 /// est en train d'éditer ou non, ce qui reste une décision d'écran.

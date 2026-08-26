@@ -84,8 +84,8 @@ public class PointEditViewModel {
     /// Le point que le dernier [#enregistrer] réussi a écrit : la cible de [#resoudreCommune].
     private Long idDernierPointEnregistre;
 
-    /// L'intention de publier ce point dès son enregistrement (#3458) : la case, son gris, son verdict.
-    /// Extraite d'ici, où elle faisait franchir le seuil God-class.
+    /// L'intention de publier ce point dès son enregistrement (#3458) : la case, son gris, son
+    /// verdict.
     private final IntentionPublication intentionPublication;
 
     /// Carré **déclaré par le site** courant : c'est lui que la grille STOC vient confirmer ou contredire.

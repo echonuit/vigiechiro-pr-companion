@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /// Projections **pures** du statut workflow pour l'écran M-Passage : les jalons du stepper et la
-/// prochaine action recommandée. Extraites de [PassageViewModel] pour qu'il garde une seule
-/// responsabilité (porter l'état observable de l'écran) et reste cohésif (PMD GodClass).
+/// prochaine action recommandée. Le [PassageViewModel] garde ainsi une seule responsabilité :
+/// porter l'état observable de l'écran.
 final class EtapesWorkflow {
 
     private EtapesWorkflow() {}

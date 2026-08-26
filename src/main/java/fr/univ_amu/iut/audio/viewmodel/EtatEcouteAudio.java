@@ -10,8 +10,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 
-/// **Ce que le panneau d'écoute doit savoir** de la séquence sélectionnée, extrait du
-/// [AudioViewModel] (cohésion, seuil PMD GodClass) comme l'a été [EtatSelectionAudio].
+/// **Ce que le panneau d'écoute doit savoir** de la séquence sélectionnée.
 ///
 /// Trois situations, et une seule offre l'écoute :
 ///

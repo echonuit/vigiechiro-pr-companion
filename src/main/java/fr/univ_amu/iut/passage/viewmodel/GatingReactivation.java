@@ -4,8 +4,8 @@ import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.DisponibiliteAudio;
 
 /// Règles **pures** d'activation de la réactivation d'un passage (#1302), avec le **motif** de son
-/// blocage. Extraites de [PassageViewModel] pour qu'il garde la seule responsabilité de porter l'état
-/// observable de l'écran (PMD GodClass).
+/// blocage. Le [PassageViewModel] garde ainsi la seule responsabilité de porter l'état observable
+/// de l'écran.
 ///
 /// Le gating est **en amont** (#789) : on grise avec une explication plutôt que de laisser
 /// l'utilisateur découvrir le refus après avoir confirmé.

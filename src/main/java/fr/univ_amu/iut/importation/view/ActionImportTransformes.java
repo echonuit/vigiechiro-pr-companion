@@ -19,10 +19,10 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import javafx.stage.Window;
 
-/// Action IHM « importer un dossier de séquences déjà transformées » (#2258, parité avec la commande
-/// `importer-transformes`), extraite de [ImportationController] (pur câblage, PMD GodClass) sur le modèle
-/// de [fr.univ_amu.iut.passage.view.ActionReactivation] : elle **compose des dialogues existants** (aucun
-/// nouveau FXML) et lance l'opération **hors du fil JavaFX** via [SuiviOperation].
+/// Action IHM « importer un dossier de séquences déjà transformées » (#2258, parité avec la
+/// commande `importer-transformes`), sur le modèle de
+/// [fr.univ_amu.iut.passage.view.ActionReactivation] : elle **compose des dialogues existants**
+/// (aucun nouveau FXML) et lance l'opération **hors du fil JavaFX** via [SuiviOperation].
 ///
 /// Enchaînement : demander le dossier des transformés, choisir le point de rattachement, demander s'il faut
 /// **copier ou référencer** (recommandation déduite de l'emplacement du dossier), puis créer le passage via

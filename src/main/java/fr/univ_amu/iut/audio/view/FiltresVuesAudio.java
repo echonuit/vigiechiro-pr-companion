@@ -16,11 +16,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 
-/// Assemblage de la **barre de filtres et des vues mémorisées** de « Sons & validation » (#1194) : le
-/// catalogue de critères de l'écran (#470/#471), la mémoire de session (#484) et les onglets de vues
-/// (#623) avec leur capture de colonnes (#994). Extrait de [SonsValidationController] (unité cohésive)
-/// pour garder le contrôleur sous le plafond de concentration (`NcssCount`). Les nœuds restent injectés
-/// par le FXML dans le contrôleur, qui les passe ici regroupés.
+/// Assemblage de la **barre de filtres et des vues mémorisées** de « Sons & validation » (#1194) :
+/// le catalogue de critères de l'écran (#470/#471), la mémoire de session (#484) et les onglets de
+/// vues (#623) avec leur capture de colonnes (#994). Les nœuds restent injectés par le FXML dans le
+/// contrôleur, qui les passe ici regroupés.
 final class FiltresVuesAudio {
 
     /// Nœuds de la barre (recherche, « + Filtre », puces, onglets), regroupés en objet-paramètre
