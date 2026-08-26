@@ -27,7 +27,7 @@ import (copie protégée + renommage + transformation), puis les cas dégradés 
 **Étape 1 · Import nominal (`sd-nominale`, depuis le détail du carré 640380 → « 📥 Importer une nuit »)**
 
 - **S2-01** · *geste: designer-la-source-et-l-inspecter* · Le champ « Dossier source » est en lecture seule.
-- **S2-02** · *geste: designer-la-source-et-l-inspecter* · Le glisser-déposer d'un dossier est accepté.
+- **S2-02** · *geste: designer-la-source-et-l-inspecter* · *carton: le dossier est glissé-déposé sur l'écran* · Le glisser-déposer d'un dossier est accepté.
 - **S2-03** · *geste: designer-la-source-et-l-inspecter* · L'inspection annonce le journal détecté (LogPR1925492).
 - **S2-04** · *geste: designer-la-source-et-l-inspecter* · L'inspection annonce le relevé climatique détecté.
 - **S2-05** · *geste: designer-la-source-et-l-inspecter* · L'inspection compte 6 originaux.
