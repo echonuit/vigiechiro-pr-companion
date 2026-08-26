@@ -51,6 +51,36 @@ class LibelleDesCasTest {
     }
 
     @Test
+    @DisplayName("#4465 : un cas qui porte DEUX marqueurs n'en garde aucun dans son libellé")
+    void les_marqueurs_multiples_sont_tous_retires() {
+        // La ligne est celle de S10-01, telle qu'elle est écrite dans sa session. Le carton d'un clip
+        // affichait « *carton: une seconde instance…* · Lancer l'application… », c'est-à-dire du
+        // balisage à la place de la phrase, et sur un cas dont le marqueur `carton` sert précisément à
+        // remplacer une étape muette.
+        LibelleDesCas recueil = LibelleDesCas.de(List.of("- [ ] **S10-01** · *geste: refus-du-dossier-deja-tenu*"
+                + " · *carton: une seconde instance démarre sur le même dossier de travail*"
+                + " · Lancer l'application, la laisser ouverte"));
+
+        assertEquals(Optional.of("Lancer l'application, la laisser ouverte"), recueil.de("S10-01"));
+    }
+
+    @Test
+    @DisplayName("#4465 : une puce qui n'est pas un cas déclaré ne reçoit pas de libellé")
+    void une_puce_qui_n_est_pas_un_cas_est_ignoree() {
+        // Douze puces des fichiers de session recevaient un libellé sans être des cas : six lignes du
+        // tableau de capacités, que `MUETTES_ADMISES` déclare hors session, et du texte gras en début
+        // de ligne. Un libellé fabriqué pour ce que personne ne citera est du bruit, pas un service.
+        LibelleDesCas recueil = LibelleDesCas.de(List.of(
+                "- **Données** · enregistreur, carte SD réelle",
+                "- **PC2-01** · une ligne du tableau des capacités",
+                "- **S1-26** · La modale s'ouvre sans saut visuel"));
+
+        assertTrue(recueil.de("Données").isEmpty(), "« Données » n'est pas un identifiant de cas");
+        assertTrue(recueil.de("PC2-01").isEmpty(), "PC2-01 vit dans une session déclarée muette");
+        assertEquals(Optional.of("La modale s'ouvre sans saut visuel"), recueil.de("S1-26"));
+    }
+
+    @Test
     @DisplayName("gras, liens et numéro d'issue sont dépouillés")
     void les_ornements_sont_retires() {
         LibelleDesCas recueil = LibelleDesCas.de(
