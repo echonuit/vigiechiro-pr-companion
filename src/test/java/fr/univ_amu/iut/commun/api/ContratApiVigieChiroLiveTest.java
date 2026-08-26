@@ -522,21 +522,8 @@ class ContratApiVigieChiroLiveTest {
         supposerEcritureAutorisee();
         String participation = participationDeRebut();
 
-        // ⚠️ Cette sonde consigne un fait qui CONTREDIT trois écrits du dépôt, et c'est pour cela
-        // qu'elle existe. `ParticipationDetail` documente l'`_etag` comme « requis en en-tête If-Match
-        // pour un PATCH », `TransportVigieChiro` en envoie un, et #4356 range le piège parmi les cinq
-        // que le bouchon ignore. Les trois disent la même chose, et la plateforme dit l'inverse.
-        //
-        // Mesuré le 2026-08-26, contre la participation de rebut : 200 sans en-tête, 200 avec un
-        // étiquetage délibérément faux. L'en-tête n'est pas lu sur cette route.
-        //
-        // Le banc d'étalonnage local (révision 5e924b1) avait rendu le même verdict avant le tir, et
-        // pour une raison lisible dans le code : aucun des sept appels à `participations.update(...)`
-        // ne passe `if_match`. L'accord entre les deux est lui-même un résultat - sur ce contrat-là,
-        // notre copie ne dérive pas.
-        //
-        // Le jour où cette sonde rougira, la plateforme aura changé d'avis, et c'est exactement la
-        // mesure de dérive que l'ADR 4444 lui demande de porter.
+        // Mesuré le 2026-08-26 contre la participation de rebut, et prédit avant le tir par le banc
+        // d'étalonnage de l'ADR 4444. Trois écrits du dépôt affirment l'inverse : #4523 les traite.
         int sansEntete = api().contentType("application/json")
                 .body(Map.of("commentaire", "Sonde de contrat (#4444) : lecture du contrat If-Match."))
                 .when()
@@ -575,14 +562,8 @@ class ContratApiVigieChiroLiveTest {
         supposerEcritureAutorisee();
         String participation = participationDeRebut();
 
-        // Le second des deux comportements que #4356 exige d'établir avant d'enrichir le bouchon.
-        // Celui-ci, contrairement au premier, se confirme : `dev-docs/api-vigiechiro.md` l'annonçait,
-        // et la plateforme le fait.
-        //
-        // La forme du corps compte autant que le statut. La plateforme rend DEUX 422 de sens opposé à
-        // l'écriture : « invalid field » quand le champ n'existe pas - notre correspondance est
-        // fautive - et « field is read-only » quand il existe mais nous est fermé, auquel cas rien ne
-        // se corrige chez nous. Un tri sur le seul statut les confond (#4524).
+        // La forme du corps compte autant que le statut : la plateforme rend deux 422 de sens opposé
+        // à l'écriture, et un tri sur le seul statut les confond (#4524).
         var refus = api().contentType("application/json")
                 .body(Map.of("numero", 42))
                 .when()
