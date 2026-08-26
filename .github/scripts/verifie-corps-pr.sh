@@ -11,14 +11,21 @@
 #
 # ## Ce qu'elle refuse, et sur quelle mesure
 #
-# Trois défauts, chacun adossé à une décision déjà prise ailleurs, mesurés sur les dix-huit corps de
-# PR du dépôt le 2026-08-25 :
+# Quatre défauts, chacun adossé à une décision déjà prise ailleurs. Les trois premiers ont été mesurés
+# sur les dix-huit corps de PR du dépôt le 2026-08-25, le quatrième sur ceux du 2026-08-26 :
 #
-# | Défaut | Décision qui le porte | Mesure sur les 18 corps |
+# | Défaut | Décision qui le porte | Mesure |
 # |---|---|---|
 # | tiret cadratin de prose | ADR 2843 | 2 lignes, 1 PR, deux vrais défauts |
 # | apostrophe courbe | ADR 4368 | 0 |
 # | élision sans apostrophe | le garde du TITRE de PR, même règle | 0 |
+# | fermeture écrite en français | #4350, qui l'avait posée sans la rendre opposable | 2 en une session |
+#
+# Le quatrième diffère des trois autres : il ne refuse pas une typographie, il refuse une PROMESSE
+# QUI NE SERA PAS TENUE. « Ferme #N » ne ferme rien, et surtout ne signale rien - la demande fusionne
+# verte, l'issue reste ouverte, et on ne s'en aperçoit qu'en balayant les issues. #4350 avait écarté
+# un garde parce qu'il aurait cherché ce qui MANQUE et rougi sur tout lot d'un EPIC ; celui-ci cherche
+# ce qui est PRÉSENT, forme qui n'est jamais légitime, et laisse « Refs #N » tranquille.
 #
 # Zéro sur deux des trois règles : c'est un refus et non un cliquet, la zone étant à zéro le jour de
 # la décision. Le cadratin, lui, a deux occurrences dans une PR déjà close, que rien ne peut plus
@@ -76,6 +83,30 @@ if [ "${CORPS}" = "--auto-test" ]; then
     verifie 1 "L${COURBE}apostrophe courbe est refusée." "une apostrophe courbe est refusée"
     verifie 1 "Le garde tient, l ADR le dit." "une élision sans apostrophe est refusée"
 
+    # #4546. La forge ne reconnait que `close`, `fix` et `resolve` : une fermeture ecrite en francais
+    # ne ferme rien ET ne signale rien, ce qui la rend pire qu une absence de mot-cle. Le piege s est
+    # produit deux fois dans une seule session, gabarit en place.
+    verifie 1 "Ce que ce lot fait. Ferme #4502." "« Ferme #N » est refusé"
+    # ACCENTUÉ, et c'est le cas qui éprouve le dépliage : le motif est écrit sans accent, donc un
+    # `sans_accents` qui rendrait son entrée telle quelle laisserait passer la forme qu'on écrit
+    # vraiment. Un témoin qui ne porterait que « Clot » ne prouverait rien de ce mécanisme.
+    verifie 1 "Clôt #4502." "« Clôt #N » aussi, et il éprouve le dépliage des accents"
+    verifie 1 "Résout le #4502." "et la forme avec article, accentuée elle aussi"
+    verifie 1 "Corrige l issue #4502." "et celle qui nomme l issue"
+
+    # Les contrôles NÉGATIFS, et ce sont eux qui rendent ce refus utilisable. Le garde ecarte par
+    # #4350 cherchait ce qui MANQUE, un mot-cle de fermeture, et rougissait donc sur tout lot d un
+    # EPIC. Celui-ci cherche ce qui est PRESENT : renvoyer sans clore reste vert.
+    verifie 0 "Refs #4502" "« Refs #N » ne prétend rien et passe"
+    verifie 0 "Rattache a #4502" "« Rattaché à #N » non plus"
+    verifie 0 "Voir #4502 pour le detail" "un simple renvoi passe"
+    verifie 0 "Le correctif de #4502 tient" "un renvoi au fil d une phrase passe"
+    verifie 0 "#4502 a pose la question" "un renvoi en tete de phrase passe"
+    # `close` est un mot-cle ANGLAIS valide : le refuser ferait recrire en francais ce qui marchait.
+    verifie 0 "Close #4502" "le mot-clé anglais reste vert"
+    verifie 0 "Fixes #4502" "et ses deux jumeaux"
+    verifie 0 "Resolves #4502" "aussi"
+
     # Les exemptions. Un corps de PR colle des sorties de commande et cite des glyphes : les refuser
     # rendrait le garde contournable par suppression de la citation, ce qui est pire que muet.
     verifie 0 "Sortie collee :
@@ -115,6 +146,7 @@ CORPS_PR="${CORPS}" python3 - <<'FIN'
 import os
 import re
 import sys
+import unicodedata
 
 # Construits, jamais écrits : voir l'auto-test ci-dessus.
 CADRATIN = chr(0x2014)
@@ -140,6 +172,35 @@ BORNE = r"[^\w'" + COURBE + r"]"
 ELISION_MIN = re.compile(r"(^" + BORNE + r"?|[^\d]" + BORNE + r")([ldnscjmt]|qu) +[^\W\d_]")
 ELISION_MAJ = re.compile(r"(^" + BORNE + r"?|[^\w]\s)([LDNSCJMT]|Qu) +[^\W\d_]")
 
+# Un verbe de fermeture FRANCAIS accole a un renvoi (#4546). GitHub ne reconnait que `close`, `fix`
+# et `resolve` et leurs flexions : « Ferme #N » promet une fermeture que la forge ne fait pas, et
+# elle ne fait aucun bruit - la demande fusionne verte, l issue reste ouverte.
+#
+# Le garde de #4350 avait ete ecarte parce qu il aurait cherche ce qui MANQUE, un mot-cle de
+# fermeture, et aurait rougi sur tout lot d un EPIC qui renvoie sans clore. Celui-ci cherche ce qui
+# est PRESENT, et cette forme n est jamais legitime : qui l ecrit veut clore et ne clot pas.
+# « Refs #N » et « Rattache a #N » ne la portent pas, donc le lot passe.
+
+
+def sans_accents(texte):
+    """Le texte deplie, accents retires : « Resout » et « Résout » sont le meme verbe.
+
+    Ecrire les deux formes dans le motif aurait double chaque alternative, et la moitie aurait
+    vieilli en silence le jour ou une flexion manque.
+    """
+    return "".join(c for c in unicodedata.normalize("NFD", texte) if not unicodedata.combining(c))
+
+
+FERMETURE_FR = re.compile(
+    # `close` est ABSENT de cette liste, et c est le point delicat : « Close #N » est un mot-cle
+    # ANGLAIS valide, que la forge honore. Le refuser rendrait le garde faux dans le sens qui coute
+    # le plus cher - il ferait recrire en francais ce qui marchait.
+    r"\b(ferme|fermee?s?|clot|clos|resout|resoud|resolue?s?|corrige|corrigee?s?"
+    r"|repare|reparee?s?|termine|terminee?s?|acheve|achevee?s?)"
+    r"\s+(l[ae']\s*)?(issue\s+)?#\d{1,5}\b",
+    re.I,
+)
+
 fautes = []
 dans_un_bloc = False
 for numero, ligne in enumerate(corps.splitlines(), 1):
@@ -155,6 +216,8 @@ for numero, ligne in enumerate(corps.splitlines(), 1):
         fautes.append((numero, "apostrophe courbe", ligne.strip()))
     if ELISION_MIN.search(prose) or ELISION_MAJ.search(prose):
         fautes.append((numero, "élision sans apostrophe", ligne.strip()))
+    if FERMETURE_FR.search(sans_accents(prose)):
+        fautes.append((numero, "fermeture en français", ligne.strip()))
 
 if not fautes:
     print("Corps conforme.")
@@ -169,6 +232,12 @@ REMEDES = {
     "apostrophe courbe": (
         "Le dépôt n'écrit que l'apostrophe droite ('), et ce corps ne fait pas exception.\n"
         "  Cf. dev-docs/decisions/le-depot-n-ecrit-qu-une-apostrophe.md"
+    ),
+    "fermeture en français": (
+        "Écrivez le mot-clé en anglais : « Closes #N », « Fixes #N » ou « Resolves #N ». La forge ne\n"
+        "  reconnaît qu'eux, et une fermeture écrite en français ne ferme rien ni ne signale rien : la\n"
+        "  demande fusionne verte et l'issue reste ouverte. Pour renvoyer SANS clore - un lot dans un\n"
+        "  EPIC - écrivez « Refs #N » ou « Rattaché à #N », qui ne prétendent rien."
     ),
     "élision sans apostrophe": (
         "Rétablissez l'apostrophe : « l'ADR », « d'une nuit », « n'est pas », « qu'il ».\n"
