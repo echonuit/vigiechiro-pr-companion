@@ -1,5 +1,5 @@
 ---
-name: humaniseur
+name: humaniser
 description: Use when writing or reviewing French prose that may carry LLM writing patterns - inflated claims, sales language, vague sources, heavy connectors, anglicisms, stock words, filler, chatbot residue, reflexive bold. French counterpart of the English humanizer skill, based on Wikipedia's "Signs of AI writing" and its French equivalent "Aide:Identifier l'usage d'une IA generative".
 license: GPL-3.0-or-later
 metadata:
@@ -20,7 +20,7 @@ nom, date, citation et source survit à la réécriture. Rien ne s'invente pour 
 
 ## Annoncer
 
-« J'utilise la compétence humaniseur pour <le texte>. »
+« J'utilise la compétence humaniser pour <le texte>. »
 
 ## Quand elle s'ouvre, dans ce dépôt
 

@@ -1,5 +1,5 @@
 ---
-name: triage
+name: trier-les-issues
 description: Use before opening a chantier or claiming an issue, to decide whether there is anything to open at all. Covers sweeping open issues by concept rather than keyword, finding the live EPIC that already covers the need, checking what is already claimed, and querying the repository knowledge graph for what grep cannot relate.
 license: GPL-3.0-or-later
 metadata:
@@ -20,7 +20,7 @@ analyse ailleurs. Avant d'ouvrir quoi que ce soit, on cherche ce qui existe déj
 
 ## Annoncer
 
-« J'utilise la compétence triage pour décider s'il y a lieu d'ouvrir sur <le sujet>. »
+« J'utilise la compétence trier-les-issues pour décider s'il y a lieu d'ouvrir sur <le sujet>. »
 
 ## Pourquoi cette étape existe
 
