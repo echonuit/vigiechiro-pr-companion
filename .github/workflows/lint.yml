@@ -755,3 +755,17 @@ jobs:
         run: |
           python3 scripts/methode/synchronise-adaptateurs.py --auto-test
           python3 scripts/methode/synchronise-adaptateurs.py --verifie
+
+      - name: "La version d'OpenSpec epinglee vaut celle que les competences declarent (bloquant, #4512)"
+        # Les douze fichiers d'OpenSpec portent `generatedBy` et decrivent le contrat de la ligne de
+        # commande de CETTE version : ses sous-commandes, les champs de son JSON. Une version
+        # installee qui differe ferait decrire un contrat perime par des fichiers qui se lisent
+        # comme vrais, et le defaut n'apparaitrait qu'au moment ou un agent suit une instruction
+        # devenue fausse.
+        # Le garde lit le LOCKFILE plutot que d'invoquer `openspec --version` : c'est la version du
+        # depot qui fait foi, pas celle du poste, et ce job n'a donc besoin ni de Node ni de l'outil.
+        # L'auto-test exige le vert sur un arbre sain avant les quatre rouges : un garde qui
+        # rougirait sur tout rougirait aussi sur les quatre etats casses, et ne prouverait rien.
+        run: |
+          python3 scripts/methode/verifie-version-openspec.py --auto-test
+          python3 scripts/methode/verifie-version-openspec.py --verifie
