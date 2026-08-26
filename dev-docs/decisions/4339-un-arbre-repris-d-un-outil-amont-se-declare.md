@@ -6,6 +6,8 @@ article: A5
 chantier: "#4339 (OpenSpec), étendue par #4377 (Mocodo), chantier #4334"
 decided_at: 2026-08-24
 verification: certaine
+relations:
+  amendee_par: ["4516-une-commande-nomme-un-geste"]
 enforced_by:
   - "scripts/adr/2843-tiret-cadratin.py"
   - "scripts/adr/4368-apostrophe-en-libelle.py"
@@ -18,6 +20,10 @@ generated:
 ---
 
 # Un arbre repris d'un outil amont se déclare, il ne se réécrit pas
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-08-26** par [ADR 4516](4516-une-commande-nomme-un-geste.md) : les six commandes `opsx` sont sorties de la
+    table des exemptions en disparaissant. Seuls les trois diagrammes Mocodo y restent.
 
 ## Contexte
 

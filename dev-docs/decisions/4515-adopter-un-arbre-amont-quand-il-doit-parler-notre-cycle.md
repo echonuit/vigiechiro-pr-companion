@@ -6,6 +6,8 @@ article: A5
 chantier: "#4515, chantier #4511 (mise en service d'OpenSpec)"
 decided_at: 2026-08-26
 verification: certaine
+relations:
+  amendee_par: ["4516-une-commande-nomme-un-geste"]
 enforced_by:
   - "scripts/adr/2843-tiret-cadratin.py"
   - "scripts/adr/4366-avertissement-en-pictogramme.py"
@@ -19,6 +21,11 @@ generated:
 ---
 
 # Adopter un arbre amont quand il doit parler notre cycle, et le sortir de ses exemptions
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-08-26** par [ADR 4516](4516-une-commande-nomme-un-geste.md) : les six commandes `opsx` ne restent pas
+    amont, elles disparaissent. Six relais d'une ligne, nommés par le geste, les remplacent,
+    et l'adoption des compétences est désormais gardée contre `openspec update --force`.
 
 ## Contexte
 
