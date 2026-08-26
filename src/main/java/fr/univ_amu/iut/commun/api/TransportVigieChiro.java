@@ -140,9 +140,9 @@ final class TransportVigieChiro {
     /// « **arbitré appel par appel**, et documenté », et non une règle par verbe.
     ///
     /// Deux familles de raisons de refuser, et c'est pourquoi la décision est nommée plutôt que sa cause :
-    /// le rejeu **duplique** (une création, un message empilé), ou il **trompe** (un `PATCH` protégé par
-    /// `If-Match` rejoué après un succès dont la réponse s'est perdue revient en `412`, et l'utilisateur
-    /// lit « échec » sur une modification qui a bien eu lieu).
+    /// le rejeu **duplique** (une création, un message empilé), ou il **écrase** (un `PATCH` rejoué repose
+    /// des valeurs absolues par-dessus ce qu'un autre poste a écrit entre-temps, et rien ne l'en empêche :
+    /// la plateforme ignore `If-Match` là où on le croyait exigé, mesuré en #4523).
     enum Rejeu {
         /// Rejouer redonne le même état et la même réponse : lectures, suppression, valeur absolue.
         AUTORISE,
