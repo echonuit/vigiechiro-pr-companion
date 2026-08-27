@@ -23,7 +23,7 @@
 
 ## 3. Demander le carré au rayon serré
 
-- [ ] 3.1 Le rayon de l'appel à la grille est figé à 10 000 m, valeur choisie pour un contrôle et non
+- [x] 3.1 Le rayon de l'appel à la grille est figé à 10 000 m, valeur choisie pour un contrôle et non
       pour une proposition. Le rendre paramétrable sans changer ce que reçoit l'appelant existant.
       **Fait quand** : `ControleCarreStoc` passe toujours 10 000 m et ses tests actuels restent verts
       sans être modifiés, et un appel au rayon serré est possible.
@@ -31,11 +31,11 @@
       vrai serveur. **Fait quand** : une sonde live confronte une position hors grille au serveur réel
       et constate une réponse vide, distincte d'une panne, à côté de la sonde qui existe déjà pour le
       cas nominal.
-- [ ] 3.3 Le numéro que rend la grille n'a pas le format que le reste de l'application exige : cinq
+- [x] 3.3 Le numéro que rend la grille n'a pas le format que le reste de l'application exige : cinq
       chiffres contre six, dans les départements 01 à 09. **Fait quand** : un test unitaire sur un
       carré de département à un chiffre rougit si on retire le rembourrage, et la sonde live de #4574
       continue de passer.
-- [ ] 3.4 La convention de coordonnées de `grille_stoc` était réputée indécidable, et elle est
+- [x] 3.4 La convention de coordonnées de `grille_stoc` était réputée indécidable, et elle est
       mesurée : `[lon, lat]`, celle de GeoJSON, là où les localités d'un site sont en `[lat, lon]`.
       Le savoir vit dans une réponse brute que personne ne relira. **Fait quand** :
       `dev-docs/api-vigiechiro.md` porte la convention dans sa carte des ressources, la javadoc de
