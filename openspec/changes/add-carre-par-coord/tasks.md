@@ -27,7 +27,7 @@
       pour une proposition. Le rendre paramétrable sans changer ce que reçoit l'appelant existant.
       **Fait quand** : `ControleCarreStoc` passe toujours 10 000 m et ses tests actuels restent verts
       sans être modifiés, et un appel au rayon serré est possible.
-- [ ] 3.2 Une position hors de la grille doit rendre une réponse vide, et rien ne le vérifie contre le
+- [x] 3.2 Une position hors de la grille doit rendre une réponse vide, et rien ne le vérifie contre le
       vrai serveur. **Fait quand** : une sonde live confronte une position hors grille au serveur réel
       et constate une réponse vide, distincte d'une panne, à côté de la sonde qui existe déjà pour le
       cas nominal.
