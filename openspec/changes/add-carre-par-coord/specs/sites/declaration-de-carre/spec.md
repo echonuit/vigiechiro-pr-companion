@@ -107,34 +107,35 @@ que l'observateur avait peut-être raison de tenir.
 - **WHEN** le champ porte déjà six chiffres et que la position déduit le même numéro
 - **THEN** le champ est inchangé, et le message dit que la position confirme la saisie
 
-### Requirement: Situer une position exige une connexion, déclarer non
+### Requirement: Situer une position ne demande rien au réseau
 
-Le geste qui situe une position MUST rester fermé tant qu'aucun jeton Vigie-Chiro n'est disponible,
-et son motif MUST dire pourquoi et où se connecter.
+Le geste qui situe une position MUST fonctionner **sans connexion et sans jeton**. Le carré se déduit
+d'un référentiel embarqué, et non de la plateforme.
 
-Déclarer un carré hors connexion MUST rester possible. Travailler hors ligne est normal, et fermer la
-saisie ferait de la plateforme une condition pour déclarer chez soi.
+Deux questions distinctes se posent, et une seule appelle le réseau : « quel carré couvre cette
+position » est de la géométrie, « ce carré existe-t-il en Point Fixe » est une question de portail.
+Fermer le premier geste hors connexion ferait de la plateforme une condition pour déclarer chez soi,
+ce que l'écran existe précisément pour éviter.
 
-**Vérifié par** : un test de scénario sur la modale, sur le patron du contrôle déjà appliqué au bouton
-« Vérifier sur Vigie-Chiro ». Ce patron est vérifié pour l'autre bouton ; ce changement ajoute le cas
-du geste de position.
+**Vérifié par** : un test de scénario sur la modale, qui situe une position sans qu'aucun jeton ne
+soit disponible. Il n'existe pas.
 
-#### Scenario: Sans jeton, le geste est fermé et le dit
+#### Scenario: Sans jeton, situer une position fonctionne
 
-- **WHEN** l'observateur ouvre la modale sans être connecté à Vigie-Chiro
-- **THEN** le geste qui situe une position est fermé
-- **AND** son motif au survol dit qu'aucune position ne peut être située sans connexion, et où se
-  connecter
+- **WHEN** l'observateur ouvre la modale sans être connecté et colle une position de métropole
+- **THEN** le numéro de carré est déposé dans le champ des six chiffres
+- **AND** aucun message ne parle de connexion
 
-#### Scenario: Sans jeton, la déclaration reste entière
+#### Scenario: Sans jeton, la vérification reste fermée
 
 - **WHEN** l'observateur n'est pas connecté
-- **THEN** il peut saisir un numéro de carré et créer le site
+- **THEN** « Vérifier sur Vigie-Chiro » reste fermé, et son motif dit où se connecter
+- **AND** la déclaration du carré reste possible
 
-#### Scenario: Le geste se rouvre dès qu'un jeton arrive
+#### Scenario: Une position hors du référentiel embarqué
 
-- **WHEN** l'observateur se connecte alors que la modale est ouverte
-- **THEN** le geste qui situe une position s'ouvre sans qu'il faille rouvrir la fenêtre
+- **WHEN** la position collée est hors de la France métropolitaine
+- **THEN** aucun numéro n'est déposé, et le message le dit comme une réponse et non comme une panne
 
 ### Requirement: La vérification sur Vigie-Chiro reste un geste séparé
 

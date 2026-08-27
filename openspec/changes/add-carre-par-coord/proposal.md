@@ -41,8 +41,13 @@ contraire.
 - Le numéro rendu par la grille est **rembourré à six chiffres**. Mesuré le 2026-08-26 : la grille
   rend « 40110 » là où le catalogue déclare « Point Fixe-040110 », et `GET /sites?q=40110` ne trouve
   rien. R1 est juste, c'est la grille qui ampute le zéro des départements 01 à 09.
-- **La vérification reste un geste séparé.** Situer une position remplit le champ du carré, rien de
-  plus. « Vérifier sur Vigie-Chiro » garde son clic, ses conditions d'ouverture et son verdict.
+- **Le carré se déduit hors ligne.** Le carroyage national est déjà embarqué,
+  `carrenat.csv.gz`, 137 481 mailles pour toute la métropole. Situer une position ne demande donc
+  **rien au réseau**, et le geste fonctionne sans jeton. Mesuré le 2026-08-27 : le référentiel local
+  reproduit `GET /grille_stoc/cercle` au centimètre.
+- **La vérification reste un geste séparé, et c'est le seul qui appelle le réseau.** Situer remplit le
+  champ du carré. « Vérifier sur Vigie-Chiro » garde son clic, ses conditions d'ouverture et son
+  verdict : « ce carré existe-t-il en Point Fixe » est une question de portail, pas de géométrie.
 
 Aucun comportement existant n'est retiré : ni la saisie manuelle, ni `ControleCarreStoc`, ni la
 vérification. Pas de **BREAKING**.
@@ -70,11 +75,14 @@ il n'a rien à modifier.
 | `sites/model/` | Un analyseur de position collée, classe pure, et un service qui enchaîne analyse puis `carreStoc` |
 | `sites/viewmodel/SiteEditViewModel.java` | Le champ de position, son verdict, et le dépôt du numéro dans le champ du carré |
 | `sites/view/ModaleSiteController.java` | Le champ, son bouton et le libellé du verdict |
+| `commun/view/carte/` vers le modèle | Le référentiel du carroyage sort d'un paquet de vue |
 | `docs/ecrans/sites.md` | La section « Déclarer un site » décrit le nouveau geste |
 
 **API**
 
-`GET /grille_stoc/cercle?lng&lat&r`, déjà appelée. Le contrat est relevé dans
+**Aucune, pour la proposition.** Elle se calcule sur le référentiel embarqué.
+
+`GET /grille_stoc/cercle?lng&lat&r` reste appelée par le contrôle en aval, inchangé. Le contrat est relevé dans
 `dev-docs/api-vigiechiro.md` : trois paramètres obligatoires, résultats triés par distance croissante
 via un `$near` MongoDB. Le rayon est le `$maxDistance` de ce `$near`, en mètres. Aucun endpoint neuf.
 
