@@ -19,6 +19,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.commun.view.DoubleClicDeterministe;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -48,7 +49,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.WaitForAsyncUtils;
 
 /// Test TestFX de l'écran **M-Saison** : le FXML est chargé avec un injecteur de test (ViewModel sur un
 /// [ServiceSoldeSaison] simulé, contrats d'ouverture mockés), monté headless. On vérifie l'affichage
@@ -254,16 +254,14 @@ class SaisonViewTest {
     @Test
     @DisplayName("double-clic sur un point avec passage ouvre le passage concerné")
     void double_clic_ouvre_le_passage(FxRobot robot) {
-        robot.doubleClickOn("640001");
-        WaitForAsyncUtils.waitForFxEvents();
+        DoubleClicDeterministe.surLigneContenant(robot, "#tableSaison", "640001");
         verify(ouvrirPassage).ouvrir(eq(42L), any(ContexteSite.class));
     }
 
     @Test
     @DisplayName("double-clic sur un point sans passage ouvre le carré du point")
     void double_clic_sans_passage_ouvre_le_carre(FxRobot robot) {
-        robot.doubleClickOn("640002");
-        WaitForAsyncUtils.waitForFxEvents();
+        DoubleClicDeterministe.surLigneContenant(robot, "#tableSaison", "640002");
         verify(ouvrirSite).ouvrirDetail("640002");
     }
 

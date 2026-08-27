@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.commun.view.DoubleClicDeterministe;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -419,7 +420,7 @@ class MultisiteViewTest {
     void double_clic_ouvre_le_passage(FxRobot robot) {
         // Le libellé, et non l'ISO : depuis #4019 la colonne rend « 21/06/2026 », et c'est sur ce
         // texte-là que se pose le curseur de la personne qui double-clique.
-        robot.doubleClickOn("21/06/2026"); // date unique de la ligne idPassage = 42
+        DoubleClicDeterministe.surLigneContenant(robot, "#tableLignes", "21/06/2026"); // ligne idPassage = 42
 
         verify(ouvrirPassage).ouvrir(eq(42L), any(ContexteSite.class));
     }

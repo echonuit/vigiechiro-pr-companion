@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.DoubleClicDeterministe;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -82,7 +83,7 @@ class SiteDetailVersPassageViewTest {
     @Test
     @DisplayName("Double-cliquer une ligne de passage ouvre l'écran pivot M-Passage")
     void double_clic_ouvre_m_passage(FxRobot robot) {
-        robot.doubleClickOn(DATE_AFFICHEE);
+        DoubleClicDeterministe.surLigneContenant(robot, "#tablePassages", DATE_AFFICHEE);
 
         HBox stepper = robot.lookup("#stepper").queryAs(HBox.class);
         assertThat(stepper.getChildren()).isNotEmpty();

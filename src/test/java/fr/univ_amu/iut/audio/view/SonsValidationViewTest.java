@@ -36,6 +36,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ColonneDate;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
+import fr.univ_amu.iut.commun.view.DoubleClicDeterministe;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
@@ -389,9 +390,7 @@ class SonsValidationViewTest {
     @DisplayName("#1794 : double-clic sur une observation ouvre la fiche de la proposition Tadarida")
     void double_clic_observation_ouvre_la_fiche(FxRobot robot) {
         // Première ligne = « Pippip » (Pipistrelle commune), chiroptère à fiche PNA.
-        Node ligne =
-                robot.lookup("#tableObservations").lookup(".table-row-cell").query();
-        robot.doubleClickOn(ligne);
+        DoubleClicDeterministe.surLigne(robot, "#tableObservations", 0);
 
         assertThat(urlsFiche)
                 .containsExactly(
