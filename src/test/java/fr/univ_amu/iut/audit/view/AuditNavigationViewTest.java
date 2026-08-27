@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.DoubleClicDeterministe;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
@@ -19,7 +20,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
@@ -97,9 +97,8 @@ class AuditNavigationViewTest {
                 .as("la nuit sans session produit bien un constat : il y a une ligne à double-cliquer")
                 .isNotEmpty();
 
-        Node premiereLigne = robot.lookup(".table-row-cell").query();
-        robot.doubleClickOn(premiereLigne);
-        WaitForAsyncUtils.waitForFxEvents();
+        // Sans identifiant de table, ce lookup prenait la première ligne de TOUTE la scène.
+        DoubleClicDeterministe.surLigne(robot, "#tableConstats", 0);
 
         assertThat(passageOuvert.get())
                 .as("le constat accusait un passage : il s'ouvre, au lieu de laisser l'utilisateur le chercher")

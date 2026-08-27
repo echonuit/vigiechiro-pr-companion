@@ -290,6 +290,9 @@ class ScenarioFicheSiteTest {
         // La session ne demande pas seulement un tableau : elle demande « double-clic vers le passage ».
         // Sans ce geste, le clip montrerait une table et s'arrêterait avant ce qu'elle sert à faire.
         Respiration.entreDeuxGestes(robot);
+        // Le vrai geste, et non `DoubleClicDeterministe` (#4554) : ce cas est FILMÉ, et un
+        // événement envoyé directement à la ligne ne déplace pas le curseur. Le clip montrerait
+        // une table qui change toute seule, ce qui est précisément ce que la session vient voir.
         robot.doubleClickOn(DATE_AFFICHEE);
         WaitForAsyncUtils.waitFor(
                 10, TimeUnit.SECONDS, () -> robot.lookup("#stepper").tryQuery().isPresent());

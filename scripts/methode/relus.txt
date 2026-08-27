@@ -1213,7 +1213,7 @@ cef5bd33ed6d  src/test/java/fr/univ_amu/iut/analyse/outils/NuitDeDemonstrationSy
 be1e4da73d1f  src/test/java/fr/univ_amu/iut/analyse/view/ActiviteControllerTest.java
 561e45fa9764  src/test/java/fr/univ_amu/iut/analyse/view/ActiviteNuitTest.java
 ae9a8d6a80e5  src/test/java/fr/univ_amu/iut/analyse/view/ActiviteViewTest.java
-823210f022d9  src/test/java/fr/univ_amu/iut/analyse/view/AnalyseViewTest.java
+6a5e8657be23  src/test/java/fr/univ_amu/iut/analyse/view/AnalyseViewTest.java
 5d036ff3aa17  src/test/java/fr/univ_amu/iut/analyse/view/ConstructeurDonneesCarteEspecesTest.java
 c768760b41eb  src/test/java/fr/univ_amu/iut/analyse/view/CriteresActiviteTest.java
 0632047deef6  src/test/java/fr/univ_amu/iut/analyse/view/CriteresAnalyseTest.java
@@ -1260,7 +1260,7 @@ ab6ca8445aad  src/test/java/fr/univ_amu/iut/audio/view/NavigationAudioViewTest.j
 70849ea7e398  src/test/java/fr/univ_amu/iut/audio/view/PublicationCorrectionsUITest.java
 45935e4c9d37  src/test/java/fr/univ_amu/iut/audio/view/RevueClavierTest.java
 d3c3716067cf  src/test/java/fr/univ_amu/iut/audio/view/ScenarioPerceptifFiltresTest.java
-538dfdd32b46  src/test/java/fr/univ_amu/iut/audio/view/SonsValidationArchiveViewTest.java
+5335e33cc9a7  src/test/java/fr/univ_amu/iut/audio/view/SonsValidationArchiveViewTest.java
 df42bcd62303  src/test/java/fr/univ_amu/iut/audio/view/SonsValidationDepotViewTest.java
 1e15ecf3943a  src/test/java/fr/univ_amu/iut/audio/view/SonsValidationStatutViewTest.java
 3cf35dc1c485  src/test/java/fr/univ_amu/iut/audio/view/SonsValidationViewTest.java
@@ -1527,6 +1527,8 @@ cf8e73c35456  src/test/java/fr/univ_amu/iut/commun/view/CritereListeEnumerationT
 3374b3079b7b  src/test/java/fr/univ_amu/iut/commun/view/DescripteurVueJsonTest.java
 3e592916d022  src/test/java/fr/univ_amu/iut/commun/view/DialogueProgressionTest.java
 a43937072547  src/test/java/fr/univ_amu/iut/commun/view/DialoguesHabillesTest.java
+6ddd52fdd7c0  src/test/java/fr/univ_amu/iut/commun/view/DoubleClicDeterministe.java
+a910b8995309  src/test/java/fr/univ_amu/iut/commun/view/DoubleClicDeterministeTest.java
 737e4218b3dc  src/test/java/fr/univ_amu/iut/commun/view/DoublonsFeuillesDeStyleTest.java
 55dddc071aa7  src/test/java/fr/univ_amu/iut/commun/view/EmplacementPassageTest.java
 f2ba2ec08bd4  src/test/java/fr/univ_amu/iut/commun/view/ExecuteurTacheAsynchroneTest.java

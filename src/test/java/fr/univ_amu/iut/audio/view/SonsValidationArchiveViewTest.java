@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.DoubleClicDeterministe;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -54,10 +55,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -265,61 +263,13 @@ class SonsValidationArchiveViewTest {
                 .isFalse();
     }
 
-    /// Double-clic **déterministe** sur la ligne d'index `index` de `idTable`.
-    ///
-    /// Deux fragilités sont évitées ici. Les `TableRow` sont **recyclés** : leur ordre dans le graphe de
-    /// scène ne suit pas celui des lignes affichées, donc la première `.table-row-cell` venue est souvent
-    /// une ligne **vide**. Et en headless, `doubleClickOn(Node)` vise le **centre du nœud en coordonnées
-    /// écran** : il rate sa cible quand la mise en page n'est pas encore stabilisée. On cible donc la ligne
-    /// par son **index réel** et on lui envoie l'événement directement, ce qui exerce le même gestionnaire
-    /// de production (`DoubleClicLigne`) sans dépendre du placement.
-    private static void doubleCliquerLigne(FxRobot robot, String idTable, int index) {
-        // Amener la ligne dans le viewport AVANT de la chercher. Les `TableRow` sont **virtualisés** :
-        // seules les lignes visibles existent comme noeuds, et une ligne hors cadre n'est donc pas
-        // « introuvable », elle n'est pas encore construite. Le message qui remonte - « aucune ligne
-        // d'index N » - se lit pourtant comme une absence de donnee.
-        //
-        // Trouve en #4016 : le panneau d'ecoute a repris la place que son contenu demande, la table a
-        // rendu quelques lignes de moins, et l'index 2 est sorti du viewport.
-        robot.interact(() -> {
-            TableView<?> table = robot.lookup(idTable).queryAs(TableView.class);
-            table.scrollTo(index);
-        });
-        WaitForAsyncUtils.waitForFxEvents();
-        Node ligne = robot.lookup(idTable).lookup(".table-row-cell").queryAll().stream()
-                .map(noeud -> (TableRow<?>) noeud)
-                .filter(rangee -> !rangee.isEmpty() && rangee.getIndex() == index)
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("aucune ligne d'index " + index + " dans " + idTable));
-        robot.interact(() -> ligne.fireEvent(new MouseEvent(
-                MouseEvent.MOUSE_CLICKED,
-                0,
-                0,
-                0,
-                0,
-                MouseButton.PRIMARY,
-                2,
-                false,
-                false,
-                false,
-                false,
-                true,
-                false,
-                false,
-                true,
-                false,
-                false,
-                null)));
-        WaitForAsyncUtils.waitForFxEvents();
-    }
-
     @Test
     @DisplayName("#1834 : double-clic sur un taxon sans fiche : rien ne s'ouvre, et le bandeau dit pourquoi")
     void double_clic_sans_fiche_affiche_le_motif(FxRobot robot) {
         Node bandeau = robot.lookup("#bandeauRetour").query();
         assertThat(bandeau.isVisible()).as("aucun retour au départ").isFalse();
 
-        doubleCliquerLigne(robot, "#tableObservations", 2); // « Bruit » : pseudo-taxon, aucune fiche
+        DoubleClicDeterministe.surLigne(robot, "#tableObservations", 2); // « Bruit » : pseudo-taxon, aucune fiche
 
         assertThat(urlsOuvertes)
                 .as("un pseudo-taxon n'a pas de fiche : rien ne doit s'ouvrir")
@@ -338,7 +288,7 @@ class SonsValidationArchiveViewTest {
     @Test
     @DisplayName("#1834 : double-clic sur un chiroptère ouvre sa fiche, sans message de refus")
     void double_clic_avec_fiche_ouvre_et_ne_signale_rien(FxRobot robot) {
-        doubleCliquerLigne(robot, "#tableObservations", 0); // « Pippip » : chiroptère à fiche PNA
+        DoubleClicDeterministe.surLigne(robot, "#tableObservations", 0); // « Pippip » : chiroptère à fiche PNA
 
         assertThat(urlsOuvertes)
                 .containsExactly(
@@ -346,14 +296,5 @@ class SonsValidationArchiveViewTest {
         assertThat(robot.lookup("#bandeauRetour").query().isVisible())
                 .as("la fiche s'est ouverte : il n'y a rien à signaler")
                 .isFalse();
-    }
-
-    private void doubleCliquerLigne(FxRobot robot, int index) {
-        Node ligne = robot.lookup("#tableObservations")
-                .lookup(".table-row-cell")
-                .nth(index)
-                .query();
-        robot.doubleClickOn(ligne);
-        WaitForAsyncUtils.waitForFxEvents();
     }
 }

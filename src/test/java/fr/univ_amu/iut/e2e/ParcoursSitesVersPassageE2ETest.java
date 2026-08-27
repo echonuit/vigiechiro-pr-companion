@@ -136,6 +136,9 @@ class ParcoursSitesVersPassageE2ETest {
     /// que la navigation aboutisse réellement, avec quelques réessais ; l'assertion de l'appelant tranche
     /// clairement si, malgré tout, on n'y est pas.
     private static void doubleClicVersPassage(FxRobot robot, NavigationViewModel navigation) {
+        // Le vrai geste, et non `DoubleClicDeterministe` (#4554) : un parcours E2E éprouve le
+        // chemin que l'utilisateur emprunte, robot et placement compris. Contourner le clic
+        // rendrait ce test stable en lui retirant ce qu'il sert à attraper.
         for (int essai = 1; essai <= 3; essai++) {
             robot.doubleClickOn(DATE_NUIT);
             try {

@@ -203,6 +203,8 @@ class ParcoursMultisiteVersPassageE2ETest {
                 // entre jamais dans le cadre (#3932). Il faut donc l'y AMENER, et c'est le point de
                 // détail qui a coûté un essai : le défilement n'est pas celui du chrome.
                 amenerLaColonneDate(robot, table);
+                // Le vrai geste, et non `DoubleClicDeterministe` (#4554), pour la même raison
+                // qu'au parcours jumeau : c'est le chemin de l'utilisateur qui est éprouvé ici.
                 AttenteAvantClic.attendreCliquable(robot, DATE_NUIT, 3, null);
                 robot.doubleClickOn(DATE_NUIT);
                 WaitForAsyncUtils.waitFor(3, TimeUnit.SECONDS, () -> "passage".equals(navigation.getVueCourante()));
