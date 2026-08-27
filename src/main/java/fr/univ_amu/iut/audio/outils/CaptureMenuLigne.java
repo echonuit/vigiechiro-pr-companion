@@ -100,22 +100,14 @@ public final class CaptureMenuLigne {
             System.out.println("[capture-menu-ligne] popup non rendu (headless) : " + fichier + " ignoré.");
             return;
         }
-        // Habillage commun (#3374). L'ancien helper `styles()` posait bien palette+base, mais
-        // n'installait PAS la police embarquee : `base.css` demandait alors une famille non
-        // enregistree, et le popup rendait avec celle du systeme.
-        // Trop tard pour la TAILLE. Le popup se dimensionne a `show()`, **avant** qu'aucune feuille
-        // ne lui soit attachee ; `applyCss` + `layout` repeignent ensuite dans la bonne police sans
-        // redimensionner la fenetre. Le menu se mesure donc dans une police et se peint dans une autre.
+        // Habiller la scene HOTE, et non le popup (#3374, #3417). Le popup se dimensionne a `show()`,
+        // AVANT qu'aucune feuille ne lui soit attachee : `applyCss` + `layout` repeignent ensuite dans la
+        // bonne police sans redimensionner la fenetre, si bien que le menu se mesure dans une police et
+        // se peint dans une autre.
         //
-        // Invisible sur un poste ou le repli systeme EST Noto Sans - retirer la police embarquee ne
-        // change pas la taille d'un pixel - et bien reel en CI, qui rendait 309x134 quand un poste
-        // rendait 289x144.
-        //
-        // Ce que la MESURE a tranche (#3417) : habiller la scene HOTE suffit, et les deux
-        // environnements produisent desormais le meme fichier au bit pres. Une sonde m'avait fait
-        // conclure l'inverse - `racine.setStyle(...)` ne changeait rien - mais elle testait un style
-        // EN LIGNE, quand un popup herite des FEUILLES de la scene qui l'ouvre. Elle repondait non a
-        // une question qu'on ne lui avait pas posee.
+        // Invisible sur un poste ou le repli systeme EST Noto Sans, et bien reel en CI, qui rendait
+        // 309x134 quand un poste rendait 289x144. Habiller la scene hote suffit : les deux
+        // environnements produisent le meme fichier au bit pres.
         Habillage.poser(scenePopup);
         Parent racine = scenePopup.getRoot();
         racine.applyCss();

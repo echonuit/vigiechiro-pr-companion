@@ -158,18 +158,12 @@ public class SitesViewModel {
         if (rapports.isEmpty()) {
             return "Aucun site distant récupéré (non connecté, ou aucun site sur Vigie-Chiro).";
         }
-        // #1284 : une synchronisation EMPÊCHÉE (injoignable, refus) se dit telle quelle, au lieu de se
-        // confondre avec « aucun site distant ». Mais elle se disait en ÉCRASANT tout le reste (#2655) :
-        //
-        //     if (empeche.isPresent()) { return "Sites non synchronisés : " + souci + "."; }
-        //
-        // Deux mensonges dans une ligne. Les rapprocheurs qui avaient **abouti** disparaissaient - une
-        // synchro partiellement réussie s'annonçait totalement empêchée. Et le message accusait les
-        // **sites** quel que soit le rapprocheur en souci : les sites pouvaient être à jour et les nuits
-        // injoignables, on lisait quand même « Sites non synchronisés ».
+        // Chaque nature dit son issue, à côté des autres (#2655). Une synchronisation empêchée se dit
+        // telle quelle (#1284) sans écraser le reste : un message unique faisait disparaître les
+        // rapprocheurs qui avaient abouti, et accusait les SITES quel que soit le rapprocheur en souci.
         //
         // `RapportSynchro.enClair()` sait déjà dire « nuit(s) non récupérées (cause) » rapport par
-        // rapport : il suffit de cesser de l'écraser. Chaque nature dit son issue, à côté des autres.
+        // rapport ; il suffit de ne pas l'écraser.
         String corps = rapports.stream().map(SitesViewModel::segmentSynchro).collect(Collectors.joining(", "));
         return rapports.stream().anyMatch(rapport -> rapport.souci() != null)
                 ? corps + "."
