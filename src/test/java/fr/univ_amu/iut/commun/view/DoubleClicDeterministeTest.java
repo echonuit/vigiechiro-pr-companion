@@ -3,10 +3,10 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import javafx.collections.FXCollections;
-import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.StackPane;
@@ -58,9 +58,14 @@ class DoubleClicDeterministeTest {
             });
             return rangee;
         });
-        // Une fenêtre volontairement courte : la table ne construit que les lignes visibles.
-        scene.setScene(new Scene(new StackPane(table), 320, 200));
-        scene.show();
+        // Une fenêtre volontairement courte : la table ne construit que les lignes visibles, ce que
+        // ce banc a besoin d'éprouver. La hauteur est posée sur la TABLE et non sur le stage reçu :
+        // l'ADR 4475 refuse qu'un `@Start` fige la fenêtre de son fork, qui cesserait alors de
+        // s'ajuster aux scènes des classes suivantes.
+        table.setPrefHeight(160);
+        table.setMaxHeight(160);
+        FenetreAjustable.poser(scene, new StackPane(table), 320, 200);
+        FenetreAjustable.afficher(scene);
     }
 
     @Test
