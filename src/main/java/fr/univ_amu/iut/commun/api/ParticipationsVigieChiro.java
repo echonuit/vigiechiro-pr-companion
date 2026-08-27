@@ -90,7 +90,8 @@ final class ParticipationsVigieChiro {
     }
 
     /// Vue **détaillée** d'une participation depuis `GET /participations/#id` (axe 4) : `_id` + `_etag`
-    /// (pour un PATCH `If-Match`) + dates + météo + configuration + état du traitement Tadarida. Vide si le
+    /// (que la garde de concurrence compare avant d'écrire, #4552) + dates + météo + configuration +
+    /// état du traitement Tadarida. Vide si le
     /// corps est illisible ou sans `_id`. Tolérant.
     static Optional<ParticipationDetail> detail(String corps) {
         try {

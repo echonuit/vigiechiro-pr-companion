@@ -66,7 +66,8 @@ final class RequetesVigieChiro {
     /// Corps d'une **mise à jour partielle** de participation (`PATCH /participations/#id`) : on n'émet que
     /// les métadonnées **synchronisables** (dates, météo, configuration ; champs `null` omis) et on **retire
     /// `point`** : la localité identifie la participation, elle ne se modifie pas depuis l'app. La
-    /// concurrence est gérée côté client par l'en-tête `If-Match` (l'`_etag`), pas par le corps.
+    /// concurrence ne se joue pas dans le corps, et pas davantage dans l'en-tête que la plateforme
+    /// ignore ici (#4523) : elle est tenue en amont par une relecture comparée (#4552).
     static String miseAJourParticipation(ParticipationADeposer participation) {
         JsonObject corps = GSON.toJsonTree(participation).getAsJsonObject();
         corps.remove("point");

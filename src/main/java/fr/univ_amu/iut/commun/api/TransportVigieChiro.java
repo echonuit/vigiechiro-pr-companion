@@ -91,9 +91,12 @@ final class TransportVigieChiro {
     }
 
     /// Écriture authentifiée (`POST` / `PATCH`) d'un corps JSON sur `chemin`, triée comme [#lire]. Si
-    /// `etag` est non-`null`, ajoute l'en-tête `If-Match` (concurrence optimiste exigée par Eve pour
-    /// les mises à jour).
+    /// `etag` est non-`null`, l'en-tête `If-Match` part avec la requête ; sinon il ne part pas.
     /// `rejeu` dit ce qu'un rejeu ferait **côté serveur** : l'appelant l'arbitre, le transport l'applique.
+    ///
+    /// **Ce que le serveur en fait dépend de la route**, pas de cette méthode : deux routes d'écriture
+    /// sur vingt-neuf l'exigent et refusent en `412` sans lui, les autres l'ignorent (socle relu le
+    /// 2026-08-27). Pour une route donnée, c'est l'appel qui la porte qui le dit.
     ReponseApi<String> ecrire(String methode, String chemin, String corpsJson, String etag, Rejeu rejeu) {
         Optional<String> entete = enteteAuthorization();
         if (entete.isEmpty()) {
