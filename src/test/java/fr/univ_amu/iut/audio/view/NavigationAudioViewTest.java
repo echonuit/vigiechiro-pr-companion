@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.EtapeNavigation;
@@ -18,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -51,11 +51,11 @@ class NavigationAudioViewTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        stage.setScene(new Scene(racine, 1100, 760));
+        FenetreAjustable.poser(stage, racine, 1100, 760);
         injector.getInstance(NavigationAudio.class)
                 .ouvrir(new SourceObservations.ParPassage(
                         new ContextePassage(999L, 3, new ContexteSite("640380", "A1", "Étang de la Tuilière"))));
-        stage.show();
+        FenetreAjustable.afficher(stage);
     }
 
     @AfterEach

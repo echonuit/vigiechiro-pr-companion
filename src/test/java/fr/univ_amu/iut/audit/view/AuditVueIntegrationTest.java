@@ -16,11 +16,11 @@ import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Severite;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
@@ -82,8 +82,8 @@ class AuditVueIntegrationTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        stage.setScene(new Scene(vue, 1000, 640));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1000, 640);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

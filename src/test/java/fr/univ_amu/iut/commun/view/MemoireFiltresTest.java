@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import java.util.ArrayList;
@@ -9,7 +10,6 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.scene.Scene;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.SortType;
@@ -46,8 +46,8 @@ class MemoireFiltresTest {
     @Start
     void start(Stage stage) {
         racine = new VBox();
-        stage.setScene(new Scene(racine, 300, 200));
-        stage.show();
+        FenetreAjustable.poser(stage, racine, 300, 200);
+        FenetreAjustable.afficher(stage);
     }
 
     private static TableView<String> tableAvecColonnes(String id) {

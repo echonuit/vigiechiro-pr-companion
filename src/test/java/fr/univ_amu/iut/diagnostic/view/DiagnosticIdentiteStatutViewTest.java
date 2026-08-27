@@ -10,6 +10,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -26,7 +27,6 @@ import java.time.LocalTime;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -80,8 +80,8 @@ class DiagnosticIdentiteStatutViewTest {
         controleur = loader.getController();
         // On n'ouvre pas ici : chaque test choisit son chemin, comme la navigation le fait (contrôleur
         // neuf, puis `ouvrirSur`, puis lecture de la barre par le chrome).
-        stage.setScene(new Scene(vue, 1000, 760));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1000, 760);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DispositionColonnesEnMemoire;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuButton;
@@ -34,8 +34,8 @@ class GestionnaireColonnesTest {
     @Start
     void start(Stage stage) {
         racine = new StackPane();
-        stage.setScene(new Scene(racine, 320, 260));
-        stage.show();
+        FenetreAjustable.poser(stage, racine, 320, 260);
+        FenetreAjustable.afficher(stage);
     }
 
     private static TableView<String> tableAvec(String... entetes) {

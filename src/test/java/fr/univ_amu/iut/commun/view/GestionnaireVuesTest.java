@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.VueSauvegardeeDao;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
@@ -18,7 +19,6 @@ import java.util.function.Function;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.TextField;
@@ -68,8 +68,8 @@ class GestionnaireVuesTest {
                 List.of(),
                 (ligne, texte) -> ligne.contains(texte));
         onglets = new FlowPane();
-        stage.setScene(new Scene(new VBox(recherche, onglets), 400, 200));
-        stage.show();
+        FenetreAjustable.poser(stage, new VBox(recherche, onglets), 400, 200);
+        FenetreAjustable.afficher(stage);
     }
 
     /// Construit le gestionnaire d'onglets (sur le fil FX) et le mémorise dans [#gestion].

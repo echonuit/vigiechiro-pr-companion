@@ -14,7 +14,7 @@ import fr.univ_amu.iut.analyse.model.LigneSynthese;
 import fr.univ_amu.iut.analyse.model.ServiceSynthese;
 import fr.univ_amu.iut.analyse.viewmodel.SyntheseViewModel;
 import fr.univ_amu.iut.commun.model.ContexteActivite;
-import fr.univ_amu.iut.commun.view.Habillage;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -101,8 +101,8 @@ class SyntheseSansReferentielViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        stage.setScene(Habillage.scene(vue, 1100, 640));
-        stage.show();
+        FenetreAjustable.poserHabillee(stage, vue, 1100, 640);
+        FenetreAjustable.afficher(stage);
     }
 
     private void ouvrir(FxRobot robot) {

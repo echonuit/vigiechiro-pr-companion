@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
@@ -51,7 +52,6 @@ import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableRow;
@@ -218,8 +218,8 @@ class SonsValidationArchiveViewTest {
         Parent vue = loader.load();
         controleur = loader.getController();
         controleur.ouvrirSur(new SourceObservations.ParPassage(PASSAGE_7));
-        stage.setScene(new Scene(vue, 1000, 700));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1000, 700);
+        FenetreAjustable.afficher(stage);
     }
 
     private void selectionner(FxRobot robot, int index) {

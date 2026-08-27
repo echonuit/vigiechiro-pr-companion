@@ -12,11 +12,11 @@ import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
-import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
@@ -97,9 +97,9 @@ class NavigationSitesRapatriementTest {
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
-        stage.setScene(Habillage.scene(loader.load(), 1100, 720));
+        FenetreAjustable.poserHabillee(stage, loader.load(), 1100, 720);
         injector.getInstance(NavigationSites.class).ouvrirAccueil();
-        stage.show();
+        FenetreAjustable.afficher(stage);
     }
 
     @AfterEach

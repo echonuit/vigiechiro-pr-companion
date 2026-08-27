@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.nedjar.vigiechiro.audio.AudioView;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.Node;
@@ -65,8 +66,8 @@ class ContrasteVueAudioTest {
         // Le composant est monté sous les mêmes feuilles que les écrans qui l'emploient (qualification
         // et Sons & validation), sans quoi la cascade mesurée ne serait pas celle de production.
         StackPane racine = new StackPane(vueAudio);
-        stage.setScene(Habillage.scene(racine, 900, 400));
-        stage.show();
+        FenetreAjustable.poserHabillee(stage, racine, 900, 400);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

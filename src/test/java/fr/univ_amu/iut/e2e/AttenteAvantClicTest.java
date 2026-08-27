@@ -2,7 +2,7 @@ package fr.univ_amu.iut.e2e;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javafx.scene.Scene;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
@@ -30,8 +30,8 @@ class AttenteAvantClicTest {
         // le refuse. C'est exactement la forme du défaut observé en CI.
         horsCadre.setLayoutY(2000);
         racine.getChildren().add(horsCadre);
-        stage.setScene(new Scene(racine, 400, 300));
-        stage.show();
+        FenetreAjustable.poser(stage, racine, 400, 300);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

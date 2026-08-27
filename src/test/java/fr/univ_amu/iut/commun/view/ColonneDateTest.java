@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -38,8 +39,8 @@ class ColonneDateTest {
     @Start
     void start(Stage stage) {
         racine = new StackPane();
-        stage.setScene(Habillage.scene(racine, 400, 300));
-        stage.show();
+        FenetreAjustable.poserHabillee(stage, racine, 400, 300);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

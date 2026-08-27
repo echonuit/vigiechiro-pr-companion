@@ -46,20 +46,36 @@ def _dimensionne(texte: str, receveur: str) -> bool:
                           rf"{re.escape(receveur)}\.sizeToScene\(", texte))
 
 
+def _a_soi(texte: str, receveur: str) -> bool:
+    """Le receveur est-il une fenetre que la classe cree pour elle ?
+
+    Une fenetre a soi n est pas partagee : la figer ne coute rien a personne.
+    `ConventionsDEcritureTest` l ecrit deja - « Pour une fenetre a soi, `new Stage()` - et alors
+    elle n est plus recue, et ce garde ne la regarde plus ». Sans cette exemption le cliquet
+    comptait deux modales privees parmi ses suspects, mesure en fermant #4582.
+    """
+    return bool(re.search(rf"\b{re.escape(receveur)}\s*=\s*new\s+Stage\s*\(", texte))
+
+
 def suspects(racine: pathlib.Path = None) -> list[str]:
+    """Un suspect par fichier dont AU MOINS une pose herite du stage du fork.
+
+    Toutes les poses sont lues, et non la premiere seule : un fichier qui pose d abord sa modale
+    privee verrait son vrai cas cache par le faux.
+    """
     racine = racine or TESTS_ANCRES
     trouves = []
     for f in sorted(racine.rglob("*.java")):
         texte = f.read_text(encoding="utf-8")
         if "@Start" not in texte:
             continue
-        pose = SCENE_DIMENSIONNEE.search(texte)
-        if not pose:
-            continue
-        if _dimensionne(texte, pose.group(1)):
-            continue
-        nom = f.relative_to(RACINE_DEPOT) if f.is_relative_to(RACINE_DEPOT) else f.name
-        trouves.append(f"{nom}  pose une scène dimensionnée, hérite du stage du fork")
+        for pose in SCENE_DIMENSIONNEE.finditer(texte):
+            receveur = pose.group(1)
+            if _a_soi(texte, receveur) or _dimensionne(texte, receveur):
+                continue
+            nom = f.relative_to(RACINE_DEPOT) if f.is_relative_to(RACINE_DEPOT) else f.name
+            trouves.append(f"{nom}  pose une scène dimensionnée, hérite du stage du fork")
+            break
     return trouves
 
 
@@ -107,6 +123,23 @@ def _auto_test() -> int:
         pose(nu.replace("stage.setScene(new Scene(vue, 980, 980));",
                         "stage.setScene(new Scene(\n                vue,\n                980,\n                980));"))
         cas.append(("une déclaration repliée compte aussi", len(suspects(r)) == 1))
+
+        # Une fenetre A SOI n est pas partagee : la figer ne coute rien a personne, et
+        # `ConventionsDEcritureTest` l ecrit deja. Deux modales privees etaient comptees avant
+        # cette exemption, mesurees en fermant #4582.
+        pose("class A {\n    @Start\n    void start(Stage recu) {\n"
+             "        Stage modale = new Stage();\n"
+             "        modale.setScene(new Scene(vue, 980, 980));\n        modale.show();\n    }\n}\n")
+        cas.append(("une fenêtre à soi n'est pas comptée", suspects(r) == []))
+
+        # LE cas qui rend l exemption sure : une pose privee ne doit pas MASQUER la pose partagee
+        # qui la suit. Sans lui, exempter reviendrait a rendre aveugle tout fichier qui ouvre une
+        # modale avant de poser son ecran.
+        pose("class A {\n    @Start\n    void start(Stage stage) {\n"
+             "        Stage modale = new Stage();\n"
+             "        modale.setScene(new Scene(vue, 400, 300));\n"
+             "        stage.setScene(new Scene(vue, 980, 980));\n        stage.show();\n    }\n}\n")
+        cas.append(("une pose privée ne masque pas la pose partagée", len(suspects(r)) == 1))
 
     for nom, ok in cas:
         print(f"  {'✔' if ok else '✘'} {nom}")

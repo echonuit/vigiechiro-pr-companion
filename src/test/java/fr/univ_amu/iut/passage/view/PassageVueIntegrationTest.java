@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirActivite;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
@@ -37,7 +38,6 @@ import javafx.css.PseudoClass;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TabPane;
@@ -79,8 +79,8 @@ class PassageVueIntegrationTest {
     void start(Stage stage) {
         // Fixture affichée : passage VÉRIFIÉ (dépôt possible, validation encore verrouillée).
         Parent vue = charger(StatutWorkflow.VERIFIE, 2);
-        stage.setScene(new Scene(vue, 1100, 720));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1100, 720);
+        FenetreAjustable.afficher(stage);
     }
 
     // ----- Balayage du câblage Vue <-> ViewModel par vrai lookup fx:id (fixture VÉRIFIÉ) -----

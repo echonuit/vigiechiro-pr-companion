@@ -8,8 +8,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
-import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
@@ -96,8 +96,8 @@ class DiagnosticVueIntegrationTest {
         Parent vue = loader.load();
         controleur = loader.getController();
         controleur.ouvrirSur(ctx(42L));
-        stage.setScene(Habillage.scene(vue, 1000, 760));
-        stage.show();
+        FenetreAjustable.poserHabillee(stage, vue, 1000, 760);
+        FenetreAjustable.afficher(stage);
     }
 
     private static ContextePassage ctx(long idPassage) {

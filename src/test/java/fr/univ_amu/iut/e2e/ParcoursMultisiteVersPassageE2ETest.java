@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
@@ -26,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Labeled;
@@ -83,8 +83,8 @@ class ParcoursMultisiteVersPassageE2ETest {
         //
         // À 900, la table déborde de façon reproductible et le test exerce ce que la CI exerce. C'est le
         // parti pris de `CarteHorsCadreAccueilTest` (#3929), transposé ici (#3932).
-        stage.setScene(new Scene(racine, 900, 860));
-        stage.show();
+        FenetreAjustable.poser(stage, racine, 900, 860);
+        FenetreAjustable.afficher(stage);
     }
 
     @AfterEach

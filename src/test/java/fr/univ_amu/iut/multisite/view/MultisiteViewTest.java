@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -45,7 +46,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -220,8 +220,8 @@ class MultisiteViewTest {
                 return choixExport;
             }
         });
-        stage.setScene(new Scene(vue, 1100, 680));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1100, 680);
+        FenetreAjustable.afficher(stage);
     }
 
     /// Ce que le double de sélection répondra à l'export : vide = l'utilisateur a **annulé**.

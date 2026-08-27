@@ -31,11 +31,11 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ColonneDate;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
-import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
@@ -281,8 +281,8 @@ class SonsValidationViewTest {
         Parent vue = loader.load();
         controleur = loader.getController();
         controleur.ouvrirSur(new SourceObservations.References("u-1"));
-        stage.setScene(Habillage.scene(vue, 1000, 700));
-        stage.show();
+        FenetreAjustable.poserHabillee(stage, vue, 1000, 700);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirActivite;
@@ -44,7 +45,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -195,8 +195,8 @@ class PassageViewTest {
         controleur = loader.getController();
         navigateur.empiler(vue, "passage", "Détails du passage", controleur);
         controleur.ouvrirSur(ID_PASSAGE, new ContexteSite("640380", "A1", "Étang de la Tuilière"));
-        stage.setScene(new Scene(vue, 1100, 700));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1100, 700);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

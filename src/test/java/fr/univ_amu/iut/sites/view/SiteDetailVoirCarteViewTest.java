@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -17,7 +18,6 @@ import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.stage.Stage;
@@ -83,10 +83,10 @@ class SiteDetailVoirCarteViewTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        stage.setScene(new Scene(racine, 1100, 760));
+        FenetreAjustable.poser(stage, racine, 1100, 760);
         injector.getInstance(NavigationSites.class)
                 .ouvrirDetail(new SiteDao(source).findById(jeu.idSite()).orElseThrow());
-        stage.show();
+        FenetreAjustable.afficher(stage);
     }
 
     @AfterEach

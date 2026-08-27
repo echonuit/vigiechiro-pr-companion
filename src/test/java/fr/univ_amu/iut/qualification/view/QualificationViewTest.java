@@ -14,6 +14,7 @@ import com.google.inject.Provides;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -32,7 +33,6 @@ import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -131,8 +131,8 @@ class QualificationViewTest {
         controleur.notificateur().definir((niveau, entete, message) -> {});
         controleur.ouvrirSur(
                 new ContextePassage(ID_PASSAGE, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière")));
-        stage.setScene(new Scene(vue, 1100, 760));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1100, 760);
+        FenetreAjustable.afficher(stage);
     }
 
     private static List<SequenceEnSelection> lignes(int n) {

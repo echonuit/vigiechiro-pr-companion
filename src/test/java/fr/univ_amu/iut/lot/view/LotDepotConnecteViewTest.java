@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -37,7 +38,6 @@ import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -115,8 +115,8 @@ class LotDepotConnecteViewTest {
         controleur = loader.getController();
         controleur.confirmateur().definir(message -> true); // pas de dialogue natif bloquant sous TestFX
         controleur.ouvrirSur(CONTEXTE);
-        stage.setScene(new Scene(vue, 980, 980));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 980, 980);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

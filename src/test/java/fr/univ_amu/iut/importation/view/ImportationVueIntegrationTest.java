@@ -10,9 +10,9 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
@@ -84,9 +84,9 @@ class ImportationVueIntegrationTest {
         // defilement qui amene un bouton dans le cadre), il mesurerait la police de la MACHINE et non
         // celle du produit. C'est ce que `ScenesHabilleesTest` exige, et il l'a exige des la premiere
         // execution - le garde connaissait la regle avant moi.
-        stage.setScene(Habillage.scene(racine, 1100, 760));
+        FenetreAjustable.poserHabillee(stage, racine, 1100, 760);
         injector.getInstance(NavigationImportation.class).ouvrir();
-        stage.show();
+        FenetreAjustable.afficher(stage);
     }
 
     private void seeder(SourceDeDonnees source) {

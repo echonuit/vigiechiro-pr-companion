@@ -9,6 +9,7 @@ import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -20,7 +21,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
@@ -78,9 +78,9 @@ class AuditNavigationViewTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        stage.setScene(new Scene(racine, 1100, 760));
+        FenetreAjustable.poser(stage, racine, 1100, 760);
         injector.getInstance(NavigationAudit.class).ouvrir();
-        stage.show();
+        FenetreAjustable.afficher(stage);
     }
 
     @AfterEach

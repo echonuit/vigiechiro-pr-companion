@@ -13,6 +13,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -27,7 +28,6 @@ import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -100,8 +100,8 @@ class QualificationIdentiteStatutViewTest {
         controleur = loader.getController();
         // Compte rendu neutralisé (#1509) : le vrai dialogue figerait le headless.
         controleur.notificateur().definir((niveau, entete, message) -> {});
-        stage.setScene(new Scene(vue, 1100, 760));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1100, 760);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

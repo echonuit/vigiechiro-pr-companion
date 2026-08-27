@@ -4,12 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.event.Event;
 import javafx.event.EventType;
-import javafx.scene.Scene;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.PickResult;
@@ -34,8 +34,8 @@ class DepotFichierTest {
     @Start
     void start(Stage stage) {
         cible = new Region();
-        stage.setScene(new Scene(cible, 100, 100));
-        stage.show();
+        FenetreAjustable.poser(stage, cible, 100, 100);
+        FenetreAjustable.afficher(stage);
     }
 
     private static Dragboard dragboardAvec(File... fichiers) {

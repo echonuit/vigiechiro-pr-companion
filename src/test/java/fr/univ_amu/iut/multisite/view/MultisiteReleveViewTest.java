@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
@@ -35,7 +36,6 @@ import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
@@ -135,8 +135,8 @@ class MultisiteReleveViewTest {
         FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource("Multisite.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
-        stage.setScene(new Scene(vue, 1100, 680));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1100, 680);
+        FenetreAjustable.afficher(stage);
     }
 
     /// L'item « Relever l'état des analyses » du menu ☰ (un `MenuItem` n'est pas un `Node` : on le

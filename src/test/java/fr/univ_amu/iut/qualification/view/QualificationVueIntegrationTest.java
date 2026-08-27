@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VerdictFichier;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.IconesSeverite;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -39,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -160,8 +160,8 @@ class QualificationVueIntegrationTest {
         controleur.notificateur().definir((niveau, entete, message) -> {});
         controleur.ouvrirSur(
                 new ContextePassage(ID_PASSAGE, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière")));
-        stage.setScene(new Scene(vue, 1100, 760));
-        stage.show();
+        FenetreAjustable.poser(stage, vue, 1100, 760);
+        FenetreAjustable.afficher(stage);
     }
 
     @Test

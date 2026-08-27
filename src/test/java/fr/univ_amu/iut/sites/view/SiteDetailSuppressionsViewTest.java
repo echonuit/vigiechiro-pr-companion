@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
+import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.Navigateur;
@@ -26,7 +27,6 @@ import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
@@ -101,7 +101,7 @@ class SiteDetailSuppressionsViewTest {
         // Le chrome, pour que le retour à l'accueil après suppression du site soit une vraie navigation.
         FXMLLoader chrome = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         chrome.setControllerFactory(injector::getInstance);
-        stage.setScene(new Scene(chrome.load(), 1100, 760));
+        FenetreAjustable.poser(stage, chrome.load(), 1100, 760);
 
         // On rejoue NavigationSites.ouvrirDetail(site) à la main : c'est le seul moyen de garder la main
         // sur le controller, donc de remplacer ses deux dialogues avant le premier clic.
@@ -118,7 +118,7 @@ class SiteDetailSuppressionsViewTest {
                 .definir((niveau, entete, message) -> annonces.add(niveau + " | " + entete + " | " + message));
         controleur.afficher(site);
         injector.getInstance(Navigateur.class).empiler(vue, "site-detail", "Carré " + CARRE, controleur);
-        stage.show();
+        FenetreAjustable.afficher(stage);
     }
 
     @AfterEach
