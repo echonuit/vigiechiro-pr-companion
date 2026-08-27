@@ -1,0 +1,192 @@
+## Context
+
+Le lot 0 de l'EPIC #3848 instruit le périmètre de « reprendre le travail d'une nuit sur un autre
+poste ». Il rend un document, pas du code. Voir `proposal.md` pour le pourquoi.
+
+Trois contraintes mesurées cadrent l'approche, et aucune n'était dans l'énoncé de l'EPIC.
+
+**Une seule sélection d'écoute par passage, garantie par le schéma.**
+
+```sql
+-- V01__schema.sql
+passage_id INTEGER NOT NULL UNIQUE REFERENCES passage(id) ON DELETE CASCADE
+```
+
+**Ce qu'un relecteur produit tient dans deux colonnes.** `selection_sequence.verdict`, un `TEXT`
+nullable posé par V27, et `passage.verification_verdict`, cache dérivé recalculable. L'aller pèse les
+séquences d'une nuit ; le retour pèse quelques kilo-octets.
+
+**L'avis d'expert ne se saisit pas localement.** V26 pose que `taxon_validator` et
+`validator_certainty` sont « toujours un REFLET du serveur, jamais une saisie locale ». Ce que le
+MNHN tranche vient du serveur des deux côtés, et n'a rien à faire dans un paquet.
+
+## Goals / Non-Goals
+
+**Goals**
+
+- Décider le régime d'emport d'une nuit, et le contenu du paquet.
+- Nommer ce que le schéma actuel ne sait pas représenter, avant qu'un lot suivant s'y heurte.
+
+**Non-Goals**
+
+- Écrire le code : les lots 1 à 3 le font.
+- Trancher la réconciliation de deux avis d'experts divergents. Ce n'est pas un conflit technique
+  mais une question de domaine, et elle déborde ce chantier.
+- Toucher au contrôle de concurrence de la plateforme : il n'est pas sous notre contrôle.
+
+## Decisions
+
+### D1. Le paquet emporte toutes les séquences transformées, pas les bruts
+
+**Tranché.** La qualification travaille sur une sélection de dix à trente séquences réparties sur la
+nuit, et cette sélection se **régénère**. C'est la régénération qui décide du contenu, pas le couple
+transformées/brutes que l'EPIC opposait.
+
+*Écarté : la sélection courante seule.* Le paquet serait bien plus léger, mais le relecteur ne
+pourrait pas régénérer, donc pas contester l'échantillon tiré par l'expéditeur, ce qu'une relecture
+déléguée cherche parfois précisément à faire.
+
+*Écarté : tout, bruts compris.* L'art antérieur donne l'ordre de grandeur. ChiroTool, outil du même
+protocole, offre le partage « sans copier des To de bruts » et fait des bruts une option désactivée
+par défaut. Le besoin qu'ils servent ainsi, réactiver la nuit ailleurs, n'est pas celui d'une
+relecture.
+
+### D2. Les identifiants de plateforme ne voyagent pas dans le paquet
+
+**Tranché, par ricochet du régime.** L'EPIC hésitait : les embarquer « permet de poursuivre le dépôt
+depuis l'autre poste, mais fait circuler un lien vers un compte qui n'est pas celui du
+destinataire ». Le relecteur juge, l'expéditeur publie : le lien vers le compte n'a aucune raison de
+partir, et l'hésitation tombe sans arbitrage.
+
+### D3. Le régime d'emport : la copie signée
+
+**Tranché.** Le relecteur juge sur son exemplaire, et son avis revient comme un artefact **signé de
+son pseudo**, jamais fondu dans celui de l'expéditeur. Les deux postes travaillent pendant ce temps.
+
+Quatre régimes ont été pesés, avec leur coût mesuré.
+
+| Régime | Le relecteur juge | Le travail revient | L'origine pendant |
+|---|---|---|---|
+| Prêt | oui | oui, automatiquement | verrouillée, lisible |
+| Déménagement | oui | oui, par le même geste | n'a plus la nuit |
+| Copie signée | oui | oui, comme artefact **attribué** | continue de travailler |
+| Consultation | non | non | continue de travailler |
+
+*La consultation est déjà écartée par l'EPIC lui-même*, dont le tableau d'ouverture range « export
+des observations avec leurs sons » parmi les mécanismes qui ne conviennent pas : « conçu pour faire
+écouter ; rien ne se réimporte ».
+
+**La copie signée est le régime de l'art antérieur**, et il n'était pas sur la table. ChiroTool
+enregistre la relecture dans une copie suffixée des initiales du relecteur, préserve l'original, et
+ne recombine **jamais** deux relecteurs : cherché explicitement, aucun `merge`, `fusion`, `combine`
+ni `consolid` dans son module de validation. La réconciliation est hors de l'outil, délibérément.
+
+Ce régime épouse une propriété du domaine que les trois autres manquent : **une validation
+s'attribue**. Deux experts qui divergent ne produisent pas un conflit à résoudre, mais deux avis,
+chacun signé.
+
+**Pourquoi lui plutôt que les deux autres.** Une validation naturaliste s'attribue à une personne :
+deux avis divergents sur la même séquence ne sont pas une anomalie à réduire, ce sont deux jugements
+d'experts, et les écraser l'un par l'autre détruirait une information que le domaine considère comme
+la donnée elle-même. C'est aussi le seul régime où personne n'est jamais bloqué.
+
+*Écarté : le prêt.* Compatible avec le schéma actuel sans rien y changer, puisque le gel de l'origine
+garantit qu'une seule sélection évolue à la fois. Rejeté parce qu'il immobilise l'expéditeur pendant
+toute la relecture, et parce qu'il écrase l'avis reçu sur le sien au lieu de le conserver à côté.
+
+*Écarté : le déménagement.* Le moins de code neuf des trois, et compatible lui aussi. Rejeté pour la
+même raison, aggravée : l'expéditeur n'a plus rien du tout, et perdre le paquet perd la nuit.
+
+*Écarté : la consultation.* Récusée par l'EPIC avant ce lot.
+
+### D3b. L'avis du relecteur se range en colonnes, à côté du nôtre
+
+La copie signée est **le seul des trois régimes à ne pas tenir dans le schéma actuel**. Les deux
+postes travaillent, donc les deux régénèrent leur sélection, donc deux sélections légitimes existent
+pour un passage que `listening_selection.passage_id UNIQUE` n'autorise qu'à en avoir une.
+
+**Tranché.** `selection_sequence` gagne deux colonnes additives, `verdict_relecteur` et
+`relecteur_pseudo`, comme V27 lui avait ajouté `verdict`.
+
+**Le dépôt a déjà tranché ce problème une fois, dans le même sens.** V26 devait loger l'avis d'un
+expert du MNHN sur une détection déjà jugée par Tadarida puis corrigée par l'observateur. Elle n'a
+pas dupliqué l'observation : elle a ajouté des colonnes à côté.
+
+```sql
+-- V26__validation_expert.sql
+ALTER TABLE observation ADD COLUMN taxon_validator TEXT REFERENCES taxon(code);
+ALTER TABLE observation ADD COLUMN validator_certainty TEXT;
+```
+
+Trois avis sur la même détection, sur la même ligne. Le verdict d'un relecteur sur une séquence est
+le même motif, et le résoudre autrement créerait deux façons de dire « quelqu'un d'autre a jugé
+ceci ».
+
+*Écarté : retirer le `UNIQUE` sur `listening_selection.passage_id`.* Ce serait la voie générale, et
+elle porterait N relecteurs. Mesuré : **vingt-trois classes lisent le verdict d'un passage**, du
+tableau multisite et ses filtres au solde de saison, en passant par quatre commandes de la ligne de
+commande et la vue du passage. « Le verdict du passage » est une notion consommée partout ; la faire
+passer à N valeurs déborde très largement ce chantier.
+
+*Écarté : garder l'avis revenu comme un document à côté.* C'est ce que fait l'art antérieur avec son
+`_<initiales>.xlsx`, et cela ne coûte presque rien. Rejeté parce qu'un avis qui vit dans un document
+**se lit, il ne se manipule pas** : il ne s'affiche pas près de la séquence qu'il juge, ne se filtre
+pas, ne s'agrège pas. Le relecteur aurait travaillé pour un fichier que personne n'ouvre.
+
+**La limite se dit plutôt qu'elle ne se cache.** Deux colonnes portent **un** relecteur, pas N,
+exactement comme V26 porte un validateur. C'est ce que le régime décrit : une nuit se confie à
+quelqu'un, pas à un comité. Le jour où il en faudra plusieurs, la voie générale sera toujours là, et
+elle sera un chantier à elle seule.
+
+### D4. L'attribution, si le régime la demande, coûte peu
+
+Mesuré dans `connexion/model/StockageConnexion.java` : l'identité de l'utilisateur est déjà persistée
+localement dans `connexion.json`, avec son `id`, son **`pseudo`** et son `role`, et se lit **hors
+connexion**. Là où ChiroTool fait taper des initiales, le nom lisible est déjà là.
+
+**Une limite à traiter dans la conception.** `profil()` passe par `sessionValide()`, qui filtre sur
+la péremption du jeton à quatorze jours. Au-delà, l'identité est rendue vide alors qu'elle est
+physiquement dans le fichier. Un relecteur qui juge sans s'être reconnecté depuis deux semaines
+produirait des verdicts non attribuables.
+
+*Le remède ne coûte rien* : apposer l'identité sur le paquet **à son ouverture**, tant qu'elle est
+valide, plutôt que de la lire au moment du jugement.
+
+### D5. Le plan précède l'écriture, et se lit avant de copier
+
+L'art antérieur sépare `plan_export()` de `run_export()` : le plan porte une estimation en octets et
+ses avertissements **avant** qu'un octet soit copié, les fichiers y sont **typés** pour ventiler
+l'estimation par nature, et le mode d'essai est le défaut. Le lot 1 de l'EPIC exige déjà
+« l'estimation de volume annoncée avant écriture » : c'est le bon découpage, pas une précaution.
+
+## Risks / Trade-offs
+
+**Le relecteur peut juger des séquences absentes de la sélection de l'expéditeur.** → D1 lui donne de
+quoi régénérer, et `listening_selection.passage_id` étant `UNIQUE`, sa régénération remplace la
+sélection reçue. Au retour, une partie de ses verdicts porte donc sur des séquences que l'expéditeur
+n'avait pas tirées. Le verdict revenu s'accroche à la **séquence**, pas à la sélection : celles que
+les deux ont en commun s'affichent côte à côte, les autres se montrent comme « jugée par <pseudo>,
+hors de votre sélection ». Rien ne se perd, et rien ne s'invente. Le détail appartient aux specs.
+
+**Deux colonnes portent un relecteur, pas plusieurs.** → Assumé, et c'est le même choix que V26 pour
+le validateur. Une nuit se confie à quelqu'un, pas à un comité. Un second prêt écraserait l'avis du
+premier : l'écran doit donc le dire avant d'importer, jamais après.
+
+**L'identité s'évapore au bout de quatorze jours.** → `profil()` filtre sur la péremption du jeton,
+et rend une identité vide au-delà, alors qu'elle est écrite dans `connexion.json`. Un avis non
+attribuable n'a plus de sens sous ce régime. Le paquet porte donc l'identité **apposée à son
+ouverture**, tant qu'elle est valide, et non lue au moment du jugement.
+
+**L'agrégation du verdict ignore le relecteur.** → `AgregationVerdict.deriver(List<VerdictFichier>)`
+dérive le verdict du passage depuis les seuls verdicts de l'expéditeur, et vingt-trois classes
+consomment ce verdict. Il **reste inchangé** : l'avis du relecteur s'affiche, il ne vote pas. Décider
+qu'il pèse sur le verdict final serait une décision de domaine, et elle n'est pas dans ce lot.
+
+**Le paquet pèse une nuit entière de séquences transformées.** → C'est le prix de la régénération,
+choisi en D1. Le plan d'export annonce l'estimation avant d'écrire, ventilée par nature de fichier,
+et l'essai à blanc est le défaut : personne ne découvre le volume après coup.
+
+## Open Questions
+
+Aucune. Le régime d'emport n'en est pas une : il change les specs et les tâches, il se tranche avant
+que cette note soit close.
