@@ -275,21 +275,11 @@ class MesSitesViewTest {
                 .isNotEmpty();
         Respiration.leTempsDeLire(robot);
 
-        // Ce clip-ci ne montre pas le voile PENDANT qu'il paraît, et c'est voulu : il garde l'autre
-        // moitié du cas - l'écran chargé, ses cartes lisibles, et RIEN qui le voile. Un voile resté en
-        // place bloquerait tout.
+        // Ce clip ne montre pas le voile, et c'est voulu : il garde l'autre moitié du cas - l'écran
+        // chargé, ses cartes lisibles, et RIEN qui le voile.
         //
-        // Deux erreurs successives méritent d'être notées ici, parce qu'elles se contredisent.
-        //
-        // 1. J'ai d'abord écrit qu'AUCUN clip ne pouvait montrer le voile. C'était mesuré sur cette
-        //    fixture-ci, deux sites, où `charger()` est instantané - j'avais conclu du PRODUIT ce qui
-        //    n'était vrai que de la base de démonstration. Sur cent cinquante carrés il durait un
-        //    demi-seconde, et un cas l'a filmé (#4172).
-        // 2. Puis #4251 a fait lire l'écran PAR LOT : huit millisecondes à cent cinquante carrés comme à
-        //    soixante. Le voile ne tient plus sur une image, et le cas qui le filmait n'a plus de sujet.
-        //
-        // La seconde erreur serait de croire que la première était sans objet : le voile a bien été
-        // filmable, et il a cessé de l'être parce que le produit s'est amélioré. Le mécanisme reste, et
+        // Le voile n'est plus filmable depuis que #4251 fait lire l'écran par lot : huit millisecondes à
+        // cent cinquante carrés comme à soixante. Il a existé, un cas l'a filmé (#4172), et le mécanisme
         // servira le jour où un écran mettra du temps - « Carte & passages » y met encore cent vingt
         // millisecondes (#4271).
     }

@@ -147,23 +147,13 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         lblSynchro.managedProperty().bind(viewModel.messageSynchroProperty().isNotEmpty());
         viewModel.cartes().addListener((ListChangeListener<CarteSite>) changement -> reconstruire());
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
-        // Bouton relâché par binding sur l'occupation (#1254) : plus de setDisable posé à la main de
-        // part et d'autre du travail, plus de bouton figé si le travail échoue.
-        // Fermé aussi TANT QU'AUCUN JETON n'est disponible (#4194). Sans cela le geste était offert,
-        // ouvrait son dialogue de progression, ne rapatriait rien - `RapprochementSites` rend
-        // `Optional.empty()` sur `NonConnecte` - et l'écran ne disait pas pourquoi. C'est exactement ce
-        // que l'affordance #789 refuse : on EMPÊCHE, au lieu d'avertir après coup. La commande voisine
-        // « Ouvrir sur Vigie-Chiro », sur la fiche du site, l'appliquait déjà.
+        // Le bouton se ferme par LIAISON, sur l'occupation (#1254) et sur l'absence de jeton (#4194) :
+        // empêcher plutôt qu'avertir après coup (#789). Une liaison et non une relecture au chargement,
+        // parce qu'un écran qui conseille « Connectez-vous » doit voir qu'on l'a suivi (#4205).
         //
-        // Et l'écran SUIT le jeton (#4205) : la question se LIE, elle ne se relit pas à chaque
-        // chargement. Le motif conseille « Connectez-vous depuis le menu principal » ; on suivait ce
-        // conseil, on revenait, et le bouton répétait le même conseil, faute d'un chargement pour le
-        // relire. Un écran qui donne un conseil doit voir qu'on l'a suivi.
-        //
-        // Et c'est le MÊME lecteur que les deux autres écrans qui ferment un geste de plateforme
-        // (la fiche, la modale de carré). La réponse passait ici par `SitesViewModel.connecte` →
-        // `SynchronisationSites.estConnecte()` → le client : trois maillons pour une question à
-        // laquelle `EtatConnexion` répond, et un instantané là où il faut une liaison.
+        // `EtatConnexion` répond directement, là où le chemin par `SitesViewModel.connecte` passait par
+        // trois maillons et rendait un instantané. Même lecteur que la fiche du site et la modale de
+        // carré, qui ferment aussi un geste de plateforme.
         BooleanExpression connecte = etatConnexion
                 .<BooleanExpression>map(EtatConnexion::connecteProperty)
                 .orElseGet(() -> new SimpleBooleanProperty(false));

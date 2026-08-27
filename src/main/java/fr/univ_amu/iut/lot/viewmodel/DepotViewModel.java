@@ -236,18 +236,14 @@ public class DepotViewModel {
         enCours.set(false);
         // Un dépôt a eu lieu : la participation existe → l'étape ④ devient « Lancer la participation ».
         participationLiee.set(true);
-        // Le bandeau d'une ligne a disparu (#2653) : il redisait en phrase ce que la bande dit en
-        // proportions, et il ne pouvait porter ni le volume ni l'action suivante.
+        // Le ViewModel publie le FAIT, pas sa traduction : c'est l'écran qui sait où mènent ses boutons.
+        // Le bandeau d'une ligne a disparu avec #2653, il redisait en phrase ce que la bande dit en
+        // proportions. Le plan accompagne le bilan parce qu'un dépôt INTERROMPU a une tentative sans échec
+        // et des archives manquantes (#1044) : sans lui la barre serait pleine et verte.
         //
-        // Le ViewModel publie le FAIT, pas sa traduction : c'est l'écran qui sait où mènent ses boutons,
-        // et « Lancer la participation » est une action de l'étape ④. Le plan accompagne le bilan parce
-        // qu'un dépôt INTERROMPU a une tentative sans échec et des archives manquantes (#1044) : sans
-        // lui, la barre serait pleine et verte.
-        // Deux sources, et un plancher plutôt qu'un choix : la table compte toutes les tentatives, le
-        // bilan compte celle-ci. En régime normal la table est la plus complète (une reprise y ajoute au
-        // déjà-déposé) ; mais elle est alimentée par un relais, et si celui-ci est en retard elle
-        // annoncerait moins que ce qui vient de partir. Ce qui est en ligne est donc AU MOINS ce que
-        // cette tentative a déposé.
+        // Deux sources, et un PLANCHER plutôt qu'un choix : la table compte toutes les tentatives, le
+        // bilan compte celle-ci. La table est la plus complète en régime normal, mais un relais en retard
+        // lui ferait annoncer moins que ce qui vient de partir.
         int enLigne = Math.max(suiviLignes.deposeesProperty().get(), bilan.deposees());
         finDepot.set(new FinDepot(
                 bilan,

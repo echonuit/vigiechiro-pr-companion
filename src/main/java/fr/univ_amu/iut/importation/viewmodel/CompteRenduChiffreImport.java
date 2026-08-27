@@ -236,17 +236,13 @@ public final class CompteRenduChiffreImport {
                                     + " passage(s) existant(s) pour la même série et la même date. Le passage créé en est un doublon assumé."));
         }
         anomalies.stream().map(Avertissement::de).forEach(avertissements::add);
-        // L'écriture distante se dit (#1488) : elle porte les données de l'utilisateur sur un serveur, et
-        // ne s'annonçait nulle part. Elle est dite au registre du SUCCÈS, pas de l'alerte : c'est un fait
-        // accompli et voulu, non un problème - la sévérité par mention (#2358) permet enfin de le dire.
-        // #3473 : et ce qu'il RESTE à y faire. Annoncer une création, c'est annoncer un fait accompli,
-        // ce qui se lit « c'est fait » - or la fiche web attend encore des informations que Companion
-        // ne connaît pas (météo saisie, matériel, commentaires). L'utilisateur qui a produit ce retour
-        // demandait exactement cette phrase-là : « pensez à remplir les informations complémentaires ».
+        // L'écriture distante se dit (#1488) : elle porte les données de l'utilisateur sur un serveur.
+        // Au registre du SUCCÈS et non de l'alerte - c'est un fait accompli et voulu - ce que la sévérité
+        // par mention permet de dire (#2358).
         //
-        // Cette suite n'a pu être ajoutée qu'APRÈS #3448. Ce message s'affichait auparavant alors
-        // qu'aucune participation n'avait été créée : l'enrichir l'aurait rendu plus convaincant, pas
-        // plus vrai.
+        // Et ce qu'il RESTE à y faire (#3473). Annoncer une création se lit « c'est fait », or la fiche
+        // web attend encore des informations que Companion ne connaît pas : météo, matériel,
+        // commentaires.
         if (contexte.participations() == 1) {
             avertissements.add(Avertissement.succes(
                     "Participation créée sur Vigie-Chiro : la nuit y est déclarée, le dépôt la réutilisera."

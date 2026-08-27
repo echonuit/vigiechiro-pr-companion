@@ -8,7 +8,7 @@ decided_at: 2026-08-25
 verification: probable
 enforced_by:
   - "scripts/adr/4472-commentaire-en-corps.py"
-ratchet: 79
+ratchet: 43
 inv_key: cliquet-commentaire-corps
 verified:
   - by: machine:ci
@@ -56,7 +56,16 @@ c'est la règle du dépôt : *ce qui n'est pas compté grandit*.
 une. Le seuil est le double du 9ᵉ décile : il laisse passer le régime normal et ne signale que ce qui
 en sort franchement.
 
-Le cliquet est posé à **<!--inv:cliquet-commentaire-corps-->79<!--/inv-->**, l'état du jour.
+Le cliquet est posé à **<!--inv:cliquet-commentaire-corps-->43<!--/inv-->**, l'état du jour.
+
+**79 → 43** (#4583). Le chantier #4502 avait écarté ce ruban en invoquant cette ADR, et le motif
+n'avait pas voix : son objet était d'aligner sur `vigiechiro-companion`, qui en compte 59.
+
+Huit blocs sur vingt-sept ont été ouverts et contractés, aucun raccourci pour atteindre un chiffre.
+Tous portaient de l'histoire que `git log` garde déjà, chacun citant l'issue qui l'explique ; ce qui
+reste dit le contrat au présent. Les dix-neuf autres restent tels quels, et c'est ce que cette ADR
+annonçait : un bloc long peut être justifié. Ils tiennent une formule, un seuil et sa mesure, une
+limite déclarée, ou ce qu'une sonde ne doit surtout pas faire.
 
 Les chiffres sont ceux de **ce** dépôt. Le seuil vient de la ligne d'origine et il est repris parce
 que la distribution mesurée ici le confirme : même médiane, même 9ᵉ décile, et aucun bloc au-dessus

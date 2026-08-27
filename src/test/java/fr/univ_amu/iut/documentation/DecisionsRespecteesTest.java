@@ -362,24 +362,14 @@ class DecisionsRespecteesTest {
     @Test
     @DisplayName("ADR 2745 : une sous-vue ne se procure rien de ce qui doit être unique")
     void une_sous_vue_ne_se_procure_pas_ce_qui_doit_etre_unique() {
-        // Le piège que cette garde ferme a réellement eu lieu, au premier fx:include du dépôt (#2745).
-        // Un controller de sous-vue avec un constructeur @Inject se construit très bien : FXMLLoader
-        // propage la controllerFactory Guice aux inclusions. Mais les ViewModel du dépôt sont
-        // délibérément NON-SINGLETON (« un VM frais par chargement d'écran »), si bien que la sous-vue
-        // reçoit un SECOND modèle, vide, et câble ses nœuds dessus.
+        // Un controller de sous-vue avec un constructeur `@Inject` se construit très bien : `FXMLLoader`
+        // propage la `controllerFactory` Guice aux inclusions. Mais les ViewModel du dépôt sont
+        // délibérément non-singleton, si bien que la sous-vue reçoit un SECOND modèle, vide, et câble ses
+        // nœuds dessus. Rien ne rougit : ça compile, l'écran s'affiche, la table est simplement vide.
         //
-        // Rien ne rougit : ça compile, la vue se charge, l'écran s'affiche. La table est simplement
-        // vide et les actions ne portent sur rien.
-        //
-        // Le ViewModel n'est qu'un cas (#3335). Un PORTEUR de dialogue en est un autre, et il est
-        // plus piégeux parce qu'il ne s'injecte pas : le dépôt le fabrique en initialiseur de champ
-        // (`new ConfirmateurModifiable()`, neuf contrôleurs le font). Or l'ADR 0010 en fait un point de
-        // SUBSTITUTION pour les tests, et un point de substitution n'en est un que s'il est unique : un
-        // test parent qui pose son double sur `controleur.confirmateur()` ne toucherait pas celui de la
-        // sous-vue, et le `showAndWait()` figerait le test headless.
-        //
-        // Même panne que l'ADR 3018 à un autre étage : un composant se procure localement ce qu'il
-        // aurait dû recevoir, et le résultat n'a pas l'air cassé.
+        // Le ViewModel n'est qu'un cas (#3335) ; un PORTEUR de dialogue en est un autre, plus piégeux
+        // parce qu'il se fabrique en initialiseur de champ (#2745). Même panne que l'ADR 3018 à un autre
+        // étage : un composant se procure localement ce qu'il aurait dû recevoir.
         Map<String, String> fautifs = new TreeMap<>();
         Set<String> inclusions = new TreeSet<>();
 

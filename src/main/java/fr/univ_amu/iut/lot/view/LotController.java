@@ -266,20 +266,14 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         depotViewModel.enCoursProperty().addListener((obs, avant, apres) -> majOperationCritique());
         majOperationCritique();
 
-        // Statut du workflow déporté en zone centre de la barre de statut (#693), plus de sous-titre.
-        // Barre de statut 3 zones (#823) : gauche = contexte du passage, centre = statut + récap, droite =
-        // état vivant (par priorité : lancement > dépôt en cours > génération > espace insuffisant >
-        // bilan archives).
+        // Barre de statut à trois zones (#823) : gauche = contexte du passage, centre = statut et récap,
+        // droite = état vivant, par priorité lancement > dépôt en cours > génération > espace insuffisant
+        // > bilan archives. Le statut du workflow est en zone centre (#693), et il n'y a plus de
+        // sous-titre.
         //
-        // #3546 : la liste ci-dessous doit énoncer **tout** ce que [ZonesStatutLot] lit, y compris le
-        // lancement, qui passe en premier. Il manquait, et le défaut se cachait derrière une séquence :
-        // `marquerLancementEnCours` pose `lancementEnCours` puis `enCours`, et c'est la seconde écriture -
-        // déclarée - qui invalidait la liaison. Sur un dépôt déjà en cours, `enCours` ne change pas : plus
-        // rien n'invalide, et l'annonce du lancement reste invisible.
-        //
-        // #3548 : le contexte du passage manquait pour la même raison. `bind()` évalue le calcul tout de
-        // suite, ici avant `ouvrirSur` : la zone gauche naît vide, et seule une dépendance déclarée la
-        // refait. Sur le chemin d'erreur d'ouverture, aucune ne bougeait.
+        // La liste ci-dessous énonce TOUT ce que [ZonesStatutLot] lit, lancement compris (#3546, #3548) :
+        // une dépendance omise se cache derrière une séquence d'écritures, et l'annonce reste invisible
+        // sur un dépôt déjà en cours.
         zonesStatut.bind(Bindings.createObjectBinding(
                 zonesStatutLot::calculer,
                 contexte,
