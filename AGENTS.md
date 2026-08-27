@@ -103,15 +103,18 @@ contenant le chemin, et la découverte casse en silence.
 fait (`dev-docs/`) et ce qu'on a décidé (`dev-docs/decisions/`). Un changement porte ses delta
 specs, et l'archivage les fusionne dans les specs principales.
 
-**Ce que le cadre contient aujourd'hui : sa configuration, et rien d'autre.** Il n'y a pas encore de
-`openspec/specs/`, aucun changement proposé ni archivé. Le cadre est posé pour le premier chantier
-qui en aura besoin, et cette page dira ce qu'il porte quand il portera quelque chose. Un dossier
-vide présenté comme un point de départ enverrait un repreneur nulle part.
+**Ce que le cadre porte aujourd'hui.** Un changement en cours, `add-carre-par-coord`, avec son
+`proposal.md`, son `design.md`, ses `tasks.md` et sa delta spec sous
+`changes/add-carre-par-coord/specs/`. `openspec/specs/` reste vide, et c'est normal : les specs
+principales ne se remplissent qu'à l'**archivage**, qui y fusionne les delta specs des changements
+clos. Un `openspec/specs/` vide à côté d'un changement en cours est donc l'état attendu, pas un
+oubli.
 
-Le cycle, quand il servira : `openspec-propose` ouvre le changement, `openspec-apply-change` le
-réalise, `openspec-archive-change` le clôt en mettant à jour la spécification. `openspec-explore`
-sert à instruire avant de proposer. La langue des artefacts est déclarée dans `openspec/config.yaml`,
-et c'est le français.
+Le cycle se tape par six gestes, qui ouvrent chacun leur compétence : `/instruire` pour instruire
+avant de proposer, `/proposer` pour ouvrir le changement, `/realiser` pour le réaliser, `/reprendre`
+pour en réviser le plan, `/fusionner` pour porter ses delta specs dans les specs principales, et
+`/archiver` pour le clore. La langue des artefacts est déclarée dans `openspec/config.yaml`, et c'est
+le français.
 
 ## Cycle de vie d'un chantier
 
