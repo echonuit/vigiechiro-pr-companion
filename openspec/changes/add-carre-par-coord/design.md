@@ -3,13 +3,29 @@
 Voir `proposal.md`, section Why, pour la motivation. Ce qui suit n'est que l'état du code qui contraint
 l'approche.
 
-Trois pièces existent déjà et ne sont pas à écrire.
+**Le carroyage national est déjà embarqué**, et c'est le fait qui gouverne tout le reste.
+`src/main/resources/fr/univ_amu/iut/commun/view/carte/carrenat.csv.gz` porte **137 481 mailles**,
+numéro vers centroïde WGS84, toute la métropole. `FournisseurEmpriseCarreOfficiel` le charge une fois
+et s'en sert pour dessiner l'emprise d'un carré sur la carte.
+
+Il porte donc aussi le **sens inverse** : le carré d'une position est la maille de centroïde le plus
+proche. Mesuré le 2026-08-27, il reproduit `GET /grille_stoc/cercle` au centimètre.
+
+| Cas | Référentiel local | Serveur |
+|---|---|---|
+| Position de test | `40110` à 374,9 m | `040110`, centroïde à 4 cm |
+| Milieu d'un côté commun | 995,3 et 1000,1 m | 997,7 et 997,7 m |
+| Coin à quatre carrés | 1411,7 puis 1412,3 x3 | 1412 x4 |
+| Hors métropole | plus proche à 1 233 km | vide |
+
+Quatre pièces existent déjà et ne sont pas à écrire.
 
 | Pièce | Ce qu'elle fait | Où |
 |---|---|---|
 | `ClientVigieChiro#carreStoc` | Position vers numéro de carré, par `GET /grille_stoc/cercle` | `commun/api/` |
 | `ReponsesVigieChiro#numeroCarreStoc` | Lit le **premier** élément de la réponse | `commun/api/` |
 | `ControleCarreStoc` | Confronte le carré d'un point au carré déclaré, en aval | `sites/model/` |
+| `FournisseurEmpriseCarreOfficiel` | Charge `carrenat.csv.gz`, numéro vers centroïde | `commun/view/carte/` |
 
 Deux traits de l'existant pèsent sur la conception.
 
@@ -44,7 +60,38 @@ plafonnés à 80.
 
 ## Decisions
 
+### D0. Le carré se calcule **hors ligne**, la plateforme ne répond qu'à l'autre question
+
+Deux questions distinctes se posaient, et elles ont été confondues.
+
+| Question | Qui sait répondre |
+|---|---|
+| Quel carré couvre cette position ? | **Le référentiel embarqué**. C'est de la géométrie |
+| Ce carré existe-t-il en Point Fixe, et est-il à moi ? | **Le portail**, et c'est déjà « Vérifier sur Vigie-Chiro » |
+
+Le geste qui situe une position ne demande donc **rien au réseau**. Le bouton existant garde la seule
+question qui l'appelle.
+
+**Ce que ça répare, et ce n'est pas un détail.** L'écran de déclaration existe pour qu'on puisse
+déclarer un carré chez soi, hors connexion : sa documentation le dit, « fermer la saisie ferait de la
+plateforme une condition pour déclarer chez soi ». Faire passer la proposition par le portail aurait
+fermé le geste exactement dans le cas d'usage qui a ouvert ce chantier - une relève chez soi, un
+import le lendemain.
+
+**Écarté : interroger `GET /grille_stoc/cercle`.** C'était l'approche des décisions D1, D2 et D7,
+écrites avant d'avoir vu le référentiel. Elle marche, elle est mesurée, et elle coûte un aller-retour,
+un jeton et une connexion pour un calcul que la machine tient déjà. Elle reste la source
+**faisant autorité** si un doute naît sur la fraîcheur du fichier embarqué, mais le carroyage national
+est un découpage fixe, pas une donnée vivante.
+
+**Écarté : décoder le numéro.** Il n'encode aucune coordonnée : six chiffres valent département plus
+identifiant local, sans géométrie dedans. C'est écrit dans la javadoc de `EmpriseCarre`, et c'est
+la raison d'être du référentiel.
+
 ### D1. Le rayon se serre côté serveur, en paramètre d'appel
+
+**Livrée, et hors du chemin de la proposition depuis D0.** Elle sert le contrôle en aval, et
+#4610 s'en servira. Ce qui suit reste vrai de cet appel-là.
 
 `carreStoc` prend un rayon en paramètre. L'appelant existant, `ControleCarreStoc`, passe les 10 000 m
 qu'il utilise déjà ; la proposition passe 1 500 m.
@@ -59,6 +106,9 @@ plus et un risque d'inversion silencieuse.
 méthodes qui ne diffèrent que par une constante finissent par diverger ailleurs.
 
 ### D2. 1 500 m, et l'arithmétique qui le fonde
+
+**Hors du chemin de la proposition depuis D0.** La mesure qu'elle porte garde sa valeur : c'est elle
+qui a établi la géométrie de la grille, et elle vaut pour le référentiel local comme pour le serveur.
 
 Le côté d'un carré STOC vaut 2 km, propriété relevée dans la javadoc de `carreStoc`. La demi-diagonale
 d'un carré de 2 km vaut donc `1000 x racine(2)`, soit environ 1 414 m : c'est la distance maximale
@@ -139,7 +189,15 @@ Accepter les liens longs et refuser les courts donnerait une fonctionnalité qui
 liens copiés depuis la même carte, l'un marche et l'autre non. Refuser les deux avec un motif qui dit
 quoi coller à la place se comprend d'un coup. Ce choix se rouvre si le besoin se mesure.
 
-### D7. Le geste est fermé sans jeton, patron de #4210
+### D7. Le geste est fermé sans jeton - **renversée par D0**
+
+**Cette décision était fausse, et pour une raison qui compte.** Elle fermait le geste hors connexion
+par analogie avec « Vérifier sur Vigie-Chiro ». Mais ce bouton-là interroge le portail, alors que
+situer une position ne demande rien à personne. Fermer le geste aurait interdit hors ligne un calcul
+purement local, dans le cas d'usage même qui a ouvert le chantier.
+
+Le geste **reste ouvert sans jeton**. Ce qui suit ne vaut plus que pour « Vérifier sur Vigie-Chiro »,
+qui ne change pas.
 
 `ModaleSiteController` ferme déjà « Vérifier sur Vigie-Chiro » tant qu'aucun jeton n'est disponible,
 et le commentaire du code en donne le motif : sans cela, on tapait, on cliquait, on payait un
@@ -190,6 +248,10 @@ produit doit dire plutôt que masquer.
 Le seuil se dérive de la géométrie. Pour un point à `x` mètres d'un bord, l'écart entre les deux
 distances vaut environ `2x`. Un seuil d'écart de **50 m** désigne donc les points situés à moins de
 25 m du bord, soit l'ordre de grandeur de ce qu'on vise en cliquant sur une carte.
+
+**Les distances se calculent en local**, sur les centroïdes du référentiel. Un temps cette décision
+allait obliger à lire le `centre` des réponses de la plateforme, ce que D3 refuse : la réponse de
+`grille_stoc` ne porte aucune distance, seulement un tri. D0 dissout ce conflit. D3 reste intact.
 
 **Écarté : choisir le plus proche et se taire.** C'est le comportement actuel. Il propose un numéro
 sur deux au hasard le long des bords, et un numéro faux et plausible est le défaut que tout ce
