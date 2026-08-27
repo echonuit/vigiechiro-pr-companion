@@ -1852,7 +1852,7 @@ d98e41b2d508  src/test/java/fr/univ_amu/iut/recette/BancDeRecette.java
 87701f8fbb55  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteJetonTest.java
 992bf542c672  src/test/java/fr/univ_amu/iut/recette/BancDeRecettePlateformeTest.java
 db5c0b3fb259  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteSansDepotTest.java
-71a69104d526  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteUrlTest.java
+6d05636b96cb  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteUrlTest.java
 bfbc2c64fc3e  src/test/java/fr/univ_amu/iut/recette/BancDesClipsTest.java
 23c234a11ccf  src/test/java/fr/univ_amu/iut/recette/CablageDesReperesTest.java
 3fcaced47b79  src/test/java/fr/univ_amu/iut/recette/CadreVisible.java

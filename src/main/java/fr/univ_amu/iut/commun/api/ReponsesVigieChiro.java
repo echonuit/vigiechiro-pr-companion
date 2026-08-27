@@ -7,6 +7,8 @@ import com.google.gson.JsonParser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /// Lecture des réponses JSON de l'API VigieChiro (backend Eve) vers les records du paquet `commun.api`.
 ///
@@ -14,6 +16,8 @@ import java.util.Optional;
 /// (`String` → record), **tolérantes** (JSON illisible / champ absent → vide, jamais d'exception) et
 /// testables sur des réponses figées, sans réseau.
 final class ReponsesVigieChiro {
+
+    private static final Logger LOG = Logger.getLogger(ReponsesVigieChiro.class.getName());
 
     /// Clé de l'identifiant MongoDB, commune à tous les documents Eve (`_id`).
     private static final String CLE_ID = "_id";
@@ -188,6 +192,7 @@ final class ReponsesVigieChiro {
             }
         } catch (RuntimeException illisible) {
             // corps non-JSON : on retombe sur un tableau vide (dégradation propre).
+            LOG.log(Level.WARNING, illisible, () -> "Corps de réponse non-JSON : tableau vide rendu");
         }
         return new JsonArray();
     }

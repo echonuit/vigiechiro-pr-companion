@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /// **Exécute** la procédure de reset (#1419, EPIC #1154) : repartir d'une base neuve **sans perte
 /// silencieuse**. C'est la réponse exécutable à la question de l'EPIC ; `reset-guide` seul se contentait
@@ -38,6 +40,8 @@ import java.util.Set;
 /// montée, ou des fichiers retrouvés. Le service ne le fait pas : il **nomme** les nuits concernées pour
 /// que l'utilisateur sache exactement quoi rebrancher, plutôt que de le laisser découvrir le trou.
 public class ServiceReset {
+
+    private static final Logger LOG = Logger.getLogger(ServiceReset.class.getName());
 
     private final ServiceRecuperabilite recuperabilite;
     private final ClientVigieChiro client;
@@ -141,6 +145,11 @@ public class ServiceReset {
                 reconstruits++;
             } catch (RuntimeException echec) {
                 // Signalée par l'audit final : c'est lui qui fait foi sur l'état du workspace.
+                LOG.log(
+                        Level.FINE,
+                        echec,
+                        () -> "Reconstruction impossible pour la participation " + orpheline.idParticipation()
+                                + " : l'audit final tranche");
             }
         }
         return reconstruits;

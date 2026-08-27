@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
 /// Fournisseur d'emprise **officiel** (#325) : cale le carré sur le **carroyage national Vigie-Chiro**
@@ -23,6 +25,8 @@ import java.util.zip.GZIPInputStream;
 /// inconnu) renvoie `Optional.empty()` : la chaîne ([FournisseurEmpriseCarreEnChaine]) bascule alors sur
 /// le repli [EmpriseAutourDesPoints].
 public final class FournisseurEmpriseCarreOfficiel implements FournisseurEmpriseCarre {
+
+    private static final Logger LOG = Logger.getLogger(FournisseurEmpriseCarreOfficiel.class.getName());
 
     private static final String RESSOURCE = "carrenat.csv.gz";
 
@@ -79,6 +83,10 @@ public final class FournisseurEmpriseCarreOfficiel implements FournisseurEmprise
                             });
                         } catch (NumberFormatException ligneInvalide) {
                             // Ligne non conforme (en-tête inattendu, colonne non numérique) : ignorée.
+                            LOG.log(
+                                    Level.FINE,
+                                    ligneInvalide,
+                                    () -> "Centroïde non numérique pour le carré " + champs[0] + " : ligne ignorée");
                         }
                     }
                 }
