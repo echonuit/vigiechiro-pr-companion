@@ -218,6 +218,81 @@ class ContratApiVigieChiroLiveTest {
     }
 
     @Test
+    @DisplayName("GET /grille_stoc/cercle (#4574) : le rayon se mesure au CENTRE d'une maille et non à son"
+            + " bord, seule géométrie où un rayon serré peut ne rien rendre hors du carré")
+    void grille_stoc_mesure_une_distance_au_centre() {
+        ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
+
+        // Même amorce auto-vérifiante que la sonde nominale : un site RÉEL de l'observateur, dont on
+        // connaît déjà le carré attendu. Aucune coordonnée codée en dur, qui périmerait.
+        Optional<SiteVigieChiro> siteGeolocalise = client.mesSites().enOptionnel().orElseThrow().stream()
+                .filter(site -> site.numeroCarre() != null && !site.points().isEmpty())
+                .findFirst();
+        assumeTrue(siteGeolocalise.isPresent(), "Aucun site géolocalisé sur ce compte : sonde sans objet.");
+        SiteVigieChiro site = siteGeolocalise.get();
+        PointVigieChiro point = site.points().getFirst();
+
+        // Les paliers descendent jusqu'à 1 m, et c'est le dernier qui tranche, par ou-exclusif. Une
+        // grille stockée en POINTS met un point d'écoute à des centaines de mètres de son centre,
+        // donc r = 1 m ne peut rien rendre. Une grille stockée en POLYGONES le met DANS son carré,
+        // donc à distance zéro, et r = 1 m rend quand même le carré : aucun rayon ne le refoulerait
+        // alors jamais, et le serrage du rayon n'existerait pas. C'est de cette géométrie que dépend
+        // le lot #4576.
+        List<Integer> paliers = List.of(10_000, 5_000, 2_000, 1_500, 1_414, 1_000, 500, 100, 1);
+        List<String> observation = new ArrayList<>();
+        int plusPetitRayonRendantSonCarre = -1;
+        int compteAUnMetre = -1;
+
+        for (int rayon : paliers) {
+            // Requête bâtie par concaténation, comme « ClientVigieChiro#carreStoc » : la conversion d'un
+            // double y est indépendante de la locale, là où un gabarit pourrait semer une virgule.
+            String requete =
+                    "/grille_stoc/cercle?lng=" + point.longitude() + "&lat=" + point.latitude() + "&r=" + rayon;
+            List<String> numeros = api().when()
+                    .get(requete)
+                    .then()
+                    .statusCode(200)
+                    .extract()
+                    .jsonPath()
+                    .getList("_items.numero", String.class);
+
+            boolean porteSonCarre = numeros.contains(site.numeroCarre());
+            observation.add("        r = %6d m -> %3d maille(s)%s"
+                    .formatted(rayon, numeros.size(), porteSonCarre ? "   dont le sien" : ""));
+            if (porteSonCarre) {
+                plusPetitRayonRendantSonCarre = rayon;
+            }
+            if (rayon == 1) {
+                compteAUnMetre = numeros.size();
+            }
+        }
+
+        // La MESURE s'imprime, elle ne s'assère pas : les comptes dépendent de la position du point sur
+        // ce compte-ci. Ce qui s'assère ci-dessous est la GÉOMÉTRIE, qui n'en dépend pas.
+        System.out.printf("%n[#4574] Grille STOC autour du point %s du carré %s :%n", point.code(), site.numeroCarre());
+        observation.forEach(System.out::println);
+        System.out.printf("        plus petit rayon rendant SON carré : %d m%n", plusPetitRayonRendantSonCarre);
+
+        assertThat(compteAUnMetre)
+                .as(
+                        "r = 1 m rend %d maille(s). Une réponse NON vide à 1 m dit que la grille stocke des"
+                                + " POLYGONES et que « $near » mesure au bord : un point est dans son carré, donc à"
+                                + " distance zéro, et aucun rayon ne refoulerait jamais un carré. Le serrage du"
+                                + " rayon (décision D2 de « add-carre-par-coord ») n'existerait alors pas, et le"
+                                + " design doit se rouvrir AVANT le lot #4576.",
+                        compteAUnMetre)
+                .isZero();
+
+        assertThat(plusPetitRayonRendantSonCarre)
+                .as("son carré doit encore sortir à 1 500 m, rayon retenu pour la proposition : tout point"
+                        + " d'un carré de 2 km de côté est à moins de 1 414 m de son centre, et 1 500 m"
+                        + " couvre cette distance. Un plus petit rayon rendant son carré au-delà de 1 500 m"
+                        + " dirait que la maille n'est pas celle qu'on croit")
+                .isGreaterThan(0)
+                .isLessThanOrEqualTo(1_500);
+    }
+
+    @Test
     @DisplayName("Dérive client : ClientVigie-Chiro.participation(id) lit le détail réel (_etag présent)")
     void client_lit_le_detail_participation() {
         ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
