@@ -203,16 +203,19 @@ class SynchronisationParticipationTest {
     }
 
     @Test
-    @DisplayName("#4552 : la participation a bougé entre la lecture et l'envoi → aucun PATCH")
+    @DisplayName("#4552 : un champ que nous écrivons a bougé entre la lecture et l'envoi → aucun PATCH")
     void pousser_vers_renonce_si_le_distant_a_bouge() {
         when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
         armerPassageEtPoint();
         when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
-        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
-        // Un autre poste a ecrit entre notre lecture et notre envoi : la relecture ne rend plus le meme etag.
+        // Permissif : le chemin du refus ne construit plus le corps, donc ce doublage ne sert pas quand
+        // la garde tient. Il sert quand elle ne tient plus, pour que l'echec nomme la garde et non un mock.
+        lenient().when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // Un autre poste a saisi la meteo entre notre lecture et notre envoi : ecrire par-dessus
+        // effacerait sa saisie. C'est un champ que le PATCH emet, donc un vrai conflit (#4603).
         when(client.participation("part-1"))
                 .thenReturn(ReponseApi.succes(detail("e-lu")))
-                .thenReturn(ReponseApi.succes(detail("e-bouge")));
+                .thenReturn(ReponseApi.succes(detailAvecMeteo("e-bouge", new MeteoDepot("FORT", "75-100"))));
         // Permissif : ce doublage sert a laisser le flux aller jusqu'au bout tant que la garde n'existe
         // pas. Une fois la garde posee, plus rien ne l'appelle, et c'est exactement ce qu'on verifie.
         lenient()
@@ -225,19 +228,85 @@ class SynchronisationParticipationTest {
     }
 
     @Test
-    @DisplayName("#4552 : renoncer n'est pas être refusé, et les deux ne se lisent pas pareil")
+    @DisplayName("#4552 témoin : la météo a bougé, on renonce, et ce n'est pas un refus de la plateforme")
     void pousser_vers_renoncement_est_un_etat_distinct() {
         when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
         armerPassageEtPoint();
         when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
-        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // Permissif : le chemin du refus ne construit plus le corps, donc ce doublage ne sert pas quand
+        // la garde tient. Il sert quand elle ne tient plus, pour que l'echec nomme la garde et non un mock.
+        lenient().when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
         when(client.participation("part-1"))
                 .thenReturn(ReponseApi.succes(detail("e-lu")))
-                .thenReturn(ReponseApi.succes(detail("e-bouge")));
+                .thenReturn(ReponseApi.succes(detailAvecMeteo("e-bouge", new MeteoDepot("FORT", "75-100"))));
+        lenient()
+                .when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
 
         EnvoiParticipation envoi = sync.pousserVers(42L);
 
         assertThat(envoi).isInstanceOf(EnvoiParticipation.ModifieEntreTemps.class);
+    }
+
+    @Test
+    @DisplayName("#4603 : seul le traitement a bougé → l'envoi part, il n'écraserait rien")
+    void pousser_vers_envoie_quand_seul_le_traitement_a_bouge() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // L'ouvrier d'analyse a avance entre nos deux lectures : l'etag bouge, et aucun champ que nous
+        // ecrivons ne bouge. Refuser ici priverait l'utilisateur d'un envoi qui n'efface rien.
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detail("e-lu")))
+                .thenReturn(ReponseApi.succes(detailAvecTraitement("e-bouge", traitementEnCours())));
+        lenient()
+                .when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        EnvoiParticipation envoi = sync.pousserVers(42L);
+
+        assertThat(envoi).isInstanceOf(EnvoiParticipation.Ecrit.class);
+        verify(client).modifierParticipation(eq("part-1"), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("#4603 : la relecture échoue → refus dur, et surtout aucun PATCH à l'aveugle")
+    void pousser_vers_refuse_si_la_relecture_echoue() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        // La coupure tombe ENTRE les deux lectures. Sans relecture, la garde ne sait rien : elle ne doit
+        // surtout pas laisser partir l'ecriture au benefice du doute.
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detail("e-lu")))
+                .thenReturn(ReponseApi.injoignable("connexion perdue"));
+
+        assertThatThrownBy(() -> sync.pousserVers(42L)).isInstanceOf(RegleMetierException.class);
+
+        verify(client, never()).modifierParticipation(anyString(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("#4603 témoin : la configuration a bougé → on renonce, elle fait partie de ce qu'on écrit")
+    void pousser_vers_renonce_quand_la_configuration_a_bouge() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        // Permissif : le chemin du refus ne construit plus le corps, donc ce doublage ne sert pas quand
+        // la garde tient. Il sert quand elle ne tient plus, pour que l'echec nomme la garde et non un mock.
+        lenient().when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detail("e-lu")))
+                .thenReturn(ReponseApi.succes(detailAvecConfiguration("e-bouge", Map.of("micro1_type", "SMX"))));
+        lenient()
+                .when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        EnvoiParticipation envoi = sync.pousserVers(42L);
+
+        assertThat(envoi).isInstanceOf(EnvoiParticipation.ModifieEntreTemps.class);
+        verify(client, never()).modifierParticipation(anyString(), anyString(), any());
     }
 
     @Test
@@ -442,6 +511,54 @@ class SynchronisationParticipationTest {
     private void armerPassageEtPoint() {
         when(passageDao.findById(42L)).thenReturn(Optional.of(passage(null)));
         when(referentielPoint.pour(7L)).thenReturn(Optional.of(new InfosPoint("Z41", 7L, CARRE)));
+    }
+
+    private static Traitement traitementEnCours() {
+        return new Traitement(EtatTraitement.EN_COURS, null, "2026-07-04T05:00:00+00:00", null, null, null);
+    }
+
+    /// Le meme detail que [#detail(String)], dont seul l'etat du traitement differe : c'est ce que
+    /// l'ouvrier d'analyse fait bouger tout seul, sans toucher un champ que nous ecrivons.
+    private static ParticipationDetail detailAvecTraitement(String etag, Traitement traitement) {
+        ParticipationDetail modele = detail(etag);
+        return new ParticipationDetail(
+                modele.id(),
+                etag,
+                modele.point(),
+                modele.dateDebut(),
+                modele.dateFin(),
+                modele.meteo(),
+                modele.configuration(),
+                traitement);
+    }
+
+    /// Le meme detail que [#detail(String)], dont seule la meteo differe : un champ que le `PATCH`
+    /// ecrit, donc un vrai conflit.
+    private static ParticipationDetail detailAvecMeteo(String etag, MeteoDepot meteo) {
+        ParticipationDetail modele = detail(etag);
+        return new ParticipationDetail(
+                modele.id(),
+                etag,
+                modele.point(),
+                modele.dateDebut(),
+                modele.dateFin(),
+                meteo,
+                modele.configuration(),
+                modele.traitement());
+    }
+
+    /// Le meme detail que [#detail(String)], dont seule la configuration differe.
+    private static ParticipationDetail detailAvecConfiguration(String etag, Map<String, String> configuration) {
+        ParticipationDetail modele = detail(etag);
+        return new ParticipationDetail(
+                modele.id(),
+                etag,
+                modele.point(),
+                modele.dateDebut(),
+                modele.dateFin(),
+                modele.meteo(),
+                configuration,
+                modele.traitement());
     }
 
     private static ParticipationDetail detail(String etag) {
