@@ -71,9 +71,23 @@ l'arithmétique plane ci-dessus ferait perdre les points de coin.
 **Écarté : garder 10 000 m.** Le motif est dans `proposal.md`. Une proposition se valide sans se
 relire, un contrôle se lit à côté d'une vérité déjà tapée.
 
-Un cas limite assumé : sur un coin exact, les centres de quatre carrés sont équidistants à 1 414 m, et
-le « premier élément » en désigne un sans que rien ne le distingue. Un point strictement intérieur n'a
-pas cette ambiguïté, et un point de coin exact n'arrive pas d'une position relevée sur une carte.
+**Mesuré le 2026-08-27**, sur la grille réelle autour du carré `040110`, ce qui change deux choses
+que ce paragraphe affirmait sans preuve.
+
+| Position | Ce que la grille rend |
+|---|---|
+| Coin commun à quatre carrés | 4 mailles, toutes à **1 412 m** |
+| Le même coin, à `r = 1400` | **0 maille** |
+| Milieu d'un côté commun | 2 mailles, à **997,7 m chacune**, ex aequo au dixième de mètre |
+
+L'arithmétique prédisait 1 414 m au coin ; la grille en rend 1 412. Et le rejet du « 1 414 m exact »
+n'était pas une précaution de principe : à 1 400 m un point de coin ne propose **rien**. La marge de
+88 m est ce qui le sauve.
+
+Le cas limite est plus large que « le coin exact ». Au milieu d'un côté, deux centres sont à distance
+**strictement égale**, et un décalage de 5 m suffit à faire basculer le premier élément. Sur une bande
+de quelques mètres le long de chaque bord, le « premier » est donc un tirage. D11 en tire les
+conséquences.
 
 ### D3. On garde « le premier élément »
 
@@ -161,6 +175,31 @@ le rattraper déplace la règle hors de sa place.
 Ce rembourrage répare aussi un défaut de production : `ControleCarreStoc` comparait « 40110 » à
 « 040110 » par `equals`, donc rendait `Diverge` à tort dans neuf départements. Sa garde et la cécité
 de la sonde qui l'a laissé passer vivent en #4592, hors de ce changement.
+
+### D11. Plusieurs carrés candidats se nomment, aucun ne se choisit
+
+Quand les deux premières mailles sont à des distances proches, l'écran les **nomme toutes les deux** et
+ne pré-remplit rien. L'observateur tranche.
+
+**Ce n'est pas un défaut de calcul à corriger.** Pour un point exactement sur une frontière, « le carré
+qui le contient » n'existe pas sans une convention, du type intervalle semi-ouvert où le carré de
+gauche possède son bord. La plateforme ne stocke que des **centres** : sa représentation ne peut pas
+porter cette convention, et aucune question ne la lui fera rendre. C'est un fait du domaine, que le
+produit doit dire plutôt que masquer.
+
+Le seuil se dérive de la géométrie. Pour un point à `x` mètres d'un bord, l'écart entre les deux
+distances vaut environ `2x`. Un seuil d'écart de **50 m** désigne donc les points situés à moins de
+25 m du bord, soit l'ordre de grandeur de ce qu'on vise en cliquant sur une carte.
+
+**Écarté : choisir le plus proche et se taire.** C'est le comportement actuel. Il propose un numéro
+sur deux au hasard le long des bords, et un numéro faux et plausible est le défaut que tout ce
+changement cherche à éviter.
+
+**Écarté : ne rien proposer près d'un bord.** Deux candidats valent mieux que rien : ils épargnent le
+détour par le portail, qui est la corvée que ce chantier supprime.
+
+**Écarté : demander la convention à la plateforme.** Elle ne l'a pas. Le carroyage y est stocké en
+points.
 
 ### D9. Ce que cette note ne fait pas
 

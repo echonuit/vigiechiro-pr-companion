@@ -180,3 +180,38 @@ département à un chiffre. Le cas existant n'éprouve que le département 13, q
 - **WHEN** la position collée tombe dans un carré du département 04
 - **THEN** le champ des six chiffres est complet
 - **AND** « Vérifier sur Vigie-Chiro » est ouvert
+
+### Requirement: Plusieurs carrés candidats se nomment, aucun ne se choisit
+
+Quand la grille rend plusieurs carrés à des distances proches, l'écran SHALL les **nommer** et MUST
+NOT en déposer un dans le champ des six chiffres.
+
+Un point situé sur la frontière de deux carrés n'appartient à aucun des deux sans une convention que
+la grille ne porte pas : elle ne stocke que des centres. Mesuré le 2026-08-27, deux centres sont à
+distance strictement égale au milieu d'un côté commun, et quatre le sont à un coin. Choisir le
+« premier » y revient à tirer au sort, et un numéro faux et plausible est le défaut que ce changement
+cherche à éviter.
+
+Le seuil se dérive de la géométrie : pour un point à `x` mètres d'un bord, l'écart entre les deux
+distances vaut environ `2x`. Un écart de moins de **50 m** désigne les points à moins de 25 m d'un
+bord.
+
+**Vérifié par** : des tests unitaires sur la lecture de la réponse de la grille, avec deux mailles
+proches puis deux mailles éloignées, et un test de scénario sur la modale. Aucun n'existe.
+
+#### Scenario: Deux carrés à distance proche
+
+- **WHEN** la position collée tombe à moins de 25 m d'un bord, et que la grille rend deux carrés dont
+  les distances diffèrent de moins de 50 m
+- **THEN** le champ des six chiffres reste vide
+- **AND** le message nomme les deux numéros et dit que la position est sur une frontière
+
+#### Scenario: Un carré nettement plus proche que le suivant
+
+- **WHEN** la grille rend plusieurs carrés dont le deuxième est à plus de 50 m du premier
+- **THEN** le premier est déposé dans le champ, comme pour un carré unique
+
+#### Scenario: Un seul carré rendu
+
+- **WHEN** la grille ne rend qu'un carré
+- **THEN** il est déposé dans le champ, sans mention de frontière

@@ -57,6 +57,12 @@
 - [ ] 4.4 Situer une position pourrait faire partir seule la question « ce carré existe-t-il ? », que
       personne n'a posée. **Fait quand** : un test de scénario compte les interrogations du portail
       après un geste de position et n'en trouve qu'une.
+- [ ] 4.5 Sur une frontière, deux carrés sont candidats à distance strictement égale, et l'application
+      en dépose un au hasard sans le dire. Mesuré le 2026-08-27 : 997,7 m chacun au milieu d'un côté,
+      1 412 m pour quatre au coin, et 5 m de décalage suffisent à faire basculer le premier.
+      **Fait quand** : un test unitaire rougit si un carré est déposé alors que deux sont proches, un
+      autre rougit si rien n'est déposé alors qu'un seul l'emporte nettement, et un test de scénario
+      constate que le message nomme les deux numéros.
 
 ## 5. Ce qui doit rester vrai après
 
