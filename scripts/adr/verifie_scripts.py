@@ -646,6 +646,50 @@ def test_4475_stage_non_dimensionne() -> None:
         _verifie("4475 sizeToScene suffit, comme FenetreDuBanc le prescrit", len(m.suspects(racine)), 0)
 
 
+def test_4617_code_mort_et_zone_de_test() -> None:
+    m = _charge("4617-code-mort-et-zone-de-test.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+
+        def rapport(*violations: str) -> pathlib.Path:
+            chemin = racine / "pmd.xml"
+            chemin.write_text(
+                '<?xml version="1.0"?><pmd version="7">' + "".join(violations) + "</pmd>",
+                encoding="utf-8")
+            return chemin
+
+        def fichier(chemin: str, regle: str) -> str:
+            return (f'<file name="{chemin}"><violation beginline="1" rule="{regle}">x</violation>'
+                    "</file>")
+
+        prod = "/depot/src/main/java/fr/univ_amu/iut/A.java"
+        test = "/depot/src/test/java/fr/univ_amu/iut/ATest.java"
+
+        # Le cas de #4554 : une methode morte compte, dans les DEUX zones.
+        _verifie("4617 le code mort compte en production",
+                 len(m.suspects(rapport(fichier(prod, "UnusedPrivateMethod")))), 1)
+        _verifie("4617 le code mort compte aussi dans la zone de test",
+                 len(m.suspects(rapport(fichier(test, "UnusedPrivateMethod")))), 1)
+
+        # Le controle qui porte la decision : repeter un litteral est ce qu un test DOIT faire, et
+        # cette seule regle rend 1 366 des 1 428 signalements du depot. Sans cette tolerance, le
+        # cliquet serait illisible ; avec elle appliquee partout, la production perdrait une regle
+        # qu elle tient a zero. Les deux bords sont donc exiges.
+        _verifie("4617 un litteral repete est tolere dans la zone de test",
+                 len(m.suspects(rapport(fichier(test, "AvoidDuplicateLiterals")))), 0)
+        _verifie("4617 le meme litteral repete compte en production",
+                 len(m.suspects(rapport(fichier(prod, "AvoidDuplicateLiterals")))), 1)
+
+        # Un garde qui ne sait pas lire REFUSE. Rendre zero sur un rapport absent le rendrait vert
+        # au moment precis ou il sert - le defaut de #4544 sous une autre forme.
+        absent = racine / "jamais-produit.xml"
+        try:
+            m.suspects(absent)
+            _verifie("4617 un rapport absent fait REFUSER", 0, 1)
+        except SystemExit:
+            _verifie("4617 un rapport absent fait REFUSER", 1, 1)
+
+
 def test_4476_javadoc_raconte_son_extraction() -> None:
     m = _charge("4476-javadoc-raconte-son-extraction.py")
     with tempfile.TemporaryDirectory() as d:
@@ -896,6 +940,7 @@ if __name__ == "__main__":
         test_4472_commentaire_en_corps,
         test_4468_javadoc_non_relue,
         test_4475_stage_non_dimensionne,
+        test_4617_code_mort_et_zone_de_test,
         test_4476_javadoc_raconte_son_extraction,
         test_4477_longueur_des_adr,
         test_les_gardes_de_code_lisent_les_deux_arbres,

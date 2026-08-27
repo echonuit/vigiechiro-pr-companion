@@ -154,4 +154,21 @@
 
     <rule ref="category/java/bestpractices.xml/AvoidReassigningParameters"/>
 
+
+    <!-- Le code mort n'etait couvert par RIEN : ni ce jeu, qui ne portait que des regles de
+         conception, ni `analyser-ecj`, qui ne cherche que les divergences entre compilateurs. Une
+         methode privee jamais appelee a ainsi vecu a 75 lignes de la version correcte du meme
+         helper (#4554, #4617).
+
+         La suppression porte sur les METHODES du FXMLLoader, non sur les fichiers qui les
+         contiennent : `@FXML` et `initialize()` sont appelees par reflexion, donc invisibles pour
+         PMD, et elles font 135 des 158 signalements. Exclure les 42 controleurs entiers aurait
+         laisse tout leur autre code sans garde. -->
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod">
+        <properties>
+            <property name="violationSuppressXPath"
+                      value="./ancestor-or-self::MethodDeclaration[@Name='initialize' or ModifierList/Annotation[@SimpleName='FXML']]"/>
+        </properties>
+    </rule>
+
 </ruleset>

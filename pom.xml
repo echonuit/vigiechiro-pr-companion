@@ -822,7 +822,14 @@
             <!-- PMD : linter de code smells aligné sur les refactorings
                  enseignés. Ruleset pédagogique dans pmd-ruleset.xml.
                  Par défaut failOnViolation=false (warning only) ; le
-                 profil -Pquality-gate active failOnViolation=true. -->
+                 profil -Pquality-gate active failOnViolation=true.
+
+                 Depuis #4617, ce n'est plus PMD qui prononce le verdict du portail : `lint.yml`
+                 lance `pmd:pmd` pour PRODUIRE le rapport, et le cliquet de l'ADR 4617 le juge.
+                 `failOnViolation` est binaire là où il faut une marge, et une seule des règles,
+                 les littéraux dupliqués, doit être écartée de la zone de test sans l'être de la
+                 production - ce que PMD ne sait pas exprimer. `includeTests` est à `true` : les
+                 deux zones sont analysées, la seconde valant 52 % des lignes Java du dépôt. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
@@ -835,7 +842,7 @@
                     <failOnViolation>false</failOnViolation>
                     <linkXRef>false</linkXRef>
                     <targetJdk>25</targetJdk>
-                    <includeTests>false</includeTests>
+                    <includeTests>true</includeTests>
                 </configuration>
                 <executions>
                     <execution>
