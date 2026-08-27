@@ -314,6 +314,8 @@ d3e2d5006cfa  src/main/java/fr/univ_amu/iut/commun/model/AcquisitionAncrage.java
 1162c8389091  src/main/java/fr/univ_amu/iut/commun/model/Alerte.java
 f4a2378be8bc  src/main/java/fr/univ_amu/iut/commun/model/AnalyseurCoordonnees.java
 e679e19570e9  src/main/java/fr/univ_amu/iut/commun/model/Besoin.java
+12892806a221  src/main/java/fr/univ_amu/iut/commun/model/CarreCandidat.java
+c4c59d55a5b7  src/main/java/fr/univ_amu/iut/commun/model/CarroyageNational.java
 b0e2cb33ceef  src/main/java/fr/univ_amu/iut/commun/model/CauseLisible.java
 f968aae98fa9  src/main/java/fr/univ_amu/iut/commun/model/Certitude.java
 a80bd0e32be2  src/main/java/fr/univ_amu/iut/commun/model/CiblePassage.java
@@ -633,7 +635,7 @@ b504dc62bc69  src/main/java/fr/univ_amu/iut/commun/view/carte/EmpriseCarre.java
 3502893f6c9e  src/main/java/fr/univ_amu/iut/commun/view/carte/EventailCentre.java
 1e7c6f9af476  src/main/java/fr/univ_amu/iut/commun/view/carte/FournisseurEmpriseCarre.java
 93ac4c1546db  src/main/java/fr/univ_amu/iut/commun/view/carte/FournisseurEmpriseCarreEnChaine.java
-458c65d59031  src/main/java/fr/univ_amu/iut/commun/view/carte/FournisseurEmpriseCarreOfficiel.java
+2286e1eee91b  src/main/java/fr/univ_amu/iut/commun/view/carte/FournisseurEmpriseCarreOfficiel.java
 cdb1209cb534  src/main/java/fr/univ_amu/iut/commun/view/carte/PointGeo.java
 3dcdaec2a896  src/main/java/fr/univ_amu/iut/commun/viewmodel/AccueilViewModel.java
 f152ea1edf44  src/main/java/fr/univ_amu/iut/commun/viewmodel/ClasseBadge.java
@@ -1397,6 +1399,7 @@ fa53c4593cc7  src/test/java/fr/univ_amu/iut/commun/di/FonctionnalitesTriTest.jav
 18913582745c  src/test/java/fr/univ_amu/iut/commun/di/ReservationWorkspaceTest.java
 eebe0b04ea61  src/test/java/fr/univ_amu/iut/commun/model/AcquisitionAncrageTest.java
 9888d40cb9c5  src/test/java/fr/univ_amu/iut/commun/model/AnalyseurCoordonneesTest.java
+6986b5447126  src/test/java/fr/univ_amu/iut/commun/model/CarroyageNationalTest.java
 bba1fd995a27  src/test/java/fr/univ_amu/iut/commun/model/CauseLisibleTest.java
 a8352ee0d288  src/test/java/fr/univ_amu/iut/commun/model/CertitudeTest.java
 044943704e62  src/test/java/fr/univ_amu/iut/commun/model/CommuneTest.java

@@ -44,17 +44,17 @@
 
 ## 3 bis. Le carré se déduit hors ligne
 
-- [ ] 3b.1 Le référentiel du carroyage national vit sous `commun/view/carte/`, alors que c'est une
+- [x] 3b.1 Le référentiel du carroyage national vit sous `commun/view/carte/`, alors que c'est une
       donnée du domaine et non un détail de dessin. Un service du modèle qui s'en sert dépendrait
       d'un paquet de vue. **Fait quand** : le chargement et la table numéro vers centroïde vivent dans
       le modèle, `FournisseurEmpriseCarreOfficiel` les consomme sans changer de comportement, et ses
       tests actuels sont verts sans être modifiés.
-- [ ] 3b.2 Rien ne sait déduire un carré d'une position sans appeler la plateforme, alors que le
+- [x] 3b.2 Rien ne sait déduire un carré d'une position sans appeler la plateforme, alors que le
       référentiel embarqué le permet. **Fait quand** : un service rend les carrés candidats d'une
       position, ordonnés par distance, et des tests unitaires le confrontent aux trois cas mesurés le
       2026-08-27 : 374,9 m pour la position de test, deux mailles quasi ex aequo au milieu d'un côté,
       quatre à 1 412 m au coin.
-- [ ] 3b.3 Une position hors métropole doit rendre aucun candidat, et non le carré le plus proche à
+- [x] 3b.3 Une position hors métropole doit rendre aucun candidat, et non le carré le plus proche à
       1 233 km. **Fait quand** : un test unitaire sur une position en plein Atlantique rend une liste
       vide, et le seuil retenu est justifié par la géométrie de la maille.
 
