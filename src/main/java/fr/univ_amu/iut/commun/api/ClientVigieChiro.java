@@ -264,8 +264,9 @@ public final class ClientVigieChiro {
         return transport.lire(CHEMIN_MOI_PARTICIPATIONS + PaginationEve.requete(page));
     }
 
-    /// Participation **détaillée** (`GET /participations/#id`, axe 4) : `_etag` (pour un `PATCH` `If-Match`
-    /// concurrent-sûr), dates, météo, configuration matérielle et état du traitement Tadarida. Issue
+    /// Participation **détaillée** (`GET /participations/#id`, axe 4) : `_etag` (que la garde de
+    /// concurrence relit et compare avant d'écrire, #4552), dates, météo, configuration matérielle et
+    /// état du traitement Tadarida. Issue
     /// **triée** (#1284) : une participation inconnue revient en `Refuse(404)`, une panne en
     /// `Injoignable`, l'absence de jeton en `NonConnecte` : plus jamais un même « vide ».
     public ReponseApi<ParticipationDetail> participation(String id) {
@@ -385,9 +386,9 @@ public final class ClientVigieChiro {
     /// avec un étiquetage faux (#4523). Il reste au contrat parce qu'une concurrence optimiste côté
     /// client, sur le patron de `PublicationPoint`, en aurait besoin.
     public ResultatEcriture modifierParticipation(String id, String etag, ParticipationADeposer miseAJour) {
-        // Pas de rejeu (#2677) : l'`If-Match` protège du doublon, mais pas du malentendu. Si la première
-        // rejeu peut ECRASER en silence l'écriture d'un autre poste : la plateforme ignore l'en-tête,
-        // donc rien ne protège cet appel de la concurrence (#4523).
+        // Pas de rejeu (#2677) : la plateforme ignore l'`If-Match` sur cette route (#4523), donc un
+        // rejeu reposerait des valeurs absolues par-dessus ce qu'un autre poste a écrit entre-temps.
+        // La concurrence est tenue en amont, par la relecture de `SynchronisationParticipation` (#4552).
         String echec = echecDe(transport.ecrire(
                 "PATCH",
                 CHEMIN_PARTICIPATIONS + id,

@@ -3,8 +3,8 @@ package fr.univ_amu.iut.commun.api;
 import java.util.Map;
 
 /// Vue **détaillée** d'une participation (`GET /participations/#id`), au-delà de la liste
-/// [ParticipationVigieChiro] : elle porte l'`_etag` (requis en en-tête `If-Match` pour un `PATCH`
-/// concurrent-sûr), les métadonnées **synchronisables** (dates, météo, configuration matérielle) et l'état
+/// [ParticipationVigieChiro] : elle porte l'`_etag` (que la garde de concurrence compare avant
+/// d'écrire, #4552), les métadonnées **synchronisables** (dates, météo, configuration matérielle) et l'état
 /// du traitement Tadarida. Sert à **tirer** les données depuis la plateforme (pré-remplir un passage
 /// préparé sur le web) et à préparer une mise à jour.
 ///
