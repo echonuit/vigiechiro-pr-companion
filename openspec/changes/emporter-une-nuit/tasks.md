@@ -1,0 +1,66 @@
+## 1. Ce que le lot 0 doit laisser derrière lui
+
+- [ ] 1.1 Les cinq décisions de `design.md` deviennent une ADR de `dev-docs/decisions/`, numérotée par
+      l'issue du chantier. **Fait quand** : l'ADR existe, déclare son article et son niveau de
+      vérification, et les gardes d'ADR sont verts. Cette note sera archivée, l'ADR non.
+- [ ] 1.2 Le corps de l'EPIC #3848 annonce trois décisions à prendre ; deux d'entre elles ne sont plus
+      des questions ouvertes. **Fait quand** : le corps dit ce qui est tranché et renvoie à l'ADR,
+      plutôt que de laisser lire des questions résolues.
+
+## 2. Le schéma accueille l'avis d'un relecteur
+
+- [ ] 2.1 Rien ne peut ranger le verdict de quelqu'un d'autre sur une séquence. Ajouter
+      `verdict_relecteur` et `relecteur_pseudo` à `selection_sequence`, sur le patron additif de V27.
+      **Fait quand** : la migration passe sur une base existante sans perte, et un test constate
+      qu'une séquence porte les deux verdicts sans que le premier bouge.
+- [ ] 2.2 Le verdict du passage doit rester dérivé des seuls verdicts de l'expéditeur. **Fait quand** :
+      les tests de `AgregationVerdict` sont verts **sans avoir été modifiés**, et un test neuf pose un
+      verdict de relecteur divergent puis constate que le verdict du passage n'a pas bougé.
+
+## 3. Écrire le paquet
+
+- [ ] 3.1 Rien ne sait dire ce que pèserait un paquet avant de l'écrire. Écrire le plan comme une
+      fonction pure, sans écriture disque. **Fait quand** : des tests unitaires couvrent le volume
+      ventilé par nature de contenu, et un test constate qu'aucun fichier n'existe après un plan.
+- [ ] 3.2 Le plan est une classe pure : il doit résister à ses mutations. **Fait quand** : PIT a
+      tourné sur elle, ses survivants sont lus un par un, et chacun est soit tué par un test neuf,
+      soit justifié par écrit.
+- [ ] 3.3 Le paquet n'existe pas. L'écrire depuis un plan confirmé. **Fait quand** : un test écrit un
+      paquet dans un dossier temporaire, le relit, et retrouve toutes les séquences transformées de la
+      nuit, ses métadonnées, la sélection en cours et ses verdicts, sans aucun enregistrement brut.
+
+## 4. Ouvrir le paquet, et signer ce qu'on y fait
+
+- [ ] 4.1 Un paquet ouvert sans identité valide recueillerait des verdicts anonymes. Apposer
+      l'identité à l'ouverture, refuser l'ouverture sans elle. **Fait quand** : un test ouvre un
+      paquet sans connexion valide et constate un refus qui nomme la cause.
+- [ ] 4.2 L'identité se périme à quatorze jours alors que le jugement peut venir après. **Fait
+      quand** : un test ouvre un paquet avec une identité valide, avance l'horloge injectée au-delà de
+      la péremption, pose un verdict, et constate le pseudo relevé à l'ouverture.
+- [ ] 4.3 Le relecteur doit pouvoir régénérer sa sélection. **Fait quand** : un test ouvre un paquet,
+      régénère, et constate que la nouvelle sélection tire parmi toutes les séquences de la nuit.
+
+## 5. Reprendre l'avis, sans écraser le sien
+
+- [ ] 5.1 Un avis importé écraserait le verdict de l'expéditeur. **Fait quand** : un test importe un
+      avis divergent et constate que les deux verdicts subsistent, chacun avec son pseudo.
+- [ ] 5.2 Un verdict portant sur une séquence hors de la sélection de l'expéditeur n'a nulle part où
+      aller. **Fait quand** : un test importe un tel verdict et le retrouve conservé, présenté comme
+      hors sélection, et non écarté en silence.
+- [ ] 5.3 Un second avis effacerait le premier sans un mot. **Fait quand** : un test importe un avis
+      sur une nuit qui en porte déjà un et constate un refus qui nomme ce qui serait remplacé.
+
+## 6. Ce qui se voit, et ce qui se prouve
+
+- [ ] 6.1 Les deux verdicts doivent se lire côte à côte dans l'écran de qualification. **Fait quand** :
+      un test de scénario sur la vue constate les deux verdicts et les deux pseudos sur une séquence
+      jugée deux fois.
+- [ ] 6.2 Un geste d'écran qu'aucun clip ne montre ne se vérifie que sur parole. **Fait quand** : le
+      parcours « emporter une nuit, la relire ailleurs, reprendre l'avis » a son cas de recette et son
+      clip, contrôle négatif compris.
+- [ ] 6.3 La documentation de l'écran décrit un écran qui aura changé. **Fait quand** : `docs/ecrans/`
+      décrit le nouveau geste, ses refus et l'affichage de l'avis d'un relecteur, et le garde de
+      documentation à jour est vert.
+- [ ] 6.4 Toute capacité métier s'offre aussi en ligne de commande (A19). **Fait quand** : l'emport et
+      la reprise ont leur commande, couvertes par `cli-surface.bats` et `cli.bats`, ou une issue dit
+      pourquoi elles ne l'ont pas.
