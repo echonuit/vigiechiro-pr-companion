@@ -40,6 +40,14 @@ public final class CarroyageNational {
     /// sans admettre la maille d'à côté, dont le centre est à 2 km.
     private static final double PORTEE_METRES = 1_500;
 
+    /// Mètres par degré de latitude, valeur **précise**.
+    ///
+    /// `EmpriseAutourDesPoints` et `FournisseurEmpriseCarreOfficiel` en emploient une autre, 111,0 km
+    /// par degré, et l'écart de 0,12 % est délibéré : là-bas on **dessine** une boîte de 2 km, où
+    /// 130 m de biais ne se voient pas ; ici on **mesure** une distance qu'on compare à un seuil de
+    /// 50 m. Les unifier sur la valeur ronde ferait dériver le seuil de frontière ; les unifier sur
+    /// celle-ci ne casserait rien mais changerait des emprises pour rien. Constaté à la passe 7 de la
+    /// clôture du chantier #4573.
     private static final double METRES_PAR_DEGRE_LAT = 111_132;
 
     private static final double METRES_PAR_DEGRE_LON_EQUATEUR = 111_320;

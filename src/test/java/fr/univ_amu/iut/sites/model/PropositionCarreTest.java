@@ -36,6 +36,9 @@ class PropositionCarreTest {
                 .as("proposer un numéro sur une frontière revient à tirer au sort")
                 .isEmpty();
         assertThat(verdict.message()).contains("040110").contains("040111").contains("frontière");
+        assertThat(((VerdictProposition.Frontiere) verdict).numeros())
+                .as("rangés par numéro : l'ordre ne doit pas suggérer une préférence que la phrase refuse")
+                .containsExactly("040110", "040111");
     }
 
     @Test

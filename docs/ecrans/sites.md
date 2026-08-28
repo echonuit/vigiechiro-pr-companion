@@ -72,6 +72,10 @@ Trois réponses possibles, et deux ne remplissent rien :
 - **aucun carré ne couvre cette position** : vous êtes hors de France métropolitaine, ou la latitude et
   la longitude sont inversées. Le message le dit.
 
+![La fenêtre de déclaration après avoir situé une position : le numéro de carré s'est rempli seul, et un message vert dit d'où il vient.](../assets/captures/apercu-sites-modale-site-position-situee.png)
+
+![La même fenêtre quand la position tombe sur une frontière : rien n'est rempli, et un message orange nomme les deux carrés candidats.](../assets/captures/apercu-sites-modale-site-position-frontiere.png)
+
 Un **lien** de carte n'est pas accepté : collez les coordonnées, pas l'adresse de la page.
 
 ### Savoir si le carré existe déjà sur Vigie-Chiro
