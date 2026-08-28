@@ -36,7 +36,7 @@ MNHN tranche vient du serveur des deux côtés, et n'a rien à faire dans un paq
 
 ## Decisions
 
-### D1. Le paquet emporte toutes les séquences transformées, pas les bruts
+### D1. Le paquet emporte la sélection d'écoute, et elle est figée
 
 **Tranché.** Le paquet emporte les séquences de la **sélection d'écoute**, et cette sélection est
 **figée** pour le relecteur.
@@ -138,8 +138,8 @@ tableau multisite et ses filtres au solde de saison, en passant par quatre comma
 commande et la vue du passage. « Le verdict du passage » est une notion consommée partout ; la faire
 passer à N valeurs déborde très largement ce chantier.
 
-*Écarté : garder l'avis revenu comme un document à côté.* C'est ce que fait l'art antérieur avec son
-`_<initiales>.xlsx`, et cela ne coûte presque rien. Rejeté parce qu'un avis qui vit dans un document
+*Écarté : garder l'avis revenu comme un document à côté.* Un tableur signé, déposé auprès de la nuit,
+ne coûterait presque rien à produire. Rejeté parce qu'un avis qui vit dans un document
 **se lit, il ne se manipule pas** : il ne s'affiche pas près de la séquence qu'il juge, ne se filtre
 pas, ne s'agrège pas. Le relecteur aurait travaillé pour un fichier que personne n'ouvre.
 
@@ -147,6 +147,13 @@ pas, ne s'agrège pas. Le relecteur aurait travaillé pour un fichier que person
 exactement comme V26 porte un validateur. C'est ce que le régime décrit : une nuit se confie à
 quelqu'un, pas à un comité. Le jour où il en faudra plusieurs, la voie générale sera toujours là, et
 elle sera un chantier à elle seule.
+
+**Un second avis ne se glisse pas en silence.** Puisque les deux colonnes portent un relecteur, un
+avis qui arrive sur une nuit qui en porte déjà un remplace le précédent. Le remplacement reste
+possible, jamais tacite : double confirmation qui nomme le relecteur présent et le nombre de verdicts
+perdus, sur le patron de `ConfirmationsImport.confirmerEcrasement` (#279, #2223). *Écarté : refuser
+l'import.* Rien ne serait effacé, mais le premier relecteur qui répond verrouillerait la nuit, et
+aucun geste ne permettrait plus d'en accueillir un autre.
 
 ### D4. L'attribution, si le régime la demande, coûte peu
 

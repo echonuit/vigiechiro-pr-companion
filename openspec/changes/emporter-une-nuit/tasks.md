@@ -51,11 +51,13 @@
 
 - [ ] 5.1 Un avis importé écraserait le verdict de l'expéditeur. **Fait quand** : un test importe un
       avis divergent et constate que les deux verdicts subsistent, chacun avec son pseudo.
-- [ ] 5.2 Un verdict portant sur une séquence hors de la sélection de l'expéditeur n'a nulle part où
-      aller. **Fait quand** : un test importe un tel verdict et le retrouve conservé, présenté comme
-      hors sélection, et non écarté en silence.
+- [ ] 5.2 La sélection étant figée, un verdict hors d'elle signale un paquet qui ne correspond pas à
+      la nuit. **Fait quand** : un test importe un tel verdict et constate un refus qui nomme la
+      séquence en cause, sans que rien n'ait été écrit.
 - [ ] 5.3 Un second avis effacerait le premier sans un mot. **Fait quand** : un test importe un avis
-      sur une nuit qui en porte déjà un et constate un refus qui nomme ce qui serait remplacé.
+      sur une nuit qui en porte déjà un et constate une double confirmation qui nomme le relecteur
+      présent et le nombre de verdicts perdus ; un second test refuse la confirmation et constate que
+      rien n'a été écrit.
 
 ## 6. Ce qui se voit, et ce qui se prouve
 

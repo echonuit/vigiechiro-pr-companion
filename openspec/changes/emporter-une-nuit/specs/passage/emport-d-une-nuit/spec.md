@@ -67,8 +67,10 @@ le pseudo est toujours celui de l'ouverture.
 À l'import d'un avis, l'application SHALL conserver le verdict de l'expéditeur inchangé et ranger
 celui du relecteur à côté. Elle ne SHALL PAS fondre les deux, ni en dériver un troisième.
 
-Un verdict portant sur une séquence absente de la sélection de l'expéditeur SHALL être conservé et
-présenté comme tel, plutôt qu'écarté.
+La sélection étant figée, un verdict qui désigne une séquence hors d'elle ne peut venir que d'un
+paquet qui ne correspond pas à la nuit visée. L'application SHALL alors refuser l'import en nommant
+la séquence en cause, plutôt que d'écarter le verdict en silence ou de l'accueillir sans ligne où le
+ranger.
 
 *Vérifié par* : aucun dispositif n'existe encore. Le lot devra porter un test qui importe un avis
 divergent et constate que les deux verdicts subsistent.
@@ -77,9 +79,10 @@ divergent et constate que les deux verdicts subsistent.
 - **WHEN** un avis revient avec un verdict sur une séquence que l'expéditeur avait déjà jugée
 - **THEN** les deux verdicts sont visibles côte à côte, chacun avec le pseudo de qui l'a posé
 
-#### Scenario: le relecteur a jugé une séquence hors de la sélection de l'expéditeur
+#### Scenario: un verdict désigne une séquence hors de la sélection figée
 - **WHEN** un avis revient avec un verdict sur une séquence que l'expéditeur n'avait pas tirée
-- **THEN** le verdict est conservé et présenté comme jugé hors de la sélection de l'expéditeur
+- **THEN** l'application refuse l'import en nommant la séquence en cause, car le paquet ne correspond
+  pas à la nuit visée
 
 #### Scenario: un second avis arriverait par-dessus un premier
 - **WHEN** un avis est importé alors qu'un avis d'un autre relecteur est déjà présent
