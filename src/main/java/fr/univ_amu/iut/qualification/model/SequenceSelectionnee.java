@@ -6,25 +6,32 @@ import java.util.Objects;
 /// Rattachement d'une séquence d'écoute à une [SelectionDEcoute] : une ligne de la table de
 /// jonction N..N `selection_sequence` (C11 ↔ C8).
 ///
-/// Chaque ligne matérialise à la fois l'appartenance d'une séquence à une sélection, sa
-/// `position` d'affichage dans la liste de vérification (les séquences sont relues ordonnées
-/// par position), le flag `ecoutee` mis à jour à chaque lecture (« séquence écoutée », dérivé)
-/// et son [#verdict] par fichier (#1524, lot 5 : on ne juge que ce qu'on écoute).
+/// Elle porte **deux** verdicts et non un : le nôtre, et celui d'un relecteur à qui la nuit a été
+/// confiée. Ils coexistent et ne fusionnent jamais ; l'avis du relecteur s'affiche, il ne vote pas,
+/// et `AgregationVerdict` ne le voit pas. Le pourquoi est dans l'ADR 4517.
 ///
-/// La clé primaire composite est `(selection_id, sequence_id)` : une même séquence ne peut
-/// être rattachée qu'une fois à une sélection donnée.
+/// La clé primaire composite est `(selection_id, sequence_id)`.
 ///
 /// @param idSelection identifiant de la sélection (FK → `listening_selection.id`)
 /// @param idSequence identifiant de la séquence rattachée (FK → `listening_sequence.id`)
 /// @param position rang d'affichage dans la sélection (≥ 0)
 /// @param ecoutee `true` si la séquence a déjà été écoutée (flag `listened`)
-/// @param verdict verdict par fichier de la séquence ([VerdictFichier#NON_JUGE] par défaut ;
-///     colonne `verdict` nullable, `null` ⇒ non jugé)
+/// @param verdict verdict par fichier posé **ici** ([VerdictFichier#NON_JUGE] par défaut)
+/// @param verdictRelecteur verdict rapporté par un relecteur, [VerdictFichier#NON_JUGE] tant
+///     qu'aucun avis n'est revenu ; jamais dérivé de [#verdict]
+/// @param pseudoRelecteur pseudo de qui a posé [#verdictRelecteur], `null` s'il n'y en a pas
 public record SequenceSelectionnee(
-        Long idSelection, Long idSequence, int position, boolean ecoutee, VerdictFichier verdict) {
+        Long idSelection,
+        Long idSequence,
+        int position,
+        boolean ecoutee,
+        VerdictFichier verdict,
+        VerdictFichier verdictRelecteur,
+        String pseudoRelecteur) {
 
     public SequenceSelectionnee {
         verdict = verdict == null ? VerdictFichier.NON_JUGE : verdict;
+        verdictRelecteur = verdictRelecteur == null ? VerdictFichier.NON_JUGE : verdictRelecteur;
     }
 
     /// Constructeur de compatibilité (sans verdict, #1524) : préserve les appels antérieurs au verdict
@@ -33,8 +40,26 @@ public record SequenceSelectionnee(
         this(idSelection, idSequence, position, ecoutee, VerdictFichier.NON_JUGE);
     }
 
-    /// Copie avec un nouveau verdict (les autres champs inchangés).
+    /// Constructeur de compatibilité (sans relecteur, #4624) : un rattachement sans avis rapporté.
+    public SequenceSelectionnee(
+            Long idSelection, Long idSequence, int position, boolean ecoutee, VerdictFichier verdict) {
+        this(idSelection, idSequence, position, ecoutee, verdict, VerdictFichier.NON_JUGE, null);
+    }
+
+    /// Copie avec un nouveau verdict **local** : l'avis du relecteur est préservé.
     public SequenceSelectionnee avecVerdict(VerdictFichier nouveau) {
-        return new SequenceSelectionnee(idSelection, idSequence, position, ecoutee, Objects.requireNonNull(nouveau));
+        return new SequenceSelectionnee(
+                idSelection,
+                idSequence,
+                position,
+                ecoutee,
+                Objects.requireNonNull(nouveau),
+                verdictRelecteur,
+                pseudoRelecteur);
+    }
+
+    /// `true` si un relecteur a rendu un avis : il faut **quoi** et **qui**, pas l'un des deux.
+    public boolean porteUnAvisDeRelecteur() {
+        return verdictRelecteur != VerdictFichier.NON_JUGE && pseudoRelecteur != null;
     }
 }

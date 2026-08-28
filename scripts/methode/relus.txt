@@ -1041,9 +1041,9 @@ ebc7965c702c  src/main/java/fr/univ_amu/iut/passage/viewmodel/SelectionCampagne.
 0084a58a6ff5  src/main/java/fr/univ_amu/iut/qualification/model/PreCheckNuit.java
 c221e37d54a6  src/main/java/fr/univ_amu/iut/qualification/model/SelectionDEcoute.java
 1358cd7f0b45  src/main/java/fr/univ_amu/iut/qualification/model/SequenceEnSelection.java
-61d7cf4f945e  src/main/java/fr/univ_amu/iut/qualification/model/SequenceSelectionnee.java
+5d875b0c1ac4  src/main/java/fr/univ_amu/iut/qualification/model/SequenceSelectionnee.java
 b15603524e55  src/main/java/fr/univ_amu/iut/qualification/model/ServiceQualification.java
-b487490ecf29  src/main/java/fr/univ_amu/iut/qualification/model/dao/SelectionDao.java
+844f99fffe87  src/main/java/fr/univ_amu/iut/qualification/model/dao/SelectionDao.java
 e5561540ee07  src/main/java/fr/univ_amu/iut/qualification/outils/CaptureQualification.java
 ac046feeabb5  src/main/java/fr/univ_amu/iut/qualification/view/BarreVerdicts.java
 2382be0584af  src/main/java/fr/univ_amu/iut/qualification/view/CompteRenduRegeneration.java
@@ -1846,6 +1846,7 @@ a915ebf9d263  src/test/java/fr/univ_amu/iut/qualification/AgregationVerdictTest.
 9730b83d72ad  src/test/java/fr/univ_amu/iut/qualification/QualificationInjectionTest.java
 17441a81b96b  src/test/java/fr/univ_amu/iut/qualification/QualificationModuleTest.java
 33533e7deecc  src/test/java/fr/univ_amu/iut/qualification/SelectionDaoTest.java
+9501a6d14d9c  src/test/java/fr/univ_amu/iut/qualification/SequenceSelectionneeTest.java
 a343b5ab6bf1  src/test/java/fr/univ_amu/iut/qualification/ServiceQualificationMockTest.java
 ac077c73780d  src/test/java/fr/univ_amu/iut/qualification/ServiceQualificationTest.java
 3e3363f10944  src/test/java/fr/univ_amu/iut/qualification/view/ModaleSelectionViewTest.java

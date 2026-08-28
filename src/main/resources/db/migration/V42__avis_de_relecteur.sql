@@ -1,0 +1,33 @@
+-- V42 - L avis d un relecteur, range a cote du notre (#4624, EPIC #3848, ADR 4517).
+--
+-- Une nuit se confie a quelqu un d autre, qui la relit sur son poste et rend son avis. Une sequence
+-- ne portait qu UN verdict, `selection_sequence.verdict` pose par V27 : l avis qui revenait n avait
+-- nulle part ou aller sans ecraser celui de l expediteur.
+--
+-- LE MEME MOTIF A DEJA ETE RESOLU ICI. V26 devait loger l avis d un expert du MNHN sur une detection
+-- deja jugee par Tadarida puis corrigee par l observateur. Elle n a pas duplique l observation : elle
+-- a ajoute `taxon_validator` et `validator_certainty` A COTE. Trois avis sur la meme ligne. Le
+-- verdict d un relecteur est ce motif, et le resoudre autrement creerait deux facons de dire
+-- « quelqu un d autre a juge ceci ».
+--
+-- POURQUOI PAS PLUSIEURS RELECTEURS. La voie generale serait de retirer le UNIQUE sur
+-- `listening_selection.passage_id` et de porter une selection par relecteur. Ecartee sur la mesure :
+-- 23 classes lisent le verdict d un passage, du tableau multisite au solde de saison et a quatre
+-- commandes de la ligne de commande. Deux colonnes portent UN relecteur, comme V26 porte UN
+-- validateur, et une nuit se confie a quelqu un, pas a un comite.
+--
+-- Colonnes nullables, defaut NULL. Pour `verdict_relecteur`, NULL = "non juge"
+-- (VerdictFichier.NON_JUGE cote modele) et le domaine des valeurs non nulles est celui de `verdict` :
+-- les libelles de VerdictFichier ('Bon' | 'Mauvais' | 'Inexploitable'), meme convention de stockage.
+--
+-- `relecteur_pseudo` est un REFLET de la plateforme, jamais une saisie locale : il vient du profil
+-- persiste dans `connexion.json` et s appose a l ouverture du paquet. Aucune contrainte de forme,
+-- comme V26 n en met aucune sur `validator_certainty` : contraindre un reflet ferait rougir sur ce
+-- que le serveur envoie, ce que nous ne decidons pas.
+--
+-- AUCUN BACK-FILL. Une sequence deja jugee n a pas ete relue par quelqu un d autre : lui inventer un
+-- relecteur serait ecrire ce qui n a pas ete declare (article A17). Les deux colonnes restent NULL
+-- sur tout l existant, et c est la verite.
+
+ALTER TABLE selection_sequence ADD COLUMN verdict_relecteur TEXT;
+ALTER TABLE selection_sequence ADD COLUMN relecteur_pseudo TEXT;

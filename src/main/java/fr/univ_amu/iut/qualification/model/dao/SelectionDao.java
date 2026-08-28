@@ -40,7 +40,9 @@ public class SelectionDao extends DaoGenerique<SelectionDEcoute, Long> {
             rs.getLong("sequence_id"),
             rs.getInt("position"),
             rs.getInt("listened") != 0,
-            VerdictFichier.parLibelleOuNonJuge(rs.getString("verdict")));
+            VerdictFichier.parLibelleOuNonJuge(rs.getString("verdict")),
+            VerdictFichier.parLibelleOuNonJuge(rs.getString("verdict_relecteur")),
+            rs.getString("relecteur_pseudo"));
 
     public SelectionDao(SourceDeDonnees source) {
         super(source);
@@ -146,6 +148,27 @@ public class SelectionDao extends DaoGenerique<SelectionDEcoute, Long> {
     /// Enregistre le **verdict par fichier** d'une séquence rattachée (#1524, lot 5). Le verdict
     /// [VerdictFichier#NON_JUGE] repose la colonne à `NULL`. Sans effet si le couple (sélection,
     /// séquence) n'est pas rattaché.
+    /// Enregistre l'avis d'un **relecteur** sur une séquence : son verdict et son pseudo, rangés à
+    /// côté du nôtre sans le toucher (ADR 4517).
+    ///
+    /// Les deux colonnes s'écrivent **ensemble** : un verdict sans pseudo n'est signé par personne,
+    /// un pseudo sans verdict ne juge rien.
+    ///
+    /// @param idSelection sélection portant la séquence
+    /// @param idSequence séquence jugée
+    /// @param verdict verdict du relecteur ; [VerdictFichier#NON_JUGE] efface l'avis, pseudo compris
+    /// @param pseudo pseudo du relecteur, ignoré quand le verdict efface l'avis
+    public void marquerAvisDeRelecteur(Long idSelection, Long idSequence, VerdictFichier verdict, String pseudo) {
+        boolean efface = verdict == null || verdict == VerdictFichier.NON_JUGE;
+        executerMaj(
+                "UPDATE selection_sequence SET verdict_relecteur = ?, relecteur_pseudo = ?"
+                        + " WHERE selection_id = ? AND sequence_id = ?",
+                libelleOuNull(verdict),
+                efface ? null : pseudo,
+                idSelection,
+                idSequence);
+    }
+
     public void marquerVerdict(Long idSelection, Long idSequence, VerdictFichier verdict) {
         executerMaj(
                 "UPDATE selection_sequence SET verdict = ? WHERE selection_id = ? AND sequence_id = ?",
