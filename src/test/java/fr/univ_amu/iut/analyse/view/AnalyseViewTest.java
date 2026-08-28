@@ -905,10 +905,6 @@ class AnalyseViewTest {
                 .toList();
     }
 
-    private static ObservationAnalyse obsLieu(String taxon, String commune, String carre, String site) {
-        return obsLieu(taxon, commune, carre, site, null);
-    }
-
     private static ObservationAnalyse obsLieu(
             String taxon, String commune, String carre, String site, String codePoint) {
         return new ObservationAnalyse(
