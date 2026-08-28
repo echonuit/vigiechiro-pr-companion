@@ -111,7 +111,9 @@ def aligner_les_balises() -> list[str]:
 
 
 def appliquer() -> list[str]:
-    cliquets, _ = rapport.collecter()
+    # `collecter()` rend quatre listes depuis #4635 : cliquets, planchers, loupes, et les scripts
+    # dont le verdict n a pas ete lu. Seuls les cliquets se resserrent ici.
+    cliquets, _, _, _ = rapport.collecter()
     faits = []
     for num, nouvelle in rapport.resserrements(cliquets):
         fichier = sorted(DECISIONS.glob(f"{num}-*.md"))[0]

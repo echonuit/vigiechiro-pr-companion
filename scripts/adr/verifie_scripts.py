@@ -858,6 +858,25 @@ def test_les_gardes_de_code_lisent_les_deux_arbres() -> None:
                  any("test" in str(r) for r in racines), True)
 
 
+def test_resserre_cliquets_appelle_le_rapport() -> None:
+    """La COUTURE entre les deux modules, la ou le temoin voisin n eprouvait que leurs pieces.
+
+    `test_rapport_et_resserrement` verifie le motif de `rapport.py` et la detection de
+    `resserre_cliquets.py`, chacun de son cote. Aucun des deux n appelait l autre, et le jour ou
+    `collecter()` est passe de deux listes a quatre (#4635), l appel a casse sans qu un seul cas ne
+    rougisse. Le harnais chargeait pourtant les deux fichiers.
+
+    Ce cas ne mesure rien d autre que cela : les deux se parlent encore.
+    """
+    resserre = _charge("resserre_cliquets.py")
+    rapport = _charge("rapport.py")
+    attendus = rapport.collecter()
+    signature = resserre.__doc__ is not None
+    _verifie("resserre_cliquets se charge a cote de rapport", signature, True)
+    _verifie("collecter() rend le nombre de listes que resserre_cliquets deballe",
+             len(attendus), 4)
+
+
 def test_rapport_et_resserrement() -> None:
     rapport = _charge("rapport.py")
     # Le parsing : une ligne normalisée doit être reconnue.
@@ -1006,6 +1025,7 @@ if __name__ == "__main__":
         test_loupe_4472_densite_de_commentaire,
         test_un_verdict_se_rend_sur_le_numero_de_son_adr,
         test_les_gardes_de_code_lisent_les_deux_arbres,
+        test_resserre_cliquets_appelle_le_rapport,
         test_rapport_et_resserrement,
     ):
         essai()
