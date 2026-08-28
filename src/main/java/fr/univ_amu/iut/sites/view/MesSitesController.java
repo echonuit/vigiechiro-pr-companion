@@ -363,9 +363,5 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         return carte.passagesDeLAnnee() == 0 ? "jamais utilisé" : "tous vérifiés";
     }
 
-    private static String vide(String texte) {
-        return texte == null || texte.isBlank() ? null : texte;
-    }
-
     /// Valeurs saisies dans la modale de création de site (carré requis, nom optionnel).
 }

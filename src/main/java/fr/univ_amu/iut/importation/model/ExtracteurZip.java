@@ -200,15 +200,6 @@ public final class ExtracteurZip {
         }
     }
 
-    private static void supprimerSilencieux(Path chemin) {
-        try {
-            Files.deleteIfExists(chemin);
-        } catch (IOException echec) {
-            // Best-effort.
-            LOG.log(Level.FINE, echec, () -> "Suppression impossible : " + chemin);
-        }
-    }
-
     /// Renvoie le **dossier à inspecter** dans `extrait`. Une archive créée par « compresser ce dossier »
     /// contient un **unique dossier racine** (`MaNuit/LogPR…`, `MaNuit/bruts/…`) : l'inspection, qui
     /// cherche le journal et les WAV à la racine du dossier source (et dans `bruts/`), ne verrait alors

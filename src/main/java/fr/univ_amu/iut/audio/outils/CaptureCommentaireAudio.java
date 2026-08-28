@@ -2,9 +2,7 @@ package fr.univ_amu.iut.audio.outils;
 
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.view.Habillage;
-import java.net.URL;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -78,17 +76,5 @@ public final class CaptureCommentaireAudio {
 
         ApercuFx.enregistrerPng(scene, fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
-    }
-
-    private static void ajouter(List<String> feuilles, Class<?> ancre, String nom) {
-        URL url = ancre.getResource(nom);
-        if (url != null) {
-            feuilles.add(url.toExternalForm());
-        }
-    }
-
-    /// Classe d'ancrage pour les CSS **partagées** (`commun/view`), sans dépendre d'un type de feature.
-    private static Class<?> ancreCssPartagee() {
-        return fr.univ_amu.iut.commun.view.ConfirmationNavigation.class;
     }
 }

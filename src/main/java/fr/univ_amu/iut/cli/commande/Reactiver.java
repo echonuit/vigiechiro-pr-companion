@@ -10,12 +10,10 @@ import fr.univ_amu.iut.passage.model.CompteRenduReactivation;
 import fr.univ_amu.iut.passage.model.IndiceAcoustique;
 import fr.univ_amu.iut.passage.model.ModeRebranchement;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
-import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -93,20 +91,6 @@ public final class Reactiver implements Callable<Integer> {
                         JetonAnnulation.neutre());
         sortie.println(json ? FormatJson.objet(projeter(rapport)) : enTexte(rapport));
         return rapport.complete() ? 0 : 1;
-    }
-
-    /// Les fichiers **refusés** : jamais rebranchés en silence, chacun avec son motif.
-    private static void ajouterEcarts(StringBuilder texte, List<EcartReactivation> ecarts) {
-        if (ecarts.isEmpty()) {
-            return;
-        }
-        texte.append(ecarts.size())
-                .append(" fichier(s) portaient le bon nom mais n'étaient pas le bon audio (non rebranchés) :\n");
-        ecarts.forEach(ecart -> texte.append("  - ")
-                .append(ecart.nomFichier())
-                .append(" : ")
-                .append(ecart.motif())
-                .append('\n'));
     }
 
     /// Le compte rendu partagé avec la modale, **suivi d'une ligne lisible par une machine**.

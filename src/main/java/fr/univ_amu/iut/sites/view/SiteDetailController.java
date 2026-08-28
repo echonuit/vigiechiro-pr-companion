@@ -518,16 +518,6 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         colVerdict.setCellFactory(colonne -> ColonneBadge.cellule(LignePassage::verdictClasseCss));
     }
 
-    /// Texte saisi → `null` si vide (champ optionnel non renseigné).
-    private static String vide(String texte) {
-        return texte == null || texte.isBlank() ? null : texte;
-    }
-
-    /// Valeur de champ → chaîne vide si `null` (pour pré-remplir un `TextField`).
-    private static String ouVide(String texte) {
-        return texte == null ? "" : texte;
-    }
-
     /// Valeurs saisies dans la boîte d'édition d'un site (carré requis ; nom et commentaire
     /// optionnels ; protocole choisi dans la liste).
 
