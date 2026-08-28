@@ -341,18 +341,6 @@ class ReactivationModaleViewTest {
         return fichiers;
     }
 
-    /// Les seules lignes de détail, chacune étant un nœud distinct depuis #2001 - ce qui permet de
-    /// vérifier qu'un sujet et son motif voyagent ensemble, et non qu'ils apparaissent quelque part
-    /// dans un pavé.
-    private static List<String> details(FxRobot robot) {
-        return robot.lookup("#zoneCompteRendu").queryAs(VBox.class).getChildren().stream()
-                .filter(Label.class::isInstance)
-                .map(Label.class::cast)
-                .filter(l -> l.getStyleClass().contains("compte-rendu-detail"))
-                .map(Label::getText)
-                .toList();
-    }
-
     private static List<String> lignes(FxRobot robot) {
         return robot.lookup("#zoneCompteRendu").queryAs(VBox.class).getChildren().stream()
                 .filter(Label.class::isInstance)

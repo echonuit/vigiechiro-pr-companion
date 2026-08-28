@@ -528,11 +528,4 @@ class ScenarioPerceptifFiltresTest {
                 .orElseThrow(() -> new IllegalStateException(
                         "aucune entrée cochable contenant « " + fragment + " » ; le menu porte " + valeurs(menu)));
     }
-
-    private static MenuItem itemParLibelle(MenuButton menu, String libelle) {
-        return menu.getItems().stream()
-                .filter(item -> libelle.equals(item.getText()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("aucune entrée « " + libelle + " » dans ce menu"));
-    }
 }

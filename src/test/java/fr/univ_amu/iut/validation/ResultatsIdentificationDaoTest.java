@@ -14,9 +14,7 @@ import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -129,18 +127,5 @@ class ResultatsIdentificationDaoTest {
         assertThat(dao.findByPassage(idPassage))
                 .as("ON DELETE CASCADE doit avoir supprimé les résultats du passage")
                 .isEmpty();
-    }
-
-    private static long insererCle(Connection cx, String sql, Object... params) throws SQLException {
-        try (PreparedStatement ps = cx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            for (int i = 0; i < params.length; i++) {
-                ps.setObject(i + 1, params[i]);
-            }
-            ps.executeUpdate();
-            try (ResultSet cles = ps.getGeneratedKeys()) {
-                cles.next();
-                return cles.getLong(1);
-            }
-        }
     }
 }

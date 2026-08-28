@@ -172,10 +172,6 @@ public final class GenerateurCartesSD {
         return lignes;
     }
 
-    private static String ligne(String date, String heure, String serie, String message) {
-        return date + " - " + heure + " PR" + serie + " " + message;
-    }
-
     private static String contenuThlog(SpecCarteSd spec) {
         String jour = dateReference(spec).format(FORMAT_THLOG);
         StringBuilder contenu = new StringBuilder("Date\tHour\tTemperature\tHumidity\n");
