@@ -1485,6 +1485,7 @@ d71e2d2ef7d4  src/test/java/fr/univ_amu/iut/commun/persistence/DaoCompterTest.ja
 953b3f96cd72  src/test/java/fr/univ_amu/iut/commun/persistence/DureeReelleSequencesMigrationTest.java
 8a5ab4ff9229  src/test/java/fr/univ_amu/iut/commun/persistence/EmpreinteMigrationsTest.java
 b5f25e28562a  src/test/java/fr/univ_amu/iut/commun/persistence/FiletAvantMigrationTest.java
+d7503eedd7a8  src/test/java/fr/univ_amu/iut/commun/persistence/InsertionParametree.java
 568de11e0141  src/test/java/fr/univ_amu/iut/commun/persistence/InventaireSauvegardesTest.java
 5a3f4f9f5f96  src/test/java/fr/univ_amu/iut/commun/persistence/LectureParLotSurVraiSqliteTest.java
 92385d14d5c7  src/test/java/fr/univ_amu/iut/commun/persistence/LotsDeParametresTest.java
@@ -1494,7 +1495,7 @@ b6546a921522  src/test/java/fr/univ_amu/iut/commun/persistence/MigrationReparati
 8f263bf2a319  src/test/java/fr/univ_amu/iut/commun/persistence/MigrationSchemaTest.java
 de7c180a8fd4  src/test/java/fr/univ_amu/iut/commun/persistence/MigrationV37StatutRecupereTest.java
 40ecdde2007d  src/test/java/fr/univ_amu/iut/commun/persistence/PersistenceInfraTest.java
-b9a197129587  src/test/java/fr/univ_amu/iut/commun/persistence/RestaurationCompleteTest.java
+dd907eae48ed  src/test/java/fr/univ_amu/iut/commun/persistence/RestaurationCompleteTest.java
 ea22ca8086fa  src/test/java/fr/univ_amu/iut/commun/persistence/RetourArriereRestaurationTest.java
 d8caf25b4ba1  src/test/java/fr/univ_amu/iut/commun/persistence/ServiceSauvegardeTest.java
 c83fdd0f5910  src/test/java/fr/univ_amu/iut/commun/persistence/VerrouWorkspaceTest.java

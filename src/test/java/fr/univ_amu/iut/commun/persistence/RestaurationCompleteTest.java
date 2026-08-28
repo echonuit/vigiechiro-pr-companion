@@ -397,7 +397,7 @@ class RestaurationCompleteTest {
             long idOriginal =
                     insererOriginal(cx, idSession, nuit.resolve("bruts").resolve("PaRec.wav"), "PaRec.wav");
             insererOriginal(cx, idSession, brutHorsSession, "brut.wav");
-            inserer(
+            InsertionParametree.poser(
                     cx,
                     "INSERT INTO listening_sequence(session_id, original_recording_id, file_path,"
                             + " file_name) VALUES (?, ?, ?, ?)",
@@ -405,14 +405,14 @@ class RestaurationCompleteTest {
                     idOriginal,
                     nuit.resolve("transformes").resolve("seq.wav"),
                     "seq.wav");
-            inserer(
+            InsertionParametree.poser(
                     cx,
                     "INSERT INTO sensor_log(session_id, file_path) VALUES (?, ?)",
                     idSession,
                     nuit.resolve("LogPR.txt"));
             // Le CSV Tadarida est rattaché au PASSAGE, pas à la session : c'est la seule des six
             // tables à chemin qui se retrouve par une autre clé, et donc celle qu'on oublie.
-            inserer(
+            InsertionParametree.poser(
                     cx,
                     "INSERT INTO identification_results(passage_id, file_path, detected_format,"
                             + " imported_at) VALUES (?, ?, 'Tadarida', '2026-08-03')",
@@ -424,31 +424,9 @@ class RestaurationCompleteTest {
         }
     }
 
-    /// Pose une ligne dont les valeurs passent par des paramètres, jamais par la concaténation.
-    ///
-    /// Le risque pratique était nul - c'est du code de test et l'entrée vient du harnais - mais un
-    /// échappement écrit à la main est précisément ce qu'une requête préparée existe pour éviter, et
-    /// l'alerte ne se ferme pas autrement (#4509). Un `Path` se pose par son chemin ; le reste passe
-    /// tel quel.
-    private static void inserer(Connection cx, String sql, Object... valeurs) throws SQLException {
-        try (PreparedStatement ordre = cx.prepareStatement(sql)) {
-            for (int i = 0; i < valeurs.length; i++) {
-                Object v = valeurs[i];
-                if (v instanceof Path chemin) {
-                    ordre.setString(i + 1, chemin.toString());
-                } else if (v instanceof Long entier) {
-                    ordre.setLong(i + 1, entier);
-                } else {
-                    ordre.setString(i + 1, String.valueOf(v));
-                }
-            }
-            ordre.executeUpdate();
-        }
-    }
-
     /// Pose un original et rend sa clé, que la ligne suivante rattache.
     private static long insererOriginal(Connection cx, long idSession, Path fichier, String nom) throws SQLException {
-        inserer(
+        InsertionParametree.poser(
                 cx,
                 "INSERT INTO original_recording(session_id, file_path, file_name)" + " VALUES (?, ?, ?)",
                 idSession,
@@ -509,7 +487,7 @@ class RestaurationCompleteTest {
         try (Connection cx = source.getConnection();
                 Statement st = cx.createStatement()) {
             st.execute("PRAGMA foreign_keys = OFF");
-            inserer(
+            InsertionParametree.poser(
                     cx,
                     "INSERT INTO recording_session(root_path, originals_total_bytes,"
                             + " sequences_total_bytes, passage_id) VALUES (?, 0, 0, ?)",
