@@ -300,7 +300,7 @@ La liste des carrés suivis, peuplée et à l'état initial.
 
 ## Modale point d'écoute
 
-<sub>`sites/view/ModalePoint.fxml` &middot; 2 capture(s)</sub>
+<sub>`sites/view/ModalePoint.fxml` &middot; 3 capture(s)</sub>
 
 <table>
 <tr>
@@ -310,6 +310,14 @@ La liste des carrés suivis, peuplée et à l'état initial.
 <tr>
 <td><a href="apercu-sites-modale-point.png"><img src="apercu-sites-modale-point.png" width="430" alt="Modale point"></a></td>
 <td><a href="apercu-sites-modale-point-creation.png"><img src="apercu-sites-modale-point-creation.png" width="430" alt="Modale point création"></a></td>
+</tr>
+<tr>
+<th width="50%">Modale point carré divergent</th>
+<th width="50%"></th>
+</tr>
+<tr>
+<td><a href="apercu-sites-modale-point-carre-divergent.png"><img src="apercu-sites-modale-point-carre-divergent.png" width="430" alt="Modale point carré divergent"></a></td>
+<td></td>
 </tr>
 </table>
 
