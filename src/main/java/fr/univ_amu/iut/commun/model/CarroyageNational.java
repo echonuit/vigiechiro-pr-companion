@@ -40,18 +40,6 @@ public final class CarroyageNational {
     /// sans admettre la maille d'à côté, dont le centre est à 2 km.
     private static final double PORTEE_METRES = 1_500;
 
-    /// Mètres par degré de latitude, valeur **précise**.
-    ///
-    /// `EmpriseAutourDesPoints` et `FournisseurEmpriseCarreOfficiel` en emploient une autre, 111,0 km
-    /// par degré, et l'écart de 0,12 % est délibéré : là-bas on **dessine** une boîte de 2 km, où
-    /// 130 m de biais ne se voient pas ; ici on **mesure** une distance qu'on compare à un seuil de
-    /// 50 m. Les unifier sur la valeur ronde ferait dériver le seuil de frontière ; les unifier sur
-    /// celle-ci ne casserait rien mais changerait des emprises pour rien. Constaté à la passe 7 de la
-    /// clôture du chantier #4573.
-    private static final double METRES_PAR_DEGRE_LAT = 111_132;
-
-    private static final double METRES_PAR_DEGRE_LON_EQUATEUR = 111_320;
-
     private final Map<String, PositionGeo> centroides;
 
     private CarroyageNational(Map<String, PositionGeo> centroides) {
@@ -98,23 +86,17 @@ public final class CarroyageNational {
     public List<CarreCandidat> candidats(double latitude, double longitude) {
         List<CarreCandidat> proches = new ArrayList<>();
         for (Map.Entry<String, PositionGeo> maille : centroides.entrySet()) {
-            double distance = distanceMetres(latitude, longitude, maille.getValue());
+            double distance = ConversionGeographique.distanceMetres(
+                    latitude,
+                    longitude,
+                    maille.getValue().latitude(),
+                    maille.getValue().longitude());
             if (distance <= PORTEE_METRES) {
                 proches.add(new CarreCandidat(maille.getKey(), distance));
             }
         }
         proches.sort(Comparator.comparingDouble(CarreCandidat::distanceMetres));
         return List.copyOf(proches);
-    }
-
-    /// Distance en mètres, par projection équirectangulaire locale. À l'échelle du kilomètre, elle
-    /// s'écarte de la distance géodésique de bien moins d'un mètre, et les mesures du 2026-08-27 le
-    /// confirment contre le serveur : 1 411,7 m calculés ici pour 1 412 m rendus par la plateforme.
-    private static double distanceMetres(double latitude, double longitude, PositionGeo centre) {
-        double dx =
-                (centre.longitude() - longitude) * METRES_PAR_DEGRE_LON_EQUATEUR * Math.cos(Math.toRadians(latitude));
-        double dy = (centre.latitude() - latitude) * METRES_PAR_DEGRE_LAT;
-        return Math.hypot(dx, dy);
     }
 
     /// Nombre de mailles connues. Sert aux tests et au diagnostic.

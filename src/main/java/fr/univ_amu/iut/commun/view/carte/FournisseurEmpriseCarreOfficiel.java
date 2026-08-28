@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.view.carte;
 
 import fr.univ_amu.iut.commun.model.CarroyageNational;
+import fr.univ_amu.iut.commun.model.ConversionGeographique;
 import fr.univ_amu.iut.commun.model.PositionGeo;
 import java.util.List;
 import java.util.Optional;
@@ -18,10 +19,10 @@ import java.util.Optional;
 /// ([FournisseurEmpriseCarreEnChaine]) bascule alors sur le repli [EmpriseAutourDesPoints].
 public final class FournisseurEmpriseCarreOfficiel implements FournisseurEmpriseCarre {
 
-    /// Demi-côté du carré Vigie-Chiro (2 km de côté) et conversion km → degrés (cf. [EmpriseAutourDesPoints]).
+    /// Demi-côté du carré Vigie-Chiro, qui fait 2 km de côté. La conversion en degrés vit dans
+    /// [fr.univ_amu.iut.commun.model.ConversionGeographique], à la précision du **dessin** : sa javadoc
+    /// dit pourquoi elle n'est pas celle de la mesure.
     private static final double DEMI_COTE_KM = 1.0;
-
-    private static final double KM_PAR_DEGRE_LAT = 111.0;
 
     private final CarroyageNational carroyage;
 
@@ -45,8 +46,8 @@ public final class FournisseurEmpriseCarreOfficiel implements FournisseurEmprise
     }
 
     private static EmpriseCarre autourDe(PositionGeo centre) {
-        double demiLat = DEMI_COTE_KM / KM_PAR_DEGRE_LAT;
-        double demiLon = DEMI_COTE_KM / (KM_PAR_DEGRE_LAT * Math.cos(Math.toRadians(centre.latitude())));
+        double demiLat = ConversionGeographique.degresDeLatitudePour(DEMI_COTE_KM);
+        double demiLon = ConversionGeographique.degresDeLongitudePour(DEMI_COTE_KM, centre.latitude());
         return new EmpriseCarre(
                 centre.latitude() - demiLat,
                 centre.longitude() - demiLon,
