@@ -8,6 +8,7 @@ decided_at: 2026-08-28
 verification: certaine
 enforced_by:
   - "NumeroDeCarreTest#departement_a_un_chiffre_retrouve_son_zero"
+  - "ReponsesVigieChiroTest#numero_carre_stoc_rembourre_le_zero_de_gauche"
   - "CarroyageNationalTest#centroide_se_cherche_sur_six_chiffres"
   - "FournisseurEmpriseCarreOfficielTest#carre_de_departement_a_un_chiffre_est_cale"
 verified:
@@ -67,9 +68,17 @@ passe 0 de la clôture qui l'a vu. La table se bâtit donc sur la forme de R1, p
 
 ## Comment on saurait qu'elle est rompue
 
-`NumeroDeCarreTest#departement_a_un_chiffre_retrouve_son_zero` tient la règle.
-`CarroyageNationalTest#centroide_se_cherche_sur_six_chiffres` tient que la table parle une seule langue.
-`FournisseurEmpriseCarreOfficielTest#carre_de_departement_a_un_chiffre_est_cale` tient la conséquence
-visible : la carte trace ces mailles.
+`NumeroDeCarreTest#departement_a_un_chiffre_retrouve_son_zero` tient la règle elle-même.
 
-Les trois rougissent si quelqu'un rend le référentiel « tel quel ».
+Les trois autres tiennent chacune des deux entrées, et la conséquence visible :
+
+- `ReponsesVigieChiroTest#numero_carre_stoc_rembourre_le_zero_de_gauche` tient la réponse de la
+  plateforme. C'est **le garde de la cause de #4592** : `ControleCarreStoc` compare par `equals`, et
+  il ne peut concorder que si ce qui lui arrive est déjà au format. Le contrôle ne peut pas tenir ce
+  garde lui-même - son test bouchonne le client, donc en aval du rembourrage.
+- `CarroyageNationalTest#centroide_se_cherche_sur_six_chiffres` tient le référentiel embarqué, et
+  qu'il parle une seule langue de bout en bout.
+- `FournisseurEmpriseCarreOfficielTest#carre_de_departement_a_un_chiffre_est_cale` tient ce que
+  l'observateur voit : la carte trace ces mailles.
+
+Les quatre rougissent si quelqu'un rend un numéro « tel quel ».
