@@ -46,10 +46,10 @@ transformées/brutes que l'EPIC opposait.
 pourrait pas régénérer, donc pas contester l'échantillon tiré par l'expéditeur, ce qu'une relecture
 déléguée cherche parfois précisément à faire.
 
-*Écarté : tout, bruts compris.* L'art antérieur donne l'ordre de grandeur. ChiroTool, outil du même
-protocole, offre le partage « sans copier des To de bruts » et fait des bruts une option désactivée
-par défaut. Le besoin qu'ils servent ainsi, réactiver la nuit ailleurs, n'est pas celui d'une
-relecture.
+*Écarté : tout, bruts compris.* Les enregistrements sont en 384 kHz : le volume d'une nuit entière
+de bruts se compte en dizaines de gigaoctets, et le lot 1 de l'EPIC exige déjà « l'estimation de
+volume annoncée avant écriture ». Le besoin que les bruts servent, réactiver la nuit ailleurs, n'est
+pas celui d'une relecture.
 
 ### D2. Les identifiants de plateforme ne voyagent pas dans le paquet
 
@@ -76,10 +76,10 @@ Quatre régimes ont été pesés, avec leur coût mesuré.
 des observations avec leurs sons » parmi les mécanismes qui ne conviennent pas : « conçu pour faire
 écouter ; rien ne se réimporte ».
 
-**La copie signée est le régime de l'art antérieur**, et il n'était pas sur la table. ChiroTool
-enregistre la relecture dans une copie suffixée des initiales du relecteur, préserve l'original, et
-ne recombine **jamais** deux relecteurs : cherché explicitement, aucun `merge`, `fusion`, `combine`
-ni `consolid` dans son module de validation. La réconciliation est hors de l'outil, délibérément.
+**La copie signée a son précédent dans le dépôt**, et il n'était pas sur la table. V26 devait loger
+l'avis d'un expert du MNHN sur une détection déjà jugée par Tadarida puis corrigée par l'observateur.
+Elle n'a pas dupliqué l'observation, elle a ajouté `taxon_validator` et `validator_certainty` **à
+côté** : trois avis sur la même ligne, aucun écrasé, aucune réconciliation.
 
 Ce régime épouse une propriété du domaine que les trois autres manquent : **une validation
 s'attribue**. Deux experts qui divergent ne produisent pas un conflit à résoudre, mais deux avis,
@@ -142,22 +142,28 @@ elle sera un chantier à elle seule.
 
 Mesuré dans `connexion/model/StockageConnexion.java` : l'identité de l'utilisateur est déjà persistée
 localement dans `connexion.json`, avec son `id`, son **`pseudo`** et son `role`, et se lit **hors
-connexion**. Là où ChiroTool fait taper des initiales, le nom lisible est déjà là.
+connexion**. Le nom lisible est donc déjà là, et le relecteur n'a rien à saisir : une identité qu'on
+ne tape pas ne se tape pas de travers.
 
 **Une limite à traiter dans la conception.** `profil()` passe par `sessionValide()`, qui filtre sur
 la péremption du jeton à quatorze jours. Au-delà, l'identité est rendue vide alors qu'elle est
 physiquement dans le fichier. Un relecteur qui juge sans s'être reconnecté depuis deux semaines
-produirait des verdicts non attribuables.
+produirait des verdicts non attribuables. Le pseudo n'est jamais saisi : une identité qu'on ne tape
+pas ne se tape pas de travers.
 
 *Le remède ne coûte rien* : apposer l'identité sur le paquet **à son ouverture**, tant qu'elle est
 valide, plutôt que de la lire au moment du jugement.
 
 ### D5. Le plan précède l'écriture, et se lit avant de copier
 
-L'art antérieur sépare `plan_export()` de `run_export()` : le plan porte une estimation en octets et
-ses avertissements **avant** qu'un octet soit copié, les fichiers y sont **typés** pour ventiler
-l'estimation par nature, et le mode d'essai est le défaut. Le lot 1 de l'EPIC exige déjà
-« l'estimation de volume annoncée avant écriture » : c'est le bon découpage, pas une précaution.
+**Le dépôt porte déjà ce patron, et l'a chiffré trois fois.** `CompacteurDepot.planifier()` porte la
+mention « **Planifie sans rien écrire** » (#1994) et rend une partition déterministe.
+`estimationTailleDepot()` est pure et statique, « exposée pour que l'IHM anticipe avec **le même
+calcul** que le garde-fou avant écriture » (#808). `verifierEspaceDisque()` refuse avant d'écrire
+quand le disque n'a manifestement pas la place (#769).
+
+Le lot 1 de l'EPIC exige déjà « l'estimation de volume annoncée avant écriture ». Ce n'est donc pas
+une précaution à inventer : c'est le patron de la maison, qu'il faut suivre plutôt que refaire.
 
 ## Risks / Trade-offs
 

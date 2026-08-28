@@ -53,10 +53,9 @@ anomalie à réduire : ce sont deux jugements d'experts, et les écraser l'un pa
 une information que le domaine tient pour la donnée elle-même. C'est l'article A17 appliqué à un
 jugement : ne rien effacer.
 
-L'art antérieur confirme sans avoir été consulté pour cela. ChiroTool, outil du même protocole sous
-licence MIT, enregistre la relecture dans une copie suffixée des **initiales** du relecteur et ne
-recombine jamais deux relecteurs : cherché explicitement, aucun `merge`, `fusion`, `combine` ni
-`consolid` dans son module de validation. La réconciliation y est hors de l'outil, délibérément.
+Le dépôt tient déjà ce raisonnement ailleurs. V26 a logé l'avis du validateur du MNHN à côté de
+celui de l'observateur plutôt que de l'écraser, et n'a prévu **aucune** réconciliation entre les
+deux : ils coexistent, chacun attribué à son auteur.
 
 ### Pourquoi pas la voie générale
 

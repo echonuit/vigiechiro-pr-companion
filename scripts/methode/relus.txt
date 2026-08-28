@@ -254,7 +254,7 @@ dc00d22288af  src/main/java/fr/univ_amu/iut/cli/model/ErreurUsage.java
 0ebcb1e9dfb6  src/main/java/fr/univ_amu/iut/cli/model/RegistrePassages.java
 afd418f97e22  src/main/java/fr/univ_amu/iut/commun/api/CatalogueApi.java
 8cff5613e037  src/main/java/fr/univ_amu/iut/commun/api/ClientGbif.java
-25a1d3d00074  src/main/java/fr/univ_amu/iut/commun/api/ClientVigieChiro.java
+ce42a1c324f6  src/main/java/fr/univ_amu/iut/commun/api/ClientVigieChiro.java
 ead5f91ebcf9  src/main/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgression.java
 06f404203a9c  src/main/java/fr/univ_amu/iut/commun/api/CorpsReponse.java
 55f6b2e2c266  src/main/java/fr/univ_amu/iut/commun/api/DonneeVigieChiro.java
