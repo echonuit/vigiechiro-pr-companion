@@ -159,6 +159,54 @@ class ScenarioModaleCarreTest {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    @Test
+    @CasDeRecette(value = "S1-38", portee = Portee.A_L_ECRAN)
+    @DisplayName("S1-38 · partir d'un lieu : coller une position remplit le numéro de carré")
+    void partir_d_un_lieu_remplit_le_carre(FxRobot robot) throws TimeoutException {
+        ouvrirLaDeclaration(robot);
+
+        situer(robot, POSITION_INTERIEURE);
+
+        assertThat(champCarre(robot).getText()).isEqualTo("040110");
+        assertThat(encartPosition(robot).getText()).contains("040110");
+        assertThat(encartPosition(robot).getStyleClass()).contains("encart-succes");
+    }
+
+    @Test
+    @CasDeRecette(value = "S1-39", portee = Portee.A_L_ECRAN)
+    @DisplayName("S1-39 · le geste marche HORS CONNEXION, là où « Vérifier » reste fermé")
+    void situer_marche_hors_connexion(FxRobot robot) throws TimeoutException {
+        seDeconnecter();
+        ouvrirLaDeclaration(robot);
+
+        situer(robot, POSITION_INTERIEURE);
+
+        // Les deux gestes côte à côte, et c'est le contraste qui est le sujet du clip : le carroyage
+        // est embarqué, le portail non.
+        assertThat(champCarre(robot).getText()).isEqualTo("040110");
+        assertThat(robot.lookup("#btnVerifierCarre").queryAs(Button.class).isDisabled())
+                .as("« Vérifier sur Vigie-Chiro » interroge le portail : sans jeton il reste fermé")
+                .isTrue();
+        assertThat(robot.lookup("#btnSituer").queryAs(Button.class).isDisabled())
+                .as("« Situer » ne demande rien à personne : la connexion ne le concerne pas")
+                .isFalse();
+    }
+
+    @Test
+    @CasDeRecette(value = "S1-40", portee = Portee.A_L_ECRAN)
+    @DisplayName("S1-40 · sur une frontière, l'application NOMME les deux carrés et n'en choisit aucun")
+    void sur_une_frontiere_rien_ne_se_remplit(FxRobot robot) throws TimeoutException {
+        ouvrirLaDeclaration(robot);
+
+        situer(robot, POSITION_FRONTALIERE);
+
+        assertThat(champCarre(robot).getText())
+                .as("choisir entre deux centres équidistants reviendrait à tirer au sort")
+                .isEmpty();
+        assertThat(encartPosition(robot).getText()).contains("040110").contains("040111");
+        assertThat(encartPosition(robot).getStyleClass()).contains("encart-avertissement");
+    }
+
     @AfterEach
     void nettoyerWorkspace() {
         System.clearProperty("vigiechiro.workspace");
@@ -470,6 +518,37 @@ class ScenarioModaleCarreTest {
     private static Label encart(FxRobot robot) {
         return robot.lookup("#messageCarreExistant").queryAs(Label.class);
     }
+
+    private static TextField champPosition(FxRobot robot) {
+        return robot.lookup("#champPosition").queryAs(TextField.class);
+    }
+
+    private static Label encartPosition(FxRobot robot) {
+        return robot.lookup("#messagePosition").queryAs(Label.class);
+    }
+
+    /// Colle une position et clique « Situer ».
+    ///
+    /// Le geste est **synchrone** : le carroyage est embarqué, donc rien n'attend le réseau. C'est
+    /// exactement ce que ces trois cas montrent, et pourquoi ils ne bouchonnent aucun client.
+    private void situer(FxRobot robot, String position) throws TimeoutException {
+        Respiration.avantLeGeste(robot);
+        robot.clickOn(champPosition(robot)).write(position);
+        WaitForAsyncUtils.waitForFxEvents();
+        GesteVisible.cliquer(robot, "#btnSituer");
+        WaitForAsyncUtils.waitFor(
+                10, TimeUnit.SECONDS, () -> encartPosition(robot).isVisible());
+        CadreVisible.amener(encartPosition(robot), robot);
+        Respiration.surLeMomentCle(robot);
+    }
+
+    /// Une position bien à l'intérieur du carré `040110`, mesurée le 2026-08-27 à 374,9 m de son
+    /// centre. Elle porte quatorze décimales parce que c'est ce qu'une carte donne, et le champ doit
+    /// l'avaler telle quelle.
+    private static final String POSITION_INTERIEURE = "44.44674980384396, 6.298116860416506";
+
+    /// Le milieu du côté commun aux carrés `040110` et `040111` : deux centres à 997,7 m chacun.
+    private static final String POSITION_FRONTALIERE = "44.444990, 6.306335";
 
     private void laPlateformeConnait(String carre) {
         when(client.chercherCarre(carre)).thenAnswer(appel -> {

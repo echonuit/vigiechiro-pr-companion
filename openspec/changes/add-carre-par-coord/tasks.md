@@ -87,7 +87,7 @@
 - [x] 5.2 La documentation de l'écran décrit un geste qui n'existera plus tel quel. **Fait quand** :
       la section « Déclarer un site » de `docs/ecrans/sites.md` décrit le nouveau geste, ses refus et
       sa fermeture hors connexion, et le garde de documentation à jour est vert.
-- [ ] 5.3 Un geste d'écran qu'aucun clip ne montre ne se vérifie que sur parole. **Fait quand** : le
+- [x] 5.3 Un geste d'écran qu'aucun clip ne montre ne se vérifie que sur parole. **Fait quand** : le
       parcours « coller une position, obtenir un carré, déclarer le site » a son cas de recette et son
       clip, contrôle négatif compris.
 - [x] 5.4 Le motif durable du rayon - celui d'une proposition n'est pas celui d'un contrôle - ne vit
