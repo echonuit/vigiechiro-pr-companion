@@ -36,7 +36,6 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -417,10 +416,6 @@ class MesSitesViewTest {
         robot.interact(() -> injector.getInstance(RevisionDonnees.class).mutationStructurelleValidee());
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
-    }
-
-    private static KeyEvent touche(KeyCode code) {
-        return new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false);
     }
 
     private static HBox trouverCarte(FxRobot robot, String titre) {

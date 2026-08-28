@@ -11,7 +11,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
-import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -139,12 +138,6 @@ class ScenarioModaleCarreTest {
                 };
             }
         };
-    }
-
-    /// Enregistre une connexion, comme la modale de connexion le ferait.
-    private void seConnecter() {
-        injector.getInstance(StockageConnexion.class)
-                .enregistrer("jeton-de-recette", new ProfilVigieChiro(ID_USER, "chiro", "observateur"));
     }
 
     /// Efface la connexion : le cas hors connexion se joue sur le produit, pas sur un drapeau.
