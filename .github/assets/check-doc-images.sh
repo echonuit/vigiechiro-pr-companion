@@ -32,6 +32,25 @@ if [ "${1:-}" = "--auto-test" ]; then
         fi
     }
 
+    # Le temoin du defaut de tube (#4642). Il n'passe pas par `verifie`, qui reinvoque le script
+    # entier : ce qui s'eprouve ici est le MOTIF, sur une source assez grosse pour depasser le
+    # tampon d'un tube. Un temoin bati sur une liste courte serait vert avant comme apres.
+    temoin_tube() {
+        local grosse cible avec sans
+        grosse=$(seq 1 50000 | sed 's/^/apercu-x/;s/$/.png/')
+        cible=$(printf '%s\n' "$grosse" | head -1)
+        cas=$((cas + 1))
+        rouges=$((rouges + 1))
+        if printf '%s\n' "$grosse" | grep -qx "$cible"; then avec=trouve; else avec=RATE; fi
+        if grep -qxF "$cible" <<< "$grosse"; then sans=trouve; else sans=RATE; fi
+        if [ "$avec" = RATE ] && [ "$sans" = trouve ]; then
+            echo "  ✔ le tube accuse a tort sur une grosse source, sa suppression corrige"
+        else
+            echo "  ✘ temoin du tube : avec tube=$avec, sans tube=$sans (attendu RATE puis trouve)"
+            echecs=1
+        fi
+    }
+
     monter() { # un bac COMPLET : une page qui référence une capture présente et déclarée
         rm -rf "$bac"
         mkdir -p "$bac/.github/assets" "$bac/docs"
@@ -65,6 +84,7 @@ if [ "${1:-}" = "--auto-test" ]; then
     verifie 0 "une doc sans aucune capture n'a rien à vérifier"
 
     echo
+    temoin_tube
     echo "${cas} cas, dont ${rouges} qui DOIVENT rougir."
     if [ "${echecs}" = 0 ]; then
         echo "Auto-test de la garde images de doc : OK"
@@ -109,7 +129,18 @@ while IFS= read -r png; do
     ERREURS=$((ERREURS + 1))
     continue
   fi
-  if ! printf '%s\n' "$declarees" | grep -qx "$png"; then
+  # Sans tube, et c'est le fond : `grep -q` sort au premier match et referme le tuyau, si bien qu'un
+  # `printf` encore en train d'ecrire recoit SIGPIPE - que `pipefail` propage ALORS MEME que `grep` a
+  # trouve. Le garde accuse alors une capture parfaitement declaree.
+  #
+  # Mesure (#4642) : avec les 142 captures du manifeste, 4 492 octets, le defaut ne se declenche
+  # jamais - 0 sur 200 essais - parce que l'ecriture tient sous le tampon de 65 536 octets d'un tube.
+  # Avec 50 000 entrees, 888 893 octets, il se declenche 40 fois sur 40. Il est donc LATENT : il se
+  # reveillerait vers deux mille captures, contre cent quarante aujourd'hui.
+  #
+  # L'echec observe sur #4641 n'est PAS explique par ce motif, et sa cause reste inconnue. Ce qui
+  # suit previent une classe de defaut, cela ne corrige pas cet echec-la.
+  if ! grep -qxF "$png" <<< "$declarees"; then
     echo "✗ $png : présente mais NON déclarée dans captures.manifest (à ajouter pour la régénération)"
     ERREURS=$((ERREURS + 1))
   fi
