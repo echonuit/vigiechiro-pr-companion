@@ -95,6 +95,19 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
   **établit d'abord qu'on est connecté** : l'entrée de menu porte l'identité (« Vigie-Chiro : pseudo
   (rôle) ») au lieu de « Se connecter à Vigie-Chiro… ». Un rapatriement suppose un jeton, et un clip
   qui commence au « + Nouveau site » demande de le croire sur parole.
+- **S1-38** · Partir d'un **lieu** plutôt que d'un numéro : dans « + Nouveau site », coller
+  `44.44674980384396, 6.298116860416506` sous le champ du carré et cliquer « **Situer** ». Le champ des
+  six chiffres se remplit de `040110`, et un encart vert dit dans quel carré la position tombe. Le
+  bouton « Créer » s'ouvre.
+- **S1-39** · Le geste **ne demande rien au réseau** : se déconnecter (S1-11), rouvrir la déclaration,
+  refaire S1-38. Le carré se déduit quand même - le carroyage national est embarqué. « Vérifier sur
+  Vigie-Chiro » reste fermé, lui, et son infobulle dit pourquoi : c'est la différence entre les deux
+  gestes, et elle se voit.
+- **S1-40** · Sur une **frontière**, rien ne se remplit : coller `44.444990, 6.306335`, cliquer
+  « Situer ». Un encart orange nomme **deux** carrés, `040110` et `040111`, et invite à choisir celui
+  où se trouvait le micro. Le champ garde ce qu'il avait, et « Créer » reste fermé s'il était vide.
+  L'application ne tranche pas : les deux centres sont à distance égale, et elle ne sait pas de quel
+  côté était le micro.
 - **S1-14** · Carte de site complète : nom, points, passages, badge fraîcheur, badges « Enregistré / Verrouillé
   sur Vigie-Chiro », chevron ›.
 - **S1-15** · Navigation clavier (Tab / Entrée / Espace) sur les cartes.

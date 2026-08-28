@@ -1957,7 +1957,7 @@ d8a89dd5ca6b  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteVerifierCarreVi
 11f259be9047  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteViewTest.java
 dda319300ca9  src/test/java/fr/univ_amu/iut/sites/view/NavigationSitesRapatriementTest.java
 95b30117689d  src/test/java/fr/univ_amu/iut/sites/view/ScenarioFicheSiteTest.java
-3eb04adda258  src/test/java/fr/univ_amu/iut/sites/view/ScenarioModaleCarreTest.java
+676648d33987  src/test/java/fr/univ_amu/iut/sites/view/ScenarioModaleCarreTest.java
 37b56139befb  src/test/java/fr/univ_amu/iut/sites/view/ScenarioPerceptifRecuperationCarreTest.java
 4f5ceefcc8c1  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailBadgePlateformeViewTest.java
 c461b6ad5d43  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailPublierPointViewTest.java
