@@ -7,11 +7,13 @@ import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
@@ -104,6 +106,14 @@ public final class CarroyageNational {
         return centroides.size();
     }
 
+    /// Tous les numéros connus, en lecture seule.
+    ///
+    /// Sert au garde qui tient la **forme** du référentiel plutôt qu'un chiffre : il survit ainsi à une
+    /// régénération, et rougit si elle réintroduit une maille qu'on ne saurait nommer (#4612).
+    public Set<String> numeros() {
+        return Collections.unmodifiableSet(centroides.keySet());
+    }
+
     /// Porteur d'initialisation paresseuse : la table ne se lit qu'au premier appel.
     private static final class Porteur {
         private static final CarroyageNational INSTANCE = new CarroyageNational(charger());
@@ -150,9 +160,17 @@ public final class CarroyageNational {
         if (champs.length < 3) {
             return;
         }
+        String numero = champs[0].strip();
+        if (!estUnNumeroDeMaille(numero)) {
+            // Le rembourrage de R1 rendrait « 0 » sous la forme « 000000 » : un numéro qui n'existe pas,
+            // mais qui a l'air d'en être un. La source amont en portait quatre (#4612), et une position
+            // tombant dans l'une de ces mailles se serait vu proposer ce numéro-là.
+            LOG.log(Level.WARNING, () -> "Numéro de maille non conforme à R1, ligne ignorée : " + numero);
+            return;
+        }
         try {
             centroides.put(
-                    NumeroDeCarre.surSixChiffres(champs[0].strip()),
+                    NumeroDeCarre.surSixChiffres(numero),
                     new PositionGeo(Double.parseDouble(champs[1].strip()), Double.parseDouble(champs[2].strip())));
         } catch (NumberFormatException ligneInvalide) {
             // Ligne non conforme (en-tête inattendu, colonne non numérique) : ignorée. Elle parle
@@ -163,5 +181,14 @@ public final class CarroyageNational {
                     ligneInvalide,
                     () -> "Centroïde non numérique pour le carré " + champs[0] + " : ligne ignorée");
         }
+    }
+
+    /// Un numéro de maille exploitable : **cinq ou six chiffres**, R1 rétablissant le zéro de gauche.
+    ///
+    /// En deçà, le rembourrage fabriquerait un numéro plausible et faux - « 0 » deviendrait « 000000 ».
+    /// Refuser à la lecture est le seul endroit où cela se voit une fois pour toutes ; plus loin, le
+    /// numéro a déjà l'air d'un vrai (#4612).
+    private static boolean estUnNumeroDeMaille(String numero) {
+        return (numero.length() == 5 || numero.length() == 6) && numero.chars().allMatch(Character::isDigit);
     }
 }

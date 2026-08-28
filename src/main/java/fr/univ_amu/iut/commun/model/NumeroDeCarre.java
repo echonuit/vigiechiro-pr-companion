@@ -5,7 +5,7 @@ package fr.univ_amu.iut.commun.model;
 ///
 /// Deux sources rendent un numéro et **toutes deux l'amputent** de ce zéro : la grille du portail
 /// (`GET /grille_stoc/cercle`, mesuré le 2026-08-26) et le référentiel embarqué (13 342 numéros à cinq
-/// chiffres sur 137 481). La règle vit donc ici, une fois, plutôt que chez chacune - c'est ce que la
+/// chiffres sur 137 479). La règle vit donc ici, une fois, plutôt que chez chacune - c'est ce que la
 /// décision D10 voulait dire par « au point où le numéro entre dans l'application », et il y a deux
 /// entrées.
 ///

@@ -847,7 +847,7 @@ tiennent dans une seule entrée, « 640380 · Vallon ». `CritereLieu.carres` et
 ne pouvant pas dépendre d'une vue.
 
 **Le carroyage répond dans les deux sens, et normalise son format à la lecture** (chantier #4573).
-Le référentiel embarqué `carrenat.csv.gz` (137 481 mailles, toute la métropole) donne le centroïde
+Le référentiel embarqué `carrenat.csv.gz` (137 479 mailles, toute la métropole) donne le centroïde
 d'un numéro, et donc aussi le numéro d'une position : le carré d'un point est la maille de centroïde
 le plus proche, la partition par centre le plus proche d'un réseau de mailles carrées étant le
 découpage lui-même. Ce sens inverse rend `GET /grille_stoc/cercle` **inutile pour proposer un carré** :
@@ -856,11 +856,13 @@ carré existe-t-il en Point Fixe ».
 
 Le piège, et il a mordu deux fois : **le référentiel comme la grille du portail amputent le zéro de
 gauche des départements 01 à 09**, alors que la règle R1 et le catalogue des sites imposent six
-chiffres. 13 342 numéros sur 137 481 sont concernés. `NumeroDeCarre.surSixChiffres` rétablit la forme,
+chiffres. 13 342 numéros sur 137 479 sont concernés. `NumeroDeCarre.surSixChiffres` rétablit la forme,
 et `CarroyageNational` bâtit sa table dessus : une classe qui rendrait du rembourré tout en cherchant
 du brut ne pourrait pas se redonner ce qu'elle vient de rendre. Un lecteur qui compare un numéro sans
 passer par là obtient un faux négatif silencieux - c'était le cas de `ControleCarreStoc` (#4592) et de
 l'emprise cartographique, qui retombait sur son repli pour ces 13 342 mailles.
+
+**Et le référentiel lui-même se garde** (#4612). La source amont porte quatre mailles dont le numéro vaut `0` ; rembourrées, elles donneraient `000000` - un numéro qui n'existe pas mais qui a l'air d'en être un, et l'une couvrait 2 km de Paris intra-muros. Deux ont été rétablies sur l'autorité de `GET /grille_stoc/cercle`, deux retirées faute de contrepartie officielle. Le garde lit le **fichier** et non la table chargée : depuis que la lecture refuse une ligne non conforme, la table resterait propre pendant que le référentiel se dégrade, et un garde posé sur elle aurait l'air de tenir quelque chose sans rien tenir.
 
 **Sur une frontière, on nomme sans choisir.** Deux centres sont à distance strictement égale au milieu
 d'un côté commun, quatre le sont à un coin - mesuré le 2026-08-27, 997,7 m et 1 412 m. « Le plus

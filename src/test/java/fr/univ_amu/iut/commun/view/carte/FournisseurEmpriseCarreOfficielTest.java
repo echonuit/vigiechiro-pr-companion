@@ -38,7 +38,7 @@ class FournisseurEmpriseCarreOfficielTest {
     @DisplayName("un carré de département à un chiffre est calé lui aussi (#4573, passe 0)")
     void carre_de_departement_a_un_chiffre_est_cale() {
         // Le référentiel ampute le zéro des départements 01 à 09, et un site en porte six (R1) : la
-        // recherche échouait donc pour 13 342 mailles sur 137 481, et la carte retombait en silence sur
+        // recherche échouait donc pour 13 342 mailles sur 137 479, et la carte retombait en silence sur
         // l'emprise autour des points. Aucun test ne le voyait, tous portant sur des départements à deux
         // chiffres.
         assertThat(officiel.emprise("040110", List.of()))
