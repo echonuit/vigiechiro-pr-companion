@@ -499,8 +499,8 @@ public final class ClientVigieChiro {
     }
 
     /// Seuil de bascule en **multipart** (#2354) : au-delà, le `PUT` S3 est découpé en parties
-    /// réessayables séparément. 5 Mo est le minimum d'une partie S3 (sauf la dernière) et la taille de
-    /// chunk retenue - valeur reprise de l'implémentation de référence ChiroTool.
+    /// réessayables séparément. 5 Mo est le minimum d'une partie S3 (sauf la dernière), et c'est donc
+    /// le plus petit seuil qui ne produise jamais de partie refusée.
     public static final long SEUIL_MULTIPART_OCTETS = 5L * 1024 * 1024;
 
     /// Déclare un fichier **multipart** (#2354, `POST /fichiers {multipart:true}`) : la réponse ne porte
