@@ -52,7 +52,7 @@ HORS_CHAMP = {
     "brief/docs/assets/diagrammes/modele-conceptuel.svg": "rendu par Mocodo, qui substitue",
     "brief/docs/assets/diagrammes/modele-integration-plateforme.svg": "rendu par Mocodo, qui substitue",
     "dev-docs/assets/nuit-de-capture.svg": "rendu par Mocodo, qui substitue",
-    "scripts/adr/4368-apostrophe-en-libelle.py": "le garde nomme le caractère qu'il cherche",
+    "scripts/adr/4368-apostrophe-droite.py": "le garde nomme le caractère qu'il cherche",
 }
 
 VOISINAGE = 24

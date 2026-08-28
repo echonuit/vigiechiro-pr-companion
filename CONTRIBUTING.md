@@ -184,7 +184,7 @@ Un commentaire décrit le comportement d'aujourd'hui. « Jusqu'ici », « aupara
 L'historique a ses lieux : `git log`, le CHANGELOG, la section « Alternatives écartées » d'une ADR.
 
 **Une seule apostrophe, l'ASCII** (`'`). Le dépôt en portait 220 courbes le 2026-08-24 ; elles sont
-normalisées, et `scripts/adr/4368-apostrophe-en-libelle.py` tient la règle à zéro. Trois exemptions,
+normalisées, et `scripts/adr/4368-apostrophe-droite.py` tient la règle à zéro. Trois exemptions,
 toutes déclarées dans son en-tête : le `CHANGELOG.md`, qui est engendré, les SVG rendus par Mocodo,
 qui substitue à la source droite, et le signe cité plutôt qu'employé. Le titre de PR est gardé lui
 aussi, parce qu'il devient une ligne du CHANGELOG publié.
