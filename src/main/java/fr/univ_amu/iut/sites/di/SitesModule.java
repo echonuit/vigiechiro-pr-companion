@@ -28,6 +28,7 @@ import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
+import fr.univ_amu.iut.sites.model.ControleCarreLocal;
 import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.ImportSiteDistant;
 import fr.univ_amu.iut.sites.model.PointLocalParLocalite;
@@ -160,12 +161,20 @@ public class SitesModule extends ModuleDeFeature {
     /// ceux-là ont besoin de la plateforme, celui-ci non. Le carroyage est embarqué, donc le service est
     /// toujours disponible - c'est la décision D0 du chantier, lisible jusque dans le montage.
     ///
-    /// `CarroyageNational` n'a pas de constructeur public : sa grille de 137 481 mailles ne se charge
+    /// `CarroyageNational` n'a pas de constructeur public : sa grille de 137 479 mailles ne se charge
     /// qu'une fois, derrière `embarque()`.
     @Provides
     @Singleton
     PropositionCarre fournirPropositionCarre() {
         return new PropositionCarre(CarroyageNational.embarque());
+    }
+
+    /// Le contrôle **hors ligne** du carré, pour la ligne de commande (#4671). Il partage la grille de
+    /// `PropositionCarre` : `embarque()` ne la charge qu'une fois par JVM.
+    @Provides
+    @Singleton
+    ControleCarreLocal fournirControleCarreLocal() {
+        return new ControleCarreLocal(CarroyageNational.embarque());
     }
 
     @Provides

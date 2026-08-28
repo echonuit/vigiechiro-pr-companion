@@ -25,18 +25,6 @@ public class ControleCarreStoc {
 
     private static final Logger LOG = Logger.getLogger(ControleCarreStoc.class.getName());
 
-    /// Écart de distance en deçà duquel deux carrés ne se départagent pas (#4610).
-    ///
-    /// **Dérivé de la géométrie, pas choisi** : pour un point à `x` mètres d'un bord, l'écart entre les
-    /// deux distances aux centres vaut environ `2x`. Cent mètres désignent donc les points à moins de
-    /// 50 m d'une frontière - un point d'écoute n'est pas relevé au mètre près, et 5 m de décalage
-    /// suffisaient à faire basculer le verdict.
-    ///
-    /// Deux fois la valeur retenue pour la **proposition**, et c'est délibéré : proposer un numéro faux
-    /// et plausible se paie cher, tandis qu'ici se taire ne coûte qu'un contrôle en moins. Le contrôle
-    /// peut donc être plus prudent que la proposition sans que l'un contredise l'autre.
-    private static final double ECART_INDISCERNABLE_METRES = 100;
-
     private final ClientVigieChiro client;
 
     public ControleCarreStoc(ClientVigieChiro client) {
@@ -53,7 +41,7 @@ public class ControleCarreStoc {
         Objects.requireNonNull(carreDeclare, "carreDeclare");
         return switch (client.carresStocProches(latitude, longitude)) {
             case ReponseApi.Succes<List<CarreCandidat>>(List<CarreCandidat> candidats) ->
-                verdict(carreDeclare, candidats);
+                ConfrontationCarre.confronter(carreDeclare, candidats);
             case ReponseApi.NonConnecte<List<CarreCandidat>> nonConnecte -> new VerdictCarre.Indisponible();
             case ReponseApi.Injoignable<List<CarreCandidat>>(String cause) -> {
                 LOG.log(Level.FINE, () -> "Contrôle du carré STOC ignoré (Vigie-Chiro injoignable : " + cause + ")");
@@ -64,26 +52,5 @@ public class ControleCarreStoc {
                 yield new VerdictCarre.Indisponible();
             }
         };
-    }
-
-    /// Le verdict, sachant **tous** les candidats proches et non le seul premier.
-    ///
-    /// Le carré déclaré concorde s'il figure parmi les **indiscernables** : ceux dont la distance ne se
-    /// distingue pas de la plus courte. Sur une frontière, l'observateur a raison quel que soit celui des
-    /// deux qu'il a déclaré, et le contrôle n'a pas à trancher une question qui n'a pas de réponse.
-    ///
-    /// Hors de cette bande, la divergence se dit encore, et se dit contre **le plus proche** : c'est ce
-    /// qui garde au contrôle son objet, une faute de frappe sur le carré.
-    private static VerdictCarre verdict(String carreDeclare, List<CarreCandidat> candidats) {
-        if (candidats.isEmpty()) {
-            return new VerdictCarre.HorsGrille();
-        }
-        double plusCourte = candidats.getFirst().distanceMetres();
-        boolean declareEstIndiscernable = candidats.stream()
-                .filter(candidat -> candidat.distanceMetres() - plusCourte < ECART_INDISCERNABLE_METRES)
-                .anyMatch(candidat -> candidat.numero().equals(carreDeclare));
-        return declareEstIndiscernable
-                ? new VerdictCarre.Concorde(carreDeclare)
-                : new VerdictCarre.Diverge(candidats.getFirst().numero(), carreDeclare);
     }
 }

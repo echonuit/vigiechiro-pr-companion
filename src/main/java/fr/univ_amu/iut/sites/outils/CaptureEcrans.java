@@ -28,6 +28,7 @@ import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.ImportSiteDistant;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
@@ -35,6 +36,7 @@ import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.SouhaitDeclaration;
+import fr.univ_amu.iut.sites.model.VerdictCarre;
 import fr.univ_amu.iut.sites.view.MesSitesController;
 import fr.univ_amu.iut.sites.view.ModalePointController;
 import fr.univ_amu.iut.sites.view.ModaleSiteController;
@@ -146,6 +148,8 @@ public final class CaptureEcrans {
         capturerModaleEdition(
                 creerInjecteur(), seed.site(), seed.point(), sortie.resolve("apercu-sites-modale-point.png"));
         capturerModaleCreation(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-point-creation.png"));
+        capturerModalePointCarreDivergent(
+                seed.site(), seed.point(), sortie.resolve("apercu-sites-modale-point-carre-divergent.png"));
         capturerModaleSiteEdition(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-site.png"));
         capturerModaleSiteCreation(creerInjecteur(), sortie.resolve("apercu-sites-modale-site-creation.png"));
         capturerModaleSiteCarreExistant(sortie.resolve("apercu-sites-modale-site-carre-existant.png"));
@@ -207,6 +211,46 @@ public final class CaptureEcrans {
         // l'aperçu montre la modale telle qu'elle est hors ligne (#3458).
         ((ModalePointController) loader.getController()).demarrerCreation(site, () -> {}, identifiant -> {});
         ApercuFx.capturerApresPreparation(new Scene(vue), AttenteTuiles::attendre, fichier);
+    }
+
+    /// Modale de point quand la position **ne tombe pas** dans le carré déclaré par le site (#733).
+    ///
+    /// L'état n'avait aucune image alors que #4671 a changé DEUX FOIS ce qui s'y affiche : plus de cri à
+    /// tort dans neuf départements (#4592), puis plus d'accusation près d'une frontière (#4610).
+    ///
+    /// Le contrôle vit derrière un `OptionalBinder` que seule la connexion remplit : sans bouchon,
+    /// l'image montrerait un silence. Le carré rendu est **la maille voisine** de celle que le site
+    /// déclare - la faute réelle, un chiffre de trop - car une capture doit rester plausible.
+    private static void capturerModalePointCarreDivergent(Site site, PointDEcoute point, Path fichier)
+            throws IOException {
+        Injector injecteur = injecteurAvecControleCarre(new VerdictCarre.Diverge("640381", site.numeroCarre()));
+        FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        ((ModalePointController) loader.getController()).demarrerEdition(site, point, () -> {});
+        ApercuFx.capturerApresPreparation(new Scene(vue), AttenteTuiles::attendre, fichier);
+    }
+
+    /// Injecteur dont le contrôle du carré rend **toujours** le verdict donné.
+    ///
+    /// Même patron qu'[#injecteurAvecVerdict] : l'état à montrer dépend d'une réponse de la plateforme,
+    /// et une capture ne s'appuie sur aucun réseau.
+    private static Injector injecteurAvecControleCarre(VerdictCarre verdict) {
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(ModuleCaptureCommun.executeursSynchrones(), liaison -> {
+                    liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
+                    OptionalBinder.newOptionalBinder(liaison, OuvrirImportation.class)
+                            .setBinding()
+                            .toInstance(idSite -> {});
+                    OptionalBinder.newOptionalBinder(liaison, ControleCarreStoc.class)
+                            .setBinding()
+                            .toInstance(new ControleCarreStoc(new ClientVigieChiro(Optional::empty)) {
+                                @Override
+                                public VerdictCarre confronter(String carreDeclare, double latitude, double longitude) {
+                                    return verdict;
+                                }
+                            });
+                }));
     }
 
     /// Modale d'édition d'un site (champs pré-remplis), rendue seule. Pas de carte-outil ici : aucun

@@ -316,3 +316,24 @@ Tant qu'aucun GPS n'est renseigné, le marqueur démarre **au centre du carré**
 ![La fenêtre de création d'un point d'écoute : formulaire vierge.](../assets/captures/apercu-sites-modale-point-creation.png)
 
 ![La même fenêtre en modification : les champs sont pré-remplis avec les valeurs du point existant.](../assets/captures/apercu-sites-modale-point.png)
+
+### Quand la position ne tombe pas dans le carré déclaré
+
+Dès que vous renseignez des coordonnées, l'application regarde dans quel carré de la grille officielle
+elles tombent, et le compare à celui que le site déclare. Si les deux diffèrent, elle le dit.
+
+![La fenêtre de modification quand la position tombe dans un autre carré : un message orange nomme les deux numéros.](../assets/captures/apercu-sites-modale-point-carre-divergent.png)
+
+**Ce n'est pas un refus.** Vous pouvez enregistrer quand même : c'est peut-être le numéro de carré du
+site qui est faux, et vous êtes seul à le savoir. Le message vous dit lequel des deux vérifier.
+
+Sans lui, une faute de frappe sur un numéro de carré ne se voit qu'au **dépôt**, très loin en aval,
+après avoir contaminé le nom de tous vos fichiers.
+
+Deux cas ne déclenchent **aucun** message, et c'est voulu :
+
+- **la position est près d'une frontière** : elle tombe dans deux carrés à la fois, parfois quatre à un
+  coin. Celui que vous avez déclaré est alors accepté, quel qu'il soit des deux : vous étiez là, pas
+  l'application ;
+- **vous travaillez hors connexion** : la vérification demande la grille à Vigie-Chiro. Elle se tait
+  plutôt que de vous alerter à tort, et la saisie reste entière.
