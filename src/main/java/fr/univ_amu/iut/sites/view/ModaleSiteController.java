@@ -100,6 +100,20 @@ public class ModaleSiteController {
     @FXML
     private Label messageCarreExistant;
 
+    /// La position collée depuis une carte (#4577).
+    @FXML
+    private TextField champPosition;
+
+    /// « Situer » : contrairement à « Vérifier sur Vigie-Chiro », il ne demande **rien au réseau**, donc
+    /// il n'est jamais fermé pour cause de connexion.
+    @FXML
+    private Button btnSituer;
+
+    /// Ce que la position a donné : distinct de [#messageCarreExistant], qui porte la réponse du
+    /// portail. Les confondre effacerait l'un par l'autre.
+    @FXML
+    private Label messagePosition;
+
     /// Ligne du geste « Récupérer ce carré » (#3806) : elle n'existe qu'après un verdict « il existe
     /// déjà », et se retire de la mise en page le reste du temps.
     @FXML
@@ -140,6 +154,14 @@ public class ModaleSiteController {
     ///
     /// Le bouton se désactive pendant l'appel : sans cela, deux clics rapides lanceraient deux
     /// recherches. Un échec technique remet le geste à portée, et le dit.
+    @FXML
+    private void situerPosition() {
+        // Synchrone, sans `executeur` : le carroyage est embarqué et la recherche tient en quelques
+        // millisecondes. Passer par le fil de fond ferait payer un aller-retour d'ordonnancement pour
+        // un calcul local, et laisserait croire à un appel réseau qu'il n'y a pas.
+        viewModel.situerPosition();
+    }
+
     @FXML
     private void verifierCarre() {
         rechercheEnCours.set(true);
@@ -281,6 +303,18 @@ public class ModaleSiteController {
                         .otherwise("Vous n'êtes pas connecté à Vigie-Chiro : rien ne peut être vérifié."
                                 + " Vous pouvez déclarer ce carré sans vérifier, ou vous connecter depuis"
                                 + " le menu principal, entrée « Se connecter à Vigie-Chiro… »."));
+        champPosition.textProperty().bindBidirectional(viewModel.position().texte());
+        LibelleRetour.installer(messagePosition, viewModel.position().retour());
+        Modales.suivreLaCroissance(racine, messagePosition.managedProperty());
+        // Fermé tant qu'il n'y a rien à situer, et JAMAIS pour cause de connexion : le carroyage est
+        // embarqué. C'est la difference avec « Vérifier sur Vigie-Chiro », dont le motif ci-dessus parle
+        // de jeton.
+        btnSituer.disableProperty().bind(champPosition.textProperty().isEmpty());
+        IndicateurBlocage.expliquer(
+                btnSituer,
+                Bindings.when(champPosition.textProperty().isEmpty())
+                        .then("Collez d'abord une position, latitude puis longitude.")
+                        .otherwise("Déduire le carré de cette position. Aucune connexion nécessaire."));
         LibelleRetour.installer(messageCarreExistant, viewModel.carre().retourProperty());
         // Le geste suit le verdict : visible seulement quand il y a un carré à récupérer, et retiré de la
         // mise en page sinon - un bouton grisé en permanence sur un carré libre n'aurait rien à dire.

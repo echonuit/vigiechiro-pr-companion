@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import fr.univ_amu.iut.commun.model.NumeroDeCarre;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -84,24 +85,11 @@ final class ReponsesVigieChiro {
             if (element.isJsonObject()) {
                 String numero = texte(element.getAsJsonObject(), "numero");
                 if (numero != null && !numero.isBlank()) {
-                    return Optional.of(surSixChiffres(numero));
+                    return Optional.of(NumeroDeCarre.surSixChiffres(numero));
                 }
             }
         }
         return Optional.empty();
-    }
-
-    /// Le numéro sur **six chiffres**, département en tête : la forme qu'impose R1 et que respecte le
-    /// catalogue. La grille ampute le zéro de gauche des départements 01 à 09 (#4576).
-    ///
-    /// Le rembourrage vit **ici**, au point unique où ce numéro entre dans l'application : réparé chez
-    /// celui qui compare, le défaut resterait entier pour le lecteur suivant. Un numéro plus long passe
-    /// tel quel.
-    ///
-    /// Sans conditionnelle à dessein : `length() >= 6 ? ...` portait un mutant **équivalent**, la borne
-    /// mutée en `> 6` rendant le même résultat.
-    private static String surSixChiffres(String numero) {
-        return "0".repeat(Math.max(0, 6 - numero.length())) + numero;
     }
 
     /// Identifiant du document **créé** par une écriture Eve (`POST` renvoyant le document), ou vide si le
