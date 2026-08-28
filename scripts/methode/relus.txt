@@ -1959,7 +1959,7 @@ bd7d2b209501  src/test/java/fr/univ_amu/iut/sites/SiteDaoTest.java
 2b00cd974aab  src/test/java/fr/univ_amu/iut/sites/SiteTiersDaoTest.java
 fdb1347ad0fe  src/test/java/fr/univ_amu/iut/sites/model/AppariementPointsTest.java
 3ec22b19f4af  src/test/java/fr/univ_amu/iut/sites/model/BandeDesIndiscernablesTest.java
-9970134d0941  src/test/java/fr/univ_amu/iut/sites/model/ConfrontationCarreTest.java
+8274ffcc758b  src/test/java/fr/univ_amu/iut/sites/model/ConfrontationCarreTest.java
 10be41acf753  src/test/java/fr/univ_amu/iut/sites/model/ControleCarreLocalTest.java
 f9fecd78ca1f  src/test/java/fr/univ_amu/iut/sites/model/ControleCarreStocTest.java
 e3b0c44298fc  src/test/java/fr/univ_amu/iut/sites/model/PositionColleeTest.java

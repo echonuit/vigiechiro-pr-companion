@@ -16,7 +16,7 @@ import picocli.CommandLine.Spec;
 /// [ServiceSites#ajouterPoint] sans logique nouvelle ; les refus métier (site introuvable, code mal formé
 /// R2, code déjà pris) sortent en échec d'exécution (code 1). Les coordonnées sont en degrés décimaux.
 ///
-/// **Le carré est contrôlé quand une position est donnée** (#4682), comme dans l'écran : le carroyage
+/// **Le carré est contrôlé quand une position est donnée** (#4671), comme dans l'écran : le carroyage
 /// embarqué dit dans quelle maille tombe le point, et une divergence part sur la sortie d'ERREUR. Le
 /// code de sortie ne change pas - le contrôle est un confort, jamais une condition, et l'identifiant du
 /// point reste seul sur la sortie standard pour que `POINT=$(...)` continue de marcher.

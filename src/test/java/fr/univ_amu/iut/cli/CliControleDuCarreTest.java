@@ -12,7 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/// Le contrôle du carré en ligne de commande (#4682), comblé à la passe 2 de la clôture de #4671.
+/// Le contrôle du carré en ligne de commande (#4671), comblé à la passe 2 de la clôture de #4671.
 ///
 /// L'écran contrôle depuis #733 dès qu'un point reçoit ses coordonnées ; `ajouter-point` et
 /// `modifier-point` posaient les mêmes coordonnées sans rien dire. Le contrôle est ici **hors ligne** -

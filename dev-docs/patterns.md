@@ -870,7 +870,7 @@ proche » n'y désigne rien, et la représentation par centres ne peut pas porte
 d'intervalle semi-ouvert qui trancherait. L'appelant reçoit donc les candidats et laisse l'observateur
 décider : lui seul sait où était son micro.
 
-**La même règle, deux sources, un seul texte** (#4682). La frontière se lit dans les deux sens : pour
+**La même règle, deux sources, un seul texte** (#4671). La frontière se lit dans les deux sens : pour
 **proposer** un carré, les candidats indiscernables se nomment et aucun ne se choisit ; pour
 **contrôler** un carré déjà déclaré, il concorde s'il figure parmi eux - l'observateur a raison quel que
 soit celui des deux qu'il a écrit.

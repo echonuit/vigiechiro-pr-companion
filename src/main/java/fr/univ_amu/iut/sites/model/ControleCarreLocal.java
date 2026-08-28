@@ -4,7 +4,7 @@ import fr.univ_amu.iut.commun.model.CarroyageNational;
 import java.util.Objects;
 import java.util.Optional;
 
-/// Confronter un carré déclaré à une position **sans rien demander à personne** (#4682).
+/// Confronter un carré déclaré à une position **sans rien demander à personne** (#4671).
 ///
 /// Même règle que [ControleCarreStoc] - toutes deux passent par [ConfrontationCarre] - mais l'autre
 /// interroge la plateforme, et celle-ci lit le carroyage embarqué. « Quel carré couvre cette position »

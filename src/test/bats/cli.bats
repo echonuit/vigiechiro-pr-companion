@@ -206,12 +206,12 @@ echappement() { printf '\033'; }
   [ "${status}" -eq 2 ]
 }
 
-# --- Le controle du carre en ligne de commande (#4682, passe 2 de la cloture de #4671) -------------
+# --- Le controle du carre en ligne de commande (#4671, passe 2 de la cloture de #4671) -------------
 # L ecran controle depuis #733 des qu un point recoit ses coordonnees ; ces deux commandes posaient
 # les memes coordonnees sans rien dire. Le controle est HORS LIGNE : le carroyage est embarque, donc
 # ces cas tournent sans jeton et sans reseau, comme le reste du fichier.
 
-@test "ajouter-point hors du carre declare : le dit sur stderr, et rend 0 quand meme (#4682)" {
+@test "ajouter-point hors du carre declare : le dit sur stderr, et rend 0 quand meme (#4671)" {
   local site
   site=$(cli creer-site --carre 130711 --protocole STANDARD --sans-verification 2>/dev/null)
 
@@ -223,7 +223,7 @@ echappement() { printf '\033'; }
   [[ "${output}" == *"130711"* ]]
 }
 
-@test "ajouter-point : l identifiant reste SEUL sur stdout, l avertissement part sur stderr (#4682)" {
+@test "ajouter-point : l identifiant reste SEUL sur stdout, l avertissement part sur stderr (#4671)" {
   # POINT=$(vigiechiro ajouter-point ...) est le contrat de la commande depuis #615. Un avertissement
   # sur la sortie standard le casserait sans qu aucun code de sortie ne bronche.
   local site point
@@ -233,7 +233,7 @@ echappement() { printf '\033'; }
   [[ "${point}" =~ ^[0-9]+$ ]]
 }
 
-@test "ajouter-point dans le carre declare : aucun avertissement, une concordance est du bruit (#4682)" {
+@test "ajouter-point dans le carre declare : aucun avertissement, une concordance est du bruit (#4671)" {
   local site
   site=$(cli creer-site --carre 040110 --protocole STANDARD --sans-verification 2>/dev/null)
 
@@ -242,7 +242,7 @@ echappement() { printf '\033'; }
   [[ "${output}" != *"grille STOC"* ]]
 }
 
-@test "modifier-point qui deplace hors du carre : le dit aussi (#4682)" {
+@test "modifier-point qui deplace hors du carre : le dit aussi (#4671)" {
   # Le defaut se pose aussi bien en deplacant qu en creant : les deux portes, pas une.
   local site point
   site=$(cli creer-site --carre 130711 --protocole STANDARD --sans-verification 2>/dev/null)

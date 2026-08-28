@@ -4,7 +4,7 @@ import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.sites.model.ControleCarreLocal;
 import picocli.CommandLine.Model.CommandSpec;
 
-/// Dire une divergence de carré sur la sortie d'**erreur**, sans changer le code de sortie (#4682).
+/// Dire une divergence de carré sur la sortie d'**erreur**, sans changer le code de sortie (#4671).
 ///
 /// Deux commandes posent des coordonnées sur un point - `ajouter-point` et `modifier-point` - et l'écran
 /// contrôle depuis #733 ce qu'elles ne contrôlaient pas. Le geste est ici plutôt que dupliqué dans les

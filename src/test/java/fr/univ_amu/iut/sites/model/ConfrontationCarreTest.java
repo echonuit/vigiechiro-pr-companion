@@ -7,13 +7,13 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// La règle du verdict, éprouvée sur des distances **choisies** (#4682).
+/// La règle du verdict, éprouvée sur des distances **choisies** (#4671).
 ///
 /// [ControleCarreStoc] et [ControleCarreLocal] la partagent sans la connaître : l'un interroge la
 /// plateforme, l'autre lit le carroyage, et tous deux passent par ici. C'est donc ici que le seuil se
 /// tient, et nulle part ailleurs.
 ///
-/// **Pourquoi des distances écrites à la main.** Le seuil vaut 100 m d'écart. Le construire depuis de
+/// **Pourquoi des distances écrites à la main.** Le seuil vaut 100 m d'écart (#4610). Le construire depuis de
 /// vraies coordonnées obligerait à viser cette valeur au mètre près en degrés, et le test parlerait
 /// alors de trigonométrie plutôt que de la règle. Ici, l'écart **est** la donnée d'entrée.
 class ConfrontationCarreTest {

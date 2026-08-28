@@ -169,7 +169,7 @@ public class SitesModule extends ModuleDeFeature {
         return new PropositionCarre(CarroyageNational.embarque());
     }
 
-    /// Le contrôle **hors ligne** du carré, pour la ligne de commande (#4682). Il partage la grille de
+    /// Le contrôle **hors ligne** du carré, pour la ligne de commande (#4671). Il partage la grille de
     /// `PropositionCarre` : `embarque()` ne la charge qu'une fois par JVM.
     @Provides
     @Singleton

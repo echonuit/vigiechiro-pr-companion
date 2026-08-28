@@ -6,7 +6,7 @@ import fr.univ_amu.iut.commun.model.CarroyageNational;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// Le contrôle du carré **sans réseau** (#4682) : même règle que [ControleCarreStoc], autre source.
+/// Le contrôle du carré **sans réseau** (#4671) : même règle que [ControleCarreStoc], autre source.
 ///
 /// Les positions sont celles mesurées le 2026-08-27 contre le serveur réel, et servent d'oracle ici comme
 /// dans les tests de la chaîne en ligne.
