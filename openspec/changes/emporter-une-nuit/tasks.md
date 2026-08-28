@@ -1,11 +1,17 @@
 ## 1. Ce que le lot 0 doit laisser derrière lui
 
-- [ ] 1.1 Les cinq décisions de `design.md` deviennent une ADR de `dev-docs/decisions/`, numérotée par
+- [x] 1.1 Les cinq décisions de `design.md` deviennent une ADR de `dev-docs/decisions/`, numérotée par
       l'issue du chantier. **Fait quand** : l'ADR existe, déclare son article et son niveau de
       vérification, et les gardes d'ADR sont verts. Cette note sera archivée, l'ADR non.
-- [ ] 1.2 Le corps de l'EPIC #3848 annonce trois décisions à prendre ; deux d'entre elles ne sont plus
-      des questions ouvertes. **Fait quand** : le corps dit ce qui est tranché et renvoie à l'ADR,
-      plutôt que de laisser lire des questions résolues.
+      **Fait** : ADR 4517, article A17, vérification `humaine`. Une seule ADR et non cinq : le
+      numéro est celui de l'issue, donc une par issue. Elle porte la décision **structurante**,
+      celle qu'un lecteur futur pourrait défaire faute d'en connaître la raison ; le détail des
+      cinq reste dans `design.md`, qui part à l'archivage sans disparaître.
+- [x] 1.2 Le corps de l'EPIC #3848 annonce trois décisions à prendre, et **les trois** sont tranchées,
+      non deux comme cette tâche l'annonçait. **Fait quand** : le corps dit ce qui est tranché et
+      renvoie à l'ADR, plutôt que de laisser lire des questions résolues.
+      **Fait** : la section « Décisions à prendre » est devenue « Décisions tranchées par le lot 0 »,
+      renvoie à l'ADR 4517 et à `design.md`, et nomme les cinq issues du découpage.
 
 ## 2. Le schéma accueille l'avis d'un relecteur
 
