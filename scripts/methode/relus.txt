@@ -929,6 +929,7 @@ fd8ceb740817  src/main/java/fr/univ_amu/iut/passage/model/DecompteAudio.java
 b64615b6913e  src/main/java/fr/univ_amu/iut/passage/model/DetailPassage.java
 63144236e4c5  src/main/java/fr/univ_amu/iut/passage/model/DisponibiliteAudio.java
 7cff7085762b  src/main/java/fr/univ_amu/iut/passage/model/DossierTemporaire.java
+6977e39fb5d6  src/main/java/fr/univ_amu/iut/passage/model/EcrivainPaquet.java
 c19bf8bfec8a  src/main/java/fr/univ_amu/iut/passage/model/EmpreinteContenu.java
 cd43e1bc1cf4  src/main/java/fr/univ_amu/iut/passage/model/EnregistrementOriginal.java
 7c25f921e6c4  src/main/java/fr/univ_amu/iut/passage/model/Enregistreur.java
@@ -952,11 +953,13 @@ a2fc3072f89f  src/main/java/fr/univ_amu/iut/passage/model/InventaireBrutsSource.
 0663f69d3cfc  src/main/java/fr/univ_amu/iut/passage/model/Micro.java
 b25cba20c3d5  src/main/java/fr/univ_amu/iut/passage/model/ModeRebranchement.java
 5a2ad836f506  src/main/java/fr/univ_amu/iut/passage/model/MoteurWorkflowPassage.java
+e06777bc7938  src/main/java/fr/univ_amu/iut/passage/model/NatureDEntree.java
 a7ba4f385a02  src/main/java/fr/univ_amu/iut/passage/model/NuitsOpportunistes.java
 4092fddde3c0  src/main/java/fr/univ_amu/iut/passage/model/ObjetJson.java
 6a0f4ed3500f  src/main/java/fr/univ_amu/iut/passage/model/ObservationsAReconstruire.java
 242c0f7795ed  src/main/java/fr/univ_amu/iut/passage/model/ParticipationOrpheline.java
 66b7cf16b1fc  src/main/java/fr/univ_amu/iut/passage/model/Passage.java
+acee2b6ce71f  src/main/java/fr/univ_amu/iut/passage/model/PlanDePaquet.java
 358f82c6a34d  src/main/java/fr/univ_amu/iut/passage/model/PlateformeReconstruction.java
 586296a91d79  src/main/java/fr/univ_amu/iut/passage/model/PositionMicro.java
 cdca476d018e  src/main/java/fr/univ_amu/iut/passage/model/ProgressionTelechargement.java
@@ -1805,6 +1808,7 @@ c45263937ade  src/test/java/fr/univ_amu/iut/passage/model/AnalyseAcoustiqueTest.
 75e3dae55c8c  src/test/java/fr/univ_amu/iut/passage/model/CorrespondanceParticipationTest.java
 1f65281861a1  src/test/java/fr/univ_amu/iut/passage/model/CreationPassageArchiveTest.java
 cb7e86dcc417  src/test/java/fr/univ_amu/iut/passage/model/DecompteAudioTest.java
+d06312709d08  src/test/java/fr/univ_amu/iut/passage/model/EcrivainPaquetTest.java
 1c26157f7122  src/test/java/fr/univ_amu/iut/passage/model/EmpreinteContenuTest.java
 5ddf43ffcdbb  src/test/java/fr/univ_amu/iut/passage/model/FenetreObserveeNuitTest.java
 4fabfcaa6292  src/test/java/fr/univ_amu/iut/passage/model/HydratationCollisionTest.java
@@ -1813,6 +1817,7 @@ d17fd2d12abb  src/test/java/fr/univ_amu/iut/passage/model/IndiceAcoustiqueTest.j
 978ef66bdfc4  src/test/java/fr/univ_amu/iut/passage/model/MeteoOpenMeteoTest.java
 32c67fa1fd75  src/test/java/fr/univ_amu/iut/passage/model/MeteoPassageTest.java
 b03f97a20dc3  src/test/java/fr/univ_amu/iut/passage/model/ParticipationOrphelineTest.java
+90b5ce16b4e7  src/test/java/fr/univ_amu/iut/passage/model/PlanDePaquetTest.java
 3567263e5189  src/test/java/fr/univ_amu/iut/passage/model/ProgressionTelechargementTest.java
 acd643d069e5  src/test/java/fr/univ_amu/iut/passage/model/PropositionsEnregistreurTest.java
 5ad7c6668356  src/test/java/fr/univ_amu/iut/passage/model/ReliquatPlaceholderTest.java
