@@ -996,10 +996,15 @@ ont formé le delta clos par #1920 ; les suites de #1838 ont eu leur propre clô
 est donc régulier, pas accidentel.
 
 **Les suites d'un chantier se closent par les mêmes 12 passes**, appliquées à leur seul delta
-(`git log <sha-de-la-clôture-précédente>..origin/main`, filtré sur les commits du chantier). C'est peu
-coûteux - le périmètre est étroit - et c'est là qu'on trouve ce que le travail de suite a laissé
-derrière lui : une capacité livrée d'un seul côté, un état visuel sans capture, une règle construite par
-quatre PR qu'aucune ADR ne porte.
+(`git log <sha-de-la-clôture-précédente>..origin/main`, **entier et non filtré** : le code des suites
+doit se juger à côté de ce qui a été fusionné pendant qu'elles couraient). C'est peu coûteux - le
+périmètre est étroit - et c'est là qu'on trouve ce que le travail de suite a laissé derrière lui : une
+capacité livrée d'un seul côté, un état visuel sans capture, une règle construite par quatre PR
+qu'aucune ADR ne porte.
+
+Cette page a longtemps écrit ici « filtré sur les commits du chantier », et c'était faux : la clôture
+de #4671 a trouvé son défaut le plus coûteux dans un plancher **posé par une autre session** pendant
+qu'elle courait. Un delta filtré ne l'aurait pas montré.
 
 **Un bilan est une hypothèse, pas un verdict.** Sa section « dette restante » décrit ce qu'on croyait
 comprendre au moment de l'écrire. Le bilan de #1864 affirmait d'un défaut d'horodatage qu'« une
