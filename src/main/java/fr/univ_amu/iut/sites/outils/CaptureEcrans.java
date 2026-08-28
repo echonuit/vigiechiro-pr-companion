@@ -150,6 +150,8 @@ public final class CaptureEcrans {
         capturerModaleSiteCreation(creerInjecteur(), sortie.resolve("apercu-sites-modale-site-creation.png"));
         capturerModaleSiteCarreExistant(sortie.resolve("apercu-sites-modale-site-carre-existant.png"));
         capturerModaleSiteAutreProtocole(sortie.resolve("apercu-sites-modale-site-autre-protocole.png"));
+        capturerModaleSitePositionSituee(sortie.resolve("apercu-sites-modale-site-position-situee.png"));
+        capturerModaleSitePositionFrontaliere(sortie.resolve("apercu-sites-modale-site-position-frontiere.png"));
         capturerCompteRenduRapatriement(
                 creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-carre-recupere.png"));
         capturerSynchroEnCours(sortie.resolve("apercu-sites-synchro-progression.png"));
@@ -288,6 +290,38 @@ public final class CaptureEcrans {
         Scene scene = new Scene(vue);
         ((TextField) exiger(scene, "#champCarre")).setText(CARRE_DEJA_DECLARE);
         ((Button) exiger(scene, "#btnVerifierCarre")).fire();
+        ApercuFx.enregistrerPng(scene, fichier);
+    }
+
+    /// Modale de déclaration **après avoir situé une position** (#4573).
+    ///
+    /// L'état ne se devine pas d'une capture au repos : le champ des six chiffres s'est rempli tout
+    /// seul, et un message dit d'où vient le numéro. C'est le geste qui dispense d'aller chercher son
+    /// carré sur le portail, et il marche hors connexion.
+    private static void capturerModaleSitePositionSituee(Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE_SITE));
+        loader.setControllerFactory(creerInjecteur()::getInstance);
+        Parent vue = loader.load();
+        ((ModaleSiteController) loader.getController()).demarrerCreation(() -> {});
+        Scene scene = new Scene(vue);
+        ((TextField) exiger(scene, "#champPosition")).setText("44.44674980384396, 6.298116860416506");
+        ((Button) exiger(scene, "#btnSituer")).fire();
+        ApercuFx.enregistrerPng(scene, fichier);
+    }
+
+    /// Modale de déclaration quand la position tombe **sur une frontière** (#4573).
+    ///
+    /// L'état est le plus trompeur des trois sans image : rien ne s'est rempli, et ce n'est pas une
+    /// panne. Deux carrés sont à distance strictement égale, l'application les nomme, et c'est
+    /// l'observateur qui tranche - lui seul sait de quel côté était le micro.
+    private static void capturerModaleSitePositionFrontaliere(Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE_SITE));
+        loader.setControllerFactory(creerInjecteur()::getInstance);
+        Parent vue = loader.load();
+        ((ModaleSiteController) loader.getController()).demarrerCreation(() -> {});
+        Scene scene = new Scene(vue);
+        ((TextField) exiger(scene, "#champPosition")).setText("44.444990, 6.306335");
+        ((Button) exiger(scene, "#btnSituer")).fire();
         ApercuFx.enregistrerPng(scene, fichier);
     }
 

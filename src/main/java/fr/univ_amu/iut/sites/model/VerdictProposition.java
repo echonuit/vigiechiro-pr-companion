@@ -34,8 +34,14 @@ public sealed interface VerdictProposition {
     /// Choisir reviendrait à tirer au sort : mesuré le 2026-08-27, deux centres sont à distance
     /// strictement égale au milieu d'un côté commun, et quatre le sont à un coin.
     record Frontiere(List<String> numeros) implements VerdictProposition {
+        /// Rangés par **numéro**, et non par distance.
+        ///
+        /// Constaté à la revue visuelle de la clôture : le message dit qu'on ne choisit pas, et les
+        /// listait pourtant du plus proche au plus lointain. L'ordre suggérait donc une préférence que
+        /// la phrase refuse d'avoir - sur une frontière, les distances sont égales à quelques mètres,
+        /// et ces mètres ne disent rien de l'endroit où était le micro.
         public Frontiere {
-            numeros = List.copyOf(numeros);
+            numeros = numeros.stream().sorted().toList();
         }
 
         @Override

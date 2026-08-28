@@ -40,6 +40,14 @@ public final class CarroyageNational {
     /// sans admettre la maille d'à côté, dont le centre est à 2 km.
     private static final double PORTEE_METRES = 1_500;
 
+    /// Mètres par degré de latitude, valeur **précise**.
+    ///
+    /// `EmpriseAutourDesPoints` et `FournisseurEmpriseCarreOfficiel` en emploient une autre, 111,0 km
+    /// par degré, et l'écart de 0,12 % est délibéré : là-bas on **dessine** une boîte de 2 km, où
+    /// 130 m de biais ne se voient pas ; ici on **mesure** une distance qu'on compare à un seuil de
+    /// 50 m. Les unifier sur la valeur ronde ferait dériver le seuil de frontière ; les unifier sur
+    /// celle-ci ne casserait rien mais changerait des emprises pour rien. Constaté à la passe 7 de la
+    /// clôture du chantier #4573.
     private static final double METRES_PAR_DEGRE_LAT = 111_132;
 
     private static final double METRES_PAR_DEGRE_LON_EQUATEUR = 111_320;
@@ -69,6 +77,11 @@ public final class CarroyageNational {
 
     /// Centroïde de la maille `numeroCarre`, ou **vide** quand le numéro est inconnu : hors métropole,
     /// ou simplement faux.
+    ///
+    /// Le numéro se donne sur **six chiffres**, la seule forme que R1 autorise. La table est bâtie sur
+    /// cette forme : le référentiel ampute le zéro des départements 01 à 09, et [NumeroDeCarre] le
+    /// rétablit à la lecture, une fois. Sans cela la classe parlerait deux langues, et ce qu'elle rend
+    /// ne pourrait pas lui être redonné - trouvé à la passe 0 de la clôture du chantier #4573.
     public Optional<PositionGeo> centroide(String numeroCarre) {
         return Optional.ofNullable(centroides.get(numeroCarre));
     }
@@ -87,7 +100,7 @@ public final class CarroyageNational {
         for (Map.Entry<String, PositionGeo> maille : centroides.entrySet()) {
             double distance = distanceMetres(latitude, longitude, maille.getValue());
             if (distance <= PORTEE_METRES) {
-                proches.add(new CarreCandidat(NumeroDeCarre.surSixChiffres(maille.getKey()), distance));
+                proches.add(new CarreCandidat(maille.getKey(), distance));
             }
         }
         proches.sort(Comparator.comparingDouble(CarreCandidat::distanceMetres));
@@ -157,7 +170,7 @@ public final class CarroyageNational {
         }
         try {
             centroides.put(
-                    champs[0].strip(),
+                    NumeroDeCarre.surSixChiffres(champs[0].strip()),
                     new PositionGeo(Double.parseDouble(champs[1].strip()), Double.parseDouble(champs[2].strip())));
         } catch (NumberFormatException ligneInvalide) {
             // Ligne non conforme (en-tête inattendu, colonne non numérique) : ignorée. Elle parle

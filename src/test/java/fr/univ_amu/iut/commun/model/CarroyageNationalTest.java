@@ -3,6 +3,10 @@ package fr.univ_amu.iut.commun.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
+import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -66,6 +70,58 @@ class CarroyageNationalTest {
         // Plein Atlantique. Sans portée, la maille la plus proche serait rendue et proposée : un numéro
         // parfaitement plausible, et faux de mille kilomètres.
         assertThat(CarroyageNational.embarque().candidats(45.0, -20.0)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("le centroïde se cherche sur SIX chiffres, la forme que R1 impose aux appelants")
+    void centroide_se_cherche_sur_six_chiffres() {
+        // Le référentiel ampute le zéro des départements 01 a 09, et `candidats` le rembourre déjà.
+        // Sans le rembourrer ici aussi, la classe parlerait deux langues : ce qu'elle rend ne pourrait
+        // pas lui être redonné. Trouvé à la passe 0 de la clôture du chantier #4573.
+        assertThat(CarroyageNational.embarque().centroide("040110"))
+                .as("un appelant tient un numéro à six chiffres : c'est la seule forme que R1 autorise")
+                .isPresent();
+    }
+
+    @Test
+    @DisplayName("une ligne au centroïde non numérique est ignorée, et le journal NOMME le carré fautif")
+    void ligne_non_numerique_parle_dans_le_journal() throws Exception {
+        // Le catch parle depuis #4619, et un message vide vaudrait un catch muet : c'est le jour où le
+        // référentiel se dégrade qu'on lira cette ligne, et il doit dire QUEL carré.
+        List<java.util.logging.LogRecord> captures = new java.util.ArrayList<>();
+        Logger logger = Logger.getLogger(CarroyageNational.class.getName());
+        Level niveauInitial = logger.getLevel();
+        Handler sonde = new Handler() {
+            @Override
+            public void publish(java.util.logging.LogRecord enregistrement) {
+                captures.add(enregistrement);
+            }
+
+            @Override
+            public void flush() {
+                // Rien à vider : la sonde accumule en mémoire.
+            }
+
+            @Override
+            public void close() {
+                // Rien à fermer.
+            }
+        };
+        logger.addHandler(sonde);
+        logger.setLevel(Level.FINE);
+        try {
+            CarroyageNational.depuis("010001;pas un nombre;0.0");
+        } finally {
+            logger.removeHandler(sonde);
+            logger.setLevel(niveauInitial);
+        }
+
+        assertThat(captures).singleElement().satisfies(trace -> {
+            assertThat(trace.getLevel()).isEqualTo(Level.FINE);
+            assertThat(trace.getMessage())
+                    .as("le message doit nommer le carré fautif, pas seulement signaler un incident")
+                    .contains("010001");
+        });
     }
 
     @Test
