@@ -8,7 +8,6 @@ import fr.univ_amu.iut.analyse.model.LargeurTranche;
 import fr.univ_amu.iut.analyse.model.LigneActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.commun.model.DepotVues;
-import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VersionApplication;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
@@ -31,9 +30,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -453,14 +450,6 @@ public class ActiviteController implements EmplacementNavigation, RafraichirAuRe
 
     private static String libelleTranche(LargeurTranche tranche) {
         return tranche == LargeurTranche.HEURE ? "1 h" : tranche.minutes() + " min";
-    }
-
-    /// Minutes écoulées depuis 18 h le soir de la nuit à laquelle appartient `instant` (bascule à midi,
-    /// [Nuit]). Un contact à 23:30 est à 330 min ; un contact à 02:00 le lendemain est à 480 min : l'ordre
-    /// à cheval sur minuit est préservé.
-    private static long minutesDepuis18h(LocalDateTime instant) {
-        LocalDate soir = Nuit.de(instant);
-        return Duration.between(soir.atTime(DEBUT_FENETRE), instant).toMinutes();
     }
 
     /// Position, en minutes sur l'axe nocturne (0 = 18 h), d'une **heure pleine** de la fenêtre (coucher ou

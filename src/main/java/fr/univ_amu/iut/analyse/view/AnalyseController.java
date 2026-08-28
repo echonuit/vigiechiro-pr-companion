@@ -42,7 +42,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -591,10 +590,6 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, Suit
                 .findFirst()
                 .map(StatutObservation::valueOf)
                 .orElse(null);
-    }
-
-    private static ObservableValue<String> texte(Object valeur) {
-        return new ReadOnlyStringWrapper(String.valueOf(valeur));
     }
 
     private static void lierVisibilite(Node noeud, ObservableValue<Boolean> visible) {
