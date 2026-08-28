@@ -49,6 +49,27 @@ et voulus.
 Seul son auto-test y tourne, et c'est nécessaire : l'outil qui doit voir les gardes hors service
 serait sinon le premier à l'être.
 
+## Les exemptions aussi (#4662)
+
+Le relevé rend en plus le **nombre** d'exemptions que chaque garde déclare : ce qu'il s'interdit de
+lire, et que ce dépôt a dû lui ajouter pour son propre contexte. C'est ce qu'un portage écrase sans
+qu'aucun diff paraisse fautif - le fichier importé est correct, son diff est propre, et il retire en
+silence le contexte de la cible.
+
+Le nombre et non la liste : deux arbres n'exemptent pas les mêmes fichiers, et confronter des chemins
+qui n'existent que d'un côté ne dirait rien.
+
+**Le mécanisme ne s'est jamais produit ici**, mesuré : les seize retraits que l'histoire des gardes
+porte sont tous des élargissements annoncés dans leur sujet, ou des reformatages.
+
+Il a failli une fois. Le garde de l'apostrophe d'ici porte cinq exemptions, dont trois nomment des
+SVG engendrés propres à ce dépôt ; celui d'en face n'en a aucune et lit les SVG. Le porter tel quel,
+ce que #4637 annonçait, aurait fait rougir le garde sur au moins 22 occurrences dans des fichiers que
+la régénération réécrirait. Le relevé rend cet écart : « exemptions : ici 5 / ailleurs 0 ».
+
+Aucun **garde** n'est posé pour autant : un dispositif contre un défaut jamais survenu se défend
+moins bien qu'un instrument qui le rend visible avant qu'il n'arrive.
+
 ## Les deux limites, déclarées
 
 **Le prédicat n'est pas comparé.** Deux motifs d'expression régulière ne se confrontent pas

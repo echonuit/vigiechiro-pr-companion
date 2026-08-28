@@ -68,6 +68,18 @@ VERDICT = re.compile(
 HORS_GARDES = {"rapport.py", "resserre_cliquets.py", "verifie_scripts.py",
                "verifie_temoins_non_decoratifs.py"}
 
+# Les listes d EXEMPTION, sous les quatre noms que ce depot leur donne. C est ce qu un portage
+# ecrase sans qu aucun diff paraisse fautif (#4662) : le fichier importe est correct, son diff est
+# propre, et il retire en silence ce que ce depot avait du ajouter pour son propre contexte.
+#
+# Mesure du 2026-08-28 : le mecanisme ne s est JAMAIS produit ici - les seize retraits que l histoire
+# porte sont tous des elargissements annonces dans leur sujet. Il a failli, sur le garde de
+# l apostrophe : le porter tel quel aurait efface trois exemptions nommant des SVG propres a ce
+# depot, et fait rougir le garde sur au moins 22 occurrences dans des fichiers engendres.
+EXEMPTIONS = re.compile(
+    r"^(?:HORS_CHAMP|HORS_COUVERTURE|EXEMPT[A-Z_]*|RESERVES)\s*=\s*[\{\(]", re.M)
+CLE_EXEMPTEE = re.compile(r"^\s*\"([^\"]+)\"\s*[:,]", re.M)
+
 CORPUS = ("RACINES_ANCREES", "RACINES", "PRODUCTION_ANCREE", "PRODUCTION", "TESTS_ANCRES", "TESTS")
 
 
@@ -147,6 +159,22 @@ def seuil(texte: str, decisions: pathlib.Path) -> str:
     return "(ADR %s introuvable)" % numero
 
 
+def exemptions(texte: str) -> str:
+    """Ce que le garde s interdit de lire, et que ce depot a du lui ajouter.
+
+    Le NOMBRE et non la liste : deux arbres n exemptent pas les memes fichiers, et confronter des
+    chemins qui n existent que d un cote ne dirait rien. Un ecart de compte, lui, se lit.
+    """
+    debut = EXEMPTIONS.search(texte)
+    if not debut:
+        return "0"
+    reste = texte[debut.end() :]
+    fin = reste.find("\n}")
+    if fin < 0:
+        fin = reste.find("\n)")
+    return str(len(CLE_EXEMPTEE.findall(reste[: fin if fin > 0 else 400])))
+
+
 def contrats(racine: pathlib.Path) -> dict:
     """Le contrat de chaque garde d un arbre, indexe par son geste."""
     dossier = racine / "scripts" / "adr"
@@ -161,6 +189,7 @@ def contrats(racine: pathlib.Path) -> dict:
             "fichier": source.name,
             "population": population(texte),
             "seuil": seuil(texte, decisions),
+            "exemptions": exemptions(texte),
             "verdict": (titre.group(3).strip() if titre else "(aucun verdict rendu)"),
         }
     return out
@@ -177,7 +206,7 @@ def ecarts(ici: dict, ailleurs: dict) -> list[str]:
         if b is None:
             lignes.append("%-38s present ici seulement (%s)" % (g, a["fichier"]))
             continue
-        for champ in ("population", "seuil", "verdict"):
+        for champ in ("population", "seuil", "exemptions", "verdict"):
             if a[champ] != b[champ]:
                 lignes.append("%-38s %-11s ici « %s » / ailleurs « %s »"
                               % (g, champ, a[champ], b[champ]))
@@ -236,8 +265,22 @@ def _auto_test() -> int:
         trouves = ecarts(contrats(r / "a"), contrats(r / "b"))
         verifie("un ecart de verdict est vu", any("verdict" in l for l in trouves), True)
 
+        # L ecart d EXEMPTIONS : ce qu un portage efface sans que le diff paraisse fautif.
+        (r / "a/scripts/adr/verifie_apostrophe.py").write_text(
+            'from _commun import RACINES, rapporte\nADR = "1"\n'
+            'HORS_CHAMP = {\n    "un.svg": "engendre",\n    "deux.svg": "engendre",\n}\n'
+            'rapporte(ADR, "densite ici", [])\n', encoding="utf-8")
+        (r / "b/scripts/adr/cliquet-apostrophe.py").write_text(
+            'from _commun import RACINES, rapporte\nADR = "1"\n'
+            'rapporte(ADR, "densite ici", [])\n', encoding="utf-8")
+        trouves = ecarts(contrats(r / "a"), contrats(r / "b"))
+        verifie("un ecart d exemptions est vu", any("exemptions" in l for l in trouves), True)
+
         # Le sens NEGATIF : deux gardes identiques ne rendent aucun ecart. Sans ce cas, un releve
         # qui crierait toujours passerait les trois premiers sans rien prouver.
+        (r / "a/scripts/adr/verifie_apostrophe.py").write_text(
+            'from _commun import RACINES, rapporte\nADR = "1"\nrapporte(ADR, "densite ici", [])\n',
+            encoding="utf-8")
         (r / "b/scripts/adr/cliquet-apostrophe.py").write_text(
             'from _commun import RACINES, rapporte\nADR = "1"\nrapporte(ADR, "densite ici", [])\n',
             encoding="utf-8")
@@ -265,5 +308,6 @@ if __name__ == "__main__":
     else:
         print("Contrats des gardes de cet arbre :\n")
         for g, c in sorted(ici.items()):
-            print("  %-38s %-22s %-16s %s" % (g, c["population"], c["seuil"], c["verdict"][:44]))
+            print("  %-38s %-22s %-16s exempt=%-3s %s"
+                  % (g, c["population"], c["seuil"], c["exemptions"], c["verdict"][:34]))
         print("\n%d garde(s)." % len(ici))
