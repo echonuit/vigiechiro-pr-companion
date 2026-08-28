@@ -288,6 +288,7 @@ nav:
     - 4546 · Un corps de pull request ne promet pas ce que la forge ne fera pas: decisions/4546-un-corps-de-pr-ne-promet-pas-ce-que-la-forge-ne-fera-pas.md
     - 4571 · Fusionner en rouge est un choix, fusionner sans couleur est un accident: decisions/4571-une-fusion-sans-verdict-se-refuse.md
     - 4586 · Le corpus d'un garde se déclare une fois, et sa liste se dérive: decisions/4586-le-corpus-d-un-garde-se-declare-une-fois.md
+    - 4617 · Le portail regarde les deux zones, et le code mort compte: decisions/4617-le-portail-voit-les-tests-et-le-code-mort.md
     - 4598 · Le titre de PR se vérifie avant l'ouverture, et les titres d'issue ne s'alignent pas: decisions/4598-le-titre-se-verifie-avant-l-ouverture.md
   - Recette (acceptation):
     - Méthode: recette/index.md

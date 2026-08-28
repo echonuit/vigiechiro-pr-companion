@@ -568,12 +568,19 @@ jobs:
           ./.github/assets/check-capture-mains.sh --auto-test
           ./.github/assets/check-capture-mains.sh
 
-      - name: Portail qualité (PMD, bloquant)
-        # Analyse statique seule : PMD n'a besoin que des classes compilées (résolution de
-        # types), pas des tests. Ne PAS remplacer par `-Pquality-gate verify -DskipTests` :
-        # sans jacoco.exec, jacoco:check passe silencieusement au vert au lieu de bloquer.
-        # Le seuil de couverture bloquant est appliqué dans maven.yml, là où les tests tournent.
-        run: ./mvnw -B -Pquality-gate compile pmd:check
+      - name: "Portail qualité (PMD) : le rapport, que le cliquet 4617 juge"
+        # `test-compile` et non `compile` depuis #4617 : le portail analyse desormais les DEUX
+        # zones, et PMD a besoin des classes de test compilées pour résoudre leurs types. Ne PAS
+        # remplacer par `-Pquality-gate verify -DskipTests` : sans jacoco.exec, jacoco:check passe
+        # silencieusement au vert au lieu de bloquer. Le seuil de couverture bloquant est appliqué
+        # dans maven.yml, là où les tests tournent.
+        #
+        # `pmd:pmd` et non `pmd:check` : ce pas PRODUIT le rapport, il ne juge pas. Le verdict
+        # revient au cliquet de l'ADR 4617, lancé par le pas suivant, parce que `failOnViolation`
+        # est binaire là où il faut une marge - et parce qu'une seule des sept règles, les littéraux
+        # dupliqués, n'a pas de sens dans la zone de test et doit y être écartée. PMD ne sait pas
+        # exprimer cette différence : les quatre formes essayées sont dans l'ADR.
+        run: ./mvnw -B test-compile pmd:pmd
 
       - name: Cliquets ADR (bloquant)
         # Chaque script `probable` (scripts/adr/NNNN-*.py) rend un code non nul quand le nombre de
