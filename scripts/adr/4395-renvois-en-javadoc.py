@@ -54,25 +54,31 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION, rapporte_plancher  # noqa: E402
+from _commun import PRODUCTION, TESTS, rapporte_plancher  # noqa: E402
 
-ADR = "4395"
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 
-# LA PRODUCTION SEULE, et c'est un TROU connu, pas une exception justifiee (ADR 4586).
+# DEUX planchers, un par arbre, et surtout pas un seul sur les deux (#4587).
 #
-# Mesure du 2026-08-26 : 976 renvois distincts vivent dans la javadoc de l arbre de test,
-# contre 3 134 en production. Ils ne sont proteges par rien et peuvent disparaitre sans
-# qu aucun plancher ne rougisse. Combler demande de LIRE les 976 avant de relever le
-# plancher, donc sa propre mesure et sa propre mutation : c est #4587.
-ZONE = PRODUCTION.as_posix()
+# Un plancher unique laisserait une perte d un cote se compenser par un gain de l autre : total
+# stable, verdict vert, et un renvoi perdu en production paye par un renvoi ajoute dans un test. Les
+# deux populations sont donc DISJOINTES, chacune avec son ADR et son seuil, et la mutation de l une
+# ne touche pas l autre - c est ce qui le prouve.
+#
+# Ce que l arbre de test apporte, mesure le 2026-08-28 : sur ses 990 renvois, 274 pointent vers une
+# issue que la production ne cite NULLE PART. Les perdre ne renvoie pas le lecteur ailleurs, cela
+# coupe le fil vers 151 discussions.
+ZONES = {"4395": PRODUCTION.as_posix(), "4587": TESTS.as_posix()}
+
+# Le plancher historique, celui de la production. Garde son nom : `renvois()` sans argument le sert.
+ZONE = ZONES["4395"]
 
 # `#` puis un a cinq chiffres, borne a droite. Voir la cecite declaree en tete.
 RENVOI = re.compile(r"#\d{1,5}\b")
 
 
-def fichiers(racine: pathlib.Path = None) -> list[str]:
-    """Les fichiers Java de production, relatifs a `racine`.
+def fichiers(racine: pathlib.Path = None, zone: str = None) -> list[str]:
+    """Les fichiers Java d une zone, relatifs a `racine`.
 
     Sur le depot, la liste vient de `git ls-files` : les fichiers SUIVIS. Sur une fixture, qui n est
     pas un depot, elle vient du parcours de l arbre. Sans cette seconde branche, `renvois(racine=...)`
@@ -80,18 +86,19 @@ def fichiers(racine: pathlib.Path = None) -> list[str]:
     une fixture qu il ne lit pas. Le defaut a deja ete commis une fois, sur le garde 4368.
     """
     racine = racine or RACINE
+    zone = zone or ZONE
     if (racine / ".git").exists() or racine == RACINE:
         sortie = subprocess.run(
-            ["git", "-C", str(racine), "ls-files", "-z", ZONE], capture_output=True, check=True
+            ["git", "-C", str(racine), "ls-files", "-z", zone], capture_output=True, check=True
         ).stdout.decode()
         noms = [c for c in sortie.split("\0") if c]
     else:
-        zone = racine / ZONE
-        noms = [str(f.relative_to(racine)) for f in sorted(zone.rglob("*.java")) if f.is_file()]
+        dossier = racine / zone
+        noms = [str(f.relative_to(racine)) for f in sorted(dossier.rglob("*.java")) if f.is_file()]
     return sorted(n for n in noms if n.endswith(".java"))
 
 
-def par_fichier(racine: pathlib.Path = None) -> dict[str, int]:
+def par_fichier(racine: pathlib.Path = None, zone: str = None) -> dict[str, int]:
     """Le nombre d issues DISTINCTES que la javadoc de chaque fichier cite.
 
     Distinctes, et non occurrences : un fichier qui cite `#3068` deux fois pointe vers une seule
@@ -99,7 +106,7 @@ def par_fichier(racine: pathlib.Path = None) -> dict[str, int]:
     """
     base = racine or RACINE
     comptes = {}
-    for chemin in fichiers(base):
+    for chemin in fichiers(base, zone):
         try:
             texte = (base / chemin).read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
@@ -113,9 +120,9 @@ def par_fichier(racine: pathlib.Path = None) -> dict[str, int]:
     return comptes
 
 
-def renvois(racine: pathlib.Path = None) -> int:
-    """Le nombre d issues distinctes citees, somme sur les fichiers de production."""
-    return sum(par_fichier(racine).values())
+def renvois(racine: pathlib.Path = None, zone: str = None) -> int:
+    """Le nombre d issues distinctes citees, somme sur les fichiers d une zone."""
+    return sum(par_fichier(racine, zone).values())
 
 
 def _auto_test() -> int:
@@ -191,4 +198,11 @@ def _auto_test() -> int:
 if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
-    sys.exit(rapporte_plancher(ADR, "issues citees par la javadoc", renvois(), "renvois"))
+    # Les deux planchers, l un apres l autre. Le code de sortie est le PIRE des deux : une perte
+    # dans un arbre doit faire rougir, meme si l autre a gagne. C est la disjonction en pratique.
+    codes = [
+        rapporte_plancher("4395", "issues citees par la javadoc de production", renvois(), "renvois"),
+        rapporte_plancher("4587", "issues citees par la javadoc de test",
+                          renvois(zone=ZONES["4587"]), "renvois"),
+    ]
+    sys.exit(max(codes))
