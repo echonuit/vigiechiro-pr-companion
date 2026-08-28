@@ -74,9 +74,9 @@ final class ReponsesVigieChiro {
     /// croissante**. Le premier élément est donc le carré de la position demandée ; les suivants sont ses
     /// voisins, dont nous n'avons que faire.
     ///
-    /// On ne lit **que** le `numero`, jamais le `centre` : le numéro suffit. Ce fut d'abord une abstention
-    /// faute de savoir quelle convention la plateforme emploie là ; #4576 l'a mesurée et
-    /// `dev-docs/api-vigiechiro.md` la porte. L'abstention est donc un **choix**.
+    /// On ne lit que le `numero`, jamais le `centre` : pour cette question-ci, il suffit. « Les suivants
+    /// sont ses voisins, dont nous n'avons que faire » a été **démenti par #4610** ; qui doit les
+    /// départager lit [ReponsesGrilleStoc#carresProches].
     ///
     /// Aucun carré (mer, hors de France) ou corps illisible → vide : ce n'est pas une erreur, c'est une
     /// réponse.
