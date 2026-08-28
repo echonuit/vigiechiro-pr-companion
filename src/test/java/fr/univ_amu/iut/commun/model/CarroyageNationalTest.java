@@ -3,10 +3,15 @@ package fr.univ_amu.iut.commun.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -128,6 +133,72 @@ class CarroyageNationalTest {
     @DisplayName("le référentiel couvre toute la métropole")
     void couverture_nationale() {
         assertThat(CarroyageNational.embarque().taille()).isGreaterThan(100_000);
+    }
+
+    @Test
+    @DisplayName("#4612 : TOUT le référentiel embarqué respecte R1 - lu dans le FICHIER, pas dans la table")
+    void tout_le_referentiel_embarque_respecte_r1() throws Exception {
+        // Le garde que l'issue demandait : rien ne vérifiait que les numéros du référentiel étaient des
+        // numéros. La source amont en portait QUATRE valant « 0 », dont une couvrant 2 km de Paris
+        // intra-muros. Deux ont été rétablies sur l'autorité de la plateforme (750016, 361721), deux
+        // retirées faute de contrepartie officielle.
+        //
+        // Il lit le FICHIER et non la table chargée, et c'est tout l'intérêt : depuis que la lecture
+        // REFUSE une ligne non conforme, la table resterait propre pendant que le référentiel se
+        // dégrade. Un garde posé sur la table aurait donc l'air de tenir quelque chose sans rien tenir.
+        //
+        // Il tient une forme, pas un chiffre : il survit à une régénération du référentiel.
+        List<String> horsNorme = new ArrayList<>();
+        try (BufferedReader lecteur = new BufferedReader(new InputStreamReader(
+                new GZIPInputStream(CarroyageNational.class.getResourceAsStream("carrenat.csv.gz")),
+                StandardCharsets.UTF_8))) {
+            String ligne;
+            while ((ligne = lecteur.readLine()) != null) {
+                String nettoyee = ligne.strip();
+                if (nettoyee.isEmpty() || nettoyee.startsWith("#") || nettoyee.startsWith("numero")) {
+                    continue;
+                }
+                String numero = nettoyee.split(";")[0].strip();
+                if (!numero.matches("\\d{5,6}")) {
+                    horsNorme.add(nettoyee);
+                }
+            }
+        }
+
+        assertThat(horsNorme)
+                .as("une maille qu'on ne saurait nommer serait rembourrée en « 000000 » : un numéro"
+                        + " qui n'existe pas, mais qui a l'air d'en être un")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#4612 : les deux mailles rétablies sont là, et les deux fantômes n'y sont plus")
+    void les_mailles_retablies_et_les_fantomes() {
+        CarroyageNational grille = CarroyageNational.embarque();
+
+        assertThat(grille.centroide("750016"))
+                .as("Paris rive gauche : la plateforme la nomme, notre source l'avait perdue")
+                .isPresent();
+        assertThat(grille.centroide("361721")).as("Indre").isPresent();
+        // Les deux retirées n'ont jamais eu de numéro à retrouver : « 000000 » aurait été fabriqué.
+        assertThat(grille.centroide("000000")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#4612 : une maille sans numéro est REFUSÉE à la lecture, pas rembourrée en « 000000 »")
+    void une_maille_sans_numero_est_refusee() {
+        // Sans ce refus, `surSixChiffres` en ferait « 000000 » : un numéro qui n'existe pas, mais qui a
+        // l'air d'en être un. C'est exactement le cas que l'issue appelait « pire que ne rien proposer ».
+        CarroyageNational grille = CarroyageNational.depuis("""
+                0;48.852143;2.324249
+                750017;48.852143;2.352249
+                """);
+
+        assertThat(grille.taille()).isEqualTo(1);
+        assertThat(grille.centroide("000000")).isEmpty();
+        assertThat(grille.candidats(48.852143, 2.324249))
+                .as("la position tombe là où était la maille sans numéro : rien de faux ne se propose")
+                .noneMatch(candidat -> candidat.numero().startsWith("0000"));
     }
 
     @Test
