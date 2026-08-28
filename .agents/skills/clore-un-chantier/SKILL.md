@@ -54,6 +54,24 @@ qu'elles écrivent est lu hors de l'échange qui l'a produit, donc l'article A31
 - Les **ADR** s'écrivent quand toutes les décisions sont prises.
 - Le **bilan** vient en dernier parce qu'il renvoie à tout le reste.
 
+## Rejouer une passe invalide celles qui la balayaient
+
+Une clôture se refait parfois - une passe sautée, une passe faite de trop loin. **L'ordre vaut alors
+une seconde fois** : une passe qui en balaye d'autres doit être rejouée **après** elles.
+
+Vécu le 28 août 2026 sur le chantier #4573. Six passes ont été reprises, mais la **10** avait été
+relancée avant que les 5 à 8 ne le soient. Elle a balayé des passes qui n'avaient pas encore eu lieu
+dans leur forme finale, et n'a rien tiré ni de la 0 ni de la 7 - les deux sources que
+[`ecrire-une-adr`](../ecrire-une-adr/SKILL.md) désigne pourtant en premier.
+
+**Elle a rendu deux ADR sur quatre, et cela ressemblait à un succès.** C'est le piège : une passe qui
+produit quelque chose paraît avoir abouti. Le contrôle n'est donc pas « la passe a-t-elle rendu
+quelque chose », mais **énumérer ce que le chantier a décidé et vérifier que chaque décision a son
+fichier**.
+
+Les deux ADR manquantes étaient les plus faciles à défaire : un rembourrage qu'un lecteur retirerait
+comme superflu, et deux constantes divergentes qu'il unifierait par souci de cohérence.
+
 ## Passe 0 : la question qui décide
 
 > Le chantier a-t-il **contredit** une décision existante, et si oui, l'a-t-il fait exprès ?
@@ -83,6 +101,20 @@ La passe 9 ne les **découvre** pas : chacune a été ouverte au moment où elle
 rattachée à l'EPIC du chantier ou à celui des suites (#4562). Arriver en passe 9 avec une page
 blanche est le signe que cette règle n'a pas été tenue, pas que le chantier n'a rien trouvé.
 
+**Ce qu'on y trouve n'est plus une prédiction.** L'EPIC #4671 - les quatre suites de #4573 - a été
+clos par les douze passes le 28 août 2026, sur un périmètre de quatre issues **déjà livrées et
+fusionnées**. Les trois choses annoncées ci-dessus y étaient, et **trois passes ont produit du code
+de production**, les 2, 7 et 8 :
+
+| Ce qui était annoncé | Ce qui a été trouvé |
+|---|---|
+| une capacité livrée d'un seul côté | `ajouter-point --lat --lon` posait des coordonnées sans contrôler le carré, là où l'écran contrôlait depuis #733 |
+| un état visuel sans capture | l'état divergent du contrôle, dont ce chantier avait changé **deux fois** ce qui s'affiche |
+| une règle qu'aucune ADR ne porte | deux seuils d'indiscernabilité, écrivant deux fois la même justification |
+
+Un périmètre étroit n'est donc pas une raison d'abréger : c'est ce qui rend la clôture rapide, pas ce
+qui la rend inutile.
+
 ## Signaux d'alerte : on s'arrête
 
 | Pensée | Réalité |
@@ -92,3 +124,7 @@ blanche est le signe que cette règle n'a pas été tenue, pas que le chantier n
 | « Cette ADR ne concerne pas mon delta » | Elle régit peut-être du code hors delta qu'il faut aligner |
 | « Je relis les ADR de ma branche » | Contre `origin/main`, sinon vous manquez celles écrites pendant |
 | « Les suites, on verra plus tard » | Elles se closent par les mêmes douze passes |
+| « Le garde est sorti en 0, tout va bien » | Un plancher qui dit « à relever » sort en **0**. Passe 1 : on **lit** ce que les gardes écrivent |
+| « Je refais la passe qui manquait » | Elle en invalide d'autres si elle les balayait. La 10 se rejoue **en dernier** |
+| « La capture est produite, la passe 8 est faite » | Elle se **regarde**. Une image peut montrer le bon état et rester invraisemblable |
+| « Cette trouvaille aura le numéro suivant » | Un numéro d'issue **supposé** est le numéro de quelqu'un d'autre. On l'ouvre, ou on cite l'EPIC |
