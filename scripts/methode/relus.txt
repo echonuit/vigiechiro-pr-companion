@@ -1378,6 +1378,7 @@ ffd3c4583804  src/test/java/fr/univ_amu/iut/cliquet/CliquetFixturePassageTest.ja
 248d7440f943  src/test/java/fr/univ_amu/iut/cliquet/PatronDuCliquetTest.java
 57514ed01e2f  src/test/java/fr/univ_amu/iut/commun/SeveriteTest.java
 662d57b062f5  src/test/java/fr/univ_amu/iut/commun/api/CatalogueApiTest.java
+cbe826a37011  src/test/java/fr/univ_amu/iut/commun/api/ChaineDuCarreStocTest.java
 80a2127fd522  src/test/java/fr/univ_amu/iut/commun/api/ClientGbifTest.java
 78ebdc58f018  src/test/java/fr/univ_amu/iut/commun/api/ClientVigieChiroTest.java
 1e5ff4971e8a  src/test/java/fr/univ_amu/iut/commun/api/ContratApiVigieChiroLiveTest.java

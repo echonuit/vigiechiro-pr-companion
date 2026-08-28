@@ -197,11 +197,19 @@ class ContratApiVigieChiroLiveTest {
 
         // Un site RÉEL de l'observateur, avec un point géolocalisé : on connaît donc déjà la bonne réponse.
         // La sonde est ainsi auto-vérifiante, sans coordonnées codées en dur qui périmeraient.
-        Optional<SiteVigieChiro> siteGeolocalise = client.mesSites().enOptionnel().orElseThrow().stream()
+        List<SiteVigieChiro> geolocalises = client.mesSites().enOptionnel().orElseThrow().stream()
                 .filter(site -> site.numeroCarre() != null && !site.points().isEmpty())
-                .findFirst();
-        assumeTrue(siteGeolocalise.isPresent(), "Aucun site géolocalisé sur ce compte : sonde sans objet.");
-        SiteVigieChiro site = siteGeolocalise.get();
+                .toList();
+        assumeTrue(!geolocalises.isEmpty(), "Aucun site géolocalisé sur ce compte : sonde sans objet.");
+        // Le premier venu, c'était la CÉCITÉ de #4592 : la grille ampute le zéro de gauche des
+        // départements 01 à 09, et cette sonde vérifie précisément l'égalité que l'amputation casse.
+        // Elle est restée verte pendant des mois en tombant sur un site à deux chiffres - neuf
+        // départements sur quatre-vingt-seize, il fallait de la chance pour la voir. On préfère donc
+        // désormais un site du cas dangereux, en se rabattant sur n'importe lequel s'il n'y en a pas.
+        SiteVigieChiro site = geolocalises.stream()
+                .filter(candidat -> candidat.numeroCarre().startsWith("0"))
+                .findFirst()
+                .orElseGet(geolocalises::getFirst);
         PointVigieChiro point = site.points().getFirst();
 
         Optional<String> carre = client.carreStoc(point.latitude(), point.longitude())
