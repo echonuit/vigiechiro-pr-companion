@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.ResultatVerification;
 import fr.univ_amu.iut.commun.model.Utilisateur;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -16,10 +17,12 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CarteSite;
+import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import fr.univ_amu.iut.sites.viewmodel.SitesViewModel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -116,6 +119,37 @@ class ParcoursDeclarerSiteE2ETest {
         assertThat(carte.site().numeroCarre()).isEqualTo("640380");
         assertThat(carte.nombrePoints()).isEqualTo(2);
         assertThat(carte.codesPoints()).contains("A1").contains("B2");
+    }
+
+    @Test
+    @DisplayName("P1 : partir d'un LIEU - une position collée traverse la lecture, le carroyage et le service")
+    void declarer_un_site_en_partant_d_une_position() {
+        // La couture que ce parcours traverse : trois classes qui ne se connaissent pas, et dont
+        // aucun test unitaire ne prouve qu'elles s'enchaînent jusqu'à la base.
+        //
+        //   PositionCollee      un texte  ->  une position
+        //   CarroyageNational   une position -> des carrés candidats     (embarqué, sans réseau)
+        //   ServiceSites        un numéro -> un site persisté
+        SiteEditViewModel saisie = new SiteEditViewModel(
+                service, injector.getInstance(LienVigieChiroDao.class), ID_USER, Optional.empty(), Optional.empty());
+        saisie.preparerCreation();
+
+        // Jalon 1 : Marie colle la position relevée sur sa carte, sans connaître son numéro de carré.
+        saisie.position().texte().set("44.44674980384396, 6.298116860416506");
+        saisie.situerPosition();
+
+        // Jalon 2 : le carré se déduit, sur six chiffres, sans qu'aucun réseau ne soit sollicité.
+        assertThat(saisie.numeroCarreProperty().get()).isEqualTo("040110");
+        assertThat(saisie.position().retour().get().texte()).contains("040110");
+
+        // Jalon 3 : le site se crée avec ce numéro, et la persistance le relit tel quel.
+        Site site = service.creerSite("040110", "Relevé de la vallée", Protocole.STANDARD, null, ID_USER);
+
+        assertThat(service.listerSites(ID_USER))
+                .extracting(Site::numeroCarre)
+                .as("le numéro déduit d'une position est celui qui atteint la base")
+                .contains("040110");
+        assertThat(site.numeroCarre()).isEqualTo("040110");
     }
 
     @Test

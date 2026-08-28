@@ -34,7 +34,7 @@ COMMANDES_OPTIONS_REQUISES=(
   vigiechiro
   creer-campagne rattacher-campagne modifier-campagne supprimer-campagne
   modifier-site supprimer-site modifier-point
-  recuperer-carre
+  recuperer-carre situer-carre
 )
 
 @test "surface : chaque commande à options requises refuse l'absence d'arguments (exit 2) (#1592)" {
@@ -75,6 +75,27 @@ COMMANDES_LOCALES_SANS_ARG=(
   done
   echo "commandes locales sans argument vérifiées : ${n}"
   [ "${n}" -eq 10 ]
+}
+
+@test "situer-carre : une position intérieure rend son carré sur six chiffres, exit 0 (#4660)" {
+  # Le carroyage est EMBARQUÉ : cette commande ne touche ni le réseau ni la base. C'est ce qui la rend
+  # utile à un script, et ce que ce cas prouve de bout en bout sur le fat-jar.
+  run cli situer-carre --position "44.44674980384396, 6.298116860416506"
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"040110"* ]]
+}
+
+@test "situer-carre : sur une frontière, les deux candidats sortent et le code n'est pas 0 (#4660)" {
+  run cli situer-carre --position "44.444990, 6.306335"
+  [ "${status}" -ne 0 ]
+  [[ "${output}" == *"040110"* ]]
+  [[ "${output}" == *"040111"* ]]
+}
+
+@test "situer-carre : hors métropole, aucun numéro, et le motif le dit (#4660)" {
+  run cli situer-carre --position "45.0, -20.0"
+  [ "${status}" -ne 0 ]
+  [[ "${output}" == *"métropolitaine"* ]]
 }
 
 @test "audit-coherence : base fraîche, aucun écart disque/base annoncé, exit 0 (#1592)" {
