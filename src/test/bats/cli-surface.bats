@@ -51,8 +51,8 @@ COMMANDES_OPTIONS_REQUISES=(
   # Verrouillé, comme COMMANDES_LOCALES_SANS_ARG juste en dessous. Un plancher à « -ge 20 » sur une
   # liste de 41 tolérait d'en voir disparaître vingt sans rougir : ce n'était pas un inventaire, c'était
   # un minimum. Ajouter une commande à la liste, c'est ajuster ce chiffre - le geste est le prix de
-  # l'inventaire (#3960).
-  [ "${n}" -eq 41 ]
+  # l'inventaire (#3960). Passé à 42 par « situer-carre », dont --position est requise (#4660).
+  [ "${n}" -eq 42 ]
 }
 
 # Commandes LOCALES sans option requise : s'exécutent telles quelles sur la base fraîche (migrée au
