@@ -281,6 +281,14 @@ La liste des carrés suivis, peuplée et à l'état initial.
 <td><a href="apercu-sites-modale-site-autre-protocole.png"><img src="apercu-sites-modale-site-autre-protocole.png" width="430" alt="Modale site : le carré existe en Routier, protocole que Companion ne gère pas"></a></td>
 </tr>
 <tr>
+<th width="50%">Modale site : position située</th>
+<th width="50%">Modale site : position sur une frontière</th>
+</tr>
+<tr>
+<td><a href="apercu-sites-modale-site-position-situee.png"><img src="apercu-sites-modale-site-position-situee.png" width="430" alt="Modale site : une position collée a rempli le numéro de carré, sans rien demander au réseau"></a></td>
+<td><a href="apercu-sites-modale-site-position-frontiere.png"><img src="apercu-sites-modale-site-position-frontiere.png" width="430" alt="Modale site : la position est sur une frontière, les deux carrés candidats sont nommés et aucun n'est déposé"></a></td>
+</tr>
+<tr>
 <th width="50%">Compte rendu : carré récupéré</th>
 <th width="50%"></th>
 </tr>
