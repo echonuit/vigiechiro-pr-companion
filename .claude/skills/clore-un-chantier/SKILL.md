@@ -72,6 +72,50 @@ fichier**.
 Les deux ADR manquantes étaient les plus faciles à défaire : un rembourrage qu'un lecteur retirerait
 comme superflu, et deux constantes divergentes qu'il unifierait par souci de cohérence.
 
+## Le delta que TOUTES les passes lisent
+
+> `<sha d'ouverture>..origin/main`, **entier**. Jamais filtré sur les commits du chantier.
+
+C'est l'erreur la plus fréquente de la clôture, et elle est invisible : filtrer donne un delta qui a
+l'air juste, plus petit, et plus rapide à relire.
+
+**Le code d'un chantier ne vit pas seul.** Il vit à côté de ce qui a été fusionné pendant qu'il
+courait, et c'est cet ensemble-là qui part en production. Une passe qui ne lit que « mes commits »
+juge un état qui n'a jamais existé.
+
+Mesuré le 28 août 2026, à la clôture de #4671. La passe 1 y a trouvé **deux planchers périmés**, dont
+un - celui de l'arbre de test - **posé par une autre session** pendant le chantier. Un delta filtré
+n'aurait montré ni le plancher, ni le fait que mon propre travail l'avait fait monter sans le
+verrouiller. Le défaut n'était ni dans mes commits ni dans les leurs : il était dans leur **rencontre**.
+
+```bash
+git log --oneline <sha-d-ouverture>..origin/main            # TOUS les commits, toutes sessions
+git diff --stat <sha-d-ouverture>..origin/main              # et tout ce qu'ils touchent
+```
+
+Cela vaut pour les douze passes, pas seulement la 0 : la doc que la passe 3 relit peut avoir été
+rendue fausse par un autre chantier, l'écran que la passe 8 regarde peut avoir été déplacé par lui.
+
+## Aucune passe ne suppose
+
+> Une passe se conclut sur une **mesure reproductible**, ou elle ne se conclut pas.
+
+Reproductible veut dire : quelqu'un d'autre lance la même commande et obtient le même nombre. Une
+lecture à l'œil, un souvenir, un « ça doit être ça » n'en sont pas - et une clôture est précisément
+l'endroit où l'on croit savoir, puisqu'on vient d'écrire le code.
+
+**Un résultat qui surprend se remesure avant d'être cru.** Quatre fois le même jour, la première
+mesure était fausse :
+
+| Ce que la mesure disait | Ce qu'elle valait |
+|---|---|
+| « aucune méthode n'est appelée » | un glob mangé par le shell ; refaite en Python, aucune n'était morte |
+| « 0 test exécuté » | des rapports effacés par un `clean` enchaîné, pas un test manquant |
+| « verdict=perte, un renvoi a disparu » | un fichier neuf **non indexé**, que `git ls-files` ne voyait pas |
+| « cette issue portera le numéro suivant » | le numéro appartenait déjà à un autre chantier, et quatorze renvois pointaient chez lui |
+
+Aucune de ces quatre n'aurait été rattrapée par un garde : toutes rendaient un résultat **plausible**.
+
 ## Passe 0 : la question qui décide
 
 > Le chantier a-t-il **contredit** une décision existante, et si oui, l'a-t-il fait exprès ?
@@ -128,3 +172,5 @@ qui la rend inutile.
 | « Je refais la passe qui manquait » | Elle en invalide d'autres si elle les balayait. La 10 se rejoue **en dernier** |
 | « La capture est produite, la passe 8 est faite » | Elle se **regarde**. Une image peut montrer le bon état et rester invraisemblable |
 | « Cette trouvaille aura le numéro suivant » | Un numéro d'issue **supposé** est le numéro de quelqu'un d'autre. On l'ouvre, ou on cite l'EPIC |
+| « Je relis le diff de mon chantier » | Le delta est `<ouverture>..origin/main` **entier**. Filtrer cache ce que la rencontre avec les autres sessions a produit |
+| « C'est évident, je note et j'avance » | Une passe se conclut sur une mesure **reproductible**. Un résultat qui surprend se remesure avant d'être cru |
