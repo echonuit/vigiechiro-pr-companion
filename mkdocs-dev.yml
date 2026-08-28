@@ -288,6 +288,7 @@ nav:
     - 4621 · Sur une frontière, on nomme les candidats sans en choisir un: decisions/4621-sur-une-frontiere-on-nomme-les-candidats-sans-en-choisir-un.md
     - 4656 · Devant une copie morte, on cherche où le geste vit: decisions/4656-une-copie-morte-se-supprime-la-ou-le-geste-vit.md
     - 4671 · Le contrôle du carré a deux sources: decisions/4671-le-controle-du-carre-a-deux-sources-et-l-ecran-garde-la-plateforme.md
+    - 4682 · Le portail compte chaque zone à part: decisions/4682-le-portail-compte-chaque-zone-a-part.md
     - 4475 · Un test dimensionne son stage, il n'hérite pas du fork: decisions/4475-un-test-dimensionne-son-stage-il-n-herite-pas-du-fork.md
     - 4476 · Une javadoc ne raconte pas le refactoring qui l'a produite: decisions/4476-une-javadoc-ne-raconte-pas-le-refactoring-qui-l-a-produite.md
     - 4477 · Une ADR dit sa décision et l'incident qui l'a produite: decisions/4477-une-adr-dit-sa-decision-et-l-incident-qui-l-a-produite.md
