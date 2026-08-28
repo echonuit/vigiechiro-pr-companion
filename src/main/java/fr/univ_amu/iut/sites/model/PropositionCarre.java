@@ -13,17 +13,6 @@ import java.util.Objects;
 /// « Vérifier sur Vigie-Chiro » qui la pose.
 public final class PropositionCarre {
 
-    /// Écart de distance en deçà duquel deux carrés ne se départagent pas.
-    ///
-    /// Dérivé de la géométrie plutôt que choisi : pour un point à `x` mètres d'un bord, l'écart entre
-    /// les deux distances vaut environ `2x`. Cinquante mètres désignent donc les points à moins de 25 m
-    /// d'une frontière, l'ordre de grandeur de ce qu'on vise en cliquant sur une carte.
-    ///
-    /// La stricte inégalité ne se distingue pas de son contraire : un écart de 50,0 m *exact* n'est pas
-    /// atteignable sur des distances calculées depuis des degrés, et PIT laisse donc survivre la
-    /// mutation de cette borne. Ce qui se teste est la VALEUR du seuil, encadrée à 40 m et à 200 m.
-    private static final double ECART_INDISCERNABLE_METRES = 50;
-
     private final CarroyageNational carroyage;
 
     public PropositionCarre(CarroyageNational carroyage) {
@@ -40,11 +29,10 @@ public final class PropositionCarre {
         if (candidats.isEmpty()) {
             return new VerdictProposition.HorsGrille();
         }
-        List<String> indiscernables = candidats.stream()
-                .filter(candidat ->
-                        candidat.distanceMetres() - candidats.getFirst().distanceMetres() < ECART_INDISCERNABLE_METRES)
-                .map(CarreCandidat::numero)
-                .toList();
+        List<String> indiscernables =
+                BandeDesIndiscernables.dans(candidats, BandeDesIndiscernables.POUR_PROPOSER).stream()
+                        .map(CarreCandidat::numero)
+                        .toList();
         return indiscernables.size() == 1
                 ? new VerdictProposition.Propose(indiscernables.getFirst())
                 : new VerdictProposition.Frontiere(indiscernables);

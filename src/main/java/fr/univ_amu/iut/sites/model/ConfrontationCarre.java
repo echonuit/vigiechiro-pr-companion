@@ -11,18 +11,6 @@ import java.util.Objects;
 /// copies dériveraient, et l'écran finirait par dire d'une position ce que `ajouter-point` en nie.
 public final class ConfrontationCarre {
 
-    /// Écart de distance en deçà duquel deux carrés ne se départagent pas (#4610).
-    ///
-    /// **Dérivé de la géométrie, pas choisi** : pour un point à `x` mètres d'un bord, l'écart des deux
-    /// distances vaut environ `2x`, donc cent mètres désignent les points à moins de 50 m d'une frontière.
-    /// Le double de la valeur retenue pour la **proposition**, délibérément : proposer un numéro faux et
-    /// plausible se paie cher, tandis qu'ici se taire ne coûte qu'un contrôle.
-    ///
-    /// La borne stricte ne se distingue pas de son contraire - 100,0 m *exacts* ne sont pas atteignables
-    /// sur des distances calculées depuis des degrés - et PIT laisse donc survivre sa mutation. Ce qui se
-    /// teste est la **valeur**, encadrée à 60 m et à 140 m.
-    public static final double ECART_INDISCERNABLE_METRES = 100;
-
     private ConfrontationCarre() {}
 
     /// Le verdict, sachant **tous** les candidats proches et non le seul premier.
@@ -38,10 +26,9 @@ public final class ConfrontationCarre {
         if (candidats.isEmpty()) {
             return new VerdictCarre.HorsGrille();
         }
-        double plusCourte = candidats.getFirst().distanceMetres();
-        boolean declareEstIndiscernable = candidats.stream()
-                .filter(candidat -> candidat.distanceMetres() - plusCourte < ECART_INDISCERNABLE_METRES)
-                .anyMatch(candidat -> candidat.numero().equals(carreDeclare));
+        boolean declareEstIndiscernable =
+                BandeDesIndiscernables.dans(candidats, BandeDesIndiscernables.POUR_CONTROLER).stream()
+                        .anyMatch(candidat -> candidat.numero().equals(carreDeclare));
         return declareEstIndiscernable
                 ? new VerdictCarre.Concorde(carreDeclare)
                 : new VerdictCarre.Diverge(candidats.getFirst().numero(), carreDeclare);
