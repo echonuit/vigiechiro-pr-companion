@@ -36,15 +36,25 @@ MNHN tranche vient du serveur des deux côtés, et n'a rien à faire dans un paq
 
 ## Decisions
 
-### D1. Le paquet emporte toutes les séquences transformées, pas les bruts
+### D1. Le paquet emporte la sélection d'écoute, et elle est figée
 
-**Tranché.** La qualification travaille sur une sélection de dix à trente séquences réparties sur la
-nuit, et cette sélection se **régénère**. C'est la régénération qui décide du contenu, pas le couple
-transformées/brutes que l'EPIC opposait.
+**Tranché.** Le paquet emporte les séquences de la **sélection d'écoute**, et cette sélection est
+**figée** pour le relecteur.
 
-*Écarté : la sélection courante seule.* Le paquet serait bien plus léger, mais le relecteur ne
-pourrait pas régénérer, donc pas contester l'échantillon tiré par l'expéditeur, ce qu'une relecture
-déléguée cherche parfois précisément à faire.
+Le motif tient à l'arithmétique de l'échantillonnage. La sélection tire dix à trente séquences
+réparties sur une nuit qui en porte beaucoup plus. Si le relecteur régénérait la sienne, les deux
+échantillons se recouvriraient à hauteur de `t × t / N` séquences, où `t` est la taille du tirage et
+`N` celle de la nuit : à trente sur cinq cents, cela fait **deux séquences jugées par les deux**. Les
+avis ne seraient plus comparables, et la reprise devrait fusionner deux échantillons disjoints.
+
+Figer la sélection rend les deux verdicts comparables ligne à ligne, ce qui est la condition pour que
+les colonnes de la décision D3b aient un sens.
+
+*Écarté : toutes les séquences transformées de la nuit.* C'était le choix initial, retenu pour
+permettre au relecteur de régénérer sa sélection. L'arithmétique ci-dessus l'a défait : la
+régénération produit deux échantillons quasi disjoints, donc deux avis qu'on ne peut pas confronter.
+Emporter la nuit entière coûtait alors un ordre de grandeur de volume pour une faculté dont on ne
+savait plus quoi faire au retour.
 
 *Écarté : tout, bruts compris.* Les enregistrements sont en 384 kHz : le volume d'une nuit entière
 de bruts se compte en dizaines de gigaoctets, et le lot 1 de l'EPIC exige déjà « l'estimation de
@@ -128,8 +138,8 @@ tableau multisite et ses filtres au solde de saison, en passant par quatre comma
 commande et la vue du passage. « Le verdict du passage » est une notion consommée partout ; la faire
 passer à N valeurs déborde très largement ce chantier.
 
-*Écarté : garder l'avis revenu comme un document à côté.* C'est ce que fait l'art antérieur avec son
-`_<initiales>.xlsx`, et cela ne coûte presque rien. Rejeté parce qu'un avis qui vit dans un document
+*Écarté : garder l'avis revenu comme un document à côté.* Un tableur signé, déposé auprès de la nuit,
+ne coûterait presque rien à produire. Rejeté parce qu'un avis qui vit dans un document
 **se lit, il ne se manipule pas** : il ne s'affiche pas près de la séquence qu'il juge, ne se filtre
 pas, ne s'agrège pas. Le relecteur aurait travaillé pour un fichier que personne n'ouvre.
 
@@ -137,6 +147,13 @@ pas, ne s'agrège pas. Le relecteur aurait travaillé pour un fichier que person
 exactement comme V26 porte un validateur. C'est ce que le régime décrit : une nuit se confie à
 quelqu'un, pas à un comité. Le jour où il en faudra plusieurs, la voie générale sera toujours là, et
 elle sera un chantier à elle seule.
+
+**Un second avis ne se glisse pas en silence.** Puisque les deux colonnes portent un relecteur, un
+avis qui arrive sur une nuit qui en porte déjà un remplace le précédent. Le remplacement reste
+possible, jamais tacite : double confirmation qui nomme le relecteur présent et le nombre de verdicts
+perdus, sur le patron de `ConfirmationsImport.confirmerEcrasement` (#279, #2223). *Écarté : refuser
+l'import.* Rien ne serait effacé, mais le premier relecteur qui répond verrouillerait la nuit, et
+aucun geste ne permettrait plus d'en accueillir un autre.
 
 ### D4. L'attribution, si le régime la demande, coûte peu
 
@@ -167,12 +184,10 @@ une précaution à inventer : c'est le patron de la maison, qu'il faut suivre pl
 
 ## Risks / Trade-offs
 
-**Le relecteur peut juger des séquences absentes de la sélection de l'expéditeur.** → D1 lui donne de
-quoi régénérer, et `listening_selection.passage_id` étant `UNIQUE`, sa régénération remplace la
-sélection reçue. Au retour, une partie de ses verdicts porte donc sur des séquences que l'expéditeur
-n'avait pas tirées. Le verdict revenu s'accroche à la **séquence**, pas à la sélection : celles que
-les deux ont en commun s'affichent côte à côte, les autres se montrent comme « jugée par <pseudo>,
-hors de votre sélection ». Rien ne se perd, et rien ne s'invente. Le détail appartient aux specs.
+**Le relecteur ne peut pas contester l'échantillonnage.** → Assumé. Il juge le tirage de
+l'expéditeur, et s'il l'estime mal réparti, il le dit hors de l'outil. Ouvrir la régénération
+rouvrirait le problème que D1 vient de fermer : deux échantillons quasi disjoints, et une reprise qui
+n'aurait plus rien à comparer.
 
 **Deux colonnes portent un relecteur, pas plusieurs.** → Assumé, et c'est le même choix que V26 pour
 le validateur. Une nuit se confie à quelqu'un, pas à un comité. Un second prêt écraserait l'avis du
@@ -188,9 +203,9 @@ dérive le verdict du passage depuis les seuls verdicts de l'expéditeur, et vin
 consomment ce verdict. Il **reste inchangé** : l'avis du relecteur s'affiche, il ne vote pas. Décider
 qu'il pèse sur le verdict final serait une décision de domaine, et elle n'est pas dans ce lot.
 
-**Le paquet pèse une nuit entière de séquences transformées.** → C'est le prix de la régénération,
-choisi en D1. Le plan d'export annonce l'estimation avant d'écrire, ventilée par nature de fichier,
-et l'essai à blanc est le défaut : personne ne découvre le volume après coup.
+**Le paquet pèse la sélection, soit dix à trente séquences.** → Un ordre de grandeur de moins que la
+nuit entière. Le plan d'export annonce quand même l'estimation avant d'écrire, ventilée par nature :
+une clé pleine reste une clé pleine, et personne ne découvre le volume après coup.
 
 ## Open Questions
 

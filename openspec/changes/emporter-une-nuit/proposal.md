@@ -11,9 +11,9 @@ pas du code.
 
 - **Une nuit s'emporte vers un autre poste sous forme de paquet**, et l'avis du relecteur revient
   **signé de son pseudo**, rangé à côté du nôtre plutôt que fondu dedans.
-- Le paquet emporte **toutes les séquences transformées** de la nuit, pour que le relecteur puisse
-  régénérer sa propre sélection d'écoute et non subir celle de l'expéditeur. Les enregistrements
-  bruts n'y sont pas.
+- Le paquet emporte **la sélection d'écoute et ses séquences**, pas la nuit entière. La sélection est
+  **figée** : le relecteur juge le même échantillon que l'expéditeur, ce qui rend les deux verdicts
+  comparables séquence par séquence. Les enregistrements bruts n'y sont pas non plus.
 - Les **identifiants de plateforme ne voyagent pas** : le relecteur juge, l'expéditeur publie.
 - `selection_sequence` gagne deux colonnes, `verdict_relecteur` et `relecteur_pseudo`, sur le patron
   de V26 qui a logé l'avis du validateur du MNHN à côté de celui de l'observateur.

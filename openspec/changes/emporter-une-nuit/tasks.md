@@ -32,8 +32,8 @@
       tourné sur elle, ses survivants sont lus un par un, et chacun est soit tué par un test neuf,
       soit justifié par écrit.
 - [ ] 3.3 Le paquet n'existe pas. L'écrire depuis un plan confirmé. **Fait quand** : un test écrit un
-      paquet dans un dossier temporaire, le relit, et retrouve toutes les séquences transformées de la
-      nuit, ses métadonnées, la sélection en cours et ses verdicts, sans aucun enregistrement brut.
+      paquet dans un dossier temporaire, le relit, et retrouve les séquences **de la sélection**, ses
+      métadonnées et ses verdicts, **sans les autres séquences de la nuit ni aucun brut**.
 
 ## 4. Ouvrir le paquet, et signer ce qu'on y fait
 
@@ -43,18 +43,21 @@
 - [ ] 4.2 L'identité se périme à quatorze jours alors que le jugement peut venir après. **Fait
       quand** : un test ouvre un paquet avec une identité valide, avance l'horloge injectée au-delà de
       la péremption, pose un verdict, et constate le pseudo relevé à l'ouverture.
-- [ ] 4.3 Le relecteur doit pouvoir régénérer sa sélection. **Fait quand** : un test ouvre un paquet,
-      régénère, et constate que la nouvelle sélection tire parmi toutes les séquences de la nuit.
+- [ ] 4.3 La régénération rouvrirait le problème que D1 ferme : deux échantillons quasi disjoints.
+      **Fait quand** : un test constate qu'une nuit venue d'un paquet refuse la régénération, et que
+      le refus dit que la sélection est celle de l'expéditeur.
 
 ## 5. Reprendre l'avis, sans écraser le sien
 
 - [ ] 5.1 Un avis importé écraserait le verdict de l'expéditeur. **Fait quand** : un test importe un
       avis divergent et constate que les deux verdicts subsistent, chacun avec son pseudo.
-- [ ] 5.2 Un verdict portant sur une séquence hors de la sélection de l'expéditeur n'a nulle part où
-      aller. **Fait quand** : un test importe un tel verdict et le retrouve conservé, présenté comme
-      hors sélection, et non écarté en silence.
+- [ ] 5.2 La sélection étant figée, un verdict hors d'elle signale un paquet qui ne correspond pas à
+      la nuit. **Fait quand** : un test importe un tel verdict et constate un refus qui nomme la
+      séquence en cause, sans que rien n'ait été écrit.
 - [ ] 5.3 Un second avis effacerait le premier sans un mot. **Fait quand** : un test importe un avis
-      sur une nuit qui en porte déjà un et constate un refus qui nomme ce qui serait remplacé.
+      sur une nuit qui en porte déjà un et constate une double confirmation qui nomme le relecteur
+      présent et le nombre de verdicts perdus ; un second test refuse la confirmation et constate que
+      rien n'a été écrit.
 
 ## 6. Ce qui se voit, et ce qui se prouve
 
