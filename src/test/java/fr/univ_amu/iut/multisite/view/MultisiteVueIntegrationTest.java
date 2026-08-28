@@ -79,15 +79,6 @@ class MultisiteVueIntegrationTest {
     private ServiceMultisite service;
     private MultisiteController controleur;
 
-    private static LignePassage ligne(long id, String carre, String point, int annee, int numero, String date) {
-        return ligne(id, carre, point, annee, numero, date, Verdict.OK);
-    }
-
-    private static LignePassage ligne(
-            long id, String carre, String point, int annee, int numero, String date, Verdict verdict) {
-        return ligne(id, carre, point, annee, numero, date, verdict, EtatAnalyse.SANS_OBJET, null);
-    }
-
     /// Variante portant l'**état d'analyse** (#1338) et la date de son relevé.
     private static LignePassage ligne(
             long id,

@@ -8,7 +8,7 @@ decided_at: 2026-08-27
 verification: probable
 enforced_by:
   - "scripts/adr/4617-code-mort-et-zone-de-test.py"
-ratchet: 57
+ratchet: 55
 verified:
   - by: machine:ci
     at: 2026-08-27
@@ -58,13 +58,16 @@ bien au-delà de sa cible, production comprise ; une seconde exécution du plugi
 appliquée, le goal `check` déclenchant `pmd:pmd` en fork avec la configuration **globale** ; et
 `failOnViolation` est binaire là qu'il faut un cliquet.
 
-**Le cliquet est à 57** : 32 `NcssCount`, 17 `UnusedPrivateMethod` dont 9 en production,
+**Le cliquet est à 55** : 32 `NcssCount`, 15 `UnusedPrivateMethod` dont 9 en production,
 5 `GodClass`, 2 `ExcessiveParameterList`, 1 `CyclomaticComplexity`.
 
-Il est descendu de 63 à 57 quand la famille `executer` a été retirée (#4639, chantier #4656) : six
-copies d'un helper SQL de deux lignes, dont cinq d'empreinte rigoureusement identique. Le compte a
-baissé d'exactement six, ce qui vérifie que chaque suppression a retiré une violation plutôt que de
-la déplacer.
+**Une méthode retirée n'est pas une violation retirée.** Trois surcharges sont parties pour deux
+violations : `MultisiteVueIntegrationTest` portait un escalier `ligne(...)` à 6, 7 puis 9 arguments,
+et PMD ne signalait que la première, la deuxième lui paraissant vivante puisqu'appelée par la morte.
+Les retirer d'un coup n'a coûté qu'une violation. Le cliquet ne descend donc pas du nombre de
+méthodes supprimées, et seule la re-mesure tranche.
+
+Posé à 62, il est monté à 63 puis descendu à 57 et 55 au fil du chantier #4656.
 
 Il a été posé à 62 et relevé d'un cran le lendemain, ce qui mérite d'être dit plutôt que lissé.
 `SynchronisationParticipationTest` a franchi le seuil `NcssCount` en gagnant les cas qui ferment un
