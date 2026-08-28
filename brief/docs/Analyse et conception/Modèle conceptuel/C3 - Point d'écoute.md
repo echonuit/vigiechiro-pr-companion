@@ -14,6 +14,7 @@ Un point dans un site, identifié par un code court fourni par Vigie-Chiro. Le p
 
 - [R2](Règles%20métier.md#r2) - format du code (lettre + chiffre).
 - [R26](Règles%20métier.md#r26) - les coordonnées GPS tombent **dans l'emprise du carré** (carroyage national, 2 km) ; l'édition cartographique clampe le point à son carré.
+- [R26bis](Règles%20métier.md#r26bis) - **sur une frontière**, les coordonnées satisfont R26 pour plusieurs carrés : le point tombe dans deux mailles, quatre à un coin, et le modèle ne tranche pas.
 - [R27](Règles%20métier.md#r27) - un point **sans GPS** est situé au centre de son carré (position approchée, en éventail si plusieurs).
 - [R28](Règles%20métier.md#r28) - un point qui **porte des passages** ne peut pas être supprimé.
 
