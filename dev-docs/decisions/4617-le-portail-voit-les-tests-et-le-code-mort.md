@@ -8,7 +8,7 @@ decided_at: 2026-08-27
 verification: probable
 enforced_by:
   - "scripts/adr/4617-code-mort-et-zone-de-test.py"
-ratchet: 62
+ratchet: 63
 verified:
   - by: machine:ci
     at: 2026-08-27
@@ -58,8 +58,20 @@ bien au-delà de sa cible, production comprise ; une seconde exécution du plugi
 appliquée, le goal `check` déclenchant `pmd:pmd` en fork avec la configuration **globale** ; et
 `failOnViolation` est binaire là qu'il faut un cliquet.
 
-**Le cliquet est à 62**, la mesure du jour : 31 `NcssCount`, 23 `UnusedPrivateMethod` dont 9 en
-production, 5 `GodClass`, 2 `ExcessiveParameterList`, 1 `CyclomaticComplexity`.
+**Le cliquet est à 63** : 32 `NcssCount`, 23 `UnusedPrivateMethod` dont 9 en production,
+5 `GodClass`, 2 `ExcessiveParameterList`, 1 `CyclomaticComplexity`.
+
+Il a été posé à 62 et relevé d'un cran le lendemain, ce qui mérite d'être dit plutôt que lissé.
+`SynchronisationParticipationTest` a franchi le seuil `NcssCount` en gagnant les cas qui ferment un
+défaut d'écriture concurrente (#4632), fusionné entre la mesure et la mise en place. Allonger une
+classe de test pour couvrir un cas de plus est le geste juste : refuser cette montée pousserait à
+ne pas couvrir, ce qu'aucun seuil de longueur ne vaut.
+
+**Ce que cet incident apprend sur le cliquet lui-même.** Sa valeur porte sur l'arbre ENTIER, donc
+elle vieillit dès qu'une autre demande est fusionnée. Une branche mesurée puis rebasée doit être
+**re-mesurée avant d'être poussée** : le premier passage a laissé `main` rouge parce que le rebase
+avait nettoyé `target/`, que le garde a refusé de conclure faute de rapport, et que ce refus a été
+lu comme une vérification. Un garde qui refuse dit qu'il n'a rien mesuré, pas que tout va bien.
 
 ## Conséquences
 
