@@ -6,6 +6,8 @@ article: A17
 chantier: "#4517, chantier #4511 (mise en service d'OpenSpec), pour l'EPIC produit #3848"
 decided_at: 2026-08-27
 verification: humaine
+relations:
+  amendee_par: ["4627-le-paquet-fige-la-selection-d-ecoute"]
 verification_note: "le lot 0 rend un document, pas du code : aucun garde ne tient encore cette décision. Les scénarios qui la vérifieront sont écrits dans la delta spec du changement `emporter-une-nuit`, et les gardes arrivent avec les lots qui la réalisent (#4624 à #4628)"
 verified:
   - by: human:nedseb
@@ -16,6 +18,14 @@ generated:
 ---
 
 # Un avis de relecteur se range à côté du nôtre, il ne le remplace pas
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-08-28** par [ADR 4627](4627-le-paquet-fige-la-selection-d-ecoute.md) : le
+    paquet n'emporte pas toutes les séquences de la nuit mais celles de la **sélection**, et la
+    sélection est figée. Deux tirages indépendants se recouvrent sur `t × t / N` séquences,
+    soit environ deux sur trente pour une nuit de cinq cents : les deux colonnes de cette ADR
+    supposent que les verdicts tombent sur la même ligne, ce que seule une sélection commune
+    garantit.
 
 ## Contexte
 

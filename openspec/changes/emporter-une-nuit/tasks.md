@@ -32,8 +32,8 @@
       tourné sur elle, ses survivants sont lus un par un, et chacun est soit tué par un test neuf,
       soit justifié par écrit.
 - [ ] 3.3 Le paquet n'existe pas. L'écrire depuis un plan confirmé. **Fait quand** : un test écrit un
-      paquet dans un dossier temporaire, le relit, et retrouve toutes les séquences transformées de la
-      nuit, ses métadonnées, la sélection en cours et ses verdicts, sans aucun enregistrement brut.
+      paquet dans un dossier temporaire, le relit, et retrouve les séquences **de la sélection**, ses
+      métadonnées et ses verdicts, **sans les autres séquences de la nuit ni aucun brut**.
 
 ## 4. Ouvrir le paquet, et signer ce qu'on y fait
 
@@ -43,8 +43,9 @@
 - [ ] 4.2 L'identité se périme à quatorze jours alors que le jugement peut venir après. **Fait
       quand** : un test ouvre un paquet avec une identité valide, avance l'horloge injectée au-delà de
       la péremption, pose un verdict, et constate le pseudo relevé à l'ouverture.
-- [ ] 4.3 Le relecteur doit pouvoir régénérer sa sélection. **Fait quand** : un test ouvre un paquet,
-      régénère, et constate que la nouvelle sélection tire parmi toutes les séquences de la nuit.
+- [ ] 4.3 La régénération rouvrirait le problème que D1 ferme : deux échantillons quasi disjoints.
+      **Fait quand** : un test constate qu'une nuit venue d'un paquet refuse la régénération, et que
+      le refus dit que la sélection est celle de l'expéditeur.
 
 ## 5. Reprendre l'avis, sans écraser le sien
 

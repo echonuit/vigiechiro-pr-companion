@@ -6,20 +6,22 @@ attribué, et ce qu'il ne décide pas.
 
 ## ADDED Requirements
 
-### Requirement: Le paquet emporte de quoi régénérer une sélection d'écoute
+### Requirement: Le paquet emporte la sélection d'écoute, et elle est figée
 
-Le paquet SHALL contenir toutes les séquences transformées de la nuit, ses métadonnées, et la
-sélection d'écoute en cours avec les verdicts déjà posés. Il ne SHALL PAS contenir les
-enregistrements bruts.
+Le paquet SHALL contenir les séquences de la sélection d'écoute en cours, ses métadonnées et les
+verdicts déjà posés. Il ne SHALL PAS contenir les autres séquences de la nuit, ni les enregistrements
+bruts.
+
+La sélection SHALL être figée pour le relecteur : les deux jugent le même échantillon, faute de quoi
+les deux avis porteraient sur des séquences quasi disjointes et ne se compareraient pas.
 
 *Vérifié par* : aucun dispositif n'existe encore. Le lot qui produira le paquet devra porter un test
-qui ouvre un paquet et constate qu'une régénération y trouve des séquences hors de la sélection
-reçue.
+qui ouvre un paquet et constate que la régénération y est refusée en nommant sa cause.
 
-#### Scenario: le relecteur régénère sa propre sélection
+#### Scenario: la régénération est fermée sur une nuit venue d'un paquet
 - **WHEN** un relecteur ouvre un paquet et demande une nouvelle sélection d'écoute
-- **THEN** la sélection produite tire parmi toutes les séquences de la nuit, et non parmi les seules
-  séquences de la sélection reçue
+- **THEN** l'application refuse en disant que la sélection est celle de l'expéditeur, plutôt que de
+  produire un échantillon que personne ne pourra confronter au sien
 
 #### Scenario: les bruts restent au poste d'origine
 - **WHEN** un paquet est écrit pour une nuit dont les enregistrements bruts sont présents
