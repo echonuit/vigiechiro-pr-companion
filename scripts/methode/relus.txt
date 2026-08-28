@@ -315,7 +315,7 @@ d3e2d5006cfa  src/main/java/fr/univ_amu/iut/commun/model/AcquisitionAncrage.java
 f4a2378be8bc  src/main/java/fr/univ_amu/iut/commun/model/AnalyseurCoordonnees.java
 e679e19570e9  src/main/java/fr/univ_amu/iut/commun/model/Besoin.java
 f1f3882e2b2a  src/main/java/fr/univ_amu/iut/commun/model/CarreCandidat.java
-af0f84bd8db7  src/main/java/fr/univ_amu/iut/commun/model/CarroyageNational.java
+065f552013f0  src/main/java/fr/univ_amu/iut/commun/model/CarroyageNational.java
 b0e2cb33ceef  src/main/java/fr/univ_amu/iut/commun/model/CauseLisible.java
 f968aae98fa9  src/main/java/fr/univ_amu/iut/commun/model/Certitude.java
 a80bd0e32be2  src/main/java/fr/univ_amu/iut/commun/model/CiblePassage.java
@@ -329,6 +329,7 @@ a56df0dabb10  src/main/java/fr/univ_amu/iut/commun/model/ConfigurationAmorcage.j
 ad011628c47f  src/main/java/fr/univ_amu/iut/commun/model/ConfigurationJournalisation.java
 88a4430d2db0  src/main/java/fr/univ_amu/iut/commun/model/ConstructeurLienEspece.java
 c6854eea2b1d  src/main/java/fr/univ_amu/iut/commun/model/ContexteActivite.java
+47551717a187  src/main/java/fr/univ_amu/iut/commun/model/ConversionGeographique.java
 240d5dc91d9c  src/main/java/fr/univ_amu/iut/commun/model/CoordonneesPoint.java
 7983188ae882  src/main/java/fr/univ_amu/iut/commun/model/CopieInterruptible.java
 ea4e7137f0bc  src/main/java/fr/univ_amu/iut/commun/model/DepotDispositionColonnes.java
@@ -636,7 +637,7 @@ b504dc62bc69  src/main/java/fr/univ_amu/iut/commun/view/carte/EmpriseCarre.java
 3502893f6c9e  src/main/java/fr/univ_amu/iut/commun/view/carte/EventailCentre.java
 1e7c6f9af476  src/main/java/fr/univ_amu/iut/commun/view/carte/FournisseurEmpriseCarre.java
 93ac4c1546db  src/main/java/fr/univ_amu/iut/commun/view/carte/FournisseurEmpriseCarreEnChaine.java
-2286e1eee91b  src/main/java/fr/univ_amu/iut/commun/view/carte/FournisseurEmpriseCarreOfficiel.java
+36633e36e0cc  src/main/java/fr/univ_amu/iut/commun/view/carte/FournisseurEmpriseCarreOfficiel.java
 cdb1209cb534  src/main/java/fr/univ_amu/iut/commun/view/carte/PointGeo.java
 3dcdaec2a896  src/main/java/fr/univ_amu/iut/commun/viewmodel/AccueilViewModel.java
 f152ea1edf44  src/main/java/fr/univ_amu/iut/commun/viewmodel/ClasseBadge.java
@@ -1414,6 +1415,7 @@ a4ee6b599e8d  src/test/java/fr/univ_amu/iut/commun/model/CompletudeFichesEspeces
 4f6ff9f0a11b  src/test/java/fr/univ_amu/iut/commun/model/ConfigurationAmorcageTest.java
 c1e43b791228  src/test/java/fr/univ_amu/iut/commun/model/ConfigurationJournalisationTest.java
 678edd1fd3c3  src/test/java/fr/univ_amu/iut/commun/model/ConstructeurLienEspeceTest.java
+7e98bb47768e  src/test/java/fr/univ_amu/iut/commun/model/ConversionGeographiqueTest.java
 78eaa9a50fbe  src/test/java/fr/univ_amu/iut/commun/model/CopieInterruptibleTest.java
 922f2263151a  src/test/java/fr/univ_amu/iut/commun/model/CycleTraitementIntegrationTest.java
 9009bc3116e9  src/test/java/fr/univ_amu/iut/commun/model/DistanceGeoTest.java

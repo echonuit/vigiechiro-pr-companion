@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.view.carte;
 
+import fr.univ_amu.iut.commun.model.ConversionGeographique;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,8 +20,6 @@ public final class EmpriseAutourDesPoints implements FournisseurEmpriseCarre {
     /// Demi-côté **minimal** du carré, en kilomètres (carré Vigie-Chiro de 2 km de côté).
     private static final double DEMI_COTE_KM = 1.0;
 
-    private static final double KM_PAR_DEGRE_LAT = 111.0;
-
     @Override
     public Optional<EmpriseCarre> emprise(String numeroCarre, List<PointGeo> pointsDuCarre) {
         List<PointGeo> geolocalises = pointsDuCarre.stream()
@@ -34,8 +33,9 @@ public final class EmpriseAutourDesPoints implements FournisseurEmpriseCarre {
         double latCentre = (lat.getMin() + lat.getMax()) / 2.0;
         double lonCentre = (lon.getMin() + lon.getMax()) / 2.0;
         // Demi-côté = max(demi-côté 2 km, demi-écart des points) → l'emprise contient toujours les points.
-        double demiLat = Math.max(DEMI_COTE_KM / KM_PAR_DEGRE_LAT, (lat.getMax() - lat.getMin()) / 2.0);
-        double demiLonMin = DEMI_COTE_KM / (KM_PAR_DEGRE_LAT * Math.cos(Math.toRadians(latCentre)));
+        double demiLat = Math.max(
+                ConversionGeographique.degresDeLatitudePour(DEMI_COTE_KM), (lat.getMax() - lat.getMin()) / 2.0);
+        double demiLonMin = ConversionGeographique.degresDeLongitudePour(DEMI_COTE_KM, latCentre);
         double demiLon = Math.max(demiLonMin, (lon.getMax() - lon.getMin()) / 2.0);
         return Optional.of(
                 new EmpriseCarre(latCentre - demiLat, lonCentre - demiLon, latCentre + demiLat, lonCentre + demiLon));
