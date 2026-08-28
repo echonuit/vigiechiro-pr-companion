@@ -24,15 +24,22 @@ par le fournisseur : `/instruire`, `/proposer`, `/realiser`, `/reprendre`, `/fus
 Avant la première ligne de code, produire **un seul bloc** - il vaut réservation, résumé et plan à la fois - puis le déposer en commentaire sur l'issue, assigner l'issue, et attendre mon accord explicite. Un geste, pas deux : une cérémonie qu'on saute parce qu'elle est longue ne se tiendra pas mieux en s'allongeant.
 
 ```markdown
-**Pris par** : chantier <EPIC ou thème> · branche `<nom-de-branche>`
+**Pris par** : chantier #<numéro de l'EPIC> · branche `<nom-de-branche>`
 **Ce qu'il y a à faire** : <une phrase, dans les termes du problème>
 **Pourquoi maintenant** : <ce qui la rend traitable ou urgente>
-**Dans quelle continuité** : <le chantier d'où elle vient, l'issue qu'elle suit, ce qu'elle permet ensuite>
+**Dans quelle continuité** : <l'issue qu'elle suit, ce qu'elle permet ensuite>
 **Périmètre** : <ce que je touche> ; **hors périmètre** : <ce que je ne touche pas, et qui pourrait tenter>
 **Plan** : <3 à 6 étapes>
 **Ce que je vérifierai** : <le dispositif, et comment je le verrai rouge>
 **Question ouverte** : <s'il y en a une ; sinon retirer la ligne>
 ```
+
+**Un numéro d'EPIC, pas un thème.** La première ligne porte le chantier auquel l'issue
+**appartient**, et le sas des suites n'en est pas un : on y consigne une trouvaille, on n'y prend rien.
+Une issue de suite n'a donc pas de chantier par construction, et le geste attendu est d'en ouvrir un.
+Vécu le 27 août : trois sessions ont pris des issues avec `Pris par : sas des suites #4562`, et il a
+fallu les reprendre. C'était moi pour trois d'entre elles. La compétence `ouvrir-une-issue` porte la
+règle et sa raison.
 
 **Le moment de dérive est le milieu, pas l'ouverture.** À l'ouverture tu es attentif ; c'est en découvrant un défaut adjacent que tu élargis sans le dire. Tout changement de périmètre en cours d'issue se re-demande : tu le poses, tu proposes, tu attends. Tu ne l'absorbes pas. Vécu : la réécriture de `dev-docs/captures.md` a été fondue dans la PR #3483 sans que la question soit posée - c'était défendable, et ce n'était pas ta décision.
 
