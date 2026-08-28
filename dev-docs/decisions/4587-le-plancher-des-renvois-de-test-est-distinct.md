@@ -8,7 +8,7 @@ decided_at: 2026-08-28
 verification: certaine
 enforced_by:
   - "scripts/adr/4395-renvois-en-javadoc.py"
-floor: 995
+floor: 996
 inv_key: plancher-renvois-test
 verified:
   - by: machine:ci
@@ -25,7 +25,7 @@ generated:
 L'ADR 4395 pose qu'un renvoi porté par la javadoc ne se perd pas, et son plancher garde les renvois
 de `src/main/java`. Il n'a jamais lu `src/test/java`.
 
-Mesuré le 2026-08-28 : **<!--inv:plancher-renvois-test-->995<!--/inv--> renvois distincts** y vivent, dans 596 fichiers sur 813, et rien ne les
+Mesuré le 2026-08-28 : **<!--inv:plancher-renvois-test-->996<!--/inv--> renvois distincts** y vivent, dans 596 fichiers sur 813, et rien ne les
 garde. Le trou a été trouvé en passe 7 de la clôture de #4502, en mesurant pourquoi deux gardes sur
 treize lisaient la production seule. L'autre, `2635`, était une exception justifiée ; celui-ci était
 un oubli.

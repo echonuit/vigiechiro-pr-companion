@@ -189,7 +189,11 @@ public final class CaptureActivite {
         Parent vue = loader.load();
         ActiviteController controleur = loader.getController();
         ouvrirSurLaDemo(controleur);
-        controleur.exporterVers(Path.of(System.getProperty("java.io.tmpdir"), "activite-nuit.png"), SOIR.plusDays(1));
+        // Un dossier à nous, créé en `0700` : `java.io.tmpdir` reste lisible par tout utilisateur
+        // local, et ce PNG est un rendu de la nuit d'un observateur (#4509). Le fichier est jeté
+        // avec son dossier, l'aperçu qui compte étant écrit plus bas.
+        Path jetable = Files.createTempDirectory("vigiechiro-capture-activite-");
+        controleur.exporterVers(jetable.resolve("activite-nuit.png"), SOIR.plusDays(1));
         ApercuFx.enregistrerPng(new Scene(vue, 980, 620), fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
