@@ -42,7 +42,18 @@ import xml.etree.ElementTree as ET
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from _commun import RACINE_DEPOT, rapporte  # noqa: E402
 
-ADR = "4617"
+# DEUX cliquets, un par zone, et surtout pas un seul sur les deux (#4682).
+#
+# Un compteur unique laisserait une regression d un cote se payer par un gain de l autre : total
+# stable, verdict vert, et une methode morte reapparue en production compensee par un `NcssCount`
+# retire d un test. C est le defaut que l ADR 4587 refuse pour les planchers de renvois, et il vaut
+# ici mot pour mot. Le chantier #4656 a ramene la production a ZERO violation : c est precisement
+# l acquis qu un compteur unique ne garde pas.
+#
+# Les deux populations sont donc DISJOINTES, chacune avec son ADR et son seuil, et le script rend le
+# PIRE des deux codes.
+ADR_TEST = "4617"
+ADR_PRODUCTION = "4682"
 RAPPORT = RACINE_DEPOT / "target" / "pmd.xml"
 # La seule regle que la zone de test n a pas a tenir, et la mesure qui le justifie est dans le
 # docstring. Ailleurs qu en test, elle compte comme les autres.
@@ -53,11 +64,14 @@ def _zone(chemin: str) -> str:
     return "test" if "/src/test/" in chemin.replace("\\", "/") else "production"
 
 
-def suspects(rapport: pathlib.Path | None = None) -> list[str]:
+def suspects(rapport: pathlib.Path | None = None, zone: str | None = None) -> list[str]:
     """Les violations retenues, la zone de chacune, de la plus frequente a la plus rare.
 
     `rapport` n existe que pour l auto-test, qui a besoin d un corpus qu il maitrise : mesurer sur
     le depot ne separerait pas ce que le garde compte de ce qu il epargne.
+
+    `zone` borne le compte a « production » ou « test ». Sans elle, les deux sont rendues ensemble,
+    ce que l auto-test utilise pour montrer la compensation qu un compteur unique laisse passer.
     """
     source = rapport or RAPPORT
     if not source.exists():
@@ -73,15 +87,26 @@ def suspects(rapport: pathlib.Path | None = None) -> list[str]:
     retenus = []
     for fichier in arbre.findall(f".//{balise('file')}"):
         chemin = fichier.get("name") or ""
-        zone = _zone(chemin)
+        zone_du_fichier = _zone(chemin)
         for violation in fichier.findall(balise("violation")):
             regle = violation.get("rule")
-            if zone == "test" and regle in TOLEREES_EN_TEST:
+            if zone_du_fichier == "test" and regle in TOLEREES_EN_TEST:
                 continue
-            retenus.append((regle, zone, pathlib.Path(chemin).name, violation.get("beginline")))
+            if zone is not None and zone_du_fichier != zone:
+                continue
+            retenus.append((regle, zone_du_fichier, pathlib.Path(chemin).name,
+                            violation.get("beginline")))
     retenus.sort()
-    return [f"{regle}  {nom}:{ligne}  ({zone})" for regle, zone, nom, ligne in retenus]
+    return [f"{regle}  {nom}:{ligne}  ({z})" for regle, z, nom, ligne in retenus]
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte(ADR, "violations du portail, zone de test comprise", suspects(), apercu=12))
+    # Les deux cliquets, l un apres l autre. Le code de sortie est le PIRE des deux : une regression
+    # dans une zone doit faire rougir, meme si l autre a gagne. C est la disjonction en pratique.
+    codes = [
+        rapporte(ADR_PRODUCTION, "violations du portail en production",
+                 suspects(zone="production"), apercu=12),
+        rapporte(ADR_TEST, "violations du portail en zone de test",
+                 suspects(zone="test"), apercu=12),
+    ]
+    sys.exit(max(codes))

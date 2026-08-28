@@ -681,6 +681,31 @@ def test_4617_code_mort_et_zone_de_test() -> None:
         _verifie("4617 le meme litteral repete compte en production",
                  len(m.suspects(rapport(fichier(prod, "AvoidDuplicateLiterals")))), 1)
 
+        # LA COMPENSATION : une violation de plus en production, une de moins en test. Le total ne
+        # bouge pas. Un compteur unique reste donc vert pendant qu'une regression passe dans la zone
+        # qui compte le plus - le defaut que l'ADR 4587 refuse, « surtout pas un seul sur les deux ».
+        avant = m.suspects(rapport(fichier(prod, "UnusedPrivateMethod"),
+                                   fichier(test, "NcssCount"),
+                                   fichier(test, "GodClass")))
+        apres = m.suspects(rapport(fichier(prod, "UnusedPrivateMethod"),
+                                   fichier(prod, "NcssCount"),
+                                   fichier(test, "GodClass")))
+        _verifie("4617 la compensation ne change pas le total", len(avant), len(apres))
+        # ET c'est pourquoi le compte se fait PAR ZONE : a total constant, la production gagne une
+        # violation. Un compteur unique resterait vert ; deux compteurs disjoints rougissent.
+        prod_avant = m.suspects(rapport(fichier(prod, "UnusedPrivateMethod"),
+                                        fichier(test, "NcssCount"),
+                                        fichier(test, "GodClass")), zone="production")
+        prod_apres = m.suspects(rapport(fichier(prod, "UnusedPrivateMethod"),
+                                        fichier(prod, "NcssCount"),
+                                        fichier(test, "GodClass")), zone="production")
+        _verifie("4682 la zone de production, elle, voit la regression",
+                 len(prod_apres), len(prod_avant) + 1)
+        _verifie("4682 et la zone de test voit sa baisse",
+                 len(m.suspects(rapport(fichier(prod, "UnusedPrivateMethod"),
+                                        fichier(prod, "NcssCount"),
+                                        fichier(test, "GodClass")), zone="test")), 1)
+
         # Un garde qui ne sait pas lire REFUSE. Rendre zero sur un rapport absent le rendrait vert
         # au moment precis ou il sert - le defaut de #4544 sous une autre forme.
         absent = racine / "jamais-produit.xml"
