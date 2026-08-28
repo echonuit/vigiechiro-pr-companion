@@ -285,6 +285,7 @@ nav:
     - 4577 · Le carré d'une position se calcule hors ligne: decisions/4577-le-carre-d-une-position-se-calcule-hors-ligne.md
     - 4578 · Deux précisions de conversion coexistent: decisions/4578-deux-precisions-de-conversion-coexistent-parce-qu-elles-ne-servent-pas-a-la-meme-chose.md
     - 4621 · Sur une frontière, on nomme les candidats sans en choisir un: decisions/4621-sur-une-frontiere-on-nomme-les-candidats-sans-en-choisir-un.md
+    - 4656 · Devant une copie morte, on cherche où le geste vit: decisions/4656-une-copie-morte-se-supprime-la-ou-le-geste-vit.md
     - 4475 · Un test dimensionne son stage, il n'hérite pas du fork: decisions/4475-un-test-dimensionne-son-stage-il-n-herite-pas-du-fork.md
     - 4476 · Une javadoc ne raconte pas le refactoring qui l'a produite: decisions/4476-une-javadoc-ne-raconte-pas-le-refactoring-qui-l-a-produite.md
     - 4477 · Une ADR dit sa décision et l'incident qui l'a produite: decisions/4477-une-adr-dit-sa-decision-et-l-incident-qui-l-a-produite.md
