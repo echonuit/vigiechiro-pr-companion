@@ -114,6 +114,15 @@ def rapporte_plancher(numero: str, titre: str, mesure: int, unite: str) -> int:
     qu'un humain le trie ; ce qui a disparu ne se liste pas, justement parce qu'il n'est plus là. La
     sortie annonce donc un nombre et un manque, pas une énumération.
 
+    **Les deux écarts refusent, et pas seulement la perte** (issue #4683). Un plancher périmé - la
+    mesure au-dessus du seuil - sortait en 0 : le message disait de relever, personne ne lit une
+    sortie verte, et les deux planchers du dépôt se sont trouvés périmés de vingt-et-un renvois moins
+    de vingt-quatre heures après avoir été posés. Ce qu'un plancher promet est de garder un gain ; un
+    gain non verrouillé se reperd, et le refus est ce qui rend la promesse vraie.
+
+    La polarité complète : `perte` refuse parce qu'on a perdu, `a-relever` refuse parce qu'on n'a pas
+    encore gardé, `ok` seul passe.
+
     Sortie normalisée, pour que le rapport hebdomadaire puisse agréger sans deviner :
 
         PLANCHER 4395 | mesure=4026 | plancher=4026 | verdict=ok
@@ -140,9 +149,13 @@ def rapporte_plancher(numero: str, titre: str, mesure: int, unite: str) -> int:
         return 1
     if verdict == "a-relever":
         print(
-            f"Le dépôt en porte plus que son plancher ({mesure} > {seuil}) : relevez-le à {mesure}\n"
-            f"dans l'ADR, sinon ce qui vient d'être gagné se reperdra en silence."
+            f"ÉCHEC : le dépôt en porte plus que son plancher ({mesure} > {seuil}).\n"
+            f"Relevez-le à {mesure} dans l'ADR - l'en-tête `floor:` ET les balises qui le citent.\n"
+            f"Un plancher périmé ne garde pas ce qu'on vient de gagner : la perte redevient gratuite\n"
+            f"dès qu'on a oublié de relever, et un message sans conséquence n'est pas une règle.",
+            file=sys.stderr,
         )
+        return 1
     return 0
 
 
