@@ -166,12 +166,6 @@ class SaisieCertitudeTest {
 
     // --- utilitaires de semis SQL ---
 
-    private static void executer(Connection cx, String sql) throws SQLException {
-        try (Statement st = cx.createStatement()) {
-            st.executeUpdate(sql);
-        }
-    }
-
     private static long cle(Connection cx, String sql) throws SQLException {
         try (PreparedStatement ps = cx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.executeUpdate();

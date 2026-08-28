@@ -148,10 +148,4 @@ class ValidationManuelleTest {
             }
         }
     }
-
-    private static void executer(Connection cx, String sql) throws SQLException {
-        try (Statement st = cx.createStatement()) {
-            st.execute(sql);
-        }
-    }
 }
