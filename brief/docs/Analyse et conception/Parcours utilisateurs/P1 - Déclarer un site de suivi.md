@@ -4,11 +4,12 @@
 
 > **Persona principal** : Marie. **Objectifs qualité visés** : [O2 Facilité d'apprentissage](../../Objectifs%20qualités/Objectifs%20qualités/O2.md), [SC1 Onboarding](../../Objectifs%20qualités/Scénario/SC1.md).
 
-Marie a créé son site sur le portail web Vigie-Chiro (<https://vigiechiro.herokuapp.com/>) et a noté son **n° de carré** (6 chiffres) ainsi que les **codes des points** (lettre + chiffre, ex. `A1`, `Z4`). Elle ouvre l'application pour la première fois et veut déclarer son dans l'application site afin de pouvoir importer ses nuits ensuite.
+Marie a créé son site sur le portail web Vigie-Chiro (<https://vigiechiro.herokuapp.com/>) et a noté les **codes des points** (lettre + chiffre, ex. `A1`, `Z4`). Le **n° de carré**, elle peut l'avoir noté ou non : depuis #4573, l'application le déduit d'une position collée depuis une carte. Elle ouvre l'application pour la première fois et veut déclarer son dans l'application site afin de pouvoir importer ses nuits ensuite.
 
 1. Marie démarre l'application. L'écran d'accueil détecte qu'aucun site n'est encore déclaré et lui propose une seule action mise en avant : « **Ajouter mon premier site de suivi** ».
 2. Elle clique. Un formulaire s'ouvre avec :
     - **N° de carré** (6 chiffres, validé à la saisie : doit faire exactement 6 chiffres, l'application avertit si elle oublie le leading zero pour les départements 1-9)
+    - **ou une position collée**, sous le champ : « Situer » en déduit le carré et remplit le n°. Le carroyage national étant embarqué, ce geste marche **hors connexion**, à la différence de « Vérifier sur Vigie-Chiro ». Sur une frontière entre deux carrés, l'application les **nomme** et ne choisit pas : elle ne sait pas de quel côté était le micro, Marie si
     - **Nom convivial** (optionnel, pour reconnaître le site facilement, ex. « Étang de la Tuilière »)
     - **Protocole** : menu déroulant à deux valeurs - `PointFixeStandard` (par défaut : protocole VigieChiro à la lettre, déclenche les alertes [R3](../Modèle%20conceptuel/Règles%20métier.md#r3) / [R4](../Modèle%20conceptuel/Règles%20métier.md#r4) en cas de passage hors fenêtre) ou `PointFixeRecherche` (cas Samuel : dates et fréquences libres, R3 / R4 muettes)
     - **Liste des points** : Marie ajoute autant de codes que nécessaire (ex. `A1`, `B2`). Pour chaque point, elle peut ajouter des coordonnées GPS et un descriptif (tous optionnels).

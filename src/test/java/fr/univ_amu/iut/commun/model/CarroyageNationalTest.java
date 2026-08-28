@@ -69,6 +69,17 @@ class CarroyageNationalTest {
     }
 
     @Test
+    @DisplayName("le centroïde se cherche sur SIX chiffres, la forme que R1 impose aux appelants")
+    void centroide_se_cherche_sur_six_chiffres() {
+        // Le référentiel ampute le zéro des départements 01 a 09, et `candidats` le rembourre déjà.
+        // Sans le rembourrer ici aussi, la classe parlerait deux langues : ce qu'elle rend ne pourrait
+        // pas lui être redonné. Trouvé à la passe 0 de la clôture du chantier #4573.
+        assertThat(CarroyageNational.embarque().centroide("040110"))
+                .as("un appelant tient un numéro à six chiffres : c'est la seule forme que R1 autorise")
+                .isPresent();
+    }
+
+    @Test
     @DisplayName("le référentiel couvre toute la métropole")
     void couverture_nationale() {
         assertThat(CarroyageNational.embarque().taille()).isGreaterThan(100_000);

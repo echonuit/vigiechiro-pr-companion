@@ -47,6 +47,33 @@ carré à la volée sur le terrain et les compléter plus tard, depuis la fiche 
 Si le carré est **déjà déclaré** dans Companion, le motif s'affiche **dans la fenêtre**, sous le champ,
 et **votre saisie est conservée** : corrigez le numéro sans tout recommencer.
 
+### Vous ne connaissez pas le numéro ? Partez du lieu
+
+Sous le champ du carré, **collez une position** et cliquez **Situer** : l'application vous dit dans
+quel carré elle tombe, et remplit le champ pour vous.
+
+La position se copie depuis n'importe quelle carte. Sur Google Maps, un clic droit sur le point puis
+« Copier les coordonnées » ; sur OpenStreetMap, un clic droit puis « Afficher l'adresse de ce lieu ».
+Deux nombres séparés par une virgule, **latitude puis longitude** : `43.296482, 5.369780`. Les degrés,
+minutes et secondes marchent aussi.
+
+!!! tip "Ce geste n'a pas besoin d'Internet"
+    Le carroyage national est **embarqué dans l'application**. Situer une position fonctionne donc chez
+    vous, hors connexion, contrairement à « Vérifier sur Vigie-Chiro » juste au-dessus, qui interroge le
+    portail. C'est le cas courant : on relève près de chez soi, et on importe le lendemain.
+
+Trois réponses possibles, et deux ne remplissent rien :
+
+- **un seul carré couvre cette position** : son numéro s'inscrit dans le champ. S'il en remplace un que
+  vous aviez tapé, le message vous dit lequel a été remplacé ;
+- **la position est sur une frontière** : deux carrés, parfois quatre à un coin, sont à égale distance.
+  L'application les **nomme** et ne choisit pas - vous seul savez de quel côté était le micro. Recopiez
+  celui qui convient ;
+- **aucun carré ne couvre cette position** : vous êtes hors de France métropolitaine, ou la latitude et
+  la longitude sont inversées. Le message le dit.
+
+Un **lien** de carte n'est pas accepté : collez les coordonnées, pas l'adresse de la page.
+
 ### Savoir si le carré existe déjà sur Vigie-Chiro
 
 Le bouton **Vérifier sur Vigie-Chiro**, à droite du numéro, pose la question **au portail** avant que
