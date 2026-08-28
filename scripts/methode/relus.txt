@@ -1045,9 +1045,12 @@ d8df481f824d  src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java
 6a9aa62cbaf1  src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java
 609ac4d5ccbe  src/main/java/fr/univ_amu/iut/qualification/di/QualificationModule.java
 73b492e3e943  src/main/java/fr/univ_amu/iut/qualification/model/AgregationVerdict.java
+f11933af8c2b  src/main/java/fr/univ_amu/iut/qualification/model/AvisRevenu.java
 5b69995dfce9  src/main/java/fr/univ_amu/iut/qualification/model/ContexteVerification.java
 8e741e9afd60  src/main/java/fr/univ_amu/iut/qualification/model/GenerateurSelection.java
+5f5838de3e04  src/main/java/fr/univ_amu/iut/qualification/model/PlanDeReprise.java
 0084a58a6ff5  src/main/java/fr/univ_amu/iut/qualification/model/PreCheckNuit.java
+ea1562f90716  src/main/java/fr/univ_amu/iut/qualification/model/RepriseAvis.java
 c221e37d54a6  src/main/java/fr/univ_amu/iut/qualification/model/SelectionDEcoute.java
 1358cd7f0b45  src/main/java/fr/univ_amu/iut/qualification/model/SequenceEnSelection.java
 5d875b0c1ac4  src/main/java/fr/univ_amu/iut/qualification/model/SequenceSelectionnee.java
@@ -1863,9 +1866,11 @@ cd203af38495  src/test/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduRattach
 49766a118987  src/test/java/fr/univ_amu/iut/perf/JeuDuBancTest.java
 a915ebf9d263  src/test/java/fr/univ_amu/iut/qualification/AgregationVerdictTest.java
 7dfaa00febe4  src/test/java/fr/univ_amu/iut/qualification/GenerateurSelectionTest.java
+b175a4d32440  src/test/java/fr/univ_amu/iut/qualification/PlanDeRepriseTest.java
 259055c613bf  src/test/java/fr/univ_amu/iut/qualification/PreCheckNuitTest.java
 9730b83d72ad  src/test/java/fr/univ_amu/iut/qualification/QualificationInjectionTest.java
 17441a81b96b  src/test/java/fr/univ_amu/iut/qualification/QualificationModuleTest.java
+40b670ed59ee  src/test/java/fr/univ_amu/iut/qualification/RepriseAvisTest.java
 33533e7deecc  src/test/java/fr/univ_amu/iut/qualification/SelectionDaoTest.java
 9501a6d14d9c  src/test/java/fr/univ_amu/iut/qualification/SequenceSelectionneeTest.java
 a343b5ab6bf1  src/test/java/fr/univ_amu/iut/qualification/ServiceQualificationMockTest.java
