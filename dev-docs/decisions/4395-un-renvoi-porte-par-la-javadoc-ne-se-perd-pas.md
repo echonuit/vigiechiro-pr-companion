@@ -57,6 +57,9 @@ pas qu'il l'ouvre une fois au lieu de deux.
 
 Le plancher vaut **<!--inv:plancher-renvois-->3 193<!--/inv-->**. Il se relève de ce qu'un chantier
 ajoute, et #4441 lui a rendu **quinze** renvois d'un coup : le dépôt portait cinquante-trois
+`(#…)`, le caractère de suspension au lieu d'un numéro, qu'aucun motif ne voyait puisque celui de ce
+garde exige des chiffres. Chacun a été retrouvé par `git blame`, le commit qui a introduit la ligne
+nommant son issue dans cinquante-trois cas sur cinquante-trois.
 
 **3 136 → 3 160** (#4646). Le plancher annonçait « à relever » depuis on ne sait quand, et personne
 ne le voyait : `rapport.py` n'avait aucun motif pour les lignes de plancher, et son verdict était
@@ -75,9 +78,12 @@ total sans qu'aucun renvoi n'ait été ajouté.
 
 Aucun fichier n'a baissé ni disparu : le déplacement redouté ne s'est pas produit, et les
 vingt-quatre sont des ajouts. Le plancher les verrouille.
-`(#…)`, le caractère de suspension au lieu d'un numéro, qu'aucun motif ne voyait puisque celui de ce
-garde exige des chiffres. Chacun a été retrouvé par `git blame`, le commit qui a introduit la ligne
-nommant son issue dans cinquante-trois cas sur cinquante-trois.
+
+**3 160 → 3 193**, et le plancher de test **996 → 1 009**, relevés au fil des lots qui ont posé des
+renvois. Ces relevés-là sont restés à la main, et deux d'entre eux ont laissé la prose de l'ADR en
+arrière pendant que l'en-tête suivait : c'est ce que #4683 a outillé plutôt que corrigé une fois de
+plus.
+
 L'abaisser est possible, et c'est une décision : la justifier dans cette ADR, comme on justifie un
 cliquet qui monte.
 
@@ -89,6 +95,23 @@ resserrer. Un plancher compte ce qu'on possède : il borne par le bas, **descend
 la bonne nouvelle est de le relever. Les deux ne peuvent pas partager un champ sans qu'un lecteur
 pressé lise le mauvais sens, d'où `floor` à côté de `ratchet` dans l'en-tête, et
 `rapporte_plancher` à côté de `rapporte` dans le socle.
+
+**Trois verdicts, et deux d'entre eux refusent** (#4683). `perte` refuse parce qu'on a perdu ;
+`a-relever` refuse parce qu'on n'a pas encore gardé ; seul `ok` passe. La deuxième moitié manquait :
+un plancher périmé annonçait sa péremption et rendait `0`. Celui-ci l'a annoncée de #4441 à #4646
+sans que personne ne la lise, et pendant tout ce temps le garde n'aurait rougi qu'en dessous de
+3 136 : les vingt-quatre renvois gagnés au-dessus se reperdaient sans qu'il dise rien. Un gain n'est
+gardé qu'une fois le seuil relevé.
+
+**Ce que ce refus coûte, et pourquoi c'est le bon prix.** Ajouter un renvoi fait désormais rougir la
+CI jusqu'à ce que le plancher suive. C'est le reproche que cette ADR adresse plus haut à une valeur
+figée par fichier : faire payer la discipline à chaque geste honnête. Il est accepté ici parce que le
+relevé est un geste et non trois - `scripts/methode/releve-les-planchers.py --ecrire` lit le verdict
+du garde et pose la mesure aux trois endroits où un seuil s'écrit : l'en-tête `floor:`, la balise du
+corps, celle du journal. Sans lui, le refus se paierait trois fois, et il y a un précédent : deux
+balises restées en arrière ont fait rougir `DocumentationAJourTest` sous #4646, parce que le chiffre
+y porte une espace **insécable** que le remplacement littéral manquait - et que le `grep` de
+vérification manquait pour la même raison.
 
 **Le total est global, pas figé par fichier.** Figer 983 valeurs et les tenir à chaque édition
 légitime ferait payer la discipline à chaque geste honnête, pour attraper une faute qui ne se commet

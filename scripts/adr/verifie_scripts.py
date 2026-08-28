@@ -883,6 +883,27 @@ def test_les_gardes_de_code_lisent_les_deux_arbres() -> None:
                  any("test" in str(r) for r in racines), True)
 
 
+def test_un_plancher_perime_refuse() -> None:
+    """Un plancher qui SAIT compter et ne sait pas REFUSER ne garde rien (issue #4683).
+
+    Les deux gardes de plancher sortaient en 0 des que la mesure depassait le seuil. Le message
+    disait pourtant quoi faire - « relevez-le, sinon ce qui vient d etre gagne se reperdra » - mais
+    personne ne lit une sortie verte. Les deux planchers etaient perimes de vingt-et-un renvois
+    moins de vingt-quatre heures apres avoir ete poses.
+
+    Le seuil vient d une ADR reelle : `plancher()` le lit dans son en-tete, et une fixture
+    demanderait de fabriquer une ADR pour eprouver deux comparaisons d entiers.
+    """
+    commun = _charge("_commun.py")
+    seuil = commun.plancher("4395")
+    codes = {}
+    for nom, mesure in (("perte", seuil - 1), ("ok", seuil), ("a-relever", seuil + 1)):
+        codes[nom] = commun.rapporte_plancher("4395", "temoin de polarite", mesure, "renvois")
+    _verifie("un plancher perdu refuse", codes["perte"], 1)
+    _verifie("un plancher tenu passe", codes["ok"], 0)
+    _verifie("un plancher perime refuse aussi", codes["a-relever"], 1)
+
+
 def test_resserre_cliquets_appelle_le_rapport() -> None:
     """La COUTURE entre les deux modules, la ou le temoin voisin n eprouvait que leurs pieces.
 
@@ -1050,6 +1071,7 @@ if __name__ == "__main__":
         test_loupe_4472_densite_de_commentaire,
         test_un_verdict_se_rend_sur_le_numero_de_son_adr,
         test_les_gardes_de_code_lisent_les_deux_arbres,
+        test_un_plancher_perime_refuse,
         test_resserre_cliquets_appelle_le_rapport,
         test_rapport_et_resserrement,
     ):
