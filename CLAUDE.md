@@ -17,6 +17,10 @@ Les six compétences OpenSpec sont en plus exposées en commandes, nommées par 
 par le fournisseur : `/instruire`, `/proposer`, `/realiser`, `/reprendre`, `/fusionner`,
 `/archiver`. Chacune tient en une ligne et ne fait qu'ouvrir sa compétence, où vit le flux.
 
+**`/clore` les a rejointes** (#4659). C'était le geste le plus long du dépôt et le seul sans commande,
+alors que 43 EPIC clos sur 64 n'avaient laissé aucune trace de clôture. Une compétence qu'aucune
+commande n'appelle est une compétence qu'on n'ouvre que si l'on y pense déjà.
+
 ## Au commencement de CHAQUE issue : UN bloc, puis TU T'ARRÊTES
 
 **Consigne d'agent, pas règle du dépôt.** Elle n'a pas d'équivalent dans `CONTRIBUTING.md` et n'a pas à en avoir : elle règle la façon dont nous travaillons ensemble.

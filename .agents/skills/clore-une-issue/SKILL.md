@@ -101,3 +101,4 @@ Ce n'est pas de la cosmétique. C'est la seule trace qui survive.
 | « Le titre de la PR, on s'en fiche » | Il devient la ligne du CHANGELOG, que la typographie ne rattrape pas après coup |
 | « Je relis le titre, ça suffit » | Quatre titres relus ont rougi le même jour. Le script rend un verdict, la relecture rend un avis |
 | « La typographie du corps, ça n'engage rien » | `corps-pr.yml` refuse le cadratin, l'apostrophe courbe et l'élision sans apostrophe. Le reste de la grille est à vous, et ce corps est publié dès qu'il part |
+| « C'était la dernière issue de l'EPIC, il est donc clos » | Fermer les issues n'est pas clore le chantier. Les douze passes portent sur le **delta**, pas sur les tickets, et 43 EPIC clos sur 64 n'en portaient aucune trace (#4659). La commande est `/clore` |

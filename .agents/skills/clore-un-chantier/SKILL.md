@@ -12,11 +12,16 @@ metadata:
 ## Loi d'airain
 
 ```
-LES DOUZE PASSES S'EXÉCUTENT DANS L'ORDRE
+LES DOUZE PASSES S'EXÉCUTENT DANS L'ORDRE, ET LAISSENT LEUR TRACE
 ```
 
 L'ordre n'est pas un rangement, c'est une chaîne de dépendances. Le rompre fait rater ce que la
 passe suivante devait trouver.
+
+**La trace n'est pas une formalité de fin.** Une clôture qui n'en laisse aucune est indiscernable
+d'une clôture qui n'a pas eu lieu - pour le lecteur, pour le prochain chantier, et pour la mesure.
+Le 28 août 2026, **43 des 64 EPIC clos** du dépôt n'en portaient aucune, dont un clos le jour même
+par les douze passes, avec bilan et artefact. Rien ne l'avait réclamée (#4659).
 
 ## Annoncer
 
@@ -37,7 +42,7 @@ passe suivante devait trouver.
 | 8 | Revue visuelle | chaque **état** de chaque écran touché | `revoir-les-ecrans` |
 | 9 | Suites consolidées | l'EPIC des suites relu et regroupé, les rattachements tranchés | `trier-les-issues` |
 | 10 | ADR du chantier | une décision structurante, une ADR | `ecrire-une-adr` |
-| 11 | Bilan | livré, dette restante, décisions et leur pourquoi | `humaniser` |
+| 11 | Bilan | livré, dette restante, décisions et leur pourquoi, **et la trace collée dans l'EPIC** | `humaniser` |
 
 Quatre passes ne produisent que de la prose, et c'est pourquoi elles nomment `humaniser` : ce
 qu'elles écrivent est lu hors de l'échange qui l'a produit, donc l'article A31 s'y applique.
@@ -159,6 +164,20 @@ de production**, les 2, 7 et 8 :
 Un périmètre étroit n'est donc pas une raison d'abréger : c'est ce qui rend la clôture rapide, pas ce
 qui la rend inutile.
 
+## La trace : ce que la passe 11 colle dans l'EPIC
+
+Le bilan raconte ; **la case atteste**. Les deux sont nécessaires, et c'est la seconde qu'on oublie
+parce qu'elle ne s'écrit pas, elle se coche.
+
+Le modèle vit dans [`dev-docs/cycle-de-chantier.md`](../../../dev-docs/cycle-de-chantier.md), section
+« Modèle de clôture (à coller dans l'EPIC) ». Il se colle **en commentaire sur l'EPIC**, cases cochées,
+avant de le fermer. Son en-tête `## Clôture de chantier` est ce que le garde cherche : une clôture qui
+l'omet ne se distingue d'aucune manière d'une clôture qui n'a pas eu lieu.
+
+**Une passe non tenue se coche quand même, en le disant.** Une case laissée vide sans un mot laisse
+croire à un oubli ; une case qui porte « sans objet : aucun écran touché » est une décision, et se
+relit comme telle.
+
 ## Signaux d'alerte : on s'arrête
 
 | Pensée | Réalité |
@@ -174,3 +193,5 @@ qui la rend inutile.
 | « Cette trouvaille aura le numéro suivant » | Un numéro d'issue **supposé** est le numéro de quelqu'un d'autre. On l'ouvre, ou on cite l'EPIC |
 | « Je relis le diff de mon chantier » | Le delta est `<ouverture>..origin/main` **entier**. Filtrer cache ce que la rencontre avec les autres sessions a produit |
 | « C'est évident, je note et j'avance » | Une passe se conclut sur une mesure **reproductible**. Un résultat qui surprend se remesure avant d'être cru |
+| « Le bilan est écrit, la clôture est faite » | Le bilan raconte, la **case** atteste. Sans elle, rien ne distingue votre clôture d'une clôture absente |
+| « J'ai fermé la dernière issue, l'EPIC est clos » | Fermer les issues n'est pas clore le chantier. Les douze passes portent sur le **delta**, pas sur les tickets |
