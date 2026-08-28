@@ -25,6 +25,10 @@ import sys
 ICI = pathlib.Path(__file__).parent
 LIGNE_CLIQUET = re.compile(r"^ADR (\d+) \| suspects=(\d+) \| cliquet=(\d+) \| verdict=(\S+)$", re.M)
 LIGNE_LOUPE = re.compile(r"^LOUPE (\d+) \| candidats=(\d+)$", re.M)
+# Le PLANCHER est la polarite inverse du cliquet, et il a sa propre ligne. Ce rapport ne la lisait
+# pas : le garde des renvois annoncait « a-relever » a chaque passage, sans que rien ne le montre.
+LIGNE_PLANCHER = re.compile(
+    r"^PLANCHER (\d+) \| mesure=(\d+) \| plancher=(\d+) \| verdict=(\S+)$", re.M)
 
 
 def executer(script: pathlib.Path) -> str:
@@ -37,20 +41,51 @@ def executer(script: pathlib.Path) -> str:
 
 
 def collecter():
-    cliquets, loupes = [], []
+    """Les verdicts, et la liste de ceux que ce rapport n a PAS su lire (article A3).
+
+    Un script lance dont aucune ligne ne correspond rendait un rapport silencieux : il manquait dans
+    le tableau, et rien ne disait qu il manquait. Mesure du 2026-08-28 : sur vingt scripts, TROIS
+    etaient dans ce cas, dont un plancher qui annoncait `verdict=a-relever` depuis on ne sait quand.
+    Un dispositif dit ce qu il couvre, et ce qu il n a pas pu lire.
+    """
+    cliquets, planchers, loupes, muets = [], [], [], []
     for script in sorted(ICI.glob("[0-9]*.py")):
         sortie = executer(script)
+        lus = 0
         for m in LIGNE_CLIQUET.finditer(sortie):
             num, suspects, cliquet, verdict = m.group(1), int(m.group(2)), int(m.group(3)), m.group(4)
             cliquets.append((num, suspects, cliquet, verdict))
+            lus += 1
+        for m in LIGNE_PLANCHER.finditer(sortie):
+            num, mesure, plancher, verdict = m.group(1), int(m.group(2)), int(m.group(3)), m.group(4)
+            planchers.append((num, mesure, plancher, verdict))
+            lus += 1
+        if not lus:
+            muets.append((script.name, premiere_ligne_de_verdict(sortie)))
     for script in sorted(ICI.glob("loupe-*.py")):
         sortie = executer(script)
+        lus = 0
         for m in LIGNE_LOUPE.finditer(sortie):
             loupes.append((m.group(1), int(m.group(2))))
-    return cliquets, loupes
+            lus += 1
+        if not lus:
+            muets.append((script.name, premiere_ligne_de_verdict(sortie)))
+    return cliquets, planchers, loupes, muets
 
 
-def rendre(cliquets, loupes, markdown: bool) -> str:
+def premiere_ligne_de_verdict(sortie: str) -> str:
+    """Ce que le script a rendu qui RESSEMBLE a un verdict, pour que le rapport montre l ecart.
+
+    Sans cet extrait, le lecteur sait qu un script est muet et doit le relancer a la main pour savoir
+    pourquoi. Avec lui, l ecart entre ce qui est rendu et ce qui est attendu se lit sur place.
+    """
+    for ligne in sortie.split("\n"):
+        if ligne.startswith(("ADR ", "LOUPE ", "PLANCHER ")) and "|" in ligne:
+            return ligne.strip()
+    return "aucune ligne de verdict"
+
+
+def rendre(cliquets, planchers, loupes, muets, markdown: bool) -> str:
     h1, h2, li = ("## ", "### ", "- ") if markdown else ("== ", "-- ", "  ")
     out = [f"{h1}Rapport de conformité aux ADR", ""]
 
@@ -82,12 +117,27 @@ def rendre(cliquets, loupes, markdown: bool) -> str:
         out.append(f"{li}Aucun cliquet à resserrer : chaque marge colle à la réalité.")
         out.append("")
 
+    if planchers:
+        out += ["", f"{h2}Planchers (ce qu'on possède et qui ne redescend pas)"]
+        for num, mesure, plancher, verdict in planchers:
+            fleche = "→ ok" if verdict == "ok" else f"→ {verdict}"
+            out.append(f"{li}ADR {num} : mesure={mesure} plancher={plancher} {fleche}")
+        out.append("")
+
     out.append(f"{h2}Loupes (vérifications « humaine », indicatif)")
     if loupes:
         for num, n in loupes:
             out.append(f"{li}ADR {num} : {n} candidat(s) à revoir.")
     else:
         out.append(f"{li}Aucune loupe active.")
+    if muets:
+        out += ["", f"{h2}\u26a0 Verdicts que ce rapport n'a pas su lire"]
+        for nom, rendu in muets:
+            out.append(f"{li}{nom} : {rendu}")
+        out.append(f"{li}Ces scripts ont été lancés ; leur sortie ne porte aucun verdict que ce"
+                   f" rapport sache lire. Un registre et un garde qui refuse de conclure sont"
+                   f" légitimement dans ce cas ; une ligne de verdict mal formée ne l'est pas.")
+
     return "\n".join(out) + "\n"
 
 
@@ -99,5 +149,5 @@ def resserrements(cliquets):
 
 if __name__ == "__main__":
     markdown = "--markdown" in sys.argv
-    cliquets, loupes = collecter()
-    sys.stdout.write(rendre(cliquets, loupes, markdown))
+    cliquets, planchers, loupes, muets = collecter()
+    sys.stdout.write(rendre(cliquets, planchers, loupes, muets, markdown))

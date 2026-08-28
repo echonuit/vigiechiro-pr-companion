@@ -21,6 +21,7 @@ import sys
 import tempfile
 
 ICI = pathlib.Path(__file__).parent
+ICI_NOM = pathlib.Path(__file__).name
 
 # Nomme parce qu il porte PLUSIEURS cas la ou ses voisins n en ont qu un : le cliquet Java, la
 # tolerance zero d une zone, le refus d une zone qui ne balaie rien, le discernement de la couverture,
@@ -772,6 +773,65 @@ def gardes_deux_arbres() -> list[str]:
     return trouves
 
 
+# Les trois aides qui rendent un verdict, et le premier argument que chacune attend : le NUMERO de
+# l ADR. Le rapport lit ses verdicts sur ce numero ; un slug y passerait sans rougir et sa ligne
+# serait jetee en silence.
+REND_UN_VERDICT = re.compile(r"\b(rapporte|rapporte_plancher|loupe)\(\s*([^,\s)]+)", re.M)
+
+
+def test_loupe_4472_densite_de_commentaire() -> None:
+    """La loupe de densite compte le commentaire contre le code, et n a jamais eu de temoin.
+
+    Portee depuis la ligne d origine, elle n etait chargee par personne : sa detection pouvait avoir
+    cesse sans que rien ne le dise, et son verdict etait de surcroit jete par le rapport (#4635).
+    """
+    m = _charge("loupe-4472-densite-de-commentaire.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(
+            racine,
+            "Bavarde.java",
+            "class Bavarde {\n"
+            "  void faire() {\n"
+            + "    // une ligne de commentaire\n" * 12
+            + "".join(f"    int x{i} = {i};\n" for i in range(6))
+            + "  }\n"
+            "}\n",
+        )
+        _ecrire(
+            racine,
+            "Sobre.java",
+            "class Sobre {\n  void faire() {\n"
+            + "".join(f"    int y{i} = {i};\n" for i in range(6))
+            + "  }\n}\n",
+        )
+        bavardes = [nom for _, nom, _, _ in m.methodes(racines=[racine])]
+        _verifie("loupe 4472 voit la methode bavarde", any("Bavarde" in n for n in bavardes), True)
+        _verifie("loupe 4472 laisse la methode sobre", any("Sobre" in n for n in bavardes), False)
+
+
+def test_un_verdict_se_rend_sur_le_numero_de_son_adr() -> None:
+    """Le premier argument d une aide de verdict est un numero, jamais un slug (issue #4635).
+
+    `loupe-4472-densite-de-commentaire.py` passait le litteral « densite-de-commentaire », la
+    convention du depot d origine restee dans sa ligne de verdict au moment du portage. Le script
+    tournait, trouvait 43 candidats, et `rapport.py` les jetait : sa ligne ne correspondait a aucun
+    de ses motifs, et rien ne disait qu elle manquait.
+
+    Ce cas est STATIQUE et ne lance rien : il lit l appel. Relancer les vingt scripts couterait le
+    temps du rapport entier pour attraper une faute de frappe.
+    """
+    fautifs = []
+    for source in sorted(ICI.glob("*.py")):
+        if source.name in ("_commun.py", ICI_NOM):
+            continue
+        for appel in REND_UN_VERDICT.finditer(source.read_text(encoding="utf-8")):
+            aide, premier = appel.group(1), appel.group(2)
+            if premier[:1] in ("'", '"') and not premier.strip("\"'").isdigit():
+                fautifs.append(f"{source.name} : {aide}({premier}…)")
+    _verifie("un verdict se rend sur le NUMERO de son ADR, jamais sur un slug", fautifs, [])
+
+
 def test_les_gardes_de_code_lisent_les_deux_arbres() -> None:
     """Ce cas tient le CORPUS, la ou le temoin propre a chaque garde tient sa DETECTION.
 
@@ -943,6 +1003,8 @@ if __name__ == "__main__":
         test_4617_code_mort_et_zone_de_test,
         test_4476_javadoc_raconte_son_extraction,
         test_4477_longueur_des_adr,
+        test_loupe_4472_densite_de_commentaire,
+        test_un_verdict_se_rend_sur_le_numero_de_son_adr,
         test_les_gardes_de_code_lisent_les_deux_arbres,
         test_rapport_et_resserrement,
     ):

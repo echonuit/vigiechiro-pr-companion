@@ -34,6 +34,9 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from _commun import RACINES_ANCREES, RACINE_DEPOT, loupe  # noqa: E402
 
+# Le numero, et non le slug : ici l identite d une ADR est son numero.
+ADR = "4472"
+
 RACINES = RACINES_ANCREES
 
 # Deux planchers, parce que les deux lectures n ont pas la meme echelle.
@@ -224,11 +227,11 @@ def main() -> int:
             i = sys.argv.index(drapeau)
             n = int(sys.argv[i + 1]) if i + 1 < len(sys.argv) and sys.argv[i + 1].isdigit() else combien
             mesures = classes() if drapeau == "--classes" else methodes()
-            return loupe("densite-de-commentaire", f"densité de commentaire, {drapeau[2:]}", _rend("", mesures, n))
+            return loupe(ADR, f"densité de commentaire, {drapeau[2:]}", _rend("", mesures, n))
 
     lignes = ["« par classe »"] + _rend("", classes(), combien)
     lignes += ["", "« par méthode »"] + _rend("", methodes(), combien)
-    return loupe("densite-de-commentaire", "densité de commentaire, par classe et par méthode", lignes)
+    return loupe(ADR, "densité de commentaire, par classe et par méthode", lignes)
 
 
 if __name__ == "__main__":
