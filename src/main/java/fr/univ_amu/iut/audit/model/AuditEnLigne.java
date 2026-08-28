@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /// Audit **en ligne** (extrait de [ServiceAuditCoherence] pour la cohésion) : confronte le **dépôt** au
 /// serveur ([VerificationDepot], #1132) et les **points d'écoute** aux localités serveur
@@ -17,6 +19,8 @@ import java.util.Optional;
 /// partiels / hors connexion). Dégrade proprement : si rien n'est disponible, un unique constat `INFO` ;
 /// un passage non lié ou sans plan de dépôt est ignoré. Aucune exception ne remonte.
 class AuditEnLigne {
+
+    private static final Logger LOG = Logger.getLogger(AuditEnLigne.class.getName());
 
     private final Optional<VerificationDepot> verificationDepot;
     private final Optional<AuditPointsServeur> auditPointsServeur;
@@ -55,6 +59,7 @@ class AuditEnLigne {
                 constats.addAll(versConstats(passage.id(), moteur.verifier(passage.id())));
             } catch (RegleMetierException horsPerimetre) {
                 // Passage non lié à une participation ou sans plan de dépôt local : rien à confronter en ligne.
+                LOG.log(Level.FINE, horsPerimetre, () -> "Passage " + passage.id() + " hors périmètre d'audit");
             }
         }
         return constats;

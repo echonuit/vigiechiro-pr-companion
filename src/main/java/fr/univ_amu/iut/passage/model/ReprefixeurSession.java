@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /// Re-renomme physiquement le dossier d'une session et les fichiers préfixés qu'il contient, d'un
@@ -26,6 +28,8 @@ import java.util.stream.Stream;
 /// place. La base, elle, n'est mise à jour qu'ensuite par [ServicePassage] : en cas d'échec disque,
 /// rien n'a bougé et la cohérence base/disque est préservée.
 public class ReprefixeurSession {
+
+    private static final Logger LOG = Logger.getLogger(ReprefixeurSession.class.getName());
 
     /// Déplace `racineSession` vers le dossier du nouveau préfixe (même parent) et re-préfixe les
     /// fichiers qu'il contient. Renvoie la nouvelle racine.
@@ -106,8 +110,12 @@ public class ReprefixeurSession {
             Path[] paire = faits.pop();
             try {
                 Files.move(paire[1], paire[0]);
-            } catch (IOException ignore) {
+            } catch (IOException echec) {
                 // best-effort : on poursuit l'annulation des autres renommages
+                LOG.log(
+                        Level.WARNING,
+                        echec,
+                        () -> "Annulation du renommage impossible : " + paire[1] + " reste en place");
             }
         }
     }
@@ -115,8 +123,9 @@ public class ReprefixeurSession {
     private static void remettreEnPlace(Path nouvelleRacine, Path racineSession) {
         try {
             Files.move(nouvelleRacine, racineSession);
-        } catch (IOException ignore) {
+        } catch (IOException echec) {
             // best-effort : le dossier reste sous le nouveau nom, mais ses fichiers ont été restaurés
+            LOG.log(Level.WARNING, echec, () -> "Le dossier reste sous son nouveau nom : " + nouvelleRacine);
         }
     }
 

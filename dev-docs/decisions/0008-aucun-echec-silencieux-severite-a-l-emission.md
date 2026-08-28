@@ -7,7 +7,7 @@ chantier: "EPIC #1523 (observabilité)"
 verification: probable
 enforced_by:
   - "scripts/adr/0008-echec-silencieux.py"
-ratchet: 16
+ratchet: 0
 verified:
   - by: machine:suspects
 ---
@@ -36,16 +36,35 @@ Des échecs disparaissaient sans laisser de trace : `catch` muets, tâches longu
 
 Le garde n'a jamais lu que `src/main/java`, et **aucune décision ne l'y avait restreint** : il est né avant que la question ne se pose. Un test qui avale son échec ment pourtant de la même façon qu'une classe de production, et plus mal : il rend vert sans avoir rien prouvé. Le corpus est donc les deux arbres.
 
-Les **quatre** `catch` au corps vide de `src/test/java` ont été arbitrés un par un avant d'entrer dans le cliquet, qui passe de 12 à 16 :
+Les **quatre** `catch` au corps vide de `src/test/java` avaient été arbitrés un par un avant
+d'entrer dans le cliquet, qui passait alors de 12 à 16.
 
-| Endroit | Ce que le catch vide y fait |
-|---|---|
-| `SondeAccessibiliteTest:70` | l'exception est le comportement **attendu** : elle prouve que le dossier n'est pas inscriptible |
-| `ParcoursMultisiteVersPassageE2ETest:216` | boucle de reprise ; l'assertion de l'appelant tranche si les trois essais échouent |
-| `ParcoursSitesVersPassageE2ETest:144` | même boucle, même arbitrage |
-| `BancDeRecetteUrlTest:110` | fermeture d'un guichet qui ne vit que le temps du cas |
+## Tolérance zéro (#4585)
 
-Aucun n'est un échec avalé, et c'est pourquoi ils entrent dans le cliquet plutôt que de le faire rougir.
+**16 → 0**, et le cliquet devient un **refus** : l'article A9 veut qu'une zone au plancher soit
+gardée par un refus, sinon le zéro ne reste pas zéro. Ce ruban ne s'alignait pas par résorption, le
+dépôt de référence portant les mêmes douze en production et n'en voyant que douze parce que son garde
+ne lit pas l'arbre de test.
+
+Aucun des seize n'était un oubli : tous portaient une variable nommée et un commentaire. La question
+n'était donc pas qui avait oublié, mais si ce silence était le bon niveau de sévérité, ce que cette
+ADR fait décider à l'émission.
+
+**Douze émettent.** `FINE` pour ce qui est attendu - une ligne de référentiel non conforme, une date
+impossible, une suppression au mieux - et `WARNING` pour ce qui laisse un état bancal : une session à
+moitié repréfixée, une ancienne session restée sous `.remplace`, un corps de réponse non-JSON. Le
+commentaire reste et dit le pourquoi ; le journal dit que c'est arrivé.
+
+**Quatre disparaissent**, la condition se testant au lieu de se rattraper.
+`SondeAccessibiliteTest` mesure dans une variable ce que son `assumeTrue` lit, `BancDeRecetteUrlTest`
+laisse la fermeture remonter, et les deux boucles de reprise E2E gardent leur dernière cause pour la
+joindre à leur rapport.
+
+**Un arbitrage de cette ADR était faux.** Elle écrivait de `ParcoursSitesVersPassageE2ETest` « même
+boucle, même arbitrage : l'assertion de l'appelant tranche si les trois essais échouent ». Sa boucle
+rendait la main **en silence** après trois échecs, et le cas continuait comme si la navigation avait
+abouti pour échouer plus loin, sur un nœud absent, très loin de sa cause. C'est l'échec avalé que
+cette ADR refuse, et il vivait dans sa propre liste d'exceptions.
 
 ## Alternatives écartées
 

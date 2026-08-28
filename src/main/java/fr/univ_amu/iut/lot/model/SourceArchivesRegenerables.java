@@ -9,6 +9,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /// [SourceDepot] des **archives ZIP**, capable de **regenerer a la demande** une archive absente du
 /// disque (#1994).
@@ -33,6 +35,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /// et un lot qui a change fait echouer le depot explicitement plutot que de re-televerser une archive
 /// de meme nom au contenu different.
 public final class SourceArchivesRegenerables implements SourceDepot {
+
+    private static final Logger LOG = Logger.getLogger(SourceArchivesRegenerables.class.getName());
 
     /// Extension des archives de depot, en facteur : elle sert a la fois a nommer et a relire un rang.
     private static final String EXTENSION = ".zip";
@@ -127,6 +131,10 @@ public final class SourceArchivesRegenerables implements SourceDepot {
         } catch (IOException echecDeLiberation) {
             // Volontairement ignore : l'unite est en ligne, c'est ce qui compte. Le dossier gardera une
             // archive de trop, que « Liberer l'espace disque » saura enlever.
+            LOG.log(
+                    Level.FINE,
+                    echecDeLiberation,
+                    () -> "Archive " + identifiant + " non supprimée : « Libérer l'espace disque » la reprendra");
         }
     }
 

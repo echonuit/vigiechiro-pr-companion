@@ -15,6 +15,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -28,6 +30,8 @@ import java.util.zip.ZipInputStream;
 /// (#104) : chaque entrée est recopiée en flux ([CopieInterruptible]), jamais chargée entière. Une
 /// entrée dont le chemin s'évaderait du dossier (`../…`) est **refusée** - garde « zip-slip ».
 public final class ExtracteurZip {
+
+    private static final Logger LOG = Logger.getLogger(ExtracteurZip.class.getName());
 
     private ExtracteurZip() {}
 
@@ -199,8 +203,9 @@ public final class ExtracteurZip {
     private static void supprimerSilencieux(Path chemin) {
         try {
             Files.deleteIfExists(chemin);
-        } catch (IOException ignore) {
+        } catch (IOException echec) {
             // Best-effort.
+            LOG.log(Level.FINE, echec, () -> "Suppression impossible : " + chemin);
         }
     }
 
@@ -241,8 +246,9 @@ public final class ExtracteurZip {
             entrees.filter(Files::isDirectory)
                     .filter(p -> p.getFileName().toString().startsWith("import-zip-"))
                     .forEach(ArborescenceFichiers::effacerAuMieux);
-        } catch (IOException ignore) {
+        } catch (IOException echec) {
             // Best-effort : un balayage incomplet n'est pas une erreur métier.
+            LOG.log(Level.FINE, echec, () -> "Balayage des dossiers d'import incomplet sous " + dossierBase);
         }
     }
 }

@@ -83,19 +83,17 @@ class BancDeRecetteUrlTest {
     /// classes qui passent après, dans l'ordre où la répartition les a mises. C'est le défaut même que
     /// ce cas décrit, retourné contre le reste de la suite.
     @AfterEach
-    void rendreLEtatPartage() {
+    void rendreLEtatPartage() throws IOException {
         System.clearProperty("vigiechiro.url");
         System.clearProperty("vigiechiro.workspace");
         fermer();
     }
 
-    private void fermer() {
-        try {
-            if (guichet != null) {
-                guichet.close();
-            }
-        } catch (IOException fermeture) {
-            // Rien à réparer : le guichet n'existe que le temps du cas.
+    /// La fermeture REMONTE : un guichet qui refuse de se fermer laisse un port pris, et le cas
+    /// suivant du fork échouerait sur une cause qui n'est pas la sienne.
+    private void fermer() throws IOException {
+        if (guichet != null) {
+            guichet.close();
         }
     }
 
