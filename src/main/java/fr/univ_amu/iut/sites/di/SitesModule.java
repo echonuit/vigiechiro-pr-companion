@@ -28,6 +28,7 @@ import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
+import fr.univ_amu.iut.sites.model.ControleCarreLocal;
 import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.ImportSiteDistant;
 import fr.univ_amu.iut.sites.model.PointLocalParLocalite;
@@ -166,6 +167,14 @@ public class SitesModule extends ModuleDeFeature {
     @Singleton
     PropositionCarre fournirPropositionCarre() {
         return new PropositionCarre(CarroyageNational.embarque());
+    }
+
+    /// Le contrôle **hors ligne** du carré, pour la ligne de commande (#4682). Il partage la grille de
+    /// `PropositionCarre` : `embarque()` ne la charge qu'une fois par JVM.
+    @Provides
+    @Singleton
+    ControleCarreLocal fournirControleCarreLocal() {
+        return new ControleCarreLocal(CarroyageNational.embarque());
     }
 
     @Provides

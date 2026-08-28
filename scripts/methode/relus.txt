@@ -175,8 +175,9 @@ cef533cc30a1  src/main/java/fr/univ_amu/iut/cli/CouleurCli.java
 e614e795bc57  src/main/java/fr/univ_amu/iut/cli/LectureSeule.java
 b97f2eb85f2c  src/main/java/fr/univ_amu/iut/cli/VerdictCli.java
 6edb0b0ce728  src/main/java/fr/univ_amu/iut/cli/commande/AfficherSoldeSaison.java
-a64fdfcfc59f  src/main/java/fr/univ_amu/iut/cli/commande/AjouterPoint.java
+e494fe43ba4b  src/main/java/fr/univ_amu/iut/cli/commande/AjouterPoint.java
 3280cd8b7909  src/main/java/fr/univ_amu/iut/cli/commande/Auditer.java
+b384090bce46  src/main/java/fr/univ_amu/iut/cli/commande/AvertissementCarre.java
 b3e768af3334  src/main/java/fr/univ_amu/iut/cli/commande/CiblesRevue.java
 04d2ecfef1f2  src/main/java/fr/univ_amu/iut/cli/commande/CommandeRacine.java
 5887aa5bf914  src/main/java/fr/univ_amu/iut/cli/commande/ConstituerSelection.java
@@ -1089,11 +1090,13 @@ ede310e6a3f3  src/main/java/fr/univ_amu/iut/sites/di/CommunePointSites.java
 06a92944639a  src/main/java/fr/univ_amu/iut/sites/di/PointsDuCarreSites.java
 ca051118f7a5  src/main/java/fr/univ_amu/iut/sites/di/PublicationPointModule.java
 564a747797e7  src/main/java/fr/univ_amu/iut/sites/di/RechercheCarreExistantModule.java
-74b5cf894615  src/main/java/fr/univ_amu/iut/sites/di/SitesModule.java
+b20f33c32031  src/main/java/fr/univ_amu/iut/sites/di/SitesModule.java
 605de68255f6  src/main/java/fr/univ_amu/iut/sites/di/SynchronisationSitesModule.java
 caedbc158715  src/main/java/fr/univ_amu/iut/sites/model/AppariementPoints.java
 639f7cdc0b1b  src/main/java/fr/univ_amu/iut/sites/model/CommuneDuPoint.java
-89b37d02fbe4  src/main/java/fr/univ_amu/iut/sites/model/ControleCarreStoc.java
+8b535bbabf36  src/main/java/fr/univ_amu/iut/sites/model/ConfrontationCarre.java
+9a916da10985  src/main/java/fr/univ_amu/iut/sites/model/ControleCarreLocal.java
+8278c1c35952  src/main/java/fr/univ_amu/iut/sites/model/ControleCarreStoc.java
 b86cd45c26c9  src/main/java/fr/univ_amu/iut/sites/model/ImportSiteDistant.java
 b8ca5156a810  src/main/java/fr/univ_amu/iut/sites/model/LecturePosition.java
 34db4c9a40fe  src/main/java/fr/univ_amu/iut/sites/model/PointDEcoute.java
@@ -1313,6 +1316,7 @@ a7b638195c11  src/test/java/fr/univ_amu/iut/bibliotheque/ExportBiblioSonsTest.ja
 1a9b6cbc2338  src/test/java/fr/univ_amu/iut/cli/ClassementLectureEcritureTest.java
 6c77fd73d4d4  src/test/java/fr/univ_amu/iut/cli/CliAuditTest.java
 c9ddeacdc80b  src/test/java/fr/univ_amu/iut/cli/CliCampagneTest.java
+7d03e30cc0e0  src/test/java/fr/univ_amu/iut/cli/CliControleDuCarreTest.java
 d46725e9a252  src/test/java/fr/univ_amu/iut/cli/CliDiscussionTest.java
 af1c71c057e2  src/test/java/fr/univ_amu/iut/cli/CliEmplacementsTest.java
 f9c5457c2e82  src/test/java/fr/univ_amu/iut/cli/CliExportVuTest.java
@@ -1953,6 +1957,7 @@ c54ebddab8a8  src/test/java/fr/univ_amu/iut/sites/ServiceSitesTest.java
 bd7d2b209501  src/test/java/fr/univ_amu/iut/sites/SiteDaoTest.java
 2b00cd974aab  src/test/java/fr/univ_amu/iut/sites/SiteTiersDaoTest.java
 fdb1347ad0fe  src/test/java/fr/univ_amu/iut/sites/model/AppariementPointsTest.java
+10be41acf753  src/test/java/fr/univ_amu/iut/sites/model/ControleCarreLocalTest.java
 f9fecd78ca1f  src/test/java/fr/univ_amu/iut/sites/model/ControleCarreStocTest.java
 e3b0c44298fc  src/test/java/fr/univ_amu/iut/sites/model/PositionColleeTest.java
 760e64f30290  src/test/java/fr/univ_amu/iut/sites/model/PropositionCarreTest.java

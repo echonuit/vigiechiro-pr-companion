@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import fr.univ_amu.iut.sites.model.ControleCarreLocal;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.Objects;
@@ -53,15 +54,20 @@ public final class ModifierPoint implements Callable<Integer> {
     // Provider, non instance directe : picocli instancie les sous-commandes AVANT la migration du schéma.
     private final Provider<ServiceSites> service;
 
+    private final Provider<ControleCarreLocal> controle;
+
     @Inject
-    public ModifierPoint(Provider<ServiceSites> service) {
+    public ModifierPoint(Provider<ServiceSites> service, Provider<ControleCarreLocal> controle) {
         this.service = Objects.requireNonNull(service, "service");
+        this.controle = Objects.requireNonNull(controle, "controle");
     }
 
     @Override
     public Integer call() {
         PointDEcoute point = service.get().modifierPoint(idPoint, idSite, code, latitude, longitude, description);
         spec.commandLine().getOut().println("Point " + point.id() + " modifié : " + point.code());
+        AvertissementCarre.direSiDivergence(
+                spec, controle.get(), service.get().site(point.idSite()).numeroCarre(), latitude, longitude);
         return 0;
     }
 }
