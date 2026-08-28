@@ -1,99 +1,56 @@
 package fr.univ_amu.iut.commun.view.carte;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import fr.univ_amu.iut.commun.model.CarroyageNational;
+import fr.univ_amu.iut.commun.model.PositionGeo;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
 
-/// Fournisseur d'emprise **officiel** (#325) : cale le carré sur le **carroyage national Vigie-Chiro**
-/// (« carrenat »). Le numéro (NUMNAT = département + identifiant local) n'encode pas de coordonnées :
-/// on lit le **centroïde WGS84** de la maille dans un référentiel embarqué (`carrenat.csv`), puis on en
-/// déduit l'emprise du carré **2 km** centrée dessus.
+/// Fournisseur d'emprise **officiel** (#325) : cale le carré sur le carroyage national Vigie-Chiro.
 ///
-/// Le référentiel embarqué (`carrenat.csv.gz`, gzip) couvre **toute la France métropolitaine**
-/// (≈ 137 000 mailles), issu de `cesco-lab/Vigie-Chiro_scripts inputs/CountryGrids/carrenatFR.csv`
-/// (EPSG:27572 Lambert II étendu) converti en WGS84. Un numéro absent (hors métropole, ou numéro
-/// inconnu) renvoie `Optional.empty()` : la chaîne ([FournisseurEmpriseCarreEnChaine]) bascule alors sur
-/// le repli [EmpriseAutourDesPoints].
+/// Le numéro n'encode pas de coordonnées : on lit le centroïde WGS84 de la maille dans
+/// [CarroyageNational], puis on en déduit l'emprise du carré **2 km** centrée dessus.
+///
+/// Le référentiel lui-même a été descendu dans le modèle par #4621 : le découpage du territoire est une
+/// donnée du domaine, et la carte n'est qu'un de ses lecteurs. Cette classe ne garde que ce qui la
+/// concerne, passer d'un centroïde à une emprise.
+///
+/// Un numéro absent (hors métropole, ou numéro inconnu) renvoie `Optional.empty()` : la chaîne
+/// ([FournisseurEmpriseCarreEnChaine]) bascule alors sur le repli [EmpriseAutourDesPoints].
 public final class FournisseurEmpriseCarreOfficiel implements FournisseurEmpriseCarre {
-
-    private static final Logger LOG = Logger.getLogger(FournisseurEmpriseCarreOfficiel.class.getName());
-
-    private static final String RESSOURCE = "carrenat.csv.gz";
 
     /// Demi-côté du carré Vigie-Chiro (2 km de côté) et conversion km → degrés (cf. [EmpriseAutourDesPoints]).
     private static final double DEMI_COTE_KM = 1.0;
 
     private static final double KM_PAR_DEGRE_LAT = 111.0;
 
-    /// numéro de carré → centroïde `{latitude, longitude}` WGS84.
-    private final Map<String, double[]> centroides;
+    private final CarroyageNational carroyage;
 
     public FournisseurEmpriseCarreOfficiel() {
-        this.centroides = chargerReferentiel();
+        this(CarroyageNational.embarque());
+    }
+
+    /// Sur un carroyage donné : sert aux tests, qui n'ont pas à charger la grille nationale.
+    public FournisseurEmpriseCarreOfficiel(CarroyageNational carroyage) {
+        this.carroyage = carroyage;
     }
 
     @Override
     public Optional<EmpriseCarre> emprise(String numeroCarre, List<PointGeo> pointsDuCarre) {
-        double[] centre = centroides.get(numeroCarre);
-        if (centre == null) {
-            return Optional.empty();
-        }
-        double latCentre = centre[0];
-        double lonCentre = centre[1];
-        double demiLat = DEMI_COTE_KM / KM_PAR_DEGRE_LAT;
-        double demiLon = DEMI_COTE_KM / (KM_PAR_DEGRE_LAT * Math.cos(Math.toRadians(latCentre)));
-        return Optional.of(
-                new EmpriseCarre(latCentre - demiLat, lonCentre - demiLon, latCentre + demiLat, lonCentre + demiLon));
+        return carroyage.centroide(numeroCarre).map(FournisseurEmpriseCarreOfficiel::autourDe);
     }
 
     /// Nombre de carrés connus du référentiel (utile aux tests / au diagnostic).
     public int taille() {
-        return centroides.size();
+        return carroyage.taille();
     }
 
-    private static Map<String, double[]> chargerReferentiel() {
-        Map<String, double[]> centroides = new HashMap<>();
-        try (InputStream flux = FournisseurEmpriseCarreOfficiel.class.getResourceAsStream(RESSOURCE)) {
-            if (flux == null) {
-                return centroides; // pas de référentiel embarqué → tout passe au repli
-            }
-            try (BufferedReader lecteur =
-                    new BufferedReader(new InputStreamReader(new GZIPInputStream(flux), StandardCharsets.UTF_8))) {
-                String ligne;
-                while ((ligne = lecteur.readLine()) != null) {
-                    ligne = ligne.strip();
-                    if (ligne.isEmpty() || ligne.startsWith("#") || ligne.startsWith("numero")) {
-                        continue; // commentaires et en-tête
-                    }
-                    String[] champs = ligne.split(";");
-                    if (champs.length >= 3) {
-                        try {
-                            centroides.put(champs[0].strip(), new double[] {
-                                Double.parseDouble(champs[1].strip()), Double.parseDouble(champs[2].strip())
-                            });
-                        } catch (NumberFormatException ligneInvalide) {
-                            // Ligne non conforme (en-tête inattendu, colonne non numérique) : ignorée.
-                            LOG.log(
-                                    Level.FINE,
-                                    ligneInvalide,
-                                    () -> "Centroïde non numérique pour le carré " + champs[0] + " : ligne ignorée");
-                        }
-                    }
-                }
-            }
-        } catch (IOException probleme) {
-            throw new UncheckedIOException("Lecture du référentiel de carroyage " + RESSOURCE, probleme);
-        }
-        return centroides;
+    private static EmpriseCarre autourDe(PositionGeo centre) {
+        double demiLat = DEMI_COTE_KM / KM_PAR_DEGRE_LAT;
+        double demiLon = DEMI_COTE_KM / (KM_PAR_DEGRE_LAT * Math.cos(Math.toRadians(centre.latitude())));
+        return new EmpriseCarre(
+                centre.latitude() - demiLat,
+                centre.longitude() - demiLon,
+                centre.latitude() + demiLat,
+                centre.longitude() + demiLon);
     }
 }
