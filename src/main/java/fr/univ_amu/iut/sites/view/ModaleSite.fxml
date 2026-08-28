@@ -46,6 +46,18 @@
     </StackPane>
   </HBox>
   <Label text="6 chiffres, tel qu'il figure sur la grille Vigie-Chiro" styleClass="field-hint" wrapText="true"/>
+  <!-- « Partir d'un lieu plutôt que d'un numéro » (#4577). Le carré se déduit du carroyage EMBARQUÉ :
+       ce geste ne demande rien au réseau et reste offert hors connexion, à la différence de
+       « Vérifier sur Vigie-Chiro » juste au-dessus, qui interroge le portail. -->
+  <Label text="Vous ne connaissez pas le numéro ?" styleClass="field-label"/>
+  <HBox alignment="CENTER_LEFT" spacing="8.0">
+    <TextField fx:id="champPosition" promptText="43.296482, 5.369780" prefWidth="220.0"/>
+    <Button fx:id="btnSituer" text="Situer" styleClass="bouton-secondaire" onAction="#situerPosition"/>
+  </HBox>
+  <Label text="Collez la position copiée sur une carte, latitude puis longitude" styleClass="field-hint"
+         wrapText="true"/>
+  <!-- Ce que la position a donné : distinct du message d'existence, qui porte la réponse du portail. -->
+  <Label fx:id="messagePosition" wrapText="true" managed="false" visible="false"/>
   <!-- Ce que la plateforme a répondu sur ce carré : distinct du bandeau de retour, qui porte l'issue de
        l'enregistrement. Les confondre effacerait l'un par l'autre. -->
   <Label fx:id="messageCarreExistant" wrapText="true" managed="false" visible="false"/>

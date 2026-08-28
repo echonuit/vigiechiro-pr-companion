@@ -60,19 +60,19 @@
 
 ## 4. Le geste dans l'écran de déclaration
 
-- [ ] 4.1 L'écran de déclaration n'offre aucun moyen de partir d'un lieu plutôt que d'un numéro.
+- [x] 4.1 L'écran de déclaration n'offre aucun moyen de partir d'un lieu plutôt que d'un numéro.
       **Fait quand** : un test de scénario sur la modale colle une position, demande à situer, et
       constate le numéro à six chiffres dans son champ.
-- [ ] 4.2 Situer une position ne demande rien au réseau, et rien ne le prouve. **Fait quand** : un
+- [x] 4.2 Situer une position ne demande rien au réseau, et rien ne le prouve. **Fait quand** : un
       test de scénario situe une position sans qu'aucun jeton ne soit disponible et constate le numéro
       déposé, sans message de connexion, tandis que « Vérifier sur Vigie-Chiro » reste fermé.
-- [ ] 4.3 Un numéro tapé à la main disparaîtrait sans un mot si une position en déduisait un autre.
+- [x] 4.3 Un numéro tapé à la main disparaîtrait sans un mot si une position en déduisait un autre.
       **Fait quand** : un test de scénario constate que le remplacement nomme le numéro remplacé, et
       que le cas où les deux concordent le dit au lieu de se taire.
-- [ ] 4.4 Situer une position pourrait faire partir seule la question « ce carré existe-t-il ? », que
+- [x] 4.4 Situer une position pourrait faire partir seule la question « ce carré existe-t-il ? », que
       personne n'a posée. **Fait quand** : un test de scénario compte les interrogations du portail
       après un geste de position et n'en trouve qu'une.
-- [ ] 4.5 Sur une frontière, deux carrés sont candidats à distance strictement égale, et l'application
+- [x] 4.5 Sur une frontière, deux carrés sont candidats à distance strictement égale, et l'application
       en dépose un au hasard sans le dire. Mesuré le 2026-08-27 : 997,7 m chacun au milieu d'un côté,
       1 412 m pour quatre au coin, et 5 m de décalage suffisent à faire basculer le premier.
       **Fait quand** : un test unitaire rougit si un carré est déposé alors que deux sont proches, un

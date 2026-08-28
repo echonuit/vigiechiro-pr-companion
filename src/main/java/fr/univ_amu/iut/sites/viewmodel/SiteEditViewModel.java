@@ -1,9 +1,11 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
+import fr.univ_amu.iut.commun.model.CarroyageNational;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.sites.model.PropositionCarre;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -80,6 +82,10 @@ public class SiteEditViewModel {
     /// avant que l'utilisateur ait tapé quoi que ce soit.
     private final BooleanBinding carreInvalideEtSaisi;
 
+    /// Vrai le temps que [#situerPosition()] dépose son numéro : l'écouteur qui oublie le verdict de
+    /// position ne doit pas effacer celui qui vient de le produire.
+    private boolean depotEnCours;
+
     /// Site en cours d'édition ; `null` en création.
     private Site siteEnEdition;
 
@@ -89,6 +95,16 @@ public class SiteEditViewModel {
     /// Le versant « ce carré existe-t-il là-bas ? » (#3458, #3806), **extrait** en #3801 : il ne
     /// partage aucun état avec la saisie, et le portail qualité a fini par le dire.
     private final CarreExistantViewModel carre;
+
+    /// Le versant « partir d'un lieu plutôt que d'un numéro » (#4577), même extraction pour la même
+    /// raison.
+    ///
+    /// Monté ici plutôt qu'injecté : il ne dépend d'aucun port, seulement du carroyage **embarqué**.
+    /// C'est la décision D0 du chantier - le carré se calcule hors ligne - et c'est ce qui la rend
+    /// visible dans le code, là où `recherche` et `rapatriement` sont `Optional` parce qu'ils ont
+    /// besoin de la plateforme.
+    private final PositionColleeViewModel position =
+            new PositionColleeViewModel(new PropositionCarre(CarroyageNational.embarque()));
 
     /// La modale sert à **déclarer** (et non à modifier) : la distinction décide de ce qu'un verdict
     /// « ce carré existe déjà » entraîne. En déclaration il ferme l'enregistrement ; en édition il ne
@@ -123,6 +139,40 @@ public class SiteEditViewModel {
         // vérifie l'énumération (ADR 3547).
         peutEnregistrer = carreValide.and(enCreation.and(carre.recuperable()).not());
         numeroCarre.addListener((observable, avant, apres) -> carre.oublier());
+        // Un numéro saisi à la main invalide le verdict de position au même titre que celui
+        // d'existence : il ne juge plus ce que porte le champ. Le dépôt fait par `situerPosition`
+        // est exempté, sans quoi le verdict s'effacerait à l'instant même où il vient d'être rendu.
+        numeroCarre.addListener((observable, avant, apres) -> {
+            if (!depotEnCours) {
+                position.oublier();
+            }
+        });
+    }
+
+    /// Le versant « partir d'un lieu » de cette modale (#4577).
+    public PositionColleeViewModel position() {
+        return position;
+    }
+
+    /// Situe la position collée, et dépose le carré déduit **quand il y en a un seul**.
+    ///
+    /// Ne demande rien au réseau. Trois verdicts sur quatre ne déposent rien : sur une frontière on
+    /// nomme sans choisir, hors grille et sur un texte illisible il n'y a rien à proposer.
+    ///
+    /// Déposer un numéro efface le verdict d'existence, comme le ferait une frappe : « ce carré existe
+    /// déjà » ne dit plus rien du numéro qui vient de le remplacer.
+    public void situerPosition() {
+        position.situer(numeroCarre.get());
+        String propose = position.numeroPropose().get();
+        if (propose.isEmpty()) {
+            return;
+        }
+        depotEnCours = true;
+        try {
+            numeroCarre.set(propose);
+        } finally {
+            depotEnCours = false;
+        }
     }
 
     /// Le versant « ce carré existe-t-il là-bas ? » de cette modale (#3801).

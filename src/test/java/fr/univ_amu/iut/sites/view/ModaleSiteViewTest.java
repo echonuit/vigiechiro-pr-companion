@@ -295,4 +295,59 @@ class ModaleSiteViewTest {
                 .as("le motif disparaît avec le blocage : l'infobulle dit alors ce que fait l'action")
                 .doesNotContain("6 chiffres");
     }
+
+    @Test
+    @DisplayName("#4577 : coller une position et cliquer « Situer » remplit le champ du carré")
+    void situer_une_position_remplit_le_carre(FxRobot robot) {
+        enCreation(robot);
+
+        robot.interact(() -> robot.lookup("#champPosition")
+                .queryAs(TextField.class)
+                .setText("44.44674980384396, 6.298116860416506"));
+        robot.interact(() -> robot.lookup("#btnSituer").queryAs(Button.class).fire());
+
+        assertThat(robot.lookup("#champCarre").queryAs(TextField.class).getText())
+                .as("le carré se déduit du carroyage embarqué, sans rien demander au réseau")
+                .isEqualTo("040110");
+        assertThat(robot.lookup("#messagePosition").queryAs(Label.class).getText())
+                .contains("040110");
+    }
+
+    @Test
+    @DisplayName("#4577 : « Situer » n'est fermé que faute de position, jamais faute de connexion")
+    void situer_ne_depend_pas_de_la_connexion(FxRobot robot) {
+        enCreation(robot);
+
+        Button situer = robot.lookup("#btnSituer").queryAs(Button.class);
+        assertThat(situer.isDisabled())
+                .as("rien à situer tant que rien n'est collé")
+                .isTrue();
+
+        robot.interact(
+                () -> robot.lookup("#champPosition").queryAs(TextField.class).setText("45.0, 0.0"));
+
+        assertThat(situer.isDisabled())
+                .as("le carroyage est embarqué : ce geste n'a jamais besoin du portail, à la différence"
+                        + " de « Vérifier sur Vigie-Chiro »")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#4577 : sur une frontière, le champ du carré reste intact et les deux candidats se lisent")
+    void situer_sur_une_frontiere_ne_remplit_rien(FxRobot robot) {
+        enCreation(robot);
+
+        robot.interact(() -> {
+            robot.lookup("#champCarre").queryAs(TextField.class).setText("640380");
+            robot.lookup("#champPosition").queryAs(TextField.class).setText("44.444990, 6.306335");
+        });
+        robot.interact(() -> robot.lookup("#btnSituer").queryAs(Button.class).fire());
+
+        assertThat(robot.lookup("#champCarre").queryAs(TextField.class).getText())
+                .as("choisir entre deux carrés equidistants reviendrait à tirer au sort")
+                .isEqualTo("640380");
+        assertThat(robot.lookup("#messagePosition").queryAs(Label.class).getText())
+                .contains("040110")
+                .contains("040111");
+    }
 }
