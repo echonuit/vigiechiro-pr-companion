@@ -254,7 +254,7 @@ dc00d22288af  src/main/java/fr/univ_amu/iut/cli/model/ErreurUsage.java
 0ebcb1e9dfb6  src/main/java/fr/univ_amu/iut/cli/model/RegistrePassages.java
 afd418f97e22  src/main/java/fr/univ_amu/iut/commun/api/CatalogueApi.java
 8cff5613e037  src/main/java/fr/univ_amu/iut/commun/api/ClientGbif.java
-ce42a1c324f6  src/main/java/fr/univ_amu/iut/commun/api/ClientVigieChiro.java
+0e80b0d33e4b  src/main/java/fr/univ_amu/iut/commun/api/ClientVigieChiro.java
 ead5f91ebcf9  src/main/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgression.java
 06f404203a9c  src/main/java/fr/univ_amu/iut/commun/api/CorpsReponse.java
 55f6b2e2c266  src/main/java/fr/univ_amu/iut/commun/api/DonneeVigieChiro.java
@@ -286,7 +286,8 @@ f88e99f1c20a  src/main/java/fr/univ_amu/iut/commun/api/PiecesJointesVigieChiro.j
 21c04a1d1c8d  src/main/java/fr/univ_amu/iut/commun/api/RapportSynchro.java
 330cebbb90e4  src/main/java/fr/univ_amu/iut/commun/api/RapprochementVigieChiro.java
 9c08aa69d1d6  src/main/java/fr/univ_amu/iut/commun/api/ReponseApi.java
-45a277d2f9c0  src/main/java/fr/univ_amu/iut/commun/api/ReponsesVigieChiro.java
+d7cdd493d80f  src/main/java/fr/univ_amu/iut/commun/api/ReponsesGrilleStoc.java
+7d635d1885cb  src/main/java/fr/univ_amu/iut/commun/api/ReponsesVigieChiro.java
 aab6e05513b7  src/main/java/fr/univ_amu/iut/commun/api/RequetesVigieChiro.java
 ecd041bacd9f  src/main/java/fr/univ_amu/iut/commun/api/ResolveurCommuneApiGeo.java
 7b1aee9ffe9c  src/main/java/fr/univ_amu/iut/commun/api/ResultatEcriture.java
@@ -1089,7 +1090,7 @@ a417e25cea31  src/main/java/fr/univ_amu/iut/sites/di/SitesModule.java
 605de68255f6  src/main/java/fr/univ_amu/iut/sites/di/SynchronisationSitesModule.java
 caedbc158715  src/main/java/fr/univ_amu/iut/sites/model/AppariementPoints.java
 639f7cdc0b1b  src/main/java/fr/univ_amu/iut/sites/model/CommuneDuPoint.java
-8278c1c35952  src/main/java/fr/univ_amu/iut/sites/model/ControleCarreStoc.java
+89b37d02fbe4  src/main/java/fr/univ_amu/iut/sites/model/ControleCarreStoc.java
 b86cd45c26c9  src/main/java/fr/univ_amu/iut/sites/model/ImportSiteDistant.java
 b8ca5156a810  src/main/java/fr/univ_amu/iut/sites/model/LecturePosition.java
 34db4c9a40fe  src/main/java/fr/univ_amu/iut/sites/model/PointDEcoute.java
@@ -1378,7 +1379,7 @@ ffd3c4583804  src/test/java/fr/univ_amu/iut/cliquet/CliquetFixturePassageTest.ja
 248d7440f943  src/test/java/fr/univ_amu/iut/cliquet/PatronDuCliquetTest.java
 57514ed01e2f  src/test/java/fr/univ_amu/iut/commun/SeveriteTest.java
 662d57b062f5  src/test/java/fr/univ_amu/iut/commun/api/CatalogueApiTest.java
-cbe826a37011  src/test/java/fr/univ_amu/iut/commun/api/ChaineDuCarreStocTest.java
+bfa1642021af  src/test/java/fr/univ_amu/iut/commun/api/ChaineDuCarreStocTest.java
 80a2127fd522  src/test/java/fr/univ_amu/iut/commun/api/ClientGbifTest.java
 78ebdc58f018  src/test/java/fr/univ_amu/iut/commun/api/ClientVigieChiroTest.java
 1e5ff4971e8a  src/test/java/fr/univ_amu/iut/commun/api/ContratApiVigieChiroLiveTest.java
@@ -1393,6 +1394,7 @@ a7fea890d92a  src/test/java/fr/univ_amu/iut/commun/api/PiecesJointesVigieChiroTe
 52a94238fb19  src/test/java/fr/univ_amu/iut/commun/api/RapportSynchroTest.java
 f6426469ca46  src/test/java/fr/univ_amu/iut/commun/api/RapprochementVigieChiroTest.java
 c555ba0a16ae  src/test/java/fr/univ_amu/iut/commun/api/ReponseApiTest.java
+b3aaf034461c  src/test/java/fr/univ_amu/iut/commun/api/ReponsesGrilleStocTest.java
 3fdcd995bfec  src/test/java/fr/univ_amu/iut/commun/api/ReponsesVigieChiroTest.java
 38cbe72aa330  src/test/java/fr/univ_amu/iut/commun/api/RequetesVigieChiroTest.java
 630ff74b69a4  src/test/java/fr/univ_amu/iut/commun/api/ResolveurCommuneApiGeoTest.java
@@ -1946,7 +1948,7 @@ c54ebddab8a8  src/test/java/fr/univ_amu/iut/sites/ServiceSitesTest.java
 bd7d2b209501  src/test/java/fr/univ_amu/iut/sites/SiteDaoTest.java
 2b00cd974aab  src/test/java/fr/univ_amu/iut/sites/SiteTiersDaoTest.java
 fdb1347ad0fe  src/test/java/fr/univ_amu/iut/sites/model/AppariementPointsTest.java
-38bbdcd226aa  src/test/java/fr/univ_amu/iut/sites/model/ControleCarreStocTest.java
+f9fecd78ca1f  src/test/java/fr/univ_amu/iut/sites/model/ControleCarreStocTest.java
 e3b0c44298fc  src/test/java/fr/univ_amu/iut/sites/model/PositionColleeTest.java
 760e64f30290  src/test/java/fr/univ_amu/iut/sites/model/PropositionCarreTest.java
 429fe4271b74  src/test/java/fr/univ_amu/iut/sites/model/PublicationPointTest.java

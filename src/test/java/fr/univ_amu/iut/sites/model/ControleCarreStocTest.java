@@ -6,8 +6,9 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.model.CarreCandidat;
 import fr.univ_amu.iut.commun.model.Severite;
-import java.util.Optional;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,10 @@ import org.junit.jupiter.api.Test;
 /// lui, ce que l'observateur va lire.
 ///
 /// Depuis #1284, un retour `ReponseApi` non bouchonné vaut **`null`** : chaque cas stube explicitement.
+///
+/// Depuis #4610, le contrôle demande **tous** les candidats proches et non le premier : ces cas-ci en
+/// bouchonnent donc un seul, à distance nulle, ce qui est la situation « loin de toute frontière ». Le
+/// cas de la frontière se tient dans `ChaineDuCarreStocTest`, qui traverse la lecture des centres.
 class ControleCarreStocTest {
 
     private static final String CARRE_DECLARE = "130711";
@@ -34,7 +39,7 @@ class ControleCarreStocTest {
     @Test
     @DisplayName("Le point tombe dans le carré déclaré : la saisie est confirmée")
     void carre_concordant() {
-        repond(ReponseApi.succes(Optional.of(CARRE_DECLARE)));
+        repond(ReponseApi.succes(List.of(new CarreCandidat(CARRE_DECLARE, 0))));
 
         VerdictCarre verdict = controle.confronter(CARRE_DECLARE, LATITUDE, LONGITUDE);
 
@@ -48,7 +53,7 @@ class ControleCarreStocTest {
     @Test
     @DisplayName("Le point tombe dans un AUTRE carré : la divergence est dite, les deux numéros à l'appui")
     void carre_divergent() {
-        repond(ReponseApi.succes(Optional.of("130712")));
+        repond(ReponseApi.succes(List.of(new CarreCandidat("130712", 0))));
 
         VerdictCarre verdict = controle.confronter(CARRE_DECLARE, LATITUDE, LONGITUDE);
 
@@ -63,7 +68,7 @@ class ControleCarreStocTest {
     @Test
     @DisplayName("Aucun carré à cette position : coordonnées probablement fausses (ou inversées)")
     void hors_grille() {
-        repond(ReponseApi.succes(Optional.empty()));
+        repond(ReponseApi.succes(List.of()));
 
         VerdictCarre verdict = controle.confronter(CARRE_DECLARE, LATITUDE, LONGITUDE);
 
@@ -97,7 +102,7 @@ class ControleCarreStocTest {
                 .isEmpty();
     }
 
-    private void repond(ReponseApi<Optional<String>> reponse) {
-        when(client.carreStoc(LATITUDE, LONGITUDE)).thenReturn(reponse);
+    private void repond(ReponseApi<List<CarreCandidat>> reponse) {
+        when(client.carresStocProches(LATITUDE, LONGITUDE)).thenReturn(reponse);
     }
 }

@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.api;
 
 import com.google.gson.JsonArray;
+import fr.univ_amu.iut.commun.model.CarreCandidat;
 import fr.univ_amu.iut.commun.model.Certitude;
 import java.io.IOException;
 import java.io.InputStream;
@@ -139,6 +140,18 @@ public final class ClientVigieChiro {
     public ReponseApi<Optional<String>> carreStoc(double latitude, double longitude, int rayonMetres) {
         String requete = "/grille_stoc/cercle?lng=" + longitude + "&lat=" + latitude + "&r=" + rayonMetres;
         return transport.lire(requete).transformer(ReponsesVigieChiro::numeroCarreStoc);
+    }
+
+    /// **Tous** les carrés que la grille rend autour d'une position, chacun avec sa distance (#4610).
+    ///
+    /// Le contrôle a besoin de la liste et non du premier : sur une frontière, deux mailles sont à
+    /// distance strictement égale - 997,7 m chacune le 2026-08-27 - et prendre le premier revient à tirer
+    /// au sort, puis à le reprocher à l'observateur. Même rayon et mêmes issues triées que [#carreStoc].
+    public ReponseApi<List<CarreCandidat>> carresStocProches(double latitude, double longitude) {
+        String requete = "/grille_stoc/cercle?lng=" + longitude + "&lat=" + latitude + "&r=" + RAYON_CARRE_STOC_METRES;
+        return transport
+                .lire(requete)
+                .transformer(corps -> ReponsesGrilleStoc.carresProches(corps, latitude, longitude));
     }
 
     /// Sites rattachés à l'observateur, **dérivés de ses participations** (`GET /moi/participations`),
