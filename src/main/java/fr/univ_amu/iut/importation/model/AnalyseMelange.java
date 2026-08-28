@@ -10,6 +10,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,6 +29,8 @@ import java.util.regex.Pattern;
 ///
 /// Objet de transport pur (aucune dépendance JavaFX) ; les noms illisibles sont simplement ignorés.
 public record AnalyseMelange(SortedSet<String> series, SortedSet<LocalDate> nuits) {
+
+    private static final Logger LOG = Logger.getLogger(AnalyseMelange.class.getName());
 
     private static final Pattern MOTIF = Pattern.compile("PaRecPR(\\d+)_(\\d{8})_\\d{6}");
     private static final DateTimeFormatter FORMAT_DATE = DateTimeFormatter.ofPattern("yyyyMMdd", Locale.ROOT);
@@ -53,6 +57,10 @@ public record AnalyseMelange(SortedSet<String> series, SortedSet<LocalDate> nuit
                     nuits.add(jour);
                 } catch (DateTimeParseException illisible) {
                     // Date impossible : on ignore ce nom sans interrompre l'analyse.
+                    LOG.log(
+                            Level.FINE,
+                            illisible,
+                            () -> "Date impossible dans « " + original.getFileName() + " » : nom ignoré");
                 }
             }
         }

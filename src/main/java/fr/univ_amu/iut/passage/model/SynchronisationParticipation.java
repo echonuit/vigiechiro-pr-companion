@@ -147,25 +147,40 @@ public final class SynchronisationParticipation {
         // écrit en base, il n'a pas à laisser de trace sur un chemin qui va échouer.
         Passage passage = realignerSurLesPreuves(declare);
         InfosPoint point = infosPoint(passage);
+        // La relecture est le coeur de la garde (#4552) : entre la lecture du haut et maintenant, un autre
+        // poste a pu écrire. Elle passe avant le corps, qui doit partir de l'état le plus frais (#4603).
+        ParticipationDetail juste =
+                client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
+        if (aChangeSurCeQueNousEcrivons(distant, juste)) {
+            return new EnvoiParticipation.ModifieEntreTemps(realignementEntre(declare, passage));
+        }
         // #1844 : la configuration distante est passée au mapping pour être **préservée**. Le PATCH
         // remplace le dictionnaire entier ; sans elle, chaque envoi effacerait les champs saisis sur le web
-        // que l'app ne modélise pas (micro0_numero_serie, micro1_*, canal_*).
+        // que l'app ne modélise pas (micro0_numero_serie, micro1_*, canal_*). Elle vient de la relecture :
+        // on envoie l'état qu'on vient de valider, pas un état plus ancien. Les deux coïncident tant que
+        // la garde compare la configuration entière ; ils cesseraient de coïncider si elle se resserrait
+        // sur les seules clés que nous posons (#4603).
         ParticipationADeposer maj = CorrespondanceParticipation.versParticipation(
                 point.code(),
                 passage,
                 materielDao.pour(idPassage),
-                distant.configuration(),
+                juste.configuration(),
                 fuseaux.pour(passage.idPoint()));
-        // La relecture est le coeur de la garde (#4552) : entre la lecture du haut et maintenant, un autre
-        // poste a pu écrire. Envoyer par-dessus effacerait son travail sans que rien ne le dise.
-        ParticipationDetail juste =
-                client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
-        if (!juste.etag().equals(distant.etag())) {
-            return new EnvoiParticipation.ModifieEntreTemps(realignementEntre(declare, passage));
-        }
-        ResultatEcriture ecriture = client.modifierParticipation(objectid, distant.etag(), maj);
+        ResultatEcriture ecriture = client.modifierParticipation(objectid, juste.etag(), maj);
         // #1885 : le réalignement a modifié les données de l'utilisateur, il ne peut pas rester tacite.
         return EnvoiParticipation.ecrit(ecriture, realignementEntre(declare, passage));
+    }
+
+    /// Vrai si un champ que le `PATCH` écrit a changé entre les deux lectures (#4603).
+    ///
+    /// L'`_etag` ne convient pas : il bouge sur **tout** le document, et l'ouvrier d'analyse du socle
+    /// le fait bouger seul, sans aucun humain, en avançant l'état du traitement. Comparer ce que nous
+    /// émettons laisse passer ce qui n'écrase rien, et refuse encore ce qui écraserait.
+    private static boolean aChangeSurCeQueNousEcrivons(ParticipationDetail avant, ParticipationDetail juste) {
+        return !Objects.equals(avant.dateDebut(), juste.dateDebut())
+                || !Objects.equals(avant.dateFin(), juste.dateFin())
+                || !Objects.equals(avant.meteo(), juste.meteo())
+                || !Objects.equals(avant.configuration(), juste.configuration());
     }
 
     /// Le réalignement survenu entre le passage **déclaré** et le passage **envoyé**, ou vide si les heures

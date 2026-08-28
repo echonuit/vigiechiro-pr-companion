@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
 /// Le **carroyage national Vigie-Chiro** (« carrenat »), embarqué : numéro de carré vers centroïde
@@ -25,6 +27,8 @@ import java.util.zip.GZIPInputStream;
 /// La ressource vient de `cesco-lab/Vigie-Chiro_scripts inputs/CountryGrids/carrenatFR.csv`
 /// (EPSG:27572 Lambert II étendu) convertie en WGS84.
 public final class CarroyageNational {
+
+    private static final Logger LOG = Logger.getLogger(CarroyageNational.class.getName());
 
     private static final String RESSOURCE = "carrenat.csv.gz";
 
@@ -156,7 +160,13 @@ public final class CarroyageNational {
                     champs[0].strip(),
                     new PositionGeo(Double.parseDouble(champs[1].strip()), Double.parseDouble(champs[2].strip())));
         } catch (NumberFormatException ligneInvalide) {
-            // Ligne non conforme (en-tête inattendu, colonne non numérique) : ignorée.
+            // Ligne non conforme (en-tête inattendu, colonne non numérique) : ignorée. Elle parle
+            // depuis #4619 : un catch muet ne laisse aucune trace du jour où le référentiel se
+            // dégrade, et le cliquet des corps vides le refuse désormais.
+            LOG.log(
+                    Level.FINE,
+                    ligneInvalide,
+                    () -> "Centroïde non numérique pour le carré " + champs[0] + " : ligne ignorée");
         }
     }
 }

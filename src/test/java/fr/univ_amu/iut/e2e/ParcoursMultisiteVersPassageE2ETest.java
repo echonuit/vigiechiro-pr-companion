@@ -192,6 +192,7 @@ class ParcoursMultisiteVersPassageE2ETest {
     /// abouti : deux échecs ont été lus ainsi (#3823). Motif de l'ADR 2213.
     private static void doubleClicVersPassage(FxRobot robot, NavigationViewModel navigation) {
         TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
+        Throwable derniere = null;
         for (int essai = 1; essai <= 3; essai++) {
             try {
                 // Attendre ce que le clic EXIGE, et non la simple présence du nœud (#3906, jumeau de
@@ -210,6 +211,7 @@ class ParcoursMultisiteVersPassageE2ETest {
                 WaitForAsyncUtils.waitFor(3, TimeUnit.SECONDS, () -> "passage".equals(navigation.getVueCourante()));
                 return;
             } catch (AssertionError | TimeoutException reessai) {
+                derniere = reessai;
                 // Cellule pas encore rendue ou navigation pas encore aboutie : on retente.
                 //
                 // `AssertionError` est rattrapée parce qu'`attendreCliquable` lève cela, et non une
@@ -227,12 +229,14 @@ class ParcoursMultisiteVersPassageE2ETest {
         //
         // Un dispositif qui ne peut pas conclure rapporte ce qu'il a vu (ADR 2213), et ne conclut donc
         // pas à sa place. Celui-ci concluait.
-        throw new AssertionError("Le double-clic vers le passage n'a pas abouti après 3 essais de 3 s.\n"
-                + "Vue courante : " + navigation.getVueCourante() + "\n"
-                + AttenteAvantClic.etatObserve(robot, DATE_NUIT) + "\n"
-                + "Deux causes possibles, que ce message ne tranche pas : la cellule n'est jamais entrée"
-                + " dans le cadre de la scène (lire ses bornes ci-dessus), ou la navigation n'a pas"
-                + " abouti après un double-clic pourtant parti.");
+        throw new AssertionError(
+                "Le double-clic vers le passage n'a pas abouti après 3 essais de 3 s.\n"
+                        + "Vue courante : " + navigation.getVueCourante() + "\n"
+                        + AttenteAvantClic.etatObserve(robot, DATE_NUIT) + "\n"
+                        + "Deux causes possibles, que ce message ne tranche pas : la cellule n'est jamais entrée"
+                        + " dans le cadre de la scène (lire ses bornes ci-dessus), ou la navigation n'a pas"
+                        + " abouti après un double-clic pourtant parti.",
+                derniere);
     }
 
     /// Amène la colonne « Date » dans le viewport de la table, sans quoi sa cellule reste hors cadre et le

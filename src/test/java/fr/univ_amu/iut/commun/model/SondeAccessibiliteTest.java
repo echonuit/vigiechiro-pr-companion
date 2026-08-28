@@ -64,12 +64,15 @@ class SondeAccessibiliteTest {
         Files.setPosixFilePermissions(lecture, PosixFilePermissions.fromString("r-xr-xr-x"));
         try {
             // Auto-garde : si l'on peut écrire malgré r-x (exécution en root), le test ne prouve rien.
+            boolean ecritureRefusee;
             try {
                 Files.delete(Files.createTempFile(lecture, "root", ".tmp"));
-                assumeTrue(false, "écriture possible malgré r-x (probablement root) : test sans objet");
+                ecritureRefusee = false;
             } catch (IOException attendu) {
                 // C'est le comportement voulu : on ne peut pas écrire.
+                ecritureRefusee = true;
             }
+            assumeTrue(ecritureRefusee, "écriture possible malgré r-x (probablement root) : test sans objet");
             assertThat(SondeAccessibilite.sonder(lecture)).isEqualTo(Verdict.NON_INSCRIPTIBLE);
         } finally {
             Files.setPosixFilePermissions(lecture, PosixFilePermissions.fromString("rwxr-xr-x"));

@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -50,6 +52,8 @@ import picocli.CommandLine.Spec;
         description = "Où en est l'analyse Tadarida de la nuit déposée ? (0 = terminé, 3 = en cours,"
                 + " 1 = en échec, 4 = jamais lancée, 2 = indisponible)")
 public final class EtatTraitementVigieChiro implements Callable<Integer>, LectureSeule {
+
+    private static final Logger LOG = Logger.getLogger(EtatTraitementVigieChiro.class.getName());
 
     /// Motif **purement numérique**, donc insensible à la locale : c'est justement le « Fri » et le
     /// « Jul » du serveur qu'on remplace. `'à'` plutôt qu'un espace, parce que la valeur atterrit au
@@ -185,6 +189,7 @@ public final class EtatTraitementVigieChiro implements Callable<Integer>, Lectur
                 return AFFICHAGE.format(ZonedDateTime.parse(date, forme).withZoneSameInstant(fuseau));
             } catch (DateTimeParseException autreForme) {
                 // La forme suivante, et à défaut la chaîne telle quelle.
+                LOG.log(Level.FINEST, autreForme, () -> "Date « " + date + " » illisible dans la forme " + forme);
             }
         }
         return date;

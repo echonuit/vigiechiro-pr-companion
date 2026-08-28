@@ -139,6 +139,7 @@ class ParcoursSitesVersPassageE2ETest {
         // Le vrai geste, et non `DoubleClicDeterministe` (#4554) : un parcours E2E éprouve le
         // chemin que l'utilisateur emprunte, robot et placement compris. Contourner le clic
         // rendrait ce test stable en lui retirant ce qu'il sert à attraper.
+        TimeoutException derniere = null;
         for (int essai = 1; essai <= 3; essai++) {
             robot.doubleClickOn(DATE_NUIT);
             try {
@@ -146,8 +147,15 @@ class ParcoursSitesVersPassageE2ETest {
                 return;
             } catch (TimeoutException reessai) {
                 // Navigation pas encore aboutie : on retente (le double-clic n'a peut-être pas « pris »).
+                derniere = reessai;
             }
         }
+        // La boucle rendait la main en SILENCE : le cas continuait comme si la navigation avait abouti,
+        // et échouait plus loin sur un nœud absent, très loin de sa cause.
+        throw new AssertionError(
+                "Le double-clic vers le passage n'a pas abouti après 3 essais de 3 s. Vue courante : "
+                        + navigation.getVueCourante(),
+                derniere);
     }
 
     private static Path creerNuitSynthetique(Path sd) throws Exception {

@@ -6,6 +6,8 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /// Remplacement **atomique** de la session physique lors d'un écrasement (#214).
 ///
@@ -23,6 +25,8 @@ import java.util.function.Supplier;
 /// l'insertion du nouveau (cf. [ServiceImport]) : un échec laisse donc l'ancien passage intact, cohérent
 /// avec sa session physique restaurée.
 final class RemplacementSession {
+
+    private static final Logger LOG = Logger.getLogger(RemplacementSession.class.getName());
 
     private RemplacementSession() {}
 
@@ -73,6 +77,10 @@ final class RemplacementSession {
             Files.move(miseDeCote, dossierSession);
         } catch (IOException restaurationImpossible) {
             // On laisse l'ancienne session sous « .remplace » plutôt que de masquer l'échec d'origine.
+            LOG.log(
+                    Level.WARNING,
+                    restaurationImpossible,
+                    () -> "Ancienne session laissée sous « .remplace » : " + miseDeCote);
         }
     }
 }
