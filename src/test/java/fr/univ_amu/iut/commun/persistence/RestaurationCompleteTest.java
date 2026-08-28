@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -392,25 +393,69 @@ class RestaurationCompleteTest {
                 Statement st = cx.createStatement()) {
             // Aucun passage réel derrière ces lignes : seuls les chemins nous intéressent ici.
             st.execute("PRAGMA foreign_keys = OFF");
-            long idSession = identifiantSession(st, nuit);
-            st.execute("INSERT INTO original_recording(session_id, file_path, file_name) VALUES (" + idSession + ", '"
-                    + echapper(nuit.resolve("bruts").resolve("PaRec.wav")) + "', 'PaRec.wav')");
-            long idOriginal = derniereCle(st);
-            st.execute("INSERT INTO original_recording(session_id, file_path, file_name) VALUES (" + idSession + ", '"
-                    + echapper(brutHorsSession) + "', 'brut.wav')");
-            st.execute("INSERT INTO listening_sequence(session_id, original_recording_id, file_path, file_name)"
-                    + " VALUES (" + idSession + ", " + idOriginal + ", '"
-                    + echapper(nuit.resolve("transformes").resolve("seq.wav")) + "', 'seq.wav')");
-            st.execute("INSERT INTO sensor_log(session_id, file_path) VALUES (" + idSession + ", '"
-                    + echapper(nuit.resolve("LogPR.txt")) + "')");
+            long idSession = identifiantSession(cx, nuit);
+            long idOriginal =
+                    insererOriginal(cx, idSession, nuit.resolve("bruts").resolve("PaRec.wav"), "PaRec.wav");
+            insererOriginal(cx, idSession, brutHorsSession, "brut.wav");
+            inserer(
+                    cx,
+                    "INSERT INTO listening_sequence(session_id, original_recording_id, file_path,"
+                            + " file_name) VALUES (?, ?, ?, ?)",
+                    idSession,
+                    idOriginal,
+                    nuit.resolve("transformes").resolve("seq.wav"),
+                    "seq.wav");
+            inserer(
+                    cx,
+                    "INSERT INTO sensor_log(session_id, file_path) VALUES (?, ?)",
+                    idSession,
+                    nuit.resolve("LogPR.txt"));
             // Le CSV Tadarida est rattaché au PASSAGE, pas à la session : c'est la seule des six
             // tables à chemin qui se retrouve par une autre clé, et donc celle qu'on oublie.
-            st.execute("INSERT INTO identification_results(passage_id, file_path, detected_format,"
-                    + " imported_at) VALUES (" + passageSuivant + ", '"
-                    + echapper(nuit.resolve("resultats.csv")) + "', 'Tadarida', '2026-08-03')");
+            inserer(
+                    cx,
+                    "INSERT INTO identification_results(passage_id, file_path, detected_format,"
+                            + " imported_at) VALUES (?, ?, 'Tadarida', '2026-08-03')",
+                    (long) passageSuivant,
+                    nuit.resolve("resultats.csv"));
             return idSession;
         } catch (SQLException echec) {
             throw new IOException(echec);
+        }
+    }
+
+    /// Pose une ligne dont les valeurs passent par des paramètres, jamais par la concaténation.
+    ///
+    /// Le risque pratique était nul - c'est du code de test et l'entrée vient du harnais - mais un
+    /// échappement écrit à la main est précisément ce qu'une requête préparée existe pour éviter, et
+    /// l'alerte ne se ferme pas autrement (#4509). Un `Path` se pose par son chemin ; le reste passe
+    /// tel quel.
+    private static void inserer(Connection cx, String sql, Object... valeurs) throws SQLException {
+        try (PreparedStatement ordre = cx.prepareStatement(sql)) {
+            for (int i = 0; i < valeurs.length; i++) {
+                Object v = valeurs[i];
+                if (v instanceof Path chemin) {
+                    ordre.setString(i + 1, chemin.toString());
+                } else if (v instanceof Long entier) {
+                    ordre.setLong(i + 1, entier);
+                } else {
+                    ordre.setString(i + 1, String.valueOf(v));
+                }
+            }
+            ordre.executeUpdate();
+        }
+    }
+
+    /// Pose un original et rend sa clé, que la ligne suivante rattache.
+    private static long insererOriginal(Connection cx, long idSession, Path fichier, String nom) throws SQLException {
+        inserer(
+                cx,
+                "INSERT INTO original_recording(session_id, file_path, file_name)" + " VALUES (?, ?, ?)",
+                idSession,
+                fichier,
+                nom);
+        try (Statement st = cx.createStatement()) {
+            return derniereCle(st);
         }
     }
 
@@ -421,11 +466,13 @@ class RestaurationCompleteTest {
         }
     }
 
-    private static long identifiantSession(Statement st, Path nuit) throws SQLException {
-        try (ResultSet rs =
-                st.executeQuery("SELECT id FROM recording_session WHERE root_path = '" + echapper(nuit) + "'")) {
-            rs.next();
-            return rs.getLong(1);
+    private static long identifiantSession(Connection cx, Path nuit) throws SQLException {
+        try (PreparedStatement ordre = cx.prepareStatement("SELECT id FROM recording_session WHERE root_path = ?")) {
+            ordre.setString(1, nuit.toString());
+            try (ResultSet rs = ordre.executeQuery()) {
+                rs.next();
+                return rs.getLong(1);
+            }
         }
     }
 
@@ -457,18 +504,17 @@ class RestaurationCompleteTest {
         return chemins;
     }
 
-    private static String echapper(Path chemin) {
-        return chemin.toString().replace("'", "''");
-    }
-
     private void declarerSession(Path racineSession) throws IOException {
         passageSuivant++;
         try (Connection cx = source.getConnection();
                 Statement st = cx.createStatement()) {
             st.execute("PRAGMA foreign_keys = OFF");
-            st.execute("INSERT INTO recording_session(root_path, originals_total_bytes,"
-                    + " sequences_total_bytes, passage_id) VALUES ('"
-                    + racineSession.toString().replace("'", "''") + "', 0, 0, " + passageSuivant + ")");
+            inserer(
+                    cx,
+                    "INSERT INTO recording_session(root_path, originals_total_bytes,"
+                            + " sequences_total_bytes, passage_id) VALUES (?, 0, 0, ?)",
+                    racineSession,
+                    (long) passageSuivant);
         } catch (SQLException echec) {
             throw new IOException(echec);
         }

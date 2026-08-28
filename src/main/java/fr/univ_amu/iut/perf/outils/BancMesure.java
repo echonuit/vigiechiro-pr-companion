@@ -52,11 +52,18 @@ public final class BancMesure {
 
     private BancMesure() {}
 
+    /// L'espace de travail du banc : celui qu'on lui impose, ou un dossier temporaire à nous seuls.
+    ///
+    /// `createTempDirectory` crée en `0700` là où le système le permet, quand `java.io.tmpdir` reste
+    /// lisible par tout utilisateur local (#4509). Le jumeau de `BancImport`, que #4510 avait corrigé
+    /// sans venir jusqu'ici.
+    private static Path espaceDeTravail() throws IOException {
+        String impose = System.getProperty("vigiechiro.workspace");
+        return impose != null ? Path.of(impose) : Files.createTempDirectory("vigiechiro-bench-");
+    }
+
     public static void main(String[] args) throws IOException {
-        Path racine = Path.of(System.getProperty(
-                "vigiechiro.workspace",
-                Path.of(System.getProperty("java.io.tmpdir"), "vigiechiro-bench")
-                        .toString()));
+        Path racine = espaceDeTravail();
         int nbPassages = Integer.getInteger("perf.passages", 1000);
         int nbObservations = Integer.getInteger("perf.observations", 4031);
 
