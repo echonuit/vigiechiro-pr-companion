@@ -8,7 +8,7 @@ decided_at: 2026-08-24
 verification: certaine
 enforced_by:
   - "scripts/adr/4395-renvois-en-javadoc.py"
-floor: 3136
+floor: 3160
 inv_key: plancher-renvois
 verified:
   - by: machine:ci
@@ -55,8 +55,26 @@ sur le dépôt, **ne descend pas**. Il est tenu par un plancher déclaré, que
 Distinctes, et non occurrences : ce qui se perd est qu'un fichier **cesse d'ouvrir** une discussion,
 pas qu'il l'ouvre une fois au lieu de deux.
 
-Le plancher vaut **<!--inv:plancher-renvois-->3 136<!--/inv-->**. Il se relève de ce qu'un chantier
+Le plancher vaut **<!--inv:plancher-renvois-->3 160<!--/inv-->**. Il se relève de ce qu'un chantier
 ajoute, et #4441 lui a rendu **quinze** renvois d'un coup : le dépôt portait cinquante-trois
+
+**3 136 → 3 160** (#4646). Le plancher annonçait « à relever » depuis on ne sait quand, et personne
+ne le voyait : `rapport.py` n'avait aucun motif pour les lignes de plancher, et son verdict était
+jeté avec celui des trois autres scripts qu'il ne savait pas lire (#4635).
+
+Les vingt-quatre renvois gagnés ont été triés avant d'être verrouillés, le comptage sommant les
+issues **distinctes par fichier** : déplacer un bloc d'un fichier à l'autre aurait fait monter le
+total sans qu'aucun renvoi n'ait été ajouté.
+
+| Nature | Fichiers | Renvois |
+|---|---:|---:|
+| fichiers neufs au corpus | 6 | +9 |
+| fichiers qui montent | 11 | +15 |
+| fichiers qui baissent | **0** | 0 |
+| fichiers disparus | **0** | 0 |
+
+Aucun fichier n'a baissé ni disparu : le déplacement redouté ne s'est pas produit, et les
+vingt-quatre sont des ajouts. Le plancher les verrouille.
 `(#…)`, le caractère de suspension au lieu d'un numéro, qu'aucun motif ne voyait puisque celui de ce
 garde exige des chiffres. Chacun a été retrouvé par `git blame`, le commit qui a introduit la ligne
 nommant son issue dans cinquante-trois cas sur cinquante-trois.
