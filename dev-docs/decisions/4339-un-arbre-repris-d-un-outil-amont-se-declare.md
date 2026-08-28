@@ -10,7 +10,7 @@ relations:
   amendee_par: ["4516-une-commande-nomme-un-geste"]
 enforced_by:
   - "scripts/adr/2843-tiret-cadratin.py"
-  - "scripts/adr/4368-apostrophe-en-libelle.py"
+  - "scripts/adr/4368-apostrophe-droite.py"
 verified:
   - by: machine:ci
     at: 2026-08-24

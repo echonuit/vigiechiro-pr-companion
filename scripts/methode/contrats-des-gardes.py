@@ -72,9 +72,16 @@ CORPUS = ("RACINES_ANCREES", "RACINES", "PRODUCTION_ANCREE", "PRODUCTION", "TEST
 
 
 def geste(nom: str) -> str:
-    """Le geste que le fichier nomme, ses prefixes de convention retires."""
+    """Le geste que le fichier nomme, ses prefixes et son separateur normalises.
+
+    Le SEPARATEUR compte autant que le prefixe : `verifie_apostrophe_droite.py` et
+    `4368-apostrophe-droite.py` nomment le meme geste, et les apparier par le nom brut les rendait
+    en DEUX absences la ou il n y a qu une convention de plus. Mesure du 2026-08-28, en renommant
+    le garde de l apostrophe (#4637).
+    """
     trouve = PREFIXES.match(nom)
-    return trouve.group(3) if trouve else nom[:-3]
+    brut = trouve.group(3) if trouve else nom[:-3]
+    return brut.replace("_", "-")
 
 
 def sans_docstring(texte: str) -> str:
@@ -193,6 +200,8 @@ def _auto_test() -> int:
 
     verifie("le geste se lit sous les deux conventions",
             geste("cliquet-echec-silencieux.py") == geste("0008-echec-silencieux.py"), True)
+    verifie("le separateur ne separe pas deux gestes identiques",
+            geste("verifie_apostrophe_droite.py") == geste("4368-apostrophe-droite.py"), True)
     verifie("un identifiant en SLUG se lit comme un numero",
             numero_adr('rapporte("aucun-echec-silencieux", "titre", [])'),
             "aucun-echec-silencieux")

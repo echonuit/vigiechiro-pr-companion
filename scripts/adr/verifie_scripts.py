@@ -481,7 +481,7 @@ def test_4366_pictogramme_en_tete_de_ligne() -> None:
 
 
 def test_4368_apostrophe_en_libelle() -> None:
-    m = _charge("4368-apostrophe-en-libelle.py")
+    m = _charge("4368-apostrophe-droite.py")
     C = chr(0x2019)
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)

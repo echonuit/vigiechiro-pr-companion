@@ -1,6 +1,6 @@
 ---
 type: adr
-title: "L'apostrophe d'un libellé est droite, et le garde ne regarde que les libellés"
+title: "L'apostrophe droite est la seule du dépôt, et le garde le lit en entier"
 status: stable
 article: A23
 heuristiques: ["nielsen-4"]
@@ -8,7 +8,7 @@ chantier: "#4368 (passe 9 du chantier #4334)"
 decided_at: 2026-08-24
 verification: probable
 enforced_by:
-  - "scripts/adr/4368-apostrophe-en-libelle.py"
+  - "scripts/adr/4368-apostrophe-droite.py"
 ratchet: 0
 verified:
   - by: machine:suspects
@@ -18,7 +18,7 @@ generated:
   at: 2026-08-24
 ---
 
-# L'apostrophe d'un libellé est droite, et le garde ne regarde que les libellés
+# L'apostrophe droite est la seule du dépôt, et le garde le lit en entier
 
 ## Contexte
 
@@ -66,6 +66,13 @@ Les 176 restantes ne sont pas une dette tenue par un cliquet : elles sont hors d
 décision, et le disent.
 
 ## Amendement du 2026-08-24 : la règle vaut partout
+
+!!! note "Le titre a suivi le 2026-08-28"
+    Il annonçait « et le garde ne regarde que les libellés », la portée de la première version,
+    quatre jours après que cet amendement l'eut élargie. Une décision dont le titre contredit son
+    propre applicateur se lit de travers par qui ne descend pas jusqu'ici, et c'est ce qui est
+    arrivé en instruisant #4637 : le garde a été déclaré absent sur la foi de son nom. Le script
+    s'appelle `4368-apostrophe-droite.py` depuis.
 
 La décision ci-dessus bornait le garde aux chaînes littérales de `src/main/java`, au motif que douze
 apostrophes seulement atteignaient un écran et qu'un cliquet à 188 aurait fait porter une relecture
