@@ -679,6 +679,19 @@ jobs:
         # et c'est le seul endroit où il peut être vu rougir.
         run: bash .github/scripts/verifie-verdict-avant-fusion.sh --auto-test
 
+      - name: "Auto-test du garde de clôture consignée (bloquant, #4659)"
+        # Ses cas tournent HORS LIGNE : la liste des EPIC s'injecte par `CLOTURE_EPICS_FICHIER`, sans
+        # quoi il faudrait la forge pour éprouver un garde, et un garde dont les cas ne se relancent
+        # pas ne se relance jamais.
+        run: bash .github/scripts/verifie-cloture-consignee.sh --auto-test
+
+      - name: "Clôture consignée : un EPIC clos porte sa trace (bloquant, #4659)"
+        # Celui-ci interroge la forge, d'où le jeton. Il REFUSE si elle ne répond pas : un cliquet qui
+        # conclut sur ce qu'il n'a pas lu vaut moins que pas de cliquet.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/verifie-cloture-consignee.sh
+
       - name: "Auto-test du garde de durée du portail (bloquant, #3661)"
         # Il est arrivé avec un fichier `bats` plutôt qu'un auto-test - la seule exception des onze
         # scripts -, ce qui faisait attendre à ses cas l'assemblage d'un fat-jar de 80 Mo dont ils
