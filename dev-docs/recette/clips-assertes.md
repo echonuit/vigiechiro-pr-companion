@@ -264,6 +264,31 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.creer_reste_ferme_puis_se_rouvre.mp4"></video>
 
+### S1-38 · `partir_d_un_lieu_remplit_le_carre`
+
+Le geste qui dispense d'aller chercher son numéro sur le portail : une position collée, un clic, et le
+champ des six chiffres se remplit.
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.partir_d_un_lieu_remplit_le_carre.mp4"></video>
+
+### S1-39 · `situer_marche_hors_connexion`
+
+Celui-ci se regarde pour ce qu'il met **côte à côte**. « Vérifier sur Vigie-Chiro » est grisé, faute de
+jeton ; « Situer » fonctionne, parce qu'il ne demande rien à personne. Le carroyage national est
+embarqué, le portail non, et c'est la seule image qui le montre.
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.situer_marche_hors_connexion.mp4"></video>
+
+### S1-40 · `sur_une_frontiere_rien_ne_se_remplit`
+
+Rien ne se remplit, et ce n'est pas une panne. Deux carrés sont à distance strictement égale, l'écran
+les nomme, et l'observateur tranche - lui seul sait de quel côté était le micro.
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.sur_une_frontiere_rien_ne_se_remplit.mp4"></video>
+
 
 ## ScenarioImportNominalTest
 
