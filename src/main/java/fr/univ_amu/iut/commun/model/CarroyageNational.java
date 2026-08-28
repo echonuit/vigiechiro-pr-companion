@@ -87,7 +87,7 @@ public final class CarroyageNational {
         for (Map.Entry<String, PositionGeo> maille : centroides.entrySet()) {
             double distance = distanceMetres(latitude, longitude, maille.getValue());
             if (distance <= PORTEE_METRES) {
-                proches.add(new CarreCandidat(maille.getKey(), distance));
+                proches.add(new CarreCandidat(NumeroDeCarre.surSixChiffres(maille.getKey()), distance));
             }
         }
         proches.sort(Comparator.comparingDouble(CarreCandidat::distanceMetres));

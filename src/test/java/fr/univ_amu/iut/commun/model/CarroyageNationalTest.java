@@ -24,12 +24,12 @@ class CarroyageNationalTest {
     @DisplayName("le sens inverse : la position d'une nuit rend le carré qui la couvre, sans réseau")
     void position_vers_carre() {
         // Position mesurée le 2026-08-27 contre `GET /grille_stoc/cercle`, qui rendait « 040110 ».
-        // Le référentiel local doit rendre le même, et le numéro y est amputé de son zéro comme sur
-        // le serveur : c'est `ReponsesVigieChiro#surSixChiffres` qui rembourre, en aval.
+        // Le référentiel ampute le zéro comme le serveur, et [NumeroDeCarre] le rétablit ici : les deux
+        // sources rendent désormais la même forme, celle que R1 impose (#4577).
         var candidats = CarroyageNational.embarque().candidats(44.44674980384396, 6.298116860416506);
 
         assertThat(candidats).isNotEmpty();
-        assertThat(candidats.getFirst().numero()).isEqualTo("40110");
+        assertThat(candidats.getFirst().numero()).isEqualTo("040110");
         assertThat(candidats.getFirst().distanceMetres())
                 .as("l'API mesurait ce point à moins de 500 m de son centre")
                 .isCloseTo(374.9, within(1.0));
@@ -43,7 +43,7 @@ class CarroyageNationalTest {
         var candidats = CarroyageNational.embarque().candidats(44.444990, 6.306335);
 
         assertThat(candidats).hasSize(2);
-        assertThat(candidats).extracting(CarreCandidat::numero).containsExactlyInAnyOrder("40110", "40111");
+        assertThat(candidats).extracting(CarreCandidat::numero).containsExactlyInAnyOrder("040110", "040111");
         assertThat(candidats.get(1).distanceMetres() - candidats.getFirst().distanceMetres())
                 .as("les deux centres sont à quelques mètres l'un de l'autre en distance")
                 .isLessThan(20.0);
