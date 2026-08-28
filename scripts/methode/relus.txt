@@ -957,6 +957,8 @@ e06777bc7938  src/main/java/fr/univ_amu/iut/passage/model/NatureDEntree.java
 a7ba4f385a02  src/main/java/fr/univ_amu/iut/passage/model/NuitsOpportunistes.java
 4092fddde3c0  src/main/java/fr/univ_amu/iut/passage/model/ObjetJson.java
 6a0f4ed3500f  src/main/java/fr/univ_amu/iut/passage/model/ObservationsAReconstruire.java
+177bd69cce64  src/main/java/fr/univ_amu/iut/passage/model/OuvertureDePaquet.java
+a8747c104323  src/main/java/fr/univ_amu/iut/passage/model/PaquetOuvert.java
 242c0f7795ed  src/main/java/fr/univ_amu/iut/passage/model/ParticipationOrpheline.java
 66b7cf16b1fc  src/main/java/fr/univ_amu/iut/passage/model/Passage.java
 acee2b6ce71f  src/main/java/fr/univ_amu/iut/passage/model/PlanDePaquet.java
@@ -1816,6 +1818,7 @@ d06312709d08  src/test/java/fr/univ_amu/iut/passage/model/EcrivainPaquetTest.jav
 d17fd2d12abb  src/test/java/fr/univ_amu/iut/passage/model/IndiceAcoustiqueTest.java
 978ef66bdfc4  src/test/java/fr/univ_amu/iut/passage/model/MeteoOpenMeteoTest.java
 32c67fa1fd75  src/test/java/fr/univ_amu/iut/passage/model/MeteoPassageTest.java
+04b19d1c4f2c  src/test/java/fr/univ_amu/iut/passage/model/OuvertureDePaquetTest.java
 b03f97a20dc3  src/test/java/fr/univ_amu/iut/passage/model/ParticipationOrphelineTest.java
 90b5ce16b4e7  src/test/java/fr/univ_amu/iut/passage/model/PlanDePaquetTest.java
 3567263e5189  src/test/java/fr/univ_amu/iut/passage/model/ProgressionTelechargementTest.java
