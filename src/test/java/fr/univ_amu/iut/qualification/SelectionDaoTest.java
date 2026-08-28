@@ -198,6 +198,47 @@ class SelectionDaoTest {
     }
 
     @Test
+    @DisplayName("#4624 : l'avis d'un relecteur se range à côté du nôtre, il ne le remplace pas")
+    void avis_de_relecteur_coexiste_avec_le_verdict_de_l_expediteur() {
+        SelectionDEcoute selection = dao.insert(new SelectionDEcoute(null, MethodeSelection.MANUEL, 1, idPassage));
+        long sequence = creerSequence("seq_relue");
+        dao.attacherSequence(new SequenceSelectionnee(selection.id(), sequence, 0, false));
+        dao.marquerVerdict(selection.id(), sequence, VerdictFichier.BON);
+
+        // Un relecteur juge la même séquence, et il n'est pas d'accord.
+        dao.marquerAvisDeRelecteur(selection.id(), sequence, VerdictFichier.MAUVAIS, "pseudo-du-relecteur");
+
+        assertThat(dao.listerSequences(selection.id()))
+                .singleElement()
+                .as("les deux verdicts subsistent, chacun avec son auteur")
+                .satisfies(rattachement -> {
+                    assertThat(rattachement.verdict())
+                            .as("le verdict de l'expéditeur ne bouge pas")
+                            .isEqualTo(VerdictFichier.BON);
+                    assertThat(rattachement.verdictRelecteur())
+                            .as("celui du relecteur se range à côté")
+                            .isEqualTo(VerdictFichier.MAUVAIS);
+                    assertThat(rattachement.pseudoRelecteur()).isEqualTo("pseudo-du-relecteur");
+                });
+    }
+
+    @Test
+    @DisplayName("#4624 : sans relecteur, les deux colonnes sont vides et ne se devinent pas")
+    void sans_relecteur_l_avis_est_vide() {
+        SelectionDEcoute selection = dao.insert(new SelectionDEcoute(null, MethodeSelection.MANUEL, 1, idPassage));
+        long sequence = creerSequence("seq_non_relue");
+        dao.attacherSequence(new SequenceSelectionnee(selection.id(), sequence, 0, false));
+        dao.marquerVerdict(selection.id(), sequence, VerdictFichier.BON);
+
+        assertThat(dao.listerSequences(selection.id())).singleElement().satisfies(rattachement -> {
+            assertThat(rattachement.verdictRelecteur())
+                    .as("aucun relecteur : NON_JUGE, et surtout pas une copie du nôtre")
+                    .isEqualTo(VerdictFichier.NON_JUGE);
+            assertThat(rattachement.pseudoRelecteur()).isNull();
+        });
+    }
+
+    @Test
     @DisplayName("#1524 : verdict par fichier, défaut NON_JUGE (NULL), marquage et remise à NULL")
     void verdict_par_fichier_defaut_marquage_et_remise_a_zero() {
         SelectionDEcoute selection = dao.insert(new SelectionDEcoute(null, MethodeSelection.MANUEL, 1, idPassage));
