@@ -13,12 +13,14 @@ public final class ConfrontationCarre {
 
     /// Écart de distance en deçà duquel deux carrés ne se départagent pas (#4610).
     ///
-    /// **Dérivé de la géométrie, pas choisi** : pour un point à `x` mètres d'un bord, l'écart entre les
-    /// deux distances aux centres vaut environ `2x`. Cent mètres désignent donc les points à moins de
-    /// 50 m d'une frontière - un point d'écoute n'est pas relevé au mètre près.
+    /// **Dérivé de la géométrie, pas choisi** : pour un point à `x` mètres d'un bord, l'écart des deux
+    /// distances vaut environ `2x`, donc cent mètres désignent les points à moins de 50 m d'une frontière.
+    /// Le double de la valeur retenue pour la **proposition**, délibérément : proposer un numéro faux et
+    /// plausible se paie cher, tandis qu'ici se taire ne coûte qu'un contrôle.
     ///
-    /// Deux fois la valeur retenue pour la **proposition**, et c'est délibéré : proposer un numéro faux
-    /// et plausible se paie cher, tandis qu'ici se taire ne coûte qu'un contrôle en moins.
+    /// La borne stricte ne se distingue pas de son contraire - 100,0 m *exacts* ne sont pas atteignables
+    /// sur des distances calculées depuis des degrés - et PIT laisse donc survivre sa mutation. Ce qui se
+    /// teste est la **valeur**, encadrée à 60 m et à 140 m.
     public static final double ECART_INDISCERNABLE_METRES = 100;
 
     private ConfrontationCarre() {}

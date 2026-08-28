@@ -8,7 +8,7 @@ decided_at: 2026-08-24
 verification: certaine
 enforced_by:
   - "scripts/adr/4395-renvois-en-javadoc.py"
-floor: 3180
+floor: 3185
 inv_key: plancher-renvois
 verified:
   - by: machine:ci
@@ -55,7 +55,7 @@ sur le dépôt, **ne descend pas**. Il est tenu par un plancher déclaré, que
 Distinctes, et non occurrences : ce qui se perd est qu'un fichier **cesse d'ouvrir** une discussion,
 pas qu'il l'ouvre une fois au lieu de deux.
 
-Le plancher vaut **<!--inv:plancher-renvois-->3 180<!--/inv-->**. Il se relève de ce qu'un chantier
+Le plancher vaut **<!--inv:plancher-renvois-->3 185<!--/inv-->**. Il se relève de ce qu'un chantier
 ajoute, et #4441 lui a rendu **quinze** renvois d'un coup : le dépôt portait cinquante-trois
 
 **3 136 → 3 160** (#4646). Le plancher annonçait « à relever » depuis on ne sait quand, et personne
