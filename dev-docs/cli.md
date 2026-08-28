@@ -54,6 +54,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 |---|---|---|---|
 | `creer-site` | `--carre <n> [--nom ..] [--protocole ..] [--commentaire ..] [--sans-verification]` | A10 | `ServiceSites.creerSite` |
 | `recuperer-carre` | `--carre <n> [--nom ..] [--protocole ..] [--commentaire ..]` | A10 | `RapatriementCarre.rapatrier` |
+| `situer-carre` | `--position "<lat, lon>"` | A10 | `PropositionCarre.pour`. **Aucun réseau** : le carroyage national est embarqué (137 481 mailles, métropole), et c'est ce qui rend la commande utile à un script - traiter un lot de nuits dont on a les positions GPS sans ouvrir l'application. Trois issues distinguées par le **code de sortie**, pour qu'un script tranche sans lire la prose : un carré unique s'écrit sur la sortie standard (exit 0) ; sur une **frontière** les candidats s'y écrivent tous et le motif part sur l'erreur (exit 1), parce que deux centres à distance égale ne se départagent pas ; hors métropole rien ne s'écrit (exit 1) ; un texte illisible rend un code d'**usage** (exit 2), qui n'est pas la même chose qu'une position sans carré |
 | `modifier-site` | `--site <id> --carre <n> [--nom ..] [--protocole ..] [--commentaire ..]` | A10 | `ServiceSites.modifierSite` |
 | `supprimer-site` | `--site <id> [--confirmer]` | A10 | `ServiceSites.supprimerSite` |
 | `ajouter-point` | `--site <id> --code <c> [--lat ..] [--lon ..] [--description ..]` | A10 | `ServiceSites.ajouterPoint` |

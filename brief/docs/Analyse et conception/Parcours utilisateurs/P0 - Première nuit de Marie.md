@@ -61,7 +61,7 @@ Marie a participé à un atelier d'initiation Vigie-Chiro le mois dernier, fabri
 
 ## Étape 1 - Déclarer le site
 
-Marie note son n° de carré (6 chiffres, leading zero si département 1-9) et le code de son point (lettre + chiffre, ex. `A1`). Elle ouvre l'application, clique sur « Ajouter mon premier site » et remplit le formulaire.
+Marie note le code de son point (lettre + chiffre, ex. `A1`). Le **n° de carré** (6 chiffres, leading zero si département 1-9), elle peut l'avoir noté ou non : l'application le déduit d'une position collée depuis une carte (#4573). Elle ouvre l'application, clique sur « Ajouter mon premier site » et remplit le formulaire.
 
 → **Détail complet** : [P1 - Déclarer un site de suivi](P1%20-%20Déclarer%20un%20site%20de%20suivi.md).
 

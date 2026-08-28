@@ -235,6 +235,7 @@ e760d6b66fe3  src/main/java/fr/univ_amu/iut/cli/commande/ResetGuide.java
 b552edd02b17  src/main/java/fr/univ_amu/iut/cli/commande/Restaurer.java
 cb7b50194ce7  src/main/java/fr/univ_amu/iut/cli/commande/RetroEmpreintes.java
 eb958130a44b  src/main/java/fr/univ_amu/iut/cli/commande/Sauvegarder.java
+035e4658cd8e  src/main/java/fr/univ_amu/iut/cli/commande/SituerCarre.java
 b76ac24a9cb5  src/main/java/fr/univ_amu/iut/cli/commande/SortieInventaire.java
 cc3d1d367633  src/main/java/fr/univ_amu/iut/cli/commande/StatutPassage.java
 ed5cbb4b3270  src/main/java/fr/univ_amu/iut/cli/commande/SupprimerCampagne.java
@@ -1085,7 +1086,7 @@ ede310e6a3f3  src/main/java/fr/univ_amu/iut/sites/di/CommunePointSites.java
 06a92944639a  src/main/java/fr/univ_amu/iut/sites/di/PointsDuCarreSites.java
 ca051118f7a5  src/main/java/fr/univ_amu/iut/sites/di/PublicationPointModule.java
 564a747797e7  src/main/java/fr/univ_amu/iut/sites/di/RechercheCarreExistantModule.java
-a417e25cea31  src/main/java/fr/univ_amu/iut/sites/di/SitesModule.java
+74b5cf894615  src/main/java/fr/univ_amu/iut/sites/di/SitesModule.java
 605de68255f6  src/main/java/fr/univ_amu/iut/sites/di/SynchronisationSitesModule.java
 caedbc158715  src/main/java/fr/univ_amu/iut/sites/model/AppariementPoints.java
 639f7cdc0b1b  src/main/java/fr/univ_amu/iut/sites/model/CommuneDuPoint.java
@@ -1328,6 +1329,7 @@ e151cdcec01f  src/test/java/fr/univ_amu/iut/cli/CliRattacherCampagneTest.java
 e1a4bc0bef6b  src/test/java/fr/univ_amu/iut/cli/CliResetGuideTest.java
 a32807498948  src/test/java/fr/univ_amu/iut/cli/CliRetroEmpreintesTest.java
 d0b648a86063  src/test/java/fr/univ_amu/iut/cli/CliSauvegardeTest.java
+45984acd7ee2  src/test/java/fr/univ_amu/iut/cli/CliSituerCarreTest.java
 ac389b52075c  src/test/java/fr/univ_amu/iut/cli/CliSoldeSaisonTest.java
 6182b940d47d  src/test/java/fr/univ_amu/iut/cli/CliStatutRecupereTest.java
 1957c562eca9  src/test/java/fr/univ_amu/iut/cli/CliSupprimerPassageTest.java

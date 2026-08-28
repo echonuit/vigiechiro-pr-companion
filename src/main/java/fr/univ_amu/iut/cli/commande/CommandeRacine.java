@@ -89,6 +89,7 @@ import picocli.CommandLine.Spec;
             ListerObservations.class,
             ListerEspeces.class,
             ListerCarres.class,
+            SituerCarre.class,
             ValiderObservations.class,
             CorrigerObservations.class,
             MarquerDouteux.class,

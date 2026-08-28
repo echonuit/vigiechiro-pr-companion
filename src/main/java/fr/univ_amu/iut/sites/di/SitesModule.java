@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.api.ResolveurCommuneApiGeo;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
+import fr.univ_amu.iut.commun.model.CarroyageNational;
 import fr.univ_amu.iut.commun.model.CommunePoint;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -30,6 +31,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.ImportSiteDistant;
 import fr.univ_amu.iut.sites.model.PointLocalParLocalite;
+import fr.univ_amu.iut.sites.model.PropositionCarre;
 import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RapprochementNuitsOpportunistes;
@@ -150,6 +152,20 @@ public class SitesModule extends ModuleDeFeature {
         Multibinder.newSetBinder(binder(), RapprochementVigieChiro.class)
                 .addBinding()
                 .to(RapprochementNuitsOpportunistes.class);
+    }
+
+    /// Proposer un carré depuis une position (#4577, #4660).
+    ///
+    /// **Pas d'`OptionalBinder`**, à la différence de `RechercheCarreExistant` et `ControleCarreStoc` :
+    /// ceux-là ont besoin de la plateforme, celui-ci non. Le carroyage est embarqué, donc le service est
+    /// toujours disponible - c'est la décision D0 du chantier, lisible jusque dans le montage.
+    ///
+    /// `CarroyageNational` n'a pas de constructeur public : sa grille de 137 481 mailles ne se charge
+    /// qu'une fois, derrière `embarque()`.
+    @Provides
+    @Singleton
+    PropositionCarre fournirPropositionCarre() {
+        return new PropositionCarre(CarroyageNational.embarque());
     }
 
     @Provides

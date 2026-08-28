@@ -281,7 +281,9 @@ nav:
     - 4453 · La prose publiée sur la forge relève de la même grille: decisions/4453-la-prose-publiee-sur-la-forge-releve-de-la-meme-grille.md
     - 4472 · Un commentaire long en corps de méthode est un signal: decisions/4472-un-commentaire-long-en-corps-de-methode-est-un-signal.md
     - 4468 · Une javadoc non relue est une dette, tenue par son empreinte: decisions/4468-une-javadoc-non-relue-est-une-dette-tenue-par-son-empreinte.md
+    - 4576 · Le format R1 se rétablit à l'entrée: decisions/4576-le-format-r1-se-retablit-a-l-entree-pas-au-point-de-comparaison.md
     - 4577 · Le carré d'une position se calcule hors ligne: decisions/4577-le-carre-d-une-position-se-calcule-hors-ligne.md
+    - 4578 · Deux précisions de conversion coexistent: decisions/4578-deux-precisions-de-conversion-coexistent-parce-qu-elles-ne-servent-pas-a-la-meme-chose.md
     - 4621 · Sur une frontière, on nomme les candidats sans en choisir un: decisions/4621-sur-une-frontiere-on-nomme-les-candidats-sans-en-choisir-un.md
     - 4475 · Un test dimensionne son stage, il n'hérite pas du fork: decisions/4475-un-test-dimensionne-son-stage-il-n-herite-pas-du-fork.md
     - 4476 · Une javadoc ne raconte pas le refactoring qui l'a produite: decisions/4476-une-javadoc-ne-raconte-pas-le-refactoring-qui-l-a-produite.md
