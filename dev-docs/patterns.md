@@ -870,6 +870,20 @@ proche » n'y désigne rien, et la représentation par centres ne peut pas porte
 d'intervalle semi-ouvert qui trancherait. L'appelant reçoit donc les candidats et laisse l'observateur
 décider : lui seul sait où était son micro.
 
+**La même règle, deux sources, un seul texte** (#4682). La frontière se lit dans les deux sens : pour
+**proposer** un carré, les candidats indiscernables se nomment et aucun ne se choisit ; pour
+**contrôler** un carré déjà déclaré, il concorde s'il figure parmi eux - l'observateur a raison quel que
+soit celui des deux qu'il a écrit.
+
+Le contrôle a deux appelants qui n'interrogent pas la même source : l'écran demande à la plateforme,
+`ajouter-point` lit le carroyage embarqué. `ConfrontationCarre` porte le verdict pour les deux, et le
+seuil avec lui. Deux copies auraient dérivé, et l'écran aurait fini par dire d'une position ce que la
+ligne de commande en nie - c'est la raison qui avait déjà fait naître `ConversionGeographique` (#4673),
+et elle se répète assez pour valoir règle.
+
+Le seuil du contrôle vaut **le double** de celui de la proposition, et c'est délibéré : proposer un
+numéro faux et plausible se paie cher, tandis que taire un contrôle ne coûte qu'un contrôle.
+
 **Une dimension qui change d'écriture déclare de quel côté** ([ADR 3158](decisions/3158-une-valeur-memorisee-se-rattrape-par-dimension.md)).
 Une vue mémorise le **texte** coché : requalifier une entrée le rend introuvable. Le socle demande donc
 au critère ce que la valeur désigne, plutôt que de comparer des chaînes qu'il ne sait pas interpréter.

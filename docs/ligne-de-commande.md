@@ -100,6 +100,36 @@ else
 fi
 ```
 
+### Une commande peut réussir et vous avertir quand même
+
+Un code `0` dit que l'opération a abouti, pas que tout est parfait. Certaines commandes écrivent en
+plus une remarque sur la **sortie d'erreur**, sans échouer pour autant.
+
+C'est le cas quand vous donnez une position à un point d'écoute : l'application regarde dans quel
+carré cette position tombe, et vous le dit si ce n'est pas celui que le site déclare.
+
+```bash
+POINT=$(vigiechiro ajouter-point --site 3 --code A1 --lat 44.4467 --lon 6.2981)
+# stdout : 12
+# stderr : Ce point tombe dans le carré 040110 de la grille STOC, alors que ce
+#          site déclare le carré 130711. Vérifiez les coordonnées, ou le n° de
+#          carré du site.
+```
+
+Le point **a bien été créé**, et son identifiant est sur la sortie standard : `POINT=$(...)` marche
+comme avant. La remarque part ailleurs, exprès, pour ne pas se retrouver dans votre variable.
+
+Une faute de frappe sur un numéro de carré ne se voit sinon qu'au dépôt, très loin en aval, après
+avoir contaminé le nom de tous vos fichiers. Si vous voulez la voir passer, gardez la sortie
+d'erreur :
+
+```bash
+vigiechiro ajouter-point --site 3 --code A1 --lat 44.4467 --lon 6.2981 2> alertes.txt
+```
+
+Ce contrôle **ne demande rien au réseau** : la grille des carrés est embarquée dans l'application. Il
+fonctionne donc sans connexion et sans jeton, comme le reste de ces deux commandes.
+
 ## Quand un fichier est refusé parce qu'il est trop gros
 
 Le compagnon refuse de lire une entrée démesurée : un journal de carte, une réponse du serveur, une

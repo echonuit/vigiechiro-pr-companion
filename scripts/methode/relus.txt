@@ -1090,7 +1090,7 @@ ede310e6a3f3  src/main/java/fr/univ_amu/iut/sites/di/CommunePointSites.java
 06a92944639a  src/main/java/fr/univ_amu/iut/sites/di/PointsDuCarreSites.java
 ca051118f7a5  src/main/java/fr/univ_amu/iut/sites/di/PublicationPointModule.java
 564a747797e7  src/main/java/fr/univ_amu/iut/sites/di/RechercheCarreExistantModule.java
-b20f33c32031  src/main/java/fr/univ_amu/iut/sites/di/SitesModule.java
+24f8716089e5  src/main/java/fr/univ_amu/iut/sites/di/SitesModule.java
 605de68255f6  src/main/java/fr/univ_amu/iut/sites/di/SynchronisationSitesModule.java
 caedbc158715  src/main/java/fr/univ_amu/iut/sites/model/AppariementPoints.java
 639f7cdc0b1b  src/main/java/fr/univ_amu/iut/sites/model/CommuneDuPoint.java

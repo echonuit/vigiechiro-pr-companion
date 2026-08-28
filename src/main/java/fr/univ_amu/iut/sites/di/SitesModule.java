@@ -161,7 +161,7 @@ public class SitesModule extends ModuleDeFeature {
     /// ceux-là ont besoin de la plateforme, celui-ci non. Le carroyage est embarqué, donc le service est
     /// toujours disponible - c'est la décision D0 du chantier, lisible jusque dans le montage.
     ///
-    /// `CarroyageNational` n'a pas de constructeur public : sa grille de 137 481 mailles ne se charge
+    /// `CarroyageNational` n'a pas de constructeur public : sa grille de 137 479 mailles ne se charge
     /// qu'une fois, derrière `embarque()`.
     @Provides
     @Singleton
