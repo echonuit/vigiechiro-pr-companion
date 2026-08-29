@@ -11,8 +11,10 @@ import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
+import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.model.dao.ReleveParticipationDao;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.passage.model.RattrapageMetadonnees;
 import fr.univ_amu.iut.passage.model.ReleveDeParticipation;
@@ -54,6 +56,14 @@ public class SynchronisationParticipationModule extends ModuleDeFeature {
     RattrapageMetadonnees fournirRattrapageMetadonnees(
             @Named(QUALIFIANT) SynchronisationParticipation synchronisation, LienVigieChiroDao liens) {
         return new RattrapageMetadonnees(synchronisation, liens);
+    }
+
+    /// Le geste qui note la base (#4706). Il tient le DAO et l'horloge, pour que la synchronisation
+    /// n'ait a connaitre ni l'un ni l'autre.
+    @Provides
+    @Singleton
+    ReleveDeParticipation fournirReleveDeParticipation(ReleveParticipationDao releves, Horloge horloge) {
+        return new ReleveDeParticipation(releves, horloge);
     }
 
     @Provides

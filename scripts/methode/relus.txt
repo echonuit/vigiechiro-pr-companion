@@ -310,7 +310,7 @@ fba3183746fc  src/main/java/fr/univ_amu/iut/commun/di/Categorie.java
 da8566d56db8  src/main/java/fr/univ_amu/iut/commun/di/Fonctionnalite.java
 7c396ed206bf  src/main/java/fr/univ_amu/iut/commun/di/Fonctionnalites.java
 24a4b05e498f  src/main/java/fr/univ_amu/iut/commun/di/ModuleDeFeature.java
-2d748259fcd3  src/main/java/fr/univ_amu/iut/commun/di/PersistenceModule.java
+d935bcf6526c  src/main/java/fr/univ_amu/iut/commun/di/PersistenceModule.java
 1783d2dab932  src/main/java/fr/univ_amu/iut/commun/di/RacineInjecteur.java
 d3e2d5006cfa  src/main/java/fr/univ_amu/iut/commun/model/AcquisitionAncrage.java
 30135a60cae8  src/main/java/fr/univ_amu/iut/commun/model/ActionGroupee.java
@@ -911,7 +911,7 @@ a595f687e5e3  src/main/java/fr/univ_amu/iut/multisite/viewmodel/ReconstructionVi
 61b061354bcc  src/main/java/fr/univ_amu/iut/passage/di/CampagneModule.java
 e23785d4af7a  src/main/java/fr/univ_amu/iut/passage/di/PassageModule.java
 c1e5fa209e4c  src/main/java/fr/univ_amu/iut/passage/di/ReconstructionModule.java
-0ab46426fc64  src/main/java/fr/univ_amu/iut/passage/di/SynchronisationParticipationModule.java
+5d03464e7489  src/main/java/fr/univ_amu/iut/passage/di/SynchronisationParticipationModule.java
 1b9e7e47afac  src/main/java/fr/univ_amu/iut/passage/model/AdoptionOriginauxReconstruits.java
 58dddf2695d9  src/main/java/fr/univ_amu/iut/passage/model/AnalyseAcoustique.java
 2a1f9ff6bea5  src/main/java/fr/univ_amu/iut/passage/model/AppuisReactivation.java

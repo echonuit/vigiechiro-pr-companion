@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
+import fr.univ_amu.iut.commun.model.dao.ReleveParticipationDao;
 import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
@@ -66,5 +67,13 @@ public class PersistenceModule extends AbstractModule {
     @Singleton
     ReleveTraitementDao fournirReleveTraitementDao(SourceDeDonnees source) {
         return new ReleveTraitementDao(source);
+    }
+
+    /// Ce que la plateforme portait a notre derniere lecture (#4706) : la BASE contre laquelle un
+    /// conflit se constate. Voisin du releve de traitement, et pose pour la meme raison.
+    @Provides
+    @Singleton
+    ReleveParticipationDao fournirReleveParticipationDao(SourceDeDonnees source) {
+        return new ReleveParticipationDao(source);
     }
 }
