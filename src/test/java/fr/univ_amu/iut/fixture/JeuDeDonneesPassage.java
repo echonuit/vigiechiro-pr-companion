@@ -177,6 +177,24 @@ public final class JeuDeDonneesPassage {
         return this;
     }
 
+    /// Branche le jeu sur un passage et une session qui **existent déjà**, au lieu d'en semer.
+    ///
+    /// Un banc filmé qui vient d'importer une nuit a son passage et sa session en base, mais aucune
+    /// détection : l'analyse est un autre geste, et elle ne tourne pas sur le banc. Il lui faut donc
+    /// poser des observations SUR ce passage-là, et non sur un second que la fixture aurait créé à côté
+    /// (#4800).
+    ///
+    /// Les réglages de semis - `carre`, `point`, `nuit`, `statut` - deviennent alors sans effet : le
+    /// passage existe, la fixture ne le retouche pas. C'est le pendant de [#surLePoint(long)].
+    /// @param idOriginal l'enregistrement d'origine auquel rattacher les séquences ajoutées ; il est
+    ///     obligatoire en base, et un banc qui vient d'importer en a autant que de fichiers copiés
+    public JeuDeDonneesPassage surLePassage(long idPassage, long idSession, long idOriginal) {
+        this.idPassage = idPassage;
+        this.idSession = idSession;
+        this.idOriginal = idOriginal;
+        return this;
+    }
+
     public JeuDeDonneesPassage enregistreur(String numeroSerie) {
         this.numeroSerie = numeroSerie;
         return this;
