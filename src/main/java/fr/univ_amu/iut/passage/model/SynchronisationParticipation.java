@@ -196,9 +196,10 @@ public final class SynchronisationParticipation {
     /// (#4707). C'est la question que deux lectures prises dans le même appel ne peuvent pas poser :
     /// elles ne couvrent que leur propre intervalle, quelques millisecondes.
     private static boolean aChangeDepuisLaBase(ReleveParticipation base, ParticipationDetail juste) {
-        return !Objects.equals(base.dateDebut(), juste.dateDebut())
-                || !Objects.equals(base.dateFin(), juste.dateFin())
-                || !Objects.equals(base.meteo(), juste.meteo())
+        // #4756 : les DATES ne comptent pas ici. Nous en tenons la meilleure source, les
+        // enregistrements les prouvant, et bloquer ferait gagner une declaration a la main contre une
+        // preuve. Le realignement reste annonce a l'utilisateur, donc rien ne se fait dans son dos.
+        return !Objects.equals(base.meteo(), juste.meteo())
                 || !Objects.equals(base.configuration(), juste.configuration());
     }
 
@@ -206,9 +207,10 @@ public final class SynchronisationParticipation {
     /// (#4603). Repli quand aucune base n'existe : l'`_etag` ne convient pas, il bouge sur tout le
     /// document et l'ouvrier d'analyse le fait bouger seul.
     private static boolean aChangeSurCeQueNousEcrivons(ParticipationDetail avant, ParticipationDetail juste) {
-        return !Objects.equals(avant.dateDebut(), juste.dateDebut())
-                || !Objects.equals(avant.dateFin(), juste.dateFin())
-                || !Objects.equals(avant.meteo(), juste.meteo())
+        // #4756 : les dates n'y sont pas davantage que dans la comparaison contre la base. La regle
+        // porte sur la NATURE du champ, pas sur le mecanisme : la faire dependre du fait qu'une nuit
+        // ait deja ete lue donnerait deux traitements opposes au meme champ.
+        return !Objects.equals(avant.meteo(), juste.meteo())
                 || !Objects.equals(avant.configuration(), juste.configuration());
     }
 
