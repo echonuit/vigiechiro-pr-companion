@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.MeteoDepot;
+import fr.univ_amu.iut.commun.api.ParticipationADeposer;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
@@ -316,6 +317,55 @@ class SynchronisationParticipationTest {
                 .thenReturn(ResultatEcriture.reussie("part-1"));
 
         assertThat(sync.pousserVers(42L)).isInstanceOf(EnvoiParticipation.Ecrit.class);
+    }
+
+    @Test
+    @DisplayName("#4757 : eux seuls ont saisi la météo → l'envoi part, et le corps ne la porte PAS")
+    void pousser_vers_omet_la_meteo_que_nous_n_avons_pas_touchee() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        // La nuit locale PORTE une meteo, et c'est indispensable : si elle n'en portait pas, taire le
+        // champ et envoyer notre valeur seraient indiscernables - tous deux rendraient `null` - et ce
+        // banc passerait sans rien prouver. Mesure : la mutation M1, qui retire l'omission, lui a
+        // d'abord survecu pour cette raison exacte.
+        when(passageDao.findById(42L)).thenReturn(Optional.of(passage(METEO_LOCALE)));
+        when(referentielPoint.pour(7L)).thenReturn(Optional.of(new InfosPoint("Z41", 7L, CARRE)));
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // La base porte CE QUE NOUS PORTONS : nous n'y avons donc pas touche depuis notre lecture.
+        when(releve.base(42L)).thenReturn(Optional.of(baseAvecMeteo(METEO_ENVOYEE)));
+        // Eux ont saisi FORT depuis. Refuser n'aurait rien a proteger de notre cote.
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detailAvecMeteo("e-loin", new MeteoDepot("FORT", "75-100", 20, 18))));
+        when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        EnvoiParticipation envoi = sync.pousserVers(42L);
+
+        assertThat(envoi).isInstanceOf(EnvoiParticipation.Ecrit.class);
+        ArgumentCaptor<ParticipationADeposer> corps = ArgumentCaptor.forClass(ParticipationADeposer.class);
+        verify(client).modifierParticipation(anyString(), anyString(), corps.capture());
+        // Verifier seulement que l'envoi part laisserait passer une version qui emet notre meteo :
+        // c'est le defaut meme. Un champ omis laisse le leur intact, GSON ne serialisant pas les nulls.
+        assertThat(corps.getValue().meteo()).isNull();
+    }
+
+    @Test
+    @DisplayName("#4757 témoin : les DEUX côtés ont bougé → on renonce, c'est le seul vrai conflit")
+    void pousser_vers_renonce_quand_les_deux_cotes_ont_bouge() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        lenient().when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // La base porte NUL, nous portons ce que le passage local dit, eux portent FORT : trois valeurs
+        // distinctes, donc personne ne peut trancher a notre place.
+        when(releve.base(42L)).thenReturn(Optional.of(baseAvecMeteo(new MeteoDepot("NUL", "0-25"))));
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detailAvecMeteo("e-loin", new MeteoDepot("FORT", "75-100"))));
+        lenient()
+                .when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        assertThat(sync.pousserVers(42L)).isInstanceOf(EnvoiParticipation.ModifieEntreTemps.class);
     }
 
     @Test
@@ -754,6 +804,13 @@ class SynchronisationParticipationTest {
 
     /// Le meme detail que [#detail(String)], dont seule la meteo differe : un champ que le `PATCH`
     /// ecrit, donc un vrai conflit.
+    /// La meteo de la nuit locale, et ce qu'elle donne une fois traduite pour l'API. Les deux doivent
+    /// coincider : c'est ce qui fait dire au banc « nous n'y avons pas touche ».
+    private static final String METEO_LOCALE =
+            MeteoPassage.definirReleve(null, new MeteoReleve(8.0, 5.0, Vent.FAIBLE, CouvertureNuageuse.DE_0_A_25));
+
+    private static final MeteoDepot METEO_ENVOYEE = new MeteoDepot("FAIBLE", "0-25", 8, 5);
+
     private static ParticipationDetail detailAvecMeteo(String etag, MeteoDepot meteo) {
         ParticipationDetail modele = detail(etag);
         return new ParticipationDetail(

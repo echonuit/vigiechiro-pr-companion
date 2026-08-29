@@ -43,12 +43,26 @@ final class CorrespondanceParticipation {
             MaterielMicro micro,
             Map<String, String> configurationDistante,
             ZoneId fuseauDuSite) {
+        return versParticipation(codePoint, passage, micro, configurationDistante, meteo(passage), fuseauDuSite);
+    }
+
+    /// Variante où la météo est **tranchée au-dehors** (#4757) : `meteoAEnvoyer` à `null` **tait** le
+    /// champ, et la plateforme garde alors le sien. Les envois qui n'ont personne à ménager - la
+    /// création, et la modification d'une nuit dont nous sommes seuls à parler - passent par la variante
+    /// ci-dessus, qui envoie ce que le passage local porte.
+    static ParticipationADeposer versParticipation(
+            String codePoint,
+            Passage passage,
+            MaterielMicro micro,
+            Map<String, String> configurationDistante,
+            MeteoDepot meteoAEnvoyer,
+            ZoneId fuseauDuSite) {
         exigerBornesDeNuit(passage);
         return new ParticipationADeposer(
                 codePoint,
                 debutVc(passage, fuseauDuSite),
                 finVc(passage, fuseauDuSite),
-                meteo(passage),
+                meteoAEnvoyer,
                 configuration(passage, micro, configurationDistante),
                 null);
     }
@@ -62,7 +76,7 @@ final class CorrespondanceParticipation {
 
     // --- push : local -> API -----------------------------------------------------------------------
 
-    private static MeteoDepot meteo(Passage passage) {
+    static MeteoDepot meteo(Passage passage) {
         if (passage.donneesMeteo() == null || passage.donneesMeteo().isBlank()) {
             return null;
         }
