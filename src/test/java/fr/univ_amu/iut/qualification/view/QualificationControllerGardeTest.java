@@ -7,6 +7,8 @@ import fr.univ_amu.iut.commun.model.DispositionColonnesEnMemoire;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.connexion.model.StockageConnexion;
+import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
@@ -49,7 +51,9 @@ class QualificationControllerGardeTest {
                 ouvrirSiteNeutre(),
                 new DispositionColonnesEnMemoire(),
                 new ExecuteurTacheSynchrone(),
-                mock(NavigationQualification.class));
+                mock(NavigationQualification.class),
+                mock(ServiceEmport.class),
+                mock(StockageConnexion.class));
 
         assertThat(controller.aSaisieNonEnregistree()).isFalse();
 
@@ -70,7 +74,9 @@ class QualificationControllerGardeTest {
                 ouvrirSiteNeutre(),
                 new DispositionColonnesEnMemoire(),
                 new ExecuteurTacheSynchrone(),
-                mock(NavigationQualification.class));
+                mock(NavigationQualification.class),
+                mock(ServiceEmport.class),
+                mock(StockageConnexion.class));
 
         verdictVm.choisirVerdict(Verdict.OK);
         verdictVm.enregistrer();
@@ -95,7 +101,9 @@ class QualificationControllerGardeTest {
                 ouvrirSiteNeutre(),
                 new DispositionColonnesEnMemoire(),
                 new ExecuteurTacheSynchrone(),
-                mock(NavigationQualification.class));
+                mock(NavigationQualification.class),
+                mock(ServiceEmport.class),
+                mock(StockageConnexion.class));
 
         verdictVm.choisirVerdict(Verdict.OK);
         verdictVm.enregistrer();
