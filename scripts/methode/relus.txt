@@ -1254,6 +1254,7 @@ c768760b41eb  src/test/java/fr/univ_amu/iut/analyse/view/CriteresActiviteTest.ja
 42b8d69e756f  src/test/java/fr/univ_amu/iut/analyse/view/LegendeExportActiviteTest.java
 a12caf7daa04  src/test/java/fr/univ_amu/iut/analyse/view/NatureNuitTest.java
 89005816798d  src/test/java/fr/univ_amu/iut/analyse/view/NavigationSyntheseViewTest.java
+e453f0b46c13  src/test/java/fr/univ_amu/iut/analyse/view/ScenarioCourbeActiviteTest.java
 3e4d63b5214a  src/test/java/fr/univ_amu/iut/analyse/view/SelecteurColonnesAnalyseTest.java
 910e6164fca6  src/test/java/fr/univ_amu/iut/analyse/view/SyntheseLargeurColonnesTest.java
 fd04d285ab8a  src/test/java/fr/univ_amu/iut/analyse/view/SyntheseSansReferentielViewTest.java
@@ -1692,7 +1693,7 @@ e1b2fdd546f0  src/test/java/fr/univ_amu/iut/e2e/ParcoursSitesVersPassageE2ETest.
 073e746df436  src/test/java/fr/univ_amu/iut/e2e/ParcoursValidationExpertE2ETest.java
 a06d8c7fb747  src/test/java/fr/univ_amu/iut/e2e/ParcoursVerifierEchantillonnageE2ETest.java
 ecd57cd9d2d6  src/test/java/fr/univ_amu/iut/e2e/RetourApresVerificationE2ETest.java
-4e62ece92a04  src/test/java/fr/univ_amu/iut/fixture/JeuDeDonneesPassage.java
+2704be62020a  src/test/java/fr/univ_amu/iut/fixture/JeuDeDonneesPassage.java
 5aae7e47d836  src/test/java/fr/univ_amu/iut/fixture/JeuDeDonneesPassageTest.java
 fdb9ea22e5df  src/test/java/fr/univ_amu/iut/fixture/JournalDeCapteur.java
 8a00f2d62738  src/test/java/fr/univ_amu/iut/fixture/SortieCapturee.java
