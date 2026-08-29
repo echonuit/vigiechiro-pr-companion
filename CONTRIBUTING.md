@@ -257,6 +257,13 @@ rattachements, recadrage des titres et des corps déplacés) ; puis cartographie
 les patterns en place plutôt que réinventer) ; puis rédiger un plan ; puis découper en **issues reliées
 à un EPIC**.
 
+**Le palier du sous-chantier.** Pour chaque lot, une question avant de l'accrocher : combien de PR ?
+Une ou deux, des issues rattachées à l'EPIC suffisent. **Plus de deux PR cohérentes, c'est un
+chantier** : le lot s'ouvre alors en **sous-chantier**, un EPIC enfant, ses issues s'y rattachent, et
+la case du parent pointe vers lui. Un lot multi-PR accroché sous une case à cocher n'a ni périmètre
+écrit, ni bilan, ni les douze passes, et se termine sans que personne sache s'il est fini. La forme
+observée dans les EPIC existants n'est pas la règle : l'imiter reproduit le défaut.
+
 Le triage vient **en premier** parce qu'une issue est rattachée au chantier qui a remarqué son
 **symptôme**, pas à celui qui traite sa **cause** : deux issues sur le même sujet, écrites depuis deux
 angles, ne se ressemblent pas, et le recoupement se découvre alors au **conflit de fusion**.

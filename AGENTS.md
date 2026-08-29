@@ -76,6 +76,7 @@ remplacent pas ce document : il se lit au début, une compétence s'ouvre au mom
 | Compétence | Quand l'ouvrir |
 |---|---|
 | `trier-les-issues` | avant d'ouvrir un chantier, pour décider s'il y a lieu |
+| `ouvrir-un-chantier` | les quatre étapes d'ouverture, et le palier du sous-chantier |
 | `ouvrir-une-issue` | ce qu'il faut avoir mesuré, vérifié et compris avant la première ligne |
 | `worktree` | avant tout travail de branche, et avant de construire pendant que l'appli tourne |
 | `tdd` | la boucle rouge, vert, refactor, et son échelle |
@@ -125,6 +126,13 @@ Un **chantier** est un lot de travail d'ampleur **EPIC**, réparti sur plusieurs
 **0. Trier et regrouper les issues existantes, AVANT la cartographie et le plan.** Balayer les issues ouvertes **par concept**, pas par mot-clé (« la sévérité s'écrit dans le texte » et « des avertissements vivent hors du système de restitution » sont le même sujet sous deux noms) ; chercher les **EPIC vivants** et les issues « **différée de #N** » (elles signalent un parent, parfois clos, dont la moitié restante n'a plus de toit) ; **décider des rattachements** : une issue appartient au chantier qui traite sa **cause**, pas à celui qui a remarqué son **symptôme** ; **recadrer titre ET corps** des issues déplacées (un recadrage laissé en commentaire sous un corps périmé ne recadre rien). Sans cette étape, le recoupement entre deux chantiers ne se découvre qu'au **conflit de fusion**, quand deux chemins existent déjà. Vécu : un audit de passe 7 a produit une issue doublonnant six des huit cas d'une issue existante, mieux fondée, dont le prérequis a fusionné pendant que le doublon s'écrivait.
 
 **Puis** : cartographier l'existant (repérer les **patterns réutilisables** avant d'écrire du neuf), rédiger un **plan**, puis **découper en issues** reliées à un **EPIC**.
+
+**Et pour chaque lot, une question avant de l'accrocher** : combien de PR ? Une ou deux, des issues
+rattachées à l'EPIC suffisent. **Plus de deux PR cohérentes, c'est un chantier** : le lot s'ouvre
+alors en **sous-chantier**, un EPIC enfant, ses issues s'y rattachent, et la case du parent pointe
+vers lui. Un lot multi-PR accroché sous une case à cocher n'a ni périmètre écrit, ni bilan, ni les
+douze passes : il se termine sans que personne sache s'il est fini. La forme observée dans les EPIC
+existants n'est pas la règle, et l'imiter reproduit le défaut ([ADR 4712](dev-docs/decisions/4712-un-lot-multi-pr-est-un-sous-chantier.md)).
 
 ### Au commencement de chaque issue : se signaler
 
