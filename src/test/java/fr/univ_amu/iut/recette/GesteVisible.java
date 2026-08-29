@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import org.testfx.api.FxRobot;
@@ -50,10 +51,7 @@ public final class GesteVisible {
     /// copie aurait divergé de la première.
     public static void amenerDansLeCadre(FxRobot robot, String selecteur) {
         try {
-            WaitForAsyncUtils.waitFor(
-                    SECONDES_CADRE,
-                    TimeUnit.SECONDS,
-                    () -> unePasse(robot, selecteur) || estDansLeCadre(robot, selecteur));
+            WaitForAsyncUtils.waitFor(SECONDES_CADRE, TimeUnit.SECONDS, () -> unePasse(robot, selecteur));
         } catch (TimeoutException jamais) {
             throw new IllegalStateException("« " + selecteur + " » n'est jamais venu dans le cadre en "
                     + SECONDES_CADRE + " s. Rendre la main sans l'avoir amené reporterait l'échec sur le"
@@ -71,12 +69,16 @@ public final class GesteVisible {
     /// diffère son calcul d'un tour de boucle, parce que « révéler tout de suite reviendrait à viser un
     /// nœud de hauteur nulle ». Ce geste-ci, du côté des bancs, ne l'avait jamais hérité (#4723).
     private static boolean unePasse(FxRobot robot, String selecteur) {
-        Node cible = robot.lookup(selecteur).query();
-        for (ScrollPane panneau : panneauxDont(cible)) {
-            robot.interact(() -> amener(panneau, cible));
-            WaitForAsyncUtils.waitForFxEvents();
-        }
-        return estDansLeCadre(robot, selecteur);
+        AtomicBoolean atteignable = new AtomicBoolean();
+        robot.interact(() -> {
+            Node cible = robot.lookup(selecteur).query();
+            for (ScrollPane panneau : panneauxDont(cible)) {
+                amener(panneau, cible);
+            }
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> atteignable.set(estDansLeCadre(robot, selecteur)));
+        return atteignable.get();
     }
 
     /// Les panneaux de défilement dont `cible` **descend**, du plus proche au plus lointain.
@@ -101,6 +103,8 @@ public final class GesteVisible {
     /// suffit pas, et le plus lointain seul laisse la cible **rognée** par celui du dedans. Mesuré sur
     /// les 25 combinaisons d'un banc à deux panneaux : une seule laisse le clic atteindre la cible, et
     /// cinq autres le font partir dans le vide en paraissant bonnes.
+    /// **Le quotient est borné, sans garde** : il sort de `[0, 1]` onze fois sur quatre-vingt-seize
+    /// appels réels, mais JavaFX normalise la valeur stockée. Hygiène, pas remède (#4795).
     private static void amener(ScrollPane panneau, Node cible) {
         Node contenu = panneau.getContent();
         if (contenu == null) {
@@ -110,7 +114,7 @@ public final class GesteVisible {
         double hauteurVue = panneau.getViewportBounds().getHeight();
         double y = cible.localToScene(cible.getBoundsInLocal()).getMinY();
         double yContenu = contenu.localToScene(contenu.getBoundsInLocal()).getMinY();
-        panneau.setVvalue((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue));
+        panneau.setVvalue(Math.clamp((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue), 0, 1));
     }
 
     /// La cible est-elle dans le cadre, **au sens de TestFX** ?
