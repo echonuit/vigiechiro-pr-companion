@@ -52,15 +52,27 @@ class OuvertureDePaquetTest {
         assertThat(ouvert.sequences()).containsExactly("sequences/seq.wav");
     }
 
+    /// Le pseudo est **capturé** à l'ouverture, il n'est pas **relu** au moment où l'on s'en sert.
+    ///
+    /// La disparition de l'identité est jouée en deux actes : elle est constatée par un refus
+    /// d'ouvrir, puis le paquet déjà ouvert est interrogé. Sans le premier acte, le test ne dirait
+    /// rien de plus que celui qui le précède.
+    ///
+    /// **Ce qu'il n'éprouve pas encore** : poser un verdict au travers d'un [PaquetOuvert] après la
+    /// péremption. Ce flux n'existe pas (tâche 5.3 du changement, écran de #4628), et l'horloge que
+    /// la tâche 4.2 décrivait n'aurait servi qu'à ce test.
     @Test
-    @DisplayName("Le pseudo relevé à l'ouverture ne dépend plus de l'identité ensuite")
-    void le_pseudo_releve_ne_depend_plus_de_l_identite_ensuite() throws IOException {
+    @DisplayName("Le pseudo est capturé à l'ouverture, non relu quand l'identité a disparu")
+    void le_pseudo_est_capture_a_l_ouverture_non_relu_ensuite() throws IOException {
         Path paquet = paquetDe("seq.wav");
-
         PaquetOuvert ouvert = OuvertureDePaquet.ouvrir(paquet, Optional.of(RELECTEUR));
 
+        assertThatThrownBy(() -> OuvertureDePaquet.ouvrir(paquet, Optional.empty()))
+                .as("l'identité n'est plus disponible : une ouverture neuve est désormais refusée")
+                .isInstanceOf(IllegalStateException.class);
+
         assertThat(ouvert.pseudoRelecteur())
-                .as("l'identité a été relevée une fois : sa péremption ultérieure ne l'efface pas")
+                .as("et pourtant le paquet déjà ouvert signe toujours, parce qu'il a capturé")
                 .isEqualTo("chiro-pierre");
     }
 
