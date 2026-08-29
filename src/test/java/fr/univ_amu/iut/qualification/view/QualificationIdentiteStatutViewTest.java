@@ -18,10 +18,12 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit.Feu;
 import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
+import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
@@ -70,6 +72,22 @@ class QualificationIdentiteStatutViewTest {
             @Provides
             SelectionEcouteViewModel selection() {
                 return new SelectionEcouteViewModel(service);
+            }
+
+            @Provides
+            ServiceEmport emport() {
+
+                // Les gestes d'emport (#4727) ne sont pas le sujet de cet écran-ci : un double suffit
+
+                // à ce que le contrôleur se construise, et `ActionsEmportTest` les éprouve à part.
+
+                return mock(ServiceEmport.class);
+            }
+
+            @Provides
+            StockageConnexion connexion() {
+
+                return mock(StockageConnexion.class);
             }
 
             @Provides
