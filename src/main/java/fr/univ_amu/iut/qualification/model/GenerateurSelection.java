@@ -84,6 +84,9 @@ public class GenerateurSelection {
             case REPARTITION_TEMPORELLE -> repartitionTemporelle(triees, k);
             case ALEATOIRE -> aleatoire(triees, k, new Random());
             case MANUEL -> new ArrayList<>(triees.subList(0, k));
+            case RECUE_D_UN_PAQUET ->
+                throw new IllegalArgumentException(
+                        "Une sélection reçue d'un paquet n'est pas tirée : elle arrive figée (ADR 4627).");
         };
     }
 

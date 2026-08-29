@@ -132,8 +132,14 @@ public class ServiceQualification {
             throw new RegleMetierException(
                     "Aucune séquence d'écoute à échantillonner pour ce passage (transformation requise).");
         }
-        List<SequenceDEcoute> choisies = generateur.selectionner(nuit, methode, taille);
         Optional<SelectionDEcoute> existante = selectionDao.findByPassage(idPassage);
+        if (existante
+                .filter(deja -> deja.methode() == MethodeSelection.RECUE_D_UN_PAQUET)
+                .isPresent()) {
+            throw new RegleMetierException("La sélection d'écoute de cette nuit est celle de l'expéditeur, et elle est"
+                    + " figée : la régénérer produirait un échantillon que personne ne pourrait confronter au sien.");
+        }
+        List<SequenceDEcoute> choisies = generateur.selectionner(nuit, methode, taille);
 
         uniteDeTravail.executer(connexion -> {
             if (existante.isPresent()) {

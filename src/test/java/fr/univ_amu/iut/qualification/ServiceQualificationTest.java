@@ -237,6 +237,23 @@ class ServiceQualificationTest {
     }
 
     @Test
+    @DisplayName("#4705 : une nuit venue d'un paquet refuse la régénération, et le refus dit pourquoi")
+    void une_nuit_venue_d_un_paquet_refuse_la_regeneration() {
+        creerNuit(5);
+        // La sélection n'a pas été tirée ici : elle est arrivée figée dans un paquet.
+        selectionDao.insert(new SelectionDEcoute(null, MethodeSelection.RECUE_D_UN_PAQUET, 2, idPassage));
+
+        assertThatThrownBy(() -> service.creerSelection(idPassage, MethodeSelection.REPARTITION_TEMPORELLE, 3))
+                .as("deux tirages indépendants se recouvrent à peine : les avis ne se compareraient plus")
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("expéditeur");
+
+        assertThat(selectionDao.findByPassage(idPassage).orElseThrow().methode())
+                .as("un refus qui aurait déjà remplacé la sélection ne serait pas un refus")
+                .isEqualTo(MethodeSelection.RECUE_D_UN_PAQUET);
+    }
+
+    @Test
     @DisplayName("#4698 : l'avis d'un relecteur, si divergent soit-il, ne déplace pas le verdict du passage")
     void l_avis_du_relecteur_ne_deplace_pas_le_verdict_du_passage() {
         creerNuit(3);

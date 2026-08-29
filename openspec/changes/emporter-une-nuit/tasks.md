@@ -36,7 +36,7 @@
 - [x] 3.2 Le plan est une classe pure : il doit résister à ses mutations. **Fait quand** : PIT a
       tourné sur elle, ses survivants sont lus un par un, et chacun est soit tué par un test neuf,
       soit justifié par écrit.
-- [ ] 3.3 Le paquet n'existe pas. L'écrire depuis un plan confirmé. **Fait quand** : un test écrit un
+- [x] 3.3 Le paquet n'existe pas. L'écrire depuis un plan confirmé. **Fait quand** : un test écrit un
       paquet dans un dossier temporaire, le relit, et retrouve les séquences **de la sélection**, ses
       métadonnées et ses verdicts, **sans les autres séquences de la nuit ni aucun brut**.
 
@@ -50,7 +50,7 @@
 - [x] 4.2 L'identité se périme à quatorze jours alors que le jugement peut venir après. **Fait
       quand** : un test ouvre un paquet avec une identité valide, avance l'horloge injectée au-delà de
       la péremption, pose un verdict, et constate le pseudo relevé à l'ouverture.
-- [ ] 4.3 La régénération rouvrirait le problème que D1 ferme : deux échantillons quasi disjoints.
+- [x] 4.3 La régénération rouvrirait le problème que D1 ferme : deux échantillons quasi disjoints.
       **Fait quand** : un test constate qu'une nuit venue d'un paquet refuse la régénération, et que
       le refus dit que la sélection est celle de l'expéditeur.
 
@@ -59,6 +59,13 @@
       capture l'identifiant de plateforme au lieu du pseudo. Il n'éprouve pas encore la pose d'un
       verdict au travers d'un paquet ouvert après péremption : ce flux n'existe pas, et l'horloge que
       cette tâche décrivait n'aurait servi qu'à ce seul test. La suite est consignée séparément.
+
+      **Fait** : `PaquetAllerRetourTest` écrit un paquet depuis une sélection de deux séquences tirées
+      d'une nuit qui en porte cinq, le rouvre, et retrouve les deux séquences, les métadonnées et les
+      verdicts, sans les trois autres ni le brut (3.3). Pour 4.3,
+      `ServiceQualificationTest.une_nuit_venue_d_un_paquet_refuse_la_regeneration` : le refus tombe si
+      on le retire. La provenance est une valeur de `MethodeSelection`, donc **aucune migration**, et
+      le `switch` exhaustif a désigné lui-même les deux endroits à traiter.
 
 ## 5. Reprendre l'avis, sans écraser le sien
 
