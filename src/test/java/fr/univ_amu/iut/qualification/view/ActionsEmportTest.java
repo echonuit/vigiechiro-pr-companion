@@ -289,7 +289,114 @@ class ActionsEmportTest {
                 .satisfies(message -> assertThat(message).contains("Emport interrompu"));
     }
 
+    @Test
+    @DisplayName("Renvoyer son avis écrit un paquet signé, et l'annulation n'écrit rien")
+    void renvoyer_son_avis_ecrit_un_paquet_signe() throws IOException {
+        uneSelectionDeDeux();
+        Path retour = dossier.resolve("avis.zip");
+        actions.selecteur().definir(selecteurQuiRepond(retour));
+
+        actions.renvoyerAvis(idPassage, "chiro-pierre");
+
+        assertThat(Files.exists(retour)).as("l'avis part").isTrue();
+        assertThat(dernierNiveau).isEqualTo(NiveauNotification.INFORMATION);
+        assertThat(notifications)
+                .singleElement()
+                .satisfies(
+                        message -> assertThat(message).contains("Avis renvoyé").contains("2 verdict"));
+    }
+
+    @Test
+    @DisplayName("Importer un avis se confirme deux fois quand un relecteur a déjà répondu")
+    void importer_un_avis_demande_confirmation_quand_un_avis_existe() throws IOException {
+        uneSelectionDeDeux();
+        Path avis = unAvisSignePar("claire");
+        actions.selecteur().definir(selecteurQuiRepond(avis));
+        actions.confirmateur().definir(message -> true);
+        actions.importerAvis();
+
+        Path second = unAvisSignePar("martin");
+        actions.selecteur().definir(selecteurQuiRepond(second));
+        List<String> demandes = new ArrayList<>();
+        actions.confirmateur().definir(message -> {
+            demandes.add(message);
+            return false;
+        });
+
+        actions.importerAvis();
+
+        assertThat(demandes)
+                .as("la confirmation nomme qui serait remplacé, et combien de verdicts partiraient")
+                .anySatisfy(message -> assertThat(message).contains("claire").contains("2"));
+        assertThat(selectionDao.listerSequences(
+                        selectionDao.findByPassage(idPassage).orElseThrow().id()))
+                .as("refusée, elle n'écrit rien : l'avis de claire tient")
+                .allSatisfy(ligne -> assertThat(ligne.pseudoRelecteur()).isEqualTo("claire"));
+    }
+
     // --- montage -----------------------------------------------------------
+
+    /// Un avis tel qu'un relecteur le renverrait : un manifeste signé, sans séquence.
+    ///
+    /// Le relecteur travaille sur **son** poste : deux relecteurs ne partagent pas une base, et le
+    /// simuler autrement ferait passer un test là où le domaine dit non.
+    private Path unAvisSignePar(String pseudo) throws IOException {
+        Path aller = dossier.resolve("aller-" + pseudo + ".zip");
+        new ServiceEmport(
+                        selectionDao,
+                        sequenceDao,
+                        new SessionDao(source),
+                        new PassageDao(source),
+                        new PointDao(source),
+                        new SiteDao(source),
+                        new UniteDeTravail(source))
+                .composer(idPassage, aller);
+
+        SourceDeDonnees poste = new SourceDeDonnees(new Workspace(dossier.resolve("poste-" + pseudo)));
+        new MigrationSchema(poste).migrer();
+        JeuDeDonneesPassage.dans(poste)
+                .utilisateur("u-1")
+                .carre("040962")
+                .nomSite("Étang")
+                .point("A1")
+                .position(43.5, 5.4)
+                .enregistreur("1925492")
+                .nuit(1, 2026, "2026-06-20")
+                .heures("20:00:00", "06:00:00")
+                .statut(StatutWorkflow.TRANSFORME)
+                .semerPassage();
+        Long passageLa = new PassageDao(poste).findAll().getFirst().id();
+        Long sessionLa = new SessionDao(poste)
+                .insert(new SessionDEnregistrement(null, "/wsR/sess", null, null, passageLa))
+                .id();
+        Long originalLa = new EnregistrementOriginalDao(poste)
+                .insert(new EnregistrementOriginal(null, "o.wav", "/wsR/o.wav", 5.0, 384000, null, sessionLa))
+                .id();
+        SequenceDao sequencesLa = new SequenceDao(poste);
+        for (int t = 0; t < 3; t++) {
+            String nom = "Car040962-2026-Pass1-A1-" + String.format("%03d", t) + ".wav";
+            sequencesLa.insert(new SequenceDEcoute(
+                    null, nom, originalLa, t, 0.0, 5.0, "/wsR/" + nom, false, sessionLa, null, null));
+        }
+
+        ServiceEmport chez = new ServiceEmport(
+                new SelectionDao(poste),
+                sequencesLa,
+                new SessionDao(poste),
+                new PassageDao(poste),
+                new PointDao(poste),
+                new SiteDao(poste),
+                new UniteDeTravail(poste));
+        chez.reprendre(aller, Optional.of(RELECTEUR));
+        SelectionDao selectionLa = new SelectionDao(poste);
+        Long sel = selectionLa.findByPassage(passageLa).orElseThrow().id();
+        for (SequenceSelectionnee ligne : selectionLa.listerSequences(sel)) {
+            selectionLa.marquerVerdict(sel, ligne.idSequence(), VerdictFichier.INEXPLOITABLE);
+        }
+        Path retour = dossier.resolve("retour-" + pseudo + ".zip");
+        chez.renvoyerAvis(passageLa, retour, pseudo);
+        return retour;
+    }
 
     private void uneSelectionDeDeux() {
         List<SequenceDEcoute> nuit = creerNuit(3);
