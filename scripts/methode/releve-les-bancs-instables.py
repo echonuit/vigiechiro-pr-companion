@@ -35,6 +35,51 @@ RESUME = re.compile(rf"\[ERROR\]\s+{CLASSE}\.([a-z][A-Za-z0-9_]*):\d+")
 DETAIL = re.compile(rf"\[ERROR\]\s+{CLASSE}\.([a-z][A-Za-z0-9_]*)\([^)]*\)\s+--\s+Time elapsed")
 
 
+def testsEchouesOrdonnes(journal: str) -> list[str]:
+    """Les `Classe.methode` en echec, **dans l'ordre du journal**, sans doublon.
+
+    L'ordre est l'information : une cascade emporte une classe entiere quelques secondes apres le
+    test qui l'a declenchee, et un ensemble la perd par construction. C'est ce qui faisait figurer
+    107 des 141 classes JavaFX au releve, victimes comprises.
+    """
+    vus, ordre = set(), []
+    for ligne in journal.splitlines():
+        for motif in (RESUME, DETAIL):
+            for classe, methode in motif.findall(ligne):
+                nom = f"{classe}.{methode}"
+                if nom not in vus:
+                    vus.add(nom)
+                    ordre.append(nom)
+    return ordre
+
+
+def tete(ordonnes: list[str]) -> str | None:
+    """Le premier test tombe : le suspect. Les forks etant entrelaces, ce n'est pas une certitude."""
+    return ordonnes[0] if ordonnes else None
+
+
+def suite(ordonnes: list[str]) -> list[str]:
+    """Ce que la tete a emporte, ou ce qui est tombe pour son compte dans un autre fork."""
+    return ordonnes[1:]
+
+
+def comptesParRang(parTentative: list[list[str]]) -> tuple[dict[str, int], dict[str, int]]:
+    """Combien de fois chaque test est EN TETE, et combien de fois DANS LA SUITE.
+
+    Un test peut etre les deux : la separation observe un tirage, elle ne classe pas un test une
+    fois pour toutes.
+    """
+    tetes: dict[str, int] = {}
+    suites: dict[str, int] = {}
+    for ordonnes in parTentative:
+        premier = tete(ordonnes)
+        if premier:
+            tetes[premier] = tetes.get(premier, 0) + 1
+        for autre in suite(ordonnes):
+            suites[autre] = suites.get(autre, 0) + 1
+    return tetes, suites
+
+
 def testsEchoues(journal: str) -> set[str]:
     """Les `Classe.methode` que ce journal declare en echec."""
     vus = set()
@@ -163,7 +208,48 @@ def _autoTest() -> int:
     # Le sens NEGATIF : un rapport qui rendrait toujours vide passerait tout le reste.
     assert lignes, "trois runs dont deux rouges doivent produire des lignes"
 
-    print("auto-test : 6 temoins verts")
+    # L'ORDRE decide. Un extrait reel : un test tombe, puis une classe entiere cinq secondes plus
+    # tard. Le premier est le suspect, les vingt et un suivants sont ce qu'il a emporte.
+    cascade = (
+        "b\tB\t2026-08-29T14:31:22Z [ERROR] fr.univ_amu.iut.qualification.view.ScenarioSelectionEcouteTest"
+        ".personnaliser_la_selection(FxRobot) -- Time elapsed: 4.159 s <<< ERROR!\n"
+        "b\tB\t2026-08-29T14:31:27Z [ERROR] fr.univ_amu.iut.analyse.view.ActiviteViewTest"
+        ".ouvrir_tout_charge_les_passages(FxRobot) -- Time elapsed: 0.002 s <<< ERROR!\n"
+        "b\tB\t2026-08-29T14:31:27Z [ERROR] fr.univ_amu.iut.analyse.view.ActiviteViewTest"
+        ".sans_courbe_tracee_l_export_est_grise(FxRobot) -- Time elapsed: 0.002 s <<< ERROR!\n"
+    )
+    ordonnes = testsEchouesOrdonnes(cascade)
+    assert ordonnes[0] == "ScenarioSelectionEcouteTest.personnaliser_la_selection", ordonnes
+    assert len(ordonnes) == 3, ordonnes
+
+    # Le sens NEGATIF : melanger l'ordre doit CHANGER la tete. Sans cela, une implementation qui
+    # trierait par nom passerait le temoin ci-dessus, `ActiviteViewTest` venant avant `Scenario`.
+    lignes = cascade.strip().split("\n")
+    inverse = "\n".join(reversed(lignes)) + "\n"
+    assert testsEchouesOrdonnes(inverse)[0] != ordonnes[0], "la tete doit suivre l'ordre du journal"
+
+    # Surefire nomme le MEME test deux fois : en detail pendant la course, puis dans le resume final.
+    # Sans dedoublonnage, une cascade de vingt et un tests en compterait quarante-deux, et un test vu
+    # dans les deux formes passerait pour tombe deux fois. Mesure : la mutation qui retire le
+    # dedoublonnage y a d'abord survecu, mon extrait n'ayant aucun test repete.
+    deuxFois = cascade + (
+        "b\tB\t2026-08-29T14:32:00Z [ERROR]   ScenarioSelectionEcouteTest.personnaliser_la_selection:88\n"
+    )
+    assert len(testsEchouesOrdonnes(deuxFois)) == 3, testsEchouesOrdonnes(deuxFois)
+    assert tete(testsEchouesOrdonnes(deuxFois)) == "ScenarioSelectionEcouteTest.personnaliser_la_selection"
+
+    # La tete d'une tentative, et sa suite.
+    assert tete(ordonnes) == "ScenarioSelectionEcouteTest.personnaliser_la_selection"
+    assert len(suite(ordonnes)) == 2, suite(ordonnes)
+
+    # Un test peut etre en tete ICI et dans la suite LA : la separation est une observation par
+    # tirage, pas un classement definitif.
+    parTentative = [ordonnes, list(reversed(ordonnes))]
+    tetes, suites = comptesParRang(parTentative)
+    assert tetes["ScenarioSelectionEcouteTest.personnaliser_la_selection"] == 1, tetes
+    assert suites["ScenarioSelectionEcouteTest.personnaliser_la_selection"] == 1, suites
+
+    print("auto-test : 14 temoins verts")
     return 0
 
 
@@ -181,30 +267,33 @@ def main() -> int:
     if not tirages:
         print("Aucun tirage lu : `gh` est-il installe et authentifie ?")
         return 1
-    parRun, muets = {}, []
+    parTentative, muets = [], []
     for r in rejoues:
-        echoues = set()
         for tentative in range(1, r["tentatives"]):
-            echoues |= testsEchoues(journalDeTentative(r["id"], tentative))
-        if echoues:
-            parRun[str(r["id"])] = echoues
-        else:
-            muets.append(r["id"])
-    lignes = rapport(parRun, tirages)
+            ordonnes = testsEchouesOrdonnes(journalDeTentative(r["id"], tentative))
+            if ordonnes:
+                parTentative.append(ordonnes)
+            else:
+                muets.append(r["id"])
+    tetes, suites = comptesParRang(parTentative)
     print(f"RELEVE bancs | fenetre={jours}j | tirages={tirages} | relances={len(rejoues)}"
-          f" | instables={len(lignes)}")
-    if not lignes:
+          f" | en tete={len(tetes)} | dans la suite={len(suites)}")
+    if not tetes:
         print("\nAucun test nomme dans les tentatives echouees.")
-    for test, n, total in lignes:
-        print(f"  {n:3d}/{total}  {100 * n / total:5.3f} %  {test}")
+    # En tete d'abord : c'est la population des SUSPECTS, et elle est la seule a designer quelque
+    # chose. « Dans la suite » compte ce qu'une cascade a emporte, et un test peut etre les deux.
+    print("\n  EN TETE (suspects)          tentatives ou il tombe le PREMIER")
+    for test, n in sorted(tetes.items(), key=lambda c: (-c[1], c[0])):
+        aussi = suites.get(test, 0)
+        reste = f", et {aussi} fois dans la suite" if aussi else ""
+        print(f"  {n:3d}/{tirages}  {100 * n / tirages:6.3f} %  {test}{reste}")
+    emportes = {t: n for t, n in suites.items() if t not in tetes}
+    if emportes:
+        print(f"\n  {len(emportes)} test(s) JAMAIS en tete : victimes seules, rien ne les accuse.")
     if muets:
-        # Une relance dont la tentative echouee ne nomme aucun test n'a pas echoue sur un banc :
-        # compilation, garde, quota, ou runner tombe. Les taire ferait passer ces relances pour des
-        # instabilites de test.
         print(
-            "\n%d relance(s) dont la tentative echouee ne nomme aucun test, donc echouees pour"
-            " autre chose : %s."
-            % (len(muets), ", ".join(str(i) for i in muets))
+            "\n%d tentative(s) echouee(s) sans aucun test nomme, donc echouees pour autre chose : %s."
+            % (len(muets), ", ".join(str(i) for i in sorted(set(muets))))
         )
     return 0
 
