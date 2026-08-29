@@ -118,7 +118,12 @@ class RattrapageMetadonneesTest {
         assertThat(bilan).isEqualTo(new BilanRattrapage(1, 1, 0));
         assertThat(((IssuePassage.Ignore) vues.get(0)).cause())
                 .doesNotContain("refus")
-                .contains("Vigie-Chiro");
+                .contains("Vigie-Chiro")
+                // La cause d'un lot se lit APRES coup, sur des dizaines de nuits, par quelqu'un qui ne
+                // sait plus laquelle avait bougé. Elle doit donc porter le geste, comme les deux autres
+                // surfaces le font depuis la cloture de #4755 : sans lui, la nuit ignoree le restera au
+                // prochain lot, a l'identique, puisque rien n'aura remis la base a jour.
+                .contains("--recuperer");
     }
 
     @Test

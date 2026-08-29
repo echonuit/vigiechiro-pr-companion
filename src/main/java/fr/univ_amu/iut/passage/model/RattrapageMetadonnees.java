@@ -105,7 +105,9 @@ public final class RattrapageMetadonnees {
                 // #4552 : ignorée, pas refusée. Une nuit qui a bougé se rejoue après relecture, et le
                 // lot continue : le renoncement porte sur elle seule.
                 return new IssuePassage.Ignore(
-                        idPassage, "la nuit a changé sur Vigie-Chiro depuis sa lecture, rien n'a été envoyé");
+                        idPassage,
+                        "la nuit a changé sur Vigie-Chiro depuis notre dernière lecture, rien n'a été"
+                                + " envoyé ; relancez avec --recuperer pour repartir de l'état à jour");
             }
             if (!envoi.ecriture().estReussie()) {
                 return new IssuePassage.Ignore(idPassage, envoi.ecriture().echec());

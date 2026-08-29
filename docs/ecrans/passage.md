@@ -460,6 +460,28 @@ perdre votre saisie.
 Ces deux boutons n'apparaissent que si vous êtes **connecté** à Vigie-Chiro : hors connexion, la
 fenêtre reste utilisable pour tout le reste, elle ne propose simplement pas d'échange.
 
+#### Quand quelqu'un d'autre travaille sur la même nuit
+
+L'application retient ce que la plateforme portait à votre dernière lecture. Elle sait donc distinguer
+ce que **vous** avez changé de ce qu'un **collègue** a changé, et elle n'écrase jamais son travail en
+silence.
+
+Trois situations, trois comportements :
+
+| Ce qui s'est passé | Ce que fait « Envoyer » |
+|---|---|
+| votre collègue a saisi la météo, vous n'y avez pas touché | l'envoi part, et **sa** météo reste : votre envoi ne parle pas de ce champ |
+| vous seul avez modifié la météo | l'envoi part avec la vôtre |
+| vous **et** lui l'avez modifiée, différemment | **rien n'est envoyé** : personne ne peut trancher à votre place |
+
+Dans le troisième cas, le message vous dit d'utiliser **Récupérer depuis Vigie-Chiro**. Suivez-le : il
+n'y a pas d'autre geste qui remette l'application à jour, et refermer puis rouvrir la fenêtre ne suffit
+pas. Vous verrez alors ce que votre collègue a saisi, et vous déciderez de ce qu'il faut garder.
+
+Les **heures de la nuit**, elles, ne bloquent jamais rien : l'application les recalcule à partir de vos
+enregistrements, qui sont une meilleure source qu'une saisie à la main - la sienne comme la vôtre. Si
+elle les corrige, elle vous le dit.
+
 !!! tip "Vérifier sur la plateforme"
     Après un envoi, le bouton **Voir la participation** (barre du haut de l'écran du passage) ouvre la
     fiche dans votre navigateur : c'est le moyen le plus sûr de confirmer que la plateforme affiche
