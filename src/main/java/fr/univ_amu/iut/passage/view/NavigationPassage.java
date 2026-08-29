@@ -85,6 +85,14 @@ public class NavigationPassage implements OuvrirPassage {
             Modales.centrerSur(modale, parent);
             modale.initModality(Modality.WINDOW_MODAL);
             modale.setTitle("Modifier le passage");
+            // Le contrôleur est posé sur la fenêtre, et c'est le pendant des porteurs qu'il expose
+            // déjà aux tests (#1013 pour le confirmateur). Sans cela ils sont hors d'atteinte d'un banc
+            // filmé : celui-ci passe par la navigation, comme l'utilisateur, et la navigation était
+            // seule à tenir le contrôleur - elle le jetait en sortant de cette méthode.
+            //
+            // Un banc qui ne peut pas substituer le confirmateur ouvre un vrai dialogue modal, qui
+            // fige TestFX : le geste devient infilmable, alors que le produit est en bon état.
+            modale.setUserData(controleur);
             modale.setScene(Habillage.scene(vue));
             Modales.fermerParEchap(modale);
             modale.show();

@@ -328,3 +328,51 @@ vraie inspection d'un vrai arbre de fichiers, et deux tournages du même commit 
 > qui se passe pendant l'opération n'auraient rien à montrer. Le banc ralentit donc son exécuteur
 > d'environ une seconde par fichier. Ce que le clip démontre : ces cinq surfaces existent et
 > s'enchaînent. Ce qu'il ne démontre pas : combien de temps un import prend.
+
+
+## ScenarioPassagePivotTest
+
+Le passage est le pivot de `S2` : l'import s'y termine, et l'analyse en repart. Ses trois gestes se
+jouent chacun sur une carte SD fraîche, et chacun **rejoue l'import complet** avant d'arriver à
+l'écran qu'il montre. Ce préambule occupe la première moitié de chaque clip : c'est le chemin réel
+de l'utilisateur, qui n'atteint le passage qu'en ayant importé.
+
+Le préambule est **freiné**, pour la raison dite plus haut : sur des fixtures générées l'import dure
+des millisecondes, et l'écran d'avancement traverserait le clip sans qu'aucune image n'en sorte.
+Aucun de ces clips ne dit donc quoi que ce soit de la vitesse du produit.
+
+### S2-18 à S2-26 · `lire_le_passage_pivot`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPassagePivotTest.lire_le_passage_pivot.mp4"></video>
+
+> Le passage s'ouvre par l'**action du compte rendu** de fin d'import, et non par le bouton de la zone
+> d'avertissement de numéro : celui-là reste invisible après un import nominal. Ce que le clip montre
+> est le chemin qu'un observateur emprunte réellement.
+
+> Le stepper distingue trois états, et le cas lit les étapes **acquises** : un passage naît au statut
+> `TRANSFORME`, donc « Importé » est franchie et « Transformé » est courante. Il vérifie aussi que les
+> trois suivantes restent à venir - sans quoi un stepper qui marquerait tout passerait.
+
+### S2-27 à S2-32 · `modifier_le_passage`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPassagePivotTest.modifier_le_passage.mp4"></video>
+
+> `S2-30` substitue le **fournisseur de météo** : l'appel réseau est ce que le banc ne peut pas faire.
+> Ce que la case observe est le remplissage - les valeurs rendues atterrissent dans les champs, et
+> remplacent ce qui était saisi à la main.
+
+> `S2-32` prend **deux relevés** du récapitulatif plutôt qu'un. Un instantané ne distingue pas un récap
+> vivant d'un récap figé, et c'est ce récap qui annonce ce que « Appliquer » va faire.
+
+### S2-33 · `renommer_le_passage_sur_le_disque`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPassagePivotTest.renommer_le_passage_sur_le_disque.mp4"></video>
+
+> **Le dialogue de confirmation n'est pas à l'image, et c'est voulu** : `Alert.showAndWait()` fige
+> TestFX, et le geste deviendrait infilmable alors que le produit est en bon état. Le confirmateur est
+> donc substitué, et sa question capturée. Ce que le clip démontre : « Appliquer » ne part pas sans
+> demander, et la question nomme le numéro qui va changer. Ce qu'il ne montre pas : la fenêtre qui
+> porte cette question.
