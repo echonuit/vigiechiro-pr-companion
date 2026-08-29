@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.recette;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
@@ -70,19 +72,45 @@ public final class GesteVisible {
     /// nœud de hauteur nulle ». Ce geste-ci, du côté des bancs, ne l'avait jamais hérité (#4723).
     private static boolean unePasse(FxRobot robot, String selecteur) {
         Node cible = robot.lookup(selecteur).query();
-        ScrollPane defilement = robot.lookup(".scroll-pane").queryAs(ScrollPane.class);
-        robot.interact(() -> {
-            double hauteurContenu = defilement.getContent().getBoundsInLocal().getHeight();
-            double hauteurVue = defilement.getViewportBounds().getHeight();
-            double y = cible.localToScene(cible.getBoundsInLocal()).getMinY();
-            double yContenu = defilement
-                    .getContent()
-                    .localToScene(defilement.getContent().getBoundsInLocal())
-                    .getMinY();
-            defilement.setVvalue((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue));
-        });
-        WaitForAsyncUtils.waitForFxEvents();
+        for (ScrollPane panneau : panneauxDont(cible)) {
+            robot.interact(() -> amener(panneau, cible));
+            WaitForAsyncUtils.waitForFxEvents();
+        }
         return estDansLeCadre(robot, selecteur);
+    }
+
+    /// Les panneaux de défilement dont `cible` **descend**, du plus proche au plus lointain.
+    ///
+    /// Le geste interrogeait le graphe entier et prenait le premier `.scroll-pane` rendu. L'écran de
+    /// vérification en porte trois - celui du chrome, celui que sa mise en page pose, celui d'un champ
+    /// de texte - et le `lookup` traverse même les **autres fenêtres** (#4778). Remonter les parents
+    /// répond sans rien supposer de cet ordre.
+    private static List<ScrollPane> panneauxDont(Node cible) {
+        List<ScrollPane> panneaux = new ArrayList<>();
+        for (Node noeud = cible.getParent(); noeud != null; noeud = noeud.getParent()) {
+            if (noeud instanceof ScrollPane panneau) {
+                panneaux.add(panneau);
+            }
+        }
+        return panneaux;
+    }
+
+    /// Amène `cible` en haut du champ de `panneau`.
+    ///
+    /// Chacun des panneaux emboîtés se règle, du plus proche au plus lointain : le plus proche seul ne
+    /// suffit pas, et le plus lointain seul laisse la cible **rognée** par celui du dedans. Mesuré sur
+    /// les 25 combinaisons d'un banc à deux panneaux : une seule laisse le clic atteindre la cible, et
+    /// cinq autres le font partir dans le vide en paraissant bonnes.
+    private static void amener(ScrollPane panneau, Node cible) {
+        Node contenu = panneau.getContent();
+        if (contenu == null) {
+            return;
+        }
+        double hauteurContenu = contenu.getBoundsInLocal().getHeight();
+        double hauteurVue = panneau.getViewportBounds().getHeight();
+        double y = cible.localToScene(cible.getBoundsInLocal()).getMinY();
+        double yContenu = contenu.localToScene(contenu.getBoundsInLocal()).getMinY();
+        panneau.setVvalue((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue));
     }
 
     /// La cible est-elle dans le cadre, **au sens de TestFX** ?
