@@ -72,14 +72,25 @@ public class ServiceEmport {
     /// @param pseudoRelecteur qui a ouvert le paquet
     public record BilanReprise(Long idPassage, Long idSelection, int sequences, String pseudoRelecteur) {}
 
-    /// Compose le paquet d'une nuit depuis sa sélection d'écoute, et l'écrit.
+    /// Un emport **préparé** : ce qu'il pèsera, et ce qu'il écrira, avant d'écrire.
+    ///
+    /// Le plan commande. Séparer préparer d'écrire est ce qui permet à l'écran d'annoncer le volume
+    /// puis d'écrire **exactement ce qu'il a annoncé** ; refaire un plan au moment d'écrire ferait
+    /// confirmer un volume et en produire un autre.
+    ///
+    /// @param destination l'archive à venir, jamais touchée par la préparation
+    /// @param plan ce que le paquet pèsera, ventilé par nature
+    /// @param manifeste le texte du manifeste, celui-là même que le plan a pesé
+    /// @param fichiers les séquences à emporter, dans l'ordre du plan
+    public record EmportPrepare(Path destination, PlanDePaquet plan, String manifeste, List<Path> fichiers) {}
+
+    /// Prépare l'emport d'une nuit : **rien n'est écrit**.
     ///
     /// @param idPassage la nuit à emporter
-    /// @param destination l'archive à écrire
-    /// @return la taille de l'archive, en octets
+    /// @param destination l'archive à venir
+    /// @return ce qui sera écrit, et ce que cela pèsera
     /// @throws IllegalStateException si le passage n'a pas de sélection, ou si une séquence manque
-    /// @throws IOException sur échec d'écriture
-    public long composer(Long idPassage, Path destination) throws IOException {
+    public EmportPrepare preparer(Long idPassage, Path destination) {
         Objects.requireNonNull(idPassage, "idPassage");
         Objects.requireNonNull(destination, "destination");
 
@@ -87,14 +98,13 @@ public class ServiceEmport {
                 .findByPassage(idPassage)
                 .orElseThrow(() -> new IllegalStateException(
                         "Cette nuit n'a pas de sélection d'écoute : il n'y a rien à faire relire."));
-        Map<Long, SequenceDEcoute> connues =
-                sequenceDao.findParIds(selectionDao.listerSequences(selection.id()).stream()
-                        .map(SequenceSelectionnee::idSequence)
-                        .toList());
+        List<SequenceSelectionnee> rattachements = selectionDao.listerSequences(selection.id());
+        Map<Long, SequenceDEcoute> connues = sequenceDao.findParIds(
+                rattachements.stream().map(SequenceSelectionnee::idSequence).toList());
 
         List<ManifestePaquet.SequenceEmportee> emportees = new ArrayList<>();
         List<Path> fichiers = new ArrayList<>();
-        for (SequenceSelectionnee rattachement : selectionDao.listerSequences(selection.id())) {
+        for (SequenceSelectionnee rattachement : rattachements) {
             SequenceDEcoute sequence = connues.get(rattachement.idSequence());
             if (sequence == null) {
                 throw new IllegalStateException("La séquence " + rattachement.idSequence()
@@ -105,16 +115,36 @@ public class ServiceEmport {
             fichiers.add(Path.of(sequence.cheminFichier()));
         }
 
+        Prefixe prefixe = prefixeDe(idPassage);
         String manifeste = new ManifestePaquet(
-                        prefixeDe(idPassage).carre(),
-                        prefixeDe(idPassage).point(),
-                        prefixeDe(idPassage).annee(),
-                        prefixeDe(idPassage).nuit(),
+                        prefixe.carre(),
+                        prefixe.point(),
+                        prefixe.annee(),
+                        prefixe.nuit(),
                         selection.methode(),
                         emportees)
                 .texte();
-        PlanDePaquet plan = PlanDePaquet.pour(destination, manifeste, fichiers);
-        return EcrivainPaquet.ecrire(destination, plan, manifeste, fichiers);
+        return new EmportPrepare(destination, PlanDePaquet.pour(destination, manifeste, fichiers), manifeste, fichiers);
+    }
+
+    /// Écrit un emport **déjà préparé**, sans recalculer ce qu'il emporte.
+    ///
+    /// @param prepare ce qui a été annoncé, et qui fait foi
+    /// @return la taille de l'archive, en octets
+    /// @throws IOException sur échec d'écriture
+    public long ecrire(EmportPrepare prepare) throws IOException {
+        Objects.requireNonNull(prepare, "prepare");
+        return EcrivainPaquet.ecrire(prepare.destination(), prepare.plan(), prepare.manifeste(), prepare.fichiers());
+    }
+
+    /// Prépare puis écrit, d'un seul geste, pour un appelant qui n'a rien à annoncer.
+    ///
+    /// @param idPassage la nuit à emporter
+    /// @param destination l'archive à écrire
+    /// @return la taille de l'archive, en octets
+    /// @throws IOException sur échec d'écriture
+    public long composer(Long idPassage, Path destination) throws IOException {
+        return ecrire(preparer(idPassage, destination));
     }
 
     /// Reprend un paquet reçu : crée la sélection de l'expéditeur, **figée**, avec ses verdicts.

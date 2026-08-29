@@ -249,6 +249,35 @@ class ServiceEmportTest {
                 .hasMessageContaining("session");
     }
 
+    @Test
+    @DisplayName("Préparer pèse sans écrire, et écrire suit le plan préparé plutôt que d'en refaire un")
+    void preparer_pese_sans_ecrire_puis_ecrire_suit_le_plan() throws IOException {
+        List<SequenceDEcoute> nuit = creerNuit(3);
+        SelectionDEcoute selection =
+                selectionDao.insert(new SelectionDEcoute(null, MethodeSelection.MANUEL, 2, idPassage));
+        selectionDao.attacherSequence(
+                new SequenceSelectionnee(selection.id(), nuit.get(0).id(), 0, false));
+        selectionDao.attacherSequence(
+                new SequenceSelectionnee(selection.id(), nuit.get(1).id(), 1, false));
+
+        Path paquet = dossier.resolve("prepare.zip");
+        ServiceEmport.EmportPrepare prepare = emport.preparer(idPassage, paquet);
+
+        assertThat(prepare.plan().octetsEstimes())
+                .as("le volume s'annonce avant d'écrire, sinon on confirme à l'aveugle")
+                .isPositive();
+        assertThat(Files.exists(paquet))
+                .as("et rien n'est écrit pour le savoir : c'est ce qui distingue un plan d'un essai")
+                .isFalse();
+
+        long octets = emport.ecrire(prepare);
+
+        assertThat(octets).isEqualTo(Files.size(paquet));
+        assertThat(prepare.plan().entrees())
+                .as("ce qui a été écrit est ce qui avait été annoncé, manifeste compris")
+                .hasSize(3);
+    }
+
     // --- montage -----------------------------------------------------------
 
     private ServiceEmport serviceSur(SourceDeDonnees s) {

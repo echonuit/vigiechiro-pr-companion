@@ -15,6 +15,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
@@ -90,11 +92,15 @@ public class SelectionEcouteController {
     /// @param depotColonnes disposition persistée des colonnes, par écran
     /// @param personnaliser ouvre la modale de personnalisation, que seul le parent sait situer
     /// @param regenerer régénère la sélection, en passant par les porteurs du parent (ADR 0010)
+    /// @param emporter emporte la nuit pour relecture (#4727), par les porteurs du parent également
+    /// @param ouvrirPaquetRecu ouvre un paquet reçu d'un autre poste (#4727)
     void installer(
             SelectionEcouteViewModel selectionVm,
             DepotDispositionColonnes depotColonnes,
             Runnable personnaliser,
-            Runnable regenerer) {
+            Runnable regenerer,
+            Runnable emporter,
+            Runnable ouvrirPaquetRecu) {
         Objects.requireNonNull(selectionVm, "selectionVm");
         this.personnaliser = Objects.requireNonNull(personnaliser, "personnaliser");
         this.regenerer = Objects.requireNonNull(regenerer, "regenerer");
@@ -109,6 +115,14 @@ public class SelectionEcouteController {
                 Objects.requireNonNull(depotColonnes, "depotColonnes"),
                 "qualification",
                 "principale");
+
+        // Les deux gestes de l'emport (#4727) rejoignent le menu Outils plutôt que la barre : ils sont
+        // rares, et deux boutons de plus feraient reculer ceux qu'on emploie à chaque nuit.
+        MenuItem itemEmporter = new MenuItem("Emporter cette nuit…");
+        itemEmporter.setOnAction(evenement -> emporter.run());
+        MenuItem itemOuvrir = new MenuItem("Ouvrir un paquet reçu…");
+        itemOuvrir.setOnAction(evenement -> ouvrirPaquetRecu.run());
+        menuOutils.getItems().addAll(new SeparatorMenuItem(), itemEmporter, itemOuvrir);
 
         lblListeTitre
                 .textProperty()

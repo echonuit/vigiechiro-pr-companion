@@ -15,6 +15,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
+import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import fr.univ_amu.iut.qualification.model.dao.SelectionDao;
 import fr.univ_amu.iut.qualification.view.NavigationQualification;
@@ -99,6 +100,29 @@ public class QualificationModule extends ModuleDeFeature {
                 generateur,
                 preCheck,
                 uniteDeTravail);
+    }
+
+    /// Le parcours d'emport (#4726), que rien n'appelait avant #4727.
+    ///
+    /// @param selectionDao la sélection d'écoute et ses rattachements
+    /// @param sequenceDao les séquences de la nuit
+    /// @param sessionDao la session qui les porte
+    /// @param passageDao la nuit
+    /// @param pointDao le point d'écoute, pour le préfixe du manifeste
+    /// @param siteDao le carré, pour le préfixe du manifeste
+    /// @param uniteDeTravail la transaction d'une reprise
+    /// @return le service d'emport
+    @Provides
+    @Singleton
+    ServiceEmport fournirServiceEmport(
+            SelectionDao selectionDao,
+            SequenceDao sequenceDao,
+            SessionDao sessionDao,
+            PassageDao passageDao,
+            PointDao pointDao,
+            SiteDao siteDao,
+            UniteDeTravail uniteDeTravail) {
+        return new ServiceEmport(selectionDao, sequenceDao, sessionDao, passageDao, pointDao, siteDao, uniteDeTravail);
     }
 
     /// ViewModel du noyau verdict de M-Qualification. **Non-singleton** (un VM frais par chargement
