@@ -56,9 +56,10 @@ PMD ne sait pas exprimer ce filtre. Quatre formes ont été essayées avant de l
 détail de chacune vit dans l'en-tête du script : aucune ne distingue les deux zones sans couper trop
 ou n'être jamais appliquée.
 
-**Le cliquet est à 40**, et **plus aucune méthode morte n'y figure** : les 23 qu'avait révélées
-cette ADR ont été retirées par le chantier #4656. Restent 32 `NcssCount`, 5 `GodClass`,
-2 `ExcessiveParameterList` et 1 `CyclomaticComplexity`.
+**Le cliquet est à 40, et il ne porte plus que la zone de test** : celui de la production est
+détaché par l'[ADR 4682](4682-le-portail-compte-chaque-zone-a-part.md). **Plus aucune méthode morte
+n'y figure** : les 23 qu'avait révélées cette ADR ont été retirées par le chantier #4656. Restent
+32 `NcssCount`, 5 `GodClass`, 2 `ExcessiveParameterList` et 1 `CyclomaticComplexity`.
 
 **Une méthode retirée n'est pas une violation retirée.** Trois surcharges sont parties pour deux
 violations : `MultisiteVueIntegrationTest` portait un escalier `ligne(...)` à 6, 7 puis 9 arguments,
