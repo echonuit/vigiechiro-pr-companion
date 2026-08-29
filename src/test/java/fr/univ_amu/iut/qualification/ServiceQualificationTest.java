@@ -237,6 +237,36 @@ class ServiceQualificationTest {
     }
 
     @Test
+    @DisplayName("#4727 : la ligne de l'écran porte l'avis du relecteur, et distingue « pas relu » de « non jugé »")
+    void la_ligne_de_l_ecran_porte_l_avis_du_relecteur() {
+        creerNuit(2);
+        SelectionDEcoute selection = service.creerSelection(idPassage, MethodeSelection.MANUEL, 2);
+        List<Long> sequences = service.sequencesDeLaSelection(selection.id()).stream()
+                .map(SequenceSelectionnee::idSequence)
+                .toList();
+        service.enregistrerVerdictFichier(idPassage, sequences.get(0), VerdictFichier.BON);
+        selectionDao.marquerAvisDeRelecteur(selection.id(), sequences.get(0), VerdictFichier.MAUVAIS, "martin");
+
+        List<SequenceEnSelection> lignes = service.detaillerSelection(selection.id());
+
+        assertThat(lignes.get(0).verdict())
+                .as("le verdict de l'expéditeur reste celui de l'expéditeur")
+                .isEqualTo(VerdictFichier.BON);
+        assertThat(lignes.get(0).verdictRelecteur())
+                .as("et celui du relecteur arrive jusqu'à l'écran")
+                .isEqualTo(VerdictFichier.MAUVAIS);
+        assertThat(lignes.get(0).pseudoRelecteur()).isEqualTo("martin");
+        assertThat(lignes.get(0).porteUnAvisDeRelecteur()).isTrue();
+
+        assertThat(lignes.get(1).porteUnAvisDeRelecteur())
+                .as("personne n'a relu cette séquence : ce n'est pas « le relecteur a dit non jugé »")
+                .isFalse();
+        assertThat(lignes.get(1).pseudoRelecteur())
+                .as("sans pseudo, un badge vide ne peut pas se faire passer pour un avis")
+                .isNull();
+    }
+
+    @Test
     @DisplayName("#4705 : une nuit venue d'un paquet refuse la régénération, et le refus dit pourquoi")
     void une_nuit_venue_d_un_paquet_refuse_la_regeneration() {
         creerNuit(5);

@@ -70,6 +70,7 @@
       <TableColumn fx:id="colDuree" text="Durée" prefWidth="80.0"/>
       <TableColumn fx:id="colEcoute" text="Écouté" prefWidth="70.0"/>
       <TableColumn fx:id="colVerdict" text="Verdict" prefWidth="120.0"/>
+                    <TableColumn fx:id="colAvisRelecteur" text="Avis relecteur" prefWidth="170.0"/>
     </columns>
     <placeholder>
       <Label text="Aucune séquence à écouter pour l'instant." wrapText="true"/>

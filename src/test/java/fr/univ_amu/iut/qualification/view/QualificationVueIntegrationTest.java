@@ -241,7 +241,7 @@ class QualificationVueIntegrationTest {
     void colonnes_table_liees_aux_donnees(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
 
-        assertThat(table.getColumns()).hasSize(5);
+        assertThat(table.getColumns()).hasSize(6);
         TableColumn<?, ?> colPosition = table.getColumns().get(0);
         TableColumn<?, ?> colFichier = table.getColumns().get(1);
         TableColumn<?, ?> colDuree = table.getColumns().get(2);
@@ -256,6 +256,24 @@ class QualificationVueIntegrationTest {
                 .isFalse(); // séquence non encore écoutée (#2237 : booléen, plus une chaîne)
         // #1524 : le verdict par fichier vaut NON_JUGE tant qu'aucune écoute n'a été rendue.
         assertThat((VerdictFichier) colVerdict.getCellData(0)).isEqualTo(VerdictFichier.NON_JUGE);
+    }
+
+    @Test
+    @DisplayName("#4727 : la colonne d'avis montre le verdict du relecteur et son pseudo, et rien sans avis")
+    void colonne_avis_du_relecteur(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
+
+        assertThat(table.getColumns().get(5).getText())
+                .as("la colonne existe et se nomme pour ce qu'elle porte")
+                .contains("relecteur");
+
+        assertThat(VerdictParFichier.libelleAvis(
+                        new SequenceEnSelection(null, 0, false, VerdictFichier.BON, VerdictFichier.MAUVAIS, "martin")))
+                .as("quoi et qui, car un verdict sans auteur ne s'attribue pas")
+                .isEqualTo("Mauvais · martin");
+        assertThat(VerdictParFichier.libelleAvis(new SequenceEnSelection(null, 0, false, VerdictFichier.BON)))
+                .as("sans avis, rien : un badge vide se prendrait pour un jugement")
+                .isEmpty();
     }
 
     @Test

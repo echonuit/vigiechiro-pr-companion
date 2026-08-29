@@ -76,6 +76,11 @@ public class SelectionEcouteController {
     @FXML
     private TableColumn<SequenceEnSelection, VerdictFichier> colVerdict;
 
+    /// L'avis d'un relecteur, quand une nuit est revenue jugée (#4727). La cellule reçoit la ligne
+    /// entière : le verdict seul ne dirait pas qui l'a posé.
+    @FXML
+    private TableColumn<SequenceEnSelection, SequenceEnSelection> colAvisRelecteur;
+
     private Runnable personnaliser;
     private Runnable regenerer;
 
@@ -144,7 +149,8 @@ public class SelectionEcouteController {
                 new GestionnaireColonnes.Colonne(colFichier, "Fichier", true),
                 new GestionnaireColonnes.Colonne(colDuree, "Durée", false),
                 new GestionnaireColonnes.Colonne(colEcoute, "Écouté", false),
-                new GestionnaireColonnes.Colonne(colVerdict, "Verdict", false));
+                new GestionnaireColonnes.Colonne(colVerdict, "Verdict", false),
+                new GestionnaireColonnes.Colonne(colAvisRelecteur, "Avis relecteur", true));
     }
 
     /// La table, pour ce que le parent pilote encore : la synchronisation de la sélection au clavier.
@@ -156,6 +162,11 @@ public class SelectionEcouteController {
     /// badge et les boutons jugent la même séquence, ils se câblent ensemble ([VerdictParFichier]).
     TableColumn<SequenceEnSelection, VerdictFichier> colonneVerdict() {
         return colVerdict;
+    }
+
+    /// La colonne d'avis, que le parent câble en même temps que celle du verdict (#4727).
+    TableColumn<SequenceEnSelection, SequenceEnSelection> colonneAvisRelecteur() {
+        return colAvisRelecteur;
     }
 
     @FXML

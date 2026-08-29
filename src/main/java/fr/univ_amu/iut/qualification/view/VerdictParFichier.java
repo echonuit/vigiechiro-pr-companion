@@ -65,6 +65,42 @@ final class VerdictParFichier {
 
     /// La colonne « Verdict » affiche un badge coloré selon le verdict par fichier de la ligne
     /// ([VerdictFichier]) ; `NON_JUGE` reste discret (aucune écoute encore rendue).
+    /// Ce que la colonne d'avis affiche : le verdict du relecteur **et** son pseudo, ou rien.
+    ///
+    /// Rien, et non un badge vide : une séquence que personne n'a relue ne doit pas se lire comme un
+    /// jugement. La distinction « pas relu » contre « relu et non jugé » n'existe pas en base, où
+    /// [fr.univ_amu.iut.qualification.model.dao.SelectionDao] efface le pseudo avec le verdict
+    /// (#4624) ; celle qui reste est « un avis existe » contre « aucun ».
+    ///
+    /// @param ligne la ligne de la sélection
+    /// @return le libellé de l'avis, vide s'il n'y en a pas
+    static String libelleAvis(SequenceEnSelection ligne) {
+        return ligne.porteUnAvisDeRelecteur()
+                ? ligne.verdictRelecteur().libelle() + " · " + ligne.pseudoRelecteur()
+                : "";
+    }
+
+    /// Câble la colonne d'avis : la cellule reçoit la **ligne entière**, car le verdict seul ne dit
+    /// pas qui l'a posé.
+    static void lierColonneAvis(TableColumn<SequenceEnSelection, SequenceEnSelection> colAvis) {
+        colAvis.setCellValueFactory(cellule -> new ReadOnlyObjectWrapper<>(cellule.getValue()));
+        colAvis.setCellFactory(colonne -> new BadgeAvis());
+    }
+
+    private static final class BadgeAvis extends TableCell<SequenceEnSelection, SequenceEnSelection> {
+        @Override
+        protected void updateItem(SequenceEnSelection ligne, boolean vide) {
+            super.updateItem(ligne, vide);
+            if (vide || ligne == null || !ligne.porteUnAvisDeRelecteur()) {
+                setGraphic(null);
+                return;
+            }
+            Label badge = new Label(libelleAvis(ligne));
+            badge.getStyleClass().addAll("badge-verdict", "badge-verdict-" + suffixe(ligne.verdictRelecteur()));
+            setGraphic(badge);
+        }
+    }
+
     private static void lierColonne(TableColumn<SequenceEnSelection, VerdictFichier> colVerdict) {
         colVerdict.setCellValueFactory(
                 cellule -> new ReadOnlyObjectWrapper<>(cellule.getValue().verdict()));
