@@ -14,10 +14,17 @@ import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 /// @param position position d'affichage dans la sélection (≥ 0, ordre de relecture)
 /// @param ecoutee `true` si la séquence a déjà été écoutée
 /// @param verdict verdict par fichier rendu à l'écoute ([VerdictFichier#NON_JUGE] par défaut)
-public record SequenceEnSelection(SequenceDEcoute sequence, int position, boolean ecoutee, VerdictFichier verdict) {
+public record SequenceEnSelection(
+        SequenceDEcoute sequence,
+        int position,
+        boolean ecoutee,
+        VerdictFichier verdict,
+        VerdictFichier verdictRelecteur,
+        String pseudoRelecteur) {
 
     public SequenceEnSelection {
         verdict = verdict == null ? VerdictFichier.NON_JUGE : verdict;
+        verdictRelecteur = verdictRelecteur == null ? VerdictFichier.NON_JUGE : verdictRelecteur;
     }
 
     /// Constructeur de compatibilité (sans verdict) : le verdict retombe sur
@@ -26,8 +33,21 @@ public record SequenceEnSelection(SequenceDEcoute sequence, int position, boolea
         this(sequence, position, ecoutee, VerdictFichier.NON_JUGE);
     }
 
-    /// Copie avec un nouveau verdict (séquence, position, écoutée inchangés).
+    /// Constructeur de compatibilité (sans relecteur, #4727) : une ligne qu'aucun relecteur n'a vue.
+    public SequenceEnSelection(SequenceDEcoute sequence, int position, boolean ecoutee, VerdictFichier verdict) {
+        this(sequence, position, ecoutee, verdict, VerdictFichier.NON_JUGE, null);
+    }
+
+    /// Copie avec un nouveau verdict **local** : l'avis du relecteur est préservé.
     public SequenceEnSelection avecVerdict(VerdictFichier nouveau) {
-        return new SequenceEnSelection(sequence, position, ecoutee, nouveau);
+        return new SequenceEnSelection(sequence, position, ecoutee, nouveau, verdictRelecteur, pseudoRelecteur);
+    }
+
+    /// `true` si un relecteur a rendu un avis : il faut **quoi** et **qui**, pas l'un des deux.
+    ///
+    /// Sans cette distinction, une séquence que personne n'a relue et une séquence qu'un relecteur a
+    /// laissée « non jugé » s'afficheraient de la même façon, et l'écran ferait croire à un avis.
+    public boolean porteUnAvisDeRelecteur() {
+        return verdictRelecteur != VerdictFichier.NON_JUGE && pseudoRelecteur != null;
     }
 }

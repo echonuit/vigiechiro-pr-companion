@@ -289,6 +289,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
                 boutonMauvais,
                 boutonInexploitable,
                 colonneSelectionController.colonneVerdict());
+        VerdictParFichier.lierColonneAvis(colonneSelectionController.colonneAvisRelecteur());
 
         // Détail de la séquence courante.
         lblSeqNumero

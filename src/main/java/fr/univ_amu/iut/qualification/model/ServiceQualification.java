@@ -221,7 +221,12 @@ public class ServiceQualification {
             sequenceDao
                     .findById(rattachement.idSequence())
                     .ifPresent(sequence -> lignes.add(new SequenceEnSelection(
-                            sequence, rattachement.position(), rattachement.ecoutee(), rattachement.verdict())));
+                            sequence,
+                            rattachement.position(),
+                            rattachement.ecoutee(),
+                            rattachement.verdict(),
+                            rattachement.verdictRelecteur(),
+                            rattachement.pseudoRelecteur())));
         }
         return lignes;
     }
