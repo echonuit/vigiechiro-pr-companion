@@ -1032,3 +1032,51 @@ FIN
   [[ "${output}" == *"Journaux"* ]]
   [[ "${output}" == *"${BATS_TEST_TMPDIR}/logs"* ]]
 }
+
+# --- Le parcours d'emport en ligne de commande (#4729, article A19) --------------------------------
+#
+# Chaque commande est éprouvée sur un REFUS autant que sur un succès. En ligne de commande, un refus
+# muet coûte plus cher qu'ailleurs : aucun écran ne rattrape un code de sortie.
+
+@test "emporter-nuit sans --vers : erreur d'usage picocli, exit 2" {
+  run cli emporter-nuit --passage 1
+  [ "${status}" -eq 2 ]
+}
+
+@test "emporter-nuit sur une nuit sans selection : refus metier qui dit sa cause" {
+  run cli emporter-nuit --passage 999999 --vers "${BATS_TEST_TMPDIR}/nuit.zip"
+  [ "${status}" -ne 0 ]
+  [[ "${output}" == *"sélection"* ]]
+}
+
+@test "emporter-nuit sans --oui n ecrit rien : le volume s annonce avant" {
+  run cli emporter-nuit --passage 999999 --vers "${BATS_TEST_TMPDIR}/rien.zip"
+  [ ! -f "${BATS_TEST_TMPDIR}/rien.zip" ]
+}
+
+@test "ouvrir-paquet-recu sans --fichier : erreur d'usage picocli, exit 2" {
+  run cli ouvrir-paquet-recu
+  [ "${status}" -eq 2 ]
+}
+
+@test "ouvrir-paquet-recu sur une archive absente : refus, pas de trace de succes" {
+  run cli ouvrir-paquet-recu --fichier "${BATS_TEST_TMPDIR}/absent.zip"
+  [ "${status}" -ne 0 ]
+  [[ "${output}" != *"à relire"* ]]
+}
+
+@test "renvoyer-avis sans --vers : erreur d'usage picocli, exit 2" {
+  run cli renvoyer-avis --passage 1
+  [ "${status}" -eq 2 ]
+}
+
+@test "reprendre-avis sans --fichier : erreur d'usage picocli, exit 2" {
+  run cli reprendre-avis
+  [ "${status}" -eq 2 ]
+}
+
+@test "reprendre-avis sur une archive absente : refus, et rien n est range" {
+  run cli reprendre-avis --fichier "${BATS_TEST_TMPDIR}/absent.zip"
+  [ "${status}" -ne 0 ]
+  [[ "${output}" != *"rangés"* ]]
+}

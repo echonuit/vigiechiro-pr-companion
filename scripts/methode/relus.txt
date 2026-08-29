@@ -189,6 +189,7 @@ fbf30790a4bb  src/main/java/fr/univ_amu/iut/cli/commande/CorrigerObservations.ja
 21a134b889f8  src/main/java/fr/univ_amu/iut/cli/commande/Diagnostiquer.java
 1a231defbcc3  src/main/java/fr/univ_amu/iut/cli/commande/Discussion.java
 f6bf33df2d69  src/main/java/fr/univ_amu/iut/cli/commande/Emplacements.java
+a052f5d6924a  src/main/java/fr/univ_amu/iut/cli/commande/EmporterNuit.java
 c21fbc3ddd83  src/main/java/fr/univ_amu/iut/cli/commande/EtatTraitementVigieChiro.java
 968d0cf0bf5f  src/main/java/fr/univ_amu/iut/cli/commande/ExporterActivite.java
 4d0baed8a81f  src/main/java/fr/univ_amu/iut/cli/commande/ExporterLot.java
@@ -219,6 +220,7 @@ a454de20a45a  src/main/java/fr/univ_amu/iut/cli/commande/ListerSitesVigieChiro.j
 627662fc7d03  src/main/java/fr/univ_amu/iut/cli/commande/ModifierCampagne.java
 a1e0bd537cb6  src/main/java/fr/univ_amu/iut/cli/commande/ModifierPoint.java
 d9edbce511fe  src/main/java/fr/univ_amu/iut/cli/commande/ModifierSite.java
+8ef6fd8677d4  src/main/java/fr/univ_amu/iut/cli/commande/OuvrirPaquetRecu.java
 cbcdce6c7033  src/main/java/fr/univ_amu/iut/cli/commande/PoserCertitude.java
 d77fae41bfd7  src/main/java/fr/univ_amu/iut/cli/commande/PreCheck.java
 04e9290b8962  src/main/java/fr/univ_amu/iut/cli/commande/PublierCorrectionsVigieChiro.java
@@ -232,6 +234,8 @@ d9d95ecc485c  src/main/java/fr/univ_amu/iut/cli/commande/RattacherCampagne.java
 f683d1366f4f  src/main/java/fr/univ_amu/iut/cli/commande/RecupererCarre.java
 726fa2a1f0bb  src/main/java/fr/univ_amu/iut/cli/commande/RecupererVigieChiro.java
 14cb27d28fa2  src/main/java/fr/univ_amu/iut/cli/commande/ReinitialiserDepot.java
+01d1e51a2faa  src/main/java/fr/univ_amu/iut/cli/commande/RenvoyerAvis.java
+ff977ae6c387  src/main/java/fr/univ_amu/iut/cli/commande/ReprendreAvis.java
 e760d6b66fe3  src/main/java/fr/univ_amu/iut/cli/commande/ResetGuide.java
 b552edd02b17  src/main/java/fr/univ_amu/iut/cli/commande/Restaurer.java
 cb7b50194ce7  src/main/java/fr/univ_amu/iut/cli/commande/RetroEmpreintes.java

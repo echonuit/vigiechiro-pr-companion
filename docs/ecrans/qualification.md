@@ -52,6 +52,42 @@ pictogramme sont ceux d'un avertissement.
 
 ![L'écran de qualification après enregistrement d'un verdict « Inexploitable » : l'avertissement rappelle que le passage ne pourra pas être déposé.](../assets/captures/apercu-qualification-a-jeter.png)
 
+## Faire relire une nuit par quelqu'un d'autre
+
+Une nuit peut se juger à deux. Les quatre gestes vivent dans le menu **☰ outils** de la liste, en deux
+groupes qui disent les deux rôles.
+
+**Vous confiez la nuit.** « **Emporter cette nuit…** » vous demande où écrire le paquet, puis
+**annonce ce qu'il pèsera** avant d'écrire quoi que ce soit : le nombre de séquences, le volume total
+et la part d'audio. Rien n'est écrit tant que vous n'avez pas confirmé, et annuler ne laisse aucun
+fichier.
+
+Le paquet emporte les séquences de **la sélection en cours**, pas toute la nuit, et les verdicts que
+vous avez déjà posés. Votre relecteur juge donc le même échantillon que vous : deux tirages
+indépendants n'auraient presque aucune séquence en commun, et les deux avis ne se compareraient pas.
+
+**Votre relecteur reçoit.** « **Ouvrir un paquet reçu…** » installe la nuit chez lui, avec votre
+sélection **figée** : il ne peut pas la régénérer, et l'application le lui dit plutôt que de griser un
+bouton sans explication. Son identité est relevée **à l'ouverture**, pas au moment où il juge, si bien
+qu'un jugement rendu deux semaines plus tard porte quand même son nom.
+
+**Il vous renvoie son avis.** « **Renvoyer mon avis…** » écrit un paquet léger : son jugement signé,
+sans les séquences, que vous avez déjà.
+
+**Vous reprenez son avis.** « **Reprendre un avis reçu…** » range son verdict **à côté du vôtre**, dans
+la colonne « Avis relecteur », avec son pseudo. Le vôtre ne bouge pas, et l'avis affiché ne pèse pas
+sur le verdict de la nuit : il s'affiche, il ne vote pas.
+
+Une séquence que personne n'a relue n'affiche **rien** dans cette colonne, plutôt qu'un badge qu'on
+prendrait pour un jugement.
+
+**Si un deuxième relecteur répond**, l'application vous nomme celui qui est déjà là et le nombre de
+verdicts qui seraient perdus, et attend votre accord. Refuser ne change rien.
+
+**En ligne de commande.** Les quatre gestes ont leur commande : `emporter-nuit`, `ouvrir-paquet-recu`,
+`renvoyer-avis` et `reprendre-avis`. `emporter-nuit` annonce le volume et s'arrête ; ajoutez `--oui`
+pour écrire. `reprendre-avis` refuse de remplacer un avis présent sans `--remplacer`.
+
 ## État initial
 
 À l'ouverture de l'écran, la sélection de séquences est déjà générée, mais rien n'a encore été
