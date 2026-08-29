@@ -51,7 +51,7 @@ décisions se cadrent pour l'**utilisateur final**, pas pour un contexte pédago
   que de supposer où le travail est passé.
 
 - Avant tout commit : `git config user.email` = `sebastien.nedjar@univ-amu.fr`.
-- Avant de committer : **tests ciblés** + `./mvnw spotless:apply` + `./mvnw -Pquality-gate pmd:check` (PMD strict, dont GodClass). Le **gate complet** `-Pquality-gate verify` seulement si nécessaire (la CI reste autoritaire).
+- Avant de committer : **tests ciblés** + `./mvnw spotless:apply` + `./mvnw -B test-compile pmd:pmd` puis `python3 scripts/adr/4617-code-mort-et-zone-de-test.py`. PMD **produit** le rapport, il ne juge pas : le verdict est ce cliquet, qui compte production et test séparément. Ne pas employer `pmd:check`, qui refuse tout dès la première violation et ne peut pas passer sur ce dépôt. Le **gate complet** `-Pquality-gate verify` seulement si nécessaire (la CI reste autoritaire).
 - **Conventional Commits en français**, petits commits par préoccupation ; petites PR séquentielles.
 - **`Closes #N` dans le corps de la PR**, pour que l'issue se ferme à la fusion. Le mot-clé reste anglais : « Ferme #N » ne ferme rien et ne le dit pas. Une PR qui renvoie à une issue sans la clore écrit « Rattaché à #N ».
 - **Pas de tiret cadratin** ; noms de classes en français sans accents ; doc-comments `///` (JEP 467).
