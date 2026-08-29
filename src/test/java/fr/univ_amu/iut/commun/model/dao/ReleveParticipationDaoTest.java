@@ -107,6 +107,25 @@ class ReleveParticipationDaoTest {
     }
 
     @Test
+    @DisplayName("#4768 : les températures survivent à l'aller-retour, comme le vent et la couverture")
+    void temperatures_survivent() {
+        dao.enregistrer(new ReleveParticipation(
+                idPassage,
+                PARTICIPATION,
+                null,
+                null,
+                new MeteoDepot("FAIBLE", "0-25", 12, 5),
+                Map.of(),
+                "2026-08-29T09:30:00"));
+
+        MeteoDepot relue = dao.pour(idPassage).orElseThrow().meteo();
+
+        // Sans elles, la comparaison de #4707 les voit toujours divergentes et bloque tout envoi.
+        assertThat(relue.temperatureDebut()).isEqualTo(12);
+        assertThat(relue.temperatureFin()).isEqualTo(5);
+    }
+
+    @Test
     @DisplayName("une météo absente chez eux se relit absente, et non comme un bloc vide")
     void meteo_absente_reste_absente() {
         dao.enregistrer(

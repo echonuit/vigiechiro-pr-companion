@@ -63,19 +63,24 @@ public class ReleveParticipationDao extends DaoGenerique<ReleveParticipation, Lo
         MeteoDepot meteo = releve.meteo();
         executerMaj(
                 "INSERT INTO participation_relevee (passage_id, participation_id, date_debut, date_fin,"
-                        + " meteo_vent, meteo_couverture, configuration, releve_le)"
-                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                        + " meteo_vent, meteo_couverture, meteo_temperature_debut, meteo_temperature_fin,"
+                        + " configuration, releve_le)"
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                         + " ON CONFLICT(passage_id) DO UPDATE SET"
                         + " participation_id = excluded.participation_id, date_debut = excluded.date_debut,"
                         + " date_fin = excluded.date_fin, meteo_vent = excluded.meteo_vent,"
-                        + " meteo_couverture = excluded.meteo_couverture, configuration = excluded.configuration,"
-                        + " releve_le = excluded.releve_le",
+                        + " meteo_couverture = excluded.meteo_couverture,"
+                        + " meteo_temperature_debut = excluded.meteo_temperature_debut,"
+                        + " meteo_temperature_fin = excluded.meteo_temperature_fin,"
+                        + " configuration = excluded.configuration, releve_le = excluded.releve_le",
                 releve.passageId(),
                 releve.participationId(),
                 releve.dateDebut(),
                 releve.dateFin(),
                 meteo == null ? null : meteo.vent(),
                 meteo == null ? null : meteo.couverture(),
+                meteo == null ? null : meteo.temperatureDebut(),
+                meteo == null ? null : meteo.temperatureFin(),
                 GSON.toJson(releve.configuration() == null ? Map.of() : releve.configuration()),
                 releve.releveLe());
     }
@@ -91,10 +96,23 @@ public class ReleveParticipationDao extends DaoGenerique<ReleveParticipation, Lo
         enregistrer(releve);
     }
 
+    /// Le bloc météo relu, **avec ses températures** (#4768). En omettre une partie ne rendrait pas la
+    /// comparaison moins précise : elle la rendrait toujours vraie, donc la garde toujours bloquante.
     private static MeteoDepot lireMeteo(ResultSet rs) throws SQLException {
         String vent = rs.getString("meteo_vent");
         String couverture = rs.getString("meteo_couverture");
-        return vent == null && couverture == null ? null : new MeteoDepot(vent, couverture);
+        Integer debut = lireEntier(rs, "meteo_temperature_debut");
+        Integer fin = lireEntier(rs, "meteo_temperature_fin");
+        return vent == null && couverture == null && debut == null && fin == null
+                ? null
+                : new MeteoDepot(vent, couverture, debut, fin);
+    }
+
+    /// Un entier de colonne, ou `null` : `getInt` rend `0` sur un `NULL`, ce qui ferait d'une
+    /// température absente une température de zéro degré.
+    private static Integer lireEntier(ResultSet rs, String colonne) throws SQLException {
+        int valeur = rs.getInt(colonne);
+        return rs.wasNull() ? null : valeur;
     }
 
     private static Map<String, String> lireConfiguration(ResultSet rs) throws SQLException {

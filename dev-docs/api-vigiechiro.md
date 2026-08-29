@@ -102,7 +102,7 @@ route, mesuré le 2026-08-26. Sans garde, un second poste qui modifie la même n
 leur. Sans base, « l'utilisateur a modifié la météo » et « la plateforme l'a modifiée » sont
 indiscernables.
 
-La table `participation_relevee` (V43) porte cette base : ce que la plateforme portait à **notre
+La table `participation_relevee` (V43, complétée par V44) porte cette base : ce que la plateforme portait à **notre
 dernière lecture**, horodaté. Le tirage l'alimente, et l'envoi seulement quand l'écriture a été
 **acceptée** : noter après un refus décrirait un état distant inexistant, et noter après un
 renoncement rendrait la base égale à leur valeur, si bien que la tentative suivante conclurait qu'ils
@@ -112,6 +112,14 @@ n'ont rien changé.
 `PATCH` écrit depuis notre dernière lecture. Faute de relevé, sur une nuit antérieure à la migration,
 il retombe sur une comparaison entre deux lectures du même appel : cela ne couvre qu'une course de
 quelques millisecondes, et c'est assumé.
+
+**Ce qu'elle doit porter en entier.** V43 n'y stockait du bloc météo que le vent et la couverture,
+alors que `MeteoDepot` en porte quatre composants : les températures partent vers la plateforme depuis
+#1844. La base relue en manquait donc toujours deux, la comparaison les voyait divergentes à chaque
+fois, et **aucun envoi ne pouvait plus partir** sur une nuit qui en porte une (#4768, réparé par V44).
+
+Un relevé qui sert de base doit porter **tout** ce que la comparaison regarde. En stocker une partie
+ne rend pas la garde moins précise : elle la rend toujours vraie, donc toujours bloquante.
 
 **Ce que cette base n'est pas.** Elle ne dit pas ce qui est vrai, elle dit ce que nous avions vu. Elle
 ne se montre jamais à l'utilisateur comme une donnée, et la vérité reste côté serveur ([ADR 4640]).
