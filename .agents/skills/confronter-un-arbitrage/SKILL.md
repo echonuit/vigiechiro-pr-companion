@@ -98,10 +98,23 @@ dans le tube n'est jamais revenu dans la réponse.
 
 ## Ce qui part est une publication
 
-Le dépôt est **appelé à devenir public**. Le publier est une décision prise à un moment choisi, sur
-un contenu choisi, sous la GPL et avec l'attribution que porte `REMERCIEMENTS.md`. Une question
-emporte ce qu'elle emporte, tout de suite, vers un autre destinataire, et ne se retire pas. Le tri
-se fait donc sur deux conditions : **est-ce déjà publié, et la question en a-t-elle besoin ?**
+Le dépôt **est public** - `gh repo view --json visibility` le dit, et les signaux d'alerte de cette
+page le supposaient déjà quand ce paragraphe annonçait encore un futur. Ce qui vit sur `main` ou dans
+une issue est donc **déjà publié**, lisible par n'importe qui depuis le web, et le citer dans une
+question ne le publie pas une seconde fois.
+
+Cela ne rend pas le tri inutile, cela en déplace la charge. Publier reste une décision prise à un
+moment choisi, sur un contenu choisi, sous la GPL et avec l'attribution que porte `REMERCIEMENTS.md`.
+Une question, elle, emporte ce qu'elle emporte, tout de suite, vers un autre destinataire, et ne se
+retire pas. Le tri se fait donc sur deux conditions : **est-ce déjà publié, et la question en
+a-t-elle besoin ?**
+
+**La première condition est plus large qu'elle n'en avait l'air, la seconde ne bouge pas.** Un
+arbitrage a été écarté le 2026-08-26 sur la lecture d'avant : le corps de l'EPIC #3848 et trois
+extraits d'ADR rangés dans « pas encore publié » alors qu'ils sont lisibles par tous. Une règle de
+tri plus stricte que nécessaire prive l'audit du contexte qui le rendrait utile, et cette page le dit
+plus bas - les auditeurs « ne connaissent que ce que la question porte ». Un extrait public qui
+n'éclaire pas l'arbitrage n'a toujours rien à faire dans la question.
 
 La question n'est pas seule à partir. Codex charge de lui-même l'`AGENTS.md` de son répertoire de
 travail : la même question de neuf mots coûte 6 669 jetons depuis le worktree contre 3 726 depuis
