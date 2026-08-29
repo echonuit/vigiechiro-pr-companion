@@ -61,10 +61,18 @@ passent tous en local. Chacun se lance selon ce qu'on a touché, et aucun ne se 
 | `./mvnw -o test -Dtest=DocumentationAJourTest` | dès qu'un **chiffre** change dans une ADR ou une doc |
 
 **Les planchers vivent dans trois endroits chacun** : l'en-tête `floor:`, la balise du corps de l'ADR,
-et celle du journal. N'en tenir qu'un laisse les deux autres mentir.
+et celle du journal. N'en tenir qu'un laisse les deux autres mentir, et c'est arrivé :
+`DocumentationAJourTest` a rougi sous #4646 sur deux balises restées en arrière, parce que le chiffre
+y porte une espace insécable que le remplacement littéral manquait. `python3
+scripts/methode/releve-les-planchers.py --ecrire` les tient d'un seul geste : il lit le verdict du
+garde plutôt que de recopier une mesure, et préserve le séparateur qu'il trouve.
 
-**Un plancher qui dit « à relever » sort en `0`.** On lit ce que les gardes écrivent, on ne compte pas
-leurs codes de sortie.
+**Un plancher périmé refuse** (#4683). `a-relever` rend `1`, comme `perte` : la boucle des cliquets
+de la CI l'attrape, et ne pas relever fait rougir. Ce n'est pas un oubli silencieux, c'est un refus.
+
+**Un code de sortie ne suffit pourtant pas à lire un garde.** Les cinq loupes rendent `0` en
+signalant, parce qu'elles observent sans juger ; et `rapport.py` nomme séparément les scripts dont il
+n'a pas su lire le verdict. On lit donc ce qu'ils écrivent, pour ce qu'un code ne dit pas.
 
 ## Le rebase périme une partie de la batterie
 
@@ -147,7 +155,7 @@ vraiment ce changement, ce qu'un rouge vaut, et l'issue mère qui ne se ferme pa
 |---|---|
 | « La PR est en vol, j'attends » | Attendre sans moniteur, c'est espérer. Le verdict tombe sans lecteur |
 | « Les tests passent en local, la CI passera » | Quatre gardes ne tournent qu'en CI, et deux ne lisent que le corps de la PR |
-| « Le garde est sorti en 0, tout va bien » | Un plancher qui dit « à relever » sort en 0 |
+| « Le garde est sorti en 0, tout va bien » | Les cinq loupes signalent en rendant `0` : elles observent sans juger |
 | « Le titre me semble bon » | Il devient la ligne du CHANGELOG. Le script rend un verdict, la relecture rend un avis |
 | « Je relis le titre, ça suffit » | Quatre titres relus ont rougi le même jour |
 | « La typographie du corps, ça n'engage rien » | `corps-pr.yml` refuse quatre formes, et ce corps est publié dès qu'il part |
