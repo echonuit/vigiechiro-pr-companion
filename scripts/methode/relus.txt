@@ -1329,7 +1329,7 @@ a7b638195c11  src/test/java/fr/univ_amu/iut/bibliotheque/ExportBiblioSonsTest.ja
 0633cbcaaf8b  src/test/java/fr/univ_amu/iut/bibliotheque/ServiceBibliothequeApprovalTest.java
 9d556b445a40  src/test/java/fr/univ_amu/iut/bibliotheque/ServiceBibliothequeMockTest.java
 0d0aaf9834b0  src/test/java/fr/univ_amu/iut/bibliotheque/ServiceBibliothequeTest.java
-1a9b6cbc2338  src/test/java/fr/univ_amu/iut/cli/ClassementLectureEcritureTest.java
+4ed84ea795e6  src/test/java/fr/univ_amu/iut/cli/ClassementLectureEcritureTest.java
 6c77fd73d4d4  src/test/java/fr/univ_amu/iut/cli/CliAuditTest.java
 c9ddeacdc80b  src/test/java/fr/univ_amu/iut/cli/CliCampagneTest.java
 d8fb7f61a3d2  src/test/java/fr/univ_amu/iut/cli/CliControleDuCarreTest.java
