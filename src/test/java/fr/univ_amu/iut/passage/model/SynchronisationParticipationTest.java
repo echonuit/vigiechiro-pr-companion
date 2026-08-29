@@ -301,6 +301,70 @@ class SynchronisationParticipationTest {
     }
 
     @Test
+    @DisplayName("#4756 : seule une DATE diverge → l'envoi part, les enregistrements prouvent la nôtre")
+    void pousser_vers_envoie_quand_seule_une_date_diverge() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        when(releve.base(42L)).thenReturn(Optional.of(baseAvecMeteo(new MeteoDepot("FAIBLE", "0-25"))));
+        // Un poste a corrige une date A LA MAIN. Nos enregistrements, eux, prouvent la notre : bloquer
+        // ferait gagner la declaration contre la preuve.
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detailAvecDateDebut("e-loin", "2026-07-03T21:00:00+00:00")));
+        when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        assertThat(sync.pousserVers(42L)).isInstanceOf(EnvoiParticipation.Ecrit.class);
+    }
+
+    @Test
+    @DisplayName("#4756 : SANS base non plus, une date seule ne bloque pas, le champ ne change pas de nature")
+    void pousser_vers_sans_base_une_date_seule_ne_bloque_pas() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // Nuit anterieure a V43 : aucun releve, donc le repli. Traiter la date autrement ici ferait
+        // dependre la nature d'un champ du fait qu'on ait deja lu la nuit, ce qui n'a pas de sens.
+        when(releve.base(42L)).thenReturn(Optional.empty());
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detail("e-lu")))
+                .thenReturn(ReponseApi.succes(detailAvecDateDebut("e-bouge", "2026-07-03T21:00:00+00:00")));
+        when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        assertThat(sync.pousserVers(42L)).isInstanceOf(EnvoiParticipation.Ecrit.class);
+    }
+
+    @Test
+    @DisplayName("#4756 témoin : une date ET une météo divergent → on renonce encore")
+    void pousser_vers_renonce_si_une_meteo_diverge_aussi() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        lenient().when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        when(releve.base(42L)).thenReturn(Optional.of(baseAvecMeteo(new MeteoDepot("FAIBLE", "0-25"))));
+        // Retirer les dates de la comparaison ne doit pas faire passer un cas qui porte AUSSI un vrai
+        // conflit de meteo.
+        ParticipationDetail deuxEcarts = new ParticipationDetail(
+                "part-1",
+                "e-loin",
+                "Z41",
+                "2026-07-03T21:00:00+00:00",
+                "2026-07-04T04:00:00+00:00",
+                new MeteoDepot("FORT", "75-100"),
+                Map.of("micro0_type", "ICS", "micro0_position", "CANOPEE"),
+                traitementFini());
+        when(client.participation("part-1")).thenReturn(ReponseApi.succes(deuxEcarts));
+        lenient()
+                .when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        assertThat(sync.pousserVers(42L)).isInstanceOf(EnvoiParticipation.ModifieEntreTemps.class);
+    }
+
+    @Test
     @DisplayName("#4707 témoin : la plateforme n'a pas bougé depuis la base → l'envoi part")
     void pousser_vers_envoie_quand_la_plateforme_colle_a_la_base() {
         when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
@@ -706,6 +770,20 @@ class SynchronisationParticipationTest {
                 meteo,
                 modele.configuration(),
                 "2026-08-29T09:00:00");
+    }
+
+    /// Le meme detail que [#detail(String)], dont seule la date de debut differe.
+    private static ParticipationDetail detailAvecDateDebut(String etag, String dateDebut) {
+        ParticipationDetail modele = detail(etag);
+        return new ParticipationDetail(
+                modele.id(),
+                etag,
+                modele.point(),
+                dateDebut,
+                modele.dateFin(),
+                modele.meteo(),
+                modele.configuration(),
+                modele.traitement());
     }
 
     private static ParticipationDetail detail(String etag) {

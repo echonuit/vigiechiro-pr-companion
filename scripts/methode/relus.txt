@@ -1855,7 +1855,7 @@ acd643d069e5  src/test/java/fr/univ_amu/iut/passage/model/PropositionsEnregistre
 8c770b41719f  src/test/java/fr/univ_amu/iut/passage/model/ServiceDisponibiliteAudioTest.java
 480bb2c177aa  src/test/java/fr/univ_amu/iut/passage/model/ServiceReactivationPassageTest.java
 7197dbbe34ed  src/test/java/fr/univ_amu/iut/passage/model/ServiceReconstructionPassagesTest.java
-57dcb8d971b8  src/test/java/fr/univ_amu/iut/passage/model/SynchronisationParticipationTest.java
+075f7ffa7542  src/test/java/fr/univ_amu/iut/passage/model/SynchronisationParticipationTest.java
 8a9952c6166d  src/test/java/fr/univ_amu/iut/passage/model/VerificationIdentiteAudioTest.java
 cbf696adf24a  src/test/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleViewTest.java
 4db65e35b161  src/test/java/fr/univ_amu/iut/passage/view/NavigationPassageViewTest.java
