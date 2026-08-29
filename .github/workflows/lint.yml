@@ -734,6 +734,13 @@ jobs:
         # presenterait comme un rapport propre. Ses temoins tiennent les deux lectures qui comptent :
         # recoller les lignes de continuation d'un lot, et ne pas confondre `#46` avec `#4`.
         run: python3 scripts/adr/loupe-4712-lots-multi-pr.py --auto-test
+      - name: "Auto-test du relevé des bancs instables (bloquant, #4806)"
+        # Ce relevé lit les TENTATIVES d'un run, pas son verdict courant : une relance écrase l'échec
+        # précédent, si bien que la signature d'une instabilité est invisible dans `gh run list`.
+        # Ses témoins tiennent les deux lectures qui comptent : les deux formes sous lesquelles
+        # surefire nomme un test échoué, et le tri par fréquence, dont la mutation a d'abord survécu
+        # parce que le témoin rangeait ses noms dans le même ordre que l'alphabet.
+        run: python3 scripts/methode/releve-les-bancs-instables.py --auto-test
       - name: "Auto-test du compteur qui ÉCRIT le manifeste (bloquant, #4527)"
         # Le cliquet ci-dessus VÉRIFIE le manifeste ; ce compteur l'ÉCRIT, et il n'avait aucun cas.
         # `--marque` acceptait n'importe quel fichier existant : l'entrée n'était ensuite ni relue,
