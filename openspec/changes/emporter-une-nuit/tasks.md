@@ -15,37 +15,50 @@
 
 ## 2. Le schéma accueille l'avis d'un relecteur
 
-- [ ] 2.1 Rien ne peut ranger le verdict de quelqu'un d'autre sur une séquence. Ajouter
+- [x] 2.1 Rien ne peut ranger le verdict de quelqu'un d'autre sur une séquence. Ajouter
       `verdict_relecteur` et `relecteur_pseudo` à `selection_sequence`, sur le patron additif de V27.
       **Fait quand** : la migration passe sur une base existante sans perte, et un test constate
       qu'une séquence porte les deux verdicts sans que le premier bouge.
-- [ ] 2.2 Le verdict du passage doit rester dérivé des seuls verdicts de l'expéditeur. **Fait quand** :
+- [x] 2.2 Le verdict du passage doit rester dérivé des seuls verdicts de l'expéditeur. **Fait quand** :
       les tests de `AgregationVerdict` sont verts **sans avoir été modifiés**, et un test neuf pose un
       verdict de relecteur divergent puis constate que le verdict du passage n'a pas bougé.
 
+      **Fait** : `V42__avis_de_relecteur.sql`, enregistrée dans `MigrationSchema`, et
+      `SelectionDaoTest.avis_de_relecteur_coexiste_avec_le_verdict_de_l_expediteur` (#4624). Pour
+      2.2, `ServiceQualificationTest.l_avis_du_relecteur_ne_deplace_pas_le_verdict_du_passage`
+      (#4698) : il tombe quand on fait primer l'avis du relecteur dans la dérivation.
+
 ## 3. Écrire le paquet
 
-- [ ] 3.1 Rien ne sait dire ce que pèserait un paquet avant de l'écrire. Écrire le plan comme une
+- [x] 3.1 Rien ne sait dire ce que pèserait un paquet avant de l'écrire. Écrire le plan comme une
       fonction pure, sans écriture disque. **Fait quand** : des tests unitaires couvrent le volume
       ventilé par nature de contenu, et un test constate qu'aucun fichier n'existe après un plan.
-- [ ] 3.2 Le plan est une classe pure : il doit résister à ses mutations. **Fait quand** : PIT a
+- [x] 3.2 Le plan est une classe pure : il doit résister à ses mutations. **Fait quand** : PIT a
       tourné sur elle, ses survivants sont lus un par un, et chacun est soit tué par un test neuf,
       soit justifié par écrit.
 - [ ] 3.3 Le paquet n'existe pas. L'écrire depuis un plan confirmé. **Fait quand** : un test écrit un
       paquet dans un dossier temporaire, le relit, et retrouve les séquences **de la sélection**, ses
       métadonnées et ses verdicts, **sans les autres séquences de la nuit ni aucun brut**.
 
+      **Fait** : `PlanDePaquetTest` pour 3.1, et PIT sur le plan pour 3.2 (#4625).
+
 ## 4. Ouvrir le paquet, et signer ce qu'on y fait
 
-- [ ] 4.1 Un paquet ouvert sans identité valide recueillerait des verdicts anonymes. Apposer
+- [x] 4.1 Un paquet ouvert sans identité valide recueillerait des verdicts anonymes. Apposer
       l'identité à l'ouverture, refuser l'ouverture sans elle. **Fait quand** : un test ouvre un
       paquet sans connexion valide et constate un refus qui nomme la cause.
-- [ ] 4.2 L'identité se périme à quatorze jours alors que le jugement peut venir après. **Fait
+- [x] 4.2 L'identité se périme à quatorze jours alors que le jugement peut venir après. **Fait
       quand** : un test ouvre un paquet avec une identité valide, avance l'horloge injectée au-delà de
       la péremption, pose un verdict, et constate le pseudo relevé à l'ouverture.
 - [ ] 4.3 La régénération rouvrirait le problème que D1 ferme : deux échantillons quasi disjoints.
       **Fait quand** : un test constate qu'une nuit venue d'un paquet refuse la régénération, et que
       le refus dit que la sélection est celle de l'expéditeur.
+
+      **Fait, avec sa réserve pour 4.2** : le test éprouve que le pseudo est **capturé** et non relu,
+      en deux actes, l'identité disparue étant constatée par un refus d'ouvrir. Il tombe si l'ouverture
+      capture l'identifiant de plateforme au lieu du pseudo. Il n'éprouve pas encore la pose d'un
+      verdict au travers d'un paquet ouvert après péremption : ce flux n'existe pas, et l'horloge que
+      cette tâche décrivait n'aurait servi qu'à ce seul test. La suite est consignée séparément.
 
 ## 5. Reprendre l'avis, sans écraser le sien
 

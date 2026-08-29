@@ -25,10 +25,13 @@ import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.qualification.model.AvisRevenu;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
+import fr.univ_amu.iut.qualification.model.PlanDeReprise;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit.Feu;
+import fr.univ_amu.iut.qualification.model.RepriseAvis;
 import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
 import fr.univ_amu.iut.qualification.model.SequenceSelectionnee;
@@ -38,7 +41,9 @@ import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -229,6 +234,40 @@ class ServiceQualificationTest {
                 .extracting(SequenceSelectionnee::verdict)
                 .containsExactlyInAnyOrder(VerdictFichier.BON, VerdictFichier.BON, VerdictFichier.INEXPLOITABLE);
         assertThat(service.verdictDerivePassage(idPassage)).isEqualTo(Verdict.DOUTEUX);
+    }
+
+    @Test
+    @DisplayName("#4698 : l'avis d'un relecteur, si divergent soit-il, ne déplace pas le verdict du passage")
+    void l_avis_du_relecteur_ne_deplace_pas_le_verdict_du_passage() {
+        creerNuit(3);
+        SelectionDEcoute selection = service.creerSelection(idPassage, MethodeSelection.MANUEL, 3);
+        List<Long> sequences = service.sequencesDeLaSelection(selection.id()).stream()
+                .map(SequenceSelectionnee::idSequence)
+                .toList();
+        for (Long sequence : sequences) {
+            service.enregistrerVerdictFichier(idPassage, sequence, VerdictFichier.BON);
+        }
+        Verdict avant = service.verdictDerivePassage(idPassage);
+        assertThat(avant)
+                .as("trois Bon : le passage est OK, et il y a donc quelque chose à déplacer")
+                .isEqualTo(Verdict.OK);
+
+        // Le relecteur juge les trois Inexploitable : de quoi tout renverser s'il votait.
+        Map<Long, VerdictFichier> rapportes = new LinkedHashMap<>();
+        for (Long sequence : sequences) {
+            rapportes.put(sequence, VerdictFichier.INEXPLOITABLE);
+        }
+        AvisRevenu avis = new AvisRevenu("martin", rapportes);
+        PlanDeReprise plan = PlanDeReprise.pour(selectionDao.listerSequences(selection.id()), avis);
+        RepriseAvis.appliquer(selectionDao, selection.id(), plan, avis, false);
+
+        assertThat(selectionDao.listerSequences(selection.id()))
+                .as("l'avis est bien arrivé, sans quoi ce test ne prouverait rien")
+                .allSatisfy(rattachement ->
+                        assertThat(rattachement.verdictRelecteur()).isEqualTo(VerdictFichier.INEXPLOITABLE));
+        assertThat(service.verdictDerivePassage(idPassage))
+                .as("l'avis du relecteur s'affiche, il ne vote pas (ADR 4517)")
+                .isEqualTo(avant);
     }
 
     @Test
