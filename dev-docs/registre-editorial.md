@@ -97,6 +97,7 @@ comptage.
 | commentaire long en corps de méthode | `scripts/adr/4472-commentaire-en-corps.py`, article A30 | cliquet à <!--inv:cliquet-commentaire-corps-->43<!--/inv-->, plus une loupe de densité qui ne bloque pas |
 | javadoc qui raconte son extraction | `scripts/adr/4476-javadoc-raconte-son-extraction.py`, article A30 | cliquet à <!--inv:cliquet-javadoc-extraction-->0<!--/inv--> |
 | ADR qui raconte plus que sa décision | `scripts/adr/4477-longueur-des-adr.py`, article A30 | cliquet à <!--inv:cliquet-longueur-adr-->58<!--/inv--> |
+| traces d'outil, cinq familles comptables | `scripts/adr/4783-traces-d-outil.py`, article A31 | tolérance zéro, cliquet à <!--inv:cliquet-traces-outil-->0<!--/inv-->, trois exemptions déclarées |
 | source vague, conjecture présentée en fait | article A5 | la mesure fait foi et dit d'où elle vient |
 | section « défis et perspectives » | le gabarit d'ADR | contexte, décision, conséquences, alternatives |
 
@@ -129,6 +130,12 @@ Les **connecteurs lourds** en viennent aussi, et ils rendent zéro. Une liste qu
 utile et un motif vide vaut d'être lue en entier.
 
 ## L'inventaire, et ce qu'il ne prétend pas
+
+Les cinq traces d'outil sont comptables elles aussi, et elles ne sont pas dans les tableaux
+ci-dessus : leur compte vit dans le garde qui les tient, et un inventaire se cite plutôt qu'il ne se
+duplique (ADR 3535). Mesure du 2026-08-29, sur 2 726 fichiers et 372 370 lignes : **zéro** pour les
+cinq. Sans l'exemption de la compétence qui les énumère, le même compteur rend 22 marques de
+citation, toutes aux lignes qui les définissent.
 
 Cette page rend compte des motifs **comptables**. Ceux qui ne le sont pas, l'importance gonflée,
 l'analyse creuse en participe présent, la langue de la brochure, le tricolon forcé, l'aphorisme de

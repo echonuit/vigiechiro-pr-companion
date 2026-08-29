@@ -480,6 +480,54 @@ def test_4366_pictogramme_en_tete_de_ligne() -> None:
     _verifie("4366 encadre de parentheses : epargne", compte(f"Le pictogramme ({alerte}) est cite."), 0)
 
 
+def test_4783_traces_d_outil() -> None:
+    m = _charge("4783-traces-d-outil.py")
+    ZWSP, ZWJ, BOM = chr(0x200B), chr(0x200D), chr(0xFEFF)
+    E_HOMME, E_LOUPE = chr(0x1F468), chr(0x1F52C)
+    E_CYR = chr(0x0435)  # « e » cyrillique, sosie du latin
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        # SIX refus, un par famille comptable. Les cinq epargnes sont l autre moitie du temoin :
+        # un garde qui refuse tout passerait le premier compte et serait inutilisable.
+        # Les chaines sont ASSEMBLEES et non ecrites. Ce fichier est lu par le garde qu il
+        # eprouve, et une chaine litterale y ferait rougir le depot entier : c est l ADR 3645 au
+        # grain de la ligne. `test_4368_apostrophe_en_libelle` emploie le meme detour avec
+        # `chr(0x2019)`. Exempter la suite en bloc serait plus simple et laisserait un angle mort
+        # de 1 100 lignes.
+        jeton = "cite" + "turn0search0"
+        renvoi = "[" + "cite: 12]"
+        suivi = "utm_" + "source=chatgpt.com"
+        gabarit = "[Votre " + "nom]"
+        refuses = {
+            "t1a.md": f"Voir la source {jeton} pour le detail.",
+            "t1b.md": f"Le rapport le dit {renvoi}.",
+            "t2.md": f"https://exemple.org/page?{suivi}",
+            "t3.md": f"un espace{ZWSP}sans chasse",
+            "t4.md": f"la m{E_CYR}sure est fausse",
+            "t5.md": f"Signe : {gabarit}",
+        }
+        epargnes = {
+            # Le liant COMPOSE un pictogramme, il ne traine pas.
+            "ok-emoji.md": f"Le persona {E_HOMME}{ZWJ}{E_LOUPE} parle.",
+            # La marque d ordre est DECRITE, pas posee : l effacer casserait un analyseur de CSV.
+            "ok-bom.java": f"    private static final char BOM = '{BOM}';",
+            # La grille cite les chaines qu elle cherche ; entre accents graves elles sont nommees.
+            "ok-citee.md": f"Chercher `{jeton}` dans le texte.",
+            # Un lien Markdown ouvre un crochet sans etre un gabarit.
+            "ok-lien.md": "Voir [le guide](https://exemple.org) et [autre](x).",
+            # Un mot entierement cyrillique est un mot etranger, pas un sosie.
+            "ok-cyrillique.md": "Le mot " + chr(0x0440) + chr(0x0435) + chr(0x043A) + chr(0x0430)
+                                + " signifie riviere.",
+        }
+        for nom, contenu in {**refuses, **epargnes}.items():
+            _ecrire(racine, nom, contenu + "\n")
+        trouves = m.suspects(racine=racine)
+        _verifie("4783 refuse une occurrence de chacune des cinq familles",
+                 sorted({t.split(":")[0] for t in trouves}), sorted(refuses))
+        _verifie("4783 epargne l emoji, la marque decrite, la chaine citee, le lien et le mot etranger",
+                 [t for t in trouves if t.split(":")[0] in epargnes], [])
+
+
 def test_4368_apostrophe_en_libelle() -> None:
     m = _charge("4368-apostrophe-droite.py")
     C = chr(0x2019)
@@ -1057,6 +1105,7 @@ if __name__ == "__main__":
         test_4366_avertissement_en_pictogramme,
         test_4366_pictogramme_en_tete_de_ligne,
         test_4368_apostrophe_en_libelle,
+        test_4783_traces_d_outil,
         test_4395_renvois_en_javadoc,
         test_4359_blocs_relus,
         test_loupe_4359_javadoc_vieillie,
