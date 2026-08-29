@@ -926,7 +926,7 @@ c3bb0a70d076  src/main/java/fr/univ_amu/iut/passage/model/ChoixRebranchement.jav
 343ee6c4f22c  src/main/java/fr/univ_amu/iut/passage/model/CompteRenduChiffreReactivation.java
 3c6051a3033c  src/main/java/fr/univ_amu/iut/passage/model/CompteRenduReactivation.java
 c307350ce434  src/main/java/fr/univ_amu/iut/passage/model/ConseilSiteNonRattache.java
-21523be10863  src/main/java/fr/univ_amu/iut/passage/model/CorrespondanceParticipation.java
+07873904e9df  src/main/java/fr/univ_amu/iut/passage/model/CorrespondanceParticipation.java
 5af874a13b89  src/main/java/fr/univ_amu/iut/passage/model/CouvertureNuageuse.java
 998bbda80d21  src/main/java/fr/univ_amu/iut/passage/model/CreationPassageArchive.java
 72a63454a6d7  src/main/java/fr/univ_amu/iut/passage/model/CriAttendu.java
@@ -983,6 +983,7 @@ f1da9dceb4a1  src/main/java/fr/univ_amu/iut/passage/model/RegenerationSequences.
 fa7945d46e54  src/main/java/fr/univ_amu/iut/passage/model/ReleveClimatique.java
 71082f52412c  src/main/java/fr/univ_amu/iut/passage/model/ReleveDeParticipation.java
 f515411cf88e  src/main/java/fr/univ_amu/iut/passage/model/ReprefixeurSession.java
+92e85687542d  src/main/java/fr/univ_amu/iut/passage/model/ResolutionMeteo.java
 4f6ba0662ad3  src/main/java/fr/univ_amu/iut/passage/model/ResultatHydratation.java
 554f3a1d85e6  src/main/java/fr/univ_amu/iut/passage/model/SequenceDEcoute.java
 06082db93173  src/main/java/fr/univ_amu/iut/passage/model/SequencesRegenerees.java
@@ -995,7 +996,7 @@ a8eaf78c837a  src/main/java/fr/univ_amu/iut/passage/model/ServicePassage.java
 24493cd0b728  src/main/java/fr/univ_amu/iut/passage/model/ServiceReconstructionPassages.java
 311edadbba1e  src/main/java/fr/univ_amu/iut/passage/model/SessionDEnregistrement.java
 642311752ffe  src/main/java/fr/univ_amu/iut/passage/model/SortieDeRecuperation.java
-6f26165861a6  src/main/java/fr/univ_amu/iut/passage/model/SynchronisationParticipation.java
+078c630ba344  src/main/java/fr/univ_amu/iut/passage/model/SynchronisationParticipation.java
 7f2837d0c5ef  src/main/java/fr/univ_amu/iut/passage/model/UniciteQuadruplet.java
 156e4487d4f8  src/main/java/fr/univ_amu/iut/passage/model/Vent.java
 870b2c48c322  src/main/java/fr/univ_amu/iut/passage/model/VerdictIdentite.java
@@ -1853,10 +1854,11 @@ acd643d069e5  src/test/java/fr/univ_amu/iut/passage/model/PropositionsEnregistre
 9cf3b89edd5f  src/test/java/fr/univ_amu/iut/passage/model/ReleveDeParticipationTest.java
 5ad7c6668356  src/test/java/fr/univ_amu/iut/passage/model/ReliquatPlaceholderTest.java
 68ad9ca6f88d  src/test/java/fr/univ_amu/iut/passage/model/ReprefixeurSessionTest.java
+9edcccf296f8  src/test/java/fr/univ_amu/iut/passage/model/ResolutionMeteoTest.java
 8c770b41719f  src/test/java/fr/univ_amu/iut/passage/model/ServiceDisponibiliteAudioTest.java
 480bb2c177aa  src/test/java/fr/univ_amu/iut/passage/model/ServiceReactivationPassageTest.java
 7197dbbe34ed  src/test/java/fr/univ_amu/iut/passage/model/ServiceReconstructionPassagesTest.java
-075f7ffa7542  src/test/java/fr/univ_amu/iut/passage/model/SynchronisationParticipationTest.java
+36b21d2ee473  src/test/java/fr/univ_amu/iut/passage/model/SynchronisationParticipationTest.java
 8a9952c6166d  src/test/java/fr/univ_amu/iut/passage/model/VerificationIdentiteAudioTest.java
 cbf696adf24a  src/test/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleViewTest.java
 4db65e35b161  src/test/java/fr/univ_amu/iut/passage/view/NavigationPassageViewTest.java

@@ -21,6 +21,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -160,25 +161,30 @@ public final class SynchronisationParticipation {
         // saisit la meteo dix minutes plus tot n'est pas vu : nos deux lectures concordent sur SA valeur,
         // et notre corps, venu du passage local, l'ecrase sans rien dire.
         //
-        // Faute de base - une nuit anterieure a la migration V43 -, on retombe sur la garde d'avant, qui
-        // ne voit qu'une course etroite. C'est peu, et c'est defini.
-        boolean conflit = releve.base(idPassage)
-                .map(base -> aChangeDepuisLaBase(base, juste))
-                .orElseGet(() -> aChangeSurCeQueNousEcrivons(distant, juste));
-        if (conflit) {
+        // Faute de base - une nuit anterieure a la migration V43 -, la lecture du haut EN TIENT LIEU. Elle
+        // est une base d'une milliseconde : elle ne voit qu'une course etroite, et c'est exactement la
+        // garde d'avant #4707. C'est peu, et c'est defini.
+        Optional<ReleveParticipation> base = releve.base(idPassage);
+        // #4757 : la meteo se tranche a part. Qu'ils l'aient touchee ne nous contredit que si nous
+        // l'avons touchee AUSSI, et differemment ; sinon nous taisons le champ et leur saisie survit.
+        ResolutionMeteo meteo = ResolutionMeteo.entre(
+                base.map(ReleveParticipation::meteo).orElseGet(distant::meteo),
+                CorrespondanceParticipation.meteo(passage),
+                juste.meteo());
+        // La configuration, elle, part entiere : le PATCH remplace le dictionnaire, si bien qu'un envoi
+        // porte forcement les cles des autres. Nous ne pouvons donc pas la taire, et tout changement
+        // depuis la reference reste un conflit. Dire l'ecart plutot que le subir est l'objet de #4709.
+        Map<String, String> configurationDeReference =
+                base.map(ReleveParticipation::configuration).orElseGet(distant::configuration);
+        if (meteo.conflit() || !Objects.equals(configurationDeReference, juste.configuration())) {
             return new EnvoiParticipation.ModifieEntreTemps(realignementEntre(declare, passage));
         }
-        // #1844 : la configuration distante est passée au mapping pour être **préservée**. Le PATCH
-        // remplace le dictionnaire entier ; sans elle, chaque envoi effacerait les champs saisis sur le web
-        // que l'app ne modélise pas (micro0_numero_serie, micro1_*, canal_*). Elle vient de la relecture :
-        // on envoie l'état qu'on vient de valider, pas un état plus ancien. Les deux coïncident tant que
-        // la garde compare la configuration entière ; ils cesseraient de coïncider si elle se resserrait
-        // sur les seules clés que nous posons (#4603).
         ParticipationADeposer maj = CorrespondanceParticipation.versParticipation(
                 point.code(),
                 passage,
                 materielDao.pour(idPassage),
                 juste.configuration(),
+                meteo.aEnvoyer(),
                 fuseaux.pour(passage.idPoint()));
         ResultatEcriture ecriture = client.modifierParticipation(objectid, juste.etag(), maj);
         // #4706 : la base ne se note QUE sur une ecriture acceptee, et sur la relecture, qui est l'etat
@@ -190,28 +196,6 @@ public final class SynchronisationParticipation {
         }
         // #1885 : le réalignement a modifié les données de l'utilisateur, il ne peut pas rester tacite.
         return EnvoiParticipation.ecrit(ecriture, realignementEntre(declare, passage));
-    }
-
-    /// Vrai si la plateforme a changé un champ que le `PATCH` écrit, **depuis notre dernière lecture**
-    /// (#4707). C'est la question que deux lectures prises dans le même appel ne peuvent pas poser :
-    /// elles ne couvrent que leur propre intervalle, quelques millisecondes.
-    private static boolean aChangeDepuisLaBase(ReleveParticipation base, ParticipationDetail juste) {
-        // #4756 : les DATES ne comptent pas ici. Nous en tenons la meilleure source, les
-        // enregistrements les prouvant, et bloquer ferait gagner une declaration a la main contre une
-        // preuve. Le realignement reste annonce a l'utilisateur, donc rien ne se fait dans son dos.
-        return !Objects.equals(base.meteo(), juste.meteo())
-                || !Objects.equals(base.configuration(), juste.configuration());
-    }
-
-    /// Vrai si un champ que le `PATCH` écrit a changé **entre les deux lectures** d'un même envoi
-    /// (#4603). Repli quand aucune base n'existe : l'`_etag` ne convient pas, il bouge sur tout le
-    /// document et l'ouvrier d'analyse le fait bouger seul.
-    private static boolean aChangeSurCeQueNousEcrivons(ParticipationDetail avant, ParticipationDetail juste) {
-        // #4756 : les dates n'y sont pas davantage que dans la comparaison contre la base. La regle
-        // porte sur la NATURE du champ, pas sur le mecanisme : la faire dependre du fait qu'une nuit
-        // ait deja ete lue donnerait deux traitements opposes au meme champ.
-        return !Objects.equals(avant.meteo(), juste.meteo())
-                || !Objects.equals(avant.configuration(), juste.configuration());
     }
 
     /// Le réalignement survenu entre le passage **déclaré** et le passage **envoyé**, ou vide si les heures

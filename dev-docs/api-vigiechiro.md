@@ -108,10 +108,27 @@ dernière lecture**, horodaté. Le tirage l'alimente, et l'envoi seulement quand
 renoncement rendrait la base égale à leur valeur, si bien que la tentative suivante conclurait qu'ils
 n'ont rien changé.
 
-`SynchronisationParticipation#pousserVers` renonce donc quand la plateforme a changé un champ que le
-`PATCH` écrit depuis notre dernière lecture. Faute de relevé, sur une nuit antérieure à la migration,
-il retombe sur une comparaison entre deux lectures du même appel : cela ne couvre qu'une course de
-quelques millisecondes, et c'est assumé.
+`SynchronisationParticipation#pousserVers` compare donc contre cette base. Faute de relevé, sur une
+nuit antérieure à la migration, la lecture du haut d'appel **en tient lieu** : une base d'une
+milliseconde, qui ne couvre qu'une course étroite. C'est peu, et c'est défini.
+
+**Qu'ils aient écrit ne suffit pas à faire un conflit** (#4757). Le champ **météo** se tranche à part,
+sur les trois valeurs : si la nôtre égale la base, nous n'y avons pas touché, et nous **taisons le
+champ** plutôt que d'y répondre. Une clé absente du corps laisse la plateforme garder la sienne, le
+GSON de `RequetesVigieChiro` ne sérialisant pas les `null`, si bien que la saisie d'un collègue
+survit sans que personne n'ait eu à arbitrer.
+
+| base | nous | eux | ce qui part |
+|---|---|---|---|
+| M0 | M0 | M1 | rien : leur saisie survit |
+| M0 | M1 | M0 | la nôtre |
+| M0 | M1 | M2 | rien du tout : c'est le seul vrai conflit, et l'envoi est refusé |
+
+La **configuration**, elle, part entière et ne peut pas se taire : le `PATCH` remplace le dictionnaire,
+donc tout envoi porte forcément les clés des autres. Tout changement depuis la base y reste un conflit.
+
+Effacer une météo, en revanche, ne s'envoie pas : le corps ne sait pas porter un effacement, faute de
+`serializeNulls()`. Défaut antérieur, ouvert en #4777.
 
 **Ce qu'elle doit porter en entier.** V43 n'y stockait du bloc météo que le vent et la couverture,
 alors que `MeteoDepot` en porte quatre composants : les températures partent vers la plateforme depuis
@@ -185,7 +202,7 @@ la sonde live `refus_serveur_est_un_refuse_explicite` verrouille que ce refus re
 | GET | `/participations/{id}/donnees` | résultats Tadarida (paginé) : sert à l'import |
 | GET | `/taxons/liste` | référentiel taxons |
 | POST | `/sites/{id}/participations` | crée une participation |
-| PATCH | `/participations/{id}` | pousse météo/config depuis la modale du passage ; **aucun `If-Match`**, la concurrence est tenue côté client (#4707) |
+| PATCH | `/participations/{id}` | pousse météo/config depuis la modale du passage ; **aucun `If-Match`**, la concurrence est tenue côté client (#4707), et le champ non modifié est **tu** plutôt qu'arbitré (#4757) |
 | POST | `/fichiers` (`lien_participation`) puis `PUT` S3 signé puis POST `/fichiers/{id}` | téléverse un fichier **rattaché à la participation** (3 temps, `PUT` **en flux**) |
 | POST | `/participations/{id}/compute` (corps `{}`) | déclenche le **traitement serveur** (Tadarida) de la participation déposée |
 | GET | `/grille_stoc/cercle?lng&lat&r` | mailles du carroyage national autour d'un point |
