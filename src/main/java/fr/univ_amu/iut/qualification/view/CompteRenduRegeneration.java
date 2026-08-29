@@ -32,6 +32,7 @@ final class CompteRenduRegeneration {
             case REPARTITION_TEMPORELLE -> "réparties sur la nuit";
             case ALEATOIRE -> "tirées au hasard";
             case MANUEL -> "choisies manuellement";
+            case RECUE_D_UN_PAQUET -> "reçues d'un paquet, et figées";
         };
     }
 }
