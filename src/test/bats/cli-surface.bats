@@ -28,6 +28,7 @@ COMMANDES_OPTIONS_REQUISES=(
   importer importer-tadarida
   marquer-douteux marquer-reference poser-certitude
   valider-observations corriger-observations qualifier qualifier-fichier lister-selection pre-check constituer-selection
+  emporter-nuit ouvrir-paquet-recu renvoyer-avis reprendre-avis
   restaurer reinitialiser-depot supprimer-passage supprimer-sauvegarde
   deposer deposer-vigiechiro importer-vigiechiro publier-corrections-vigiechiro
   etat-traitement-vigiechiro lancer-traitement-vigiechiro verifier-depot-vigiechiro traiter-passages
@@ -51,8 +52,10 @@ COMMANDES_OPTIONS_REQUISES=(
   # Verrouillé, comme COMMANDES_LOCALES_SANS_ARG juste en dessous. Un plancher à « -ge 20 » sur une
   # liste de 41 tolérait d'en voir disparaître vingt sans rougir : ce n'était pas un inventaire, c'était
   # un minimum. Ajouter une commande à la liste, c'est ajuster ce chiffre - le geste est le prix de
-  # l'inventaire (#3960). Passé à 42 par « situer-carre », dont --position est requise (#4660).
-  [ "${n}" -eq 42 ]
+  # l'inventaire (#3960). Passé à 42 par « situer-carre », dont --position est requise (#4660), puis à
+  # 46 par les quatre gestes du parcours d'emport (#4729) : emporter-nuit et renvoyer-avis exigent
+  # --passage et --vers, ouvrir-paquet-recu et reprendre-avis exigent --fichier.
+  [ "${n}" -eq 46 ]
 }
 
 # Commandes LOCALES sans option requise : s'exécutent telles quelles sur la base fraîche (migrée au

@@ -104,7 +104,7 @@ Or ces étapes ne dépendent pas de la suite de tests, mais de ce qu'on **emball
 | `build` | la suite de tests | le comportement, et la couverture au seuil |
 | `paquet` | l'assemblage, puis l'app-image | que le jar **démarre**, que la CLI répond **depuis le lanceur livré**, que le shade est idempotent |
 
-Les <!--inv:tests-bats-->118<!--/inv--> tests bats visaient le fat-jar par `java -cp` jusqu'à #4071,
+Les <!--inv:tests-bats-->126<!--/inv--> tests bats visaient le fat-jar par `java -cp` jusqu'à #4071,
 c'est-à-dire un chemin qu'**aucun utilisateur n'emprunte**. Ils visent désormais `bin/vigiechiro` de
 l'app-image construite au-dessus, donc le runtime jlink réellement livré. Ils viennent pour cette
 raison **après** le garde-fou app-image, et non plus juste après le `package` - sans que rien ne change

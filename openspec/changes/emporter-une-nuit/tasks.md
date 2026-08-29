@@ -74,22 +74,28 @@
 - [x] 5.2 La sélection étant figée, un verdict hors d'elle signale un paquet qui ne correspond pas à
       la nuit. **Fait quand** : un test importe un tel verdict et constate un refus qui nomme la
       séquence en cause, sans que rien n'ait été écrit.
-- [ ] 5.3 Un second avis effacerait le premier sans un mot. **Fait quand** : un test importe un avis
+- [x] 5.3 Un second avis effacerait le premier sans un mot. **Fait quand** : un test importe un avis
       sur une nuit qui en porte déjà un et constate une double confirmation qui nomme le relecteur
       présent et le nombre de verdicts perdus ; un second test refuse la confirmation et constate que
       rien n'a été écrit.
 
 ## 6. Ce qui se voit, et ce qui se prouve
 
-- [ ] 6.1 Les deux verdicts doivent se lire côte à côte dans l'écran de qualification. **Fait quand** :
-      un test de scénario sur la vue constate les deux verdicts et les deux pseudos sur une séquence
-      jugée deux fois.
+- [x] 6.1 Les deux verdicts doivent se lire côte à côte dans l'écran de qualification. **Fait quand** :
+      un test sur la vue constate les deux verdicts **et le pseudo du relecteur** sur une séquence jugée
+      deux fois, et constate qu'une séquence sans avis n'affiche rien.
+
+      **Correction du 2026-08-29.** Cette tâche exigeait « les deux **pseudos** ». Le schéma n'en porte
+      qu'un, celui du relecteur : le verdict de l'expéditeur n'a pas de pseudo et n'en a jamais eu,
+      c'est le sien sur son poste. C'est la seconde attente que ce plan formule au-delà de ce que
+      #4624 a construit, après « pas relu contre non jugé » corrigée en #4742.
+      **Fait** : la colonne « Avis relecteur » et `VerdictParFichier.libelleAvis` (#4742).
 - [ ] 6.2 Un geste d'écran qu'aucun clip ne montre ne se vérifie que sur parole. **Fait quand** : le
       parcours « emporter une nuit, la relire ailleurs, reprendre l'avis » a son cas de recette et son
       clip, contrôle négatif compris.
-- [ ] 6.3 La documentation de l'écran décrit un écran qui aura changé. **Fait quand** : `docs/ecrans/`
+- [x] 6.3 La documentation de l'écran décrit un écran qui aura changé. **Fait quand** : `docs/ecrans/`
       décrit le nouveau geste, ses refus et l'affichage de l'avis d'un relecteur, et le garde de
       documentation à jour est vert.
-- [ ] 6.4 Toute capacité métier s'offre aussi en ligne de commande (A19). **Fait quand** : l'emport et
+- [x] 6.4 Toute capacité métier s'offre aussi en ligne de commande (A19). **Fait quand** : l'emport et
       la reprise ont leur commande, couvertes par `cli-surface.bats` et `cli.bats`, ou une issue dit
       pourquoi elles ne l'ont pas.

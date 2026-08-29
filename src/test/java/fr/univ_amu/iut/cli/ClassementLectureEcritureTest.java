@@ -36,7 +36,10 @@ class ClassementLectureEcritureTest {
     ///
     /// Un cliquet, pas un inventaire : il ne dit rien de plus que le code, il oblige seulement à
     /// trancher quand la surface bouge. Le chiffre se met à jour **en même temps** que la décision.
-    private static final int ECRIVAINES_ATTENDUES = 45;
+    /// 45 à 49 par les quatre gestes de l'emport (#4729) : les quatre gardent le verrou, y compris
+    /// `emporter-nuit` et `renvoyer-avis` qui n'écrivent que hors du dossier de travail. Un paquet
+    /// bâti pendant qu'un autre processus écrit porterait une sélection à demi lue.
+    private static final int ECRIVAINES_ATTENDUES = 49;
 
     @Test
     @DisplayName("le nombre de commandes qui prennent le verrou est celui qu'on a décidé")
