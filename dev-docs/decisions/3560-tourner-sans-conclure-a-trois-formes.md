@@ -66,9 +66,9 @@ Le dépôt tient un principe écrit : ces deux-là restent tolérants en build l
 1. le coût est de l'ordre de la seconde - `analyze-only` seul prend 4 s, démarrage de Maven compris ;
 2. une fois la sortie à zéro, il n'a **aucun faux positif** : le verdict est déterministe, là où PMD
    est lent et JaCoCo dépend d'un seuil de couverture ;
-3. surtout, le déplacer sous `-Pquality-gate` le **désactiverait** : le job `build` lance
-   `verify` **sans** ce profil, et `lint.yml` n'invoque que le but `pmd:check`. Il ne tournerait
-   nulle part - c'est-à-dire retour au point de départ.
+3. surtout, le déplacer sous `-Pquality-gate` le **désactiverait** : **aucun atelier n'active ce
+   profil**. Il ne tournerait nulle part - c'est-à-dire retour au point de départ. Voir la révision
+   du 2026-08-29 : cette raison était d'abord écrite autrement, et la mesure l'a renforcée.
 
 ### Un seuil se choisit contre la variance mesurée, et la mesure se rejoue
 
@@ -96,6 +96,42 @@ de sa première fausse alerte. Il avertit avec la comparaison en clair.
 **Un test qui figerait le contenu du `pom.xml`** (« `failOnWarning` vaut bien `true` ») : il
 n'éprouverait que lui-même. Le vrai dispositif est le build de la CI, exercé à chaque PR, et il a été
 **vu rouge** en retirant une déclaration.
+
+## Révision du 2026-08-29 : la décision tient, et sa raison est meilleure
+
+Reprise à la demande, en remesurant la troisième raison de refuser `-Pquality-gate`. Une clause
+fausse, une conclusion renforcée, et une annonce à corriger.
+
+**La clause était périmée.** Elle disait « `lint.yml` n'invoque que le but `pmd:check` ». Il ne
+l'invoque **pas du tout** : depuis le chantier de l'ADR 4617, il lance `test-compile pmd:pmd`, qui
+produit le rapport sans juger, et laisse le verdict aux cliquets. La seule mention de `pmd:check` qui
+subsiste dans l'atelier est un commentaire expliquant pourquoi il n'est **pas** employé.
+
+**La conclusion, elle, est plus solide qu'à l'écriture**, et pour une raison plus simple que celle
+d'origine :
+
+```
+$ grep -rn "Pquality-gate" .github/workflows/
+lint.yml:575:  # ... ne PAS remplacer par `-Pquality-gate verify -DskipTests` ...
+```
+
+Aucun atelier n'active le profil. L'unique occurrence est une mise en garde contre son usage. Le
+raisonnement ne repose donc plus sur ce qu'un atelier invoque, mais sur le fait que **rien nulle
+part** n'active `-Pquality-gate`. La première moitié de la clause tient inchangée : `maven.yml`
+lance bien `verify` sans le profil.
+
+**Et la décision est toujours appliquée.** `analyze-only` reste lié à la phase `verify` avec
+`failOnWarning=true`, et `mesure-duree-portail.sh`, que l'en-tête déclare, existe.
+
+**L'annonce qu'il fallait corriger.** Ce défaut a été trouvé pendant le chantier #4713, et écarté de
+ses sept lots à chaque étape au motif qu'il « ne portait pas seulement la phrase fausse, mais fondait
+un raisonnement dessus, donc qu'il fallait rejuger la décision ». La remesure a démenti cette
+annonce : il n'y avait rien à rejuger. Une justification vieillie n'est pas une décision fragile, et
+les confondre coûte un chantier qu'on n'ouvre pas.
+
+**Ce que cette révision n'est pas.** Pas un encart « Ce qui fait foi aujourd'hui » : celui-là
+n'annonce que des relations déclarées en en-tête, et cette ADR n'est amendée par aucune autre. Elle
+est corrigée sur un fait, et la correction se lit ici.
 
 ## Conséquences
 
