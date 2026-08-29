@@ -76,7 +76,8 @@ public class MigrationSchema {
         "V40__point_publie.sql",
         "V41__cause_du_refus.sql",
         "V42__avis_de_relecteur.sql",
-        "V43__participation_relevee.sql"
+        "V43__participation_relevee.sql",
+        "V44__releve_temperatures.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";

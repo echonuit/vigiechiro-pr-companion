@@ -319,6 +319,29 @@ class SynchronisationParticipationTest {
     }
 
     @Test
+    @DisplayName("#4768 : la plateforme porte des températures, le relevé les garde → l'envoi part")
+    void pousser_vers_envoie_quand_seules_les_temperatures_sont_en_jeu() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        lenient().when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // La base porte MAINTENANT les quatre composants, temperatures comprises (#4768).
+        when(releve.base(42L)).thenReturn(Optional.of(baseAvecMeteo(new MeteoDepot("FAIBLE", "0-25", 12, 5))));
+        // La plateforme porte les memes (#1844) : personne n'a rien change.
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detailAvecMeteo("e-lu", new MeteoDepot("FAIBLE", "0-25", 12, 5))));
+        lenient()
+                .when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        EnvoiParticipation envoi = sync.pousserVers(42L);
+
+        // Avant #4768, la base perdait les temperatures : la comparaison les voyait toujours
+        // divergentes, et AUCUN envoi ne partait sur une telle nuit. Le temoin s'est inverse.
+        assertThat(envoi).isInstanceOf(EnvoiParticipation.Ecrit.class);
+    }
+
+    @Test
     @DisplayName("#4756 : SANS base non plus, une date seule ne bloque pas, le champ ne change pas de nature")
     void pousser_vers_sans_base_une_date_seule_ne_bloque_pas() {
         when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
