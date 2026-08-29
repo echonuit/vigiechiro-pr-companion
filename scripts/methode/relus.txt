@@ -1029,7 +1029,7 @@ a7447e62e1ac  src/main/java/fr/univ_amu/iut/passage/view/ReactivationModaleContr
 65a0d2a007e8  src/main/java/fr/univ_amu/iut/passage/viewmodel/ActionRecommandee.java
 ace9f3756eef  src/main/java/fr/univ_amu/iut/passage/viewmodel/ApercuRenommage.java
 7e7457954276  src/main/java/fr/univ_amu/iut/passage/viewmodel/ChoixDuPoint.java
-ac8db55d741b  src/main/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduDEnvoi.java
+85141136d5d6  src/main/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduDEnvoi.java
 15df1af71e57  src/main/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduRattachement.java
 6278de69f3ed  src/main/java/fr/univ_amu/iut/passage/viewmodel/EtapeWorkflow.java
 23453448942b  src/main/java/fr/univ_amu/iut/passage/viewmodel/EtapesWorkflow.java
@@ -1872,6 +1872,7 @@ cbf696adf24a  src/test/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleV
 3d6110c2ae06  src/test/java/fr/univ_amu/iut/passage/view/RattachementModaleViewTest.java
 cbc014bf6958  src/test/java/fr/univ_amu/iut/passage/view/ReactivationModaleViewTest.java
 bffcab754b0f  src/test/java/fr/univ_amu/iut/passage/view/ScenarioPassagePivotTest.java
+dcebab754186  src/test/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduDEnvoiTest.java
 cd203af38495  src/test/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduRattachementTest.java
 1b869e0cc43b  src/test/java/fr/univ_amu/iut/passage/viewmodel/CorrectionPointTest.java
 1933f68af71f  src/test/java/fr/univ_amu/iut/passage/viewmodel/GestionCampagnesViewModelTest.java

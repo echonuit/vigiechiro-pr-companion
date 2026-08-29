@@ -17,13 +17,19 @@ final class CompteRenduDEnvoi {
     ///
     /// Les trois cas ne se disent pas de la même façon : la plateforme a refusé, nous avons renoncé,
     /// ou l'envoi est parti.
+    ///
+    /// Le renoncement nomme « Récupérer depuis Vigie-Chiro », seul geste qui remet la base à jour :
+    /// l'ouverture de la fiche ne lit rien de distant (ADR 4640), donc rouvrir reproduirait le refus à
+    /// l'identique - et l'ADR 3854 interdit de conseiller un geste sans vérifier qu'il s'applique.
+    /// Il date la divergence de notre dernière **lecture**, non de l'ouverture : depuis #4707 la
+    /// comparaison porte sur la base, qui peut avoir des jours.
     static Envoi de(EnvoiParticipation issue) {
         if (!(issue instanceof EnvoiParticipation.Ecrit envoi)) {
             // #4552 : nous renonçons, la plateforme n'a rien refusé. Lui attribuer ce geste ferait
             // chercher la panne du mauvais côté.
-            String renoncement = "La nuit a changé sur Vigie-Chiro depuis que cette fiche est ouverte."
+            String renoncement = "La nuit a changé sur Vigie-Chiro depuis notre dernière lecture."
                     + " Rien n'a été envoyé, pour ne pas effacer ce qu'un autre poste y a écrit."
-                    + " Rouvrez la fiche pour repartir de l'état à jour.";
+                    + " Utilisez « Récupérer depuis Vigie-Chiro » pour repartir de l'état à jour.";
             // Le réalignement a eu lieu et il est écrit en base, même si rien n'est parti. Le taire ici
             // corrigerait la nuit de l'utilisateur dans son dos, et la CLI le dit déjà.
             return new Envoi.Empeche(issue.realignement()

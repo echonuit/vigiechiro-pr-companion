@@ -143,7 +143,7 @@ class FiletAvantMigrationTest {
         executer("ALTER TABLE depot_unite DROP COLUMN cause_refus"); // V41
         executer("ALTER TABLE selection_sequence DROP COLUMN verdict_relecteur"); // V42
         executer("ALTER TABLE selection_sequence DROP COLUMN relecteur_pseudo"); // V42
-        executer("DROP TABLE IF EXISTS participation_relevee"); // V43
+        executer("DROP TABLE IF EXISTS participation_relevee"); // V43, et V44 (colonnes de cette table)
     }
 
     /// Noms des fichiers du dossier de sauvegardes, **liste vide** s'il n'existe pas : un dossier

@@ -141,9 +141,19 @@ ne rend pas la garde moins précise : elle la rend toujours vraie, donc toujours
 **Ce que cette base n'est pas.** Elle ne dit pas ce qui est vrai, elle dit ce que nous avions vu. Elle
 ne se montre jamais à l'utilisateur comme une donnée, et la vérité reste côté serveur ([ADR 4640]).
 
-**Ce qu'elle ne couvre pas encore.** Les dates et la météo du corps envoyé viennent du passage
-**local** et remplacent le distant sans condition. La non-destruction de l'[ADR 0020] ne vaut
-aujourd'hui que pour le dictionnaire `configuration`. C'est le lot 2 du chantier, #4708.
+**Ce que le lot 2 a réglé** (#4755, qui a absorbé #4708). Les dates et la météo ne remplacent plus
+le distant sans condition, et les deux ont reçu des règles **opposées**, chacune selon la nature du
+champ :
+
+- les **dates** ne bloquent plus rien (#4756). Nous en tenons la meilleure source, les enregistrements
+  qui prouvent la nuit, et `realignerSurLesPreuves` les recalcule à chaque envoi. Bloquer aurait fait
+  gagner une déclaration à la main contre une preuve ; le réalignement, lui, se dit à l'utilisateur ;
+- la **météo** se tait quand nous n'y avons pas touché (#4757), et ne fait conflit que si les deux
+  côtés ont écrit, différemment ;
+- la **configuration** reste régie par l'[ADR 0020], inchangée : le `PATCH` remplaçant le
+  dictionnaire entier, tout envoi porte forcément les clés des autres, donc elle ne peut pas se taire.
+
+Une règle unique pour les trois était l'erreur de #4552 et de #4603.
 
 [ADR 4640]: https://companion-dev.echonuit.fr/decisions/4640-pour-ne-rien-effacer-il-faut-se-souvenir-de-ce-qu-on-avait-vu/
 [ADR 0020]: https://companion-dev.echonuit.fr/decisions/0020-ecrire-sur-la-plateforme-ne-rien-inventer-ni-effacer/

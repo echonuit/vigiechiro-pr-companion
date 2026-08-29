@@ -204,8 +204,9 @@ public final class MetadonneesPassage implements Callable<Integer> {
                     sortie,
                     compte,
                     "modifiee-entre-temps",
-                    "La nuit a changé sur Vigie-Chiro depuis sa lecture. Rien n'a été envoyé, pour ne pas"
-                            + " effacer ce qu'un autre poste y a écrit.",
+                    "La nuit a changé sur Vigie-Chiro depuis notre dernière lecture. Rien n'a été envoyé, pour ne pas"
+                            + " effacer ce qu'un autre poste y a écrit. Relancez avec --recuperer pour"
+                            + " repartir de l'état à jour, puis renvoyez.",
                     "modifiee-entre-temps");
             rendre(sortie, compte);
             return 1;
