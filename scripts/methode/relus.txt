@@ -1067,7 +1067,7 @@ ac046feeabb5  src/main/java/fr/univ_amu/iut/qualification/view/BarreVerdicts.jav
 df451a7b3c93  src/main/java/fr/univ_amu/iut/qualification/view/Feux.java
 8c6b0f04f4ac  src/main/java/fr/univ_amu/iut/qualification/view/MarqueurEcoute.java
 d6bc83900cd6  src/main/java/fr/univ_amu/iut/qualification/view/ModaleSelectionController.java
-ae722b8ae06a  src/main/java/fr/univ_amu/iut/qualification/view/NavigationQualification.java
+bf48bc7f3059  src/main/java/fr/univ_amu/iut/qualification/view/NavigationQualification.java
 a8fe4748183d  src/main/java/fr/univ_amu/iut/qualification/view/QualificationController.java
 216eab20dfa5  src/main/java/fr/univ_amu/iut/qualification/view/SelectionEcouteController.java
 f16ef267eaa4  src/main/java/fr/univ_amu/iut/qualification/view/StatutQualification.java
@@ -1894,6 +1894,7 @@ cae07d34e6a3  src/test/java/fr/univ_amu/iut/qualification/view/QualificationCont
 cd070b1c4a6b  src/test/java/fr/univ_amu/iut/qualification/view/QualificationIdentiteStatutViewTest.java
 371d116b1916  src/test/java/fr/univ_amu/iut/qualification/view/QualificationViewTest.java
 6e4250db20c7  src/test/java/fr/univ_amu/iut/qualification/view/QualificationVueIntegrationTest.java
+62ca79c783a4  src/test/java/fr/univ_amu/iut/qualification/view/ScenarioSelectionEcouteTest.java
 2ef6b5e9acbf  src/test/java/fr/univ_amu/iut/qualification/viewmodel/QualificationViewModelTest.java
 69f1f54af525  src/test/java/fr/univ_amu/iut/qualification/viewmodel/SelectionEcouteViewModelTest.java
 d98e41b2d508  src/test/java/fr/univ_amu/iut/recette/BancDeRecette.java

@@ -491,7 +491,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     /// vraie modale ([ModaleSelectionController]), sur le patron déjà en service dans l'application.
     @FXML
     private void personnaliser() {
-        navigation.ouvrirModaleSelection(racine.getScene().getWindow());
+        navigation.ouvrirModaleSelection(racine.getScene().getWindow(), selectionVm);
     }
 
     /// Raccourcis clavier (footer de la maquette) : O / D / J posent le verdict, Entrée enregistre,
