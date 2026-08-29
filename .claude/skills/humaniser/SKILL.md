@@ -54,7 +54,7 @@ Les sept tics de `CONTRIBUTING.md` sont le sous-ensemble **opposable** de cette 
 Si l'auteur fournit un texte de lui, le lire d'abord et relever ses habitudes : longueur des
 phrases, ouvertures de paragraphe, ponctuation, formules qui reviennent. Les respecter ensuite,
 même quand elles figurent dans la grille. Un auteur qui emploie le tiret cadratin en garde le même
-taux ; la règle 20 ne devient pas une interdiction.
+taux ; le motif 14 ne devient pas une interdiction.
 
 ## La personnalité s'ajoute où elle a sa place
 
@@ -67,12 +67,22 @@ vivant.
 
 # La grille
 
-Quarante et un motifs. Les trente-cinq premiers viennent de
+Cinquante-quatre motifs, en trois séries. Les motifs **numérotés**, 1 à 42, rangés par famille.
+Les six motifs **`FR`**, propres au français. Les six **traces d'outil**, notées `T`, qui ont leur
+section et leur règle de lecture, une seule occurrence y suffisant à conclure.
+
+Les trente-cinq premiers viennent de
 [« Signs of AI writing »](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) (WikiProject
-AI Cleanup) et sont adaptés au français. Les six derniers, notés `FR`, viennent de sources
-françaises et n'ont pas d'équivalent dans la liste anglaise :
+AI Cleanup) et sont adaptés au français. Les six `FR` viennent de sources françaises sans équivalent
+dans la liste anglaise :
 [« Aide:Identifier l'usage d'une IA générative »](https://fr.wikipedia.org/wiki/Aide:Identifier_l%27usage_d%27une_IA_g%C3%A9n%C3%A9rative)
-et trois relevés de tics de ChatGPT en français.
+et trois relevés de tics de ChatGPT en français. Les treize derniers, 36 à 42 et T1 à T6, viennent
+de l'[humaniseur anglais d'Aboudjem](https://github.com/Aboudjem/humanizer-skill), sous licence MIT,
+et leurs exemples sont refaits ici.
+
+**Un numéro est un identifiant, pas une position.** Les motifs 36 à 42 ferment la famille où ils
+tombent, si bien que la numérotation n'y est pas continue. C'est voulu : l'ADR 4476 cite « le motif
+30 de la grille », et un numéro qui glisse à chaque ajout fait mentir ce qui le cite.
 
 Un motif absent de votre corpus se garde quand même dans la grille : une règle ne se juge pas à sa
 fréquence du jour.
@@ -184,6 +194,10 @@ qui est un nombre d'espèces (93), le nom commun « l'essentiel » (18), la maje
 la dynamique audio (11), le sens statistique de « significatif » (7) et « la version approfondie »
 (1).
 
+**Ces trois niveaux pèsent la liste de ce motif, et rien d'autre.** Ils trient des mots isolés, dont
+l'ambiguïté est le problème. Les autres motifs listent des tournures, bien moins ambiguës, et chacun
+porte ses faux positifs sur place plutôt qu'une échelle.
+
 Les niveaux 1 et 2 ne viennent pas de là. Douze de leurs quatorze mots rendent zéro, et un zéro ne
 dit pas si un mot est absent parce qu'il est étranger à ce français ou parce qu'une relecture l'a
 retiré. Les deux qui restent tiennent en une occurrence chacun : « crucial », qui est le seul tic du
@@ -262,6 +276,36 @@ Qui agit disparaît. Rendre l'acteur quand cela éclaire.
 
 ---
 
+### 39. La fausse agentivité
+
+**Mots à surveiller** : les données montrent que, les chiffres nous disent, le marché récompense,
+la technologie impose, le code décide, l'architecture veut.
+
+Une chose inerte reçoit un verbe de volonté, et l'acteur réel disparaît avec. Nommer qui agit, ou
+rendre le verbe à ce qu'il décrit.
+
+> Les données nous disent que la détection nocturne se dégrade après minuit.
+
+> Sur les nuits mesurées, le taux de détection baisse après minuit.
+
+Attention aux faux positifs : « la méthode rend une liste vide » est du français technique
+ordinaire. Le tic est le verbe qui prête une **intention**, pas celui qui décrit un comportement.
+
+### 40. Le narrateur à distance
+
+**Mots à surveiller** : on a tendance à, les gens ont l'habitude de, il y a comme un sentiment que,
+d'aucuns pensent, on pourrait dire que, il est de coutume de.
+
+Le texte survole une scène où personne n'est nommé, et le lecteur n'y est pas non plus. Mettre le
+lecteur dedans, ou nommer qui fait la chose.
+
+> On a tendance à négliger la relecture des captures.
+
+> Une capture régénérée se referme sans être ouverte, et le défaut passe.
+
+Ce motif est proche du FR5, et les deux se séparent nettement : FR5 vise le « nous » sans référent,
+celui-ci vise le **tiers** indéfini.
+
 ## Forme
 
 ### 14. Le tiret cadratin et le tiret demi-cadratin
@@ -335,6 +379,35 @@ deux. Un mélange se voit surtout quand le texte alimente une interface, où deu
 alors deux apostrophes différentes.
 
 ---
+
+### 36. Le titre en question
+
+**Mots à surveiller** : Pourquoi X est-il important ?, Qu'est-ce que X ?, Comment fonctionne X ?,
+En quoi X change-t-il la donne ?
+
+Un titre de section posé en question, dans un texte qui n'est pas une foire aux questions. Il
+annonce un développement au lieu de nommer ce que la section contient, et il oblige à lire pour
+savoir si l'on est au bon endroit.
+
+> ## Pourquoi la relecture des captures est-elle importante ?
+
+> ## Une capture non relue dérive en silence
+
+Une vraie foire aux questions garde ses questions : c'est sa forme, et le lecteur y arrive avec la
+sienne.
+
+### 42. Le gras là où il ne rend pas
+
+Du `**gras**` dans un support qui n'affiche pas le Markdown : un message de commit, un libellé
+d'interface ou de ligne de commande, un courriel en texte brut. Les astérisques s'y lisent
+littéralement.
+
+> git commit -m "corrige le **plafond** de la fenêtre"
+
+> git commit -m "corrige le plafond de la fenêtre"
+
+Distinct du motif 15, qui vise le gras **de trop** là où il s'affiche. Ici il s'affiche mal, et la
+question de son utilité ne se pose même pas.
 
 ## Restes de conversation
 
@@ -423,6 +496,39 @@ En français, le tic prend une autre forme : le calque non traduit (« une appro
 
 ---
 
+### 37. L'ouverture énumérative prudente
+
+**Mots à surveiller** : il existe plusieurs façons de, il y a quelques points à considérer, de
+manière générale, en règle générale, plusieurs facteurs entrent en jeu, cela dépend de plusieurs
+choses.
+
+La phrase annonce une liste vague au lieu de donner la réponse, et la réponse arrive au paragraphe
+suivant, si elle arrive. Commencer par ce qu'on sait.
+
+> Il existe plusieurs façons de gérer la concurrence. De manière générale, cela dépend du contexte.
+
+> La garde compare l'enregistrement à la base, et refuse si un champ écrit a bougé.
+
+Ce motif est adossé au corpus HC3 ([arXiv:2301.07597](https://arxiv.org/abs/2301.07597)), qui
+compare des réponses humaines et des réponses de modèle.
+
+### 38. Le tapis roulant
+
+**Mots à surveiller** : autrement dit, en d'autres termes, pour faire simple, cela signifie que,
+c'est-à-dire que, pour le dire autrement.
+
+Un paragraphe redit ce que le précédent a dit, sous un autre habillage, sans rien ajouter.
+L'épreuve tient en une question par phrase : **qu'est-ce qui est neuf ici ?** Ce qui ne répond pas
+se retire.
+
+> Le seuil est fixé à 50 mètres. Autrement dit, au-delà de 50 mètres, la comparaison ne se fait
+> plus. Cela signifie que deux points distants de plus de 50 mètres ne sont jamais rapprochés.
+
+> Deux points distants de plus de 50 mètres ne sont jamais rapprochés.
+
+Une reformulation se garde quand elle traduit vraiment : une formule vers des mots, un terme du
+domaine vers la langue courante.
+
 ## Rhétorique
 
 ### 27. La fausse révélation
@@ -445,6 +551,9 @@ voici ce qu'il faut savoir, sans plus attendre, petit point, deux choses mérite
 et c'est instructif.
 
 Le registre familier ne rachète pas l'annonce : « un truc qui m'a bien piégé » a le même défaut.
+
+**T6 est son voisin**, et les deux se confondent parce qu'ils partagent « décortiquons ». Le motif
+28 annonce au lecteur ce qui vient ; T6 laisse voir le procédé, qui ne lui était pas destiné.
 
 > Voyons de plus près comment fonctionne le cache dans Next.js. Voici ce qu'il faut savoir.
 
@@ -546,6 +655,24 @@ reprise. C'est souvent le reste d'une version antérieure du texte.
 Une alternative réelle se garde : dans un document de conception ou un tutoriel, le lecteur peut
 vraiment l'envisager. Plusieurs rejets courts et sans suite dans le même texte sont le signal.
 
+### 41. Le crochet d'accroche
+
+**Mots à surveiller** : Le hic ?, Le problème ?, Et c'est là que ça coince., Ça vous parle ?,
+La bonne nouvelle ?, Devinez quoi., Sauf que.
+
+Une phrase très courte tient lieu de suspense avant la phrase qui porte l'information. Elle vient
+de l'écriture pour les réseaux, où elle sert à retenir quelqu'un qui fait défiler. Retirer le
+crochet : la phrase suivante fait son travail seule.
+
+> La garde bloquait tous les envois. Le hic ? Elle comparait deux lectures espacées de
+> millisecondes.
+
+> La garde bloquait tous les envois parce qu'elle comparait deux lectures espacées de seulement
+> quelques millisecondes.
+
+Distinct du motif 31 : la chute dramatique est une **suite** de fragments, celui-ci est une
+question ou un fragment isolé qui sert de charnière.
+
 ---
 
 ## Les six motifs propres au français
@@ -629,6 +756,78 @@ faux positifs qui portent sur l'auteur.
 
 ---
 
+# Les traces d'outil
+
+**Ces six-là ne se lisent pas comme les autres.** Partout ailleurs la grille demande un groupe : un
+mot ne prouve rien, c'est l'empilement qui parle. Ici une seule occurrence conclut, parce que ces
+chaînes n'existent nulle part ailleurs que dans la sortie d'un outil, ou parce qu'elles sont le
+résidu d'un geste qui n'aurait pas dû aboutir.
+
+Elles ne disent pas qu'un texte est mauvais. Elles disent qu'il a été collé sans être relu, ce qui
+est une autre information et souvent plus utile.
+
+### T1. Les marques de citation d'assistant
+
+**À chercher** : `citeturn0search0`, `contentReference[oaicite:0]{index=0}`, `oai_citation`,
+`[cite: 1]`, `[span_1](start_span)`, `grok_card`, `grok_render_citation_card_json`,
+`attributableIndex`, `attached_file`, `ppl-ai-file-upload`, les crochets lenticulaires isolés.
+
+Des jetons internes que l'interface d'un assistant rend invisibles et que le presse-papier emporte.
+Aucun n'a de raison d'exister dans un texte écrit. Les retirer, et rétablir une vraie référence si
+la citation comptait.
+
+### T2. Les paramètres de suivi accrochés aux liens
+
+**À chercher** : `utm_source=chatgpt.com`, `utm_source=openai`, `utm_source=copilot.com`,
+`utm_source=perplexity`, `referrer=grok.com`.
+
+Plusieurs assistants marquent les liens qu'ils rendent. Le paramètre suit le lien dans le
+copier-coller, et il part sur la forge avec. Le retirer : il ne sert qu'à celui qui l'a posé.
+
+### T3. Les caractères invisibles
+
+**À chercher** : U+200B espace sans chasse, U+200C antiliant, U+200D liant, U+FEFF marque d'ordre,
+U+00AD trait conditionnel, U+2060 sans coupure.
+
+Ils ne s'affichent pas, cassent une recherche, coupent un mot au milieu, et se recopient sans qu'on
+les voie. Ils arrivent par un collage, jamais par une frappe.
+
+**Deux emplois légitimes existent, et ils se déclarent.** Le liant U+200D compose les séquences
+d'emoji, `👨‍🔬` en portant un. Et un caractère cité plutôt qu'employé reste, comme la constante `BOM`
+d'un analyseur de fichiers. Hors de ces deux cas, c'est un résidu.
+
+### T4. Les homoglyphes
+
+**À chercher** : une lettre cyrillique ou grecque au milieu d'un mot latin, `а е о р с х у і`,
+`ο Α`.
+
+Le mot se lit normalement et ne se trouve plus. C'est le résidu d'un collage depuis une source
+mêlée, et c'est aussi la manoeuvre connue pour tromper un détecteur, ce qui rend sa présence dans un
+texte de travail d'autant plus douteuse.
+
+### T5. Le gabarit non rempli
+
+**À chercher** : `[Votre nom]`, `[INSÉRER L'URL]`, `[À COMPLÉTER]`, `2026-XX-XX`, `XXXX`, toute
+instruction restée entre crochets.
+
+Personne ne publie sciemment un texte à trous. Le remplir, ou retirer la ligne : les deux valent
+mieux que de la laisser, et laisser est ce qui arrive.
+
+### T6. Le raisonnement laissé dans le texte
+
+**Mots à surveiller** : Étape 1 :, D'abord je vais, Décomposons, Voyons voir, Analysons cela,
+Réfléchissons, une numérotation qui décrit une démarche plutôt qu'un contenu.
+
+L'échafaudage du raisonnement survit dans le texte rendu. Garder la conclusion, dans la voix de
+l'auteur, et retirer la marche qui y menait.
+
+**Il se distingue du motif 28**, et les deux se confondent facilement puisque « décortiquons »
+figure dans les deux listes. Le motif 28 est une figure adressée au lecteur, qui annonce ce qui
+vient. T6 est du texte qui ne lui était **pas destiné** : il décrit le procédé, pas le sujet.
+Devant un cas douteux, la question qui tranche est de savoir à qui la phrase parle.
+
+---
+
 # Ce que cette grille ne peut pas voir
 
 Une grille de motifs mesure sa **précision**, jamais son **rappel**. Lire les lignes qu'un motif
@@ -651,6 +850,13 @@ décrit, et il faut les lire ensemble.
 La même limite vaut pour les traces **distribuées** : un plan identique sur chaque section, des
 synonymes alternés mécaniquement, un commentaire complet sur ce qui est trivial et muet sur ce qui
 est difficile. Chaque occurrence isolée paraît correcte ; c'est leur répétition qui est le signe.
+
+**Une manoeuvre attrape la seconde : permuter deux paragraphes.** Prendre le deuxième et le
+quatrième d'une section, les échanger, relire. Si rien ne casse, le texte pose des blocs autonomes
+au lieu de dérouler un raisonnement, et chaque paragraphe recommence au lieu de continuer. Un texte
+qui tient a un ordre, et la permutation le fait voir sans qu'aucun mot ne soit suspect.
+
+Ce n'est pas un motif, c'est un geste : rien ne le déclenche, il faut décider de l'essayer.
 
 Un échantillon **non déclenché par les motifs**, tiré au hasard et lu contre le sujet, est le seul
 moyen de voir ces deux familles.
@@ -751,7 +957,12 @@ et de trois relevés de tics de ChatGPT en français
 [Flint](https://generationia.flint.media/p/dejouer-tics-langage-chatgpt),
 [Projet Voltaire](https://www.projet-voltaire.fr/ressources/detecter-texte-chatgpt-ia-generative/)).
 
+Treize motifs, 36 à 42 et T1 à T6, viennent de l'[humaniseur anglais
+d'Aboudjem](https://github.com/Aboudjem/humanizer-skill), sous licence MIT. L'ouverture énumérative
+prudente y est adossée au corpus HC3 ([arXiv:2301.07597](https://arxiv.org/abs/2301.07597)), et les
+deux avertissements sur l'auteur à [Liang et al.](https://arxiv.org/abs/2304.02819).
+
 Ce que ce dépôt en retient comme règles opposables, et les mesures qui les fondent, sont dans la
 section « Le registre » de [CONTRIBUTING.md](../../../CONTRIBUTING.md). Sept tics y sont retenus sur
-les quarante et un de cette grille : ils servent à refuser une relecture, quand la grille sert à
+les cinquante-quatre de cette grille : ils servent à refuser une relecture, quand la grille sert à
 relire.
