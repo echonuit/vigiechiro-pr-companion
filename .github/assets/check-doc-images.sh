@@ -32,7 +32,7 @@ if [ "${1:-}" = "--auto-test" ]; then
         fi
     }
 
-    # Le temoin du defaut de tube (#4642). Il n'passe pas par `verifie`, qui reinvoque le script
+    # Le temoin du defaut de tube (#4642). Il ne passe pas par `verifie`, qui reinvoque le script
     # entier : ce qui s'eprouve ici est le MOTIF, sur une source assez grosse pour depasser le
     # tampon d'un tube. Un temoin bati sur une liste courte serait vert avant comme apres.
     temoin_tube() {

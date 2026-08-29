@@ -24,11 +24,13 @@ de fichier en XPath s est revelee couper bien au-dela de sa cible, production co
 execution du plugin ne marche pas davantage : le goal `check` declenche `pmd:pmd` en fork, et ce
 fork lit la configuration GLOBALE, jamais celle de l execution. Les quatre formes ont ete essayees.
 
-**Pourquoi 62.** C est la mesure du jour, pas une cible : 31 `NcssCount`, 23 `UnusedPrivateMethod`
-dont 9 en production, 5 `GodClass`, 2 `ExcessiveParameterList`, 1 `CyclomaticComplexity`. Le
-cliquet descendra quand ces cas seront traites ; les 23 methodes mortes demandent une lecture par
-site et feront leur propre issue, PMD y visant des SURCHARGES precises qu aucun comptage par nom ne
-sait distinguer.
+**Les deux seuils.** La zone de test est a 40 : 32 `NcssCount`, 5 `GodClass`,
+2 `ExcessiveParameterList`, 1 `CyclomaticComplexity`. La production est a ZERO, et l ADR 4682 dit
+que cela se lit comme un REFUS et non comme une marge a resserrer.
+
+Pose a 62, le cliquet a d abord ete unique sur les deux zones. Le chantier #4656 l a fait descendre
+a 40 en retirant vingt-trois methodes mortes, puis #4682 l a separe : un compteur unique laissait
+une regression d un cote se payer par un gain de l autre.
 
 **Ce qu il ne lit pas.** Le rapport de PMD, et rien d autre. Si `target/pmd.xml` manque, il REFUSE
 au lieu de rendre zero : un garde qui conclut sur ce qu il n a pas lu est vert au moment ou il sert,

@@ -291,6 +291,7 @@ nav:
     - 4659 · Une clôture sans trace ne se distingue pas d'une clôture absente: decisions/4659-une-cloture-sans-trace-ne-se-distingue-pas-d-une-cloture-absente.md
     - 4671 · Le contrôle du carré a deux sources: decisions/4671-le-controle-du-carre-a-deux-sources-et-l-ecran-garde-la-plateforme.md
     - 4682 · Le portail compte chaque zone à part: decisions/4682-le-portail-compte-chaque-zone-a-part.md
+    - 4685 · Un mécanisme plausible corrigé n'est pas une cause établie: decisions/4685-un-mecanisme-plausible-corrige-n-est-pas-une-cause-etablie.md
     - 4475 · Un test dimensionne son stage, il n'hérite pas du fork: decisions/4475-un-test-dimensionne-son-stage-il-n-herite-pas-du-fork.md
     - 4476 · Une javadoc ne raconte pas le refactoring qui l'a produite: decisions/4476-une-javadoc-ne-raconte-pas-le-refactoring-qui-l-a-produite.md
     - 4477 · Une ADR dit sa décision et l'incident qui l'a produite: decisions/4477-une-adr-dit-sa-decision-et-l-incident-qui-l-a-produite.md
