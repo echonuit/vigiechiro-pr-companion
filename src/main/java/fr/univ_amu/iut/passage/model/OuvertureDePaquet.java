@@ -42,8 +42,28 @@ public final class OuvertureDePaquet {
                                 + " sinon les verdicts que vous poseriez ne pourraient être attribués"
                                 + " à personne."));
 
-        String manifeste = null;
         List<String> sequences = new ArrayList<>();
+        return new PaquetOuvert(pseudo, manifesteEtSequences(paquet, sequences), sequences);
+    }
+
+    /// Le manifeste seul, **sans exiger d'identité**.
+    ///
+    /// Un avis qui revient porte déjà la sienne dans son manifeste (#4744) : demander une connexion
+    /// pour lire une signature qu'on tient dans la main serait un refus sans objet. L'identité reste
+    /// exigée par [#ouvrir], qui l'appose sur ce que le lecteur **jugera**.
+    ///
+    /// @param paquet l'archive à lire
+    /// @return le texte du manifeste
+    /// @throws IllegalStateException si l'archive n'en porte aucun
+    /// @throws IOException sur échec de lecture
+    public static String lireManifeste(Path paquet) throws IOException {
+        Objects.requireNonNull(paquet, "paquet");
+        return manifesteEtSequences(paquet, new ArrayList<>());
+    }
+
+    /// Parcourt l'archive une fois : rend le manifeste, et remplit `sequences` au passage.
+    private static String manifesteEtSequences(Path paquet, List<String> sequences) throws IOException {
+        String manifeste = null;
         try (ZipInputStream flux = new ZipInputStream(Files.newInputStream(paquet))) {
             for (ZipEntry entree = flux.getNextEntry(); entree != null; entree = flux.getNextEntry()) {
                 if (PlanDePaquet.NOM_MANIFESTE.equals(entree.getName())) {
@@ -57,7 +77,7 @@ public final class OuvertureDePaquet {
             throw new IllegalStateException("Archive sans " + PlanDePaquet.NOM_MANIFESTE
                     + " : ce n'est pas un paquet d'emport, et rien ne dit de quelle nuit il s'agirait.");
         }
-        return new PaquetOuvert(pseudo, manifeste, sequences);
+        return manifeste;
     }
 
     /// Le contenu de l'entrée courante. `ZipInputStream#readAllBytes` lit bien l'entrée seule, mais

@@ -92,15 +92,13 @@ public class SelectionEcouteController {
     /// @param depotColonnes disposition persistée des colonnes, par écran
     /// @param personnaliser ouvre la modale de personnalisation, que seul le parent sait situer
     /// @param regenerer régénère la sélection, en passant par les porteurs du parent (ADR 0010)
-    /// @param emporter emporte la nuit pour relecture (#4727), par les porteurs du parent également
-    /// @param ouvrirPaquetRecu ouvre un paquet reçu d'un autre poste (#4727)
+    /// @param gestes les quatre gestes de l'emport (#4727, #4744), par les porteurs du parent
     void installer(
             SelectionEcouteViewModel selectionVm,
             DepotDispositionColonnes depotColonnes,
             Runnable personnaliser,
             Runnable regenerer,
-            Runnable emporter,
-            Runnable ouvrirPaquetRecu) {
+            GestesDEmport gestes) {
         Objects.requireNonNull(selectionVm, "selectionVm");
         this.personnaliser = Objects.requireNonNull(personnaliser, "personnaliser");
         this.regenerer = Objects.requireNonNull(regenerer, "regenerer");
@@ -118,11 +116,15 @@ public class SelectionEcouteController {
 
         // Les deux gestes de l'emport (#4727) rejoignent le menu Outils plutôt que la barre : ils sont
         // rares, et deux boutons de plus feraient reculer ceux qu'on emploie à chaque nuit.
-        MenuItem itemEmporter = new MenuItem("Emporter cette nuit…");
-        itemEmporter.setOnAction(evenement -> emporter.run());
-        MenuItem itemOuvrir = new MenuItem("Ouvrir un paquet reçu…");
-        itemOuvrir.setOnAction(evenement -> ouvrirPaquetRecu.run());
-        menuOutils.getItems().addAll(new SeparatorMenuItem(), itemEmporter, itemOuvrir);
+        menuOutils
+                .getItems()
+                .addAll(
+                        new SeparatorMenuItem(),
+                        entree("Emporter cette nuit…", gestes.emporter()),
+                        entree("Ouvrir un paquet reçu…", gestes.ouvrirPaquetRecu()),
+                        new SeparatorMenuItem(),
+                        entree("Renvoyer mon avis…", gestes.renvoyerAvis()),
+                        entree("Reprendre un avis reçu…", gestes.reprendreAvis()));
 
         lblListeTitre
                 .textProperty()
@@ -165,6 +167,24 @@ public class SelectionEcouteController {
                 new GestionnaireColonnes.Colonne(colEcoute, "Écouté", false),
                 new GestionnaireColonnes.Colonne(colVerdict, "Verdict", false),
                 new GestionnaireColonnes.Colonne(colAvisRelecteur, "Avis relecteur", true));
+    }
+
+    /// Les quatre gestes de l'emport, groupés (#4744).
+    ///
+    /// Groupés parce qu'ils arrivent ensemble et qu'un cinquième paramètre `Runnable` aurait porté la
+    /// signature à huit : le coût d'un paramètre de plus est consigné en #4767, et il se paie ici.
+    ///
+    /// @param emporter emporte la nuit pour relecture
+    /// @param ouvrirPaquetRecu ouvre un paquet reçu d'un autre poste
+    /// @param renvoyerAvis renvoie l'avis du relecteur à l'expéditeur
+    /// @param reprendreAvis range un avis revenu à côté du nôtre
+    record GestesDEmport(Runnable emporter, Runnable ouvrirPaquetRecu, Runnable renvoyerAvis, Runnable reprendreAvis) {}
+
+    /// Une entrée de menu qui déclenche un geste.
+    private static MenuItem entree(String libelle, Runnable geste) {
+        MenuItem item = new MenuItem(libelle);
+        item.setOnAction(evenement -> geste.run());
+        return item;
     }
 
     /// La table, pour ce que le parent pilote encore : la synchronisation de la sélection au clavier.
