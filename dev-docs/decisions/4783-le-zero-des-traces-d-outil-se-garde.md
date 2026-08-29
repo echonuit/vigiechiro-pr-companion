@@ -9,6 +9,7 @@ verification: probable
 enforced_by:
   - "scripts/adr/4783-traces-d-outil.py"
 ratchet: 0
+inv_key: cliquet-traces-outil
 verified:
   - by: machine:suspects
     at: 2026-08-29
