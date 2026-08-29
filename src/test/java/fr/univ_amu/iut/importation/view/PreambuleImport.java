@@ -13,7 +13,6 @@ import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Labeled;
 import org.testfx.api.FxRobot;
-import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// Amener une nuit **réellement importée** sur le banc, pour les gestes qui commencent après.
@@ -83,7 +82,7 @@ public final class PreambuleImport {
         //
         // `CompteRenduDeFinImport` le dit en toutes lettres : « un compte rendu ne se termine pas sur
         // Fermer ». C'est donc bien ce bouton-là que l'utilisateur prend, et que le clip doit montrer.
-        amenerLActionDansLeCadre(robot);
+        GesteVisible.amenerDansLeCadre(robot, LIBELLE_SUITE);
         GesteVisible.cliquer(robot, LIBELLE_SUITE);
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -93,31 +92,6 @@ public final class PreambuleImport {
                 "le passage pivot ne s'est pas ouvert après l'import : c'est par « " + LIBELLE_SUITE
                         + " » que l'utilisateur y arrive, et un banc qui y sauterait ne montrerait pas ce"
                         + " chemin");
-    }
-
-    /// Fait venir « Ouvrir le passage » dans le cadre, en REJOUANT le défilement jusqu'à ce qu'elle
-    /// soit atteignable au sens de [org.testfx.util.NodeQueryUtils#isVisible()] - le prédicat même
-    /// dont `moveTo` se sert.
-    ///
-    /// Une seule passe ne suffit pas : [GesteVisible#amenerDansLeCadre] calcule la position une fois,
-    /// et le compte rendu vient de paraître. Mesurée à cet instant, la cible rend souvent une largeur
-    /// nulle au lieu de sa place ; le panneau s'arrête à mi-course et le bouton reste sous le bord.
-    /// Vu rouge trois fois en intégration sur la suite complète, jamais seul.
-    ///
-    /// @throws TimeoutException si l'action ne vient jamais dans le cadre
-    private static void amenerLActionDansLeCadre(FxRobot robot) throws TimeoutException {
-        attendre(
-                APPARITION_SECONDES,
-                () -> {
-                    GesteVisible.amenerDansLeCadre(robot, LIBELLE_SUITE);
-                    return robot.lookup(LIBELLE_SUITE)
-                            .match(NodeQueryUtils.isVisible())
-                            .tryQuery()
-                            .isPresent();
-                },
-                "« " + LIBELLE_SUITE + " » n'est jamais venue dans le cadre : le compte rendu de fin"
-                        + " d'import porte cette action, et c'est par elle que l'utilisateur atteint le"
-                        + " passage");
     }
 
     /// Le contrôleur de l'écran affiché, pris chez le navigateur qui le détient.
