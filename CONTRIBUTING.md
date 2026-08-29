@@ -416,12 +416,13 @@ Deux workflows se déclenchent à chaque push :
 | Workflow | Rôle | Bloquant ? |
 |---|---|---|
 | [`maven.yml`](.github/workflows/maven.yml) | Build + tests headless **+ couverture** (`./mvnw verify -Djacoco.haltOnFailure=true`, seuils JaCoCo bloquants). | **Oui** |
-| [`lint.yml`](.github/workflows/lint.yml) | Statique : **`spotless:check`** (formatage) + complétude des captures + **`-Pquality-gate compile pmd:check`** (PMD bloquant). | **Oui** |
+| [`lint.yml`](.github/workflows/lint.yml) | Statique : **`spotless:check`** (formatage) + complétude des captures + **`test-compile pmd:pmd`**, qui produit le rapport sans juger, puis les **cliquets ADR** qui le jugent - dont celui de l'[ADR 4617](dev-docs/decisions/4617-le-portail-voit-les-tests-et-le-code-mort.md). | **Oui** |
 
 Reproduire les contrôles **en local** (la CI les répartit sur les deux workflows) :
 
 ```bash
-./mvnw -Pquality-gate compile pmd:check         # PMD bloquant (lint.yml)
+./mvnw -B test-compile pmd:pmd                  # le rapport PMD, qui ne juge pas (lint.yml)
+python3 scripts/adr/4617-code-mort-et-zone-de-test.py   # le verdict, par zone (lint.yml)
 ./mvnw -B verify -Djacoco.haltOnFailure=true    # tests + couverture + dépendances (maven.yml)
 ./mvnw spotless:check                           # formatage (lint.yml)
 ```
