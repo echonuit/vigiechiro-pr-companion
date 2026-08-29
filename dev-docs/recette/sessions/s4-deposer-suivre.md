@@ -279,10 +279,14 @@ surtout `verifier-depot-vigiechiro`, sans équivalent IHM alors que c'est le seu
 dépôt ZIP est bien arrivé). Écart de nommage : la commande `deposer` ne dépose rien (elle prépare et
 marque déposé, sans réseau) : confusion avec `deposer-vigiechiro`.
 
-Un écart s'est ajouté avec ce chantier : les **métadonnées d'un passage** (récupérer, envoyer, saisir
-l'enregistreur) n'existent **que** dans la modale IHM - aucune commande ne les expose. C'est aussi ce qui
-prive d'un rattrapage en masse des nuits rapatriées avant #1814, réparables aujourd'hui **une par une**.
-Suivi par une issue dédiée.
+Un écart s'était ajouté avec ce chantier : les **métadonnées d'un passage** n'existaient que dans la
+modale IHM. **Il est comblé depuis** : `metadonnees-passage` expose `--recuperer`, `--envoyer`,
+`--enregistreur` et les heures, plus un rattrapage `--tout` qui n'écrit qu'avec `--confirmer`. Le
+rattrapage en masse des nuits rapatriées avant #1814 ne se fait donc plus une par une.
+
+Ce que la commande n'a **pas**, en revanche, c'est le moindre cas `bats` : ni celui de surface que
+portent ses voisines, ni la vérification de ses codes de sortie, dont le `1` qu'elle rend sur un
+renoncement de concurrence. Suivi en #4753.
 
 ## Prérequis avant de lancer
 

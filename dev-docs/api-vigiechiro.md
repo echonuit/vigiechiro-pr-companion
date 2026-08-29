@@ -92,6 +92,37 @@ Récupérer un token : sur le site VigieChiro connecté, exécuter le marque-pag
 Base : `https://vigiechiro.herokuapp.com/api/v1`. Auth : `Authorization: Basic base64("<token>:")` (token en
 *username*, mot de passe vide).
 
+### La concurrence se tient côté client, contre ce que nous avions vu (#4640)
+
+La plateforme ne protège pas l'écriture d'une participation : elle ignore l'`If-Match` sur cette
+route, mesuré le 2026-08-26. Sans garde, un second poste qui modifie la même nuit voit son écriture
+écrasée en silence.
+
+**Constater un conflit demande trois valeurs**, et le dépôt n'en avait que deux : la nôtre et la
+leur. Sans base, « l'utilisateur a modifié la météo » et « la plateforme l'a modifiée » sont
+indiscernables.
+
+La table `participation_relevee` (V43) porte cette base : ce que la plateforme portait à **notre
+dernière lecture**, horodaté. Le tirage l'alimente, et l'envoi seulement quand l'écriture a été
+**acceptée** : noter après un refus décrirait un état distant inexistant, et noter après un
+renoncement rendrait la base égale à leur valeur, si bien que la tentative suivante conclurait qu'ils
+n'ont rien changé.
+
+`SynchronisationParticipation#pousserVers` renonce donc quand la plateforme a changé un champ que le
+`PATCH` écrit depuis notre dernière lecture. Faute de relevé, sur une nuit antérieure à la migration,
+il retombe sur une comparaison entre deux lectures du même appel : cela ne couvre qu'une course de
+quelques millisecondes, et c'est assumé.
+
+**Ce que cette base n'est pas.** Elle ne dit pas ce qui est vrai, elle dit ce que nous avions vu. Elle
+ne se montre jamais à l'utilisateur comme une donnée, et la vérité reste côté serveur ([ADR 4640]).
+
+**Ce qu'elle ne couvre pas encore.** Les dates et la météo du corps envoyé viennent du passage
+**local** et remplacent le distant sans condition. La non-destruction de l'[ADR 0020] ne vaut
+aujourd'hui que pour le dictionnaire `configuration`. C'est le lot 2 du chantier, #4708.
+
+[ADR 4640]: https://companion-dev.echonuit.fr/decisions/4640-pour-ne-rien-effacer-il-faut-se-souvenir-de-ce-qu-on-avait-vu/
+[ADR 0020]: https://companion-dev.echonuit.fr/decisions/0020-ecrire-sur-la-plateforme-ne-rien-inventer-ni-effacer/
+
 ### Toute écriture déclare ce qu'un rejeu lui ferait (#2677)
 
 Le réessai gradué est posé au **point de passage unique** des émissions : toute lecture en bénéficie
@@ -104,10 +135,10 @@ c'est la **réponse** qui se perd.
 | Valeur | Quand | Exemples |
 |---|---|---|
 | `AUTORISE` | rejouer redonne le même état **et** la même réponse | correction d'observation (valeur absolue), suppression, demande d'URL de partie |
-| `INTERDIT` | rejouer **duplique** ou **trompe** | `POST` de création, message empilé par `$push`, `PATCH` protégé par `If-Match` |
+| `INTERDIT` | rejouer **duplique** ou **trompe** | `POST` de création, message empilé par `$push`, `PATCH` qui repose des valeurs absolues |
 
 **Une règle par verbe HTTP serait fausse.** `PUT /donnees/…/messages` **empile** côté serveur : un
-`PUT` peut parfaitement ne pas être idempotent. Et le `PATCH` avec `If-Match` ne duplique pas, mais
+`PUT` peut parfaitement ne pas être idempotent. Et le `PATCH` avec `If-Match`, **là où le serveur le lit**, ne duplique pas, mais
 rejoué après un succès dont la réponse s'est perdue il revient en `412` - l'utilisateur lirait « échec »
 sur une modification qui a bien eu lieu. L'arbitrage est **par appel**, écrit à côté de lui.
 
@@ -146,7 +177,7 @@ la sonde live `refus_serveur_est_un_refuse_explicite` verrouille que ce refus re
 | GET | `/participations/{id}/donnees` | résultats Tadarida (paginé) : sert à l'import |
 | GET | `/taxons/liste` | référentiel taxons |
 | POST | `/sites/{id}/participations` | crée une participation |
-| PATCH | `/participations/{id}` (`If-Match: _etag`) | pousse météo/config depuis la modale du passage |
+| PATCH | `/participations/{id}` | pousse météo/config depuis la modale du passage ; **aucun `If-Match`**, la concurrence est tenue côté client (#4707) |
 | POST | `/fichiers` (`lien_participation`) puis `PUT` S3 signé puis POST `/fichiers/{id}` | téléverse un fichier **rattaché à la participation** (3 temps, `PUT` **en flux**) |
 | POST | `/participations/{id}/compute` (corps `{}`) | déclenche le **traitement serveur** (Tadarida) de la participation déposée |
 | GET | `/grille_stoc/cercle?lng&lat&r` | mailles du carroyage national autour d'un point |
@@ -265,7 +296,12 @@ qui n'existe pas dans le source, et se saute proprement si le miroir est absent.
       formulaire web lie** : `detecteur_enregistreur_numero_serie`. L'app a longtemps poussé
       `..._numserie` : accepté par le serveur, **invisible** sur la fiche web. La lecture accepte
       encore les deux ; l'écriture retire l'ancienne.
-    - **`_etag`** est requis en en-tête `If-Match` pour tout `PATCH`/`PUT`/`DELETE` (concurrence Eve).
+    - **`_etag`** n'est **pas** requis en en-tête `If-Match`, contrairement à ce que la convention Eve
+      laisse croire. Mesuré sur le socle le 2026-08-29 : **2 routes d'écriture sur 29** posent un
+      `if_match` (les référentiels `taxons` et `protocoles`), et elles refusent alors en `412` sans
+      lui. Les 27 autres l'ignorent, le socle commentant lui-même qu'il réessaie en cas de course.
+      La route des participations est de ces 27 : elle rend `200` sans en-tête comme avec un
+      étiquetage faux (#4523).
     - **`traitement.etat`** : les **cinq** états de l'analyse serveur (`PLANIFIE`, `EN_COURS`, `FINI`,
       `ERREUR`, `RETRY`), accompagnés de `date_planification` / `date_debut` / `date_fin`, `message`
       (trace d'erreur) et `retry`. Le bloc est **remplacé** à chaque étape, jamais complété. Cf. § « Le
@@ -715,7 +751,7 @@ Sondé via `OPTIONS` (en-tête `Allow`) avec un token d'observateur : **aucune s
 
 | Ressource | `Allow` observé | Réalité |
 |---|---|---|
-| `/participations/{id}` | `GET, PATCH, DELETE…` | PATCH **fonctionne** (sync modale) ; **DELETE annoncé** : une participation est supprimable par son propriétaire (non testé, destructif ; `If-Match` requis, convention Eve) |
+| `/participations/{id}` | `GET, PATCH, DELETE…` | PATCH **fonctionne** (sync modale) ; **DELETE annoncé** : une participation est supprimable par son propriétaire (non testé, destructif ; `If-Match` supposé requis par convention Eve, **non vérifié** sur cette route) |
 | `/sites/{id}` | `GET, PATCH, DELETE…` | PATCH réel → **403** : `Allow` reflète le **schéma Eve**, pas l'autorisation par rôle. Écriture/suppression réservées (MNHN/propriétaire) |
 | `/moi/participations` | `GET` seul | lecture seule, **paginée** (`_meta.total` fiable) |
 | `/fichiers` (collection) | `POST, GET…` | `GET` réel → **403** : on peut créer des fichiers, pas les relire |
