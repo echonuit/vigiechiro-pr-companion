@@ -49,6 +49,9 @@ Deux textes, relus dans six mois **sans le fil** : le corps de l'issue, et celui
 6. LIRE A FROID les deux, comme quelqu un qui n a pas suivi.
 ```
 
+Une fois les deux corps au net, [`ouvrir-une-pr`](../ouvrir-une-pr/SKILL.md) prend la suite : la
+batterie locale, les refus que seule la forge rend, et le moniteur qui part avec la PR.
+
 ## Deux dettes réelles, laissées dans le dépôt
 
 Une prémisse fausse, une mesure de mutation lue comme « ce code est atteignable », a été corrigée
