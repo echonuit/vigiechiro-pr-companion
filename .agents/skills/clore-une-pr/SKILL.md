@@ -94,9 +94,9 @@ Relancer ce que la PR touchait, sur `main` mis à jour, coûte une minute. Et un
 compilation dans la même commande efface les rapports : un « 0 test exécuté » est alors un artefact de
 mesure, pas un résultat.
 
-Quand la PR fusionnée était la dernière d'un chantier, fermer les issues ne suffit pas :
-[`clore-un-chantier`](../clore-un-chantier/SKILL.md) porte les douze passes, et
-[`clore-une-issue`](../clore-une-issue/SKILL.md) rappelle que les deux corps se relisent avant.
+Une fois fusionnée, [`clore-une-issue`](../clore-une-issue/SKILL.md) prend la suite : l'issue se met
+au net et se ferme. Et fermer la dernière issue d'un chantier n'est pas le clore -
+[`clore-un-chantier`](../clore-un-chantier/SKILL.md) porte les douze passes.
 
 ## Signaux d'alerte : on s'arrête
 

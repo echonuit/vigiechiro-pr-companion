@@ -54,10 +54,14 @@ GARDE = pathlib.Path(".github") / "scripts" / "verifie-titre-pr.sh"
 # Les trois documents qui decrivent le moment ou le titre s ecrit. `.agents/skills` est le fonds,
 # `.claude/skills` sa copie tenue par `synchronise-adaptateurs.py` : les deux doivent nommer la
 # commande, la copie etant ce que Claude Code lit.
+#
+# La competence a change : le titre s ecrit en OUVRANT la pull request, et `clore-une-issue` le
+# portait par accident d histoire. Elle vient desormais APRES la fusion, ou il est trop tard pour
+# eprouver un titre. Le corpus suit le moment, pas le nom.
 CORPUS = (
     pathlib.Path("CONTRIBUTING.md"),
-    pathlib.Path(".agents") / "skills" / "clore-une-issue" / "SKILL.md",
-    pathlib.Path(".claude") / "skills" / "clore-une-issue" / "SKILL.md",
+    pathlib.Path(".agents") / "skills" / "ouvrir-une-pr" / "SKILL.md",
+    pathlib.Path(".claude") / "skills" / "ouvrir-une-pr" / "SKILL.md",
 )
 
 # Les deux titres temoins. Le second compte autant que le premier : un script qui refuserait tout
