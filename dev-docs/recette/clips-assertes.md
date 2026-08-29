@@ -376,3 +376,28 @@ Aucun de ces clips ne dit donc quoi que ce soit de la vitesse du produit.
 > donc substitué, et sa question capturée. Ce que le clip démontre : « Appliquer » ne part pas sans
 > demander, et la question nomme le numéro qui va changer. Ce qu'il ne montre pas : la fenêtre qui
 > porte cette question.
+
+
+## ScenarioDiagnosticPassageTest
+
+Le diagnostic est l'écran où l'on va voir **pourquoi** une nuit est ce qu'elle est. Le clip repart de
+l'import, comme les trois précédents, et rejoint le diagnostic par sa carte sur le passage : c'est le
+chemin de l'observateur, et il commence donc lui aussi par un import freiné.
+
+### S2-34 à S2-39 · `lire_le_diagnostic_d_un_passage`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioDiagnosticPassageTest.lire_le_diagnostic_d_un_passage.mp4"></video>
+
+> `S2-39` **ne se lit pas sur cet écran**. L'enregistreur et le nombre de mesures sont en barre de
+> statut, qui appartient au chrome : le contrôleur du diagnostic y publie un résumé (#693, #3548), et
+> c'est le chrome qui le rend. Le clip montre les deux à la fois, ce qu'un banc monté sur la seule vue
+> du diagnostic n'aurait pas pu filmer.
+
+> La carte nominale **n'a aucune anomalie**, et c'est son substitut qui parle - « Aucune anomalie
+> détectée. » La case admet les deux formes, et le banc ne tranche pas à la place du produit : exiger
+> une liste peuplée reviendrait à demander des défauts à une nuit saine.
+
+> L'alerte « hors nuit » paraît, et ce n'est pas un montage : mesuré, l'enregistrement de la carte
+> nominale déborde de sa fenêtre nocturne des deux côtés. Le cas est donc jouable sans fabriquer une
+> seconde carte.
