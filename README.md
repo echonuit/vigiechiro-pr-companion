@@ -258,7 +258,7 @@ Le projet embarque une chaîne qualité **professionnelle**, exécutée à chaqu
 | `./mvnw javafx:run` | Lance l'application |
 | `./mvnw test` | Tests unitaires et d'intégration |
 | `./mvnw verify` | Build complet (tests + couverture + contrôles) |
-| `./mvnw -Pquality-gate verify` | Build + **PMD bloquant** + seuils de couverture |
+| `./mvnw -B verify -Djacoco.haltOnFailure=true` | Build + tests + **seuils de couverture bloquants** (ce que lance `maven.yml`) |
 | `./mvnw spotless:apply` | Formate le code (Palantir Java Format) |
 
 - 🤝 **[CONTRIBUTING.md](CONTRIBUTING.md)** : comment proposer une contribution (fork puis branche puis PR).

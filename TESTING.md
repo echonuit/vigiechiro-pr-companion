@@ -49,11 +49,12 @@ Monocle. Le headless vient de `glass.platform=Headless`, pas de TestFX.
 |---|---|
 | `./mvnw test` | **Toute** la suite de tests. |
 | `./mvnw verify` | Build complet : tests + couverture + contrôles (PMD/JaCoCo **non** bloquants). |
-| `./mvnw -Pquality-gate verify` | **Portail qualité** : PMD `failOnViolation` + seuils JaCoCo **bloquants**. |
+| `./mvnw -Pquality-gate verify` | Rend PMD bloquant sur **toute** violation. **Ne passe pas** sur ce dépôt : le portail se tient par le cliquet de l'ADR 4617, pas par `failOnViolation`. |
 | `./mvnw test -Dtest=SitesViewModelTest` | Une seule **classe** de test. |
 | `./mvnw test -Dtest=SitesViewModelTest#chargeLesSites` | Une seule **méthode**. |
 | `env -u DISPLAY ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage -DtargetClasses=… -DtargetTests=…` | Tests de **mutation** PIT (lent, ciblé, à la demande). `-Pmutation test` **ne mute rien** : le profil n'a aucune liaison de phase, donc le goal n'est jamais invoqué - la commande lance toute la suite et rend zéro rapport, sans le dire. |
-| `./mvnw pmd:check` | Rapport PMD seul (rapide). |
+| `./mvnw -B test-compile pmd:pmd` | Le rapport PMD. Il **ne juge pas** : le verdict est le cliquet de l'ADR 4617. |
+| `python3 scripts/adr/4617-code-mort-et-zone-de-test.py` | Le verdict du portail, par zone. Refuse si le rapport manque. |
 | `./mvnw spotless:check` | Vérifie le formatage (sans modifier). |
 
 ---
@@ -133,7 +134,7 @@ La source de vérité est [`.github/workflows/maven.yml`](.github/workflows/mave
 |---|---|---|
 | Build + tests + couverture + hygiène des dépendances (`maven.yml`) | `./mvnw -B verify -Djacoco.haltOnFailure=true` | **Oui** |
 | Formatage (`lint.yml`) | `./mvnw -B spotless:check` | **Oui** |
-| Portail qualité PMD (`lint.yml`) | `./mvnw -B -Pquality-gate compile pmd:check` | **Oui** |
+| Portail qualité (`lint.yml`) | `./mvnw -B test-compile pmd:pmd` puis les **cliquets ADR**, dont `scripts/adr/4617-code-mort-et-zone-de-test.py` | **Oui** |
 
 `lint.yml` vérifie aussi la **complétude des captures de référence**
 ([`check-captures.sh`](.github/assets/check-captures.sh)). Une PR doit passer **les deux** workflows.
