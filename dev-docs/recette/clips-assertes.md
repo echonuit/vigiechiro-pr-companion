@@ -434,3 +434,32 @@ le chemin réel, et il commence donc lui aussi par un import freiné.
 > Le dialogue de confirmation et le compte rendu de régénération ne sont pas à l'image : tous deux
 > passent par `Alert.showAndWait()`, qui fige TestFX. Leurs porteurs sont substitués et leurs messages
 > capturés.
+
+
+## ScenarioRaccourcisVerificationTest
+
+Le clavier de l'écran de vérification. Trois de ses six cas gardent une **absence** - une touche qui
+ne doit pas agir - et chacun relève d'abord l'autre condition : la touche agit là où elle doit agir,
+puis se tait là où elle doit se taire. C'est le seul moyen qu'un non-effet prouve quelque chose.
+
+### S3-39 à S3-44 · `les_raccourcis_clavier_de_la_verification`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioRaccourcisVerificationTest.les_raccourcis_clavier_de_la_verification.mp4"></video>
+
+> **Le clip montre des touches, donc peu de mouvement.** Ce qui change à l'image est ce qu'elles
+> produisent : la ligne suivante se sélectionne, le bouton du verdict se marque, la lettre s'inscrit
+> dans le commentaire, le bandeau de succès paraît. Le geste lui-même est invisible par nature.
+
+> `S3-40` **ne démontre pas que le son sorte**, et c'est la même limite que `S3-12` : mesuré pendant
+> #4734, la lecture ne démarre pas faute de périphérique audio. Ce que le cas établit est que la barre
+> d'espace atteint le lecteur - ses tentatives en témoignent - et qu'elle **ne déclenche pas** le
+> bouton qui a le focus, défaut que #1504 a eu à corriger.
+
+> `S3-44` est un **contrôle croisé** et non une lecture : la légende doit nommer les libellés que les
+> boutons portent aujourd'hui. #1513 a eu à corriger une légende qui avait cessé de suivre l'écran.
+
+> **Une limite déclarée.** La moitié « `Entrée` ne fait rien sans verdict » constate un fait vrai sans
+> qu'aucune mutation ait pu la faire rougir : trois couches le tiennent en série, et les retirer une à
+> une - puis deux ensemble - laisse le cas vert. L'en-tête du banc le dit, pour qu'on ne lui prête pas
+> une solidité qu'il n'a pas.

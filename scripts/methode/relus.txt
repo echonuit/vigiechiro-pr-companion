@@ -1900,6 +1900,7 @@ cae07d34e6a3  src/test/java/fr/univ_amu/iut/qualification/view/QualificationCont
 cd070b1c4a6b  src/test/java/fr/univ_amu/iut/qualification/view/QualificationIdentiteStatutViewTest.java
 371d116b1916  src/test/java/fr/univ_amu/iut/qualification/view/QualificationViewTest.java
 6e4250db20c7  src/test/java/fr/univ_amu/iut/qualification/view/QualificationVueIntegrationTest.java
+c4625eadd4c2  src/test/java/fr/univ_amu/iut/qualification/view/ScenarioRaccourcisVerificationTest.java
 62ca79c783a4  src/test/java/fr/univ_amu/iut/qualification/view/ScenarioSelectionEcouteTest.java
 2ef6b5e9acbf  src/test/java/fr/univ_amu/iut/qualification/viewmodel/QualificationViewModelTest.java
 69f1f54af525  src/test/java/fr/univ_amu/iut/qualification/viewmodel/SelectionEcouteViewModelTest.java
