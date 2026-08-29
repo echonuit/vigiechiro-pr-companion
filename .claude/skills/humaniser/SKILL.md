@@ -155,11 +155,17 @@ foster, garner, intricate, vibrant.
 
 Le tic est le **groupe**, pas le mot isolé. Encore faut-il savoir ce que chaque mot pèse dans le
 groupe, et les dix-neuf mots français ne pèsent pas pareil. Ils se rangent sur un seul axe :
-**combien d'autres emplois le mot a-t-il ?** Un mot sans autre emploi n'est là que pour
-emballer ; un mot qui est aussi un terme du domaine ne prouvera jamais rien seul.
+**combien d'emplois le mot a-t-il dans le registre de ce dépôt ?** Un mot qui n'y en a aucun n'est
+là que pour emballer ; un mot qui est aussi un terme du domaine ne prouvera jamais rien seul.
 
-**Niveau 1, le mot sans autre emploi** : paysage (au figuré), tapisserie (au figuré), fascinant,
-captivant, passionnant, révolutionnaire, transformateur, disruptif, incontournable.
+**L'axe est relatif à ce registre, et le dire évite une erreur.** « Incontournable » n'a aucun
+emploi ici, et il en a un très vivant ailleurs : sur les 4 454 pages de foire aux questions
+françaises du jeu `almanach/hc3_french_ood`, ses huit occurrences sont toutes commerciales, « un
+véritable incontournable de la région », et toutes écrites par des humains. Le mot ne dit donc rien
+de l'auteur. Il dit un registre, que ce dépôt n'a pas.
+
+**Niveau 1, le mot sans emploi dans ce registre** : paysage (au figuré), tapisserie (au figuré),
+fascinant, captivant, passionnant, révolutionnaire, transformateur, disruptif, incontournable.
 Une occurrence suffit à ouvrir la ligne, et la ligne est presque toujours fautive.
 
 **Niveau 2, le mot marqué qui garde un emploi** : crucial, primordial, fondamental, notable,
