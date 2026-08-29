@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -68,6 +69,9 @@ class SynchronisationParticipationTest {
     @Mock
     FenetreObserveeNuit fenetreObservee;
 
+    @Mock
+    ReleveDeParticipation releve;
+
     private SynchronisationParticipation sync;
 
     @BeforeEach
@@ -81,7 +85,8 @@ class SynchronisationParticipationTest {
                 referentielPoint,
                 fenetreObservee,
                 // Aucune commune resolue : repli metropole, soit le comportement d'avant #3442.
-                new FuseauDuPoint(idPoint -> Optional.empty()));
+                new FuseauDuPoint(idPoint -> Optional.empty()),
+                releve);
     }
 
     @Test
@@ -387,6 +392,72 @@ class SynchronisationParticipationTest {
         ArgumentCaptor<MaterielMicro> micro = ArgumentCaptor.forClass(MaterielMicro.class);
         verify(materielDao).definir(micro.capture());
         assertThat(micro.getValue().typeMicro()).isEqualTo("ICS");
+    }
+
+    @Test
+    @DisplayName("#4706 : tirer NOTE ce que la plateforme portait, pour servir de base au conflit")
+    void tirer_depuis_note_le_releve() {
+        when(passageDao.findById(42L)).thenReturn(Optional.of(passage(null)));
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        ParticipationDetail distant = detail("e-lu");
+        when(client.participation("part-1")).thenReturn(ReponseApi.succes(distant));
+
+        sync.tirerDepuis(42L);
+
+        // Sans base, une modification faite ici ne se distingue pas d'une modification faite la-bas.
+        verify(releve).noter(42L, "part-1", distant);
+    }
+
+    @Test
+    @DisplayName("#4706 : une écriture ACCEPTÉE note la base, sur l'état qu'on vient de valider")
+    void pousser_vers_note_apres_une_ecriture_acceptee() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        ParticipationDetail juste = detail("e-lu");
+        when(client.participation("part-1")).thenReturn(ReponseApi.succes(juste));
+        when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        sync.pousserVers(42L);
+
+        // C'est la RELECTURE qu'on note : c'est l'etat contre lequel on a valide, et celui qu'on a envoye.
+        verify(releve).noter(42L, "part-1", juste);
+    }
+
+    @Test
+    @DisplayName("#4706 : une écriture REFUSÉE ne note rien, la base décrirait un état qui n'existe pas")
+    void pousser_vers_ne_note_rien_si_refuse() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        when(client.participation("part-1")).thenReturn(ReponseApi.succes(detail("e-lu")));
+        when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.echouee("422 champ invalide"));
+
+        sync.pousserVers(42L);
+
+        verify(releve, never()).noter(anyLong(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("#4706 : un RENONCEMENT ne note rien, sinon il effacerait le conflit qu'il vient de voir")
+    void pousser_vers_ne_note_rien_quand_il_renonce() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detail("e-lu")))
+                .thenReturn(ReponseApi.succes(detailAvecMeteo("e-bouge", new MeteoDepot("FORT", "75-100"))));
+
+        sync.pousserVers(42L);
+
+        // Noter ici rendrait la base EGALE a leur valeur. La tentative suivante conclurait « eux n'ont
+        // rien change » et ecraserait leur travail en silence : le conflit se resoudrait tout seul,
+        // en notre faveur, sans que personne l'ait tranche.
+        verify(releve, never()).noter(anyLong(), anyString(), any());
     }
 
     @Test

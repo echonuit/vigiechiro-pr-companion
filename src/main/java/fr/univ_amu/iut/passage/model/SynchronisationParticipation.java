@@ -40,6 +40,7 @@ public final class SynchronisationParticipation {
             "Participation Vigie-Chiro introuvable (non connecté, ou supprimée côté plateforme).";
 
     private final ClientVigieChiro client;
+    private final ReleveDeParticipation releve;
     private final LienVigieChiroDao liens;
     private final PassageDao passageDao;
     private final MaterielMicroDao materielDao;
@@ -66,7 +67,9 @@ public final class SynchronisationParticipation {
             EnregistreurDao enregistreurDao,
             ReferentielPoint referentielPoint,
             FenetreObserveeNuit fenetreObservee,
-            FuseauDuPoint fuseaux) {
+            FuseauDuPoint fuseaux,
+            ReleveDeParticipation releve) {
+        this.releve = Objects.requireNonNull(releve, "releve");
         this.client = Objects.requireNonNull(client, "client");
         this.liens = Objects.requireNonNull(liens, "liens");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
@@ -167,6 +170,13 @@ public final class SynchronisationParticipation {
                 juste.configuration(),
                 fuseaux.pour(passage.idPoint()));
         ResultatEcriture ecriture = client.modifierParticipation(objectid, juste.etag(), maj);
+        // #4706 : la base ne se note QUE sur une ecriture acceptee, et sur la relecture, qui est l'etat
+        // contre lequel on a valide. Un refus decrirait un etat distant qui n'existe pas ; et noter
+        // apres un renoncement rendrait la base egale a LEUR valeur, si bien que la tentative suivante
+        // conclurait qu'ils n'ont rien change et ecraserait leur travail en silence.
+        if (ecriture.estReussie()) {
+            releve.noter(idPassage, objectid, juste);
+        }
         // #1885 : le réalignement a modifié les données de l'utilisateur, il ne peut pas rester tacite.
         return EnvoiParticipation.ecrit(ecriture, realignementEntre(declare, passage));
     }
@@ -247,6 +257,10 @@ public final class SynchronisationParticipation {
         String objectid = participationDe(idPassage).orElseThrow(() -> new RegleMetierException(NON_LIE));
         ParticipationDetail distant =
                 client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
+
+        // #4706 : ce que la plateforme portait devient la BASE. Sans elle, une modification faite ici
+        // ne se distingue pas d'une modification faite la-bas, et le conflit ne se constate pas.
+        releve.noter(idPassage, objectid, distant);
 
         MeteoReleve fusion =
                 CorrespondanceParticipation.fusionnerMeteo(MeteoPassage.lire(passage.donneesMeteo()), distant.meteo());
