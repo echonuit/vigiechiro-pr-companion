@@ -248,7 +248,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A8 · La mutation mesure dès qu'un comportement est complet | 0 | 0 | **relecture seule** |
 | A9 · La dette se tient par un cliquet, pas par un nettoyage | 10 | 4 | `scripts/adr/2843-tiret-cadratin.py`, `PatronDuCliquetTest#tout_cliquet_passe_par_le_patron`, `scripts/adr/verifie_scripts.py`, et 6 autres |
 | A10 · Jamais de suppression d'avertissement | 0 | 0 | **relecture seule** |
-| A11 · L'assumé se déclare, il ne se contourne pas | 6 | 0 | **relecture seule** |
+| A11 · L'assumé se déclare, il ne se contourne pas | 7 | 0 | **relecture seule** |
 | A12 · Rendre compte avant de conclure, et aucun échec silencieux | 8 | 4 | `scripts/adr/0008-echec-silencieux.py`, `.github/scripts/verifie-secret-winget.sh`, `RetourOperationTest#les_deux_causes_ne_se_melangent_pas`, et 2 autres |
 | A13 · Un refus dit ce qui manque, et ne conseille que le vérifié | 9 | 8 | `scripts/adr/2635-refus-sans-surface.py`, `AuditDepartementDuPointTest#legitime_et_suspecte_indiscernables`, `FiltresLieuTest#le_point_est_filtrable`, et 6 autres |
 | A14 · Un état n'est pas un compte rendu, et ils ne partagent pas de canal | 8 | 2 | `CompteRenduChiffreTest#ventilation_non_exhaustive_refusee`, `CauseLisibleTest#l_enveloppe_de_reflexion_ne_masque_pas_la_panne`, `scripts/adr/3947-message-enveloppe.py` |

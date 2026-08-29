@@ -47,10 +47,22 @@ issues sur le même sujet, écrites depuis deux angles, ne se ressemblent pas.
              pas a celui qui a remarque son symptome.
 5. RECADRER  titre ET corps des issues deplacees. Un recadrage laisse en commentaire
              sous un corps perime ne recadre rien.
+6. DIMENSIONNER chaque lot : combien de PR ? Plus de deux, c est un CHANTIER, donc
+             le lot s ouvre en SOUS-CHANTIER et non sous une case a cocher.
 ```
 
 Quand deux chantiers se recoupent, **découper le périmètre explicitement** et l'écrire dans les
 deux, plutôt que de laisser la fusion arbitrer.
+
+## Le palier du sous-chantier, à l'étape 6
+
+**Plus de deux PR cohérentes, c'est un chantier.** Un lot qui portera plusieurs issues et plusieurs
+PR s'ouvre en **sous-chantier**, pas sous une case à cocher.
+
+La règle, sa mesure et son piège vivent dans la compétence `ouvrir-un-chantier`, qui porte le geste
+du découpage. Elle est rappelée ici parce que cette compétence s'ouvre aux **deux** moments où des
+lots se créent : au découpage d'un chantier, et à la passe 9 d'une clôture, où les suites deviennent
+des issues.
 
 ## Interroger le graphe, pour ce que `grep` ne relie pas
 
@@ -100,3 +112,5 @@ l'**investigation d'un défaut**, l'**audit global**.
 | « Cette issue est libre, personne n'est assigné » | L'assignation est muette. Lire `git worktree list` |
 | « Elle est revendiquée depuis longtemps » | Vérifier : branche vivante ? PR ouverte ? |
 | « J'ai compté 28 occurrences » | Un comptage n'est pas une lecture |
+| « Ce lot tiendra bien sous une case à cocher » | Combien de PR ? Plus de deux, il lui faut un sous-chantier |
+| « Les autres EPIC font comme ça » | La forme observée enseigne l'erreur : #4511 porte sept lots et zéro sous-chantier |
