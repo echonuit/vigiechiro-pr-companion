@@ -103,7 +103,15 @@ sans que personne ne la lise, et pendant tout ce temps le garde n'aurait rougi q
 3 136 : les vingt-quatre renvois gagnés au-dessus se reperdaient sans qu'il dise rien. Un gain n'est
 gardé qu'une fois le seuil relevé.
 
-**Ce que ce refus coûte, et pourquoi c'est le bon prix.** Ajouter un renvoi fait désormais rougir la
+**Ce que cette annonce ignorée ne prouve pas** (#4710). Elle était **invisible**. `rapport.py` n'avait
+aucun motif pour les lignes de plancher, et leur verdict était jeté avec ceux qu'il ne savait pas
+lire, jusqu'à ce que #4635 le corrige. Ce qui a échoué est donc un avertissement muet, et un
+avertissement muet ne dit rien d'un avertissement qui parle. Garder `a-relever` sans conséquence,
+maintenant que le rapport l'affiche à chaque passage, n'a jamais été essayé : cette option est
+écartée par choix, pas par mesure, et l'écrire autrement ferait passer une préférence pour un
+résultat.
+
+**Ce que ce refus coûte, et pourquoi il est accepté.** Ajouter un renvoi fait désormais rougir la
 CI jusqu'à ce que le plancher suive. C'est le reproche que cette ADR adresse plus haut à une valeur
 figée par fichier : faire payer la discipline à chaque geste honnête. Il est accepté ici parce que le
 relevé est un geste et non trois - `scripts/methode/releve-les-planchers.py --ecrire` lit le verdict
@@ -112,6 +120,20 @@ corps, celle du journal. Sans lui, le refus se paierait trois fois, et il y a un
 balises restées en arrière ont fait rougir `DocumentationAJourTest` sous #4646, parce que le chiffre
 y porte une espace **insécable** que le remplacement littéral manquait - et que le `grep` de
 vérification manquait pour la même raison.
+
+**Combien de fois ce prix se paie** (#4710). Du 24 au 29 août 2026, le plancher a pris onze valeurs :
+4 076, 3 111, 3 112, 3 127, 3 129, 3 136, 3 160, 3 165, 3 167, 3 193, 3 196. Cinq de ces relevés
+viennent de commits qui ne parlent pas de renvois - deux lots d'alertes CodeQL, la lecture d'une
+position collée depuis une carte, une clôture, la reprise d'un avis de qualification. Ils ont ajouté
+de la javadoc qui cite des issues, et c'est tout ce qu'il faut. La friction ne tombe donc pas sur les
+chantiers de javadoc, elle tombe partout. La série se rejoue en lisant `floor:` à chaque commit qui a
+touché cette ADR.
+
+**Ce qui rouvrirait la question.** Le refus tient tant que ce prix reste supportable à l'usage. S'il
+cesse de l'être - une PR sur deux arrêtée par un garde étranger à son sujet, le relevé exécuté sans
+être lu - l'avertissement visible redevient le candidat, avec l'avantage de n'avoir pas encore été
+jugé. Ce paragraphe existe pour que la porte reste trouvable : une décision qui garde une option
+ouverte doit dire laquelle, sinon elle se referme au premier lecteur pressé.
 
 **Le total est global, pas figé par fichier.** Figer 983 valeurs et les tenir à chaque édition
 légitime ferait payer la discipline à chaque geste honnête, pour attraper une faute qui ne se commet
