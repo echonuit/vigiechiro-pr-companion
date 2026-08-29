@@ -310,7 +310,7 @@ fba3183746fc  src/main/java/fr/univ_amu/iut/commun/di/Categorie.java
 da8566d56db8  src/main/java/fr/univ_amu/iut/commun/di/Fonctionnalite.java
 7c396ed206bf  src/main/java/fr/univ_amu/iut/commun/di/Fonctionnalites.java
 24a4b05e498f  src/main/java/fr/univ_amu/iut/commun/di/ModuleDeFeature.java
-2d748259fcd3  src/main/java/fr/univ_amu/iut/commun/di/PersistenceModule.java
+d935bcf6526c  src/main/java/fr/univ_amu/iut/commun/di/PersistenceModule.java
 1783d2dab932  src/main/java/fr/univ_amu/iut/commun/di/RacineInjecteur.java
 d3e2d5006cfa  src/main/java/fr/univ_amu/iut/commun/model/AcquisitionAncrage.java
 30135a60cae8  src/main/java/fr/univ_amu/iut/commun/model/ActionGroupee.java
@@ -400,6 +400,7 @@ cd5c328caa5c  src/main/java/fr/univ_amu/iut/commun/model/RegionDuCarre.java
 5be563f44d98  src/main/java/fr/univ_amu/iut/commun/model/Reglage.java
 04721139110a  src/main/java/fr/univ_amu/iut/commun/model/Reglages.java
 9f1e02cf69e1  src/main/java/fr/univ_amu/iut/commun/model/RegleMetierException.java
+a9ceebaf1063  src/main/java/fr/univ_amu/iut/commun/model/ReleveParticipation.java
 9b324045d703  src/main/java/fr/univ_amu/iut/commun/model/ReleveTraitement.java
 8b4a1f05c453  src/main/java/fr/univ_amu/iut/commun/model/ResolveurCommune.java
 330a22c80a2a  src/main/java/fr/univ_amu/iut/commun/model/ResultatRecherche.java
@@ -426,6 +427,7 @@ b21789ac3f18  src/main/java/fr/univ_amu/iut/commun/model/dao/DispositionColonnes
 fabe5a93b80f  src/main/java/fr/univ_amu/iut/commun/model/dao/LienVigieChiroDao.java
 b9c37f88910f  src/main/java/fr/univ_amu/iut/commun/model/dao/NuitRecupereeDao.java
 df44959bdc07  src/main/java/fr/univ_amu/iut/commun/model/dao/ReglagesDao.java
+eb5865684e81  src/main/java/fr/univ_amu/iut/commun/model/dao/ReleveParticipationDao.java
 0b53095cabbd  src/main/java/fr/univ_amu/iut/commun/model/dao/ReleveTraitementDao.java
 f50d8061a9e9  src/main/java/fr/univ_amu/iut/commun/model/dao/UtilisateurDao.java
 34ecdca578f8  src/main/java/fr/univ_amu/iut/commun/model/dao/VueSauvegardeeDao.java
@@ -909,7 +911,7 @@ a595f687e5e3  src/main/java/fr/univ_amu/iut/multisite/viewmodel/ReconstructionVi
 61b061354bcc  src/main/java/fr/univ_amu/iut/passage/di/CampagneModule.java
 e23785d4af7a  src/main/java/fr/univ_amu/iut/passage/di/PassageModule.java
 c1e5fa209e4c  src/main/java/fr/univ_amu/iut/passage/di/ReconstructionModule.java
-0ab46426fc64  src/main/java/fr/univ_amu/iut/passage/di/SynchronisationParticipationModule.java
+5d03464e7489  src/main/java/fr/univ_amu/iut/passage/di/SynchronisationParticipationModule.java
 1b9e7e47afac  src/main/java/fr/univ_amu/iut/passage/model/AdoptionOriginauxReconstruits.java
 58dddf2695d9  src/main/java/fr/univ_amu/iut/passage/model/AnalyseAcoustique.java
 2a1f9ff6bea5  src/main/java/fr/univ_amu/iut/passage/model/AppuisReactivation.java
@@ -979,6 +981,7 @@ c1e9e61ee624  src/main/java/fr/univ_amu/iut/passage/model/RapportReactivation.ja
 6f767d8efcee  src/main/java/fr/univ_amu/iut/passage/model/RebranchementSequences.java
 f1da9dceb4a1  src/main/java/fr/univ_amu/iut/passage/model/RegenerationSequences.java
 fa7945d46e54  src/main/java/fr/univ_amu/iut/passage/model/ReleveClimatique.java
+aa1ecfdf7829  src/main/java/fr/univ_amu/iut/passage/model/ReleveDeParticipation.java
 f515411cf88e  src/main/java/fr/univ_amu/iut/passage/model/ReprefixeurSession.java
 4f6ba0662ad3  src/main/java/fr/univ_amu/iut/passage/model/ResultatHydratation.java
 554f3a1d85e6  src/main/java/fr/univ_amu/iut/passage/model/SequenceDEcoute.java
@@ -1479,6 +1482,7 @@ b9d123809bcd  src/test/java/fr/univ_amu/iut/commun/model/PreferenceSourceEspeceT
 0a96fa8510a7  src/test/java/fr/univ_amu/iut/commun/model/dao/DispositionColonnesDaoTest.java
 1b6ea3763d0e  src/test/java/fr/univ_amu/iut/commun/model/dao/LienVigieChiroDaoTest.java
 1d16ce7ed93c  src/test/java/fr/univ_amu/iut/commun/model/dao/ReglagesDaoTest.java
+d68a3ba4a0b2  src/test/java/fr/univ_amu/iut/commun/model/dao/ReleveParticipationDaoTest.java
 a52f280a8fc0  src/test/java/fr/univ_amu/iut/commun/model/dao/ReleveTraitementDaoTest.java
 966769256877  src/test/java/fr/univ_amu/iut/commun/model/dao/UtilisateurDaoTest.java
 73dd0c43e36c  src/test/java/fr/univ_amu/iut/commun/model/dao/VueSauvegardeeDaoTest.java
@@ -1845,6 +1849,7 @@ b03f97a20dc3  src/test/java/fr/univ_amu/iut/passage/model/ParticipationOrpheline
 90b5ce16b4e7  src/test/java/fr/univ_amu/iut/passage/model/PlanDePaquetTest.java
 3567263e5189  src/test/java/fr/univ_amu/iut/passage/model/ProgressionTelechargementTest.java
 acd643d069e5  src/test/java/fr/univ_amu/iut/passage/model/PropositionsEnregistreurTest.java
+9cf3b89edd5f  src/test/java/fr/univ_amu/iut/passage/model/ReleveDeParticipationTest.java
 5ad7c6668356  src/test/java/fr/univ_amu/iut/passage/model/ReliquatPlaceholderTest.java
 68ad9ca6f88d  src/test/java/fr/univ_amu/iut/passage/model/ReprefixeurSessionTest.java
 8c770b41719f  src/test/java/fr/univ_amu/iut/passage/model/ServiceDisponibiliteAudioTest.java

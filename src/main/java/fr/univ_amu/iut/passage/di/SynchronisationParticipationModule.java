@@ -11,10 +11,13 @@ import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
+import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.model.dao.ReleveParticipationDao;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.passage.model.RattrapageMetadonnees;
+import fr.univ_amu.iut.passage.model.ReleveDeParticipation;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
@@ -55,6 +58,14 @@ public class SynchronisationParticipationModule extends ModuleDeFeature {
         return new RattrapageMetadonnees(synchronisation, liens);
     }
 
+    /// Le geste qui note la base (#4706). Il tient le DAO et l'horloge, pour que la synchronisation
+    /// n'ait a connaitre ni l'un ni l'autre.
+    @Provides
+    @Singleton
+    ReleveDeParticipation fournirReleveDeParticipation(ReleveParticipationDao releves, Horloge horloge) {
+        return new ReleveDeParticipation(releves, horloge);
+    }
+
     @Provides
     @Singleton
     @Named(QUALIFIANT)
@@ -66,8 +77,17 @@ public class SynchronisationParticipationModule extends ModuleDeFeature {
             EnregistreurDao enregistreurDao,
             ReferentielPoint referentielPoint,
             FenetreObserveeNuit fenetreObservee,
-            FuseauDuPoint fuseaux) {
+            FuseauDuPoint fuseaux,
+            ReleveDeParticipation releve) {
         return new SynchronisationParticipation(
-                client, liens, passageDao, materielDao, enregistreurDao, referentielPoint, fenetreObservee, fuseaux);
+                client,
+                liens,
+                passageDao,
+                materielDao,
+                enregistreurDao,
+                referentielPoint,
+                fenetreObservee,
+                fuseaux,
+                releve);
     }
 }

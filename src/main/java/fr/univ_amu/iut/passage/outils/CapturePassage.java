@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.AcquisitionAncrage;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.HorlogeSysteme;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -22,6 +23,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.model.dao.ReleveParticipationDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
@@ -45,6 +47,7 @@ import fr.univ_amu.iut.passage.model.IndiceAcoustique;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.AbsenceReactivation;
+import fr.univ_amu.iut.passage.model.ReleveDeParticipation;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
@@ -294,7 +297,8 @@ public final class CapturePassage {
                                         new SequenceDao(source)),
                                 // Aperçu : aucune commune résolue, donc le repli métropole - ce que
                                 // montrent les captures, et ce qu'attend leur déterminisme.
-                                new FuseauDuPoint(idPoint -> Optional.empty()));
+                                new FuseauDuPoint(idPoint -> Optional.empty()),
+                                new ReleveDeParticipation(new ReleveParticipationDao(source), new HorlogeSysteme()));
                     }
                 });
     }
