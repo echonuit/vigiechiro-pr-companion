@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.ReleveParticipation;
 import fr.univ_amu.iut.commun.model.dao.ReleveParticipationDao;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /// Note ce que la plateforme portait pour une participation, à l'instant où nous l'avons lue
 /// (#4706, EPIC #4640).
@@ -23,6 +24,15 @@ public final class ReleveDeParticipation {
     public ReleveDeParticipation(ReleveParticipationDao releves, Horloge horloge) {
         this.releves = Objects.requireNonNull(releves, "releves");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+    }
+
+    /// La **base** du passage : ce que la plateforme portait à notre dernière lecture, ou vide si nous
+    /// ne l'avons jamais lue.
+    ///
+    /// Un vide n'est pas une anomalie : une nuit antérieure à la migration n'a pas de relevé, et la
+    /// question du conflit reste alors sans réponse. C'est à l'appelant de dire ce qu'il en fait.
+    public Optional<ReleveParticipation> base(Long idPassage) {
+        return releves.pour(idPassage);
     }
 
     /// Note l'état distant lu, en écrasant le relevé précédent du même passage.
