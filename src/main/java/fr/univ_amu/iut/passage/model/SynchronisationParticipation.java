@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.InfosPoint;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.ReleveParticipation;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
@@ -154,7 +155,17 @@ public final class SynchronisationParticipation {
         // poste a pu écrire. Elle passe avant le corps, qui doit partir de l'état le plus frais (#4603).
         ParticipationDetail juste =
                 client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
-        if (aChangeSurCeQueNousEcrivons(distant, juste)) {
+        // #4707 : la reference est la BASE, ce que la plateforme portait a notre derniere lecture, et non
+        // la lecture du haut prise il y a quelques millisecondes. Sans ce deplacement, un collegue qui
+        // saisit la meteo dix minutes plus tot n'est pas vu : nos deux lectures concordent sur SA valeur,
+        // et notre corps, venu du passage local, l'ecrase sans rien dire.
+        //
+        // Faute de base - une nuit anterieure a la migration V43 -, on retombe sur la garde d'avant, qui
+        // ne voit qu'une course etroite. C'est peu, et c'est defini.
+        boolean conflit = releve.base(idPassage)
+                .map(base -> aChangeDepuisLaBase(base, juste))
+                .orElseGet(() -> aChangeSurCeQueNousEcrivons(distant, juste));
+        if (conflit) {
             return new EnvoiParticipation.ModifieEntreTemps(realignementEntre(declare, passage));
         }
         // #1844 : la configuration distante est passée au mapping pour être **préservée**. Le PATCH
@@ -181,11 +192,19 @@ public final class SynchronisationParticipation {
         return EnvoiParticipation.ecrit(ecriture, realignementEntre(declare, passage));
     }
 
-    /// Vrai si un champ que le `PATCH` écrit a changé entre les deux lectures (#4603).
-    ///
-    /// L'`_etag` ne convient pas : il bouge sur **tout** le document, et l'ouvrier d'analyse du socle
-    /// le fait bouger seul, sans aucun humain, en avançant l'état du traitement. Comparer ce que nous
-    /// émettons laisse passer ce qui n'écrase rien, et refuse encore ce qui écraserait.
+    /// Vrai si la plateforme a changé un champ que le `PATCH` écrit, **depuis notre dernière lecture**
+    /// (#4707). C'est la question que deux lectures prises dans le même appel ne peuvent pas poser :
+    /// elles ne couvrent que leur propre intervalle, quelques millisecondes.
+    private static boolean aChangeDepuisLaBase(ReleveParticipation base, ParticipationDetail juste) {
+        return !Objects.equals(base.dateDebut(), juste.dateDebut())
+                || !Objects.equals(base.dateFin(), juste.dateFin())
+                || !Objects.equals(base.meteo(), juste.meteo())
+                || !Objects.equals(base.configuration(), juste.configuration());
+    }
+
+    /// Vrai si un champ que le `PATCH` écrit a changé **entre les deux lectures** d'un même envoi
+    /// (#4603). Repli quand aucune base n'existe : l'`_etag` ne convient pas, il bouge sur tout le
+    /// document et l'ouvrier d'analyse le fait bouger seul.
     private static boolean aChangeSurCeQueNousEcrivons(ParticipationDetail avant, ParticipationDetail juste) {
         return !Objects.equals(avant.dateDebut(), juste.dateDebut())
                 || !Objects.equals(avant.dateFin(), juste.dateFin())

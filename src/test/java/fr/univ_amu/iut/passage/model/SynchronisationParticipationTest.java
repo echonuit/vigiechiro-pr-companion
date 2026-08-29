@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.InfosPoint;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.ReleveParticipation;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
@@ -273,6 +274,67 @@ class SynchronisationParticipationTest {
 
         assertThat(envoi).isInstanceOf(EnvoiParticipation.Ecrit.class);
         verify(client).modifierParticipation(eq("part-1"), anyString(), any());
+    }
+
+    @Test
+    @DisplayName(
+            "#4707 : la plateforme a bougé depuis notre dernière lecture → on renonce, même si nos deux lectures concordent")
+    void pousser_vers_renonce_quand_la_plateforme_a_bouge_depuis_la_base() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        lenient().when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // Le relevé garde ce que nous avions vu : FAIBLE.
+        when(releve.base(42L)).thenReturn(Optional.of(baseAvecMeteo(new MeteoDepot("FAIBLE", "0-25"))));
+        // Un collegue a saisi FORT il y a dix minutes. Nos DEUX lectures rendent FORT et concordent,
+        // donc la garde d'avant laissait passer - et notre corps, venu du passage local, ecrasait.
+        ParticipationDetail maintenant = detailAvecMeteo("e-loin", new MeteoDepot("FORT", "75-100"));
+        when(client.participation("part-1")).thenReturn(ReponseApi.succes(maintenant));
+        lenient()
+                .when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        EnvoiParticipation envoi = sync.pousserVers(42L);
+
+        assertThat(envoi).isInstanceOf(EnvoiParticipation.ModifieEntreTemps.class);
+        verify(client, never()).modifierParticipation(anyString(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("#4707 témoin : la plateforme n'a pas bougé depuis la base → l'envoi part")
+    void pousser_vers_envoie_quand_la_plateforme_colle_a_la_base() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // La base et la plateforme portent la MEME meteo : personne n'a touche a ce que nous ecrivons.
+        when(releve.base(42L)).thenReturn(Optional.of(baseAvecMeteo(new MeteoDepot("FAIBLE", "0-25"))));
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detailAvecMeteo("e-lu", new MeteoDepot("FAIBLE", "0-25"))));
+        when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        assertThat(sync.pousserVers(42L)).isInstanceOf(EnvoiParticipation.Ecrit.class);
+    }
+
+    @Test
+    @DisplayName("#4707 : sans relevé, une nuit antérieure à V43 retombe sur la garde d'avant, pas sur rien")
+    void pousser_vers_sans_base_retombe_sur_la_garde_d_avant() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        lenient().when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // Aucune base : la question du conflit est sans reponse sur le long terme, mais la course
+        // etroite reste surveillee. Sans ce repli, une nuit ancienne perdrait TOUTE protection.
+        when(releve.base(42L)).thenReturn(Optional.empty());
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detail("e-lu")))
+                .thenReturn(ReponseApi.succes(detailAvecMeteo("e-bouge", new MeteoDepot("FORT", "75-100"))));
+        lenient()
+                .when(client.modifierParticipation(anyString(), anyString(), any()))
+                .thenReturn(ResultatEcriture.reussie("part-1"));
+
+        assertThat(sync.pousserVers(42L)).isInstanceOf(EnvoiParticipation.ModifieEntreTemps.class);
     }
 
     @Test
@@ -630,6 +692,20 @@ class SynchronisationParticipationTest {
                 modele.meteo(),
                 configuration,
                 modele.traitement());
+    }
+
+    /// Un releve qui porte la meteo donnee, le reste egal a [#detail(String)] : c'est la BASE, ce que
+    /// la plateforme portait la derniere fois que nous l'avons lue.
+    private static ReleveParticipation baseAvecMeteo(MeteoDepot meteo) {
+        ParticipationDetail modele = detail("e-base");
+        return new ReleveParticipation(
+                42L,
+                "part-1",
+                modele.dateDebut(),
+                modele.dateFin(),
+                meteo,
+                modele.configuration(),
+                "2026-08-29T09:00:00");
     }
 
     private static ParticipationDetail detail(String etag) {
