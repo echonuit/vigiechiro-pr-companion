@@ -114,6 +114,44 @@ class ManifestePaquetTest {
     }
 
     @Test
+    @DisplayName("Le manifeste dit qui a jugé, sans quoi l'avis revient anonyme")
+    void le_manifeste_dit_qui_a_juge() {
+        ManifestePaquet signe =
+                new ManifestePaquet("640380", "A1", 2026, 1, MethodeSelection.MANUEL, "chiro-pierre", SEQUENCES);
+
+        ManifestePaquet relu = ManifestePaquet.depuis(signe.texte());
+
+        assertThat(relu.pseudoJugeur())
+                .as("l'expéditeur qui ouvre un retour lirait son propre nom, sinon : le pseudo doit voyager")
+                .isEqualTo("chiro-pierre");
+        assertThat(relu.sequences()).containsExactlyElementsOf(SEQUENCES);
+    }
+
+    @Test
+    @DisplayName("Un manifeste que personne n'a jugé le dit, plutôt que de nommer quelqu'un au hasard")
+    void un_manifeste_sans_jugeur_le_dit() {
+        ManifestePaquet relu = ManifestePaquet.depuis(unManifeste().texte());
+
+        assertThat(relu.pseudoJugeur())
+                .as("une nuit emportée avant tout jugement n'a pas de jugeur, et ce n'est pas une anomalie")
+                .isNull();
+    }
+
+    @Test
+    @DisplayName("Un manifeste de retour ne porte aucune séquence, et se relit quand même")
+    void un_manifeste_de_retour_sans_sequence_se_relit() {
+        ManifestePaquet retour = new ManifestePaquet(
+                "640380", "A1", 2026, 1, MethodeSelection.RECUE_D_UN_PAQUET, "chiro-pierre", List.of());
+
+        ManifestePaquet relu = ManifestePaquet.depuis(retour.texte());
+
+        assertThat(relu.sequences())
+                .as("le retour porte un avis, pas une nuit : l'expéditeur a déjà les séquences")
+                .isEmpty();
+        assertThat(relu.pseudoJugeur()).isEqualTo("chiro-pierre");
+    }
+
+    @Test
     @DisplayName("Un manifeste illisible est refusé en nommant sa cause, jamais rendu vide")
     void un_manifeste_illisible_est_refuse() {
         assertThatThrownBy(() -> ManifestePaquet.depuis("ceci n'est pas un manifeste"))

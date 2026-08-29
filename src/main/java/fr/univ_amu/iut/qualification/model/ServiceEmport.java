@@ -193,6 +193,142 @@ public class ServiceEmport {
         return new BilanReprise(passage.id(), selection.id(), resolues.size(), ouvert.pseudoRelecteur());
     }
 
+    /// Ce qu'un import d'avis a posé.
+    ///
+    /// @param idPassage la nuit chez l'expéditeur
+    /// @param pseudoRelecteur qui a jugé, lu dans le manifeste du retour
+    /// @param verdicts le nombre d'avis rangés à côté des nôtres
+    public record BilanImportAvis(Long idPassage, String pseudoRelecteur, int verdicts) {}
+
+    /// Renvoie l'avis d'un relecteur : **un manifeste signé, sans aucune séquence**.
+    ///
+    /// L'expéditeur possède déjà les séquences ; les lui renvoyer doublerait le volume du voyage pour
+    /// un contenu qu'il a. Le format de l'aller suffit : [OuvertureDePaquet] refuse un paquet sans
+    /// manifeste, jamais un paquet sans séquence.
+    ///
+    /// @param idPassage la nuit relue, sur le poste du relecteur
+    /// @param destination l'archive à écrire
+    /// @param pseudoJugeur le relecteur qui signe cet avis
+    /// @return ce que l'avis renvoyé porte
+    /// @throws IllegalStateException si la nuit n'a pas de sélection à renvoyer
+    /// @throws IOException sur échec d'écriture
+    public BilanAvisRenvoye renvoyerAvis(Long idPassage, Path destination, String pseudoJugeur) throws IOException {
+        Objects.requireNonNull(idPassage, "idPassage");
+        Objects.requireNonNull(destination, "destination");
+        Objects.requireNonNull(pseudoJugeur, "pseudoJugeur");
+
+        SelectionDEcoute selection = selectionDao
+                .findByPassage(idPassage)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Cette nuit n'a pas de sélection d'écoute : il n'y a aucun avis à renvoyer."));
+        List<SequenceSelectionnee> rattachements = selectionDao.listerSequences(selection.id());
+        Map<Long, SequenceDEcoute> connues = sequenceDao.findParIds(
+                rattachements.stream().map(SequenceSelectionnee::idSequence).toList());
+
+        List<ManifestePaquet.SequenceEmportee> juges = new ArrayList<>();
+        for (SequenceSelectionnee rattachement : rattachements) {
+            SequenceDEcoute sequence = connues.get(rattachement.idSequence());
+            if (sequence == null) {
+                throw new IllegalStateException("La séquence " + rattachement.idSequence()
+                        + " a disparu : l'avis renvoyé serait incomplet sans le dire.");
+            }
+            juges.add(new ManifestePaquet.SequenceEmportee(
+                    sequence.nomFichier(), rattachement.position(), rattachement.verdict()));
+        }
+
+        Prefixe prefixe = prefixeDe(idPassage);
+        String manifeste = new ManifestePaquet(
+                        prefixe.carre(),
+                        prefixe.point(),
+                        prefixe.annee(),
+                        prefixe.nuit(),
+                        selection.methode(),
+                        pseudoJugeur,
+                        juges)
+                .texte();
+        PlanDePaquet plan = PlanDePaquet.pour(destination, manifeste, List.of());
+        long octets = EcrivainPaquet.ecrire(destination, plan, manifeste, List.of());
+        return new BilanAvisRenvoye(octets, juges.size(), pseudoJugeur);
+    }
+
+    /// Ce qu'un avis renvoyé porte.
+    ///
+    /// @param octets la taille de l'archive écrite
+    /// @param verdicts le nombre de verdicts que le relecteur renvoie
+    /// @param pseudoJugeur qui les signe
+    public record BilanAvisRenvoye(long octets, int verdicts, String pseudoJugeur) {}
+
+    /// Un import d'avis **préparé** : ce qu'il poserait, et ce qui l'en empêcherait.
+    ///
+    /// Séparer préparer d'appliquer évite de se servir d'une exception comme d'un branchement :
+    /// l'écran lit le plan pour savoir s'il doit demander une confirmation, plutôt que de tenter et
+    /// de rattraper.
+    ///
+    /// @param idPassage la nuit chez l'expéditeur
+    /// @param avis l'avis revenu, signé
+    /// @param plan ce qu'il poserait, et l'avis qu'il remplacerait
+    public record ImportPrepare(Long idPassage, AvisRevenu avis, PlanDeReprise plan) {}
+
+    /// Prépare la reprise d'un avis revenu : **rien n'est écrit**.
+    ///
+    /// @param paquetRevenu l'archive d'avis
+    /// @return ce que la reprise poserait
+    /// @throws IllegalStateException si le manifeste n'est pas signé, si la nuit est inconnue, ou si
+    ///     une séquence de l'avis n'existe pas ici
+    /// @throws IOException sur échec de lecture
+    public ImportPrepare preparerImport(Path paquetRevenu) throws IOException {
+        Objects.requireNonNull(paquetRevenu, "paquetRevenu");
+        ManifestePaquet manifeste = ManifestePaquet.depuis(OuvertureDePaquet.lireManifeste(paquetRevenu));
+        if (manifeste.pseudoJugeur() == null) {
+            throw new IllegalStateException(
+                    "Ce paquet ne dit pas qui a jugé : un avis anonyme ne s'attribue pas (ADR 4517).");
+        }
+
+        Passage passage = passageAttendu(manifeste);
+        SelectionDEcoute selection = selectionDao
+                .findByPassage(passage.id())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Cette nuit n'a plus de sélection d'écoute : l'avis n'a nulle part où se ranger."));
+        Map<String, SequenceDEcoute> parNom = sequencesDuPassage(passage.id());
+
+        Map<Long, VerdictFichier> verdicts = new LinkedHashMap<>();
+        for (ManifestePaquet.SequenceEmportee jugee : manifeste.sequences()) {
+            SequenceDEcoute locale = parNom.get(jugee.nomFichier());
+            if (locale == null) {
+                throw new IllegalStateException("La séquence « " + jugee.nomFichier()
+                        + " » de l'avis n'existe pas ici : ce paquet ne vient pas de cette nuit.");
+            }
+            verdicts.put(locale.id(), jugee.verdict());
+        }
+
+        AvisRevenu avis = new AvisRevenu(manifeste.pseudoJugeur(), verdicts);
+        return new ImportPrepare(
+                selection.id(), avis, PlanDeReprise.pour(selectionDao.listerSequences(selection.id()), avis));
+    }
+
+    /// Applique une reprise préparée, sans la recalculer.
+    ///
+    /// @param prepare ce qui a été annoncé, et qui fait foi
+    /// @param remplacementConfirme `true` quand l'utilisateur a confirmé d'écraser l'avis présent
+    /// @return ce que l'import a posé
+    /// @throws IllegalStateException si le plan refuse, ou s'il remplacerait sans confirmation
+    public BilanImportAvis appliquerImport(ImportPrepare prepare, boolean remplacementConfirme) {
+        Objects.requireNonNull(prepare, "prepare");
+        int poses = RepriseAvis.appliquer(
+                selectionDao, prepare.idPassage(), prepare.plan(), prepare.avis(), remplacementConfirme);
+        return new BilanImportAvis(prepare.idPassage(), prepare.avis().pseudoRelecteur(), poses);
+    }
+
+    /// Prépare puis applique, d'un seul geste.
+    ///
+    /// @param paquetRevenu l'archive d'avis
+    /// @param remplacementConfirme `true` quand l'utilisateur a confirmé d'écraser l'avis présent
+    /// @return ce que l'import a posé
+    /// @throws IOException sur échec de lecture
+    public BilanImportAvis importerAvis(Path paquetRevenu, boolean remplacementConfirme) throws IOException {
+        return appliquerImport(preparerImport(paquetRevenu), remplacementConfirme);
+    }
+
     /// Le préfixe d'un passage, **lu en base** et non deviné d'un nom de fichier : un fichier renommé
     /// ferait alors mentir le manifeste. C'est le chemin que suit déjà `cli/commande/Importer`.
     ///

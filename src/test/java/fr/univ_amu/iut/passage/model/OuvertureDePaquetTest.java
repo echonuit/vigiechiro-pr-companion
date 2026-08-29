@@ -77,6 +77,31 @@ class OuvertureDePaquetTest {
     }
 
     @Test
+    @DisplayName("Lire le manifeste seul ne demande aucune identité : l'avis revenu porte déjà la sienne")
+    void lire_le_manifeste_ne_demande_aucune_identite() throws IOException {
+        Path paquet = paquetDe("seq.wav");
+
+        assertThat(OuvertureDePaquet.lireManifeste(paquet))
+                .as("un avis signé dans son manifeste se lit sans se reconnecter à la plateforme")
+                .isEqualTo(MANIFESTE);
+    }
+
+    @Test
+    @DisplayName("Lire le manifeste d'une archive qui n'en a pas se refuse comme l'ouverture")
+    void lire_le_manifeste_absent_se_refuse() throws IOException {
+        Path sansManifeste = dossier.resolve("vide.zip");
+        try (java.util.zip.ZipOutputStream zip =
+                new java.util.zip.ZipOutputStream(java.nio.file.Files.newOutputStream(sansManifeste))) {
+            zip.putNextEntry(new java.util.zip.ZipEntry("sequences/seq.wav"));
+            zip.closeEntry();
+        }
+
+        assertThatThrownBy(() -> OuvertureDePaquet.lireManifeste(sansManifeste))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(PlanDePaquet.NOM_MANIFESTE);
+    }
+
+    @Test
     @DisplayName("Un paquet sans manifeste n'est pas un paquet, et le refus le dit")
     void un_paquet_sans_manifeste_est_refuse() throws IOException {
         Path faux = dossier.resolve("faux.zip");

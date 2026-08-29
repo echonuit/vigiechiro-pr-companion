@@ -72,12 +72,9 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     /// Façade de navigation de la feature : ouvre la modale « Personnaliser la sélection » (#1431).
     private final NavigationQualification navigation;
 
-    private final StockageConnexion connexion;
-
-    private final ActionsEmport actionsEmport;
-
-    /// La nuit ouverte, que les deux gestes de l'emport visent. `null` tant qu'aucune n'est ouverte.
-    private Long idPassageCourant;
+    /// Les quatre gestes de l'emport, tenus hors d'ici (#4744) : le contrôleur relie, il n'accumule
+    /// pas, et les y garder l'avait fait franchir le seuil `GodClass` du portail.
+    private final GestesEmportQualification gestesEmport;
     /// Controller de la sous-vue `SelectionEcoute.fxml`, injecté par le `fx:include` (#2745) : il
     /// possède les treize champs de la colonne gauche et leur câblage. Le nom est imposé par JavaFX,
     /// qui concatène le `fx:id` de l'inclusion (`colonneSelection`) et le suffixe `Controller`.
@@ -238,27 +235,11 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
-        this.connexion = Objects.requireNonNull(connexion, "connexion");
-        this.actionsEmport = new ActionsEmport(
-                Objects.requireNonNull(serviceEmport, "serviceEmport"),
+        this.gestesEmport = new GestesEmportQualification(
+                serviceEmport,
+                connexion,
                 () -> racine.getScene() == null ? null : racine.getScene().getWindow());
-        this.actionsEmport.notificateur().definir(notificateur);
-        this.actionsEmport.confirmateur().definir(confirmateur);
-    }
-
-    /// Emporte la nuit courante pour relecture (#4727). Sans nuit ouverte, il n'y a rien à emporter.
-    private void emporter() {
-        if (idPassageCourant != null) {
-            actionsEmport.emporter(idPassageCourant);
-        }
-    }
-
-    /// Ouvre un paquet reçu d'un autre poste (#4727).
-    ///
-    /// L'identité vient de [StockageConnexion], comme `audio` la prend déjà : le refus d'ouvrir sans
-    /// identité valide est tenu par le service, pas ici.
-    private void ouvrirPaquetRecu() {
-        actionsEmport.ouvrirPaquetRecu(connexion.profil());
+        this.gestesEmport.relierAux(notificateur, confirmateur);
     }
 
     /// Garde de navigation : un verdict a été **choisi mais pas encore enregistré** (brouillon). Quitter
@@ -287,12 +268,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         // ce controller sait situer, et « Régénérer » passe par NOS porteurs de confirmation et de
         // compte rendu - en fabriquer d'autres là-bas les rendrait insubstituables (ADR 0010).
         colonneSelectionController.installer(
-                selectionVm,
-                depotColonnes,
-                this::personnaliser,
-                this::regenerer,
-                this::emporter,
-                this::ouvrirPaquetRecu);
+                selectionVm, depotColonnes, this::personnaliser, this::regenerer, gestesEmport.gestes());
         // Bandeau : identité de la nuit (VM sélection) + statut/verdict persistés (VM verdict).
         lblTitreContexte.textProperty().bind(selectionVm.titreContexteProperty());
         lblPlageHoraire.textProperty().bind(selectionVm.plageHoraireProperty());
@@ -423,7 +399,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     /// Appelée par [NavigationQualification] après le chargement du FXML ; mémorise le contexte pour le
     /// fil d'Ariane.
     public void ouvrirSur(ContextePassage passage) {
-        this.idPassageCourant = passage.idPassage();
+        gestesEmport.surNuit(passage.idPassage());
         this.contexte.set(passage);
         Long idPassage = passage.idPassage();
         // Ouverture **hors du fil JavaFX** (#1210) : vérification + sélection d'écoute chargées en

@@ -278,6 +278,86 @@ class ServiceEmportTest {
                 .hasSize(3);
     }
 
+    @Test
+    @DisplayName("L'aller-retour complet : l'avis revient signé, et se range à côté sans écraser")
+    void l_aller_retour_complet_range_l_avis_a_cote() throws IOException {
+        Path paquet = unPaquetDeDeuxSequences();
+        selectionDao.marquerVerdict(
+                selectionDao.findByPassage(idPassage).orElseThrow().id(),
+                sequenceDao.findBySession(idSession).getFirst().id(),
+                VerdictFichier.BON);
+
+        // Chez le relecteur : il ouvre, juge autrement, et renvoie son avis.
+        SourceDeDonnees posteB = posteQuiConnaitLaMemeCampagne();
+        ServiceEmport chezB = serviceSur(posteB);
+        SelectionDao selectionB = new SelectionDao(posteB);
+        chezB.reprendre(paquet, Optional.of(RELECTEUR));
+        Long selB = selectionB.findByPassage(passageDe(posteB)).orElseThrow().id();
+        for (SequenceSelectionnee ligne : selectionB.listerSequences(selB)) {
+            selectionB.marquerVerdict(selB, ligne.idSequence(), VerdictFichier.INEXPLOITABLE);
+        }
+        Path retour = dossier.resolve("avis.zip");
+        chezB.renvoyerAvis(passageDe(posteB), retour, "chiro-pierre");
+
+        PaquetOuvert ouvertChezA = OuvertureDePaquet.ouvrir(retour, Optional.of(RELECTEUR));
+        assertThat(ouvertChezA.sequences())
+                .as("le retour porte un avis, pas une nuit : aucune séquence ne refait le voyage")
+                .isEmpty();
+        ManifestePaquet manifesteDuRetour = ManifestePaquet.depuis(ouvertChezA.manifeste());
+        assertThat(manifesteDuRetour.pseudoJugeur())
+                .as("le pseudo voyage dans le manifeste, sinon l'expéditeur lirait le sien")
+                .isEqualTo("chiro-pierre");
+        assertThat(manifesteDuRetour.sequences()).hasSize(2);
+
+        // Chez l'expéditeur : l'avis se range à côté du sien.
+        ServiceEmport.BilanImportAvis bilan = emport.importerAvis(retour, false);
+
+        assertThat(bilan.verdicts()).isEqualTo(2);
+        assertThat(bilan.pseudoRelecteur()).isEqualTo("chiro-pierre");
+        assertThat(selectionDao.listerSequences(
+                        selectionDao.findByPassage(idPassage).orElseThrow().id()))
+                .as("les deux verdicts coexistent : le nôtre n'a pas bougé")
+                .anySatisfy(ligne -> {
+                    assertThat(ligne.verdict()).isEqualTo(VerdictFichier.BON);
+                    assertThat(ligne.verdictRelecteur()).isEqualTo(VerdictFichier.INEXPLOITABLE);
+                    assertThat(ligne.pseudoRelecteur()).isEqualTo("chiro-pierre");
+                });
+    }
+
+    @Test
+    @DisplayName("Un paquet d'aller réimporté comme un avis se refuse : personne ne l'a signé")
+    void un_paquet_non_signe_ne_s_importe_pas_comme_un_avis() throws IOException {
+        Path aller = unPaquetDeDeuxSequences();
+
+        assertThatThrownBy(() -> emport.importerAvis(aller, false))
+                .as("un avis anonyme ne s'attribue pas : c'est la décision de l'ADR 4517")
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("qui a jugé");
+    }
+
+    @Test
+    @DisplayName("Un second avis ne remplace le premier qu'une fois le remplacement confirmé")
+    void un_second_avis_attend_sa_confirmation() throws IOException {
+        Path retour = unAvisRenvoyePar("claire");
+        emport.importerAvis(retour, false);
+        Path second = unAvisRenvoyePar("martin");
+
+        assertThatThrownBy(() -> emport.importerAvis(second, false))
+                .as("l'avis de claire tient tant que le remplacement n'est pas confirmé")
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("claire");
+        assertThat(selectionDao.listerSequences(
+                        selectionDao.findByPassage(idPassage).orElseThrow().id()))
+                .allSatisfy(ligne -> assertThat(ligne.pseudoRelecteur()).isEqualTo("claire"));
+
+        emport.importerAvis(second, true);
+
+        assertThat(selectionDao.listerSequences(
+                        selectionDao.findByPassage(idPassage).orElseThrow().id()))
+                .as("confirmé, le remplacement a eu lieu")
+                .allSatisfy(ligne -> assertThat(ligne.pseudoRelecteur()).isEqualTo("martin"));
+    }
+
     // --- montage -----------------------------------------------------------
 
     private ServiceEmport serviceSur(SourceDeDonnees s) {
@@ -295,6 +375,33 @@ class ServiceEmportTest {
                 new UniteDeTravail(s));
     }
 
+    /// Un paquet d'avis, tel qu'un relecteur le renverrait, jugé Inexploitable par `pseudo`.
+    private Path unAvisRenvoyePar(String pseudo) throws IOException {
+        Path aller = dossier.resolve("aller-" + pseudo + ".zip");
+        if (selectionDao.findByPassage(idPassage).isEmpty()) {
+            List<SequenceDEcoute> nuit = creerNuit(2);
+            SelectionDEcoute selection =
+                    selectionDao.insert(new SelectionDEcoute(null, MethodeSelection.MANUEL, 2, idPassage));
+            selectionDao.attacherSequence(
+                    new SequenceSelectionnee(selection.id(), nuit.get(0).id(), 0, false));
+            selectionDao.attacherSequence(
+                    new SequenceSelectionnee(selection.id(), nuit.get(1).id(), 1, false));
+        }
+        emport.composer(idPassage, aller);
+
+        SourceDeDonnees poste = posteQuiConnaitLaMemeCampagne("poste-" + pseudo);
+        ServiceEmport chez = serviceSur(poste);
+        SelectionDao selectionLa = new SelectionDao(poste);
+        chez.reprendre(aller, Optional.of(RELECTEUR));
+        Long sel = selectionLa.findByPassage(passageDe(poste)).orElseThrow().id();
+        for (SequenceSelectionnee ligne : selectionLa.listerSequences(sel)) {
+            selectionLa.marquerVerdict(sel, ligne.idSequence(), VerdictFichier.INEXPLOITABLE);
+        }
+        Path retour = dossier.resolve("retour-" + pseudo + ".zip");
+        chez.renvoyerAvis(passageDe(poste), retour, pseudo);
+        return retour;
+    }
+
     private Path unPaquetDeDeuxSequences() throws IOException {
         List<SequenceDEcoute> nuit = creerNuit(3);
         SelectionDEcoute selection =
@@ -310,7 +417,12 @@ class ServiceEmportTest {
     }
 
     private SourceDeDonnees posteQuiConnaitLaMemeCampagne() {
-        SourceDeDonnees b = new SourceDeDonnees(new Workspace(dossier.resolve("poste-b")));
+        return posteQuiConnaitLaMemeCampagne("poste-b");
+    }
+
+    /// Un poste relecteur nommé : deux relecteurs ne partagent pas la même base.
+    private SourceDeDonnees posteQuiConnaitLaMemeCampagne(String emplacement) {
+        SourceDeDonnees b = new SourceDeDonnees(new Workspace(dossier.resolve(emplacement)));
         new MigrationSchema(b).migrer();
         // Un second carré et un second point, pour que les filtres aient quelque chose à écarter.
         JeuDeDonneesPassage.dans(b)

@@ -26,9 +26,34 @@ import java.util.regex.Pattern;
 /// @param annee année de la campagne
 /// @param nuit numéro de la nuit dans la campagne
 /// @param methode comment la sélection a été tirée, pour que le relecteur le sache
+/// @param pseudoJugeur qui a posé les verdicts que ce manifeste porte, `null` si personne
 /// @param sequences ce que le paquet emporte, dans l'ordre de la sélection
 public record ManifestePaquet(
-        String carre, String point, int annee, int nuit, MethodeSelection methode, List<SequenceEmportee> sequences) {
+        String carre,
+        String point,
+        int annee,
+        int nuit,
+        MethodeSelection methode,
+        String pseudoJugeur,
+        List<SequenceEmportee> sequences) {
+
+    /// Un manifeste dont personne n'a encore jugé les séquences.
+    ///
+    /// @param carre numéro du carré du site
+    /// @param point code du point d'écoute
+    /// @param annee année de la campagne
+    /// @param nuit numéro de la nuit dans la campagne
+    /// @param methode comment la sélection a été tirée
+    /// @param sequences ce que le paquet emporte
+    public ManifestePaquet(
+            String carre,
+            String point,
+            int annee,
+            int nuit,
+            MethodeSelection methode,
+            List<SequenceEmportee> sequences) {
+        this(carre, point, annee, nuit, methode, null, sequences);
+    }
 
     /// Une séquence emportée, avec le verdict que l'expéditeur avait déjà posé.
     ///
@@ -53,6 +78,8 @@ public record ManifestePaquet(
     private static final String NUIT = "nuit";
 
     private static final String METHODE = "methode";
+
+    private static final String JUGEUR = "jugeur";
 
     private static final String SEQUENCES = "sequences";
 
@@ -79,6 +106,7 @@ public record ManifestePaquet(
         entetes.put(ANNEE, String.valueOf(annee));
         entetes.put(NUIT, String.valueOf(nuit));
         entetes.put(METHODE, methode.name());
+        entetes.put(JUGEUR, pseudoJugeur == null ? "" : pseudoJugeur);
         String plat = JsonSimple.objet(entetes);
 
         return plat.substring(0, plat.length() - 1)
@@ -120,12 +148,14 @@ public record ManifestePaquet(
             emportees.add(new SequenceEmportee(
                     noms.get(i), entier(positions.get(i), "position"), VerdictFichier.valueOf(verdicts.get(i))));
         }
+        String jugeur = scalaire(texte, JUGEUR);
         return new ManifestePaquet(
                 scalaire(texte, CARRE),
                 scalaire(texte, POINT),
                 entier(scalaire(texte, ANNEE), ANNEE),
                 entier(scalaire(texte, NUIT), NUIT),
                 MethodeSelection.valueOf(scalaire(texte, METHODE)),
+                jugeur.isEmpty() ? null : jugeur,
                 emportees);
     }
 

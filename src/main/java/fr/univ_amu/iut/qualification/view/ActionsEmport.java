@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.passage.model.NatureDEntree;
+import fr.univ_amu.iut.qualification.model.PlanDeReprise;
 import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -118,6 +119,73 @@ public final class ActionsEmport {
             // interrompu », a son test.
             notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Paquet illisible", echec.getMessage());
         }
+    }
+
+    /// Renvoie l'avis du relecteur : un paquet **signé de lui**, sans aucune séquence (#4744).
+    ///
+    /// @param idPassage la nuit relue
+    /// @param pseudoJugeur le relecteur qui signe
+    public void renvoyerAvis(Long idPassage, String pseudoJugeur) {
+        Optional<Path> destination = selecteur.enregistrerFichier("Renvoyer mon avis", "avis.zip", PAQUET);
+        if (destination.isEmpty()) {
+            return;
+        }
+        try {
+            ServiceEmport.BilanAvisRenvoye bilan = service.renvoyerAvis(idPassage, destination.get(), pseudoJugeur);
+            notificateur.notifier(
+                    NiveauNotification.INFORMATION,
+                    "Avis renvoyé",
+                    bilan.verdicts() + " verdict(s) signés « " + bilan.pseudoJugeur() + " ».");
+        } catch (IllegalStateException refus) {
+            notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Avis non renvoyé", refus.getMessage());
+        } catch (IOException echec) {
+            notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Envoi interrompu", echec.getMessage());
+        }
+    }
+
+    /// Range un avis revenu à côté du nôtre (#4744, ADR 4517).
+    ///
+    /// **La confirmation ne se demande que si elle a lieu d'être.** Le service refuse un remplacement
+    /// non confirmé en nommant le relecteur présent ; ce refus devient alors la question posée, plutôt
+    /// qu'une confirmation systématique que l'utilisateur apprendrait à cliquer sans lire.
+    public void importerAvis() {
+        Optional<Path> avis = selecteur.choisirFichier("Reprendre un avis reçu", Optional.empty(), PAQUET);
+        if (avis.isEmpty()) {
+            return;
+        }
+        try {
+            ServiceEmport.ImportPrepare prepare = service.preparerImport(avis.get());
+            if (prepare.plan().refuse()) {
+                notificateur.notifier(
+                        NiveauNotification.AVERTISSEMENT,
+                        "Avis non repris",
+                        String.join(" ; ", prepare.plan().refus()));
+                return;
+            }
+            if (prepare.plan().demandeConfirmation() && !confirmateur.confirmer(remplacement(prepare))) {
+                return;
+            }
+            rendreCompte(service.appliquerImport(prepare, true));
+        } catch (IllegalStateException refus) {
+            notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Avis non repris", refus.getMessage());
+        } catch (IOException echec) {
+            notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Avis illisible", echec.getMessage());
+        }
+    }
+
+    /// Ce que la confirmation d'un second avis annonce : qui serait remplacé, et ce qui serait perdu.
+    private static String remplacement(ServiceEmport.ImportPrepare prepare) {
+        PlanDeReprise.AvisDejaPresent present = prepare.plan().avisDejaPresent();
+        return "L'avis de « " + present.pseudo() + " » et ses " + present.verdicts()
+                + " verdict(s) seraient définitivement remplacés par ceux de « "
+                + prepare.avis().pseudoRelecteur() + " ». Continuer ?";
+    }
+
+    private void rendreCompte(ServiceEmport.BilanImportAvis bilan) {
+        notificateur.notifier(
+                NiveauNotification.INFORMATION,
+                "Avis repris",
+                bilan.verdicts() + " verdict(s) de « " + bilan.pseudoRelecteur() + " » rangés à côté des vôtres.");
     }
 
     /// Ce que la confirmation annonce : combien de séquences, et ce que cela pèsera.
