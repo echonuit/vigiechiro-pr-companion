@@ -905,6 +905,21 @@ jobs:
           python3 scripts/methode/etapes-sans-renvoi-aval.py --auto-test
           python3 scripts/methode/etapes-sans-renvoi-aval.py
 
+      - name: "Un test cité par une page existe (bloquant, #4745)"
+        # `mvn test -Dtest=Classe#methode` rend BUILD SUCCESS et « Tests run: 0 » quand la cible
+        # n'existe pas. Une page qui donne un tel exemple ne desinforme pas seulement : elle met en
+        # main une commande VERTE SANS AVOIR JUGE, au moment precis ou l'on doute d'une methode.
+        # Vecu le 2026-08-29 : TESTING.md citait `#chargeLesSites`, absente, pendant que
+        # dev-docs/tests-et-qualite.md donnait deux pages plus loin la forme juste.
+        #
+        # Le motif a ete EPROUVE avant d'etre cru : `-Dtest=A,B,C` dans ci-cd-release.md est un
+        # gabarit de prose, dont un premier motif tirait une classe `A` introuvable. La regle qui
+        # l'ecarte est DERIVEE et non enumeree - une citation ne compte que si elle nomme quelque
+        # chose finissant par `Test`, et la convention la porte : 791 classes de test sur 791.
+        run: |
+          python3 scripts/methode/tests-cites-existent.py --auto-test
+          python3 scripts/methode/tests-cites-existent.py
+
       - name: "La méthode nomme le garde du titre, et ce garde refuse encore l'espace (bloquant, #4598)"
         # Le dépôt pratique deux conventions de titre à un caractère d'écart, et c'est la plus
         # écrite qui est fausse en PR : 62 des 100 derniers titres d'issue portent l'espace avant
