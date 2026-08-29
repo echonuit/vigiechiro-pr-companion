@@ -78,6 +78,9 @@ fini**. Un lot qui ne dit pas son fait-quand se clôt à l'estime.
 Les lots devenus sous-chantiers y figurent par leur numéro, pas par une liste d'issues : le parent
 reste lisible, et la clôture sait quoi clore.
 
+Le chantier ouvert, [`ouvrir-une-issue`](../ouvrir-une-issue/SKILL.md) prend chaque issue une par une,
+et la chaîne se poursuit jusqu'à [`clore-un-chantier`](../clore-un-chantier/SKILL.md).
+
 ## Signaux d'alerte : on s'arrête
 
 | Pensée | Réalité |

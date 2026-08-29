@@ -96,6 +96,9 @@ Le signalement est un **filet**, pas une garantie. Il repose sur la discipline, 
 lâche exactement quand ça va vite, c'est-à-dire quand les collisions arrivent. Il complète `trier-les-issues`,
 il ne le remplace pas.
 
+Quand le travail est prêt, [`ouvrir-une-pr`](../ouvrir-une-pr/SKILL.md) prend la suite : la batterie
+locale, les refus que seule la forge rend, et le moniteur qui part avec la PR.
+
 ## Signaux d'alerte : on s'arrête
 
 | Pensée | Réalité |

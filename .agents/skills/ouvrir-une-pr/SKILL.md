@@ -66,18 +66,35 @@ Un conflit sur un inventaire ne se résout pas « en prenant le plus grand ». U
 est un gain que quelqu'un a payé, donc on prend le sien ; un **plancher** prend la mesure réelle de la
 branche fusionnée.
 
-## Le titre s'éprouve avant, le garde de CI ne mord qu'après
+## Le titre se vérifie avant l'ouverture, pas après
+
+`titre-pr.yml` refuse un titre non conforme, et il le fait bien : les 100 dernières PR fusionnées
+suivent toutes la convention. Il ne peut mordre qu'une fois la PR ouverte, et cela coûte une PR à
+ré-éditer puis une vérification à relancer. Le même script tourne en local, sur la chaîne que vous
+vous apprêtez à taper :
 
 ```bash
-bash .github/scripts/verifie-titre-pr.sh "<le titre>"
+./.github/scripts/verifie-titre-pr.sh "fix(passage): le pivot se relit"
 ```
 
-Il devient le sujet du commit de squash, donc la ligne du CHANGELOG. Deux refus vécus, sur des titres
-qui semblaient bons :
+Le défaut n'entre pas au commit. Les quatre PR rouges du 2026-08-26, #4570, #4588, #4589 et #4591,
+partaient toutes d'une branche aux sujets de commit conformes, et 286 des 297 sujets de branche
+hors `main` le sont aussi. Trois de ces quatre titres sont le sujet du commit retapé avec ses
+accents, le quatrième est le titre de l'issue #4574 recopié tel quel. Le défaut entre à la frappe
+du titre : en écrivant du français correct, la main applique la typographie française, et l'espace
+avant le deux-points que Conventional Commits interdit vient avec.
 
-- une **espace avant le deux-points** de `feat(scope): sujet` - le deux-points est un jeton de syntaxe,
-  et l'espace casse `semantic-release` en silence ;
-- une **élision sans apostrophe**, `d accuser` pour `d'accuser`.
+Ce qui décide de la frappe est le nombre de commits. `gh pr create --fill` reprend le sujet quand la
+branche n'en porte qu'un, et titre la PR avec le **nom de branche** au-delà, forme que le garde
+refuse. Les quatre PR rouges avaient toutes trois commits ou plus : leur titre ne pouvait pas être
+rempli, il devait être écrit.
+
+La règle est dans `CONTRIBUTING.md` depuis longtemps, avec sa raison et son coût. Les quatre PR
+l'ont manquée le même jour. Le script, lui, rend un verdict.
+
+Le 2026-08-28 a ajouté une cinquième forme, du même geste : une **élision sans apostrophe**,
+`d accuser` pour `d'accuser`. La main qui évite l'espace avant le deux-points peut encore buter sur
+l'apostrophe, et le script les refuse toutes les deux.
 
 ## Les quatre refus que seule la forge rend
 
@@ -122,5 +139,7 @@ vraiment ce changement, ce qu'un rouge vaut, et l'issue mère qui ne se ferme pa
 | « Les tests passent en local, la CI passera » | Quatre gardes ne tournent qu'en CI, et deux ne lisent que le corps de la PR |
 | « Le garde est sorti en 0, tout va bien » | Un plancher qui dit « à relever » sort en 0 |
 | « Le titre me semble bon » | Il devient la ligne du CHANGELOG. Le script rend un verdict, la relecture rend un avis |
+| « Je relis le titre, ça suffit » | Quatre titres relus ont rougi le même jour |
+| « La typographie du corps, ça n'engage rien » | `corps-pr.yml` refuse quatre formes, et ce corps est publié dès qu'il part |
 | « J'ai rebasé, la batterie de tout à l'heure vaut encore » | Le rebase périme les mesures qui dépendent du dépôt entier |
 | « `Ferme #N` ferme l'issue » | Elle reste ouverte, et la PR fusionne verte |
