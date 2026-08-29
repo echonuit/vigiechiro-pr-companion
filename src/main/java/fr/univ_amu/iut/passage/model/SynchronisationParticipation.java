@@ -192,17 +192,9 @@ public final class SynchronisationParticipation {
         return EnvoiParticipation.ecrit(ecriture, realignementEntre(declare, passage));
     }
 
-    /// Vrai si un champ que le `PATCH` écrit a changé entre les deux lectures (#4603).
-    ///
-    /// L'`_etag` ne convient pas : il bouge sur **tout** le document, et l'ouvrier d'analyse du socle
-    /// le fait bouger seul, sans aucun humain, en avançant l'état du traitement. Comparer ce que nous
-    /// émettons laisse passer ce qui n'écrase rien, et refuse encore ce qui écraserait.
     /// Vrai si la plateforme a changé un champ que le `PATCH` écrit, **depuis notre dernière lecture**
-    /// (#4707).
-    ///
-    /// C'est la question que deux lectures prises dans le même appel ne peuvent pas poser : elles ne
-    /// couvrent que leur propre intervalle, quelques millisecondes, alors que le besoin porte sur le
-    /// temps qui s'est écoulé depuis que nous avons regardé.
+    /// (#4707). C'est la question que deux lectures prises dans le même appel ne peuvent pas poser :
+    /// elles ne couvrent que leur propre intervalle, quelques millisecondes.
     private static boolean aChangeDepuisLaBase(ReleveParticipation base, ParticipationDetail juste) {
         return !Objects.equals(base.dateDebut(), juste.dateDebut())
                 || !Objects.equals(base.dateFin(), juste.dateFin())
@@ -210,6 +202,9 @@ public final class SynchronisationParticipation {
                 || !Objects.equals(base.configuration(), juste.configuration());
     }
 
+    /// Vrai si un champ que le `PATCH` écrit a changé **entre les deux lectures** d'un même envoi
+    /// (#4603). Repli quand aucune base n'existe : l'`_etag` ne convient pas, il bouge sur tout le
+    /// document et l'ouvrier d'analyse le fait bouger seul.
     private static boolean aChangeSurCeQueNousEcrivons(ParticipationDetail avant, ParticipationDetail juste) {
         return !Objects.equals(avant.dateDebut(), juste.dateDebut())
                 || !Objects.equals(avant.dateFin(), juste.dateFin())
