@@ -13,10 +13,15 @@ import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.importation.view.PreambuleImport;
+import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
+import fr.univ_amu.iut.passage.model.FournisseurMeteo;
+import fr.univ_amu.iut.passage.model.MeteoReleve;
+import fr.univ_amu.iut.passage.model.Vent;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
@@ -26,11 +31,16 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.view.NavigationSites;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +48,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Le passage pivot de `S2`, l'écran où une nuit importée devient une chose sur laquelle on agit
 /// (#4557).
@@ -76,6 +87,14 @@ class ScenarioPassagePivotTest {
     /// Ce que la carte nominale porte, et que le résumé du passage doit retrouver.
     private static final int ORIGINAUX = 6;
 
+    /// Le nom du geste, sur son bouton comme sur le titre de sa modale.
+    private static final String LIBELLE_MODIFIER = "Modifier le passage";
+
+    /// Ce que le fournisseur de météo substitué rend, et qu'on doit retrouver dans les champs.
+    private static final String TEMPERATURE_RELEVEE = "17";
+
+    private static final int APPARITION_SECONDES = 30;
+
     private static final long PAUSE_PAR_FICHIER_MS = 900;
 
     private Path carteSd;
@@ -89,8 +108,19 @@ class ScenarioPassagePivotTest {
         injecteur = BancDeRecette.surLeChrome()
                 .taille(1180, 900)
                 .executeur(BancDeRecette.Executeur.ASYNCHRONE)
-                .remplacer(liaison -> liaison.bind(ExecuteurTache.class)
-                        .toInstance(new ExecuteurTacheRalenti(new ExecuteurTacheAsynchrone(), PAUSE_PAR_FICHIER_MS)))
+                .remplacer(liaison -> {
+                    liaison.bind(ExecuteurTache.class)
+                            .toInstance(
+                                    new ExecuteurTacheRalenti(new ExecuteurTacheAsynchrone(), PAUSE_PAR_FICHIER_MS));
+                    // Le relevé météo est un PORT, et le banc y répond lui-même. Sans cette liaison,
+                    // « Récupérer la météo » appellerait Open-Meteo pour de vrai : un banc qui dépend
+                    // d'un service tiers rougit le jour où ce service tousse, pour une raison qui n'est
+                    // pas le produit. Ce que la case observe est le REMPLISSAGE des champs, et il a bien
+                    // lieu.
+                    liaison.bind(FournisseurMeteo.class)
+                            .toInstance((latitude, longitude, date, debut, fin) ->
+                                    Optional.of(new MeteoReleve(17.4, 9.2, Vent.FAIBLE, CouvertureNuageuse.DE_0_A_25)));
+                })
                 .semer(this::poserLeCarreEtSonPoint)
                 .ouvrir(inj -> inj.getInstance(NavigationSites.class).ouvrirDetail(CARRE))
                 .montrer(stage);
@@ -225,7 +255,231 @@ class ScenarioPassagePivotTest {
         Respiration.leTempsDeLire(robot);
     }
 
+    @Test
+    @CasDeRecette(
+            value = {"S2-27", "S2-28", "S2-29", "S2-30", "S2-31", "S2-32"},
+            portee = Portee.A_L_ECRAN)
+    @DisplayName("S2-27 à S2-32 · modifier le passage : les spinners, la météo, le micro, le récap")
+    void modifier_le_passage(FxRobot robot) throws TimeoutException {
+        PreambuleImport.importerUneNuitEtOuvrirSonPassage(robot, injecteur.getInstance(Navigateur.class), carteSd);
+
+        // ─── S2-27 · le bouton et le titre disent la MÊME chose ──────────────────────────────────
+        // La documentation disait « Modifier le rattachement » quand l'écran disait autre chose : deux
+        // noms pour un geste obligent le lecteur à deviner que c'est le même.
+        assertThat(texte(robot, "#boutonRattachement"))
+                .as("le bouton s'appelle « %s »", LIBELLE_MODIFIER)
+                .contains(LIBELLE_MODIFIER);
+
+        Respiration.surLeMomentCle(robot);
+        GesteVisible.cliquer(robot, "#boutonRattachement");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        attendre(
+                APPARITION_SECONDES,
+                () -> robot.lookup("#spinnerNumero").tryQuery().isPresent(),
+                "la modale d'édition ne s'est pas ouverte : sans elle, aucun des six cas n'a d'écran");
+
+        assertThat(titreDeLaModale(robot))
+                .as("et la modale porte le MÊME titre. C'est ce que la case demande de constater :"
+                        + " l'écran et son point d'entrée se nomment pareil")
+                .isEqualTo(LIBELLE_MODIFIER);
+
+        // ─── S2-28 · les spinners FONCTIONNENT ──────────────────────────────────────────────────
+        // « Fonctionnent » ne se constate pas sur leur présence : on les actionne et on compare.
+        int numeroAvant = valeurDuSpinner(robot, "#spinnerNumero");
+        robot.interact(() -> spinner(robot, "#spinnerNumero").increment());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(valeurDuSpinner(robot, "#spinnerNumero"))
+                .as(
+                        "le spinner du numéro de passage AVANCE : il valait %d. Un spinner qui paraît sans"
+                                + " répondre est le genre de contrôle qu'on croit avoir réglé",
+                        numeroAvant)
+                .isGreaterThan(numeroAvant);
+
+        int anneeAvant = valeurDuSpinner(robot, "#spinnerAnnee");
+        robot.interact(() -> spinner(robot, "#spinnerAnnee").increment());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(valeurDuSpinner(robot, "#spinnerAnnee"))
+                .as("et celui de l'année aussi : il valait %d", anneeAvant)
+                .isGreaterThan(anneeAvant);
+
+        // ─── S2-29 · la météo se SAISIT ─────────────────────────────────────────────────────────
+        robot.clickOn("#champTemperature").write("12,5");
+        robot.clickOn("#champTemperatureFin").write("8,5");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(texte(robot, "#champTemperature"))
+                .as("la température de début de nuit se saisit à la main : le relevé automatique peut"
+                        + " manquer, et l'observateur a son propre thermomètre")
+                .contains("12");
+
+        assertThat(robot.lookup("#champVent").tryQuery())
+                .as("le vent est proposé, en liste : c'est une grandeur du protocole, pas un texte libre")
+                .isPresent();
+        assertThat(robot.lookup("#champCouverture").tryQuery())
+                .as("la couverture nuageuse aussi")
+                .isPresent();
+
+        // ─── S2-30 · « Récupérer la météo » REMPLIT les champs ───────────────────────────────────
+        // Le port est substitué : l'appel réseau est ce que le banc ne peut pas faire, le remplissage
+        // est ce que la case observe. Les valeurs viennent du répondant, et se retrouvent à l'écran.
+        Respiration.surLeMomentCle(robot);
+        GesteVisible.cliquer(robot, "#boutonRecupererMeteo");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        attendre(
+                APPARITION_SECONDES,
+                () -> texte(robot, "#champTemperature").contains(TEMPERATURE_RELEVEE),
+                "« Récupérer la météo » n'a rien rempli : le relevé rendu par le fournisseur doit"
+                        + " atterrir dans les champs, sinon le geste ne fait qu'un aller-retour muet");
+
+        assertThat(texte(robot, "#champTemperature"))
+                .as("la température relevée REMPLACE ce qui était saisi : c'est un relevé, pas une"
+                        + " suggestion à côté")
+                .contains(TEMPERATURE_RELEVEE);
+
+        // ─── S2-31 · le matériel micro, dont un type en LISTE FERMÉE ────────────────────────────
+        assertThat(robot.lookup("#champPosition").tryQuery())
+                .as("la position du micro se saisit")
+                .isPresent();
+        assertThat(robot.lookup("#champHauteur").tryQuery())
+                .as("sa hauteur aussi")
+                .isPresent();
+
+        Object typeMicro = robot.lookup("#champTypeMicro").query();
+        assertThat(typeMicro)
+                .as("le type de micro est une liste FERMÉE, et non un champ libre : c'est un"
+                        + " référentiel, et deux orthographes du même micro fausseraient l'analyse")
+                .isInstanceOf(ComboBox.class);
+
+        assertThat(robot.lookup("#champTypeMicro").queryAs(ComboBox.class).isEditable())
+                .as("fermée veut dire non éditable : une liste où l'on peut taper n'en est pas une")
+                .isFalse();
+
+        // ─── S2-32 · le récapitulatif suit EN DIRECT ────────────────────────────────────────────
+        // Deux relevés, comme partout où « ça suit » est le fait : un instantané ne distingue pas un
+        // récap vivant d'un récap figé.
+        String recapAvant = texte(robot, "#labelRecap");
+
+        robot.interact(() -> spinner(robot, "#spinnerNumero").increment());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(texte(robot, "#labelRecap"))
+                .as(
+                        "le récapitulatif se recompose à chaque changement : il disait « %s ». C'est lui"
+                                + " qui dit ce que « Appliquer » va faire, et un récap figé annoncerait autre"
+                                + " chose que ce qui arrivera",
+                        recapAvant)
+                .isNotEqualTo(recapAvant);
+
+        Respiration.leTempsDeLire(robot);
+    }
+
+    @Test
+    @CasDeRecette(value = "S2-33", portee = Portee.A_L_ECRAN)
+    @DisplayName("S2-33 · changer le numéro de passage demande confirmation avant de renommer le disque")
+    void renommer_le_passage_sur_le_disque(FxRobot robot) throws TimeoutException {
+        PreambuleImport.importerUneNuitEtOuvrirSonPassage(robot, injecteur.getInstance(Navigateur.class), carteSd);
+
+        GesteVisible.cliquer(robot, "#boutonRattachement");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        attendre(
+                APPARITION_SECONDES,
+                () -> robot.lookup("#spinnerNumero").tryQuery().isPresent(),
+                "la modale d'édition ne s'est pas ouverte : sans elle, il n'y a pas de numéro à changer");
+
+        // Le confirmateur est SUBSTITUÉ, et le dialogue réel est ce que le banc ne peut pas filmer :
+        // `Alert.showAndWait()` fige TestFX. Ce que la case demande de constater est que la
+        // confirmation soit DEMANDÉE, et son message est capturé ici plutôt que montré.
+        List<String> demandes = new ArrayList<>();
+        controleurDeLaModale(robot).confirmateur().definir(message -> {
+            demandes.add(message);
+            return false;
+        });
+
+        int numeroAvant = valeurDuSpinner(robot, "#spinnerNumero");
+
+        Respiration.surLeMomentCle(robot);
+        robot.interact(() -> spinner(robot, "#spinnerNumero").increment());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        GesteVisible.cliquer(robot, "#boutonAppliquer");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(demandes)
+                .as(
+                        "changer le numéro de passage de %d renomme les séquences SUR LE DISQUE, et c'est"
+                                + " irréversible : le produit demande avant de le faire. Appliquer sans demander"
+                                + " renommerait des fichiers que l'observateur croit intacts",
+                        numeroAvant)
+                .hasSize(1);
+
+        assertThat(demandes.getFirst())
+                .as("et la demande NOMME ce qui va changer : elle reprend le récapitulatif vivant, celui"
+                        + " que l'écran affiche. Une question qui dirait seulement « confirmer ? » ne"
+                        + " permettrait pas de décider")
+                .isNotBlank()
+                .contains(String.valueOf(numeroAvant + 1));
+
+        Respiration.leTempsDeLire(robot);
+    }
+
     // --------------------------------------------------------------------------------------------
+
+    /// Le contrôleur de la modale ouverte, posé par `NavigationPassage` sur la fenêtre.
+    ///
+    /// La navigation le tenait seule et le jetait en sortant : un banc filmé, qui passe par elle comme
+    /// l'utilisateur, n'avait aucun moyen d'atteindre les porteurs que ce contrôleur expose pourtant
+    /// aux tests. Sans eux, « Appliquer » ouvre un vrai dialogue modal, qui fige TestFX.
+    private static RattachementModaleController controleurDeLaModale(FxRobot robot) {
+        return robot.listTargetWindows().stream()
+                .filter(Stage.class::isInstance)
+                .map(Stage.class::cast)
+                .map(Stage::getUserData)
+                .filter(RattachementModaleController.class::isInstance)
+                .map(RattachementModaleController.class::cast)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Aucune modale d'édition ouverte ne porte son contrôleur. « Modifier le passage »"
+                                + " n'a pas ouvert la modale, ou la navigation a cessé de le poser sur la"
+                                + " fenêtre."));
+    }
+
+    /// Le titre de la fenêtre modale ouverte par-dessus la principale.
+    ///
+    /// Lu sur la fenêtre et non sur un libellé de la scène : c'est la barre de titre que la case
+    /// désigne, et c'est `NavigationPassage` qui la pose.
+    private static String titreDeLaModale(FxRobot robot) {
+        return robot.listTargetWindows().stream()
+                .filter(Stage.class::isInstance)
+                .map(Stage.class::cast)
+                .filter(fenetre -> fenetre.getOwner() != null)
+                .map(Stage::getTitle)
+                .filter(titre -> titre != null && !titre.isBlank())
+                .findFirst()
+                .orElse("");
+    }
+
+    private static void attendre(int secondes, java.util.concurrent.Callable<Boolean> condition, String siJamais)
+            throws TimeoutException {
+        try {
+            WaitForAsyncUtils.waitFor(secondes, java.util.concurrent.TimeUnit.SECONDS, condition);
+        } catch (TimeoutException jamais) {
+            throw new TimeoutException(siJamais);
+        }
+    }
+
+    private static Spinner<Integer> spinner(FxRobot robot, String id) {
+        return robot.lookup(id).queryAs(Spinner.class);
+    }
+
+    private static int valeurDuSpinner(FxRobot robot, String id) {
+        Object valeur = spinner(robot, id).getValue();
+        return valeur instanceof Integer entier ? entier : -1;
+    }
 
     /// Les cartes d'action qui portent le liseré « recommandée ».
     ///
@@ -287,8 +541,20 @@ class ScenarioPassagePivotTest {
                 .toList();
     }
 
+    /// Ce qu'un nœud AFFICHE, qu'il soit libellé ou champ de saisie.
+    ///
+    /// Les deux branches, et c'est le premier tir qui l'a exigé : ce banc lit des `Label` (le bandeau,
+    /// le résumé) et des `TextField` (la météo, le micro). Une aide qui n'aurait connu que les premiers
+    /// aurait rendu la chaîne vide sur les seconds - donc un cas rouge pour une raison qui n'est pas le
+    /// produit, ou pire, un cas vert sur une absence.
     private static String texte(FxRobot robot, String id) {
         Node noeud = robot.lookup(id).tryQuery().orElse(null);
-        return noeud instanceof Labeled libelle && libelle.getText() != null ? libelle.getText() : "";
+        if (noeud instanceof Labeled libelle) {
+            return libelle.getText() == null ? "" : libelle.getText();
+        }
+        if (noeud instanceof TextInputControl champ) {
+            return champ.getText() == null ? "" : champ.getText();
+        }
+        return "";
     }
 }

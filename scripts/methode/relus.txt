@@ -1857,7 +1857,7 @@ cbf696adf24a  src/test/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleV
 1223d0b3a4bf  src/test/java/fr/univ_amu/iut/passage/view/RattachementModaleFermetureViewTest.java
 3d6110c2ae06  src/test/java/fr/univ_amu/iut/passage/view/RattachementModaleViewTest.java
 cbc014bf6958  src/test/java/fr/univ_amu/iut/passage/view/ReactivationModaleViewTest.java
-4017a53e53c1  src/test/java/fr/univ_amu/iut/passage/view/ScenarioPassagePivotTest.java
+bffcab754b0f  src/test/java/fr/univ_amu/iut/passage/view/ScenarioPassagePivotTest.java
 cd203af38495  src/test/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduRattachementTest.java
 1b869e0cc43b  src/test/java/fr/univ_amu/iut/passage/viewmodel/CorrectionPointTest.java
 1933f68af71f  src/test/java/fr/univ_amu/iut/passage/viewmodel/GestionCampagnesViewModelTest.java
