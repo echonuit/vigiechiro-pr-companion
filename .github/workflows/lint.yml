@@ -727,6 +727,12 @@ jobs:
         # redevient suspect. Un garde qui ne tiendrait que le premier laisserait passer exactement le
         # geste qu'on veut empêcher, et resterait vert. Ses neuf cas portent les deux.
         run: python3 scripts/adr/4468-javadoc-non-relue.py --auto-test
+      - name: "Auto-test de la loupe des lots multi-PR (bloquant, #4712)"
+        # Cette loupe ne refuse rien : elle met les lots d'un EPIC sous les yeux pour que la question
+        # du sous-chantier se pose. Son seul defaut possible est donc de MAL LIRE, et il se
+        # presenterait comme un rapport propre. Ses temoins tiennent les deux lectures qui comptent :
+        # recoller les lignes de continuation d'un lot, et ne pas confondre `#46` avec `#4`.
+        run: python3 scripts/adr/loupe-4712-lots-multi-pr.py --auto-test
       - name: "Auto-test du compteur qui ÉCRIT le manifeste (bloquant, #4527)"
         # Le cliquet ci-dessus VÉRIFIE le manifeste ; ce compteur l'ÉCRIT, et il n'avait aucun cas.
         # `--marque` acceptait n'importe quel fichier existant : l'entrée n'était ensuite ni relue,
