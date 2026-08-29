@@ -153,12 +153,36 @@ porte des dates ou des actes que la source établit.
 **En anglais** : delve, crucial, pivotal, tapestry, testament, landscape, showcase, underscore,
 foster, garner, intricate, vibrant.
 
-**En français** : crucial, essentiel, primordial, fondamental, notable, significatif, majeur, riche,
-dynamique, approfondi, paysage (au figuré), tapisserie (au figuré), fascinant, captivant,
-passionnant, révolutionnaire, transformateur, disruptif, incontournable.
+Le tic est le **groupe**, pas le mot isolé. Encore faut-il savoir ce que chaque mot pèse dans le
+groupe, et les dix-neuf mots français ne pèsent pas pareil. Ils se rangent sur un seul axe :
+**combien d'autres emplois le mot a-t-il ?** Un mot sans autre emploi n'est là que pour
+emballer ; un mot qui est aussi un terme du domaine ne prouvera jamais rien seul.
 
-Le tic est le **groupe**, pas le mot isolé. Un « essentiel » ne prouve rien ; trois dans un
-paragraphe se voient.
+**Niveau 1, le mot sans autre emploi** : paysage (au figuré), tapisserie (au figuré), fascinant,
+captivant, passionnant, révolutionnaire, transformateur, disruptif, incontournable.
+Une occurrence suffit à ouvrir la ligne, et la ligne est presque toujours fautive.
+
+**Niveau 2, le mot marqué qui garde un emploi** : crucial, primordial, fondamental, notable,
+approfondi.
+Il existe en français ordinaire, et l'emphase se voit quand il revient. Deux dans un paragraphe se
+lisent ; un seul s'ouvre avant de se retenir.
+
+**Niveau 3, le mot à deux emplois** : riche, essentiel, majeur, significatif, dynamique.
+Il est aussi un terme du domaine, un nom commun ou un adjectif technique. **Il ne prouve jamais rien
+seul**, quel que soit le nombre d'occurrences : la ligne s'ouvre d'abord.
+
+**Ce qui a décidé ce rangement, et ce qui ne l'a pas décidé.** Le niveau 3 vient d'une mesure. Les
+dix-neuf mots comptés le 2026-08-29 sur `dev-docs`, `docs`, `brief`, `openspec` et les commentaires
+de `src` rendent 144 occurrences, dont **une seule est un tic**. Les 143 autres sont « richesse »,
+qui est un nombre d'espèces (93), le nom commun « l'essentiel » (18), la majeure de version (13),
+la dynamique audio (11), le sens statistique de « significatif » (7) et « la version approfondie »
+(1).
+
+Les niveaux 1 et 2 ne viennent pas de là. Douze de leurs quatorze mots rendent zéro, et un zéro ne
+dit pas si un mot est absent parce qu'il est étranger à ce français ou parce qu'une relecture l'a
+retiré. Les deux qui restent tiennent en une occurrence chacun : « crucial », qui est le seul tic du
+corpus, et « approfondi », qui est du français ordinaire. Ces quatorze-là sont donc rangés à la
+lecture, et la mesure dit seulement qu'ils ne servent presque à rien ici.
 
 ### 8. Le verbe simple évité
 
@@ -593,6 +617,10 @@ vocabulaire du début à la fin. Un auteur humain fatigue, s'emballe, coupe cour
 Ce motif ne se corrige pas mot à mot. Il se corrige en variant réellement : une phrase courte après
 trois longues, un paragraphe qui s'arrête plus tôt que prévu, un aparté.
 
+**Et il ne se retient jamais seul.** Beaucoup d'auteurs écrivent naturellement en faible variance,
+et ce motif ne les distingue pas d'une sortie de modèle. Voir « Une prose peu variée », parmi les
+faux positifs qui portent sur l'auteur.
+
 ---
 
 # Ce que cette grille ne peut pas voir
@@ -646,6 +674,29 @@ Aucun élément ci-dessous ne prouve quoi que ce soit à lui seul.
   d'œuvre, d'un nom propre ou d'un exemple qui sert précisément à le montrer.
 - **Un terme du domaine qui ressemble à un tic.** « La richesse d'un carré » est un nombre d'espèces,
   pas de la publicité. Ouvrir les lignes avant de retenir un motif.
+
+## Trois faux positifs qui portent sur l'auteur, et non sur le texte
+
+Les quinze ci-dessus disent qu'un passage ne prouve rien. Les trois qui suivent disent autre chose.
+Un faux positif de texte retire un motif du compte ; un faux positif d'auteur empêche le compte de
+conclure.
+
+- **Une prose peu variée.** L'alternance des longueurs de phrase est un signal usuel, et beaucoup
+  d'auteurs autistes ou TDAH écrivent naturellement en faible variance, avec un plan régulier et un
+  vocabulaire stable. Aucune heuristique de variance ne sépare cette voix d'une sortie de modèle.
+  La faible variance ne fait donc jamais monter un verdict à elle seule : il faut les marques
+  lexicales et celles du contenu, et il faut les avoir lues.
+
+- **Un français scolaire, ou de langue seconde.** Les détecteurs entraînés sur de l'anglais natif
+  sur-signalent les auteurs non natifs
+  ([Liang et al., arXiv:2304.02819](https://arxiv.org/abs/2304.02819)), et la même prudence vaut
+  ici. Un registre appliqué, des tournures apprises et une syntaxe prudente sont la voix honnête de
+  quelqu'un qui écrit dans une langue qui n'est pas la sienne. Le relever comme un tic revient à
+  refuser un texte pour la langue de qui l'a écrit.
+
+- **Un échantillon trop court.** Sous une quarantaine de mots, il n'y a pas de quoi conclure : cette
+  grille mesure des taux et des groupes, et ni l'un ni l'autre n'existe sur trois phrases. Le dire,
+  plutôt que de trancher au hasard.
 
 ## Ce qui porte la voix et se garde
 
