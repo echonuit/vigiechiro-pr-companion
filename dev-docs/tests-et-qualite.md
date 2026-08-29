@@ -12,9 +12,10 @@ référence structurée ; le repo-root garde un mémo
 | `./mvnw test -Dtest=SitesViewModelTest` | Une seule **classe** de test |
 | `./mvnw test -Dtest=SitesViewModelTest#charger_lit_par_lot` | Une seule **méthode** |
 | `./mvnw verify` | Build complet : tests + couverture + contrôles (PMD/JaCoCo **non** bloquants) |
-| `./mvnw -Pquality-gate verify` | **Portail qualité** : PMD `failOnViolation` + seuils JaCoCo **bloquants** |
+| `./mvnw -Pquality-gate verify` | Rend PMD bloquant sur **toute** violation. **Ne passe pas** sur ce dépôt : le portail se tient par le cliquet de l'ADR 4617, pas par `failOnViolation`. |
 | `env -u DISPLAY ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage -DtargetClasses=… -DtargetTests=…` | Tests de **mutation** PIT (lent, ciblé, à la demande). `-Pmutation test` **ne mute rien** : le profil n'a aucune liaison de phase, donc le goal n'est jamais invoqué - la commande lance toute la suite et rend zéro rapport, sans le dire. |
-| `./mvnw pmd:check` | Rapport PMD seul (rapide) |
+| `./mvnw -B test-compile pmd:pmd` | Le rapport PMD. Il **ne juge pas** : le verdict est le cliquet de l'ADR 4617. |
+| `python3 scripts/adr/4617-code-mort-et-zone-de-test.py` | Le verdict du portail, par zone. Refuse si le rapport manque. |
 | `./mvnw spotless:check` / `spotless:apply` | Vérifie / applique le formatage |
 | `./mvnw javafx:run` | Lance l'application |
 
@@ -690,7 +691,7 @@ introduites, et vérifier à la main les garde-fous que PIT ne peut pas atteindr
 |---|---|---|
 | « Java CI » ([maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml)), tests **+ couverture** **+ hygiène des dépendances** | `./mvnw -B verify -Djacoco.haltOnFailure=true` | **Oui** |
 | « Quality gate » ([lint.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml)), formatage | `./mvnw -B spotless:check` | **Oui** |
-| « Quality gate », portail PMD | `./mvnw -B -Pquality-gate compile pmd:check` | **Oui** |
+| « Quality gate », portail PMD | `./mvnw -B test-compile pmd:pmd` puis les **cliquets ADR**, dont celui de l'ADR 4617 | **Oui** |
 
 L'**hygiène des dépendances** est verrouillée dans la première ligne : `dependency:analyze-only` est
 lié à la phase `verify` et **échoue sur écart** (`failOnWarning`). Jusqu'à #3515 il n'était lié à

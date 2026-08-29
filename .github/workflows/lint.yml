@@ -1,4 +1,5 @@
-# Portail qualité statique : formatage + complétude des captures + PMD bloquant.
+# Portail qualité statique : formatage + complétude des captures + le rapport PMD, que les cliquets
+# ADR jugent. PMD lui-même ne bloque pas : voir le pas « Portail qualité » et l'ADR 4617.
 # Aucun test ici : la suite complète (et le seuil de couverture JaCoCo bloquant)
 # vit dans maven.yml, pour ne pas exécuter les tests deux fois par PR.
 # `solution` est conservée pendant la transition (avant la consolidation en `main`).

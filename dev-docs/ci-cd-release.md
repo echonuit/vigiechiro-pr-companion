@@ -13,7 +13,7 @@ publication.
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `fuseau-alternatif` | push `main` + PR | Rejoue **toute** la suite sous `America/Cayenne` : *ce que le produit calcule pour une nuit ne dépend pas du fuseau de la machine* ([ADR 3450](decisions/3450-une-propriete-de-fuseau-se-tient-en-rejouant-pas-en-relisant.md)). `TZ` passe par l'**environnement**, hérité des forks surefire, et `FuseauDExecutionTest` vérifie depuis l'intérieur que la zone est bien appliquée | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `duree-du-portail` | push `main` + PR | Compare la **médiane** des 12 dernières exécutions réussies sur `main` à celle des 12 d'avant, et **avertit** au-delà de 20 % d'écart. Une CI riche se dégrade par accumulation, jamais d'un coup : chaque ajout coûte trente secondes que personne ne remarque. Deux **médianes**, et non une exécution contre un seuil : sur trente exécutions, deux durent le double des autres, et un butoir aurait rougi sans qu'aucune PR soit fautive (#3508) | Non - il avertit |
 | [suite-sous-windows-et-macos.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/suite-sous-windows-et-macos.yml) | **hebdomadaire (mardi 6 h UTC)** + manuel | Lance la suite **entière** sous Windows et macOS, et **conclut** : rouge dès le premier échec, TestFX compté à part. Manuel jusqu'à #3526, le temps de savoir ce que la suite y donnait - 11 échecs sous Windows au premier relevé, 0 sous macOS. Programmé la **veille** du train de publication, dont il est désormais la condition (cf. plus bas). En manuel il peut être **ciblé** sur quelques classes (#3754, 2 min contre 48) : un passage ciblé sert à instruire, jamais à prouver | **Oui** |
-| [lint.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml) | push `main` + PR | « Quality gate » (statique) : `spotless:check` + complétude des captures + `./mvnw -Pquality-gate compile pmd:check` (**PMD bloquant**) | **Oui** |
+| [lint.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml) | push `main` + PR | « Quality gate » (statique) : `spotless:check` + complétude des captures + `test-compile pmd:pmd` qui **produit** le rapport, puis les **cliquets ADR** qui le jugent | **Oui** |
 | [docs.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/docs.yml) | push/PR sur la doc | Construit les **deux** sites MkDocs (`--strict`) ; déploie Pages (dormant tant que `ENABLE_PAGES` ≠ true) | Build oui |
 | [titre-pr.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/titre-pr.yml) | PR (dont `edited`) | Le **titre de la PR** suit Conventional Commits (c'est lui que semantic-release lira, cf. ci-dessous) | Non - **informatif**, et volontairement (cf. ci-dessous) |
 | [corps-pr.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/corps-pr.yml) | PR (dont `edited`) | Le **corps de la PR** passe la part mécanisable de la grille de prose : cadratin, apostrophe courbe, élision sans apostrophe. Ce corps n'est jamais commis, et c'est pourquoi aucun garde de fichiers ne l'atteignait ; il est pourtant publié dès qu'il part ([ADR 4453](decisions/4453-la-prose-publiee-sur-la-forge-releve-de-la-meme-grille.md)) | Non - **informatif**, comme le titre |
@@ -72,15 +72,19 @@ publication.
 
 Le profil Maven `quality-gate` rend **bloquants** des contrôles tolérants par défaut :
 
-- **PMD** : `failOnViolation=true` (sinon simple rapport), exécuté par `lint.yml` (`compile pmd:check`) ;
+- **PMD** : `failOnViolation=true`, que `lint.yml` n'emploie **pas** - il lance `test-compile pmd:pmd`
+  et laisse le verdict au cliquet de l'ADR 4617, qui tolère une marge là où `failOnViolation` refuse
+  tout ;
 - **JaCoCo** : le seuil de couverture devient bloquant, exécuté par `maven.yml`
   (`verify -Djacoco.haltOnFailure=true`). Les valeurs vivent dans le `pom.xml`, seule source.
 
 Ces deux contrôles sont **répartis sur deux workflows** : `lint.yml` porte le **statique** (Spotless +
 captures + PMD), `maven.yml` porte les **tests + couverture**. Localement :
 
-- `./mvnw -Pquality-gate compile pmd:check` reproduit la gate PMD de `lint.yml` ;
-- `./mvnw -Pquality-gate verify` reproduit le build complet **avec** la couverture bloquante (comme `maven.yml`).
+- `./mvnw -B test-compile pmd:pmd` puis `python3 scripts/adr/4617-code-mort-et-zone-de-test.py`
+  reproduit le portail de `lint.yml` ;
+- `./mvnw -B verify -Djacoco.haltOnFailure=true` reproduit `maven.yml`, qui n'emploie **pas** le
+  profil : la couverture y est bloquante, PMD non.
 
 **Spotless** (Palantir Java Format) formate via un *hook* pre-commit et est vérifié par `lint.yml` (`spotless:check`).
 

@@ -341,6 +341,7 @@ publiée (`feat:` mineure, `fix:` patch, `BREAKING CHANGE:` majeure ; cf.
 - [ ] Module de feature déclaré comme service `ModuleDeFeature` dans les **deux** listes `ServiceLoader` (auto-découverte, cf. [Injection](injection.md#la-racine-de-composition)) - **pas** dans `RacineInjecteur` - et l'app démarre (`./mvnw javafx:run`).
 - [ ] Navigation branchée par contrat `Ouvrir*` si ouverte depuis un autre écran.
 - [ ] Capture + manifeste si l'écran est documenté.
-- [ ] Tests verts et **`./mvnw -Pquality-gate verify`** vert (PMD + couverture).
+- [ ] Tests verts, **`./mvnw -B test-compile pmd:pmd`** puis le cliquet 4617 vert, et la couverture
+      tenue par `./mvnw -B verify -Djacoco.haltOnFailure=true`.
 - [ ] Commits en **Conventional Commits** (cf.
       [CONTRIBUTING.md](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/CONTRIBUTING.md)).
