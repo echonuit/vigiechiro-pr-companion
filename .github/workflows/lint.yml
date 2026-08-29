@@ -920,6 +920,28 @@ jobs:
           python3 scripts/methode/tests-cites-existent.py --auto-test
           python3 scripts/methode/tests-cites-existent.py
 
+      - name: "Aucun auto-test de garde de méthode n'est décoratif (bloquant, #4760)"
+        # L'article A2 demande qu'un garde soit vu ROUGE sur sa propre mutation.
+        # `scripts/adr/verifie_temoins_non_decoratifs.py` le rend mecanique, mais pour `scripts/adr/`
+        # seulement : les gardes de methode, dont onze bloquants ici, avaient un `--auto-test` que
+        # rien n'obligeait a detecter quoi que ce soit.
+        #
+        # LA TRANSPOSITION N'EST PAS CELLE QU'ON CROIT. Les gardes d'ADR sont mutes en AJOUTANT la
+        # neutralisation en fin de fichier, parce que le harnais les IMPORTE. Un garde de methode se
+        # lance en `--auto-test` : son `raise SystemExit` part avant de l'atteindre, et la mutation
+        # n'agit jamais. Cinq essais ont ainsi rendu « decoratif » pour cinq gardes, dont deux vus
+        # rougir sur un vrai defaut le meme jour. La neutralisation s'INSERE avant le point d'entree.
+        #
+        # ET LA FONCTION D'AUTO-TEST EST EPARGNEE, sinon le garde rougit pour la mauvaise raison :
+        # deux gardes nomment la leur `auto_test` sans souligne, et la neutraliser les faisait rougir
+        # parce que leur point d'entree rendait une liste, non parce qu'ils avaient cesse de detecter.
+        #
+        # Il REFUSE plutot que de sauter : six gardes sans `if __name__` sont nommes a chaque
+        # passage, leur sort etant decide par #4788.
+        run: |
+          python3 scripts/methode/temoins-de-methode-non-decoratifs.py --auto-test
+          python3 scripts/methode/temoins-de-methode-non-decoratifs.py
+
       - name: "La méthode nomme le garde du titre, et ce garde refuse encore l'espace (bloquant, #4598)"
         # Le dépôt pratique deux conventions de titre à un caractère d'écart, et c'est la plus
         # écrite qui est fausse en PR : 62 des 100 derniers titres d'issue portent l'espace avant
