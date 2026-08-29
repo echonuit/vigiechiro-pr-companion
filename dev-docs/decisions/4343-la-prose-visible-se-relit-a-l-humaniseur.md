@@ -50,9 +50,8 @@ n'est pas une règle, c'est un goût.
 ## Décision
 
 **Toute prose visible passe la grille de la compétence `humaniseur` avant d'être commise.** Elle
-porte des motifs avec leurs exemples et leurs faux positifs, adossés à « Signs of AI writing », à
-son équivalent français et à l'humaniseur anglais d'Aboudjem. Quarante et un le 2026-08-24,
-cinquante-quatre depuis le chantier #4748 : **le compte fait foi dans la compétence, pas ici.**
+porte ses motifs, leurs exemples et leurs faux positifs, adossés à « Signs of AI writing » et à
+son équivalent français.
 
 Est **visible** ce qu'un humain lira hors de l'échange qui l'a produit :
 
