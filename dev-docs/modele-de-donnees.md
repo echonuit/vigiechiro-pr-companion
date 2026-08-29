@@ -44,8 +44,8 @@ Le **schéma physique** est plus proche de la machine. On le donne en notation *
 (IE / *crow's foot*, celle de Mermaid) : relations binaires, clés étrangères explicites. C'est la
 traduction du MCD ci-dessus. **19 tables à l'origine**, créées par
 [`V01__schema.sql`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/resources/db/migration/V01__schema.sql) ;
-le schéma courant en compte **<!--inv:tables-->34<!--/inv-->**, au terme des
-**<!--inv:migrations-->42<!--/inv-->** migrations versionnées ; clés étrangères
+le schéma courant en compte **<!--inv:tables-->35<!--/inv-->**, au terme des
+**<!--inv:migrations-->43<!--/inv-->** migrations versionnées ; clés étrangères
 **`ON DELETE CASCADE`** (supprimer un passage emporte sa session, ses séquences, ses observations…).
 
 !!! note "Pourquoi ces deux chiffres sont balisés et pas le premier"
