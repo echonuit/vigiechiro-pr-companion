@@ -5,6 +5,7 @@ import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import org.testfx.api.FxRobot;
+import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// Faire un geste **de façon qu'on le voie faire** (#4177, #4181).
@@ -30,6 +31,10 @@ import org.testfx.util.WaitForAsyncUtils;
 /// clique. Le temps d'arrêt ne coûte qu'à une séance filmée.
 public final class GesteVisible {
 
+    /// Le temps laissé à la mise en page pour établir ses bornes. Généreux : ce délai n'est atteint
+    /// que si la cible ne vient JAMAIS, cas où l'on veut un message plutôt qu'un silence.
+    private static final int SECONDES_CADRE = 10;
+
     private GesteVisible() {}
 
     /// Fait défiler le `ScrollPane` du chrome jusqu'à ce que `selecteur` soit **dans le cadre**.
@@ -42,6 +47,28 @@ public final class GesteVisible {
     /// pourquoi cette aide vit ici et non chez un scénario. Elle y était, en privé, et une seconde
     /// copie aurait divergé de la première.
     public static void amenerDansLeCadre(FxRobot robot, String selecteur) {
+        try {
+            WaitForAsyncUtils.waitFor(
+                    SECONDES_CADRE,
+                    TimeUnit.SECONDS,
+                    () -> unePasse(robot, selecteur) || estDansLeCadre(robot, selecteur));
+        } catch (TimeoutException jamais) {
+            throw new IllegalStateException("« " + selecteur + " » n'est jamais venu dans le cadre en "
+                    + SECONDES_CADRE + " s. Rendre la main sans l'avoir amené reporterait l'échec sur le"
+                    + " clic suivant, qui l'annoncerait comme une absence de nœud.");
+        }
+    }
+
+    /// Une passe de calcul, puis le verdict : la cible est-elle atteignable ?
+    ///
+    /// Le calcul se refait à chaque tour parce que ses **bornes** peuvent ne pas encore être établies -
+    /// un écran qui vient de paraître rend une largeur nulle, et le quotient tombe alors à mi-course.
+    /// Une passe unique sur des bornes fausses ne se rattrape pas toute seule.
+    ///
+    /// Le produit connaissait déjà ce mode de défaillance : [fr.univ_amu.iut.commun.view.DefilementChrome]
+    /// diffère son calcul d'un tour de boucle, parce que « révéler tout de suite reviendrait à viser un
+    /// nœud de hauteur nulle ». Ce geste-ci, du côté des bancs, ne l'avait jamais hérité (#4723).
+    private static boolean unePasse(FxRobot robot, String selecteur) {
         Node cible = robot.lookup(selecteur).query();
         ScrollPane defilement = robot.lookup(".scroll-pane").queryAs(ScrollPane.class);
         robot.interact(() -> {
@@ -55,6 +82,18 @@ public final class GesteVisible {
             defilement.setVvalue((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue));
         });
         WaitForAsyncUtils.waitForFxEvents();
+        return estDansLeCadre(robot, selecteur);
+    }
+
+    /// La cible est-elle dans le cadre, **au sens de TestFX** ?
+    ///
+    /// Le prédicat même dont `moveTo` se sert : une seconde façon de lire aurait divergé de la
+    /// première, et c'est ce refus-là que le geste doit prévenir.
+    private static boolean estDansLeCadre(FxRobot robot, String selecteur) {
+        return robot.lookup(selecteur)
+                .match(NodeQueryUtils.isVisible())
+                .tryQuery()
+                .isPresent();
     }
 
     /// Amène le pointeur sur `cible`, l'y laisse voir, puis clique.
