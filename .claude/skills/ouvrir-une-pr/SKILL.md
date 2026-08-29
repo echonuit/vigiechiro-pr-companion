@@ -27,7 +27,7 @@ Ce n'est pas un défaut rare : les sessions **disent** attendre la CI et ne le f
 ## Fonction de garde
 
 ```
-1. METTRE AU NET les deux corps par `clore-une-issue`, avant tout le reste.
+1. METTRE AU NET le corps de la PR, ICI. Celui de l issue attend la fusion.
 2. LANCER   la batterie locale, selon ce qui a ete touche.
 3. REBASER  sur `origin/main`, puis RELANCER ce que le rebase peut avoir perime.
 4. EPROUVER le titre AVANT `gh pr create`.
@@ -37,6 +37,16 @@ Ce n'est pas un défaut rare : les sessions **disent** attendre la CI et ne le f
 
 L'étape 6 est un seul geste, pas deux. Une PR ouverte sans moniteur est le cas que cette compétence
 existe pour empêcher.
+
+**L'étape 1 ne délègue pas** (#4731). Elle disait « les deux corps, par `clore-une-issue` », qui
+s'emploie **après** la fusion depuis #4722 : la première étape de l'ouverture envoyait à la
+compétence de la fermeture. Les deux se renvoyaient alors le corps de la PR, chacune désignant
+l'autre, si bien que personne ne le mettait au net. Il se met au net ici, avec le titre ; le corps de
+l'**issue** attend `clore-une-pr` puis `clore-une-issue`.
+
+Un garde le tient désormais : `scripts/methode/etapes-sans-renvoi-aval.py` refuse qu'une **étape
+numérotée** nomme une compétence située plus loin dans le cycle. La prose reste libre de nommer la
+suite - c'est même ce qu'on attend d'elle.
 
 ## La batterie locale, et pourquoi elle ne se devine pas
 

@@ -885,6 +885,25 @@ jobs:
           python3 scripts/methode/verifie-renvois-competences.py --auto-test
           python3 scripts/methode/verifie-renvois-competences.py --verifie
 
+      - name: "Une étape du cycle ne délègue pas vers l'aval (bloquant, #4731)"
+        # Les six competences du cycle s'enchainent dans un ordre. Une ETAPE NUMEROTEE qui delegue
+        # vers l'aval envoie le lecteur faire maintenant un travail qui ne se fait qu'apres : il ne
+        # peut pas obeir, et le texte ne lui dit pas pourquoi, donc il se croit en faute. Vecu le
+        # 2026-08-29 : l'etape 1 d'`ouvrir-une-pr` deleguait a `clore-une-issue`, que #4722 venait
+        # de deplacer APRES la fusion - et les deux se renvoyaient le corps de la PR, chacune
+        # designant l'autre, si bien que personne ne le mettait au net.
+        #
+        # La PROSE reste libre de nommer la suite : c'est meme ce qu'on attend d'elle. Seules les
+        # etapes sont tenues, parce qu'elles prescrivent un geste a faire MAINTENANT.
+        #
+        # Il REFUSE plutot que de sauter : les six ne titrent pas leur liste pareil - « Fonction de
+        # garde », « Les quatre etapes », « Les douze passes ». Un motif cale sur un seul titre en
+        # sauterait deux sur six et rendrait vert. La liste se derive de sa forme, et une competence
+        # dont aucune liste n'est trouvee fait rougir (article A3).
+        run: |
+          python3 scripts/methode/etapes-sans-renvoi-aval.py --auto-test
+          python3 scripts/methode/etapes-sans-renvoi-aval.py
+
       - name: "La méthode nomme le garde du titre, et ce garde refuse encore l'espace (bloquant, #4598)"
         # Le dépôt pratique deux conventions de titre à un caractère d'écart, et c'est la plus
         # écrite qui est fausse en PR : 62 des 100 derniers titres d'issue portent l'espace avant
