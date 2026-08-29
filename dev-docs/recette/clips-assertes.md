@@ -401,3 +401,36 @@ chemin de l'observateur, et il commence donc lui aussi par un import freiné.
 > L'alerte « hors nuit » paraît, et ce n'est pas un montage : mesuré, l'enregistrement de la carte
 > nominale déborde de sa fenêtre nocturne des deux côtés. Le cas est donc jouable sans fabriquer une
 > seconde carte.
+
+
+## ScenarioSelectionEcouteTest
+
+La modale qui décide de ce que l'observateur va écouter, et dont « Régénérer » **efface sa
+progression**. Le clip repart de l'import et rejoint la vérification par la carte du passage : c'est
+le chemin réel, et il commence donc lui aussi par un import freiné.
+
+### S3-12 à S3-17 · `personnaliser_la_selection_d_ecoute`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioSelectionEcouteTest.personnaliser_la_selection_d_ecoute.mp4"></video>
+
+> **Le banc supplée le périphérique audio, qu'il n'a pas.** Mesuré : le clic sur « Lecture » laisse
+> `playing` à faux, le composant retombant deux fois faute de carte son. La propriété est donc posée à
+> vrai ensuite, et c'est le câblage réel du produit qui prend le relais - `playingProperty` déclenche
+> le marquage de la séquence, qui fait la progression. Ce que le clip démontre : une séquence écoutée
+> change ce que « Régénérer » coûte. Ce qu'il ne démontre pas : que « Lecture » émette du son.
+
+> **La progression se lit par le produit lui-même**, et non par un compteur interne. `S3-12` établit
+> que la confirmation ne paraît **que** s'il y a de quoi perdre ; les cas suivants s'en servent comme
+> oracle - après « Annuler » le produit prévient encore, après « Régénérer » il ne prévient plus. Un
+> avertissement systématique s'apprend à ignorer, et un relevé unique ne dirait pas s'il paraît à bon
+> escient.
+
+> **Ce clip a trouvé un défaut du produit, et le montre corrigé.** « Personnaliser… » n'appliquait
+> rien : la modale recevait de l'injecteur une sélection **neuve** au lieu de celle de l'écran, écrivait
+> dedans, régénérait cet orphelin. Elle se rouvrait de surcroît sur les valeurs par défaut. Aucun test
+> ne le voyait, celui de la modale lui injectant un modèle partagé.
+
+> Le dialogue de confirmation et le compte rendu de régénération ne sont pas à l'image : tous deux
+> passent par `Alert.showAndWait()`, qui fige TestFX. Leurs porteurs sont substitués et leurs messages
+> capturés.

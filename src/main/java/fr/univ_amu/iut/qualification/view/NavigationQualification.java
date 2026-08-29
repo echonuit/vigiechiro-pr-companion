@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
@@ -59,12 +60,21 @@ public class NavigationQualification implements OuvrirVerification {
 
     /// Ouvre la modale **« Personnaliser la sélection d'écoute »** (R12, #1431), en remplacement du
     /// `Dialog` bâti à la main dans [QualificationController] : le geste - qui **efface la progression
-    /// d'écoute** - devient jouable dans un test, et sa capture montre la vraie vue.
+    /// d'écoute** - devient jouable dans un test.
+    ///
+    /// La sélection est celle de l'écran APPELANT, qui la passe. Prise de l'injecteur elle serait
+    /// **neuve** - ce modèle est non-singleton - et la modale écrirait dans un orphelin sans que
+    /// l'écran n'en voie rien (#4734). Les autres modales reçoivent déjà leur objet ; celle-ci était
+    /// la seule à ne rien recevoir.
     ///
     /// @param parent fenêtre propriétaire (pour la modalité)
-    public void ouvrirModaleSelection(Window parent) {
+    /// @param selection la sélection d'écoute de l'écran appelant, celle que la modale doit modifier
+    public void ouvrirModaleSelection(Window parent, SelectionEcouteViewModel selection) {
+        Objects.requireNonNull(selection, "selection");
         FXMLLoader loader = ChargeurFxml.chargeur(NavigationQualification.class, "ModaleSelection.fxml");
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(type -> type == ModaleSelectionController.class
+                ? new ModaleSelectionController(selection)
+                : injector.getInstance(type));
         try {
             Parent vue = loader.load();
             ((ModaleSelectionController) loader.getController()).demarrer();
