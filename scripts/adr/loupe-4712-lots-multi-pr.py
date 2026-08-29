@@ -31,10 +31,14 @@ Usage : loupe-4712-lots-multi-pr.py [--auto-test]
 from __future__ import annotations
 
 import json
+import pathlib
 import re
 import shutil
 import subprocess
 import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from _commun import loupe  # noqa: E402
 
 LOT = re.compile(r"^- \[[ x]\] \*\*Lot[^\n]*(?:\n(?:    |\t)[^\n]*)*", re.M)
 RATTACHEMENT = "Fait partie de #"
@@ -76,18 +80,34 @@ def _issues() -> list[dict]:
 
 
 def rapport(issues: list[dict]) -> list[str]:
+    """Un candidat par LOT, chacun se lisant seul (#4758).
+
+    La surface de revue est le lot, pas l EPIC : la loupe demande « pour chaque lot, combien de
+    PR ? », et plusieurs EPIC n en portent aucun. Chaque ligne nomme donc son EPIC, comme les
+    quatre autres loupes du depot dont chaque candidat se lit sans son voisin.
+    """
     lignes: list[str] = []
     for epic in sorted((i for i in issues if estEpic(i)), key=lambda i: -i["number"]):
         enfants = rattachees(epic["number"], issues)
         sousChantiers = [e for e in enfants if estEpic(e)]
-        sesLots = lots(epic.get("body") or "")
-        lignes.append(
-            f"EPIC #{epic['number']} : {len(sesLots)} lot(s), "
-            f"{len(enfants)} issue(s) rattachee(s), {len(sousChantiers)} sous-chantier(s)"
-        )
-        for lot in sesLots:
-            lignes.append(f"    {lot[:150]}")
+        for lot in lots(epic.get("body") or ""):
+            lignes.append(
+                f"EPIC #{epic['number']} ({len(enfants)} issue(s), "
+                f"{len(sousChantiers)} sous-chantier(s)) · {lot[:130]}"
+            )
     return lignes
+
+
+def sansLot(issues: list[dict]) -> list[int]:
+    """Les EPIC ouverts qui ne declarent aucun lot. Ils ne sont pas des candidats a la revue.
+
+    Ils restent affiches parce qu un EPIC sans lot est un signal en soi, mais les compter parmi
+    les candidats gonflerait le nombre d une revue qui n a rien a lire.
+    """
+    return sorted(
+        (e["number"] for e in issues if estEpic(e) and not lots(e.get("body") or "")),
+        reverse=True,
+    )
 
 
 def _autoTest() -> int:
@@ -111,22 +131,38 @@ def _autoTest() -> int:
     assert [i["number"] for i in liees] == [99], liees
     assert estEpic(liees[0])
 
-    sansLot = [{"number": 7, "title": "vide", "body": "aucun lot ici", "labels": [{"name": "epic"}]}]
-    assert lots(sansLot[0]["body"]) == []
-    assert rapport(sansLot)[0].startswith("EPIC #7 : 0 lot(s)")
+    vide = [{"number": 7, "title": "vide", "body": "aucun lot ici", "labels": [{"name": "epic"}]}]
+    assert lots(vide[0]["body"]) == []
+    # Un EPIC sans lot ne donne AUCUN candidat : la surface de revue est le lot, et il n en a pas.
+    assert rapport(vide) == [], rapport(vide)
+    # Mais il reste signale, sinon un EPIC sous-structure disparaitrait du releve (#4758).
+    assert sansLot(vide) == [7], sansLot(vide)
 
-    print("auto-test : 6 temoins verts")
+    # Un candidat se lit SEUL : il nomme son EPIC, comme les quatre autres loupes du depot.
+    unLot = rapport(issues)
+    assert len(unLot) == 2, unLot
+    assert all(l.startswith("EPIC #4 ") for l in unLot), unLot
+    assert "Lot 1 - Porter" in unLot[1], unLot[1]
+    # Le sens NEGATIF : sans ce cas, un `rapport` qui rendrait toujours vide passerait les autres.
+    assert rapport(issues) != [], "un EPIC portant deux lots doit rendre deux candidats"
+
+    print("auto-test : 10 temoins verts")
     return 0
 
 
 def main() -> int:
     if "--auto-test" in sys.argv:
         return _autoTest()
-    print("LOUPE 4712 - un lot multi-PR s'ouvre en sous-chantier (jugement humain)")
-    for ligne in rapport(_issues()):
-        print(f"  {ligne}")
+    issues = _issues()
+    code = loupe("4712", "un lot multi-PR s'ouvre en sous-chantier (jugement humain)", rapport(issues))
     print("\nPour chaque lot ci-dessus : combien de PR ? Plus de deux, il lui fallait un sous-chantier.")
-    return 0
+    muets = sansLot(issues)
+    if muets:
+        print(
+            "%d EPIC ouvert(s) ne declarent aucun lot, donc rien a relire ici : %s."
+            % (len(muets), ", ".join("#%d" % n for n in muets))
+        )
+    return code
 
 
 if __name__ == "__main__":
