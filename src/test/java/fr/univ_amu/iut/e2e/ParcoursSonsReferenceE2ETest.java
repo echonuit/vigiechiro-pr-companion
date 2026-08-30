@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.DefilementChrome;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.recette.Attente;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeoutException;
@@ -71,6 +72,19 @@ class ParcoursSonsReferenceE2ETest {
         AttenteAvantClic.attendreCliquable(
                 robot, "Sons & validation", 10, injector.getInstance(DefilementChrome.class));
         robot.clickOn("Sons & validation");
+
+        // Le clic parti, l'ecran n'est pas ouvert pour autant. Des sept cartes de l'accueil, celle-ci
+        // est la SEULE dont l'ouverture fasse de l'entree-sortie avant d'afficher : une requete en base
+        // pour l'identifiant courant, puis `occuper(...)` qui charge les sons hors du fil JavaFX
+        // (#1214). `ScenarioAccueilTest` l'avait mesure en #4408 ; ce banc-ci affirmait sans attendre,
+        // et il est tombe 4 fois sur 1 150 (#4814, mesure par #4811).
+        //
+        // La lecture se fait SUR le fil FX : le graphe de scene n'est pas partageable, et `waitFor`
+        // rappelle le predicat depuis le fil du test.
+        Attente.queSurLeFil(() -> "audio".equals(navigation.getVueCourante()), "que la vue audio s'ouvre");
+        Attente.queSurLeFil(
+                () -> !robot.lookup("#tableObservations").queryAll().isEmpty(),
+                "que la table des observations soit posée");
 
         assertThat(navigation.getVueCourante()).isEqualTo("audio");
         assertThat(robot.lookup("#tableObservations").queryAs(TableView.class)).isNotNull();

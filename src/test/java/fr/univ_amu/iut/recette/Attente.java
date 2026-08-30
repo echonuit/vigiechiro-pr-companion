@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.recette;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
@@ -30,6 +31,36 @@ public final class Attente {
     /// @param ceQuOnAttend dit à la première personne du banc, et repris tel quel dans l'échec
     public static void que(BooleanSupplier condition, String ceQuOnAttend) {
         que(condition, ceQuOnAttend, DELAI_MS);
+    }
+
+    /// Attend que `condition` devienne vraie, en la lisant **sur le fil JavaFX**.
+    ///
+    /// `waitFor` rappelle le prédicat depuis le fil du test. Un prédicat qui touche le graphe de scène
+    /// doit être lu sur le fil FX, qui n'est pas partageable : sinon il lit un graphe qu'un autre fil
+    /// est en train d'écrire. Mesuré par #4408, dont le remède vivait en privé dans `ScenarioAccueilTest`,
+    /// sur la seule carte de l'accueil qui charge hors du fil JavaFX avant d'afficher (#1214).
+    public static void queSurLeFil(BooleanSupplier condition, String ceQuOnAttend) {
+        queSurLeFil(condition, ceQuOnAttend, DELAI_MS);
+    }
+
+    /// La même, avec un délai choisi.
+    public static void queSurLeFil(BooleanSupplier condition, String ceQuOnAttend, long delaiMs) {
+        que(() -> lireSurLeFil(condition), ceQuOnAttend, delaiMs);
+    }
+
+    /// La valeur du prédicat, évaluée sur le fil JavaFX et rapportée ici.
+    private static boolean lireSurLeFil(BooleanSupplier condition) {
+        try {
+            return Boolean.TRUE.equals(
+                    WaitForAsyncUtils.asyncFx(condition::getAsBoolean).get());
+        } catch (InterruptedException interrompu) {
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (ExecutionException echec) {
+            // Le predicat a leve SUR le fil FX. Le taire ferait expirer l'attente sur un delai, en
+            // accusant la lenteur la ou il y a une exception : elle remonte donc telle quelle.
+            throw new AssertionError("le prédicat a levé sur le fil JavaFX", echec.getCause());
+        }
     }
 
     /// La même, avec un délai choisi. Utile aux bancs qui savent leur attente courte, et aux témoins
