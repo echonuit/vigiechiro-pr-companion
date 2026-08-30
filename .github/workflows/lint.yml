@@ -700,6 +700,13 @@ jobs:
         # pas ne se relance jamais.
         run: bash .github/scripts/verifie-cloture-consignee.sh --auto-test
 
+      - name: "Auto-test du garde de spécification consignée (bloquant, #4922)"
+        # Copie d'ADR 4659 pour la forme, et son voisin pour le fond : celui-ci compte les clôtures
+        # qui n'ont pas répondu à la passe 10. Ses cas s'injectent par `SPEC_EPICS_FICHIER`, donc ils
+        # tournent hors ligne. Deux d'entre eux tiennent la raison pour laquelle il lit le CONTENU de
+        # la ligne et non son numéro : #4840 a renuméroté le cycle.
+        run: bash .github/scripts/verifie-specification-consignee.sh --auto-test
+
       - name: "Auto-test du garde de chantier de l issue (bloquant, #4649)"
         # Ses cas tournent HORS LIGNE : les parents s injectent par `CHANTIER_ISSUES_FICHIER`. Le
         # garde lui-même vit dans `corps-pr.yml`, qui seul dispose du corps de la demande.
@@ -711,6 +718,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash .github/scripts/verifie-cloture-consignee.sh
+
+      - name: "Spécification consignée : une clôture répond à la passe 10 (bloquant, #4922)"
+        # Il interroge la forge, d'où le jeton, et REFUSE si elle ne répond pas. Un EPIC clos SANS
+        # AUCUNE trace ne lui appartient pas : c'est le cliquet de #4659 qui monte alors, et compter
+        # la même faute deux fois ferait rougir deux gardes pour un seul manquement.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/verifie-specification-consignee.sh
 
       - name: "Auto-test du garde de durée du portail (bloquant, #3661)"
         # Il est arrivé avec un fichier `bats` plutôt qu'un auto-test - la seule exception des onze
@@ -774,6 +789,13 @@ jobs:
         # Ses dix cas tiennent les deux portes, l'entrée et la sortie : ce qui n'a rien à faire au
         # manifeste est refusé, et ce qui a cessé d'y correspondre est nommé.
         run: python3 scripts/methode/couverture-relecture.py --auto-test
+
+      - name: "La loupe de couverture OpenSpec compte juste (bloquant, #4922)"
+        # Une LOUPE, pas un garde : elle sort toujours 0 et ne refuse rien. Seul son comptage est tenu
+        # ici, et l'un de ses cas dit lequel se trompe le plus facilement - une delta spec archivée
+        # compterait deux fois la même capacité, gonflant le numérateur sans que rien ne le montre.
+        # Ce qui REFUSE est le cliquet de la même ADR, plus haut dans ce fichier.
+        run: python3 scripts/methode/couverture-openspec.py --auto-test
 
       - name: "Le relevé des contrats de garde s'éprouve (bloquant, #4636)"
         # Le relevé COMPARE deux arbres, et l'autre n'existe pas sur le runner : seul son

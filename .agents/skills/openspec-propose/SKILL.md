@@ -172,6 +172,20 @@ sont prêts pour relecture ; quand tu veux, lance `/realiser` ».
 
 ## Ce que ce dépôt ajoute au flux de l'outil
 
+**Une capacité est une capacité métier, au sens qu'[ADR 0014] lui donne déjà** : une opération, une
+option, un format d'export, une règle de gestion. Pas un détail de présentation. La définition
+n'est pas propre à OpenSpec, et c'est voulu : la capacité que la spécification décrit est celle-là
+même que la parité exige sur les deux surfaces. En écrire une seconde laisserait deux règles voisines
+dans le dépôt, et le prochain lecteur appliquerait celle qu'il trouve en premier.
+
+**Elle se nomme `<paquet de fonctionnalité>/<geste>`**, comme `passage/emport-d-une-nuit` : le paquet
+de `src/main/java/fr/univ_amu/iut/` qui la porte, puis le geste dans les termes de l'utilisateur et
+jamais dans ceux de la solution.
+
+**Son grain est le geste, pas l'écran ni le service.** Un écran peut en offrir plusieurs, et une
+capacité traverse volontiers l'écran et la ligne de commande : `emport-d-une-nuit` couvre les deux.
+Découper par écran produirait des specs qui se contredisent dès qu'un geste change de place.
+
 **L'étape 0 du dépôt vient avant ce flux.** Balayer les issues ouvertes par **concept** et non par
 mot-clé, chercher l'EPIC vivant qui couvrirait déjà le besoin, et vérifier ce qui est déjà pris.
 Proposer un changement sur un sujet déjà traité ailleurs se découvre au conflit de fusion, quand deux
@@ -197,3 +211,5 @@ de laisser le lecteur le supposer.
 | « Je recopie `context` dans la proposition » | `context` et `rules` sont des contraintes pour vous, pas du contenu. |
 | « L'artefact est `blocked`, j'attends » | Une dépendance conditionnelle sautée ne barre pas : on écrit quand même. |
 | « Un changement de ce nom existe déjà, je le complète » | Demander : continuer celui-là, ou en ouvrir un autre. |
+
+[ADR 0014]: ../../../dev-docs/decisions/0014-parite-cli-ihm.md
