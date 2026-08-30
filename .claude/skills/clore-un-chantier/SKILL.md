@@ -44,7 +44,7 @@ par les quatorze passes, avec bilan et artefact. Rien ne l'avait réclamée (#46
 | 9 | Suites consolidées | l'EPIC des suites relu et regroupé, les rattachements tranchés | `trier-les-issues` |
 | 10 | Archivage OpenSpec | les delta specs fusionnées, **puis** le changement sous `archive/` | `openspec-archive-change` |
 | 11 | ADR du chantier | une décision structurante, une ADR | `ecrire-une-adr` |
-| 12 | Bilan | livré, dette restante, décisions et leur pourquoi, **et la trace collée dans l'EPIC** | `humaniser` |
+| 12 | Bilan | livré, dette restante, décisions et leur pourquoi, **et la trace collée dans l'EPIC** | `rendre-le-bilan`, `humaniser` en appui |
 
 Quatre passes ne produisent que de la prose, et c'est pourquoi elles nomment `humaniser` : ce
 qu'elles écrivent est lu hors de l'échange qui l'a produit, donc l'article A31 s'y applique.
