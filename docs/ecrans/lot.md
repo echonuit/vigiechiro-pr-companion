@@ -229,9 +229,23 @@ L'écran est long ; la **barre de statut** du bas de fenêtre garde l'essentiel 
 
 - à **gauche**, le contexte (« Carré 640380 · A1 · N° 2 ») ;
 - au **centre**, le statut et le récapitulatif (« Prêt à déposer · 4806 séquences · 13,2 Go ») ;
-- à **droite**, l'état vivant : la progression du dépôt, sinon celle de la génération d'archives
-  (avec l'estimation du temps restant), sinon une alerte d'espace disque, sinon le bilan des archives
-  présentes (« 21 archive(s) · 5,9 Go dans depot/ »).
+- à **droite**, l'état vivant : d'abord l'avertissement de réconciliation s'il y en a un, puis la
+  progression du dépôt, sinon celle de la génération d'archives (avec l'estimation du temps restant),
+  sinon une alerte d'espace disque, sinon le bilan des archives présentes (« 21 archive(s) · 5,9 Go
+  dans depot/ »).
+
+!!! warning "« Déjà déposées : impossible à vérifier »"
+
+    Avant de téléverser, l'application demande à Vigie-Chiro ce qui s'y trouve déjà, pour ne pas
+    renvoyer des archives inutilement. Quand cette question **ne peut pas être posée** (connexion
+    coupée, session expirée), le dépôt continue quand même, mais des archives déjà en ligne vont
+    repartir.
+
+    L'avertissement le dit **avant** que vous attendiez, et non après, parce que c'est le seul moment
+    où vous pouvez encore décider d'arrêter et de réessayer plus tard. Il passe donc devant
+    « n/N déposées » : l'avancement ne vous apprend rien que vous puissiez utiliser, celui-ci si.
+
+    La cause est nommée : une coupure se réessaie, une session expirée demande de se reconnecter.
 
 ## Checklist de cohérence : ce qui bloque
 

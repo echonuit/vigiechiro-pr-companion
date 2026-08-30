@@ -9,6 +9,8 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 
 /// Table de dépôt VigieChiro (#983) côté ViewModel : spécialise le socle [SuiviLignes] pour refléter
 /// l'état **persisté** des unités (`depot_unite`, #981 : réhydratation à la réouverture) et les
@@ -42,6 +44,14 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
     /// Combien d'unités ont été **refusées définitivement** (#3687) : elles comptent parmi les échecs,
     /// mais pas parmi ce qui reste à reprendre.
     private final ReadOnlyIntegerWrapper refusDefinitifs = new ReadOnlyIntegerWrapper(this, "refusDefinitifs", 0);
+
+    /// Ce que la réconciliation n'a pas pu lire avant le dépôt (#4631), vide quand elle a tourné.
+    ///
+    /// Elle n'a pas conclu « la plateforme ne porte rien » : elle n'a rien pu demander. Les unités
+    /// déjà déposées là-bas vont donc être renvoyées, et l'utilisateur doit le savoir avant
+    /// d'attendre, pas après.
+    private final ReadOnlyStringWrapper reconciliationImpossible =
+            new ReadOnlyStringWrapper(this, "reconciliationImpossible", "");
 
     /// Pose (ou re-pose) la table depuis l'état **persisté** des unités : chaque statut de `depot_unite`
     /// est traduit en état de ligne (à déposer → en attente ; en cours interrompu → en attente, il sera
@@ -77,6 +87,22 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
     public void deposee(String identifiant) {
         parIdentifiant(identifiant).ifPresent(LigneDepot::terminer);
         recalculerReste();
+    }
+
+    /// La réconciliation n'a pas pu lire ce que la plateforme porte (#4631).
+    ///
+    /// Aucune ligne n'est marquée : aucune unité n'a échoué. C'est l'étape d'avant qui n'a pas tourné,
+    /// et sa conséquence est que des archives déjà déposées vont repartir.
+    ///
+    /// @param raison ce que la réponse a dit d'elle-même
+    /// @param definitif `true` quand un nouvel essai est inutile
+    public void reconciliationImpossible(String raison, boolean definitif) {
+        reconciliationImpossible.set(FormatsLot.libelleReconciliationImpossible(raison, definitif));
+    }
+
+    /// L'avertissement de réconciliation, vide quand elle a pu lire.
+    public ReadOnlyStringProperty reconciliationImpossibleProperty() {
+        return reconciliationImpossible.getReadOnlyProperty();
     }
 
     /// Le téléversement de l'unité `identifiant` a échoué (ligne « échec », raison en infobulle).

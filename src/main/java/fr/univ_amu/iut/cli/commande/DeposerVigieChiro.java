@@ -211,6 +211,15 @@ public final class DeposerVigieChiro implements Callable<Integer> {
             sortie.println("  ! " + identifiant + " : " + raison);
         }
 
+        /// La réconciliation n'a pas pu lire (#4631). Marquée `~` et non `!` : aucune unité n'a échoué,
+        /// c'est l'étape d'avant qui n'a pas tourné, et sa conséquence est que des archives déjà
+        /// déposées vont repartir. Un script qui lit cette sortie doit pouvoir distinguer les deux.
+        @Override
+        public void reconciliationImpossible(String raison, boolean definitif) {
+            sortie.println("  ~ déjà déposées : impossible à vérifier, des archives vont repartir" + " pour rien ("
+                    + raison + ")" + (definitif ? "" : " Réessayez plus tard."));
+        }
+
         /// Parité avec l'IHM (clôture #2350) : depuis le réessai gradué (#2354), une coupure momentanée
         /// n'échoue plus, elle **attend**. L'écran le dit par une mention discrète ; la ligne de commande
         /// se taisait, et une temporisation de trente secondes y passait pour un blocage - exactement ce

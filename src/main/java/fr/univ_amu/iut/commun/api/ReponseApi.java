@@ -194,6 +194,9 @@ public sealed interface ReponseApi<T> {
         }
     }
 
+    /// Le statut HTTP d'une ressource absente : le seul refus qui soit vraiment une absence (#4631).
+    int ABSENT = 404;
+
     /// Cause d'un `200` que nos parseurs ne savent pas lire : un portail captif ou un mandataire qui
     /// répond à la place du serveur. « Pas de réponse exploitable » n'est pas un refus.
     String REPONSE_ILLISIBLE = "réponse illisible";
@@ -201,6 +204,24 @@ public sealed interface ReponseApi<T> {
     /// La valeur portée en cas de succès, vide sinon : l'adaptateur vers le comportement historique
     /// (« dégradation propre »), à réserver aux sites où le silence est le comportement **voulu**.
     Optional<T> enOptionnel();
+
+    /// **Pourquoi** [#enOptionnel()] est vide, sans jamais perdre la cause (#4631).
+    ///
+    /// Quatre issues distinctes s'aplatissent en un seul vide, et les appelants rendaient toutes les
+    /// quatre comme une absence. Ce n'est pas la même chose et le geste appelé n'est pas le même : on
+    /// réessaie une coupure, on ne réessaie pas une participation qui n'existe pas.
+    ///
+    /// Un `404` **est** une absence, et rend donc le libellé fourni. Tout le reste rend sa propre
+    /// cause. Sur un succès, rend le libellé aussi : la question ne se pose pas.
+    ///
+    /// @param libelleSiAbsent ce qu'on dit quand la ressource est vraiment absente
+    /// @return la cause de l'échec, ou `libelleSiAbsent` sur une absence ou un succès
+    default String pourquoiVide(String libelleSiAbsent) {
+        if (this instanceof Refuse<T> refuse && refuse.statut() == ABSENT) {
+            return libelleSiAbsent;
+        }
+        return echec().orElse(libelleSiAbsent);
+    }
 
     /// Transporte l'issue vers un autre type de valeur : un succès est transformé, toute autre issue
     /// traverse inchangée (la cause d'un échec ne dépend pas de ce qu'on comptait lire).

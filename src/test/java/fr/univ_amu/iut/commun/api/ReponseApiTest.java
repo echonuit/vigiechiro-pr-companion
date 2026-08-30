@@ -135,4 +135,49 @@ class ReponseApiTest {
             assertTrue(refus.echec().orElseThrow().startsWith("HTTP 422 : "));
         }
     }
+
+    @Nested
+    @DisplayName("#4631 : pourquoiVide ne perd jamais la cause")
+    class PourquoiVide {
+
+        private static final String ABSENTE = "participation introuvable";
+
+        @Test
+        @DisplayName("une coupure dit la coupure, pas l'absence")
+        void injoignable_dit_la_coupure() {
+            assertThat(ReponseApi.<String>injoignable("connexion réinitialisée").pourquoiVide(ABSENTE))
+                    .contains("injoignable")
+                    .contains("connexion réinitialisée")
+                    .doesNotContain(ABSENTE);
+        }
+
+        @Test
+        @DisplayName("l'absence de jeton dit l'absence de jeton")
+        void non_connecte_dit_le_jeton() {
+            assertThat(ReponseApi.<String>nonConnecte().pourquoiVide(ABSENTE))
+                    .contains("jeton")
+                    .doesNotContain(ABSENTE);
+        }
+
+        @Test
+        @DisplayName("un 404 EST une absence : c'est le seul refus qui le soit")
+        void refus_404_est_une_absence() {
+            assertThat(ReponseApi.<String>refuse(404, "not found").pourquoiVide(ABSENTE))
+                    .isEqualTo(ABSENTE);
+        }
+
+        @Test
+        @DisplayName("un autre refus dit son statut, il n'est pas une absence")
+        void autre_refus_dit_son_statut() {
+            assertThat(ReponseApi.<String>refuse(503, "maintenance").pourquoiVide(ABSENTE))
+                    .contains("503")
+                    .doesNotContain(ABSENTE);
+        }
+
+        @Test
+        @DisplayName("sur un succès la question ne se pose pas, et rien n'échoue")
+        void succes_ne_pose_pas_la_question() {
+            assertThat(ReponseApi.succes("valeur").pourquoiVide(ABSENTE)).isEqualTo(ABSENTE);
+        }
+    }
 }

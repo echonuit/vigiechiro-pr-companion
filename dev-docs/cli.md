@@ -315,6 +315,10 @@ déjà l'ancienne et la nouvelle adresse. Un `10` permanent s'apprend à s'ignor
 lui celui qui compte. L'IHM, elle, garde son avertissement sur les trois cas : elle parle à quelqu'un
 qui lit le compte rendu ([ADR 3500](decisions/3500-le-code-de-sortie-distingue-le-manque-du-deplacement.md)).
 
+`deposer-vigiechiro` marque d'un `~` ce que la **réconciliation** n'a pas pu vérifier (#4631) : aucune
+unité n'a échoué, c'est l'étape d'avant qui n'a pas tourné, et des archives déjà en ligne vont
+repartir. Un script distingue donc `!` (une unité a échoué) de `~` (on n'a pas pu savoir).
+
 `deposer-vigiechiro` étend la convention : `0` **seulement si le dépôt est complet** ; `1` si des
 fichiers restent à reprendre (relancer la même commande ne re-téléverse que les manquants). Le jeton
 vient de `--token`, sinon de la variable d'environnement `VIGIECHIRO_TOKEN`, sinon de la **connexion

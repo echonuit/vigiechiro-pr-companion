@@ -210,6 +210,54 @@ class SynchronisationParticipationTest {
     }
 
     @Test
+    @DisplayName("#4631 : une coupure à la PREMIÈRE lecture dit la coupure, pas « introuvable »")
+    void pousser_vers_nomme_la_coupure_de_la_premiere_lecture() {
+        // La lecture echoue AVANT infosPoint : n'armer que ce qui sert, sinon Mockito refuse le
+        // doublage inutile - et il a raison, un doublage inutile fait croire a une couverture.
+        when(passageDao.findById(42L)).thenReturn(Optional.of(passage(null)));
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(client.participation("part-1")).thenReturn(ReponseApi.injoignable("connexion réinitialisée"));
+
+        assertThatThrownBy(() -> sync.pousserVers(42L))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("injoignable")
+                .hasMessageContaining("connexion réinitialisée")
+                .as("on réessaie une coupure, on ne réessaie pas une participation qui n'existe pas");
+    }
+
+    @Test
+    @DisplayName("#4631 : une coupure à la RELECTURE de la garde dit la coupure, pas « introuvable »")
+    void pousser_vers_nomme_la_coupure_de_la_relecture() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty());
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        lenient().when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        // La fenêtre entre les deux lectures est précisément celle où une coupure se produit sans que
+        // rien d'autre n'ait échoué (#4603 l'a rendue atteignable en ajoutant la relecture).
+        when(client.participation("part-1"))
+                .thenReturn(ReponseApi.succes(detail("e-lu")))
+                .thenReturn(ReponseApi.injoignable("délai dépassé"));
+
+        assertThatThrownBy(() -> sync.pousserVers(42L))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("délai dépassé");
+    }
+
+    @Test
+    @DisplayName("#4631 : un vrai 404 reste « introuvable », c'est la seule absence")
+    void pousser_vers_garde_introuvable_sur_un_404() {
+        // La lecture echoue AVANT infosPoint : n'armer que ce qui sert, sinon Mockito refuse le
+        // doublage inutile - et il a raison, un doublage inutile fait croire a une couverture.
+        when(passageDao.findById(42L)).thenReturn(Optional.of(passage(null)));
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(client.participation("part-1")).thenReturn(ReponseApi.refuse(404, "not found"));
+
+        assertThatThrownBy(() -> sync.pousserVers(42L))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("introuvable");
+    }
+
+    @Test
     @DisplayName("#4552 : un champ que nous écrivons a bougé entre la lecture et l'envoi → aucun PATCH")
     void pousser_vers_renonce_si_le_distant_a_bouge() {
         when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver

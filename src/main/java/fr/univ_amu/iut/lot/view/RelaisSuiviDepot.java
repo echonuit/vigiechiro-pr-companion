@@ -42,6 +42,14 @@ final class RelaisSuiviDepot implements SuiviDepot {
         filJavaFx.execute(() -> cible.echouee(identifiant, raison, definitif));
     }
 
+    /// La réconciliation n'a pas pu lire (#4631). Aucune unité n'a échoué : la cible l'apprend comme
+    /// un avertissement de dépôt, sans marquer d'unité, sinon l'écran afficherait un échec qui n'a pas
+    /// eu lieu.
+    @Override
+    public void reconciliationImpossible(String raison, boolean definitif) {
+        filJavaFx.execute(() -> cible.reconciliationImpossible(raison, definitif));
+    }
+
     @Override
     public void uniteProgresse(String identifiant, double fraction) {
         filJavaFx.execute(() -> cible.progresse(identifiant, fraction));

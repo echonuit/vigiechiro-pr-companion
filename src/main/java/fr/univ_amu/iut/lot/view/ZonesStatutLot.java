@@ -59,6 +59,15 @@ final class ZonesStatutLot {
     }
 
     private String droiteEtatVivant() {
+        // La réconciliation passe AVANT tout le reste (#4631) : quand elle n'a pas pu lire, des archives
+        // déjà déposées vont repartir, et l'utilisateur doit le savoir AVANT d'attendre le dépôt, pas
+        // après. Annoncer « 3/12 déposées » par-dessus lui cacherait la seule chose sur laquelle il peut
+        // encore agir.
+        String reconciliation =
+                depotViewModel.suiviLignes().reconciliationImpossibleProperty().get();
+        if (!reconciliation.isEmpty()) {
+            return reconciliation;
+        }
         // Le lancement passe AVANT le téléversement : les deux allument `enCours`, mais un lancement n'a
         // pas de compteur d'archives - annoncer « n/N déposées » pendant un simple appel serait faux.
         if (depotViewModel.lancementEnCoursProperty().get()) {

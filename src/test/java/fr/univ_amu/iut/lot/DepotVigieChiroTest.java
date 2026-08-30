@@ -3,6 +3,7 @@ package fr.univ_amu.iut.lot;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -61,6 +62,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 
 /// **Dépôt d'une nuit** ([DepotVigieChiro]) **reprenable par unité** (#982) : participation réutilisée ou
 /// créée en repli ([SynchronisationParticipation] mockée), plan `depot_unite` **réel** (SQLite jetable,
@@ -715,6 +717,29 @@ class DepotVigieChiroTest {
         assertThat(bilan.deposees()).isEqualTo(1); // « cette fois-ci » : la réconciliation n'en fait pas partie
         assertThat(depotUnites.toutesDeposees(idPassage)).isTrue();
         assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOSE);
+    }
+
+    @Test
+    @DisplayName("#4631 réconciliation : une panne de lecture se DIT, au lieu de valoir « rien en ligne »")
+    void reconciliation_injoignable_le_dit_au_suivi(@TempDir Path dossier) throws IOException {
+        Path fichier = fichier(dossier, "seq_000.wav");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        // La lecture echoue. Avant, `orElseGet(List::of)` en faisait « la plateforme ne porte rien » :
+        // une reconciliation menee sur cette premisse conclut au lieu de constater qu'elle n'a rien pu
+        // demander, et les archives deja en ligne repartent sans que personne ne le sache.
+        when(client.donnees("part-1")).thenReturn(ReponseApi.injoignable("connexion réinitialisée"));
+        armerUploadOk();
+        SuiviDepot suivi = mock(SuiviDepot.class);
+
+        depot.deposer(idPassage, SourceDepot.desFichiers(List.of(fichier)), () -> false, suivi);
+
+        ArgumentCaptor<String> raison = ArgumentCaptor.forClass(String.class);
+        verify(suivi).reconciliationImpossible(raison.capture(), eq(false));
+        assertThat(raison.getValue())
+                .as("la cause doit être dite, pas devinée")
+                .contains("injoignable")
+                .contains("connexion réinitialisée");
+        verify(suivi, never()).uniteEchouee(anyString(), anyString(), anyBoolean());
     }
 
     @Test
