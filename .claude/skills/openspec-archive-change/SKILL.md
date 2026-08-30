@@ -44,6 +44,12 @@ principale.
 
 Le nom du changement est facultatif. S'il manque, le déduire du fil. S'il reste vague, demander.
 
+## Quand elle s'emploie
+
+**L'archivage est un acte de clôture, pas une fin d'issue.** Il se fait à la passe 10, quand le
+chantier entier est livré, et non à chaque demande de fusion. Un changement archivé alors que son
+chantier court encore fait mentir la liste des changements actifs dans l'autre sens.
+
 ## Fonction de garde
 
 ```
@@ -148,6 +154,18 @@ appliquer, donc chaque capacité doit se lire comme déjà fusionnée :
 Si la fusion a échoué, ou si une capacité ne correspond pas, dire ce qui diffère et **s'arrêter**.
 Rien n'a bougé, `changeRoot` est intact, et la reprise reste possible.
 
+## Une exigence écrite à la proposition a vieilli
+
+Une delta spec écrite **avant** la réalisation porte souvent, sous une exigence, la mention qu'aucun
+dispositif ne la vérifie encore. C'était vrai à l'écriture, c'est faux à la clôture, et la recopier
+telle quelle rend la spécification principale **fausse le jour de sa création**.
+
+Mesuré sur le premier archivage du dépôt, #4833 : **quatre exigences sur cinq** étaient dans ce cas.
+
+Une exigence qui ne dit pas comment elle est vérifiée se relit comme vérifiée. Et quand le dispositif
+manque encore, l'écrire aussi : un scénario qu'aucun test ne tient décrit une garantie **visée**, non
+tenue, et la spec le dit à cet endroit plutôt que de laisser le lecteur le supposer.
+
 ## 5. Déplacer
 
 Créer le dossier d'archive s'il manque, puis déplacer :
@@ -166,6 +184,20 @@ Le fichier `.openspec.yaml` suit le dossier : il n'y a rien à préserver à la 
 ## 6. Rendre compte
 
 ```markdown
+## Ce qui dit que la passe est finie
+
+Trois signaux, et le troisième est celui qu'on oublie parce qu'il regarde ailleurs :
+
+```bash
+openspec list --json        # plus aucun changement actif
+openspec validate --specs   # vert
+```
+
+Et `openspec/changes/` ne doit plus porter le delta que `openspec/specs/` porte désormais.
+
+**Un archivage qu'on croit fait laisse la spécification principale muette.** C'est le mode de panne
+de cette passe : le dossier a bougé, et ce qu'il devait verser n'a été versé nulle part.
+
 ## Archivage terminé
 
 **Changement :** <nom>
