@@ -105,6 +105,17 @@ Rien n'oblige à attendre la version suivante. La liste des classes est dérivé
 depuis `CorrespondanceRecetteTest` : un tournage manuel sur `main` ramasse les bancs neufs sans
 qu'une ligne change.
 
+!!! danger "`banc-filme` vert ne dit pas qu'un clip a été produit"
+
+    Ce job de l'intégration lance les `--auto-test` des deux bancs filmés, dont
+    `.github/scripts/lance-test-filme.sh` pour celui de la recette. Ces cas éprouvent ce que le banc
+    **refuse**, en six secondes : il répond « le banc refuse ce qu'il doit refuser », jamais « des
+    images existent ». Le tournage, lui, met une vingtaine de minutes.
+
+    Mesuré le 2026-08-30 : les neuf demandes de fusion du palier de #4447 sont toutes passées avec
+    `banc-filme` vert, et sept clips déclarés sur les pages ouvraient un lecteur vide (#4820). Ce
+    n'est pas un défaut du job : c'est la question qu'il pose qui n'est pas celle-là.
+
 !!! warning "Un tournage manuel efface celui du train"
 
     La pré-version est roulante, et rien ne distingue les deux sources au moment d'écrire. Le
