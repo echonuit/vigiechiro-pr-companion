@@ -1290,7 +1290,7 @@ a0099c2685df  src/test/java/fr/univ_amu/iut/audio/view/GestionnaireFiltresMemoir
 107641829f13  src/test/java/fr/univ_amu/iut/audio/view/ImportVigieChiroUITest.java
 b2938ad316fb  src/test/java/fr/univ_amu/iut/audio/view/LibellesAudioTest.java
 6636b079890f  src/test/java/fr/univ_amu/iut/audio/view/MetriquesAcoustiquesAudioTest.java
-ab6ca8445aad  src/test/java/fr/univ_amu/iut/audio/view/NavigationAudioViewTest.java
+222f29ca1e34  src/test/java/fr/univ_amu/iut/audio/view/NavigationAudioViewTest.java
 3f93944ed9df  src/test/java/fr/univ_amu/iut/audio/view/PanneauDiscussionTest.java
 70849ea7e398  src/test/java/fr/univ_amu/iut/audio/view/PublicationCorrectionsUITest.java
 45935e4c9d37  src/test/java/fr/univ_amu/iut/audio/view/RevueClavierTest.java
@@ -1318,7 +1318,7 @@ c53459066136  src/test/java/fr/univ_amu/iut/audit/model/ServiceAuditCoherenceTes
 9b26ae7e22b0  src/test/java/fr/univ_amu/iut/audit/model/ServiceRecuperabiliteTest.java
 3c5546745bb0  src/test/java/fr/univ_amu/iut/audit/view/ActionResetGuideTest.java
 62bbc5be366f  src/test/java/fr/univ_amu/iut/audit/view/ActiviteAuditTest.java
-0127e0e3c663  src/test/java/fr/univ_amu/iut/audit/view/AuditNavigationViewTest.java
+eee19628866a  src/test/java/fr/univ_amu/iut/audit/view/AuditNavigationViewTest.java
 b3b1fe54f5f1  src/test/java/fr/univ_amu/iut/audit/view/AuditRetraitOrphelinsViewTest.java
 6dd4379466e1  src/test/java/fr/univ_amu/iut/audit/view/AuditVueIntegrationTest.java
 834e0aeff00c  src/test/java/fr/univ_amu/iut/audit/view/CriteresAuditTest.java
@@ -1580,7 +1580,7 @@ a910b8995309  src/test/java/fr/univ_amu/iut/commun/view/DoubleClicDeterministeTe
 f2ba2ec08bd4  src/test/java/fr/univ_amu/iut/commun/view/ExecuteurTacheAsynchroneTest.java
 8cd975500fbf  src/test/java/fr/univ_amu/iut/commun/view/ExecuteurTacheSynchroneTest.java
 8eb7a05dae7b  src/test/java/fr/univ_amu/iut/commun/view/ExportGrapheTest.java
-fe470bdc7747  src/test/java/fr/univ_amu/iut/commun/view/FilArianeElisionTest.java
+ec9f3b975be5  src/test/java/fr/univ_amu/iut/commun/view/FilArianeElisionTest.java
 1657be8a182c  src/test/java/fr/univ_amu/iut/commun/view/GestionnaireColonnesTest.java
 9b436f112a95  src/test/java/fr/univ_amu/iut/commun/view/GestionnaireVuesTest.java
 b6db9ee90de4  src/test/java/fr/univ_amu/iut/commun/view/GluonMapSpikeTest.java
@@ -1689,8 +1689,8 @@ da799342c730  src/test/java/fr/univ_amu/iut/e2e/ParcoursPassageVersValidationE2E
 0287d34d0735  src/test/java/fr/univ_amu/iut/e2e/ParcoursPublierCorrectionsE2ETest.java
 7b4d6e23fc97  src/test/java/fr/univ_amu/iut/e2e/ParcoursRechercheGlobaleE2ETest.java
 6fbd52656321  src/test/java/fr/univ_amu/iut/e2e/ParcoursRegrouperNuitsParPointE2ETest.java
-b7e8e0e0db2b  src/test/java/fr/univ_amu/iut/e2e/ParcoursResetE2ETest.java
-6bd2d60885ce  src/test/java/fr/univ_amu/iut/e2e/ParcoursRestaurationDepuisVigieChiroE2ETest.java
+00e0ca4960fa  src/test/java/fr/univ_amu/iut/e2e/ParcoursResetE2ETest.java
+acb95ea9dcce  src/test/java/fr/univ_amu/iut/e2e/ParcoursRestaurationDepuisVigieChiroE2ETest.java
 e1b2fdd546f0  src/test/java/fr/univ_amu/iut/e2e/ParcoursSitesVersPassageE2ETest.java
 7d1d541c2137  src/test/java/fr/univ_amu/iut/e2e/ParcoursSonsReferenceE2ETest.java
 073e746df436  src/test/java/fr/univ_amu/iut/e2e/ParcoursValidationExpertE2ETest.java
@@ -1871,7 +1871,7 @@ acd643d069e5  src/test/java/fr/univ_amu/iut/passage/model/PropositionsEnregistre
 36b21d2ee473  src/test/java/fr/univ_amu/iut/passage/model/SynchronisationParticipationTest.java
 8a9952c6166d  src/test/java/fr/univ_amu/iut/passage/model/VerificationIdentiteAudioTest.java
 434ae859e67a  src/test/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleViewTest.java
-4db65e35b161  src/test/java/fr/univ_amu/iut/passage/view/NavigationPassageViewTest.java
+f4286d23a74d  src/test/java/fr/univ_amu/iut/passage/view/NavigationPassageViewTest.java
 2ea44d9cda6f  src/test/java/fr/univ_amu/iut/passage/view/PassageActionsFicheViewTest.java
 3a52056aeff5  src/test/java/fr/univ_amu/iut/passage/view/PassageControllerEmplacementTest.java
 3a7e7d486f43  src/test/java/fr/univ_amu/iut/passage/view/PassageReactivationViewTest.java
@@ -1984,7 +1984,7 @@ c26af7c98771  src/test/java/fr/univ_amu/iut/recette/film/GestesTest.java
 40331daf6ffc  src/test/java/fr/univ_amu/iut/recette/film/LibelleDesCas.java
 e3b0c44298fc  src/test/java/fr/univ_amu/iut/recette/film/LibelleDesCasTest.java
 4c71323ae5c4  src/test/java/fr/univ_amu/iut/recette/film/PoliceDuBanc.java
-5bd80d0a3d78  src/test/java/fr/univ_amu/iut/recette/film/PoliceDuBancTest.java
+27d28ad39a22  src/test/java/fr/univ_amu/iut/recette/film/PoliceDuBancTest.java
 ed50873aa3fe  src/test/java/fr/univ_amu/iut/recherche/model/ServiceRechercheGlobaleTest.java
 f07e72456d7d  src/test/java/fr/univ_amu/iut/saison/FiltresSaisonTest.java
 966f912fb1bb  src/test/java/fr/univ_amu/iut/saison/SaisonFiltresTest.java
@@ -2026,12 +2026,12 @@ dda319300ca9  src/test/java/fr/univ_amu/iut/sites/view/NavigationSitesRapatrieme
 5c14634ebc58  src/test/java/fr/univ_amu/iut/sites/view/ScenarioModaleCarreTest.java
 37b56139befb  src/test/java/fr/univ_amu/iut/sites/view/ScenarioPerceptifRecuperationCarreTest.java
 4f5ceefcc8c1  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailBadgePlateformeViewTest.java
-c461b6ad5d43  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailPublierPointViewTest.java
-8431e1b84ead  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailRenommageViewTest.java
+a31e1e09096e  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailPublierPointViewTest.java
+9873d46aab3d  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailRenommageViewTest.java
 a2510f138d4e  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailSuppressionsViewTest.java
 01e43cadc648  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailVersImportViewTest.java
 74d03d9c8a96  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailVersPassageViewTest.java
-ffd624a10066  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailVoirCarteViewTest.java
+cf740adaf02b  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailVoirCarteViewTest.java
 a296cc4d6fa6  src/test/java/fr/univ_amu/iut/sites/view/SitesVueIntegrationTest.java
 a3c0f1cdee8d  src/test/java/fr/univ_amu/iut/sites/viewmodel/FraicheurTest.java
 7d06d9ea61b0  src/test/java/fr/univ_amu/iut/sites/viewmodel/IndicateurPointsTest.java

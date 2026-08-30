@@ -38,6 +38,7 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// **Le reset guidé, de bout en bout** (#1419, EPIC #1154) : la question de l'EPIC, prise au mot :
 /// *« peut-on repartir d'une base neuve sans perte silencieuse ? »*
@@ -59,6 +60,14 @@ class ParcoursResetE2ETest {
     private static final String SEQ_1 = "Car130711-2026-Pass1-Z41-PaRec_20260703_220529_000";
     private static final String ID_USER = "u-1";
     private static final String SERIE = "1925492";
+
+    /// La racine des espaces de ce banc. JUnit la supprime en fin de test, et elle
+    /// emporte les répertoires que les appels ci-dessous y créent (#4888).
+    /// **Statique**, parce que les deux appels ci-dessous vivent dans des méthodes statiques. JUnit
+    /// crée alors la racine une fois pour la classe et la supprime au bout, ce qui suffit : les
+    /// répertoires qu'elle porte disparaissent avec elle.
+    @TempDir
+    private static Path dossierTemporaire;
 
     @AfterEach
     void nettoyer() {
@@ -169,13 +178,13 @@ class ParcoursResetE2ETest {
     }
 
     private static Path dossierSauvegarde() throws Exception {
-        return Files.createTempDirectory("vc-reset-sauvegardes");
+        return Files.createTempDirectory(dossierTemporaire, "vc-reset-sauvegardes");
     }
 
     /// Injecteur **réel** de l'application (tous les modules de feature), avec la seule plateforme
     /// substituée : c'est le vrai câblage qu'on exerce, pas une maquette du parcours.
     private static Injector injecteurAvec(ClientVigieChiro client) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-e2e-reset");
+        Path workspace = Files.createTempDirectory(dossierTemporaire, "vc-e2e-reset");
         System.setProperty("vigiechiro.workspace", workspace.toString());
         return Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
             @Override

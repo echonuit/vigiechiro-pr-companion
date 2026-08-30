@@ -9,7 +9,7 @@ verification: probable
 verification_note: "le compte est DIFFÉRENTIEL et se mesure autour d'une suite complète, donc dans le job et non dans un test : deux pas encadrent la suite dans maven.yml"
 enforced_by:
   - "scripts/methode/compte-les-reliquats.py"
-ratchet: 138
+ratchet: 70
 verified:
   - by: human:nedseb
     at: 2026-08-30
@@ -41,8 +41,8 @@ C'est un acquis sans gardien, et chaque banc écrit depuis a rappelé la même l
 test, sans rien à écrire ; le dépôt l'emploie déjà 259 fois. Une aide partagée, qui n'est pas un test
 et à qui `@TempDir` ne s'injecte pas, supprime en fin de fork.
 
-**Et le compte se tient**, par un cliquet qui ne peut que descendre. Il vaut **138**, après que
-les dix bancs de #4868 en ont retiré 64 des 202 mesurés à sa pose. C'est l'article A9 : la
+**Et le compte se tient**, par un cliquet qui ne peut que descendre. Il vaut **70** : 202 à sa pose, puis 138, 103 et 70 au
+fil des trois lots de conversion, #4868, #4876 et #4888. C'est l'article A9 : la
 dette se tient par un cliquet, pas par un nettoyage. Le nettoyage manuel du 30 août a retiré 5,8 Go
 et n'a rien empêché ; il se refera tant que rien ne compte.
 
@@ -74,12 +74,9 @@ processus, ce que ni JUnit ni le dépôt ne font ; le dire coûte moins que de l
 
 ## Ce qui prouve que le garde voit
 
-Retirer le `@TempDir` de `GestionnaireVuesTest` et rendre son `createTempDirectory` fait passer le
-compte de **0 à 14**. Le remettre le ramène à 0.
-
-Cette épreuve a d'abord rendu **0 dans les deux cas**, et j'ai failli conclure : la mutation ne
-compilait pas, `Files` n'étant plus importé depuis la conversion, si bien que le banc tournait sur du
-code sain. Une mutation qui ne compile pas ne prouve rien, et elle se présente comme un succès.
+Retirer le `@TempDir` de `GestionnaireVuesTest` fait passer le compte de **0 à 14** ; le remettre le
+ramène à 0. L'épreuve a d'abord rendu 0 dans les deux cas, la mutation ne compilant pas : une mutation
+qui ne compile pas ne prouve rien, et elle se présente comme un succès.
 
 ## Ce que cette décision empêche
 
@@ -90,8 +87,8 @@ ADR, et le modifier est une décision qui se relit.
 ## Conséquences
 
 - Le cliquet est celui que **la CI mesure**, jamais celui du poste où l'on écrit : à sa pose, mon poste
-  rendait 198 et la CI 202, le nombre de forks suivant la machine (`forkCount=1C`). Il est descendu à
-  **138** quand les dix bancs de #4868 ont cessé d'en laisser 64.
+  rendait 198 et la CI 202, le nombre de forks suivant la machine (`forkCount=1C`). Il descend d'un lot à l'autre : **202** à sa pose,
+  **138**, puis **70** au fil des conversions.
 - Les 58 bancs qui créent dans un `@Start` ou un `@BeforeEach` se convertissent par lots, et le
   cliquet descend d'autant.
 - Les outils `Capture*` de production ne sont pas visés : leur reliquat meurt avec le runner.

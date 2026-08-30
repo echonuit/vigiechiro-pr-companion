@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// Le banc dessine par-dessus l'image qu'il rend : carton-titre, halo, flèche, badge. Ce dessin passe
 /// par AWT, qui ne sait rien des polices que `commun.view.Typographie` charge du côté JavaFX.
@@ -36,6 +37,11 @@ import org.junit.jupiter.api.Test;
 /// sur tout poste et sans fontconfig ». Charger le TTF **embarqué dans le jar** garde cette propriété et
 /// donne en plus la typographie du produit. C'est strictement mieux, pas un compromis.
 class PoliceDuBancTest {
+
+    /// La racine des espaces de ce banc. JUnit la supprime en fin de test, et elle
+    /// emporte les répertoires que les appels ci-dessous y créent (#4888).
+    @TempDir
+    private Path dossierTemporaire;
 
     private static final Path FILM = Path.of("src", "test", "java", "fr", "univ_amu", "iut", "recette", "film");
 
@@ -98,7 +104,7 @@ class PoliceDuBancTest {
     @Test
     @DisplayName("#4241 : le garde attrape bien un fichier fabriqué qui demande une police logique")
     void le_garde_attrape_un_fichier_fabrique() throws IOException {
-        Path bac = Files.createTempDirectory("garde-police");
+        Path bac = Files.createTempDirectory(dossierTemporaire, "garde-police");
         Files.writeString(
                 bac.resolve("Fautif.java"),
                 "class Fautif { void dessiner() { g.setFont(new Font(Font." + "SANS_SERIF, 0, 12)); } }",
