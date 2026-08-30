@@ -41,7 +41,7 @@ par les quatorze passes, avec bilan et artefact. Rien ne l'avait réclamée (#46
 | 6b | Recette préparée | chaque capacité ajoutée a sa case `Sxx-NN`, et la fixture pour la jouer | |
 | 7 | Harmonisation | l'application entière, pas le delta | `harmoniser-l-application` |
 | 8 | Revue visuelle | chaque **état** de chaque écran touché | `revoir-les-ecrans` |
-| 9 | Suites consolidées | l'EPIC des suites relu et regroupé, les rattachements tranchés | `trier-les-issues` |
+| 9 | Suites consolidées | l'EPIC des suites vidé de tout ce qui relève du chantier clos | `vider-le-sas` |
 | 10 | Archivage OpenSpec | les delta specs fusionnées, **puis** le changement sous `archive/` | `openspec-archive-change` |
 | 11 | ADR du chantier | une décision structurante, une ADR | `ecrire-une-adr` |
 | 12 | Bilan | livré, dette restante, décisions et leur pourquoi, **et la trace collée dans l'EPIC** | `rendre-le-bilan`, `humaniser` en appui |
