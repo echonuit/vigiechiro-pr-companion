@@ -206,20 +206,21 @@ def auto_test() -> int:
     return 0
 
 
-if "--auto-test" in sys.argv:
-    sys.exit(auto_test())
+if __name__ == "__main__":
+    if "--auto-test" in sys.argv:
+        sys.exit(auto_test())
 
-trouves = ecarts(RACINE)
-if trouves:
-    print("Renvoi sans cible ni repli :", file=sys.stderr)
-    for e in trouves:
-        print(f"  {e}", file=sys.stderr)
-    print(
-        "\nUn renvoi se corrige en pointant une commande qui existe, ou en declarant le flux "
-        "optionnel et le repli dans la meme competence, comme le fait openspec-update-change.",
-        file=sys.stderr,
-    )
-    sys.exit(1)
+    trouves = ecarts(RACINE)
+    if trouves:
+        print("Renvoi sans cible ni repli :", file=sys.stderr)
+        for e in trouves:
+            print(f"  {e}", file=sys.stderr)
+        print(
+            "\nUn renvoi se corrige en pointant une commande qui existe, ou en declarant le flux "
+            "optionnel et le repli dans la meme competence, comme le fait openspec-update-change.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
-total = sum(len(f) for _, f in entrees(RACINE))
-print(f"{total} competence(s) relues : tous les renvois ont une cible ou un repli.")
+    total = sum(len(f) for _, f in entrees(RACINE))
+    print(f"{total} competence(s) relues : tous les renvois ont une cible ou un repli.")

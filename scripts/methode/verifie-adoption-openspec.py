@@ -193,16 +193,17 @@ def auto_test() -> int:
     return 0
 
 
-if "--auto-test" in sys.argv:
-    sys.exit(auto_test())
+if __name__ == "__main__":
+    if "--auto-test" in sys.argv:
+        sys.exit(auto_test())
 
-trouves = ecarts(RACINE)
-if trouves:
-    print("Adoption des competences OpenSpec rompue :", file=sys.stderr)
-    for e in trouves:
-        print(f"  {e}", file=sys.stderr)
-    print("\n" + RAPPEL, file=sys.stderr)
-    sys.exit(1)
+    trouves = ecarts(RACINE)
+    if trouves:
+        print("Adoption des competences OpenSpec rompue :", file=sys.stderr)
+        for e in trouves:
+            print(f"  {e}", file=sys.stderr)
+        print("\n" + RAPPEL, file=sys.stderr)
+        sys.exit(1)
 
-total = sum(len(f) for _, f in entrees(RACINE))
-print(f"{total} competence(s) OpenSpec adoptee(s), marqueurs intacts.")
+    total = sum(len(f) for _, f in entrees(RACINE))
+    print(f"{total} competence(s) OpenSpec adoptee(s), marqueurs intacts.")

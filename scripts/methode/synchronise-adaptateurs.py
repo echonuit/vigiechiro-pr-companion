@@ -87,53 +87,57 @@ def auto_test() -> int:
     return 0
 
 
-if "--auto-test" in sys.argv:
-    sys.exit(auto_test())
-
+# Remontee AVANT le point d entree (issue #4788) : la neutralisation du harnais de mutation
+# s insere juste avant `if __name__`, et une fonction definie apres lui echapperait.
 def competences(d: pathlib.Path):
     if not d.is_dir():
         return {}
     return {p.parent.name: p for p in sorted(d.glob("*/SKILL.md"))}
 
-nos = competences(SOURCE)
-if not nos:
-    print(f"aucune competence sous {SOURCE.relative_to(RACINE)}", file=sys.stderr)
-    sys.exit(1)
 
-ecarts = []
-retires = []
-for cible in CIBLES:
-    for nom, src in nos.items():
-        dst = cible / nom / "SKILL.md"
-        if dst.exists() and filecmp.cmp(src, dst, shallow=False):
-            continue
-        ecarts.append(f"{dst.relative_to(RACINE)} {'absent' if not dst.exists() else 'perime'}")
-        if not VERIFIE:
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dst)
+if __name__ == "__main__":
+    if "--auto-test" in sys.argv:
+        sys.exit(auto_test())
 
-    # L AUTRE SENS. Boucler sur la seule source repond a « tout ce qui doit etre copie l est-il ? »
-    # et jamais a « ce qui est la doit-il y etre ? ». Un renommage de competence laissait donc sa
-    # copie derriere lui, et ce garde annoncait « adaptateurs a jour » avec un dossier de plus.
-    # Mesure de #4565 : cinq renommages, cinq orphelins survivants, aucun mot. Article A3, ADR 2748.
-    if cible.is_dir():
-        for mort in sorted(d for d in cible.iterdir() if d.is_dir() and d.name not in nos):
-            ecarts.append(f"{mort.relative_to(RACINE)} orphelin : aucune source sous "
-                          f"{SOURCE.relative_to(RACINE)}")
-            if not VERIFIE:
-                shutil.rmtree(mort)
-                retires.append(str(mort.relative_to(RACINE)))
-
-if VERIFIE:
-    if ecarts:
-        print("Adaptateurs desynchronises :", file=sys.stderr)
-        for e in ecarts:
-            print(f"  {e}", file=sys.stderr)
-        print("\nRelancer : python3 scripts/methode/synchronise-adaptateurs.py", file=sys.stderr)
+    nos = competences(SOURCE)
+    if not nos:
+        print(f"aucune competence sous {SOURCE.relative_to(RACINE)}", file=sys.stderr)
         sys.exit(1)
-    print(f"{len(nos)} competence(s), adaptateurs a jour.")
-else:
-    for mort in retires:
-        print(f"  retire : {mort} (orphelin, plus aucune source)")
-    print(f"{len(nos)} competence(s) synchronisee(s)"
-          + (f", {len(ecarts)} ecart(s) corrige(s)" if ecarts else ", rien a faire"))
+
+    ecarts = []
+    retires = []
+    for cible in CIBLES:
+        for nom, src in nos.items():
+            dst = cible / nom / "SKILL.md"
+            if dst.exists() and filecmp.cmp(src, dst, shallow=False):
+                continue
+            ecarts.append(f"{dst.relative_to(RACINE)} {'absent' if not dst.exists() else 'perime'}")
+            if not VERIFIE:
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
+
+        # L AUTRE SENS. Boucler sur la seule source repond a « tout ce qui doit etre copie l est-il ? »
+        # et jamais a « ce qui est la doit-il y etre ? ». Un renommage de competence laissait donc sa
+        # copie derriere lui, et ce garde annoncait « adaptateurs a jour » avec un dossier de plus.
+        # Mesure de #4565 : cinq renommages, cinq orphelins survivants, aucun mot. Article A3, ADR 2748.
+        if cible.is_dir():
+            for mort in sorted(d for d in cible.iterdir() if d.is_dir() and d.name not in nos):
+                ecarts.append(f"{mort.relative_to(RACINE)} orphelin : aucune source sous "
+                              f"{SOURCE.relative_to(RACINE)}")
+                if not VERIFIE:
+                    shutil.rmtree(mort)
+                    retires.append(str(mort.relative_to(RACINE)))
+
+    if VERIFIE:
+        if ecarts:
+            print("Adaptateurs desynchronises :", file=sys.stderr)
+            for e in ecarts:
+                print(f"  {e}", file=sys.stderr)
+            print("\nRelancer : python3 scripts/methode/synchronise-adaptateurs.py", file=sys.stderr)
+            sys.exit(1)
+        print(f"{len(nos)} competence(s), adaptateurs a jour.")
+    else:
+        for mort in retires:
+            print(f"  retire : {mort} (orphelin, plus aucune source)")
+        print(f"{len(nos)} competence(s) synchronisee(s)"
+              + (f", {len(ecarts)} ecart(s) corrige(s)" if ecarts else ", rien a faire"))
