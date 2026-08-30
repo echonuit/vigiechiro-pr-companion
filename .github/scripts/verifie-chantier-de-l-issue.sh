@@ -14,9 +14,10 @@ export LC_ALL=C
 
 readonly SAS=4562
 
-# Les issues que le corps déclare fermer. Seuls les mots-clés que la FORGE reconnaît comptent :
-# `close`, `fix`, `resolve` et leurs flexions. « Ferme #N » ne ferme rien, et c'est le garde du
-# corps de PR qui refuse cette forme-là.
+# Les issues que le corps déclare fermer. Quels mots-clés la forge reconnaît est un fait que l'ADR
+# 4546 porte déjà, mesuré : `close`, `fix`, `resolve` et leurs flexions. Ce garde l'applique plutôt
+# que de le réénoncer, et « Ferme #N » reste l'affaire de `verifie-corps-pr.sh`, qui tient l'autre
+# moitié de la même décision.
 issuesFermees() {
     printf '%s' "${1-}" \
         | grep -oiE '\b(close[sd]?|closing|fix(e[sd])?|fixing|resolve[sd]?|resolving)[[:space:]]+#[0-9]+' \
@@ -118,6 +119,26 @@ if [ "${1-}" = "--auto-test" ]; then
     joue rouge "une des deux fermetures suffit à refuser" "$(printf 'Closes #4649\nCloses #4571')"
     joue refus "une issue absente de la forge fait REFUSER, pas conclure" \
         "Closes #4571" "${bac}/nulle-part.json"
+
+    # L APPEL, et non le verdict (ADR 4331). Les cas ci-dessus injectent tous un leurre et
+    # n exercent jamais `parentDe` par son chemin réel. Celui-ci le lance avec `gh` hors du PATH :
+    # aucun réseau, et il rougit en une milliseconde. Sans lui, la fonction qui interroge n est
+    # éprouvée par rien, ce qui est exactement le défaut que l ADR 4331 a mesuré sur
+    # `verifie-jeton-vivant.sh`.
+    # Un PATH vidé ferait échouer `grep` AVANT le contrôle, et le refus tomberait pour la mauvaise
+    # raison. Le leurre ne retire donc que `gh`, en ne liant que ce que le chemin réel appelle.
+    mkdir -p "${bac}/bin"
+    for outil in grep sort; do ln -sf "$(command -v "${outil}")" "${bac}/bin/${outil}"; done
+    cas=$((cas + 1))
+    rouges=$((rouges + 1))
+    sortie=$(PATH="${bac}/bin" "$(command -v bash)" "$0" "Closes #4571" 2>&1) && code=0 || code=$?
+    # Le verdict se prend sur le MESSAGE autant que sur le code : un 2 pourrait venir d autre chose.
+    if [ "${code}" = 2 ] && printf '%s' "${sortie}" | grep -q 'est absent'; then
+        echo "  ✔ sans « gh », l appel REFUSE au lieu de conclure"
+    else
+        echo "  ✘ sans « gh », l appel REFUSE au lieu de conclure : code ${code}, dit « ${sortie} »"
+        echecs=1
+    fi
 
     echo
     echo "${cas} cas, dont ${rouges} qui DOIVENT refuser."
