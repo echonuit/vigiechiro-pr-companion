@@ -930,7 +930,7 @@ jobs:
         # etapes sont tenues, parce qu'elles prescrivent un geste a faire MAINTENANT.
         #
         # Il REFUSE plutot que de sauter : les six ne titrent pas leur liste pareil - « Fonction de
-        # garde », « Les quatre etapes », « Les quatorze passes ». Un motif cale sur un seul titre en
+        # garde », « Les cinq etapes », « Les quatorze passes ». Un motif cale sur un seul titre en
         # sauterait deux sur six et rendrait vert. La liste se derive de sa forme, et une competence
         # dont aucune liste n'est trouvee fait rougir (article A3).
         run: |

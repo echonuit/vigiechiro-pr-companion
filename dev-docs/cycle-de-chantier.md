@@ -1090,6 +1090,7 @@ trompé : une analyse fausse laissée en place oriente le chantier suivant.
 - [ ] 0. Triage : issues ouvertes balayées **par concept**, EPIC vivants et issues « différées de #N » cherchés, rattachements décidés, titres/corps recadrés
 - [ ] 1. Cartographie de l'existant (patterns réutilisables)
 - [ ] 2. Plan (découpage, contraintes, risques, ordre des paliers)
+- [ ] 2b. Spécification tranchée : **ce chantier change-t-il ce que le produit FAIT ?** Si oui, `/instruire` puis `/proposer`, et les tâches du changement **sont** les lots. Si non, la raison s'écrit en une phrase
 - [ ] 3. Issues créées et reliées à l'EPIC
 
 ## Clôture de chantier

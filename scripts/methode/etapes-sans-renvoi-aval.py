@@ -19,7 +19,7 @@ qu elles prescrivent un geste a faire MAINTENANT.
 `ecrire-une-adr` et les autres se convoquent a n importe quel moment ; elles ne sont pas ordonnees.
 
 **Il REFUSE plutot que de sauter.** Les six ne titrent pas leur liste d etapes pareil - « Fonction
-de garde », « Les quatre etapes », « Les quatorze passes ». Un motif cale sur un seul titre en sauterait
+de garde », « Les cinq etapes », « Les quatorze passes ». Un motif cale sur un seul titre en sauterait
 deux sur six et rendrait vert. La liste se DERIVE donc de sa forme, et une competence dont aucune
 liste n est trouvee fait rougir : un garde qui ne sait pas lire le dit (article A3).
 
