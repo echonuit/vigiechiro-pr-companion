@@ -1,7 +1,7 @@
 # Instructions pour GitHub Copilot
 
 La méthode de ce dépôt est dans **[AGENTS.md](../AGENTS.md)**, à la racine. Lisez-le avant de
-proposer quoi que ce soit : il porte les garde-fous, le cycle d'un chantier et les treize passes de
+proposer quoi que ce soit : il porte les garde-fous, le cycle d'un chantier et les quatorze passes de
 clôture, et rien d'important n'est répété ici.
 
 Ce fichier ne redit que les règles dont l'oubli coûte le plus cher, parce qu'elles se violent en une

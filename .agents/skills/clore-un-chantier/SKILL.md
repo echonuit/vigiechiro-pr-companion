@@ -21,13 +21,13 @@ passe suivante devait trouver.
 **La trace n'est pas une formalité de fin.** Une clôture qui n'en laisse aucune est indiscernable
 d'une clôture qui n'a pas eu lieu - pour le lecteur, pour le prochain chantier, et pour la mesure.
 Le 28 août 2026, **43 des 64 EPIC clos** du dépôt n'en portaient aucune, dont un clos le jour même
-par les treize passes, avec bilan et artefact. Rien ne l'avait réclamée (#4659).
+par les quatorze passes, avec bilan et artefact. Rien ne l'avait réclamée (#4659).
 
 ## Annoncer
 
 « J'utilise la compétence clore-un-chantier pour clore <l'EPIC>, passe par passe. »
 
-## Les treize passes
+## Les quatorze passes
 
 | # | Passe | Ce qu'elle produit | Compétence |
 |---|---|---|---|
@@ -38,6 +38,7 @@ par les treize passes, avec bilan et artefact. Rien ne l'avait réclamée (#4659
 | 4 | Doc utilisateur | `docs/` et ses captures | `revoir-les-ecrans`, `humaniser` |
 | 5 | Brief projet | parcours, maquettes, modèle conceptuel | `humaniser` |
 | 6 | Tests | chaque usage introduit est couvert | `tdd`, `mutation` |
+| 6b | Recette préparée | chaque capacité ajoutée a sa case `Sxx-NN`, et la fixture pour la jouer | |
 | 7 | Harmonisation | l'application entière, pas le delta | |
 | 8 | Revue visuelle | chaque **état** de chaque écran touché | `revoir-les-ecrans` |
 | 9 | Suites consolidées | l'EPIC des suites relu et regroupé, les rattachements tranchés | `trier-les-issues` |
@@ -99,7 +100,7 @@ git log --oneline <sha-d-ouverture>..origin/main            # TOUS les commits, 
 git diff --stat <sha-d-ouverture>..origin/main              # et tout ce qu'ils touchent
 ```
 
-Cela vaut pour les treize passes, pas seulement la 0 : la doc que la passe 3 relit peut avoir été
+Cela vaut pour les quatorze passes, pas seulement la 0 : la doc que la passe 3 relit peut avoir été
 rendue fausse par un autre chantier, l'écran que la passe 8 regarde peut avoir été déplacé par lui.
 
 ## Aucune passe ne suppose
@@ -145,7 +146,7 @@ clôture où un garde de surface CLI avait été tenu à jour, mais pas le garde
 ## Les suites d'une clôture se closent aussi
 
 Les issues consolidées en passe 9 forment un chantier à part entière. Elles se closent par **les
-mêmes treize passes**, appliquées à leur seul delta. Le dépôt l'a appris trois fois.
+mêmes quatorze passes**, appliquées à leur seul delta. Le dépôt l'a appris trois fois.
 
 La passe 9 ne les **découvre** pas : chacune a été ouverte au moment où elle a été trouvée, et
 rattachée à l'EPIC du chantier ou à celui des suites (#4562). Arriver en passe 9 avec une page
@@ -187,7 +188,7 @@ relit comme telle.
 | « L'harmonisation n'a rien cassé, les tests passent » | Elle casse des écrans sans casser de test. C'est pourquoi la revue visuelle suit |
 | « Cette ADR ne concerne pas mon delta » | Elle régit peut-être du code hors delta qu'il faut aligner |
 | « Je relis les ADR de ma branche » | Contre `origin/main`, sinon vous manquez celles écrites pendant |
-| « Les suites, on verra plus tard » | Elles se closent par les mêmes treize passes |
+| « Les suites, on verra plus tard » | Elles se closent par les mêmes quatorze passes |
 | « Le garde est sorti en 0, tout va bien » | Un plancher qui dit « à relever » sort en **0**. Passe 1 : on **lit** ce que les gardes écrivent |
 | « Je refais la passe qui manquait » | Elle en invalide d'autres si elle les balayait. La 10 se rejoue **en dernier** |
 | « La capture est produite, la passe 8 est faite » | Elle se **regarde**. Une image peut montrer le bon état et rester invraisemblable |
@@ -195,4 +196,4 @@ relit comme telle.
 | « Je relis le diff de mon chantier » | Le delta est `<ouverture>..origin/main` **entier**. Filtrer cache ce que la rencontre avec les autres sessions a produit |
 | « C'est évident, je note et j'avance » | Une passe se conclut sur une mesure **reproductible**. Un résultat qui surprend se remesure avant d'être cru |
 | « Le bilan est écrit, la clôture est faite » | Le bilan raconte, la **case** atteste. Sans elle, rien ne distingue votre clôture d'une clôture absente |
-| « J'ai fermé la dernière issue, l'EPIC est clos » | Fermer les issues n'est pas clore le chantier. Les treize passes portent sur le **delta**, pas sur les tickets |
+| « J'ai fermé la dernière issue, l'EPIC est clos » | Fermer les issues n'est pas clore le chantier. Les quatorze passes portent sur le **delta**, pas sur les tickets |

@@ -8,7 +8,7 @@ le **flux de contribution**, cette page décrit le niveau au-dessus : comment on
 **clôt** un chantier entier.
 
 Le principe : un chantier ne se termine pas au dernier `feat:` mergé. Une fois le cœur livré, une
-**clôture en 13 passes** (numérotées **0 à 12**) garantit que l'évolution est intégrée, cohérente
+**clôture en 14 passes** (numérotées **0 à 12**, plus la **6b** qui prolonge la 6) garantit que l'évolution est intégrée, cohérente
 entre les deux surfaces (IHM et CLI), documentée, testée, harmonisée, **regardée**, et que la suite
 est cadrée.
 
@@ -459,7 +459,7 @@ Ce n'est pas de la cosmétique. Le **titre de la pull request devient le sujet d
 son corps est ce qu'atteint quiconque remonte depuis `git log`. C'est la seule trace qui survive à la
 fermeture de l'onglet.
 
-## À la clôture : les 13 passes
+## À la clôture : les 14 passes
 
 Elles s'exécutent **dans l'ordre** : la relecture des ADR remet l'existant en tête avant qu'on touche
 à quoi que ce soit, l'audit d'intégration peut révéler du travail à faire avant de documenter, la
@@ -745,7 +745,22 @@ précisément dans les **coutures** entre deux étapes. Quand deux scénarios pa
 est simple : deux étapes se fusionnent quand le défaut probable est **entre** elles. À l'inverse,
 fusionner sans couture à exercer ne produit qu'un test-fleuve illisible - la longueur n'est pas le but.
 
-#### Préparer la recette : toute capacité ajoutée sait comment on la vérifie
+### 6b. Passe de préparation de recette
+
+**Pourquoi une lettre et pas un numéro.** Cette étape a longtemps vécu comme une case `6b` de la liste
+de clôture, sans section qui la décrive ni ligne au tableau des passes : trois listes décrivaient le
+même cycle avec trois comptes différents, et un agent qui la cochait s'appuyait sur une phrase là où
+les autres passes offrent des dizaines de lignes (#4839).
+
+Elle garde sa lettre plutôt que de devenir la passe 7, et ce choix est mesuré : renuméroter aurait
+touché **161 citations dans 73 fichiers**, dont 39 ADR et 20 fichiers de production. Une passe
+suffixée dit d'ailleurs quelque chose de vrai, qu'un numéro plein effacerait : elle **prolonge** la
+passe 6 sans être une étape indépendante, on ne prépare pas la recette avant d'avoir écrit les tests.
+
+La règle générale reste : une passe porte un numéro. La lettre est l'exception, et elle se justifie
+ici par la continuité, pas par le coût.
+
+**Préparer la recette : toute capacité ajoutée sait comment on la vérifie**
 
 La [recette](recette/index.md) n'est pas le déversoir de ce qui a résisté à l'automatisation. C'est
 l'endroit où vit **le procédé de vérification** d'une capacité : le geste à faire, ce qu'on doit voir,
@@ -1049,7 +1064,7 @@ Le dépôt l'a vécu **trois fois** : les suites de l'EPIC #1662 ont formé l'EP
 ont formé le delta clos par #1920 ; les suites de #1838 ont eu leur propre clôture (#1921). Le patron
 est donc régulier, pas accidentel.
 
-**Les suites d'un chantier se closent par les mêmes 13 passes**, appliquées à leur seul delta
+**Les suites d'un chantier se closent par les mêmes 14 passes**, appliquées à leur seul delta
 (`git log <sha-de-la-clôture-précédente>..origin/main`, **entier et non filtré** : le code des suites
 doit se juger à côté de ce qui a été fusionné pendant qu'elles couraient). C'est peu coûteux - le
 périmètre est étroit - et c'est là qu'on trouve ce que le travail de suite a laissé derrière lui : une
