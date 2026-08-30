@@ -29,6 +29,19 @@ public interface SuiviDepot {
     /// lecture du texte de `raison`, où la même panne s'écrit de trop de façons.
     void uniteEchouee(String identifiant, String raison, boolean definitif);
 
+    /// La réconciliation n'a **pas pu lire** ce que la plateforme porte (#4631).
+    ///
+    /// Ce n'est pas « la plateforme ne porte rien ». La lecture rendait un vide sur quatre issues
+    /// distinctes, et le vide se lisait comme une absence de données : une réconciliation menée sur
+    /// cette prémisse conclut que rien n'a été déposé là-bas, alors qu'elle n'a rien pu demander.
+    ///
+    /// Distincte d'[#uniteEchouee] à dessein : aucune unité n'a échoué, c'est l'étape qui n'a pas
+    /// tourné. Les confondre afficherait un échec de dépôt là où il n'y en a pas.
+    ///
+    /// @param raison ce que la réponse a dit d'elle-même
+    /// @param definitif `true` quand un nouvel essai est inutile, depuis `ReponseApi.estReessayable()`
+    void reconciliationImpossible(String raison, boolean definitif);
+
     /// Avancement (fraction 0 à 1, #984) du téléversement de l'unité `identifiant`, remontée octet par
     /// octet pour une barre de progression par archive. No-op par défaut : seuls les suivis IHM
     /// l'exploitent (les suivis inerte / console l'ignorent).
@@ -54,6 +67,9 @@ public interface SuiviDepot {
 
             @Override
             public void uniteEchouee(String identifiant, String raison, boolean definitif) {}
+
+            @Override
+            public void reconciliationImpossible(String raison, boolean definitif) {}
         };
     }
 }

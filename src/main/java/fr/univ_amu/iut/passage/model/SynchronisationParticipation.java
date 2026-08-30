@@ -146,16 +146,21 @@ public final class SynchronisationParticipation {
     public EnvoiParticipation pousserVers(Long idPassage) {
         Passage declare = chargerPassage(idPassage);
         String objectid = participationDe(idPassage).orElseThrow(() -> new RegleMetierException(NON_LIE));
+        // La cause ne se perd plus (#4631) : quatre issues distinctes s'aplatissaient en un vide, et
+        // toutes ressortaient en « introuvable ». On réessaie une coupure, pas une participation absente.
+        ReponseApi<ParticipationDetail> lecture = client.participation(objectid);
         ParticipationDetail distant =
-                client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
+                lecture.enOptionnel().orElseThrow(() -> new RegleMetierException(lecture.pourquoiVide(INTROUVABLE)));
         // Réaligné seulement une fois l'envoi acquis (passage lié, participation lisible) : le réalignement
         // écrit en base, il n'a pas à laisser de trace sur un chemin qui va échouer.
         Passage passage = realignerSurLesPreuves(declare);
         InfosPoint point = infosPoint(passage);
         // La relecture est le coeur de la garde (#4552) : entre la lecture du haut et maintenant, un autre
         // poste a pu écrire. Elle passe avant le corps, qui doit partir de l'état le plus frais (#4603).
-        ParticipationDetail juste =
-                client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
+        ReponseApi<ParticipationDetail> relecture = client.participation(objectid);
+        ParticipationDetail juste = relecture
+                .enOptionnel()
+                .orElseThrow(() -> new RegleMetierException(relecture.pourquoiVide(INTROUVABLE)));
         // #4707 : la reference est la BASE, ce que la plateforme portait a notre derniere lecture, et non
         // la lecture du haut prise il y a quelques millisecondes. Sans ce deplacement, un collegue qui
         // saisit la meteo dix minutes plus tot n'est pas vu : nos deux lectures concordent sur SA valeur,
@@ -260,8 +265,11 @@ public final class SynchronisationParticipation {
     public void tirerDepuis(Long idPassage) {
         Passage passage = chargerPassage(idPassage);
         String objectid = participationDe(idPassage).orElseThrow(() -> new RegleMetierException(NON_LIE));
+        // La cause ne se perd plus (#4631) : quatre issues distinctes s'aplatissaient en un vide, et
+        // toutes ressortaient en « introuvable ». On réessaie une coupure, pas une participation absente.
+        ReponseApi<ParticipationDetail> lecture = client.participation(objectid);
         ParticipationDetail distant =
-                client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
+                lecture.enOptionnel().orElseThrow(() -> new RegleMetierException(lecture.pourquoiVide(INTROUVABLE)));
 
         // #4706 : ce que la plateforme portait devient la BASE. Sans elle, une modification faite ici
         // ne se distingue pas d'une modification faite la-bas, et le conflit ne se constate pas.
@@ -313,11 +321,12 @@ public final class SynchronisationParticipation {
         }
         Passage passage = chargerPassage(idPassage);
         InfosPoint point = infosPoint(passage);
-        Optional<ParticipationDetail> distant =
-                client.participation(objectid.get()).enOptionnel();
+        ReponseApi<ParticipationDetail> lue = client.participation(objectid.get());
+        Optional<ParticipationDetail> distant = lue.enOptionnel();
         if (distant.isEmpty()) {
-            return List.of("participation liée injoignable (" + objectid.get()
-                    + ") : hors connexion, ou participation disparue côté Vigie-Chiro");
+            // Ce message énumérait les deux causes possibles faute de savoir laquelle (#4631). Il la dit.
+            return List.of("participation liée illisible (" + objectid.get() + ") : "
+                    + lue.pourquoiVide("participation disparue côté Vigie-Chiro"));
         }
         List<String> ecarts = new ArrayList<>();
         if (!point.code().equals(distant.get().point())) {

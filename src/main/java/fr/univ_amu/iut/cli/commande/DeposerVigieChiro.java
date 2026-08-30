@@ -12,6 +12,7 @@ import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.SuiviDepot;
+import fr.univ_amu.iut.lot.viewmodel.FormatsLot;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Objects;
@@ -209,6 +210,14 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         @Override
         public void uniteEchouee(String identifiant, String raison, boolean definitif) {
             sortie.println("  ! " + identifiant + " : " + raison);
+        }
+
+        /// La réconciliation n'a pas pu lire (#4631). Marquée `~` et non `!` : aucune unité n'a échoué,
+        /// c'est l'étape d'avant qui n'a pas tourné, et sa conséquence est que des archives déjà
+        /// déposées vont repartir. Un script qui lit cette sortie doit pouvoir distinguer les deux.
+        @Override
+        public void reconciliationImpossible(String raison, boolean definitif) {
+            sortie.println("  ~ " + FormatsLot.libelleReconciliationImpossible(raison, definitif));
         }
 
         /// Parité avec l'IHM (clôture #2350) : depuis le réessai gradué (#2354), une coupure momentanée

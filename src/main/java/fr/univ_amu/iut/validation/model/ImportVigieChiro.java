@@ -190,11 +190,15 @@ public class ImportVigieChiro {
     /// On arrive ici après une lecture **réussie** des `donnees` : la plateforme répond. Si la relecture
     /// de l'état échoue malgré tout juste après, on le dit tel quel, sans deviner.
     private String pourquoiRienAImporter(String participationId) {
-        Traitement traitement =
-                this.traitement.etat(participationId).enOptionnel().orElse(null);
+        ReponseApi<Traitement> lecture = this.traitement.etat(participationId);
+        Traitement traitement = lecture.enOptionnel().orElse(null);
         if (traitement == null) {
+            // Le message disait « Réessayez » quelle que soit la cause (#4631). Sans jeton ou sur un
+            // refus définitif, réessayer ne mène nulle part : la conduite suit ce que la réponse dit.
             return "Vigie-Chiro ne renvoie aucune observation pour cette participation, et l'état du"
-                    + " traitement n'a pas pu être relu. Réessayez dans un instant.";
+                    + " traitement n'a pas pu être relu : "
+                    + lecture.pourquoiVide("état du traitement absent")
+                    + (lecture.estReessayable() ? " Réessayez dans un instant." : "");
         }
         if (traitement.estInconnu()) {
             return "L'analyse n'a jamais été lancée sur Vigie-Chiro pour cette nuit."

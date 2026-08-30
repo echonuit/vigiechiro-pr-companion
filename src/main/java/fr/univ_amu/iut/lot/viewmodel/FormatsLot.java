@@ -67,6 +67,20 @@ public final class FormatsLot {
         return "Lancement de l'analyse sur Vigie-Chiro…";
     }
 
+    /// L'avertissement quand la réconciliation n'a pas pu lire la plateforme (#4631).
+    ///
+    /// Il dit la **conséquence** avant la cause : des archives déjà déposées vont repartir. C'est ce
+    /// que l'utilisateur a besoin de savoir pour décider d'attendre ou d'arrêter, la cause ne servant
+    /// qu'à choisir entre réessayer et se reconnecter.
+    ///
+    /// @param raison ce que la réponse a dit d'elle-même
+    /// @param definitif `true` quand un nouvel essai est inutile
+    /// @return le libellé, jamais vide
+    public static String libelleReconciliationImpossible(String raison, boolean definitif) {
+        return "Déjà déposées : impossible à vérifier, des archives vont repartir pour rien (" + raison + ")"
+                + (definitif ? "." : " Réessayez plus tard.");
+    }
+
     public static String libelleDepotEnCours(int deposees, int enCours, int echecs, int total) {
         if (total == 0) {
             return "Dépôt en préparation…";

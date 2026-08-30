@@ -34,8 +34,17 @@ final class ReconciliationDepot {
         if (restantes.isEmpty() || restantes.stream().noneMatch(unite -> unite.type() == TypeDepotUnite.WAV)) {
             return;
         }
+        // Une panne de lecture devenait une liste vide, donc « la plateforme ne porte rien » (#4631).
+        // Ce n'était pas un libellé trompeur mais un raisonnement mené sur une prémisse fausse.
+        var lecture = client.donnees(participationId);
+        if (lecture.enOptionnel().isEmpty()) {
+            suivi.reconciliationImpossible(
+                    lecture.pourquoiVide("la plateforme ne porte aucune donnée pour cette participation"),
+                    !lecture.estReessayable());
+            return;
+        }
         Set<String> titresTraites = new HashSet<>();
-        for (var donnee : client.donnees(participationId).enOptionnel().orElseGet(List::of)) {
+        for (var donnee : lecture.enOptionnel().orElseThrow()) {
             titresTraites.add(donnee.titre());
         }
         if (titresTraites.isEmpty()) {
