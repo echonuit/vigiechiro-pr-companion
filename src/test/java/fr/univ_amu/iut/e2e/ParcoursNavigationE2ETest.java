@@ -17,7 +17,6 @@ import fr.univ_amu.iut.multisite.view.NavigationMultisite;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.view.NavigationSites;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -30,6 +29,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -49,9 +49,15 @@ class ParcoursNavigationE2ETest {
     private NavigationViewModel navigation;
     private Site etang;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test. `createTempDirectory`
+    /// n'enlevait rien, et cette classe était l'une des dix qui laissaient la moitié des
+    /// répertoires attribuables (#4868).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-nav-e2e");
+        Path workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);

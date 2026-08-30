@@ -20,7 +20,6 @@ import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.Respiration;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -34,6 +33,7 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -61,9 +61,15 @@ class ConnexionModaleViewTest {
 
     private ClientVigieChiro client;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test. `createTempDirectory`
+    /// n'enlevait rien, et cette classe était l'une des dix qui laissaient la moitié des
+    /// répertoires attribuables (#4868).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-connexion");
+        Path workspace = dossierTemporaire;
         StockageConnexion stockage = new StockageConnexion(new Workspace(workspace), Horloge.systeme());
         client = mock(ClientVigieChiro.class);
         OuvreurDeLien ouvreur = urlOuverte::set;
