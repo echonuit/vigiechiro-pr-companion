@@ -198,6 +198,12 @@ public class SelectionEcouteController {
         return colVerdict;
     }
 
+    /// Le menu Outils **de cet écran**, que la recette tient plutôt que de le chercher par identifiant :
+    /// cinq FXML du dépôt en déclarent un du même nom (#4728).
+    MenuButton menuOutils() {
+        return menuOutils;
+    }
+
     /// La colonne d'avis, que le parent câble en même temps que celle du verdict (#4727).
     TableColumn<SequenceEnSelection, SequenceEnSelection> colonneAvisRelecteur() {
         return colAvisRelecteur;

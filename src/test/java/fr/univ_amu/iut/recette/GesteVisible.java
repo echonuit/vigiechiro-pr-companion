@@ -157,6 +157,26 @@ public final class GesteVisible {
     ///
     /// @throws TimeoutException si l'entrée ne paraît pas - un menu qui ne s'ouvre pas rendrait un clip
     ///     immobile que personne ne signalerait
+    /// Même chose sur un menu **déjà en main**, quand plusieurs écrans portent le même identifiant.
+    ///
+    /// Cinq FXML du dépôt déclarent `fx:id="menuOutils"` : le chrome, l'analyse, le lot, la sélection
+    /// d'écoute et le détail d'un site. Un `lookup` par identifiant ouvre donc le premier venu, et le
+    /// scénario attend une entrée qui n'y est pas (#4728). C'est le défaut qu'`ApercuFx.exigerParLibelle`
+    /// a corrigé côté aperçus.
+    ///
+    /// @param robot le robot du banc
+    /// @param menu le menu que le scénario tient
+    /// @param libelle l'entrée à choisir
+    /// @throws TimeoutException si l'entrée ne paraît pas
+    public static void choisir(FxRobot robot, Node menu, String libelle) throws TimeoutException {
+        cliquer(robot, menu);
+        WaitForAsyncUtils.waitForFxEvents();
+        WaitForAsyncUtils.waitFor(
+                5, TimeUnit.SECONDS, () -> robot.lookup(libelle).tryQuery().isPresent());
+        Respiration.leTempsDeLire(robot);
+        cliquer(robot, libelle);
+    }
+
     public static void choisir(FxRobot robot, String idDuMenu, String libelle) throws TimeoutException {
         robot.clickOn(idDuMenu);
         WaitForAsyncUtils.waitForFxEvents();

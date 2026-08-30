@@ -242,6 +242,18 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         this.gestesEmport.relierAux(notificateur, confirmateur);
     }
 
+    /// Le menu Outils de la sélection d'écoute, que la recette tient plutôt que de le chercher par
+    /// identifiant : cinq FXML du dépôt en déclarent un du même nom (#4728).
+    javafx.scene.control.MenuButton menuDeLaSelection() {
+        return colonneSelectionController.menuOutils();
+    }
+
+    /// Les gestes de l'emport, que la recette pilote : elle y substitue le sélecteur de fichier, un
+    /// sélecteur natif figeant un test headless (#4728).
+    GestesEmportQualification gestesEmport() {
+        return gestesEmport;
+    }
+
     /// Garde de navigation : un verdict a été **choisi mais pas encore enregistré** (brouillon). Quitter
     /// l'écran perdrait ce verdict ; le socle demande confirmation avant de naviguer ailleurs.
     @Override

@@ -463,3 +463,58 @@ puis se tait là où elle doit se taire. C'est le seul moyen qu'un non-effet pro
 > qu'aucune mutation ait pu la faire rougir : trois couches le tiennent en série, et les retirer une à
 > une - puis deux ensemble - laisse le cas vert. L'en-tête du banc le dit, pour qu'on ne lui prête pas
 > une solidité qu'il n'a pas.
+
+## ScenarioEmportExpediteurTest
+
+Le poste qui **possède** la nuit : il la prépare, l'emporte, et reçoit en retour l'avis de qui l'a
+relue. Les deux clips se lisent ensemble, dans cet ordre, parce que le second suppose le premier.
+
+### S3-45 à S3-47 · `emporter_une_nuit_et_ses_deux_refus`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioEmportExpediteurTest.emporter_une_nuit_et_ses_deux_refus.mp4"></video>
+
+> **Deux des trois cas sont des refus**, et c'est voulu : un geste qui écrit des gigaoctets se juge
+> autant sur ce qu'il refuse d'écrire que sur ce qu'il écrit. `S3-46` est une nuit sans sélection,
+> `S3-47` une séquence que le disque ne porte plus.
+
+> **Le volume s'annonce avant que rien ne parte.** Ce qui change à l'image est le compte rendu, pas la
+> barre de progression : l'écriture est brève, l'annonce est ce que l'utilisateur lit.
+
+### S3-48 et S3-49 · `reprendre_un_avis_et_le_second_qui_se_confirme`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioEmportExpediteurTest.reprendre_un_avis_et_le_second_qui_se_confirme.mp4"></video>
+
+> `S3-49` est le cas qui **demande** avant de remplacer. Un second avis sur les mêmes séquences écrase
+> le premier, et la question nomme ce qui serait perdu plutôt que de dire « êtes-vous sûr ». Sans
+> verdicts posés au préalable l'avis serait vide, et la question ne se poserait jamais : la fixture les
+> pose donc en premier.
+
+## ScenarioEmportRelecteurTest
+
+Le poste qui **ne possède pas** la nuit. Toute la difficulté est là : chez le relecteur la nuit existe
+déjà, ouvrir l'écran de vérification y pose une sélection, et le paquet reçu doit remplacer celle-là.
+C'est en filmant ce rôle que le défaut corrigé par #4728 s'est vu, et aucun test unitaire ne pouvait
+le voir puisque tous partaient du poste de l'expéditeur.
+
+### S3-50 et S3-51 · `relire_une_nuit_confiee`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioEmportRelecteurTest.relire_une_nuit_confiee.mp4"></video>
+
+> **Le remplacement se confirme, il n'est pas tacite.** La question nomme les verdicts qui seront
+> perdus. `S3-51` constate ensuite que le compte rendu dit **qui** signera : l'identité est relevée à
+> l'ouverture du paquet, pas au moment du jugement.
+
+### S3-52 · `renvoyer_son_avis`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioEmportRelecteurTest.renvoyer_son_avis.mp4"></video>
+
+> **L'avis n'emporte pas les séquences**, que l'expéditeur possède déjà : il ne porte que les verdicts
+> et le pseudo qui les signe. C'est ce que le manifeste relu après coup établit.
+
+> **Ce que ces trois cas ne peuvent pas montrer.** Le voyage du fichier d'un poste à l'autre. Le paquet
+> arrive par la fixture, composé par le service : aucune des deux familles ne filme le transport, et
+> c'est une limite du dispositif plutôt qu'un manque du tournage.
