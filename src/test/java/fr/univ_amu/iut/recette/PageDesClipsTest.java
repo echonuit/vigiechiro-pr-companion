@@ -52,6 +52,11 @@ class PageDesClipsTest {
     /// montre est un clip que personne ne verra, et la source ne change rien à cela.
     private static final Path PAGE_CONNECTES = Path.of("dev-docs", "recette", "clips-connectes.md");
 
+    /// La page d'entrée de la section. Son tableau « Deux familles, deux pages » annonce combien
+    /// de cas chaque famille porte, et ces nombres se périment comme le chapeau : ils sont écrits à
+    /// la main devant une liste qui bouge. Les deux l'étaient au 2026-08-30, à 9 et 46 pour 15 et 55.
+    private static final Path PAGE_ENTREE = Path.of("dev-docs", "recette", "clips.md");
+
     private static final Path SESSIONS = Path.of("dev-docs", "recette", "sessions");
 
     private static final Path SOURCES_DE_TEST = Path.of("src", "test", "java");
@@ -67,6 +72,22 @@ class PageDesClipsTest {
 
     /// Le titre d'une section de cas : `### S6-27 · ...`.
     private static final Pattern SECTION = Pattern.compile("^### (S\\d+-\\d+) ·", Pattern.MULTILINE);
+
+    /// Les deux nombres du chapeau : « Ces **15** cas [...] tiennent en **10** clips ».
+    ///
+    /// Deux motifs et non un : les nombres comptent des choses différentes - un cas est une section,
+    /// un clip est une adresse - et six cas partagent une seule image. Un motif unique ferait passer
+    /// l'un pour l'autre, ce qui est exactement l'erreur que la phrase existe pour écarter.
+    private static final Pattern CHAPEAU_CAS = Pattern.compile("Ces \\*\\*(\\d+)\\*\\* cas");
+
+    private static final Pattern CHAPEAU_CLIPS = Pattern.compile("tiennent en \\*\\*(\\d+)\\*\\* clips");
+
+    /// Une ligne du tableau des familles : le lien vers la page, puis son compte en dernière colonne.
+    ///
+    /// Le lien est capturé et non le libellé : c'est lui qui dit QUELLE page compter, et un libellé
+    /// retouché ne doit pas faire porter le compte d'une famille sur l'autre.
+    private static final Pattern LIGNE_FAMILLE =
+            Pattern.compile("\\[Cas [^\\]]+\\]\\((clips-[a-z]+\\.md)\\)[^|\\n]*\\|[^|\\n]*\\|\\s*(\\d+)\\s*\\|");
 
     /// Une annotation `@CasDeRecette(...)` suivie, quelques lignes plus bas, de sa méthode de test.
     ///
@@ -91,6 +112,62 @@ class PageDesClipsTest {
                 .as("un cas perceptif absent de la page est un cas que personne ne regarde, et rien"
                         + " d'autre ne le signalerait")
                 .containsExactlyInAnyOrderElementsOf(casPerceptifs());
+    }
+
+    /// La troisième façon dont cette page se périme : son **chapeau annonce un nombre**, et ajouter
+    /// un cas ne le change pas.
+    ///
+    /// Mesuré (#4820) : le palier de #4447 a porté la page de neuf cas à quinze, et le chapeau a
+    /// continué d'écrire « ces neuf-là ». Le cas ci-dessus était vert, et à juste titre : il garde
+    /// l'**ensemble** des cas, pas leur compte. La page se contredit alors elle-même, et rien ne dit
+    /// au lecteur laquelle des deux valeurs croire, donc il doute des deux.
+    @Test
+    @DisplayName("#4820 : le chapeau annonce le nombre de cas et de clips que la page porte")
+    void le_chapeau_annonce_les_bons_nombres() {
+        String page = lire(PAGE);
+
+        Set<String> sections = sectionsDe(page);
+        Set<String> clips = clipsDe(page);
+
+        assertThat(annonce(page, CHAPEAU_CAS))
+                .as("le chapeau annonce un nombre de cas que la page ne porte pas")
+                .isEqualTo(sections.size());
+        assertThat(annonce(page, CHAPEAU_CLIPS))
+                .as("le chapeau annonce un nombre de clips DISTINCTS que la page ne porte pas :"
+                        + " six cas partagent la même image, et ce partage est ce que la phrase dit")
+                .isEqualTo(clips.size());
+    }
+
+    /// Le même mensonge, une page plus haut : le tableau « Deux familles, deux pages » de
+    /// [#PAGE_ENTREE] annonce le compte de chaque famille, et personne ne le relit en ajoutant un
+    /// cas. Mesuré le 2026-08-30, il disait 9 et 46 pour 10 et 54 clips, et le second était déjà
+    /// faux avant le palier de #4447 : c'est le régime normal d'un nombre que rien ne garde.
+    ///
+    /// Il lit le tableau plutôt que d'écrire les deux chemins, et compte des **clips** et non des
+    /// cas : un titre de la page des assertés peut couvrir une plage (`### S2-01 à S2-07 · ...`), et
+    /// six cas perceptifs partagent une seule image. Compter les sections rendait 38 pour 54 clips.
+    @Test
+    @DisplayName("#4820 : le tableau des familles annonce le compte que chaque page porte")
+    void le_tableau_des_familles_annonce_les_bons_comptes() {
+        Map<String, Integer> annonces = new TreeMap<>();
+        Matcher m = LIGNE_FAMILLE.matcher(lire(PAGE_ENTREE));
+        while (m.find()) {
+            annonces.put(m.group(1), Integer.parseInt(m.group(2)));
+        }
+
+        assertThat(annonces)
+                .as("le tableau des familles est la porte d'entrée de la section : s'il ne liste plus"
+                        + " les deux pages, ce cas ne garde plus rien et doit le dire")
+                .hasSize(2);
+
+        Map<String, Integer> reels = new TreeMap<>();
+        for (String page : annonces.keySet()) {
+            reels.put(page, clipsDe(lire(PAGE_ENTREE.resolveSibling(page))).size());
+        }
+        assertThat(annonces)
+                .as("un compte annoncé qui n'est pas celui de la page laisse le lecteur devant deux"
+                        + " chiffres contradictoires, sans savoir lequel croire")
+                .isEqualTo(reels);
     }
 
     @Test
@@ -171,6 +248,36 @@ class PageDesClipsTest {
     /// porte déjà (#3645).
     static boolean dansOutillageDeRecette(String chemin) {
         return chemin.replace('\\', '/').contains("/iut/recette/");
+    }
+
+    /// Les identifiants de cas qu'une page montre, lus dans ses titres de section.
+    private static Set<String> sectionsDe(String page) {
+        Set<String> cas = new TreeSet<>();
+        Matcher m = SECTION.matcher(page);
+        while (m.find()) {
+            cas.add(m.group(1));
+        }
+        return cas;
+    }
+
+    /// Les clips DISTINCTS qu'une page montre, lus dans les adresses qu'elle écrit.
+    private static Set<String> clipsDe(String page) {
+        Set<String> adresses = new TreeSet<>();
+        Matcher m = CLIP.matcher(page);
+        while (m.find()) {
+            adresses.add(m.group(1) + "." + m.group(2));
+        }
+        return adresses;
+    }
+
+    /// Le nombre qu'annonce le chapeau, ou `-1` si la phrase a disparu.
+    ///
+    /// `-1` et non une exception : une phrase réécrite doit rougir **sur l'assertion**, en disant
+    /// quel nombre la page porte, plutôt que casser avant elle sur un `NoSuchElement` que personne
+    /// ne relie au chapeau.
+    private static int annonce(String page, Pattern phrase) {
+        Matcher m = phrase.matcher(page);
+        return m.find() ? Integer.parseInt(m.group(1)) : -1;
     }
 
     /// Les `Classe.methode` des tests qui citent un cas de recette, lus dans les sources.

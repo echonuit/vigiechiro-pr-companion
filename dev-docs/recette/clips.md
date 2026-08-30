@@ -88,6 +88,33 @@ et les verse sur la pré-version.
 Sans cette case, le flux garde son autre rôle : filmer **une** classe pour éprouver qu'un runner
 pilote réellement, ce qui est l'objet de `sans_gestionnaire_de_fenetres`.
 
+### Le train le fait aussi, et le décalage est dans l'intervalle
+
+`release.yml` appelle ce flux après `publish`, sur la version qu'il vient de publier. Le tournage
+n'est donc pas un geste que quelqu'un doit penser à faire.
+
+Ce que le train ne couvre pas, c'est **l'intervalle entre deux versions**. Un banc écrit après la
+dernière version n'a pas de clip, et n'en aura pas avant la prochaine.
+
+Mesuré le 2026-08-30 (#4820) : sept clips déclarés sur les deux pages ouvraient un lecteur vide. Le
+dernier tournage datait du 28 août à 14:52 UTC, sur un commit où aucun des cinq bancs neufs
+n'existait encore - les trois clips du banc d'import étaient là précisément parce que ce banc-là
+existait. Rien n'était cassé : personne n'avait filmé depuis.
+
+Rien n'oblige à attendre la version suivante. La liste des classes est dérivée **à l'exécution**,
+depuis `CorrespondanceRecetteTest` : un tournage manuel sur `main` ramasse les bancs neufs sans
+qu'une ligne change.
+
+!!! warning "Un tournage manuel efface celui du train"
+
+    La pré-version est roulante, et rien ne distingue les deux sources au moment d'écrire. Le
+    tournage manuel du 28 août a remplacé les clips de `v2.189.0` par un jeu dont les notes disent
+    « ces clips ne correspondent à aucune version publiée ».
+
+    Ce qui se perd est la correspondance, pas les clips : ceux de la version restent sur son **tag**.
+    C'est `clips-recette` qui cesse alors de montrer une version publiée, et ses
+    notes sont le seul endroit qui le dit.
+
 ## Tourner une seule session, ou sur une autre plateforme
 
 Le flux **tournage de recette** (`tournage-recette.yml`, `workflow_dispatch`) prend deux entrées : la
@@ -102,10 +129,10 @@ perdu la moitié, et un compte de fichiers ne le dirait pas.
 
 ## Deux familles, deux pages
 
-| | Ce qu'un clip y sert | Combien |
+| | Ce qu'un clip y sert | Combien de clips |
 |---|---|---|
-| [Cas perceptifs](clips-perceptifs.md) | **le regarder** : c'est le seul verdict qui existe pour ces cas | 9 |
-| [Cas assertés](clips-assertes.md) | comprendre **pourquoi un test rougit**, ou vérifier qu'il joue ce que son nom annonce | 46 |
+| [Cas perceptifs](clips-perceptifs.md) | **le regarder** : c'est le seul verdict qui existe pour ces cas | 10 |
+| [Cas assertés](clips-assertes.md) | comprendre **pourquoi un test rougit**, ou vérifier qu'il joue ce que son nom annonce | 58 |
 
 ### Et une troisième source, qui ne se compare pas
 

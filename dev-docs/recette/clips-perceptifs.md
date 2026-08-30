@@ -1,7 +1,8 @@
 # Les clips des cas perceptifs
 
 Un cas **perceptif** ne se prouve pas par une assertion : il décrit ce qu'un écran fait *pendant*
-qu'il le fait, et le verdict revient à qui regarde. Ces neuf-là sont ceux qu'aucun test ne tranche.
+qu'il le fait, et le verdict revient à qui regarde. Ces **15** cas sont ceux qu'aucun test ne
+tranche, et ils tiennent en **10** clips : les six derniers partagent une seule image.
 
 La phrase sous chaque clip dit **ce qu'il faut y voir**. Si ce n'est pas ce que vous voyez, le cas est
 rouge.
