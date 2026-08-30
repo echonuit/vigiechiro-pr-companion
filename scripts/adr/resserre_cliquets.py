@@ -32,12 +32,15 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import rapport  # noqa: E402
-
-DECISIONS = pathlib.Path("dev-docs/decisions")
+from _commun import DECISIONS, RACINE_DEPOT  # noqa: E402
 
 # Les racines de prose susceptibles de porter une balise. Mêmes que celles que balaie
 # `DocumentationAJourTest`, et pour la même raison : une balise vit où on la lit.
-PROSE = (pathlib.Path("dev-docs"), pathlib.Path("docs"), pathlib.Path("brief"))
+#
+# ANCRÉES sur la racine, comme `DECISIONS` qu'on importe au lieu de la recopier (issue #4781). Ce
+# script ÉCRIT, et sous sa forme relative il annonçait « 0 cliquet resserré » depuis n'importe quel
+# répertoire, y compris un qui n'est pas un dépôt. Un succès sans avoir rien lu.
+PROSE = tuple(RACINE_DEPOT / nom for nom in ("dev-docs", "docs", "brief"))
 
 # `<!--inv:clé-->N<!--/inv-->`, où N peut porter ses espaces de milliers.
 BALISE = re.compile(r"(<!--inv:%s-->)([\d ]+)(<!--/inv-->)")
@@ -70,7 +73,7 @@ def ecrire_les_balises(cle: str, nouvelle: int) -> list[str]:
             neuf = motif.sub(lambda m: m.group(1) + _formate(m.group(2), nouvelle) + m.group(3), texte)
             if neuf != texte:
                 fichier.write_text(neuf, encoding="utf-8")
-                touches.append(str(fichier))
+                touches.append(str(fichier.relative_to(RACINE_DEPOT)))
     return touches
 
 

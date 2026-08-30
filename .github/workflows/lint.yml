@@ -646,6 +646,20 @@ jobs:
           python3 scripts/adr/verifie_corpus_declare.py --auto-test
           python3 scripts/adr/verifie_corpus_declare.py
 
+      - name: "Un garde tourne dans SON depot, pas celui de l'appelant (bloquant, #4781)"
+        # `rapport.py` lancait chaque garde par `subprocess.run` sans `cwd`, donc chacun heritait du
+        # repertoire de l'appelant. Mesure : lance depuis `/tmp`, CINQ cliquets sur dix-huit
+        # rendaient une autre valeur, dont quatre tombaient a zero faute de trouver quoi que ce soit.
+        #
+        # Ce n'est pas un rapport faux et sans suite : `resserre_cliquets.py` agit sur ces verdicts
+        # et ECRIT. Eprouve le 2026-08-29, il a ramene quatre champs `ratchet:` a zero dans les
+        # vraies ADR - 4, 2, 1 et 2 - en annoncant un succes et en sortant 0.
+        #
+        # Le temoin emploie une SONDE plutot que de relancer les dix-huit gardes : elle imprime son
+        # repertoire, et le cas « lance du depot » evite que le cas « lance d'ailleurs » ne passe au
+        # vert parce que le repertoire d'essai serait par hasard le bon. Cout mesure : 0,1 s.
+        run: python3 scripts/adr/rapport.py --auto-test
+
       - name: "Auto-test des passes du graphe de connaissance (bloquant, #4231)"
         # Ces deux scripts n'avaient aucun dispositif, et les deux annonçaient des chiffres
         # qu'aucune donnée ne soutenait : une couverture CLI de « 128/69 », et un rapport ouvrant

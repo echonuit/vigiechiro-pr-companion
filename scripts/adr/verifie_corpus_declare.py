@@ -11,10 +11,20 @@ Le depot connait ce piege et l a ecrit ailleurs : `verifie_temoins_non_decoratif
 liste plutot que de l enumerer, parce qu un garde neuf passerait au travers. La lecon valait pour
 les temoins, pas encore pour le corpus.
 
-**Ce que ce garde refuse.** Un fichier de `scripts/adr/` qui ecrit lui-meme le chemin d un arbre de
-sources. Le corpus s importe depuis `_commun` : `RACINES` pour les deux arbres, `PRODUCTION` seule
-pour une exception assumee. C est ce refus qui rend la DERIVATION fiable : sans lui, un garde neuf
-reecrit le chemin et redevient invisible a la liste derivee.
+**Ce que ce garde refuse.** Un fichier de `scripts/adr/` qui ecrit lui-meme le chemin d un corpus :
+les deux arbres de sources, et le dossier des decisions. Le corpus s importe depuis `_commun` :
+`RACINES` pour les deux arbres, `PRODUCTION` seule pour une exception assumee, `DECISIONS` pour les
+ADR. C est ce refus qui rend la DERIVATION fiable : sans lui, un garde neuf reecrit le chemin et
+redevient invisible a la liste derivee.
+
+**Le dossier des decisions est entre tard, et le retard se raconte** (issue #4781). Ce garde ne
+couvrait que les arbres de sources, alors que `dev-docs/decisions` etait le chemin le plus recopie
+du depot : `resserre_cliquets.py` en portait sa propre copie, et ce fichier-ci portait la sienne. Le
+garde qui interdit de recopier un corpus ne savait donc pas ou etait le sien.
+
+**Et il mesure SON depot, pas celui du repertoire courant.** Sous sa forme relative, lance depuis un
+autre exemplaire du depot, il mesurait cet autre-la et annoncait `verdict=ok` sans nommer ce qu il
+avait lu. Le chemin affiche reste relatif : c est la recherche qui s ancre, pas le rapport.
 
 **Les deux formes, et pourquoi la normalisation.** Le chemin s ecrit d un morceau chez les uns,
 `Path("src/main/java")`, et en segments chez les autres, `RACINE / "src" / "main" / "java"`. Un
@@ -45,20 +55,30 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import RACINE_DEPOT, rapporte  # noqa: E402
 
 ADR = "4586"
 
+# RELATIF a dessein : il se joint soit a la racine du depot, soit a celle du temoin. C est le seul
+# emploi qui decide, et les deux passent par `racine_lue` plus bas (issue #4781).
 DOSSIER = pathlib.Path("scripts/adr")
 
 # Le fonds commun EST l endroit ou le corpus se declare, et ce fichier-ci porte la sequence : tous
 # deux se compteraient eux-memes.
 RESERVES = {"_commun.py", pathlib.Path(__file__).name}
 
-# Construite, jamais ecrite : voir la note en tete.
+# Construites, jamais ecrites : voir la note en tete.
 _RACINE = "sr" + "c"
 _ARBRES = ("ma" + "in", "te" + "st")
-SEQUENCES = tuple(_RACINE + arbre + "java" for arbre in _ARBRES)
+# Le tiret de `dev-docs` N EST PAS du bruit : `BRUIT` ne retire que guillemets, barres, virgules et
+# blancs. La sequence le porte donc, sinon elle ne rencontre jamais la ligne qu elle cherche.
+_DECISIONS = "dev" + "-docs" + "decisions"
+
+# Chaque sequence normalisee, et le nom sous lequel le refus la designe. Le dossier des decisions y
+# est entre en #4781 : il etait le corpus le plus recopie du depot, et le seul que ce garde ne
+# voyait pas. Un garde qui interdit de recopier un corpus ne savait pas ou etait le sien.
+CORPUS = {_RACINE + arbre + "java": "l arbre " + arbre for arbre in _ARBRES}
+CORPUS[_DECISIONS] = "le dossier des decisions"
 
 # Ce qui separe les segments d un chemin, quelle que soit la forme employee.
 BRUIT = re.compile(r"[\"'/,\s]+")
@@ -74,9 +94,9 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     `racine` n existe que pour le temoin, qui a besoin d un corpus qu il maitrise : mesurer sur le
     depot ne separerait pas ce que le garde compte de ce qu il epargne.
     """
-    dossier = (racine / DOSSIER) if racine else DOSSIER
+    racine_lue = racine if racine else RACINE_DEPOT
     trouves = []
-    for source in sorted(dossier.glob("*.py")):
+    for source in sorted((racine_lue / DOSSIER).glob("*.py")):
         if source.name in RESERVES:
             continue
         dans_docstring = False
@@ -91,18 +111,17 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
             if ligne[:1].isspace():
                 continue
             nu = BRUIT.sub("", ligne)
-            for sequence in SEQUENCES:
+            for sequence, nom in CORPUS.items():
                 if sequence in nu:
-                    arbre = sequence[len(_RACINE) : -len("java")]
-                    trouves.append(
-                        f"{source.as_posix()}:{numero}  l arbre {arbre} ecrit au lieu d etre importe"
-                    )
+                    vu = source.relative_to(racine_lue).as_posix()
+                    trouves.append(f"{vu}:{numero}  {nom} ecrit au lieu d etre importe")
                     break
     return trouves
 
 
 def auto_test() -> int:
     """Le garde se prouve dans les DEUX sens, sinon il ne prouve rien."""
+    import os
     import tempfile
 
     echecs = 0
@@ -120,6 +139,8 @@ def auto_test() -> int:
 
     plein = '"' + _RACINE + "/" + _ARBRES[0] + '/java"'
     segments = '"' + _RACINE + '" / "' + _ARBRES[0] + '" / "java"'
+    decisions = '"' + _DECISIONS[:8] + "/" + _DECISIONS[8:] + '"'
+    decisions_segments = '"' + _DECISIONS[:8] + '" / "' + _DECISIONS[8:] + '"'
 
     print("Auto-test du garde du corpus declare (#4586) :")
     with tempfile.TemporaryDirectory() as brut:
@@ -155,6 +176,33 @@ def auto_test() -> int:
         pose(racine, "")
         pose(racine, f"PRODUCTION = pathlib.Path({plein})\n", nom="_commun.py")
         verifie("`_commun.py` peut ecrire le chemin", len(suspects(racine)), 0)
+
+        # 7 et 8. Le dossier des DECISIONS, dans les deux formes (issue #4781). Avant ce cas, deux
+        #    fichiers du depot en portaient une copie et le garde n en voyait aucune.
+        pose(racine, "", nom="_commun.py")
+        pose(racine, f"DECISIONS = pathlib.Path({decisions})\n")
+        verifie("le dossier des decisions ecrit d un morceau est vu", len(suspects(racine)), 1)
+        pose(racine, f"DECISIONS = RACINE / {decisions_segments}\n")
+        verifie("le dossier des decisions ecrit en segments est vu", len(suspects(racine)), 1)
+
+    # 9 et 10. L ANCRAGE : lance depuis un autre depot, le garde mesure le sien (issue #4781).
+    #    Le cas 9 n est pas decoratif, il rend le cas 10 concluant : sans lui, le leurre pourrait
+    #    etre malforme et le verdict identique pour une mauvaise raison.
+    with tempfile.TemporaryDirectory() as brut:
+        leurre = pathlib.Path(brut)
+        (leurre / DOSSIER).mkdir(parents=True)
+        (leurre / DOSSIER / "faux-cliquet.py").write_text(
+            f"SOURCES = pathlib.Path({plein})\n", encoding="utf-8"
+        )
+        verifie("le leurre serait vu par un garde qui le lirait", len(suspects(leurre)), 1)
+
+        attendu = suspects()
+        ancien = os.getcwd()
+        try:
+            os.chdir(leurre)
+            verifie("lance depuis un autre depot, le garde mesure le sien", suspects(), attendu)
+        finally:
+            os.chdir(ancien)
 
     return echecs
 

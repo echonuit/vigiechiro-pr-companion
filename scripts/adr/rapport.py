@@ -22,6 +22,9 @@ import re
 import subprocess
 import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from _commun import RACINE_DEPOT  # noqa: E402
+
 ICI = pathlib.Path(__file__).parent
 LIGNE_CLIQUET = re.compile(r"^ADR (\d+) \| suspects=(\d+) \| cliquet=(\d+) \| verdict=(\S+)$", re.M)
 LIGNE_LOUPE = re.compile(r"^LOUPE (\d+) \| candidats=(\d+)$", re.M)
@@ -33,9 +36,20 @@ LIGNE_PLANCHER = re.compile(
 
 def executer(script: pathlib.Path) -> str:
     """Lance un script de vérification et rend sa sortie. Le code de sortie est ignoré : le rapport
-    observe, il ne juge pas - un cliquet en régression fait déjà rougir la CI ailleurs."""
+    observe, il ne juge pas - un cliquet en régression fait déjà rougir la CI ailleurs.
+
+    Le script tourne DANS le dépôt, pas dans le répertoire de l'appelant (issue #4781). Sans `cwd`,
+    chaque garde héritait du répertoire courant : lancé d'ailleurs, cinq cliquets sur dix-huit
+    rendaient une autre mesure, dont quatre tombaient à zéro faute de trouver quoi que ce soit.
+    `resserre_cliquets.py` agit sur ces verdicts et ÉCRIT : il ramenait alors quatre `ratchet:` à
+    zéro dans les vraies ADR, en annonçant un succès. Une ligne ici couvre les cinq, et le garde
+    qu'on écrira demain."""
     fini = subprocess.run(
-        [sys.executable, str(script)], capture_output=True, text=True, check=False
+        [sys.executable, str(script)],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=RACINE_DEPOT,
     )
     return fini.stdout + fini.stderr
 
@@ -147,7 +161,47 @@ def resserrements(cliquets):
     return [(num, s) for num, s, c, v in cliquets if v == "a-resserrer"]
 
 
+def auto_test() -> int:
+    """Le lancement s ancre, et se prouve par une sonde plutôt qu en relançant les dix-huit gardes."""
+    import os
+    import tempfile
+
+    echecs = 0
+
+    def verifie(libelle, obtenu, attendu):
+        nonlocal echecs
+        if obtenu == attendu:
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
+            echecs = 1
+
+    print("Auto-test du lancement des gardes (#4781) :")
+    with tempfile.TemporaryDirectory() as brut:
+        sonde = pathlib.Path(brut) / "sonde.py"
+        sonde.write_text("import os\nprint(os.getcwd())\n", encoding="utf-8")
+
+        # 1. Depuis le dépôt : la sonde doit déjà voir la racine, et non `scripts/adr`.
+        verifie("lancé du dépôt, le garde tourne à la racine", executer(sonde).strip(), str(RACINE_DEPOT))
+
+        # 2. Depuis AILLEURS : c est le cas qui a corrompu quatre ADR. Sans le premier, ce cas
+        #    passerait au vert pour la mauvaise raison, le répertoire d essai étant peut-être le bon.
+        ancien = os.getcwd()
+        try:
+            os.chdir(brut)
+            verifie("lancé d ailleurs, le garde tourne QUAND MÊME à la racine",
+                    executer(sonde).strip(), str(RACINE_DEPOT))
+            verifie("et le répertoire d essai n était pas déjà la racine",
+                    os.getcwd() == str(RACINE_DEPOT), False)
+        finally:
+            os.chdir(ancien)
+
+    return echecs
+
+
 if __name__ == "__main__":
+    if "--auto-test" in sys.argv:
+        raise SystemExit(auto_test())
     markdown = "--markdown" in sys.argv
     cliquets, planchers, loupes, muets = collecter()
     sys.stdout.write(rendre(cliquets, planchers, loupes, muets, markdown))

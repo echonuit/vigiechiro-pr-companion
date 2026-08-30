@@ -35,11 +35,12 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import DECISIONS, rapporte  # noqa: E402
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
-DECISIONS = RACINE / "dev-docs" / "decisions"
+# `DECISIONS` s importe : le corpus se declare dans `_commun` et nulle part ailleurs (ADR 4586).
+# `RACINE` reste, car les trois chemins ci-dessous ne sont pas le corpus des ADR.
 CONSTITUTION = RACINE / "CONSTITUTION.md"
 NAV = RACINE / "mkdocs-dev.yml"
 RESERVES = {"index.md", "log.md"}
