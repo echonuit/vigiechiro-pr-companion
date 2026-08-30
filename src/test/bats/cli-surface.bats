@@ -131,6 +131,38 @@ COMMANDES_LOCALES_SANS_ARG=(
   [[ "${output}" != *"Unknown option"* ]]
 }
 
+@test "metadonnees-passage : invocation nue refusée, exit 2, et le message dit ce qui manque (#4753)" {
+  # Cette commande n'avait AUCUN cas bats, pas même celui-ci (#4753). Elle n'entre pas dans
+  # COMMANDES_OPTIONS_REQUISES : aucune de ses options n'est `required`, et ce n'est donc pas picocli
+  # qui refuse mais sa propre `verifierInvocation`. Le code de sortie est le même, le chemin non, et
+  # l'ajouter à cette liste rendrait son commentaire faux.
+  run cli metadonnees-passage
+  [ "${status}" -eq 2 ]
+  # Le code 2 seul ne prouve rien : une commande INEXISTANTE rend 2 elle aussi, et ce cas resterait
+  # vert sur un jar d'où la commande aurait disparu. Le message la distingue.
+  [[ "${output}" == *"--passage"* ]]
+  [[ "${output}" == *"--tout"* ]]
+  [[ "${output}" != *"Unmatched argument"* ]]
+  [[ "${output}" != *"Unknown command"* ]]
+}
+
+@test "metadonnees-passage : --passage ET --tout ensemble sont refusés, exit 2 (#4753)" {
+  # L'exclusion est portée par `verifierInvocation`, pas par un groupe picocli : sans ce cas, la
+  # remplacer par un `if` qui accepte les deux ne ferait rougir personne.
+  run cli metadonnees-passage --passage 1 --tout
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"pas les deux"* ]]
+}
+
+@test "metadonnees-passage : une nuit inconnue est un refus métier, jamais une pile (#4753)" {
+  # Le code de sortie est ce qu'un script lit. Un refus métier ne doit pas se présenter comme un
+  # succès, ni comme une erreur d'usage, ni comme une trace de pile.
+  run cli metadonnees-passage --passage 999999 --recuperer
+  [ "${status}" -ne 0 ]
+  [[ "${output}" != *"Exception"* ]]
+  [[ "${output}" != *"\tat fr.univ_amu"* ]]
+}
+
 @test "api : le groupe affiche son aide et sort en succès (#3006)" {
   # Groupe imbriqué (une première dans ce dépôt) : sans sous-commande il se comporte comme la racine.
   run cli api
