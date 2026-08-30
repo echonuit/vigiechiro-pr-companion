@@ -22,7 +22,6 @@ import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -40,6 +39,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -62,9 +62,13 @@ class ParcoursAnalyseVersValidationE2ETest {
     /// Retenu par le semis : #3840 revalide **cette** séquence depuis la vue audio.
     private long idSequenceSemee;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test (#4901).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-e2e-analyse");
+        Path workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);

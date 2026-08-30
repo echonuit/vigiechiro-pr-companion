@@ -40,6 +40,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -61,9 +62,13 @@ class ParcoursMultisiteVersPassageE2ETest {
     private static final String DATE_NUIT = "22/04/2026"; // date du journal → cellule unique du tableau
     private Injector injector;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test (#4901).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-e2e-ms");
+        Path workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);

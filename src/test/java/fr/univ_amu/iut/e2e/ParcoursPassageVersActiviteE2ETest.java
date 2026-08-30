@@ -13,7 +13,6 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import javafx.fxml.FXMLLoader;
@@ -26,6 +25,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -50,9 +50,13 @@ class ParcoursPassageVersActiviteE2ETest {
     private long idPassage;
     private ContexteSite contexte;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test (#4901).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-e2e-activite");
+        Path workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
