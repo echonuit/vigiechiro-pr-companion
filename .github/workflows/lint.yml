@@ -952,6 +952,21 @@ jobs:
           python3 scripts/methode/tests-cites-existent.py --auto-test
           python3 scripts/methode/tests-cites-existent.py
 
+      - name: "Une citation de passe désigne une passe qui existe (bloquant, #4844)"
+        # Le dépôt compte 299 citations de ses passes de clôture, dans 145 fichiers. Avant ce garde,
+        # RIEN ne vérifiait qu'une citation désigne encore une passe qui existe : mesuré en #4518, une
+        # citation remise à l'ancienne numérotation laissait verts les deux tests de documentation, la
+        # boucle complète des cliquets et les deux gardes de méthode. Trente tests, aucun rouge.
+        #
+        # Les bornes sont DÉRIVÉES des titres du cycle, jamais écrites en dur : un garde qui porte le
+        # compte en dur ment au prochain ajout, ce qui est le défaut qu'il doit empêcher.
+        #
+        # Ce qu'il NE couvre PAS : une citation valide mais fausse, dont le numéro existe et dont le
+        # sens a glissé. Son en-tête le dit, pour qu'on ne lui prête pas cette portée.
+        run: |
+          python3 scripts/methode/passes-citees-existent.py --auto-test
+          python3 scripts/methode/passes-citees-existent.py
+
       - name: "Aucun auto-test de garde de méthode n'est décoratif (bloquant, #4760)"
         # L'article A2 demande qu'un garde soit vu ROUGE sur sa propre mutation.
         # `scripts/adr/verifie_temoins_non_decoratifs.py` le rend mecanique, mais pour `scripts/adr/`
