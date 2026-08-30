@@ -42,6 +42,7 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -75,10 +76,15 @@ class ScenarioEmportExpediteurTest {
 
     private Injector injecteur;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test, là où
+    /// `createTempDirectory` n'enlevait rien (#4876).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws IOException {
         carteSd = CarteDeRecette.materialiser(FIXTURE);
-        dossierDEmport = Files.createTempDirectory("emport-recette");
+        dossierDEmport = dossierTemporaire;
 
         injecteur = BancDeRecette.surLeChrome()
                 .taille(1180, 900)

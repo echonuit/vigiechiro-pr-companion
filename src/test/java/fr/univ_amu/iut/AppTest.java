@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.TailleOuverture;
-import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.control.Label;
@@ -16,6 +16,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -30,6 +31,11 @@ class AppTest {
 
     private Stage stage;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test, là où
+    /// `createTempDirectory` n'enlevait rien (#4876).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
         this.stage = stage;
@@ -37,8 +43,7 @@ class AppTest {
         // `~/Documents/VigieChiro-Companion` - le VRAI dossier de l'utilisateur - et se heurtait au verrou
         // exclusif (#2731) dès qu'une autre session travaillait sur la machine. Le symptôme était un
         // blocage muet du démarrage, sans rapport apparent avec ce qu'on testait.
-        System.setProperty(
-                "vigiechiro.workspace", Files.createTempDirectory("vc-app").toString());
+        System.setProperty("vigiechiro.workspace", dossierTemporaire.toString());
         stage.setScene(null); // évite la fuite de Scene entre tests (TestFX réutilise le Stage)
         new App().start(stage);
     }
