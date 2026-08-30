@@ -1,8 +1,10 @@
 package fr.univ_amu.iut.recette;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 
 /// Une carte SD de recette, matérialisée là où un banc filmé peut la désigner.
 ///
@@ -34,6 +36,26 @@ public final class CarteDeRecette {
                     + SPECS.toAbsolutePath() + ". Les cartes de recette sont des specs déclaratives, et"
                     + " un banc qui en désigne une qui n'existe pas filmerait une inspection vide.");
         }
-        return new GenerateurCartesSD().genererDepuisFichier(spec, Files.createTempDirectory("vc-carte-" + fixture));
+        Path carte = Files.createTempDirectory("vc-carte-" + fixture);
+        supprimerEnFinDeFork(carte);
+        return new GenerateurCartesSD().genererDepuisFichier(spec, carte);
+    }
+
+    /// Supprime `carte` quand le fork se termine, faute de pouvoir le faire quand le banc se termine.
+    ///
+    /// Même raison que dans [BancDeRecette] : `@TempDir` s'injecte dans un test, et ceci est une aide.
+    /// Le fork meurt de toute façon à la fin de la classe, donc la fenêtre de vie est la même (#4924).
+    private static void supprimerEnFinDeFork(Path carte) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try (var chemins = Files.walk(carte)) {
+                chemins.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+            } catch (IOException echec) {
+                // Un fork qui s'eteint n'a plus de banc a faire rougir, mais son journal est lu : c'est
+                // celui du job. Taire l'echec rendrait un repertoire ABANDONNE indiscernable d'un
+                // repertoire supprime (ADR 0008).
+                System.err.println("carte de recette : l'espace " + carte + " n'a pas pu etre supprime en"
+                        + " fin de fork (" + echec + "). Il restera dans /tmp.");
+            }
+        }));
     }
 }

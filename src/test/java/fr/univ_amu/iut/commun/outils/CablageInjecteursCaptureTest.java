@@ -28,6 +28,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -82,6 +83,12 @@ class CablageInjecteursCaptureTest {
 
     private static String workspacePrecedent;
 
+    /// La racine des espaces de ce banc, **statique** parce que l'appel vit dans une
+    /// méthode statique. JUnit la crée une fois pour la classe et la supprime au bout
+    /// (#4924).
+    @TempDir
+    private static Path dossierTemporaire;
+
     @BeforeAll
     static void espaceDeTravailJetable() throws IOException {
         // Construire un injecteur peut toucher la persistance : on pointe la propriété lue par le socle
@@ -90,7 +97,8 @@ class CablageInjecteursCaptureTest {
         workspacePrecedent = System.getProperty("vigiechiro.workspace");
         System.setProperty(
                 "vigiechiro.workspace",
-                Files.createTempDirectory("vc-cablage-captures").toString());
+                Files.createTempDirectory(dossierTemporaire, "vc-cablage-captures")
+                        .toString());
     }
 
     @AfterAll

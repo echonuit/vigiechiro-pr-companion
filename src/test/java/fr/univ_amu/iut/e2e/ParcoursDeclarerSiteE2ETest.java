@@ -19,7 +19,6 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CarteSite;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import fr.univ_amu.iut.sites.viewmodel.SitesViewModel;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +26,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// **Test E2E de parcours (P1 - Déclarer un site de suivi)**, version **sans IHM** : on rejoue le
 /// parcours de Marie **uniquement par la couche métier** (services réels + ViewModel d'accueil),
@@ -55,10 +55,14 @@ class ParcoursDeclarerSiteE2ETest {
     private Injector injector;
     private ServiceSites service;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test (#4924).
+    @TempDir
+    private Path dossierTemporaire;
+
     @BeforeEach
     void preparer() throws Exception {
         // Base jetable : un workspace temporaire par test → injecteur et DB SQLite isolés.
-        Path workspace = Files.createTempDirectory("vc-e2e-p1");
+        Path workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);

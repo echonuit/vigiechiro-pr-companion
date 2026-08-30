@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// Garde la **nuit de démonstration** de l'écran Synthèse : elle doit produire les quatre messages que
 /// la colonne « Activité » sait écrire, plus le bouclier PNA.
@@ -41,9 +42,15 @@ class NuitDeDemonstrationSyntheseTest {
 
     private static List<LigneSynthese> lignes;
 
+    /// La racine des espaces de ce banc, **statique** parce que l'appel vit dans une
+    /// méthode statique. JUnit la crée une fois pour la classe et la supprime au bout
+    /// (#4924).
+    @TempDir
+    private static Path dossierTemporaire;
+
     @BeforeAll
     static void semerEtAgreger() throws IOException, SQLException {
-        Path workspace = Files.createTempDirectory("vc-test-nuit-demo");
+        Path workspace = Files.createTempDirectory(dossierTemporaire, "vc-test-nuit-demo");
         System.setProperty("vigiechiro.workspace", workspace.toString());
 
         Injector injecteur = CaptureSynthese.creerInjecteur();
