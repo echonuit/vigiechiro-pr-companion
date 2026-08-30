@@ -618,7 +618,7 @@ capture est une fonctionnalité à moitié livrée.
 ### 5. Passe de brief projet
 
 Le **brief projet** est le document de **conception** vivant du produit : le besoin, les **parcours
-utilisateurs** (P1-P10), les maquettes, le modèle conceptuel. Ce n'est **pas** un sujet pédagogique -
+utilisateurs** (P0 à P17), les maquettes, le modèle conceptuel. Ce n'est **pas** un sujet pédagogique -
 son lecteur est un **contributeur** du produit, pas un étudiant. Quand un chantier change un de ces
 **éléments de conception** (un parcours, une maquette, le modèle de données, une contrainte produit),
 répercuter l'évolution dans le brief pour qu'il reste aligné avec le produit réellement livré. Un brief

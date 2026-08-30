@@ -36,7 +36,7 @@ par les quatorze passes, avec bilan et artefact. Rien ne l'avait réclamée (#46
 | 2 | Cohérence CLI et IHM | la commande manquante, ou son absence justifiée | `confronter-les-deux-surfaces` |
 | 3 | Doc développeur | `dev-docs/` recolle au code livré | `recoller-la-doc-au-code`, `humaniser` en appui |
 | 4 | Doc utilisateur | `docs/` et ses captures | `documenter-pour-l-utilisateur`, `humaniser` en appui |
-| 5 | Brief projet | parcours, maquettes, modèle conceptuel | `humaniser` |
+| 5 | Brief projet | parcours, maquettes, modèle conceptuel | `aligner-le-brief-au-produit`, `humaniser` en appui |
 | 6 | Tests | chaque usage introduit est couvert | `tdd`, `mutation` |
 | 6b | Recette préparée | chaque capacité ajoutée a sa case `Sxx-NN`, et la fixture pour la jouer | |
 | 7 | Harmonisation | l'application entière, pas le delta | `harmoniser-l-application` |
