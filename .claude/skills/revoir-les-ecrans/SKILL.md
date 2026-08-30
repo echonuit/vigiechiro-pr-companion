@@ -54,19 +54,20 @@ qui est la plus à même de casser un écran sans casser un test. On regarde don
 1. du **texte coupé** : libellé, consigne, bouton. Une ellipse est un aveu ;
 2. un **glyphe absent** : emoji, symbole ;
 3. un **écart entre la capture et le produit** : une capture *reconstruite* quelque part au lieu
-   d'être *rendue* **mentira** tôt ou tard ;
+   d'être *rendue* **mentira** tôt ou tard (#1468) ;
 4. une **régression de style** après factorisation CSS ;
 5. un **écran de la doc qui ne ressemble plus** à ce que le chantier a livré.
 
 ## Les cinq défauts qu'aucun test n'a vus
 
-Tous trouvés en ouvrant une capture, alors que les gestes concernés étaient couverts.
+Tous trouvés en ouvrant une capture, alors que les gestes concernés étaient couverts. Le constat
+s'est répété **cinq fois** sur les chantiers #1405 et #1431.
 
 | Défaut | Ce qu'il révèle |
 |---|---|
 | Un libellé tronqué | puis **le même** sur un autre écran, préexistant |
 | Une consigne rognée par le bouton voisin | la place n'est pas testée |
-| Un emoji qui ne se rend pas | le glyphe manque à la police |
+| Un emoji qui ne se rend pas | le glyphe manque à la police (#700) |
 | Une capture de doc qui avait dérivé | elle montrait un protocole **qui n'existe pas** |
 | Une confirmation destructive entière cachée | la doc montrait un produit disparu |
 
@@ -76,7 +77,7 @@ Un aperçu s'ouvre à sa taille naturelle, où un glyphe fait douze pixels. À c
 pictogramme monochrome fin est indistinguable du vide** : on conclut « absent » sur ce qui est
 simplement discret.
 
-Une clôture a publié trois « preuves » d'absence dont **une seule** était exacte. Recadrés et
+La clôture de #1933 a publié trois « preuves » d'absence dont **une seule** était exacte. Recadrés et
 agrandis trois fois, deux des glyphes se rendaient, et un troisième se rendait **en forme
 méconnaissable**, ce que personne n'avait envisagé.
 
