@@ -79,8 +79,9 @@ de la suite E2E a produit **quatre** erreurs de suite.
 | chercher une commande par son nom de classe | **non testée**, quand le test l'invoque en kebab-case |
 | et l'inverse | **non testée**, quand le test instancie la classe |
 
-Il a fallu **croiser deux signaux** pour obtenir la vraie réponse : sur 41 commandes, **zéro** sans
-test, là où les greps naïfs en annonçaient jusqu'à vingt.
+Il a fallu **croiser deux signaux** pour obtenir la vraie réponse : sur les 41 commandes **que le
+dépôt portait alors**, **zéro** sans test, là où les greps naïfs en annonçaient jusqu'à vingt. Le
+chiffre a vieilli, la leçon non.
 
 Le second signal le moins cher est le graphe du dépôt : ses arêtes `calls` entrantes disent qui
 exerce réellement une méthode, y compris depuis un test qui ne cite pas son nom.
