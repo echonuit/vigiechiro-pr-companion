@@ -36,6 +36,7 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -67,9 +68,15 @@ class AuditRetraitOrphelinsViewTest {
         return cree;
     }
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test. `createTempDirectory`
+    /// n'enlevait rien, et cette classe était l'une des dix qui laissaient la moitié des
+    /// répertoires attribuables (#4868).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        racine = Files.createTempDirectory("audit-orphelins");
+        racine = dossierTemporaire;
         orphelinA = dossier("Car130711-2026-Pass2-Z1");
         orphelinB = dossier("Car130711-2026-Pass3-Z1");
         constats.add(new ConstatAudit(

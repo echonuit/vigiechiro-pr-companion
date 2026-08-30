@@ -6,10 +6,11 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// Tests du DAO de la disposition des colonnes (table `column_layout`, V19, #994) : upsert par
 /// `(feature, table_key)` et isolation des clés.
@@ -17,9 +18,15 @@ class DispositionColonnesDaoTest {
 
     private DispositionColonnesDao dao;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test. `createTempDirectory`
+    /// n'enlevait rien, et cette classe était l'une des dix qui laissaient la moitié des
+    /// répertoires attribuables (#4868).
+    @TempDir
+    private Path dossierTemporaire;
+
     @BeforeEach
     void preparer() throws IOException {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(Files.createTempDirectory("dispo-colonnes")));
+        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossierTemporaire));
         new MigrationSchema(source).migrer();
         dao = new DispositionColonnesDao(source);
     }

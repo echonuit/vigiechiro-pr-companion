@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// « Espèces & observations » lit par **ensembles**, et doit continuer à le faire.
 ///
@@ -62,8 +63,16 @@ class AuditGlobalDesLecturesTest {
                 .isLessThan(12);
     }
 
+    /// La racine des espaces de ce banc. JUnit la supprime en fin de test, et elle emporte les
+    /// repertoires qu'`audit7-` y cree a chaque appel (#4868).
+    @TempDir
+    private Path dossierTemporaire;
+
     private int requetes(int nuits) throws Exception {
-        Path espace = Files.createTempDirectory("audit7-" + nuits);
+        // Sous le @TempDir de la classe, et non a la racine du dossier temporaire : cette methode
+        // est appelee plusieurs fois avec un prefixe variable, donc un champ @TempDir unique ne
+        // suffirait pas. Supprimer le parent emporte ses enfants (#4868).
+        Path espace = Files.createTempDirectory(dossierTemporaire, "audit7-" + nuits);
         // La source est construite À LA MAIN, pas résolue par l'injecteur : Guice en fabrique une
         // autre, et le compteur restait à zéro - un « zéro requête » qui se lit comme une bonne
         // nouvelle. C'est l'assertion de non-vacuité qui l'a dit.
