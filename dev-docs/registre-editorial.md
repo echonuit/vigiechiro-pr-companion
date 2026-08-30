@@ -145,3 +145,24 @@ a comptés.
 
 C'est une différence de nature, et elle est assumée : une règle opposable n'a pas besoin d'être
 mécanisable, elle a besoin d'être **refusable**.
+
+## Ce que « se voient à la lecture » coûte
+
+La phrase ci-dessus porte quatre des sept tics opposables. Elle méritait d'être mesurée, puisqu'une
+règle opposable sert à **refuser**.
+
+Le 2026-08-29, douze passages tirés de huit corps de demande de fusion ont été classés contre les
+sept tics par **quatre lecteurs**, dont trois extérieurs au dépôt. **Dix sur douze ont reçu des
+verdicts différents.** Un passage en a reçu quatre. Deux seulement ont fait l'unanimité : un
+aphorisme de fin franc, et un passage sans tic.
+
+**Ce que cette mesure ne dit pas, et qui la borne.** Les trois lecteurs extérieurs jugeaient sur des
+**extraits**, et deux de leurs convergences se sont révélées fausses à la vérification : ces motifs
+se décident sur ce qui entoure la phrase, et la frontière de l'extrait tranchait à leur place. La
+mesure établit donc la **dispersion**, pas laquelle des lectures était la bonne.
+
+**Ce qui en découle, et qui n'annule rien.** Les sept tics tiennent : ils ont été retenus parce
+qu'une relecture les a vus revenir sur un corpus, ce qui est une observation de fréquence et reste
+vraie. Ce que la mesure retire est l'idée qu'un cas donné se tranche pareil d'un relecteur à
+l'autre. La compétence `humaniser` porte depuis un **test de suppression** qui décide quatre de ces
+motifs par une procédure au lieu d'un jugement.
