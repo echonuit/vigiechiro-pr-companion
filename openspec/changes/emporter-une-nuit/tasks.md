@@ -95,7 +95,7 @@
       clip, contrôle négatif compris.
 
       **Fait** : huit cas, S3-45 à S3-52, en **deux familles par rôle** (#4728). Le poste expéditeur
-      prépare, emporte et reprend un avis, avec deux contrôles négatifs — une nuit sans sélection et
+      prépare, emporte et reprend un avis, avec deux contrôles négatifs : une nuit sans sélection et
       une séquence introuvable. Le poste relecteur ouvre un paquet reçu, le juge et renvoie son avis
       signé. Quatre clips, jugés **sur l'image** au seuil de luminance 20 : moyenne 185 à 189, et
       99 % des images au-dessus du seuil.
