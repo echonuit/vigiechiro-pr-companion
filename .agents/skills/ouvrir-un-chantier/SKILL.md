@@ -30,7 +30,7 @@ périmètre, sans bilan et sans clôture.
 | 0 | Trier et regrouper l'existant | les rattachements tranchés, les titres et corps recadrés | `trier-les-issues` |
 | 1 | Cartographier | les patterns réutilisables **nommés**, avant d'écrire du neuf | cette compétence |
 | 2 | Planifier | ce que le chantier livre, et ce qu'il ne livre pas | cette compétence |
-| 2b | Décider de la spécification | la question posée, et **sa réponse écrite** | `openspec-propose` |
+| 2b | Décider de la spécification | la question posée, et **sa réponse écrite** | `openspec-explore`, puis `openspec-propose` |
 | 3 | Découper | des lots dimensionnés, puis des issues ou des sous-chantiers | cette compétence, et [ADR 4712] |
 
 L'étape 0 vient **en premier** parce qu'une issue est rattachée au chantier qui a remarqué son
