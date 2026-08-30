@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -12,9 +13,6 @@ import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.MenuButton;
@@ -92,9 +90,10 @@ class ScenarioAccueilTest {
             Respiration.avantLeGeste(robot);
 
             robot.clickOn(carte);
-            attendre(
+            Attente.queSurLeFil(
+                    () -> robot.lookup(".carte-activite").queryAll().isEmpty(),
                     "la carte « " + intitule + " » a-t-elle ouvert quoi que ce soit ? L'accueil est encore là",
-                    () -> robot.lookup(".carte-activite").queryAll().isEmpty());
+                    DELAI_ECRAN_S * 1_000L);
             Respiration.apresLeGeste(robot);
 
             String destination = derniereEtape(robot);
@@ -104,9 +103,10 @@ class ScenarioAccueilTest {
             destinations.add(destination);
 
             robot.clickOn("#boutonRetour");
-            attendre(
+            Attente.queSurLeFil(
+                    () -> !robot.lookup(".carte-activite").queryAll().isEmpty(),
                     "le retour depuis « " + intitule + " » n'a pas ramené l'accueil",
-                    () -> !robot.lookup(".carte-activite").queryAll().isEmpty());
+                    DELAI_ECRAN_S * 1_000L);
         }
 
         assertThat(destinations)
@@ -152,28 +152,6 @@ class ScenarioAccueilTest {
     /// Le temps laissé à un écran pour s'ouvrir. Généreux : ce n'est pas un budget de performance,
     /// c'est la borne au-delà de laquelle on préfère un échec à une attente.
     private static final int DELAI_ECRAN_S = 15;
-
-    /// Attend que `predicat` soit vrai, et échoue en nommant ce qu'on attendait.
-    ///
-    /// `waitForFxEvents()` ne suffit pas ici, et c'est mesuré (#4408). Il vide la file du fil FX ;
-    /// il n'attend pas le thread d'arrière-plan qui la remplira. La carte « Sons & validation » est
-    /// la seule des sept dont l'ouverture fasse de l'entrée-sortie avant d'afficher - une requête en
-    /// base pour l'identifiant courant, puis `occuper(...)` pour charger les sons hors du fil JavaFX
-    /// (#1214). C'est elle qui a rougi, une fois sur 5 088, et seulement en CI.
-    ///
-    /// Le prédicat se lit **sur le fil de JavaFX** : le graphe de scène n'est pas thread-safe, et
-    /// `waitFor` rappelle le prédicat en boucle depuis le fil du test.
-    private static void attendre(String ceQuOnAttendait, Callable<Boolean> predicat) {
-        try {
-            WaitForAsyncUtils.waitFor(
-                    DELAI_ECRAN_S,
-                    TimeUnit.SECONDS,
-                    () -> Boolean.TRUE.equals(
-                            WaitForAsyncUtils.asyncFx(predicat).get()));
-        } catch (TimeoutException _) {
-            throw new AssertionError(ceQuOnAttendait);
-        }
-    }
 
     private static List<String> intitulesDesCartes(FxRobot robot) {
         // Le titre d'une carte est un `Text`, non un `Label` : `CartesAccueil` l'a changé en #2046
