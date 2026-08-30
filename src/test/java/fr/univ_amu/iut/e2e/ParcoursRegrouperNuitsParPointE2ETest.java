@@ -42,6 +42,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// **Test E2E du parcours P9 « Regrouper les nuits successives par point »**, piloté **sans IHM** : le
 /// parcours est rejoué par la seule couche métier, services et DAO réels câblés par [RacineInjecteur],
@@ -88,11 +89,15 @@ class ParcoursRegrouperNuitsParPointE2ETest {
     private List<Long> idsNuits;
     private Long idNuitAutrePoint;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test (#4924).
+    @TempDir
+    private Path dossierTemporaire;
+
     @BeforeEach
     void preparer() throws Exception {
         // Base jetable : un workspace temporaire par test → injecteur et DB SQLite isolés. La
         // propriété doit être posée AVANT de construire l'injecteur (qui y lit l'emplacement de la base).
-        workspace = Files.createTempDirectory("vc-e2e-p9");
+        workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
         source = injector.getInstance(SourceDeDonnees.class);

@@ -34,6 +34,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// **Test E2E du parcours fil rouge P0, « Première nuit de Marie »** : la chaîne complète de
 /// bout-en-bout, racontée du point de vue de la persona débutante mono-site, **pilotée uniquement
@@ -69,9 +70,13 @@ class ParcoursPremiereNuitE2ETest {
     private SourceDeDonnees source;
     private Path workspace;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test (#4924).
+    @TempDir
+    private Path dossierTemporaire;
+
     @BeforeEach
     void preparerLaBaseJetable() throws Exception {
-        workspace = Files.createTempDirectory("vc-e2e-p0");
+        workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
         source = injector.getInstance(SourceDeDonnees.class);

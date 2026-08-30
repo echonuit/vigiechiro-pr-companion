@@ -19,7 +19,6 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 import javafx.fxml.FXMLLoader;
@@ -32,6 +31,7 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -46,9 +46,13 @@ class ConnexionModaleJetonNonVerifieViewTest {
 
     private ClientVigieChiro client;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test (#4924).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-connexion-non-verifie");
+        Path workspace = dossierTemporaire;
         StockageConnexion stockage = new StockageConnexion(new Workspace(workspace), Horloge.systeme());
         // Jeton conservé par une connexion hors ligne (#1369) : enregistré, jamais vérifié.
         stockage.enregistrer("TOK-HORS-LIGNE", null);

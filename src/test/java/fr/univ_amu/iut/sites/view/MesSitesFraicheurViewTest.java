@@ -21,7 +21,6 @@ import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -31,6 +30,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -64,9 +64,13 @@ class MesSitesFraicheurViewTest {
     private Injector injector;
     private Site site;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test (#4924).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-sites-fraicheur");
+        Path workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         // Exécuteur synchrone : le chargement des cartes passe par l'occupation, et une assertion posée
         // contre un chargement de fond ne prouverait rien.
