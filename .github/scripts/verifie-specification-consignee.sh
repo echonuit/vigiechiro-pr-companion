@@ -45,15 +45,29 @@ readonly MARQUE='## Clôture de chantier'
 # retours à la ligne par « . » - ce qui produirait un faux positif sur une ligne cochée suivie,
 # bien plus bas, du mot cherché. L'auto-test a rattrapé les deux.
 #
-# Le motif ne cherche que « OpenSpec », et non « OpenSpec archivé ». Le modèle du cycle écrit
-# « Changement OpenSpec archivé », les clôtures réelles écrivent « Archivage OpenSpec » : #4882
-# avait répondu correctement et ce garde la comptait fautive. Aucune autre passe ne mentionne
-# OpenSpec dans une trace de clôture, donc le mot seul suffit et tolère la formulation.
+# Le motif exige DEUX mots sur la même ligne, « OpenSpec » et « archiv », dans l'un ou l'autre ordre.
+# Chacun seul ne suffit pas, et les deux raisons sont vécues.
+#
+# Le modèle du cycle écrit « Changement OpenSpec archivé », les clôtures réelles écrivent « Archivage
+# OpenSpec » : exiger la formulation du modèle faisait compter #4882 fautive alors qu'elle avait
+# répondu. L'ordre des deux mots est donc libre.
+#
+# Mais « OpenSpec » seul ne suffit pas non plus, et cet en-tête a affirmé le contraire pendant une
+# demi-journée : « aucune autre passe ne mentionne OpenSpec dans une trace de clôture ». La trace de
+# #4882 le démentait le jour même, à la passe 6 - « sept gardes de méthode verts, dont les deux
+# d'OpenSpec ». Le mot nomme aussi deux gardes que la passe des tests lance, et une clôture qui les
+# citerait sans répondre à la passe 10 passerait pour spécifiée (#4938).
+#
+# **Ce qui reste heuristique, et se déclare.** Deux mots sur une ligne ne sont pas une reconnaissance
+# exacte : une passe 6 qui parlerait des « gardes d'archivage OpenSpec » tromperait encore ce motif.
+# Ce garde vérifie qu'une trace PORTE une ligne cochée qui parle d'archiver un changement, il ne
+# prouve pas que cette ligne est la passe 10. C'est l'article A3, et c'est la raison du niveau
+# `probable`.
 #
 # La ligne de la passe 10, reconnue par son CONTENU et non par son numéro. #4840 a renuméroté le
 # cycle : dans une trace antérieure, « 10. » désigne la passe des ADR. Un garde qui matcherait le
 # numéro compterait douze clôtures comme spécifiées alors qu'aucune ne l'était.
-readonly LIGNE='(^|\n)- \[x\] [0-9]+[a-z]?\..*OpenSpec'
+readonly LIGNE='(^|\n)- \[x\] [0-9]+[a-z]?\.[^\n]*(OpenSpec[^\n]*[Aa]rchiv|[Aa]rchiv[^\n]*OpenSpec)'
 
 # Le commit qui a créé la passe 10 (#4840). Fait historique, jamais mis à jour.
 readonly DEPUIS='2026-08-30T09:00:15Z'
@@ -156,6 +170,8 @@ if [ "${1-}" = "--auto-test" ]; then
     # Le cas qui a piégé l'écriture de ce garde, et la raison pour laquelle il lit le CONTENU.
     joue rouge "une ANCIENNE passe 10 (les ADR) ne vaut pas réponse : #4840 a renuméroté" \
         "[{\"number\":1,\"body\":\"${TRACE}\",\"comments\":[]},{\"number\":2,\"body\":\"${ANCIENNE}\",\"comments\":[]}]"
+    joue rouge "une passe 6 qui NOMME OpenSpec sans archiver ne vaut pas réponse (#4938)" \
+        "[{\"number\":1,\"body\":\"${TRACE}\",\"comments\":[]},{\"number\":2,\"body\":\"${TRACE}\\n- [x] 6. Tests : sept gardes de méthode verts, dont les deux d'OpenSpec.\",\"comments\":[]}]"
     joue ok "la formulation « Archivage OpenSpec » vaut réponse : c'est celle de #4882" \
         "[{\"number\":1,\"body\":\"${TRACE}\",\"comments\":[]},{\"number\":2,\"body\":\"${TRACE}\\n- [x] 10. Archivage OpenSpec : **sans objet**.\",\"comments\":[]}]"
     joue ok "un AUTRE numéro portant le même contenu vaut réponse : le numéro ne fait pas foi" \
