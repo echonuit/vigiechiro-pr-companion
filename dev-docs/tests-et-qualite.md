@@ -228,6 +228,7 @@ comme un cas prouvé.
 | `RepartitionDesCas` | trie en **asserté / perceptif / non couvert**, et signale les désaccords entre le script et le code |
 | `ReperesDeSeance` + `JournalDesReperes` | pendant une séance filmée, consignent l'instant de chaque test (`currentTimeMillis`, jamais `nanoTime`) |
 | `Seance` | dit à un scénario s'il est filmé, pour qu'il ne prenne ses respirations que là |
+| `Attente` | attend qu'une condition devienne vraie, et **dit ce qu'elle attendait** en expirant. `queSurLeFil` pour un prédicat qui touche la scène. À ne pas confondre avec `Respiration`, qui ne s'arrête que si l'on filme et ne tient donc rien en CI (#4694) |
 
 **Deux bancs tournent ces clips, et ils ne se ressemblent pas.**
 
@@ -842,5 +843,19 @@ pose le trio du chrome.
     (ou un appel direct en `@Start`) qui déclenche ce chemin, `waitForFxEvents()` ne fait que vider la
     file du fil FX - il n'attend pas le thread d'arrière-plan qui la remplira. L'assertion tombe alors
     avant le callback de succès : un échec qui ne se reproduit que sur une machine lente, donc en CI
-    (#3668, #3717). Remède : `WaitForAsyncUtils.waitFor(timeout, TimeUnit, () -> <prédicat
-    observable>)` sur l'état attendu, jamais une assertion immédiate après l'`interact`.
+    (#3668, #3717). Remède : **`Attente.que(prédicat, ceQuOnAttend)`** sur l'état attendu, jamais une
+    assertion immédiate après l'`interact`.
+
+    Cette classe existe parce que le remède avait été réinventé **trois fois** en privé, et jamais
+    partagé : dans `AppTest` pour la mise en page (#4504), dans `ScenarioAccueilTest` pour l'ouverture
+    d'un écran (#4408), et nulle part ailleurs, chaque banc écrivant son `waitFor`. Elle **dit ce
+    qu'elle attendait** en expirant, sans quoi l'échec arrive plus tard sur l'assertion, qui accuse le
+    code là où c'est la mise en place qui n'a pas eu lieu.
+
+    **`Attente.queSurLeFil` quand le prédicat touche la scène** : `waitFor` rappelle le prédicat depuis
+    le fil du **test**, et le graphe de scène n'est pas partageable.
+
+    Quatre bancs de #4804 sont tombés faute de cette attente, entre 3 et 4 fois sur 1 150 passages,
+    chacun sous une forme différente : une respiration de tournage qui ne s'arrête que si l'on filme
+    (#4694), un commentaire qui **conclut** qu'il n'y a rien à attendre (#4813), rien du tout entre le
+    clic et l'assertion (#4814), et `waitForFxEvents` pris pour une attente de travail de fond (#4815).

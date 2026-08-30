@@ -76,6 +76,24 @@ class AttenteTest {
     }
 
     @Test
+    @DisplayName("une exception du prédicat remonte, au lieu de se déguiser en lenteur")
+    void une_exception_du_predicat_remonte() {
+        // La javadoc de `lireSurLeFil` promet que l'exception remonte « telle quelle ». Rien ne le
+        // tenait : la mutation qui la remplace par `return false` survivait, et l'attente aurait alors
+        // expire sur son delai en accusant la lenteur la ou il y a un defaut. Trouve en passe 6 de la
+        // cloture de #4841.
+        assertThatThrownBy(() -> Attente.queSurLeFil(
+                        () -> {
+                            throw new IllegalStateException("le predicat a un defaut");
+                        },
+                        "que quelque chose arrive",
+                        200))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("levé sur le fil JavaFX")
+                .hasRootCauseMessage("le predicat a un defaut");
+    }
+
+    @Test
     @DisplayName("une condition déjà vraie ne coûte aucune attente")
     void deja_vraie_ne_coute_rien() {
         long avant = System.nanoTime();
