@@ -74,7 +74,26 @@ def _autoTest() -> int:
         # Une suite qui ne laisse rien rend zero, et non l'ensemble d'avant.
         assert laisses(avant, avant) == set()
 
-    print("auto-test : 6 temoins verts")
+    # Le refus de conclure, qui est la raison d'etre du garde (ADR 2213). Sans ce temoin, remplacer
+    # `if not TEMOIN.exists()` par `if False` laissait les six autres verts : le garde rendait alors
+    # le compte TOTAL, c'est-a-dire exactement le defaut qu'il existe pour empecher. Trouve en
+    # passe 6 de la cloture de #4859, par mutation.
+    global TEMOIN  # noqa: PLW0603
+    garde, argv = TEMOIN, sys.argv
+    try:
+        with tempfile.TemporaryDirectory() as brut:
+            TEMOIN = pathlib.Path(brut) / "releve-jamais-ecrit"
+            sys.argv = ["compte-les-reliquats.py", "--apres"]
+            try:
+                main()
+            except SystemExit as refus:
+                assert "REFUSE" in str(refus), str(refus)
+            else:
+                raise AssertionError("sans releve d'avant, le garde a CONCLU au lieu de refuser")
+    finally:
+        TEMOIN, sys.argv = garde, argv
+
+    print("auto-test : 7 temoins verts")
     return 0
 
 
