@@ -12,7 +12,6 @@ import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.SuiviDepot;
-import fr.univ_amu.iut.lot.viewmodel.FormatsLot;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Objects;
@@ -217,7 +216,8 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         /// déposées vont repartir. Un script qui lit cette sortie doit pouvoir distinguer les deux.
         @Override
         public void reconciliationImpossible(String raison, boolean definitif) {
-            sortie.println("  ~ " + FormatsLot.libelleReconciliationImpossible(raison, definitif));
+            sortie.println("  ~ déjà déposées : impossible à vérifier, des archives vont repartir" + " pour rien ("
+                    + raison + ")" + (definitif ? "" : " Réessayez plus tard."));
         }
 
         /// Parité avec l'IHM (clôture #2350) : depuis le réessai gradué (#2354), une coupure momentanée
