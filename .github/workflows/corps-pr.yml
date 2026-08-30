@@ -16,6 +16,9 @@ concurrency:
 
 permissions:
   contents: read
+  # Le garde du chantier lit le `parent` de l issue que la demande ferme. Lecture seule, et sur les
+  # issues uniquement : il ne touche à rien.
+  issues: read
 
 jobs:
   corps:
@@ -32,3 +35,18 @@ jobs:
         run: |
           chmod +x .github/scripts/verifie-corps-pr.sh
           ./.github/scripts/verifie-corps-pr.sh "${CORPS}"
+
+      - name: "L issue fermée appartient à un chantier (bloquant, #4649)"
+        # Il vit ici et non dans `lint.yml` parce qu il lui faut le CORPS de la demande, que seul cet
+        # évènement porte. Il ne juge que l issue que CETTE demande ferme : un balayage de toutes les
+        # issues rougirait chez tout le monde pendant qu une seule attend son rattachement, ce que
+        # l en-tête de `verifie-cloture-consignee.sh` dit avoir voulu éviter.
+        #
+        # Rattacher l issue ne modifie pas la demande, donc `edited` ne se déclenche pas : la
+        # correction se relit en relançant ce job, ou à la poussée suivante.
+        env:
+          CORPS: ${{ github.event.pull_request.body }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          chmod +x .github/scripts/verifie-chantier-de-l-issue.sh
+          ./.github/scripts/verifie-chantier-de-l-issue.sh "${CORPS}"
