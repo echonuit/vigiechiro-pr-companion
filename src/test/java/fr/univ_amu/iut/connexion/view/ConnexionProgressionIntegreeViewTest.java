@@ -20,7 +20,6 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +35,7 @@ import javafx.stage.Window;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -53,9 +53,14 @@ class ConnexionProgressionIntegreeViewTest {
 
     private final List<String> vuPendantLOperation = new ArrayList<>();
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test, là où
+    /// `createTempDirectory` n'enlevait rien (#4876).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-connexion-progression");
+        Path workspace = dossierTemporaire;
         StockageConnexion stockage = new StockageConnexion(new Workspace(workspace), Horloge.systeme());
         ClientVigieChiro client = mock(ClientVigieChiro.class);
         when(client.moi()).thenAnswer(appel -> {

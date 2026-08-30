@@ -37,6 +37,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// **Test E2E du parcours P2 « Importer une nuit d'enregistrement »**, piloté **sans IHM** : on
 /// rejoue les étapes du parcours à travers le **ViewModel réel** de l'assistant M-Import
@@ -75,9 +76,14 @@ class ParcoursImporterNuitE2ETest {
     private PointDEcoute point;
     private Path dossierSource;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test, là où
+    /// `createTempDirectory` n'enlevait rien (#4876).
+    @TempDir
+    private Path dossierTemporaire;
+
     @BeforeEach
     void preparer() throws Exception {
-        Path workspace = Files.createTempDirectory("vc-e2e-import");
+        Path workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
         source = injector.getInstance(SourceDeDonnees.class);
@@ -219,7 +225,7 @@ class ParcoursImporterNuitE2ETest {
             "P2 #155 : import résilient, un WAV illisible est rejeté+consigné, l'import réussit et le rapport le liste")
     void parcours_import_resilient_avec_rapport() throws Exception {
         // Nuit avec un WAV valide ET un WAV illisible (contenu non-WAV portant l'extension .wav).
-        Path nuit = Files.createTempDirectory("vc-e2e-resilient");
+        Path nuit = Files.createTempDirectory(dossierTemporaire, "vc-e2e-resilient");
         JournalDeCapteur.ecrire(nuit, SERIE, LocalDate.of(2026, 4, 22));
         JournalDeCapteur.ecrireReleve(nuit, SERIE);
         ecrireWav(nuit.resolve("PaRecPR" + SERIE + "_20260422_203922.wav")); // valide
@@ -259,7 +265,7 @@ class ParcoursImporterNuitE2ETest {
     void parcours_complet_depuis_un_zip() throws Exception {
         // La nuit n'est pas un dossier mais une archive .zip (cas d'usage #139 : l'utilisateur récupère
         // une nuit zippée). On la place hors du workspace pour bien distinguer source et extraction.
-        Path zip = Files.createTempDirectory("vc-e2e-zip").resolve("nuit.zip");
+        Path zip = Files.createTempDirectory(dossierTemporaire, "vc-e2e-zip").resolve("nuit.zip");
         compresser(dossierSource, zip);
 
         ImportationViewModel vm = injector.getInstance(ImportationViewModel.class);
@@ -305,7 +311,8 @@ class ParcoursImporterNuitE2ETest {
     void parcours_depuis_un_zip_avec_dossier_racine() throws Exception {
         // Cas courant : l'utilisateur a fait « clic droit → Compresser » sur le dossier de la nuit, donc
         // tout le contenu est sous un dossier racine « MaNuit/ » dans l'archive.
-        Path zip = Files.createTempDirectory("vc-e2e-zip-wrap").resolve("MaNuit.zip");
+        Path zip =
+                Files.createTempDirectory(dossierTemporaire, "vc-e2e-zip-wrap").resolve("MaNuit.zip");
         compresserSousDossier(dossierSource, "MaNuit", zip);
 
         ImportationViewModel vm = injector.getInstance(ImportationViewModel.class);

@@ -19,7 +19,7 @@ import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.viewmodel.GestionCampagnesViewModel;
-import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
@@ -33,6 +33,7 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -55,11 +56,14 @@ class GestionCampagnesModaleViewTest {
     private ServiceCampagne service;
     private final AtomicReference<String> questionPosee = new AtomicReference<>();
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test, là où
+    /// `createTempDirectory` n'enlevait rien (#4876).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        System.setProperty(
-                "vigiechiro.workspace",
-                Files.createTempDirectory("vc-gestion-campagnes").toString());
+        System.setProperty("vigiechiro.workspace", dossierTemporaire.toString());
         Injector socle = Guice.createInjector(
                 new CommunModule(), new PersistenceModule(), new PassageModule(), new CampagneModule());
         SourceDeDonnees source = socle.getInstance(SourceDeDonnees.class);
