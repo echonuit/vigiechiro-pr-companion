@@ -129,6 +129,26 @@ ${TROISQUOTES}" "un bloc de code cloture est épargné"
     # La contrepartie : en TETE de phrase la majuscule reste vue, sinon « L ADR » redeviendrait muet.
     verifie 1 "Le garde tient. L amendement le dit." "une élision majuscule en tête de phrase reste refusée"
 
+    # #4786. Ce qui SUIT decide. Une sortie d outil citee commence par un symbole isole, et le
+    # motif la lisait comme une elision - en tete de ligne, indentee ou non. L indentation n y
+    # etait pour rien : c est la branche `^` qui s applique la.
+    verifie 0 "M scripts/adr/truc.py" "une sortie d'outil en tête de ligne ne déclenche pas"
+    verifie 0 "  M scripts/adr/truc.py" "la même, indentée, ne déclenche pas non plus"
+    verifie 0 "Le seuil monte. N observation(s) ont ete vues." "un symbole suivi d'un compte entre parenthèses ne déclenche pas"
+    # Et la contrepartie du meme rejet : ce qui suit reste un MOT quand il porte un trait d union
+    # ou une apostrophe. Sans ces deux cas, le retrecissement perdrait de vraies elisions.
+    verifie 1 "Le garde tient. L auto-test le prouve." "une élision suivie d'un mot composé reste refusée"
+    verifie 1 "Le garde tient. D abord, la mesure." "une élision suivie d'une virgule reste refusée"
+
+    # #4786, second volet. Une decoration Markdown ouverte entre la lettre et le mot rendait le
+    # garde muet. Ce qui separe les deux cas est de savoir si la lettre isolee est DEDANS la
+    # decoration - un symbole etiquete - ou DEHORS, le mot seul etant decore - une elision.
+    verifie 1 "Le garde tient. L **amendement** le dit." "une élision devant un mot en gras est refusée"
+    verifie 1 "Le garde tient. L « amendement » le dit." "une élision devant des guillemets est refusée"
+    verifie 1 "un truc l **ADR** dit" "la même règle vaut pour les minuscules"
+    verifie 0 "| **C** Conformité | à établir |" "un symbole DANS le gras ne déclenche pas"
+    verifie 0 "- **N** saute à la prochaine observation." "une touche en gras ne déclenche pas"
+
     # Épingle une DÉCISION, pas un comportement : un corps vide PASSE. Qui voudra le refuser fera
     # d'abord rougir ce cas, et lira dans l'en-tête pourquoi ce garde ne tranche pas cette
     # question-là.
@@ -169,8 +189,29 @@ CITE = re.compile(
 # n est donc vue qu apres une espace elle-meme precedee d un caractere non alphanumerique, soit la
 # tete de phrase. Le detail de la mesure est dans `verifie-titre-pr.sh`, qui porte la regle mere.
 BORNE = r"[^\w'" + COURBE + r"]"
-ELISION_MIN = re.compile(r"(^" + BORNE + r"?|[^\d]" + BORNE + r")([ldnscjmt]|qu) +[^\W\d_]")
-ELISION_MAJ = re.compile(r"(^" + BORNE + r"?|[^\w]\s)([LDNSCJMT]|Qu) +[^\W\d_]")
+
+# Ce qui SUIT decide, et non ce qui precede (issue #4786). Une elision est suivie d un MOT francais,
+# qui peut porter trait d union et apostrophe. Un symbole est suivi de ce qu il etiquette : un
+# chemin, un compte entre parentheses, un identifiant. `M scripts/adr/truc.py` etait refuse comme
+# une elision, en tete de ligne, indente ou non - la branche `^` du motif s applique la, et le
+# retrecissement de #4483 ne couvrait que le milieu de phrase.
+MOT = r"[^\W\d_](?:[^\W\d_]|['" + COURBE + r"-])*"
+
+# Une decoration Markdown peut s ouvrir entre la lettre et le mot, et le garde ne voyait alors plus
+# rien : « L **amendement** le dit » passait. Ce qui separe les deux cas est de savoir si la lettre
+# isolee est DEDANS la decoration ou DEHORS. `**C** Conformite` etiquette une colonne, `**N** saute
+# a la suivante` nomme une touche : la lettre y est dedans, c est un symbole. Dans `L **amendement**`
+# la lettre est dehors et c est le MOT qui est decore : c est une elision.
+OUVRE = r"(?:\*\*|\*|__|_|«\s*|\[)?"
+
+# La fin du mot admet la decoration FERMANTE, sans quoi « L **amendement** » se couperait sur l
+# etoile et la detection retomberait.
+FIN_MOT = r"(\s|[*_)\]»,.;:!?]|$)"
+
+ELISION_MIN = re.compile(
+    r"(^" + BORNE + r"?|[^\d]" + BORNE + r")([ldnscjmt]|qu) +" + OUVRE + MOT + FIN_MOT)
+ELISION_MAJ = re.compile(
+    r"(^" + BORNE + r"?|[^\w]\s)([LDNSCJMT]|Qu) +" + OUVRE + MOT + FIN_MOT)
 
 # Un verbe de fermeture FRANCAIS accole a un renvoi (#4546). GitHub ne reconnait que `close`, `fix`
 # et `resolve` et leurs flexions : « Ferme #N » promet une fermeture que la forge ne fait pas, et
@@ -242,7 +283,10 @@ REMEDES = {
     "élision sans apostrophe": (
         "Rétablissez l'apostrophe : « l'ADR », « d'une nuit », « n'est pas », « qu'il ».\n"
         "  L'habitude d'amputer les apostrophes vient du quoting shell des messages de commit ;\n"
-        "  elle survit à la disparition de sa cause, et ce corps-ci se lit sur la forge."
+        "  elle survit à la disparition de sa cause, et ce corps-ci se lit sur la forge.\n"
+        "  Si la ligne CITE la sortie d'un outil, ce n'est pas une élision : mettez-la dans un bloc\n"
+        "  clôturé par trois accents graves, que ce garde épargne entièrement. Indenter ne suffit\n"
+        "  pas, une indentation portant aussi bien de la prose."
     ),
 }
 
