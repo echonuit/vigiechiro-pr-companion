@@ -39,7 +39,7 @@ par les quatorze passes, avec bilan et artefact. Rien ne l'avait réclamée (#46
 | 5 | Brief projet | parcours, maquettes, modèle conceptuel | `humaniser` |
 | 6 | Tests | chaque usage introduit est couvert | `tdd`, `mutation` |
 | 6b | Recette préparée | chaque capacité ajoutée a sa case `Sxx-NN`, et la fixture pour la jouer | |
-| 7 | Harmonisation | l'application entière, pas le delta | |
+| 7 | Harmonisation | l'application entière, pas le delta | `harmoniser-l-application` |
 | 8 | Revue visuelle | chaque **état** de chaque écran touché | `revoir-les-ecrans` |
 | 9 | Suites consolidées | l'EPIC des suites relu et regroupé, les rattachements tranchés | `trier-les-issues` |
 | 10 | Archivage OpenSpec | les delta specs fusionnées, **puis** le changement sous `archive/` | `openspec-archive-change` |
