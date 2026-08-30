@@ -58,25 +58,33 @@ plausible.
 
 ## Pourquoi ce garde n'est pas un test
 
-Il faut compter quand tous les forks ont rendu la main. Un test tourne *pendant* : il ne voit ni les
-forks voisins ni ce qui suit. Le garde vit donc dans le job, en deux pas qui encadrent la suite, et
-c'est la seule place d'où la propriété soit observable.
+Il faut compter quand tous les forks ont rendu la main, et un test tourne *pendant*. Le garde vit donc
+dans le job, en deux pas qui encadrent la suite.
 
 ## La limite, mesurée et écrite
 
 Le compte attribue à la suite **tout ce qui apparaît pendant**, y compris ce qu'une autre session
-crée au même moment. Mesuré le 30 août : une classe seule a rendu **237** alors que la suite complète
-en laisse 198, parce qu'un second plan de travail jouait ses tests en parallèle sur la même machine.
-
-En CI le runner est dédié, et la question ne se pose pas. En local, on lance la suite seule ou l'on ne
-croit pas le chiffre. Distinguer les répertoires par leur créateur demanderait de les préfixer par le
-processus, ce que ni JUnit ni le dépôt ne font ; le dire coûte moins que de l'outiller.
+crée au même moment : une classe seule a rendu **237** quand la suite entière en laissait 198, un
+second plan de travail jouant ses tests en parallèle. En CI le runner est dédié ; en local, on lance
+la suite seule ou l'on ne croit pas le chiffre.
 
 ## Ce qui prouve que le garde voit
 
 Retirer le `@TempDir` de `GestionnaireVuesTest` fait passer le compte de **0 à 14** ; le remettre le
-ramène à 0. L'épreuve a d'abord rendu 0 dans les deux cas, la mutation ne compilant pas : une mutation
-qui ne compile pas ne prouve rien, et elle se présente comme un succès.
+ramène à 0.
+
+## Les quatre qui restent, et pourquoi ils restent
+
+Ce ne sont plus des bancs. Le cache de Gluon Maps est créé par `CachedOsmTileRetriever`, dont les
+chaînes ne portent **aucun nom de propriété** : la bibliothèque ne laisse pas choisir où il vit.
+
+Le seul levier, `-Djava.io.tmpdir` par fork, déplacerait **tous** les temporaires et casserait ce
+garde, qui lit `/tmp` : le remède coûterait le dispositif qui mesure.
+
+Les vingt et un outils `Capture*` n'entrent pas dans le compte : ils tournent dans d'autres jobs que
+celui que les deux pas encadrent.
+
+Le cliquet reste donc à 4, et ces quatre sont nommés ici pour qu'on n'y cherche pas un banc (#4942).
 
 ## Ce que cette décision empêche
 
