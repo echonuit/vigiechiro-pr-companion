@@ -31,8 +31,9 @@ ce qu'il faut avoir posé avant de commencer, et refuse de démarrer tant que ce
             une mesure qui vient de tomber) ou urgente (elle bloque autre chose).
 3. SITUER   dans quelle continuite elle s inscrit : quelle issue elle suit, ce
             qu elle rend possible ensuite.
-4. NOMMER   le CHANTIER auquel elle appartient, par son numero. Pas celui d ou elle
-            vient : celui qui traite sa CAUSE. S il n existe pas, l ouvrir.
+4. NOMMER   le CHANTIER auquel elle appartient, par son numero, ET l y RATTACHER :
+            gh issue edit <n> --parent <EPIC>. Pas celui d ou elle vient : celui qui
+            traite sa CAUSE. S il n existe pas, l ouvrir.
 5. DEPOSER  ces quatre elements EN COMMENTAIRE sur l issue, avec le remede envisage.
 6. RELIRE   a la grille de la competence humaniser ce qui part sur la forge. Le corps de l issue
             est de la prose publiee, et l article A31 le couvre depuis qu il ne

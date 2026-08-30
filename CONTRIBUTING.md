@@ -305,7 +305,9 @@ plus de quelques minutes, le pas était trop gros : revenir au dernier vert et l
 Elle se rattache à l'**EPIC du chantier** si elle est dans son périmètre, sinon à l'**EPIC des
 suites** ([#4562](https://github.com/echonuit/vigiechiro-pr-companion/issues/4562)) ; en cas de doute,
 les suites, car la passe 9 est faite pour corriger un rattachement et ne peut rien pour une trouvaille
-jamais écrite. Ce qui se perd n'est pas la trouvaille mais son **détail** : le chiffre, le numéro de
+jamais écrite. **Le rattachement est une sous-issue** (`gh issue create --parent <EPIC>`), pas une
+ligne ajoutée au corps de l'EPIC : une liste tenue à la main se périme sans bruit et ne se compte
+pas. Ce qui se perd n'est pas la trouvaille mais son **détail** : le chiffre, le numéro de
 run, le message littéral, c'est-à-dire ce qui la rend traitable. Un signalement en commentaire ou dans
 un compte rendu ne compte pas : il est réel, et il sort de la vue à la fusion.
 
