@@ -30,6 +30,7 @@ import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
+import fr.univ_amu.iut.qualification.model.DetailSelection;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit.Feu;
 import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
@@ -109,7 +110,7 @@ class QualificationVueIntegrationTest {
                         null));
         when(service.ouvrirVerification(anyLong()))
                 .thenReturn(new SelectionDEcoute(ID_SELECTION, MethodeSelection.REPARTITION_TEMPORELLE, 3, ID_PASSAGE));
-        when(service.detaillerSelection(anyLong())).thenReturn(lignes(3));
+        when(service.detaillerSelection(anyLong())).thenReturn(new DetailSelection(lignes(3), List.of()));
         // R12 : la régénération doit aboutir (sinon NPE captée → liste inchangée).
         when(service.creerSelection(anyLong(), any(MethodeSelection.class), anyInt()))
                 .thenReturn(new SelectionDEcoute(99L, MethodeSelection.ALEATOIRE, 3, ID_PASSAGE));

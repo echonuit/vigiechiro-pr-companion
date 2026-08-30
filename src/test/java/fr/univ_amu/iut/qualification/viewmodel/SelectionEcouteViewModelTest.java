@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.VerdictFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
+import fr.univ_amu.iut.qualification.model.DetailSelection;
 import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
@@ -64,7 +65,7 @@ class SelectionEcouteViewModelTest {
                         null));
         when(service.ouvrirVerification(anyLong()))
                 .thenReturn(new SelectionDEcoute(ID_SELECTION, MethodeSelection.REPARTITION_TEMPORELLE, n, ID_PASSAGE));
-        when(service.detaillerSelection(anyLong())).thenReturn(lignesDe(n));
+        when(service.detaillerSelection(anyLong())).thenReturn(new DetailSelection(lignesDe(n), List.of()));
     }
 
     /// `n` séquences non écoutées (chemins `…/seqI.wav`), pour stubber `detaillerSelection`.
@@ -76,6 +77,22 @@ class SelectionEcouteViewModelTest {
             lignes.add(new SequenceEnSelection(sequence, i, false));
         }
         return lignes;
+    }
+
+    @Test
+    @DisplayName("#4739 : une séquence illisible se dit dans le message, la liste ne l'ampute plus en silence")
+    void ouvrir_dit_ce_que_la_selection_n_a_pas_pu_lire() {
+        stubOuverture(3);
+        when(service.detaillerSelection(anyLong())).thenReturn(new DetailSelection(lignesDe(3), List.of(41L, 42L)));
+
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.lignes()).hasSize(3);
+        assertThat(viewModel.messageProperty().get())
+                .as("l'écran doit dire pourquoi il montre moins que la sélection ne porte")
+                .contains("2 séquence(s)")
+                .contains("41")
+                .contains("42");
     }
 
     @Test
@@ -221,7 +238,7 @@ class SelectionEcouteViewModelTest {
                 .thenThrow(new RegleMetierException("Passage introuvable : 99"));
         when(service.ouvrirVerification(anyLong()))
                 .thenReturn(new SelectionDEcoute(ID_SELECTION, MethodeSelection.REPARTITION_TEMPORELLE, 5, ID_PASSAGE));
-        when(service.detaillerSelection(anyLong())).thenReturn(lignesDe(5));
+        when(service.detaillerSelection(anyLong())).thenReturn(new DetailSelection(lignesDe(5), List.of()));
         viewModel.ouvrirSur(ID_PASSAGE);
         viewModel.selectionner(viewModel.lignes().get(0));
         assertThat(viewModel.lignes()).hasSize(5);

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.qualification.model.DetailSelection;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import java.io.PrintWriter;
@@ -55,18 +56,23 @@ public final class ListerSelection implements Callable<Integer>, LectureSeule {
     @Override
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
-        List<SequenceEnSelection> sequences = service.detaillerSelectionParPassage(idPassage);
+        DetailSelection detail = service.detaillerSelectionParPassage(idPassage);
+        List<SequenceEnSelection> sequences = detail.lignes();
         Verdict propose = service.verdictDerivePassage(idPassage);
 
         if (json) {
             Map<String, Object> objet = new LinkedHashMap<>();
             objet.put("passage", idPassage);
             objet.put("verdictFinalPropose", propose.libelle());
+            objet.put("sequencesIllisibles", detail.sequencesIntrouvables());
             objet.put(
                     "sequences",
                     sequences.stream().map(ListerSelection::enObjet).toList());
             sortie.println(FormatJson.objet(objet));
             return 0;
+        }
+        if (!detail.complet()) {
+            sortie.println("Attention : " + detail.avertissement());
         }
         if (sequences.isEmpty()) {
             sortie.println("Aucune sélection d'écoute pour le passage #" + idPassage + ".");
