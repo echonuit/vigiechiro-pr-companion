@@ -79,6 +79,34 @@ apartés de leur auteur. Un texte de référence, technique, juridique ou factue
 n'y ajoute ni avis ni première personne. Dans les deux cas, aucun fait ne s'invente pour faire plus
 vivant.
 
+## Trancher un motif qui demande un jugement
+
+Quatre motifs ne se décident pas sur la phrase : le 9, le 25, le 32 et le 34. Leur critère demande
+de savoir ce qu'un lecteur aurait pu croire, ce que la phrase remplace, ou si quelqu'un avait
+vraiment soulevé l'objection. Deviner cela varie d'un relecteur à l'autre, et c'est mesuré : sur
+douze passages soumis à quatre lecteurs, dix ont reçu des verdicts différents.
+
+**Le test de suppression les tranche, en deux gestes.**
+
+Retirer la phrase, et regarder ce qui part. Si aucune information opérationnelle ne disparaît, la
+phrase était l'emballage. Si le lecteur perd un fait, une contrainte ou une conséquence, elle
+portait quelque chose.
+
+Devant un « ce n'est pas X », citer le passage où X était en jeu. Sans ce passage, la négation ne
+répond à personne et se retire.
+
+**Où ce passage peut se trouver diffère selon le motif**, et c'est ce qui sépare le 9 du 34.
+L'antithèse du motif 9 demande qu'un lecteur ait pu croire X **à cet endroit** : le passage doit
+donc précéder. L'objection du motif 34 demande seulement que le texte nomme qui la porte, avant ou
+après. Éprouvé sur un cas réel : « cent cinquante carrés n'est pas un chiffre choisi pour faire
+durer » est légitime, et c'est la phrase **suivante** qui le montre en nommant qui tenait cette
+position.
+
+**Ces quatre motifs se décident sur ce qui entoure la phrase**, jamais sur elle seule. Un extrait
+les rend indécidables, et sa frontière tranche alors à la place du lecteur : trois lecteurs à qui
+l'on avait soumis des extraits ont classé « objection inventée » une phrase dont la suivante
+nommait qui portait l'objection.
+
 ---
 
 # La grille
@@ -238,7 +266,8 @@ un, se présente comme, dispose de, se compose de.
 un véritable Y ; loin d'être un simple X.
 
 L'antithèse ne se justifie que si un lecteur pouvait vraiment confondre les deux termes. Quand
-personne n'a proposé Y, elle emballe.
+personne n'a proposé Y, elle emballe. Le **test de suppression** tranche : citer le passage
+antérieur où Y était en jeu, ou retirer la négation. Ici l'antériorité compte.
 
 > Ce n'est pas qu'une chanson, c'est une déclaration. Ce n'est pas le rythme sous la voix, c'est
 > l'atmosphère elle-même.
@@ -501,7 +530,8 @@ Le texte se termine sur un souhait au lieu du dernier fait utile.
 > L'avenir s'annonce prometteur pour l'entreprise. De belles perspectives se dessinent sur le chemin
 > de l'excellence.
 
-Retirer le paragraphe. Si la source donne des projets réels, écrire les projets.
+Retirer le paragraphe. Si la source donne des projets réels, écrire les projets. Le **test de
+suppression** tranche : si rien d'opérationnel ne part avec la clôture, elle était l'emballage.
 
 ### 26. Les paires à trait d'union
 
@@ -629,7 +659,8 @@ Une affirmation ordinaire prend la forme d'un aphorisme et perd son détail.
 > processus au point de perdre de vue son usage réel.
 
 Attention aux faux positifs : « l'abscisse est le nombre de minutes depuis 18 h » est du français
-ordinaire, pas une formule.
+ordinaire, pas une formule. Le **test de suppression** tranche : une formule qui part sans emporter
+de détail était une formule.
 
 ### 33. La fausse candeur
 
@@ -651,7 +682,8 @@ Le texte répond à une objection qui n'apparaît nulle part ailleurs. Retirer l
 porte une affirmation réelle, écrire l'affirmation.
 
 Garder l'objection quand le texte nomme qui la porte, ou qu'il y répond entièrement. Une affirmation
-directe comme « cette API n'est pas thread-safe » n'est pas ce motif.
+directe comme « cette API n'est pas thread-safe » n'est pas ce motif. Le **test de suppression**
+tranche : citer où l'objection est portée, avant ou après, ou la retirer.
 
 ### 35. La fausse alternative écartée
 
