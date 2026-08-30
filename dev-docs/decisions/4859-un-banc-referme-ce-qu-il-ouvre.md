@@ -9,7 +9,7 @@ verification: probable
 verification_note: "le compte est DIFFÉRENTIEL et se mesure autour d'une suite complète, donc dans le job et non dans un test : deux pas encadrent la suite dans maven.yml"
 enforced_by:
   - "scripts/methode/compte-les-reliquats.py"
-ratchet: 198
+ratchet: 202
 verified:
   - by: human:nedseb
     at: 2026-08-30
@@ -41,7 +41,7 @@ C'est un acquis sans gardien, et chaque banc écrit depuis a rappelé la même l
 test, sans rien à écrire ; le dépôt l'emploie déjà 259 fois. Une aide partagée, qui n'est pas un test
 et à qui `@TempDir` ne s'injecte pas, supprime en fin de fork.
 
-**Et le compte se tient**, par un cliquet à 198 qui ne peut que descendre. C'est l'article A9 : la
+**Et le compte se tient**, par un cliquet à 202 qui ne peut que descendre. C'est l'article A9 : la
 dette se tient par un cliquet, pas par un nettoyage. Le nettoyage manuel du 30 août a retiré 5,8 Go
 et n'a rien empêché ; il se refera tant que rien ne compte.
 
@@ -88,8 +88,9 @@ ADR, et le modifier est une décision qui se relit.
 
 ## Conséquences
 
-- Le cliquet part à **198**, mesuré sur une suite complète locale. La CI en rendra peut-être un autre,
-  son nombre de forks suivant la machine (`forkCount=1C`) ; le seuil sera alors celui qu'elle mesure.
+- Le cliquet part à **202**, et c'est **la CI qui l'a mesuré**. Mon poste en rendait 198 : le nombre
+  de forks suit la machine (`forkCount=1C`), donc le compte aussi. Le seuil est celui du dispositif qui
+  juge, pas celui de la machine où l'on écrit.
 - Les 58 bancs qui créent dans un `@Start` ou un `@BeforeEach` se convertissent par lots, et le
   cliquet descend d'autant.
 - Les outils `Capture*` de production ne sont pas visés : leur reliquat meurt avec le runner.
