@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
@@ -115,7 +116,7 @@ class ActiviteViewTest {
             }
         });
         FXMLLoader loader = new FXMLLoader(ActiviteController.class.getResource("Activite.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         FenetreAjustable.poserHabillee(stage, vue, 960, 640);

@@ -22,6 +22,7 @@ import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Reglages;
@@ -201,7 +202,7 @@ class SonsValidationDepotViewTest {
                 },
                 new NavigationDeTestModule());
         FXMLLoader loader = new FXMLLoader(SonsValidationController.class.getResource("SonsValidation.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         // Le oui/non du remplacement, remplacé par un double (#1405) : un vrai dialogue figerait le test.

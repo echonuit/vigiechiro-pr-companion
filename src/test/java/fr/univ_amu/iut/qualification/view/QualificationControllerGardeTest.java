@@ -1,14 +1,8 @@
 package fr.univ_amu.iut.qualification.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
-import fr.univ_amu.iut.commun.model.DispositionColonnesEnMemoire;
 import fr.univ_amu.iut.commun.model.Verdict;
-import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
-import fr.univ_amu.iut.commun.view.OuvrirSite;
-import fr.univ_amu.iut.connexion.model.StockageConnexion;
-import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
@@ -28,32 +22,13 @@ class QualificationControllerGardeTest {
     private ServiceQualification service;
 
     /// Contrat [OuvrirSite] no-op : la garde de saisie ne dépend pas de la navigation (on ne clique
-    /// pas le fil d'Ariane), seulement de l'état du verdict.
-    private static OuvrirSite ouvrirSiteNeutre() {
-        return new OuvrirSite() {
-            @Override
-            public void ouvrirListe() {}
-
-            @Override
-            public void ouvrirDetail(String numeroCarre) {}
-        };
-    }
 
     @Test
     @DisplayName("aSaisieNonEnregistree : faux par défaut, vrai dès qu'un verdict brouillon est choisi")
     void garde_reflete_le_verdict_brouillon() {
         QualificationViewModel verdictVm = new QualificationViewModel(service);
         SelectionEcouteViewModel selectionVm = new SelectionEcouteViewModel(service);
-        QualificationController controller = new QualificationController(
-                verdictVm,
-                selectionVm,
-                (idPassage, contexte) -> {},
-                ouvrirSiteNeutre(),
-                new DispositionColonnesEnMemoire(),
-                new ExecuteurTacheSynchrone(),
-                mock(NavigationQualification.class),
-                mock(ServiceEmport.class),
-                mock(StockageConnexion.class));
+        QualificationController controller = ControleurQualificationDeTest.avec(verdictVm, selectionVm);
 
         assertThat(controller.aSaisieNonEnregistree()).isFalse();
 
@@ -67,16 +42,7 @@ class QualificationControllerGardeTest {
     void garde_se_rearme_si_commentaire_modifie_apres_enregistrement() {
         QualificationViewModel verdictVm = new QualificationViewModel(service);
         SelectionEcouteViewModel selectionVm = new SelectionEcouteViewModel(service);
-        QualificationController controller = new QualificationController(
-                verdictVm,
-                selectionVm,
-                (idPassage, contexte) -> {},
-                ouvrirSiteNeutre(),
-                new DispositionColonnesEnMemoire(),
-                new ExecuteurTacheSynchrone(),
-                mock(NavigationQualification.class),
-                mock(ServiceEmport.class),
-                mock(StockageConnexion.class));
+        QualificationController controller = ControleurQualificationDeTest.avec(verdictVm, selectionVm);
 
         verdictVm.choisirVerdict(Verdict.OK);
         verdictVm.enregistrer();
@@ -94,16 +60,7 @@ class QualificationControllerGardeTest {
     void garde_se_rearme_si_verdict_change_apres_enregistrement() {
         QualificationViewModel verdictVm = new QualificationViewModel(service);
         SelectionEcouteViewModel selectionVm = new SelectionEcouteViewModel(service);
-        QualificationController controller = new QualificationController(
-                verdictVm,
-                selectionVm,
-                (idPassage, contexte) -> {},
-                ouvrirSiteNeutre(),
-                new DispositionColonnesEnMemoire(),
-                new ExecuteurTacheSynchrone(),
-                mock(NavigationQualification.class),
-                mock(ServiceEmport.class),
-                mock(StockageConnexion.class));
+        QualificationController controller = ControleurQualificationDeTest.avec(verdictVm, selectionVm);
 
         verdictVm.choisirVerdict(Verdict.OK);
         verdictVm.enregistrer();

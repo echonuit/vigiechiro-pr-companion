@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.inject.Injector;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
@@ -102,7 +103,7 @@ class ChargementFxmlTest {
         try {
             WaitForAsyncUtils.waitForAsyncFx(15_000, () -> {
                 FXMLLoader loader = new FXMLLoader(url);
-                loader.setControllerFactory(injecteur::getInstance);
+                loader.setControllerFactory(DiagnosticGuice.pour(injecteur));
                 return loader.load();
             });
         } catch (Throwable echec) {

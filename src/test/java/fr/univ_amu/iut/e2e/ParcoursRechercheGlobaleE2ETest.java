@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.ResultatRecherche;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -64,7 +65,7 @@ class ParcoursRechercheGlobaleE2ETest {
         seederSitePointPassage(source);
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent racine = loader.load();
         FenetreAjustable.poser(stage, racine, 1100, 760);
         FenetreAjustable.afficher(stage); // démarre sur l'accueil du chrome

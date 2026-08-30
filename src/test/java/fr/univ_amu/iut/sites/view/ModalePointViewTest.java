@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -70,7 +71,7 @@ class ModalePointViewTest {
         Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
         service.ajouterPoint(site.id(), "A1", 43.5, 5.4, "Chêne");
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent racine = loader.load();
         // `Habillage` via `FenetreDuBanc` : ce cas est FILMÉ (#3773, #4149).
         FenetreDuBanc.poser(stage, racine, 1180, 900);

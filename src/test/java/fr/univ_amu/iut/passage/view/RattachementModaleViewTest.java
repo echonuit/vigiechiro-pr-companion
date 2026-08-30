@@ -10,6 +10,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
@@ -111,7 +112,7 @@ class RattachementModaleViewTest {
             }
         });
         FXMLLoader loader = new FXMLLoader(RattachementModaleController.class.getResource("RattachementModale.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         controleur.demarrer(7L, "040962", "A1", () -> succesAppele.set(true));

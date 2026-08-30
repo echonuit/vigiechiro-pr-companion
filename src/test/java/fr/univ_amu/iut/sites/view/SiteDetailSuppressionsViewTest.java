@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -100,13 +101,13 @@ class SiteDetailSuppressionsViewTest {
 
         // Le chrome, pour que le retour à l'accueil après suppression du site soit une vraie navigation.
         FXMLLoader chrome = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        chrome.setControllerFactory(injector::getInstance);
+        chrome.setControllerFactory(DiagnosticGuice.pour(injector));
         FenetreAjustable.poser(stage, chrome.load(), 1100, 760);
 
         // On rejoue NavigationSites.ouvrirDetail(site) à la main : c'est le seul moyen de garder la main
         // sur le controller, donc de remplacer ses deux dialogues avant le premier clic.
         FXMLLoader loader = new FXMLLoader(SiteDetailController.class.getResource("SiteDetail.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         vue = loader.load();
         controleur = loader.getController();
         controleur.confirmateur().definir(message -> {

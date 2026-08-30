@@ -9,6 +9,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -96,7 +97,7 @@ class SiteDetailRenommageViewTest {
                 .insert(new Site(null, CARRE_AVANT, "Étang", Protocole.STANDARD, null, "2026-01-01", ID_USER));
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injecteur::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injecteur));
         Parent racine = loader.load();
         // `Habillage` via `FenetreDuBanc` : ce cas est FILMÉ (#3773, #4149).
         FenetreDuBanc.poser(stage, racine, 1180, 900);

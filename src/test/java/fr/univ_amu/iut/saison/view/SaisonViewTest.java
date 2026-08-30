@@ -16,6 +16,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
@@ -157,7 +158,7 @@ class SaisonViewTest {
         });
 
         FXMLLoader loader = new FXMLLoader(SaisonController.class.getResource("Saison.fxml"));
-        loader.setControllerFactory(injecteur::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injecteur));
         Parent vue = loader.load();
         controleur = loader.getController();
         navigateur = new Navigateur(new NavigationViewModel(), revision);

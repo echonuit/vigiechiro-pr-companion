@@ -11,6 +11,7 @@ import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -341,7 +342,7 @@ public final class BancDeRecette {
         }
 
         FXMLLoader chargeur = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        chargeur.setControllerFactory(injecteur::getInstance);
+        chargeur.setControllerFactory(DiagnosticGuice.pour(injecteur));
         Parent racine = chargeur.load();
         FenetreDuBanc.poser(stage, racine, largeur, hauteur);
         ouverture.accept(injecteur);

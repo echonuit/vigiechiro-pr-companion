@@ -9,6 +9,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
@@ -87,7 +88,7 @@ class ConnexionModaleConnecteeViewTest {
             }
         });
         FXMLLoader loader = new FXMLLoader(ConnexionModaleController.class.getResource("ConnexionModale.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         // `Habillage`, et non `new Scene` : ce cas est FILMÉ, et une scène montée sans habillage

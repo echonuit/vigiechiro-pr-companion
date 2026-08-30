@@ -23,6 +23,7 @@ import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
 import fr.univ_amu.iut.audio.viewmodel.ExporteurAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
@@ -278,7 +279,7 @@ class SonsValidationViewTest {
                     }
                 }));
         FXMLLoader loader = new FXMLLoader(SonsValidationController.class.getResource("SonsValidation.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         controleur.ouvrirSur(new SourceObservations.References("u-1"));

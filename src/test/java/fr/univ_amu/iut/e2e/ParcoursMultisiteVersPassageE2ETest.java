@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -76,7 +77,7 @@ class ParcoursMultisiteVersPassageE2ETest {
         injector.getInstance(ServiceImport.class).importer(sd, point.id(), new Prefixe("640380", 2026, 1, "A1"));
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent racine = loader.load();
         // 900, et non 1280 : c'est `TailleOuverture.LARGEUR_MINIMALE`, le plancher que l'application
         // s'autorise et la largeur à laquelle les runners tournent réellement - l'écran headless étant

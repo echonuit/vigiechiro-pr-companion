@@ -1431,6 +1431,8 @@ b3aaf034461c  src/test/java/fr/univ_amu/iut/commun/api/ReponsesGrilleStocTest.ja
 efdb83418f82  src/test/java/fr/univ_amu/iut/commun/api/UrlSigneeAdmiseTest.java
 08562833df8b  src/test/java/fr/univ_amu/iut/commun/di/AmorcageTest.java
 9ceb8cd1b78e  src/test/java/fr/univ_amu/iut/commun/di/DecouverteModulesTest.java
+65f32a89bdfc  src/test/java/fr/univ_amu/iut/commun/di/DiagnosticGuice.java
+0e743f3b19dc  src/test/java/fr/univ_amu/iut/commun/di/DiagnosticGuiceTest.java
 fa53c4593cc7  src/test/java/fr/univ_amu/iut/commun/di/FonctionnalitesTriTest.java
 4aa4dad74f7c  src/test/java/fr/univ_amu/iut/commun/di/RacineInjecteurTest.java
 18913582745c  src/test/java/fr/univ_amu/iut/commun/di/ReservationWorkspaceTest.java
@@ -1901,9 +1903,10 @@ b175a4d32440  src/test/java/fr/univ_amu/iut/qualification/PlanDeRepriseTest.java
 a343b5ab6bf1  src/test/java/fr/univ_amu/iut/qualification/ServiceQualificationMockTest.java
 ecf099c1b090  src/test/java/fr/univ_amu/iut/qualification/ServiceQualificationTest.java
 42fd2ea144a2  src/test/java/fr/univ_amu/iut/qualification/view/ActionsEmportTest.java
+5daf9fa3fa46  src/test/java/fr/univ_amu/iut/qualification/view/ControleurQualificationDeTest.java
 3e3363f10944  src/test/java/fr/univ_amu/iut/qualification/view/ModaleSelectionViewTest.java
 16fc9bf4e679  src/test/java/fr/univ_amu/iut/qualification/view/NavigationQualificationViewTest.java
-cae07d34e6a3  src/test/java/fr/univ_amu/iut/qualification/view/QualificationControllerGardeTest.java
+da2c9aca2459  src/test/java/fr/univ_amu/iut/qualification/view/QualificationControllerGardeTest.java
 cd070b1c4a6b  src/test/java/fr/univ_amu/iut/qualification/view/QualificationIdentiteStatutViewTest.java
 371d116b1916  src/test/java/fr/univ_amu/iut/qualification/view/QualificationViewTest.java
 6e4250db20c7  src/test/java/fr/univ_amu/iut/qualification/view/QualificationVueIntegrationTest.java

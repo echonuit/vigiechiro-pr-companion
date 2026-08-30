@@ -13,6 +13,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.analyse.model.LigneSynthese;
 import fr.univ_amu.iut.analyse.model.ServiceSynthese;
 import fr.univ_amu.iut.analyse.viewmodel.SyntheseViewModel;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.ClasseActivite;
 import fr.univ_amu.iut.commun.model.ConfianceReferentiel;
 import fr.univ_amu.iut.commun.model.ContexteActivite;
@@ -145,7 +146,7 @@ class SyntheseLargeurColonnesTest {
             }
         });
         FXMLLoader loader = new FXMLLoader(SyntheseController.class.getResource("Synthese.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         stage.setScene(Habillage.scene(vue, LARGEUR_APERCU, 700));

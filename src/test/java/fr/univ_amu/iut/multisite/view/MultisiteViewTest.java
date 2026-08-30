@@ -15,6 +15,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
@@ -197,7 +198,7 @@ class MultisiteViewTest {
             }
         });
         FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource("Multisite.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         navigateur = new Navigateur(new NavigationViewModel(), revision);

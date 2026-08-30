@@ -18,6 +18,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
@@ -168,7 +169,7 @@ class AnalyseViewTest {
             }
         });
         FXMLLoader loader = new FXMLLoader(AnalyseController.class.getResource("Analyse.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         navigateur = new Navigateur(new NavigationViewModel(), revision);

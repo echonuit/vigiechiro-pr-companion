@@ -14,6 +14,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.multibindings.OptionalBinder;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
@@ -178,7 +179,7 @@ class PassageReactivationViewTest {
             }
         });
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         PassageController controleur = loader.getController();
         // Sans ce double de désignation, le clic ouvrirait un DirectoryChooser natif et le test figerait.
