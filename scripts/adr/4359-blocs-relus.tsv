@@ -15,4 +15,4 @@ e99f60391e1c5005	src/main/java/fr/univ_amu/iut/importation/model/TransformationA
 6392c80b94f3a7d5	src/main/java/fr/univ_amu/iut/importation/model/ServiceImport.java	les cinq etapes du parcours P2 et le moteur de chacune ; releu tranche 13
 a63f7ef771163dad	src/main/java/fr/univ_amu/iut/commun/model/SaisonActivite.java	bornes issues d une publication citee : la provenance ne se resume pas
 dd729ed938d83cc5	src/main/java/fr/univ_amu/iut/analyse/outils/CaptureSynthese.java	tableau de ce que la capture doit montrer, plus deux faits absents de la source
-1a9cf14291c6e845	src/main/java/fr/univ_amu/iut/lot/outils/CaptureLot.java	les dix apercus de M-Lot et l etat que chacun montre ; releu tranche 13
+1a9cf14291c6e845	src/main/java/fr/univ_amu/iut/lot/outils/CaptureLot.java	les dix apercus de M-Lot et l etat que chacun montre ; relu tranche 13
