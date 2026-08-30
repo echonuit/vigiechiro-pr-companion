@@ -156,6 +156,12 @@ public class ServiceEmport {
     /// @param paquet l'archive reçue
     /// @param identite l'identité du relecteur, apposée à l'ouverture
     /// @return ce que la reprise a posé
+    /// **Une sélection locale est remplacée**, et c'est le cas normal : sur le poste du relecteur la
+    /// nuit existe déjà, et ouvrir l'écran de vérification lui a posé une sélection tirée ici. Ouvrir
+    /// un paquet est justement demander à juger **celle de l'expéditeur** ; refuser bloquerait le
+    /// relecteur qui a simplement regardé la nuit avant. Le remplacement efface les verdicts locaux,
+    /// et l'appelant le fait confirmer (#4728).
+    ///
     /// @throws IllegalStateException si l'identité manque, si la nuit est inconnue, ou si une
     ///     séquence du paquet n'existe pas au poste destinataire
     /// @throws IOException sur échec de lecture
@@ -176,21 +182,37 @@ public class ServiceEmport {
             resolues.add(locale);
         }
 
-        SelectionDEcoute selection = selectionDao.insert(
-                new SelectionDEcoute(null, MethodeSelection.RECUE_D_UN_PAQUET, resolues.size(), passage.id()));
+        // Une sélection locale est REMPLACÉE, atomiquement, sur le patron de `creerSelection`. C'est le
+        // cas normal : sur le poste du relecteur la nuit existe, et ouvrir l'écran de vérification lui
+        // a posé une sélection tirée ici. Insérer sans supprimer heurtait `passage_id UNIQUE`, et la
+        // DataAccessException échappait aux catch de l'appelant : le geste ne rendait aucun compte,
+        // ni succès ni refus (#4728).
+        Optional<SelectionDEcoute> locale = selectionDao.findByPassage(passage.id());
         uniteDeTravail.executer(connexion -> {
+            if (locale.isPresent()) {
+                selectionDao.supprimerDansTransaction(connexion, locale.get().id());
+            }
+            long idSelection = selectionDao.insererDansTransaction(
+                    connexion, MethodeSelection.RECUE_D_UN_PAQUET, resolues.size(), passage.id());
             for (int rang = 0; rang < resolues.size(); rang++) {
-                ManifestePaquet.SequenceEmportee emportee =
-                        manifeste.sequences().get(rang);
-                selectionDao.attacherSequence(new SequenceSelectionnee(
-                        selection.id(), resolues.get(rang).id(), emportee.position(), false));
-                if (emportee.verdict() != VerdictFichier.NON_JUGE) {
-                    selectionDao.marquerVerdict(
-                            selection.id(), resolues.get(rang).id(), emportee.verdict());
-                }
+                selectionDao.attacherDansTransaction(
+                        connexion,
+                        idSelection,
+                        resolues.get(rang).id(),
+                        manifeste.sequences().get(rang).position(),
+                        false);
             }
         });
-        return new BilanReprise(passage.id(), selection.id(), resolues.size(), ouvert.pseudoRelecteur());
+        SelectionDEcoute recue = selectionDao
+                .findByPassage(passage.id())
+                .orElseThrow(() -> new IllegalStateException("Sélection reçue non persistée : " + passage.id()));
+        for (int rang = 0; rang < resolues.size(); rang++) {
+            ManifestePaquet.SequenceEmportee emportee = manifeste.sequences().get(rang);
+            if (emportee.verdict() != VerdictFichier.NON_JUGE) {
+                selectionDao.marquerVerdict(recue.id(), resolues.get(rang).id(), emportee.verdict());
+            }
+        }
+        return new BilanReprise(passage.id(), recue.id(), resolues.size(), ouvert.pseudoRelecteur());
     }
 
     /// Ce qu'un import d'avis a posé.

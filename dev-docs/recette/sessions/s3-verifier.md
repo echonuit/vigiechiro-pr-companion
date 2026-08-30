@@ -103,6 +103,34 @@ raccourcis clavier.
 - **S3-43** · *geste: les-raccourcis-clavier-de-la-verification* · Curseur dans le commentaire : O/D/J tapent la lettre (raccourcis de verdict suspendus).
 - **S3-44** · *geste: les-raccourcis-clavier-de-la-verification* · La légende clavier est visible (footer) et cohérente avec les libellés à l'écran (#1513).
 
+**Bloc 6 · Faire relire une nuit par quelqu'un d'autre (#3848)**
+
+Deux familles, une par rôle : un clip filme une application, le parcours en traverse deux. Ce qu'aucune
+des deux ne peut montrer est le **voyage du fichier**, qui s'y réduit à un paquet qui part ou qui
+arrive.
+
+*Poste expéditeur.*
+
+- **S3-45** · *geste: emporter-une-nuit* · « Emporter cette nuit… » **annonce le volume avant d'écrire**
+  (nombre de séquences, total, part d'audio), puis écrit une fois confirmé.
+- **S3-46** · *geste: emporter-une-nuit* · Annuler la désignation du fichier **n'écrit rien** et ne
+  demande aucune confirmation : le geste s'arrête avant même de peser.
+- **S3-47** · *geste: emporter-une-nuit* · Refuser l'annonce de volume **ne laisse aucun fichier**.
+- **S3-48** · *geste: reprendre-un-avis* · « Reprendre un avis reçu… » range le verdict du relecteur
+  dans la colonne « Avis relecteur », **avec son pseudo**, et le nôtre ne bouge pas.
+- **S3-49** · *geste: reprendre-un-avis* · Un **second** avis nomme le relecteur présent et le nombre de
+  verdicts qui seraient perdus ; refuser **n'écrit rien**.
+
+*Poste relecteur.*
+
+- **S3-50** · *geste: relire-une-nuit-confiee* · « Ouvrir un paquet reçu… » installe la sélection de
+  l'expéditeur, **figée** : la régénération est refusée **avec son motif**, pas grisée sans
+  explication.
+- **S3-51** · *geste: relire-une-nuit-confiee* · L'identité du relecteur est relevée **à l'ouverture**,
+  et c'est elle qui signera ses verdicts.
+- **S3-52** · *geste: relire-une-nuit-confiee* · « Renvoyer mon avis… » écrit un paquet **signé de
+  lui**, sans les séquences que l'expéditeur possède déjà.
+
 ## Corrections à confirmer (constats du 14/07, tous mergés)
 
 Ces constats de la passe pré-refonte sont **corrigés** ; le re-jeu les **confirme** au lieu de les

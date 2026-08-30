@@ -105,6 +105,10 @@ public final class ActionsEmport {
         if (paquet.isEmpty()) {
             return;
         }
+        if (!confirmateur.confirmer("Ouvrir ce paquet remplacera la sélection d'écoute de cette nuit par"
+                + " celle de l'expéditeur, et les verdicts posés ici seront perdus. Continuer ?")) {
+            return;
+        }
         try {
             ServiceEmport.BilanReprise bilan = service.reprendre(paquet.get(), identite);
             notificateur.notifier(

@@ -90,9 +90,24 @@
       c'est le sien sur son poste. C'est la seconde attente que ce plan formule au-delà de ce que
       #4624 a construit, après « pas relu contre non jugé » corrigée en #4742.
       **Fait** : la colonne « Avis relecteur » et `VerdictParFichier.libelleAvis` (#4742).
-- [ ] 6.2 Un geste d'écran qu'aucun clip ne montre ne se vérifie que sur parole. **Fait quand** : le
+- [x] 6.2 Un geste d'écran qu'aucun clip ne montre ne se vérifie que sur parole. **Fait quand** : le
       parcours « emporter une nuit, la relire ailleurs, reprendre l'avis » a son cas de recette et son
       clip, contrôle négatif compris.
+
+      **Fait** : huit cas, S3-45 à S3-52, en **deux familles par rôle** (#4728). Le poste expéditeur
+      prépare, emporte et reprend un avis, avec deux contrôles négatifs — une nuit sans sélection et
+      une séquence introuvable. Le poste relecteur ouvre un paquet reçu, le juge et renvoie son avis
+      signé. Quatre clips, jugés **sur l'image** au seuil de luminance 20 : moyenne 185 à 189, et
+      99 % des images au-dessus du seuil.
+
+      **Ce que le clip a trouvé et qu'aucun test unitaire n'avait vu** : sur le poste du relecteur la
+      nuit existe déjà, ouvrir l'écran de vérification y pose une sélection, et `reprendre` heurtait
+      alors `passage_id UNIQUE`. La `DataAccessException` échappait aux deux `catch` de l'appelant :
+      le geste ne rendait **aucun** compte, ni succès ni refus. Corrigé par un remplacement atomique.
+
+      **Ce que le clip ne peut pas montrer** : le voyage du fichier entre les deux postes. Aucune des
+      deux familles ne le filme, et le paquet arrive donc par la fixture. C'est une limite du
+      dispositif, énoncée plutôt que masquée.
 - [x] 6.3 La documentation de l'écran décrit un écran qui aura changé. **Fait quand** : `docs/ecrans/`
       décrit le nouveau geste, ses refus et l'affichage de l'avis d'un relecteur, et le garde de
       documentation à jour est vert.

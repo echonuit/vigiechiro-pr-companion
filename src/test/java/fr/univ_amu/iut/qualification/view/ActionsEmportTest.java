@@ -249,6 +249,9 @@ class ActionsEmportTest {
                 new UniteDeTravail(vierge)));
         List<String> refus = new ArrayList<>();
         chezVierge.notificateur().definir((niveau, entete, message) -> refus.add(entete + " | " + message));
+        // Le confirmateur est substitué aussi : ouvrir un paquet demande maintenant de confirmer le
+        // remplacement (#4728), et le défaut ouvrirait une vraie Alert hors du fil JavaFX.
+        chezVierge.confirmateur().definir(message -> true);
         chezVierge.selecteur().definir(selecteurQuiRepond(paquet));
 
         chezVierge.ouvrirPaquetRecu(Optional.of(RELECTEUR));

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.qualification.view;
 
 import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.commun.view.Notificateur;
+import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import java.util.Objects;
@@ -41,6 +42,11 @@ final class GestesEmportQualification {
     void relierAux(Notificateur notificateur, Confirmateur confirmateur) {
         actions.notificateur().definir(notificateur);
         actions.confirmateur().definir(confirmateur);
+    }
+
+    /// Le porteur du sélecteur, que la recette substitue (#4728).
+    SelecteurFichierModifiable selecteur() {
+        return actions.selecteur();
     }
 
     /// La nuit sur laquelle les gestes portent désormais.
