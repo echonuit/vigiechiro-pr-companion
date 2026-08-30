@@ -35,7 +35,7 @@ par les quatorze passes, avec bilan et artefact. Rien ne l'avait réclamée (#46
 | 1 | Audit d'intégration | ce que `main` a changé pendant le chantier | `auditer-l-integration` |
 | 2 | Cohérence CLI et IHM | la commande manquante, ou son absence justifiée | `confronter-les-deux-surfaces` |
 | 3 | Doc développeur | `dev-docs/` recolle au code livré | `recoller-la-doc-au-code`, `humaniser` en appui |
-| 4 | Doc utilisateur | `docs/` et ses captures | `revoir-les-ecrans`, `humaniser` |
+| 4 | Doc utilisateur | `docs/` et ses captures | `documenter-pour-l-utilisateur`, `humaniser` en appui |
 | 5 | Brief projet | parcours, maquettes, modèle conceptuel | `humaniser` |
 | 6 | Tests | chaque usage introduit est couvert | `tdd`, `mutation` |
 | 6b | Recette préparée | chaque capacité ajoutée a sa case `Sxx-NN`, et la fixture pour la jouer | |
