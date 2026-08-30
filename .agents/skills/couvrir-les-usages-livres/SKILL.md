@@ -109,6 +109,19 @@ Deux gestes, complémentaires :
 Les survivants se lisent **un par un**. Un survivant est soit un test à écrire, soit une mutation
 équivalente qu'on écarte en le disant.
 
+## Un dispositif peut être vert en ne vérifiant rien de ce qu'il annonce
+
+C'est la forme la plus coûteuse d'un test qui passe sans juger, parce qu'elle porte un nom qui promet.
+
+Mesuré sur #3450 : le job `fuseau-alternatif`, écrit pour rejouer toute la suite sous
+`America/Cayenne`, passait le fuseau par `-Duser.timezone` sur la **ligne Maven**. Surefire fabrique
+ses propres JVM, qui n'en héritent pas. Le job aurait été **vert en rejouant la suite dans le fuseau
+du runner**, c'est-à-dire en ne vérifiant rien.
+
+Il a fallu passer par l'**environnement**, et lui adjoindre un test qui vérifie **depuis l'intérieur
+de la suite** que le fuseau annoncé est bien celui qui tourne. Un dispositif qui annonce une
+condition la vérifie de l'intérieur, sinon il atteste son propre nom.
+
 ## La passe rend deux comptes, et un seul ne conclut pas
 
 C'est ce qui la sépare des treize autres, qui se concluent sur une mesure.

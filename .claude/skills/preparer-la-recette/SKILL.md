@@ -64,7 +64,7 @@ Une case déposée dans la mauvaise session sera jouée **deux fois ou jamais**.
 
 L'état de chaque session se lit dans l'index de la recette, **et nulle part ailleurs**. La première
 version de la page du cycle recopiait la liste : les deux copies ont divergé en **quelques heures**,
-S7 ayant été écrite le jour même où le paragraphe affirmait qu'elle n'existait pas.
+S7 ayant été écrite (#3517) le jour même où le paragraphe affirmait qu'elle n'existait pas.
 
 **Un inventaire ne se duplique pas, il se cite.**
 
