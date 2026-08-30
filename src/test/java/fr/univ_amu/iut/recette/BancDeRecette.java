@@ -20,10 +20,12 @@ import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.connexion.di.ConnexionModule;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -232,6 +234,29 @@ public final class BancDeRecette {
         return this;
     }
 
+    /// Supprime `espace` quand le fork se termine, faute de pouvoir le faire quand le banc se termine.
+    ///
+    /// `@TempDir` conviendrait, mais il s'injecte dans un test et ce banc est une aide : le lui passer
+    /// changerait la signature de `montrer` chez ses **24** appelants. Le fork meurt de toute façon à
+    /// la fin de la classe, donc la fenêtre de vie du répertoire est la même. Cette classe laissait
+    /// 1 122 répertoires dans `/tmp` (#4737).
+    ///
+    /// `File.deleteOnExit` ne conviendrait pas : il ne supprime pas un répertoire non vide, et
+    /// celui-ci porte une base.
+    private static void supprimerEnFinDeFork(Path espace) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try (var chemins = Files.walk(espace)) {
+                chemins.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+            } catch (IOException echec) {
+                // Un fork qui s'eteint n'a plus de banc a faire rougir, mais son journal est lu : c'est
+                // celui du job. Taire l'echec rendrait un repertoire ABANDONNE indiscernable d'un
+                // repertoire supprime, soit exactement le defaut que #4737 corrige (ADR 0008).
+                System.err.println("banc de recette : l'espace " + espace + " n'a pas pu etre supprime en"
+                        + " fin de fork (" + echec + "). Il restera dans /tmp.");
+            }
+        }));
+    }
+
     /// Monte tout et affiche la fenêtre. Rend l'injecteur, dont le scénario aura besoin.
     public Injector montrer(Stage stage) throws IOException {
         if (executeur == null) {
@@ -240,6 +265,7 @@ public final class BancDeRecette {
                     + " décide de ce que le clip peut montrer, et ne se prend pas par défaut.");
         }
         Path espace = Files.createTempDirectory("vc-banc");
+        supprimerEnFinDeFork(espace);
         System.setProperty("vigiechiro.workspace", espace.toString());
 
         List<Module> surcharges = new ArrayList<>();

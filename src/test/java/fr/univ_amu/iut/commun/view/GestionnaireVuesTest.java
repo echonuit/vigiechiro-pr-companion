@@ -9,7 +9,7 @@ import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
-import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +29,7 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -51,9 +52,14 @@ class GestionnaireVuesTest {
     /// Réponse de la « saisie de nom » injectée (nouvelle vue / renommage), contrôlée par test.
     private Function<String, Optional<String>> saisieNom = defaut -> Optional.of("Vue par bouton");
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test. `Files.createTempDirectory`
+    /// n'enlevait rien, et cette classe laissait 728 répertoires dans `/tmp` (#4737).
+    @TempDir
+    private Path espaceDeTravail;
+
     @Start
     void start(Stage stage) throws Exception {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(Files.createTempDirectory("vues-test")));
+        SourceDeDonnees source = new SourceDeDonnees(new Workspace(espaceDeTravail));
         new MigrationSchema(source).migrer();
         dao = new VueSauvegardeeDao(source);
 
