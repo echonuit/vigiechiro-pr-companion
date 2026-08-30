@@ -753,6 +753,12 @@ jobs:
         # presenterait comme un rapport propre. Ses temoins tiennent les deux lectures qui comptent :
         # recoller les lignes de continuation d'un lot, et ne pas confondre `#46` avec `#4`.
         run: python3 scripts/adr/loupe-4712-lots-multi-pr.py --auto-test
+      - name: "Auto-test du compte des reliquats (bloquant, #4859)"
+        # Son seul défaut possible est de MAL COMPTER, et il se présenterait comme un rapport propre.
+        # Ses témoins tiennent ce qui décide : le compte est différentiel, et un dossier étranger à la
+        # suite reste dehors.
+        run: python3 scripts/methode/compte-les-reliquats.py --auto-test
+
       - name: "Auto-test du relevé des bancs instables (bloquant, #4806)"
         # Ce relevé lit les TENTATIVES d'un run, pas son verdict courant : une relance écrase l'échec
         # précédent, si bien que la signature d'une instabilité est invisible dans `gh run list`.
