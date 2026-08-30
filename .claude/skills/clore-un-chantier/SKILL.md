@@ -33,7 +33,7 @@ par les quatorze passes, avec bilan et artefact. Rien ne l'avait réclamée (#46
 |---|---|---|---|
 | 0 | Relecture des ADR existantes | la liste des décisions que le chantier a contredites | `ecrire-une-adr` |
 | 1 | Audit d'intégration | ce que `main` a changé pendant le chantier | `auditer-l-integration` |
-| 2 | Cohérence CLI et IHM | la commande manquante, ou son absence justifiée | |
+| 2 | Cohérence CLI et IHM | la commande manquante, ou son absence justifiée | `confronter-les-deux-surfaces` |
 | 3 | Doc développeur | `dev-docs/` recolle au code livré | `humaniser` |
 | 4 | Doc utilisateur | `docs/` et ses captures | `revoir-les-ecrans`, `humaniser` |
 | 5 | Brief projet | parcours, maquettes, modèle conceptuel | `humaniser` |
