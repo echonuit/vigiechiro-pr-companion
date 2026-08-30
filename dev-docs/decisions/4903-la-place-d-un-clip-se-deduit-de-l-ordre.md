@@ -15,7 +15,7 @@ generated:
   at: 2026-08-30
 ---
 
-# La place d'un contrôle visuel se déduit de l'ordre
+# La place d'un contrôle visuel se déduit de l'ordre des passes, pas de la destination de ce qu'il produit
 
 ## Contexte
 
