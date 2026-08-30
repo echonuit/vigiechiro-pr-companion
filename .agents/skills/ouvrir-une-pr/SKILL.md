@@ -132,6 +132,27 @@ rien et ne signale rien : la PR fusionne **verte** et l'issue reste **ouverte**.
 Pour renvoyer sans clore - un lot dans un EPIC - `Refs #N` ou « Rattaché à #N », qui ne prétendent
 rien.
 
+## Si le chantier porte un changement OpenSpec, le corps nomme sa tâche
+
+Un chantier qui a tranché sa spécification à l'ouverture porte un `tasks.md`, et ce lot en réalise
+une ligne. **Le corps de la demande la nomme**, parce que c'est là qu'elle se relit : le fichier vit
+dans la branche, la demande vit sur la forge, et c'est la forge qu'on interroge pour savoir ce qui a
+été fait.
+
+```
+Réalise la tâche 3 du changement `emporter-une-nuit`.
+```
+
+`openspec status --change "<nom>" --json` rend les tâches et leur état quand on ne les a plus en tête.
+
+**Et la tâche se coche dans le même commit que le travail.** C'est ce qui s'est produit pour
+`emporter-une-nuit`, dont les dix-sept tâches ont été cochées par les commits qui les réalisaient,
+sans que rien ne le demande. Un cochage différé est un cochage qui n'a pas lieu, et l'écart ne se
+découvre alors qu'à l'archivage, quand `tasks.md` décrit un plan que le code a déjà dépassé.
+
+**Sans changement actif, il n'y a rien à nommer**, et ce n'est pas un manque : la plupart des lots du
+dépôt n'en portent pas.
+
 ## Le moniteur, dans le même geste que l'ouverture
 
 Ce qu'il surveille : un rouge, et la fin des vérifications. Ce qu'il ne fait pas : conclure à votre

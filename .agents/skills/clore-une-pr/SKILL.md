@@ -85,6 +85,17 @@ corps d'avant fait lire l'ancien plan comme s'il valait encore.
 **L'EPIC compte aussi.** Cocher le lot livré prend dix secondes, et un EPIC dont les cases ne bougent
 pas laisse croire qu'il n'avance pas.
 
+**Et la tâche du changement OpenSpec, s'il y en a un.** Elle se coche dans la branche, avec le
+travail, donc **avant** la fusion : c'est le dernier moment où le geste est encore gratuit. Après, il
+faut une demande pour cocher une case.
+
+Ce n'est pas une exigence neuve, c'est ce qui s'est déjà fait : les dix-sept tâches du changement
+`emporter-une-nuit` ont été cochées par les commits qui les réalisaient. Rien ne le demandait, et
+c'est bien le problème - une habitude tient tant que la même personne travaille.
+
+Une tâche non cochée ne se rattrape pas, elle se **découvre** : à l'archivage, quand `tasks.md`
+décrit un plan que le code a déjà dépassé, et qu'on ne sait plus lequel des deux avait raison.
+
 ## Après la fusion, `main` se vérifie
 
 La CI a jugé la **branche**. Ce qui part en production est la **fusion**, et deux PR vertes séparément

@@ -53,6 +53,28 @@ Elle vient **après** [`clore-une-pr`](../clore-une-pr/SKILL.md) : la PR fusionn
 net et se ferme. Quand elle était la dernière d'un chantier,
 [`clore-un-chantier`](../clore-un-chantier/SKILL.md) prend la suite.
 
+## Si l'issue réalisait une tâche, le plan se confronte au livré
+
+L'étape 1 demande si la prémisse d'ouverture tient encore. Quand l'issue réalisait la tâche d'un
+changement OpenSpec, la même question se pose au plan : **la tâche décrit-elle ce qui a été livré ?**
+
+Trois réponses, et une seule est le cas courant.
+
+| Ce qu'on trouve | Ce qu'on fait |
+|---|---|
+| la tâche décrit le livré | elle est cochée depuis la branche, il n'y a rien à faire |
+| le livré a dépassé le plan | le plan suit, par [`openspec-update-change`](../openspec-update-change/SKILL.md) |
+| la tâche n'est pas cochée | la cocher maintenant, et se demander pourquoi elle ne l'a pas été |
+
+**Ce n'est pas un quatrième déclencheur de la révision**, qui en a trois et qui viennent tous du
+milieu du chantier. C'est le dernier endroit où l'on vérifie que ces trois-là ont été honorés, et le
+dernier où l'écart coûte encore peu.
+
+**Ce que coûte de ne pas regarder, mesuré.** Une révision de `emporter-une-nuit` avait écarté la
+régénération d'une sélection reçue. **Trois artefacts** ont continué de la supposer, dont la tâche
+5.2, et aucun garde ne les a vus : il a fallu relire. Un seul aurait suffi à faire archiver une
+spécification que le code dément.
+
 ## Deux dettes réelles, laissées dans le dépôt
 
 Une prémisse fausse, une mesure de mutation lue comme « ce code est atteignable », a été corrigée
