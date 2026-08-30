@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// **Test E2E de la couture « référence → sommeil → réveil »** (#2425, chantier #2258).
 ///
@@ -51,6 +52,12 @@ class ParcoursImporterTransformesE2ETest {
     private static final int FREQUENCE_ENTETE = 38_400; // Fe/10 d'une séquence déjà transformée
     private static final int TRAMES = 6_000;
 
+    /// La racine des espaces de ce banc, **statique** parce que l'un des deux appels vit dans
+    /// une méthode statique. JUnit la crée une fois pour la classe et la supprime au bout, ce
+    /// qui suffit : les répertoires qu'elle porte disparaissent avec elle (#4914).
+    @TempDir
+    private static Path dossierTemporaire;
+
     @Test
     @DisplayName(
             "Référence → sommeil → réveil : l'audio référencé s'endort quand le support part, se réveille au retour")
@@ -66,7 +73,7 @@ class ParcoursImporterTransformesE2ETest {
         SequenceDao sequenceDao = injector.getInstance(SequenceDao.class);
 
         // 1. Référencer un dossier externe de transformés (aucune copie dans l'espace de travail).
-        Path support = preparerDossierTransforme(Files.createTempDirectory("vc-e2e-tr-support"));
+        Path support = preparerDossierTransforme(Files.createTempDirectory(dossierTemporaire, "vc-e2e-tr-support"));
         ResultatImportReference resultat =
                 importReference.importer(support, idPoint, 2026, 1, true, p -> {}, JetonAnnulation.neutre());
         long idPassage = resultat.idPassage();
@@ -117,7 +124,7 @@ class ParcoursImporterTransformesE2ETest {
     }
 
     private static Injector injecteurNeuf() throws IOException {
-        Path workspace = Files.createTempDirectory("vc-e2e-tr-ws");
+        Path workspace = Files.createTempDirectory(dossierTemporaire, "vc-e2e-tr-ws");
         System.setProperty("vigiechiro.workspace", workspace.toString());
         return Guice.createInjector(RacineInjecteur.modules());
     }

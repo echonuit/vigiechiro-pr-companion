@@ -33,7 +33,6 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MessageObservation;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
@@ -49,6 +48,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -79,9 +79,13 @@ class ParcoursValidationExpertE2ETest {
     /// en fabrique un neuf par chargement, et seul celui-là a ses colonnes câblées.
     private fr.univ_amu.iut.audio.view.SonsValidationController controleur;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test (#4914).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-e2e-expert");
+        Path workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = Guice.createInjector(Modules.override(RacineInjecteur.modules())
                 .with(liaison -> liaison.bind(ClientVigieChiro.class).toInstance(plateformeBouchonnee())));
