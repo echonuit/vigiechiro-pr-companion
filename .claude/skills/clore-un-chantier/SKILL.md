@@ -107,6 +107,11 @@ rendue fausse par un autre chantier, l'écran que la passe 8 regarde peut avoir 
 
 > Une passe se conclut sur une **mesure reproductible**, ou elle ne se conclut pas.
 
+**Une seule fait exception, et elle est nommée.** La passe 6 conclut sur **deux** comptes, les tests
+ajoutés par famille et les survivants éliminés, parce que couverture et sévérité varient
+indépendamment et qu'aucune mesure unique ne les résume sans en cacher une
+([ADR 4926](../../../dev-docs/decisions/4926-la-passe-6-conclut-sur-deux-comptes.md)).
+
 Reproductible veut dire : quelqu'un d'autre lance la même commande et obtient le même nombre. Une
 lecture à l'œil, un souvenir, un « ça doit être ça » n'en sont pas - et une clôture est précisément
 l'endroit où l'on croit savoir, puisqu'on vient d'écrire le code.
