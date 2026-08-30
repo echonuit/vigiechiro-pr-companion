@@ -33,6 +33,15 @@ OpenStreetMap », « on n'ajoute aucune protection de branche », « ce territoi
 table de dérivation ». Ce sont des ADR, et **ce sont celles qu'on oublie**, parce qu'elles ne
 laissent pas de code derrière elles.
 
+## Une par décision, immuable, et numérotée comme son issue
+
+**Le numéro de l'ADR est celui de l'issue** qui a porté la décision. Cela évite d'inventer une
+numérotation parallèle, et rend le chemin de la décision au travail qui l'a produite lisible dans les
+deux sens.
+
+Une par décision : deux décisions dans un fichier se renversent ensemble le jour où l'une seule
+change.
+
 ## Les trois niveaux de vérification
 
 | Niveau | Ce qu'il exige | Ce qu'il nomme |
@@ -43,6 +52,20 @@ laissent pas de code derrière elles.
 
 Le niveau se déclare en en-tête, au même titre que le statut et le chantier. Un niveau `certaine`
 sans référence nommée est refusé.
+
+La règle vient de l'[ADR 2465](../../../dev-docs/decisions/2465-une-adr-declare-comment-elle-est-verifiee.md),
+et se pose dans les champs de l'en-tête OKF :
+
+| Champ | Ce qu'il porte |
+|---|---|
+| `verification:` | `certaine`, `probable` ou `humaine` |
+| `enforced_by:` | le test ou le script qui **refuse**, pour `certaine` et `probable` |
+| `ratchet:` | le cliquet, que `probable` exige en plus |
+| `loupe:` | pour `humaine`, à la place d'un applicateur |
+
+**Une vérification `humaine` déclare une loupe, jamais un `enforced_by:`.** Y nommer un script
+prétendrait qu'il refuse, quand il ne fait que relever, et un garde qui promet plus qu'il ne tient
+emprunte la solidité de ses voisins.
 
 ## Fonction de garde
 
@@ -69,12 +92,35 @@ masquait.
 
 **Un cycle qui exige une chose impossible obtient qu'on l'ignore.**
 
+Les cinq ADR du chantier #3151, les 3406, 3439, 3450, 3451 et 3483, portent **toutes** la mention
+« suite de » : aucune n'est née à l'endroit où le cycle les demandait. L'ADR 3439 est sortie de la
+revue visuelle, et l'ADR 3483 d'une trouvaille faite en retirant ce que 3439 masquait.
+
+**Un cycle qui exige une chose impossible obtient qu'on l'ignore.**
+
 ## Les trois sources qui reviennent
 
 - la **passe 0**, quand le chantier a délibérément **dépassé** une ADR existante : le dépassement
   s'écrit, sinon deux règles opposées cohabitent dans le dépôt ;
 - la **passe 7**, où un refactoring de conceptualisation tranche presque toujours quelque chose ;
 - la **passe 8**, où l'on découvre ce qu'aucun test ne dit.
+
+## Ce qu'il faut lancer, plutôt que de le découvrir en CI
+
+Une ADR neuve doit atteindre son lecteur, et deux dispositifs le vérifient, à des moments différents.
+
+```bash
+python3 scripts/adr/verifie_okf.py            # refuse, neuf formes dont l'atteignabilité
+python3 scripts/methode/matrice-constitution.py --verifie   # dit si la matrice est périmée
+python3 scripts/methode/matrice-constitution.py             # la régénère
+```
+
+`verifie_okf.py` refuse une ADR **absente de `dev-docs/decisions/index.md` ou de `mkdocs-dev.yml`**,
+sous le motif « atteignabilité ». Ce n'est pas théorique : les ADR 4649 et 4829, écrites le 30 août
+2026, ont été refusées tant qu'elles ne figuraient pas aux deux endroits.
+
+La **matrice de la constitution** n'est pas dans ce garde. Elle se régénère, et son contrôle le dit
+plutôt qu'il ne le corrige.
 
 ## Signaux d'alerte : on s'arrête
 
