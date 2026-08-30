@@ -36,4 +36,19 @@ public record SessionDEnregistrement(
         Path nom = Path.of(cheminRacine).getFileName();
         return Prefixe.depuisNomDossier(nom == null ? null : nom.toString());
     }
+
+    /// Le chemin réel d'un fichier de cette session : **absolu tel quel, relatif résolu contre la
+    /// racine** (#4666). Vivait en deux exemplaires, ici parce qu'ici vit la racine.
+    ///
+    /// **Aucune branche `isAbsolute()`, et c'est voulu** : `Path.resolve` rend trivialement un argument
+    /// absolu, c'est son contrat. Les deux exemplaires en portaient une, morte.
+    ///
+    /// Un chemin absent et une session introuvable restent les cas de l'appelant, pas la règle.
+    /// Ce que l'écart a coûté est écrit en #1994 : un chemin non résolu faisait échouer le dépôt.
+    ///
+    /// @param cheminFichier le chemin stocké, absolu ou relatif
+    /// @return le chemin résolu
+    public Path resoudre(Path cheminFichier) {
+        return Path.of(cheminRacine).resolve(cheminFichier);
+    }
 }

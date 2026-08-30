@@ -128,8 +128,7 @@ public class ServiceLot {
     /// **lit la taille** des fichiers, donc un chemin non résolu fait échouer le dépôt là où la
     /// génération, elle, passait.
     private static Path resoudreDansSession(SessionDEnregistrement session, String cheminSequence) {
-        Path chemin = Path.of(cheminSequence);
-        return chemin.isAbsolute() ? chemin : Path.of(session.cheminRacine()).resolve(chemin);
+        return session.resoudre(Path.of(cheminSequence));
     }
 
     /// Consulte l'état de dépôt d'un passage **sans le transitionner** (lecture pour l'IHM M-Lot) :

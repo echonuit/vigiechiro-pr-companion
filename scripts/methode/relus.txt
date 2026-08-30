@@ -998,7 +998,7 @@ a8eaf78c837a  src/main/java/fr/univ_amu/iut/passage/model/ServicePassage.java
 0884a6469fe1  src/main/java/fr/univ_amu/iut/passage/model/ServiceRattachement.java
 213926b6598d  src/main/java/fr/univ_amu/iut/passage/model/ServiceReactivationPassage.java
 24493cd0b728  src/main/java/fr/univ_amu/iut/passage/model/ServiceReconstructionPassages.java
-311edadbba1e  src/main/java/fr/univ_amu/iut/passage/model/SessionDEnregistrement.java
+0857df4f8d6e  src/main/java/fr/univ_amu/iut/passage/model/SessionDEnregistrement.java
 642311752ffe  src/main/java/fr/univ_amu/iut/passage/model/SortieDeRecuperation.java
 078c630ba344  src/main/java/fr/univ_amu/iut/passage/model/SynchronisationParticipation.java
 7f2837d0c5ef  src/main/java/fr/univ_amu/iut/passage/model/UniciteQuadruplet.java
@@ -1865,6 +1865,7 @@ acd643d069e5  src/test/java/fr/univ_amu/iut/passage/model/PropositionsEnregistre
 8c770b41719f  src/test/java/fr/univ_amu/iut/passage/model/ServiceDisponibiliteAudioTest.java
 480bb2c177aa  src/test/java/fr/univ_amu/iut/passage/model/ServiceReactivationPassageTest.java
 7197dbbe34ed  src/test/java/fr/univ_amu/iut/passage/model/ServiceReconstructionPassagesTest.java
+63b238f5b1c7  src/test/java/fr/univ_amu/iut/passage/model/SessionDEnregistrementTest.java
 36b21d2ee473  src/test/java/fr/univ_amu/iut/passage/model/SynchronisationParticipationTest.java
 8a9952c6166d  src/test/java/fr/univ_amu/iut/passage/model/VerificationIdentiteAudioTest.java
 cbf696adf24a  src/test/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleViewTest.java

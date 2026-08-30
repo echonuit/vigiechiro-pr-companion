@@ -137,12 +137,9 @@ public class ExportObservationsEtSons {
             return null;
         }
         Path chemin = Path.of(sequence.cheminFichier());
-        if (chemin.isAbsolute()) {
-            return chemin;
-        }
         return Optional.ofNullable(sessionsParId.get(sequence.idSession()))
-                .map(session -> Path.of(session.cheminRacine()).resolve(chemin))
-                .orElse(null);
+                .map(session -> session.resoudre(chemin))
+                .orElseGet(() -> chemin.isAbsolute() ? chemin : null);
     }
 
     /// Nom du sous-dossier d'archive d'une session : le **nom de son dossier** sur disque (le
