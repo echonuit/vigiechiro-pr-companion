@@ -196,15 +196,16 @@ def auto_test() -> int:
     return 0
 
 
-if "--auto-test" in sys.argv:
-    sys.exit(auto_test())
+if __name__ == "__main__":
+    if "--auto-test" in sys.argv:
+        sys.exit(auto_test())
 
-trouves = ecarts(RACINE)
-if trouves:
-    print("Le controle local du titre ne tient plus :", file=sys.stderr)
-    for e in trouves:
-        print(f"  {e}", file=sys.stderr)
-    print("\n" + RAPPEL, file=sys.stderr)
-    sys.exit(1)
+    trouves = ecarts(RACINE)
+    if trouves:
+        print("Le controle local du titre ne tient plus :", file=sys.stderr)
+        for e in trouves:
+            print(f"  {e}", file=sys.stderr)
+        print("\n" + RAPPEL, file=sys.stderr)
+        sys.exit(1)
 
-print(f"{len(CORPUS)} document(s) nomment « {GARDE.name} », qui refuse encore l espace.")
+    print(f"{len(CORPUS)} document(s) nomment « {GARDE.name} », qui refuse encore l espace.")

@@ -133,6 +133,16 @@ def suspects() -> tuple[list[str], list[str]]:
     return decoratifs, illisibles
 
 
+def code_de_sortie(decoratifs: list[str], illisibles: list[str]) -> int:
+    """Le verdict, extrait du point d entree pour qu un temoin puisse l atteindre (issue #4788).
+
+    Les DEUX refusent, et c est la decision de cette issue. Un garde illisible etait signale en
+    sortant 0 : six sur quinze etaient dans ce cas, la CI restait verte, et la liste ne se vidait
+    pas. Une ligne de journal sous un vert ne se lit pas.
+    """
+    return 1 if (decoratifs or illisibles) else 0
+
+
 def _auto_test() -> int:
     echecs = 0
 
@@ -164,6 +174,12 @@ def _auto_test() -> int:
     # Et l exemption se derive : elle ne nomme aucun garde en particulier.
     verifie("l exemption ne cite aucun nom de garde",
             any(g.split(".")[0] in NEUTRALISATION for g in corpus()), False)
+
+    # #4788. Un garde sans point d entree REFUSE, au lieu d etre signale sous un vert.
+    verifie("rien a signaler passe", code_de_sortie([], []), 0)
+    verifie("un garde decoratif refuse", code_de_sortie(["x"], []), 1)
+    verifie("un garde SANS POINT D ENTREE refuse aussi", code_de_sortie([], ["y"]), 1)
+    verifie("et les deux ensemble refusent", code_de_sortie(["x"], ["y"]), 1)
     return echecs
 
 
@@ -185,9 +201,16 @@ if __name__ == "__main__":
     if illisibles:
         print(
             "\nCes gardes exécutent leur corps au niveau du module : aucun endroit sûr où insérer\n"
-            "la neutralisation. Les sauter en silence rendrait vert sur une couverture partielle,\n"
-            "ce que ce garde existe pour empêcher. Leur sort est décidé par l'issue #4788.",
+            "la neutralisation, donc aucune preuve au titre de l'article A2.\n"
+            "\nLe remède tient en une ligne : placez la partie qui S'EXÉCUTE sous\n"
+            "`if __name__ == \"__main__\":`, en laissant AU-DESSUS tout ce qui se définit.\n"
+            "La neutralisation s'insère juste avant ce point d'entrée, et une fonction\n"
+            "définie après lui y échapperait.\n"
+            "\nCe garde REFUSE désormais au lieu de le signaler (issue #4788). Il l'a signalé\n"
+            "en sortant 0 tant que six gardes sur quinze étaient dans ce cas : une ligne de\n"
+            "journal sous une CI verte ne se lit pas, et la liste ne se vidait pas.",
             file=sys.stderr,
         )
-    print("Les %d gardes de méthode éprouvés rougissent sous mutation." % (len(corpus()) - len(illisibles)))
-    raise SystemExit(0)
+    if not code_de_sortie(decoratifs, illisibles):
+        print("Les %d gardes de méthode éprouvés rougissent sous mutation." % len(corpus()))
+    raise SystemExit(code_de_sortie(decoratifs, illisibles))

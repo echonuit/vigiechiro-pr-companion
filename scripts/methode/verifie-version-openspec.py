@@ -255,21 +255,22 @@ def auto_test() -> int:
     return 0
 
 
-if "--auto-test" in sys.argv:
-    sys.exit(auto_test())
+if __name__ == "__main__":
+    if "--auto-test" in sys.argv:
+        sys.exit(auto_test())
 
-trouves = ecarts(RACINE)
-if trouves:
-    print("Version d OpenSpec desynchronisee :", file=sys.stderr)
-    for e in trouves:
-        print(f"  {e}", file=sys.stderr)
-    print(
-        "\nLe lockfile fait foi. Pour monter de version, il ne suffit pas de le deplacer : les "
-        "douze fichiers d OpenSpec decrivent le contrat de la version qu ils declarent, et se "
-        "regenerent ou se relisent a la main.",
-        file=sys.stderr,
-    )
-    sys.exit(1)
+    trouves = ecarts(RACINE)
+    if trouves:
+        print("Version d OpenSpec desynchronisee :", file=sys.stderr)
+        for e in trouves:
+            print(f"  {e}", file=sys.stderr)
+        print(
+            "\nLe lockfile fait foi. Pour monter de version, il ne suffit pas de le deplacer : les "
+            "douze fichiers d OpenSpec decrivent le contrat de la version qu ils declarent, et se "
+            "regenerent ou se relisent a la main.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
-resolue, _ = version_resolue(RACINE)
-print(f"{PAQUET} {resolue}, {len(competences(RACINE))} competence(s) alignee(s).")
+    resolue, _ = version_resolue(RACINE)
+    print(f"{PAQUET} {resolue}, {len(competences(RACINE))} competence(s) alignee(s).")

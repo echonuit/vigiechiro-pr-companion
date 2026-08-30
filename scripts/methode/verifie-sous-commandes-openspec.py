@@ -288,23 +288,24 @@ def auto_test() -> int:
     return 0
 
 
-if "--auto-test" in sys.argv:
-    sys.exit(auto_test())
+if __name__ == "__main__":
+    if "--auto-test" in sys.argv:
+        sys.exit(auto_test())
 
-trouves = ecarts(RACINE)
-if trouves:
-    print("Invocations d OpenSpec qui n existent pas :", file=sys.stderr)
-    for e in trouves:
-        print(f"  {e}", file=sys.stderr)
+    trouves = ecarts(RACINE)
+    if trouves:
+        print("Invocations d OpenSpec qui n existent pas :", file=sys.stderr)
+        for e in trouves:
+            print(f"  {e}", file=sys.stderr)
+        print(
+            "\nLa liste du valide est lue de l aide de la ligne de commande epinglee, jamais recopiee "
+            "ici : une liste recopiee serait un second inventaire a tenir. Si l invocation est bonne "
+            "et l outil a change, c est la version epinglee qu il faut reprendre.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    outil, _ = binaire(RACINE)
     print(
-        "\nLa liste du valide est lue de l aide de la ligne de commande epinglee, jamais recopiee "
-        "ici : une liste recopiee serait un second inventaire a tenir. Si l invocation est bonne "
-        "et l outil a change, c est la version epinglee qu il faut reprendre.",
-        file=sys.stderr,
+        f"{len(fichiers(RACINE))} fichier(s) d OpenSpec relus : toutes les invocations citees existent."
     )
-    sys.exit(1)
-
-outil, _ = binaire(RACINE)
-print(
-    f"{len(fichiers(RACINE))} fichier(s) d OpenSpec relus : toutes les invocations citees existent."
-)
