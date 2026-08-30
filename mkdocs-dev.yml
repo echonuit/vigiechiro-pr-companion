@@ -318,6 +318,8 @@ nav:
     - 4787 · Un cas qui garde une absence relève d'abord la présence, dans le même cas: decisions/4787-un-cas-qui-garde-une-absence-releve-d-abord-la-presence.md
     - 4781 · Un garde mesure le dépôt dont il fait partie: decisions/4781-un-garde-mesure-le-depot-dont-il-fait-partie.md
     - 4788 · L'absence de preuve refuse, elle ne se signale pas: decisions/4788-l-absence-de-preuve-refuse-elle-ne-se-signale-pas.md
+    - 4649 · Un garde qui interroge la forge juge l'objet de sa demande, pas le dépôt entier: decisions/4649-un-garde-de-forge-juge-l-objet-de-sa-demande.md
+    - 4829 · Le rattachement d'une issue à son chantier est une donnée, pas de la prose: decisions/4829-le-rattachement-d-une-issue-est-une-donnee-pas-de-la-prose.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
