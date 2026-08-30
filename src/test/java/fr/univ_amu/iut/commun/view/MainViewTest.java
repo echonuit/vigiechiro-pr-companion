@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -377,6 +378,10 @@ class MainViewTest {
         // menu, puis les compteurs qui changent, et jamais ce qui a été choisi entre les deux.
         GesteVisible.choisir(robot, "#menuOutils", entree.libelle());
         Respiration.surLeMomentCle(robot);
+        // La respiration ci-dessus ne s'arrête QUE si l'on filme : entre le geste et l'assertion, ce
+        // banc n'attendait donc rien en CI, et il réussissait parce que la restauration avait le plus
+        // souvent fini avant. Quatre fois sur 1 150 elle n'avait pas fini (#4694, mesuré par #4811).
+        Attente.que(bandeau::isVisible, "que les compteurs reflètent la base restaurée");
 
         assertThat(bandeau.isVisible())
                 .as("les compteurs reflètent la base restaurée sans qu'on ait quitté l'accueil")
