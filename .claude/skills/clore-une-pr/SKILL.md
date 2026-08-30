@@ -36,20 +36,33 @@ au moment où on l'a regardé.
 
 ## Toutes les vérifications ne jugent pas tout
 
-Un changement de documentation n'est jugé par aucun job Java. Attendre `paquet`, `ordre-alternatif` ou
-`fuseau-alternatif` sur une PR qui ne touche que des `.md` fait perdre vingt minutes pour un verdict
-sans objet.
+**La documentation de ce dépôt est testée comme du code, et c'est ce qu'on oublie.** Huit classes de
+test lisent des fichiers de documentation et refusent quand ils dérivent : `DocumentationAJourTest`,
+`NomDeLApplicationTest`, `ConventionsDEcritureTest`, `AnnonceDesMutationsTest`, et les quatre de
+`recette` qui tiennent les sessions, les clips et leur correspondance.
+
+Une PR qui ne touche que des `.md` est donc jugée par `build`, et par les deux rejeux qui relancent la
+**suite entière** sans filtre. Seul `paquet` en est vraiment dispensé : il assemble avec `-DskipTests`.
 
 Ce qui juge, selon ce qu'on a touché :
 
 | Ce que la PR touche | Ce qui la juge |
 |---|---|
-| documentation, compétences, ADR, workflows | `lint`, `corps`, `titre`, `contrat-fichiers` |
-| code de production ou de test | tout, y compris les rejeux en fuseau et en ordre alternatifs |
+| documentation, compétences, ADR, workflows | `lint`, `corps`, `titre`, `contrat-fichiers`, **et `build`**, `ordre-alternatif`, `fuseau-alternatif` |
+| code de production ou de test | tout, y compris `paquet` |
 | une vue ou une capture | `capturer` et les gardes de captures en plus |
 
 **`lint` juge presque tout**, y compris les compétences : il porte les gardes de méthode, les
 inventaires et les auto-tests des gardes de CI.
+
+**Ce que cette page a enseigné de faux, et ce qu'il en a coûté.** Elle affirmait qu'*un changement de
+documentation n'est jugé par aucun job Java*, et son tableau omettait `build`. Le 30 août 2026, #4923
+a été fusionnée avec les quatre vérifications que cette page désignait, toutes vertes. `build` a
+conclu **douze minutes plus tard** : deux ADR portaient un titre en en-tête et un autre sur leur page.
+`main` est resté rouge une heure, et deux demandes ouvertes ensuite en ont hérité.
+
+La fusion était **correcte selon cette page**. Ce n'était pas une inattention, et c'est ce qui rend
+l'erreur coûteuse : une consigne fausse est suivie exactement.
 
 ## Un rouge n'est pas toujours une régression
 
@@ -113,7 +126,9 @@ au net et se ferme. Et fermer la dernière issue d'un chantier n'est pas le clor
 
 | Pensée | Réalité |
 |---|---|
-| « J'attends que tout soit vert » | Les jobs Java ne jugent pas une PR de documentation |
+| « C'est de la doc, aucun job Java ne la juge » | Huit classes de test lisent la documentation. Cette page a enseigné le contraire, et `main` en est resté rouge une heure |
+| « Quatre vérifications sur cinq sont vertes » | Nommez celle qui manque. Compter les vertes ressemble à vérifier, et c'est le geste qui a fusionné #4923 |
+| « J'attends que tout soit vert » | Seul `paquet` ne juge pas un `.md` : il assemble avec `-DskipTests`. Les deux rejeux, eux, relancent la suite entière |
 | « C'est rouge, donc j'ai cassé quelque chose » | Cherchez le même job ailleurs. Une bascule rougit sans avoir lu |
 | « Je relance, ça passera » | Une bascule se consigne. La relancer en silence apprend à ignorer les rouges |
 | « Le corps décrit bien la PR » | Il décrit ce qu'elle était à l'ouverture. Elle a grossi depuis |
