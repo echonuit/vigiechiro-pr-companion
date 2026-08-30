@@ -27,6 +27,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.qualification.model.AvisRevenu;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
+import fr.univ_amu.iut.qualification.model.DetailSelection;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
 import fr.univ_amu.iut.qualification.model.PlanDeReprise;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
@@ -40,6 +41,10 @@ import fr.univ_amu.iut.qualification.model.dao.SelectionDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -247,7 +252,8 @@ class ServiceQualificationTest {
         service.enregistrerVerdictFichier(idPassage, sequences.get(0), VerdictFichier.BON);
         selectionDao.marquerAvisDeRelecteur(selection.id(), sequences.get(0), VerdictFichier.MAUVAIS, "martin");
 
-        List<SequenceEnSelection> lignes = service.detaillerSelection(selection.id());
+        List<SequenceEnSelection> lignes =
+                service.detaillerSelection(selection.id()).lignes();
 
         assertThat(lignes.get(0).verdict())
                 .as("le verdict de l'expéditeur reste celui de l'expéditeur")
@@ -321,7 +327,7 @@ class ServiceQualificationTest {
     @DisplayName("#1512 : detaillerSelectionParPassage joint la sélection par passage (vide si absente)")
     void detailler_selection_par_passage() {
         // Sans sélection : liste vide (lecture seule, ne constitue rien).
-        assertThat(service.detaillerSelectionParPassage(idPassage)).isEmpty();
+        assertThat(service.detaillerSelectionParPassage(idPassage).lignes()).isEmpty();
 
         creerNuit(3);
         SelectionDEcoute selection = service.creerSelection(idPassage, MethodeSelection.MANUEL, 3);
@@ -331,7 +337,8 @@ class ServiceQualificationTest {
         service.enregistrerVerdictFichier(idPassage, sequences.get(0), VerdictFichier.BON);
         service.enregistrerVerdictFichier(idPassage, sequences.get(2), VerdictFichier.INEXPLOITABLE);
 
-        List<SequenceEnSelection> lignes = service.detaillerSelectionParPassage(idPassage);
+        List<SequenceEnSelection> lignes =
+                service.detaillerSelectionParPassage(idPassage).lignes();
         assertThat(lignes).hasSize(3);
         assertThat(lignes)
                 .extracting(SequenceEnSelection::verdict)
@@ -580,12 +587,52 @@ class ServiceQualificationTest {
     }
 
     @Test
+    @DisplayName("#4739 : une séquence rattachée mais illisible est NOMMÉE, pas retirée en silence")
+    void detailler_selection_nomme_ce_qu_elle_n_a_pas_pu_lire() throws SQLException {
+        creerNuit(3);
+        SelectionDEcoute selection = service.ouvrirVerification(idPassage);
+        int avant = service.detaillerSelection(selection.id()).lignes().size();
+
+        rattacherUneSequenceInexistante(selection.id(), 999_999L);
+
+        DetailSelection detail = service.detaillerSelection(selection.id());
+
+        assertThat(detail.lignes()).as("les séquences lisibles restent").hasSize(avant);
+        assertThat(detail.complet()).isFalse();
+        assertThat(detail.sequencesIntrouvables()).containsExactly(999_999L);
+        assertThat(detail.avertissement())
+                .as("l'appelant doit pouvoir dire ce qui manque, pas seulement en compter moins")
+                .contains("999999");
+    }
+
+    /// Pose un rattachement **pendant** : une ligne de `selection_sequence` dont la séquence n'existe
+    /// pas. L'application ne peut pas la produire, `PRAGMA foreign_keys = ON` étant posé sur chaque
+    /// connexion de [SourceDeDonnees] et la colonne portant un `REFERENCES ... ON DELETE CASCADE`.
+    ///
+    /// Une base **éditée hors de l'application** le peut : le pragma ne valide pas rétroactivement les
+    /// lignes déjà écrites. C'est cet état-là que le cas éprouve, et c'est pourquoi l'insertion se fait
+    /// sur une connexion nue, pragma par défaut, plutôt que par le DAO qui la refuserait.
+    private void rattacherUneSequenceInexistante(Long idSelection, long idSequenceAbsente) throws SQLException {
+        String url = "jdbc:sqlite:" + new Workspace(dossier).cheminBaseDeDonnees();
+        try (Connection nue = DriverManager.getConnection(url);
+                PreparedStatement insertion = nue.prepareStatement(
+                        "INSERT INTO selection_sequence (selection_id, sequence_id, position, listened)"
+                                + " VALUES (?, ?, ?, 0)")) {
+            insertion.setLong(1, idSelection);
+            insertion.setLong(2, idSequenceAbsente);
+            insertion.setInt(3, 99);
+            insertion.executeUpdate();
+        }
+    }
+
+    @Test
     @DisplayName("detaillerSelection joint les séquences (ordre position) et reflète le flag écouté")
     void detailler_selection() {
         List<SequenceDEcoute> nuit = creerNuit(50);
         SelectionDEcoute selection = service.ouvrirVerification(idPassage);
 
-        List<SequenceEnSelection> lignes = service.detaillerSelection(selection.id());
+        List<SequenceEnSelection> lignes =
+                service.detaillerSelection(selection.id()).lignes();
 
         assertThat(lignes).extracting(SequenceEnSelection::position).startsWith(0, 1, 2);
         assertThat(lignes).allSatisfy(ligne -> assertThat(ligne.ecoutee()).isFalse());
@@ -593,7 +640,7 @@ class ServiceQualificationTest {
 
         Long premiere = lignes.get(0).sequence().id();
         service.marquerSequenceEcoutee(selection.id(), premiere);
-        SequenceEnSelection rechargee = service.detaillerSelection(selection.id()).stream()
+        SequenceEnSelection rechargee = service.detaillerSelection(selection.id()).lignes().stream()
                 .filter(ligne -> ligne.sequence().id().equals(premiere))
                 .findFirst()
                 .orElseThrow();

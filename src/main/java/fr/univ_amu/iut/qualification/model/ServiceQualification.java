@@ -215,29 +215,36 @@ public class ServiceQualification {
 
     /// Détaille la sélection : joint chaque rattachement (position + flag écouté) à sa séquence
     /// d'écoute ([SequenceDEcoute]), ordonné par position. Lecture seule.
-    public List<SequenceEnSelection> detaillerSelection(Long idSelection) {
+    ///
+    /// Rend aussi **ce qu'elle n'a pas pu lire** (#4739) : un rattachement dont la séquence est
+    /// introuvable était écarté en silence, et l'appelant recevait une liste plus courte que la
+    /// sélection sans rien qui distingue les deux cas.
+    public DetailSelection detaillerSelection(Long idSelection) {
         List<SequenceEnSelection> lignes = new ArrayList<>();
+        List<Long> introuvables = new ArrayList<>();
         for (SequenceSelectionnee rattachement : selectionDao.listerSequences(idSelection)) {
             sequenceDao
                     .findById(rattachement.idSequence())
-                    .ifPresent(sequence -> lignes.add(new SequenceEnSelection(
-                            sequence,
-                            rattachement.position(),
-                            rattachement.ecoutee(),
-                            rattachement.verdict(),
-                            rattachement.verdictRelecteur(),
-                            rattachement.pseudoRelecteur())));
+                    .ifPresentOrElse(
+                            sequence -> lignes.add(new SequenceEnSelection(
+                                    sequence,
+                                    rattachement.position(),
+                                    rattachement.ecoutee(),
+                                    rattachement.verdict(),
+                                    rattachement.verdictRelecteur(),
+                                    rattachement.pseudoRelecteur())),
+                            () -> introuvables.add(rattachement.idSequence()));
         }
-        return lignes;
+        return new DetailSelection(lignes, introuvables);
     }
 
-    /// Détaille la sélection d'écoute **d'un passage** (jointure de lecture par `idPassage`) : liste vide
-    /// si le passage n'a pas de sélection. Convenience de lecture pour la CLI (#1512). Lecture seule.
-    public List<SequenceEnSelection> detaillerSelectionParPassage(Long idPassage) {
+    /// Détaille la sélection d'écoute **d'un passage** (jointure de lecture par `idPassage`) : détail
+    /// vide si le passage n'a pas de sélection. Convenience de lecture pour la CLI (#1512). Lecture seule.
+    public DetailSelection detaillerSelectionParPassage(Long idPassage) {
         return selectionDao
                 .findByPassage(idPassage)
                 .map(selection -> detaillerSelection(selection.id()))
-                .orElseGet(List::of);
+                .orElseGet(() -> new DetailSelection(List.of(), List.of()));
     }
 
     /// Enregistre le **verdict par fichier** d'une séquence de la sélection d'un passage (#1524, lot 5).

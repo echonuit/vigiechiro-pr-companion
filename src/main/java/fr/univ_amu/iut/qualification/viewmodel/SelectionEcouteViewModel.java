@@ -7,12 +7,12 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.qualification.model.AgregationVerdict;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
+import fr.univ_amu.iut.qualification.model.DetailSelection;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
 import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -94,8 +94,7 @@ public class SelectionEcouteViewModel {
 
     /// Données de la sélection d'écoute chargées **hors du fil JavaFX** (#1210) : contexte + sélection +
     /// lignes détaillées. Lecture seule (aucune mutation observable).
-    public record DonneesSelection(
-            ContexteVerification contexte, SelectionDEcoute selection, List<SequenceEnSelection> lignes) {}
+    public record DonneesSelection(ContexteVerification contexte, SelectionDEcoute selection, DetailSelection detail) {}
 
     /// **Lecture seule** : contexte, ouverture de la vérification (sélection) et détail des séquences.
     /// Sûre **hors du fil JavaFX**.
@@ -112,9 +111,12 @@ public class SelectionEcouteViewModel {
         reinitialiser();
         appliquerContexte(donnees.contexte());
         this.idSelection = donnees.selection().id();
-        lignes.setAll(donnees.lignes());
+        lignes.setAll(donnees.detail().lignes());
         recalculerProgression();
-        message.set("");
+        // Le message repartait vide à chaque ouverture. Il porte désormais ce que la liste ne
+        // montre pas : une séquence illisible était écartée sans un mot (#4739). Vide quand tout
+        // a été lu, donc l'écran reste muet dans le cas normal.
+        message.set(donnees.detail().avertissement());
     }
 
     /// Route l'échec d'un chargement vers le message de l'écran (filet #795).
@@ -187,10 +189,11 @@ public class SelectionEcouteViewModel {
         try {
             SelectionDEcoute selection = service.creerSelection(idPassage, methode.get(), taille.get());
             this.idSelection = selection.id();
-            lignes.setAll(service.detaillerSelection(idSelection));
+            DetailSelection detail = service.detaillerSelection(idSelection);
+            lignes.setAll(detail.lignes());
             sequenceCourante.set(null);
             recalculerProgression();
-            message.set("");
+            message.set(detail.avertissement());
         } catch (RuntimeException echec) {
             message.set(echec.getMessage());
         }

@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
+import fr.univ_amu.iut.qualification.model.DetailSelection;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit.Feu;
 import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
@@ -154,7 +155,7 @@ class QualificationIdentiteStatutViewTest {
                         null));
         when(service.ouvrirVerification(anyLong()))
                 .thenReturn(new SelectionDEcoute(7L, MethodeSelection.REPARTITION_TEMPORELLE, 0, ID_PASSAGE));
-        when(service.detaillerSelection(anyLong())).thenReturn(List.of());
+        when(service.detaillerSelection(anyLong())).thenReturn(new DetailSelection(List.of(), List.of()));
 
         robot.interact(() -> controleur.ouvrirSur(CONTEXTE));
 
