@@ -314,6 +314,8 @@ nav:
     - 4617 · Le portail regarde les deux zones, et le code mort compte: decisions/4617-le-portail-voit-les-tests-et-le-code-mort.md
     - 4598 · Le titre de PR se vérifie avant l'ouverture, et les titres d'issue ne s'alignent pas: decisions/4598-le-titre-se-verifie-avant-l-ouverture.md
     - 4787 · Un cas qui garde une absence relève d'abord la présence, dans le même cas: decisions/4787-un-cas-qui-garde-une-absence-releve-d-abord-la-presence.md
+    - 4781 · Un garde mesure le dépôt dont il fait partie: decisions/4781-un-garde-mesure-le-depot-dont-il-fait-partie.md
+    - 4788 · L'absence de preuve refuse, elle ne se signale pas: decisions/4788-l-absence-de-preuve-refuse-elle-ne-se-signale-pas.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

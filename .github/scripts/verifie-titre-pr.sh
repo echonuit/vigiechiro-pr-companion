@@ -81,6 +81,13 @@ if [ "${TITRE}" = "--auto-test" ]; then
     # Et la contrepartie : la majuscule reste vue LA OU une phrase commence, sinon le retrecissement
     # aurait rendu le garde aveugle a « L ADR », qui est le defaut d origine.
     verifie 1 "docs(adr): L amendement 2843 est cite" "une élision majuscule en tête de phrase reste refusée"
+    # #4786, harmonise ici : la regle mere avait diverge de sa copie dans le garde du CORPS. Ce qui
+    # SUIT decide. Une sortie d outil citee dans un titre n est pas une elision, et une elision
+    # cachee derriere une decoration en reste une.
+    verifie 0 "fix(garde): M scripts/adr/truc.py a change" "une sortie d'outil ne déclenche pas"
+    verifie 0 "docs(adr): N observation(s) ont ete relues" "un symbole suivi d'un compte entre parenthèses ne déclenche pas"
+    verifie 1 "fix(garde): L **amendement** le dit" "une élision devant un mot en gras est refusée"
+    verifie 1 "fix(garde): L auto-test le prouve" "une élision suivie d'un mot composé reste refusée"
     # Le SCOPE est en ASCII, et ce cas le tient contre la locale : `[a-z0-9._-]` fait entrer
     # « e » sous une locale francaise et l en sort sous `C`. Sans l epinglage en tete de ce
     # fichier, ce cas passerait en local et rougirait en CI - ce qui est arrive (#4456).
@@ -165,8 +172,18 @@ fi
 # Ce qu'elle ne voit PAS, et c'est assumé : un accent manquant sur un mot qui existe aussi sans accent
 # (« garde » / « gardé », « complete » / « complète »). Aucun motif ne tranche sans dictionnaire, et un
 # garde à faux positifs se contourne. Pour ceux-là, il reste la relecture.
-ELISION_MIN="(^[^[:alnum:]_'’]?|[^[:digit:]][^[:alnum:]_'’])([ldnscjmt]|qu) +[[:alpha:]]"
-ELISION_MAJ="(^[^[:alnum:]_'’]?|[^[:alnum:]_][[:space:]])([LDNSCJMT]|Qu) +[[:alpha:]]"
+# Ce qui SUIT decide, et non ce qui precede (#4786, harmonise ici en clôturant #4803). Une elision
+# est suivie d un MOT francais, qui peut porter trait d union et apostrophe. Un symbole est suivi de
+# ce qu il etiquette : un chemin, un compte entre parentheses, un identifiant. Le garde du CORPS
+# porte la meme regle, et cette page en est la source ; les deux divergeaient depuis #4786.
+MOT="[[:alpha:]]([[:alpha:]]|['’-])*"
+# Une decoration peut s ouvrir entre la lettre et le mot. Ce qui separe les deux cas est de savoir si
+# la lettre isolee est DEDANS la decoration - un symbole etiquete - ou DEHORS, le mot seul etant
+# decore, qui est une elision.
+OUVRE="(\*\*|\*|__|_|«[[:space:]]*|\[)?"
+FIN_MOT="([[:space:]]|[*_)]|]|»|,|\.|;|:|!|\?|$)"
+ELISION_MIN="(^[^[:alnum:]_'’]?|[^[:digit:]][^[:alnum:]_'’])([ldnscjmt]|qu) +${OUVRE}${MOT}${FIN_MOT}"
+ELISION_MAJ="(^[^[:alnum:]_'’]?|[^[:alnum:]_][[:space:]])([LDNSCJMT]|Qu) +${OUVRE}${MOT}${FIN_MOT}"
 if printf '%s' "${TITRE}" | grep -qE "${ELISION_MIN}|${ELISION_MAJ}"; then
     echo "::error::Le titre de la PR contient une élision sans apostrophe."
     echo

@@ -6,6 +6,8 @@ article: A2
 chantier: "#4770 (suites de #4713)"
 decided_at: 2026-08-29
 verification: certaine
+relations:
+  amendee_par: ["4788-l-absence-de-preuve-refuse-elle-ne-se-signale-pas"]
 enforced_by:
   - "scripts/methode/temoins-de-methode-non-decoratifs.py"
 verified:
@@ -17,6 +19,12 @@ generated:
 ---
 
 # Muter un garde de méthode passe par son point d'entrée, pas par la fin du fichier
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-08-30** par [ADR 4788](4788-l-absence-de-preuve-refuse-elle-ne-se-signale-pas.md) :
+    les six gardes sans point d'entrée en ont reçu un, et le garde REFUSE désormais au lieu de les
+    nommer. La phrase « le refus, non le saut » décrivait une sortie en 0, donc un signalement sans
+    coût. Le corpus compte quinze gardes éprouvés et zéro non éprouvé.
 
 ## Contexte
 
