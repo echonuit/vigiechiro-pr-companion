@@ -20,8 +20,8 @@ passe suivante devait trouver.
 
 **La trace n'est pas une formalité de fin.** Une clôture qui n'en laisse aucune est indiscernable
 d'une clôture qui n'a pas eu lieu - pour le lecteur, pour le prochain chantier, et pour la mesure.
-Le 28 août 2026, **43 des 64 EPIC clos** du dépôt n'en portaient aucune, dont un clos le jour même
-par les quatorze passes, avec bilan et artefact. Rien ne l'avait réclamée (#4659).
+La mesure qui l'établit vit dans [`rendre-le-bilan`](../rendre-le-bilan/SKILL.md), dont c'est la
+passe.
 
 ## Annoncer
 
@@ -90,10 +90,8 @@ l'air juste, plus petit, et plus rapide à relire.
 courait, et c'est cet ensemble-là qui part en production. Une passe qui ne lit que « mes commits »
 juge un état qui n'a jamais existé.
 
-Mesuré le 28 août 2026, à la clôture de #4671. La passe 1 y a trouvé **deux planchers périmés**, dont
-un - celui de l'arbre de test - **posé par une autre session** pendant le chantier. Un delta filtré
-n'aurait montré ni le plancher, ni le fait que mon propre travail l'avait fait monter sans le
-verrouiller. Le défaut n'était ni dans mes commits ni dans les leurs : il était dans leur **rencontre**.
+Le cas qui l'établit est une trouvaille de la **passe 1**, et il vit dans
+[`auditer-l-integration`](../auditer-l-integration/SKILL.md) avec ce qu'elle en fait.
 
 ```bash
 git log --oneline <sha-d-ouverture>..origin/main            # TOUS les commits, toutes sessions
@@ -154,8 +152,8 @@ Les issues consolidées en passe 9 forment un chantier à part entière. Elles s
 mêmes quatorze passes**, appliquées à leur seul delta. Le dépôt l'a appris trois fois.
 
 La passe 9 ne les **découvre** pas : chacune a été ouverte au moment où elle a été trouvée, et
-rattachée à l'EPIC du chantier ou à celui des suites (#4562). Arriver en passe 9 avec une page
-blanche est le signe que cette règle n'a pas été tenue, pas que le chantier n'a rien trouvé.
+rattachée à l'EPIC du chantier ou à celui des suites (#4562). Ce que la passe en fait, et comment
+elle lit une page blanche, vit dans [`vider-le-sas`](../vider-le-sas/SKILL.md).
 
 **Ce qu'on y trouve n'est plus une prédiction.** L'EPIC #4671 - les quatre suites de #4573 - a été
 clos par les douze passes le 28 août 2026, sur un périmètre de quatre issues **déjà livrées et
