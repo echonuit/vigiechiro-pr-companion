@@ -3,7 +3,7 @@ type: adr
 title: "L'amorçage s'écrit d'un seul coup, et se relit en octets"
 status: stable
 article: A17
-chantier: "#3507, lot 1 (#3559) du chantier #3518 ; ADR écrite à la passe 10 de la clôture du lot"
+chantier: "#3507, lot 1 (#3559) du chantier #3518 ; ADR écrite à la passe 11 de la clôture du lot"
 decided_at: 2026-08-10
 verification: certaine
 enforced_by:

@@ -3,7 +3,7 @@ type: adr
 title: "Devant une copie morte, on cherche où le geste vit, on ne factorise pas"
 status: stable
 article: A1
-chantier: "#4656 (clôture, passe 10)"
+chantier: "#4656 (clôture, passe 11)"
 decided_at: 2026-08-28
 verification: humaine
 verification_note: "la règle est une heuristique de lecture : elle dit quelle question poser devant un signalement, ce qu'aucun garde ne peut vérifier à la place de qui lit"

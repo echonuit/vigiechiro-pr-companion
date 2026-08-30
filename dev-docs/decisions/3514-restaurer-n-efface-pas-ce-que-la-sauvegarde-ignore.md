@@ -3,7 +3,7 @@ type: adr
 title: "Restaurer n'efface pas ce que la sauvegarde ignore, et ne tient pas de journal"
 status: stable
 article: A17
-chantier: "#3514, lot 1 (#3559) du chantier #3518 ; ADR écrite à la passe 10 de la clôture du lot"
+chantier: "#3514, lot 1 (#3559) du chantier #3518 ; ADR écrite à la passe 11 de la clôture du lot"
 decided_at: 2026-08-10
 verification: certaine
 enforced_by:

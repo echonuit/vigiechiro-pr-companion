@@ -3,7 +3,7 @@ type: adr
 title: "Un corps de pull request ne promet pas ce que la forge ne fera pas"
 status: stable
 article: A31
-chantier: "#4546 (passe 10 de la clôture de #4502)"
+chantier: "#4546 (passe 11 de la clôture de #4502)"
 decided_at: 2026-08-26
 verification: certaine
 enforced_by:

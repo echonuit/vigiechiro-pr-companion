@@ -47,7 +47,7 @@ sans référence nommée est refusé.
 ## Fonction de garde
 
 ```
-1. BALAYER    les passes 0 a 9 et poser pour chacune la meme question :
+1. BALAYER    les passes 0 a 10 et poser pour chacune la meme question :
               une decision a-t-elle ete prise ici, qu un lecteur futur pourrait
               defaire faute d en connaitre la raison ?
 2. ECRIRE     une ADR par decision. Le contexte, la decision, ses consequences.
@@ -57,7 +57,7 @@ sans référence nommée est refusé.
               visible au sens de l article A31, et c est ici qu elle s ecrit.
 ```
 
-## Pourquoi en passe 10, et pas en passe 3
+## Pourquoi en passe 11, et pas en passe 3
 
 Parce que **les passes 4 à 9 produisent des décisions**, et qu'on ne peut pas écrire en début de
 clôture ce qu'on n'a pas encore décidé.

@@ -49,7 +49,7 @@ n'est demandée nulle part au moment où elle s'applique.
 
 ## Décision
 
-**La passe 11 colle le modèle en commentaire sur l'EPIC, et un cliquet tient l'absence de trace.**
+**La passe 12 colle le modèle en commentaire sur l'EPIC, et un cliquet tient l'absence de trace.**
 
 Le bilan **raconte**, la case **atteste**. Les deux sont nécessaires, et c'est la seconde qu'on oublie
 parce qu'elle ne s'écrit pas, elle se coche.

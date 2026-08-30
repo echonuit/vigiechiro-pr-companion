@@ -16,7 +16,7 @@ verified:
 
 ## Contexte
 
-La passe 10 demande d'écrire les décisions du chantier, en rappelant qu'**une décision de ne pas
+La passe 11 demande d'écrire les décisions du chantier, en rappelant qu'**une décision de ne pas
 faire en est une**. Deux abstentions sont sorties de cette clôture. Sans trace, chacune se
 re-débattra, et probablement dans l'autre sens.
 
