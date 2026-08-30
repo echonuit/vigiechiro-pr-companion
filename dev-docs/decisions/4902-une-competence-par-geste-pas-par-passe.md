@@ -15,7 +15,7 @@ generated:
   at: 2026-08-30
 ---
 
-# Une compétence par geste, pas par passe
+# Une compétence par geste, pas par passe : ce qui décide est si les deux moments font la même chose
 
 ## Contexte
 
