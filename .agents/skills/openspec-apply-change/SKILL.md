@@ -153,7 +153,8 @@ garde vérifié.
 
 Cette compétence s'invoque à tout moment : avant que tous les artefacts soient faits si des tâches
 existent, après une réalisation partielle, ou en alternance avec d'autres actions. Si la réalisation
-révèle un défaut de conception, proposer de reprendre les artefacts plutôt que de forcer le passage.
+révèle un défaut de conception, proposer de reprendre les artefacts par
+[`openspec-update-change`](../openspec-update-change/SKILL.md) plutôt que de forcer le passage.
 
 ## Signaux d'alerte : on s'arrête
 

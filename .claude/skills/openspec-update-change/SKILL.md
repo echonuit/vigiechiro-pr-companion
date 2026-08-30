@@ -26,6 +26,29 @@ Si le plan revise implique de toucher au code, on s'arrete et on renvoie vers `/
 
 « J'utilise la compétence openspec-update-change pour reprendre le changement <nom>. »
 
+## Quand on l'ouvre
+
+Cette compétence a longtemps porté une procédure sans déclencheur : rien n'y disait à quel moment on
+la convoque, et une compétence qu'aucune cérémonie n'appelle est une compétence qu'on n'ouvre que si
+l'on y pense déjà (#4911).
+
+Trois moments l'appellent, et les trois viennent du **milieu** d'un chantier :
+
+- **un élargissement posé et accepté.** [`openspec-apply-change`](../openspec-apply-change/SKILL.md)
+  s'arrête quand une tâche demande plus que la spécification ne décrit, et fait poser la question.
+  Quand la réponse élargit le périmètre, **le plan écrit doit suivre** : c'est ici.
+- **une conception que la réalisation dément.** Le même arrêt, pour une autre cause : ce qu'on
+  découvre en écrivant contredit ce que la note de conception supposait.
+- **un arbitrage du mainteneur** qui renverse une décision déjà posée dans les artefacts.
+
+**Ce que coûte de ne pas le faire, mesuré.** Une révision de `emporter-une-nuit` a écarté la
+régénération d'une sélection reçue. Trois artefacts ont continué de la supposer : le titre de D1, une
+clause de la delta spec et la tâche 5.2. Ils ont été trouvés en relisant, pas par un garde, et un
+seul d'entre eux aurait suffi à faire archiver en passe 10 une spécification que le code dément.
+
+C'est la raison d'être de l'étape 4 : la confrontation se fait **dans les deux sens**, et une édition
+d'un artefact tardif oblige à revoir un artefact antérieur aussi souvent que l'inverse.
+
 ## Ce que cette compétence fait, et ce qu'elle ne fait pas
 
 Elle révise les artefacts de planification d'un changement **qui existent déjà**, et les tient
