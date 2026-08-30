@@ -114,15 +114,13 @@ class PageDesClipsTest {
                 .containsExactlyInAnyOrderElementsOf(casPerceptifs());
     }
 
-    /// La troisième façon dont cette page se périme, et celle qu'aucun cas ne gardait : son
-    /// **chapeau annonce un nombre**, et ajouter un cas ne le change pas.
+    /// La troisième façon dont cette page se périme : son **chapeau annonce un nombre**, et ajouter
+    /// un cas ne le change pas.
     ///
     /// Mesuré (#4820) : le palier de #4447 a porté la page de neuf cas à quinze, et le chapeau a
-    /// continué d'écrire « ces neuf-là ». Le cas ci-dessus était vert pendant ce temps, et à juste
-    /// titre : il garde l'**ensemble** des cas, pas leur compte. Rien d'autre ne lit cette phrase.
-    ///
-    /// La page se contredit alors elle-même - le chapeau dit neuf, les sections en montrent quinze -
-    /// et rien ne dit au lecteur laquelle des deux croire, donc il doute des deux.
+    /// continué d'écrire « ces neuf-là ». Le cas ci-dessus était vert, et à juste titre : il garde
+    /// l'**ensemble** des cas, pas leur compte. La page se contredit alors elle-même, et rien ne dit
+    /// au lecteur laquelle des deux valeurs croire, donc il doute des deux.
     @Test
     @DisplayName("#4820 : le chapeau annonce le nombre de cas et de clips que la page porte")
     void le_chapeau_annonce_les_bons_nombres() {
@@ -140,21 +138,14 @@ class PageDesClipsTest {
                 .isEqualTo(clips.size());
     }
 
-    /// Le même mensonge, une page plus haut. Le tableau « Deux familles, deux pages » de
-    /// [#PAGE_ENTREE] annonce le compte de chaque famille, et personne ne le relit en ajoutant un cas.
+    /// Le même mensonge, une page plus haut : le tableau « Deux familles, deux pages » de
+    /// [#PAGE_ENTREE] annonce le compte de chaque famille, et personne ne le relit en ajoutant un
+    /// cas. Mesuré le 2026-08-30, il disait 9 et 46 pour 10 et 54 clips, et le second était déjà
+    /// faux avant le palier de #4447 : c'est le régime normal d'un nombre que rien ne garde.
     ///
-    /// Mesuré le 2026-08-30 : il disait **9** et **46** pour **15** et **55**. Le second était déjà
-    /// faux avant le palier de #4447 - donc ce n'est pas un oubli, c'est le régime normal d'un nombre
-    /// que rien ne garde.
-    ///
-    /// Ce cas lit le tableau plutôt que d'écrire les deux chemins : une troisième famille ajoutée à
-    /// la table sera comptée sans qu'on y pense, et c'est le contraire qui a produit le défaut.
-    ///
-    /// Il compte des **clips** et non des cas, ce que la colonne dit désormais. Les deux nombres
-    /// divergent depuis le palier de #4447 : un titre de la page des assertés peut couvrir une plage
-    /// - `### S2-01 à S2-07 · ...` - et six cas perceptifs partagent une seule image. Compter les
-    /// sections rendait 38 là où la page porte 55 clips, et la colonne ne disait pas laquelle des
-    /// deux grandeurs elle annonçait.
+    /// Il lit le tableau plutôt que d'écrire les deux chemins, et compte des **clips** et non des
+    /// cas : un titre de la page des assertés peut couvrir une plage (`### S2-01 à S2-07 · ...`), et
+    /// six cas perceptifs partagent une seule image. Compter les sections rendait 38 pour 54 clips.
     @Test
     @DisplayName("#4820 : le tableau des familles annonce le compte que chaque page porte")
     void le_tableau_des_familles_annonce_les_bons_comptes() {
