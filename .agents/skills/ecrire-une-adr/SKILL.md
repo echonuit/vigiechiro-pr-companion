@@ -84,14 +84,42 @@ ensemble, mais leurs étapes sont distinctes et ce qui suit les sépare.
 
 ```
 0. METTRE A JOUR le graphe du depot : graphify update .
-1. LISTER    les ADR apparues PENDANT le chantier, contre origin/main.
-2. POSER     la question qui decide : le chantier a-t-il CONTREDIT une decision
+1. RELIRE    la PROMESSE de l EPIC, et la confronter a ce qui a atterri.
+             Un « non » suspend la cloture : voir plus bas.
+2. LISTER    les ADR apparues PENDANT le chantier, contre origin/main.
+3. POSER     la question qui decide : le chantier a-t-il CONTREDIT une decision
              existante, et si oui l a-t-il fait expres ?
-3. POSER     la meme question A L ENVERS : parmi les ADR que le chantier
+4. POSER     la meme question A L ENVERS : parmi les ADR que le chantier
              RESPECTE, certaines regissent-elles du code HORS du delta qu il
              faudrait aligner ?
-4. ECRIRE    tout depassement delibere. Il deviendra une ADR en passe 11.
+5. ECRIRE    tout depassement delibere. Il deviendra une ADR en passe 11.
 ```
+
+### La promesse, et ce qu'on fait d'un « non »
+
+> L'EPIC promettait ceci. Est-ce livré ? Ce qui ne l'est pas, l'a-t-on **décidé**, ou **oublié** ?
+
+Le cycle demande partout ce qui a été **livré**, et nulle part si ce qui était **promis** l'a été. Le
+bilan de la passe 12 liste ; il ne confronte pas. Une promesse à moitié tenue produit donc un bilan
+juste et une clôture fausse.
+
+**La promesse se lit sous la forme qu'elle a prise.** Le « fini quand » de chaque lot est la
+meilleure, quand il est là. Il ne l'est pas souvent : sur 70 EPIC clos, **3** en portent un. À
+défaut, on confronte le corps de l'EPIC, sa section « ce que porte cet EPIC », sa liste de lots.
+
+**Un « non » suspend la clôture**, et il n'y a que deux issues :
+
+- **livrer** ce qui manque, la clôture reprenant ensuite ;
+- **décider de ne pas livrer**, ce qui est une décision de ne pas faire, donc une ADR de la passe 11,
+  et ce que le lot devient se dit.
+
+Ce qui n'est pas permis est la troisième voie, celle qu'on prend par défaut : clore en laissant la
+promesse à moitié tenue sans que personne ne l'ait décidé.
+
+**Vécu à la clôture de #4925**, le jour où la question a été écrite. L'EPIC promettait trois lots,
+deux étaient livrés, le troisième n'avait jamais été découpé. Trois autres dispositifs le
+déclaraient prêt : les compétences en place, le tableau complet, cinq gardes verts. Le lot 3 est
+sorti en EPIC #4937, par décision.
 
 ### Le graphe d'abord, parce que la passe s'en sert
 
