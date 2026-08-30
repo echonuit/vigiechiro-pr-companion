@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testfx.framework.junit5.ApplicationExtension;
@@ -51,9 +52,13 @@ class ChargementFxmlTest {
 
     private Injector injecteur;
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test. `Files.createTempDirectory`
+    /// n'enlevait rien, et cette classe laissait 1 588 répertoires dans `/tmp` (#4737).
+    @TempDir
+    private Path workspace;
+
     @Start
     void demarrer(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-fxml-smoke");
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injecteur = RacineInjecteur.creer();
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
