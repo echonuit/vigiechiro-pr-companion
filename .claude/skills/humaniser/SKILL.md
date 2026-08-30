@@ -38,6 +38,22 @@ pourquoi le fil ne fait pas foi.
 Les sept tics de `CONTRIBUTING.md` sont le sous-ensemble **opposable** de cette grille : ils servent
 à refuser une relecture, quand la grille sert à relire.
 
+## Ce qu'elle efface sans le viser
+
+Réécrire un texte détruit les corrélations statistiques qu'il portait, y compris les marques de
+provenance que plusieurs fournisseurs de modèles y placent délibérément. Cette compétence en efface
+donc, incidemment, et c'est inévitable dès lors qu'on reformule.
+
+**Ce dépôt déclare sa provenance ailleurs**, à la main, et cette déclaration ne tient à aucune
+propriété du texte : l'article A26 l'exige, et 47 des 50 ADR décidées depuis lui portent
+`generated.by` en en-tête. La compétence retire donc le **style**, pas la **provenance**.
+
+S'en servir pour faire passer un texte pour non assisté contredirait A26. La loi d'airain dit déjà
+« on retire l'emballage, jamais le fait », et la provenance est un fait.
+
+Détecter une telle marque est hors de portée et n'est pas visé : ces schémas sont à clé, et un tiers
+ne les lit pas.
+
 ## Fonction de garde
 
 ```
