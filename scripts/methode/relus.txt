@@ -1909,6 +1909,8 @@ c4625eadd4c2  src/test/java/fr/univ_amu/iut/qualification/view/ScenarioRaccourci
 62ca79c783a4  src/test/java/fr/univ_amu/iut/qualification/view/ScenarioSelectionEcouteTest.java
 2ef6b5e9acbf  src/test/java/fr/univ_amu/iut/qualification/viewmodel/QualificationViewModelTest.java
 69f1f54af525  src/test/java/fr/univ_amu/iut/qualification/viewmodel/SelectionEcouteViewModelTest.java
+66f56657f11e  src/test/java/fr/univ_amu/iut/recette/Attente.java
+a0620485d3e1  src/test/java/fr/univ_amu/iut/recette/AttenteTest.java
 d98e41b2d508  src/test/java/fr/univ_amu/iut/recette/BancDeRecette.java
 87701f8fbb55  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteJetonTest.java
 992bf542c672  src/test/java/fr/univ_amu/iut/recette/BancDeRecettePlateformeTest.java
