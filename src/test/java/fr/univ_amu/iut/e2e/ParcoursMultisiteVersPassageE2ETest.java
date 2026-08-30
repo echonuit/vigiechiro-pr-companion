@@ -17,12 +17,14 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.multisite.view.NavigationMultisite;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
@@ -114,19 +116,19 @@ class ParcoursMultisiteVersPassageE2ETest {
         Button verifier = robot.lookup("#boutonVerifier").queryAs(Button.class);
         assertThat(verifier).isNotNull();
         // navigation.getVueCourante() bascule dès le changement d'écran, avant que le chargement du
-        // passage (lui aussi asynchrone) n'ait appliqué ses données ; le fil d'Ariane ci-dessous n'est
-        // renseigné qu'à la fin de ce chargement (navigation.actualiserFil, même callback que
-        // verificationDisponibleProperty). Attendre l'un garantit l'autre.
+        // passage (lui aussi asynchrone) n'ait appliqué ses données.
         WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !verifier.isDisabled());
 
         // 3) Le fil d'Ariane GLOBAL situe le passage sous son site, même atteint via multisite (#140) :
         // Accueil › Mes sites › Carré 640380 › Détails du passage N° 1 (emplacement, pas l'historique).
         HBox fil = robot.lookup("#filAriane").queryAs(HBox.class);
-        var libelles = fil.getChildren().stream()
-                .filter(n -> n.getStyleClass().contains("fil-ariane-segment")
-                        || n.getStyleClass().contains("fil-ariane-courant"))
-                .map(n -> ((Labeled) n).getText())
-                .toList();
+        // Le fil s'attend LUI-MÊME. Ce banc concluait qu'attendre le bouton suffisait, les deux venant
+        // du « même callback » : c'est faux, et cela lui a coûté quatre rouges sur 1 150 passages
+        // (#4813, mesuré par #4811). Le bouton suit `PassageViewModel.verificationDisponible`, posé à
+        // la fin du chargement du passage ; le fil suit `MainController.rafraichirNavigation`, sur un
+        // listener de `navigateur.historique()`. Deux chaînes, deux moments.
+        Attente.que(() -> !segmentsDuFil(fil).isEmpty(), "que le fil d'Ariane porte ses segments");
+        var libelles = segmentsDuFil(fil);
         assertThat(libelles)
                 .contains("Carré 640380")
                 .anySatisfy(t -> assertThat(t).startsWith("Détails du passage"));
@@ -177,6 +179,16 @@ class ParcoursMultisiteVersPassageE2ETest {
                 .filter(segment -> libelle.equals(segment.getText()))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    /// Les libellés du fil d'Ariane : segments cliquables et segment courant. L'attente et l'assertion
+    /// lisent la même chose, sans quoi la première rendrait la main sur un prédicat plus large.
+    private static List<String> segmentsDuFil(HBox fil) {
+        return fil.getChildren().stream()
+                .filter(n -> n.getStyleClass().contains("fil-ariane-segment")
+                        || n.getStyleClass().contains("fil-ariane-courant"))
+                .map(n -> ((Labeled) n).getText())
+                .toList();
     }
 
     /// Double-clic « robuste » de drill-down vers M-Passage. Sous charge, TestFX peut ne pas enregistrer le

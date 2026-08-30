@@ -1675,7 +1675,7 @@ e93a95bddc5b  src/test/java/fr/univ_amu/iut/e2e/AttenteAvantClicTest.java
 a9ad8588a9e9  src/test/java/fr/univ_amu/iut/e2e/ParcoursFicheEspeceE2ETest.java
 3e25988b8509  src/test/java/fr/univ_amu/iut/e2e/ParcoursImporterNuitE2ETest.java
 2bcf1502522f  src/test/java/fr/univ_amu/iut/e2e/ParcoursImporterTransformesE2ETest.java
-e4b423daa2da  src/test/java/fr/univ_amu/iut/e2e/ParcoursMultisiteVersPassageE2ETest.java
+88a99bd7f3f5  src/test/java/fr/univ_amu/iut/e2e/ParcoursMultisiteVersPassageE2ETest.java
 49077896b9ef  src/test/java/fr/univ_amu/iut/e2e/ParcoursNavigationE2ETest.java
 f9f2dc467d28  src/test/java/fr/univ_amu/iut/e2e/ParcoursPassageVersActiviteE2ETest.java
 bb50dc41d229  src/test/java/fr/univ_amu/iut/e2e/ParcoursPassageVersDiagnosticE2ETest.java
