@@ -246,7 +246,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A6 · La vérification se déclare, sur trois niveaux | 3 | 2 | `DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment`, `EcritureAtomiqueTest#creation_restreinte` |
 | A7 · Le test précède le code | 1 | 1 | `BancDesClipsTest#une_classe_filmee_neuve_declare_son_banc` |
 | A8 · La mutation mesure dès qu'un comportement est complet | 0 | 0 | **relecture seule** |
-| A9 · La dette se tient par un cliquet, pas par un nettoyage | 10 | 4 | `scripts/adr/2843-tiret-cadratin.py`, `PatronDuCliquetTest#tout_cliquet_passe_par_le_patron`, `scripts/adr/verifie_scripts.py`, et 6 autres |
+| A9 · La dette se tient par un cliquet, pas par un nettoyage | 11 | 4 | `scripts/adr/2843-tiret-cadratin.py`, `PatronDuCliquetTest#tout_cliquet_passe_par_le_patron`, `scripts/adr/verifie_scripts.py`, et 7 autres |
 | A10 · Jamais de suppression d'avertissement | 0 | 0 | **relecture seule** |
 | A11 · L'assumé se déclare, il ne se contourne pas | 7 | 0 | **relecture seule** |
 | A12 · Rendre compte avant de conclure, et aucun échec silencieux | 8 | 4 | `scripts/adr/0008-echec-silencieux.py`, `.github/scripts/verifie-secret-winget.sh`, `RetourOperationTest#les_deux_causes_ne_se_melangent_pas`, et 2 autres |

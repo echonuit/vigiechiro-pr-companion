@@ -96,6 +96,7 @@ nav:
     - 4755 · Un champ qu'on n'a pas touché se tait: decisions/4755-un-champ-qu-on-n-a-pas-touche-se-tait.md
     - 4768 · Une référence partielle ne dégrade pas la garde, elle la bloque: decisions/4768-une-reference-partielle-bloque-tout.md
     - 4841 · Un motif ne se déclare qu'après son contrôle inverse: decisions/4841-un-motif-ne-se-declare-qu-apres-son-controle-inverse.md
+    - 4859 · Un banc referme ce qu'il ouvre: decisions/4859-un-banc-referme-ce-qu-il-ouvre.md
     - 4770 · Muter un garde de méthode passe par son point d'entrée: decisions/4770-la-mutation-se-transpose-par-le-point-d-entree.md
     - 4713 · Une page de méthode ne se relit pas, donc ce qu'elle prescrit de vérifiable se garde: decisions/4713-une-page-de-methode-ne-se-relit-pas.md
     - 4783 · Le zéro des traces d'outil se garde, parce qu'il se retourne d'un seul collage: decisions/4783-le-zero-des-traces-d-outil-se-garde.md

@@ -60,6 +60,11 @@ jobs:
           check-latest: false
           cache: maven
 
+      - name: Ce que /tmp portait avant la suite
+        # Le compte est DIFFÉRENTIEL (ADR 4859) : sans ce relevé, le pas suivant compterait le total et
+        # accuserait ce que le runner porte déjà. Il refuse d'ailleurs de conclure sans lui.
+        run: python3 scripts/methode/compte-les-reliquats.py --avant
+
       - name: Build + tests + couverture (headless)
         # Tests UI en headless via la Headless Platform JavaFX 26 (glass.platform=Headless,
         # cf. pom.xml) : aucun display X11 requis, plus besoin de xvfb.
@@ -67,6 +72,13 @@ jobs:
         # justification dans pom.xml, seule source) : les tests ne s'exécutant que dans ce
         # job, le gate de couverture doit vivre ici et non dans lint.yml.
         run: ./mvnw -B verify -Djacoco.haltOnFailure=true --file pom.xml
+
+      - name: Ce que la suite a laissé dans /tmp (bloquant, ADR 4859)
+        # La propriété ne s'observe QU'ICI : un test tourne pendant, il ne voit ni les forks voisins ni
+        # ce qui suit. `if: always()` parce qu'une suite rouge laisse elle aussi ses répertoires, et
+        # c'est même là qu'elle en laisse le plus.
+        if: always()
+        run: python3 scripts/methode/compte-les-reliquats.py --apres
 
   # Rejoue TOUTE la suite sous un second fuseau (#3450). Ce n'est pas une redite du job `build` :
   # c'est le seul dispositif qui tienne la propriété « ce que le produit calcule pour une nuit ne
