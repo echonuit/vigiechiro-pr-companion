@@ -23,13 +23,14 @@ périmètre, sans bilan et sans clôture.
 
 « J'utilise la compétence ouvrir-un-chantier pour ouvrir <l'EPIC>, étape par étape. »
 
-## Les quatre étapes
+## Les cinq étapes
 
 | # | Étape | Ce qu'elle rend | Qui la porte |
 |---|---|---|---|
 | 0 | Trier et regrouper l'existant | les rattachements tranchés, les titres et corps recadrés | `trier-les-issues` |
 | 1 | Cartographier | les patterns réutilisables **nommés**, avant d'écrire du neuf | cette compétence |
 | 2 | Planifier | ce que le chantier livre, et ce qu'il ne livre pas | cette compétence |
+| 2b | Décider de la spécification | la question posée, et **sa réponse écrite** | `openspec-propose` |
 | 3 | Découper | des lots dimensionnés, puis des issues ou des sous-chantiers | cette compétence, et [ADR 4712] |
 
 L'étape 0 vient **en premier** parce qu'une issue est rattachée au chantier qui a remarqué son
@@ -38,6 +39,30 @@ découvre qu'au conflit de fusion.
 
 L'étape 1 vient **avant** le plan, sinon le plan invente ce qui existe déjà. Le dépôt porte des
 patrons éprouvés, et un chantier qui les redécouvre paie deux fois.
+
+## L'étape 2b : la question se pose, et la réponse s'écrit
+
+**Ce chantier change-t-il ce que le produit FAIT ?** La question se pose à chaque ouverture, et la
+réponse s'écrit. Un « non » est une décision ; un silence est un oubli, et les deux se ressemblent
+trop pour qu'on les laisse se confondre.
+
+Si oui : `/instruire` puis `/proposer`. Le changement porte alors la spécification, la conception et
+ses tâches, et **ces tâches sont les lots** de l'étape 3.
+
+Si non : l'écrire en une phrase dans l'EPIC, comme la clôture écrit « sans objet » sur une passe qui
+n'avait rien à faire. « Ce chantier ne change que des gardes », « il ne touche que de la prose », « son
+delta n'a aucun effet observable » sont des réponses, et elles se relisent.
+
+**Pourquoi une lettre et pas un numéro.** L'étape prolonge le plan sans être indépendante : on ne
+décide pas d'une spécification avant de savoir ce qu'on livre. Et elle précède le découpage parce que
+les tâches du changement **sont** les lots, ce que le premier changement du dépôt a montré. La règle
+générale reste qu'une étape porte un numéro ; la lettre dit la continuité, comme pour la passe `6b` de
+la clôture (#4839).
+
+**Ce que ce geste a coûté de n'exister pas.** La clôture archive un changement OpenSpec depuis #4518,
+en passe 10. Rien ne disait d'en créer un. Deux changements existaient à l'ouverture de ce lot, et
+tous deux avaient été créés par le chantier qui construisait l'outil, jamais parce que la méthode le
+demandait (#4907).
 
 ## Le palier du sous-chantier, à l'étape 3
 

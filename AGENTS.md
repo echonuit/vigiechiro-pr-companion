@@ -76,7 +76,7 @@ remplacent pas ce document : il se lit au début, une compétence s'ouvre au mom
 | Compétence | Quand l'ouvrir |
 |---|---|
 | `trier-les-issues` | avant d'ouvrir un chantier, pour décider s'il y a lieu |
-| `ouvrir-un-chantier` | les quatre étapes d'ouverture, et le palier du sous-chantier |
+| `ouvrir-un-chantier` | les cinq étapes d'ouverture, dont la spécification tranchée, et le palier du sous-chantier |
 | `ouvrir-une-issue` | ce qu'il faut avoir mesuré, vérifié et compris avant la première ligne |
 | `worktree` | avant tout travail de branche, et avant de construire pendant que l'appli tourne |
 | `tdd` | la boucle rouge, vert, refactor, et son échelle |
