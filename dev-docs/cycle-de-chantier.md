@@ -280,6 +280,17 @@ Elle se rattache alors à l'un des deux endroits, et le choix ne se discute pas 
 En cas de doute, l'EPIC des suites. Un rattachement trop large se corrige en passe 9, qui est faite
 pour cela ; une trouvaille jamais écrite ne se corrige pas.
 
+**Le rattachement est une sous-issue**, pas une ligne ajoutée au corps de l'EPIC :
+
+```bash
+gh issue create --parent <EPIC> --title "..."   # à l'ouverture de la trouvaille
+gh issue edit <n> --parent <EPIC>               # pour la déplacer
+```
+
+Une liste tenue à la main dans un corps d'EPIC se périme sans bruit, et elle ne se compte pas. Le
+lien natif se lit par `gh issue view <EPIC> --json parent,subIssues,subIssuesSummary` : chaque issue
+porte son chantier, et la taille d'un EPIC est un nombre plutôt qu'un décompte à l'œil.
+
 **La seule dispense, et elle est étroite** : une trouvaille **corrigée dans la pull request en cours**
 n'a pas besoin d'issue. Le corps de la PR la porte, et rien ne peut se perdre entre la trouvaille et
 son remède puisqu'ils voyagent ensemble. C'est le cas de l'auto-test absent découvert en traitant
