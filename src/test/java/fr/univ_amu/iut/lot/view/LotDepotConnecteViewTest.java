@@ -16,6 +16,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -110,7 +111,7 @@ class LotDepotConnecteViewTest {
                 },
                 new NavigationDeTestModule());
         FXMLLoader loader = new FXMLLoader(LotController.class.getResource("Lot.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         controleur.confirmateur().definir(message -> true); // pas de dialogue natif bloquant sous TestFX

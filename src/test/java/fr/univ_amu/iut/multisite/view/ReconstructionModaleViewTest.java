@@ -10,6 +10,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
@@ -66,7 +67,7 @@ class ReconstructionModaleViewTest {
         });
         FXMLLoader loader =
                 new FXMLLoader(ReconstructionModaleController.class.getResource("ReconstructionModale.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         ReconstructionModaleController controleur = loader.getController();
         controleur.demarrer(() -> appelantRafraichi.set(true));

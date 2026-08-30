@@ -8,6 +8,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -84,7 +85,7 @@ class MesSitesFraicheurViewTest {
         site = injector.getInstance(ServiceSites.class).creerSite(CARRE, NOM_AVANT, Protocole.STANDARD, null, ID_USER);
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent racine = loader.load();
         FenetreAjustable.poser(stage, racine, 1280, 860);
         FenetreAjustable.afficher(stage);

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.within;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.outils.LisibiliteCapture;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
@@ -76,7 +77,7 @@ class FilArianeElisionTest {
         injector = RacineInjecteur.creer();
         new MigrationSchema(injector.getInstance(SourceDeDonnees.class)).migrer();
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent racine = loader.load();
         // `Habillage` et non `new Scene` : ce fichier **mesure** des largeurs, donc son verdict dépend de
         // la police effectivement rendue (#3773). Recopier le banc voisin m'a fait hériter de sa dette :

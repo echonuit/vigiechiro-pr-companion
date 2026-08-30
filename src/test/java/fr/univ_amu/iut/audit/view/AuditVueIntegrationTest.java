@@ -14,6 +14,7 @@ import fr.univ_amu.iut.audit.model.NettoyageDossiersOrphelins;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
@@ -79,7 +80,7 @@ class AuditVueIntegrationTest {
             }
         });
         FXMLLoader loader = new FXMLLoader(AuditController.class.getResource("Audit.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         FenetreAjustable.poser(stage, vue, 1000, 640);

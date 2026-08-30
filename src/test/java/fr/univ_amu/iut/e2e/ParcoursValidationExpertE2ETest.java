@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.api.MessageVigieChiro;
 import fr.univ_amu.iut.commun.api.ObservationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
@@ -98,7 +99,7 @@ class ParcoursValidationExpertE2ETest {
 
         FXMLLoader loader = new FXMLLoader(
                 AudioViewModel.class.getResource("/fr/univ_amu/iut/audio/view/" + "SonsValidation.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         controleur.ouvrirSur(new SourceObservations.ParPassage(

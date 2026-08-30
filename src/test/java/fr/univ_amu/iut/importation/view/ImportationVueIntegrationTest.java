@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -78,7 +79,7 @@ class ImportationVueIntegrationTest {
         new MigrationSchema(source).migrer();
         seeder(source);
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent racine = loader.load();
         // `Habillage.scene` et non `new Scene` : depuis que ce test MESURE une geometrie (le
         // defilement qui amene un bouton dans le cadre), il mesurerait la police de la MACHINE et non

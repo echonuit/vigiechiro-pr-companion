@@ -3,6 +3,7 @@ package fr.univ_amu.iut.importation.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -89,7 +90,7 @@ class ImportationClicImporterTest {
         // son constructeur), puis on récupère SON ViewModel par réflexion (par type,
         // robuste au nom du champ) pour observer l'état de l'import.
         FXMLLoader loader = new FXMLLoader(ImportationController.class.getResource("Importation.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = (ImportationController) loader.getController();
         viewModel = extraireViewModel(controleur);

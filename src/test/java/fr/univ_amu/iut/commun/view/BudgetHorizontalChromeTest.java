@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.within;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.outils.LisibiliteCapture;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
@@ -79,7 +80,7 @@ class BudgetHorizontalChromeTest {
         new MigrationSchema(injector.getInstance(SourceDeDonnees.class)).migrer();
         navigation = injector.getInstance(NavigationViewModel.class);
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent racine = loader.load();
         // `Habillage` et non `new Scene` : depuis #3960 ce fichier MESURE la largeur atteinte avant
         // chaque verification, donc son verdict depend de la police reellement rendue (ADR 3773).

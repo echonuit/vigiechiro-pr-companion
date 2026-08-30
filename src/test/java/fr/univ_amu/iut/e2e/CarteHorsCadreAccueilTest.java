@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -52,7 +53,7 @@ class CarteHorsCadreAccueilTest {
         injector = RacineInjecteur.creer();
         new MigrationSchema(injector.getInstance(SourceDeDonnees.class)).migrer();
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent racine = loader.load();
         // La largeur du plancher, et une hauteur qui laisse la dernière rangée dehors.
         stage.setScene(new Scene(racine, TailleOuverture.LARGEUR_MINIMALE, 860));

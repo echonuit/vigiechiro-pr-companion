@@ -14,6 +14,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import fr.nedjar.vigiechiro.audio.AudioView;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -165,7 +166,7 @@ class QualificationVueIntegrationTest {
             }
         });
         FXMLLoader loader = new FXMLLoader(QualificationController.class.getResource("Qualification.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         // Ces tests vérifient le comportement R12 de « Régénérer », pas la confirmation (#798) : on accepte

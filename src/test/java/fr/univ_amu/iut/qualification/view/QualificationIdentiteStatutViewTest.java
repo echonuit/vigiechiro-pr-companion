@@ -11,6 +11,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
@@ -114,7 +115,7 @@ class QualificationIdentiteStatutViewTest {
             }
         });
         FXMLLoader loader = new FXMLLoader(QualificationController.class.getResource("Qualification.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent vue = loader.load();
         controleur = loader.getController();
         // Compte rendu neutralisé (#1509) : le vrai dialogue figerait le headless.

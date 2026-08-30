@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -60,7 +61,7 @@ class SiteDetailBadgePlateformeViewTest {
                         LienVigieChiro.ENTITE_SITE, String.valueOf(site.id()), "6a4961f587bc8dba39481180", false));
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
+        loader.setControllerFactory(DiagnosticGuice.pour(injector));
         Parent racine = loader.load();
         FenetreAjustable.poser(stage, racine, 1100, 760);
         injector.getInstance(NavigationSites.class).ouvrirDetail(site);
