@@ -63,15 +63,17 @@ dans le job, en deux pas qui encadrent la suite.
 
 ## La limite, mesurée et écrite
 
-Le compte attribue à la suite **tout ce qui apparaît pendant**, y compris ce qu'une autre session
-crée au même moment : une classe seule a rendu **237** quand la suite entière en laissait 198, un
-second plan de travail jouant ses tests en parallèle. En CI le runner est dédié ; en local, on lance
-la suite seule ou l'on ne croit pas le chiffre.
+Le compte attribue à la suite **tout ce qui apparaît pendant** : une classe seule a rendu **237**
+quand la suite entière en laissait 198, un second plan de travail tournant en parallèle. En CI le
+runner est dédié ; en local, on lance la suite seule ou l'on ne croit pas le chiffre.
 
 ## Ce qui prouve que le garde voit
 
 Retirer le `@TempDir` de `GestionnaireVuesTest` fait passer le compte de **0 à 14** ; le remettre le
 ramène à 0.
+
+Trois mutants. Compte total, compte inversé : tués. **Refus désarmé** : survivant, six témoins
+verts, le garde rendant le total. Un septième le tue.
 
 ## Les quatre qui restent, et pourquoi ils restent
 
