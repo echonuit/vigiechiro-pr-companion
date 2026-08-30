@@ -38,7 +38,7 @@ par les quatorze passes, avec bilan et artefact. Rien ne l'avait réclamée (#46
 | 4 | Doc utilisateur | `docs/` et ses captures | `documenter-pour-l-utilisateur`, `humaniser` en appui |
 | 5 | Brief projet | parcours, maquettes, modèle conceptuel | `aligner-le-brief-au-produit`, `humaniser` en appui |
 | 6 | Tests | chaque usage introduit est couvert | `couvrir-les-usages-livres`, `tdd` et `mutation` en appui |
-| 6b | Recette préparée | chaque capacité ajoutée a sa case `Sxx-NN`, et la fixture pour la jouer | |
+| 6b | Recette préparée | chaque capacité ajoutée a sa case `Sxx-NN`, et la fixture pour la jouer | `preparer-la-recette` |
 | 7 | Harmonisation | l'application entière, pas le delta | `harmoniser-l-application` |
 | 8 | Revue visuelle | chaque **état** de chaque écran touché | `revoir-les-ecrans` |
 | 9 | Suites consolidées | l'EPIC des suites vidé de tout ce qui relève du chantier clos | `vider-le-sas` |
