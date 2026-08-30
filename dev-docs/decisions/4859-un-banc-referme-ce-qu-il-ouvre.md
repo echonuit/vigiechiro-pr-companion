@@ -9,7 +9,7 @@ verification: probable
 verification_note: "le compte est DIFFÉRENTIEL et se mesure autour d'une suite complète, donc dans le job et non dans un test : deux pas encadrent la suite dans maven.yml"
 enforced_by:
   - "scripts/methode/compte-les-reliquats.py"
-ratchet: 50
+ratchet: 36
 verified:
   - by: human:nedseb
     at: 2026-08-30
@@ -41,8 +41,8 @@ C'est un acquis sans gardien, et chaque banc écrit depuis a rappelé la même l
 test, sans rien à écrire ; le dépôt l'emploie déjà 259 fois. Une aide partagée, qui n'est pas un test
 et à qui `@TempDir` ne s'injecte pas, supprime en fin de fork.
 
-**Et le compte se tient**, par un cliquet qui ne peut que descendre. Il vaut **50** : 202 à sa pose, puis 138, 70 et 50 au
-fil des lots de conversion. C'est l'article A9 : la
+**Et le compte se tient**, par un cliquet qui ne peut que descendre. Il vaut **36** : 202 à sa pose, puis 138, 70, 50 et 36
+au fil des lots de conversion. C'est l'article A9 : la
 dette se tient par un cliquet, pas par un nettoyage. Le nettoyage manuel du 30 août a retiré 5,8 Go
 et n'a rien empêché ; il se refera tant que rien ne compte.
 
@@ -88,7 +88,7 @@ ADR, et le modifier est une décision qui se relit.
 
 - Le cliquet est celui que **la CI mesure**, jamais celui du poste où l'on écrit : à sa pose, mon poste
   rendait 198 et la CI 202, le nombre de forks suivant la machine (`forkCount=1C`). Il descend d'un lot à l'autre : **202** à sa pose,
-  puis **138**, **70** et **50** au fil des conversions.
+  puis **138**, **70**, **50** et **36** au fil des conversions.
 - Les 58 bancs qui créent dans un `@Start` ou un `@BeforeEach` se convertissent par lots, et le
   cliquet descend d'autant.
 - Les outils `Capture*` de production ne sont pas visés : leur reliquat meurt avec le runner.
