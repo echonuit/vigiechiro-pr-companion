@@ -17,10 +17,14 @@ import pathlib
 import re
 import sys
 
-DECISIONS = pathlib.Path("dev-docs/decisions")
-
 # La racine du dépôt, pour les gardes qui s'ancrent au lieu de dépendre du répertoire courant.
 RACINE_DEPOT = pathlib.Path(__file__).resolve().parents[2]
+
+# ANCRÉE, et non relative (issue #4781). Un garde lancé depuis un autre exemplaire du dépôt mesurait
+# celui-là et rendait son verdict sans le dire ; `resserre_cliquets.py`, qui ÉCRIT, annonçait
+# « 0 cliquet resserré » depuis `/tmp`. La forme relative de `PRODUCTION` et `TESTS` ci-dessous a une
+# raison que celle-ci n'a pas : elles paraissent dans le rapport, où un chemin absolu serait illisible.
+DECISIONS = RACINE_DEPOT / "dev-docs" / "decisions"
 
 # LE CORPUS DES GARDES DE CODE, déclaré ici et nulle part ailleurs (ADR 4586).
 #
@@ -29,8 +33,10 @@ RACINE_DEPOT = pathlib.Path(__file__).resolve().parents[2]
 # six gardes lisaient les deux arbres sans y figurer. Un corpus déclaré ici se LIT par le programme,
 # ce qui permet à cette liste de se dériver au lieu de s'énumérer.
 #
-# Les chemins sont RELATIFS, comme `DECISIONS` : un garde qui s'ancre écrit `RACINE_DEPOT / TESTS`,
-# et le rapport garde des chemins lisibles.
+# Ces deux chemins-ci sont RELATIFS, et c'est le rapport qui l'exige : il les affiche, et un chemin
+# absolu y serait illisible et différent d'une machine à l'autre. Un garde qui s'ancre écrit donc
+# `RACINE_DEPOT / TESTS`, ou importe la variante ancrée plus bas. `DECISIONS` ne suit pas cette
+# convention parce qu'elle ne paraît dans aucun rapport : elle est ancrée d'emblée.
 #
 # Un garde qui lit délibérément la production seule importe `PRODUCTION` et dit pourquoi dans SA
 # javadoc : l'exception devient alors visible d'une commande, et sa raison se trouve là où on

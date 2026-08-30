@@ -595,6 +595,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie_lien_javadoc_formatable.py` | une ligne `///` de plus de 120 caractères portant un lien markdown à texte espacé : le formateur la casserait en perdant le préfixe | `lint.yml` |
 | `verifie_temoins_non_decoratifs.py` | aucun témoin de `verifie_scripts.py` n'est décoratif : chaque garde perd sa détection, la suite doit rougir (article A2 rendu mécanique). La mutation porte sur un **arbre jetable** depuis #4700 - `scripts/` copié, le reste lié - donc l'interrompre ne peut plus laisser un garde neutralisé dans le dépôt | `lint.yml` |
 | `verifie_corpus_declare.py` | le corpus d'un garde s'importe de `_commun.py` et ne se recopie pas : c'est ce refus qui permet à la liste des gardes à deux arbres de se dériver au lieu de s'énumérer (ADR 4586) | `lint.yml` |
+| `rapport.py` | chaque garde tourne dans SON dépôt, et non dans le répertoire de l'appelant : sans `cwd`, cinq cliquets sur dix-huit rendaient une autre valeur depuis ailleurs, et `resserre_cliquets.py` ramenait quatre `ratchet:` à zéro dans les vraies ADR en annonçant un succès (issue #4781) | `lint.yml` |
 | `verifie-epinglage.sh` | actions figées sur un SHA, aucune divergence de version | `lint.yml` |
 | `verifie-jeton.sh` | aucun jeton VigieChiro en clair | `lint.yml` |
 | `check-captures.sh` | chaque vue a une capture, chaque capture existe et est présentée | `lint.yml` |
