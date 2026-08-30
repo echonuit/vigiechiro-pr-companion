@@ -14,7 +14,6 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
@@ -26,6 +25,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
@@ -43,9 +43,13 @@ class SiteDetailVoirCarteViewTest {
     private final AtomicReference<String> pointFocalise = new AtomicReference<>();
     private final AtomicReference<String> carrePourPlacer = new AtomicReference<>();
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test (#4888).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-voir-carte");
+        Path workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Injector injector = Guice.createInjector(Modules.override(RacineInjecteur.modules())
                 .with(liaison -> liaison.bind(OuvrirMultisite.class).toInstance(new OuvrirMultisite() {

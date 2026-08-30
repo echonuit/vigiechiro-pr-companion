@@ -65,6 +65,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// **Test E2E de restauration : une machine vierge se reconstruit depuis la plateforme** (#1050, EPIC
 /// #1154).
@@ -96,6 +97,14 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
     private static final String SEQ_2 = "Car130711-2026-Pass1-Z41-PaRec_20260703_220534_000";
     private static final int FREQUENCE_ACQUISITION_HZ = 40_000;
     private static final double DUREE_BRUT_S = 12.0;
+
+    /// La racine des espaces de ce banc. JUnit la supprime en fin de test, et elle emporte les
+    /// répertoires que les appels ci-dessous y créent (#4888).
+    /// **Statique**, l'un des trois appels vivant dans une méthode statique. JUnit crée alors la
+    /// racine une fois pour la classe et la supprime au bout, ce qui suffit : les répertoires qu'elle
+    /// porte disparaissent avec elle.
+    @TempDir
+    private static Path dossierTemporaire;
 
     @Test
     @DisplayName("Base vierge : la synchro rapatrie sites, points et passages (en squelettes archivés)")
@@ -240,7 +249,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
         // L'utilisateur retrouve, sur sa carte SD, le brut de cette nuit et le log de l'enregistreur. SEQ_1 et
         // SEQ_2 sont les tranches i=0 et i=1 (à 5 s d'écart) de ce brut : sa régénération les reproduit à
         // l'identique, et la cascade structurelle les accepte (#1650/#1682).
-        Path sd = Files.createTempDirectory("vc-e2e-bruts");
+        Path sd = Files.createTempDirectory(dossierTemporaire, "vc-e2e-bruts");
         ecrireBrut(sd.resolve("PaRec_20260703_220529.wav"));
         JournalDeCapteur.ecrire(sd, "1925492", LocalDate.of(2026, 7, 3), FREQUENCE_ACQUISITION_HZ / 1000);
 
@@ -296,7 +305,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
         // 2. L'utilisateur retrouve sa carte SD et réactive. AUCUNE reconstruction préalable : la
         //    réactivation va chercher elle-même les observations (phase 0), recrée les séquences, puis
         //    rebranche l'audio. C'est la couture entière, celle que le défaut traversait.
-        Path sd = Files.createTempDirectory("vc-e2e-squelette");
+        Path sd = Files.createTempDirectory(dossierTemporaire, "vc-e2e-squelette");
         ecrireBrut(sd.resolve("PaRec_20260703_220529.wav"));
         JournalDeCapteur.ecrire(sd, "1925492", LocalDate.of(2026, 7, 3), FREQUENCE_ACQUISITION_HZ / 1000);
 
@@ -356,7 +365,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
     /// Injecteur **réel** de l'application (tous les modules de feature), avec la seule plateforme
     /// substituée : c'est le vrai câblage qu'on exerce, pas une maquette du parcours.
     private static Injector injecteurAvec(ClientVigieChiro client) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-e2e-restauration");
+        Path workspace = Files.createTempDirectory(dossierTemporaire, "vc-e2e-restauration");
         System.setProperty("vigiechiro.workspace", workspace.toString());
         return Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
             @Override

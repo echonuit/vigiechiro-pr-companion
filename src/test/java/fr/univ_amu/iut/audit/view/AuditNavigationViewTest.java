@@ -17,7 +17,6 @@ import fr.univ_amu.iut.commun.view.DoubleClicDeterministe;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
@@ -29,6 +28,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -52,9 +52,13 @@ class AuditNavigationViewTest {
     private final AtomicReference<Long> passageOuvert = new AtomicReference<>();
     private final AtomicReference<ContexteSite> contexteOuvert = new AtomicReference<>();
 
+    /// JUnit crée ce répertoire et le **supprime** en fin de test (#4888).
+    @TempDir
+    private Path dossierTemporaire;
+
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-audit-nav");
+        Path workspace = dossierTemporaire;
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Injector injector = Guice.createInjector(Modules.override(RacineInjecteur.modules())
                 .with(liaison -> liaison.bind(OuvrirPassage.class).toInstance((idPassage, contexte) -> {
