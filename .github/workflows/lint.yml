@@ -989,6 +989,22 @@ jobs:
           python3 scripts/methode/passes-citees-existent.py --auto-test
           python3 scripts/methode/passes-citees-existent.py
 
+      - name: "Concordances du cycle : commandes, tableau et compétences se répondent (bloquant, #4918)"
+        # Quatre concordances, aucune tenue jusqu'ici : une commande ouvre une compétence qui existe,
+        # le tableau en nomme une qui existe, la `description` annonce la passe que le tableau lui
+        # attribue, aucune compétence n'est orpheline. La troisième s'était rompue : `ecrire-une-adr`
+        # annonçait « pass 10 » quand le tableau lui donne les passes 0 et 11.
+        #
+        # `passes-citees-existent.py` ne pouvait pas le voir, et ce n'est pas un défaut de sa part : la
+        # passe 10 EXISTE. Ce garde lit une concordance entre deux inventaires, non un numéro.
+        #
+        # Chacun de ses huit cas déclare LAQUELLE des quatre doit rougir, et non « rouge ou non » : la
+        # première version ne lisait que le verdict, et quatre mutations sur cinq y survivaient parce
+        # qu'un cas rougissait pour la mauvaise raison.
+        run: |
+          python3 scripts/methode/concordances-du-cycle.py --auto-test
+          python3 scripts/methode/concordances-du-cycle.py
+
       - name: "Aucun auto-test de garde de méthode n'est décoratif (bloquant, #4760)"
         # L'article A2 demande qu'un garde soit vu ROUGE sur sa propre mutation.
         # `scripts/adr/verifie_temoins_non_decoratifs.py` le rend mecanique, mais pour `scripts/adr/`
