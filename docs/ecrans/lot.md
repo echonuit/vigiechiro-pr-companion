@@ -247,6 +247,8 @@ L'écran est long ; la **barre de statut** du bas de fenêtre garde l'essentiel 
 
     La cause est nommée : une coupure se réessaie, une session expirée demande de se reconnecter.
 
+![La réconciliation n'a pas pu lire la plateforme : l'avertissement passe devant le compteur d'avancement.](../assets/captures/apercu-lot-reconciliation-impossible.png)
+
 ## Checklist de cohérence : ce qui bloque
 
 Si la nuit n'est pas en état d'être déposée (par exemple séquences d'écoute absentes ou journal du

@@ -216,6 +216,9 @@ participation », puis le suivi du traitement. S4 est la première session qui *
   vide sur la fiche web.
 - **S4-74** · *geste: envoyer-les-metadonnees-hors-connexion* · Couper le réseau, « Envoyer » : la modale **reste ouverte**, la cause est à l'écran, et un second
   essai une fois le réseau revenu aboutit.
+- **S4-94** · *geste: deposer-hors-connexion-apres-preparation* · Préparer le dépôt, **couper le réseau**, puis « Téléverser » : la ligne d'état annonce
+  « Déjà déposées : impossible à vérifier, des archives vont repartir pour rien », **avant** le compteur « n/N déposées » et non après. La cause est nommée
+  (injoignable, et non « aucune donnée »), et le dépôt continue quand même (#4631).
 - **S4-75** · *hors-portée: un fichier de journal à ouvrir hors de l'application* · `logs/vigiechiro-0.log` porte une ligne par échange (méthode, chemin, issue, durée).
 - **S4-76** · *hors-portée: un fichier de journal à ouvrir hors de l'application* · Un refus serveur y figure **avec le corps de la réponse** (la cause, pas seulement le statut).
 - **S4-77** · *hors-portée: un fichier de journal à ouvrir hors de l'application* · **Ouvrir le journal et y chercher le jeton** : il n'y figure ni en clair, ni encodé, ni via une URL S3

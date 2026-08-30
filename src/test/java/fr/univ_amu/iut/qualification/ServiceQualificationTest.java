@@ -591,7 +591,12 @@ class ServiceQualificationTest {
     void detailler_selection_nomme_ce_qu_elle_n_a_pas_pu_lire() throws SQLException {
         creerNuit(3);
         SelectionDEcoute selection = service.ouvrirVerification(idPassage);
-        int avant = service.detaillerSelection(selection.id()).lignes().size();
+        DetailSelection saine = service.detaillerSelection(selection.id());
+        int avant = saine.lignes().size();
+        // Les DEUX sens : `complet()` pouvait rendre `false` partout sans qu'un cas ne tombe (#4852).
+        assertThat(saine.complet())
+                .as("une sélection dont tout se lit EST complète")
+                .isTrue();
 
         rattacherUneSequenceInexistante(selection.id(), 999_999L);
 

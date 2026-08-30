@@ -86,13 +86,13 @@ import javafx.scene.Scene;
 ///    courante et étape ② qui n'est plus un passage obligé (#1998) ;
 ///  - `apercu-lot-generation` : génération en cours, indicateur d'activité, bouton désactivé ;
 ///  - `apercu-lot-archives` : archives générées, liste des ZIP, étape ③ courante ;
-///  - `apercu-lot-televerser` : mêmes archives, connecté, « Téléverser sur Vigie-Chiro » à côté du dépôt
-///    manuel (#1890) ;
+///  - `apercu-lot-televerser` : mêmes archives, connecté, le téléversement à côté du dépôt manuel (#1890) ;
 ///  - `apercu-lot-depose` : **Déposé**, état final, toutes les étapes franchies ;
 ///  - `apercu-lot-participation` : participation liée, le bouton ④ sur « Lancer la participation » ;
 ///  - `apercu-lot-alertes` : **Vérifié incohérent**, zone d'alertes (R14), « Préparer le lot » désactivé ;
 ///  - `apercu-lot-reprise` : dépôt en cours (#2354), une archive déposée, une autre dont le `PUT` a
-///    rencontré une coupure, en « Nouvelle tentative dans N s… ».
+///    rencontré une coupure, en « Nouvelle tentative dans N s… » ;
+///  - `apercu-lot-reconciliation-impossible` : la réconciliation n'a pas pu lire la plateforme (#4631).
 ///
 /// Les aperçus connectés ont besoin d'un `Optional<DepotVigieChiro>` non vide, sans quoi l'étape ③ et le
 /// second mode du bouton ④ ne se rendent pas. Headless : `.github/assets/capture-screenshots.sh`.
@@ -104,6 +104,13 @@ public final class CaptureLot {
     private static final String CODE_POINT = "A1";
     private static final String NOM_SITE = "Étang de la Tuilière";
     private static final Prefixe PREFIXE = new Prefixe(NUMERO_CARRE, 2026, 1, CODE_POINT);
+
+    /// L'archive des séquences, nommée une fois : deux aperçus la montrent, dans deux états
+    /// différents. Le portail refuse un littéral répété en production, cliquet à zéro (ADR 4682).
+    private static final String ARCHIVE_SEQUENCES = "Car040962-2026-Pass1-A1-sequences.zip";
+
+    /// L'instant où les unités de dépôt sont planifiées, partagé par les aperçus qui en posent.
+    private static final String PLANIFIE_A = "2026-06-21T09:00:00";
     private static final Prefixe PREFIXE_INCOHERENT = new Prefixe(NUMERO_CARRE, 2026, 2, CODE_POINT);
     private static final String NOM_ORIGINAL = PREFIXE.nommerOriginal("PaRecPR" + SERIE + "_20260620_213000.wav");
     /// Volumes posés en **base 1000**, celle dans laquelle `Formats` les rend depuis #3573. Écrits en
@@ -200,15 +207,28 @@ public final class CaptureLot {
             depot.marquerEnCours();
             SuiviLignesDepot lignes = depot.suiviLignes();
             String deposee = "Car040962-2026-Pass1-A1-originaux.zip";
-            String enCours = "Car040962-2026-Pass1-A1-sequences.zip";
+            String enCours = ARCHIVE_SEQUENCES;
             lignes.planifier(List.of(
-                    DepotUnite.aDeposer(idCoherent, deposee, TypeDepotUnite.ZIP, "2026-06-21T09:00:00"),
-                    DepotUnite.aDeposer(idCoherent, enCours, TypeDepotUnite.ZIP, "2026-06-21T09:00:00")));
+                    DepotUnite.aDeposer(idCoherent, deposee, TypeDepotUnite.ZIP, PLANIFIE_A),
+                    DepotUnite.aDeposer(idCoherent, enCours, TypeDepotUnite.ZIP, PLANIFIE_A)));
             lignes.demarree(deposee);
             lignes.deposee(deposee);
             lignes.demarree(enCours);
             lignes.progresse(enCours, 0.4);
             lignes.reprise(enCours, Duration.ofSeconds(3));
+        });
+        // #4631 : la réconciliation n'a PAS PU lire ce que la plateforme porte. L'état n'avait aucun
+        // aperçu, alors que c'est celui où l'utilisateur peut encore agir : des archives déjà en ligne
+        // vont repartir, et l'avertissement passe DEVANT « n/N déposées » pour qu'il le sache avant
+        // d'attendre. Trouvé sans capture à la passe 8 de la clôture de #4852.
+        rendrePilote(connecte, idCoherent, sortie.resolve("apercu-lot-reconciliation-impossible.png"), (vm, depot) -> {
+            depot.marquerEnCours();
+            SuiviLignesDepot lignes = depot.suiviLignes();
+            String archive = ARCHIVE_SEQUENCES;
+            lignes.planifier(List.of(DepotUnite.aDeposer(idCoherent, archive, TypeDepotUnite.ZIP, PLANIFIE_A)));
+            lignes.demarree(archive);
+            lignes.progresse(archive, 0.25);
+            lignes.reconciliationImpossible("Vigie-Chiro injoignable : connexion réinitialisée.", false);
         });
         // ④ Déposé : état final, toutes les étapes franchies.
         service.marquerDepose(idCoherent);
