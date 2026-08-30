@@ -86,7 +86,7 @@ remplacent pas ce document : il se lit au début, une compétence s'ouvre au mom
 | `revoir-les-ecrans` | la planche avant/après |
 | `ecrire-une-adr` | format, statut, chaînage, et l'article auquel elle se rattache |
 | `clore-une-issue` | ce qu'on laisse derrière soi |
-| `clore-un-chantier` | les treize passes de clôture |
+| `clore-un-chantier` | les quatorze passes de clôture |
 | `humaniser` | relire une prose française qui porte des marques d'écriture par LLM |
 | `confronter-un-arbitrage` | soumettre un arbitrage à trois lecteurs, sans leur faire dire une mesure |
 | `openspec-propose`, `-apply-change`, `-update-change`, `-sync-specs`, `-archive-change`, `-explore` | le cycle d'un changement dans la spécification vivante |
@@ -131,7 +131,7 @@ Un **chantier** est un lot de travail d'ampleur **EPIC**, réparti sur plusieurs
 rattachées à l'EPIC suffisent. **Plus de deux PR cohérentes, c'est un chantier** : le lot s'ouvre
 alors en **sous-chantier**, un EPIC enfant, ses issues s'y rattachent, et la case du parent pointe
 vers lui. Un lot multi-PR accroché sous une case à cocher n'a ni périmètre écrit, ni bilan, ni les
-treize passes : il se termine sans que personne sache s'il est fini. La forme observée dans les EPIC
+quatorze passes : il se termine sans que personne sache s'il est fini. La forme observée dans les EPIC
 existants n'est pas la règle, et l'imiter reproduit le défaut ([ADR 4712](dev-docs/decisions/4712-un-lot-multi-pr-est-un-sous-chantier.md)).
 
 ### Au commencement de chaque issue : se signaler
@@ -162,7 +162,7 @@ Le **corps** de l'issue porte l'état courant de la vérité ; les **commentaire
 
 Avant de fusionner : **le corps de la PR et celui de l'issue se lisent-ils dans six mois, sans le fil ?**
 
-### À la clôture : 13 passes obligatoires, numérotées 0 à 12 (dans l'ordre)
+### À la clôture : 14 passes obligatoires, numérotées 0 à 12 plus la 6b (dans l'ordre)
 
 Les passes **0 à 9 gardent leur numéro**, et les deux dernières ont glissé d'un cran. L'insertion en 10 rompt la règle qui plaçait les passes neuves aux extrémités pour ne renuméroter aucune citation : l'archivage doit précéder l'écriture des ADR, puisque celle-ci balaie ce qui la précède et doit voir la spécification fusionnée. Une passe ne se range donc pas où elle coûte le moins, mais où son effet est juste. Ce que ce choix a coûté est compté dans #4518.
 

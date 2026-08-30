@@ -1,5 +1,5 @@
 ---
-description: Clore un chantier par les treize passes, dans l'ordre, et laisser sa trace dans l'EPIC.
+description: Clore un chantier par les quatorze passes, dans l'ordre, et laisser sa trace dans l'EPIC.
 argument-hint: le numéro de l'EPIC, sinon il se déduit du fil
 allowed-tools: ["Skill"]
 ---

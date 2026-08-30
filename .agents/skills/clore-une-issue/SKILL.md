@@ -75,4 +75,4 @@ Ce n'est pas de la cosmétique. C'est la seule trace qui survive.
 | « J'ai corrigé ça en commentaire » | Qui lit en diagonale retient la première version |
 | « Le corps est un peu périmé, ce n'est pas grave » | C'est ce que lira le repreneur |
 | « Le fil explique tout » | Le fil disparaît. Le corps reste |
-| « C'était la dernière issue de l'EPIC, il est donc clos » | Fermer les issues n'est pas clore le chantier. Les treize passes portent sur le **delta**, pas sur les tickets, et 43 EPIC clos sur 64 n'en portaient aucune trace (#4659). La commande est `/clore` |
+| « C'était la dernière issue de l'EPIC, il est donc clos » | Fermer les issues n'est pas clore le chantier. Les quatorze passes portent sur le **delta**, pas sur les tickets, et 43 EPIC clos sur 64 n'en portaient aucune trace (#4659). La commande est `/clore` |

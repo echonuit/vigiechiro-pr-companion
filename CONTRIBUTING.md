@@ -248,7 +248,7 @@ TITRE="feat(passage): écran pivot d'une nuit"
 ## 5. Cycle de vie d'un chantier
 
 Un **chantier** est une évolution d'ampleur **EPIC**, répartie sur **plusieurs PR** (le §4 décrit
-_une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 13 passes,
+_une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 14 passes,
 numérotées **0 à 11** (les passes 1 à 9 gardent leur numéro : 35 ADR **immuables** les citent).
 
 **À l'ouverture**, dans cet ordre : **trier et regrouper les issues existantes** (balayage **par
@@ -261,7 +261,7 @@ les patterns en place plutôt que réinventer) ; puis rédiger un plan ; puis d�
 Une ou deux, des issues rattachées à l'EPIC suffisent. **Plus de deux PR cohérentes, c'est un
 chantier** : le lot s'ouvre alors en **sous-chantier**, un EPIC enfant, ses issues s'y rattachent, et
 la case du parent pointe vers lui. Un lot multi-PR accroché sous une case à cocher n'a ni périmètre
-écrit, ni bilan, ni les treize passes, et se termine sans que personne sache s'il est fini. La forme
+écrit, ni bilan, ni les quatorze passes, et se termine sans que personne sache s'il est fini. La forme
 observée dans les EPIC existants n'est pas la règle : l'imiter reproduit le défaut.
 
 Le triage vient **en premier** parce qu'une issue est rattachée au chantier qui a remarqué son
@@ -405,7 +405,7 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
     été corrigé y figure aussi : une troncature montrée et assumée vaut mieux qu'une omission.
 
 **Les suites se closent aussi.** Les issues consolidées en passe 9, une fois livrées, forment un
-**nouveau delta** : il se clôt par les **mêmes 13 passes**, appliquées à lui seul. Et un bilan est une
+**nouveau delta** : il se clôt par les **mêmes 14 passes**, appliquées à lui seul. Et un bilan est une
 **hypothèse** : quand une suite est traitée, relire ce que le bilan précédent en disait et le corriger
 s'il s'est trompé.
 
