@@ -82,20 +82,20 @@ La convention de nommage qui la complète, `<paquet de fonctionnalité>/<geste>`
 
 ## Pourquoi le cliquet vaut 1
 
-La passe de spécification est entrée dans le cycle le 2026-08-30 à 09:00:15Z, par #4840. Trois EPIC
-ont été clos après cette borne : #4873 et #4874 y ont répondu, tous deux par un « sans objet »
-motivé, et **#4841 ne l'a pas fait**.
+La passe est entrée dans le cycle le 2026-08-30 à 09:00:15Z, par #4840. Trois EPIC ont été clos après
+cette borne : #4873 et #4874 y ont répondu par un « sans objet » motivé, et **#4841 ne l'a pas fait**.
 
-#4841 a été clos **neuf minutes** après, et sa trace porte encore l'ancienne numérotation, où « 10 »
-désignait la passe des ADR. Sa clôture était donc rédigée avant que la règle n'existe. C'est un
-artefact de frontière, il est assumé par ce chiffre, et il n'est pas rattrapé : rejouer une clôture
-pour une passe née neuf minutes plus tôt n'apprendrait rien à personne.
+Il a été clos **neuf minutes** après, sa trace portant encore l'ancienne numérotation : elle était
+rédigée avant que la règle n'existe. Artefact de frontière, assumé par ce chiffre et non rattrapé.
 
 ## Ce que le garde ne prétend pas
 
 Il vérifie qu'un **jugement a été rendu**, pas qu'il est juste. Une clôture peut cocher la passe à
-tort, et rien ne le verra. C'est la raison du niveau `probable` : la règle est vérifiable dans sa
-forme, pas dans son fond.
+tort, et rien ne le verra.
+
+Il ne prouve pas non plus que la ligne trouvée **est** la passe 10 : il reconnaît une ligne cochée qui
+parle d'archiver un changement, ce qui reste une heuristique (#4938). Deux limites distinctes, une
+seule raison du niveau `probable` : la règle est vérifiable dans sa forme, pas dans son fond.
 
 ## Ce qu'un lecteur futur pourrait défaire
 
