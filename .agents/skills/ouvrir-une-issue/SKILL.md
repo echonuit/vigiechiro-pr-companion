@@ -68,6 +68,24 @@ les reprendre une par une. Les blocs de #4571, #4554 et #4617 portaient tous `Pr
 qui n'a été ouvert qu'après coup, en #4650. Trois sessions au même endroit le même jour ne sont pas
 trois inattentions.
 
+## Si le chantier porte un changement OpenSpec, ce lot en est une tâche
+
+L'étape 2b de [`ouvrir-un-chantier`](../ouvrir-un-chantier/SKILL.md) fait décider, à chaque ouverture,
+si le chantier appelle un changement OpenSpec. Quand il en porte un, **ses tâches sont ses lots** : une
+issue prise n'est pas un travail libre, c'est une tâche à cocher.
+
+Le geste est alors [`openspec-apply-change`](../openspec-apply-change/SKILL.md), et cela change deux
+choses au bloc d'ouverture :
+
+- **le plan de l'issue se lit dans les tâches**, il ne se réinvente pas. Un plan écrit à côté du
+  changement produit deux découpages qui divergeront, et c'est l'artefact qui perdra ;
+- **l'élargissement se pose contre la spécification**, pas contre l'intuition. C'est la seule surface
+  où « cette tâche demande plus que prévu » a un sens vérifiable.
+
+Quand le chantier n'en porte pas, rien de tout cela ne s'applique, et son étape 2b l'aura écrit.
+Vérifier avant de prendre coûte une commande, `openspec list --json`, et évite d'improviser un
+découpage que le chantier avait déjà tranché (#4911).
+
 ## Pourquoi le commentaire **et** l'assignation, pas l'un ou l'autre
 
 | Dispositif | Ce qu'il porte | Ce qu'il ne dit pas |
