@@ -3,7 +3,7 @@ type: adr
 title: "Un mécanisme plausible corrigé n'est pas une cause établie"
 status: stable
 article: A1
-chantier: "#4685 (clôture, passe 10)"
+chantier: "#4685 (clôture, passe 11)"
 decided_at: 2026-08-29
 verification: humaine
 verification_note: "la règle porte sur ce qu'une correction PRÉTEND, et une prétention ne se mesure pas : aucun garde ne peut distinguer un correctif qui explique son incident d'un correctif qui lui ressemble"

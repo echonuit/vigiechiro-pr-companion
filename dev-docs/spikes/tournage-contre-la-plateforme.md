@@ -345,7 +345,7 @@ Elle trancherait trois choses :
 3. **la durée de vie du jeton** : un jeton de tournage se révoque à la fin du run, donc il ne peut pas
    être celui du contrat hebdomadaire, qui vit de durer.
 
-Elle a été écrite en passe 10 : **[ADR 4291](../decisions/4291-un-clip-tourne-contre-la-plateforme-ne-se-range-pas-avec-les-autres.md)**.
+Elle a été écrite en passe 11 : **[ADR 4291](../decisions/4291-un-clip-tourne-contre-la-plateforme-ne-se-range-pas-avec-les-autres.md)**.
 
 Ce que cette page ne disait pas, faute de l'avoir mesuré, **a été mesuré depuis** : le tri des deux
 scripts de session, cas par cas, donne **29 cas de S8 sur 38** atteignables, et **S4 hors de portée** -

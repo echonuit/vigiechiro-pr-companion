@@ -8,7 +8,7 @@ le **flux de contribution**, cette page décrit le niveau au-dessus : comment on
 **clôt** un chantier entier.
 
 Le principe : un chantier ne se termine pas au dernier `feat:` mergé. Une fois le cœur livré, une
-**clôture en 12 passes** (numérotées **0 à 11**) garantit que l'évolution est intégrée, cohérente
+**clôture en 13 passes** (numérotées **0 à 12**) garantit que l'évolution est intégrée, cohérente
 entre les deux surfaces (IHM et CLI), documentée, testée, harmonisée, **regardée**, et que la suite
 est cadrée.
 
@@ -448,7 +448,7 @@ Ce n'est pas de la cosmétique. Le **titre de la pull request devient le sujet d
 son corps est ce qu'atteint quiconque remonte depuis `git log`. C'est la seule trace qui survive à la
 fermeture de l'onglet.
 
-## À la clôture : les 12 passes
+## À la clôture : les 13 passes
 
 Elles s'exécutent **dans l'ordre** : la relecture des ADR remet l'existant en tête avant qu'on touche
 à quoi que ce soit, l'audit d'intégration peut révéler du travail à faire avant de documenter, la
@@ -543,7 +543,7 @@ colle au code livré : [Architecture](architecture.md), [Patterns et principes](
 [Injection (Guice)](injection.md), [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md) si le
 chantier a introduit un **nouveau pattern d'extension** que les futures features devront suivre.
 
-Les **ADR ne s'écrivent plus ici** : elles se rédigent en **passe 10**, quand toutes les décisions du
+Les **ADR ne s'écrivent plus ici** : elles se rédigent en **passe 11**, quand toutes les décisions du
 chantier sont prises. Cette passe-ci ne traite que les pages de description.
 
 #### Chercher ce qui est devenu FAUX, pas ce qu'on a à ajouter
@@ -924,7 +924,50 @@ Le travail est donc de **relire** ce qui s'est accumulé :
     Sa taille est un signal. S'il enfle sans que rien n'en sorte, ce ne sont pas les trouvailles qui
     sont trop nombreuses : ce sont les passes 9 qui ne le lisent pas.
 
-### 10. Écriture des ADR du chantier
+### 10. Archivage des changements OpenSpec
+
+Un changement de `openspec/changes/` décrit un travail qui est fait. L'y laisser fait mentir la liste
+des changements **actifs**, et la spécification principale reste muette sur ce qui vient de changer.
+
+L'archivage est un acte de clôture, pas une fin d'issue : il se fait ici, quand le chantier entier est
+livré, et non à chaque PR fusionnée.
+
+**L'ordre n'est pas négociable, et c'est tout le contenu de cette passe.** Les delta specs fusionnent
+dans `openspec/specs/` **avant** que `changeRoot` ne bouge. Déplacer pendant qu'une fusion le lit
+encore laisse le changement archivé et la spécification jamais mise à jour, **sans que rien ne le
+dise** : les deux moitiés paraissent faites.
+
+1. **Vérifier** les artefacts et les tâches. Un manque avertit et se confirme, il ne refuse pas.
+2. **Évaluer** l'écart entre chaque delta spec et sa spec principale, et le **montrer** avant de
+   demander quoi que ce soit. Les delta specs se lisent dans
+   `artifactPaths.specs.existingOutputPaths`, et nulle part ailleurs.
+3. **Fusionner en ligne**, jamais en tâche de fond. On fusionne, on ne recopie pas : les en-têtes
+   d'opération ne survivent pas, et ce que le delta ne mentionne pas se garde.
+4. **Re-comparer toutes** les capacités portant une delta spec, et pas seulement celles que la fusion
+   dit avoir touchées. Une fusion réussie ne laisse rien à appliquer.
+5. **Déplacer** `changeRoot` sous l'archive, une fois et une seule, préfixé de la date du jour et
+   jamais de deux dates empilées.
+
+!!! warning "Une exigence écrite à la proposition a vieilli"
+    Une delta spec écrite avant la réalisation porte souvent `*Vérifié par* : aucun dispositif
+    n'existe encore`. C'était vrai alors, c'est faux à la clôture, et le recopier tel quel rend la
+    spec principale **fausse le jour de sa création**. Mesuré sur le premier archivage du dépôt
+    (#4833) : quatre exigences sur cinq étaient dans ce cas. Une exigence qui ne dit pas comment elle
+    est vérifiée se relit comme vérifiée.
+
+    Et quand un dispositif manque encore, l'écrire aussi. Le scénario qu'aucun test ne tient décrit une
+    garantie **visée**, non tenue, et la spec le dit à cet endroit plutôt que de laisser le lecteur le
+    supposer.
+
+!!! tip "Signal concret"
+    `openspec list --json` ne doit plus montrer aucun changement actif, `openspec validate --specs`
+    doit être vert, et `openspec/changes/` ne doit plus porter le delta que `openspec/specs/` porte
+    désormais. Un archivage qu'on croit fait laisse la spécification principale muette.
+
+La compétence `openspec-archive-change` porte le flux, et `openspec-sync-specs` la fusion qu'elle
+appelle en ligne.
+
+### 11. Écriture des ADR du chantier
 
 Toute **décision structurante** prise pendant le chantier - un choix d'architecture ou de domaine qu'un
 développeur futur pourrait raisonnablement remettre en cause faute d'en connaître les raisons - donne
@@ -940,7 +983,7 @@ supposé : les cinq ADR du chantier #3151 - 3406, 3439, 3450, 3451, 3483 - porte
 sortie de la **revue visuelle** (passe 8), l'ADR 3483 d'une trouvaille faite en retirant ce que 3439
 masquait. Un cycle qui exige une chose impossible obtient qu'on l'ignore.
 
-Cette passe **balaie donc les passes 0 à 9** et pose, pour chacune, la même question : *une décision
+Cette passe **balaie donc les passes 0 à 10** et pose, pour chacune, la même question : *une décision
 a-t-elle été prise ici, qu'un lecteur futur pourrait défaire faute d'en connaître la raison ?* Trois
 sources reviennent :
 
@@ -954,19 +997,19 @@ OpenStreetMap », « on n'ajoute aucune protection de branche », « la Polynés
 dérivation » : ce sont des ADR, et ce sont celles qu'on oublie, parce qu'elles ne laissent pas de code
 derrière elles.
 
-### 11. Phase de bilan
+### 12. Phase de bilan
 
 Une **synthèse** courte : ce qui a été livré, la **dette restante**, les **décisions** prises et leur
 pourquoi. Elle se dépose dans le corps de l'EPIC (au moment de le clore) et, si elle change une
 règle du dépôt, se répercute dans `AGENTS.md` / `CONTRIBUTING.md`. Le bilan **renvoie** aux
-[ADR](decisions/index.md) écrites en passe 10 plutôt que de redérouler le raisonnement des décisions -
+[ADR](decisions/index.md) écrites en passe 11 plutôt que de redérouler le raisonnement des décisions -
 c'est la raison pour laquelle il vient **après** elles et non l'inverse.
 
 **Et il se montre.** Un chantier d'IHM se juge sur ce qu'il change à l'écran, or le bilan est un texte :
 il décrit des captures que son lecteur n'a pas sous les yeux. La passe 8 les a pourtant toutes ouvertes,
 recadrées et regardées : ce travail reste dans la tête de qui l'a fait.
 
-La passe 11 produit donc un **artefact visuel** : une page qui met les états **avant / après** côte à
+La passe 12 produit donc un **artefact visuel** : une page qui met les états **avant / après** côte à
 côte, une ligne par conséquence visible du chantier, avec la phrase qui dit ce qu'on doit y voir. Elle
 sert deux fois :
 
@@ -987,7 +1030,7 @@ documenter une décision déjà prise.
 
 ## Les suites d'une clôture se closent aussi
 
-La passe 9 consolide les issues ouvertes en chemin ; la passe 11 les nomme « dette restante » et clôt
+La passe 9 consolide les issues ouvertes en chemin ; la passe 12 les nomme « dette restante » et clôt
 l'EPIC. Ces issues, une fois livrées, forment un **nouveau delta** - et rien ne les rattrape si l'on
 considère que le chantier est fini.
 
@@ -995,7 +1038,7 @@ Le dépôt l'a vécu **trois fois** : les suites de l'EPIC #1662 ont formé l'EP
 ont formé le delta clos par #1920 ; les suites de #1838 ont eu leur propre clôture (#1921). Le patron
 est donc régulier, pas accidentel.
 
-**Les suites d'un chantier se closent par les mêmes 12 passes**, appliquées à leur seul delta
+**Les suites d'un chantier se closent par les mêmes 13 passes**, appliquées à leur seul delta
 (`git log <sha-de-la-clôture-précédente>..origin/main`, **entier et non filtré** : le code des suites
 doit se juger à côté de ce qui a été fusionné pendant qu'elles couraient). C'est peu coûteux - le
 périmètre est étroit - et c'est là qu'on trouve ce que le travail de suite a laissé derrière lui : une
@@ -1035,8 +1078,9 @@ trompé : une analyse fausse laissée en place oriente le chantier suivant.
 - [ ] 7. Harmonisation : **audit global** (ce qui ressemble / bénéficierait, exhaustif) puis **refactoring de conceptualisation** (lisibilité ; duplication et abstraction = outils) ; **choix, doutes, conséquences discutés avec l'utilisateur**
 - [ ] 8. Revue visuelle : **toute conséquence visible** couverte par une capture (captures **ajoutées** si besoin), régénérées et ouvertes une par une
 - [ ] 9. Nouveaux chantiers identifiés + issues créées
-- [ ] 10. ADR du chantier écrites (balayer les passes 0 à 9 ; une décision **de ne pas faire** en est une)
-- [ ] 11. Bilan (livré / dette / décisions) **+ artefact visuel avant/après soumis avant de clore**
+- [ ] 10. Changement OpenSpec archivé : delta specs **fusionnées d'abord** dans `openspec/specs/`, toutes les capacités re-comparées, **puis** le dossier déplacé sous `archive/`
+- [ ] 11. ADR du chantier écrites (balayer les passes 0 à 10 ; une décision **de ne pas faire** en est une)
+- [ ] 12. Bilan (livré / dette / décisions) **+ artefact visuel avant/après soumis avant de clore**
 ```
 
 ## Modèle de cycle d'une issue (rouge, vert, refactor)

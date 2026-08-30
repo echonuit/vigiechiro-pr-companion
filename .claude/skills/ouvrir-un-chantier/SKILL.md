@@ -48,7 +48,7 @@ l'accrocher :
 - plus de deux, ou plusieurs issues déjà identifiées : le lot **s'ouvre en sous-chantier**, un EPIC
   enfant, ses issues s'y rattachent, et la case du parent pointe vers lui.
 
-Un lot multi-PR sous une case à cocher n'a ni périmètre écrit, ni bilan, ni les douze passes de
+Un lot multi-PR sous une case à cocher n'a ni périmètre écrit, ni bilan, ni les treize passes de
 clôture. Il se termine sans que personne sache s'il est fini.
 
 **Le piège est que la forme observée enseigne l'erreur.** Qui cherche comment faire regarde les EPIC
@@ -62,7 +62,7 @@ mécanique ont été mesurés puis écartés, faute de signal lisible dans de la
 
 ## Pourquoi cette compétence existe
 
-Le dépôt avait `ouvrir-une-issue` et `clore-une-issue`, et `clore-un-chantier` avec ses douze passes
+Le dépôt avait `ouvrir-une-issue` et `clore-une-issue`, et `clore-un-chantier` avec ses treize passes
 détaillées. L'ouverture d'un chantier, elle, tenait en **une phrase**, dont seule la première étape
 avait une compétence.
 

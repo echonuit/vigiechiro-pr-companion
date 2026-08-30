@@ -2,7 +2,7 @@
 #
 # Un EPIC clos sans trace de clôture ne se distingue pas d'un EPIC clos sans clôture (#4659).
 #
-# Le dépôt écrit à trois endroits que tout chantier se clôt par douze passes - `CONTRIBUTING.md` §5,
+# Le dépôt écrit à trois endroits que tout chantier se clôt par treize passes - `CONTRIBUTING.md` §5,
 # `dev-docs/cycle-de-chantier.md`, la compétence `clore-un-chantier`. Rien ne le vérifiait, et
 # **43 des 64 EPIC clos** n'en portaient aucune trace au 2026-08-28.
 #
@@ -20,7 +20,7 @@
 # et le garde se ferait désactiver la première semaine. Le cliquet ne peut que DESCENDRE : fermer un
 # EPIC sans trace le fait monter à 44, et c'est ce mouvement-là qui rougit.
 #
-# Rejouer douze passes sur un chantier clos depuis un an n'aurait pas de sens. Les 43 sont donc
+# Rejouer treize passes sur un chantier clos depuis un an n'aurait pas de sens. Les 43 sont donc
 # assumées, une fois, par ce chiffre - et non rattrapées.
 #
 # ## Pourquoi il vit ici et non dans `scripts/adr/`

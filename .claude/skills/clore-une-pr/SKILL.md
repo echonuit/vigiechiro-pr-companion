@@ -96,7 +96,7 @@ mesure, pas un résultat.
 
 Une fois fusionnée, [`clore-une-issue`](../clore-une-issue/SKILL.md) prend la suite : l'issue se met
 au net et se ferme. Et fermer la dernière issue d'un chantier n'est pas le clore -
-[`clore-un-chantier`](../clore-un-chantier/SKILL.md) porte les douze passes.
+[`clore-un-chantier`](../clore-un-chantier/SKILL.md) porte les treize passes.
 
 ## Signaux d'alerte : on s'arrête
 

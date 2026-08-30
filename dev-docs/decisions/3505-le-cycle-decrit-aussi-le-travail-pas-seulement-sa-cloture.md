@@ -102,8 +102,8 @@ Donc :
   le droit de **dépasser** une décision - #3442 a rendu faux ce que l'ADR 3406 assumait sur l'outre-mer -
   mais pas de le faire en silence, sinon deux règles opposées cohabitent et le prochain lecteur applique
   la première trouvée ;
-- **passe 10, en queue** : écrire les ADR du chantier, en balayant les passes 0 à 9. Le **bilan** devient
-  la passe 11, parce qu'il **renvoie** aux ADR et ne peut pas renvoyer à ce qui n'est pas écrit.
+- **passe 11, en queue** : écrire les ADR du chantier, en balayant les passes 0 à 10. Le **bilan** devient
+  la passe 12, parce qu'il **renvoie** aux ADR et ne peut pas renvoyer à ce qui n'est pas écrit.
 
 Une décision **de ne pas faire** est une décision, et c'est celle qu'on oublie : elle ne laisse pas de
 code derrière elle.

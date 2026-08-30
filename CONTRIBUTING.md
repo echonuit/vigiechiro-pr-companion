@@ -248,7 +248,7 @@ TITRE="feat(passage): écran pivot d'une nuit"
 ## 5. Cycle de vie d'un chantier
 
 Un **chantier** est une évolution d'ampleur **EPIC**, répartie sur **plusieurs PR** (le §4 décrit
-_une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 12 passes,
+_une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 13 passes,
 numérotées **0 à 11** (les passes 1 à 9 gardent leur numéro : 35 ADR **immuables** les citent).
 
 **À l'ouverture**, dans cet ordre : **trier et regrouper les issues existantes** (balayage **par
@@ -261,7 +261,7 @@ les patterns en place plutôt que réinventer) ; puis rédiger un plan ; puis d�
 Une ou deux, des issues rattachées à l'EPIC suffisent. **Plus de deux PR cohérentes, c'est un
 chantier** : le lot s'ouvre alors en **sous-chantier**, un EPIC enfant, ses issues s'y rattachent, et
 la case du parent pointe vers lui. Un lot multi-PR accroché sous une case à cocher n'a ni périmètre
-écrit, ni bilan, ni les douze passes, et se termine sans que personne sache s'il est fini. La forme
+écrit, ni bilan, ni les treize passes, et se termine sans que personne sache s'il est fini. La forme
 observée dans les EPIC existants n'est pas la règle : l'imiter reproduit le défaut.
 
 Le triage vient **en premier** parce qu'une issue est rattachée au chantier qui a remarqué son
@@ -384,7 +384,10 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    précédente (CSS, socle) qui est la plus à même de casser un écran sans casser un test, d'où cette
    relecture **juste après** elle.
 9. **Suites consolidées** : l'EPIC des suites relu, regroupé, les rattachements tranchés, et ce que la clôture a elle-même révélé ajouté.
-10. **ADR du chantier écrites** (`dev-docs/decisions/`), pour toute **décision structurante**. Le numéro
+10. **Changement OpenSpec archivé** : les delta specs fusionnent d'abord dans `openspec/specs/`, toutes les
+    capacités sont re-comparées, **puis** le dossier passe sous `openspec/changes/archive/`. L'ordre inverse
+    laisse le changement archivé et la spécification jamais mise à jour, sans que rien ne le dise.
+11. **ADR du chantier écrites** (`dev-docs/decisions/`), pour toute **décision structurante**. Le numéro
     **ne se choisit pas** : c'est celui de l'issue qui porte la décision (le lot, à défaut l'EPIC) ; le
     compteur séquentiel est clos à 0048, voir le [journal](dev-docs/decisions/index.md). Chaque ADR
     **déclare comment elle est vérifiée** (champ `verification: certaine | probable | humaine` de son en-tête OKF,
@@ -393,14 +396,14 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
     décisions : sur le chantier #3151, les cinq ADR sont nées après la passe 3, aucune à l'endroit prévu.
     Une décision **de ne pas faire** est une décision, et c'est celle qu'on oublie : elle ne laisse pas
     de code derrière elle.
-11. **Bilan** : ce qui a été livré, dette restante, décisions (qui **renvoient aux ADR** de la passe 10).
-    **Et il se montre** : la passe 11 produit un **artefact visuel avant / après**, une ligne par
+12. **Bilan** : ce qui a été livré, dette restante, décisions (qui **renvoient aux ADR** de la passe 11).
+    **Et il se montre** : la passe 12 produit un **artefact visuel avant / après**, une ligne par
     conséquence visible, soumis **avant** de clore l'EPIC. Un chantier d'IHM se juge sur ce qu'il change
     à l'écran, et un bilan écrit demande qu'on le croie là où une capture le montre. Ce qui n'a **pas**
     été corrigé y figure aussi : une troncature montrée et assumée vaut mieux qu'une omission.
 
 **Les suites se closent aussi.** Les issues consolidées en passe 9, une fois livrées, forment un
-**nouveau delta** : il se clôt par les **mêmes 12 passes**, appliquées à lui seul. Et un bilan est une
+**nouveau delta** : il se clôt par les **mêmes 13 passes**, appliquées à lui seul. Et un bilan est une
 **hypothèse** : quand une suite est traitée, relire ce que le bilan précédent en disait et le corriger
 s'il s'est trompé.
 
