@@ -1,6 +1,6 @@
 ---
 name: ecrire-une-adr
-description: Use at closure pass 10, once every decision is taken, and whenever a chantier deliberately overrides an existing decision. One decision, one ADR, and every ADR declares how it is verified.
+description: Use at closure pass 0 to re-read the existing decisions and find what the chantier contradicted, and at pass 11 to write what it decided. One decision, one ADR, and every ADR declares how it is verified.
 license: GPL-3.0-or-later
 metadata:
   langue: fr
@@ -67,7 +67,82 @@ et se pose dans les champs de l'en-tête OKF :
 prétendrait qu'il refuse, quand il ne fait que relever, et un garde qui promet plus qu'il ne tient
 emprunte la solidité de ses voisins.
 
-## Fonction de garde
+## Deux moments, et le second n'est pas le premier
+
+Cette compétence sert **deux passes** de la clôture, et elles ne demandent pas le même geste.
+
+| Passe | Le geste |
+|---|---|
+| **0** · en tête de clôture | **relire** l'existant, et chercher ce que le chantier a contredit |
+| **11** · après la 10 | **écrire** ce que le chantier a décidé |
+
+Les deux sont les deux bouts d'une même conversation avec le corpus : ce que la passe 0 trouve
+d'un dépassement délibéré, la passe 11 l'écrit des deux côtés. C'est pourquoi elles vivent ici
+ensemble, mais leurs étapes sont distinctes et ce qui suit les sépare.
+
+## Passe 0 : la fonction de garde de la relecture
+
+```
+0. METTRE A JOUR le graphe du depot : graphify update .
+1. LISTER    les ADR apparues PENDANT le chantier, contre origin/main.
+2. POSER     la question qui decide : le chantier a-t-il CONTREDIT une decision
+             existante, et si oui l a-t-il fait expres ?
+3. POSER     la meme question A L ENVERS : parmi les ADR que le chantier
+             RESPECTE, certaines regissent-elles du code HORS du delta qu il
+             faudrait aligner ?
+4. ECRIRE    tout depassement delibere. Il deviendra une ADR en passe 11.
+```
+
+### Le graphe d'abord, parce que la passe s'en sert
+
+```bash
+graphify update .
+```
+
+La passe 0 cherche ce qui est apparu pendant le chantier. Un graphe périmé oriente cette recherche à
+côté, et il vieillit sans le dire.
+
+Mesuré le 30 août 2026 : le graphe datait de vingt heures et rendait « Passe 9 · identification des
+nouveaux chantiers » à la ligne 843, un titre et un emplacement que la passe 9 n'avait plus depuis le
+matin même. La règle générale vit dans le `CLAUDE.md` du dépôt parent et n'avait pas été tenue de la
+journée.
+
+Il est en tête de la **première** passe, ce qui le rend acquis pour les treize suivantes sans le
+répéter. Les passes 3 et 7 interrogent le graphe elles aussi, et lisent alors un état à jour.
+
+### La lecture se fait contre `origin/main`, jamais contre la branche
+
+```bash
+git log --oneline <sha-d-ouverture>..origin/main -- dev-docs/decisions/
+```
+
+D'autres chantiers ont pu écrire des ADR pendant celui-ci. Le rebase de la passe 1 arriverait trop
+tard pour les découvrir, et ce sont justement les plus susceptibles d'avoir été ignorées : elles
+n'existaient pas quand le plan a été écrit.
+
+### Un dépassement est permis, un dépassement silencieux ne l'est pas
+
+Un chantier a le droit de dépasser une ADR : #3442 a rendu faux ce que l'ADR 3406 assumait sur
+l'outre-mer, et c'était le progrès attendu.
+
+Ce qui n'est pas permis, c'est que le dépassement soit **tu**. Une ADR qu'on contredit sans le dire
+laisse deux règles opposées dans le dépôt, et le prochain lecteur appliquera celle qu'il trouvera en
+premier.
+
+### La question à l'envers, celle qu'on ne pose pas
+
+Parmi les ADR que le chantier **respecte**, certaines régissent-elles du code **hors du delta** qu'il
+faudrait aligner ?
+
+C'est ce qui a manqué à une clôture où `cli-surface.bats`, le garde de surface, avait été tenu à
+jour, mais pas `cli.bats`, le garde de comportement que la **même** décision régit. Le chantier ne
+contredisait rien ; il avait laissé une moitié derrière lui.
+
+Cette question a produit du travail à trois clôtures du 30 août 2026 : un appel de garde jamais
+éprouvé, six commandes citées sans avoir été lancées, et quatre autres le lendemain. Elle n'est pas
+décorative.
+
+## Passe 11 : la fonction de garde de l'écriture
 
 ```
 1. BALAYER    les passes 0 a 10 et poser pour chacune la meme question :
