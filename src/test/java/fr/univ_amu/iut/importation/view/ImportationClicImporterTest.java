@@ -20,6 +20,7 @@ import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.LigneFichierImport;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
@@ -155,6 +156,14 @@ class ImportationClicImporterTest {
 
         robot.interact(() -> robot.lookup("#boutonParcourir").queryButton().fire());
         WaitForAsyncUtils.waitForFxEvents();
+        // `waitForFxEvents` vide la file du fil FX ; il n'attend PAS le thread d'arriere-plan qui la
+        // remplira, et l'inspection tourne precisement hors de ce fil. Le banc affirmait donc sur un
+        // travail qui n'avait pas forcement fini, et il est tombe 3 fois sur 1 150 (#4815, mesure par
+        // #4811). Meme mecanisme que #4408 et #4814, sur un autre ecran.
+        //
+        // Les deux premieres assertions lisent des proprietes posees AU CLIC : elles tiennent. C'est la
+        // troisieme, qui depend de la fin de l'inspection, qui doit etre attendue.
+        Attente.queSurLeFil(() -> !viewModel.rattachement().sites().isEmpty(), "que l'inspection ait rendu ses sites");
 
         // Le dossier désigné devient la source de l'écran, et l'inspection tourne : c'est tout le geste,
         // et il n'avait jamais été joué - les tests posaient le dossier directement sur le ViewModel.
