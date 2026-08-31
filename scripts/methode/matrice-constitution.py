@@ -25,6 +25,7 @@ import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import RACINE_DEPOT, imprime_contrat
 from verifie_okf import RESERVES, lit_entete
 
 CONSTITUTION = RACINE / "CONSTITUTION.md"
@@ -119,11 +120,31 @@ def remplace(texte: str, matrice: str) -> str:
     return texte.rstrip("\n") + "\n\n---\n\n" + matrice + "\n"
 
 
+# Ce que ce garde DÉCLARE être (issue #5009).
+CONTRAT = {
+    "geste": "matrice de la constitution périmée : un article dont les applicateurs ont bougé",
+    "population": "DECISIONS + CONSTITUTION.md",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/matrice-constitution.py --auto-test",
+    "decision": "hygiène, sans décision",
+}
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Matrice de traçabilité de la constitution")
     p.add_argument("--verifie", action="store_true", help="refuse une matrice périmée")
+    p.add_argument("--contrat", action="store_true", help="ce que ce garde declare etre")
     p.add_argument("--auto-test", action="store_true", help="éprouve le garde sur des fixtures")
     args = p.parse_args()
+
+    # AVANT `auto_test` et avant toute lecture : un contrat s'imprime sans rien lire et sans rien
+    # exiger. Un garde qui refuserait d'abord (dependance absente, fichier introuvable) rendrait un
+    # refus la ou l'appelant demandait sa declaration, et le deriveur recolterait des refus.
+    if args.contrat:
+        return imprime_contrat(
+            pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+        )
 
     if args.auto_test:
         return auto_test()

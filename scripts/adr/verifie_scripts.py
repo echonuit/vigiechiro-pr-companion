@@ -1348,6 +1348,57 @@ def test_le_rapport_lit_encore_les_trois_lignes() -> None:
     )
 
 
+def test_le_contrat_a_une_forme_et_refuse_l_incomplet() -> None:
+    """Le format du contrat, ecrit une fois et eprouve ici (issue #5009).
+
+    Un garde ne declare rien de ce qu il est, donc `contrats-des-gardes.py` doit DEVINER : sur les 33
+    gardes qu il lit, 11 ne rendent aucune population, 6 aucune ADR, 6 aucun verdict normalise. Le
+    contrat remplace la devinette par une declaration, et cette fonction en porte la forme.
+
+    Le cas de REFUS compte autant que les autres : un contrat auquel il manque un champ doit refuser,
+    sans quoi le deriveur lirait un contrat partiel en le prenant pour complet.
+    """
+    import contextlib
+    import io
+
+    commun = _charge("_commun.py")
+    complet = {
+        "geste": "echec silencieux : catch au corps vide",
+        "population": "PRODUCTION + TESTS",
+        "dispositif": "cliquet",
+        "seuil": "0, polarite=descend",
+        "temoin": "scripts/adr/verifie_scripts.py#test_0008_echec_silencieux",
+        "decision": "ADR 0008",
+    }
+
+    sortie = io.StringIO()
+    with contextlib.redirect_stdout(sortie):
+        code = commun.imprime_contrat("scripts/adr/0008-echec-silencieux.py", complet)
+    rendu = sortie.getvalue()
+
+    _verifie("un contrat complet passe", code, 0)
+    _verifie(
+        "il porte sa ligne d en-tete",
+        "CONTRAT | garde=scripts/adr/0008-echec-silencieux.py" in rendu,
+        True,
+    )
+    _verifie("et ses six champs", all(f"{c}: " in rendu for c in complet), True)
+    # Les champs se lisent DANS L ORDRE declare : un deriveur qui les apparie par position, ou un
+    # humain qui compare deux contrats cote a cote, dependent de cet ordre.
+    _verifie(
+        "dans l ordre",
+        [l.split(":")[0] for l in rendu.splitlines() if ": " in l and not l.startswith("CONTRAT")],
+        list(complet),
+    )
+
+    # Le sens NEGATIF, sans lequel un imprimeur qui accepterait TOUT passerait les cas precedents.
+    for manquant in ("population", "temoin"):
+        ampute = {k: v for k, v in complet.items() if k != manquant}
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            code = commun.imprime_contrat("scripts/adr/0008-echec-silencieux.py", ampute)
+        _verifie(f"un contrat sans « {manquant} » refuse", code, 1)
+
+
 def test_resserre_cliquets_appelle_le_rapport() -> None:
     """La COUTURE entre les deux modules, la ou le temoin voisin n eprouvait que leurs pieces.
 
@@ -1546,6 +1597,7 @@ if __name__ == "__main__":
         test_une_loupe_muette_le_dit_sans_bloquer,
         test_un_plancher_sans_population_dit_pourquoi,
         test_le_rapport_lit_encore_les_trois_lignes,
+        test_le_contrat_a_une_forme_et_refuse_l_incomplet,
         test_resserre_cliquets_appelle_le_rapport,
         test_rapport_et_resserrement,
     ):

@@ -272,6 +272,55 @@ def rapporte(
     return 0
 
 
+# Les six champs d'un contrat de garde, dans leur ORDRE (issue #5009). L'ordre n'est pas cosmétique :
+# un dériveur qui apparie par position, ou un humain qui compare deux contrats côte à côte, en
+# dépendent. Il vit ici et nulle part ailleurs, pour que 119 gardes ne le recopient pas.
+#
+# `bloquant` et `ou_tourne` n'y sont PAS, et c'est une décision. 46 gardes sur 104 tournent depuis
+# plus d'un site, aux sémantiques différentes : un champ déclaré serait vrai le jour où on l'écrit et
+# faux au second site. Ces deux propriétés se DÉRIVENT des workflows, elles ne se déclarent pas.
+CHAMPS_DU_CONTRAT = ("geste", "population", "dispositif", "seuil", "temoin", "decision")
+
+
+def imprime_contrat(garde: str, contrat: dict[str, str]) -> int:
+    """Imprime ce qu'un garde DÉCLARE être, et refuse un contrat incomplet.
+
+    Un garde ne déclarait rien de ce qu'il est, si bien que `contrats-des-gardes.py` devait deviner :
+    la population depuis ses `import`, le seuil depuis l'en-tête de son ADR, le verdict depuis le
+    titre passé à l'aide. Sur les 33 gardes qu'il lit, 11 ne rendent aucune population, 6 aucune ADR
+    et 6 aucun verdict normalisé. Le contrat remplace la devinette par une déclaration.
+
+    **Le refus sur contrat incomplet compte autant que l'impression.** Sans lui, un dériveur lirait un
+    contrat partiel en le prenant pour complet, et le manifeste annoncerait une exhaustivité qu'il
+    n'aurait pas. Un champ sans objet s'écrit, il ne s'omet pas : `seuil: (sans objet)` pour un
+    invariant dit quelque chose, une ligne absente ne dit rien.
+
+    Le champ `temoin` NOMME un témoin sans imposer sa forme. `0008-echec-silencieux.py` n'a aucune
+    option d'auto-test et son témoin est central, dans `verifie_scripts.py` : exiger cette option
+    partout produirait quinze harnais en double, ou une liste d'exemptions, c'est-à-dire le second
+    inventaire que ce chantier existe pour supprimer.
+
+    La formulation évite le littéral de cette option, et c'est une CONCESSION assumée :
+    `verifie-inventaires-ci.sh` cherche ce littéral dans le fichier ENTIER, docstrings comprises, et
+    conclurait que ce module répond à une option qu'il n'a pas. Le défaut est ouvert en issue plutôt
+    que masqué ici.
+    """
+    manquants = [c for c in CHAMPS_DU_CONTRAT if c not in contrat]
+    if manquants:
+        print(
+            f"ÉCHEC : contrat incomplet pour {garde}. Champs manquants : {', '.join(manquants)}.\n"
+            f"Un champ sans objet s'écrit « (sans objet) » : une ligne absente ne se distingue pas\n"
+            f"d'un oubli, et le dériveur ne peut pas trancher à votre place.",
+            file=sys.stderr,
+        )
+        return 1
+
+    print(f"CONTRAT | garde={garde}")
+    for champ in CHAMPS_DU_CONTRAT:
+        print(f"{champ}: {contrat[champ]}")
+    return 0
+
+
 def loupe(numero: str, titre: str, candidats: list[str], lus: int | None = None) -> int:
     """Une LOUPE, pour une ADR « humaine » dont un pattern reconnaissable existe.
 
