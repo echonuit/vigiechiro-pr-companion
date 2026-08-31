@@ -20,7 +20,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES, rapporte, sans_commentaires_java
+from _commun import RACINE_DEPOT, RACINES, imprime_contrat, rapporte, sans_commentaires_java
 
 # Les DEUX arbres. Un test qui avale son echec ment de la meme facon qu une classe de production :
 # il rend vert sans avoir rien prouve, et c est precisement le defaut que l ADR 0008 nomme. La
@@ -59,7 +59,25 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     return trouves
 
 
+# Ce que ce garde DÉCLARE être (issue #5009), plutôt que ce qu'un relevé devine de lui.
+CONTRAT = {
+    "geste": "échec silencieux : catch au corps vide",
+    "population": "PRODUCTION + TESTS",
+    "dispositif": "cliquet",
+    "seuil": "0, polarite=descend",
+    "temoin": "scripts/adr/verifie_scripts.py#test_0008_echec_silencieux",
+    "decision": "ADR 0008",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s'imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(
         rapporte("0008", "échec silencieux : catch au corps vide", suspects(), lus=len(fichiers()))
     )

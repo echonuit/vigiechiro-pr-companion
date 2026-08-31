@@ -18,6 +18,30 @@ set -uo pipefail
 
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Ce que ce garde DÉCLARE être (issue #5009). La branche vient AVANT tout le reste, et ce n'est pas
+# un détail d'ordre : `verifie-permissions.sh` refuse en ligne 38 si PyYAML manque, avant son
+# dispatch de la ligne 81, et un dériveur y récolterait des refus au lieu de contrats. Un contrat
+# s'imprime sans rien lire et sans rien exiger.
+#
+# La forme est celle de `_commun.imprime_contrat`, qu'un script shell ne peut pas importer. C'est la
+# duplication que l'ADR 3661 assume : un garde de CI porte ses propres cas, et rien d'autre ne les
+# porte. Ce qui compte est que l'INTERFACE soit la même, pas le code qui la rend.
+#
+# Le délimiteur ne s'appelle pas `CONTRAT` : il serait alors le PRÉFIXE de la première ligne du
+# contenu, et shellcheck s'y perd (SC1121), qui est bloquant en CI.
+if [ "${1:-}" = "--contrat" ]; then
+    cat <<'FIN_DU_CONTRAT'
+CONTRAT | garde=.github/scripts/verifie-butoirs.sh
+geste: job de workflow sans butoir de durée
+population: WORKFLOWS
+dispositif: invariant
+seuil: (sans objet)
+temoin: .github/scripts/verifie-butoirs.sh --auto-test
+decision: hygiène, sans décision
+FIN_DU_CONTRAT
+    exit 0
+fi
+
 if [ "${1:-}" = "--auto-test" ]; then
     echecs=0
     cas=0
