@@ -25,7 +25,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "adr"))
-from _commun import rapporte  # noqa: E402
+from _commun import rapporte
 
 ADR = "4859"
 
@@ -78,7 +78,7 @@ def _autoTest() -> int:
     # `if not TEMOIN.exists()` par `if False` laissait les six autres verts : le garde rendait alors
     # le compte TOTAL, c'est-a-dire exactement le defaut qu'il existe pour empecher. Trouve en
     # passe 6 de la cloture de #4859, par mutation.
-    global TEMOIN  # noqa: PLW0603
+    global TEMOIN
     garde, argv = TEMOIN, sys.argv
     try:
         with tempfile.TemporaryDirectory() as brut:

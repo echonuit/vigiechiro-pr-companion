@@ -35,7 +35,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES_ANCREES, RACINE_DEPOT, rapporte  # noqa: E402
+from _commun import RACINE_DEPOT, RACINES_ANCREES, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4476"
@@ -82,7 +82,7 @@ def raconte(corps: str) -> str | None:
     return None
 
 
-def suspects(racine: pathlib.Path = None) -> list[str]:
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Un suspect par bloc de javadoc qui raconte l extraction dont sa classe est nee."""
     arbres = [racine] if racine else list(RACINES)
     trouves = []
@@ -104,13 +104,17 @@ def _auto_test() -> int:
 
         (r / "A.java").write_text(
             "/// Extrait de [X] pour le garder sous le plafond de taille (PMD `NcssCount`).\n"
-            "class A {}\n", encoding="utf-8")
+            "class A {}\n",
+            encoding="utf-8",
+        )
         vus = suspects(r)
         cas.append(("le recit d une extraction est vu", len(vus) == 1))
         cas.append(("et le suspect cite la phrase", "plafond de taille" in vus[0]))
 
         # Le geste attendu : dire ce que la classe fait. Le cliquet doit alors se taire.
-        (r / "A.java").write_text("/// Libelles du bandeau de qualification.\nclass A {}\n", encoding="utf-8")
+        (r / "A.java").write_text(
+            "/// Libelles du bandeau de qualification.\nclass A {}\n", encoding="utf-8"
+        )
         cas.append(("une javadoc qui contracte ne l est pas", suspects(r) == []))
 
         # LA borne qui justifie la proximite : un bloc peut nommer l outil pour dire ou en est la
@@ -121,25 +125,36 @@ def _auto_test() -> int:
             "///\n"
             "/// Ce controleur est au plafond de `NcssCount` : vingt colonnes de plus le feraient\n"
             "/// depasser, et le sélecteur vit donc ici.\n"
-            "class B {}\n", encoding="utf-8")
+            "class B {}\n",
+            encoding="utf-8",
+        )
         cas.append(("une contrainte du jour n est pas un recit", suspects(r) == []))
 
         # Et la borne inverse : le verbe seul, sans outil, decrit souvent un geste du domaine.
-        (r / "C.java").write_text("/// Le taxon extrait de la ligne Tadarida.\nclass C {}\n", encoding="utf-8")
+        (r / "C.java").write_text(
+            "/// Le taxon extrait de la ligne Tadarida.\nclass C {}\n", encoding="utf-8"
+        )
         cas.append(("un verbe sans outil ne suffit pas", suspects(r) == []))
 
         # Un outil seul non plus : le depot cite PMD dans des blocs qui ne racontent rien.
-        (r / "D.java").write_text("/// Exempte de `ExcessiveParameterList` par son annotation.\nclass D {}\n",
-                                  encoding="utf-8")
+        (r / "D.java").write_text(
+            "/// Exempte de `ExcessiveParameterList` par son annotation.\nclass D {}\n",
+            encoding="utf-8",
+        )
         cas.append(("un outil sans verbe ne suffit pas", suspects(r) == []))
 
     for nom, ok in cas:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
     if rates:
-        print(f"\n{len(rates)} cas en échec : le cliquet ne tient pas ce qu'il annonce.", file=sys.stderr)
+        print(
+            f"\n{len(rates)} cas en échec : le cliquet ne tient pas ce qu'il annonce.",
+            file=sys.stderr,
+        )
         return 1
-    print(f"\n{len(cas)} cas : le cliquet voit le récit d'une extraction, et pas la contrainte du jour.")
+    print(
+        f"\n{len(cas)} cas : le cliquet voit le récit d'une extraction, et pas la contrainte du jour."
+    )
     return 0
 
 
@@ -152,4 +167,6 @@ if __name__ == "__main__":
             print(f"  {s}")
         print(f"\n{len(listes)} blocs de javadoc racontent l'extraction dont leur classe est née")
         sys.exit(0)
-    sys.exit(rapporte(ADR, "javadoc qui raconte le refactoring dont elle est née", listes, apercu=12))
+    sys.exit(
+        rapporte(ADR, "javadoc qui raconte le refactoring dont elle est née", listes, apercu=12)
+    )

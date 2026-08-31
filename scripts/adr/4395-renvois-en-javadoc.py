@@ -54,7 +54,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION, TESTS, rapporte_plancher  # noqa: E402
+from _commun import PRODUCTION, TESTS, rapporte_plancher
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 
@@ -77,7 +77,7 @@ ZONE = ZONES["4395"]
 RENVOI = re.compile(r"#\d{1,5}\b")
 
 
-def fichiers(racine: pathlib.Path = None, zone: str = None) -> list[str]:
+def fichiers(racine: pathlib.Path | None = None, zone: str | None = None) -> list[str]:
     """Les fichiers Java d une zone, relatifs a `racine`.
 
     Sur le depot, la liste vient de `git ls-files` : les fichiers SUIVIS. Sur une fixture, qui n est
@@ -98,7 +98,7 @@ def fichiers(racine: pathlib.Path = None, zone: str = None) -> list[str]:
     return sorted(n for n in noms if n.endswith(".java"))
 
 
-def par_fichier(racine: pathlib.Path = None, zone: str = None) -> dict[str, int]:
+def par_fichier(racine: pathlib.Path | None = None, zone: str | None = None) -> dict[str, int]:
     """Le nombre d issues DISTINCTES que la javadoc de chaque fichier cite.
 
     Distinctes, et non occurrences : un fichier qui cite `#3068` deux fois pointe vers une seule
@@ -120,7 +120,7 @@ def par_fichier(racine: pathlib.Path = None, zone: str = None) -> dict[str, int]
     return comptes
 
 
-def renvois(racine: pathlib.Path = None, zone: str = None) -> int:
+def renvois(racine: pathlib.Path | None = None, zone: str | None = None) -> int:
     """Le nombre d issues distinctes citees, somme sur les fichiers d une zone."""
     return sum(par_fichier(racine, zone).values())
 
@@ -171,8 +171,10 @@ def _auto_test() -> int:
         ),
         (
             "le meme renvoi deux fois dans un bloc compte pour un (#4398)",
-            "/// Le delai fixe est remplace par une condition (#3068).\n"
-            "/// C est assume (#3068), les tuiles etant une entree exterieure.\nclass A {}\n",
+            (
+                "/// Le delai fixe est remplace par une condition (#3068).\n"
+                "/// C est assume (#3068), les tuiles etant une entree exterieure.\nclass A {}\n"
+            ),
             1,
         ),
     ]
@@ -201,8 +203,11 @@ if __name__ == "__main__":
     # Les deux planchers, l un apres l autre. Le code de sortie est le PIRE des deux : une perte
     # dans un arbre doit faire rougir, meme si l autre a gagne. C est la disjonction en pratique.
     codes = [
-        rapporte_plancher("4395", "issues citees par la javadoc de production", renvois(), "renvois"),
-        rapporte_plancher("4587", "issues citees par la javadoc de test",
-                          renvois(zone=ZONES["4587"]), "renvois"),
+        rapporte_plancher(
+            "4395", "issues citees par la javadoc de production", renvois(), "renvois"
+        ),
+        rapporte_plancher(
+            "4587", "issues citees par la javadoc de test", renvois(zone=ZONES["4587"]), "renvois"
+        ),
     ]
     sys.exit(max(codes))

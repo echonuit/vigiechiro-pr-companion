@@ -101,7 +101,7 @@ def test_3053_capture_libelle() -> None:
         racine = pathlib.Path(d)
         abstention = (
             "  void geste() {\n"
-            "    menu.getItems().stream().filter(i -> \"Lieu\".equals(i.getText()))\n"
+            '    menu.getItems().stream().filter(i -> "Lieu".equals(i.getText()))\n'
             "        .findFirst().ifPresent(MenuItem::fire);\n"
             "  }\n"
         )
@@ -112,7 +112,7 @@ def test_3053_capture_libelle() -> None:
             "audio/outils/CaptureY.java",
             "class CaptureY {\n"
             "  void geste() {\n"
-            "    ApercuFx.exigerParLibelle(\"le menu\", menu.getItems(), MenuItem::getText, \"Lieu\").fire();\n"
+            '    ApercuFx.exigerParLibelle("le menu", menu.getItems(), MenuItem::getText, "Lieu").fire();\n'
             "  }\n"
             "}\n",
         )
@@ -123,8 +123,14 @@ def test_3053_capture_libelle() -> None:
             "class CaptureZ {\n  /* proscrit : .findFirst().ifPresent(x) */\n}\n",
         )
         # Ni le nom ni le paquet d'un outil de capture : hors périmètre, l'usage y est normal.
-        _ecrire(racine, "audio/view/UnControleur.java", "class UnControleur {\n" + abstention + "}\n")
-        _ecrire(racine, "audio/model/CaptureAilleurs.java", "class CaptureAilleurs {\n" + abstention + "}\n")
+        _ecrire(
+            racine, "audio/view/UnControleur.java", "class UnControleur {\n" + abstention + "}\n"
+        )
+        _ecrire(
+            racine,
+            "audio/model/CaptureAilleurs.java",
+            "class CaptureAilleurs {\n" + abstention + "}\n",
+        )
         n = len(m.suspects(sources=racine))
         _verifie("3053 détecte le geste qui ne se fait pas, et lui seul", n, 1)
 
@@ -152,9 +158,9 @@ def test_0035_pictogramme() -> None:
         _ecrire(
             racine,
             "Vue.fxml",
-            '<VBox>\n'
+            "<VBox>\n"
             '  <Button text="\U0001f5d1 Supprimer"/>\n'  # pictogramme dans un libellé -> compte
-            '  <!-- \U0001f5d1 en commentaire, prose autorisée -->\n'  # commentaire -> non
+            "  <!-- \U0001f5d1 en commentaire, prose autorisée -->\n"  # commentaire -> non
             "</VBox>\n",
         )
         n = len(m.suspects(sources=racine))
@@ -170,12 +176,18 @@ def test_2843_tiret_cadratin() -> None:
             racine,
             "Exemple.java",
             "class Exemple {\n"
-            "    // un tiret cadratin " + cad + " en commentaire, et la regle vise les commentaires\n"
+            "    // un tiret cadratin "
+            + cad
+            + " en commentaire, et la regle vise les commentaires\n"
             '    String propre = "deux-points : voila la forme attendue";\n'  # rien -> non
             '    static final String ABSENTE = "' + cad + '";\n'  # litteral = le glyphe -> non
             "    /// La cellule vide affiche `" + cad + "` dans le tableau.\n"  # chevrons -> non
-            "    /// Le verdict vaut « " + cad + " a verifier » tant que rien n est pose.\n"  # cite -> non
-            '    Pattern LEGACY = Pattern.compile("probable [-' + cad + '] `");\n'  # classe litterale -> non
+            "    /// Le verdict vaut « "
+            + cad
+            + " a verifier » tant que rien n est pose.\n"  # cite -> non
+            '    Pattern LEGACY = Pattern.compile("probable [-'
+            + cad
+            + '] `");\n'  # classe litterale -> non
             "}\n",
         )
         n = len(m.suspects(racine))
@@ -199,9 +211,15 @@ def test_2843_prose_documentation() -> None:
             "page.md",
             "Une phrase " + cad + " avec un cadratin de prose.\n"  # prose -> compte
             "La cellule vide affiche `" + cad + "` dans le tableau.\n"  # chevrons de code -> non
-            "Le lien « GPS manquant " + cad + " placer » vient de l application.\n"  # citation -> non
-            "Un motif `[-" + cad + "]` accepte l ancienne forme d en-tete.\n"  # classe litterale -> non
-            "Voir [le guide " + cad + " chapitre 3](guide.md) pour la suite.\n"  # LIEN Markdown -> compte
+            "Le lien « GPS manquant "
+            + cad
+            + " placer » vient de l application.\n"  # citation -> non
+            "Un motif `[-"
+            + cad
+            + "]` accepte l ancienne forme d en-tete.\n"  # classe litterale -> non
+            "Voir [le guide "
+            + cad
+            + " chapitre 3](guide.md) pour la suite.\n"  # LIEN Markdown -> compte
             "Une phrase saine : deux-points.\n",  # rien -> non
         )
         n = len(m.prose(racine))
@@ -229,7 +247,11 @@ def test_2843_zone_vide_est_une_erreur() -> None:
         racine = pathlib.Path(d)
         _ecrire(racine, "Source.java", "// une prose " + cad + " avec un cadratin\n")
         # Le bon motif voit le fichier et compte sa prose.
-        _verifie("2843 zone nettoyee : le motif « *.java » voit l arbre Java", len(m.prose(racine, (), "*.java")), 1)
+        _verifie(
+            "2843 zone nettoyee : le motif « *.java » voit l arbre Java",
+            len(m.prose(racine, (), "*.java")),
+            1,
+        )
         # Le mauvais motif ne voit rien : ce doit etre une erreur, jamais un zero rassurant.
         try:
             m.prose(racine, (), "*.md")
@@ -256,10 +278,16 @@ def test_2843_couverture_distingue_dedans_dehors() -> None:
         try:
             m.ZONES_NETTOYEES = (("zone temoin", racine / "zone", (), "*.md"),)
             m.SOURCES = []
-            _verifie("2843 couverture : un fichier DANS la zone est couvert",
-                     m.couvert(racine / "zone" / "dedans.md"), True)
-            _verifie("2843 couverture : un fichier HORS zone ne l est pas",
-                     m.couvert(racine / "ailleurs" / "dehors.md"), False)
+            _verifie(
+                "2843 couverture : un fichier DANS la zone est couvert",
+                m.couvert(racine / "zone" / "dedans.md"),
+                True,
+            )
+            _verifie(
+                "2843 couverture : un fichier HORS zone ne l est pas",
+                m.couvert(racine / "ailleurs" / "dehors.md"),
+                False,
+            )
         finally:
             m.ZONES_NETTOYEES, m.SOURCES = zones, sources
 
@@ -277,7 +305,11 @@ def test_2843_balayage_non_recursif() -> None:
         racine = pathlib.Path(d)
         _ecrire(racine, "RACINE.md", "Une prose " + cad + " a la racine.\n")
         _ecrire(racine, "sousdossier/PROFOND.md", "Une prose " + cad + " en profondeur.\n")
-        _verifie("2843 zone nettoyee : recursif voit les deux niveaux", len(m.prose(racine, (), "*.md")), 2)
+        _verifie(
+            "2843 zone nettoyee : recursif voit les deux niveaux",
+            len(m.prose(racine, (), "*.md")),
+            2,
+        )
         _verifie(
             "2843 zone nettoyee : non recursif s arrete a la racine",
             len(m.prose(racine, (), "*.md", False)),
@@ -380,7 +412,7 @@ def test_2635_refus_sans_surface() -> None:
         _ecrire(
             racine,
             "fr/univ_amu/iut/site/view/Ecran.java",
-            "class Ecran {\n" '  String a() { return "menu \u2630"; }\n' "}\n",
+            'class Ecran {\n  String a() { return "menu \u2630"; }\n}\n',
         )
         n = len(m.suspects(sources=racine))
         _verifie("2635 voit le glyphe dans un modèle, ignore le commentaire et la vue", n, 1)
@@ -434,10 +466,15 @@ def test_4359_javadoc_narratif() -> None:
 
         # Le MEME bloc, pose au-dessus d une methode : il coute, la ou il ne coutait rien au-dessus
         # d une classe. C est tout ce que le seuil par nature apporte, et rien d autre ne le tient.
-        _ecrire(racine, "fr/univ_amu/iut/a/SousClasse.java",
-                "class SousClasse {\n" + entre_deux + "\n    void faire() {}\n}\n")
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/a/SousClasse.java",
+            "class SousClasse {\n" + entre_deux + "\n    void faire() {}\n}\n",
+        )
         n = len(m.suspects(racine=racine))
-        _verifie("4359 compte au-dessus d une methode ce qu il epargne au-dessus d une classe", n, 5)
+        _verifie(
+            "4359 compte au-dessus d une methode ce qu il epargne au-dessus d une classe", n, 5
+        )
 
 
 def test_4366_avertissement_en_pictogramme() -> None:
@@ -449,10 +486,22 @@ def test_4366_avertissement_en_pictogramme() -> None:
         ("prose : le signe alerte", f"{A} ne pas redemarrer entre deux passages.", ".md", False, 1),
         ("cite entre accents graves", f"les libelles commencaient par un `{A}`.", ".md", False, 0),
         ("cite entre guillemets francais", f"le signe « {A} » ouvrait la ligne.", ".md", False, 0),
-        ("voisin d un autre marqueur", f"un \u2717 interdit ; un {A} laisse deposer.", ".md", False, 0),
+        (
+            "voisin d un autre marqueur",
+            f"un \u2717 interdit ; un {A} laisse deposer.",
+            ".md",
+            False,
+            0,
+        ),
         ("dans un bloc de code markdown", f"{A} sortie du programme", ".md", True, 0),
-        ("chaine litterale d un fichier de code", f'echo "{A} rien n a ete filme"', ".sh", False, 0),
-        ("noeud montre d une maquette", f"<text x=\"10\">{A} attention</text>", ".svg", False, 0),
+        (
+            "chaine litterale d un fichier de code",
+            f'echo "{A} rien n a ete filme"',
+            ".sh",
+            False,
+            0,
+        ),
+        ("noeud montre d une maquette", f'<text x="10">{A} attention</text>', ".svg", False, 0),
     ]
     for titre, ligne, suffixe, bloc, attendu in cas:
         _verifie(f"4366 {titre}", len(m.alertes(ligne, suffixe, bloc)), attendu)
@@ -475,9 +524,19 @@ def test_4366_pictogramme_en_tete_de_ligne() -> None:
         return 0 if pos is None else len(m.alertes(ligne, suffixe, False))
 
     _verifie("4366 en tete de ligne, suivi de gras : compte", compte(f"{alerte} **Attention.**"), 1)
-    _verifie("4366 en javadoc, suivi de gras : compte", compte(f"/// {alerte} **Attention.**", ".java"), 1)
-    _verifie("4366 encadre de guillemets francais : epargne", compte(f"Le signe « {alerte} » se cite."), 0)
-    _verifie("4366 encadre de parentheses : epargne", compte(f"Le pictogramme ({alerte}) est cite."), 0)
+    _verifie(
+        "4366 en javadoc, suivi de gras : compte",
+        compte(f"/// {alerte} **Attention.**", ".java"),
+        1,
+    )
+    _verifie(
+        "4366 encadre de guillemets francais : epargne",
+        compte(f"Le signe « {alerte} » se cite."),
+        0,
+    )
+    _verifie(
+        "4366 encadre de parentheses : epargne", compte(f"Le pictogramme ({alerte}) est cite."), 0
+    )
 
 
 def test_4783_traces_d_outil() -> None:
@@ -516,16 +575,26 @@ def test_4783_traces_d_outil() -> None:
             # Un lien Markdown ouvre un crochet sans etre un gabarit.
             "ok-lien.md": "Voir [le guide](https://exemple.org) et [autre](x).",
             # Un mot entierement cyrillique est un mot etranger, pas un sosie.
-            "ok-cyrillique.md": "Le mot " + chr(0x0440) + chr(0x0435) + chr(0x043A) + chr(0x0430)
-                                + " signifie riviere.",
+            "ok-cyrillique.md": "Le mot "
+            + chr(0x0440)
+            + chr(0x0435)
+            + chr(0x043A)
+            + chr(0x0430)
+            + " signifie riviere.",
         }
         for nom, contenu in {**refuses, **epargnes}.items():
             _ecrire(racine, nom, contenu + "\n")
         trouves = m.suspects(racine=racine)
-        _verifie("4783 refuse une occurrence de chacune des cinq familles",
-                 sorted({t.split(":")[0] for t in trouves}), sorted(refuses))
-        _verifie("4783 epargne l emoji, la marque decrite, la chaine citee, le lien et le mot etranger",
-                 [t for t in trouves if t.split(":")[0] in epargnes], [])
+        _verifie(
+            "4783 refuse une occurrence de chacune des cinq familles",
+            sorted({t.split(":")[0] for t in trouves}),
+            sorted(refuses),
+        )
+        _verifie(
+            "4783 epargne l emoji, la marque decrite, la chaine citee, le lien et le mot etranger",
+            [t for t in trouves if t.split(":")[0] in epargnes],
+            [],
+        )
 
 
 def test_4368_apostrophe_en_libelle() -> None:
@@ -547,8 +616,7 @@ def test_4368_apostrophe_en_libelle() -> None:
             f'  static final String CLASSE = "[\'{C}]";\n'
             "}\n",
         )
-        _verifie("4368 compte les emplois, epargne les mentions",
-                 len(m.suspects(racine=racine)), 2)
+        _verifie("4368 compte les emplois, epargne les mentions", len(m.suspects(racine=racine)), 2)
 
 
 def test_4395_renvois_en_javadoc() -> None:
@@ -589,25 +657,39 @@ def test_4359_blocs_relus() -> None:
     m = _charge("4359-blocs-relus.py")
     corpus = {"aaaa": "src/main/java/A.java", "bbbb": "src/main/java/B.java"}
 
-    _verifie("4359 registre : une entree qui correspond n est pas perimee",
-             len(m.perimees([("aaaa", "src/main/java/A.java", "motif")], corpus)), 0)
-    _verifie("4359 registre : une entree qui ne correspond a rien est perimee",
-             len(m.perimees([("zzzz", "src/main/java/Fantome.java", "motif")], corpus)), 1)
-    _verifie("4359 registre : un registre vide ne perime rien",
-             len(m.perimees([], corpus)), 0)
+    _verifie(
+        "4359 registre : une entree qui correspond n est pas perimee",
+        len(m.perimees([("aaaa", "src/main/java/A.java", "motif")], corpus)),
+        0,
+    )
+    _verifie(
+        "4359 registre : une entree qui ne correspond a rien est perimee",
+        len(m.perimees([("zzzz", "src/main/java/Fantome.java", "motif")], corpus)),
+        1,
+    )
+    _verifie("4359 registre : un registre vide ne perime rien", len(m.perimees([], corpus)), 0)
     # L EMPREINTE fait l identite, pas le chemin : un bloc deplace d un fichier a l autre reste relu.
     # C est un choix, et il est ici pour qu on le voie plutot que de le decouvrir.
-    _verifie("4359 registre : l empreinte fait l identite, pas le chemin",
-             len(m.perimees([("aaaa", "src/main/java/Ailleurs.java", "motif")], corpus)), 0)
+    _verifie(
+        "4359 registre : l empreinte fait l identite, pas le chemin",
+        len(m.perimees([("aaaa", "src/main/java/Ailleurs.java", "motif")], corpus)),
+        0,
+    )
 
     # Une REINDENTATION ne doit pas invalider une lecture qui reste valable.
     bloc = ["    /// Premiere ligne.", "    /// Seconde ligne."]
     decale = ["        /// Premiere ligne.", "        /// Seconde ligne."]
-    _verifie("4359 registre : une reindentation ne change pas l empreinte",
-             m.empreinte(bloc), m.empreinte(decale))
+    _verifie(
+        "4359 registre : une reindentation ne change pas l empreinte",
+        m.empreinte(bloc),
+        m.empreinte(decale),
+    )
     # Mais une EDITION, si : c est tout le propos.
-    _verifie("4359 registre : un mot change invalide l empreinte",
-             m.empreinte(bloc) != m.empreinte(["    /// Premiere ligne.", "    /// Autre chose."]), True)
+    _verifie(
+        "4359 registre : un mot change invalide l empreinte",
+        m.empreinte(bloc) != m.empreinte(["    /// Premiere ligne.", "    /// Autre chose."]),
+        True,
+    )
 
 
 def test_loupe_4359_javadoc_vieillie() -> None:
@@ -622,25 +704,43 @@ def test_loupe_4359_javadoc_vieillie() -> None:
     # Le cas positif : bloc sous cliquet, code plus recent que lui.
     lignes = long_ + corps
     temps = [100] * len(long_) + [200, 200]
-    _verifie("loupe 4359 voit un bloc dont le code a bouge apres lui",
-             len(m.candidats_du_fichier("A.java", lignes, temps)), 1)
+    _verifie(
+        "loupe 4359 voit un bloc dont le code a bouge apres lui",
+        len(m.candidats_du_fichier("A.java", lignes, temps)),
+        1,
+    )
 
     # Le code est PLUS ANCIEN : la javadoc a ete corrigee depuis, rien a signaler.
-    _verifie("loupe 4359 epargne un bloc plus recent que son code",
-             len(m.candidats_du_fichier("A.java", lignes, [200] * len(long_) + [100, 100])), 0)
+    _verifie(
+        "loupe 4359 epargne un bloc plus recent que son code",
+        len(m.candidats_du_fichier("A.java", lignes, [200] * len(long_) + [100, 100])),
+        0,
+    )
 
     # Meme date : c est plus de la moitie du corpus, et la loupe est aveugle a ce cas - declare.
-    _verifie("loupe 4359 epargne un bloc du meme commit que son code",
-             len(m.candidats_du_fichier("A.java", lignes, [100] * (len(long_) + 2))), 0)
+    _verifie(
+        "loupe 4359 epargne un bloc du meme commit que son code",
+        len(m.candidats_du_fichier("A.java", lignes, [100] * (len(long_) + 2))),
+        0,
+    )
 
     # Sous le seuil : le bloc n est pas dans le cliquet, donc pas dans la surface de revue.
-    _verifie("loupe 4359 epargne un bloc court, meme avec du code plus recent",
-             len(m.candidats_du_fichier("A.java", court + corps, [100] * len(court) + [200, 200])), 0)
+    _verifie(
+        "loupe 4359 epargne un bloc court, meme avec du code plus recent",
+        len(m.candidats_du_fichier("A.java", court + corps, [100] * len(court) + [200, 200])),
+        0,
+    )
 
     # Une ligne VIDE plus recente ne compte pas : sans cela un simple retour a la ligne suffirait.
-    _verifie("loupe 4359 ne compte pas une ligne vide comme du code",
-             len(m.candidats_du_fichier("A.java", long_ + ["", "class A {}"],
-                                        [100] * len(long_) + [999, 100])), 0)
+    _verifie(
+        "loupe 4359 ne compte pas une ligne vide comme du code",
+        len(
+            m.candidats_du_fichier(
+                "A.java", long_ + ["", "class A {}"], [100] * len(long_) + [999, 100]
+            )
+        ),
+        0,
+    )
 
 
 def test_4472_commentaire_en_corps() -> None:
@@ -651,13 +751,18 @@ def test_4472_commentaire_en_corps() -> None:
         # Hors d un corps, c est de l en-tete de fichier et ce cliquet n a rien a en dire ; dedans,
         # c est la population qu il tient. Un garde qui confondrait les deux compterait les licences.
         bloc = "\n".join(f"        // Ligne {i}." for i in range(m.SEUIL + 3))
-        _ecrire(racine, "fr/univ_amu/iut/a/Dedans.java",
-                "class Dedans {\n    void faire() {\n" + bloc + "\n        int x = 1;\n    }\n}\n")
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/a/Dedans.java",
+            "class Dedans {\n    void faire() {\n" + bloc + "\n        int x = 1;\n    }\n}\n",
+        )
         _verifie("4472 un bloc long DANS un corps est compte", len(m.suspects(racine)), 3)
 
         entete = "\n".join(f"// Ligne {i}." for i in range(m.SEUIL + 3))
         _ecrire(racine, "fr/univ_amu/iut/a/Dedans.java", entete + "\nclass Dehors {}\n")
         _verifie("4472 le meme bloc HORS d un corps ne coute rien", len(m.suspects(racine)), 0)
+
+
 def test_4468_javadoc_non_relue() -> None:
     m = _charge("4468-javadoc-non-relue.py")
     with tempfile.TemporaryDirectory() as d:
@@ -678,7 +783,13 @@ def test_4468_javadoc_non_relue() -> None:
         # LE SECOND FAIT, celui qui distingue ce cliquet d une case cochee : la javadoc change, donc
         # elle n a pas ete relue SOUS SA FORME ACTUELLE, et le fichier redevient suspect.
         lu.write_text("/// Le contrat de A, reecrit en douce.\nclass Lu {}\n", encoding="utf-8")
-        _verifie("4468 une javadoc reecrite en douce redevient suspecte", len(m.suspects(racine, table)), 2)
+        _verifie(
+            "4468 une javadoc reecrite en douce redevient suspecte",
+            len(m.suspects(racine, table)),
+            2,
+        )
+
+
 def test_4974_attente_reinventee() -> None:
     m = _charge("4974-attente-reinventee.py")
     with tempfile.TemporaryDirectory() as d:
@@ -687,43 +798,73 @@ def test_4974_attente_reinventee() -> None:
 
         # Le nom ne fait pas le defaut : c est ce que la decision tient, et le harnais l eprouve
         # ici comme l auto-test l eprouve chez lui.
-        _ecrire(racine, "fr/a/A.java", "class A {\n    private void ouvrirLaFiche() {\n" + sonde + "    }\n}\n")
+        _ecrire(
+            racine,
+            "fr/a/A.java",
+            "class A {\n    private void ouvrirLaFiche() {\n" + sonde + "    }\n}\n",
+        )
         _verifie("4974 une sonde privee est vue quel que soit son nom", len(m.suspects(racine)), 1)
 
-        _ecrire(racine, "fr/a/A.java", "class A {\n    private void patienter() {\n" + sonde + "    }\n}\n")
+        _ecrire(
+            racine,
+            "fr/a/A.java",
+            "class A {\n    private void patienter() {\n" + sonde + "    }\n}\n",
+        )
         _verifie("4974 renommer ne soustrait rien", m.suspects(racine), ["A.java:3"])
 
         # La population elargie par #4845 : une attente ecrite en clair dans un CAS DE TEST tait la
         # meme chose. La restriction aux methodes privees ne tenait qu a la facon dont le defaut
         # avait ete trouve.
-        _ecrire(racine, "fr/a/T.java", "class T {\n    @Test\n    void un_cas() {\n" + sonde + "    }\n}\n")
+        _ecrire(
+            racine,
+            "fr/a/T.java",
+            "class T {\n    @Test\n    void un_cas() {\n" + sonde + "    }\n}\n",
+        )
         _verifie("4974 une attente ecrite dans un cas de test compte", len(m.suspects(racine)), 2)
 
         # Le sens NEGATIF que #4845 a rendu necessaire : une CITATION en commentaire n est pas un
         # appel, et la javadoc d AttenteAvantClic en portait une.
-        _ecrire(racine, "fr/a/T.java", "class T {\n    /// Un `WaitForAsyncUtils.waitFor(...)` nu.\n"
-                "    void rien() {}\n}\n")
+        _ecrire(
+            racine,
+            "fr/a/T.java",
+            "class T {\n    /// Un `WaitForAsyncUtils.waitFor(...)` nu.\n    void rien() {}\n}\n",
+        )
         _verifie("4974 une citation en commentaire ne compte pas", len(m.suspects(racine)), 1)
 
         # Les trois sens NEGATIFS, sans lesquels un garde qui rend toutes les methodes privees
         # paraitrait juste.
-        _ecrire(racine, "fr/a/B.java", "class B {\n    private void dormir() {\n"
-                "        WaitForAsyncUtils.sleep(350, MS);\n    }\n}\n")
+        _ecrire(
+            racine,
+            "fr/a/B.java",
+            "class B {\n    private void dormir() {\n"
+            "        WaitForAsyncUtils.sleep(350, MS);\n    }\n}\n",
+        )
         _verifie("4974 un sleep n est pas une attente", len(m.suspects(racine)), 1)
 
-        _ecrire(racine, "fr/a/C.java", "class C {\n    private void vider() {\n"
-                "        WaitForAsyncUtils.waitForFxEvents();\n    }\n}\n")
+        _ecrire(
+            racine,
+            "fr/a/C.java",
+            "class C {\n    private void vider() {\n"
+            "        WaitForAsyncUtils.waitForFxEvents();\n    }\n}\n",
+        )
         _verifie("4974 waitForFxEvents n est pas une sonde", len(m.suspects(racine)), 1)
 
-        _ecrire(racine, "fr/a/Attente.java", "class Attente {\n    private static void interne() {\n"
-                + sonde + "    }\n}\n")
+        _ecrire(
+            racine,
+            "fr/a/Attente.java",
+            "class Attente {\n    private static void interne() {\n" + sonde + "    }\n}\n",
+        )
         _verifie("4974 l aide partagee est exemptee", len(m.suspects(racine)), 1)
 
         # #4997 : `waitForAsyncFx` est la meme dette sous un autre nom, et le garde le compte. Ce cas
         # vient EN DERNIER : les fichiers du dossier jetable sont partages, et un fichier ajoute plus
         # tot ferait compter un de trop a chacun des cas suivants.
-        _ecrire(racine, "fr/a/F.java", "class F {\n    private void surFx(Runnable a) {\n"
-                "        WaitForAsyncUtils.waitForAsyncFx(5_000, a);\n    }\n}\n")
+        _ecrire(
+            racine,
+            "fr/a/F.java",
+            "class F {\n    private void surFx(Runnable a) {\n"
+            "        WaitForAsyncUtils.waitForAsyncFx(5_000, a);\n    }\n}\n",
+        )
         _verifie("4974 waitForAsyncFx compte aussi", len(m.suspects(racine)), 2)
 
 
@@ -734,13 +875,22 @@ def test_4475_stage_non_dimensionne() -> None:
         # Le cas qui compte : la MEME classe, avec puis sans le geste qui fait suivre le stage. Le
         # garde accepte trois formes, et `sizeToScene` est celle que `FenetreDuBanc` prescrit ici :
         # un garde qui n accepterait que `setWidth` pousserait a figer le stage, donc au defaut.
-        nu = ("class Nu {\n    @Start\n    void start(Stage fenetre) {\n"
-              "        fenetre.setScene(new Scene(racine, 980, 980));\n    }\n}\n")
+        nu = (
+            "class Nu {\n    @Start\n    void start(Stage fenetre) {\n"
+            "        fenetre.setScene(new Scene(racine, 980, 980));\n    }\n}\n"
+        )
         _ecrire(racine, "fr/univ_amu/iut/a/NuTest.java", nu)
-        _verifie("4475 une scene dimensionnee sans stage dimensionne est vue", len(m.suspects(racine)), 1)
-        _ecrire(racine, "fr/univ_amu/iut/a/NuTest.java",
-                nu.replace("    }\n}", "        fenetre.sizeToScene();\n    }\n}"))
-        _verifie("4475 sizeToScene suffit, comme FenetreDuBanc le prescrit", len(m.suspects(racine)), 0)
+        _verifie(
+            "4475 une scene dimensionnee sans stage dimensionne est vue", len(m.suspects(racine)), 1
+        )
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/a/NuTest.java",
+            nu.replace("    }\n}", "        fenetre.sizeToScene();\n    }\n}"),
+        )
+        _verifie(
+            "4475 sizeToScene suffit, comme FenetreDuBanc le prescrit", len(m.suspects(racine)), 0
+        )
 
 
 def test_4617_code_mort_et_zone_de_test() -> None:
@@ -752,55 +902,101 @@ def test_4617_code_mort_et_zone_de_test() -> None:
             chemin = racine / "pmd.xml"
             chemin.write_text(
                 '<?xml version="1.0"?><pmd version="7">' + "".join(violations) + "</pmd>",
-                encoding="utf-8")
+                encoding="utf-8",
+            )
             return chemin
 
         def fichier(chemin: str, regle: str) -> str:
-            return (f'<file name="{chemin}"><violation beginline="1" rule="{regle}">x</violation>'
-                    "</file>")
+            return (
+                f'<file name="{chemin}"><violation beginline="1" rule="{regle}">x</violation>'
+                "</file>"
+            )
 
         prod = "/depot/src/main/java/fr/univ_amu/iut/A.java"
         test = "/depot/src/test/java/fr/univ_amu/iut/ATest.java"
 
         # Le cas de #4554 : une methode morte compte, dans les DEUX zones.
-        _verifie("4617 le code mort compte en production",
-                 len(m.suspects(rapport(fichier(prod, "UnusedPrivateMethod")))), 1)
-        _verifie("4617 le code mort compte aussi dans la zone de test",
-                 len(m.suspects(rapport(fichier(test, "UnusedPrivateMethod")))), 1)
+        _verifie(
+            "4617 le code mort compte en production",
+            len(m.suspects(rapport(fichier(prod, "UnusedPrivateMethod")))),
+            1,
+        )
+        _verifie(
+            "4617 le code mort compte aussi dans la zone de test",
+            len(m.suspects(rapport(fichier(test, "UnusedPrivateMethod")))),
+            1,
+        )
 
         # Le controle qui porte la decision : repeter un litteral est ce qu un test DOIT faire, et
         # cette seule regle rend 1 366 des 1 428 signalements du depot. Sans cette tolerance, le
         # cliquet serait illisible ; avec elle appliquee partout, la production perdrait une regle
         # qu elle tient a zero. Les deux bords sont donc exiges.
-        _verifie("4617 un litteral repete est tolere dans la zone de test",
-                 len(m.suspects(rapport(fichier(test, "AvoidDuplicateLiterals")))), 0)
-        _verifie("4617 le meme litteral repete compte en production",
-                 len(m.suspects(rapport(fichier(prod, "AvoidDuplicateLiterals")))), 1)
+        _verifie(
+            "4617 un litteral repete est tolere dans la zone de test",
+            len(m.suspects(rapport(fichier(test, "AvoidDuplicateLiterals")))),
+            0,
+        )
+        _verifie(
+            "4617 le meme litteral repete compte en production",
+            len(m.suspects(rapport(fichier(prod, "AvoidDuplicateLiterals")))),
+            1,
+        )
 
         # LA COMPENSATION : une violation de plus en production, une de moins en test. Le total ne
         # bouge pas. Un compteur unique reste donc vert pendant qu'une regression passe dans la zone
         # qui compte le plus - le defaut que l'ADR 4587 refuse, « surtout pas un seul sur les deux ».
-        avant = m.suspects(rapport(fichier(prod, "UnusedPrivateMethod"),
-                                   fichier(test, "NcssCount"),
-                                   fichier(test, "GodClass")))
-        apres = m.suspects(rapport(fichier(prod, "UnusedPrivateMethod"),
-                                   fichier(prod, "NcssCount"),
-                                   fichier(test, "GodClass")))
+        avant = m.suspects(
+            rapport(
+                fichier(prod, "UnusedPrivateMethod"),
+                fichier(test, "NcssCount"),
+                fichier(test, "GodClass"),
+            )
+        )
+        apres = m.suspects(
+            rapport(
+                fichier(prod, "UnusedPrivateMethod"),
+                fichier(prod, "NcssCount"),
+                fichier(test, "GodClass"),
+            )
+        )
         _verifie("4617 la compensation ne change pas le total", len(avant), len(apres))
         # ET c'est pourquoi le compte se fait PAR ZONE : a total constant, la production gagne une
         # violation. Un compteur unique resterait vert ; deux compteurs disjoints rougissent.
-        prod_avant = m.suspects(rapport(fichier(prod, "UnusedPrivateMethod"),
-                                        fichier(test, "NcssCount"),
-                                        fichier(test, "GodClass")), zone="production")
-        prod_apres = m.suspects(rapport(fichier(prod, "UnusedPrivateMethod"),
-                                        fichier(prod, "NcssCount"),
-                                        fichier(test, "GodClass")), zone="production")
-        _verifie("4682 la zone de production, elle, voit la regression",
-                 len(prod_apres), len(prod_avant) + 1)
-        _verifie("4682 et la zone de test voit sa baisse",
-                 len(m.suspects(rapport(fichier(prod, "UnusedPrivateMethod"),
-                                        fichier(prod, "NcssCount"),
-                                        fichier(test, "GodClass")), zone="test")), 1)
+        prod_avant = m.suspects(
+            rapport(
+                fichier(prod, "UnusedPrivateMethod"),
+                fichier(test, "NcssCount"),
+                fichier(test, "GodClass"),
+            ),
+            zone="production",
+        )
+        prod_apres = m.suspects(
+            rapport(
+                fichier(prod, "UnusedPrivateMethod"),
+                fichier(prod, "NcssCount"),
+                fichier(test, "GodClass"),
+            ),
+            zone="production",
+        )
+        _verifie(
+            "4682 la zone de production, elle, voit la regression",
+            len(prod_apres),
+            len(prod_avant) + 1,
+        )
+        _verifie(
+            "4682 et la zone de test voit sa baisse",
+            len(
+                m.suspects(
+                    rapport(
+                        fichier(prod, "UnusedPrivateMethod"),
+                        fichier(prod, "NcssCount"),
+                        fichier(test, "GodClass"),
+                    ),
+                    zone="test",
+                )
+            ),
+            1,
+        )
 
         # Un garde qui ne sait pas lire REFUSE. Rendre zero sur un rapport absent le rendrait vert
         # au moment precis ou il sert - le defaut de #4544 sous une autre forme.
@@ -818,15 +1014,23 @@ def test_4476_javadoc_raconte_son_extraction() -> None:
         racine = pathlib.Path(d)
         # Le cliquet ne vise pas toute mention d extraction, mais celle qui nomme l OUTIL qui l a
         # exigee : c est ce voisinage-la qui fait le recit, « on a scinde parce que PMD a rougi ».
-        _ecrire(racine, "fr/univ_amu/iut/a/Recit.java",
-                "/// Collaborateur extrait de ServiceImport (plafond NcssCount).\nclass Recit {}\n")
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/a/Recit.java",
+            "/// Collaborateur extrait de ServiceImport (plafond NcssCount).\nclass Recit {}\n",
+        )
         _verifie("4476 un recit qui nomme l outil qui l a exige est vu", len(m.suspects(racine)), 1)
         # LA BORNE QUI COMPTE : le verbe et l outil dans DEUX phrases distinctes sont une mention
         # legitime. Un cliquet qui elargirait le voisinage au bloc entier les compterait, et sa liste
         # grossirait sans qu une javadoc ait change.
-        _ecrire(racine, "fr/univ_amu/iut/a/Recit.java",
-                "/// Ce que la classe garantit.\n///\n/// Voir ServiceImport pour le parcours complet.\nclass Recit {}\n")
-        _verifie("4476 le nom de l outil seul, hors du verbe, est epargne", len(m.suspects(racine)), 0)
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/a/Recit.java",
+            "/// Ce que la classe garantit.\n///\n/// Voir ServiceImport pour le parcours complet.\nclass Recit {}\n",
+        )
+        _verifie(
+            "4476 le nom de l outil seul, hors du verbe, est epargne", len(m.suspects(racine)), 0
+        )
 
 
 def test_4477_longueur_des_adr() -> None:
@@ -842,7 +1046,7 @@ def test_4477_longueur_des_adr() -> None:
     dont la DECISION tient en trois lignes, et c est la decision que le seuil borne.
     """
     m = _charge("4477-longueur-des-adr.py")
-    entete = "---\ntype: adr\ntitle: \"Une decision\"\n---\n"
+    entete = '---\ntype: adr\ntitle: "Une decision"\n---\n'
     long_ = " ".join(f"mot{i}" for i in range(m.SEUIL + 100))
     court = " ".join(f"mot{i}" for i in range(100))
     with tempfile.TemporaryDirectory() as d:
@@ -967,7 +1171,9 @@ def test_les_gardes_de_code_lisent_les_deux_arbres() -> None:
     Pour le second c est un trou connu, mesure a 976 renvois, et suivi par #4587.
     """
     derives = gardes_deux_arbres()
-    _verifie("la liste des gardes a deux arbres se derive, et n est pas vide", len(derives) > 10, True)
+    _verifie(
+        "la liste des gardes a deux arbres se derive, et n est pas vide", len(derives) > 10, True
+    )
     for nom in derives:
         m = _charge(nom)
         # Le nom de l attribut varie : `RACINES` chez la plupart, `ARBRES` chez les loupes bornees a
@@ -975,8 +1181,11 @@ def test_les_gardes_de_code_lisent_les_deux_arbres() -> None:
         racines = getattr(m, "RACINES", None) or getattr(m, "ARBRES", ())
         # Le chemin CONTIENT `src/test/java`, il ne s y termine pas forcement : une loupe peut etre
         # bornee a un paquet, et son sous-arbre de test est un corpus de test tout autant.
-        _verifie(f"{nom.removesuffix('.py')} : l arbre de test est dans son corpus",
-                 any("test" in str(r) for r in racines), True)
+        _verifie(
+            f"{nom.removesuffix('.py')} : l arbre de test est dans son corpus",
+            any("test" in str(r) for r in racines),
+            True,
+        )
 
 
 def test_un_plancher_perime_refuse() -> None:
@@ -1017,12 +1226,17 @@ def test_une_population_vide_refuse() -> None:
     n aurait pas de place ou vivre.
     """
     commun = _charge("_commun.py")
-    _verifie("une population vide refuse",
-             commun.rapporte("0008", "temoin de population", [], lus=0), 1)
-    _verifie("une population lue passe",
-             commun.rapporte("0008", "temoin de population", [], lus=851), 0)
-    _verifie("une population non declaree ne refuse pas encore",
-             commun.rapporte("0008", "temoin de population", []), 0)
+    _verifie(
+        "une population vide refuse", commun.rapporte("0008", "temoin de population", [], lus=0), 1
+    )
+    _verifie(
+        "une population lue passe", commun.rapporte("0008", "temoin de population", [], lus=851), 0
+    )
+    _verifie(
+        "une population non declaree ne refuse pas encore",
+        commun.rapporte("0008", "temoin de population", []),
+        0,
+    )
 
 
 def test_une_loupe_muette_le_dit_sans_bloquer() -> None:
@@ -1071,8 +1285,7 @@ def test_un_plancher_sans_population_dit_pourquoi() -> None:
     with contextlib.redirect_stdout(sortie):
         code = commun.rapporte_plancher("4395", "temoin de population", 0, "renvois", lus=0)
     _verifie("un plancher sans population refuse", code, 1)
-    _verifie("et il dit que rien n a ete lu",
-             "population-vide" in sortie.getvalue(), True)
+    _verifie("et il dit que rien n a ete lu", "population-vide" in sortie.getvalue(), True)
 
 
 def test_le_rapport_lit_encore_les_trois_lignes() -> None:
@@ -1102,26 +1315,37 @@ def test_le_rapport_lit_encore_les_trois_lignes() -> None:
     # On verifie les VALEURS capturees, et non le seul appariement : un groupe capturant ajoute pour
     # `lus` decalerait les indices, `rapport.py` lirait le mauvais nombre, et un cas qui ne teste que
     # « ca apparie » resterait vert. C est le meme defaut, un cran plus fin.
-    cliquet = rapport.LIGNE_CLIQUET.search(rendu(
-        lambda: commun.rapporte("0008", "temoin de couture", [], lus=2076)))
+    cliquet = rapport.LIGNE_CLIQUET.search(
+        rendu(lambda: commun.rapporte("0008", "temoin de couture", [], lus=2076))
+    )
     _verifie("le rapport lit une ligne de cliquet", bool(cliquet), True)
     _verifie("et il en tire le bon numero", cliquet.group(1) if cliquet else None, "0008")
     _verifie("et le bon compte de suspects", cliquet.group(2) if cliquet else None, "0")
     _verifie("et le bon verdict", cliquet.group(4) if cliquet else None, "ok")
 
-    loupe = rapport.LIGNE_LOUPE.search(rendu(
-        lambda: commun.loupe("0020", "temoin de couture", ["x"], lus=9)))
+    loupe = rapport.LIGNE_LOUPE.search(
+        rendu(lambda: commun.loupe("0020", "temoin de couture", ["x"], lus=9))
+    )
     _verifie("le rapport lit une ligne de loupe", bool(loupe), True)
     _verifie("et il en tire le bon compte de candidats", loupe.group(2) if loupe else None, "1")
 
-    plancher = rapport.LIGNE_PLANCHER.search(rendu(
-        lambda: commun.rapporte_plancher("4395", "temoin de couture", 3245, "renvois", lus=4026)))
+    plancher = rapport.LIGNE_PLANCHER.search(
+        rendu(
+            lambda: commun.rapporte_plancher("4395", "temoin de couture", 3245, "renvois", lus=4026)
+        )
+    )
     _verifie("le rapport lit une ligne de plancher", bool(plancher), True)
     _verifie("et il en tire la bonne mesure", plancher.group(2) if plancher else None, "3245")
 
-    _verifie("et il les lit encore quand le compte n est pas declare",
-             bool(rapport.LIGNE_CLIQUET.search(rendu(
-                 lambda: commun.rapporte("0008", "temoin de couture", [])))), True)
+    _verifie(
+        "et il les lit encore quand le compte n est pas declare",
+        bool(
+            rapport.LIGNE_CLIQUET.search(
+                rendu(lambda: commun.rapporte("0008", "temoin de couture", []))
+            )
+        ),
+        True,
+    )
 
 
 def test_resserre_cliquets_appelle_le_rapport() -> None:
@@ -1139,8 +1363,7 @@ def test_resserre_cliquets_appelle_le_rapport() -> None:
     attendus = rapport.collecter()
     signature = resserre.__doc__ is not None
     _verifie("resserre_cliquets se charge a cote de rapport", signature, True)
-    _verifie("collecter() rend le nombre de listes que resserre_cliquets deballe",
-             len(attendus), 4)
+    _verifie("collecter() rend le nombre de listes que resserre_cliquets deballe", len(attendus), 4)
 
 
 def test_rapport_et_resserrement() -> None:
@@ -1155,12 +1378,21 @@ def test_rapport_et_resserrement() -> None:
     ligne = "ADR 0099 | lus=42 | suspects=2 | cliquet=5 | verdict=a-resserrer"
     trouve = rapport.LIGNE_CLIQUET.search(ligne)
     _verifie("rapport.py parse une ligne de cliquet", bool(trouve), True)
-    _verifie("et il en tire les bons champs malgre le champ ajoute",
-             trouve.groups() if trouve else None, ("0099", "2", "5", "a-resserrer"))
+    _verifie(
+        "et il en tire les bons champs malgre le champ ajoute",
+        trouve.groups() if trouve else None,
+        ("0099", "2", "5", "a-resserrer"),
+    )
     # La seconde forme acceptee : un garde qui ne declare pas encore son compte rend `lus=?`.
-    _verifie("rapport.py parse un compte non declare",
-             bool(rapport.LIGNE_CLIQUET.search(
-                 "ADR 0099 | lus=? | suspects=2 | cliquet=5 | verdict=a-resserrer")), True)
+    _verifie(
+        "rapport.py parse un compte non declare",
+        bool(
+            rapport.LIGNE_CLIQUET.search(
+                "ADR 0099 | lus=? | suspects=2 | cliquet=5 | verdict=a-resserrer"
+            )
+        ),
+        True,
+    )
     # La détection de resserrement : cliquet 5 pour 2 suspects -> ramener à 2.
     props = rapport.resserrements([("0099", 2, 5, "a-resserrer")])
     _verifie("rapport.py propose de resserrer 5 -> 2", props, [("0099", 2)])
@@ -1179,7 +1411,8 @@ def test_rapport_et_resserrement() -> None:
     )
     _verifie(
         "l alignement lit `ratchet:` comme `floor:` - les deux polarites vivent en balise",
-        bool(resserre.SEUIL_DECLARE.search("floor: 7\n")) and bool(resserre.SEUIL_DECLARE.search("ratchet: 7\n")),
+        bool(resserre.SEUIL_DECLARE.search("floor: 7\n"))
+        and bool(resserre.SEUIL_DECLARE.search("ratchet: 7\n")),
         True,
     )
 
@@ -1261,7 +1494,10 @@ def auto_test() -> int:
 
     print("\n3 cas, dont 1 qui DOIT rougir sur un harnais aveugle.")
     if echecs:
-        print(f"{len(echecs)} cas en échec : ne pas se fier au verdict de ce harnais.", file=sys.stderr)
+        print(
+            f"{len(echecs)} cas en échec : ne pas se fier au verdict de ce harnais.",
+            file=sys.stderr,
+        )
         return 1
     print("Auto-test concluant.")
     return 0
@@ -1326,7 +1562,10 @@ if __name__ == "__main__":
             file=sys.stderr,
         )
     if _echecs:
-        print(f"\n{len(_echecs)} cas en échec : un script ne détecte plus ce qu'il devrait.", file=sys.stderr)
+        print(
+            f"\n{len(_echecs)} cas en échec : un script ne détecte plus ce qu'il devrait.",
+            file=sys.stderr,
+        )
     if _echecs or decouverts:
         sys.exit(1)
     print(

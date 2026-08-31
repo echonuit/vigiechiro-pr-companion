@@ -157,26 +157,31 @@ def _auto_test() -> int:
     def verifie(libelle, obtenu, attendu):
         nonlocal echecs
         if obtenu == attendu:
-            print("  ✔ %s" % libelle)
+            print(f"  ✔ {libelle}")
         else:
-            print("  ✘ %s : attendu %r, obtenu %r" % (libelle, attendu, obtenu))
+            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
             echecs = 1
 
-    verifie("un import de module se voit",
-            imports_durs("import yaml\n"), ["yaml"])
-    verifie("une forme `from` aussi",
-            imports_durs("from yaml import safe_load\n"), ["yaml"])
-    verifie("un import groupe se decompose",
-            imports_durs("import glob, os, sys\n"), ["glob", "os", "sys"])
+    verifie("un import de module se voit", imports_durs("import yaml\n"), ["yaml"])
+    verifie("une forme `from` aussi", imports_durs("from yaml import safe_load\n"), ["yaml"])
+    verifie(
+        "un import groupe se decompose",
+        imports_durs("import glob, os, sys\n"),
+        ["glob", "os", "sys"],
+    )
     # Le sens NEGATIF, sans lequel un detecteur qui rendrait TOUT passerait les trois premiers.
-    verifie("un import en corps de fonction est ignore",
-            imports_durs("def f():\n    import graphify\n"), [])
-    verifie("un import sous try, au niveau du module, compte",
-            imports_durs("try:\n    import yaml\nexcept ImportError:\n    pass\n"), ["yaml"])
-    verifie("une source illisible ne fait pas planter le garde",
-            imports_durs("def f(:\n"), [])
-    verifie("le groupe de la doc est lu comme une declaration",
-            "mkdocs" in declares(), True)
+    verifie(
+        "un import en corps de fonction est ignore",
+        imports_durs("def f():\n    import graphify\n"),
+        [],
+    )
+    verifie(
+        "un import sous try, au niveau du module, compte",
+        imports_durs("try:\n    import yaml\nexcept ImportError:\n    pass\n"),
+        ["yaml"],
+    )
+    verifie("une source illisible ne fait pas planter le garde", imports_durs("def f(:\n"), [])
+    verifie("le groupe de la doc est lu comme une declaration", "mkdocs" in declares(), True)
 
     with tempfile.TemporaryDirectory() as brut:
         bac = pathlib.Path(brut)
@@ -184,36 +189,56 @@ def _auto_test() -> int:
         (bac / ".github" / "scripts").mkdir(parents=True)
         (bac / "scripts" / "un-garde.py").write_text("import yaml\n", encoding="utf-8")
 
-        verifie("un import non declare est un suspect",
-                [s for s in suspects(bac) if "yaml" in s] != [], True)
+        verifie(
+            "un import non declare est un suspect",
+            [s for s in suspects(bac) if "yaml" in s] != [],
+            True,
+        )
         verifie("et le garde a bien LU quelque chose", len(fichiers(bac)), 1)
 
         # Le sens NEGATIF : declarer le paquet doit faire disparaitre le suspect. Sans ce cas, un
         # detecteur qui accuserait TOUT passerait le precedent.
         # Le nom de la distribution NE SUFFIT PAS : `PyYAML` ne s importe pas `pyyaml`.
         (bac / "pyproject.toml").write_text(
-            '[dependency-groups]\ngardes = ["PyYAML==6.0.2"]\n', encoding="utf-8")
-        verifie("le seul nom de distribution ne suffit pas",
-                [s for s in suspects(bac) if "yaml" in s] != [], True)
+            '[dependency-groups]\ngardes = ["PyYAML==6.0.2"]\n', encoding="utf-8"
+        )
+        verifie(
+            "le seul nom de distribution ne suffit pas",
+            [s for s in suspects(bac) if "yaml" in s] != [],
+            True,
+        )
 
         (bac / "pyproject.toml").write_text(
             '[dependency-groups]\ngardes = ["PyYAML==6.0.2"]\n'
-            '[tool.vigiechiro.modules]\nPyYAML = ["yaml"]\n', encoding="utf-8")
-        verifie("une fois le module declare, il ne l est plus",
-                [s for s in suspects(bac) if "yaml" in s], [])
+            '[tool.vigiechiro.modules]\nPyYAML = ["yaml"]\n',
+            encoding="utf-8",
+        )
+        verifie(
+            "une fois le module declare, il ne l est plus",
+            [s for s in suspects(bac) if "yaml" in s],
+            [],
+        )
 
         # Le Python enfoui dans un garde shell compte, sans quoi les neuf gardes de CI
         # passeraient au travers : c est la population meme qui motive cette issue.
         (bac / ".github" / "scripts" / "un-garde.sh").write_text(
-            "python3 - <<'PY'\nimport requests\nPY\n", encoding="utf-8")
-        verifie("le Python enfoui dans un heredoc compte",
-                [s for s in suspects(bac) if "requests" in s] != [], True)
+            "python3 - <<'PY'\nimport requests\nPY\n", encoding="utf-8"
+        )
+        verifie(
+            "le Python enfoui dans un heredoc compte",
+            [s for s in suspects(bac) if "requests" in s] != [],
+            True,
+        )
 
         # Un import en corps de fonction reste hors champ, meme dans l arbre reel.
         (bac / "scripts" / "paresseux.py").write_text(
-            "def f():\n    import graphify\n", encoding="utf-8")
-        verifie("un import paresseux n est pas un suspect",
-                [s for s in suspects(bac) if "graphify" in s], [])
+            "def f():\n    import graphify\n", encoding="utf-8"
+        )
+        verifie(
+            "un import paresseux n est pas un suspect",
+            [s for s in suspects(bac) if "graphify" in s],
+            [],
+        )
 
         # Le chemin de REFUS, et non le seul calcul. Sans ces trois cas, desarmer une condition de
         # refus laisserait le garde rendre 0 sur un depot fautif, temoins verts.

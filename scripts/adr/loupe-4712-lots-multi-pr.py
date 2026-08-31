@@ -38,7 +38,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import loupe  # noqa: E402
+from _commun import loupe
 
 LOT = re.compile(r"^- \[[ x]\] \*\*Lot[^\n]*(?:\n(?:    |\t)[^\n]*)*", re.M)
 RATTACHEMENT = "Fait partie de #"
@@ -65,10 +65,23 @@ def estEpic(issue: dict) -> bool:
 
 def _issues() -> list[dict]:
     if not shutil.which("gh"):
-        print("REFUS : « gh » est absent. Cette loupe ne conclut pas sur ce qu'elle n'a pas lu.", file=sys.stderr)
+        print(
+            "REFUS : « gh » est absent. Cette loupe ne conclut pas sur ce qu'elle n'a pas lu.",
+            file=sys.stderr,
+        )
         raise SystemExit(2)
     sortie = subprocess.run(
-        ["gh", "issue", "list", "--state", "open", "--limit", "800", "--json", "number,title,body,labels"],
+        [
+            "gh",
+            "issue",
+            "list",
+            "--state",
+            "open",
+            "--limit",
+            "800",
+            "--json",
+            "number,title,body,labels",
+        ],
         capture_output=True,
         text=True,
         check=False,
@@ -124,7 +137,12 @@ def _autoTest() -> int:
 
     issues = [
         {"number": 4, "title": "parent", "body": corpsEpic, "labels": [{"name": "epic"}]},
-        {"number": 99, "title": "enfant", "body": "Fait partie de #4", "labels": [{"name": "epic"}]},
+        {
+            "number": 99,
+            "title": "enfant",
+            "body": "Fait partie de #4",
+            "labels": [{"name": "epic"}],
+        },
         {"number": 46, "title": "voisine", "body": "Fait partie de #46", "labels": []},
     ]
     liees = rattachees(4, issues)
@@ -154,13 +172,17 @@ def main() -> int:
     if "--auto-test" in sys.argv:
         return _autoTest()
     issues = _issues()
-    code = loupe("4712", "un lot multi-PR s'ouvre en sous-chantier (jugement humain)", rapport(issues))
-    print("\nPour chaque lot ci-dessus : combien de PR ? Plus de deux, il lui fallait un sous-chantier.")
+    code = loupe(
+        "4712", "un lot multi-PR s'ouvre en sous-chantier (jugement humain)", rapport(issues)
+    )
+    print(
+        "\nPour chaque lot ci-dessus : combien de PR ? Plus de deux, il lui fallait un sous-chantier."
+    )
     muets = sansLot(issues)
     if muets:
         print(
-            "%d EPIC ouvert(s) ne declarent aucun lot, donc rien a relire ici : %s."
-            % (len(muets), ", ".join("#%d" % n for n in muets))
+            f"{len(muets)} EPIC ouvert(s) ne declarent aucun lot, donc rien a relire "
+            f"ici : {', '.join(f'#{n}' for n in muets)}."
         )
     return code
 

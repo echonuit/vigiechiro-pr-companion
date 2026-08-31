@@ -33,7 +33,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import rapporte
 
 ADR = "4368"
 RACINE = pathlib.Path(__file__).resolve().parents[2]
@@ -41,9 +41,29 @@ RACINE = pathlib.Path(__file__).resolve().parents[2]
 COURBE = "’"
 
 BINAIRES = {
-    ".png", ".jpg", ".jpeg", ".gif", ".ico", ".jar", ".zip", ".gz", ".tar", ".pdf",
-    ".mp4", ".webm", ".wav", ".ttf", ".otf", ".woff", ".woff2", ".class", ".db",
-    ".webp", ".avif", ".bmp", ".tiff",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".ico",
+    ".jar",
+    ".zip",
+    ".gz",
+    ".tar",
+    ".pdf",
+    ".mp4",
+    ".webm",
+    ".wav",
+    ".ttf",
+    ".otf",
+    ".woff",
+    ".woff2",
+    ".class",
+    ".db",
+    ".webp",
+    ".avif",
+    ".bmp",
+    ".tiff",
 }
 
 # Les fichiers dont la forme de l apostrophe ne nous appartient pas.
@@ -58,7 +78,7 @@ HORS_CHAMP = {
 VOISINAGE = 24
 
 
-def fichiers(racine: pathlib.Path = None) -> list[str]:
+def fichiers(racine: pathlib.Path | None = None) -> list[str]:
     """Les fichiers que le releve accepte de lire, relatifs a `racine`.
 
     Sur le depot, la liste vient de `git ls-files` : les fichiers SUIVIS, donc ni les artefacts de
@@ -92,15 +112,15 @@ def citee(ligne: str, position: int) -> bool:
     if ligne.count("«", 0, position) > ligne.count("»", 0, position):
         return True
     # Une chaine dont le signe est le seul contenu : `"’"`, `'’'`.
-    fenetre = ligne[max(0, position - 2): position + 3]
+    fenetre = ligne[max(0, position - 2) : position + 3]
     if re.search(r"""(["'])’\1""", fenetre):
         return True
     # Une classe de caracteres d expression reguliere qui l enumere avec la droite.
-    voisin = ligne[max(0, position - VOISINAGE): position + VOISINAGE]
+    voisin = ligne[max(0, position - VOISINAGE) : position + VOISINAGE]
     return "[" in voisin and "'" in voisin and "]" in voisin
 
 
-def suspects(racine: pathlib.Path = None) -> list[str]:
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Une apostrophe courbe employee, par occurrence."""
     base = racine or RACINE
     trouves = []

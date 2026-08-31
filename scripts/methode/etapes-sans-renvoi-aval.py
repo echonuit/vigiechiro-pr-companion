@@ -46,8 +46,8 @@ CYCLE = [
 RANG = {nom: i for i, nom in enumerate(CYCLE)}
 NOMME = re.compile(r"\b((?:ouvrir|clore)-(?:un|une)-(?:chantier|issue|pr))\b")
 
-ETAPE_LISTE = re.compile(r"^\s*(\d+)\.\s+\S")      # « 1. METTRE AU NET … »
-ETAPE_TABLE = re.compile(r"^\|\s*(\d+)\s*\|")       # « | 0 | Trier … | »
+ETAPE_LISTE = re.compile(r"^\s*(\d+)\.\s+\S")  # « 1. METTRE AU NET … »
+ETAPE_TABLE = re.compile(r"^\|\s*(\d+)\s*\|")  # « | 0 | Trier … | »
 
 
 def sections(texte: str) -> list[tuple[str, str]]:
@@ -62,8 +62,7 @@ def etapes(texte: str) -> list[str] | None:
     Rend None quand aucune section n en porte : l appelant en fait un refus, jamais un silence.
     """
     for _titre, corps in sections(texte):
-        lignes = [l for l in corps.split("\n")
-                  if ETAPE_LISTE.match(l) or ETAPE_TABLE.match(l)]
+        lignes = [l for l in corps.split("\n") if ETAPE_LISTE.match(l) or ETAPE_TABLE.match(l)]
         if len(lignes) >= 3:
             return lignes
     return None
@@ -75,19 +74,20 @@ def ecarts() -> tuple[list[str], list[str]]:
     for nom in CYCLE:
         f = FONDS / nom / "SKILL.md"
         if not f.exists():
-            illisibles.append("%s : SKILL.md absent" % nom)
+            illisibles.append(f"{nom} : SKILL.md absent")
             continue
         pas = etapes(f.read_text(encoding="utf-8"))
         if pas is None:
-            illisibles.append("%s : aucune liste d etapes reconnue" % nom)
+            illisibles.append(f"{nom} : aucune liste d etapes reconnue")
             continue
         for ligne in pas:
             for cite in NOMME.findall(ligne):
                 if cite == nom or cite not in RANG:
                     continue
                 if RANG[cite] > RANG[nom]:
-                    fautes.append("%s delegue vers %s (plus loin dans le cycle)\n      %s"
-                                  % (nom, cite, ligne.strip()))
+                    fautes.append(
+                        f"{nom} delegue vers {cite} (plus loin dans le cycle)\n      {ligne.strip()}"
+                    )
     return fautes, illisibles
 
 
@@ -97,20 +97,25 @@ def _auto_test() -> int:
     def verifie(libelle, obtenu, attendu):
         nonlocal echecs
         if obtenu == attendu:
-            print("  ✔ %s" % libelle)
+            print(f"  ✔ {libelle}")
         else:
-            print("  ✘ %s : attendu %r, obtenu %r" % (libelle, attendu, obtenu))
+            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
             echecs = 1
 
     LISTE = "## Fonction de garde\n\n```\n1. FAIRE ceci\n2. FAIRE cela\n3. FAIRE encore\n```\n"
     verifie("une liste en bloc se lit", len(etapes(LISTE) or []), 3)
 
-    TABLE = ("## Les quatre étapes\n\n| # | Étape |\n|---|---|\n"
-             "| 0 | Trier |\n| 1 | Cartographier |\n| 2 | Planifier |\n")
+    TABLE = (
+        "## Les quatre étapes\n\n| # | Étape |\n|---|---|\n"
+        "| 0 | Trier |\n| 1 | Cartographier |\n| 2 | Planifier |\n"
+    )
     verifie("une liste en table se lit aussi", len(etapes(TABLE) or []), 3)
 
-    verifie("une competence sans liste rend None, elle ne rend pas vide",
-            etapes("## Contexte\n\nDeux phrases, aucune etape.\n"), None)
+    verifie(
+        "une competence sans liste rend None, elle ne rend pas vide",
+        etapes("## Contexte\n\nDeux phrases, aucune etape.\n"),
+        None,
+    )
 
     # Le sens NEGATIF : sans lui, un motif qui ne trouverait JAMAIS rien passerait les trois premiers.
     PROSE = "## Fonction de garde\n\n```\n1. FAIRE ceci\n```\n\nUne fois fusionnee, `clore-une-issue` prend la suite.\n"
@@ -127,14 +132,16 @@ if __name__ == "__main__":
         raise SystemExit(_auto_test())
     fautes, illisibles = ecarts()
     for l in illisibles:
-        print("ILLISIBLE : %s" % l, file=sys.stderr)
+        print(f"ILLISIBLE : {l}", file=sys.stderr)
     for l in fautes:
-        print("ÉCHEC : %s" % l, file=sys.stderr)
+        print(f"ÉCHEC : {l}", file=sys.stderr)
     if fautes or illisibles:
-        print("\nUne étape prescrit un geste à faire MAINTENANT. La déléguer à une compétence\n"
-              "de l'aval envoie le lecteur faire ce qui ne se fait qu'après : il ne peut pas\n"
-              "obéir, et se croit en faute. La prose, elle, reste libre de nommer la suite.",
-              file=sys.stderr)
+        print(
+            "\nUne étape prescrit un geste à faire MAINTENANT. La déléguer à une compétence\n"
+            "de l'aval envoie le lecteur faire ce qui ne se fait qu'après : il ne peut pas\n"
+            "obéir, et se croit en faute. La prose, elle, reste libre de nommer la suite.",
+            file=sys.stderr,
+        )
         raise SystemExit(1)
-    print("Les %d compétences du cycle : aucune étape ne délègue vers l'aval." % len(CYCLE))
+    print(f"Les {len(CYCLE)} compétences du cycle : aucune étape ne délègue vers l'aval.")
     raise SystemExit(0)

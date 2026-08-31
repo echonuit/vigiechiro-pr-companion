@@ -25,7 +25,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION_ANCREE  # noqa: E402
+from _commun import PRODUCTION_ANCREE
 
 VUES = PRODUCTION_ANCREE
 
@@ -39,7 +39,7 @@ CLIQUABLE = re.compile(
 DIMENSIONS = ("prefHeight", "minHeight", "prefWidth", "minWidth")
 
 
-def fautes(racine: pathlib.Path = None) -> list[str]:
+def fautes(racine: pathlib.Path | None = None) -> list[str]:
     """Les cibles declarees sous le seuil, une par ligne."""
     racine = racine or VUES
     trouvees = []
@@ -86,8 +86,12 @@ def _auto_test() -> int:
         (r / "petit.fxml").write_text(
             '<VBox><CheckBox fx:id="d" minWidth="12.0"/></VBox>', encoding="utf-8"
         )
-        cas.append(("la largeur compte aussi, sur une case à cocher",
-                    any("minWidth=12.0" in x for x in fautes(r))))
+        cas.append(
+            (
+                "la largeur compte aussi, sur une case à cocher",
+                any("minWidth=12.0" in x for x in fautes(r)),
+            )
+        )
 
         (r / "petit.fxml").unlink()
         (r / "sain.fxml").unlink()
@@ -97,7 +101,9 @@ def _auto_test() -> int:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
     if rates:
-        print(f"\n{len(rates)} cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr)
+        print(
+            f"\n{len(rates)} cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr
+        )
         return 1
     print(f"\n{len(cas)} cas : le garde voit une cible trop petite et laisse passer le reste.")
     return 0

@@ -46,24 +46,71 @@ ZONES = ("dev-docs", "docs", "brief", "openspec")
 TEXTES_DU_MOTIF = ("dev-docs/registre-editorial.md",)
 
 CONNECTEURS = [
-    "Cependant", "Toutefois", "Néanmoins", "Par ailleurs", "En outre", "De surcroît",
-    "Par conséquent", "En conséquence", "De ce fait", "Dès lors", "En effet", "En somme",
-    "En résumé", "En définitive", "De plus", "Dorénavant", "À cet égard",
+    "Cependant",
+    "Toutefois",
+    "Néanmoins",
+    "Par ailleurs",
+    "En outre",
+    "De surcroît",
+    "Par conséquent",
+    "En conséquence",
+    "De ce fait",
+    "Dès lors",
+    "En effet",
+    "En somme",
+    "En résumé",
+    "En définitive",
+    "De plus",
+    "Dorénavant",
+    "À cet égard",
 ]
 
 FAMILLES = {
-    "formules creuses": ["mettre en place", "mise en place", "mettre en œuvre", "il convient de",
-                         "dans ce cadre", "à l'ère de", "en conclusion", "besoin urgent"],
-    "mots surchargés": ["crucial", "primordial", "fondamental", "significatif", "révolutionnaire",
-                        "transformateur", "disruptif", "incontournable", "fascinant", "captivant"],
-    "remplissage": ["afin de pouvoir", "dans le but de", "du fait que", "à l'heure actuelle",
-                    "il est important de noter", "force est de constater"],
+    "formules creuses": [
+        "mettre en place",
+        "mise en place",
+        "mettre en œuvre",
+        "il convient de",
+        "dans ce cadre",
+        "à l'ère de",
+        "en conclusion",
+        "besoin urgent",
+    ],
+    "mots surchargés": [
+        "crucial",
+        "primordial",
+        "fondamental",
+        "significatif",
+        "révolutionnaire",
+        "transformateur",
+        "disruptif",
+        "incontournable",
+        "fascinant",
+        "captivant",
+    ],
+    "remplissage": [
+        "afin de pouvoir",
+        "dans le but de",
+        "du fait que",
+        "à l'heure actuelle",
+        "il est important de noter",
+        "force est de constater",
+    ],
     "fausse révélation": ["au fond,", "en réalité,", "la vraie question", "ce qui compte vraiment"],
     "calques de l'anglais": ["faire du sens", "au final", "en termes de", "digital", "opportunité"],
-    "« nous » de commentaire": ["nous avons choisi", "nous devons", "nous pouvons voir",
-                                "comme nous l'avons vu", "on notera que"],
-    "annonce avant la chose": ["voici ce qu'il faut savoir", "entrons dans", "décortiquons",
-                               "sans plus attendre"],
+    "« nous » de commentaire": [
+        "nous avons choisi",
+        "nous devons",
+        "nous pouvons voir",
+        "comme nous l'avons vu",
+        "on notera que",
+    ],
+    "annonce avant la chose": [
+        "voici ce qu'il faut savoir",
+        "entrons dans",
+        "décortiquons",
+        "sans plus attendre",
+    ],
 }
 
 
@@ -76,7 +123,7 @@ def ouvertures(connecteur: str, texte: str) -> int:
     return len(re.findall(rf"(?:^|[.!?:]\s+|^[-*]\s+){re.escape(connecteur)}\b", texte, re.M))
 
 
-def corpus(racine: pathlib.Path = None) -> tuple[str, int, int]:
+def corpus(racine: pathlib.Path | None = None) -> tuple[str, int, int]:
     """Le texte des zones de prose, son nombre de lignes et son nombre de fichiers."""
     racine = racine or RACINE
     textes = []
@@ -109,8 +156,10 @@ def auto_test() -> int:
             echecs.append(titre)
     print()
     if echecs:
-        print(f"ÉCHEC : {len(echecs)} cas. Un zéro rendu par ce compteur ne prouverait rien.",
-              file=sys.stderr)
+        print(
+            f"ÉCHEC : {len(echecs)} cas. Un zéro rendu par ce compteur ne prouverait rien.",
+            file=sys.stderr,
+        )
         return 1
     print("Auto-test concluant : quatre positions comptent, deux ne comptent pas.")
     return 0
@@ -119,8 +168,11 @@ def auto_test() -> int:
 def main() -> int:
     p = argparse.ArgumentParser(description="Mesure des motifs éditoriaux du corpus")
     p.add_argument("--auto-test", action="store_true", help="éprouve le compteur d'ouvertures")
-    p.add_argument("--verifie", action="store_true",
-                   help="refuse un connecteur lourd revenu en ouverture de phrase")
+    p.add_argument(
+        "--verifie",
+        action="store_true",
+        help="refuse un connecteur lourd revenu en ouverture de phrase",
+    )
     args = p.parse_args()
     if args.auto_test:
         return auto_test()
@@ -130,12 +182,16 @@ def main() -> int:
         revenus = [(c, ouvertures(c, tout)) for c in CONNECTEURS]
         revenus = [(c, n) for c, n in revenus if n]
         if revenus:
-            print(f"{len(revenus)} connecteur(s) lourd(s) en ouverture de phrase :", file=sys.stderr)
+            print(
+                f"{len(revenus)} connecteur(s) lourd(s) en ouverture de phrase :", file=sys.stderr
+            )
             for c, n in revenus:
                 print(f"  {c} : {n}", file=sys.stderr)
-            print("\ndev-docs/registre-editorial.md écarte ce motif AU MOTIF qu'il rend zéro.\n"
-                  "Le motif ne tient plus : réécrivez ces ouvertures, ou rouvrez la décision.",
-                  file=sys.stderr)
+            print(
+                "\ndev-docs/registre-editorial.md écarte ce motif AU MOTIF qu'il rend zéro.\n"
+                "Le motif ne tient plus : réécrivez ces ouvertures, ou rouvrez la décision.",
+                file=sys.stderr,
+            )
             return 1
         print("Registre : aucun connecteur lourd en ouverture de phrase.")
         return 0

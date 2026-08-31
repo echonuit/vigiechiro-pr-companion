@@ -15,7 +15,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES, loupe  # noqa: E402
+from _commun import RACINES, loupe
 
 # Les DEUX arbres (ADR 4488). Une loupe aveugle a la moitie du code a le meme defaut qu un garde
 # qui l est : elle surfacerait moins sans jamais le dire. Mesure d ouverture, les deux repertoires
@@ -47,4 +47,8 @@ def candidats(api: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(loupe("0020", "surface d'écriture vers la plateforme (à confronter aux 3 règles)", candidats()))
+    sys.exit(
+        loupe(
+            "0020", "surface d'écriture vers la plateforme (à confronter aux 3 règles)", candidats()
+        )
+    )

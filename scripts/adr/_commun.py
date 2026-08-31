@@ -79,7 +79,7 @@ def cliquet(numero: str) -> int:
             f"ADR {numero} ne déclare aucun cliquet lisible. Attendu, dans son en-tête :\n"
             f"  verification: probable\n"
             f"  enforced_by:\n"
-            f"    - \"chemin/du/script\"\n"
+            f'    - "chemin/du/script"\n'
             f"  ratchet: N"
         )
     return int(trouve.group(1))
@@ -102,7 +102,7 @@ def plancher(numero: str) -> int:
             f"ADR {numero} ne déclare aucun plancher lisible. Attendu, dans son en-tête :\n"
             f"  verification: certaine\n"
             f"  enforced_by:\n"
-            f"    - \"chemin/du/script\"\n"
+            f'    - "chemin/du/script"\n'
             f"  floor: N"
         )
     return int(trouve.group(1))
@@ -165,9 +165,9 @@ def rapporte_plancher(
 
     if verdict == "population-vide":
         print(
-            f"\nÉCHEC : ce plancher n'a lu aucune unité, donc sa mesure de 0 ne prouve aucune perte.\n"
-            f"Vérifiez sa population avant de chercher ce qui manque : c'est le corpus qui a disparu,\n"
-            f"pas forcément ce qu'il gardait.",
+            "\nÉCHEC : ce plancher n'a lu aucune unité, donc sa mesure de 0 ne prouve aucune perte.\n"
+            "Vérifiez sa population avant de chercher ce qui manque : c'est le corpus qui a disparu,\n"
+            "pas forcément ce qu'il gardait.",
             file=sys.stderr,
         )
         return 1
@@ -229,7 +229,9 @@ def rapporte(
         print(f"  {suspect}")
     # Un apercu qui ne dit pas ce qu il tait est un compte rendu partiel qui se donne pour complet.
     if len(montres) < len(suspects):
-        print(f"  … et {len(suspects) - len(montres)} autres, non montrés (aperçu borné à {apercu})")
+        print(
+            f"  … et {len(suspects) - len(montres)} autres, non montrés (aperçu borné à {apercu})"
+        )
 
     verdict = "ok"
     if lus == 0:
@@ -248,9 +250,9 @@ def rapporte(
 
     if verdict == "population-vide":
         print(
-            f"\nÉCHEC : ce garde n'a lu aucune unité. Son zéro suspect ne prouve rien.\n"
-            f"Vérifiez sa population : un chemin qui a bougé, un motif qui ne s'apparie plus, ou un\n"
-            f"lancement depuis un autre répertoire. Un garde qui ne balaie rien reste vert sans juger.",
+            "\nÉCHEC : ce garde n'a lu aucune unité. Son zéro suspect ne prouve rien.\n"
+            "Vérifiez sa population : un chemin qui a bougé, un motif qui ne s'apparie plus, ou un\n"
+            "lancement depuis un autre répertoire. Un garde qui ne balaie rien reste vert sans juger.",
             file=sys.stderr,
         )
         return 1
@@ -296,7 +298,9 @@ def loupe(numero: str, titre: str, candidats: list[str], lus: int | None = None)
     if lus == 0:
         # Sur STDOUT, avec le reste de son rapport : une loupe ne rate jamais, donc `stderr` serait
         # le mauvais canal, et `rapport.py` lit la sortie normalisée sur stdout.
-        print(f"LOUPE {numero} | population-vide : elle n'a rien balayé, son zéro ne veut rien dire.")
+        print(
+            f"LOUPE {numero} | population-vide : elle n'a rien balayé, son zéro ne veut rien dire."
+        )
     return 0
 
 

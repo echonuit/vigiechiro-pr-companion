@@ -1098,3 +1098,11 @@ jobs:
         run: |
           python3 scripts/methode/verifie-dependances-declarees.py --auto-test
           python3 scripts/methode/verifie-dependances-declarees.py
+
+      - name: "Le Python des gardes est formaté et sans reproche (bloquant, #5022)"
+        # Le pendant de Spotless et PMD, qui tiennent le Java, et de shellcheck, qui tient le shell.
+        # 13 965 lignes de Python n'avaient rien, et c'est la couche qui juge tout le reste.
+        # Le format d'abord : un diff de forme noierait un diff de fond dans la revue suivante.
+        run: |
+          ruff format --check scripts .github/scripts
+          ruff check scripts .github/scripts

@@ -35,8 +35,9 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import DECISIONS, rapporte  # noqa: E402
 import tempfile
+
+from _commun import DECISIONS, rapporte
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 # `DECISIONS` s importe : le corpus se declare dans `_commun` et nulle part ailleurs (ADR 4586).
@@ -132,14 +133,20 @@ def lit_entete(texte: str) -> dict:
             if nu.startswith("- "):
                 item = nu[2:]
                 cle, _, reste = item.partition(":")
-                valeur = {cle.strip(): _valeur(reste)} if _ and not item.startswith('"') else _valeur(item)
+                valeur = (
+                    {cle.strip(): _valeur(reste)}
+                    if _ and not item.startswith('"')
+                    else _valeur(item)
+                )
                 if not isinstance(champs.get(courant_cle), list):
                     champs[courant_cle] = []
                 champs[courant_cle].append(valeur)
             else:
                 cle, _, reste = nu.partition(":")
                 if not _:
-                    raise EnteteInvalide(f"ligne {numero} : « {nu[:40] } » n'est pas « clé: valeur »")
+                    raise EnteteInvalide(
+                        f"ligne {numero} : « {nu[:40]} » n'est pas « clé: valeur »"
+                    )
                 if not isinstance(champs.get(courant_cle), dict):
                     champs[courant_cle] = {}
                 champs[courant_cle][cle.strip()] = _valeur(reste)
@@ -153,12 +160,12 @@ def lit_entete(texte: str) -> dict:
     return champs
 
 
-def articles(chemin: pathlib.Path = None) -> set[str]:
+def articles(chemin: pathlib.Path | None = None) -> set[str]:
     """Les codes d'article que la constitution déclare."""
     return set(ARTICLE.findall((chemin or CONSTITUTION).read_text(encoding="utf-8")))
 
 
-def heuristiques_connues(annexe: pathlib.Path = None) -> list[str]:
+def heuristiques_connues(annexe: pathlib.Path | None = None) -> list[str]:
     """Le vocabulaire clos, dans l ordre de l annexe. Liste vide si l annexe manque.
 
     La lecture s arrete au marqueur de la matrice engendree : celle-ci porte les memes cles entre
@@ -180,7 +187,7 @@ def _articles_de(entete: dict) -> set[str]:
     return codes | set(entete.get("articles_absorbes") or [])
 
 
-def _entetes(decisions: pathlib.Path = None) -> dict[str, dict]:
+def _entetes(decisions: pathlib.Path | None = None) -> dict[str, dict]:
     """Les en-tetes lisibles du corpus, par nom de fichier."""
     lus = {}
     for f in sorted((decisions or DECISIONS).glob("*.md")):
@@ -193,7 +200,7 @@ def _entetes(decisions: pathlib.Path = None) -> dict[str, dict]:
     return lus
 
 
-def suspects_ergonomie(decisions: pathlib.Path = None) -> list[str]:
+def suspects_ergonomie(decisions: pathlib.Path | None = None) -> list[str]:
     """Les ADR d un article d usage qui ne declarent aucune heuristique.
 
     Un suspect par ADR. Le grain compte : le cliquet doit descendre d un cran par decision lue,
@@ -207,8 +214,9 @@ def suspects_ergonomie(decisions: pathlib.Path = None) -> list[str]:
     return trouves
 
 
-def heuristiques_sans_emploi(decisions: pathlib.Path = None,
-                             annexe: pathlib.Path = None) -> list[str]:
+def heuristiques_sans_emploi(
+    decisions: pathlib.Path | None = None, annexe: pathlib.Path | None = None
+) -> list[str]:
     """Les heuristiques du vocabulaire qu aucune decision ne sert.
 
     Ce n est PAS une faute : le jour ou le produit n a rien a decider sur l aide et la
@@ -219,6 +227,8 @@ def heuristiques_sans_emploi(decisions: pathlib.Path = None,
         for cle in e.get("heuristiques") or []:
             servies.add(cle)
     return [c for c in heuristiques_connues(annexe) if c not in servies]
+
+
 # Un renvoi vers une ADR VOISINE : aucune barre oblique, donc le meme dossier. Depuis que
 # l identite est le slug, il ne commence plus par un chiffre ; exiger un chiffre rendrait
 # « 0 renvoi » sur un corpus qui n en manque aucun, soit la forme exacte du succes.
@@ -227,13 +237,13 @@ RENVOI = re.compile(r"\]\(([a-z0-9][a-z0-9-]*\.md)(?:#[^)]*)?\)")
 DEPASSEMENT = {"renverse", "remplace", "annule"}
 
 
-class EnteteInvalide(ValueError):
-    """L'en-tête sort de la forme que le dépôt écrit."""
-
-
-def verifie(decisions: pathlib.Path = None, constitution: pathlib.Path = None,
-            nav: pathlib.Path = None, plancher: int = None,
-            annexe: pathlib.Path = None) -> list[str]:
+def verifie(
+    decisions: pathlib.Path | None = None,
+    constitution: pathlib.Path | None = None,
+    nav: pathlib.Path | None = None,
+    plancher: int | None = None,
+    annexe: pathlib.Path | None = None,
+) -> list[str]:
     """Les manquements du paquet, un par ligne. Liste vide : le paquet est conforme."""
     decisions = decisions or DECISIONS
     plancher = PLANCHER_CORPUS if plancher is None else plancher
@@ -248,7 +258,8 @@ def verifie(decisions: pathlib.Path = None, constitution: pathlib.Path = None,
     if not vocabulaire:
         fautes.append(
             "annexe : le vocabulaire des heuristiques est introuvable ou vide ; "
-            "le contrôle des clés ne vérifierait rien")
+            "le contrôle des clés ne vérifierait rien"
+        )
 
     # 8. Cliquet de corpus : une décision ne disparaît pas sans qu'on l'ait décidé.
     if len(fichiers) < plancher:
@@ -294,13 +305,15 @@ def verifie(decisions: pathlib.Path = None, constitution: pathlib.Path = None,
         if brut is not None:
             if not isinstance(brut, list):
                 fautes.append(
-                    f"{f.name} : « heuristiques » doit être une liste, même à une seule entrée")
+                    f"{f.name} : « heuristiques » doit être une liste, même à une seule entrée"
+                )
             else:
                 for cle in brut:
                     if cle not in vocabulaire:
                         fautes.append(
                             f"{f.name} : heuristique « {cle} » hors du vocabulaire clos ; "
-                            f"l'annexe en tient {len(vocabulaire)}")
+                            f"l'annexe en tient {len(vocabulaire)}"
+                        )
 
         # 4. Succession : une décision dépassée nomme ce qui la remplace.
         if e.get("status") == "deprecated":
@@ -330,7 +343,9 @@ def verifie(decisions: pathlib.Path = None, constitution: pathlib.Path = None,
             fautes.append(f"{orpheline} : absente de index.md")
     chemin_nav = nav or NAV
     if chemin_nav.exists():
-        vus = set(re.findall(r"decisions/([a-z0-9][^\s:]*\.md)", chemin_nav.read_text(encoding="utf-8")))
+        vus = set(
+            re.findall(r"decisions/([a-z0-9][^\s:]*\.md)", chemin_nav.read_text(encoding="utf-8"))
+        )
         for orpheline in sorted(noms - vus):
             fautes.append(f"{orpheline} : absente de la navigation du site")
     return fautes
@@ -360,13 +375,14 @@ def _fixture(d: str, documents: dict[str, str], plancher: int, annexe: bool = Tr
     if annexe:
         fichier_annexe.write_text(
             "| Clé | Nom |\n|---|---|\n| `nielsen-1` | Un témoin |\n| `gestalt-cloture` | Un autre |\n",
-            encoding="utf-8")
+            encoding="utf-8",
+        )
     return verifie(decisions, const, nav, plancher=plancher, annexe=fichier_annexe)
 
 
 MODELE = (
-    "---\ntype: adr\ntitle: \"Témoin\"\nstatus: stable\narticle: A1\n"
-    "verification: certaine\nenforced_by:\n  - \"TemoinTest#cas\"\n"
+    '---\ntype: adr\ntitle: "Témoin"\nstatus: stable\narticle: A1\n'
+    'verification: certaine\nenforced_by:\n  - "TemoinTest#cas"\n'
     "verified:\n  - by: machine:ci\n    at: 2026-08-20\n---\n\n# Témoin\n\n## Contexte\n\nRien.\n"
 )
 
@@ -382,83 +398,138 @@ def auto_test() -> int:
     """
     echecs = []
 
-    def cas(titre: str, documents: dict[str, str], attendu: str | None, plancher: int = 1,
-            annexe: bool = True) -> None:
+    def cas(
+        titre: str,
+        documents: dict[str, str],
+        attendu: str | None,
+        plancher: int = 1,
+        annexe: bool = True,
+    ) -> None:
         with tempfile.TemporaryDirectory() as d:
             fautes = _fixture(d, documents, plancher, annexe=annexe)
         vu = any(attendu in f for f in fautes) if attendu else not fautes
-        etat = ("rouge" if vu else "VERT, ce qui est le défaut") if attendu else (
-            "vert" if vu else f"ROUGE sans motif : {fautes[:2]}")
+        etat = (
+            ("rouge" if vu else "VERT, ce qui est le défaut")
+            if attendu
+            else ("vert" if vu else f"ROUGE sans motif : {fautes[:2]}")
+        )
         print(f"  {'✔' if vu else '✘'} {titre:32} -> {etat}")
         if not vu:
             echecs.append(titre)
 
-    cas("en-tête absent", {"0001-t.md": MODELE.replace("---\ntype: adr", "type: adr", 1)},
-        "en-tête illisible")
+    cas(
+        "en-tête absent",
+        {"0001-t.md": MODELE.replace("---\ntype: adr", "type: adr", 1)},
+        "en-tête illisible",
+    )
     cas("aucun type", {"0001-t.md": MODELE.replace("type: adr\n", "", 1)}, "aucun champ « type »")
     cas("article absent", {"0001-t.md": MODELE.replace("article: A1\n", "", 1)}, "aucun article")
-    cas("article inconnu", {"0001-t.md": MODELE.replace("article: A1", "article: A99")},
-        "absent de la constitution")
-    cas("niveau inconnu", {"0001-t.md": MODELE.replace("verification: certaine", "verification: peut-etre")},
-        "inconnu")
-    cas("certaine sans applicateur",
-        {"0001-t.md": MODELE.replace("enforced_by:\n  - \"TemoinTest#cas\"\n", "")},
-        "sans applicateur")
-    cas("probable sans cliquet",
+    cas(
+        "article inconnu",
+        {"0001-t.md": MODELE.replace("article: A1", "article: A99")},
+        "absent de la constitution",
+    )
+    cas(
+        "niveau inconnu",
+        {"0001-t.md": MODELE.replace("verification: certaine", "verification: peut-etre")},
+        "inconnu",
+    )
+    cas(
+        "certaine sans applicateur",
+        {"0001-t.md": MODELE.replace('enforced_by:\n  - "TemoinTest#cas"\n', "")},
+        "sans applicateur",
+    )
+    cas(
+        "probable sans cliquet",
         {"0001-t.md": MODELE.replace("verification: certaine", "verification: probable")},
-        "sans cliquet")
-    cas("humaine qui nomme un applicateur",
+        "sans cliquet",
+    )
+    cas(
+        "humaine qui nomme un applicateur",
         {"0001-t.md": MODELE.replace("verification: certaine", "verification: humaine")},
-        "est-ce une loupe")
-    cas("aucune vérification",
+        "est-ce une loupe",
+    )
+    cas(
+        "aucune vérification",
         {"0001-t.md": MODELE.replace("verified:\n  - by: machine:ci\n    at: 2026-08-20\n", "")},
-        "aucune trace")
-    cas("renvoi cassé",
-        {"0001-t.md": MODELE.replace("Rien.", "Voir [ailleurs](9999-absente.md).")}, "n'existe pas")
-    cas("renversée mais en vigueur",
-        {"0001-t.md": MODELE,
-         "0002-s.md": MODELE.replace("verified:", "relations:\n  renverse: [\"0001\"]\nverified:")},
-        "encore « stable »", plancher=2)
+        "aucune trace",
+    )
+    cas(
+        "renvoi cassé",
+        {"0001-t.md": MODELE.replace("Rien.", "Voir [ailleurs](9999-absente.md).")},
+        "n'existe pas",
+    )
+    cas(
+        "renversée mais en vigueur",
+        {
+            "0001-t.md": MODELE,
+            "0002-s.md": MODELE.replace("verified:", 'relations:\n  renverse: ["0001"]\nverified:'),
+        },
+        "encore « stable »",
+        plancher=2,
+    )
     cas("corpus sous son plancher", {"0001-t.md": MODELE}, "plancher", plancher=2)
-    cas("heuristique hors du vocabulaire clos",
+    cas(
+        "heuristique hors du vocabulaire clos",
         {"0001-t.md": MODELE.replace("article: A1", 'heuristiques: ["nielsen-42"]\narticle: A1')},
-        "hors du vocabulaire clos")
-    cas("heuristiques déclarées en scalaire",
+        "hors du vocabulaire clos",
+    )
+    cas(
+        "heuristiques déclarées en scalaire",
         {"0001-t.md": MODELE.replace("article: A1", 'heuristiques: "nielsen-1"\narticle: A1')},
-        "doit être une liste")
+        "doit être une liste",
+    )
     # Le vocabulaire vit dans l annexe. Sans elle, le controle des cles laisserait tout passer :
     # un garde qui peut ne rien verifier le dit, et ici il refuse.
-    cas("annexe des heuristiques absente",
-        {"0001-t.md": MODELE}, "le contrôle des clés ne vérifierait rien", annexe=False)
-    cas("une clé du vocabulaire est acceptée",
-        {"0001-t.md": MODELE.replace("article: A1", 'heuristiques: ["gestalt-cloture"]\narticle: A1')},
-        None)
+    cas(
+        "annexe des heuristiques absente",
+        {"0001-t.md": MODELE},
+        "le contrôle des clés ne vérifierait rien",
+        annexe=False,
+    )
+    cas(
+        "une clé du vocabulaire est acceptée",
+        {
+            "0001-t.md": MODELE.replace(
+                "article: A1", 'heuristiques: ["gestalt-cloture"]\narticle: A1'
+            )
+        },
+        None,
+    )
     cas("corpus sain", {"0001-t.md": MODELE, "0002-s.md": MODELE}, None, plancher=2)
 
     if echecs:
         print(f"\n{len(echecs)} cas en échec : {', '.join(echecs)}", file=sys.stderr)
         return 1
+
     # Les deux controles qui ne passent pas par `verifie()` : l un rend des suspects sous cliquet,
     # l autre un simple constat. Ils s eprouvent donc sur un corpus jetable, faute de quoi ils ne
     # seraient tenus par rien.
     def sonde(titre: str, obtenu, attendu) -> None:
         ok = obtenu == attendu
-        print(f"  {'✔' if ok else '✘'} {titre:32} -> {'vert' if ok else f'{obtenu} au lieu de {attendu}'}")
+        print(
+            f"  {'✔' if ok else '✘'} {titre:32} -> {'vert' if ok else f'{obtenu} au lieu de {attendu}'}"
+        )
         if not ok:
             echecs.append(titre)
 
     with tempfile.TemporaryDirectory() as d:
         r = pathlib.Path(d) / "decisions"
         r.mkdir(parents=True)
-        (r / "sans-heuristique.md").write_text(MODELE.replace("article: A1", "article: A12"),
-                                               encoding="utf-8")
+        (r / "sans-heuristique.md").write_text(
+            MODELE.replace("article: A1", "article: A12"), encoding="utf-8"
+        )
         (r / "hors-usage.md").write_text(MODELE, encoding="utf-8")
-        sonde("suspects : l'ADR d'usage nue est vue",
-              [s.split("  ")[0] for s in suspects_ergonomie(r)], ["sans-heuristique.md"])
-        sonde("suspects : l'ADR hors usage est épargnée",
-              len(suspects_ergonomie(r)), 1)
+        sonde(
+            "suspects : l'ADR d'usage nue est vue",
+            [s.split("  ")[0] for s in suspects_ergonomie(r)],
+            ["sans-heuristique.md"],
+        )
+        sonde("suspects : l'ADR hors usage est épargnée", len(suspects_ergonomie(r)), 1)
 
-    print("\nAuto-test concluant : chaque refus rougit sur sa propre violation, et un paquet sain reste vert.")
+    print(
+        "\nAuto-test concluant : chaque refus rougit sur sa propre violation, et un paquet sain reste vert."
+    )
     return 0
 
 
@@ -481,15 +552,21 @@ def main() -> int:
     # manque à connaître, pas une faute à corriger.
     connues = heuristiques_connues()
     orphelines = heuristiques_sans_emploi()
-    print(f"\nErgonomie : {len(connues) - len(orphelines)} heuristique(s) servie(s) sur "
-          f"{len(connues)}.")
+    print(
+        f"\nErgonomie : {len(connues) - len(orphelines)} heuristique(s) servie(s) sur "
+        f"{len(connues)}."
+    )
     if orphelines:
         print("  Aucune décision ne sert : " + ", ".join(orphelines))
 
     # Contrôle 3 : les ADR d'un article d'usage qui ne déclarent rien, sous cliquet.
     print()
-    return rapporte(ADR_ERGONOMIE, "ADR d'un article d'usage sans heuristique déclarée",
-                    suspects_ergonomie(), apercu=12)
+    return rapporte(
+        ADR_ERGONOMIE,
+        "ADR d'un article d'usage sans heuristique déclarée",
+        suspects_ergonomie(),
+        apercu=12,
+    )
 
 
 if __name__ == "__main__":

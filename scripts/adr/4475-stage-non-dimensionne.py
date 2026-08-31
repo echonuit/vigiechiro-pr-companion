@@ -23,7 +23,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, TESTS_ANCRES, rapporte  # noqa: E402
+from _commun import RACINE_DEPOT, TESTS_ANCRES, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4475"
@@ -32,7 +32,9 @@ ADR = "4475"
 # Une scene posee AVEC des dimensions explicites : c est la seule forme ou le test AFFIRME une
 # taille. Une scene sans dimensions s en remet a son contenu, et n a rien a garantir.
 SCENE_DIMENSIONNEE = re.compile(
-    r"(\w+)\.setScene\(\s*(?:new\s+Scene|Habillage\.scene)\([^;]*?,\s*[\d.]+\s*,\s*[\d.]+\s*\)", re.S)
+    r"(\w+)\.setScene\(\s*(?:new\s+Scene|Habillage\.scene)\([^;]*?,\s*[\d.]+\s*,\s*[\d.]+\s*\)",
+    re.S,
+)
 
 
 def _dimensionne(texte: str, receveur: str) -> bool:
@@ -42,8 +44,13 @@ def _dimensionne(texte: str, receveur: str) -> bool:
     l ont renomme - `modale`, `fenetre`. Chercher `stage.setWidth` laissait passer ceux-la, et le
     garde annoncait vert sur un fichier qu il n avait pas su lire.
     """
-    return bool(re.search(rf"{re.escape(receveur)}\.setWidth\(|{re.escape(receveur)}\.setHeight\(|"
-                          rf"{re.escape(receveur)}\.sizeToScene\(", texte))
+    return bool(
+        re.search(
+            rf"{re.escape(receveur)}\.setWidth\(|{re.escape(receveur)}\.setHeight\(|"
+            rf"{re.escape(receveur)}\.sizeToScene\(",
+            texte,
+        )
+    )
 
 
 def _a_soi(texte: str, receveur: str) -> bool:
@@ -57,7 +64,7 @@ def _a_soi(texte: str, receveur: str) -> bool:
     return bool(re.search(rf"\b{re.escape(receveur)}\s*=\s*new\s+Stage\s*\(", texte))
 
 
-def suspects(racine: pathlib.Path = None) -> list[str]:
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Un suspect par fichier dont AU MOINS une pose herite du stage du fork.
 
     Toutes les poses sont lues, et non la premiere seule : un fichier qui pose d abord sa modale
@@ -89,11 +96,14 @@ def _auto_test() -> int:
         def pose(contenu: str) -> None:
             (r / "A.java").write_text(contenu, encoding="utf-8")
 
-        nu = ("class A {\n    @Start\n    void start(Stage stage) {\n"
-              "        stage.setScene(new Scene(vue, 980, 980));\n        stage.show();\n    }\n}\n")
+        nu = (
+            "class A {\n    @Start\n    void start(Stage stage) {\n"
+            "        stage.setScene(new Scene(vue, 980, 980));\n        stage.show();\n    }\n}\n"
+        )
         pose(nu)
-        cas.append(("une scène dimensionnée sans stage dimensionné est un suspect",
-                    len(suspects(r)) == 1))
+        cas.append(
+            ("une scène dimensionnée sans stage dimensionné est un suspect", len(suspects(r)) == 1)
+        )
 
         pose(nu.replace("stage.show();", "stage.setWidth(980);\n        stage.show();"))
         cas.append(("dimensionner le stage lève le suspect", suspects(r) == []))
@@ -115,37 +125,51 @@ def _auto_test() -> int:
 
         # LE defaut que le garde a eu lui-meme : la moitie des `@Start` renomment leur stage, et
         # chercher `stage.setWidth` les declarait verts sans les avoir lus.
-        pose(nu.replace("stage.", "modale.").replace("Stage stage", "Stage modale")
-               .replace("modale.show();", "modale.setWidth(980);\n        modale.show();"))
+        pose(
+            nu.replace("stage.", "modale.")
+            .replace("Stage stage", "Stage modale")
+            .replace("modale.show();", "modale.setWidth(980);\n        modale.show();")
+        )
         cas.append(("un stage renomme compte comme dimensionne", suspects(r) == []))
 
         # La declaration s etale souvent sur plusieurs lignes : le motif doit la suivre.
-        pose(nu.replace("stage.setScene(new Scene(vue, 980, 980));",
-                        "stage.setScene(new Scene(\n                vue,\n                980,\n                980));"))
+        pose(
+            nu.replace(
+                "stage.setScene(new Scene(vue, 980, 980));",
+                "stage.setScene(new Scene(\n                vue,\n                980,\n                980));",
+            )
+        )
         cas.append(("une déclaration repliée compte aussi", len(suspects(r)) == 1))
 
         # Une fenetre A SOI n est pas partagee : la figer ne coute rien a personne, et
         # `ConventionsDEcritureTest` l ecrit deja. Deux modales privees etaient comptees avant
         # cette exemption, mesurees en fermant #4582.
-        pose("class A {\n    @Start\n    void start(Stage recu) {\n"
-             "        Stage modale = new Stage();\n"
-             "        modale.setScene(new Scene(vue, 980, 980));\n        modale.show();\n    }\n}\n")
+        pose(
+            "class A {\n    @Start\n    void start(Stage recu) {\n"
+            "        Stage modale = new Stage();\n"
+            "        modale.setScene(new Scene(vue, 980, 980));\n        modale.show();\n    }\n}\n"
+        )
         cas.append(("une fenêtre à soi n'est pas comptée", suspects(r) == []))
 
         # LE cas qui rend l exemption sure : une pose privee ne doit pas MASQUER la pose partagee
         # qui la suit. Sans lui, exempter reviendrait a rendre aveugle tout fichier qui ouvre une
         # modale avant de poser son ecran.
-        pose("class A {\n    @Start\n    void start(Stage stage) {\n"
-             "        Stage modale = new Stage();\n"
-             "        modale.setScene(new Scene(vue, 400, 300));\n"
-             "        stage.setScene(new Scene(vue, 980, 980));\n        stage.show();\n    }\n}\n")
+        pose(
+            "class A {\n    @Start\n    void start(Stage stage) {\n"
+            "        Stage modale = new Stage();\n"
+            "        modale.setScene(new Scene(vue, 400, 300));\n"
+            "        stage.setScene(new Scene(vue, 980, 980));\n        stage.show();\n    }\n}\n"
+        )
         cas.append(("une pose privée ne masque pas la pose partagée", len(suspects(r)) == 1))
 
     for nom, ok in cas:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
     if rates:
-        print(f"\n{len(rates)} cas en échec : le cliquet ne compte pas ce qu'il annonce.", file=sys.stderr)
+        print(
+            f"\n{len(rates)} cas en échec : le cliquet ne compte pas ce qu'il annonce.",
+            file=sys.stderr,
+        )
         return 1
     print(f"\n{len(cas)} cas : le cliquet voit le stage hérité, et laisse le reste.")
     return 0

@@ -21,7 +21,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_java  # noqa: E402
+from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_java
 
 # Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne
 # avant que la question ne se pose. La dette de qualite ne connait pas de code de seconde zone, et
@@ -53,7 +53,9 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
         texte = sans_commentaires_java(source.read_text(encoding="utf-8"))
         for abstention in ABSTENTION.finditer(texte):
             ligne = texte[: abstention.start()].count("\n") + 1
-            trouves.append(f"{source}:{ligne}  recherche qui s'abstient (voir ApercuFx.exigerParLibelle)")
+            trouves.append(
+                f"{source}:{ligne}  recherche qui s'abstient (voir ApercuFx.exigerParLibelle)"
+            )
     return trouves
 
 

@@ -16,6 +16,7 @@ c'est ce qui rend le mouvement fluide plutot que sacade.
 
     xdotool $(trajet.py x0 y0 x1 y1 duree)
 """
+
 import sys
 
 

@@ -45,8 +45,18 @@ NIVEAUX = {"certaine": "machine:ci", "probable": "machine:suspects", "humaine": 
 # Les puces de relation, ramenees a leur verbe. La forme libre est conservee dans `relations` :
 # les verbes portent du sens, et les ecraser en un seul « lie a » perdrait ce que le spike a mesure.
 RELATIONS = {
-    "prolonge", "amende", "amendée", "complète", "fait évoluer", "applique",
-    "suit", "suite de", "renverse", "reformule", "absorbe", "quatrième couture",
+    "prolonge",
+    "amende",
+    "amendée",
+    "complète",
+    "fait évoluer",
+    "applique",
+    "suit",
+    "suite de",
+    "renverse",
+    "reformule",
+    "absorbe",
+    "quatrième couture",
 }
 
 
@@ -83,7 +93,7 @@ def convertit(chemin: pathlib.Path, article: str) -> str | None:
     verif = puces.get("Vérification", [""])[0]
     niveau = verif.split(" ")[0].strip().lower()
     note = re.split(r"\s[-–]\s", verif, maxsplit=1)
-    date = (DATE.search(statut) or DATE.search(texte))
+    date = DATE.search(statut) or DATE.search(texte)
     date = date.group(1) if date else ""
 
     tete = ["---", "type: adr", f"title: {echappe(titre)}"]
@@ -131,7 +141,13 @@ def convertit(chemin: pathlib.Path, article: str) -> str | None:
         for verbe, cibles in sorted(liens.items()):
             tete.append(f"  {verbe}: [{', '.join(echappe(c) for c in cibles)}]")
     tete.append("---")
-    return "\n".join(tete) + "\n\n" + f"# {titre}\n\n" + corps + ("\n" if not corps.endswith("\n") else "")
+    return (
+        "\n".join(tete)
+        + "\n\n"
+        + f"# {titre}\n\n"
+        + corps
+        + ("\n" if not corps.endswith("\n") else "")
+    )
 
 
 def main() -> int:

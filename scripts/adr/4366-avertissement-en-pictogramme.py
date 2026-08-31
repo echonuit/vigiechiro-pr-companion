@@ -42,7 +42,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4366"
@@ -68,9 +68,30 @@ VOISINAGE = 32
 EMISSION = re.compile(r"""(?:echo|printf|print|format|System\.(?:out|err)\.\w+)\s*\(?\s*['"]""")
 
 BINAIRES = {
-    ".ttf", ".otf", ".woff", ".woff2", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg",
-    ".jar", ".zip", ".gz", ".tar", ".pdf", ".webm", ".mp4", ".wav", ".class", ".db",
-    ".webp", ".avif", ".bmp", ".tiff",
+    ".ttf",
+    ".otf",
+    ".woff",
+    ".woff2",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".ico",
+    ".svg",
+    ".jar",
+    ".zip",
+    ".gz",
+    ".tar",
+    ".pdf",
+    ".webm",
+    ".mp4",
+    ".wav",
+    ".class",
+    ".db",
+    ".webp",
+    ".avif",
+    ".bmp",
+    ".tiff",
 }
 
 CODE = {".java", ".py", ".sh", ".bash", ".yml", ".yaml", ".fxml", ".css", ".bats"}

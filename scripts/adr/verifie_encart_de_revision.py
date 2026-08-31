@@ -28,7 +28,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import DECISIONS  # noqa: E402
+from _commun import DECISIONS
 
 TITRE_ENCART = '!!! warning "Ce qui fait foi aujourd\'hui"'
 
@@ -60,7 +60,7 @@ def encart(texte: str) -> tuple[list[str], int] | tuple[None, None]:
     if debut < 0:
         return None, None
     titre = re.search(r"^# .+$", texte, re.M)
-    distance = texte[: debut].count("\n") - (texte[: titre.start()].count("\n") if titre else 0)
+    distance = texte[:debut].count("\n") - (texte[: titre.start()].count("\n") if titre else 0)
     lignes = texte[debut:].split("\n")
     fin = 1
     for i, ligne in enumerate(lignes[1:], 1):
@@ -71,7 +71,7 @@ def encart(texte: str) -> tuple[list[str], int] | tuple[None, None]:
     return re.findall(r"\]\(([a-z0-9][a-z0-9-]*)\.md\)", corps), distance
 
 
-def fautes(racine: pathlib.Path = None) -> list[str]:
+def fautes(racine: pathlib.Path | None = None) -> list[str]:
     racine = racine or DECISIONS
     trouvees = []
     for chemin in sorted(racine.glob("*.md")):
@@ -83,22 +83,30 @@ def fautes(racine: pathlib.Path = None) -> list[str]:
         if attendues and citees is None:
             trouvees.append(
                 f"{chemin.name} : {len(attendues)} relation(s) subie(s) declaree(s), aucun encart "
-                f"« Ce qui fait foi aujourd'hui » sous le titre")
+                f"« Ce qui fait foi aujourd'hui » sous le titre"
+            )
             continue
         if citees is None:
             continue
         if not attendues:
-            trouvees.append(f"{chemin.name} : un encart de revision sans aucune relation subie declaree")
+            trouvees.append(
+                f"{chemin.name} : un encart de revision sans aucune relation subie declaree"
+            )
             continue
         if distance is not None and distance > MARGE:
             trouvees.append(
-                f"{chemin.name} : l encart est a {distance} lignes du titre, il doit le suivre")
+                f"{chemin.name} : l encart est a {distance} lignes du titre, il doit le suivre"
+            )
         for cible in attendues:
             if cible not in citees:
-                trouvees.append(f"{chemin.name} : l encart n annonce pas « {cible} », pourtant declaree")
+                trouvees.append(
+                    f"{chemin.name} : l encart n annonce pas « {cible} », pourtant declaree"
+                )
         for cible in citees:
             if cible not in attendues:
-                trouvees.append(f"{chemin.name} : l encart annonce « {cible} », qui n est pas declaree")
+                trouvees.append(
+                    f"{chemin.name} : l encart annonce « {cible} », qui n est pas declaree"
+                )
     return trouvees
 
 
@@ -109,10 +117,18 @@ def _fixture(d: str, documents: dict[str, str]) -> pathlib.Path:
     return racine
 
 
-def _saine(relation: str = 'relations:\n  amendee_par: ["voisine"]\n', encart_pose: bool = True) -> str:
+def _saine(
+    relation: str = 'relations:\n  amendee_par: ["voisine"]\n', encart_pose: bool = True
+) -> str:
     tete = f"---\ntype: adr\n{relation}---\n\n# Un titre\n"
-    bloc = (f"\n{TITRE_ENCART}\n    **Amendee le 2026-01-01** par [ADR](voisine.md) :\n"
-            "    ce qui change.\n") if encart_pose else ""
+    bloc = (
+        (
+            f"\n{TITRE_ENCART}\n    **Amendee le 2026-01-01** par [ADR](voisine.md) :\n"
+            "    ce qui change.\n"
+        )
+        if encart_pose
+        else ""
+    )
     return tete + bloc + "\nDu corps ordinaire.\n"
 
 
@@ -123,36 +139,67 @@ def _auto_test() -> int:
         cas.append(("un corpus sain est vert", fautes(r) == []))
 
         (r / "sujet.md").write_text(_saine(encart_pose=False), encoding="utf-8")
-        cas.append(("une relation subie sans encart rougit", any("aucun encart" in f for f in fautes(r))))
+        cas.append(
+            ("une relation subie sans encart rougit", any("aucun encart" in f for f in fautes(r)))
+        )
 
         (r / "sujet.md").write_text(_saine(relation=""), encoding="utf-8")
-        cas.append(("un encart sans relation declaree rougit", any("sans aucune relation" in f for f in fautes(r))))
+        cas.append(
+            (
+                "un encart sans relation declaree rougit",
+                any("sans aucune relation" in f for f in fautes(r)),
+            )
+        )
 
         (r / "sujet.md").write_text(
-            _saine().replace("[ADR](voisine.md)", "[ADR](autre.md)"), encoding="utf-8")
+            _saine().replace("[ADR](voisine.md)", "[ADR](autre.md)"), encoding="utf-8"
+        )
         (r / "autre.md").write_text("---\ntype: adr\n---\n\n# Autre\n", encoding="utf-8")
         f = fautes(r)
-        cas.append(("une cible declaree absente de l encart rougit", any("n annonce pas" in x for x in f)))
-        cas.append(("une cible de l encart non declaree rougit", any("qui n est pas declaree" in x for x in f)))
+        cas.append(
+            ("une cible declaree absente de l encart rougit", any("n annonce pas" in x for x in f))
+        )
+        cas.append(
+            (
+                "une cible de l encart non declaree rougit",
+                any("qui n est pas declaree" in x for x in f),
+            )
+        )
 
         # La faille que l exclusion du cliquet de longueur ouvrirait : de la prose rangee dans l
         # encart sous couvert d un lien. Elle est fermee par le controle ci-dessus, et ce cas le dit.
         (r / "sujet.md").write_text(
-            _saine().replace("    ce qui change.\n",
-                             "    ce qui change.\n    **Amendee** par [ADR](autre.md) : de la prose de plus.\n"),
-            encoding="utf-8")
-        cas.append(("de la prose glissee dans l encart rougit", any("qui n est pas declaree" in x for x in fautes(r))))
+            _saine().replace(
+                "    ce qui change.\n",
+                "    ce qui change.\n    **Amendee** par [ADR](autre.md) : de la prose de plus.\n",
+            ),
+            encoding="utf-8",
+        )
+        cas.append(
+            (
+                "de la prose glissee dans l encart rougit",
+                any("qui n est pas declaree" in x for x in fautes(r)),
+            )
+        )
 
         (r / "sujet.md").write_text(
-            _saine().replace("# Un titre\n", "# Un titre\n\nUn paragraphe.\n\nUn autre.\n\nUn troisieme.\n"),
-            encoding="utf-8")
-        cas.append(("un encart loin du titre rougit", any("lignes du titre" in x for x in fautes(r))))
+            _saine().replace(
+                "# Un titre\n", "# Un titre\n\nUn paragraphe.\n\nUn autre.\n\nUn troisieme.\n"
+            ),
+            encoding="utf-8",
+        )
+        cas.append(
+            ("un encart loin du titre rougit", any("lignes du titre" in x for x in fautes(r)))
+        )
 
     for nom, ok in cas:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
     if rates:
-        print(f"\n{len(rates)} cas en echec : le garde ne detecte plus ce qu il annonce.", file=sys.stderr)
+        print(
+            f"\n{len(rates)} cas en echec : le garde ne detecte plus ce qu il annonce.",
+            file=sys.stderr,
+        )
         return 1
     print("\nLe garde de l encart de revision detecte ses violations temoins.")
     return 0
@@ -167,5 +214,7 @@ if __name__ == "__main__":
     if trouvees:
         print(f"\n{len(trouvees)} encart(s) de revision en defaut.", file=sys.stderr)
         sys.exit(1)
-    print("Encarts de revision : chaque relation subie est annoncee sous son titre, et rien de plus.")
+    print(
+        "Encarts de revision : chaque relation subie est annoncee sous son titre, et rien de plus."
+    )
     sys.exit(0)

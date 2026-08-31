@@ -31,8 +31,8 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-import rapport  # noqa: E402
-from _commun import DECISIONS, RACINE_DEPOT  # noqa: E402
+import rapport
+from _commun import DECISIONS, RACINE_DEPOT
 
 # Les racines de prose susceptibles de porter une balise. Mêmes que celles que balaie
 # `DocumentationAJourTest`, et pour la même raison : une balise vit où on la lit.
@@ -70,7 +70,9 @@ def ecrire_les_balises(cle: str, nouvelle: int) -> list[str]:
             texte = fichier.read_text(encoding="utf-8")
             if f"<!--inv:{cle}-->" not in texte:
                 continue
-            neuf = motif.sub(lambda m: m.group(1) + _formate(m.group(2), nouvelle) + m.group(3), texte)
+            neuf = motif.sub(
+                lambda m: m.group(1) + _formate(m.group(2), nouvelle) + m.group(3), texte
+            )
             if neuf != texte:
                 fichier.write_text(neuf, encoding="utf-8")
                 touches.append(str(fichier.relative_to(RACINE_DEPOT)))
@@ -109,7 +111,9 @@ def aligner_les_balises() -> list[str]:
             continue
         touches = ecrire_les_balises(cle, int(declare.group(1)))
         if touches:
-            faits.append(f"balise `{cle}` reposee a {declare.group(1)} dans {len(touches)} fichier(s)")
+            faits.append(
+                f"balise `{cle}` reposee a {declare.group(1)} dans {len(touches)} fichier(s)"
+            )
     return faits
 
 
@@ -119,7 +123,7 @@ def appliquer() -> list[str]:
     cliquets, _, _, _ = rapport.collecter()
     faits = []
     for num, nouvelle in rapport.resserrements(cliquets):
-        fichier = sorted(DECISIONS.glob(f"{num}-*.md"))[0]
+        fichier = min(DECISIONS.glob(f"{num}-*.md"))
         texte = fichier.read_text(encoding="utf-8")
         # On ne baisse que le champ `ratchet` de CETTE ADR, dans son en-tête.
         nouveau, n = re.subn(

@@ -28,7 +28,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import TESTS, rapporte  # noqa: E402
+from _commun import TESTS, rapporte
 
 SOURCES = [TESTS]
 
@@ -55,7 +55,15 @@ EXTRAIT = 90
 #
 # Les cinq se reconnaissent à leur encadrement. Cinq listes d'exceptions auraient dérivé séparément.
 CITE = re.compile(
-    "\\[-" + CADRATIN + "\\]|\"" + CADRATIN + '"|`' + CADRATIN + "`|«[^»\n]*»|\\|\\s*" + CADRATIN + "\\s*(?=\\|)"
+    "\\[-"
+    + CADRATIN
+    + '\\]|"'
+    + CADRATIN
+    + '"|`'
+    + CADRATIN
+    + "`|«[^»\n]*»|\\|\\s*"
+    + CADRATIN
+    + "\\s*(?=\\|)"
 )
 
 
@@ -194,7 +202,9 @@ def prose(
         p for p in sorted(balayage) if p.is_file() and not any(part in exclus for part in p.parts)
     ]
     if not pages:
-        raise AssertionError(f"zone « {racine} » : aucun fichier « {motif} », le garde ne balaie rien")
+        raise AssertionError(
+            f"zone « {racine} » : aucun fichier « {motif} », le garde ne balaie rien"
+        )
     for page in pages:
         for numero, ligne in enumerate(page.read_text(encoding="utf-8").splitlines(), 1):
             if CADRATIN in CITE.sub("", ligne):

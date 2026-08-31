@@ -55,7 +55,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, rapporte  # noqa: E402
+from _commun import RACINE_DEPOT, rapporte
 
 ADR = "4586"
 

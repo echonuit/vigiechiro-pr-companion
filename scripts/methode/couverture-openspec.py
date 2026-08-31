@@ -30,8 +30,9 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(
-    subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True)
-    .stdout.strip()
+    subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=False
+    ).stdout.strip()
     or "."
 )
 
@@ -79,7 +80,11 @@ def reperes(racine: pathlib.Path) -> list[tuple[str, int]]:
         for f in cli.rglob("*.java"):
             noms.update(COMMANDE.findall(f.read_text(encoding="utf-8")))
     nb_services = len(list(modele.glob("*/model/Service*.java"))) if modele.is_dir() else 0
-    return [("écrans documentés", nb_ecrans), ("commandes", len(noms)), ("services de domaine", nb_services)]
+    return [
+        ("écrans documentés", nb_ecrans),
+        ("commandes", len(noms)),
+        ("services de domaine", nb_services),
+    ]
 
 
 def rapporte(racine: pathlib.Path) -> None:
@@ -120,13 +125,30 @@ def auto_test() -> int:
         (spec / "spec.md").write_text(
             "# x\n## Requirements\n### Requirement: A\n### Requirement: B\n", encoding="utf-8"
         )
-        joue("une capacité et ses deux exigences se comptent", capacites(r), [("passage/emport-d-une-nuit", 2)])
+        joue(
+            "une capacité et ses deux exigences se comptent",
+            capacites(r),
+            [("passage/emport-d-une-nuit", 2)],
+        )
 
         # Le cas qui compte : une delta spec archivée ne doit pas doubler le numérateur.
-        delta = r / "openspec" / "changes" / "archive" / "2026-01-01-x" / "specs" / "passage" / "emport-d-une-nuit"
+        delta = (
+            r
+            / "openspec"
+            / "changes"
+            / "archive"
+            / "2026-01-01-x"
+            / "specs"
+            / "passage"
+            / "emport-d-une-nuit"
+        )
         delta.mkdir(parents=True)
         (delta / "spec.md").write_text("### Requirement: A\n", encoding="utf-8")
-        joue("une delta ARCHIVÉE ne se compte pas deux fois", capacites(r), [("passage/emport-d-une-nuit", 2)])
+        joue(
+            "une delta ARCHIVÉE ne se compte pas deux fois",
+            capacites(r),
+            [("passage/emport-d-une-nuit", 2)],
+        )
 
         src = racine_des_paquets(r)
         (src / "passage").mkdir(parents=True)
@@ -134,7 +156,9 @@ def auto_test() -> int:
         joue("les paquets se lisent depuis l'arbre", paquets(r), ["commun", "passage"])
 
         (src / "cli" / "commande").mkdir(parents=True)
-        (src / "cli" / "commande" / "C.java").write_text('name = "emporter"\nname = "emporter"\n', encoding="utf-8")
+        (src / "cli" / "commande" / "C.java").write_text(
+            'name = "emporter"\nname = "emporter"\n', encoding="utf-8"
+        )
         joue("une commande citée deux fois ne compte qu'une", dict(reperes(r))["commandes"], 1)
 
     print()

@@ -34,7 +34,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES_ANCREES, RACINE_DEPOT, rapporte  # noqa: E402
+from _commun import RACINE_DEPOT, RACINES_ANCREES, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4472"
@@ -84,7 +84,7 @@ def blocs(fichier: pathlib.Path) -> list[tuple[int, int, int]]:
     return trouves
 
 
-def suspects(racine: pathlib.Path = None) -> list[str]:
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Un suspect par LIGNE au-dela du seuil, comme le cliquet de la javadoc."""
     racines = [racine] if racine else list(RACINES)
     trouves = []
@@ -142,9 +142,12 @@ def _auto_test() -> int:
         cas.append(("les lignes vides n allongent pas le bloc", suspects(r) == []))
 
         # Deux blocs d un meme corps cumulent : le grain est la ligne, comme pour la javadoc.
-        deux = corps(SEUIL + 3).replace("        int x = 1;",
-                                        "        int x = 1;\n" + "\n".join(
-                                            f"        // Autre {i}." for i in range(SEUIL + 2)) + "\n        int y = 2;")
+        deux = corps(SEUIL + 3).replace(
+            "        int x = 1;",
+            "        int x = 1;\n"
+            + "\n".join(f"        // Autre {i}." for i in range(SEUIL + 2))
+            + "\n        int y = 2;",
+        )
         pose(deux)
         cas.append(("deux blocs cumulent leur dette", len(suspects(r)) == 5))
 
@@ -152,7 +155,10 @@ def _auto_test() -> int:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
     if rates:
-        print(f"\n{len(rates)} cas en échec : le cliquet ne compte pas ce qu'il annonce.", file=sys.stderr)
+        print(
+            f"\n{len(rates)} cas en échec : le cliquet ne compte pas ce qu'il annonce.",
+            file=sys.stderr,
+        )
         return 1
     print(f"\n{len(cas)} cas : le cliquet voit le débordement en corps, et laisse le reste.")
     return 0

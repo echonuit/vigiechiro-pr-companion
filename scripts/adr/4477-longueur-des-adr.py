@@ -30,7 +30,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import DECISIONS, rapporte  # noqa: E402
+from _commun import DECISIONS, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4477"

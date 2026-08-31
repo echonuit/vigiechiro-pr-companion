@@ -63,7 +63,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import loupe  # noqa: E402
+from _commun import loupe
 
 # Le commit qui a ecrit la regle, en UTC. Fait historique, il ne se met pas a jour.
 NAISSANCE = "2026-08-29T05:37:52Z"
@@ -74,9 +74,15 @@ NAISSANCE = "2026-08-29T05:37:52Z"
 # `critere-de-fin.motif.md`.
 # Injectable pour l auto-test, comme le corpus des deux cliquets de forge : sans cela le chemin de
 # refus n est exerce par rien, et une mutation l a montre en le laissant vert.
-MOTIF = pathlib.Path(os.environ.get("CRITERE_MOTIF_FICHIER") or pathlib.Path(__file__).parent / "critere-de-fin.motif")
+MOTIF = pathlib.Path(
+    os.environ.get("CRITERE_MOTIF_FICHIER")
+    or pathlib.Path(__file__).parent / "critere-de-fin.motif"
+)
 if not MOTIF.is_file():
-    print(f"REFUS : « {MOTIF} » est introuvable. Cette loupe ne conclut pas sans son motif.", file=sys.stderr)
+    print(
+        f"REFUS : « {MOTIF} » est introuvable. Cette loupe ne conclut pas sans son motif.",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 CRITERE = re.compile(MOTIF.read_text(encoding="utf-8").splitlines()[0], re.I)
 
@@ -85,7 +91,7 @@ def estEpic(issue: dict) -> bool:
     """L UNION du label et du titre : rater un chantier, c est ne pas poser la question."""
     parLabel = any(e.get("name") == "epic" for e in issue.get("labels") or [])
     titre = (issue.get("title") or "").lower()
-    return parLabel or titre.startswith("[epic]") or titre.startswith("[chantier]")
+    return parLabel or titre.startswith(("[epic]", "[chantier]"))
 
 
 def ditSonCritere(corps: str) -> bool:
@@ -94,7 +100,10 @@ def ditSonCritere(corps: str) -> bool:
 
 def _forge(arguments: list[str]) -> str:
     if not shutil.which("gh"):
-        print("REFUS : « gh » est absent. Cette loupe ne conclut pas sur ce qu'elle n'a pas lu.", file=sys.stderr)
+        print(
+            "REFUS : « gh » est absent. Cette loupe ne conclut pas sur ce qu'elle n'a pas lu.",
+            file=sys.stderr,
+        )
         raise SystemExit(2)
     sortie = subprocess.run(["gh", *arguments], capture_output=True, text=True, check=False)
     if sortie.returncode != 0:
@@ -106,15 +115,33 @@ def _forge(arguments: list[str]) -> str:
 def _corpus() -> tuple[list[dict], dict[int, list[dict]]]:
     """Les chantiers ouverts depuis la regle, et les sous-issues de chacun."""
     issues = json.loads(
-        _forge(["issue", "list", "--state", "all", "--limit", "1600", "--json", "number,title,createdAt,labels"])
+        _forge(
+            [
+                "issue",
+                "list",
+                "--state",
+                "all",
+                "--limit",
+                "1600",
+                "--json",
+                "number,title,createdAt,labels",
+            ]
+        )
     )
     chantiers = [i for i in issues if estEpic(i) and i["createdAt"] > NAISSANCE]
     lots: dict[int, list[dict]] = {}
     for chantier in chantiers:
-        rendu = json.loads(_forge(["issue", "view", str(chantier["number"]), "--json", "subIssues"]))
-        numeros = [n["number"] for n in rendu.get("subIssues", {}).get("nodes", []) if n.get("state") == "OPEN"]
+        rendu = json.loads(
+            _forge(["issue", "view", str(chantier["number"]), "--json", "subIssues"])
+        )
+        numeros = [
+            n["number"]
+            for n in rendu.get("subIssues", {}).get("nodes", [])
+            if n.get("state") == "OPEN"
+        ]
         lots[chantier["number"]] = [
-            json.loads(_forge(["issue", "view", str(n), "--json", "number,title,body"])) for n in numeros
+            json.loads(_forge(["issue", "view", str(n), "--json", "number,title,body"]))
+            for n in numeros
         ]
     return chantiers, lots
 
@@ -126,7 +153,9 @@ def candidats(chantiers: list[dict], lots: dict[int, list[dict]]) -> list[str]:
         for lot in sorted(lots.get(chantier["number"], []), key=lambda l: l["number"]):
             if ditSonCritere(lot.get("body") or ""):
                 continue
-            lignes.append(f"lot #{lot['number']} du chantier #{chantier['number']} · {(lot.get('title') or '')[:90]}")
+            lignes.append(
+                f"lot #{lot['number']} du chantier #{chantier['number']} · {(lot.get('title') or '')[:90]}"
+            )
     return lignes
 
 
@@ -134,16 +163,22 @@ def _autoTest() -> int:
     """Les temoins : une par formulation du motif, un lot muet sort, la borne tient."""
     assert ditSonCritere("blabla\n\n## Fini quand\n\nil rougit."), "« Fini quand » doit compter"
     assert ditSonCritere("**Fait quand** : les six y sont."), "« Fait quand » doit compter"
-    assert ditSonCritere("## Comment on saura que chaque lot est fini\n\nil rougit."), "la section doit compter"
+    assert ditSonCritere("## Comment on saura que chaque lot est fini\n\nil rougit."), (
+        "la section doit compter"
+    )
     assert ditSonCritere("Le critère de fin est le suivant."), "« critère de fin » doit compter"
     # Ce temoin est ce qui tient le « comment » du motif. Sans lui, restreindre `on saur...` a
     # `comment on saur...` ne serait prouve par rien : « on ne saura pas s il est fini » ne discrimine
     # pas, les deux mots n y etant pas adjacents. Celui-ci les colle, et il est mort si le « comment »
     # tombe.
-    assert not ditSonCritere("Personne ne dit si on saura que c est fini."), "« on saura ... fini » seul n est pas un critere"
+    assert not ditSonCritere("Personne ne dit si on saura que c est fini."), (
+        "« on saura ... fini » seul n est pas un critere"
+    )
     assert not ditSonCritere("On ne saura pas s il est fini."), "une negation n est pas un critere"
     assert not ditSonCritere("Un lot sans rien."), "un corps muet ne doit pas compter"
-    assert ditSonCritere("**Ce que je vérifierai** : le garde rougit."), "« Ce que je vérifierai » est le mot que CLAUDE.md prescrit"
+    assert ditSonCritere("**Ce que je vérifierai** : le garde rougit."), (
+        "« Ce que je vérifierai » est le mot que CLAUDE.md prescrit"
+    )
 
     assert estEpic({"title": "[epic] X", "labels": []}), "le titre suffit"
     assert estEpic({"title": "[chantier] X", "labels": []}), "« [chantier] » aussi"
@@ -152,7 +187,12 @@ def _autoTest() -> int:
 
     chantiers = [
         {"number": 10, "title": "[epic] recent", "createdAt": "2026-08-30T00:00:00Z", "labels": []},
-        {"number": 20, "title": "[epic] recent aussi", "createdAt": "2026-08-31T00:00:00Z", "labels": []},
+        {
+            "number": 20,
+            "title": "[epic] recent aussi",
+            "createdAt": "2026-08-31T00:00:00Z",
+            "labels": [],
+        },
     ]
     lots = {
         10: [
@@ -194,10 +234,14 @@ def _autoTest() -> int:
         env={**os.environ, "CRITERE_MOTIF_FICHIER": "/nulle/part/critere.motif"},
         check=False,
     )
-    assert manquant.returncode == 2, f"un motif introuvable doit REFUSER en 2, pas en {manquant.returncode}"
+    assert manquant.returncode == 2, (
+        f"un motif introuvable doit REFUSER en 2, pas en {manquant.returncode}"
+    )
     assert "introuvable" in manquant.stderr, manquant.stderr
 
-    print("Auto-test concluant : les formulations du motif reconnues, la negation ecartee, un lot muet vu.")
+    print(
+        "Auto-test concluant : les formulations du motif reconnues, la negation ecartee, un lot muet vu."
+    )
     return 0
 
 

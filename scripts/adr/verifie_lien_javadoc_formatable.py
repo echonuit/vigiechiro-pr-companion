@@ -46,9 +46,12 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES, RACINE_DEPOT  # noqa: E402
+from _commun import RACINE_DEPOT, RACINES
 
-RACINE_DEPOT = pathlib.Path(__file__).resolve().parents[2]
+# `RACINE_DEPOT` etait IMPORTE puis RECALCULE deux lignes plus bas, a l identique (#5022). La seconde
+# ecriture gagnait, et c est precisement ce que l ADR 4586 interdit : un corpus se declare une fois.
+# `verifie_corpus_declare.py` ne l a pas vu parce qu il ne surveille que les deux arbres Java et
+# `DECISIONS` ; c est le trou que #4836 elargit.
 ARBRES = RACINES
 
 # La borne du formateur, telle que `pom.xml` la configure pour palantir-java-format.
@@ -59,7 +62,7 @@ BORNE = 120
 LIEN_COUPABLE = re.compile(r"\[[^\]\n]* [^\]\n]*\]\(")
 
 
-def a_risque(racine: pathlib.Path = None) -> list[str]:
+def a_risque(racine: pathlib.Path | None = None) -> list[str]:
     """Les lignes `///` que le formateur casserait, une par entree."""
     base = racine or RACINE_DEPOT
     trouves = []
@@ -100,8 +103,12 @@ def _auto_test() -> int:
             (src / nom).write_text(contenu, encoding="utf-8")
 
         # 1. Le cas refuse : longue ET lien a texte espace.
-        ecrire("A.java", f"/// Le defaut est revenu quatre fois ([ADR 4134]{lien}).\nclass A {{}}\n")
-        cas.append(("une ligne longue avec un lien a texte espace est refusee", len(a_risque(r)) == 1))
+        ecrire(
+            "A.java", f"/// Le defaut est revenu quatre fois ([ADR 4134]{lien}).\nclass A {{}}\n"
+        )
+        cas.append(
+            ("une ligne longue avec un lien a texte espace est refusee", len(a_risque(r)) == 1)
+        )
 
         # 2. Longue, mais SANS lien : le formateur la replie correctement, mesure a l appui.
         ecrire("A.java", "/// " + "mot " * 40 + "\nclass A {}\n")
@@ -113,16 +120,23 @@ def _auto_test() -> int:
 
         # 4. Longue avec un lien dont le texte n a PAS d espace : le formateur ne peut couper
         #    qu avant le crochet, ce qui est sans dommage.
-        ecrire("A.java", f"/// Le defaut est revenu quatre fois, voir ici ([ADR4134]{lien}).\nclass A {{}}\n")
+        ecrire(
+            "A.java",
+            f"/// Le defaut est revenu quatre fois, voir ici ([ADR4134]{lien}).\nclass A {{}}\n",
+        )
         cas.append(("une ligne longue dont le lien n a pas d espace passe", a_risque(r) == []))
 
     for nom, ok in cas:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
     if rates:
-        print(f"\n{len(rates)} cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr)
+        print(
+            f"\n{len(rates)} cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr
+        )
         return 1
-    print(f"\n{len(cas)} cas : le garde voit la forme à risque et laisse passer les trois voisines.")
+    print(
+        f"\n{len(cas)} cas : le garde voit la forme à risque et laisse passer les trois voisines."
+    )
     return 0
 
 
@@ -137,7 +151,10 @@ def main() -> int:
         print(f"  {t}", file=sys.stderr)
     if trouves:
         print(f"\n{len(trouves)} ligne(s) que le formateur casserait.", file=sys.stderr)
-        print("Pré-repliez le lien : le texte sur une ligne `///`, la cible sur la suivante.", file=sys.stderr)
+        print(
+            "Pré-repliez le lien : le texte sur une ligne `///`, la cible sur la suivante.",
+            file=sys.stderr,
+        )
         return 1
     print("Javadoc : aucun lien que le formateur casserait.")
     return 0

@@ -109,7 +109,9 @@ def ecarts(racine: pathlib.Path) -> list[str]:
 
     if len({n for _, n in comptes}) > 1:
         detail = ", ".join(f"{libelle} en rend {n}" for libelle, n in comptes)
-        trouves.append(f"les entrees du corpus ne rendent pas le meme nombre de competences : {detail}")
+        trouves.append(
+            f"les entrees du corpus ne rendent pas le meme nombre de competences : {detail}"
+        )
 
     if trouves:
         return trouves
@@ -140,9 +142,10 @@ def auto_test() -> int:
     script = pathlib.Path(__file__).resolve()
 
     def renvoi_invente(r: pathlib.Path) -> None:
-        f = sorted((r / CORPUS[0][0]).glob(CORPUS[0][1]))[0]
-        f.write_text(f.read_text(encoding="utf-8") + "\nPuis lancez `/frobnicate`.\n",
-                     encoding="utf-8")
+        f = min((r / CORPUS[0][0]).glob(CORPUS[0][1]))
+        f.write_text(
+            f.read_text(encoding="utf-8") + "\nPuis lancez `/frobnicate`.\n", encoding="utf-8"
+        )
 
     def commande_supprimee(r: pathlib.Path) -> None:
         (r / COMMANDES / "realiser.md").unlink()
@@ -153,13 +156,15 @@ def auto_test() -> int:
             f = r / base / "openspec-update-change" / "SKILL.md"
             if f.exists():
                 texte = f.read_text(encoding="utf-8")
-                f.write_text(texte.replace("est un flux optionnel", "est commode"), encoding="utf-8")
+                f.write_text(
+                    texte.replace("est un flux optionnel", "est commode"), encoding="utf-8"
+                )
 
     def entree_absente(r: pathlib.Path) -> None:
         shutil.rmtree(r / CORPUS[1][0])
 
     def arbre_ampute(r: pathlib.Path) -> None:
-        shutil.rmtree(sorted((r / CORPUS[1][0]).glob(CORPUS[1][1]))[0].parent)
+        shutil.rmtree(min((r / CORPUS[1][0]).glob(CORPUS[1][1])).parent)
 
     cas = [
         ("renvoi invente vers /frobnicate", renvoi_invente),
@@ -181,12 +186,15 @@ def auto_test() -> int:
         return subprocess.run(
             [sys.executable, str(copie / script.relative_to(RACINE)), "--verifie"],
             capture_output=True,
+            check=False,
         ).returncode
 
     echecs = []
     with tempfile.TemporaryDirectory() as tmp:
         temoin = code_sur(copie_jetable(tmp))
-        print(f"  {'temoin, arbre sain':34s} -> {'vert' if temoin == 0 else f'ROUGE (code {temoin})'}")
+        print(
+            f"  {'temoin, arbre sain':34s} -> {'vert' if temoin == 0 else f'ROUGE (code {temoin})'}"
+        )
         if temoin != 0:
             echecs.append("le temoin rougit, donc les rouges qui suivent ne prouvent rien")
 

@@ -105,7 +105,9 @@ def entrees(racine: pathlib.Path) -> list[tuple[str, list[pathlib.Path]]]:
     rendu = []
     for motif in MOTIFS:
         base = racine / motif
-        rendu.append((str(motif), sorted(base.glob("openspec-*/SKILL.md")) if base.is_dir() else []))
+        rendu.append(
+            (str(motif), sorted(base.glob("openspec-*/SKILL.md")) if base.is_dir() else [])
+        )
     return rendu
 
 
@@ -147,9 +149,7 @@ def ecarts(racine: pathlib.Path) -> list[str]:
         return [panne]
 
     if demandee != resolue:
-        trouves.append(
-            f"le manifeste epingle {demandee}, le lockfile resout {resolue}"
-        )
+        trouves.append(f"le manifeste epingle {demandee}, le lockfile resout {resolue}")
 
     incomplet = corpus_incomplet(racine)
     if incomplet:
@@ -186,8 +186,9 @@ def auto_test() -> int:
     def casse_competence(r: pathlib.Path) -> None:
         fichier = competences(r)[0]
         texte = fichier.read_text(encoding="utf-8")
-        fichier.write_text(ENTETE_VERSION.sub('  generatedBy: "0.0.1"', texte, count=1),
-                           encoding="utf-8")
+        fichier.write_text(
+            ENTETE_VERSION.sub('  generatedBy: "0.0.1"', texte, count=1), encoding="utf-8"
+        )
 
     def relache_epinglage(r: pathlib.Path) -> None:
         manifeste = r / DOSSIER_OUTIL / "package.json"
@@ -204,7 +205,7 @@ def auto_test() -> int:
 
     def arbre_ampute(r: pathlib.Path) -> None:
         """Un arbre perd UNE competence : les entrees cessent de rendre le meme compte."""
-        shutil.rmtree(sorted((r / MOTIFS[1]).glob("openspec-*/SKILL.md"))[0].parent)
+        shutil.rmtree(min((r / MOTIFS[1]).glob("openspec-*/SKILL.md")).parent)
 
     cas = [
         ("version du lockfile deplacee", casse_lockfile),
@@ -227,6 +228,7 @@ def auto_test() -> int:
         return subprocess.run(
             [sys.executable, str(copie / script.relative_to(RACINE)), "--verifie"],
             capture_output=True,
+            check=False,
         ).returncode
 
     echecs = []

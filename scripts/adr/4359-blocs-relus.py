@@ -56,7 +56,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-import importlib.util  # noqa: E402
+import importlib.util
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 REGISTRE = pathlib.Path("scripts/adr/4359-blocs-relus.tsv")
@@ -77,7 +77,7 @@ def empreinte(lignes: list[str]) -> str:
     return hashlib.sha256("\n".join(l.strip() for l in lignes).encode()).hexdigest()[:16]
 
 
-def blocs_du_corpus(racine: pathlib.Path = None) -> dict[str, str]:
+def blocs_du_corpus(racine: pathlib.Path | None = None) -> dict[str, str]:
     """Empreinte -> chemin, pour chaque bloc SOUS CLIQUET du code de production."""
     base = racine or RACINE
     trouves = {}
@@ -98,7 +98,7 @@ def blocs_du_corpus(racine: pathlib.Path = None) -> dict[str, str]:
     return trouves
 
 
-def entrees(racine: pathlib.Path = None) -> list[tuple[str, str, str]]:
+def entrees(racine: pathlib.Path | None = None) -> list[tuple[str, str, str]]:
     """Les lignes du registre, hors commentaires et lignes vides."""
     fichier = (racine or RACINE) / REGISTRE
     if not fichier.exists():
@@ -109,7 +109,9 @@ def entrees(racine: pathlib.Path = None) -> list[tuple[str, str, str]]:
             continue
         parts = ligne.split("\t")
         if len(parts) != 3:
-            raise SystemExit(f"registre : ligne mal formee, trois colonnes attendues -> {ligne[:60]}")
+            raise SystemExit(
+                f"registre : ligne mal formee, trois colonnes attendues -> {ligne[:60]}"
+            )
         lues.append(tuple(p.strip() for p in parts))
     return lues
 

@@ -124,7 +124,9 @@ def _forge(*args: str) -> str:
 def _borne(jours: int) -> str:
     return subprocess.run(
         ["date", "-u", "-d", f"-{jours} days", "+%Y-%m-%dT%H:%M:%SZ"],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     ).stdout.strip()
 
 
@@ -134,8 +136,11 @@ def relances(jours: int) -> tuple[list[dict], int]:
     `gh run list` ne suffit pas : il plafonne, et surtout il ne porte pas `run_attempt`.
     """
     brut = _forge(
-        "api", "--paginate", f"repos/{DEPOT}/actions/workflows/{FLUX}/runs?per_page=100",
-        "-q", ".workflow_runs[] | [.id, .run_attempt, .conclusion, .created_at, .head_sha] | @tsv",
+        "api",
+        "--paginate",
+        f"repos/{DEPOT}/actions/workflows/{FLUX}/runs?per_page=100",
+        "-q",
+        ".workflow_runs[] | [.id, .run_attempt, .conclusion, .created_at, .head_sha] | @tsv",
     )
     borne = _borne(jours)
     dans = []
@@ -143,8 +148,14 @@ def relances(jours: int) -> tuple[list[dict], int]:
         champs = ligne.split("\t")
         if len(champs) < 5 or champs[3] < borne or champs[2] not in CONCLUS:
             continue
-        dans.append({"id": int(champs[0]), "tentatives": int(champs[1]),
-                     "verdict": champs[2], "sha": champs[4]})
+        dans.append(
+            {
+                "id": int(champs[0]),
+                "tentatives": int(champs[1]),
+                "verdict": champs[2],
+                "sha": champs[4],
+            }
+        )
     return [r for r in dans if r["tentatives"] > 1], len(dans)
 
 
@@ -156,13 +167,15 @@ def journalDeTentative(idRun: int, tentative: int, atelier: str = "build") -> st
         zipDeRun = pathlib.Path(dossier) / "l.zip"
         fait = subprocess.run(
             ["gh", "api", f"repos/{DEPOT}/actions/runs/{idRun}/attempts/{tentative}/logs"],
-            capture_output=True, check=False,
+            capture_output=True,
+            check=False,
         )
         if not fait.stdout:
             return ""
         zipDeRun.write_bytes(fait.stdout)
-        subprocess.run(["unzip", "-qq", "-o", str(zipDeRun), "-d", dossier],
-                       capture_output=True, check=False)
+        subprocess.run(
+            ["unzip", "-qq", "-o", str(zipDeRun), "-d", dossier], capture_output=True, check=False
+        )
         morceaux = []
         for fichier in pathlib.Path(dossier).glob("*.txt"):
             morceaux.append(fichier.read_text(encoding="utf-8", errors="replace"))
@@ -189,7 +202,9 @@ SEUIL_EFFONDREMENT = 50
 _NATIF = re.compile(r"OSPango|UnsatisfiedLinkError|no javafx_font", re.I)
 _APPRO = re.compile(
     r"could not be resolved|Could not transfer artifact|Non-resolvable"
-    r"|could not be found at the URI|Failed to download archive", re.I)
+    r"|could not be found at the URI|Failed to download archive",
+    re.I,
+)
 _ANNULE = "The operation was canceled"
 
 # La FIN du journal, pas le journal : « REFUSE » et les exceptions attendues y trainent partout. Un
@@ -204,7 +219,7 @@ def _finDErreur(journal: str) -> str | None:
     marques = [i for i, ligne in enumerate(lignes) if "##[error]" in ligne]
     if not marques:
         return None
-    return "\n".join(lignes[max(0, marques[-1] - _AVANT_L_ERREUR): marques[-1] + 1])
+    return "\n".join(lignes[max(0, marques[-1] - _AVANT_L_ERREUR) : marques[-1] + 1])
 
 
 def classe(journal: str, ordonnes: list[str]) -> tuple[str, str]:
@@ -232,17 +247,23 @@ def _autoTest() -> int:
         "build\tBuild + tests\t2026-08-29T14:31:22Z [ERROR] Tests run: 5306, Failures: 1\n"
         "build\tBuild + tests\t2026-08-29T14:31:22Z [ERROR]   AppTest.le_stage_partage_reste_ajustable:145 [une scene]\n"
     )
-    assert testsEchoues(resume) == {"AppTest.le_stage_partage_reste_ajustable"}, testsEchoues(resume)
+    assert testsEchoues(resume) == {"AppTest.le_stage_partage_reste_ajustable"}, testsEchoues(
+        resume
+    )
 
     # Forme « detail » : le paquet est present, et les arguments du cas aussi.
     detail = (
         "build\tBuild\t2026-08-29T14:31:27Z [ERROR] fr.univ_amu.iut.analyse.view.ActiviteViewTest"
         ".ouvrir_tout_charge_les_passages(FxRobot) -- Time elapsed: 0.002 s <<< ERROR!\n"
     )
-    assert testsEchoues(detail) == {"ActiviteViewTest.ouvrir_tout_charge_les_passages"}, testsEchoues(detail)
+    assert testsEchoues(detail) == {"ActiviteViewTest.ouvrir_tout_charge_les_passages"}, (
+        testsEchoues(detail)
+    )
 
     # Le sens NEGATIF : la ligne de COMPTE ne nomme aucun test, et ne doit rien produire.
-    compte = "build\tB\t2026-08-29T14:31:27Z [ERROR] Tests run: 40, Failures: 1, Errors: 0, Skipped: 0\n"
+    compte = (
+        "build\tB\t2026-08-29T14:31:27Z [ERROR] Tests run: 40, Failures: 1, Errors: 0, Skipped: 0\n"
+    )
     assert testsEchoues(compte) == set(), testsEchoues(compte)
 
     # Un meme test vu sous les DEUX formes dans le meme journal ne compte qu'une fois.
@@ -292,7 +313,10 @@ def _autoTest() -> int:
         "b\tB\t2026-08-29T14:32:00Z [ERROR]   ScenarioSelectionEcouteTest.personnaliser_la_selection:88\n"
     )
     assert len(testsEchouesOrdonnes(deuxFois)) == 3, testsEchouesOrdonnes(deuxFois)
-    assert tete(testsEchouesOrdonnes(deuxFois)) == "ScenarioSelectionEcouteTest.personnaliser_la_selection"
+    assert (
+        tete(testsEchouesOrdonnes(deuxFois))
+        == "ScenarioSelectionEcouteTest.personnaliser_la_selection"
+    )
 
     # La tete d'une tentative, et sa suite.
     assert tete(ordonnes) == "ScenarioSelectionEcouteTest.personnaliser_la_selection"
@@ -312,23 +336,30 @@ def _autoTest() -> int:
     # la meme conduite.
 
     # Un banc qui vacille : c'est NOUS, et un rejeu ne repare rien.
-    assert classe("", ["ScenarioAccueilTest.chaque_carte"]) == ("DEPOT", UN_BANC), \
-        classe("", ["ScenarioAccueilTest.chaque_carte"])
+    assert classe("", ["ScenarioAccueilTest.chaque_carte"]) == ("DEPOT", UN_BANC), classe(
+        "", ["ScenarioAccueilTest.chaque_carte"]
+    )
 
     # La couche graphique native manque : le runner, et le rejeu est la bonne conduite.
-    natif = ("Could not initialize class com.sun.javafx.font.freetype.OSPango\n"
-             "ExceptionInInitializerError: java.lang.UnsatisfiedLinkError: no javafx_font_pango")
+    natif = (
+        "Could not initialize class com.sun.javafx.font.freetype.OSPango\n"
+        "ExceptionInInitializerError: java.lang.UnsatisfiedLinkError: no javafx_font_pango"
+    )
     assert classe(natif, [])[0] == "RUNNER", classe(natif, [])
 
     # Une JVM entiere qui tombe : le runner aussi, meme si des tests sont nommes.
     assert classe("", [f"T{i}.cas" for i in range(60)])[0] == "RUNNER", "60 tests tombes"
 
     # L'approvisionnement : ni nous ni le runner, et le rejeu est la bonne conduite.
-    appro = ("[ERROR] Plugin org.apache.maven.plugins:maven-surefire-plugin:3.5.6 or one of its\n"
-             "dependencies could not be resolved:\n##[error]Process completed with exit code 1.")
+    appro = (
+        "[ERROR] Plugin org.apache.maven.plugins:maven-surefire-plugin:3.5.6 or one of its\n"
+        "dependencies could not be resolved:\n##[error]Process completed with exit code 1."
+    )
     assert classe(appro, []) == ("FORGE", APPROVISIONNEMENT), classe(appro, [])
-    action = ("##[error]An action could not be found at the URI 'https://codeload.github.com/...'\n"
-              "##[error]Failed to download archive 'https://codeload.github.com/...' after 1 attempts.")
+    action = (
+        "##[error]An action could not be found at the URI 'https://codeload.github.com/...'\n"
+        "##[error]Failed to download archive 'https://codeload.github.com/...' after 1 attempts."
+    )
     assert classe(action, [])[0] == "FORGE", classe(action, [])
 
     # Une annulation : une CONSEQUENCE, pas une cause. Le rejeu ne dit rien tant que la vraie
@@ -383,8 +414,10 @@ def _classement(jours: int) -> int:
             lues += 1
             cle = classe(journal, testsEchouesOrdonnes(journal))
             parts[cle] = parts.get(cle, 0) + 1
-    print(f"CLASSEMENT | fenetre={jours}j | tirages={tirages} | relances={len(rejoues)}"
-          f" | tentatives rouges lues={lues}")
+    print(
+        f"CLASSEMENT | fenetre={jours}j | tirages={tirages} | relances={len(rejoues)}"
+        f" | tentatives rouges lues={lues}"
+    )
     if not lues:
         print("\nAucune tentative lue : rien a classer.")
         return 0
@@ -392,8 +425,10 @@ def _classement(jours: int) -> int:
     for (qui, pourquoi), n in sorted(parts.items(), key=lambda c: (-c[1], c[0])):
         print(f"  {n:3d}  {100 * n / lues:5.1f} %  {qui:12s} {pourquoi}")
     rejouables = sum(n for (qui, _), n in parts.items() if qui in ("RUNNER", "FORGE"))
-    print(f"\n  {rejouables}/{lues} valent un rejeu ({100 * rejouables / lues:.0f} %)."
-          f" Les autres le rendent inutile : la cause revient au tirage suivant.")
+    print(
+        f"\n  {rejouables}/{lues} valent un rejeu ({100 * rejouables / lues:.0f} %)."
+        f" Les autres le rendent inutile : la cause revient au tirage suivant."
+    )
     return 0
 
 
@@ -416,8 +451,10 @@ def main() -> int:
             else:
                 muets.append(r["id"])
     tetes, suites = comptesParRang(parTentative)
-    print(f"RELEVE bancs | fenetre={jours}j | tirages={tirages} | relances={len(rejoues)}"
-          f" | en tete={len(tetes)} | dans la suite={len(suites)}")
+    print(
+        f"RELEVE bancs | fenetre={jours}j | tirages={tirages} | relances={len(rejoues)}"
+        f" | en tete={len(tetes)} | dans la suite={len(suites)}"
+    )
     if not tetes:
         print("\nAucun test nomme dans les tentatives echouees.")
     # En tete d'abord : c'est la population des SUSPECTS, et elle est la seule a designer quelque
@@ -432,8 +469,8 @@ def main() -> int:
         print(f"\n  {len(emportes)} test(s) JAMAIS en tete : victimes seules, rien ne les accuse.")
     if muets:
         print(
-            "\n%d tentative(s) echouee(s) sans aucun test nomme, donc echouees pour autre chose : %s."
-            % (len(muets), ", ".join(str(i) for i in sorted(set(muets))))
+            f"\n{len(muets)} tentative(s) echouee(s) sans aucun test nomme, donc "
+            f"echouees pour autre chose : {', '.join(str(i) for i in sorted(set(muets)))}."
         )
     return 0
 

@@ -23,7 +23,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT  # noqa: E402
+from _commun import RACINE_DEPOT
 
 ICI = pathlib.Path(__file__).parent
 # Le champ `lus` (issue #5007) se lit en groupe NON capturant, et ce n'est pas un detail : les
@@ -31,12 +31,15 @@ ICI = pathlib.Path(__file__).parent
 # `resserrements()` deballe des tuples de QUATRE elements. Un groupe capturant les decalerait, le
 # rapport lirait le mauvais nombre, et rien ne rougirait. `?` est accepte parce qu'un garde qui ne
 # declare pas encore son compte n'est pas une panne : c'est une dette, que le manifeste comptera.
-LIGNE_CLIQUET = re.compile(r"^ADR (\d+) \| lus=(?:\?|\d+) \| suspects=(\d+) \| cliquet=(\d+) \| verdict=(\S+)$", re.M)
+LIGNE_CLIQUET = re.compile(
+    r"^ADR (\d+) \| lus=(?:\?|\d+) \| suspects=(\d+) \| cliquet=(\d+) \| verdict=(\S+)$", re.M
+)
 LIGNE_LOUPE = re.compile(r"^LOUPE (\d+) \| lus=(?:\?|\d+) \| candidats=(\d+)$", re.M)
 # Le PLANCHER est la polarite inverse du cliquet, et il a sa propre ligne. Ce rapport ne la lisait
 # pas : le garde des renvois annoncait « a-relever » a chaque passage, sans que rien ne le montre.
 LIGNE_PLANCHER = re.compile(
-    r"^PLANCHER (\d+) \| lus=(?:\?|\d+) \| mesure=(\d+) \| plancher=(\d+) \| verdict=(\S+)$", re.M)
+    r"^PLANCHER (\d+) \| lus=(?:\?|\d+) \| mesure=(\d+) \| plancher=(\d+) \| verdict=(\S+)$", re.M
+)
 
 
 def executer(script: pathlib.Path) -> str:
@@ -72,11 +75,21 @@ def collecter():
         sortie = executer(script)
         lus = 0
         for m in LIGNE_CLIQUET.finditer(sortie):
-            num, suspects, cliquet, verdict = m.group(1), int(m.group(2)), int(m.group(3)), m.group(4)
+            num, suspects, cliquet, verdict = (
+                m.group(1),
+                int(m.group(2)),
+                int(m.group(3)),
+                m.group(4),
+            )
             cliquets.append((num, suspects, cliquet, verdict))
             lus += 1
         for m in LIGNE_PLANCHER.finditer(sortie):
-            num, mesure, plancher, verdict = m.group(1), int(m.group(2)), int(m.group(3)), m.group(4)
+            num, mesure, plancher, verdict = (
+                m.group(1),
+                int(m.group(2)),
+                int(m.group(3)),
+                m.group(4),
+            )
             planchers.append((num, mesure, plancher, verdict))
             lus += 1
         if not lus:
@@ -124,7 +137,9 @@ def rendre(cliquets, planchers, loupes, muets, markdown: bool) -> str:
     if regressions:
         out.append(f"{h2}⚠ Régressions (un cas a été ajouté)")
         for num, s, c in regressions:
-            out.append(f"{li}ADR {num} : {s} suspects pour un cliquet de {c}. À corriger sur la PR fautive.")
+            out.append(
+                f"{li}ADR {num} : {s} suspects pour un cliquet de {c}. À corriger sur la PR fautive."
+            )
         out.append("")
 
     if a_resserrer:
@@ -153,9 +168,11 @@ def rendre(cliquets, planchers, loupes, muets, markdown: bool) -> str:
         out += ["", f"{h2}\u26a0 Verdicts que ce rapport n'a pas su lire"]
         for nom, rendu in muets:
             out.append(f"{li}{nom} : {rendu}")
-        out.append(f"{li}Ces scripts ont été lancés ; leur sortie ne porte aucun verdict que ce"
-                   f" rapport sache lire. Un registre et un garde qui refuse de conclure sont"
-                   f" légitimement dans ce cas ; une ligne de verdict mal formée ne l'est pas.")
+        out.append(
+            f"{li}Ces scripts ont été lancés ; leur sortie ne porte aucun verdict que ce"
+            f" rapport sache lire. Un registre et un garde qui refuse de conclure sont"
+            f" légitimement dans ce cas ; une ligne de verdict mal formée ne l'est pas."
+        )
 
     return "\n".join(out) + "\n"
 
@@ -187,17 +204,27 @@ def auto_test() -> int:
         sonde.write_text("import os\nprint(os.getcwd())\n", encoding="utf-8")
 
         # 1. Depuis le dépôt : la sonde doit déjà voir la racine, et non `scripts/adr`.
-        verifie("lancé du dépôt, le garde tourne à la racine", executer(sonde).strip(), str(RACINE_DEPOT))
+        verifie(
+            "lancé du dépôt, le garde tourne à la racine",
+            executer(sonde).strip(),
+            str(RACINE_DEPOT),
+        )
 
         # 2. Depuis AILLEURS : c est le cas qui a corrompu quatre ADR. Sans le premier, ce cas
         #    passerait au vert pour la mauvaise raison, le répertoire d essai étant peut-être le bon.
         ancien = os.getcwd()
         try:
             os.chdir(brut)
-            verifie("lancé d ailleurs, le garde tourne QUAND MÊME à la racine",
-                    executer(sonde).strip(), str(RACINE_DEPOT))
-            verifie("et le répertoire d essai n était pas déjà la racine",
-                    os.getcwd() == str(RACINE_DEPOT), False)
+            verifie(
+                "lancé d ailleurs, le garde tourne QUAND MÊME à la racine",
+                executer(sonde).strip(),
+                str(RACINE_DEPOT),
+            )
+            verifie(
+                "et le répertoire d essai n était pas déjà la racine",
+                os.getcwd() == str(RACINE_DEPOT),
+                False,
+            )
         finally:
             os.chdir(ancien)
 

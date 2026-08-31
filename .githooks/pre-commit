@@ -29,4 +29,16 @@ STAGED_JAVA=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.java$
 # Re-stage uniquement les fichiers qui étaient déjà stagés
 echo "$STAGED_JAVA" | xargs git add
 
+# Le pendant Python de ce que Spotless fait au Java, juste au-dessus (#5022). Même contrat : on
+# formate, on re-stage, et on ne BLOQUE PAS le commit sur une question de forme. `ruff check` n'est
+# volontairement pas lancé ici : il porte des jugements qu'un commit en cours n'a pas à trancher, et
+# c'est la CI qui les rend.
+STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.py$' || true)
+if [ -n "$STAGED_PY" ]; then
+  if command -v ruff >/dev/null 2>&1; then
+    echo "$STAGED_PY" | xargs ruff format --quiet >/dev/null 2>&1 || true
+    echo "$STAGED_PY" | xargs git add
+  fi
+fi
+
 exit 0

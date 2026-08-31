@@ -34,7 +34,8 @@ GARDE = RACINE / "scripts" / "adr" / "4395-renvois-en-javadoc.py"
 # sans rien dire, et ce script a annonce que tout allait bien pendant qu il ne lisait rien (#5021).
 # Apprendre le champ de #5014 aurait repare ce cas-la et laisse le suivant.
 VERDICT = re.compile(
-    r"^PLANCHER (\d+) \|.*?\bmesure=(\d+)\b.*?\bplancher=(\d+)\b.*?\bverdict=(\S+)\s*$", re.M)
+    r"^PLANCHER (\d+) \|.*?\bmesure=(\d+)\b.*?\bplancher=(\d+)\b.*?\bverdict=(\S+)\s*$", re.M
+)
 
 # Ce qui ANNONCE un plancher, quel que soit le reste de la ligne. Sert a distinguer « le garde n en a
 # rendu aucun » de « il en a rendu et je n ai pas su les lire ».
@@ -53,7 +54,9 @@ def mesures() -> dict:
     planchers et qu aucun ne se lit, ce script refuse au lieu de conclure. C est le defaut qui l a
     rendu muet le 2026-08-31, et son message rassurait (#5021).
     """
-    rendu = subprocess.run([sys.executable, str(GARDE)], capture_output=True, text=True, cwd=RACINE)
+    rendu = subprocess.run(
+        [sys.executable, str(GARDE)], capture_output=True, text=True, cwd=RACINE, check=False
+    )
     return lire(rendu.stdout)
 
 
@@ -67,8 +70,9 @@ def lire(sortie: str) -> dict:
     annoncees = len(ANNONCE.findall(sortie))
     if annoncees and not lues:
         raise VerdictIllisible(
-            "REFUS : le garde annonce %d plancher(s) et aucun ne se lit. Son format a change, et ce\n"
-            "script ne conclut pas sur ce qu il n a pas su lire." % annoncees)
+            f"REFUS : le garde annonce {annoncees} plancher(s) et aucun ne se lit. Son "
+            "format a change, et ce\nscript ne conclut pas sur ce qu il n a pas su lire."
+        )
     return lues
 
 
@@ -106,21 +110,21 @@ def releve(ecrire: bool) -> int:
     for numero, mesure in sorted(a_relever.items()):
         adr = fichier_de(numero)
         if adr is None:
-            print("  ADR %s introuvable" % numero, file=sys.stderr)
+            print(f"  ADR {numero} introuvable", file=sys.stderr)
             return 1
         cle = cle_inventaire(adr)
         touches = []
         for cible in (adr, DECISIONS / "index.md"):
             texte = cible.read_text(encoding="utf-8")
-            neuf = CHAMP.sub("floor: %d" % mesure, texte) if cible == adr else texte
+            neuf = CHAMP.sub(f"floor: {mesure}", texte) if cible == adr else texte
             if cle:
                 neuf = pose(neuf, cle, mesure)
             if neuf != texte:
                 touches.append(cible.name)
                 if ecrire:
                     cible.write_text(neuf, encoding="utf-8")
-        print("  ADR %s → %d   (%s)" % (numero, mesure, ", ".join(touches) or "rien à changer"))
-    print("\n%d plancher(s) %s." % (len(a_relever), "relevé(s)" if ecrire else "à relever"))
+        print(f"  ADR {numero} → {mesure}   ({', '.join(touches) or 'rien à changer'})")
+    print(f"\n{len(a_relever)} plancher(s) {'relevé(s)' if ecrire else 'à relever'}.")
     return 0
 
 
@@ -130,22 +134,34 @@ def auto_test() -> int:
     def verifie(libelle, obtenu, attendu):
         nonlocal echecs
         if obtenu == attendu:
-            print("  ✔ %s" % libelle)
+            print(f"  ✔ {libelle}")
         else:
-            print("  ✘ %s : attendu %r, obtenu %r" % (libelle, attendu, obtenu))
+            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
             echecs = 1
 
     balise = "vaut <!--inv:essai-->3 136<!--/inv--> aujourd'hui"
-    verifie("l'espace insécable du séparateur est préservée",
-            pose(balise, "essai", 3160), "vaut <!--inv:essai-->3 160<!--/inv--> aujourd'hui")
-    verifie("un chiffre sans séparateur le reste",
-            pose("<!--inv:essai-->996<!--/inv-->", "essai", 1003), "<!--inv:essai-->1003<!--/inv-->")
-    verifie("une autre balise n'est pas touchée",
-            pose("<!--inv:autre-->12<!--/inv-->", "essai", 99), "<!--inv:autre-->12<!--/inv-->")
+    verifie(
+        "l'espace insécable du séparateur est préservée",
+        pose(balise, "essai", 3160),
+        "vaut <!--inv:essai-->3 160<!--/inv--> aujourd'hui",
+    )
+    verifie(
+        "un chiffre sans séparateur le reste",
+        pose("<!--inv:essai-->996<!--/inv-->", "essai", 1003),
+        "<!--inv:essai-->1003<!--/inv-->",
+    )
+    verifie(
+        "une autre balise n'est pas touchée",
+        pose("<!--inv:autre-->12<!--/inv-->", "essai", 99),
+        "<!--inv:autre-->12<!--/inv-->",
+    )
     # Le sens NEGATIF : sans ce cas, un `pose` qui rendrait toujours son entrée passerait le
     # troisième et n'aurait rien prouvé.
-    verifie("la balise visée change bel et bien",
-            pose("<!--inv:essai-->12<!--/inv-->", "essai", 99) != "<!--inv:essai-->12<!--/inv-->", True)
+    verifie(
+        "la balise visée change bel et bien",
+        pose("<!--inv:essai-->12<!--/inv-->", "essai", 99) != "<!--inv:essai-->12<!--/inv-->",
+        True,
+    )
     verifie("le garde rend bien deux planchers", len(mesures()), 2)
 
     # Les trois cas du format, et c est le troisieme qui manquait le 2026-08-31. Le motif se lit sur
@@ -154,18 +170,32 @@ def auto_test() -> int:
     actuel = "PLANCHER 4395 | lus=? | mesure=3246 | plancher=3245 | verdict=a-relever"
     futur = "PLANCHER 4395 | lus=12 | source=git | mesure=3246 | plancher=3245 | verdict=a-relever"
     verifie("le format d origine se lit", bool(VERDICT.search(ancien)), True)
-    verifie("le champ lus= inséré par #5014 ne fait plus perdre la ligne", bool(VERDICT.search(actuel)), True)
-    verifie("un champ INCONNU de plus ne la fera pas perdre non plus", bool(VERDICT.search(futur)), True)
-    verifie("la mesure lue est la bonne, et non le premier nombre venu",
-            VERDICT.search(actuel).group(2), "3246")
+    verifie(
+        "le champ lus= inséré par #5014 ne fait plus perdre la ligne",
+        bool(VERDICT.search(actuel)),
+        True,
+    )
+    verifie(
+        "un champ INCONNU de plus ne la fera pas perdre non plus", bool(VERDICT.search(futur)), True
+    )
+    verifie(
+        "la mesure lue est la bonne, et non le premier nombre venu",
+        VERDICT.search(actuel).group(2),
+        "3246",
+    )
 
     # Le sens NEGATIF, celui qui donne son prix aux trois precedents : n avoir rien reconnu n est pas
     # avoir constate que tout allait bien. Sans ce cas, un motif qui cesserait de reconnaitre quoi que
     # ce soit rendrait un dictionnaire vide et le script conclurait au calme, ce qu il a fait.
     annoncees = len(ANNONCE.findall(actuel))
-    verifie("une ligne d un format inconnu reste ANNONCÉE, donc comptée comme illisible", annoncees, 1)
-    verifie("une sortie sans aucun plancher n annonce rien, et c est legitime",
-            len(ANNONCE.findall("rien à signaler")), 0)
+    verifie(
+        "une ligne d un format inconnu reste ANNONCÉE, donc comptée comme illisible", annoncees, 1
+    )
+    verifie(
+        "une sortie sans aucun plancher n annonce rien, et c est legitime",
+        len(ANNONCE.findall("rien à signaler")),
+        0,
+    )
 
     # Le REFUS lui-meme, et non son calcul. Sans ces trois cas, retirer la condition de refus laissait
     # le banc vert : le chemin qui rend ce script honnete n etait garde par rien.
