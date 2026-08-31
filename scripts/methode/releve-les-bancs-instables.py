@@ -10,7 +10,7 @@ suite complete, ou le Stage de TestFX est partage entre les classes d'un meme fo
 
 Les runs passes SONT les tirages. Ce releve les lit.
 
-Usage : releve-les-bancs-instables.py [--jours N] [--auto-test]
+Usage : releve-les-bancs-instables.py [--jours N] [--classe] [--auto-test]
 """
 
 from __future__ import annotations
@@ -169,6 +169,62 @@ def journalDeTentative(idRun: int, tentative: int, atelier: str = "build") -> st
         return "\n".join(morceaux)
 
 
+# ---- Classer une tentative rouge (#4187) ----
+#
+# Le releve savait dire « echouee pour autre chose » ; il ne disait pas QUOI. Or sur 57 tentatives
+# rouges de 21 jours, ce seau valait 20, et il portait QUATRE causes dont une seule appelle un rejeu.
+# Classer, c'est ce qui remplace le rejeu a l'aveugle par une conduite.
+
+UN_BANC = "un ou deux bancs qui vacillent"
+EFFONDREMENT = "effondrement massif de la JVM"
+NATIF = "couche graphique native absente"
+APPROVISIONNEMENT = "artefact ou action indisponible"
+ANNULATION = "annule parce qu'une autre etape avait deja rouge"
+INCONNU = "aucune cause reconnue dans le journal"
+
+# Au-dela, ce n'est plus un banc qui tombe : c'est la JVM qui emporte tout ce qui restait a jouer.
+# Le plus gros rouge NORMAL du depot en 21 jours en a fait tomber 2 ; l'effondrement, plus de 1 300.
+SEUIL_EFFONDREMENT = 50
+
+_NATIF = re.compile(r"OSPango|UnsatisfiedLinkError|no javafx_font", re.I)
+_APPRO = re.compile(
+    r"could not be resolved|Could not transfer artifact|Non-resolvable"
+    r"|could not be found at the URI|Failed to download archive", re.I)
+_ANNULE = "The operation was canceled"
+
+# La FIN du journal, pas le journal : « REFUSE » et les exceptions attendues y trainent partout. Un
+# premier dessin lisait le journal entier et rangeait 20 tentatives sur 20 sous « garde de methode »,
+# parce qu'un garde VERT imprime aussi son refus.
+_AVANT_L_ERREUR = 12
+
+
+def _finDErreur(journal: str) -> str | None:
+    """Les lignes autour de la DERNIERE erreur, ou None si le journal n'en porte aucune."""
+    lignes = journal.splitlines()
+    marques = [i for i, ligne in enumerate(lignes) if "##[error]" in ligne]
+    if not marques:
+        return None
+    return "\n".join(lignes[max(0, marques[-1] - _AVANT_L_ERREUR): marques[-1] + 1])
+
+
+def classe(journal: str, ordonnes: list[str]) -> tuple[str, str]:
+    """A qui ce rouge appartient, et pourquoi. Rend `INDETERMINE` plutot que d'inventer une cause."""
+    if _NATIF.search(journal):
+        return ("RUNNER", NATIF)
+    if len(ordonnes) >= SEUIL_EFFONDREMENT:
+        return ("RUNNER", EFFONDREMENT)
+    if ordonnes:
+        return ("DEPOT", UN_BANC)
+    fin = _finDErreur(journal)
+    if fin is None:
+        return ("INDETERMINE", INCONNU)
+    if _APPRO.search(fin):
+        return ("FORGE", APPROVISIONNEMENT)
+    if _ANNULE in fin:
+        return ("CASCADE", ANNULATION)
+    return ("INDETERMINE", INCONNU)
+
+
 def _autoTest() -> int:
     """Les temoins, sur des extraits de journaux REELS de la forge."""
     # Forme « resume » : une ligne par test, a la fin du rapport surefire.
@@ -249,7 +305,59 @@ def _autoTest() -> int:
     assert tetes["ScenarioSelectionEcouteTest.personnaliser_la_selection"] == 1, tetes
     assert suites["ScenarioSelectionEcouteTest.personnaliser_la_selection"] == 1, suites
 
-    print("auto-test : 14 temoins verts")
+    # ---- Le CLASSEMENT d'une tentative rouge (#4187) ----
+    #
+    # Les extraits viennent de journaux REELS de la forge, cites au plus court. Le releve savait deja
+    # dire « echouee pour autre chose » ; il ne disait pas QUOI, et les quatre causes n'appellent pas
+    # la meme conduite.
+
+    # Un banc qui vacille : c'est NOUS, et un rejeu ne repare rien.
+    assert classe("", ["ScenarioAccueilTest.chaque_carte"]) == ("DEPOT", UN_BANC), \
+        classe("", ["ScenarioAccueilTest.chaque_carte"])
+
+    # La couche graphique native manque : le runner, et le rejeu est la bonne conduite.
+    natif = ("Could not initialize class com.sun.javafx.font.freetype.OSPango\n"
+             "ExceptionInInitializerError: java.lang.UnsatisfiedLinkError: no javafx_font_pango")
+    assert classe(natif, [])[0] == "RUNNER", classe(natif, [])
+
+    # Une JVM entiere qui tombe : le runner aussi, meme si des tests sont nommes.
+    assert classe("", [f"T{i}.cas" for i in range(60)])[0] == "RUNNER", "60 tests tombes"
+
+    # L'approvisionnement : ni nous ni le runner, et le rejeu est la bonne conduite.
+    appro = ("[ERROR] Plugin org.apache.maven.plugins:maven-surefire-plugin:3.5.6 or one of its\n"
+             "dependencies could not be resolved:\n##[error]Process completed with exit code 1.")
+    assert classe(appro, []) == ("FORGE", APPROVISIONNEMENT), classe(appro, [])
+    action = ("##[error]An action could not be found at the URI 'https://codeload.github.com/...'\n"
+              "##[error]Failed to download archive 'https://codeload.github.com/...' after 1 attempts.")
+    assert classe(action, [])[0] == "FORGE", classe(action, [])
+
+    # Une annulation : une CONSEQUENCE, pas une cause. Le rejeu ne dit rien tant que la vraie
+    # cause n'est pas lue ailleurs.
+    assert classe("##[error]The operation was canceled.", [])[0] == "CASCADE"
+
+    # Le sens NEGATIF, celui qui empeche le classement de tout absorber : un journal qui ne porte
+    # AUCUNE erreur ne se range pas. Trois tentatives reelles sont dans ce cas, et les ranger de
+    # force aurait invente une cause (ADR 2213).
+    assert classe("Cleaning up orphan processes\n", [])[0] == "INDETERMINE"
+
+    # Et l'inverse : un journal ou « REFUSE » traine parce qu'un garde VERT explique son refus ne
+    # doit pas passer pour un echec de garde. Ce faux positif a range 20 tentatives sur 20 lors du
+    # premier dessin, et c'est ce qui a fait lire la ligne d'erreur FINALE plutot que le journal.
+    vert = "Ce garde REFUSE plutot que de conclure sur ce qu il n a pas lu.\nverdict=ok\n"
+    assert classe(vert, [])[0] == "INDETERMINE", classe(vert, [])
+
+    # LE temoin qui tient la fenetre. Un journal ou le motif d'approvisionnement traine LOIN au
+    # dessus, alors que l'erreur finale est une annulation. Lire le journal entier rend « FORGE » et
+    # se trompe de conduite : on rejouerait, alors que la vraie cause est ailleurs, dans l'etape qui
+    # a rouge la premiere. Sans ce temoin, remplacer la fenetre par le journal entier survivait.
+    loin = (
+        "[INFO] telechargement: cette dependance could not be resolved au premier essai, reprise\n"
+        + "[INFO] compilation\n" * 40
+        + "##[error]The operation was canceled.\n"
+    )
+    assert classe(loin, [])[0] == "CASCADE", classe(loin, [])
+
+    print("auto-test : 24 temoins verts")
     return 0
 
 
@@ -259,10 +367,42 @@ def _jours() -> int:
     return 21
 
 
+def _classement(jours: int) -> int:
+    """A qui appartiennent les rouges rejoues, et donc lesquels valent un rejeu."""
+    rejoues, tirages = relances(jours)
+    if not tirages:
+        print("Aucun tirage lu : `gh` est-il installe et authentifie ?")
+        return 1
+    parts: dict[tuple[str, str], int] = {}
+    lues = 0
+    for r in rejoues:
+        for tentative in range(1, r["tentatives"]):
+            journal = journalDeTentative(r["id"], tentative)
+            if not journal:
+                continue
+            lues += 1
+            cle = classe(journal, testsEchouesOrdonnes(journal))
+            parts[cle] = parts.get(cle, 0) + 1
+    print(f"CLASSEMENT | fenetre={jours}j | tirages={tirages} | relances={len(rejoues)}"
+          f" | tentatives rouges lues={lues}")
+    if not lues:
+        print("\nAucune tentative lue : rien a classer.")
+        return 0
+    print("\n  A QUI CE ROUGE APPARTIENT       et ce que la conduite en fait")
+    for (qui, pourquoi), n in sorted(parts.items(), key=lambda c: (-c[1], c[0])):
+        print(f"  {n:3d}  {100 * n / lues:5.1f} %  {qui:12s} {pourquoi}")
+    rejouables = sum(n for (qui, _), n in parts.items() if qui in ("RUNNER", "FORGE"))
+    print(f"\n  {rejouables}/{lues} valent un rejeu ({100 * rejouables / lues:.0f} %)."
+          f" Les autres le rendent inutile : la cause revient au tirage suivant.")
+    return 0
+
+
 def main() -> int:
     if "--auto-test" in sys.argv:
         return _autoTest()
     jours = _jours()
+    if "--classe" in sys.argv:
+        return _classement(jours)
     rejoues, tirages = relances(jours)
     if not tirages:
         print("Aucun tirage lu : `gh` est-il installe et authentifie ?")

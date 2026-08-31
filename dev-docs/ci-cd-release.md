@@ -728,6 +728,47 @@ Deux exigences, apprises de ce qui a failli passer :
   **lui seul**. Vécu pendant #3293 : une première tentative de neutralisation n'avait rien modifié, et
   le vert obtenu ne prouvait rien.
 
+## Un rouge se classe avant de se rejouer (#4187)
+
+Un rouge de CI se rejouait à l'aveugle, et le geste passait pour raisonnable : on avait tous vu la
+suite repartir verte sans qu'une ligne ait changé. Sur 21 jours, **55 passages sur 1 233 ont été
+rejoués à la main**, soit 4,5 %, et personne ne savait ce que ce chiffre recouvrait.
+
+Le relevé le dit maintenant :
+
+```bash
+python3 scripts/methode/releve-les-bancs-instables.py --classe --jours 21
+```
+
+| À qui le rouge appartient | Part | La conduite |
+|---|---:|---|
+| **DÉPÔT**, un ou deux bancs qui vacillent | 56 % | Ne pas rejouer. Ouvrir ou nourrir l'issue du banc |
+| **CASCADE**, annulé parce qu'une autre étape avait déjà rougi | 19 % | Ne pas rejouer. Lire l'étape qui a rougi la première |
+| **FORGE**, artefact ou action indisponible | 11 % | Rejouer, une fois |
+| **RUNNER**, JVM effondrée ou couche graphique absente | 9 % | Rejouer, une fois, et le consigner |
+| **INDÉTERMINÉ**, aucune cause reconnue | 5 % | Lire le journal. Ne pas rejouer sans l'avoir lu |
+
+**Un rouge sur cinq seulement vaut un rejeu.** Les quatre autres reviennent au tirage suivant, chez
+quelqu'un d'autre, sur une demande qui n'a rien à voir. C'est le coût réel du geste réflexe : il ne
+supprime pas le rouge, il le déplace et en efface la trace, puisque la tentative rejouée écrase le
+verdict de la précédente dans ce que la forge montre.
+
+**La cascade existe à deux niveaux, et un seul était modélisé.** Le relevé distinguait déjà, entre
+tests, celui qui tombe en tête de ceux qu'il emporte. Le même phénomène joue entre **jobs** : 11 des
+57 tentatives rouges ne portent aucun test tombé, seulement un « The operation was canceled » qui dit
+qu'une étape voisine avait déjà échoué. Chercher la cause dans le job annulé ne mène nulle part.
+
+**Ce qui compte est la fin du journal, pas le journal.** Un premier classement lisait le texte entier
+et rangeait 20 tentatives sur 20 sous « un garde a refusé », parce qu'un garde **vert** imprime aussi
+le mot « REFUSE » en expliquant ce qu'il aurait refusé. De même, `java.net.ConnectException` apparaît
+348 fois dans des journaux parfaitement sains : c'est une coupure réseau qu'un test **provoque
+exprès**. Ce qui a fait échouer se lit autour de la dernière ligne d'erreur, et nulle part ailleurs.
+
+**Quand un rouge de runner cesse d'en être un.** Deux fois de suite sur la même semaine, avec la même
+signature, ce n'est plus le runner : c'est une dépendance du dépôt à quelque chose que l'image ne
+garantit pas. Les deux tentatives à couche graphique absente relevées sur 21 jours sont sous ce
+seuil, et restent donc classées runner.
+
 ## Épinglage des actions et conteneurs (#2737)
 
 Chaque `uses:` désigne un **contenu**, jamais un nom : une action est figée sur un **SHA de commit**,
