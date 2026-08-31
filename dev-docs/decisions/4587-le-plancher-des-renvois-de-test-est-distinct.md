@@ -8,7 +8,7 @@ decided_at: 2026-08-28
 verification: certaine
 enforced_by:
   - "scripts/adr/4395-renvois-en-javadoc.py"
-floor: 1132
+floor: 1134
 inv_key: plancher-renvois-test
 verified:
   - by: machine:ci
@@ -29,7 +29,7 @@ de `src/main/java`. Il n'a jamais lu `src/test/java`.
 a été trouvé en passe 7 de la clôture de #4502, en mesurant pourquoi deux gardes sur treize lisaient
 la production seule. L'autre, `2635`, était une exception justifiée ; celui-ci était un oubli.
 
-Le plancher vaut aujourd'hui **<!--inv:plancher-renvois-test-->1 132<!--/inv-->**, sur 608 fichiers
+Le plancher vaut aujourd'hui **<!--inv:plancher-renvois-test-->1 134<!--/inv-->**, sur 608 fichiers
 porteurs parmi 825. Ce chiffre-là **bouge** - il se relève de ce que chaque lot ajoute - alors que la
 mesure d'ouverture ci-dessus est figée : les mêler dans une phrase datée la rendrait fausse au
 premier relevé, et c'est ce que #4683 a corrigé ici.
