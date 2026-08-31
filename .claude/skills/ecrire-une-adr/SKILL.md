@@ -103,9 +103,27 @@ Le cycle demande partout ce qui a été **livré**, et nulle part si ce qui éta
 bilan de la passe 12 liste ; il ne confronte pas. Une promesse à moitié tenue produit donc un bilan
 juste et une clôture fausse.
 
-**La promesse se lit sous la forme qu'elle a prise.** Le « fini quand » de chaque lot est la
-meilleure, quand il est là. Il ne l'est pas souvent : sur 70 EPIC clos, **3** en portent un. À
-défaut, on confronte le corps de l'EPIC, sa section « ce que porte cet EPIC », sa liste de lots.
+**La promesse se relit lot par lot, et les lots s'énumèrent.** Un lot est une sous-issue depuis
+#4829, et son critère de fin vit dans son corps depuis #4975. La passe les prend un par un plutôt que
+de juger à l'impression, exactement comme la passe 11 énumère les décisions au lieu de conclure « la
+passe a rendu quelque chose ».
+
+```bash
+gh issue view <EPIC> --json subIssues -q '.subIssues.nodes[] | "\(.number) \(.state) \(.title)"'
+```
+
+**Ce que le chantier a promis se lit alors sur trois surfaces, dans cet ordre** : le critère de fin de
+chaque lot, quand il est là ; à défaut le corps de l'EPIC, sa section « ce que porte cet EPIC » et sa
+liste de lots ; et le bilan de la passe 12, qui liste ce qui a été livré.
+
+**Combien de lots portent le leur, et comment le savoir.** `scripts/adr/loupe-4992-lots-sans-critere.py`
+le dit pour le dépôt entier, et le rapport du lundi le publie. Mesuré le 2026-08-31 : **13 lots
+ouverts sur 21 n'en portaient aucun**, sur les 26 chantiers ouverts depuis que la règle existe.
+
+Ce chiffre remplace un « 3 sur 70 » qui a longtemps servi à justifier qu'on ne relise pas les
+critères. Il mêlait deux populations, 67 des 70 chantiers étant antérieurs à la règle, et ne
+cherchait qu'une des trois formulations en usage (#4951). La leçon vaut au-delà de ce chiffre :
+**un comptage qui sert à renoncer se vérifie avant de renoncer.**
 
 **Un « non » suspend la clôture**, et il n'y a que deux issues :
 
