@@ -5,9 +5,8 @@ status: stable
 article: A3
 chantier: "#4846 (EPIC #4511)"
 decided_at: 2026-08-31
-verification: probable
-enforced_by:
-  - "scripts/methode/passes-citees-existent.py"
+verification: humaine
+loupe: "aucun motif ne lit si une passe est bien placee : la question se pose a l insertion, et seule sa consequence, la resolution des citations, est tenue par un script"
 verified:
   - by: machine:ci
     at: 2026-08-31
@@ -69,10 +68,11 @@ récrit pas l'histoire.
 
 `scripts/methode/passes-citees-existent.py` refuse une citation qui désigne une passe inexistante :
 il dérive les bornes des titres du cycle, lit **les deux extrémités** d'un intervalle, et s'exclut
-lui-même de son corpus.
+lui-même de son corpus. C'est la **conséquence** de la seconde moitié, pas la décision.
 
-Il ne voit pas la première moitié de cette décision. Qu'une passe soit **bien placée** ne se mesure
-pas ; cela se discute à l'insertion, et c'est la raison du niveau `probable`.
+La première moitié ne se mesure pas. Qu'une passe soit **bien placée** se discute à l'insertion, et
+lui coller un script fabriquerait un contrôle creux, c'est-à-dire pire que rien. D'où le niveau
+`humaine`, comme ses deux voisines de cycle.
 
 ## Ce qu'un lecteur futur pourrait défaire
 
