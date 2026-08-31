@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -112,19 +113,19 @@ class ParcoursSitesVersPassageE2ETest {
         // clic immédiat les rate sous charge - « returned 1 nodes, but no nodes were visible ». Sept
         // occurrences en deux jours, toujours sur une carte tardive, jamais sur la première (#3823).
         // C'est le motif « interact puis assertion immédiate » que #3717 avait audité.
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("Mes sites").queryAll().stream().anyMatch(Node::isVisible));
+        Attente.que(
+                () -> robot.lookup("Mes sites").queryAll().stream().anyMatch(Node::isVisible),
+                "l'entrée « Mes sites » devient visible",
+                10 * 1000L);
         robot.clickOn("Mes sites");
         assertThat(navigation.getVueCourante()).isEqualTo("sites");
 
         // 2) Carte du site (« Carré 640380 ») → écran M-Site-detail. Depuis le déport #1212, les
         // cartes se chargent hors du fil JavaFX (vrai exécuteur asynchrone ici) : attendre leur rendu.
-        WaitForAsyncUtils.waitFor(
-                5,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("Carré " + CARRE).tryQuery().isPresent());
+        Attente.que(
+                () -> robot.lookup("Carré " + CARRE).tryQuery().isPresent(),
+                "le carré cherché paraît dans la liste",
+                5 * 1000L);
         robot.clickOn("Carré " + CARRE);
         assertThat(navigation.getVueCourante()).isEqualTo("site-detail");
         TableView<?> passages = robot.lookup("#tablePassages").queryAs(TableView.class);

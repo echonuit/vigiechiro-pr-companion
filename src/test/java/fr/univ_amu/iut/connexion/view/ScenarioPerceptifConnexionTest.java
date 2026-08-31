@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
@@ -25,7 +26,6 @@ import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
@@ -35,7 +35,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.WaitForAsyncUtils;
 
 /// Les scénarios qui **jouent** `S1-26` et `S1-27`, pour qu'un humain les tranche en regardant (#3791,
 /// EPIC #3667).
@@ -155,10 +154,10 @@ class ScenarioPerceptifConnexionTest {
         // C'est ici que se joue le cas : la zone de progression paraît d'abord, seule, et le bandeau
         // n'arrive qu'à la fin. Attendre le BANDEAU, et non la zone, garantit que le film contient
         // les deux moments - donc le passage de l'un à l'autre, qui est ce qu'on juge.
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible());
+        Attente.que(
+                () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible(),
+                "le bandeau de statut de connexion paraît",
+                10 * 1000L);
         // Le moment que ce cas existe pour montrer : le bandeau vient de remplacer la zone de
         // progression, et c'est ce passage qu'on juge.
         Respiration.surLeMomentCle(robot);

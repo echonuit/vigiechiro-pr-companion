@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -29,7 +30,6 @@ import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
@@ -212,10 +212,10 @@ class MesSitesViewTest {
 
         robot.clickOn("#champToken").write("jeton-de-recette");
         robot.clickOn("#boutonConnecter");
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible());
+        Attente.que(
+                () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible(),
+                "le bandeau de statut paraît",
+                10 * 1000L);
         Respiration.leTempsDeLire(robot);
 
         // ADR 4188 : une modale se filme avec son écran de départ ET son écran d'arrivée. On la

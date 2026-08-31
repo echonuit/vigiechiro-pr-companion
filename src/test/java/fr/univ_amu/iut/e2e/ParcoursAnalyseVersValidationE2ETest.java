@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.Observation;
@@ -28,7 +29,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -43,7 +43,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E de parcours** : depuis la vue transverse **« Espèces & observations »** (`analyse`), on
 /// sélectionne une espèce puis une de ses détections et on déclenche **« Écouter / valider »** ; le
@@ -100,7 +99,7 @@ class ParcoursAnalyseVersValidationE2ETest {
         robot.interact(() -> injector.getInstance(NavigationAnalyse.class).ouvrir());
         assertThat(navigation.getVueCourante()).isEqualTo("analyse");
         TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !especes.getItems().isEmpty());
+        Attente.que(() -> !especes.getItems().isEmpty(), "la table des espèces se remplit", 5 * 1000L);
         assertThat(especes.getItems()).hasSize(1);
 
         // 2) Sélectionner l'espèce → son détail liste l'observation seedée (chargé en direct sur le fil
@@ -118,8 +117,10 @@ class ParcoursAnalyseVersValidationE2ETest {
         // sélection de la ligne cible n'est posée que dans le callback de succès.
         assertThat(navigation.getVueCourante()).isEqualTo("audio");
         TableView<?> tableValidation = robot.lookup("#tableObservations").queryAs(TableView.class);
-        WaitForAsyncUtils.waitFor(
-                5, TimeUnit.SECONDS, () -> tableValidation.getSelectionModel().getSelectedItem() != null);
+        Attente.que(
+                () -> tableValidation.getSelectionModel().getSelectedItem() != null,
+                "une ligne de validation est sélectionnée",
+                5 * 1000L);
         Object selection = tableValidation.getSelectionModel().getSelectedItem();
         assertThat(selection).isInstanceOf(LigneObservationAudio.class);
         assertThat(((LigneObservationAudio) selection).idObservation()).isEqualTo(idObservation);
@@ -133,7 +134,7 @@ class ParcoursAnalyseVersValidationE2ETest {
 
         robot.interact(() -> injector.getInstance(NavigationAnalyse.class).ouvrir());
         TableView<EspeceAgregee> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !especes.getItems().isEmpty());
+        Attente.que(() -> !especes.getItems().isEmpty(), "la table des espèces se remplit après le retour", 5 * 1000L);
         assertThat(especes.getItems())
                 .extracting(EspeceAgregee::code)
                 .as("l'inventaire de départ")
@@ -164,10 +165,10 @@ class ParcoursAnalyseVersValidationE2ETest {
         // abouti, le remplacement qui suit tombe pendant la lecture et se fait relire **par elle** : le
         // test passe alors sans que le retour y soit pour rien, et reste vert même en retirant
         // `RafraichirAuRetour` d'Analyse. Je l'ai constaté sur ma première version, en la mutant.
-        WaitForAsyncUtils.waitFor(
-                5,
-                TimeUnit.SECONDS,
-                () -> especes.getItems().stream().anyMatch(espece -> "Nyclei".equals(espece.code())));
+        Attente.que(
+                () -> especes.getItems().stream().anyMatch(espece -> "Nyclei".equals(espece.code())),
+                "l'espèce Nyclei paraît dans la table",
+                5 * 1000L);
 
         // Le remplacement, seul, une fois l'annonce précédente entièrement consommée. Celui-ci ne signale
         // rien : plus personne ne préviendra Analyse tant qu'on n'y sera pas revenu.
@@ -180,8 +181,10 @@ class ParcoursAnalyseVersValidationE2ETest {
         // comptes de l'accueil ne bouge (ADR 3537). C'est `RafraichirAuRetour` qui rattrape, et lui seul.
         // Analyse lit le taxon RETENU, `COALESCE(taxon_observer, taxon_tadarida)` : l'espèce change donc.
         TableView<EspeceAgregee> apresRetour = robot.lookup("#tableEspeces").queryAs(TableView.class);
-        WaitForAsyncUtils.waitFor(
-                5, TimeUnit.SECONDS, () -> apresRetour.getItems().size() > 1);
+        Attente.que(
+                () -> apresRetour.getItems().size() > 1,
+                "la table compte plus d'une espèce après le retour",
+                5 * 1000L);
         assertThat(apresRetour.getItems())
                 .extracting(EspeceAgregee::code)
                 .as("l'écran quitté a relu sa donnée au retour. « Nyclei » signifierait qu'il en est resté"

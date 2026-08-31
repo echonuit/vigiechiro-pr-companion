@@ -63,16 +63,25 @@ def corpsDe(texte: str, debut: int) -> str:
     return "\n".join(lignes)
 
 
+# Une ligne de COMMENTAIRE qui cite l appel n est pas un appel. Sans cela, la javadoc d
+# `AttenteAvantClic` qui explique pourquoi elle rattrape comptait comme une attente reinventee.
+COMMENTAIRE = re.compile(r"^\s*(///|//|\*|/\*)")
+
+
 def suspects(racine: pathlib.Path = RACINE) -> list[str]:
-    """Les methodes privees qui sondent en propre, une ligne par site."""
+    """Tout appel a `waitFor` hors de l aide partagee, une entree par site.
+
+    #4845 a elargi la population : elle ne se limite plus aux methodes PRIVEES. Une attente ecrite
+    en clair dans un cas de test tait exactement la meme chose, et la restriction ne tenait qu a la
+    facon dont le defaut avait ete trouve.
+    """
     trouves = []
     for fichier in sorted(racine.rglob("*.java")):
         if fichier.name in EXEMPTES:
             continue
-        texte = fichier.read_text(encoding="utf-8")
-        for debut in SIGNATURE.finditer(texte):
-            if SONDE.search(corpsDe(texte, debut.start())):
-                trouves.append(f"{fichier.name}#{debut.group(1)}")
+        for rang, ligne in enumerate(fichier.read_text(encoding="utf-8").splitlines(), 1):
+            if SONDE.search(ligne) and not COMMENTAIRE.match(ligne):
+                trouves.append(f"{fichier.name}:{rang}")
     return trouves
 
 
@@ -82,56 +91,44 @@ def _autoTest() -> int:
     cas = []
     with tempfile.TemporaryDirectory() as brut:
         r = pathlib.Path(brut)
+        sonde = "        WaitForAsyncUtils.waitFor(1, S, () -> vrai());\n"
 
-        # Une aide privee qui sonde : c est le defaut, quel que soit son nom.
-        (r / "A.java").write_text(
-            "class A {\n    private void ouvrirLaFiche() {\n"
-            "        WaitForAsyncUtils.waitFor(1, S, () -> vrai());\n    }\n}\n",
-            encoding="utf-8")
-        cas.append(("un nom quelconque est vu", suspects(r) == ["A.java#ouvrirLaFiche"]))
+        # Une aide privee qui sonde : le defaut d origine, quel que soit son NOM (#4974).
+        (r / "A.java").write_text("class A {\n    private void ouvrirLaFiche() {\n" + sonde + "    }\n}\n",
+                                  encoding="utf-8")
+        cas.append(("un nom quelconque est vu", suspects(r) == ["A.java:3"]))
+        (r / "A.java").write_text("class A {\n    private void patienter() {\n" + sonde + "    }\n}\n",
+                                  encoding="utf-8")
+        cas.append(("renommer ne soustrait pas", suspects(r) == ["A.java:3"]))
 
-        # LE temoin qui dit pourquoi ce cliquet ne lit pas les noms : renommer ne doit rien changer.
-        (r / "A.java").write_text(
-            "class A {\n    private void patienter() {\n"
-            "        WaitForAsyncUtils.waitFor(1, S, () -> vrai());\n    }\n}\n",
-            encoding="utf-8")
-        cas.append(("renommer ne soustrait pas", suspects(r) == ["A.java#patienter"]))
+        # LA population elargie par #4845 : une attente ecrite en clair dans un CAS DE TEST tait
+        # exactement la meme chose. La restriction aux methodes privees ne tenait qu a la facon dont
+        # le defaut avait ete trouve.
+        (r / "B.java").write_text("class B {\n    @Test\n    void un_cas() {\n" + sonde + "    }\n}\n",
+                                  encoding="utf-8")
+        cas.append(("un cas de test compte aussi", "B.java:4" in suspects(r)))
 
-        # Une methode PUBLIQUE n est pas une reinvention privee : c est peut-etre l aide partagee.
-        (r / "B.java").write_text(
-            "class B {\n    public void que() {\n"
-            "        WaitForAsyncUtils.waitFor(1, S, () -> vrai());\n    }\n}\n",
-            encoding="utf-8")
-        cas.append(("une methode publique reste dehors", "B.java#que" not in suspects(r)))
+        # Le sens NEGATIF : une ligne de COMMENTAIRE qui cite l appel n est pas un appel. Sans ce
+        # temoin, la javadoc d `AttenteAvantClic` expliquant pourquoi elle rattrape comptait comme
+        # une reinvention, et le cliquet valait un de trop.
+        (r / "C.java").write_text("class C {\n    /// Un `WaitForAsyncUtils.waitFor(...)` nu ne dit rien.\n"
+                                  "    void rien() {}\n}\n", encoding="utf-8")
+        cas.append(("une citation en commentaire ne compte pas", "C.java:2" not in suspects(r)))
 
-        # Le sens NEGATIF : une aide privee qui n attend PAS ne se compte pas. Sans ce temoin, un
-        # garde qui rendrait toutes les methodes privees paraitrait juste.
-        (r / "C.java").write_text(
-            "class C {\n    private void attendreRecherche() {\n"
-            "        WaitForAsyncUtils.sleep(350, MS);\n    }\n}\n",
-            encoding="utf-8")
-        cas.append(("un sleep n est pas une attente", "C.java#attendreRecherche" not in suspects(r)))
+        # Un sleep n attend aucune condition.
+        (r / "D.java").write_text("class D {\n    private void dormir() {\n"
+                                  "        WaitForAsyncUtils.sleep(350, MS);\n    }\n}\n", encoding="utf-8")
+        cas.append(("un sleep n est pas une attente", "D.java:3" not in suspects(r)))
 
-        # `waitForFxEvents` vide la file sans attendre de condition : il ne se compte pas non plus.
-        (r / "D.java").write_text(
-            "class D {\n    private void vider() {\n"
-            "        WaitForAsyncUtils.waitForFxEvents();\n    }\n}\n",
-            encoding="utf-8")
-        cas.append(("waitForFxEvents n est pas une sonde", suspects(r) == ["A.java#patienter"]))
+        # `waitForFxEvents` vide la file sans attendre de condition.
+        (r / "E.java").write_text("class E {\n    private void vider() {\n"
+                                  "        WaitForAsyncUtils.waitForFxEvents();\n    }\n}\n", encoding="utf-8")
+        cas.append(("waitForFxEvents n est pas une sonde", "E.java:3" not in suspects(r)))
 
-        # L aide partagee elle-meme est exemptee, sinon le cliquet compterait le remede.
-        (r / "Attente.java").write_text(
-            "class Attente {\n    private static void interne() {\n"
-            "        WaitForAsyncUtils.waitFor(1, S, () -> vrai());\n    }\n}\n",
-            encoding="utf-8")
-        cas.append(("l aide partagee est exemptee", "Attente.java#interne" not in suspects(r)))
-
-        # Un `waitFor` HORS de toute methode privee, dans un test public, ne releve pas de ce cliquet.
-        (r / "E.java").write_text(
-            "class E {\n    @Test\n    void un_cas() {\n"
-            "        WaitForAsyncUtils.waitFor(1, S, () -> vrai());\n    }\n}\n",
-            encoding="utf-8")
-        cas.append(("un cas de test n est pas une aide", len(suspects(r)) == 1))
+        # L aide partagee est exemptee, sinon le cliquet compterait le remede.
+        (r / "Attente.java").write_text("class Attente {\n    static void que() {\n" + sonde + "    }\n}\n",
+                                        encoding="utf-8")
+        cas.append(("l aide partagee est exemptee", not any(s.startswith("Attente.java") for s in suspects(r))))
 
     for nom, ok in cas:
         print(f"  {'✔' if ok else '✘'} {nom}")
@@ -139,11 +136,11 @@ def _autoTest() -> int:
     if rates:
         print(f"\n{len(rates)} cas en échec : le cliquet ne tient pas ce qu'il annonce.", file=sys.stderr)
         return 1
-    print(f"\n{len(cas)} cas : il voit une sonde privée sous n'importe quel nom, et rien d'autre.")
+    print(f"\n{len(cas)} cas : il voit une attente hors de l'aide partagée, et rien d'autre.")
     return 0
 
 
 if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(_autoTest())
-    sys.exit(rapporte(ADR, "attentes réinventées : une méthode privée qui sonde en propre", suspects()))
+    sys.exit(rapporte(ADR, "attentes réinventées : un `waitFor` hors de l'aide partagée", suspects()))

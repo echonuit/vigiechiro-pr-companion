@@ -37,6 +37,7 @@ import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -49,7 +50,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import javafx.scene.Node;
 import javafx.scene.control.Labeled;
 import javafx.stage.Stage;
@@ -60,7 +60,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.WaitForAsyncUtils;
 
 /// Le scénario qui **joue** `S4-33`, pour qu'un humain le tranche en regardant (#4055, #4115).
 ///
@@ -179,8 +178,10 @@ class ScenarioPerceptifRefusDepotTest {
         // rendait la main dès le titre du compte rendu, alors que les avertissements paraissent à la
         // passe suivante : le test passait sur mon poste et rougissait sur le runner, sur la seule
         // différence de rythme. Une attente qui ne porte pas sur l'assertion ne garde rien.
-        WaitForAsyncUtils.waitFor(
-                20, TimeUnit.SECONDS, () -> texteAffiche(robot).contains(REFUSEES + " archive(s) ont été refusées"));
+        Attente.que(
+                () -> texteAffiche(robot).contains(REFUSEES + " archive(s) ont été refusées"),
+                "le compte des archives refusées s'affiche",
+                20 * 1000L);
         // Le moment que ce cas existe pour montrer : la phrase du compte rendu, dont c'est la
         // LISIBILITÉ qu'on juge. Elle demande d'être lue, pas aperçue.
         // Le compte rendu paraît SOUS la ligne de flottaison, et l'écran est revenu en haut quand

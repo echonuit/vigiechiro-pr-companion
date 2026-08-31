@@ -20,12 +20,12 @@ import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
+import fr.univ_amu.iut.recette.Attente;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -170,7 +170,7 @@ class AuditRetraitOrphelinsViewTest {
         robot.clickOn("#boutonRetirerOrphelins");
         WaitForAsyncUtils.waitForFxEvents();
         // Deux passages hors fil s'enchaînent (mesure puis retrait) : on attend que le disque ait bougé.
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !Files.exists(orphelinB));
+        Attente.que(() -> !Files.exists(orphelinB), "l'orphelin B est retiré du disque", 5 * 1000L);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(demandee).isTrue();
