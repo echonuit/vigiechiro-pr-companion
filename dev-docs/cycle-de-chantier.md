@@ -145,6 +145,11 @@ sans continuité écrite devient un correctif isolé dont personne ne sait s'il 
 se déposent en commentaire ; le critère, lui, s'écrit dans le **corps** de l'issue, qui est un lot de
 son chantier. La compétence `ouvrir-une-issue` porte le geste et dit pourquoi le corps et non le fil.
 
+Deux dispositifs le tiennent, et **aucun ne bloque** ([ADR 4992](decisions/4992-le-critere-de-fin-se-rappelle-et-se-mesure-il-ne-se-refuse-pas.md)) :
+un lot ouvert sans critère reçoit un **commentaire** de rappel, une seule fois ; et la loupe
+`scripts/adr/loupe-4992-lots-sans-critere.py` compte les lots muets au rapport du lundi. Aucune
+demande de fusion ne peut rougir pour cette raison.
+
 ### Et se signaler : dire qu'on la prend, et ce qu'on va faire
 
 Ces trois phrases ne servent pas qu'à soi. **Elles se déposent en commentaire sur l'issue**, et l'issue
