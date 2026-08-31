@@ -127,6 +127,14 @@ Un **chantier** est un lot de travail d'ampleur **EPIC**, réparti sur plusieurs
 
 **Puis** : cartographier l'existant (repérer les **patterns réutilisables** avant d'écrire du neuf), rédiger un **plan**, puis **découper en issues** reliées à un **EPIC**.
 
+**Chaque lot dit comment on saura qu'il est fini, et il le dit dans son propre corps.** Depuis #4829,
+le lot d'un EPIC est une **sous-issue** que la forge relie, pas une case cochée dans le corps du
+parent : son critère vit donc là où on le lit et où on travaille. Le corps de l'EPIC dit ce que le
+lot **livre**, c'est le plan ; le critère dit comment on saura que c'est fait, c'est l'engagement du
+lot. Un lot qui n'en porte pas se clôt à l'estime, et un critère qui reformule le lot n'en est pas
+un : « fini quand la loupe est écrite » ne dit rien de plus que le titre, « fini quand elle rougit
+sur un lot neuf muet » se joue.
+
 **Et pour chaque lot, une question avant de l'accrocher** : combien de PR ? Une ou deux, des issues
 rattachées à l'EPIC suffisent. **Plus de deux PR cohérentes, c'est un chantier** : le lot s'ouvre
 alors en **sous-chantier**, un EPIC enfant, ses issues s'y rattachent, et la case du parent pointe
@@ -144,6 +152,11 @@ avec le chantier, la branche et le remède envisagé, puis **assigner l'issue**.
 Les deux, pas l'un ou l'autre : l'assignee est le signal qui se filtre
 (`gh issue list --assignee "*"`), le commentaire porte ce que l'assignee ne dit pas. Un signalement
 se relâche : quand on s'arrête, retirer l'assignee et le dire.
+
+**Le critère de fin, lui, va dans le CORPS de l'issue**, et pas dans ce commentaire. L'issue est un
+lot de son chantier, et c'est au lot que le découpage demande son critère. Un commentaire descend
+sous le fil à mesure que l'issue vit ; le corps est ce qui survit à l'onglet fermé, et c'est lui que
+la clôture relit.
 
 La forme exacte du bloc, et la consigne d'attendre un accord avant de commencer, sont propres à
 Claude Code et vivent dans [CLAUDE.md](CLAUDE.md).
