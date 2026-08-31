@@ -633,6 +633,21 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `mesure-duree-portail.sh` | l'**allongement** du portail qualité, médiane contre médiane | `maven.yml` - il **avertit**, il ne bloque pas (autotest : `lint.yml`) |
 | `verifie-cloture-consignee.sh` | un EPIC clos **sans trace de clôture**. Le dépôt écrit à trois endroits que tout chantier se clôt par quatorze passes, et rien ne le vérifiait : 43 sur 64 n'en portaient aucune. La cause n'était pas l'inattention - la compétence `clore-un-chantier` ne mentionnait nulle part le modèle à coller, et qui la suivait à la lettre ne laissait donc aucune trace ([ADR 4659](decisions/4659-une-cloture-sans-trace-ne-se-distingue-pas-d-une-cloture-absente.md)). **Cliquet** à 42, qui ne peut que descendre : les anciennes sont assumées, une de plus rougit. Il **refuse** si la forge ne répond pas | `lint.yml` - bloquant (autotest : `lint.yml`, hors ligne) |
 | `verifie-specification-consignee.sh` | une clôture qui n'a pas répondu à la **passe 10**, celle de l'archivage OpenSpec. Cliquet de **déficit** et non fraction de couverture : la question « combien de capacités sur combien » n'a pas de dénominateur, le dépôt en offrant cinq incompatibles. Il reconnaît la ligne à son **contenu** et non à son numéro, #4840 ayant renuméroté le cycle. Un EPIC clos sans AUCUNE trace ne lui appartient pas : c'est le cliquet voisin de #4659 qui monte alors | `lint.yml` |
+
+!!! warning "Un troisième cliquet de forge se décide avant d'être fini (#4954)"
+    Les deux ci-dessus partagent **59 lignes** : lire un cliquet dans un en-tête d'ADR, interroger la
+    forge en refusant si `gh` manque, descendre le seuil quand le dépôt en porte moins, et le banc
+    `joue` avec son injection hors ligne.
+
+    L'extraction a été **écartée en connaissance de cause** : une bibliothèque partagée entre deux
+    gardes de CI crée un mode de défaillance commun, et muter une fonction partagée éprouve la
+    bibliothèque plutôt que le garde. Leurs prémisses ont d'ailleurs divergé depuis (#4948), et la
+    part commune est tombée de 65 % et 54 % à **55 % et 48 %**.
+
+    **Mais deux instances ne font pas un patron, et trois si.** Si vous écrivez un troisième cliquet
+    qui interroge la forge, la copie devient une dette qui se paie trois fois : rouvrez #4954 et
+    tranchez **avant** de le finir, pas après.
+
 | `lance-test-filme.sh` | un runner **pilote** un test filmé, et refuse de le lancer sans gestionnaire de fenêtres | `recette-filmee.yml` - workflow **manuel** |
 | `filtrer-bruit-cartes.sh` | rend leur version committée aux aperçus de carte dont **seul le fond** a changé | `capture-vues.yml` |
 | `compare-apercus.sh` | montre, sur une PR, les écrans qu'elle change : avant/après accolés, part de pixels, et le **dit** quand aucun ne change | `capture-vues.yml` (autotest : `lint.yml`) |
