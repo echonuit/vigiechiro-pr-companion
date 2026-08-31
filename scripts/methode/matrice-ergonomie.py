@@ -74,13 +74,21 @@ def rend(releve: dict, annexe: pathlib.Path = None) -> str:
     """La section de matrice, telle qu'elle doit figurer dans l'annexe."""
     noms = dict(vocabulaire(annexe))
     par_cle = releve["par_cle"]
-    sortie = [DEBUT, "", "## Matrice : ce que chaque heuristique sert", "",
-              "Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.py`, "
-              "et gardée par lui.", "",
-              f"**{releve['rattachements']} rattachement(s), portés par {releve['adr']} décision(s).** "
-              "Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le "
-              "cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.", "",
-              "| Clé | Heuristique | ADR | Lesquelles |", "|---|---|---:|---|"]
+    sortie = [
+        DEBUT,
+        "",
+        "## Matrice : ce que chaque heuristique sert",
+        "",
+        "Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.py`, "
+        "et gardée par lui.",
+        "",
+        f"**{releve['rattachements']} rattachement(s), portés par {releve['adr']} décision(s).** "
+        "Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le "
+        "cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.",
+        "",
+        "| Clé | Heuristique | ADR | Lesquelles |",
+        "|---|---|---:|---|",
+    ]
     vides = []
     for cle, servantes in par_cle.items():
         if servantes:
@@ -92,9 +100,13 @@ def rend(releve: dict, annexe: pathlib.Path = None) -> str:
             montrees = "**aucune**"
             vides.append(cle)
         sortie.append(f"| `{cle}` | {noms.get(cle, '?')} | {len(servantes)} | {montrees} |")
-    sortie += ["", f"**{len(vides)} heuristique(s) sur {len(par_cle)} que rien ne sert.** Ce n'est "
-               "pas une faute : c'est ce dont personne n'a eu à décider, et il faut le voir pour "
-               "savoir si c'est un choix ou un angle mort.", ""]
+    sortie += [
+        "",
+        f"**{len(vides)} heuristique(s) sur {len(par_cle)} que rien ne sert.** Ce n'est "
+        "pas une faute : c'est ce dont personne n'a eu à décider, et il faut le voir pour "
+        "savoir si c'est un choix ou un angle mort.",
+        "",
+    ]
     if vides:
         sortie += [f"- `{c}` · {noms.get(c, '?')}" for c in vides] + [""]
     sortie.append(FIN)
@@ -104,7 +116,7 @@ def rend(releve: dict, annexe: pathlib.Path = None) -> str:
 def remplace(texte: str, matrice: str) -> str:
     """Le document, sa matrice remplacée ou ajoutée en fin."""
     if DEBUT in texte and FIN in texte:
-        return texte[: texte.index(DEBUT)] + matrice + texte[texte.index(FIN) + len(FIN):]
+        return texte[: texte.index(DEBUT)] + matrice + texte[texte.index(FIN) + len(FIN) :]
     return texte.rstrip("\n") + "\n\n---\n\n" + matrice + "\n"
 
 
@@ -115,10 +127,14 @@ def _auto_test() -> int:
         decisions = racine / "decisions"
         decisions.mkdir()
         annexe = racine / "annexe.md"
-        annexe.write_text("| `nielsen-1` | Un |\n| `nielsen-10` | Deux |\n| `affordance` | Trois |\n",
-                          encoding="utf-8")
-        tete = '---\ntype: adr\nheuristiques: {}\n---\n\n# Un\n'
-        (decisions / "a.md").write_text(tete.format('["nielsen-1", "affordance"]'), encoding="utf-8")
+        annexe.write_text(
+            "| `nielsen-1` | Un |\n| `nielsen-10` | Deux |\n| `affordance` | Trois |\n",
+            encoding="utf-8",
+        )
+        tete = "---\ntype: adr\nheuristiques: {}\n---\n\n# Un\n"
+        (decisions / "a.md").write_text(
+            tete.format('["nielsen-1", "affordance"]'), encoding="utf-8"
+        )
         (decisions / "b.md").write_text(tete.format('["nielsen-1"]'), encoding="utf-8")
 
         r = recense(decisions, annexe)
@@ -142,7 +158,10 @@ def _auto_test() -> int:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
     if rates:
-        print(f"\n{len(rates)} cas en échec : la matrice ne dit pas ce qu'elle annonce.", file=sys.stderr)
+        print(
+            f"\n{len(rates)} cas en échec : la matrice ne dit pas ce qu'elle annonce.",
+            file=sys.stderr,
+        )
         return 1
     print("\nAuto-test concluant : la matrice compte ses deux nombres, et ne se relit pas.")
     return 0
@@ -161,8 +180,11 @@ def main() -> int:
     attendu = remplace(texte, rend(recense()))
     if args.verifie:
         if texte != attendu:
-            print("La matrice des heuristiques est périmée.\n"
-                  "Relancez : python3 scripts/methode/matrice-ergonomie.py", file=sys.stderr)
+            print(
+                "La matrice des heuristiques est périmée.\n"
+                "Relancez : python3 scripts/methode/matrice-ergonomie.py",
+                file=sys.stderr,
+            )
             return 1
         print("Matrice des heuristiques à jour.")
         return 0

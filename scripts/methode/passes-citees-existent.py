@@ -130,7 +130,11 @@ def _auto_test() -> int:
     verifie("un intervalle valide passe", citations_hors_bornes("les passes 0 a 2", 0, 2), [])
     # La BORNE HAUTE d un intervalle est celle qui bouge quand on ajoute une passe. Sans ce cas, un
     # motif qui ne lit que le premier nombre passe pour bon.
-    verifie("la borne haute d un intervalle est lue", citations_hors_bornes("les passes 0 a 13", 0, 12), [13])
+    verifie(
+        "la borne haute d un intervalle est lue",
+        citations_hors_bornes("les passes 0 a 13", 0, 12),
+        [13],
+    )
 
     # Le sens NEGATIF, sans lequel un motif qui n accepterait jamais rien passerait tout ce qui
     # precede et rendrait vert sur un depot casse.

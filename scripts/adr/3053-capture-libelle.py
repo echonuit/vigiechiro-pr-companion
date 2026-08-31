@@ -53,7 +53,9 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
         texte = sans_commentaires_java(source.read_text(encoding="utf-8"))
         for abstention in ABSTENTION.finditer(texte):
             ligne = texte[: abstention.start()].count("\n") + 1
-            trouves.append(f"{source}:{ligne}  recherche qui s'abstient (voir ApercuFx.exigerParLibelle)")
+            trouves.append(
+                f"{source}:{ligne}  recherche qui s'abstient (voir ApercuFx.exigerParLibelle)"
+            )
     return trouves
 
 

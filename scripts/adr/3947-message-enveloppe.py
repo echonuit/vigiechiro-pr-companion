@@ -71,4 +71,8 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte("3947", "message d'erreur composé à la main plutôt que par CauseLisible", suspects()))
+    sys.exit(
+        rapporte(
+            "3947", "message d'erreur composé à la main plutôt que par CauseLisible", suspects()
+        )
+    )

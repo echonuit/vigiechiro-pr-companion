@@ -41,9 +41,29 @@ RACINE = pathlib.Path(__file__).resolve().parents[2]
 COURBE = "’"
 
 BINAIRES = {
-    ".png", ".jpg", ".jpeg", ".gif", ".ico", ".jar", ".zip", ".gz", ".tar", ".pdf",
-    ".mp4", ".webm", ".wav", ".ttf", ".otf", ".woff", ".woff2", ".class", ".db",
-    ".webp", ".avif", ".bmp", ".tiff",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".ico",
+    ".jar",
+    ".zip",
+    ".gz",
+    ".tar",
+    ".pdf",
+    ".mp4",
+    ".webm",
+    ".wav",
+    ".ttf",
+    ".otf",
+    ".woff",
+    ".woff2",
+    ".class",
+    ".db",
+    ".webp",
+    ".avif",
+    ".bmp",
+    ".tiff",
 }
 
 # Les fichiers dont la forme de l apostrophe ne nous appartient pas.
@@ -92,11 +112,11 @@ def citee(ligne: str, position: int) -> bool:
     if ligne.count("«", 0, position) > ligne.count("»", 0, position):
         return True
     # Une chaine dont le signe est le seul contenu : `"’"`, `'’'`.
-    fenetre = ligne[max(0, position - 2): position + 3]
+    fenetre = ligne[max(0, position - 2) : position + 3]
     if re.search(r"""(["'])’\1""", fenetre):
         return True
     # Une classe de caracteres d expression reguliere qui l enumere avec la droite.
-    voisin = ligne[max(0, position - VOISINAGE): position + VOISINAGE]
+    voisin = ligne[max(0, position - VOISINAGE) : position + VOISINAGE]
     return "[" in voisin and "'" in voisin and "]" in voisin
 
 

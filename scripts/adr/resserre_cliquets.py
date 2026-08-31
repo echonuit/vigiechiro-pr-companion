@@ -70,7 +70,9 @@ def ecrire_les_balises(cle: str, nouvelle: int) -> list[str]:
             texte = fichier.read_text(encoding="utf-8")
             if f"<!--inv:{cle}-->" not in texte:
                 continue
-            neuf = motif.sub(lambda m: m.group(1) + _formate(m.group(2), nouvelle) + m.group(3), texte)
+            neuf = motif.sub(
+                lambda m: m.group(1) + _formate(m.group(2), nouvelle) + m.group(3), texte
+            )
             if neuf != texte:
                 fichier.write_text(neuf, encoding="utf-8")
                 touches.append(str(fichier.relative_to(RACINE_DEPOT)))
@@ -109,7 +111,9 @@ def aligner_les_balises() -> list[str]:
             continue
         touches = ecrire_les_balises(cle, int(declare.group(1)))
         if touches:
-            faits.append(f"balise `{cle}` reposee a {declare.group(1)} dans {len(touches)} fichier(s)")
+            faits.append(
+                f"balise `{cle}` reposee a {declare.group(1)} dans {len(touches)} fichier(s)"
+            )
     return faits
 
 

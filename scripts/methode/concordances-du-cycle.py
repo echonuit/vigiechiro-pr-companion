@@ -86,8 +86,11 @@ def ouvertures(commandes: pathlib.Path) -> dict[str, set[str]]:
     return par_commande
 
 
-def suspects(fonds: pathlib.Path = FONDS, orchestrateur: pathlib.Path = ORCHESTRATEUR,
-             commandes: pathlib.Path = COMMANDES) -> list[str]:
+def suspects(
+    fonds: pathlib.Path = FONDS,
+    orchestrateur: pathlib.Path = ORCHESTRATEUR,
+    commandes: pathlib.Path = COMMANDES,
+) -> list[str]:
     """Les quatre concordances, dans l ordre du tableau de l en-tete."""
     fautes: list[str] = []
     presentes = competences(fonds)
@@ -111,38 +114,51 @@ def suspects(fonds: pathlib.Path = FONDS, orchestrateur: pathlib.Path = ORCHESTR
             continue
         dites = attrib.get(nom, [])
         if not dites:
-            fautes.append(f"`{nom}` annonce la passe {annoncee.group(1)}, que le tableau ne lui attribue pas")
+            fautes.append(
+                f"`{nom}` annonce la passe {annoncee.group(1)}, que le tableau ne lui attribue pas"
+            )
         elif annoncee.group(1) not in dites:
             fautes.append(
-                f"`{nom}` annonce la passe {annoncee.group(1)}, le tableau lui attribue {' et '.join(dites)}")
+                f"`{nom}` annonce la passe {annoncee.group(1)}, le tableau lui attribue {' et '.join(dites)}"
+            )
 
     # 4. Aucune competence orpheline. Le corpus qui la nomme est plus large que le tableau : une
     # competence d appoint comme `deboguer` vit dans les pages de methode et non dans le cycle des
     # passes. Les y ignorer produisait trois faux positifs sur l arbre reel.
     citees = set(attrib) | {n for noms in ouvre.values() for n in noms}
-    pages = [fonds.parent.parent / f for f in ("AGENTS.md", "CONTRIBUTING.md", "CLAUDE.md",
-                                               "dev-docs/cycle-de-chantier.md")]
+    pages = [
+        fonds.parent.parent / f
+        for f in ("AGENTS.md", "CONTRIBUTING.md", "CLAUDE.md", "dev-docs/cycle-de-chantier.md")
+    ]
     corpus = "".join(p.read_text(encoding="utf-8") for p in pages if p.is_file())
-    corpus += "".join((fonds / autre / "SKILL.md").read_text(encoding="utf-8") for autre in presentes)
+    corpus += "".join(
+        (fonds / autre / "SKILL.md").read_text(encoding="utf-8") for autre in presentes
+    )
     for nom in sorted(presentes - citees):
         propre = (fonds / nom / "SKILL.md").read_text(encoding="utf-8").count(nom)
         if corpus.count(nom) <= propre:
-            fautes.append(f"`{nom}` n est nommee par rien : ni commande, ni tableau, ni page, ni autre competence")
+            fautes.append(
+                f"`{nom}` n est nommee par rien : ni commande, ni tableau, ni page, ni autre competence"
+            )
 
     return fautes
 
 
-def _bac(tmp: pathlib.Path, table: str, descriptions: dict[str, str],
-         commandes: dict[str, str]) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
+def _bac(
+    tmp: pathlib.Path, table: str, descriptions: dict[str, str], commandes: dict[str, str]
+) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
     """Un arbre minimal : le fonds, l orchestrateur, les commandes."""
     fonds = tmp / "skills"
     for nom, description in descriptions.items():
         (fonds / nom).mkdir(parents=True, exist_ok=True)
         (fonds / nom / "SKILL.md").write_text(
-            f"---\nname: {nom}\ndescription: {description}\n---\n\n# {nom}\n", encoding="utf-8")
+            f"---\nname: {nom}\ndescription: {description}\n---\n\n# {nom}\n", encoding="utf-8"
+        )
     orch = fonds / "clore-un-chantier" / "SKILL.md"
     orch.parent.mkdir(parents=True, exist_ok=True)
-    orch.write_text("---\nname: clore-un-chantier\ndescription: rien\n---\n\n" + table, encoding="utf-8")
+    orch.write_text(
+        "---\nname: clore-un-chantier\ndescription: rien\n---\n\n" + table, encoding="utf-8"
+    )
     cmds = tmp / "commands"
     cmds.mkdir(parents=True, exist_ok=True)
     for nom, corps in commandes.items():
@@ -159,10 +175,12 @@ def _auto_test() -> int:
     import tempfile
 
     SAINE = "| 1 | Audit | ce qu il rend | `auditer` |\n| 6 | Tests | ce qu il rend | `couvrir`, `appui` en appui |\n"
-    DESC = {"auditer": "Use at closure pass 1, pour auditer.",
-            "couvrir": "Use at closure pass 6, pour couvrir.",
-            "appui": "Une competence d appui, qui n annonce aucune passe.",
-            "clore-un-chantier": "rien"}
+    DESC = {
+        "auditer": "Use at closure pass 1, pour auditer.",
+        "couvrir": "Use at closure pass 6, pour couvrir.",
+        "appui": "Une competence d appui, qui n annonce aucune passe.",
+        "clore-un-chantier": "rien",
+    }
     CMD = {"clore": "Ouvrir la competence `clore-un-chantier`."}
 
     # Le cas 1 detourne la commande SANS orpheliner `clore-un-chantier` : le tableau doit donc la
@@ -171,27 +189,55 @@ def _auto_test() -> int:
 
     cas = [
         ("temoin, arbre sain", SAINE, DESC, CMD, None),
-        ("1. une commande ouvre une competence absente", AVEC_ORCH, DESC,
-         {"clore": "Ouvrir la competence `jamais-ecrite`."}, "la commande /clore ouvre `jamais-ecrite`"),
-        ("2. le tableau nomme une competence absente",
-         SAINE + "| 7 | Harmo | ce qu il rend | `jamais-ecrite` |\n", DESC, CMD,
-         "le tableau des passes nomme `jamais-ecrite`"),
-        ("3. la description annonce une autre passe que le tableau", SAINE,
-         {**DESC, "auditer": "Use at closure pass 9, pour auditer."}, CMD,
-         "`auditer` annonce la passe 9, le tableau lui attribue 1"),
-        ("4. une competence n est nommee par rien", SAINE,
-         {**DESC, "orpheline": "Une competence que rien n appelle, et qui n annonce aucune passe."}, CMD,
-         "`orpheline` n est nommee par rien"),
+        (
+            "1. une commande ouvre une competence absente",
+            AVEC_ORCH,
+            DESC,
+            {"clore": "Ouvrir la competence `jamais-ecrite`."},
+            "la commande /clore ouvre `jamais-ecrite`",
+        ),
+        (
+            "2. le tableau nomme une competence absente",
+            SAINE + "| 7 | Harmo | ce qu il rend | `jamais-ecrite` |\n",
+            DESC,
+            CMD,
+            "le tableau des passes nomme `jamais-ecrite`",
+        ),
+        (
+            "3. la description annonce une autre passe que le tableau",
+            SAINE,
+            {**DESC, "auditer": "Use at closure pass 9, pour auditer."},
+            CMD,
+            "`auditer` annonce la passe 9, le tableau lui attribue 1",
+        ),
+        (
+            "4. une competence n est nommee par rien",
+            SAINE,
+            {
+                **DESC,
+                "orpheline": "Une competence que rien n appelle, et qui n annonce aucune passe.",
+            },
+            CMD,
+            "`orpheline` n est nommee par rien",
+        ),
         ("une competence d appui muette ne fait pas rougir", SAINE, DESC, CMD, None),
-        ("une competence servant DEUX passes, annoncant la SECONDE",
-         SAINE + "| 11 | ADR | ce qu il rend | `auditer` |\n",
-         {**DESC, "auditer": "Use at closure pass 11, pour ecrire."}, CMD, None),
+        (
+            "une competence servant DEUX passes, annoncant la SECONDE",
+            SAINE + "| 11 | ADR | ce qu il rend | `auditer` |\n",
+            {**DESC, "auditer": "Use at closure pass 11, pour ecrire."},
+            CMD,
+            None,
+        ),
         # Une competence d appui NE DOIT PAS annoncer de passe : le tableau la marque « en appui »
         # precisement parce qu elle ne la porte pas. Sans l exemption, elle serait attribuee et ce
         # cas passerait au vert.
-        ("une competence d appui qui annonce une passe est refusee", SAINE,
-         {**DESC, "appui": "Use at closure pass 6, en appui."}, CMD,
-         "`appui` annonce la passe 6, que le tableau ne lui attribue pas"),
+        (
+            "une competence d appui qui annonce une passe est refusee",
+            SAINE,
+            {**DESC, "appui": "Use at closure pass 6, en appui."},
+            CMD,
+            "`appui` annonce la passe 6, que le tableau ne lui attribue pas",
+        ),
     ]
 
     echecs = 0
@@ -210,11 +256,15 @@ def _auto_test() -> int:
             if juste:
                 print(f"  ✔ {libelle}")
             else:
-                print(f"  ✘ {libelle} : attendu {attendu or 'aucune faute'}, obtenu {rendues or 'aucune'}")
+                print(
+                    f"  ✘ {libelle} : attendu {attendu or 'aucune faute'}, obtenu {rendues or 'aucune'}"
+                )
                 echecs = 1
     print()
     print(f"{len(cas)} cas, dont {rouges} qui DOIVENT rougir, un par concordance.")
-    print("Auto-test concluant : le garde voit les quatre." if not echecs else "Auto-test EN ECHEC.")
+    print(
+        "Auto-test concluant : le garde voit les quatre." if not echecs else "Auto-test EN ECHEC."
+    )
     return echecs
 
 

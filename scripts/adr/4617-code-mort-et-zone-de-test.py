@@ -96,8 +96,9 @@ def suspects(rapport: pathlib.Path | None = None, zone: str | None = None) -> li
                 continue
             if zone is not None and zone_du_fichier != zone:
                 continue
-            retenus.append((regle, zone_du_fichier, pathlib.Path(chemin).name,
-                            violation.get("beginline")))
+            retenus.append(
+                (regle, zone_du_fichier, pathlib.Path(chemin).name, violation.get("beginline"))
+            )
     retenus.sort()
     return [f"{regle}  {nom}:{ligne}  ({z})" for regle, z, nom, ligne in retenus]
 
@@ -106,9 +107,14 @@ if __name__ == "__main__":
     # Les deux cliquets, l un apres l autre. Le code de sortie est le PIRE des deux : une regression
     # dans une zone doit faire rougir, meme si l autre a gagne. C est la disjonction en pratique.
     codes = [
-        rapporte(ADR_PRODUCTION, "violations du portail en production",
-                 suspects(zone="production"), apercu=12),
-        rapporte(ADR_TEST, "violations du portail en zone de test",
-                 suspects(zone="test"), apercu=12),
+        rapporte(
+            ADR_PRODUCTION,
+            "violations du portail en production",
+            suspects(zone="production"),
+            apercu=12,
+        ),
+        rapporte(
+            ADR_TEST, "violations du portail en zone de test", suspects(zone="test"), apercu=12
+        ),
     ]
     sys.exit(max(codes))

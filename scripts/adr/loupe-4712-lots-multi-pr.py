@@ -65,10 +65,23 @@ def estEpic(issue: dict) -> bool:
 
 def _issues() -> list[dict]:
     if not shutil.which("gh"):
-        print("REFUS : « gh » est absent. Cette loupe ne conclut pas sur ce qu'elle n'a pas lu.", file=sys.stderr)
+        print(
+            "REFUS : « gh » est absent. Cette loupe ne conclut pas sur ce qu'elle n'a pas lu.",
+            file=sys.stderr,
+        )
         raise SystemExit(2)
     sortie = subprocess.run(
-        ["gh", "issue", "list", "--state", "open", "--limit", "800", "--json", "number,title,body,labels"],
+        [
+            "gh",
+            "issue",
+            "list",
+            "--state",
+            "open",
+            "--limit",
+            "800",
+            "--json",
+            "number,title,body,labels",
+        ],
         capture_output=True,
         text=True,
         check=False,
@@ -124,7 +137,12 @@ def _autoTest() -> int:
 
     issues = [
         {"number": 4, "title": "parent", "body": corpsEpic, "labels": [{"name": "epic"}]},
-        {"number": 99, "title": "enfant", "body": "Fait partie de #4", "labels": [{"name": "epic"}]},
+        {
+            "number": 99,
+            "title": "enfant",
+            "body": "Fait partie de #4",
+            "labels": [{"name": "epic"}],
+        },
         {"number": 46, "title": "voisine", "body": "Fait partie de #46", "labels": []},
     ]
     liees = rattachees(4, issues)
@@ -154,8 +172,12 @@ def main() -> int:
     if "--auto-test" in sys.argv:
         return _autoTest()
     issues = _issues()
-    code = loupe("4712", "un lot multi-PR s'ouvre en sous-chantier (jugement humain)", rapport(issues))
-    print("\nPour chaque lot ci-dessus : combien de PR ? Plus de deux, il lui fallait un sous-chantier.")
+    code = loupe(
+        "4712", "un lot multi-PR s'ouvre en sous-chantier (jugement humain)", rapport(issues)
+    )
+    print(
+        "\nPour chaque lot ci-dessus : combien de PR ? Plus de deux, il lui fallait un sous-chantier."
+    )
     muets = sansLot(issues)
     if muets:
         print(

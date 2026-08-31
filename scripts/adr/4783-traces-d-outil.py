@@ -44,9 +44,29 @@ ADR = "4783"
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 
 BINAIRES = {
-    ".png", ".jpg", ".jpeg", ".gif", ".ico", ".jar", ".zip", ".gz", ".tar", ".pdf",
-    ".mp4", ".webm", ".wav", ".ttf", ".otf", ".woff", ".woff2", ".class", ".db",
-    ".webp", ".avif", ".bmp", ".tiff",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".ico",
+    ".jar",
+    ".zip",
+    ".gz",
+    ".tar",
+    ".pdf",
+    ".mp4",
+    ".webm",
+    ".wav",
+    ".ttf",
+    ".otf",
+    ".woff",
+    ".woff2",
+    ".class",
+    ".db",
+    ".webp",
+    ".avif",
+    ".bmp",
+    ".tiff",
 }
 
 HORS_CHAMP = {
@@ -56,16 +76,22 @@ HORS_CHAMP = {
 }
 
 # T1. Jetons de citation qu une interface d assistant rend invisibles et que le collage emporte.
-MARQUES = ("citeturn", "contentReference[oaicite", "oai_citation", "grok_card",
-           "grok_render_citation_card_json", "attributableIndex", "ppl-ai-file-upload")
+MARQUES = (
+    "citeturn",
+    "contentReference[oaicite",
+    "oai_citation",
+    "grok_card",
+    "grok_render_citation_card_json",
+    "attributableIndex",
+    "ppl-ai-file-upload",
+)
 MARQUES_RE = re.compile(r"\[cite:\s*\d|\[span_\d+\]\(start_span\)")
 
 # T2. Parametres de suivi que plusieurs assistants accrochent aux liens qu ils rendent.
 UTM = re.compile(r"utm_source=(chatgpt|openai|copilot|perplexity|claude)|referrer=grok")
 
 # T3. Caracteres qui ne s affichent pas et se recopient sans qu on les voie.
-INVISIBLES = {"​": "U+200B", "‌": "U+200C", "‍": "U+200D",
-              "﻿": "U+FEFF", "­": "U+00AD", "⁠": "U+2060"}
+INVISIBLES = {"​": "U+200B", "‌": "U+200C", "‍": "U+200D", "﻿": "U+FEFF", "­": "U+00AD", "⁠": "U+2060"}
 
 # T4. Lettres cyrilliques et grecques employees a la place de leurs sosies latines.
 SOSIES = "аеорсхуіАЕОСХоΑ"
@@ -75,7 +101,9 @@ LATINE = re.compile(r"[A-Za-z]")
 # doit pas les declencher.
 GABARIT = re.compile(
     r"\[Votre nom\]|\[Your Name\]|\[INS[EÉ]RER\b|\[INSERT \b|\[[ÀA] COMPL[EÉ]TER\]"
-    r"|\b\d{4}-XX-XX\b|\b20XX\b|\bXXXX-XX-XX\b", re.I)
+    r"|\b\d{4}-XX-XX\b|\b20XX\b|\bXXXX-XX-XX\b",
+    re.I,
+)
 
 
 def fichiers(racine: pathlib.Path = None) -> list[str]:
@@ -93,15 +121,16 @@ def fichiers(racine: pathlib.Path = None) -> list[str]:
         noms = [c for c in sortie.split("\0") if c]
     else:
         noms = [str(f.relative_to(racine)) for f in sorted(racine.rglob("*")) if f.is_file()]
-    return sorted(c for c in noms
-                  if c not in HORS_CHAMP and pathlib.Path(c).suffix.lower() not in BINAIRES)
+    return sorted(
+        c for c in noms if c not in HORS_CHAMP and pathlib.Path(c).suffix.lower() not in BINAIRES
+    )
 
 
 def citee(ligne: str, position: int) -> bool:
     """Le signe est-il MENTIONNE plutot qu employe ? Voir la troisieme exemption en tete."""
     if ligne.count("`", 0, position) % 2 == 1:
         return True
-    fenetre = ligne[max(0, position - 2): position + 3]
+    fenetre = ligne[max(0, position - 2) : position + 3]
     return bool(re.search(r"""(["'])(\\u[0-9a-fA-F]{4}|.)\1""", fenetre))
 
 
@@ -141,9 +170,14 @@ def suspects(racine: pathlib.Path = None) -> list[str]:
                 nom = INVISIBLES.get(car)
                 if nom and not citee(ligne, i) and not liant_d_emoji(ligne, i):
                     trouves.append(f"{chemin}:{n}  T3 {nom}  {extrait}")
-                elif car in SOSIES and not citee(ligne, i) and (
+                elif (
+                    car in SOSIES
+                    and not citee(ligne, i)
+                    and (
                         (i and LATINE.match(ligne[i - 1]))
-                        or (i + 1 < len(ligne) and LATINE.match(ligne[i + 1]))):
+                        or (i + 1 < len(ligne) and LATINE.match(ligne[i + 1]))
+                    )
+                ):
                     trouves.append(f"{chemin}:{n}  T4 sosie {car!r}  {extrait}")
             for m in GABARIT.finditer(ligne):
                 if not citee(ligne, m.start()):

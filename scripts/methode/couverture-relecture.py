@@ -100,7 +100,9 @@ def relus(chemin: pathlib.Path = None) -> dict[str, str]:
         # Une entree sans empreinte est illisible plutot qu absente : le manifeste porte une
         # affirmation, et une affirmation mal formee ne doit pas passer pour un silence.
         if len(parts) != 2:
-            raise SystemExit(f"Entree de manifeste mal formee : « {nu} » (attendu : <empreinte>  <chemin>)")
+            raise SystemExit(
+                f"Entree de manifeste mal formee : « {nu} » (attendu : <empreinte>  <chemin>)"
+            )
         lu[parts[1]] = parts[0]
     return lu
 
@@ -204,7 +206,12 @@ def _auto_test() -> int:
         registre = r / "relus.txt"
 
         marque(["src/main/java/A.java"], r, registre)
-        cas.append(("un .java du corpus entre au manifeste", list(relus(registre)) == ["src/main/java/A.java"]))
+        cas.append(
+            (
+                "un .java du corpus entre au manifeste",
+                list(relus(registre)) == ["src/main/java/A.java"],
+            )
+        )
 
         # LE cas de #4527. Sans ce refus, la ligne entrait, aucun parcours ne la voyait, et le total
         # annonce cessait d etre celui du corpus.
@@ -214,7 +221,12 @@ def _auto_test() -> int:
         except SystemExit:
             refuse = True
         cas.append(("un fichier hors corpus est refuse", refuse))
-        cas.append(("et il n a rien laisse derriere lui", list(relus(registre)) == ["src/main/java/A.java"]))
+        cas.append(
+            (
+                "et il n a rien laisse derriere lui",
+                list(relus(registre)) == ["src/main/java/A.java"],
+            )
+        )
 
         # Le refus porte sur l APPARTENANCE, pas sur le suffixe seul : un `.java` range ailleurs
         # serait tout aussi invisible.
@@ -235,14 +247,18 @@ def _auto_test() -> int:
         cas.append(("un fichier introuvable est refuse", refuse_absent))
 
         lus, reste, perdues = etat(r, registre)
-        cas.append(("le fichier marque est compte relu", [c for _, c in lus] == ["src/main/java/A.java"]))
+        cas.append(
+            ("le fichier marque est compte relu", [c for _, c in lus] == ["src/main/java/A.java"])
+        )
         cas.append(("et rien n est mort", perdues == []))
 
         # L autre moitie : une entree qui ne designe plus rien. Elle arrive par une suppression, ou
         # par une edition a la main du manifeste - le refus ci-dessus ne ferme que la porte d entree.
         (production / "A.java").unlink()
         lus, reste, perdues = etat(r, registre)
-        cas.append(("un fichier supprime laisse une entree morte", perdues == ["src/main/java/A.java"]))
+        cas.append(
+            ("un fichier supprime laisse une entree morte", perdues == ["src/main/java/A.java"])
+        )
         cas.append(("et il ne compte plus parmi les relus", lus == []))
 
         # Controle NEGATIF : un manifeste vide sur un corpus vide ne signale rien.
@@ -254,9 +270,14 @@ def _auto_test() -> int:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
     if rates:
-        print(f"\n{len(rates)} cas en échec : le compteur ne tient pas ce qu'il annonce.", file=sys.stderr)
+        print(
+            f"\n{len(rates)} cas en échec : le compteur ne tient pas ce qu'il annonce.",
+            file=sys.stderr,
+        )
         return 1
-    print(f"\n{len(cas)} cas : le manifeste refuse ce qu'il ne saurait garder, et signale ce qu'il a perdu.")
+    print(
+        f"\n{len(cas)} cas : le manifeste refuse ce qu'il ne saurait garder, et signale ce qu'il a perdu."
+    )
     return 0
 
 
@@ -265,7 +286,7 @@ def main() -> int:
         return _auto_test()
     if "--marque" in sys.argv:
         i = sys.argv.index("--marque")
-        print(f"{marque(sys.argv[i + 1:])} fichiers au manifeste")
+        print(f"{marque(sys.argv[i + 1 :])} fichiers au manifeste")
         return 0
 
     lus, reste, perdues = etat()

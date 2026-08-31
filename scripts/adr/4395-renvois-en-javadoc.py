@@ -201,8 +201,11 @@ if __name__ == "__main__":
     # Les deux planchers, l un apres l autre. Le code de sortie est le PIRE des deux : une perte
     # dans un arbre doit faire rougir, meme si l autre a gagne. C est la disjonction en pratique.
     codes = [
-        rapporte_plancher("4395", "issues citees par la javadoc de production", renvois(), "renvois"),
-        rapporte_plancher("4587", "issues citees par la javadoc de test",
-                          renvois(zone=ZONES["4587"]), "renvois"),
+        rapporte_plancher(
+            "4395", "issues citees par la javadoc de production", renvois(), "renvois"
+        ),
+        rapporte_plancher(
+            "4587", "issues citees par la javadoc de test", renvois(zone=ZONES["4587"]), "renvois"
+        ),
     ]
     sys.exit(max(codes))

@@ -54,7 +54,9 @@ def poses(commande: str) -> set[str] | None:
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description="Relevé des secrets et variables exigés par les ateliers")
+    p = argparse.ArgumentParser(
+        description="Relevé des secrets et variables exigés par les ateliers"
+    )
     p.add_argument("--compare", action="store_true", help="confronte le relevé au dépôt via `gh`")
     args = p.parse_args()
 
@@ -71,16 +73,20 @@ def main() -> int:
 
         presents = poses(commande)
         if presents is None:
-            print(f"\n`gh {commande} list` n'a pas répondu : le relevé seul est rendu.\n",
-                  file=sys.stderr)
+            print(
+                f"\n`gh {commande} list` n'a pas répondu : le relevé seul est rendu.\n",
+                file=sys.stderr,
+            )
             continue
         manquants = sorted(set(exiges) - presents)
         inutiles = sorted(presents - set(exiges))
         print(f"\n{len(presents)} {libelle}(s) posé(s) sur le dépôt.")
         if manquants:
             ecart = 1
-            print(f"\n{len(manquants)} MANQUANT(S) : les étapes qui en dépendent seront sautées, "
-                  "en gris et non en rouge.")
+            print(
+                f"\n{len(manquants)} MANQUANT(S) : les étapes qui en dépendent seront sautées, "
+                "en gris et non en rouge."
+            )
             for nom in manquants:
                 print(f"  {nom:26} {', '.join(exiges[nom])}")
         if inutiles:

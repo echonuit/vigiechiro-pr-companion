@@ -158,20 +158,27 @@ def auto_test() -> int:
     with arbre_jetable() as faux:
         # 2. Le sens POSITIF : un garde dont le temoin tient fait bien rougir la suite une fois mute.
         #    `2843-tiret-cadratin.py` sert de reference : son temoin compte des cadratins.
-        verifie("un garde au temoin solide fait rougir la suite sous mutation",
-                suite_rougit("2843-tiret-cadratin.py", faux), True)
+        verifie(
+            "un garde au temoin solide fait rougir la suite sous mutation",
+            suite_rougit("2843-tiret-cadratin.py", faux),
+            True,
+        )
         # 3. Le sens NEGATIF : sans mutation, la suite est verte. Sans ce cas, un script qui rendrait
         #    TOUJOURS `True` passerait le cas precedent et n aurait rien prouve.
         rendu = subprocess.run(
             [sys.executable, str(faux / "scripts" / "adr" / "verifie_scripts.py")],
-            capture_output=True, cwd=faux)
+            capture_output=True,
+            cwd=faux,
+        )
         verifie("sans mutation, la suite est verte", rendu.returncode, 0)
         # 4. Ce que ce lot prouve (#4700) : muter n a PAS touche le depot. Sans ce cas, une
         #    reecriture qui reviendrait a muter la source passerait les trois precedents.
         vraie = (DOSSIER / "2843-tiret-cadratin.py").read_text(encoding="utf-8")
         verifie("la mutation n a pas touche le depot", NEUTRALISATION.strip() in vraie, False)
         # 5. Et l arbre jetable est bien un AUTRE arbre, sinon le quatrieme cas ne prouve rien.
-        verifie("l arbre mute n est pas le depot", faux.resolve() == DOSSIER.parents[1].resolve(), False)
+        verifie(
+            "l arbre mute n est pas le depot", faux.resolve() == DOSSIER.parents[1].resolve(), False
+        )
         # 6. Il porte pourtant de quoi juger : `src/` est lie, donc lisible.
         verifie("l arbre jetable voit les sources du depot", (faux / "src").exists(), True)
     return echecs

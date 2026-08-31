@@ -60,4 +60,6 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte("0008", "échec silencieux : catch au corps vide", suspects(), lus=len(fichiers())))
+    sys.exit(
+        rapporte("0008", "échec silencieux : catch au corps vide", suspects(), lus=len(fichiers()))
+    )

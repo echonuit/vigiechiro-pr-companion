@@ -34,7 +34,7 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
     # Retrait mutualisé dans _commun (défaut trouvé sur 0010/0046 en clôture).
     trouves = []
     arbres = [sources] if sources else list(RACINES)
-    for f in sorted(f for a in arbres if a.is_dir() for f in a.rglob('*.fxml')):
+    for f in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.fxml")):
         texte = sans_commentaires_xml(f.read_text(encoding="utf-8"))
         for balise in SLOT.finditer(texte):
             ligne = texte[: balise.start()].count("\n") + 1

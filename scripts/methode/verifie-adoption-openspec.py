@@ -121,14 +121,16 @@ def auto_test() -> int:
     def retire_langue(r: pathlib.Path) -> None:
         fichier = entrees(r)[0][1][0]
         texte = fichier.read_text(encoding="utf-8")
-        fichier.write_text(re.sub(r"^\s*langue:\s*fr\s*$\n", "", texte, count=1, flags=re.M),
-                           encoding="utf-8")
+        fichier.write_text(
+            re.sub(r"^\s*langue:\s*fr\s*$\n", "", texte, count=1, flags=re.M), encoding="utf-8"
+        )
 
     def retire_origine(r: pathlib.Path) -> None:
         fichier = entrees(r)[1][1][0]
         texte = fichier.read_text(encoding="utf-8")
-        fichier.write_text(re.sub(r"^\s*origine:\s*\S.*$\n", "", texte, count=1, flags=re.M),
-                           encoding="utf-8")
+        fichier.write_text(
+            re.sub(r"^\s*origine:\s*\S.*$\n", "", texte, count=1, flags=re.M), encoding="utf-8"
+        )
 
     def retire_un_arbre(r: pathlib.Path) -> None:
         shutil.rmtree(r / CORPUS[1][0])

@@ -55,9 +55,11 @@ def _code(valeur: str) -> str:
     lecteur voit les chevrons eux-memes : le bandeau afficherait sa propre syntaxe.
     """
     morceaux = html.escape(valeur).split("`")
-    return "".join(
-        m if i % 2 == 0 else f"<code>{m}</code>" for i, m in enumerate(morceaux)
-    ) if len(morceaux) % 2 else html.escape(valeur)
+    return (
+        "".join(m if i % 2 == 0 else f"<code>{m}</code>" for i, m in enumerate(morceaux))
+        if len(morceaux) % 2
+        else html.escape(valeur)
+    )
 
 
 def _ligne(intitule: str, valeur: str) -> str:
@@ -110,8 +112,10 @@ def bandeau(meta: dict, articles: dict[str, str] | None = None) -> str:
             if meta.get("verification_note"):
                 morceaux.append(html.escape(str(meta["verification_note"])))
             if meta.get("loupe"):
-                morceaux.append("Loupe : " + ", ".join(
-                    f"<code>{html.escape(str(l))}</code>" for l in meta["loupe"]))
+                morceaux.append(
+                    "Loupe : "
+                    + ", ".join(f"<code>{html.escape(str(l))}</code>" for l in meta["loupe"])
+                )
             if morceaux:
                 glose = " ".join(morceaux)
         lignes.append(_ligne(titre, glose))
@@ -145,7 +149,10 @@ def _auto_test() -> int:
     """
     import types
 
-    ARTICLES = {"A18": "L'utilisateur possède ses fichiers", "A28": "Un avertissement se dit en mots"}
+    ARTICLES = {
+        "A18": "L'utilisateur possède ses fichiers",
+        "A28": "Un avertissement se dit en mots",
+    }
     echecs = []
 
     def verifie(titre: str, ok: bool, detail: str = "") -> None:
@@ -154,41 +161,65 @@ def _auto_test() -> int:
             echecs.append(titre)
 
     complet = {
-        "type": "adr", "title": "Témoin", "status": "stable", "article": "A18",
-        "decided_at": "2026-08-24", "chantier": "#1234", "verification": "certaine",
+        "type": "adr",
+        "title": "Témoin",
+        "status": "stable",
+        "article": "A18",
+        "decided_at": "2026-08-24",
+        "chantier": "#1234",
+        "verification": "certaine",
         "enforced_by": ["TemoinTest#cas"],
     }
     rendu = bandeau(complet, ARTICLES)
-    verifie("le bandeau porte les quatre lignes",
-            all(m in rendu for m in ("Statut", "Article", "Chantier", "Vérification certaine")), rendu[:90])
+    verifie(
+        "le bandeau porte les quatre lignes",
+        all(m in rendu for m in ("Statut", "Article", "Chantier", "Vérification certaine")),
+        rendu[:90],
+    )
     # L enonce est ECHAPPE : l apostrophe sort en `&#x27;`. L asserter sous sa forme brute passerait
     # a cote de l echappement, qui est ce qui empeche un titre d ADR de casser le HTML du bandeau.
-    verifie("l enonce de l article vient de la constitution, echappe",
-            html.escape("L'utilisateur possède ses fichiers") in rendu, rendu[:90])
-    verifie("l applicateur est rendu en code",
-            "<code>TemoinTest#cas</code>" in rendu, rendu[:90])
+    verifie(
+        "l enonce de l article vient de la constitution, echappe",
+        html.escape("L'utilisateur possède ses fichiers") in rendu,
+        rendu[:90],
+    )
+    verifie("l applicateur est rendu en code", "<code>TemoinTest#cas</code>" in rendu, rendu[:90])
 
     # C est le HTML qui est exige, pas une admonition : une admonition se degrade en texte apparent
     # quand l extension manque, ce qui est une panne discrete.
-    verifie("le bandeau est du HTML, pas une admonition",
-            rendu.startswith('<div class="adr-bandeau">') and "!!!" not in rendu, rendu[:60])
+    verifie(
+        "le bandeau est du HTML, pas une admonition",
+        rendu.startswith('<div class="adr-bandeau">') and "!!!" not in rendu,
+        rendu[:60],
+    )
 
     # Aucun cadratin, pas meme en entite : le cliquet cherche le glyphe et manquerait `&mdash;`.
-    verifie("aucun cadratin, ni glyphe ni entite",
-            chr(0x2014) not in rendu and "&mdash;" not in rendu and "&#8212;" not in rendu)
+    verifie(
+        "aucun cadratin, ni glyphe ni entite",
+        chr(0x2014) not in rendu and "&mdash;" not in rendu and "&#8212;" not in rendu,
+    )
 
-    humaine = dict(complet, verification="humaine", enforced_by=None,
-                   loupe=["scripts/adr/2843-tiret-cadratin.py"])
+    humaine = dict(
+        complet,
+        verification="humaine",
+        enforced_by=None,
+        loupe=["scripts/adr/2843-tiret-cadratin.py"],
+    )
     rendu_h = bandeau(humaine, ARTICLES)
-    verifie("une verification humaine montre sa loupe",
-            "Loupe :" in rendu_h and "2843-tiret-cadratin.py" in rendu_h, rendu_h[:90])
+    verifie(
+        "une verification humaine montre sa loupe",
+        "Loupe :" in rendu_h and "2843-tiret-cadratin.py" in rendu_h,
+        rendu_h[:90],
+    )
     # Une ADR ecrite a la main porte souvent les DEUX : un motif, et le champ `loupe:`. Rendre l un
     # OU l autre cacherait les scripts a celles dont la note ne les nomme pas, ce qui etait le cas.
     avec_note = dict(humaine, verification_note="aucun motif textuel ne tranche")
     rendu_n = bandeau(avec_note, ARTICLES)
-    verifie("le motif ET la loupe se rendent ensemble",
-            "aucun motif textuel ne tranche" in rendu_n and "2843-tiret-cadratin.py" in rendu_n,
-            rendu_n[:120])
+    verifie(
+        "le motif ET la loupe se rendent ensemble",
+        "aucun motif textuel ne tranche" in rendu_n and "2843-tiret-cadratin.py" in rendu_n,
+        rendu_n[:120],
+    )
 
     # Un article que la constitution ne declare pas ARRETE la construction : c est un rattachement
     # casse, et le site ne doit pas le rendre en silence.
@@ -208,17 +239,24 @@ def _auto_test() -> int:
     page = types.SimpleNamespace(meta=complet)
     sortie = on_page_markdown("# Témoin\n\n## Contexte\n", page, None, None)
     lignes = sortie.split("\n")
-    verifie("le bandeau se pose SOUS le titre de niveau 1",
-            lignes[0].startswith("# ") and any("adr-bandeau" in l for l in lignes[1:4]), sortie[:80])
+    verifie(
+        "le bandeau se pose SOUS le titre de niveau 1",
+        lignes[0].startswith("# ") and any("adr-bandeau" in l for l in lignes[1:4]),
+        sortie[:80],
+    )
 
     # Une page qui n est pas une ADR ne doit rien recevoir.
     autre = types.SimpleNamespace(meta={"type": "page"})
-    verifie("une page qui n est pas une ADR est rendue inchangée",
-            on_page_markdown("# Autre\n", autre, None, None) == "# Autre\n")
+    verifie(
+        "une page qui n est pas une ADR est rendue inchangée",
+        on_page_markdown("# Autre\n", autre, None, None) == "# Autre\n",
+    )
 
     print()
     if echecs:
-        print(f"ÉCHEC : {len(echecs)} cas. Le bandeau ne fait pas ce qu il annonce.", file=sys.stderr)
+        print(
+            f"ÉCHEC : {len(echecs)} cas. Le bandeau ne fait pas ce qu il annonce.", file=sys.stderr
+        )
         return 1
     print("Auto-test concluant : le bandeau rend ce qu il promet, et refuse un rattachement cassé.")
     return 0
@@ -228,4 +266,3 @@ if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
     raise SystemExit("Ce fichier est un hook MkDocs. Lancez-le avec --auto-test pour l'éprouver.")
-

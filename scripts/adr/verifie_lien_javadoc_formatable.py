@@ -100,8 +100,12 @@ def _auto_test() -> int:
             (src / nom).write_text(contenu, encoding="utf-8")
 
         # 1. Le cas refuse : longue ET lien a texte espace.
-        ecrire("A.java", f"/// Le defaut est revenu quatre fois ([ADR 4134]{lien}).\nclass A {{}}\n")
-        cas.append(("une ligne longue avec un lien a texte espace est refusee", len(a_risque(r)) == 1))
+        ecrire(
+            "A.java", f"/// Le defaut est revenu quatre fois ([ADR 4134]{lien}).\nclass A {{}}\n"
+        )
+        cas.append(
+            ("une ligne longue avec un lien a texte espace est refusee", len(a_risque(r)) == 1)
+        )
 
         # 2. Longue, mais SANS lien : le formateur la replie correctement, mesure a l appui.
         ecrire("A.java", "/// " + "mot " * 40 + "\nclass A {}\n")
@@ -113,16 +117,23 @@ def _auto_test() -> int:
 
         # 4. Longue avec un lien dont le texte n a PAS d espace : le formateur ne peut couper
         #    qu avant le crochet, ce qui est sans dommage.
-        ecrire("A.java", f"/// Le defaut est revenu quatre fois, voir ici ([ADR4134]{lien}).\nclass A {{}}\n")
+        ecrire(
+            "A.java",
+            f"/// Le defaut est revenu quatre fois, voir ici ([ADR4134]{lien}).\nclass A {{}}\n",
+        )
         cas.append(("une ligne longue dont le lien n a pas d espace passe", a_risque(r) == []))
 
     for nom, ok in cas:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
     if rates:
-        print(f"\n{len(rates)} cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr)
+        print(
+            f"\n{len(rates)} cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr
+        )
         return 1
-    print(f"\n{len(cas)} cas : le garde voit la forme à risque et laisse passer les trois voisines.")
+    print(
+        f"\n{len(cas)} cas : le garde voit la forme à risque et laisse passer les trois voisines."
+    )
     return 0
 
 
@@ -137,7 +148,10 @@ def main() -> int:
         print(f"  {t}", file=sys.stderr)
     if trouves:
         print(f"\n{len(trouves)} ligne(s) que le formateur casserait.", file=sys.stderr)
-        print("Pré-repliez le lien : le texte sur une ligne `///`, la cible sur la suivante.", file=sys.stderr)
+        print(
+            "Pré-repliez le lien : le texte sur une ligne `///`, la cible sur la suivante.",
+            file=sys.stderr,
+        )
         return 1
     print("Javadoc : aucun lien que le formateur casserait.")
     return 0

@@ -78,10 +78,9 @@ RAPPEL = (
 
 def verdicts(racine: pathlib.Path) -> tuple[int, int]:
     """Les codes rendus par le script cite sur les deux titres temoins."""
+
     def code(titre: str) -> int:
-        return subprocess.run(
-            ["bash", str(racine / GARDE), titre], capture_output=True
-        ).returncode
+        return subprocess.run(["bash", str(racine / GARDE), titre], capture_output=True).returncode
 
     return code(REFUSE), code(ACCEPTE)
 

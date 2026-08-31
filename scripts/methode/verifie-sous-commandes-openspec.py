@@ -93,9 +93,7 @@ def binaire(racine: pathlib.Path) -> tuple[str | None, str | None]:
 
 def sous_commandes(outil: str, chemin: list[str]) -> set[str]:
     """Ce que l aide de l outil expose a ce niveau. Lu de l outil, jamais recopie ici."""
-    rendu = subprocess.run(
-        [outil] + chemin + ["--help"], capture_output=True, text=True
-    ).stdout
+    rendu = subprocess.run([outil] + chemin + ["--help"], capture_output=True, text=True).stdout
     bloc = rendu.split("Commands:", 1)
     if len(bloc) < 2:
         return set()
@@ -118,7 +116,7 @@ def corps(texte: str) -> str:
     if texte.startswith("---\n"):
         fin = texte.find("\n---\n", 3)
         if fin != -1:
-            return texte[fin + 5:]
+            return texte[fin + 5 :]
     return texte
 
 
@@ -212,20 +210,25 @@ def auto_test() -> int:
 
     def commande_inventee(r: pathlib.Path) -> None:
         f = premier_fichier(r)
-        f.write_text(f.read_text(encoding="utf-8") + "\nLancez `openspec frobnicate`.\n",
-                     encoding="utf-8")
+        f.write_text(
+            f.read_text(encoding="utf-8") + "\nLancez `openspec frobnicate`.\n", encoding="utf-8"
+        )
 
     def sous_commande_inventee(r: pathlib.Path) -> None:
         f = premier_fichier(r)
-        f.write_text(f.read_text(encoding="utf-8") + "\nLancez `openspec new frobnicate`.\n",
-                     encoding="utf-8")
+        f.write_text(
+            f.read_text(encoding="utf-8") + "\nLancez `openspec new frobnicate`.\n",
+            encoding="utf-8",
+        )
 
     def entete_yaml(r: pathlib.Path) -> None:
         """Le faux positif : dans l en-tete, et a cheval sur deux lignes. Doit rester VERT."""
         f = premier_fichier(r)
         texte = f.read_text(encoding="utf-8")
-        f.write_text("---\nmetadata:\n  author: openspec\n  version: \"1.0\"\n---\n" + corps(texte),
-                     encoding="utf-8")
+        f.write_text(
+            '---\nmetadata:\n  author: openspec\n  version: "1.0"\n---\n' + corps(texte),
+            encoding="utf-8",
+        )
 
     def sans_binaire(r: pathlib.Path) -> None:
         shutil.rmtree(r / ".github" / "openspec" / "node_modules", ignore_errors=True)
@@ -284,7 +287,9 @@ def auto_test() -> int:
     if echecs:
         print("\nLe garde ne tient pas : " + ", ".join(echecs), file=sys.stderr)
         return 1
-    print(f"\nAuto-test concluant : vert sur l arbre sain, et les {len(cas)} cas rendent leur verdict.")
+    print(
+        f"\nAuto-test concluant : vert sur l arbre sain, et les {len(cas)} cas rendent leur verdict."
+    )
     return 0
 
 

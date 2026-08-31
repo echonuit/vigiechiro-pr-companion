@@ -57,22 +57,31 @@ def recense(decisions: pathlib.Path, constitution: pathlib.Path) -> list[dict]:
             for t in e.get("enforced_by") or []:
                 if MECANIQUE.match(str(t)) and t not in tenants:
                     tenants.append(str(t))
-        lignes.append({
-            "code": code,
-            "enonce": enonce,
-            "adrs": len(adrs),
-            "certaines": sum(1 for e in adrs if e.get("verification") == "certaine"),
-            "tenants": tenants,
-        })
+        lignes.append(
+            {
+                "code": code,
+                "enonce": enonce,
+                "adrs": len(adrs),
+                "certaines": sum(1 for e in adrs if e.get("verification") == "certaine"),
+                "tenants": tenants,
+            }
+        )
     return lignes
 
 
 def rend(lignes: list[dict]) -> str:
     """La section de matrice, telle qu'elle doit figurer dans la constitution."""
-    sortie = [DEBUT, "", "## Matrice de traçabilité", "",
-              "Engendrée depuis les en-têtes des ADR par "
-              "`scripts/methode/matrice-constitution.py`, et gardée par lui.", "",
-              "| Article | Jurisprudence | Dont mécanisée | Tenu par |", "|---|---:|---:|---|"]
+    sortie = [
+        DEBUT,
+        "",
+        "## Matrice de traçabilité",
+        "",
+        "Engendrée depuis les en-têtes des ADR par "
+        "`scripts/methode/matrice-constitution.py`, et gardée par lui.",
+        "",
+        "| Article | Jurisprudence | Dont mécanisée | Tenu par |",
+        "|---|---:|---:|---|",
+    ]
     dettes = []
     for l in lignes:
         if l["tenants"]:
@@ -84,9 +93,13 @@ def rend(lignes: list[dict]) -> str:
             tenu = "**relecture seule**"
             dettes.append(l)
         sortie.append(f"| {l['code']} · {l['enonce']} | {l['adrs']} | {l['certaines']} | {tenu} |")
-    sortie += ["", f"**{len(dettes)} article(s) sur {len(lignes)} ne sont tenus que par la relecture.** "
-               "C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, "
-               "pas comme une fatalité.", ""]
+    sortie += [
+        "",
+        f"**{len(dettes)} article(s) sur {len(lignes)} ne sont tenus que par la relecture.** "
+        "C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, "
+        "pas comme une fatalité.",
+        "",
+    ]
     if dettes:
         sortie += [f"- {l['code']} · {l['enonce']}" for l in dettes] + [""]
     sortie.append(FIN)
@@ -115,8 +128,11 @@ def main() -> int:
     attendu = remplace(texte, rend(recense(DECISIONS, CONSTITUTION)))
     if args.verifie:
         if texte != attendu:
-            print("La matrice de la constitution est périmée.\n"
-                  "Relancez : python3 scripts/methode/matrice-constitution.py", file=sys.stderr)
+            print(
+                "La matrice de la constitution est périmée.\n"
+                "Relancez : python3 scripts/methode/matrice-constitution.py",
+                file=sys.stderr,
+            )
             return 1
         print("Matrice de la constitution à jour.")
         return 0
@@ -127,9 +143,11 @@ def main() -> int:
 
 def auto_test() -> int:
     """Le garde doit rougir sur une matrice périmée, et se taire sur une matrice fraîche."""
-    modele = ("---\ntype: adr\ntitle: \"T\"\nstatus: stable\narticle: A1\n"
-              "verification: certaine\nenforced_by:\n  - \"TemoinTest#cas\"\n"
-              "verified:\n  - by: machine:ci\n---\n\n# T\n")
+    modele = (
+        '---\ntype: adr\ntitle: "T"\nstatus: stable\narticle: A1\n'
+        'verification: certaine\nenforced_by:\n  - "TemoinTest#cas"\n'
+        "verified:\n  - by: machine:ci\n---\n\n# T\n"
+    )
     echecs = []
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
@@ -137,7 +155,9 @@ def auto_test() -> int:
         decisions.mkdir()
         (decisions / "0001-t.md").write_text(modele, encoding="utf-8")
         const = racine / "CONSTITUTION.md"
-        const.write_text("### A1 : Un témoin\n\n### A2 : Un article que rien ne tient\n", encoding="utf-8")
+        const.write_text(
+            "### A1 : Un témoin\n\n### A2 : Un article que rien ne tient\n", encoding="utf-8"
+        )
 
         lignes = recense(decisions, const)
         frais = remplace(const.read_text(encoding="utf-8"), rend(lignes))
@@ -155,14 +175,18 @@ def auto_test() -> int:
         # Non-vacuité : une fois écrite, la matrice doit être stable. Un générateur instable
         # rendrait le garde rouge à jamais, et son rouge cesserait de vouloir dire quelque chose.
         const.write_text(frais, encoding="utf-8")
-        stable = remplace(const.read_text(encoding="utf-8"), rend(recense(decisions, const))) == frais
+        stable = (
+            remplace(const.read_text(encoding="utf-8"), rend(recense(decisions, const))) == frais
+        )
         print(f"  {'✔' if stable else '✘'} la matrice engendrée est stable")
         if not stable:
             echecs.append("stabilité")
 
         # Et elle doit rougir quand la jurisprudence bouge sous elle.
         (decisions / "0002-u.md").write_text(modele.replace("# T", "# U"), encoding="utf-8")
-        perime = remplace(const.read_text(encoding="utf-8"), rend(recense(decisions, const))) != frais
+        perime = (
+            remplace(const.read_text(encoding="utf-8"), rend(recense(decisions, const))) != frais
+        )
         print(f"  {'✔' if perime else '✘'} une ADR ajoutée périme la matrice")
         if not perime:
             echecs.append("péremption")

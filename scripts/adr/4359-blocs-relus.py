@@ -109,7 +109,9 @@ def entrees(racine: pathlib.Path = None) -> list[tuple[str, str, str]]:
             continue
         parts = ligne.split("\t")
         if len(parts) != 3:
-            raise SystemExit(f"registre : ligne mal formee, trois colonnes attendues -> {ligne[:60]}")
+            raise SystemExit(
+                f"registre : ligne mal formee, trois colonnes attendues -> {ligne[:60]}"
+            )
         lues.append(tuple(p.strip() for p in parts))
     return lues
 

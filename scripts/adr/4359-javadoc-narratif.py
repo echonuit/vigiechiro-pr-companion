@@ -262,65 +262,92 @@ def _auto_test() -> int:
         # Une constante d enum aussi - et sa forme a arguments ne doit pas passer pour une methode.
         pose("A.java", "enum E {\n" + bloc(SM + 1, '    ROUGE("r"),') + "}")
         f = suspects(r)
-        cas.append(("une constante d enum n est pas une methode", len(f) == 1 and "(constante)" in f[0]))
+        cas.append(
+            ("une constante d enum n est pas une methode", len(f) == 1 and "(constante)" in f[0])
+        )
 
         # Une annotation entre le bloc et la declaration ne doit pas brouiller la lecture.
         pose("A.java", "class F {\n" + bloc(SM + 2, "    @Override\n    void g() {}") + "}")
-        cas.append(("une annotation ne cache pas la declaration",
-                    len(suspects(r)) == 2 and "(methode)" in suspects(r)[0]))
+        cas.append(
+            (
+                "une annotation ne cache pas la declaration",
+                len(suspects(r)) == 2 and "(methode)" in suspects(r)[0],
+            )
+        )
 
         # LE cas qui a fausse cinquante-huit mesures : une annotation MULTILIGNE. Sauter sa seule
         # premiere ligne fait lire `name = "..."` comme la declaration, et une javadoc de CLASSE se
         # retrouve mesuree au seuil d un CHAMP - deux fois plus severe.
-        commande = ('@Command(\n        name = "faire",\n        description = "fait")\n'
-                    "public class G {}")
+        commande = (
+            '@Command(\n        name = "faire",\n        description = "fait")\npublic class G {}'
+        )
         pose("A.java", bloc(SM + 2, commande))
-        cas.append(("une annotation multiligne ne fait pas passer une classe pour un champ",
-                    suspects(r) == []))
+        cas.append(
+            (
+                "une annotation multiligne ne fait pas passer une classe pour un champ",
+                suspects(r) == [],
+            )
+        )
 
         # Et la borne : au-dela du seuil du TYPE, la meme classe annotee coute bien.
         pose("A.java", bloc(ST + 2, commande))
         f = suspects(r)
-        cas.append(("cette classe annotee coute au seuil du type",
-                    len(f) == 2 and "(type)" in f[0]))
+        cas.append(
+            ("cette classe annotee coute au seuil du type", len(f) == 2 and "(type)" in f[0])
+        )
 
         # LE cas qui rend le seuil juste : les etiquettes de contrat ne racontent rien. Sans cette
         # exception, un record de trente champs serait le pire suspect du depot alors qu il est
         # exemplaire.
-        tags = "/// Resume.\n" + "\n".join(f"/// @param p{i} un champ" for i in range(30)) + "\nclass C {}\n"
+        tags = (
+            "/// Resume.\n"
+            + "\n".join(f"/// @param p{i} un champ" for i in range(30))
+            + "\nclass C {}\n"
+        )
         pose("A.java", tags)
         cas.append(("trente @param ne racontent rien", suspects(r) == []))
 
         # Une etiquette tient souvent sur plusieurs lignes. Sans ce cas, les SUITES comptaient
         # comme de la prose et un record bien documente devenait le pire suspect du depot - ce que
         # le cas precedent ne voyait pas, ses trente etiquettes tenant chacune sur une ligne.
-        longs = "/// Resume.\n" + "\n".join(
-            f"/// @param p{i} un champ\n///     dont l explication continue\n///     sur trois lignes"
-            for i in range(30)) + "\nclass C {}\n"
+        longs = (
+            "/// Resume.\n"
+            + "\n".join(
+                f"/// @param p{i} un champ\n///     dont l explication continue\n///     sur trois lignes"
+                for i in range(30)
+            )
+            + "\nclass C {}\n"
+        )
         pose("A.java", longs)
         cas.append(("les suites d une etiquette non plus", suspects(r) == []))
 
         # Un TABLEAU specifie, il ne raconte pas : ses lignes ne comptent pas, meme argument que
         # pour les etiquettes de contrat. Sans ce cas, une matrice de decision se paierait comme
         # un paragraphe d histoire.
-        table = ("/// Resume.\n"
-                 + "\n".join(f"/// | cas {i} | verdict {i} |" for i in range(ST + 5))
-                 + "\nclass T {}\n")
+        table = (
+            "/// Resume.\n"
+            + "\n".join(f"/// | cas {i} | verdict {i} |" for i in range(ST + 5))
+            + "\nclass T {}\n"
+        )
         pose("A.java", table)
         cas.append(("un tableau ne compte pas comme de la prose", suspects(r) == []))
 
         # Un bloc de CODE montre un usage : il ne compte pas davantage, cloture comprise.
-        exemple = ("/// Resume.\n/// ```java\n"
-                   + "\n".join(f"/// ligne{i}();" for i in range(ST + 5))
-                   + "\n/// ```\nclass U {}\n")
+        exemple = (
+            "/// Resume.\n/// ```java\n"
+            + "\n".join(f"/// ligne{i}();" for i in range(ST + 5))
+            + "\n/// ```\nclass U {}\n"
+        )
         pose("A.java", exemple)
         cas.append(("un bloc de code non plus", suspects(r) == []))
 
         # LA borne : ce qui SUIT un bloc de code referme compte de nouveau. Sans elle, une fence
         # ouverte en tete blanchirait tout le bloc.
-        apres_code = ("/// ```java\n/// exemple();\n/// ```\n"
-                      + "\n".join(f"/// Ligne {i}." for i in range(ST + 2))
-                      + "\nclass V {}\n")
+        apres_code = (
+            "/// ```java\n/// exemple();\n/// ```\n"
+            + "\n".join(f"/// Ligne {i}." for i in range(ST + 2))
+            + "\nclass V {}\n"
+        )
         pose("A.java", apres_code)
         cas.append(("ce qui suit un bloc de code referme compte", len(suspects(r)) == 2))
 
@@ -340,7 +367,10 @@ def _auto_test() -> int:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
     if rates:
-        print(f"\n{len(rates)} cas en échec : le cliquet ne compte pas ce qu'il annonce.", file=sys.stderr)
+        print(
+            f"\n{len(rates)} cas en échec : le cliquet ne compte pas ce qu'il annonce.",
+            file=sys.stderr,
+        )
         return 1
     print(f"\n{len(cas)} cas : le cliquet voit un bloc narratif et laisse passer le contrat.")
     return 0

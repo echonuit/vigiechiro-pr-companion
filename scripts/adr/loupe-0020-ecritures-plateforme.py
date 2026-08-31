@@ -47,4 +47,8 @@ def candidats(api: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(loupe("0020", "surface d'écriture vers la plateforme (à confronter aux 3 règles)", candidats()))
+    sys.exit(
+        loupe(
+            "0020", "surface d'écriture vers la plateforme (à confronter aux 3 règles)", candidats()
+        )
+    )

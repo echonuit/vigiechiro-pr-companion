@@ -79,7 +79,7 @@ def cliquet(numero: str) -> int:
             f"ADR {numero} ne déclare aucun cliquet lisible. Attendu, dans son en-tête :\n"
             f"  verification: probable\n"
             f"  enforced_by:\n"
-            f"    - \"chemin/du/script\"\n"
+            f'    - "chemin/du/script"\n'
             f"  ratchet: N"
         )
     return int(trouve.group(1))
@@ -102,7 +102,7 @@ def plancher(numero: str) -> int:
             f"ADR {numero} ne déclare aucun plancher lisible. Attendu, dans son en-tête :\n"
             f"  verification: certaine\n"
             f"  enforced_by:\n"
-            f"    - \"chemin/du/script\"\n"
+            f'    - "chemin/du/script"\n'
             f"  floor: N"
         )
     return int(trouve.group(1))
@@ -229,7 +229,9 @@ def rapporte(
         print(f"  {suspect}")
     # Un apercu qui ne dit pas ce qu il tait est un compte rendu partiel qui se donne pour complet.
     if len(montres) < len(suspects):
-        print(f"  … et {len(suspects) - len(montres)} autres, non montrés (aperçu borné à {apercu})")
+        print(
+            f"  … et {len(suspects) - len(montres)} autres, non montrés (aperçu borné à {apercu})"
+        )
 
     verdict = "ok"
     if lus == 0:
@@ -296,7 +298,9 @@ def loupe(numero: str, titre: str, candidats: list[str], lus: int | None = None)
     if lus == 0:
         # Sur STDOUT, avec le reste de son rapport : une loupe ne rate jamais, donc `stderr` serait
         # le mauvais canal, et `rapport.py` lit la sortie normalisée sur stdout.
-        print(f"LOUPE {numero} | population-vide : elle n'a rien balayé, son zéro ne veut rien dire.")
+        print(
+            f"LOUPE {numero} | population-vide : elle n'a rien balayé, son zéro ne veut rien dire."
+        )
     return 0
 
 

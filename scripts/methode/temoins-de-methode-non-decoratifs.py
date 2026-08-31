@@ -155,25 +155,38 @@ def _auto_test() -> int:
             echecs = 1
 
     verifie("le corpus vient de lint.yml, et n est pas vide", len(corpus()) > 5, True)
-    verifie("un garde a point d entree est mutable",
-            mutable('def f():\n    pass\n\n\nif __name__ == "__main__":\n    f()\n'), True)
-    verifie("un garde sans point d entree ne l est pas",
-            mutable("def f():\n    pass\n\n\nf()\n"), False)
+    verifie(
+        "un garde a point d entree est mutable",
+        mutable('def f():\n    pass\n\n\nif __name__ == "__main__":\n    f()\n'),
+        True,
+    )
+    verifie(
+        "un garde sans point d entree ne l est pas", mutable("def f():\n    pass\n\n\nf()\n"), False
+    )
 
     src = 'def detecte():\n    return [1]\n\n\nif __name__ == "__main__":\n    detecte()\n'
     # Le point qui a coute cinq mesures fausses : la neutralisation s INSERE, elle ne s ajoute pas.
-    verifie("la neutralisation se pose AVANT le point d entree",
-            mute(src).index("_t_mutation") < mute(src).index("if __name__"), True)
+    verifie(
+        "la neutralisation se pose AVANT le point d entree",
+        mute(src).index("_t_mutation") < mute(src).index("if __name__"),
+        True,
+    )
     verifie("elle ne se pose pas apres", mute(src).rstrip().endswith("detecte()"), True)
     # Le sens NEGATIF : sans lui, un `mute` qui rendrait son entree passerait les deux precedents.
     verifie("la source est bien changee", mute(src) != src, True)
 
     # La fonction d auto-test est epargnee, sinon le garde rougit pour la mauvaise raison (#4760).
-    verifie("`auto_test` est épargnée par la neutralisation",
-            'not ("auto" in _bas_mutation and "test" in _bas_mutation)' in NEUTRALISATION, True)
+    verifie(
+        "`auto_test` est épargnée par la neutralisation",
+        'not ("auto" in _bas_mutation and "test" in _bas_mutation)' in NEUTRALISATION,
+        True,
+    )
     # Et l exemption se derive : elle ne nomme aucun garde en particulier.
-    verifie("l exemption ne cite aucun nom de garde",
-            any(g.split(".")[0] in NEUTRALISATION for g in corpus()), False)
+    verifie(
+        "l exemption ne cite aucun nom de garde",
+        any(g.split(".")[0] in NEUTRALISATION for g in corpus()),
+        False,
+    )
 
     # #4788. Un garde sans point d entree REFUSE, au lieu d etre signale sous un vert.
     verifie("rien a signaler passe", code_de_sortie([], []), 0)
@@ -203,7 +216,7 @@ if __name__ == "__main__":
             "\nCes gardes exécutent leur corps au niveau du module : aucun endroit sûr où insérer\n"
             "la neutralisation, donc aucune preuve au titre de l'article A2.\n"
             "\nLe remède tient en une ligne : placez la partie qui S'EXÉCUTE sous\n"
-            "`if __name__ == \"__main__\":`, en laissant AU-DESSUS tout ce qui se définit.\n"
+            '`if __name__ == "__main__":`, en laissant AU-DESSUS tout ce qui se définit.\n'
             "La neutralisation s'insère juste avant ce point d'entrée, et une fonction\n"
             "définie après lui y échapperait.\n"
             "\nCe garde REFUSE désormais au lieu de le signaler (issue #4788). Il l'a signalé\n"

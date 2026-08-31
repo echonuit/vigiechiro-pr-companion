@@ -113,14 +113,23 @@ def main(argv: list[str]) -> int:
     chemin = pathlib.Path(arguments[0]) if arguments else RAPPORT
     if not chemin.exists():
         print(f"Rapport introuvable : {chemin}", file=sys.stderr)
-        print("PIT a-t-il tourné ? Rappel : le but seul n'exécute aucune phase, il faut", file=sys.stderr)
-        print("  ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage", file=sys.stderr)
+        print(
+            "PIT a-t-il tourné ? Rappel : le but seul n'exécute aucune phase, il faut",
+            file=sys.stderr,
+        )
+        print(
+            "  ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage",
+            file=sys.stderr,
+        )
         return 1
     try:
         etats, survivants = lire(chemin)
     except ET.ParseError as tronque:
         print(f"Rapport illisible ({chemin}) : {tronque}", file=sys.stderr)
-        print("Il est écrit au fil de l'eau : une lecture pendant le run tombe sur un fichier", file=sys.stderr)
+        print(
+            "Il est écrit au fil de l'eau : une lecture pendant le run tombe sur un fichier",
+            file=sys.stderr,
+        )
         print("incomplet. Attendre la fin de la mesure.", file=sys.stderr)
         return 2
     print(markdown(etats, survivants))

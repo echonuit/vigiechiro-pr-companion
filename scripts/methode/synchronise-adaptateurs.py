@@ -16,6 +16,7 @@ rougir. Une copie n a pas de valeur propre, et `git` garde ce qui est efface.
     --auto-test : eprouver le garde lui-meme sur une copie jetable, et sortir 1 s il reste vert
                   la ou il devrait rougir. Un garde vert n est pas un garde verifie.
 """
+
 import filecmp, shutil, subprocess, sys, tempfile, pathlib
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
@@ -37,15 +38,30 @@ def auto_test() -> int:
         """Une copie qui n a plus de source : ce que laisse tout renommage de competence."""
         orphelin = r / ".claude" / "skills" / "competence-disparue"
         orphelin.mkdir(parents=True)
-        (orphelin / "SKILL.md").write_text("---\nname: competence-disparue\n---\n", encoding="utf-8")
+        (orphelin / "SKILL.md").write_text(
+            "---\nname: competence-disparue\n---\n", encoding="utf-8"
+        )
 
     cas = [
-        ("adaptateur absent",  lambda r: shutil.rmtree(r / ".claude" / "skills" / next(
-            p.parent.name for p in sorted((r / ".agents" / "skills").glob("*/SKILL.md"))))),
-        ("adaptateur perime",  lambda r: next(
-            (r / ".claude" / "skills").glob("*/SKILL.md")).open("a", encoding="utf-8").write("derive\n")),
-        ("source vide",        lambda r: (r / ".agents" / "skills").rename(r / ".agents" / "skills-off")),
-        ("copie orpheline",    copie_orpheline),
+        (
+            "adaptateur absent",
+            lambda r: shutil.rmtree(
+                r
+                / ".claude"
+                / "skills"
+                / next(p.parent.name for p in sorted((r / ".agents" / "skills").glob("*/SKILL.md")))
+            ),
+        ),
+        (
+            "adaptateur perime",
+            lambda r: (
+                next((r / ".claude" / "skills").glob("*/SKILL.md"))
+                .open("a", encoding="utf-8")
+                .write("derive\n")
+            ),
+        ),
+        ("source vide", lambda r: (r / ".agents" / "skills").rename(r / ".agents" / "skills-off")),
+        ("copie orpheline", copie_orpheline),
     ]
     echecs = []
 
@@ -54,14 +70,19 @@ def auto_test() -> int:
         for d in (".agents", ".claude", "scripts"):
             if (RACINE / d).exists():
                 shutil.copytree(RACINE / d, copie / d, symlinks=True)
-        subprocess.run([sys.executable, str(copie / script.relative_to(RACINE))], capture_output=True)
+        subprocess.run(
+            [sys.executable, str(copie / script.relative_to(RACINE))], capture_output=True
+        )
         return copie
 
     with tempfile.TemporaryDirectory() as tmp:
         temoin = subprocess.run(
             [sys.executable, str(monte(tmp) / script.relative_to(RACINE)), "--verifie"],
-            capture_output=True).returncode
-        print(f"  {'temoin, arbre sain':20s} -> {'vert' if temoin == 0 else f'ROUGE (code {temoin})'}")
+            capture_output=True,
+        ).returncode
+        print(
+            f"  {'temoin, arbre sain':20s} -> {'vert' if temoin == 0 else f'ROUGE (code {temoin})'}"
+        )
         if temoin != 0:
             echecs.append("le temoin rougit, donc les rouges qui suivent ne prouvent rien")
     for nom, casser in cas:
@@ -70,11 +91,14 @@ def auto_test() -> int:
             for d in (".agents", ".claude", "scripts"):
                 if (RACINE / d).exists():
                     shutil.copytree(RACINE / d, copie / d, symlinks=True)
-            subprocess.run([sys.executable, str(copie / script.relative_to(RACINE))],
-                           capture_output=True)
+            subprocess.run(
+                [sys.executable, str(copie / script.relative_to(RACINE))], capture_output=True
+            )
             casser(copie)
-            code = subprocess.run([sys.executable, str(copie / script.relative_to(RACINE)), "--verifie"],
-                                  capture_output=True).returncode
+            code = subprocess.run(
+                [sys.executable, str(copie / script.relative_to(RACINE)), "--verifie"],
+                capture_output=True,
+            ).returncode
             etat = "rouge" if code == 1 else f"VERT (code {code})"
             print(f"  {nom:20s} -> {etat}")
             if code != 1:
@@ -122,8 +146,10 @@ if __name__ == "__main__":
         # Mesure de #4565 : cinq renommages, cinq orphelins survivants, aucun mot. Article A3, ADR 2748.
         if cible.is_dir():
             for mort in sorted(d for d in cible.iterdir() if d.is_dir() and d.name not in nos):
-                ecarts.append(f"{mort.relative_to(RACINE)} orphelin : aucune source sous "
-                              f"{SOURCE.relative_to(RACINE)}")
+                ecarts.append(
+                    f"{mort.relative_to(RACINE)} orphelin : aucune source sous "
+                    f"{SOURCE.relative_to(RACINE)}"
+                )
                 if not VERIFIE:
                     shutil.rmtree(mort)
                     retires.append(str(mort.relative_to(RACINE)))
@@ -133,11 +159,15 @@ if __name__ == "__main__":
             print("Adaptateurs desynchronises :", file=sys.stderr)
             for e in ecarts:
                 print(f"  {e}", file=sys.stderr)
-            print("\nRelancer : python3 scripts/methode/synchronise-adaptateurs.py", file=sys.stderr)
+            print(
+                "\nRelancer : python3 scripts/methode/synchronise-adaptateurs.py", file=sys.stderr
+            )
             sys.exit(1)
         print(f"{len(nos)} competence(s), adaptateurs a jour.")
     else:
         for mort in retires:
             print(f"  retire : {mort} (orphelin, plus aucune source)")
-        print(f"{len(nos)} competence(s) synchronisee(s)"
-              + (f", {len(ecarts)} ecart(s) corrige(s)" if ecarts else ", rien a faire"))
+        print(
+            f"{len(nos)} competence(s) synchronisee(s)"
+            + (f", {len(ecarts)} ecart(s) corrige(s)" if ecarts else ", rien a faire")
+        )

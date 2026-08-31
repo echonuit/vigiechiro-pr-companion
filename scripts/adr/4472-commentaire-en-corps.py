@@ -142,9 +142,12 @@ def _auto_test() -> int:
         cas.append(("les lignes vides n allongent pas le bloc", suspects(r) == []))
 
         # Deux blocs d un meme corps cumulent : le grain est la ligne, comme pour la javadoc.
-        deux = corps(SEUIL + 3).replace("        int x = 1;",
-                                        "        int x = 1;\n" + "\n".join(
-                                            f"        // Autre {i}." for i in range(SEUIL + 2)) + "\n        int y = 2;")
+        deux = corps(SEUIL + 3).replace(
+            "        int x = 1;",
+            "        int x = 1;\n"
+            + "\n".join(f"        // Autre {i}." for i in range(SEUIL + 2))
+            + "\n        int y = 2;",
+        )
         pose(deux)
         cas.append(("deux blocs cumulent leur dette", len(suspects(r)) == 5))
 
@@ -152,7 +155,10 @@ def _auto_test() -> int:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
     if rates:
-        print(f"\n{len(rates)} cas en échec : le cliquet ne compte pas ce qu'il annonce.", file=sys.stderr)
+        print(
+            f"\n{len(rates)} cas en échec : le cliquet ne compte pas ce qu'il annonce.",
+            file=sys.stderr,
+        )
         return 1
     print(f"\n{len(cas)} cas : le cliquet voit le débordement en corps, et laisse le reste.")
     return 0
