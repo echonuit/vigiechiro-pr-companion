@@ -71,6 +71,16 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      - name: Le releveur de planchers refuse d'avoir lu zéro
+        # Il ne devine aucun chiffre : il lance le garde et LIT le verdict rendu. Son motif était
+        # positionnel, si bien qu'un champ inséré au milieu par #5014 lui a fait perdre la ligne. Il
+        # n'a alors rien relevé en annonçant « chaque seuil colle à sa mesure » : un message qui
+        # affirme ce qu'il n'a pas vérifié, et le pire mode de panne pour un outil de remède (#5021).
+        #
+        # Son auto-test portait déjà le cas qui l'aurait attrapé, et ne tournait NULLE PART. C'est
+        # cette moitié-là qui compte : un garde que rien ne joue ne garde rien.
+        run: python3 scripts/methode/releve-les-planchers.py --auto-test
+
       - name: Cache des .deb (le dépaquetage, lui, se refait)
         # Ce cache-ci porte sur les `.deb`, pas sur l'état installé : `dpkg` tourne donc à chaque
         # run, et avec lui les scripts post-installation - `fc-cache` compris. On perd le temps du
