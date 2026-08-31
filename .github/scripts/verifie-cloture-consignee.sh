@@ -94,13 +94,17 @@ if [ "${1-}" = "--auto-test" ]; then
     cas=0
     rouges=0
     printf 'title: une ADR sans cliquet\n' > "${bac}/adr-muette.md"
-    joue() { # <attendu: ok|rouge|refus> <libellé> <json> [fichier-adr]
-        local attendu="$1" libelle="$2" json="$3" adr="${4:-${bac}/adr.md}"
+    printf '%s\n' "${MARQUE}" > "${bac}/modele-sain.md"
+    printf 'un modele qui a perdu sa marque\n' > "${bac}/modele-renomme.md"
+
+    joue() { # <attendu: ok|rouge|refus> <libellé> <json> [fichier-adr] [fichier-modele]
+        local attendu="$1" libelle="$2" json="$3" adr="${4:-${bac}/adr.md}" mod="${5:-${bac}/modele-sain.md}"
         cas=$((cas + 1))
         [ "${attendu}" != ok ] && rouges=$((rouges + 1))
         printf '%s' "${json}" > "${bac}/epics.json"
         local code=0
         CLOTURE_EPICS_FICHIER="${bac}/epics.json" CLOTURE_ADR_FICHIER="${adr}" \
+            CLOTURE_MODELE_FICHIER="${mod}" \
             "$0" > /dev/null 2>&1 || code=$?
         local obtenu=ok
         [ "${code}" = 1 ] && obtenu=rouge
@@ -125,6 +129,14 @@ if [ "${1-}" = "--auto-test" ]; then
         '[{"number":1,"body":"## Clôture de chantier\n- [x] 0.","comments":[]},{"number":2,"body":"b","comments":[]}]'
     joue ok "la trace dans un COMMENTAIRE compte, c'est là qu'elle se colle" \
         '[{"number":1,"body":"b","comments":[{"body":"## Clôture de chantier\n- [x] 0."}]},{"number":2,"body":"b","comments":[]}]'
+    joue ok "AUCUN EPIC clos : rien a juger" \
+        '[]'
+
+    # La premisse : la marque vit-elle encore dans le modele ? Sans ce cas, le refus serait du code
+    # qu aucune epreuve ne traverse (#4948).
+    joue refus "la marque absente du MODELE fait REFUSER : elle a ete renommee" \
+        '[{"number":1,"body":"## Clôture de chantier","comments":[]}]' \
+        "${bac}/adr.md" "${bac}/modele-renomme.md"
     joue refus "une ADR sans cliquet lisible fait REFUSER, pas conclure" \
         '[{"number":1,"body":"a","comments":[]}]' "${bac}/adr-muette.md"
     joue refus "une ADR introuvable fait REFUSER aussi" \
@@ -137,8 +149,29 @@ if [ "${1-}" = "--auto-test" ]; then
     exit "${echecs}"
 fi
 
+# La PREMISSE, verifiee a chaque passage (#4948).
+#
+# Ce garde cherche une chaine dans de la prose d issue. Si le modele de `dev-docs/cycle-de-chantier.md`
+# est renomme, plus aucune trace ne la porte : le compte saute a tout le corpus et le garde accuse les
+# cloturers alors que c est sa propre chaine qui a bouge.
+#
+# On ne peut pas le voir dans le corpus : « aucun EPIC ne porte la marque » est precisement l etat que
+# ce garde EXISTE pour signaler - 43 sur 64 le 2026-08-28. Le signal est donc ailleurs, dans le MODELE
+# lui-meme, qui est sous controle de version : si la marque n y est plus, elle a ete renommee.
+readonly MODELE='dev-docs/cycle-de-chantier.md'
+# Injectable pour l auto-test, comme la liste des EPIC et l ADR : un refus qu on ne peut pas jouer
+# hors ligne est un refus que personne ne rejoue.
+modele="${CLOTURE_MODELE_FICHIER:-$(racine)/${MODELE}}"
+if [ -f "${modele}" ] && ! grep -qF "${MARQUE}" "${modele}"; then
+    echo "REFUS : « ${MARQUE} » n apparait plus dans ${MODELE}." >&2
+    echo "La marque que ce garde cherche a ete renommee dans le modele. Alignez-la ici, sinon il" >&2
+    echo "comptera toutes les clotures comme absentes et accusera les cloturers." >&2
+    exit 2
+fi
+
 seuil=$(cliquet)
-liste=$(epics | sansTrace || true)
+corpus=$(epics)
+liste=$(printf '%s' "${corpus}" | sansTrace || true)
 compte=$(printf '%s' "${liste}" | grep -c . || true)
 
 echo "CLIQUET 4659 | sans trace=${compte} | cliquet=${seuil}"
