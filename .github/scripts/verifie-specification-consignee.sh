@@ -134,21 +134,28 @@ if [ "${1-}" = "--auto-test" ]; then
 
     cas=0
     rouges=0
-    joue() { # <attendu: ok|rouge|refus> <libellé> <json> [fichier-adr]
-        local attendu="$1" libelle="$2" json="$3" adr="${4:-${bac}/adr.md}"
+    # Le 5e parametre est le MOTIF attendu dans la sortie. Sans lui, deux refus differents sortent
+    # tous deux en 2 et un cas peut passer pour la mauvaise raison (ADR 4918).
+    joue() { # <attendu: ok|rouge|refus> <libellé> <json> [adr] [motif]
+        local attendu="$1" libelle="$2" json="$3" adr="${4:-${bac}/adr.md}" motif="${5-}"
         cas=$((cas + 1))
         [ "${attendu}" != ok ] && rouges=$((rouges + 1))
         printf '%s' "${json}" > "${bac}/epics.json"
         local code=0
         SPEC_EPICS_FICHIER="${bac}/epics.json" SPEC_ADR_FICHIER="${adr}" \
-            "$0" > /dev/null 2>&1 || code=$?
+            "$0" > "${bac}/sortie.txt" 2>&1 || code=$?
         local obtenu=ok
+        local ecrit
+        ecrit=$(cat "${bac}/sortie.txt" 2>/dev/null)
         [ "${code}" = 1 ] && obtenu=rouge
         [ "${code}" = 2 ] && obtenu=refus
-        if [ "${obtenu}" = "${attendu}" ]; then
+        if [ "${obtenu}" = "${attendu}" ] && { [ -z "${motif}" ] || printf '%s' "${ecrit}" | grep -qF "${motif}"; }; then
             echo "  ✔ ${libelle}"
-        else
+        elif [ "${obtenu}" != "${attendu}" ]; then
             echo "  ✘ ${libelle} : attendu ${attendu}, obtenu ${obtenu}"
+            echecs=1
+        else
+            echo "  ✘ ${libelle} : ${obtenu} pour la MAUVAISE raison, « ${motif} » absent de la sortie"
             echecs=1
         fi
     }
@@ -180,7 +187,8 @@ if [ "${1-}" = "--auto-test" ]; then
     # La premisse, eprouvee plutot qu ecrite : si la marque est renommee, le corpus tombe a zero et
     # ce garde passerait VERT en n ayant rien lu (#4948).
     joue refus "des EPIC clos dont AUCUN ne porte la marque : corpus vide, on REFUSE" \
-        '[{"number":1,"body":"## Bilan de chantier\n- [x] 10. Archivage OpenSpec : sans objet","comments":[]}]'
+        '[{"number":1,"body":"## Bilan de chantier\n- [x] 10. Archivage OpenSpec : sans objet","comments":[]}]' \
+        "${bac}/adr.md" "AUCUN ne porte"
     joue ok "AUCUN EPIC clos : rien a juger, ce n est pas un corpus vide suspect" \
         '[]'
     joue refus "une ADR sans cliquet lisible fait REFUSER, pas conclure" \
