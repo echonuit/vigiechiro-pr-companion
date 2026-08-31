@@ -97,22 +97,29 @@ if [ "${1-}" = "--auto-test" ]; then
     printf '%s\n' "${MARQUE}" > "${bac}/modele-sain.md"
     printf 'un modele qui a perdu sa marque\n' > "${bac}/modele-renomme.md"
 
-    joue() { # <attendu: ok|rouge|refus> <libellé> <json> [fichier-adr] [fichier-modele]
-        local attendu="$1" libelle="$2" json="$3" adr="${4:-${bac}/adr.md}" mod="${5:-${bac}/modele-sain.md}"
+    # Le 6e parametre est le MOTIF attendu dans la sortie. Sans lui, deux refus differents sortent
+    # tous deux en 2 et un cas peut passer pour la mauvaise raison (ADR 4918).
+    joue() { # <attendu: ok|rouge|refus> <libellé> <json> [adr] [modele] [motif]
+        local attendu="$1" libelle="$2" json="$3" adr="${4:-${bac}/adr.md}" mod="${5:-${bac}/modele-sain.md}" motif="${6-}"
         cas=$((cas + 1))
         [ "${attendu}" != ok ] && rouges=$((rouges + 1))
         printf '%s' "${json}" > "${bac}/epics.json"
         local code=0
         CLOTURE_EPICS_FICHIER="${bac}/epics.json" CLOTURE_ADR_FICHIER="${adr}" \
             CLOTURE_MODELE_FICHIER="${mod}" \
-            "$0" > /dev/null 2>&1 || code=$?
+            "$0" > "${bac}/sortie.txt" 2>&1 || code=$?
         local obtenu=ok
+        local ecrit
+        ecrit=$(cat "${bac}/sortie.txt" 2>/dev/null)
         [ "${code}" = 1 ] && obtenu=rouge
         [ "${code}" = 2 ] && obtenu=refus
-        if [ "${obtenu}" = "${attendu}" ]; then
+        if [ "${obtenu}" = "${attendu}" ] && { [ -z "${motif}" ] || printf '%s' "${ecrit}" | grep -qF "${motif}"; }; then
             echo "  ✔ ${libelle}"
-        else
+        elif [ "${obtenu}" != "${attendu}" ]; then
             echo "  ✘ ${libelle} : attendu ${attendu}, obtenu ${obtenu}"
+            echecs=1
+        else
+            echo "  ✘ ${libelle} : ${obtenu} pour la MAUVAISE raison, « ${motif} » absent de la sortie"
             echecs=1
         fi
     }
@@ -136,11 +143,11 @@ if [ "${1-}" = "--auto-test" ]; then
     # qu aucune epreuve ne traverse (#4948).
     joue refus "la marque absente du MODELE fait REFUSER : elle a ete renommee" \
         '[{"number":1,"body":"## Clôture de chantier","comments":[]}]' \
-        "${bac}/adr.md" "${bac}/modele-renomme.md"
+        "${bac}/adr.md" "${bac}/modele-renomme.md" "n apparait plus dans"
     joue refus "une ADR sans cliquet lisible fait REFUSER, pas conclure" \
-        '[{"number":1,"body":"a","comments":[]}]' "${bac}/adr-muette.md"
+        '[{"number":1,"body":"a","comments":[]}]' "${bac}/adr-muette.md" "" "ne déclare aucun cliquet lisible"
     joue refus "une ADR introuvable fait REFUSER aussi" \
-        '[{"number":1,"body":"a","comments":[]}]' "${bac}/nulle-part.md"
+        '[{"number":1,"body":"a","comments":[]}]' "${bac}/nulle-part.md" "" "ne déclare aucun cliquet lisible"
 
     echo
     echo "${cas} cas, dont ${rouges} qui DOIVENT refuser."
