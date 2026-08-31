@@ -93,7 +93,19 @@ jobs:
       matrix:
         os: ${{ fromJSON(needs.choisir.outputs.matrice) }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    # 150 et non 90 : la durée de ce job tient surtout au runner qu'on tire. Sur les huit passages
+    # complets d'août elle va de 45 à plus de 92 minutes (45, 48, 50, 53, 55, 69, puis deux tués au
+    # plafond), et l'un des deux tués est tombé le 26 août ENTRE deux passages à 45 et 48 minutes, sur
+    # la même image et le même JDK. La variance est celle de la machine, pas du dépôt : macOS, au même
+    # commit, tient 18 à 19 minutes à chaque fois.
+    #
+    # Un plafond à 90 coupait donc un passage sur quatre sans rien apprendre, et le coût n'est pas
+    # qu'une machine perdue : un `cancelled` ne vaut aucune preuve pour `veille-plateformes.sh`, qui
+    # ne retient que les `success`. Le train du mercredi restait sans preuve fraîche.
+    #
+    # Relever ne masque rien. Un job réellement bloqué meurt toujours ici, simplement plus tard ; ce
+    # qui le distingue d'un runner lent est le journal, pas le plafond.
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
