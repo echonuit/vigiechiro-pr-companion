@@ -26,12 +26,17 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from _commun import RACINE_DEPOT  # noqa: E402
 
 ICI = pathlib.Path(__file__).parent
-LIGNE_CLIQUET = re.compile(r"^ADR (\d+) \| suspects=(\d+) \| cliquet=(\d+) \| verdict=(\S+)$", re.M)
-LIGNE_LOUPE = re.compile(r"^LOUPE (\d+) \| candidats=(\d+)$", re.M)
+# Le champ `lus` (issue #5007) se lit en groupe NON capturant, et ce n'est pas un detail : les
+# indices de groupe sont consommes en clair plus bas (`m.group(2)`, `m.group(3)`), et
+# `resserrements()` deballe des tuples de QUATRE elements. Un groupe capturant les decalerait, le
+# rapport lirait le mauvais nombre, et rien ne rougirait. `?` est accepte parce qu'un garde qui ne
+# declare pas encore son compte n'est pas une panne : c'est une dette, que le manifeste comptera.
+LIGNE_CLIQUET = re.compile(r"^ADR (\d+) \| lus=(?:\?|\d+) \| suspects=(\d+) \| cliquet=(\d+) \| verdict=(\S+)$", re.M)
+LIGNE_LOUPE = re.compile(r"^LOUPE (\d+) \| lus=(?:\?|\d+) \| candidats=(\d+)$", re.M)
 # Le PLANCHER est la polarite inverse du cliquet, et il a sa propre ligne. Ce rapport ne la lisait
 # pas : le garde des renvois annoncait « a-relever » a chaque passage, sans que rien ne le montre.
 LIGNE_PLANCHER = re.compile(
-    r"^PLANCHER (\d+) \| mesure=(\d+) \| plancher=(\d+) \| verdict=(\S+)$", re.M)
+    r"^PLANCHER (\d+) \| lus=(?:\?|\d+) \| mesure=(\d+) \| plancher=(\d+) \| verdict=(\S+)$", re.M)
 
 
 def executer(script: pathlib.Path) -> str:

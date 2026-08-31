@@ -1000,6 +1000,130 @@ def test_un_plancher_perime_refuse() -> None:
     _verifie("un plancher perime refuse aussi", codes["a-relever"], 1)
 
 
+def test_une_population_vide_refuse() -> None:
+    """Un garde qui n a rien LU rend zero suspect, et ce zero ressemble a un succes (issue #5007).
+
+    Le mode de panne se mesure : sur 98 commits qui deplacent un seuil d ADR, 28 sont des
+    CORRECTIFS. Un ciblage manque rend un nombre plausible que personne ne questionne, justement
+    parce qu il ne bouge pas ; le jour ou le ciblage se corrige, le saut se lit comme une
+    regression alors que c est la premiere mesure juste.
+
+    Compter ce qu on a LU a cote de ce qu on a RETENU rend la difference visible, et le zero absolu
+    refuse. Le cliquet de l ADR 0008 vaut 0 : sans le champ `lus`, zero suspect y passe en vert,
+    ce qui est exactement le faux vert a fermer.
+
+    Le troisieme cas fixe la semantique de la migration : une population NON DECLAREE ne refuse
+    pas. Sans lui, les 36 sites d appel casseraient d un coup, et le cliquet qui les fait descendre
+    n aurait pas de place ou vivre.
+    """
+    commun = _charge("_commun.py")
+    _verifie("une population vide refuse",
+             commun.rapporte("0008", "temoin de population", [], lus=0), 1)
+    _verifie("une population lue passe",
+             commun.rapporte("0008", "temoin de population", [], lus=851), 0)
+    _verifie("une population non declaree ne refuse pas encore",
+             commun.rapporte("0008", "temoin de population", []), 0)
+
+
+def test_une_loupe_muette_le_dit_sans_bloquer() -> None:
+    """Une loupe qui n a rien lu rend « aucun candidat », ce qui se lit « rien a revoir » (#5007).
+
+    C est le faux vert sous sa forme de loupe. Mais une loupe ne BLOQUE jamais : c est sa definition
+    dans l ADR 2465, et la changer serait une autre decision que celle de ce lot. Elle DIT donc
+    qu elle n a rien lu, et rend toujours 0 ; c est le manifeste qui comptera ce silence.
+    """
+    import contextlib
+    import io
+
+    commun = _charge("_commun.py")
+    sortie = io.StringIO()
+    with contextlib.redirect_stdout(sortie):
+        code = commun.loupe("0020", "temoin de population", [], lus=0)
+    rendu = sortie.getvalue()
+    _verifie("une loupe muette ne bloque pas", code, 0)
+    _verifie("une loupe muette le dit", "population-vide" in rendu, True)
+    _verifie("une loupe qui a lu porte son compte", "lus=12" in _rendu_loupe(commun, 12), True)
+
+
+def _rendu_loupe(commun, lus: int) -> str:
+    """La sortie d une loupe, capturee, pour que le cas voisin lise ce qu elle ecrit."""
+    import contextlib
+    import io
+
+    sortie = io.StringIO()
+    with contextlib.redirect_stdout(sortie):
+        commun.loupe("0020", "temoin de population", ["un candidat"], lus=lus)
+    return sortie.getvalue()
+
+
+def test_un_plancher_sans_population_dit_pourquoi() -> None:
+    """Un plancher sur population vide refuse deja, mais pour la mauvaise raison (#5007).
+
+    Il mesure 0, tombe sous son seuil, et annonce une PERTE. Le message envoie alors chercher des
+    renvois disparus, alors que rien n a ete lu. Un refus qui accuse la mauvaise cause coute une
+    enquete, et c est le defaut que l ADR 4002 nomme sur un autre axe.
+    """
+    import contextlib
+    import io
+
+    commun = _charge("_commun.py")
+    sortie = io.StringIO()
+    with contextlib.redirect_stdout(sortie):
+        code = commun.rapporte_plancher("4395", "temoin de population", 0, "renvois", lus=0)
+    _verifie("un plancher sans population refuse", code, 1)
+    _verifie("et il dit que rien n a ete lu",
+             "population-vide" in sortie.getvalue(), True)
+
+
+def test_le_rapport_lit_encore_les_trois_lignes() -> None:
+    """La COUTURE entre ce que `_commun` ECRIT et ce que `rapport.py` LIT (issue #5007).
+
+    Les trois motifs de `rapport.py` sont ancres `^...$` sur l ordre exact des champs. Ajouter `lus`
+    entre `ADR NNNN` et `suspects=` les a tous les trois rendus aveugles, et la panne est SILENCIEUSE :
+    le rapport ne rate pas, il declare simplement tous les gardes MUETS. C est le mode de panne que
+    ce lot existe pour rendre visible, produit par le lot lui-meme.
+
+    Le voisin `test_resserre_cliquets_appelle_le_rapport` garde la meme famille de defaut sur une
+    autre couture, et sa docstring dit pourquoi : les deux se parlent encore, ou ils ne se parlent
+    plus sans qu un seul cas ne rougisse.
+    """
+    import contextlib
+    import io
+
+    commun = _charge("_commun.py")
+    rapport = _charge("rapport.py")
+
+    def rendu(appel) -> str:
+        sortie = io.StringIO()
+        with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(io.StringIO()):
+            appel()
+        return sortie.getvalue()
+
+    # On verifie les VALEURS capturees, et non le seul appariement : un groupe capturant ajoute pour
+    # `lus` decalerait les indices, `rapport.py` lirait le mauvais nombre, et un cas qui ne teste que
+    # « ca apparie » resterait vert. C est le meme defaut, un cran plus fin.
+    cliquet = rapport.LIGNE_CLIQUET.search(rendu(
+        lambda: commun.rapporte("0008", "temoin de couture", [], lus=2076)))
+    _verifie("le rapport lit une ligne de cliquet", bool(cliquet), True)
+    _verifie("et il en tire le bon numero", cliquet.group(1) if cliquet else None, "0008")
+    _verifie("et le bon compte de suspects", cliquet.group(2) if cliquet else None, "0")
+    _verifie("et le bon verdict", cliquet.group(4) if cliquet else None, "ok")
+
+    loupe = rapport.LIGNE_LOUPE.search(rendu(
+        lambda: commun.loupe("0020", "temoin de couture", ["x"], lus=9)))
+    _verifie("le rapport lit une ligne de loupe", bool(loupe), True)
+    _verifie("et il en tire le bon compte de candidats", loupe.group(2) if loupe else None, "1")
+
+    plancher = rapport.LIGNE_PLANCHER.search(rendu(
+        lambda: commun.rapporte_plancher("4395", "temoin de couture", 3245, "renvois", lus=4026)))
+    _verifie("le rapport lit une ligne de plancher", bool(plancher), True)
+    _verifie("et il en tire la bonne mesure", plancher.group(2) if plancher else None, "3245")
+
+    _verifie("et il les lit encore quand le compte n est pas declare",
+             bool(rapport.LIGNE_CLIQUET.search(rendu(
+                 lambda: commun.rapporte("0008", "temoin de couture", [])))), True)
+
+
 def test_resserre_cliquets_appelle_le_rapport() -> None:
     """La COUTURE entre les deux modules, la ou le temoin voisin n eprouvait que leurs pieces.
 
@@ -1022,9 +1146,21 @@ def test_resserre_cliquets_appelle_le_rapport() -> None:
 def test_rapport_et_resserrement() -> None:
     rapport = _charge("rapport.py")
     # Le parsing : une ligne normalisée doit être reconnue.
-    ligne = "ADR 0099 | suspects=2 | cliquet=5 | verdict=a-resserrer"
+    #
+    # Ce littéral épingle le format SUR LE FIL, et c'est pour cela qu'il ne se remplace pas par un
+    # appel à `_commun` (issue #5007). Le cas voisin `test_le_rapport_lit_encore_les_trois_lignes`
+    # fait produire la ligne par `_commun` et la fait lire par `rapport.py` : il attrape une dérive
+    # d'UN côté, jamais une dérive des DEUX, qui resterait verte. Le littéral, lui, ne bouge que si
+    # quelqu'un décide de changer le format, et le fait alors sciemment.
+    ligne = "ADR 0099 | lus=42 | suspects=2 | cliquet=5 | verdict=a-resserrer"
     trouve = rapport.LIGNE_CLIQUET.search(ligne)
     _verifie("rapport.py parse une ligne de cliquet", bool(trouve), True)
+    _verifie("et il en tire les bons champs malgre le champ ajoute",
+             trouve.groups() if trouve else None, ("0099", "2", "5", "a-resserrer"))
+    # La seconde forme acceptee : un garde qui ne declare pas encore son compte rend `lus=?`.
+    _verifie("rapport.py parse un compte non declare",
+             bool(rapport.LIGNE_CLIQUET.search(
+                 "ADR 0099 | lus=? | suspects=2 | cliquet=5 | verdict=a-resserrer")), True)
     # La détection de resserrement : cliquet 5 pour 2 suspects -> ramener à 2.
     props = rapport.resserrements([("0099", 2, 5, "a-resserrer")])
     _verifie("rapport.py propose de resserrer 5 -> 2", props, [("0099", 2)])
@@ -1170,6 +1306,10 @@ if __name__ == "__main__":
         test_un_verdict_se_rend_sur_le_numero_de_son_adr,
         test_les_gardes_de_code_lisent_les_deux_arbres,
         test_un_plancher_perime_refuse,
+        test_une_population_vide_refuse,
+        test_une_loupe_muette_le_dit_sans_bloquer,
+        test_un_plancher_sans_population_dit_pourquoi,
+        test_le_rapport_lit_encore_les_trois_lignes,
         test_resserre_cliquets_appelle_le_rapport,
         test_rapport_et_resserrement,
     ):

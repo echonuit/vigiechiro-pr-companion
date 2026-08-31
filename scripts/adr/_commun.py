@@ -108,7 +108,18 @@ def plancher(numero: str) -> int:
     return int(trouve.group(1))
 
 
-def rapporte_plancher(numero: str, titre: str, mesure: int, unite: str) -> int:
+def _dit_lus(lus: int | None) -> str:
+    """Le compte des unités lues, ou `?` quand le garde ne le déclare pas encore (issue #5007).
+
+    Un seul endroit où cette convention est écrite : les trois lignes de verdict la partagent, et
+    `rapport.py` la lit sous cette forme exacte. La répéter trois fois la ferait diverger.
+    """
+    return "?" if lus is None else str(lus)
+
+
+def rapporte_plancher(
+    numero: str, titre: str, mesure: int, unite: str, lus: int | None = None
+) -> int:
     """Confronte une mesure à son plancher, et rend le code de sortie.
 
     **La polarité est l'inverse de `rapporte`, et c'est voulu.** Un cliquet compte ce qu'on tolère :
@@ -137,13 +148,29 @@ def rapporte_plancher(numero: str, titre: str, mesure: int, unite: str) -> int:
     print(f"ADR {numero} - {titre}")
 
     verdict = "ok"
-    if mesure < seuil:
+    if lus == 0:
+        # Sans ce cas, un plancher sur population vide mesure 0, tombe sous son seuil, et annonce
+        # une PERTE : le message envoie alors chercher des renvois disparus alors que rien n'a été
+        # lu. Un refus qui accuse la mauvaise cause coûte une enquête.
+        verdict = "population-vide"
+    elif mesure < seuil:
         verdict = "perte"
     elif mesure > seuil:
         verdict = "a-relever"
 
-    print(f"\nPLANCHER {numero} | mesure={mesure} | plancher={seuil} | verdict={verdict}")
+    print(
+        f"\nPLANCHER {numero} | lus={_dit_lus(lus)} | mesure={mesure} "
+        f"| plancher={seuil} | verdict={verdict}"
+    )
 
+    if verdict == "population-vide":
+        print(
+            f"\nÉCHEC : ce plancher n'a lu aucune unité, donc sa mesure de 0 ne prouve aucune perte.\n"
+            f"Vérifiez sa population avant de chercher ce qui manque : c'est le corpus qui a disparu,\n"
+            f"pas forcément ce qu'il gardait.",
+            file=sys.stderr,
+        )
+        return 1
     if verdict == "perte":
         print(
             f"\nÉCHEC : {mesure} {unite} pour un plancher de {seuil}. Il en manque {seuil - mesure}.\n"
@@ -165,8 +192,30 @@ def rapporte_plancher(numero: str, titre: str, mesure: int, unite: str) -> int:
     return 0
 
 
-def rapporte(numero: str, titre: str, suspects: list[str], apercu: int | None = None) -> int:
+def rapporte(
+    numero: str,
+    titre: str,
+    suspects: list[str],
+    apercu: int | None = None,
+    lus: int | None = None,
+) -> int:
     """Affiche les suspects, confronte leur nombre au cliquet, et rend le code de sortie.
+
+    **`lus` dit ce que le garde a LU, quand `suspects` ne dit que ce qu'il a RETENU** (issue #5007).
+    Un ciblage manqué rend un nombre plausible : il ne bouge pas, donc personne ne le regarde, et le
+    jour où le ciblage se corrige le saut se lit comme une régression alors que c'est la première
+    mesure juste. Sur 98 commits qui déplacent un seuil, 28 sont des correctifs de cette famille.
+
+    Trois signaux, du plus dur au plus doux. `lus=0` **refuse** : un garde qui ne balaie rien n'est
+    jamais légitime, et c'est la généralisation de ce que `temoins-de-methode-non-decoratifs.py`
+    fait déjà pour lui seul. Un `lus` qui baisse ne refuse pas, il se voit au diff du manifeste : une
+    population rétrécit légitimement quand des fichiers disparaissent, et un garde qui crierait
+    là-dessus s'apprendrait à ignorer (ADR 4002). Et `suspects` qui baisse **pendant que** `lus`
+    baisse est le faux vert, que les deux nombres côte à côte rendent enfin lisible.
+
+    `lus=None` veut dire **non déclaré**, et ne refuse pas : les 36 sites d'appel se convertissent
+    par un cliquet qui descend, non par une rupture. La ligne de verdict l'écrit `lus=?`, pour que le
+    rapport compte les muets au lieu de les deviner.
 
     Dépasser le cliquet est un échec : c'est une régression, quelqu'un a ajouté un cas.
     Passer *sous* le cliquet n'est pas un échec, c'est une bonne nouvelle - mais elle est signalée,
@@ -183,13 +232,28 @@ def rapporte(numero: str, titre: str, suspects: list[str], apercu: int | None = 
         print(f"  … et {len(suspects) - len(montres)} autres, non montrés (aperçu borné à {apercu})")
 
     verdict = "ok"
-    if len(suspects) > marge:
+    if lus == 0:
+        # AVANT les comparaisons au cliquet, et non après : sur une population vide, le compte des
+        # suspects ne veut rien dire, et le comparer donnerait un verdict que rien ne fonde.
+        verdict = "population-vide"
+    elif len(suspects) > marge:
         verdict = "regression"
     elif len(suspects) < marge:
         verdict = "a-resserrer"
 
-    print(f"\nADR {numero} | suspects={len(suspects)} | cliquet={marge} | verdict={verdict}")
+    print(
+        f"\nADR {numero} | lus={_dit_lus(lus)} | suspects={len(suspects)} "
+        f"| cliquet={marge} | verdict={verdict}"
+    )
 
+    if verdict == "population-vide":
+        print(
+            f"\nÉCHEC : ce garde n'a lu aucune unité. Son zéro suspect ne prouve rien.\n"
+            f"Vérifiez sa population : un chemin qui a bougé, un motif qui ne s'apparie plus, ou un\n"
+            f"lancement depuis un autre répertoire. Un garde qui ne balaie rien reste vert sans juger.",
+            file=sys.stderr,
+        )
+        return 1
     if verdict == "regression":
         print(
             f"\nÉCHEC : {len(suspects)} suspects pour un cliquet de {marge}. Un cas a été ajouté.\n"
@@ -206,7 +270,7 @@ def rapporte(numero: str, titre: str, suspects: list[str], apercu: int | None = 
     return 0
 
 
-def loupe(numero: str, titre: str, candidats: list[str]) -> int:
+def loupe(numero: str, titre: str, candidats: list[str], lus: int | None = None) -> int:
     """Une LOUPE, pour une ADR « humaine » dont un pattern reconnaissable existe.
 
     Elle ne prouve rien et ne borne rien : elle surface une **surface de revue** - « voici les
@@ -224,7 +288,15 @@ def loupe(numero: str, titre: str, candidats: list[str]) -> int:
     print(f"LOUPE {numero} - {titre}")
     for c in candidats:
         print(f"  {c}")
-    print(f"\nLOUPE {numero} | candidats={len(candidats)}")
+    print(f"\nLOUPE {numero} | lus={_dit_lus(lus)} | candidats={len(candidats)}")
+    # Une loupe qui n'a rien lu rend « aucun candidat », ce qui se lit « rien à revoir » : c'est le
+    # faux vert sous sa forme de loupe. Elle le DIT, et ne bloque pas pour autant : ne jamais bloquer
+    # est sa définition même (ADR 2465), et la changer serait une autre décision que celle-ci. Le
+    # marqueur est normalisé pour que le rapport et le manifeste comptent ce silence sans deviner.
+    if lus == 0:
+        # Sur STDOUT, avec le reste de son rapport : une loupe ne rate jamais, donc `stderr` serait
+        # le mauvais canal, et `rapport.py` lit la sortie normalisée sur stdout.
+        print(f"LOUPE {numero} | population-vide : elle n'a rien balayé, son zéro ne veut rien dire.")
     return 0
 
 
