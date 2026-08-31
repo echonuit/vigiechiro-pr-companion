@@ -8,7 +8,7 @@ decided_at: 2026-08-31
 verification: certaine
 enforced_by:
   - "scripts/adr/4974-attente-reinventee.py"
-ratchet: 4
+ratchet: 5
 verified:
   - by: machine:ci
     at: 2026-08-31
@@ -68,6 +68,13 @@ Les quatre survivants **rattrapent tous** et disent ce qu'ils attendaient :
 | `GesteVisible#amenerDansLeCadre` | lève un `IllegalStateException` nommant le sélecteur jamais venu |
 | `AttenteAvantClic#attendreCliquable` | joint l'état observé de la cible |
 | les deux `doubleClicVersPassage` | retentent trois fois, puis lèvent avec les bornes observées |
+| `ChargementFxmlTest` | son `catch (Throwable)` nomme la ressource FXML fautive, ce qu'`Attente` ne saurait pas faire |
+
+**Et le nom a été contourné une seconde fois, par la bibliothèque.** Le cliquet ne comptait que
+`waitFor` ; `waitForAsyncFx` levait la même `TimeoutException` nue sous un autre nom, et sept sites
+lui échappaient. C'est exactement le contournement que cette décision annonce, arrivé à son propre
+garde. Il compte les deux depuis #4997, et `Attente.surLeFil` porte le geste manquant : exécuter
+**sur** le fil, là où `queSurLeFil` **lit** sur le fil.
 
 ## Les deux boucles de reprise, et pourquoi elles ne se convertissent pas
 

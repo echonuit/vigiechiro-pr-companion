@@ -719,6 +719,13 @@ def test_4974_attente_reinventee() -> None:
                 + sonde + "    }\n}\n")
         _verifie("4974 l aide partagee est exemptee", len(m.suspects(racine)), 1)
 
+        # #4997 : `waitForAsyncFx` est la meme dette sous un autre nom, et le garde le compte. Ce cas
+        # vient EN DERNIER : les fichiers du dossier jetable sont partages, et un fichier ajoute plus
+        # tot ferait compter un de trop a chacun des cas suivants.
+        _ecrire(racine, "fr/a/F.java", "class F {\n    private void surFx(Runnable a) {\n"
+                "        WaitForAsyncUtils.waitForAsyncFx(5_000, a);\n    }\n}\n")
+        _verifie("4974 waitForAsyncFx compte aussi", len(m.suspects(racine)), 2)
+
 
 def test_4475_stage_non_dimensionne() -> None:
     m = _charge("4475-stage-non-dimensionne.py")

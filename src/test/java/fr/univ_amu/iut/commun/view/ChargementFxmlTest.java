@@ -100,6 +100,9 @@ class ChargementFxmlTest {
                         ressource)
                 .isNotNull();
 
+        // Le `waitForAsyncFx` reste ici, et ne rejoint pas `Attente`. Il n'expire PAS en silence :
+        // le `catch` ci-dessous nomme la ressource fautive, ce que `Attente.surLeFil` ferait moins
+        // bien, ne la connaissant pas (#4997).
         try {
             WaitForAsyncUtils.waitForAsyncFx(15_000, () -> {
                 FXMLLoader loader = new FXMLLoader(url);

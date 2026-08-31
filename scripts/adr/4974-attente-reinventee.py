@@ -43,7 +43,10 @@ EXEMPTES = {"Attente.java"}
 
 # Le corps d une methode privee, quel que soit son NOM et quel que soit son type de retour.
 SIGNATURE = re.compile(r"^[ \t]*private (?:static )?[\w<>\[\], ]+ (\w+)\(", re.M)
-SONDE = re.compile(r"WaitForAsyncUtils\.waitFor\(")
+# `waitFor` attend une CONDITION, `waitForAsyncFx` execute une ACTION sur le fil : deux gestes,
+# une seule dette, et `Attente` porte les deux depuis #4997. Ne compter que le premier serait
+# le contournement par renommage que cette ADR existe pour empecher.
+SONDE = re.compile(r"WaitForAsyncUtils\.(waitFor|waitForAsyncFx)\(")
 
 # Une methode plus longue que cela n est plus une aide : la lecture s arrete et le cas se voit a l
 # oeil. Borner evite qu un fichier pathologique fasse lire tout le reste du corps de la classe.
@@ -108,6 +111,14 @@ def _autoTest() -> int:
                                   encoding="utf-8")
         cas.append(("un cas de test compte aussi", "B.java:4" in suspects(r)))
 
+        # LE temoin de #4997 : `waitForAsyncFx` est la meme dette sous un autre nom. Sans lui, le
+        # garde ne comptait que `waitFor` et sept sites lui echappaient - le contournement par
+        # renommage que cette ADR existe pour empecher, arrive a son propre garde.
+        (r / "F.java").write_text("class F {\n    private void surFx(Runnable a) {\n"
+                                  "        WaitForAsyncUtils.waitForAsyncFx(5_000, a);\n    }\n}\n",
+                                  encoding="utf-8")
+        cas.append(("waitForAsyncFx compte aussi", "F.java:3" in suspects(r)))
+
         # Le sens NEGATIF : une ligne de COMMENTAIRE qui cite l appel n est pas un appel. Sans ce
         # temoin, la javadoc d `AttenteAvantClic` expliquant pourquoi elle rattrape comptait comme
         # une reinvention, et le cliquet valait un de trop.
@@ -136,7 +147,7 @@ def _autoTest() -> int:
     if rates:
         print(f"\n{len(rates)} cas en échec : le cliquet ne tient pas ce qu'il annonce.", file=sys.stderr)
         return 1
-    print(f"\n{len(cas)} cas : il voit une attente hors de l'aide partagée, et rien d'autre.")
+    print(f"\n{len(cas)} cas : il voit une attente hors de l'aide partagée, sous ses deux noms.")
     return 0
 
 

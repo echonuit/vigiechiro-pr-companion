@@ -50,6 +50,27 @@ class AttenteTest {
     }
 
     @Test
+    @DisplayName("#4997 : exécuter SUR LE FIL en disant ce qu'on faisait, au lieu d'expirer nu")
+    void sur_le_fil_elle_dit_ce_qu_elle_faisait() {
+        // `waitForAsyncFx` execute une action sur le fil JavaFX et attend qu'elle rende. En expirant
+        // elle leve une `TimeoutException` NUE : le journal de CI ne dit alors ni ce qu'on construisait
+        // ni ou le parcours s'est arrete. C'est le meme defaut que le `waitFor` nu de #4845, sous un
+        // autre nom, et l'ADR 4974 dit qu'un garde qui lit un nom se contourne en renommant.
+        assertThatThrownBy(() -> Attente.surLeFil(
+                        () -> {
+                            try {
+                                Thread.sleep(400);
+                            } catch (InterruptedException interrompu) {
+                                Thread.currentThread().interrupt();
+                            }
+                        },
+                        "construire le formulaire personnalisé",
+                        100))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("construire le formulaire personnalisé");
+    }
+
+    @Test
     @DisplayName("#4847 : le message peut se CONSTRUIRE à l'expiration, pour dire ce qu'on a observé")
     void le_message_se_construit_a_l_expiration() {
         // AppTest attendait une hauteur, et disait dans son echec la hauteur OBSERVEE apres coup.
