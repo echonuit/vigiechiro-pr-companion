@@ -1,0 +1,41 @@
+# Les dépendances Python du dépôt, épinglées et groupées par usage (issue #5008).
+#
+# Pourquoi ce fichier existe. Neuf gardes de CI portaient `import yaml` sans que rien ne déclare
+# PyYAML : en CI ils ne marchaient que parce que l'image `ubuntu-latest` le fournit, et le job
+# `lint` n'installe rien. En local, six des neuf plantaient nu sur `ModuleNotFoundError`, erreur qui
+# ressemble à un défaut du changement en cours.
+#
+# L'asymétrie n'avait jamais été argumentée : 36 dépendances déclarées dans `pom.xml` pour tester le
+# Java, un fichier pour construire la doc, et rien pour les gardes.
+#
+# Installation, la même en CI et sur un poste :
+#   pip install --group gardes    # ce dont les gardes ont besoin
+#   pip install --group doc       # ce dont la documentation a besoin
+#
+# `uv sync --group <nom>` fait la même chose pour qui l'a. Aucune des deux n'est un prérequis du
+# dépôt : `pip` suffit, et il est là par construction avec `actions/setup-python`.
+
+[project]
+name = "vigiechiro-outillage"
+version = "0"
+description = "Les dépendances de l'outillage du dépôt : ses gardes et sa documentation."
+requires-python = ">=3.12"
+
+[dependency-groups]
+# Ce que les GARDES lisent. Ne porte que ce qui est UTILISÉ : déclarer une dépendance dont rien ne
+# se sert est ce que `dependency:analyze-only` refuse côté Java, et il n'y a pas de raison d'être
+# plus permissif ici. `pytest`, `mutmut` et `coverage.py` entreront avec le lot qui les emploie.
+gardes = ["PyYAML==6.0.2"]
+
+# Ce que la DOCUMENTATION construit. Ces deux versions se tiennent : mkdocs-material < 9.7.0 exige
+# `pymdown-extensions~=10.2`, soit « >= 10.2 et < 11 ». Monter pymdown-extensions en 11 sans monter
+# mkdocs-material rend l'installation insoluble. Les faire bouger ensemble, ou pas du tout.
+doc = ["mkdocs-material==9.7.7", "pymdown-extensions==11.0.1"]
+
+# Le nom de la DISTRIBUTION n'est pas celui du MODULE : `PyYAML` répond à `import yaml`, et
+# `mkdocs-material` fournit `mkdocs` et `material`. Deviner la correspondance exigerait d'interroger
+# ce qui est déjà INSTALLÉ, donc de rendre un verdict qui dépend de la machine. Elle se déclare ici,
+# et `scripts/methode/verifie-dependances-declarees.py` la lit.
+[tool.vigiechiro.modules]
+PyYAML = ["yaml"]
+mkdocs-material = ["mkdocs", "material"]

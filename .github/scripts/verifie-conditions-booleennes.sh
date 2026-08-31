@@ -26,6 +26,20 @@
 # Exit 0 si aucune comparaison fautive, 1 sinon (détails sur stdout).
 set -uo pipefail
 
+# PyYAML est requis : un YAML de workflow ne se lit pas a la ligne sans se tromper (blocs, ancres,
+# `on:` que YAML interprete en booleen). S'il manque, la garde REFUSE bruyamment - une garde qui se
+# saute quand son outillage manque est un faux vert de plus.
+#
+# Ce controle DEFINIT une fonction et ne s'execute pas ici : il est appele au point d'usage. Un refus
+# pose en tete de fichier passerait AVANT le dispatch des options, et rendrait un refus la ou
+# l'appelant demandait autre chose (#5008).
+exige_pyyaml() {
+  python3 -c 'import yaml' 2>/dev/null && return 0
+  echo "❌ PyYAML est absent : cette garde ne peut pas lire les workflows."
+  echo "   Installer avec « pip install --group gardes », qui lit pyproject.toml."
+  return 1
+}
+
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RACINE="$(cd "$ICI/../.." && pwd)"
 FLUX="$RACINE/.github/workflows"
@@ -166,6 +180,7 @@ jobs:
 }
 
 verifier() {
+    exige_pyyaml || return 1
     python3 - "$FLUX" <<'PY'
 import os
 import re

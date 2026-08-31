@@ -42,7 +42,7 @@ RACINE="${RENVOIS_RACINE:-$(cd "$ICI/../.." && pwd)}"
 # une garde qui se saute quand son outillage manque est un faux vert de plus.
 if ! python3 -c 'import yaml' 2>/dev/null; then
   echo "❌ PyYAML est absent : la garde des renvois ne peut pas lire les workflows."
-  echo "   Installer avec « pip install pyyaml », ou « apt-get install python3-yaml »."
+  echo "   Installer avec « pip install --group gardes », qui lit pyproject.toml."
   exit 1
 fi
 

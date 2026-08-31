@@ -39,7 +39,7 @@ Depuis la racine du dépôt :
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -r docs/requirements.txt
+pip install --group doc
 mkdocs serve -f mkdocs-brief.yml  # http://localhost:8000
 ```
 
