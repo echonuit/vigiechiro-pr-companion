@@ -48,7 +48,12 @@ final class CyclesJournal {
             String message = m.group(7).strip();
             String bas = message.toLowerCase(Locale.ROOT);
 
-            if (message.contains("Wakeup") && bas.contains("cpt")) {
+            // Un réveil VOULU ne commence pas une nuit : l'observateur a appuyé sur une touche pour
+            // regarder son écran, et la nuit en cours continue. Le compter comme un cycle en
+            // fabriquait une seconde et refermait la première en « tronquée » (#4981).
+            if (MotifDeReveil.estUnReveil(message)
+                    && bas.contains("cpt")
+                    && !estUnReveilEnCoursDeNuit(message, reveil)) {
                 // Nouveau réveil : un cycle précédent encore ouvert n'a jamais été refermé → tronqué.
                 if (reveil != null) {
                     cycles.add(new CycleAcquisition(
@@ -80,6 +85,15 @@ final class CyclesJournal {
             cycles.add(new CycleAcquisition(compteur, reveil, null, false, motif(sdPleine, "journal interrompu")));
         }
         return List.copyOf(cycles);
+    }
+
+    /// `true` si ce réveil survient **pendant** une nuit déjà ouverte et qu'il a été voulu.
+    ///
+    /// Les deux conditions comptent. Un réveil par touche AVANT toute nuit reste le début d'une nuit,
+    /// puisque c'est ainsi qu'on met l'enregistreur en route ; et un réveil de cause inconnue referme
+    /// la nuit en cours, parce que le journal ne sait pas ce qui s'est passé entre-temps.
+    private static boolean estUnReveilEnCoursDeNuit(String message, LocalDateTime reveilOuvert) {
+        return reveilOuvert != null && MotifDeReveil.estVoulu(message);
     }
 
     private static String motif(boolean sdPleine, String defaut) {

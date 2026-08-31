@@ -161,7 +161,7 @@ class AnalyseurLogPRTest {
                 "22/04/26 - 16:02:21 PR1925492 Sonde température/hygrométrie absente",
                 "22/04/26 - 16:02:21 PR1925492 Batteries internes 3.2V (12%) (MCP3221)",
                 "22/04/26 - 16:02:21 PR1925492 Paramètres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq." + " 8-120kHz",
-                "22/04/26 - 02:13:05 PR1925492 Wakeup by WATCHDOG... Cpt 7");
+                "22/04/26 - 02:13:05 PR1925492 Wakeup by unknow... Cpt 7");
 
         JournalParse journal = analyseur.analyser(journalDegrade);
 
@@ -176,14 +176,38 @@ class AnalyseurLogPRTest {
     }
 
     @Test
+    @DisplayName("#4981 : un réveil par touche n'est pas une anomalie, un réveil de cause inconnue en reste une")
+    void un_reveil_par_touche_n_est_pas_une_anomalie() {
+        // Les quatre motifs que `TeensyRecorder.ino` émet réellement. `PINPUSH` couvre toutes les
+        // touches, et le firmware sort alors de la veille pour laisser l'observateur agir : c'est un
+        // geste voulu. Les deux `unknow` gardent une cause inconnue, donc restent des anomalies.
+        JournalParse voulu = analyseur.analyser(List.of(
+                "22/04/26 - 20:30:00 PR1925492 Wakeup by ALARM... Cpt 1",
+                "23/04/26 - 01:15:00 PR1925492 Wakeup by PINPUSH... Cpt 2"));
+
+        assertThat(voulu.messagesAnomalies())
+                .as("ni le réveil programmé ni celui par touche ne sont des anomalies")
+                .noneMatch(message -> message.contains("Réveil non programmé"));
+
+        JournalParse inconnu = analyseur.analyser(List.of(
+                "22/04/26 - 20:30:00 PR1925492 Wakeup by unknow... Cpt 1",
+                "23/04/26 - 01:15:00 PR1925492 Wakeup by unknow ISR... Cpt 2"));
+
+        assertThat(inconnu.messagesAnomalies())
+                .as("une cause inconnue reste ce que l'observateur doit savoir")
+                .filteredOn(message -> message.contains("Réveil non programmé"))
+                .hasSize(2);
+    }
+
+    @Test
     @DisplayName("#1696 : évènements/anomalies filtrables par nuit ; une entrée de déploiement reste sur chaque nuit")
     void journal_filtrable_par_nuit() {
         List<String> journal = List.of(
                 "22/04/26 - 20:30:00 PR1925492 Sonde température/hygrométrie absente",
                 "22/04/26 - 20:31:00 PR1925492 ### demarrage soir22",
-                "23/04/26 - 03:00:00 PR1925492 Wakeup by WATCHDOG Cpt3 nuit22", // avant midi → nuit du 22
+                "23/04/26 - 03:00:00 PR1925492 Wakeup by unknow... Cpt 3 nuit22", // avant midi → nuit du 22
                 "23/04/26 - 21:00:00 PR1925492 ### changement soir23",
-                "24/04/26 - 02:00:00 PR1925492 Wakeup by WATCHDOG Cpt5 nuit23"); // avant midi → nuit du 23
+                "24/04/26 - 02:00:00 PR1925492 Wakeup by unknow... Cpt 5 nuit23"); // avant midi → nuit du 23
 
         JournalParse j = analyseur.analyser(journal);
 
