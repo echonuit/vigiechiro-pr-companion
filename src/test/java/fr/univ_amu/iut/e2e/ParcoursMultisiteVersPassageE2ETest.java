@@ -207,7 +207,7 @@ class ParcoursMultisiteVersPassageE2ETest {
     ///
     /// **Épuiser les essais lève, au lieu de rendre la main.** L'abandon silencieux présentait l'échec comme
     /// « attendu passage, obtenu multisite », un bug de navigation apparent là où le robot n'avait pas
-    /// abouti : deux échecs ont été lus ainsi (#3823). Motif de l'ADR 2213.
+    /// abouti : deux échecs ont été lus ainsi (#3823). Motif de l'ADR 2213, et décision de #4974.
     private static void doubleClicVersPassage(FxRobot robot, NavigationViewModel navigation) {
         TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
         Throwable derniere = null;

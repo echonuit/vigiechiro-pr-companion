@@ -141,6 +141,7 @@ class ParcoursSitesVersPassageE2ETest {
     /// laissant l'écran sur la vue intermédiaire (« site-detail ») quand l'assertion tombe. On attend donc
     /// que la navigation aboutisse réellement, avec quelques réessais ; l'assertion de l'appelant tranche
     /// clairement si, malgré tout, on n'y est pas.
+    /// Le `waitFor` **sonde** ici pour retenter ; son `catch` n'attend qu'une `TimeoutException` (#4974).
     private static void doubleClicVersPassage(FxRobot robot, NavigationViewModel navigation) {
         // Le vrai geste, et non `DoubleClicDeterministe` (#4554) : un parcours E2E éprouve le
         // chemin que l'utilisateur emprunte, robot et placement compris. Contourner le clic

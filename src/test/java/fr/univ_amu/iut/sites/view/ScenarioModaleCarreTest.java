@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -461,10 +462,10 @@ class ScenarioModaleCarreTest {
     private void ouvrirLaDeclaration(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
         GesteVisible.cliquer(robot, "+ Nouveau site");
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("#champCarre").tryQuery().isPresent());
+        Attente.que(
+                () -> robot.lookup("#champCarre").tryQuery().isPresent(),
+                "la modale de déclaration s'ouvre, reconnue à son champ de carré",
+                10_000L);
         Respiration.apresLeGeste(robot);
     }
 
@@ -478,7 +479,7 @@ class ScenarioModaleCarreTest {
     private void verifier(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
         GesteVisible.cliquer(robot, "#btnVerifierCarre");
-        WaitForAsyncUtils.waitFor(10, TimeUnit.SECONDS, () -> encart(robot).isVisible());
+        Attente.que(() -> encart(robot).isVisible(), "l'encart de vérification du carré paraît", 10_000L);
         CadreVisible.amener(encart(robot), robot);
         Respiration.surLeMomentCle(robot);
     }
@@ -529,8 +530,10 @@ class ScenarioModaleCarreTest {
         robot.clickOn(champPosition(robot)).write(position);
         WaitForAsyncUtils.waitForFxEvents();
         GesteVisible.cliquer(robot, "#btnSituer");
-        WaitForAsyncUtils.waitFor(
-                10, TimeUnit.SECONDS, () -> encartPosition(robot).isVisible());
+        Attente.que(
+                () -> encartPosition(robot).isVisible(),
+                "l'encart de position paraît après avoir situé le point",
+                10_000L);
         CadreVisible.amener(encartPosition(robot), robot);
         Respiration.surLeMomentCle(robot);
     }
