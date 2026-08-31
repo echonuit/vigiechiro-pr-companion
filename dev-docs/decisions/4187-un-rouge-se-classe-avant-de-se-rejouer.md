@@ -16,6 +16,8 @@ generated:
   at: 2026-08-31
 ---
 
+# Un rouge se classe avant de se rejouer
+
 ## Contexte
 
 Un rouge de CI se rejouait à l'aveugle, et le geste passait pour raisonnable : la suite repartait
