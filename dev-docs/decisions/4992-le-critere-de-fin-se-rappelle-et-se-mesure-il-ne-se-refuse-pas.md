@@ -54,8 +54,11 @@ différent.
 
 **Et un libellé opposable serait un jeton à poser.** Normaliser une formulation unique rendrait le
 motif exact, au prix de récompenser « Fini quand : c'est bon » et de refuser un critère écrit
-autrement. Le critère s'écrit déjà de trois façons dans ce dépôt, dont deux viennent de la compétence
-elle-même, et le comptage d'origine s'est trompé trois fois pour cette raison.
+autrement. Le critère s'écrit de **cinq** façons dans ce dépôt, dont deux viennent de la compétence
+elle-même et une du bloc que `CLAUDE.md` prescrit, et le comptage d'origine s'est trompé trois fois
+pour cette raison. Elles vivent dans un seul fichier, `scripts/adr/critere-de-fin.motif`, lu par les
+deux dispositifs : chacun portait sa copie, et la cinquième a manqué aux deux sans que rien ne le
+dise (#4995).
 
 ## Ce que la mesure a refusé
 
@@ -66,7 +69,7 @@ naît de `gh issue create`, qui n'en traverse aucun. Ce qu'un agent lit avant de
 formulaire.
 
 **Le comptage d'origine.** #4951 annonçait 3 EPIC sur 70. Il mêlait 118 chantiers antérieurs à la
-règle avec les 22 qui pouvaient lui obéir, et ne cherchait qu'une des trois formulations. Refait :
+règle avec les 22 qui pouvaient lui obéir, et ne cherchait qu'une des formulations en usage. Refait :
 11 chantiers sur 22 portaient un critère, et au grain du lot, 9 lots ouverts sur 11 n'en portaient
 aucun.
 
