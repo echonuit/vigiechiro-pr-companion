@@ -40,8 +40,9 @@ Avant d'écrire du code :
    patron DAO, `Capture*`…). Voir [Patterns et principes](patterns.md).
 2. **Rédiger un plan** : découpage, contraintes d'architecture ([Architecture](architecture.md) et les
    règles ArchUnit de [Tests et qualité](tests-et-qualite.md)), risques, ordre des paliers.
-3. **Découper en issues** reliées à un **EPIC** (une issue « parapluie » avec la task-list des
-   sous-issues). Chaque sous-issue porte son palier et ses dépendances.
+3. **Découper en issues** reliées à un **EPIC**, une issue « parapluie » dont les lots sont ses
+   **sous-issues** depuis #4829. Chaque sous-issue porte son palier, ses dépendances, et **son
+   critère de fin**, dans son corps.
 
 ### Étape 0 : le triage, avant tout le reste
 
@@ -139,6 +140,10 @@ sans savoir ce qu'ils construisent.
 
 Le troisième point est celui qu'on saute, et c'est le seul qui ne se retrouve pas après coup. Une issue
 sans continuité écrite devient un correctif isolé dont personne ne sait s'il a été fini.
+
+**Et une quatrième, qui ne va pas au même endroit : le critère de fin.** Les trois phrases ci-dessus
+se déposent en commentaire ; le critère, lui, s'écrit dans le **corps** de l'issue, qui est un lot de
+son chantier. La compétence `ouvrir-une-issue` porte le geste et dit pourquoi le corps et non le fil.
 
 ### Et se signaler : dire qu'on la prend, et ce qu'on va faire
 
