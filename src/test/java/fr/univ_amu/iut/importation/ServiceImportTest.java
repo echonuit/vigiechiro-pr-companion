@@ -1348,8 +1348,8 @@ class ServiceImportTest {
                 "1925492",
                 LocalDate.of(2026, 4, 22),
                 List.of(
-                        "23/04/26 - 03:00:00 PR1925492 Wakeup by WATCHDOG Cpt3 nuit22",
-                        "24/04/26 - 02:00:00 PR1925492 Wakeup by WATCHDOG Cpt5 nuit23"));
+                        "23/04/26 - 03:00:00 PR1925492 Wakeup by unknow... Cpt 3 nuit22",
+                        "24/04/26 - 02:00:00 PR1925492 Wakeup by unknow... Cpt 5 nuit23"));
         for (String jour : List.of("20260422", "20260423")) {
             ecrireWav(carte.resolve("PaRecPR1925492_" + jour + "_203922.wav"));
             ecrireWav(carte.resolve("PaRecPR1925492_" + jour + "_204326.wav"));

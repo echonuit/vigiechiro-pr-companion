@@ -186,7 +186,7 @@ public final class AnalyseurLogPR {
     /// Détection conservatrice des anomalies (R19) : réveil non programmé, batterie faible, erreur
     /// SD.
     private static void collecterAnomalie(LocalDateTime horodatage, String message, List<LigneJournal> anomalies) {
-        if (message.contains("Wakeup") && !message.contains("ALARM")) {
+        if (MotifDeReveil.estUnReveil(message) && !MotifDeReveil.estVoulu(message)) {
             anomalies.add(new LigneJournal(horodatage, "Réveil non programmé : " + message));
         }
         String minuscule = message.toLowerCase(Locale.ROOT);

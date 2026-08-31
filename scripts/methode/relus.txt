@@ -708,7 +708,7 @@ d525e43a76d0  src/main/java/fr/univ_amu/iut/importation/model/ApercuEcrasement.j
 7e01a1f9f142  src/main/java/fr/univ_amu/iut/importation/model/ContexteImport.java
 823d92804f93  src/main/java/fr/univ_amu/iut/importation/model/CopieProtegee.java
 a2cbd2949853  src/main/java/fr/univ_amu/iut/importation/model/CycleAcquisition.java
-2d4ca4c02758  src/main/java/fr/univ_amu/iut/importation/model/CyclesJournal.java
+10bf0233bbe1  src/main/java/fr/univ_amu/iut/importation/model/CyclesJournal.java
 7742654afffc  src/main/java/fr/univ_amu/iut/importation/model/DecoupageParallele.java
 a30713b524a5  src/main/java/fr/univ_amu/iut/importation/model/EtatNommage.java
 5ea2bb553bf6  src/main/java/fr/univ_amu/iut/importation/model/ExtracteurZip.java
@@ -724,6 +724,7 @@ c1fe0b5b344b  src/main/java/fr/univ_amu/iut/importation/model/InventaireParInspe
 91c8727d53d8  src/main/java/fr/univ_amu/iut/importation/model/LigneJournal.java
 0fda331823a9  src/main/java/fr/univ_amu/iut/importation/model/LigneRapport.java
 16c92c80c309  src/main/java/fr/univ_amu/iut/importation/model/MoteurImport.java
+886e20efa7dc  src/main/java/fr/univ_amu/iut/importation/model/MotifDeReveil.java
 81ce90abdc2b  src/main/java/fr/univ_amu/iut/importation/model/NuitAImporter.java
 28a78a0c8857  src/main/java/fr/univ_amu/iut/importation/model/NuitDetectee.java
 6cbafd005b24  src/main/java/fr/univ_amu/iut/importation/model/OriginalIllisibleException.java
@@ -1719,6 +1720,7 @@ e45fa97b00a2  src/test/java/fr/univ_amu/iut/importation/ServiceImportTest.java
 963e62993246  src/test/java/fr/univ_amu/iut/importation/SuiviFichiersImportTest.java
 7d8e5cc1e7d0  src/test/java/fr/univ_amu/iut/importation/TransformationAudioTest.java
 edc030e28fd3  src/test/java/fr/univ_amu/iut/importation/model/ConfigurationAcquisitionTest.java
+2c8610be0f7a  src/test/java/fr/univ_amu/iut/importation/model/CyclesJournalTest.java
 40047255ec8f  src/test/java/fr/univ_amu/iut/importation/model/EquivalenceImportReactivationTest.java
 afd5f044b9f8  src/test/java/fr/univ_amu/iut/importation/model/FiltreThLogNuitTest.java
 44fafead3413  src/test/java/fr/univ_amu/iut/importation/model/InventaireParInspectionTest.java
