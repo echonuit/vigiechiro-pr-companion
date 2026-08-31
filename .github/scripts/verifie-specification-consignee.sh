@@ -177,6 +177,12 @@ if [ "${1-}" = "--auto-test" ]; then
     joue ok "un AUTRE numéro portant le même contenu vaut réponse : le numéro ne fait pas foi" \
         "[{\"number\":1,\"body\":\"${TRACE}\",\"comments\":[]},{\"number\":2,\"body\":\"${TRACE}\\n- [x] 12. Changement OpenSpec archivé : fusionné.\",\"comments\":[]}]"
 
+    # La premisse, eprouvee plutot qu ecrite : si la marque est renommee, le corpus tombe a zero et
+    # ce garde passerait VERT en n ayant rien lu (#4948).
+    joue refus "des EPIC clos dont AUCUN ne porte la marque : corpus vide, on REFUSE" \
+        '[{"number":1,"body":"## Bilan de chantier\n- [x] 10. Archivage OpenSpec : sans objet","comments":[]}]'
+    joue ok "AUCUN EPIC clos : rien a juger, ce n est pas un corpus vide suspect" \
+        '[]'
     joue refus "une ADR sans cliquet lisible fait REFUSER, pas conclure" \
         "[{\"number\":1,\"body\":\"${TRACE}\",\"comments\":[]}]" "${bac}/adr-muette.md"
     joue refus "une ADR introuvable fait REFUSER aussi" \
@@ -190,7 +196,30 @@ if [ "${1-}" = "--auto-test" ]; then
 fi
 
 seuil=$(cliquet)
-liste=$(epics | sansReponse || true)
+corpus=$(epics)
+
+# La PREMISSE, verifiee a chaque passage plutot qu ecrite dans un en-tete (#4948).
+#
+# Ce garde ne juge que les traces qui PORTENT la marque. Si la marque est renommee, son corpus tombe
+# a zero, il compte zero manquement et passe VERT en n ayant rien lu. Mesure le 2026-08-31 sur un bac
+# ou toutes les traces portaient « ## Bilan de chantier » : « sans reponse=0 », code 0.
+#
+# Un EPIC clos sans AUCUNE trace est legitime et appartient a ADR 4659. Ce qui ne l est pas, c est
+# qu AUCUN des EPIC clos ne porte la marque alors qu il y en a : cela designe la marque, pas les
+# cloturers. C est l article A3, « un dispositif dit ce qu il n a pas pu lire ».
+clos=$(printf '%s' "${corpus}" | jq 'length' 2> /dev/null || echo 0)
+portent=$(printf '%s' "${corpus}" | jq -r --arg m "${MARQUE}" '
+    [.[] | select(([(.body // "")] + [.comments[]?.body // ""] | join("\n")) | contains($m))] | length
+' 2> /dev/null || echo 0)
+if [ "${clos}" -gt 0 ] && [ "${portent}" = "0" ]; then
+    echo "REFUS : ${clos} EPIC clos, et AUCUN ne porte « ${MARQUE} »." >&2
+    echo "Ce garde ne lit que les traces qui portent cette marque : son corpus est vide, et un" >&2
+    echo "compte de zero ne voudrait rien dire. La marque a probablement ete renommee dans" >&2
+    echo "« dev-docs/cycle-de-chantier.md » ; alignez-la ici." >&2
+    exit 2
+fi
+
+liste=$(printf '%s' "${corpus}" | sansReponse || true)
 compte=$(printf '%s' "${liste}" | grep -c . || true)
 
 echo "CLIQUET 4922 | sans réponse à la passe de spécification=${compte} | cliquet=${seuil}"
