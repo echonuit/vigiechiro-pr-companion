@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.TailleOuverture;
 import fr.univ_amu.iut.recette.Attente;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
@@ -82,6 +83,15 @@ class AppTest {
         return new Mesure(ouverture.largeur(), ouverture.hauteur(), mesures[0], mesures[1]);
     }
 
+    /// Rend le Stage partagé tel qu'il a été reçu : sans plancher, et à la taille de sa scène.
+    ///
+    /// Le `sizeToScene` est un remède **partiel** de #4785 : il ne supprime pas le rouge intermittent
+    /// de [#le_stage_partage_reste_ajustable], il supprime sa **cascade**. À l'échec, la fenêtre reste
+    /// à 600 quand son contenu en réclame 720, et les classes suivantes du fork en héritent ; un seul
+    /// `sizeToScene` la porte à 720, ce qui prouve que rien n'est figé. Cause ouverte en #5018.
+    ///
+    /// L'appeler **ici** ne défait rien : l'assertion a déjà eu lieu. **Avant**, ce serait tout autre
+    /// chose, et le premier jet du test l'a payé d'un mutant survivant.
     @AfterEach
     void nettoyerWorkspace(FxRobot robot) {
         System.clearProperty("vigiechiro.workspace");
@@ -95,6 +105,7 @@ class AppTest {
         robot.interact(() -> {
             stage.setMinWidth(0);
             stage.setMinHeight(0);
+            stage.sizeToScene();
         });
     }
 
@@ -181,10 +192,38 @@ class AppTest {
     /// Le plancher figure aussi : il vaut 600 tant que `App.start` l'a posé, et c'est lui qui remonte
     /// la petite scène à 600. Le lire évite de conclure au figement sur une fenêtre simplement bornée.
     private String geometrie(double aLOuverture, double contenuBas, double contenuHaut) {
+        double fenetreAlors = stage.getHeight();
         return "  plancher %.0f | 8 lignes : fenêtre %.0f, contenu %.0f | 40 lignes : fenêtre %.0f, contenu %.0f%n"
-                        .formatted(stage.getMinHeight(), aLOuverture, contenuBas, stage.getHeight(), contenuHaut)
-                + "  Si le contenu à 40 lignes dépasse la fenêtre, le Stage est FIGÉ par une classe du"
-                + " même fork ; s'il reste sous 600, c'est la scène qui n'a pas grandi.";
+                        .formatted(stage.getMinHeight(), aLOuverture, contenuBas, fenetreAlors, contenuHaut)
+                + "  fenêtre après %d ms de plus : %.0f, lue SUR LE FIL : %.0f%n"
+                        .formatted(REPRISE_MS, fenetreApresUnDelai(), hauteurSurLeFil())
+                + "  scène : %.0f, minHeight %.0f, resizable %s%n"
+                        .formatted(stage.getScene().getHeight(), stage.getMinHeight(), stage.isResizable())
+                + "  Le contenu reste sous 600 : la scène n'a pas grandi. Le contenu dépasse et la"
+                + " fenêtre ne suit pas : l'ajustement automatique de la fenêtre n'a pas eu lieu. Ce"
+                + " n'est PAS un figement, mesuré en #4785 : un seul `sizeToScene` la rattrape, et le"
+                + " teardown de cette classe le fait pour épargner la cascade.";
+    }
+
+    /// Le délai laissé à la fenêtre pour suivre, quand l'assertion vient de la trouver immobile.
+    ///
+    /// Il ne sert **qu'au rapport** : le test a déjà échoué quand on le lit. Sa seule raison d'être est
+    /// de départager un figement, qui ne suit jamais, d'un retard, qui suit après coup (#4785).
+    private static final long REPRISE_MS = 1_500L;
+
+    /// La hauteur de la fenêtre lue **sur le fil JavaFX**, où elle est écrite.
+    ///
+    /// Une propriété JavaFX lue depuis le fil du test peut rendre une valeur périmée. Si les deux
+    /// lectures diffèrent, le banc n'accuse pas un figement mais sa propre façon de lire (#4785).
+    private double hauteurSurLeFil() {
+        return Attente.surLeFil(stage::getHeight, "lire la hauteur du Stage sur son fil", 2_000L);
+    }
+
+    /// La hauteur de la fenêtre après [#REPRISE_MS], lue sur le fil JavaFX.
+    private double fenetreApresUnDelai() {
+        WaitForAsyncUtils.sleep(REPRISE_MS, TimeUnit.MILLISECONDS);
+        WaitForAsyncUtils.waitForFxEvents();
+        return stage.getHeight();
     }
 
     /// Une racine de `combien` lignes, assez basse pour tenir sous l'écran du banc.
