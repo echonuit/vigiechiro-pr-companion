@@ -725,6 +725,9 @@ jobs:
       - name: Auto-test du rappel de critère de fin
         run: bash .github/scripts/rappelle-le-critere-de-fin.sh --auto-test
 
+      - name: Auto-test de la loupe des lots sans critère
+        run: python3 scripts/adr/loupe-4992-lots-sans-critere.py --auto-test
+
       - name: "Clôture consignée : un EPIC clos porte sa trace (bloquant, #4659)"
         # Celui-ci interroge la forge, d'où le jeton. Il REFUSE si elle ne répond pas : un cliquet qui
         # conclut sur ce qu'il n'a pas lu vaut moins que pas de cliquet.
