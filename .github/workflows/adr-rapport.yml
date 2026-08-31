@@ -23,6 +23,10 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # Deux loupes lisent la forge, 4712 et 4992. Sans ce droit, `gh` n'est pas authentifié sur le
+  # runner, elles REFUSENT plutôt que de conclure, et le rapport les compte parmi ses scripts muets.
+  # C'est ce qui rendait `loupe-4712` invisible ici depuis son écriture (#4992).
+  issues: read
 
 jobs:
   rapport:
@@ -39,6 +43,10 @@ jobs:
           python-version: "3.x"
 
       - name: Publier le rapport dans le résumé du job
+        env:
+          # `rapport.py` lance les loupes, dont deux interrogent la forge. Le jeton leur est passé
+          # ici et non au niveau du job : les cliquets, eux, lisent l'arbre et n'en ont pas besoin.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           python3 scripts/adr/rapport.py --markdown >> "$GITHUB_STEP_SUMMARY"
