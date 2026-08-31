@@ -53,15 +53,25 @@ def capacites(racine: pathlib.Path) -> list[tuple[str, int]]:
     return trouvees
 
 
+def racine_des_paquets(racine: pathlib.Path) -> pathlib.Path:
+    """La racine des paquets de fonctionnalite, declaree ICI et nulle part ailleurs (ADR 4586).
+
+    Elle etait ecrite trois fois. Deux ecritures qui divergent feraient compter les paquets dans un
+    arbre et les services dans un autre, et la loupe rendrait un rapport coherent sur deux realites
+    differentes. Trouve a la passe 1 de la cloture de #4511.
+    """
+    return racine / "src" / "main" / "java" / "fr" / "univ_amu" / "iut"
+
+
 def paquets(racine: pathlib.Path) -> list[str]:
-    base = racine / "src" / "main" / "java" / "fr" / "univ_amu" / "iut"
+    base = racine_des_paquets(racine)
     return sorted(d.name for d in base.iterdir() if d.is_dir()) if base.is_dir() else []
 
 
 def reperes(racine: pathlib.Path) -> list[tuple[str, int]]:
     ecrans = racine / "docs" / "ecrans"
-    cli = racine / "src" / "main" / "java" / "fr" / "univ_amu" / "iut" / "cli" / "commande"
-    modele = racine / "src" / "main" / "java" / "fr" / "univ_amu" / "iut"
+    modele = racine_des_paquets(racine)
+    cli = modele / "cli" / "commande"
 
     nb_ecrans = len([f for f in ecrans.glob("*.md") if f.stem != "index"]) if ecrans.is_dir() else 0
     noms = set()
@@ -118,7 +128,7 @@ def auto_test() -> int:
         (delta / "spec.md").write_text("### Requirement: A\n", encoding="utf-8")
         joue("une delta ARCHIVÉE ne se compte pas deux fois", capacites(r), [("passage/emport-d-une-nuit", 2)])
 
-        src = r / "src" / "main" / "java" / "fr" / "univ_amu" / "iut"
+        src = racine_des_paquets(r)
         (src / "passage").mkdir(parents=True)
         (src / "commun").mkdir(parents=True)
         joue("les paquets se lisent depuis l'arbre", paquets(r), ["commun", "passage"])

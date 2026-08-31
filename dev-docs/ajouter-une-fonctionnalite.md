@@ -18,6 +18,21 @@ on le câble à l'injection, puis on le **branche à la navigation** sans casser
     une consigne d'écrire les tests en dernier - et c'en était une. La section 8 rassemble donc les
     **outils et niveaux** de test, pas le moment où l'on s'en sert.
 
+!!! note "Avant le premier test : ce que le produit doit FAIRE"
+    Une fonctionnalité neuve change ce que le produit fait, donc l'étape **2b** de l'ouverture de
+    chantier s'applique : la capacité se décrit dans la
+    [spécification vivante](cycle-de-chantier.md) avant d'être écrite, par `/instruire` puis
+    `/proposer`. Les tâches du changement deviennent alors les lots du chantier, et se cochent dans
+    les commits qui les réalisent.
+
+    Une **capacité** est ici la capacité métier au sens de
+    [l'ADR 0014](decisions/0014-parite-cli-ihm.md), nommée `<paquet>/<geste>` :
+    `passage/emport-d-une-nuit`. Son grain est le geste, pas l'écran - une capacité traverse
+    volontiers l'écran et la ligne de commande.
+
+    Cette page décrit ensuite **comment** on l'écrit. La spécification dit **quoi**, et elle survit à
+    la fermeture de l'issue.
+
 ## 1. Créer le paquet et ses 4 couches
 
 Sous `src/main/java/fr/univ_amu/iut/`, créez `mafeature/` avec les 4 sous-paquets. Chacun a une
@@ -343,5 +358,7 @@ publiée (`feat:` mineure, `fix:` patch, `BREAKING CHANGE:` majeure ; cf.
 - [ ] Capture + manifeste si l'écran est documenté.
 - [ ] Tests verts, **`./mvnw -B test-compile pmd:pmd`** puis le cliquet 4617 vert, et la couverture
       tenue par `./mvnw -B verify -Djacoco.haltOnFailure=true`.
+- [ ] Si le chantier porte un changement OpenSpec, **la tâche réalisée est cochée** dans les commits
+      du travail, et le corps de la demande la nomme.
 - [ ] Commits en **Conventional Commits** (cf.
       [CONTRIBUTING.md](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/CONTRIBUTING.md)).
