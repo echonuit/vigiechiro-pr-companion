@@ -20,13 +20,13 @@ import fr.univ_amu.iut.commun.view.ExecuteurFicheSynchrone;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.Attente;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -42,7 +42,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E** du parcours « Fiche de l'espèce » (#844) : depuis le tableau de bord, ouvrir
 /// **Sons & validation** (source `References`), sélectionner un son de référence chiroptère, puis
@@ -111,7 +110,7 @@ class ParcoursFicheEspeceE2ETest {
         // (occupation.occuper) : sans cette attente, la table est encore vide quand l'assertion tombe,
         // un échec qui ne se produit que sur une machine lente, donc en CI.
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !table.getItems().isEmpty());
+        Attente.que(() -> !table.getItems().isEmpty(), "la table se remplit", 5 * 1000L);
         assertThat(table.getItems()).as("le son de référence Pippip est listé").isNotEmpty();
         robot.interact(() -> table.getSelectionModel().select(0));
 

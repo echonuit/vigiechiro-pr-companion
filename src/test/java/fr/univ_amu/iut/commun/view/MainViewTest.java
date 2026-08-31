@@ -191,10 +191,10 @@ class MainViewTest {
         // L'écran « Mes sites » se peuple par l'exécuteur ASYNCHRONE du vrai injecteur : au retour du
         // clic il ne porte encore que son voile d'occupation. `waitForFxEvents` vide la file du fil FX,
         // il n'attend pas le thread qui la remplira - on attend donc la carte elle-même.
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> !robot.lookup(".carte-site").queryAll().isEmpty());
+        Attente.que(
+                () -> !robot.lookup(".carte-site").queryAll().isEmpty(),
+                "les cartes de sites paraissent sur l'accueil",
+                10 * 1000L);
         Respiration.entreDeuxGestes(robot);
 
         robot.clickOn((Node) robot.lookup(".carte-site").query());

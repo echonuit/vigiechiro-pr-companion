@@ -8,7 +8,7 @@ decided_at: 2026-08-31
 verification: certaine
 enforced_by:
   - "scripts/adr/4974-attente-reinventee.py"
-ratchet: 2
+ratchet: 4
 verified:
   - by: machine:ci
     at: 2026-08-31
@@ -51,7 +51,25 @@ cliquet à chaque fois qu'on l'enrichit.
 borne donc le nombre de sites qui sondent en propre, et chaque survivant porte sa raison dans sa
 javadoc.
 
-## Les deux survivants, et pourquoi le cliquet vaut 2 et non 0
+## La population élargie par #4845, et pourquoi le cliquet vaut 4
+
+Le cliquet a d'abord compté les méthodes **privées**. #4845 a montré que cette restriction ne tenait
+qu'à la façon dont le défaut avait été trouvé : une attente écrite en clair dans un cas de test tait
+exactement la même chose. Il compte désormais **tout appel à `waitFor` hors d'`Attente`**, et 41
+sites y sont passés.
+
+Une **citation en commentaire** n'est pas un appel : la javadoc d'`AttenteAvantClic`, qui explique
+pourquoi elle rattrape, comptait pour une réinvention et faisait valoir un de trop au cliquet.
+
+Les quatre survivants **rattrapent tous** et disent ce qu'ils attendaient :
+
+| Site | Ce qu'il fait de l'expiration |
+|---|---|
+| `GesteVisible#amenerDansLeCadre` | lève un `IllegalStateException` nommant le sélecteur jamais venu |
+| `AttenteAvantClic#attendreCliquable` | joint l'état observé de la cible |
+| les deux `doubleClicVersPassage` | retentent trois fois, puis lèvent avec les bornes observées |
+
+## Les deux boucles de reprise, et pourquoi elles ne se convertissent pas
 
 Les deux `doubleClicVersPassage` sont des boucles de **reprise**. Leur expiration est rattrapée pour
 retenter trois fois, et c'est leur `throw` final qui parle, en joignant les bornes observées de la

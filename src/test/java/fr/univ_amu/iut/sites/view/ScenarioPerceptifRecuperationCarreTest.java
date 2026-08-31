@@ -22,6 +22,7 @@ import fr.univ_amu.iut.commun.view.Notificateur;
 import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
@@ -38,7 +39,6 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.SouhaitDeclaration;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
@@ -196,10 +196,10 @@ class ScenarioPerceptifRecuperationCarreTest {
         Respiration.entreDeuxGestes(robot);
         GesteVisible.cliquer(robot, "#btnVerifierCarre");
         // L'exécuteur est asynchrone : le verdict n'est PAS là au retour du clic (ADR 3668).
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("#btnRecupererCarre").tryQuery().isPresent());
+        Attente.que(
+                () -> robot.lookup("#btnRecupererCarre").tryQuery().isPresent(),
+                "le bouton « Récupérer ce carré » paraît",
+                10 * 1000L);
         Respiration.entreDeuxGestes(robot);
 
         robot.clickOn("#btnRecupererCarre");
@@ -207,13 +207,13 @@ class ScenarioPerceptifRecuperationCarreTest {
         // C'est ici que se joue le cas : la modale s'efface, l'écran d'où elle venait reste, et son
         // bandeau dit ce qui vient d'être créé. Attendre le TEXTE du bandeau, et non sa présence :
         // le noeud existe dès le chargement de l'écran, invisible et vide.
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
+        Attente.que(
                 () -> robot.lookup("#lblRetour")
                         .tryQueryAs(Label.class)
                         .filter(libelle -> libelle.getText().contains(CARRE))
-                        .isPresent());
+                        .isPresent(),
+                "le libellé de retour porte son verdict",
+                10 * 1000L);
         // Le moment que ce cas existe pour montrer : la liste vient de s'ouvrir sur le carré récupéré,
         // et c'est là qu'on juge si l'on comprend ce qui s'est passé.
         Respiration.surLeMomentCle(robot);

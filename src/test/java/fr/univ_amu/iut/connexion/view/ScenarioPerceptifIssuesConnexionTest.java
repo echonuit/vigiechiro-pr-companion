@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.control.Alert;
@@ -229,8 +228,10 @@ class ScenarioPerceptifIssuesConnexionTest {
 
         // Étape 3 : se connecter sans jeton demande le geste manquant, sans partir sur le réseau.
         robot.clickOn("#boutonConnecter");
-        WaitForAsyncUtils.waitFor(
-                20, TimeUnit.SECONDS, () -> statut(robot).getText().contains("Collez d'abord"));
+        Attente.que(
+                () -> statut(robot).getText().contains("Collez d'abord"),
+                "le statut invite à coller un jeton",
+                20 * 1000L);
         Respiration.surLeMomentCle(robot);
 
         assertThat(statut(robot).getText()).contains("Collez d'abord");

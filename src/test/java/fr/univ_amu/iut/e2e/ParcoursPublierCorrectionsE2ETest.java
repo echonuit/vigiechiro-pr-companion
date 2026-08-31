@@ -33,6 +33,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -45,7 +46,6 @@ import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -59,7 +59,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E de la publication des corrections** (#723, refondue par #1838) : d'une nuit importée
 /// **par CSV** jusqu'au `PATCH` parti vers la plateforme.
@@ -137,7 +136,7 @@ class ParcoursPublierCorrectionsE2ETest {
         // (occupation.occuper) : waitForFxEvents ne fait que vider la file du fil FX, il n'attend pas
         // ce thread en tache de fond. Sans cette attente, la table est encore vide quand l'assertion
         // tombe, un échec qui ne se produit que sur une machine lente, donc en CI (#3733).
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !table.getItems().isEmpty());
+        Attente.que(() -> !table.getItems().isEmpty(), "la table se remplit", 5 * 1000L);
         assertThat(table.getItems()).as("l'import rapide a bien rempli l'écran").hasSize(1);
 
         Observation avant = observations().getFirst();

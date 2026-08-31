@@ -111,7 +111,7 @@ class ParcoursMultisiteVersPassageE2ETest {
         // lente, donc en CI.
         robot.interact(() -> injector.getInstance(NavigationMultisite.class).ouvrirAccueil());
         TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !table.getItems().isEmpty());
+        Attente.que(() -> !table.getItems().isEmpty(), "la table des lignes se remplit", 5 * 1000L);
         assertThat(table.getItems()).hasSize(1);
         assertThat(navigation.getVueCourante()).isEqualTo("multisite");
 
@@ -123,7 +123,7 @@ class ParcoursMultisiteVersPassageE2ETest {
         assertThat(verifier).isNotNull();
         // navigation.getVueCourante() bascule dès le changement d'écran, avant que le chargement du
         // passage (lui aussi asynchrone) n'ait appliqué ses données.
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !verifier.isDisabled());
+        Attente.que(() -> !verifier.isDisabled(), "le bouton « Vérifier » devient actif", 5 * 1000L);
 
         // 3) Le fil d'Ariane GLOBAL situe le passage sous son site, même atteint via multisite (#140) :
         // Accueil › Mes sites › Carré 640380 › Détails du passage N° 1 (emplacement, pas l'historique).
@@ -149,17 +149,17 @@ class ParcoursMultisiteVersPassageE2ETest {
         // multisite_drill_vers_passage : chargement de l'agrégat puis chargement du passage, tous deux
         // asynchrones.
         robot.interact(() -> injector.getInstance(NavigationMultisite.class).ouvrirAccueil());
-        WaitForAsyncUtils.waitFor(
-                5,
-                TimeUnit.SECONDS,
+        Attente.que(
                 () -> !robot.lookup("#tableLignes")
                         .queryAs(TableView.class)
                         .getItems()
-                        .isEmpty());
+                        .isEmpty(),
+                "la table des lignes se remplit après le retour",
+                5 * 1000L);
         doubleClicVersPassage(robot, navigation);
         assertThat(navigation.getVueCourante()).isEqualTo("passage");
         Button verifier = robot.lookup("#boutonVerifier").queryAs(Button.class);
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !verifier.isDisabled());
+        Attente.que(() -> !verifier.isDisabled(), "le bouton « Vérifier » redevient actif", 5 * 1000L);
 
         // 2) M-Passage → écran enfant (carte « Diagnostic matériel »).
         robot.interact(robot.lookup("#boutonDiagnostic").queryButton()::fire);

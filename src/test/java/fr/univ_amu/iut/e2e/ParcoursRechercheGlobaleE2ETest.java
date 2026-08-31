@@ -14,8 +14,8 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.Attente;
 import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -130,7 +130,7 @@ class ParcoursRechercheGlobaleE2ETest {
         robot.interact(() -> champ.setText("zzzz-introuvable"));
         // Le panneau doit s'ouvrir malgré l'absence de résultat (#795) : rester invisible ferait croire
         // que la recherche n'a pas tourné.
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, panneau::isVisible);
+        Attente.que(panneau::isVisible, "le panneau de recherche s'ouvre", 5 * 1000L);
 
         assertThat(liste.getItems()).isEmpty();
         assertThat(liste.getPlaceholder())
@@ -147,7 +147,7 @@ class ParcoursRechercheGlobaleE2ETest {
 
         saisirEtAttendreDesResultats(robot, "Tuilière"); // le panneau est ouvert...
         robot.interact(() -> champ.setText("   "));
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !panneau.isVisible()); // ...puis se referme
+        Attente.que(() -> !panneau.isVisible(), "le panneau de recherche se referme", 5 * 1000L); // ...puis se referme
     }
 
     /// Saisit `requete` dans le champ du chrome et attend que l'**anti-rebond** (180 ms) ait livré des
@@ -156,7 +156,7 @@ class ParcoursRechercheGlobaleE2ETest {
         TextField champ = robot.lookup("#champRecherche").queryAs(TextField.class);
         ListView<?> liste = robot.lookup("#listeResultats").queryAs(ListView.class);
         robot.interact(() -> champ.setText(requete));
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !liste.getItems().isEmpty());
+        Attente.que(() -> !liste.getItems().isEmpty(), "la liste des résultats se remplit", 5 * 1000L);
         return liste;
     }
 

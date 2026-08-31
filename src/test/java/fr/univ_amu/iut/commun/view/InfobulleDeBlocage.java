@@ -1,6 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
-import java.util.concurrent.TimeUnit;
+import fr.univ_amu.iut.recette.Attente;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
 import javafx.scene.control.Tooltip;
@@ -62,7 +62,7 @@ public final class InfobulleDeBlocage {
         }
         robot.moveTo(enveloppe);
         WaitForAsyncUtils.waitForFxEvents();
-        WaitForAsyncUtils.waitFor(DELAI_INFOBULLE_S, TimeUnit.SECONDS, infobulle::isShowing);
+        Attente.que(infobulle::isShowing, "l'infobulle de blocage paraît sous le pointeur", DELAI_INFOBULLE_S * 1000L);
         return infobulle.getText();
     }
 }

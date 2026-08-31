@@ -153,11 +153,8 @@ public final class GesteVisible {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
-    /// Ouvre `idDuMenu`, amène le pointeur sur l'entrée `libelle`, l'y laisse voir, puis clique.
-    ///
-    /// @throws TimeoutException si l'entrée ne paraît pas - un menu qui ne s'ouvre pas rendrait un clip
-    ///     immobile que personne ne signalerait
-    /// Même chose sur un menu **déjà en main**, quand plusieurs écrans portent le même identifiant.
+    /// Choisit `libelle` dans un menu **déjà en main**, quand plusieurs écrans portent le même
+    /// identifiant.
     ///
     /// Cinq FXML du dépôt déclarent `fx:id="menuOutils"` : le chrome, l'analyse, le lot, la sélection
     /// d'écoute et le détail d'un site. Un `lookup` par identifiant ouvre donc le premier venu, et le
@@ -168,20 +165,28 @@ public final class GesteVisible {
     /// @param menu le menu que le scénario tient
     /// @param libelle l'entrée à choisir
     /// @throws TimeoutException si l'entrée ne paraît pas
-    public static void choisir(FxRobot robot, Node menu, String libelle) throws TimeoutException {
+    public static void choisir(FxRobot robot, Node menu, String libelle) {
         cliquer(robot, menu);
         WaitForAsyncUtils.waitForFxEvents();
-        WaitForAsyncUtils.waitFor(
-                5, TimeUnit.SECONDS, () -> robot.lookup(libelle).tryQuery().isPresent());
+        Attente.que(
+                () -> robot.lookup(libelle).tryQuery().isPresent(),
+                "l'entrée « " + libelle + " » paraît dans le menu ouvert",
+                5_000L);
         Respiration.leTempsDeLire(robot);
         cliquer(robot, libelle);
     }
 
-    public static void choisir(FxRobot robot, String idDuMenu, String libelle) throws TimeoutException {
+    /// Ouvre `idDuMenu`, amène le pointeur sur l'entrée `libelle`, l'y laisse voir, puis clique.
+    ///
+    /// Un menu qui ne s'ouvre pas rendrait un clip immobile que personne ne signalerait : l'attente
+    /// **dit** donc ce qu'elle guettait (#4845).
+    public static void choisir(FxRobot robot, String idDuMenu, String libelle) {
         robot.clickOn(idDuMenu);
         WaitForAsyncUtils.waitForFxEvents();
-        WaitForAsyncUtils.waitFor(
-                5, TimeUnit.SECONDS, () -> robot.lookup(libelle).tryQuery().isPresent());
+        Attente.que(
+                () -> robot.lookup(libelle).tryQuery().isPresent(),
+                "l'entrée « " + libelle + " » paraît dans le menu ouvert",
+                5_000L);
         Respiration.leTempsDeLire(robot);
 
         // Le pointeur VA sur l'entrée, et s'y arrête, AVANT de cliquer. Sans cet arrêt, le clic et la

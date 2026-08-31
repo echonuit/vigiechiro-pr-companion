@@ -20,13 +20,13 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -41,7 +41,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E de parcours (fil rouge P1 → P4)** : sur le **vrai chrome** de l'application (injecteur
 /// applicatif `RacineInjecteur`), on enchaîne plusieurs écrans via la **navigation réelle** et on
@@ -114,7 +113,7 @@ class ParcoursDepotE2ETest {
         // (désactivé), un échec qui ne se produit que sur une machine lente, donc en CI.
         robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));
         Button verifier = robot.lookup("#boutonVerifier").queryAs(Button.class);
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !verifier.isDisabled());
+        Attente.que(() -> !verifier.isDisabled(), "le bouton « Vérifier » devient actif", 5 * 1000L);
         assertThat(verifier.isDisabled()).isFalse();
 
         // 2) Vérifier → M-Qualification, poser le verdict OK puis enregistrer. M-Qualification se charge
@@ -123,13 +122,13 @@ class ParcoursDepotE2ETest {
         // venait de choisir (verdictVm.appliquer(...) réapplique l'état lu en base) - le passage reste
         // alors « Transformé ».
         robot.interact(verifier::fire);
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
+        Attente.que(
                 () -> !robot.lookup("#tableSequences")
                         .queryAs(TableView.class)
                         .getItems()
-                        .isEmpty());
+                        .isEmpty(),
+                "M-Qualification charge ses séquences",
+                10 * 1000L);
         robot.interact(robot.lookup("#boutonOk").queryAs(Button.class)::fire);
         robot.interact(robot.lookup("#boutonEnregistrer").queryAs(Button.class)::fire);
         assertThat(statut(passages)).isEqualTo(StatutWorkflow.VERIFIE);
@@ -138,7 +137,7 @@ class ParcoursDepotE2ETest {
         // rechargement du passage est asynchrone.
         robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));
         Button depot = robot.lookup("#boutonDepot").queryAs(Button.class);
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !depot.isDisabled());
+        Attente.que(() -> !depot.isDisabled(), "le bouton de dépôt devient actif", 5 * 1000L);
         assertThat(depot.isDisabled()).isFalse();
 
         // 4) Préparer le dépôt → M-Lot : préparer puis déposer.

@@ -36,7 +36,6 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.SouhaitDeclaration;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -319,10 +318,10 @@ class ScenarioModaleCarreTest {
         saisir(robot, CARRE_PRIS);
         verifier(robot);
 
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("#btnRecupererCarre").tryQuery().isPresent());
+        Attente.que(
+                () -> robot.lookup("#btnRecupererCarre").tryQuery().isPresent(),
+                "le bouton « Récupérer ce carré » paraît",
+                10 * 1000L);
         // Le pointeur s'arrête SUR le bouton avant de cliquer (#4181). `clickOn` seul téléporte : le
         // geste décisif de ce cas - « on a cliqué sur Récupérer » - n'existait sur aucune image.
         GesteVisible.cliquer(robot, "#btnRecupererCarre");
@@ -331,22 +330,22 @@ class ScenarioModaleCarreTest {
         // le geste se termine là où il a commencé. La modale s'efface, « Mes sites » reste, le carré
         // paraît dans la liste et le bandeau dit ce qui vient d'être créé. Le script promettait la
         // fiche du carré ; c'est ce clip qui a montré qu'elle avait un chantier de retard (#4180).
-        WaitForAsyncUtils.waitFor(
-                15,
-                TimeUnit.SECONDS,
+        Attente.que(
                 () -> robot.lookup("#lblRetour")
                         .tryQueryAs(Label.class)
                         .filter(libelle -> libelle.getText().contains(CARRE_PRIS))
-                        .isPresent());
+                        .isPresent(),
+                "le libellé de retour porte son verdict",
+                15 * 1000L);
         // Et on attend la CARTE, pas seulement le bandeau. Les deux arrivent par des chemins
         // différents - le bandeau est posé par le compte rendu, la liste se reconstruit après le signal
         // de mutation - et la liste arrive en dernier. Le test affirmait sur elle sans l'avoir attendue :
         // vert cent fois en local, rouge dans la suite complète, là où la machine est chargée. Une
         // assertion sur un état qu'on n'a pas attendu ne mesure que la vitesse du runner.
-        WaitForAsyncUtils.waitFor(
-                15,
-                TimeUnit.SECONDS,
-                () -> !robot.lookup(".carte-site").queryAll().isEmpty());
+        Attente.que(
+                () -> !robot.lookup(".carte-site").queryAll().isEmpty(),
+                "les cartes de sites reparaissent",
+                15 * 1000L);
         Respiration.surLeMomentCle(robot);
 
         assertThat(robot.lookup("#champCarre").tryQuery())
@@ -418,10 +417,10 @@ class ScenarioModaleCarreTest {
 
         // Et l'écran d'ARRIVÉE, sans quoi on ne voit pas ce que la modale a changé (ADR 4188).
         robot.clickOn(creer);
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup(".carte-site").queryAll().size() > avant);
+        Attente.que(
+                () -> robot.lookup(".carte-site").queryAll().size() > avant,
+                "une carte de site de plus paraît",
+                10 * 1000L);
         Respiration.surLeMomentCle(robot);
 
         assertThat(titresDesCartes(robot))
@@ -445,10 +444,7 @@ class ScenarioModaleCarreTest {
         Respiration.avantLeGeste(robot);
 
         robot.clickOn("Annuler");
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("#champCarre").tryQuery().isEmpty());
+        Attente.que(() -> robot.lookup("#champCarre").tryQuery().isEmpty(), "le champ de carré se vide", 10 * 1000L);
         Respiration.surLeMomentCle(robot);
 
         assertThat(titresDesCartes(robot))

@@ -691,7 +691,19 @@ def test_4974_attente_reinventee() -> None:
         _verifie("4974 une sonde privee est vue quel que soit son nom", len(m.suspects(racine)), 1)
 
         _ecrire(racine, "fr/a/A.java", "class A {\n    private void patienter() {\n" + sonde + "    }\n}\n")
-        _verifie("4974 renommer ne soustrait rien", m.suspects(racine), ["A.java#patienter"])
+        _verifie("4974 renommer ne soustrait rien", m.suspects(racine), ["A.java:3"])
+
+        # La population elargie par #4845 : une attente ecrite en clair dans un CAS DE TEST tait la
+        # meme chose. La restriction aux methodes privees ne tenait qu a la facon dont le defaut
+        # avait ete trouve.
+        _ecrire(racine, "fr/a/T.java", "class T {\n    @Test\n    void un_cas() {\n" + sonde + "    }\n}\n")
+        _verifie("4974 une attente ecrite dans un cas de test compte", len(m.suspects(racine)), 2)
+
+        # Le sens NEGATIF que #4845 a rendu necessaire : une CITATION en commentaire n est pas un
+        # appel, et la javadoc d AttenteAvantClic en portait une.
+        _ecrire(racine, "fr/a/T.java", "class T {\n    /// Un `WaitForAsyncUtils.waitFor(...)` nu.\n"
+                "    void rien() {}\n}\n")
+        _verifie("4974 une citation en commentaire ne compte pas", len(m.suspects(racine)), 1)
 
         # Les trois sens NEGATIFS, sans lesquels un garde qui rend toutes les methodes privees
         # paraitrait juste.

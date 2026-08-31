@@ -28,7 +28,6 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -295,8 +294,8 @@ class ScenarioFicheSiteTest {
         // événement envoyé directement à la ligne ne déplace pas le curseur. Le clip montrerait
         // une table qui change toute seule, ce qui est précisément ce que la session vient voir.
         robot.doubleClickOn(DATE_AFFICHEE);
-        WaitForAsyncUtils.waitFor(
-                10, TimeUnit.SECONDS, () -> robot.lookup("#stepper").tryQuery().isPresent());
+        Attente.que(
+                () -> robot.lookup("#stepper").tryQuery().isPresent(), "le sélecteur de passage s'ouvre", 10 * 1000L);
         Respiration.surLeMomentCle(robot);
 
         assertThat(robot.lookup("#stepper").tryQuery())
@@ -353,8 +352,8 @@ class ScenarioFicheSiteTest {
         // remplaçait par un double qui écrivait le nouveau numéro : le clip montrait un clic sur
         // « Modifier » puis un numéro qui change, sans qu'aucune modale ne paraisse (#4174).
         robot.clickOn("#boutonModifier");
-        WaitForAsyncUtils.waitFor(
-                10, TimeUnit.SECONDS, () -> robot.lookup("#champNom").tryQuery().isPresent());
+        Attente.que(
+                () -> robot.lookup("#champNom").tryQuery().isPresent(), "le champ de nom du site paraît", 10 * 1000L);
         Respiration.leTempsDeLire(robot);
 
         // S1-23 · « création vs édition » : les champs portent déjà le site, et le bouton ne dit plus
@@ -374,8 +373,10 @@ class ScenarioFicheSiteTest {
         Respiration.avantLeGeste(robot);
 
         robot.clickOn("#boutonValider");
-        WaitForAsyncUtils.waitFor(
-                10, TimeUnit.SECONDS, () -> robot.lookup("#champNom").tryQuery().isEmpty());
+        Attente.que(
+                () -> robot.lookup("#champNom").tryQuery().isEmpty(),
+                "le champ de nom disparaît à la fermeture",
+                10 * 1000L);
         Respiration.surLeMomentCle(robot);
 
         assertThat(robot.lookup("#barreStatut").queryAll())
@@ -395,10 +396,7 @@ class ScenarioFicheSiteTest {
         Respiration.avantLeGeste(robot);
 
         GesteVisible.cliquer(robot, "+ Ajouter un point");
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("#champCode").tryQuery().isPresent());
+        Attente.que(() -> robot.lookup("#champCode").tryQuery().isPresent(), "le champ de code paraît", 10 * 1000L);
         Respiration.leTempsDeLire(robot);
 
         robot.clickOn(robot.lookup("#champCode").queryAs(TextField.class)).write("E5");
@@ -417,10 +415,10 @@ class ScenarioFicheSiteTest {
         Respiration.surLeMomentCle(robot);
 
         GesteVisible.cliquer(robot, "#boutonValider");
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup(".carte-point").queryAll().size() > 3);
+        Attente.que(
+                () -> robot.lookup(".carte-point").queryAll().size() > 3,
+                "les cartes de points sont plus de trois",
+                10 * 1000L);
         Respiration.surLeMomentCle(robot);
 
         // Le verdict se lit SUR L'ÉCRAN, et non dans le ViewModel : une carte de point porte
@@ -460,10 +458,7 @@ class ScenarioFicheSiteTest {
         Respiration.leTempsDeLire(robot);
 
         robot.clickOn("+ Ajouter un point");
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("#champCode").tryQuery().isPresent());
+        Attente.que(() -> robot.lookup("#champCode").tryQuery().isPresent(), "le champ de code paraît", 10 * 1000L);
         Respiration.leTempsDeLire(robot);
 
         robot.clickOn(robot.lookup("#champCode").queryAs(TextField.class)).write("D4");
@@ -471,10 +466,10 @@ class ScenarioFicheSiteTest {
         Respiration.avantLeGeste(robot);
 
         robot.clickOn("#boutonValider");
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup(".carte-point").queryAll().size() > avant);
+        Attente.que(
+                () -> robot.lookup(".carte-point").queryAll().size() > avant,
+                "une carte de point de plus paraît",
+                10 * 1000L);
         Respiration.surLeMomentCle(robot);
 
         assertThat(robot.lookup(".carte-point-code").queryAll().stream()
