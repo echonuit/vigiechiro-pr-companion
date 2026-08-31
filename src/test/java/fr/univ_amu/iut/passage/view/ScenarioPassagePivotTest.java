@@ -17,6 +17,7 @@ import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.FournisseurMeteo;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.Vent;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -274,10 +275,10 @@ class ScenarioPassagePivotTest {
         GesteVisible.cliquer(robot, "#boutonRattachement");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#spinnerNumero").tryQuery().isPresent(),
-                "la modale d'édition ne s'est pas ouverte : sans elle, aucun des six cas n'a d'écran");
+                "la modale d'édition ne s'est pas ouverte : sans elle, aucun des six cas n'a d'écran",
+                APPARITION_SECONDES * 1000L);
 
         assertThat(titreDeLaModale(robot))
                 .as("et la modale porte le MÊME titre. C'est ce que la case demande de constater :"
@@ -329,11 +330,11 @@ class ScenarioPassagePivotTest {
         GesteVisible.cliquer(robot, "#boutonRecupererMeteo");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> texte(robot, "#champTemperature").contains(TEMPERATURE_RELEVEE),
                 "« Récupérer la météo » n'a rien rempli : le relevé rendu par le fournisseur doit"
-                        + " atterrir dans les champs, sinon le geste ne fait qu'un aller-retour muet");
+                        + " atterrir dans les champs, sinon le geste ne fait qu'un aller-retour muet",
+                APPARITION_SECONDES * 1000L);
 
         assertThat(texte(robot, "#champTemperature"))
                 .as("la température relevée REMPLACE ce qui était saisi : c'est un relevé, pas une"
@@ -386,10 +387,10 @@ class ScenarioPassagePivotTest {
         GesteVisible.cliquer(robot, "#boutonRattachement");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#spinnerNumero").tryQuery().isPresent(),
-                "la modale d'édition ne s'est pas ouverte : sans elle, il n'y a pas de numéro à changer");
+                "la modale d'édition ne s'est pas ouverte : sans elle, il n'y a pas de numéro à changer",
+                APPARITION_SECONDES * 1000L);
 
         // Le confirmateur est SUBSTITUÉ, et le dialogue réel est ce que le banc ne peut pas filmer :
         // `Alert.showAndWait()` fige TestFX. Ce que la case demande de constater est que la
@@ -461,15 +462,6 @@ class ScenarioPassagePivotTest {
                 .filter(titre -> titre != null && !titre.isBlank())
                 .findFirst()
                 .orElse("");
-    }
-
-    private static void attendre(int secondes, java.util.concurrent.Callable<Boolean> condition, String siJamais)
-            throws TimeoutException {
-        try {
-            WaitForAsyncUtils.waitFor(secondes, java.util.concurrent.TimeUnit.SECONDS, condition);
-        } catch (TimeoutException jamais) {
-            throw new TimeoutException(siJamais);
-        }
     }
 
     private static Spinner<Integer> spinner(FxRobot robot, String id) {

@@ -3,11 +3,11 @@ package fr.univ_amu.iut.importation.view;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
@@ -54,11 +54,11 @@ public final class PreambuleImport {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux : le rattachement ne propose rien"
-                        + " tant qu'elle n'a pas lu la carte");
+                        + " tant qu'elle n'a pas lu la carte",
+                APPARITION_SECONDES * 1000L);
 
         ComboBox<?> points = robot.lookup("#comboPoints").queryAs(ComboBox.class);
         robot.interact(() -> points.getSelectionModel().select(0));
@@ -69,11 +69,11 @@ public final class PreambuleImport {
         GesteVisible.amenerDansLeCadre(robot, "#boutonImporter");
         GesteVisible.cliquer(robot, "#boutonImporter");
 
-        attendre(
-                FIN_SECONDES,
+        Attente.que(
                 () -> estVisible(robot, "#compteRenduChiffre"),
                 "l'import n'a pas abouti : sans nuit importée, il n'y a pas de passage à ouvrir, et les"
-                        + " gestes qui commencent ici n'ont rien à montrer");
+                        + " gestes qui commencent ici n'ont rien à montrer",
+                FIN_SECONDES * 1000L);
 
         // Le chemin vers le passage passe par l'ACTION du compte rendu, et non par `#boutonOuvrirNuit`
         // - celui-là appartient à la zone d'avertissement de numéro, et ne paraît que si la nuit était
@@ -86,12 +86,12 @@ public final class PreambuleImport {
         GesteVisible.cliquer(robot, LIBELLE_SUITE);
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> estVisible(robot, "#stepper"),
                 "le passage pivot ne s'est pas ouvert après l'import : c'est par « " + LIBELLE_SUITE
                         + " » que l'utilisateur y arrive, et un banc qui y sauterait ne montrerait pas ce"
-                        + " chemin");
+                        + " chemin",
+                APPARITION_SECONDES * 1000L);
     }
 
     /// Le contrôleur de l'écran affiché, pris chez le navigateur qui le détient.
@@ -127,15 +127,6 @@ public final class PreambuleImport {
                 throw new AssertionError("l'import LIT une source : ce préambule n'écrit aucun fichier");
             }
         };
-    }
-
-    private static void attendre(int secondes, java.util.concurrent.Callable<Boolean> condition, String siJamais)
-            throws TimeoutException {
-        try {
-            WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, condition);
-        } catch (TimeoutException jamais) {
-            throw new TimeoutException(siJamais);
-        }
     }
 
     private static boolean estVisible(FxRobot robot, String id) {

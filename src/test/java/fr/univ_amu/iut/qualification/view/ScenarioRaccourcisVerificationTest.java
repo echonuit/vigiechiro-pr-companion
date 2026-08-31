@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.importation.view.PreambuleImport;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -114,10 +115,10 @@ class ScenarioRaccourcisVerificationTest {
         Respiration.surLeMomentCle(robot);
         GesteVisible.cliquer(robot, "#boutonVerifier");
         WaitForAsyncUtils.waitForFxEvents();
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#tableSequences").tryQuery().isPresent(),
-                "l'écran de vérification ne s'est pas ouvert : sans lui, aucun raccourci n'a de clavier");
+                "l'écran de vérification ne s'est pas ouvert : sans lui, aucun raccourci n'a de clavier",
+                APPARITION_SECONDES * 1000L);
 
         lesFlechesChangentDeSequence(robot);
         espaceVaAuLecteurEtPasAuBoutonFocalise(robot);
@@ -275,10 +276,10 @@ class ScenarioRaccourcisVerificationTest {
         robot.push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#lblSucces").query().isVisible(),
-                "« Entrée » n'a pas enregistré le verdict, alors qu'un verdict était retenu");
+                "« Entrée » n'a pas enregistré le verdict, alors qu'un verdict était retenu",
+                APPARITION_SECONDES * 1000L);
 
         Respiration.leTempsDeLire(robot);
     }
@@ -325,14 +326,5 @@ class ScenarioRaccourcisVerificationTest {
 
     private static String texte(FxRobot robot, Node noeud) {
         return noeud instanceof Labeled libelle && libelle.getText() != null ? libelle.getText() : "";
-    }
-
-    private static void attendre(int secondes, java.util.concurrent.Callable<Boolean> condition, String siJamais)
-            throws TimeoutException {
-        try {
-            WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, condition);
-        } catch (TimeoutException jamais) {
-            throw new TimeoutException(siJamais);
-        }
     }
 }

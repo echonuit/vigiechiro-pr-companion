@@ -576,6 +576,10 @@ class MainViewTest {
     }
 
     /// Laisse passer l'anti-rebond de la recherche (#314 P3) avant d'observer les résultats.
+    ///
+    /// **Ce n'est pas une attente sur condition**, et elle ne rejoint donc pas [Attente] : il n'y a
+    /// rien à observer, seulement un délai à laisser passer. Le compte de #4847 la retenait parce
+    /// qu'il lisait le FICHIER et non la méthode, et que `waitFor` paraît ailleurs ici.
     private static void attendreRecherche() {
         WaitForAsyncUtils.sleep(350, TimeUnit.MILLISECONDS);
         WaitForAsyncUtils.waitForFxEvents();

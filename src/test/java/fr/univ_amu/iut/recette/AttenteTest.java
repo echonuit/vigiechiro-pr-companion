@@ -50,6 +50,28 @@ class AttenteTest {
     }
 
     @Test
+    @DisplayName("#4847 : le message peut se CONSTRUIRE à l'expiration, pour dire ce qu'on a observé")
+    void le_message_se_construit_a_l_expiration() {
+        // AppTest attendait une hauteur, et disait dans son echec la hauteur OBSERVEE apres coup.
+        // Un message `String` est evalue AVANT l'attente : il aurait rapporte la valeur d'avant, en
+        // faisant croire que rien n'avait bouge. La particularite rejoint donc `Attente` plutot que
+        // de justifier une attente privee de plus (#4847).
+        java.util.concurrent.atomic.AtomicInteger lu = new java.util.concurrent.atomic.AtomicInteger();
+        assertThatThrownBy(() -> Attente.que(
+                        () -> {
+                            lu.incrementAndGet();
+                            return false;
+                        },
+                        () -> "la hauteur est restée à " + lu.get(),
+                        200))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("la hauteur est restée à ")
+                .matches(
+                        e -> !e.getMessage().contains("restée à 0"),
+                        "le message doit porter ce qui a ete observe, pas l'etat d'avant l'attente");
+    }
+
+    @Test
     @DisplayName("elle sait lire le prédicat SUR LE FIL JavaFX, le graphe de scène n'y étant pas partageable")
     void elle_lit_sur_le_fil_javafx() {
         AtomicReference<String> filLu = new AtomicReference<>();
