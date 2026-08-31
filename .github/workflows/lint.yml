@@ -722,6 +722,9 @@ jobs:
         # garde lui-même vit dans `corps-pr.yml`, qui seul dispose du corps de la demande.
         run: bash .github/scripts/verifie-chantier-de-l-issue.sh --auto-test
 
+      - name: Auto-test du rappel de critère de fin
+        run: bash .github/scripts/rappelle-le-critere-de-fin.sh --auto-test
+
       - name: "Clôture consignée : un EPIC clos porte sa trace (bloquant, #4659)"
         # Celui-ci interroge la forge, d'où le jeton. Il REFUSE si elle ne répond pas : un cliquet qui
         # conclut sur ce qu'il n'a pas lu vaut moins que pas de cliquet.

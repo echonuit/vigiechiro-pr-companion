@@ -1,0 +1,63 @@
+# Un lot ouvert sans critère de fin ne provoquait aucun signal (#4977) : le manque ne se découvrait
+# qu'à la clôture du chantier, des semaines plus tard.
+#
+# Ce workflow RAPPELLE, il ne refuse pas. Il ne peut faire rougir aucune demande de fusion, et c'est
+# délibéré : l'arbitrage de #4961 a écarté le rouge qui tombe sur qui n'a pas la main, des jours
+# après l'ouverture qu'il juge.
+#
+# La forge enregistre `parent_issue_added`, mais aucun workflow ne peut s'y abonner : les types
+# d'activité de `issues` s'arrêtent à `opened`, `edited`, `labeled` et quinze autres. Un lot rattaché
+# après coup et jamais réédité échappe donc à ce workflow, et c'est la loupe hebdomadaire du lot 3
+# qui balaie le stock. La règle et son pourquoi sont dans .github/scripts/rappelle-le-critere-de-fin.sh.
+name: Critère de fin d'un lot
+
+on:
+  issues:
+    # `edited` rattrape le lot dont la marque de rattachement est écrite après l'ouverture, cas le
+    # plus fréquent puisque `gh issue edit --parent` suit toujours `gh issue create`.
+    types: [opened, edited, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+permissions:
+  issues: write
+
+jobs:
+  rappeler:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Le lot dit-il comment on saura qu'il est fini
+        id: loupe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NUMERO: ${{ github.event.issue.number }}
+        run: |
+          chmod +x .github/scripts/rappelle-le-critere-de-fin.sh
+          ./.github/scripts/rappelle-le-critere-de-fin.sh "${NUMERO}" > rappel.txt
+          if [ -s rappel.txt ]; then
+            echo "rappel=oui" >> "${GITHUB_OUTPUT}"
+          else
+            echo "rappel=non" >> "${GITHUB_OUTPUT}"
+            echo "::notice::Ce lot dit son critère de fin, ou n'est pas un lot."
+          fi
+
+      - name: Le rappel se pose une fois, jamais deux
+        if: steps.loupe.outputs.rappel == 'oui'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NUMERO: ${{ github.event.issue.number }}
+        run: |
+          # La marque est la première ligne du rappel. Sans ce contrôle, un lot réédité trois fois
+          # recevrait trois fois le même texte, et la loupe deviendrait la nuisance qu'elle évite.
+          if gh issue view "${NUMERO}" --json comments \
+              -q '.comments[].body' | grep -q 'rappel-critere-de-fin'; then
+            echo "::notice::Le rappel a déjà été posé sur #${NUMERO} : rien à ajouter."
+            exit 0
+          fi
+          gh issue comment "${NUMERO}" --body-file rappel.txt
+          echo "::notice::Rappel posé sur #${NUMERO}."
