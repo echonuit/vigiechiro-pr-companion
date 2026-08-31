@@ -29,8 +29,8 @@
 #
 # ## Le coût d'une erreur, et ce qu'il autorise
 #
-# Le motif ci-dessous connaît trois formulations, mesurées sur les vingt-deux chantiers ouverts
-# depuis que la règle existe. Une quatrième apparaîtra, et il ne la verra pas.
+# Le motif partagé connaît cinq formulations, et leur provenance est dans `critere-de-fin.motif.md`.
+# Une sixième apparaîtra, et il ne la verra pas.
 #
 # **Signaler à tort coûte un commentaire inutile ; se taire à tort ne coûte rien de plus**, le lot 3
 # balayant le stock chaque semaine. C'est ce qui sépare cette loupe d'un cliquet : un cliquet faux
@@ -56,11 +56,19 @@ readonly MARQUE='<!-- rappel-critere-de-fin -->'
 # `verifie-chantier-de-l-issue.sh` tient déjà cette moitié-là.
 readonly SAS=4562
 
-# Les trois formulations mesurées, plus « critère de fin » que la méthode emploie. L'ordre est
-# indifférent, l'alternance est byte à byte sous LC_ALL=C.
-# La troisième branche exige « comment on saur... » et non « on saur... » seul : l'auto-test a
-# attrapé « on ne saura pas s il est fini », qui porte les mots et nie le critère.
-readonly CRITERE='fini[ -]quand|fait[ -]quand|crit(è|e)re de fin|comment on saur[a-z]*[^.]{0,60}fini'
+# Le motif vit dans UN fichier, lu aussi par `loupe-4992-lots-sans-critere.py`. Il portait sa propre
+# copie, et les deux avaient divergé sur deux caractères le jour de leur écriture : la cinquième
+# formulation manquait aux deux, et rien ne pouvait le dire (#4995, #4837). Voir
+# `scripts/adr/critere-de-fin.motif.md` pour les contraintes de dialecte.
+# Injectable pour l auto-test, comme les corpus des deux cliquets de forge : sans cela le chemin
+# de refus n est exerce par rien, et une mutation l a montre en le laissant vert.
+readonly MOTIF="${CRITERE_MOTIF_FICHIER:-$(cd "$(dirname "$0")/../.." && pwd)/scripts/adr/critere-de-fin.motif}"
+if [ ! -r "${MOTIF}" ]; then
+    echo "REFUS : « ${MOTIF} » est illisible. Cette loupe ne conclut pas sans son motif." >&2
+    exit 2
+fi
+CRITERE="$(head -1 "${MOTIF}")"
+readonly CRITERE
 
 # La marque de rattachement versionnée, celle que `ouvrir-une-issue` demande d'écrire dans le corps.
 readonly RATTACHEMENT='Fait partie de #[0-9]+'
@@ -140,7 +148,8 @@ cat > "${bac}/issues.json" <<'JSON'
   "6": {"corps": "Une issue libre, sans parent ni marque."},
   "7": {"corps": "Un lot pas encore rattache.\n\nFait partie de #4961"},
   "8": {"corps": "Un lot pas encore rattache, qui dit son critere.\n\nFini quand il rougit.\n\nFait partie de #4961"},
-  "9": {"corps": "Un lot.\n\nOn ne saura pas s il est fini. Rien d autre.", "parent": "4961"}
+  "9": {"corps": "Un lot.\n\nOn ne saura pas s il est fini. Rien d autre.", "parent": "4961"},
+  "10": {"corps": "Un lot.\n\n**Ce que je vérifierai** : le garde rougit.", "parent": "4961"}
 }
 JSON
 
@@ -172,6 +181,19 @@ joue silence "une issue sans parent ni marque n'est pas un lot" 6
 joue rappel  "la marque « Fait partie de » suffit à faire un lot, sans parent posé" 7
 joue silence "un lot déclaré par la marque et qui dit son critère se tait" 8
 joue rappel  "« on ne saura pas s'il est fini » n'est pas un critère : la négation ne compte pas" 9
+joue silence "« Ce que je vérifierai » compte : c'est le mot que CLAUDE.md prescrit" 10
+
+# Le motif illisible fait REFUSER, pas conclure. Sans ce cas, retirer le refus laisse l auto-test vert.
+cas=$((cas + 1))
+signale=$((signale + 1))
+sortie=$(CRITERE_MOTIF_FICHIER="${bac}/nulle-part.motif" CRITERE_ISSUES_FICHIER="${bac}/issues.json" \
+    "$0" 1 2>&1) && code=0 || code=$?
+if [ "${code}" = 2 ] && printf '%s' "${sortie}" | grep -q 'est illisible'; then
+    echo "  ✔ un motif illisible fait REFUSER au lieu de se taire"
+else
+    echo "  ✘ un motif illisible fait REFUSER au lieu de se taire : code ${code}, dit « ${sortie} »"
+    echecs=1
+fi
 
 # La MARQUE doit être dans le rappel, sinon le workflow reposterait à chaque édition.
 cas=$((cas + 1))
@@ -187,7 +209,9 @@ fi
 # rougit en une milliseconde. Un PATH vidé ferait échouer `grep` AVANT le contrôle, et le refus
 # tomberait pour la mauvaise raison ; le leurre ne retire donc que `gh`.
 mkdir -p "${bac}/bin"
-for outil in grep jq head; do ln -sf "$(command -v "${outil}")" "${bac}/bin/${outil}"; done
+# `dirname` s ajoute depuis que le motif vit dans un fichier : le leurre ne retire que « gh », et
+# lier moins ferait tomber le refus pour la mauvaise raison.
+for outil in grep jq head dirname; do ln -sf "$(command -v "${outil}")" "${bac}/bin/${outil}"; done
 cas=$((cas + 1))
 signale=$((signale + 1))
 sortie=$(PATH="${bac}/bin" "$(command -v bash)" "$0" 1 2>&1) && code=0 || code=$?
@@ -206,7 +230,7 @@ joue silence "un numéro inconnu du corpus se lit comme une issue sans rattachem
 echo
 echo "${cas} cas, dont ${signale} qui DOIVENT signaler ou refuser."
 if [ "${echecs}" = 0 ]; then
-    echo "Auto-test concluant : la loupe voit un lot muet, et se tait sur les trois formulations."
+    echo "Auto-test concluant : la loupe voit un lot muet, et se tait sur les formulations du motif."
 else
     echo "Auto-test EN ÉCHEC."
 fi

@@ -26,15 +26,16 @@ n'existait pas. Cette borne est un fait historique : elle ne se met pas a jour.
 
 C'est aussi ce qui a fausse le comptage d'origine (#4951) : 3 sur 70, dont 67 anterieurs a la regle.
 
-## Trois formulations, et une quatrieme viendra
+## Cinq formulations, et une sixieme viendra
 
-Le critere s'ecrit « Fini quand », « Fait quand », ou en section « Comment on saura que chaque lot
-est fini ». Les trois sont mesurees sur les vingt-deux chantiers ouverts depuis la regle ; les deux
-premieres viennent de la competence elle-meme, qui dit « fini » puis « son fait-quand ».
+Elles vivent dans `critere-de-fin.motif`, lu aussi par `rappelle-le-critere-de-fin.sh`, et leur
+provenance est dans `critere-de-fin.motif.md`. La cinquieme, « Ce que je verifierai », a manque aux
+deux dispositifs pendant une demi-journee alors que c'est celle que `CLAUDE.md` prescrit : neuf
+rappels a tort sur les douze lots du chantier #4980 (#4995).
 
-Une quatrieme apparaitra et cette loupe ne la verra pas. Signaler a tort coute une ligne de rapport
-qu'un lecteur ecarte ; se taire a tort laisse un lot muet, que la loupe du lot 2 aura deja rappele
-s'il est neuf. Le motif peut donc rester genereux la ou un cliquet aurait du etre exact.
+Une sixieme apparaitra. Signaler a tort coute une ligne de rapport qu'un lecteur ecarte ; se taire a
+tort laisse un lot muet, que le rappel du lot 2 aura deja signale s'il est neuf. Le motif peut donc
+rester genereux la ou un cliquet aurait du etre exact, et il s'elargit a un seul endroit.
 
 ## Ce qu'un EPIC est ici, et pourquoi ce n'est pas le label
 
@@ -67,13 +68,17 @@ from _commun import loupe  # noqa: E402
 # Le commit qui a ecrit la regle, en UTC. Fait historique, il ne se met pas a jour.
 NAISSANCE = "2026-08-29T05:37:52Z"
 
-# Les trois formulations mesurees, plus « critere de fin » que la methode emploie. La troisieme exige
-# « comment on saur... » et non « on saur... » seul : « on ne saura pas s il est fini » porte les mots
-# et nie le critere, et l auto-test du lot 2 l a attrape.
-CRITERE = re.compile(
-    r"fini[ -]quand|fait[ -]quand|crit[eè]re de fin|comment on saur\w*[^.]{0,60}fini",
-    re.I,
-)
+# Le motif vit dans UN fichier, lu aussi par `.github/scripts/rappelle-le-critere-de-fin.sh`. Chacun
+# portait sa copie, et elles avaient deja diverge sur deux caracteres : la cinquieme formulation
+# manquait aux deux, et rien ne pouvait le dire (#4995, #4837). Les contraintes de dialecte sont dans
+# `critere-de-fin.motif.md`.
+# Injectable pour l auto-test, comme le corpus des deux cliquets de forge : sans cela le chemin de
+# refus n est exerce par rien, et une mutation l a montre en le laissant vert.
+MOTIF = pathlib.Path(os.environ.get("CRITERE_MOTIF_FICHIER") or pathlib.Path(__file__).parent / "critere-de-fin.motif")
+if not MOTIF.is_file():
+    print(f"REFUS : « {MOTIF} » est introuvable. Cette loupe ne conclut pas sans son motif.", file=sys.stderr)
+    raise SystemExit(2)
+CRITERE = re.compile(MOTIF.read_text(encoding="utf-8").splitlines()[0], re.I)
 
 
 def estEpic(issue: dict) -> bool:
@@ -126,7 +131,7 @@ def candidats(chantiers: list[dict], lots: dict[int, list[dict]]) -> list[str]:
 
 
 def _autoTest() -> int:
-    """Les temoins : les trois formulations se taisent, un lot muet sort, la borne tient."""
+    """Les temoins : une par formulation du motif, un lot muet sort, la borne tient."""
     assert ditSonCritere("blabla\n\n## Fini quand\n\nil rougit."), "« Fini quand » doit compter"
     assert ditSonCritere("**Fait quand** : les six y sont."), "« Fait quand » doit compter"
     assert ditSonCritere("## Comment on saura que chaque lot est fini\n\nil rougit."), "la section doit compter"
@@ -138,6 +143,7 @@ def _autoTest() -> int:
     assert not ditSonCritere("Personne ne dit si on saura que c est fini."), "« on saura ... fini » seul n est pas un critere"
     assert not ditSonCritere("On ne saura pas s il est fini."), "une negation n est pas un critere"
     assert not ditSonCritere("Un lot sans rien."), "un corps muet ne doit pas compter"
+    assert ditSonCritere("**Ce que je vérifierai** : le garde rougit."), "« Ce que je vérifierai » est le mot que CLAUDE.md prescrit"
 
     assert estEpic({"title": "[epic] X", "labels": []}), "le titre suffit"
     assert estEpic({"title": "[chantier] X", "labels": []}), "« [chantier] » aussi"
@@ -179,7 +185,19 @@ def _autoTest() -> int:
     finally:
         os.environ["PATH"] = chemin
 
-    print("Auto-test concluant : trois formulations reconnues, la negation ecartee, un lot muet vu.")
+    # Le motif manquant fait REFUSER, pas conclure. Le script se relance par son chemin reel, avec un
+    # motif introuvable : c est le seul moyen d exercer un refus pose au chargement du module.
+    manquant = subprocess.run(
+        [sys.executable, __file__, "--auto-test"],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "CRITERE_MOTIF_FICHIER": "/nulle/part/critere.motif"},
+        check=False,
+    )
+    assert manquant.returncode == 2, f"un motif introuvable doit REFUSER en 2, pas en {manquant.returncode}"
+    assert "introuvable" in manquant.stderr, manquant.stderr
+
+    print("Auto-test concluant : les formulations du motif reconnues, la negation ecartee, un lot muet vu.")
     return 0
 
 
