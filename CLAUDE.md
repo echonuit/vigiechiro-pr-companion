@@ -38,6 +38,11 @@ Avant la première ligne de code, produire **un seul bloc** - il vaut réservati
 **Question ouverte** : <s'il y en a une ; sinon retirer la ligne>
 ```
 
+**Le critère de fin ne reste pas dans le bloc.** « Ce que je vérifierai » est le critère de fin du
+lot, et le bloc part en **commentaire**. La ligne se recopie donc dans le **corps** de l'issue, où la
+clôture la relira. C'est la règle d'`AGENTS.md`, et la seule chose que le bloc en dit de plus est
+qu'elle s'énonce avant de commencer.
+
 **Un numéro d'EPIC, pas un thème.** La première ligne porte le chantier auquel l'issue
 **appartient**, et le sas des suites n'en est pas un : on y consigne une trouvaille, on n'y prend rien.
 Une issue de suite n'a donc pas de chantier par construction, et le geste attendu est d'en ouvrir un.
