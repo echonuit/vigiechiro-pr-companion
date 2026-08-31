@@ -23,7 +23,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, TESTS_ANCRES, rapporte  # noqa: E402
+from _commun import RACINE_DEPOT, TESTS_ANCRES, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4475"
@@ -64,7 +64,7 @@ def _a_soi(texte: str, receveur: str) -> bool:
     return bool(re.search(rf"\b{re.escape(receveur)}\s*=\s*new\s+Stage\s*\(", texte))
 
 
-def suspects(racine: pathlib.Path = None) -> list[str]:
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Un suspect par fichier dont AU MOINS une pose herite du stage du fork.
 
     Toutes les poses sont lues, et non la premiere seule : un fichier qui pose d abord sa modale

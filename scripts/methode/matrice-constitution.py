@@ -25,7 +25,7 @@ import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
-from verifie_okf import RESERVES, lit_entete  # noqa: E402
+from verifie_okf import RESERVES, lit_entete
 
 CONSTITUTION = RACINE / "CONSTITUTION.md"
 DECISIONS = RACINE / "dev-docs" / "decisions"
@@ -76,8 +76,10 @@ def rend(lignes: list[dict]) -> str:
         "",
         "## Matrice de traçabilité",
         "",
-        "Engendrée depuis les en-têtes des ADR par "
-        "`scripts/methode/matrice-constitution.py`, et gardée par lui.",
+        (
+            "Engendrée depuis les en-têtes des ADR par "
+            "`scripts/methode/matrice-constitution.py`, et gardée par lui."
+        ),
         "",
         "| Article | Jurisprudence | Dont mécanisée | Tenu par |",
         "|---|---:|---:|---|",
@@ -95,9 +97,11 @@ def rend(lignes: list[dict]) -> str:
         sortie.append(f"| {l['code']} · {l['enonce']} | {l['adrs']} | {l['certaines']} | {tenu} |")
     sortie += [
         "",
-        f"**{len(dettes)} article(s) sur {len(lignes)} ne sont tenus que par la relecture.** "
-        "C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, "
-        "pas comme une fatalité.",
+        (
+            f"**{len(dettes)} article(s) sur {len(lignes)} ne sont tenus que par la relecture.** "
+            "C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, "
+            "pas comme une fatalité."
+        ),
         "",
     ]
     if dettes:

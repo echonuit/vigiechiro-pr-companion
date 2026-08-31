@@ -32,7 +32,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES_ANCREES, RACINE_DEPOT, loupe  # noqa: E402
+from _commun import RACINE_DEPOT, RACINES_ANCREES, loupe
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4472"

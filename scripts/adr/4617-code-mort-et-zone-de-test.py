@@ -42,7 +42,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, rapporte  # noqa: E402
+from _commun import RACINE_DEPOT, rapporte
 
 # DEUX cliquets, un par zone, et surtout pas un seul sur les deux (#4682).
 #

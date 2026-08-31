@@ -35,7 +35,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES_ANCREES, RACINE_DEPOT, rapporte  # noqa: E402
+from _commun import RACINE_DEPOT, RACINES_ANCREES, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4476"
@@ -82,7 +82,7 @@ def raconte(corps: str) -> str | None:
     return None
 
 
-def suspects(racine: pathlib.Path = None) -> list[str]:
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Un suspect par bloc de javadoc qui raconte l extraction dont sa classe est nee."""
     arbres = [racine] if racine else list(RACINES)
     trouves = []

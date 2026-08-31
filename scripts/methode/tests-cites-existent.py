@@ -72,13 +72,11 @@ def suspects() -> list[str]:
             f = fichier_de(classe.split(".")[-1])
             ou = page.relative_to(RACINE)
             if f is None:
-                fautes.append("%s : la classe de `-Dtest=%s` est absente de src/test" % (ou, spec))
+                fautes.append(f"{ou} : la classe de `-Dtest={spec}` est absente de src/test")
             elif methode and METHODE.format(methode) not in f.read_text(
                 encoding="utf-8", errors="replace"
             ):
-                fautes.append(
-                    "%s : `-Dtest=%s` nomme une methode absente de %s" % (ou, spec, f.name)
-                )
+                fautes.append(f"{ou} : `-Dtest={spec}` nomme une methode absente de {f.name}")
     return sorted(set(fautes))
 
 
@@ -88,9 +86,9 @@ def _auto_test() -> int:
     def verifie(libelle, obtenu, attendu):
         nonlocal echecs
         if obtenu == attendu:
-            print("  ✔ %s" % libelle)
+            print(f"  ✔ {libelle}")
         else:
-            print("  ✘ %s : attendu %r, obtenu %r" % (libelle, attendu, obtenu))
+            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
             echecs = 1
 
     verifie("une classe de test se reconnait", est_une_citation("SitesViewModelTest"), True)
@@ -110,7 +108,7 @@ if __name__ == "__main__":
         raise SystemExit(_auto_test())
     fautes = suspects()
     for f in fautes:
-        print("ÉCHEC : %s" % f, file=sys.stderr)
+        print(f"ÉCHEC : {f}", file=sys.stderr)
     if fautes:
         print(
             "\n`mvn test -Dtest=…` rend `BUILD SUCCESS` et `Tests run: 0` quand la cible n'existe\n"

@@ -35,8 +35,9 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import DECISIONS, rapporte  # noqa: E402
 import tempfile
+
+from _commun import DECISIONS, rapporte
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 # `DECISIONS` s importe : le corpus se declare dans `_commun` et nulle part ailleurs (ADR 4586).
@@ -159,12 +160,12 @@ def lit_entete(texte: str) -> dict:
     return champs
 
 
-def articles(chemin: pathlib.Path = None) -> set[str]:
+def articles(chemin: pathlib.Path | None = None) -> set[str]:
     """Les codes d'article que la constitution déclare."""
     return set(ARTICLE.findall((chemin or CONSTITUTION).read_text(encoding="utf-8")))
 
 
-def heuristiques_connues(annexe: pathlib.Path = None) -> list[str]:
+def heuristiques_connues(annexe: pathlib.Path | None = None) -> list[str]:
     """Le vocabulaire clos, dans l ordre de l annexe. Liste vide si l annexe manque.
 
     La lecture s arrete au marqueur de la matrice engendree : celle-ci porte les memes cles entre
@@ -186,7 +187,7 @@ def _articles_de(entete: dict) -> set[str]:
     return codes | set(entete.get("articles_absorbes") or [])
 
 
-def _entetes(decisions: pathlib.Path = None) -> dict[str, dict]:
+def _entetes(decisions: pathlib.Path | None = None) -> dict[str, dict]:
     """Les en-tetes lisibles du corpus, par nom de fichier."""
     lus = {}
     for f in sorted((decisions or DECISIONS).glob("*.md")):
@@ -199,7 +200,7 @@ def _entetes(decisions: pathlib.Path = None) -> dict[str, dict]:
     return lus
 
 
-def suspects_ergonomie(decisions: pathlib.Path = None) -> list[str]:
+def suspects_ergonomie(decisions: pathlib.Path | None = None) -> list[str]:
     """Les ADR d un article d usage qui ne declarent aucune heuristique.
 
     Un suspect par ADR. Le grain compte : le cliquet doit descendre d un cran par decision lue,
@@ -214,7 +215,7 @@ def suspects_ergonomie(decisions: pathlib.Path = None) -> list[str]:
 
 
 def heuristiques_sans_emploi(
-    decisions: pathlib.Path = None, annexe: pathlib.Path = None
+    decisions: pathlib.Path | None = None, annexe: pathlib.Path | None = None
 ) -> list[str]:
     """Les heuristiques du vocabulaire qu aucune decision ne sert.
 
@@ -236,16 +237,12 @@ RENVOI = re.compile(r"\]\(([a-z0-9][a-z0-9-]*\.md)(?:#[^)]*)?\)")
 DEPASSEMENT = {"renverse", "remplace", "annule"}
 
 
-class EnteteInvalide(ValueError):
-    """L'en-tête sort de la forme que le dépôt écrit."""
-
-
 def verifie(
-    decisions: pathlib.Path = None,
-    constitution: pathlib.Path = None,
-    nav: pathlib.Path = None,
-    plancher: int = None,
-    annexe: pathlib.Path = None,
+    decisions: pathlib.Path | None = None,
+    constitution: pathlib.Path | None = None,
+    nav: pathlib.Path | None = None,
+    plancher: int | None = None,
+    annexe: pathlib.Path | None = None,
 ) -> list[str]:
     """Les manquements du paquet, un par ligne. Liste vide : le paquet est conforme."""
     decisions = decisions or DECISIONS

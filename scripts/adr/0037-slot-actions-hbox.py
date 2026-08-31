@@ -17,7 +17,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_xml  # noqa: E402
+from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_xml
 
 # La styleClass ou l'fx:id, porté par la balise HBox elle-même, évoque un slot d'actions.
 # Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne

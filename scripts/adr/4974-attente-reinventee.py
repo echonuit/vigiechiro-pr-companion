@@ -30,7 +30,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import TESTS_ANCRES, rapporte  # noqa: E402
+from _commun import TESTS_ANCRES, rapporte
 
 ADR = "4974"
 

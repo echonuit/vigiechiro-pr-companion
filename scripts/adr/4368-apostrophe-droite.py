@@ -33,7 +33,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import rapporte
 
 ADR = "4368"
 RACINE = pathlib.Path(__file__).resolve().parents[2]
@@ -78,7 +78,7 @@ HORS_CHAMP = {
 VOISINAGE = 24
 
 
-def fichiers(racine: pathlib.Path = None) -> list[str]:
+def fichiers(racine: pathlib.Path | None = None) -> list[str]:
     """Les fichiers que le releve accepte de lire, relatifs a `racine`.
 
     Sur le depot, la liste vient de `git ls-files` : les fichiers SUIVIS, donc ni les artefacts de
@@ -120,7 +120,7 @@ def citee(ligne: str, position: int) -> bool:
     return "[" in voisin and "'" in voisin and "]" in voisin
 
 
-def suspects(racine: pathlib.Path = None) -> list[str]:
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Une apostrophe courbe employee, par occurrence."""
     base = racine or RACINE
     trouves = []

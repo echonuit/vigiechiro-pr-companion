@@ -55,7 +55,7 @@ PLANCHER_PREFIXE = 40
 MARQUEUR = ("- ", "* ", "|", "`", ">", "#", "@")
 
 
-def doublons(racine: pathlib.Path = None) -> list[str]:
+def doublons(racine: pathlib.Path | None = None) -> list[str]:
     """Les couples de lignes `///` dont la seconde repete la premiere, entiere ou prolongee."""
     racine = racine or JAVA
     trouves = []

@@ -21,9 +21,9 @@ rattachement casse, et le site ne doit pas le rendre en silence.
 """
 
 import html
-import sys
 import pathlib
 import re
+import sys
 
 NIVEAUX = {
     "certaine": ("Vérification certaine", "un test ou un script déterministe la tient"),
@@ -125,7 +125,7 @@ def bandeau(meta: dict, articles: dict[str, str] | None = None) -> str:
     return '<div class="adr-bandeau">' + "".join(lignes) + "</div>"
 
 
-def on_page_markdown(markdown, page, config, files):  # noqa: ARG001  (signature MkDocs)
+def on_page_markdown(markdown, page, config, files):
     if str(page.meta.get("type", "")) != "adr":
         return markdown
     rendu = bandeau(page.meta)

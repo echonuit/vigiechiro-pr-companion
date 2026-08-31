@@ -106,7 +106,7 @@ def auto_test_rougit(nom: str, faux: pathlib.Path) -> bool:
     try:
         cible.write_text(mute(original), encoding="utf-8")
         rendu = subprocess.run(
-            [sys.executable, str(cible), "--auto-test"], capture_output=True, cwd=faux
+            [sys.executable, str(cible), "--auto-test"], capture_output=True, cwd=faux, check=False
         )
     finally:
         cible.write_text(original, encoding="utf-8")
@@ -120,16 +120,16 @@ def suspects() -> tuple[list[str], list[str]]:
         for nom in corpus():
             f = RACINE / "scripts" / "methode" / nom
             if not f.is_file():
-                illisibles.append("%s : absent de scripts/methode" % nom)
+                illisibles.append(f"{nom} : absent de scripts/methode")
                 continue
             source = f.read_text(encoding="utf-8")
             if not porte_un_auto_test(source):
                 continue
             if not mutable(source):
-                illisibles.append("%s : aucun `if __name__` ou inserer la neutralisation" % nom)
+                illisibles.append(f"{nom} : aucun `if __name__` ou inserer la neutralisation")
                 continue
             if not auto_test_rougit(nom, faux):
-                decoratifs.append("%s : son auto-test reste vert, detection neutralisee" % nom)
+                decoratifs.append(f"{nom} : son auto-test reste vert, detection neutralisee")
     return decoratifs, illisibles
 
 
@@ -149,9 +149,9 @@ def _auto_test() -> int:
     def verifie(libelle, obtenu, attendu):
         nonlocal echecs
         if obtenu == attendu:
-            print("  ✔ %s" % libelle)
+            print(f"  ✔ {libelle}")
         else:
-            print("  ✘ %s : attendu %r, obtenu %r" % (libelle, attendu, obtenu))
+            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
             echecs = 1
 
     verifie("le corpus vient de lint.yml, et n est pas vide", len(corpus()) > 5, True)
@@ -201,9 +201,9 @@ if __name__ == "__main__":
         raise SystemExit(_auto_test())
     decoratifs, illisibles = suspects()
     for l in illisibles:
-        print("NON ÉPROUVÉ : %s" % l, file=sys.stderr)
+        print(f"NON ÉPROUVÉ : {l}", file=sys.stderr)
     for l in decoratifs:
-        print("ÉCHEC : %s" % l, file=sys.stderr)
+        print(f"ÉCHEC : {l}", file=sys.stderr)
     if decoratifs:
         print(
             "\nUn auto-test qui reste vert alors que le garde ne détecte plus rien ne prouve rien.\n"
@@ -225,5 +225,5 @@ if __name__ == "__main__":
             file=sys.stderr,
         )
     if not code_de_sortie(decoratifs, illisibles):
-        print("Les %d gardes de méthode éprouvés rougissent sous mutation." % len(corpus()))
+        print(f"Les {len(corpus())} gardes de méthode éprouvés rougissent sous mutation.")
     raise SystemExit(code_de_sortie(decoratifs, illisibles))

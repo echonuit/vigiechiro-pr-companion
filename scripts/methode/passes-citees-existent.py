@@ -91,7 +91,7 @@ def _a_lire(chemin: pathlib.Path) -> bool:
 def suspects():
     bas, haut = bornes(CYCLE.read_text(encoding="utf-8"))
     if bas is None:
-        return ["%s ne porte aucun titre `### N.` : les bornes ne se derivent pas" % CYCLE.name]
+        return [f"{CYCLE.name} ne porte aucun titre `### N.` : les bornes ne se derivent pas"]
     fautes = []
     for f in sorted(RACINE.rglob("*")):
         if not f.is_file() or not _a_lire(f):
@@ -102,8 +102,8 @@ def suspects():
             continue
         for numero in citations_hors_bornes(texte, bas, haut):
             fautes.append(
-                "%s cite « passe %d », hors des bornes %d a %d"
-                % (f.relative_to(RACINE).as_posix(), numero, bas, haut)
+                f"{f.relative_to(RACINE).as_posix()} cite « passe {numero} », "
+                f"hors des bornes {bas} a {haut}"
             )
     return fautes
 
@@ -114,9 +114,9 @@ def _auto_test() -> int:
     def verifie(libelle, obtenu, attendu):
         nonlocal echecs
         if obtenu == attendu:
-            print("  ✔ %s" % libelle)
+            print(f"  ✔ {libelle}")
         else:
-            print("  ✘ %s : attendu %r, obtenu %r" % (libelle, attendu, obtenu))
+            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
             echecs = 1
 
     cycle = "### 0. Une\n\n### 1. Deux\n\n### 2. Trois\n"
@@ -159,7 +159,7 @@ if __name__ == "__main__":
         raise SystemExit(_auto_test())
     fautes = suspects()
     for f in fautes:
-        print("ÉCHEC : %s" % f, file=sys.stderr)
+        print(f"ÉCHEC : {f}", file=sys.stderr)
     if fautes:
         print(
             "\nUne citation qui nomme une passe inexistante envoie son lecteur nulle part. Les bornes\n"

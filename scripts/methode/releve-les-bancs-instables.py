@@ -469,8 +469,8 @@ def main() -> int:
         print(f"\n  {len(emportes)} test(s) JAMAIS en tete : victimes seules, rien ne les accuse.")
     if muets:
         print(
-            "\n%d tentative(s) echouee(s) sans aucun test nomme, donc echouees pour autre chose : %s."
-            % (len(muets), ", ".join(str(i) for i in sorted(set(muets))))
+            f"\n{len(muets)} tentative(s) echouee(s) sans aucun test nomme, donc "
+            f"echouees pour autre chose : {', '.join(str(i) for i in sorted(set(muets)))}."
         )
     return 0
 

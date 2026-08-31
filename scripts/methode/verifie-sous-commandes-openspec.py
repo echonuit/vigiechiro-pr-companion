@@ -93,7 +93,9 @@ def binaire(racine: pathlib.Path) -> tuple[str | None, str | None]:
 
 def sous_commandes(outil: str, chemin: list[str]) -> set[str]:
     """Ce que l aide de l outil expose a ce niveau. Lu de l outil, jamais recopie ici."""
-    rendu = subprocess.run([outil] + chemin + ["--help"], capture_output=True, text=True).stdout
+    rendu = subprocess.run(
+        [outil] + chemin + ["--help"], capture_output=True, text=True, check=False
+    ).stdout
     bloc = rendu.split("Commands:", 1)
     if len(bloc) < 2:
         return set()
@@ -239,7 +241,7 @@ def auto_test() -> int:
 
     def arbre_ampute(r: pathlib.Path) -> None:
         """Un arbre perd UNE competence : les entrees cessent de rendre le meme compte."""
-        shutil.rmtree(sorted((r / MOTIFS[1][0]).glob(MOTIFS[1][1]))[0].parent)
+        shutil.rmtree(min((r / MOTIFS[1][0]).glob(MOTIFS[1][1])).parent)
 
     cas = [
         ("commande inventee", commande_inventee, 1),
@@ -263,6 +265,7 @@ def auto_test() -> int:
         return subprocess.run(
             [sys.executable, str(copie / script.relative_to(RACINE)), "--verifie"],
             capture_output=True,
+            check=False,
         ).returncode
 
     echecs = []

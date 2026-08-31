@@ -46,9 +46,12 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES, RACINE_DEPOT  # noqa: E402
+from _commun import RACINE_DEPOT, RACINES
 
-RACINE_DEPOT = pathlib.Path(__file__).resolve().parents[2]
+# `RACINE_DEPOT` etait IMPORTE puis RECALCULE deux lignes plus bas, a l identique (#5022). La seconde
+# ecriture gagnait, et c est precisement ce que l ADR 4586 interdit : un corpus se declare une fois.
+# `verifie_corpus_declare.py` ne l a pas vu parce qu il ne surveille que les deux arbres Java et
+# `DECISIONS` ; c est le trou que #4836 elargit.
 ARBRES = RACINES
 
 # La borne du formateur, telle que `pom.xml` la configure pour palantir-java-format.
@@ -59,7 +62,7 @@ BORNE = 120
 LIEN_COUPABLE = re.compile(r"\[[^\]\n]* [^\]\n]*\]\(")
 
 
-def a_risque(racine: pathlib.Path = None) -> list[str]:
+def a_risque(racine: pathlib.Path | None = None) -> list[str]:
     """Les lignes `///` que le formateur casserait, une par entree."""
     base = racine or RACINE_DEPOT
     trouves = []

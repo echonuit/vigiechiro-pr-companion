@@ -31,8 +31,8 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-import rapport  # noqa: E402
-from _commun import DECISIONS, RACINE_DEPOT  # noqa: E402
+import rapport
+from _commun import DECISIONS, RACINE_DEPOT
 
 # Les racines de prose susceptibles de porter une balise. Mêmes que celles que balaie
 # `DocumentationAJourTest`, et pour la même raison : une balise vit où on la lit.
@@ -123,7 +123,7 @@ def appliquer() -> list[str]:
     cliquets, _, _, _ = rapport.collecter()
     faits = []
     for num, nouvelle in rapport.resserrements(cliquets):
-        fichier = sorted(DECISIONS.glob(f"{num}-*.md"))[0]
+        fichier = min(DECISIONS.glob(f"{num}-*.md"))
         texte = fichier.read_text(encoding="utf-8")
         # On ne baisse que le champ `ratchet` de CETTE ADR, dans son en-tête.
         nouveau, n = re.subn(

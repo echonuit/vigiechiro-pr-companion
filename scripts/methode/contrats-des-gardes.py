@@ -139,7 +139,7 @@ def numero_adr(texte: str) -> str | None:
     if appel:
         if appel.group(1):
             return appel.group(1)
-        constante = re.search(r"^%s = \"([^\"]+)\"" % re.escape(appel.group(2)), texte, re.M)
+        constante = re.search(rf"^{re.escape(appel.group(2))} = \"([^\"]+)\"", texte, re.M)
         if constante:
             return constante.group(1)
     constante = CONSTANTE_ADR.search(texte)
@@ -157,11 +157,11 @@ def seuil(texte: str, decisions: pathlib.Path) -> str:
             continue
         entete = fichier.read_text(encoding="utf-8").split("\n---\n")[0]
         for champ, mot in (("ratchet:", "cliquet"), ("floor:", "plancher")):
-            marque = re.search(r"^%s\s*(\d+)\s*$" % champ, entete, re.M)
+            marque = re.search(rf"^{champ}\s*(\d+)\s*$", entete, re.M)
             if marque:
-                return "%s %s" % (mot, marque.group(1))
+                return f"{mot} {marque.group(1)}"
         return "(sans seuil)"
-    return "(ADR %s introuvable)" % numero
+    return f"(ADR {numero} introuvable)"
 
 
 def exemptions(texte: str) -> str:
@@ -206,16 +206,14 @@ def ecarts(ici: dict, ailleurs: dict) -> list[str]:
     for g in sorted(set(ici) | set(ailleurs)):
         a, b = ici.get(g), ailleurs.get(g)
         if a is None:
-            lignes.append("%-38s ABSENT ici, present ailleurs (%s)" % (g, b["fichier"]))
+            lignes.append(f"{g:<38} ABSENT ici, present ailleurs ({b['fichier']})")
             continue
         if b is None:
-            lignes.append("%-38s present ici seulement (%s)" % (g, a["fichier"]))
+            lignes.append(f"{g:<38} present ici seulement ({a['fichier']})")
             continue
         for champ in ("population", "seuil", "exemptions", "verdict"):
             if a[champ] != b[champ]:
-                lignes.append(
-                    "%-38s %-11s ici « %s » / ailleurs « %s »" % (g, champ, a[champ], b[champ])
-                )
+                lignes.append(f"{g:<38} {champ:<11} ici « {a[champ]} » / ailleurs « {b[champ]} »")
     return lignes
 
 
@@ -228,9 +226,9 @@ def _auto_test() -> int:
     def verifie(libelle, obtenu, attendu):
         nonlocal echecs
         if obtenu == attendu:
-            print("  ✔ %s" % libelle)
+            print(f"  ✔ {libelle}")
         else:
-            print("  ✘ %s : attendu %s, obtenu %s" % (libelle, attendu, obtenu))
+            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
             echecs = 1
 
     verifie(
@@ -325,12 +323,12 @@ if __name__ == "__main__":
         autre = pathlib.Path(sys.argv[1]).expanduser().resolve()
         if not (autre / "scripts" / "adr").is_dir():
             raise SystemExit(
-                "%s ne porte pas de scripts/adr/ : ce n est pas un arbre comparable." % autre
+                f"{autre} ne porte pas de scripts/adr/ : ce n est pas un arbre comparable."
             )
         lignes = ecarts(ici, contrats(autre))
         print("Ecarts de contrat entre les deux arbres, appariés par le geste :\n")
         print("\n".join("  " + l for l in lignes) if lignes else "  Aucun écart.")
-        print("\n%d écart(s) sur %d geste(s) ici." % (len(lignes), len(ici)))
+        print(f"\n{len(lignes)} écart(s) sur {len(ici)} geste(s) ici.")
         print("Le PREDICAT n'est pas comparé : deux motifs ne se confrontent pas mécaniquement.")
         print(
             "L'appariement se fait par le geste : deux gardes du même sujet sous deux gestes"
@@ -340,7 +338,7 @@ if __name__ == "__main__":
         print("Contrats des gardes de cet arbre :\n")
         for g, c in sorted(ici.items()):
             print(
-                "  %-38s %-22s %-16s exempt=%-3s %s"
-                % (g, c["population"], c["seuil"], c["exemptions"], c["verdict"][:34])
+                f"  {g:<38} {c['population']:<22} {c['seuil']:<16} "
+                f"exempt={c['exemptions']:<3} {c['verdict'][:34]}"
             )
-        print("\n%d garde(s)." % len(ici))
+        print(f"\n{len(ici)} garde(s).")

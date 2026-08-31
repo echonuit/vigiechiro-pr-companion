@@ -221,7 +221,7 @@ for p in sorted(Path("src/main/java").rglob("*.fxml")) + sorted(
             nom = css[0] or css[1]
             cible = (p.parent / nom).resolve()
             try:
-                rel = cible.relative_to(Path(".").resolve())
+                rel = cible.relative_to(Path.cwd())
             except ValueError:
                 continue
             if cible.exists():

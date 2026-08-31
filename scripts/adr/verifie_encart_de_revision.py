@@ -28,7 +28,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import DECISIONS  # noqa: E402
+from _commun import DECISIONS
 
 TITRE_ENCART = '!!! warning "Ce qui fait foi aujourd\'hui"'
 
@@ -71,7 +71,7 @@ def encart(texte: str) -> tuple[list[str], int] | tuple[None, None]:
     return re.findall(r"\]\(([a-z0-9][a-z0-9-]*)\.md\)", corps), distance
 
 
-def fautes(racine: pathlib.Path = None) -> list[str]:
+def fautes(racine: pathlib.Path | None = None) -> list[str]:
     racine = racine or DECISIONS
     trouvees = []
     for chemin in sorted(racine.glob("*.md")):

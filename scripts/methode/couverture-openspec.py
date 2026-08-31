@@ -31,7 +31,7 @@ import tempfile
 
 RACINE = pathlib.Path(
     subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True
+        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=False
     ).stdout.strip()
     or "."
 )

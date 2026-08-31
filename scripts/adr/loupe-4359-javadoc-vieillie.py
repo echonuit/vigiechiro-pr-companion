@@ -42,7 +42,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES, loupe  # noqa: E402
+from _commun import RACINES, loupe
 
 ADR = "4359"
 RACINE = pathlib.Path(__file__).resolve().parents[2]
@@ -139,11 +139,11 @@ def candidats_du_fichier(chemin: str, lignes: list[str], temps: list[int]) -> li
                     f"{chemin}:{i + 1}  bloc de {prose(lignes[i:j])} lignes, "
                     f"code plus récent de {(code - doc) // 86400} jour(s)"
                 )
-        i = k if k > j else j
+        i = max(j, k)
     return trouves
 
 
-def candidats(racine: pathlib.Path = None) -> list[str]:
+def candidats(racine: pathlib.Path | None = None) -> list[str]:
     """Les blocs sous cliquet dont le code a bougé après eux."""
     base = racine or RACINE
     trouves = []

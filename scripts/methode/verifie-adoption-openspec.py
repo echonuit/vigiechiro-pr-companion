@@ -167,6 +167,7 @@ def auto_test() -> int:
         return subprocess.run(
             [sys.executable, str(copie / script.relative_to(RACINE)), "--verifie"],
             capture_output=True,
+            check=False,
         ).returncode
 
     echecs = []

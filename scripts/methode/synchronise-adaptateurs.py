@@ -17,7 +17,12 @@ rougir. Une copie n a pas de valeur propre, et `git` garde ce qui est efface.
                   la ou il devrait rougir. Un garde vert n est pas un garde verifie.
 """
 
-import filecmp, shutil, subprocess, sys, tempfile, pathlib
+import filecmp
+import pathlib
+import shutil
+import subprocess
+import sys
+import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 SOURCE = RACINE / ".agents" / "skills"
@@ -71,7 +76,9 @@ def auto_test() -> int:
             if (RACINE / d).exists():
                 shutil.copytree(RACINE / d, copie / d, symlinks=True)
         subprocess.run(
-            [sys.executable, str(copie / script.relative_to(RACINE))], capture_output=True
+            [sys.executable, str(copie / script.relative_to(RACINE))],
+            capture_output=True,
+            check=False,
         )
         return copie
 
@@ -79,6 +86,7 @@ def auto_test() -> int:
         temoin = subprocess.run(
             [sys.executable, str(monte(tmp) / script.relative_to(RACINE)), "--verifie"],
             capture_output=True,
+            check=False,
         ).returncode
         print(
             f"  {'temoin, arbre sain':20s} -> {'vert' if temoin == 0 else f'ROUGE (code {temoin})'}"
@@ -92,12 +100,15 @@ def auto_test() -> int:
                 if (RACINE / d).exists():
                     shutil.copytree(RACINE / d, copie / d, symlinks=True)
             subprocess.run(
-                [sys.executable, str(copie / script.relative_to(RACINE))], capture_output=True
+                [sys.executable, str(copie / script.relative_to(RACINE))],
+                capture_output=True,
+                check=False,
             )
             casser(copie)
             code = subprocess.run(
                 [sys.executable, str(copie / script.relative_to(RACINE)), "--verifie"],
                 capture_output=True,
+                check=False,
             ).returncode
             etat = "rouge" if code == 1 else f"VERT (code {code})"
             print(f"  {nom:20s} -> {etat}")

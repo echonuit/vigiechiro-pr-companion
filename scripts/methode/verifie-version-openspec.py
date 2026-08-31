@@ -205,7 +205,7 @@ def auto_test() -> int:
 
     def arbre_ampute(r: pathlib.Path) -> None:
         """Un arbre perd UNE competence : les entrees cessent de rendre le meme compte."""
-        shutil.rmtree(sorted((r / MOTIFS[1]).glob("openspec-*/SKILL.md"))[0].parent)
+        shutil.rmtree(min((r / MOTIFS[1]).glob("openspec-*/SKILL.md")).parent)
 
     cas = [
         ("version du lockfile deplacee", casse_lockfile),
@@ -228,6 +228,7 @@ def auto_test() -> int:
         return subprocess.run(
             [sys.executable, str(copie / script.relative_to(RACINE)), "--verifie"],
             capture_output=True,
+            check=False,
         ).returncode
 
     echecs = []

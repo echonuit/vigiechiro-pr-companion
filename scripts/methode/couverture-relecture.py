@@ -81,7 +81,7 @@ def prose(fichier: pathlib.Path) -> int:
     return compte
 
 
-def relus(chemin: pathlib.Path = None) -> dict[str, str]:
+def relus(chemin: pathlib.Path | None = None) -> dict[str, str]:
     """Le manifeste : chemin -> empreinte de la javadoc au moment de la relecture.
 
     Seule lecture du manifeste : le cliquet qui le verifie emprunte cette fonction plutot que d en
@@ -107,28 +107,28 @@ def relus(chemin: pathlib.Path = None) -> dict[str, str]:
     return lu
 
 
-def ecrire(manifeste: dict[str, str], chemin: pathlib.Path = None) -> None:
+def ecrire(manifeste: dict[str, str], chemin: pathlib.Path | None = None) -> None:
     corps = "".join(f"{manifeste[c]}  {c}\n" for c in sorted(manifeste))
     (chemin or MANIFESTE).write_text(ENTETE + corps, encoding="utf-8")
 
 
-def racines(base: pathlib.Path = None) -> tuple[pathlib.Path, ...]:
+def racines(base: pathlib.Path | None = None) -> tuple[pathlib.Path, ...]:
     """Les deux arbres Java sous `base`. Le parametre sert aux temoins, qui montent un arbre jetable."""
     socle = base or RACINE
     return (socle / "src" / "main" / "java", socle / "src" / "test" / "java")
 
 
-def corpus(base: pathlib.Path = None) -> list[pathlib.Path]:
+def corpus(base: pathlib.Path | None = None) -> list[pathlib.Path]:
     """Les fichiers que le manifeste a vocation a porter, et eux seuls."""
     return sorted(f for r in racines(base) if r.is_dir() for f in r.rglob(f"*{SUFFIXE}"))
 
 
-def dans_le_corpus(absolu: pathlib.Path, base: pathlib.Path = None) -> bool:
+def dans_le_corpus(absolu: pathlib.Path, base: pathlib.Path | None = None) -> bool:
     """Ce chemin est-il un fichier du corpus ? Fonction PURE, pour le temoin."""
     return absolu.suffix == SUFFIXE and any(absolu.is_relative_to(r) for r in racines(base))
 
 
-def mortes(table: dict[str, str], base: pathlib.Path = None) -> list[str]:
+def mortes(table: dict[str, str], base: pathlib.Path | None = None) -> list[str]:
     """Les entrees qui ne designent aucun fichier du corpus. Fonction PURE, pour le temoin.
 
     Deux causes, et les deux demandent la meme action - retirer la ligne. Le fichier a ete supprime
@@ -141,7 +141,9 @@ def mortes(table: dict[str, str], base: pathlib.Path = None) -> list[str]:
     return sorted(c for c in table if c not in vivants)
 
 
-def etat(base: pathlib.Path = None, source: pathlib.Path = None) -> tuple[list, list, list]:
+def etat(
+    base: pathlib.Path | None = None, source: pathlib.Path | None = None
+) -> tuple[list, list, list]:
     """(relus, restants, entrees mortes). Un restant dit POURQUOI il l est."""
     socle = base or RACINE
     deja = relus(source)
@@ -160,7 +162,9 @@ def etat(base: pathlib.Path = None, source: pathlib.Path = None) -> tuple[list, 
     return lus, reste, mortes(deja, socle)
 
 
-def marque(chemins: list[str], base: pathlib.Path = None, source: pathlib.Path = None) -> int:
+def marque(
+    chemins: list[str], base: pathlib.Path | None = None, source: pathlib.Path | None = None
+) -> int:
     """Porte des fichiers au manifeste avec leur empreinte du jour.
 
     **Un chemin hors corpus est refuse** (#4527). Une entree posee ailleurs n est jamais relue,
@@ -246,7 +250,7 @@ def _auto_test() -> int:
             refuse_absent = True
         cas.append(("un fichier introuvable est refuse", refuse_absent))
 
-        lus, reste, perdues = etat(r, registre)
+        lus, _reste, perdues = etat(r, registre)
         cas.append(
             ("le fichier marque est compte relu", [c for _, c in lus] == ["src/main/java/A.java"])
         )
@@ -255,7 +259,7 @@ def _auto_test() -> int:
         # L autre moitie : une entree qui ne designe plus rien. Elle arrive par une suppression, ou
         # par une edition a la main du manifeste - le refus ci-dessus ne ferme que la porte d entree.
         (production / "A.java").unlink()
-        lus, reste, perdues = etat(r, registre)
+        lus, _reste, perdues = etat(r, registre)
         cas.append(
             ("un fichier supprime laisse une entree morte", perdues == ["src/main/java/A.java"])
         )

@@ -123,7 +123,7 @@ def ouvertures(connecteur: str, texte: str) -> int:
     return len(re.findall(rf"(?:^|[.!?:]\s+|^[-*]\s+){re.escape(connecteur)}\b", texte, re.M))
 
 
-def corpus(racine: pathlib.Path = None) -> tuple[str, int, int]:
+def corpus(racine: pathlib.Path | None = None) -> tuple[str, int, int]:
     """Le texte des zones de prose, son nombre de lignes et son nombre de fichiers."""
     racine = racine or RACINE
     textes = []

@@ -74,17 +74,21 @@ def markdown(etats: collections.Counter, survivants: collections.Counter) -> str
     lignes = [
         "## Mutation (PIT)",
         "",
-        f"**{tues} / {total} mutants détectés** ({score:.1f} %), "
-        f"{etats.get('SURVIVED', 0)} survivants, {etats.get('NO_COVERAGE', 0)} sans couverture.",
+        (
+            f"**{tues} / {total} mutants détectés** ({score:.1f} %), "
+            f"{etats.get('SURVIVED', 0)} survivants, {etats.get('NO_COVERAGE', 0)} sans couverture."
+        ),
         "",
     ]
     detections_sans_assertion = ventilation_sans_assertion(etats)
     if detections_sans_assertion:
         lignes += [
-            f"⚠️ Dont **{detections_sans_assertion}** détectés, mais par épuisement plutôt que par une"
-            " assertion. Un butoir mal calibré gonfle donc ce score : mesuré sur une classe de vue, un"
-            " butoir absurde a fait passer 43 % à **100 %** (#2768). Si cette part grossit, c'est le"
-            " butoir ou le périmètre qu'il faut regarder, pas les tests.",
+            (
+                f"⚠️ Dont **{detections_sans_assertion}** détectés, mais par épuisement plutôt que par une"
+                " assertion. Un butoir mal calibré gonfle donc ce score : mesuré sur une classe de vue, un"
+                " butoir absurde a fait passer 43 % à **100 %** (#2768). Si cette part grossit, c'est le"
+                " butoir ou le périmètre qu'il faut regarder, pas les tests."
+            ),
             "",
         ]
     if not survivants:

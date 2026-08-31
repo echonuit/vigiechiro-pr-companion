@@ -47,7 +47,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4468"
@@ -74,12 +74,12 @@ lignes_javadoc = _COMPTEUR.lignes_javadoc
 empreinte = _COMPTEUR.empreinte
 
 
-def manifeste(chemin: pathlib.Path = None) -> dict[str, str]:
+def manifeste(chemin: pathlib.Path | None = None) -> dict[str, str]:
     """Le manifeste des relus, lu par la fonction du compteur : un fichier, un lecteur."""
     return _COMPTEUR.relus(chemin or MANIFESTE)
 
 
-def suspects(racine: pathlib.Path = None, table: dict[str, str] = None) -> list[str]:
+def suspects(racine: pathlib.Path | None = None, table: dict[str, str] | None = None) -> list[str]:
     """Un suspect par fichier Java non relu, ou relu puis modifie.
 
     `racine` sert aux temoins, qui montent un arbre jetable. Sans elle, les deux racines Java du
@@ -141,7 +141,7 @@ def _auto_test() -> int:
         (r / "B.java").write_text(
             "/// Un contrat.\n/// @param x rien\nclass B {}\n", encoding="utf-8"
         )
-        sansTag = hashlib.sha256("Un contrat.".encode("utf-8")).hexdigest()[:12]
+        sansTag = hashlib.sha256(b"Un contrat.").hexdigest()[:12]
         cas.append(("une etiquette entre dans l empreinte", empreinte(r / "B.java") != sansTag))
 
         # Un fichier neuf arrive suspect sans qu on ait rien a declarer : c est la moitie du contrat.

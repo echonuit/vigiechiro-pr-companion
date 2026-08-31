@@ -63,7 +63,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import loupe  # noqa: E402
+from _commun import loupe
 
 # Le commit qui a ecrit la regle, en UTC. Fait historique, il ne se met pas a jour.
 NAISSANCE = "2026-08-29T05:37:52Z"
@@ -91,7 +91,7 @@ def estEpic(issue: dict) -> bool:
     """L UNION du label et du titre : rater un chantier, c est ne pas poser la question."""
     parLabel = any(e.get("name") == "epic" for e in issue.get("labels") or [])
     titre = (issue.get("title") or "").lower()
-    return parLabel or titre.startswith("[epic]") or titre.startswith("[chantier]")
+    return parLabel or titre.startswith(("[epic]", "[chantier]"))
 
 
 def ditSonCritere(corps: str) -> bool:

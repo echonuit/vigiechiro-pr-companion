@@ -142,7 +142,7 @@ def auto_test() -> int:
     script = pathlib.Path(__file__).resolve()
 
     def renvoi_invente(r: pathlib.Path) -> None:
-        f = sorted((r / CORPUS[0][0]).glob(CORPUS[0][1]))[0]
+        f = min((r / CORPUS[0][0]).glob(CORPUS[0][1]))
         f.write_text(
             f.read_text(encoding="utf-8") + "\nPuis lancez `/frobnicate`.\n", encoding="utf-8"
         )
@@ -164,7 +164,7 @@ def auto_test() -> int:
         shutil.rmtree(r / CORPUS[1][0])
 
     def arbre_ampute(r: pathlib.Path) -> None:
-        shutil.rmtree(sorted((r / CORPUS[1][0]).glob(CORPUS[1][1]))[0].parent)
+        shutil.rmtree(min((r / CORPUS[1][0]).glob(CORPUS[1][1])).parent)
 
     cas = [
         ("renvoi invente vers /frobnicate", renvoi_invente),
@@ -186,6 +186,7 @@ def auto_test() -> int:
         return subprocess.run(
             [sys.executable, str(copie / script.relative_to(RACINE)), "--verifie"],
             capture_output=True,
+            check=False,
         ).returncode
 
     echecs = []

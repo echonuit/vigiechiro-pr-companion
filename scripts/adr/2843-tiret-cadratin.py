@@ -28,7 +28,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import TESTS, rapporte  # noqa: E402
+from _commun import TESTS, rapporte
 
 SOURCES = [TESTS]
 

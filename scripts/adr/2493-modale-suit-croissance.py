@@ -19,7 +19,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_java  # noqa: E402
+from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_java
 
 # Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne
 # avant que la question ne se pose. La dette de qualite ne connait pas de code de seconde zone, et

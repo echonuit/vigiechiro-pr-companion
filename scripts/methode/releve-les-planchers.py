@@ -54,7 +54,9 @@ def mesures() -> dict:
     planchers et qu aucun ne se lit, ce script refuse au lieu de conclure. C est le defaut qui l a
     rendu muet le 2026-08-31, et son message rassurait (#5021).
     """
-    rendu = subprocess.run([sys.executable, str(GARDE)], capture_output=True, text=True, cwd=RACINE)
+    rendu = subprocess.run(
+        [sys.executable, str(GARDE)], capture_output=True, text=True, cwd=RACINE, check=False
+    )
     return lire(rendu.stdout)
 
 
@@ -68,8 +70,8 @@ def lire(sortie: str) -> dict:
     annoncees = len(ANNONCE.findall(sortie))
     if annoncees and not lues:
         raise VerdictIllisible(
-            "REFUS : le garde annonce %d plancher(s) et aucun ne se lit. Son format a change, et ce\n"
-            "script ne conclut pas sur ce qu il n a pas su lire." % annoncees
+            f"REFUS : le garde annonce {annoncees} plancher(s) et aucun ne se lit. Son "
+            "format a change, et ce\nscript ne conclut pas sur ce qu il n a pas su lire."
         )
     return lues
 
@@ -108,21 +110,21 @@ def releve(ecrire: bool) -> int:
     for numero, mesure in sorted(a_relever.items()):
         adr = fichier_de(numero)
         if adr is None:
-            print("  ADR %s introuvable" % numero, file=sys.stderr)
+            print(f"  ADR {numero} introuvable", file=sys.stderr)
             return 1
         cle = cle_inventaire(adr)
         touches = []
         for cible in (adr, DECISIONS / "index.md"):
             texte = cible.read_text(encoding="utf-8")
-            neuf = CHAMP.sub("floor: %d" % mesure, texte) if cible == adr else texte
+            neuf = CHAMP.sub(f"floor: {mesure}", texte) if cible == adr else texte
             if cle:
                 neuf = pose(neuf, cle, mesure)
             if neuf != texte:
                 touches.append(cible.name)
                 if ecrire:
                     cible.write_text(neuf, encoding="utf-8")
-        print("  ADR %s → %d   (%s)" % (numero, mesure, ", ".join(touches) or "rien à changer"))
-    print("\n%d plancher(s) %s." % (len(a_relever), "relevé(s)" if ecrire else "à relever"))
+        print(f"  ADR {numero} → {mesure}   ({', '.join(touches) or 'rien à changer'})")
+    print(f"\n{len(a_relever)} plancher(s) {'relevé(s)' if ecrire else 'à relever'}.")
     return 0
 
 
@@ -132,9 +134,9 @@ def auto_test() -> int:
     def verifie(libelle, obtenu, attendu):
         nonlocal echecs
         if obtenu == attendu:
-            print("  ✔ %s" % libelle)
+            print(f"  ✔ {libelle}")
         else:
-            print("  ✘ %s : attendu %r, obtenu %r" % (libelle, attendu, obtenu))
+            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
             echecs = 1
 
     balise = "vaut <!--inv:essai-->3 136<!--/inv--> aujourd'hui"

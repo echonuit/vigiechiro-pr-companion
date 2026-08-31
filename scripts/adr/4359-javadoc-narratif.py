@@ -57,7 +57,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES_ANCREES, RACINE_DEPOT, rapporte  # noqa: E402
+from _commun import RACINE_DEPOT, RACINES_ANCREES, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero, et `_commun.py` la
 # retrouve par `dev-docs/decisions/{numero}-*.md`.
@@ -190,7 +190,7 @@ def blocs_par_nature(fichier: pathlib.Path) -> list[tuple[int, int, str]]:
     return trouves
 
 
-def suspects(racine: pathlib.Path = None) -> list[str]:
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Un suspect par LIGNE de prose au-dela du seuil, et non par bloc.
 
     Le grain a ete choisi apres coup, et la raison merite d etre ecrite. Compter les BLOCS trop
@@ -247,7 +247,7 @@ def _auto_test() -> int:
         # une classe - ou il est a sa place - et le meme sur un accesseur.
         pose("A.java", "class C {\n" + bloc(SM + 2, "    void f() {}") + "}")
         f = suspects(r)
-        cas.append((f"la meme longueur sur une methode coute", len(f) == 2))
+        cas.append(("la meme longueur sur une methode coute", len(f) == 2))
         cas.append(("la nature methode est reconnue", any("(methode)" in x for x in f)))
 
         # Et la borne : ce meme bloc, au-dessus d une CLASSE, ne coute rien.

@@ -38,7 +38,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import loupe  # noqa: E402
+from _commun import loupe
 
 LOT = re.compile(r"^- \[[ x]\] \*\*Lot[^\n]*(?:\n(?:    |\t)[^\n]*)*", re.M)
 RATTACHEMENT = "Fait partie de #"
@@ -181,8 +181,8 @@ def main() -> int:
     muets = sansLot(issues)
     if muets:
         print(
-            "%d EPIC ouvert(s) ne declarent aucun lot, donc rien a relire ici : %s."
-            % (len(muets), ", ".join("#%d" % n for n in muets))
+            f"{len(muets)} EPIC ouvert(s) ne declarent aucun lot, donc rien a relire "
+            f"ici : {', '.join(f'#{n}' for n in muets)}."
         )
     return code
 

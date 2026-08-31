@@ -36,7 +36,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import rapporte
 
 ADR = "4783"
 # Ancre sur le SCRIPT et non sur le repertoire courant : un chemin relatif ferait mesurer le depot
@@ -91,7 +91,14 @@ MARQUES_RE = re.compile(r"\[cite:\s*\d|\[span_\d+\]\(start_span\)")
 UTM = re.compile(r"utm_source=(chatgpt|openai|copilot|perplexity|claude)|referrer=grok")
 
 # T3. Caracteres qui ne s affichent pas et se recopient sans qu on les voie.
-INVISIBLES = {"​": "U+200B", "‌": "U+200C", "‍": "U+200D", "﻿": "U+FEFF", "­": "U+00AD", "⁠": "U+2060"}
+INVISIBLES = {
+    "\u200b": "U+200B",
+    "‌": "U+200C",
+    "‍": "U+200D",
+    "﻿": "U+FEFF",
+    "­": "U+00AD",
+    "⁠": "U+2060",
+}
 
 # T4. Lettres cyrilliques et grecques employees a la place de leurs sosies latines.
 SOSIES = "аеорсхуіАЕОСХоΑ"
@@ -106,7 +113,7 @@ GABARIT = re.compile(
 )
 
 
-def fichiers(racine: pathlib.Path = None) -> list[str]:
+def fichiers(racine: pathlib.Path | None = None) -> list[str]:
     """Les fichiers que le releve accepte de lire, relatifs a `racine`.
 
     Sur le depot la liste vient de `git ls-files`, donc des fichiers SUIVIS. Sur une fixture, qui
@@ -145,7 +152,7 @@ def liant_d_emoji(ligne: str, position: int) -> bool:
     return ord(ligne[position - 1]) > 0x2100
 
 
-def suspects(racine: pathlib.Path = None) -> list[str]:
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Une trace d outil par occurrence, avec sa famille."""
     base = racine or RACINE
     trouves = []

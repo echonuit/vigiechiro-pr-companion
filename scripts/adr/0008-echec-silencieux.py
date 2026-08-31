@@ -20,7 +20,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES, rapporte, sans_commentaires_java  # noqa: E402
+from _commun import RACINES, rapporte, sans_commentaires_java
 
 # Les DEUX arbres. Un test qui avale son echec ment de la meme facon qu une classe de production :
 # il rend vert sans avoir rien prouve, et c est precisement le defaut que l ADR 0008 nomme. La

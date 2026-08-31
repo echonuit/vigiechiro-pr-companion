@@ -25,7 +25,6 @@ import os
 
 from mkdocs.structure.files import File
 
-
 # Ce que le hook expose, et sous quel dossier du site.
 EXPOSES = (
     ("apercu-", ".png", "assets/captures"),

@@ -23,7 +23,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT  # noqa: E402
+from _commun import RACINE_DEPOT
 
 ICI = pathlib.Path(__file__).parent
 # Le champ `lus` (issue #5007) se lit en groupe NON capturant, et ce n'est pas un detail : les

@@ -80,7 +80,9 @@ def verdicts(racine: pathlib.Path) -> tuple[int, int]:
     """Les codes rendus par le script cite sur les deux titres temoins."""
 
     def code(titre: str) -> int:
-        return subprocess.run(["bash", str(racine / GARDE), titre], capture_output=True).returncode
+        return subprocess.run(
+            ["bash", str(racine / GARDE), titre], capture_output=True, check=False
+        ).returncode
 
     return code(REFUSE), code(ACCEPTE)
 
@@ -167,6 +169,7 @@ def auto_test() -> int:
         return subprocess.run(
             [sys.executable, str(copie / script.relative_to(RACINE)), "--verifie"],
             capture_output=True,
+            check=False,
         ).returncode
 
     echecs = []

@@ -25,16 +25,16 @@ decoratif pour autant : ce script ne prononce donc rien sur ceux-la, et la liste
 dit une par une.
 """
 
+import contextlib
 import pathlib
 import re
-import contextlib
 import shutil
 import subprocess
 import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import rapporte
 
 ADR = "4490"
 DOSSIER = pathlib.Path(__file__).resolve().parent
@@ -118,6 +118,7 @@ def suite_rougit(nom: str, faux: pathlib.Path) -> bool:
             [sys.executable, str(faux / "scripts" / "adr" / "verifie_scripts.py")],
             capture_output=True,
             cwd=faux,
+            check=False,
         )
     finally:
         cible.write_text(original, encoding="utf-8")
@@ -169,6 +170,7 @@ def auto_test() -> int:
             [sys.executable, str(faux / "scripts" / "adr" / "verifie_scripts.py")],
             capture_output=True,
             cwd=faux,
+            check=False,
         )
         verifie("sans mutation, la suite est verte", rendu.returncode, 0)
         # 4. Ce que ce lot prouve (#4700) : muter n a PAS touche le depot. Sans ce cas, une

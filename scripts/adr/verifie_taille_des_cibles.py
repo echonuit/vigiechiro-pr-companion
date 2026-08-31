@@ -25,7 +25,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION_ANCREE  # noqa: E402
+from _commun import PRODUCTION_ANCREE
 
 VUES = PRODUCTION_ANCREE
 
@@ -39,7 +39,7 @@ CLIQUABLE = re.compile(
 DIMENSIONS = ("prefHeight", "minHeight", "prefWidth", "minWidth")
 
 
-def fautes(racine: pathlib.Path = None) -> list[str]:
+def fautes(racine: pathlib.Path | None = None) -> list[str]:
     """Les cibles declarees sous le seuil, une par ligne."""
     racine = racine or VUES
     trouvees = []

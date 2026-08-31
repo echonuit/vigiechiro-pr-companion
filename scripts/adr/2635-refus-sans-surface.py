@@ -21,7 +21,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION, rapporte, sans_commentaires_java  # noqa: E402
+from _commun import PRODUCTION, rapporte, sans_commentaires_java
 
 # LA PRODUCTION SEULE, et c'est une exception assumee (ADR 4586).
 #
