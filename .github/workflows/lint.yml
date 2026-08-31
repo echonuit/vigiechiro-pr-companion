@@ -200,6 +200,16 @@ jobs:
         # ce qui s'installera au moment de publier est exactement ce que le dépôt déclare.
         run: npm ci --prefix .github/release
 
+      - name: "Les specs principales d'OpenSpec valident (bloquant, #4962)"
+        # Les trois gardes OpenSpec anterieurs portent sur la coherence de l'outillage avec lui-meme ;
+        # aucun n'executait `openspec validate`. Celui-ci le fait, et REFUSE sur un corpus vide :
+        # l'outil sort en 0 en ecrivant « No items found to validate », donc un garde qui l'appellerait
+        # nu deviendrait muet en ayant l'air sain le jour ou la racine des specs bouge.
+        run: |
+          npm ci --prefix .github/openspec
+          python3 scripts/methode/verifie-specs-valides.py --auto-test
+          python3 scripts/methode/verifie-specs-valides.py
+
       - name: "Les invocations d'OpenSpec citées dans nos fichiers existent (bloquant, #4514)"
         # Ce pas vit dans CE job, et non dans `lint`, pour une raison matérielle : il a besoin de la
         # ligne de commande OpenSpec, donc de Node, et `outillage-release` est le seul job qui en
