@@ -29,14 +29,47 @@ RACINE = pathlib.Path(__file__).resolve().parents[2]
 DECISIONS = RACINE / "dev-docs" / "decisions"
 GARDE = RACINE / "scripts" / "adr" / "4395-renvois-en-javadoc.py"
 
-VERDICT = re.compile(r"^PLANCHER (\d+) \| mesure=(\d+) \| plancher=(\d+) \| verdict=(\S+)$", re.M)
+# Les champs SE LISENT PAR LEUR NOM, et le motif tolere ceux qu il ne connait pas. #5014 a insere un
+# champ `lus=` entre le numero et la mesure : un motif positionnel a cesse de reconnaitre la ligne,
+# sans rien dire, et ce script a annonce que tout allait bien pendant qu il ne lisait rien (#5021).
+# Apprendre le champ de #5014 aurait repare ce cas-la et laisse le suivant.
+VERDICT = re.compile(
+    r"^PLANCHER (\d+) \|.*?\bmesure=(\d+)\b.*?\bplancher=(\d+)\b.*?\bverdict=(\S+)\s*$", re.M)
+
+# Ce qui ANNONCE un plancher, quel que soit le reste de la ligne. Sert a distinguer « le garde n en a
+# rendu aucun » de « il en a rendu et je n ai pas su les lire ».
+ANNONCE = re.compile(r"^PLANCHER \d+ \|", re.M)
 CHAMP = re.compile(r"^floor: \d+$", re.M)
 
 
+class VerdictIllisible(Exception):
+    """Le garde a rendu des planchers, et aucun n a pu etre lu."""
+
+
 def mesures() -> dict:
-    """Ce que le garde rend, et rien d autre. Son code de sortie ne nous regarde pas ici."""
+    """Ce que le garde rend, et rien d autre. Son code de sortie ne nous regarde pas ici.
+
+    N avoir rien reconnu n est pas avoir constate que tout allait bien : si le garde ANNONCE des
+    planchers et qu aucun ne se lit, ce script refuse au lieu de conclure. C est le defaut qui l a
+    rendu muet le 2026-08-31, et son message rassurait (#5021).
+    """
     rendu = subprocess.run([sys.executable, str(GARDE)], capture_output=True, text=True, cwd=RACINE)
-    return {m.group(1): (int(m.group(2)), int(m.group(3))) for m in VERDICT.finditer(rendu.stdout)}
+    return lire(rendu.stdout)
+
+
+def lire(sortie: str) -> dict:
+    """Les planchers d une sortie de garde, ou un REFUS si elle en annonce sans qu aucun se lise.
+
+    Fonction pure, et c est deliberé : le refus se mute et s eprouve ici, la ou il n exige aucun
+    sous-processus. Il vivait dans `mesures()` et aucun cas ne pouvait le faire rougir (#5021).
+    """
+    lues = {m.group(1): (int(m.group(2)), int(m.group(3))) for m in VERDICT.finditer(sortie)}
+    annoncees = len(ANNONCE.findall(sortie))
+    if annoncees and not lues:
+        raise VerdictIllisible(
+            "REFUS : le garde annonce %d plancher(s) et aucun ne se lit. Son format a change, et ce\n"
+            "script ne conclut pas sur ce qu il n a pas su lire." % annoncees)
+    return lues
 
 
 def cle_inventaire(adr: pathlib.Path) -> str | None:
@@ -114,10 +147,43 @@ def auto_test() -> int:
     verifie("la balise visée change bel et bien",
             pose("<!--inv:essai-->12<!--/inv-->", "essai", 99) != "<!--inv:essai-->12<!--/inv-->", True)
     verifie("le garde rend bien deux planchers", len(mesures()), 2)
+
+    # Les trois cas du format, et c est le troisieme qui manquait le 2026-08-31. Le motif se lit sur
+    # une sortie fabriquee : lancer le vrai garde ne dirait rien d un format qu il n emet pas encore.
+    ancien = "PLANCHER 4395 | mesure=3246 | plancher=3245 | verdict=a-relever"
+    actuel = "PLANCHER 4395 | lus=? | mesure=3246 | plancher=3245 | verdict=a-relever"
+    futur = "PLANCHER 4395 | lus=12 | source=git | mesure=3246 | plancher=3245 | verdict=a-relever"
+    verifie("le format d origine se lit", bool(VERDICT.search(ancien)), True)
+    verifie("le champ lus= inséré par #5014 ne fait plus perdre la ligne", bool(VERDICT.search(actuel)), True)
+    verifie("un champ INCONNU de plus ne la fera pas perdre non plus", bool(VERDICT.search(futur)), True)
+    verifie("la mesure lue est la bonne, et non le premier nombre venu",
+            VERDICT.search(actuel).group(2), "3246")
+
+    # Le sens NEGATIF, celui qui donne son prix aux trois precedents : n avoir rien reconnu n est pas
+    # avoir constate que tout allait bien. Sans ce cas, un motif qui cesserait de reconnaitre quoi que
+    # ce soit rendrait un dictionnaire vide et le script conclurait au calme, ce qu il a fait.
+    annoncees = len(ANNONCE.findall(actuel))
+    verifie("une ligne d un format inconnu reste ANNONCÉE, donc comptée comme illisible", annoncees, 1)
+    verifie("une sortie sans aucun plancher n annonce rien, et c est legitime",
+            len(ANNONCE.findall("rien à signaler")), 0)
+
+    # Le REFUS lui-meme, et non son calcul. Sans ces trois cas, retirer la condition de refus laissait
+    # le banc vert : le chemin qui rend ce script honnete n etait garde par rien.
+    verifie("une sortie lisible rend ses planchers", len(lire(actuel)), 1)
+    verifie("une sortie SANS plancher rend un dictionnaire vide, sans refuser", lire("rien"), {})
+    try:
+        lire("PLANCHER 4395 | format=inconnu sans mesure ni verdict")
+        verifie("une annonce illisible REFUSE au lieu de conclure", "a conclu", "a refusé")
+    except VerdictIllisible:
+        verifie("une annonce illisible REFUSE au lieu de conclure", "a refusé", "a refusé")
     return echecs
 
 
 if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
-    raise SystemExit(releve("--ecrire" in sys.argv))
+    try:
+        raise SystemExit(releve("--ecrire" in sys.argv))
+    except VerdictIllisible as illisible:
+        print(illisible, file=sys.stderr)
+        raise SystemExit(2) from illisible
