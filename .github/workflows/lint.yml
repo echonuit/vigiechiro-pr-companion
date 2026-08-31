@@ -282,6 +282,17 @@ jobs:
           check-latest: false
           cache: maven
 
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.x"
+
+      - name: "Installer les dépendances déclarées des gardes (#5008)"
+        # Neuf gardes de ce job portent `import yaml`, et rien ne déclarait PyYAML : ils ne
+        # marchaient que parce que l'image `ubuntu-latest` le fournit. Une dépendance qu'on a sans
+        # le savoir tombe le jour où l'image change, et l'erreur accuse alors la PR qui passait par
+        # là. Elle est désormais épinglée dans `pyproject.toml` et installée ici.
+        run: pip install --group gardes
+
       - name: Formatage Spotless (bloquant)
         # Spotless est opt-in (pas de binding Maven) : on l'exécute explicitement ici pour
         # qu'un code non formaté fasse échouer la CI, même sans le hook pre-commit local.
@@ -1070,3 +1081,10 @@ jobs:
         run: |
           python3 scripts/methode/verifie-controle-du-titre.py --auto-test
           python3 scripts/methode/verifie-controle-du-titre.py --verifie
+
+      - name: "Un garde déclare ce dont il a besoin, comme le pom le déclare pour Java (bloquant, #5008)"
+        # L'auto-test d'abord : un détecteur relâché passerait sinon au vert sur un dépôt conforme.
+        # Le verdict ensuite, sur les deux arbres de gardes et le Python enfoui dans leurs heredocs.
+        run: |
+          python3 scripts/methode/verifie-dependances-declarees.py --auto-test
+          python3 scripts/methode/verifie-dependances-declarees.py

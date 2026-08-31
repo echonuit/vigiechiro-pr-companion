@@ -112,11 +112,11 @@ plugins:
 extra_css:
   - stylesheets/extra.css
 
-# Le dossier docs/benchmarks (note technique de perf) et le fichier des
-# dépendances ne font pas partie du site utilisateur.
+# Le dossier docs/benchmarks (note technique de perf) ne fait pas partie du site utilisateur.
+# Le fichier des dépendances y figurait aussi ; il vit désormais en `pyproject.toml`, hors de
+# `docs/`, et n'a plus besoin d'être exclu (#5008).
 exclude_docs: |
   benchmarks/
-  requirements.txt
 
 # Validation des liens (#2887). MkDocs vérifie par défaut que le FICHIER cité existe, mais pas que
 # l'ANCRE y existe : un `#titre-renomme` passait donc en silence, y compris en `--strict`. Mesuré, le

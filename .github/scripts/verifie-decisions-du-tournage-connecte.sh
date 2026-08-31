@@ -45,6 +45,20 @@
 # Usage : ./.github/scripts/verifie-decisions-du-tournage-connecte.sh [--auto-test] [répertoire]
 set -uo pipefail
 
+# PyYAML est requis : un YAML de workflow ne se lit pas a la ligne sans se tromper (blocs, ancres,
+# `on:` que YAML interprete en booleen). S'il manque, la garde REFUSE bruyamment - une garde qui se
+# saute quand son outillage manque est un faux vert de plus.
+#
+# Ce controle DEFINIT une fonction et ne s'execute pas ici : il est appele au point d'usage. Un refus
+# pose en tete de fichier passerait AVANT le dispatch des options, et rendrait un refus la ou
+# l'appelant demandait autre chose (#5008).
+exige_pyyaml() {
+  python3 -c 'import yaml' 2>/dev/null && return 0
+  echo "❌ PyYAML est absent : cette garde ne peut pas lire les workflows."
+  echo "   Installer avec « pip install --group gardes », qui lit pyproject.toml."
+  return 1
+}
+
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RACINE="$(cd "$ICI/../.." && pwd)"
 
@@ -61,6 +75,7 @@ refus_de_la_source_connectee() { # <répertoire de workflows>
     chmod +x "${bac}/bin/gh"
 
     bloc="${bac}/reprendre.sh"
+    exige_pyyaml || return 1
     if ! python3 - "${flux}/comparer-tournages.yml" "${bloc}" <<'PY'; then
 import sys
 
@@ -114,6 +129,7 @@ PY
 # --- 2. et 3. Les deux propriétés qui se lisent dans le YAML ----------------------------------------
 
 versement_conditionne() { # <répertoire de workflows>
+    exige_pyyaml || return 1
     python3 - "$1/tournage-recette.yml" <<'PY'
 import re
 import sys
@@ -146,6 +162,7 @@ PY
 }
 
 controle_avant_le_tournage() { # <répertoire de workflows>
+    exige_pyyaml || return 1
     python3 - "$1/tournage-recette.yml" <<'PY'
 import re
 import sys
@@ -207,6 +224,7 @@ auto_test() {
         local nom="$1"
         mkdir -p "${bac}/${nom}"
         cp "${bac}/sain/"*.yml "${bac}/${nom}/"
+        exige_pyyaml || return 1
         python3 - "${bac}/${nom}" <<PY
 import sys
 $2
