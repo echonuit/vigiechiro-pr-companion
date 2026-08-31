@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.recette.Attente;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -32,8 +33,7 @@ class ExecuteurTacheAsynchroneTest {
         AtomicBoolean surFilFx = new AtomicBoolean();
         AtomicBoolean travailHorsFilFx = new AtomicBoolean();
 
-        WaitForAsyncUtils.waitForAsyncFx(
-                5_000,
+        Attente.surLeFil(
                 () -> executeur.executer(
                         () -> {
                             travailHorsFilFx.set(!Platform.isFxApplicationThread());
@@ -43,7 +43,9 @@ class ExecuteurTacheAsynchroneTest {
                             resultat.set(valeur);
                             surFilFx.set(Platform.isFxApplicationThread());
                         },
-                        erreur -> {}));
+                        erreur -> {}),
+                "que l'exécuteur applique le succès sur le fil",
+                5_000L);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(travailHorsFilFx).as("travail exécuté hors du fil JavaFX").isTrue();
@@ -58,8 +60,7 @@ class ExecuteurTacheAsynchroneTest {
         AtomicBoolean surFilFx = new AtomicBoolean();
         RuntimeException panne = new IllegalStateException("réseau coupé");
 
-        WaitForAsyncUtils.waitForAsyncFx(
-                5_000,
+        Attente.surLeFil(
                 () -> executeur.executer(
                         () -> {
                             throw panne;
@@ -68,7 +69,9 @@ class ExecuteurTacheAsynchroneTest {
                         erreur -> {
                             capturee.set(erreur);
                             surFilFx.set(Platform.isFxApplicationThread());
-                        }));
+                        }),
+                "que l'exécuteur applique l'échec sur le fil",
+                5_000L);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(capturee.get()).isSameAs(panne);
@@ -85,8 +88,7 @@ class ExecuteurTacheAsynchroneTest {
             points.add(point);
         });
 
-        WaitForAsyncUtils.waitForAsyncFx(
-                5_000,
+        Attente.surLeFil(
                 () -> executeur.executer(
                         () -> {
                             relais.accept(new Progression("1/2", 0.5));
@@ -94,7 +96,9 @@ class ExecuteurTacheAsynchroneTest {
                             return "fini";
                         },
                         valeur -> {},
-                        erreur -> {}));
+                        erreur -> {}),
+                "que l'exécuteur relaie sa progression sur le fil",
+                5_000L);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(points).extracting(Progression::libelle).containsExactly("1/2", "2/2");
@@ -109,8 +113,7 @@ class ExecuteurTacheAsynchroneTest {
         JetonAnnulation jeton = new JetonAnnulation();
         jeton.annuler();
 
-        WaitForAsyncUtils.waitForAsyncFx(
-                5_000,
+        Attente.surLeFil(
                 () -> executeur.executer(
                         () -> {
                             jeton.leverSiAnnule();
@@ -118,7 +121,9 @@ class ExecuteurTacheAsynchroneTest {
                         },
                         valeur -> {},
                         () -> annuleSurFilFx.set(Platform.isFxApplicationThread()),
-                        echec::set));
+                        echec::set),
+                "que l'exécuteur applique l'annulation sur le fil",
+                5_000L);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(annuleSurFilFx).as("callback d'annulation sur le fil JavaFX").isTrue();

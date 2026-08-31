@@ -1602,7 +1602,7 @@ f4d2944ae339  src/test/java/fr/univ_amu/iut/commun/view/NavigationDeTestModule.j
 b41580a09a04  src/test/java/fr/univ_amu/iut/commun/view/NomsHeritesTest.java
 1db4db0eee6f  src/test/java/fr/univ_amu/iut/commun/view/NotificationDialogueTest.java
 ad70ba22892f  src/test/java/fr/univ_amu/iut/commun/view/OccupationChromeTest.java
-e2d23eab871d  src/test/java/fr/univ_amu/iut/commun/view/OngletReglagesEmplacementsTest.java
+8ac717bbb9ee  src/test/java/fr/univ_amu/iut/commun/view/OngletReglagesEmplacementsTest.java
 837e48803469  src/test/java/fr/univ_amu/iut/commun/view/OngletReglagesFonctionnalitesRenduTest.java
 d3901c3b6491  src/test/java/fr/univ_amu/iut/commun/view/OngletReglagesFonctionnalitesTest.java
 cd86f012a2f7  src/test/java/fr/univ_amu/iut/commun/view/OngletReglagesWiringTest.java
@@ -1916,7 +1916,7 @@ c4625eadd4c2  src/test/java/fr/univ_amu/iut/qualification/view/ScenarioRaccourci
 62ca79c783a4  src/test/java/fr/univ_amu/iut/qualification/view/ScenarioSelectionEcouteTest.java
 2ef6b5e9acbf  src/test/java/fr/univ_amu/iut/qualification/viewmodel/QualificationViewModelTest.java
 69f1f54af525  src/test/java/fr/univ_amu/iut/qualification/viewmodel/SelectionEcouteViewModelTest.java
-c72df510ca55  src/test/java/fr/univ_amu/iut/recette/Attente.java
+fb8bff00c6a9  src/test/java/fr/univ_amu/iut/recette/Attente.java
 a0620485d3e1  src/test/java/fr/univ_amu/iut/recette/AttenteTest.java
 933977f22799  src/test/java/fr/univ_amu/iut/recette/BancDeRecette.java
 87701f8fbb55  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteJetonTest.java

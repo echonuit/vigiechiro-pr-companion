@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.ServiceEmplacements;
+import fr.univ_amu.iut.recette.Attente;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.testfx.framework.junit5.ApplicationExtension;
-import org.testfx.util.WaitForAsyncUtils;
 
 /// Rendu et comportement de l'onglet « Emplacements » (#1038). Les trois dialogues sont remplacés par
 /// des doubles : le sélecteur natif figerait TestFX, le compte rendu aussi, et `Platform.exit()` tuerait
@@ -412,12 +412,14 @@ class OngletReglagesEmplacementsTest {
         return racine.lookup(".avis-redemarrage");
     }
 
+    /// Exécute `action` sur le fil JavaFX, et dit ce qu'elle faisait si elle n'y arrive pas (#4997).
     private static void surFx(Runnable action) {
-        WaitForAsyncUtils.waitForAsyncFx(5_000, action);
+        Attente.surLeFil(action, "agir sur l'onglet des emplacements", 5_000L);
     }
 
+    /// La même, pour une action qui rend une valeur : construire l'écran et rendre sa racine.
     private static <T> T surFx(java.util.concurrent.Callable<T> action) {
-        return WaitForAsyncUtils.waitForAsyncFx(5_000, action);
+        return Attente.surLeFil(action, "construire l'onglet des emplacements", 5_000L);
     }
 
     private static void restaurer(String cle, String valeur) {

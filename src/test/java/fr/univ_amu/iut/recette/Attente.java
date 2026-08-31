@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.recette;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -47,6 +48,37 @@ public final class Attente {
     /// La même, avec un délai choisi.
     public static void queSurLeFil(BooleanSupplier condition, String ceQuOnAttend, long delaiMs) {
         que(() -> lireSurLeFil(condition), ceQuOnAttend, delaiMs);
+    }
+
+    /// Exécute `action` **sur le fil JavaFX** et attend qu'elle rende, en disant ce qu'elle faisait
+    /// si elle n'y arrive pas.
+    ///
+    /// Symétrique de [#queSurLeFil] : celle-ci **lit** une condition sur le fil, celle-là y **fait**
+    /// quelque chose. `WaitForAsyncUtils.waitForAsyncFx` rend la même chose en levant une
+    /// `TimeoutException` nue, et un journal de CI n'apprend alors ni ce qu'on construisait ni où le
+    /// parcours s'est arrêté (#4997, même défaut que le `waitFor` nu de #4845).
+    ///
+    /// @param ceQueOnFaisait dit à la première personne du banc, et repris tel quel dans l'échec
+    public static void surLeFil(Runnable action, String ceQueOnFaisait, long delaiMs) {
+        surLeFil(
+                () -> {
+                    action.run();
+                    return null;
+                },
+                ceQueOnFaisait,
+                delaiMs);
+    }
+
+    /// La même, pour une action qui **rend** une valeur.
+    public static <T> T surLeFil(Callable<T> action, String ceQueOnFaisait, long delaiMs) {
+        try {
+            return WaitForAsyncUtils.waitForAsyncFx(delaiMs, action);
+        } catch (Throwable echec) {
+            throw new AssertionError(
+                    "n'a pas pu " + ceQueOnFaisait + " sur le fil JavaFX en " + delaiMs
+                            + " ms. Ce n'est pas le code qui a tort tant que ceci n'a pas eu lieu.",
+                    echec);
+        }
     }
 
     /// La valeur du prédicat, évaluée sur le fil JavaFX et rapportée ici.
