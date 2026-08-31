@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.persistence.PlacementRacine;
 import fr.univ_amu.iut.commun.persistence.RegimeRestauration;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -42,6 +43,11 @@ class ActionsSauvegardeTest {
 
     private static final Path DOSSIER = Path.of("/tmp/sauvegardes");
     private static final Path FICHIER = Path.of("/tmp/sauvegardes/vigiechiro-2026-07-14.db");
+
+    /// La racine du volume courant : le jumeau de #3461 hors de l'import. Une sauvegarde complète
+    /// s'écrit sur une clé dédiée, et se désigne alors par sa racine.
+    private static final Path RACINE_VOLUME =
+            FileSystems.getDefault().getRootDirectories().iterator().next();
 
     private final ServiceSauvegarde service = mock(ServiceSauvegarde.class);
     private final OccupationChrome occupation =
@@ -305,6 +311,29 @@ class ActionsSauvegardeTest {
                 .singleElement()
                 .satisfies(annonce -> assertThat(annonce).contains("Sauvegarde restaurée"));
         assertThat(relectures).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#3461 : une sauvegarde désignée par la RACINE d'un volume se confirme au lieu de casser")
+    void restauration_complete_depuis_une_racine_de_volume() {
+        // Jumeau de #3461, trouvé par audit croisé. Une racine n'a pas de dernier segment, et le nom
+        // repris dans la confirmation en était tiré sans garde. La confirmation annonce un remplacement
+        // de la base ET des sessions : casser juste avant coûte plus qu'ailleurs.
+        assertThat(RACINE_VOLUME.getFileName())
+                .as("prémisse du cas : une racine de volume n'a aucun dernier segment")
+                .isNull();
+        choix = Optional.of(RACINE_VOLUME);
+        when(service.restaurerComplet(RACINE_VOLUME))
+                .thenReturn(new BilanRestauration(true, List.of(), List.of(), RegimeRestauration.ENSEMBLE));
+
+        action.restaurerComplet();
+
+        // Faute de dernier segment, c'est le chemin entier qui nomme le support : « / » ou « E:\ » se
+        // lisent, « null » non.
+        assertThat(confirmations)
+                .singleElement()
+                .satisfies(message -> assertThat(message).contains(RACINE_VOLUME.toString()));
+        verify(service).restaurerComplet(RACINE_VOLUME);
     }
 
     @Test

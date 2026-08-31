@@ -13,6 +13,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 import java.util.logging.Level;
@@ -36,8 +37,17 @@ public final class ExtracteurZip {
     private ExtracteurZip() {}
 
     /// `true` si `chemin` désigne une archive `.zip` (par l'extension, insensible à la casse).
+    ///
+    /// Une racine de volume (`L:\` sous Windows, `/` ailleurs) n'a pas de dernier segment, donc
+    /// `getFileName()` y rend `null`. Le nom se teste avant d'être lu, comme le fait
+    /// [fr.univ_amu.iut.commun.model.PresenceFichiers]. Une racine n'est pas une archive : elle rend
+    /// `false`, et l'import la traite comme le dossier qu'elle est (#3461).
     public static boolean estZip(Path chemin) {
-        return chemin != null && chemin.getFileName().toString().toLowerCase().endsWith(".zip");
+        if (chemin == null) {
+            return false;
+        }
+        Path nom = chemin.getFileName();
+        return nom != null && nom.toString().toLowerCase(Locale.ROOT).endsWith(".zip");
     }
 
     /// Variante sans suivi de progression (extraction silencieuse), pour les appels qui n'affichent rien.

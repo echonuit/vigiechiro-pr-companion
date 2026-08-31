@@ -12,10 +12,12 @@ import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -48,6 +50,52 @@ class ExtracteurZipTest {
         assertThat(ExtracteurZip.estZip(Path.of("NUIT.ZIP"))).isTrue();
         assertThat(ExtracteurZip.estZip(Path.of("dossier"))).isFalse();
         assertThat(ExtracteurZip.estZip(Path.of("PaRecPR1_x.wav"))).isFalse();
+    }
+
+    @Test
+    @DisplayName("estZip sur une racine de volume rend false au lieu de casser (#3461)")
+    void detection_zip_sur_une_racine_de_volume() {
+        // Les racines du système courant, et non un littéral : sous Windows le parcours rend les
+        // lettres de lecteur, celles que l'utilisateur désigne en insérant sa carte.
+        //
+        // Deux préconditions sont asserties AVANT le verdict, sans quoi le cas passerait au vert sans
+        // rien éprouver : le parcours n'est pas vide, et la racine parcourue n'a bien aucun nom. La
+        // seconde est la prémisse du défaut ; ne tenir que la première laisserait le cas vert sur une
+        // plateforme dont les racines porteraient un nom.
+        assertThat(FileSystems.getDefault().getRootDirectories())
+                .as("le système de fichiers doit exposer au moins une racine, sinon ce cas n'éprouve rien")
+                .isNotEmpty();
+        for (Path racineVolume : FileSystems.getDefault().getRootDirectories()) {
+            assertThat(racineVolume.getFileName())
+                    .as("prémisse du cas : la racine %s ne doit avoir aucun dernier segment", racineVolume)
+                    .isNull();
+            assertThat(ExtracteurZip.estZip(racineVolume))
+                    .as("racine de volume %s", racineVolume)
+                    .isFalse();
+        }
+    }
+
+    @Test
+    @DisplayName("estZip reconnaît une archive même sous une locale sans I pointé")
+    void detection_zip_sous_une_locale_turque() {
+        // En turc, « I » se minuscule en « ı » sans point : « .ZIP » devient « .zıp », qui ne finit pas
+        // par « .zip ». Une archive légitime cesserait donc d'être reconnue sur le poste d'un
+        // utilisateur turc, et sur lui seul. La casse se plie sous une locale fixe, jamais celle du poste.
+        Locale avant = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr"));
+            assertThat(ExtracteurZip.estZip(Path.of("NUIT.ZIP"))).isTrue();
+        } finally {
+            Locale.setDefault(avant);
+        }
+    }
+
+    @Test
+    @DisplayName("estZip tolère un argument nul, comportement conservé")
+    void detection_zip_sur_un_argument_nul() {
+        // Caractérisation, non régression : la tolérance au nul précède #3461 et aucun appelant du
+        // dépôt ne la sollicite. Le cas épingle ce que le garde scindé doit continuer de rendre.
+        assertThat(ExtracteurZip.estZip(null)).isFalse();
     }
 
     @Test

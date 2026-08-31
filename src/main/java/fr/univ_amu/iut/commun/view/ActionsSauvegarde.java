@@ -243,8 +243,13 @@ final class ActionsSauvegarde {
     }
 
     /// Nom lisible du fichier ou dossier désigné, tel qu'il est repris dans la confirmation.
+    ///
+    /// Une racine de volume n'a pas de dernier segment : `getFileName()` y rend `null`. C'est le cas
+    /// d'une sauvegarde complète écrite sur une clé dédiée, puis désignée par sa racine. Le chemin
+    /// entier nomme alors le support, faute de mieux, et la confirmation reste lisible (#3461).
     private static String nomDe(Path chemin) {
-        return chemin.getFileName().toString();
+        Path nom = chemin.getFileName();
+        return nom != null ? nom.toString() : chemin.toString();
     }
 
     private static String message(Throwable echec) {
