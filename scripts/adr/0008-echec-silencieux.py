@@ -34,13 +34,23 @@ from _commun import RACINES, rapporte, sans_commentaires_java  # noqa: E402
 CATCH = re.compile(r"catch\s*\([^)]*\)\s*\{([^{}]*)\}", re.S)
 
 
+def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unités que ce garde LIT, extraites pour que `lus` les compte (issue #5007).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu'il RETENAIT. Un ciblage manqué
+    donnait donc zéro suspect sur zéro fichier, et ce zéro passait pour un succès. L'extraire fait
+    du compte des unités lues une valeur, au lieu d'un effet de bord invisible.
+    """
+    arbres = [racine / a for a in RACINES] if racine else list(RACINES)
+    return sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java"))
+
+
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
     # Les commentaires sont retirés du fichier ENTIER d'abord (helper mutualisé) : le corps devient
     # vide s'il ne portait qu'un « // ignoré volontairement », et un catch écrit dans un commentaire ne
     # se fait pas prendre pour du code. L'ADR veut une trace observable À L'EXÉCUTION, pas une note.
-    arbres = [racine / a for a in RACINES] if racine else list(RACINES)
     trouves = []
-    for source in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
+    for source in fichiers(racine):
         texte = sans_commentaires_java(source.read_text(encoding="utf-8"))
         for bloc in CATCH.finditer(texte):
             if not bloc.group(1).strip():
@@ -50,4 +60,4 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte("0008", "échec silencieux : catch au corps vide", suspects()))
+    sys.exit(rapporte("0008", "échec silencieux : catch au corps vide", suspects(), lus=len(fichiers())))
