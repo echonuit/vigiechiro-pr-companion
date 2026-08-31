@@ -34,6 +34,9 @@ ce qu'il faut avoir posé avant de commencer, et refuse de démarrer tant que ce
 4. NOMMER   le CHANTIER auquel elle appartient, par son numero, ET l y RATTACHER :
             gh issue edit <n> --parent <EPIC>. Pas celui d ou elle vient : celui qui
             traite sa CAUSE. S il n existe pas, l ouvrir.
+4b. ECRIRE  dans le CORPS de l issue son CRITERE DE FIN : comment on saura qu elle
+            est finie. Rattachee a un chantier, elle en est un LOT, et un lot qui ne
+            dit pas son critere se clot a l estime. Le corps, pas un commentaire.
 5. DEPOSER  ces quatre elements EN COMMENTAIRE sur l issue, avec le remede envisage.
 6. RELIRE   a la grille de la competence humaniser ce qui part sur la forge. Le corps de l issue
             est de la prose publiee, et l article A31 le couvre depuis qu il ne
@@ -86,6 +89,20 @@ Quand le chantier n'en porte pas, rien de tout cela ne s'applique, et son étape
 Vérifier avant de prendre coûte une commande, `openspec list --json`, et évite d'improviser un
 découpage que le chantier avait déjà tranché (#4911).
 
+## Le critère de fin va dans le corps, pas dans le bloc
+
+L'étape 4b sort de l'étape 4 et n'en est pas indépendante : c'est parce que l'issue est rattachée à
+un chantier qu'elle en est un lot, et c'est au lot que
+[`ouvrir-un-chantier`](../ouvrir-un-chantier/SKILL.md) demande son critère de fin.
+
+**Le corps, et non le bloc de prise.** Le bloc se dépose en commentaire, et un commentaire descend
+sous le fil à mesure que l'issue vit. Le corps est ce qui survit à l'onglet fermé, ce que
+[`clore-une-issue`](../clore-une-issue/SKILL.md) appelle la vérité de l'issue par opposition à son
+journal. Un critère écrit en commentaire est un critère que la clôture ne relira pas.
+
+Mesuré le 2026-08-31 : sur les onze lots ouverts des chantiers ouverts depuis que la règle existe,
+**neuf** ne portaient aucun critère dans leur corps (#4951).
+
 ## Pourquoi le commentaire **et** l'assignation, pas l'un ou l'autre
 
 | Dispositif | Ce qu'il porte | Ce qu'il ne dit pas |
@@ -127,3 +144,4 @@ locale, les refus que seule la forge rend, et le moniteur qui part avec la PR.
 | « Je m'assigne, ça suffit » | L'assignation ne dit pas quel remède vous allez écrire |
 | « Personne d'autre ne travaille dessus » | L'assignation est muette et le compte est partagé |
 | « Je reprendrai plus tard, je garde l'assignation » | Une revendication oubliée est pire que rien |
+| « Mon bloc dit ce que je vérifierai, ça suffit » | Le bloc est un commentaire. Le critère va dans le corps |
