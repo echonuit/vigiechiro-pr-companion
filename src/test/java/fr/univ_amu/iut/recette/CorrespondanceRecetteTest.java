@@ -557,7 +557,9 @@ class CorrespondanceRecetteTest {
         int casComptes = 0;
         for (String ligne : lignes) {
             String[] colonnes = ligne.split("\t", -1);
-            assertThat(colonnes).as("session, nombre de cas, classes").hasSize(3);
+            assertThat(colonnes)
+                    .as("session, nombre de cas, classes, cas filmables")
+                    .hasSize(4);
             casComptes += Integer.parseInt(colonnes[1]);
             vues.addAll(List.of(colonnes[2].split(",")));
         }
@@ -568,6 +570,35 @@ class CorrespondanceRecetteTest {
         assertThat(casComptes)
                 .as("chaque cas cité appartient à une session et une seule")
                 .isEqualTo(cites.size());
+    }
+
+    @Test
+    @DisplayName("La quatrième colonne nomme les cas qu'un tournage NON connecté doit rendre")
+    void la_quatrieme_colonne_exclut_les_cas_connectes() throws IOException {
+        // #5012 : le train tourne non connecté, et les scénarios `recette-connectee` sont exclus de son
+        // build. Compter leurs cas parmi les attendus lui demandait un nombre que sa configuration lui
+        // interdit d'atteindre, et la release refusait de verser ses clips à chaque passage.
+        List<String> lignes = Files.readAllLines(SESSIONS_A_FILMER);
+
+        SortedSet<String> filmables = new TreeSet<>();
+        for (String ligne : lignes) {
+            String[] colonnes = ligne.split("\t", -1);
+            assertThat(colonnes)
+                    .as("session, cas cités, classes, cas filmables hors connecté")
+                    .hasSize(4);
+            if (!colonnes[3].isEmpty()) {
+                filmables.addAll(List.of(colonnes[3].split(",")));
+            }
+        }
+
+        assertThat(filmables)
+                .as("un tournage non connecté rend exactement les cas cités qui ne sont pas connectés")
+                .containsExactlyInAnyOrderElementsOf(new TreeSet<>(cites.keySet()) {
+                    {
+                        removeAll(casConnectes);
+                    }
+                });
+        assertThat(filmables).as("aucun cas connecté ne doit y figurer").doesNotContainAnyElementsOf(casConnectes);
     }
 
     // ----------------------------------------------------------------------------------------
@@ -621,17 +652,27 @@ class CorrespondanceRecetteTest {
         return tiret < 0 ? cas : cas.substring(0, tiret);
     }
 
-    /// Dépose, par session : le nombre de cas cités, puis les classes qui les jouent.
+    /// Dépose, par session : le nombre de cas cités, les classes qui les jouent, puis les cas qu'un
+    /// tournage **non connecté** doit rendre.
     ///
     /// Le nombre de cas est déposé AVEC les classes parce que c'est lui qui permet au tournage de
     /// dire s'il a rendu ce qu'il devait rendre. Sans lui, un tournage de session ne pourrait
     /// vérifier que « des clips sont sortis », ce qui est le genre de garde qui ne garde rien.
+    ///
+    /// La quatrième colonne retire les cas `recette-connectee`, exclus du build sans jeton : les
+    /// compter demandait au train un nombre qu'il ne pouvait pas atteindre (#5012). Elle les NOMME,
+    /// là où un compte oblige à refaire son calcul pour savoir lesquels manquent.
     private static void deposerLesSessionsAFilmer() {
         SortedMap<String, SortedSet<String>> classes = classesParSession();
         SortedMap<String, SortedSet<String>> cas = casCitesParSession();
         List<String> lignes = new ArrayList<>();
-        classes.forEach((session, noms) -> lignes.add(
-                session + "\t" + cas.getOrDefault(session, new TreeSet<>()).size() + "\t" + String.join(",", noms)));
+        classes.forEach((session, noms) -> {
+            SortedSet<String> filmables = new TreeSet<>(cas.getOrDefault(session, new TreeSet<>()));
+            filmables.removeAll(casConnectes);
+            lignes.add(
+                    session + "\t" + cas.getOrDefault(session, new TreeSet<>()).size() + "\t" + String.join(",", noms)
+                            + "\t" + String.join(",", filmables));
+        });
         try {
             Files.createDirectories(SESSIONS_A_FILMER.getParent());
             Files.write(SESSIONS_A_FILMER, lignes);

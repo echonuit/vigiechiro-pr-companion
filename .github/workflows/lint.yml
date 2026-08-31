@@ -344,6 +344,17 @@ jobs:
           chmod +x .github/scripts/verdict-du-tournage.sh
           ./.github/scripts/verdict-du-tournage.sh --auto-test
 
+      - name: Le tournage nomme les cas qu'il n'a pas rendus
+        # Son oracle comparait deux nombres, « 111 cas sur 116 », sans jamais dire lesquels : il
+        # fallait refaire son calcul à la main pour l'apprendre. Et le compte attendu incluait les cas
+        # des scénarios exclus du build sans jeton, si bien qu'un tournage non connecté ne pouvait pas
+        # l'atteindre - le train a cessé de verser ses clips Java pendant cinq jours sans le dire.
+        # Son contrôle négatif est celui qui compte : un index illisible REFUSE au lieu de conclure
+        # qu'aucun cas ne manque.
+        run: |
+          chmod +x .github/scripts/cas-manquants-du-tournage.sh
+          ./.github/scripts/cas-manquants-du-tournage.sh --auto-test
+
       - name: La révocation du jeton sait ce qui vaut succès
         # Sa règle est de celles qu'une relecture distraite retourne : `404` et `401` sont des
         # SUCCÈS, parce que l'objectif n'est pas « le serveur a répondu 200 » mais « ce jeton ne sert

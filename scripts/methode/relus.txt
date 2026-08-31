@@ -1931,7 +1931,7 @@ bfbc2c64fc3e  src/test/java/fr/univ_amu/iut/recette/BancDesClipsTest.java
 dd0bd72a760f  src/test/java/fr/univ_amu/iut/recette/CarteDeRecette.java
 dc61d71a4d14  src/test/java/fr/univ_amu/iut/recette/CasDeRecette.java
 b5e7288906d9  src/test/java/fr/univ_amu/iut/recette/ClipDeModaleTest.java
-0ec19aedd416  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
+adc5cdc4a3fb  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
 e754fd5b8832  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
 af9b80216119  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheRalenti.java
 bd083deb8799  src/test/java/fr/univ_amu/iut/recette/ExtractionCarteReelleTest.java
