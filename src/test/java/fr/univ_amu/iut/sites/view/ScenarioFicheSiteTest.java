@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -227,10 +228,10 @@ class ScenarioFicheSiteTest {
     private void revenirAMesSites(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
         GesteVisible.cliquer(robot, "#boutonRetour");
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> !robot.lookup(".carte-site").queryAll().isEmpty());
+        Attente.que(
+                () -> !robot.lookup(".carte-site").queryAll().isEmpty(),
+                "les cartes de sites reparaissent après le retour",
+                10_000L);
         Respiration.apresLeGeste(robot);
     }
 
@@ -496,10 +497,10 @@ class ScenarioFicheSiteTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("aucune carte de site intitulée « " + titre + " »"));
         robot.clickOn(carte);
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("#valNumeroCarre").tryQuery().isPresent());
+        Attente.que(
+                () -> robot.lookup("#valNumeroCarre").tryQuery().isPresent(),
+                "la fiche du site s'ouvre, reconnue à son numéro de carré",
+                10_000L);
         Respiration.apresLeGeste(robot);
     }
 

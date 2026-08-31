@@ -96,6 +96,7 @@ nav:
     - 4755 · Un champ qu'on n'a pas touché se tait: decisions/4755-un-champ-qu-on-n-a-pas-touche-se-tait.md
     - 4768 · Une référence partielle ne dégrade pas la garde, elle la bloque: decisions/4768-une-reference-partielle-bloque-tout.md
     - 4841 · Un motif ne se déclare qu'après son contrôle inverse: decisions/4841-un-motif-ne-se-declare-qu-apres-son-controle-inverse.md
+    - 4974 · Un garde qui lit un nom se contourne en renommant: decisions/4974-un-garde-qui-lit-un-nom-se-contourne-en-renommant.md
     - 4859 · Un banc referme ce qu'il ouvre: decisions/4859-un-banc-referme-ce-qu-il-ouvre.md
     - 4187 · Un rouge se classe avant de se rejouer: decisions/4187-un-rouge-se-classe-avant-de-se-rejouer.md
     - 4770 · Muter un garde de méthode passe par son point d'entrée: decisions/4770-la-mutation-se-transpose-par-le-point-d-entree.md

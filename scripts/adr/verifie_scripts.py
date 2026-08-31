@@ -679,6 +679,35 @@ def test_4468_javadoc_non_relue() -> None:
         # elle n a pas ete relue SOUS SA FORME ACTUELLE, et le fichier redevient suspect.
         lu.write_text("/// Le contrat de A, reecrit en douce.\nclass Lu {}\n", encoding="utf-8")
         _verifie("4468 une javadoc reecrite en douce redevient suspecte", len(m.suspects(racine, table)), 2)
+def test_4974_attente_reinventee() -> None:
+    m = _charge("4974-attente-reinventee.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        sonde = "        WaitForAsyncUtils.waitFor(1, S, () -> vrai());\n"
+
+        # Le nom ne fait pas le defaut : c est ce que la decision tient, et le harnais l eprouve
+        # ici comme l auto-test l eprouve chez lui.
+        _ecrire(racine, "fr/a/A.java", "class A {\n    private void ouvrirLaFiche() {\n" + sonde + "    }\n}\n")
+        _verifie("4974 une sonde privee est vue quel que soit son nom", len(m.suspects(racine)), 1)
+
+        _ecrire(racine, "fr/a/A.java", "class A {\n    private void patienter() {\n" + sonde + "    }\n}\n")
+        _verifie("4974 renommer ne soustrait rien", m.suspects(racine), ["A.java#patienter"])
+
+        # Les trois sens NEGATIFS, sans lesquels un garde qui rend toutes les methodes privees
+        # paraitrait juste.
+        _ecrire(racine, "fr/a/B.java", "class B {\n    private void dormir() {\n"
+                "        WaitForAsyncUtils.sleep(350, MS);\n    }\n}\n")
+        _verifie("4974 un sleep n est pas une attente", len(m.suspects(racine)), 1)
+
+        _ecrire(racine, "fr/a/C.java", "class C {\n    private void vider() {\n"
+                "        WaitForAsyncUtils.waitForFxEvents();\n    }\n}\n")
+        _verifie("4974 waitForFxEvents n est pas une sonde", len(m.suspects(racine)), 1)
+
+        _ecrire(racine, "fr/a/Attente.java", "class Attente {\n    private static void interne() {\n"
+                + sonde + "    }\n}\n")
+        _verifie("4974 l aide partagee est exemptee", len(m.suspects(racine)), 1)
+
+
 def test_4475_stage_non_dimensionne() -> None:
     m = _charge("4475-stage-non-dimensionne.py")
     with tempfile.TemporaryDirectory() as d:
@@ -1113,6 +1142,7 @@ if __name__ == "__main__":
         test_loupe_0044,
         test_4472_commentaire_en_corps,
         test_4468_javadoc_non_relue,
+        test_4974_attente_reinventee,
         test_4475_stage_non_dimensionne,
         test_4617_code_mort_et_zone_de_test,
         test_4476_javadoc_raconte_son_extraction,

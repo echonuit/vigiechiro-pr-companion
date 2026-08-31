@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -289,8 +290,11 @@ class ScenarioPerceptifIssuesConnexionTest {
         }
         robot.clickOn("#boutonConnecter");
         // L'exécuteur est asynchrone : le message n'est PAS là au retour du clic.
-        WaitForAsyncUtils.waitFor(
-                20, TimeUnit.SECONDS, () -> !statut(robot).getText().isBlank());
+        Attente.que(
+                () -> !statut(robot).getText().isBlank(),
+                "le statut de connexion s'affiche : l'exécuteur est asynchrone, le message n'est pas"
+                        + " là au retour du clic",
+                20_000L);
     }
 
     /// Amène le message dans le cadre, s'y arrête le temps qu'on le lise, et **vérifie** qu'il y est.

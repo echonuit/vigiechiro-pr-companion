@@ -1678,7 +1678,7 @@ ec0931d84305  src/test/java/fr/univ_amu/iut/e2e/ParcoursDepotE2ETest.java
 f74742dfa2fc  src/test/java/fr/univ_amu/iut/e2e/ParcoursFicheEspeceE2ETest.java
 1f031cc57d61  src/test/java/fr/univ_amu/iut/e2e/ParcoursImporterNuitE2ETest.java
 dec7aa7cc284  src/test/java/fr/univ_amu/iut/e2e/ParcoursImporterTransformesE2ETest.java
-9e0e1e3542c3  src/test/java/fr/univ_amu/iut/e2e/ParcoursMultisiteVersPassageE2ETest.java
+a0837b0545d9  src/test/java/fr/univ_amu/iut/e2e/ParcoursMultisiteVersPassageE2ETest.java
 a929f1779d35  src/test/java/fr/univ_amu/iut/e2e/ParcoursNavigationE2ETest.java
 354e2fc29750  src/test/java/fr/univ_amu/iut/e2e/ParcoursPassageVersActiviteE2ETest.java
 6c20a13e3e98  src/test/java/fr/univ_amu/iut/e2e/ParcoursPassageVersDiagnosticE2ETest.java
@@ -1691,7 +1691,7 @@ d055e8fc884b  src/test/java/fr/univ_amu/iut/e2e/ParcoursPublierCorrectionsE2ETes
 44b0ac1c232c  src/test/java/fr/univ_amu/iut/e2e/ParcoursRegrouperNuitsParPointE2ETest.java
 00e0ca4960fa  src/test/java/fr/univ_amu/iut/e2e/ParcoursResetE2ETest.java
 acb95ea9dcce  src/test/java/fr/univ_amu/iut/e2e/ParcoursRestaurationDepuisVigieChiroE2ETest.java
-fedac2dbfd14  src/test/java/fr/univ_amu/iut/e2e/ParcoursSitesVersPassageE2ETest.java
+3327e8785ef1  src/test/java/fr/univ_amu/iut/e2e/ParcoursSitesVersPassageE2ETest.java
 a30b6108b6e6  src/test/java/fr/univ_amu/iut/e2e/ParcoursSonsReferenceE2ETest.java
 fcbe8023fc7e  src/test/java/fr/univ_amu/iut/e2e/ParcoursValidationExpertE2ETest.java
 cc7e7d3e1cb5  src/test/java/fr/univ_amu/iut/e2e/ParcoursVerifierEchantillonnageE2ETest.java

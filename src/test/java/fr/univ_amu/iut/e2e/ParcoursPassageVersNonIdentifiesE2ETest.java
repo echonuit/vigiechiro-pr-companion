@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -30,7 +31,6 @@ import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -46,7 +46,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E de parcours** : l'écran **« Sons & validation »** d'un passage (source `ParPassage`) réunit
 /// désormais les observations Tadarida **et** les **séquences non identifiées** (sons présents sur disque
@@ -114,7 +113,11 @@ class ParcoursPassageVersNonIdentifiesE2ETest {
         // L'ouverture (SonsValidationController.ouvrirSur) charge la table hors du fil JavaFX
         // (occupation.occuper) : sans cette attente, la table est encore vide quand l'appelant lit son
         // contenu, un échec qui ne se produit que sur une machine lente, donc en CI.
-        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !table.getItems().isEmpty());
+        Attente.que(
+                () -> !table.getItems().isEmpty(),
+                "la table des observations se remplit : elle charge hors du fil JavaFX, et reste vide"
+                        + " un instant après l'ouverture",
+                5_000L);
         return table;
     }
 
