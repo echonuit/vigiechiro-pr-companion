@@ -32,7 +32,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -235,11 +234,10 @@ class ImportationClicImporterTest {
 
         // L'import doit aboutir : sinon le clic « ne fait rien ».
         WaitForAsyncUtils.waitForFxEvents();
-        boolean termine = attendreEtat(EtatImport.TERMINE);
-
-        assertThat(termine)
-                .as("après le clic, l'import doit atteindre l'état TERMINE (sinon « rien ne se passe »)")
-                .isTrue();
+        Attente.que(
+                () -> viewModel.etatProperty().get() == EtatImport.TERMINE,
+                "après le clic, l'import atteint TERMINE (sinon « rien ne se passe »)",
+                10_000L);
         assertThat(viewModel.resultatProperty().get())
                 .as("un import abouti expose son résultat")
                 .isNotNull();
@@ -289,7 +287,7 @@ class ImportationClicImporterTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         robot.interact(() -> robot.lookup("#boutonImporter").queryButton().fire());
-        assertThat(attendreEtat(EtatImport.TERMINE)).isTrue();
+        Attente.que(() -> viewModel.etatProperty().get() == EtatImport.TERMINE, "l'import atteint TERMINE", 10_000L);
         WaitForAsyncUtils.waitForFxEvents();
 
         // Les événements par fichier (relayés au fil JavaFX pendant l'import) ont rempli la table : une
@@ -326,13 +324,14 @@ class ImportationClicImporterTest {
 
         // 1er import : réussit.
         robot.interact(importer::fire);
-        assertThat(attendreEtat(EtatImport.TERMINE)).isTrue();
+        Attente.que(() -> viewModel.etatProperty().get() == EtatImport.TERMINE, "l'import atteint TERMINE", 10_000L);
 
         // 2e import du même quadruplet : refusé (R5). L'erreur doit rester visible.
         robot.interact(importer::fire);
-        assertThat(attendreEtat(EtatImport.ECHEC))
-                .as("ré-importer la même nuit doit échouer (unicité R5)")
-                .isTrue();
+        Attente.que(
+                () -> viewModel.etatProperty().get() == EtatImport.ECHEC,
+                "ré-importer la même nuit échoue (unicité R5)",
+                10_000L);
 
         WaitForAsyncUtils.waitForFxEvents();
         Label message = robot.lookup("#labelMessage").queryAs(Label.class);
@@ -362,7 +361,7 @@ class ImportationClicImporterTest {
             return true;
         });
         robot.interact(ecraser::fire);
-        assertThat(attendreEtat(EtatImport.TERMINE)).isTrue();
+        Attente.que(() -> viewModel.etatProperty().get() == EtatImport.TERMINE, "l'import atteint TERMINE", 10_000L);
 
         assertThat(confirmations)
                 .as("double confirmation avant l'écrasement destructif")
@@ -424,7 +423,7 @@ class ImportationClicImporterTest {
 
         controleur.confirmateur().definir(message -> true); // l'utilisateur assume le doublon
         robot.interact(robot.lookup("#boutonImporter").queryButton()::fire);
-        assertThat(attendreEtat(EtatImport.TERMINE)).isTrue();
+        Attente.que(() -> viewModel.etatProperty().get() == EtatImport.TERMINE, "l'import atteint TERMINE", 10_000L);
 
         assertThat(injector.getInstance(ServiceImport.class).nuitDejaImportee("1925492", "2026-04-22"))
                 .as("importer quand même → un second passage pour la même nuit")
@@ -456,7 +455,7 @@ class ImportationClicImporterTest {
         });
         WaitForAsyncUtils.waitForFxEvents();
         robot.interact(robot.lookup("#boutonImporter").queryButton()::fire);
-        assertThat(attendreEtat(EtatImport.TERMINE)).isTrue();
+        Attente.que(() -> viewModel.etatProperty().get() == EtatImport.TERMINE, "l'import atteint TERMINE", 10_000L);
     }
 
     /// Force la re-vérification du pré-contrôle R5 sur le n° 1 (toggle), désormais pris après l'import :
@@ -467,16 +466,6 @@ class ImportationClicImporterTest {
             viewModel.rattachement().numeroPassageProperty().set(1); // repris
         });
         WaitForAsyncUtils.waitForFxEvents();
-    }
-
-    private boolean attendreEtat(EtatImport attendu) {
-        try {
-            WaitForAsyncUtils.waitFor(
-                    10, TimeUnit.SECONDS, () -> viewModel.etatProperty().get() == attendu);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     private Path preparerCarteSD(Path dossier) throws IOException {

@@ -6,6 +6,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.SuiviProgression;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.GesteVisible;
@@ -15,8 +16,6 @@ import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -172,10 +171,10 @@ class ScenarioConnecteConnexionTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         // ─── S8-05 · l'avancement paraît DANS la modale ───────────────────────────────────────────
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> visible(robot, "#zoneProgression"),
-                "la progression n'a jamais paru dans la modale");
+                "la progression n'a jamais paru dans la modale",
+                APPARITION_SECONDES * 1000L);
 
         // On asserte AVANT de tenir l'écran. L'état est celui de l'instant où la progression paraît,
         // donc déterministe ; le maintien qui suit sert la caméra, pas l'assertion.
@@ -192,12 +191,12 @@ class ScenarioConnecteConnexionTest {
         Respiration.leTempsDeLire(robot);
 
         // ─── S8-06 · l'identité et le résumé, à la fin ────────────────────────────────────────────
-        attendre(
-                FIN_SECONDES,
+        Attente.que(
                 () -> !visible(robot, "#zoneProgression"),
                 "l'opération n'a pas fini dans le temps imparti. À lire comme « le compte de tournage est"
                         + " plus gros que ce banc ne le prévoit », pas comme un défaut du produit :"
-                        + " se connecter rejoue le rapatriement des nuits du compte");
+                        + " se connecter rejoue le rapatriement des nuits du compte",
+                FIN_SECONDES * 1000L);
         WaitForAsyncUtils.waitForFxEvents();
 
         // Ce que la synchro a fait, imprime plutot que suppose. Le resume ne porte que des
@@ -237,12 +236,12 @@ class ScenarioConnecteConnexionTest {
         GesteVisible.cliquer(robot, "#boutonFermer");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> visible(robot, "#bandeauIndicateurs"),
                 "le bandeau de compteurs n'est jamais apparu sur l'accueil. La connexion a pourtant"
                         + " synchronisé sites et taxons : si rien ne paraît, c'est le bandeau qui ne suit"
-                        + " pas la donnée, et non ce cas qui se trompe");
+                        + " pas la donnée, et non ce cas qui se trompe",
+                APPARITION_SECONDES * 1000L);
         Respiration.leTempsDeLire(robot);
 
         assertThat(pastilles(robot))
@@ -296,10 +295,10 @@ class ScenarioConnecteConnexionTest {
         GesteVisible.cliquer(robot, "#boutonConnecter");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> visible(robot, "#zoneProgression"),
-                "la progression n'a jamais paru dans la modale");
+                "la progression n'a jamais paru dans la modale",
+                APPARITION_SECONDES * 1000L);
 
         // Le premier relevé, pris au plus tôt : il sert de point de comparaison.
         double fractionInitiale = fraction(robot);
@@ -333,11 +332,11 @@ class ScenarioConnecteConnexionTest {
         // ─── S8-02 · la barre AVANCE, et son libellé nomme la nuit ───────────────────────────────
         // « Il ne reste pas figé » ne se constate pas sur UN instantané : une barre arrêtée et une
         // barre qui progresse s'y ressemblent. On compare donc DEUX relevés.
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> fraction(robot) > fractionInitiale,
                 "la barre n'a pas bougé entre deux relevés : elle est restée figée à sa valeur"
-                        + " d'ouverture, ce que la case S8-02 interdit explicitement");
+                        + " d'ouverture, ce que la case S8-02 interdit explicitement",
+                APPARITION_SECONDES * 1000L);
 
         assertThat(texte(robot, "#" + SuiviProgression.ID_MESSAGE))
                 .as("le libellé doit NOMMER la nuit en cours, sous la forme « Nuits k / N » que"
@@ -348,12 +347,12 @@ class ScenarioConnecteConnexionTest {
         // ─── S8-03 · l'estimation du temps restant ───────────────────────────────────────────────
         // « une fois l'avancement mesurable » : ProgressionOperation extrapole le restant depuis le
         // temps écoulé, donc elle ne peut rien annoncer au premier instant.
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> texte(robot, "#" + SuiviProgression.ID_MESSAGE).contains("restant"),
                 "aucune estimation du temps restant n'a paru dans le libellé d'avancement. Elle"
                         + " s'extrapole du temps écoulé : si elle manque, c'est que l'opération n'a jamais"
-                        + " été mesurable, et la case S8-03 n'a rien à montrer");
+                        + " été mesurable, et la case S8-03 n'a rien à montrer",
+                APPARITION_SECONDES * 1000L);
 
         assertThat(texte(robot, "#" + SuiviProgression.ID_MESSAGE))
                 .as("l'estimation s'ajoute au libellé sous la forme « … · ~X s restant » :"
@@ -365,22 +364,14 @@ class ScenarioConnecteConnexionTest {
 
         // Le geste se termine où l'opération se termine : on laisse la barre finir plutôt que de
         // couper le clip au milieu.
-        attendre(
-                FIN_SECONDES,
+        Attente.que(
                 () -> !visible(robot, "#zoneProgression"),
                 "l'opération n'a pas fini dans le temps imparti. À lire comme « le compte de tournage est"
-                        + " plus gros que ce banc ne le prévoit », pas comme un défaut du produit");
+                        + " plus gros que ce banc ne le prévoit », pas comme un défaut du produit",
+                FIN_SECONDES * 1000L);
         WaitForAsyncUtils.waitForFxEvents();
 
         Respiration.leTempsDeLire(robot);
-    }
-
-    private static void attendre(int secondes, Callable<Boolean> condition, String quoi) throws TimeoutException {
-        try {
-            WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, condition);
-        } catch (TimeoutException _) {
-            throw new TimeoutException(quoi + " (au bout de " + secondes + " s)");
-        }
     }
 
     /// L'avancement de la barre, ou -1 si elle n'est pas là.

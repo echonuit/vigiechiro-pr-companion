@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -165,11 +166,11 @@ class ScenarioImportNominalTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux : elle balaie le dossier hors du"
-                        + " fil JavaFX, et rien n'a paru dans le temps imparti");
+                        + " fil JavaFX, et rien n'a paru dans le temps imparti",
+                APPARITION_SECONDES * 1000L);
 
         // ─── S2-03 · le journal détecté, NOMMÉ ───────────────────────────────────────────────────
         assertThat(texte(robot, "#labelJournal"))
@@ -336,11 +337,11 @@ class ScenarioImportNominalTest {
         // CINQ des six cas portent sur ce qui se passe PENDANT l'opération. Attendre la fin puis
         // regarder ne dirait rien d'eux : la barre serait rangée, la table figée, le formulaire
         // dégelé. Le relevé se prend donc au vol, dès que la progression paraît.
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> visible(robot, "#zoneProgression"),
                 "la progression n'a jamais paru : l'import de six fichiers passe par une barre, et"
-                        + " sans elle les cinq cas de suivi n'ont rien à montrer");
+                        + " sans elle les cinq cas de suivi n'ont rien à montrer",
+                APPARITION_SECONDES * 1000L);
 
         // L'instant du relevé est celui où l'estimation EXISTE, et non le premier. `S2-13` dit « une
         // fois l'avancement mesurable » : elle s'extrapole du temps écoulé, donc elle ne peut rien
@@ -349,12 +350,12 @@ class ScenarioImportNominalTest {
         //
         // Attendre CE moment-là plutôt que de relever au plus tôt garde les cinq constats
         // contemporains, à un instant où les cinq peuvent exister.
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> texte(robot, "#labelProgression").contains("restant"),
                 "aucune estimation du temps restant n'a paru dans l'avancement. Elle s'extrapole du"
                         + " temps écoulé : si elle manque, c'est que l'opération n'a jamais été"
-                        + " mesurable, et S2-13 n'a rien à montrer");
+                        + " mesurable, et S2-13 n'a rien à montrer",
+                APPARITION_SECONDES * 1000L);
         AuVol releve = AuVol.prendre(robot);
 
         // ─── S2-12 · une barre DÉTERMINÉE, et non un rouet ───────────────────────────────────────
@@ -396,11 +397,11 @@ class ScenarioImportNominalTest {
         Respiration.leTempsDeLire(robot);
 
         // ─── S2-17 · le compte rendu de fin ──────────────────────────────────────────────────────
-        attendre(
-                FIN_SECONDES,
+        Attente.que(
                 () -> visible(robot, "#compteRenduChiffre"),
                 "l'import n'a pas rendu son compte rendu dans le temps imparti. À lire comme « la"
-                        + " carte est plus grosse que ce banc ne le prévoit », pas comme un défaut");
+                        + " carte est plus grosse que ce banc ne le prévoit », pas comme un défaut",
+                FIN_SECONDES * 1000L);
 
         assertThat(texte(robot, "#labelStatut") + " " + libellesDeLEcran(robot))
                 .as("la fin se DIT : depuis #2358 c'est la bande de compte rendu chiffré qui la porte,"
@@ -461,11 +462,11 @@ class ScenarioImportNominalTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux : le rattachement ne propose"
-                        + " rien tant qu'elle n'a pas lu la carte");
+                        + " rien tant qu'elle n'a pas lu la carte",
+                APPARITION_SECONDES * 1000L);
     }
 
     /// Combien de pastilles de la carte portent `couleur`.
@@ -527,15 +528,6 @@ class ScenarioImportNominalTest {
                 throw new AssertionError("l'import LIT une source : ce geste n'écrit aucun fichier");
             }
         };
-    }
-
-    private static void attendre(int secondes, java.util.concurrent.Callable<Boolean> condition, String siJamais)
-            throws TimeoutException {
-        try {
-            WaitForAsyncUtils.waitFor(secondes, java.util.concurrent.TimeUnit.SECONDS, condition);
-        } catch (TimeoutException jamais) {
-            throw new TimeoutException(siJamais);
-        }
     }
 
     private static boolean visible(FxRobot robot, String id) {

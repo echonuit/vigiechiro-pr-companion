@@ -559,6 +559,10 @@ class ScenarioModaleCarreTest {
 
     /// Le temps qu'un appel réseau prend, **seulement en séance filmée** : hors tournage, la suite ne
     /// paie pas la lisibilité des films.
+    ///
+    /// **Ce n'est pas une attente sur condition**, et elle ne rejoint donc pas [Attente] : c'est un
+    /// cadencement délibéré pour le film, qui n'observe rien. Le compte de #4847 la retenait parce
+    /// qu'il lisait le FICHIER et non la méthode.
     private static void attendreCommeLeReseau() throws InterruptedException {
         if (Seance.filmee()) {
             Thread.sleep(VERIFICATION_MS);

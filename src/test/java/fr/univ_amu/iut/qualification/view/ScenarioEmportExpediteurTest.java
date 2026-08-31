@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.importation.view.PreambuleImport;
 import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.model.dao.SelectionDao;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -35,7 +36,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
@@ -227,10 +227,10 @@ class ScenarioEmportExpediteurTest {
         Respiration.surLeMomentCle(robot);
         GesteVisible.cliquer(robot, "#boutonVerifier");
         WaitForAsyncUtils.waitForFxEvents();
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#tableSequences").tryQuery().isPresent(),
-                "l'écran de vérification ne s'est pas ouvert : sans lui, aucun des cas n'a de quoi se lire");
+                "l'écran de vérification ne s'est pas ouvert : sans lui, aucun des cas n'a de quoi se lire",
+                APPARITION_SECONDES * 1000L);
     }
 
     private QualificationController controleurDeLEcran() {
@@ -248,15 +248,6 @@ class ScenarioEmportExpediteurTest {
     /// test headless, et c'est la raison d'être du porteur injectable (#3197).
     private void definirSelecteur(FxRobot robot, SelecteurFichier selecteur) {
         controleurDeLEcran().gestesEmport().selecteur().definir(selecteur);
-    }
-
-    private static void attendre(int secondes, java.util.concurrent.Callable<Boolean> condition, String motif)
-            throws TimeoutException {
-        try {
-            WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, condition);
-        } catch (TimeoutException delai) {
-            throw new TimeoutException(motif);
-        }
     }
 
     private static SelecteurFichier selecteurQuiRepond(Path chemin) {

@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.importation.view.PreambuleImport;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -29,7 +30,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
 import javafx.scene.control.RadioButton;
@@ -109,11 +109,11 @@ class ScenarioSelectionEcouteTest {
         GesteVisible.cliquer(robot, "#boutonVerifier");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#tableSequences").tryQuery().isPresent(),
                 "l'écran de vérification ne s'est pas ouvert depuis le passage : c'est par sa carte que"
-                        + " l'observateur y arrive, et sans lui aucun des six cas n'a de quoi se lire");
+                        + " l'observateur y arrive, et sans lui aucun des six cas n'a de quoi se lire",
+                APPARITION_SECONDES * 1000L);
 
         // Le confirmateur est SUBSTITUÉ et ses questions capturées : `Alert.showAndWait()` fige TestFX.
         // Il refuse toujours, ce qui en fait un relevé SANS effet de bord - on peut donc l'interroger
@@ -223,10 +223,10 @@ class ScenarioSelectionEcouteTest {
         GesteVisible.cliquer(robot, "Annuler");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#curseurTaille").tryQuery().isEmpty(),
-                "« Annuler » n'a pas fermé la modale");
+                "« Annuler » n'a pas fermé la modale",
+                APPARITION_SECONDES * 1000L);
 
         ouvrirLaModale(robot);
 
@@ -258,11 +258,11 @@ class ScenarioSelectionEcouteTest {
         robot.push(KeyCode.ESCAPE);
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#curseurTaille").tryQuery().isEmpty(),
                 "`Échap` n'a pas fermé la modale : une modale dont on ne sort qu'à la souris piège"
-                        + " l'observateur au clavier (#1505)");
+                        + " l'observateur au clavier (#1505)",
+                APPARITION_SECONDES * 1000L);
 
         Respiration.leTempsDeLire(robot);
     }
@@ -279,10 +279,10 @@ class ScenarioSelectionEcouteTest {
         GesteVisible.cliquer(robot, modale(robot, "#boutonRegenerer"));
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#curseurTaille").tryQuery().isEmpty(),
-                "« Régénérer » n'a pas fermé la modale : elle a appliqué sans rendre la main");
+                "« Régénérer » n'a pas fermé la modale : elle a appliqué sans rendre la main",
+                APPARITION_SECONDES * 1000L);
 
         ouvrirLaModale(robot);
         assertThat(radio(robot, "#choixAleatoire").isSelected())
@@ -327,11 +327,11 @@ class ScenarioSelectionEcouteTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         AudioView vue = (AudioView) robot.lookup("#audioView").query();
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> vue.getAudioFile() != null,
                 "aucune séquence n'a été chargée dans la vue audio : sans fichier, « Lecture » n'a rien"
-                        + " à jouer et la progression ne peut pas être marquée");
+                        + " à jouer et la progression ne peut pas être marquée",
+                APPARITION_SECONDES * 1000L);
 
         GesteVisible.cliquer(robot, "#playButton");
         WaitForAsyncUtils.waitForFxEvents();
@@ -344,10 +344,10 @@ class ScenarioSelectionEcouteTest {
     private static void ouvrirLaModale(FxRobot robot) throws TimeoutException {
         GesteVisible.cliquer(robot, "#boutonPersonnaliser");
         WaitForAsyncUtils.waitForFxEvents();
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#curseurTaille").tryQuery().isPresent(),
-                "« Personnaliser… » n'a pas ouvert la modale de sélection d'écoute");
+                "« Personnaliser… » n'a pas ouvert la modale de sélection d'écoute",
+                APPARITION_SECONDES * 1000L);
     }
 
     /// Le nœud `id` de la MODALE, et non son homonyme du panneau.
@@ -399,14 +399,5 @@ class ScenarioSelectionEcouteTest {
         return noeud instanceof javafx.scene.control.Labeled libelle && libelle.getText() != null
                 ? libelle.getText()
                 : "";
-    }
-
-    private static void attendre(int secondes, java.util.concurrent.Callable<Boolean> condition, String siJamais)
-            throws TimeoutException {
-        try {
-            WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, condition);
-        } catch (TimeoutException jamais) {
-            throw new TimeoutException(siJamais);
-        }
     }
 }

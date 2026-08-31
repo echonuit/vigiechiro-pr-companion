@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.importation.view.PreambuleImport;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -26,7 +27,6 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.view.NavigationSites;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 import javafx.scene.Node;
@@ -112,11 +112,11 @@ class ScenarioDiagnosticPassageTest {
         GesteVisible.cliquer(robot, "#boutonDiagnostic");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#listeAnomalies").tryQuery().isPresent(),
                 "le diagnostic ne s'est pas ouvert depuis le passage : c'est par sa carte que"
-                        + " l'observateur y arrive, et sans l'écran aucun des six cas n'a de quoi se lire");
+                        + " l'observateur y arrive, et sans l'écran aucun des six cas n'a de quoi se lire",
+                APPARITION_SECONDES * 1000L);
 
         // ─── S2-34 · la courbe climatique, et son axe GRADUÉ EN HEURES ───────────────────────────
         XYChart<?, ?> graphe = robot.lookup("#grapheClimat").queryAs(XYChart.class);
@@ -263,14 +263,5 @@ class ScenarioDiagnosticPassageTest {
     private static String texte(FxRobot robot, String id) {
         Node noeud = robot.lookup(id).tryQuery().orElse(null);
         return noeud instanceof Labeled libelle && libelle.getText() != null ? libelle.getText() : "";
-    }
-
-    private static void attendre(int secondes, java.util.concurrent.Callable<Boolean> condition, String siJamais)
-            throws TimeoutException {
-        try {
-            WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, condition);
-        } catch (TimeoutException jamais) {
-            throw new TimeoutException(siJamais);
-        }
     }
 }

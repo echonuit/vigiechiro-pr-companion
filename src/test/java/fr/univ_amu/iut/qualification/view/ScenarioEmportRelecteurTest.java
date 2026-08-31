@@ -19,6 +19,7 @@ import fr.univ_amu.iut.passage.model.ManifestePaquet;
 import fr.univ_amu.iut.passage.model.OuvertureDePaquet;
 import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.model.dao.SelectionDao;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -36,7 +37,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -180,10 +180,10 @@ class ScenarioEmportRelecteurTest {
         Respiration.surLeMomentCle(robot);
         GesteVisible.cliquer(robot, "#boutonVerifier");
         WaitForAsyncUtils.waitForFxEvents();
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#tableSequences").tryQuery().isPresent(),
-                "l'écran de vérification ne s'est pas ouvert : sans lui, aucun des trois cas n'a de quoi se lire");
+                "l'écran de vérification ne s'est pas ouvert : sans lui, aucun des trois cas n'a de quoi se lire",
+                APPARITION_SECONDES * 1000L);
     }
 
     private Long passageCourant() {
@@ -206,15 +206,6 @@ class ScenarioEmportRelecteurTest {
 
     private void definirSelecteur(FxRobot robot, SelecteurFichier selecteur) {
         controleurDeLEcran().gestesEmport().selecteur().definir(selecteur);
-    }
-
-    private static void attendre(int secondes, java.util.concurrent.Callable<Boolean> condition, String motif)
-            throws TimeoutException {
-        try {
-            WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, condition);
-        } catch (TimeoutException delai) {
-            throw new TimeoutException(motif);
-        }
     }
 
     private static SelecteurFichier selecteur(Path chemin) {

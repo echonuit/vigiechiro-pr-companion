@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.importation.view.PreambuleImport;
+import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -36,7 +37,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
 import javafx.scene.chart.NumberAxis;
@@ -148,10 +148,10 @@ class ScenarioCourbeActiviteTest {
         GesteVisible.cliquer(robot, "#boutonActivite");
         WaitForAsyncUtils.waitForFxEvents();
 
-        attendre(
-                APPARITION_SECONDES,
+        Attente.que(
                 () -> robot.lookup("#grapheActivite").query().isVisible(),
-                "la courbe d'activité ne s'est pas ouverte : sans elle, aucun des six cas n'a d'écran");
+                "la courbe d'activité ne s'est pas ouverte : sans elle, aucun des six cas n'a d'écran",
+                APPARITION_SECONDES * 1000L);
 
         XYChart<Number, Number> courbe = courbe(robot);
 
@@ -335,14 +335,5 @@ class ScenarioCourbeActiviteTest {
                 .filter(Node::isVisible)
                 .map(Object::toString)
                 .toList();
-    }
-
-    private static void attendre(int secondes, java.util.concurrent.Callable<Boolean> condition, String siJamais)
-            throws TimeoutException {
-        try {
-            WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, condition);
-        } catch (TimeoutException jamais) {
-            throw new TimeoutException(siJamais);
-        }
     }
 }

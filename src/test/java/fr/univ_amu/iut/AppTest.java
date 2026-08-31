@@ -4,9 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.TailleOuverture;
+import fr.univ_amu.iut.recette.Attente;
 import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
@@ -163,15 +162,12 @@ class AppTest {
     /// dépôt ne laisse donc le Stage en dimensionnement explicite ; c'est la mesure qui partait trop
     /// tôt.
     private void attendreLaMiseEnPage(double plancher) {
-        try {
-            WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> hauteurDuContenu() > plancher);
-        } catch (TimeoutException expiration) {
-            throw new AssertionError(
-                    "la scène de 40 lignes n'a pas dépassé " + plancher + " en 5 s : contenu "
-                            + hauteurDuContenu() + ". Ce n'est pas un Stage figé, c'est une mise en page"
-                            + " qui n'a pas eu lieu.",
-                    expiration);
-        }
+        Attente.que(
+                () -> hauteurDuContenu() > plancher,
+                () -> "la scène de 40 lignes n'a pas dépassé " + plancher + " : contenu "
+                        + hauteurDuContenu() + ". Ce n'est pas un Stage figé, c'est une mise en page"
+                        + " qui n'a pas eu lieu.",
+                5_000L);
     }
 
     /// Ce que le rouge doit dire, et que « 600 n'est pas supérieur à 600 » ne dit pas (#4504).

@@ -22,10 +22,9 @@ import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
+import fr.univ_amu.iut.recette.Attente;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -41,7 +40,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.WaitForAsyncUtils;
 
 /// Test E2E de **propagation d'une vérification** : **une seule** vérification, faite par l'interface,
 /// doit se refléter sur **toutes** les surfaces qui l'affichent, au fur et à mesure qu'on dépile la
@@ -150,7 +148,7 @@ class RetourApresVerificationE2ETest {
         // On attend donc que l'écran soit CHARGÉ - un statut, quel qu'il soit - avant d'affirmer
         // lequel. Attendre la valeur attendue rendrait l'assertion tautologique : elle cesserait de
         // pouvoir refuser, ce qui est exactement le vert creux qu'on cherche à éviter.
-        attendre("le statut du passage s'affiche", () -> !lblStatut.getText().isEmpty());
+        Attente.que(() -> !lblStatut.getText().isEmpty(), "le statut du passage s'affiche", 10_000L);
         assertThat(lblStatut.getText()).isEqualTo(StatutWorkflow.TRANSFORME.libelle());
         assertThat(lblVerdict.getText()).isEqualTo("non saisi");
 
@@ -162,12 +160,13 @@ class RetourApresVerificationE2ETest {
         // encore en vol : celui-ci atterrit ensuite et **écrase** le verdict qu'on venait de choisir
         // (`verdictVm.appliquer(...)` réapplique l'état lu en base). Rien n'est alors enregistré, et le
         // passage reste « Transformé » - un échec qui ne se produit que sur une machine lente, donc en CI.
-        attendre(
-                "M-Qualification a chargé ses séquences",
+        Attente.que(
                 () -> !robot.lookup("#tableSequences")
                         .queryAs(TableView.class)
                         .getItems()
-                        .isEmpty());
+                        .isEmpty(),
+                "M-Qualification a chargé ses séquences",
+                10_000L);
 
         robot.interact(robot.lookup("#boutonOk").queryAs(Button.class)::fire);
         robot.interact(robot.lookup("#boutonEnregistrer").queryAs(Button.class)::fire);
@@ -180,27 +179,12 @@ class RetourApresVerificationE2ETest {
         // vaille ce qu'on espère. Un rafraîchissement qui poserait le mauvais statut fait toujours
         // rougir l'assertion qui suit ; un rafraîchissement qui n'arrive jamais fait rougir l'attente,
         // et celle-ci dit ce qu'elle attendait.
-        attendre(
+        Attente.que(
+                () -> !StatutWorkflow.TRANSFORME.libelle().equals(lblStatut.getText()),
                 "M-Passage se rafraîchit après le retour",
-                () -> !StatutWorkflow.TRANSFORME.libelle().equals(lblStatut.getText()));
+                10_000L);
         assertThat(lblStatut.getText()).isEqualTo(StatutWorkflow.VERIFIE.libelle());
         assertThat(lblVerdict.getText()).isEqualTo(Verdict.OK.libelle());
-    }
-
-    /// Attend une condition d'écran, et dit ce qu'elle attendait quand elle expire.
-    ///
-    /// `WaitForAsyncUtils.waitFor` lève une `TimeoutException` **nue**. Le lecteur d'un journal de CI
-    /// n'apprend alors ni ce qu'on attendait ni où le parcours s'est arrêté, quand c'est exactement ce
-    /// qui départage une lenteur d'un défaut (ADR 2213 : un dispositif qui ne peut pas conclure
-    /// rapporte ce qu'il a vu).
-    private static void attendre(String ceQuOnAttend, Callable<Boolean> condition) throws TimeoutException {
-        try {
-            WaitForAsyncUtils.waitFor(10, TimeUnit.SECONDS, condition);
-        } catch (TimeoutException expiration) {
-            TimeoutException dit = new TimeoutException("attendu en vain pendant 10 s : " + ceQuOnAttend);
-            dit.initCause(expiration);
-            throw dit;
-        }
     }
 
     private static fr.univ_amu.iut.multisite.model.LignePassage ligneMultisite(TableView<?> table) {

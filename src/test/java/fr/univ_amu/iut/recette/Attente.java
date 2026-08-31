@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// **Attendre qu'une condition devienne vraie**, avant d'affirmer quoi que ce soit dessus.
@@ -66,11 +67,23 @@ public final class Attente {
     /// La même, avec un délai choisi. Utile aux bancs qui savent leur attente courte, et aux témoins
     /// de cette classe, qui ont besoin d'expirer vite.
     public static void que(BooleanSupplier condition, String ceQuOnAttend, long delaiMs) {
+        que(condition, () -> ceQuOnAttend, delaiMs);
+    }
+
+    /// La même, dont le message se **construit à l'expiration** plutôt qu'avant d'attendre.
+    ///
+    /// Un message `String` est évalué avant l'attente : un banc qui veut dire **ce qu'il a observé**
+    /// rapporterait alors la valeur d'avant, en faisant croire que rien n'a bougé. `AppTest` tenait
+    /// cette particularité en privé, et disait la hauteur atteinte, sans quoi deux causes distinctes
+    /// rendent le même chiffre et le journal de CI ne permet pas de trancher (#4504, #4847).
+    ///
+    /// @param ceQuOnAttend appelé **seulement** si l'attente expire
+    public static void que(BooleanSupplier condition, Supplier<String> ceQuOnAttend, long delaiMs) {
         try {
             WaitForAsyncUtils.waitFor(delaiMs, TimeUnit.MILLISECONDS, condition::getAsBoolean);
         } catch (TimeoutException expiration) {
             throw new AssertionError(
-                    "attendu en vain pendant " + delaiMs + " ms : " + ceQuOnAttend
+                    "attendu en vain pendant " + delaiMs + " ms : " + ceQuOnAttend.get()
                             + ". Ce n'est pas le code qui a tort, c'est ce que le banc attendait qui"
                             + " n'a pas eu lieu.",
                     expiration);
