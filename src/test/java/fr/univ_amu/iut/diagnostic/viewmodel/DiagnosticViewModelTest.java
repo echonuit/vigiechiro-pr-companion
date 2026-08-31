@@ -113,28 +113,47 @@ class DiagnosticViewModelTest {
     @Test
     @DisplayName("#548 : cohérence horaires disponible → fenêtre nocturne exposée, sans alerte si tout est nocturne")
     void coherence_horaires_nominale() {
-        CoherenceHoraire coherence =
-                new CoherenceHoraire(true, LocalTime.of(21, 58), LocalTime.of(5, 48), false, false);
+        CoherenceHoraire coherence = new CoherenceHoraire(
+                true,
+                LocalTime.of(21, 58),
+                LocalTime.of(5, 48),
+                LocalTime.of(21, 28),
+                LocalTime.of(6, 18),
+                LocalTime.of(21, 28),
+                LocalTime.of(6, 18),
+                CoherenceHoraire.Couverture.INFORMATION);
         when(service.diagnostiquer(ID_PASSAGE)).thenReturn(diagnostic(serie(), 43.5, 5.4, coherence));
 
         viewModel.ouvrirSur(ID_PASSAGE);
 
         assertThat(viewModel.coherenceHoraireDisponibleProperty().get()).isTrue();
         assertThat(viewModel.fenetreNuitProperty().get()).contains("21:58").contains("05:48");
-        assertThat(viewModel.alerteHorsNuitProperty().get()).isEqualTo(RetourOperation.AUCUN);
+        // Une nuit qui couvre la fenêtre du protocole reçoit une INFORMATION, et non le silence :
+        // le protocole est un plancher, et le dépasser est un fait qu'on rapporte sans en faire un
+        // défaut. C'est ce que #4988 devra rendre visuellement distinct d'un avertissement.
+        assertThat(viewModel.alerteHorsNuitProperty().get().severite()).isEqualTo(Severite.INFO);
+        assertThat(viewModel.alerteHorsNuitProperty().get().texte()).contains("couvre la fenêtre du protocole");
     }
 
     @Test
     @DisplayName("#548 : démarrage et arrêt hors nuit → une alerte « hors nuit » est produite")
     void coherence_horaires_hors_nuit() {
-        CoherenceHoraire coherence = new CoherenceHoraire(true, LocalTime.of(21, 58), LocalTime.of(5, 48), true, true);
+        CoherenceHoraire coherence = new CoherenceHoraire(
+                true,
+                LocalTime.of(21, 58),
+                LocalTime.of(5, 48),
+                LocalTime.of(21, 28),
+                LocalTime.of(6, 18),
+                LocalTime.of(22, 30),
+                LocalTime.of(5, 30),
+                CoherenceHoraire.Couverture.AVERTISSEMENT);
         when(service.diagnostiquer(ID_PASSAGE)).thenReturn(diagnostic(serie(), 43.5, 5.4, coherence));
 
         viewModel.ouvrirSur(ID_PASSAGE);
 
         assertThat(viewModel.alerteHorsNuitProperty().get().texte())
-                .contains("Hors nuit")
-                .contains("diurne");
+                .contains("ne couvre pas")
+                .contains("protocole");
         // #2050 : la sévérité est portée par la donnée, plus par la classe CSS ni le FontIcon figés du FXML.
         assertThat(viewModel.alerteHorsNuitProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
     }

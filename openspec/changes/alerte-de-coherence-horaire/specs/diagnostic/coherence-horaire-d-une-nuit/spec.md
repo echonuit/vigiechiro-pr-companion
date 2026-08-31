@@ -38,25 +38,6 @@ exacte et une plage plus étroite.
 - **WHEN** l'enregistrement finit 10 minutes après le lever du soleil
 - **THEN** le système rend le niveau **avertissement**, et nomme la borne non couverte
 
-### Requirement: Une interruption consignée est plus grave qu'une borne non couverte
-
-Quand le journal du capteur consigne que la nuit ne s'est pas refermée normalement, le système SHALL
-rendre un niveau de gravité **supérieure** à celui d'une borne non couverte, et SHALL le distinguer
-de celle-ci dans ce qu'il affiche.
-
-Les deux constats SHALL pouvoir coexister : une nuit peut à la fois manquer une borne et avoir été
-interrompue.
-
-*Vérifié par* : cas unitaires sur un journal portant une nuit refermée, une nuit interrompue, et une
-nuit à la fois interrompue et trop courte.
-
-#### Scenario: Une nuit interrompue en son milieu
-
-- **WHEN** la plage couvre la fenêtre exigée, et le journal du capteur consigne que la nuit ne s'est
-  pas refermée normalement
-- **THEN** le système rend le niveau **avertissement de gravité supérieure**, et dit que
-  l'enregistrement a été interrompu
-
 ### Requirement: Ce que le système ne peut pas savoir, il ne l'affirme pas
 
 Le système SHALL déduire l'interruption du **journal du capteur** seul, et SHALL NOT l'inférer d'un
@@ -65,6 +46,13 @@ ressemblent, et aucune mesure disponible ne les sépare.
 
 Le système SHALL NOT présenter l'absence d'avertissement comme une preuve que la nuit est entière, le
 journal du capteur étant circulaire et pouvant avoir perdu la trace d'une interruption.
+
+**Le niveau d'interruption est reporté, et ce report est une décision.** La réalisation a montré que
+la complétude d'une nuit, calculée à l'import par `CycleAcquisition`, n'est **persistée nulle part** :
+le diagnostic s'ouvre plus tard, sur un passage en base, et n'a aucun moyen de l'apprendre. Livrer le
+troisième niveau demanderait d'abord de persister cette donnée, ce qui est un travail à soi seul et
+rejoint le sujet du lot #4990. En attendant, le système SHALL NOT feindre de savoir : il ne rend que
+ce que les horaires disent.
 
 *Vérifié par* : relecture humaine de la prose affichée, et un cas unitaire montrant qu'une longue
 absence de fichiers sans mention au journal ne déclenche aucun avertissement.

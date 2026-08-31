@@ -2,6 +2,7 @@ package fr.univ_amu.iut.diagnostic.model;
 
 import fr.univ_amu.iut.commun.model.EphemerideSolaire;
 import fr.univ_amu.iut.commun.model.FuseauDuSite;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -25,6 +26,15 @@ public final class AnalyseCoherenceHoraire {
     /// ([FuseauDuSite]) parce que le **chemin d'écriture** vers la plateforme en avait besoin et
     /// employait, lui, le fuseau de la machine (#3406).
     private static final ZoneId FUSEAU_SITE = FuseauDuSite.ZONE;
+
+    /// La marge que le protocole Vigie-Chiro Point Fixe exige de part et d'autre de la nuit :
+    /// commencer **au moins** 30 minutes avant le coucher, finir **au moins** 30 minutes après le
+    /// lever.
+    ///
+    /// Ce n'est pas une tolérance et cela ne se règle pas. Une tolérance est une marge d'erreur qu'on
+    /// s'accorde ; ceci est ce que le programme demande, et le nommer autrement inviterait à
+    /// l'ajuster (#4987).
+    private static final Duration MARGE_DU_PROTOCOLE = Duration.ofMinutes(30);
 
     private AnalyseCoherenceHoraire() {}
 
@@ -62,16 +72,33 @@ public final class AnalyseCoherenceHoraire {
             Instant demarrage = ZonedDateTime.of(nuit, debut, FUSEAU_SITE).toInstant();
             Instant arret = ZonedDateTime.of(jourFin, fin, FUSEAU_SITE).toInstant();
 
-            boolean demarrageHorsNuit = demarrage.isBefore(coucher);
-            boolean arretHorsNuit = arret.isAfter(lever);
+            // La fenêtre EXIGÉE, et non la nuit astronomique : le protocole demande de déborder de
+            // part et d'autre, et c'est ce débordement qu'il faut couvrir.
+            Instant debutExige = coucher.minus(MARGE_DU_PROTOCOLE);
+            Instant finExigee = lever.plus(MARGE_DU_PROTOCOLE);
+
             return new CoherenceHoraire(
                     true,
                     coucher.atZone(FUSEAU_SITE).toLocalTime(),
                     lever.atZone(FUSEAU_SITE).toLocalTime(),
-                    demarrageHorsNuit,
-                    arretHorsNuit);
+                    debutExige.atZone(FUSEAU_SITE).toLocalTime(),
+                    finExigee.atZone(FUSEAU_SITE).toLocalTime(),
+                    debut,
+                    fin,
+                    couverture(demarrage, arret, debutExige, finExigee));
         } catch (DateTimeParseException horodatageInvalide) {
             return CoherenceHoraire.indisponible();
         }
+    }
+
+    /// Ce que les horaires disent de la fenêtre exigée : couverte, ou pas couverte.
+    ///
+    /// Aucun seuil en minutes n'intervient. La question n'est pas « de combien s'écarte-t-on d'une
+    /// cible » mais « la fenêtre est-elle couverte », et un écart de dix secondes du bon côté est un
+    /// dépassement comme un autre.
+    private static CoherenceHoraire.Couverture couverture(
+            Instant demarrage, Instant arret, Instant debutExige, Instant finExigee) {
+        boolean couverte = !demarrage.isAfter(debutExige) && !arret.isBefore(finExigee);
+        return couverte ? CoherenceHoraire.Couverture.INFORMATION : CoherenceHoraire.Couverture.AVERTISSEMENT;
     }
 }

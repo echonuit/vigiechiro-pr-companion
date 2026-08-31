@@ -1,14 +1,12 @@
 ## 1. Le modèle dit le protocole (lot #4987)
 
-- [ ] 1.1 Cas rouge : un démarrage 30 min AVANT le coucher ne doit signaler aucun défaut, il en signale un aujourd'hui
-- [ ] 1.2 Cas rouge : un démarrage 30 min APRÈS le coucher doit signaler un avertissement, il n'en signale aucun aujourd'hui
-- [ ] 1.3 Le niveau remplace les deux booléens `demarrageHorsNuit` et `arretHorsNuit` de `CoherenceHoraire`
-- [ ] 1.4 La marge de 30 minutes devient une constante nommée du protocole, jamais un réglage
-- [ ] 1.5 `CoherenceHoraire` porte la plage exigée et la plage effective
-- [ ] 1.6 La javadoc cesse d'énoncer la règle inversée, qui est la prémisse d'où vient le défaut
-- [ ] 1.7 Le troisième niveau se lit sur `CycleAcquisition`, jamais sur les horodatages des WAV
-- [ ] 1.8 Cas des deux constats cumulés : une nuit à la fois trop courte et interrompue
-- [ ] 1.9 Mutation de chaque prédicat : inverser une borne doit faire rougir son cas, et lui seul
+- [x] 1.1 Cas rouge : un démarrage 30 min AVANT le coucher ne doit signaler aucun défaut, il en signale un aujourd'hui
+- [x] 1.2 Cas rouge : un démarrage 30 min APRÈS le coucher doit signaler un avertissement, il n'en signale aucun aujourd'hui
+- [x] 1.3 Le niveau remplace les deux booléens `demarrageHorsNuit` et `arretHorsNuit` de `CoherenceHoraire`
+- [x] 1.4 La marge de 30 minutes devient une constante nommée du protocole, jamais un réglage
+- [x] 1.5 `CoherenceHoraire` porte la plage exigée et la plage effective
+- [x] 1.6 La javadoc cesse d'énoncer la règle inversée, qui est la prémisse d'où vient le défaut
+- [x] 1.7 Mutation de chaque prédicat : inverser une borne doit faire rougir son cas, et lui seul
 
 ## 2. Les deux surfaces rendent le même verdict (lot #4988)
 
@@ -26,7 +24,11 @@
 - [ ] 3.3 `E6` porte ce qui a été livré, à la place de son constat de manque
 - [ ] 3.4 Recherche sur tout le corpus : plus aucune occurrence ne présente « démarrage avant le coucher » comme un défaut, le zéro confirmé motif par motif
 
-## 4. La décision est écrite (passe 11 de la clôture)
+## 4. Ce que ce changement ne livre pas
 
-- [ ] 4.1 ADR : le protocole est un plancher, et ce qu'on ne peut pas savoir ne se décide pas
-- [ ] 4.2 L'ADR nomme son dispositif de vérification, et la mesure qui a écarté la détection par silences
+- [x] 4.1 Le niveau d'interruption est reporté : la complétude d'une nuit n'est persistée nulle part, et le diagnostic ne peut pas la retrouver. Lot #5030 ouvert pour la persister, à jouer après #4990
+
+## 5. La décision est écrite (passe 11 de la clôture)
+
+- [ ] 5.1 ADR : le protocole est un plancher, et ce qu'on ne peut pas savoir ne se décide pas
+- [ ] 5.2 L'ADR nomme son dispositif de vérification, et la mesure qui a écarté la détection par silences

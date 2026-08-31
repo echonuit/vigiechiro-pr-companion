@@ -34,7 +34,15 @@ class DiagnostiquerTest {
                 5.4,
                 LocalDateTime.of(2026, 6, 23, 8, 0),
                 8.5,
-                new CoherenceHoraire(true, LocalTime.of(21, 58), LocalTime.of(5, 48), true, false));
+                new CoherenceHoraire(
+                        true,
+                        LocalTime.of(21, 58),
+                        LocalTime.of(5, 48),
+                        LocalTime.of(21, 28),
+                        LocalTime.of(6, 18),
+                        LocalTime.of(22, 30),
+                        LocalTime.of(6, 18),
+                        CoherenceHoraire.Couverture.AVERTISSEMENT));
     }
 
     private static Diagnostic diagnosticSansReleve() {
@@ -62,7 +70,7 @@ class DiagnostiquerTest {
                 .contains("2 mesures T°/hygrométrie")
                 .contains("8,5 °C")
                 .contains("nuit 21:58 → 05:48")
-                .contains("hors nuit")
+                .contains("la fenêtre du protocole n'est pas couverte")
                 .contains("GPS du point")
                 .contains("disponible")
                 .contains("Réveil non programmé à 03:12")
@@ -90,7 +98,7 @@ class DiagnostiquerTest {
                 .containsEntry("temperatureDebutNuitCelsius", 8.5)
                 .containsEntry("coherenceHoraireDisponible", true)
                 .containsEntry("coucherSoleil", "21:58")
-                .containsEntry("horsNuit", true)
+                .containsEntry("couvertureDuProtocole", "AVERTISSEMENT")
                 .containsEntry("gpsDisponible", true);
         assertThat(objet.get("anomalies")).isEqualTo(List.of("Réveil non programmé à 03:12"));
         // Sérialisation JSON des tableaux (via FormatJson).

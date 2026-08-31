@@ -412,6 +412,14 @@ class DiagnosticVueIntegrationTest {
                 5.4,
                 LocalDateTime.of(2026, 6, 23, 8, 0),
                 8.5,
-                new CoherenceHoraire(true, LocalTime.of(21, 58), LocalTime.of(5, 48), false, false));
+                new CoherenceHoraire(
+                        true,
+                        LocalTime.of(21, 58),
+                        LocalTime.of(5, 48),
+                        LocalTime.of(21, 28),
+                        LocalTime.of(6, 18),
+                        LocalTime.of(21, 20),
+                        LocalTime.of(6, 25),
+                        CoherenceHoraire.Couverture.INFORMATION));
     }
 }

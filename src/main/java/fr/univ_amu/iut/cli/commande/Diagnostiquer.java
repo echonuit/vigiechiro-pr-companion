@@ -125,7 +125,13 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
         }
         String fenetre =
                 "nuit " + HEURE.format(coherence.coucherSoleil()) + " → " + HEURE.format(coherence.leverSoleil());
-        return coherence.aUnEcart() ? fenetre + ", hors nuit (une partie diurne)" : fenetre + ", cohérent";
+        // Restitution minimale, posée par #4987 : la plage exigée et la plage enregistrée arrivent
+        // avec #4988, qui les livre sur les deux surfaces ensemble.
+        return switch (coherence.couverture()) {
+            case AVERTISSEMENT -> fenetre + ", la fenêtre du protocole n'est pas couverte";
+            case INFORMATION -> fenetre + ", fenêtre du protocole couverte et dépassée";
+            case INDISPONIBLE -> fenetre;
+        };
     }
 
     /// Ajoute `  <libellé aligné> : <valeur>` (libellé cadré à 19 caractères) suivi d'un retour ligne.
@@ -146,7 +152,9 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
         objet.put("coherenceHoraireDisponible", coherence.disponible());
         objet.put("coucherSoleil", coherence.disponible() ? HEURE.format(coherence.coucherSoleil()) : null);
         objet.put("leverSoleil", coherence.disponible() ? HEURE.format(coherence.leverSoleil()) : null);
-        objet.put("horsNuit", coherence.disponible() && coherence.aUnEcart());
+        objet.put(
+                "couvertureDuProtocole",
+                coherence.disponible() ? coherence.couverture().name() : null);
         objet.put("gpsDisponible", d.coordonneesGpsDisponibles());
         objet.put("anomalies", d.anomalies().anomalies());
         objet.put("evenements", d.anomalies().evenements());
