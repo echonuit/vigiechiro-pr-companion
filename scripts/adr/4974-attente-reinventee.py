@@ -30,10 +30,13 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte  # noqa: E402
+from _commun import TESTS_ANCRES, rapporte  # noqa: E402
 
 ADR = "4974"
-RACINE = pathlib.Path(__file__).resolve().parents[2] / "src" / "test" / "java"
+
+# Le corpus s IMPORTE, il ne se recopie pas : un chemin ecrit en clair rend le garde invisible a la
+# liste que `verifie_corpus_declare.py` derive de ce que chacun importe (ADR 4586).
+RACINE = TESTS_ANCRES
 
 # `Attente` EST l attente partagee : elle appelle `waitFor` par construction.
 EXEMPTES = {"Attente.java"}
