@@ -236,18 +236,25 @@ jobs:
             attendus=0
           elif [ "${SESSION}" = "toutes" ]; then
             classes=$(awk -F'\t' '{print $3}' "${derive}" | tr ',' '\n' | sort -u | paste -sd,)
-            attendus=$(awk -F'\t' '{s += $2} END {print s + 0}' "${derive}")
+            cas_attendus=$(awk -F'\t' '$4 != "" {print $4}' "${derive}" | paste -sd,)
           else
             classes=$(awk -F'\t' -v s="${SESSION}" '$1 == s {print $3}' "${derive}")
-            attendus=$(awk -F'\t' -v s="${SESSION}" '$1 == s {print $2}' "${derive}")
+            cas_attendus=$(awk -F'\t' -v s="${SESSION}" '$1 == s {print $4}' "${derive}")
             # Une session SANS cas cité n'est pas une panne du dispositif : c'est l'état du
             # dépôt, et la plupart des sessions y sont encore. On le dit et on s'arrête, plutôt que
             # de lancer un tournage qui rendrait zéro clip et un garde qui ne saurait quoi conclure.
             [ -n "${classes}" ] || { echo "::error::${SESSION} ne cite aucun cas : il n'y a rien à filmer."; exit 1; }
           fi
 
+          # La QUATRIÈME colonne, et non la deuxième : celle-ci compte les cas cités, connectés
+          # compris, alors que les scénarios `recette-connectee` sont exclus du build sans jeton. Un
+          # tournage non connecté se voyait donc demander cinq cas qu'il ne pouvait pas filmer, et le
+          # train a cessé de verser ses clips Java sans que la release le dise (#5012).
+          attendus=$(printf '%s\n' "${cas_attendus}" | tr ',' '\n' | sed '/^$/d' | sort -u | wc -l)
+
           echo "classes=${classes}" >> "${GITHUB_OUTPUT}"
           echo "attendus=${attendus}" >> "${GITHUB_OUTPUT}"
+          echo "cas_attendus=${cas_attendus}" >> "${GITHUB_OUTPUT}"
           {
             echo "## Tournage ${SESSION} sur ${{ needs.choisir.outputs.runner }}"
             echo
@@ -338,6 +345,7 @@ jobs:
         env:
           SESSION: ${{ inputs.session }}
           ATTENDUS: ${{ steps.liste.outputs.attendus }}
+          CAS_ATTENDUS: ${{ steps.liste.outputs.cas_attendus }}
           CONNECTE: ${{ inputs.connecte }}
         run: |
           set -uo pipefail
@@ -405,6 +413,21 @@ jobs:
               exit 1
             }
             exit 0
+          fi
+
+          # Le refus NOMME ce qui manque. Rendre deux nombres obligeait à refaire le calcul à la
+          # main pour savoir quoi corriger, et c'est la moitié du remède de #5012.
+          if [ "${obtenus}" -ne "${ATTENDUS}" ] && [ "${CONNECTE}" != "true" ]; then
+            chmod +x .github/scripts/cas-manquants-du-tournage.sh
+            absents=$(./.github/scripts/cas-manquants-du-tournage.sh "${CAS_ATTENDUS}" "${index}" || true)
+            if [ -n "${absents}" ]; then
+              echo "::error::cas non filmés : $(printf '%s' "${absents}" | tr '\n' ' ')"
+              {
+                echo
+                echo "### Cas non filmés"
+                printf '%s\n' "${absents}" | sed 's/^/- /'
+              } >> "${GITHUB_STEP_SUMMARY}"
+            fi
           fi
 
           [ "${obtenus}" -eq "${ATTENDUS}" ] || {
