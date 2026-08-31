@@ -257,8 +257,16 @@ public class ReactivationModaleController {
         }
     }
 
-    private static String question(Path dossierSource, boolean horsEspaceDeTravail) {
-        String ou = "Des fichiers déjà transformés ont été trouvés dans « " + dossierSource.getFileName() + " ». ";
+    /// La phrase qui nomme le dossier trouvé. Portée paquet : la composition est pure, et l'éprouver
+    /// par la modale coûterait un banc JavaFX pour une concaténation.
+    ///
+    /// Une racine de volume n'a pas de dernier segment. Sans garde, la concaténation rendait le texte
+    /// « null », car `getFileName()` y vaut `null` : la javadoc de `CandidatsReactivation` prévoit
+    /// pourtant qu'on désigne « une carte SD entière » (#3461).
+    static String question(Path dossierSource, boolean horsEspaceDeTravail) {
+        Path nom = dossierSource.getFileName();
+        String ou =
+                "Des fichiers déjà transformés ont été trouvés dans « " + (nom != null ? nom : dossierSource) + " ». ";
         return horsEspaceDeTravail
                 ? ou
                         + "Ce dossier est en dehors de votre dossier de travail : ces fichiers sont les vôtres."

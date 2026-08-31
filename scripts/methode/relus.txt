@@ -497,7 +497,7 @@ e781d38ddb7a  src/main/java/fr/univ_amu/iut/commun/view/ActionOuvrirReglages.jav
 4072fc5afc7b  src/main/java/fr/univ_amu/iut/commun/view/ActionSauvegarder.java
 d7761a80649a  src/main/java/fr/univ_amu/iut/commun/view/ActionSauvegarderComplet.java
 bed2b87ec0d4  src/main/java/fr/univ_amu/iut/commun/view/ActionVigieChiroPassage.java
-a7015ca11bbf  src/main/java/fr/univ_amu/iut/commun/view/ActionsSauvegarde.java
+1ec6d34d38e3  src/main/java/fr/univ_amu/iut/commun/view/ActionsSauvegarde.java
 f5e3b3a4a832  src/main/java/fr/univ_amu/iut/commun/view/ActiviteAccueil.java
 21fb8268dedf  src/main/java/fr/univ_amu/iut/commun/view/AdaptateurColonnes.java
 9c01a3255059  src/main/java/fr/univ_amu/iut/commun/view/AlerteDemarrage.java
@@ -711,7 +711,7 @@ a2cbd2949853  src/main/java/fr/univ_amu/iut/importation/model/CycleAcquisition.j
 2d4ca4c02758  src/main/java/fr/univ_amu/iut/importation/model/CyclesJournal.java
 7742654afffc  src/main/java/fr/univ_amu/iut/importation/model/DecoupageParallele.java
 a30713b524a5  src/main/java/fr/univ_amu/iut/importation/model/EtatNommage.java
-0a6f387e862d  src/main/java/fr/univ_amu/iut/importation/model/ExtracteurZip.java
+5ea2bb553bf6  src/main/java/fr/univ_amu/iut/importation/model/ExtracteurZip.java
 6cbcdd465f08  src/main/java/fr/univ_amu/iut/importation/model/FabriqueEntitesImport.java
 d97064e1dd7d  src/main/java/fr/univ_amu/iut/importation/model/FiltreThLogNuit.java
 90f6c91a8d2c  src/main/java/fr/univ_amu/iut/importation/model/FrequenceAcquisition.java
@@ -1029,7 +1029,7 @@ ec052b9bc411  src/main/java/fr/univ_amu/iut/passage/view/AppuisPassage.java
 08afea411a9e  src/main/java/fr/univ_amu/iut/passage/view/NavigationPassage.java
 17822834eb2b  src/main/java/fr/univ_amu/iut/passage/view/PassageController.java
 0dd6e58afbe5  src/main/java/fr/univ_amu/iut/passage/view/RattachementModaleController.java
-a7447e62e1ac  src/main/java/fr/univ_amu/iut/passage/view/ReactivationModaleController.java
+000fb58a763f  src/main/java/fr/univ_amu/iut/passage/view/ReactivationModaleController.java
 65a0d2a007e8  src/main/java/fr/univ_amu/iut/passage/viewmodel/ActionRecommandee.java
 ace9f3756eef  src/main/java/fr/univ_amu/iut/passage/viewmodel/ApercuRenommage.java
 7e7457954276  src/main/java/fr/univ_amu/iut/passage/viewmodel/ChoixDuPoint.java
@@ -1539,7 +1539,7 @@ c61e6ecf9404  src/test/java/fr/univ_amu/iut/commun/view/ActionFicheEspeceTest.ja
 d588d2af7e69  src/test/java/fr/univ_amu/iut/commun/view/ActionMenuWiringTest.java
 d1c2406b28e1  src/test/java/fr/univ_amu/iut/commun/view/ActionOuvrirJournauxTest.java
 8294cd616aad  src/test/java/fr/univ_amu/iut/commun/view/ActionsMenuChromeTest.java
-3a44ac214bf7  src/test/java/fr/univ_amu/iut/commun/view/ActionsSauvegardeTest.java
+2d0c29d89c78  src/test/java/fr/univ_amu/iut/commun/view/ActionsSauvegardeTest.java
 cf76a4af50b1  src/test/java/fr/univ_amu/iut/commun/view/AxeHoraireTest.java
 1c7495848b48  src/test/java/fr/univ_amu/iut/commun/view/BandeauAnnonceTest.java
 7f18ba765b87  src/test/java/fr/univ_amu/iut/commun/view/BandeauRetourStructureTest.java
@@ -1879,6 +1879,7 @@ f4286d23a74d  src/test/java/fr/univ_amu/iut/passage/view/NavigationPassageViewTe
 324f85b443e8  src/test/java/fr/univ_amu/iut/passage/view/PassageVueIntegrationTest.java
 1223d0b3a4bf  src/test/java/fr/univ_amu/iut/passage/view/RattachementModaleFermetureViewTest.java
 3d6110c2ae06  src/test/java/fr/univ_amu/iut/passage/view/RattachementModaleViewTest.java
+e96caab1b9b1  src/test/java/fr/univ_amu/iut/passage/view/ReactivationModaleQuestionTest.java
 cbc014bf6958  src/test/java/fr/univ_amu/iut/passage/view/ReactivationModaleViewTest.java
 bffcab754b0f  src/test/java/fr/univ_amu/iut/passage/view/ScenarioPassagePivotTest.java
 dcebab754186  src/test/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduDEnvoiTest.java
