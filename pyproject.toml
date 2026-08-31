@@ -25,7 +25,7 @@ requires-python = ">=3.12"
 # Ce que les GARDES lisent. Ne porte que ce qui est UTILISÉ : déclarer une dépendance dont rien ne
 # se sert est ce que `dependency:analyze-only` refuse côté Java, et il n'y a pas de raison d'être
 # plus permissif ici. `pytest`, `mutmut` et `coverage.py` entreront avec le lot qui les emploie.
-gardes = ["PyYAML==6.0.2"]
+gardes = ["PyYAML==6.0.2", "ruff==0.16.5"]
 
 # Ce que la DOCUMENTATION construit. Ces deux versions se tiennent : mkdocs-material < 9.7.0 exige
 # `pymdown-extensions~=10.2`, soit « >= 10.2 et < 11 ». Monter pymdown-extensions en 11 sans monter
@@ -38,4 +38,27 @@ doc = ["mkdocs-material==9.7.7", "pymdown-extensions==11.0.1"]
 # et `scripts/methode/verifie-dependances-declarees.py` la lit.
 [tool.vigiechiro.modules]
 PyYAML = ["yaml"]
+# `ruff` ne s'importe pas : il s'appelle en ligne de commande.
+ruff = []
 mkdocs-material = ["mkdocs", "material"]
+
+# Le formateur et le linter du Python du dépôt (issue #5022). Le Java avait Spotless et PMD, le
+# shell avait shellcheck, et 13 965 lignes de Python n'avaient rien : c'est la couche qui juge tout
+# le reste qui n'était jugée par personne.
+[tool.ruff]
+# 100 colonnes, parce que c'est ce que ce dépôt ÉCRIT : centile 95 de ses lignes Python, centile 99 à
+# 105. Le défaut de ruff est 88, étranger à ce code : il toucherait 5 431 lignes au lieu de 3 718, en
+# éclatant en multiligne chaque appel un peu long. La norme suit le code, elle ne lui est pas imposée.
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# Le jeu de règles est celui que ruff active PAR DÉFAUT, et c'est un choix : le contrôle est la
+# VERSION ÉPINGLÉE ci-dessus, exactement comme `pom.xml` épingle PMD et hérite de son jeu. Une montée
+# de version change donc le jeu, et devient un acte délibéré qu'on relit.
+ignore = [
+  # `re.S` plutôt que `re.DOTALL`, 63 fois. C'est une préférence de nommage, pas un défaut évité : le
+  # dépôt emploie les alias courts uniformément, et les renommer ne rendrait aucun garde plus juste.
+  # Un signalement qui crie sur du bon travail est un signalement qu'on apprend à ignorer (ADR 4002).
+  "FURB167",
+]
