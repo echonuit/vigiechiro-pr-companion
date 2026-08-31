@@ -2,6 +2,21 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.191.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.190.0...v2.191.0) (2026-08-31)
+
+
+### Bug Fixes
+
+* **ci:** le train attend cinq cas que sa configuration lui interdit de filmer ([#5013](https://github.com/echonuit/vigiechiro-pr-companion/issues/5013)) ([7723574](https://github.com/echonuit/vigiechiro-pr-companion/commit/7723574766ce0f417048953c546f0e834cd9c27b)), closes [#5012](https://github.com/echonuit/vigiechiro-pr-companion/issues/5012) [#4993](https://github.com/echonuit/vigiechiro-pr-companion/issues/4993)
+* **commun:** une racine de volume n'a pas de nom, et trois écrans le lisaient quand même ([#5001](https://github.com/echonuit/vigiechiro-pr-companion/issues/5001)) ([25c2d85](https://github.com/echonuit/vigiechiro-pr-companion/commit/25c2d8540ea38f6d1c55a58a96972a70ce8b46a1)), closes [#3461](https://github.com/echonuit/vigiechiro-pr-companion/issues/3461) [#4980](https://github.com/echonuit/vigiechiro-pr-companion/issues/4980)
+* **loupe:** le critère de fin a cinq formes, et le motif n'en vit plus qu'une fois ([#5003](https://github.com/echonuit/vigiechiro-pr-companion/issues/5003)) ([4f8b26a](https://github.com/echonuit/vigiechiro-pr-companion/commit/4f8b26af381f1c62823754b539d0028c53f2d5a3)), closes [#4980](https://github.com/echonuit/vigiechiro-pr-companion/issues/4980) [#4837](https://github.com/echonuit/vigiechiro-pr-companion/issues/4837) [#4995](https://github.com/echonuit/vigiechiro-pr-companion/issues/4995)
+* **test:** six attentes sur le fil disent ce qu'elles faisaient, et le cliquet cesse d'être contourné ([#5000](https://github.com/echonuit/vigiechiro-pr-companion/issues/5000)) ([d9160f5](https://github.com/echonuit/vigiechiro-pr-companion/commit/d9160f5a4352bd5c4fb9d6e6d8fb1aa2b409987b)), closes [#4997](https://github.com/echonuit/vigiechiro-pr-companion/issues/4997) [#4845](https://github.com/echonuit/vigiechiro-pr-companion/issues/4845)
+
+
+### Features
+
+* **garde:** le verdict dit ce qu'il a lu, et refuse d'avoir lu zéro ([#5014](https://github.com/echonuit/vigiechiro-pr-companion/issues/5014)) ([b03ff43](https://github.com/echonuit/vigiechiro-pr-companion/commit/b03ff43087b6c29257d4976fe388818923e0fb68))
+
 # [2.190.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.189.0...v2.190.0) (2026-08-31)
 
 
