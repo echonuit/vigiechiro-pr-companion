@@ -1315,19 +1315,26 @@ def test_le_rapport_lit_encore_les_trois_lignes() -> None:
     # On verifie les VALEURS capturees, et non le seul appariement : un groupe capturant ajoute pour
     # `lus` decalerait les indices, `rapport.py` lirait le mauvais nombre, et un cas qui ne teste que
     # « ca apparie » resterait vert. C est le meme defaut, un cran plus fin.
+    #
+    # Ce cas a fait exactement cela le 2026-09-01 : quand `lus` est devenu capturant (#5053), il a
+    # rougi sur les trois motifs a la fois, en disant a chaque fois quelle valeur il obtenait a la
+    # place. Les indices ci-dessous ont donc bouge d un cran, et le compte LU est desormais verifie
+    # lui aussi : ce que le motif capture doit etre ce qu on croit, pas seulement quelque chose.
     cliquet = rapport.LIGNE_CLIQUET.search(
         rendu(lambda: commun.rapporte("0008", "temoin de couture", [], lus=2076))
     )
     _verifie("le rapport lit une ligne de cliquet", bool(cliquet), True)
     _verifie("et il en tire le bon numero", cliquet.group(1) if cliquet else None, "0008")
-    _verifie("et le bon compte de suspects", cliquet.group(2) if cliquet else None, "0")
-    _verifie("et le bon verdict", cliquet.group(4) if cliquet else None, "ok")
+    _verifie("et le compte LU", cliquet.group(2) if cliquet else None, "2076")
+    _verifie("et le bon compte de suspects", cliquet.group(3) if cliquet else None, "0")
+    _verifie("et le bon verdict", cliquet.group(5) if cliquet else None, "ok")
 
     loupe = rapport.LIGNE_LOUPE.search(
         rendu(lambda: commun.loupe("0020", "temoin de couture", ["x"], lus=9))
     )
     _verifie("le rapport lit une ligne de loupe", bool(loupe), True)
-    _verifie("et il en tire le bon compte de candidats", loupe.group(2) if loupe else None, "1")
+    _verifie("et il en tire le compte LU", loupe.group(2) if loupe else None, "9")
+    _verifie("et le bon compte de candidats", loupe.group(3) if loupe else None, "1")
 
     plancher = rapport.LIGNE_PLANCHER.search(
         rendu(
@@ -1335,7 +1342,8 @@ def test_le_rapport_lit_encore_les_trois_lignes() -> None:
         )
     )
     _verifie("le rapport lit une ligne de plancher", bool(plancher), True)
-    _verifie("et il en tire la bonne mesure", plancher.group(2) if plancher else None, "3245")
+    _verifie("et il en tire le compte LU", plancher.group(2) if plancher else None, "4026")
+    _verifie("et la bonne mesure", plancher.group(3) if plancher else None, "3245")
 
     _verifie(
         "et il les lit encore quand le compte n est pas declare",
@@ -1430,9 +1438,9 @@ def test_rapport_et_resserrement() -> None:
     trouve = rapport.LIGNE_CLIQUET.search(ligne)
     _verifie("rapport.py parse une ligne de cliquet", bool(trouve), True)
     _verifie(
-        "et il en tire les bons champs malgre le champ ajoute",
+        "et il en tire les bons champs, le compte lu compris",
         trouve.groups() if trouve else None,
-        ("0099", "2", "5", "a-resserrer"),
+        ("0099", "42", "2", "5", "a-resserrer"),
     )
     # La seconde forme acceptee : un garde qui ne declare pas encore son compte rend `lus=?`.
     _verifie(
@@ -1445,11 +1453,24 @@ def test_rapport_et_resserrement() -> None:
         True,
     )
     # La détection de resserrement : cliquet 5 pour 2 suspects -> ramener à 2.
-    props = rapport.resserrements([("0099", 2, 5, "a-resserrer")])
+    #
+    # Les tuples sont ecrits EN DUR, et c est ce qui tient l arite. Quand `lus` y a ete ajoute
+    # (#5053), ce cas a leve « expected 5, got 4 » avant qu une ligne de rendu ne soit ecrite : la
+    # note d origine de `rapport.py` craignait qu un decalage passe en silence, et il ne passe plus.
+    props = rapport.resserrements([("0099", "42", 2, 5, "a-resserrer")])
     _verifie("rapport.py propose de resserrer 5 -> 2", props, [("0099", 2)])
     # Aucune proposition quand la marge colle.
-    props2 = rapport.resserrements([("0099", 5, 5, "ok")])
+    props2 = rapport.resserrements([("0099", "42", 5, 5, "ok")])
     _verifie("rapport.py ne resserre pas une marge exacte", props2, [])
+
+    # Le compte doit traverser jusqu au RENDU, et pas seulement jusqu au tuple. C est la moitie du
+    # trajet qu aucun cas ne couvrait : `lus` pouvait etre capture, range, puis jete a l affichage.
+    rendu_texte = rapport.rendre([("0099", "42", 2, 5, "a-resserrer")], [], [], [], markdown=False)
+    _verifie("le rendu texte porte le compte lu", "lus=42" in rendu_texte, True)
+    rendu_md = rapport.rendre([("0099", "?", 2, 5, "ok")], [], [], [], markdown=True)
+    _verifie("le rendu markdown porte un compte non declare", "| ? |" in rendu_md, True)
+    rendu_loupe = rapport.rendre([], [], [("4472", "2080", 43)], [], markdown=False)
+    _verifie("le rendu d une loupe porte ce qu elle a lu", "sur 2080" in rendu_loupe, True)
 
     # MESURER n est pas RESORBER, et le confondre a laisse trois chiffres perimes en une journee
     # (#4469). Une valeur qui MONTE ou qui ne bouge pas ne passe par aucun resserrement : la passe
