@@ -22,11 +22,15 @@ Le protocole Vigie-Chiro Point Fixe demande que l'enregistreur soit **allumé 30
 
 - heure de coucher de soleil **calculée localement** d'après les coordonnées GPS du point d'écoute et la date d'enregistrement
 - heure de lever de soleil idem
-- **plage théorique attendue** (coucher - 30 min → lever + 30 min)
+- **plage exigée par le protocole** (coucher - 30 min → lever + 30 min)
 - **plage effective enregistrée** (extraite du journal du capteur : heure de premier déclenchement → heure de mise en veille)
-- écart : ✅ conforme / ⚠ écart de N minutes / ❌ écart majeur
+- le verdict : **information** si la plage enregistrée couvre la plage exigée, **avertissement** si elle ne la couvre pas, et **rien** si le calcul n'a pas pu se faire
 
-Si la plage est conforme, l'utilisateur a un retour visuel rassurant. Sinon, il peut investiguer dans la liste des évènements anormaux ci-dessus.
+Si la plage couvre ce qui est demandé, l'utilisateur a un retour rassurant. Sinon, il peut investiguer dans la liste des évènements anormaux ci-dessus.
+
+**Ce que ce parcours annonçait, et ce qui a été livré.** Il décrivait trois niveaux - « ✅ conforme / ⚠ écart de N minutes / ❌ écart majeur » - et un écart chiffré en minutes. Le produit livré (#4984) en porte **deux**, sans chiffre : le protocole est un **plancher**, donc « couvre » et « ne couvre pas » épuisent la question, et un troisième niveau demanderait de décider à partir de quel manque un manque devient majeur - ce que rien ne permet de trancher.
+
+Le vocabulaire des trois niveaux n'a pas disparu pour autant : c'est celui du **feu de la qualification** (M-Qualification, #1506), qui mesure lui aussi une couverture horaire, avec un écart en minutes et un drapeau « moitié manquante ». Les deux mesures ne lisent pas la même fenêtre - l'une les éphémérides, l'autre les heures déclarées du passage - et ce parcours décrivait, sans le savoir, un mélange des deux. Le rapprochement est ouvert en issue #5055.
 
 **Précondition** : les **coordonnées GPS** doivent avoir été saisies pour le point lors de la déclaration du site ([P1](P1%20-%20Déclarer%20un%20site%20de%20suivi.md)) ou ajoutées par la suite. Sans coordonnées, l'encart est masqué et l'utilisateur est invité à compléter sa fiche site. Cette vérification est une **idée Samuel** (mai 2026) - hors MVP strict mais facile à intégrer une fois P6 en place.
 

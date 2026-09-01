@@ -55,17 +55,22 @@ import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// Tests d'**intégration TestFX** de l'écran **M-Diagnostic** centrés sur le câblage réel
-/// Vue ↔ ViewModel : chaque test fait un **vrai lookup des `fx:id`** (`robot.lookup("#166")`) puis
+/// Vue ↔ ViewModel : chaque test fait un **vrai lookup des `fx:id`** (`robot.lookup("#grapheClimat")`) puis
 /// vérifie que l'état affiché reflète le [DiagnosticViewModel] et qu'un **changement de passage**
 /// (réinvocation de `ouvrirSur(...)` sur le fil JavaFX) propage le bon effet à l'écran. Un écran
 /// resté à l'état de placeholder (sans `fx:id` ni bindings) échouerait donc ici, là où une lecture
 /// directe des propriétés du ViewModel l'aurait laissé passer.
 ///
-/// Cet écran est en **lecture seule** (patron « pur câblage » du CM4) : il ne comporte ni bouton,
-/// ni `ComboBox`, ni `TableView`, donc aucun `onAction`. Les « interactions » testées sont les
-/// transitions d'état déclenchées par `ouvrirSur(...)` : reconstruction du graphe climatique
-/// (`ListChangeListener` → `majGraphe()`), signalement R20 (relevé absent), ligne d'état GPS et message
-/// d'erreur (visibilités liées). Le [ServiceDiagnostic] est mocké : aucune base de données.
+/// Cet écran **consulte** : il ne modifie aucune donnée. Ses deux seuls `onAction` sortent de la
+/// consultation - « Exporter le graphe… » et la fermeture du bandeau de retour - et le reste de ce
+/// qu'on y voit se déclenche par `ouvrirSur(...)` : reconstruction du graphe climatique
+/// (`ListChangeListener` → `majGraphe()`), signalement R20 (relevé absent), ligne d'état GPS, plages
+/// du protocole et message d'erreur (visibilités liées). Le [ServiceDiagnostic] est mocké : aucune
+/// base de données.
+///
+/// La phrase précédente disait « ni bouton, ni `ComboBox`, ni `TableView`, donc aucun `onAction` ».
+/// C'était vrai du placeholder d'origine et faux de l'écran depuis « Exporter le graphe… » : une
+/// javadoc qui décrit l'écran qu'on avait prévu se relit comme si elle décrivait celui qu'on a.
 @ExtendWith(ApplicationExtension.class)
 class DiagnosticVueIntegrationTest {
 
@@ -420,6 +425,6 @@ class DiagnosticVueIntegrationTest {
                         LocalTime.of(6, 18),
                         LocalTime.of(21, 20),
                         LocalTime.of(6, 25),
-                        CoherenceHoraire.Couverture.INFORMATION));
+                        CoherenceHoraire.Couverture.COUVERTE));
     }
 }

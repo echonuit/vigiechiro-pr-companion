@@ -47,12 +47,12 @@ import javafx.scene.Scene;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Capture l'écran M-Diagnostic en PNG pour le comparer à la maquette du brief, en **quatre états**
+/// Capture l'écran M-Diagnostic en PNG pour le comparer à la maquette du brief, en **sept états**
 /// afin d'en montrer les particularités :
 ///
-/// - `apercu-diagnostic.png` : **relevé présent**, nuit **cohérente** (horaires dans la fenêtre
-///   nocturne, aucune alerte), courbe climatique (T°/hygrométrie de la nuit), anomalies (R19 : réveil
-///   non programmé, batterie faible), évènements, cohérence horaire et GPS ;
+/// - `apercu-diagnostic.png` : **relevé présent**, une nuit qui **couvre** la fenêtre du protocole et
+///   porte donc une **information**, la courbe climatique, les anomalies (R19), les évènements, la
+///   cohérence horaire et le GPS ;
 /// - `apercu-diagnostic-sans-releve.png` : **relevé absent** (R20), l'absence de sonde est signalée,
 ///   le graphe est vide mais les anomalies du journal restent affichées ;
 /// - `apercu-diagnostic-sans-gps.png` : **point sans coordonnées GPS**, le repère GPS passe à « non
@@ -146,6 +146,9 @@ public final class CaptureDiagnostic {
     /// Identifiant volontairement absent de la base : le chargement échoue et l'écran rend son bandeau.
     private static final long PASSAGE_INEXISTANT = 999_999L;
 
+    // `apercu-diagnostic.png` est le SEUL aperçu qui montre la règle du protocole dans le bon sens :
+    // une nuit qui couvre la fenêtre porte une information, et non « aucune alerte » comme cette
+    // classe l'a écrit tant que le modèle traitait le respect du protocole comme un défaut (#4984).
     private static void capturer() throws IOException {
         Path workspace = Files.createTempDirectory("vc-capture-diagnostic");
         System.setProperty("vigiechiro.workspace", workspace.toString());

@@ -123,15 +123,19 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
 
     /// Libellé de la cohérence horaire : fenêtre nocturne au point, plages exigée et enregistrée, et
     /// ce que leur écart vaut (#548, #4988). « Indisponible » quand le calcul n'a pas pu se faire.
-    private static String coherenceLisible(CoherenceHoraire coherence) {
+    ///
+    /// Visible pour le banc de parité : l'écran porte le même verdict par
+    /// `DiagnosticViewModel.libelleEcart`, et deux surfaces qui trancheraient différemment la même
+    /// nuit ne se contrediraient nulle part ailleurs (ADR 0014).
+    public static String coherenceLisible(CoherenceHoraire coherence) {
         if (!coherence.disponible()) {
             return "indisponible (GPS ou horaires manquants, ou latitude polaire)";
         }
         String fenetre = "nuit " + HEURE.format(coherence.coucherSoleil()) + VERS
                 + HEURE.format(coherence.leverSoleil()) + ", " + plagesLisibles(coherence);
         return switch (coherence.couverture()) {
-            case AVERTISSEMENT -> fenetre + ", la fenêtre du protocole n'est pas couverte";
-            case INFORMATION -> fenetre + ", fenêtre du protocole couverte et dépassée";
+            case INCOMPLETE -> fenetre + ", la fenêtre du protocole n'est pas couverte";
+            case COUVERTE -> fenetre + ", fenêtre du protocole couverte et dépassée";
             case INDISPONIBLE -> fenetre;
         };
     }

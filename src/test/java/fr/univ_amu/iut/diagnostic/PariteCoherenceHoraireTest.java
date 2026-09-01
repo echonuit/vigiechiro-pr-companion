@@ -2,6 +2,7 @@ package fr.univ_amu.iut.diagnostic;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.diagnostic.model.AnalyseCoherenceHoraire;
 import fr.univ_amu.iut.diagnostic.model.CoherenceHoraire;
 import java.time.format.DateTimeFormatter;
@@ -57,5 +58,40 @@ class PariteCoherenceHoraireTest {
                 .isEmpty();
         assertThat(fr.univ_amu.iut.cli.commande.Diagnostiquer.plagesLisibles(indisponible))
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("ADR 0014 : les deux surfaces tranchent la MÊME nuit dans le même sens")
+    void les_deux_surfaces_tranchent_dans_le_meme_sens() {
+        // La parité au-dessus porte sur les HEURES citées. Elle laissait passer le cas qui compte le
+        // plus : deux surfaces qui citent les mêmes heures et en tirent des verdicts opposés. Les
+        // deux `switch` sont aujourd'hui d'accord parce qu'ils lisent la même énumération, et rien
+        // n'obligeait le second à suivre le premier si on en changeait un.
+        for (CoherenceHoraire.Couverture etat : CoherenceHoraire.Couverture.values()) {
+            CoherenceHoraire coherence = coherenceDe(etat);
+
+            boolean ecranAlerte = fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel.libelleEcart(coherence)
+                            .severite()
+                    == Severite.AVERTISSEMENT;
+            boolean terminalAlerte = fr.univ_amu.iut.cli.commande.Diagnostiquer.coherenceLisible(coherence)
+                    .contains("n'est pas couverte");
+
+            assertThat(ecranAlerte)
+                    .as(
+                            "sur une nuit %s, l'écran alerte=%s et le terminal alerte=%s",
+                            etat, ecranAlerte, terminalAlerte)
+                    .isEqualTo(terminalAlerte);
+        }
+    }
+
+    /// Une cohérence dans l'état voulu, construite par l'analyse réelle plutôt qu'à la main : un
+    /// exemple écrit à la main ne garderait que lui-même.
+    private static CoherenceHoraire coherenceDe(CoherenceHoraire.Couverture etat) {
+        return switch (etat) {
+            case INDISPONIBLE -> CoherenceHoraire.indisponible();
+            case INCOMPLETE -> nuitTropCourte();
+            // Une nuit qui commence tôt et finit tard couvre la fenêtre exigée quelle que soit la date.
+            case COUVERTE -> AnalyseCoherenceHoraire.analyser(AIX_LAT, AIX_LON, "2026-06-20", "18:00:00", "09:00:00");
+        };
     }
 }

@@ -121,7 +121,7 @@ class DiagnosticViewModelTest {
                 LocalTime.of(6, 18),
                 LocalTime.of(21, 28),
                 LocalTime.of(6, 18),
-                CoherenceHoraire.Couverture.INFORMATION);
+                CoherenceHoraire.Couverture.COUVERTE);
         when(service.diagnostiquer(ID_PASSAGE)).thenReturn(diagnostic(serie(), 43.5, 5.4, coherence));
 
         viewModel.ouvrirSur(ID_PASSAGE);
@@ -146,7 +146,7 @@ class DiagnosticViewModelTest {
                 LocalTime.of(6, 18),
                 LocalTime.of(22, 30),
                 LocalTime.of(5, 30),
-                CoherenceHoraire.Couverture.AVERTISSEMENT);
+                CoherenceHoraire.Couverture.INCOMPLETE);
         when(service.diagnostiquer(ID_PASSAGE)).thenReturn(diagnostic(serie(), 43.5, 5.4, coherence));
 
         viewModel.ouvrirSur(ID_PASSAGE);

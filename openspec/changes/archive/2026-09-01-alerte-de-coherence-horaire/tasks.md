@@ -30,5 +30,5 @@
 
 ## 5. La décision est écrite (passe 11 de la clôture)
 
-- [ ] 5.1 ADR : le protocole est un plancher, et ce qu'on ne peut pas savoir ne se décide pas
-- [ ] 5.2 L'ADR nomme son dispositif de vérification, et la mesure qui a écarté la détection par silences
+- [x] 5.1 ADR : le protocole est un plancher, et ce qu'on ne peut pas savoir ne se décide pas. Écrite en `dev-docs/decisions/4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas.md`, avec un quatrième point que la passe 0 a imposé : l'énumération du modèle nomme un état du domaine et non une gravité
+- [x] 5.2 L'ADR nomme son dispositif de vérification, et la mesure qui a écarté la détection par silences. Trois `enforced_by`, dont le banc de parité du verdict ajouté par la passe 2 ; et la section « Ce que la mesure a refusé » porte les deux refus, l'intervalle silencieux et le détour par les anomalies persistées

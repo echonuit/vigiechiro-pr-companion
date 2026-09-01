@@ -92,8 +92,17 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
 - **S2-34** · *geste: lire-le-diagnostic-d-un-passage* · La courbe climatique T°/hygrométrie s'affiche, l'axe **gradué en heures**.
 - **S2-35** · *geste: lire-le-diagnostic-d-un-passage* · Les anomalies détectées s'affichent (ou leur placeholder).
 - **S2-36** · *geste: lire-le-diagnostic-d-un-passage* · Les évènements du journal s'affichent (ou leur placeholder).
-- **S2-37** · *geste: lire-le-diagnostic-d-un-passage* · La cohérence horaire indique la fenêtre nocturne (coucher/lever du soleil), avec l'alerte
-  « hors nuit » si l'enregistrement déborde.
+- **S2-37** · *geste: lire-le-diagnostic-d-un-passage* · La cohérence horaire indique la fenêtre nocturne (coucher/lever du soleil), et **sous elle
+  les deux plages** : « Protocole … » (coucher moins 30 minutes → lever plus 30) et « Enregistré … ».
+- **S2-66** · *geste: lire-le-diagnostic-d-un-passage* · Sur cette nuit, qui **ne couvre pas** la fenêtre exigée, un **avertissement** paraît et **dit ce
+  qui manque**. Il ne se contente pas de signaler.
+- **S2-67** · *geste: lire-le-diagnostic-d-un-passage* · *(carte `nuit-longue`)* Sur une nuit qui **couvre** la fenêtre exigée et la dépasse, l'écran rend
+  une **information**, jamais un avertissement : le protocole est un **plancher**, et le dépasser
+  n'est pas un défaut. C'est le cas qui ferait rougir la règle inversée, et c'est celui qu'aucune
+  case ne portait : l'ancienne rédaction de S2-37 demandait au contraire de vérifier « l'alerte "hors
+  nuit" si l'enregistrement déborde », c'est-à-dire de confirmer le défaut (#4984). **À jouer à la
+  main** : le comportement est éprouvé par un banc, mais aucun clip ne le montre, la carte de recette
+  n'ayant pas de nuit qui couvre la fenêtre (#5061).
 - **S2-38** · *geste: lire-le-diagnostic-d-un-passage* · L'état GPS du **point d'écoute** est **toujours visible** : « disponible » ou « non renseigné
   (compléter la fiche site) ».
 - **S2-39** · *geste: lire-le-diagnostic-d-un-passage* · La **barre de statut** (bas de fenêtre) affiche l'enregistreur diagnostiqué et le **nombre de

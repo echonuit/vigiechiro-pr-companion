@@ -36,6 +36,12 @@ public record CoherenceHoraire(
         Couverture couverture) {
 
     /// Ce que les horaires disent de la fenêtre que le protocole exige.
+    ///
+    /// Les valeurs nomment l'**état du domaine**, jamais la gravité de son annonce. Le premier jet
+    /// disait `INFORMATION` et `AVERTISSEMENT`, c'est-à-dire deux synonymes de [Severite], et les
+    /// deux surfaces les convertissaient une pour une : c'était une seconde échelle de sévérité
+    /// dans le modèle, exactement le motif contre lequel l'ADR 0038 met en garde. La gravité est
+    /// une décision de surface, et elle se prend là où l'on parle à quelqu'un.
     public enum Couverture {
         /// La vérification n'a pas pu être faite : ni GPS, ni horaires, ou nuit polaire.
         INDISPONIBLE,
@@ -44,9 +50,9 @@ public record CoherenceHoraire(
         /// Aucune valeur ne distingue « couverte tout juste » de « couverte et dépassée ». L'égalité
         /// à la seconde près n'arrive pas, et un niveau qu'aucune nuit n'atteint serait un niveau
         /// mort.
-        INFORMATION,
+        COUVERTE,
         /// La fenêtre n'est pas entièrement couverte : le protocole n'est pas tenu.
-        AVERTISSEMENT
+        INCOMPLETE
     }
 
     private static final CoherenceHoraire INDISPONIBLE =
@@ -56,13 +62,5 @@ public record CoherenceHoraire(
     /// polaire).
     public static CoherenceHoraire indisponible() {
         return INDISPONIBLE;
-    }
-
-    /// `true` si la vérification a pu être faite, donc s'il y a quelque chose à afficher.
-    ///
-    /// Ne dit pas la gravité : une information en est une aussi, et elle n'est **pas** un défaut. Qui
-    /// doit distinguer lit [#couverture()].
-    public boolean aQuelqueChoseADire() {
-        return disponible && couverture != Couverture.INDISPONIBLE;
     }
 }

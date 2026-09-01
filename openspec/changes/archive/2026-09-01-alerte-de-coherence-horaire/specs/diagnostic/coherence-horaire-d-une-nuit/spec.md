@@ -1,8 +1,11 @@
 ## Purpose
 
 Dire à l'observateur si la nuit qu'il vient d'importer couvre la fenêtre d'enregistrement que le
-protocole Vigie-Chiro Point Fixe exige, et si son enregistreur a consigné une interruption en cours
-de nuit.
+protocole Vigie-Chiro Point Fixe exige.
+
+L'interruption en cours de nuit **ne fait pas partie de cette capacité** : elle demande une donnée
+qui n'est persistée nulle part, et l'exigence ci-dessous dit pourquoi. Ce paragraphe l'annonçait
+comme livrée tant que le report n'avait pas été tranché.
 
 ## ADDED Requirements
 
