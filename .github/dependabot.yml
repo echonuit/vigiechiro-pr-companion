@@ -28,6 +28,15 @@ updates:
       - "github-actions"
     commit-message:
       prefix: "chore(deps)"
+    # `init` et `analyze` sont deux dépendances pour Dependabot et une seule pour CodeQL, qui
+    # refuse une paire dépareillée : « Loaded a configuration file for version '4.37.6', but
+    # running version '4.37.9' ». Montées séparément, les deux demandes se cassent l'une l'autre,
+    # aucune ne peut passer au vert, et fusionner la première laisse `main` rouge jusqu'à la
+    # seconde. Mesuré sur #5062 et #5063. Elles arrivent donc en une seule demande.
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
 
   # Outillage de publication (semantic-release et ses greffons), figé par lockfile depuis #2738.
   # Sans cette entrée, le lockfile fige aussi les correctifs de sécurité : figer sans surveiller
