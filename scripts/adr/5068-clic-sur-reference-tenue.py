@@ -31,7 +31,7 @@ from _commun import TESTS_ANCRES, rapporte  # noqa: E402
 
 ADR = "5068"
 
-# L aide partagee porte l unique clic sur noeud qui soit deliberе : elle EST le geste commun.
+# L aide partagee porte l unique clic sur noeud qui soit delibere : elle EST le geste commun.
 EXEMPTES = {"GesteVisible.java"}
 
 APPEL = re.compile(r"\bclickOn\(\s*([^\n]*)")
