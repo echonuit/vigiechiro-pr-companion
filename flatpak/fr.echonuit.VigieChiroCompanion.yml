@@ -59,6 +59,18 @@ finish-args:
   - --filesystem=/run/media
   - --filesystem=/media
 
+  # Ouvrir un dossier dans le gestionnaire de fichiers (#4982) : RIEN A DECLARER ICI, et c'est
+  # mesure, pas suppose. `flatpak run` pose sans condition `--call=org.freedesktop.portal.*=*` sur
+  # le proxy de bus, donc le portail OpenURI est deja joignable. Ajouter un `--talk-name` pour lui
+  # serait une permission qui ne change rien, et qui ferait croire qu'elle sert.
+  #
+  # Verifie le 1er septembre 2026 sur le paquet installe, en ecoutant le bus pendant l'appel :
+  # `Desktop.getDesktop().open(dossier)` emet UN message a `org.freedesktop.portal.OpenURI`,
+  # exactement comme `xdg-open` pris pour reference. Le JDK journalise au passage deux
+  # `GLib-GIO-CRITICAL: g_app_info_get_executable` : il cherche d'abord un gestionnaire LOCAL au
+  # bac a sable, n'en trouve aucun, et bascule sur le portail. Ces lignes ressemblent a un echec
+  # et n'en sont pas - le dossier s'ouvre. Ne pas les prendre pour un defaut a corriger.
+
 modules:
   - name: openjdk
     buildsystem: simple

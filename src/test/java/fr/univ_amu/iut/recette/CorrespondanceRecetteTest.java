@@ -471,7 +471,12 @@ class CorrespondanceRecetteTest {
             if (finSection >= 0 && (fin < 0 || finSection < fin)) {
                 fin = finSection;
             }
-            trouve.append(fin < 0 ? texte.substring(debut) : texte, debut, fin < 0 ? texte.length() : fin);
+            // La section COURT jusqu'à la fin de la page quand rien ne la suit. La forme précédente
+            // passait alors `texte.substring(debut)` comme séquence, tout en l'indexant avec les
+            // bornes de la page entière : `IndexOutOfBoundsException`. Le défaut a survécu parce
+            // qu'aucun cas hors application n'était encore le DERNIER de sa page - S4-18 l'est, et
+            // c'est lui qui a fait tomber le garde (#4982).
+            trouve.append(texte, debut, fin < 0 ? texte.length() : fin);
         }
         return trouve.toString();
     }

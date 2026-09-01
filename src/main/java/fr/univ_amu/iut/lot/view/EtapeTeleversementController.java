@@ -3,6 +3,7 @@ package fr.univ_amu.iut.lot.view;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.MenuCopier;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.PressePapier;
 import fr.univ_amu.iut.lot.viewmodel.LigneDepot;
 import java.nio.file.Path;
@@ -149,7 +150,9 @@ public class EtapeTeleversementController {
                 Bindings.when(btnOuvrirDepot.disableProperty())
                         .then("Aucune archive de dépôt à ouvrir : générez d'abord les archives (ou patientez"
                                 + " la fin de la génération en cours).")
-                        .otherwise("Ouvrir le sous-dossier « depot/ » pour un dépôt manuel des archives ZIP."));
+                        .otherwise("Ouvrir le sous-dossier « depot/ » dans votre gestionnaire de fichiers."
+                                + " Le dépôt lui-même se fait ensuite sur le portail Vigie-Chiro, en y"
+                                + " téléversant ces archives."));
     }
 
     /// Câble la table de dépôt (#983) : lignes persistées (`depot_unite` #981) + événements du moteur
@@ -221,8 +224,21 @@ public class EtapeTeleversementController {
     @FXML
     void ouvrirDossierDepot() {
         String chemin = appuis.viewModel().cheminDepotProperty().get();
-        if (chemin != null && !chemin.isBlank()) {
-            appuis.ouvreurDeLien().ouvrir(Path.of(chemin).toUri().toString());
+        if (chemin == null || chemin.isBlank()) {
+            return;
+        }
+        // Un DOSSIER, et non un lien. Le `file://` passé au navigateur rendait un listing de
+        // répertoire : un observateur y a cherché comment déposer ses archives et n'a rien trouvé,
+        // puisqu'il n'y a rien à y faire (#4982). En cas d'échec on DIT le chemin plutôt que de
+        // retomber sur le navigateur, ce qui reproduirait le défaut sans qu'on le voie.
+        if (!appuis.ouvreurDeLien().ouvrirDossier(Path.of(chemin))) {
+            appuis.notificateur()
+                    .notifier(
+                            NiveauNotification.INFORMATION,
+                            "Ouvrez ce dossier vous-même",
+                            "Le système n'a pas su l'ouvrir. Les archives à déposer sont ici, et le bouton"
+                                    + " « Copier » met ce chemin dans le presse-papier :\n"
+                                    + chemin);
         }
     }
 

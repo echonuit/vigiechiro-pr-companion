@@ -33,6 +33,18 @@ public final class ActionOuvrirJournaux implements ActionMenu {
     private final Workspace workspace;
     private final OuvreurDeLien ouvreurDeLien;
 
+    private Window proprietaire;
+
+    /// Ce qu'on dit quand le système n'a pas su ouvrir le dossier. Porteur modifiable, comme
+    /// [ActionAPropos] : le banc y pose un double, l'application le dialogue réel.
+    private final NotificateurModifiable notificateur =
+            new NotificateurModifiable(new NotificationDialogue(() -> proprietaire));
+
+    /// Porteur de compte rendu exposé aux tests.
+    NotificateurModifiable notificateur() {
+        return notificateur;
+    }
+
     @Inject
     ActionOuvrirJournaux(Workspace workspace, OuvreurDeLien ouvreurDeLien) {
         this.workspace = Objects.requireNonNull(workspace, "workspace");
@@ -61,12 +73,20 @@ public final class ActionOuvrirJournaux implements ActionMenu {
 
     @Override
     public void executer(Window proprietaire) {
+        this.proprietaire = proprietaire;
         Path dossier = workspace.dossierLogs();
         try {
             Files.createDirectories(dossier);
         } catch (IOException echec) {
             LOG.log(Level.WARNING, echec, () -> "Dossier des journaux impossible à créer : " + dossier);
         }
-        ouvreurDeLien.ouvrir(dossier.toUri().toString());
+        // Un DOSSIER, et non un lien. Le `file://` passé au navigateur y rendait un listing de
+        // répertoire, ce qui ressemble à un dossier ouvert sans en être un (#4982).
+        if (!ouvreurDeLien.ouvrirDossier(dossier)) {
+            notificateur.notifier(
+                    NiveauNotification.INFORMATION,
+                    "Ouvrez ce dossier vous-même",
+                    "Le système n'a pas su l'ouvrir. Les journaux sont ici :\n" + dossier);
+        }
     }
 }

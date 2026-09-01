@@ -143,7 +143,7 @@ perdu la moitié, et un compte de fichiers ne le dirait pas.
 | | Ce qu'un clip y sert | Combien de clips |
 |---|---|---|
 | [Cas perceptifs](clips-perceptifs.md) | **le regarder** : c'est le seul verdict qui existe pour ces cas | 10 |
-| [Cas assertés](clips-assertes.md) | comprendre **pourquoi un test rougit**, ou vérifier qu'il joue ce que son nom annonce | 58 |
+| [Cas assertés](clips-assertes.md) | comprendre **pourquoi un test rougit**, ou vérifier qu'il joue ce que son nom annonce | 59 |
 
 ### Et une troisième source, qui ne se compare pas
 

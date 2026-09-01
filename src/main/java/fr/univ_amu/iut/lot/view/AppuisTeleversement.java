@@ -3,6 +3,7 @@ package fr.univ_amu.iut.lot.view;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
@@ -11,9 +12,9 @@ import java.util.function.Supplier;
 
 /// Ce dont la sous-vue « Téléverser » a besoin, regroupé (#2745).
 ///
-/// Un Parameter-Object plutôt qu'une liste de huit arguments : c'est la règle du dépôt sur l'arité des
-/// constructions, et une signature de huit paramètres du même genre (deux ViewModels, deux ports,
-/// deux fonctions) se remplit un jour dans le désordre sans que rien ne le dise.
+/// Un Parameter-Object plutôt qu'une liste de neuf arguments : c'est la règle du dépôt sur l'arité des
+/// constructions, et une signature de neuf paramètres du même genre (deux ViewModels, deux ports,
+/// deux porteurs, deux fonctions) se remplit un jour dans le désordre sans que rien ne le dise.
 ///
 /// Ces appuis **viennent du parent**, jamais d'une injection propre à la sous-vue : les ViewModel du
 /// dépôt sont non-singleton, et se les injecter en donnerait de nouveaux, vides (ADR 2745, gardé par
@@ -25,6 +26,7 @@ import java.util.function.Supplier;
 /// @param depotColonnes disposition persistée des colonnes, par écran et par table
 /// @param ouvreurDeLien port d'ouverture d'un dossier dans le gestionnaire de fichiers
 /// @param confirmateur porteur de confirmation, **partagé avec le parent** dont les tests le remplacent
+/// @param notificateur porteur de compte rendu, partagé de même : un geste qui n'aboutit pas se dit
 /// @param idPassage passage courant, lu à chaque geste (le contexte change sans recharger la vue)
 /// @param lancerParticipation étape ④, offerte par le compte rendu de fin de dépôt (#2653)
 record AppuisTeleversement(
@@ -34,6 +36,7 @@ record AppuisTeleversement(
         DepotDispositionColonnes depotColonnes,
         OuvreurDeLien ouvreurDeLien,
         ConfirmateurModifiable confirmateur,
+        NotificateurModifiable notificateur,
         Supplier<Long> idPassage,
         Runnable lancerParticipation) {
 
@@ -44,6 +47,7 @@ record AppuisTeleversement(
         Objects.requireNonNull(depotColonnes, "depotColonnes");
         Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
         Objects.requireNonNull(confirmateur, "confirmateur");
+        Objects.requireNonNull(notificateur, "notificateur");
         Objects.requireNonNull(idPassage, "idPassage");
         Objects.requireNonNull(lancerParticipation, "lancerParticipation");
     }

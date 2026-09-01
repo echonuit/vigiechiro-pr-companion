@@ -490,7 +490,7 @@ bc1d29b795c6  src/main/java/fr/univ_amu/iut/commun/persistence/VerrouWorkspace.j
 992c9518f889  src/main/java/fr/univ_amu/iut/commun/view/ActionAPropos.java
 02a065a3e4aa  src/main/java/fr/univ_amu/iut/commun/view/ActionFicheEspece.java
 2d488e1dc07d  src/main/java/fr/univ_amu/iut/commun/view/ActionMenu.java
-b07ea88b667d  src/main/java/fr/univ_amu/iut/commun/view/ActionOuvrirJournaux.java
+c04260a43f9c  src/main/java/fr/univ_amu/iut/commun/view/ActionOuvrirJournaux.java
 e781d38ddb7a  src/main/java/fr/univ_amu/iut/commun/view/ActionOuvrirReglages.java
 6b720afe5b6e  src/main/java/fr/univ_amu/iut/commun/view/ActionRestaurer.java
 77cfd1465573  src/main/java/fr/univ_amu/iut/commun/view/ActionRestaurerComplet.java
@@ -590,8 +590,8 @@ dff135c19e2a  src/main/java/fr/univ_amu/iut/commun/view/OccupationChrome.java
 ed96f6def25a  src/main/java/fr/univ_amu/iut/commun/view/OngletReglagesFonctionnalites.java
 7cad567d4256  src/main/java/fr/univ_amu/iut/commun/view/OngletReglagesPersonnalise.java
 68125570febd  src/main/java/fr/univ_amu/iut/commun/view/OngletsVues.java
-70a606803fce  src/main/java/fr/univ_amu/iut/commun/view/OuvreurDeLien.java
-1a7d903b4065  src/main/java/fr/univ_amu/iut/commun/view/OuvreurDeLienSysteme.java
+2da451508057  src/main/java/fr/univ_amu/iut/commun/view/OuvreurDeLien.java
+595e4f8f2908  src/main/java/fr/univ_amu/iut/commun/view/OuvreurDeLienSysteme.java
 2c380d018c05  src/main/java/fr/univ_amu/iut/commun/view/OuvrirActivite.java
 00d073a6b46b  src/main/java/fr/univ_amu/iut/commun/view/OuvrirAnalyse.java
 0fd26a9d1208  src/main/java/fr/univ_amu/iut/commun/view/OuvrirAudio.java
@@ -837,13 +837,13 @@ c848e5b9066b  src/main/java/fr/univ_amu/iut/lot/model/dao/DepotPlanDao.java
 6c85dd916dd6  src/main/java/fr/univ_amu/iut/lot/model/dao/DepotUniteDao.java
 cdcfe60dcae2  src/main/java/fr/univ_amu/iut/lot/outils/CaptureCompteRenduDepot.java
 1feca192a0d2  src/main/java/fr/univ_amu/iut/lot/outils/CaptureLot.java
-cddce7a31112  src/main/java/fr/univ_amu/iut/lot/view/AppuisTeleversement.java
+d85b40ab44da  src/main/java/fr/univ_amu/iut/lot/view/AppuisTeleversement.java
 c8830e19de44  src/main/java/fr/univ_amu/iut/lot/view/BandeauLotUI.java
 7f43cce2950d  src/main/java/fr/univ_amu/iut/lot/view/CompteRenduDepotUI.java
 afc956093fe2  src/main/java/fr/univ_amu/iut/lot/view/EtapeDeposerUI.java
 2e483544fe6d  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleversementController.java
 20531ccad085  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleverserUI.java
-5eaf17e1459c  src/main/java/fr/univ_amu/iut/lot/view/LotController.java
+4785f518bf6b  src/main/java/fr/univ_amu/iut/lot/view/LotController.java
 2020a70711b5  src/main/java/fr/univ_amu/iut/lot/view/NavigationLot.java
 c5fa1ea4b7ca  src/main/java/fr/univ_amu/iut/lot/view/RelaisSuiviDepot.java
 477cfe8018aa  src/main/java/fr/univ_amu/iut/lot/view/SuiviTraitementUI.java
@@ -1539,7 +1539,7 @@ c6f9e9e80a8c  src/test/java/fr/univ_amu/iut/commun/view/AccueilApparenceTest.jav
 4fb83bc8a97a  src/test/java/fr/univ_amu/iut/commun/view/ActionAProposTest.java
 c61e6ecf9404  src/test/java/fr/univ_amu/iut/commun/view/ActionFicheEspeceTest.java
 d588d2af7e69  src/test/java/fr/univ_amu/iut/commun/view/ActionMenuWiringTest.java
-d1c2406b28e1  src/test/java/fr/univ_amu/iut/commun/view/ActionOuvrirJournauxTest.java
+f41fba6d613a  src/test/java/fr/univ_amu/iut/commun/view/ActionOuvrirJournauxTest.java
 8294cd616aad  src/test/java/fr/univ_amu/iut/commun/view/ActionsMenuChromeTest.java
 2d0c29d89c78  src/test/java/fr/univ_amu/iut/commun/view/ActionsSauvegardeTest.java
 cf76a4af50b1  src/test/java/fr/univ_amu/iut/commun/view/AxeHoraireTest.java
@@ -1778,7 +1778,7 @@ d290c4438c53  src/test/java/fr/univ_amu/iut/lot/view/LotIdentiteStatutViewTest.j
 21de420b4e35  src/test/java/fr/univ_amu/iut/lot/view/LotViewTest.java
 0296639e177a  src/test/java/fr/univ_amu/iut/lot/view/LotVueIntegrationTest.java
 59fbfe99d0e1  src/test/java/fr/univ_amu/iut/lot/view/NavigationLotViewTest.java
-f1ccd1f78a5a  src/test/java/fr/univ_amu/iut/lot/view/ScenarioPerceptifRefusDepotTest.java
+bbcbe824c929  src/test/java/fr/univ_amu/iut/lot/view/ScenarioPerceptifRefusDepotTest.java
 029a40b4f056  src/test/java/fr/univ_amu/iut/lot/viewmodel/ActionsLotPossiblesTest.java
 227eb4b62ef9  src/test/java/fr/univ_amu/iut/lot/viewmodel/AnticipationEspaceDisqueTest.java
 9ac41c207f58  src/test/java/fr/univ_amu/iut/lot/viewmodel/CompteRenduChiffreDepotTest.java
@@ -1876,7 +1876,7 @@ acd643d069e5  src/test/java/fr/univ_amu/iut/passage/model/PropositionsEnregistre
 8a9952c6166d  src/test/java/fr/univ_amu/iut/passage/model/VerificationIdentiteAudioTest.java
 434ae859e67a  src/test/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleViewTest.java
 f4286d23a74d  src/test/java/fr/univ_amu/iut/passage/view/NavigationPassageViewTest.java
-2ea44d9cda6f  src/test/java/fr/univ_amu/iut/passage/view/PassageActionsFicheViewTest.java
+ca08d0312ad1  src/test/java/fr/univ_amu/iut/passage/view/PassageActionsFicheViewTest.java
 3a52056aeff5  src/test/java/fr/univ_amu/iut/passage/view/PassageControllerEmplacementTest.java
 3a7e7d486f43  src/test/java/fr/univ_amu/iut/passage/view/PassageReactivationViewTest.java
 6693574eadac  src/test/java/fr/univ_amu/iut/passage/view/PassageViewTest.java

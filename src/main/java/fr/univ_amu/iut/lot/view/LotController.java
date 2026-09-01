@@ -15,6 +15,8 @@ import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.MenuLigne;
+import fr.univ_amu.iut.commun.view.NotificateurModifiable;
+import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -56,6 +58,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'écran **M-Lot** (`Lot.fxml`).
@@ -111,6 +114,13 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// les deux confirmations de l'écran (suppression des archives, réinitialisation du dépôt).
     private final ConfirmateurModifiable confirmateur =
             new ConfirmateurModifiable(new ConfirmationNavigation("Supprimer les archives de dépôt ?"));
+
+    /// Compte rendu d'un geste qui n'a pas abouti : porteur partagé, stub en test, comme le
+    /// confirmateur au-dessus. Porté par le PARENT et passé aux sous-vues (ADR 2745 et 0010) :
+    /// fabriqué dans une sous-vue, il serait un second point de substitution que les doubles du
+    /// parent n'atteindraient pas, et l'écran se tairait sans que rien ne le signale.
+    private final NotificateurModifiable notificateur =
+            new NotificateurModifiable(new NotificationDialogue(this::fenetre));
 
     @FXML
     private HBox stepper;
@@ -299,6 +309,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 depotColonnes,
                 ouvreurDeLien,
                 confirmateur,
+                notificateur,
                 () -> contexte.get().idPassage(),
                 () -> suiviTraitement.lancer(depotViewModel)));
 
@@ -596,6 +607,19 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 Elles ont déjà été téléversées sur Vigie-Chiro et pourront être régénérées si besoin.""")) {
             viewModel.supprimerArchives();
         }
+    }
+
+    /// Porteur de compte rendu exposé aux tests : `notificateur().definir(stub)`.
+    NotificateurModifiable notificateur() {
+        return notificateur;
+    }
+
+    /// Fenêtre porteuse, ou `null` avant l'attachement à une scène. `getScene()` rend `null` tant
+    /// que l'écran n'est pas affiché, et un dialogue sans propriétaire s'ouvre derrière.
+    private Window fenetre() {
+        return stepper == null || stepper.getScene() == null
+                ? null
+                : stepper.getScene().getWindow();
     }
 
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.

@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
@@ -49,8 +50,10 @@ import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Labeled;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
@@ -114,6 +117,13 @@ class ScenarioPerceptifRefusDepotTest {
     private Injector injector;
     private ContextePassage contexte;
 
+    /// Ce que le port d'ouverture a reçu, geste par geste (#4982). Le gestionnaire de fichiers est
+    /// l'autre frontière système truquée ici : en ouvrir un vrai sur un runner n'a pas de sens, et
+    /// ce qui se vérifie n'est de toute façon pas la fenêtre mais le geste demandé.
+    private final List<String> liensOuverts = new ArrayList<>();
+
+    private final List<Path> dossiersOuverts = new ArrayList<>();
+
     @Start
     void start(Stage stage) throws IOException {
         injector = BancDeRecette.surLeChrome()
@@ -130,6 +140,23 @@ class ScenarioPerceptifRefusDepotTest {
                         OptionalBinder.newOptionalBinder(binder(), DepotVigieChiro.class)
                                 .setBinding()
                                 .to(Key.get(DepotVigieChiro.class, Names.named(QUALIFIANT)));
+                    }
+
+                    @Provides
+                    @Singleton
+                    OuvreurDeLien ouvreurDeLien() {
+                        return new OuvreurDeLien() {
+                            @Override
+                            public void ouvrir(String url) {
+                                liensOuverts.add(url);
+                            }
+
+                            @Override
+                            public boolean ouvrirDossier(Path dossier) {
+                                dossiersOuverts.add(dossier);
+                                return true;
+                            }
+                        };
                     }
 
                     @Provides
@@ -209,6 +236,46 @@ class ScenarioPerceptifRefusDepotTest {
         assertThat(CadreVisible.contient(libellePortant(robot, "Reconnectez-vous")))
                 .as("la phrase que ce cas fait juger est visible à l'image, et non sous le pli")
                 .isTrue();
+    }
+
+    @Test
+    @CasDeRecette(
+            value = "S4-18",
+            portee = Portee.HORS_APPLICATION,
+            reserve = "Aucun gestionnaire de fichiers ne s'ouvre sur le banc : ce clip montre le clic,"
+                    + " pas la fenêtre qu'il ouvre. Ce qui se vérifie est le GESTE demandé au système -"
+                    + " ouvrir un dossier, et non ouvrir un lien - et cela se lit dans l'assertion.")
+    @DisplayName("S4-18 · « Ouvrir le dossier » ouvre un DOSSIER, et non un onglet de navigateur")
+    void ouvrir_le_dossier_de_depot_demande_un_dossier(FxRobot robot) {
+        // Ce cas se joue SUR CET ÉCRAN-LÀ, et c'est tout son sens : le repli manuel s'atteint quand
+        // le téléversement vient d'échouer. C'est le moment où un observateur a cliqué ici, reçu un
+        // listing de répertoire dans son navigateur, et est reparti chercher ses ZIP à la main
+        // (#4982). Le clip le montre sur l'écran qui porte ce repli, et par ses vrais boutons.
+        Respiration.avantLeGeste(robot);
+
+        // On GÉNÈRE d'abord, par le vrai bouton : « Ouvrir le dossier » reste désactivé tant qu'il
+        // n'y a pas d'archive à montrer, et les archives naissent de ce geste-là. Le premier jet
+        // cliquait à l'ouverture de l'écran, sur un bouton grisé - le clic ne portait pas, et rien
+        // ne le disait sinon une liste vide au moment d'asserter.
+        CadreVisible.amener(robot.lookup("#btnGenererArchives").query(), robot);
+        robot.clickOn("#btnGenererArchives");
+
+        Button ouvrir = robot.lookup("#btnOuvrirDepot").queryAs(Button.class);
+        Attente.que(
+                () -> !ouvrir.isDisabled(), "les archives sont générées, donc il y a un dossier à ouvrir", 20 * 1000L);
+        CadreVisible.amener(ouvrir, robot);
+        Respiration.entreDeuxGestes(robot);
+
+        robot.clickOn("#btnOuvrirDepot");
+        Respiration.surLeMomentCle(robot);
+
+        assertThat(dossiersOuverts)
+                .as("le port reçoit un CHEMIN par le geste « dossier », et non une URI de navigateur")
+                .hasSize(1);
+        assertThat(dossiersOuverts.getFirst()).asString().endsWith("depot");
+        assertThat(liensOuverts)
+                .as("rien ne part au navigateur : c'est là que le listing de répertoire naissait")
+                .isEmpty();
     }
 
     // --------------------------------------------------------------------------------------------
