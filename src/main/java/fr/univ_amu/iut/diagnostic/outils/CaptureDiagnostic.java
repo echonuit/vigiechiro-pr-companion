@@ -57,9 +57,9 @@ import javafx.scene.Scene;
 ///   le graphe est vide mais les anomalies du journal restent affichées ;
 /// - `apercu-diagnostic-sans-gps.png` : **point sans coordonnées GPS**, le repère GPS passe à « non
 ///   renseigné » et l'encart cohérence horaires disparaît (calcul impossible sans coordonnées) ;
-/// - `apercu-diagnostic-hors-nuit.png` : **enregistrement hors nuit** (démarrage avant le coucher et
-///   arrêt après le lever du soleil), l'alerte de cohérence horaire s'affiche - couleur et icône
-///   posées par `LibelleRetour` depuis la sévérité (#2050, #2222).
+/// - `apercu-diagnostic-hors-nuit.png` : la fenêtre du protocole **n'est pas couverte**, l'avertissement
+///   de cohérence horaire s'affiche - couleur et icône posées par `LibelleRetour` depuis la sévérité
+///   (#2050, #2222). Le nom du fichier décrit encore l'ancienne règle : #4989 le reprend.
 ///
 /// **Déterminisme** : l'écran n'affiche que la série climatique, les anomalies et le GPS, aucun
 /// chemin de fichier, donc aucune dépendance au dossier temporaire.
@@ -76,16 +76,24 @@ public final class CaptureDiagnostic {
     /// Horaires **nominaux** : l'enregistrement tient dans la fenêtre nocturne (démarrage après le
     /// coucher, arrêt avant le lever), donc **aucune** alerte de cohérence horaire. C'est l'état que
     /// montre la capture principale, désormais une nuit cohérente (#2222).
-    private static final String DEBUT_NOMINAL = "22:00:00";
+    /// Horaires qui **couvrent** la fenêtre du protocole : commencés avant le coucher moins trente
+    /// minutes, finis après le lever plus trente. Les deux valeurs ont été échangées avec celles du
+    /// cas d'alerte, qui les portaient à l'envers : le protocole est un plancher, et ces horaires-là
+    /// le tiennent (#4988).
+    private static final String DEBUT_NOMINAL = "20:25:00";
 
-    private static final String FIN_NOMINALE = "06:00:00";
+    private static final String FIN_NOMINALE = "07:47:00";
 
-    /// Horaires **hors nuit** : démarrage avant le coucher du soleil et arrêt après le lever - une
-    /// partie de l'enregistrement est diurne. Déclenche l'alerte « hors nuit » que la capture dédiée
-    /// `apercu-diagnostic-hors-nuit.png` met en évidence (#2222).
-    private static final String DEBUT_HORS_NUIT = "20:25:00";
+    /// Horaires qui **ne couvrent pas** la fenêtre exigée : commencés après le coucher, finis avant
+    /// la fin demandée. C'est l'erreur de paramétrage réellement commise sur le terrain, et l'alerte
+    /// que la capture dédiée met en évidence.
+    ///
+    /// Attention : le fichier s'appelle encore `apercu-diagnostic-hors-nuit.png`, nom qui décrivait l'ancienne
+    /// règle inversée. Le renommage appartient à #4989, qui possède la page d'écran et les manifestes
+    /// où ce nom vit aussi.
+    private static final String DEBUT_HORS_NUIT = "22:00:00";
 
-    private static final String FIN_HORS_NUIT = "07:47:00";
+    private static final String FIN_HORS_NUIT = "05:00:00";
 
     /// THLog synthétique : une nuit de juin, refroidissement de 19→11 °C et hygrométrie montante
     /// (entête comprise, séparateur tabulation, comme `PaRecPR<sn>_THLog.csv`).
@@ -259,8 +267,8 @@ public final class CaptureDiagnostic {
                 passageDao, sessionDao, journalDao, idPointSansGps, 3, "2026-06-24", DEBUT_NOMINAL, FIN_NOMINALE);
         rattacherReleve(releveDao, sessionDao, idSansGps, thlog);
 
-        // Passage dédié à l'alerte « hors nuit » (#2222) : géolocalisé (le calcul exige un GPS) et
-        // relevé présent (écran complet), mais des horaires qui débordent la fenêtre nocturne.
+        // Passage dédié à l'avertissement (#2222) : géolocalisé (le calcul exige un GPS) et relevé
+        // présent (écran complet), avec des horaires qui NE COUVRENT PAS la fenêtre du protocole.
         long idHorsNuit = passageAvecJournal(
                 passageDao, sessionDao, journalDao, idPoint, 4, "2026-06-20", DEBUT_HORS_NUIT, FIN_HORS_NUIT);
         rattacherReleve(releveDao, sessionDao, idHorsNuit, thlog);

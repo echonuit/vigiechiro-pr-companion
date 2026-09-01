@@ -64,6 +64,11 @@ public class DiagnosticViewModel {
     /// La fenêtre nocturne **exploitable** (heures de coucher et de lever), pour situer les mesures sur
     /// le graphe. `null` tant qu'aucun diagnostic n'est chargé ; indisponible quand le point n'a pas de
     /// coordonnées.
+    /// Les deux plages, exigée et enregistrée, ou la chaîne vide (#4988).
+    public ReadOnlyStringProperty plagesHorairesProperty() {
+        return plagesHoraires.getReadOnlyProperty();
+    }
+
     public ReadOnlyObjectProperty<CoherenceHoraire> coherenceHoraireProperty() {
         return coherence.getReadOnlyProperty();
     }
@@ -71,6 +76,12 @@ public class DiagnosticViewModel {
     /// Libellé de la fenêtre nocturne (`Nuit : coucher 21:58 · lever 05:48`), vide si indisponible.
     /// L'icône lune est posée par la vue (FontIcon), pas ici (le VM ignore l'IHM).
     private final ReadOnlyStringWrapper fenetreNuit = new ReadOnlyStringWrapper(this, "fenetreNuit", "");
+
+    /// Ce que le protocole attendait et ce qui a été enregistré, sous la fenêtre nocturne (#4988).
+    ///
+    /// Vide quand la vérification est indisponible : un attendu sans son obtenu laisserait croire à
+    /// une mesure qui n'a pas eu lieu.
+    private final ReadOnlyStringWrapper plagesHoraires = new ReadOnlyStringWrapper(this, "plagesHoraires", "");
 
     /// La cohérence horaire brute du diagnostic courant, ou `null` tant que rien n'est chargé. Le libellé
     /// n'en dit que le texte ; l'aplat de la nuit sur le graphe a besoin des **heures** (#2617).
@@ -123,11 +134,13 @@ public class DiagnosticViewModel {
         coherenceHoraireDisponible.set(coherence.disponible());
         if (!coherence.disponible()) {
             fenetreNuit.set("");
+            plagesHoraires.set("");
             alerteHorsNuit.set(RetourOperation.AUCUN);
             return;
         }
         fenetreNuit.set("Nuit : coucher " + HEURE.format(coherence.coucherSoleil()) + " · lever "
                 + HEURE.format(coherence.leverSoleil()));
+        plagesHoraires.set(PlagesHoraires.lisible(coherence));
         alerteHorsNuit.set(libelleEcart(coherence));
     }
 

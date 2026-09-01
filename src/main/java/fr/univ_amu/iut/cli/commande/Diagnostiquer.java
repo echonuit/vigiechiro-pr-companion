@@ -38,6 +38,10 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
 
     private static final DateTimeFormatter HEURE = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT);
 
+    /// La flèche qui sépare les deux bornes d'une plage. Nommée parce qu'elle sert quatre fois, et
+    /// que le portail refuse un littéral répété.
+    private static final String VERS = " → ";
+
     @Option(
             names = "--passage",
             required = true,
@@ -123,15 +127,27 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
         if (!coherence.disponible()) {
             return "indisponible (GPS ou horaires manquants, ou latitude polaire)";
         }
-        String fenetre =
-                "nuit " + HEURE.format(coherence.coucherSoleil()) + " → " + HEURE.format(coherence.leverSoleil());
-        // Restitution minimale, posée par #4987 : la plage exigée et la plage enregistrée arrivent
-        // avec #4988, qui les livre sur les deux surfaces ensemble.
+        String fenetre = "nuit " + HEURE.format(coherence.coucherSoleil()) + VERS
+                + HEURE.format(coherence.leverSoleil()) + ", " + plagesLisibles(coherence);
         return switch (coherence.couverture()) {
             case AVERTISSEMENT -> fenetre + ", la fenêtre du protocole n'est pas couverte";
             case INFORMATION -> fenetre + ", fenêtre du protocole couverte et dépassée";
             case INDISPONIBLE -> fenetre;
         };
+    }
+
+    /// Ce que le protocole attendait et ce qui a été enregistré, ou la chaîne vide si la vérification
+    /// n'a pas pu se faire.
+    ///
+    /// Visible pour le banc de parité : l'écran et cette commande doivent citer les **mêmes** plages,
+    /// et un cas qui comparerait deux exemples écrits à la main ne garderait rien (ADR 0014).
+    public static String plagesLisibles(CoherenceHoraire coherence) {
+        if (!coherence.disponible()) {
+            return "";
+        }
+        return "protocole " + HEURE.format(coherence.debutExige()) + VERS + HEURE.format(coherence.finExigee())
+                + ", enregistré " + HEURE.format(coherence.debutEnregistre()) + VERS
+                + HEURE.format(coherence.finEnregistree());
     }
 
     /// Ajoute `  <libellé aligné> : <valeur>` (libellé cadré à 19 caractères) suivi d'un retour ligne.
@@ -155,6 +171,10 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
         objet.put(
                 "couvertureDuProtocole",
                 coherence.disponible() ? coherence.couverture().name() : null);
+        objet.put("debutExige", coherence.disponible() ? HEURE.format(coherence.debutExige()) : null);
+        objet.put("finExigee", coherence.disponible() ? HEURE.format(coherence.finExigee()) : null);
+        objet.put("debutEnregistre", coherence.disponible() ? HEURE.format(coherence.debutEnregistre()) : null);
+        objet.put("finEnregistree", coherence.disponible() ? HEURE.format(coherence.finEnregistree()) : null);
         objet.put("gpsDisponible", d.coordonneesGpsDisponibles());
         objet.put("anomalies", d.anomalies().anomalies());
         objet.put("evenements", d.anomalies().evenements());
