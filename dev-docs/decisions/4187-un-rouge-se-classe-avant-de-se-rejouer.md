@@ -42,21 +42,19 @@ conduite.
 | DÉPÔT, un ou deux bancs qui vacillent | 56 % | ne pas rejouer, nourrir l'issue du banc |
 | CASCADE, annulé car une autre étape avait rougi | 19 % | ne pas rejouer, lire l'étape qui a rougi la première |
 | FORGE, artefact ou action indisponible | 11 % | rejouer, une fois |
-| RUNNER, JVM effondrée ou couche native absente | 9 % | rejouer une fois, et le consigner |
+| RUNNER, JVM effondrée, couche native absente, ou **cause traversant la couche graphique** | 9 % | rejouer une fois, et le consigner |
 | INDÉTERMINÉ | 5 % | lire le journal, ne pas rejouer sans l'avoir lu |
 
-**Un rouge sur cinq seulement vaut un rejeu.** Les quatre autres reviennent au tirage suivant, chez
-quelqu'un d'autre, sur une demande sans rapport. Le rejeu ne supprime pas le rouge : il le déplace,
-et il en efface la trace, la tentative rejouée écrasant le verdict de la précédente.
+**Un rouge sur cinq seulement vaut un rejeu.** Les autres reviennent au tirage suivant, chez
+quelqu'un d'autre. Le rejeu ne supprime pas le rouge : il le déplace, et la tentative rejouée efface
+le verdict de la précédente.
 
-**La mesure a refusé le remède que l'issue demandait.** #4187 attendait une conduite pour le runner.
-Le runner pèse 9 %. Ce qui pèse 56 %, ce sont nos propres bancs, et aucune conduite ne les répare :
-il faut les corriger, ce que #4845, #4847 et #4696 portent. C'est l'ADR 4853 appliquée à un chantier
-de CI plutôt qu'à un service.
+**La mesure a refusé le remède demandé.** L'issue attendait une conduite pour le runner, qui pèse
+9 % ; ce qui pèse 56 %, ce sont nos bancs, qu'aucune conduite ne répare. ADR 4853, sur un chantier
+de CI.
 
 **Une cause non reconnue se nomme telle quelle.** `INDÉTERMINÉ` existe parce que trois tentatives ne
-portent aucune erreur dans les journaux lus. Les ranger de force aurait inventé une cause, et l'ADR
-2213 refuse cela.
+portent aucune erreur : les ranger de force aurait inventé une cause (ADR 2213).
 
 ## La cascade existe à deux niveaux, et un seul était modélisé
 
@@ -65,16 +63,21 @@ phénomène joue **entre jobs** : 11 tentatives ne portent aucun test tombé, se
 `The operation was canceled` qui dit qu'une étape voisine avait déjà échoué. Chercher la cause dans
 le job annulé ne mène nulle part, et c'est pourtant le journal qu'on ouvre en premier.
 
+## Le volume ne suffit pas : la COUCHE décide (#5036)
+
+Le classement décidait « runner » sur deux signes : couche native absente, ou plus de cinquante tests
+tombés. Un défaut de rendu qui n'emporte **qu'un** test lui échappait.
+
+Il lit désormais la **cause profonde**, celle que `Caused by:` porte dans le bloc surefire, et cherche
+si elle traverse la couche graphique. **Cinq formulations plus séduisantes ont été réfutées sur des
+journaux réels**, que #5036 porte : la plus instructive est que 61 % des piles d'une suite **verte**
+sont entièrement étrangères. La sixième classe correctement les **huit** journaux disponibles, et
+généralise ce que `OSPango` faisait pour un seul symptôme : nommer la couche plutôt que compter.
+
 ## Ce qui se lit est la fin du journal, jamais le journal
 
-Deux mesures plausibles et fausses ont précédé la bonne.
-
-Compter les exceptions du journal entier faisait remonter `java.net.ConnectException` à 348 fois,
-avec des comptes **identiques à l'unité** sur sept runs : une coupure réseau qu'un test provoque
-exprès. Chercher les motifs dans le texte entier rangeait ensuite **20 tentatives sur 20** sous « un
-garde a refusé », parce qu'un garde **vert** imprime aussi le mot `REFUSE`.
-
-Le classement ne lit donc que les douze lignes précédant la **dernière** ligne d'erreur.
+Deux mesures fausses l'ont établi, et l'ADR 4804 en porte la règle générale. Le classement ne lit que
+les douze lignes précédant la dernière ligne d'erreur.
 
 ## Ce qui prouve que le classement voit
 
@@ -85,12 +88,10 @@ avait produit le 20 sur 20. Ce témoin existe désormais.
 
 ## Conséquences
 
-- Le seuil d'effondrement vaut **50** tests tombés. Le plus gros rouge normal du dépôt en 21 jours en
-  a fait tomber 2 ; un effondrement en emporte plus de 1 300. Aucune valeur intermédiaire n'a été
-  observée, et ce vide est ce qui rend le seuil sûr plutôt qu'arbitraire.
-- Un rouge de runner qui revient **deux fois dans la même semaine avec la même signature** cesse d'en
-  être un : c'est une dépendance à ce que l'image ne garantit pas. Les deux tentatives à couche
-  native absente relevées sont sous ce seuil.
+- Le seuil d'effondrement vaut **50**. Le plus gros rouge normal du dépôt en 21 jours en a fait
+  tomber 2, un effondrement plus de 1 300 : ce **vide** rend le seuil sûr plutôt qu'arbitraire.
+- Un rouge de runner qui revient **deux fois la même semaine avec la même signature** cesse d'en être
+  un : c'est une dépendance à ce que l'image ne garantit pas.
 - La conduite vit dans `dev-docs/ci-cd-release.md`, où l'on va quand la CI rougit.
 
 ## Alternatives écartées
