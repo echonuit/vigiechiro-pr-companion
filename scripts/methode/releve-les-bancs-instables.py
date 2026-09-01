@@ -222,12 +222,87 @@ def _finDErreur(journal: str) -> str | None:
     return "\n".join(lignes[max(0, marques[-1] - _AVANT_L_ERREUR) : marques[-1] + 1])
 
 
+COUCHE_GRAPHIQUE = "la cause profonde traverse la couche graphique"
+
+# Une ligne de pile, et la marque de ce qui est A NOUS. Le classement lit la PILE et non le seul
+# VOLUME : un defaut de runner qui n emporte qu un test lui echappait, et il concluait « c est nous »
+# sur une pile ou nous n apparaissons pas (#5036).
+# Le motif n est PAS ancre en debut de ligne : la forge prefixe chaque ligne de son journal par
+# « atelier<TAB>etape<TAB>horodatage », si bien qu un `^\s*at` ne colle jamais. Le premier jet l a
+# fait, et son temoin l a attrape.
+_CADRE = re.compile(r"\bat [\w.$/]+\([^)]*\)")
+_NOTRE = re.compile(r"\bfr\.univ_amu\.")
+
+# La ligne qui OUVRE une pile : un nom d exception qualifie, hors ligne de cadre.
+_EXCEPTION = re.compile(r"\b(?:[\w.]+\.)?\w*(?:Exception|Error)\b")
+
+
+# L echec surefire d un cas, et la CAUSE PROFONDE qu il enveloppe.
+_ECHEC_SUREFIRE = re.compile(r"<<< (?:ERROR|FAILURE)!")
+_CAUSE = re.compile(r"\bCaused by: ")
+
+# La couche graphique de JavaFX : le verre, le rendu, et le pont vers la boite a outils.
+_GRAPHIQUE = re.compile(r"com\.sun\.glass\.|com\.sun\.prism\.|com\.sun\.javafx\.tk\.")
+
+
+def causeProfonde(journal: str) -> list[str]:
+    """Les cadres de la DERNIERE `Caused by:` du premier echec surefire rencontre.
+
+    Quatre portees plus larges ont ete essayees et refutees (#5036) :
+
+    - le journal entier : il porte forcement nos cadres, ailleurs, donc jamais etranger ;
+    - une pile quelconque : 61 % des piles d une suite VERTE sont etrangeres, donc toujours vrai ;
+    - la pile du cas tombe : elle contient le cas, donc NOS lignes, par construction ;
+    - un motif de cadre ancre en debut de ligne : la forge prefixe chaque ligne de son journal.
+
+    Ce qui reste est la cause que TestFX enveloppe : elle n est appelee par aucun de nos cadres, et
+    elle est unique par echec.
+    """
+    lignes = journal.splitlines()
+    debut = next((i for i, l in enumerate(lignes) if _ECHEC_SUREFIRE.search(l)), None)
+    if debut is None:
+        return []
+    cadres, dansLaCause = [], False
+    for ligne in lignes[debut + 1 :]:
+        if _CAUSE.search(ligne):
+            cadres, dansLaCause = [], True
+            continue
+        if _CADRE.search(ligne):
+            if dansLaCause:
+                cadres.append(ligne)
+            continue
+        if dansLaCause and cadres:
+            break  # la cause s arrete a la premiere ligne qui n est pas un cadre
+    return cadres
+
+
+def coucheGraphique(journal: str) -> bool:
+    """La cause profonde de l echec traverse-t-elle la couche graphique de JavaFX ?
+
+    C est la COUCHE qui distingue, pas le proprietaire des cadres. Cinq formulations plus seduisantes
+    ont ete refutees sur des journaux reels (#5036) :
+
+    1. aucune ligne du depot dans le JOURNAL : il en porte forcement, ailleurs ;
+    2. une pile quelconque entierement etrangere : 61 % des piles d une suite VERTE le sont ;
+    3. la pile du cas tombe : elle contient le cas, donc nos lignes, par construction ;
+    4. un motif de cadre ancre en debut de ligne : la forge prefixe ses lignes de journal ;
+    5. le PREMIER cadre de la cause profonde : une expiration de `WaitForAsyncUtils` ou une fermeture
+       de socket appartiennent a autrui tout en etant NOTRE geste.
+
+    La sixieme classe correctement les huit journaux reels dont on dispose. Elle generalise ce que le
+    marqueur `OSPango` faisait deja pour un seul symptome : nommer la couche.
+    """
+    return any(_GRAPHIQUE.search(cadre) for cadre in causeProfonde(journal))
+
+
 def classe(journal: str, ordonnes: list[str]) -> tuple[str, str]:
     """A qui ce rouge appartient, et pourquoi. Rend `INDETERMINE` plutot que d'inventer une cause."""
     if _NATIF.search(journal):
         return ("RUNNER", NATIF)
     if len(ordonnes) >= SEUIL_EFFONDREMENT:
         return ("RUNNER", EFFONDREMENT)
+    if coucheGraphique(journal):
+        return ("RUNNER", COUCHE_GRAPHIQUE)
     if ordonnes:
         return ("DEPOT", UN_BANC)
     fin = _finDErreur(journal)
@@ -388,7 +463,56 @@ def _autoTest() -> int:
     )
     assert classe(loin, [])[0] == "CASCADE", classe(loin, [])
 
-    print("auto-test : 24 temoins verts")
+    # ---- La COUCHE decide, pas le volume (#5036) ----
+    #
+    # Extraits REELS du 1er septembre 2026, avec le prefixe de journal de la forge et la forme d un
+    # bloc surefire : la ligne d echec, l exception enveloppante, puis `Caused by:` et sa pile. Un
+    # premier jet a ecrit ces temoins sur un extrait SYNTHETIQUE sans cette forme, et ils passaient
+    # alors que la regle ne voyait rien du journal reel.
+    prefixe = "build\tB\t2026-09-01T06:45:30Z "
+    echec = (
+        prefixe
+        + "[ERROR] fr.univ_amu.iut.AppTest.un_cas(FxRobot) -- Time elapsed: 2.2 s <<< ERROR!\n"
+    )
+
+    # La cause traverse la couche graphique : le runner, meme si NOTRE cadre ferme la pile.
+    graphique = echec + "".join(
+        prefixe + l + "\n"
+        for l in (
+            "java.lang.RuntimeException: java.lang.IndexOutOfBoundsException",
+            "\tat org.testfx.util.WaitForAsyncUtils.waitFor(WaitForAsyncUtils.java:276)",
+            "\tat fr.univ_amu.iut.AppTest.un_cas(AppTest.java:177)",
+            "Caused by: java.lang.IndexOutOfBoundsException",
+            "\tat java.base/java.nio.ByteBufferAsIntBufferB.put(ByteBufferAsIntBufferB.java:180)",
+            "\tat com.sun.glass.ui.headless.HeadlessWindow.clearRect(HeadlessWindow.java:343)",
+            "\tat javafx.stage.Stage.setScene(Stage.java:291)",
+            "\tat fr.univ_amu.iut.AppTest.lambda$un_cas$2(AppTest.java:177)",
+        )
+    )
+    assert classe(graphique, ["AppTest.un_cas"])[0] == "RUNNER", classe(
+        graphique, ["AppTest.un_cas"]
+    )
+
+    # LE temoin qui a refute la cinquieme formulation : le premier cadre appartient a autrui, et
+    # pourtant l attente qui expire est NOTRE geste. Sans lui, une expiration devenait « runner ».
+    attente = echec + "".join(
+        prefixe + l + "\n"
+        for l in (
+            "java.lang.RuntimeException: java.util.concurrent.TimeoutException",
+            "\tat fr.univ_amu.iut.AppTest.un_cas(AppTest.java:140)",
+            "Caused by: java.util.concurrent.TimeoutException",
+            "\tat org.testfx.util.WaitForAsyncUtils.waitFor(WaitForAsyncUtils.java:276)",
+            "\tat fr.univ_amu.iut.recette.Attente.que(Attente.java:118)",
+        )
+    )
+    assert classe(attente, ["AppTest.un_cas"]) == ("DEPOT", UN_BANC), classe(
+        attente, ["AppTest.un_cas"]
+    )
+
+    # Et un echec SANS cause enveloppee reste ce qu il etait : un banc qui vacille.
+    assert classe(echec, ["AppTest.un_cas"]) == ("DEPOT", UN_BANC)
+
+    print("auto-test : 27 temoins verts")
     return 0
 
 
