@@ -193,4 +193,8 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte(ADR, "traces d'outil laissees par un collage non relu", suspects()))
+    sys.exit(
+        rapporte(
+            ADR, "traces d'outil laissees par un collage non relu", suspects(), lus=len(fichiers())
+        )
+    )

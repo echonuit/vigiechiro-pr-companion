@@ -566,6 +566,9 @@ def main() -> int:
         "ADR d'un article d'usage sans heuristique déclarée",
         suspects_ergonomie(),
         apercu=12,
+        # L'unite n'est pas le fichier balaye mais l'ADR LISIBLE : `_entetes()` est deja le
+        # corpus que ce controle lit, et l'extraire une seconde fois le compterait deux fois.
+        lus=len(_entetes()),
     )
 
 

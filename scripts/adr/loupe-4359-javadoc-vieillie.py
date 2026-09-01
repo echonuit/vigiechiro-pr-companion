@@ -158,4 +158,14 @@ def candidats(racine: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(loupe(ADR, "blocs sous cliquet dont le code a bougé après la javadoc", candidats()))
+    sys.exit(
+        loupe(
+            ADR,
+            "blocs sous cliquet dont le code a bougé après la javadoc",
+            candidats(),
+            # `fichiers()` n'a pas de defaut : lui passer RACINE, et non rien. Une signature dont le
+            # defaut est une constante et non `None` est l'une des divergences qui ont casse trois
+            # gardes quand la PR #5040 a tente de traiter cette famille par motif.
+            lus=len(fichiers(RACINE)),
+        )
+    )

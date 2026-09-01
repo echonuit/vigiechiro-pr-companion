@@ -141,4 +141,12 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte(ADR, "apostrophe courbe employée au lieu de l'ASCII", suspects(), apercu=15))
+    sys.exit(
+        rapporte(
+            ADR,
+            "apostrophe courbe employée au lieu de l'ASCII",
+            suspects(),
+            apercu=15,
+            lus=len(fichiers()),
+        )
+    )

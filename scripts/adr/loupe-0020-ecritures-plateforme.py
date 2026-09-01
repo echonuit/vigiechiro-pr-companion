@@ -34,12 +34,21 @@ ECRITURE = re.compile(
 )
 
 
-def candidats(api: pathlib.Path | None = None) -> list[str]:
-    trouves = []
+def fichiers(api: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unités que ce garde LIT, extraites pour que `lus` les compte (issue #5007).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu'il RETENAIT. Un ciblage manqué
+    donnait donc zéro suspect sur zéro fichier, et ce zéro passait pour un succès.
+    """
     # Le retour anticipe sur un repertoire absent devient un FILTRE : avec deux arbres, l un peut
     # manquer sans que l autre cesse d etre lu, et une racine de temoin n a pas a exister non plus.
     arbres = [api] if api else list(ARBRES)
-    for source in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
+    return sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java"))
+
+
+def candidats(api: pathlib.Path | None = None) -> list[str]:
+    trouves = []
+    for source in fichiers(api):
         for numero, ligne in enumerate(source.read_text(encoding="utf-8").splitlines(), 1):
             if ECRITURE.search(ligne):
                 trouves.append(f"{source}:{numero}  {ligne.strip()[:100]}")
@@ -49,6 +58,9 @@ def candidats(api: pathlib.Path | None = None) -> list[str]:
 if __name__ == "__main__":
     sys.exit(
         loupe(
-            "0020", "surface d'écriture vers la plateforme (à confronter aux 3 règles)", candidats()
+            "0020",
+            "surface d'écriture vers la plateforme (à confronter aux 3 règles)",
+            candidats(),
+            lus=len(fichiers()),
         )
     )

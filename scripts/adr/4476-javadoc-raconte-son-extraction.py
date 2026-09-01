@@ -82,11 +82,20 @@ def raconte(corps: str) -> str | None:
     return None
 
 
+def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unités que ce garde LIT, extraites pour que `lus` les compte (issue #5007).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu'il RETENAIT. Un ciblage manqué
+    donnait donc zéro suspect sur zéro fichier, et ce zéro passait pour un succès.
+    """
+    arbres = [racine] if racine else list(RACINES)
+    return sorted(x for a in arbres if a.is_dir() for x in a.rglob("*.java"))
+
+
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Un suspect par bloc de javadoc qui raconte l extraction dont sa classe est nee."""
-    arbres = [racine] if racine else list(RACINES)
     trouves = []
-    for f in sorted(x for a in arbres if a.is_dir() for x in a.rglob("*.java")):
+    for f in fichiers(racine):
         for debut, corps in blocs(f):
             phrase = raconte(corps)
             if phrase:
@@ -168,5 +177,11 @@ if __name__ == "__main__":
         print(f"\n{len(listes)} blocs de javadoc racontent l'extraction dont leur classe est née")
         sys.exit(0)
     sys.exit(
-        rapporte(ADR, "javadoc qui raconte le refactoring dont elle est née", listes, apercu=12)
+        rapporte(
+            ADR,
+            "javadoc qui raconte le refactoring dont elle est née",
+            listes,
+            apercu=12,
+            lus=len(fichiers()),
+        )
     )

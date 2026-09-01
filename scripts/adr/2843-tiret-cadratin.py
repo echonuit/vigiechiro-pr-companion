@@ -67,6 +67,19 @@ CITE = re.compile(
 )
 
 
+def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unités que ce garde LIT, extraites pour que `lus` les compte (issue #5007).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu'il RETENAIT. Un ciblage manqué
+    donnait donc zéro suspect sur zéro fichier, et ce zéro passait pour un succès.
+
+    Le tri est fait ARBRE PAR ARBRE, comme dans la boucle d'origine. Trier globalement sur les deux
+    arbres les entrelacerait : le compte ne bougerait pas, mais l'ordre de l'aperçu si.
+    """
+    arbres = [racine] if racine is not None else SOURCES
+    return [f for a in arbres if a.exists() for f in sorted(a.rglob("*.java"))]
+
+
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Les lignes Java portant un tiret cadratin **de prose**, citations exclues.
 
@@ -78,16 +91,12 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     `racine` sert au garde-fou `verifie_scripts.py`, qui pointe le script vers une fixture jetable.
     Sans elle, on balaie les deux arbres de sources du dépôt.
     """
-    arbres = [racine] if racine is not None else SOURCES
     trouves = []
-    for arbre in arbres:
-        if not arbre.exists():
-            continue
-        for source in sorted(arbre.rglob("*.java")):
-            contenu = source.read_text(encoding="utf-8")
-            for numero, ligne in enumerate(contenu.splitlines(), 1):
-                if CADRATIN in CITE.sub("", ligne):
-                    trouves.append(f"{source}:{numero}  {ligne.strip()[:EXTRAIT]}")
+    for source in fichiers(racine):
+        contenu = source.read_text(encoding="utf-8")
+        for numero, ligne in enumerate(contenu.splitlines(), 1):
+            if CADRATIN in CITE.sub("", ligne):
+                trouves.append(f"{source}:{numero}  {ligne.strip()[:EXTRAIT]}")
     return trouves
 
 
@@ -266,7 +275,7 @@ def sans_garde() -> list[str]:
 
 
 if __name__ == "__main__":
-    code = rapporte("2843", "tiret cadratin dans une source Java", suspects())
+    code = rapporte("2843", "tiret cadratin dans une source Java", suspects(), lus=len(fichiers()))
 
     # Une zone déclare quatre champs, et un cinquième **optionnel** : le balayage non récursif, qui ne
     # sert qu'à la racine du dépôt. Le défaut porté ici plutôt qu'un `True` répété sur chaque ligne

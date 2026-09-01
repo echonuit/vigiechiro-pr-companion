@@ -84,11 +84,20 @@ def blocs(fichier: pathlib.Path) -> list[tuple[int, int, int]]:
     return trouves
 
 
+def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unités que ce garde LIT, extraites pour que `lus` les compte (issue #5007).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu'il RETENAIT. Un ciblage manqué
+    donnait donc zéro suspect sur zéro fichier, et ce zéro passait pour un succès.
+    """
+    racines = [racine] if racine else list(RACINES)
+    return sorted(f for r in racines for f in r.rglob("*.java"))
+
+
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Un suspect par LIGNE au-dela du seuil, comme le cliquet de la javadoc."""
-    racines = [racine] if racine else list(RACINES)
     trouves = []
-    for f in sorted(f for r in racines for f in r.rglob("*.java")):
+    for f in fichiers(racine):
         nom = f.relative_to(RACINE_DEPOT) if f.is_relative_to(RACINE_DEPOT) else f.name
         for depart, compte, profondeur in blocs(f):
             if profondeur < PROFONDEUR_CORPS:
@@ -173,4 +182,12 @@ if __name__ == "__main__":
             print(f"  {s}")
         print(f"\n{len(listes)} lignes de commentaire au-delà du seuil, en corps de méthode")
         sys.exit(0)
-    sys.exit(rapporte(ADR, "commentaire qui déborde en corps de méthode", listes, apercu=15))
+    sys.exit(
+        rapporte(
+            ADR,
+            "commentaire qui déborde en corps de méthode",
+            listes,
+            apercu=15,
+            lus=len(fichiers()),
+        )
+    )
