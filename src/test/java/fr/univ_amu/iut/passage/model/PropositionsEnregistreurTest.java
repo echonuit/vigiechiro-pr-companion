@@ -6,6 +6,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
@@ -103,7 +104,7 @@ class PropositionsEnregistreurTest {
     }
 
     private static JournalDuCapteur journal(String chemin) {
-        return new JournalDuCapteur(1L, chemin, null, null, ID_SESSION);
+        return new JournalDuCapteur(1L, chemin, null, null, Completude.INCONNUE, ID_SESSION);
     }
 
     private static EnregistrementOriginal original(String nom) {

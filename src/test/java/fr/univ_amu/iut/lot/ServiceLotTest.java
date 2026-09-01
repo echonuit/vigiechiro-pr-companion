@@ -3,6 +3,7 @@ package fr.univ_amu.iut.lot;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -132,7 +133,8 @@ class ServiceLotTest {
             sequenceDao.insert(
                     new SequenceDEcoute(null, nom, idOriginal, i, i * 5.0, 5.0, "transformes/" + nom, true, idSession));
         }
-        journalDao.insert(new JournalDuCapteur(null, "LogPR" + SERIE + ".txt", null, null, idSession));
+        journalDao.insert(
+                new JournalDuCapteur(null, "LogPR" + SERIE + ".txt", null, null, Completude.INCONNUE, idSession));
         return idSession;
     }
 
@@ -375,7 +377,8 @@ class ServiceLotTest {
                 .id();
         originalDao.insert(
                 new EnregistrementOriginal(null, NOM_ORIGINAL, "bruts/" + NOM_ORIGINAL, 12.0, 384000, null, idSession));
-        journalDao.insert(new JournalDuCapteur(null, "LogPR" + SERIE + ".txt", null, null, idSession));
+        journalDao.insert(
+                new JournalDuCapteur(null, "LogPR" + SERIE + ".txt", null, null, Completude.INCONNUE, idSession));
         // aucune séquence : transformation manquante
 
         assertThatThrownBy(() -> service.preparerLot(passage.id()))

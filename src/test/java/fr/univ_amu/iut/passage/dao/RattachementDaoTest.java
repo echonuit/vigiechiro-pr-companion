@@ -2,6 +2,7 @@ package fr.univ_amu.iut.passage.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
@@ -101,8 +102,8 @@ class RattachementDaoTest {
                 racine.resolve("transformes").resolve(ANCIEN + "-PaRec_000.wav").toString(),
                 false,
                 idSession));
-        journalDao.insert(
-                new JournalDuCapteur(null, racine.resolve("foo_LogPR.txt").toString(), "[]", "[]", idSession));
+        journalDao.insert(new JournalDuCapteur(
+                null, racine.resolve("foo_LogPR.txt").toString(), "[]", "[]", Completude.INCONNUE, idSession));
         releveDao.insert(
                 new ReleveClimatique(null, racine.resolve("foo_THLog.csv").toString(), null, idSession));
     }

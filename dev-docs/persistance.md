@@ -40,7 +40,7 @@ Les trois premières migrations posent l'essentiel : `V01__schema.sql` (le sché
 `V02__seed_taxons.sql` (données de référence), `V03__perf_indexes.sql` (index). Les suivantes le font
 **évoluer**, migration après migration. Le dossier
 [`db/migration/`](https://github.com/echonuit/vigiechiro-pr-companion/tree/main/src/main/resources/db/migration)
-en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations-->44<!--/inv--> à ce jour).
+en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations-->45<!--/inv--> à ce jour).
 
 !!! tip "Ajouter une migration"
     1. Créez `db/migration/Vnn__description.sql`, où `nn` est le **numéro qui suit la dernière
@@ -51,7 +51,15 @@ en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations
        dans une transaction (voir ci-dessous), et ces trois-là n'y survivent pas. Un `PRAGMA` y est
        silencieusement sans effet, ce qui est le pire des trois. Une migration qui en aurait
        réellement besoin doit d'abord changer `MigrationSchema.appliquer`.
-    4. **Une fois poussée, elle ne se modifie plus.** Elle est appliquée chez d'autres, et ne se
+    4. **Défaites-la dans `FiletAvantMigrationTest.redescendreEnVersion37`.** Ce banc simule une base
+       restée à une version antérieure en retirant du registre les versions à rejouer **et en défaisant
+       ce qu'elles avaient fait**. Une migration neuve qu'on oublie d'y défaire fait échouer ses trois
+       cas sur un `duplicate column name` : la colonne existe encore quand la migration se rejoue. Le
+       message est clair une fois lu, et il ne dit pas d'où vient l'oubli.
+    5. **Le nombre de migrations est un chiffre balisé.** `<!--inv:migrations-->` vit dans **deux**
+       documents, `persistance.md` (ici) et `modele-de-donnees.md`, et `DocumentationAJourTest` les
+       vérifie tous les deux. En corriger un seul laisse l'autre rouge.
+    6. **Une fois poussée, elle ne se modifie plus.** Elle est appliquée chez d'autres, et ne se
        rejouera pas chez eux. Ce qu'il faut corriger se corrige dans une migration **suivante** ; une
        retouche du script déjà publié fait refuser le démarrage (voir ci-dessous).
 

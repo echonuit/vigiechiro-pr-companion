@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.EspaceDisque;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.JournalMutations;
@@ -263,6 +264,7 @@ final class MoteurImport {
                 cheminJournalCopie.toString(),
                 journal.evenementsJsonPourNuit(dateNuit),
                 journal.anomaliesJsonPourNuit(dateNuit),
+                completudeDe(rapport, dateNuit),
                 null);
         ReleveClimatique releveEntite =
                 cheminReleveCopie == null ? null : new ReleveClimatique(null, cheminReleveCopie.toString(), null, null);
@@ -481,6 +483,22 @@ final class MoteurImport {
             throw new UncheckedIOException("Calcul du volume des originaux impossible", e);
         }
         return total;
+    }
+
+    /// Ce que le journal dit de la fin de CETTE nuit, relu depuis la partition de l'inspection (#5030).
+    ///
+    /// Retrouvée par la date plutôt que passée en paramètre : `importerUneNuit` en porte déjà cinq, et
+    /// la partition est la **seule** source de cette valeur - la faire voyager en parallèle ouvrirait
+    /// la possibilité qu'elle diverge de la nuit qu'elle décrit.
+    ///
+    /// Une nuit que la partition ne retrouve pas est **inconnue**, jamais complète : c'est la règle de
+    /// #4990, et elle vaut ici aussi.
+    private static Completude completudeDe(RapportInspection rapport, LocalDate dateNuit) {
+        return rapport.partitionNuits().stream()
+                .filter(nuit -> nuit.dateNuit().equals(dateNuit))
+                .findFirst()
+                .map(NuitDetectee::completude)
+                .orElse(Completude.INCONNUE);
     }
 
     /// Écrit dans la session un relevé climatique THLog **restreint à la nuit** `dateNuit` (#1696). La

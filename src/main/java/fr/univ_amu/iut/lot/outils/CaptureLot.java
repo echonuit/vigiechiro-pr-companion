@@ -13,6 +13,7 @@ import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
@@ -435,8 +436,11 @@ public final class CaptureLot {
             sequenceDao.insert(new SequenceDEcoute(
                     null, nom, idOriginal, i, i * 5.0, 5.0, "transformes/" + nom, true, session.id()));
         }
+        // Ce journal de semis ne porte ni évènements ni anomalies : sa complétude est donc INCONNUE,
+        // et l'écrire ainsi vaut mieux que de la laisser deviner (#5030).
         new JournalDuCapteurDao(source)
-                .insert(new JournalDuCapteur(null, "LogPR" + SERIE + ".txt", null, null, session.id()));
+                .insert(new JournalDuCapteur(
+                        null, "LogPR" + SERIE + ".txt", null, null, Completude.INCONNUE, session.id()));
         return passage.id();
     }
 

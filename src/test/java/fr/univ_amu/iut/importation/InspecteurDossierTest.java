@@ -3,8 +3,8 @@ package fr.univ_amu.iut.importation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
-import fr.univ_amu.iut.importation.model.Completude;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.NuitDetectee;

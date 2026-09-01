@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

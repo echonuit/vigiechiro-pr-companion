@@ -1,0 +1,19 @@
+-- V45 - Le journal garde ce qu'il dit de la completude de sa nuit (#5030).
+--
+-- La donnee existait deja : `CycleAcquisition` la calcule a l'import depuis `LogPR`, et
+-- `NuitDetectee` la porte. Elle n'etait persistee NULLE PART. Ses seuls consommateurs vivaient dans
+-- l'ecran d'import, et le diagnostic, qui s'ouvre plus tard sur un passage en base, ne pouvait pas la
+-- retrouver. Le troisieme niveau de l'alerte horaire l'attend (ADR 4984, point 4).
+--
+-- Sur `sensor_log` et non sur `recording_session`, parce que la completude est un fait LU DU JOURNAL.
+-- Une session sans journal n'a rien a en dire, ce qui donne au NULL sa lecture naturelle.
+--
+-- NULL n'est pas un quatrieme etat. Il porte exactement ce que `Completude.INCONNUE` porte deja :
+-- « le journal ne permet pas de conclure ». Une base d'avant cette migration se relit donc INCONNUE,
+-- et surtout pas COMPLETE - ce serait refaire au report le defaut que #4990 vient de corriger au
+-- calcul, ou l'absence de preuve etait lue comme une preuve.
+--
+-- Pas de contrainte CHECK sur les valeurs : SQLite ne sait pas ajouter une contrainte a une table
+-- existante sans la recreer, et le garde utile est du cote Java, ou la conversion refuse ce qu'elle
+-- ne reconnait pas plutot que de le rabattre sur une valeur plausible.
+ALTER TABLE sensor_log ADD COLUMN night_completeness TEXT;

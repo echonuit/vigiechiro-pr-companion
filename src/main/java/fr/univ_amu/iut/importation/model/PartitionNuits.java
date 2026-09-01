@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import java.nio.file.Path;

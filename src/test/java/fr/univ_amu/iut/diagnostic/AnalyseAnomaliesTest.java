@@ -2,6 +2,7 @@ package fr.univ_amu.iut.diagnostic;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.JsonSimple;
 import fr.univ_amu.iut.diagnostic.model.AnalyseAnomalies;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
@@ -22,8 +23,8 @@ class AnalyseAnomaliesTest {
                 "Redémarrage inattendu détecté après coupure",
                 "Batterie faible (12%) : Batteries internes 12%");
 
-        AnalyseAnomalies analyse = AnalyseAnomalies.depuisJournal(
-                new JournalDuCapteur(1L, "LogPR1925492.txt", "[]", JsonSimple.tableau(anomalies), 7L));
+        AnalyseAnomalies analyse = AnalyseAnomalies.depuisJournal(new JournalDuCapteur(
+                1L, "LogPR1925492.txt", "[]", JsonSimple.tableau(anomalies), Completude.INCONNUE, 7L));
 
         assertThat(analyse.aDesAnomalies()).isTrue();
         assertThat(analyse.anomalies()).hasSize(4);
@@ -37,7 +38,7 @@ class AnalyseAnomaliesTest {
     @DisplayName("R19 : journal sans anomalie → listes vides, pas de reconstitution")
     void journal_sans_anomalie() {
         AnalyseAnomalies analyse = AnalyseAnomalies.depuisJournal(
-                new JournalDuCapteur(1L, "LogPR1925492.txt", "[\"### Démarrage\"]", "[]", 7L));
+                new JournalDuCapteur(1L, "LogPR1925492.txt", "[\"### Démarrage\"]", "[]", Completude.INCONNUE, 7L));
 
         assertThat(analyse.aDesAnomalies()).isFalse();
         assertThat(analyse.anomalies()).isEmpty();
@@ -58,8 +59,8 @@ class AnalyseAnomaliesTest {
     @Test
     @DisplayName("Colonnes JSON nulles tolérées (journal tronqué)")
     void colonnes_nulles_tolerees() {
-        AnalyseAnomalies analyse =
-                AnalyseAnomalies.depuisJournal(new JournalDuCapteur(1L, "LogPR.txt", null, null, 7L));
+        AnalyseAnomalies analyse = AnalyseAnomalies.depuisJournal(
+                new JournalDuCapteur(1L, "LogPR.txt", null, null, Completude.INCONNUE, 7L));
 
         assertThat(analyse.anomalies()).isEmpty();
         assertThat(analyse.evenements()).isEmpty();

@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -197,7 +198,8 @@ class PassageDaoTest {
                 new EnregistrementOriginal(null, "orig.wav", "bruts/orig.wav", 12.0, 384000, null, session.id()));
         sequenceDao.insert(new SequenceDEcoute(
                 null, "orig_000.wav", original.id(), 0, 0.0, 5.0, "transformes/orig_000.wav", false, session.id()));
-        journalDao.insert(new JournalDuCapteur(null, "LogPR1925492.txt", "[]", "[]", session.id()));
+        journalDao.insert(
+                new JournalDuCapteur(null, "LogPR1925492.txt", "[]", "[]", Completude.INCONNUE, session.id()));
         releveDao.insert(new ReleveClimatique(null, "PaRecPR1925492_THLog.csv", "[]", session.id()));
 
         dao.delete(passage.id());
