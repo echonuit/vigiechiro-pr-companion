@@ -69,6 +69,15 @@ def sans_encart(texte: str) -> str:
     return texte[:debut] + "\n".join(lignes[fin:])
 
 
+def fichiers(racine=None) -> list[pathlib.Path]:
+    """Les unites que ce garde LIT, extraites pour que `lus` les compte (issue #5015).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu il RETENAIT : un
+    ciblage manque donnait zero suspect sur zero fichier, et ce zero passait pour un succes.
+    """
+    return sorted((racine or DECISIONS).glob("*.md"))
+
+
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Les ADR dont le corps depasse le seuil, de la plus longue a la plus courte.
 
@@ -76,7 +85,7 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     depot ne separerait pas ce que le garde compte de ce qu il epargne.
     """
     mesures = []
-    for f in sorted((racine or DECISIONS).glob("*.md")):
+    for f in fichiers(racine):
         if f.name in RESERVES:
             continue
         mots = len(corps(f).split())
@@ -87,4 +96,4 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte(ADR, f"corps d'ADR au-dela de {SEUIL} mots", suspects()))
+    sys.exit(rapporte(ADR, f"corps d'ADR au-dela de {SEUIL} mots", suspects(), lus=len(fichiers())))

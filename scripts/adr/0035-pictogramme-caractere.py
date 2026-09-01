@@ -31,12 +31,21 @@ SOURCES = PRODUCTION
 PICTOGRAMME = re.compile("[\U0001f300-\U0001faff←-⇿☀-➿⬀-⯿]")
 
 
+def fichiers(sources: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unites que ce garde LIT, extraites pour que `lus` les compte (issue #5015).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu il RETENAIT : un ciblage
+    manque donnait zero suspect sur zero fichier, et ce zero passait pour un succes.
+    """
+    arbres = [sources] if sources else list(RACINES)
+    return sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.fxml"))
+
+
 def suspects(sources: pathlib.Path | None = None) -> list[str]:
     # Un commentaire est de la prose : le `↔` qui y décrit une barre « à rallonge » est le cas que
     # l'ADR autorise. On le retire donc d'abord (helper mutualisé dans _commun).
     trouves = []
-    arbres = [sources] if sources else list(RACINES)
-    for vue in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.fxml")):
+    for vue in fichiers(sources):
         contenu = sans_commentaires_xml(vue.read_text(encoding="utf-8"))
         for numero, ligne in enumerate(contenu.splitlines(), 1):
             for signe in PICTOGRAMME.findall(ligne):
@@ -45,4 +54,8 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte("0035", "pictogramme posé en caractère dans un FXML", suspects()))
+    sys.exit(
+        rapporte(
+            "0035", "pictogramme posé en caractère dans un FXML", suspects(), lus=len(fichiers())
+        )
+    )

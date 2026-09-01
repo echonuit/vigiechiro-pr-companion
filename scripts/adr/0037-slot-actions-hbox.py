@@ -29,12 +29,21 @@ SOURCES = PRODUCTION
 SLOT = re.compile(r'<HBox\b[^>]*(?:styleClass|fx:id)="[^"]*action[^"]*"', re.I | re.S)
 
 
+def fichiers(sources: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unites que ce garde LIT, extraites pour que `lus` les compte (issue #5015).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu il RETENAIT : un ciblage
+    manque donnait zero suspect sur zero fichier, et ce zero passait pour un succes.
+    """
+    arbres = [sources] if sources else list(RACINES)
+    return sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.fxml"))
+
+
 def suspects(sources: pathlib.Path | None = None) -> list[str]:
     # Commentaires FXML retirés d'abord : un <HBox ...action...> en commentaire serait un faux positif.
     # Retrait mutualisé dans _commun (défaut trouvé sur 0010/0046 en clôture).
     trouves = []
-    arbres = [sources] if sources else list(RACINES)
-    for f in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.fxml")):
+    for f in fichiers(sources):
         texte = sans_commentaires_xml(f.read_text(encoding="utf-8"))
         for balise in SLOT.finditer(texte):
             ligne = texte[: balise.start()].count("\n") + 1
@@ -44,4 +53,11 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte("0037", "slot d'actions déclaré en HBox au lieu de FlowPane", suspects()))
+    sys.exit(
+        rapporte(
+            "0037",
+            "slot d'actions déclaré en HBox au lieu de FlowPane",
+            suspects(),
+            lus=len(fichiers()),
+        )
+    )

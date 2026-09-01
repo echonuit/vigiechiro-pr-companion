@@ -32,12 +32,21 @@ ADAPTATEURS = "fr/univ_amu/iut/commun/view/"
 APPEL = re.compile(r"new Alert\(|\.showAndWait\(\)")
 
 
+def fichiers(sources: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unites que ce garde LIT, extraites pour que `lus` les compte (issue #5015).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu il RETENAIT : un ciblage
+    manque donnait zero suspect sur zero fichier, et ce zero passait pour un succes.
+    """
+    arbres = [sources] if sources else list(RACINES)
+    return sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java"))
+
+
 def suspects(sources: pathlib.Path | None = None) -> list[str]:
     # Les commentaires sont retirés d'abord : un `///` qui CITE `Alert.showAndWait()` en expliquant un
     # bug passé n'est pas un appel (faux positif trouvé en clôture). Retrait mutualisé dans _commun.
     trouves = []
-    arbres = [sources] if sources else list(RACINES)
-    for source in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
+    for source in fichiers(sources):
         if ADAPTATEURS in source.as_posix():
             continue
         lignes = sans_commentaires_java(source.read_text(encoding="utf-8")).splitlines()
@@ -48,4 +57,6 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte("0010", "dialogue bloquant appelé hors du port", suspects()))
+    sys.exit(
+        rapporte("0010", "dialogue bloquant appelé hors du port", suspects(), lus=len(fichiers()))
+    )

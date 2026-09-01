@@ -49,10 +49,19 @@ FORMES = (
 )
 
 
+def fichiers(sources: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unites que ce garde LIT, extraites pour que `lus` les compte (issue #5015).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu il RETENAIT : un ciblage
+    manque donnait zero suspect sur zero fichier, et ce zero passait pour un succes.
+    """
+    arbres = [sources] if sources else list(RACINES)
+    return sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java"))
+
+
 def suspects(sources: pathlib.Path | None = None) -> list[str]:
     trouves = []
-    arbres = [sources] if sources else list(RACINES)
-    for fichier in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
+    for fichier in fichiers(sources):
         # CauseLisible est le remède : elle porte ces motifs dans sa propre documentation, et se
         # compterait elle-même. C'est le défaut de l'ADR 3645 - un détecteur textuel s'exclut de son
         # corpus - et il a déjà coûté un cliquet qui certifiait ses propres débiteurs.
@@ -73,6 +82,9 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
 if __name__ == "__main__":
     sys.exit(
         rapporte(
-            "3947", "message d'erreur composé à la main plutôt que par CauseLisible", suspects()
+            "3947",
+            "message d'erreur composé à la main plutôt que par CauseLisible",
+            suspects(),
+            lus=len(fichiers()),
         )
     )

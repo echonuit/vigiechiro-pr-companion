@@ -40,9 +40,18 @@ LITTERAL = re.compile(r'"((?:[^"\\]|\\.)*)"')
 SURFACE = "☰"
 
 
+def fichiers(sources: pathlib.Path = SOURCES) -> list[pathlib.Path]:
+    """Les unites que ce garde LIT, extraites pour que `lus` les compte (issue #5015).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu il RETENAIT : un
+    ciblage manque donnait zero suspect sur zero fichier, et ce zero passait pour un succes.
+    """
+    return sorted(sources.rglob("*.java"))
+
+
 def suspects(sources: pathlib.Path = SOURCES) -> list[str]:
     trouves = []
-    for source in sorted(sources.rglob("*.java")):
+    for source in fichiers(sources):
         if "/model/" not in source.as_posix():
             continue
         texte = sans_commentaires_java(source.read_text(encoding="utf-8"))
@@ -54,4 +63,8 @@ def suspects(sources: pathlib.Path = SOURCES) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte("2635", "refus de modèle nommant une surface d'IHM", suspects()))
+    sys.exit(
+        rapporte(
+            "2635", "refus de modèle nommant une surface d'IHM", suspects(), lus=len(fichiers())
+        )
+    )
