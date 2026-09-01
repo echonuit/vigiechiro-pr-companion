@@ -136,7 +136,7 @@ class DiagnosticViewModelTest {
     }
 
     @Test
-    @DisplayName("#548 : démarrage et arrêt hors nuit → une alerte « hors nuit » est produite")
+    @DisplayName("#4987 : une plage qui ne couvre pas la fenêtre exigée produit un avertissement")
     void coherence_horaires_hors_nuit() {
         CoherenceHoraire coherence = new CoherenceHoraire(
                 true,

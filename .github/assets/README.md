@@ -602,7 +602,7 @@ L'écran qui porte l'état d'avancement d'une nuit.
 </tr>
 <tr>
 <td><a href="apercu-diagnostic-sans-gps.png"><img src="apercu-diagnostic-sans-gps.png" width="430" alt="Sans GPS"></a></td>
-<td><a href="apercu-diagnostic-hors-nuit.png"><img src="apercu-diagnostic-hors-nuit.png" width="430" alt="Hors nuit"></a></td>
+<td><a href="apercu-diagnostic-protocole-non-couvert.png"><img src="apercu-diagnostic-protocole-non-couvert.png" width="430" alt="Protocole non couvert"></a></td>
 </tr>
 </table>
 

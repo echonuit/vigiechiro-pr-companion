@@ -12,8 +12,8 @@ L'écran réunit :
 - les **anomalies** détectées (par exemple réveil non programmé, batterie faible) ;
 - les **évènements du journal** du capteur (démarrage, arrêt programmé...) ;
 - la **cohérence horaire** : la fenêtre nocturne réelle au point d'écoute (heures de coucher et de
-  lever du soleil), assortie d'une alerte « hors nuit » si l'enregistrement déborde de cette fenêtre
-  (démarrage avant le coucher ou arrêt après le lever du soleil) ;
+  lever du soleil), la fenêtre que le protocole exige de couvrir, la plage réellement enregistrée, et
+  un mot sur l'écart entre les deux ;
 - la **fenêtre nocturne** matérialisée par un aplat pâle derrière la courbe : elle situe les mesures
   dans la nuit réelle, et sans coordonnées au point elle disparaît plutôt que d'être inventée ;
 - un bouton **Exporter le graphe…** qui écrit la courbe en image, **redessinée** pour l'occasion (donc
@@ -26,14 +26,27 @@ L'écran réunit :
 L'enregistreur diagnostiqué et le nombre de mesures climatiques figurent dans la **barre de statut**
 en bas de la fenêtre.
 
-## Alerte « hors nuit »
+## La fenêtre que le protocole exige
 
-Quand l'enregistrement déborde de la fenêtre nocturne (démarrage **avant** le coucher du soleil ou
-arrêt **après** le lever), une alerte le signale sous la cohérence horaire : une partie du son est
-diurne, donc peu susceptible de contenir des cris de chauves-souris. La couleur et le pictogramme de
-l'alerte sont ceux d'un avertissement.
+Le protocole Vigie-Chiro Point Fixe demande d'enregistrer **au moins** de 30 minutes avant le coucher
+du soleil à 30 minutes après son lever. C'est un **plancher** : commencer plus tôt ou finir plus tard
+couvre ce qui est demandé, et davantage.
 
-![L'écran de diagnostic avec l'alerte « hors nuit » : l'enregistrement déborde de la fenêtre nocturne.](../assets/captures/apercu-diagnostic-hors-nuit.png)
+Cette marge est voulue. Elle produit bien une portion d'enregistrement en plein jour, et c'est le but :
+les premières chauves-souris sortent avant la nuit complète, et les dernières rentrent après l'aube.
+
+L'écran montre donc deux plages sous la fenêtre nocturne : ce que le protocole attendait, et ce que
+vous avez enregistré.
+
+- Si votre plage **couvre** la fenêtre exigée, une information vous le dit. Ce n'est pas un défaut.
+- Si elle **ne la couvre pas**, un avertissement le signale : une partie de la nuit demandée n'a pas
+  été enregistrée. Vérifiez le paramétrage de l'enregistreur pour la sortie suivante.
+
+![L'écran de diagnostic quand la fenêtre du protocole n'est pas couverte : l'avertissement nomme la
+plage attendue et la plage enregistrée.](../assets/captures/apercu-diagnostic-protocole-non-couvert.png)
+
+L'écran ne signale pas les interruptions survenues **au milieu** d'une nuit : cette information n'est
+pas conservée après l'import. L'absence d'avertissement ne prouve donc pas qu'une nuit est entière.
 
 ## Sans relevé climatique
 

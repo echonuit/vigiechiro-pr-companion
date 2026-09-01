@@ -121,8 +121,8 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
         return t.toString().stripTrailing();
     }
 
-    /// Libellé de la cohérence horaire : fenêtre nocturne au point et repère « hors nuit » (#548), ou
-    /// « indisponible » quand elle n'a pas pu être calculée.
+    /// Libellé de la cohérence horaire : fenêtre nocturne au point, plages exigée et enregistrée, et
+    /// ce que leur écart vaut (#548, #4988). « Indisponible » quand le calcul n'a pas pu se faire.
     private static String coherenceLisible(CoherenceHoraire coherence) {
         if (!coherence.disponible()) {
             return "indisponible (GPS ou horaires manquants, ou latitude polaire)";

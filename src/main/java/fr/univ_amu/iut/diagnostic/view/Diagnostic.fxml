@@ -96,7 +96,7 @@
     </VBox>
   </HBox>
 
-  <!-- Cohérence horaires (#548) : fenêtre nocturne réelle au point + repère « hors nuit ». -->
+  <!-- Coherence horaire (#548, #4988) : fenetre nocturne reelle au point, puis les deux plages. -->
   <Label fx:id="lblFenetreNuit" styleClass="section-sous">
     <graphic>
       <FontIcon iconLiteral="fas-moon"/>

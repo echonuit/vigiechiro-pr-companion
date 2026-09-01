@@ -91,7 +91,7 @@ public class ServiceDiagnostic {
         }
 
         // Cohérence horaires (#548) : la fenêtre nocturne réelle au point sert à repérer un
-        // démarrage/arrêt hors nuit. Indisponible sans GPS ou sans horaires (dégradation propre).
+        // couverture de la fenêtre exigée. Indisponible sans GPS ou sans horaires (dégradation propre).
         CoherenceHoraire coherence = AnalyseCoherenceHoraire.analyser(
                 latitude, longitude, passage.dateEnregistrement(), passage.heureDebut(), passage.heureFin());
 

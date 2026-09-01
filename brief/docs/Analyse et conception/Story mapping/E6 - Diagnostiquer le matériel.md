@@ -64,7 +64,7 @@
 ## E6.S3 - Vérifier la cohérence des horaires d'enregistrement vs astronomie locale { #e6s3 }
 
 !!! note "Partiellement livré"
-    Le **calcul astronomique local** (coucher / lever) et sa précondition GPS sont livrés et testés. Mais l'encart affiché **n'a pas** la **plage théorique** (coucher -30 min → lever +30 min), la **plage effective enregistrée**, ni l'**écart à trois niveaux** (✅ / ⚠ / ❌) ; l'absence de GPS n'offre pas de lien direct vers la fiche site.
+    Livré. L'encart porte la **plage exigée** par le protocole (coucher -30 min → lever +30 min), la **plage effective enregistrée**, et le verdict de couverture (#4987, #4988). L'écart à trois niveaux envisagé ici n'a pas été retenu : le protocole est un **plancher**, donc la fenêtre est couverte ou ne l'est pas, et les seuils de 5 et 30 minutes mesuraient un écart à une cible qui n'existe pas. Un troisième niveau signalant une nuit **interrompue** reste à faire, la complétude d'une nuit n'étant persistée nulle part (#5030). L'absence de GPS n'offre toujours pas de lien direct vers la fiche site.
 
 **En tant que** [Samuel](../Personas/Samuel.md)
 
