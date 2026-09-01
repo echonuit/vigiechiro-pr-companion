@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
+import fr.univ_amu.iut.importation.model.Completude;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.NuitDetectee;
@@ -134,7 +135,9 @@ class InspecteurDossierTest {
         assertThat(nuits)
                 .extracting(NuitDetectee::dateNuit)
                 .containsExactly(LocalDate.of(2026, 7, 3), LocalDate.of(2026, 7, 4), LocalDate.of(2026, 7, 5));
-        assertThat(nuits).extracting(NuitDetectee::complete).containsExactly(true, true, false);
+        assertThat(nuits)
+                .extracting(NuitDetectee::completude)
+                .containsExactly(Completude.COMPLETE, Completude.COMPLETE, Completude.TRONQUEE);
         assertThat(nuits.get(2).motifIncompletude()).isEqualTo("carte SD pleine");
         assertThat(nuits).extracting(NuitDetectee::nombreFichiers).containsExactly(2, 2, 2);
     }

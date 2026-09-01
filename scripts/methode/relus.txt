@@ -705,6 +705,7 @@ c5d305db7000  src/main/java/fr/univ_amu/iut/diagnostic/view/DiagnosticController
 f9cc636c0690  src/main/java/fr/univ_amu/iut/importation/model/AnalyseurLogPR.java
 d525e43a76d0  src/main/java/fr/univ_amu/iut/importation/model/ApercuEcrasement.java
 23031f79618b  src/main/java/fr/univ_amu/iut/importation/model/BornesExtraction.java
+2670b415fb75  src/main/java/fr/univ_amu/iut/importation/model/Completude.java
 4ca9b00fcac9  src/main/java/fr/univ_amu/iut/importation/model/ConfigurationAcquisition.java
 7e01a1f9f142  src/main/java/fr/univ_amu/iut/importation/model/ContexteImport.java
 823d92804f93  src/main/java/fr/univ_amu/iut/importation/model/CopieProtegee.java
@@ -721,16 +722,16 @@ cf19ac27fdcd  src/main/java/fr/univ_amu/iut/importation/model/InventaireArchive.
 c1fe0b5b344b  src/main/java/fr/univ_amu/iut/importation/model/InventaireParInspection.java
 17c86b66781f  src/main/java/fr/univ_amu/iut/importation/model/InventaireTransformesReferences.java
 7839f3b8cbbc  src/main/java/fr/univ_amu/iut/importation/model/JournalDeRepli.java
-0927784b0a21  src/main/java/fr/univ_amu/iut/importation/model/JournalParse.java
+3423c91f80b3  src/main/java/fr/univ_amu/iut/importation/model/JournalParse.java
 91c8727d53d8  src/main/java/fr/univ_amu/iut/importation/model/LigneJournal.java
 0fda331823a9  src/main/java/fr/univ_amu/iut/importation/model/LigneRapport.java
 16c92c80c309  src/main/java/fr/univ_amu/iut/importation/model/MoteurImport.java
 886e20efa7dc  src/main/java/fr/univ_amu/iut/importation/model/MotifDeReveil.java
 81ce90abdc2b  src/main/java/fr/univ_amu/iut/importation/model/NuitAImporter.java
-28a78a0c8857  src/main/java/fr/univ_amu/iut/importation/model/NuitDetectee.java
+7c7c8a9ee342  src/main/java/fr/univ_amu/iut/importation/model/NuitDetectee.java
 6cbafd005b24  src/main/java/fr/univ_amu/iut/importation/model/OriginalIllisibleException.java
 77faad69e761  src/main/java/fr/univ_amu/iut/importation/model/OutilsImport.java
-b5c255155f98  src/main/java/fr/univ_amu/iut/importation/model/PartitionNuits.java
+3bacc0141a5f  src/main/java/fr/univ_amu/iut/importation/model/PartitionNuits.java
 d1e6b52b7a87  src/main/java/fr/univ_amu/iut/importation/model/PassageExistant.java
 a0da4eeaed49  src/main/java/fr/univ_amu/iut/importation/model/PreparationOriginaux.java
 aa68423feb86  src/main/java/fr/univ_amu/iut/importation/model/RapportImport.java
@@ -791,7 +792,7 @@ ef0a4852afcd  src/main/java/fr/univ_amu/iut/importation/viewmodel/ExecutionImpor
 0a06f6e29147  src/main/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModel.java
 abff5608525f  src/main/java/fr/univ_amu/iut/importation/viewmodel/LigneFichierImport.java
 2b4c9642c974  src/main/java/fr/univ_amu/iut/importation/viewmodel/MarquageNuitsImportees.java
-df13f5c233b8  src/main/java/fr/univ_amu/iut/importation/viewmodel/NuitVM.java
+634f110f130f  src/main/java/fr/univ_amu/iut/importation/viewmodel/NuitVM.java
 4a96d6e97d6d  src/main/java/fr/univ_amu/iut/importation/viewmodel/OngletReglagesImport.java
 e5b954ad709d  src/main/java/fr/univ_amu/iut/importation/viewmodel/PreferenceConservation.java
 5a172c6fc117  src/main/java/fr/univ_amu/iut/importation/viewmodel/RattachementImportViewModel.java
@@ -1727,6 +1728,7 @@ edc030e28fd3  src/test/java/fr/univ_amu/iut/importation/model/ConfigurationAcqui
 afd5f044b9f8  src/test/java/fr/univ_amu/iut/importation/model/FiltreThLogNuitTest.java
 44fafead3413  src/test/java/fr/univ_amu/iut/importation/model/InventaireParInspectionTest.java
 7c10ebc27109  src/test/java/fr/univ_amu/iut/importation/model/NombreTranchesFideleTest.java
+5ca222636db7  src/test/java/fr/univ_amu/iut/importation/model/PartitionNuitsIndicesTest.java
 11a7825bd7fe  src/test/java/fr/univ_amu/iut/importation/model/PassageDeLaNuitTest.java
 50b557b7db7a  src/test/java/fr/univ_amu/iut/importation/model/ReconciliationNomsTest.java
 10c02946b42a  src/test/java/fr/univ_amu/iut/importation/model/TriParSerieTest.java

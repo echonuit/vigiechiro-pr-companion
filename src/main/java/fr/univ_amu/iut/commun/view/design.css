@@ -485,6 +485,19 @@
     -fx-border-radius: 11;
 }
 
+/* Complétude d'une nuit détectée à l'import (#4990). « Complète » et « incomplète » réemploient les
+   deux pastilles de fraîcheur ci-dessus ; le troisième état a besoin d'un vocabulaire à lui.
+
+   Il est PLEIN, et pas en creux : le neutre bordé dit une ABSENCE - c'est celui de « Non planifié »,
+   une nuit qui n'existe pas - alors qu'ici la nuit est bien là, ce sont ses entrées de journal qui
+   manquent. Même raisonnement que `.badge-statut-importe`, et le même fond, celui d'une nuit réelle
+   sur laquelle on ne porte aucun jugement. Les deux ne se croisent pas : la table d'import ne montre
+   pas de statut workflow. */
+.badge-completude-inconnue {
+    -fx-background-color: -badge-arrivee-fond;
+    -fx-text-fill: -badge-arrivee-texte;
+}
+
 /* Statut workflow d'un passage. */
 .badge-statut-importe {
     /* Le fond neutre était si proche du blanc de la ligne que la pastille disparaissait : il ne restait

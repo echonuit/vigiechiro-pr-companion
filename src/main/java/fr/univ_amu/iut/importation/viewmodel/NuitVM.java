@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
+import fr.univ_amu.iut.importation.model.Completude;
 import fr.univ_amu.iut.importation.model.NuitDetectee;
 import java.time.LocalDate;
 import java.util.Objects;
@@ -23,7 +24,8 @@ public class NuitVM {
     private final NuitDetectee nuit;
 
     /// Inclure cette nuit dans l'import (une nuit incluse = un passage). **Vrai par défaut**, y compris
-    /// pour une nuit tronquée (l'utilisateur peut la décocher au vu du badge « incomplète »).
+    /// pour une nuit tronquée comme pour une nuit dont la complétude est inconnue : le badge et son
+    /// infobulle informent, ils ne décident pas à la place de l'observateur (#4990).
     private final BooleanProperty inclure = new SimpleBooleanProperty(this, "inclure", true);
 
     /// N° de passage **proposé** pour cette nuit (auto-numérotation consécutive depuis le prochain n°
@@ -53,14 +55,25 @@ public class NuitVM {
         return nuit.nombreFichiers();
     }
 
-    /// `true` si la nuit s'est terminée normalement ; `false` si **tronquée** (carte pleine, interruption).
+    /// `true` si le journal atteste une fin de nuit normale.
+    ///
+    /// **Faux ne veut pas dire tronquée** : il veut dire « pas attestée complète », ce qui couvre
+    /// aussi la nuit dont le journal ne dit rien. Qui doit les distinguer lit [#badge()], qui les
+    /// nomme.
     public boolean estComplete() {
-        return nuit.complete();
+        return nuit.completude() == Completude.COMPLETE;
     }
 
-    /// Libellé court de l'état de complétude, à afficher en badge (« complète » / « incomplète »).
+    /// Libellé court de l'état de complétude, à afficher en badge.
+    ///
+    /// « inconnue » n'est pas une nuance de « incomplète » : la nuit peut être entière, et rien ne
+    /// le dit. Les confondre rendrait le badge menteur dans un sens comme dans l'autre (#4990).
     public String badge() {
-        return nuit.complete() ? "complète" : "incomplète";
+        return switch (nuit.completude()) {
+            case COMPLETE -> "complète";
+            case TRONQUEE -> "incomplète";
+            case INCONNUE -> "complétude inconnue";
+        };
     }
 
     /// Classe CSS de la pastille de complétude, **dérivée** de l'état (jamais stockée). Le mapping reste
@@ -68,9 +81,56 @@ public class NuitVM {
     /// d'architecture (même partage que `Fraicheur.classeBadge`).
     ///
     /// Une nuit tronquée est un **avertissement**, pas une erreur : elle s'importe et se dépose
-    /// normalement, la troncature se constate.
+    /// normalement, la troncature se constate. Une nuit inconnue est **neutre** : rien ne permet de
+    /// l'inquiéter, rien ne permet de la rassurer, et lui donner la pastille verte reproduirait le
+    /// défaut qu'on corrige (#4990).
     public String classeBadge() {
-        return nuit.complete() ? "badge-succes" : "badge-avertissement";
+        return switch (nuit.completude()) {
+            case COMPLETE -> "badge-succes";
+            case TRONQUEE -> "badge-avertissement";
+            case INCONNUE -> "badge-completude-inconnue";
+        };
+    }
+
+    /// Ce que l'infobulle de la pastille dit, et **ce qu'il y a à faire** (#4990).
+    ///
+    /// Trois surfaces séparées portaient les trois pièces du raisonnement - le badge disait l'arrêt,
+    /// la liste d'anomalies disait la batterie, la même liste disait les erreurs SD - et aucune ne
+    /// les rapprochait. Un observateur les a rapprochées de tête et a conclu juste ; c'est ce
+    /// rapprochement-là qui manquait.
+    ///
+    /// La phrase **relève**, elle ne diagnostique pas : « le journal s'arrête à 03:14, la dernière
+    /// mesure de batterie était à 11 % » est honnête, « votre batterie était vide » ne l'est pas.
+    /// Companion n'a que le journal du capteur.
+    public String explication() {
+        return switch (nuit.completude()) {
+            case COMPLETE -> null;
+            case TRONQUEE -> phraseTronquee();
+            case INCONNUE ->
+                "Le journal ne couvre pas cette nuit : ses entrées ont pu être effacées,"
+                        + " une carte pleine effaçant les plus anciennes. La nuit est peut-être entière, et"
+                        + " rien ici ne permet de l'affirmer. Ses enregistrements s'importent normalement.";
+        };
+    }
+
+    /// Le motif de l'arrêt, puis ce que le journal montrait avant lui, puis la conduite à tenir.
+    private String phraseTronquee() {
+        StringBuilder phrase = new StringBuilder("La nuit ne s'est pas refermée normalement");
+        if (nuit.motifIncompletude() != null) {
+            phrase.append(" : ").append(nuit.motifIncompletude());
+        }
+        phrase.append(".");
+        if (!nuit.indicesDuJournal().isEmpty()) {
+            phrase.append("\n\nCe que le journal montre avant l'arrêt :");
+            for (String indice : nuit.indicesDuJournal()) {
+                phrase.append("\n  · ").append(indice);
+            }
+        }
+        // La conduite à tenir, qui est ce qui manquait le plus : le badge énonçait un fait et
+        // laissait sans réponse « est-ce exploitable » et « faut-il vérifier le matériel ».
+        phrase.append("\n\nLes enregistrements de cette nuit restent exploitables jusqu'à l'arrêt, et")
+                .append(" s'importent comme les autres. Vérifiez l'enregistreur avant la prochaine sortie.");
+        return phrase.toString();
     }
 
     /// Motif de troncature (« carte SD pleine »…) quand la nuit est incomplète, sinon `null`.

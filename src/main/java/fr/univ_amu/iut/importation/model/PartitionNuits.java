@@ -20,10 +20,13 @@ import java.util.TreeMap;
 /// via [Prefixe#horodatageDe(String)]), avec un **seuil de bascule à midi** : un enregistrement du petit
 /// matin (avant midi) appartient à la nuit de la **veille**. Robuste même sans journal.
 ///
-/// **Complétude** déduite des [cycles du journal][CyclesJournal] (fiable) : une nuit dont le cycle s'est
-/// terminé anormalement (carte SD pleine, erreur, interruption) est **tronquée**. Une nuit sans cycle
-/// correspondant (journal absent) est supposée **complète** : on ne devine pas, pour éviter les fausses
-/// alertes (une nuit calme au petit matin a peu de fichiers sans être tronquée).
+/// **Complétude** déduite des [cycles du journal][CyclesJournal], en [trois états][Completude]. Une
+/// nuit dont le cycle s'est terminé anormalement est **tronquée** ; une nuit sans cycle correspondant
+/// est **inconnue**, et non complète.
+///
+/// La supposition de complétude tenait à une crainte juste - ne pas deviner, une nuit calme au petit
+/// matin ayant peu de fichiers sans être tronquée. Le troisième état la préserve tout en cessant de
+/// rassurer : on ne devine toujours pas, et on ne conclut plus non plus (#4990).
 public final class PartitionNuits {
 
     private PartitionNuits() {}
@@ -31,6 +34,14 @@ public final class PartitionNuits {
     /// Les nuits détectées, **triées par date croissante**. Les fichiers d'une nuit sont triés
     /// chronologiquement. Les noms non horodatés sont ignorés.
     public static List<NuitDetectee> partitionner(List<Path> originaux, List<CycleAcquisition> cycles) {
+        return partitionner(originaux, cycles, null);
+    }
+
+    /// Les nuits détectées, avec ce que le journal montrait avant l'arrêt de celles qui n'ont pas été
+    /// refermées (#4990). `journal` peut être `null` : sans lui, les indices sont vides et le reste
+    /// est inchangé.
+    public static List<NuitDetectee> partitionner(
+            List<Path> originaux, List<CycleAcquisition> cycles, JournalParse journal) {
         Map<LocalDate, List<Path>> parNuit = new TreeMap<>();
         for (Path original : originaux) {
             horodatage(original)
@@ -50,9 +61,19 @@ public final class PartitionNuits {
             LocalDateTime debut = horodatage(fichiers.get(0)).orElse(null);
             LocalDateTime fin = horodatage(fichiers.get(fichiers.size() - 1)).orElse(null);
             CycleAcquisition cycle = cycleParNuit.get(entree.getKey());
-            boolean complete = cycle == null || cycle.complet();
-            String motif = cycle != null && !cycle.complet() ? cycle.raison() : null;
-            nuits.add(new NuitDetectee(entree.getKey(), debut, fin, fichiers, complete, motif));
+            // Aucun cycle ne dit rien de cette nuit, ni en bien ni en mal. Le premier jet concluait
+            // `cycle == null || cycle.complet()`, donc « complète » : l'absence de preuve lue comme
+            // une preuve, et le badge le plus rassurant sur la nuit dont on sait le moins (#4990).
+            Completude completude =
+                    cycle == null ? Completude.INCONNUE : cycle.complet() ? Completude.COMPLETE : Completude.TRONQUEE;
+            String motif = completude == Completude.TRONQUEE ? cycle.raison() : null;
+            // Les indices n'accompagnent QUE la nuit tronquée. Sur une nuit inconnue il n'y a rien à
+            // montrer - c'est précisément le problème - et en montrer sur une nuit complète ferait
+            // passer des faits ordinaires pour un signal.
+            List<String> indices = completude == Completude.TRONQUEE && journal != null
+                    ? journal.anomaliesDeLaNuit(entree.getKey())
+                    : List.of();
+            nuits.add(new NuitDetectee(entree.getKey(), debut, fin, fichiers, completude, motif, indices));
         }
         return nuits;
     }

@@ -93,6 +93,6 @@ public record RapportInspection(
     /// déduit des [#cyclesJournal()]. Une seule nuit ⇒ liste à un élément (import classique). Sert à
     /// l'IHM (liste des nuits + inclure/exclure) et au découpage de l'import en un passage par nuit.
     public List<NuitDetectee> partitionNuits() {
-        return PartitionNuits.partitionner(originaux, cyclesJournal);
+        return PartitionNuits.partitionner(originaux, cyclesJournal, journal);
     }
 }

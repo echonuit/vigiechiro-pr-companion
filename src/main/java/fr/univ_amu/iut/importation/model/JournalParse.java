@@ -113,6 +113,14 @@ public record JournalParse(
         return JsonSimple.tableau(messages(deLaNuit(anomalies, nuit)));
     }
 
+    /// Les anomalies **de cette nuit**, en texte, dans l'ordre du journal.
+    ///
+    /// Sert au rapprochement de #4990 : une nuit qui n'a pas été refermée porte ce que le journal
+    /// montrait avant son arrêt, plutôt que de laisser ouvrir trois écrans pour le reconstituer.
+    public List<String> anomaliesDeLaNuit(LocalDate nuit) {
+        return messages(deLaNuit(anomalies, nuit));
+    }
+
     private static List<String> messages(List<LigneJournal> lignes) {
         return lignes.stream().map(LigneJournal::texte).toList();
     }
