@@ -4,7 +4,7 @@
 > **Persona principal** : [Karim](../Personas/Karim.md) et [Samuel](../Personas/Samuel.md) (exploitation pro, contrôle du parc d'enregistreurs).
 > **Parcours couverts** : [P6 - Diagnostiquer le matériel](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md).
 
-L'écran présente, pour le passage courant, un **bilan technique** de la nuit : un **graphe climatique** (température / hygrométrie) issu du relevé de la sonde, la liste des **anomalies** détectées dans le journal du capteur (R19), le **journal** brut des évènements, la **cohérence horaire** (fenêtre nocturne réelle au point d'écoute et repère « hors nuit »), et l'état du **GPS du point d'écoute**. L'objectif : décider si un enregistreur doit être révisé.
+L'écran présente, pour le passage courant, un **bilan technique** de la nuit : un **graphe climatique** (température / hygrométrie) issu du relevé de la sonde, la liste des **anomalies** détectées dans le journal du capteur (R19), le **journal** brut des évènements, la **cohérence horaire** (fenêtre nocturne réelle au point d'écoute, fenêtre exigée par le protocole et plage enregistrée), et l'état du **GPS du point d'écoute**. L'objectif : décider si un enregistreur doit être révisé.
 
 > **Robustesse** : quand le relevé climatique est manquant (sonde absente ou défaillante), la section climat n'est **pas masquée** : un bandeau d'avertissement explicite le signale (R20) et le reste du diagnostic reste exploitable.
 
@@ -101,9 +101,9 @@ L'écran présente, pour le passage courant, un **bilan technique** de la nuit :
   <rect x="516" y="411" width="453" height="26" class="list-row-alt"/>
   <text x="529" y="428" class="cell">Arrêt programmé à 06:00:00</text>
 
-  <!-- Cohérence horaire (#548) : fenêtre nocturne + repère hors nuit -->
+  <!-- Cohérence horaire (#548, #4989) : fenêtre nocturne, fenêtre exigée, plage enregistrée -->
   <text x="30" y="592" class="footer-txt">Nuit : coucher 21:58 · lever 05:48</text>
-  <text x="30" y="612" class="footer-warn">Hors nuit : démarrage avant le coucher et arrêt après le lever du soleil (une partie de l'enregistrement est diurne).</text>
+  <text x="30" y="612" class="footer-warn">La fenêtre du protocole n'est pas couverte : une partie de la nuit demandée n'a pas été enregistrée.</text>
   <!-- État GPS du point d'écoute (ligne permanente) -->
   <text x="30" y="632" class="footer-ok">GPS du point : disponible</text>
 
@@ -111,7 +111,7 @@ L'écran présente, pour le passage courant, un **bilan technique** de la nuit :
   <rect x="0" y="640" width="1000" height="20" class="statusbar"/>
   <text x="12" y="654" class="status-txt">Carré 640380 · A1 · N° 2</text>
   <text x="500" y="654" class="status-txt" text-anchor="middle">PR 1925492 · 10 mesures</text>
-  <text x="988" y="654" class="status-txt" text-anchor="end">Hors nuit</text>
+  <text x="988" y="654" class="status-txt" text-anchor="end">Protocole non couvert</text>
 </svg>
 </div>
 
@@ -123,7 +123,7 @@ L'écran présente, pour le passage courant, un **bilan technique** de la nuit :
 - **Graphe climatique** (`grapheClimat`) : `LineChart` à **deux séries** (température en orange foncé, hygrométrie en orange clair). Axe X **temporel** (`NumberAxis` en minutes depuis la première mesure, étiquettes `HH:mm`, quelques repères espacés), axe Y commun `T° (°C) / Humidité…`. Légende sous le graphe.
 - **Anomalies (R19)** (`listeAnomalies`) : `ListView` des évènements anormaux du journal (réveils non programmés, batterie faible, erreurs SD…). Le journal étant circulaire, certaines entrées anciennes peuvent manquer.
 - **Évènements du journal** (`listeEvenements`) : `ListView` du journal brut horodaté du capteur (démarrage, arrêt programmé…).
-- **Cohérence horaire** (`lblFenetreNuit`, `lblAlerteHorsNuit`, #548) : la **fenêtre nocturne** réelle au point d'écoute (`Nuit : coucher 21:58 · lever 05:48`), calculée depuis les coordonnées et la date ; une **alerte « hors nuit »** apparaît si l'enregistrement démarre avant le coucher ou s'arrête après le lever du soleil.
+- **Cohérence horaire** (`lblFenetreNuit`, `lblAlerteHorsNuit`, #548) : la **fenêtre nocturne** réelle au point d'écoute (`Nuit : coucher 21:58 · lever 05:48`), calculée depuis les coordonnées et la date ; sous elle, la fenêtre que le **protocole exige** de couvrir (coucher moins 30 minutes, lever plus 30) et la **plage enregistrée**. Un avertissement apparaît quand la seconde ne couvre pas la première ; une information quand elle la couvre et la dépasse, ce qui n'est pas un défaut : la marge diurne est ce que le protocole demande.
 - **État GPS** (`lblGps`) : ligne d'état **permanente** portant les coordonnées du **point d'écoute** (et non du capteur) : « GPS du point : disponible », ou « GPS du point : non renseigné (compléter la fiche site) ». Le calcul de la fenêtre nocturne en dépend.
 - **Zone de message** (`lblMessage`) : retours d'état (passage introuvable, erreurs).
 
@@ -162,6 +162,6 @@ Si la sonde est absente ou défaillante, la section climat **n'est pas masquée*
 - **`LineChart` JavaFX** : deux `XYChart.Series` (température, hygrométrie) sur un **axe temporel** (`NumberAxis`, étiquettes `HH:mm`). Lier les séries à des collections observables du ViewModel ; gérer proprement le cas « série vide » (graphe affiché sans étiquettes d'axe, pas d'exception).
 - **`ListView` pour anomalies et journal** : `cellFactory` simple (texte). La virtualisation native suffit même pour un journal volumineux.
 - **Données manquantes explicites (R20)** : ne jamais masquer une section absente. Piloter la visibilité du bandeau via une `BooleanProperty` du ViewModel (`releveClimatiqueAbsent`).
-- **Cohérence horaires astronomiques** : **implémentée** (#548). L'écran calcule la fenêtre nocturne réelle au point d'écoute (coucher / lever du soleil via une éphéméride, fuseau Europe/Paris) et compare les horaires d'enregistrement à cette fenêtre pour repérer un démarrage ou un arrêt **hors nuit** (portion diurne). Indisponible proprement si le GPS ou les horaires manquent, ou en latitude polaire.
+- **Cohérence horaires astronomiques** : **implémentée** (#548). L'écran calcule la fenêtre nocturne réelle au point d'écoute (coucher / lever du soleil via une éphéméride, fuseau Europe/Paris) et en déduit la fenêtre que le protocole exige de couvrir (coucher moins 30 minutes, lever plus 30) et la compare à la plage enregistrée. Couvrir davantage n'est pas s'écarter : le protocole est un plancher, et la marge diurne qu'il impose est voulue. Indisponible proprement si le GPS ou les horaires manquent, ou en latitude polaire.
 - **Icônes** : les repères visuels (température, anomalies, journal, nuit, GPS) sont des `FontIcon` Ikonli, pas des emojis (règle #700).
 - **Réutilisation** : l'écran consomme le **relevé climatique** et le **journal du capteur** déjà chargés par le socle pour le passage ; le ViewModel expose des propriétés observables, la vue ne fait que les lier.

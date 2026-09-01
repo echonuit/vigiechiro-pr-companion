@@ -193,7 +193,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     }
 
     /// Compose les 3 zones de la barre de statut (#1022) : identité du passage (gauche), matériel du
-    /// diagnostic (centre), et à droite l'**alerte prioritaire** : hors-nuit puis relevé climatique absent.
+    /// diagnostic (centre), et à droite l'**alerte prioritaire** : cohérence horaire puis relevé climatique absent.
     private ZonesStatut calculerZonesStatut() {
         ContextePassage courant = contexte.get();
         String gauche = courant == null ? "" : courant.identiteStatut();
@@ -219,7 +219,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     @FXML
     private void initialize() {
         // Barre de statut 3 zones (#1022, EPIC #1016) : contexte du passage à gauche, matériel (enregistreur)
-        // au centre, alerte prioritaire à droite (hors-nuit > relevé climatique absent).
+        // au centre, alerte prioritaire à droite (cohérence horaire > relevé climatique absent).
         // #3548 : `contexte` figure dans la liste parce que le calcul le lit. `bind()` évalue tout de
         // suite, ici avant `ouvrirSur` : la zone gauche naît vide, et seule une dépendance déclarée la
         // refait. Sur le chemin d'erreur d'ouverture, aucune ne bougeait, et l'écran n'annonçait plus de
@@ -258,7 +258,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
         lblPlagesHoraires.managedProperty().bind(lblPlagesHoraires.visibleProperty());
         lblFenetreNuit.managedProperty().bind(viewModel.coherenceHoraireDisponibleProperty());
 
-        // Alerte « hors nuit » : texte, visibilité (présent/absent) et sévérité (couleur + icône) posés
+        // Alerte de cohérence horaire : texte, visibilité (présent/absent) et sévérité posés
         // par LibelleRetour depuis le RetourOperation du ViewModel (#2050).
         LibelleRetour.installer(lblAlerteHorsNuit, viewModel.alerteHorsNuitProperty());
 

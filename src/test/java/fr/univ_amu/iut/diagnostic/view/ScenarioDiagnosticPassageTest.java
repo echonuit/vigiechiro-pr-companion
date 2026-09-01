@@ -174,23 +174,29 @@ class ScenarioDiagnosticPassageTest {
                         + " qui parle ici, et non son substitut")
                 .isNotEmpty();
 
-        // ─── S2-37 · la fenêtre nocturne, et l'alerte « hors nuit » ──────────────────────────────
+        // ─── S2-37 · la fenêtre nocturne, et l'écart au protocole ────────────────────────────────
         assertThat(texte(robot, "#lblFenetreNuit"))
                 .as("la cohérence horaire nomme la fenêtre nocturne : coucher et lever du soleil. Sans"
-                        + " eux, « hors nuit » serait un verdict sans son barème")
+                        + " eux, un verdict de couverture serait rendu sans son barème")
                 .contains("coucher")
                 .contains("lever");
 
-        // La nuit nominale DÉBORDE de sa fenêtre : mesuré, et c'est ce qui rend le cas jouable sans
-        // fabriquer une seconde carte. L'alerte est donc attendue visible ET parlante.
+        assertThat(texte(robot, "#lblPlagesHoraires"))
+                .as("et les DEUX plages : ce que le protocole exigeait, ce qui a été enregistré. Un"
+                        + " verdict sans elles se croit sur parole (#4988)")
+                .contains("Protocole")
+                .contains("Enregistré");
+
+        // La nuit semée ne couvre pas la fenêtre exigée : mesuré, et c'est ce qui rend le cas jouable
+        // sans fabriquer une seconde carte. L'avertissement est donc attendu visible ET parlant.
         assertThat(robot.lookup("#lblAlerteHorsNuit").query().isVisible())
-                .as("et l'alerte « hors nuit » paraît, parce que cet enregistrement déborde de la fenêtre"
-                        + " - une partie est diurne. Une alerte qui se tairait ici laisserait passer une"
-                        + " nuit qui n'en est pas tout à fait une")
+                .as("l'avertissement paraît, parce que cet enregistrement ne couvre pas toute la fenêtre"
+                        + " que le protocole demande. Une alerte qui se tairait ici laisserait passer une"
+                        + " nuit incomplète")
                 .isTrue();
 
         assertThat(texte(robot, "#lblAlerteHorsNuit"))
-                .as("elle DIT ce qui déborde, et ne se contente pas de signaler")
+                .as("elle DIT ce qui manque, et ne se contente pas de signaler")
                 .isNotBlank();
 
         Respiration.leTempsDeLire(robot);

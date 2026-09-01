@@ -186,7 +186,7 @@ fbf30790a4bb  src/main/java/fr/univ_amu/iut/cli/commande/CorrigerObservations.ja
 305c8df46a5c  src/main/java/fr/univ_amu/iut/cli/commande/CreerSite.java
 458204361d12  src/main/java/fr/univ_amu/iut/cli/commande/Deposer.java
 c06c3950b192  src/main/java/fr/univ_amu/iut/cli/commande/DeposerVigieChiro.java
-2f97284e9b08  src/main/java/fr/univ_amu/iut/cli/commande/Diagnostiquer.java
+0134d8ed9d44  src/main/java/fr/univ_amu/iut/cli/commande/Diagnostiquer.java
 1a231defbcc3  src/main/java/fr/univ_amu/iut/cli/commande/Discussion.java
 f6bf33df2d69  src/main/java/fr/univ_amu/iut/cli/commande/Emplacements.java
 a052f5d6924a  src/main/java/fr/univ_amu/iut/cli/commande/EmporterNuit.java
@@ -694,10 +694,10 @@ c007723889a6  src/main/java/fr/univ_amu/iut/diagnostic/model/LectureThLog.java
 91feee972e18  src/main/java/fr/univ_amu/iut/diagnostic/model/MesureClimatique.java
 3983f4b83951  src/main/java/fr/univ_amu/iut/diagnostic/model/SerieClimatique.java
 9d1167fc29c3  src/main/java/fr/univ_amu/iut/diagnostic/model/ServiceDiagnostic.java
-76296eeb0ac3  src/main/java/fr/univ_amu/iut/diagnostic/outils/CaptureDiagnostic.java
-0dab9efbe270  src/main/java/fr/univ_amu/iut/diagnostic/view/DiagnosticController.java
+f5a59a154e2f  src/main/java/fr/univ_amu/iut/diagnostic/outils/CaptureDiagnostic.java
+c5d305db7000  src/main/java/fr/univ_amu/iut/diagnostic/view/DiagnosticController.java
 9fcf0dddc863  src/main/java/fr/univ_amu/iut/diagnostic/view/NavigationDiagnostic.java
-a2327912c342  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
+3ec2a43af71f  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
 55e763ebf57a  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/PlagesHoraires.java
 72e4bf119771  src/main/java/fr/univ_amu/iut/importation/di/ImportationModule.java
 94bf5669367f  src/main/java/fr/univ_amu/iut/importation/model/AnalyseCoherence.java

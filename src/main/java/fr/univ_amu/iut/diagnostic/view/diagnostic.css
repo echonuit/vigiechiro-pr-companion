@@ -35,7 +35,7 @@
 
 /*
  * Icônes FontIcon des libellés (#1671, en remplacement des emojis) : neutres sur les titres de
- * section et les sous-titres, ambre dans les encarts d'alerte (R20 / hors-nuit) pour s'accorder au
+ * section et les sous-titres, ambre dans les encarts d'alerte (R20 / cohérence horaire) pour s'accorder au
  * texte. Le repère GPS garde ses propres couleurs (plus spécifiques, ci-dessus).
  */
 .ecran-diagnostic .section-titre .ikonli-font-icon,

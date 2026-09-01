@@ -57,9 +57,9 @@ import javafx.scene.Scene;
 ///   le graphe est vide mais les anomalies du journal restent affichées ;
 /// - `apercu-diagnostic-sans-gps.png` : **point sans coordonnées GPS**, le repère GPS passe à « non
 ///   renseigné » et l'encart cohérence horaires disparaît (calcul impossible sans coordonnées) ;
-/// - `apercu-diagnostic-hors-nuit.png` : la fenêtre du protocole **n'est pas couverte**, l'avertissement
-///   de cohérence horaire s'affiche - couleur et icône posées par `LibelleRetour` depuis la sévérité
-///   (#2050, #2222). Le nom du fichier décrit encore l'ancienne règle : #4989 le reprend.
+/// - `apercu-diagnostic-protocole-non-couvert.png` : la fenêtre que le protocole exige **n'est pas
+///   couverte**, l'avertissement de cohérence horaire s'affiche - couleur et icône posées par
+///   `LibelleRetour` depuis la sévérité (#2050, #2222).
 ///
 /// **Déterminisme** : l'écran n'affiche que la série climatique, les anomalies et le GPS, aucun
 /// chemin de fichier, donc aucune dépendance au dossier temporaire.
@@ -88,12 +88,9 @@ public final class CaptureDiagnostic {
     /// la fin demandée. C'est l'erreur de paramétrage réellement commise sur le terrain, et l'alerte
     /// que la capture dédiée met en évidence.
     ///
-    /// Attention : le fichier s'appelle encore `apercu-diagnostic-hors-nuit.png`, nom qui décrivait l'ancienne
-    /// règle inversée. Le renommage appartient à #4989, qui possède la page d'écran et les manifestes
-    /// où ce nom vit aussi.
-    private static final String DEBUT_HORS_NUIT = "22:00:00";
+    private static final String DEBUT_NON_COUVERT = "22:00:00";
 
-    private static final String FIN_HORS_NUIT = "05:00:00";
+    private static final String FIN_NON_COUVERTE = "05:00:00";
 
     /// THLog synthétique : une nuit de juin, refroidissement de 19→11 °C et hygrométrie montante
     /// (entête comprise, séparateur tabulation, comme `PaRecPR<sn>_THLog.csv`).
@@ -164,9 +161,12 @@ public final class CaptureDiagnostic {
         exporter(injecteur, graine.idAvecReleve(), sortie.resolve("apercu-diagnostic-export.png"));
         rendre(injecteur, graine.idSansReleve(), sortie.resolve("apercu-diagnostic-sans-releve.png"));
         rendre(injecteur, graine.idSansGps(), sortie.resolve("apercu-diagnostic-sans-gps.png"));
-        // État migré (#2050) que rien ne montrait de façon dédiée (#2222) : un enregistrement hors nuit
+        // État migré (#2050) que rien ne montrait de façon dédiée (#2222) : une nuit dont la plage
         // fait apparaître l'alerte de cohérence horaire, rendue par LibelleRetour depuis la sévérité.
-        rendre(injecteur, graine.idHorsNuit(), sortie.resolve("apercu-diagnostic-hors-nuit.png"));
+        rendre(
+                injecteur,
+                graine.idProtocoleNonCouvert(),
+                sortie.resolve("apercu-diagnostic-protocole-non-couvert.png"));
         // Bandeau de retour (#1917) : jusqu'ici AUCUN aperçu ne montrait de bandeau sur AUCUN écran migré
         // - on ne vérifiait que « rien n'est déplacé » quand il est absent. Ouvrir sur un passage
         // inexistant produit le cas réel sans mock : le chargement échoue et l'écran le dit.
@@ -230,8 +230,8 @@ public final class CaptureDiagnostic {
     }
 
     /// Seede un site, un point géolocalisé et un point sans GPS, et quatre passages déposés (chacun
-    /// session + journal) : nominal avec relevé, sans relevé, sans GPS, et hors nuit avec relevé. Les
-    /// passages « avec relevé », « sans GPS » et « hors nuit » reçoivent un THLog synthétique. Renvoie
+    /// session + journal) : nominal avec relevé, sans relevé, sans GPS, et protocole non couvert. Les
+    /// passages « avec relevé », « sans GPS » et « non couvert » reçoivent un THLog synthétique. Renvoie
     /// les quatre identifiants.
     private static Graine seeder(SourceDeDonnees source, Path workspace) throws IOException {
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
@@ -269,11 +269,11 @@ public final class CaptureDiagnostic {
 
         // Passage dédié à l'avertissement (#2222) : géolocalisé (le calcul exige un GPS) et relevé
         // présent (écran complet), avec des horaires qui NE COUVRENT PAS la fenêtre du protocole.
-        long idHorsNuit = passageAvecJournal(
-                passageDao, sessionDao, journalDao, idPoint, 4, "2026-06-20", DEBUT_HORS_NUIT, FIN_HORS_NUIT);
-        rattacherReleve(releveDao, sessionDao, idHorsNuit, thlog);
+        long idProtocoleNonCouvert = passageAvecJournal(
+                passageDao, sessionDao, journalDao, idPoint, 4, "2026-06-20", DEBUT_NON_COUVERT, FIN_NON_COUVERTE);
+        rattacherReleve(releveDao, sessionDao, idProtocoleNonCouvert, thlog);
 
-        return new Graine(idAvecReleve, idSansReleve, idSansGps, idHorsNuit);
+        return new Graine(idAvecReleve, idSansReleve, idSansGps, idProtocoleNonCouvert);
     }
 
     /// Rattache le relevé climatique `thlog` à la session du passage `idPassage`.
@@ -327,5 +327,5 @@ public final class CaptureDiagnostic {
         return passage.id();
     }
 
-    private record Graine(long idAvecReleve, long idSansReleve, long idSansGps, long idHorsNuit) {}
+    private record Graine(long idAvecReleve, long idSansReleve, long idSansGps, long idProtocoleNonCouvert) {}
 }

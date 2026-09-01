@@ -19,10 +19,10 @@
 
 ## 3. Les documents cessent de se contredire (lot #4989)
 
-- [ ] 3.1 `docs/ecrans/diagnostic.md` cesse de présenter le respect du protocole comme le motif de l'alerte
-- [ ] 3.2 `M-Diagnostic.md` et son SVG disent la règle du bon sens, et pourquoi la marge diurne est voulue
-- [ ] 3.3 `E6` porte ce qui a été livré, à la place de son constat de manque
-- [ ] 3.4 Recherche sur tout le corpus : plus aucune occurrence ne présente « démarrage avant le coucher » comme un défaut, le zéro confirmé motif par motif
+- [x] 3.1 `docs/ecrans/diagnostic.md` cesse de présenter le respect du protocole comme le motif de l'alerte
+- [x] 3.2 `M-Diagnostic.md` et son SVG disent la règle du bon sens, et pourquoi la marge diurne est voulue
+- [x] 3.3 `E6` porte ce qui a été livré, à la place de son constat de manque
+- [x] 3.4 Recherche sur tout le corpus : plus aucune occurrence ne présente « démarrage avant le coucher » comme un défaut, le zéro confirmé motif par motif
 
 ## 4. Ce que ce changement ne livre pas
 

@@ -93,7 +93,7 @@ public class DiagnosticViewModel {
     private final ReadOnlyObjectWrapper<CoherenceHoraire> coherence =
             new ReadOnlyObjectWrapper<>(this, "coherence", null);
 
-    /// Alerte « hors nuit » (démarrage/arrêt diurne), [RetourOperation#AUCUN] si les horaires sont
+    /// Ce que l'écart au protocole vaut, [RetourOperation#AUCUN] si les horaires sont
     /// cohérents. Un [RetourOperation] plutôt qu'une chaîne : sa sévérité (AVERTISSEMENT) est portée par la
     /// **donnée** et non par une classe CSS figée dans le FXML (#2050). Le label inline la rend via
     /// [LibelleRetour][fr.univ_amu.iut.commun.view.LibelleRetour] ; la barre de statut, neutre (ADR 0039),
@@ -206,7 +206,7 @@ public class DiagnosticViewModel {
         return fenetreNuit.getReadOnlyProperty();
     }
 
-    /// Alerte « hors nuit » quand l'enregistrement déborde de la fenêtre nocturne, [RetourOperation#AUCUN]
+    /// Ce que l'écart à la fenêtre exigée vaut pour l'observateur, [RetourOperation#AUCUN]
     /// sinon (#548).
     public ReadOnlyObjectProperty<RetourOperation> alerteHorsNuitProperty() {
         return alerteHorsNuit.getReadOnlyProperty();
