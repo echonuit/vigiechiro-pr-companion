@@ -98,6 +98,7 @@ nav:
     - 4841 · Un motif ne se déclare qu'après son contrôle inverse: decisions/4841-un-motif-ne-se-declare-qu-apres-son-controle-inverse.md
     - 4974 · Un garde qui lit un nom se contourne en renommant: decisions/4974-un-garde-qui-lit-un-nom-se-contourne-en-renommant.md
     - 4804 · Une mesure plausible se contrôle avant d'être crue: decisions/4804-une-mesure-plausible-se-controle-avant-d-etre-crue.md
+    - 5068 · Une dette assumée se compte: decisions/5068-une-dette-assumee-se-compte.md
     - 4859 · Un banc referme ce qu'il ouvre: decisions/4859-un-banc-referme-ce-qu-il-ouvre.md
     - 4187 · Un rouge se classe avant de se rejouer: decisions/4187-un-rouge-se-classe-avant-de-se-rejouer.md
     - 4770 · Muter un garde de méthode passe par son point d'entrée: decisions/4770-la-mutation-se-transpose-par-le-point-d-entree.md
