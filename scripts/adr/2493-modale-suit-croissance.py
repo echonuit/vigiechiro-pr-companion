@@ -36,10 +36,19 @@ REVELE = re.compile(
 )
 
 
+def fichiers(vues: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unites que ce garde LIT, extraites pour que `lus` les compte (issue #5015).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu il RETENAIT : un ciblage
+    manque donnait zero suspect sur zero fichier, et ce zero passait pour un succes.
+    """
+    arbres = [vues] if vues else list(RACINES)
+    return sorted(f for a in arbres if a.is_dir() for f in a.rglob("*Controller.java"))
+
+
 def suspects(vues: pathlib.Path | None = None) -> list[str]:
     trouves = []
-    arbres = [vues] if vues else list(RACINES)
-    for source in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*Controller.java")):
+    for source in fichiers(vues):
         if not MODALE.search(source.name):
             continue
         code = sans_commentaires_java(source.read_text(encoding="utf-8"))
@@ -51,4 +60,11 @@ def suspects(vues: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte("2493", "modale qui révèle un bandeau sans suivreLaCroissance", suspects()))
+    sys.exit(
+        rapporte(
+            "2493",
+            "modale qui révèle un bandeau sans suivreLaCroissance",
+            suspects(),
+            lus=len(fichiers()),
+        )
+    )

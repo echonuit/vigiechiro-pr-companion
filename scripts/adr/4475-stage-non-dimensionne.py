@@ -64,6 +64,18 @@ def _a_soi(texte: str, receveur: str) -> bool:
     return bool(re.search(rf"\b{re.escape(receveur)}\s*=\s*new\s+Stage\s*\(", texte))
 
 
+def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unites que ce garde LIT, extraites pour que `lus` les compte (issue #5015).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu il RETENAIT : un
+    ciblage manque donnait zero suspect sur zero fichier, et ce zero passait pour un succes.
+    """
+    # La normalisation vit ICI et non chez l appelant : `fichiers` doit rendre la meme population
+    # que `suspects` lisait, sans quoi `lus` compterait autre chose que ce qui est juge.
+    racine = racine or TESTS_ANCRES
+    return sorted(racine.rglob("*.java"))
+
+
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Un suspect par fichier dont AU MOINS une pose herite du stage du fork.
 
@@ -72,7 +84,7 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """
     racine = racine or TESTS_ANCRES
     trouves = []
-    for f in sorted(racine.rglob("*.java")):
+    for f in fichiers(racine):
         texte = f.read_text(encoding="utf-8")
         if "@Start" not in texte:
             continue
@@ -184,4 +196,12 @@ if __name__ == "__main__":
             print(f"  {s}")
         print(f"\n{len(listes)} classes héritent du stage de leur fork")
         sys.exit(0)
-    sys.exit(rapporte(ADR, "test TestFX qui hérite du stage de son fork", listes, apercu=12))
+    sys.exit(
+        rapporte(
+            ADR,
+            "test TestFX qui hérite du stage de son fork",
+            listes,
+            apercu=12,
+            lus=len(fichiers()),
+        )
+    )

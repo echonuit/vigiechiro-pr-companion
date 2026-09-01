@@ -42,12 +42,21 @@ def est_outil_de_capture(source: pathlib.Path) -> bool:
     return source.name.startswith("Capture") and source.parent.name == "outils"
 
 
+def fichiers(sources: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unites que ce garde LIT, extraites pour que `lus` les compte (issue #5015).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu il RETENAIT : un ciblage
+    manque donnait zero suspect sur zero fichier, et ce zero passait pour un succes.
+    """
+    arbres = [sources] if sources else list(RACINES)
+    return sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java"))
+
+
 def suspects(sources: pathlib.Path | None = None) -> list[str]:
     # Commentaires retirés d'abord : un exemple cité dans un Javadoc n'est pas du code (c'est le cas de
     # l'en-tête d'ApercuFx, qui décrit précisément le motif qu'il remplace).
     trouves = []
-    arbres = [sources] if sources else list(RACINES)
-    for source in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
+    for source in fichiers(sources):
         if not est_outil_de_capture(source):
             continue
         texte = sans_commentaires_java(source.read_text(encoding="utf-8"))
@@ -60,4 +69,6 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
 
 
 if __name__ == "__main__":
-    sys.exit(rapporte("3053", "capture : le geste qui ne se fait pas", suspects()))
+    sys.exit(
+        rapporte("3053", "capture : le geste qui ne se fait pas", suspects(), lus=len(fichiers()))
+    )

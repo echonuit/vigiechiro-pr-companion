@@ -71,6 +71,15 @@ def corpsDe(texte: str, debut: int) -> str:
 COMMENTAIRE = re.compile(r"^\s*(///|//|\*|/\*)")
 
 
+def fichiers(racine: pathlib.Path = RACINE) -> list[pathlib.Path]:
+    """Les unites que ce garde LIT, extraites pour que `lus` les compte (issue #5015).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu il RETENAIT : un
+    ciblage manque donnait zero suspect sur zero fichier, et ce zero passait pour un succes.
+    """
+    return sorted(racine.rglob("*.java"))
+
+
 def suspects(racine: pathlib.Path = RACINE) -> list[str]:
     """Tout appel a `waitFor` hors de l aide partagee, une entree par site.
 
@@ -79,7 +88,7 @@ def suspects(racine: pathlib.Path = RACINE) -> list[str]:
     facon dont le defaut avait ete trouve.
     """
     trouves = []
-    for fichier in sorted(racine.rglob("*.java")):
+    for fichier in fichiers(racine):
         if fichier.name in EXEMPTES:
             continue
         for rang, ligne in enumerate(fichier.read_text(encoding="utf-8").splitlines(), 1):
@@ -179,5 +188,10 @@ if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(_autoTest())
     sys.exit(
-        rapporte(ADR, "attentes réinventées : un `waitFor` hors de l'aide partagée", suspects())
+        rapporte(
+            ADR,
+            "attentes réinventées : un `waitFor` hors de l'aide partagée",
+            suspects(),
+            lus=len(fichiers()),
+        )
     )
