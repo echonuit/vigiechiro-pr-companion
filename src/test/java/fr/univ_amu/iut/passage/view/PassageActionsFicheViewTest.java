@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.view;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -77,6 +78,15 @@ class PassageActionsFicheViewTest {
     private static final long ID_PASSAGE = 42L;
     private static final ContexteSite CONTEXTE = new ContexteSite("640380", "A1", "Étang de la Tuilière");
     private static final Path SESSION = Path.of("/data/Car640380-2026-Pass2-A1");
+
+    /// Fiche de la participation liée, telle que le portail la rend.
+    private static final String LIEN_FICHE = "https://www.vigiechiro.fr/participation/42";
+
+    /// Ce qui est parti au navigateur, et ce qui est parti au gestionnaire de fichiers (#4982).
+    private final List<String> liensOuverts = new ArrayList<>();
+
+    /// Ce qui est parti au gestionnaire de fichiers : vide ici, et c'est le contrôle négatif.
+    private final List<Path> dossiersOuverts = new ArrayList<>();
 
     /// Ce que le confirmateur a **demandé** en chaîne (annuler dépôt, purge).
     private final List<String> confirmations = new ArrayList<>();
@@ -161,12 +171,29 @@ class PassageActionsFicheViewTest {
 
             @Provides
             PortailVigieChiro portail() {
-                return mock(PortailVigieChiro.class);
+                PortailVigieChiro portail = mock(PortailVigieChiro.class);
+                // Une participation liée : sans elle « Voir la participation » n'a rien à ouvrir, et
+                // le contrôle négatif de #4982 passerait pour vert sans avoir rien éprouvé.
+                lenient().when(portail.pageParticipation(anyLong())).thenReturn(Optional.of(LIEN_FICHE));
+                return portail;
             }
 
             @Provides
             OuvreurDeLien ouvreurDeLien() {
-                return url -> {};
+                // Les deux gestes du port sont notés séparément (#4982) : un bouchon qui n'en note
+                // qu'un ne peut pas dire lequel a servi.
+                return new OuvreurDeLien() {
+                    @Override
+                    public void ouvrir(String url) {
+                        liensOuverts.add(url);
+                    }
+
+                    @Override
+                    public boolean ouvrirDossier(Path dossier) {
+                        dossiersOuverts.add(dossier);
+                        return true;
+                    }
+                };
             }
         });
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
@@ -348,5 +375,17 @@ class PassageActionsFicheViewTest {
         assertThat(annonces)
                 .as("annuler un dépôt ne détruit rien : son refus ne doit plus bloquer (ADR 0023)")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#4982 : « Voir la participation » continue de partir au navigateur")
+    void la_fiche_de_participation_part_toujours_au_navigateur(FxRobot robot) {
+        // Contrôle négatif du remède de #4982. Séparer « ouvrir un dossier » de « ouvrir un lien »
+        // n'aurait aucune valeur si le remède avait envoyé TOUT au gestionnaire de fichiers : c'est
+        // le seul usage légitime du port, et il est ici sur un AUTRE écran que celui qu'on répare.
+        robot.clickOn("#boutonOuvrirPortail");
+
+        assertThat(liensOuverts).containsExactly(LIEN_FICHE);
+        assertThat(dossiersOuverts).isEmpty();
     }
 }

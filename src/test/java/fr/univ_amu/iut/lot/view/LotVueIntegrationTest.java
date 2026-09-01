@@ -85,6 +85,7 @@ class LotVueIntegrationTest {
 
     /// Faux ouvreur de lien (#251) : enregistre les URI demandées, sans ouvrir de gestionnaire de fichiers.
     private final List<String> liensOuverts = new ArrayList<>();
+    private final List<Path> dossiersOuverts = new ArrayList<>();
 
     @Start
     void start(Stage stage) throws Exception {
@@ -117,7 +118,21 @@ class LotVueIntegrationTest {
 
                     @Provides
                     OuvreurDeLien ouvreurDeLien() {
-                        return liensOuverts::add;
+                        // Les DEUX gestes du port sont enregistrés séparément (#4982). Un bouchon
+                        // qui n'en note qu'un ne peut pas distinguer « ouvre un dossier » de
+                        // « ouvre un lien », et c'est cette confusion qu'on éprouve ici.
+                        return new OuvreurDeLien() {
+                            @Override
+                            public void ouvrir(String url) {
+                                liensOuverts.add(url);
+                            }
+
+                            @Override
+                            public boolean ouvrirDossier(Path dossier) {
+                                dossiersOuverts.add(dossier);
+                                return true;
+                            }
+                        };
                     }
                 },
                 new NavigationDeTestModule());
@@ -552,7 +567,7 @@ class LotVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#259 : après une génération réussie, « Ouvrir le dossier » s'active et ouvre depot/")
+    @DisplayName("#4982 : « Ouvrir le dossier » demande un DOSSIER, et non un lien de navigateur")
     void ouvrir_dossier_depot_apres_generation(FxRobot robot) {
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
         when(service.genererArchivesDepot(anyLong(), any(), any()))
@@ -564,9 +579,13 @@ class LotVueIntegrationTest {
         assertThat(ouvrir.isDisabled()).isFalse();
         robot.clickOn("#btnOuvrirDepot");
 
-        // L'ouvreur reçoit une URI fichier pointant le sous-dossier depot/ (cible du téléversement).
-        assertThat(liensOuverts).hasSize(1);
-        assertThat(liensOuverts.get(0)).startsWith("file:").contains("/ws/session-42/depot");
+        // Le port reçoit un CHEMIN par le geste « dossier » (#259, cible du téléversement).
+        assertThat(dossiersOuverts).containsExactly(Path.of("/ws/session-42/depot"));
+        // Et rien ne part au navigateur. Cette ligne portait auparavant l'assertion inverse
+        // (`liensOuverts.get(0)).startsWith("file:")`) : le banc épinglait le défaut au lieu de le
+        // refuser. C'est par là qu'un observateur a reçu un listing de répertoire dans un onglet
+        // au moment où le téléversement venait d'échouer (#4982).
+        assertThat(liensOuverts).isEmpty();
     }
 
     @Test

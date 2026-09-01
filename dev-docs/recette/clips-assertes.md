@@ -518,3 +518,18 @@ le voir puisque tous partaient du poste de l'expéditeur.
 > **Ce que ces trois cas ne peuvent pas montrer.** Le voyage du fichier d'un poste à l'autre. Le paquet
 > arrive par la fixture, composé par le service : aucune des deux familles ne filme le transport, et
 > c'est une limite du dispositif plutôt qu'un manque du tournage.
+
+## ScenarioPerceptifRefusDepotTest
+
+### S4-18 · `ouvrir_le_dossier_de_depot_demande_un_dossier`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifRefusDepotTest.ouvrir_le_dossier_de_depot_demande_un_dossier.mp4"></video>
+
+> Aucun gestionnaire de fichiers ne s'ouvre sur le banc : ce clip montre le clic, pas la fenêtre qu'il ouvre. Ce qui se vérifie est le GESTE demandé au système - ouvrir un dossier, et non ouvrir un lien - et cela se lit dans l'assertion.
+
+**Pourquoi ce cas a une section à lui.** Il existait depuis toujours dans `s4-deposer-suivre.md` et
+**aucun test ne le citait**. Le document disait juste : « ouvre le dossier `depot/` ». Le code, lui,
+passait une URI `file://` au navigateur, qui rendait un listing de répertoire. Un observateur y a
+cherché comment déposer ses archives, n'a rien trouvé, et est reparti chercher les ZIP à la main
+(#4982). Un cas de recette qu'aucun banc ne cite ne garde rien.
