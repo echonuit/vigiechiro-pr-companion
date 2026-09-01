@@ -255,6 +255,9 @@ def main() -> int:
         "4992",
         f"lots ouverts sans critere de fin ({len(muets)} sur {ouverts}, {len(chantiers)} chantiers depuis la regle)",
         muets,
+        # L'unite est le LOT ouvert, pas le fichier : ce garde lit la forge. `ouverts` porte deja
+        # ce compte, et le titre du verdict l'affiche ; `lus` le rend lisible par le rapport.
+        lus=ouverts,
     )
     print("\nPour chaque lot ci-dessus : ecrire dans SON corps comment on saura qu il est fini.")
     return code

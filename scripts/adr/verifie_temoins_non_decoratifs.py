@@ -125,13 +125,25 @@ def suite_rougit(nom: str, faux: pathlib.Path) -> bool:
     return rendu.returncode != 0
 
 
+def mutes(noms: list[str] | None = None) -> list[str]:
+    """Les gardes que ce garde MUTE reellement, extraits pour que `lus` les compte (issue #5007).
+
+    L unite n est ni le fichier ni la ligne : c est le GARDE. Et c est bien le garde MUTE, non
+    celui que la suite charge : `HORS_PORTEE` et les absents ne sont jamais neutralises, donc
+    jamais lus. Les compter gonflerait le nombre d une population que ce garde n eprouve pas.
+    """
+    return [
+        nom
+        for nom in (noms if noms is not None else gardes())
+        if nom not in HORS_PORTEE and (DOSSIER / nom).is_file()
+    ]
+
+
 def suspects(noms: list[str] | None = None) -> list[str]:
     """Un suspect par garde dont la suite reste verte alors qu il ne detecte plus rien."""
     trouves = []
     with arbre_jetable() as faux:
-        for nom in noms if noms is not None else gardes():
-            if nom in HORS_PORTEE or not (DOSSIER / nom).is_file():
-                continue
+        for nom in mutes(noms):
             if not suite_rougit(nom, faux):
                 trouves.append(f"{nom}  la suite reste verte, sa detection neutralisee")
     return trouves
@@ -189,4 +201,11 @@ def auto_test() -> int:
 if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
-    sys.exit(rapporte(ADR, "temoin decoratif : la suite reste verte sans detection", suspects()))
+    sys.exit(
+        rapporte(
+            ADR,
+            "temoin decoratif : la suite reste verte sans detection",
+            suspects(),
+            lus=len(mutes()),
+        )
+    )
