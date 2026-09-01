@@ -37,7 +37,7 @@ La mutation devient mécanique. Pour chaque garde chargée par `verifie_scripts.
 
 ## Conséquences
 
-- Le coût est mesuré : `verifie_scripts.py` s'exécute en 0,05 s, et 23 gardes se mutent en 1,2 s. Rien ne justifie de refaire ce balayage à la main.
+- Le coût est mesuré, et il a grossi : au 2026-09-01, `verifie_scripts.py` s'exécute en **132 s** et **29 gardes** se mutent en **105 s**, contre 0,05 s et 23 gardes en 1,2 s à la décision. Le harnais a pris son temps le jour où un cas de couture s'est mis à appeler `rapport.collecter()`, qui lance tous les gardes ; le corpus, lui, grandit à chaque garde que la suite charge. Rien ne justifie pour autant de refaire ce balayage à la main : c'est trois minutes de machine contre une relecture que personne ne tiendra.
 - Un témoin nouveau est éprouvé dès sa PR, et non à la clôture suivante.
 - L'auto-test du garde prouve le mécanisme dans les **deux** sens : qu'un témoin solide fait bien rougir la suite sous mutation, et que sans mutation la suite est verte. Sans le second, un script qui répondrait toujours « tout va bien » passerait le premier.
 

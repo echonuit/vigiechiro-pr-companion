@@ -68,7 +68,7 @@ TOLEREES_EN_TEST = {"AvoidDuplicateLiterals"}
 ZONES = {"production": PRODUCTION, "test": TESTS}
 
 
-def fichiers(zone: str | None = None, racine: pathlib.Path | None = None) -> list[pathlib.Path]:
+def fichiers(racine: pathlib.Path | None = None, zone: str | None = None) -> list[pathlib.Path]:
     """Les fichiers Java que PMD a ANALYSES dans la zone, pour que `lus` les compte (issue #5007).
 
     Le compte vient de l ARBRE VISE et non du rapport, et cette distinction est tout l interet du
@@ -136,14 +136,14 @@ if __name__ == "__main__":
             "violations du portail en production",
             suspects(zone="production"),
             apercu=12,
-            lus=len(fichiers("production")),
+            lus=len(fichiers(zone="production")),
         ),
         rapporte(
             ADR_TEST,
             "violations du portail en zone de test",
             suspects(zone="test"),
             apercu=12,
-            lus=len(fichiers("test")),
+            lus=len(fichiers(zone="test")),
         ),
     ]
     sys.exit(max(codes))

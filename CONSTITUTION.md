@@ -239,8 +239,8 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | Article | Jurisprudence | Dont mécanisée | Tenu par |
 |---|---:|---:|---|
 | A1 · La preuve précède l'affirmation | 4 | 1 | `.github/scripts/verifie-decisions-du-tournage-connecte.sh`, `.github/scripts/verifie-jeton-vivant.sh`, `.github/scripts/revoque-jeton.sh` |
-| A2 · Un garde est vu rouge sur sa propre mutation | 9 | 6 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure-duree-portail.sh`, et 2 autres |
-| A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 27 | 20 | `.github/scripts/veille-contrat-api.sh`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 21 autres |
+| A2 · Un garde est vu rouge sur sa propre mutation | 10 | 7 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure-duree-portail.sh`, et 2 autres |
+| A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 28 | 21 | `.github/scripts/veille-contrat-api.sh`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 21 autres |
 | A4 · Un cas joué n'est pas un cas prouvé | 24 | 15 | `ApercuFxElisionTest#bouton_tronque_refuse`, `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`, `scripts/adr/3053-capture-libelle.py`, et 12 autres |
 | A5 · La mesure fait foi, et dit d'où elle vient | 25 | 16 | `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`, `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`, `EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues`, et 12 autres |
 | A6 · La vérification se déclare, sur trois niveaux | 3 | 2 | `DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment`, `EcritureAtomiqueTest#creation_restreinte` |
@@ -248,7 +248,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A8 · La mutation mesure dès qu'un comportement est complet | 0 | 0 | **relecture seule** |
 | A9 · La dette se tient par un cliquet, pas par un nettoyage | 14 | 6 | `scripts/adr/2843-tiret-cadratin.py`, `PatronDuCliquetTest#tout_cliquet_passe_par_le_patron`, `scripts/adr/verifie_scripts.py`, et 10 autres |
 | A10 · Jamais de suppression d'avertissement | 0 | 0 | **relecture seule** |
-| A11 · L'assumé se déclare, il ne se contourne pas | 9 | 0 | **relecture seule** |
+| A11 · L'assumé se déclare, il ne se contourne pas | 10 | 0 | **relecture seule** |
 | A12 · Rendre compte avant de conclure, et aucun échec silencieux | 9 | 5 | `scripts/adr/0008-echec-silencieux.py`, `.github/scripts/verifie-secret-winget.sh`, `RetourOperationTest#les_deux_causes_ne_se_melangent_pas`, et 5 autres |
 | A13 · Un refus dit ce qui manque, et ne conseille que le vérifié | 9 | 8 | `scripts/adr/2635-refus-sans-surface.py`, `AuditDepartementDuPointTest#legitime_et_suspecte_indiscernables`, `FiltresLieuTest#le_point_est_filtrable`, et 6 autres |
 | A14 · Un état n'est pas un compte rendu, et ils ne partagent pas de canal | 8 | 2 | `CompteRenduChiffreTest#ventilation_non_exhaustive_refusee`, `CauseLisibleTest#l_enveloppe_de_reflexion_ne_masque_pas_la_panne`, `scripts/adr/3947-message-enveloppe.py` |
