@@ -201,8 +201,7 @@ class ServiceDiagnosticTest {
         // dix-sept minutes trop tard : la fenêtre n'est pas couverte, même si la fin la dépasse.
         assertThat(diagnostic.coherenceHoraire().couverture())
                 .as("démarrage à 20:25, après le début exigé (~20:08)")
-                .isEqualTo(fr.univ_amu.iut.diagnostic.model.CoherenceHoraire.Couverture.AVERTISSEMENT);
-        assertThat(diagnostic.coherenceHoraire().aQuelqueChoseADire()).isTrue();
+                .isEqualTo(fr.univ_amu.iut.diagnostic.model.CoherenceHoraire.Couverture.INCOMPLETE);
     }
 
     @Test

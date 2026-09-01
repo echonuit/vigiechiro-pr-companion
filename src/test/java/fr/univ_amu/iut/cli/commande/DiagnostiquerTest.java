@@ -42,7 +42,7 @@ class DiagnostiquerTest {
                         LocalTime.of(6, 18),
                         LocalTime.of(22, 30),
                         LocalTime.of(6, 18),
-                        CoherenceHoraire.Couverture.AVERTISSEMENT));
+                        CoherenceHoraire.Couverture.INCOMPLETE));
     }
 
     private static Diagnostic diagnosticSansReleve() {
@@ -98,7 +98,11 @@ class DiagnostiquerTest {
                 .containsEntry("temperatureDebutNuitCelsius", 8.5)
                 .containsEntry("coherenceHoraireDisponible", true)
                 .containsEntry("coucherSoleil", "21:58")
-                .containsEntry("couvertureDuProtocole", "AVERTISSEMENT")
+                // La valeur nomme l'état du domaine, et non la gravité de son annonce : elle a dit
+                // « AVERTISSEMENT » le temps d'une PR, ce qui faisait porter une sévérité à une clé
+                // qui annonce une couverture. Cette clé est publique pour les scripts, et cette
+                // ligne est ce qui la tient : elle a rougi au renommage, comme il fallait.
+                .containsEntry("couvertureDuProtocole", "INCOMPLETE")
                 .containsEntry("gpsDisponible", true);
         assertThat(objet.get("anomalies")).isEqualTo(List.of("Réveil non programmé à 03:12"));
         // Sérialisation JSON des tableaux (via FormatJson).

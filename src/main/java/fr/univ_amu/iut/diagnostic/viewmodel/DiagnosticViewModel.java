@@ -146,18 +146,22 @@ public class DiagnosticViewModel {
 
     /// Ce que l'encart annonce du verdict de couverture.
     ///
-    /// Restitution **minimale**, posée par #4987 pour que le modèle corrigé atteigne l'écran sans que
-    /// celui-ci mente. Elle ne montre encore ni la plage exigée ni la plage enregistrée, et ne
-    /// distingue pas visuellement l'information de l'avertissement : c'est le travail de #4988, et
-    /// la tâche 2.2 dit pourquoi il compte, une information rendue comme un défaut reproduirait le
-    /// mal qu'on corrige.
-    private static RetourOperation libelleEcart(CoherenceHoraire coherence) {
+    /// **La gravité se décide ICI**, et non dans le modèle (#4984) : [CoherenceHoraire.Couverture]
+    /// nomme un état du domaine, cette méthode en fait une information ou un avertissement. C'est ce
+    /// que l'ADR 0038 demande, une seule échelle de sévérité.
+    ///
+    /// Visible pour le banc de parité : le terminal porte le même verdict par
+    /// `Diagnostiquer.coherenceLisible`, et deux surfaces qui trancheraient différemment la même
+    /// nuit ne se contrediraient nulle part ailleurs (ADR 0014).
+    public static RetourOperation libelleEcart(CoherenceHoraire coherence) {
+        // Une couverture tenue est une INFORMATION : le protocole est un plancher, et le dépasser
+        // n'est pas un défaut. La rendre comme un défaut reproduirait le mal qu'on corrige.
         return switch (coherence.couverture()) {
-            case AVERTISSEMENT ->
+            case INCOMPLETE ->
                 RetourOperation.avertissement(
                         "L'enregistrement ne couvre pas toute la fenêtre que le protocole demande,"
                                 + " de 30 minutes avant le coucher à 30 minutes après le lever.");
-            case INFORMATION -> RetourOperation.info("L'enregistrement couvre la fenêtre du protocole, et la dépasse.");
+            case COUVERTE -> RetourOperation.info("L'enregistrement couvre la fenêtre du protocole, et la dépasse.");
             case INDISPONIBLE -> RetourOperation.AUCUN;
         };
     }

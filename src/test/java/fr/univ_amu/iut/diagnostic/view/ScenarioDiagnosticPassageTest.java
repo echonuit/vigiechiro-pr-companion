@@ -98,9 +98,13 @@ class ScenarioDiagnosticPassageTest {
 
     @Test
     @CasDeRecette(
-            value = {"S2-34", "S2-35", "S2-36", "S2-37", "S2-38", "S2-39"},
+            // S2-66 rejoint la liste : ce banc éprouvait déjà l'avertissement et ce qu'il dit, sans
+            // que la session porte une case pour lui. S2-67, lui, demande une nuit qui COUVRE la
+            // fenêtre, que cette carte n'a pas : il reste à jouer à la main, et c'est dit dans la
+            // session (#4984).
+            value = {"S2-34", "S2-35", "S2-36", "S2-37", "S2-38", "S2-39", "S2-66"},
             portee = Portee.A_L_ECRAN)
-    @DisplayName("S2-34 à S2-39 · lire le diagnostic : la courbe, les listes, la nuit, le GPS, le pied")
+    @DisplayName("S2-34 à S2-39 et S2-66 · lire le diagnostic : la courbe, les listes, la nuit, le GPS, le pied")
     void lire_le_diagnostic_d_un_passage(FxRobot robot) throws TimeoutException {
         PreambuleImport.importerUneNuitEtOuvrirSonPassage(robot, injecteur.getInstance(Navigateur.class), carteSd);
 

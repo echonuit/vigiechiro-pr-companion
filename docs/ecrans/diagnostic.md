@@ -38,7 +38,8 @@ les premières chauves-souris sortent avant la nuit complète, et les dernières
 L'écran montre donc deux plages sous la fenêtre nocturne : ce que le protocole attendait, et ce que
 vous avez enregistré.
 
-- Si votre plage **couvre** la fenêtre exigée, une information vous le dit. Ce n'est pas un défaut.
+- Si votre plage **couvre** la fenêtre exigée, une information vous le dit. Ce n'est pas un défaut :
+  c'est le cas de l'aperçu en tête de page, où l'encart est bleu et non ambre.
 - Si elle **ne la couvre pas**, un avertissement le signale : une partie de la nuit demandée n'a pas
   été enregistrée. Vérifiez le paramétrage de l'enregistreur pour la sortie suivante.
 

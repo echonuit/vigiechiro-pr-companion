@@ -99,6 +99,6 @@ public final class AnalyseCoherenceHoraire {
     private static CoherenceHoraire.Couverture couverture(
             Instant demarrage, Instant arret, Instant debutExige, Instant finExigee) {
         boolean couverte = !demarrage.isAfter(debutExige) && !arret.isBefore(finExigee);
-        return couverte ? CoherenceHoraire.Couverture.INFORMATION : CoherenceHoraire.Couverture.AVERTISSEMENT;
+        return couverte ? CoherenceHoraire.Couverture.COUVERTE : CoherenceHoraire.Couverture.INCOMPLETE;
     }
 }

@@ -31,7 +31,7 @@ class AnalyseCoherenceHoraireTest {
         // exact vient de l'éphéméride, et un cas posé à la minute près se briserait sur une seconde.
         CoherenceHoraire coherence = AnalyseCoherenceHoraire.analyser(AIX_LAT, AIX_LON, NUIT, "20:38:00", "06:43:00");
 
-        assertThat(coherence.couverture()).isEqualTo(Couverture.INFORMATION);
+        assertThat(coherence.couverture()).isEqualTo(Couverture.COUVERTE);
     }
 
     @Test
@@ -53,7 +53,7 @@ class AnalyseCoherenceHoraireTest {
         // L'erreur de paramétrage réellement commise, et sur laquelle l'application se taisait.
         CoherenceHoraire coherence = AnalyseCoherenceHoraire.analyser(AIX_LAT, AIX_LON, NUIT, "21:53:00", "06:28:00");
 
-        assertThat(coherence.couverture()).isEqualTo(Couverture.AVERTISSEMENT);
+        assertThat(coherence.couverture()).isEqualTo(Couverture.INCOMPLETE);
     }
 
     @Test
@@ -61,7 +61,7 @@ class AnalyseCoherenceHoraireTest {
     void une_plage_plus_large_informe() {
         CoherenceHoraire coherence = AnalyseCoherenceHoraire.analyser(AIX_LAT, AIX_LON, NUIT, "20:00:00", "07:00:00");
 
-        assertThat(coherence.couverture()).isEqualTo(Couverture.INFORMATION);
+        assertThat(coherence.couverture()).isEqualTo(Couverture.COUVERTE);
     }
 
     @Test
@@ -69,7 +69,7 @@ class AnalyseCoherenceHoraireTest {
     void finir_trop_tot_avertit() {
         CoherenceHoraire coherence = AnalyseCoherenceHoraire.analyser(AIX_LAT, AIX_LON, NUIT, "20:53:00", "06:08:00");
 
-        assertThat(coherence.couverture()).isEqualTo(Couverture.AVERTISSEMENT);
+        assertThat(coherence.couverture()).isEqualTo(Couverture.INCOMPLETE);
     }
 
     @Test
