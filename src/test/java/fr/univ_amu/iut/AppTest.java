@@ -13,6 +13,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,15 +84,25 @@ class AppTest {
         return new Mesure(ouverture.largeur(), ouverture.hauteur(), mesures[0], mesures[1]);
     }
 
+    /// Attend que la fenêtre ait **atteint sa taille d'ouverture** avant qu'un cas ne la mesure.
+    ///
+    /// `@Start` rend la main dès que `App.start` a appelé `show()` ; la fenêtre prend sa taille au pas
+    /// suivant. Sans cette attente, un cas lit **600**, le plancher, au lieu des 900 voulus. Mesuré en
+    /// #5018 : le montage décidait du verdict, et le cas mesurait sa chance.
+    @BeforeEach
+    void attendreLOuverture() {
+        Attente.que(
+                () -> stage.getHeight() >= TailleOuverture.HAUTEUR_VOULUE,
+                "la fenêtre atteint sa taille d'ouverture de " + TailleOuverture.HAUTEUR_VOULUE
+                        + " px, et non son seul plancher",
+                5_000L);
+    }
+
     /// Rend le Stage partagé tel qu'il a été reçu : sans plancher, et à la taille de sa scène.
     ///
-    /// Le `sizeToScene` est un remède **partiel** de #4785 : il ne supprime pas le rouge intermittent
-    /// de [#le_stage_partage_reste_ajustable], il supprime sa **cascade**. À l'échec, la fenêtre reste
-    /// à 600 quand son contenu en réclame 720, et les classes suivantes du fork en héritent ; un seul
-    /// `sizeToScene` la porte à 720, ce qui prouve que rien n'est figé. Cause ouverte en #5018.
-    ///
-    /// L'appeler **ici** ne défait rien : l'assertion a déjà eu lieu. **Avant**, ce serait tout autre
-    /// chose, et le premier jet du test l'a payé d'un mutant survivant.
+    /// Le `sizeToScene` reste, bien que #5018 ait traité la cause à sa source : il défend les classes
+    /// suivantes du fork contre **tout** ce qui laisserait la fenêtre trop petite, et pas seulement
+    /// contre l'ouverture manquée que cette classe éprouvait.
     @AfterEach
     void nettoyerWorkspace(FxRobot robot) {
         System.clearProperty("vigiechiro.workspace");
@@ -200,9 +211,9 @@ class AppTest {
                 + "  scène : %.0f, minHeight %.0f, resizable %s%n"
                         .formatted(stage.getScene().getHeight(), stage.getMinHeight(), stage.isResizable())
                 + "  Le contenu reste sous 600 : la scène n'a pas grandi. Le contenu dépasse et la"
-                + " fenêtre ne suit pas : l'ajustement automatique de la fenêtre n'a pas eu lieu. Ce"
-                + " n'est PAS un figement, mesuré en #4785 : un seul `sizeToScene` la rattrape, et le"
-                + " teardown de cette classe le fait pour épargner la cascade.";
+                + " fenêtre ne suit pas : lire alors la HAUTEUR D'OUVERTURE. #5018 a mesuré que ce cas"
+                + " venait d'une fenêtre ouverte à son plancher au lieu de sa scène, et que"
+                + " l'ajustement travaille normalement quand elle s'ouvre juste.";
     }
 
     /// Le délai laissé à la fenêtre pour suivre, quand l'assertion vient de la trouver immobile.

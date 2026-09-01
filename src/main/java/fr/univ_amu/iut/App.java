@@ -125,6 +125,11 @@ public class App extends Application {
         });
 
         primaryStage.show();
+
+        // La fenêtre PREND la taille de sa scène quand `show()` a manqué de l'y mettre : #5018 a
+        // mesuré une ouverture sur deux à 600 px, le plancher, au lieu des 900 que la scène porte.
+        // Jamais `setWidth`, qui figerait le Stage (voir `recette.FenetreDuBanc`).
+        primaryStage.sizeToScene();
     }
 
     /// Rend le dossier de travail à la fermeture (#2731). Sans cela, le verrou ne serait relâché que
