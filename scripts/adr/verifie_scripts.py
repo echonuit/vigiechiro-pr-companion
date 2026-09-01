@@ -1407,6 +1407,114 @@ def test_le_contrat_a_une_forme_et_refuse_l_incomplet() -> None:
         _verifie(f"un contrat sans « {manquant} » refuse", code, 1)
 
 
+def test_le_refus_s_eprouve_sur_un_garde_reel() -> None:
+    """Le refus sur population vide, eprouve sur un garde REEL de chacune des quatre familles.
+
+    `test_une_population_vide_refuse` eprouve `_commun` : il lui PASSE zero et regarde le code. Il ne
+    dit pas qu un garde donne, dont on vide l arbre, ARRIVE a zero. Entre les deux il y a tout ce que
+    la conversion a introduit, et le lot #5051 a montre que ces divergences sont reelles : quatre
+    formes differentes sur trente-trois appels, dont une signature sans defaut et une normalisation
+    ecrite DANS la fonction.
+
+    Ce cas eprouve donc les DEUX moities : que la population du garde tombe a zero quand on la vide,
+    et que le verdict bati dessus refuse.
+
+    « Refuser » ne veut pas dire la meme chose partout, et c est mesure : `rapporte` et
+    `rapporte_plancher` rendent 1, une loupe rend 0 et le DIT. Une loupe ne bloque jamais (ADR 2465),
+    donc un cas qui attendrait 1 de l une serait faux, et vert pour la mauvaise raison.
+
+    `compte-les-reliquats` est absent expres : sa population vide est sa REUSSITE, il ne declare pas
+    `lus` pour cette raison, et l eprouver ici contredirait une decision ecrite (#5015).
+    """
+    import contextlib
+    import io
+
+    commun = _charge("_commun.py")
+
+    def verdict(appel) -> tuple[int, str]:
+        """Le code rendu ET ce qui a ete imprime : une loupe se juge sur sa ligne, pas sur son code."""
+        sortie = io.StringIO()
+        with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(io.StringIO()):
+            code = appel()
+        return code, sortie.getvalue()
+
+    with tempfile.TemporaryDirectory() as brut:
+        vide = pathlib.Path(brut)
+
+        # 1. Les FICHIERS d un arbre. La famille des vingt-cinq.
+        fichiers = _charge("0008-echec-silencieux.py")
+        # Le CONTRASTE d abord. Un cas qui n affirmerait que des vides serait decoratif : la
+        # neutralisation de `verifie_temoins_non_decoratifs.py` remplace chaque fonction par
+        # `lambda: []`, si bien que « la population est vide » resterait vrai sur un garde mort.
+        # Ce que l on veut savoir est que la population DISCRIMINE, pas qu elle sait rendre zero.
+        _verifie("0008 sur le depot lit des fichiers", len(fichiers.fichiers()) > 0, True)
+        _verifie("0008 sur un arbre vide n a rien lu", len(fichiers.fichiers(vide)), 0)
+        code, _ = verdict(
+            lambda: commun.rapporte(
+                "0008",
+                "temoin de famille",
+                fichiers.suspects(vide),
+                lus=len(fichiers.fichiers(vide)),
+            )
+        )
+        _verifie("et son verdict REFUSE", code, 1)
+
+        # 2. Les ZONES d un rapport. Le compte vient de l arbre vise, pas des entrees du rapport,
+        #    et c est pourquoi cette zone-ci est videable depuis #5054.
+        zones = _charge("4617-code-mort-et-zone-de-test.py")
+        _verifie("4617 sur le depot lit sa zone", len(zones.fichiers("production")) > 0, True)
+        _verifie("4617 sur une zone vide n a rien lu", len(zones.fichiers("production", vide)), 0)
+        faux = vide / "pmd.xml"
+        faux.write_text('<?xml version="1.0"?><pmd></pmd>', encoding="utf-8")
+        code, _ = verdict(
+            lambda: commun.rapporte(
+                "4682",
+                "temoin de famille",
+                zones.suspects(faux, "production"),
+                lus=len(zones.fichiers("production", vide)),
+            )
+        )
+        _verifie("et son verdict REFUSE", code, 1)
+
+        # 3. La FORGE. L unite est l issue, et une demande qui ne rend rien est le mode de panne.
+        forge = _charge("loupe-4712-lots-multi-pr.py")
+        # `lus` se DERIVE de la population vidée, et ne s ecrit pas `0` en dur : ecrit en dur, il
+        # tiendrait meme si le garde cessait de compter ses issues, et le cas serait vert pour une
+        # raison qui n a rien a voir avec la forge.
+        corps_d_epic = (
+            "- [x] **Lot 0 - Instruction.** Fait.\n"
+            "- [ ] **Lot 1 - Porter.** Sous-chantier #99, parce qu il porte deux issues\n"
+            "      et au moins deux PR.\n"
+        )
+        _verifie("4712 sur un corps d EPIC voit ses lots", len(forge.lots(corps_d_epic)), 2)
+        sans_issue: list[dict] = []
+        _verifie("4712 sans aucune issue n a rien lu", len(forge.rapport(sans_issue)), 0)
+        code, dit = verdict(
+            lambda: commun.loupe(
+                "4712", "temoin de famille", forge.rapport(sans_issue), lus=len(sans_issue)
+            )
+        )
+        _verifie("et la loupe le DIT", "population-vide" in dit, True)
+        _verifie("sans bloquer, parce qu une loupe ne bloque jamais", code, 0)
+
+        # 4. Les gardes MUTES. L unite est le garde, et zero garde mute est un harnais qui dort.
+        temoins = _charge("verifie_temoins_non_decoratifs.py")
+        _verifie(
+            "les temoins voient les gardes que la suite charge", len(temoins.mutes()) > 0, True
+        )
+        _verifie("les temoins sans garde a muter n ont rien lu", len(temoins.mutes([])), 0)
+        # Les suspects sont passes VIDES plutot que par `temoins.suspects([])`, et ce n est pas de
+        # la paresse : `suspects()` mute chaque garde de `mutes()` en relancant la suite entiere.
+        # Sur une population vide il ne coute rien, mais le jour ou l on MUTE ce garde pour verifier
+        # que ce cas-ci attrape, `mutes()` rend les 27 gardes et l epreuve part pour dix minutes.
+        # Ce que ce cas doit prouver est que la population tombe a zero, ce que la ligne au-dessus
+        # dit deja ; le verdict, lui, se juge sur le compte.
+        code, _ = verdict(
+            lambda: commun.rapporte("4490", "temoin de famille", [], lus=len(temoins.mutes([])))
+        )
+        _verifie("et son verdict REFUSE", code, 1)
+
+
 def test_resserre_cliquets_appelle_le_rapport() -> None:
     """La COUTURE entre les deux modules, la ou le temoin voisin n eprouvait que leurs pieces.
 
@@ -1621,6 +1729,7 @@ if __name__ == "__main__":
         test_le_contrat_a_une_forme_et_refuse_l_incomplet,
         test_resserre_cliquets_appelle_le_rapport,
         test_rapport_et_resserrement,
+        test_le_refus_s_eprouve_sur_un_garde_reel,
     ):
         essai()
     decouverts = _completude()

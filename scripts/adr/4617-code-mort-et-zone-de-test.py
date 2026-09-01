@@ -42,7 +42,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION_ANCREE, RACINE_DEPOT, TESTS_ANCRES, rapporte
+from _commun import PRODUCTION, RACINE_DEPOT, TESTS, rapporte
 
 # DEUX cliquets, un par zone, et surtout pas un seul sur les deux (#4682).
 #
@@ -62,10 +62,13 @@ RAPPORT = RACINE_DEPOT / "target" / "pmd.xml"
 TOLEREES_EN_TEST = {"AvoidDuplicateLiterals"}
 
 
-ZONES = {"production": PRODUCTION_ANCREE, "test": TESTS_ANCRES}
+# Les chemins RELATIFS, que `fichiers()` ancre lui-meme : c est ce qui rend une zone videable.
+# Ancres ici, ils auraient fige la racine, et aucun cas n aurait pu pointer le garde vers un arbre
+# vide pour voir son refus partir (issue #5054).
+ZONES = {"production": PRODUCTION, "test": TESTS}
 
 
-def fichiers(zone: str | None = None) -> list[pathlib.Path]:
+def fichiers(zone: str | None = None, racine: pathlib.Path | None = None) -> list[pathlib.Path]:
     """Les fichiers Java que PMD a ANALYSES dans la zone, pour que `lus` les compte (issue #5007).
 
     Le compte vient de l ARBRE VISE et non du rapport, et cette distinction est tout l interet du
@@ -77,7 +80,9 @@ def fichiers(zone: str | None = None) -> list[pathlib.Path]:
     puisque `lus=0` refuse. Ce que ce garde doit pouvoir distinguer, c est « zero violation » de
     « PMD n a pas tourne sur cette zone », et seul le compte de l arbre le dit.
     """
-    arbres = [ZONES[zone]] if zone else list(ZONES.values())
+    base = racine or RACINE_DEPOT
+    choisies = [ZONES[zone]] if zone else list(ZONES.values())
+    arbres = [base / c for c in choisies]
     return sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java"))
 
 
