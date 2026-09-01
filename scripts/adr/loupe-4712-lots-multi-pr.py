@@ -173,7 +173,13 @@ def main() -> int:
         return _autoTest()
     issues = _issues()
     code = loupe(
-        "4712", "un lot multi-PR s'ouvre en sous-chantier (jugement humain)", rapport(issues)
+        "4712",
+        "un lot multi-PR s'ouvre en sous-chantier (jugement humain)",
+        rapport(issues),
+        # L'unite n'est pas le fichier : ce garde lit la FORGE, et ce qu'il a lu est le nombre
+        # d'issues que la demande a rendues. Un zero y dirait que la forge n'a rien renvoye,
+        # ce qui est justement le silence qu'un « aucun candidat » ne distingue pas.
+        lus=len(issues),
     )
     print(
         "\nPour chaque lot ci-dessus : combien de PR ? Plus de deux, il lui fallait un sous-chantier."

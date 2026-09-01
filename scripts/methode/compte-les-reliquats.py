@@ -116,6 +116,16 @@ def main() -> int:
         )
     avant = set(TEMOIN.read_text(encoding="utf-8").split())
     restes = sorted(laisses(avant, presents(racine)))
+    # Ce garde ne declare PAS `lus`, et c est une decision, non un oubli (issue #5015).
+    #
+    # Ses deux populations valent legitimement ZERO. Sur un runner vierge dont la suite nettoie
+    # bien, ni le temoin d avant ni les repertoires presents ne portent quoi que ce soit. Or
+    # `lus=0` REFUSE : declarer l une ou l autre ferait rougir la reussite meme de ce garde, dont
+    # le but est qu il ne reste rien. Aucune de ses populations n a de zero anormal.
+    #
+    # Ce que cela coute est ecrit ici pour ne pas se reperdre : si `MOTIFS` cessait d apparier,
+    # ce garde rendrait « aucun reliquat » en silence et rien ne le dirait. La cecite est assumee,
+    # faute d une population qui la revelerait.
     return rapporte(ADR, "répertoires temporaires laissés par la suite", restes)
 
 

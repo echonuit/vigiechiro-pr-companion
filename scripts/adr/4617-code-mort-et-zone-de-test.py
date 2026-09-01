@@ -42,7 +42,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, rapporte
+from _commun import PRODUCTION_ANCREE, RACINE_DEPOT, TESTS_ANCRES, rapporte
 
 # DEUX cliquets, un par zone, et surtout pas un seul sur les deux (#4682).
 #
@@ -60,6 +60,25 @@ RAPPORT = RACINE_DEPOT / "target" / "pmd.xml"
 # La seule regle que la zone de test n a pas a tenir, et la mesure qui le justifie est dans le
 # docstring. Ailleurs qu en test, elle compte comme les autres.
 TOLEREES_EN_TEST = {"AvoidDuplicateLiterals"}
+
+
+ZONES = {"production": PRODUCTION_ANCREE, "test": TESTS_ANCRES}
+
+
+def fichiers(zone: str | None = None) -> list[pathlib.Path]:
+    """Les fichiers Java que PMD a ANALYSES dans la zone, pour que `lus` les compte (issue #5007).
+
+    Le compte vient de l ARBRE VISE et non du rapport, et cette distinction est tout l interet du
+    champ ici. PMD ne liste que les fichiers FAUTIFS : une zone irreprochable n a aucune entree
+    dans `pmd.xml`. Mesure du 2026-09-01 : 425 balises `file` et 1 493 violations, toutes en zone
+    de test ; la production n en porte aucune, et son cliquet vaut zero parce qu elle est propre.
+
+    Compter les entrees du rapport ferait donc REFUSER la production pour etre irreprochable,
+    puisque `lus=0` refuse. Ce que ce garde doit pouvoir distinguer, c est « zero violation » de
+    « PMD n a pas tourne sur cette zone », et seul le compte de l arbre le dit.
+    """
+    arbres = [ZONES[zone]] if zone else list(ZONES.values())
+    return sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java"))
 
 
 def _zone(chemin: str) -> str:
@@ -112,9 +131,14 @@ if __name__ == "__main__":
             "violations du portail en production",
             suspects(zone="production"),
             apercu=12,
+            lus=len(fichiers("production")),
         ),
         rapporte(
-            ADR_TEST, "violations du portail en zone de test", suspects(zone="test"), apercu=12
+            ADR_TEST,
+            "violations du portail en zone de test",
+            suspects(zone="test"),
+            apercu=12,
+            lus=len(fichiers("test")),
         ),
     ]
     sys.exit(max(codes))

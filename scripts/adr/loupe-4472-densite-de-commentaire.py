@@ -138,27 +138,35 @@ def _ou(f: pathlib.Path) -> str:
     return str(f.relative_to(RACINE_DEPOT)) if f.is_relative_to(RACINE_DEPOT) else f.name
 
 
-def classes(racines=None) -> list[tuple[float, str, int, int]]:
+def fichiers(racines=None) -> list[pathlib.Path]:
+    """Les unités que ce garde LIT, extraites pour que `lus` les compte (issue #5007).
+
+    `classes()` et `methodes()` balaient le meme arbre : le compte est celui des fichiers, une seule
+    fois, et non la somme des deux mesures qui compterait chaque fichier deux fois.
+
+    Le tri est fait RACINE PAR RACINE, comme dans les deux boucles d'origine.
+    """
     racines = racines or RACINES
+    return [f for r in racines for f in sorted(r.rglob("*.java"))]
+
+
+def classes(racines=None) -> list[tuple[float, str, int, int]]:
     out = []
-    for racine in racines:
-        for f in sorted(racine.rglob("*.java")):
-            mesure = par_classe(f)
-            if mesure:
-                _, com, code = mesure
-                out.append((com / code, _ou(f), com, code))
+    for f in fichiers(racines):
+        mesure = par_classe(f)
+        if mesure:
+            _, com, code = mesure
+            out.append((com / code, _ou(f), com, code))
     out.sort(reverse=True)
     return out
 
 
 def methodes(racines=None) -> list[tuple[float, str, int, int]]:
-    racines = racines or RACINES
     out = []
-    for racine in racines:
-        for f in sorted(racine.rglob("*.java")):
-            for nom, ligne, com, code in par_methode(f):
-                if com:
-                    out.append((com / code, f"{_ou(f)}:{ligne}  {nom}()", com, code))
+    for f in fichiers(racines):
+        for nom, ligne, com, code in par_methode(f):
+            if com:
+                out.append((com / code, f"{_ou(f)}:{ligne}  {nom}()", com, code))
     out.sort(reverse=True)
     return out
 
@@ -251,11 +259,18 @@ def main() -> int:
                 else combien
             )
             mesures = classes() if drapeau == "--classes" else methodes()
-            return loupe(ADR, f"densité de commentaire, {drapeau[2:]}", _rend("", mesures, n))
+            return loupe(
+                ADR,
+                f"densité de commentaire, {drapeau[2:]}",
+                _rend("", mesures, n),
+                lus=len(fichiers()),
+            )
 
     lignes = ["« par classe »"] + _rend("", classes(), combien)
     lignes += ["", "« par méthode »"] + _rend("", methodes(), combien)
-    return loupe(ADR, "densité de commentaire, par classe et par méthode", lignes)
+    return loupe(
+        ADR, "densité de commentaire, par classe et par méthode", lignes, lus=len(fichiers())
+    )
 
 
 if __name__ == "__main__":
