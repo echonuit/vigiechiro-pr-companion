@@ -24,7 +24,8 @@ public class NuitVM {
     private final NuitDetectee nuit;
 
     /// Inclure cette nuit dans l'import (une nuit incluse = un passage). **Vrai par défaut**, y compris
-    /// pour une nuit tronquée (l'utilisateur peut la décocher au vu du badge « incomplète »).
+    /// pour une nuit tronquée comme pour une nuit dont la complétude est inconnue : le badge et son
+    /// infobulle informent, ils ne décident pas à la place de l'observateur (#4990).
     private final BooleanProperty inclure = new SimpleBooleanProperty(this, "inclure", true);
 
     /// N° de passage **proposé** pour cette nuit (auto-numérotation consécutive depuis le prochain n°
