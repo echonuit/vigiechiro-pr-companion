@@ -131,19 +131,22 @@ public class DiagnosticViewModel {
         alerteHorsNuit.set(libelleEcart(coherence));
     }
 
+    /// Ce que l'encart annonce du verdict de couverture.
+    ///
+    /// Restitution **minimale**, posée par #4987 pour que le modèle corrigé atteigne l'écran sans que
+    /// celui-ci mente. Elle ne montre encore ni la plage exigée ni la plage enregistrée, et ne
+    /// distingue pas visuellement l'information de l'avertissement : c'est le travail de #4988, et
+    /// la tâche 2.2 dit pourquoi il compte, une information rendue comme un défaut reproduirait le
+    /// mal qu'on corrige.
     private static RetourOperation libelleEcart(CoherenceHoraire coherence) {
-        if (!coherence.aUnEcart()) {
-            return RetourOperation.AUCUN;
-        }
-        String detail;
-        if (coherence.demarrageHorsNuit() && coherence.arretHorsNuit()) {
-            detail = "démarrage avant le coucher et arrêt après le lever du soleil";
-        } else if (coherence.demarrageHorsNuit()) {
-            detail = "démarrage avant le coucher du soleil";
-        } else {
-            detail = "arrêt après le lever du soleil";
-        }
-        return RetourOperation.avertissement("Hors nuit : " + detail + " (une partie de l'enregistrement est diurne).");
+        return switch (coherence.couverture()) {
+            case AVERTISSEMENT ->
+                RetourOperation.avertissement(
+                        "L'enregistrement ne couvre pas toute la fenêtre que le protocole demande,"
+                                + " de 30 minutes avant le coucher à 30 minutes après le lever.");
+            case INFORMATION -> RetourOperation.info("L'enregistrement couvre la fenêtre du protocole, et la dépasse.");
+            case INDISPONIBLE -> RetourOperation.AUCUN;
+        };
     }
 
     private void reinitialiser() {

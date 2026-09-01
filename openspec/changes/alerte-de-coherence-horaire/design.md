@@ -37,7 +37,19 @@ représenter comme un degré sur la même échelle serait une commodité qui mas
 plutôt que le seul verdict. C'est ce que le story mapping demandait déjà sans que ce soit livré, et
 c'est ce qui permet à l'observateur de comprendre le niveau au lieu de le subir.
 
-**L'interruption vient de `CycleAcquisition`.** Elle est déjà calculée, elle est un fait consigné par
+**L'interruption est reportée, et voici ce qui l'a démentie.** Cette note supposait
+`CycleAcquisition` accessible depuis le diagnostic. Mesuré à la réalisation : sa complétude est
+consommée **au seul import**, par `NuitVM` et `TableNuits`, et n'est persistée dans aucune colonne. Le
+diagnostic s'ouvre sur un passage en base, plus tard, et ne peut pas la retrouver. Le détour par les
+anomalies persistées ne marche pas non plus : elles viennent d'`AnalyseurLogPR`, un autre chemin, et
+aucun de ses filtres ne reconnaît un motif de troncature.
+
+Le troisième niveau demande donc de **persister la complétude** : une colonne, une migration, un DAO,
+et le chemin d'import qui l'écrit. C'est un lot, pas une tâche, et il rejoint #4990, dont le sujet est
+précisément cette donnée. Ce changement livre les deux niveaux de couverture, qui corrigent le défaut
+signalé, et dit ce qui manque plutôt que de le simuler.
+
+**Ce que l'analyse de la source garde de valable.** Elle est déjà calculée, elle est un fait consigné par
 le capteur, et elle ne demande aucun seuil. L'alternative, déduire un trou d'un intervalle sans
 enregistrement, a été écartée : une nuit calme et une nuit interrompue s'y ressemblent, et le dépôt
 n'a qu'une seule nuit réelle, dix-huit fois recopiée, donc aucune population sur laquelle asseoir le

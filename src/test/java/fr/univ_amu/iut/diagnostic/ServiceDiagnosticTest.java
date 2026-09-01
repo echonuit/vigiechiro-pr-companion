@@ -197,10 +197,12 @@ class ServiceDiagnosticTest {
         assertThat(diagnostic.coherenceHoraire().disponible()).isTrue();
         assertThat(diagnostic.coherenceHoraire().coucherSoleil()).isNotNull();
         assertThat(diagnostic.coherenceHoraire().leverSoleil()).isNotNull();
-        assertThat(diagnostic.coherenceHoraire().arretHorsNuit())
-                .as("arrêt à 07:47, bien après le lever du soleil d'avril (~06:44)")
-                .isTrue();
-        assertThat(diagnostic.coherenceHoraire().aUnEcart()).isTrue();
+        // Le protocole exige de couvrir 20:08 → 07:14 ce jour-là. La nuit commence à 20:25, soit
+        // dix-sept minutes trop tard : la fenêtre n'est pas couverte, même si la fin la dépasse.
+        assertThat(diagnostic.coherenceHoraire().couverture())
+                .as("démarrage à 20:25, après le début exigé (~20:08)")
+                .isEqualTo(fr.univ_amu.iut.diagnostic.model.CoherenceHoraire.Couverture.AVERTISSEMENT);
+        assertThat(diagnostic.coherenceHoraire().aQuelqueChoseADire()).isTrue();
     }
 
     @Test

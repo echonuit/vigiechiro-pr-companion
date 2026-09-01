@@ -685,8 +685,8 @@ f67229c6c5ab  src/main/java/fr/univ_amu/iut/connexion/viewmodel/ConnexionViewMod
 099042d54334  src/main/java/fr/univ_amu/iut/connexion/viewmodel/RefletDuJeton.java
 43688b4b31d0  src/main/java/fr/univ_amu/iut/diagnostic/di/DiagnosticModule.java
 b4dbbeca2cb9  src/main/java/fr/univ_amu/iut/diagnostic/model/AnalyseAnomalies.java
-a80063b60f39  src/main/java/fr/univ_amu/iut/diagnostic/model/AnalyseCoherenceHoraire.java
-0fa2cee35234  src/main/java/fr/univ_amu/iut/diagnostic/model/CoherenceHoraire.java
+aa53a8b7a399  src/main/java/fr/univ_amu/iut/diagnostic/model/AnalyseCoherenceHoraire.java
+f8e9ed84cc11  src/main/java/fr/univ_amu/iut/diagnostic/model/CoherenceHoraire.java
 50d42969748b  src/main/java/fr/univ_amu/iut/diagnostic/model/Diagnostic.java
 367483c33358  src/main/java/fr/univ_amu/iut/diagnostic/model/ExportDiagnostic.java
 a5cfacc21bda  src/main/java/fr/univ_amu/iut/diagnostic/model/LectureJsonTableau.java
@@ -697,7 +697,7 @@ c007723889a6  src/main/java/fr/univ_amu/iut/diagnostic/model/LectureThLog.java
 3d45c9b6436b  src/main/java/fr/univ_amu/iut/diagnostic/outils/CaptureDiagnostic.java
 0dab9efbe270  src/main/java/fr/univ_amu/iut/diagnostic/view/DiagnosticController.java
 9fcf0dddc863  src/main/java/fr/univ_amu/iut/diagnostic/view/NavigationDiagnostic.java
-c81efebe9f78  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
+f180f5870b64  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
 72e4bf119771  src/main/java/fr/univ_amu/iut/importation/di/ImportationModule.java
 94bf5669367f  src/main/java/fr/univ_amu/iut/importation/model/AnalyseCoherence.java
 7bce3b47c375  src/main/java/fr/univ_amu/iut/importation/model/AnalyseMelange.java
@@ -1660,7 +1660,7 @@ c36381d0edc6  src/test/java/fr/univ_amu/iut/connexion/view/ScenarioPerceptifIssu
 014699e0801c  src/test/java/fr/univ_amu/iut/diagnostic/ExportDiagnosticTest.java
 7993bde2780c  src/test/java/fr/univ_amu/iut/diagnostic/LectureJsonTableauTest.java
 ccd7d6ca7dc6  src/test/java/fr/univ_amu/iut/diagnostic/ServiceDiagnosticTest.java
-f1d5c073ecd7  src/test/java/fr/univ_amu/iut/diagnostic/model/AnalyseCoherenceHoraireTest.java
+aaabfa2a2ebe  src/test/java/fr/univ_amu/iut/diagnostic/model/AnalyseCoherenceHoraireTest.java
 305b3802a6b5  src/test/java/fr/univ_amu/iut/diagnostic/view/DiagnosticIdentiteStatutViewTest.java
 9f68ef7aa82d  src/test/java/fr/univ_amu/iut/diagnostic/view/DiagnosticViewTest.java
 7a59955e96d0  src/test/java/fr/univ_amu/iut/diagnostic/view/DiagnosticVueIntegrationTest.java
