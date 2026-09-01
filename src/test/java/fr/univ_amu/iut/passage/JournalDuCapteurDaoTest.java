@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
@@ -51,8 +52,8 @@ class JournalDuCapteurDaoTest {
     @Test
     @DisplayName("insert rend le journal relisible (chemin + JSON)")
     void inserer_rend_le_journal_relisible() {
-        JournalDuCapteur insere = dao.insert(
-                new JournalDuCapteur(null, "LogPR1925492.txt", "[{\"evt\":\"start\"}]", "[\"reboot\"]", idSession));
+        JournalDuCapteur insere = dao.insert(new JournalDuCapteur(
+                null, "LogPR1925492.txt", "[{\"evt\":\"start\"}]", "[\"reboot\"]", Completude.INCONNUE, idSession));
 
         assertThat(insere.id()).isNotNull();
         JournalDuCapteur relu = dao.findById(insere.id()).orElseThrow();
@@ -65,9 +66,10 @@ class JournalDuCapteurDaoTest {
     @Test
     @DisplayName("relation 1:1 : deux journaux pour la même session sont interdits")
     void unicite_session_id_est_garantie() {
-        dao.insert(new JournalDuCapteur(null, "LogPR1.txt", null, null, idSession));
+        dao.insert(new JournalDuCapteur(null, "LogPR1.txt", null, null, Completude.INCONNUE, idSession));
 
-        assertThatThrownBy(() -> dao.insert(new JournalDuCapteur(null, "LogPR2.txt", null, null, idSession)))
+        assertThatThrownBy(() -> dao.insert(
+                        new JournalDuCapteur(null, "LogPR2.txt", null, null, Completude.INCONNUE, idSession)))
                 .as("session_id UNIQUE impose un seul journal par session")
                 .isInstanceOf(DataAccessException.class);
     }
@@ -75,14 +77,15 @@ class JournalDuCapteurDaoTest {
     @Test
     @DisplayName("FK active : une session inconnue est rejetée")
     void clef_etrangere_active_une_session_inconnue_est_rejetee() {
-        assertThatThrownBy(() -> dao.insert(new JournalDuCapteur(null, "x.txt", null, null, 9999L)))
+        assertThatThrownBy(
+                        () -> dao.insert(new JournalDuCapteur(null, "x.txt", null, null, Completude.INCONNUE, 9999L)))
                 .isInstanceOf(DataAccessException.class);
     }
 
     @Test
     @DisplayName("supprimer la session supprime son journal en cascade")
     void supprimer_la_session_supprime_le_journal_en_cascade() {
-        dao.insert(new JournalDuCapteur(null, "LogPR1925492.txt", null, null, idSession));
+        dao.insert(new JournalDuCapteur(null, "LogPR1925492.txt", null, null, Completude.INCONNUE, idSession));
         assertThat(dao.trouverParSession(idSession)).isPresent();
 
         sessionDao.delete(idSession);

@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.JsonSimple;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -326,6 +327,9 @@ public final class CaptureDiagnostic {
                 "LogPR" + SERIE + ".txt",
                 JsonSimple.tableau(evenements),
                 JsonSimple.tableau(anomalies),
+                // La nuit de l'aperçu s'est refermée normalement : « Arrêt programmé à 06:00:00 » est dans ses
+                // évènements. La complétude le dit désormais explicitement (#5030).
+                Completude.COMPLETE,
                 idSession));
         return passage.id();
     }

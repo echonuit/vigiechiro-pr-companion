@@ -3,6 +3,7 @@ package fr.univ_amu.iut.diagnostic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.JsonSimple;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -160,6 +161,7 @@ class ServiceDiagnosticTest {
                 "LogPR" + SERIE + ".txt",
                 JsonSimple.tableau(List.of("### Démarrage PR" + SERIE)),
                 JsonSimple.tableau(anomalies),
+                Completude.INCONNUE,
                 idSession));
 
         Diagnostic diagnostic = service.diagnostiquer(idPassage);
@@ -178,7 +180,7 @@ class ServiceDiagnosticTest {
     @DisplayName("Le GPS du diagnostic provient du point d'écoute (feature sites)")
     void gps_depuis_point() {
         Long idSession = creerSession();
-        journalDao.insert(new JournalDuCapteur(null, "LogPR.txt", "[]", "[]", idSession));
+        journalDao.insert(new JournalDuCapteur(null, "LogPR.txt", "[]", "[]", Completude.INCONNUE, idSession));
 
         Diagnostic diagnostic = service.diagnostiquer(idPassage);
 
@@ -208,7 +210,7 @@ class ServiceDiagnosticTest {
     @DisplayName("Relevé climatique présent → série lue depuis le THLog (~1 mesure/600s)")
     void serie_climatique_lue() {
         Long idSession = creerSession();
-        journalDao.insert(new JournalDuCapteur(null, "LogPR.txt", "[]", "[]", idSession));
+        journalDao.insert(new JournalDuCapteur(null, "LogPR.txt", "[]", "[]", Completude.INCONNUE, idSession));
         releveDao.insert(new ReleveClimatique(null, copierThLogReel().toString(), null, idSession));
 
         Diagnostic diagnostic = service.diagnostiquer(idPassage);
@@ -226,7 +228,7 @@ class ServiceDiagnosticTest {
     @DisplayName("R20 : relevé climatique absent → signalé explicitement")
     void releve_absent_signale() {
         Long idSession = creerSession();
-        journalDao.insert(new JournalDuCapteur(null, "LogPR.txt", "[]", "[]", idSession));
+        journalDao.insert(new JournalDuCapteur(null, "LogPR.txt", "[]", "[]", Completude.INCONNUE, idSession));
         // aucun climate_log inséré : la sonde manque.
 
         Diagnostic diagnostic = service.diagnostiquer(idPassage);

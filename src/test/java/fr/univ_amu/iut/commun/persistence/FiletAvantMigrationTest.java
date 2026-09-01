@@ -144,6 +144,7 @@ class FiletAvantMigrationTest {
         executer("ALTER TABLE selection_sequence DROP COLUMN verdict_relecteur"); // V42
         executer("ALTER TABLE selection_sequence DROP COLUMN relecteur_pseudo"); // V42
         executer("DROP TABLE IF EXISTS participation_relevee"); // V43, et V44 (colonnes de cette table)
+        executer("ALTER TABLE sensor_log DROP COLUMN night_completeness"); // V45
     }
 
     /// Noms des fichiers du dossier de sauvegardes, **liste vide** s'il n'existe pas : un dossier

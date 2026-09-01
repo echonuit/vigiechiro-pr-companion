@@ -2,6 +2,7 @@ package fr.univ_amu.iut.lot;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.ResultatVerification;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -114,7 +115,8 @@ class VerificationCoherenceTest {
     }
 
     private void creerJournal(Long idSession) {
-        journalDao.insert(new JournalDuCapteur(null, "LogPR" + SERIE + ".txt", null, null, idSession));
+        journalDao.insert(
+                new JournalDuCapteur(null, "LogPR" + SERIE + ".txt", null, null, Completude.INCONNUE, idSession));
     }
 
     private void creerReleve(Long idSession) {

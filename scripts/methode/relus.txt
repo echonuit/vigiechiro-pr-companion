@@ -330,6 +330,7 @@ a80bd0e32be2  src/main/java/fr/univ_amu/iut/commun/model/CiblePassage.java
 3429fcc7804d  src/main/java/fr/univ_amu/iut/commun/model/CleDeReglage.java
 a10777f99953  src/main/java/fr/univ_amu/iut/commun/model/Commune.java
 17580577a143  src/main/java/fr/univ_amu/iut/commun/model/CommunePoint.java
+d8a27b4f10a8  src/main/java/fr/univ_amu/iut/commun/model/Completude.java
 438f8f361302  src/main/java/fr/univ_amu/iut/commun/model/CompteurValidations.java
 95551842faba  src/main/java/fr/univ_amu/iut/commun/model/ConfianceReferentiel.java
 a56df0dabb10  src/main/java/fr/univ_amu/iut/commun/model/ConfigurationAmorcage.java
@@ -725,7 +726,7 @@ c1fe0b5b344b  src/main/java/fr/univ_amu/iut/importation/model/InventaireParInspe
 3423c91f80b3  src/main/java/fr/univ_amu/iut/importation/model/JournalParse.java
 91c8727d53d8  src/main/java/fr/univ_amu/iut/importation/model/LigneJournal.java
 0fda331823a9  src/main/java/fr/univ_amu/iut/importation/model/LigneRapport.java
-16c92c80c309  src/main/java/fr/univ_amu/iut/importation/model/MoteurImport.java
+db9bd55ae8ed  src/main/java/fr/univ_amu/iut/importation/model/MoteurImport.java
 886e20efa7dc  src/main/java/fr/univ_amu/iut/importation/model/MotifDeReveil.java
 81ce90abdc2b  src/main/java/fr/univ_amu/iut/importation/model/NuitAImporter.java
 7c7c8a9ee342  src/main/java/fr/univ_amu/iut/importation/model/NuitDetectee.java
@@ -747,7 +748,7 @@ afb19a28ec8d  src/main/java/fr/univ_amu/iut/importation/model/ResultatDecoupage.
 ddab8fb4b57a  src/main/java/fr/univ_amu/iut/importation/model/ResultatImportMultiNuits.java
 47b967aa0ec1  src/main/java/fr/univ_amu/iut/importation/model/SequenceProduite.java
 d892ce0269f6  src/main/java/fr/univ_amu/iut/importation/model/ServiceImport.java
-d1eeb633e590  src/main/java/fr/univ_amu/iut/importation/model/ServiceImportReference.java
+fae582809663  src/main/java/fr/univ_amu/iut/importation/model/ServiceImportReference.java
 1bdab3570fc9  src/main/java/fr/univ_amu/iut/importation/model/SourceOriginal.java
 a7127d869bc7  src/main/java/fr/univ_amu/iut/importation/model/StatutImportFichier.java
 3d74e22ec680  src/main/java/fr/univ_amu/iut/importation/model/SuiviFichiers.java
@@ -957,7 +958,7 @@ e3f6f80bfb3e  src/main/java/fr/univ_amu/iut/passage/model/HydratationDepuisBruts
 4df615893af4  src/main/java/fr/univ_amu/iut/passage/model/IndiceAcoustique.java
 a0ff73bfba88  src/main/java/fr/univ_amu/iut/passage/model/InventaireBruts.java
 a2fc3072f89f  src/main/java/fr/univ_amu/iut/passage/model/InventaireBrutsSource.java
-599a065fae60  src/main/java/fr/univ_amu/iut/passage/model/JournalDuCapteur.java
+db941efda959  src/main/java/fr/univ_amu/iut/passage/model/JournalDuCapteur.java
 3d6d8ae1b1f8  src/main/java/fr/univ_amu/iut/passage/model/ManifestePaquet.java
 751af3d58369  src/main/java/fr/univ_amu/iut/passage/model/MarquageOpportuniste.java
 39d2be8a8521  src/main/java/fr/univ_amu/iut/passage/model/MaterielMicro.java
@@ -1013,7 +1014,7 @@ efab8c93a36b  src/main/java/fr/univ_amu/iut/passage/model/VerificationIdentiteAu
 87700fc527e8  src/main/java/fr/univ_amu/iut/passage/model/dao/CampagneDao.java
 80ba8991c003  src/main/java/fr/univ_amu/iut/passage/model/dao/EnregistrementOriginalDao.java
 d4042449945e  src/main/java/fr/univ_amu/iut/passage/model/dao/EnregistreurDao.java
-bac23697adb5  src/main/java/fr/univ_amu/iut/passage/model/dao/JournalDuCapteurDao.java
+59d38d3270c0  src/main/java/fr/univ_amu/iut/passage/model/dao/JournalDuCapteurDao.java
 13dbbe6a9fdd  src/main/java/fr/univ_amu/iut/passage/model/dao/MaterielMicroDao.java
 b7e3f8b71974  src/main/java/fr/univ_amu/iut/passage/model/dao/MicroDao.java
 f5c33fd4d3c2  src/main/java/fr/univ_amu/iut/passage/model/dao/PassageDao.java
@@ -1518,6 +1519,7 @@ ae2e0135d936  src/test/java/fr/univ_amu/iut/commun/persistence/BackfillVerdictMi
 bc155f697960  src/test/java/fr/univ_amu/iut/commun/persistence/BaseNeuveTest.java
 705a0722b6c0  src/test/java/fr/univ_amu/iut/commun/persistence/BesoinDePlaceTest.java
 b77a3ac31be2  src/test/java/fr/univ_amu/iut/commun/persistence/BilanRestaurationTest.java
+91a6d6b379e6  src/test/java/fr/univ_amu/iut/commun/persistence/CompletudePersisteeTest.java
 d71e2d2ef7d4  src/test/java/fr/univ_amu/iut/commun/persistence/DaoCompterTest.java
 953b3f96cd72  src/test/java/fr/univ_amu/iut/commun/persistence/DureeReelleSequencesMigrationTest.java
 8a5ab4ff9229  src/test/java/fr/univ_amu/iut/commun/persistence/EmpreinteMigrationsTest.java

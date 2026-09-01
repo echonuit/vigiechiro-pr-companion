@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.importation.model;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.JournalMutations;
@@ -267,12 +268,16 @@ public class ServiceImportReference {
         return new SessionDEnregistrement(null, racine.toString(), 0L, volumeSequences(originaux), null);
     }
 
+    /// Le journal d'un import par référence porte une complétude **inconnue**, et c'est exact : ce
+    /// chemin part d'un dossier de séquences déjà transformées, sans cycle d'acquisition à lire. Dire
+    /// « complète » y serait aussi faux qu'ailleurs (#5030).
     private static JournalDuCapteur journalDe(JournalParse journal, Path cheminJournal) {
         return new JournalDuCapteur(
                 null,
                 cheminJournal.toString(),
                 journal.evenementsJsonPourNuit(journal.dateDebut()),
                 journal.anomaliesJsonPourNuit(journal.dateDebut()),
+                Completude.INCONNUE,
                 null);
     }
 

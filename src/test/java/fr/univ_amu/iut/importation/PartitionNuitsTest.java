@@ -2,7 +2,7 @@ package fr.univ_amu.iut.importation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import fr.univ_amu.iut.importation.model.Completude;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.importation.model.CycleAcquisition;
 import fr.univ_amu.iut.importation.model.NuitDetectee;
 import fr.univ_amu.iut.importation.model.PartitionNuits;

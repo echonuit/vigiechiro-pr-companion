@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;

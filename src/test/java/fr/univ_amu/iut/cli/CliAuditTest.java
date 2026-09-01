@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.model.Commune;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -308,6 +309,6 @@ class CliAuditTest {
         String cheminManquant = racineSession.resolve("LogPR" + SERIE + ".txt").toString();
         injecteur
                 .getInstance(JournalDuCapteurDao.class)
-                .insert(new JournalDuCapteur(null, cheminManquant, null, null, idSession));
+                .insert(new JournalDuCapteur(null, cheminManquant, null, null, Completude.INCONNUE, idSession));
     }
 }

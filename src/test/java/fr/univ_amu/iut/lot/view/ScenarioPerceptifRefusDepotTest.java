@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
@@ -327,7 +328,8 @@ class ScenarioPerceptifRefusDepotTest {
         }
         // Bloquant s'il manque : « Journal du capteur (LogPR<n>.txt) absent ».
         new JournalDuCapteurDao(source)
-                .insert(new JournalDuCapteur(null, "LogPR" + SERIE + ".txt", null, null, idSession));
+                .insert(new JournalDuCapteur(
+                        null, "LogPR" + SERIE + ".txt", null, null, Completude.INCONNUE, idSession));
 
         // Sans lignes de suivi, `archivesGenerees` est faux et le bouton « Déposer » n'est pas le
         // geste primaire de l'écran (`LotController:440`). Le premier essai s'est arrêté là : l'écran

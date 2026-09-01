@@ -1,6 +1,12 @@
-package fr.univ_amu.iut.importation.model;
+package fr.univ_amu.iut.commun.model;
 
-/// Ce que le journal du capteur permet de dire d'une nuit détectée (#4990).
+/// Ce que le journal du capteur permet de dire d'une nuit (#4990).
+///
+/// Dans `commun.model` et non dans `importation.model`, où elle est née : la complétude est calculée
+/// à l'import mais **persistée sur le journal** (`passage.model.JournalDuCapteur`, #5030), et
+/// `importation` cite déjà `passage` cinquante-neuf fois. La laisser chez son auteur aurait fermé un
+/// cycle entre les deux features, que `ArchitectureTest` refuse. Même trajet que
+/// [Severite], descendue ici par #2159 pour la même raison.
 ///
 /// Les valeurs nomment l'**état du domaine**, jamais la gravité de son annonce : celle-ci se décide à
 /// la surface, où l'on parle à quelqu'un (ADR 0038, et ADR 4984 qui l'applique au protocole horaire).

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.Commune;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Severite;
@@ -346,7 +347,7 @@ class ServiceAuditCoherenceTest {
         // fichier sous le workspace serait une ERREUR.
         String cheminExterne =
                 Path.of("/media", "carte-sd-absente", "LogPR" + SERIE + ".txt").toString();
-        journalDao.insert(new JournalDuCapteur(null, cheminExterne, null, null, idSession));
+        journalDao.insert(new JournalDuCapteur(null, cheminExterne, null, null, Completude.INCONNUE, idSession));
 
         List<ConstatAudit> constats = service.auditerPassage(idPassage).constats();
 
@@ -516,7 +517,7 @@ class ServiceAuditCoherenceTest {
                     new EmpreinteContenu(Files.size(fichier), Empreintes.empreinteCourte(fichier))));
         }
         Path journal = Files.write(racineSession.resolve("LogPR" + SERIE + ".txt"), new byte[16]);
-        journalDao.insert(new JournalDuCapteur(null, journal.toString(), null, null, idSession));
+        journalDao.insert(new JournalDuCapteur(null, journal.toString(), null, null, Completude.INCONNUE, idSession));
         Path releve = Files.write(racineSession.resolve("PaRecPR" + SERIE + "_THLog.csv"), new byte[16]);
         releveDao.insert(new ReleveClimatique(null, releve.toString(), null, idSession));
         return idPassage;
@@ -546,7 +547,7 @@ class ServiceAuditCoherenceTest {
                     null, nomSequence, idOriginal, index, index * 5.0, 5.0, sequence.toString(), true, idSession));
         }
         Path journal = Files.write(racineSession.resolve("LogPR" + SERIE + ".txt"), new byte[16]);
-        journalDao.insert(new JournalDuCapteur(null, journal.toString(), null, null, idSession));
+        journalDao.insert(new JournalDuCapteur(null, journal.toString(), null, null, Completude.INCONNUE, idSession));
         Path releve = Files.write(racineSession.resolve("PaRecPR" + SERIE + "_THLog.csv"), new byte[16]);
         releveDao.insert(new ReleveClimatique(null, releve.toString(), null, idSession));
         return idPassage;
