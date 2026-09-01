@@ -24,12 +24,18 @@ import pathlib
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
-PRODUCTION = RACINE / "src" / "main" / "java"
-TESTS = RACINE / "src" / "test" / "java"
-# Les deux racines de Java du depot. Les chemins du manifeste sont relatifs a la RACINE, et non a
-# l une d elles : une cle « fr/…/Machin.java » ne dirait pas de quel arbre elle vient, et un
-# homonyme entre production et test se recouvrirait en silence.
-RACINES = (PRODUCTION, TESTS)
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import RACINES_ANCREES
+
+# Les chemins du manifeste sont relatifs a la RACINE, et non a l un des deux arbres Java : une cle
+# « fr/…/Machin.java » ne dirait pas de quel arbre elle vient, et un homonyme entre production et
+# test se recouvrirait en silence.
+#
+# Les deux arbres Java, IMPORTES et non recopies (issue #4836, ADR 4586). `RACINES` est lu de
+# l exterieur : `scripts/adr/4468-javadoc-non-relue.py` charge ce module et s en sert pour balayer.
+# Ils sont ANCRES, parce que l appelant les rglob : la forme relative de `_commun` mesurerait le
+# repertoire courant.
+RACINES = RACINES_ANCREES
 MANIFESTE = pathlib.Path(__file__).parent / "relus.txt"
 
 # Les suffixes du corpus. Un seul aujourd hui, nomme plutot qu ecrit en dur : la question « ce

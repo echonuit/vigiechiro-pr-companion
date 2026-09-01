@@ -26,7 +26,9 @@ import subprocess
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
-DECISIONS = RACINE / "dev-docs" / "decisions"
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import DECISIONS
+
 GARDE = RACINE / "scripts" / "adr" / "4395-renvois-en-javadoc.py"
 
 # Les champs SE LISENT PAR LEUR NOM, et le motif tolere ceux qu il ne connait pas. #5014 a insere un
