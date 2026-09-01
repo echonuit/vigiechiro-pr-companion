@@ -868,6 +868,52 @@ def test_4974_attente_reinventee() -> None:
         _verifie("4974 waitForAsyncFx compte aussi", len(m.suspects(racine)), 2)
 
 
+def test_5068_clic_sur_reference_tenue() -> None:
+    m = _charge("5068-clic-sur-reference-tenue.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+
+        _ecrire(
+            racine,
+            "fr/a/A.java",
+            "class A {\n    void cas() {\n        robot.clickOn(carte);\n    }\n}\n",
+        )
+        _verifie("5068 un noeud deja resolu est vu", m.suspects(racine), ["A.java:3"])
+
+        # Le PREMIER argument decide : une premiere ecriture ecartait la ligne des qu elle citait
+        # `MouseButton`, et ratait un site qui tient une reference tout autant.
+        _ecrire(
+            racine,
+            "fr/a/B.java",
+            "class B {\n    void cas() {\n"
+            "        robot.clickOn(carte, MouseButton.SECONDARY);\n    }\n}\n",
+        )
+        _verifie("5068 un second argument ne soustrait pas le site", len(m.suspects(racine)), 2)
+
+        # Les trois sens NEGATIFS, chacun ayant fait surcompter lors des mesures de #4804.
+        _ecrire(
+            racine,
+            "fr/a/C.java",
+            'class C {\n    void cas() {\n        robot.clickOn("#champCode");\n    }\n}\n',
+        )
+        _verifie("5068 un selecteur litteral ne compte pas", len(m.suspects(racine)), 2)
+
+        _ecrire(
+            racine,
+            "fr/a/D.java",
+            'class D {\n    static final String B = "#bouton";\n'
+            "    void cas() {\n        robot.clickOn(B);\n    }\n}\n",
+        )
+        _verifie("5068 une constante String ne compte pas", len(m.suspects(racine)), 2)
+
+        _ecrire(
+            racine,
+            "fr/a/E.java",
+            "class E {\n    /// `clickOn(libelle)` teleporte le pointeur.\n    void cas() {}\n}\n",
+        )
+        _verifie("5068 une citation en commentaire ne compte pas", len(m.suspects(racine)), 2)
+
+
 def test_4475_stage_non_dimensionne() -> None:
     m = _charge("4475-stage-non-dimensionne.py")
     with tempfile.TemporaryDirectory() as d:
@@ -1605,6 +1651,7 @@ if __name__ == "__main__":
         test_loupe_0044,
         test_4472_commentaire_en_corps,
         test_4468_javadoc_non_relue,
+        test_5068_clic_sur_reference_tenue,
         test_4974_attente_reinventee,
         test_4475_stage_non_dimensionne,
         test_4617_code_mort_et_zone_de_test,
