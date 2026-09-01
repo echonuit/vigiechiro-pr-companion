@@ -17,6 +17,13 @@ import re
 import sys
 from pathlib import Path
 
+# ANCRE, et non relatif au repertoire courant (issue #4836, defaut de #4781). Ce pont lisait SEPT
+# chemins relatifs au CWD : lance d ailleurs, il mesurait un autre arbre et rendait son verdict sans
+# le dire. Son voisin `rebuild.py` s ancre depuis toujours ; celui-ci ne le faisait pas.
+RACINE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import PRODUCTION_ANCREE
+
 
 def indexer_classes_java(noeuds):
     """Index des classes Java : par nom pleinement qualifie, et par fichier source.
@@ -141,9 +148,9 @@ def auto_test():
 if __name__ == "__main__" and "--auto-test" in sys.argv:
     raise SystemExit(auto_test())
 
-SRC = Path("graphify-out/.graphify_extract.json")
+SRC = RACINE / "graphify-out/.graphify_extract.json"
 if not SRC.exists():
-    SRC = Path("graphify-out/graph.json")
+    SRC = RACINE / "graphify-out/graph.json"
 g = json.loads(SRC.read_text(encoding="utf-8"))
 nodes = {n["id"]: n for n in g["nodes"]}
 edges = g.get("edges") if "edges" in g else g["links"]
@@ -206,8 +213,8 @@ print(f"index : {len(par_fqn)} classes Java par FQN")
 
 # ------------------------------------------------------------------------ C1 : vues FXML
 n_fxml = n_ctrl = n_css = 0
-for p in sorted(Path("src/main/java").rglob("*.fxml")) + sorted(
-    Path("src/main/resources").rglob("*.fxml")
+for p in sorted(PRODUCTION_ANCREE.rglob("*.fxml")) + sorted(
+    (RACINE / "src/main/resources").rglob("*.fxml")
 ):
     t = p.read_text(encoding="utf-8", errors="ignore")
     lignes = t.splitlines()
@@ -232,7 +239,7 @@ print(
 
 # ---------------------------------------------------------------- C2 : registre ServiceLoader
 n_reg = 0
-for p in sorted(Path("src/main/resources/META-INF/services").glob("*")):
+for p in sorted((RACINE / "src/main/resources/META-INF/services").glob("*")):
     if not p.is_file():
         continue
     rid = ajouter_noeud(p, label=p.name)
@@ -260,7 +267,7 @@ print(f"     {len(commandes)} noms de commandes picocli indexes")
 
 n_bats = n_test = n_inv = 0
 non_resolues = set()
-for p in sorted(Path("src/test/bats").glob("*.bats")):
+for p in sorted((RACINE / "src/test/bats").glob("*.bats")):
     lignes = p.read_text(encoding="utf-8", errors="ignore").splitlines()
     bid = ajouter_noeud(p)
     n_bats += 1
@@ -327,7 +334,7 @@ extraction = {
     "input_tokens": 0,
     "output_tokens": 0,
 }
-Path("graphify-out/.graphify_extract.json").write_text(
+(RACINE / "graphify-out/.graphify_extract.json").write_text(
     json.dumps(extraction, ensure_ascii=False), encoding="utf-8"
 )
 print(f"\nresultat : {len(nodes)} noeuds, {len(edges)} aretes")

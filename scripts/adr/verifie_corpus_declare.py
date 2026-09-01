@@ -63,6 +63,15 @@ ADR = "4586"
 # emploi qui decide, et les deux passent par `racine_lue` plus bas (issue #4781).
 DOSSIER = pathlib.Path("scripts/adr")
 
+# L ARBRE que ce garde lit (issue #4836). L ADR 4586 vaut pour tout garde Python, pas pour le seul
+# dossier ou elle est nee : hors de `scripts/adr`, SEPT sites recopiaient un corpus sans que rien ne
+# le dise, dont un qui n avait meme pas d ancre.
+#
+# Il se DERIVE et ne s enumere pas : `scripts/**/*.py` couvre les gardes d ADR, ceux de methode, les
+# ponts du graphe et l outillage, et un dossier neuf y entre tout seul. Une liste de dossiers serait
+# le second inventaire que ce garde existe justement pour supprimer.
+ARBRE_DES_GARDES = pathlib.Path("scripts")
+
 # Le fonds commun EST l endroit ou le corpus se declare, et ce fichier-ci porte la sequence : tous
 # deux se compteraient eux-memes.
 RESERVES = {"_commun.py", pathlib.Path(__file__).name}
@@ -96,7 +105,10 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """
     racine_lue = racine if racine else RACINE_DEPOT
     trouves = []
-    for source in sorted((racine_lue / DOSSIER).glob("*.py")):
+    balayes = (
+        f for f in (racine_lue / ARBRE_DES_GARDES).rglob("*.py") if "__pycache__" not in f.parts
+    )
+    for source in sorted(balayes):
         if source.name in RESERVES:
             continue
         dans_docstring = False
@@ -184,6 +196,21 @@ def auto_test() -> int:
         verifie("le dossier des decisions ecrit d un morceau est vu", len(suspects(racine)), 1)
         pose(racine, f"DECISIONS = RACINE / {decisions_segments}\n")
         verifie("le dossier des decisions ecrit en segments est vu", len(suspects(racine)), 1)
+
+        # 11 et 12. HORS de `scripts/adr` (issue #4836). L ADR 4586 vaut pour TOUT garde Python, et
+        #    sept sites du depot la violaient hors de ce dossier sans que rien ne le dise. Le second
+        #    cas est le sens negatif : un import y reste un import, sinon le balayage elargi
+        #    accuserait tout ce qu il decouvre.
+        pose(racine, "")
+        ailleurs = racine / "scripts" / "methode"
+        ailleurs.mkdir(parents=True, exist_ok=True)
+        (ailleurs / "faux-garde.py").write_text(
+            f"DECISIONS = pathlib.Path({decisions})\n", encoding="utf-8"
+        )
+        verifie("une recopie hors de scripts/adr est vue", len(suspects(racine)), 1)
+
+        (ailleurs / "faux-garde.py").write_text("from _commun import DECISIONS\n", encoding="utf-8")
+        verifie("un import hors de scripts/adr ne l est pas", len(suspects(racine)), 0)
 
     # 9 et 10. L ANCRAGE : lance depuis un autre depot, le garde mesure le sien (issue #4781).
     #    Le cas 9 n est pas decoratif, il rend le cas 10 concluant : sans lui, le leurre pourrait

@@ -25,7 +25,8 @@ import re
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
-DECISIONS = RACINE / "dev-docs" / "decisions"
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import DECISIONS
 
 # Le titre porte parfois son propre numero, parfois non, et le separateur a deux formes.
 TITRE = re.compile(r"^#\s+(?:ADR\s+)?(?:\S+\s*[-–:]\s*)?(.*)$")

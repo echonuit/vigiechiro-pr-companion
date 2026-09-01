@@ -25,11 +25,10 @@ import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
-from _commun import RACINE_DEPOT, imprime_contrat
+from _commun import DECISIONS, RACINE_DEPOT, imprime_contrat
 from verifie_okf import RESERVES, lit_entete
 
 CONSTITUTION = RACINE / "CONSTITUTION.md"
-DECISIONS = RACINE / "dev-docs" / "decisions"
 
 DEBUT = "<!-- matrice engendree : ne pas editer a la main -->"
 FIN = "<!-- fin de la matrice engendree -->"
