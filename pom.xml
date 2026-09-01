@@ -67,7 +67,7 @@
         <javafx.mainClass>vigiechiro/fr.univ_amu.iut.App</javafx.mainClass>
         <testfx.version>4.0.18</testfx.version>
 
-        <junit.jupiter.version>6.1.2</junit.jupiter.version>
+        <junit.jupiter.version>6.1.3</junit.jupiter.version>
         <opentest4j.version>1.3.0</opentest4j.version>
         <assertj.version>3.27.7</assertj.version>
         <mockito.version>5.23.0</mockito.version>
