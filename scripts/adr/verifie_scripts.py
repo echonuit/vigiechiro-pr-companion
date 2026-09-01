@@ -1462,8 +1462,8 @@ def test_le_refus_s_eprouve_sur_un_garde_reel() -> None:
         # 2. Les ZONES d un rapport. Le compte vient de l arbre vise, pas des entrees du rapport,
         #    et c est pourquoi cette zone-ci est videable depuis #5054.
         zones = _charge("4617-code-mort-et-zone-de-test.py")
-        _verifie("4617 sur le depot lit sa zone", len(zones.fichiers("production")) > 0, True)
-        _verifie("4617 sur une zone vide n a rien lu", len(zones.fichiers("production", vide)), 0)
+        _verifie("4617 sur le depot lit sa zone", len(zones.fichiers(zone="production")) > 0, True)
+        _verifie("4617 sur une zone vide n a rien lu", len(zones.fichiers(vide, "production")), 0)
         faux = vide / "pmd.xml"
         faux.write_text('<?xml version="1.0"?><pmd></pmd>', encoding="utf-8")
         code, _ = verdict(
@@ -1471,7 +1471,7 @@ def test_le_refus_s_eprouve_sur_un_garde_reel() -> None:
                 "4682",
                 "temoin de famille",
                 zones.suspects(faux, "production"),
-                lus=len(zones.fichiers("production", vide)),
+                lus=len(zones.fichiers(vide, "production")),
             )
         )
         _verifie("et son verdict REFUSE", code, 1)
