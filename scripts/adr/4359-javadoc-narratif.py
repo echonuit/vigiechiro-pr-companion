@@ -190,6 +190,16 @@ def blocs_par_nature(fichier: pathlib.Path) -> list[tuple[int, int, str]]:
     return trouves
 
 
+def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unités que ce garde LIT, extraites pour que `lus` les compte (issue #5007).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu'il RETENAIT. Un ciblage manqué
+    donnait donc zéro suspect sur zéro fichier, et ce zéro passait pour un succès.
+    """
+    racines = [racine] if racine else list(RACINES)
+    return sorted(f for r in racines for f in r.rglob("*.java"))
+
+
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Un suspect par LIGNE de prose au-dela du seuil, et non par bloc.
 
@@ -202,9 +212,8 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     Un bloc sous le seuil de sa nature ne coute rien : une classe difficile merite un paragraphe,
     un accesseur non.
     """
-    racines = [racine] if racine else list(RACINES)
     trouves = []
-    for f in sorted(f for r in racines for f in r.rglob("*.java")):
+    for f in fichiers(racine):
         # Le chemin est relatif a la RACINE_DEPOT du depot, et non a l arbre : sans quoi un suspect ne
         # dirait pas de quel arbre il vient, et deux homonymes se confondraient. Les temoins, eux,
         # montent un arbre jetable et n ont que leur nom de fichier.
@@ -385,4 +394,8 @@ if __name__ == "__main__":
             print(f"  {s}")
         print(f"\n{len(listes)} lignes de prose au-delà de {SEUIL} par bloc")
         sys.exit(0)
-    sys.exit(rapporte(ADR, "javadoc qui raconte au lieu de contracter", listes, apercu=20))
+    sys.exit(
+        rapporte(
+            ADR, "javadoc qui raconte au lieu de contracter", listes, apercu=20, lus=len(fichiers())
+        )
+    )

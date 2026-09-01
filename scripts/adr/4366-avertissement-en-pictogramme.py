@@ -216,4 +216,8 @@ if __name__ == "__main__":
             print(f"  {compte:5}  {chemin}")
         print(f"\n{len(groupes)} fichiers porteurs, {len(listes)} pictogrammes")
         sys.exit(0)
-    sys.exit(rapporte(ADR, "avertissements portes par un pictogramme", listes, apercu=25))
+    sys.exit(
+        rapporte(
+            ADR, "avertissements portes par un pictogramme", listes, apercu=25, lus=len(fichiers())
+        )
+    )

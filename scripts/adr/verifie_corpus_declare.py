@@ -97,6 +97,19 @@ BRUIT = re.compile(r"[\"'/,\s]+")
 PROSE = re.compile(r"^\s*(?:#|\"\"\"|''')")
 
 
+def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unités que ce garde LIT, extraites pour que `lus` les compte (issue #5007).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu'il RETENAIT. Un ciblage manqué
+    donnait donc zéro suspect sur zéro fichier, et ce zéro passait pour un succès.
+    """
+    racine_lue = racine if racine else RACINE_DEPOT
+    balayes = (
+        f for f in (racine_lue / ARBRE_DES_GARDES).rglob("*.py") if "__pycache__" not in f.parts
+    )
+    return [f for f in sorted(balayes) if f.name not in RESERVES]
+
+
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Un suspect par ligne qui ECRIT un chemin d arbre au lieu de l importer.
 
@@ -105,12 +118,7 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """
     racine_lue = racine if racine else RACINE_DEPOT
     trouves = []
-    balayes = (
-        f for f in (racine_lue / ARBRE_DES_GARDES).rglob("*.py") if "__pycache__" not in f.parts
-    )
-    for source in sorted(balayes):
-        if source.name in RESERVES:
-            continue
+    for source in fichiers(racine):
         dans_docstring = False
         for numero, ligne in enumerate(source.read_text(encoding="utf-8").split("\n"), 1):
             # Une docstring de plusieurs lignes cite sans que chaque ligne porte une ouverture.
@@ -238,5 +246,10 @@ if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
     sys.exit(
-        rapporte(ADR, "corpus recopie : un chemin d arbre ecrit au lieu d etre importe", suspects())
+        rapporte(
+            ADR,
+            "corpus recopie : un chemin d arbre ecrit au lieu d etre importe",
+            suspects(),
+            lus=len(fichiers()),
+        )
     )

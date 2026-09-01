@@ -37,12 +37,21 @@ MECANISME = re.compile(
 )
 
 
-def candidats(racine: pathlib.Path | None = None) -> list[str]:
-    trouves = []
+def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unités que ce garde LIT, extraites pour que `lus` les compte (issue #5007).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu'il RETENAIT. Un ciblage manqué
+    donnait donc zéro suspect sur zéro fichier, et ce zéro passait pour un succès.
+    """
     # Le retour anticipe sur un repertoire absent devient un FILTRE : avec deux arbres, l un peut
     # manquer sans que l autre cesse d etre lu, et une racine de temoin n a pas a exister non plus.
     arbres = [racine] if racine else list(ARBRES)
-    for source in sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java")):
+    return sorted(f for a in arbres if a.is_dir() for f in a.rglob("*.java"))
+
+
+def candidats(racine: pathlib.Path | None = None) -> list[str]:
+    trouves = []
+    for source in fichiers(racine):
         texte = sans_commentaires_java(source.read_text(encoding="utf-8"))
         for numero, ligne in enumerate(texte.splitlines(), 1):
             if MECANISME.search(ligne):
@@ -56,5 +65,6 @@ if __name__ == "__main__":
             "0044",
             "surface de parallélisme (à confronter à la nature de l'attente : I/O → threads virtuels, calcul → pool borné)",
             candidats(),
+            lus=len(fichiers()),
         )
     )

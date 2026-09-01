@@ -79,6 +79,16 @@ def manifeste(chemin: pathlib.Path | None = None) -> dict[str, str]:
     return _COMPTEUR.relus(chemin or MANIFESTE)
 
 
+def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
+    """Les unités que ce garde LIT, extraites pour que `lus` les compte (issue #5007).
+
+    Le parcours vivait dans `suspects()`, qui ne rendait que ce qu'il RETENAIT. Un ciblage manqué
+    donnait donc zéro suspect sur zéro fichier, et ce zéro passait pour un succès.
+    """
+    racines = [racine] if racine else list(_COMPTEUR.RACINES)
+    return sorted(f for r in racines for f in r.rglob("*.java"))
+
+
 def suspects(racine: pathlib.Path | None = None, table: dict[str, str] | None = None) -> list[str]:
     """Un suspect par fichier Java non relu, ou relu puis modifie.
 
@@ -86,11 +96,10 @@ def suspects(racine: pathlib.Path | None = None, table: dict[str, str] | None = 
     depot sont balayees, et les chemins rendus sont relatifs a la racine du depot - c est la cle du
     manifeste, et elle dit de quel arbre vient chaque fichier.
     """
-    racines = [racine] if racine else list(_COMPTEUR.RACINES)
     base = racine or RACINE
     table = manifeste() if table is None else table
     trouves = []
-    for f in sorted(f for r in racines for f in r.rglob("*.java")):
+    for f in fichiers(racine):
         rel = str(f.relative_to(base))
         connue = table.get(rel)
         if connue is None:
@@ -194,4 +203,12 @@ if __name__ == "__main__":
             print(f"  {s}")
         print(f"\n{len(listes)} fichiers de production dont la javadoc reste à relire")
         sys.exit(0)
-    sys.exit(rapporte(ADR, "javadoc non relue, ou réécrite depuis sa relecture", listes, apercu=15))
+    sys.exit(
+        rapporte(
+            ADR,
+            "javadoc non relue, ou réécrite depuis sa relecture",
+            listes,
+            apercu=15,
+            lus=len(fichiers()),
+        )
+    )

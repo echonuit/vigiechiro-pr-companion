@@ -204,10 +204,18 @@ if __name__ == "__main__":
     # dans un arbre doit faire rougir, meme si l autre a gagne. C est la disjonction en pratique.
     codes = [
         rapporte_plancher(
-            "4395", "issues citees par la javadoc de production", renvois(), "renvois"
+            "4395",
+            "issues citees par la javadoc de production",
+            renvois(),
+            "renvois",
+            lus=len(fichiers()),
         ),
         rapporte_plancher(
-            "4587", "issues citees par la javadoc de test", renvois(zone=ZONES["4587"]), "renvois"
+            "4587",
+            "issues citees par la javadoc de test",
+            renvois(zone=ZONES["4587"]),
+            "renvois",
+            lus=len(fichiers(zone=ZONES["4587"])),
         ),
     ]
     sys.exit(max(codes))
