@@ -294,9 +294,23 @@ Une **table des nuits** apparaît alors, une ligne par nuit :
   numéros de passage proposés se **renumérotent** automatiquement pour rester consécutifs.
 - **Nuit du** : date du soir de la nuit (date du futur passage).
 - **Fichiers** : nombre d'enregistrements de la nuit.
-- **État** : **complète** ou **incomplète**. Une nuit est signalée **incomplète** quand le journal
-  montre qu'elle s'est arrêtée anormalement (carte SD pleine, interruption). Elle reste **incluse par
-  défaut** : à vous de décider de la conserver (pour la faire traiter par Tadarida) ou de la décocher.
+- **État** : ce que le journal du capteur permet de dire de la nuit, en **trois** mentions.
+
+    **complète** : le journal montre une fin de nuit normale.
+
+    **incomplète** : le journal montre que la nuit s'est arrêtée anormalement (carte SD pleine,
+    interruption). Survolez la pastille : l'infobulle dit le motif, **ce que le journal montrait juste
+    avant l'arrêt** (le dernier niveau de batterie relevé, une erreur d'écriture) et ce qu'il y a à
+    faire. Ces relevés sont des faits, pas un diagnostic : Companion n'a que le journal, il ne peut pas
+    affirmer une cause.
+
+    **complétude inconnue** : le journal ne couvre pas cette nuit. Le journal du capteur est
+    **circulaire** : quand la carte se remplit, il efface ses entrées les plus anciennes, donc celles
+    des premières nuits. La nuit est peut-être entière, et rien ne permet de l'affirmer. Companion vous
+    le dit au lieu de la déclarer complète.
+
+    Dans les trois cas la nuit reste **incluse par défaut** : à vous de décider de la conserver (pour
+    la faire traiter par Tadarida) ou de la décocher.
 - **Passage n°** : numéro attribué à la nuit, **auto-numéroté** à partir du prochain numéro libre du
   point (« — » si la nuit est décochée).
 - La mention **« déjà importée »** rappelle qu'un passage existe déjà en base pour cette nuit.
@@ -371,7 +385,8 @@ la barre « écrit » se réduit d'autant : c'est là que se voit ce que ce rég
   passages existaient déjà, et la liste s'ouvre comme les motifs ;
 - les **anomalies du journal du capteur** : réveil non programmé, batterie faible, horloge
   resynchronisée. Elles n'expliquent pas toujours un problème, mais elles éclairent une nuit qui semble
-  incomplète ;
+  incomplète - et pour une nuit arrêtée anormalement, l'infobulle de sa pastille vous montre déjà celles
+  qui précèdent l'arrêt, sans que vous ayez à les chercher ici ;
 - la **participation créée sur Vigie-Chiro**, quand vous êtes connecté et que le site est relié. L'import
   écrit alors sur la plateforme, et il vous le dit plutôt que de vous le laisser découvrir au dépôt.
 

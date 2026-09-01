@@ -15,17 +15,27 @@ import java.util.List;
 /// @param debut horodatage du premier enregistrement de la nuit
 /// @param fin horodatage du dernier enregistrement de la nuit
 /// @param originaux les WAV de cette nuit, triés chronologiquement
-/// @param complete `true` si la nuit s'est terminée normalement ; `false` si **tronquée** (carte pleine,
-///     interruption)
-/// @param motifIncompletude libellé court de la troncature quand `!complete` (ex. « carte SD pleine »),
-///     sinon `null`
+/// @param completude ce que le journal permet d'établir : complète, tronquée, ou **inconnue** (#4990)
+/// @param motifIncompletude libellé court de la troncature quand la nuit est tronquée (ex. « carte SD
+///     pleine »), sinon `null`
+/// @param indicesDuJournal ce que le journal montrait juste avant l'arrêt d'une nuit tronquée ; vide
+///     sinon, y compris sur une nuit inconnue - il n'y a alors rien à montrer, c'est le problème même.
+///     Des **faits relevés**, jamais une cause (#4990)
 public record NuitDetectee(
         LocalDate dateNuit,
         LocalDateTime debut,
         LocalDateTime fin,
         List<Path> originaux,
-        boolean complete,
-        String motifIncompletude) {
+        Completude completude,
+        String motifIncompletude,
+        List<String> indicesDuJournal) {
+
+    /// Les listes sont figées à la construction : une nuit détectée est un constat, et un constat qui
+    /// changerait sous son lecteur ne serait plus un constat.
+    public NuitDetectee {
+        originaux = List.copyOf(originaux);
+        indicesDuJournal = List.copyOf(indicesDuJournal);
+    }
 
     /// Nombre d'enregistrements originaux de la nuit.
     public int nombreFichiers() {

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.importation.model.Completude;
 import fr.univ_amu.iut.importation.model.CycleAcquisition;
 import fr.univ_amu.iut.importation.model.NuitDetectee;
 import fr.univ_amu.iut.importation.model.PartitionNuits;
@@ -61,20 +62,45 @@ class PartitionNuitsTest {
 
         List<NuitDetectee> nuits = PartitionNuits.partitionner(originaux, cycles);
 
-        assertThat(nuits).extracting(NuitDetectee::complete).containsExactly(true, true, false);
+        assertThat(nuits)
+                .extracting(NuitDetectee::completude)
+                .containsExactly(Completude.COMPLETE, Completude.COMPLETE, Completude.TRONQUEE);
         assertThat(nuits.get(2).motifIncompletude()).isEqualTo("carte SD pleine");
         assertThat(nuits.get(0).motifIncompletude()).isNull();
     }
 
     @Test
-    @DisplayName("Sans cycle correspondant (journal absent), une nuit est supposée complète")
-    void sans_cycle_supposee_complete() {
+    @DisplayName("Les fichiers d'une nuit sont triés, quel que soit l'ordre où ils arrivent")
+    void les_fichiers_sont_tries() {
+        // Le dossier ne promet aucun ordre, et `debut` / `fin` sont lus aux DEUX BOUTS de la liste :
+        // sans tri, une nuit annoncerait comme premier enregistrement celui que le système de
+        // fichiers a rendu en premier. Le tri survivait à sa mutation faute d'une entrée désordonnée.
+        List<NuitDetectee> nuits = PartitionNuits.partitionner(
+                List.of(wav("20260704_060000"), wav("20260703_213000"), wav("20260703_233000")), List.of());
+
+        assertThat(nuits).singleElement().satisfies(nuit -> {
+            assertThat(nuit.debut()).isEqualTo(LocalDateTime.of(2026, 7, 3, 21, 30));
+            assertThat(nuit.fin()).isEqualTo(LocalDateTime.of(2026, 7, 4, 6, 0));
+        });
+    }
+
+    @Test
+    @DisplayName("#4990 : sans cycle correspondant, une nuit est INCONNUE, jamais complète")
+    void sans_cycle_la_nuit_est_inconnue() {
+        // Ce banc portait l'assertion inverse : « une nuit est supposée complète ». La supposition
+        // était défendue - ne pas deviner, pour éviter les fausses alertes d'une nuit calme - et
+        // elle plaçait le défaut ailleurs : le binaire forçait à choisir entre deux erreurs, et
+        // « complète » est celle qui rassure. R19 rend le cas ordinaire, la carte pleine effaçant
+        // les entrées des PREMIÈRES nuits, celles qu'on relira le plus tard.
         List<NuitDetectee> nuits =
                 PartitionNuits.partitionner(List.of(wav("20260703_213000"), wav("20260704_060000")), List.of());
 
         assertThat(nuits).singleElement().satisfies(nuit -> {
             assertThat(nuit.dateNuit()).isEqualTo(LocalDate.of(2026, 7, 3));
-            assertThat(nuit.complete()).isTrue();
+            assertThat(nuit.completude()).isEqualTo(Completude.INCONNUE);
+            assertThat(nuit.motifIncompletude())
+                    .as("on ne sait rien : il n'y a donc aucun motif à donner")
+                    .isNull();
             assertThat(nuit.nombreFichiers()).isEqualTo(2);
         });
     }

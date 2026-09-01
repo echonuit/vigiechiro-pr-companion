@@ -102,7 +102,9 @@ final class TableNuits {
     private static TableColumn<NuitVM, String> colonneEtat() {
         // 190 px calibraient « ⚠ incomplète (carte SD pleine) » ; il ne reste qu'un mot.
         TableColumn<NuitVM, String> colonne = colonneTexte("État", 130, NuitVM::badge);
-        colonne.setCellFactory(c -> ColonneBadge.cellule(NuitVM::classeBadge, NuitVM::motifIncompletude));
+        // L'infobulle ne porte plus le seul motif : elle porte ce que le journal montrait avant
+        // l'arrêt et la conduite à tenir (#4990). Le motif restait un fait sans suite.
+        colonne.setCellFactory(c -> ColonneBadge.cellule(NuitVM::classeBadge, NuitVM::explication));
         return colonne;
     }
 }
