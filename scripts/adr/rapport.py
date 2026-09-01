@@ -27,18 +27,21 @@ from _commun import RACINE_DEPOT
 
 ICI = pathlib.Path(__file__).parent
 # Le champ `lus` (issue #5007) se lit en groupe NON capturant, et ce n'est pas un detail : les
-# indices de groupe sont consommes en clair plus bas (`m.group(2)`, `m.group(3)`), et
-# `resserrements()` deballe des tuples de QUATRE elements. Un groupe capturant les decalerait, le
-# rapport lirait le mauvais nombre, et rien ne rougirait. `?` est accepte parce qu'un garde qui ne
-# declare pas encore son compte n'est pas une panne : c'est une dette, que le manifeste comptera.
+# indices de groupe sont consommes en clair plus bas, et les tuples portent CINQ elements depuis
+# que `lus` est capture (#5053). Le decalage que redoutait la note d'origine est tenu par un cas :
+# `test_rapport_et_resserrement` passe des tuples ecrits en dur a `resserrements()`, si bien qu'une
+# arite changee sans lui leve une erreur de deballage. Constate rouge avant d'ecrire ce changement.
+#
+# `?` est accepte parce qu'un garde qui ne declare pas son compte n'est pas toujours une panne : les
+# quatre muets qui restent sont des exclusions ECRITES, non des retardataires (#5015).
 LIGNE_CLIQUET = re.compile(
-    r"^ADR (\d+) \| lus=(?:\?|\d+) \| suspects=(\d+) \| cliquet=(\d+) \| verdict=(\S+)$", re.M
+    r"^ADR (\d+) \| lus=(\?|\d+) \| suspects=(\d+) \| cliquet=(\d+) \| verdict=(\S+)$", re.M
 )
-LIGNE_LOUPE = re.compile(r"^LOUPE (\d+) \| lus=(?:\?|\d+) \| candidats=(\d+)$", re.M)
+LIGNE_LOUPE = re.compile(r"^LOUPE (\d+) \| lus=(\?|\d+) \| candidats=(\d+)$", re.M)
 # Le PLANCHER est la polarite inverse du cliquet, et il a sa propre ligne. Ce rapport ne la lisait
 # pas : le garde des renvois annoncait « a-relever » a chaque passage, sans que rien ne le montre.
 LIGNE_PLANCHER = re.compile(
-    r"^PLANCHER (\d+) \| lus=(?:\?|\d+) \| mesure=(\d+) \| plancher=(\d+) \| verdict=(\S+)$", re.M
+    r"^PLANCHER (\d+) \| lus=(\?|\d+) \| mesure=(\d+) \| plancher=(\d+) \| verdict=(\S+)$", re.M
 )
 
 
@@ -73,34 +76,38 @@ def collecter():
     cliquets, planchers, loupes, muets = [], [], [], []
     for script in sorted(ICI.glob("[0-9]*.py")):
         sortie = executer(script)
-        lus = 0
+        # `verdicts` compte les LIGNES lues dans cette sortie, et non les unites qu'un garde a lues.
+        # Les deux s'appelaient `lus`, a un caractere pres du champ : deux sens sous un nom.
+        verdicts = 0
         for m in LIGNE_CLIQUET.finditer(sortie):
-            num, suspects, cliquet, verdict = (
+            num, lus, suspects, cliquet, verdict = (
                 m.group(1),
-                int(m.group(2)),
+                m.group(2),
                 int(m.group(3)),
-                m.group(4),
+                int(m.group(4)),
+                m.group(5),
             )
-            cliquets.append((num, suspects, cliquet, verdict))
-            lus += 1
+            cliquets.append((num, lus, suspects, cliquet, verdict))
+            verdicts += 1
         for m in LIGNE_PLANCHER.finditer(sortie):
-            num, mesure, plancher, verdict = (
+            num, lus, mesure, plancher, verdict = (
                 m.group(1),
-                int(m.group(2)),
+                m.group(2),
                 int(m.group(3)),
-                m.group(4),
+                int(m.group(4)),
+                m.group(5),
             )
-            planchers.append((num, mesure, plancher, verdict))
-            lus += 1
-        if not lus:
+            planchers.append((num, lus, mesure, plancher, verdict))
+            verdicts += 1
+        if not verdicts:
             muets.append((script.name, premiere_ligne_de_verdict(sortie)))
     for script in sorted(ICI.glob("loupe-*.py")):
         sortie = executer(script)
-        lus = 0
+        verdicts = 0
         for m in LIGNE_LOUPE.finditer(sortie):
-            loupes.append((m.group(1), int(m.group(2))))
-            lus += 1
-        if not lus:
+            loupes.append((m.group(1), m.group(2), int(m.group(3))))
+            verdicts += 1
+        if not verdicts:
             muets.append((script.name, premiere_ligne_de_verdict(sortie)))
     return cliquets, planchers, loupes, muets
 
@@ -123,16 +130,16 @@ def rendre(cliquets, planchers, loupes, muets, markdown: bool) -> str:
 
     out.append(f"{h2}Cliquets (vérifications « probable »)")
     if markdown:
-        out += ["", "| ADR | suspects | cliquet | verdict |", "|---|---|---|---|"]
-        for num, s, c, v in cliquets:
-            out.append(f"| {num} | {s} | {c} | {v} |")
+        out += ["", "| ADR | lus | suspects | cliquet | verdict |", "|---|---|---|---|---|"]
+        for num, lus, s, c, v in cliquets:
+            out.append(f"| {num} | {lus} | {s} | {c} | {v} |")
     else:
-        for num, s, c, v in cliquets:
-            out.append(f"{li}ADR {num} : suspects={s} cliquet={c} → {v}")
+        for num, lus, s, c, v in cliquets:
+            out.append(f"{li}ADR {num} : lus={lus} suspects={s} cliquet={c} → {v}")
     out.append("")
 
-    a_resserrer = [(num, s, c) for num, s, c, v in cliquets if v == "a-resserrer"]
-    regressions = [(num, s, c) for num, s, c, v in cliquets if v == "regression"]
+    a_resserrer = [(num, s, c) for num, _, s, c, v in cliquets if v == "a-resserrer"]
+    regressions = [(num, s, c) for num, _, s, c, v in cliquets if v == "regression"]
 
     if regressions:
         out.append(f"{h2}⚠ Régressions (un cas a été ajouté)")
@@ -153,15 +160,15 @@ def rendre(cliquets, planchers, loupes, muets, markdown: bool) -> str:
 
     if planchers:
         out += ["", f"{h2}Planchers (ce qu'on possède et qui ne redescend pas)"]
-        for num, mesure, plancher, verdict in planchers:
+        for num, lus, mesure, plancher, verdict in planchers:
             fleche = "→ ok" if verdict == "ok" else f"→ {verdict}"
-            out.append(f"{li}ADR {num} : mesure={mesure} plancher={plancher} {fleche}")
+            out.append(f"{li}ADR {num} : lus={lus} mesure={mesure} plancher={plancher} {fleche}")
         out.append("")
 
     out.append(f"{h2}Loupes (vérifications « humaine », indicatif)")
     if loupes:
-        for num, n in loupes:
-            out.append(f"{li}ADR {num} : {n} candidat(s) à revoir.")
+        for num, lus, n in loupes:
+            out.append(f"{li}ADR {num} : {n} candidat(s) à revoir, sur {lus} unité(s) lue(s).")
     else:
         out.append(f"{li}Aucune loupe active.")
     if muets:
@@ -180,7 +187,7 @@ def rendre(cliquets, planchers, loupes, muets, markdown: bool) -> str:
 def resserrements(cliquets):
     """La liste (num, nouvelle_valeur) des cliquets à abaisser : c'est ce qu'un geste d'auto-calibration
     appliquerait dans les ADR."""
-    return [(num, s) for num, s, c, v in cliquets if v == "a-resserrer"]
+    return [(num, s) for num, lus, s, c, v in cliquets if v == "a-resserrer"]
 
 
 def auto_test() -> int:
