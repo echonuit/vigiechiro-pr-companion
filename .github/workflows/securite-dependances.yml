@@ -65,7 +65,7 @@ jobs:
 
       - name: Scanner le SBOM
         id: scan
-        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
+        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
         with:
           sbom: target/sbom.json
           # Le seuil est strict PARCE QUE la mesure du jour est zéro : au moment où l'inventaire est
