@@ -93,6 +93,9 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     private Label lblFenetreNuit;
 
     @FXML
+    private Label lblPlagesHoraires;
+
+    @FXML
     private Label lblAlerteHorsNuit;
 
     @FXML
@@ -250,6 +253,9 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
         // Encart cohérence horaires (#548) : la fenêtre nocturne réelle quand elle est calculable.
         lblFenetreNuit.textProperty().bind(viewModel.fenetreNuitProperty());
         lblFenetreNuit.visibleProperty().bind(viewModel.coherenceHoraireDisponibleProperty());
+        lblPlagesHoraires.textProperty().bind(viewModel.plagesHorairesProperty());
+        lblPlagesHoraires.visibleProperty().bind(viewModel.coherenceHoraireDisponibleProperty());
+        lblPlagesHoraires.managedProperty().bind(lblPlagesHoraires.visibleProperty());
         lblFenetreNuit.managedProperty().bind(viewModel.coherenceHoraireDisponibleProperty());
 
         // Alerte « hors nuit » : texte, visibilité (présent/absent) et sévérité (couleur + icône) posés

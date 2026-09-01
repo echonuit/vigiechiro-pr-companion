@@ -10,12 +10,12 @@
 
 ## 2. Les deux surfaces rendent le même verdict (lot #4988)
 
-- [ ] 2.1 L'écran de diagnostic affiche le niveau, la plage exigée et la plage effective
-- [ ] 2.2 Le niveau « information » ne se présente pas comme un défaut, sans quoi le remède reproduit le mal
-- [ ] 2.3 La commande `diagnostiquer` rend le même niveau, parité de l'ADR 0014
-- [ ] 2.4 Cas qui interroge les deux surfaces sur la même nuit et compare : il doit rougir si une seule est corrigée
-- [ ] 2.5 L'état indisponible reste distinct d'un verdict, sans coordonnées ni horaires
-- [ ] 2.6 Capture de l'encart dans son état d'avertissement, sans quoi la capacité est livrée sans avoir été regardée
+- [x] 2.1 L'écran de diagnostic affiche le niveau, la plage exigée et la plage effective
+- [x] 2.2 Le niveau « information » ne se présente pas comme un défaut, sans quoi le remède reproduit le mal
+- [x] 2.3 La commande `diagnostiquer` rend le même niveau, parité de l'ADR 0014
+- [x] 2.4 Cas qui interroge les deux surfaces sur la même nuit et compare : il doit rougir si une seule est corrigée
+- [x] 2.5 L'état indisponible reste distinct d'un verdict, sans coordonnées ni horaires
+- [x] 2.6 Capture de l'encart dans son état d'avertissement, sans quoi la capacité est livrée sans avoir été regardée
 
 ## 3. Les documents cessent de se contredire (lot #4989)
 

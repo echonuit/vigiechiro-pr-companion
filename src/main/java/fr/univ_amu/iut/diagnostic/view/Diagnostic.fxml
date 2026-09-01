@@ -102,6 +102,9 @@
       <FontIcon iconLiteral="fas-moon"/>
     </graphic>
   </Label>
+  <!-- Ce que le protocole attendait et ce qui a ete enregistre (#4988). Sous la fenetre et en retrait,
+       parce que c'est elle que ces deux plages annotent. -->
+  <Label fx:id="lblPlagesHoraires" styleClass="annotation"/>
   <!-- Annotation de la fenetre de nuit ci-dessus, en retrait sous elle : le lien entre les deux ne se
        lisait pas, les deux partant du meme fer que les titres (#1974). -->
   <!-- Sévérité (couleur + icône) posée à l'exécution par LibelleRetour, depuis le RetourOperation du
