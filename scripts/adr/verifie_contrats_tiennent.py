@@ -315,6 +315,23 @@ def _auto_test() -> int:
         seuil_contredit("3280, polarite=monte", "(2 ADR : 4395, 4587)"),
         False,
     )
+    # Le JUMEAU, cherche par la compétence deboguer : `seuil()` a DEUX aveux porteurs de chiffres,
+    # et n en corriger qu un laisserait le second site. Celui-ci n a pas encore de garde reel - il
+    # attend qu une ADR citee disparaisse - donc seul un temoin le tient.
+    verifie(
+        "une ADR introuvable n a pas non plus resolu de seuil",
+        seuil_resolu("(ADR 4712 introuvable)"),
+        None,
+    )
+    verifie(
+        "et son numero ne se compare pas a un seuil declare",
+        seuil_contredit("43, polarite=descend", "(ADR 4712 introuvable)"),
+        False,
+    )
+    # Les deux aveux SANS chiffre, qui ne rougissaient pas mais se taisent pour la bonne raison.
+    verifie("« sans seuil » ne resout rien", seuil_resolu("(sans seuil)"), None)
+    verifie("« pas d ADR declaree » non plus", seuil_resolu("(pas d ADR declaree)"), None)
+
     verifie("un cliquet conclut, sur son nombre", seuil_resolu("cliquet 43"), "43")
     verifie("un plancher aussi", seuil_resolu("plancher 3280"), "3280")
 
