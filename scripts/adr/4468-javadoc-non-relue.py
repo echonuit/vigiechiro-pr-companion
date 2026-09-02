@@ -47,7 +47,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte
+from _commun import RACINE_DEPOT, imprime_contrat, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4468"
@@ -194,7 +194,24 @@ def _auto_test() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "javadoc non relue, ou reecrite depuis sa relecture",
+    "population": "PRODUCTION + TESTS",
+    "dispositif": "cliquet",
+    "seuil": "0, polarite=descend",
+    "temoin": "scripts/adr/4468-javadoc-non-relue.py --auto-test",
+    "decision": "ADR 4468",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
     listes = suspects()

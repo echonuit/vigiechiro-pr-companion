@@ -27,7 +27,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import TESTS_ANCRES, rapporte
+from _commun import RACINE_DEPOT, TESTS_ANCRES, imprime_contrat, rapporte
 
 ADR = "5068"
 
@@ -185,7 +185,24 @@ def _autoTest() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "clic tenant une reference entre la resolution et le geste",
+    "population": "TESTS",
+    "dispositif": "cliquet",
+    "seuil": "38, polarite=descend",
+    "temoin": "scripts/adr/5068-clic-sur-reference-tenue.py --auto-test",
+    "decision": "ADR 5068",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     if "--auto-test" in sys.argv:
         sys.exit(_autoTest())
     sys.exit(

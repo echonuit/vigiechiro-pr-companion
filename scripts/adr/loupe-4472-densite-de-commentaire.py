@@ -32,7 +32,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, RACINES_ANCREES, loupe
+from _commun import RACINE_DEPOT, RACINES_ANCREES, imprime_contrat, loupe
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4472"
@@ -273,5 +273,22 @@ def main() -> int:
     )
 
 
+CONTRAT = {
+    "geste": "densite de commentaire, par classe et par methode",
+    "population": "PRODUCTION + TESTS",
+    "dispositif": "loupe",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/loupe-4472-densite-de-commentaire.py --auto-test",
+    "decision": "ADR 4472",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(_auto_test() if "--auto-test" in sys.argv else main())
