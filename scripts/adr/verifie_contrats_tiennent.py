@@ -30,13 +30,14 @@ cette erreur en mesurant ce chantier, et c est la meme que #5032 et #5103.
 
 from __future__ import annotations
 
+import ast
 import pathlib
 import re
 import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, rapporte
+from _commun import RACINE_DEPOT, imprime_contrat, rapporte
 
 ADR = "4636"
 
@@ -83,8 +84,54 @@ def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
     return vus
 
 
+def dispatche_en_code(chemin: pathlib.Path, texte: str) -> bool:
+    """`--contrat` apparait-il dans le CODE du script, et non dans sa seule prose ?
+
+    **C est une barriere de surete, pas d optimisation.** Lancer un script qui ne porte pas cette
+    branche ne coute pas seulement du temps : il IGNORE l argument et fait son travail. Un
+    generateur reecrirait des fichiers, et ce garde deviendrait un effet de bord.
+
+    Les trois porteurs emploient trois idiomes - `"--contrat" in sys.argv`, un `add_argument` de
+    `argparse`, et un test shell - mais tous les trois ecrivent le litteral dans du CODE. C est le
+    controle de #5032 : une MENTION n est pas un DISPATCH.
+
+    **La cecite est assumee et elle penche du bon cote** : un quatrieme idiome que ce controle ne
+    verrait pas ne serait pas lance, donc pas confronte. Mieux vaut manquer un contrat que
+    d executer un script dont on ignore ce qu il fait.
+    """
+    if chemin.suffix != ".py":
+        return any("--contrat" in l and not l.lstrip().startswith("#") for l in texte.split("\n"))
+    try:
+        arbre = ast.parse(texte)
+    except SyntaxError:
+        return False
+    docstrings = set()
+    for noeud in ast.walk(arbre):
+        corps = getattr(noeud, "body", None)
+        porteur = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+        if isinstance(noeud, porteur) and corps and isinstance(corps[0], ast.Expr):
+            tete = corps[0].value
+            if isinstance(tete, ast.Constant) and isinstance(tete.value, str):
+                docstrings.add(id(tete))
+    return any(
+        isinstance(n, ast.Constant)
+        and isinstance(n.value, str)
+        and "--contrat" in n.value
+        and id(n) not in docstrings
+        for n in ast.walk(arbre)
+    )
+
+
 def contrat_de(chemin: pathlib.Path) -> dict[str, str] | None:
     """Ce que le garde REPOND a `--contrat`, ou rien s il ne repond pas."""
+    # Ne jamais se lancer SOI-MEME. La branche `--contrat` ci-dessus suffit en principe, mais un
+    # garde qui lance des scripts ne doit pas dependre d une seule barriere : c est le defaut qui a
+    # mis la machine a plat le 2026-09-02, en essaimant des sous-processus plus vite que leur
+    # plafond ne les tuait.
+    if chemin.resolve() == pathlib.Path(__file__).resolve():
+        return None
+    if not dispatche_en_code(chemin, chemin.read_text(encoding="utf-8", errors="ignore")):
+        return None
     lance = ["bash", str(chemin)] if chemin.suffix == ".sh" else [sys.executable, str(chemin)]
     try:
         # `check=False` est VOULU : un garde qui refuse sort 1, et seule sa sortie nous interesse.
@@ -220,12 +267,53 @@ def _auto_test() -> int:
         False,
     )
 
+    # La protection contre la RECURSION. Sans elle, ce garde se lancait LUI-MEME : il n avait pas de
+    # branche `--contrat`, tombait donc dans son travail, et se rappelait. Les sous-processus
+    # essaimaient plus vite que leur plafond ne les tuait, et la machine est tombee (2026-09-02).
+    verifie(
+        "ce garde ne se lance jamais lui-meme",
+        contrat_de(pathlib.Path(__file__).resolve()),
+        None,
+    )
+    # Et la barriere de SURETE : une mention en prose ne suffit pas a faire lancer un script, parce
+    # qu un script sans cette branche ignore l argument et FAIT SON TRAVAIL.
+    verifie(
+        "une mention en commentaire ne vaut pas dispatch",
+        dispatche_en_code(pathlib.Path("x.sh"), "# on parle de --contrat ici\necho bonjour\n"),
+        False,
+    )
+    verifie(
+        "mais une ligne de code, oui",
+        dispatche_en_code(pathlib.Path("x.sh"), 'if [ "$1" = "--contrat" ]; then\n'),
+        True,
+    )
+
     print()
     print("Auto-test concluant." if not echecs else "Auto-test EN ÉCHEC.")
     return echecs
 
 
+# Ce que ce garde DECLARE etre. Il en portait aucun, et c est ce qui l a rendu dangereux : sans
+# branche `--contrat`, s appeler lui-meme le faisait tomber dans son travail, donc se rappeler.
+CONTRAT = {
+    "geste": "contrat declare qui contredit ce que le garde fait",
+    "population": "les points d entree qui mentionnent un contrat",
+    "dispositif": "cliquet",
+    "seuil": "0, polarite=descend",
+    "temoin": "scripts/adr/verifie_scripts.py#test_un_contrat_ne_contredit_pas_le_garde",
+    "decision": "ADR 4636",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger. Ce garde en
+    # avait besoin plus que les autres, puisqu il LANCE ceux qu il inventorie.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
     sys.exit(
