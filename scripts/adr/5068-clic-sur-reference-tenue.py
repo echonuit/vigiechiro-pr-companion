@@ -56,12 +56,23 @@ def premierArgument(reste: str) -> str:
     return "".join(sortie).strip()
 
 
+def fichiers(racine: pathlib.Path = TESTS_ANCRES) -> list[pathlib.Path]:
+    """Les unites que ce garde LIT, extraites pour que `lus` les compte (issue #5007).
+
+    Le filtre `EXEMPTES` vit ICI et non dans `suspects()` : un fichier exempte n est pas lu, donc
+    le compter gonflerait une population que ce garde ne regarde pas.
+
+    Le defaut n est pas `None` mais `TESTS_ANCRES`, et il le reste. C est l une des trois
+    divergences que la PR #5040 a documentees apres avoir casse trois gardes en les traitant par
+    motif ; la respecter est moins couteux que de l uniformiser.
+    """
+    return [f for f in sorted(racine.rglob("*.java")) if f.name not in EXEMPTES]
+
+
 def suspects(racine: pathlib.Path = TESTS_ANCRES) -> list[str]:
     """Les clics dont l argument est un noeud DEJA RESOLU, une entree par site."""
     trouves = []
-    for fichier in sorted(racine.rglob("*.java")):
-        if fichier.name in EXEMPTES:
-            continue
+    for fichier in fichiers(racine):
         texte = fichier.read_text(encoding="utf-8")
         selecteurs = set(CONSTANTE.findall(texte))
         for rang, ligne in enumerate(texte.splitlines(), 1):
@@ -178,5 +189,10 @@ if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(_autoTest())
     sys.exit(
-        rapporte(ADR, "clics tenant une référence entre la résolution et le geste", suspects())
+        rapporte(
+            ADR,
+            "clics tenant une référence entre la résolution et le geste",
+            suspects(),
+            lus=len(fichiers()),
+        )
     )

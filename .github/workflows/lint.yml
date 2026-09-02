@@ -685,6 +685,18 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/adr/verifie_temoins_non_decoratifs.py --auto-test
+
+      - name: "Aucun appel de verdict ne cache ce qu'il a lu (bloquant, #5049)"
+        # Le sous-chantier #5015 a converti 33 appels, et son bilan nommait cette dette : rien
+        # n'empechait un appel neuf de naitre muet. La regression a eu lieu en QUELQUES HEURES,
+        # sur `5068-clic-sur-reference-tenue.py`, dont l'auteur ne pouvait pas le savoir.
+        #
+        # L'auto-test tient les deux moities : un appel muet est vu, et un appel qui declare ne
+        # l'est PAS. Un garde qui refuserait tout passerait la premiere.
+        run: |
+          set -euo pipefail
+          python3 scripts/adr/verifie_verdicts_declares.py --auto-test
+          python3 scripts/adr/verifie_verdicts_declares.py
           python3 scripts/adr/verifie_temoins_non_decoratifs.py
 
       - name: "Le corpus d'un garde se declare une fois (bloquant, #4586)"

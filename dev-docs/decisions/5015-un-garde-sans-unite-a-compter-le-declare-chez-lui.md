@@ -5,8 +5,11 @@ status: stable
 article: A11
 chantier: "#5015, sous-chantier du compte lu (#5006)"
 decided_at: 2026-09-01
-verification: humaine
-verification_note: "qu'une population vide soit la réussite d'un garde est un jugement sur ce que ce garde veut dire. Aucun motif ne le distingue d'un garde qui a manqué son ciblage. Ce qui se tient mécaniquement est le COMPTE des non-déclarants, qui ne remonte pas"
+verification: probable
+verification_note: "qu'une population vide soit la réussite d'un garde reste un jugement : aucun motif ne le distingue d'un ciblage manqué, et c'est pourquoi les exceptions se NOMMENT une par une plutôt que de se compter. Ce qui se tient mécaniquement est le reste : tout appel de verdict hors de cette liste doit déclarer ce qu'il lit, et le garde le refuse"
+enforced_by:
+  - "scripts/adr/verifie_verdicts_declares.py"
+ratchet: 0
 verified:
   - by: human:nedseb
     at: 2026-09-01

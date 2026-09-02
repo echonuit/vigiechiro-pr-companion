@@ -1561,6 +1561,53 @@ def test_le_refus_s_eprouve_sur_un_garde_reel() -> None:
         _verifie("et son verdict REFUSE", code, 1)
 
 
+def test_un_appel_de_verdict_declare_ou_se_nomme() -> None:
+    """Le garde de l ADR 5015 voit un appel muet, et ne voit PAS un appel qui declare.
+
+    Les deux moities comptent. Un garde qui refuserait TOUT, exceptions comprises, passerait la
+    premiere : c est la cecite d un temoin qui n affirmerait que des vides (ADR 5054).
+
+    Ce cas fait aussi ENTRER ce garde dans le corpus de `verifie_temoins_non_decoratifs.py`, qui
+    mute ce que ce harnais charge. Sans lui, il echapperait aux deux meta-gardes : il n est pas
+    numerote, donc `_completude()` ne le reclame pas, et il n est pas mute, donc rien ne prouve
+    que son propre auto-test attrape quelque chose.
+    """
+    import tempfile
+
+    garde = _charge("verifie_verdicts_declares.py")
+
+    # Les assertions portent d abord sur `fichiers()` et `suspects()`, les fonctions NON PREFIXEES.
+    # La mutation de l ADR 4490 ne remplace qu elles : un cas qui n eprouverait que `_appels_muets`
+    # resterait vert sur un garde mort, et c est ce que ce cas faisait avant que le meta-garde ne
+    # le nomme decoratif. La cecite est declaree dans l ADR 4490 elle-meme.
+    with tempfile.TemporaryDirectory() as brut:
+        faux = pathlib.Path(brut)
+        (faux / "scripts").mkdir()
+        (faux / "scripts" / "muet.py").write_text(
+            'from _commun import rapporte\nrapporte("0000", "t", [])\n', encoding="utf-8"
+        )
+        (faux / "scripts" / "declare.py").write_text(
+            'from _commun import rapporte\nrapporte("0000", "t", [], lus=7)\n', encoding="utf-8"
+        )
+        _verifie("5015 lit les sources de l arbre qu on lui donne", len(garde.fichiers(faux)), 2)
+        vus = garde.suspects(faux)
+        _verifie("5015 voit l appel muet et lui seul", len(vus), 1)
+        _verifie("et il le NOMME par son fichier", "muet.py" in vus[0] if vus else False, True)
+
+    muet = 'from _commun import rapporte\nrapporte("0000", "t", [])\n'
+    declare = 'from _commun import rapporte\nrapporte("0000", "t", [], lus=12)\n'
+    homonyme = "def rapporte(x):\n    return x\n\n\nrapporte(3)\n"
+
+    _verifie("5015 voit un appel muet", len(garde._appels_muets(muet)), 1)
+    _verifie("5015 ne voit pas un appel qui declare", len(garde._appels_muets(declare)), 0)
+    _verifie("5015 ecarte un homonyme local", len(garde._appels_muets(homonyme)), 0)
+    _verifie(
+        "et ses exceptions sont NOMMEES, non comptees",
+        sorted(garde.HORS_PORTEE),
+        ["compte-les-reliquats.py", "verifie_scripts.py"],
+    )
+
+
 def test_resserre_cliquets_appelle_le_rapport() -> None:
     """La COUTURE entre les deux modules, la ou le temoin voisin n eprouvait que leurs pieces.
 
@@ -1774,6 +1821,7 @@ if __name__ == "__main__":
         test_un_plancher_sans_population_dit_pourquoi,
         test_le_rapport_lit_encore_les_trois_lignes,
         test_le_contrat_a_une_forme_et_refuse_l_incomplet,
+        test_un_appel_de_verdict_declare_ou_se_nomme,
         test_resserre_cliquets_appelle_le_rapport,
         test_rapport_et_resserrement,
         test_le_refus_s_eprouve_sur_un_garde_reel,
