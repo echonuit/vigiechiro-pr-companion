@@ -295,15 +295,10 @@ def imprime_contrat(garde: str, contrat: dict[str, str]) -> int:
     n'aurait pas. Un champ sans objet s'écrit, il ne s'omet pas : `seuil: (sans objet)` pour un
     invariant dit quelque chose, une ligne absente ne dit rien.
 
-    Le champ `temoin` NOMME un témoin sans imposer sa forme. `0008-echec-silencieux.py` n'a aucune
-    option d'auto-test et son témoin est central, dans `verifie_scripts.py` : exiger cette option
+    Le champ `temoin` NOMME un témoin sans imposer sa forme. `0008-echec-silencieux.py` n'a aucun
+    `--auto-test` et son témoin est central, dans `verifie_scripts.py` : exiger `--auto-test`
     partout produirait quinze harnais en double, ou une liste d'exemptions, c'est-à-dire le second
     inventaire que ce chantier existe pour supprimer.
-
-    La formulation évite le littéral de cette option, et c'est une CONCESSION assumée :
-    `verifie-inventaires-ci.sh` cherche ce littéral dans le fichier ENTIER, docstrings comprises, et
-    conclurait que ce module répond à une option qu'il n'a pas. Le défaut est ouvert en issue plutôt
-    que masqué ici.
     """
     manquants = [c for c in CHAMPS_DU_CONTRAT if c not in contrat]
     if manquants:
