@@ -22,10 +22,8 @@ generated:
 
 Un rouge de CI se rejouait à l'aveugle, et le geste passait pour raisonnable : la suite repartait
 souvent verte sans qu'une ligne ait changé. L'issue #4187 en tirait « la suite rougit sur des pannes
-JavaFX du runner », et citait trois signatures internes à JavaFX.
-
-Rien ne mesurait la part de vrai. Le relevé du lot 0 rangeait sous un seul mot, « échouées pour autre
-chose », toutes les tentatives où aucun test n'était nommé.
+JavaFX du runner », sans que rien ne mesure la part de vrai : le relevé rangeait sous un seul mot,
+« échouées pour autre chose », toutes les tentatives où aucun test n'était nommé.
 
 ## Le défaut
 
@@ -49,9 +47,8 @@ conduite.
 quelqu'un d'autre. Le rejeu ne supprime pas le rouge : il le déplace, et la tentative rejouée efface
 le verdict de la précédente.
 
-**La mesure a refusé le remède demandé.** L'issue attendait une conduite pour le runner, qui pèse
-9 % ; ce qui pèse 56 %, ce sont nos bancs, qu'aucune conduite ne répare. ADR 4853, sur un chantier
-de CI.
+**La mesure a refusé le remède demandé** : l'issue attendait une conduite pour le runner (9 %), quand
+56 % sont nos bancs, qu'aucune conduite ne répare (ADR 4853).
 
 **Une cause non reconnue se nomme telle quelle.** `INDÉTERMINÉ` existe parce que trois tentatives ne
 portent aucune erreur : les ranger de force aurait inventé une cause (ADR 2213).
@@ -71,20 +68,22 @@ tombés. Un défaut de rendu qui n'emporte **qu'un** test lui échappait.
 Il lit désormais la **cause profonde**, celle que `Caused by:` porte dans le bloc surefire, et cherche
 si elle traverse la couche graphique. **Cinq formulations plus séduisantes ont été réfutées sur des
 journaux réels**, que #5036 porte : la plus instructive est que 61 % des piles d'une suite **verte**
-sont entièrement étrangères. La sixième classe correctement les **huit** journaux disponibles, et
+sont entièrement étrangères. La sixième classe correctement les **neuf** journaux disponibles, et
 généralise ce que `OSPango` faisait pour un seul symptôme : nommer la couche plutôt que compter.
+
+**Le moteur de texte en est, et manquait (#4823).** Une NPE de `PrismTextLayout` partait au dépôt.
+`com.sun.javafx.text` rejoint le motif, sans déplacer aucun rouge mesuré.
 
 ## Ce qui se lit est la fin du journal, jamais le journal
 
-Deux mesures fausses l'ont établi, et l'ADR 4804 en porte la règle générale. Le classement ne lit que
-les douze lignes précédant la dernière ligne d'erreur.
+Deux mesures fausses l'ont établi ; l'ADR 4804 porte la règle générale. Le classement ne lit que les
+douze lignes précédant la dernière erreur.
 
 ## Ce qui prouve que le classement voit
 
-Vingt-quatre témoins, sur des extraits réels. Quatre mutations, chacune vérifiée comme appliquée
-avant d'être jouée. Trois meurent. **Relire le journal entier au lieu de sa fin a survécu**, faute
-d'un témoin où le motif traîne loin au-dessus d'une erreur d'un autre type : le faux positif même qui
-avait produit le 20 sur 20. Ce témoin existe désormais.
+Des témoins sur extraits réels, et des mutations vérifiées comme appliquées avant d'être jouées.
+**Relire le journal entier au lieu de sa fin a survécu** faute d'un témoin où le motif traîne au-dessus
+d'une erreur d'un autre type : le faux positif qui avait produit le 20 sur 20. Il existe désormais.
 
 ## Conséquences
 
