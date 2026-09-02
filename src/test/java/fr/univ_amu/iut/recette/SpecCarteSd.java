@@ -42,6 +42,11 @@ record SpecCarteSd(
     /// @param nuit date de la première ligne du journal (fixe `dateDebut` pour l'analyseur)
     /// @param sondePresente ajoute (ou non) la ligne « Sonde température/hygrométrie présente »
     /// @param corrompu si vrai, le journal est écrit illisible (aucune série extractible : l'inspection échoue)
+    /// @param appuiSurTouche si vrai, `Wakeup by PINPUSH... Cpt 2` s'intercale au milieu de la nuit :
+    ///     l'observateur est venu regarder l'écran. Ce réveil est **voulu** et n'ouvre pas une nuit de
+    ///     plus, ce que le code ignorait (#4981)
+    /// @param nuitInterrompue si vrai, le journal s'arrête après le réveil, sans mise en veille : le
+    ///     cycle reste ouvert et la nuit est TRONQUÉE. Carte pleine, batterie vide, arrêt subi (#5093)
     /// @param sessions redémarrages **supplémentaires** du capteur, chacun reposant ses paramètres après
     ///     `nuit` (#3898). Vide dans le cas courant, et le journal produit est alors **identique** à
     ///     l'octet près à ce qu'il était avant : les huit specs existantes ne bougent pas
@@ -51,6 +56,8 @@ record SpecCarteSd(
             LocalDate nuit,
             boolean sondePresente,
             boolean corrompu,
+            boolean appuiSurTouche,
+            boolean nuitInterrompue,
             List<Session> sessions) {
 
         Journal {
@@ -127,5 +134,11 @@ record SpecCarteSd(
             boolean incoherent,
             int nuits,
             String etatNommage,
-            int rejets) {}
+            int rejets,
+            List<String> completudes) {
+
+        Attendu {
+            completudes = List.copyOf(completudes);
+        }
+    }
 }

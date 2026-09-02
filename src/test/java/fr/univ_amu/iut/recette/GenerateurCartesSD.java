@@ -157,8 +157,13 @@ public final class GenerateurCartesSD {
     /// dans les tests qui ont juste besoin d'un journal valide (#2868). Une seule source, deux usages.
     private static List<String> lignesJournal(SpecCarteSd spec) {
         SpecCarteSd.Journal journal = spec.journal();
-        List<String> lignes =
-                new ArrayList<>(JournalDeCapteur.lignes(journal.serie(), journal.nuit(), journal.sondePresente()));
+        List<String> lignes = new ArrayList<>(JournalDeCapteur.lignes(
+                journal.serie(),
+                journal.nuit(),
+                journal.sondePresente(),
+                JournalDeCapteur.FREQUENCE_KHZ_PAR_DEFAUT,
+                journal.appuiSurTouche(),
+                journal.nuitInterrompue()));
         // #3898 : chaque redémarrage déclaré ajoute son propre tracé à la SUITE, ce qu'un vrai
         // enregistreur fait - il n'ouvre pas un nouveau fichier, il continue le sien. Une ligne
         // « Paramètres » de plus par session, donc, avec sa fréquence à elle.

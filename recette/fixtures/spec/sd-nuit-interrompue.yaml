@@ -1,0 +1,39 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-nuit-interrompue
+but: "La nuit s'est arrêtée avant son terme : le journal ne se referme jamais (#5093)."
+
+# Le journal s'arrête après le réveil, sans « Passage en mode Veille » ni mise en veille. C'est ce que
+# laisse une carte pleine, une batterie vide ou un arrêt subi : le cycle reste ouvert.
+#
+# À distinguer de `sd-multi-nuits`, dont les nuits sans preuve sont INCONNUES : ici le journal PARLE et
+# dit que la nuit s'est interrompue. « Inconnue » n'est pas une nuance d'« incomplète » (#4990).
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-04-22"
+  nuitInterrompue: true
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+# Les bruts s'arrêtent tôt dans la nuit, cohérents avec un enregistreur qui a cessé d'enregistrer.
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260422_203922"
+      - "20260422_223045"
+      - "20260423_001200"
+
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 1
+  completudes: ["TRONQUEE"]

@@ -1,0 +1,47 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-reveil-bouton
+but: "L'observateur est venu appuyer sur une touche au milieu de la nuit : UNE nuit, pas deux (#4981)."
+
+# Le journal porte, entre le réveil programmé et la mise en veille, une ligne
+# « Wakeup by PINPUSH... Cpt 2 ». C'est le geste de quelqu'un qui vient regarder l'écran : le firmware
+# sort de la veille pour le laisser agir. Le code ne connaissait que `ALARM`, traitait tout le reste en
+# anomalie, et fabriquait donc une nuit de plus (#4981). Aucune carte ne portait ce cas.
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-04-22"
+  appuiSurTouche: true
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+# Une seule nuit d'enregistrements, de part et d'autre de l'appui sur la touche (01:15 du matin).
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260422_203922"
+      - "20260422_223045"
+      - "20260423_001200"
+      - "20260423_030000"
+      - "20260423_054530"
+
+# MESURÉ, et ce n'est pas ce qu'on croit. En retirant le remède de #4981 - `estVoulu` ne
+# reconnaissant plus que `alarm` - cette carte rend ["TRONQUEE"] au lieu de ["COMPLETE"], et le
+# NOMBRE DE NUITS NE BOUGE PAS : la partition groupe les bruts par horodatage, pas par cycle du
+# journal. Ce que l'appui non reconnu casse, c'est le cycle, qui reste ouvert et rend la nuit tronquée.
+#
+# Autrement dit, sans la ligne `completudes` cette carte serait DÉCORATIVE : elle passerait aussi bien
+# avec le défaut que sans lui. C'est le contrat qui la rend probante, pas la carte seule.
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 1
+  completudes: ["COMPLETE"]
