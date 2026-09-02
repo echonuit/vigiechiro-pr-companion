@@ -44,6 +44,7 @@ RACINE="${INVENTAIRES_RACINE:-$(cd "$ICI/../.." && pwd)}"
 
 juger() {
     python3 - "$1" <<'FIN'
+import ast
 import glob
 import os
 import re
@@ -114,9 +115,48 @@ motifs = [
     os.path.join(racine, "scripts", "**", "*.sh"),
     os.path.join(racine, "scripts", "**", "*.py"),
 ]
+# Un fichier PORTE l'option quand il la DISPATCHE, non quand il en parle. La recherche brute sur le
+# fichier entier concluait qu'il y repond des qu'il la mentionne, et `scripts/adr/_commun.py` en a
+# fait les frais : documenter le champ `temoin` du contrat suffisait a l'exiger au tableau, alors
+# qu'il n'a aucun point d'entree (#5032).
+#
+# C'est la mise en garde que `_commun.py` porte lui-meme pour les gardes de code, jamais appliquee
+# a ce garde-ci : « un script qui compte un motif present dans un COMMENTAIRE est faux par
+# construction ; le commentaire cite la chose, il ne la fait pas ».
+def porte_l_option(chemin, texte):
+    if not chemin.endswith(".py"):
+        # En shell, retirer les lignes de commentaire suffit.
+        nu = "\n".join(l for l in texte.split("\n") if not l.lstrip().startswith("#"))
+        return "--auto-test" in nu
+    try:
+        arbre = ast.parse(texte)
+    except SyntaxError:
+        # On ne conclut pas sur ce qu'on ne sait pas lire, et on penche du cote BRUYANT : compter
+        # a tort se voit et se corrige, ne pas compter est le silence que cet inventaire combat.
+        return "--auto-test" in texte
+    # Les commentaires n'entrent pas dans l'arbre : `ast` les ecarte seul. Restent les docstrings,
+    # seules constantes qui ne sont pas du code, et qu'il faut donc reconnaitre pour les exclure.
+    docstrings = set()
+    for noeud in ast.walk(arbre):
+        corps = getattr(noeud, "body", None)
+        porteur = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+        if isinstance(noeud, porteur) and corps and isinstance(corps[0], ast.Expr):
+            tete = corps[0].value
+            if isinstance(tete, ast.Constant) and isinstance(tete.value, str):
+                docstrings.add(id(tete))
+    return any(
+        isinstance(n, ast.Constant)
+        and isinstance(n.value, str)
+        and "--auto-test" in n.value
+        and id(n) not in docstrings
+        for n in ast.walk(arbre)
+    )
+
+
 for motif in motifs:
     for chemin in glob.glob(motif, recursive=True):
-        if "--auto-test" in open(chemin, encoding="utf-8", errors="ignore").read():
+        texte = open(chemin, encoding="utf-8", errors="ignore").read()
+        if "--auto-test" in texte and porte_l_option(chemin, texte):
             autotestes.add(os.path.basename(chemin))
 
 if not autotestes:
