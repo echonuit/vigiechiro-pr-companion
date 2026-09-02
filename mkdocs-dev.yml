@@ -340,6 +340,7 @@ nav:
     - 5053 · Le compte lu vient de l'arbre visé: decisions/5053-le-compte-lu-vient-de-l-arbre-vise-pas-de-la-source.md
     - 5015 · Un garde sans unité à compter le déclare chez lui: decisions/5015-un-garde-sans-unite-a-compter-le-declare-chez-lui.md
     - 5054 · Un témoin qui n'affirme que des vides ne prouve rien: decisions/5054-un-temoin-qui-n-affirme-que-des-vides-ne-prouve-rien.md
+    - 5089 · Un chemin suivi ne porte que de l'ASCII: decisions/5089-un-chemin-suivi-ne-porte-que-de-l-ascii.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

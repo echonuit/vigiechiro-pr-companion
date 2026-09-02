@@ -1191,7 +1191,7 @@ class DocumentationAJourTest {
     // #2386 - Unicité des règles métier et statut réel des ADR.
 
     private static final Path REGLES =
-            Path.of("brief", "docs", "Analyse et conception", "Modèle conceptuel", "Règles métier.md");
+            Path.of("brief", "docs", "Analyse et conception", "Modele conceptuel", "Regles metier.md");
 
     /// Racine du brief : les renvois `[Rn](#rn)` à contrôler y vivent.
     private static final Path BRIEF = Path.of("brief");

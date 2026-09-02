@@ -17,7 +17,7 @@
 **Critères d'acceptation** :
 
 - [x] Au premier lancement, l'application crée un fichier `companion.db` dans le dossier de travail utilisateur si absent.
-- [x] Le schéma initial contient toutes les tables vides correspondant aux entités du [modèle conceptuel](../Modèle%20conceptuel/index.md) (Utilisateur, Site, Point, Passage, Session d'enregistrement, EnregistrementOriginal, SéquenceDÉcoute, JournalCapteur, RelevéClimatique, SélectionDÉcoute, RésultatsIdentification, Observation, Taxon, GroupeTaxonomique).
+- [x] Le schéma initial contient toutes les tables vides correspondant aux entités du [modèle conceptuel](../Modele%20conceptuel/index.md) (Utilisateur, Site, Point, Passage, Session d'enregistrement, EnregistrementOriginal, SéquenceDÉcoute, JournalCapteur, RelevéClimatique, SélectionDÉcoute, RésultatsIdentification, Observation, Taxon, GroupeTaxonomique).
 - [x] Une classe `DaoGenerique<T>` ou équivalent fournit les opérations CRUD de base (`create`, `findById`, `findAll`, `update`, `delete`).
 - [x] La connexion JDBC est gérée avec un pool ou un singleton thread-safe.
 - [x] Un test d'intégration crée la BD, exécute une opération CRUD, et vérifie le résultat.
@@ -34,7 +34,7 @@
 
 **Je veux** des DAO opérationnels pour les entités `Site` et `Point d'écoute`
 
-**Afin que** l'épopée [E1](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md) puisse créer, lire, mettre à jour et supprimer des sites et points
+**Afin que** l'épopée [E1](E1%20-%20Gerer%20ses%20sites%20et%20points%20de%20suivi.md) puisse créer, lire, mettre à jour et supprimer des sites et points
 
 **Critères d'acceptation** :
 
@@ -44,7 +44,7 @@
 - [x] Les contraintes d'unicité sont vérifiées (n° de carré unique, code de point unique par site).
 - [x] Tests d'intégration sur les opérations CRUD.
 
-**Parcours rattaché** : sert [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md)<br>
+**Parcours rattaché** : sert [P1](../Parcours%20utilisateurs/P1%20-%20Declarer%20un%20site%20de%20suivi.md)<br>
 **Maquettes cibles** : aucune (DAO pur)<br>
 **Dépendances** : [E0.S1](#e0s1)<br>
 
@@ -67,7 +67,7 @@
 - [x] L'association `Enregistreur ↔ Site/Point` (mémorisée pour faciliter les imports suivants) est persistée.
 - [x] Tests d'intégration couvrant la création, la transition de statut et le verdict.
 
-**Parcours rattaché** : sert [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)<br>
+**Parcours rattaché** : sert [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), [P3](../Parcours%20utilisateurs/P3%20-%20Verifier%20l%27enregistrement%20par%20echantillonnage.md), [P4](../Parcours%20utilisateurs/P4%20-%20Preparer%20un%20lot%20pret%20a%20deposer.md)<br>
 **Maquettes cibles** : aucune (DAO pur)<br>
 **Dépendances** : [E0.S1](#e0s1), [E0.S2](#e0s2)<br>
 
@@ -89,7 +89,7 @@
 - [x] Le statut « écouté oui/non » par séquence dans le contexte d'une sélection est persisté.
 - [x] Tests d'intégration.
 
-**Parcours rattaché** : sert [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md)<br>
+**Parcours rattaché** : sert [P3](../Parcours%20utilisateurs/P3%20-%20Verifier%20l%27enregistrement%20par%20echantillonnage.md)<br>
 **Maquettes cibles** : aucune (DAO pur)<br>
 **Dépendances** : [E0.S1](#e0s1), [E0.S3](#e0s3)<br>
 
@@ -108,10 +108,10 @@
 - [x] `ResultatsIdentificationDao` permet de créer un import (chemin du CSV source, format détecté, date d'import) rattaché à un passage.
 - [x] `ObservationDao` permet d'insérer en masse des observations (volumétrie potentielle : 4000+ par passage), avec leur taxon Tadarida, probabilité, séquence rattachée, statut de validation, taxon observateur, commentaire.
 - [x] `TaxonDao` et `GroupeTaxonomiqueDao` permettent de gérer un référentiel des taxons (peuplé une fois pour toutes ou rafraîchi via un fichier de référence).
-- [x] Insertion en masse (bulk insert) optimisée pour ne pas freezer l'IHM (cf. [O3](../../Objectifs%20qualités/Objectifs%20qualités/O3.md)).
+- [x] Insertion en masse (bulk insert) optimisée pour ne pas freezer l'IHM (cf. [O3](../../Objectifs%20qualites/Objectifs%20qualites/O3.md)).
 - [ ] Tests d'intégration avec un jeu de données représentatif (au moins 1000 observations).
 
-**Parcours rattaché** : sert [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md)<br>
+**Parcours rattaché** : sert [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20resultats%20Tadarida.md)<br>
 **Maquettes cibles** : aucune (DAO pur)<br>
 **Dépendances** : [E0.S1](#e0s1), [E0.S3](#e0s3)<br>
 
@@ -150,19 +150,19 @@
 
 **En tant que** [Marie](../Personas/Marie.md) ou [Samuel](../Personas/Samuel.md)
 
-**Je veux** que ma session de validation Tadarida ([P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md)), si je la quitte avant la fin, puisse être reprise plus tard exactement là où je l'avais laissée
+**Je veux** que ma session de validation Tadarida ([P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20resultats%20Tadarida.md)), si je la quitte avant la fin, puisse être reprise plus tard exactement là où je l'avais laissée
 
 **Afin de** pouvoir étaler la validation sur plusieurs jours sans rien perdre
 
 **Critères d'acceptation** :
 
 - [ ] Le contexte de validation est persisté en BD : dernière observation vue, filtres actifs (taxon, groupe, seuil de probabilité, plage horaire), mode de validation choisi (inventaire/activité).
-    ✅ **Vérifié le 2026-08-05, aucune dérive** : `MemoireFiltres` se déclare mémoire **de session** (singleton Guice, #484 généralisé en #3098). Les filtres survivent à un changement d'écran, pas à un redémarrage. La case est donc légitimement décochée, et [E7](E7%20-%20Valider%20les%20r%C3%A9sultats%20Tadarida.md) l'énonce déjà.
+    ✅ **Vérifié le 2026-08-05, aucune dérive** : `MemoireFiltres` se déclare mémoire **de session** (singleton Guice, #484 généralisé en #3098). Les filtres survivent à un changement d'écran, pas à un redémarrage. La case est donc légitimement décochée, et [E7](E7%20-%20Valider%20les%20resultats%20Tadarida.md) l'énonce déjà.
 - [ ] Au retour sur l'écran de validation pour le même passage, le contexte est restauré automatiquement.
 - [x] Les observations déjà validées ou corrigées sont persistées et conservent leur statut.
 - [ ] Test d'intégration : validation partielle, fermeture, réouverture, vérification de la restauration.
 
-**Parcours rattaché** : transverse à [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md)<br>
+**Parcours rattaché** : transverse à [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20resultats%20Tadarida.md)<br>
 **Maquettes cibles** : [M-SonsValidation](../Maquettes/M-SonsValidation.md) (la vue de validation doit indiquer si une session est restaurée)<br>
 **Dépendances** : [E0.S1](#e0s1), [E0.S5](#e0s5), E7 (la validation elle-même)<br>
 
@@ -249,11 +249,11 @@
 **Critères d'acceptation** :
 
 - [x] Un **audit en lecture seule** vérifie, par passage, la présence disque, le préfixe attendu et la cohérence des unités déposées, plus un **balayage inverse** des orphelins ; **en ligne**, il confronte le dépôt au serveur et se **dégrade proprement hors connexion**.
-- [x] L'audit confronte aussi les **dérivations d'une même donnée** quand elles peuvent se contredire : le **département** d'un point, lu par son carré ([R1](../Modèle%20conceptuel/Règles%20métier.md#r1)) et par sa commune ([C3](../Modèle%20conceptuel/C3%20-%20Point%20d'écoute.md)). Le carroyage national ignorant les limites administratives ([R26](../Modèle%20conceptuel/Règles%20métier.md#r26)), l'écart est **souvent légitime** : le constat le **montre sans le juger**, en **information**, et ne fait donc jamais échouer l'audit.
+- [x] L'audit confronte aussi les **dérivations d'une même donnée** quand elles peuvent se contredire : le **département** d'un point, lu par son carré ([R1](../Modele%20conceptuel/Regles%20metier.md#r1)) et par sa commune ([C3](../Modele%20conceptuel/C3%20-%20Point%20d'ecoute.md)). Le carroyage national ignorant les limites administratives ([R26](../Modele%20conceptuel/Regles%20metier.md#r26)), l'écart est **souvent légitime** : le constat le **montre sans le juger**, en **information**, et ne fait donc jamais échouer l'audit.
 - [x] Un **bilan de récupérabilité** classe chaque nuit **Disque → Serveur → Perdu** (un **dépôt ZIP** est « perdu » côté serveur) en lisant le **mode de dépôt réel**, jamais présumé.
 - [x] Le **reset guidé** est ordonné : dire ce qu'on perdrait + acceptation, **exiger que la plateforme réponde avant de détruire**, sauvegarder, base neuve, repeupler depuis le serveur, audit final.
-- [x] Une nuit **« perdue »** reste navigable en **passage archivé**, réactivable plus tard ([E4.S6](E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s6)).
+- [x] Une nuit **« perdue »** reste navigable en **passage archivé**, réactivable plus tard ([E4.S6](E4%20-%20Preparer%20et%20tracer%20le%20depot%20VigieChiro.md#e4s6)).
 
 **Parcours rattaché** : transverse (maintenance)<br>
 **Maquettes cibles** : *écran d'audit non maquetté* (cf. [#2382](https://github.com/echonuit/vigiechiro-pr-companion/issues/2382))<br>
-**Dépendances** : [E0.S1](#e0s1), [E9.S5](E9%20-%20Intégration%20plateforme%20VigieChiro.md#e9s5)<br>
+**Dépendances** : [E0.S1](#e0s1), [E9.S5](E9%20-%20Integration%20plateforme%20VigieChiro.md#e9s5)<br>

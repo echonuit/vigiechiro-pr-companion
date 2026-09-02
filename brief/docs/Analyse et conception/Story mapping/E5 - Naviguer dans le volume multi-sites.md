@@ -2,11 +2,11 @@
 
 [← Retour au sommaire story mapping](index.md) · **Parcours principal** : [P5 - Naviguer dans plusieurs sites et passages](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) (MUST de fait pour Karim et Samuel)
 
-**Portée** : permettre à l'utilisateur de **se repérer rapidement** dans un volume de plusieurs sites, points et passages, sans se perdre. C'est l'épopée qui transforme l'application d'un outil mono-site (où la barre latérale de [E1.S4](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s4) suffit) en un outil de production capable de tenir l'échelle de Karim (3 chantiers, 8 nuits par retour terrain) ou Samuel (24 enregistreurs × 40-50 nuits = **plus de 1 000 passages par saison**).
+**Portée** : permettre à l'utilisateur de **se repérer rapidement** dans un volume de plusieurs sites, points et passages, sans se perdre. C'est l'épopée qui transforme l'application d'un outil mono-site (où la barre latérale de [E1.S4](E1%20-%20Gerer%20ses%20sites%20et%20points%20de%20suivi.md#e1s4) suffit) en un outil de production capable de tenir l'échelle de Karim (3 chantiers, 8 nuits par retour terrain) ou Samuel (24 enregistreurs × 40-50 nuits = **plus de 1 000 passages par saison**).
 
 **Persona principal** : Karim et Samuel (Marie reste sur 1 site et n'a pas besoin de la majorité des stories de cette épopée).
 
-**Pré-requis** : [E0.S2](E0%20-%20Fondations%20de%20persistance.md#e0s2), [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E1](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md) (sites/points déclarés), [E2](E2%20-%20Importer%20et%20transformer%20une%20nuit.md) (passages importés).
+**Pré-requis** : [E0.S2](E0%20-%20Fondations%20de%20persistance.md#e0s2), [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E1](E1%20-%20Gerer%20ses%20sites%20et%20points%20de%20suivi.md) (sites/points déclarés), [E2](E2%20-%20Importer%20et%20transformer%20une%20nuit.md) (passages importés).
 
 ## E5.S1 - Vue arborescente des sites avec compteurs de passages par point { #e5s1 }
 
@@ -31,7 +31,7 @@
 
 **Parcours rattaché** : [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), étape 1<br>
 **Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (panneau gauche arborescent), [M-Sites](../Maquettes/M-Sites.md) (vue d'entrée également)<br>
-**Dépendances** : [E0.S2](E0%20-%20Fondations%20de%20persistance.md#e0s2), [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E1.S4](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s4)<br>
+**Dépendances** : [E0.S2](E0%20-%20Fondations%20de%20persistance.md#e0s2), [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E1.S4](E1%20-%20Gerer%20ses%20sites%20et%20points%20de%20suivi.md#e1s4)<br>
 
 ---
 
@@ -64,13 +64,13 @@
     - colonnes textuelles : input texte avec match partiel (Site, Point)
     - colonnes énumérées : multi-sélection (Statut d'avancement, Verdict)
     - colonnes dates : sélecteur de plage
-- [ ] Le tableau reste réactif jusqu'à au moins 500 lignes (cf. [O5](../../Objectifs%20qualités/Objectifs%20qualités/O5.md)) - pas de freeze IHM en tri/filtre.  *(non verifiable depuis le code)*
+- [ ] Le tableau reste réactif jusqu'à au moins 500 lignes (cf. [O5](../../Objectifs%20qualites/Objectifs%20qualites/O5.md)) - pas de freeze IHM en tri/filtre.  *(non verifiable depuis le code)*
 - [x] Le clic sur une ligne ouvre la fiche détail du passage.
 - [x] L'état des filtres et du tri est mémorisé en session (perdu au redémarrage, contrairement à la sélection d'écoute qui est persistée).
 
 **Parcours rattaché** : [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), étape 2<br>
 **Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (panneau principal en mode tableau)<br>
-**Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E4.S4](E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s4)<br>
+**Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E4.S4](E4%20-%20Preparer%20et%20tracer%20le%20depot%20VigieChiro.md#e4s4)<br>
 
 ---
 

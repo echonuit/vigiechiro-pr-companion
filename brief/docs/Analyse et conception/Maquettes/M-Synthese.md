@@ -2,7 +2,7 @@
 
 > **Type** : écran **« Synthèse de la nuit »** d'un passage (atteint depuis [M-Passage](M-Passage.md) pour un passage dont les résultats d'identification ont été importés).
 > **Persona principal** : [Marie](../Personas/Marie.md) (lire ce que sa nuit contient) et [Karim](../Personas/Karim.md) (replacer une nuit dans un contexte régional).
-> **Parcours couverts** : prolonge [P7 - Valider les résultats Tadarida](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md) et [P11 - Inventaire des espèces détectées](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20espèces%20détectées.md).
+> **Parcours couverts** : prolonge [P7 - Valider les résultats Tadarida](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20resultats%20Tadarida.md) et [P11 - Inventaire des espèces détectées](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20especes%20detectees.md).
 > **Issue** : #2351 (chantier #2348, lot 1).
 
 L'écran répond à une question que l'inventaire ne traite pas : **718 contacts de Pipistrelle de Kuhl, est-ce beaucoup ?** Il présente, pour la nuit courante, un tableau par espèce (contacts, fichiers distincts, groupe taxonomique) et une colonne **Activité** qui replace ce comptage dans un **référentiel** de saison, de région et de milieu, sous forme de quatre classes : Faible, Moyenne, Forte, Très forte.
@@ -188,7 +188,7 @@ Quand aucun référentiel n'est chargé (ressource absente, ou fonctionnalité d
 
 - **`TableView` JavaFX** avec une `cellFactory` dédiée pour la colonne Activité (pastille + bornes). La pastille porte un libellé, jamais une couleur seule.
 - **Référentiel dans `commun/model`** (`ReferentielActivite`), sans dépendance JavaFX, donc testable isolément. Agrégation à côté de `AgregationAnalyse` dans `analyse/model`.
-- **Ressource embarquée versionnée et datée**, avec sa provenance en en-tête de fichier : c'est une donnée de référence, soumise aux mêmes exigences de traçabilité que la liste des taxons ([C14](../Modèle%20conceptuel/C14%20-%20Taxon.md)).
+- **Ressource embarquée versionnée et datée**, avec sa provenance en en-tête de fichier : c'est une donnée de référence, soumise aux mêmes exigences de traçabilité que la liste des taxons ([C14](../Modele%20conceptuel/C14%20-%20Taxon.md)).
 - **Fonctionnalité optionnelle** (`referentiel-activite`) : l'écran doit rester cohérent quand elle est désactivée, d'où la variante ci-dessus.
 - **Export** : séparateur et encodage alignés sur les exports existants ; l'avertissement est recopié **dans le fichier**, pas seulement affiché avant l'écriture.
 - **Icônes** : `FontIcon` Ikonli, pas d'emoji (règle #700).

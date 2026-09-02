@@ -2,9 +2,9 @@
 
 > **Type** : onglet **« Matériel »** des Réglages. Première fiche de maquette portant sur cet écran, qui n'en avait aucune.
 > **Persona principal** : [Karim](../Personas/Karim.md) (un parc qui tourne sur plusieurs chantiers).
-> **Parcours couvert** : [P16 - Déclarer et retrouver son matériel](../Parcours%20utilisateurs/P16%20-%20Déclarer%20et%20retrouver%20son%20matériel.md).
+> **Parcours couvert** : [P16 - Déclarer et retrouver son matériel](../Parcours%20utilisateurs/P16%20-%20Declarer%20et%20retrouver%20son%20materiel.md).
 > **Issue** : #3847. **Cible non livrée** : l'écran n'existe pas, son état se lit sur l'issue.
-> **Concepts** : [C4 - Enregistreur](../Modèle%20conceptuel/C4%20-%20Enregistreur.md), [C4bis - Micro](../Modèle%20conceptuel/C4bis%20-%20Micro.md).
+> **Concepts** : [C4 - Enregistreur](../Modele%20conceptuel/C4%20-%20Enregistreur.md), [C4bis - Micro](../Modele%20conceptuel/C4bis%20-%20Micro.md).
 
 Le modèle conceptuel décrit ce parc depuis l'origine, et la base le tient. L'import lit le numéro de
 série dans le journal du capteur, si bien que **les enregistreurs sont déjà là** quand on ouvre cet

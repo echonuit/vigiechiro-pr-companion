@@ -2,7 +2,7 @@
 
 > **Type** : écran spécialisé, ouvert par une carte d'action de [M-Passage](M-Passage.md).
 > **Persona principal** : [Karim](../Personas/Karim.md) (une nuit d'un lot a échoué) et [Marie](../Personas/Marie.md) (« est-ce que ma nuit est bien arrivée ? »).
-> **Parcours couvert** : [P14 - Vérifier ce que la plateforme détient d'une nuit](../Parcours%20utilisateurs/P14%20-%20Vérifier%20ce%20que%20la%20plateforme%20détient%20d%27une%20nuit.md).
+> **Parcours couvert** : [P14 - Vérifier ce que la plateforme détient d'une nuit](../Parcours%20utilisateurs/P14%20-%20Verifier%20ce%20que%20la%20plateforme%20detient%20d%27une%20nuit.md).
 > **Issue** : #3845. **Cible non livrée** : l'écran n'existe pas, son état se lit sur l'issue.
 
 L'écran répond à une question posée depuis **une nuit précise** : que détient la plateforme, et en

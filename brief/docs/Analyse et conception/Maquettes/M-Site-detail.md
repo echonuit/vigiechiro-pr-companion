@@ -2,7 +2,7 @@
 
 > **Type** : vue de détail (atteinte par clic sur une carte de [M-Sites](M-Sites.md)).
 > **Persona principal** : [Marie](../Personas/Marie.md), partagée avec [Karim](../Personas/Karim.md). [Samuel](../Personas/Samuel.md) y accède ponctuellement ; sa vue de prédilection est [M-MultiSite](M-MultiSite.md).
-> **Parcours couverts** : [P1 - Déclarer un site de suivi](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md), [P12 - Récupérer une nuit déposée sur VigieChiro](../Parcours%20utilisateurs/P12%20-%20Récupérer%20une%20nuit%20déposée%20sur%20VigieChiro.md).
+> **Parcours couverts** : [P1 - Déclarer un site de suivi](../Parcours%20utilisateurs/P1%20-%20Declarer%20un%20site%20de%20suivi.md), [P12 - Récupérer une nuit déposée sur VigieChiro](../Parcours%20utilisateurs/P12%20-%20Recuperer%20une%20nuit%20deposee%20sur%20VigieChiro.md).
 
 Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identité (n° de carré, département, protocole, dates), ses points d'écoute (coordonnées GPS optionnelles) et l'historique des passages enregistrés sur ce site. C'est aussi depuis cet écran qu'on **modifie le site** (ajout/retrait de points, mise à jour des coordonnées GPS) et qu'on lance un import.
 
@@ -193,9 +193,9 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
 
 ### Annotations
 
-- **Bandeau d'infos clés** : la fiche d'identité du site (n° de carré, département déduit des 2 premiers chiffres du carré [R1](../Modèle%20conceptuel/Règles%20métier.md#r1), protocole, date de création, dernière nuit importée, total passages de l'année, et le **statut Vigie-Chiro** : lié ou non à la plateforme).
+- **Bandeau d'infos clés** : la fiche d'identité du site (n° de carré, département déduit des 2 premiers chiffres du carré [R1](../Modele%20conceptuel/Regles%20metier.md#r1), protocole, date de création, dernière nuit importée, total passages de l'année, et le **statut Vigie-Chiro** : lié ou non à la plateforme).
 - **L'écran détient le site, et le relit après l'avoir modifié** (#3672). Tout ce qui parle d'identité en dérive : le numéro affiché, le département qui s'en déduit, le titre, le contexte transmis à un passage qu'on ouvre d'ici, et la cible de « Voir sur la carte ». Or **le numéro de carré est modifiable** depuis « ✏ Modifier ». Recharger les listes ne suffit donc pas : l'écran doit **relire son site**, sans quoi il continue d'annoncer un carré qui n'existe plus sous ce numéro - et le propage aux écrans qu'il ouvre. Son **libellé dans la pile de navigation** se relibelle du même geste.
-- **Cartes points d'écoute** : pour A1 et B2 (géolocalisés), le lien vert **« GPS - voir sur la carte »**, précédé d'une **icône de validation**, ouvre la carte multi-sites centrée sur le point. Pour C3 (sans GPS), le lien ambré **« GPS manquant - placer sur la carte »**, précédé d'une **icône d'avertissement**, ouvre la carte sur le carré, **mode édition actif**, pour glisser le point à sa position ([R26](../Modèle%20conceptuel/Règles%20métier.md#r26), [R27](../Modèle%20conceptuel/Règles%20métier.md#r27)). Chaque carte indique le nombre de passages rattachés ; une carte qui en porte ne peut pas être supprimée ([R28](../Modèle%20conceptuel/Règles%20métier.md#r28)).
+- **Cartes points d'écoute** : pour A1 et B2 (géolocalisés), le lien vert **« GPS - voir sur la carte »**, précédé d'une **icône de validation**, ouvre la carte multi-sites centrée sur le point. Pour C3 (sans GPS), le lien ambré **« GPS manquant - placer sur la carte »**, précédé d'une **icône d'avertissement**, ouvre la carte sur le carré, **mode édition actif**, pour glisser le point à sa position ([R26](../Modele%20conceptuel/Regles%20metier.md#r26), [R27](../Modele%20conceptuel/Regles%20metier.md#r27)). Chaque carte indique le nombre de passages rattachés ; une carte qui en porte ne peut pas être supprimée ([R28](../Modele%20conceptuel/Regles%20metier.md#r28)).
 - **Tableau passages** : colonnes Date, Point, N° de passage, Statut, Verdict, Enregistreur, Déposé le. Le **statut** suit le cycle `Importé → Transformé → Vérifié → Prêt à déposer → Déposé` (couleur dérivée du statut).
 
 ### Interactions clés
@@ -207,10 +207,10 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
 | Bouton **🗺 Carte** | Ouvre [M-MultiSite](M-MultiSite.md) centré sur le carré du site |
 | Bouton **☁️ Ouvrir sur Vigie-Chiro** | Ouvre la fiche du site sur le portail web (si le site est lié à la plateforme) |
 | Bouton **✏ Modifier** | Ouvre le formulaire d'édition du site (mêmes champs que la création) |
-| Bouton **🗑 Supprimer** | Désactivé tant que des passages sont rattachés au site ([R28](../Modèle%20conceptuel/Règles%20métier.md#r28)) ; sinon confirmation |
+| Bouton **🗑 Supprimer** | Désactivé tant que des passages sont rattachés au site ([R28](../Modele%20conceptuel/Regles%20metier.md#r28)) ; sinon confirmation |
 | Menu **☰** | Choix des colonnes affichées (tableau des points) |
 | Lien **GPS / GPS manquant** d'une carte (icône de validation ou d'avertissement) | Ouvre la carte (voir / placer le point) |
-| **✏ / 🗑** d'une carte de point | Édite le point (modale) / le supprime (bloqué si passages, [R28](../Modèle%20conceptuel/Règles%20métier.md#r28)) |
+| **✏ / 🗑** d'une carte de point | Édite le point (modale) / le supprime (bloqué si passages, [R28](../Modele%20conceptuel/Regles%20metier.md#r28)) |
 | Double-clic sur une ligne du tableau | Ouvre [M-Passage](M-Passage.md) du passage sélectionné |
 
 ---
@@ -282,14 +282,14 @@ Activée par **+ Ajouter un point** ou par **✏ Modifier** d'une carte. Le code
 
 - Seul le **code de point** est obligatoire (étoile rouge `*`) ; le descriptif et les coordonnées GPS sont optionnels.
 - La **validation R2** (1 lettre + 1 chiffre) est faite à la saisie : un code mal formé passe le champ en rouge.
-- Les coordonnées GPS doivent tomber **dans le carré du site** ([R26](../Modèle%20conceptuel/Règles%20métier.md#r26)) ; sur la carte, le point se **place / se corrige au glisser**, contraint à sa maille.
+- Les coordonnées GPS doivent tomber **dans le carré du site** ([R26](../Modele%20conceptuel/Regles%20metier.md#r26)) ; sur la carte, le point se **place / se corrige au glisser**, contraint à sa maille.
 - Le bouton **+ Ajouter** devient **Enregistrer** en mode édition (valeurs pré-remplies).
 
 ---
 
 ## Variante - suppression de point bloquée
 
-Si on tente de supprimer un point qui porte des passages, l'opération est **bloquée** avec un message explicite ([R28](../Modèle%20conceptuel/Règles%20métier.md#r28)).
+Si on tente de supprimer un point qui porte des passages, l'opération est **bloquée** avec un message explicite ([R28](../Modele%20conceptuel/Regles%20metier.md#r28)).
 
 <div markdown="0">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" role="img" aria-label="Maquette M-Site-detail - Suppression de point bloquée" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #6b7785;">
@@ -330,7 +330,7 @@ Si on tente de supprimer un point qui porte des passages, l'opération est **blo
 
 ### Notes sur la suppression bloquée
 
-- L'application **n'autorise jamais** la suppression silencieuse de données rattachées ([R28](../Modèle%20conceptuel/Règles%20métier.md#r28)) : un point (ou un site) qui porte des passages est protégé.
+- L'application **n'autorise jamais** la suppression silencieuse de données rattachées ([R28](../Modele%20conceptuel/Regles%20metier.md#r28)) : un point (ou un site) qui porte des passages est protégé.
 - **« Voir passages »** ramène vers le tableau des passages du site pour identifier ce qu'il faudrait retirer en premier ; **« Compris »** ferme la modale sans rien faire.
 
 ## Notes pour l'implémentation
@@ -338,4 +338,4 @@ Si on tente de supprimer un point qui porte des passages, l'opération est **blo
 - La **fiche d'identité** et le **tableau des passages** sont calculés par le service (agrégation par site).
 - Le **tableau** supporte de nombreuses lignes sans pagination (un site très actif sur la saison) ; le tri se fait par en-tête de colonne.
 - Le **statut d'avancement** affiché est l'attribut persisté ; la couleur du badge en est **dérivée**, pas stockée.
-- **Points rapatriés** (récupération d'une nuit, [P12](../Parcours%20utilisateurs/P12%20-%20Récupérer%20une%20nuit%20déposée%20sur%20VigieChiro.md)) : la synchronisation « mes sites » ramène **tous** les points du carré Vigie-Chiro. La section « Points d'écoute » **masque par défaut** ceux qui sont rapatriés mais **sans passage**, repliés derrière un « **+ N rapatrié(s)** » qu'on déplie au besoin, pour ne montrer d'emblée que les points réellement utilisés. Un point rapatrié réapparaît dès qu'un passage l'y rattache.
+- **Points rapatriés** (récupération d'une nuit, [P12](../Parcours%20utilisateurs/P12%20-%20Recuperer%20une%20nuit%20deposee%20sur%20VigieChiro.md)) : la synchronisation « mes sites » ramène **tous** les points du carré Vigie-Chiro. La section « Points d'écoute » **masque par défaut** ceux qui sont rapatriés mais **sans passage**, repliés derrière un « **+ N rapatrié(s)** » qu'on déplie au besoin, pour ne montrer d'emblée que les points réellement utilisés. Un point rapatrié réapparaît dès qu'un passage l'y rattache.

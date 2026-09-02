@@ -4,7 +4,7 @@ import java.util.Objects;
 
 /// Résultat élémentaire d'une vérification de règle métier **non bloquante** ou **bloquante**.
 ///
-/// Le modèle conceptuel distingue deux familles de règles (cf. `Règles métier.md`) :
+/// Le modèle conceptuel distingue deux familles de règles (cf. `Regles metier.md`) :
 ///
 /// - les règles **SOFT** (ex. R3 : passage hors fenêtre, R4 : intervalle &lt; 1 mois) :
 /// l'application *alerte sans bloquer*, l'utilisateur reste libre de continuer ;

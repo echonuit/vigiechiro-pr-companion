@@ -2,7 +2,7 @@
 
 [← Retour au sommaire des parcours](index.md) · **Transverse** · accessible depuis tout écran
 
-> **Persona principal** : tous. **Objectifs qualité servis** : [O2 Facilité d'apprentissage](../../Objectifs%20qualités/Objectifs%20qualités/O2.md) (atteindre n'importe quel élément sans connaître l'arborescence).
+> **Persona principal** : tous. **Objectifs qualité servis** : [O2 Facilité d'apprentissage](../../Objectifs%20qualites/Objectifs%20qualites/O2.md) (atteindre n'importe quel élément sans connaître l'arborescence).
 
 Dès qu'un utilisateur gère plus de quelques sites, retrouver un site, un point ou un passage précis en naviguant écran par écran devient fastidieux. Une **recherche globale** est posée en haut à droite du bandeau de l'application, présente sur **tous les écrans**, et permet de **sauter directement** à l'élément voulu.
 

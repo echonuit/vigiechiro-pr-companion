@@ -2,7 +2,7 @@
 
 > **Type** : vue plein écran (carte « Espèces & observations » de l'accueil).
 > **Persona principal** : [Karim](../Personas/Karim.md), [Samuel](../Personas/Samuel.md) ([Marie](../Personas/Marie.md) ponctuellement).
-> **Parcours couverts** : [P11 - Inventaire des espèces détectées](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20espèces%20détectées.md).
+> **Parcours couverts** : [P11 - Inventaire des espèces détectées](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20especes%20detectees.md).
 
 L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite transversalement** les observations (toutes nuits confondues) pour répondre à « quelles espèces ai-je détectées, où, quand, combien ? ». Il est en **maître-détail** : un **inventaire** en haut (regroupé par espèce ou par carré), et en bas le **détail des observations** de l'élément sélectionné.
 
@@ -181,7 +181,7 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
 ### Annotations
 
 - **Onglets de vues + barre d'outils** (socle partagé, décrit une fois dans le [pattern visuel partagé](index.md)) : en tête, les **onglets de vues mémorisées** (**＋** pour en créer). En dessous, le sélecteur **Regrouper** (spécifique à cet écran) bascule l'inventaire entre **Par espèce** (montré ici) et **Par carré** (richesse spécifique par carré) ; un bouton **＋ Filtre** ajoute des **puces** (statut, période…) ; un champ de filtre texte ; le bouton **🗺️ Carte** (vers la [carte de répartition](#variante-mode-carte-choroplethe-de-richesse)) ; un bouton **Exporter** ; et le menu **☰** pour le **choix des colonnes**.
-- **Inventaire (par espèce)** : une ligne par espèce, avec son **groupe** taxonomique, ses compteurs (détections, passages, carrés, points) et sa **période** d'observation. L'espèce retenue pour chaque observation est le **taxon validé** s'il existe, sinon la **proposition Tadarida** (cf. [R17](../Modèle%20conceptuel/Règles%20métier.md#r17)) ; les pseudo-taxons « bruit » et « oiseau » sont exclus.
+- **Inventaire (par espèce)** : une ligne par espèce, avec son **groupe** taxonomique, ses compteurs (détections, passages, carrés, points) et sa **période** d'observation. L'espèce retenue pour chaque observation est le **taxon validé** s'il existe, sinon la **proposition Tadarida** (cf. [R17](../Modele%20conceptuel/Regles%20metier.md#r17)) ; les pseudo-taxons « bruit » et « oiseau » sont exclus.
 - **Détail (maître-détail)** : en sélectionnant une espèce, le panneau du bas liste **toutes ses observations** à travers les passages (passage, carré, point, proposition Tadarida + probabilité, votre taxon, statut). C'est la réponse à « où et quand ai-je détecté cette espèce ? », toutes nuits confondues.
 
 ### Interactions clés
@@ -341,7 +341,7 @@ Le bouton **« 🗺️ Carte »** remplace la table d'inventaire par une **carte
 
 - **Choroplèthe de richesse** (aucune espèce sélectionnée) : chaque carré est vert, l'opacité croît avec le **nombre d'espèces distinctes** détectées (de `peu` à `beaucoup`). Le survol d'un carré affiche `Carré N · site · X espèces · Y détections · période`.
 - **Répartition d'une espèce** (une espèce sélectionnée dans l'inventaire avant de basculer) : les carrés **où elle est présente** gardent leur couleur de richesse, les autres sont **atténués en gris** : on lit *où vit* l'espèce **et** la richesse de ces carrés.
-- L'emprise des carrés vient du **carroyage officiel** ([R26](../Modèle%20conceptuel/Règles%20métier.md#r26)) : le seul **numéro de carré** suffit, aucun GPS n'est requis. Un carré absent du carroyage reste dans le tableau mais **n'est pas tracé**. Le bouton **⤢** recadre la carte sur les carrés affichés.
+- L'emprise des carrés vient du **carroyage officiel** ([R26](../Modele%20conceptuel/Regles%20metier.md#r26)) : le seul **numéro de carré** suffit, aucun GPS n'est requis. Un carré absent du carroyage reste dans le tableau mais **n'est pas tracé**. Le bouton **⤢** recadre la carte sur les carrés affichés.
 
 ### Notes pour l'implémentation
 
@@ -349,4 +349,4 @@ Le bouton **« 🗺️ Carte »** remplace la table d'inventaire par une **carte
 - **Deux façons d'être à jour** : le retour ci-dessus couvre ce qu'une sous-activité a changé pendant que l'écran était masqué. Il ne couvre pas ce qui arrive **pendant** qu'on le regarde : un import Tadarida ajoute des observations sans qu'on ait bougé. L'écran suit donc aussi le **signal de mutation** du socle, qui l'avertit de toute écriture structurelle validée. Les deux coexistent : le premier voit les `update` (un verdict), le second les `insert` / `delete`.
 - **Maître-détail** : `SplitPane` vertical (inventaire ou carte en haut, observations en bas). La zone maître est un `StackPane` à trois états (table **Par espèce**, table **Par carré**, **carte de répartition**) ; le **regroupement** choisit la table, le bouton **« 🗺️ Carte »** bascule sur la carte.
 - **Carte de répartition** : réutilise le composant socle `CarteSites` (le même que [M-MultiSite](M-MultiSite.md)) ; la couleur des carrés (choroplèthe de richesse) est calculée côté `view`, le `ViewModel` restant agnostique de JavaFX.
-- **Taxon retenu** : taxon observateur si validé, sinon Tadarida ([R17](../Modèle%20conceptuel/Règles%20métier.md#r17)).
+- **Taxon retenu** : taxon observateur si validé, sinon Tadarida ([R17](../Modele%20conceptuel/Regles%20metier.md#r17)).

@@ -2,7 +2,7 @@
 
 > **Type** : vue plein écran (atteinte par la carte « Préparer le dépôt » depuis [M-Passage](M-Passage.md)).
 > **Persona principal** : tous. C'est l'**étape finale** de la chaîne fil rouge : la nuit est vérifiée, on la dépose sur Vigie-Chiro.
-> **Parcours couverts** : [P4 - Préparer le dépôt](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md).
+> **Parcours couverts** : [P4 - Préparer le dépôt](../Parcours%20utilisateurs/P4%20-%20Preparer%20un%20lot%20pret%20a%20deposer.md).
 > **Issue** : #2337 (recadrage de la maquette sur l'écran livré), chantier #2369.
 
 La vue déroule le dépôt en **quatre étapes** (un stepper les rappelle en tête), suivies de deux sections de suivi et d'entretien. Le chemin nominal est un **dépôt direct sur Vigie-Chiro depuis l'application** : elle crée la participation, téléverse les séquences au bon format, reprend sur coupure, puis on **lance l'analyse** Tadarida. L'ouverture du dossier pour un **dépôt navigateur** est un **repli** hors connexion, jamais le mode par défaut.
