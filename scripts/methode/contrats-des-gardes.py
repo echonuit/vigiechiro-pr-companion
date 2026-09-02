@@ -40,6 +40,7 @@ Usage :
     python3 scripts/methode/contrats-des-gardes.py --auto-test
 """
 
+import ast
 import pathlib
 import re
 import sys
@@ -133,21 +134,113 @@ def population(texte: str) -> str:
     return " + ".join(ecrits) if ecrits else "(non declaree)"
 
 
+VERDICTS_RENDUS = ("rapporte", "rapporte_plancher", "loupe")
+
+
+def numeros_adr(texte: str) -> list[str]:
+    """Les ADR que le garde rend, dans l ordre de ses appels de verdict.
+
+    **Par `ast`, et non par motif.** Une CHAINE qui cite un appel n en est pas un : une fixture
+    d auto-test portant `rapporte("0000", ...)` etait lue comme le verdict du garde, et
+    `verifie_verdicts_declares.py` s en trouvait releve sous l ADR 0000 au lieu de 5015 (#5103).
+
+    C est le defaut de #5032, ferme le meme jour dans `verifie-inventaires-ci.sh` : une MENTION
+    comptee pour un DISPATCH. La parade etait connue ici, `sans_docstring()` en temoigne, mais elle
+    ne retirait que la docstring de module ; une fixture n en est pas une.
+
+    La liste peut porter PLUSIEURS numeros, et c est une limite assumee plutot qu un choix
+    arbitraire : `4617-code-mort-et-zone-de-test.py` rend deux verdicts, un par zone.
+    """
+    try:
+        arbre = ast.parse(texte)
+    except SyntaxError:
+        return []
+    # Les constantes de module, pour resoudre `rapporte(ADR, ...)`.
+    constantes = {
+        cible.id: n.value.value
+        for n in ast.walk(arbre)
+        if isinstance(n, ast.Assign)
+        and isinstance(n.value, ast.Constant)
+        and isinstance(n.value.value, str)
+        for cible in n.targets
+        if isinstance(cible, ast.Name)
+    }
+    trouves = []
+    for n in ast.walk(arbre):
+        if not isinstance(n, ast.Call) or not n.args:
+            continue
+        nom = getattr(n.func, "id", None) or getattr(n.func, "attr", None)
+        if nom not in VERDICTS_RENDUS:
+            continue
+        premier = n.args[0]
+        if isinstance(premier, ast.Constant) and isinstance(premier.value, str):
+            valeur = premier.value
+        elif isinstance(premier, ast.Name):
+            valeur = constantes.get(premier.id)
+        else:
+            valeur = None
+        if valeur:
+            trouves.append((n.lineno, valeur))
+    # `ast.walk` parcourt en largeur : on retablit l ordre de la SOURCE, sinon le premier numero
+    # rendu dependrait de la profondeur du noeud et non de ce que le garde ecrit en premier.
+    vus = []
+    for _, valeur in sorted(trouves):
+        if valeur not in vus:
+            vus.append(valeur)
+    return vus
+
+
+def titre_verdict(texte: str) -> str | None:
+    """Le titre du PREMIER verdict rendu, lu par `ast` pour la meme raison que son numero.
+
+    Le motif le prenait dans la premiere chaine qui ressemblait a un appel : sur
+    `verifie_verdicts_declares.py`, il rendait « t », le titre de sa fixture d auto-test.
+    """
+    try:
+        arbre = ast.parse(texte)
+    except SyntaxError:
+        return None
+    litteraux, construits = [], []
+    for n in ast.walk(arbre):
+        if not isinstance(n, ast.Call) or len(n.args) < 2:
+            continue
+        nom = getattr(n.func, "id", None) or getattr(n.func, "attr", None)
+        if nom not in VERDICTS_RENDUS:
+            continue
+        second = n.args[1]
+        if isinstance(second, ast.Constant) and isinstance(second.value, str):
+            litteraux.append((n.lineno, second.value))
+        elif isinstance(second, ast.JoinedStr):
+            # Un titre CONSTRUIT : on rend ses parties litterales, l interpolation devenant « … »
+            # plutot qu un trou. `longueur-des-adr` rendrait sinon « corps d ADR au-dela de  mots »,
+            # dont la double espace ne dit pas qu il manque quelque chose.
+            morceaux = [p.value if isinstance(p, ast.Constant) else "…" for p in second.values]
+            construits.append((n.lineno, "".join(morceaux)))
+    # Un titre LITTERAL est prefere a un titre construit, meme s il vient plus loin dans la source :
+    # `loupe-4472` en porte deux, celui de sa branche a drapeau etant parametre. Trier par la seule
+    # ligne rendrait le moins informatif des deux.
+    if litteraux:
+        return min(litteraux)[1]
+    return min(construits)[1] if construits else None
+
+
 def numero_adr(texte: str) -> str | None:
-    """Le numero de l ADR, lu dans l appel de verdict puis, a defaut, dans la constante."""
-    appel = VERDICT.search(texte)
-    if appel:
-        if appel.group(1):
-            return appel.group(1)
-        constante = re.search(rf"^{re.escape(appel.group(2))} = \"([^\"]+)\"", texte, re.M)
-        if constante:
-            return constante.group(1)
+    """Le PREMIER numero d ADR que le garde rend, ou la constante a defaut d appel."""
+    vus = numeros_adr(texte)
+    if vus:
+        return vus[0]
     constante = CONSTANTE_ADR.search(texte)
     return constante.group(1) if constante else None
 
 
 def seuil(texte: str, decisions: pathlib.Path) -> str:
     """Le seuil declare par l ADR du garde, cliquet ou plancher."""
+    vus = numeros_adr(texte)
+    if len(vus) > 1:
+        # Un garde peut rendre PLUSIEURS verdicts, un par zone, et porter autant d ADR. Aucun
+        # contrat unique ne peut en choisir une : la limite se declare plutot que de se trancher
+        # au hasard du premier appel rencontre.
+        return f"({len(vus)} ADR : {', '.join(vus)})"
     numero = numero_adr(texte)
     if not numero:
         return "(pas d ADR declaree)"
@@ -189,13 +282,13 @@ def contrats(racine: pathlib.Path) -> dict:
         if source.name.startswith("_") or source.name in HORS_GARDES:
             continue
         texte = source.read_text(encoding="utf-8")
-        titre = VERDICT.search(texte)
+        titre = titre_verdict(texte)
         out[geste(source.name)] = {
             "fichier": source.name,
             "population": population(texte),
             "seuil": seuil(texte, decisions),
             "exemptions": exemptions(texte),
-            "verdict": (titre.group(3).strip() if titre else "(aucun verdict rendu)"),
+            "verdict": (titre.strip() if titre else "(aucun verdict rendu)"),
         }
     return out
 
@@ -240,6 +333,15 @@ def _auto_test() -> int:
         "le separateur ne separe pas deux gestes identiques",
         geste("verifie_apostrophe_droite.py") == geste("4368-apostrophe-droite.py"),
         True,
+    )
+    verifie(
+        "une CHAINE de fixture n est pas un appel",
+        numero_adr(
+            'ADR = "5015"\n'
+            'muet = \'rapporte("0000", "t", [])\'\n'
+            'sys.exit(rapporte(ADR, "le vrai verdict", []))\n'
+        ),
+        "5015",
     )
     verifie(
         "un identifiant en SLUG se lit comme un numero",
