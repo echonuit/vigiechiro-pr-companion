@@ -2,9 +2,9 @@
 
 [← Retour au sommaire des parcours](index.md) · **Section C - Après le dépôt & exploitation**
 
-> **Persona principal** : Karim / Samuel. **Objectifs qualité visés** : [O5 Capacité d'affichage](../../Objectifs%20qualités/Objectifs%20qualités/O5.md), confort de productivité.
+> **Persona principal** : Karim / Samuel. **Objectifs qualité visés** : [O5 Capacité d'affichage](../../Objectifs%20qualites/Objectifs%20qualites/O5.md), confort de productivité.
 
-Samuel a déployé un enregistreur sur le même point pendant **4 nuits successives** dans le cadre d'un passage Vigie-Chiro. Il vient de récupérer les résultats Tadarida pour les 4 nuits et entame la validation taxonomique (parcours [P7](P7%20-%20Valider%20les%20résultats%20Tadarida.md)). Il sait qu'une espèce détectée et validée sur la nuit 1 sera très probablement aussi présente sur les nuits 2, 3 et 4 - il veut **gagner du temps** en regroupant les nuits.
+Samuel a déployé un enregistreur sur le même point pendant **4 nuits successives** dans le cadre d'un passage Vigie-Chiro. Il vient de récupérer les résultats Tadarida pour les 4 nuits et entame la validation taxonomique (parcours [P7](P7%20-%20Valider%20les%20resultats%20Tadarida.md)). Il sait qu'une espèce détectée et validée sur la nuit 1 sera très probablement aussi présente sur les nuits 2, 3 et 4 - il veut **gagner du temps** en regroupant les nuits.
 
 1. Samuel ouvre la vue des sites et sélectionne un point. Il voit la liste des passages sur ce point pour la saison en cours, ordonnés chronologiquement.
 2. Il sélectionne plusieurs passages successifs (4 nuits) avec un Ctrl+clic ou en glissant la sélection.
@@ -18,10 +18,10 @@ Samuel a déployé un enregistreur sur le même point pendant **4 nuits successi
 
 ## Productivité
 
-Ce parcours **conditionne la productivité** des utilisateurs qui traitent beaucoup de passages (Karim, Samuel) : regrouper les nuits successives d'un même point évite de re-valider espèce par espèce sur chaque nuit. Il prolonge la validation Tadarida ([P7](P7%20-%20Valider%20les%20résultats%20Tadarida.md)) - d'autant plus utile que celle-ci est déjà bien avancée.
+Ce parcours **conditionne la productivité** des utilisateurs qui traitent beaucoup de passages (Karim, Samuel) : regrouper les nuits successives d'un même point évite de re-valider espèce par espèce sur chaque nuit. Il prolonge la validation Tadarida ([P7](P7%20-%20Valider%20les%20resultats%20Tadarida.md)) - d'autant plus utile que celle-ci est déjà bien avancée.
 
 ## Le point comme ligne de solde
 
-L'enrichissement annoncé ici est **livré** (#2356, EPIC #2349). Il ne rend pas ce parcours livré pour autant : le solde de saison compte les passages d'un point, il ne les **regroupe** pas pour une validation conjointe, qui reste la cible décrite ci-dessus et n'existe toujours pas (cf. [E8.S1](../Story%20mapping/E8%20-%20Productivité%20avancée%20Tadarida.md#e8s1)).
+L'enrichissement annoncé ici est **livré** (#2356, EPIC #2349). Il ne rend pas ce parcours livré pour autant : le solde de saison compte les passages d'un point, il ne les **regroupe** pas pour une validation conjointe, qui reste la cible décrite ci-dessus et n'existe toujours pas (cf. [E8.S1](../Story%20mapping/E8%20-%20Productivite%20avancee%20Tadarida.md#e8s1)).
 
 Le regroupement des nuits par point visait ici la **validation conjointe**. Le même axe sert à une autre question, et c'est celle-là qui a été livrée : combien de passages attendus ont été réalisés pour ce point, et lequel manque. Voir [M-Saison](../Maquettes/M-Saison.md) (#2356).

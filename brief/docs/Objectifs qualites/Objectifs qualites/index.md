@@ -1,0 +1,14 @@
+# Objectifs qualités
+
+Les objectifs qualités du *VigieChiro Companion* ordonnent les critères qualités les plus importants au regard du besoin exprimé par le client. Ils servent de boussole tout au long du développement.
+
+| Id | Description | Scénario | Critère de qualité | Catégorie |
+|---|---|---|---|---|
+| [O1](O1.md) | L'application doit fonctionner de manière identique sur les principaux systèmes d'exploitation utilisés par les naturalistes (Windows, Linux, macOS) sans installation système lourde. | | [Facilité d'installation](../Critere%20de%20qualite/Facilite%20d'installation.md) | [Portabilité](../Categorie%20de%20qualite/Portabilite.md) |
+| [O2](O2.md) | Un possesseur de PR sans formation informatique doit pouvoir réaliser le cycle complet (import → validation → export) après une démonstration de quinze minutes. | [SC1](../Scenario/SC1.md) | [Facilité d'apprentissage](../Critere%20de%20qualite/Facilite%20d'apprentissage.md) | [Convivialité](../Categorie%20de%20qualite/Convivialite.md) |
+| [O3](O3.md) | L'application doit gérer une session de plusieurs milliers de WAV (plusieurs Go) sans dégradation perceptible de la réactivité de l'interface. | | [Comportement dans la durée](../Critere%20de%20qualite/Comportement%20dans%20la%20duree.md) | [Efficience des performances](../Categorie%20de%20qualite/Efficience%20des%20performances.md) |
+| [O4](O4.md) | La lecture audio des évènements doit être transposée dans la bande audible (ralentissement ×10 ou ×20) sans clipping ni saut. | | [Exactitude fonctionnelle](../Critere%20de%20qualite/Exactitude%20fonctionnelle.md) | [Adéquation fonctionnelle](../Categorie%20de%20qualite/Adequation%20fonctionnelle.md) |
+| [O5](O5.md) | Le parcours d'un CSV de 4 000 observations doit s'effectuer sans latence (filtrage, tri, sélection en moins de 100 ms). | | [Capacité](../Critere%20de%20qualite/Capacite.md) | [Efficience des performances](../Categorie%20de%20qualite/Efficience%20des%20performances.md) |
+| [O6](O6.md) | L'architecture doit permettre l'ajout ultérieur de nouveaux protocoles VigieChiro (Carré, Pédestre, Routier, Point fixe) sans réécrire le cœur de l'application. | [SC3](../Scenario/SC3.md) | [Modularité](../Critere%20de%20qualite/Modularite.md) | [Maintenabilité](../Categorie%20de%20qualite/Maintenabilite.md) |
+| [O7](O7.md) | Les annotations saisies par l'utilisateur (validation, correction de taxon) ne doivent jamais être perdues, y compris en cas d'arrêt brutal de l'application. | | [Intégrité](../Critere%20de%20qualite/Integrite.md) | [Sécurité](../Categorie%20de%20qualite/Securite.md) |
+| [O8](O8.md) | Les identifiants d'observateur ou de participation présents dans les données VigieChiro ne doivent pas fuir hors de l'environnement local de l'utilisateur. | [SC2](../Scenario/SC2.md) | [Confidentialité](../Critere%20de%20qualite/Confidentialite.md) | [Sécurité](../Categorie%20de%20qualite/Securite.md) |

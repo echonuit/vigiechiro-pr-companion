@@ -2,13 +2,13 @@
 
 > **Type** : vue plein écran (atteinte par clic « Vérifier l'enregistrement » depuis [M-Passage](M-Passage.md)).
 > **Persona principal** : tous. C'est l'étape de **sound check global** que chaque utilisateur fait avant de déposer une nuit.
-> **Parcours couverts** : [P3 - Vérifier l'enregistrement par échantillonnage](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md).
+> **Parcours couverts** : [P3 - Vérifier l'enregistrement par échantillonnage](../Parcours%20utilisateurs/P3%20-%20Verifier%20l%27enregistrement%20par%20echantillonnage.md).
 
 L'écran est divisé en **2 colonnes** surmontant un **bandeau de décision en pied** : à gauche, la liste des séquences d'écoute échantillonnées avec, pour chacune, son état d'écoute et son **verdict par fichier son** ; à droite, le panneau de détail (info séquence + vue audio + **les trois boutons de verdict du fichier courant**). En pied, sur toute la largeur, le **verdict final du passage** : une valeur **proposée** (dérivée des verdicts par fichier), surchargeable, puis enregistrée. L'utilisateur enchaîne typiquement : clic sur une séquence → écoute → verdict du fichier (`Bon` / `Mauvais` / `Inexploitable`) → suivante ; le verdict final se recompose au fil de l'eau, et il l'enregistre quand il est prêt.
 
 > **Patron d'écoute partagé avec [M-SonsValidation](M-SonsValidation.md)** : les deux écrans réutilisent le **même composant d'écoute** (`AudioView` : sonogramme + spectrogramme) sous un squelette « liste ↔ écoute » commun. La différence porte sur le **mode métier** : ici un **verdict par fichier son** puis un **verdict final du passage** (mode *Vérification* par échantillonnage), là un **verdict par observation** (mode *Validation* taxonomique).
 
-> ✅ **Écran implémenté (chantier [#1524](https://github.com/echonuit/vigiechiro-pr-companion/issues/1524), lot 6).** Le modèle **cible** est en place : un **verdict par fichier son** (`Bon` / `Mauvais` / `Inexploitable`) saisi séquence par séquence, une **barre tricolore** qui en donne la répartition d'un coup d'œil, et un **verdict final du passage dérivé** et surchargeable (`OK` / `Utilisable` / `Inexploitable`, état initial `Non vérifié`) - cf. [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), [R13/R14](../Modèle%20conceptuel/Règles%20métier.md#r13) et le [glossaire](../Modèle%20conceptuel/Glossaire%20métier.md).
+> ✅ **Écran implémenté (chantier [#1524](https://github.com/echonuit/vigiechiro-pr-companion/issues/1524), lot 6).** Le modèle **cible** est en place : un **verdict par fichier son** (`Bon` / `Mauvais` / `Inexploitable`) saisi séquence par séquence, une **barre tricolore** qui en donne la répartition d'un coup d'œil, et un **verdict final du passage dérivé** et surchargeable (`OK` / `Utilisable` / `Inexploitable`, état initial `Non vérifié`) - cf. [P3](../Parcours%20utilisateurs/P3%20-%20Verifier%20l%27enregistrement%20par%20echantillonnage.md), [R13/R14](../Modele%20conceptuel/Regles%20metier.md#r13) et le [glossaire](../Modele%20conceptuel/Glossaire%20metier.md).
 
 ## Maquette principale - 12 séquences sur 30 écoutées, quelques verdicts par fichier posés
 
@@ -341,7 +341,7 @@ L'écran est divisé en **2 colonnes** surmontant un **bandeau de décision en p
     - **Lecteur audio** (barre sombre) : ⏮ ⏯ ⏭, minutage, volume.
     - **Votre verdict sur ce fichier** : trois boutons à contour coloré (`Bon` / `Mauvais` / `Inexploitable`) qui jugent **la séquence courante**. Celui du verdict déjà posé est mis en évidence ; désactivés tant qu'aucune séquence n'est sélectionnée.
 - **Pied - Verdict global du passage** (pleine largeur, sous les deux colonnes, pour signifier qu'il porte sur **toute la nuit**) :
-    - Une **puce « Proposé : X »** donne le verdict final **dérivé** des verdicts par fichier ([R13](../Modèle%20conceptuel/Règles%20métier.md#r13)).
+    - Une **puce « Proposé : X »** donne le verdict final **dérivé** des verdicts par fichier ([R13](../Modele%20conceptuel/Regles%20metier.md#r13)).
     - Trois boutons `OK` / `Utilisable` / `Inexploitable` **pré-remplis** par le proposé (surchargeables). Un « (surchargé) » apparaît sur la puce si le choix diffère du proposé.
     - **Commentaire** optionnel + bouton **« 💾 Enregistrer le verdict »**, qui persiste le verdict + commentaire et passe le passage au statut `Vérifié`.
 - **Pied de page** : raccourcis clavier harmonisés (↑/↓/Espace/O/D/J/⏎).
@@ -371,7 +371,7 @@ L'écran est divisé en **2 colonnes** surmontant un **bandeau de décision en p
 | **J** (clavier) ou clic rouge | Verdict global `Inexploitable` |
 | **⏎** (Entrée) ou clic Enregistrer | Persiste le verdict global (proposé ou surchargé) + commentaire, passe le passage au statut `Vérifié` |
 | Bouton **Personnaliser…** / **Régénérer** | Reconstitue la sélection (méthode + taille) ; **efface les verdicts par fichier** déjà saisis |
-| Verdict global **Inexploitable** | Le passage ne pourra pas être inclus dans un lot prêt à déposer ([R14](../Modèle%20conceptuel/Règles%20métier.md#r14)) ; il faudra le **requalifier** |
+| Verdict global **Inexploitable** | Le passage ne pourra pas être inclus dans un lot prêt à déposer ([R14](../Modele%20conceptuel/Regles%20metier.md#r14)) ; il faudra le **requalifier** |
 
 ---
 
@@ -453,7 +453,7 @@ Activée par le bouton **Personnaliser…** dans l'en-tête de la liste. Permet 
 
 ### Notes sur la modale de personnalisation
 
-- **Méthode** : 2 cards radio horizontales. RéparTemporel sélectionnée par défaut (cf. [R12](../Modèle%20conceptuel/Règles%20métier.md#r12)).
+- **Méthode** : 2 cards radio horizontales. RéparTemporel sélectionnée par défaut (cf. [R12](../Modele%20conceptuel/Regles%20metier.md#r12)).
 - **Taille** : slider 10-30, valeur courante affichée à droite (gros chiffre bleu).
 - **Aperçu impact** (encart jaune) : avertissement explicite que la régénération efface la progression d'écoute **et les verdicts par fichier**.
 - **Boutons** : Annuler (secondary) / Régénérer (primary).
@@ -463,7 +463,7 @@ Activée par le bouton **Personnaliser…** dans l'en-tête de la liste. Permet 
 - **TableView avec virtualisation** : la liste des séquences peut atteindre 30 lignes (taille max). JavaFX `TableView` gère nativement la virtualisation.
 - **Composant de vue audio fourni** : le bloc `sonogramme + spectrogramme + curseur synchronisé + boutons zoom` est un **composant JavaFX fourni** (cf. Contraintes techniques), partagé avec [M-SonsValidation](M-SonsValidation.md).
 - **Barre tricolore** : ce n'est **pas** un `ProgressBar` JavaFX (mono-couleur) mais une petite barre empilée maison (un `HBox` de segments colorés proportionnels aux comptes `Bon` / `Mauvais` / `Inexploitable`, le reste laissant voir le fond gris « non jugé »).
-- **Verdict par fichier vs verdict final** : les boutons `Bon` / `Mauvais` / `Inexploitable` posent un verdict **par séquence** (persisté aussitôt). Le **verdict final du passage** en est **dérivé** ([`AgregationVerdict`](../Modèle%20conceptuel/Règles%20métier.md#r13)) et **pré-remplit** les boutons `OK` / `Utilisable` / `Inexploitable` du pied, que l'utilisateur peut **surcharger** avant d'enregistrer.
+- **Verdict par fichier vs verdict final** : les boutons `Bon` / `Mauvais` / `Inexploitable` posent un verdict **par séquence** (persisté aussitôt). Le **verdict final du passage** en est **dérivé** ([`AgregationVerdict`](../Modele%20conceptuel/Regles%20metier.md#r13)) et **pré-remplit** les boutons `OK` / `Utilisable` / `Inexploitable` du pied, que l'utilisateur peut **surcharger** avant d'enregistrer.
 - **Synchronisation lecture ↔ progression** : le statut `écouté` est marqué dès le **début** de la lecture (pas à la fin), pour permettre de zapper rapidement.
 - **Persistance** : la sélection, son état d'écoute, les verdicts par fichier, le verdict final et le commentaire sont tous persistés en base. Au retour sur l'écran, on retrouve tout son contexte.
 - **Raccourcis clavier** (O/D/J/⏎/Espace/↑/↓) : implémentés via un filtre d'évènements clavier au niveau de la racine de la vue (phase de capture, pour que la barre d'espace lance la lecture même quand un bouton a le focus).

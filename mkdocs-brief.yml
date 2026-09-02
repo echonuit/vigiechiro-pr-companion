@@ -83,55 +83,55 @@ extra_css:
 
 nav:
   - Accueil: index.md
-  - 1. Présentation du projet: Présentation du projet.md
+  - 1. Présentation du projet: Presentation du projet.md
   - 2. Stack technique et architecture: Contraintes techniques.md
   - 3. Objectifs qualités:
-      - Vue d'ensemble: Objectifs qualités/index.md
-      - Catégories ISO 25010: Objectifs qualités/Catégorie de qualité.md
-      - Critères ISO 25010: Objectifs qualités/Critère de qualité.md
+      - Vue d'ensemble: Objectifs qualites/index.md
+      - Catégories ISO 25010: Objectifs qualites/Categorie de qualite.md
+      - Critères ISO 25010: Objectifs qualites/Critere de qualite.md
       - Objectifs:
-          - Vue d'ensemble: Objectifs qualités/Objectifs qualités/index.md
-          - O1 - Portabilité multi-OS: Objectifs qualités/Objectifs qualités/O1.md
-          - O2 - Facilité d'apprentissage: Objectifs qualités/Objectifs qualités/O2.md
-          - O3 - Tenue dans la durée: Objectifs qualités/Objectifs qualités/O3.md
-          - O4 - Exactitude lecture audio: Objectifs qualités/Objectifs qualités/O4.md
-          - O5 - Capacité CSV: Objectifs qualités/Objectifs qualités/O5.md
-          - O6 - Modularité protocoles: Objectifs qualités/Objectifs qualités/O6.md
-          - O7 - Intégrité annotations: Objectifs qualités/Objectifs qualités/O7.md
-          - O8 - Confidentialité identifiants: Objectifs qualités/Objectifs qualités/O8.md
+          - Vue d'ensemble: Objectifs qualites/Objectifs qualites/index.md
+          - O1 - Portabilité multi-OS: Objectifs qualites/Objectifs qualites/O1.md
+          - O2 - Facilité d'apprentissage: Objectifs qualites/Objectifs qualites/O2.md
+          - O3 - Tenue dans la durée: Objectifs qualites/Objectifs qualites/O3.md
+          - O4 - Exactitude lecture audio: Objectifs qualites/Objectifs qualites/O4.md
+          - O5 - Capacité CSV: Objectifs qualites/Objectifs qualites/O5.md
+          - O6 - Modularité protocoles: Objectifs qualites/Objectifs qualites/O6.md
+          - O7 - Intégrité annotations: Objectifs qualites/Objectifs qualites/O7.md
+          - O8 - Confidentialité identifiants: Objectifs qualites/Objectifs qualites/O8.md
       - Scénarios:
-          - Vue d'ensemble: Objectifs qualités/Scénario/index.md
-          - SC1 - Onboarding: Objectifs qualités/Scénario/SC1.md
-          - SC2 - Aucune fuite d'identifiants: Objectifs qualités/Scénario/SC2.md
-          - SC3 - Ajout d'un protocole: Objectifs qualités/Scénario/SC3.md
-          - SC4 - Internationalisation: Objectifs qualités/Scénario/SC4.md
+          - Vue d'ensemble: Objectifs qualites/Scenario/index.md
+          - SC1 - Onboarding: Objectifs qualites/Scenario/SC1.md
+          - SC2 - Aucune fuite d'identifiants: Objectifs qualites/Scenario/SC2.md
+          - SC3 - Ajout d'un protocole: Objectifs qualites/Scenario/SC3.md
+          - SC4 - Internationalisation: Objectifs qualites/Scenario/SC4.md
   - 4. Expression du besoin: Expression du besoin.md
   - 5. Analyse et conception:
       - Vue d'ensemble: Analyse et conception/index.md
       - Modèle conceptuel:
-          - Vue d'ensemble: Analyse et conception/Modèle conceptuel/index.md
-          - C1 - Utilisateur: Analyse et conception/Modèle conceptuel/C1 - Utilisateur.md
-          - C2 - Site de suivi: Analyse et conception/Modèle conceptuel/C2 - Site de suivi.md
-          - C3 - Point d'écoute: Analyse et conception/Modèle conceptuel/C3 - Point d'écoute.md
-          - C4 - Enregistreur: Analyse et conception/Modèle conceptuel/C4 - Enregistreur.md
-          - C4bis - Micro: Analyse et conception/Modèle conceptuel/C4bis - Micro.md
-          - C5 - Passage: Analyse et conception/Modèle conceptuel/C5 - Passage.md
-          - C6 - Session d'enregistrement: Analyse et conception/Modèle conceptuel/C6 - Session d'enregistrement.md
-          - C7 - Enregistrement original: Analyse et conception/Modèle conceptuel/C7 - Enregistrement original.md
-          - C8 - Séquence d'écoute: Analyse et conception/Modèle conceptuel/C8 - Séquence d'écoute.md
-          - C9 - Journal du capteur: Analyse et conception/Modèle conceptuel/C9 - Journal du capteur.md
-          - C10 - Relevé climatique: Analyse et conception/Modèle conceptuel/C10 - Relevé climatique.md
-          - C11 - Sélection d'écoute: Analyse et conception/Modèle conceptuel/C11 - Sélection d'écoute.md
-          - C12 - Résultats d'identification: Analyse et conception/Modèle conceptuel/C12 - Résultats d'identification.md
-          - C13 - Observation: Analyse et conception/Modèle conceptuel/C13 - Observation.md
-          - C14 - Taxon: Analyse et conception/Modèle conceptuel/C14 - Taxon.md
-          - C15 - Groupe taxonomique: Analyse et conception/Modèle conceptuel/C15 - Groupe taxonomique.md
-          - C16 - Campagne: Analyse et conception/Modèle conceptuel/C16 - Campagne.md
-          - Cardinalités: Analyse et conception/Modèle conceptuel/Cardinalités.md
-          - Règles métier: Analyse et conception/Modèle conceptuel/Règles métier.md
-          - Glossaire métier: Analyse et conception/Modèle conceptuel/Glossaire métier.md
-          - Glossaire outils: Analyse et conception/Modèle conceptuel/Glossaire outils.md
-          - Diagramme plein écran: Analyse et conception/Modèle conceptuel/Diagramme - plein écran.md
+          - Vue d'ensemble: Analyse et conception/Modele conceptuel/index.md
+          - C1 - Utilisateur: Analyse et conception/Modele conceptuel/C1 - Utilisateur.md
+          - C2 - Site de suivi: Analyse et conception/Modele conceptuel/C2 - Site de suivi.md
+          - C3 - Point d'écoute: Analyse et conception/Modele conceptuel/C3 - Point d'ecoute.md
+          - C4 - Enregistreur: Analyse et conception/Modele conceptuel/C4 - Enregistreur.md
+          - C4bis - Micro: Analyse et conception/Modele conceptuel/C4bis - Micro.md
+          - C5 - Passage: Analyse et conception/Modele conceptuel/C5 - Passage.md
+          - C6 - Session d'enregistrement: Analyse et conception/Modele conceptuel/C6 - Session d'enregistrement.md
+          - C7 - Enregistrement original: Analyse et conception/Modele conceptuel/C7 - Enregistrement original.md
+          - C8 - Séquence d'écoute: Analyse et conception/Modele conceptuel/C8 - Sequence d'ecoute.md
+          - C9 - Journal du capteur: Analyse et conception/Modele conceptuel/C9 - Journal du capteur.md
+          - C10 - Relevé climatique: Analyse et conception/Modele conceptuel/C10 - Releve climatique.md
+          - C11 - Sélection d'écoute: Analyse et conception/Modele conceptuel/C11 - Selection d'ecoute.md
+          - C12 - Résultats d'identification: Analyse et conception/Modele conceptuel/C12 - Resultats d'identification.md
+          - C13 - Observation: Analyse et conception/Modele conceptuel/C13 - Observation.md
+          - C14 - Taxon: Analyse et conception/Modele conceptuel/C14 - Taxon.md
+          - C15 - Groupe taxonomique: Analyse et conception/Modele conceptuel/C15 - Groupe taxonomique.md
+          - C16 - Campagne: Analyse et conception/Modele conceptuel/C16 - Campagne.md
+          - Cardinalités: Analyse et conception/Modele conceptuel/Cardinalites.md
+          - Règles métier: Analyse et conception/Modele conceptuel/Regles metier.md
+          - Glossaire métier: Analyse et conception/Modele conceptuel/Glossaire metier.md
+          - Glossaire outils: Analyse et conception/Modele conceptuel/Glossaire outils.md
+          - Diagramme plein écran: Analyse et conception/Modele conceptuel/Diagramme - plein ecran.md
       - Personas:
           - Vue d'ensemble: Analyse et conception/Personas/index.md
           - Marie: Analyse et conception/Personas/Marie.md
@@ -139,38 +139,38 @@ nav:
           - Samuel: Analyse et conception/Personas/Samuel.md
       - Parcours utilisateurs:
           - Vue d'ensemble: Analyse et conception/Parcours utilisateurs/index.md
-          - P0 - Première nuit de Marie (fil rouge): Analyse et conception/Parcours utilisateurs/P0 - Première nuit de Marie.md
-          - P0 plein écran: Analyse et conception/Parcours utilisateurs/P0 - plein écran.md
-          - P1 - Déclarer un site de suivi: Analyse et conception/Parcours utilisateurs/P1 - Déclarer un site de suivi.md
+          - P0 - Première nuit de Marie (fil rouge): Analyse et conception/Parcours utilisateurs/P0 - Premiere nuit de Marie.md
+          - P0 plein écran: Analyse et conception/Parcours utilisateurs/P0 - plein ecran.md
+          - P1 - Déclarer un site de suivi: Analyse et conception/Parcours utilisateurs/P1 - Declarer un site de suivi.md
           - P2 - Importer une nuit d'enregistrement: Analyse et conception/Parcours utilisateurs/P2 - Importer une nuit d'enregistrement.md
-          - P3 - Vérifier l'enregistrement: Analyse et conception/Parcours utilisateurs/P3 - Vérifier l'enregistrement par échantillonnage.md
-          - P4 - Préparer le lot à déposer: Analyse et conception/Parcours utilisateurs/P4 - Préparer un lot prêt à déposer.md
+          - P3 - Vérifier l'enregistrement: Analyse et conception/Parcours utilisateurs/P3 - Verifier l'enregistrement par echantillonnage.md
+          - P4 - Préparer le lot à déposer: Analyse et conception/Parcours utilisateurs/P4 - Preparer un lot pret a deposer.md
           - P5 - Naviguer multi-sites: Analyse et conception/Parcours utilisateurs/P5 - Naviguer dans plusieurs sites et passages.md
-          - P6 - Diagnostiquer le matériel: Analyse et conception/Parcours utilisateurs/P6 - Diagnostiquer le matériel.md
-          - P7 - Valider les résultats Tadarida: Analyse et conception/Parcours utilisateurs/P7 - Valider les résultats Tadarida.md
+          - P6 - Diagnostiquer le matériel: Analyse et conception/Parcours utilisateurs/P6 - Diagnostiquer le materiel.md
+          - P7 - Valider les résultats Tadarida: Analyse et conception/Parcours utilisateurs/P7 - Valider les resultats Tadarida.md
           - P8 - Rechercher globalement: Analyse et conception/Parcours utilisateurs/P8 - Rechercher globalement.md
           - P9 - Regrouper les nuits par point: Analyse et conception/Parcours utilisateurs/P9 - Regrouper les nuits successives par point.md
-          - P10 - Exporter sons de référence: Analyse et conception/Parcours utilisateurs/P10 - Exporter une bibliothèque de sons de référence.md
-          - P11 - Inventaire des espèces: Analyse et conception/Parcours utilisateurs/P11 - Inventaire des espèces détectées.md
-          - P12 - Récupérer une nuit déposée: Analyse et conception/Parcours utilisateurs/P12 - Récupérer une nuit déposée sur VigieChiro.md
-          - P13 - Envoyer un sous-ensemble à un expert: Analyse et conception/Parcours utilisateurs/P13 - Envoyer un sous-ensemble à un expert.md
-          - P14 - Relever l'état sur la plateforme: Analyse et conception/Parcours utilisateurs/P14 - Vérifier ce que la plateforme détient d'une nuit.md
+          - P10 - Exporter sons de référence: Analyse et conception/Parcours utilisateurs/P10 - Exporter une bibliotheque de sons de reference.md
+          - P11 - Inventaire des espèces: Analyse et conception/Parcours utilisateurs/P11 - Inventaire des especes detectees.md
+          - P12 - Récupérer une nuit déposée: Analyse et conception/Parcours utilisateurs/P12 - Recuperer une nuit deposee sur VigieChiro.md
+          - P13 - Envoyer un sous-ensemble à un expert: Analyse et conception/Parcours utilisateurs/P13 - Envoyer un sous-ensemble a un expert.md
+          - P14 - Relever l'état sur la plateforme: Analyse et conception/Parcours utilisateurs/P14 - Verifier ce que la plateforme detient d'une nuit.md
           - P15 - Relire l'histoire d'une nuit: Analyse et conception/Parcours utilisateurs/P15 - Relire l'histoire d'une nuit.md
-          - P16 - Déclarer et retrouver son matériel: Analyse et conception/Parcours utilisateurs/P16 - Déclarer et retrouver son matériel.md
+          - P16 - Déclarer et retrouver son matériel: Analyse et conception/Parcours utilisateurs/P16 - Declarer et retrouver son materiel.md
           - P17 - Reprendre une nuit sur un autre poste: Analyse et conception/Parcours utilisateurs/P17 - Reprendre une nuit sur un autre poste.md
-          - Topologie plein écran: Analyse et conception/Parcours utilisateurs/Topologie - plein écran.md
+          - Topologie plein écran: Analyse et conception/Parcours utilisateurs/Topologie - plein ecran.md
       - Story mapping:
           - Vue d'ensemble: Analyse et conception/Story mapping/index.md
           - E0 - Fondations de persistance: Analyse et conception/Story mapping/E0 - Fondations de persistance.md
-          - E1 - Gérer ses sites et points de suivi: Analyse et conception/Story mapping/E1 - Gérer ses sites et points de suivi.md
+          - E1 - Gérer ses sites et points de suivi: Analyse et conception/Story mapping/E1 - Gerer ses sites et points de suivi.md
           - E2 - Importer et transformer une nuit: Analyse et conception/Story mapping/E2 - Importer et transformer une nuit.md
-          - E3 - Vérifier la qualité d'enregistrement: Analyse et conception/Story mapping/E3 - Vérifier la qualité d'enregistrement.md
-          - E4 - Préparer et tracer le dépôt VigieChiro: Analyse et conception/Story mapping/E4 - Préparer et tracer le dépôt VigieChiro.md
+          - E3 - Vérifier la qualité d'enregistrement: Analyse et conception/Story mapping/E3 - Verifier la qualite d'enregistrement.md
+          - E4 - Préparer et tracer le dépôt VigieChiro: Analyse et conception/Story mapping/E4 - Preparer et tracer le depot VigieChiro.md
           - E5 - Naviguer dans le volume multi-sites: Analyse et conception/Story mapping/E5 - Naviguer dans le volume multi-sites.md
-          - E6 - Diagnostiquer le matériel: Analyse et conception/Story mapping/E6 - Diagnostiquer le matériel.md
-          - E7 - Valider les résultats Tadarida: Analyse et conception/Story mapping/E7 - Valider les résultats Tadarida.md
-          - E8 - Productivité avancée Tadarida: Analyse et conception/Story mapping/E8 - Productivité avancée Tadarida.md
-          - E9 - Intégration plateforme VigieChiro: Analyse et conception/Story mapping/E9 - Intégration plateforme VigieChiro.md
+          - E6 - Diagnostiquer le matériel: Analyse et conception/Story mapping/E6 - Diagnostiquer le materiel.md
+          - E7 - Valider les résultats Tadarida: Analyse et conception/Story mapping/E7 - Valider les resultats Tadarida.md
+          - E8 - Productivité avancée Tadarida: Analyse et conception/Story mapping/E8 - Productivite avancee Tadarida.md
+          - E9 - Intégration plateforme VigieChiro: Analyse et conception/Story mapping/E9 - Integration plateforme VigieChiro.md
       - Maquettes:
           - Vue d'ensemble: Analyse et conception/Maquettes/index.md
           - M-Accueil: Analyse et conception/Maquettes/M-Accueil.md

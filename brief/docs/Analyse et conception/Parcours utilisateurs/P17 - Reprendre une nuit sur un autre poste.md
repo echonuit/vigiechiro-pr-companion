@@ -19,7 +19,7 @@ Deux mécanismes existent, et ni l'un ni l'autre ne répond :
 | Ce qui existe | Ce que cela fait | Pourquoi cela ne convient pas |
 |---|---|---|
 | Sauvegarde et restauration | copie la base entière et l'audio | tout ou rien : restaurer chez un collègue écrase son propre travail |
-| [P13 - Envoyer un sous-ensemble à un expert](P13%20-%20Envoyer%20un%20sous-ensemble%20à%20un%20expert.md) | une archive de séquences et un CSV filtré | conçu pour faire **écouter** ; rien ne se réimporte |
+| [P13 - Envoyer un sous-ensemble à un expert](P13%20-%20Envoyer%20un%20sous-ensemble%20a%20un%20expert.md) | une archive de séquences et un CSV filtré | conçu pour faire **écouter** ; rien ne se réimporte |
 
 Il n'y a donc rien entre l'installation complète et une sélection d'observations en lecture seule.
 

@@ -2,7 +2,7 @@
 
 > **Type** : vue de détail (atteinte par clic sur une ligne de passage dans [M-Site-detail](M-Site-detail.md) ou [M-MultiSite](M-MultiSite.md)).
 > **Persona principal** : tous. C'est l'écran pivot qui agrège les fonctionnalités liées à une nuit d'enregistrement spécifique.
-> **Parcours couverts** : transverse - point d'entrée vers [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md), [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md), [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md).
+> **Parcours couverts** : transverse - point d'entrée vers [P3](../Parcours%20utilisateurs/P3%20-%20Verifier%20l%27enregistrement%20par%20echantillonnage.md), [P4](../Parcours%20utilisateurs/P4%20-%20Preparer%20un%20lot%20pret%20a%20deposer.md), [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20materiel.md), [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20resultats%20Tadarida.md).
 
 C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une seule page, sans onglets). Il agrège, de haut en bas : l'en-tête (titre identifiant + actions sur le passage), un **bandeau d'identité** (date/plage, enregistreur, statut, verdict), le **indicateur d'étapes de statut d'avancement**, un **résumé de la nuit** (statistiques) et un jeu de **cartes d'actions « avancer »** vers les écrans spécialisés : [M-Qualification](M-Qualification.md) (vérifier), [M-Diagnostic](M-Diagnostic.md) (diagnostiquer), [M-Lot](M-Lot.md) (préparer le dépôt) et [M-SonsValidation](M-SonsValidation.md) (valider, verrouillée tant que le passage n'est pas déposé).
 
@@ -147,7 +147,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 | Bouton **🗑 Supprimer** | Confirmation forte (suppression de la nuit et des fichiers) ; refusée si le passage est déposé |
 | Bouton **🔗 Voir la participation** *(après dépôt)* | Ouvre la fiche de la participation sur la plateforme |
 | Bouton **↩ Annuler le dépôt** *(après dépôt)* | Ramène le passage à un état pré-dépôt (le dépôt en ligne n'est pas défait automatiquement) |
-| Bouton **♻ Réactiver ce passage** *(si archivé)* | Retrouve les fichiers d'un passage dont l'audio a été purgé ([E4.S6](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s6)) |
+| Bouton **♻ Réactiver ce passage** *(si archivé)* | Retrouve les fichiers d'un passage dont l'audio a été purgé ([E4.S6](../Story%20mapping/E4%20-%20Preparer%20et%20tracer%20le%20depot%20VigieChiro.md#e4s6)) |
 | Carte **🎧 Vérifier l'enregistrement** | Ouvre [M-Qualification](M-Qualification.md) (active dès que la nuit est transformée) |
 | Carte **🛠 Diagnostic matériel** | Ouvre [M-Diagnostic](M-Diagnostic.md) (toujours disponible : relevé climatique + journal) |
 | Carte **📦 Préparer le dépôt** | Ouvre [M-Lot](M-Lot.md) (active en phase de dépôt : `Vérifié` ou `Prêt à déposer`) |
@@ -160,10 +160,10 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 Le bouton **✏ Modifier le passage** ouvre une **modale** d'édition de l'**identité** du passage. Ce n'est pas un simple formulaire : changer ces valeurs **renomme tous les fichiers** de la session.
 
 - **Champs éditables** : **année** et **n° de passage** (le site et le point ne se changent pas ici) ; les valeurs courantes sont pré-remplies.
-- **Rattachement à une campagne** ([C16](../Modèle%20conceptuel/C16%20-%20Campagne.md)) : une liste déroulante des campagnes existantes, avec une entrée vide pour **détacher**. Sans conséquence sur les fichiers - c'est du rangement, pas de l'identité. La liste n'apparaît pas si la fonctionnalité `campagne` est désactivée.
-- **Case « participation opportuniste »** ([R34](../Modèle%20conceptuel/Règles%20métier.md#r34)) : déclare que la nuit a bien eu lieu mais **hors protocole**. La cocher retire le passage du décompte du [solde de saison](M-Saison.md) et rend muets les contrôles de fenêtre et d'intervalle pour lui. Là encore, aucun fichier n'est touché.
-- **Conséquence annoncée** : la modification recompose le **préfixe** `CarXXXXXX-AAAA-PassN-YY-` ([R6](../Modèle%20conceptuel/Règles%20métier.md#r6)) et **re-renomme** tous les enregistrements et séquences ([R7](../Modèle%20conceptuel/Règles%20métier.md#r7)) ; la modale l'explique avant de valider.
-- **Garde d'unicité** : la nouvelle combinaison `(Site, Point, Année, n° de passage)` doit rester **unique** ([R5](../Modèle%20conceptuel/Règles%20métier.md#r5)) ; une collision est refusée.
+- **Rattachement à une campagne** ([C16](../Modele%20conceptuel/C16%20-%20Campagne.md)) : une liste déroulante des campagnes existantes, avec une entrée vide pour **détacher**. Sans conséquence sur les fichiers - c'est du rangement, pas de l'identité. La liste n'apparaît pas si la fonctionnalité `campagne` est désactivée.
+- **Case « participation opportuniste »** ([R34](../Modele%20conceptuel/Regles%20metier.md#r34)) : déclare que la nuit a bien eu lieu mais **hors protocole**. La cocher retire le passage du décompte du [solde de saison](M-Saison.md) et rend muets les contrôles de fenêtre et d'intervalle pour lui. Là encore, aucun fichier n'est touché.
+- **Conséquence annoncée** : la modification recompose le **préfixe** `CarXXXXXX-AAAA-PassN-YY-` ([R6](../Modele%20conceptuel/Regles%20metier.md#r6)) et **re-renomme** tous les enregistrements et séquences ([R7](../Modele%20conceptuel/Regles%20metier.md#r7)) ; la modale l'explique avant de valider.
+- **Garde d'unicité** : la nouvelle combinaison `(Site, Point, Année, n° de passage)` doit rester **unique** ([R5](../Modele%20conceptuel/Regles%20metier.md#r5)) ; une collision est refusée.
 - **Confirmation forte** : l'opération touchant le disque, elle demande une confirmation explicite (**Enregistrer** / **Annuler**).
 
 ## Notes pour l'implémentation

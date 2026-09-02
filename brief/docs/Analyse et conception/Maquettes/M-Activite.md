@@ -2,7 +2,7 @@
 
 > **Type** : écran **« Activité »** d'un passage (atteint depuis [M-Passage](M-Passage.md) pour un passage dont les résultats d'identification ont été importés).
 > **Persona principal** : [Marie](../Personas/Marie.md) (comprendre la forme de sa nuit) et [Karim](../Personas/Karim.md) (repérer un dispositif douteux).
-> **Parcours couverts** : prolonge [P11 - Inventaire des espèces détectées](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20espèces%20détectées.md).
+> **Parcours couverts** : prolonge [P11 - Inventaire des espèces détectées](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20especes%20detectees.md).
 > **Issue** : #2352 (chantier #2348, lot 2).
 
 L'écran trace le **nombre de contacts par tranche horaire et par espèce**, sur un axe qui couvre la nuit et non la journée. Deux nuits à 300 contacts n'ont rien à voir selon que l'activité s'étale ou qu'elle tient en quarante minutes : c'est cette forme, effacée par le comptage total, que l'écran restitue.

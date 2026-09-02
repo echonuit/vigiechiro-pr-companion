@@ -2,7 +2,7 @@
 
 > **Type** : vue principale (atteinte depuis la carte « Mes sites » de l'accueil).
 > **Persona principal** : [Marie](../Personas/Marie.md), partagée avec [Karim](../Personas/Karim.md). [Samuel](../Personas/Samuel.md) bascule sur [M-MultiSite](M-MultiSite.md) pour sa volumétrie.
-> **Parcours couverts** : [P1 - Déclarer un site de suivi](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md), [P12 - Récupérer une nuit déposée sur VigieChiro](../Parcours%20utilisateurs/P12%20-%20Récupérer%20une%20nuit%20déposée%20sur%20VigieChiro.md).
+> **Parcours couverts** : [P1 - Déclarer un site de suivi](../Parcours%20utilisateurs/P1%20-%20Declarer%20un%20site%20de%20suivi.md), [P12 - Récupérer une nuit déposée sur VigieChiro](../Parcours%20utilisateurs/P12%20-%20Recuperer%20une%20nuit%20deposee%20sur%20VigieChiro.md).
 
 L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec pour chacun : le n° de carré, le nom convivial (et la commune), le nombre de points d'écoute, le nombre de passages enregistrés cette saison, et un badge de fraîcheur (date du dernier passage). Deux boutons sont toujours visibles en haut à droite : `+ Nouveau site` et `☁️ Récupérer depuis Vigie-Chiro`, qui **synchronise les sites et points depuis la plateforme** (utile après une réinstallation ou pour un compte déjà rempli côté web). Le clic sur une carte ouvre [M-Site-detail](M-Site-detail.md). L'écran est atteint depuis l'accueil ; le **fil d'Ariane** du chrome (`Accueil › Mes sites`) et la **recherche globale** sont posés dans le bandeau.
 
@@ -125,7 +125,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
 - **Bandeau (chrome)** : le titre, le **fil d'Ariane** (`Accueil › Mes sites`) et la **recherche globale** (champ « Rechercher », raccourci Ctrl+F, cf. [P8](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md)) sont communs à tous les écrans.
 - **Carte 1 (Carré 640380, Ahetze)** : le site en cours d'utilisation, en surbrillance (survol). Le badge vert « il y a 2 j » et « 1 à vérifier ⚠ » incitent à enchaîner sur la vérification.
 - **Carte 2 (Carré 131165, Marseille)** : site secondaire, dernier passage il y a quelques jours (badge orange).
-- **Carte 3 (Carré 131275, Calanques)** : site déclaré mais jamais utilisé (badge gris). Montre qu'on prépare un site avant la première nuit. Le carré et les coordonnées de chaque site sont **cohérents** (le préfixe du carré correspond au département des points, cf. [R26](../Modèle%20conceptuel/Règles%20métier.md#r26)).
+- **Carte 3 (Carré 131275, Calanques)** : site déclaré mais jamais utilisé (badge gris). Montre qu'on prépare un site avant la première nuit. Le carré et les coordonnées de chaque site sont **cohérents** (le préfixe du carré correspond au département des points, cf. [R26](../Modele%20conceptuel/Regles%20metier.md#r26)).
 
 ### Interactions clés
 
@@ -213,4 +213,4 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
     - orange si entre 7 et 30 jours,
     - gris si > 30 jours ou aucun passage.
 - Le **fil d'Ariane** et la **recherche globale** appartiennent au chrome (socle `commun`), partagés par tous les écrans.
-- **Points rapatriés** (récupération d'une nuit, [P12](../Parcours%20utilisateurs/P12%20-%20Récupérer%20une%20nuit%20déposée%20sur%20VigieChiro.md)) : la synchronisation « mes sites » ramène **tous** les points du carré Vigie-Chiro (la grille STOC peut en compter des dizaines). Le bandeau des points d'une carte **résume** ceux qui sont rapatriés mais **sans passage** (« A1 · B2 · C3  (+ N rapatrié(s)) ») plutôt que de les lister un à un, pour ne pas noyer les points réellement utilisés. Un point rapatrié réapparaît nommément dès qu'un passage l'y rattache.
+- **Points rapatriés** (récupération d'une nuit, [P12](../Parcours%20utilisateurs/P12%20-%20Recuperer%20une%20nuit%20deposee%20sur%20VigieChiro.md)) : la synchronisation « mes sites » ramène **tous** les points du carré Vigie-Chiro (la grille STOC peut en compter des dizaines). Le bandeau des points d'une carte **résume** ceux qui sont rapatriés mais **sans passage** (« A1 · B2 · C3  (+ N rapatrié(s)) ») plutôt que de les lister un à un, pour ne pas noyer les points réellement utilisés. Un point rapatrié réapparaît nommément dès qu'un passage l'y rattache.

@@ -19,9 +19,9 @@
 
 ## Sommaire
 
-1. [Présentation du projet](Présentation%20du%20projet.md)
+1. [Présentation du projet](Presentation%20du%20projet.md)
 2. [Stack technique et architecture](Contraintes%20techniques.md)
-3. [Objectifs qualités](Objectifs%20qualités/index.md)
+3. [Objectifs qualités](Objectifs%20qualites/index.md)
 4. [Expression du besoin](Expression%20du%20besoin.md)
 5. [**Analyse et conception**](Analyse%20et%20conception/index.md) (modèle conceptuel, personas, parcours utilisateurs, maquettes, story mapping)
 
@@ -35,7 +35,7 @@ Un **échantillon représentatif** d'une nuit (audio réduit + observations comp
 
 ### 🔵 Full dataset sur Zenodo
 
-**~4,2 Go zippés** (~11 Go décompressés) : 1572 WAV bruts + 2109 WAV redécoupés + 4031 observations Tadarida. Indispensable pour valider les stories de **volumétrie** ([O3](Objectifs%20qualités/Objectifs%20qualités/O3.md), [O5](Objectifs%20qualités/Objectifs%20qualités/O5.md)).
+**~4,2 Go zippés** (~11 Go décompressés) : 1572 WAV bruts + 2109 WAV redécoupés + 4031 observations Tadarida. Indispensable pour valider les stories de **volumétrie** ([O3](Objectifs%20qualites/Objectifs%20qualites/O3.md), [O5](Objectifs%20qualites/Objectifs%20qualites/O5.md)).
 
 !!! tip "Archive permanente : DOI Zenodo"
     La nuit complète est archivée sur Zenodo, DOI [10.5281/zenodo.20492247](https://doi.org/10.5281/zenodo.20492247) (lien permanent, accès libre) : c'est elle qui permet d'éprouver l'application sur les volumes réels.

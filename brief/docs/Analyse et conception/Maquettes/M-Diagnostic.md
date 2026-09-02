@@ -2,7 +2,7 @@
 
 > **Type** : écran **« Diagnostic matériel »** d'un passage (atteint depuis [M-Passage](M-Passage.md) pour un passage disposant d'un journal du capteur et/ou d'un relevé climatique).
 > **Persona principal** : [Karim](../Personas/Karim.md) et [Samuel](../Personas/Samuel.md) (exploitation pro, contrôle du parc d'enregistreurs).
-> **Parcours couverts** : [P6 - Diagnostiquer le matériel](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md).
+> **Parcours couverts** : [P6 - Diagnostiquer le matériel](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20materiel.md).
 
 L'écran présente, pour le passage courant, un **bilan technique** de la nuit : un **graphe climatique** (température / hygrométrie) issu du relevé de la sonde, la liste des **anomalies** détectées dans le journal du capteur (R19), le **journal** brut des évènements, la **cohérence horaire** (fenêtre nocturne réelle au point d'écoute, fenêtre exigée par le protocole et plage enregistrée), et l'état du **GPS du point d'écoute**. L'objectif : décider si un enregistreur doit être révisé.
 
@@ -155,7 +155,7 @@ Si la sonde est absente ou défaillante, la section climat **n'est pas masquée*
 | Survol d'un point du graphe | Infobulle : horodatage + valeur (T° / hygrométrie) |
 | Sélection d'une **anomalie** | Met en évidence l'entrée correspondante dans le journal |
 | Relevé climatique absent | Bandeau R20 + graphe vide, le reste du diagnostic reste exploitable |
-| Coordonnées GPS absentes | `lblGps` affiche « non renseigné » et invite à compléter la fiche site ([P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md)) |
+| Coordonnées GPS absentes | `lblGps` affiche « non renseigné » et invite à compléter la fiche site ([P1](../Parcours%20utilisateurs/P1%20-%20Declarer%20un%20site%20de%20suivi.md)) |
 
 ## Notes pour l'implémentation
 

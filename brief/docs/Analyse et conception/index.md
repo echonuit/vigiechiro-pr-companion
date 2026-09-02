@@ -4,7 +4,7 @@ Ce dossier rassemble la **conception** du produit, à partir de l'[expression du
 
 ## Sommaire
 
-1. [Modèle conceptuel](Modèle%20conceptuel/index.md) - les classes métier, leurs relations, les règles, les glossaires (un fichier par classe dans le sous-dossier)
+1. [Modèle conceptuel](Modele%20conceptuel/index.md) - les classes métier, leurs relations, les règles, les glossaires (un fichier par classe dans le sous-dossier)
 2. [Personas](Personas/index.md) - les 3 utilisateurs cibles de référence
 3. [Parcours utilisateurs](Parcours%20utilisateurs/index.md) - les trajectoires d'usage de l'application (un fichier par parcours)
 4. [Maquettes](Maquettes/index.md) - les écrans de l'application

@@ -152,9 +152,9 @@ C'est l'écran central de la chaîne de production. L'assistant est une **page u
 
 - **Section 1 (Dossier source)** : un dossier de carte SD, une copie disque, ou une **archive .zip** (décompressée d'abord). Le glisser-déposer d'un dossier ou d'un .zip n'importe où sur l'écran marche aussi.
 - **Section 2 (Inspection)** : en **lecture seule**, l'application détecte le journal du capteur, le relevé climatique, les WAV et l'état du nommage. Rien n'est modifié.
-- **Section 3 (Rattachement)** : site / point / année / n° de passage, **pré-remplis** depuis le dernier rattachement mémorisé pour cet enregistreur. La **carte** situe le carré et le point choisis (en indigo) ; un point sans GPS se place au centre de son carré ([R26](../Modèle%20conceptuel/Règles%20métier.md#r26), [R27](../Modèle%20conceptuel/Règles%20métier.md#r27)).
-    La section porte aussi une case **« Participation opportuniste »** ([R34](../Modèle%20conceptuel/Règles%20métier.md#r34)) : la nuit a bien eu lieu, mais hors protocole. C'est le bon endroit pour le déclarer, puisque c'est là qu'on désigne le carré. La case vaut pour **toutes les nuits de l'import** : une demande qui ne viserait qu'un carré, sur une carte multi-nuits, n'a pas de sens ici - elle se corrigerait passage par passage dans [M-Passage](M-Passage.md).
-- **Aperçu du préfixe** : montre le résultat exact appliqué aux fichiers ([R6](../Modèle%20conceptuel/Règles%20métier.md#r6), [R7](../Modèle%20conceptuel/Règles%20métier.md#r7)), à vérifier avant de cliquer.
+- **Section 3 (Rattachement)** : site / point / année / n° de passage, **pré-remplis** depuis le dernier rattachement mémorisé pour cet enregistreur. La **carte** situe le carré et le point choisis (en indigo) ; un point sans GPS se place au centre de son carré ([R26](../Modele%20conceptuel/Regles%20metier.md#r26), [R27](../Modele%20conceptuel/Regles%20metier.md#r27)).
+    La section porte aussi une case **« Participation opportuniste »** ([R34](../Modele%20conceptuel/Regles%20metier.md#r34)) : la nuit a bien eu lieu, mais hors protocole. C'est le bon endroit pour le déclarer, puisque c'est là qu'on désigne le carré. La case vaut pour **toutes les nuits de l'import** : une demande qui ne viserait qu'un carré, sur une carte multi-nuits, n'a pas de sens ici - elle se corrigerait passage par passage dans [M-Passage](M-Passage.md).
+- **Aperçu du préfixe** : montre le résultat exact appliqué aux fichiers ([R6](../Modele%20conceptuel/Regles%20metier.md#r6), [R7](../Modele%20conceptuel/Regles%20metier.md#r7)), à vérifier avant de cliquer.
 
 ### Interactions clés
 
@@ -163,7 +163,7 @@ C'est l'écran central de la chaîne de production. L'assistant est une **page u
 | Bouton **📂 Parcourir** / **🗜 .zip** / glisser-déposer | Choisit la source ; l'inspection se relance (lecture seule) |
 | Combobox **Site** : « + Créer un site » | Crée un site à la volée sans quitter l'import |
 | Modification du n° de passage / du point | Met à jour l'aperçu du préfixe et la carte |
-| Bouton **Annuler** | Revient en arrière ; aucun fichier touché ([R9](../Modèle%20conceptuel/Règles%20métier.md#r9)) |
+| Bouton **Annuler** | Revient en arrière ; aucun fichier touché ([R9](../Modele%20conceptuel/Regles%20metier.md#r9)) |
 | Bouton **📥 Importer cette nuit** | Lance copie vérifiée + renommage + transformation (variante « en cours » ci-dessous) |
 
 ---
@@ -314,12 +314,12 @@ Après le clic sur **📥 Importer cette nuit**, l'écran passe en mode progress
 ### Notes sur la progression
 
 - **Étapes** : copie vérifiée → renommage → transformation. La barre est **déterminée** (« X / N ») avec **temps restant estimé**.
-- **Fermer la fenêtre** : l'import continue en arrière-plan (le passage prendra le statut `Transformé`) ; **Annuler** interrompt et la session précédente est **restaurée** (remplacement atomique, [R29](../Modèle%20conceptuel/Règles%20métier.md#r29)).
-- **Import résilient** ([R29](../Modèle%20conceptuel/Règles%20métier.md#r29)) : un fichier source illisible (en-tête corrompu, fréquence non divisible par 10) est **rejeté individuellement** et consigné dans un **rapport** (importés / rejetés / non pertinents) à la fin, sans interrompre les autres.
+- **Fermer la fenêtre** : l'import continue en arrière-plan (le passage prendra le statut `Transformé`) ; **Annuler** interrompt et la session précédente est **restaurée** (remplacement atomique, [R29](../Modele%20conceptuel/Regles%20metier.md#r29)).
+- **Import résilient** ([R29](../Modele%20conceptuel/Regles%20metier.md#r29)) : un fichier source illisible (en-tête corrompu, fréquence non divisible par 10) est **rejeté individuellement** et consigné dans un **rapport** (importés / rejetés / non pertinents) à la fin, sans interrompre les autres.
 
 ## Avertissements d'inspection (non bloquants)
 
-À l'inspection, l'application **signale sans bloquer** ([R30](../Modèle%20conceptuel/Règles%20métier.md#r30)) ; l'utilisateur décide de poursuivre :
+À l'inspection, l'application **signale sans bloquer** ([R30](../Modele%20conceptuel/Regles%20metier.md#r30)) ; l'utilisateur décide de poursuivre :
 
 - **Mélange** : le dossier contient des fichiers de **plusieurs enregistreurs**. Un bandeau l'indique ; l'import reste possible.
 - **Incohérence** : le journal du capteur (n° de série, nuit) **contredit** les WAV (autre série / autre date). Bandeau rouge non bloquant.
@@ -329,5 +329,5 @@ Après le clic sur **📥 Importer cette nuit**, l'écran passe en mode progress
 
 - **Threading** : copie et transformation en **arrière-plan**, l'IHM ne gèle jamais ; la progression est mise à jour sur le fil JavaFX.
 - **Volumétrie** : tenir 40 Go sans freeze (cas Samuel).
-- **Remplacement atomique** ([R29](../Modèle%20conceptuel/Règles%20métier.md#r29)) : un import qui échoue (annulation, tous les WAV rejetés, erreur disque) **restaure** la session précédente ; rien n'est perdu.
+- **Remplacement atomique** ([R29](../Modele%20conceptuel/Regles%20metier.md#r29)) : un import qui échoue (annulation, tous les WAV rejetés, erreur disque) **restaure** la session précédente ; rien n'est perdu.
 - **N° de passage** : l'auto-incrément (max+1 pour ce point/année) est calculé à l'ouverture de l'écran.
