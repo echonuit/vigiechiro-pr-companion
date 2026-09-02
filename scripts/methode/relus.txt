@@ -1952,10 +1952,9 @@ fdd506b206bf  src/test/java/fr/univ_amu/iut/recette/FixtureMultiConfigsTest.java
 d46df2e869e3  src/test/java/fr/univ_amu/iut/recette/GenerateurCartesSD.java
 d36d168d30f5  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDCliquetTest.java
 4576ada12c8a  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDImportCliquetTest.java
-1eb784d025fb  src/test/java/fr/univ_amu/iut/recette/GesteVisible.java
+aac2091c9ebf  src/test/java/fr/univ_amu/iut/recette/GesteVisible.java
 e2160d2b8a89  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreImbriqueTest.java
 4159f62c57b5  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreTest.java
-f0af4caa910b  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCourseDeBornesTest.java
 17cebae60967  src/test/java/fr/univ_amu/iut/recette/InventaireDesSessionsTest.java
 d074a44cd5f7  src/test/java/fr/univ_amu/iut/recette/JournalDesReperes.java
 6d929019e49c  src/test/java/fr/univ_amu/iut/recette/JournalDesReperesTest.java
