@@ -144,6 +144,11 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
   complétude établi ; les deux suivantes disent « complétude inconnue ». C'est le cas ordinaire de R19
   sur le terrain - la carte tourne plusieurs nuits, le journal circulaire perd les plus anciennes - et
   c'est celui que la table présentait comme trois nuits complètes.
+- **S2-76** · *geste: un-reveil-par-bouton-au-compte-rendu* · `sd-reveil-bouton` : le journal porte « Wakeup by PINPUSH » au milieu de la nuit, l'observateur
+  étant venu regarder l'écran. Le compte rendu d'inspection **ne le signale pas** comme une anomalie,
+  et la table montre **une** nuit, complète. C'est ce que Samuel a rencontré sur ses cartes de Corse :
+  un geste volontaire porté au débit de son enregistreur, et une nuit de plus fabriquée à partir de
+  rien (#4981, corrigé en #5020).
 - **S2-45** · *geste: un-journal-absent-ou-corrompu* · `sd-journal-corrompu` : l'inspection échoue avec un message compréhensible.
 - **S2-46** · *geste: les-bandeaux-d-inspection-non-bloquants* · `sd-prefixee` : bandeau « discordance de préfixe » si le rattachement ne correspond pas.
 - **S2-47** · *geste: importer-malgre-des-rejets* · `sd-rejets` : l'import aboutit malgré le faux wav, la zone des rejets liste « nom - raison ».

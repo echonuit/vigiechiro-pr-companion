@@ -324,13 +324,18 @@ public class AgregatImportDao {
 
     /// Insère le journal du capteur 1:1 de la session (sensor_log).
     public void insererJournal(Connection cx, long idSession, JournalDuCapteur journal) throws SQLException {
-        try (PreparedStatement ps =
-                cx.prepareStatement("INSERT INTO sensor_log (file_path, parsed_events, detected_anomalies, session_id)"
-                        + " VALUES (?, ?, ?, ?)")) {
+        try (PreparedStatement ps = cx.prepareStatement("INSERT INTO sensor_log"
+                + " (file_path, parsed_events, detected_anomalies, night_completeness, session_id)"
+                + " VALUES (?, ?, ?, ?, ?)")) {
             ps.setString(1, journal.cheminFichier());
             ps.setString(2, journal.evenementsParses());
             ps.setString(3, journal.anomaliesDetectees());
-            ps.setLong(4, idSession);
+            // La complétude était CALCULÉE par `MoteurImport`, portée dans l'entité, et jetée ici :
+            // cet INSERT, écrit avant la migration V45, n'avait pas suivi la colonne. Toute nuit
+            // importée arrivait donc au diagnostic sans complétude, et le second encart de #5093 ne
+            // pouvait jamais rien dire (#5135).
+            ps.setString(4, journal.completude().name());
+            ps.setLong(5, idSession);
             ps.executeUpdate();
         }
     }

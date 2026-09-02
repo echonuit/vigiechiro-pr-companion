@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
@@ -1428,6 +1429,39 @@ class ServiceImportTest {
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("passage n°1");
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
+    }
+
+    @Test
+    @DisplayName("#5135 : la complétude calculée à l'inspection se relit EN BASE après l'import")
+    void la_completude_traverse_l_import_jusqu_a_la_base() throws IOException {
+        // Le trajet, et rien d'autre. Les deux extrémités étaient déjà tenues - `CompletudePersisteeTest`
+        // pour l'aller-retour du DAO, `GenerationCartesSDCliquetTest` pour le calcul - et c'est entre
+        // elles que la valeur disparaissait : l'INSERT de `AgregatImportDao` n'avait pas suivi la
+        // colonne ajoutée par la migration V45. La nuit arrivait au diagnostic sans complétude, et le
+        // second encart de #5093 ne pouvait jamais rien dire.
+        Path interrompue = racine.resolve("sd-interrompue");
+        Files.createDirectories(interrompue);
+        // Un journal qui NE SE REFERME PAS : ni « Passage en mode Veille », ni mise en veille. C'est ce
+        // que laisse une carte pleine, une batterie vide ou un arrêt subi.
+        Files.write(
+                interrompue.resolve("LogPR1925492.txt"),
+                JournalDeCapteur.lignes("1925492", LocalDate.of(2026, 4, 22), true, 384, false, true),
+                StandardCharsets.UTF_8);
+        Files.writeString(interrompue.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
+        ecrireWav(interrompue.resolve("PaRecPR1925492_20260422_203922.wav"));
+        ecrireWav(interrompue.resolve("PaRecPR1925492_20260422_204326.wav"));
+
+        ResultatImport resultat = service.importer(interrompue, idPoint, prefixe);
+
+        assertThat(journalDao.trouverParSession(resultat.session().id()))
+                .as("l'import doit avoir persisté un journal pour cette session")
+                .isPresent()
+                .get()
+                .extracting(fr.univ_amu.iut.passage.model.JournalDuCapteur::completude)
+                .as("la nuit s'est interrompue, l'inspection le sait, et la BASE doit le savoir aussi."
+                        + " `null` en base se relit INCONNUE, ce qui fait passer une nuit tronquée pour"
+                        + " une nuit dont on ne sait rien - et le diagnostic se tait (#5135)")
+                .isEqualTo(Completude.TRONQUEE);
     }
 
     private Path preparerCarteSD(Path dossier) throws IOException {

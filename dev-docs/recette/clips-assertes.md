@@ -378,6 +378,42 @@ Aucun de ces clips ne dit donc quoi que ce soit de la vitesse du produit.
 > porte cette question.
 
 
+
+## ScenarioReveilParBoutonTest
+
+Samuel est venu regarder l'écran de son enregistreur pendant la nuit. Le firmware sort alors de la
+veille pour le laisser agir, et écrit `Wakeup by PINPUSH`. Au retour, le diagnostic lui reprochait un
+« réveil non programmé » : son propre geste, porté à son débit.
+
+### S2-76 · `un_reveil_par_bouton_n_est_pas_une_anomalie`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioReveilParBoutonTest.un_reveil_par_bouton_n_est_pas_une_anomalie.mp4"></video>
+
+> Le remède **retire** une ligne, et une absence ne se filme pas. Le clip montre donc la **paire** :
+> le réveil paraît au journal des évènements, qui relate, et ne paraît pas aux anomalies, qui
+> accusent. Une liste d'anomalies vide, seule, prouverait aussi bien que le journal n'a pas été lu.
+
+> La carte est `sd-reveil-bouton` (#5126), dont le journal porte l'appui au milieu de la nuit.
+
+
+## ScenarioNuitInterrompueTest
+
+Une nuit peut s'arrêter avant son terme - carte pleine, batterie vide, arrêt subi - et rien ne le
+disait. Le diagnostic porte désormais un second encart sous la cohérence horaire.
+
+### S2-74 · `une_nuit_interrompue_le_dit`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioNuitInterrompueTest.une_nuit_interrompue_le_dit.mp4"></video>
+
+> Deux axes **distincts** sous la cohérence horaire : le premier dit si l'enregistrement couvre la
+> fenêtre exigée par le protocole, celui-ci s'il s'est interrompu. Une nuit peut porter les deux, et
+> les confondre reviendrait à taire l'un des deux faits.
+
+> Ce clip n'existait pas parce que le produit ne savait pas atteindre l'état : l'import jetait la
+> complétude une ligne avant la base (#5135). Il est donc, autant qu'une démonstration, la preuve que
+> le trajet est réparé.
 ## ScenarioDiagnosticPassageTest
 
 Le diagnostic est l'écran où l'on va voir **pourquoi** une nuit est ce qu'elle est. Le clip repart de
