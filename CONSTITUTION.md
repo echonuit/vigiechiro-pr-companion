@@ -248,7 +248,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A8 · La mutation mesure dès qu'un comportement est complet | 0 | 0 | **relecture seule** |
 | A9 · La dette se tient par un cliquet, pas par un nettoyage | 14 | 6 | `scripts/adr/2843-tiret-cadratin.py`, `PatronDuCliquetTest#tout_cliquet_passe_par_le_patron`, `scripts/adr/verifie_scripts.py`, et 10 autres |
 | A10 · Jamais de suppression d'avertissement | 0 | 0 | **relecture seule** |
-| A11 · L'assumé se déclare, il ne se contourne pas | 10 | 0 | **relecture seule** |
+| A11 · L'assumé se déclare, il ne se contourne pas | 10 | 0 | `scripts/adr/verifie_verdicts_declares.py` |
 | A12 · Rendre compte avant de conclure, et aucun échec silencieux | 9 | 5 | `scripts/adr/0008-echec-silencieux.py`, `.github/scripts/verifie-secret-winget.sh`, `RetourOperationTest#les_deux_causes_ne_se_melangent_pas`, et 5 autres |
 | A13 · Un refus dit ce qui manque, et ne conseille que le vérifié | 9 | 8 | `scripts/adr/2635-refus-sans-surface.py`, `AuditDepartementDuPointTest#legitime_et_suspecte_indiscernables`, `FiltresLieuTest#le_point_est_filtrable`, et 6 autres |
 | A14 · Un état n'est pas un compte rendu, et ils ne partagent pas de canal | 8 | 2 | `CompteRenduChiffreTest#ventilation_non_exhaustive_refusee`, `CauseLisibleTest#l_enveloppe_de_reflexion_ne_masque_pas_la_panne`, `scripts/adr/3947-message-enveloppe.py` |
@@ -269,10 +269,9 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 5 | 1 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py`, et 2 autres |
 | A31 · La prose visible se relit à l'humaniseur | 4 | 1 | `.github/scripts/verifie-corps-pr.sh`, `scripts/adr/4783-traces-d-outil.py` |
 
-**3 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
+**2 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
 
 - A8 · La mutation mesure dès qu'un comportement est complet
 - A10 · Jamais de suppression d'avertissement
-- A11 · L'assumé se déclare, il ne se contourne pas
 
 <!-- fin de la matrice engendree -->
