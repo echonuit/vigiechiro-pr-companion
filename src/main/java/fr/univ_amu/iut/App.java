@@ -130,6 +130,15 @@ public class App extends Application {
         // mesuré une ouverture sur deux à 600 px, le plancher, au lieu des 900 que la scène porte.
         // Jamais `setWidth`, qui figerait le Stage (voir `recette.FenetreDuBanc`).
         primaryStage.sizeToScene();
+
+        // Et on la RAMÈNE dans l'écran, parce que `show()` l'a centrée à sa taille du MOMENT (#5074).
+        // Quand la course ci-dessus la fait ouvrir au plancher, JavaFX la pose pour 900x600 ; la ligne
+        // précédente la fait ensuite grandir sans la recentrer, et elle sort par la droite et par le bas.
+        //
+        // `TailleOuverture` borne la taille, jamais la place : une fenêtre aussi large que l'écran mais
+        // posée de travers en sort quand même. C'est exactement ce que cette classe-là dit vouloir
+        // éviter, « une fenêtre dont le bas passe sous la barre des tâches, hors d'atteinte ».
+        primaryStage.centerOnScreen();
     }
 
     /// Rend le dossier de travail à la fermeture (#2731). Sans cela, le verrou ne serait relâché que
