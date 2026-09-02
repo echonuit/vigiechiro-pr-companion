@@ -21,7 +21,14 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_java
+from _commun import (
+    PRODUCTION,
+    RACINE_DEPOT,
+    RACINES,
+    imprime_contrat,
+    rapporte,
+    sans_commentaires_java,
+)
 
 # Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne
 # avant que la question ne se pose. La dette de qualite ne connait pas de code de seconde zone, et
@@ -68,7 +75,24 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
     return trouves
 
 
+CONTRAT = {
+    "geste": "capture : le geste qui ne se fait pas",
+    "population": "PRODUCTION + TESTS",
+    "dispositif": "cliquet",
+    "seuil": "0, polarite=descend",
+    "temoin": "scripts/adr/verifie_scripts.py#test_3053_capture_libelle",
+    "decision": "ADR 3053",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(
         rapporte("3053", "capture : le geste qui ne se fait pas", suspects(), lus=len(fichiers()))
     )

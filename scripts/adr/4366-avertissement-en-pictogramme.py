@@ -42,7 +42,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte
+from _commun import RACINE_DEPOT, imprime_contrat, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4366"
@@ -208,7 +208,24 @@ def par_fichier(listes: list[str]) -> list[tuple[int, str]]:
     return sorted(((v, k) for k, v in compte.items()), key=lambda m: (-m[0], m[1]))
 
 
+CONTRAT = {
+    "geste": "avertissement porte par un pictogramme",
+    "population": "les fichiers versionnes du depot, par git ls-files",
+    "dispositif": "cliquet",
+    "seuil": "0, polarite=descend",
+    "temoin": "scripts/adr/verifie_scripts.py#test_4366_avertissement_en_pictogramme",
+    "decision": "ADR 4366",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     listes = suspects()
     if "--releve" in sys.argv:
         groupes = par_fichier(listes)

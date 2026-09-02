@@ -36,7 +36,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte
+from _commun import RACINE_DEPOT, imprime_contrat, rapporte
 
 ADR = "4783"
 # Ancre sur le SCRIPT et non sur le repertoire courant : un chemin relatif ferait mesurer le depot
@@ -192,7 +192,24 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     return trouves
 
 
+CONTRAT = {
+    "geste": "trace d outil laissee par un collage non relu",
+    "population": "les fichiers versionnes du depot, par git ls-files",
+    "dispositif": "cliquet",
+    "seuil": "0, polarite=descend",
+    "temoin": "scripts/adr/verifie_scripts.py#test_4783_traces_d_outil",
+    "decision": "ADR 4783",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(
         rapporte(
             ADR, "traces d'outil laissees par un collage non relu", suspects(), lus=len(fichiers())
