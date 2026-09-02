@@ -17,7 +17,14 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_xml
+from _commun import (
+    PRODUCTION,
+    RACINE_DEPOT,
+    RACINES,
+    imprime_contrat,
+    rapporte,
+    sans_commentaires_xml,
+)
 
 # La styleClass ou l'fx:id, porté par la balise HBox elle-même, évoque un slot d'actions.
 # Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne
@@ -52,7 +59,24 @@ def suspects(sources: pathlib.Path | None = None) -> list[str]:
     return trouves
 
 
+CONTRAT = {
+    "geste": "slot d actions declare en HBox au lieu de FlowPane",
+    "population": "PRODUCTION + TESTS",
+    "dispositif": "cliquet",
+    "seuil": "2, polarite=descend",
+    "temoin": "scripts/adr/verifie_scripts.py#test_0037_slot_actions",
+    "decision": "ADR 0037",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(
         rapporte(
             "0037",

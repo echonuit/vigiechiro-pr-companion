@@ -30,7 +30,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import DECISIONS, rapporte
+from _commun import DECISIONS, RACINE_DEPOT, imprime_contrat, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4477"
@@ -95,5 +95,22 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     return [f"{nom}  {mots} mots ({mots - SEUIL} au-dela du seuil)" for mots, nom in mesures]
 
 
+CONTRAT = {
+    "geste": "corps d ADR au-dela du plafond de mots",
+    "population": "les ADR de dev-docs/decisions",
+    "dispositif": "cliquet",
+    "seuil": "58, polarite=descend",
+    "temoin": "scripts/adr/verifie_scripts.py#test_4477_longueur_des_adr",
+    "decision": "ADR 4477",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(rapporte(ADR, f"corps d'ADR au-dela de {SEUIL} mots", suspects(), lus=len(fichiers())))

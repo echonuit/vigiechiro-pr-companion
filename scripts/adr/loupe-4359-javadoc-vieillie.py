@@ -42,7 +42,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINES, loupe
+from _commun import RACINE_DEPOT, RACINES, imprime_contrat, loupe
 
 ADR = "4359"
 RACINE = pathlib.Path(__file__).resolve().parents[2]
@@ -157,7 +157,24 @@ def candidats(racine: pathlib.Path | None = None) -> list[str]:
     return trouves
 
 
+CONTRAT = {
+    "geste": "bloc sous cliquet dont le code a bouge apres la javadoc",
+    "population": "PRODUCTION + TESTS",
+    "dispositif": "loupe",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/verifie_scripts.py#test_loupe_4359_javadoc_vieillie",
+    "decision": "ADR 4359",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(
         loupe(
             ADR,

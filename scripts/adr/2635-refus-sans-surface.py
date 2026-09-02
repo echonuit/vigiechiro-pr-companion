@@ -21,7 +21,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION, rapporte, sans_commentaires_java
+from _commun import PRODUCTION, RACINE_DEPOT, imprime_contrat, rapporte, sans_commentaires_java
 
 # LA PRODUCTION SEULE, et c'est une exception assumee (ADR 4586).
 #
@@ -62,7 +62,24 @@ def suspects(sources: pathlib.Path = SOURCES) -> list[str]:
     return trouves
 
 
+CONTRAT = {
+    "geste": "refus de modele nommant une surface d IHM",
+    "population": "PRODUCTION",
+    "dispositif": "cliquet",
+    "seuil": "0, polarite=descend",
+    "temoin": "scripts/adr/verifie_scripts.py#test_2635_refus_sans_surface",
+    "decision": "ADR 2635",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(
         rapporte(
             "2635", "refus de modèle nommant une surface d'IHM", suspects(), lus=len(fichiers())

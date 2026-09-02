@@ -28,7 +28,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import TESTS, rapporte
+from _commun import RACINE_DEPOT, TESTS, imprime_contrat, rapporte
 
 SOURCES = [TESTS]
 
@@ -278,7 +278,24 @@ def sans_garde() -> list[str]:
     return orphelins
 
 
+CONTRAT = {
+    "geste": "tiret cadratin dans une source Java",
+    "population": "TESTS",
+    "dispositif": "cliquet",
+    "seuil": "1, polarite=descend",
+    "temoin": "scripts/adr/verifie_scripts.py#test_2843_tiret_cadratin",
+    "decision": "ADR 2843",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     code = rapporte("2843", "tiret cadratin dans une source Java", suspects(), lus=len(fichiers()))
 
     # Une zone déclare quatre champs, et un cinquième **optionnel** : le balayage non récursif, qui ne
