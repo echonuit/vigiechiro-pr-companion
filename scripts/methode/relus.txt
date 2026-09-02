@@ -186,7 +186,7 @@ fbf30790a4bb  src/main/java/fr/univ_amu/iut/cli/commande/CorrigerObservations.ja
 305c8df46a5c  src/main/java/fr/univ_amu/iut/cli/commande/CreerSite.java
 458204361d12  src/main/java/fr/univ_amu/iut/cli/commande/Deposer.java
 c06c3950b192  src/main/java/fr/univ_amu/iut/cli/commande/DeposerVigieChiro.java
-b9c94cf1f53d  src/main/java/fr/univ_amu/iut/cli/commande/Diagnostiquer.java
+113d31948fa1  src/main/java/fr/univ_amu/iut/cli/commande/Diagnostiquer.java
 1a231defbcc3  src/main/java/fr/univ_amu/iut/cli/commande/Discussion.java
 f6bf33df2d69  src/main/java/fr/univ_amu/iut/cli/commande/Emplacements.java
 a052f5d6924a  src/main/java/fr/univ_amu/iut/cli/commande/EmporterNuit.java
@@ -689,7 +689,7 @@ f67229c6c5ab  src/main/java/fr/univ_amu/iut/connexion/viewmodel/ConnexionViewMod
 b4dbbeca2cb9  src/main/java/fr/univ_amu/iut/diagnostic/model/AnalyseAnomalies.java
 aa53a8b7a399  src/main/java/fr/univ_amu/iut/diagnostic/model/AnalyseCoherenceHoraire.java
 d5f888dea84b  src/main/java/fr/univ_amu/iut/diagnostic/model/CoherenceHoraire.java
-50d42969748b  src/main/java/fr/univ_amu/iut/diagnostic/model/Diagnostic.java
+a169783f1467  src/main/java/fr/univ_amu/iut/diagnostic/model/Diagnostic.java
 367483c33358  src/main/java/fr/univ_amu/iut/diagnostic/model/ExportDiagnostic.java
 a5cfacc21bda  src/main/java/fr/univ_amu/iut/diagnostic/model/LectureJsonTableau.java
 c007723889a6  src/main/java/fr/univ_amu/iut/diagnostic/model/LectureThLog.java
@@ -697,9 +697,9 @@ c007723889a6  src/main/java/fr/univ_amu/iut/diagnostic/model/LectureThLog.java
 3983f4b83951  src/main/java/fr/univ_amu/iut/diagnostic/model/SerieClimatique.java
 9d1167fc29c3  src/main/java/fr/univ_amu/iut/diagnostic/model/ServiceDiagnostic.java
 b2259c4556f4  src/main/java/fr/univ_amu/iut/diagnostic/outils/CaptureDiagnostic.java
-c5d305db7000  src/main/java/fr/univ_amu/iut/diagnostic/view/DiagnosticController.java
+1e001de53598  src/main/java/fr/univ_amu/iut/diagnostic/view/DiagnosticController.java
 9fcf0dddc863  src/main/java/fr/univ_amu/iut/diagnostic/view/NavigationDiagnostic.java
-57a60edc26e6  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
+f5d9d66fe13f  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
 55e763ebf57a  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/PlagesHoraires.java
 72e4bf119771  src/main/java/fr/univ_amu/iut/importation/di/ImportationModule.java
 94bf5669367f  src/main/java/fr/univ_amu/iut/importation/model/AnalyseCoherence.java
