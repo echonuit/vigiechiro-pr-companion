@@ -230,6 +230,27 @@ correspondent pas) est signalée plus fermement :
 
 ![Cas « incohérence » : le journal ne correspond pas aux enregistrements (série et date).](../assets/captures/apercu-import-incoherence.png)
 
+### Une carte qui n'accepte plus l'écriture
+
+Si le support de la source est **monté en lecture seule**, l'inspection le dit. C'est le mode de fin
+de vie normal d'une carte SD : quand l'usure devient telle que l'écriture n'est plus fiable, son
+contrôleur bascule et n'accepte plus rien.
+
+Le message dit trois choses, dans cet ordre :
+
+- **l'import de cette nuit fonctionne.** Companion lit la carte et n'y écrit jamais, y compris pour
+  poser cette question - elle est posée au support, pas en essayant d'écrire dessus. Vos
+  enregistrements sont saufs ;
+- **le geste à faire** : vérifier le verrou de la carte s'il y en a un, puis essayer d'y créer un
+  dossier depuis votre ordinateur ;
+- **ce qui est en jeu**, qui est la **prochaine** nuit. Une carte qui n'accepte plus l'écriture
+  n'enregistrera rien sur le terrain, et c'est la seule chose qu'aucune correction ultérieure ne
+  rattrapera.
+
+Companion ne dit pas **pourquoi** le support est en lecture seule, et ne le dira pas : un petit
+verrou poussé sans y penser sur le côté de la carte donne exactement le même symptôme qu'une mémoire
+en fin de vie. C'est vous qui pouvez regarder.
+
 ### Des fichiers déjà préfixés
 
 Une carte peut avoir **déjà été traitée** - par vous, sur un autre poste, ou par quelqu'un d'autre. Ses
@@ -253,7 +274,8 @@ partiraient au dépôt sous le nom d'un **autre carré**. Deux issues :
 
 Chaque avertissement **détaille ce qui cloche** : les numéros de série trouvés pour un mélange, la
 série et la date en désaccord pour une incohérence, les passages déjà en base pour une nuit déjà
-importée. Vous n'avez pas à rouvrir le dossier pour savoir de quoi il s'agit.
+importée, le geste à faire pour un support en lecture seule. Vous n'avez pas à rouvrir le dossier pour
+savoir de quoi il s'agit.
 
 Dans les deux cas, l'import reste possible : à vous de vérifier que le dossier correspond bien à ce
 que vous attendez avant de continuer. Le cas de **plusieurs nuits** d'un même enregistreur, lui, n'est

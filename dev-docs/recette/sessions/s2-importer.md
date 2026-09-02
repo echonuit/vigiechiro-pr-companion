@@ -112,6 +112,16 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
 
 - **S2-40** · *geste: les-bandeaux-d-inspection-non-bloquants* · `sd-melange` : bandeau « mélange » (2 enregistreurs), non bloquant.
 - **S2-41** · *geste: les-bandeaux-d-inspection-non-bloquants* · `sd-incoherente` : bandeau « incohérence » journal↔wav (série et date), plus ferme.
+- **S2-71** · *geste: les-bandeaux-d-inspection-non-bloquants* · *(carte réellement protégée en écriture, ou volume monté en lecture seule pour
+  l'occasion)* · Un quatrième bandeau annonce que **le support est monté en lecture seule**. Il dit,
+  dans cet ordre : que l'import de cette nuit fonctionne, le geste à faire sur la carte, et que c'est
+  la **prochaine** nuit qui est en jeu. Il n'affirme aucune cause : un verrou mécanique poussé sans y
+  penser donne le même symptôme qu'une carte en fin de vie (#4991).
+- **S2-72** · *geste: les-bandeaux-d-inspection-non-bloquants* · *(même carte)* · **L'import aboutit**, avec ses fichiers et son passage. C'est le point
+  qui compte : le bandeau informe, il ne bloque pas. Companion lit la source et n'y écrit jamais (R9),
+  y compris pour poser cette question - elle est posée au **volume**, sans aucune écriture.
+- **S2-73** · *geste: les-bandeaux-d-inspection-non-bloquants* · Sur `sd-nominale`, ce quatrième bandeau **n'apparaît pas**. Un message qui paraîtrait
+  sur toutes les cartes est un message qu'on apprend à ignorer.
 - **S2-42** · *geste: une-carte-qui-porte-plusieurs-nuits* · `sd-multi-nuits` : la table des nuits apparaît (3 lignes, n° automatiques, cases Inclure).
 - **S2-43** · *geste: une-carte-qui-porte-plusieurs-nuits* · `sd-multi-configs` : deux nuits, et le capteur a été **reconfiguré entre les deux** (384 kHz puis
   256 kHz). Importer les deux, puis ouvrir chaque nuit : chacune annonce la fréquence

@@ -31,12 +31,41 @@ public final class AvertissementsInspection {
     private AvertissementsInspection() {}
 
     /// Assemble le compte rendu de l'inspection. Vide quand le dossier ne pose aucune question.
-    static CompteRendu rediger(AnalyseMelange melange, AnalyseCoherence coherence, List<PassageExistant> existants) {
+    static CompteRendu rediger(
+            AnalyseMelange melange,
+            AnalyseCoherence coherence,
+            List<PassageExistant> existants,
+            boolean sourceEnLectureSeule) {
         List<Constat> constats = new ArrayList<>();
         melangeConstat(melange).ifPresent(constats::add);
         coherenceConstat(coherence).ifPresent(constats::add);
         nuitExistanteConstat(existants).ifPresent(constats::add);
+        lectureSeuleConstat(sourceEnLectureSeule).ifPresent(constats::add);
         return constats.isEmpty() ? CompteRendu.de("", List.of()) : CompteRendu.de("", constats);
+    }
+
+    /// Le volume de la source est monté en **lecture seule** (#4991).
+    ///
+    /// Quatrième constat du même compte rendu, et le seul dont le coût est **à venir** : l'import de
+    /// cette nuit-ci aboutit, la source n'étant jamais modifiée (R9).
+    private static Optional<Constat> lectureSeuleConstat(boolean enLectureSeule) {
+        if (!enLectureSeule) {
+            return Optional.empty();
+        }
+        // La phrase dit ce qui a été MESURÉ - le volume est monté en lecture seule - et le geste qui
+        // s'ensuit. Jamais un pronostic de durée de vie ni une cause : le passage en lecture seule
+        // est le mode de fin de vie ordinaire d'une carte, mais ce peut aussi être un verrou
+        // mécanique poussé sans y penser, et l'observateur est le seul à pouvoir regarder.
+        return Optional.of(new Constat(
+                "Le support de cette source est monté en lecture seule : rien ne peut y être écrit.",
+                Severite.AVERTISSEMENT,
+                List.of(
+                        Detail.de("l'import de cette nuit fonctionne : Companion lit la source, il n'y"
+                                + " écrit jamais"),
+                        Detail.de("avant de repartir sur le terrain, vérifiez le verrou de la carte s'il"
+                                + " y en a un, puis essayez d'y créer un dossier depuis votre ordinateur"),
+                        Detail.de("si l'écriture reste impossible, la carte n'enregistrera pas la"
+                                + " prochaine nuit"))));
     }
 
     /// Les avertissements d'inspection **encore vrais une fois l'import fait** (#1488).

@@ -58,6 +58,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -188,6 +189,33 @@ class ServiceImportTest {
         assertThat(sequenceDao.findBySession(idSession)).hasSize(2);
         assertThat(originalDao.findBySession(idSession))
                 .allSatisfy(o -> assertThat(o.frequenceEchantillonnageHz()).isEqualTo(FREQUENCE_WAV));
+    }
+
+    @Test
+    @DisplayName("#4991 : un import depuis une source en LECTURE SEULE aboutit, avec ses fichiers")
+    void import_depuis_une_source_en_lecture_seule_aboutit() throws IOException {
+        // LE garde de ce lot, et il ne porte pas sur le message. Signaler une carte en lecture seule
+        // n'a de valeur que si l'import continue de fonctionner : le renommage opère dans le
+        // workspace, jamais sur la carte (R9), donc rien ne l'empêche. Si ce test rougit, le remède a
+        // transformé une information en obstacle, ce qui serait PIRE que le silence d'avant.
+        //
+        // La source est rendue non inscriptible par ses permissions, faute de pouvoir monter un
+        // volume en lecture seule depuis un banc. Ce n'est pas le même mécanisme que celui qu'on
+        // détecte - le drapeau du volume - et c'est voulu : ce test-ci n'éprouve pas la détection,
+        // il éprouve que l'import n'a jamais eu besoin d'écrire sur la carte.
+        Files.setPosixFilePermissions(sd, PosixFilePermissions.fromString("r-xr-xr-x"));
+        try {
+            ResultatImport resultat = service.importer(sd, idPoint, prefixe);
+
+            assertThat(resultat.passage().id()).isNotNull();
+            assertThat(resultat.passage().statutWorkflow()).isEqualTo(StatutWorkflow.TRANSFORME);
+            assertThat(resultat.nombreOriginaux()).isEqualTo(2);
+            assertThat(resultat.nombreSequences()).isEqualTo(2);
+        } finally {
+            // Sans quoi @TempDir ne peut pas effacer la carte, et l'échec du nettoyage masquerait le
+            // verdict du test.
+            Files.setPosixFilePermissions(sd, PosixFilePermissions.fromString("rwxr-xr-x"));
+        }
     }
 
     /// Volume des deux WAV d'une nuit préparée par [#preparerCarteSD] : le « lu sur la carte » attendu
