@@ -706,7 +706,6 @@ c5d305db7000  src/main/java/fr/univ_amu/iut/diagnostic/view/DiagnosticController
 f9cc636c0690  src/main/java/fr/univ_amu/iut/importation/model/AnalyseurLogPR.java
 d525e43a76d0  src/main/java/fr/univ_amu/iut/importation/model/ApercuEcrasement.java
 23031f79618b  src/main/java/fr/univ_amu/iut/importation/model/BornesExtraction.java
-2670b415fb75  src/main/java/fr/univ_amu/iut/importation/model/Completude.java
 4ca9b00fcac9  src/main/java/fr/univ_amu/iut/importation/model/ConfigurationAcquisition.java
 7e01a1f9f142  src/main/java/fr/univ_amu/iut/importation/model/ContexteImport.java
 823d92804f93  src/main/java/fr/univ_amu/iut/importation/model/CopieProtegee.java

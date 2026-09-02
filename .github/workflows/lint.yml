@@ -837,6 +837,18 @@ jobs:
         # Ses dix cas tiennent les deux portes, l'entrée et la sortie : ce qui n'a rien à faire au
         # manifeste est refusé, et ce qui a cessé d'y correspondre est nommé.
         run: python3 scripts/methode/couverture-relecture.py --auto-test
+      - name: "Le manifeste de relecture ne porte pas d'entrée morte (bloquant, #5086)"
+        # Le manifeste se vérifie dans DEUX sens, et un seul était tenu. Le cliquet 4468 parcourt le
+        # CORPUS et nomme ce qui n'y est pas relu ; une entrée qui désigne un fichier disparu lui est
+        # invisible, puisqu'elle n'est jamais parcourue. `--verifie` fait le trajet inverse, du
+        # manifeste vers le corpus, et c'est le seul qui voie une entrée morte.
+        #
+        # Elle n'est pas inoffensive : elle « ne garde rien, et compte dans le total », donc la
+        # couverture annoncée est fausse dans le sens qui flatte. Un renommage l'a produite le
+        # 2026-09-01, et rien ne l'a signalé pendant que le mode existait sans être appelé.
+        #
+        # Le coût est mesuré : 5,54 s.
+        run: python3 scripts/methode/couverture-relecture.py --verifie
 
       - name: "La loupe de couverture OpenSpec compte juste (bloquant, #4922)"
         # Une LOUPE, pas un garde : elle sort toujours 0 et ne refuse rien. Seul son comptage est tenu
