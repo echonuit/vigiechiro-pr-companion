@@ -63,7 +63,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import loupe
+from _commun import RACINE_DEPOT, imprime_contrat, loupe
 
 # Le commit qui a ecrit la regle, en UTC. Fait historique, il ne se met pas a jour.
 NAISSANCE = "2026-08-29T05:37:52Z"
@@ -263,5 +263,22 @@ def main() -> int:
     return code
 
 
+CONTRAT = {
+    "geste": "lot ouvert sans critere de fin dans son corps",
+    "population": "les lots rattaches aux chantiers ouverts, sur la forge",
+    "dispositif": "loupe",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/loupe-4992-lots-sans-critere.py --auto-test",
+    "decision": "ADR 4992",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     raise SystemExit(main())

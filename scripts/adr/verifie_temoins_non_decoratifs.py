@@ -34,7 +34,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import rapporte
+from _commun import RACINE_DEPOT, imprime_contrat, rapporte
 
 ADR = "4490"
 DOSSIER = pathlib.Path(__file__).resolve().parent
@@ -198,7 +198,24 @@ def auto_test() -> int:
     return echecs
 
 
+CONTRAT = {
+    "geste": "temoin decoratif : la suite reste verte sans detection",
+    "population": "les gardes que verifie_scripts.py charge",
+    "dispositif": "cliquet",
+    "seuil": "0, polarite=descend",
+    "temoin": "scripts/adr/verifie_temoins_non_decoratifs.py --auto-test",
+    "decision": "ADR 4490",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
     sys.exit(

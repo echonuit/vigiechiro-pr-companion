@@ -57,7 +57,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, RACINES_ANCREES, rapporte
+from _commun import RACINE_DEPOT, RACINES_ANCREES, imprime_contrat, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero, et `_commun.py` la
 # retrouve par `dev-docs/decisions/{numero}-*.md`.
@@ -385,7 +385,24 @@ def _auto_test() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "javadoc qui raconte au lieu de contracter",
+    "population": "PRODUCTION + TESTS",
+    "dispositif": "cliquet",
+    "seuil": "742, polarite=descend",
+    "temoin": "scripts/adr/4359-javadoc-narratif.py --auto-test",
+    "decision": "ADR 4359",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
     listes = suspects()

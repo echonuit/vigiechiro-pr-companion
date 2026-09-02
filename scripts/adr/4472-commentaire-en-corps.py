@@ -34,7 +34,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, RACINES_ANCREES, rapporte
+from _commun import RACINE_DEPOT, RACINES_ANCREES, imprime_contrat, rapporte
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4472"
@@ -173,7 +173,23 @@ def _auto_test() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "commentaire qui deborde en corps de methode",
+    "population": "PRODUCTION + TESTS",
+    "dispositif": "cliquet",
+    "seuil": "43, polarite=descend",
+    "temoin": "scripts/adr/4472-commentaire-en-corps.py --auto-test",
+    "decision": "ADR 4472",
+}
+
+
 if __name__ == "__main__":
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
     listes = suspects()

@@ -38,7 +38,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import loupe
+from _commun import RACINE_DEPOT, imprime_contrat, loupe
 
 LOT = re.compile(r"^- \[[ x]\] \*\*Lot[^\n]*(?:\n(?:    |\t)[^\n]*)*", re.M)
 RATTACHEMENT = "Fait partie de #"
@@ -193,5 +193,22 @@ def main() -> int:
     return code
 
 
+CONTRAT = {
+    "geste": "lot multi-PR qui aurait du s ouvrir en sous-chantier",
+    "population": "les EPIC ouverts de la forge, et leurs lots",
+    "dispositif": "loupe",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/loupe-4712-lots-multi-pr.py --auto-test",
+    "decision": "ADR 4712",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     raise SystemExit(main())

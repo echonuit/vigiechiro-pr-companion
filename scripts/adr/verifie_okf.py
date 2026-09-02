@@ -37,7 +37,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import tempfile
 
-from _commun import DECISIONS, rapporte
+from _commun import DECISIONS, RACINE_DEPOT, imprime_contrat, rapporte
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 # `DECISIONS` s importe : le corpus se declare dans `_commun` et nulle part ailleurs (ADR 4586).
@@ -572,5 +572,22 @@ def main() -> int:
     )
 
 
+CONTRAT = {
+    "geste": "ADR d un article d usage sans heuristique declaree",
+    "population": "les ADR de dev-docs/decisions, hors reservees",
+    "dispositif": "cliquet",
+    "seuil": "71, polarite=descend",
+    "temoin": "scripts/adr/verifie_okf.py --auto-test",
+    "decision": "ADR 4342",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(main())
