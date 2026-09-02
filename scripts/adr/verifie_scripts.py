@@ -1116,8 +1116,20 @@ def test_4477_longueur_des_adr() -> None:
 # Le motif d un import qui declare le corpus. `RACINES` et `RACINES_ANCREES` disent « les deux
 # arbres » ; `PRODUCTION` seule dit « la production, et voici pourquoi » dans le fichier qui
 # l importe.
-DECLARE_DEUX_ARBRES = re.compile(r"^from _commun import (.+)$", re.M)
 DEUX_ARBRES = re.compile(r"\bRACINES(?:_ANCREES)?\b")
+
+
+def _commun_du_depot():
+    """Le socle, charge une fois. Le harnais ne l importe pas en tete : il charge des COPIES."""
+    global _COMMUN
+    if _COMMUN is None:
+        spec = importlib.util.spec_from_file_location("_commun_reel", ICI / "_commun.py")
+        _COMMUN = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_COMMUN)
+    return _COMMUN
+
+
+_COMMUN = None
 
 
 def gardes_deux_arbres() -> list[str]:
@@ -1138,8 +1150,10 @@ def gardes_deux_arbres() -> list[str]:
     for source in sorted(ICI.glob("*.py")):
         if source.name == "_commun.py":
             continue
-        imports = DECLARE_DEUX_ARBRES.search(source.read_text(encoding="utf-8"))
-        if imports and DEUX_ARBRES.search(imports.group(1)):
+        # Par l AST, et non par un motif de ligne : `ruff format` replie un import de plus de 100
+        # caracteres, et le motif cessait alors de voir le garde (#5128).
+        noms = _commun_du_depot().noms_importes(source.read_text(encoding="utf-8"))
+        if any(DEUX_ARBRES.fullmatch(n) for n in noms):
             trouves.append(source.name)
     return trouves
 
@@ -1219,6 +1233,24 @@ def test_les_gardes_de_code_lisent_les_deux_arbres() -> None:
     derives = gardes_deux_arbres()
     _verifie(
         "la liste des gardes a deux arbres se derive, et n est pas vide", len(derives) > 10, True
+    )
+
+    # La MISE EN FORME de l import ne doit rien changer (#5128). Sans ce cas, un garde dont l import
+    # se replie au-dela de 100 caracteres sortait de la liste en silence : c est arrive sur six
+    # gardes a la fois, et seul le seuil « plus de dix » l a rendu visible. Un seuil n est pas un
+    # temoin : il attrape six disparitions et laisserait passer la premiere.
+    commun = _commun_du_depot()
+    une_ligne = "from _commun import RACINES_ANCREES, rapporte\n"
+    replie = "from _commun import (\n    RACINES_ANCREES,\n    rapporte,\n)\n"
+    _verifie(
+        "un import replie declare le meme corpus qu un import sur une ligne",
+        commun.noms_importes(replie),
+        commun.noms_importes(une_ligne),
+    )
+    _verifie(
+        "et ce n est pas un accord sur du vide",
+        commun.noms_importes(replie),
+        ["RACINES_ANCREES", "rapporte"],
     )
     for nom in derives:
         m = _charge(nom)
