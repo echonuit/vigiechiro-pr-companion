@@ -251,6 +251,8 @@ Companion ne dit pas **pourquoi** le support est en lecture seule, et ne le dira
 verrou poussé sans y penser sur le côté de la carte donne exactement le même symptôme qu'une mémoire
 en fin de vie. C'est vous qui pouvez regarder.
 
+![Cas « support en lecture seule » : le bandeau dit que l'import fonctionne, le geste à faire sur la carte, et que c'est la prochaine nuit qui est en jeu.](../assets/captures/apercu-import-lecture-seule.png)
+
 ### Des fichiers déjà préfixés
 
 Une carte peut avoir **déjà été traitée** - par vous, sur un autre poste, ou par quelqu'un d'autre. Ses
