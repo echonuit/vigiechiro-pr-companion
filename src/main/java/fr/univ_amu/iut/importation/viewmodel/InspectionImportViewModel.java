@@ -1,6 +1,5 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
-import fr.univ_amu.iut.commun.model.VolumeEnLectureSeule;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.importation.model.AnalyseMelange;
 import fr.univ_amu.iut.importation.model.EtatNommage;
@@ -86,21 +85,17 @@ public class InspectionImportViewModel {
     /// les tranches suivantes. `null` tant qu'aucune inspection n'a réussi.
     private RapportInspection rapport;
 
-    /// La question posée au support de la source, remplaçable (#5101).
-    ///
-    /// `VolumeEnLectureSeule::vrai` en production. Une couture, parce qu'un banc ne sait pas monter un
-    /// volume en lecture seule et qu'un outil de capture ne le sait pas davantage : sans elle, le
-    /// chemin qui va de la sonde au bandeau n'est traversé par **rien**, ce qui était le cas depuis
-    /// #5091 - la sonde avait ses cas, le bandeau les siens, et le fil entre les deux aucun.
-    private Predicate<Path> supportEnLectureSeule = VolumeEnLectureSeule::vrai;
+    /// Ce que l'inspection relève, et la sonde du support (#5101).
+    private final CompteRenduDInspection compteRendu;
 
     public InspectionImportViewModel(ServiceImport serviceImport) {
         this.serviceImport = Objects.requireNonNull(serviceImport, "serviceImport");
+        this.compteRendu = new CompteRenduDInspection(this.serviceImport);
     }
 
     /// Remplace la sonde du support (double de test, et jeu d'essai des aperçus).
     public void definirSondeDuSupport(Predicate<Path> sonde) {
-        this.supportEnLectureSeule = Objects.requireNonNull(sonde, "sonde");
+        compteRendu.definirSondeDuSupport(sonde);
     }
 
     /// Inspecte le dossier source courant **en lecture seule** (R9). En cas de succès, met à jour les
@@ -125,15 +120,8 @@ public class InspectionImportViewModel {
                     .journalOptionnel()
                     .map(journal -> "PR n° " + journal.numeroSerie())
                     .orElse(""));
-            passagesDejaImportes = passagesDeLaNuit(inspection);
-            // Le support de la source est lu ICI, une fois par inspection : le volume peut être
-            // retiré entre deux gestes, et la question ne se pose qu'au moment où l'on regarde la
-            // carte. La lecture n'écrit rien (#4991).
-            avertissements.set(AvertissementsInspection.rediger(
-                    inspection.melange(),
-                    inspection.coherence(),
-                    passagesDejaImportes,
-                    supportEnLectureSeule.test(inspection.dossierSource())));
+            passagesDejaImportes = compteRendu.passagesDeLaNuit(inspection);
+            avertissements.set(compteRendu.rediger(inspection, passagesDejaImportes));
             peuplerNuits(inspection);
             inspecte.set(true);
             messageErreur.set("");
@@ -155,7 +143,7 @@ public class InspectionImportViewModel {
         nombreOriginaux.set(0);
         etatNommage.set(null);
         resumeJournal.set("");
-        avertissements.set(CompteRendu.de("", List.of()));
+        avertissements.set(CompteRenduDInspection.vide());
         passagesDejaImportes = List.of();
         messageErreur.set("");
         nuits.clear();
@@ -208,38 +196,9 @@ public class InspectionImportViewModel {
     /// enregistreur + même date. L'identité vient du **journal** s'il est présent, sinon (mode dégradé
     /// #107) elle est **reconstituée des noms de WAV** (comme à l'import), pour que la détection couvre
     /// aussi les réimports sans journal. Sans identité exploitable, rien à signaler. La mise en forme
-    /// est déléguée à [AvertissementsInspection].
-    private List<PassageExistant> passagesDeLaNuit(RapportInspection rapport) {
-        return identiteNuit(rapport)
-                .map(identite -> serviceImport.nuitDejaImportee(identite.numeroSerie(), identite.dateNuit()))
-                .filter(Objects::nonNull)
-                .orElseGet(List::of);
-    }
-
-    /// Identité de la nuit inspectée - l'enregistreur et la date - ou vide si le dossier ne la livre pas.
-    ///
-    /// Cette identité vient du **journal** s'il est présent, sinon - mode dégradé (#107) - elle est
-    /// **reconstituée des noms de WAV**, exactement comme à l'import. C'est la même règle qui sert au
-    /// badge « déjà importée » ; l'extraire la rend consultable par les autres contrôles, en premier lieu
-    /// celui du n° de passage, qui doit reconnaître une nuit déjà récupérée de Vigie-Chiro (#2580).
-    private java.util.Optional<IdentiteNuit> identiteNuit(RapportInspection rapport) {
-        JournalParse journal =
-                rapport.journalOptionnel().filter(j -> j.dateDebut() != null).orElse(null);
-        if (journal != null) {
-            return java.util.Optional.of(
-                    new IdentiteNuit(journal.numeroSerie(), journal.dateDebut().toString()));
-        }
-        AnalyseMelange analyse = AnalyseMelange.depuis(rapport.originaux());
-        if (analyse.series().isEmpty() || analyse.nuits().isEmpty()) {
-            return java.util.Optional.empty();
-        }
-        return java.util.Optional.of(new IdentiteNuit(
-                analyse.series().first(), analyse.nuits().first().toString()));
-    }
-
     /// Identité de la **dernière nuit inspectée**, ou vide tant qu'aucune inspection n'a abouti.
     public java.util.Optional<IdentiteNuit> identiteNuit() {
-        return rapport == null ? java.util.Optional.empty() : identiteNuit(rapport);
+        return rapport == null ? java.util.Optional.empty() : CompteRenduDInspection.identiteNuit(rapport);
     }
 
     /// Recalcule l'avertissement « nuit déjà importée » (#147) depuis la **dernière inspection**, sans
@@ -248,15 +207,9 @@ public class InspectionImportViewModel {
     /// non l'instantané figé à l'inspection (sinon réimporter la même nuit sur un n° libre passerait sans
     /// confirmation). Sans inspection courante, l'avertissement reste vide.
     public void rafraichirNuitExistante() {
-        passagesDejaImportes = rapport == null ? List.of() : passagesDeLaNuit(rapport);
+        passagesDejaImportes = rapport == null ? List.of() : compteRendu.passagesDeLaNuit(rapport);
         avertissements.set(
-                rapport == null
-                        ? CompteRendu.de("", List.of())
-                        : AvertissementsInspection.rediger(
-                                rapport.melange(),
-                                rapport.coherence(),
-                                passagesDejaImportes,
-                                supportEnLectureSeule.test(rapport.dossierSource())));
+                rapport == null ? CompteRenduDInspection.vide() : compteRendu.rediger(rapport, passagesDejaImportes));
         if (rapport != null) {
             // Rafraîchit les badges par nuit **en place** (sans reconstruire la table, pour préserver les
             // cases « inclure » cochées par l'utilisateur).

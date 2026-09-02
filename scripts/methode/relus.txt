@@ -783,6 +783,7 @@ ef03b0d325da  src/main/java/fr/univ_amu/iut/importation/view/ZoneNumeroPassage.j
 f4f8aa55113b  src/main/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixe.java
 de6f60d6f46e  src/main/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspection.java
 ea4721561642  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduChiffreImport.java
+f791e51a0d7a  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduDInspection.java
 769e9b592a2f  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduImport.java
 2b3d83c5cf76  src/main/java/fr/univ_amu/iut/importation/viewmodel/ControleNumeroPassage.java
 3345eeaeb800  src/main/java/fr/univ_amu/iut/importation/viewmodel/CoordinationNuits.java
@@ -790,7 +791,7 @@ e228832ae4ee  src/main/java/fr/univ_amu/iut/importation/viewmodel/EtatImport.jav
 ef0a4852afcd  src/main/java/fr/univ_amu/iut/importation/viewmodel/ExecutionImport.java
 6596a0f4b04a  src/main/java/fr/univ_amu/iut/importation/viewmodel/IdentiteNuit.java
 02c16404d4ff  src/main/java/fr/univ_amu/iut/importation/viewmodel/ImportationViewModel.java
-5911d2aa4516  src/main/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModel.java
+de5411e45e15  src/main/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModel.java
 abff5608525f  src/main/java/fr/univ_amu/iut/importation/viewmodel/LigneFichierImport.java
 2b4c9642c974  src/main/java/fr/univ_amu/iut/importation/viewmodel/MarquageNuitsImportees.java
 634f110f130f  src/main/java/fr/univ_amu/iut/importation/viewmodel/NuitVM.java
