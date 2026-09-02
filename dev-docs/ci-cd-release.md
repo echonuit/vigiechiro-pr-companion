@@ -755,7 +755,7 @@ python3 scripts/methode/releve-les-bancs-instables.py --classe --jours 21
 | **DÉPÔT**, un ou deux bancs qui vacillent | 56 % | Ne pas rejouer. Ouvrir ou nourrir l'issue du banc |
 | **CASCADE**, annulé parce qu'une autre étape avait déjà rougi | 19 % | Ne pas rejouer. Lire l'étape qui a rougi la première |
 | **FORGE**, artefact ou action indisponible | 11 % | Rejouer, une fois |
-| **RUNNER**, JVM effondrée ou couche graphique absente | 9 % | Rejouer, une fois, et le consigner |
+| **RUNNER**, JVM effondrée, couche graphique absente, ou **cause qui la traverse** | 9 % | Rejouer, une fois, et le consigner |
 | **INDÉTERMINÉ**, aucune cause reconnue | 5 % | Lire le journal. Ne pas rejouer sans l'avoir lu |
 
 **Un rouge sur cinq seulement vaut un rejeu.** Les quatre autres reviennent au tirage suivant, chez
@@ -773,6 +773,15 @@ et rangeait 20 tentatives sur 20 sous « un garde a refusé », parce qu'un gard
 le mot « REFUSE » en expliquant ce qu'il aurait refusé. De même, `java.net.ConnectException` apparaît
 348 fois dans des journaux parfaitement sains : c'est une coupure réseau qu'un test **provoque
 exprès**. Ce qui a fait échouer se lit autour de la dernière ligne d'erreur, et nulle part ailleurs.
+
+**Ce n'est pas le volume qui décide, c'est la COUCHE (#5036).** Le classement tenait « runner » sur
+deux signes : couche native absente, ou plus de cinquante tests tombés. Un défaut de rendu qui
+n'emporte **qu'un** test lui échappait donc. Il lit désormais la **cause profonde** - celle que
+`Caused by:` porte dans le bloc surefire - et regarde si elle traverse la couche graphique :
+`com.sun.glass`, `com.sun.prism`, `com.sun.javafx.tk`, et le moteur de texte `com.sun.javafx.text`
+que #4823 a fait ajouter. Cinq formulations plus séduisantes ont été réfutées sur des journaux réels ;
+la plus instructive est que **61 % des piles d'une suite verte** sont entièrement étrangères, si bien
+qu'« une pile étrangère » ne distingue rien.
 
 **Quand un rouge de runner cesse d'en être un.** Deux fois de suite sur la même semaine, avec la même
 signature, ce n'est plus le runner : c'est une dépendance du dépôt à quelque chose que l'image ne

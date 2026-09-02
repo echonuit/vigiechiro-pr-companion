@@ -1231,6 +1231,7 @@ ea16054bb589  src/main/java/fr/univ_amu/iut/validation/model/dao/ResultatsIdenti
 41507b6de8d4  src/main/java/fr/univ_amu/iut/validation/view/NavigationValidation.java
 4b4df031a0dc  src/main/java/fr/univ_amu/iut/validation/viewmodel/IndicateurObservations.java
 6f27abfa62c5  src/main/java/module-info.java
+a6679670740d  src/test/java/fr/univ_amu/iut/AppOuvertureDansLEcranTest.java
 0efae32b475a  src/test/java/fr/univ_amu/iut/AppTest.java
 2dadd80c4bb2  src/test/java/fr/univ_amu/iut/LauncherTest.java
 3b9a9d7be23e  src/test/java/fr/univ_amu/iut/analyse/AnalyseViewModelTest.java

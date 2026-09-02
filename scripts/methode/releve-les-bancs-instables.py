@@ -242,7 +242,12 @@ _ECHEC_SUREFIRE = re.compile(r"<<< (?:ERROR|FAILURE)!")
 _CAUSE = re.compile(r"\bCaused by: ")
 
 # La couche graphique de JavaFX : le verre, le rendu, et le pont vers la boite a outils.
-_GRAPHIQUE = re.compile(r"com\.sun\.glass\.|com\.sun\.prism\.|com\.sun\.javafx\.tk\.")
+# `com.sun.javafx.text` est le MOTEUR DE TEXTE de Prism, frere de `com.sun.prism` : `PrismTextLayout`
+# y calcule la mise en page. Il manquait, et un `NullPointerException` leve dans `TextRun.getAscent`
+# etait donc impute au DEPOT (#4823, mesure sur un journal reel du 2026-09-02). C est la meme couche.
+_GRAPHIQUE = re.compile(
+    r"com\.sun\.glass\.|com\.sun\.prism\.|com\.sun\.javafx\.tk\.|com\.sun\.javafx\.text\."
+)
 
 
 def causeProfonde(journal: str) -> list[str]:
@@ -509,10 +514,31 @@ def _autoTest() -> int:
         attente, ["AppTest.un_cas"]
     )
 
+    # Le MOTEUR DE TEXTE est la meme couche que le reste du rendu, et il manquait. Cadres pris dans
+    # la section SUREFIRE d un journal reel du 2026-09-02, et non dans le dump de `SansExceptionAvalee`
+    # qui parait plus haut : celui-la rapporte les memes cadres SANS le prefixe « at », que `_CADRE`
+    # exige. Recopier la mauvaise des deux formes rendait ce temoin rouge alors que la regle est juste.
+    texte = echec + "".join(
+        prefixe + l + "\n"
+        for l in (
+            "java.lang.RuntimeException: java.lang.NullPointerException",
+            "\tat fr.univ_amu.iut.AppTest.un_cas(AppTest.java:177)",
+            (
+                "Caused by: java.lang.NullPointerException: Cannot invoke"
+                ' "com.sun.javafx.text.TextRun.getAscent()" because "<parameter1>" is null'
+            ),
+            "\tat com.sun.javafx.text.PrismTextLayout.shape(PrismTextLayout.java:849)",
+            "\tat com.sun.javafx.text.PrismTextLayout.layout(PrismTextLayout.java:1239)",
+            "\tat javafx.scene.text.Text.getLogicalBounds(Text.java:453)",
+            "\tat javafx.scene.control.skin.TextFieldSkin.lambda$new$4(TextFieldSkin.java:249)",
+        )
+    )
+    assert classe(texte, ["AppTest.un_cas"])[0] == "RUNNER", classe(texte, ["AppTest.un_cas"])
+
     # Et un echec SANS cause enveloppee reste ce qu il etait : un banc qui vacille.
     assert classe(echec, ["AppTest.un_cas"]) == ("DEPOT", UN_BANC)
 
-    print("auto-test : 27 temoins verts")
+    print("auto-test : 28 temoins verts")
     return 0
 
 
