@@ -115,6 +115,16 @@
     </VBox.margin>
   </Label>
 
+  <!-- Second encart, et non une phrase ajoutee au premier (#5093). Les deux axes ne se confondent
+       pas : celui du dessus dit si l'enregistrement couvre la fenetre exigee, calculee depuis les
+       ephemerides ; celui-ci dit si la nuit s'est refermee, lu du cycle du journal. Une nuit peut
+       etre couverte ET tronquee, et les fondre perdrait exactement cela. -->
+  <Label fx:id="lblNuitInterrompue" styleClass="encart" wrapText="true">
+    <VBox.margin>
+      <Insets left="22.0"/>
+    </VBox.margin>
+  </Label>
+
   <!--
     Disponibilité GPS du point d'écoute (#1497) : ligne d'état permanente, affichée dès qu'un
     diagnostic est chargé et indépendante de la cohérence horaires (le repère ne disparaît plus

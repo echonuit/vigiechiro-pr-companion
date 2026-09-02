@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.diagnostic.model;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import java.time.LocalDateTime;
 
 /// État matériel/technique consolidé d'une nuit déjà importée (parcours P6, épopée E6), tel
@@ -27,6 +28,9 @@ import java.time.LocalDateTime;
 /// @param temperatureDebutNuit température en début de nuit (°C), **optionnelle** (`null` si non
 /// renseignée, #106)
 /// @param coherenceHoraire cohérence des horaires d'enregistrement avec la nuit réelle (#548)
+/// @param completude ce que le journal dit de la fin de la nuit, persisté à l'import (#5093).
+///     **Autre axe** que la couverture du protocole : une nuit peut être couverte ET tronquée,
+///     l'une venant des éphémérides et l'autre du cycle du journal
 public record Diagnostic(
         Long idPassage,
         Long idSession,
@@ -37,7 +41,8 @@ public record Diagnostic(
         Double gpsLongitude,
         LocalDateTime genereLe,
         Double temperatureDebutNuit,
-        CoherenceHoraire coherenceHoraire) {
+        CoherenceHoraire coherenceHoraire,
+        Completude completude) {
 
     /// `true` si aucun relevé climatique n'est rattaché à la session (R20, à signaler).
     public boolean releveClimatiqueAbsent() {

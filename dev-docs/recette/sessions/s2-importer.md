@@ -103,6 +103,12 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
   nuit" si l'enregistrement déborde », c'est-à-dire de confirmer le défaut (#4984). **À jouer à la
   main** : le comportement est éprouvé par un banc, mais aucun clip ne le montre, la carte de recette
   n'ayant pas de nuit qui couvre la fenêtre (#5061).
+- **S2-74** · *geste: lire-le-diagnostic-d-un-passage* · Sous la cohérence horaire, un **second encart** dit ce que le journal établit de la **fin**
+  de la nuit. Deux axes distincts : le premier dit si l'enregistrement couvre la fenêtre exigée,
+  celui-ci s'il s'est interrompu. Une nuit peut porter les deux (#5093).
+- **S2-75** · *geste: un-journal-absent-ou-corrompu* · `sd-sans-journal` : ce second encart **ne dit rien**. Le journal ne couvre pas la nuit, donc
+  il n'y a ni interruption à signaler ni fin normale à attester - et son silence n'est pas une preuve
+  que la nuit fut entière, le journal étant circulaire (R19).
 - **S2-38** · *geste: lire-le-diagnostic-d-un-passage* · L'état GPS du **point d'écoute** est **toujours visible** : « disponible » ou « non renseigné
   (compléter la fiche site) ».
 - **S2-39** · *geste: lire-le-diagnostic-d-un-passage* · La **barre de statut** (bas de fenêtre) affiche l'enregistreur diagnostiqué et le **nombre de

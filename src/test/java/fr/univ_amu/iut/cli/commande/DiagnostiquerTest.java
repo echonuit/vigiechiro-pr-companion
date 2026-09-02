@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli.commande;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.diagnostic.model.AnalyseAnomalies;
 import fr.univ_amu.iut.diagnostic.model.CoherenceHoraire;
 import fr.univ_amu.iut.diagnostic.model.Diagnostic;
@@ -42,7 +43,8 @@ class DiagnostiquerTest {
                         LocalTime.of(6, 18),
                         LocalTime.of(22, 30),
                         LocalTime.of(6, 18),
-                        CoherenceHoraire.Couverture.INCOMPLETE));
+                        CoherenceHoraire.Couverture.INCOMPLETE),
+                Completude.INCONNUE);
     }
 
     private static Diagnostic diagnosticSansReleve() {
@@ -56,7 +58,8 @@ class DiagnostiquerTest {
                 null,
                 LocalDateTime.of(2026, 6, 24, 8, 0),
                 null,
-                CoherenceHoraire.indisponible());
+                CoherenceHoraire.indisponible(),
+                Completude.INCONNUE);
     }
 
     @Test

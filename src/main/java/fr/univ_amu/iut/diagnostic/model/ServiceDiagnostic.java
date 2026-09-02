@@ -1,7 +1,9 @@
 package fr.univ_amu.iut.diagnostic.model;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.passage.model.JournalDuCapteur;
 import fr.univ_amu.iut.passage.model.MeteoPassage;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
@@ -13,6 +15,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 
 /// Service métier de la feature `diagnostic` (parcours P6, épopée E6) : lit l'état
 /// matériel/technique d'une nuit **déjà importée** et l'expose pour l'onglet « Diagnostic » de la
@@ -68,10 +71,14 @@ public class ServiceDiagnostic {
         Long idSession = session.id();
 
         // R19 : anomalies/évènements du journal (1:1 session) ; analyse vide si le journal manque.
-        AnalyseAnomalies anomalies = journalDao
-                .trouverParSession(idSession)
-                .map(AnalyseAnomalies::depuisJournal)
-                .orElseGet(AnalyseAnomalies::vide);
+        // Le journal est relu UNE fois : il porte les anomalies et, depuis #5084, la complétude de sa
+        // nuit. Cette ligne la jetait, faute qu'elle existât quand elle a été écrite (#5093).
+        Optional<JournalDuCapteur> journal = journalDao.trouverParSession(idSession);
+        AnalyseAnomalies anomalies =
+                journal.map(AnalyseAnomalies::depuisJournal).orElseGet(AnalyseAnomalies::vide);
+        // Pas de journal, pas d'information : INCONNUE, et surtout pas COMPLETE. C'est la règle que
+        // #5071 a établie au calcul et #5084 au report ; elle tient ici une troisième fois.
+        Completude completude = journal.map(JournalDuCapteur::completude).orElse(Completude.INCONNUE);
 
         // R20 : relevé climatique optionnel ; absence explicitement signalée, sinon série relue du
         // THLog.
@@ -105,7 +112,8 @@ public class ServiceDiagnostic {
                 longitude,
                 horloge.maintenant(),
                 MeteoPassage.temperatureDebutNuit(passage.donneesMeteo()),
-                coherence);
+                coherence,
+                completude);
     }
 
     private static Path chemin(String valeur) {

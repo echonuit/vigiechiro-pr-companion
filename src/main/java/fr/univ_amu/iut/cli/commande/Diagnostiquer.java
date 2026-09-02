@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.cli.LectureSeule;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.diagnostic.model.CoherenceHoraire;
 import fr.univ_amu.iut.diagnostic.model.Diagnostic;
@@ -109,6 +110,7 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
                 d.releveClimatiqueAbsent() ? "absent (R20)" : d.climat().nombreMesures() + " mesures T°/hygrométrie");
         ligne(t, "T° début de nuit", Formats.temperatureLisible(d.temperatureDebutNuit()));
         ligne(t, "Cohérence horaire", coherenceLisible(d.coherenceHoraire()));
+        ligne(t, "Fin de la nuit", completudeLisible(d.completude()));
         ligne(t, "GPS du point", d.coordonneesGpsDisponibles() ? "disponible" : "non renseigné");
         ligne(t, "Anomalies (R19)", String.valueOf(d.anomalies().anomalies().size()));
         for (String anomalie : d.anomalies().anomalies()) {
@@ -127,6 +129,9 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
     /// Visible pour le banc de parité : l'écran porte le même verdict par
     /// `DiagnosticViewModel.libelleEcart`, et deux surfaces qui trancheraient différemment la même
     /// nuit ne se contrediraient nulle part ailleurs (ADR 0014).
+    ///
+    /// Cette phrase ne dit **rien** de l'interruption en cours de nuit : c'est l'autre axe, et il a sa
+    /// ligne à lui (#5093).
     public static String coherenceLisible(CoherenceHoraire coherence) {
         if (!coherence.disponible()) {
             return "indisponible (GPS ou horaires manquants, ou latitude polaire)";
@@ -137,6 +142,20 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
             case INCOMPLETE -> fenetre + ", la fenêtre du protocole n'est pas couverte";
             case COUVERTE -> fenetre + ", fenêtre du protocole couverte et dépassée";
             case INDISPONIBLE -> fenetre;
+        };
+    }
+
+    /// Ce que le journal dit de la **fin** de la nuit (#5093), autre axe que la couverture.
+    ///
+    /// Visible pour le banc de parité : l'écran porte le même verdict par
+    /// `DiagnosticViewModel.libelleCompletude`.
+    public static String completudeLisible(Completude completude) {
+        return switch (completude) {
+            case TRONQUEE -> "interrompue avant son terme, d'après le journal du capteur";
+            case COMPLETE -> "normale, attestée par le journal du capteur";
+            // Ni « entière » ni « interrompue » : le journal ne permet pas de conclure, et il est
+            // circulaire (R19), donc son silence n'est pas une preuve.
+            case INCONNUE -> "inconnue (le journal du capteur ne couvre pas cette nuit)";
         };
     }
 
@@ -175,6 +194,9 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
         objet.put(
                 "couvertureDuProtocole",
                 coherence.disponible() ? coherence.couverture().name() : null);
+        // Autre axe que la couverture : une nuit peut être couverte ET tronquée. Un script qui veut
+        // alerter sur l'une ne doit pas la déduire de l'autre (#5093).
+        objet.put("completudeDeLaNuit", d.completude().name());
         objet.put("debutExige", coherence.disponible() ? HEURE.format(coherence.debutExige()) : null);
         objet.put("finExigee", coherence.disponible() ? HEURE.format(coherence.finExigee()) : null);
         objet.put("debutEnregistre", coherence.disponible() ? HEURE.format(coherence.debutEnregistre()) : null);

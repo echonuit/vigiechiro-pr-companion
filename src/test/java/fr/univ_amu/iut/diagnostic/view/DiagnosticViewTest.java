@@ -10,6 +10,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.di.DiagnosticGuice;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -61,7 +62,8 @@ class DiagnosticViewTest {
                         5.4,
                         LocalDateTime.of(2026, 6, 23, 8, 0),
                         8.5,
-                        CoherenceHoraire.indisponible()));
+                        CoherenceHoraire.indisponible(),
+                        Completude.INCONNUE));
         Injector injector = Guice.createInjector(
                 new AbstractModule() {
                     @Provides

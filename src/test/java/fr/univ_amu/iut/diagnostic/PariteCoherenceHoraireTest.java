@@ -2,7 +2,9 @@ package fr.univ_amu.iut.diagnostic;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.Severite;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.diagnostic.model.AnalyseCoherenceHoraire;
 import fr.univ_amu.iut.diagnostic.model.CoherenceHoraire;
 import java.time.format.DateTimeFormatter;
@@ -93,5 +95,58 @@ class PariteCoherenceHoraireTest {
             // Une nuit qui commence tôt et finit tard couvre la fenêtre exigée quelle que soit la date.
             case COUVERTE -> AnalyseCoherenceHoraire.analyser(AIX_LAT, AIX_LON, "2026-06-20", "18:00:00", "09:00:00");
         };
+    }
+
+    @Test
+    @DisplayName("#5093 : les deux surfaces tranchent la FIN de la nuit dans le même sens")
+    void les_deux_surfaces_tranchent_la_fin_dans_le_meme_sens() {
+        // Second axe, second banc de parité. Les deux `switch` lisent la même énumération, et rien
+        // n'obligerait le second à suivre le premier si on en changeait un.
+        for (Completude etat : Completude.values()) {
+            boolean ecranAlerte = fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel.libelleCompletude(etat)
+                            .severite()
+                    == Severite.AVERTISSEMENT;
+            boolean terminalAlerte = fr.univ_amu.iut.cli.commande.Diagnostiquer.completudeLisible(etat)
+                    .contains("interrompue");
+
+            assertThat(ecranAlerte)
+                    .as(
+                            "sur une nuit %s, l'écran alerte=%s et le terminal alerte=%s",
+                            etat, ecranAlerte, terminalAlerte)
+                    .isEqualTo(terminalAlerte);
+        }
+    }
+
+    @Test
+    @DisplayName("#5093 : une nuit INCONNUE ne passe ni pour interrompue ni pour entière")
+    void une_nuit_inconnue_ne_passe_pour_aucun_des_deux() {
+        // LE contrôle du lot, et le troisième du même genre : #5071 l'a établi au calcul, #5084 au
+        // report, il tient ici à la restitution. Accuser une nuit sur une absence de trace serait
+        // aussi faux que la déclarer entière - le journal est circulaire (R19).
+        assertThat(fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel.libelleCompletude(Completude.INCONNUE))
+                .as("l'écran se tait : ni avertissement, ni information rassurante")
+                .isEqualTo(RetourOperation.AUCUN);
+
+        String terminal = fr.univ_amu.iut.cli.commande.Diagnostiquer.completudeLisible(Completude.INCONNUE);
+        assertThat(terminal)
+                .as("le terminal DIT qu'il ne sait pas, plutôt que de se taire : une ligne absente se"
+                        + " lirait comme une nuit sans problème")
+                .contains("inconnue");
+        assertThat(terminal).doesNotContain("interrompue").doesNotContain("normale");
+    }
+
+    @Test
+    @DisplayName("#5093 : les deux axes ne se déduisent pas l'un de l'autre")
+    void les_deux_axes_sont_independants() {
+        // Une nuit peut être COUVERTE et TRONQUEE : commencée à l'heure, la fenêtre dépassée, et
+        // arrêtée en son milieu. Si un jour l'un se déduisait de l'autre, ce cas rougirait.
+        CoherenceHoraire couverte =
+                AnalyseCoherenceHoraire.analyser(AIX_LAT, AIX_LON, "2026-06-20", "18:00:00", "09:00:00");
+
+        assertThat(couverte.couverture()).isEqualTo(CoherenceHoraire.Couverture.COUVERTE);
+        assertThat(fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel.libelleCompletude(Completude.TRONQUEE)
+                        .severite())
+                .as("la couverture est tenue, et la nuit s'est pourtant interrompue : les deux se disent")
+                .isEqualTo(Severite.AVERTISSEMENT);
     }
 }
