@@ -32,7 +32,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import rapport
-from _commun import DECISIONS, RACINE_DEPOT
+from _commun import DECISIONS, RACINE_DEPOT, imprime_contrat
 
 # Les racines de prose susceptibles de porter une balise. Mêmes que celles que balaie
 # `DocumentationAJourTest`, et pour la même raison : une balise vit où on la lit.
@@ -149,7 +149,24 @@ def appliquer() -> list[str]:
     return faits
 
 
+CONTRAT = {
+    "geste": "resserrement de cliquet a appliquer, et balises a reposer",
+    "population": "les ADR de dev-docs/decisions",
+    "dispositif": "generateur",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/verifie_scripts.py#test_resserre_cliquets_appelle_le_rapport",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     faits = appliquer()
     for f in faits:
         print(f)

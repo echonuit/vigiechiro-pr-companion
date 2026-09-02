@@ -46,7 +46,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, RACINES
+from _commun import RACINE_DEPOT, RACINES, imprime_contrat
 
 # `RACINE_DEPOT` etait IMPORTE puis RECALCULE deux lignes plus bas, a l identique (#5022). La seconde
 # ecriture gagnait, et c est precisement ce que l ADR 4586 interdit : un corpus se declare une fois.
@@ -160,5 +160,22 @@ def main() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "lien markdown de javadoc que le formateur casse en deux",
+    "population": "PRODUCTION + TESTS",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/verifie_lien_javadoc_formatable.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(main())

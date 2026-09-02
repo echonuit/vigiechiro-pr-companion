@@ -25,7 +25,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION_ANCREE
+from _commun import PRODUCTION_ANCREE, RACINE_DEPOT, imprime_contrat
 
 VUES = PRODUCTION_ANCREE
 
@@ -125,5 +125,22 @@ def main() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "cible cliquable declaree sous 24 x 24 px",
+    "population": "PRODUCTION",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/verifie_taille_des_cibles.py --auto-test",
+    "decision": "WCAG 2.5.8 niveau AA, sans ADR",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(main())

@@ -58,6 +58,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import importlib.util
 
+from _commun import RACINE_DEPOT, imprime_contrat
+
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 REGISTRE = pathlib.Path("scripts/adr/4359-blocs-relus.tsv")
 
@@ -121,7 +123,24 @@ def perimees(inscrites: list[tuple[str, str, str]], corpus: dict[str, str]) -> l
     return [f"{h}  {chemin}  ({motif})" for h, chemin, motif in inscrites if h not in corpus]
 
 
+CONTRAT = {
+    "geste": "registre des blocs relus : entree perimee, ou bloc jamais lu",
+    "population": "PRODUCTION + TESTS",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/verifie_scripts.py#test_4359_blocs_relus",
+    "decision": "ADR 4359",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     corpus = blocs_du_corpus()
     inscrites = entrees()
     mortes = perimees(inscrites, corpus)

@@ -28,7 +28,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import DECISIONS
+from _commun import DECISIONS, RACINE_DEPOT, imprime_contrat
 
 TITRE_ENCART = '!!! warning "Ce qui fait foi aujourd\'hui"'
 
@@ -205,7 +205,24 @@ def _auto_test() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "ADR depassee dont l encart n annonce pas ce qui est declare",
+    "population": "les ADR de dev-docs/decisions",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/verifie_encart_de_revision.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
     trouvees = fautes()

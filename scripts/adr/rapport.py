@@ -23,7 +23,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT
+from _commun import RACINE_DEPOT, imprime_contrat
 
 ICI = pathlib.Path(__file__).parent
 # Le champ `lus` (issue #5007) se lit en groupe NON capturant, et ce n'est pas un detail : les
@@ -238,7 +238,24 @@ def auto_test() -> int:
     return echecs
 
 
+CONTRAT = {
+    "geste": "rapport hebdomadaire : agrege les verdicts des cliquets et des loupes",
+    "population": "les cliquets numerotes et les loupes de scripts/adr",
+    "dispositif": "rapport",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/rapport.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
     markdown = "--markdown" in sys.argv
