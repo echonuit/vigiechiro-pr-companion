@@ -62,6 +62,20 @@ l'intention. C'est ce qui classe cette décision `humaine` plutôt que `certaine
 pourquoi ses sept cas sont écrits en toutes lettres. Ils ne servent pas d'illustration : ils servent
 à **reconnaître la forme** quand elle se représente.
 
+## Reproduire un intermittent : la contention se PILOTE, et le disque n'est pas le processeur (#4823)
+
+Un huitième cas, du même moule. Le banc du préambule d'import était annoncé à **1 échec sur 3**, sur
+un seul tirage rouge parmi trois passages. Mesuré sur 110 passages, il vaut **2,2 %**.
+
+Et la première campagne aurait conclu « ne se reproduit pas » : ses encodeurs de charge écrivaient
+vers `-f null -`, donc nulle part. **0 rouge sur 20** sans écriture disque, **1 sur 45** avec. La
+contention processeur et la contention d'entrées-sorties ne déclenchent pas les mêmes courses, et
+`/tmp` en tmpfs n'en produit aucune.
+
+Deux règles en sortent. La charge d'une mesure se **pilote** : une charge subie n'est pas
+reproductible et casse la comparabilité d'un avant/après. Et un « ne se reproduit pas » se lit comme
+un résultat **de son dispositif**, jamais du défaut.
+
 ## Conséquences
 
 - **Le contrôle coûte moins que le remède qu'il évite.** Ouvrir trois fichiers a démasqué deux
