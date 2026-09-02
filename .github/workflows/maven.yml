@@ -307,7 +307,13 @@ jobs:
           if ls target/original-*.jar >/dev/null 2>&1; then
             echo "original-*.jar présent : shade a remplacé l'artefact principal !" && exit 1
           fi
-          test "${tailleMince}" -lt 6000000                     # le jar principal doit rester mince (< 6 Mo)
+          # « Mince » se dit PAR RAPPORT au gras. Le seuil absolu de #1201 (6 Mo) s'est périmé en
+          # grossissant avec le code : il ne restait plus que 620 o de marge, et le prochain commit
+          # venu l'aurait franchi sans qu'aucune régression thin/fat ait eu lieu (#5101). Le rapport,
+          # lui, reste vrai : ~18 % aujourd'hui, et 100 % si le shade reprenait l'artefact principal.
+          part=$(( tailleMince * 100 / apres ))
+          echo "jar mince = ${part} % du fat-jar"
+          test "${part}" -lt 33                                 # le jar principal doit rester mince
 
       - name: "Garde-fou app-image (jpackage --type app-image, #2256)"
         # release.yml construit l'app-image APRÈS l'installeur, mais ce build n'était exercé sur AUCUNE
