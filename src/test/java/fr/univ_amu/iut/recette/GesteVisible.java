@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.recette;
 
 import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -51,34 +50,13 @@ public final class GesteVisible {
     /// pourquoi cette aide vit ici et non chez un scénario. Elle y était, en privé, et une seconde
     /// copie aurait divergé de la première.
     public static void amenerDansLeCadre(FxRobot robot, String selecteur) {
-        int[] courses = new int[1];
         try {
-            WaitForAsyncUtils.waitFor(SECONDES_CADRE, TimeUnit.SECONDS, () -> unePasse(robot, selecteur, courses));
-            // Une course absorbée est un passage qui aurait ROUGI avant #4823. Le taire rendrait le
-            // remède invisible : on ne saurait plus si le banc est sain ou seulement rattrapé, et le
-            // jour où la course s'aggrave, rien ne le dirait.
-            if (courses[0] > 0) {
-                System.err.println("GesteVisible : « " + selecteur + " » est venu dans le cadre après " + courses[0]
-                        + " passe(s) avortées sur une course interne à JavaFX (#4823).");
-            }
+            WaitForAsyncUtils.waitFor(SECONDES_CADRE, TimeUnit.SECONDS, () -> unePasse(robot, selecteur));
         } catch (TimeoutException jamais) {
             throw new IllegalStateException("« " + selecteur + " » n'est jamais venu dans le cadre en "
-                    + SECONDES_CADRE + " s" + cequiaavorte(courses[0]) + ". Rendre la main sans l'avoir"
-                    + " amené reporterait l'échec sur le clic suivant, qui l'annoncerait comme une"
-                    + " absence de nœud.");
+                    + SECONDES_CADRE + " s. Rendre la main sans l'avoir amené reporterait l'échec sur le"
+                    + " clic suivant, qui l'annoncerait comme une absence de nœud.");
         }
-    }
-
-    /// Ce que le message doit dire des passes absorbées, et rien s'il n'y en a pas eu.
-    ///
-    /// Une passe rejouée n'est pas un échec, mais dix mille le sont : sans ce compte, un banc qui rame
-    /// se lit comme un banc qui refuse (ADR 0008).
-    private static String cequiaavorte(int courses) {
-        if (courses == 0) {
-            return "";
-        }
-        return ", dont " + courses + " passe(s) avortées sur une course interne à JavaFX pendant le"
-                + " calcul des bornes";
     }
 
     /// Une passe de calcul, puis le verdict : la cible est-elle atteignable ?
@@ -90,56 +68,17 @@ public final class GesteVisible {
     /// Le produit connaissait déjà ce mode de défaillance : [fr.univ_amu.iut.commun.view.DefilementChrome]
     /// diffère son calcul d'un tour de boucle, parce que « révéler tout de suite reviendrait à viser un
     /// nœud de hauteur nulle ». Ce geste-ci, du côté des bancs, ne l'avait jamais hérité (#4723).
-    private static boolean unePasse(FxRobot robot, String selecteur, int[] courses) {
+    private static boolean unePasse(FxRobot robot, String selecteur) {
         AtomicBoolean atteignable = new AtomicBoolean();
-        try {
-            robot.interact(() -> {
-                Node cible = robot.lookup(selecteur).query();
-                for (ScrollPane panneau : panneauxDont(cible)) {
-                    amener(panneau, cible);
-                }
-            });
-            WaitForAsyncUtils.waitForFxEvents();
-            robot.interact(() -> atteignable.set(estDansLeCadre(robot, selecteur)));
-        } catch (RuntimeException rejet) {
-            if (!estUneCourseDeBornes(rejet)) {
-                throw rejet;
+        robot.interact(() -> {
+            Node cible = robot.lookup(selecteur).query();
+            for (ScrollPane panneau : panneauxDont(cible)) {
+                amener(panneau, cible);
             }
-            courses[0]++;
-            return false;
-        }
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> atteignable.set(estDansLeCadre(robot, selecteur)));
         return atteignable.get();
-    }
-
-    /// La passe a-t-elle avorté sur une course INTERNE À JAVAFX pendant le calcul des bornes ?
-    ///
-    /// La reconnaissance exige **le type ET la pile**. Rattraper toutes les `IndexOutOfBoundsException`
-    /// éteindrait des pannes du dépôt, qui doivent rester des pannes (#4823).
-    private static boolean estUneCourseDeBornes(Throwable rejet) {
-        for (Throwable cause = rejet; cause != null && cause != cause.getCause(); cause = cause.getCause()) {
-            if (avorteDansLesBornes(cause)) {
-                return true;
-            }
-            for (Throwable etouffee : cause.getSuppressed()) {
-                if (avorteDansLesBornes(etouffee)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private static boolean avorteDansLesBornes(Throwable cause) {
-        if (!(cause instanceof ConcurrentModificationException || cause instanceof IndexOutOfBoundsException)) {
-            return false;
-        }
-        for (StackTraceElement cadre : cause.getStackTrace()) {
-            if ("javafx.scene.Parent".equals(cadre.getClassName())
-                    && "updateCachedBounds".equals(cadre.getMethodName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /// Les panneaux de défilement dont `cible` **descend**, du plus proche au plus lointain.
