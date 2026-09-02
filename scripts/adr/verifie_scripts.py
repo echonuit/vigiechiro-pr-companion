@@ -1848,7 +1848,26 @@ def auto_test() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "harnais : un detecteur sans cas temoin n est tenu que par son cliquet",
+    "population": "les gardes que _charge nomme dans ce fichier",
+    "dispositif": "harnais",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/verifie_scripts.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste. Ce fichier n importe pas `_commun` en tete - il charge des COPIES de
+    # l arbre - donc il passe par l aide qui le charge une fois, posee par #5129.
+    if "--contrat" in sys.argv:
+        _c = _commun_du_depot()
+        raise SystemExit(
+            _c.imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(_c.RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
     print("Auto-test des scripts de vérification ADR (#2467) :")

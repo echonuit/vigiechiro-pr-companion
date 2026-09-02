@@ -38,6 +38,9 @@ import pathlib
 import sys
 import tempfile
 
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from _commun import RACINE_DEPOT, imprime_contrat
+
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 JAVA = RACINE / "src"
 
@@ -315,5 +318,22 @@ def main() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "deux lignes de javadoc identiques et consecutives",
+    "population": "toutes les sources Java sous src/, soit les deux arbres",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/adr/verifie_javadoc_sans_doublon.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
+    if "--contrat" in sys.argv:
+        sys.exit(
+            imprime_contrat(
+                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
+            )
+        )
     sys.exit(main())
