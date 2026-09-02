@@ -13,6 +13,7 @@ Sortie normalisée, pour que le rapport hebdomadaire puisse agréger sans devine
     ADR 0010 | suspects=6 | cliquet=6 | verdict=ok
 """
 
+import ast
 import pathlib
 import re
 import sys
@@ -346,6 +347,36 @@ def loupe(numero: str, titre: str, candidats: list[str], lus: int | None = None)
             f"LOUPE {numero} | population-vide : elle n'a rien balayé, son zéro ne veut rien dire."
         )
     return 0
+
+
+# --- Ce qu'un module importe d'ici, quelle que soit sa mise en forme -----------------------------
+#
+# Deux dériveurs lisaient `^from _commun import (.+)$`, donc une SEULE ligne : `gardes_deux_arbres`
+# dans le harnais, et `population` dans `contrats-des-gardes.py`. Au-delà de 100 caractères,
+# `ruff format` replie l'import en parenthèses, et les deux cessaient de voir (#5128).
+#
+# Les deux échouaient différemment, et c'est le second qui coûtait. Le harnais REFUSE, donc le cas
+# s'est vu. L'inférence, elle, rendait « (non declaree) », qui ne contredit rien par construction :
+# un garde serait resté vert pendant que la mesure avait cessé de le lire. C'est la dégradation
+# muette que l'ADR 4586 et le chantier #5102 existent pour supprimer.
+#
+# Le remède vit ICI et nulle part ailleurs, pour que les deux lecteurs ne redérivent pas chacun le
+# leur. La lecture passe par l'AST : une MISE EN FORME n'est pas une capacité, et c'est la même
+# leçon que #5032 et #5103.
+
+
+def noms_importes(texte: str, module: str = "_commun") -> list[str]:
+    """Les noms qu'une source importe de `module`, sur une ligne ou repliés en parenthèses."""
+    try:
+        arbre = ast.parse(texte)
+    except SyntaxError:
+        return []
+    return [
+        alias.name
+        for noeud in ast.walk(arbre)
+        if isinstance(noeud, ast.ImportFrom) and noeud.module == module
+        for alias in noeud.names
+    ]
 
 
 # --- Retrait des commentaires, mutualisé -------------------------------------------------------------

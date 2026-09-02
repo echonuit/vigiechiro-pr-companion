@@ -47,11 +47,15 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 
+# La lecture des imports vit dans `_commun`, et non ici : deux deriveurs la faisaient chacun de leur
+# cote, et le motif textuel des deux devenait aveugle des que `ruff format` repliait la ligne (#5128).
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import noms_importes
+
 # Les prefixes que les deux conventions posent devant le geste.
 PREFIXES = re.compile(r"^(cliquet-|loupe-|verifie[-_])?(\d{4}-)?(.*?)\.py$")
 
 CONSTANTE_ADR = re.compile(r"^ADR(?:_[A-Z]+)? = \"([^\"]+)\"", re.M)
-IMPORTE = re.compile(r"^from _commun import (.+?)(?:  #.*)?$", re.M)
 CHEMIN_ECRIT = re.compile(r"\"(src/(?:main|test)/java[^\"]*)\"")
 
 # L appel qui rend le verdict porte les DEUX choses qu on cherche : l ADR et le titre. Le premier
@@ -117,12 +121,9 @@ def sans_docstring(texte: str) -> str:
 
 def population(texte: str) -> str:
     """Ce que le garde lit, qu il l importe ou qu il l ecrive."""
-    importe = IMPORTE.search(texte)
-    if importe:
-        noms = [n.strip() for n in importe.group(1).split(",")]
-        corpus = [n for n in noms if n in CORPUS]
-        if corpus:
-            return " + ".join(sorted(corpus))
+    corpus = [n for n in noms_importes(texte) if n in CORPUS]
+    if corpus:
+        return " + ".join(sorted(corpus))
     # Un corpus se declare au niveau du MODULE ; ce qui est indente batit une fixture. La regle
     # vient de l ADR 4586, et sans elle le releve comptait les arbres temoins des auto-tests.
     #
@@ -323,6 +324,19 @@ def _auto_test() -> int:
         else:
             print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
             echecs = 1
+
+    # La MISE EN FORME de l import ne change pas la population (#5128). Les deux formes sont
+    # ecrites ici plutot que lues sur un garde reel : un garde dont l import se replierait un jour
+    # ferait passer ce cas pour vert sans qu il ait rien compare.
+    une_ligne = "from _commun import RACINES_ANCREES, rapporte\n"
+    replie = "from _commun import (\n    RACINES_ANCREES,\n    rapporte,\n)\n"
+    verifie("un import sur une ligne rend sa population", population(une_ligne), "RACINES_ANCREES")
+    verifie("un import replie rend LA MEME", population(replie), population(une_ligne))
+    verifie(
+        "et ce n est pas un accord sur du vide",
+        population(replie) != "(non declaree)",
+        True,
+    )
 
     verifie(
         "le geste se lit sous les deux conventions",
