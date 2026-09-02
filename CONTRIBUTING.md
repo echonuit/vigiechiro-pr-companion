@@ -37,6 +37,32 @@ pour une raison expliquée avec lui dans
 [dev-docs/tests-et-qualite.md](dev-docs/tests-et-qualite.md#sonarqube-for-ide-facultatif-à-configurer).
 C'est **PMD qui fait foi** : lui seul bloque la CI.
 
+### L'outillage Python, dès que vous touchez à un garde
+
+Les gardes du dépôt sont en Python, et leurs versions sont **épinglées** dans
+[pyproject.toml](pyproject.toml), groupe `gardes`. Le `ruff` de votre `PATH` n'est probablement pas
+celui-là.
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install --group gardes
+.venv/bin/ruff --version        # doit rendre la version épinglée, pas celle du PATH
+```
+
+**Rien à ajouter à `.gitignore`** : depuis Python 3.11, `venv` écrit lui-même un `.venv/.gitignore`
+contenant `*`. Le dossier ne paraît pas dans `git status`. VS Code active ce `.venv` tout seul, si
+bien que le terminal de l'IDE porte les bonnes versions sans qu'on y pense.
+
+**Pourquoi ça compte, et non « c'est plus propre ».** La demande #5105 est sortie rouge sur une règle
+`ruff` que la version du poste ne connaissait pas : le contrôle local et celui de la CI ne lisaient
+pas les mêmes règles, donc aucune attention ne pouvait rattraper l'écart. Les deux commandes qui
+bloquent la CI, à jouer avant de pousser :
+
+```bash
+.venv/bin/ruff check         scripts .github/scripts
+.venv/bin/ruff format --check scripts .github/scripts
+```
+
 ### La ligne de commande OpenSpec, si vous touchez à la spécification vivante
 
 Elle n'est pas nécessaire pour construire ni pour tester le produit. Elle l'est dès que vous ouvrez
