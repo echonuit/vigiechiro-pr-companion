@@ -20,6 +20,13 @@ Mesure du 2026-09-02 sur les trois porteurs, dont aucune ligne n est un defaut :
 La regle est donc « les deux ne se CONTREDISENT pas ». Un silence de l inference n est pas une
 contradiction : c est le cas normal, et c est meme la raison d etre du contrat.
 
+**Encore faut-il RECONNAITRE le silence, et le champ `seuil` ne le reconnaissait pas** (#5119).
+L inference dit son ignorance en toutes lettres, entre parentheses - `(2 ADR : 4395, 4587)`,
+`(sans seuil)` - la ou `population` dit « (non declaree) ». Mais un aveu ecrit en francais peut
+porter un chiffre, et `CHIFFRE.search` lisait le « 2 » de « 2 ADR » comme un seuil. Un garde a deux
+ADR ne pouvait donc pas declarer le sien sans etre accuse. `seuil_resolu` nomme desormais les deux
+formes CONCLUANTES au lieu d ecarter les autres.
+
 ## Comment les porteurs se trouvent
 
 Par un grep, puis par un LANCEMENT. Le grep ne fait que reduire les candidats ; c est la reponse a
@@ -37,7 +44,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, imprime_contrat, rapporte
+from _commun import RACINE_DEPOT, cliquet, imprime_contrat, rapporte
 
 ADR = "4636"
 
@@ -61,6 +68,10 @@ HORS_CONFRONTATION = {
 }
 
 CHIFFRE = re.compile(r"(\d+)")
+
+# Les deux formes par lesquelles `seuil()` CONCLUT. Tout le reste est un aveu d ignorance, et un
+# aveu ne contredit rien : c est deja la regle du champ `population`, que `corpus_resolu` applique.
+SEUIL_CONCLUANT = re.compile(r"^(?:cliquet|plancher) (\d+)$")
 
 
 def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
@@ -164,6 +175,38 @@ def corpus_resolu(expression: str) -> frozenset[str] | None:
     return frozenset(a for m in morceaux for a in ALIAS[m])
 
 
+def seuil_resolu(expression: str) -> str | None:
+    """Le nombre qu un seuil infere DESIGNE, ou rien quand l inference n a pas conclu.
+
+    Le pendant de `corpus_resolu` pour le champ `seuil`, et il manquait. `seuil()` rend `cliquet N`
+    ou `plancher N` quand elle conclut ; toutes ses autres reponses DISENT qu elle ne sait pas, et
+    elles sont entre parentheses : `(2 ADR : 4395, 4587)`, `(sans seuil)`, `(pas d ADR declaree)`,
+    `(ADR N introuvable)`. Une seule porte un chiffre, ce qui explique que le defaut ait attendu un
+    garde a deux ADR pour se voir : `CHIFFRE.search` y lisait le « 2 » de « 2 ADR » et le comparait,
+    si bien que `4395-renvois-en-javadoc.py` ne pouvait pas declarer son plancher de 3280 sans etre
+    accuse de contredire un nombre qui n est le seuil de rien (issue #5119).
+
+    **La reconnaissance est POSITIVE, et ce n est pas un detail de style.** Ecarter les parentheses
+    marcherait aujourd hui et lirait une RESSEMBLANCE ; nommer les deux formes conclusives demande
+    ce que l inference REPOND. C est la lecon de #5032, #5103 et #5108, et le prix en est un
+    couplage au vocabulaire de `seuil()` que `_auto_test` tient par un temoin sur un garde reel.
+    """
+    trouve = SEUIL_CONCLUANT.match(expression)
+    return trouve.group(1) if trouve else None
+
+
+def seuil_contredit(declare: str, infere: str) -> bool:
+    """Un seuil DECLARE contredit-il ce que l inference a resolu ?
+
+    La DECISION vit ici, et non dans `suspects()`, pour qu un temoin puisse l eprouver. Une aide
+    qu on teste pendant que la comparaison reste ailleurs se verifie elle-meme sans rien tenir :
+    supprimer l appel laisserait ses temoins verts.
+    """
+    d = CHIFFRE.search(declare)
+    i = seuil_resolu(infere)
+    return bool(d and i and d.group(1) != i)
+
+
 def temoin_existe(temoin: str, base: pathlib.Path) -> bool:
     """Ce que le champ `temoin` NOMME existe-t-il ?
 
@@ -179,9 +222,13 @@ def temoin_existe(temoin: str, base: pathlib.Path) -> bool:
     return bool(premier) and (base / premier).is_file()
 
 
-def suspects(racine: pathlib.Path | None = None) -> list[str]:
-    """Un suspect par CONTRADICTION entre ce qu un contrat declare et ce que le garde fait."""
-    base = racine or RACINE_DEPOT
+def releve_des_contrats(base: pathlib.Path):
+    """Le module d inference, charge depuis son fichier au nom non importable.
+
+    Extrait de `suspects()` pour que `_auto_test` puisse interroger la VRAIE inference (issue
+    #5119). Un temoin qui recopierait ses reponses en dur ne verrait pas son vocabulaire deriver,
+    et c est precisement ce que le couplage de `seuil_resolu` demande de tenir.
+    """
     sys.path.insert(0, str(base / "scripts" / "methode"))
     import importlib.util
 
@@ -190,6 +237,13 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     )
     releve = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(releve)
+    return releve
+
+
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
+    """Un suspect par CONTRADICTION entre ce qu un contrat declare et ce que le garde fait."""
+    base = racine or RACINE_DEPOT
+    releve = releve_des_contrats(base)
 
     trouves = []
     for chemin in fichiers(racine):
@@ -215,12 +269,10 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
         if d is not None and i is not None and d != i:
             trouves.append(f"{vu}  population declaree {sorted(d)} contredit {sorted(i)}")
 
-        seuil_declare = CHIFFRE.search(contrat.get("seuil", ""))
-        seuil_infere = CHIFFRE.search(releve.seuil(texte, base / "dev-docs" / "decisions"))
-        if seuil_declare and seuil_infere and seuil_declare.group(1) != seuil_infere.group(1):
-            trouves.append(
-                f"{vu}  seuil declare {seuil_declare.group(1)} contredit {seuil_infere.group(1)}"
-            )
+        seuil_infere = releve.seuil(texte, base / "dev-docs" / "decisions")
+        if seuil_contredit(contrat.get("seuil", ""), seuil_infere):
+            declare = CHIFFRE.search(contrat.get("seuil", "")).group(1)
+            trouves.append(f"{vu}  seuil declare {declare} contredit {seuil_resolu(seuil_infere)}")
     return trouves
 
 
@@ -251,6 +303,48 @@ def _auto_test() -> int:
         corpus_resolu("(non declaree)"),
         None,
     )
+    # Le champ `seuil` (issue #5119). L inference DIT quand elle ne conclut pas, et son aveu ne
+    # contredit rien - la meme regle que `corpus_resolu` tient pour la population.
+    verifie(
+        "une inference a deux ADR n a resolu aucun seuil",
+        seuil_resolu("(2 ADR : 4395, 4587)"),
+        None,
+    )
+    verifie(
+        "et le contrat juste qu elle refusait passe desormais",
+        seuil_contredit("3280, polarite=monte", "(2 ADR : 4395, 4587)"),
+        False,
+    )
+    verifie("un cliquet conclut, sur son nombre", seuil_resolu("cliquet 43"), "43")
+    verifie("un plancher aussi", seuil_resolu("plancher 3280"), "3280")
+
+    # Ce qui empeche le correctif de rendre le garde AVEUGLE : un desaccord reel refuse toujours.
+    verifie(
+        "un seuil declare qui contredit un cliquet resolu reste vu",
+        seuil_contredit("0, polarite=descend", "cliquet 43"),
+        True,
+    )
+    verifie(
+        "et le meme seuil ne se contredit pas lui-meme",
+        seuil_contredit("43, polarite=descend", "cliquet 43"),
+        False,
+    )
+
+    # Le COUPLAGE au vocabulaire de `seuil()`, tenu sur un garde REEL. Sans lui, un renommage dans
+    # l inference ferait cesser toute comparaison de seuil sans qu aucun temoin ne se plaigne : le
+    # garde deviendrait vert en ayant cesse de juger. Les deux bouts se lisent, aucun n est ecrit
+    # en dur, si bien que resserrer le cliquet de 4472 laisse ce cas vert.
+    _releve = releve_des_contrats(RACINE_DEPOT)
+    _garde_a_une_adr = RACINE_DEPOT / "scripts" / "adr" / "4472-commentaire-en-corps.py"
+    _rendu = _releve.seuil(
+        _garde_a_une_adr.read_text(encoding="utf-8"), RACINE_DEPOT / "dev-docs" / "decisions"
+    )
+    verifie(
+        "le seuil d un garde reel se resout, et sur le cliquet que son ADR declare",
+        seuil_resolu(_rendu),
+        str(cliquet("4472")),
+    )
+
     verifie(
         "un temoin nomme une fonction qui existe",
         temoin_existe("scripts/adr/verifie_scripts.py#test_0008_echec_silencieux", RACINE_DEPOT),
