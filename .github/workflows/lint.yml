@@ -686,6 +686,18 @@ jobs:
           set -euo pipefail
           python3 scripts/adr/verifie_temoins_non_decoratifs.py --auto-test
 
+      - name: "Un contrat declare ne contredit pas le garde (bloquant, #5108)"
+        # `imprime_contrat` refuse un contrat INCOMPLET ; rien ne le confrontait au reel. Un contrat
+        # que personne ne confronte est un commentaire, et il derive : la docstring de 2843 a
+        # annonce deux arbres pour un corpus qui n'en portait qu'un, pendant des mois (#5048).
+        #
+        # La regle n'est pas l'egalite. Le vocabulaire differe, et le contrat sait souvent PLUS que
+        # l'inference : un silence de celle-ci n'est pas une contradiction.
+        run: |
+          set -euo pipefail
+          python3 scripts/adr/verifie_contrats_tiennent.py --auto-test
+          python3 scripts/adr/verifie_contrats_tiennent.py
+
       - name: "Aucun appel de verdict ne cache ce qu'il a lu (bloquant, #5049)"
         # Le sous-chantier #5015 a converti 33 appels, et son bilan nommait cette dette : rien
         # n'empechait un appel neuf de naitre muet. La regression a eu lieu en QUELQUES HEURES,

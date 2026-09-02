@@ -8,6 +8,8 @@ decided_at: 2026-08-28
 verification: certaine
 enforced_by:
   - "scripts/methode/contrats-des-gardes.py"
+  - "scripts/adr/verifie_contrats_tiennent.py"
+ratchet: 0
 verified:
   - by: machine:ci
     at: 2026-08-28

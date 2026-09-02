@@ -1561,6 +1561,46 @@ def test_le_refus_s_eprouve_sur_un_garde_reel() -> None:
         _verifie("et son verdict REFUSE", code, 1)
 
 
+def test_un_contrat_ne_contredit_pas_le_garde() -> None:
+    """Le garde de l ADR 4636 voit une contradiction, et PAS un desaccord de vocabulaire.
+
+    Les deux moities comptent, et la seconde est celle qui coute : `RACINES` et
+    `PRODUCTION + TESTS` nomment le meme corpus, et une comparaison naive crierait sur les trois
+    seuls contrats du depot.
+
+    Les assertions portent sur des fonctions NON PREFIXEES, seules que la mutation de l ADR 4490
+    remplace. Un cas qui n eprouverait que des fonctions a souligne resterait vert sur un garde
+    mort, ce que #5049 a paye.
+    """
+    garde = _charge("verifie_contrats_tiennent.py")
+
+    _verifie(
+        "un alias et sa forme developpee disent le meme corpus",
+        garde.corpus_resolu("RACINES") == garde.corpus_resolu("PRODUCTION + TESTS"),
+        True,
+    )
+    _verifie(
+        "un seul arbre n est pas les deux",
+        garde.corpus_resolu("TESTS") == garde.corpus_resolu("RACINES"),
+        False,
+    )
+    _verifie(
+        "une population que l inference ignore ne contredit rien",
+        garde.corpus_resolu("(non declaree)"),
+        None,
+    )
+    _verifie(
+        "un temoin absent est vu",
+        garde.temoin_existe("scripts/adr/verifie_scripts.py#test_fantome", garde.RACINE_DEPOT),
+        False,
+    )
+    _verifie(
+        "les champs hors confrontation sont NOMMES",
+        sorted(garde.HORS_CONFRONTATION),
+        ["dispositif", "geste"],
+    )
+
+
 def test_un_appel_de_verdict_declare_ou_se_nomme() -> None:
     """Le garde de l ADR 5015 voit un appel muet, et ne voit PAS un appel qui declare.
 
@@ -1821,6 +1861,7 @@ if __name__ == "__main__":
         test_un_plancher_sans_population_dit_pourquoi,
         test_le_rapport_lit_encore_les_trois_lignes,
         test_le_contrat_a_une_forme_et_refuse_l_incomplet,
+        test_un_contrat_ne_contredit_pas_le_garde,
         test_un_appel_de_verdict_declare_ou_se_nomme,
         test_resserre_cliquets_appelle_le_rapport,
         test_rapport_et_resserrement,
