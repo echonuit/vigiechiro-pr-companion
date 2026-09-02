@@ -13,6 +13,7 @@ import fr.univ_amu.iut.importation.model.PassageExistant;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -51,7 +52,8 @@ class AvertissementsInspectionTest {
         CompteRendu rendu = AvertissementsInspection.rediger(
                 melange("PaRecPR1925492_20260422_203000.wav", "PaRecPR1925492_20260422_233000.wav"),
                 coherence("1925492", "PaRecPR1925492_20260422_203000.wav"),
-                List.of());
+                List.of(),
+                false);
 
         assertThat(rendu.estVide()).isTrue();
     }
@@ -60,7 +62,10 @@ class AvertissementsInspectionTest {
     @DisplayName("Plusieurs enregistreurs : chaque série est un détail, pas une virgule dans la phrase")
     void melange_enregistreurs() {
         CompteRendu rendu = AvertissementsInspection.rediger(
-                melange("PaRecPR1925492_20260422_203000.wav", "PaRecPR1648011_20260422_203000.wav"), null, List.of());
+                melange("PaRecPR1925492_20260422_203000.wav", "PaRecPR1648011_20260422_203000.wav"),
+                null,
+                List.of(),
+                false);
 
         Constat constat = constatUnique(rendu);
         assertThat(constat.severite())
@@ -78,7 +83,8 @@ class AvertissementsInspectionTest {
                         "PaRecPR1925492_20260423_203000.wav",
                         "PaRecPR1925492_20260424_203000.wav"),
                 null,
-                List.of());
+                List.of(),
+                false);
 
         assertThat(rendu.estVide()).isTrue();
     }
@@ -92,7 +98,8 @@ class AvertissementsInspectionTest {
                         "PaRecPR1648011_20260423_203000.wav",
                         "PaRecPR1648011_20260424_203000.wav"),
                 null,
-                List.of());
+                List.of(),
+                false);
 
         assertThat(constatUnique(rendu).details())
                 .extracting(Detail::sujet)
@@ -103,7 +110,7 @@ class AvertissementsInspectionTest {
     @DisplayName("Désaccord de série seul : un détail, et rien sur la date")
     void incoherence_serie() {
         CompteRendu rendu = AvertissementsInspection.rediger(
-                null, coherence("1925492", "PaRecPR1648011_20260422_203000.wav"), List.of());
+                null, coherence("1925492", "PaRecPR1648011_20260422_203000.wav"), List.of(), false);
 
         assertThat(constatUnique(rendu).details()).singleElement().satisfies(detail -> {
             assertThat(detail.sujet()).isEqualTo("série déclarée absente des fichiers");
@@ -115,7 +122,7 @@ class AvertissementsInspectionTest {
     @DisplayName("Désaccord de date seul : un détail, et rien sur la série")
     void incoherence_date() {
         CompteRendu rendu = AvertissementsInspection.rediger(
-                null, coherence("1925492", "PaRecPR1925492_20260430_203000.wav"), List.of());
+                null, coherence("1925492", "PaRecPR1925492_20260430_203000.wav"), List.of(), false);
 
         assertThat(constatUnique(rendu).details()).singleElement().satisfies(detail -> {
             assertThat(detail.sujet()).isEqualTo("date du journal hors de la nuit des fichiers");
@@ -127,7 +134,7 @@ class AvertissementsInspectionTest {
     @DisplayName("Série ET date en désaccord : deux détails distincts, pas une phrase liée par « et »")
     void incoherence_serie_et_date() {
         CompteRendu rendu = AvertissementsInspection.rediger(
-                null, coherence("1925492", "PaRecPR1648011_20260430_203000.wav"), List.of());
+                null, coherence("1925492", "PaRecPR1648011_20260430_203000.wav"), List.of(), false);
 
         // La phrase d'origine reliait les deux par un « et », obligeant à reconstituer mentalement ce qui
         // portait sur quoi. Deux détails séparés se lisent sans effort.
@@ -142,7 +149,8 @@ class AvertissementsInspectionTest {
         CompteRendu rendu = AvertissementsInspection.rediger(
                 null,
                 null,
-                List.of(new PassageExistant(2, 2026, "640380", "A1"), new PassageExistant(7, 2025, "130711", "Z4")));
+                List.of(new PassageExistant(2, 2026, "640380", "A1"), new PassageExistant(7, 2025, "130711", "Z4")),
+                false);
 
         assertThat(constatUnique(rendu).details())
                 .extracting(Detail::sujet)
@@ -155,7 +163,8 @@ class AvertissementsInspectionTest {
         CompteRendu rendu = AvertissementsInspection.rediger(
                 melange("PaRecPR1925492_20260422_203000.wav", "PaRecPR1648011_20260422_203000.wav"),
                 coherence("1111111", "PaRecPR1648011_20260430_203000.wav"),
-                List.of(new PassageExistant(2, 2026, "640380", "A1")));
+                List.of(new PassageExistant(2, 2026, "640380", "A1")),
+                false);
 
         assertThat(rendu.constats()).hasSize(3);
         assertThat(rendu.severite())
@@ -183,5 +192,54 @@ class AvertissementsInspectionTest {
         assertThat(AvertissementsInspection.questionNuitDejaImportee(List.of()).estVide())
                 .as("rien à confirmer : l'import part sans poser de question")
                 .isTrue();
+    }
+
+    @Test
+    @DisplayName("#4991 : un support en lecture seule est dit, avec la conduite à tenir")
+    void support_en_lecture_seule() {
+        Constat constat = constatUnique(AvertissementsInspection.rediger(
+                melange("PaRecPR1925492_20260422_203000.wav"),
+                coherence("1925492", "PaRecPR1925492_20260422_203000.wav"),
+                List.of(),
+                true));
+
+        assertThat(constat.fait())
+                .as("le fait MESURÉ, et rien de plus : le volume est monté en lecture seule")
+                .contains("lecture seule");
+        assertThat(constat.severite())
+                .as("un avertissement, pas une erreur : l'import de cette nuit aboutit")
+                .isEqualTo(Severite.AVERTISSEMENT);
+
+        String details = constat.details().stream().map(Detail::sujet).collect(Collectors.joining(" | "));
+        assertThat(details)
+                .as("la première chose à savoir est que l'import marche, sans quoi le message se lit"
+                        + " comme un refus")
+                .contains("l'import de cette nuit fonctionne");
+        assertThat(details)
+                .as("puis le geste, qui est de regarder la carte - Companion ne peut pas le faire")
+                .contains("vérifiez le verrou");
+        assertThat(details)
+                .as("et l'enjeu, qui est la PROCHAINE nuit : c'est la seule chose qu'aucune correction"
+                        + " ultérieure ne rattrapera")
+                .contains("prochaine nuit");
+        assertThat(details)
+                .as("jamais un pronostic ni une cause : le verrou mécanique explique le même symptôme")
+                .doesNotContain("usure")
+                .doesNotContain("fin de vie")
+                .doesNotContain("défectueuse");
+    }
+
+    @Test
+    @DisplayName("#4991 : un support inscriptible ne dit rien, et c'est le contrôle négatif")
+    void support_inscriptible_se_tait() {
+        // Sans lui, un constat posé sans condition passerait le cas précédent. Et un message qui
+        // paraît sur toutes les cartes est un message qu'on apprend à ignorer.
+        CompteRendu rendu = AvertissementsInspection.rediger(
+                melange("PaRecPR1925492_20260422_203000.wav"),
+                coherence("1925492", "PaRecPR1925492_20260422_203000.wav"),
+                List.of(),
+                false);
+
+        assertThat(rendu.estVide()).isTrue();
     }
 }

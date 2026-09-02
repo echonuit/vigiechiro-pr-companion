@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
+import fr.univ_amu.iut.commun.model.VolumeEnLectureSeule;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.importation.model.AnalyseMelange;
 import fr.univ_amu.iut.importation.model.EtatNommage;
@@ -111,8 +112,14 @@ public class InspectionImportViewModel {
                     .map(journal -> "PR n° " + journal.numeroSerie())
                     .orElse(""));
             passagesDejaImportes = passagesDeLaNuit(inspection);
+            // Le support de la source est lu ICI, une fois par inspection : le volume peut être
+            // retiré entre deux gestes, et la question ne se pose qu'au moment où l'on regarde la
+            // carte. La lecture n'écrit rien (#4991).
             avertissements.set(AvertissementsInspection.rediger(
-                    inspection.melange(), inspection.coherence(), passagesDejaImportes));
+                    inspection.melange(),
+                    inspection.coherence(),
+                    passagesDejaImportes,
+                    VolumeEnLectureSeule.vrai(inspection.dossierSource())));
             peuplerNuits(inspection);
             inspecte.set(true);
             messageErreur.set("");
@@ -232,7 +239,10 @@ public class InspectionImportViewModel {
                 rapport == null
                         ? CompteRendu.de("", List.of())
                         : AvertissementsInspection.rediger(
-                                rapport.melange(), rapport.coherence(), passagesDejaImportes));
+                                rapport.melange(),
+                                rapport.coherence(),
+                                passagesDejaImportes,
+                                VolumeEnLectureSeule.vrai(rapport.dossierSource())));
         if (rapport != null) {
             // Rafraîchit les badges par nuit **en place** (sans reconstruire la table, pour préserver les
             // cases « inclure » cochées par l'utilisateur).

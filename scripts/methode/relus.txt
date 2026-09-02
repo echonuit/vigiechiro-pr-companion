@@ -426,6 +426,7 @@ e79975259fea  src/main/java/fr/univ_amu/iut/commun/model/Utilisateur.java
 84d702ac6d05  src/main/java/fr/univ_amu/iut/commun/model/Verdict.java
 bdfb14f0a852  src/main/java/fr/univ_amu/iut/commun/model/VerdictFichier.java
 b6e8da3fc7e9  src/main/java/fr/univ_amu/iut/commun/model/VersionApplication.java
+51d52a170fef  src/main/java/fr/univ_amu/iut/commun/model/VolumeEnLectureSeule.java
 50b8cac7ce73  src/main/java/fr/univ_amu/iut/commun/model/VueSauvegardee.java
 3d898df588ee  src/main/java/fr/univ_amu/iut/commun/model/Workspace.java
 b21789ac3f18  src/main/java/fr/univ_amu/iut/commun/model/dao/DispositionColonnesDao.java
@@ -781,7 +782,7 @@ a7c8afafb0f8  src/main/java/fr/univ_amu/iut/importation/view/TableNuits.java
 f16563b0fd16  src/main/java/fr/univ_amu/iut/importation/view/ZoneNuits.java
 ef03b0d325da  src/main/java/fr/univ_amu/iut/importation/view/ZoneNumeroPassage.java
 f4f8aa55113b  src/main/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixe.java
-afe604c2f081  src/main/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspection.java
+de6f60d6f46e  src/main/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspection.java
 ea4721561642  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduChiffreImport.java
 769e9b592a2f  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduImport.java
 2b3d83c5cf76  src/main/java/fr/univ_amu/iut/importation/viewmodel/ControleNumeroPassage.java
@@ -1493,6 +1494,7 @@ b9d123809bcd  src/test/java/fr/univ_amu/iut/commun/model/PreferenceSourceEspeceT
 8e06582f60e5  src/test/java/fr/univ_amu/iut/commun/model/StatutWorkflowRangTest.java
 04db0e5ad0fc  src/test/java/fr/univ_amu/iut/commun/model/SuiviTraitementTest.java
 2a6dfe16682d  src/test/java/fr/univ_amu/iut/commun/model/VersionApplicationTest.java
+ba165bf8dd3f  src/test/java/fr/univ_amu/iut/commun/model/VolumeEnLectureSeuleTest.java
 2d596762d361  src/test/java/fr/univ_amu/iut/commun/model/WorkspaceTest.java
 0c668d8f8694  src/test/java/fr/univ_amu/iut/commun/model/dao/DispositionColonnesDaoTest.java
 1b6ea3763d0e  src/test/java/fr/univ_amu/iut/commun/model/dao/LienVigieChiroDaoTest.java
