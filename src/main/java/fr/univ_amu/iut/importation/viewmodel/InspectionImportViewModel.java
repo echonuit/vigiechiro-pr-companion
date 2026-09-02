@@ -12,6 +12,7 @@ import fr.univ_amu.iut.importation.model.ServiceImport;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -85,8 +86,21 @@ public class InspectionImportViewModel {
     /// les tranches suivantes. `null` tant qu'aucune inspection n'a réussi.
     private RapportInspection rapport;
 
+    /// La question posée au support de la source, remplaçable (#5101).
+    ///
+    /// `VolumeEnLectureSeule::vrai` en production. Une couture, parce qu'un banc ne sait pas monter un
+    /// volume en lecture seule et qu'un outil de capture ne le sait pas davantage : sans elle, le
+    /// chemin qui va de la sonde au bandeau n'est traversé par **rien**, ce qui était le cas depuis
+    /// #5091 - la sonde avait ses cas, le bandeau les siens, et le fil entre les deux aucun.
+    private Predicate<Path> supportEnLectureSeule = VolumeEnLectureSeule::vrai;
+
     public InspectionImportViewModel(ServiceImport serviceImport) {
         this.serviceImport = Objects.requireNonNull(serviceImport, "serviceImport");
+    }
+
+    /// Remplace la sonde du support (double de test, et jeu d'essai des aperçus).
+    public void definirSondeDuSupport(Predicate<Path> sonde) {
+        this.supportEnLectureSeule = Objects.requireNonNull(sonde, "sonde");
     }
 
     /// Inspecte le dossier source courant **en lecture seule** (R9). En cas de succès, met à jour les
@@ -119,7 +133,7 @@ public class InspectionImportViewModel {
                     inspection.melange(),
                     inspection.coherence(),
                     passagesDejaImportes,
-                    VolumeEnLectureSeule.vrai(inspection.dossierSource())));
+                    supportEnLectureSeule.test(inspection.dossierSource())));
             peuplerNuits(inspection);
             inspecte.set(true);
             messageErreur.set("");
@@ -242,7 +256,7 @@ public class InspectionImportViewModel {
                                 rapport.melange(),
                                 rapport.coherence(),
                                 passagesDejaImportes,
-                                VolumeEnLectureSeule.vrai(rapport.dossierSource())));
+                                supportEnLectureSeule.test(rapport.dossierSource())));
         if (rapport != null) {
             // Rafraîchit les badges par nuit **en place** (sans reconstruire la table, pour préserver les
             // cases « inclure » cochées par l'utilisateur).

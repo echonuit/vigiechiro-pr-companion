@@ -171,6 +171,9 @@ public final class CaptureDiagnostic {
                 injecteur,
                 graine.idProtocoleNonCouvert(),
                 sortie.resolve("apercu-diagnostic-protocole-non-couvert.png"));
+        // Les DEUX encarts à la fois : la fenêtre est couverte, et la nuit s'est pourtant interrompue.
+        // C'est ce que les deux axes permettent de dire, et une phrase unique aurait perdu (#5093).
+        rendre(injecteur, graine.idNuitInterrompue(), sortie.resolve("apercu-diagnostic-nuit-interrompue.png"));
         // Bandeau de retour (#1917) : jusqu'ici AUCUN aperçu ne montrait de bandeau sur AUCUN écran migré
         // - on ne vérifiait que « rien n'est déplacé » quand il est absent. Ouvrir sur un passage
         // inexistant produit le cas réel sans mock : le chargement échoue et l'écran le dit.
@@ -257,27 +260,74 @@ public final class CaptureDiagnostic {
                 .id();
 
         long idAvecReleve = passageAvecJournal(
-                passageDao, sessionDao, journalDao, idPoint, 2, "2026-06-22", DEBUT_NOMINAL, FIN_NOMINALE);
+                passageDao,
+                sessionDao,
+                journalDao,
+                idPoint,
+                2,
+                "2026-06-22",
+                DEBUT_NOMINAL,
+                FIN_NOMINALE,
+                Completude.COMPLETE);
         Path thlog = workspace.resolve("PaRecPR" + SERIE + "_THLog.csv");
         Files.writeString(thlog, String.join("\n", THLOG) + "\n", StandardCharsets.UTF_8);
         rattacherReleve(releveDao, sessionDao, idAvecReleve, thlog);
 
         long idSansReleve = passageAvecJournal(
-                passageDao, sessionDao, journalDao, idPoint, 1, "2026-06-08", DEBUT_NOMINAL, FIN_NOMINALE);
+                passageDao,
+                sessionDao,
+                journalDao,
+                idPoint,
+                1,
+                "2026-06-08",
+                DEBUT_NOMINAL,
+                FIN_NOMINALE,
+                Completude.COMPLETE);
 
         // Relevé présent mais point sans GPS : la courbe s'affiche, le repère GPS passe à « non
         // renseigné » et l'encart cohérence horaires disparaît (calcul impossible sans coordonnées).
         long idSansGps = passageAvecJournal(
-                passageDao, sessionDao, journalDao, idPointSansGps, 3, "2026-06-24", DEBUT_NOMINAL, FIN_NOMINALE);
+                passageDao,
+                sessionDao,
+                journalDao,
+                idPointSansGps,
+                3,
+                "2026-06-24",
+                DEBUT_NOMINAL,
+                FIN_NOMINALE,
+                Completude.COMPLETE);
         rattacherReleve(releveDao, sessionDao, idSansGps, thlog);
 
         // Passage dédié à l'avertissement (#2222) : géolocalisé (le calcul exige un GPS) et relevé
         // présent (écran complet), avec des horaires qui NE COUVRENT PAS la fenêtre du protocole.
         long idProtocoleNonCouvert = passageAvecJournal(
-                passageDao, sessionDao, journalDao, idPoint, 4, "2026-06-20", DEBUT_NON_COUVERT, FIN_NON_COUVERTE);
+                passageDao,
+                sessionDao,
+                journalDao,
+                idPoint,
+                4,
+                "2026-06-20",
+                DEBUT_NON_COUVERT,
+                FIN_NON_COUVERTE,
+                Completude.COMPLETE);
         rattacherReleve(releveDao, sessionDao, idProtocoleNonCouvert, thlog);
 
-        return new Graine(idAvecReleve, idSansReleve, idSansGps, idProtocoleNonCouvert);
+        // Passage dédié au SECOND encart (#5093) : la nuit couvre la fenêtre du protocole - le premier
+        // encart informe donc - et son journal montre qu'elle s'est interrompue. Les deux axes se
+        // lisent alors côte à côte, ce qu'aucun aperçu ne montrait.
+        long idNuitInterrompue = passageAvecJournal(
+                passageDao,
+                sessionDao,
+                journalDao,
+                idPoint,
+                5,
+                "2026-06-20",
+                DEBUT_NOMINAL,
+                FIN_NOMINALE,
+                Completude.TRONQUEE);
+        rattacherReleve(releveDao, sessionDao, idNuitInterrompue, thlog);
+
+        return new Graine(idAvecReleve, idSansReleve, idSansGps, idProtocoleNonCouvert, idNuitInterrompue);
     }
 
     /// Rattache le relevé climatique `thlog` à la session du passage `idPassage`.
@@ -297,7 +347,8 @@ public final class CaptureDiagnostic {
             int numero,
             String date,
             String heureDebut,
-            String heureFin) {
+            String heureFin,
+            Completude completude) {
         Passage passage = passageDao.insert(new Passage(
                 null,
                 numero,
@@ -318,7 +369,13 @@ public final class CaptureDiagnostic {
                 .insert(new SessionDEnregistrement(
                         null, "Car640380-2026-Pass" + numero + "-A1", null, null, passage.id()))
                 .id();
-        List<String> evenements = List.of("### Démarrage PR" + SERIE, "Arrêt programmé à 06:00:00");
+        // Les évènements suivent l'état de fin de nuit, sinon l'image se contredit : la première
+        // version montrait « Arrêt programmé à 06:00:00 » sous un encart annonçant une interruption,
+        // et un lecteur attentif y voyait deux affirmations opposées. Vu en OUVRANT la capture, pas
+        // en lisant le code - aucun test ne compare un encart à une liste voisine (#5101).
+        List<String> evenements = completude == Completude.TRONQUEE
+                ? List.of("### Démarrage PR" + SERIE, "Dernière entrée : 03:14:22")
+                : List.of("### Démarrage PR" + SERIE, "Arrêt programmé à 06:00:00");
         List<String> anomalies = List.of(
                 "Réveil non programmé : 23/06/26 - 03:12:00 PR" + SERIE + " Wakeup",
                 "Batterie faible (18%) : Batteries internes 18%");
@@ -327,12 +384,11 @@ public final class CaptureDiagnostic {
                 "LogPR" + SERIE + ".txt",
                 JsonSimple.tableau(evenements),
                 JsonSimple.tableau(anomalies),
-                // La nuit de l'aperçu s'est refermée normalement : « Arrêt programmé à 06:00:00 » est dans ses
-                // évènements. La complétude le dit désormais explicitement (#5030).
-                Completude.COMPLETE,
+                completude,
                 idSession));
         return passage.id();
     }
 
-    private record Graine(long idAvecReleve, long idSansReleve, long idSansGps, long idProtocoleNonCouvert) {}
+    private record Graine(
+            long idAvecReleve, long idSansReleve, long idSansGps, long idProtocoleNonCouvert, long idNuitInterrompue) {}
 }

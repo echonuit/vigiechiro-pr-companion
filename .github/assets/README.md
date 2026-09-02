@@ -376,6 +376,10 @@ L'assistant et **tous ses chemins non nominaux** : c'est la vue la plus riche en
 <td><a href="apercu-import-multi-nuits.png"><img src="apercu-import-multi-nuits.png" width="430" alt="Multi nuits"></a></td>
 <td><a href="apercu-import-rattachement-avertissements.png"><img src="apercu-import-rattachement-avertissements.png" width="430" alt="Rattachement avertissements"></a></td>
 </tr>
+<tr>
+<td><a href="apercu-import-lecture-seule.png"><img src="apercu-import-lecture-seule.png" width="430" alt="Support en lecture seule"></a></td>
+<td></td>
+</tr>
 </table>
 
 <table>
@@ -603,6 +607,7 @@ L'écran qui porte l'état d'avancement d'une nuit.
 <tr>
 <td><a href="apercu-diagnostic-sans-gps.png"><img src="apercu-diagnostic-sans-gps.png" width="430" alt="Sans GPS"></a></td>
 <td><a href="apercu-diagnostic-protocole-non-couvert.png"><img src="apercu-diagnostic-protocole-non-couvert.png" width="430" alt="Protocole non couvert"></a></td>
+<td><a href="apercu-diagnostic-nuit-interrompue.png"><img src="apercu-diagnostic-nuit-interrompue.png" width="430" alt="Nuit interrompue"></a></td>
 </tr>
 </table>
 

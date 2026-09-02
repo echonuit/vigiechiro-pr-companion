@@ -314,6 +314,25 @@ public final class CaptureImport {
         vm.inspection().dossierSourceProperty().set(creerDossierMultiNuits());
         vm.inspecter();
         rendre(scene, sortie.resolve("apercu-import-multi-nuits.png"));
+
+        // État « support en lecture seule » (#5091) : le quatrième constat de l'inspection. La source
+        // est une carte dont le volume n'accepte plus l'écriture - le mode de fin de vie normal de
+        // cette mémoire - et l'import fonctionne quand même, ce que le bandeau dit en premier.
+        //
+        // Le dossier est rendu non inscriptible par ses PERMISSIONS, faute de pouvoir monter un volume
+        // en lecture seule depuis un outil de capture. Ce n'est pas le mécanisme que le produit
+        // détecte, d'où le bandeau forcé plutôt que déduit : ce qu'on photographie est la RESTITUTION,
+        // et elle est la même quelle que soit la manière dont le volume le devient.
+        vm.inspection()
+                .dossierSourceProperty()
+                .set(creerDossier(
+                        "vigiechiro-sd-lecture-seule",
+                        "PaRecPR1925492_20260422_203922.wav",
+                        "PaRecPR1925492_20260422_204326.wav"));
+        vm.inspection().definirSondeDuSupport(chemin -> true);
+        vm.inspecter();
+        rendre(scene, sortie.resolve("apercu-import-lecture-seule.png"));
+        vm.inspection().definirSondeDuSupport(fr.univ_amu.iut.commun.model.VolumeEnLectureSeule::vrai);
     }
 
     private static void capturerAvertissementsRattachement(ImportationViewModel vm, Scene scene, Path sortie)
@@ -398,14 +417,27 @@ public final class CaptureImport {
     /// Journal daté de la **première nuit** (03/07) de l'échantillon multi-nuits : sa date tombe dans les
     /// nuits des fichiers (03/04/05-07), pour que l'inspection ne lève **pas** l'avertissement de
     /// non-correspondance journal/enregistrements (le cas normal d'une carte laissée tourner plusieurs
-    /// nuits, où le journal couvre bien ces nuits).
+    /// nuits).
+    ///
+    /// Le journal couvre la **première** nuit et pas les deux autres : l'aperçu montre donc les deux
+    /// états de complétude côte à côte, « complète » et « complétude inconnue » (#5101).
     private static final String LOG_MULTI =
             "03/07/26 - 20:25:00 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
                     + " CPU 600000000, T4.1\n"
                     + "03/07/26 - 20:25:01 PR1925492 Sonde temperature/hygrometrie presente, lecture toutes"
                     + " les 600s\n"
                     + "03/07/26 - 20:25:01 PR1925492 Parametres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
-                    + " 8-120kHz\n";
+                    + " 8-120kHz\n"
+                    // Le cycle de la PREMIÈRE nuit, et de celle-là seulement. C'est le cas ordinaire de
+                    // R19 sur le terrain : la carte tourne plusieurs nuits, le journal est circulaire, et
+                    // ce sont les entrées les plus ANCIENNES qu'il perd - ici les deux nuits suivantes.
+                    //
+                    // Le journal n'en portait aucun avant #5101, et la javadoc affirmait pourtant qu'il
+                    // « couvre bien ces nuits ». L'écart ne se voyait pas tant que l'absence de cycle
+                    // était lue « complète » ; #5071 l'a rendue visible, et l'aperçu montrait trois
+                    // badges « complétude inconnue » sous une légende qui parlait d'autre chose.
+                    + "03/07/26 - 20:25:02 PR1925492 Wakeup by ALARM Cpt 1\n"
+                    + "04/07/26 - 07:47:00 PR1925492 ### Passage en mode Veille\n";
 
     /// Fabrique un dossier d'échantillon **déterministe** (sous `java.io.tmpdir/<nom>`) : journal
     /// `LogPR` (contenu `log`) + relevé climatique de la série 1925492, plus les WAV nommés. Chemin fixe

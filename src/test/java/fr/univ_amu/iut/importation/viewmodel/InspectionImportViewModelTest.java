@@ -219,4 +219,35 @@ class InspectionImportViewModelTest {
         assertThat(vm.nuits().get(0).statutDejaImporteeProperty().get()).isEmpty();
         assertThat(vm.nuits().get(1).statutDejaImporteeProperty().get()).contains("déjà importée");
     }
+
+    @Test
+    @DisplayName("#5091 : un support en lecture seule remonte jusqu'au compte rendu de l'inspection")
+    void un_support_en_lecture_seule_atteint_le_compte_rendu() {
+        // Le fil que #5091 n'avait pas éprouvé : la sonde avait ses cas, le bandeau les siens, et rien
+        // ne traversait de l'une à l'autre. Même trou que celui de #4990 sur les indices du journal, et
+        // c'est la couture posée pour l'aperçu qui le rend visible.
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        vm.definirSondeDuSupport(chemin -> true);
+        vm.dossierSourceProperty().set(sd);
+
+        vm.inspecter();
+
+        assertThat(vm.avertissementsProperty().get().constats())
+                .as("le quatrième constat atteint le compte rendu, il ne s'arrête pas au modèle")
+                .anySatisfy(constat -> assertThat(constat.fait()).contains("lecture seule"));
+    }
+
+    @Test
+    @DisplayName("#5091 : un support inscriptible ne fait apparaître aucun constat")
+    void un_support_inscriptible_n_ajoute_rien() {
+        // Contrôle négatif. Sans lui, une sonde branchée en dur sur `true` passerait le cas d'au-dessus.
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        vm.definirSondeDuSupport(chemin -> false);
+        vm.dossierSourceProperty().set(sd);
+
+        vm.inspecter();
+
+        assertThat(vm.avertissementsProperty().get().constats())
+                .noneSatisfy(constat -> assertThat(constat.fait()).contains("lecture seule"));
+    }
 }

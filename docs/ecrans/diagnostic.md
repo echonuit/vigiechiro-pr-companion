@@ -58,6 +58,8 @@ Sous la fenêtre du protocole, un **second encart** dit ce que le journal du cap
 Une nuit peut très bien **couvrir la fenêtre et s'être interrompue** : commencée à l'heure, largement
 au-delà du lever, puis arrêtée au milieu. Les deux encarts le disent alors chacun de son côté.
 
+![Cas « nuit interrompue » : la fenêtre du protocole est couverte, et le journal montre pourtant que la nuit s'est arrêtée avant son terme. Les deux encarts se lisent côte à côte.](../assets/captures/apercu-diagnostic-nuit-interrompue.png)
+
 Quand le journal ne couvre pas la nuit, ce second encart **se tait**. Le journal du capteur est
 circulaire : quand la carte se remplit, il efface ses entrées les plus anciennes. Son silence ne
 prouve donc **pas** que la nuit fut entière - il dit seulement qu'on n'en sait rien.
