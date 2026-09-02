@@ -1572,7 +1572,27 @@ def test_un_appel_de_verdict_declare_ou_se_nomme() -> None:
     numerote, donc `_completude()` ne le reclame pas, et il n est pas mute, donc rien ne prouve
     que son propre auto-test attrape quelque chose.
     """
+    import tempfile
+
     garde = _charge("verifie_verdicts_declares.py")
+
+    # Les assertions portent d abord sur `fichiers()` et `suspects()`, les fonctions NON PREFIXEES.
+    # La mutation de l ADR 4490 ne remplace qu elles : un cas qui n eprouverait que `_appels_muets`
+    # resterait vert sur un garde mort, et c est ce que ce cas faisait avant que le meta-garde ne
+    # le nomme decoratif. La cecite est declaree dans l ADR 4490 elle-meme.
+    with tempfile.TemporaryDirectory() as brut:
+        faux = pathlib.Path(brut)
+        (faux / "scripts").mkdir()
+        (faux / "scripts" / "muet.py").write_text(
+            'from _commun import rapporte\nrapporte("0000", "t", [])\n', encoding="utf-8"
+        )
+        (faux / "scripts" / "declare.py").write_text(
+            'from _commun import rapporte\nrapporte("0000", "t", [], lus=7)\n', encoding="utf-8"
+        )
+        _verifie("5015 lit les sources de l arbre qu on lui donne", len(garde.fichiers(faux)), 2)
+        vus = garde.suspects(faux)
+        _verifie("5015 voit l appel muet et lui seul", len(vus), 1)
+        _verifie("et il le NOMME par son fichier", "muet.py" in vus[0] if vus else False, True)
 
     muet = 'from _commun import rapporte\nrapporte("0000", "t", [])\n'
     declare = 'from _commun import rapporte\nrapporte("0000", "t", [], lus=12)\n'
