@@ -46,8 +46,21 @@ vous avez enregistré.
 ![L'écran de diagnostic quand la fenêtre du protocole n'est pas couverte : l'avertissement nomme la
 plage attendue et la plage enregistrée.](../assets/captures/apercu-diagnostic-protocole-non-couvert.png)
 
-L'écran ne signale pas les interruptions survenues **au milieu** d'une nuit : cette information n'est
-pas conservée après l'import. L'absence d'avertissement ne prouve donc pas qu'une nuit est entière.
+## La fin de la nuit
+
+Sous la fenêtre du protocole, un **second encart** dit ce que le journal du capteur établit de la
+**fin** de la nuit. C'est une autre question que la précédente, et les deux se lisent ensemble :
+
+- la fenêtre du protocole demande *avez-vous enregistré assez longtemps*, et se calcule depuis le
+  coucher et le lever au point d'écoute ;
+- la fin de la nuit demande *l'enregistreur s'est-il arrêté normalement*, et se lit dans son journal.
+
+Une nuit peut très bien **couvrir la fenêtre et s'être interrompue** : commencée à l'heure, largement
+au-delà du lever, puis arrêtée au milieu. Les deux encarts le disent alors chacun de son côté.
+
+Quand le journal ne couvre pas la nuit, ce second encart **se tait**. Le journal du capteur est
+circulaire : quand la carte se remplit, il efface ses entrées les plus anciennes. Son silence ne
+prouve donc **pas** que la nuit fut entière - il dit seulement qu'on n'en sait rien.
 
 ## Sans relevé climatique
 

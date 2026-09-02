@@ -98,6 +98,11 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     @FXML
     private Label lblAlerteHorsNuit;
 
+    /// Second encart : la nuit s'est-elle refermée (#5093). Distinct de celui du dessus, qui dit la
+    /// couverture de la fenêtre exigée - deux axes, deux sources, et une nuit peut porter les deux.
+    @FXML
+    private Label lblNuitInterrompue;
+
     @FXML
     private HBox ligneGps;
 
@@ -261,6 +266,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
         // Alerte de cohérence horaire : texte, visibilité (présent/absent) et sévérité posés
         // par LibelleRetour depuis le RetourOperation du ViewModel (#2050).
         LibelleRetour.installer(lblAlerteHorsNuit, viewModel.alerteHorsNuitProperty());
+        LibelleRetour.installer(lblNuitInterrompue, viewModel.nuitInterrompueProperty());
 
         // Disponibilité GPS du point d'écoute (#1497) : ligne d'état permanente, affichée dès qu'un
         // diagnostic est chargé et découplée de la cohérence horaires (le repère ne disparaît plus

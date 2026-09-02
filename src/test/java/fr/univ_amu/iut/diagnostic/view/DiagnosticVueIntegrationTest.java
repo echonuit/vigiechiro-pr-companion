@@ -9,6 +9,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.di.DiagnosticGuice;
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Lieu;
@@ -384,7 +385,8 @@ class DiagnosticVueIntegrationTest {
                 5.4,
                 LocalDateTime.of(2026, 6, 23, 8, 0),
                 8.5,
-                CoherenceHoraire.indisponible());
+                CoherenceHoraire.indisponible(),
+                Completude.INCONNUE);
     }
 
     /// Diagnostic R20 : aucun relevé climatique rattaché, GPS non renseigné, journal sans anomalie.
@@ -399,7 +401,8 @@ class DiagnosticVueIntegrationTest {
                 null,
                 LocalDateTime.of(2026, 6, 24, 8, 0),
                 null,
-                CoherenceHoraire.indisponible());
+                CoherenceHoraire.indisponible(),
+                Completude.INCONNUE);
     }
 
     /// Diagnostic « nuit complète » (#1497) : GPS renseigné ET cohérence horaires calculée (fenêtre
@@ -425,6 +428,7 @@ class DiagnosticVueIntegrationTest {
                         LocalTime.of(6, 18),
                         LocalTime.of(21, 20),
                         LocalTime.of(6, 25),
-                        CoherenceHoraire.Couverture.COUVERTE));
+                        CoherenceHoraire.Couverture.COUVERTE),
+                Completude.INCONNUE);
     }
 }

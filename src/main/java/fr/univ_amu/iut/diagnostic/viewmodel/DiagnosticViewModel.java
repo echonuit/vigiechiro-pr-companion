@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.diagnostic.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.diagnostic.model.CoherenceHoraire;
@@ -98,6 +99,10 @@ public class DiagnosticViewModel {
     /// **donnée** et non par une classe CSS figée dans le FXML (#2050). Le label inline la rend via
     /// [LibelleRetour][fr.univ_amu.iut.commun.view.LibelleRetour] ; la barre de statut, neutre (ADR 0039),
     /// n'en consomme que le texte.
+    /// Ce que l'encart annonce de la fin de la nuit (#5093). Second axe, distinct de la couverture.
+    private final ReadOnlyObjectWrapper<RetourOperation> nuitInterrompue =
+            new ReadOnlyObjectWrapper<>(this, "nuitInterrompue", RetourOperation.AUCUN);
+
     private final ReadOnlyObjectWrapper<RetourOperation> alerteHorsNuit =
             new ReadOnlyObjectWrapper<>(this, "alerteHorsNuit", RetourOperation.AUCUN);
 
@@ -127,6 +132,26 @@ public class DiagnosticViewModel {
         evenements.setAll(diagnostic.anomalies().evenements());
         temperature.set(Formats.temperatureLisible(diagnostic.temperatureDebutNuit()));
         appliquerCoherence(diagnostic.coherenceHoraire());
+        nuitInterrompue.set(libelleCompletude(diagnostic.completude()));
+    }
+
+    /// Ce que l'encart annonce de la **fin** de la nuit (#5093).
+    ///
+    /// La gravité se décide ici, comme celle de la couverture : [Completude] nomme un état du domaine
+    /// (ADR 0038, et ADR 4984 qui l'applique).
+    ///
+    /// Visible pour le banc de parité : le terminal porte le même verdict.
+    public static RetourOperation libelleCompletude(Completude completude) {
+        // INCONNUE se TAIT. Elle ne passe ni pour une interruption - on accuserait une nuit sur une
+        // absence de trace - ni pour une nuit entière, ce que la prose ci-dessous dit explicitement.
+        // C'est la règle de #5071 au calcul et de #5084 au report, tenue ici une troisième fois.
+        return switch (completude) {
+            case TRONQUEE ->
+                RetourOperation.avertissement("Le journal du capteur montre que cette nuit s'est"
+                        + " interrompue avant son terme : les enregistrements s'arrêtent là.");
+            case COMPLETE -> RetourOperation.info("Le journal du capteur atteste une fin de nuit normale.");
+            case INCONNUE -> RetourOperation.AUCUN;
+        };
     }
 
     private void appliquerCoherence(CoherenceHoraire coherence) {
@@ -177,6 +202,7 @@ public class DiagnosticViewModel {
         coherenceHoraireDisponible.set(false);
         fenetreNuit.set("");
         alerteHorsNuit.set(RetourOperation.AUCUN);
+        nuitInterrompue.set(RetourOperation.AUCUN);
     }
 
     /// Enregistreur de la nuit (`PR <n° de série>`).
@@ -208,6 +234,12 @@ public class DiagnosticViewModel {
     /// indisponible.
     public ReadOnlyStringProperty fenetreNuitProperty() {
         return fenetreNuit.getReadOnlyProperty();
+    }
+
+    /// Ce que l'encart dit de la fin de la nuit, [RetourOperation#AUCUN] quand le journal ne permet
+    /// pas de conclure (#5093).
+    public ReadOnlyObjectProperty<RetourOperation> nuitInterrompueProperty() {
+        return nuitInterrompue.getReadOnlyProperty();
     }
 
     /// Ce que l'écart à la fenêtre exigée vaut pour l'observateur, [RetourOperation#AUCUN]

@@ -3,6 +3,7 @@ package fr.univ_amu.iut.diagnostic.viewmodel;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
@@ -55,7 +56,8 @@ class DiagnosticViewModelTest {
                 lon,
                 LocalDateTime.of(2026, 6, 23, 8, 0),
                 8.5,
-                coherence);
+                coherence,
+                Completude.INCONNUE);
     }
 
     private static SerieClimatique serie() {
