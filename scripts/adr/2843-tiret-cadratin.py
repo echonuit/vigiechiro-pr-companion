@@ -89,7 +89,11 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     cliquet dont on ignore le plancher est un cliquet sur lequel on ne peut pas clore le chantier.
 
     `racine` sert au garde-fou `verifie_scripts.py`, qui pointe le script vers une fixture jetable.
-    Sans elle, on balaie les deux arbres de sources du dépôt.
+    Sans elle, on balaie `SOURCES`, c'est-à-dire l'arbre de TEST seul. La production en est sortie
+    quand elle a atteint zéro : le cliquet ne garde plus que la zone qui reste loin du plancher, ce
+    que l'en-tête du module dit depuis. Cette phrase annonçait « les deux arbres », et le fichier se
+    contredisait alors trois fois contre une. Le champ `lus` de la ligne de verdict porte le compte
+    du jour ; il n'est pas recopié ici, un chiffre en prose vieillissant sans que rien ne le dise.
     """
     trouves = []
     for source in fichiers(racine):
