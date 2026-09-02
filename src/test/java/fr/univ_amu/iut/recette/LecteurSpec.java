@@ -75,6 +75,8 @@ final class LecteurSpec {
                 nuit == null ? null : LocalDate.parse(nuit),
                 bool(map, "sondePresente", true),
                 bool(map, "corrompu", false),
+                bool(map, "appuiSurTouche", false),
+                bool(map, "nuitInterrompue", false),
                 lireSessions(map.get("sessions")));
     }
 
@@ -148,7 +150,8 @@ final class LecteurSpec {
                 bool(map, "incoherent", false),
                 intOf(map, "nuits", 1),
                 str(map, "etatNommage", prefixe ? "PREFIXE" : "BRUT"),
-                intOf(map, "rejets", 0));
+                intOf(map, "rejets", 0),
+                lireCompletudes(map.get("completudes")));
     }
 
     private static List<String> lireChaines(Object valeur) {
@@ -174,6 +177,22 @@ final class LecteurSpec {
     private static String str(Map<?, ?> map, String cle, String defaut) {
         Object valeur = map.get(cle);
         return valeur == null ? defaut : valeur.toString();
+    }
+
+    /// Les complétudes attendues, **une par nuit et dans l'ordre des nuits**, ou aucune.
+    ///
+    /// Vide par défaut : une carte qui ne déclare rien n'est pas jugée là-dessus, et les specs
+    /// existantes ne bougent pas. Une carte qui déclare est jugée sur **toutes** ses nuits, car une
+    /// liste partielle laisserait croire que le reste a été regardé.
+    private static List<String> lireCompletudes(Object brut) {
+        if (!(brut instanceof List<?> liste)) {
+            return List.of();
+        }
+        List<String> etats = new ArrayList<>();
+        for (Object element : liste) {
+            etats.add(String.valueOf(element));
+        }
+        return etats;
     }
 
     private static boolean bool(Map<?, ?> map, String cle, boolean defaut) {

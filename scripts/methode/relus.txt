@@ -1707,7 +1707,7 @@ cc7e7d3e1cb5  src/test/java/fr/univ_amu/iut/e2e/ParcoursVerifierEchantillonnageE
 7d37e6ad4ba2  src/test/java/fr/univ_amu/iut/e2e/RetourApresVerificationE2ETest.java
 2704be62020a  src/test/java/fr/univ_amu/iut/fixture/JeuDeDonneesPassage.java
 5aae7e47d836  src/test/java/fr/univ_amu/iut/fixture/JeuDeDonneesPassageTest.java
-fdb9ea22e5df  src/test/java/fr/univ_amu/iut/fixture/JournalDeCapteur.java
+a9484409ff14  src/test/java/fr/univ_amu/iut/fixture/JournalDeCapteur.java
 8a00f2d62738  src/test/java/fr/univ_amu/iut/fixture/SortieCapturee.java
 c4ecf9dc9e9c  src/test/java/fr/univ_amu/iut/importation/AnalyseCoherenceTest.java
 7ccc080b8069  src/test/java/fr/univ_amu/iut/importation/AnalyseMelangeTest.java
@@ -1960,7 +1960,7 @@ e2160d2b8a89  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreImbriqueTes
 d074a44cd5f7  src/test/java/fr/univ_amu/iut/recette/JournalDesReperes.java
 6d929019e49c  src/test/java/fr/univ_amu/iut/recette/JournalDesReperesTest.java
 a8ebe81a91bf  src/test/java/fr/univ_amu/iut/recette/Jugement.java
-73eb48583391  src/test/java/fr/univ_amu/iut/recette/LecteurSpec.java
+23ea2a6b45e9  src/test/java/fr/univ_amu/iut/recette/LecteurSpec.java
 1af59295a807  src/test/java/fr/univ_amu/iut/recette/MotifDeCas.java
 328603688575  src/test/java/fr/univ_amu/iut/recette/PageDesClipsTest.java
 a5d5dc3a5941  src/test/java/fr/univ_amu/iut/recette/PerimetreDesSessions.java
@@ -1977,7 +1977,7 @@ ba84a77dca75  src/test/java/fr/univ_amu/iut/recette/RecetteImportCliGoldenTest.j
 955859ce669d  src/test/java/fr/univ_amu/iut/recette/SansExceptionAvaleeTest.java
 accdcc27fbcd  src/test/java/fr/univ_amu/iut/recette/Seance.java
 d454ecd5ac76  src/test/java/fr/univ_amu/iut/recette/SeanceTest.java
-3958e52e5e27  src/test/java/fr/univ_amu/iut/recette/SpecCarteSd.java
+cfde589c7b2e  src/test/java/fr/univ_amu/iut/recette/SpecCarteSd.java
 e19e055e1fb2  src/test/java/fr/univ_amu/iut/recette/film/CalqueDesGestes.java
 8c9b84d546ab  src/test/java/fr/univ_amu/iut/recette/film/CalqueDesGestesTest.java
 a24e19e1fce0  src/test/java/fr/univ_amu/iut/recette/film/CameraDeScene.java

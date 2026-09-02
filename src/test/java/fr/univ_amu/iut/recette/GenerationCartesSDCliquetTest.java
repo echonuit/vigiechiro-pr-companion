@@ -84,6 +84,17 @@ class GenerationCartesSDCliquetTest {
                 .as("%s : nombre de nuits détectées", spec.fixture())
                 .hasSize(attendu.nuits());
 
+        // La complétude n'est jugée que si la carte la déclare (#5126). Une carte peut exercer un état
+        // sans que rien ne dise ce qu'on en attend : c'était le cas de `sd-multi-nuits`, qui portait
+        // depuis toujours un journal ne couvrant qu'une de ses trois nuits sans que le contrat le sache.
+        if (!attendu.completudes().isEmpty()) {
+            assertThat(rapport.partitionNuits().stream()
+                            .map(nuit -> nuit.completude().name())
+                            .toList())
+                    .as("%s : complétude de chaque nuit, dans l'ordre des nuits", spec.fixture())
+                    .containsExactlyElementsOf(attendu.completudes());
+        }
+
         if (spec.zip()) {
             verifierCheminZip(spec, carte, rapport);
         }

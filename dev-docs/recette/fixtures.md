@@ -28,6 +28,8 @@ journal:                        # journal du capteur LogPR<serie>.txt
   nuit: "2026-04-22"            # date de la 1re ligne (fixe dateDebut pour l'analyseur)
   sondePresente: true           # ajoute la ligne « Sonde ... présente »
   corrompu: false               # true -> journal illisible (aucune série extractible)
+  appuiSurTouche: false         # true -> « Wakeup by PINPUSH... Cpt 2 » au milieu de la nuit (#4981)
+  nuitInterrompue: false        # true -> le journal s'arrête après le réveil, cycle jamais refermé (#5093)
   sessions:                     # REDÉMARRAGES supplémentaires du capteur (#3898), facultatif
     - nuit: "2026-04-25"        #   chacun repose ses paramètres après `nuit` ci-dessus
       frequenceKhz: 256         #   et peut annoncer une autre fréquence d'acquisition
@@ -58,6 +60,7 @@ attendu:                        # contrat de recette (voir « Le garde-fou »)
   nuits: 1                      # nombre de nuits détectées
   etatNommage: "BRUT"           # BRUT, PREFIXE ou VIDE
   rejets: 0                     # > 0 déclenche la vérification d'import réel
+  completudes: []               # une par nuit, dans l'ordre : COMPLETE, TRONQUEE ou INCONNUE
 ```
 
 Deux variantes utiles :
@@ -85,7 +88,7 @@ Deux variantes utiles :
           intervalleSecondes: 300
     ```
 
-## Les 10 cartes de recette
+## Les 12 cartes de recette
 
 Chaque carte exerce **une** pathologie de l'assistant d'import (voir l'étape 5 de
 [S2 · Importer une nuit](sessions/s2-importer.md)).
@@ -102,6 +105,8 @@ Chaque carte exerce **une** pathologie de l'assistant d'import (voir l'étape 5 
 | `sd-prefixee` | bruts déjà préfixés `Car...` -> état de nommage `PREFIXE` | 3 |
 | `sd-rejets` | un faux wav parmi huit valides -> l'import aboutit, zone des rejets | 9 |
 | `sd-grosse` | soixante wav -> test de charge (progression, parallélisme, disque) | 60 |
+| `sd-reveil-bouton` | un appui sur une touche au milieu de la nuit -> **une** nuit, complète, et non deux (#4981) | 5 |
+| `sd-nuit-interrompue` | le journal ne se referme jamais -> nuit **tronquée** (#5093) | 3 |
 
 ## Régénérer les cartes
 

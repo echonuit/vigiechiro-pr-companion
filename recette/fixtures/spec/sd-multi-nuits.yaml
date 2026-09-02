@@ -35,3 +35,7 @@ attendu:
   plusieursEnregistreurs: false
   incoherent: false
   nuits: 3
+  # Le journal ne couvre que la PREMIÈRE nuit : les deux suivantes n'ont aucune preuve, et leur
+  # complétude est donc INCONNUE et non « incomplète » (#5071, #4990). Sans cette ligne, la carte
+  # exerçait cet état depuis toujours sans que rien ne le juge (#5126).
+  completudes: ["COMPLETE", "INCONNUE", "INCONNUE"]

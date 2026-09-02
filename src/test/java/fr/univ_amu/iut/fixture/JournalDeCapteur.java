@@ -65,6 +65,35 @@ public final class JournalDeCapteur {
     ///     valeur du journal dont un test dépende vraiment aujourd'hui : l'import en tire la fréquence
     ///     réelle des bruts, que l'en-tête WAV ne dit pas (il porte `Fe/10`, cf. EPIC #1054)
     public static List<String> lignes(String serie, LocalDate nuit, boolean sondePresente, int frequenceKhz) {
+        return lignes(serie, nuit, sondePresente, frequenceKhz, false);
+    }
+
+    /// Les lignes du journal d'une nuit, avec ou sans **appui sur une touche** en son milieu.
+    ///
+    /// @param appuiSurTouche vrai pour intercaler `Wakeup by PINPUSH... Cpt 2` entre le réveil
+    ///     programmé et la mise en veille. C'est le geste de l'observateur qui vient regarder l'écran :
+    ///     le firmware sort de la veille pour le laisser agir, et cela n'ouvre **pas** une nuit de plus.
+    ///     Le code ne connaissait que `ALARM` et fabriquait une nuit sur cet appui (#4981) ; aucune
+    ///     carte de recette ne portait ce cas (#5126). L'heure est fixe, le générateur restant
+    ///     déterministe
+    public static List<String> lignes(
+            String serie, LocalDate nuit, boolean sondePresente, int frequenceKhz, boolean appuiSurTouche) {
+        return lignes(serie, nuit, sondePresente, frequenceKhz, appuiSurTouche, false);
+    }
+
+    /// Les lignes du journal d'une nuit, que l'enregistreur a pu **ne pas refermer**.
+    ///
+    /// @param nuitInterrompue vrai pour que le journal s'arrête après le réveil, sans « Passage en mode
+    ///     Veille » ni mise en veille. C'est ce que laisse une carte pleine, une batterie vide ou un
+    ///     arrêt subi : le cycle reste ouvert, et la nuit est TRONQUÉE et non complète. Le diagnostic
+    ///     ne le signalait nulle part avant #5093
+    public static List<String> lignes(
+            String serie,
+            LocalDate nuit,
+            boolean sondePresente,
+            int frequenceKhz,
+            boolean appuiSurTouche,
+            boolean nuitInterrompue) {
         String soir = nuit.format(FORMAT_JOURNAL);
         String matin = nuit.plusDays(1).format(FORMAT_JOURNAL);
         List<String> lignes = new ArrayList<>();
@@ -88,6 +117,12 @@ public final class JournalDeCapteur {
                 "Paramètres : Acquisi. 20:25-07:47, Fe" + frequenceKhz + "kHz FL N FPH 00,"
                         + " S. R. 16dB 1dt. GN0, Bd. Freq. 8-120kHz, Wav 2-30s SD 99%"));
         lignes.add(ligne(soir, "20:26:13", serie, "Wakeup by ALARM... Cpt 1"));
+        if (appuiSurTouche) {
+            lignes.add(ligne(matin, "01:15:00", serie, "Wakeup by PINPUSH... Cpt 2"));
+        }
+        if (nuitInterrompue) {
+            return lignes;
+        }
         lignes.add(ligne(matin, "07:48:00", serie, "### Passage en mode Veille"));
         lignes.add(ligne(matin, "07:52:21", serie, "Mise en veille, réveil à 20:25, Bat. Interne 4.0 90%"));
         return lignes;
