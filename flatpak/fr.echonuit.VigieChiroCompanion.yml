@@ -114,8 +114,8 @@ modules:
     sources:
       - type: file
         dest-filename: vigiechiro.deb
-        url: https://github.com/echonuit/vigiechiro-pr-companion/releases/download/v2.191.0/vigiechirocompanion_2.191.0_amd64-x64.deb
-        sha256: f79062588b6bf20442f42321042cd78028756ff8b3840af41bc97edeb42f3fc9
+        url: https://github.com/echonuit/vigiechiro-pr-companion/releases/download/v2.192.0/vigiechirocompanion_2.192.0_amd64-x64.deb
+        sha256: feac4c7786f682b76132f5e101205d389d14e7b37dc03997efc1fd8dff16bb8a
         # `flatpak-external-data-checker`, exécuté dans `flatpak.yml`, détecte les nouvelles
         # versions et ouvre la mise à jour tout seul : c'est ce qui rend la maintenance quasi nulle.
         x-checker-data:
