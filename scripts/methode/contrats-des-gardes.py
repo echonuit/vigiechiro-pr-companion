@@ -220,8 +220,8 @@ def titre_verdict(texte: str) -> str | None:
     # `loupe-4472` en porte deux, celui de sa branche a drapeau etant parametre. Trier par la seule
     # ligne rendrait le moins informatif des deux.
     if litteraux:
-        return sorted(litteraux)[0][1]
-    return sorted(construits)[0][1] if construits else None
+        return min(litteraux)[1]
+    return min(construits)[1] if construits else None
 
 
 def numero_adr(texte: str) -> str | None:
