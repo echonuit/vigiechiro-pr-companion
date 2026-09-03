@@ -284,7 +284,7 @@ les patterns en place plutôt que réinventer) ; puis rédiger un plan ; puis d�
 à un EPIC**.
 
 **Le palier du sous-chantier.** Pour chaque lot, une question avant de l'accrocher : combien de PR ?
-Une ou deux, des issues rattachées à l'EPIC suffisent. **Plus de deux PR cohérentes, c'est un
+Une seule, et une issue rattachée à l'EPIC suffit. **Une PR par issue : dès la deuxième, c'est un
 chantier** : le lot s'ouvre alors en **sous-chantier**, un EPIC enfant, ses issues s'y rattachent, et
 la case du parent pointe vers lui. Un lot multi-PR accroché sous une case à cocher n'a ni périmètre
 écrit, ni bilan, ni les quatorze passes, et se termine sans que personne sache s'il est fini. La forme

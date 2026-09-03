@@ -66,12 +66,12 @@ demandait (#4907).
 
 ## Le palier du sous-chantier, à l'étape 3
 
-**Plus de deux PR cohérentes, c'est un chantier.** Pour chaque lot, la question se pose avant de
-l'accrocher :
+**Une PR par issue : dès la deuxième, c'est un chantier.** Pour chaque lot, la question se pose
+avant de l'accrocher :
 
-- une ou deux PR : des issues rattachées à l'EPIC suffisent ;
-- plus de deux, ou plusieurs issues déjà identifiées : le lot **s'ouvre en sous-chantier**, un EPIC
-  enfant, ses issues s'y rattachent, et la case du parent pointe vers lui.
+- **une seule PR** : une issue rattachée à l'EPIC suffit ;
+- **deux ou plus**, ou plusieurs issues déjà identifiées : le lot **s'ouvre en sous-chantier**, un
+  EPIC enfant, ses issues s'y rattachent, et la case du parent pointe vers lui.
 
 Un lot multi-PR sous une case à cocher n'a ni périmètre écrit, ni bilan, ni les quatorze passes de
 clôture. Il se termine sans que personne sache s'il est fini.
@@ -131,7 +131,7 @@ et la chaîne se poursuit jusqu'à [`clore-un-chantier`](../clore-un-chantier/SK
 | Pensée | Réalité |
 |---|---|
 | « Je découpe en issues, on verra la taille après » | La taille se demande avant. Après, le lot est déjà accroché |
-| « Ce lot tiendra bien sous une case à cocher » | Combien de PR ? Plus de deux, il lui faut un sous-chantier |
+| « Ce lot tiendra bien sous une case à cocher » | Combien de PR ? Deux, et il lui faut déjà un sous-chantier |
 | « Les autres EPIC font comme ça » | La forme observée enseigne l'erreur : #4511 porte sept lots et zéro sous-chantier |
 | « Je cartographierai en écrivant le code » | Le plan aura alors inventé ce qui existait déjà |
 | « Le triage, je le ferai si un doublon apparaît » | Il apparaîtra au conflit de fusion, quand deux chemins existent |

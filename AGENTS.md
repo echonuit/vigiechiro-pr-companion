@@ -135,8 +135,8 @@ lot. Un lot qui n'en porte pas se clôt à l'estime, et un critère qui reformul
 un : « fini quand la loupe est écrite » ne dit rien de plus que le titre, « fini quand elle rougit
 sur un lot neuf muet » se joue.
 
-**Et pour chaque lot, une question avant de l'accrocher** : combien de PR ? Une ou deux, des issues
-rattachées à l'EPIC suffisent. **Plus de deux PR cohérentes, c'est un chantier** : le lot s'ouvre
+**Et pour chaque lot, une question avant de l'accrocher** : combien de PR ? Une seule, et une issue
+rattachée à l'EPIC suffit. **Une PR par issue : dès la deuxième, c'est un chantier** : le lot s'ouvre
 alors en **sous-chantier**, un EPIC enfant, ses issues s'y rattachent, et la case du parent pointe
 vers lui. Un lot multi-PR accroché sous une case à cocher n'a ni périmètre écrit, ni bilan, ni les
 quatorze passes : il se termine sans que personne sache s'il est fini. La forme observée dans les EPIC

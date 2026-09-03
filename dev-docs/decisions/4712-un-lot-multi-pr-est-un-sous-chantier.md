@@ -1,6 +1,6 @@
 ---
 type: adr
-title: "Un lot qui portera plus de deux PR s'ouvre en sous-chantier"
+title: "Un lot qui portera plus d'une PR s'ouvre en sous-chantier"
 status: stable
 article: A11
 chantier: "#4712, sas des suites (#4562)"
@@ -17,7 +17,7 @@ generated:
   at: 2026-08-29
 ---
 
-# Un lot qui portera plus de deux PR s'ouvre en sous-chantier
+# Un lot qui portera plus d'une PR s'ouvre en sous-chantier
 
 ## Contexte
 
@@ -39,12 +39,17 @@ le porteur du produit a dû redemander la règle plusieurs fois.
 
 ## Décision
 
-**Plus de deux PR cohérentes, c'est un chantier.** Au découpage, chaque lot se pose la question du
-nombre de PR :
+**Une PR par issue : dès la deuxième, c'est un chantier.** Au découpage, chaque lot se pose la
+question du nombre de PR :
 
-- une ou deux : des issues rattachées à l'EPIC suffisent ;
-- plus de deux, ou plusieurs issues déjà identifiées : le lot **s'ouvre en sous-chantier**, un EPIC
-  enfant, ses issues s'y rattachent, et la case du parent pointe vers lui.
+- **une seule** : une issue rattachée à l'EPIC suffit ;
+- **deux ou plus**, ou plusieurs issues déjà identifiées : le lot **s'ouvre en sous-chantier**, un
+  EPIC enfant, ses issues s'y rattachent, et la case du parent pointe vers lui.
+
+Le seuil s'énonce par le principe et non par un nombre à comparer, parce que la forme précédente se
+lisait à l'envers : « une ou deux : des issues suffisent » disait qu'un lot de deux PR n'était pas un
+chantier, quand la décision était l'inverse. Elle a été suivie exactement, et il a fallu la corriger
+au découpage du sous-chantier C de #5102 (issue #5155).
 
 La règle s'écrit à l'endroit qui induisait l'erreur, c'est-à-dire dans la phrase de découpage
 d'`AGENTS.md` et son équivalent de `CONTRIBUTING.md`, et non dans une page qu'on lit une fois.
