@@ -79,6 +79,8 @@ class ScenarioMenuDeLigneImportTest {
 
     private static final int APPARITION_SECONDES = 30;
 
+    private static final int FIN_SECONDES = 180;
+
     private static final long PAUSE_PAR_FICHIER_MS = 900;
 
     /// « Colonnes… » ferme la grammaire de tous les menus de ligne du produit (#1792).
@@ -192,6 +194,24 @@ class ScenarioMenuDeLigneImportTest {
                                 + " (#1792).%nLe menu dit : %s",
                         libelles)
                 .contains(COLONNES);
+
+        // Et on LAISSE L'IMPORT CONCLURE. Sans cela le geste part sur un travail en cours - copie,
+        // renommage et transformation freinés à 900 ms par fichier - que les classes suivantes du
+        // fork subissent. Mesuré : `ordre-alternatif`, qui rejoue toute la suite dans un fork UNIQUE,
+        // est passé de 19 minutes à plus de 40, son butoir, et s'est fait couper (#5165).
+        //
+        // C'est aussi ce que le clip doit montrer : un geste qui se termine.
+        Attente.que(
+                // VISIBLE, et non seulement présent : le panneau existe dans le graphe de scène
+                // avant d'être montré, et `isPresent()` rendait vrai aussitôt - l'attente ne servait
+                // à rien. C'est le piège que `PreambuleImport` évite en testant la visibilité.
+                () -> robot.lookup("#compteRenduChiffre")
+                        .tryQuery()
+                        .map(Node::isVisible)
+                        .orElse(false),
+                "l'import lancé pour faire paraître le suivi n'a jamais abouti : le banc laisserait"
+                        + " alors du travail derrière lui",
+                FIN_SECONDES * 1000L);
     }
 
     /// Déclenche l'item `item` du sous-menu `sousMenu`, sans passer par le pointeur.
