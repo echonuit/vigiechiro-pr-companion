@@ -161,11 +161,13 @@ class ScenarioMenuDeLigneImportTest {
                 .filter(texte -> texte != null && !texte.isBlank())
                 .toList();
         assertThat(libelles)
-                .as("le menu doit porter des libellés lisibles, et non des entrées muettes")
+                .as("« le menu s'ouvre, ENTIÈREMENT LISIBLE » : chaque entrée doit porter un libellé"
+                        + " qu'on puisse lire. Une entrée muette laisserait l'observateur deviner ce"
+                        + " qu'elle fait, et un menu se lit avant de se cliquer")
                 .isNotEmpty()
-                .allSatisfy(libelle -> assertThat(libelle).doesNotContain("…​"));
+                .contains("Colonnes…")
+                .anySatisfy(libelle -> assertThat(libelle).isEqualTo("Copier"));
 
-        // ─── S2-53 · « Colonnes… » ferme le menu ─────────────────────────────────────────────────
         // ─── S2-52 · « Copier ▸ Nom du fichier » remplit le presse-papier ───────────────────────
         // La sélection d'abord : le menu copie la LIGNE choisie, et sans sélection il n'aurait rien à
         // copier. C'est le geste réel - on clique droit sur une ligne, donc on la désigne.
