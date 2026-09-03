@@ -972,8 +972,8 @@ class DocumentationAJourTest {
 
     /// Fichiers Markdown de la racine (hors sites) qui peuvent porter une balise d'inventaire.
     ///
-    /// `REMERCIEMENTS.md` y entre avec #5169 : son en-tete annoncait un effectif que rien ne
-    /// rapprochait de la liste nominative juste en dessous.
+    /// `REMERCIEMENTS.md` en fait partie : son en-tete annonce un effectif que la liste nominative
+    /// juste en dessous doit confirmer.
     private static final List<Path> FICHIERS_DOC_RACINE = List.of(Path.of("README.md"), Path.of("REMERCIEMENTS.md"));
 
     /// Une ligne de contributeur de `REMERCIEMENTS.md` : `| [@pseudonyme](url) | n | n | n |`.
@@ -1071,17 +1071,12 @@ class DocumentationAJourTest {
         };
     }
 
-    /// Les personnes que `REMERCIEMENTS.md` liste nommement.
+    /// Les personnes que `REMERCIEMENTS.md` liste nommement, comptees sur les pseudonymes DISTINCTS.
     ///
-    /// Le fichier annoncait 92 contributrices et contributeurs et en listait 90. Rien ne rapprochait
-    /// les deux nombres : il n'est engendre par aucun script, son en-tete se recopiait a la main, et
-    /// l'ecart a survecu jusqu'a ce que le recit d'origine du README reprenne le chiffre a quatre
-    /// endroits de plus (#5169). C'est l'article A5 : un chiffre que le code sait recalculer ne
-    /// s'ecrit pas a la main.
+    /// Le grain est la personne et non la ligne : qui change d equipe en cours de semestre figure
+    /// dans deux tableaux, et l en-tete annonce un effectif, pas un nombre d inscriptions.
     ///
-    /// Le decompte porte sur les pseudonymes DISTINCTS et non sur les lignes. Aucun ne se repete
-    /// aujourd'hui, mais une personne qui changerait d'equipe en cours de semestre serait comptee
-    /// deux fois, et l'effectif annonce cesserait d'etre un effectif.
+    /// C est l article A5 : un chiffre que le code sait recalculer ne s ecrit pas a la main.
     private static int contributeursListes() {
         Matcher ligne = CONTRIBUTEUR_REMERCIE.matcher(lire(Path.of("REMERCIEMENTS.md")));
         Set<String> pseudonymes = new TreeSet<>();
