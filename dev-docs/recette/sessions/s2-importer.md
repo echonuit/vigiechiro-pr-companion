@@ -133,13 +133,16 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
   256 kHz). Importer les deux, puis ouvrir chaque nuit : chacune annonce la fréquence
   d'acquisition de **sa** session, et non celle de la première (#3460).
 - **S2-44** · *geste: un-journal-absent-ou-corrompu* · `sd-sans-journal` : l'absence de journal est signalée, l'import reste possible (mode dégradé).
-- **S2-68** · *geste: un-journal-absent-ou-corrompu* · `sd-sans-journal` : la nuit porte le badge **« complétude inconnue »**, et **non** « complète ». Sa
+- **S2-68** · *geste: un-journal-absent-ou-corrompu* · `sd-sans-journal-multi` : la nuit porte le badge **« complétude inconnue »**, et **non** « complète ». Sa
   pastille n'est ni verte ni ambre : rien ne permet de rassurer, rien ne permet d'inquiéter. Avant
   #4990, cette nuit recevait le badge vert le plus rassurant, l'absence de preuve étant lue comme une
   preuve.
-- **S2-69** · *geste: un-journal-absent-ou-corrompu* · `sd-sans-journal` · *survoler la pastille* · L'infobulle dit **pourquoi** on ne sait pas (« ses entrées
+- **S2-69** · *geste: un-journal-absent-ou-corrompu* · `sd-sans-journal-multi` · *survoler la pastille* · L'infobulle dit **pourquoi** on ne sait pas (« ses entrées
   ont pu être effacées, une carte pleine effaçant les plus anciennes »), que la nuit est peut-être
   entière, et que ses enregistrements s'importent normalement. Elle n'affirme aucune cause.
+  *(Carte changée en #5145 : `sd-sans-journal` ne porte qu'une nuit, et la table des nuits n'est
+  visible qu'à partir de deux. Le badge n'était donc jamais à l'écran, et ces deux cas ne pouvaient
+  pas être joués. `sd-sans-journal-multi` est la même carte à deux nuits.)*
 - **S2-70** · *geste: une-carte-qui-porte-plusieurs-nuits* · `sd-multi-nuits` : le journal ne couvre que la **première** nuit. Seule celle-ci porte un badge de
   complétude établi ; les deux suivantes disent « complétude inconnue ». C'est le cas ordinaire de R19
   sur le terrain - la carte tourne plusieurs nuits, le journal circulaire perd les plus anciennes - et
