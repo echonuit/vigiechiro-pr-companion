@@ -384,6 +384,27 @@ Aucun de ces clips ne dit donc quoi que ce soit de la vitesse du produit.
 
 
 
+
+## ScenarioMenuDeLigneImportTest
+
+### S2-51 à S2-53 · `le_menu_de_ligne_s_ouvre_pendant_l_import`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioMenuDeLigneImportTest.le_menu_de_ligne_s_ouvre_pendant_l_import.mp4"></video>
+
+> **La session déclarait ce geste « non automatisable (rendu du popup) ». C'était faux.** Le clic droit
+> ouvre une seconde fenêtre, que la caméra sait composer - son propre code cite le cas : « pour les
+> fenêtres qui paraissent en cours de séance : un menu, une modale ».
+
+> Ce qui manquait n'était pas un moyen mais deux gestes que le dépôt connaissait déjà : viser la table
+> par son identifiant, et l'**amener dans le cadre**, l'assistant étant plus haut que la scène.
+
+> Le clip se joue **pendant** l'import, et il le faut : la table du suivi n'existe que le temps de
+> l'opération. Sans le frein du banc, l'import d'une fixture dure des millisecondes et il n'y aurait
+> aucune ligne sur laquelle cliquer.
+
+> `S2-52` déclenche l'action du sous-menu plutôt que de le survoler : un popup dans un popup est ce que
+> le rendu sans écran tient le moins bien, et l'action déclenchée éprouve le même code que le clic.
 ## ScenarioAnnonceConnexionTest
 
 ### S2-61 · `deconnecte_le_compte_rendu_ne_pretend_rien`
