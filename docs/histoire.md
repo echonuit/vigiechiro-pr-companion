@@ -35,15 +35,15 @@ avant que l'écran n'existe.
 ## Quatre semaines, vingt et une équipes
 
 Le développement s'est fait pendant la SAÉ 2.01 du BUT Informatique de l'IUT d'Aix-Marseille.
-Vingt et une équipes d'étudiantes et d'étudiants de première année, quatre-vingt-douze personnes,
-ont travaillé quatre semaines sur le même produit, chacune dans son dépôt, chacune sur sa part du
-parcours. La première version utilisable est sortie de là. Les noms sont dans
+Vingt et une équipes d'étudiantes et d'étudiants de première année,
+<!--inv:contributeurs-->90<!--/inv--> personnes, ont travaillé quatre semaines sur le même produit,
+chacune dans son dépôt, chacune sur sa part du parcours. La première version utilisable est sortie de là. Les noms sont dans
 [REMERCIEMENTS.md](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/REMERCIEMENTS.md).
 
 ## Deux consolidations
 
-Un produit livré en quatre semaines par quatre-vingt-douze personnes tient debout par endroits, et
-pas partout. Deux passes ont suivi.
+Un produit livré en quatre semaines par une promotion entière tient debout par endroits, et pas
+partout. Deux passes ont suivi.
 
 La première a repris les fonctionnalités une par une, en confrontant plusieurs modèles de langue au
 même code.

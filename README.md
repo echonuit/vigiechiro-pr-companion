@@ -188,11 +188,10 @@ ensuite été découpé en issues, une par parcours, et accompagné des tests un
 [brief](https://brief.echonuit.fr/), et il a continué de vivre depuis.
 
 Sont venues quatre semaines intensives. Vingt et une équipes de première année de BUT Informatique,
-quatre-vingt-douze étudiantes et étudiants, chacune dans son dépôt, toutes sur le même produit. Le
-MVP est sorti de là.
+<!--inv:contributeurs-->90<!--/inv--> étudiantes et étudiants, chacune dans son dépôt, toutes sur le
+même produit. Le MVP est sorti de là.
 
-Ce que quatre-vingt-douze personnes livrent en quatre semaines tient debout par endroits, et pas
-partout. Deux consolidations ont suivi. La première a repris les fonctionnalités une par une, en
+Ce qu'une promotion entière livre en quatre semaines tient debout par endroits, et pas partout. Deux consolidations ont suivi. La première a repris les fonctionnalités une par une, en
 faisant s'affronter plusieurs modèles de langue sur le même code. La seconde a visé l'usage réel,
 jusqu'à ce qu'un observateur puisse traiter sa saison entière sans buter.
 

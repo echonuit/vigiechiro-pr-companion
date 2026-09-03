@@ -900,7 +900,8 @@ class DocumentationAJourTest {
             "criteres-analyse",
             "criteres-activite",
             "criteres-multisite",
-            "criteres-audit");
+            "criteres-audit",
+            "contributeurs");
 
     /// La clé de balise qu'une ADR déclare pour SA valeur, dans son en-tête.
     private static final Pattern CLE_BALISE_ADR = Pattern.compile("^inv_key: ([a-z-]+)$", Pattern.MULTILINE);
@@ -970,7 +971,13 @@ class DocumentationAJourTest {
     private static final List<Path> RACINES_DOC = List.of(Path.of("dev-docs"), Path.of("docs"), Path.of("brief"));
 
     /// Fichiers Markdown de la racine (hors sites) qui peuvent porter une balise d'inventaire.
-    private static final List<Path> FICHIERS_DOC_RACINE = List.of(Path.of("README.md"));
+    ///
+    /// `REMERCIEMENTS.md` y entre avec #5169 : son en-tete annoncait un effectif que rien ne
+    /// rapprochait de la liste nominative juste en dessous.
+    private static final List<Path> FICHIERS_DOC_RACINE = List.of(Path.of("README.md"), Path.of("REMERCIEMENTS.md"));
+
+    /// Une ligne de contributeur de `REMERCIEMENTS.md` : `| [@pseudonyme](url) | n | n | n |`.
+    private static final Pattern CONTRIBUTEUR_REMERCIE = Pattern.compile("^\\| \\[@([^\\]]+)\\]", Pattern.MULTILINE);
 
     /// Une ligne du tableau des commandes de `cli.md` : première cellule = commande entre accents graves.
     private static final Pattern COMMANDE_DOCUMENTEE =
@@ -1052,6 +1059,7 @@ class DocumentationAJourTest {
                         Path.of("src", "main", "resources", "db", "migration"),
                         nom -> nom.startsWith("V") && nom.endsWith(".sql"));
             case "tests-bats" -> casesBats();
+            case "contributeurs" -> contributeursListes();
             case "tables" -> tablesDuSchema();
             case "ecrans" ->
                 (int) fichiersDe(Path.of("docs", "ecrans"), nom -> nom.endsWith(".md") && !"index.md".equals(nom));
@@ -1061,6 +1069,26 @@ class DocumentationAJourTest {
             when seuilsDeclares().containsKey(seuil) -> seuilsDeclares().get(seuil);
             default -> throw new AssertionError("clé d'inventaire inconnue : " + cle);
         };
+    }
+
+    /// Les personnes que `REMERCIEMENTS.md` liste nommement.
+    ///
+    /// Le fichier annoncait 92 contributrices et contributeurs et en listait 90. Rien ne rapprochait
+    /// les deux nombres : il n'est engendre par aucun script, son en-tete se recopiait a la main, et
+    /// l'ecart a survecu jusqu'a ce que le recit d'origine du README reprenne le chiffre a quatre
+    /// endroits de plus (#5169). C'est l'article A5 : un chiffre que le code sait recalculer ne
+    /// s'ecrit pas a la main.
+    ///
+    /// Le decompte porte sur les pseudonymes DISTINCTS et non sur les lignes. Aucun ne se repete
+    /// aujourd'hui, mais une personne qui changerait d'equipe en cours de semestre serait comptee
+    /// deux fois, et l'effectif annonce cesserait d'etre un effectif.
+    private static int contributeursListes() {
+        Matcher ligne = CONTRIBUTEUR_REMERCIE.matcher(lire(Path.of("REMERCIEMENTS.md")));
+        Set<String> pseudonymes = new TreeSet<>();
+        while (ligne.find()) {
+            pseudonymes.add(ligne.group(1));
+        }
+        return pseudonymes.size();
     }
 
     /// Les tables du schéma **courant**, obtenues en appliquant les migrations puis en interrogeant

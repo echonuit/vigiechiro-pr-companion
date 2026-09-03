@@ -2,7 +2,9 @@
 
 Le projet **VigieChiro Companion** a été construit dans le cadre de la **SAÉ 2.01** du **BUT Informatique** de l'**IUT d'Aix-Marseille** (promo 2026).
 
-Il est le fruit du travail de **21 équipes** (**92 étudiantes et étudiants**) qui ont contribué au fil du semestre : conception, développement de l'interface, tests, revues de code et gestion de projet.
+Il est le fruit du travail de **21 équipes**. <!--inv:contributeurs-->90<!--/inv--> étudiantes et étudiants sont nommés ci-dessous, pour la conception, le développement de l'interface, les tests, les revues de code et la gestion de projet.
+
+Ce nombre est celui des personnes listées sur cette page, et un test le vérifie : l'en-tête ne peut plus annoncer un effectif que la liste ne porte pas. Il a annoncé 92 jusqu'au 2026-09-03, sans que rien ne rapproche les deux nombres.
 
 Chaque équipe a travaillé dans son propre dépôt au sein de l'organisation [IUTInfoAix-S201-2026](https://github.com/IUTInfoAix-S201-2026). Les pseudonymes ci-dessous renvoient aux profils GitHub publics, et les liens d'équipe vers les dépôts de travail correspondants.
 
