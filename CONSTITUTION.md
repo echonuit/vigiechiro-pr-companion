@@ -242,7 +242,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A2 · Un garde est vu rouge sur sa propre mutation | 10 | 7 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure-duree-portail.sh`, et 2 autres |
 | A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 31 | 24 | `.github/scripts/veille-contrat-api.sh`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 24 autres |
 | A4 · Un cas joué n'est pas un cas prouvé | 24 | 15 | `ApercuFxElisionTest#bouton_tronque_refuse`, `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`, `scripts/adr/3053-capture-libelle.py`, et 12 autres |
-| A5 · La mesure fait foi, et dit d'où elle vient | 25 | 16 | `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`, `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`, `EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues`, et 12 autres |
+| A5 · La mesure fait foi, et dit d'où elle vient | 26 | 17 | `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`, `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`, `EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues`, et 12 autres |
 | A6 · La vérification se déclare, sur trois niveaux | 3 | 2 | `DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment`, `EcritureAtomiqueTest#creation_restreinte` |
 | A7 · Le test précède le code | 1 | 1 | `BancDesClipsTest#une_classe_filmee_neuve_declare_son_banc` |
 | A8 · La mutation mesure dès qu'un comportement est complet | 0 | 0 | **relecture seule** |

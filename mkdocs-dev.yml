@@ -343,6 +343,7 @@ nav:
     - 5089 · Un chemin suivi ne porte que de l'ASCII: decisions/5089-un-chemin-suivi-ne-porte-que-de-l-ascii.md
     - 5125 · Un point d'entrée qui ne juge pas dit ce qu'il est: decisions/5125-un-point-d-entree-qui-ne-juge-pas-dit-ce-qu-il-est.md
     - 5157 · Le dispositif déclare ce que l'outil fait sans mode: decisions/5157-le-dispositif-se-lit-sans-mode.md
+    - 5169 · Un inventaire s'adosse au code, ou au document qui fait autorité: decisions/5169-un-inventaire-s-adosse-au-code-ou-au-document.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md
