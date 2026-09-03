@@ -55,7 +55,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, imprime_contrat, rapporte
+from _commun import RACINE_DEPOT, rapporte, sort_si_contrat_demande
 
 ADR = "4586"
 
@@ -253,13 +253,7 @@ CONTRAT = {
 
 
 if __name__ == "__main__":
-    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
-    if "--contrat" in sys.argv:
-        sys.exit(
-            imprime_contrat(
-                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
-            )
-        )
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
     sys.exit(

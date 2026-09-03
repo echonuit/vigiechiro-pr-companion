@@ -42,7 +42,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION, RACINE_DEPOT, TESTS, imprime_contrat, rapporte
+from _commun import PRODUCTION, RACINE_DEPOT, TESTS, rapporte, sort_si_contrat_demande
 
 # DEUX cliquets, un par zone, et surtout pas un seul sur les deux (#4682).
 #
@@ -138,13 +138,7 @@ CONTRAT = {
 
 
 if __name__ == "__main__":
-    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
-    if "--contrat" in sys.argv:
-        sys.exit(
-            imprime_contrat(
-                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
-            )
-        )
+    sort_si_contrat_demande(__file__, CONTRAT)
     # Les deux cliquets, l un apres l autre. Le code de sortie est le PIRE des deux : une regression
     # dans une zone doit faire rougir, meme si l autre a gagne. C est la disjonction en pratique.
     codes = [

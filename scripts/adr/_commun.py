@@ -317,6 +317,30 @@ def imprime_contrat(garde: str, contrat: dict[str, str]) -> int:
     return 0
 
 
+def sort_si_contrat_demande(fichier: str, contrat: dict[str, str]) -> None:
+    """Imprime ce que le garde DECLARE etre, et TERMINE LE PROCESSUS, si `--contrat` est demande.
+
+    **Le nom dit qu elle sort, et c est delibere.** Une aide qui peut terminer le programme depuis
+    l interieur doit l annoncer a qui ne voit qu un appel ; `repond_au_contrat` aurait cache
+    exactement ce qui compte. Elle rend la main quand `--contrat` n est pas demande, si bien que le
+    site d appel s ecrit sur une ligne, en tete du bloc `__main__`, avant toute lecture.
+
+    **Ce qu elle centralise n est pas six lignes, c est la REGLE** (issue #5137). « Un contrat
+    s imprime avant tout le reste, sans rien lire et sans rien exiger » vivait en commentaire dans
+    41 fichiers : elle changeait a 41 endroits, ou elle divergeait. Sa raison tient en une phrase
+    qu il faut avoir sous les yeux : un garde qui refuserait d abord, faute d une dependance ou d un
+    fichier, rendrait un refus la ou l appelant demandait sa declaration.
+
+    `verifie_contrats_tiennent.py` sait que cet appel vaut dispatch, par sa constante
+    `AIDE_DU_CONTRAT`. Sans cela, les 41 porteurs deviendraient autant de contrats inatteignables :
+    c est ce que le prototype a mesure avant d ecrire la condition.
+    """
+    if "--contrat" not in sys.argv:
+        return
+    chemin = pathlib.Path(fichier).resolve().relative_to(RACINE_DEPOT).as_posix()
+    sys.exit(imprime_contrat(chemin, contrat))
+
+
 def loupe(numero: str, titre: str, candidats: list[str], lus: int | None = None) -> int:
     """Une LOUPE, pour une ADR « humaine » dont un pattern reconnaissable existe.
 

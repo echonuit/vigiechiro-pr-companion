@@ -37,7 +37,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import tempfile
 
-from _commun import DECISIONS, RACINE_DEPOT, imprime_contrat, rapporte
+from _commun import DECISIONS, rapporte, sort_si_contrat_demande
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 # `DECISIONS` s importe : le corpus se declare dans `_commun` et nulle part ailleurs (ADR 4586).
@@ -583,11 +583,5 @@ CONTRAT = {
 
 
 if __name__ == "__main__":
-    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
-    if "--contrat" in sys.argv:
-        sys.exit(
-            imprime_contrat(
-                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
-            )
-        )
+    sort_si_contrat_demande(__file__, CONTRAT)
     sys.exit(main())

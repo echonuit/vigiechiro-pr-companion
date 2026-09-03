@@ -44,7 +44,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, cliquet, imprime_contrat, rapporte
+from _commun import CHAMPS_DU_CONTRAT, RACINE_DEPOT, cliquet, rapporte, sort_si_contrat_demande
 
 ADR = "4636"
 
@@ -69,6 +69,16 @@ HORS_CONFRONTATION = {
 }
 
 CHIFFRE = re.compile(r"(\d+)")
+
+# L AIDE DE `_commun` QUI PORTE LA BRANCHE, pour les gardes qui l appellent (issue #5137).
+#
+# Un fichier qui l appelle repond a `--contrat` sans ecrire le litteral : c est elle qui le teste.
+# Sans ce nom, les 41 porteurs factorises deviendraient autant de « contrats inatteignables », ce
+# que le prototype a mesure avant que cette constante n existe.
+#
+# Elle est nommee ici plutot que devinee : suivre les appels jusqu a `sys.exit` demanderait de
+# resoudre les imports et le corps de l aide, pour une reponse qu un nom donne exactement.
+AIDE_DU_CONTRAT = "sort_si_contrat_demande"
 
 # LE DERNIER PORTEUR NON PYTHON, nomme plutot que devine (issue #5144).
 #
@@ -173,6 +183,8 @@ def dispatche_en_code(chemin: pathlib.Path, texte: str) -> bool:
     """
     if chemin.suffix != ".py":
         return any("--contrat" in l and not l.lstrip().startswith("#") for l in texte.split("\n"))
+    if AIDE_DU_CONTRAT in texte:
+        return True
     try:
         arbre = ast.parse(texte)
     except SyntaxError:
@@ -514,6 +526,40 @@ def _auto_test() -> int:
     )
     # Et la barriere de SURETE : une mention en prose ne suffit pas a faire lancer un script, parce
     # qu un script sans cette branche ignore l argument et FAIT SON TRAVAIL.
+    # L appel a l aide de `_commun` vaut dispatch (issue #5137) : elle PORTE la branche. Les deux
+    # sens, sinon un controle qui repondrait toujours `True` passerait le premier.
+    # L aide SORT, elle ne se contente pas d imprimer (issue #5137). Si elle rendait la main, le
+    # garde ferait son travail apres avoir declare : `--contrat` deviendrait un balayage du depot,
+    # et le `startswith` de `contrat_de` resterait vrai, donc rien ne rougirait. Le controle est le
+    # NOMBRE de lignes : sept, l en-tete et les six champs, et rien apres.
+    rendu_reel = subprocess.run(
+        [
+            sys.executable,
+            str(RACINE_DEPOT / "scripts" / "adr" / "0008-echec-silencieux.py"),
+            "--contrat",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=RACINE_DEPOT,
+        check=False,
+    ).stdout
+    verifie(
+        "repondre son contrat n entraine AUCUN autre travail",
+        len([l for l in rendu_reel.split("\n") if l.strip()]),
+        1 + len(CHAMPS_DU_CONTRAT),
+    )
+
+    verifie(
+        "un appel a l aide de _commun vaut dispatch",
+        dispatche_en_code(pathlib.Path("g.py"), "sort_si_contrat_demande(__file__, CONTRAT)\n"),
+        True,
+    )
+    verifie(
+        "un fichier qui ne l appelle pas et n ecrit pas le litteral ne dispatche pas",
+        dispatche_en_code(pathlib.Path("g.py"), 'CONTRAT = {"geste": "x"}\nprint(CONTRAT)\n'),
+        False,
+    )
+
     verifie(
         "une mention en commentaire ne vaut pas dispatch",
         dispatche_en_code(pathlib.Path("x.sh"), "# on parle de --contrat ici\necho bonjour\n"),
@@ -543,14 +589,7 @@ CONTRAT = {
 
 
 if __name__ == "__main__":
-    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger. Ce garde en
-    # avait besoin plus que les autres, puisqu il LANCE ceux qu il inventorie.
-    if "--contrat" in sys.argv:
-        sys.exit(
-            imprime_contrat(
-                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
-            )
-        )
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
     sys.exit(

@@ -19,7 +19,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, RACINES, imprime_contrat, loupe, sans_commentaires_java
+from _commun import RACINES, loupe, sans_commentaires_java, sort_si_contrat_demande
 
 # Les DEUX arbres (ADR 4488). Une loupe aveugle a la moitie du code a le meme defaut qu un garde
 # qui l est : elle surfacerait moins sans jamais le dire. Mesure d ouverture, les deux repertoires
@@ -70,13 +70,7 @@ CONTRAT = {
 
 
 if __name__ == "__main__":
-    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
-    if "--contrat" in sys.argv:
-        sys.exit(
-            imprime_contrat(
-                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
-            )
-        )
+    sort_si_contrat_demande(__file__, CONTRAT)
     sys.exit(
         loupe(
             "0044",

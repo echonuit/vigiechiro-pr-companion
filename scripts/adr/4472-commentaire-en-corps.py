@@ -34,7 +34,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, RACINES_ANCREES, imprime_contrat, rapporte
+from _commun import RACINE_DEPOT, RACINES_ANCREES, rapporte, sort_si_contrat_demande
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4472"
@@ -184,12 +184,7 @@ CONTRAT = {
 
 
 if __name__ == "__main__":
-    if "--contrat" in sys.argv:
-        sys.exit(
-            imprime_contrat(
-                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
-            )
-        )
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
     listes = suspects()
