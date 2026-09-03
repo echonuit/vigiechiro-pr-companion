@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Un point d entree de `scripts/adr` declare ce qu il est (ADR 4636, issue #5149).
+"""Un point d entree de `scripts/adr` ou de `scripts/methode` declare ce qu il est (ADR 4636).
 
-Les 41 points d entree de ce dossier portent un contrat depuis le sous-chantier #5117. Rien
-n empechait le 42e d arriver sans le sien.
+Les 42 points d entree de `scripts/adr` portent un contrat depuis le sous-chantier #5117, et les
+24 de `scripts/methode` depuis #5154. Rien n empechait le 67e d arriver sans le sien.
 
 ## Ce que ce garde tient, et pourquoi il ne compte pas
 
@@ -15,14 +15,22 @@ qu on tolere et sa marge se releve ; ici il n y a rien a tolerer. #5102 l annonc
 cliquet », puis demandait « des exceptions NOMMEES, non un compte » : les deux ne vont pas ensemble,
 et c est la description qui a raison contre l etiquette.
 
-## Sa population est `scripts/adr`, et c est une decision
+## Sa population est `scripts/adr` ET `scripts/methode`, et c est une decision
 
-Le depot porte 70 points d entree Python, dont 42 declarent un contrat. A cette echelle, la liste
-d exceptions en compterait vingt-huit, plus quarante-sept gardes shell : ce ne serait plus une liste
-d exceptions mais l inventaire de ce qui n est pas fait, deguise en regle.
+`scripts/methode` l a rejointe en #5157, une fois ses 24 points d entree declarants. Six points
+d entree Python du depot restent dehors, dans cinq dossiers : `icone`, `scripts/doc-video`,
+`scripts/graphify` pour deux, `scripts/mkdocs` et `scripts/qualite`. Aucun lot ne les a traites.
 
-Elle s elargira quand les lots la rejoindront : le lot 4 de #5102 porte `scripts/methode`, et le
-lot 5 mesure les gardes shell sans leur ecrire de contrat, la cible du depot etant de les convertir.
+**La raison qui bornait cette population a faibli, et il faut le dire.** Elle tenait a une
+arithmetique : au depart, elargir aurait demande vingt-huit exceptions nommees, ce qui aurait fait
+de la liste l inventaire de ce qui n est pas fait, deguise en regle. Mesure aujourd hui, le depot
+porte 72 points d entree Python dont 66 sont tenus : la liste en compterait **six**, ce qui est
+exactement la taille a laquelle l idiome des exceptions nommees fonctionne. Ce que cette
+arithmetique ne dit pas, en revanche, c est si ces six DOIVENT declarer, et c est la vraie
+question. Elle se tranche dans une demande a elle, pas dans un elargissement au fil de l eau.
+
+Les 50 fichiers `.sh` versionnes restent dehors sans arbitrage a rendre : le lot 5 de #5102 les
+mesure SANS leur ecrire de contrat, la cible du depot etant de les convertir, pas de les documenter.
 
 ## Ce qu il ne fait PAS
 
@@ -51,14 +59,14 @@ DOSSIERS = (DOSSIER, DOSSIER.parent / "methode")
 # raison, sinon cette liste devient le tapis sous lequel on pousse la dette : c est l idiome de
 # `HORS_PORTEE` dans `verifie_verdicts_declares.py`.
 #
-# **Elle est VIDE a la livraison**, et c est la mesure qui compte : les 41 points d entree de
-# `scripts/adr` declarent tous leur contrat. Une entree ajoutee ici est une decision, pas une
+# **Elle est VIDE a la livraison**, et c est la mesure qui compte : les 66 points d entree des
+# deux dossiers declarent tous leur contrat. Une entree ajoutee ici est une decision, pas une
 # formalite, et elle se defend dans la demande qui l ajoute.
 SANS_CONTRAT: dict[str, str] = {}
 
 
 def points_d_entree(dossier: pathlib.Path | None = None) -> list[pathlib.Path]:
-    """Les fichiers de `scripts/adr` qui SE LANCENT, c est-a-dire portent un bloc `__main__`.
+    """Les fichiers des dossiers tenus qui SE LANCENT, c est-a-dire portent un bloc `__main__`.
 
     Par l AST et non par le nom : `verifie_`, `loupe-` et les numeros sont trois conventions pour la
     meme chose, et un motif qui chercherait l une manquerait les deux autres. C est la lecon de
@@ -169,8 +177,24 @@ def _auto_test() -> int:
 
     # La liste des exceptions est VIDE, et ce cas la tient : la remplir devient une decision visible.
     verifie("aucune exception n est ouverte", SANS_CONTRAT, {})
-    # Et sur le depot reel, les 41 declarent.
+    # Et sur le depot reel, les 66 declarent.
     verifie("le corpus reel ne porte aucun suspect", suspects(), [])
+
+    # CE GARDE DECLARE-T-IL LA POPULATION QU IL LIT ? (issue #5176)
+    #
+    # #5157 a elargi `DOSSIERS` a `scripts/methode` sans toucher au CONTRAT, qui a continue
+    # d annoncer `scripts/adr` seul pendant que le garde en lisait 66. Rien ne l a vu :
+    # `verifie_contrats_tiennent.py` ne confronte le champ `population` que lorsque les DEUX cotes
+    # se resolvent par son `ALIAS`, un vocabulaire d arbres Java. Sur les 66 contrats du corpus
+    # Python, il s abstient pour 40, et ce fichier est du nombre - des deux cotes a la fois.
+    #
+    # **Ce que ce cas prouve, et ce qu il ne prouve pas.** Il prouve qu aucun dossier lu n est
+    # passe sous silence. Il ne prouve pas que la phrase soit JUSTE : `population` est de la prose
+    # libre, et une prose peut nommer les bons dossiers en decrivant mal ce qu on y prend. La
+    # confrontation complete demande un vocabulaire ferme pour le corpus Python, comme `DISPOSITIFS`
+    # en a ferme un pour le dispositif ; c est une decision, et elle n est pas prise ici.
+    oublies = [d.name for d in DOSSIERS if d.name not in CONTRAT["population"]]
+    verifie("le contrat nomme chaque dossier que le garde lit", oublies, [])
 
     print()
     print("Auto-test concluant." if not echecs else "Auto-test EN ÉCHEC.")
@@ -179,8 +203,8 @@ def _auto_test() -> int:
 
 # Ce que ce garde DECLARE etre. Il s applique a lui-meme : sa population le contient.
 CONTRAT = {
-    "geste": "point d entree de scripts/adr qui ne declare aucun contrat",
-    "population": "les points d entree de scripts/adr, par leur bloc __main__",
+    "geste": "point d entree de scripts/adr ou scripts/methode sans contrat declare",
+    "population": "les points d entree de scripts/adr et scripts/methode, par leur bloc __main__",
     "dispositif": "invariant",
     "seuil": "(sans objet)",
     "temoin": "scripts/adr/verifie_contrat_obligatoire.py --auto-test",
@@ -193,7 +217,7 @@ if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
     manquants = suspects()
-    print(f"ADR {ADR} - point d entree de scripts/adr sans contrat declare")
+    print(f"ADR {ADR} - point d entree de scripts/adr ou scripts/methode sans contrat declare")
     for m in manquants:
         print(f"  {m}")
     print(
@@ -202,7 +226,8 @@ if __name__ == "__main__":
     )
     if manquants:
         print(
-            "\nÉCHEC : un point d'entrée de scripts/adr ne déclare pas ce qu'il est.\n"
+            "\nÉCHEC : un point d'entrée de scripts/adr ou scripts/methode ne déclare pas ce\n"
+            "qu'il est.\n"
             "Ajoutez-lui un CONTRAT de six champs, sur le modèle de 0008-echec-silencieux.py, et la\n"
             "branche qui l'imprime AVANT tout le reste. Ce n'est pas un cliquet : il n'y a pas de\n"
             "marge à relever. Si ce point d'entrée ne doit vraiment pas déclarer, nommez-le dans\n"
