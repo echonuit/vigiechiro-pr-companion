@@ -136,6 +136,30 @@ Connexion réussie · référentiel à jour : 1 site, 199 taxons,
 
 <video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteConnexionTest.la_barre_avance_nuit_par_nuit.mp4"></video>
 
+
+### S2-59, S2-60 · l'import annonce la participation, et ce qu'il reste à faire
+
+> **S2-59** Connecté, importer une nuit : le compte rendu annonce une participation créée.
+> **S2-60** La même annonce dit **ce qu'il reste à faire** sur le portail.
+
+**Pourquoi ce clip ne peut pas être bouchonné.** L'objet de ces deux cas est hors de l'application : la
+participation vit sur la plateforme. Contre un double, le clip affirmerait la création parce qu'on
+aurait fait dire au double qu'elle a eu lieu - « convaincant et creux », exactement ce que cette page
+mesure plus haut.
+
+**Ce clip écrit.** Il crée une participation sur le compte de tournage, et doit donc viser le compte
+prévu pour cela, jamais un compte portant de vraies nuits.
+
+**Sa précondition.** Le compte doit porter au moins un site : sans lui, il n'y a rien à quoi rattacher
+la nuit, et la participation ne peut pas naître. Le scénario s'arrête alors en le disant, plutôt que
+d'échouer comme si le produit était en cause.
+
+**Ce qu'il ne prouve pas.** Que la participation soit correctement **remplie**. « Voir la
+participation » l'ouvre sur le portail, et cette moitié-là se juge à l'oeil, hors du banc - la session
+l'annonce déjà : deux de ces cas « exigent de regarder ailleurs que dans l'application ».
+
+<video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteAnnonceImportTest.connecte_l_import_annonce_la_participation.mp4"></video>
+
 ## Ce que ces clips publient, et le compte que cela engage
 
 `S8-06` montre l'identité que la plateforme a rendue. Un clip connecté porte donc, **en clair et sur

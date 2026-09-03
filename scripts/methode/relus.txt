@@ -1752,9 +1752,11 @@ d49c5a1ab907  src/test/java/fr/univ_amu/iut/importation/view/ConfirmationsImport
 3fca3c395fc1  src/test/java/fr/univ_amu/iut/importation/view/ImportationViewTest.java
 837d09ad81c0  src/test/java/fr/univ_amu/iut/importation/view/ImportationVueIntegrationTest.java
 8ffdac54cb48  src/test/java/fr/univ_amu/iut/importation/view/PreambuleImport.java
+855feca7c987  src/test/java/fr/univ_amu/iut/importation/view/ScenarioAnnonceConnexionTest.java
 8d4f927f4340  src/test/java/fr/univ_amu/iut/importation/view/ScenarioBandeauLectureSeuleTest.java
 e37c915aa4db  src/test/java/fr/univ_amu/iut/importation/view/ScenarioBandeauxDInspectionTest.java
 7eed6692ab66  src/test/java/fr/univ_amu/iut/importation/view/ScenarioCarteMultiNuitsTest.java
+4bd33c9c875c  src/test/java/fr/univ_amu/iut/importation/view/ScenarioConnecteAnnonceImportTest.java
 de261e43385f  src/test/java/fr/univ_amu/iut/importation/view/ScenarioImportNominalTest.java
 7e677ede1765  src/test/java/fr/univ_amu/iut/importation/view/ScenarioJournalAbsentTest.java
 61baa82e82c8  src/test/java/fr/univ_amu/iut/importation/view/ScenarioRejetsEtArchiveTest.java
