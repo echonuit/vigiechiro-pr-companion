@@ -691,8 +691,12 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 
 ### Et un analyseur les lit tous (#4108)
 
-Ces gardes sont elles-mêmes du shell, et le dépôt en compte **42 scripts** hors `node_modules`. Le
+Ces gardes sont elles-mêmes du shell, et le dépôt en compte **50 scripts** hors `node_modules`. Le
 job `lint` les passe tous à `shellcheck`.
+
+Ce chiffre a été **42** et l'est resté dans cette page pendant huit jours : il était juste le
+2026-08-25, quand #4393 l'a écrit, et le corpus a grossi sans que la phrase suive. Le relevé
+ci-dessous existe pour que la prochaine dérive se voie.
 
 Les **réglages** vivent dans `.shellcheckrc`, à la racine, et non dans le YAML : un contributeur qui
 lance `shellcheck son-script.sh` doit voir ce que voit la CI. Un réglage caché dans un workflow
@@ -740,6 +744,92 @@ Deux exigences, apprises de ce qui a failli passer :
 - **Éprouver l'auto-test lui-même.** En neutralisant une règle, le cas correspondant doit rougir - et
   **lui seul**. Vécu pendant #3293 : une première tentative de neutralisation n'avait rien modifié, et
   le vert obtenu ne prouvait rien.
+
+### Ce qui reste en shell, et où chacun descend (#5187)
+
+Le dépôt vise **deux langages** : Java pour la production et son outillage, Python pour l'outillage
+du projet. Les scripts shell se convertissent donc, et **ils ne reçoivent pas de contrat** : le
+format `--contrat` est éprouvé en shell depuis #5009, mais y étendre le corpus serait investir dans
+ce qui doit disparaître. Ce relevé mesure et borne ; il ne convertit rien.
+
+**Chaque chiffre est obtenu en lançant quelque chose.** Aucun ne vient d'un motif sur le source, et
+c'est la seule façon de répondre à la question posée : ce qu'un script **répond**, pas ce à quoi il
+ressemble.
+
+#### La population
+
+| | |
+|---|---:|
+| fichiers `.sh` versionnés | **50** |
+| vus par le `find` du job `lint` | **50** |
+| écart entre les deux, dans les deux sens | **0** |
+
+Les deux ensembles sont identiques, comparés par `comm` dans les deux directions. Il n'y a donc
+qu'une population, pas deux qui se confondraient.
+
+#### Ce que chacun répond
+
+Un script est un **garde** s'il distingue `--auto-test` d'un drapeau quelconque. La question ne se
+lit pas dans le source sans retomber sur la ressemblance ; elle se mesure **par contraste**, en
+comparant sa sortie sous `--auto-test` à sa sortie sous `--zzz-drapeau-inexistant`.
+
+| catégorie | n | ce qui la définit |
+|---|---:|---|
+| **gardes** | **45** | distinguent le drapeau, et leur auto-test sort en **0**, tous les 45 |
+| **outils** | **5** | rendent la même chose avec les deux drapeaux : ils ne le voient pas |
+
+Les cinq outils sont `capture-screenshots.sh`, `construit-appimage.sh`, `mesure-pixels.sh`,
+`porte-sur-le-contrat-de-fichiers.sh` et `icone/genere-icones.sh`.
+
+**Le contrôle négatif est `construit-appimage.sh`** : un workflow le lance, il sort en `1`, et il
+n'est pas compté comme garde parce qu'il rend exactement la même chose sous les deux drapeaux. Être
+lancé par la CI et échouer ne fait pas un garde ; distinguer le drapeau, si.
+
+**Une mesure a dû être écartée, et c'est instructif.** `capture-screenshots.sh` paraissait distinguer
+le drapeau. Le contrôle de non-déterminisme le dément : **deux appels sous le MÊME drapeau diffèrent
+déjà**, parce que la question déclenche une compilation Maven puis un rendu JavaFX que le délai
+d'attente coupe à un endroit variable. Un contraste ne conclut que sur un script déterministe, et
+celui-ci ne l'est pas. Il est rangé parmi les outils.
+
+#### Ce que la CI atteint
+
+| | |
+|---|---:|
+| atteints depuis un workflow, **transitivement** | **49** |
+| orphelins | **1** |
+
+L'unique orphelin est `icone/genere-icones.sh`, lancé à la main quand l'icône change.
+
+La transitivité n'est pas un raffinement : mesurée sur les seuls workflows, la réponse était « 5 non
+lancés ». Quatre d'entre eux sont en réalité appelés par un autre script ou par l'outillage Python,
+et un script lancé par un garde est exécuté par la CI aussi sûrement qu'un script cité dans un `run:`.
+
+#### Où chacun descend
+
+| destination | n | ce qui la décide |
+|---|---:|---|
+| conversion vers Python | 44 | la cible des deux langages, sans autre condition |
+| reste Bash **sous condition** | 1 | `lance-test-filme.sh`, 1 295 lignes d'orchestration, **tant que le banc Java n'est pas définitivement validé**. La condition est écrite pour qu'on sache quand la lever |
+| à trancher | 5 | les cinq outils : ce ne sont pas des gardes, et aucune règle écrite ne dit ce qu'ils deviennent |
+
+Les cinq derniers ne sont pas de la dette oubliée, c'est un arbitrage qui n'a pas été rendu. Deux
+touchent à l'empaquetage et à la capture, un troisième génère une icône : leur langage se discute
+autrement que celui d'un garde.
+
+#### Deux limites de ce relevé, déclarées
+
+**L'inventaire de la CI compte les gardes shell par une recherche textuelle.**
+`verifie-inventaires-ci.sh` retire les lignes de commentaire puis cherche la chaîne `--auto-test`,
+là où sa moitié Python fait un vrai contrôle par `ast` en excluant les docstrings depuis #5032.
+Confronté à la mesure par contraste, **il tombe juste : 45 des deux côtés, les mêmes 45.** La règle
+est fragile par construction et exacte sur le corpus d'aujourd'hui ; c'est un risque, pas un défaut,
+et il est écrit ici plutôt que corrigé au passage.
+
+**Ses motifs ne balaient pas `icone/`.** Le dossier n'y figure pas, donc un auto-test qui y
+apparaîtrait serait invisible de l'inventaire. Sans conséquence aujourd'hui, `genere-icones.sh` ne
+mentionnant `--auto-test` nulle part. C'est la cécité à un dossier que ce même garde décrit à propos
+de #4013, et elle a survécu à sa propre description.
+
 
 ## Un rouge se classe avant de se rejouer (#4187)
 
