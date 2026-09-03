@@ -1753,6 +1753,7 @@ d49c5a1ab907  src/test/java/fr/univ_amu/iut/importation/view/ConfirmationsImport
 8ffdac54cb48  src/test/java/fr/univ_amu/iut/importation/view/PreambuleImport.java
 8d4f927f4340  src/test/java/fr/univ_amu/iut/importation/view/ScenarioBandeauLectureSeuleTest.java
 e37c915aa4db  src/test/java/fr/univ_amu/iut/importation/view/ScenarioBandeauxDInspectionTest.java
+7eed6692ab66  src/test/java/fr/univ_amu/iut/importation/view/ScenarioCarteMultiNuitsTest.java
 de261e43385f  src/test/java/fr/univ_amu/iut/importation/view/ScenarioImportNominalTest.java
 fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
 140614766d08  src/test/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixeTest.java
