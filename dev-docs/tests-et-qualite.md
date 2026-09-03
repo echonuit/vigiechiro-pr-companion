@@ -376,7 +376,7 @@ Une doc qui ment est **pire** qu'une doc absente : on la croit. Le dépôt l'ava
 | Les sous-commandes de l'annotation `@Command` de `CommandeRacine` | Le tableau de `dev-docs/cli.md` | Une commande livrée, testée, verte en CI… et **introuvable** dans sa propre doc |
 | Les `ActiviteAccueil` **liées dans l'injecteur** | La fiche `docs/ecrans/<pageDoc>.md` | Un **écran entier** offert à l'utilisateur, sans page |
 | Les fiches présentes sur le disque | La `nav` de `mkdocs.yml` **et** le tableau de `docs/ecrans/index.md` | Une page que le site ne publie pas, ou qu'on ne peut atteindre depuis l'index de sa section |
-| Les **chiffres balisés** `<!--inv:clé-->N<!--/inv-->` (#2385) | L'**inventaire réel du code** (contrats `Ouvrir*`, états de `StatutWorkflow`, features, sous-commandes, **catalogues de critères de filtre**) | Un décompte **figé dans la prose** qui dérive après un ajout : « 43 sous-commandes » quand le code en câble 44 |
+| Les **chiffres balisés** `<!--inv:clé-->N<!--/inv-->` (#2385) | L'**inventaire réel** : le code le plus souvent (contrats `Ouvrir*`, états de `StatutWorkflow`, features, sous-commandes, **catalogues de critères de filtre**), ou le document qui fait autorité sur sa population quand le code ne sait rien (ADR 5169) | Un décompte **figé dans la prose** qui dérive après un ajout : « 43 sous-commandes » quand le code en câble 44 |
 
 Depuis #4336, les confrontations qui portent sur les ADR lisent leur **en-tête OKF** et non plus des
 puces : `article:`, `verification:`, `enforced_by:` ou `loupe:`, `chantier:`. Une confrontation s'y
@@ -425,12 +425,18 @@ l'application compte **<!--inv:features-->N<!--/inv--> features** métier
     balayage qui corrige n'est pas celui qui compte - c'est l'audit d'harmonisation de la clôture qui
     a rendu le troisième.
 
-    Trois cas, trois gestes :
+    Quatre cas, quatre gestes :
 
     - **le code sait compter** → balise `<!--inv:clé-->N<!--/inv-->`, plus une entrée dans
       `DocumentationAJourTest` ;
-    - **le code ne sait pas** (un commentaire de workflow, une note de PR) → **écrire la phrase sans
-      le nombre**. « les tests bats, qui lancent chacun un JVM » dit ce qu'il faut sans rien promettre ;
+    - **le code ne sait pas, mais un document du dépôt fait autorité sur cette population** → même
+      balise, adossée à ce document, et le document dit alors ce que le chiffre compte. C'est le cas
+      de `REMERCIEMENTS.md`, dont la liste nominative est la seule source qui existe sur le nombre de
+      contributeurs et d'équipes (ADR 5169). Le garde tient une cohérence interne : il attrape la
+      dérive de l'annonce, jamais l'oubli dans la liste ;
+    - **le code ne sait pas, et rien d'autre ne fait autorité** (un commentaire de workflow, une note
+      de PR) → **écrire la phrase sans le nombre**. « les tests bats, qui lancent chacun un JVM » dit
+      ce qu'il faut sans rien promettre ;
     - **le chiffre est une mesure datée** (« 66 aperçus sur 138 différaient le 6 août ») → il reste en
       dur, et c'est **juste** : ce n'est pas un inventaire, c'est un constat, et un constat a une date.
 
