@@ -8,13 +8,15 @@
 
 ## Objectif
 
-Le lot 3 a fait tourner la suite entière sous Windows et macOS, chaque mardi. Restent deux choses
-qu'une suite de tests **ne peut pas** juger, et qui ont pourtant motivé deux correctifs :
+Le lot 3 a fait tourner la suite entière sous Windows et macOS, chaque mardi. Restent trois choses
+qu'une suite de tests **ne peut pas** juger, et qui ont pourtant motivé des correctifs :
 
 1. **Ce qu'un humain lit** quand le dossier de travail est déjà tenu par une autre instance ;
-2. **Ce qu'une vraie console Windows rend** de la couleur de la CLI.
+2. **Ce qu'une vraie console Windows rend** de la couleur de la CLI ;
+3. **Ce que produit le geste de la racine**, quand on désigne une carte SD par `L:\` et non par un
+   sous-dossier.
 
-Ces deux comportements n'ont **jamais été observés sur une machine Windows réelle**. Ils sont
+Ces comportements n'ont **jamais été observés sur une machine Windows réelle**. Ils sont
 éprouvés par des tests - c'est la raison d'être du lot - mais un test lit une chaîne, il ne lit pas un
 écran.
 
@@ -26,6 +28,7 @@ Ces deux comportements n'ont **jamais été observés sur une machine Windows r�
 | la borne du repli de lecture | `VerrouWorkspaceTest.ApresLOctetDuVerrou` (partout) |
 | la couleur est éteinte quand la sortie est redirigée, allumée sur un pseudo-terminal | `cli.bats` (#3738) - **sous Linux seulement** |
 | toute la suite passe sous Windows et macOS | passage programmé du mardi (#3526) |
+| une racine de volume n'est ni une archive, ni un nom nul, sur les **trois** sites | `ExtracteurZipTest`, `ActionsSauvegardeTest`, `ReactivationModaleQuestionTest`, matrice `contrat-fichiers` sur 3 OS (#5001) |
 
 Ce que la machine réelle ajoute : **un humain devant l'écran**, et une console Windows véritable -
 `bats` ne tourne que sous Linux.
@@ -36,6 +39,10 @@ Ce que la machine réelle ajoute : **un humain devant l'écran**, et une console
 - L'application installée (S9 la pose), et le **fat-jar** disponible pour la partie CLI.
 - Un dossier de travail contenant au moins une nuit, pour que la seconde instance ait quelque chose à
   refuser.
+- Pour la section C, une **carte SD** montée sous sa propre lettre de lecteur, portant **à sa
+  racine** les WAV, le `LogPR` et le journal TH d'une nuit. À la racine, et non dans un sous-dossier :
+  c'est la racine qui est le sujet, et un sous-dossier ne joue aucun des trois cas.
+- Pour S10-10, une **sauvegarde complète** déjà écrite sur un support dédié, désignable par sa racine.
 
 ## Le script (une case = un fait observable)
 
@@ -80,6 +87,33 @@ seule des trois.
 
 - [ ] **S10-08** · *hors-portée: une variable d'environnement posée dans une console Windows réelle, hors du banc* · Poser `NO_COLOR=1` puis relancer S10-05.
   **Attendu** : aucune couleur, et l'aide reste lisible.
+
+### C. Le geste de la racine (#3461, #5001)
+
+Une carte SD se désigne volontiers par sa **racine**, `L:\`, et non par un sous-dossier. Une racine de
+volume n'a pas de dernier segment : `getFileName()` y rend `null`, et trois écrans le lisaient quand
+même. #5001 les a corrigés, et la matrice `contrat-fichiers` le tient **à la fonction**.
+
+Ce qu'aucun banc ne joue est le geste de l'observateur : insérer la carte, la désigner par sa racine,
+et lire ce que l'écran répond. Les trois cas veulent la **même** carte et la **même** racine, joués à
+la suite. La lettre de lecteur est donnée ici comme `L:\` ; noter celle qu'on a réellement.
+
+- [ ] **S10-09** · *geste: import-depuis-la-racine-d-une-carte* · *carton: insérer la carte SD et désigner sa racine dans le sélecteur natif de dossier* · **Préparer** : la carte de la section Environnement, WAV, `LogPR` et journal TH **à sa racine**. **Le geste** : ouvrir l'import, désigner la carte par sa racine (`L:\`, pas `L:\une-nuit`), et mener l'import jusqu'au bout.
+  **Attendu** : l'import aboutit et **le passage est créé**, visible dans la liste des nuits. Aucune
+  erreur à l'écran, à aucun moment. Le défaut d'origine prenait la racine pour une archive et
+  remontait une exception à l'écran : ce cas est vert seulement si l'on va **jusqu'au passage**, pas
+  seulement jusqu'à l'écran d'inspection.
+
+- [ ] **S10-10** · *geste: restauration-designee-par-sa-racine* · *carton: insérer le support de sauvegarde et désigner sa racine dans le sélecteur natif de dossier* · **Préparer** : une sauvegarde complète écrite sur un support dédié, désignable par sa racine. **Le geste** : lancer la restauration, désigner le support par sa racine, et **s'arrêter sur la confirmation** pour la lire avant de valider.
+  **Attendu** : la confirmation nomme le support par son **chemin entier**, `L:\`, faute de dernier
+  segment. Ni « null », ni une erreur, ni un nom vide entre les guillemets. C'est une confirmation
+  **destructive** : si elle ne nomme pas ce qu'elle va écraser, on valide à l'aveugle, et c'est le
+  cas où l'on ne peut pas revenir.
+
+- [ ] **S10-11** · *geste: reactivation-d-une-carte-entiere* · *carton: insérer la carte SD et désigner sa racine dans le sélecteur natif de dossier* · **Préparer** : une carte portant des fichiers **déjà transformés**. **Le geste** : lancer la réactivation et désigner la **carte entière**, par sa racine.
+  **Attendu** : la question de la modale se lit « Des fichiers déjà transformés ont été trouvés dans
+  « `L:\` ». » Le mot **null** n'apparaît nulle part dans la phrase. Désigner une carte entière est
+  prévu par la conception, pas un détournement : c'est le geste qu'un observateur fait en premier.
 
 ## Ce que la session ne couvre pas, et pourquoi
 
