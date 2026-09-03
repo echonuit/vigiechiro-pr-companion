@@ -383,6 +383,20 @@ Aucun de ces clips ne dit donc quoi que ce soit de la vitesse du produit.
 
 
 
+
+## ScenarioAnnonceConnexionTest
+
+### S2-61 · `deconnecte_le_compte_rendu_ne_pretend_rien`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioAnnonceConnexionTest.deconnecte_le_compte_rendu_ne_pretend_rien.mp4"></video>
+
+> **Ne rien prétendre et annoncer un échec sont deux messages différents**, et c'est le premier que ce
+> cas demande : hors ligne, il n'y a pas eu de tentative, donc pas d'échec à raconter.
+
+> Ses deux voisins, `S2-59` et `S2-60`, ne sont **pas** ici : leur objet est la participation créée sur
+> la plateforme, et un clip bouchonné en serait muet. Ils vivent sur
+> [la page des clips connectés](clips-connectes.md).
 ## ScenarioRejetsEtArchiveTest
 
 Trois façons d'aborder l'import qui ne partent pas d'un dossier propre. Aucune n'est un cas limite :
