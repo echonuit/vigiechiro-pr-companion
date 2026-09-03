@@ -25,6 +25,9 @@ import re
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 # `openspec` entre ici avant de porter quoi que ce soit (#4513). La mesure qui l a decide : deux
 # connecteurs lourds en ouverture, places dans `openspec/`, laissaient `--verifie` au VERT, quand le
 # meme texte place dans `dev-docs/` le faisait rougir en nommant les deux occurrences. Le temoin
@@ -219,5 +222,16 @@ def main() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "motif editorial recompte sur le corpus de prose",
+    "population": "les zones de prose du depot declarees par ZONES",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/mesure-registre.py --auto-test",
+    "decision": "ADR 3645",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     sys.exit(main())

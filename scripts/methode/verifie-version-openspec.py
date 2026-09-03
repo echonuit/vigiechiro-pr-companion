@@ -43,6 +43,9 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 PAQUET = "@fission-ai/openspec"
 DOSSIER_OUTIL = pathlib.Path(".github") / "openspec"
 
@@ -257,7 +260,18 @@ def auto_test() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "version OpenSpec epinglee qui differe de ce que les competences declarent",
+    "population": "les competences de .agents/skills et leur copie de .claude/skills",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/verifie-version-openspec.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(auto_test())
 

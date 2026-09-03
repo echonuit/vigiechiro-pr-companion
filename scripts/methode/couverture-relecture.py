@@ -25,7 +25,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
-from _commun import RACINES_ANCREES
+from _commun import RACINES_ANCREES, sort_si_contrat_demande
 
 # Les chemins du manifeste sont relatifs a la RACINE, et non a l un des deux arbres Java : une cle
 # « fr/…/Machin.java » ne dirait pas de quel arbre elle vient, et un homonyme entre production et
@@ -334,5 +334,16 @@ def main() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "javadoc jamais relue, ou reecrite depuis sa relecture",
+    "population": "PRODUCTION + TESTS",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/couverture-relecture.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     sys.exit(main())

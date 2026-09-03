@@ -25,7 +25,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "adr"))
-from _commun import rapporte
+from _commun import rapporte, sort_si_contrat_demande
 
 ADR = "4859"
 
@@ -129,5 +129,16 @@ def main() -> int:
     return rapporte(ADR, "répertoires temporaires laissés par la suite", restes)
 
 
+CONTRAT = {
+    "geste": "repertoire temporaire laisse par la suite de tests",
+    "population": "les repertoires temporaires du systeme",
+    "dispositif": "cliquet",
+    "seuil": "4, polarite=descend",
+    "temoin": "scripts/methode/compte-les-reliquats.py --auto-test",
+    "decision": "ADR 4859",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     sys.exit(main())
