@@ -379,6 +379,64 @@ Aucun de ces clips ne dit donc quoi que ce soit de la vitesse du produit.
 
 
 
+
+## ScenarioBandeauLectureSeuleTest
+
+Le quatrième bandeau de l'inspection : le support est monté en **lecture seule**. Ces cas dormaient
+faute qu'un banc sache monter un volume ; la couture posée en #5091 les rend filmables.
+
+### S2-71 et S2-72 · `le_support_en_lecture_seule_s_annonce_et_l_import_aboutit`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit.mp4"></video>
+
+> Les deux cas sont joués **d'un trait**, et c'est voulu. Séparés, chacun ment à moitié : un bandeau
+> seul laisse croire à un refus, ce qu'un observateur craint précisément en voyant un avertissement
+> sur sa carte. Le clip montre le bandeau, puis l'import qui aboutit derrière.
+
+> L'ordre des trois phrases porte le sens : d'abord que l'import fonctionne, ensuite le geste à faire,
+> enfin que c'est la **prochaine** nuit qui est en jeu. Le banc l'affirme dans cet ordre.
+
+### S2-73 · `une_carte_inscriptible_n_annonce_rien`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioBandeauLectureSeuleTest.une_carte_inscriptible_n_annonce_rien.mp4"></video>
+
+> Contrôle négatif, et il n'est pas décoratif : sans lui, un bandeau qui paraîtrait **toujours**
+> passerait les deux cas précédents. La sonde reste ici celle du produit, qui interroge le vrai volume.
+
+
+## ScenarioBandeauxDInspectionTest
+
+Les bandeaux que l'inspection lève sur une carte discutable. Chaque cas prend **sa** carte : c'est la
+carte qui fait la pathologie.
+
+### S2-40 · `le_bandeau_du_melange`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioBandeauxDInspectionTest.le_bandeau_du_melange.mp4"></video>
+
+> Le bandeau **nomme** les séries mêlées, et le bouton d'import reste là : il informe, il ne bloque
+> pas. Un avertissement qui retirerait le bouton serait un refus déguisé.
+
+### S2-41 · `le_bandeau_de_l_incoherence`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioBandeauxDInspectionTest.le_bandeau_de_l_incoherence.mp4"></video>
+
+> Plus ferme que le mélange, et toujours pas bloquant. Le bandeau dit **quoi** peut être faux - la
+> série ou la date du passage - car c'est cela que l'observateur devra corriger après l'import.
+
+### S2-46 · `le_bandeau_de_la_discordance_de_prefixe`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioBandeauxDInspectionTest.le_bandeau_de_la_discordance_de_prefixe.mp4"></video>
+
+> **Celui-ci bloque**, contrairement aux trois autres, et c'est **mesuré** : le bouton d'import est
+> désactivé. La session le range pourtant sous le geste des bandeaux « non bloquants », et le
+> commentaire du contrôleur l'annonçait ainsi depuis #111. Le comportement est le bon - importer des
+> fichiers préfixés pour un autre carré les enverrait au dépôt sous ce nom-là - et ce sont les écrits
+> qui ont vieilli. Le commentaire est corrigé ici ; le classement du cas revient au porteur.
 ## ScenarioReveilParBoutonTest
 
 Samuel est venu regarder l'écran de son enregistreur pendant la nuit. Le firmware sort alors de la
