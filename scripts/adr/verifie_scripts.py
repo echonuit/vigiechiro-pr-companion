@@ -1143,14 +1143,23 @@ def test_5188_corpus_shell() -> None:
         (racine / "jamais-ajoute.sh").write_text("#!/usr/bin/env bash\ntrue\n", encoding="utf-8")
         _verifie("un .sh non indexe reste hors du corpus", len(m.suspects(racine)), 1)
 
-    # Sur le depot reel : le tolere est COMPTE, pas retire. Une tolerance est un delai (ADR 5188).
-    reels = m.suspects()
-    _verifie(
-        "le tolere est compte, avec sa condition",
-        len([s for s in reels if "(tolere :" in s]),
-        len(m.TOLERES),
-    )
-    _verifie("et aucun script n est retire du compte", len(reels), len(m.fichiers()))
+        # LA DISTINCTION DE L ADR 5188, sur un temoin SYNTHETIQUE et non sur le depot reel.
+        # Une premiere version interrogeait `m.suspects()` sans argument : elle passait ici et
+        # rougissait sous `verifie_temoins_non_decoratifs.py`, qui copie `scripts/` SANS `.git`.
+        # Ce garde ecrit sa regle noir sur blanc - un temoin s eprouve sur un arbre a lui, jamais
+        # sur le corpus versionne - et un temoin qui depend de git ne la respecte pas.
+        for chemin in m.TOLERES:
+            cible = racine / chemin
+            cible.parent.mkdir(parents=True, exist_ok=True)
+            cible.write_text("#!/usr/bin/env bash\ntrue\n", encoding="utf-8")
+        subprocess.run(["git", "add", "-A"], cwd=racine, check=True)
+        rendu = m.suspects(racine)
+        _verifie(
+            "le tolere est COMPTE, avec sa condition",
+            len([s for s in rendu if "(tolere :" in s]),
+            len(m.TOLERES),
+        )
+        _verifie("et aucun script n est retire du compte", len(rendu), len(m.fichiers(racine)))
 
 
 # Le motif d un import qui declare le corpus. `RACINES` et `RACINES_ANCREES` disent « les deux
