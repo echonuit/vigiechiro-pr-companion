@@ -262,6 +262,17 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         return selecteur;
     }
 
+    /// L'inspection **de cet écran-ci**, exposée aux bancs pour y poser la sonde du support (#5138).
+    ///
+    /// `Injector#getInstance` en rendrait une AUTRE : le ViewModel n'est lié nulle part, donc Guice
+    /// en fabrique une par injection, et la sonde posée sur celle-là n'atteindrait pas l'écran. C'est
+    /// la même raison qui fait passer `selecteur()` et `confirmateur()` par ici.
+    ///
+    /// N'expose que l'inspection, et non le ViewModel entier : un banc n'a besoin que de la couture.
+    InspectionImportViewModel inspection() {
+        return viewModel.inspection();
+    }
+
     /// Pré-sélectionne le site `idSite` dans le rattachement (raccourci « Importer une nuit » depuis
     /// la fiche d'un site). À appeler juste après le chargement FXML, une fois les sites listés.
     public void preselectionnerSite(Long idSite) {
@@ -342,7 +353,10 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         // passages créés après import).
         caseOpportuniste.selectedProperty().bindBidirectional(rattachement.opportunisteProperty());
         labelApercu.textProperty().bind(rattachement.apercuPrefixeProperty());
-        // Discordance de préfixe (#111) : déjà-préfixés ne correspondant pas au rattachement (non bloquant).
+        // Discordance de préfixe (#111) : déjà-préfixés ne correspondant pas au rattachement. Ce
+        // bandeau-là BLOQUE, contrairement aux trois de l'inspection : le message le dit, et le
+        // bouton d'import est désactivé tant que la discordance dure. Le commentaire annonçait
+        // l'inverse depuis #111 (mesuré et corrigé en #5138).
         // La visibilité est portée par le composant : un retour absent retire le libellé de la mise en page.
         LibelleRetour.installer(labelPrefixeDiscordant, rattachement.avertissementPrefixeProperty());
     }
