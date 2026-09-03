@@ -1540,6 +1540,7 @@ de7c180a8fd4  src/test/java/fr/univ_amu/iut/commun/persistence/MigrationV37Statu
 dd907eae48ed  src/test/java/fr/univ_amu/iut/commun/persistence/RestaurationCompleteTest.java
 ea22ca8086fa  src/test/java/fr/univ_amu/iut/commun/persistence/RetourArriereRestaurationTest.java
 d8caf25b4ba1  src/test/java/fr/univ_amu/iut/commun/persistence/ServiceSauvegardeTest.java
+a6e4230c235d  src/test/java/fr/univ_amu/iut/commun/persistence/VerrouPendantUnImportTest.java
 c83fdd0f5910  src/test/java/fr/univ_amu/iut/commun/persistence/VerrouWorkspaceTest.java
 c6f9e9e80a8c  src/test/java/fr/univ_amu/iut/commun/view/AccueilApparenceTest.java
 4fb83bc8a97a  src/test/java/fr/univ_amu/iut/commun/view/ActionAProposTest.java

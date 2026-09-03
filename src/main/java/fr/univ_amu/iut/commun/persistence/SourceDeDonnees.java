@@ -59,6 +59,10 @@ public class SourceDeDonnees {
             try (Statement st = connexion.createStatement()) {
                 st.execute("PRAGMA foreign_keys = ON");
                 st.execute("PRAGMA busy_timeout = " + DELAI_VERROU_MS);
+                // WAL : un lecteur ne bloque plus l'écrivain (#4983). En journal rollback, une lecture
+                // longue - et un import lit longtemps - tient un verrou partagé qui fait échouer toute
+                // écriture. Le `busy_timeout` ci-dessus ne fait alors qu'attendre l'échec.
+                st.execute("PRAGMA journal_mode = WAL");
             }
             return connexion;
         } catch (SQLException | IOException e) {
