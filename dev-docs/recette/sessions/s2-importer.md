@@ -159,7 +159,18 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
 - **S2-49** · *geste: reimporter-une-nuit-deja-connue* · Ré-inspection de `sd-nominale` : bandeau « nuit déjà importée », informatif.
 - **S2-50** · *geste: reimporter-une-nuit-deja-connue* · Rattachement au même point + année + n° : bandeau « n° déjà pris » avec « Utiliser ce n° » et
 
-**Bloc · Gestes de ligne (EPIC #1792)** : non automatisable (rendu du popup).
+**Bloc · Gestes de ligne (EPIC #1792)** : **automatisable**, contrairement à ce qui était écrit ici.
+
+> L'annotation disait « non automatisable (rendu du popup) ». C'est faux, et trois mesures le disent
+> (#5165). Le clic droit ouvre une **seconde fenêtre** que `isShowing()` confirme et que
+> `lookup(".menu-item")` parcourt. `CameraDeScene` boucle sur `Window.getWindows()` et cite le cas dans
+> son propre code : « pour les fenêtres qui paraissent en cours de séance : un menu, une modale ». Et
+> `CaptureMenuLigne` photographie déjà un menu de ce genre depuis #1792.
+>
+> Ce qui manquait n'était pas un moyen mais deux gestes que le dépôt connaissait : viser la table par
+> son identifiant, et l'amener dans le cadre - l'assistant est plus haut que la scène.
+>
+> Une annotation fausse coûte plus cher qu'un cas non filmé : elle décourage d'essayer.
 
 - **S2-51** · *geste: le-menu-contextuel-du-suivi-des-fichiers* · Pendant un import, clic droit sur une ligne du **suivi des fichiers** : le menu s'ouvre,
   entièrement lisible.
