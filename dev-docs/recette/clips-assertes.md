@@ -380,6 +380,37 @@ Aucun de ces clips ne dit donc quoi que ce soit de la vitesse du produit.
 
 
 
+
+## ScenarioCarteMultiNuitsTest
+
+On pose l'enregistreur et on le laisse. Le journal, lui, est **circulaire** : il perd les nuits les
+plus anciennes (R19). La carte porte donc trois nuits sous un journal qui n'en couvre qu'une, et c'est
+la situation la plus fréquente du terrain, pas un cas limite.
+
+### S2-42 et S2-70 · `la_table_des_nuits_et_ses_badges`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioCarteMultiNuitsTest.la_table_des_nuits_et_ses_badges.mp4"></video>
+
+> Ce qui se juge est la **distinction** : « complète » sur la première nuit, « complétude inconnue »
+> sur les deux autres. Trois badges identiques ne diraient rien, et c'était l'état d'avant #5071.
+
+> Trois lots ont construit ce badge sans le montrer en mouvement : #5071 pour la règle - une nuit sans
+> preuve est **inconnue**, jamais complète - #5030 pour sa colonne, #5135 pour le trajet qui l'amène à
+> la base. `apercu-import-multi-nuits.png` en donne une image fixe (#5101), mais elle ne dit pas d'où
+> vient ce badge.
+
+> Le banc lit les **cellules**, non les objets du modèle : un banc qui lirait `NuitVM#badge()`
+> rejouerait le calcul au lieu d'éprouver ce que l'observateur voit. Il cherche « complétude inco »
+> et non le libellé entier, la colonne de 130 px le tronquant (#5111).
+
+### S2-43 · `deux_nuits_deux_configurations`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioCarteMultiNuitsTest.deux_nuits_deux_configurations.mp4"></video>
+
+> Le capteur a été repris et reconfiguré entre les deux nuits. #3460 a corrigé le fait qu'une nuit
+> repartait avec les réglages d'une **autre** ; ce cas garde la correction.
 ## ScenarioBandeauLectureSeuleTest
 
 Le quatrième bandeau de l'inspection : le support est monté en **lecture seule**. Ces cas dormaient
