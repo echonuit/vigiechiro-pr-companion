@@ -686,6 +686,55 @@ sa cible - et un `-Pmutation` ciblé l'aurait signalé sans qu'on ait à deviner
 **En pratique** : à la passe 6 d'une clôture, lancer PIT ciblé sur les classes que le chantier a
 introduites, et vérifier à la main les garde-fous que PIT ne peut pas atteindre.
 
+### Demander à un garde ce qu'il est : `--contrat`
+
+Les **41 points d'entrée** de `scripts/adr` répondent à `--contrat` et déclarent six champs. La
+réponse s'obtient sans rien lire du dépôt : la branche s'imprime **avant tout le reste**, pour qu'un
+garde dont une dépendance manque rende quand même sa déclaration.
+
+```bash
+python3 scripts/adr/0008-echec-silencieux.py --contrat
+```
+
+```
+CONTRAT | garde=scripts/adr/0008-echec-silencieux.py
+geste: échec silencieux : catch au corps vide
+population: PRODUCTION + TESTS
+dispositif: cliquet
+seuil: 0, polarite=descend
+temoin: scripts/adr/verifie_scripts.py#test_0008_echec_silencieux
+decision: ADR 0008
+```
+
+| Champ | Ce qu'il dit |
+|---|---|
+| `geste` | ce que le garde cherche, en une phrase |
+| `population` | ce qu'il balaie. Les arbres Java se nomment `PRODUCTION` et `TESTS` ; le reste s'écrit en clair |
+| `dispositif` | ce qu'il est. Sept valeurs, dont le compte sur les 41 : `cliquet` (26), `loupe` (6), `invariant` (5), `plancher`, `rapport`, `generateur` et `harnais` (1 chacun) |
+| `seuil` | la marge et sa polarité, ou `(sans objet)` |
+| `temoin` | ce qui l'éprouve : `<fichier> --auto-test`, ou `verifie_scripts.py#<fonction>` |
+| `decision` | l'ADR qui le fonde, ou « hygiène, sans décision » |
+
+**Un champ sans objet s'écrit, il ne s'omet pas.** `imprime_contrat` refuse un contrat incomplet :
+une ligne absente ne se distingue pas d'un oubli, alors que `seuil: (sans objet)` pour un invariant
+dit quelque chose.
+
+**Ce que la déclaration remplace.** `contrats-des-gardes.py` sait deviner la population, le seuil et
+l'ADR en lisant le source. L'inférence marche souvent et se trompe sans le dire : elle lisait une
+chaîne de fixture comme du code (#5103), et rendait « (non declaree) » dès qu'un import se repliait
+au-delà de 100 caractères (#5128). Un contrat déclaré porte en plus ce qu'aucun motif ne dérive - la
+population d'un garde qui interroge la forge, par exemple.
+
+**Et il est confronté.** `verifie_contrats_tiennent.py` compare ce que le contrat déclare à ce que le
+garde fait, et refuse la contradiction. La règle n'est pas l'égalité : `RACINES` et
+`PRODUCTION + TESTS` nomment le même corpus, et un **silence** de l'inférence ne contredit rien.
+Sans cette confrontation, un contrat serait un commentaire, et il dériverait dès le jour où on
+l'écrit.
+
+**Ce qu'il ne dit pas** : ce que le garde **refuse** vraiment. Un contrat déclare ce qu'un garde
+**est**, jamais son prédicat. Et le champ `temoin` est vérifié **existant**, pas éprouvé : neuf des
+quarante-et-un ne sont tenus que par cette vérification-là (#5134).
+
 ## Ce qui bloque la CI
 
 | Workflow | Commande | Bloquant ? |

@@ -1848,6 +1848,21 @@ def auto_test() -> int:
     return 0
 
 
+# Ce que ce fichier DECLARE etre. Son `dispositif` est un mot a lui, et il se justifie ici plutot
+# que de se poser (issue #5125).
+#
+# **Il ne rend pas de verdict de `_commun`.** Ses appels a `rapporte`, `rapporte_plancher` et `loupe`
+# sont des FIXTURES : il les lance sur des arbres jetables pour verifier qu ils refusent quand il
+# faut. Un releve qui compte ces appels le range a tort parmi les gardes qui jugent, et c est
+# l erreur qu a faite la premiere mesure de #5117.
+#
+# **Il refuse pourtant, et pas selon une marge.** Un detecteur sans cas temoin le fait sortir en 1,
+# quel que soit leur nombre : ce n est donc ni un cliquet, ni un plancher, ni une loupe. Ce n est pas
+# non plus un `invariant` au sens des six autres, qui eprouvent le CODE ; celui-ci eprouve les
+# GARDES, et son refus porte sur la couverture du dispositif plutot que sur le depot.
+#
+# `seuil` est « (sans objet) » pour la meme raison : ce qu il exige est une propriete de tout ou
+# rien, pas un compte qu on tolere.
 CONTRAT = {
     "geste": "harnais : un detecteur sans cas temoin n est tenu que par son cliquet",
     "population": "les gardes que _charge nomme dans ce fichier",
