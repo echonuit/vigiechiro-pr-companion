@@ -382,6 +382,44 @@ Aucun de ces clips ne dit donc quoi que ce soit de la vitesse du produit.
 
 
 
+
+## ScenarioRejetsEtArchiveTest
+
+Trois façons d'aborder l'import qui ne partent pas d'un dossier propre. Aucune n'est un cas limite :
+un WAV illisible parmi cent arrive, une nuit rapportée en `.zip` arrive, et rebrancher la même carte
+arrive tout le temps.
+
+### S2-47 · `l_import_aboutit_malgre_les_rejets`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioRejetsEtArchiveTest.l_import_aboutit_malgre_les_rejets.mp4"></video>
+
+> L'import **aboutit** : un fichier illisible ne fait pas perdre les autres, qui sont ce que
+> l'observateur est venu chercher. Et les rejets **nomment** le fichier et la raison - un « 1 rejet »
+> ne dirait pas lequel, et il ne pourrait pas le retrouver sur sa carte.
+
+### S2-48 · `la_decompression_se_voit_avant_l_inspection`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection.mp4"></video>
+
+> Ce qui se juge est l'**ordre** : la barre doit se voir **avant** que l'inspection ait compté les six
+> originaux. Sinon le clip montrerait la progression de l'import, et le cas ne prouverait rien.
+
+> `ImportationController#chargerSource` pose l'état `EXTRACTION` sur le fil JavaFX **avant** de
+> démarrer, précisément pour qu'une grosse archive ne laisse pas l'observateur devant un écran figé
+> (#146). Rien ne s'appelle « décompression » côté écran : la barre est celle de `#zoneProgression`.
+
+### S2-49 et S2-50 · `reimporter_une_nuit_deja_connue`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioRejetsEtArchiveTest.reimporter_une_nuit_deja_connue.mp4"></video>
+
+> Le clip montre les **deux temps** : la nuit est importée pour de bon, puis la même carte est
+> redésignée. Sans le premier temps, le bandeau « déjà importée » paraîtrait sorti de nulle part.
+
+> Il **informe**, il ne bloque pas : l'observateur peut vouloir réimporter, et c'est à lui d'en
+> décider.
 ## ScenarioJournalAbsentTest
 
 Sans journal, Companion ne sait rien de la fin de la nuit. Avant #4990, cette nuit recevait le badge
