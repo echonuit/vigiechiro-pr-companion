@@ -54,7 +54,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import PRODUCTION, RACINE_DEPOT, TESTS, imprime_contrat, rapporte_plancher
+from _commun import PRODUCTION, TESTS, rapporte_plancher, sort_si_contrat_demande
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 
@@ -208,13 +208,7 @@ CONTRAT = {
 
 
 if __name__ == "__main__":
-    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
-    if "--contrat" in sys.argv:
-        sys.exit(
-            imprime_contrat(
-                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
-            )
-        )
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
     # Les deux planchers, l un apres l autre. Le code de sortie est le PIRE des deux : une perte

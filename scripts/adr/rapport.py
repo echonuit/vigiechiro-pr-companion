@@ -23,7 +23,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import RACINE_DEPOT, imprime_contrat
+from _commun import RACINE_DEPOT, sort_si_contrat_demande
 
 ICI = pathlib.Path(__file__).parent
 # Le champ `lus` (issue #5007) se lit en groupe NON capturant, et ce n'est pas un detail : les
@@ -249,13 +249,7 @@ CONTRAT = {
 
 
 if __name__ == "__main__":
-    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
-    if "--contrat" in sys.argv:
-        sys.exit(
-            imprime_contrat(
-                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
-            )
-        )
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
     markdown = "--markdown" in sys.argv

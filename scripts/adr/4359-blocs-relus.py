@@ -58,7 +58,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import importlib.util
 
-from _commun import RACINE_DEPOT, imprime_contrat
+from _commun import sort_si_contrat_demande
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 REGISTRE = pathlib.Path("scripts/adr/4359-blocs-relus.tsv")
@@ -134,13 +134,7 @@ CONTRAT = {
 
 
 if __name__ == "__main__":
-    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
-    if "--contrat" in sys.argv:
-        sys.exit(
-            imprime_contrat(
-                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
-            )
-        )
+    sort_si_contrat_demande(__file__, CONTRAT)
     corpus = blocs_du_corpus()
     inscrites = entrees()
     mortes = perimees(inscrites, corpus)

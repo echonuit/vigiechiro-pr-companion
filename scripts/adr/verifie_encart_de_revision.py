@@ -28,7 +28,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import DECISIONS, RACINE_DEPOT, imprime_contrat
+from _commun import DECISIONS, sort_si_contrat_demande
 
 TITRE_ENCART = '!!! warning "Ce qui fait foi aujourd\'hui"'
 
@@ -216,13 +216,7 @@ CONTRAT = {
 
 
 if __name__ == "__main__":
-    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
-    if "--contrat" in sys.argv:
-        sys.exit(
-            imprime_contrat(
-                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
-            )
-        )
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
     trouvees = fautes()

@@ -17,14 +17,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from _commun import (
-    PRODUCTION,
-    RACINE_DEPOT,
-    RACINES,
-    imprime_contrat,
-    rapporte,
-    sans_commentaires_xml,
-)
+from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_xml, sort_si_contrat_demande
 
 # La styleClass ou l'fx:id, porté par la balise HBox elle-même, évoque un slot d'actions.
 # Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne
@@ -70,13 +63,7 @@ CONTRAT = {
 
 
 if __name__ == "__main__":
-    # AVANT tout le reste : un contrat s imprime sans rien lire et sans rien exiger.
-    if "--contrat" in sys.argv:
-        sys.exit(
-            imprime_contrat(
-                pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
-            )
-        )
+    sort_si_contrat_demande(__file__, CONTRAT)
     sys.exit(
         rapporte(
             "0037",
