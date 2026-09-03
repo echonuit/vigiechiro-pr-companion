@@ -1679,7 +1679,7 @@ d8dfd907b1d1  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioNuitInterrom
 f3d67902b4ad  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioReveilParBoutonTest.java
 7987ae9805fd  src/test/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModelTest.java
 9c8a02123e93  src/test/java/fr/univ_amu/iut/documentation/DecisionsRespecteesTest.java
-6a24d0d7fc03  src/test/java/fr/univ_amu/iut/documentation/DocumentationAJourTest.java
+4894b7149968  src/test/java/fr/univ_amu/iut/documentation/DocumentationAJourTest.java
 e55e224b4323  src/test/java/fr/univ_amu/iut/documentation/NomDeLApplicationTest.java
 9e14ebf40997  src/test/java/fr/univ_amu/iut/e2e/AttenteAvantClic.java
 e93a95bddc5b  src/test/java/fr/univ_amu/iut/e2e/AttenteAvantClicTest.java

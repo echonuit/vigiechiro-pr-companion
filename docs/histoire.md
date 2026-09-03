@@ -32,10 +32,10 @@ Ce document existe toujours et il est public : c'est le [brief](https://brief.ec
 vous vous demandez pourquoi un écran est fait comme il est, la réponse s'y trouve souvent, écrite
 avant que l'écran n'existe.
 
-## Quatre semaines, vingt et une équipes
+## Quatre semaines, toutes les équipes en parallèle
 
 Le développement s'est fait pendant la SAÉ 2.01 du BUT Informatique de l'IUT d'Aix-Marseille.
-Vingt et une équipes d'étudiantes et d'étudiants de première année,
+<!--inv:equipes-->21<!--/inv--> équipes d'étudiantes et d'étudiants de première année,
 <!--inv:contributeurs-->90<!--/inv--> personnes, ont travaillé quatre semaines sur le même produit,
 chacune dans son dépôt, chacune sur sa part du parcours. La première version utilisable est sortie de là. Les noms sont dans
 [REMERCIEMENTS.md](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/REMERCIEMENTS.md).

@@ -45,7 +45,8 @@ dépôt et la synchronisation sortent de chez vous, par votre compte Vigie-Chiro
 jeton, aucun mot de passe conservé).
 
 > Né d'une commande réelle (Samuel Busson, CEREMA), écrit d'abord comme énoncé de SAÉ, livré en
-> quatre semaines par 21 équipes de BUT Informatique, consolidé depuis :
+> quatre semaines par <!--inv:equipes-->21<!--/inv--> équipes de BUT Informatique, consolidé
+> depuis :
 > [d'où vient ce projet](#origine).
 
 <p align="center">
@@ -187,7 +188,8 @@ ensuite été découpé en issues, une par parcours, et accompagné des tests un
 équipes si leur code faisait ce qu'on attendait de lui. Ce document est public : c'est le
 [brief](https://brief.echonuit.fr/), et il a continué de vivre depuis.
 
-Sont venues quatre semaines intensives. Vingt et une équipes de première année de BUT Informatique,
+Sont venues quatre semaines intensives. <!--inv:equipes-->21<!--/inv--> équipes de première année
+de BUT Informatique,
 <!--inv:contributeurs-->90<!--/inv--> étudiantes et étudiants, chacune dans son dépôt, toutes sur le
 même produit. Le MVP est sorti de là.
 
@@ -363,7 +365,8 @@ Vérifier : `java -version` doit afficher `openjdk version "25.0.x"`.
 
 ## 🙌 Remerciements
 
-Le MVP est le travail des 21 équipes d'étudiantes et d'étudiants de la promo 2026 du BUT
+Le MVP est le travail des <!--inv:equipes-->21<!--/inv--> équipes d'étudiantes et d'étudiants de
+la promo 2026 du BUT
 Informatique de l'IUT d'Aix-Marseille, pendant la SAÉ 2.01. Leurs dépôts vivent dans l'organisation
 [IUTInfoAix-S201-2026](https://github.com/IUTInfoAix-S201-2026), et la liste complète des
 contributrices et contributeurs est dans [REMERCIEMENTS.md](REMERCIEMENTS.md), équipe par équipe.
