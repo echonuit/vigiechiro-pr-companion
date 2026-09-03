@@ -25,6 +25,9 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 SOURCE = RACINE / ".agents" / "skills"
 CIBLES = [RACINE / ".claude" / "skills"]
 VERIFIE = "--verifie" in sys.argv
@@ -130,7 +133,18 @@ def competences(d: pathlib.Path):
     return {p.parent.name: p for p in sorted(d.glob("*/SKILL.md"))}
 
 
+CONTRAT = {
+    "geste": "copie de competence perimee ou orpheline",
+    "population": "les competences de .agents/skills, et leur copie de .claude/skills",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/synchronise-adaptateurs.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(auto_test())
 

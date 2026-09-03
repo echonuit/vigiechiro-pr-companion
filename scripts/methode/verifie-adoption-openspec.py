@@ -45,6 +45,8 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
 
 # Les deux arbres. `.agents/skills` est le fonds, `.claude/skills` sa copie tenue par
 # `synchronise-adaptateurs.py`. Les deux doivent porter les marqueurs : la copie est ce que Claude
@@ -196,7 +198,18 @@ def auto_test() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "competence OpenSpec adoptee que la regeneration ecraserait",
+    "population": "les competences openspec-* de .agents et .claude",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/verifie-adoption-openspec.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(auto_test())
 

@@ -23,7 +23,7 @@ import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
-from _commun import DECISIONS
+from _commun import DECISIONS, sort_si_contrat_demande
 
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
 from verifie_okf import RESERVES, lit_entete
@@ -201,5 +201,16 @@ def main() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "matrice des heuristiques d ergonomie perimee",
+    "population": "les ADR de dev-docs/decisions, et l annexe des heuristiques",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/matrice-ergonomie.py --auto-test",
+    "decision": "article A29",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     sys.exit(main())

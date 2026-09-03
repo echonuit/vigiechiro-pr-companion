@@ -45,6 +45,8 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
 
 # Le script que la methode doit nommer. Il est lance par `bash` et non execute directement : les
 # workflows lui posent le bit d execution avant chaque appel, et un checkout qui ne le porte pas
@@ -198,7 +200,18 @@ def auto_test() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "controle local du titre de PR absent de ce qui le documente",
+    "population": "CONTRIBUTING.md et la competence ouvrir-une-pr, dans ses deux copies",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/verifie-controle-du-titre.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(auto_test())
 

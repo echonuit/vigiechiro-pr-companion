@@ -50,6 +50,9 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 BINAIRE_EPINGLE = pathlib.Path(".github") / "openspec" / "node_modules" / ".bin" / "openspec"
 
 # Les deux arbres qui decrivent le contrat. Les adaptateurs de `.claude/skills` sont des copies,
@@ -296,7 +299,18 @@ def auto_test() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "invocation OpenSpec citee et qui n existe pas",
+    "population": "les competences openspec-* de .agents et .claude",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/verifie-sous-commandes-openspec.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(auto_test())
 
