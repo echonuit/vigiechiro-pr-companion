@@ -877,7 +877,8 @@ class DocumentationAJourTest {
         }
     }
 
-    // #2385 - Conformité des chiffres documentés à l'inventaire réel du code.
+    // #2385 - Conformité des chiffres documentés à l'inventaire qui fait foi (le code, ou le
+    // document qui fait autorité sur sa population : ADR 5169).
 
     /// Une **balise d'inventaire** ancre un chiffre de la doc à un décompte du code :
     /// `<!--inv:clé-->N<!--/inv-->`. Le `N` reste **visible** (un commentaire HTML ne s'affiche pas), donc
@@ -988,7 +989,7 @@ class DocumentationAJourTest {
             Pattern.compile("^\\|\\s*`([a-z][a-z0-9-]*)`\\s*\\|", Pattern.MULTILINE);
 
     @Test
-    @DisplayName("#2385 : chaque chiffre balisé <!--inv:cle--> égale l'inventaire réel du code")
+    @DisplayName("#2385 : chaque chiffre balisé <!--inv:cle--> égale l'inventaire qui fait foi")
     void chaque_chiffre_balise_egale_l_inventaire_reel() throws IOException {
         SoftAssertions verifs = new SoftAssertions();
         Set<String> clesRencontrees = new TreeSet<>();
@@ -1007,8 +1008,8 @@ class DocumentationAJourTest {
                 int reel = inventaireReel(cle);
                 verifs.assertThat(annonce)
                         .as(
-                                "%s : la balise <!--inv:%s--> annonce %d, mais l'inventaire réel du code vaut %d."
-                                        + " Ce chiffre est vérifié : corrigez-le (ou le code) plutôt que de le"
+                                "%s : la balise <!--inv:%s--> annonce %d, mais l'inventaire réel vaut %d."
+                                        + " Ce chiffre est vérifié : corrigez-le, ou ce qu'il compte, plutôt que de le"
                                         + " laisser dériver.",
                                 fichier, cle, annonce, reel)
                         .isEqualTo(reel);
