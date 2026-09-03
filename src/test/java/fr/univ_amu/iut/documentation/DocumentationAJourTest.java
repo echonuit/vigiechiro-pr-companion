@@ -901,7 +901,8 @@ class DocumentationAJourTest {
             "criteres-activite",
             "criteres-multisite",
             "criteres-audit",
-            "contributeurs");
+            "contributeurs",
+            "equipes");
 
     /// La clé de balise qu'une ADR déclare pour SA valeur, dans son en-tête.
     private static final Pattern CLE_BALISE_ADR = Pattern.compile("^inv_key: ([a-z-]+)$", Pattern.MULTILINE);
@@ -978,6 +979,9 @@ class DocumentationAJourTest {
 
     /// Une ligne de contributeur de `REMERCIEMENTS.md` : `| [@pseudonyme](url) | n | n | n |`.
     private static final Pattern CONTRIBUTEUR_REMERCIE = Pattern.compile("^\\| \\[@([^\\]]+)\\]", Pattern.MULTILINE);
+
+    /// Le titre d une equipe dans `REMERCIEMENTS.md` : une section de niveau trois, une par depot.
+    private static final Pattern EQUIPE_REMERCIEE = Pattern.compile("^### ", Pattern.MULTILINE);
 
     /// Une ligne du tableau des commandes de `cli.md` : première cellule = commande entre accents graves.
     private static final Pattern COMMANDE_DOCUMENTEE =
@@ -1060,6 +1064,7 @@ class DocumentationAJourTest {
                         nom -> nom.startsWith("V") && nom.endsWith(".sql"));
             case "tests-bats" -> casesBats();
             case "contributeurs" -> contributeursListes();
+            case "equipes" -> equipesListees();
             case "tables" -> tablesDuSchema();
             case "ecrans" ->
                 (int) fichiersDe(Path.of("docs", "ecrans"), nom -> nom.endsWith(".md") && !"index.md".equals(nom));
@@ -1084,6 +1089,17 @@ class DocumentationAJourTest {
             pseudonymes.add(ligne.group(1));
         }
         return pseudonymes.size();
+    }
+
+    /// Les equipes que `REMERCIEMENTS.md` presente, une section de niveau trois chacune.
+    ///
+    /// Meme raison que pour le compte des personnes : la prose annonce ce nombre a plusieurs
+    /// endroits, et l article A5 veut qu il se cite plutot qu il se recopie.
+    private static int equipesListees() {
+        return (int) EQUIPE_REMERCIEE
+                .matcher(lire(Path.of("REMERCIEMENTS.md")))
+                .results()
+                .count();
     }
 
     /// Les tables du schéma **courant**, obtenues en appliquant les migrations puis en interrogeant
