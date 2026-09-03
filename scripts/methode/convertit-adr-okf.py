@@ -254,6 +254,9 @@ def main() -> int:
     return 0
 
 
+# Pourquoi `generateur` : il ECRIT, avec `--ecrit`, et rend un apercu sinon. Il ne juge rien. Son
+# `return 1` est un chemin d erreur, pas un verdict, et le confondre avec un refus ferait attendre de
+# lui une garde qu il n exerce pas. La conversion est faite : aucun atelier ne le lance.
 CONTRAT = {
     "geste": "conversion des ADR du format a puces vers l en-tete OKF",
     "population": "les ADR de dev-docs/decisions",

@@ -168,6 +168,9 @@ def auto_test() -> int:
     return echecs
 
 
+# Pourquoi `loupe` : elle met sous les yeux ce que la specification couvre et ce qu elle ne couvre
+# pas, sans jamais bloquer. C est la definition meme de la loupe (ADR 2465) : elle rend une surface
+# de revue, et classer une lacune en infraction pretendrait a une certitude qu aucun compte ne donne.
 CONTRAT = {
     "geste": "ce que la specification vivante couvre du produit, et ce qu elle ne couvre pas",
     "population": "les specs de .github/openspec, confrontees aux ecrans et services du produit",
