@@ -70,6 +70,52 @@ HORS_CONFRONTATION = {
 
 CHIFFRE = re.compile(r"(\d+)")
 
+# LE DERNIER PORTEUR NON PYTHON, nomme plutot que devine (issue #5144).
+#
+# Un contrat Python se DECLARE par un `CONTRAT` au niveau module, que l AST lit. Le shell n a pas
+# cette prise : `verifie-butoirs.sh` imprime ses six champs depuis un `cat <<'FIN_DU_CONTRAT'`.
+#
+# **On ne tord pas le recensement pour lui.** #5102 a decide que les gardes shell ne recoivent pas de
+# contrat mais se CONVERTISSENT, la cible du depot etant deux langages, Java et Python. Batir un
+# mecanisme pour ce cas serait investir dans ce qui doit disparaitre.
+#
+# Une exception NOMMEE dit ce qu un motif tairait : il en reste un, c est le dernier, et le jour ou
+# le lot 5 de #5102 le convertit, ce dictionnaire devient vide et la branche qui le lit s en va.
+# L idiome vient de `HORS_PORTEE` dans `verifie_verdicts_declares.py`, dont le commentaire dit
+# pourquoi chaque entree porte sa raison.
+PORTEURS_HORS_PYTHON = {
+    ".github/scripts/verifie-butoirs.sh": (
+        "dernier garde shell portant un contrat ; il imprime ses champs depuis un heredoc, qu aucun "
+        "AST Python ne lit. Se retire quand le lot 5 de #5102 l aura converti"
+    ),
+}
+
+
+def declare_un_contrat(texte: str) -> bool:
+    """Ce module DECLARE-t-il un `CONTRAT` ? La declaration, non la mention (issue #5144).
+
+    La population se lisait par un grep du litteral `--contrat`, et sa docstring disait que « le grep
+    ne conclut pas, il REDUIT ». Une reduction qui peut PERDRE des membres n en est pas une : c est
+    un filtre qui sous-compte, en silence.
+
+    Mesure faite sur un prototype de la factorisation de #5137, ou le litteral part dans une aide de
+    `_commun` : le garde tombait de `lus=43` a `lus=4` en rendant `suspects=0` a l identique. Trente-
+    neuf contrats cessaient d etre confrontes sans que rien ne le dise.
+
+    Ce qui fait d un fichier un PORTEUR est ce qu il declare. La facon dont il repond est une autre
+    question, celle de `dispatche_en_code`, et les confondre est le defaut que ceci corrige.
+    """
+    try:
+        arbre = ast.parse(texte)
+    except SyntaxError:
+        return False
+    return any(
+        isinstance(noeud, ast.Assign)
+        and any(isinstance(c, ast.Name) and c.id == "CONTRAT" for c in noeud.targets)
+        for noeud in arbre.body
+    )
+
+
 # LE VOCABULAIRE DES DISPOSITIFS, declare ici et nulle part ailleurs (ADR 5125).
 #
 # Quatre disent COMMENT un garde juge : `cliquet` borne ce qu on tolere, `plancher` garde ce qu on
@@ -90,23 +136,23 @@ SEUIL_CONCLUANT = re.compile(r"^(?:cliquet|plancher) (\d+)$")
 
 
 def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
-    """Les points d entree qui MENTIONNENT un contrat, candidats a en porter un.
+    """Les points d entree qui DECLARENT un contrat (issue #5144).
 
-    Le grep ne conclut pas : il reduit. C est la reponse a `--contrat` qui fait foi, parce que les
-    idiomes de dispatch different. Lancer `--contrat` sur les 117 points d entree couterait des
-    minutes, un script sans cette branche ignorant l argument et faisant son travail.
+    Python par l AST, plus les porteurs hors Python nommes un par un. La declaration fait le
+    porteur ; la facon de repondre est une autre question, tranchee par `dispatche_en_code`, et un
+    fichier qui declare sans repondre est desormais un SUSPECT au lieu de disparaitre.
     """
     base = racine or RACINE_DEPOT
     vus = []
-    for motif in ("scripts/**/*.py", ".github/scripts/*.sh", ".github/assets/*.sh"):
-        for f in sorted(base.glob(motif)):
-            if "__pycache__" in f.parts or f.name.startswith("_"):
-                continue
-            try:
-                if "--contrat" in f.read_text(encoding="utf-8", errors="ignore"):
-                    vus.append(f)
-            except OSError:
-                continue
+    for f in sorted(base.glob("scripts/**/*.py")):
+        if "__pycache__" in f.parts or f.name.startswith("_"):
+            continue
+        try:
+            if declare_un_contrat(f.read_text(encoding="utf-8", errors="ignore")):
+                vus.append(f)
+        except OSError:
+            continue
+    vus += [base / nom for nom in sorted(PORTEURS_HORS_PYTHON) if (base / nom).is_file()]
     return vus
 
 
@@ -262,6 +308,17 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
 
     trouves = []
     for chemin in fichiers(racine):
+        vu_tot = chemin.relative_to(base).as_posix()
+        # Un contrat DECLARE que rien ne peut atteindre est un contrat qui ment : il existe, il a
+        # l air tenu, et personne ne le lit. Avant #5144 ce fichier sortait simplement de la
+        # population, et le garde rendait le meme vert sur un corpus plus petit.
+        if chemin.suffix == ".py" and not dispatche_en_code(
+            chemin, chemin.read_text(encoding="utf-8", errors="ignore")
+        ):
+            trouves.append(
+                f"{vu_tot}  contrat declare mais inatteignable : aucune branche --contrat"
+            )
+            continue
         contrat = contrat_de(chemin)
         if contrat is None:
             continue
@@ -392,6 +449,42 @@ def _auto_test() -> int:
     verifie(
         "et les trois qui ne jugent pas aussi",
         {"rapport", "generateur", "harnais"} <= DISPOSITIFS,
+        True,
+    )
+
+    # LA POPULATION se derive de la DECLARATION, non d une mention (issue #5144). Les deux formes
+    # sont ecrites ici : sans la seconde, un motif qui repondrait toujours `True` passerait.
+    verifie(
+        "un module qui declare un CONTRAT est un porteur",
+        declare_un_contrat('CONTRAT = {\n    "geste": "x",\n}\n'),
+        True,
+    )
+    verifie(
+        "une MENTION en prose n en fait pas un",
+        declare_un_contrat("# on parle de CONTRAT ici\nx = 1\n"),
+        False,
+    )
+    verifie(
+        "ni une variable locale du meme nom",
+        declare_un_contrat("def f():\n    CONTRAT = {}\n    return CONTRAT\n"),
+        False,
+    )
+    # Et ce que le grep d avant faisait, que la declaration ne fait plus : dependre du litteral.
+    verifie(
+        "un porteur dont le litteral vit ailleurs reste vu",
+        declare_un_contrat('CONTRAT = {"geste": "x"}\n\nsort_ailleurs(__file__, CONTRAT)\n'),
+        True,
+    )
+    # Le dernier porteur shell est NOMME, pas devine : le jour ou le lot 5 de #5102 le convertit,
+    # ce cas tombe a zero et la branche qui le lit s en va.
+    verifie(
+        "il reste exactement un porteur hors Python",
+        len(PORTEURS_HORS_PYTHON),
+        1,
+    )
+    verifie(
+        "et chacun porte sa raison",
+        all(len(r) > 40 for r in PORTEURS_HORS_PYTHON.values()),
         True,
     )
 
