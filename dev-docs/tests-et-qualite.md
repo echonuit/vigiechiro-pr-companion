@@ -688,9 +688,14 @@ introduites, et vérifier à la main les garde-fous que PIT ne peut pas atteindr
 
 ### Demander à un garde ce qu'il est : `--contrat`
 
-Les **41 points d'entrée** de `scripts/adr` répondent à `--contrat` et déclarent six champs. La
-réponse s'obtient sans rien lire du dépôt : la branche s'imprime **avant tout le reste**, pour qu'un
-garde dont une dépendance manque rende quand même sa déclaration.
+**Soixante-sept points d'entrée** répondent à `--contrat` et déclarent six champs : les 42 de
+`scripts/adr`, les 24 de `scripts/methode`, et le dernier garde shell. La réponse s'obtient sans rien
+lire du dépôt : la branche s'imprime **avant tout le reste**, pour qu'un garde dont une dépendance
+manque rende quand même sa déclaration.
+
+`verifie_contrat_obligatoire.py` **refuse** un point d'entrée de ces deux dossiers qui n'en
+déclarerait pas. Ce n'est pas un cliquet : il n'y a pas de marge à relever, et l'échappatoire est une
+liste d'exceptions **nommées**, vide aujourd'hui.
 
 ```bash
 python3 scripts/adr/0008-echec-silencieux.py --contrat
@@ -710,7 +715,7 @@ decision: ADR 0008
 |---|---|
 | `geste` | ce que le garde cherche, en une phrase |
 | `population` | ce qu'il balaie. Les arbres Java se nomment `PRODUCTION` et `TESTS` ; le reste s'écrit en clair |
-| `dispositif` | ce qu'il est. Sept valeurs, dont le compte sur les 41 : `cliquet` (26), `loupe` (6), `invariant` (5), `plancher`, `rapport`, `generateur` et `harnais` (1 chacun) |
+| `dispositif` | ce qu'il est, et le vocabulaire est **clos** (ADR 5125). Quatre disent comment il juge : `cliquet` (27), `invariant` (25), `loupe` (7), `plancher` (1). Trois disent qu'il ne juge **pas**, et ce qu'il fait à la place : `rapport` (4), `generateur` (2), `harnais` (1) |
 | `seuil` | la marge et sa polarité, ou `(sans objet)` |
 | `temoin` | ce qui l'éprouve : `<fichier> --auto-test`, ou `verifie_scripts.py#<fonction>` |
 | `decision` | l'ADR qui le fonde, ou « hygiène, sans décision » |
