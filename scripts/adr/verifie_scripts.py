@@ -17,6 +17,7 @@ Aucune dépendance hors stdlib : lancé comme les scripts, `python3 scripts/adr/
 import importlib.util
 import pathlib
 import re
+import subprocess
 import sys
 import tempfile
 
@@ -1113,6 +1114,54 @@ def test_4477_longueur_des_adr() -> None:
         )
 
 
+def test_5188_corpus_shell() -> None:
+    """Le cliquet compte ce qui reste en shell, et sa population est ce que GIT SUIT.
+
+    Le temoin ne peut donc pas se contenter d ecrire des fichiers : un `.sh` pose sur le disque et
+    jamais indexe n entre pas dans le corpus, et un temoin qui l ignorerait affirmerait une
+    detection que le garde ne fait pas. Le cas monte donc un vrai depot, et il eprouve les DEUX
+    sens : un arbre sans shell ne rend rien, un script ajoute est vu.
+
+    Le troisieme cas est celui que l ADR 5188 porte : un script TOLERE reste COMPTE, avec sa
+    condition. Le retirer ferait croire a une dispense, et le compte cesserait de dire ce qui reste
+    a convertir - c est la distinction entre un delai et une exemption, et elle se casse en une
+    ligne si personne ne la tient.
+    """
+    m = _charge("5188-corpus-shell.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        subprocess.run(["git", "init", "-q"], cwd=racine, check=True)
+        (racine / "un.py").write_text("x = 1\n", encoding="utf-8")
+        subprocess.run(["git", "add", "-A"], cwd=racine, check=True)
+        _verifie("5188 sur un arbre sans shell ne rend rien", len(m.suspects(racine)), 0)
+
+        (racine / "ajoute.sh").write_text("#!/usr/bin/env bash\ntrue\n", encoding="utf-8")
+        subprocess.run(["git", "add", "-A"], cwd=racine, check=True)
+        _verifie("et il voit le script ajoute", len(m.suspects(racine)), 1)
+
+        # Non indexe : hors du corpus, comme pour tous les cliquets du depot.
+        (racine / "jamais-ajoute.sh").write_text("#!/usr/bin/env bash\ntrue\n", encoding="utf-8")
+        _verifie("un .sh non indexe reste hors du corpus", len(m.suspects(racine)), 1)
+
+        # LA DISTINCTION DE L ADR 5188, sur un temoin SYNTHETIQUE et non sur le depot reel.
+        # Une premiere version interrogeait `m.suspects()` sans argument : elle passait ici et
+        # rougissait sous `verifie_temoins_non_decoratifs.py`, qui copie `scripts/` SANS `.git`.
+        # Ce garde ecrit sa regle noir sur blanc - un temoin s eprouve sur un arbre a lui, jamais
+        # sur le corpus versionne - et un temoin qui depend de git ne la respecte pas.
+        for chemin in m.TOLERES:
+            cible = racine / chemin
+            cible.parent.mkdir(parents=True, exist_ok=True)
+            cible.write_text("#!/usr/bin/env bash\ntrue\n", encoding="utf-8")
+        subprocess.run(["git", "add", "-A"], cwd=racine, check=True)
+        rendu = m.suspects(racine)
+        _verifie(
+            "le tolere est COMPTE, avec sa condition",
+            len([s for s in rendu if "(tolere :" in s]),
+            len(m.TOLERES),
+        )
+        _verifie("et aucun script n est retire du compte", len(rendu), len(m.fichiers(racine)))
+
+
 # Le motif d un import qui declare le corpus. `RACINES` et `RACINES_ANCREES` disent « les deux
 # arbres » ; `PRODUCTION` seule dit « la production, et voici pourquoi » dans le fichier qui
 # l importe.
@@ -1918,6 +1967,7 @@ if __name__ == "__main__":
         test_4617_code_mort_et_zone_de_test,
         test_4476_javadoc_raconte_son_extraction,
         test_4477_longueur_des_adr,
+        test_5188_corpus_shell,
         test_loupe_4472_densite_de_commentaire,
         test_un_verdict_se_rend_sur_le_numero_de_son_adr,
         test_les_gardes_de_code_lisent_les_deux_arbres,
