@@ -26,8 +26,8 @@ référence explique *en détail* ce que chaque écran propose.
 L'écran **Qualification** propose en plus des [raccourcis clavier](../raccourcis-clavier.md) dédiés
 (verdict, écoute, navigation) pour traiter les séquences rapidement.
 
-Chaque écran ci-dessus dispose de sa **fiche détaillée** (son nom est un lien), illustrée par les
-captures de ses différents états.
+Chaque écran ci-dessus a sa **fiche détaillée** (son nom est un lien), illustrée par les captures
+de ses différents états.
 
 ## Quitter un écran en cours de saisie
 
