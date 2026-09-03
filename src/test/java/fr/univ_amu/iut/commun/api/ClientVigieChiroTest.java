@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.api;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -176,6 +178,36 @@ class ClientVigieChiroTest {
         assertThat(sansToken.echec()).contains("jeton");
         assertThat(horsLigne.estReussie()).isFalse();
         assertThat(horsLigne.echec()).contains("injoignable");
+    }
+
+    @Test
+    @DisplayName("#3469 : un refus S3 porte ce que le serveur a répondu, et non le vide")
+    void un_refus_s3_porte_le_corps_du_serveur() throws Exception {
+        // Le journal de Samuel montre treize `PUT` refusés « 403 : (corps vide) », et l'issue en conclut
+        // que « la cause n'a jamais été mesurée ». Elle ne POUVAIT pas l'être : le transport appelait
+        // `BodyHandlers.discarding()` et passait une chaîne vide écrite en dur au triage.
+        //
+        // S3 nomme pourtant sa cause, et les trois qu'il distingue n'appellent pas la même conduite :
+        // un droit refusé, une horloge décalée, une signature fausse.
+        String corpsS3 = "<?xml version=\"1.0\"?><Error><Code>AccessDenied</Code>"
+                + "<Message>Request has expired</Message></Error>";
+        // La réponse se construit AVANT le `when` : `reponse(...)` bouchonne elle-même, et Mockito
+        // refuse un bouchonnage imbriqué dans un autre.
+        HttpResponse<Object> refuse = reponse(403, corpsS3, Map.of());
+        HttpClient http = mock(HttpClient.class);
+        when(http.send(any(), any())).thenReturn(refuse);
+        ClientVigieChiro client = clientAvec(http);
+
+        ReponseApi<String> refus = client.televerserVersS3(
+                "https://vigiechiro.s3.amazonaws.com/zip?Signature=abc", new byte[] {1}, "application/zip");
+
+        assertThat(refus.echec())
+                .as("le refus doit porter ce que S3 a DIT. Sans corps, l'application ne peut rien"
+                        + " annoncer, et personne ne peut instruire la cause - ce qui est exactement"
+                        + " l'impasse dans laquelle #3469 se trouve depuis le 26 juillet")
+                .isPresent()
+                .get(as(InstanceOfAssertFactories.STRING))
+                .contains("AccessDenied");
     }
 
     @Test

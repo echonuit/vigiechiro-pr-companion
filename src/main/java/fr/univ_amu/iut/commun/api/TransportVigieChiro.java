@@ -280,10 +280,21 @@ final class TransportVigieChiro {
                     .build();
             // Chemin SEUL : une URL S3 pré-signée porte sa signature dans sa requête (#1845).
             chemin = requete.uri().getPath();
-            HttpResponse<Void> http = client.send(requete, HttpResponse.BodyHandlers.discarding());
+            // Le corps est LU, quel que soit le statut, comme partout ailleurs dans ce transport.
+            // Il ne l'était pas ici : `BodyHandlers.discarding()` le jetait, et le triage recevait une
+            // chaîne vide écrite en dur. S3 nomme pourtant sa cause - `AccessDenied`,
+            // `RequestTimeTooSkewed`, `SignatureDoesNotMatch` - et ces trois-là n'appellent pas la même
+            // conduite. Les treize refus du 26 juillet sont donc arrivés muets parce que NOUS les avions
+            // fait taire, et l'instruction de #3469 attendait depuis lors une cause qu'elle ne pouvait
+            // pas obtenir.
+            //
+            // Sur succès, le corps d'un `PUT` S3 est vide ou négligeable, et l'ETag vient des en-têtes :
+            // le lire ne coûte rien et referme le flux sur tous les chemins (cf. `CorpsReponse`).
+            HttpResponse<InputStream> http = client.send(requete, HttpResponse.BodyHandlers.ofInputStream());
+            String corpsRendu = CorpsReponse.sousPlafond(http, chemin);
             ReponseApi<String> reponse = http.statusCode() >= 200 && http.statusCode() < 300
                     ? ReponseApi.succes(etag(http))
-                    : triage(http.statusCode(), "");
+                    : triage(http.statusCode(), corpsRendu);
             JournalEchange.consigner(GESTE_S3, chemin, reponse, debut, null);
             return new PolitiqueReessai.Issue<>(reponse, retryAfter(http));
         } catch (InterruptedException interrompu) {
