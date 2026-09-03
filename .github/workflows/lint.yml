@@ -698,6 +698,14 @@ jobs:
           python3 scripts/adr/verifie_contrats_tiennent.py --auto-test
           python3 scripts/adr/verifie_contrats_tiennent.py
 
+      - name: "Un point d'entree de scripts/adr declare ce qu'il est (bloquant, #5149)"
+        # Le sous-chantier #5117 a porte ce dossier de 2 contrats a 41 sur 41. Rien n empechait le
+        # 42e d arriver sans le sien : un garde neuf s ecrit sur le modele d un voisin, dont on
+        # copie le bloc de verdict et pas la declaration. L invariant refuse, sans marge a relever.
+        run: |
+          python3 scripts/adr/verifie_contrat_obligatoire.py --auto-test
+          python3 scripts/adr/verifie_contrat_obligatoire.py
+
       - name: "Aucun appel de verdict ne cache ce qu'il a lu (bloquant, #5049)"
         # Le sous-chantier #5015 a converti 33 appels, et son bilan nommait cette dette : rien
         # n'empechait un appel neuf de naitre muet. La regression a eu lieu en QUELQUES HEURES,

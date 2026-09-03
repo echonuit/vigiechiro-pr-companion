@@ -9,6 +9,7 @@ verification: certaine
 enforced_by:
   - "scripts/methode/contrats-des-gardes.py"
   - "scripts/adr/verifie_contrats_tiennent.py"
+  - "scripts/adr/verifie_contrat_obligatoire.py"
 ratchet: 0
 verified:
   - by: machine:ci
