@@ -33,6 +33,9 @@ import re
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 FONDS = RACINE / ".agents" / "skills"
 
 CYCLE = [
@@ -127,7 +130,18 @@ def _auto_test() -> int:
     return echecs
 
 
+CONTRAT = {
+    "geste": "etape numerotee qui delegue vers une competence situee plus loin",
+    "population": "les competences de .agents/skills et leur copie de .claude/skills",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/etapes-sans-renvoi-aval.py --auto-test",
+    "decision": "ADR 4828",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
     fautes, illisibles = ecarts()

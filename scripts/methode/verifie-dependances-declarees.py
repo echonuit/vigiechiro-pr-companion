@@ -35,6 +35,8 @@ import tempfile
 import tomllib
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
 
 # Les deux arbres de gardes, plus les fichiers de dependances qui peuvent les couvrir.
 ARBRES = ("scripts", ".github/scripts")
@@ -297,7 +299,18 @@ def rend_verdict(racine: pathlib.Path | None = None) -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "garde qui ne declare pas ce dont il a besoin",
+    "population": "les points d entree de scripts/",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/verifie-dependances-declarees.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
     raise SystemExit(rend_verdict())

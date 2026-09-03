@@ -22,6 +22,10 @@ import subprocess
 import sys
 import tempfile
 
+_RACINE_CONTRAT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(_RACINE_CONTRAT / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 # Surefire nomme un test echoue sous deux formes, et il faut les deux : la premiere seule rate les
 # erreurs, la seconde seule rate les echecs d'assertion quand la classe entiere tombe.
 #
@@ -625,5 +629,16 @@ def main() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "combien de fois chaque banc a rougi, sur combien de tirages",
+    "population": "les runs de la forge sur une fenetre de jours",
+    "dispositif": "rapport",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/releve-les-bancs-instables.py --auto-test",
+    "decision": "ADR 4187",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     sys.exit(main())

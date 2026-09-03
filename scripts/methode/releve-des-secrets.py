@@ -20,6 +20,9 @@ import subprocess
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 ATELIERS = RACINE / ".github" / "workflows"
 FOURNI_PAR_ACTIONS = {"GITHUB_TOKEN"}
 
@@ -33,10 +36,15 @@ FAMILLES = (
 )
 
 
-def releve(motif: re.Pattern) -> dict[str, list[str]]:
-    """Chaque nom exige par les ateliers, et ceux qui le demandent."""
+def releve(motif: re.Pattern, ateliers: pathlib.Path | None = None) -> dict[str, list[str]]:
+    """Chaque nom exige par les ateliers, et ceux qui le demandent.
+
+    `ateliers` est injectable pour que l auto-test pose son propre corpus (issue #5157). Sans cela,
+    le seul temoin possible lirait les ateliers reels, donc changerait de reponse a chaque atelier
+    ajoute : un temoin dont le resultat depend du depot ne prouve pas le releveur, il le suit.
+    """
     exiges: dict[str, list[str]] = {}
-    for atelier in sorted(ATELIERS.glob("*.yml")):
+    for atelier in sorted((ateliers or ATELIERS).glob("*.yml")):
         for nom in sorted(set(motif.findall(atelier.read_text(encoding="utf-8")))):
             if nom in FOURNI_PAR_ACTIONS:
                 continue
@@ -51,6 +59,68 @@ def poses(commande: str) -> set[str] | None:
     except (OSError, subprocess.CalledProcessError):
         return None
     return {l.split("\t")[0].strip() for l in fini.stdout.splitlines() if l.strip()}
+
+
+def auto_test() -> int:
+    """Le releveur se prouve sur un corpus POSE, et dans les deux sens.
+
+    Un temoin qui ne verifierait que « il rend quelque chose » passerait sur un motif casse : il
+    faut lui montrer ce qu il doit voir ET ce qu il doit ignorer.
+    """
+    import tempfile
+
+    echecs = 0
+
+    def verifie(libelle, obtenu, attendu):
+        nonlocal echecs
+        if obtenu == attendu:
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
+            echecs = 1
+
+    print("Auto-test du releve des secrets (#5157) :")
+    _, _, motif_secret = FAMILLES[0]
+    _, _, motif_variable = FAMILLES[1]
+
+    with tempfile.TemporaryDirectory(prefix="vc-secrets-") as tmp:
+        faux = pathlib.Path(tmp)
+        (faux / "a.yml").write_text(
+            "jobs:\n  x:\n    env:\n      A: ${{ secrets.JETON_A }}\n"
+            "      B: ${{ vars.REGLAGE_B }}\n"
+            "      C: ${{ secrets.GITHUB_TOKEN }}\n",
+            encoding="utf-8",
+        )
+        (faux / "b.yml").write_text(
+            "jobs:\n  y:\n    env:\n      A: ${{ secrets.JETON_A }}\n", encoding="utf-8"
+        )
+        # Le sens POSITIF : un secret exige par deux ateliers est rendu, avec ses deux ateliers.
+        verifie(
+            "un secret exige est rendu, avec qui le demande",
+            releve(motif_secret, faux).get("JETON_A"),
+            ["a.yml", "b.yml"],
+        )
+        # Ce que le releveur doit IGNORER : ce que les actions fournissent d elles-memes.
+        verifie(
+            "GITHUB_TOKEN n est pas exige du depot",
+            "GITHUB_TOKEN" in releve(motif_secret, faux),
+            False,
+        )
+        # Les deux familles ne se melangent pas : un motif ne voit pas ce que l autre cherche.
+        verifie(
+            "une variable n est pas un secret", "REGLAGE_B" in releve(motif_secret, faux), False
+        )
+        verifie(
+            "et le motif des variables la voit", "REGLAGE_B" in releve(motif_variable, faux), True
+        )
+        # Le sens NEGATIF : sur un corpus vide, le releveur ne rend rien plutot que de deviner.
+        vide = faux / "vide"
+        vide.mkdir()
+        verifie("un corpus sans atelier ne rend rien", releve(motif_secret, vide), {})
+
+    print()
+    print("Auto-test concluant." if not echecs else "Auto-test EN ÉCHEC.")
+    return echecs
 
 
 def main() -> int:
@@ -100,5 +170,18 @@ def main() -> int:
     return ecart
 
 
+CONTRAT = {
+    "geste": "releve des secrets et variables que les ateliers exigent",
+    "population": "les workflows de .github/workflows",
+    "dispositif": "rapport",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/releve-des-secrets.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
+    if "--auto-test" in sys.argv:
+        sys.exit(auto_test())
     raise SystemExit(main())

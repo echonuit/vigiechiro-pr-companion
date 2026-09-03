@@ -36,6 +36,9 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 ATELIER = RACINE / ".github" / "workflows" / "lint.yml"
 LANCE = re.compile(r"scripts/methode/([a-z0-9-]+\.py)")
 POINT_D_ENTREE = re.compile(r'^if __name__ == ["\']__main__["\']:', re.M)
@@ -196,7 +199,18 @@ def _auto_test() -> int:
     return echecs
 
 
+CONTRAT = {
+    "geste": "auto-test de garde de methode qui reste vert sans detection",
+    "population": "les gardes de scripts/methode que la suite charge",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/temoins-de-methode-non-decoratifs.py --auto-test",
+    "decision": "ADR 4490",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
     decoratifs, illisibles = suspects()

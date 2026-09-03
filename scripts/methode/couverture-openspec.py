@@ -35,6 +35,8 @@ RACINE = pathlib.Path(
     ).stdout.strip()
     or "."
 )
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
 
 EXIGENCE = re.compile(r"^### Requirement:", re.MULTILINE)
 COMMANDE = re.compile(r'name\s*=\s*"([a-z][a-z0-9-]*)"')
@@ -166,7 +168,18 @@ def auto_test() -> int:
     return echecs
 
 
+CONTRAT = {
+    "geste": "ce que la specification vivante couvre du produit, et ce qu elle ne couvre pas",
+    "population": "les specs de .github/openspec, confrontees aux ecrans et services du produit",
+    "dispositif": "loupe",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/couverture-openspec.py --auto-test",
+    "decision": "ADR 0014",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(auto_test())
     rapporte(RACINE)

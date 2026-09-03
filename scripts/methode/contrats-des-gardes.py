@@ -50,7 +50,7 @@ RACINE = pathlib.Path(__file__).resolve().parents[2]
 # La lecture des imports vit dans `_commun`, et non ici : deux deriveurs la faisaient chacun de leur
 # cote, et le motif textuel des deux devenait aveugle des que `ruff format` repliait la ligne (#5128).
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
-from _commun import noms_importes
+from _commun import noms_importes, sort_si_contrat_demande
 
 # Les prefixes que les deux conventions posent devant le geste.
 PREFIXES = re.compile(r"^(cliquet-|loupe-|verifie[-_])?(\d{4}-)?(.*?)\.py$")
@@ -431,7 +431,18 @@ def _auto_test() -> int:
     return echecs
 
 
+CONTRAT = {
+    "geste": "releve des contrats de gardes, pour comparer deux arbres",
+    "population": "les gardes de scripts/adr, lus sans etre lances",
+    "dispositif": "rapport",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/contrats-des-gardes.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
     ici = contrats(RACINE)
