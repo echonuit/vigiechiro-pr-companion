@@ -27,7 +27,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
-from _commun import DECISIONS
+from _commun import DECISIONS, sort_si_contrat_demande
 
 GARDE = RACINE / "scripts" / "adr" / "4395-renvois-en-javadoc.py"
 
@@ -211,7 +211,18 @@ def auto_test() -> int:
     return echecs
 
 
+CONTRAT = {
+    "geste": "plancher perime, ou dont les trois inscriptions divergent",
+    "population": "les ADR portant un plancher, et les trois endroits ou chacun s ecrit",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/releve-les-planchers.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
     try:

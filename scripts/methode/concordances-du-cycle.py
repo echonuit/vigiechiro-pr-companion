@@ -45,6 +45,9 @@ import re
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 FONDS = RACINE / ".agents" / "skills"
 COMMANDES = RACINE / ".claude" / "commands"
 ORCHESTRATEUR = FONDS / "clore-un-chantier" / "SKILL.md"
@@ -268,7 +271,18 @@ def _auto_test() -> int:
     return echecs
 
 
+CONTRAT = {
+    "geste": "concordance rompue entre commandes, tableau des passes et competences",
+    "population": "les competences de .agents/skills et leur copie de .claude/skills, et le tableau des passes du cycle",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/concordances-du-cycle.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
     fautes = suspects()

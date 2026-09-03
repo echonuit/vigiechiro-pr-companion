@@ -44,6 +44,10 @@ import subprocess
 import sys
 import tempfile
 
+_RACINE_CONTRAT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(_RACINE_CONTRAT / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 BINAIRE_EPINGLE = pathlib.Path(".github") / "openspec" / "node_modules" / ".bin" / "openspec"
 
 # Ce que l outil ecrit quand il n a rien trouve. Cherche sur les DEUX flux : il l ecrit sur la
@@ -159,7 +163,18 @@ def auto_test() -> int:
     return echecs
 
 
+CONTRAT = {
+    "geste": "specification principale d OpenSpec qui ne valide pas",
+    "population": "les specs de .github/openspec, par la ligne de commande epinglee",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/verifie-specs-valides.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(auto_test())
     code, message = juge(racine())

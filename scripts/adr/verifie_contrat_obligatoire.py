@@ -42,6 +42,10 @@ from _commun import sort_si_contrat_demande
 
 ADR = "4636"
 DOSSIER = pathlib.Path(__file__).resolve().parent
+# Les dossiers tenus. `scripts/adr` depuis #5149 ; `scripts/methode` depuis #5157, une fois
+# ses 24 points d entree declarants. Les quatre autres dossiers de `scripts/` restent
+# dehors : ils portent cinq points d entree, et aucun lot ne les a encore traites.
+DOSSIERS = (DOSSIER, DOSSIER.parent / "methode")
 
 # Les points d entree qui n ont PAS a declarer de contrat, et pourquoi. Chacun est nomme avec sa
 # raison, sinon cette liste devient le tapis sous lequel on pousse la dette : c est l idiome de
@@ -60,9 +64,9 @@ def points_d_entree(dossier: pathlib.Path | None = None) -> list[pathlib.Path]:
     meme chose, et un motif qui chercherait l une manquerait les deux autres. C est la lecon de
     #5046, ou trois heuristiques ont rendu trois comptes tous faux.
     """
-    base = dossier or DOSSIER
+    bases = [dossier] if dossier else list(DOSSIERS)
     trouves = []
-    for f in sorted(base.glob("*.py")):
+    for f in sorted(f for b in bases for f in b.glob("*.py")):
         if f.name.startswith("_") or "__pycache__" in f.parts:
             continue
         try:

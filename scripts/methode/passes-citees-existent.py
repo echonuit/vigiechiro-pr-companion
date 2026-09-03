@@ -38,6 +38,9 @@ import re
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 CYCLE = RACINE / "dev-docs" / "cycle-de-chantier.md"
 
 # Les titres de passes : `### 0. Relecture...`. Le suffixe litteral d une case `6b` n en est pas un.
@@ -154,7 +157,18 @@ def _auto_test() -> int:
     return echecs
 
 
+CONTRAT = {
+    "geste": "citation de passe de cloture qui designe une passe inexistante",
+    "population": "les competences de .agents/skills et leur copie de .claude/skills, et dev-docs/cycle-de-chantier.md",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/passes-citees-existent.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
     fautes = suspects()

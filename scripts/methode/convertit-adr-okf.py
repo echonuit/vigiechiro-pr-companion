@@ -26,7 +26,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
-from _commun import DECISIONS
+from _commun import DECISIONS, sort_si_contrat_demande
 
 # Le titre porte parfois son propre numero, parfois non, et le separateur a deux formes.
 TITRE = re.compile(r"^#\s+(?:ADR\s+)?(?:\S+\s*[-–:]\s*)?(.*)$")
@@ -151,6 +151,75 @@ def convertit(chemin: pathlib.Path, article: str) -> str | None:
     )
 
 
+def auto_test() -> int:
+    """La conversion se prouve sur une ADR POSEE, et dans les deux sens.
+
+    Le defaut que ce temoin garde est nomme dans `convertit` : une premiere version reaffectait la
+    tranche du corps a chaque ligne et n en gardait que la derniere. Les 172 corps etaient amputes,
+    et l apercu tronque ne le montrait pas. Un temoin qui ne verifierait que l en-tete l aurait
+    laisse passer, d ou le cas qui compte le CORPS (issue #5157).
+    """
+    import tempfile
+
+    echecs = 0
+
+    def verifie(libelle, obtenu, attendu):
+        nonlocal echecs
+        if obtenu == attendu:
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
+            echecs = 1
+
+    print("Auto-test de la conversion vers OKF (#5157) :")
+
+    A_PUCES = (
+        "# ADR 9999 - Un titre de temoin\n"
+        "\n"
+        "- **Statut** : stable\n"
+        "- **Date** : 2026-09-03\n"
+        "- **V\u00e9rification** : probable (cliquet : 7)\n"
+        "\n"
+        "## Contexte\n"
+        "\n"
+        "Le premier paragraphe du corps.\n"
+        "\n"
+        "## Decision\n"
+        "\n"
+        "Le dernier paragraphe du corps.\n"
+    )
+
+    with tempfile.TemporaryDirectory(prefix="vc-okf-") as tmp:
+        f = pathlib.Path(tmp) / "9999-un-titre-de-temoin.md"
+        f.write_text(A_PUCES, encoding="utf-8")
+        rendu = convertit(f, "A1")
+        verifie("une ADR a puces se convertit", rendu is not None, True)
+        verifie("l en-tete OKF ouvre le rendu", rendu.startswith("---\n"), True)
+        verifie("le titre est repris", 'title: "Un titre de temoin"' in rendu, True)
+        # La puce s ecrit « Vérification », AVEC son accent : c est la cle que `convertit` lit, et
+        # ma premiere fixture l ecrivait sans. Le rendu portait alors `verification: ` vide, sans
+        # que rien ne s en plaigne : une cle inconnue ne fait pas rougir la conversion.
+        verifie("le niveau de verification aussi", "verification: probable" in rendu, True)
+        verifie("et le cliquet qu il portait", "ratchet: 7" in rendu, True)
+
+        # LE CAS QUI COMPTE : le corps est pris ENTIER, non ampute a sa derniere tranche.
+        verifie(
+            "le corps garde son premier paragraphe",
+            "Le premier paragraphe du corps." in rendu,
+            True,
+        )
+        verifie("et son dernier", "Le dernier paragraphe du corps." in rendu, True)
+
+        # Le sens NEGATIF : une ADR deja convertie ne se reconvertit pas.
+        deja = pathlib.Path(tmp) / "9998-deja-convertie.md"
+        deja.write_text("---\ntype: adr\n---\n\n# Deja\n", encoding="utf-8")
+        verifie("une ADR deja au format OKF est laissee telle quelle", convertit(deja, "A1"), None)
+
+    print()
+    print("Auto-test concluant." if not echecs else "Auto-test EN ÉCHEC.")
+    return echecs
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--carte", required=True, help="fichier « numero article » par ligne")
@@ -185,5 +254,18 @@ def main() -> int:
     return 0
 
 
+CONTRAT = {
+    "geste": "conversion des ADR du format a puces vers l en-tete OKF",
+    "population": "les ADR de dev-docs/decisions",
+    "dispositif": "generateur",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/convertit-adr-okf.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
+    if "--auto-test" in sys.argv:
+        sys.exit(auto_test())
     sys.exit(main())

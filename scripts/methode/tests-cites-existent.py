@@ -26,6 +26,9 @@ import re
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+from _commun import sort_si_contrat_demande
+
 TESTS = RACINE / "src" / "test"
 
 CITATION = re.compile(r"-Dtest=([A-Za-z0-9_$.]+(?:#[A-Za-z0-9_$]+)?)")
@@ -103,7 +106,18 @@ def _auto_test() -> int:
     return echecs
 
 
+CONTRAT = {
+    "geste": "test cite par une page de methode et qui n existe pas",
+    "population": "les competences de .agents/skills et leur copie de .claude/skills, et les pages de dev-docs",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": "scripts/methode/tests-cites-existent.py --auto-test",
+    "decision": "hygiene, sans decision",
+}
+
+
 if __name__ == "__main__":
+    sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
     fautes = suspects()
