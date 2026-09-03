@@ -63,11 +63,26 @@ ALIAS = {
 # les six champs sont tenus.
 HORS_CONFRONTATION = {
     "geste": "une phrase libre, qu aucun motif ne derive du code",
-    "dispositif": "cliquet, plancher, loupe ou invariant : l inference le devine du nom de l aide "
-    "appelee, ce qui rendrait un desaccord la ou il n y a qu une convention de nommage",
+    "dispositif": "il n est pas CONFRONTE a l inference, qui le devine du nom de l aide appelee : "
+    "ce serait un desaccord la ou il n y a qu une convention de nommage. Son VOCABULAIRE est "
+    "verifie, lui, contre `DISPOSITIFS` (ADR 5125)",
 }
 
 CHIFFRE = re.compile(r"(\d+)")
+
+# LE VOCABULAIRE DES DISPOSITIFS, declare ici et nulle part ailleurs (ADR 5125).
+#
+# Quatre disent COMMENT un garde juge : `cliquet` borne ce qu on tolere, `plancher` garde ce qu on
+# possede, `loupe` observe sans bloquer, `invariant` refuse sans marge. Trois disent qu il ne juge
+# PAS, et ce qu il fait a la place : `rapport` agrege, `generateur` ecrit, `harnais` eprouve les
+# gardes eux-memes.
+#
+# Ces trois-la pourraient s ecrire « (sans objet) ». L ADR 5125 dit pourquoi ils ne le font pas : un
+# champ qui se tait ne se distingue pas d un oubli, et l ADR 2748 demande qu un dispositif qui peut
+# ne rien verifier le DISE.
+DISPOSITIFS = frozenset(
+    {"cliquet", "plancher", "loupe", "invariant", "rapport", "generateur", "harnais"}
+)
 
 # Les deux formes par lesquelles `seuil()` CONCLUT. Tout le reste est un aveu d ignorance, et un
 # aveu ne contredit rien : c est deja la regle du champ `population`, que `corpus_resolu` applique.
@@ -269,6 +284,10 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
         if d is not None and i is not None and d != i:
             trouves.append(f"{vu}  population declaree {sorted(d)} contredit {sorted(i)}")
 
+        dispositif = contrat.get("dispositif", "")
+        if dispositif not in DISPOSITIFS:
+            trouves.append(f"{vu}  dispositif inconnu : {dispositif!r}")
+
         seuil_infere = releve.seuil(texte, base / "dev-docs" / "decisions")
         if seuil_contredit(contrat.get("seuil", ""), seuil_infere):
             declare = CHIFFRE.search(contrat.get("seuil", "")).group(1)
@@ -360,6 +379,20 @@ def _auto_test() -> int:
         "le seuil d un garde reel se resout, et sur le cliquet que son ADR declare",
         seuil_resolu(_rendu),
         str(cliquet("4472")),
+    )
+
+    # Le VOCABULAIRE des dispositifs (ADR 5125). Un mot hors de l ensemble est refuse ; les sept
+    # connus passent. Les deux cotes se lisent, si bien qu ajouter un mot a `DISPOSITIFS` suffit.
+    verifie("un dispositif hors du vocabulaire est vu", "bidule" in DISPOSITIFS, False)
+    verifie(
+        "les quatre qui jugent y sont",
+        {"cliquet", "plancher", "loupe", "invariant"} <= DISPOSITIFS,
+        True,
+    )
+    verifie(
+        "et les trois qui ne jugent pas aussi",
+        {"rapport", "generateur", "harnais"} <= DISPOSITIFS,
+        True,
     )
 
     verifie(
