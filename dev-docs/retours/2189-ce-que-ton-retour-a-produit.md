@@ -9,6 +9,9 @@
 > Elle dit trois choses, et les sépare : ce qui est **corrigé**, ce qui **ne l'est pas encore**, et ce
 > qui **ne viendra pas**. Un point tu, ou promis sans l'être, se paierait à ta première nuit.
 
+> Les captures sont celles du dépôt, régénérées à chaque version : ce sont les écrans d'aujourd'hui,
+> pas des copies d'écran prises une fois.
+
 ## Comment lire les légendes
 
 Chaque entrée dit ce que l'artefact **montre** et ce qu'il **ne montre pas**. Ce n'est pas une
@@ -56,12 +59,12 @@ exigée n'est pas un défaut.
 Les deux images ci-dessous se lisent **ensemble** : c'est leur écart qui montre la correction, et
 chacune seule ne prouverait rien.
 
-![Le protocole n'est pas couvert : un avertissement](../../.github/assets/apercu-diagnostic-protocole-non-couvert.png)
+![Le protocole n'est pas couvert : un avertissement](https://raw.githubusercontent.com/echonuit/vigiechiro-pr-companion/main/.github/assets/apercu-diagnostic-protocole-non-couvert.png)
 
 **Ce que la première montre** : l'avertissement se déclenche quand l'enregistrement **ne couvre pas**
 la fenêtre demandée - de 30 minutes avant le coucher à 30 minutes après le lever.
 
-![Le protocole est couvert et dépassé : une information](../../.github/assets/apercu-diagnostic.png)
+![Le protocole est couvert et dépassé : une information](https://raw.githubusercontent.com/echonuit/vigiechiro-pr-companion/main/.github/assets/apercu-diagnostic.png)
 
 **Ce que la seconde montre** : quand l'enregistrement couvre la fenêtre **et la dépasse**, l'écran rend
 une simple **information**, en bleu. C'est là que se lit le retournement : dépasser le protocole
@@ -86,7 +89,7 @@ lue comme une preuve, et le badge le plus rassurant allait à la nuit dont on sa
 
 **Corrigé.** Trois états désormais, et « inconnue » n'est pas une nuance d'« incomplète ».
 
-![La table des nuits et ses badges](../../.github/assets/apercu-import-multi-nuits.png)
+![La table des nuits et ses badges](https://raw.githubusercontent.com/echonuit/vigiechiro-pr-companion/main/.github/assets/apercu-import-multi-nuits.png)
 
 <video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioCarteMultiNuitsTest.la_table_des_nuits_et_ses_badges.mp4"></video>
 
@@ -100,7 +103,7 @@ lue comme une preuve, et le badge le plus rassurant allait à la nuit dont on sa
 **Corrigé**, et le bandeau dit trois choses dans cet ordre : que l'import de cette nuit **fonctionne**,
 le geste à faire sur la carte, et que c'est la **prochaine** nuit qui est en jeu.
 
-![Le bandeau du support en lecture seule](../../.github/assets/apercu-import-lecture-seule.png)
+![Le bandeau du support en lecture seule](https://raw.githubusercontent.com/echonuit/vigiechiro-pr-companion/main/.github/assets/apercu-import-lecture-seule.png)
 
 <video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit.mp4"></video>
 
@@ -122,7 +125,7 @@ dire.
 Une carte pleine, une batterie vide, un arrêt subi : la nuit s'arrête avant son terme et rien ne le
 disait.
 
-![Le second encart, sur une nuit interrompue](../../.github/assets/apercu-diagnostic-nuit-interrompue.png)
+![Le second encart, sur une nuit interrompue](https://raw.githubusercontent.com/echonuit/vigiechiro-pr-companion/main/.github/assets/apercu-diagnostic-nuit-interrompue.png)
 
 <video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioNuitInterrompueTest.une_nuit_interrompue_le_dit.mp4"></video>
 
