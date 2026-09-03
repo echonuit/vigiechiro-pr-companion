@@ -311,7 +311,7 @@ class TransportVigieChiroTest {
     @Test
     @DisplayName("#2354 : une coupure momentanée est réessayée, puis le PUT S3 réussit")
     void depot_s3_reessaie_une_coupure_puis_reussit() throws Exception {
-        HttpResponse<Void> ok = reponse(200, Map.of());
+        HttpResponse<InputStream> ok = reponse(200, Map.of());
         HttpClient client = mock(HttpClient.class);
         doThrow(new IOException("paquet perdu")).doReturn(ok).when(client).send(any(), any());
         List<Duration> attentes = new ArrayList<>();
@@ -424,7 +424,7 @@ class TransportVigieChiroTest {
     @DisplayName("#2354 : un refus définitif (4xx) du PUT S3 n'est jamais rejoué")
     void depot_s3_ne_reessaie_pas_un_refus_definitif() throws Exception {
         // 403 SignatureDoesNotMatch : rejouer ne le rendra pas valide.
-        HttpResponse<Void> refus = reponse(403, Map.of());
+        HttpResponse<InputStream> refus = reponse(403, Map.of());
         HttpClient client = mock(HttpClient.class);
         doReturn(refus).when(client).send(any(), any());
         List<Duration> attentes = new ArrayList<>();
@@ -443,8 +443,8 @@ class TransportVigieChiroTest {
     @Test
     @DisplayName("#2354 : le PUT S3 respecte le Retry-After du serveur (503 → attente imposée → succès)")
     void depot_s3_respecte_retry_after() throws Exception {
-        HttpResponse<Void> occupe = reponse(503, Map.of("Retry-After", List.of("2")));
-        HttpResponse<Void> ok = reponse(200, Map.of());
+        HttpResponse<InputStream> occupe = reponse(503, Map.of("Retry-After", List.of("2")));
+        HttpResponse<InputStream> ok = reponse(200, Map.of());
         HttpClient client = mock(HttpClient.class);
         doReturn(occupe).doReturn(ok).when(client).send(any(), any());
         List<Duration> attentes = new ArrayList<>();
@@ -481,7 +481,7 @@ class TransportVigieChiroTest {
     @Test
     @DisplayName("#2354 : deposerPartie rend Succes portant l'ETag S3 (guillemets retirés)")
     void depot_partie_rend_l_etag() throws Exception {
-        HttpResponse<Void> ok = reponse(200, Map.of("ETag", List.of("\"etag-abc\"")));
+        HttpResponse<InputStream> ok = reponse(200, Map.of("ETag", List.of("\"etag-abc\"")));
         HttpClient client = mock(HttpClient.class);
         doReturn(ok).when(client).send(any(), any());
         TransportVigieChiro transport =
@@ -496,7 +496,7 @@ class TransportVigieChiroTest {
     @Test
     @DisplayName("#2354 : deposerPartie réessaie une coupure momentanée, puis rend l'ETag")
     void depot_partie_reessaie_puis_reussit() throws Exception {
-        HttpResponse<Void> ok = reponse(200, Map.of("ETag", List.of("etag-2")));
+        HttpResponse<InputStream> ok = reponse(200, Map.of("ETag", List.of("etag-2")));
         HttpClient client = mock(HttpClient.class);
         doThrow(new IOException("coupure")).doReturn(ok).when(client).send(any(), any());
         List<Duration> attentes = new ArrayList<>();
@@ -613,10 +613,22 @@ class TransportVigieChiroTest {
         return reponse;
     }
 
-    private static HttpResponse<Void> reponse(int statut, Map<String, List<String>> entetes) {
-        HttpResponse<Void> reponse = mock(HttpResponse.class);
+    /// Une réponse S3 bouchonnée, **avec son corps**.
+    ///
+    /// Elle n'en portait pas : le dépôt S3 appelait `BodyHandlers.discarding()` et n'en lisait jamais.
+    /// Depuis #3469 il le lit, comme le reste du transport le fait déjà, et un refus porte donc ce que
+    /// le serveur a dit. Une réponse sans corps ne représenterait plus rien de réel.
+    private static HttpResponse<InputStream> reponse(int statut, Map<String, List<String>> entetes) {
+        return reponse(statut, entetes, "");
+    }
+
+    /// La même, portant `corps` - ce que S3 répond quand il refuse.
+    private static HttpResponse<InputStream> reponse(int statut, Map<String, List<String>> entetes, String corps) {
+        byte[] octets = corps.getBytes(StandardCharsets.UTF_8);
+        HttpResponse<InputStream> reponse = mock(HttpResponse.class);
         when(reponse.statusCode()).thenReturn(statut);
         when(reponse.headers()).thenReturn(HttpHeaders.of(entetes, (nom, valeur) -> true));
+        when(reponse.body()).thenAnswer(appel -> new ByteArrayInputStream(octets));
         return reponse;
     }
 }
