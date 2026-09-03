@@ -170,6 +170,9 @@ def main() -> int:
     return ecart
 
 
+# Pourquoi `rapport` : il releve ce que les ateliers EXIGENT, et `--compare` dit l ecart avec ce que
+# le depot porte. Ni l un ni l autre ne refuse : un secret manquant se voit a l usage, et faire
+# rougir la CI sur l inventaire d un depot dont on ne connait pas les secrets serait un faux verdict.
 CONTRAT = {
     "geste": "releve des secrets et variables que les ateliers exigent",
     "population": "les workflows de .github/workflows",

@@ -629,6 +629,9 @@ def main() -> int:
     return 0
 
 
+# Pourquoi `rapport` : il COMPTE, il ne juge pas. Combien de fois chaque banc a rougi sur combien de
+# tirages est une mesure, et l ADR 4187 en fait le prealable au classement d un rouge, non le
+# classement lui-meme. Il sort en 0 meme quand les taux sont mauvais.
 CONTRAT = {
     "geste": "combien de fois chaque banc a rougi, sur combien de tirages",
     "population": "les runs de la forge sur une fenetre de jours",

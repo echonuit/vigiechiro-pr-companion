@@ -431,6 +431,9 @@ def _auto_test() -> int:
     return echecs
 
 
+# Pourquoi `rapport` et non `invariant` : ce releve ne REFUSE jamais. Il rend le contrat de chaque
+# garde pour qu on compare deux arbres, et sort en 0 quoi qu il trouve. Un dispositif qui ne refuse
+# pas n est pas un invariant, et le dire evite qu on attende de lui un verdict qu il ne rend pas.
 CONTRAT = {
     "geste": "releve des contrats de gardes, pour comparer deux arbres",
     "population": "les gardes de scripts/adr, lus sans etre lances",
