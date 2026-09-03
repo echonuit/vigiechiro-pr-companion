@@ -806,15 +806,18 @@ et un script lancé par un garde est exécuté par la CI aussi sûrement qu'un s
 
 #### Où chacun descend
 
+**Les cinquante disparaissent.** Bash n'a pas d'état stable dans ce dépôt, et une tolérance est un
+**délai daté, jamais une exemption** (ADR 5188).
+
 | destination | n | ce qui la décide |
 |---|---:|---|
-| conversion vers Python | 44 | la cible des deux langages, sans autre condition |
-| reste Bash **sous condition** | 1 | `lance-test-filme.sh`, 1 295 lignes d'orchestration, **tant que le banc Java n'est pas définitivement validé**. La condition est écrite pour qu'on sache quand la lever |
-| à trancher | 5 | les cinq outils : ce ne sont pas des gardes, et aucune règle écrite ne dit ce qu'ils deviennent |
+| conversion, sans condition | **49** | la cible des deux langages |
+| conversion **après une condition écrite** | **1** | `lance-test-filme.sh`, 1 295 lignes d'orchestration, tolérées **tant que le banc Java n'est pas définitivement validé**. La condition est écrite pour qu'on sache la lever, et sa levée déclenche la conversion |
 
-Les cinq derniers ne sont pas de la dette oubliée, c'est un arbitrage qui n'a pas été rendu. Deux
-touchent à l'empaquetage et à la capture, un troisième génère une icône : leur langage se discute
-autrement que celui d'un garde.
+Le **langage d'arrivée** de chacun se choisit au moment de sa conversion, entre Java et Python selon
+ce qu'il outille. Ce n'est pas un arbitrage laissé ouvert sur le fond : rien ne reste en shell. Les
+cinq outils qui ne sont pas des gardes ne font pas exception ; ils n'ont simplement pas la même
+urgence, n'étant tenus par aucun auto-test.
 
 #### Deux limites de ce relevé, déclarées
 
