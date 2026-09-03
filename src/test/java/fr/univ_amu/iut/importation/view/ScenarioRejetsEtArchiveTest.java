@@ -31,8 +31,6 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.view.NavigationSites;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import javafx.scene.Node;
@@ -69,6 +67,12 @@ class ScenarioRejetsEtArchiveTest {
     private static final int FIN_SECONDES = 180;
 
     private static final long PAUSE_PAR_FICHIER_MS = 900;
+
+    private static final String BOUTON_ASSISTANT = "#boutonImporterNuit";
+
+    private static final String BOUTON_IMPORTER = "#boutonImporter";
+
+    private static final String LABEL_ORIGINAUX = "#labelOriginaux";
 
     /// L'action du compte rendu de fin, telle que `CompteRenduDeFinImport` la nomme.
     private static final String LIBELLE_SUITE = "Ouvrir la nuit importée";
@@ -138,7 +142,7 @@ class ScenarioRejetsEtArchiveTest {
                 .exists();
 
         Respiration.avantLeGeste(robot);
-        GesteVisible.cliquer(robot, "#boutonImporterNuit");
+        GesteVisible.cliquer(robot, BOUTON_ASSISTANT);
         WaitForAsyncUtils.waitForFxEvents();
 
         controleur().selecteur().definir(repondant(archive));
@@ -155,14 +159,14 @@ class ScenarioRejetsEtArchiveTest {
 
         // Le libellé n'est pas VIDE au départ : il affiche « 0 enregistrement(s) », son état neutre.
         // Ce qui se juge est donc que le VRAI compte n'y soit pas encore - la carte en porte six.
-        assertThat(texte(robot, "#labelOriginaux"))
+        assertThat(texte(robot, LABEL_ORIGINAUX))
                 .as("la barre doit se voir AVANT l'inspection. Si les six originaux étaient déjà"
                         + " comptés, ce que le clip montre serait la progression de l'IMPORT et non"
                         + " celle de la décompression - et le cas ne prouverait rien")
                 .doesNotContain("6 enregistrement");
 
         Attente.que(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
+                () -> !texte(robot, LABEL_ORIGINAUX).isBlank(),
                 "l'inspection n'a jamais suivi la décompression : l'archive a été ouverte pour rien",
                 FIN_SECONDES * 1000L);
     }
@@ -185,7 +189,7 @@ class ScenarioRejetsEtArchiveTest {
         // cas que celui qui l'a causée. Une faute, trois cas rouges.
         robot.interact(() -> injecteur.getInstance(NavigationSites.class).ouvrirDetail(CARRE));
         WaitForAsyncUtils.waitForFxEvents();
-        GesteVisible.cliquer(robot, "#boutonImporterNuit");
+        GesteVisible.cliquer(robot, BOUTON_ASSISTANT);
         WaitForAsyncUtils.waitForFxEvents();
 
         controleur().selecteur().definir(repondant(carte));
@@ -194,7 +198,7 @@ class ScenarioRejetsEtArchiveTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         Attente.que(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
+                () -> !texte(robot, LABEL_ORIGINAUX).isBlank(),
                 "l'inspection n'a jamais conclu sur la seconde désignation",
                 APPARITION_SECONDES * 1000L);
 
@@ -204,7 +208,7 @@ class ScenarioRejetsEtArchiveTest {
                         + " l'observateur peut vouloir réimporter, et c'est à lui d'en décider")
                 .containsIgnoringCase("déjà");
 
-        assertThat(robot.lookup("#boutonImporter").tryQuery())
+        assertThat(robot.lookup(BOUTON_IMPORTER).tryQuery())
                 .as("le bandeau informe, il ne bloque pas")
                 .isPresent();
     }
@@ -214,8 +218,8 @@ class ScenarioRejetsEtArchiveTest {
         ComboBox<?> points = robot.lookup("#comboPoints").queryAs(ComboBox.class);
         robot.interact(() -> points.getSelectionModel().select(0));
         WaitForAsyncUtils.waitForFxEvents();
-        GesteVisible.amenerDansLeCadre(robot, "#boutonImporter");
-        GesteVisible.cliquer(robot, "#boutonImporter");
+        GesteVisible.amenerDansLeCadre(robot, BOUTON_IMPORTER);
+        GesteVisible.cliquer(robot, BOUTON_IMPORTER);
         Attente.que(
                 () -> estVisible(robot, "#compteRenduChiffre"),
                 "l'import n'a pas abouti : le compte rendu de fin n'a jamais paru",
@@ -237,32 +241,11 @@ class ScenarioRejetsEtArchiveTest {
         return robot.lookup(identifiant).tryQuery().map(Node::isVisible).orElse(false);
     }
 
-    /// Le texte rendu de chaque ligne de la table des nuits, dans l'ordre de l'écran.
-    ///
-    /// Lu sur les **cellules**, et non sur les objets du modèle : une cellule est un `Labeled`, et
-    /// c'est ce qu'elle affiche qui se juge. Un banc qui lirait `NuitVM#badge()` rejouerait le calcul
-    /// au lieu d'éprouver ce que l'observateur voit.
-    private static List<String> lignesDeLaTable(FxRobot robot) {
-        Node zone = robot.lookup("#zoneNuits").tryQuery().orElse(null);
-        if (!(zone instanceof Parent parent)) {
-            return List.of();
-        }
-        List<String> lignes = new ArrayList<>();
-        for (Node noeud : parent.lookupAll(".table-row-cell")) {
-            StringBuilder ligne = new StringBuilder();
-            collecter(noeud, ligne);
-            if (!ligne.isEmpty()) {
-                lignes.add(ligne.toString());
-            }
-        }
-        return lignes;
-    }
-
     /// Désigne `fixture`, lance l'inspection, et rend tout ce que les bandeaux disent.
     private String inspecter(FxRobot robot, String fixture) throws TimeoutException, IOException {
         Path carte = CarteDeRecette.materialiser(fixture);
         Respiration.avantLeGeste(robot);
-        GesteVisible.cliquer(robot, "#boutonImporterNuit");
+        GesteVisible.cliquer(robot, BOUTON_ASSISTANT);
         WaitForAsyncUtils.waitForFxEvents();
 
         controleur().selecteur().definir(repondant(carte));
@@ -274,7 +257,7 @@ class ScenarioRejetsEtArchiveTest {
         // n'en lèvent pas au même endroit. `sd-prefixee` ne dit rien ici - sa discordance se voit au
         // RATTACHEMENT - et attendre un bandeau d'inspection y expirerait pour rien.
         Attente.que(
-                () -> !texte(robot, "#labelOriginaux").isBlank(),
+                () -> !texte(robot, LABEL_ORIGINAUX).isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux sur « " + fixture + " » : elle"
                         + " balaie le dossier hors du fil JavaFX, et rien n'a paru dans le temps imparti",
                 APPARITION_SECONDES * 1000L);
