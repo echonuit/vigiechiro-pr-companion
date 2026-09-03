@@ -342,6 +342,7 @@ nav:
     - 5054 · Un témoin qui n'affirme que des vides ne prouve rien: decisions/5054-un-temoin-qui-n-affirme-que-des-vides-ne-prouve-rien.md
     - 5089 · Un chemin suivi ne porte que de l'ASCII: decisions/5089-un-chemin-suivi-ne-porte-que-de-l-ascii.md
     - 5125 · Un point d'entrée qui ne juge pas dit ce qu'il est: decisions/5125-un-point-d-entree-qui-ne-juge-pas-dit-ce-qu-il-est.md
+    - 5157 · Le dispositif déclare ce que l'outil fait sans mode: decisions/5157-le-dispositif-se-lit-sans-mode.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md

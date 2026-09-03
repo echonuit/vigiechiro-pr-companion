@@ -22,8 +22,8 @@ import subprocess
 import sys
 import tempfile
 
-_RACINE_CONTRAT = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(_RACINE_CONTRAT / "scripts" / "adr"))
+RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts" / "adr"))
 from _commun import sort_si_contrat_demande
 
 # Surefire nomme un test echoue sous deux formes, et il faut les deux : la premiere seule rate les
