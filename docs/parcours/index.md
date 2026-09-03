@@ -1,8 +1,8 @@
 # Parcours métier
 
-Le traitement d'une nuit de capture suit toujours le même fil : de la **carte SD** jusqu'au
-**dépôt** sur la plateforme Vigie-Chiro, puis, quelques jours plus tard, la **validation des
-espèces** identifiées. Cette page déroule ce parcours étape par étape.
+Le traitement d'une nuit suit toujours le même fil : de la carte SD au dépôt sur la plateforme
+Vigie-Chiro, puis, quelques jours plus tard, la validation des espèces identifiées. Cette page le
+déroule étape par étape.
 
 <div style="text-align:center; margin:1.2rem 0">
   <img src="../assets/illustrations/parcours.svg" style="max-width:100%; width:780px"

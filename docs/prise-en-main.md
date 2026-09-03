@@ -1,12 +1,12 @@
 # Prise en main
 
-Cette page explique comment **installer**, **lancer** VigieChiro Companion, puis **situer les écrans** au
-premier démarrage. En quelques minutes, vous êtes prêt à traiter votre première nuit
-d'enregistrement.
+Cette page va de l'installation à votre première nuit : télécharger l'application, la lancer, et
+situer les écrans que vous verrez au premier démarrage.
 
 ## Installer l'application
 
-Plusieurs chemins mènent à l'application, et le choix n'est pas anodin.
+Il y a plusieurs façons de l'installer, et elles ne demandent pas les mêmes droits sur votre
+machine.
 
 !!! tip "Vous ne voulez pas taper de commande ?"
     Passez directement à **« Installer, ou simplement décompresser »**, juste en dessous : c'est un
@@ -252,7 +252,7 @@ l'avez pas lue, parce qu'il serait fâcheux de manquer le résultat d'une destru
 l'**état** d'une nuit (« Passage déposé le… ») n'est pas un compte rendu : ce libellé-là reste affiché
 et ne se ferme pas.
 
-## Et ensuite ?
+## Où aller ensuite
 
 - [Parcours métier](parcours/index.md) : le déroulé complet d'une nuit, de la carte SD au dépôt.
 - [Référence par écran](ecrans/index.md) : le détail de chaque écran et de ses états.
