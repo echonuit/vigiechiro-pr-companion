@@ -76,6 +76,7 @@ nav:
   - Raccourcis clavier: raccourcis-clavier.md
   - Glossaire: glossaire.md
   - FAQ et dépannage: faq.md
+  - "D'où vient cette application": histoire.md
 
 # Extensions alignées sur le brief SAE 2.01 (même rendu).
 markdown_extensions:

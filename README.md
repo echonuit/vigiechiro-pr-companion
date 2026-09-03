@@ -35,12 +35,18 @@
 ---
 
 Des enregistreurs autonomes (*Passive Recorder*) posés en forêt captent les ultrasons des
-chauves-souris pendant une nuit entière. **VigieChiro Companion** accompagne l'observateur depuis
-la **carte SD** de l'enregistreur jusqu'au **dépôt** des données sur la plateforme nationale
-**Vigie-Chiro**, puis la **validation** des espèces identifiées : le tout dans un **outil local** unique, à installer sans serveur. Le dépôt et la synchronisation passent par votre **compte Vigie-Chiro** (connexion par jeton, sans mot de passe stocké).
+chauves-souris pendant une nuit entière. Au matin, il reste une carte SD pleine et tout le travail
+à faire. VigieChiro Companion accompagne ce travail : importer la carte, vérifier ce qui a été
+enregistré, déposer le lot sur la plateforme nationale **Vigie-Chiro**, puis relire les espèces que
+l'analyse a proposées.
 
-> Né d'une **commande réelle** (Samuel Busson, CEREMA), construit dans le cadre de la SAÉ 2.01 du BUT
-> Informatique de l'IUT d'Aix-Marseille.
+Tout se passe sur votre machine, dans une application unique, sans serveur à installer. Seuls le
+dépôt et la synchronisation sortent de chez vous, par votre compte Vigie-Chiro (connexion par
+jeton, aucun mot de passe conservé).
+
+> Né d'une commande réelle (Samuel Busson, CEREMA), écrit d'abord comme énoncé de SAÉ, livré en
+> quatre semaines par 21 équipes de BUT Informatique, consolidé depuis :
+> [d'où vient ce projet](#origine).
 
 <p align="center">
   <img src=".github/assets/apercu-accueil.png" width="720"
@@ -67,8 +73,9 @@ espèces quelques jours plus tard.
 ## 📖 Découvrir les écrans
 
 L'application compte <!--inv:ecrans-->16<!--/inv--> écrans, documentés un par un. Les plus
-fréquentés ont leur vignette ci-dessous : **cliquez pour ouvrir la page** (rôle, captures commentées,
-astuces). Les autres sont dans [le sommaire des écrans](https://companion.echonuit.fr/ecrans/).
+fréquentés ont leur vignette ci-dessous ; chacune ouvre sa page, avec le rôle de l'écran, des
+captures commentées et les pièges du parcours. Les autres sont dans
+[le sommaire des écrans](https://companion.echonuit.fr/ecrans/).
 
 <table>
   <tr>
@@ -109,9 +116,9 @@ propre *runtime* (**aucun Java à installer**).
 | macOS (Apple Silicon) | `.dmg` | Non (embarqué) |
 | Linux (Debian/Ubuntu) | `.deb` | Non (embarqué) |
 
-Chaque système dispose aussi d'une **archive portable** qui ne s'installe pas et ne demande **aucun
-droit d'administration** : on décompresse et on lance. Sous Linux, une **AppImage** fait la même chose
-en un fichier unique.
+Chaque système a aussi une **archive portable** : elle ne s'installe pas, ne demande aucun droit
+d'administration, et il suffit de la décompresser pour lancer. Sous Linux, une **AppImage** fait la
+même chose en un fichier unique.
 
 Sous **Windows**, le gestionnaire de paquets intégré évite le téléchargement manuel :
 
@@ -159,8 +166,8 @@ cd vigiechiro-pr-companion
 
 ## 🌐 L'écosystème Vigie-Chiro
 
-VigieChiro Companion est le **chaînon logiciel** entre un capteur de terrain et une base
-scientifique nationale. Il s'appuie sur, et complète, plusieurs projets ouverts :
+VigieChiro Companion relie un capteur posé en forêt à une base scientifique nationale. Il
+s'appuie sur plusieurs projets ouverts, et les complète :
 
 | Projet | Rôle dans la chaîne | Lien |
 |---|---|---|
@@ -169,6 +176,73 @@ scientifique nationale. Il s'appuie sur, et complète, plusieurs projets ouverts
 | **audio-view** | Le **composant JavaFX** (sonogramme + spectrogramme) utilisé pour l'écoute, publié sur Maven Central | [github.com/echonuit/audio-view](https://github.com/echonuit/audio-view) |
 | **Jeu de données exemple** | Une **nuit complète** de capture (échantillon audio + observations), pour tester sans matériel | [Dépôt](https://github.com/echonuit/vigiechiro-pr-companion-exemple-nuit) · [DOI Zenodo](https://doi.org/10.5281/zenodo.20492247) |
 | **Le brief** | Le **brief projet** : contexte, besoin, parcours utilisateurs, *story mapping* (document de conception vivant) | [brief.echonuit.fr](https://brief.echonuit.fr/) |
+
+<a id="origine"></a>
+
+## 📜 D'où vient ce projet
+
+Avant la première ligne de code, il a fallu un énoncé : le protocole Vigie-Chiro, le besoin de
+Samuel Busson (CEREMA), les personas, les parcours utilisateurs, la carte des récits. Ce brief a
+ensuite été découpé en issues, une par parcours, et accompagné des tests unitaires qui diraient aux
+équipes si leur code faisait ce qu'on attendait de lui. Ce document est public : c'est le
+[brief](https://brief.echonuit.fr/), et il a continué de vivre depuis.
+
+Sont venues quatre semaines intensives. Vingt et une équipes de première année de BUT Informatique,
+quatre-vingt-douze étudiantes et étudiants, chacune dans son dépôt, toutes sur le même produit. Le
+MVP est sorti de là.
+
+Ce que quatre-vingt-douze personnes livrent en quatre semaines tient debout par endroits, et pas
+partout. Deux consolidations ont suivi. La première a repris les fonctionnalités une par une, en
+faisant s'affronter plusieurs modèles de langue sur le même code. La seconde a visé l'usage réel,
+jusqu'à ce qu'un observateur puisse traiter sa saison entière sans buter.
+
+### Trois projets dans le même dépôt
+
+**Un outil libre pour les observateurs.**
+[Vigie-Chiro](https://www.vigienature.fr/fr/chauves-souris) est un programme de science
+participative du Muséum national d'histoire naturelle. Des bénévoles posent des enregistreurs,
+une nuit d'ultrasons revient sur une carte SD, et il faut la trier, la vérifier, la déposer. Cette
+application fait ce trajet, sous licence GPLv3, pour les gens qui tiennent le protocole. L'équipe
+[Team Chiro](https://croemer3.wixsite.com/teamchiro/vigie-chiro?lang=fr) en donne une présentation
+côté terrain.
+
+**Un support d'apprentissage.** La SAÉ 2.01 du BUT Informatique de l'IUT d'Aix-Marseille demande
+aux étudiants de livrer sur une commande réelle, avec la qualité qui va avec : revues de code,
+tests, intégration continue, et un client au bout qui attend un outil utilisable.
+
+**Un terrain de recherche.** Le dépôt sert enfin à explorer et à mesurer l'ingénierie du
+développement agentique. Plusieurs résultats de recherche y sont confrontés à une base de code
+déjà écrite, large et complexe, plutôt qu'à un exercice taillé pour eux. Ce que ça donne se lit
+ici même : [AGENTS.md](AGENTS.md) porte la méthode, [CONSTITUTION.md](CONSTITUTION.md) les règles
+qu'un garde refuse mécaniquement, `dev-docs/decisions/` la jurisprudence qui les a produites, et
+`.agents/skills/` les gestes du métier au format Agent Skills.
+
+<details>
+<summary><b>Les travaux mis à l'épreuve ici</b></summary>
+
+Le code écrit avec une assistance, ou par un agent, porte des défauts que ni le sentiment de son
+auteur ni la relecture automatique ne rattrapent. Les quatre premiers travaux mesurent ce
+manque ; les trois suivants proposent ce qu'on peut mettre en face.
+
+- N. Perry, M. Srivastava, D. Kumar, D. Boneh, « Do users write more insecure code with AI
+  assistants? », *ACM CCS*, 2023.
+- Y. Zhou, X. Liu, Y. Li, Y. Wan, Y. Liu, « Is vibe coding safe? Benchmarking vulnerability of
+  agent-generated code in real-world tasks », [arXiv:2512.03262](https://arxiv.org/abs/2512.03262),
+  2025.
+- A. Amro, M. H. Alalfi, « GitHub's Copilot code review: can AI spot security flaws before you
+  commit? », [arXiv:2509.13650](https://arxiv.org/abs/2509.13650), 2025.
+- Y. Liu, W. Wang, R. Feng, Y. Zhang, G. Xu, G. Deng, Y. Li, L. Zhang, « Agent skills in the wild:
+  an empirical study of security vulnerabilities at scale »,
+  [arXiv:2601.10338](https://arxiv.org/abs/2601.10338), 2026.
+- S. R. Marri, « Constitutional spec-driven development: enforcing security by construction in
+  AI-assisted code generation », [arXiv:2602.02584](https://arxiv.org/abs/2602.02584), 2026.
+- R. Krebs, S. Mazumdar, « PELLI: framework to effectively integrate LLMs for quality software
+  generation », [arXiv:2602.10808](https://arxiv.org/abs/2602.10808), 2026.
+- « A study on test-driven development method with the aid of generative AI in software
+  engineering », *International Journal of Internet, Broadcasting and Communication*, 16(4), 2024,
+  p. 194-202.
+
+</details>
 
 <a id="architecture"></a>
 
@@ -249,9 +323,9 @@ S'ajoutent la fonctionnalité transverse **`cli`** (import/export en ligne de co
 
 ## 🤝 Contribuer, tester, sécurité
 
-Le projet embarque une chaîne qualité **professionnelle**, exécutée à chaque push par la CI : tests
-**JUnit 5 / AssertJ / Mockito / TestFX** (IHM *headless*) + **ApprovalTests**, linter **PMD**, format
-**Spotless** (hook pre-commit), garde-fou d'**architecture ArchUnit**, couverture **JaCoCo**.
+À chaque push, la CI rejoue la même chaîne : tests **JUnit 5 / AssertJ / Mockito / TestFX** (IHM
+*headless*) et **ApprovalTests**, linter **PMD**, format **Spotless** (hook pre-commit), règles
+d'architecture **ArchUnit**, couverture **JaCoCo**.
 
 | Commande | Effet |
 |---|---|
@@ -290,11 +364,10 @@ Vérifier : `java -version` doit afficher `openjdk version "25.0.x"`.
 
 ## 🙌 Remerciements
 
-Ce projet a été construit par les **21 équipes** d'étudiantes et étudiants de la promo 2026 du
-**BUT Informatique** (IUT d'Aix-Marseille), dans le cadre de la **SAÉ 2.01**. Leurs dépôts de
-travail vivent dans l'organisation [IUTInfoAix-S201-2026](https://github.com/IUTInfoAix-S201-2026).
-
-👉 La liste complète des contributrices et contributeurs est dans **[REMERCIEMENTS.md](REMERCIEMENTS.md)**.
+Le MVP est le travail des 21 équipes d'étudiantes et d'étudiants de la promo 2026 du BUT
+Informatique de l'IUT d'Aix-Marseille, pendant la SAÉ 2.01. Leurs dépôts vivent dans l'organisation
+[IUTInfoAix-S201-2026](https://github.com/IUTInfoAix-S201-2026), et la liste complète des
+contributrices et contributeurs est dans [REMERCIEMENTS.md](REMERCIEMENTS.md), équipe par équipe.
 
 ---
 

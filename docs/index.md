@@ -6,13 +6,13 @@
        style="width: 100%; height: auto; display: block; border-radius: 4px;">
 </div>
 
-**VigieChiro Companion** est une application de bureau qui accompagne l'observateur dans le traitement
-d'une **nuit de capture acoustique de chauves-souris**, depuis la **carte SD** de l'enregistreur
-de terrain jusqu'au **dépôt** des données sur la plateforme nationale Vigie-Chiro.
+Des enregistreurs autonomes posés sur le terrain captent les ultrasons des chauves-souris pendant
+une nuit entière. Au matin, il vous reste une carte SD pleine et tout le travail à faire.
 
-Des enregistreurs autonomes posés sur le terrain captent les ultrasons d'une nuit entière.
-L'application vous aide ensuite à importer ces enregistrements, à les préparer, à en vérifier la
-qualité, à constituer le dépôt, puis à relire les espèces identifiées.
+**VigieChiro Companion** est une application de bureau qui tient ce travail de bout en bout :
+importer les enregistrements, les préparer, écouter ce qu'il faut pour juger de la nuit, constituer
+le lot, le déposer sur la plateforme nationale Vigie-Chiro, puis relire les espèces que l'analyse a
+proposées.
 
 ![L'écran d'accueil de VigieChiro Companion, d'où vous accédez aux différentes activités.](assets/captures/apercu-accueil.png)
 
@@ -31,7 +31,9 @@ fil, de la première importation au dépôt final.
 - [Prise en main](prise-en-main.md) : installer, lancer l'application et faire le tour de l'écran d'accueil.
 - [Parcours métier](parcours/index.md) : le déroulé complet, étape par étape, de la carte SD au dépôt.
 - [Référence par écran](ecrans/index.md) : une fiche détaillée pour chaque écran de l'application.
+- [D'où vient cette application](histoire.md) : le besoin, les vingt et une équipes qui l'ont
+  construite, et les trois projets qui vivent dans le même dépôt.
 
 !!! info "Illustrations toujours à jour"
-    Les captures d'écran de cette documentation sont **régénérées automatiquement à partir du
-    code** de l'application : ce que vous voyez ici correspond à la version courante des écrans.
+    C'est l'application elle-même qui produit les captures de cette documentation, à chaque
+    version : ce que vous voyez ici est ce que vous verrez à l'écran.
