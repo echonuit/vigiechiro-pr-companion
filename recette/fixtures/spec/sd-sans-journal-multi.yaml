@@ -1,0 +1,41 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-sans-journal-multi
+but: "Deux nuits SANS journal : la table paraît, et ses deux badges disent « complétude inconnue »."
+
+# Aucun journal, comme `sd-sans-journal` - mode dégradé (#107). La différence est le nombre de nuits.
+#
+# POURQUOI CETTE CARTE EXISTE (#5145). `sd-sans-journal` ne porte qu'une nuit, et la table des nuits
+# n'est visible qu'à partir de DEUX (`plusieursNuitsProperty`). Le badge de complétude n'y est donc
+# jamais à l'écran, et les cas S2-68 et S2-69 - qui portent sur ce badge et son infobulle - ne
+# pouvaient pas être filmés. Mesuré avant d'écrire cette carte, plutôt que supposé.
+journal:
+  present: false
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+# Deux nuits consécutives, deux enregistrements chacune.
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260422_203922"
+      - "20260422_223045"
+      - "20260423_210000"
+      - "20260423_233000"
+
+attendu:
+  aJournal: false
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 2
+  # Sans journal, aucune des deux nuits n'a de preuve. INCONNUE, et surtout pas COMPLETE : avant
+  # #4990, l'absence de preuve était lue comme une preuve et la nuit recevait le badge le plus
+  # rassurant.
+  completudes: ["INCONNUE", "INCONNUE"]

@@ -381,6 +381,57 @@ Aucun de ces clips ne dit donc quoi que ce soit de la vitesse du produit.
 
 
 
+
+## ScenarioJournalAbsentTest
+
+Sans journal, Companion ne sait rien de la fin de la nuit. Avant #4990, cette nuit recevait le badge
+vert le plus rassurant : l'absence de preuve était lue comme une preuve.
+
+### S2-44 · `l_absence_de_journal_est_signalee`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioJournalAbsentTest.l_absence_de_journal_est_signalee.mp4"></video>
+
+> L'absence est **dite**, et l'import reste possible : un journal manquant n'empêche pas de récupérer
+> les enregistrements, qui sont ce que l'observateur est venu chercher (mode dégradé, #107).
+
+### S2-68 et S2-69 · `sans_journal_la_nuit_est_inconnue`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioJournalAbsentTest.sans_journal_la_nuit_est_inconnue.mp4"></video>
+
+> **Ce que ce clip ne montre pas** : l'infobulle qui s'ouvre. Un popup ne se rend pas en headless. Le
+> banc lit l'infobulle **installée** - comme `ScenarioPassagePivotTest` le fait déjà - et affirme donc
+> ce qu'elle dit, qui est le fond de `S2-69` : pourquoi on ne sait pas, sans affirmer de cause.
+
+> La carte est `sd-sans-journal-multi`, écrite pour ce lot. `sd-sans-journal` ne porte qu'**une** nuit,
+> et la table n'est visible qu'à partir de deux : le badge n'était donc jamais à l'écran, et ces deux
+> cas ne pouvaient pas être joués (#5145).
+
+### S2-45 · `un_journal_corrompu_fait_echouer_l_inspection`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioJournalAbsentTest.un_journal_corrompu_fait_echouer_l_inspection.mp4"></video>
+
+> Le seul cas du geste qui attend un **échec**. Un écran resté vide ne dirait pas si le refus a eu lieu
+> ou si rien ne s'est passé : c'est le message qui fait la différence, et il **nomme** ce qui cloche -
+> « Journal LogPR inexploitable : aucun numéro de série d'enregistreur trouvé. »
+
+
+## ScenarioDiagnosticSansJournalTest
+
+### S2-75 · `sans_journal_le_second_encart_se_tait`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioDiagnosticSansJournalTest.sans_journal_le_second_encart_se_tait.mp4"></video>
+
+> **Filmer un silence.** L'encart se tait, et c'est le bon comportement : ni interruption à signaler,
+> ni fin normale à attester. Son silence n'est pas une preuve que la nuit fut entière, le journal étant
+> circulaire (R19).
+
+> Le banc affirme **deux** choses ensemble - l'encart se tait, et le reste du diagnostic est là - faute
+> de quoi l'absence pourrait venir d'un écran qui ne s'est pas ouvert. Témoin négatif : en faisant dire
+> « fin de nuit normale » à l'état inconnu, le clip rougit.
 ## ScenarioCarteMultiNuitsTest
 
 On pose l'enregistreur et on le laisse. Le journal, lui, est **circulaire** : il perd les nuits les

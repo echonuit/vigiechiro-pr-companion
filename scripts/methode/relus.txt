@@ -1674,6 +1674,7 @@ aaabfa2a2ebe  src/test/java/fr/univ_amu/iut/diagnostic/model/AnalyseCoherenceHor
 d9fec5c6ee66  src/test/java/fr/univ_amu/iut/diagnostic/view/DiagnosticVueIntegrationTest.java
 6182b95cf80f  src/test/java/fr/univ_amu/iut/diagnostic/view/NavigationDiagnosticViewTest.java
 adcfaef51e36  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioDiagnosticPassageTest.java
+db45175c906f  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioDiagnosticSansJournalTest.java
 d8dfd907b1d1  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioNuitInterrompueTest.java
 f3d67902b4ad  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioReveilParBoutonTest.java
 7987ae9805fd  src/test/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModelTest.java
@@ -1755,6 +1756,7 @@ d49c5a1ab907  src/test/java/fr/univ_amu/iut/importation/view/ConfirmationsImport
 e37c915aa4db  src/test/java/fr/univ_amu/iut/importation/view/ScenarioBandeauxDInspectionTest.java
 7eed6692ab66  src/test/java/fr/univ_amu/iut/importation/view/ScenarioCarteMultiNuitsTest.java
 de261e43385f  src/test/java/fr/univ_amu/iut/importation/view/ScenarioImportNominalTest.java
+7e677ede1765  src/test/java/fr/univ_amu/iut/importation/view/ScenarioJournalAbsentTest.java
 fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
 140614766d08  src/test/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixeTest.java
 4d3bfc4da711  src/test/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspectionTest.java
