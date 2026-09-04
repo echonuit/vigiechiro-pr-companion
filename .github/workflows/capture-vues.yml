@@ -110,8 +110,8 @@ jobs:
       # endroit qui exerce réellement les injecteurs partiels de capture jusqu'au chargement du FXML.
       - name: Générer les aperçus PNG (hors-écran)
         run: |
-          chmod +x .github/assets/capture-screenshots.sh
-          .github/assets/capture-screenshots.sh
+          chmod +x .github/assets/capture_screenshots.py
+          python3 .github/assets/capture_screenshots.py
 
       # `filtrer-bruit-cartes.sh` compare les aperçus de carte à leur version committée. L'image
       # `ubuntu-latest` ne fournit AUCUN ImageMagick : sans cette étape, la suivante échoue.

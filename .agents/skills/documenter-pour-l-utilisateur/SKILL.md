@@ -37,7 +37,7 @@ le même objet : ici on **documente une capacité**, là on **inspecte un écran
 2. ECRIRE    leur page ou leur section dans `docs/`, dans ses mots a lui.
 3. CAPTURER  le cas NOMINAL par la capture principale.
 4. DEDIER    une capture a CHAQUE etat particulier, avec sa section.
-5. DECLARER  la capture : la classe `Capture*`, `capture-screenshots.sh`, le
+5. DECLARER  la capture : la classe `Capture*`, `capture_screenshots.py`, le
              `captures.manifest`. Les trois, ou la CI refuse.
 6. RELIRE    ce que la page dit a la grille : c est de la prose lue par
              quelqu un qui n a pas suivi.
@@ -49,7 +49,7 @@ Une capture ne se produit pas en lançant quelque chose à la main. Elle se **d�
 endroits, et la marche à suivre complète vit dans « Ajouter une fonctionnalité §7 » :
 
 - une classe `CaptureMaFeature`, écrite sur le patron existant ;
-- son ajout à `capture-screenshots.sh`, qui lance chaque `Capture*` dans son propre JVM ;
+- son ajout à `capture_screenshots.py`, qui lance chaque `Capture*` dans son propre JVM ;
 - l'aperçu déclaré au `captures.manifest`.
 
 Les PNG vivent dans `.github/assets/` et le hook `scripts/mkdocs_hooks.py` les expose sous

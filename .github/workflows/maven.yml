@@ -470,7 +470,7 @@ jobs:
           # Le SHA de base de la PR, que GitHub connait deja : il evite le `merge-base`, donc le
           # clone integral. Vide hors PR, et le script verifie alors TOUT plutot que conclure.
           GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: ./.github/scripts/porte-sur-le-contrat-de-fichiers.sh
+        run: python3 .github/scripts/porte_sur_le_contrat_de_fichiers.py
 
       - name: Le contrat tient-il sur cette plateforme ?
         if: steps.portee.outputs.concerne == 'oui'

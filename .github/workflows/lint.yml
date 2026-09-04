@@ -619,7 +619,7 @@ jobs:
 
       - name: Enregistrement des outils de capture
         # Chaque outil de capture (classe outils/Capture* avec un main) doit figurer dans le
-        # tableau MAINS de capture-screenshots.sh, sinon ses PNG ne seraient jamais régénérés.
+        # tableau MAINS de capture_screenshots.py, sinon ses PNG ne seraient jamais régénérés.
         run: |
           chmod +x .github/assets/check_capture_mains.py
           python3 .github/assets/check_capture_mains.py --auto-test
@@ -1162,9 +1162,10 @@ jobs:
         # Cette couche juge tout le reste, et n'avait rien - ni format, ni règles - avant #5022.
         # Le format d'abord : un diff de forme noierait un diff de fond dans la revue suivante.
         #
-        # `.github/assets` s'est ajouté avec #5229 : les quatre gardes de captures y sont passés en
-        # Python, et le dossier n'était balayé par rien. Un dossier absent de cette liste n'échoue
-        # pas, il est simplement muet - c'est la même cécité que celle des inventaires (#4013).
+        # `.github/assets` s'est ajouté avec #5229 et `icone` avec #5236, chaque fois pour la même
+        # raison : du Python venait d'y arriver, et le dossier n'était balayé par rien. Un dossier
+        # absent de cette liste n'échoue pas, il est simplement muet - c'est la même cécité que
+        # celle des inventaires (#4013), et elle se répète à chaque dossier qui gagne un fichier.
         run: |
-          ruff format --check scripts .github/scripts .github/assets
-          ruff check scripts .github/scripts .github/assets
+          ruff format --check scripts .github/scripts .github/assets icone
+          ruff check scripts .github/scripts .github/assets icone

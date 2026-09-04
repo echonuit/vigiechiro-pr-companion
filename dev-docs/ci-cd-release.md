@@ -187,14 +187,14 @@ l'archive portable pour qui préfère un fichier à un dossier, et le seul des d
 **s'intégrer au menu des applications**, grâce à son `.desktop`.
 
 Elle est construite par
-[`.github/scripts/construit-appimage.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/scripts/construit-appimage.sh),
+[`.github/scripts/construit_appimage.py`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/scripts/construit_appimage.py),
 à partir de trois éléments versionnés dans `.github/appimage/` (le point d'entrée `AppRun`, le
 `.desktop`, et l'icône reprise de celle que jpackage dépose dans `lib/`). Le script est **lançable à
 la main**, ce qui permet de le vérifier sans passer par une release :
 
 ```bash
 ./mvnw -Pinstaller -Djpackage.type=app-image -DskipTests verify
-./.github/scripts/construit-appimage.sh 2.20.0 x86_64      # -> target/dist/*.AppImage
+python3 .github/scripts/construit_appimage.py 2.20.0 x86_64      # -> target/dist/*.AppImage
 ```
 
 L'étape est placée **avant** l'empaquetage de l'archive portable, qui supprime
@@ -607,7 +607,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie_verdicts_declares.py` | qu'aucun appel de `rapporte`, `rapporte_plancher` ou `loupe` ne rende `lus=?` : un compte non déclaré rend le zéro du garde indiscernable de « n'a rien balayé », et le refus sur population vide ne le protège alors pas (ADR 5015). Les exceptions se **nomment** avec leur raison plutôt que de se compter : un cliquet à N se satisferait de convertir un garde et d'en ajouter un autre muet. La liaison de chaque nom est résolue par `ast`, un homonyme défini localement n'étant pas le verdict de `_commun` | `lint.yml` |
 | `verifie_contrats_tiennent.py` | qu'un contrat DÉCLARÉ ne contredise pas ce que le garde FAIT : `imprime_contrat` refusait un contrat incomplet, rien ne le confrontait au réel (ADR 4636). La règle n'est pas l'égalité mais l'absence de contradiction, parce que le vocabulaire diffère (`RACINES` vaut `PRODUCTION + TESTS`) et que le contrat sait souvent PLUS que l'inférence. Sa population se dérive de la **déclaration** et non d'une mention, par `ast` depuis #5144 : un grep sur `--contrat` comptait les fichiers qui en PARLENT. Elle compte **68** porteurs, dont le dernier garde shell, nommé à part parce qu'aucun AST Python ne le lit. Chaque contrat est obtenu en **lançant** le garde, jamais en lisant son source | `lint.yml` |
 | `verifie_contrat_obligatoire.py` | qu'un point d'entrée de `scripts/adr` **ou de `scripts/methode`** DÉCLARE ce qu'il est (ADR 4636). Ils sont **67**, et la population s'est élargie en #5157 ; rien n'empêchait le suivant d'arriver sans le sien, et un corpus complet se reperd sans bruit - un garde neuf copié sur un voisin emporte le bloc de verdict et pas la déclaration. C'est un **invariant**, pas un cliquet : il n'y a pas de marge à relever, et l'échappatoire est une liste d'exceptions **nommées**, vide à la livraison. Il ne juge pas le CONTENU du contrat, que `verifie_contrats_tiennent.py` confronte déjà | `lint.yml` |
-| `5188-corpus-shell.py` | ce qui reste en shell, et que la cible des deux langages condamne (ADR 5188). Un **cliquet à <!--inv:cliquet-corpus-shell-->11<!--/inv-->**, polarité descendante : il n'empêche pas qu'un script grossisse, il empêche la seule chose qui rendrait la cible inatteignable, **qu'on en ajoute**. Le script toléré, `lance-test-filme.sh`, est **compté** et non retiré : une tolérance est un délai, et le retirer ferait croire à une dispense. Sa population est ce que `git ls-files` suit, le même angle mort que les autres cliquets plutôt qu'un angle mort différent ici | `lint.yml` |
+| `5188-corpus-shell.py` | ce qui reste en shell, et que la cible des deux langages condamne (ADR 5188). Un **cliquet à <!--inv:cliquet-corpus-shell-->7<!--/inv-->**, polarité descendante : il n'empêche pas qu'un script grossisse, il empêche la seule chose qui rendrait la cible inatteignable, **qu'on en ajoute**. Le script toléré, `lance-test-filme.sh`, est **compté** et non retiré : une tolérance est un délai, et le retirer ferait croire à une dispense. Sa population est ce que `git ls-files` suit, le même angle mort que les autres cliquets plutôt qu'un angle mort différent ici | `lint.yml` |
 | `loupe-5175-population-non-nommee.py` | un garde qui **parcourt** un chemin que sa population déclarée ne **nomme** pas (ADR 5175). Une **loupe** : elle rend `0`. Quatre des cinq écarts mesurés sont des déclarations plus précises que le chemin, pas des populations fausses, et un garde qui refuserait crierait sur du juste. Elle ne lance rien : les contrats se lisent par `ast`, second recours de l'ADR 5102, plutôt que de doubler les 68 sous-processus de `verifie_contrats_tiennent.py` pour un dispositif qui ne juge pas | `lint.yml` |
 | `verifie_corpus_declare.py` | le corpus d'un garde s'importe du fonds commun `scripts/_commun/` et ne se recopie pas ; le fonds s'exclut par son **dossier** depuis #5216, non par un nom de fichier : c'est ce refus qui permet à la liste des gardes à deux arbres de se dériver au lieu de s'énumérer (ADR 4586) | `lint.yml` |
 | `rapport.py` | chaque garde tourne dans SON dépôt, et non dans le répertoire de l'appelant : sans `cwd`, cinq cliquets sur dix-huit rendaient une autre valeur depuis ailleurs, et `resserre_cliquets.py` ramenait quatre `ratchet:` à zéro dans les vraies ADR en annonçant un succès (issue #4781) | `lint.yml` |
@@ -780,14 +780,14 @@ comparant sa sortie sous `--auto-test` à sa sortie sous `--zzz-drapeau-inexista
 | **gardes** | **45** | distinguent le drapeau, et leur auto-test sort en **0**, tous les 45 |
 | **outils** | **5** | rendent la même chose avec les deux drapeaux : ils ne le voient pas |
 
-Les cinq outils sont `capture-screenshots.sh`, `construit-appimage.sh`, `mesure-pixels.sh`,
-`porte-sur-le-contrat-de-fichiers.sh` et `icone/genere-icones.sh`.
+Les cinq outils sont `capture_screenshots.py`, `construit_appimage.py`, `mesure-pixels.sh`,
+`porte_sur_le_contrat_de_fichiers.py` et `icone/genere_icones.py`.
 
-**Le contrôle négatif est `construit-appimage.sh`** : un workflow le lance, il sort en `1`, et il
+**Le contrôle négatif est `construit_appimage.py`** : un workflow le lance, il sort en `1`, et il
 n'est pas compté comme garde parce qu'il rend exactement la même chose sous les deux drapeaux. Être
 lancé par la CI et échouer ne fait pas un garde ; distinguer le drapeau, si.
 
-**Une mesure a dû être écartée, et c'est instructif.** `capture-screenshots.sh` paraissait distinguer
+**Une mesure a dû être écartée, et c'est instructif.** `capture_screenshots.py` paraissait distinguer
 le drapeau. Le contrôle de non-déterminisme le dément : **deux appels sous le MÊME drapeau diffèrent
 déjà**, parce que la question déclenche une compilation Maven puis un rendu JavaFX que le délai
 d'attente coupe à un endroit variable. Un contraste ne conclut que sur un script déterministe, et
@@ -803,7 +803,7 @@ liste est le plan de travail des chantiers de conversion.
 
 | script | ce qu'il est | la CI l'atteint | destination |
 |---|---|:---:|---|
-| `.github/assets/capture-screenshots.sh` | outil | oui | conversion |
+| `.github/assets/capture_screenshots.py` | outil | oui | conversion |
 | `.github/assets/check_capture_mains.py` | garde | oui | conversion |
 | `.github/assets/check_captures.py` | garde | oui | conversion |
 | `.github/assets/check_doc_images.py` | garde | oui | conversion |
@@ -814,12 +814,12 @@ liste est le plan de travail des chantiers de conversion.
 | `.github/assets/mesure-pixels.sh` | outil | oui | conversion |
 | `.github/scripts/cas_manquants_du_tournage.py` | garde | oui | conversion |
 | `.github/scripts/clips_orphelins.py` | garde | oui | conversion |
-| `.github/scripts/construit-appimage.sh` | outil | oui | conversion |
+| `.github/scripts/construit_appimage.py` | outil | oui | conversion |
 | `.github/scripts/installer-paquets.sh` | garde | oui | conversion |
 | `.github/scripts/interroge_le_jeton.py` | garde | oui | conversion |
 | `.github/scripts/lance-test-filme.sh` | garde | oui | **après condition** : banc Java validé |
 | `.github/scripts/mesure_duree_portail.py` | garde | oui | conversion |
-| `.github/scripts/porte-sur-le-contrat-de-fichiers.sh` | outil | oui | conversion |
+| `.github/scripts/porte_sur_le_contrat_de_fichiers.py` | outil | oui | conversion |
 | `.github/scripts/rappelle_le_critere_de_fin.py` | garde | oui | conversion |
 | `.github/scripts/revoque_jeton.py` | garde | oui | conversion |
 | `.github/scripts/trie_les_echecs_de_plateforme.py` | garde | oui | conversion |
@@ -850,7 +850,7 @@ liste est le plan de travail des chantiers de conversion.
 | `.github/scripts/verifie_specification_consignee.py` | garde | oui | conversion |
 | `.github/scripts/verifie_titre_pr.py` | garde | oui | conversion |
 | `.github/scripts/verifie_verdict_avant_fusion.py` | garde | oui | conversion |
-| `icone/genere-icones.sh` | outil | **non** | conversion |
+| `icone/genere_icones.py` | outil | **non** | conversion |
 | `scripts/doc-video/filme-un-parcours.sh` | garde | oui | conversion |
 
 </div>
@@ -867,7 +867,7 @@ qu'un script cité dans un `run:`.
 | atteints depuis un workflow, **transitivement** | **49** |
 | orphelins | **1** |
 
-L'unique orphelin est `icone/genere-icones.sh`, lancé à la main quand l'icône change.
+L'unique orphelin est `icone/genere_icones.py`, lancé à la main quand l'icône change.
 
 La transitivité n'est pas un raffinement : mesurée sur les seuls workflows, la réponse était « 5 non
 lancés ». Quatre d'entre eux sont en réalité appelés par un autre script ou par l'outillage Python,
@@ -894,14 +894,15 @@ urgence, n'étant tenus par aucun auto-test.
 `verifie_inventaires_ci.py` retire les lignes de commentaire puis cherche la chaîne `--auto-test`,
 là où sa moitié Python fait un vrai contrôle par `ast` en excluant les docstrings depuis #5032.
 Confronté à la mesure par contraste, **il tombait juste : 45 des deux côtés, les mêmes 45** - une
-mesure prise avant les conversions de #5210, #5219, #5221, #5229, #5231 et #5233, qui ont ramené la
-moitié shell à **6**, contre **91** du côté Python.
+mesure prise avant les conversions de #5210, #5219, #5221, #5229, #5231, #5233 et #5236, qui ont
+ramené la moitié shell à **6**, contre **91** du côté Python. Le lot des outils, lui, n'y change rien :
+aucun des quatre ne dispatchait `--auto-test`, donc aucun n'était compté.
 La confrontation n'a pas été refaite depuis, et ce qui est déclaré ici est la **fragilité de la
 règle**, pas la fraîcheur du chiffre : elle est fragile par construction, et c'est un risque écrit
 plutôt que corrigé au passage.
 
 **Ses motifs ne balaient pas `icone/`.** Le dossier n'y figure pas, donc un auto-test qui y
-apparaîtrait serait invisible de l'inventaire. Sans conséquence aujourd'hui, `genere-icones.sh` ne
+apparaîtrait serait invisible de l'inventaire. Sans conséquence aujourd'hui, `genere_icones.py` ne
 mentionnant `--auto-test` nulle part. C'est la cécité à un dossier que ce même garde décrit à propos
 de #4013, et elle a survécu à sa propre description.
 

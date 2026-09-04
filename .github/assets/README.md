@@ -20,7 +20,7 @@ alignement qui a glissé, un bandeau qui a changé de sévérité, une colonne d
 ## Régénérer
 
 ```bash
-./.github/assets/capture-screenshots.sh    # JDK 25 standard, aucun serveur d'affichage requis
+python3 .github/assets/capture_screenshots.py    # JDK 25 standard, aucun serveur d'affichage requis
 ```
 
 La CI les régénère à chaque poussée sur `main` (`capture-vues.yml`), donc une capture obsolète ici

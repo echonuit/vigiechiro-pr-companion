@@ -351,8 +351,8 @@ jobs:
         shell: bash
         run: |
           TAG="${{ needs.release.outputs.tag }}"
-          chmod +x .github/scripts/construit-appimage.sh
-          ./.github/scripts/construit-appimage.sh "${TAG#v}" x86_64
+          chmod +x .github/scripts/construit_appimage.py
+          python3 .github/scripts/construit_appimage.py "${TAG#v}" x86_64
 
       - name: Empaqueter et nommer l'archive portable
         # Un format par système, choisi pour ce qu'il PRÉSERVE :
