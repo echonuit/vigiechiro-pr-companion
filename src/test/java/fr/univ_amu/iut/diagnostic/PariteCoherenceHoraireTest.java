@@ -75,8 +75,10 @@ class PariteCoherenceHoraireTest {
             boolean ecranAlerte = fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel.libelleEcart(coherence)
                             .severite()
                     == Severite.AVERTISSEMENT;
-            boolean terminalAlerte = fr.univ_amu.iut.cli.commande.Diagnostiquer.coherenceLisible(coherence)
-                    .contains("n'est pas couverte");
+            // Le verdict du terminal se DEMANDE, il ne se devine plus dans sa phrase (#5200). La sonde
+            // par sous-chaîne cassait à la première reformulation, et refusait alors pour une raison
+            // qui n'était pas celle que ce banc existe pour voir.
+            boolean terminalAlerte = fr.univ_amu.iut.cli.commande.Diagnostiquer.coherenceAlerte(coherence);
 
             assertThat(ecranAlerte)
                     .as(

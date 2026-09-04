@@ -613,6 +613,17 @@ L'écran qui porte l'état d'avancement d'une nuit.
 
 <table>
 <tr>
+<th width="50%">Début non couvert</th>
+<th width="50%">Fin non couverte</th>
+</tr>
+<tr>
+<td><a href="apercu-diagnostic-debut-non-couvert.png"><img src="apercu-diagnostic-debut-non-couvert.png" width="430" alt="Le début manque, la fin est couverte"></a></td>
+<td><a href="apercu-diagnostic-fin-non-couverte.png"><img src="apercu-diagnostic-fin-non-couverte.png" width="430" alt="La fin manque, le début est couvert"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
 <th width="50%">Retour</th>
 <th width="50%">Export</th>
 </tr>

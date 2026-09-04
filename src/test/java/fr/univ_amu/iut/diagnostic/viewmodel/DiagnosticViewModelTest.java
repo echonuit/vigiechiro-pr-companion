@@ -123,6 +123,8 @@ class DiagnosticViewModelTest {
                 LocalTime.of(6, 18),
                 LocalTime.of(21, 28),
                 LocalTime.of(6, 18),
+                true,
+                true,
                 CoherenceHoraire.Couverture.COUVERTE);
         when(service.diagnostiquer(ID_PASSAGE)).thenReturn(diagnostic(serie(), 43.5, 5.4, coherence));
 
@@ -148,16 +150,69 @@ class DiagnosticViewModelTest {
                 LocalTime.of(6, 18),
                 LocalTime.of(22, 30),
                 LocalTime.of(5, 30),
+                // 22:30 après 21:28 et 05:30 avant 06:18 : AUCUN des deux bords n'est couvert.
+                false,
+                false,
                 CoherenceHoraire.Couverture.INCOMPLETE);
         when(service.diagnostiquer(ID_PASSAGE)).thenReturn(diagnostic(serie(), 43.5, 5.4, coherence));
 
         viewModel.ouvrirSur(ID_PASSAGE);
 
+        // #5200 : l'alerte nomme le BORD qui manque. Les horaires sont sur la ligne des plages
+        // juste au-dessus ; les répéter ici les dirait deux fois à deux lignes d'écart. Ce qu'elle
+        // apporte est ce qu'aucun chiffre ne dit : de quel côté ça manque, et donc quoi faire
+        // autrement.
         assertThat(viewModel.alerteHorsNuitProperty().get().texte())
-                .contains("ne couvre pas")
-                .contains("protocole");
+                .as("cette nuit commence trop tard ET s'arrête trop tôt : l'alerte doit le DIRE,"
+                        + " et non se contenter de rappeler la règle, ni prétendre qu'un côté va bien")
+                .contains("commencent moins de 30 minutes avant le coucher")
+                .contains("s'arrêtent moins de 30 minutes après le lever")
+                .doesNotContain("bien");
         // #2050 : la sévérité est portée par la donnée, plus par la classe CSS ni le FontIcon figés du FXML.
         assertThat(viewModel.alerteHorsNuitProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
+    }
+
+    @Test
+    @DisplayName("#5200 : les quatre cas de couverture, chacun disant ce qui manque")
+    void les_quatre_cas_de_couverture() {
+        // Trois façons de ne pas couvrir la fenêtre, et elles n'appellent pas la même correction :
+        // partir plus tôt, s'arrêter plus tard, ou les deux. Une alerte unique les confondait.
+        assertThat(DiagnosticViewModel.libelleEcart(coherenceDe(true, false)).texte())
+                .as("début tenu, fin trop tôt")
+                .contains("s'arrêtent moins de 30 minutes après le lever")
+                .contains("le début est bien couvert");
+
+        assertThat(DiagnosticViewModel.libelleEcart(coherenceDe(false, true)).texte())
+                .as("début trop tard, fin tenue")
+                .contains("commencent moins de 30 minutes avant le coucher")
+                .contains("la fin est bien couverte");
+
+        assertThat(DiagnosticViewModel.libelleEcart(coherenceDe(false, false)).texte())
+                .as("aucun des deux bords tenu : la phrase ne doit pas prétendre qu'un côté va bien")
+                .contains("commencent moins de 30 minutes avant le coucher")
+                .contains("s'arrêtent moins de 30 minutes après le lever")
+                .doesNotContain("bien");
+
+        // Le quatrième cas est COUVERTE, et il n'alerte pas : le protocole est un plancher, le
+        // dépasser n'est pas un défaut.
+        assertThat(DiagnosticViewModel.libelleEcart(coherenceDe(true, true)).severite())
+                .as("les deux bords tenus : une information, jamais un avertissement")
+                .isNotEqualTo(Severite.AVERTISSEMENT);
+    }
+
+    /// Une cohérence dont on choisit les deux bords ; les heures ne servent pas ici.
+    private static CoherenceHoraire coherenceDe(boolean debutTenu, boolean finTenue) {
+        return new CoherenceHoraire(
+                true,
+                LocalTime.of(21, 58),
+                LocalTime.of(5, 48),
+                LocalTime.of(21, 28),
+                LocalTime.of(6, 18),
+                LocalTime.of(22, 30),
+                LocalTime.of(5, 30),
+                debutTenu,
+                finTenue,
+                debutTenu && finTenue ? CoherenceHoraire.Couverture.COUVERTE : CoherenceHoraire.Couverture.INCOMPLETE);
     }
 
     @Test

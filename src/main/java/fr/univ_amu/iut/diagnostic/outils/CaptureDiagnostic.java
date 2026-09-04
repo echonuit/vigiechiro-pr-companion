@@ -59,8 +59,8 @@ import javafx.scene.Scene;
 /// - `apercu-diagnostic-sans-gps.png` : **point sans coordonnées GPS**, le repère GPS passe à « non
 ///   renseigné » et l'encart cohérence horaires disparaît (calcul impossible sans coordonnées) ;
 /// - `apercu-diagnostic-protocole-non-couvert.png` : la fenêtre que le protocole exige **n'est pas
-///   couverte**, l'avertissement de cohérence horaire s'affiche - couleur et icône posées par
-///   `LibelleRetour` depuis la sévérité (#2050, #2222).
+///   couverte** et l'avertissement s'affiche (#2050, #2222) ; `-debut-non-couvert` et
+///   `-fin-non-couverte` portent les deux variantes à un seul bord (#5200).
 ///
 /// **Déterminisme** : l'écran n'affiche que la série climatique, les anomalies et le GPS, aucun
 /// chemin de fichier, donc aucune dépendance au dossier temporaire.
@@ -89,7 +89,13 @@ public final class CaptureDiagnostic {
     /// la fin demandée. C'est l'erreur de paramétrage réellement commise sur le terrain, et l'alerte
     /// que la capture dédiée met en évidence.
     ///
+    /// La nuit de tous les passages semés : une seule date, pour que les aperçus se comparent.
+    private static final String NUIT = "2026-06-20";
+
     private static final String DEBUT_NON_COUVERT = "22:00:00";
+
+    /// Un début qui, LUI, couvre : assez tôt pour la marge du protocole (#5200).
+    private static final String DEBUT_COUVERT = "19:00:00";
 
     private static final String FIN_NON_COUVERTE = "05:00:00";
 
@@ -174,6 +180,10 @@ public final class CaptureDiagnostic {
         // Les DEUX encarts à la fois : la fenêtre est couverte, et la nuit s'est pourtant interrompue.
         // C'est ce que les deux axes permettent de dire, et une phrase unique aurait perdu (#5093).
         rendre(injecteur, graine.idNuitInterrompue(), sortie.resolve("apercu-diagnostic-nuit-interrompue.png"));
+        // Les deux bords, un par un. L'alerte ne disait « ce qui manque » que d'un seul côté à la fois,
+        // et personne n'avait jamais lu les deux autres phrases (#5200).
+        rendre(injecteur, graine.idDebutSeulManquant(), sortie.resolve("apercu-diagnostic-debut-non-couvert.png"));
+        rendre(injecteur, graine.idFinSeuleManquante(), sortie.resolve("apercu-diagnostic-fin-non-couverte.png"));
         // Bandeau de retour (#1917) : jusqu'ici AUCUN aperçu ne montrait de bandeau sur AUCUN écran migré
         // - on ne vérifiait que « rien n'est déplacé » quand il est absent. Ouvrir sur un passage
         // inexistant produit le cas réel sans mock : le chargement échoue et l'écran le dit.
@@ -306,28 +316,54 @@ public final class CaptureDiagnostic {
                 journalDao,
                 idPoint,
                 4,
-                "2026-06-20",
+                NUIT,
                 DEBUT_NON_COUVERT,
                 FIN_NON_COUVERTE,
                 Completude.COMPLETE);
         rattacherReleve(releveDao, sessionDao, idProtocoleNonCouvert, thlog);
 
-        // Passage dédié au SECOND encart (#5093) : la nuit couvre la fenêtre du protocole - le premier
-        // encart informe donc - et son journal montre qu'elle s'est interrompue. Les deux axes se
-        // lisent alors côte à côte, ce qu'aucun aperçu ne montrait.
-        long idNuitInterrompue = passageAvecJournal(
+        // Les deux variantes à UN SEUL bord (#5200). Elles existaient dans le code de l'écran et
+        // aucune carte ni aucun aperçu ne les atteignait : seul le cas « ni l'un ni l'autre » était
+        // visible, si bien que deux phrases sur trois n'avaient jamais été lues par personne.
+        long idDebutSeulManquant = passageAvecJournal(
                 passageDao,
                 sessionDao,
                 journalDao,
                 idPoint,
-                5,
-                "2026-06-20",
-                DEBUT_NOMINAL,
+                6,
+                NUIT,
+                DEBUT_NON_COUVERT,
                 FIN_NOMINALE,
-                Completude.TRONQUEE);
+                Completude.COMPLETE);
+        rattacherReleve(releveDao, sessionDao, idDebutSeulManquant, thlog);
+
+        long idFinSeuleManquante = passageAvecJournal(
+                passageDao,
+                sessionDao,
+                journalDao,
+                idPoint,
+                7,
+                NUIT,
+                DEBUT_COUVERT,
+                FIN_NON_COUVERTE,
+                Completude.COMPLETE);
+        rattacherReleve(releveDao, sessionDao, idFinSeuleManquante, thlog);
+
+        // Passage dédié au SECOND encart (#5093) : la nuit couvre la fenêtre du protocole - le premier
+        // encart informe donc - et son journal montre qu'elle s'est interrompue. Les deux axes se
+        // lisent alors côte à côte, ce qu'aucun aperçu ne montrait.
+        long idNuitInterrompue = passageAvecJournal(
+                passageDao, sessionDao, journalDao, idPoint, 5, NUIT, DEBUT_NOMINAL, FIN_NOMINALE, Completude.TRONQUEE);
         rattacherReleve(releveDao, sessionDao, idNuitInterrompue, thlog);
 
-        return new Graine(idAvecReleve, idSansReleve, idSansGps, idProtocoleNonCouvert, idNuitInterrompue);
+        return new Graine(
+                idAvecReleve,
+                idSansReleve,
+                idSansGps,
+                idProtocoleNonCouvert,
+                idNuitInterrompue,
+                idDebutSeulManquant,
+                idFinSeuleManquante);
     }
 
     /// Rattache le relevé climatique `thlog` à la session du passage `idPassage`.
@@ -390,5 +426,11 @@ public final class CaptureDiagnostic {
     }
 
     private record Graine(
-            long idAvecReleve, long idSansReleve, long idSansGps, long idProtocoleNonCouvert, long idNuitInterrompue) {}
+            long idAvecReleve,
+            long idSansReleve,
+            long idSansGps,
+            long idProtocoleNonCouvert,
+            long idNuitInterrompue,
+            long idDebutSeulManquant,
+            long idFinSeuleManquante) {}
 }

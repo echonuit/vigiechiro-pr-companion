@@ -51,6 +51,9 @@ public final class JournalDeCapteur {
     /// avant d'être paramétrée. Les goldens de recette en dépendent, elle ne change pas.
     public static final int FREQUENCE_KHZ_PAR_DEFAUT = 384;
 
+    /// La fenêtre des cartes qui n'en déclarent pas : celle d'avant #5200, à l'octet près.
+    public static final String ACQUISITION = "20:25-07:47";
+
     /// Les lignes du journal d'une nuit, à la fréquence d'acquisition du parc réel.
     public static List<String> lignes(String serie, LocalDate nuit, boolean sondePresente) {
         return lignes(serie, nuit, sondePresente, FREQUENCE_KHZ_PAR_DEFAUT);
@@ -94,6 +97,22 @@ public final class JournalDeCapteur {
             int frequenceKhz,
             boolean appuiSurTouche,
             boolean nuitInterrompue) {
+        return lignes(serie, nuit, sondePresente, frequenceKhz, appuiSurTouche, nuitInterrompue, ACQUISITION);
+    }
+
+    /// Les lignes du journal, avec la FENÊTRE D'ACQUISITION choisie (#5200).
+    ///
+    /// C'est la seule chaîne dont dépend toute la couverture du protocole : `AnalyseurLogPR` en tire
+    /// les heures du passage. Écrite en dur, elle rendait deux des trois variantes de l'alerte
+    /// inatteignables par une carte, sans que rien ne le signale.
+    public static List<String> lignes(
+            String serie,
+            LocalDate nuit,
+            boolean sondePresente,
+            int frequenceKhz,
+            boolean appuiSurTouche,
+            boolean nuitInterrompue,
+            String fenetreAcquisition) {
         String soir = nuit.format(FORMAT_JOURNAL);
         String matin = nuit.plusDays(1).format(FORMAT_JOURNAL);
         List<String> lignes = new ArrayList<>();
@@ -114,7 +133,7 @@ public final class JournalDeCapteur {
                 soir,
                 "16:02:21",
                 serie,
-                "Paramètres : Acquisi. 20:25-07:47, Fe" + frequenceKhz + "kHz FL N FPH 00,"
+                "Paramètres : Acquisi. " + fenetreAcquisition + ", Fe" + frequenceKhz + "kHz FL N FPH 00,"
                         + " S. R. 16dB 1dt. GN0, Bd. Freq. 8-120kHz, Wav 2-30s SD 99%"));
         lignes.add(ligne(soir, "20:26:13", serie, "Wakeup by ALARM... Cpt 1"));
         if (appuiSurTouche) {

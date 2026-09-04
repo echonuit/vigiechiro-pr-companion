@@ -163,7 +163,8 @@ public final class GenerateurCartesSD {
                 journal.sondePresente(),
                 JournalDeCapteur.FREQUENCE_KHZ_PAR_DEFAUT,
                 journal.appuiSurTouche(),
-                journal.nuitInterrompue()));
+                journal.nuitInterrompue(),
+                journal.acquisition()));
         // #3898 : chaque redémarrage déclaré ajoute son propre tracé à la SUITE, ce qu'un vrai
         // enregistreur fait - il n'ouvre pas un nouveau fichier, il continue le sien. Une ligne
         // « Paramètres » de plus par session, donc, avec sa fréquence à elle.

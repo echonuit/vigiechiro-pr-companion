@@ -96,6 +96,9 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
   les deux plages** : « Protocole … » (coucher moins 30 minutes → lever plus 30) et « Enregistré … ».
 - **S2-66** · *geste: lire-le-diagnostic-d-un-passage* · Sur cette nuit, qui **ne couvre pas** la fenêtre exigée, un **avertissement** paraît et **dit ce
   qui manque**. Il ne se contente pas de signaler.
+  **Ce que cette case demandait n'était pas tenu jusqu'à #5200** : le message énonçait la règle du
+  protocole, « de 30 minutes avant le coucher à 30 minutes après le lever », sans jamais dire de quel
+  côté ça manquait. La case le réclamait, le produit signalait. Il nomme désormais le bord.
 - **S2-67** · *geste: lire-le-diagnostic-d-un-passage* · *(carte `nuit-longue`)* Sur une nuit qui **couvre** la fenêtre exigée et la dépasse, l'écran rend
   une **information**, jamais un avertissement : le protocole est un **plancher**, et le dépasser
   n'est pas un défaut. C'est le cas qui ferait rougir la règle inversée, et c'est celui qu'aucune
@@ -103,6 +106,8 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
   nuit" si l'enregistrement déborde », c'est-à-dire de confirmer le défaut (#4984). **À jouer à la
   main** : le comportement est éprouvé par un banc, mais aucun clip ne le montre, la carte de recette
   n'ayant pas de nuit qui couvre la fenêtre (#5061).
+- [ ] **S2-77** · *geste: lire-le-diagnostic-d-un-passage* · *(carte `sd-fin-precoce`)* **Préparer** : importer cette carte, dont le journal annonce `Acquisi. 19:55-06:30`. **Le geste** : ouvrir le diagnostic du passage. **Attendu** : l'avertissement dit que les enregistrements **s'arrêtent** trop tôt, et que **le début est bien couvert**. Il ne doit pas accuser le début.
+- [ ] **S2-78** · *geste: lire-le-diagnostic-d-un-passage* · *(carte `sd-hors-fenetre`)* **Préparer** : importer cette carte, `Acquisi. 20:25-06:30`. **Le geste** : ouvrir le diagnostic. **Attendu** : l'avertissement nomme les **deux** bords, et ne dit « bien » d'aucun des deux. C'est le cas où la phrase ne doit rien concéder.
 - **S2-74** · *geste: lire-le-diagnostic-d-un-passage* · Sous la cohérence horaire, un **second encart** dit ce que le journal établit de la **fin**
   de la nuit. Deux axes distincts : le premier dit si l'enregistrement couvre la fenêtre exigée,
   celui-ci s'il s'est interrompu. Une nuit peut porter les deux (#5093).

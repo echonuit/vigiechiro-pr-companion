@@ -428,6 +428,8 @@ class DiagnosticVueIntegrationTest {
                         LocalTime.of(6, 18),
                         LocalTime.of(21, 20),
                         LocalTime.of(6, 25),
+                        true,
+                        true,
                         CoherenceHoraire.Couverture.COUVERTE),
                 Completude.INCONNUE);
     }

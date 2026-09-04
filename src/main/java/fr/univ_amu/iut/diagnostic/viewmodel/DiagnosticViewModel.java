@@ -182,13 +182,38 @@ public class DiagnosticViewModel {
         // Une couverture tenue est une INFORMATION : le protocole est un plancher, et le dépasser
         // n'est pas un défaut. La rendre comme un défaut reproduirait le mal qu'on corrige.
         return switch (coherence.couverture()) {
-            case INCOMPLETE ->
-                RetourOperation.avertissement(
-                        "L'enregistrement ne couvre pas toute la fenêtre que le protocole demande,"
-                                + " de 30 minutes avant le coucher à 30 minutes après le lever.");
+            case INCOMPLETE -> RetourOperation.avertissement(ecartLisible(coherence));
             case COUVERTE -> RetourOperation.info("L'enregistrement couvre la fenêtre du protocole, et la dépasse.");
             case INDISPONIBLE -> RetourOperation.AUCUN;
         };
+    }
+
+    /// De quel CÔTÉ la fenêtre n'est pas couverte, en toutes lettres (#5200).
+    ///
+    /// Sans phrase de constat : la pastille signale déjà, et la version longue effaçait la zone du
+    /// matériel dans la barre de statut, qui reçoit la même chaîne sans pouvoir la raccourcir.
+    ///
+    /// Les deux booléens viennent du MODÈLE et ne se redérivent pas : [CoherenceHoraire] ne porte que
+    /// des `LocalTime`, et un enregistrement commencé après minuit s'y comparerait à l'envers.
+    private static String ecartLisible(CoherenceHoraire coherence) {
+        if (coherence.debutTenu() && !coherence.finTenue()) {
+            return "Les enregistrements s'arrêtent moins de 30 minutes après le lever ; le début est"
+                    + " bien couvert.";
+        }
+        if (!coherence.debutTenu() && coherence.finTenue()) {
+            return "Les enregistrements commencent moins de 30 minutes avant le coucher ; la fin est"
+                    + " bien couverte.";
+        }
+        if (!coherence.debutTenu()) {
+            return "Les enregistrements commencent moins de 30 minutes avant le coucher et s'arrêtent"
+                    + " moins de 30 minutes après le lever.";
+        }
+        // Les deux bords tenus et la fenêtre incomplète : la conjonction du modèle l'exclut. Si ce
+        // chemin s'ouvrait, il dirait qu'une des deux sources ment, et se taire ici rendrait une phrase
+        // fausse plutôt qu'un défaut (ADR 0008).
+        throw new IllegalStateException(
+                "couverture INCOMPLETE avec les deux bords tenus : le modèle et son libellé ne lisent"
+                        + " plus la même chose");
     }
 
     private void reinitialiser() {

@@ -77,6 +77,9 @@ final class LecteurSpec {
                 bool(map, "corrompu", false),
                 bool(map, "appuiSurTouche", false),
                 bool(map, "nuitInterrompue", false),
+                // Absente, la clé rend la fenêtre d'avant #5200 : onze specs se taisent et doivent
+                // continuer à produire le même journal à l'octet près.
+                str(map, "acquisition", JournalDeCapteur.ACQUISITION),
                 lireSessions(map.get("sessions")));
     }
 

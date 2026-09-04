@@ -145,6 +145,15 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
         };
     }
 
+    /// Ce que ce terminal TRANCHE de la couverture, exposé pour être comparé (#5200).
+    ///
+    /// Le banc de parité cherchait « n'est pas couverte » dans la phrase ci-dessus : une sonde par
+    /// sous-chaîne refuse à la première reformulation, et pour la mauvaise raison. Celle-ci rend le
+    /// même booléen sans relire le texte, donc elle survit à toute réécriture.
+    public static boolean coherenceAlerte(CoherenceHoraire coherence) {
+        return coherence.couverture() == CoherenceHoraire.Couverture.INCOMPLETE;
+    }
+
     /// Ce que le journal dit de la **fin** de la nuit (#5093), autre axe que la couverture.
     ///
     /// Visible pour le banc de parité : l'écran porte le même verdict par

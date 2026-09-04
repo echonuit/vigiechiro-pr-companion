@@ -28,6 +28,16 @@ public final class PlagesHoraires {
                 + plage(coherence.debutEnregistre(), coherence.finEnregistree());
     }
 
+    /// La plage EXIGÉE par le protocole, seule, pour l'alerte qui la nomme (#5200).
+    public static String plageExigee(CoherenceHoraire coherence) {
+        return plage(coherence.debutExige(), coherence.finExigee());
+    }
+
+    /// La plage réellement ENREGISTRÉE, seule, pour la même alerte.
+    public static String plageEnregistree(CoherenceHoraire coherence) {
+        return plage(coherence.debutEnregistre(), coherence.finEnregistree());
+    }
+
     /// Une plage, bornes séparées par un mot et non par une flèche.
     ///
     /// `U+2192` n'est pas dans la Noto Sans embarquée : il partirait en repli vers une police du
