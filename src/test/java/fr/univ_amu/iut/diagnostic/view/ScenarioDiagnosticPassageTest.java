@@ -27,6 +27,7 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.view.NavigationSites;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 import javafx.scene.Node;
@@ -139,6 +140,19 @@ class ScenarioDiagnosticPassageTest {
                 .as("et elle a des points : ils viennent du relevé de la nuit importée, pas d'un détail"
                         + " fabriqué. Une courbe vide se lirait comme une nuit sans climat")
                 .isNotEmpty();
+
+        // ─── S2-79 · le survol dit ce que la légende ne dit plus ────────────────────────────────
+        // Depuis #5205 il n'y a plus de légende : l'infobulle est le SEUL endroit qui nomme la série.
+        // Le clip doit donc la montrer, sans quoi il donne à voir une perte.
+        //
+        // Le point est pris au MILIEU de la courbe : près du bord, la bulle sortirait du cadre. La
+        // caméra la composerait quand même, et le clip aurait l'air juste en étant illisible.
+        List<? extends XYChart.Data<?, ?>> points = graphe.getData().getFirst().getData();
+        Attente.que(
+                () -> points.stream().anyMatch(donnee -> donnee.getNode() != null),
+                "les points de la courbe ont pris un nœud : sans lui, rien à survoler",
+                APPARITION_SECONDES * 1000L);
+        GesteVisible.survoler(robot, points.get(points.size() / 2).getNode());
 
         assertThat(robot.lookup("#lblReleveAbsent").query().isVisible())
                 .as("le signalement d'absence de relevé se TAIT quand le relevé est là. C'est le contrôle"

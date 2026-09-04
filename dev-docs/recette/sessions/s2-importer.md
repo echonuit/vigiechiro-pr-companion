@@ -112,6 +112,8 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
   que l'infobulle fonctionne, pas qu'un vrai pointeur atteint une cible de dix pixels. La question
   posée ici est donc : y arrive-t-on **sans viser** ? Si viser est nécessaire, c'est un défaut, et il
   a son lot à lui.
+  **Le clip du geste montre ce qu'on doit voir** depuis #5223 : le pointeur sur un point de la courbe,
+  et l'infobulle ouverte à côté. Il donne la cible, pas la réponse.
   Depuis #5205 la légende du graphe a été retirée : cette infobulle est le **seul** endroit qui dit
   quelle courbe est laquelle. Un survol inatteignable rendrait le graphe muet.
 - [ ] **S2-77** · *geste: lire-le-diagnostic-d-un-passage* · *(carte `sd-fin-precoce`)* **Préparer** : importer cette carte, dont le journal annonce `Acquisi. 19:55-06:30`. **Le geste** : ouvrir le diagnostic du passage. **Attendu** : l'avertissement dit que les enregistrements **s'arrêtent** trop tôt, et que **le début est bien couvert**. Il ne doit pas accuser le début.

@@ -34,6 +34,10 @@ public final class InfobulleDeBlocage {
     /// défaut en attente interminable.
     private static final int DELAI_INFOBULLE_S = 5;
 
+    /// Combien de temps l'infobulle reste ouverte quand on la montre pour un clip : de quoi couvrir
+    /// l'arrêt que le scénario prend, sans la laisser traîner sur les gestes suivants.
+    private static final int TENUE_INFOBULLE_S = 6;
+
     private InfobulleDeBlocage() {}
 
     /// Texte de l'infobulle installée sur `enveloppe`.
@@ -94,11 +98,14 @@ public final class InfobulleDeBlocage {
         }
         robot.interact(() -> {
             infobulle.setShowDelay(Duration.ZERO);
+            // Assez longtemps pour qu'un clip la MONTRE : la durée par défaut ne se règle pas sur
+            // l'arrêt que le scénario prend, et la bulle s'éteignait au bout de six images sur les
+            // vingt-cinq attendues.
+            infobulle.setShowDuration(Duration.seconds(TENUE_INFOBULLE_S));
             Bounds ecran = cible.localToScreen(cible.getBoundsInLocal());
-            double x = ecran.getMinX() + ecran.getWidth() / 2;
-            double y = ecran.getMinY() + ecran.getHeight() / 2;
+            Bounds scene = cible.localToScene(cible.getBoundsInLocal());
             for (EventType<MouseEvent> type : List.of(MouseEvent.MOUSE_ENTERED, MouseEvent.MOUSE_MOVED)) {
-                Event.fireEvent(cible, souris(type, x, y));
+                Event.fireEvent(cible, souris(type, scene, ecran));
             }
         });
         WaitForAsyncUtils.waitForFxEvents();
@@ -109,14 +116,19 @@ public final class InfobulleDeBlocage {
         return infobulle.getText();
     }
 
-    /// Un évènement de souris minimal, aux coordonnées écran voulues.
-    private static MouseEvent souris(EventType<MouseEvent> type, double x, double y) {
+    /// Un évènement de souris minimal, aux coordonnées de SCÈNE **et** d'écran.
+    ///
+    /// Les deux comptent, pour des lecteurs différents : l'infobulle se place d'après l'écran, le suivi
+    /// de gestes du banc dessine le pointeur d'après la SCÈNE. Un premier jet passait `0, 0` en scène :
+    /// la bulle paraissait au bon endroit et le pointeur restait dessiné dans le coin, si bien que le
+    /// clip montrait une infobulle qui s'ouvre toute seule.
+    private static MouseEvent souris(EventType<MouseEvent> type, Bounds scene, Bounds ecran) {
         return new MouseEvent(
                 type,
-                0,
-                0,
-                x,
-                y,
+                scene.getMinX() + scene.getWidth() / 2,
+                scene.getMinY() + scene.getHeight() / 2,
+                ecran.getMinX() + ecran.getWidth() / 2,
+                ecran.getMinY() + ecran.getHeight() / 2,
                 MouseButton.NONE,
                 0,
                 false,
