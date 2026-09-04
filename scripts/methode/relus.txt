@@ -697,7 +697,7 @@ c007723889a6  src/main/java/fr/univ_amu/iut/diagnostic/model/LectureThLog.java
 3983f4b83951  src/main/java/fr/univ_amu/iut/diagnostic/model/SerieClimatique.java
 9d1167fc29c3  src/main/java/fr/univ_amu/iut/diagnostic/model/ServiceDiagnostic.java
 39bff2c839a0  src/main/java/fr/univ_amu/iut/diagnostic/outils/CaptureDiagnostic.java
-1e001de53598  src/main/java/fr/univ_amu/iut/diagnostic/view/DiagnosticController.java
+4b5155750f6d  src/main/java/fr/univ_amu/iut/diagnostic/view/DiagnosticController.java
 9fcf0dddc863  src/main/java/fr/univ_amu/iut/diagnostic/view/NavigationDiagnostic.java
 b85b30a93605  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
 6c5ac41a2062  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/PlagesHoraires.java
@@ -1598,7 +1598,7 @@ b6db9ee90de4  src/test/java/fr/univ_amu/iut/commun/view/GluonMapSpikeTest.java
 9c648d44d63c  src/test/java/fr/univ_amu/iut/commun/view/IndicateurAccueilWiringTest.java
 3aa5e88dd68e  src/test/java/fr/univ_amu/iut/commun/view/IndicateurBlocageTest.java
 e4268661fc45  src/test/java/fr/univ_amu/iut/commun/view/IndicateurOccupationTest.java
-e0f6821996d3  src/test/java/fr/univ_amu/iut/commun/view/InfobulleDeBlocage.java
+e32df7591aed  src/test/java/fr/univ_amu/iut/commun/view/InfobulleDeBlocage.java
 1a4efc12d33f  src/test/java/fr/univ_amu/iut/commun/view/JetonsDeCouleurResolusTest.java
 a0d6fad39afd  src/test/java/fr/univ_amu/iut/commun/view/JournalisationTacheTest.java
 b05b0ab0572b  src/test/java/fr/univ_amu/iut/commun/view/LibelleRetourTest.java

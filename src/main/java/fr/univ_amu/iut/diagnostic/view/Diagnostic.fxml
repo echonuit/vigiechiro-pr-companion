@@ -64,7 +64,10 @@
     </Button>
   </HBox>
 
-  <GrapheNocturne fx:id="grapheClimat" VBox.vgrow="ALWAYS" minHeight="260.0" legendVisible="true" animated="false">
+  <!-- Pas de LEGENDE (#5205). Elle ne servait qu'a dire quelle courbe est laquelle, ce que le survol
+       dit desormais mieux : la serie, sa valeur et son heure. L'EXPORT garde la sienne, `ExportGraphe`
+       la rallumant de son cote : une image quittant l'application n'a pas de survol. -->
+  <GrapheNocturne fx:id="grapheClimat" VBox.vgrow="ALWAYS" minHeight="260.0" legendVisible="false" animated="false">
     <xAxis>
       <NumberAxis label="Heure"/>
     </xAxis>

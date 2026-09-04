@@ -92,8 +92,9 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
 - **S2-34** · *geste: lire-le-diagnostic-d-un-passage* · La courbe climatique T°/hygrométrie s'affiche, l'axe **gradué en heures**.
 - **S2-35** · *geste: lire-le-diagnostic-d-un-passage* · Les anomalies détectées s'affichent (ou leur placeholder).
 - **S2-36** · *geste: lire-le-diagnostic-d-un-passage* · Les évènements du journal s'affichent (ou leur placeholder).
-- **S2-37** · *geste: lire-le-diagnostic-d-un-passage* · La cohérence horaire indique la fenêtre nocturne (coucher/lever du soleil), et **sous elle
-  les deux plages** : « Protocole … » (coucher moins 30 minutes → lever plus 30) et « Enregistré … ».
+- **S2-37** · *geste: lire-le-diagnostic-d-un-passage* · La cohérence horaire tient sur **une ligne**, trois faits de même forme séparés par des points médians : « Nuit : … à … », « Protocole : … à … » (coucher moins 30 minutes, lever plus 30) et « Enregistré : … à … ».
+  *(La rédaction d'avant disait « et SOUS elle les deux plages » : c'était vrai jusqu'à #5204, qui a
+  fusionné les deux rangées.)*
 - **S2-66** · *geste: lire-le-diagnostic-d-un-passage* · Sur cette nuit, qui **ne couvre pas** la fenêtre exigée, un **avertissement** paraît et **dit ce
   qui manque**. Il ne se contente pas de signaler.
   **Ce que cette case demandait n'était pas tenu jusqu'à #5200** : le message énonçait la règle du
@@ -106,6 +107,13 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
   nuit" si l'enregistrement déborde », c'est-à-dire de confirmer le défaut (#4984). **À jouer à la
   main** : le comportement est éprouvé par un banc, mais aucun clip ne le montre, la carte de recette
   n'ayant pas de nuit qui couvre la fenêtre (#5061).
+- [ ] **S2-79** · *geste: lire-le-diagnostic-d-un-passage* · **Préparer** : ouvrir le diagnostic d'un passage dont le relevé climatique est présent, donc dont la courbe s'affiche. **Le geste** : promener la souris sur un point de la courbe, sans viser. **Attendu** : une infobulle paraît et donne l'heure, la série et la valeur, par exemple « 22:00 · T° : 18,5 °C ».
+  **Ce cas existe parce qu'un banc ne peut pas le juger.** Le banc POSTE l'entrée de souris : il prouve
+  que l'infobulle fonctionne, pas qu'un vrai pointeur atteint une cible de dix pixels. La question
+  posée ici est donc : y arrive-t-on **sans viser** ? Si viser est nécessaire, c'est un défaut, et il
+  a son lot à lui.
+  Depuis #5205 la légende du graphe a été retirée : cette infobulle est le **seul** endroit qui dit
+  quelle courbe est laquelle. Un survol inatteignable rendrait le graphe muet.
 - [ ] **S2-77** · *geste: lire-le-diagnostic-d-un-passage* · *(carte `sd-fin-precoce`)* **Préparer** : importer cette carte, dont le journal annonce `Acquisi. 19:55-06:30`. **Le geste** : ouvrir le diagnostic du passage. **Attendu** : l'avertissement dit que les enregistrements **s'arrêtent** trop tôt, et que **le début est bien couvert**. Il ne doit pas accuser le début.
 - [ ] **S2-78** · *geste: lire-le-diagnostic-d-un-passage* · *(carte `sd-hors-fenetre`)* **Préparer** : importer cette carte, `Acquisi. 20:25-06:30`. **Le geste** : ouvrir le diagnostic. **Attendu** : l'avertissement nomme les **deux** bords, et ne dit « bien » d'aucun des deux. C'est le cas où la phrase ne doit rien concéder.
 - **S2-74** · *geste: lire-le-diagnostic-d-un-passage* · Sous la cohérence horaire, un **second encart** dit ce que le journal établit de la **fin**

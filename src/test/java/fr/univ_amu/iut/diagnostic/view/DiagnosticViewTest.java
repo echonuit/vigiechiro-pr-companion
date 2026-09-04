@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
+import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -22,10 +23,12 @@ import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
 import fr.univ_amu.iut.diagnostic.model.SerieClimatique;
 import fr.univ_amu.iut.diagnostic.model.ServiceDiagnostic;
 import fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel;
+import fr.univ_amu.iut.recette.Attente;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.chart.LineChart;
@@ -97,5 +100,54 @@ class DiagnosticViewTest {
         var zones = controleur.zonesStatutProperty().get();
         assertThat(zones.gauche()).isEqualTo("Carré 640380 · A1 · N° 2");
         assertThat(zones.centre()).isEqualTo("PR 1925492 · 2 mesures");
+    }
+
+    @Test
+    @DisplayName("#5205 : chaque point du graphe dit son heure, sa série et sa valeur au survol")
+    void les_points_du_graphe_se_disent(FxRobot robot) throws TimeoutException {
+        // Le nœud d'un point naît à la mise en page : sans cette attente, la liste est vide et le cas
+        // passerait au vert en n'ayant rien regardé.
+        Attente.que(
+                () -> !grapheClimat(robot).getData().isEmpty()
+                        && grapheClimat(robot).getData().get(0).getData().stream()
+                                .anyMatch(d -> d.getNode() != null),
+                "les points du graphe ont pris un nœud",
+                5000L);
+
+        javafx.scene.chart.XYChart.Data<Number, Number> premier =
+                grapheClimat(robot).getData().get(0).getData().get(0);
+
+        // #5205 : la légende est ÉTEINTE, et ce cas n'a de valeur que parce qu'il vérifie l'autre
+        // moitié. Un test qui se contenterait de constater son absence laisserait passer un écran
+        // devenu muet : rien n'y dirait plus quelle courbe est laquelle.
+        assertThat(grapheClimat(robot).isLegendVisible())
+                .as("la légende a été retirée : c'est le survol qui nomme les séries désormais")
+                .isFalse();
+
+        // Le pointeur n'atteint pas un symbole de dix pixels : `moveTo` laisse `isHover()` faux, et
+        // l'infobulle ne paraît jamais. Le harnais poste donc l'entrée de souris, et dit pourquoi.
+        assertThat(InfobulleDeBlocage.montrerParEntreeDeSouris(premier.getNode(), robot))
+                .as("un point qui ne dit ni son heure ni sa valeur laisse lire une courbe sans pouvoir"
+                        + " la chiffrer : c'est ce que la légende ne remplace pas")
+                .containsPattern("\\d{2}:\\d{2}")
+                .as("et il NOMME sa série : c'est ce que la légende disait, et le seul moyen restant"
+                        + " de distinguer les deux courbes")
+                .contains("T°")
+                .contains("°C");
+
+        // Et elle est PHOTOGRAPHIABLE : une infobulle vit dans sa propre fenêtre, que `Window.getWindows`
+        // rend et que `CameraDeScene` compose. Sans ce contrôle, « le survol se filme » resterait une
+        // supposition, et c'est de cette supposition que dépend le retrait de la légende.
+        assertThat(javafx.stage.Window.getWindows().stream()
+                        .filter(fenetre -> fenetre instanceof javafx.stage.PopupWindow)
+                        .count())
+                .as("l'infobulle doit paraître comme une fenêtre à part, sinon aucune capture ne la" + " montrera")
+                .isPositive();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static javafx.scene.chart.XYChart<Number, Number> grapheClimat(FxRobot robot) {
+        return (javafx.scene.chart.XYChart<Number, Number>)
+                robot.lookup("#grapheClimat").query();
     }
 }
