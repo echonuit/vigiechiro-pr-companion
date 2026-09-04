@@ -529,7 +529,7 @@ jobs:
 
   # ------------------------------------------------------------------------------------------------
   # Une pré-version À PART, et c'est tout l'objet de #4306. Des données vivantes font bouger l'écran
-  # sans qu'aucun commit ait changé : le plancher de bruit de `compare-tournages.sh` mesurerait alors la
+  # sans qu'aucun commit ait changé : le plancher de bruit de `compare_tournages.py` mesurerait alors la
   # plateforme et non le rendu. Verser ces clips sur `clips-recette` ou à côté des `java-` d'un tag
   # ferait se contredire deux dispositifs EN SILENCE, puisque tous deux produisent des clips valides.
   #

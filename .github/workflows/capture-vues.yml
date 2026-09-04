@@ -113,7 +113,7 @@ jobs:
           chmod +x .github/assets/capture_screenshots.py
           python3 .github/assets/capture_screenshots.py
 
-      # `filtrer-bruit-cartes.sh` compare les aperçus de carte à leur version committée. L'image
+      # `filtrer_bruit_cartes.py` compare les aperçus de carte à leur version committée. L'image
       # `ubuntu-latest` ne fournit AUCUN ImageMagick : sans cette étape, la suivante échoue.
       - name: Installer ImageMagick (comparaison des aperçus de carte)
         env:
@@ -128,8 +128,8 @@ jobs:
       # travail, que personne ne committe.
       - name: Filtrer le bruit des cartes
         run: |
-          chmod +x .github/assets/filtrer-bruit-cartes.sh
-          .github/assets/filtrer-bruit-cartes.sh
+          chmod +x .github/assets/filtrer_bruit_cartes.py
+          python3 .github/assets/filtrer_bruit_cartes.py
 
       - name: Montrer les écrans que cette PR change (#4119)
         # Uniquement sur une PR : sur `main`, c'est le commit d'aperçus qui montre le changement.
@@ -141,15 +141,15 @@ jobs:
         #
         # Le filtrage du bruit doit avoir eu lieu AVANT : sans lui, les aperçus de carte
         # apparaîtraient à chaque fois, et une vraie régression deviendrait indiscernable du bruit de
-        # tuiles - jusqu'à 23,8 % d'une image (cf. `filtrer-bruit-cartes.sh`).
+        # tuiles - jusqu'à 23,8 % d'une image (cf. `filtrer_bruit_cartes.py`).
         if: github.event_name == 'pull_request'
         run: |
           set -uo pipefail
-          chmod +x .github/assets/compare-apercus.sh
+          chmod +x .github/assets/compare_apercus.py
           # `git status --porcelain` rend aussi bien les modifiés (` M`) que les nouveaux (`??`) : un
           # écran ajouté par la PR mérite d'être montré, même s'il n'a pas d'avant.
           mapfile -t modifies < <(git status --porcelain -- '*.png' | awk '{print $2}')
-          .github/assets/compare-apercus.sh target/apercus-pr "${modifies[@]}" || true
+          python3 .github/assets/compare_apercus.py target/apercus-pr "${modifies[@]}" || true
           cat target/apercus-pr/index.md >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Conserver les avant/après

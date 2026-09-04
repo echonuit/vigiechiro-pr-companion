@@ -7,7 +7,7 @@ chantier: "#4296, EPIC #4295"
 decided_at: 2026-08-23
 verification: certaine
 enforced_by:
-  - ".github/assets/compare-tournages.sh"
+  - ".github/assets/compare_tournages.py"
 verified:
   - by: machine:ci
     at: 2026-08-23

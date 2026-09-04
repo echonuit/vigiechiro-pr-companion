@@ -118,6 +118,6 @@ graphify-out/
 node_modules/
 
 # Zones de carte des apercus (#3439) : deposees par le rendu a cote de chaque PNG, lues aussitot par
-# filtrer-bruit-cartes.sh. Ce sont des mesures de la scene qui vient d etre rendue, pas une source :
+# filtrer_bruit_cartes.py. Ce sont des mesures de la scene qui vient d etre rendue, pas une source :
 # les committer les ferait vieillir, ce qui est exactement le defaut qu elles corrigent.
 .github/assets/apercu-*.png.carte
