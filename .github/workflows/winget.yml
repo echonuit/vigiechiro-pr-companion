@@ -179,7 +179,7 @@ jobs:
         # `release-notes-url` n'existe pas dans la v2 et y était silencieusement ignoré (le journal du
         # run le dit en `Unexpected input(s)`), et `komac sync-fork` - que `main` lance avant la mise à
         # jour - n'y est pas, alors que notre fork prend des milliers de commits de retard entre deux
-        # soumissions. Un tag figé rend l'action INVISIBLE à `verifie-fraicheur-actions.sh`, qui compare
+        # soumissions. Un tag figé rend l'action INVISIBLE à `verifie_fraicheur_actions.py`, qui compare
         # des tags : v2 face à v2, aucun écart, rien à signaler (#2213).
         uses: vedantmgoyal9/winget-releaser@b3a5dae0047c6180023acba3f548c55fdf6b7193 # main @ 2026-07-28
         with:

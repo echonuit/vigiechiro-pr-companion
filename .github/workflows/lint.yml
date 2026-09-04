@@ -31,8 +31,8 @@ jobs:
     # le défaut que #3883 avait fermé pour le premier banc, refait dans l'outil bâti pour le
     # combattre : un garde de soixante-cinq cas dont personne ne vérifiait qu'il passe.
     #
-    # Et `verifie-inventaires-ci.sh` ne pouvait pas le dire : il ne regarde que
-    # `.github/scripts` et `.github/assets`. Un banc rangé sous `scripts/` lui est invisible.
+    # Et `verifie-inventaires-ci.sh` ne pouvait pas le dire : il ne regardait alors que
+    # `.github/scripts` et `.github/assets`. Un banc rangé sous `scripts/` lui était invisible.
     #
     # Ils n'avaient JAMAIS tourné en CI. Quatorze scripts lancent leur `--auto-test` dans le job
     # `lint` ci-dessous ; celui-ci n'y était pas, faute d'outillage - et `recette-filmee.yml`, qui
@@ -411,9 +411,9 @@ jobs:
         # qu'on exécute vaut mieux qu'un garde qu'on relit - la technique a sorti un défaut réel
         # d'`api-live.yml` le jour où elle a été essayée (#4328).
         run: |
-          chmod +x .github/scripts/verifie-decisions-du-tournage-connecte.sh
-          ./.github/scripts/verifie-decisions-du-tournage-connecte.sh --auto-test
-          ./.github/scripts/verifie-decisions-du-tournage-connecte.sh
+          chmod +x .github/scripts/verifie_decisions_du_tournage_connecte.py
+          python3 .github/scripts/verifie_decisions_du_tournage_connecte.py --auto-test
+          python3 .github/scripts/verifie_decisions_du_tournage_connecte.py
 
       - name: La forme d un jeton se cherche, et le garde avoue ce qu il ne lit pas
         # Trois de ses six cas doivent rester VERTS : empreintes, identifiants et longueurs
@@ -544,9 +544,9 @@ jobs:
         # rester vert, `maven.yml` cité cinq fois compris. Une règle qui compterait des lignes au lieu
         # de comparer des fichiers rougirait sur un tableau juste, et se ferait retirer.
         run: |
-          chmod +x .github/scripts/verifie-inventaires-ci.sh
-          ./.github/scripts/verifie-inventaires-ci.sh --auto-test
-          ./.github/scripts/verifie-inventaires-ci.sh
+          chmod +x .github/scripts/verifie_inventaires_ci.py
+          python3 .github/scripts/verifie_inventaires_ci.py --auto-test
+          python3 .github/scripts/verifie_inventaires_ci.py
 
       - name: "Un nom d'étape dit en entier ce qu'il écrit (bloquant, #4255)"
         # Un `#` précédé d'une espace ouvre un commentaire YAML, y compris au milieu d'un nom non
@@ -578,8 +578,8 @@ jobs:
         # le seul contrôle qui passe à chaque PR, et sans lui un seuil relâché - une majeure de retard
         # requalifiée en simple avertissement - passerait au vert sans que rien ne le dise (#3382).
         run: |
-          chmod +x .github/scripts/verifie-fraicheur-actions.sh
-          ./.github/scripts/verifie-fraicheur-actions.sh --auto-test
+          chmod +x .github/scripts/verifie_fraicheur_actions.py
+          python3 .github/scripts/verifie_fraicheur_actions.py --auto-test
 
       - name: La veille de fraîcheur du contrat API sait encore rougir
         # Elle ne tourne pour de vrai que dans api-live.yml, une fois par semaine : son autotest est
