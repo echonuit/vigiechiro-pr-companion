@@ -152,7 +152,14 @@ ZONES_NETTOYEES = (
     # ferait donc LEVER `prose()` au lieu de garder le dossier. Le glob couvre la configuration
     # maintenant et les artefacts quand ils arriveront, sans seconde entrée à tenir.
     ("spécification vivante", pathlib.Path("openspec"), (), "*"),
-    ("gardes de capture", pathlib.Path(".github/assets"), (), "*.sh"),
+    # `*.py` et non `*.sh` depuis #5239 : les neuf gardes de capture de ce dossier sont passes en
+    # Python, et la zone est tombee a ZERO fichier. Ce garde a REFUSE, comme il doit - « aucun
+    # fichier, le garde ne balaie rien » -, et c est le seul signal qui distingue une zone videe
+    # d une zone conforme. Le glob suit donc la population plutot que l inverse.
+    #
+    # Pas de glob total ici, a la difference des tests de paquet : ce dossier porte 158 PNG et des
+    # MP4, que ce garde n a rien a lire.
+    ("gardes de capture", pathlib.Path(".github/assets"), (), "*.py"),
     # Les scripts d'atelier, dont le garde de titre de PR. Cette zone manquait, et le régime de
     # couverture l'a signalée dès que ce garde a porté sa première ligne de prose (#2947).
     ("scripts d'atelier", pathlib.Path(".github/scripts"), (), "*.sh"),
