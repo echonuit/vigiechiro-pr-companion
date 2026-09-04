@@ -63,6 +63,30 @@ class PariteCoherenceHoraireTest {
     }
 
     @Test
+    @DisplayName("#5200 : l'ALERTE de l'écran cite les heures, et pas seulement la ligne des plages")
+    void l_alerte_de_l_ecran_cite_les_heures() {
+        // Le banc ci-dessus compare les LIGNES DE PLAGES. L'alerte, elle, n'était couverte par rien :
+        // elle a énoncé la règle sans les valeurs pendant tout ce temps, et aucun test ne l'a vu.
+        CoherenceHoraire coherence = nuitTropCourte();
+
+        String alerte = fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel.libelleEcart(coherence)
+                .texte();
+
+        for (java.time.LocalTime heure : java.util.List.of(
+                coherence.debutExige(),
+                coherence.finExigee(),
+                coherence.debutEnregistre(),
+                coherence.finEnregistree())) {
+            assertThat(alerte)
+                    .as(
+                            "l'alerte doit citer %s : une alerte qui dit la règle sans le fait laisse"
+                                    + " chercher ailleurs ce qui s'est passé",
+                            heure)
+                    .contains(HEURE.format(heure));
+        }
+    }
+
+    @Test
     @DisplayName("ADR 0014 : les deux surfaces tranchent la MÊME nuit dans le même sens")
     void les_deux_surfaces_tranchent_dans_le_meme_sens() {
         // La parité au-dessus porte sur les HEURES citées. Elle laissait passer le cas qui compte le
@@ -75,8 +99,10 @@ class PariteCoherenceHoraireTest {
             boolean ecranAlerte = fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel.libelleEcart(coherence)
                             .severite()
                     == Severite.AVERTISSEMENT;
-            boolean terminalAlerte = fr.univ_amu.iut.cli.commande.Diagnostiquer.coherenceLisible(coherence)
-                    .contains("n'est pas couverte");
+            // Le verdict du terminal se DEMANDE, il ne se devine plus dans sa phrase (#5200). La sonde
+            // par sous-chaîne cassait à la première reformulation, et refusait alors pour une raison
+            // qui n'était pas celle que ce banc existe pour voir.
+            boolean terminalAlerte = fr.univ_amu.iut.cli.commande.Diagnostiquer.coherenceAlerte(coherence);
 
             assertThat(ecranAlerte)
                     .as(

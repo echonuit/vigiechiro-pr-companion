@@ -183,9 +183,15 @@ public class DiagnosticViewModel {
         // n'est pas un défaut. La rendre comme un défaut reproduirait le mal qu'on corrige.
         return switch (coherence.couverture()) {
             case INCOMPLETE ->
-                RetourOperation.avertissement(
-                        "L'enregistrement ne couvre pas toute la fenêtre que le protocole demande,"
-                                + " de 30 minutes avant le coucher à 30 minutes après le lever.");
+                // La phrase dit le FAIT, et non plus seulement la règle (#5200). Elle énonçait ce que
+                // le protocole exige, et laissait chercher ailleurs ce qui s'était passé : un verdict
+                // qu'il fallait croire sur parole, exactement ce que #4988 avait entrepris de faire
+                // cesser en posant les deux plages sous la fenêtre.
+                //
+                // Le terminal, lui, disait déjà le fait. Cette ligne rapproche l'écran de lui.
+                RetourOperation.avertissement("Les enregistrements ne couvrent pas toute la fenêtre du"
+                        + " protocole : elle va de " + PlagesHoraires.plageExigee(coherence)
+                        + ", ils vont de " + PlagesHoraires.plageEnregistree(coherence) + ".");
             case COUVERTE -> RetourOperation.info("L'enregistrement couvre la fenêtre du protocole, et la dépasse.");
             case INDISPONIBLE -> RetourOperation.AUCUN;
         };

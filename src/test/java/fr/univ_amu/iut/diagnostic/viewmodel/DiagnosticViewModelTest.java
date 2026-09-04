@@ -153,8 +153,16 @@ class DiagnosticViewModelTest {
 
         viewModel.ouvrirSur(ID_PASSAGE);
 
+        // #5200 : l'alerte dit le FAIT, et pas seulement la règle. Éprouver les HEURES plutôt qu'un
+        // fragment de phrase : c'est ce qu'elle apporte, et un fragment se périme à la première
+        // reformulation sans rien garder de ce qui compte.
         assertThat(viewModel.alerteHorsNuitProperty().get().texte())
-                .contains("ne couvre pas")
+                .as("l'alerte doit citer la fenêtre exigée ET ce qui a été enregistré : sans elles,"
+                        + " elle énonce une règle et laisse chercher ailleurs ce qui s'est passé")
+                .contains("21:28")
+                .contains("06:18")
+                .contains("22:30")
+                .contains("05:30")
                 .contains("protocole");
         // #2050 : la sévérité est portée par la donnée, plus par la classe CSS ni le FontIcon figés du FXML.
         assertThat(viewModel.alerteHorsNuitProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
