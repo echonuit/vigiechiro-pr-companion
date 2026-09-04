@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.diagnostic.model.CoherenceHoraire;
 import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
@@ -42,6 +43,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -337,12 +339,43 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
             LocalDateTime origine = instant(mesures.get(0));
             for (MesureClimatique mesure : mesures) {
                 long minutes = Duration.between(origine, instant(mesure)).toMinutes();
-                temperature.getData().add(new XYChart.Data<>(minutes, mesure.temperatureCelsius()));
-                humidite.getData().add(new XYChart.Data<>(minutes, mesure.humiditePourcent()));
+                temperature
+                        .getData()
+                        .add(pointQuiSeDit(
+                                minutes,
+                                mesure.temperatureCelsius(),
+                                HEURE.format(mesure.heure()) + " · T° : "
+                                        + Formats.temperatureLisible(mesure.temperatureCelsius())));
+                humidite.getData()
+                        .add(pointQuiSeDit(
+                                minutes,
+                                mesure.humiditePourcent(),
+                                HEURE.format(mesure.heure()) + " · Humidité : " + mesure.humiditePourcent() + " %"));
             }
             configurerAxeTemps(axeTemps, origine, mesures);
         }
         grapheClimat.getData().setAll(List.of(temperature, humidite));
+    }
+
+    /// Un point du graphe, porteur d'une infobulle qui dit son heure, sa série et sa valeur (#5205).
+    ///
+    /// Le nœud d'un point n'existe **pas** à sa construction : `XYChart` le crée à la mise en page.
+    /// L'infobulle se pose donc quand il paraît, et aussi tout de suite s'il est déjà là, pour ne pas
+    /// dépendre du moment où cette méthode est appelée.
+    ///
+    /// Le corps de l'écouteur se borne à `Tooltip.install` : JavaFX **avale** ce qu'un écouteur lève,
+    /// et un travail plus riche y échouerait sans que rien ne le dise.
+    private static XYChart.Data<Number, Number> pointQuiSeDit(long minutes, Number valeur, String texte) {
+        XYChart.Data<Number, Number> point = new XYChart.Data<>(minutes, valeur);
+        if (point.getNode() != null) {
+            Tooltip.install(point.getNode(), new Tooltip(texte));
+        }
+        point.nodeProperty().addListener((observable, avant, apres) -> {
+            if (apres != null) {
+                Tooltip.install(apres, new Tooltip(texte));
+            }
+        });
+        return point;
     }
 
     /// Deux séries **neuves** T°/hygrométrie, pour l'export : une `XYChart.Series` n'appartient qu'à un
