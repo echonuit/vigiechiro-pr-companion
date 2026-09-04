@@ -35,6 +35,13 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 
+# La sortie de Python suit l'encodage de la CONSOLE, et sous Windows c'est cp1252, où le « ✓ » de la
+# ligne de verdict n'existe pas. Le tournage `windows-latest` mourait donc sur un caractère
+# d'ornement, et le rouge accusait le banc alors que les clips étaient bien là (#5195). Reconfigurer
+# ici plutôt que de poser `PYTHONIOENCODING` sur l'étape : ce script est appelé de plusieurs
+# endroits, et un remède porté par l'appelant s'oublie au prochain appel.
+sys.stdout.reconfigure(encoding="utf-8")
+
 dossier = sys.argv[1]
 fichiers = sorted(glob.glob(os.path.join(dossier, "TEST-*.xml")))
 
