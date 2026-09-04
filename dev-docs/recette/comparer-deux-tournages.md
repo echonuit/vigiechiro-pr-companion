@@ -69,7 +69,7 @@ ci-dessus le montre.
 
 !!! warning "La tolérance se mesure, elle ne se fige pas"
 
-    `compare-tournages.sh --plancher <A> <B>` remesure le plancher sur place, en comparant deux
+    `compare_tournages.py --plancher <A> <B>` remesure le plancher sur place, en comparant deux
     tournages qu'on sait identiques.
 
 ## Le plancher du runner, mesuré
@@ -138,7 +138,7 @@ propre plancher », qui est le nombre à regarder.
 ### L'enrichir
 
 ```
-compare-tournages.sh --plancher <tournage A> <tournage B> .github/assets/planchers-tournages.tsv
+compare_tournages.py --plancher <tournage A> <tournage B> .github/assets/planchers-tournages.tsv
 ```
 
 Relancer sur une **autre** paire garde le **pire** plancher observé et compte une paire de plus.

@@ -607,7 +607,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie_verdicts_declares.py` | qu'aucun appel de `rapporte`, `rapporte_plancher` ou `loupe` ne rende `lus=?` : un compte non déclaré rend le zéro du garde indiscernable de « n'a rien balayé », et le refus sur population vide ne le protège alors pas (ADR 5015). Les exceptions se **nomment** avec leur raison plutôt que de se compter : un cliquet à N se satisferait de convertir un garde et d'en ajouter un autre muet. La liaison de chaque nom est résolue par `ast`, un homonyme défini localement n'étant pas le verdict de `_commun` | `lint.yml` |
 | `verifie_contrats_tiennent.py` | qu'un contrat DÉCLARÉ ne contredise pas ce que le garde FAIT : `imprime_contrat` refusait un contrat incomplet, rien ne le confrontait au réel (ADR 4636). La règle n'est pas l'égalité mais l'absence de contradiction, parce que le vocabulaire diffère (`RACINES` vaut `PRODUCTION + TESTS`) et que le contrat sait souvent PLUS que l'inférence. Sa population se dérive de la **déclaration** et non d'une mention, par `ast` depuis #5144 : un grep sur `--contrat` comptait les fichiers qui en PARLENT. Elle compte **68** porteurs, dont le dernier garde shell, nommé à part parce qu'aucun AST Python ne le lit. Chaque contrat est obtenu en **lançant** le garde, jamais en lisant son source | `lint.yml` |
 | `verifie_contrat_obligatoire.py` | qu'un point d'entrée de `scripts/adr` **ou de `scripts/methode`** DÉCLARE ce qu'il est (ADR 4636). Ils sont **67**, et la population s'est élargie en #5157 ; rien n'empêchait le suivant d'arriver sans le sien, et un corpus complet se reperd sans bruit - un garde neuf copié sur un voisin emporte le bloc de verdict et pas la déclaration. C'est un **invariant**, pas un cliquet : il n'y a pas de marge à relever, et l'échappatoire est une liste d'exceptions **nommées**, vide à la livraison. Il ne juge pas le CONTENU du contrat, que `verifie_contrats_tiennent.py` confronte déjà | `lint.yml` |
-| `5188-corpus-shell.py` | ce qui reste en shell, et que la cible des deux langages condamne (ADR 5188). Un **cliquet à <!--inv:cliquet-corpus-shell-->7<!--/inv-->**, polarité descendante : il n'empêche pas qu'un script grossisse, il empêche la seule chose qui rendrait la cible inatteignable, **qu'on en ajoute**. Le script toléré, `lance-test-filme.sh`, est **compté** et non retiré : une tolérance est un délai, et le retirer ferait croire à une dispense. Sa population est ce que `git ls-files` suit, le même angle mort que les autres cliquets plutôt qu'un angle mort différent ici | `lint.yml` |
+| `5188-corpus-shell.py` | ce qui reste en shell, et que la cible des deux langages condamne (ADR 5188). Un **cliquet à <!--inv:cliquet-corpus-shell-->3<!--/inv-->**, polarité descendante : il n'empêche pas qu'un script grossisse, il empêche la seule chose qui rendrait la cible inatteignable, **qu'on en ajoute**. Le script toléré, `lance-test-filme.sh`, est **compté** et non retiré : une tolérance est un délai, et le retirer ferait croire à une dispense. Sa population est ce que `git ls-files` suit, le même angle mort que les autres cliquets plutôt qu'un angle mort différent ici | `lint.yml` |
 | `loupe-5175-population-non-nommee.py` | un garde qui **parcourt** un chemin que sa population déclarée ne **nomme** pas (ADR 5175). Une **loupe** : elle rend `0`. Quatre des cinq écarts mesurés sont des déclarations plus précises que le chemin, pas des populations fausses, et un garde qui refuserait crierait sur du juste. Elle ne lance rien : les contrats se lisent par `ast`, second recours de l'ADR 5102, plutôt que de doubler les 68 sous-processus de `verifie_contrats_tiennent.py` pour un dispositif qui ne juge pas | `lint.yml` |
 | `verifie_corpus_declare.py` | le corpus d'un garde s'importe du fonds commun `scripts/_commun/` et ne se recopie pas ; le fonds s'exclut par son **dossier** depuis #5216, non par un nom de fichier : c'est ce refus qui permet à la liste des gardes à deux arbres de se dériver au lieu de s'énumérer (ADR 4586) | `lint.yml` |
 | `rapport.py` | chaque garde tourne dans SON dépôt, et non dans le répertoire de l'appelant : sans `cwd`, cinq cliquets sur dix-huit rendaient une autre valeur depuis ailleurs, et `resserre_cliquets.py` ramenait quatre `ratchet:` à zéro dans les vraies ADR en annonçant un succès (issue #4781) | `lint.yml` |
@@ -661,9 +661,9 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
     tranchez **avant** de le finir, pas après.
 
 | `lance-test-filme.sh` | un runner **pilote** un test filmé, et refuse de le lancer sans gestionnaire de fenêtres | `recette-filmee.yml` - workflow **manuel** |
-| `filtrer-bruit-cartes.sh` | rend leur version committée aux aperçus de carte dont **seul le fond** a changé | `capture-vues.yml` |
-| `compare-apercus.sh` | montre, sur une PR, les écrans qu'elle change : avant/après accolés, part de pixels, et le **dit** quand aucun ne change | `capture-vues.yml` (autotest : `lint.yml`) |
-| `compare-tournages.sh` | montre ce qui a changé entre **deux tournages** : présence du cas, image finale accolée, carte des différences, durée. Le chiffre **trie**, la carte **localise** ; une mesure impossible se compte au lieu de passer pour « rien n'a changé » | `comparer-tournages.yml` (autotest : `lint.yml`) |
+| `filtrer_bruit_cartes.py` | rend leur version committée aux aperçus de carte dont **seul le fond** a changé | `capture-vues.yml` |
+| `compare_apercus.py` | montre, sur une PR, les écrans qu'elle change : avant/après accolés, part de pixels, et le **dit** quand aucun ne change | `capture-vues.yml` (autotest : `lint.yml`) |
+| `compare_tournages.py` | montre ce qui a changé entre **deux tournages** : présence du cas, image finale accolée, carte des différences, durée. Le chiffre **trie**, la carte **localise** ; une mesure impossible se compte au lieu de passer pour « rien n'a changé » | `comparer-tournages.yml` (autotest : `lint.yml`) |
 | `verifie_chantier_de_l_issue.py` | l'issue que la demande de fusion **ferme** appartient à un chantier, **et son corps dit le même que la forge** : rattacher demande deux gestes, et le garde ne lisait que le second jusqu'à #5210. La marque se reconnaît sur une **ligne à elle seule**, forme mesurée sur 35 issues sur 35 quand « en tête de corps » n'en rendait que 15 : une prose qui cite la forme n'en porte pas une. Porté du bash au Python par #5210, le cliquet du corpus shell passant de 50 à 49 - sa première descente. Son `parent` n'est ni absent, ni le sas des suites #4562, d'où rien ne se traite. Il ne juge que cette issue-là, jamais le dépôt entier | `corps-pr.yml` (autotest : `lint.yml`) |
 | `rappelle_le_critere_de_fin.py` | un **lot** dit dans son corps comment on saura qu'il est fini. Une LOUPE : elle rend un texte à poster, ne refuse rien, et ne juge pas la **qualité** du critère. Elle reconnaît un lot par son `parent` ou par la marque « Fait partie de #N », le sas #4562 exclu | `critere-de-fin.yml` (autotest : `lint.yml`) |
 | `concordances-du-cycle.py` | les quatre concordances qui relient commandes, tableau des passes et compétences : une commande ouvre une compétence qui existe, le tableau en nomme une qui existe, la `description` annonce la passe que le tableau attribue, aucune compétence n'est orpheline. Il ne vérifie pas qu'une compétence **dise vrai** | `lint.yml` |
@@ -780,7 +780,7 @@ comparant sa sortie sous `--auto-test` à sa sortie sous `--zzz-drapeau-inexista
 | **gardes** | **45** | distinguent le drapeau, et leur auto-test sort en **0**, tous les 45 |
 | **outils** | **5** | rendent la même chose avec les deux drapeaux : ils ne le voient pas |
 
-Les cinq outils sont `capture_screenshots.py`, `construit_appimage.py`, `mesure-pixels.sh`,
+Les cinq outils sont `capture_screenshots.py`, `construit_appimage.py`, `mesure_pixels.py`,
 `porte_sur_le_contrat_de_fichiers.py` et `icone/genere_icones.py`.
 
 **Le contrôle négatif est `construit_appimage.py`** : un workflow le lance, il sort en `1`, et il
@@ -808,10 +808,10 @@ liste est le plan de travail des chantiers de conversion.
 | `.github/assets/check_captures.py` | garde | oui | conversion |
 | `.github/assets/check_doc_images.py` | garde | oui | conversion |
 | `.github/assets/check_doc_videos.py` | garde | oui | conversion |
-| `.github/assets/compare-apercus.sh` | garde | oui | conversion |
-| `.github/assets/compare-tournages.sh` | garde | oui | conversion |
-| `.github/assets/filtrer-bruit-cartes.sh` | garde | oui | conversion |
-| `.github/assets/mesure-pixels.sh` | outil | oui | conversion |
+| `.github/assets/compare_apercus.py` | garde | oui | conversion |
+| `.github/assets/compare_tournages.py` | garde | oui | conversion |
+| `.github/assets/filtrer_bruit_cartes.py` | garde | oui | conversion |
+| `.github/assets/mesure_pixels.py` | outil | oui | conversion |
 | `.github/scripts/cas_manquants_du_tournage.py` | garde | oui | conversion |
 | `.github/scripts/clips_orphelins.py` | garde | oui | conversion |
 | `.github/scripts/construit_appimage.py` | outil | oui | conversion |

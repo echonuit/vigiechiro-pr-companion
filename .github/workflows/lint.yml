@@ -135,7 +135,7 @@ jobs:
         run: bash .github/scripts/installer-paquets.sh --avec-recommandations imagemagick
 
       - name: Les deux comparaisons visuelles, et leurs grandes images
-        # `compare-apercus.sh` avait un `--auto-test` de huit cas qui ne tournait NULLE PART. Le
+        # `compare_apercus.py` avait un `--auto-test` de huit cas qui ne tournait NULLE PART. Le
         # même défaut que celui décrit plus haut pour le banc de documentation, dans un autre outil :
         # un garde dont personne ne vérifie qu'il passe.
         #
@@ -148,9 +148,9 @@ jobs:
         # Ils vivent ici et non dans `lint` parce que celui des tournages a besoin de ffmpeg, que ce
         # job installe déjà.
         run: |
-          chmod +x .github/assets/compare-apercus.sh .github/assets/compare-tournages.sh
-          ./.github/assets/compare-apercus.sh --auto-test
-          ./.github/assets/compare-tournages.sh --auto-test
+          chmod +x .github/assets/compare_apercus.py .github/assets/compare_tournages.py
+          python3 .github/assets/compare_apercus.py --auto-test
+          python3 .github/assets/compare_tournages.py --auto-test
 
   outillage-release:
     # release.yml ne se déclenche qu'au push sur `main` : aucune CI de PR ne traverse la chaîne de

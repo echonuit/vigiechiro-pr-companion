@@ -123,7 +123,7 @@ sequenceDiagram
     Dev->>Main: push (code d'un écran modifié)
     Main->>CV: déclenche
     CV->>CV: capture_screenshots.py (Capture* en headless)
-    CV->>CV: filtrer-bruit-cartes.sh (rend les cartes inchangées)
+    CV->>CV: filtrer_bruit_cartes.py (rend les cartes inchangées)
     CV->>Main: commit des apercu-*.png [skip ci]
     CV-->>Docs: workflow_run (terminé)
     Docs->>Docs: rebuild + republie le site
@@ -141,7 +141,7 @@ ne disent rien ; les PR d'aperçus **conflictent entre elles** en permanence (le
 git ne sait pas les fusionner) ; et le jour où une **vraie** régression touche une de ces images, elle
 devient indiscernable du bruit.
 
-[`filtrer-bruit-cartes.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/filtrer-bruit-cartes.sh)
+[`filtrer_bruit_cartes.py`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/filtrer_bruit_cartes.py)
 rend leur version committée aux aperçus de carte dont **seul le fond cartographique** a changé. Il ne
 cherche pas à rendre les tuiles déterministes - elles sont une entrée **extérieure** au dépôt, et
 l'ADR 3068 a tranché qu'on ne les figerait pas. Il cesse seulement de committer l'insignifiant.
