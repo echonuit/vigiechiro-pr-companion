@@ -32,9 +32,9 @@ on:
       - "scripts/mkdocs_hooks.py"
       - ".github/assets/apercu-*.png"
       - ".github/assets/captures.manifest"
-      - ".github/assets/check-doc-images.sh"
+      - ".github/assets/check_doc_images.py"
       - ".github/assets/parcours-*.mp4"
-      - ".github/assets/check-doc-videos.sh"
+      - ".github/assets/check_doc_videos.py"
       - "scripts/doc-video/filme-un-parcours.sh"
       - ".github/workflows/docs.yml"
   pull_request:
@@ -48,9 +48,9 @@ on:
       - "scripts/mkdocs_hooks.py"
       - ".github/assets/apercu-*.png"
       - ".github/assets/captures.manifest"
-      - ".github/assets/check-doc-images.sh"
+      - ".github/assets/check_doc_images.py"
       - ".github/assets/parcours-*.mp4"
-      - ".github/assets/check-doc-videos.sh"
+      - ".github/assets/check_doc_videos.py"
       - "scripts/doc-video/filme-un-parcours.sh"
       - ".github/workflows/docs.yml"
   # Republie la doc APRÈS régénération des captures par « Aperçus des vues » :
@@ -127,20 +127,20 @@ jobs:
       - name: Garde-fou captures de doc
         # L'auto-test d'abord : une règle relâchée passerait sinon au vert sur un dépôt cohérent.
         run: |
-          bash .github/assets/check-doc-images.sh --auto-test
-          bash .github/assets/check-doc-images.sh
+          python3 .github/assets/check_doc_images.py --auto-test
+          python3 .github/assets/check_doc_images.py
       - name: Garde-fou parcours filmés
         # Même ordre, et pour la même raison : le garde se prouve avant de juger.
         run: |
-          bash .github/assets/check-doc-videos.sh --auto-test
-          bash .github/assets/check-doc-videos.sh
+          python3 .github/assets/check_doc_videos.py --auto-test
+          python3 .github/assets/check_doc_videos.py
       - name: Construire le site utilisateur (strict)
         run: mkdocs build --strict
       - name: Les parcours filmés résolvent dans le site construit
         # APRÈS la construction, et c'est tout l'intérêt : MkDocs ne réécrit pas les chemins du
         # HTML brut. Un `<source src>` d'un cran trop haut donne une page valide, un lecteur vidéo
         # vide, et aucune erreur de build. Seul le site construit le dit.
-        run: bash .github/assets/check-doc-videos.sh --site site
+        run: python3 .github/assets/check_doc_videos.py --site site
       # Site DÉVELOPPEUR (config autonome) construit dans site-dev/, plus imbriqué sous le site
       # user : les deux sites sont désormais publiés SÉPARÉMENT, chacun sur son domaine.
       - name: Construire le site développeur (strict)

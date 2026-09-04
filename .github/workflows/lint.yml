@@ -387,8 +387,8 @@ jobs:
         # Son contrôle négatif est celui qui compte : un index illisible REFUSE au lieu de conclure
         # qu'aucun cas ne manque.
         run: |
-          chmod +x .github/scripts/cas-manquants-du-tournage.sh
-          ./.github/scripts/cas-manquants-du-tournage.sh --auto-test
+          chmod +x .github/scripts/cas_manquants_du_tournage.py
+          python3 .github/scripts/cas_manquants_du_tournage.py --auto-test
 
       - name: La révocation du jeton sait ce qui vaut succès
         # Sa règle est de celles qu'une relecture distraite retourne : `404` et `401` sont des
@@ -483,8 +483,8 @@ jobs:
           chmod +x .github/scripts/verifie_conditions_booleennes.py
           python3 .github/scripts/verifie_conditions_booleennes.py --auto-test
           python3 .github/scripts/verifie_conditions_booleennes.py
-          chmod +x .github/scripts/clips-orphelins.sh
-          ./.github/scripts/clips-orphelins.sh --auto-test
+          chmod +x .github/scripts/clips_orphelins.py
+          python3 .github/scripts/clips_orphelins.py --auto-test
 
       - name: Les scripts shell passent shellcheck
         # Les RÉGLAGES (exclusions) vivent dans `.shellcheckrc`, pas ici : un contributeur qui
@@ -613,17 +613,17 @@ jobs:
         # (les captures illustrent la documentation).
         # L'auto-test d'abord : une règle relâchée passerait sinon au vert sur un dépôt cohérent.
         run: |
-          chmod +x .github/assets/check-captures.sh
-          ./.github/assets/check-captures.sh --auto-test
-          ./.github/assets/check-captures.sh
+          chmod +x .github/assets/check_captures.py
+          python3 .github/assets/check_captures.py --auto-test
+          python3 .github/assets/check_captures.py
 
       - name: Enregistrement des outils de capture
         # Chaque outil de capture (classe outils/Capture* avec un main) doit figurer dans le
         # tableau MAINS de capture-screenshots.sh, sinon ses PNG ne seraient jamais régénérés.
         run: |
-          chmod +x .github/assets/check-capture-mains.sh
-          ./.github/assets/check-capture-mains.sh --auto-test
-          ./.github/assets/check-capture-mains.sh
+          chmod +x .github/assets/check_capture_mains.py
+          python3 .github/assets/check_capture_mains.py --auto-test
+          python3 .github/assets/check_capture_mains.py
 
       - name: "Portail qualité (PMD) : le rapport, que le cliquet 4617 juge"
         # `test-compile` et non `compile` depuis #4617 : le portail analyse desormais les DEUX
@@ -1159,8 +1159,12 @@ jobs:
 
       - name: "Le Python des gardes est formaté et sans reproche (bloquant, #5022)"
         # Le pendant de Spotless et PMD, qui tiennent le Java, et de shellcheck, qui tient le shell.
-        # 13 965 lignes de Python n'avaient rien, et c'est la couche qui juge tout le reste.
+        # Cette couche juge tout le reste, et n'avait rien - ni format, ni règles - avant #5022.
         # Le format d'abord : un diff de forme noierait un diff de fond dans la revue suivante.
+        #
+        # `.github/assets` s'est ajouté avec #5229 : les quatre gardes de captures y sont passés en
+        # Python, et le dossier n'était balayé par rien. Un dossier absent de cette liste n'échoue
+        # pas, il est simplement muet - c'est la même cécité que celle des inventaires (#4013).
         run: |
-          ruff format --check scripts .github/scripts
-          ruff check scripts .github/scripts
+          ruff format --check scripts .github/scripts .github/assets
+          ruff check scripts .github/scripts .github/assets

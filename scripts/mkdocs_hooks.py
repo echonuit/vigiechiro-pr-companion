@@ -9,13 +9,13 @@ Référencer une capture depuis une page (chemin relatif vers la racine du site)
 - depuis `docs/index.md`            : `assets/captures/apercu-accueil.png`
 - depuis `docs/ecrans/un-ecran.md`  : `../assets/captures/apercu-accueil.png`
 
-Le garde-fou `.github/assets/check-doc-images.sh` vérifie en CI que toute capture référencée par
+Le garde-fou `.github/assets/check_doc_images.py` vérifie en CI que toute capture référencée par
 une page existe et est déclarée dans `captures.manifest`.
 
 Les parcours filmés `.github/assets/parcours-*.mp4` suivent le même chemin, sous
 `assets/parcours/<nom>.mp4`. Ils sont produits par `scripts/doc-video/filme-un-parcours.sh`, qui
 pilote le fat-jar avec `xdotool` et vérifie le libellé visé avant chaque clic ; leur garde-fou est
-`.github/assets/check-doc-videos.sh`.
+`.github/assets/check_doc_videos.py`.
 
 Le montage est en MP4 là où le tournage est en MKV : aucun navigateur n'affiche le Matroska, et
 le MKV ne protège que le tournage (un `ffmpeg` tué laisse un MP4 sans index).

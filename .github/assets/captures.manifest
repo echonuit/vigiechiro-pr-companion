@@ -1,7 +1,7 @@
 # Manifeste de complétude des captures d'écran (issue #86).
 #
 # Format : <vue.fxml relative à src/main/java> : <captures attendues, séparées par des espaces>
-# Vérifié en CI par check-captures.sh : chaque *.fxml sous **/view/ doit figurer ici avec au moins
+# Vérifié en CI par check_captures.py : chaque *.fxml sous **/view/ doit figurer ici avec au moins
 # une capture, et chaque capture listée doit exister dans .github/assets/. But : aucune vue livrée
 # sans capture de référence, et plusieurs états par vue quand ils sont pertinents.
 

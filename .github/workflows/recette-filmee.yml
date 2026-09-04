@@ -172,7 +172,7 @@ jobs:
         # Le banc produit du `.mkv`, qu'aucun navigateur ne lit de façon fiable. Le flux est déjà
         # du H.264 : `-c copy` change le conteneur sans ré-encoder, donc sans perte ni délai. Sans
         # cette étape, la page de la doc dev afficherait un lecteur vide - le défaut que
-        # `check-doc-videos.sh --site` garde déjà pour les films de documentation.
+        # `check_doc_videos.py --site` garde déjà pour les films de documentation.
         # `always()` : cette étape est la CONDITION de la publication, pas sa conséquence. Sans
         # elle, une étape précédente qui rougit la saute, et le tournage rend un artefact sans mp4 -
         # une absence qui se lit comme « le banc n'a rien filmé » alors qu'il a tout filmé.
@@ -397,16 +397,16 @@ jobs:
       # son clip en ligne, montrant un comportement que le produit n'a plus - constaté après #4099.
       #
       # Le calcul vit dans un script à part parce que sa sortie SUPPRIME : une orientation inversée
-      # ne rend pas une erreur, elle rend la liste de ce qu'il fallait garder. `clips-orphelins.sh`
+      # ne rend pas une erreur, elle rend la liste de ce qu'il fallait garder. `clips_orphelins.py`
       # refuse par ailleurs un dossier de tournage vide, et son auto-test garde les deux cas.
       - name: Retirer les clips dont le cas a disparu
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          chmod +x .github/scripts/clips-orphelins.sh
+          chmod +x .github/scripts/clips_orphelins.py
           orphelins=$(gh release view clips-recette --json assets --jq '.assets[].name' \
-            | ./.github/scripts/clips-orphelins.sh repris/recette/clips)
+            | python3 .github/scripts/clips_orphelins.py repris/recette/clips)
           if [ -z "$orphelins" ]; then
             echo "Aucun clip orphelin : la pré-version ne porte que des cas qui existent."
             exit 0
