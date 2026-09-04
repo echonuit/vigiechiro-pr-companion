@@ -1678,7 +1678,28 @@ def test_un_contrat_ne_contredit_pas_le_garde() -> None:
     _verifie(
         "les champs hors confrontation sont NOMMES",
         sorted(garde.HORS_CONFRONTATION),
-        ["dispositif", "geste"],
+        ["dispositif", "geste", "population"],
+    )
+    # `population` a rejoint la liste en #5175 : il n est confronte que lorsque les DEUX cotes se
+    # resolvent par `ALIAS`, soit 26 contrats sur 67. Le declarer ici est ce qui distingue une
+    # cecite assumee d une promesse non tenue.
+    _verifie(
+        "et chacun porte une raison, non un simple nom",
+        [c for c, r in garde.HORS_CONFRONTATION.items() if not r],
+        [],
+    )
+    # LE COMPTE EST UNE VALEUR, pas un effet de bord : sans lui, le lecteur croit les six champs
+    # tenus. C est la lecon de `lus` (#5007) appliquee a un champ.
+    _confrontes, _abstenus = garde.confrontations()
+    _verifie(
+        "le garde SAIT combien il a confronte, et combien il a laisse",
+        _confrontes > 0 and _abstenus > 0,
+        True,
+    )
+    _verifie(
+        "et les deux comptes couvrent tout ce qui declare un contrat",
+        _confrontes + _abstenus,
+        len([c for c in garde.fichiers(garde.RACINE_DEPOT) if garde.contrat_de(c)]),
     )
 
 

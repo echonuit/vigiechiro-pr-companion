@@ -344,6 +344,7 @@ nav:
     - 5125 · Un point d'entrée qui ne juge pas dit ce qu'il est: decisions/5125-un-point-d-entree-qui-ne-juge-pas-dit-ce-qu-il-est.md
     - 5157 · Le dispositif déclare ce que l'outil fait sans mode: decisions/5157-le-dispositif-se-lit-sans-mode.md
     - 5188 · Bash disparaît, une tolérance est un délai daté: decisions/5188-bash-disparait-une-tolerance-est-un-delai.md
+    - 5175 · La population déclarée se signale, elle ne se refuse pas: decisions/5175-la-population-declaree-se-signale-elle-ne-se-refuse-pas.md
     - 5102 · Une capacité se demande, elle ne se reconnaît pas: decisions/5102-une-capacite-se-demande-jamais-se-reconnait.md
     - 5169 · Un inventaire s'adosse au code, ou au document qui fait autorité: decisions/5169-un-inventaire-s-adosse-au-code-ou-au-document.md
   - Recette (acceptation):

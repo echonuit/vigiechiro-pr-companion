@@ -135,6 +135,151 @@ def population(texte: str) -> str:
     return " + ".join(ecrits) if ecrits else "(non declaree)"
 
 
+# Ce que `_commun` expose, en chemins relatifs a la racine du depot. Un garde qui importe `DECISIONS`
+# lit `dev-docs/decisions`, et c est la seule facon de le savoir sans le lancer.
+DEPUIS_COMMUN = {
+    "RACINE_DEPOT": "",
+    "DECISIONS": "dev-docs/decisions",
+    "PRODUCTION": "src/main/java",
+    "TESTS": "src/test/java",
+    "PRODUCTION_ANCREE": "src/main/java",
+    "TESTS_ANCRES": "src/test/java",
+}
+CORPUS_MULTIPLES = {
+    "RACINES": ("src/main/java", "src/test/java"),
+    "RACINES_ANCREES": ("src/main/java", "src/test/java"),
+}
+PARCOURS = ("glob", "rglob", "iterdir", "walk")
+
+
+def chemins_lus(texte: str, relatif: str) -> set[str]:
+    """Les chemins du depot que ce garde PARCOURT, resolus par `ast` et sans le lancer.
+
+    `population()` ne reconnait qu un chemin ECRIT en clair, et le motif ne couvre que
+    `src/main/java`. Mesure du 2026-09-04 : sur les 41 contrats que `verifie_contrats_tiennent.py`
+    n arrive pas a confronter, **40 sur 40** calculent leur racine depuis `__file__`. Ce n est donc
+    pas la prose declaree qui bloque la confrontation, c est l inference qui n a rien a dire.
+
+    **On ne lance pas le garde pour le savoir.** Il ferait son travail, ce qui pour un generateur
+    veut dire ecrire dans le depot (ADR 5102). On evalue donc symboliquement ses affectations.
+
+    **Ce qui est retenu est ce que le PARCOURS itere**, pas toute constante de chemin du module.
+    Sans ce resserrement, `verifie_okf.py` rendait `CONSTITUTION.md` et `mkdocs-dev.yml`, qui sont
+    ce qu il CONFRONTE et non ce qu il lit ; un releve qui melange les deux accuse a tort.
+
+    **La couverture est de 12 sur 40, et c est une limite, pas un objectif.** Les 28 autres
+    construisent leur racine d une facon que cette evaluation ne suit pas. Elle penche du bon cote :
+    ne rien rendre est silencieux, rendre un chemin faux accuserait.
+    """
+    try:
+        arbre = ast.parse(texte)
+    except SyntaxError:
+        return set()
+
+    env: dict[str, object] = {n: _chemin(v) for n, v in DEPUIS_COMMUN.items()}
+    for nom, vals in CORPUS_MULTIPLES.items():
+        env[nom] = tuple(_chemin(v) for v in vals)
+    moi = pathlib.PurePosixPath(relatif)
+
+    def evalue(n, local=None):
+        """Un chemin, un tuple de chemins, une chaine, ou None quand on ne sait pas."""
+        portee = local if local is not None else env
+        if isinstance(n, ast.Constant):
+            return n.value
+        if isinstance(n, ast.Name):
+            return moi if n.id == "__file__" else portee.get(n.id, env.get(n.id))
+        if isinstance(n, (ast.Tuple, ast.List)):
+            vals = [evalue(e, local) for e in n.elts]
+            return tuple(v for v in vals if v is not None) or None
+        if isinstance(n, ast.BinOp) and isinstance(n.op, ast.Div):
+            g, d = evalue(n.left, local), evalue(n.right, local)
+            return g / d if isinstance(g, pathlib.PurePosixPath) and isinstance(d, str) else None
+        if isinstance(n, ast.Attribute):
+            base = evalue(n.value, local)
+            if n.attr == "parent" and isinstance(base, pathlib.PurePosixPath):
+                return base.parent
+            return None
+        if isinstance(n, ast.Subscript) and isinstance(n.value, ast.Attribute):
+            if n.value.attr == "parents":
+                socle, idx = evalue(n.value.value, local), evalue(n.slice, local)
+                if isinstance(socle, pathlib.PurePosixPath) and isinstance(idx, int):
+                    for _ in range(idx + 1):
+                        socle = socle.parent
+                    return socle
+            return None
+        if isinstance(n, ast.Call):
+            nom = getattr(n.func, "attr", None) or getattr(n.func, "id", None)
+            if nom in ("Path", "PurePosixPath") and n.args:
+                v = evalue(n.args[0], local)
+                if isinstance(v, pathlib.PurePosixPath):
+                    return v
+                return _chemin(v) if isinstance(v, str) else None
+            if nom in ("resolve", "absolute", "expanduser") and isinstance(n.func, ast.Attribute):
+                return evalue(n.func.value, local)
+        return None
+
+    for n in arbre.body:
+        cibles, valeur = _affectation(n)
+        for c in cibles:
+            v = evalue(valeur)
+            if v is not None:
+                env[c] = v
+
+    # Les fonctions de population calculent leur racine CHEZ ELLES, pas en constante de module :
+    # `def fichiers(racine=None): base = racine or RACINE_DEPOT`. C est l idiome dominant, compte en
+    # 29 exemplaires par #5075. S arreter au module ne voyait que 8 fichiers sur 40.
+    locaux = dict(env)
+    for f in ast.walk(arbre):
+        if not isinstance(f, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        args = f.args
+        rang = len(args.args) - len(args.defaults)
+        for arg, defaut in zip(args.args[rang:], args.defaults):
+            v = evalue(defaut, locaux)
+            if v is not None:
+                locaux[arg.arg] = v
+        for n in ast.walk(f):
+            cibles, valeur = _affectation(n)
+            if not cibles:
+                continue
+            # `base = racine or RACINE` : on retient la BRANCHE PAR DEFAUT, la seule que le garde
+            # emploie quand personne ne lui passe d arbre temoin.
+            if isinstance(valeur, ast.BoolOp) and isinstance(valeur.op, ast.Or):
+                valeur = valeur.values[-1]
+            v = evalue(valeur, locaux)
+            if v is not None:
+                for c in cibles:
+                    locaux[c] = v
+
+    trouves = set()
+    for n in ast.walk(arbre):
+        if not (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)):
+            continue
+        if n.func.attr not in PARCOURS:
+            continue
+        socle = evalue(n.func.value, locaux)
+        for p in socle if isinstance(socle, tuple) else (socle,):
+            if not isinstance(p, pathlib.PurePosixPath):
+                continue
+            s = p.as_posix()
+            if s not in (".", "", "/") and not s.startswith(".."):
+                trouves.add(s)
+    return trouves
+
+
+def _chemin(valeur):
+    return pathlib.PurePosixPath(valeur) if valeur else pathlib.PurePosixPath(".")
+
+
+def _affectation(n):
+    """Les noms qu une affectation lie, et la valeur liee. Rien pour tout autre noeud."""
+    if isinstance(n, ast.Assign):
+        return [c.id for c in n.targets if isinstance(c, ast.Name)], n.value
+    if isinstance(n, ast.AnnAssign) and n.value is not None and isinstance(n.target, ast.Name):
+        return [n.target.id], n.value
+    return [], None
+
+
 VERDICTS_RENDUS = ("rapporte", "rapporte_plancher", "loupe")
 
 
