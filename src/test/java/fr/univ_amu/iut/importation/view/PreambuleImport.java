@@ -51,6 +51,13 @@ public final class PreambuleImport {
         WaitForAsyncUtils.waitForFxEvents();
 
         controleur(navigateur).selecteur().definir(repondant(carte));
+
+        // Le sélecteur est DOUBLÉ, donc il répond dans l'instant : sans arrêt de part et d'autre, le
+        // clic et son résultat tombent dans la même image, et le clip saute du formulaire vide au
+        // formulaire rempli. Retour de la revue du 2026-09-04 : « le passage va trop vite entre le
+        // clic et l'étape où l'on voit le chemin sélectionné ». Le dialogue natif, lui, n'est pas
+        // filmable - c'est justement pourquoi ce moment a besoin qu'on le tienne des deux côtés.
+        Respiration.avantLeGeste(robot);
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -59,6 +66,9 @@ public final class PreambuleImport {
                 "l'inspection n'a jamais rendu son compte d'originaux : le rattachement ne propose rien"
                         + " tant qu'elle n'a pas lu la carte",
                 APPARITION_SECONDES * 1000L);
+
+        // Et le temps de LIRE le chemin, qui est ce que le geste vient de produire.
+        Respiration.leTempsDeLire(robot);
 
         ComboBox<?> points = robot.lookup("#comboPoints").queryAs(ComboBox.class);
         robot.interact(() -> points.getSelectionModel().select(0));

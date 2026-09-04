@@ -113,6 +113,11 @@ class ScenarioDiagnosticSansJournalTest {
                 "le diagnostic ne s'est pas ouvert depuis le passage : sans l'écran, un encart muet ne"
                         + " prouve rien",
                 APPARITION_SECONDES * 1000L);
+        // L'écran de diagnostic vient de s'ouvrir, et c'est LUI que le cas donne à lire. Sans arrêt,
+        // il paraît et le clip s'arrête : retour de la revue du 2026-09-04, « la fenêtre diagnostique
+        // apparaît trop vite et on n'a pas le temps de lire ». Quatre scénarios l'ouvraient, aucun ne
+        // le tenait.
+        Respiration.leTempsDeLire(robot);
 
         Labeled encart = robot.lookup("#lblNuitInterrompue").queryAs(Labeled.class);
 

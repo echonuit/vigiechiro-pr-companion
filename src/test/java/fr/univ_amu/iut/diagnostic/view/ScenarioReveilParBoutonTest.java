@@ -114,6 +114,11 @@ class ScenarioReveilParBoutonTest {
                 "le diagnostic ne s'est pas ouvert depuis le passage : c'est par sa carte que"
                         + " l'observateur y arrive, et sans l'écran le cas n'a rien à lire",
                 APPARITION_SECONDES * 1000L);
+        // L'écran de diagnostic vient de s'ouvrir, et c'est LUI que le cas donne à lire. Sans arrêt,
+        // il paraît et le clip s'arrête : retour de la revue du 2026-09-04, « la fenêtre diagnostique
+        // apparaît trop vite et on n'a pas le temps de lire ». Quatre scénarios l'ouvraient, aucun ne
+        // le tenait.
+        Respiration.leTempsDeLire(robot);
 
         // ─── Le réveil EST au journal : il a eu lieu, et l'écran le relate ───────────────────────
         // Cette moitié-là est celle qui rend l'autre lisible. Sans elle, une liste d'anomalies vide
