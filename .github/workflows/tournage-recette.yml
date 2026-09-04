@@ -199,14 +199,14 @@ jobs:
           path: ${{ runner.temp }}/apt-vigiechiro
           key: apt-${{ runner.os }}-tournage-recette
 
-      # `installer-paquets.sh`, et non `apt-get` en direct : `verifie_apt.py` refuse la seconde
+      # `installer_paquets.py`, et non `apt-get` en direct : `verifie_apt.py` refuse la seconde
       # forme, et exige le cache ci-dessus avec son `APT_CACHE`.
       - name: Installer ffmpeg (Linux)
         if: ${{ steps.ffmpeg.outputs.installe == 'manquant' && runner.os == 'Linux' }}
         shell: bash
         env:
           APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
-        run: bash .github/scripts/installer-paquets.sh ffmpeg
+        run: python3 .github/scripts/installer_paquets.py ffmpeg
 
       # La liste ne se maintient pas à la main : elle est DÉRIVÉE du classpath, cas par cas.
       # Les entrées passent par `env:` et non par interpolation dans le shell. Elles viennent

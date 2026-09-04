@@ -105,11 +105,11 @@ jobs:
       - name: Installer de quoi afficher et filmer
         # Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
         # parce que ces paquets ne sont que des fichiers ; les polices et flatpak gardent
-        # `installer-paquets.sh`, dont le post-install fait foi.
+        # `installer_paquets.py`, dont le post-install fait foi.
         env:
           APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: |
-          bash .github/scripts/installer-paquets.sh --avec-recommandations xvfb xdotool ffmpeg x11-utils
+          python3 .github/scripts/installer_paquets.py --avec-recommandations xvfb xdotool ffmpeg x11-utils
 
       # `${{ !inputs.x }}`, et JAMAIS `inputs.x != 'true'`. Une entrée `type: boolean` de
       # `workflow_dispatch` arrive comme un VRAI booléen, et comparer un booléen à une chaîne casse
@@ -139,7 +139,7 @@ jobs:
         env:
           APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: |
-          bash .github/scripts/installer-paquets.sh --avec-recommandations openbox
+          python3 .github/scripts/installer_paquets.py --avec-recommandations openbox
 
       - name: Annoncer le témoin sans gestionnaire de fenêtres
         if: ${{ inputs.sans_gestionnaire_de_fenetres }}

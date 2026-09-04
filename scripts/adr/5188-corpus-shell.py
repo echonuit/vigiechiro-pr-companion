@@ -140,7 +140,7 @@ CONTRAT = {
     "geste": "script shell restant, que la cible des deux langages condamne",
     "population": "les fichiers .sh que git suit",
     "dispositif": "cliquet",
-    "seuil": "3, polarite=descend",
+    "seuil": "2, polarite=descend",
     "temoin": "scripts/adr/5188-corpus-shell.py --auto-test",
     "decision": "ADR 5188",
 }

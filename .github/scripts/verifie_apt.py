@@ -8,7 +8,7 @@ d autre chose.
 
 Le remede a ete applique a UNE des trois, et les deux autres ont continue de pendre le lendemain.
 C est le motif qu on connait : une lecon apprise a un seul endroit. D ou une porte unique,
-`installer-paquets.sh`, et ce garde pour qu on ne la contourne pas.
+`installer_paquets.py`, et ce garde pour qu on ne la contourne pas.
 
 Ce que ce garde ne dit PAS : que la porte suffise. Elle borne et reprend ; un runner sans reseau
 echouera quand meme - en une minute et en le disant, au lieu d immobiliser une PR trois quarts
@@ -100,7 +100,7 @@ def cache_mal_branche(fichiers: list[pathlib.Path]) -> list[str] | None:
                 if risques:
                     ecarts.append(
                         f"{nom} : {', '.join(risques)} passe(nt) par l'action de cache, qui n'exécute pas "
-                        f"les scripts post-installation - à installer par installer-paquets.sh"
+                        f"les scripts post-installation - à installer par installer_paquets.py"
                     )
 
             # `--auto-test` n installe RIEN : il eprouve la porte. L exiger d un cache ferait rougir
@@ -109,7 +109,7 @@ def cache_mal_branche(fichiers: list[pathlib.Path]) -> list[str] | None:
                 e
                 for e in etapes
                 if isinstance(e, dict)
-                and "installer-paquets.sh" in str(e.get("run", ""))
+                and "installer_paquets.py" in str(e.get("run", ""))
                 and "--auto-test" not in str(e.get("run", ""))
             ]
             if not installs:
@@ -152,7 +152,7 @@ def juger(racine: pathlib.Path | None = None) -> int:
             print(f"   · {f}")
         print()
         print(
-            "  Passer par .github/scripts/installer-paquets.sh : il borne les délais et reprend les"
+            "  Passer par .github/scripts/installer_paquets.py : il borne les délais et reprend les"
         )
         print(
             "  téléchargements coupés. Trois étapes ont pendu jusqu'au butoir de leur job, sur main"
@@ -187,7 +187,7 @@ PORTE_AVEC_CACHE = """jobs:
       - uses: actions/cache@abc
       - env:
           APT_CACHE: /tmp/c
-        run: bash .github/scripts/installer-paquets.sh bats
+        run: python3 .github/scripts/installer_paquets.py bats
 """
 APT_NU = "jobs:\n  a:\n    steps:\n      - run: sudo apt-get install -y bats\n"
 APT_COMMENTE = (
@@ -197,12 +197,12 @@ SANS_APT_CACHE = """jobs:
   a:
     steps:
       - uses: actions/cache@abc
-      - run: bash .github/scripts/installer-paquets.sh bats
+      - run: python3 .github/scripts/installer_paquets.py bats
 """
 AUTO_TEST_DE_LA_PORTE = """jobs:
   a:
     steps:
-      - run: bash .github/scripts/installer-paquets.sh --auto-test
+      - run: python3 .github/scripts/installer_paquets.py --auto-test
 """
 
 
@@ -220,7 +220,7 @@ DEUX_CACHES = """jobs:
       - uses: actions/cache@abc
       - env:
           APT_CACHE: /tmp/c
-        run: bash .github/scripts/installer-paquets.sh bats
+        run: python3 .github/scripts/installer_paquets.py bats
 """
 
 

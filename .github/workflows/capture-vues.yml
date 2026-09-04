@@ -91,7 +91,7 @@ jobs:
           # runner ne répondait plus, apt basculait sur l'archive amont, et `-qq` ne laissait AUCUNE
           # trace pour le dire. Un `Acquire::Retries` reprend les téléchargements coupés ; les délais
           # font échouer vite plutôt que traîner jusqu'au butoir du job.
-          bash .github/scripts/installer-paquets.sh fonts-noto-core
+          python3 .github/scripts/installer_paquets.py fonts-noto-core
           mkdir -p ~/.config/fontconfig
           cat > ~/.config/fontconfig/fonts.conf <<'FIN'
           <?xml version="1.0"?>
@@ -118,7 +118,7 @@ jobs:
       - name: Installer ImageMagick (comparaison des aperçus de carte)
         env:
           APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
-        run: bash .github/scripts/installer-paquets.sh --avec-recommandations imagemagick
+        run: python3 .github/scripts/installer_paquets.py --avec-recommandations imagemagick
 
       # Sur une PR comme sur `main`, et c'est le correctif de fond : ce filtre vivait DANS l'étape de
       # publication, donc sous `if: push`. Aucune PR ne l'exerçait. #3359 a ainsi pu être fusionnée

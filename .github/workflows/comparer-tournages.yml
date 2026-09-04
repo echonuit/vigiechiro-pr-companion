@@ -141,8 +141,8 @@ jobs:
           APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: |
           set -euo pipefail
-          bash .github/scripts/installer-paquets.sh ffmpeg
-          bash .github/scripts/installer-paquets.sh --avec-recommandations imagemagick
+          python3 .github/scripts/installer_paquets.py ffmpeg
+          python3 .github/scripts/installer_paquets.py --avec-recommandations imagemagick
 
       - name: Comparer, et écrire ce qu'on doit regarder
         env:
