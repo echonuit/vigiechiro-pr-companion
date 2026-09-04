@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.recette;
 
+import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -141,6 +142,21 @@ public final class GesteVisible {
 
         robot.clickOn(cible);
         WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    /// Amène le pointeur sur `cible` et y fait paraître son infobulle, pour qu'un clip la montre.
+    ///
+    /// **Deux gestes, pas un** : `moveTo` met le pointeur à l'image et rien de plus, car sur un symbole
+    /// de dix pixels il laisse `isHover()` **faux** (#5205). L'entrée de souris se poste donc aussi.
+    ///
+    /// **Attention** : le clip montre alors un survol que le banc ne sait pas obtenir en pointant. Ça
+    /// donne à voir ce qu'un utilisateur voit, jamais qu'il y arrive : la case `S2-79` garde la
+    /// question.
+    public static void survoler(FxRobot robot, Node cible) throws TimeoutException {
+        robot.moveTo(cible);
+        WaitForAsyncUtils.waitForFxEvents();
+        InfobulleDeBlocage.montrerParEntreeDeSouris(cible, robot);
+        Respiration.leTempsDeLire(robot);
     }
 
     /// Même chose sur un noeud déjà en main, quand le scénario le tient plutôt que son sélecteur.

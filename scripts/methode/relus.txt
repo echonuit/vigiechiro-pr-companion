@@ -1598,7 +1598,7 @@ b6db9ee90de4  src/test/java/fr/univ_amu/iut/commun/view/GluonMapSpikeTest.java
 9c648d44d63c  src/test/java/fr/univ_amu/iut/commun/view/IndicateurAccueilWiringTest.java
 3aa5e88dd68e  src/test/java/fr/univ_amu/iut/commun/view/IndicateurBlocageTest.java
 e4268661fc45  src/test/java/fr/univ_amu/iut/commun/view/IndicateurOccupationTest.java
-e32df7591aed  src/test/java/fr/univ_amu/iut/commun/view/InfobulleDeBlocage.java
+5327426558a7  src/test/java/fr/univ_amu/iut/commun/view/InfobulleDeBlocage.java
 1a4efc12d33f  src/test/java/fr/univ_amu/iut/commun/view/JetonsDeCouleurResolusTest.java
 a0d6fad39afd  src/test/java/fr/univ_amu/iut/commun/view/JournalisationTacheTest.java
 b05b0ab0572b  src/test/java/fr/univ_amu/iut/commun/view/LibelleRetourTest.java
@@ -1965,7 +1965,7 @@ fdd506b206bf  src/test/java/fr/univ_amu/iut/recette/FixtureMultiConfigsTest.java
 d46df2e869e3  src/test/java/fr/univ_amu/iut/recette/GenerateurCartesSD.java
 d36d168d30f5  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDCliquetTest.java
 4576ada12c8a  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDImportCliquetTest.java
-aac2091c9ebf  src/test/java/fr/univ_amu/iut/recette/GesteVisible.java
+1f9ab292b964  src/test/java/fr/univ_amu/iut/recette/GesteVisible.java
 e2160d2b8a89  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreImbriqueTest.java
 4159f62c57b5  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreTest.java
 17cebae60967  src/test/java/fr/univ_amu/iut/recette/InventaireDesSessionsTest.java
