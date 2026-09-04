@@ -43,6 +43,9 @@ class DiagnostiquerTest {
                         LocalTime.of(6, 18),
                         LocalTime.of(22, 30),
                         LocalTime.of(6, 18),
+                        // 22:30 après 21:28 : le début manque. 06:18 pile : la fin est couverte.
+                        false,
+                        true,
                         CoherenceHoraire.Couverture.INCOMPLETE),
                 Completude.INCONNUE);
     }

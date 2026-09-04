@@ -58,6 +58,7 @@ record SpecCarteSd(
             boolean corrompu,
             boolean appuiSurTouche,
             boolean nuitInterrompue,
+            String acquisition,
             List<Session> sessions) {
 
         Journal {

@@ -147,13 +147,9 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
 
     /// Ce que ce terminal TRANCHE de la couverture, exposé pour être comparé (#5200).
     ///
-    /// Le banc de parité cherchait « n'est pas couverte » dans la phrase ci-dessus. Une sonde par
-    /// sous-chaîne refuse dès qu'on récrit la phrase, et elle refuse alors pour la mauvaise raison :
-    /// non pas parce que les deux surfaces divergent, mais parce qu'elle ne trouve plus son mot. Un
-    /// garde qui refuse à côté du sujet est aussi trompeur qu'un garde muet.
-    ///
-    /// Cette méthode rend le MÊME booléen que la phrase, et sans le relire. Elle survit donc à toute
-    /// reformulation, et c'est précisément ce qu'on veut d'un banc de parité.
+    /// Le banc de parité cherchait « n'est pas couverte » dans la phrase ci-dessus : une sonde par
+    /// sous-chaîne refuse à la première reformulation, et pour la mauvaise raison. Celle-ci rend le
+    /// même booléen sans relire le texte, donc elle survit à toute réécriture.
     public static boolean coherenceAlerte(CoherenceHoraire coherence) {
         return coherence.couverture() == CoherenceHoraire.Couverture.INCOMPLETE;
     }

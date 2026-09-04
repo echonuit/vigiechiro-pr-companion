@@ -77,6 +77,13 @@ public final class AnalyseCoherenceHoraire {
             Instant debutExige = coucher.minus(MARGE_DU_PROTOCOLE);
             Instant finExigee = lever.plus(MARGE_DU_PROTOCOLE);
 
+            // Les deux moitiés se GARDENT, au lieu d'être fondues dans leur conjonction. C'est ici, et
+            // ici seulement, qu'on sait de quel côté la fenêtre n'est pas tenue : plus bas les heures
+            // sont des `LocalTime`, et un enregistrement commencé après minuit s'y comparerait à
+            // l'envers. L'écran a besoin de le dire (#5200), et il ne peut pas le redériver.
+            boolean debutTenu = !demarrage.isAfter(debutExige);
+            boolean finTenue = !arret.isBefore(finExigee);
+
             return new CoherenceHoraire(
                     true,
                     coucher.atZone(FUSEAU_SITE).toLocalTime(),
@@ -85,7 +92,9 @@ public final class AnalyseCoherenceHoraire {
                     finExigee.atZone(FUSEAU_SITE).toLocalTime(),
                     debut,
                     fin,
-                    couverture(demarrage, arret, debutExige, finExigee));
+                    debutTenu,
+                    finTenue,
+                    couverture(debutTenu, finTenue));
         } catch (DateTimeParseException horodatageInvalide) {
             return CoherenceHoraire.indisponible();
         }
@@ -96,9 +105,7 @@ public final class AnalyseCoherenceHoraire {
     /// Aucun seuil en minutes n'intervient. La question n'est pas « de combien s'écarte-t-on d'une
     /// cible » mais « la fenêtre est-elle couverte », et un écart de dix secondes du bon côté est un
     /// dépassement comme un autre.
-    private static CoherenceHoraire.Couverture couverture(
-            Instant demarrage, Instant arret, Instant debutExige, Instant finExigee) {
-        boolean couverte = !demarrage.isAfter(debutExige) && !arret.isBefore(finExigee);
-        return couverte ? CoherenceHoraire.Couverture.COUVERTE : CoherenceHoraire.Couverture.INCOMPLETE;
+    private static CoherenceHoraire.Couverture couverture(boolean debutTenu, boolean finTenue) {
+        return debutTenu && finTenue ? CoherenceHoraire.Couverture.COUVERTE : CoherenceHoraire.Couverture.INCOMPLETE;
     }
 }
