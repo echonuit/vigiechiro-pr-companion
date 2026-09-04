@@ -48,5 +48,4 @@ jobs:
           CORPS: ${{ github.event.pull_request.body }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          chmod +x .github/scripts/verifie-chantier-de-l-issue.sh
-          ./.github/scripts/verifie-chantier-de-l-issue.sh "${CORPS}"
+          python3 .github/scripts/verifie_chantier_de_l_issue.py "${CORPS}"

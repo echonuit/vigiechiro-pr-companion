@@ -798,7 +798,7 @@ jobs:
       - name: "Auto-test du garde de chantier de l issue (bloquant, #4649)"
         # Ses cas tournent HORS LIGNE : les parents s injectent par `CHANTIER_ISSUES_FICHIER`. Le
         # garde lui-même vit dans `corps-pr.yml`, qui seul dispose du corps de la demande.
-        run: bash .github/scripts/verifie-chantier-de-l-issue.sh --auto-test
+        run: python3 .github/scripts/verifie_chantier_de_l_issue.py --auto-test
 
       - name: Auto-test du rappel de critère de fin
         run: bash .github/scripts/rappelle-le-critere-de-fin.sh --auto-test
