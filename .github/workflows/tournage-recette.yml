@@ -294,8 +294,12 @@ jobs:
           JETON: ${{ secrets.VIGIECHIRO_TOKEN_TOURNAGE }}
           VIGIECHIRO_URL: https://vigiechiro.herokuapp.com/api/v1
         run: |
-          chmod +x .github/scripts/verifie-jeton-vivant.sh
-          ./.github/scripts/verifie-jeton-vivant.sh
+          chmod +x .github/scripts/verifie_jeton_vivant.py
+          # `python3` n'est pas garanti sur l'image Windows, et ce job peut y tourner : on RESOUT
+          # l'interprète au lieu de le supposer. Les autres appels de gardes Python vivent sur
+          # `ubuntu-latest`, où `python3` est là par construction ; ici seulement la question se pose.
+          py=python3; command -v "$py" >/dev/null 2>&1 || py=python
+          "$py" .github/scripts/verifie_jeton_vivant.py
 
       # Le secret vit dans l'`env:` de CE PAS, jamais dans celui du job, et
       # `verifie_portee_des_secrets.py` (#4303) le refuse ailleurs. La raison n'est pas cosmétique :
@@ -374,7 +378,11 @@ jobs:
           # si bien qu'un scénario rouge laisse le job VERT. Mesuré sur le run 32696587259 : le seul
           # endroit où l'échec existait était une ligne de Maven dans un journal de trois mille.
           chmod +x .github/scripts/verdict_du_tournage.py
-          verdict=$(python3 .github/scripts/verdict_du_tournage.py target/surefire-reports)
+          # `python3` n'est pas garanti sur l'image Windows, et ce job peut y tourner : on RESOUT
+          # l'interprète au lieu de le supposer. Les autres appels de gardes Python vivent sur
+          # `ubuntu-latest`, où `python3` est là par construction ; ici seulement la question se pose.
+          py=python3; command -v "$py" >/dev/null 2>&1 || py=python
+          verdict=$("$py" .github/scripts/verdict_du_tournage.py target/surefire-reports)
           printf '%s\n' "${verdict}"
 
           {
@@ -419,7 +427,10 @@ jobs:
           # main pour savoir quoi corriger, et c'est la moitié du remède de #5012.
           if [ "${obtenus}" -ne "${ATTENDUS}" ] && [ "${CONNECTE}" != "true" ]; then
             chmod +x .github/scripts/cas_manquants_du_tournage.py
-            absents=$(python3 .github/scripts/cas_manquants_du_tournage.py "${CAS_ATTENDUS}" "${index}" || true)
+            # Même résolution qu'aux deux autres appels de ce job : `python3` n'est pas garanti sur
+            # l'image Windows, et ce job peut y tourner.
+            py=python3; command -v "$py" >/dev/null 2>&1 || py=python
+            absents=$("$py" .github/scripts/cas_manquants_du_tournage.py "${CAS_ATTENDUS}" "${index}" || true)
             if [ -n "${absents}" ]; then
               echo "::error::cas non filmés : $(printf '%s' "${absents}" | tr '\n' ' ')"
               {
@@ -513,8 +524,8 @@ jobs:
         env:
           JETON: ${{ secrets.VIGIECHIRO_TOKEN_TOURNAGE }}
         run: |
-          chmod +x .github/scripts/revoque-jeton.sh
-          ./.github/scripts/revoque-jeton.sh
+          chmod +x .github/scripts/revoque_jeton.py
+          python3 .github/scripts/revoque_jeton.py
 
   # ------------------------------------------------------------------------------------------------
   # Une pré-version À PART, et c'est tout l'objet de #4306. Des données vivantes font bouger l'écran

@@ -116,7 +116,7 @@ données d'exemple ou de test.
     Cette révocation a une conséquence qu'il faut connaître : **après un tournage, le secret est posé
     et ne vaut plus rien**. Le tournage l'**éprouve** donc par un `GET /moi` avant de filmer plutôt que
     de constater sa présence, et refuse en nommant la cause - « la plateforme refuse ce jeton » plutôt
-    qu'un scénario qui rougit trois pas plus loin (#4328, `verifie-jeton-vivant.sh`). Il sépare
+    qu'un scénario qui rougit trois pas plus loin (#4328, `verifie_jeton_vivant.py`). Il sépare
     « jeton mort » de « plateforme muette », qui n'appellent pas le même geste : poser un jeton frais
     pendant une panne d'Heroku ne servirait à rien.
 
@@ -136,7 +136,7 @@ données d'exemple ou de test.
 - **Un seul appel, trois lectures** (#4385). Le contrôle du jeton, sa révocation et le pas
   « Jeton valide ? » d'`api-live.yml` posaient la même question par trois `curl` recopiés :
   c'est ainsi que le défaut du « HTTP 000000 » s'est retrouvé aux trois. La mesure vit
-  désormais dans `interroge-le-jeton.sh`, qui **ne juge pas** - un `401` refuse le départ d'un
+  désormais dans `interroge_le_jeton.py`, qui **ne juge pas** - un `401` refuse le départ d'un
   tournage, avertit chez `api-live`, et vaut succès pour la révocation. Les faire converger
   casserait l'une des trois en silence.
 

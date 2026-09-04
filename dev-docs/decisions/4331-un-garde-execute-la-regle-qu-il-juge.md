@@ -8,8 +8,8 @@ decided_at: 2026-08-24
 verification: certaine
 enforced_by:
   - ".github/scripts/verifie_decisions_du_tournage_connecte.py"
-  - ".github/scripts/verifie-jeton-vivant.sh"
-  - ".github/scripts/revoque-jeton.sh"
+  - ".github/scripts/verifie_jeton_vivant.py"
+  - ".github/scripts/revoque_jeton.py"
 verified:
   - by: machine:ci
     at: 2026-08-24

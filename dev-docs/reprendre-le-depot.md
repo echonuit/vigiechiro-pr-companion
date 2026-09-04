@@ -45,7 +45,7 @@ if the token's lifetime is greater than 8 days.
 **Ce refus ne ressemble pas à un refus.** komac le traduit par « `Echonuit.VigieChiroCompanion`
 does not exist in microsoft/winget-pkgs », c'est-à-dire en accusant le paquet. Le diagnostic a coûté
 trois dispatchs, et l'erreur d'attribution a d'abord visé les droits du jeton, puis sa forme, avant
-que la sonde ne rapporte le message réel. `verifie-secret-winget.sh --verifie-l-acces` le nomme
+que la sonde ne rapporte le message réel. `verifie_secret_winget.py --verifie-l-acces` le nomme
 désormais au début du workflow.
 
 **Conséquence pratique** : n'entretenez pas ce secret. Créez le jeton **juste avant** de pousser une

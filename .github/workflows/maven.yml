@@ -423,8 +423,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          chmod +x .github/scripts/mesure-duree-portail.sh
-          ./.github/scripts/mesure-duree-portail.sh "${{ github.repository }}" maven.yml
+          chmod +x .github/scripts/mesure_duree_portail.py
+          python3 .github/scripts/mesure_duree_portail.py "${{ github.repository }}" maven.yml
 
   # Le contrat de SYSTÈME DE FICHIERS sur les trois plateformes livrées (#3525). Le produit part en
   # MSI, DMG et DEB ; ses tests ne tournaient que sous Linux - 21 jobs contre un, et ce dernier lance

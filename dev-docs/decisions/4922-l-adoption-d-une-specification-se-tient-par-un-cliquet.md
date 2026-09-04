@@ -8,7 +8,7 @@ decided_at: 2026-08-30
 verification: probable
 ratchet: 1
 enforced_by:
-  - ".github/scripts/verifie-specification-consignee.sh"
+  - ".github/scripts/verifie_specification_consignee.py"
 verified:
   - by: machine:ci
     at: 2026-08-30
