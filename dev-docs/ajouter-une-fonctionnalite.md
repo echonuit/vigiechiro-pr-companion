@@ -289,7 +289,7 @@ Les écrans documentés ont un aperçu PNG régénéré en CI. Pour le vôtre :
   [`ApercuFx`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/outils/ApercuFx.java)
   (Headless Platform), sur une base SQLite jetable seedée.
 - Ajoutez la classe à
-  [`.github/assets/capture-screenshots.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/capture-screenshots.sh)
+  [`.github/assets/capture_screenshots.py`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/capture_screenshots.py)
   et l'aperçu au manifeste `.github/assets/captures.manifest`.
 - Le workflow **« Aperçus des vues »** régénère les PNG à chaque push sur `main`.
 

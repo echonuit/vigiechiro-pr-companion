@@ -106,7 +106,7 @@ capture - par exemple un référentiel vide, quand l'aperçu montre précisémen
 
 ## La régénération en CI
 
-[`capture-screenshots.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/capture-screenshots.sh)
+[`capture_screenshots.py`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/capture_screenshots.py)
 compile puis lance **chaque `Capture*` dans son propre JVM**, avec les drapeaux headless
 (`-Dglass.platform=Headless -Dprism.order=sw -Djava.awt.headless=true`). Le workflow
 [`capture-vues.yml`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/capture-vues.yml)
@@ -122,7 +122,7 @@ sequenceDiagram
     participant Docs as docs.yml
     Dev->>Main: push (code d'un écran modifié)
     Main->>CV: déclenche
-    CV->>CV: capture-screenshots.sh (Capture* en headless)
+    CV->>CV: capture_screenshots.py (Capture* en headless)
     CV->>CV: filtrer-bruit-cartes.sh (rend les cartes inchangées)
     CV->>Main: commit des apercu-*.png [skip ci]
     CV-->>Docs: workflow_run (terminé)
@@ -293,7 +293,7 @@ mot.
 
 La marche à suivre (nouvel écran) est dans
 **[Ajouter une fonctionnalité §7](ajouter-une-fonctionnalite.md#7-ajouter-un-apercu-capture-decran)** :
-écrire `CaptureMaFeature` sur le patron existant, l'ajouter à `capture-screenshots.sh`, et déclarer
+écrire `CaptureMaFeature` sur le patron existant, l'ajouter à `capture_screenshots.py`, et déclarer
 l'aperçu au `captures.manifest`.
 
 **La capture principale montre le cas nominal ; chaque état particulier a la sienne.** Une vue en a

@@ -210,7 +210,7 @@ def juger(racine: pathlib.Path | None = None) -> int:
         ecarts.append(f"garde `{absent}` répond à --auto-test mais n'est pas au tableau des gardes")
 
     # ─── 3. Le contrat de système de fichiers ────────────────────────────────────────────────────
-    filtre = os.path.join(str(base), ".github", "scripts", "porte-sur-le-contrat-de-fichiers.sh")
+    filtre = os.path.join(str(base), ".github", "scripts", "porte_sur_le_contrat_de_fichiers.py")
     maven = os.path.join(str(base), ".github", "workflows", "maven.yml")
     if os.path.isfile(filtre) and os.path.isfile(maven):
         surveilles = pathlib.Path(filtre).read_text(encoding="utf-8")
@@ -291,7 +291,7 @@ def _monter(bac: pathlib.Path) -> pathlib.Path:
     (depot / ".github/workflows/b.yml").write_text("name: B\n", encoding="utf-8")
     shutil.copy(depot / ".github/workflows/a.yml", depot / ".github/workflows/maven.yml")
     (depot / ".github/scripts/verifie-truc.sh").write_text("echo --auto-test\n", encoding="utf-8")
-    (depot / ".github/scripts/porte-sur-le-contrat-de-fichiers.sh").write_text(
+    (depot / ".github/scripts/porte_sur_le_contrat_de_fichiers.py").write_text(
         CONTRAT_DE_FICHIERS, encoding="utf-8"
     )
     (depot / "dev-docs/ci-cd-release.md").write_text(PAGE, encoding="utf-8")
@@ -342,7 +342,7 @@ def _classe_jouee_non_surveillee(d: pathlib.Path) -> None:
 
 def _fichier_surveille_non_joue(d: pathlib.Path) -> None:
     _remplace(
-        d / ".github/scripts/porte-sur-le-contrat-de-fichiers.sh",
+        d / ".github/scripts/porte_sur_le_contrat_de_fichiers.py",
         "src/test/java/fr/univ_amu/iut/UnTest.java",
         "src/test/java/fr/univ_amu/iut/UnTest.java\nsrc/test/java/fr/univ_amu/iut/PasJoueTest.java",
     )

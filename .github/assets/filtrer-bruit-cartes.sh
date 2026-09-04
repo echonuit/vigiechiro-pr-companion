@@ -127,7 +127,7 @@ ICI="${CARTES_ASSETS:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 #
 # Les rectangles ne sont plus écrits ici : ils sont **dérivés de la scène** au moment du rendu, par
 # `ZoneCarteApercu`, et déposés dans un `apercu-<nom>.png.carte` à côté de chaque aperçu. Ces fichiers
-# ne sont **jamais committés** : produits par `capture-screenshots.sh`, consommés ici, dans la même
+# ne sont **jamais committés** : produits par `capture_screenshots.py`, consommés ici, dans la même
 # exécution.
 #
 # ## Pourquoi ce changement (#3439)
@@ -160,7 +160,7 @@ else
   # vérifie plus rien doit le dire, pas afficher un succès.
   if [ ${#CARTES[@]} -eq 0 ]; then
     echo "::error::Aucune zone de carte trouvée à côté des aperçus (${ICI}/apercu-*.png.carte)." >&2
-    echo "::error::Ces fichiers sont déposés par le rendu : lancez .github/assets/capture-screenshots.sh d'abord." >&2
+    echo "::error::Ces fichiers sont déposés par le rendu : lancez .github/assets/capture_screenshots.py d'abord." >&2
     exit 1
   fi
 fi

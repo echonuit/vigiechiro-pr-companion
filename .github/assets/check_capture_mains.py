@@ -2,7 +2,7 @@
 """Aucun outil de capture n est oublie du script de rendu (#3293, porte du bash en #5229).
 
 Tout outil de capture - une classe `*/outils/Capture*.java` portant une methode `main` - doit etre
-enregistre dans le tableau `MAINS` de `capture-screenshots.sh`. Sinon ses PNG ne seraient JAMAIS
+enregistre dans le tableau `MAINS` de `capture_screenshots.py`. Sinon ses PNG ne seraient JAMAIS
 regeneres par le workflow `capture-vues` : la capture existerait au manifeste, donc
 `check_captures.py` passerait, mais elle se figerait, perimee, sans que rien ne le signale.
 
@@ -19,8 +19,10 @@ systeme : la galerie montre alors la machine qui l a rendue plutot que le produi
 laisse « Cancel » dans une galerie francophone. Le controle est STATIQUE, parce que le verifier par
 le rendu couterait deux passes completes de capture.
 
-Il lit `capture-screenshots.sh`, qui reste du shell : ce garde y cherche des chaines, il ne le lance
-pas.
+Il lit `capture_screenshots.py` : ce garde y cherche des CHAINES - les litteraux FQCN du tableau
+`MAINS`, et les trois proprietes d epinglage - il ne le lance pas. Ce fichier etait du shell jusqu a
+#5236 ; ce qui compte n a pas change, c est que les chaines y soient ecrites en clair. Les construire
+plutot que les ecrire rendrait ce garde muet sans qu il rougisse.
 
 Usage : python3 .github/assets/check_capture_mains.py [--auto-test]
         MAINS_ASSETS=<dir> MAINS_SOURCES=<dir> python3 .github/assets/check_capture_mains.py
@@ -65,7 +67,7 @@ def declares(script: pathlib.Path) -> set[str]:
 def juger(assets: pathlib.Path | None = None, sources: pathlib.Path | None = None) -> int:
     """Les trois controles, et le code de sortie qui va avec."""
     base, source = racines(assets, sources)
-    script = base / "capture-screenshots.sh"
+    script = base / "capture_screenshots.py"
     mains = declares(script)
     erreurs = 0
 
@@ -95,7 +97,7 @@ def juger(assets: pathlib.Path | None = None, sources: pathlib.Path | None = Non
     for propriete in EPINGLAGES:
         if propriete not in texte:
             print(
-                "❌ Épinglage perdu dans capture-screenshots.sh (la galerie redeviendrait "
+                "❌ Épinglage perdu dans capture_screenshots.py (la galerie redeviendrait "
                 f"dépendante de la machine) : {propriete}"
             )
             erreurs += 1
@@ -127,7 +129,7 @@ def _monte(bac: pathlib.Path) -> pathlib.Path:
     shutil.rmtree(bac, ignore_errors=True)
     (bac / "assets").mkdir(parents=True)
     _outil(bac, EXEMPLE)
-    (bac / "assets" / "capture-screenshots.sh").write_text(
+    (bac / "assets" / "capture_screenshots.py").write_text(
         'MAINS=(\n  "fr.univ_amu.iut.exemple.outils.CaptureExemple"\n)\n'
         f'LOCALISATION="{LOCALISATION}"\n',
         encoding="utf-8",
@@ -152,7 +154,7 @@ def _capture_hors_outils(bac: pathlib.Path) -> None:
 
 
 def _langue_desepinglee(bac: pathlib.Path) -> None:
-    script = bac / "assets" / "capture-screenshots.sh"
+    script = bac / "assets" / "capture_screenshots.py"
     garde = [l for l in script.read_text(encoding="utf-8").splitlines() if "user.language" not in l]
     script.write_text("\n".join(garde) + "\n", encoding="utf-8")
 
