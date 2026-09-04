@@ -14,12 +14,19 @@ d'où vient cette constitution : il interdit un renvoi qui ne résout que dans u
 n'a pas d'objet ici, où les renvois résolvent. Le numéro n'est pas réattribué : une ADR cite un
 article par son numéro, et un numéro qui change de sens est pire qu'un numéro absent.
 
-**Ce que la jurisprudence a révélé.** Les 194 ADR se replient sur vingt-trois articles. Les trois
-autres n'ont produit aucune décision : la preuve qui précède l'affirmation (A1), la mutation qui
+**Ce que la jurisprudence a révélé.** Deux articles n'ont produit aucune décision : la mutation qui
 mesure dès qu'un comportement est complet (A8), et l'interdiction de supprimer un avertissement
-(A10). Tous trois disent comment on *travaille* plutôt que ce que le produit *fait*, et tous trois
+(A10). Tous deux disent comment on *travaille* plutôt que ce que le produit *fait*, et tous deux
 vivaient dans un fichier exclu du dépôt jusqu'à #4335. La mesure est rappelée ici plutôt que tue :
 un article que rien ne tient est une dette, pas une règle.
+
+**A1 en est sorti, et aucun compte n'est plus cité ici.** La preuve qui précède l'affirmation
+figurait dans cette liste ; quatre décisions la tiennent désormais. Ce paragraphe annonçait aussi
+« 194 ADR » et « vingt-trois articles », deux nombres qui ne portaient rien : l'argument est le même
+qu'ils vaillent 194 ou 278, et le second n'était que le complément du premier. Ils avaient vieilli en
+silence, parce qu'un nombre plus petit que la réalité ne cloche pas dans une phrase. Ce qui reste est
+ce qui compte, **une liste nommée**, et `scripts/methode/matrice-constitution.py` refuse qu'elle
+diverge de la mesure (issue #5180).
 
 ---
 
