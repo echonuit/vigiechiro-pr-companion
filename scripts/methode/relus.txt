@@ -1598,7 +1598,7 @@ b6db9ee90de4  src/test/java/fr/univ_amu/iut/commun/view/GluonMapSpikeTest.java
 9c648d44d63c  src/test/java/fr/univ_amu/iut/commun/view/IndicateurAccueilWiringTest.java
 3aa5e88dd68e  src/test/java/fr/univ_amu/iut/commun/view/IndicateurBlocageTest.java
 e4268661fc45  src/test/java/fr/univ_amu/iut/commun/view/IndicateurOccupationTest.java
-6a7587fcbb72  src/test/java/fr/univ_amu/iut/commun/view/InfobulleDeBlocage.java
+e32df7591aed  src/test/java/fr/univ_amu/iut/commun/view/InfobulleDeBlocage.java
 1a4efc12d33f  src/test/java/fr/univ_amu/iut/commun/view/JetonsDeCouleurResolusTest.java
 a0d6fad39afd  src/test/java/fr/univ_amu/iut/commun/view/JournalisationTacheTest.java
 b05b0ab0572b  src/test/java/fr/univ_amu/iut/commun/view/LibelleRetourTest.java

@@ -79,8 +79,8 @@ public final class InfobulleDeBlocage {
     /// dix pixels, où `isHover()` reste **faux** après `moveTo`. On poste donc l'entrée de souris que
     /// le gestionnaire d'infobulle attend, délai d'apparition à zéro sur cette infobulle-là.
     ///
-    /// ⚠️ Ceci prouve que l'infobulle FONCTIONNE et qu'on peut la montrer, jamais qu'un vrai pointeur
-    /// atteint la cible sans viser : c'est une question de recette, et elle a sa case en `S2-79`.
+    /// **Attention** : ceci prouve que l'infobulle FONCTIONNE et qu'on peut la montrer, jamais qu'un
+    /// vrai pointeur atteint la cible sans viser. C'est une question de recette, et sa case est `S2-79`.
     public static String montrerParEntreeDeSouris(Node cible, FxRobot robot) throws TimeoutException {
         Object installee = cible.getProperties().get(CLE);
         if (!(installee instanceof Tooltip infobulle)) {
