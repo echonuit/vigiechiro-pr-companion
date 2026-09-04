@@ -206,7 +206,8 @@ mini-titre en gras suivi d'un deux-points est le même défaut, un paragraphe qu
 en a 214.
 
 Un commentaire décrit le comportement d'aujourd'hui. « Jusqu'ici », « auparavant », « naguère »,
-« désormais » annoncent presque toujours le contraire, et 146 lignes de javadoc en portent encore.
+« désormais » annoncent presque toujours le contraire, et des dizaines de lignes de javadoc en
+portent encore.
 L'historique a ses lieux : `git log`, le CHANGELOG, la section « Alternatives écartées » d'une ADR.
 
 **Une seule apostrophe, l'ASCII** (`'`). Le dépôt en portait 220 courbes le 2026-08-24 ; elles sont
@@ -216,7 +217,7 @@ qui substitue à la source droite, et le signe cité plutôt qu'employé. Le tit
 aussi, parce qu'il devient une ligne du CHANGELOG publié.
 
 Le connecteur lourd en tête de phrase, « Cependant », « Par ailleurs », « En outre », est le tic
-français le plus cité. Mesuré ici : **zéro** sur 46 932 lignes de documentation. Il n'est donc pas
+français le plus cité. Mesuré ici : **zéro** sur près de cinquante mille lignes de documentation. Il n'est donc pas
 retenu comme règle, et cette mesure est ce qui le dit.
 
 Ces règles viennent de deux inventaires : [« Signs of AI writing »](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing)
@@ -275,7 +276,7 @@ TITRE="feat(passage): écran pivot d'une nuit"
 
 Un **chantier** est une évolution d'ampleur **EPIC**, répartie sur **plusieurs PR** (le §4 décrit
 _une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 14 passes,
-numérotées **0 à 11** (les passes 1 à 9 gardent leur numéro : 35 ADR **immuables** les citent).
+numérotées **0 à 11** (les passes 1 à 9 gardent leur numéro : des dizaines d'ADR **immuables** les citent).
 
 **À l'ouverture**, dans cet ordre : **trier et regrouper les issues existantes** (balayage **par
 concept** et non par mot-clé, recherche des EPIC vivants et des issues « différées de #N », décision des

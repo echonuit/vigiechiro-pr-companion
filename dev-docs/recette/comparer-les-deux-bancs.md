@@ -39,8 +39,8 @@ même prix aux deux bancs.
     nomme : 3794 se vérifie par `verifie-inventaires-ci.sh`. L'ADR 4013 cite elle aussi un banc, mais
     c'est `filme-un-parcours.sh`, celui des films de **documentation** - un dispositif distinct, que
     le retrait du banc de recette ne touche pas.
-- L'auto-test du banc bash **se vérifie lui-même en permanence** : 14 de ses 50 cas nomment un rouge
-  attendu. Les gardes du banc Java ont été éprouvés par mutation, mais **à la main**, une fois.
+- L'auto-test du banc bash **se vérifie lui-même en permanence** : plus d'un quart de ses cas nomment un
+  rouge attendu. Les gardes du banc Java ont été éprouvés par mutation, mais **à la main**, une fois.
 
 ## Comment regarder
 

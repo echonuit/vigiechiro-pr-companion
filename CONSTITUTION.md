@@ -197,8 +197,8 @@ déduite. L'identité de distribution est distincte de celle de l'auteur et de c
 
 ### A28 : Un avertissement se dit en mots
 
-Un pictogramme d'alerte n'apporte pas l'information : il annonce qu'il y en a une. Posé sur 1 187
-lignes et dans 459 fichiers, il ne distingue plus rien. Ce qui doit alerter se dit dans la phrase, ou
+Un pictogramme d'alerte n'apporte pas l'information : il annonce qu'il y en a une. Posé sur plus de mille
+lignes et des centaines de fichiers, il ne distingue plus rien. Ce qui doit alerter se dit dans la phrase, ou
 dans l'encart que le format prévoit. Le pictogramme ne subsiste que là où il est le contenu montré :
 une maquette qui rend ce que l'écran affiche, un message que le programme émet.
 
