@@ -140,6 +140,10 @@ def main() -> int:
     # AVANT `auto_test` et avant toute lecture : un contrat s'imprime sans rien lire et sans rien
     # exiger. Un garde qui refuserait d'abord (dependance absente, fichier introuvable) rendrait un
     # refus la ou l'appelant demandait sa declaration, et le deriveur recolterait des refus.
+    # Ecrit a la main plutot que par `sort_si_contrat_demande`, et c est un choix : l aide lit
+    # `sys.argv` et SORT du processus, quand ce `main` rend un code a son appelant. Les faire
+    # cohabiter donnerait deux chemins de sortie dans la meme fonction. Le garde des contrats
+    # reconnait les deux formes sans cas particulier, la divergence ne lui coute donc rien (#5102).
     if args.contrat:
         return imprime_contrat(
             pathlib.Path(__file__).resolve().relative_to(RACINE_DEPOT).as_posix(), CONTRAT
