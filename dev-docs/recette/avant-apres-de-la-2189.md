@@ -45,7 +45,7 @@ Filmer les deux côtés du même côté de la barrière. Le contrôle qui le dit
 
 ## Les paires obtenues
 
-Écarts mesurés en local contre local, à 5 % de tolérance.
+Écarts mesurés en local contre local, à 5 % de tolérance. Les clips sont plus bas, sur la pré-version [`clips-avant-apres`](https://github.com/echonuit/vigiechiro-pr-companion/releases/tag/clips-avant-apres).
 
 | Défaut | Écart | Ce que l'avant montrait | Ce que l'après montre |
 |---|---|---|---|
@@ -66,6 +66,45 @@ défaut ÉTAIT remis. Sans cette vérification, « le scénario ne bouge pas » 
 
 **#3461, la racine de carte SD**, n'a aucun clip : ses cas sont écrits en `S10-09` à `S10-11` et
 attendent d'être filmés. Un avant/après ne se fabrique pas pour un cas qui n'existe pas en clip.
+
+## Les clips, à regarder
+Chaque paire se lit dans l'ordre : l'avant, puis l'après. Le test de l'avant **échoue**, et c'est ce qui prouve que le défaut y est bien.
+
+### #4981 · un appui sur une touche n'est pas une anomalie
+
+**Avant.** L'appui sur une touche est porté aux **anomalies**, et deux alertes ambre s'ensuivent.
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-avant-apres/4981-reveil-par-bouton--AVANT.mp4"></video>
+
+**Après.** « Aucune anomalie détectée », et la seconde alerte devient l'information « fin de nuit normale ».
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-avant-apres/4981-reveil-par-bouton--APRES.mp4"></video>
+
+### #5093 · une nuit interrompue le dit
+
+**Avant.** Une seule alerte : l'encart de la nuit interrompue **n'existe pas**.
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-avant-apres/5093-nuit-interrompue--AVANT.mp4"></video>
+
+**Après.** L'encart paraît : « cette nuit s'est interrompue avant son terme ».
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-avant-apres/5093-nuit-interrompue--APRES.mp4"></video>
+
+### #4988 · les deux plages du diagnostic
+
+**Avant.** Rien sous les heures de la nuit : le verdict est à croire sur parole.
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-avant-apres/4984-plages-du-diagnostic--AVANT.mp4"></video>
+
+**Après.** « Protocole : 20:00 à 07:15 · Enregistré : 20:25 à 07:47 », l'exigé face au tenu.
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-avant-apres/4984-plages-du-diagnostic--APRES.mp4"></video>
 
 ## Ce que ces paires ne prouvent pas
 
