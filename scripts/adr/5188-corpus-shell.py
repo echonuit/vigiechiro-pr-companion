@@ -27,7 +27,7 @@ sens le 2026-09-03 : ils sont identiques, a cinquante fichiers (issue #5187).
 
 ## Ce que le seuil vaut, et ce qu il vaudra
 
-34 est la mesure du jour, pas un objectif. Elle etait de 50 le 2026-09-04 au matin : #5210 en a converti un, #5219 six, #5221 trois, puis #5229 les six qui rapprochent une piece livree de l inventaire qui la cite. Un cliquet ne se negocie pas vers le haut : chaque
+20 est la mesure du jour, pas un objectif. Elle etait de 50 le 2026-09-04 au matin : #5210 en a converti un, #5219 six, #5221 trois, #5229 six, puis #5231 les quatorze qui ne partageaient qu un auto-test. Un cliquet ne se negocie pas vers le haut : chaque
 conversion le fait descendre, et il ne remonte jamais. La cible est **zero**, ce qui distingue ce
 cliquet de la plupart des autres : ceux-la bornent une dette qu on tolere, celui-ci compte une
 population qui doit disparaitre entierement.
@@ -140,7 +140,7 @@ CONTRAT = {
     "geste": "script shell restant, que la cible des deux langages condamne",
     "population": "les fichiers .sh que git suit",
     "dispositif": "cliquet",
-    "seuil": "34, polarite=descend",
+    "seuil": "20, polarite=descend",
     "temoin": "scripts/adr/5188-corpus-shell.py --auto-test",
     "decision": "ADR 5188",
 }

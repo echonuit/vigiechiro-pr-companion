@@ -8,7 +8,7 @@ decided_at: 2026-08-25
 verification: humaine
 verification_note: "aucun motif ne distingue une antithese legitime d'une antithese de remplissage, ni une annonce d'une transition utile ; le garde de CI ne tient que la part typographique du corps (cadratin, apostrophe courbe, elision), et rien ne verifie qu un corps a passe la grille entiere"
 loupe:
-  - ".github/scripts/verifie-corps-pr.sh"
+  - ".github/scripts/verifie_corps_pr.py"
 relations:
   amende: ["4343-la-prose-visible-se-relit-a-l-humaniseur"]
 verified:

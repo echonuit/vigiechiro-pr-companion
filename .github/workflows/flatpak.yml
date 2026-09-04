@@ -258,7 +258,7 @@ jobs:
         #
         # Ce qu'il ne prouve toujours PAS : le runner n'a pas de session Wayland,
         # donc `fallback-x11` y accorderait X11 et le manifeste fautif passerait ici.
-        # C'est `verifie-affichage-flatpak.sh` (lint.yml) qui garde ce cas-là, sur la
+        # C'est `verifie_affichage_flatpak.py` (lint.yml) qui garde ce cas-là, sur la
         # politique déclarée. Les deux sont complémentaires, aucun ne suffit.
         run: |
           set -euo pipefail
@@ -314,7 +314,7 @@ jobs:
         # la ligne de commande, et c'est exactement le trou par lequel le défaut de
         # #4071 est passé : un emballage peut très bien s'afficher et n'exposer AUCUNE
         # des 66 commandes. Les autres emballages sont désormais interrogés par
-        # `verifie-demarrage-emballage.sh --cli` ; le Flatpak, lui, ne l'était pas.
+        # `verifie_demarrage_emballage.py --cli` ; le Flatpak, lui, ne l'était pas.
         #
         # On interroge par le chemin de l'UTILISATEUR - `flatpak run <app-id>
         # --version` - et non par `--command=`, qui court-circuite le script de
@@ -449,8 +449,8 @@ jobs:
           # GITHUB_TOKEN), donc sans ce passage elle ne serait validée par rien. On
           # exécute le MÊME script : seul le transport du résultat change. Publier un
           # succès en dur reviendrait à faire croire à une vérification inexistante.
-          chmod +x .github/scripts/verifie-titre-pr.sh
-          if ./.github/scripts/verifie-titre-pr.sh "$titre"; then
+          chmod +x .github/scripts/verifie_titre_pr.py
+          if python3 .github/scripts/verifie_titre_pr.py "$titre"; then
             verdict=success
             resume="Titre conforme à Conventional Commits."
           else

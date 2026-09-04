@@ -92,7 +92,7 @@ ré-éditer puis une vérification à relancer. Le même script tourne en local,
 vous apprêtez à taper :
 
 ```bash
-./.github/scripts/verifie-titre-pr.sh "fix(passage): le pivot se relit"
+python3 .github/scripts/verifie_titre_pr.py "fix(passage): le pivot se relit"
 ```
 
 Le défaut n'entre pas au commit. Les quatre PR rouges du 2026-08-26, #4570, #4588, #4589 et #4591,

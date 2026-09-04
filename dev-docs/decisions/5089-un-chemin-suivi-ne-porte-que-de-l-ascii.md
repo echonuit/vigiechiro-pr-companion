@@ -7,7 +7,7 @@ chantier: "#5089 (chantier #5088)"
 decided_at: 2026-09-02
 verification: certaine
 enforced_by:
-  - ".github/scripts/verifie-chemins-ascii.sh"
+  - ".github/scripts/verifie_chemins_ascii.py"
 verified:
   - by: machine:suspects
     at: 2026-09-02

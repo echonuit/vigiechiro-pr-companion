@@ -7,7 +7,7 @@ chantier: "#4291"
 decided_at: 2026-08-24
 verification: certaine
 enforced_by:
-  - ".github/scripts/verifie-portee-des-secrets.sh"
+  - ".github/scripts/verifie_portee_des_secrets.py"
 verified:
   - by: machine:ci
     at: 2026-08-24

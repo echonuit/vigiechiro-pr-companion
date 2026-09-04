@@ -93,7 +93,7 @@ jobs:
   # Le job ci-dessus répond de ce que le fat-jar embarque. Celui-ci répond des actions GitHub qui le
   # fabriquent, le signent et le publient - un autre approvisionnement, aussi capable de vieillir.
   #
-  # `verifie-epinglage.sh` (lint.yml) garde leur COHÉRENCE : tout figé par SHA, aucune divergence.
+  # `verifie_epinglage.py` (lint.yml) garde leur COHÉRENCE : tout figé par SHA, aucune divergence.
   # C'est vrai indéfiniment, y compris quand l'amont a pris une majeure d'avance. Mesuré au
   # 2026-08-06 : `attest-build-provenance` était sur v3.0.0 (août 2025) quand l'amont en était à
   # v4.1.1, sur l'action qui SIGNE la provenance des binaires livrés. Rien n'avait rougi, et

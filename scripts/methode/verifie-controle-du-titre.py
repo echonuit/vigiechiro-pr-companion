@@ -19,7 +19,7 @@ avec le NOM DE BRANCHE au-dela, forme que `titre-pr.yml` refuse. Mesure du 2026-
 dernieres pull requests fusionnees : 20 tenaient en un commit, 10 en plusieurs, et les quatre rouges
 etaient toutes dans la seconde famille.
 
-Le remede ne cree aucune regle : il lance le garde qui existe deja, `verifie-titre-pr.sh`, au
+Le remede ne cree aucune regle : il lance le garde qui existe deja, `verifie_titre_pr.py`, au
 moment ou le titre s ecrit. Ce garde-ci tient ce remede en place, et il ne se contente pas de
 compter une citation : il RELANCE le script cite sur deux titres connus, et refuse si celui-ci a
 cesse de refuser l espace. Une methode qui nomme une commande devenue permissive vaut moins que
@@ -48,10 +48,11 @@ RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import sort_si_contrat_demande
 
-# Le script que la methode doit nommer. Il est lance par `bash` et non execute directement : les
+# Le script que la methode doit nommer. Il est lance par `python3` et non execute directement : les
 # workflows lui posent le bit d execution avant chaque appel, et un checkout qui ne le porte pas
-# rendrait ce garde rouge pour une raison qui n est pas la sienne.
-GARDE = pathlib.Path(".github") / "scripts" / "verifie-titre-pr.sh"
+# rendrait ce garde rouge pour une raison qui n est pas la sienne. Le garde etait du bash jusqu a
+# #5231, et c est l interpreteur qui a change, pas ce raisonnement.
+GARDE = pathlib.Path(".github") / "scripts" / "verifie_titre_pr.py"
 
 # Les trois documents qui decrivent le moment ou le titre s ecrit. `.agents/skills` est le fonds,
 # `.claude/skills` sa copie tenue par `synchronise-adaptateurs.py` : les deux doivent nommer la
@@ -83,7 +84,7 @@ def verdicts(racine: pathlib.Path) -> tuple[int, int]:
 
     def code(titre: str) -> int:
         return subprocess.run(
-            ["bash", str(racine / GARDE), titre], capture_output=True, check=False
+            ["python3", str(racine / GARDE), titre], capture_output=True, check=False
         ).returncode
 
     return code(REFUSE), code(ACCEPTE)
@@ -128,7 +129,7 @@ def auto_test() -> int:
         def casser(r: pathlib.Path) -> None:
             fichier = r / chemin
             fichier.write_text(
-                fichier.read_text(encoding="utf-8").replace(GARDE.name, "un-autre-script.sh"),
+                fichier.read_text(encoding="utf-8").replace(GARDE.name, "un-autre-script.py"),
                 encoding="utf-8",
             )
 
@@ -142,11 +143,11 @@ def auto_test() -> int:
 
     def desserre_le_garde(r: pathlib.Path) -> None:
         """Ce que ferait un garde affaibli : tout passe, y compris l espace."""
-        (r / GARDE).write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+        (r / GARDE).write_text("import sys\n\nsys.exit(0)\n", encoding="utf-8")
 
     def durcit_le_garde(r: pathlib.Path) -> None:
         """Le controle negatif : un garde qui refuse tout ne prouve rien."""
-        (r / GARDE).write_text("#!/usr/bin/env bash\nexit 1\n", encoding="utf-8")
+        (r / GARDE).write_text("import sys\n\nsys.exit(1)\n", encoding="utf-8")
 
     cas = [
         ("CONTRIBUTING ne le nomme plus", oublie(CORPUS[0])),

@@ -7,7 +7,7 @@ chantier: "#4034, clôture du chantier des films et de la CI (#4013)"
 decided_at: 2026-08-20
 verification: certaine
 enforced_by:
-  - ".github/scripts/verifie-apt.sh"
+  - ".github/scripts/verifie_apt.py"
 verified:
   - by: machine:ci
     at: 2026-08-20
