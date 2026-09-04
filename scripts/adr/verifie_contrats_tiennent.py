@@ -63,6 +63,11 @@ ALIAS = {
 # les six champs sont tenus.
 HORS_CONFRONTATION = {
     "geste": "une phrase libre, qu aucun motif ne derive du code",
+    "population": "confrontee SEULEMENT quand les deux cotes se resolvent par `ALIAS`, un "
+    "vocabulaire d arbres Java. Mesure du 2026-09-04 : 26 contrats sur 67 le sont, et le garde "
+    "s ABSTIENT pour 41 - dont 40 parce que l INFERENCE ne sait rien dire, tous calculant leur "
+    "racine depuis `__file__`. La ligne de verdict le dit desormais au lieu de le taire, et "
+    "`loupe-5175-population-non-nommee.py` signale ce qui reste confrontable (issue #5175)",
     "dispositif": "il n est pas CONFRONTE a l inference, qui le devine du nom de l aide appelee : "
     "ce serait un desaccord la ou il n y a qu une convention de nommage. Son VOCABULAIRE est "
     "verifie, lui, contre `DISPOSITIFS` (ADR 5125)",
@@ -368,6 +373,26 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     return trouves
 
 
+def confrontations(racine: pathlib.Path | None = None) -> tuple[int, int]:
+    """Combien de populations ce garde a CONFRONTEES, et sur combien il s est ABSTENU.
+
+    Un vert qui ne dit pas ce qu il a juge ne dit rien : c est la lecon de `lus` (#5007), appliquee
+    ici au seul champ dont la confrontation est partielle. Sans ce compte, un lecteur croit les six
+    champs tenus, et c est ce qui a laisse passer #5176 (issue #5175).
+    """
+    base = racine or RACINE_DEPOT
+    confrontes = abstenus = 0
+    for chemin in fichiers(base):
+        contrat = contrat_de(chemin)
+        if contrat is None:
+            continue
+        if corpus_resolu(contrat.get("population", "")) is None:
+            abstenus += 1
+        else:
+            confrontes += 1
+    return confrontes, abstenus
+
+
 def _auto_test() -> int:
     """Les DEUX moities : une contradiction est vue, et un desaccord de VOCABULAIRE ne l est pas."""
     echecs = 0
@@ -584,7 +609,7 @@ def _auto_test() -> int:
 # branche `--contrat`, s appeler lui-meme le faisait tomber dans son travail, donc se rappeler.
 CONTRAT = {
     "geste": "contrat declare qui contredit ce que le garde fait",
-    "population": "les points d entree qui mentionnent un contrat",
+    "population": "les points d entree qui DECLARENT un contrat, par leur AST",
     "dispositif": "cliquet",
     "seuil": "0, polarite=descend",
     "temoin": "scripts/adr/verifie_scripts.py#test_un_contrat_ne_contredit_pas_le_garde",
@@ -596,11 +621,19 @@ if __name__ == "__main__":
     sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
-    sys.exit(
-        rapporte(
-            ADR,
-            "contrats qui contredisent ce que le garde fait",
-            suspects(),
-            lus=len(fichiers()),
-        )
+    trouves = suspects()
+    _confrontes, _abstenus = confrontations()
+    code = rapporte(
+        ADR,
+        "contrats qui contredisent ce que le garde fait",
+        trouves,
+        lus=len(fichiers()),
     )
+    # APRES le verdict, et sur une ligne a part : ce que `rapporte` imprime est lu par
+    # `rapport.py`, et y glisser un champ casserait son analyse. Ce compte n est pas un verdict,
+    # c est ce que le verdict N A PAS juge.
+    print(
+        f"  population : {_confrontes} confrontee(s), {_abstenus} abstention(s) - "
+        "voir HORS_CONFRONTATION, et loupe-5175 pour ce qui reste confrontable"
+    )
+    sys.exit(code)

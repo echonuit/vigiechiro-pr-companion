@@ -48,8 +48,11 @@ DECLARATION = "pyproject.toml"
 # Le Python enfoui dans un garde shell : `python3 - "$X" <<'PY' ... PY`.
 HEREDOC = re.compile(r"<<'(?P<borne>[A-Z]+)'\n(?P<corps>.*?)\n(?P=borne)\n", re.S)
 
-# Un module local du depot s'importe par son nom de fichier, sans paquet.
-LOCAUX = {"_commun", "rapport", "verifie_okf", "resserre_cliquets"}
+# Un module local du depot s'importe par son nom de fichier, sans paquet. Cette liste se tient a la
+# main, et elle grossit quand un garde en charge un autre : `loupe-5175` emprunte `corpus_resolu` au
+# cliquet des contrats pour savoir OU CELUI-CI S'ARRETE, sa population etant les abstentions de
+# l'autre. Ecrire une seconde resolution aurait fait diverger les deux (issue #5175).
+LOCAUX = {"_commun", "rapport", "verifie_okf", "resserre_cliquets", "verifie_contrats_tiennent"}
 
 
 def declares(racine: pathlib.Path | None = None) -> set[str]:
