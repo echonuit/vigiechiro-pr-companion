@@ -418,8 +418,8 @@ jobs:
           # Le refus NOMME ce qui manque. Rendre deux nombres obligeait à refaire le calcul à la
           # main pour savoir quoi corriger, et c'est la moitié du remède de #5012.
           if [ "${obtenus}" -ne "${ATTENDUS}" ] && [ "${CONNECTE}" != "true" ]; then
-            chmod +x .github/scripts/cas-manquants-du-tournage.sh
-            absents=$(./.github/scripts/cas-manquants-du-tournage.sh "${CAS_ATTENDUS}" "${index}" || true)
+            chmod +x .github/scripts/cas_manquants_du_tournage.py
+            absents=$(python3 .github/scripts/cas_manquants_du_tournage.py "${CAS_ATTENDUS}" "${index}" || true)
             if [ -n "${absents}" ]; then
               echo "::error::cas non filmés : $(printf '%s' "${absents}" | tr '\n' ' ')"
               {
@@ -606,7 +606,7 @@ jobs:
       # ici même : le passage de deux scénarios à un seul (#4324) a laissé deux pièces orphelines sur
       # cette pré-version, que la page continuait de proposer.
       #
-      # `clips-orphelins.sh` porte déjà ce calcul pour `clips-recette`, et il est agnostique de la
+      # `clips_orphelins.py` porte déjà ce calcul pour `clips-recette`, et il est agnostique de la
       # pré-version : il prend le dossier tourné et lit la liste en ligne sur son entrée. Le brancher
       # ici coûte huit lignes ; ne pas le brancher coûte un clip qui ment.
       - name: Retirer les clips connectés dont le cas a disparu
@@ -615,9 +615,9 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          chmod +x .github/scripts/clips-orphelins.sh
+          chmod +x .github/scripts/clips_orphelins.py
           orphelins=$(gh release view clips-connectes --json assets --jq '.assets[].name' \
-            | ./.github/scripts/clips-orphelins.sh repris/target/recette/clips)
+            | python3 .github/scripts/clips_orphelins.py repris/target/recette/clips)
           if [ -z "$orphelins" ]; then
             echo "Aucun clip orphelin : la pré-version ne porte que des cas qui existent."
             exit 0

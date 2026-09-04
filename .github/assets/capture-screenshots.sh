@@ -14,7 +14,7 @@
 #   .github/assets/capture-screenshots.sh
 #
 # Sorties (dans .github/assets/) : un ou plusieurs apercu-*.png par vue. La liste FAISANT FOI est le
-# manifeste .github/assets/captures.manifest (verifie en CI par check-captures.sh : chaque vue y a au
+# manifeste .github/assets/captures.manifest (verifie en CI par check_captures.py : chaque vue y a au
 # moins une capture, et chaque capture declaree existe). On ne duplique donc PAS ici l'enumeration des
 # fichiers (elle derivait) : chaque outil ci-dessous ecrit les PNG que son `main` produit, le manifeste
 # recense l'ensemble. Le tableau de correspondance vue <-> capture(s) vit dans le manifeste.

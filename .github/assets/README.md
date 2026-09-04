@@ -28,14 +28,14 @@ signale un écart réel, pas un oubli de commande.
 
 ## Complétude
 
-Trois garde-fous, vérifiés par [`check-captures.sh`](check-captures.sh) :
+Trois garde-fous, vérifiés par [`check_captures.py`](check_captures.py) :
 
 1. chaque vue `**/view/*.fxml` figure au [manifeste](captures.manifest) avec au moins une capture ;
 2. chaque capture déclarée au manifeste existe sur le disque ;
 3. **chaque capture du disque est présentée dans ce document** - sans quoi la galerie se met à couvrir
    une partie du produit en laissant croire qu'elle le couvre tout entier. C'est ce qui était arrivé :
    33 captures présentées sur 126. Le compte exact n'est pas répété ici : il bouge à chaque chantier,
-   et `check-captures.sh` le rend à chaque exécution. Un nombre écrit en prose dérive tout seul.
+   et `check_captures.py` le rend à chaque exécution. Un nombre écrit en prose dérive tout seul.
 
 ## Sommaire
 

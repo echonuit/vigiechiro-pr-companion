@@ -70,8 +70,8 @@ Un état montré **incidemment** est presque aussi fragile qu'un état montré n
 ## Ce que la CI refuse
 
 Trois gardes tournent sur cette passe, et ils refusent plutôt qu'ils n'avertissent :
-`check-captures.sh` refuse une vue sans aperçu, `check-doc-images.sh` une page qui pointe une image
-absente, `check-doc-videos.sh` la même chose pour les clips.
+`check_captures.py` refuse une vue sans aperçu, `check_doc_images.py` une page qui pointe une image
+absente, `check_doc_videos.py` la même chose pour les clips.
 
 Le premier lit le **code** et non le disque : une vue qui existe sans capture est un défaut, même si
 aucune page ne la cite encore.

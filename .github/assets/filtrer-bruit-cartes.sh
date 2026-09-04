@@ -33,7 +33,7 @@
 # rectangle, et non sur toute l'image.
 set -euo pipefail
 
-# Auto-test (#3385), sur le modele de `check-captures.sh` (#3293) et de `verifie-titre-pr.sh` (#2947) :
+# Auto-test (#3385), sur le modele de `check_captures.py` (#3293) et de `verifie-titre-pr.sh` (#2947) :
 # un garde qui cesse de detecter reste vert, et c'est le seul defaut qui se presente sous la forme d'un
 # succes. Chaque cas monte un depot jetable, REINVOQUE ce script dessus, et compare le resultat a
 # l'attendu - le cas de test et le chemin reel sont donc le meme code, par construction.

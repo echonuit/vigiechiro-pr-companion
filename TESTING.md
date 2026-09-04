@@ -137,7 +137,7 @@ La source de vérité est [`.github/workflows/maven.yml`](.github/workflows/mave
 | Portail qualité (`lint.yml`) | `./mvnw -B test-compile pmd:pmd` puis les **cliquets ADR**, dont `scripts/adr/4617-code-mort-et-zone-de-test.py` | **Oui** |
 
 `lint.yml` vérifie aussi la **complétude des captures de référence**
-([`check-captures.sh`](.github/assets/check-captures.sh)). Une PR doit passer **les deux** workflows.
+([`check_captures.py`](.github/assets/check_captures.py)). Une PR doit passer **les deux** workflows.
 
 ---
 
