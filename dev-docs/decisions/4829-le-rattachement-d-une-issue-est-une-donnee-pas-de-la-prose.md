@@ -7,7 +7,7 @@ chantier: "#4829 (chantier #4643)"
 decided_at: 2026-08-30
 verification: certaine
 enforced_by:
-  - ".github/scripts/verifie-chantier-de-l-issue.sh"
+  - ".github/scripts/verifie_chantier_de_l_issue.py"
 verified:
   - by: machine:ci
     at: 2026-08-30
