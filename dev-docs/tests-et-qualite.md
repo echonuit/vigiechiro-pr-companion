@@ -627,7 +627,7 @@ fois de plus dépasse le butoir de PIT (~11 s), et l'expiration y est un **effet
 défaut d'outillage. Les 16 expirations du run tué pointaient vers elle.
 
 **Pourquoi l'IHM se mesure une feature à la fois.** Muter une vue coûte ~9 s par mutant : chaque mutant
-rejoue des tests TestFX, qui démarrent un toolkit JavaFX. Les 283 classes de vue de l'application
+rejoue des tests TestFX, qui démarrent un toolkit JavaFX. Les quelques centaines de classes de vue de l'application
 demanderaient des dizaines d'heures, quand la borne d'un job est à 300 minutes. La mesure est donc
 **complète sur un cycle, pas sur un mois** : la rotation se déduit du mois, sans état à écrire ni relire,
 et le tour se fait en 15 mois. Elle vaut le détour - sur `saison`, 80 mutants, 36 % tués, **40 % de
