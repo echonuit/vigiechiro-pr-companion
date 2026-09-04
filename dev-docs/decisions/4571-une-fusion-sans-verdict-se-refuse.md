@@ -7,7 +7,7 @@ chantier: "#4571 (sas des suites #4562)"
 decided_at: 2026-08-26
 verification: humaine
 loupe:
-  - ".github/scripts/verifie-verdict-avant-fusion.sh"
+  - ".github/scripts/verifie_verdict_avant_fusion.py"
 verification_note: "le script rend l'état des runs d'un commit de tête et refuse l'absence de verdict, mais rien ne le déclenche : en faire un check requis repaierait le coût mesuré par l'ADR 0041. Il aide à regarder, il ne tient rien."
 verified:
   - by: human:nedseb

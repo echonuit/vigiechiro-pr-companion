@@ -7,7 +7,7 @@ chantier: "#3661, suites des lots 1 et 2 (#3664)"
 decided_at: 2026-08-13
 verification: certaine
 enforced_by:
-  - ".github/scripts/mesure-duree-portail.sh"
+  - ".github/scripts/mesure_duree_portail.py"
 verified:
   - by: machine:ci
     at: 2026-08-13

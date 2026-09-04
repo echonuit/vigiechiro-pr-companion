@@ -52,7 +52,20 @@ HEREDOC = re.compile(r"<<'(?P<borne>[A-Z]+)'\n(?P<corps>.*?)\n(?P=borne)\n", re.
 # main, et elle grossit quand un garde en charge un autre : `loupe-5175` emprunte `corpus_resolu` au
 # cliquet des contrats pour savoir OU CELUI-CI S'ARRETE, sa population etant les abstentions de
 # l'autre. Ecrire une seconde resolution aurait fait diverger les deux (issue #5175).
-LOCAUX = {"_commun", "rapport", "verifie_okf", "resserre_cliquets", "verifie_contrats_tiennent"}
+#
+# `interroge_le_jeton` a rejoint la liste avec #5233 pour la meme raison, et elle est la raison
+# d etre de ce module-la : la sonde vers la plateforme est PARTAGEE par ses deux appelants, parce
+# que la ligne `curl` recopiee aux trois endroits y portait le meme defaut du « HTTP 000000 »
+# (#4385). Elle ne juge pas, et c est ce qui permet de la partager - un `401` refuse le depart d un
+# tournage et vaut succes a sa revocation.
+LOCAUX = {
+    "_commun",
+    "rapport",
+    "verifie_okf",
+    "resserre_cliquets",
+    "verifie_contrats_tiennent",
+    "interroge_le_jeton",
+}
 
 
 def declares(racine: pathlib.Path | None = None) -> set[str]:

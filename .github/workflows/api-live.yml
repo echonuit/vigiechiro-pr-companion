@@ -58,15 +58,15 @@ jobs:
             echo "Secret \`VIGIECHIRO_TOKEN\` absent. Le poser : \`gh secret set VIGIECHIRO_TOKEN\` (jeton VigieChiro, validité 14 jours)." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          # La mesure descend dans `interroge-le-jeton.sh`, partagée avec le contrôle du tournage et
+          # La mesure descend dans `interroge_le_jeton.py`, partagée avec le contrôle du tournage et
           # sa révocation (#4385). Elle ne juge rien, et c'est ce qui permet de la partager : le
           # verdict d'un `401` diffère aux trois endroits, et il reste chez chacun.
           #
           # Ce qu'on y gagne : un seul `curl` à corriger. Le défaut du « HTTP 000000 » vivait aux
           # trois, parce que la ligne avait été recopiée (#4328) - et ici, aucun auto-test ne
           # l'exerçait. Il en a un, désormais, chez la sonde.
-          chmod +x .github/scripts/interroge-le-jeton.sh
-          statut=$(JETON="$VIGIECHIRO_TOKEN" ./.github/scripts/interroge-le-jeton.sh /moi GET)
+          chmod +x .github/scripts/interroge_le_jeton.py
+          statut=$(JETON="$VIGIECHIRO_TOKEN" python3 .github/scripts/interroge_le_jeton.py /moi GET)
           if [ "$statut" = "200" ]; then
             echo "valide=true" >> "$GITHUB_OUTPUT"
           else

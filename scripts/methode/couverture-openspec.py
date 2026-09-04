@@ -2,7 +2,7 @@
 """Loupe : ce que la spécification vivante couvre du produit, et ce qu'elle ne couvre pas encore.
 
 **Elle ne juge pas.** Elle sort toujours 0, comme ses quatre sœurs de ce dossier. Ce qui refuse est
-le cliquet d'[ADR 4922], `.github/scripts/verifie-specification-consignee.sh`, et il compte un
+le cliquet d'[ADR 4922], `.github/scripts/verifie_specification_consignee.py`, et il compte un
 déficit et non une couverture.
 
 ## Pourquoi des repères, et jamais un total

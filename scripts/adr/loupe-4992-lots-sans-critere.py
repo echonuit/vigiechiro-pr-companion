@@ -2,7 +2,7 @@
 """Loupe de l'ADR 4992 : quels lots ouverts ne disent pas comment on saura qu'ils sont finis.
 
 `AGENTS.md` exige depuis #4975 que chaque lot porte son critere de fin dans son CORPS. La loupe du
-lot 2 (`rappelle-le-critere-de-fin.sh`) rappelle la regle au moment ou un lot est ouvert ou edite.
+lot 2 (`rappelle_le_critere_de_fin.py`) rappelle la regle au moment ou un lot est ouvert ou edite.
 Elle ne voit rien du stock deja la, ni des lots rattaches apres coup et jamais reedites : la forge
 n'emet aucun evenement au rattachement d'une sous-issue, et aucun workflow ne peut s'y abonner.
 
@@ -28,7 +28,7 @@ C'est aussi ce qui a fausse le comptage d'origine (#4951) : 3 sur 70, dont 67 an
 
 ## Cinq formulations, et une sixieme viendra
 
-Elles vivent dans `critere-de-fin.motif`, lu aussi par `rappelle-le-critere-de-fin.sh`, et leur
+Elles vivent dans `critere-de-fin.motif`, lu aussi par `rappelle_le_critere_de_fin.py`, et leur
 provenance est dans `critere-de-fin.motif.md`. La cinquieme, « Ce que je verifierai », a manque aux
 deux dispositifs pendant une demi-journee alors que c'est celle que `CLAUDE.md` prescrit : neuf
 rappels a tort sur les douze lots du chantier #4980 (#4995).
@@ -68,7 +68,7 @@ from _commun import loupe, sort_si_contrat_demande
 # Le commit qui a ecrit la regle, en UTC. Fait historique, il ne se met pas a jour.
 NAISSANCE = "2026-08-29T05:37:52Z"
 
-# Le motif vit dans UN fichier, lu aussi par `.github/scripts/rappelle-le-critere-de-fin.sh`. Chacun
+# Le motif vit dans UN fichier, lu aussi par `.github/scripts/rappelle_le_critere_de_fin.py`. Chacun
 # portait sa copie, et elles avaient deja diverge sur deux caracteres : la cinquieme formulation
 # manquait aux deux, et rien ne pouvait le dire (#4995, #4837). Les contraintes de dialecte sont dans
 # `critere-de-fin.motif.md`.

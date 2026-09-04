@@ -8,7 +8,7 @@
 # La forge enregistre `parent_issue_added`, mais aucun workflow ne peut s'y abonner : les types
 # d'activité de `issues` s'arrêtent à `opened`, `edited`, `labeled` et quinze autres. Un lot rattaché
 # après coup et jamais réédité échappe donc à ce workflow, et c'est la loupe hebdomadaire du lot 3
-# qui balaie le stock. La règle et son pourquoi sont dans .github/scripts/rappelle-le-critere-de-fin.sh.
+# qui balaie le stock. La règle et son pourquoi sont dans .github/scripts/rappelle_le_critere_de_fin.py.
 name: Critère de fin d'un lot
 
 on:
@@ -37,8 +37,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NUMERO: ${{ github.event.issue.number }}
         run: |
-          chmod +x .github/scripts/rappelle-le-critere-de-fin.sh
-          ./.github/scripts/rappelle-le-critere-de-fin.sh "${NUMERO}" > rappel.txt
+          chmod +x .github/scripts/rappelle_le_critere_de_fin.py
+          python3 .github/scripts/rappelle_le_critere_de_fin.py "${NUMERO}" > rappel.txt
           if [ -s rappel.txt ]; then
             echo "rappel=oui" >> "${GITHUB_OUTPUT}"
           else

@@ -399,8 +399,8 @@ jobs:
         # Seul le verdict est éprouvé ici : l'appel réseau reste au bord, et il n'a rien à faire dans
         # un job de lint.
         run: |
-          chmod +x .github/scripts/revoque-jeton.sh
-          ./.github/scripts/revoque-jeton.sh --auto-test
+          chmod +x .github/scripts/revoque_jeton.py
+          python3 .github/scripts/revoque_jeton.py --auto-test
 
       - name: Les décisions du tournage connecté tiennent encore
         # Le refus de `clips-connectes` par `comparer-tournages.yml` EST un garde, et rien ne le
@@ -434,20 +434,20 @@ jobs:
         # tourne sous `bash -e`, donc une sonde jugeante ferait échouer son pas sur un jeton expiré,
         # ce que son tri refuse explicitement. Trouvé par mutation : rien ne le gardait.
         run: |
-          chmod +x .github/scripts/interroge-le-jeton.sh
-          ./.github/scripts/interroge-le-jeton.sh --auto-test
+          chmod +x .github/scripts/interroge_le_jeton.py
+          python3 .github/scripts/interroge_le_jeton.py --auto-test
 
       - name: Le contrôle du jeton sépare ses deux causes
         # Trois verdicts et non deux, et c'est tout l'objet de cet auto-test : « pas 200 » recouvre
         # un jeton mort - on en pose un frais - et une plateforme muette - poser un jeton frais n'y
         # changerait rien. Les fondre referait, un cran plus loin, le défaut de #4328.
         #
-        # Sa table est celle de `revoque-jeton.sh` LUE À L'ENVERS : `401` est un refus ici, un
+        # Sa table est celle de `revoque_jeton.py` LUE À L'ENVERS : `401` est un refus ici, un
         # succès là-bas. Les deux passent par leurs codes connus à chaque lint, parce que deux
         # scripts voisins qui se contredisent finissent par s'harmoniser par erreur.
         run: |
-          chmod +x .github/scripts/verifie-jeton-vivant.sh
-          ./.github/scripts/verifie-jeton-vivant.sh --auto-test
+          chmod +x .github/scripts/verifie_jeton_vivant.py
+          python3 .github/scripts/verifie_jeton_vivant.py --auto-test
 
       - name: La porte d installation porte ses cas
         # Elle est en travers du chemin de tous les workflows, y compris ceux qui publient : un
@@ -605,8 +605,8 @@ jobs:
         # soumissions. Elle a passé neuf mois à ne savoir que RÉUSSIR - un secret absent sortait en
         # vert - et c'est précisément le défaut que cet autotest fige (#2213).
         run: |
-          chmod +x .github/scripts/verifie-secret-winget.sh
-          ./.github/scripts/verifie-secret-winget.sh --auto-test
+          chmod +x .github/scripts/verifie_secret_winget.py
+          python3 .github/scripts/verifie_secret_winget.py --auto-test
 
       - name: Complétude des captures de référence
         # Chaque vue FXML doit avoir au moins une capture de référence déclarée au manifeste
@@ -780,20 +780,20 @@ jobs:
         # faire un check requis repaierait ce que l'ADR 0041 a déjà mesuré - deux chemins d'écriture
         # vers `main` cassés en une heure, dont la chaîne de publication. Seuls ses cas tournent ici,
         # et c'est le seul endroit où il peut être vu rougir.
-        run: bash .github/scripts/verifie-verdict-avant-fusion.sh --auto-test
+        run: python3 .github/scripts/verifie_verdict_avant_fusion.py --auto-test
 
       - name: "Auto-test du garde de clôture consignée (bloquant, #4659)"
         # Ses cas tournent HORS LIGNE : la liste des EPIC s'injecte par `CLOTURE_EPICS_FICHIER`, sans
         # quoi il faudrait la forge pour éprouver un garde, et un garde dont les cas ne se relancent
         # pas ne se relance jamais.
-        run: bash .github/scripts/verifie-cloture-consignee.sh --auto-test
+        run: python3 .github/scripts/verifie_cloture_consignee.py --auto-test
 
       - name: "Auto-test du garde de spécification consignée (bloquant, #4922)"
         # Copie d'ADR 4659 pour la forme, et son voisin pour le fond : celui-ci compte les clôtures
         # qui n'ont pas répondu à la passe 10. Ses cas s'injectent par `SPEC_EPICS_FICHIER`, donc ils
         # tournent hors ligne. Deux d'entre eux tiennent la raison pour laquelle il lit le CONTENU de
         # la ligne et non son numéro : #4840 a renuméroté le cycle.
-        run: bash .github/scripts/verifie-specification-consignee.sh --auto-test
+        run: python3 .github/scripts/verifie_specification_consignee.py --auto-test
 
       - name: "Auto-test du garde de chantier de l issue (bloquant, #4649)"
         # Ses cas tournent HORS LIGNE : les parents s injectent par `CHANTIER_ISSUES_FICHIER`. Le
@@ -801,7 +801,7 @@ jobs:
         run: python3 .github/scripts/verifie_chantier_de_l_issue.py --auto-test
 
       - name: Auto-test du rappel de critère de fin
-        run: bash .github/scripts/rappelle-le-critere-de-fin.sh --auto-test
+        run: python3 .github/scripts/rappelle_le_critere_de_fin.py --auto-test
 
       - name: Auto-test de la loupe des lots sans critère
         run: python3 scripts/adr/loupe-4992-lots-sans-critere.py --auto-test
@@ -811,7 +811,7 @@ jobs:
         # conclut sur ce qu'il n'a pas lu vaut moins que pas de cliquet.
         env:
           GH_TOKEN: ${{ github.token }}
-        run: bash .github/scripts/verifie-cloture-consignee.sh
+        run: python3 .github/scripts/verifie_cloture_consignee.py
 
       - name: "Spécification consignée : une clôture répond à la passe 10 (bloquant, #4922)"
         # Il interroge la forge, d'où le jeton, et REFUSE si elle ne répond pas. Un EPIC clos SANS
@@ -819,13 +819,13 @@ jobs:
         # la même faute deux fois ferait rougir deux gardes pour un seul manquement.
         env:
           GH_TOKEN: ${{ github.token }}
-        run: bash .github/scripts/verifie-specification-consignee.sh
+        run: python3 .github/scripts/verifie_specification_consignee.py
 
       - name: "Auto-test du garde de durée du portail (bloquant, #3661)"
         # Il est arrivé avec un fichier `bats` plutôt qu'un auto-test - la seule exception des onze
         # scripts -, ce qui faisait attendre à ses cas l'assemblage d'un fat-jar de 80 Mo dont ils
         # n'ont aucun besoin. Rentré dans le rang, il s'exécute ici, sans rien construire.
-        run: bash .github/scripts/mesure-duree-portail.sh --auto-test
+        run: python3 .github/scripts/mesure_duree_portail.py --auto-test
 
       - name: "Auto-test du garde de titre de PR (bloquant, #2947)"
         # Même raisonnement que l'étape précédente, appliqué au garde qui vit hors de `scripts/adr`.

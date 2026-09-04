@@ -7,7 +7,7 @@ chantier: "#2213 (winget), lot 5 (#2110) de l'EPIC #2104 ; PR #3594, #3597, #359
 decided_at: 2026-08-11
 verification: certaine
 enforced_by:
-  - ".github/scripts/verifie-secret-winget.sh"
+  - ".github/scripts/verifie_secret_winget.py"
 verified:
   - by: machine:ci
     at: 2026-08-11

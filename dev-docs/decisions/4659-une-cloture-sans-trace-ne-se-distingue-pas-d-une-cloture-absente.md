@@ -8,7 +8,7 @@ decided_at: 2026-08-28
 verification: probable
 ratchet: 42
 enforced_by:
-  - ".github/scripts/verifie-cloture-consignee.sh"
+  - ".github/scripts/verifie_cloture_consignee.py"
 verified:
   - by: machine:ci
     at: 2026-08-28

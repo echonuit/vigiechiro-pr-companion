@@ -5,7 +5,7 @@ comment on saura qu'il est fini.
 
 ## Pourquoi un fichier, et pas deux constantes
 
-Deux dispositifs la lisent, `rappelle-le-critere-de-fin.sh` et `loupe-4992-lots-sans-critere.py`.
+Deux dispositifs la lisent, `rappelle_le_critere_de_fin.py` et `loupe-4992-lots-sans-critere.py`.
 Chacun portait la sienne, et elles avaient déjà divergé sur deux caractères le jour de leur écriture.
 Une règle qui vit dans deux gardes voit sa divergence ne faire aucun bruit (#4837), et c'est
 exactement ce qui est arrivé : la quatrième formulation manquait aux deux, et rien ne pouvait le dire.
