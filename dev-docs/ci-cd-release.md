@@ -605,8 +605,8 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie_lien_javadoc_formatable.py` | une ligne `///` de plus de 120 caractères portant un lien markdown à texte espacé : le formateur la casserait en perdant le préfixe | `lint.yml` |
 | `verifie_temoins_non_decoratifs.py` | aucun témoin de `verifie_scripts.py` n'est décoratif : chaque garde perd sa détection, la suite doit rougir (article A2 rendu mécanique). La mutation porte sur un **arbre jetable** depuis #4700 - `scripts/` copié, le reste lié - donc l'interrompre ne peut plus laisser un garde neutralisé dans le dépôt | `lint.yml` |
 | `verifie_verdicts_declares.py` | qu'aucun appel de `rapporte`, `rapporte_plancher` ou `loupe` ne rende `lus=?` : un compte non déclaré rend le zéro du garde indiscernable de « n'a rien balayé », et le refus sur population vide ne le protège alors pas (ADR 5015). Les exceptions se **nomment** avec leur raison plutôt que de se compter : un cliquet à N se satisferait de convertir un garde et d'en ajouter un autre muet. La liaison de chaque nom est résolue par `ast`, un homonyme défini localement n'étant pas le verdict de `_commun` | `lint.yml` |
-| `verifie_contrats_tiennent.py` | qu'un contrat DÉCLARÉ ne contredise pas ce que le garde FAIT : `imprime_contrat` refusait un contrat incomplet, rien ne le confrontait au réel (ADR 4636). La règle n'est pas l'égalité mais l'absence de contradiction, parce que le vocabulaire diffère (`RACINES` vaut `PRODUCTION + TESTS`) et que le contrat sait souvent PLUS que l'inférence. Les porteurs se trouvent par un grep puis par un LANCEMENT, les trois témoins employant trois idiomes de dispatch | `lint.yml` |
-| `verifie_contrat_obligatoire.py` | qu'un point d'entrée de `scripts/adr` DÉCLARE ce qu'il est (ADR 4636). Les 41 en portent un depuis #5117 ; rien n'empêchait le 42e d'arriver sans le sien, et un corpus complet se reperd sans bruit - un garde neuf copié sur un voisin emporte le bloc de verdict et pas la déclaration. C'est un **invariant**, pas un cliquet : il n'y a pas de marge à relever, et l'échappatoire est une liste d'exceptions **nommées**, vide à la livraison. Il ne juge pas le CONTENU du contrat, que `verifie_contrats_tiennent.py` confronte déjà | `lint.yml` |
+| `verifie_contrats_tiennent.py` | qu'un contrat DÉCLARÉ ne contredise pas ce que le garde FAIT : `imprime_contrat` refusait un contrat incomplet, rien ne le confrontait au réel (ADR 4636). La règle n'est pas l'égalité mais l'absence de contradiction, parce que le vocabulaire diffère (`RACINES` vaut `PRODUCTION + TESTS`) et que le contrat sait souvent PLUS que l'inférence. Sa population se dérive de la **déclaration** et non d'une mention, par `ast` depuis #5144 : un grep sur `--contrat` comptait les fichiers qui en PARLENT. Elle compte **68** porteurs, dont le dernier garde shell, nommé à part parce qu'aucun AST Python ne le lit. Chaque contrat est obtenu en **lançant** le garde, jamais en lisant son source | `lint.yml` |
+| `verifie_contrat_obligatoire.py` | qu'un point d'entrée de `scripts/adr` **ou de `scripts/methode`** DÉCLARE ce qu'il est (ADR 4636). Ils sont **67**, et la population s'est élargie en #5157 ; rien n'empêchait le suivant d'arriver sans le sien, et un corpus complet se reperd sans bruit - un garde neuf copié sur un voisin emporte le bloc de verdict et pas la déclaration. C'est un **invariant**, pas un cliquet : il n'y a pas de marge à relever, et l'échappatoire est une liste d'exceptions **nommées**, vide à la livraison. Il ne juge pas le CONTENU du contrat, que `verifie_contrats_tiennent.py` confronte déjà | `lint.yml` |
 | `5188-corpus-shell.py` | ce qui reste en shell, et que la cible des deux langages condamne (ADR 5188). Un **cliquet à <!--inv:cliquet-corpus-shell-->50<!--/inv-->**, polarité descendante : il n'empêche pas qu'un script grossisse, il empêche la seule chose qui rendrait la cible inatteignable, **qu'on en ajoute**. Le script toléré, `lance-test-filme.sh`, est **compté** et non retiré : une tolérance est un délai, et le retirer ferait croire à une dispense. Sa population est ce que `git ls-files` suit, le même angle mort que les autres cliquets plutôt qu'un angle mort différent ici | `lint.yml` |
 | `verifie_corpus_declare.py` | le corpus d'un garde s'importe de `_commun.py` et ne se recopie pas : c'est ce refus qui permet à la liste des gardes à deux arbres de se dériver au lieu de s'énumérer (ADR 4586) | `lint.yml` |
 | `rapport.py` | chaque garde tourne dans SON dépôt, et non dans le répertoire de l'appelant : sans `cwd`, cinq cliquets sur dix-huit rendaient une autre valeur depuis ailleurs, et `resserre_cliquets.py` ramenait quatre `ratchet:` à zéro dans les vraies ADR en annonçant un succès (issue #4781) | `lint.yml` |
@@ -791,6 +791,74 @@ le drapeau. Le contrôle de non-déterminisme le dément : **deux appels sous le
 déjà**, parce que la question déclenche une compilation Maven puis un rendu JavaFX que le délai
 d'attente coupe à un endroit variable. Un contraste ne conclut que sur un script déterministe, et
 celui-ci ne l'est pas. Il est rangé parmi les outils.
+
+#### Les cinquante, un par un
+
+Un compte dit combien il reste ; il ne dit pas **quoi convertir**. Le dépôt nomme ses exceptions
+plutôt que de les compter, et une population qui doit disparaître se nomme pour la même raison : la
+liste est le plan de travail des chantiers de conversion.
+
+<div class="enrouleur" markdown>
+
+| script | ce qu'il est | la CI l'atteint | destination |
+|---|---|:---:|---|
+| `.github/assets/capture-screenshots.sh` | outil | oui | conversion |
+| `.github/assets/check-capture-mains.sh` | garde | oui | conversion |
+| `.github/assets/check-captures.sh` | garde | oui | conversion |
+| `.github/assets/check-doc-images.sh` | garde | oui | conversion |
+| `.github/assets/check-doc-videos.sh` | garde | oui | conversion |
+| `.github/assets/compare-apercus.sh` | garde | oui | conversion |
+| `.github/assets/compare-tournages.sh` | garde | oui | conversion |
+| `.github/assets/filtrer-bruit-cartes.sh` | garde | oui | conversion |
+| `.github/assets/mesure-pixels.sh` | outil | oui | conversion |
+| `.github/scripts/cas-manquants-du-tournage.sh` | garde | oui | conversion |
+| `.github/scripts/clips-orphelins.sh` | garde | oui | conversion |
+| `.github/scripts/construit-appimage.sh` | outil | oui | conversion |
+| `.github/scripts/installer-paquets.sh` | garde | oui | conversion |
+| `.github/scripts/interroge-le-jeton.sh` | garde | oui | conversion |
+| `.github/scripts/lance-test-filme.sh` | garde | oui | **après condition** : banc Java validé |
+| `.github/scripts/mesure-duree-portail.sh` | garde | oui | conversion |
+| `.github/scripts/porte-sur-le-contrat-de-fichiers.sh` | outil | oui | conversion |
+| `.github/scripts/rappelle-le-critere-de-fin.sh` | garde | oui | conversion |
+| `.github/scripts/revoque-jeton.sh` | garde | oui | conversion |
+| `.github/scripts/trie-les-echecs-de-plateforme.sh` | garde | oui | conversion |
+| `.github/scripts/veille-contrat-api.sh` | garde | oui | conversion |
+| `.github/scripts/veille-plateformes.sh` | garde | oui | conversion |
+| `.github/scripts/verdict-du-tournage.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-affichage-flatpak.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-apt.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-butoirs.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-chantier-de-l-issue.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-chemins-ascii.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-cloture-consignee.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-conditions-booleennes.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-conditions-de-job.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-corps-pr.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-decisions-du-tournage-connecte.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-demarrage-emballage.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-epinglage.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-forme-du-jeton.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-fraicheur-actions.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-inventaires-ci.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-jeton-vivant.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-jeton.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-noms-d-etapes.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-permissions.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-portee-des-secrets.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-renvois-workflows.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-secret-winget.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-specification-consignee.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-titre-pr.sh` | garde | oui | conversion |
+| `.github/scripts/verifie-verdict-avant-fusion.sh` | garde | oui | conversion |
+| `icone/genere-icones.sh` | outil | **non** | conversion |
+| `scripts/doc-video/filme-un-parcours.sh` | garde | oui | conversion |
+
+</div>
+
+La colonne **ce qu'il est** vient du contraste mesuré, pas d'une lecture du source. La colonne **la
+CI l'atteint** est transitive : un script lancé par un garde est exécuté par la CI aussi sûrement
+qu'un script cité dans un `run:`.
+
 
 #### Ce que la CI atteint
 

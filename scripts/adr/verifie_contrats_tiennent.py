@@ -173,9 +173,13 @@ def dispatche_en_code(chemin: pathlib.Path, texte: str) -> bool:
     branche ne coute pas seulement du temps : il IGNORE l argument et fait son travail. Un
     generateur reecrirait des fichiers, et ce garde deviendrait un effet de bord.
 
-    Les trois porteurs emploient trois idiomes - `"--contrat" in sys.argv`, un `add_argument` de
-    `argparse`, et un test shell - mais tous les trois ecrivent le litteral dans du CODE. C est le
-    controle de #5032 : une MENTION n est pas un DISPATCH.
+    Le corpus emploie QUATRE formes, mesurees le 2026-09-04 sur les 68 porteurs : l aide
+    mutualisee `sort_si_contrat_demande` (65), un appel direct a `imprime_contrat` (2, dont le
+    harnais, qui charge `_commun` a la main), et un test shell (1). Toutes ecrivent le litteral ou
+    le nom de l aide dans du CODE. C est le controle de #5032 : une MENTION n est pas un DISPATCH.
+
+    La phrase d origine disait « les trois porteurs, trois idiomes », vraie en #5009 et perimee des
+    le premier lot. Un chiffre dans une docstring vieillit comme un chiffre dans une page.
 
     **La cecite est assumee et elle penche du bon cote** : un quatrieme idiome que ce controle ne
     verrait pas ne serait pas lance, donc pas confronte. Mieux vaut manquer un contrat que
