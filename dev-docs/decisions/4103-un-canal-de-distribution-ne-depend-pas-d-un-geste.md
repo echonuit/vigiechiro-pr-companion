@@ -7,7 +7,7 @@ chantier: "#4103, suite de #4071"
 decided_at: 2026-08-21
 verification: certaine
 enforced_by:
-  - ".github/scripts/verifie-conditions-de-job.sh"
+  - ".github/scripts/verifie_conditions_de_job.py"
 verified:
   - by: machine:ci
     at: 2026-08-21
