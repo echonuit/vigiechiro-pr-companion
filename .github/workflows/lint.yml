@@ -171,7 +171,7 @@ jobs:
     # Le droit accordé est borné et VÉRIFIÉ SUR PLACE : l'invocation est en `--dry-run`, et l'étape
     # « La configuration d'analyse dérive bien de celle du dépôt » échoue si la liste des greffons n'est
     # pas exactement commit-analyzer + release-notes-generator, donc si un greffon d'écriture y entrait.
-    # Déclaration par job et non plancher : c'est le patron posé par #2739, que garde `verifie-permissions.sh`.
+    # Déclaration par job et non plancher : c'est le patron posé par #2739, que garde `verifie_permissions.py`.
     permissions:
       contents: write
     steps:
@@ -338,9 +338,9 @@ jobs:
         # job. Rien ne l'empêchait de se défaire : une PR qui les remettrait au plancher passerait
         # toutes les autres gardes (#3294).
         run: |
-          chmod +x .github/scripts/verifie-permissions.sh
-          ./.github/scripts/verifie-permissions.sh --auto-test
-          ./.github/scripts/verifie-permissions.sh
+          chmod +x .github/scripts/verifie_permissions.py
+          python3 .github/scripts/verifie_permissions.py --auto-test
+          python3 .github/scripts/verifie_permissions.py
 
       - name: "Un chemin suivi ne porte que de l'ASCII (bloquant, #5089)"
         # `git ls-files` et `git diff --name-only` échappent les chemins non-ASCII par défaut, ce
@@ -468,9 +468,9 @@ jobs:
         # de #3883 avait été apprécié pour le seul `banc-filme` ; vingt-six autres jobs n'en avaient
         # aucun, dont ceux qui publient.
         run: |
-          chmod +x .github/scripts/verifie-butoirs.sh
-          ./.github/scripts/verifie-butoirs.sh --auto-test
-          ./.github/scripts/verifie-butoirs.sh
+          chmod +x .github/scripts/verifie_butoirs.py
+          python3 .github/scripts/verifie_butoirs.py --auto-test
+          python3 .github/scripts/verifie_butoirs.py
 
       - name: Une entrée booléenne ne se compare pas à une chaîne
         # `inputs.x == 'true'` vaut TOUJOURS faux, et `!= 'true'` TOUJOURS vrai : une entrée
@@ -480,9 +480,9 @@ jobs:
         # même openbox - la garde qui prouve que la vérification du pointeur garde quelque chose ne
         # gardait donc rien elle-même.
         run: |
-          chmod +x .github/scripts/verifie-conditions-booleennes.sh
-          ./.github/scripts/verifie-conditions-booleennes.sh --auto-test
-          ./.github/scripts/verifie-conditions-booleennes.sh
+          chmod +x .github/scripts/verifie_conditions_booleennes.py
+          python3 .github/scripts/verifie_conditions_booleennes.py --auto-test
+          python3 .github/scripts/verifie_conditions_booleennes.py
           chmod +x .github/scripts/clips-orphelins.sh
           ./.github/scripts/clips-orphelins.sh --auto-test
 
@@ -521,18 +521,18 @@ jobs:
         # et `publish` descendaient d'une garde que le train programmé saute toujours. Le run était
         # VERT, et personne ne l'a vu pendant huit jours (#4079).
         run: |
-          chmod +x .github/scripts/verifie-conditions-de-job.sh
-          ./.github/scripts/verifie-conditions-de-job.sh --auto-test
-          ./.github/scripts/verifie-conditions-de-job.sh
+          chmod +x .github/scripts/verifie_conditions_de_job.py
+          python3 .github/scripts/verifie_conditions_de_job.py --auto-test
+          python3 .github/scripts/verifie_conditions_de_job.py
 
       - name: Les renvois entre workflows visent un libellé existant
         # Un `workflow_run` désigne le workflow attendu par son `name:`, apparié par égalité stricte.
         # Un libellé mort n'arme rien et ne rougit pas : il n'y a AUCUN run à regarder. #3279 l'a payé
         # trois semaines de documentation non republiée, repérées à l'œil et non par la CI (#3287).
         run: |
-          chmod +x .github/scripts/verifie-renvois-workflows.sh
-          ./.github/scripts/verifie-renvois-workflows.sh --auto-test
-          ./.github/scripts/verifie-renvois-workflows.sh
+          chmod +x .github/scripts/verifie_renvois_workflows.py
+          python3 .github/scripts/verifie_renvois_workflows.py --auto-test
+          python3 .github/scripts/verifie_renvois_workflows.py
 
       - name: Les inventaires que la CI tient sur elle-même concordent
         # Ce dépôt exige de son PRODUIT que ses inventaires soient prouvés - commandes CLI contre
@@ -559,8 +559,8 @@ jobs:
         # sur un dépôt propre, et son silence passerait pour un feu vert.
         run: |
           set -euo pipefail
-          ./.github/scripts/verifie-noms-d-etapes.sh --auto-test
-          ./.github/scripts/verifie-noms-d-etapes.sh
+          python3 .github/scripts/verifie_noms_d_etapes.py --auto-test
+          python3 .github/scripts/verifie_noms_d_etapes.py
       - name: Aucun jeton VigieChiro en clair
         # Le scan de secrets de GitHub ne reconnaît que les motifs de FOURNISSEURS ; un jeton
         # VigieChiro est une chaîne opaque qu'aucun catalogue ne connaît, et les motifs

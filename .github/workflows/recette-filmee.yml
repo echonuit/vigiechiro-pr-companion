@@ -123,7 +123,7 @@ jobs:
       # L'interpolation shell, elle, marche : `"${{ inputs.x }}"` rend le texte `true`. C'est ce qui a
       # rendu le défaut invisible - les étapes en `run:` se comportaient comme attendu.
       #
-      # `verifie-conditions-booleennes.sh` refuse désormais cette forme.
+      # `verifie_conditions_booleennes.py` refuse désormais cette forme.
       - name: Installer le gestionnaire de fenêtres
         # Le gestionnaire de fenêtres est posé À PART, pour que le témoin puisse s'en passer : c'est
         # tout l'objet de `sans_gestionnaire_de_fenetres`, qui vérifie que le lancement filmé REFUSE
