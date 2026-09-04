@@ -66,6 +66,14 @@ public class DiagnosticViewModel {
     /// le graphe. `null` tant qu'aucun diagnostic n'est chargé ; indisponible quand le point n'a pas de
     /// coordonnées.
     /// Les deux plages, exigée et enregistrée, ou la chaîne vide (#4988).
+    public ReadOnlyStringProperty plageExigeeProperty() {
+        return plageExigee.getReadOnlyProperty();
+    }
+
+    public ReadOnlyStringProperty plageEnregistreeProperty() {
+        return plageEnregistree.getReadOnlyProperty();
+    }
+
     public ReadOnlyStringProperty plagesHorairesProperty() {
         return plagesHoraires.getReadOnlyProperty();
     }
@@ -83,6 +91,16 @@ public class DiagnosticViewModel {
     /// Vide quand la vérification est indisponible : un attendu sans son obtenu laisserait croire à
     /// une mesure qui n'a pas eu lieu.
     private final ReadOnlyStringWrapper plagesHoraires = new ReadOnlyStringWrapper(this, "plagesHoraires", "");
+
+    /// La plage EXIGÉE seule, et la plage ENREGISTRÉE seule (#5204).
+    ///
+    /// L'écran les affiche en labels distincts pour que les séparateurs de la ligne soient tous
+    /// identiques : un « · » venu d'une chaîne ne s'espace pas comme un « · » venu du `HBox`, et les
+    /// deux se voyaient côte à côte. [#plagesHorairesProperty] reste, le banc de parité comparant la
+    /// ligne entière à celle du terminal.
+    private final ReadOnlyStringWrapper plageExigee = new ReadOnlyStringWrapper(this, "plageExigee", "");
+
+    private final ReadOnlyStringWrapper plageEnregistree = new ReadOnlyStringWrapper(this, "plageEnregistree", "");
 
     /// La cohérence horaire brute du diagnostic courant, ou `null` tant que rien n'est chargé. Le libellé
     /// n'en dit que le texte ; l'aplat de la nuit sur le graphe a besoin des **heures** (#2617).
@@ -160,12 +178,19 @@ public class DiagnosticViewModel {
         if (!coherence.disponible()) {
             fenetreNuit.set("");
             plagesHoraires.set("");
+            plageExigee.set("");
+            plageEnregistree.set("");
             alerteHorsNuit.set(RetourOperation.AUCUN);
             return;
         }
-        fenetreNuit.set("Nuit : coucher " + HEURE.format(coherence.coucherSoleil()) + " · lever "
-                + HEURE.format(coherence.leverSoleil()));
+        // Une seule grammaire pour les trois faits d'horaire, « A à B » trois fois (#5204). L'ancienne
+        // rédaction mêlait « coucher X · lever Y » et « Protocole : … », ce qui se lisait composite.
+        // Les mots « coucher » et « lever » ne quittent pas l'écran : l'alerte juste dessous les porte.
+        fenetreNuit.set(
+                "Nuit : " + HEURE.format(coherence.coucherSoleil()) + " à " + HEURE.format(coherence.leverSoleil()));
         plagesHoraires.set(PlagesHoraires.lisible(coherence));
+        plageExigee.set("Protocole : " + PlagesHoraires.plageExigee(coherence));
+        plageEnregistree.set("Enregistré : " + PlagesHoraires.plageEnregistree(coherence));
         alerteHorsNuit.set(libelleEcart(coherence));
     }
 
