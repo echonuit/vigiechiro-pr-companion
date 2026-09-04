@@ -184,16 +184,23 @@ class ScenarioDiagnosticPassageTest {
                 .isNotEmpty();
 
         // ─── S2-37 · la fenêtre nocturne, et l'écart au protocole ────────────────────────────────
+        // #5204 : la ligne dit la fenêtre en une seule grammaire, « A à B ». Les mots « coucher » et
+        // « lever » ont quitté CETTE ligne pour l'alerte, qui les porte ; éprouver les HEURES plutôt
+        // que les mots, c'est éprouver ce que la ligne apporte et non sa formulation du jour.
         assertThat(texte(robot, "#lblFenetreNuit"))
-                .as("la cohérence horaire nomme la fenêtre nocturne : coucher et lever du soleil. Sans"
-                        + " eux, un verdict de couverture serait rendu sans son barème")
-                .contains("coucher")
-                .contains("lever");
+                .as("la cohérence horaire nomme la fenêtre nocturne. Sans elle, un verdict de couverture"
+                        + " serait rendu sans son barème")
+                .containsPattern("Nuit : \\d{2}:\\d{2} à \\d{2}:\\d{2}");
 
-        assertThat(texte(robot, "#lblPlagesHoraires"))
-                .as("et les DEUX plages : ce que le protocole exigeait, ce qui a été enregistré. Un"
-                        + " verdict sans elles se croit sur parole (#4988)")
-                .contains("Protocole")
+        // #5204 : les deux plages sont deux labels, pour que les séparateurs de la ligne soient tous
+        // des nœuds frères et s'espacent pareil. Les éprouver séparément dit aussi que chacune est
+        // là : une seule assertion sur la ligne entière laisserait passer la disparition de l'une.
+        assertThat(texte(robot, "#lblPlageExigee"))
+                .as("ce que le protocole exigeait. Un verdict sans elle se croit sur parole (#4988)")
+                .contains("Protocole");
+
+        assertThat(texte(robot, "#lblPlageEnregistree"))
+                .as("et ce qui a été enregistré, en face")
                 .contains("Enregistré");
 
         // La nuit semée ne couvre pas la fenêtre exigée : mesuré, et c'est ce qui rend le cas jouable

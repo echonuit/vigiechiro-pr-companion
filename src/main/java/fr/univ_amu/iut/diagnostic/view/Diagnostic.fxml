@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import fr.univ_amu.iut.commun.view.GrapheNocturne?>
 <?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
@@ -31,11 +32,6 @@
   <!-- Résumé « N mesures » déporté en zone centre de la barre de statut (#1498, piste B) : plus de
        label empilé ici. L'absence de relevé (R20) reste portée par lblReleveAbsent + la zone droite. -->
   <!-- Température en début de nuit (#106) : donnée optionnelle saisie dans M-Passage. -->
-  <Label fx:id="lblTemperature" styleClass="section-sous">
-    <graphic>
-      <FontIcon iconLiteral="fas-thermometer-half"/>
-    </graphic>
-  </Label>
   <!-- Annotation du bloc climatique, en retrait sous son en-tete : elle dit pourquoi le graphe est
        vide. Elle ouvrait l'ecran, au meme fer que les titres de section, ce qui la faisait lire comme
        un avis general plutot que comme un commentaire de ce qui suit (#1974). -->
@@ -52,7 +48,15 @@
        controller (6 à 8 repères). Remplace un CategoryAxis qui affichait un libellé par mesure. -->
   <!-- Export de la courbe climatique (#2618) : redessinée hors écran et estampillée de son contexte,
        comme la courbe d'activité. C'est ce qu'on joint à un signalement d'anomalie. -->
-  <HBox alignment="CENTER_RIGHT">
+  <!-- Une seule rangee : la temperature a gauche, l'export a droite. Elles en occupaient deux, dont
+       la premiere etait vide sur toute sa droite (#5204). -->
+  <HBox alignment="CENTER_LEFT" spacing="8.0">
+    <Label fx:id="lblTemperature" styleClass="section-sous">
+      <graphic>
+        <FontIcon iconLiteral="fas-thermometer-half"/>
+      </graphic>
+    </Label>
+    <Region HBox.hgrow="ALWAYS"/>
     <Button fx:id="boutonExporterGraphe" minWidth="-Infinity" text="Exporter le graphe…" styleClass="bouton-secondaire" onAction="#exporterGraphe">
       <graphic>
         <FontIcon iconLiteral="fas-file-image"/>
@@ -96,15 +100,28 @@
     </VBox>
   </HBox>
 
-  <!-- Coherence horaire (#548, #4988) : fenetre nocturne reelle au point, puis les deux plages. -->
-  <Label fx:id="lblFenetreNuit" styleClass="section-sous">
-    <graphic>
-      <FontIcon iconLiteral="fas-moon"/>
-    </graphic>
-  </Label>
-  <!-- Ce que le protocole attendait et ce qui a ete enregistre (#4988). Sous la fenetre et en retrait,
-       parce que c'est elle que ces deux plages annotent. -->
-  <Label fx:id="lblPlagesHoraires" styleClass="annotation"/>
+  <!-- Coherence horaire (#548, #4988) : les TROIS faits d'horaire de la nuit sur une seule ligne, la
+       fenetre reelle puis ce que le protocole attendait et ce qui a ete enregistre. Ils occupaient
+       deux rangees, vides toutes deux sur leur droite (#5204).
+
+       Les deux labels partagent le MEME style. Le premier jet gardait `annotation` sur les plages,
+       pensant que la graisse porterait la hierarchie que le retrait disait avant. A l'image, deux
+       graisses sur une meme ligne se lisent comme une incoherence et non comme une nuance : les
+       trois faits sont des pairs depuis qu'ils ont la meme forme, et ils doivent se lire tels. -->
+  <HBox alignment="BASELINE_LEFT" spacing="8.0">
+    <Label fx:id="lblFenetreNuit" styleClass="section-sous">
+      <graphic>
+        <FontIcon iconLiteral="fas-moon"/>
+      </graphic>
+    </Label>
+    <!-- TROIS labels et DEUX separateurs identiques. Un « · » venu d'une chaine ne s'espace pas comme
+         un « · » venu du HBox : la premiere version melait les deux, et ca se voyait a l'image. Ici
+         tous les separateurs sont des noeuds freres, donc espaces pareil (#5204). -->
+    <Label text="·" styleClass="section-sous"/>
+    <Label fx:id="lblPlageExigee" styleClass="section-sous"/>
+    <Label text="·" styleClass="section-sous"/>
+    <Label fx:id="lblPlageEnregistree" styleClass="section-sous"/>
+  </HBox>
   <!-- Annotation de la fenetre de nuit ci-dessus, en retrait sous elle : le lien entre les deux ne se
        lisait pas, les deux partant du meme fer que les titres (#1974). -->
   <!-- Sévérité (couleur + icône) posée à l'exécution par LibelleRetour, depuis le RetourOperation du

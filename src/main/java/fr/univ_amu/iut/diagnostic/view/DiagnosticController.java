@@ -93,7 +93,10 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     private Label lblFenetreNuit;
 
     @FXML
-    private Label lblPlagesHoraires;
+    private Label lblPlageExigee;
+
+    @FXML
+    private Label lblPlageEnregistree;
 
     @FXML
     private Label lblAlerteHorsNuit;
@@ -258,9 +261,12 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
         // Encart cohérence horaires (#548) : la fenêtre nocturne réelle quand elle est calculable.
         lblFenetreNuit.textProperty().bind(viewModel.fenetreNuitProperty());
         lblFenetreNuit.visibleProperty().bind(viewModel.coherenceHoraireDisponibleProperty());
-        lblPlagesHoraires.textProperty().bind(viewModel.plagesHorairesProperty());
-        lblPlagesHoraires.visibleProperty().bind(viewModel.coherenceHoraireDisponibleProperty());
-        lblPlagesHoraires.managedProperty().bind(lblPlagesHoraires.visibleProperty());
+        lblPlageExigee.textProperty().bind(viewModel.plageExigeeProperty());
+        lblPlageExigee.visibleProperty().bind(viewModel.coherenceHoraireDisponibleProperty());
+        lblPlageEnregistree.textProperty().bind(viewModel.plageEnregistreeProperty());
+        lblPlageEnregistree.visibleProperty().bind(viewModel.coherenceHoraireDisponibleProperty());
+        lblPlageExigee.managedProperty().bind(lblPlageExigee.visibleProperty());
+        lblPlageEnregistree.managedProperty().bind(lblPlageEnregistree.visibleProperty());
         lblFenetreNuit.managedProperty().bind(viewModel.coherenceHoraireDisponibleProperty());
 
         // Alerte de cohérence horaire : texte, visibilité (présent/absent) et sévérité posés
