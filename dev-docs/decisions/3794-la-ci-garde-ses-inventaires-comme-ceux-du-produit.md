@@ -7,7 +7,7 @@ chantier: "#3794, lot 2 des suites #3802"
 decided_at: 2026-08-16
 verification: certaine
 enforced_by:
-  - ".github/scripts/verifie-inventaires-ci.sh"
+  - ".github/scripts/verifie_inventaires_ci.py"
 verified:
   - by: machine:ci
     at: 2026-08-16

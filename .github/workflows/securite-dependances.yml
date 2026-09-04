@@ -20,7 +20,7 @@ on:
       - ".github/workflows/securite-dependances.yml"
       # Le garde de fraîcheur ne tourne pour de vrai que le lundi. Une étape que seul un `schedule`
       # exerce peut être fusionnée cassée : ce chemin la fait tourner sur la PR qui la modifie.
-      - ".github/scripts/verifie-fraicheur-actions.sh"
+      - ".github/scripts/verifie_fraicheur_actions.py"
   workflow_dispatch: {}
 
 concurrency:
@@ -109,7 +109,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          chmod +x .github/scripts/verifie-fraicheur-actions.sh
+          chmod +x .github/scripts/verifie_fraicheur_actions.py
 
           # Trois tentatives, parce que l'API bafouille. Vu en local : un appel qui rend la liste
           # attendue, rejoué à l'identique trente secondes plus tard, revient vide. Sans reprise, ce
@@ -160,9 +160,9 @@ jobs:
 
             printf '%s\t%s\t%s\t%s\t%s\n' \
               "$depot" "${epingle:-?}" "${amont:-?}" "$retard" "${commentaire:-}" >> "$mesure"
-          done < <(./.github/scripts/verifie-fraicheur-actions.sh --inventaire)
+          done < <(python3 .github/scripts/verifie_fraicheur_actions.py --inventaire)
 
-          verdict=$(./.github/scripts/verifie-fraicheur-actions.sh < "$mesure") && frais=0 || frais=1
+          verdict=$(python3 .github/scripts/verifie_fraicheur_actions.py < "$mesure") && frais=0 || frais=1
           printf '%s\n' "$verdict"
 
           {

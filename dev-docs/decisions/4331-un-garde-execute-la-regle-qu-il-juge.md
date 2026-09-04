@@ -7,7 +7,7 @@ chantier: "#4331 (passe 11 du lot de suites du chantier #4291)"
 decided_at: 2026-08-24
 verification: certaine
 enforced_by:
-  - ".github/scripts/verifie-decisions-du-tournage-connecte.sh"
+  - ".github/scripts/verifie_decisions_du_tournage_connecte.py"
   - ".github/scripts/verifie-jeton-vivant.sh"
   - ".github/scripts/revoque-jeton.sh"
 verified:

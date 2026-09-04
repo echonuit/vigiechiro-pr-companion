@@ -8,7 +8,7 @@ decided_at: 2026-09-03
 verification: probable
 enforced_by:
   - "scripts/adr/5188-corpus-shell.py"
-ratchet: 43
+ratchet: 40
 inv_key: cliquet-corpus-shell
 verified:
   - by: machine:suspects
