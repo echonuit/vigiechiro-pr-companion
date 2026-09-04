@@ -121,13 +121,41 @@ def remplace(texte: str, matrice: str) -> str:
 
 # Ce que ce garde DÉCLARE être (issue #5009).
 CONTRAT = {
-    "geste": "matrice de la constitution périmée : un article dont les applicateurs ont bougé",
+    "geste": "la constitution ment sur sa jurisprudence : matrice périmée, ou articles sans "
+    "décision mal nommés",
     "population": "DECISIONS + CONSTITUTION.md",
     "dispositif": "invariant",
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/matrice-constitution.py --auto-test",
     "decision": "hygiène, sans décision",
 }
+
+
+# Le paragraphe qui NOMME les articles sans jurisprudence. On le borne par son intitule et par la
+# ligne vide qui le termine : le reste du document cite des articles a tout bout de champ, et lire le
+# fichier entier compterait ces mentions comme des noms de la liste.
+SANS_JURISPRUDENCE = re.compile(
+    r"\*\*Ce que la jurisprudence a r[ée]v[ée]l[ée]\.\*\*(.*?)\n\n", re.S
+)
+CODE_ARTICLE = re.compile(r"\bA(\d+)\b")
+
+
+def articles_sans_decision(lignes: list[dict]) -> list[str]:
+    """Les articles qu AUCUNE ADR ne rattache, mesures depuis le recensement."""
+    return [l["code"] for l in lignes if l["adrs"] == 0]
+
+
+def articles_nommes(texte: str) -> list[str] | None:
+    """Les articles que le paragraphe de la jurisprudence NOMME, ou rien s il est introuvable.
+
+    Rendre `None` plutot qu une liste vide n est pas un detail : une liste vide se comparerait a la
+    mesure et pourrait tomber juste par accident, sur un depot ou aucun article ne manquerait. Un
+    paragraphe introuvable est une PANNE du garde, et il se dit (ADR 5007).
+    """
+    m = SANS_JURISPRUDENCE.search(texte)
+    if m is None:
+        return None
+    return sorted({f"A{n}" for n in CODE_ARTICLE.findall(m.group(1))}, key=lambda c: int(c[1:]))
 
 
 def main() -> int:
@@ -153,8 +181,33 @@ def main() -> int:
         return auto_test()
 
     texte = CONSTITUTION.read_text(encoding="utf-8")
-    attendu = remplace(texte, rend(recense(DECISIONS, CONSTITUTION)))
+    lignes = recense(DECISIONS, CONSTITUTION)
+    attendu = remplace(texte, rend(lignes))
     if args.verifie:
+        # LA MEME QUESTION, SOUS DEUX RENDUS. La matrice et le paragraphe disent tous deux ce que la
+        # jurisprudence tient, depuis le meme recensement. Le paragraphe annoncait « 194 ADR se
+        # replient sur vingt-trois articles » et nommait A1 parmi ceux sans decision, alors qu il en
+        # porte quatre : deux nombres perimes et une affirmation fausse, qu aucun garde ne lisait
+        # (issue #5180). Les deux nombres ont ete RETIRES plutot qu ancres, ne portant rien ; la
+        # liste nommee, elle, porte tout, et c est elle qui se tient.
+        nommes = articles_nommes(texte)
+        mesures = articles_sans_decision(lignes)
+        if nommes is None:
+            print(
+                "Le paragraphe « Ce que la jurisprudence a révélé » est introuvable dans "
+                "CONSTITUTION.md.\nCe garde ne conclut pas sur un texte qu'il n'a pas lu : "
+                "l'intitulé a-t-il changé ?",
+                file=sys.stderr,
+            )
+            return 1
+        if nommes != mesures:
+            print(
+                f"Les articles sans jurisprudence sont {mesures}, le paragraphe nomme {nommes}.\n"
+                "Corrigez « Ce que la jurisprudence a révélé » dans CONSTITUTION.md : un article "
+                "que rien ne tient est une dette, et une dette mal nommée ne se rembourse pas.",
+                file=sys.stderr,
+            )
+            return 1
         if texte != attendu:
             print(
                 "La matrice de la constitution est périmée.\n"
@@ -195,6 +248,44 @@ def auto_test() -> int:
             ("l'article que rien ne tient est nommé", "**relecture seule**" in frais, True),
             ("la dette est comptée", "1 article(s) sur 2" in frais, True),
             ("une matrice périmée diffère", frais != const.read_text(encoding="utf-8"), True),
+        ):
+            print(f"  {'✔' if obtenu == attendu else '✘'} {titre}")
+            if obtenu != attendu:
+                echecs.append(titre)
+
+        # LE PARAGRAPHE QUI NOMME (issue #5180). La matrice et lui disent la meme chose depuis le
+        # meme recensement ; rien ne lisait le second, et il annoncait A1 sans jurisprudence alors
+        # qu il en porte quatre.
+        mesures = articles_sans_decision(lignes)
+        for titre, obtenu, attendu in (
+            ("les articles sans decision se mesurent", mesures, ["A2"]),
+            (
+                "le paragraphe qui les nomme est lu",
+                articles_nommes("**Ce que la jurisprudence a révélé.** rien : A2.\n\nsuite"),
+                ["A2"],
+            ),
+            (
+                "un article de TROP est vu",
+                articles_nommes("**Ce que la jurisprudence a révélé.** A1 et A2.\n\nsuite")
+                == mesures,
+                False,
+            ),
+            (
+                "un article MANQUANT aussi",
+                articles_nommes("**Ce que la jurisprudence a révélé.** rien du tout.\n\nsuite")
+                == mesures,
+                False,
+            ),
+            (
+                "un paragraphe introuvable est une PANNE, pas une liste vide",
+                articles_nommes("un texte sans ce paragraphe\n\nsuite"),
+                None,
+            ),
+            (
+                "et les articles cites AILLEURS ne comptent pas",
+                articles_nommes("**Ce que la jurisprudence a révélé.** A2.\n\nplus loin : A7, A9"),
+                ["A2"],
+            ),
         ):
             print(f"  {'✔' if obtenu == attendu else '✘'} {titre}")
             if obtenu != attendu:
