@@ -27,7 +27,7 @@ import re
 import subprocess
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import TESTS, rapporte, sort_si_contrat_demande
 
 SOURCES = [TESTS]

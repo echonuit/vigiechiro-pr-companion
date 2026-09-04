@@ -51,7 +51,7 @@ import importlib
 import pathlib
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "methode"))
 from _commun import RACINE_DEPOT, loupe, sort_si_contrat_demande
 

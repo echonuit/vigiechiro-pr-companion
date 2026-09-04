@@ -45,7 +45,7 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import sort_si_contrat_demande
 
 # Les deux arbres. `.agents/skills` est le fonds, `.claude/skills` sa copie tenue par

@@ -35,7 +35,7 @@ RACINE = pathlib.Path(
     ).stdout.strip()
     or "."
 )
-sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import sort_si_contrat_demande
 
 EXIGENCE = re.compile(r"^### Requirement:", re.MULTILINE)

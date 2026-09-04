@@ -45,7 +45,7 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import sort_si_contrat_demande
 
 # Le script que la methode doit nommer. Il est lance par `bash` et non execute directement : les

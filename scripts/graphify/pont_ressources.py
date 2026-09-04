@@ -21,7 +21,7 @@ from pathlib import Path
 # chemins relatifs au CWD : lance d ailleurs, il mesurait un autre arbre et rendait son verdict sans
 # le dire. Son voisin `rebuild.py` s ancre depuis toujours ; celui-ci ne le faisait pas.
 RACINE = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import PRODUCTION_ANCREE
 
 

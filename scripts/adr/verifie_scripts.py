@@ -41,10 +41,17 @@ _charges: set[str] = set()
 
 
 def _charge(nom: str):
-    """Importe un script au nom non-importable (chiffres, tirets) par son chemin."""
+    """Importe un script au nom non-importable (chiffres, tirets) par son chemin.
+
+    `_commun.py` a quitte `scripts/adr` pour `scripts/_commun/` en #5216 : le fonds ne vit plus chez
+    l un de ses usagers. Il se charge ici PAR SON ANCIEN NOM, et c est delibere : `_charges` alimente
+    la population de `verifie_temoins_non_decoratifs.py` et le compte de la ligne de cloture. Changer
+    la cle aurait deplace deux mesures pour un refactoring qui doit etre a comportement constant.
+    """
     _charges.add(nom)
     module = "adr_" + nom.replace("-", "_").replace(".py", "")
-    spec = importlib.util.spec_from_file_location(module, ICI / nom)
+    chemin = ICI.parent / "_commun" / "__init__.py" if nom == "_commun.py" else ICI / nom
+    spec = importlib.util.spec_from_file_location(module, chemin)
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
     return m
@@ -1172,7 +1179,13 @@ def _commun_du_depot():
     """Le socle, charge une fois. Le harnais ne l importe pas en tete : il charge des COPIES."""
     global _COMMUN
     if _COMMUN is None:
-        spec = importlib.util.spec_from_file_location("_commun_reel", ICI / "_commun.py")
+        # Le fonds a quitte `scripts/adr` pour `scripts/_commun/` en #5216 : il ne vit plus
+        # chez l un de ses usagers. Le harnais le charge donc un cran plus haut, et
+        # continue de le charger PAR FICHIER plutot que de l importer - il manipule des
+        # copies mutees, et un import mis en cache les lui cacherait.
+        spec = importlib.util.spec_from_file_location(
+            "_commun_reel", ICI.parent / "_commun" / "__init__.py"
+        )
         _COMMUN = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(_COMMUN)
     return _COMMUN

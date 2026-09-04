@@ -49,7 +49,7 @@ RACINE = pathlib.Path(__file__).resolve().parents[2]
 
 # La lecture des imports vit dans `_commun`, et non ici : deux deriveurs la faisaient chacun de leur
 # cote, et le motif textuel des deux devenait aveugle des que `ruff format` repliait la ligne (#5128).
-sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import noms_importes, sort_si_contrat_demande
 
 # Les prefixes que les deux conventions posent devant le geste.

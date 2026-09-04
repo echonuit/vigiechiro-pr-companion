@@ -54,7 +54,7 @@ import pathlib
 import re
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import RACINE_DEPOT, rapporte, sort_si_contrat_demande
 
 ADR = "4586"
@@ -74,7 +74,12 @@ ARBRE_DES_GARDES = pathlib.Path("scripts")
 
 # Le fonds commun EST l endroit ou le corpus se declare, et ce fichier-ci porte la sequence : tous
 # deux se compteraient eux-memes.
-RESERVES = {"_commun.py", pathlib.Path(__file__).name}
+#
+# Le fonds se nomme par son DOSSIER depuis #5216, non par son nom de fichier. Il a quitte
+# `scripts/adr/_commun.py` pour `scripts/_commun/__init__.py`, et une exemption sur « __init__.py »
+# dispenserait n importe quel paquet a venir. Le dossier, lui, ne designe que le fonds.
+RESERVES = {pathlib.Path(__file__).name}
+DOSSIER_DU_FONDS = "_commun"
 
 # Construites, jamais ecrites : voir la note en tete.
 _RACINE = "sr" + "c"
@@ -107,7 +112,9 @@ def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
     balayes = (
         f for f in (racine_lue / ARBRE_DES_GARDES).rglob("*.py") if "__pycache__" not in f.parts
     )
-    return [f for f in sorted(balayes) if f.name not in RESERVES]
+    return [
+        f for f in sorted(balayes) if f.name not in RESERVES and DOSSIER_DU_FONDS not in f.parts
+    ]
 
 
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
@@ -192,10 +199,20 @@ def auto_test() -> int:
         pose(racine, "def temoin():\n    ecrit(" + plein + ")\n")
         verifie("un chemin indente construit une fixture, pas un corpus", len(suspects(racine)), 0)
 
-        # 6. Le fonds commun s exclut : c est la ou le corpus DOIT etre ecrit.
+        # 6. Le fonds commun s exclut : c est la ou le corpus DOIT etre ecrit. Il se reconnait a
+        #    son DOSSIER depuis #5216, non a son nom de fichier - et ces deux cas tiennent la
+        #    distinction : le meme contenu passe dans `_commun/`, et refuse ailleurs.
         pose(racine, "")
-        pose(racine, f"PRODUCTION = pathlib.Path({plein})\n", nom="_commun.py")
-        verifie("`_commun.py` peut ecrire le chemin", len(suspects(racine)), 0)
+        (racine / DOSSIER / "_commun").mkdir(parents=True, exist_ok=True)
+        (racine / DOSSIER / "_commun" / "__init__.py").write_text(
+            f"PRODUCTION = pathlib.Path({plein})\n", encoding="utf-8"
+        )
+        verifie("le fonds peut ecrire le chemin", len(suspects(racine)), 0)
+        # Le CONTRAIRE, sur le fichier par defaut : il est reecrit par les cas suivants, quand un
+        # nom a lui persisterait et gonflerait leurs comptes d une unite. Vecu en l ecrivant.
+        pose(racine, f"PRODUCTION = pathlib.Path({plein})\n")
+        verifie("et le meme contenu hors du fonds est vu", len(suspects(racine)), 1)
+        pose(racine, "")
 
         # 7 et 8. Le dossier des DECISIONS, dans les deux formes (issue #4781). Avant ce cas, deux
         #    fichiers du depot en portaient une copie et le garde n en voyait aucune.

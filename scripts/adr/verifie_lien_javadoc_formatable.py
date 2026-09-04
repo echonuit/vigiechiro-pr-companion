@@ -45,7 +45,7 @@ import re
 import sys
 import tempfile
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import RACINE_DEPOT, RACINES, sort_si_contrat_demande
 
 # `RACINE_DEPOT` etait IMPORTE puis RECALCULE deux lignes plus bas, a l identique (#5022). La seconde

@@ -24,7 +24,7 @@ import pathlib
 import sys
 import tempfile
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "adr"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import rapporte, sort_si_contrat_demande
 
 ADR = "4859"
