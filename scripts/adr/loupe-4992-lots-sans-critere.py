@@ -62,7 +62,7 @@ import shutil
 import subprocess
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import loupe, sort_si_contrat_demande
 
 # Le commit qui a ecrit la regle, en UTC. Fait historique, il ne se met pas a jour.

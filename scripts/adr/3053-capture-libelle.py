@@ -20,7 +20,7 @@ import pathlib
 import re
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_java, sort_si_contrat_demande
 
 # Les DEUX arbres (#4462). Aucune decision n avait restreint ce garde a la production : il est ne

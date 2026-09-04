@@ -16,7 +16,7 @@ import pathlib
 import re
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import PRODUCTION, RACINES, rapporte, sans_commentaires_xml, sort_si_contrat_demande
 
 # La styleClass ou l'fx:id, porté par la balise HBox elle-même, évoque un slot d'actions.

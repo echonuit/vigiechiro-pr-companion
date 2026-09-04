@@ -29,7 +29,7 @@ travail. Le seuil descendra quand le cliquet, lui, sera descendu.
 import pathlib
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import DECISIONS, rapporte, sort_si_contrat_demande
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.

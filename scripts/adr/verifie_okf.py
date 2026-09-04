@@ -34,7 +34,7 @@ import pathlib
 import re
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 import tempfile
 
 from _commun import DECISIONS, rapporte, sort_si_contrat_demande

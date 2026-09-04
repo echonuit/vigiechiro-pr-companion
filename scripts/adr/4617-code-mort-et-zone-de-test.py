@@ -41,7 +41,7 @@ import pathlib
 import sys
 import xml.etree.ElementTree as ET
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import PRODUCTION, RACINE_DEPOT, TESTS, rapporte, sort_si_contrat_demande
 
 # DEUX cliquets, un par zone, et surtout pas un seul sur les deux (#4682).

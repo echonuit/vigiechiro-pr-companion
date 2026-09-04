@@ -24,7 +24,7 @@ import pathlib
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import RACINES_ANCREES, sort_si_contrat_demande
 
 # Les chemins du manifeste sont relatifs a la RACINE, et non a l un des deux arbres Java : une cle

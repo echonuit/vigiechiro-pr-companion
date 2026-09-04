@@ -24,6 +24,9 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE / "scripts"))
+# `verifie_okf` vit chez les gardes d ADR, le fonds commun un cran plus haut : deux
+# chemins, parce que ce sont deux choses. Le fonds a quitte scripts/adr en #5216.
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
 from _commun import DECISIONS, RACINE_DEPOT, imprime_contrat
 from verifie_okf import RESERVES, lit_entete

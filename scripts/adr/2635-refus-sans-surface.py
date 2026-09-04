@@ -20,7 +20,7 @@ import pathlib
 import re
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import PRODUCTION, rapporte, sans_commentaires_java, sort_si_contrat_demande
 
 # LA PRODUCTION SEULE, et c'est une exception assumee (ADR 4586).

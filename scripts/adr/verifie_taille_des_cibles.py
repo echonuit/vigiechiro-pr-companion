@@ -24,7 +24,7 @@ import re
 import sys
 import tempfile
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import PRODUCTION_ANCREE, sort_si_contrat_demande
 
 VUES = PRODUCTION_ANCREE

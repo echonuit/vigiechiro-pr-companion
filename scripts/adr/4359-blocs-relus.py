@@ -55,7 +55,7 @@ import hashlib
 import pathlib
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 import importlib.util
 
 from _commun import sort_si_contrat_demande

@@ -19,7 +19,7 @@ import pathlib
 import re
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import RACINES, rapporte, sans_commentaires_java, sort_si_contrat_demande
 
 # Les DEUX arbres. Un test qui avale son echec ment de la meme facon qu une classe de production :

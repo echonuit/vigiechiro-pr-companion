@@ -22,9 +22,10 @@ import sys
 import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import DECISIONS, sort_si_contrat_demande
 
+# `verifie_okf` vit chez les gardes d ADR ; le fonds commun a quitte ce dossier en #5216.
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
 from verifie_okf import RESERVES, lit_entete
 

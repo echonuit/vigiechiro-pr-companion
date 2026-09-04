@@ -694,6 +694,17 @@ introduites, et vérifier à la main les garde-fous que PIT ne peut pas atteindr
 
 ### Demander à un garde ce qu'il est : `--contrat`
 
+### Où vit le fonds commun des gardes
+
+`scripts/_commun/` porte le vocabulaire des corpus, les verdicts et l'aide `--contrat`. Il s'atteint par une seule forme, depuis n'importe quel garde :
+
+```python
+sys.path.insert(0, str(RACINE / "scripts"))
+from _commun import DECISIONS, rapporte
+```
+
+**Il a vécu dans `scripts/adr/` jusqu'à #5216**, c'est-à-dire chez l'un de ses usagers, et quatre formes de chemin coexistaient pour l'atteindre. La quatrième n'a été trouvée ni par le motif de réécriture ni par la relecture du diff, mais par un relevé des 54 auto-tests avant et après : un refactoring à comportement constant se prouve en comparant deux mesures.
+
 **Soixante-huit points d'entrée** répondent à `--contrat` et déclarent six champs : les 43 de
 `scripts/adr`, les 24 de `scripts/methode`, et le dernier garde shell. La réponse s'obtient sans rien
 lire du dépôt : la branche s'imprime **avant tout le reste**, pour qu'un garde dont une dépendance

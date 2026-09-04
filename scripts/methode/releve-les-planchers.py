@@ -26,7 +26,7 @@ import subprocess
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(RACINE / "scripts" / "adr"))
+sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import DECISIONS, sort_si_contrat_demande
 
 GARDE = RACINE / "scripts" / "adr" / "4395-renvois-en-javadoc.py"

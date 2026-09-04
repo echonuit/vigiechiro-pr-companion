@@ -38,7 +38,7 @@ import pathlib
 import sys
 import tempfile
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import sort_si_contrat_demande
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
