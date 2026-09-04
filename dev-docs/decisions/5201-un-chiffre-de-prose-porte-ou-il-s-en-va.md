@@ -77,8 +77,11 @@ l'[ADR 5102] interdit.
 
 ## Ce qu'elle ne tranche pas
 
-**Les douze sans définition.** Ils ne sont ni corrigés ni ancrés : les corriger demanderait d'inventer
-leur définition, ce qui figerait une supposition. Ils se traiteront un par un, quand quelqu'un aura
-besoin du chiffre et écrira ce qu'il compte.
+**Les douze sans définition ne sont pas corrigés ici**, et la première question leur est posée dans
+un lot à part : leur **magnitude** suffit-elle ? Là où elle suffit, le chiffre exact s'en va et la
+dette avec lui, sans qu'aucune définition n'ait à être inventée. Là où l'exactitude porte vraiment,
+il faudra écrire ce que le chiffre compte avant de l'ancrer, et c'est ce coût qui décidera.
+
+Ce que cette ADR tranche est l'**ordre des questions**, pas le sort de ces douze.
 
 [ADR 5102]: https://companion-dev.echonuit.fr/decisions/5102-une-capacite-se-demande-jamais-se-reconnait/
