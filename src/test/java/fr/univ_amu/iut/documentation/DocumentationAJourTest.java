@@ -637,7 +637,7 @@ class DocumentationAJourTest {
     /// Une vérification `certaine` nomme un test **ou** un script.
     ///
     /// Les deux sont déterministes, et l'ADR 0040 le prouve : le sujet de commit est gardé par
-    /// `verifie-titre-pr.sh`, aussi sûrement qu'un test, mais ce n'est pas du JUnit. Exiger une classe
+    /// `verifie_titre_pr.py`, aussi sûrement qu'un test, mais ce n'est pas du JUnit. Exiger une classe
     /// aurait forcé à reclasser en `probable` une décision parfaitement tenue - le format aurait menti
     /// sur la solidité du contrôle.
     private static void verifierReferenceCertaine(SoftAssertions verifs, String fichier, String reference) {

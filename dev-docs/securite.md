@@ -96,7 +96,7 @@ données d'exemple ou de test.
   read`). N'élargir que là où c'est nécessaire (`contents: write` pour `capture-vues.yml`, qui pousse
   les aperçus).
 - **Un secret de plateforme ne se pose jamais dans l'`env:` d'un job** (#4303), et
-  `verifie-portee-des-secrets.sh` le refuse. Le mécanisme ne se voit pas en lisant le YAML :
+  `verifie_portee_des_secrets.py` le refuse. Le mécanisme ne se voit pas en lisant le YAML :
   `ConnexionModule.jetonPonctuel()` lit `System.getenv`, les **forks surefire héritent** de
   l'environnement du job, et l'URL de base vaut la **production** par défaut. Posé trop haut, un jeton
   Vigie-Chiro n'est pas offert au pas qui en a besoin mais à **toute la suite de tests**.
@@ -121,7 +121,7 @@ données d'exemple ou de test.
     pendant une panne d'Heroku ne servirait à rien.
 
 - **Les textes d'un tournage sont balayés avant de partir en artefact** (#4327,
-  `verifie-forme-du-jeton.sh`). Un jeton Vigie-Chiro a une forme exacte - trente-deux caractères de
+  `verifie_forme_du_jeton.py`). Un jeton Vigie-Chiro a une forme exacte - trente-deux caractères de
   `[A-Z0-9]`, mesuré dans `auth.py` - et le balayage a lieu **avant** l'envoi, l'envoi en dépendant :
   sur un dépôt public, un artefact d'Actions se télécharge sans authentification, et le reprendre plus
   tard serait déjà trop tard.
@@ -130,7 +130,7 @@ données d'exemple ou de test.
   `secrets: inherit` à trois workflows appelés, dont un qui exécute les tests du produit : tout le
   trousseau du dépôt leur était offert. Aucun n'était lu - ce n'était pas une fuite, c'était une
   surface, et le raisonnement est celui de #2739. Une déclaration nominale côté **appelé** n'achète
-  rien tant que l'**appelant** hérite, et `verifie-portee-des-secrets.sh` tient désormais les deux
+  rien tant que l'**appelant** hérite, et `verifie_portee_des_secrets.py` tient désormais les deux
   bouts.
 
 - **Un seul appel, trois lectures** (#4385). Le contrôle du jeton, sa révocation et le pas

@@ -199,7 +199,7 @@ jobs:
           path: ${{ runner.temp }}/apt-vigiechiro
           key: apt-${{ runner.os }}-tournage-recette
 
-      # `installer-paquets.sh`, et non `apt-get` en direct : `verifie-apt.sh` refuse la seconde
+      # `installer-paquets.sh`, et non `apt-get` en direct : `verifie_apt.py` refuse la seconde
       # forme, et exige le cache ci-dessus avec son `APT_CACHE`.
       - name: Installer ffmpeg (Linux)
         if: ${{ steps.ffmpeg.outputs.installe == 'manquant' && runner.os == 'Linux' }}
@@ -298,7 +298,7 @@ jobs:
           ./.github/scripts/verifie-jeton-vivant.sh
 
       # Le secret vit dans l'`env:` de CE PAS, jamais dans celui du job, et
-      # `verifie-portee-des-secrets.sh` (#4303) le refuse ailleurs. La raison n'est pas cosmétique :
+      # `verifie_portee_des_secrets.py` (#4303) le refuse ailleurs. La raison n'est pas cosmétique :
       # `ConnexionModule.jetonPonctuel()` lit `System.getenv`, les forks surefire héritent de
       # l'environnement du job, et l'URL de base vaut la production par défaut.
       #
@@ -373,8 +373,8 @@ jobs:
           # tourne sous `-Dmaven.test.failure.ignore=true` - on veut les clips d'un cas qui rougit -,
           # si bien qu'un scénario rouge laisse le job VERT. Mesuré sur le run 32696587259 : le seul
           # endroit où l'échec existait était une ligne de Maven dans un journal de trois mille.
-          chmod +x .github/scripts/verdict-du-tournage.sh
-          verdict=$(./.github/scripts/verdict-du-tournage.sh target/surefire-reports)
+          chmod +x .github/scripts/verdict_du_tournage.py
+          verdict=$(python3 .github/scripts/verdict_du_tournage.py target/surefire-reports)
           printf '%s\n' "${verdict}"
 
           {
@@ -449,8 +449,12 @@ jobs:
         if: ${{ always() }}
         shell: bash
         run: |
-          chmod +x .github/scripts/verifie-forme-du-jeton.sh
-          ./.github/scripts/verifie-forme-du-jeton.sh target/recette/clips tournage.log \
+          chmod +x .github/scripts/verifie_forme_du_jeton.py
+          # `python3` n'est pas garanti sur l'image Windows, et ce job peut y tourner : on RESOUT
+          # l'interprète au lieu de le supposer. Les autres appels de gardes Python vivent sur
+          # `ubuntu-latest`, où `python3` est là par construction ; ici seulement la question se pose.
+          py=python3; command -v "$py" >/dev/null 2>&1 || py=python
+          "$py" .github/scripts/verifie_forme_du_jeton.py target/recette/clips tournage.log \
             | tee -a "${GITHUB_STEP_SUMMARY}"
 
       # L'envoi DÉPEND du balayage, et c'est le seul agencement qui serve à quelque chose : garder

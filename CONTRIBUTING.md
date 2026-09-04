@@ -252,7 +252,7 @@ gh pr create --fill
 # Plusieurs commits : --fill titre la PR avec le NOM DE BRANCHE, que le garde refuse.
 # Le titre s'écrit alors à la main, et c'est là qu'il se vérifie.
 TITRE="feat(passage): écran pivot d'une nuit"
-./.github/scripts/verifie-titre-pr.sh "$TITRE" && gh pr create --title "$TITRE" --body-file corps.md
+python3 .github/scripts/verifie_titre_pr.py "$TITRE" && gh pr create --title "$TITRE" --body-file corps.md
 ```
 
 - **`gh pr create --fill` ne convient qu'à une branche d'un seul commit.** Au-delà, `gh` titre la

@@ -32,7 +32,7 @@ succès. Publier une version ne demande donc aucun geste ici.
 GNOME et KDE par défaut, le repli retirait X11 précisément là où il est indispensable, et l'application
 mourait au démarrage sur `Unable to open DISPLAY`. Sur Wayland, l'hôte expose XWayland, et `x11` y donne
 un affichage. Déclarer `x11` **et** `wayland` n'est pas une option : `flatpak-builder-lint` refuse cette
-combinaison. `verifie-affichage-flatpak.sh` garde cette règle.
+combinaison. `verifie_affichage_flatpak.py` garde cette règle.
 
 `Workspace.parDefaut()` code le chemin de l'espace de travail **en dur** : on peut donc n'accorder que
 lui, plutôt que `--filesystem=home` comme le font beaucoup d'applications. Vérifié dans le bac à

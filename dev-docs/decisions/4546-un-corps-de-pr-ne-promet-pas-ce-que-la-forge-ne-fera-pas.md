@@ -7,7 +7,7 @@ chantier: "#4546 (passe 11 de la clôture de #4502)"
 decided_at: 2026-08-26
 verification: certaine
 enforced_by:
-  - ".github/scripts/verifie-corps-pr.sh"
+  - ".github/scripts/verifie_corps_pr.py"
 verified:
   - by: machine:ci
     at: 2026-08-26

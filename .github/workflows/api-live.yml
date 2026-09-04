@@ -91,7 +91,7 @@ jobs:
         #
         # Le NOM de cette étape est lu par la veille ci-dessous pour reconnaître, dans
         # l'historique, un passage qui a réellement vérifié. Le renommer sans reporter le nouveau
-        # nom dans ETAPE_CONTRAT (.github/scripts/veille-contrat-api.sh) casserait la détection ;
+        # nom dans ETAPE_CONTRAT (.github/scripts/veille_contrat_api.py) casserait la détection ;
         # la veille refuse de conclure dans ce cas plutôt que d'annoncer un « jamais joué ».
         id: contrat
         if: steps.jeton.outputs.valide == 'true'
@@ -110,7 +110,7 @@ jobs:
           PASSAGE: ${{ github.run_id }}
         run: |
           set -euo pipefail
-          chmod +x .github/scripts/veille-contrat-api.sh
+          chmod +x .github/scripts/veille_contrat_api.py
 
           # L'historique EST la mesure : rien n'est stocké. Vingt passages couvrent largement les
           # trois semaines du seuil, même avec des déclenchements manuels intercalés.
@@ -127,7 +127,7 @@ jobs:
           maintenant=""
           [ "${{ steps.contrat.outcome }}" = "success" ] && maintenant="--joue-maintenant"
 
-          verdict=$(./.github/scripts/veille-contrat-api.sh $maintenant < "$historique") && frais=0 || frais=1
+          verdict=$(python3 .github/scripts/veille_contrat_api.py $maintenant < "$historique") && frais=0 || frais=1
           printf '%s\n' "$verdict"
 
           {

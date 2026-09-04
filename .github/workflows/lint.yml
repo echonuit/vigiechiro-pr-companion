@@ -316,9 +316,9 @@ jobs:
         # L'autotest tourne d'abord, comme pour la garde jeton : une règle relâchée passerait sinon au
         # vert sur un dépôt propre, sans que rien ne le dise.
         run: |
-          chmod +x .github/scripts/verifie-epinglage.sh
-          ./.github/scripts/verifie-epinglage.sh --auto-test
-          ./.github/scripts/verifie-epinglage.sh
+          chmod +x .github/scripts/verifie_epinglage.py
+          python3 .github/scripts/verifie_epinglage.py --auto-test
+          python3 .github/scripts/verifie_epinglage.py
 
       - name: Le Flatpak peut ouvrir une fenêtre sous Wayland
         # `--socket=fallback-x11` n'accorde X11 que si Wayland est ABSENT, alors que JavaFX rend par
@@ -329,9 +329,9 @@ jobs:
         # C'est une politique de permissions, lisible dans le manifeste : on la garde ici, hors ligne,
         # plutôt que d'installer un compositeur sur le runner.
         run: |
-          chmod +x .github/scripts/verifie-affichage-flatpak.sh
-          ./.github/scripts/verifie-affichage-flatpak.sh --auto-test
-          ./.github/scripts/verifie-affichage-flatpak.sh
+          chmod +x .github/scripts/verifie_affichage_flatpak.py
+          python3 .github/scripts/verifie_affichage_flatpak.py --auto-test
+          python3 .github/scripts/verifie_affichage_flatpak.py
 
       - name: Moindre privilège des workflows
         # #2739 a retiré les droits d'écriture du plancher de release.yml pour les déclarer job par
@@ -352,9 +352,9 @@ jobs:
         # donc à zéro le jour de la décision. Le garde ne dit rien de la casse, des espaces ni des
         # apostrophes, que `core.quotePath` n'échappe pas et qui ne sont pas la cause.
         run: |
-          chmod +x .github/scripts/verifie-chemins-ascii.sh
-          ./.github/scripts/verifie-chemins-ascii.sh --auto-test
-          ./.github/scripts/verifie-chemins-ascii.sh
+          chmod +x .github/scripts/verifie_chemins_ascii.py
+          python3 .github/scripts/verifie_chemins_ascii.py --auto-test
+          python3 .github/scripts/verifie_chemins_ascii.py
 
       - name: Un secret de plateforme ne dépasse pas son pas
         # Posé dans l'`env:` d'un JOB, un jeton Vigie-Chiro n'est pas offert au pas qui en a
@@ -365,9 +365,9 @@ jobs:
         # Et rien côté serveur ne peut le rattraper : le rôle `Lecteur` est déclaré mais AUCUNE
         # route ne l'accepte, `GET /moi` compris. La lecture seule ne tient que par cette portée.
         run: |
-          chmod +x .github/scripts/verifie-portee-des-secrets.sh
-          ./.github/scripts/verifie-portee-des-secrets.sh --auto-test
-          ./.github/scripts/verifie-portee-des-secrets.sh
+          chmod +x .github/scripts/verifie_portee_des_secrets.py
+          python3 .github/scripts/verifie_portee_des_secrets.py --auto-test
+          python3 .github/scripts/verifie_portee_des_secrets.py
 
       - name: Le verdict du tournage lit le XML, pas le texte
         # Les rapports `.txt` de surefire annoncent « Tests run: 0 » sur une classe à `@Nested` et
@@ -376,8 +376,8 @@ jobs:
         # « aucun échec », et une ERREUR compte autant qu'une défaillance - c'est par une erreur qu'un
         # banc refusant faute de jeton se signale.
         run: |
-          chmod +x .github/scripts/verdict-du-tournage.sh
-          ./.github/scripts/verdict-du-tournage.sh --auto-test
+          chmod +x .github/scripts/verdict_du_tournage.py
+          python3 .github/scripts/verdict_du_tournage.py --auto-test
 
       - name: Le tournage nomme les cas qu'il n'a pas rendus
         # Son oracle comparait deux nombres, « 111 cas sur 116 », sans jamais dire lesquels : il
@@ -423,8 +423,8 @@ jobs:
         # Un quatrième vérifie qu'il NOMME le fichier qu'il a écarté. C'est ce qui l'empêche d'être
         # un faux vert : sans cette phrase, on croirait le canal des clips couvert.
         run: |
-          chmod +x .github/scripts/verifie-forme-du-jeton.sh
-          ./.github/scripts/verifie-forme-du-jeton.sh --auto-test
+          chmod +x .github/scripts/verifie_forme_du_jeton.py
+          python3 .github/scripts/verifie_forme_du_jeton.py --auto-test
 
       - name: La sonde partagée rend un code et ne le juge pas
         # Les trois appelants la partagent, et leurs verdicts sur un `401` diffèrent - refuser,
@@ -458,9 +458,9 @@ jobs:
         # Trois étapes de trois workflows ont pendu le même jour sur `apt-get update`, jusqu'au
         # butoir de leur job et jusque sur `main`. Le remède avait été appliqué à UNE des trois.
         run: |
-          chmod +x .github/scripts/verifie-apt.sh
-          ./.github/scripts/verifie-apt.sh --auto-test
-          ./.github/scripts/verifie-apt.sh
+          chmod +x .github/scripts/verifie_apt.py
+          python3 .github/scripts/verifie_apt.py --auto-test
+          python3 .github/scripts/verifie_apt.py
 
       - name: Tout job porte un butoir
         # Un job sans `timeout-minutes` que GitHub laisse courir SIX HEURES a bloqué une PR
@@ -568,9 +568,9 @@ jobs:
         # L'autotest tourne d'abord : une garde dont le motif a été relâché passerait sinon au vert
         # sur un dépôt propre, sans que rien ne le dise.
         run: |
-          chmod +x .github/scripts/verifie-jeton.sh
-          ./.github/scripts/verifie-jeton.sh --auto-test
-          ./.github/scripts/verifie-jeton.sh
+          chmod +x .github/scripts/verifie_jeton.py
+          python3 .github/scripts/verifie_jeton.py --auto-test
+          python3 .github/scripts/verifie_jeton.py
 
       - name: Le garde de fraîcheur des épinglages sait encore rougir
         # Il ne mesure pour de vrai que le lundi, dans `securite-dependances.yml`, parce que la mesure
@@ -587,8 +587,8 @@ jobs:
         # un `skipped` compté comme une exécution réelle passeraient inaperçus jusqu'au jour où on
         # compterait sur elle (#2748).
         run: |
-          chmod +x .github/scripts/veille-contrat-api.sh
-          ./.github/scripts/veille-contrat-api.sh --auto-test
+          chmod +x .github/scripts/veille_contrat_api.py
+          python3 .github/scripts/veille_contrat_api.py --auto-test
 
       - name: La garde du démarrage des emballages sait encore rougir
         # Elle ne tourne pour de vrai que dans `release.yml` (les enveloppes) et `maven.yml`
@@ -596,8 +596,8 @@ jobs:
         # étape pourrait être fusionnée cassée et ne se découvrir qu'au train suivant, en bloquant la
         # publication. Cet autotest est la seule chose qui la voie entre deux releases (#3617).
         run: |
-          chmod +x .github/scripts/verifie-demarrage-emballage.sh
-          ./.github/scripts/verifie-demarrage-emballage.sh --auto-test
+          chmod +x .github/scripts/verifie_demarrage_emballage.py
+          python3 .github/scripts/verifie_demarrage_emballage.py --auto-test
 
       - name: La garde du secret winget sait encore rougir
         # Elle ne tourne pour de vrai que dans winget.yml, sur dispatch manuel, c'est-à-dire quelques
@@ -766,14 +766,14 @@ jobs:
       - name: "Auto-test de la veille des plateformes (bloquant, #3526)"
         # Le verdict rougit dans le train de publication ; l'auto-test du JUGE tourne ici, à chaque PR.
         # Un juge qui aurait cessé de juger laisserait partir le train sur une preuve absente, et son
-        # silence passerait pour un feu vert - c'est le patron de `veille-contrat-api.sh`.
-        run: bash .github/scripts/veille-plateformes.sh --auto-test
+        # silence passerait pour un feu vert - c'est le patron de `veille_contrat_api.py`.
+        run: python3 .github/scripts/veille_plateformes.py --auto-test
 
       - name: "Auto-test du tri des échecs de plateforme (bloquant, #4544)"
         # Le juge du passage hebdomadaire n'avait AUCUN témoin, l'un des trois scripts de
         # `.github/scripts` dans ce cas. Le défaut a vécu là : un passage coupé par son plafond se
         # déclarait « complet », sans échec, et rendait 0. Rien ne pouvait le voir.
-        run: bash .github/scripts/trie-les-echecs-de-plateforme.sh --auto-test
+        run: python3 .github/scripts/trie_les_echecs_de_plateforme.py --auto-test
 
       - name: "Auto-test du garde de verdict avant fusion (bloquant, #4571)"
         # Ce garde-ci ne tourne PAS en CI : il se lance à la main avant de fusionner, parce qu'en
@@ -833,7 +833,7 @@ jobs:
         # règle compte doublement, parce que ce titre devient la ligne du CHANGELOG à la fusion en
         # squash, et que le CHANGELOG est le seul fichier que la typographie ne peut pas rattraper
         # après coup. Un garde qui cesserait de détecter laisserait la source se rouvrir en silence.
-        run: bash .github/scripts/verifie-titre-pr.sh --auto-test
+        run: python3 .github/scripts/verifie_titre_pr.py --auto-test
 
       - name: "Auto-test du garde de corps de PR (bloquant, #4453)"
         # Le corps de la PR est de la prose visible au sens de l'article A31, et il n'est jamais
@@ -842,7 +842,7 @@ jobs:
         # grille à la relecture. Ses onze cas comptent trois rouges et quatre contrôles négatifs :
         # un garde qui cesserait d'épargner un bloc de code se ferait contourner par suppression de
         # la citation, ce qui est pire que muet.
-        run: bash .github/scripts/verifie-corps-pr.sh --auto-test
+        run: python3 .github/scripts/verifie_corps_pr.py --auto-test
 
       - name: "Auto-test du cliquet de commentaire en corps de methode (bloquant, #4472)"
         # Ce cliquet tient une population que le cliquet 4359 ne voit pas. Le cas qui compte est
@@ -1141,7 +1141,7 @@ jobs:
         # Le défaut n'entre pas au commit : les quatre PR rouges du 2026-08-26 partaient toutes
         # d'une branche aux sujets de commit conformes, et 286 des 297 sujets de branche le sont.
         # Il entre à la frappe du titre, quand la main écrit du français correct et lui applique la
-        # typographie française. Le remède ne crée aucune règle, il fait lancer `verifie-titre-pr.sh`
+        # typographie française. Le remède ne crée aucune règle, il fait lancer `verifie_titre_pr.py`
         # avant l'ouverture de la PR ; ce garde tient les trois documents qui le nomment.
         # Il RELANCE le script cité sur deux titres témoins, l'un fautif et l'autre conforme : une
         # méthode qui nommerait une commande devenue permissive vaut moins que rien, son vert

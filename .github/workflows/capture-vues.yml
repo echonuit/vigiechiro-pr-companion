@@ -200,8 +200,8 @@ jobs:
           # On exécute donc ICI la MÊME validation, avec le MÊME script : seul le transport du
           # résultat change, le contrôle reste réel. Publier un succès en dur reviendrait à faire
           # croire à une vérification qui n'a pas eu lieu.
-          chmod +x .github/scripts/verifie-titre-pr.sh
-          if ./.github/scripts/verifie-titre-pr.sh "$MSG"; then
+          chmod +x .github/scripts/verifie_titre_pr.py
+          if python3 .github/scripts/verifie_titre_pr.py "$MSG"; then
             VERDICT=success
             RESUME="Titre conforme à Conventional Commits."
           else

@@ -7,7 +7,7 @@ chantier: "#2748, lot #2724 du chantier #2720 ; couvre #2887, #3287, #3345, #338
 decided_at: 2026-08-06
 verification: certaine
 enforced_by:
-  - ".github/scripts/veille-contrat-api.sh"
+  - ".github/scripts/veille_contrat_api.py"
 verified:
   - by: machine:ci
     at: 2026-08-06

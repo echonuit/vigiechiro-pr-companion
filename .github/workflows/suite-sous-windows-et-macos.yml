@@ -10,7 +10,7 @@
 # qu'on ferme. Les onze échecs relevés à l'étape 1 sont corrigés, donc il se programme (#3526).
 name: Suite complète sous Windows et macOS
 
-# Le titre du run porte le **marqueur** que la veille du train lit (`veille-plateformes.sh`). Il
+# Le titre du run porte le **marqueur** que la veille du train lit (`veille_plateformes.py`). Il
 # distingue un passage complet d'un passage ciblé, ce que l'API des runs ne permet pas autrement :
 # elle ne rend pas les entrées d'un `workflow_dispatch`.
 #
@@ -100,7 +100,7 @@ jobs:
     # commit, tient 18 à 19 minutes à chaque fois.
     #
     # Un plafond à 90 coupait donc un passage sur quatre sans rien apprendre, et le coût n'est pas
-    # qu'une machine perdue : un `cancelled` ne vaut aucune preuve pour `veille-plateformes.sh`, qui
+    # qu'une machine perdue : un `cancelled` ne vaut aucune preuve pour `veille_plateformes.py`, qui
     # ne retient que les `success`. Le train du mercredi restait sans preuve fraîche.
     #
     # Relever ne masque rien. Un job réellement bloqué meurt toujours ici, simplement plus tard ; ce
@@ -150,7 +150,12 @@ jobs:
         shell: bash
         env:
           CLASSES: ${{ inputs.classes }}
-        run: ./.github/scripts/trie-les-echecs-de-plateforme.sh
+        run: |
+          # `python3` n'est pas garanti sur l'image Windows, et ce job peut y tourner : on RESOUT
+          # l'interprète au lieu de le supposer. Les autres appels de gardes Python vivent sur
+          # `ubuntu-latest`, où `python3` est là par construction ; ici seulement la question se pose.
+          py=python3; command -v "$py" >/dev/null 2>&1 || py=python
+          "$py" .github/scripts/trie_les_echecs_de_plateforme.py
 
       - name: Conserver les rapports, pour trier plus finement si le compte surprend
         if: always()

@@ -201,7 +201,7 @@ clip soit regardé. Et ce n'est pas une hypothèse laissée en l'air - le versem
 plateforme a **confirmé** le retrait (#4324). Sans confirmation, le clip n'est pas publié.
 
 **Il ne dépasse pas son pas.** Posé dans l'`env:` d'un job, un jeton serait offert à toute la suite de
-tests, que `ConnexionModule` pointe alors sur la production. `verifie-portee-des-secrets.sh` le refuse
+tests, que `ConnexionModule` pointe alors sur la production. `verifie_portee_des_secrets.py` le refuse
 ailleurs qu'au pas qui filme. Et le banc lui-même **lie sa propre source de jeton** : un scénario qui a
 demandé une connexion factice reste factice, même dans un tournage connecté (ADR 4134).
 

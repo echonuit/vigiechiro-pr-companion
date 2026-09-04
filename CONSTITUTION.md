@@ -247,7 +247,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 |---|---:|---:|---|
 | A1 · La preuve précède l'affirmation | 4 | 1 | `.github/scripts/verifie_decisions_du_tournage_connecte.py`, `.github/scripts/verifie-jeton-vivant.sh`, `.github/scripts/revoque-jeton.sh` |
 | A2 · Un garde est vu rouge sur sa propre mutation | 10 | 7 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure-duree-portail.sh`, et 2 autres |
-| A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 32 | 24 | `.github/scripts/veille-contrat-api.sh`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 25 autres |
+| A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 32 | 24 | `.github/scripts/veille_contrat_api.py`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 25 autres |
 | A4 · Un cas joué n'est pas un cas prouvé | 24 | 15 | `ApercuFxElisionTest#bouton_tronque_refuse`, `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`, `scripts/adr/3053-capture-libelle.py`, et 12 autres |
 | A5 · La mesure fait foi, et dit d'où elle vient | 29 | 17 | `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`, `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`, `EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues`, et 12 autres |
 | A6 · La vérification se déclare, sur trois niveaux | 3 | 2 | `DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment`, `EcritureAtomiqueTest#creation_restreinte` |
@@ -268,13 +268,13 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A21 · La nuit, du crépuscule à l'aube, est l'unité de traitement | 6 | 3 | `AgregationActiviteTest#l_export_date_ses_lignes_par_la_nuit_biologique`, `NatureNuitTest#un_passage_marque_est_une_participation_opportuniste`, `CorrespondanceParticipationTest#le_depot_ne_depend_pas_du_poste` |
 | A22 · Une feature est un plugin désactivable, et rien ne cycle entre elles | 4 | 2 | `DecisionsRespecteesTest#aucun_cycle_entre_les_features`, `scripts/adr/0010-dialogue-hors-port.py`, `NavigateurTest#relibeller_ne_reabonne_pas` |
 | A23 · Ce qui s'affiche est embarqué et montré en entier, et rien ne s'offre qui ne se montre | 17 | 11 | `scripts/adr/0035-pictogramme-caractere.py`, `scripts/adr/0037-slot-actions-hbox.py`, `scripts/adr/2493-modale-suit-croissance.py`, et 12 autres |
-| A24 · La langue du dépôt est le français | 2 | 2 | `.github/scripts/verifie-titre-pr.sh`, `scripts/methode/verifie-controle-du-titre.py` |
-| A25 · Le travail de branche est isolé | 3 | 1 | `.github/scripts/verifie-epinglage.sh` |
+| A24 · La langue du dépôt est le français | 2 | 2 | `.github/scripts/verifie_titre_pr.py`, `scripts/methode/verifie-controle-du-titre.py` |
+| A25 · Le travail de branche est isolé | 3 | 1 | `.github/scripts/verifie_epinglage.py` |
 | A26 · La provenance se déclare | 3 | 2 | `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`, `DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier` |
 | A28 · Un avertissement se dit en mots | 1 | 0 | `scripts/adr/4366-avertissement-en-pictogramme.py` |
 | A29 · L'ergonomie se rattache à une heuristique nommée | 1 | 0 | `scripts/adr/verifie_okf.py` |
 | A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 5 | 1 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py`, et 2 autres |
-| A31 · La prose visible se relit à l'humaniseur | 4 | 1 | `.github/scripts/verifie-corps-pr.sh`, `scripts/adr/4783-traces-d-outil.py` |
+| A31 · La prose visible se relit à l'humaniseur | 4 | 1 | `.github/scripts/verifie_corps_pr.py`, `scripts/adr/4783-traces-d-outil.py` |
 
 **2 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.
 

@@ -7,7 +7,7 @@ chantier: "#3561, lot 3 du chantier #3518"
 decided_at: 2026-08-15
 verification: certaine
 enforced_by:
-  - ".github/scripts/veille-plateformes.sh"
+  - ".github/scripts/veille_plateformes.py"
 verified:
   - by: machine:ci
     at: 2026-08-15

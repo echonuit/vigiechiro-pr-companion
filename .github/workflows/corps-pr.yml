@@ -1,6 +1,6 @@
 # Garde-fou de la prose publiée sur la forge : le corps de la PR est ce qu'atteint quiconque remonte
 # depuis `git log`, et il n'est jamais commis, donc aucun garde du dépôt ne pouvait le refuser. La
-# règle et son pourquoi sont dans .github/scripts/verifie-corps-pr.sh et l'ADR 4453.
+# règle et son pourquoi sont dans .github/scripts/verifie_corps_pr.py et l'ADR 4453.
 name: Corps de PR
 
 on:
@@ -33,8 +33,8 @@ jobs:
           # donnée non fiable, et il porte par nature des backticks, des quotes et des `$(...)`.
           CORPS: ${{ github.event.pull_request.body }}
         run: |
-          chmod +x .github/scripts/verifie-corps-pr.sh
-          ./.github/scripts/verifie-corps-pr.sh "${CORPS}"
+          chmod +x .github/scripts/verifie_corps_pr.py
+          python3 .github/scripts/verifie_corps_pr.py "${CORPS}"
 
       - name: "L issue fermée appartient à un chantier (bloquant, #4649)"
         # Il vit ici et non dans `lint.yml` parce qu il lui faut le CORPS de la demande, que seul cet

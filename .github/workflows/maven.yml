@@ -377,8 +377,8 @@ jobs:
         # pour de vrai à chaque PR.
         run: |
           set -euo pipefail
-          chmod +x .github/scripts/verifie-demarrage-emballage.sh
-          ./.github/scripts/verifie-demarrage-emballage.sh \
+          chmod +x .github/scripts/verifie_demarrage_emballage.py
+          python3 .github/scripts/verifie_demarrage_emballage.py \
             target/dist/VigieChiroCompanion/bin/VigieChiroCompanion \
             --secondes 45 --libelle "app-image (runtime jlink)" \
             --cli target/dist/VigieChiroCompanion/bin/vigiechiro
@@ -395,7 +395,7 @@ jobs:
           bac=$(mktemp -d)
           tar -czf "$bac/portable.tar.gz" -C target/dist VigieChiroCompanion
           tar -xzf "$bac/portable.tar.gz" -C "$bac"
-          ./.github/scripts/verifie-demarrage-emballage.sh \
+          python3 .github/scripts/verifie_demarrage_emballage.py \
             "$bac/VigieChiroCompanion/bin/VigieChiroCompanion" \
             --secondes 30 --libelle "archive portable (tar.gz ré-extraite)" \
             --cli "$bac/VigieChiroCompanion/bin/vigiechiro"

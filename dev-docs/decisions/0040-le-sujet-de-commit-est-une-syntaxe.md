@@ -7,7 +7,7 @@ chantier: "EPIC #2104 / lot 0 (#2105)"
 decided_at: 2026-07-20
 verification: certaine
 enforced_by:
-  - ".github/scripts/verifie-titre-pr.sh"
+  - ".github/scripts/verifie_titre_pr.py"
 verified:
   - by: machine:ci
     at: 2026-07-20

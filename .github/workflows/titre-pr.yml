@@ -1,6 +1,6 @@
 # Garde-fou de la convention de commit (#2105) : le titre de la PR devient le sujet du commit sur
 # `main` (fusion en squash, `squash_merge_commit_title = PR_TITLE`), donc c'est lui que
-# semantic-release lira. La règle et son pourquoi sont dans .github/scripts/verifie-titre-pr.sh
+# semantic-release lira. La règle et son pourquoi sont dans .github/scripts/verifie_titre_pr.py
 # et l'ADR 0040.
 name: Titre de PR
 
@@ -30,5 +30,5 @@ jobs:
           # donnée non fiable (il peut contenir des quotes, des backticks, un `$(...)`).
           TITRE: ${{ github.event.pull_request.title }}
         run: |
-          chmod +x .github/scripts/verifie-titre-pr.sh
-          ./.github/scripts/verifie-titre-pr.sh "${TITRE}"
+          chmod +x .github/scripts/verifie_titre_pr.py
+          python3 .github/scripts/verifie_titre_pr.py "${TITRE}"

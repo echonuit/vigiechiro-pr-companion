@@ -7,7 +7,7 @@ chantier: "#3501, décision prise au lot 3 (#2723) du chantier #2720 et restée 
 decided_at: 2026-08-07
 verification: certaine
 enforced_by:
-  - ".github/scripts/verifie-epinglage.sh"
+  - ".github/scripts/verifie_epinglage.py"
 verified:
   - by: machine:ci
     at: 2026-08-07

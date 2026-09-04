@@ -10,7 +10,7 @@ l'architecture et muette sur les accès.
 !!! danger "Aucune valeur secrète ici"
     Cette page dit **quels** secrets existent, **à quoi** ils servent et **où** les régénérer. Jamais
     leur contenu. Un jeton qui apparaîtrait ici serait à révoquer immédiatement : il est déjà dans
-    l'historique git (cf. `verifie-jeton.sh`, qui garde ce dépôt contre exactement cela).
+    l'historique git (cf. `verifie_jeton.py`, qui garde ce dépôt contre exactement cela).
 
 ## Les secrets, et ce qui tombe sans eux
 
