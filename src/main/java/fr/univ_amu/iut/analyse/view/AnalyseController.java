@@ -21,8 +21,8 @@ import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
-import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.commun.view.SuitLaRevision;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -97,10 +97,10 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, Suit
     /// Désignation du fichier d'export : porteur partagé injectable (#1431), double répondant en test.
     /// Un `FileChooser` en dur **figeait** tout test de l'export - ce que la Javadoc de [#exporter]
     /// avouait sans détour (« le dialog vit dans la vue, non testé en TestFX »).
-    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
+    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
             // `this.boutonExporter` : le champ @FXML est déclaré plus bas (référence en avant interdite
             // dans un initialiseur). La fenêtre n'est lue qu'au clic.
-            new SelecteurFichierJavaFx(() -> this.boutonExporter.getScene().getWindow()));
+            () -> this.boutonExporter.getScene().getWindow());
 
     /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
     SelecteurFichierModifiable selecteur() {

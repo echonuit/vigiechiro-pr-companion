@@ -4,8 +4,8 @@ import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.view.ChoixDansListe;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.DemandeurDeChoixModifiable;
-import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import java.util.Objects;
 import java.util.function.Supplier;
 import javafx.stage.Window;
@@ -35,7 +35,7 @@ final class DialoguesAudio {
     ///     ne pas encore être attaché à une fenêtre quand le contrôleur est construit)
     DialoguesAudio(Supplier<Window> fenetre) {
         Objects.requireNonNull(fenetre, "fenetre");
-        this.selecteur = new SelecteurFichierModifiable(new SelecteurFichierJavaFx(fenetre));
+        this.selecteur = Selecteurs.pour(fenetre);
         this.participation = new DemandeurDeChoixModifiable<>(new ChoixDansListe<>(fenetre));
     }
 

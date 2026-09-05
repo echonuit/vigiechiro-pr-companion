@@ -16,8 +16,8 @@ import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
-import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
@@ -131,8 +131,8 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
 
     /// Désignation du fichier, derrière le port du socle : un `FileChooser` natif en dur **fige** un test
     /// headless, et le geste ne serait pas testable.
-    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(new SelecteurFichierJavaFx(
-            () -> this.boutonExporterGraphe.getScene().getWindow()));
+    private final SelecteurFichierModifiable selecteur =
+            Selecteurs.pour(() -> this.boutonExporterGraphe.getScene().getWindow());
 
     /// Porteur de désignation exposé aux tests.
     SelecteurFichierModifiable selecteur() {

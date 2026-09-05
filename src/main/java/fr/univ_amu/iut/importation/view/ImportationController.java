@@ -16,8 +16,8 @@ import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
-import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.commun.view.VisibiliteGeree;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
@@ -252,10 +252,10 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// par lui que **commence** l'import - un `DirectoryChooser` / `FileChooser` en dur y **figeait**
     /// tout test, de sorte que « Parcourir » n'était jamais cliqué : les tests posaient le dossier
     /// **directement sur le ViewModel**, en contournant l'écran.
-    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
+    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
             // `this.champDossier` : le champ @FXML est déclaré plus bas (référence en avant interdite
             // dans un initialiseur). La fenêtre n'est lue qu'au clic.
-            new SelecteurFichierJavaFx(() -> this.champDossier.getScene().getWindow()));
+            () -> this.champDossier.getScene().getWindow());
 
     /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
     SelecteurFichierModifiable selecteur() {

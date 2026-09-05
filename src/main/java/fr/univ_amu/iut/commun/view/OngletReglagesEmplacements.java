@@ -76,7 +76,7 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
     @Inject
     public OngletReglagesEmplacements(ServiceEmplacements service) {
         this.service = Objects.requireNonNull(service, "service");
-        this.selecteur = new SelecteurFichierModifiable(new SelecteurFichierJavaFx(this::fenetre));
+        this.selecteur = Selecteurs.pour(this::fenetre);
         this.notificateur = new NotificateurModifiable(new NotificationDialogue(this::fenetre));
     }
 

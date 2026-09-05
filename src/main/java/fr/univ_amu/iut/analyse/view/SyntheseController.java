@@ -14,8 +14,8 @@ import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
-import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
@@ -116,10 +116,10 @@ public class SyntheseController implements EmplacementNavigation, RafraichirAuRe
     /// Le sélecteur de fichier passe par un **port** : un `FileChooser` natif ouvert par `showAndWait()`
     /// fige un test TestFX headless dès la première ligne du geste. Les tests y branchent un double qui
     /// répond un chemin, ou rien du tout (l'utilisateur a annulé).
-    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
+    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
             // Le champ @FXML est déclaré plus haut mais reste nul jusqu'au chargement : la fenêtre se
             // demande donc au clic, pas à la construction.
-            new SelecteurFichierJavaFx(() -> this.boutonExporter.getScene().getWindow()));
+            () -> this.boutonExporter.getScene().getWindow());
 
     /// Le porteur du sélecteur, pour qu'un test y substitue son double.
     SelecteurFichierModifiable selecteur() {

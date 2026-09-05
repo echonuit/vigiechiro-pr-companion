@@ -623,6 +623,7 @@ ddb40f952c5b  src/main/java/fr/univ_amu/iut/commun/view/ResumeStatut.java
 f407f6d514b7  src/main/java/fr/univ_amu/iut/commun/view/SelecteurFichier.java
 8f90bce5cd3d  src/main/java/fr/univ_amu/iut/commun/view/SelecteurFichierJavaFx.java
 199bfa37dc74  src/main/java/fr/univ_amu/iut/commun/view/SelecteurFichierModifiable.java
+3c3d058e760c  src/main/java/fr/univ_amu/iut/commun/view/Selecteurs.java
 3afd27bcd3e9  src/main/java/fr/univ_amu/iut/commun/view/SignalementIncident.java
 dea9554a39e8  src/main/java/fr/univ_amu/iut/commun/view/Stepper.java
 a5b21039076a  src/main/java/fr/univ_amu/iut/commun/view/SuitLaRevision.java
@@ -1627,6 +1628,7 @@ c1388c59cf3b  src/test/java/fr/univ_amu/iut/commun/view/PoliceCouvreLIhmTest.jav
 561677914433  src/test/java/fr/univ_amu/iut/commun/view/ResolveurFicheGbifTest.java
 2c4c4f0c0ac1  src/test/java/fr/univ_amu/iut/commun/view/ScenarioAccueilTest.java
 3414d522c67b  src/test/java/fr/univ_amu/iut/commun/view/ScenesHabilleesTest.java
+8408f360dccf  src/test/java/fr/univ_amu/iut/commun/view/SelecteursTest.java
 e43ce8b62861  src/test/java/fr/univ_amu/iut/commun/view/SignalementIncidentTest.java
 095ac3a159e4  src/test/java/fr/univ_amu/iut/commun/view/SocleHauteurControlesTest.java
 0c2b648b93a5  src/test/java/fr/univ_amu/iut/commun/view/TableDonneesTest.java
