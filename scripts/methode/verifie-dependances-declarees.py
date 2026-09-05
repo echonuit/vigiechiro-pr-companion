@@ -69,6 +69,11 @@ LOCAUX = {
     # dans `scripts/_commun/` : y verser de la logique de forge ferait de ce dernier une
     # bibliotheque de domaine, ce que #5216 avait mesure comme non justifie.
     "_forge",
+    # Le mecanisme des PORTEES de job, ajoute en #5296 pour la meme raison que `_forge` : il vit
+    # dans `.github/scripts` parce qu il ne parle qu a la forge - le SHA de base d une demande, le
+    # recapitulatif d une etape. Il ne juge rien, et c est ce qui permet de le partager entre les
+    # sept jobs que le chantier #5294 conditionne.
+    "_portee",
 }
 
 
