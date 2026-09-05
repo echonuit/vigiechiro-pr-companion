@@ -638,6 +638,24 @@ chemin de l'observateur, et il commence donc lui aussi par un import freiné.
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioDiagnosticPassageTest.lire_le_diagnostic_d_un_passage.mp4"></video>
 
+### S2-67 · `une_nuit_qui_couvre_ne_se_fait_pas_accuser`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioDiagnosticPassageTest.une_nuit_qui_couvre_ne_se_fait_pas_accuser.mp4"></video>
+
+Le **contraire** du clip précédent, et le seul qui mettrait la règle en défaut si elle revenait. La
+nuit y déborde la fenêtre exigée des deux côtés, `19:30 à 07:45` contre `20:00 à 07:15`, et l'écran
+rend une **information** au lieu d'un avertissement : le protocole est un plancher, et le dépasser
+n'est pas s'en écarter.
+
+> Il a fallu une **seconde carte**, `sd-nuit-longue` : la nominale ne couvre pas la fenêtre, et c'est
+> ce qui rend `S2-66` jouable. Sans elle le geste restait filmé pour moitié, et la page annonçait un
+> clip qui ne montrait jamais ce cas-là (#5061).
+
+> Cette carte demandait autrefois une fixture entière. La clé `acquisition:` du format de spec,
+> ouverte par #5200 pour un autre sujet, la réduit à une ligne : la fenêtre annoncée par le capteur
+> est la seule chose dont dépend toute la couverture.
+
 > `S2-39` **ne se lit pas sur cet écran**. L'enregistreur et le nombre de mesures sont en barre de
 > statut, qui appartient au chrome : le contrôleur du diagnostic y publie un résumé (#693, #3548), et
 > c'est le chrome qui le rend. Le clip montre les deux à la fois, ce qu'un banc monté sur la seule vue
