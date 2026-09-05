@@ -656,6 +656,26 @@ n'est pas s'en écarter.
 > ouverte par #5200 pour un autre sujet, la réduit à une ligne : la fenêtre annoncée par le capteur
 > est la seule chose dont dépend toute la couverture.
 
+### S2-77 · `la_fin_manque_et_l_alerte_le_nomme`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioDiagnosticPassageTest.la_fin_manque_et_l_alerte_le_nomme.mp4"></video>
+
+`19:55 à 06:30` : le début couvre les 20:00 exigées, la fin manque les 07:15. L'alerte nomme le bord
+qui pèche **et concède l'autre**, ce qu'aucun chiffre ne dit à sa place.
+
+### S2-78 · `les_deux_bords_manquent_et_l_alerte_ne_concede_rien`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioDiagnosticPassageTest.les_deux_bords_manquent_et_l_alerte_ne_concede_rien.mp4"></video>
+
+`20:25 à 06:30` : aucun des deux bords. La phrase les nomme tous les deux et ne dit « bien » nulle
+part - un « bien » ici affirmerait qu'une moitié va, alors que rien ne va.
+
+> Ces deux clips **se ressemblent**, et c'est le sujet. Leurs alertes ne diffèrent que par une
+> proposition : un cas qui se serait contenté de constater un avertissement aurait été vert sur les
+> deux sans éprouver ni l'un ni l'autre (#5246).
+
 > `S2-39` **ne se lit pas sur cet écran**. L'enregistreur et le nombre de mesures sont en barre de
 > statut, qui appartient au chrome : le contrôleur du diagnostic y publie un résumé (#693, #3548), et
 > c'est le chrome qui le rend. Le clip montre les deux à la fois, ce qu'un banc monté sur la seule vue
