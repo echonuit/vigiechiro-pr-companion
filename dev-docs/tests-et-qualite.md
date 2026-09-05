@@ -694,9 +694,19 @@ introduites, et vérifier à la main les garde-fous que PIT ne peut pas atteindr
 
 ### Demander à un garde ce qu'il est : `--contrat`
 
-### Où vit le fonds commun des gardes
+### Où vivent les fonds communs des gardes
 
-`scripts/_commun/` porte le vocabulaire des corpus, les verdicts et l'aide `--contrat`. Il s'atteint par une seule forme, depuis n'importe quel garde :
+**Il y en a DEUX, et chacun sert son arbre.** `scripts/_commun/` porte le vocabulaire des corpus, les
+verdicts, l'aide `--contrat` et l'assertion des auto-tests. `.github/scripts/_forge.py` porte ce que
+les cliquets de forge partagent : la lecture du cliquet dans un en-tête d'ADR, l'interrogation de la
+forge avec son refus quand `gh` ne répond pas, et le banc de leurs cas (#4954).
+
+**Le second n'est pas une copie du premier, et la mesure a décidé de leur séparation.** Verser de la
+logique de forge dans `scripts/_commun/` en ferait une bibliothèque de domaine, ce que #5216 avait
+mesuré comme non justifié : « le partage réel est plus étroit qu'il n'y paraît ; ce que tout le monde
+a, c'est l'auto-test, le reste se répartit par tiers ».
+
+Le premier s'atteint par une seule forme, depuis n'importe quel garde :
 
 ```python
 sys.path.insert(0, str(RACINE / "scripts"))
@@ -705,8 +715,11 @@ from _commun import DECISIONS, rapporte
 
 **Il a vécu dans `scripts/adr/` jusqu'à #5216**, c'est-à-dire chez l'un de ses usagers, et quatre formes de chemin coexistaient pour l'atteindre. La quatrième n'a été trouvée ni par le motif de réécriture ni par la relecture du diff, mais par un relevé des 54 auto-tests avant et après : un refactoring à comportement constant se prouve en comparant deux mesures.
 
-**Soixante-huit points d'entrée** répondent à `--contrat` et déclarent six champs : les 43 de
-`scripts/adr`, les 24 de `scripts/methode`, et le dernier garde shell. La réponse s'obtient sans rien
+**Soixante-huit points d'entrée** répondent à `--contrat` et déclarent six champs : les **44** de
+`scripts/adr` et les **24** de `scripts/methode`. Le total n'a pas bougé mais sa composition si :
+la page annonçait « 43, 24, et le dernier garde shell », et **aucun des deux scripts shell restants
+ne répond à `--contrat`**. Relevé à la clôture de #5257, en lançant les 70 points d'entrée un par un
+plutôt qu'en recopiant le chiffre. La réponse s'obtient sans rien
 lire du dépôt : la branche s'imprime **avant tout le reste**, pour qu'un garde dont une dépendance
 manque rende quand même sa déclaration.
 
