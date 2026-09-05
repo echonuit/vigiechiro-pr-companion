@@ -51,8 +51,8 @@ import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Labeled;
@@ -121,9 +121,12 @@ class ScenarioPerceptifRefusDepotTest {
     /// Ce que le port d'ouverture a reçu, geste par geste (#4982). Le gestionnaire de fichiers est
     /// l'autre frontière système truquée ici : en ouvrir un vrai sur un runner n'a pas de sens, et
     /// ce qui se vérifie n'est de toute façon pas la fenêtre mais le geste demandé.
-    private final List<String> liensOuverts = new ArrayList<>();
+    /// Écrit par l'exécuteur asynchrone du banc, lu par le fil du test : la traversée de fils
+    /// demande une liste sûre, un `ArrayList` nu ne publiant pas ses écritures (#5152).
+    private final List<String> liensOuverts = new CopyOnWriteArrayList<>();
 
-    private final List<Path> dossiersOuverts = new ArrayList<>();
+    /// Même raison que [#liensOuverts].
+    private final List<Path> dossiersOuverts = new CopyOnWriteArrayList<>();
 
     @Start
     void start(Stage stage) throws IOException {
@@ -268,6 +271,15 @@ class ScenarioPerceptifRefusDepotTest {
         Respiration.entreDeuxGestes(robot);
 
         robot.clickOn("#btnOuvrirDepot");
+        // Le clic passe par l'exécuteur ASYNCHRONE de ce banc, déclaré plus haut : le port est écrit
+        // sur un autre fil, plus tard. `Respiration` ne tient rien ici, sa propre javadoc le dit
+        // - « hors tournage, rien ne dort » - et l'assertion courait donc après le geste au lieu
+        // d'attendre son effet. Mesuré : le banc tombait 4 fois sur 884 tirages, toujours en tête
+        // du classement, jamais en victime (#5152).
+        Attente.que(
+                () -> !dossiersOuverts.isEmpty(),
+                "le port a reçu le dossier que le geste « ouvrir » lui envoie",
+                10_000L);
         Respiration.surLeMomentCle(robot);
 
         assertThat(dossiersOuverts)
