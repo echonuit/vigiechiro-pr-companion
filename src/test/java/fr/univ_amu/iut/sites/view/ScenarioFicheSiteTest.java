@@ -227,7 +227,7 @@ class ScenarioFicheSiteTest {
     private void revenirAMesSites(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
         GesteVisible.cliquer(robot, "#boutonRetour");
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !robot.lookup(".carte-site").queryAll().isEmpty(),
                 "les cartes de sites reparaissent après le retour",
                 10_000L);
@@ -294,7 +294,7 @@ class ScenarioFicheSiteTest {
         // événement envoyé directement à la ligne ne déplace pas le curseur. Le clip montrerait
         // une table qui change toute seule, ce qui est précisément ce que la session vient voir.
         robot.doubleClickOn(DATE_AFFICHEE);
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#stepper").tryQuery().isPresent(), "le sélecteur de passage s'ouvre", 10 * 1000L);
         Respiration.surLeMomentCle(robot);
 
@@ -352,7 +352,7 @@ class ScenarioFicheSiteTest {
         // remplaçait par un double qui écrivait le nouveau numéro : le clip montrait un clic sur
         // « Modifier » puis un numéro qui change, sans qu'aucune modale ne paraisse (#4174).
         robot.clickOn("#boutonModifier");
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#champNom").tryQuery().isPresent(), "le champ de nom du site paraît", 10 * 1000L);
         Respiration.leTempsDeLire(robot);
 
@@ -373,7 +373,7 @@ class ScenarioFicheSiteTest {
         Respiration.avantLeGeste(robot);
 
         robot.clickOn("#boutonValider");
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#champNom").tryQuery().isEmpty(),
                 "le champ de nom disparaît à la fermeture",
                 10 * 1000L);
@@ -396,7 +396,8 @@ class ScenarioFicheSiteTest {
         Respiration.avantLeGeste(robot);
 
         GesteVisible.cliquer(robot, "+ Ajouter un point");
-        Attente.que(() -> robot.lookup("#champCode").tryQuery().isPresent(), "le champ de code paraît", 10 * 1000L);
+        Attente.queSurLeFil(
+                () -> robot.lookup("#champCode").tryQuery().isPresent(), "le champ de code paraît", 10 * 1000L);
         Respiration.leTempsDeLire(robot);
 
         robot.clickOn(robot.lookup("#champCode").queryAs(TextField.class)).write("E5");
@@ -415,7 +416,7 @@ class ScenarioFicheSiteTest {
         Respiration.surLeMomentCle(robot);
 
         GesteVisible.cliquer(robot, "#boutonValider");
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup(".carte-point").queryAll().size() > 3,
                 "les cartes de points sont plus de trois",
                 10 * 1000L);
@@ -458,7 +459,8 @@ class ScenarioFicheSiteTest {
         Respiration.leTempsDeLire(robot);
 
         robot.clickOn("+ Ajouter un point");
-        Attente.que(() -> robot.lookup("#champCode").tryQuery().isPresent(), "le champ de code paraît", 10 * 1000L);
+        Attente.queSurLeFil(
+                () -> robot.lookup("#champCode").tryQuery().isPresent(), "le champ de code paraît", 10 * 1000L);
         Respiration.leTempsDeLire(robot);
 
         robot.clickOn(robot.lookup("#champCode").queryAs(TextField.class)).write("D4");
@@ -466,7 +468,7 @@ class ScenarioFicheSiteTest {
         Respiration.avantLeGeste(robot);
 
         robot.clickOn("#boutonValider");
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup(".carte-point").queryAll().size() > avant,
                 "une carte de point de plus paraît",
                 10 * 1000L);
@@ -492,7 +494,7 @@ class ScenarioFicheSiteTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("aucune carte de site intitulée « " + titre + " »"));
         robot.clickOn(carte);
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#valNumeroCarre").tryQuery().isPresent(),
                 "la fiche du site s'ouvre, reconnue à son numéro de carré",
                 10_000L);
