@@ -65,6 +65,10 @@ LOCAUX = {
     "resserre_cliquets",
     "verifie_contrats_tiennent",
     "interroge_le_jeton",
+    # Le fonds des deux cliquets de forge, ajoute en #4954. Il vit dans `.github/scripts` et non
+    # dans `scripts/_commun/` : y verser de la logique de forge ferait de ce dernier une
+    # bibliotheque de domaine, ce que #5216 avait mesure comme non justifie.
+    "_forge",
 }
 
 
