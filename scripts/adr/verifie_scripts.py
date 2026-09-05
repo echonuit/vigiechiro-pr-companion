@@ -798,6 +798,28 @@ def test_4468_javadoc_non_relue() -> None:
         )
 
 
+def test_5278_attente_hors_du_fil() -> None:
+    m = _charge("5278-attente-hors-du-fil.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        lecture = '() -> !robot.lookup("#t").queryAll().isEmpty()'
+
+        _ecrire(racine, "fr/a/A.java", f'class A {{\n    void t() {{\n        Attente.que({lecture}, "que ca vienne");\n    }}\n}}\n')
+        _verifie("5278 une attente qui lit le graphe est vue", m.suspects(racine), ["fr/a/A.java:3"])
+
+        # LE SECOND FAIT, celui qui distingue ce cliquet d un compte : le MEME site, ecrit sur le
+        # fil FX, est la forme JUSTE et sort du compte. Sans ce cas, un detecteur qui accuserait
+        # tout `Attente.` passerait le premier.
+        _ecrire(racine, "fr/a/A.java", f'class A {{\n    void t() {{\n        Attente.queSurLeFil({lecture}, "que ca vienne");\n    }}\n}}\n')
+        _verifie("5278 le meme site sur le fil FX sort du compte", m.suspects(racine), [])
+
+        # Et un predicat qui ne touche pas le graphe n est pas accuse : c est ce qui empeche le
+        # detecteur de compter la population entiere et de rendre un cliquet plausible et faux.
+        _ecrire(racine, "fr/a/A.java", 'class A {\n    void t() {\n        Attente.que(() -> vm.pret().get(), "que ca vienne");\n    }\n}\n')
+        _verifie("5278 un predicat sans lecture de noeud est ignore", m.suspects(racine), [])
+        _verifie("5278 et le garde a bien LU cet appel", m.lus(racine), 1)
+
+
 def test_4974_attente_reinventee() -> None:
     m = _charge("4974-attente-reinventee.py")
     with tempfile.TemporaryDirectory() as d:
@@ -1997,6 +2019,7 @@ if __name__ == "__main__":
         test_4468_javadoc_non_relue,
         test_5068_clic_sur_reference_tenue,
         test_4974_attente_reinventee,
+        test_5278_attente_hors_du_fil,
         test_4475_stage_non_dimensionne,
         test_4617_code_mort_et_zone_de_test,
         test_4476_javadoc_raconte_son_extraction,
