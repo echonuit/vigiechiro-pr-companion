@@ -48,8 +48,16 @@ import json
 import os
 import pathlib
 import re
-import subprocess
 import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from _forge import (
+    cas_d_auto_test_de_forge,
+    cliquet_declare,
+    liste_issues,
+    racine,
+    vue_issue,
+)
 
 # L en-tete du modele de `dev-docs/cycle-de-chantier.md`, comme chez ADR 4659.
 MARQUE = "## Clôture de chantier"
@@ -66,24 +74,8 @@ DEPUIS = "2026-08-30T09:00:15Z"
 ADR = "dev-docs/decisions/4922-l-adoption-d-une-specification-se-tient-par-un-cliquet.md"
 
 
-def racine() -> pathlib.Path:
-    rendu = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=False
-    )
-    return pathlib.Path(rendu.stdout.strip() or ".")
-
-
 def cliquet() -> int:
-    fichier = pathlib.Path(os.environ.get("SPEC_ADR_FICHIER") or racine() / ADR)
-    texte = fichier.read_text(encoding="utf-8") if fichier.is_file() else ""
-    trouve = re.search(r"^ratchet:[ \t]*([0-9]+)[ \t]*$", texte, re.M)
-    if not trouve:
-        print(
-            f"REFUS : {fichier} ne déclare aucun cliquet lisible (attendu « ratchet: N »).",
-            file=sys.stderr,
-        )
-        raise SystemExit(2)
-    return int(trouve.group(1))
+    return cliquet_declare(pathlib.Path(os.environ.get("SPEC_ADR_FICHIER") or racine() / ADR))
 
 
 def epics() -> list[dict]:
@@ -92,44 +84,13 @@ def epics() -> list[dict]:
     if injectee:
         return json.loads(pathlib.Path(injectee).read_text(encoding="utf-8"))
 
-    rendu = subprocess.run(
-        [
-            "gh",
-            "issue",
-            "list",
-            "--label",
-            "epic",
-            "--state",
-            "closed",
-            "--limit",
-            "300",
-            "--json",
-            "number,closedAt",
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if rendu.returncode != 0 and not rendu.stdout.strip():
-        print(
-            "REFUS : « gh » est absent. Ce garde ne conclut pas sur ce qu'il n'a pas lu.",
-            file=sys.stderr,
-        )
-        raise SystemExit(2)
     corpus = []
-    for entree in json.loads(rendu.stdout or "[]"):
+    for entree in liste_issues(
+        ["--label", "epic", "--state", "closed", "--limit", "300", "--json", "number,closedAt"]
+    ):
         if (entree.get("closedAt") or "") <= DEPUIS:
             continue
-        vue = subprocess.run(
-            ["gh", "issue", "view", str(entree["number"]), "--json", "number,body,comments"],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if vue.returncode != 0 or not vue.stdout.strip():
-            print(f"REFUS : la forge n'a pas répondu pour #{entree['number']}.", file=sys.stderr)
-            raise SystemExit(2)
-        corpus.append(json.loads(vue.stdout))
+        corpus.append(vue_issue(entree["number"], "number,body,comments"))
     return corpus
 
 
@@ -325,11 +286,10 @@ CAS = (
 
 def _auto_test() -> int:
     """Quatorze cas hors ligne, dont cinq qui DOIVENT refuser."""
-    import contextlib
-    import io
     import tempfile
 
-    echecs = cas = rouges = 0
+    verifie, echecs = cas_d_auto_test_de_forge()
+    cas = rouges = 0
     with tempfile.TemporaryDirectory(prefix="vc-spec-") as tmp:
         bac = pathlib.Path(tmp)
         (bac / "adr.md").write_text("ratchet: 1\n", encoding="utf-8")
@@ -347,35 +307,18 @@ def _auto_test() -> int:
             (bac / "epics.json").write_text(json.dumps(corpus), encoding="utf-8")
             os.environ["SPEC_EPICS_FICHIER"] = str(bac / "epics.json")
             os.environ["SPEC_ADR_FICHIER"] = str(adrs[adr])
-            tampon = io.StringIO()
-            with contextlib.redirect_stdout(tampon), contextlib.redirect_stderr(tampon):
-                try:
-                    code = juger()
-                except SystemExit as fin:
-                    code = fin.code
-            ecrit = tampon.getvalue()
-            obtenu = {1: "rouge", 2: "refus"}.get(code, "ok")
-            if obtenu == attendu and (not motif or motif in ecrit):
-                print(f"  ✔ {libelle}")
-            elif obtenu != attendu:
-                print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-                echecs = 1
-            else:
-                print(
-                    f"  ✘ {libelle} : {obtenu} pour la MAUVAISE raison, « {motif} » absent de la sortie"
-                )
-                echecs = 1
+            verifie(attendu, libelle, motif, juger)
 
     for cle in ("SPEC_EPICS_FICHIER", "SPEC_ADR_FICHIER"):
         os.environ.pop(cle, None)
 
     print()
     print(f"{cas} cas, dont {rouges} qui DOIVENT refuser.")
-    if echecs == 0:
+    if echecs() == 0:
         print("Auto-test concluant : le garde voit une passe de spécification sautée.")
     else:
         print("Auto-test EN ÉCHEC.")
-    return echecs
+    return echecs()
 
 
 if __name__ == "__main__":
