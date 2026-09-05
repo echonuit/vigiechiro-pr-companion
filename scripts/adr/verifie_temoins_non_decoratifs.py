@@ -145,7 +145,7 @@ def arbre_jetable():
         yield faux
 
 
-def suite_rougit(nom: str, faux: pathlib.Path) -> bool:
+def suite_rougit(nom: str, faux: pathlib.Path) -> tuple[str, str]:
     """La suite rougit-elle quand ce garde perd sa detection ?
 
     La mutation porte sur l arbre JETABLE. Interrompre ce script ne peut donc plus laisser un
@@ -163,7 +163,35 @@ def suite_rougit(nom: str, faux: pathlib.Path) -> bool:
         )
     finally:
         cible.write_text(original, encoding="utf-8")
-    return rendu.returncode != 0
+    return classe_le_rouge(rendu)
+
+
+TRACE = "Traceback (most recent call last)"
+
+
+def classe_le_rouge(rendu) -> tuple[str, str]:
+    """Ce que vaut le rouge d une mutation : « tient », « non concluant » ou « decoratif ».
+
+    TROIS valeurs et non deux (ADR 5257). La neutralisation rend `[]` pour toute fonction : un garde
+    dont une fonction rend un tuple ou un chemin PLANTE au lieu d assertir, et ce rouge-la ne prouve
+    rien (ADR 4918). Le compter comme une reussite reviendrait a annoncer 43 gardes eprouves quand il
+    y en a 39.
+
+    Mesure du 2026-09-05 sur les deux chemins de ce banc : 8 tiennent et 2 ne concluent pas sur le
+    chemin de l auto-test propre, 31 et 2 sur celui de la suite. C est le banc le plus solide des
+    trois, et il annoncait quand meme quatre gardes de plus qu il n en prouvait.
+    """
+    if rendu.returncode == 0:
+        return "decoratif", "reste vert sans sa detection"
+    erreur = (
+        rendu.stderr.decode("utf-8", "replace")
+        if isinstance(rendu.stderr, bytes)
+        else (rendu.stderr or "")
+    )
+    if TRACE in erreur:
+        lignes = [l for l in erreur.strip().splitlines() if l and not l.startswith(" ")]
+        return "non concluant", (lignes[-1] if lignes else "trace illisible")[:110]
+    return "tient", ""
 
 
 MARQUE_MAIN = 'if __name__ == "__main__":'
@@ -243,7 +271,7 @@ def ligne_du_point_d_entree(source: str) -> int | None:
     return None
 
 
-def auto_test_rougit(nom: str, faux: pathlib.Path) -> bool:
+def auto_test_rougit(nom: str, faux: pathlib.Path) -> tuple[str, str]:
     """L auto-test PROPRE de ce garde rougit-il quand sa detection est neutralisee ?
 
     L autre moitie du dispositif (issue #5134). `suite_rougit` eprouve les gardes dont le temoin vit
@@ -253,7 +281,7 @@ def auto_test_rougit(nom: str, faux: pathlib.Path) -> bool:
     original = cible.read_text(encoding="utf-8")
     mute = neutralise_avant_main(original)
     if mute is None:
-        return False
+        return "non concluant", "aucun point d entree ou inserer la neutralisation"
     try:
         cible.write_text(mute, encoding="utf-8")
         rendu = subprocess.run(
@@ -264,10 +292,10 @@ def auto_test_rougit(nom: str, faux: pathlib.Path) -> bool:
             timeout=300,
         )
     except subprocess.TimeoutExpired:
-        return False
+        return "non concluant", "butoir de 300 s atteint"
     finally:
         cible.write_text(original, encoding="utf-8")
-    return rendu.returncode != 0
+    return classe_le_rouge(rendu)
 
 
 def autonomes(noms: list[str] | None = None) -> list[str]:
@@ -304,19 +332,29 @@ def mutes(noms: list[str] | None = None) -> list[str]:
     ]
 
 
-def suspects(noms: list[str] | None = None) -> list[str]:
-    """Un suspect par garde dont la suite reste verte alors qu il ne detecte plus rien."""
-    trouves = []
+def suspects(noms: list[str] | None = None) -> tuple[list[str], list[str]]:
+    """DEUX listes : les decoratifs, et les NON CONCLUANTS.
+
+    La seconde est ce que l ADR 5257 ajoute. Un garde qui PLANTE sous mutation n a rien prouve, mais
+    il n a rien montre de faux non plus : il ne fait donc pas refuser, il se compte et se nomme.
+    """
+    decoratifs, non_concluants = [], []
     with arbre_jetable() as faux:
         for nom in mutes(noms):
-            if not suite_rougit(nom, faux):
-                trouves.append(f"{nom}  la suite reste verte, sa detection neutralisee")
+            verdict, cause = suite_rougit(nom, faux)
+            if verdict == "decoratif":
+                decoratifs.append(f"{nom}  la suite reste verte, sa detection neutralisee")
+            elif verdict == "non concluant":
+                non_concluants.append(f"{nom}  {cause}")
         # L autre moitie : les gardes que le HARNAIS ne charge pas, dont le temoin est leur propre
         # `--auto-test`. Sans ce passage, ce temoin n etait verifie qu EXISTANT (#5134).
         for nom in autonomes(noms):
-            if not auto_test_rougit(nom, faux):
-                trouves.append(f"{nom}  son --auto-test reste vert, sa detection neutralisee")
-    return trouves
+            verdict, cause = auto_test_rougit(nom, faux)
+            if verdict == "decoratif":
+                decoratifs.append(f"{nom}  son --auto-test reste vert, sa detection neutralisee")
+            elif verdict == "non concluant":
+                non_concluants.append(f"{nom}  {cause}")
+    return decoratifs, non_concluants
 
 
 def auto_test() -> int:
@@ -363,6 +401,32 @@ def auto_test() -> int:
         True,
     )
 
+    # #5264. Le verdict a TROIS valeurs : un garde qui plante n est pas eprouve. Sans ces cas, ce
+    # banc comptait ces rouges-la parmi les reussites et annoncait 43 gardes tenus quand il y en a 39.
+    class _RenduFeint:
+        def __init__(self, code, err):
+            self.returncode, self.stderr = code, err
+
+    verifie(
+        "un rouge SANS trace tient",
+        classe_le_rouge(_RenduFeint(1, b"ECHEC : la detection a disparu\n"))[0],
+        "tient",
+    )
+    verifie(
+        "un rouge AVEC trace ne conclut pas",
+        classe_le_rouge(_RenduFeint(1, b"Traceback (most recent call last)\nValueError: x\n"))[0],
+        "non concluant",
+    )
+    verifie(
+        "et sa cause est rendue",
+        "ValueError"
+        in classe_le_rouge(_RenduFeint(1, b"Traceback (most recent call last)\nValueError: x\n"))[
+            1
+        ],
+        True,
+    )
+    verifie("un vert est decoratif", classe_le_rouge(_RenduFeint(0, b""))[0], "decoratif")
+
     # #5263. Le piege : un garde qui porte `if __name__` dans une CHAINE avant de le porter pour de
     # vrai. `partition` prenait la PREMIERE occurrence, la neutralisation atterrissait dans le
     # litteral, et ce banc declarait « decoratif » un garde qui ne l etait pas. Mesure d alors :
@@ -401,8 +465,8 @@ def auto_test() -> int:
         #    `2843-tiret-cadratin.py` sert de reference : son temoin compte des cadratins.
         verifie(
             "un garde au temoin solide fait rougir la suite sous mutation",
-            suite_rougit("2843-tiret-cadratin.py", faux),
-            True,
+            suite_rougit("2843-tiret-cadratin.py", faux)[0],
+            "tient",
         )
         # 3. Le sens NEGATIF : sans mutation, la suite est verte. Sans ce cas, un script qui rendrait
         #    TOUJOURS `True` passerait le cas precedent et n aurait rien prouve.
@@ -428,8 +492,8 @@ def auto_test() -> int:
         #    rien n eprouvait avant #5134.
         verifie(
             "un auto-test propre qui tient fait rougir sous mutation",
-            auto_test_rougit("verifie_corpus_declare.py", faux),
-            True,
+            auto_test_rougit("verifie_corpus_declare.py", faux)[0],
+            "tient",
         )
         # 8. Et le sens negatif : sans mutation, ce meme auto-test conclut.
         sain = subprocess.run(
@@ -465,13 +529,28 @@ if __name__ == "__main__":
     sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
+    decoratifs, non_concluants = suspects()
+    population = len(mutes()) + len(autonomes())
+    # Les NON CONCLUANTS sortent AVANT le verdict, et separement (ADR 5257) : ils ne font pas
+    # refuser, parce que refuser dessus reviendrait a refuser sur ce que ce banc n a pas su lire.
+    # Les compter parmi les eprouves annoncerait toute la population comme tenue.
+    for l in non_concluants:
+        print(f"NON CONCLUANT : {l}", file=sys.stderr)
+    if non_concluants:
+        print(
+            f"\n{len(non_concluants)} garde(s) ont PLANTE sous mutation au lieu d assertir : "
+            "ils n ont rien prouve, et un rouge pour la mauvaise raison ne prouve rien (ADR 4918). "
+            f"{population - len(non_concluants) - len(decoratifs)} tiennent reellement sur "
+            f"{population}.",
+            file=sys.stderr,
+        )
     sys.exit(
         rapporte(
             ADR,
             "temoin decoratif : la suite reste verte sans detection",
-            suspects(),
+            decoratifs,
             # Les DEUX populations : n en compter qu une ferait mentir `lus` de huit unites,
             # ce que l ADR 5007 refuse.
-            lus=len(mutes()) + len(autonomes()),
+            lus=population,
         )
     )
