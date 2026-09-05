@@ -84,6 +84,69 @@ def comptesParRang(parTentative: list[list[str]]) -> tuple[dict[str, int], dict[
     return tetes, suites
 
 
+def entraineurs(parTentative: list[list[str]]) -> dict[str, dict[str, int]]:
+    """Pour chaque victime, DERRIERE QUI elle tombe et combien de fois.
+
+    `comptesParRang` dit combien de fois un banc est tombe dans la suite. Il ne dit pas derriere qui,
+    et les deux formes que ce nombre recouvre demandent des conduites opposees :
+
+    - **un couplage** : `SonsValidationViewTest` est tombe 47 fois, TOUJOURS derriere
+      `ScenarioSelectionEcouteTest`. Ce n est pas son instabilite, c est une dependance entre classes ;
+    - **une dispersion** : `ImportationClicImporterTest` est tombe 4 fois derriere QUATRE bancs
+      differents. C est ce que fait tout banc situe en aval d une suite deja cassee, et cela ne dit
+      rien de lui.
+
+    Le nombre seul confond les deux, et il a servi a conclure de travers : le corps de #5275 lisait
+    « plus souvent victime qu accuse, donc fragile a l etat laisse par d autres », alors que ses
+    quatre entraineurs etaient quatre bancs distincts (#5312).
+    """
+    parVictime: dict[str, dict[str, int]] = {}
+    for ordonnes in parTentative:
+        premier = tete(ordonnes)
+        if not premier:
+            continue
+        meneur = _classeDe(premier)
+        for autre in suite(ordonnes):
+            victime = _classeDe(autre)
+            if victime == meneur:
+                # Deux methodes d une meme classe tombent ensemble par construction : le Stage de
+                # TestFX est partage dans la classe. Les compter serait mesurer la mecanique, pas un
+                # couplage entre bancs.
+                continue
+            compte = parVictime.setdefault(victime, {})
+            compte[meneur] = compte.get(meneur, 0) + 1
+    return parVictime
+
+
+def _classeDe(test: str) -> str:
+    """La CLASSE d un `Classe.methode`.
+
+    L agregation se fait a la classe et non a la methode, parce que la cascade est un phenomene de
+    classe : le `Stage` de TestFX est partage dans un meme fork, et c est la classe qui laisse
+    derriere elle l etat que la suivante ne supporte pas. Mesure a la methode, la meme cascade se
+    disperse sur dix lignes et le couplage devient invisible : c est ce que le premier jet de ce
+    rapport a montre."""
+    return test.split(".")[0]
+
+
+def dominant(comptes: dict[str, int]) -> tuple[str, int, bool] | None:
+    """L entraineur le plus frequent, son compte, et s il DOMINE.
+
+    Domine veut dire : PLUS de la moitie des chutes, et au moins deux fois.
+
+    La majorite est STRICTE, et ce n est pas un detail : `MainViewTest` tombe 34 fois derriere DEUX
+    bancs, 17 chacun. Une regle a « au moins la moitie » en couronnait un, et le rapport aurait
+    accuse l un des deux au hasard de l ordre alphabetique. Une egalite n accuse personne.
+
+    Le second seuil ecarte le banc tombe une seule fois, ou le premier venu ferait toujours 100 %.
+    """
+    if not comptes:
+        return None
+    qui, n = max(comptes.items(), key=lambda c: (c[1], c[0]))
+    total = sum(comptes.values())
+    return qui, n, n >= 2 and n * 2 > total
+
+
 def testsEchoues(journal: str) -> set[str]:
     """Les `Classe.methode` que ce journal declare en echec."""
     vus = set()
@@ -326,6 +389,31 @@ def classe(journal: str, ordonnes: list[str]) -> tuple[str, str]:
 
 def _autoTest() -> int:
     """Les temoins, sur des extraits de journaux REELS de la forge."""
+    # LES DEUX FORMES QUE LE NOMBRE DE VICTIMES CONFOND (#5312). Sans le second cas, un rapport qui
+    # nommerait toujours le premier entraineur venu passerait le premier et mentirait sur le second.
+    couplage = [["MeneurTest.a", "SuiveurTest.b"]] * 5
+    assert entraineurs(couplage) == {"SuiveurTest": {"MeneurTest": 5}}, entraineurs(couplage)
+    assert dominant(entraineurs(couplage)["SuiveurTest"]) == ("MeneurTest", 5, True)
+    # DEUX methodes d une meme classe ne se comptent pas : c est la mecanique du fork.
+    assert entraineurs([["MemeTest.a", "MemeTest.b"]]) == {}
+    # Et les methodes d une meme classe victime s agregent en UNE ligne.
+    deuxMethodes = [["MeneurTest.a", "SuiveurTest.b", "SuiveurTest.c"]]
+    assert entraineurs(deuxMethodes) == {"SuiveurTest": {"MeneurTest": 2}}
+
+    disperse = [[f"Meneur{i}Test.a", "SuiveurTest.b"] for i in range(4)]
+    qui, n, domine = dominant(entraineurs(disperse)["SuiveurTest"])
+    assert not domine, (qui, n)
+    assert len(entraineurs(disperse)["SuiveurTest"]) == 4
+
+    # UNE EGALITE N ACCUSE PERSONNE : deux entraineurs a 17, le cas reel de MainViewTest.
+    assert dominant({"A": 17, "B": 17}) == ("B", 17, False)
+    # Mais une majorite stricte, oui.
+    assert dominant({"A": 18, "B": 17}) == ("A", 18, True)
+    # Une seule chute ne DOMINE pas : sinon le premier venu ferait toujours 100 %.
+    assert dominant({"Seul.a": 1}) == ("Seul.a", 1, False)
+    # Une tete sans suite n entraine personne.
+    assert entraineurs([["SeulTest.a"]]) == {}
+    assert dominant({}) is None
     # Forme « resume » : une ligne par test, a la fin du rapport surefire.
     resume = (
         "build\tBuild + tests\t2026-08-29T14:31:22Z [ERROR] Tests run: 5306, Failures: 1\n"
@@ -559,6 +647,7 @@ def _classement(jours: int) -> int:
         print("Aucun tirage lu : `gh` est-il installe et authentifie ?")
         return 1
     parts: dict[tuple[str, str], int] = {}
+    parTentative: list[list[str]] = []
     lues = 0
     for r in rejoues:
         for tentative in range(1, r["tentatives"]):
@@ -566,7 +655,9 @@ def _classement(jours: int) -> int:
             if not journal:
                 continue
             lues += 1
-            cle = classe(journal, testsEchouesOrdonnes(journal))
+            ordonnes = testsEchouesOrdonnes(journal)
+            parTentative.append(ordonnes)
+            cle = classe(journal, ordonnes)
             parts[cle] = parts.get(cle, 0) + 1
     print(
         f"CLASSEMENT | fenetre={jours}j | tirages={tirages} | relances={len(rejoues)}"
@@ -583,7 +674,35 @@ def _classement(jours: int) -> int:
         f"\n  {rejouables}/{lues} valent un rejeu ({100 * rejouables / lues:.0f} %)."
         f" Les autres le rendent inutile : la cause revient au tirage suivant."
     )
+    _derriereQui(parTentative)
     return 0
+
+
+def _derriereQui(parTentative: list[list[str]]) -> None:
+    """Les victimes, et derriere QUI elles tombent : un couplage ne se conduit pas comme un bruit."""
+    parVictime = entraineurs(parTentative)
+    if not parVictime:
+        return
+    lignes = []
+    for victime, comptes in parVictime.items():
+        tete_, n, domine = dominant(comptes)
+        lignes.append((sum(comptes.values()), victime, tete_, n, domine, len(comptes)))
+    # Les COUPLAGES d abord : un total eleve mais disperse ne dit rien, alors qu un couplage nomme
+    # une classe a regarder. Trier par total seul enterrait les 47 chutes de SonsValidationViewTest
+    # sous des victimes a 105 qui n accusent personne.
+    lignes.sort(key=lambda l: (not l[4], -l[0], l[1]))
+
+    print("\n  DERRIERE QUI LES VICTIMES TOMBENT")
+    print(
+        "  un entraineur DOMINANT est un couplage entre classes, une dispersion n accuse personne"
+    )
+    for total, victime, tete_, n, domine, distincts in lignes[:12]:
+        verdict = (
+            f"couple a {tete_} ({n}/{total})" if domine else f"disperse, {distincts} entraineurs"
+        )
+        print(f"  {total:3d}  {victime:44s} {verdict}")
+    if len(lignes) > 12:
+        print(f"  … et {len(lignes) - 12} autres victimes, non montrees")
 
 
 def main() -> int:
