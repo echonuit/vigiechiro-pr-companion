@@ -2,9 +2,11 @@ package fr.univ_amu.iut.recette.film;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +26,48 @@ import org.junit.jupiter.api.Test;
 /// Les deux moitiés tiennent ensemble : on ne lit jamais une coordonnée pour ce qu'elle VAUT, et on
 /// lit un ÉCART pour ce qu'il vaut. Sous Monocle l'absolu ment, le relatif non.
 class CameraDeSceneTest {
+
+    private static final Object PRINCIPALE = new Object();
+    private static final Object AUTRE = new Object();
+
+    private static CameraDeScene.AutreFenetre fenetre(
+            Object proprietaire, boolean visible, boolean modale, boolean applicative) {
+        return new CameraDeScene.AutreFenetre(proprietaire, visible, modale, applicative);
+    }
+
+    @Test
+    @DisplayName("une modale visible qui la possède BLOQUE la fenêtre : sa barre passera au gris")
+    void une_modale_possedante_bloque() {
+        // Ce cas garde le signal qui dit OÙ VA LA FRAPPE, et il existe parce que `isFocused()` MENT
+        // ici : en Monocle headless il rend vrai pour toutes les fenêtres, faute de gestionnaire pour
+        // retirer le focus. Mesuré sur le clip de `la_modale_de_connexion_s_ouvre` : les deux barres
+        // sortaient bleues, là où le film du banc bash montre la principale virer au gris.
+        assertTrue(CameraDeScene.bloqueeParUneModale(PRINCIPALE, List.of(fenetre(PRINCIPALE, true, true, false))));
+    }
+
+    @Test
+    @DisplayName("une modale REFERMÉE ne bloque plus rien")
+    void une_modale_fermee_ne_bloque_plus() {
+        assertFalse(CameraDeScene.bloqueeParUneModale(PRINCIPALE, List.of(fenetre(PRINCIPALE, false, true, false))));
+    }
+
+    @Test
+    @DisplayName("une fenêtre NON modale ne bloque rien, même visible et possédée")
+    void une_fenetre_non_modale_ne_bloque_rien() {
+        assertFalse(CameraDeScene.bloqueeParUneModale(PRINCIPALE, List.of(fenetre(PRINCIPALE, true, false, false))));
+    }
+
+    @Test
+    @DisplayName("une modale d'une AUTRE fenêtre ne bloque pas celle-ci")
+    void une_modale_d_une_autre_ne_bloque_pas() {
+        assertFalse(CameraDeScene.bloqueeParUneModale(PRINCIPALE, List.of(fenetre(AUTRE, true, true, false))));
+    }
+
+    @Test
+    @DisplayName("une modale d'APPLICATION bloque tout le monde, même sans la posséder")
+    void une_modale_d_application_bloque_tout() {
+        assertTrue(CameraDeScene.bloqueeParUneModale(PRINCIPALE, List.of(fenetre(AUTRE, true, true, true))));
+    }
 
     private static final int TOILE_LARGEUR = 1280;
     private static final int TOILE_HAUTEUR = 900;
