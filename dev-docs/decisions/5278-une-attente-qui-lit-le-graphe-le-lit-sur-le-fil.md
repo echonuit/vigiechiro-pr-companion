@@ -8,7 +8,7 @@ decided_at: 2026-09-05
 verification: probable
 enforced_by:
   - "scripts/adr/5278-attente-hors-du-fil.py"
-ratchet: 31
+ratchet: 0
 verified:
   - by: machine:suspects
     at: 2026-09-05
@@ -49,8 +49,10 @@ comme victime. Il n'est pas seul, et c'est ce que le cliquet compte.
 par un cliquet qui descend.
 
 Le cliquet plutôt que l'invariant, parce que la population est de 63 dans 31 classes et que la
-convertir d'un coup ferait une demande qu'aucune relecture ne tiendrait. Il s'est ouvert à 63. Le lot #5269 l'a descendu à **31** en convertissant les
-trente-deux sites des bancs que le relevé accuse ; #5279 traitera les trente et un restants.
+convertir d'un coup ferait une demande qu'aucune relecture ne tiendrait. Il s'est ouvert à 63. Le lot #5269 l'a descendu à **31** en convertissant les trente-deux sites
+des bancs que le relevé accuse, et #5279 à **zéro** en traitant les trente et un restants. Le
+cliquet à zéro n'est pas un invariant déguisé : une attente qu'on ajouterait sans pouvoir la lire
+sur le fil reste possible, en **relevant le cliquet ici**, c'est-à-dire en écrivant pourquoi.
 
 **La règle se dérive des lectures de nœuds** : `lookup(`, `queryAs`, `getItems()`, `getScene()`,
 `getChildren()`, `getText()`. Énumérer les classes fautives donnerait une liste à tenir à la main, qui

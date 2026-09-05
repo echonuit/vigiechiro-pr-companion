@@ -228,7 +228,7 @@ class ScenarioPerceptifIssuesConnexionTest {
 
         // Étape 3 : se connecter sans jeton demande le geste manquant, sans partir sur le réseau.
         robot.clickOn("#boutonConnecter");
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> statut(robot).getText().contains("Collez d'abord"),
                 "le statut invite à coller un jeton",
                 20 * 1000L);
@@ -291,7 +291,7 @@ class ScenarioPerceptifIssuesConnexionTest {
         }
         robot.clickOn("#boutonConnecter");
         // L'exécuteur est asynchrone : le message n'est PAS là au retour du clic.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !statut(robot).getText().isBlank(),
                 "le statut de connexion s'affiche : l'exécuteur est asynchrone, le message n'est pas"
                         + " là au retour du clic",

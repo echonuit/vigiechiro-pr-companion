@@ -156,7 +156,7 @@ class ParcoursRechercheGlobaleE2ETest {
         TextField champ = robot.lookup("#champRecherche").queryAs(TextField.class);
         ListView<?> liste = robot.lookup("#listeResultats").queryAs(ListView.class);
         robot.interact(() -> champ.setText(requete));
-        Attente.que(() -> !liste.getItems().isEmpty(), "la liste des résultats se remplit", 5 * 1000L);
+        Attente.queSurLeFil(() -> !liste.getItems().isEmpty(), "la liste des résultats se remplit", 5 * 1000L);
         return liste;
     }
 

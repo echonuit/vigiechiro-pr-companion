@@ -108,7 +108,7 @@ class ScenarioDiagnosticSansJournalTest {
         GesteVisible.cliquer(robot, "#boutonDiagnostic");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#lblNuitInterrompue").tryQuery().isPresent(),
                 "le diagnostic ne s'est pas ouvert depuis le passage : sans l'écran, un encart muet ne"
                         + " prouve rien",

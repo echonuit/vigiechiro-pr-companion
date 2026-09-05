@@ -227,7 +227,7 @@ class ScenarioEmportExpediteurTest {
         Respiration.surLeMomentCle(robot);
         GesteVisible.cliquer(robot, "#boutonVerifier");
         WaitForAsyncUtils.waitForFxEvents();
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#tableSequences").tryQuery().isPresent(),
                 "l'écran de vérification ne s'est pas ouvert : sans lui, aucun des cas n'a de quoi se lire",
                 APPARITION_SECONDES * 1000L);

@@ -111,7 +111,7 @@ class ParcoursMultisiteVersPassageE2ETest {
         // lente, donc en CI.
         robot.interact(() -> injector.getInstance(NavigationMultisite.class).ouvrirAccueil());
         TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
-        Attente.que(() -> !table.getItems().isEmpty(), "la table des lignes se remplit", 5 * 1000L);
+        Attente.queSurLeFil(() -> !table.getItems().isEmpty(), "la table des lignes se remplit", 5 * 1000L);
         assertThat(table.getItems()).hasSize(1);
         assertThat(navigation.getVueCourante()).isEqualTo("multisite");
 
@@ -149,7 +149,7 @@ class ParcoursMultisiteVersPassageE2ETest {
         // multisite_drill_vers_passage : chargement de l'agrégat puis chargement du passage, tous deux
         // asynchrones.
         robot.interact(() -> injector.getInstance(NavigationMultisite.class).ouvrirAccueil());
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !robot.lookup("#tableLignes")
                         .queryAs(TableView.class)
                         .getItems()

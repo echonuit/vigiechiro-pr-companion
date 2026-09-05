@@ -184,7 +184,7 @@ public final class GesteVisible {
     public static void choisir(FxRobot robot, Node menu, String libelle) {
         cliquer(robot, menu);
         WaitForAsyncUtils.waitForFxEvents();
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup(libelle).tryQuery().isPresent(),
                 "l'entrée « " + libelle + " » paraît dans le menu ouvert",
                 5_000L);
@@ -199,7 +199,7 @@ public final class GesteVisible {
     public static void choisir(FxRobot robot, String idDuMenu, String libelle) {
         robot.clickOn(idDuMenu);
         WaitForAsyncUtils.waitForFxEvents();
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup(libelle).tryQuery().isPresent(),
                 "l'entrée « " + libelle + " » paraît dans le menu ouvert",
                 5_000L);

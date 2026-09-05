@@ -109,7 +109,7 @@ class ScenarioReveilParBoutonTest {
         GesteVisible.cliquer(robot, "#boutonDiagnostic");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#listeAnomalies").tryQuery().isPresent(),
                 "le diagnostic ne s'est pas ouvert depuis le passage : c'est par sa carte que"
                         + " l'observateur y arrive, et sans l'écran le cas n'a rien à lire",

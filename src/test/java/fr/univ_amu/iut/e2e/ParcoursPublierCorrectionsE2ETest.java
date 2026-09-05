@@ -136,7 +136,7 @@ class ParcoursPublierCorrectionsE2ETest {
         // (occupation.occuper) : waitForFxEvents ne fait que vider la file du fil FX, il n'attend pas
         // ce thread en tache de fond. Sans cette attente, la table est encore vide quand l'assertion
         // tombe, un échec qui ne se produit que sur une machine lente, donc en CI (#3733).
-        Attente.que(() -> !table.getItems().isEmpty(), "la table se remplit", 5 * 1000L);
+        Attente.queSurLeFil(() -> !table.getItems().isEmpty(), "la table se remplit", 5 * 1000L);
         assertThat(table.getItems()).as("l'import rapide a bien rempli l'écran").hasSize(1);
 
         Observation avant = observations().getFirst();

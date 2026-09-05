@@ -110,7 +110,7 @@ class ParcoursFicheEspeceE2ETest {
         // (occupation.occuper) : sans cette attente, la table est encore vide quand l'assertion tombe,
         // un échec qui ne se produit que sur une machine lente, donc en CI.
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
-        Attente.que(() -> !table.getItems().isEmpty(), "la table se remplit", 5 * 1000L);
+        Attente.queSurLeFil(() -> !table.getItems().isEmpty(), "la table se remplit", 5 * 1000L);
         assertThat(table.getItems()).as("le son de référence Pippip est listé").isNotEmpty();
         robot.interact(() -> table.getSelectionModel().select(0));
 

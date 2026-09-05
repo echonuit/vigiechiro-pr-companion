@@ -115,7 +115,7 @@ class ScenarioRaccourcisVerificationTest {
         Respiration.surLeMomentCle(robot);
         GesteVisible.cliquer(robot, "#boutonVerifier");
         WaitForAsyncUtils.waitForFxEvents();
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#tableSequences").tryQuery().isPresent(),
                 "l'écran de vérification ne s'est pas ouvert : sans lui, aucun raccourci n'a de clavier",
                 APPARITION_SECONDES * 1000L);
@@ -276,7 +276,7 @@ class ScenarioRaccourcisVerificationTest {
         robot.push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#lblSucces").query().isVisible(),
                 "« Entrée » n'a pas enregistré le verdict, alors qu'un verdict était retenu",
                 APPARITION_SECONDES * 1000L);
