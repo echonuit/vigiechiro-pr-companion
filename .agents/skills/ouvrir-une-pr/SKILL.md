@@ -65,7 +65,7 @@ tableau doit, c'est la commande à lancer, pas l'inventaire.
 | `python3 scripts/methode/matrice-constitution.py --verifie` **et** `python3 scripts/methode/matrice-ergonomie.py --verifie` | dès qu'une **ADR** est écrite ou modifiée. Il y a **deux** matrices engendrées depuis les en-têtes : la constitution et les heuristiques. Écrire une ADR qui porte un `nielsen-N` périme la seconde sans toucher la première |
 | `python3 scripts/methode/couverture-relecture.py --marque <fichier>` | dès qu'une **javadoc** est touchée, tests compris |
 | `./mvnw -B -o test-compile pmd:pmd` **puis** `python3 scripts/adr/4617-code-mort-et-zone-de-test.py` | dès qu'on **ajoute du code** : le cliquet refuse si `target/pmd.xml` manque, donc il ne dit rien en local |
-| `./mvnw -o test -Dtest=DocumentationAJourTest` | dès qu'un **chiffre** change dans une ADR ou une doc |
+| `./mvnw test -Dtest=DocumentationAJourTest` | dès qu'une **ADR** est écrite ou modifiée, et dès qu'un **chiffre** change dans une doc. Le déclencheur disait « un chiffre » seul jusqu'au 2026-09-05, où une ADR neuve a rougi en CI sur `l_entete_d_une_adr_porte_son_titre` sans qu'aucun chiffre ait bougé : ce test tient vingt et un invariants de documentation, pas un seul |
 
 **Et selon ce qu'on a touché d'autre.** Ces gardes-là ne tiennent pas dans un tableau sans le rendre
 illisible, et ils se déclenchent aussi nettement.

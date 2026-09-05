@@ -16,7 +16,7 @@ generated:
   by: "process:assistance-par-agents"
 ---
 
-# La page qu'on lit avant de pousser nomme ce qu'il faut lancer
+# La page qu'on lit avant de pousser nomme ce qu'il faut lancer, ou elle donne une fausse fin
 
 ## Le contexte
 
