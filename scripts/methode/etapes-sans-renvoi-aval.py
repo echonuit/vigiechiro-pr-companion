@@ -34,7 +34,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import sort_si_contrat_demande
+from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 FONDS = RACINE / ".agents" / "skills"
 
@@ -95,15 +95,7 @@ def ecarts() -> tuple[list[str], list[str]]:
 
 
 def _auto_test() -> int:
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     LISTE = "## Fonction de garde\n\n```\n1. FAIRE ceci\n2. FAIRE cela\n3. FAIRE encore\n```\n"
     verifie("une liste en bloc se lit", len(etapes(LISTE) or []), 3)
@@ -127,7 +119,7 @@ def _auto_test() -> int:
 
     verifie("le rang du cycle ordonne bien", RANG["ouvrir-une-pr"] < RANG["clore-une-issue"], True)
     verifie("une competence d appui n est pas dans le cycle", "humaniser" in RANG, False)
-    return echecs
+    return echecs()
 
 
 CONTRAT = {

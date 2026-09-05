@@ -428,3 +428,59 @@ def sans_commentaires_java(source: str) -> str:
 def sans_commentaires_xml(source: str) -> str:
     """Neutralise les commentaires XML/FXML `<!-- -->`."""
     return _blanchir(_COMMENTAIRE_XML, source)
+
+
+# L assertion des auto-tests, qui vivait recopiee dans SEIZE gardes en deux formes.
+#
+# #5216 avait mesure vingt definitions locales et pose comme critere qu elles n en fassent « une ».
+# Le lot 0 (#5217) a donne un domicile au fonds sans les faire demenager, et son corps de commit
+# annoncait « deux factorisations, pas une : lot a part dans #5215 ». Ce lot n avait jamais ete
+# ouvert ; il l a ete en #5253, a la cloture de #5218.
+#
+# LES DEUX FORMES DIFFERAIENT D UN CARACTERE, ET IL PORTAIT QUELQUE CHOSE. Dix gardes ecrivaient
+# « attendu {attendu} », six « attendu {attendu!r} ». Le `!r` montre les guillemets et les
+# echappements : sans lui, un message d echec CACHE les espaces parasites et les caracteres
+# invisibles. Le chantier de conversion en a fait l experience, trois espaces parasites ayant
+# traverse trois gardes sans qu aucun auto-test ne les voie. La forme retenue est donc celle des six,
+# et les dix autres y gagnent.
+#
+# C est un changement de comportement, sur le CHEMIN D ECHEC seul : un auto-test qui passe n imprime
+# pas cette ligne. Il est declare plutot que glisse.
+def cas_d_auto_test() -> tuple:
+    """Rend le couple (verifie, echecs) : la fonction d assertion, et un LECTEUR de sa marque.
+
+    UNE FABRIQUE plutot qu une fonction a quatre arguments, et la raison est le cout du changement :
+    les seize gardes qui recopiaient cette assertion l appellent depuis 172 endroits. Une signature
+    a quatre arguments aurait oblige a reprendre les 172 ; la fabrique ne reprend que la DEFINITION,
+    et pas un seul site d appel.
+
+    Elle rend aussi la definition invisible au recensement `ast` : les seize fichiers ne declarent
+    plus de `verifie`, ils en recoivent un. C est ce que #5216 demandait sous « les 20 definitions
+    locales sont UNE ».
+
+    SON NOM PORTE « auto » ET « test », ET CE N EST PAS UN ORNEMENT. Les bancs de mutation epargnent
+    toute fonction dont le nom porte ces deux mots, parce que neutraliser la machinerie d un
+    auto-test le fait echouer trivialement au lieu de prouver qu il a cesse de detecter. `verifie`
+    etait jusqu ici une fonction IMBRIQUEE, donc hors des globals et hors d atteinte ; extraite, elle
+    devenait un import de module, donc neutralisee, et les seize gardes passaient de « rougit
+    proprement » a « plante avant d assertir ». Mesure faite sur trois d entre eux avant et apres.
+    Le nom dit ce que la fonction est, et l exemption suit.
+
+    Le second element est une FONCTION et non la marque elle-meme. Rendre la liste nue rendait
+    `if not echecs` toujours faux, une liste non vide etant vraie meme quand elle porte zero : le
+    garde annoncait alors l echec sur un auto-test qui passait. Constate sur le premier fichier
+    rebranche, avant les quinze autres.
+
+    Le `!r` n est pas decoratif : « attendu 'ok', obtenu 'ok ' » se lit, « attendu ok, obtenu ok »
+    ne se lit pas.
+    """
+    marque = [0]
+
+    def verifie(libelle: str, obtenu: object, attendu: object) -> None:
+        if obtenu == attendu:
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
+            marque[0] = 1
+
+    return verifie, (lambda: marque[0])

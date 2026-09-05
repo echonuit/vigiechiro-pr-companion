@@ -33,7 +33,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, rapporte, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, cas_d_auto_test, rapporte, sort_si_contrat_demande
 
 ADR = "5015"
 
@@ -120,15 +120,7 @@ def _auto_test() -> int:
     La seconde n est pas une formalite. Un garde qui refuserait TOUT, exceptions comprises, passe
     la premiere ; c est la meme cecite qu un temoin qui n affirmerait que des vides (ADR 5054).
     """
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     muet = 'from _commun import rapporte\nrapporte("0000", "t", [])\n'
     declare = 'from _commun import rapporte\nrapporte("0000", "t", [], lus=12)\n'
@@ -142,8 +134,8 @@ def _auto_test() -> int:
     verifie("et la loupe est un verdict comme les autres", _appels_muets(attribut)[0][1], "loupe")
 
     print()
-    print("Auto-test concluant." if not echecs else "Auto-test EN ÉCHEC.")
-    return echecs
+    print("Auto-test concluant." if not echecs() else "Auto-test EN ÉCHEC.")
+    return echecs()
 
 
 CONTRAT = {

@@ -36,7 +36,7 @@ import tomllib
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import sort_si_contrat_demande
+from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 # Les deux arbres de gardes, plus les fichiers de dependances qui peuvent les couvrir.
 ARBRES = ("scripts", ".github/scripts")
@@ -170,15 +170,7 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
 
 
 def _auto_test() -> int:
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     verifie("un import de module se voit", imports_durs("import yaml\n"), ["yaml"])
     verifie("une forme `from` aussi", imports_durs("from yaml import safe_load\n"), ["yaml"])
@@ -273,7 +265,7 @@ def _auto_test() -> int:
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             sur_vide = rend_verdict(pathlib.Path(vide))
         verifie("une population vide fait REFUSER", sur_vide, 1)
-    return echecs
+    return echecs()
 
 
 def rend_verdict(racine: pathlib.Path | None = None) -> int:

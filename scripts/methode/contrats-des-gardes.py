@@ -50,7 +50,7 @@ RACINE = pathlib.Path(__file__).resolve().parents[2]
 # La lecture des imports vit dans `_commun`, et non ici : deux deriveurs la faisaient chacun de leur
 # cote, et le motif textuel des deux devenait aveugle des que `ruff format` repliait la ligne (#5128).
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import noms_importes, sort_si_contrat_demande
+from _commun import cas_d_auto_test, noms_importes, sort_si_contrat_demande
 
 # Les prefixes que les deux conventions posent devant le geste.
 PREFIXES = re.compile(r"^(cliquet-|loupe-|verifie[-_])?(\d{4}-)?(.*?)\.py$")
@@ -460,15 +460,7 @@ def _auto_test() -> int:
     """Le releve retrouve les deux ecarts connus, sinon il ne mesure pas ce qu il annonce."""
     import tempfile
 
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     # La MISE EN FORME de l import ne change pas la population (#5128). Les deux formes sont
     # ecrites ici plutot que lues sur un garde reel : un garde dont l import se replierait un jour
@@ -573,7 +565,7 @@ def _auto_test() -> int:
             [],
         )
 
-    return echecs
+    return echecs()
 
 
 # Pourquoi `rapport` et non `invariant` : ce releve ne REFUSE jamais. Il rend le contrat de chaque

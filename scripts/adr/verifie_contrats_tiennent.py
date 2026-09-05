@@ -44,7 +44,14 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import CHAMPS_DU_CONTRAT, RACINE_DEPOT, cliquet, rapporte, sort_si_contrat_demande
+from _commun import (
+    CHAMPS_DU_CONTRAT,
+    RACINE_DEPOT,
+    cas_d_auto_test,
+    cliquet,
+    rapporte,
+    sort_si_contrat_demande,
+)
 
 ADR = "4636"
 
@@ -395,15 +402,7 @@ def confrontations(racine: pathlib.Path | None = None) -> tuple[int, int]:
 
 def _auto_test() -> int:
     """Les DEUX moities : une contradiction est vue, et un desaccord de VOCABULAIRE ne l est pas."""
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     verifie(
         "RACINES et PRODUCTION + TESTS disent le meme corpus",
@@ -601,8 +600,8 @@ def _auto_test() -> int:
     )
 
     print()
-    print("Auto-test concluant." if not echecs else "Auto-test EN ÉCHEC.")
-    return echecs
+    print("Auto-test concluant." if not echecs() else "Auto-test EN ÉCHEC.")
+    return echecs()
 
 
 # Ce que ce garde DECLARE etre. Il en portait aucun, et c est ce qui l a rendu dangereux : sans

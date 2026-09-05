@@ -27,7 +27,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import sort_si_contrat_demande
+from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 TESTS = RACINE / "src" / "test"
 
@@ -84,15 +84,7 @@ def suspects() -> list[str]:
 
 
 def _auto_test() -> int:
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     verifie("une classe de test se reconnait", est_une_citation("SitesViewModelTest"), True)
     verifie("avec sa methode aussi", est_une_citation("SitesViewModelTest#charger"), True)
@@ -103,7 +95,7 @@ def _auto_test() -> int:
     # premiers, et le garde rendrait vert sur un depot casse.
     verifie("une classe reellement citee est trouvee", fichier_de("AppTest") is not None, True)
     verifie("une classe inventee ne l est pas", fichier_de("ClasseQuiNExistePasTest"), None)
-    return echecs
+    return echecs()
 
 
 CONTRAT = {

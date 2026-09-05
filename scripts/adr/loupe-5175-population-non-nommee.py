@@ -53,7 +53,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "methode"))
-from _commun import RACINE_DEPOT, loupe, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, cas_d_auto_test, loupe, sort_si_contrat_demande
 
 # Le nom du releve porte des tirets : il ne s importe pas, il se charge.
 releve = importlib.import_module("contrats-des-gardes")
@@ -145,15 +145,7 @@ def _auto_test() -> int:
     """Les DEUX sens, et le SILENCE : elle voit un chemin tu, elle se tait sur un chemin nomme."""
     import tempfile
 
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     print("Auto-test de la loupe des populations non nommees (#5175) :")
 
@@ -220,8 +212,8 @@ def _auto_test() -> int:
     verifie("et la portee manquante n est pas qu un compte", len(HORS_PORTEE) > 0, True)
 
     print()
-    print("Auto-test concluant." if not echecs else "Auto-test EN ÉCHEC.")
-    return echecs
+    print("Auto-test concluant." if not echecs() else "Auto-test EN ÉCHEC.")
+    return echecs()
 
 
 # Ce que cette loupe DECLARE etre (issue #5009).

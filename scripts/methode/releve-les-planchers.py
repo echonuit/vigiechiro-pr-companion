@@ -27,7 +27,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import DECISIONS, sort_si_contrat_demande
+from _commun import DECISIONS, cas_d_auto_test, sort_si_contrat_demande
 
 GARDE = RACINE / "scripts" / "adr" / "4395-renvois-en-javadoc.py"
 
@@ -131,15 +131,7 @@ def releve(ecrire: bool) -> int:
 
 
 def auto_test() -> int:
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     balise = "vaut <!--inv:essai-->3 136<!--/inv--> aujourd'hui"
     verifie(
@@ -208,7 +200,7 @@ def auto_test() -> int:
         verifie("une annonce illisible REFUSE au lieu de conclure", "a conclu", "a refusé")
     except VerdictIllisible:
         verifie("une annonce illisible REFUSE au lieu de conclure", "a refusé", "a refusé")
-    return echecs
+    return echecs()
 
 
 CONTRAT = {
