@@ -1080,6 +1080,20 @@ jobs:
           python3 scripts/methode/tests-cites-existent.py --auto-test
           python3 scripts/methode/tests-cites-existent.py
 
+      - name: "La page qu'on lit avant de pousser nomme les gardes qui jugent (bloquant, #5258)"
+        # La section « batterie locale » d'`ouvrir-une-pr` annoncait QUATRE gardes rougissant en CI
+        # hors de ce que rapport.py balaie. Mesure du 2026-09-05 : ils sont trente, et la page en
+        # nommait trois. Le cout s'est paye deux fois dans la seule PR #5255, qui closait #5065 :
+        # verifie_contrats_tiennent.py sur un cinquieme site du cliquet 4359, puis matrice-ergonomie
+        # parce que la ligne des ADR ne nomme qu'une matrice sur deux.
+        #
+        # La population est DERIVEE et non enumeree, sans quoi ce garde aurait la liste a tenir qu'il
+        # combat : une invocation `--auto-test` ne juge pas le depot, un script sans CONTRAT produit
+        # sans juger, et ce que rapport.py balaie est deja couvert par la page qui dit de le lancer.
+        run: |
+          python3 scripts/methode/verifie-batterie-locale.py --auto-test
+          python3 scripts/methode/verifie-batterie-locale.py
+
       - name: "Une citation de passe désigne une passe qui existe (bloquant, #4844)"
         # Le dépôt compte 299 citations de ses passes de clôture, dans 145 fichiers. Avant ce garde,
         # RIEN ne vérifiait qu'une citation désigne encore une passe qui existe : mesuré en #4518, une
