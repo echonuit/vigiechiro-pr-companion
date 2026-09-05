@@ -184,7 +184,26 @@ jobs:
         with:
           fetch-depth: 1 # l'historique vient a l'etape suivante, avec reprise (#4440)
 
+      # ⟨portee⟩ Ce job ne juge que la chaine de publication : les greffons de `semantic-release` et
+      # les specifications OpenSpec. Il tournait entier sur chaque demande, et il est SANS OBJET sur
+      # 99 % d'entre elles (mesure du chantier #5294). Le job tourne quand meme et conclut, parce
+      # qu'un atelier qui ne rend aucun verdict fait refuser la fusion (ADR 4571) et qu'un job absent
+      # se lit comme un job vert (ADR 2748) : c'est cette ETAPE qui decide, et elle ecrit pourquoi.
+      #
+      # Elle est placee AVANT le rapatriement d'historique, qui est l'etape la plus chere et la plus
+      # fragile du job - trente secondes en mediane, jusqu'a trois essais de deux minutes (#4440).
+      - name: "Ce diff concerne-t-il la chaine de publication ? (#5297)"
+        id: portee
+        shell: bash
+        # ⟨butoir⟩ L'etape fait un `git fetch` reseau, et #4440 est l'histoire d'un fetch qui part en
+        # vrille jusqu'au butoir du JOB. Trois minutes suffisent : elle en prend trois secondes.
+        timeout-minutes: 3
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 .github/scripts/porte_du_job.py outillage-release
+
       - name: Rapatrier l'historique et les tags, avec reprise
+        if: steps.portee.outputs.concerne == 'oui'
         # `semantic-release` a besoin de l'historique entier. Le demander au checkout n'offre AUCUNE
         # reprise, et ce clone part en vrille assez souvent pour avoir bloque quatre PR le meme jour
         # (#4440). Ici la vrille coute une minute et non quinze : on reessaie, et la mediane des
@@ -202,15 +221,18 @@ jobs:
           echo "::error::trois essais de rapatriement d'historique ont echoue (#4440)"
           exit 1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        if: steps.portee.outputs.concerne == 'oui'
         with:
           node-version: "24"
 
       - name: Installer l'outillage depuis le lockfile
+        if: steps.portee.outputs.concerne == 'oui'
         # `npm ci` échoue si le lockfile ne correspond pas au package.json : c'est la garantie que
         # ce qui s'installera au moment de publier est exactement ce que le dépôt déclare.
         run: npm ci --prefix .github/release
 
       - name: "Les specs principales d'OpenSpec valident (bloquant, #4962)"
+        if: steps.portee.outputs.concerne == 'oui'
         # Les trois gardes OpenSpec anterieurs portent sur la coherence de l'outillage avec lui-meme ;
         # aucun n'executait `openspec validate`. Celui-ci le fait, et REFUSE sur un corpus vide :
         # l'outil sort en 0 en ecrivant « No items found to validate », donc un garde qui l'appellerait
@@ -221,6 +243,7 @@ jobs:
           python3 scripts/methode/verifie-specs-valides.py
 
       - name: "Les invocations d'OpenSpec citées dans nos fichiers existent (bloquant, #4514)"
+        if: steps.portee.outputs.concerne == 'oui'
         # Ce pas vit dans CE job, et non dans `lint`, pour une raison matérielle : il a besoin de la
         # ligne de commande OpenSpec, donc de Node, et `outillage-release` est le seul job qui en
         # dispose déjà. L'y ajouter coûte une installation ; lui créer un job coûterait un checkout
@@ -239,6 +262,7 @@ jobs:
           python3 scripts/methode/verifie-sous-commandes-openspec.py --verifie
 
       - name: La configuration d'analyse dérive bien de celle du dépôt
+        if: steps.portee.outputs.concerne == 'oui'
         # Elle ne recopie pas les parserOpts, elle les hérite : une copie divergerait, et la version
         # calculée en vérification ne serait plus celle que la publication calculera.
         run: |
@@ -257,6 +281,7 @@ jobs:
           "
 
       - name: Répétition à blanc de la chaîne de publication
+        if: steps.portee.outputs.concerne == 'oui'
         # `--dry-run` n'écrit rien et la configuration d'analyse n'embarque aucun greffon d'écriture :
         # cette étape ne peut pas publier. Elle prouve que l'outillage s'installe et que les greffons se
         # chargent ; sur `main` seulement, elle prouve en plus que l'historique est lisible et qu'une
@@ -461,6 +486,21 @@ jobs:
           chmod +x .github/scripts/verifie_apt.py
           python3 .github/scripts/verifie_apt.py --auto-test
           python3 .github/scripts/verifie_apt.py
+
+      - name: "Une portee de job tient ce qu'elle promet (bloquant, #5297)"
+        # Le chantier #5294 conditionne des jobs par une ETAPE plutot que par un `paths:`, pour
+        # qu'ils rendent toujours un verdict. Le dispositif a donc un mode de panne propre, et c'est
+        # le FAUX VERT : une portee qui ne correspond a rien fait ecrire « sans objet » a un job qui
+        # aurait du juger, et personne ne le voit puisque le job finit vert.
+        #
+        # Cette garde ferme aussi un trou qui lui preexiste : `verifie_conditions_de_job.py` ne lit
+        # que les `if:` de JOB, et seulement quand le job porte un `needs:`. Rien ne regardait les
+        # `if:` d'ETAPE, qui sont precisement la ou ce dispositif-ci se conditionne.
+        run: |
+          chmod +x .github/scripts/verifie_portees_de_ci.py .github/scripts/porte_du_job.py
+          python3 .github/scripts/porte_du_job.py --auto-test
+          python3 .github/scripts/verifie_portees_de_ci.py --auto-test
+          python3 .github/scripts/verifie_portees_de_ci.py
 
       - name: Tout job porte un butoir
         # Un job sans `timeout-minutes` que GitHub laisse courir SIX HEURES a bloqué une PR

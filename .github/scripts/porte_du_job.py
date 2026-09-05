@@ -1,0 +1,225 @@
+#!/usr/bin/env python3
+"""La PORTEE d un job : ce diff l engage-t-il, ou n a-t-il rien a y apprendre (chantier #5294) ?
+
+    python3 .github/scripts/porte_du_job.py outillage-release
+
+Rend `concerne=oui` ou `concerne=non` sur la sortie du pas, ECRIT pourquoi dans le recapitulatif, et
+sort toujours 0. Le job qui l appelle tourne donc toujours et conclut : un job absent du
+recapitulatif serait indiscernable d un job vert, dans un depot qui n a aucune protection de branche
+(ADR 2748), et un atelier qui ne rend aucun verdict fait refuser la fusion (ADR 4571).
+
+## La cle est le nom YAML du job, et pas son libelle
+
+`second-compilateur` porte `name: analyser-ecj`. Deux identifiants pour une meme chose, dont un seul
+est stable et machine-lisible. `verifie_portees_de_ci.py` confronte les cles d ici aux cles du YAML.
+
+## Chaque portee nomme SON PROPRE atelier, et les deux scripts du mecanisme
+
+Sans quoi une modification du dispositif ne serait jamais eprouvee par le dispositif : on changerait
+la portee d un job, et le job ne tournerait pas pour le verifier. C est la regle que la docstring de
+`porte_sur_le_contrat_de_fichiers.py` posait en prose, et que le garde tient desormais.
+
+Le prix en est connu et assume : toute demande qui touche `maven.yml` rallume les quatre jobs qui le
+nomment. Le gain vit sur les demandes de documentation, d ADR, de brief et de recette.
+
+## UNE LIGNE PAR CHEMIN
+
+Meme forme, et meme raison, que la chaine `SURVEILLES` du contrat de fichiers : elle est lisible par
+un motif, donc gardable de l exterieur. Une liste Python d elements sur une meme ligne rendrait le
+garde MUET sans qu il rougisse.
+
+## Ce que ce fichier ne decide pas
+
+Qu une portee nomme les VRAIES dependances d un job reste un jugement, pas une deduction. Le garde
+verifie qu aucun chemin ecrit noir sur blanc dans le job n echappe a sa portee ; il ne peut pas
+verifier qu on n a rien oublie d implicite.
+"""
+
+from __future__ import annotations
+
+import pathlib
+import re
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from _portee import ajoute, base_de_comparaison, fichiers_modifies, resume, sans_base
+
+MECANISME = """
+.github/scripts/porte_du_job.py
+.github/scripts/_portee.py
+"""
+
+# Les portees, une ligne par chemin. La cle EST la cle YAML du job.
+PORTEES: dict[str, str] = {
+    "outillage-release": """
+.github/release/**
+.github/openspec/**
+openspec/**
+scripts/methode/verifie-specs-valides.py
+scripts/methode/verifie-sous-commandes-openspec.py
+.github/workflows/lint.yml
+"""
+    + MECANISME,
+}
+
+# Les jobs qui tournent ENTIER a chaque demande, et la raison de chacun. Une liste d exemptions
+# NOMMEES, jamais un compte : c est l idiome de `verifie_verdicts_declares.HORS_PORTEE`.
+INCONDITIONNELS: dict[str, str] = {
+    "build": "la suite et le seuil de couverture ; la documentation de ce depot est testee comme du code, aucune demande n en est independante",
+    "lint": "le portail des meta-gardes ; il juge les competences, les inventaires et les auto-tests, donc presque tout",
+    "corps": "il lit le corps de la demande, pas l arbre : une portee de chemins n y a aucun sens",
+    "titre": "il lit le titre de la demande, pas l arbre",
+    "duree-du-portail": "il porte `needs: build`, mesure une serie de la forge et n execute rien du depot",
+    "contrat-fichiers": "il porte sa propre porte depuis #3525, `porte_sur_le_contrat_de_fichiers.py`",
+    "banc-filme": "ecarte par ecrit au chantier #5294 : il lance les auto-tests de six dispositifs, et le conditionner en sauterait cinq pour gagner une minute",
+    "capturer": "portee prevue au lot #5299",
+    "analyser": "portee prevue au lot #5299",
+    "paquet": "portee prevue au lot #5298",
+    "fuseau-alternatif": "portee prevue au lot #5300",
+    "ordre-alternatif": "portee prevue au lot #5300",
+    "second-compilateur": "arbitrage ouvert au chantier #5294 : le conditionner, ou ecrire pourquoi il tourne toujours",
+    "inventaire": "son atelier porte deja un filtre `paths:`",
+    "fraicheur-des-actions": "son atelier porte deja un filtre `paths:`",
+}
+
+
+def chemins_surveilles(job: str) -> list[str]:
+    """Les chemins que la portee de ce job declare, un par ligne.
+
+    Exposee, et consommee par l auto-test, pour que la mutation qui la vide fasse RATER un cas plutot
+    que planter le garde : un rouge pour la mauvaise raison ne prouve rien (ADR 4918).
+    """
+    return [l.strip() for l in PORTEES.get(job, "").splitlines() if l.strip()]
+
+
+def correspond(chemin: str, motif: str) -> bool:
+    """`**` traverse les `/`, `*` ne les traverse pas, le reste est litteral.
+
+    Ni `fnmatch` (dont le `*` traverse les `/`, donc `src/*` prendrait `src/main/java/A.java`), ni
+    `PurePath.full_match` (3.13+, et ces jobs tournent aussi sous le python3 des runners Windows et
+    macOS).
+    """
+    morceaux = []
+    i = 0
+    while i < len(motif):
+        if motif.startswith("**/", i):
+            morceaux.append("(?:.*/)?")
+            i += 3
+        elif motif.startswith("**", i):
+            morceaux.append(".*")
+            i += 2
+        elif motif[i] == "*":
+            morceaux.append("[^/]*")
+            i += 1
+        elif motif[i] == "?":
+            morceaux.append("[^/]")
+            i += 1
+        else:
+            morceaux.append(re.escape(motif[i]))
+            i += 1
+    return re.fullmatch("".join(morceaux), chemin) is not None
+
+
+def juger(job: str) -> int:
+    """Le verdict pour ce job, et ce que l etape en dit."""
+    titre = f"Portée · {job}"
+    surveilles = chemins_surveilles(job)
+    if not surveilles:
+        # Jamais `non` par defaut : un job inconnu doit faire ROUGIR l etape, pas la taire.
+        print(f"❌ `{job}` ne declare aucune portee dans PORTEES.")
+        print("   Ajoutez-la, ou inscrivez le job dans INCONDITIONNELS avec sa raison.")
+        return 1
+
+    base = base_de_comparaison()
+    if not base:
+        return sans_base(titre)
+
+    modifies = fichiers_modifies(base)
+    touches = [m for m in modifies if any(correspond(m, s) for s in surveilles)]
+
+    if touches:
+        lignes = [
+            f"Ce diff touche {len(touches)} des {len(surveilles)} chemins surveillés :",
+            "",
+        ] + [f"- `{t}`" for t in touches]
+    else:
+        lignes = [
+            f"**Sans objet** : aucun des {len(surveilles)} chemins surveillés n'apparaît dans les",
+            f"{len(modifies)} fichiers de ce diff. Le job s'exécute quand même, et le dit.",
+            "",
+            "Un job absent du récapitulatif se lirait comme un job vert, dans un dépôt qui n'a",
+            "aucune protection de branche.",
+        ]
+    resume(titre, lignes)
+
+    if touches:
+        for t in touches:
+            print(f"  · {t}")
+        ajoute("GITHUB_OUTPUT", "concerne=oui")
+    else:
+        print(
+            f"Aucun des {len(surveilles)} chemins surveillés parmi {len(modifies)} fichiers : sans objet."
+        )
+        ajoute("GITHUB_OUTPUT", "concerne=non")
+    return 0
+
+
+# (chemin, motif, attendu). L appariement decide si un job TOURNE : s il derape, des portees cessent
+# de correspondre en silence, et des jobs ecrivent « sans objet » sans avoir juge. C est le faux vert
+# que tout ce dispositif existe pour eviter, et il se joue ici.
+CAS_D_APPARIEMENT = (
+    ("src/main/java/a/B.java", "src/main/**", True),
+    # `**` traverse les `/`, mais la racine du motif ancre : `src/main/**` ne prend pas `src/test`.
+    ("src/test/java/a/BTest.java", "src/main/**", False),
+    ("pom.xml", "pom.xml", True),
+    # Un motif sans `/` ne prend QUE la racine : sinon toute demande touchant un pom de sous-projet
+    # rallumerait les jobs Maven.
+    ("jpackage/pom.xml", "pom.xml", False),
+    # `*` ne traverse PAS les `/` : c est la difference avec `fnmatch`, dont le `*` les traverse.
+    ("src/a/B.java", "src/*", False),
+    ("src/B.java", "src/*", True),
+    (".github/release/x/y.js", ".github/release/**", True),
+    ("openspec/config.yaml", "openspec/**", True),
+    ("openspec", "openspec/**", False),
+)
+
+
+def _auto_test() -> int:
+    echecs = 0
+    for chemin, motif, attendu in CAS_D_APPARIEMENT:
+        obtenu = correspond(chemin, motif)
+        if obtenu == attendu:
+            print(f"  ✔ {chemin!r} ~ {motif!r} → {obtenu}")
+        else:
+            print(f"  ✘ {chemin!r} ~ {motif!r} : attendu {attendu}, obtenu {obtenu}")
+            echecs += 1
+
+    # Sous mutation, une fonction qui rend `[]` doit faire RATER ce cas, pas planter le garde : un
+    # rouge pour la mauvaise raison ne prouve rien (ADR 4918).
+    for cle in PORTEES:
+        if chemins_surveilles(cle):
+            print(f"  ✔ la portée `{cle}` déclare des chemins")
+        else:
+            print(f"  ✘ la portée `{cle}` ne déclare aucun chemin")
+            echecs += 1
+
+    # Jamais « non » par defaut : un job inconnu ROUGIT. C est le bord ou une faute de frappe dans le
+    # YAML aurait autrement neutralise un job en silence.
+    if juger("job-qui-n-existe-pas") == 0:
+        print("  ✘ un job inconnu de PORTEES ne fait pas rougir")
+        echecs += 1
+    else:
+        print("  ✔ un job inconnu de PORTEES fait rougir")
+
+    total = len(CAS_D_APPARIEMENT) + len(PORTEES) + 1
+    print(f"\n{total} cas d'appariement et de bord.")
+    return 1 if echecs else 0
+
+
+if __name__ == "__main__":
+    if "--auto-test" in sys.argv:
+        sys.exit(_auto_test())
+    if len(sys.argv) != 2:
+        print("usage : python3 .github/scripts/porte_du_job.py <cle-du-job>")
+        sys.exit(2)
+    sys.exit(juger(sys.argv[1]))
