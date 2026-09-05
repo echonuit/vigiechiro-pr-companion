@@ -28,7 +28,7 @@ Après `npm ci`, le lien `node_modules/.bin/openspec` existe. C'est lui qu'il fa
 
 ## Pourquoi cette version-là, et pas la dernière
 
-Les douze fichiers d'OpenSpec présents dans le dépôt portent `generatedBy: "1.10.0"` dans leur
+Les douze fichiers d'OpenSpec présents dans le dépôt portent `generatedBy: "1.12.0"` dans leur
 en-tête. Ils décrivent le contrat de la ligne de commande de cette version : ses sous-commandes, les
 champs de son JSON, les états qu'elle rend. Une version installée qui ne serait pas celle-là ferait
 décrire un contrat périmé par des fichiers qui se lisent comme vrais.
@@ -41,12 +41,31 @@ question.
 Une montée de version n'est donc pas un simple `npm update`. Elle demande de régénérer les douze
 fichiers, ou de vérifier à la main ce que le nouveau contrat change.
 
+**Comment le vérifier sans rien écraser.** Régénérer par-dessus effacerait la réécriture française
+que veut l'[ADR 4515]. On engendre donc les deux versions **à côté**, et on confronte :
+
+```bash
+mkdir -p /tmp/av /tmp/ap
+(cd /tmp/av && <ancienne>/openspec init . --tools claude --no-animation)
+(cd /tmp/ap && <nouvelle>/openspec init . --tools claude --no-animation)
+diff -r /tmp/av/.claude/skills /tmp/ap/.claude/skills
+```
+
+Seuls les écarts réels se portent ensuite dans la réécriture.
+
+**Ce que 1.10.0 vers 1.12.0 a coûté**, mesuré ainsi le 2026-09-05 (#5291) : quatre compétences sur
+six ne changeaient que leur `generatedBy` ; `openspec-propose` gagnait un bloc « inspecter le projet
+avant de rédiger » ; `openspec-explore` gagnait 27 lignes, dont une règle de consentement qui reprend
+la cérémonie du bloc de `CLAUDE.md`. Deux portages à la main, et rien d'autre.
+
+[ADR 4515]: https://companion-dev.echonuit.fr/decisions/4515-les-competences-openspec-sont-reecrites/
+
 ## Vérifier en local
 
 ```bash
 npm ci --prefix .github/openspec
 
-./.github/openspec/node_modules/.bin/openspec --version      # 1.10.0
+./.github/openspec/node_modules/.bin/openspec --version      # 1.12.0
 ./.github/openspec/node_modules/.bin/openspec context --json # "role": "openspec_root"
 
 python3 scripts/methode/verifie-version-openspec.py          # l'égalité tient

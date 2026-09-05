@@ -5,6 +5,6 @@
   "description": "Outillage de specification vivante (OpenSpec), fige par lockfile : voir README.md de ce dossier.",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "@fission-ai/openspec": "1.10.0"
+    "@fission-ai/openspec": "1.12.0"
   }
 }

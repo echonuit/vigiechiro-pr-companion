@@ -75,7 +75,7 @@ Le devcontainer l'installe et la met sur le `PATH`. Hors devcontainer :
 ```bash
 npm ci --prefix .github/openspec
 export PATH="$PWD/.github/openspec/node_modules/.bin:$PATH"
-openspec --version        # 1.10.0
+openspec --version        # 1.12.0
 ```
 
 **Le nom compte.** Les compétences déclarent `allowed-tools: Bash(openspec:*)`, un motif littéral
