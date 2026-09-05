@@ -7,7 +7,7 @@ compatibility: Requires openspec CLI.
 metadata:
   author: openspec
   version: "1.0"
-  generatedBy: "1.10.0"
+  generatedBy: "1.12.0"
   langue: fr
   origine: adoptee de l'outil OpenSpec, puis reecrite ici (ADR 4515)
 ---
@@ -78,6 +78,29 @@ De la description, dériver un nom en kebab-case : « ajouter l'authentification
 **Ne pas avancer sans avoir compris ce qui est demandé.** Une ambiguïté qui change matériellement le
 périmètre, le comportement observable, la compatibilité ou les critères d'acceptation se **demande**.
 Un détail mineur se tranche par une hypothèse raisonnable, écrite dans les artefacts.
+
+### Inspecter le projet AVANT de rédiger (1.12.0)
+
+Lire d'abord le `context` et les `rules`, puis inspecter ce qui touche au sujet **hors**
+d'`openspec/` : l'implémentation, les tests voisins, la configuration, la documentation. Lecture
+seule, et proportionnée au changement. Ce qu'on trouve resservira aux artefacts suivants ; on
+n'inspecte davantage qu'au besoin.
+
+Identifier le projet visé à partir de la demande et du contexte : le lieu où l'on planifie n'est pas
+toujours celui où vit le code. Si la cible n'est pas claire, demander. Sur un terrain vierge ou un
+changement qui n'est pas du code, inspecter la structure disponible et les documents utiles. Si la
+source est hors d'atteinte, dire la limite et demander dès qu'elle pèse sur le plan.
+
+**Ancrer le périmètre, l'approche et les tâches dans ce qu'on a trouvé.** Distinguer le comportement
+constaté des hypothèses et de ce qu'on ajoute. Une contradiction avec une spec existante se
+**signale** au lieu de se trancher en silence.
+
+Faire cette découverte **maintenant**, plutôt que de laisser à l'implémentation une tâche « explorer
+le code » ou « faire un plan ». Une investigation qui reste à faire se nomme par sa question
+précise, pas par un geste générique.
+
+Le dépôt en demandait déjà l'esprit avec son étape 0, qui balaie les issues par concept. 1.12.0
+l'étend au code, aux tests et à la configuration.
 
 ## 2. Retenir le schéma
 
