@@ -27,6 +27,7 @@ Usage :
     python3 scripts/methode/temoins-de-methode-non-decoratifs.py --auto-test
 """
 
+import ast
 import contextlib
 import pathlib
 import re
@@ -41,7 +42,6 @@ from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 ATELIER = RACINE / ".github" / "workflows" / "lint.yml"
 LANCE = re.compile(r"scripts/methode/([a-z0-9-]+\.py)")
-POINT_D_ENTREE = re.compile(r'^if __name__ == ["\']__main__["\']:', re.M)
 
 # Ce qu on insere pour retirer sa detection a un garde, sans toucher a ce qui le decrit.
 #
@@ -74,19 +74,65 @@ def porte_un_auto_test(source: str) -> bool:
     return "--auto-test" in source
 
 
+def ligne_du_point_d_entree(source: str) -> int | None:
+    """La ligne du `if __name__ == "__main__":` de MODULE, lue dans l ARBRE et non par un motif.
+
+    Un motif ne distingue pas le code d une chaine. Des qu un garde porte un litteral contenant ce
+    texte - et c est le cas de tout banc dont l auto-test ecrit de faux gardes - `search` prend la
+    PREMIERE occurrence, la neutralisation s insere au milieu du litteral, et elle n y neutralise
+    rien. Le garde tourne alors normalement, son auto-test passe, et ce banc conclut « decoratif »
+    sur un garde qui ne l est pas.
+
+    Ce n est pas une hypothese : le banc de `.github/scripts` s est fait prendre sur LUI-MEME en
+    #5254, ou le motif trouvait quatre occurrences pour un seul point d entree. Le cas
+    `un point d entree cache dans une chaine ne trompe pas` de l auto-test ci-dessous rejoue le
+    piege, et il est vu ROUGE avant cette correction (#5263).
+
+    L arbre ne peut pas se tromper : il ne voit que les `if` de niveau module. C est la difference
+    entre reconnaitre une forme et demander a la chose ([ADR 5102]).
+
+    ## Pourquoi elle est RECOPIEE et non partagee
+
+    `.github/scripts/temoins_de_ci_non_decoratifs.py` en porte une jumelle. La question du partage
+    s est posee, et la mesure la tranche contre : elle fait QUATORZE lignes la-bas et DIX-SEPT ici,
+    et les deux bancs ne partagent RIEN d autre - ni fonds, ni import, ni arbre. Les relier
+    demanderait un QUATRIEME domicile commun, apres `scripts/_commun/` et
+    `.github/scripts/_forge.py`, pour une fonction que chacun peut lire en entier sans quitter son
+    fichier.
+
+    C est la mesure de #5216 appliquee a ces deux-la : « le partage reel est plus etroit qu il n y
+    parait ». Ce qui protege ici n est pas le partage, c est que CHACUN porte son cas rouge : celui
+    de ce banc est plus bas, et celui de l autre vit dans son propre auto-test.
+    """
+    for noeud in ast.parse(source).body:
+        cible = getattr(noeud, "test", None)
+        if (
+            isinstance(noeud, ast.If)
+            and isinstance(cible, ast.Compare)
+            and isinstance(cible.left, ast.Name)
+            and cible.left.id == "__name__"
+        ):
+            return noeud.lineno
+    return None
+
+
 def mutable(source: str) -> bool:
     """Un garde n est mutable que si son point d entree est reperable.
 
     Sans lui, il n existe aucun endroit sur ou inserer la neutralisation : la deviner reviendrait
     a rendre « decoratif » un garde qui ne l est pas, ce que ce garde existe pour eviter.
     """
-    return POINT_D_ENTREE.search(source) is not None
+    try:
+        return ligne_du_point_d_entree(source) is not None
+    except SyntaxError:
+        return False
 
 
 def mute(source: str) -> str:
-    """La source, neutralisation INSEREE avant le point d entree."""
-    m = POINT_D_ENTREE.search(source)
-    return source[: m.start()] + NEUTRALISATION + source[m.start() :]
+    """La source, neutralisation INSEREE avant le point d entree de module."""
+    ligne = ligne_du_point_d_entree(source)
+    lignes = source.splitlines(keepends=True)
+    return "".join(lignes[: ligne - 1]) + NEUTRALISATION + "".join(lignes[ligne - 1 :])
 
 
 @contextlib.contextmanager
@@ -181,6 +227,26 @@ def _auto_test() -> int:
         "l exemption ne cite aucun nom de garde",
         any(g.split(".")[0] in NEUTRALISATION for g in corpus()),
         False,
+    )
+
+    # #5263. Le piege qui a fait tomber le banc de `.github/scripts` sur LUI-MEME : un garde qui
+    # porte `if __name__` dans une CHAINE avant de le porter pour de vrai. Un motif prenait la
+    # premiere occurrence, la neutralisation atterrissait dans le litteral, le garde tournait
+    # normalement, et ce banc le declarait « decoratif ». Vu ROUGE avant la lecture par l arbre.
+    piege = (
+        'MODELE = """\nif __name__ == "__main__":\n    print("un modele")\n"""\n\n\n'
+        "def detecte():\n    return [1]\n\n\n"
+        'if __name__ == "__main__":\n    detecte()\n'
+    )
+    verifie(
+        "un point d entree cache dans une chaine ne trompe pas",
+        ligne_du_point_d_entree(piege),
+        11,
+    )
+    verifie(
+        "et la neutralisation se pose APRES le litteral",
+        mute(piege).index("_t_mutation") > mute(piege).index('MODELE = """'),
+        True,
     )
 
     # #4788. Un garde sans point d entree REFUSE, au lieu d etre signale sous un vert.

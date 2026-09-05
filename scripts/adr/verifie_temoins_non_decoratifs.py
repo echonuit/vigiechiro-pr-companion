@@ -207,10 +207,40 @@ def neutralise_avant_main(source: str) -> str | None:
     passe en voyant les vraies fonctions - ce qui se lit « ce temoin ne prouve rien » alors qu il n a
     rien eu a prouver. Verifie sur un fichier temoin de six lignes avant d etre corrige (#5134).
     """
-    if MARQUE_MAIN not in source:
+    ligne = ligne_du_point_d_entree(source)
+    if ligne is None:
         return None
-    tete, _, queue = source.partition(MARQUE_MAIN)
-    return tete + NEUTRALISATION + "\n" + MARQUE_MAIN + queue
+    lignes = source.splitlines(keepends=True)
+    return "".join(lignes[: ligne - 1]) + NEUTRALISATION + "\n" + "".join(lignes[ligne - 1 :])
+
+
+def ligne_du_point_d_entree(source: str) -> int | None:
+    """La ligne du `if __name__ == "__main__":` de MODULE, lue dans l ARBRE et non cherchee.
+
+    Ce fichier cherchait `MARQUE_MAIN` par `partition`, donc la PREMIERE occurrence. Une chaine
+    cherchee a exactement le meme angle mort qu une expression reguliere : ni l une ni l autre ne
+    distingue le code d un litteral. Des qu un garde porte `if __name__` dans une chaine - et c est
+    le cas de tout banc dont l auto-test ecrit de faux gardes - la neutralisation s inserait DANS le
+    litteral, ou elle ne neutralisait rien, et ce banc declarait « decoratif » un garde qui ne
+    l etait pas.
+
+    Mesure du 2026-09-05 sur un faux garde de douze lignes : la neutralisation atterrissait ligne 4
+    au lieu de la ligne 11. Le cas `un point d entree cache dans une chaine ne trompe pas` de
+    l auto-test rejoue le piege, et il est vu ROUGE avant cette correction (#5263).
+
+    L arbre ne voit que les `if` de niveau module. C est la difference entre reconnaitre une forme et
+    demander a la chose ([ADR 5102]).
+    """
+    for noeud in ast.parse(source).body:
+        cible = getattr(noeud, "test", None)
+        if (
+            isinstance(noeud, ast.If)
+            and isinstance(cible, ast.Compare)
+            and isinstance(cible.left, ast.Name)
+            and cible.left.id == "__name__"
+        ):
+            return noeud.lineno
+    return None
 
 
 def auto_test_rougit(nom: str, faux: pathlib.Path) -> bool:
@@ -330,6 +360,30 @@ def auto_test() -> int:
     verifie(
         "la neutralisation precede le bloc __main__",
         mute.index("_t_mutation") < mute.index(MARQUE_MAIN),
+        True,
+    )
+
+    # #5263. Le piege : un garde qui porte `if __name__` dans une CHAINE avant de le porter pour de
+    # vrai. `partition` prenait la PREMIERE occurrence, la neutralisation atterrissait dans le
+    # litteral, et ce banc declarait « decoratif » un garde qui ne l etait pas. Mesure d alors :
+    # ligne 4 au lieu de la ligne 11. Ce cas est vu ROUGE sans la lecture par l arbre.
+    piege = (
+        'MODELE = """\nif __name__ == "__main__":\n    print("un modele")\n"""\n\n\n'
+        "def f():\n    return [1]\n\n\n"
+        'if __name__ == "__main__":\n    print(f())\n'
+    )
+    verifie(
+        "un point d entree cache dans une chaine ne trompe pas", ligne_du_point_d_entree(piege), 11
+    )
+    mute_piege = neutralise_avant_main(piege)
+    verifie(
+        "et la neutralisation se pose APRES le litteral",
+        mute_piege.index("_t_mutation") > mute_piege.index('MODELE = """'),
+        True,
+    )
+    verifie(
+        "et AVANT le vrai point d entree",
+        mute_piege.index("_t_mutation") < mute_piege.rindex(MARQUE_MAIN),
         True,
     )
     verifie(
