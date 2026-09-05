@@ -51,6 +51,25 @@ MECANISME = """
 
 # Les portees, une ligne par chemin. La cle EST la cle YAML du job.
 PORTEES: dict[str, str] = {
+    # `paquet` assemble et eprouve ce qu on EMBALLE. Il ne depend ni de la suite de tests ni de la
+    # couverture - il construit avec `-DskipTests` - donc la documentation, les ADR et les
+    # competences ne lui apprennent rien. C est le seul job dont la compétence `clore-une-pr` disait
+    # deja qu il ne juge pas un `.md`.
+    #
+    # `mvnw` et `.mvn/**` ne sont pas decoratifs : ils gouvernent la version de Maven qui construit
+    # le paquet. `src/test/bats/**` non plus - le harnais bats vit ici, et il fait 80 % du job.
+    "paquet": """
+src/main/**
+src/test/bats/**
+pom.xml
+mvnw
+.mvn/**
+jpackage/**
+.github/scripts/verifie_demarrage_emballage.py
+.github/scripts/installer_paquets.py
+.github/workflows/maven.yml
+"""
+    + MECANISME,
     "outillage-release": """
 .github/release/**
 .github/openspec/**
@@ -74,7 +93,6 @@ INCONDITIONNELS: dict[str, str] = {
     "banc-filme": "ecarte par ecrit au chantier #5294 : il lance les auto-tests de six dispositifs, et le conditionner en sauterait cinq pour gagner une minute",
     "capturer": "portee prevue au lot #5299",
     "analyser": "portee prevue au lot #5299",
-    "paquet": "portee prevue au lot #5298",
     "fuseau-alternatif": "portee prevue au lot #5300",
     "ordre-alternatif": "portee prevue au lot #5300",
     "second-compilateur": "arbitrage ouvert au chantier #5294 : le conditionner, ou ecrire pourquoi il tourne toujours",
