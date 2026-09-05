@@ -60,6 +60,7 @@ tableau doit, c'est la commande à lancer, pas l'inventaire.
 
 | À lancer | Quand |
 |---|---|
+| `python3 scripts/adr/rapport.py` | **toujours, et en premier.** Tout le reste de ce tableau est son complément, et il se lit comme tel : le 2026-09-05, j'ai lancé le complément en sautant la base, et le cliquet de l'ADR 4477 a rougi en CI sur une ADR trop longue que la boucle aurait vue |
 | `python3 scripts/adr/verifie_*.py` | dès qu'on touche une **ADR**, un **garde** ou une **javadoc** : douze gardes que `rapport.py` ne balaie pas, dont `verifie_contrats_tiennent.py`, qui confronte le seuil qu'un garde déclare **sur lui-même** au cliquet de son ADR |
 | `python3 scripts/methode/matrice-constitution.py --verifie` **et** `python3 scripts/methode/matrice-ergonomie.py --verifie` | dès qu'une **ADR** est écrite ou modifiée. Il y a **deux** matrices engendrées depuis les en-têtes : la constitution et les heuristiques. Écrire une ADR qui porte un `nielsen-N` périme la seconde sans toucher la première |
 | `python3 scripts/methode/couverture-relecture.py --marque <fichier>` | dès qu'une **javadoc** est touchée, tests compris |
