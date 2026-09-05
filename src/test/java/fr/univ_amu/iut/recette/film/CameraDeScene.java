@@ -4,7 +4,9 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,6 +31,15 @@ import javafx.stage.Window;
 final class CameraDeScene extends AnimationTimer {
 
     private static final Color FOND = new Color(0x10, 0x10, 0x14);
+
+    /// La décoration de fenêtre, et pourquoi elle se DEMANDE au lieu d'être là.
+    ///
+    /// Elle décale la scène vers le bas de la hauteur du cadre : un clip décoré n'a donc pas la même
+    /// géométrie qu'un clip nu. Les clips de recette sont comparés d'un tournage à l'autre par
+    /// `comparer-tournages.yml`, qui accole les images finales - la poser par défaut ferait diverger
+    /// tous les clips en place d'un seul coup, pour un besoin qui est celui de la DOCUMENTATION
+    /// (#5282). Elle s'arme donc, et le tournage de recette reste ce qu'il est.
+    private static final String PROPRIETE_DECORATION = "recette.film.decoration";
 
     /// La marque qui dit qu'une scène est déjà suivie, posée dans ses propriétés.
     private static final String SUIVI_POSE = "recette.film.suivi";
@@ -124,6 +135,7 @@ final class CameraDeScene extends AnimationTimer {
     private BufferedImage composer() {
         BufferedImage toile = new BufferedImage(largeur, hauteur, BufferedImage.TYPE_3BYTE_BGR);
         Map<Window, int[]> decalages = new HashMap<>();
+        boolean decore = decoration();
         Graphics2D g = toile.createGraphics();
         g.setColor(FOND);
         g.fillRect(0, 0, largeur, hauteur);
@@ -145,6 +157,21 @@ final class CameraDeScene extends AnimationTimer {
                         largeur, (int) proprietaire.getScene().getWidth(), fenetre.getX() - proprietaire.getX());
                 y = decalageRelatif(
                         hauteur, (int) proprietaire.getScene().getHeight(), fenetre.getY() - proprietaire.getY());
+            }
+            // La décoration ne va qu'aux VRAIES fenêtres. Un menu, une infobulle, la liste d'un
+            // `ComboBox` sont des `PopupWindow`, et aucun gestionnaire ne les décore : les encadrer
+            // ferait paraître un cadre de fenêtre autour d'un menu déroulant. C'est `proprietaireDe`
+            // qui les distingue, et il le faisait déjà pour les positionner.
+            if (decore && proprietaire == null) {
+                // On centre la FENÊTRE DÉCORÉE, pas sa scène : sans cela le cadre déborde en haut de
+                // la toile et sa barre se coupe - exactement le défaut des films du banc bash, où la
+                // fenêtre est collée au bord de l'écran et perd huit pixels de titre.
+                int hautDuCadre = DecorationDeFenetre.hauteurDuCadre();
+                int basDuCadre = DecorationDeFenetre.BORD;
+                x = decalage(largeur, (int) prise.getWidth() + 2 * DecorationDeFenetre.BORD) + DecorationDeFenetre.BORD;
+                y = decalage(hauteur, (int) prise.getHeight() + hautDuCadre + basDuCadre) + hautDuCadre;
+                DecorationDeFenetre.dessiner(
+                        g, x, y, (int) prise.getWidth(), (int) prise.getHeight(), titreDe(fenetre), focalisee(fenetre));
             }
             decalages.put(fenetre, new int[] {x, y});
             g.drawImage(versAwt(prise), x, y, null);
@@ -247,6 +274,67 @@ final class CameraDeScene extends AnimationTimer {
     /// remarquant là où un bord unique manquant ne se remarque pas.
     static int decalage(int toile, int fenetre) {
         return (toile - fenetre) / 2;
+    }
+
+    /// La décoration est-elle armée ? Présence de la propriété, comme pour `recette.film`.
+    private static boolean decoration() {
+        return System.getProperty(PROPRIETE_DECORATION) != null;
+    }
+
+    /// La fenêtre a-t-elle le focus ? La question se pose à la MODALITÉ, pas à `isFocused()`.
+    ///
+    /// `isFocused()` rend **vrai pour toutes les fenêtres** dans le mode Monocle headless où ce banc
+    /// tourne : il n'y a pas de gestionnaire de fenêtres pour retirer le focus à qui que ce soit.
+    /// Mesuré sur le clip de `la_modale_de_connexion_s_ouvre` : les deux barres sortaient bleues, là
+    /// où le film du banc bash montre la principale virer au gris dès que la modale paraît.
+    ///
+    /// La modalité, elle, porte le fait : une fenêtre qu'une modale **bloque** ne peut pas recevoir la
+    /// frappe, et c'est ce que la barre grise annonce. On lit la cause plutôt que le symptôme, ce qui
+    /// est la règle de l'ADR 5102.
+    static boolean focalisee(Window fenetre) {
+        List<AutreFenetre> autres = new ArrayList<>();
+        for (Window autre : Window.getWindows()) {
+            if (autre == fenetre) {
+                continue;
+            }
+            autres.add(AutreFenetre.de(autre));
+        }
+        return !bloqueeParUneModale(fenetre, autres);
+    }
+
+    /// Ce qu'il faut savoir d'une AUTRE fenêtre pour décider si elle en bloque une.
+    ///
+    /// Un record, et non les `Window` elles-mêmes, pour que la règle ci-dessous se joue **sans
+    /// toolkit JavaFX** : `CameraDeSceneTest` n'en monte pas, et une règle qu'aucun cas ne garde
+    /// serait une règle décrite, pas gardée.
+    record AutreFenetre(Object proprietaire, boolean visible, boolean modale, boolean applicative) {
+        static AutreFenetre de(Window fenetre) {
+            if (fenetre instanceof javafx.stage.Stage stage) {
+                javafx.stage.Modality modalite = stage.getModality();
+                return new AutreFenetre(
+                        stage.getOwner(),
+                        stage.isShowing(),
+                        modalite != javafx.stage.Modality.NONE,
+                        modalite == javafx.stage.Modality.APPLICATION_MODAL);
+            }
+            return new AutreFenetre(null, fenetre.isShowing(), false, false);
+        }
+    }
+
+    /// La règle : une fenêtre est bloquée par toute modale VISIBLE qui la possède, et par toute
+    /// modale d'APPLICATION, qui bloque tout le monde.
+    static boolean bloqueeParUneModale(Object fenetre, List<AutreFenetre> autres) {
+        return autres.stream()
+                .anyMatch(autre ->
+                        autre.visible() && autre.modale() && (autre.applicative() || autre.proprietaire() == fenetre));
+    }
+
+    /// Le titre que la barre affichera, ou la chaîne vide.
+    ///
+    /// Seul un [javafx.stage.Stage] porte un titre - `Window` n'en a pas. Une fenêtre qui n'en est
+    /// pas un rend donc vide, et [DecorationDeFenetre] laisse sa barre nue plutôt que d'inventer.
+    static String titreDe(Window fenetre) {
+        return fenetre instanceof javafx.stage.Stage stage && stage.getTitle() != null ? stage.getTitle() : "";
     }
 
     /// Copie les pixels sans passer par `javafx.swing` : le format entier ARGB de JavaFX est

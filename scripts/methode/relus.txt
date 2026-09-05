@@ -2,7 +2,7 @@
 # Une ligne par fichier : <empreinte>  <chemin relatif a la racine du depot>.
 # L empreinte est celle de la javadoc RELUE : si elle change, le fichier redevient a relire.
 # Voir couverture-relecture.py et scripts/adr/cliquet-javadoc-non-relue.py.
-62ed7367dd87  src/main/java/fr/univ_amu/iut/App.java
+7a2c195798ba  src/main/java/fr/univ_amu/iut/App.java
 d62213f9e9c1  src/main/java/fr/univ_amu/iut/Launcher.java
 7eeb361f4ee9  src/main/java/fr/univ_amu/iut/analyse/di/ActiviteModule.java
 e0de7a2da128  src/main/java/fr/univ_amu/iut/analyse/di/AnalyseModule.java
@@ -1994,10 +1994,12 @@ d454ecd5ac76  src/test/java/fr/univ_amu/iut/recette/SeanceTest.java
 cfde589c7b2e  src/test/java/fr/univ_amu/iut/recette/SpecCarteSd.java
 e19e055e1fb2  src/test/java/fr/univ_amu/iut/recette/film/CalqueDesGestes.java
 8c9b84d546ab  src/test/java/fr/univ_amu/iut/recette/film/CalqueDesGestesTest.java
-a24e19e1fce0  src/test/java/fr/univ_amu/iut/recette/film/CameraDeScene.java
+afae0455f945  src/test/java/fr/univ_amu/iut/recette/film/CameraDeScene.java
 5b40f972bdf8  src/test/java/fr/univ_amu/iut/recette/film/CameraDeSceneTest.java
 334967ccb4c1  src/test/java/fr/univ_amu/iut/recette/film/CartonDeTitre.java
 3e3d416e9f7a  src/test/java/fr/univ_amu/iut/recette/film/CartonDeTitreTest.java
+cc166e8729d9  src/test/java/fr/univ_amu/iut/recette/film/DecorationDeFenetre.java
+97c043adda0b  src/test/java/fr/univ_amu/iut/recette/film/DecorationDeFenetreTest.java
 d1701f680562  src/test/java/fr/univ_amu/iut/recette/film/Encodeur.java
 8c6984216bad  src/test/java/fr/univ_amu/iut/recette/film/EncodeurTest.java
 79940a4e3b7f  src/test/java/fr/univ_amu/iut/recette/film/Enregistrement.java

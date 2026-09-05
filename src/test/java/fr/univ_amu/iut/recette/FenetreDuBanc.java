@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.recette;
 
+import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
@@ -39,6 +40,10 @@ public final class FenetreDuBanc {
     /// ce qui doit précéder l'affichage - typiquement ouvrir son écran, pour que le clip ne commence pas
     /// sur l'accueil (#4126).
     public static void poser(Stage stage, Parent racine, double largeur, double hauteur) {
+        // Le titre, parce que le banc Java DESSINE désormais une barre de titre (#5285) et qu'un
+        // Stage de TestFX n'en porte aucun : sans lui, la barre resterait nue là où le film du banc
+        // bash montre « VigieChiro Companion ». Il vient de [App], pas d'un littéral recopié.
+        stage.setTitle(App.TITRE);
         FenetreAjustable.poserHabillee(stage, racine, largeur, hauteur);
     }
 

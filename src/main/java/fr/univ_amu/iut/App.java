@@ -38,6 +38,10 @@ import javafx.stage.Stage;
 /// ce qui leur donne accès aux ViewModels et services du socle et des features.
 public class App extends Application {
 
+    /// Le titre de la fenêtre principale, que le banc filmé pose aussi sur la sienne : sa barre de
+    /// titre dessinée montre ce que l'application montre, et non un littéral recopié (#5285).
+    public static final String TITRE = "VigieChiro Companion";
+
     private static final Logger LOG = Logger.getLogger(App.class.getName());
 
     @Override
@@ -111,7 +115,7 @@ public class App extends Application {
         primaryStage.setScene(Habillage.scene(root, taille.largeur(), taille.hauteur()));
         primaryStage.setMinWidth(TailleOuverture.LARGEUR_MINIMALE);
         primaryStage.setMinHeight(TailleOuverture.HAUTEUR_MINIMALE);
-        primaryStage.setTitle("VigieChiro Companion");
+        primaryStage.setTitle(TITRE);
         chargerIcones(primaryStage);
 
         // Garde-fou de fermeture (#906) : si une opération critique est en cours (import, génération

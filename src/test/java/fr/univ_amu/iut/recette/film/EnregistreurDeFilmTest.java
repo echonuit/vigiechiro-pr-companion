@@ -33,6 +33,34 @@ import org.junit.platform.testkit.engine.EngineTestKit;
 class EnregistreurDeFilmTest {
 
     @Test
+    @DisplayName("SANS la décoration, la toile reste 1280 x 900 : les clips de recette ne bougent pas")
+    void la_toile_de_recette_ne_change_pas() {
+        // C'est le garde de la RÉTROCOMPATIBILITÉ, et il vaut plus que son apparente évidence.
+        // `comparer-tournages.yml` accole les images finales de deux tournages pour dire ce qui a
+        // changé ; une toile qui grandirait ferait diverger les 128 clips en place d'un seul coup, et
+        // le diagnostic dirait « tout a changé » là où rien n'a changé du produit.
+        System.clearProperty("recette.film.decoration");
+        EnregistreurDeFilm.Dimensions nue = EnregistreurDeFilm.Dimensions.demandees();
+        assertThat(nue.largeur()).isEqualTo(1280);
+        assertThat(nue.hauteur()).isEqualTo(900);
+    }
+
+    @Test
+    @DisplayName("AVEC la décoration, la toile grandit d'exactement le cadre")
+    void la_toile_reserve_la_place_du_cadre() {
+        System.setProperty("recette.film.decoration", "");
+        try {
+            EnregistreurDeFilm.Dimensions decoree = EnregistreurDeFilm.Dimensions.demandees();
+            // 2 px de bord en largeur ; 21 de cadre haut plus 1 de bord bas en hauteur, arrondi au
+            // pair que yuv420p exige - soit 922 et non 921.
+            assertThat(decoree.largeur()).isEqualTo(1282);
+            assertThat(decoree.hauteur()).isEqualTo(922);
+        } finally {
+            System.clearProperty("recette.film.decoration");
+        }
+    }
+
+    @Test
     @DisplayName("un test qui cite un cas se filme")
     void un_test_qui_cite_un_cas_se_filme() {
         assertThat(EnregistreurDeFilm.aFilmer(List.of("S1-26"), false)).isTrue();

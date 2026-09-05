@@ -175,11 +175,25 @@ public final class EnregistreurDeFilm implements BeforeTestExecutionCallback, Af
     }
 
     /// La taille du film. Paire, parce que yuv420p n'accepte rien d'autre.
-    private record Dimensions(int largeur, int hauteur) {
+    record Dimensions(int largeur, int hauteur) {
         static Dimensions demandees() {
             String demande = System.getProperty("recette.film.taille", "1280x900");
             String[] parts = demande.split("x");
-            return new Dimensions(pair(Integer.parseInt(parts[0])), pair(Integer.parseInt(parts[1])));
+            int largeur = Integer.parseInt(parts[0]);
+            int hauteur = Integer.parseInt(parts[1]);
+            // La décoration a besoin de PLACE, et la toile par défaut n'en a pas : la scène des
+            // scénarios fait 1180 x 900 pour une toile de 1280 x 900, donc zéro marge en hauteur. Sans
+            // cette réserve, le cadre déborderait et sa barre serait coupée - le défaut même que cette
+            // décoration existe pour ne pas reproduire.
+            //
+            // La réserve est prise ICI et non dans la caméra, parce que le CARTON est composé à cette
+            // taille lui aussi : les deux doivent tenir dans la même toile, sans quoi l'encodeur refuse
+            // le second format.
+            if (System.getProperty("recette.film.decoration") != null) {
+                largeur += 2 * DecorationDeFenetre.BORD;
+                hauteur += DecorationDeFenetre.hauteurDuCadre() + DecorationDeFenetre.BORD;
+            }
+            return new Dimensions(pair(largeur), pair(hauteur));
         }
 
         private static int pair(int valeur) {
