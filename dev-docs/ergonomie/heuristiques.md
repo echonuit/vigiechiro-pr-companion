@@ -100,11 +100,11 @@ voisines de sujet sans être des doublons. Toute fusion se décide par paire, et
 
 Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.py`, et gardée par lui.
 
-**5 rattachement(s), portés par 3 décision(s).** Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.
+**6 rattachement(s), portés par 4 décision(s).** Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.
 
 | Clé | Heuristique | ADR | Lesquelles |
 |---|---|---:|---|
-| `nielsen-1` | Visibilité de l'état du système | 1 | [4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas](../decisions/4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas.md) |
+| `nielsen-1` | Visibilité de l'état du système | 2 | [4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas](../decisions/4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas.md), [5065-un-verdict-dit-ce-qu-il-n-a-pas-juge](../decisions/5065-un-verdict-dit-ce-qu-il-n-a-pas-juge.md) |
 | `nielsen-2` | Correspondance avec le monde réel | 1 | [4366-un-avertissement-se-dit-en-mots](../decisions/4366-un-avertissement-se-dit-en-mots.md) |
 | `nielsen-3` | Contrôle et liberté | 0 | **aucune** |
 | `nielsen-4` | Cohérence et standards | 1 | [4368-l-apostrophe-d-un-libelle-est-droite](../decisions/4368-l-apostrophe-d-un-libelle-est-droite.md) |
