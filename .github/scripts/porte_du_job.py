@@ -70,6 +70,30 @@ jpackage/**
 .github/workflows/maven.yml
 """
     + MECANISME,
+    # `capturer` rend les apercus PNG des vues hors-ecran. Il depend de ce qui DESSINE - le code de
+    # production et les ressources - et de l outillage d images, jamais de la documentation.
+    "capturer": """
+src/main/**
+pom.xml
+mvnw
+.mvn/**
+.github/assets/**
+.github/scripts/installer_paquets.py
+.github/scripts/verifie_titre_pr.py
+.github/workflows/capture-vues.yml
+"""
+    + MECANISME,
+    # `analyser` (CodeQL) surveille `src/**` et NON `src/main/java` : son pas « Compiler » fait
+    # `-DskipTests package`, qui compile aussi les tests. CodeQL les analyse donc, et une portee
+    # limitee a la production laisserait passer un changement de test sans l analyser.
+    "analyser": """
+src/**
+pom.xml
+mvnw
+.mvn/**
+.github/workflows/codeql.yml
+"""
+    + MECANISME,
     "outillage-release": """
 .github/release/**
 .github/openspec/**
@@ -91,8 +115,6 @@ INCONDITIONNELS: dict[str, str] = {
     "duree-du-portail": "il porte `needs: build`, mesure une serie de la forge et n execute rien du depot",
     "contrat-fichiers": "il porte sa propre porte depuis #3525, `porte_sur_le_contrat_de_fichiers.py`",
     "banc-filme": "ecarte par ecrit au chantier #5294 : il lance les auto-tests de six dispositifs, et le conditionner en sauterait cinq pour gagner une minute",
-    "capturer": "portee prevue au lot #5299",
-    "analyser": "portee prevue au lot #5299",
     "fuseau-alternatif": "portee prevue au lot #5300",
     "ordre-alternatif": "portee prevue au lot #5300",
     "second-compilateur": "arbitrage ouvert au chantier #5294 : le conditionner, ou ecrire pourquoi il tourne toujours",
