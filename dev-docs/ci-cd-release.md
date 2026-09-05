@@ -693,12 +693,17 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 
 ### Et un analyseur les lit tous (#4108)
 
-Ces gardes sont elles-mêmes du shell, et le dépôt en compte **50 scripts** hors `node_modules`. Le
-job `lint` les passe tous à `shellcheck`.
+Ces gardes **ne sont plus du shell** : ils sont en Python depuis le chantier #5215, et le corpus que
+`shellcheck` lit est tombé aux **deux scripts** que l'ADR 5188 laisse encore vivre. Le job `lint` les
+passe à `shellcheck`, et ils sortent propres.
 
-Ce chiffre a été **42** et l'est resté dans cette page pendant huit jours : il était juste le
-2026-08-25, quand #4393 l'a écrit, et le corpus a grossi sans que la phrase suive. Le relevé
-ci-dessous existe pour que la prochaine dérive se voie.
+Ce nombre n'a pas de balise à lui : il EST le cliquet du corpus shell, tenu plus haut dans cette
+page. Lui en donner une seconde ferait deux endroits à corriger pour un seul fait.
+
+Ce chiffre a été **42**, puis **50**, et chaque fois il est resté faux dans cette page pendant des
+jours. Le relevé ci-dessous existait déjà « pour que la prochaine dérive se voie » : il ne l'a pas
+vue, et la dérive était d'un facteur vingt-cinq. Une phrase qui se surveille elle-même ne surveille
+rien ; c'est la balise ci-dessus qui le fera, comme pour les autres comptes de cette page.
 
 Les **réglages** vivent dans `.shellcheckrc`, à la racine, et non dans le YAML : un contributeur qui
 lance `shellcheck son-script.sh` doit voir ce que voit la CI. Un réglage caché dans un workflow
@@ -706,9 +711,12 @@ ferait diverger les deux, et c'est le local qui mentirait, puisque c'est lui qu'
 pousser.
 
 **Une règle est exclue, `SC2016`** (« les expressions ne s'expansent pas dans des guillemets
-simples ») : 104 occurrences sur environ 130, toutes portant sur un `$` volontairement littéral -
-programmes `awk`, filtres `drawtext` de ffmpeg, extraits de workflow dans les auto-tests. Une règle
-qui rougit cent fois sur du code juste apprend à ne plus lire la sortie ([ADR 3479](decisions/3479-toute-table-n-a-pas-vocation-a-etre-exploree.md)).
+simples »). Elle l'a été sur une mesure qui n'existe plus : 104 occurrences sur environ 130, quand le
+corpus comptait 31 scripts. Sur les deux qui restent, `shellcheck -i SC2016` en signale
+**zéro**. L'exclusion ne protège donc plus rien, et son motif d'origine - une règle qui rougit cent
+fois sur du code juste apprend à ne plus lire la sortie ([ADR 3479](decisions/3479-toute-table-n-a-pas-vocation-a-etre-exploree.md)) - ne
+s'applique plus. Elle est conservée en attendant que le dernier script parte, et ce report est
+consigné plutôt que tu.
 
 **Le seuil est `-S info`, et non `warning`.** Au seuil warning, un `rm -f $fichiers` non quoté passe
 au vert : c'est un `SC2086`, classé « info », et c'est exactement la remarque qui a trouvé un vrai
@@ -721,12 +729,11 @@ a signalé un `SC2015` que shellcheck 0.11.0 ne signale plus en local. C'est don
 et un poste plus récent peut être plus **permissif** - l'inverse du sens rassurant. Vérifier
 `shellcheck --version` avant de conclure d'un vert local.
 
-**Ce qui reste dehors**, nommé plutôt que tu : **trois notes de style**, deux `SC2001` (un `sed`
-là où une expansion suffirait, mais où l'expansion serait moins lisible) et un `SC2129` (des
-redirections successives dans une fixture d'auto-test). Un lancement à la main les montre ; la CI ne
-les impose pas.
+**Ce qui reste dehors**, nommé plutôt que tu : **deux notes de style**, toutes deux des `SC2129`
+(des redirections successives). Les deux `SC2001` d'hier sont parties avec les scripts qui les
+portaient. Un lancement à la main les montre ; la CI ne les impose pas.
 
-**Cinq neutralisations locales**, chacune avec sa raison écrite sur place, et aucune globale :
+**Quatre neutralisations locales**, chacune avec sa raison écrite sur place, et aucune globale :
 deux `SC2064`/`SC2046` où l'expansion immédiate et le découpage sont le **remède** et non le défaut
 (le `trap` du banc de recette, le trajet du pointeur du banc de documentation), un `SC2020` où le
 doublon de `\n` est voulu, et deux `SC2094` où shellcheck croit voir une écriture qui vit dans une

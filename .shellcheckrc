@@ -7,13 +7,16 @@
 
 # SC2016 : « les expressions ne s'expansent pas dans des guillemets simples ».
 #
-# Mesuré sur les 31 scripts du dépôt (hors `node_modules`) : 104 occurrences sur environ 130
-# remarques, et toutes portent sur un `$` volontairement littéral - programmes `awk` passés en
-# argument, filtres `drawtext` de ffmpeg, extraits de workflow YAML dans les auto-tests des gardes.
-# Les « corriger » reviendrait à casser ce qu'elles décrivent.
+# Mesurée quand le dépôt comptait 31 scripts : 104 occurrences sur environ 130 remarques, toutes sur
+# un `$` volontairement littéral - programmes `awk` passés en argument, filtres `drawtext` de ffmpeg,
+# extraits de workflow YAML dans les auto-tests des gardes. Une règle qui rougit cent fois sur du code
+# juste ne signale plus rien : c'est la loupe bruyante que l'ADR 3479 écarte.
 #
-# Une règle qui rougit cent fois sur du code juste ne signale plus rien : elle apprend à ne plus
-# lire la sortie. C'est la loupe bruyante que l'ADR 3479 écarte.
+# CETTE MESURE N'EST PLUS LA RÉALITÉ. Le chantier #5215 a converti les gardes en Python, et il reste
+# DEUX scripts. `shellcheck -i SC2016` y signale ZÉRO occurrence : cette exclusion ne protège plus
+# rien. Elle est conservée jusqu'au départ du dernier script, parce que la lever puis la remettre
+# pour le seul `filme-un-parcours.sh` coûterait plus que l'attendre. Le jour où le corpus tombe à
+# zéro, ce fichier part avec lui.
 disable=SC2016
 
 # Le SEUIL ne se règle pas ici. `severity=` n'est pas lu depuis ce fichier - vérifié, et non
