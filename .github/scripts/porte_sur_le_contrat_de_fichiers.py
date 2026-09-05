@@ -3,13 +3,17 @@
 
 ## Pourquoi ce script existe plutot qu un filtre `paths:`
 
-Un `paths:` aurait empeche le job de demarrer sur la plupart des PR. Or ce depot n a **aucune
+Un `paths:` aurait empeche le job de demarrer sur la plupart des demandes. Or ce depot n a **aucune
 protection de branche** : un job absent du recapitulatif est indiscernable d un job vert, y compris
 pour une boucle d attente qui lit « aucune rouge, rien en cours ». C est le motif de l ADR 2748 - un
 dispositif qui peut ne rien verifier doit le dire.
 
 Le job tourne donc toujours, et **cette etape** decide. Quand elle rend `non`, le job finit vert en
 ayant ecrit pourquoi : c est un silence explicite, pas une absence.
+
+Le mecanisme - base, diff, resume - vit desormais dans `_portee.py`, que six autres jobs partagent
+depuis le chantier #5294. Ce fichier ne garde que ce qui lui est propre : la liste, et l appariement
+exact qu elle demande.
 
 ## Ce qu il regarde
 
@@ -20,19 +24,28 @@ dispositif ne serait jamais eprouvee par le dispositif.
 
 ## La liste reste UNE LIGNE PAR CHEMIN, et ce n est pas un detail de forme
 
-`verifie_inventaires_ci.py` la lit avec le motif `^(src/test/java/\\S+\\.java)$` pour confronter les
-chemins surveilles aux classes que la matrice de `maven.yml` joue. Emballer ces chemins autrement -
-une liste Python d elements sur une meme ligne, par exemple - rendrait ce garde-la MUET sans qu il
-rougisse. La chaine ci-dessous garde donc la forme que le bash lui donnait.
+`verifie_inventaires_ci.py` lit ce bloc avec le motif `^(src/test/java/\\S+\\.java)$` pour confronter
+les chemins surveilles aux classes que la matrice de `maven.yml` joue. Emballer ces chemins
+autrement - une liste Python d elements sur une meme ligne, par exemple - rendrait ce garde-la MUET
+sans qu il rougisse. La chaine ci-dessous garde donc la forme que le bash lui donnait.
+
+Depuis #5296, ce garde ne lit QUE le bloc `SURVEILLES`, et non le fichier entier. Il lisait tout, si
+bien qu une ligne de cette forme ecrite n importe ou - un exemple de docstring, un commentaire de
+conception - devenait un test « surveille » qu il fallait ajouter au `-Dtest=` de `maven.yml`. Et si
+la classe citee n existait pas, ce `-Dtest=` rendait `Tests run: 0`, c est-a-dire un faux vert.
 
 Usage : python3 .github/scripts/porte_sur_le_contrat_de_fichiers.py
 """
 
 from __future__ import annotations
 
-import os
-import subprocess
+import pathlib
 import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from _portee import ajoute, base_de_comparaison, fichiers_modifies, resume, sans_base
+
+TITRE = "Portée · contrat-fichiers"
 
 # Chemins surveilles, un par ligne. Le nom de CHAQUE entree est une decision : ajouter une classe
 # ici, c est declarer que son comportement depend du systeme. Le faire a la legere rallonge le gate
@@ -67,48 +80,8 @@ src/test/java/fr/univ_amu/iut/importation/ExtracteurZipQuotasTest.java
 src/test/java/fr/univ_amu/iut/importation/BornesExtractionTest.java
 .github/workflows/maven.yml
 .github/scripts/porte_sur_le_contrat_de_fichiers.py
+.github/scripts/_portee.py
 """
-
-
-def _git(*arguments: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(["git", *arguments], capture_output=True, text=True, check=False)
-
-
-def base_de_comparaison() -> str:
-    """Le point de divergence pour une PR, le commit precedent sinon.
-
-    On demande a GitHub le SHA de base plutot que de le CALCULER par `merge-base` : le calcul
-    exigeait l historique des DEUX cotes, donc un `fetch-depth: 0` au checkout - et ce clone integral
-    partait en vrille jusqu a epuiser les vingt minutes du job, 1 199 s et 1 200 s le meme jour sur
-    ubuntu ET macos, quand l etape prend 3 s a profondeur 1 (#4440).
-    """
-    depuis_la_forge = os.environ.get("GITHUB_BASE_SHA")
-    if depuis_la_forge:
-        _git("fetch", "--no-tags", "--depth=1", "origin", depuis_la_forge)
-        if _git("cat-file", "-e", f"{depuis_la_forge}^{{commit}}").returncode == 0:
-            return depuis_la_forge
-
-    # Repli sur le calcul, hors PR ou si le SHA n arrive pas. La profondeur peut alors ne pas
-    # suffire, et l absence de base fait VERIFIER TOUT plutot que conclure au silence.
-    branche = os.environ.get("GITHUB_BASE_REF")
-    if branche:
-        _git("fetch", "--no-tags", "--depth=50", "origin", branche)
-        calcul = _git("merge-base", "HEAD", f"origin/{branche}")
-        if calcul.returncode == 0 and calcul.stdout.strip():
-            return calcul.stdout.strip()
-
-    precedent = _git("rev-parse", "HEAD~1")
-    return precedent.stdout.strip() if precedent.returncode == 0 else ""
-
-
-def _ajoute(variable: str, ligne: str) -> None:
-    """Ecrit dans le fichier que la forge designe, ou sur la sortie standard hors CI."""
-    chemin = os.environ.get(variable)
-    if chemin:
-        with open(chemin, "a", encoding="utf-8") as f:
-            f.write(ligne + "\n")
-    else:
-        print(ligne)
 
 
 def juger() -> int:
@@ -117,41 +90,30 @@ def juger() -> int:
     base = base_de_comparaison()
 
     if not base:
-        print(
-            "Base de comparaison introuvable : on vérifie tout plutôt que de conclure au silence."
-        )
-        _ajoute("GITHUB_OUTPUT", "concerne=oui")
-        return 0
+        return sans_base(TITRE)
 
-    diff = _git("diff", "--name-only", base, "HEAD")
-    modifies = diff.stdout.splitlines() if diff.returncode == 0 else []
-    touches = [m for m in modifies if m in surveilles]
+    touches = [m for m in fichiers_modifies(base) if m in surveilles]
 
-    resume = ["### Contrat de système de fichiers", ""]
     if touches:
-        resume.append(f"Ce diff touche {len(touches)} fichier(s) surveillé(s) :")
-        resume.append("")
-        resume += [f"- `{t}`" for t in touches]
+        lignes = [f"Ce diff touche {len(touches)} fichier(s) surveillé(s) :", ""]
+        lignes += [f"- `{t}`" for t in touches]
     else:
-        resume.append(
-            "**Sans objet** : aucun fichier surveillé dans ce diff, les tests de contrat ne sont pas"
-        )
-        resume.append("rejoués sur les trois plateformes.")
-        resume.append("")
-        resume.append(
-            "Le job s'exécute quand même, et le dit : un job absent du récapitulatif se lirait comme"
-        )
-        resume.append("un job vert, dans un dépôt qui n'a aucune protection de branche.")
-    for ligne in resume:
-        _ajoute("GITHUB_STEP_SUMMARY", ligne)
+        lignes = [
+            f"**Sans objet** : aucun des {len(surveilles)} chemins surveillés n'apparaît dans ce",
+            "diff, les tests de contrat ne sont pas rejoués sur les trois plateformes.",
+            "",
+            "Le job s'exécute quand même, et le dit : un job absent du récapitulatif se lirait comme",
+            "un job vert, dans un dépôt qui n'a aucune protection de branche.",
+        ]
+    resume(TITRE, lignes)
 
     if touches:
         for t in touches:
             print(f"  · {t}")
-        _ajoute("GITHUB_OUTPUT", "concerne=oui")
+        ajoute("GITHUB_OUTPUT", "concerne=oui")
     else:
-        print("Aucun fichier surveillé dans ce diff : sans objet.")
-        _ajoute("GITHUB_OUTPUT", "concerne=non")
+        print(f"Aucun des {len(surveilles)} chemins surveillés dans ce diff : sans objet.")
+        ajoute("GITHUB_OUTPUT", "concerne=non")
     return 0
 
 

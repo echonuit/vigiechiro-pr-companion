@@ -71,6 +71,12 @@ SECTION_GARDES = "## Toute garde de CI porte sa propre preuve"
 CITATION = re.compile(r"blob/main/\.github/workflows/([A-Za-z0-9_.-]+\.yml)")
 LIGNE_DU_TABLEAU = re.compile(r"^\| `([^`]+)`", re.M)
 FICHIER_SURVEILLE = re.compile(r"^(src/test/java/\S+\.java)$", re.M)
+
+# Le bloc que `porte_sur_le_contrat_de_fichiers.py` DECLARE, par opposition a ce qu il ecrit autour.
+# Ouvre sur la ligne qui nomme `SURVEILLES`, ferme sur le delimiteur seul : `"""` dans la forme
+# Python d aujourd hui, `FIN` dans le heredoc que le bash lui donnait et que sa docstring rappelle.
+DEBUT_DU_BLOC = re.compile(r"^SURVEILLES\b.*$", re.M)
+FIN_DU_BLOC = re.compile(r'^(?:"""|\'\'\'|FIN)\s*$', re.M)
 CLASSES_JOUEES = re.compile(r"-Dtest='([^']+)'")
 
 # Le perimetre inclut `scripts/**`, et pas seulement `.github/`. Il s est arrete a `.github/` pendant
@@ -147,6 +153,25 @@ def porte_l_option(chemin: str, texte: str) -> bool:
     )
 
 
+def bloc_surveille(texte: str) -> str:
+    """Le seul bloc `SURVEILLES` du filtre, et rien de ce que le fichier ecrit autour.
+
+    Lire le fichier ENTIER faisait de toute ligne en `src/test/java/….java` une declaration, ou
+    qu elle soit - un exemple de docstring, un commentaire de conception. Elle devenait alors un
+    test « surveille » qu il fallait ajouter au `-Dtest=` de `maven.yml`, sous peine de rougir ; et
+    si la classe n existait pas, le `-Dtest=` rendait `Tests run: 0`, c est-a-dire un faux vert.
+
+    Un fichier sans bloc rend une chaine VIDE, et non le texte entier : la garde signale alors que
+    rien n est surveille, plutot que de conclure au silence sur un fichier qu elle n a pas su lire.
+    """
+    debut = DEBUT_DU_BLOC.search(texte)
+    if debut is None:
+        return ""
+    reste = texte[debut.end() :]
+    fin = FIN_DU_BLOC.search(reste)
+    return reste[: fin.start()] if fin else reste
+
+
 def autotestes(racine: pathlib.Path) -> set[str]:
     """Les noms de fichier des gardes qui repondent a `--auto-test`."""
     trouves: set[str] = set()
@@ -214,7 +239,9 @@ def juger(racine: pathlib.Path | None = None) -> int:
     maven = os.path.join(str(base), ".github", "workflows", "maven.yml")
     if os.path.isfile(filtre) and os.path.isfile(maven):
         surveilles = pathlib.Path(filtre).read_text(encoding="utf-8")
-        tests_surveilles = {os.path.basename(m)[:-5] for m in FICHIER_SURVEILLE.findall(surveilles)}
+        tests_surveilles = {
+            os.path.basename(m)[:-5] for m in FICHIER_SURVEILLE.findall(bloc_surveille(surveilles))
+        }
         corps = pathlib.Path(maven).read_text(encoding="utf-8")
         joue = CLASSES_JOUEES.search(corps)
         if joue is None:
@@ -256,11 +283,12 @@ def juger(racine: pathlib.Path | None = None) -> int:
     return 0
 
 
-CONTRAT_DE_FICHIERS = """SURVEILLES=$(cat <<'FIN'
+CONTRAT_DE_FICHIERS = '''"""Le filtre, dans la forme que le vrai porte : une docstring, puis le bloc."""
+
+SURVEILLES = """
 src/test/java/fr/univ_amu/iut/UnTest.java
-FIN
-)
 """
+'''
 PAGE = """| [a.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/a.yml) | x | y | z |
 | [b.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/b.yml) | x | y | z |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `un` | x | y | z |
@@ -348,6 +376,20 @@ def _fichier_surveille_non_joue(d: pathlib.Path) -> None:
     )
 
 
+def _leurre_hors_du_bloc(d: pathlib.Path) -> None:
+    """Un chemin cite dans la DOCSTRING du filtre, hors du bloc `SURVEILLES`.
+
+    Il ne declare rien : c est de la prose. Le compter obligerait a l ajouter au `-Dtest=` de
+    `maven.yml`, donc a jouer une classe que personne n a decide de surveiller - et, si elle
+    n existe pas, a rendre `Tests run: 0`.
+    """
+    _remplace(
+        d / ".github/scripts/porte_sur_le_contrat_de_fichiers.py",
+        "une docstring, puis le bloc.",
+        "une docstring, puis le bloc.\n\nExemple :\nsrc/test/java/fr/univ_amu/iut/LeurreTest.java\n",
+    )
+
+
 def _section_renommee(d: pathlib.Path) -> None:
     _remplace(d / "dev-docs/ci-cd-release.md", SECTION_GARDES, "## Autre titre")
 
@@ -362,6 +404,9 @@ CAS = (
     # inutile qu une regle qui accepte tout. Un depot coherent - `maven.yml` cite DEUX fois, une
     # ligne par job - doit rester vert.
     (0, "un dépôt cohérent reste vert, maven.yml cité deux fois compris", None, ""),
+    # Un chemin cite hors du bloc `SURVEILLES` est de la prose, pas une declaration. Ce cas est le
+    # pendant du controle negatif ci-dessus, resserre sur la lecture du filtre (#5296).
+    (0, "un chemin cité hors du bloc SURVEILLES ne compte pas", _leurre_hors_du_bloc, ""),
     (1, "un workflow non cité est vu", _workflow_non_cite, "c.yml"),
     (1, "un workflow cité qui n'existe plus est vu", _workflow_disparu, "disparu.yml"),
     (
