@@ -348,6 +348,7 @@ nav:
     - 5188 · Bash disparaît, une tolérance est un délai daté: decisions/5188-bash-disparait-une-tolerance-est-un-delai.md
     - 5218 · Un portage se prouve par confrontation: decisions/5218-un-portage-se-prouve-par-confrontation.md
     - 5219 · Un renommage de conversion emporte les pointeurs, pas la prose: decisions/5219-un-renommage-de-conversion-emporte-les-pointeurs-pas-la-prose.md
+    - 5257 · Un rouge par plantage ne prouve rien: decisions/5257-un-rouge-par-plantage-ne-prouve-rien.md
     - 5239 · La mesure de pixels reste un sous-processus: decisions/5239-la-mesure-de-pixels-reste-un-sous-processus.md
     - 5201 · Un chiffre de prose porte quelque chose, ou il s'en va: decisions/5201-un-chiffre-de-prose-porte-ou-il-s-en-va.md
     - 5175 · La population déclarée se signale, elle ne se refuse pas: decisions/5175-la-population-declaree-se-signale-elle-ne-se-refuse-pas.md

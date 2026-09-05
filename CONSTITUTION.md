@@ -246,7 +246,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | Article | Jurisprudence | Dont mécanisée | Tenu par |
 |---|---:|---:|---|
 | A1 · La preuve précède l'affirmation | 6 | 1 | `.github/scripts/verifie_decisions_du_tournage_connecte.py`, `.github/scripts/verifie_jeton_vivant.py`, `.github/scripts/revoque_jeton.py`, et 1 autre |
-| A2 · Un garde est vu rouge sur sa propre mutation | 10 | 7 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure_duree_portail.py`, et 2 autres |
+| A2 · Un garde est vu rouge sur sa propre mutation | 11 | 8 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure_duree_portail.py`, et 3 autres |
 | A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 32 | 24 | `.github/scripts/veille_contrat_api.py`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 25 autres |
 | A4 · Un cas joué n'est pas un cas prouvé | 24 | 15 | `ApercuFxElisionTest#bouton_tronque_refuse`, `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`, `scripts/adr/3053-capture-libelle.py`, et 12 autres |
 | A5 · La mesure fait foi, et dit d'où elle vient | 29 | 17 | `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`, `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`, `EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues`, et 12 autres |
