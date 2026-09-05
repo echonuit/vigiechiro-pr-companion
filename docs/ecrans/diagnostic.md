@@ -8,7 +8,8 @@ action transverse, accessible depuis l'écran [Passage](passage.md) quel que soi
 L'écran réunit :
 
 - la **température en début de nuit** et une **courbe climatique** de la nuit (température et
-  hygrométrie), dont l'axe est gradué en heures ;
+  hygrométrie), dont l'axe est gradué en heures. **Survolez un point de la courbe** : une bulle donne
+  son heure, sa série et sa valeur, par exemple « 22:00 · T° : 18,5 °C » ;
 - les **anomalies** détectées (par exemple réveil non programmé, batterie faible) ;
 - les **évènements du journal** du capteur (démarrage, arrêt programmé...) ;
 - la **cohérence horaire** : la fenêtre nocturne réelle au point d'écoute (heures de coucher et de
@@ -35,8 +36,17 @@ couvre ce qui est demandé, et davantage.
 Cette marge est voulue. Elle produit bien une portion d'enregistrement en plein jour, et c'est le but :
 les premières chauves-souris sortent avant la nuit complète, et les dernières rentrent après l'aube.
 
-L'écran montre donc deux plages sous la fenêtre nocturne : ce que le protocole attendait, et ce que
-vous avez enregistré.
+L'écran met donc les trois horaires de la nuit sur une seule ligne, de même forme : la fenêtre
+nocturne réelle, ce que le protocole attendait, et ce que vous avez enregistré.
+
+```
+Nuit : 20:30 à 06:45 · Protocole : 20:00 à 07:15 · Enregistré : 20:25 à 07:47
+```
+
+Quand la fenêtre n'est pas couverte, l'alerte **dit de quel côté** : « les enregistrements commencent
+moins de 30 minutes avant le coucher ; la fin est bien couverte ». Les deux bords ne se corrigent pas
+de la même façon, et un avertissement qui se contenterait de signaler ne dirait pas quoi faire
+autrement.
 
 - Si votre plage **couvre** la fenêtre exigée, une information vous le dit. Ce n'est pas un défaut :
   c'est le cas de l'aperçu en tête de page, où l'encart est bleu et non ambre.

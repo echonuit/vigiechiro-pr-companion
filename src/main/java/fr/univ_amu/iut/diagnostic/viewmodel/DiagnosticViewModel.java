@@ -3,6 +3,7 @@ package fr.univ_amu.iut.diagnostic.viewmodel;
 import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.diagnostic.model.AnalyseCoherenceHoraire;
 import fr.univ_amu.iut.diagnostic.model.CoherenceHoraire;
 import fr.univ_amu.iut.diagnostic.model.Diagnostic;
 import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
@@ -220,18 +221,22 @@ public class DiagnosticViewModel {
     ///
     /// Les deux booléens viennent du MODÈLE et ne se redérivent pas : [CoherenceHoraire] ne porte que
     /// des `LocalTime`, et un enregistrement commencé après minuit s'y comparerait à l'envers.
+    /// La marge du protocole, prise au domaine et non réécrite : une règle qui vit dans une constante
+    /// ET dans de la prose ne se corrige jamais aux deux endroits (clôture de #5065, passe 7).
+    private static final long MARGE = AnalyseCoherenceHoraire.MARGE_DU_PROTOCOLE.toMinutes();
+
     private static String ecartLisible(CoherenceHoraire coherence) {
         if (coherence.debutTenu() && !coherence.finTenue()) {
-            return "Les enregistrements s'arrêtent moins de 30 minutes après le lever ; le début est"
-                    + " bien couvert.";
+            return "Les enregistrements s'arrêtent moins de " + MARGE + " minutes après le lever ; le"
+                    + " début est bien couvert.";
         }
         if (!coherence.debutTenu() && coherence.finTenue()) {
-            return "Les enregistrements commencent moins de 30 minutes avant le coucher ; la fin est"
-                    + " bien couverte.";
+            return "Les enregistrements commencent moins de " + MARGE + " minutes avant le coucher ; la"
+                    + " fin est bien couverte.";
         }
         if (!coherence.debutTenu()) {
-            return "Les enregistrements commencent moins de 30 minutes avant le coucher et s'arrêtent"
-                    + " moins de 30 minutes après le lever.";
+            return "Les enregistrements commencent moins de " + MARGE + " minutes avant le coucher et"
+                    + " s'arrêtent moins de " + MARGE + " minutes après le lever.";
         }
         // Les deux bords tenus et la fenêtre incomplète : la conjonction du modèle l'exclut. Si ce
         // chemin s'ouvrait, il dirait qu'une des deux sources ment, et se taire ici rendrait une phrase

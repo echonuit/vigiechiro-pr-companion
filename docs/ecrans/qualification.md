@@ -12,7 +12,10 @@ Le tableau de la **sélection d'écoute** se **trie**, se **réorganise** et lai
 (clic droit ou menu principal (☰) « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
 - un **pré-check synthétique** (couverture horaire de la nuit, nombre de fichiers, cohérence du
-  renommage) qui repère d'emblée un défaut grossier ;
+  renommage) qui repère d'emblée un défaut grossier. La couverture se juge contre la **fenêtre du
+  protocole**, celle que l'écran Diagnostic affiche, et non contre les heures que l'enregistreur a
+  déclarées : les deux écrans répondaient autrefois différemment à la même question. Sans coordonnées
+  au point d'écoute, la mesure se replie sur les heures déclarées **et le dit** ;
 - un **contrôle par écoute** sur une **sélection automatique de 10 à 30 séquences** réparties sur la
   nuit. Chaque séquence s'écoute dans la **vue audio** (sonogramme et spectrogramme, avec lecture),
   pour confirmer qu'aucun défaut global (saturation, parasite continu, micro défaillant) ne s'est
