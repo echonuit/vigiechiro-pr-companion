@@ -1080,6 +1080,15 @@ jobs:
           python3 scripts/methode/tests-cites-existent.py --auto-test
           python3 scripts/methode/tests-cites-existent.py
 
+      - name: "Une attente qui lit le graphe le lit sur le fil JavaFX (autotest, #5278)"
+        # `Attente.queSurLeFil` existe depuis #4408 et n'a pas essaime : 138 appels, dont HUIT sur le
+        # fil et 63 qui lisent le graphe depuis le fil du test. RetourApresVerificationE2ETest a leve
+        # un IndexOutOfBounds Index 6 of length 6 en CI, signature d'une lecture concurrente.
+        #
+        # Le verdict lui-meme sort de la boucle des cliquets, que rapport.py balaie. Seul l'auto-test
+        # se branche ici, comme pour ses voisins numerotes.
+        run: python3 scripts/adr/5278-attente-hors-du-fil.py --auto-test
+
       - name: "La page qu'on lit avant de pousser nomme les gardes qui jugent (bloquant, #5258)"
         # La section « batterie locale » d'`ouvrir-une-pr` annoncait QUATRE gardes rougissant en CI
         # hors de ce que rapport.py balaie. Mesure du 2026-09-05 : ils sont trente, et la page en

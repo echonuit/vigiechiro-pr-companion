@@ -798,6 +798,38 @@ def test_4468_javadoc_non_relue() -> None:
         )
 
 
+def test_5278_attente_hors_du_fil() -> None:
+    m = _charge("5278-attente-hors-du-fil.py")
+    lecture = '() -> !robot.lookup("#t").queryAll().isEmpty()'
+
+    def classe(appel: str) -> str:
+        return "class A {\n    void t() {\n        " + appel + "\n    }\n}\n"
+
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+
+        _ecrire(racine, "fr/a/A.java", classe(f'Attente.que({lecture}, "que ca vienne");'))
+        _verifie(
+            "5278 une attente qui lit le graphe est vue",
+            m.suspects(racine),
+            ["fr/a/A.java:3"],
+        )
+
+        # LE SECOND FAIT, celui qui distingue ce cliquet d un compte : le MEME site, ecrit sur le
+        # fil FX, est la forme JUSTE et sort du compte. Sans ce cas, un detecteur qui accuserait
+        # tout `Attente.` passerait le premier.
+        surlefil = f'Attente.queSurLeFil({lecture}, "que ca vienne");'
+        _ecrire(racine, "fr/a/A.java", classe(surlefil))
+        _verifie("5278 le meme site sur le fil FX sort du compte", m.suspects(racine), [])
+
+        # Et un predicat qui ne touche pas le graphe n est pas accuse : c est ce qui empeche le
+        # detecteur de compter la population entiere et de rendre un cliquet plausible et faux.
+        sobre = 'Attente.que(() -> vm.pret().get(), "que ca vienne");'
+        _ecrire(racine, "fr/a/A.java", classe(sobre))
+        _verifie("5278 un predicat sans lecture de noeud est ignore", m.suspects(racine), [])
+        _verifie("5278 et le garde a bien LU cet appel", m.lus(racine), 1)
+
+
 def test_4974_attente_reinventee() -> None:
     m = _charge("4974-attente-reinventee.py")
     with tempfile.TemporaryDirectory() as d:
@@ -1997,6 +2029,7 @@ if __name__ == "__main__":
         test_4468_javadoc_non_relue,
         test_5068_clic_sur_reference_tenue,
         test_4974_attente_reinventee,
+        test_5278_attente_hors_du_fil,
         test_4475_stage_non_dimensionne,
         test_4617_code_mort_et_zone_de_test,
         test_4476_javadoc_raconte_son_extraction,
