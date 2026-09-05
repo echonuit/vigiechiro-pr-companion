@@ -40,6 +40,16 @@ suit le corpus au lieu de le doubler.
 repertoire, et la page dit de le lancer. Ces deux globs sont VERIFIES dans son source par l auto-test :
 s il elargissait sa couverture sans que ce garde le sache, la population retrecirait en silence.
 
+## La population s arrete a `scripts/`, et ce n est pas un oubli
+
+`.github/scripts/` porte trente et un scripts lances par les ateliers, dont `verifie_permissions.py`,
+`verifie_epinglage.py` et `verifie_inventaires_ci.py` : ce sont des gardes, et de vrais. Un seul y
+declare un `CONTRAT`, mesure du 2026-09-05.
+
+Y etendre la population appliquerait donc la regle du contrat a un arbre qui ne la suit pas encore,
+et TRENTE gardes en seraient exclus sans un mot. Ce serait le faux vert que ce garde existe pour
+empecher. La frontiere tombera quand cet arbre declarera, ce qui est le chantier #5006 lui-meme.
+
 ## Nommer par GLOB est legitime, et voulu
 
 Un tableau qui listerait vingt-sept lignes ne serait plus lu. La page peut donc ecrire

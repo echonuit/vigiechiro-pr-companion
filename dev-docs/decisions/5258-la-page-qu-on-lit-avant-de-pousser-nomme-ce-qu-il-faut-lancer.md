@@ -62,6 +62,13 @@ lignes : ce qui est dû au lecteur est la commande à lancer, pas l'inventaire.
 sans la rendre illisible ; ils sont nommés dans les paragraphes qui suivent le tableau, groupés par ce
 qui les déclenche. Le garde lit la page entière, parce que c'est ainsi qu'on la lit.
 
+**La population s'arrête à `scripts/`, et la frontière est mesurée.** `.github/scripts/` porte
+trente et un scripts lancés par les ateliers, dont `verifie_permissions.py`, `verifie_epinglage.py`
+et `verifie_inventaires_ci.py`. Un seul y déclare un `CONTRAT`. Étendre la population appliquerait la
+règle du contrat à un arbre qui ne la suit pas encore, et trente gardes en seraient exclus sans un
+mot : le faux vert même que cette décision combat. La frontière tombera quand cet arbre déclarera,
+ce qui est l'objet du chantier #5006.
+
 **Le cliquet ne porte pas d'`inv_key`, et c'est délibéré.** Treize ADR en déclarent une, qui miroite
 leur chiffre dans une balise du registre éditorial. Ce registre tient des **motifs d'écriture**, et ce
 cliquet n'en est pas un. Surtout, la clôture qui a produit cette décision a passé sa matinée à
