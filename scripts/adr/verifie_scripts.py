@@ -830,6 +830,35 @@ def test_5278_attente_hors_du_fil() -> None:
         _verifie("5278 et le garde a bien LU cet appel", m.lus(racine), 1)
 
 
+def test_5307_designation_hors_fabrique() -> None:
+    m = _charge("5307-designation-hors-fabrique.py")
+    construction = "        private final X s = new SelecteurFichierModifiable(new SelecteurFichierJavaFx(f));\n"
+
+    def classe(corps: str) -> str:
+        return "class A {\n" + corps + "}\n"
+
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+
+        _ecrire(racine, "fr/a/A.java", classe(construction))
+        _verifie(
+            "5307 une construction du selecteur natif hors fabrique est vue",
+            m.suspects(racine),
+            ["fr/a/A.java:2"],
+        )
+
+        # LE SECOND FAIT : le MEME site passe par la fabrique, et sort du compte. Sans ce cas, un
+        # detecteur qui accuserait tout fichier nommant le selecteur passerait le premier.
+        _ecrire(racine, "fr/a/A.java", classe("        private final X s = Selecteurs.pour(f);\n"))
+        _verifie("5307 le meme site par la fabrique sort du compte", m.suspects(racine), [])
+
+        # Et la MEME ligne en commentaire ne compte pas : sans cela le garde rougirait sur la javadoc
+        # de la fabrique, qui cite la ligne qu elle remplace.
+        _ecrire(racine, "fr/a/A.java", classe("        // new SelecteurFichierJavaFx(f)\n"))
+        _verifie("5307 la meme ligne en commentaire est ignoree", m.suspects(racine), [])
+        _verifie("5307 et le garde a bien LU ce fichier", m.lus(racine), 1)
+
+
 def test_4974_attente_reinventee() -> None:
     m = _charge("4974-attente-reinventee.py")
     with tempfile.TemporaryDirectory() as d:
@@ -2030,6 +2059,7 @@ if __name__ == "__main__":
         test_5068_clic_sur_reference_tenue,
         test_4974_attente_reinventee,
         test_5278_attente_hors_du_fil,
+        test_5307_designation_hors_fabrique,
         test_4475_stage_non_dimensionne,
         test_4617_code_mort_et_zone_de_test,
         test_4476_javadoc_raconte_son_extraction,

@@ -26,8 +26,8 @@ import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
-import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.commun.view.Stepper;
 import fr.univ_amu.iut.commun.view.SuitLaRevision;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -127,10 +127,10 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     /// geste de l'écran qui en ait besoin est « Réactiver ce passage », et c'est **par lui** qu'il
     /// restait intestable : un `DirectoryChooser` en dur fige un test headless au même titre qu'un
     /// `Alert`, et il ouvre l'action - le test s'arrêtait à la première ligne.
-    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
+    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
             // `this.racine` (et non `racine`) : le champ @FXML est déclaré plus bas, et une référence
             // simple en avant est refusée dans un initialiseur. La fenêtre n'est lue qu'au clic.
-            new SelecteurFichierJavaFx(() -> this.racine.getScene().getWindow()));
+            () -> this.racine.getScene().getWindow());
 
     /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
     SelecteurFichierModifiable selecteur() {

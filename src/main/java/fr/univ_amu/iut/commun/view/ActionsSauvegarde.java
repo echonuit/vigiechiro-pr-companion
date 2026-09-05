@@ -58,7 +58,7 @@ final class ActionsSauvegarde {
         this.occupation = Objects.requireNonNull(occupation, "occupation");
         this.apresRestauration = Objects.requireNonNull(apresRestauration, "apresRestauration");
         Objects.requireNonNull(fenetre, "fenetre");
-        this.selecteur = new SelecteurFichierModifiable(new SelecteurFichierJavaFx(fenetre));
+        this.selecteur = Selecteurs.pour(fenetre);
         this.notificateur = new NotificateurModifiable(new NotificationDialogue(fenetre));
         this.choix = new ChoixSauvegardeModifiable(new ChoixSauvegardeJavaFx(fenetre));
     }

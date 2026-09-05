@@ -14,8 +14,8 @@ import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.view.OccupationChrome;
-import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -74,7 +74,7 @@ final class GesteReset {
         this.occupation = Objects.requireNonNull(occupation, "occupation");
         this.fermeture = Objects.requireNonNull(fermeture, "fermeture");
         Objects.requireNonNull(fenetre, "fenetre");
-        this.selecteur = new SelecteurFichierModifiable(new SelecteurFichierJavaFx(fenetre));
+        this.selecteur = Selecteurs.pour(fenetre);
         this.notificateur = new NotificateurModifiable(new NotificationDialogue(fenetre));
     }
 

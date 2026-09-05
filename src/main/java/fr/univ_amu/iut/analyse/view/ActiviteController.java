@@ -24,8 +24,8 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.RepereEspeceAEnjeu;
-import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
@@ -147,10 +147,10 @@ public class ActiviteController implements EmplacementNavigation, RafraichirAuRe
 
     /// Désignation du fichier d'export, derrière le port du socle : un `FileChooser` natif en dur **fige**
     /// un test TestFX headless, et l'action ne serait pas testable du tout.
-    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
+    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
             // `this.boutonExporterImage` : le champ @FXML est déclaré plus haut mais reste nul jusqu'au
             // chargement ; la fenêtre n'est lue qu'au clic.
-            new SelecteurFichierJavaFx(() -> this.boutonExporterImage.getScene().getWindow()));
+            () -> this.boutonExporterImage.getScene().getWindow());
 
     /// Porteur de désignation exposé aux tests : `selecteur().definir(...)`.
     SelecteurFichierModifiable selecteur() {

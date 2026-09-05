@@ -5,8 +5,8 @@ import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
-import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.passage.model.NatureDEntree;
 import fr.univ_amu.iut.qualification.model.PlanDeReprise;
 import fr.univ_amu.iut.qualification.model.ServiceEmport;
@@ -44,7 +44,7 @@ public final class ActionsEmport {
     /// @param fenetre la fenêtre où poser les sélecteurs natifs
     public ActionsEmport(ServiceEmport service, Supplier<Window> fenetre) {
         this.service = Objects.requireNonNull(service, "service");
-        this.selecteur = new SelecteurFichierModifiable(new SelecteurFichierJavaFx(fenetre));
+        this.selecteur = Selecteurs.pour(fenetre);
     }
 
     /// Le porteur du sélecteur, que les tests remplacent.

@@ -19,8 +19,8 @@ import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
-import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.commun.view.SuitLaRevision;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
@@ -104,10 +104,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut, Su
 
     /// Désignation du fichier d'export : porteur partagé injectable (#1431), double répondant en test.
     /// Le `FileChooser` en dur **figeait** tout test du geste.
-    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
+    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
             // `this.menuActions` : le champ @FXML est déclaré plus bas (référence en avant interdite dans
             // un initialiseur). La fenêtre n'est lue qu'au clic.
-            new SelecteurFichierJavaFx(() -> this.menuActions.getScene().getWindow()));
+            () -> this.menuActions.getScene().getWindow());
 
     /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
     SelecteurFichierModifiable selecteur() {
