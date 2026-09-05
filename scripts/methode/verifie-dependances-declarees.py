@@ -74,6 +74,10 @@ LOCAUX = {
     # recapitulatif d une etape. Il ne juge rien, et c est ce qui permet de le partager entre les
     # sept jobs que le chantier #5294 conditionne.
     "_portee",
+    # Le point d entree des portees, ajoute en #5297. Il porte les DONNEES - quelle portee pour quel
+    # job - et `verifie_portees_de_ci.py` les lui emprunte plutot que de les redeclarer : ecrire une
+    # seconde liste aurait fait diverger la garde de ce qu elle garde, defaut mesure en #5175.
+    "porte_du_job",
 }
 
 
