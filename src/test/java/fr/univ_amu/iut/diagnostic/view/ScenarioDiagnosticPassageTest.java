@@ -63,6 +63,13 @@ class ScenarioDiagnosticPassageTest {
 
     private static final String FIXTURE = "sd-nominale";
 
+    /// La carte dont la nuit COUVRE la fenêtre exigée et la dépasse (#5061).
+    ///
+    /// `sd-nominale` ne la couvre pas, et c'est ce qui rend `S2-66` jouable. Le cas contraire demande
+    /// donc une seconde carte : le protocole est un plancher, et il faut montrer qu'on peut le dépasser
+    /// sans que rien n'accuse. Sa fenêtre vient de la clé `acquisition:`, ouverte par #5200.
+    private static final String FIXTURE_NUIT_LONGUE = "sd-nuit-longue";
+
     private static final int APPARITION_SECONDES = 30;
 
     private static final long PAUSE_PAR_FICHIER_MS = 900;
@@ -72,11 +79,14 @@ class ScenarioDiagnosticPassageTest {
 
     private Path carteSd;
 
+    private Path carteNuitLongue;
+
     private Injector injecteur;
 
     @Start
     void start(Stage stage) throws IOException {
         carteSd = CarteDeRecette.materialiser(FIXTURE);
+        carteNuitLongue = CarteDeRecette.materialiser(FIXTURE_NUIT_LONGUE);
 
         injecteur = BancDeRecette.surLeChrome()
                 .taille(1180, 900)
@@ -299,5 +309,39 @@ class ScenarioDiagnosticPassageTest {
     private static String texte(FxRobot robot, String id) {
         Node noeud = robot.lookup(id).tryQuery().orElse(null);
         return noeud instanceof Labeled libelle && libelle.getText() != null ? libelle.getText() : "";
+    }
+
+    @Test
+    @CasDeRecette(value = "S2-67", portee = Portee.A_L_ECRAN)
+    @DisplayName("S2-67 · une nuit qui COUVRE la fenêtre du protocole rend une information, pas une alerte")
+    void une_nuit_qui_couvre_ne_se_fait_pas_accuser(FxRobot robot) throws TimeoutException {
+        // Le contraire de S2-66, et le cas qui prouve que la règle a bien été retournée : le protocole
+        // est un PLANCHER, donc le dépasser n'est pas s'en écarter. Sans lui le geste était filmé pour
+        // moitié, et la page annonçait un clip qui ne montrait jamais ce cas-là (#5061).
+        PreambuleImport.importerUneNuitEtOuvrirSonPassage(
+                robot, injecteur.getInstance(Navigateur.class), carteNuitLongue);
+
+        Respiration.surLeMomentCle(robot);
+        GesteVisible.cliquer(robot, "#boutonDiagnostic");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Attente.que(
+                () -> robot.lookup("#listeAnomalies").tryQuery().isPresent(),
+                "le diagnostic ne s'est pas ouvert depuis le passage",
+                APPARITION_SECONDES * 1000L);
+        Respiration.leTempsDeLire(robot);
+
+        assertThat(texte(robot, "#lblPlageEnregistree"))
+                .as("la nuit doit DÉBORDER la fenêtre exigée des deux côtés, sinon ce cas éprouve la"
+                        + " même chose que S2-66 en croyant éprouver son contraire")
+                .contains("19:30")
+                .contains("07:45");
+
+        assertThat(texte(robot, "#lblAlerteHorsNuit"))
+                .as("le protocole est un PLANCHER : le dépasser rend une INFORMATION, jamais un reproche."
+                        + " C'est la règle inversée que #4984 a corrigée, et le seul cas qui la mettrait"
+                        + " en défaut si elle revenait")
+                .contains("couvre la fenêtre du protocole")
+                .doesNotContain("ne couvrent pas");
     }
 }
