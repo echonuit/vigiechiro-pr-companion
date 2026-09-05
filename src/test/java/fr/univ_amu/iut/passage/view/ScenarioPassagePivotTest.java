@@ -275,7 +275,7 @@ class ScenarioPassagePivotTest {
         GesteVisible.cliquer(robot, "#boutonRattachement");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#spinnerNumero").tryQuery().isPresent(),
                 "la modale d'édition ne s'est pas ouverte : sans elle, aucun des six cas n'a d'écran",
                 APPARITION_SECONDES * 1000L);
@@ -387,7 +387,7 @@ class ScenarioPassagePivotTest {
         GesteVisible.cliquer(robot, "#boutonRattachement");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#spinnerNumero").tryQuery().isPresent(),
                 "la modale d'édition ne s'est pas ouverte : sans elle, il n'y a pas de numéro à changer",
                 APPARITION_SECONDES * 1000L);

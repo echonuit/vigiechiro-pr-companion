@@ -148,7 +148,7 @@ class RetourApresVerificationE2ETest {
         // On attend donc que l'écran soit CHARGÉ - un statut, quel qu'il soit - avant d'affirmer
         // lequel. Attendre la valeur attendue rendrait l'assertion tautologique : elle cesserait de
         // pouvoir refuser, ce qui est exactement le vert creux qu'on cherche à éviter.
-        Attente.que(() -> !lblStatut.getText().isEmpty(), "le statut du passage s'affiche", 10_000L);
+        Attente.queSurLeFil(() -> !lblStatut.getText().isEmpty(), "le statut du passage s'affiche", 10_000L);
         assertThat(lblStatut.getText()).isEqualTo(StatutWorkflow.TRANSFORME.libelle());
         assertThat(lblVerdict.getText()).isEqualTo("non saisi");
 
@@ -160,7 +160,7 @@ class RetourApresVerificationE2ETest {
         // encore en vol : celui-ci atterrit ensuite et **écrase** le verdict qu'on venait de choisir
         // (`verdictVm.appliquer(...)` réapplique l'état lu en base). Rien n'est alors enregistré, et le
         // passage reste « Transformé » - un échec qui ne se produit que sur une machine lente, donc en CI.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !robot.lookup("#tableSequences")
                         .queryAs(TableView.class)
                         .getItems()
@@ -179,7 +179,7 @@ class RetourApresVerificationE2ETest {
         // vaille ce qu'on espère. Un rafraîchissement qui poserait le mauvais statut fait toujours
         // rougir l'assertion qui suit ; un rafraîchissement qui n'arrive jamais fait rougir l'attente,
         // et celle-ci dit ce qu'elle attendait.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !StatutWorkflow.TRANSFORME.libelle().equals(lblStatut.getText()),
                 "M-Passage se rafraîchit après le retour",
                 10_000L);

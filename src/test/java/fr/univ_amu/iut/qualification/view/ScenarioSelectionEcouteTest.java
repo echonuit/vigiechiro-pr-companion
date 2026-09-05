@@ -109,7 +109,7 @@ class ScenarioSelectionEcouteTest {
         GesteVisible.cliquer(robot, "#boutonVerifier");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#tableSequences").tryQuery().isPresent(),
                 "l'écran de vérification ne s'est pas ouvert depuis le passage : c'est par sa carte que"
                         + " l'observateur y arrive, et sans lui aucun des six cas n'a de quoi se lire",
@@ -223,7 +223,7 @@ class ScenarioSelectionEcouteTest {
         GesteVisible.cliquer(robot, "Annuler");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#curseurTaille").tryQuery().isEmpty(),
                 "« Annuler » n'a pas fermé la modale",
                 APPARITION_SECONDES * 1000L);
@@ -258,7 +258,7 @@ class ScenarioSelectionEcouteTest {
         robot.push(KeyCode.ESCAPE);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#curseurTaille").tryQuery().isEmpty(),
                 "`Échap` n'a pas fermé la modale : une modale dont on ne sort qu'à la souris piège"
                         + " l'observateur au clavier (#1505)",
@@ -279,7 +279,7 @@ class ScenarioSelectionEcouteTest {
         GesteVisible.cliquer(robot, modale(robot, "#boutonRegenerer"));
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#curseurTaille").tryQuery().isEmpty(),
                 "« Régénérer » n'a pas fermé la modale : elle a appliqué sans rendre la main",
                 APPARITION_SECONDES * 1000L);
@@ -344,7 +344,7 @@ class ScenarioSelectionEcouteTest {
     private static void ouvrirLaModale(FxRobot robot) throws TimeoutException {
         GesteVisible.cliquer(robot, "#boutonPersonnaliser");
         WaitForAsyncUtils.waitForFxEvents();
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#curseurTaille").tryQuery().isPresent(),
                 "« Personnaliser… » n'a pas ouvert la modale de sélection d'écoute",
                 APPARITION_SECONDES * 1000L);

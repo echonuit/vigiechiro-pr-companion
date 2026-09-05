@@ -7,7 +7,8 @@
     sinon il lit un graphe qu un autre fil est en train d ecrire.
 
 Le patron n a pas essaime. Mesure du 2026-09-05 : 138 appels a `Attente.que` ou `queSurLeFil`, dont
-HUIT sur le fil, et 63 qui lisent le graphe depuis le fil du test.
+HUIT sur le fil, et 63 qui lisent le graphe depuis le fil du test. Le lot #5269 en a converti
+trente-deux, ceux des bancs que le releve accuse : il en reste 31.
 
 ## Ce que cela produit, et ce n est pas une hypothese
 
@@ -38,7 +39,7 @@ raison plutot que de sortir du compte en silence.
 
 **Il ne suit pas un predicat qui delegue.** Un predicat qui appelle une methode privee touchant, elle,
 le graphe lui echappe. Limite declaree et non oubli : la suivre demanderait un graphe d appels, la ou
-le motif textuel attrape deja 63 sites.
+le motif textuel attrape deja la population entiere.
 
 Usage :
     python3 scripts/adr/5278-attente-hors-du-fil.py
@@ -163,7 +164,7 @@ CONTRAT = {
     "equilibrage de parentheses. `queSurLeFil` en est exclu : c est la forme JUSTE. Un predicat qui "
     "delegue a une methode privee touchant le graphe echappe au motif, limite declaree dans l en-tete",
     "dispositif": "cliquet",
-    "seuil": "63, polarite=descend",
+    "seuil": "31, polarite=descend",
     "temoin": "scripts/adr/5278-attente-hors-du-fil.py --auto-test",
     "decision": "ADR 5278",
 }

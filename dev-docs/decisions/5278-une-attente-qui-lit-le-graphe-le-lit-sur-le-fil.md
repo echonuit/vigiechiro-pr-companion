@@ -8,7 +8,7 @@ decided_at: 2026-09-05
 verification: probable
 enforced_by:
   - "scripts/adr/5278-attente-hors-du-fil.py"
-ratchet: 63
+ratchet: 31
 verified:
   - by: machine:suspects
     at: 2026-09-05
@@ -49,8 +49,8 @@ comme victime. Il n'est pas seul, et c'est ce que le cliquet compte.
 par un cliquet qui descend.
 
 Le cliquet plutôt que l'invariant, parce que la population est de 63 dans 31 classes et que la
-convertir d'un coup ferait une demande qu'aucune relecture ne tiendrait. Il s'ouvre à 63, et les lots
-#5269 et #5279 le descendent à 0.
+convertir d'un coup ferait une demande qu'aucune relecture ne tiendrait. Il s'est ouvert à 63. Le lot #5269 l'a descendu à **31** en convertissant les
+trente-deux sites des bancs que le relevé accuse ; #5279 traitera les trente et un restants.
 
 **La règle se dérive des lectures de nœuds** : `lookup(`, `queryAs`, `getItems()`, `getScene()`,
 `getChildren()`, `getText()`. Énumérer les classes fautives donnerait une liste à tenir à la main, qui

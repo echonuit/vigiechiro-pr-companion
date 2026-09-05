@@ -142,7 +142,7 @@ class ScenarioDiagnosticPassageTest {
         GesteVisible.cliquer(robot, "#boutonDiagnostic");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#listeAnomalies").tryQuery().isPresent(),
                 "le diagnostic ne s'est pas ouvert depuis le passage : c'est par sa carte que"
                         + " l'observateur y arrive, et sans l'écran aucun des six cas n'a de quoi se lire",
@@ -340,7 +340,7 @@ class ScenarioDiagnosticPassageTest {
         GesteVisible.cliquer(robot, "#boutonDiagnostic");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#listeAnomalies").tryQuery().isPresent(),
                 "le diagnostic ne s'est pas ouvert depuis le passage",
                 APPARITION_SECONDES * 1000L);
@@ -398,7 +398,7 @@ class ScenarioDiagnosticPassageTest {
         Respiration.surLeMomentCle(robot);
         GesteVisible.cliquer(robot, "#boutonDiagnostic");
         WaitForAsyncUtils.waitForFxEvents();
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#listeAnomalies").tryQuery().isPresent(),
                 "le diagnostic ne s'est pas ouvert depuis le passage",
                 APPARITION_SECONDES * 1000L);

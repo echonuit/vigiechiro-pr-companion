@@ -318,7 +318,7 @@ class ScenarioModaleCarreTest {
         saisir(robot, CARRE_PRIS);
         verifier(robot);
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#btnRecupererCarre").tryQuery().isPresent(),
                 "le bouton « Récupérer ce carré » paraît",
                 10 * 1000L);
@@ -330,7 +330,7 @@ class ScenarioModaleCarreTest {
         // le geste se termine là où il a commencé. La modale s'efface, « Mes sites » reste, le carré
         // paraît dans la liste et le bandeau dit ce qui vient d'être créé. Le script promettait la
         // fiche du carré ; c'est ce clip qui a montré qu'elle avait un chantier de retard (#4180).
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#lblRetour")
                         .tryQueryAs(Label.class)
                         .filter(libelle -> libelle.getText().contains(CARRE_PRIS))
@@ -342,7 +342,7 @@ class ScenarioModaleCarreTest {
         // de mutation - et la liste arrive en dernier. Le test affirmait sur elle sans l'avoir attendue :
         // vert cent fois en local, rouge dans la suite complète, là où la machine est chargée. Une
         // assertion sur un état qu'on n'a pas attendu ne mesure que la vitesse du runner.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !robot.lookup(".carte-site").queryAll().isEmpty(),
                 "les cartes de sites reparaissent",
                 15 * 1000L);
@@ -417,7 +417,7 @@ class ScenarioModaleCarreTest {
 
         // Et l'écran d'ARRIVÉE, sans quoi on ne voit pas ce que la modale a changé (ADR 4188).
         robot.clickOn(creer);
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup(".carte-site").queryAll().size() > avant,
                 "une carte de site de plus paraît",
                 10 * 1000L);
@@ -444,7 +444,8 @@ class ScenarioModaleCarreTest {
         Respiration.avantLeGeste(robot);
 
         robot.clickOn("Annuler");
-        Attente.que(() -> robot.lookup("#champCarre").tryQuery().isEmpty(), "le champ de carré se vide", 10 * 1000L);
+        Attente.queSurLeFil(
+                () -> robot.lookup("#champCarre").tryQuery().isEmpty(), "le champ de carré se vide", 10 * 1000L);
         Respiration.surLeMomentCle(robot);
 
         assertThat(titresDesCartes(robot))
@@ -458,7 +459,7 @@ class ScenarioModaleCarreTest {
     private void ouvrirLaDeclaration(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
         GesteVisible.cliquer(robot, "+ Nouveau site");
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#champCarre").tryQuery().isPresent(),
                 "la modale de déclaration s'ouvre, reconnue à son champ de carré",
                 10_000L);

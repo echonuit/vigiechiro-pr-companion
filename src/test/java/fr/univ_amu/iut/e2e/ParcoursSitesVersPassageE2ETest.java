@@ -113,7 +113,7 @@ class ParcoursSitesVersPassageE2ETest {
         // clic immédiat les rate sous charge - « returned 1 nodes, but no nodes were visible ». Sept
         // occurrences en deux jours, toujours sur une carte tardive, jamais sur la première (#3823).
         // C'est le motif « interact puis assertion immédiate » que #3717 avait audité.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("Mes sites").queryAll().stream().anyMatch(Node::isVisible),
                 "l'entrée « Mes sites » devient visible",
                 10 * 1000L);
@@ -122,7 +122,7 @@ class ParcoursSitesVersPassageE2ETest {
 
         // 2) Carte du site (« Carré 640380 ») → écran M-Site-detail. Depuis le déport #1212, les
         // cartes se chargent hors du fil JavaFX (vrai exécuteur asynchrone ici) : attendre leur rendu.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("Carré " + CARRE).tryQuery().isPresent(),
                 "le carré cherché paraît dans la liste",
                 5 * 1000L);
