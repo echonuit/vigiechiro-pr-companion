@@ -70,6 +70,15 @@ class ScenarioDiagnosticPassageTest {
     /// sans que rien n'accuse. Sa fenêtre vient de la clé `acquisition:`, ouverte par #5200.
     private static final String FIXTURE_NUIT_LONGUE = "sd-nuit-longue";
 
+    /// Les deux cartes qui n'exercent qu'UN bord de la fenêtre (#5246).
+    ///
+    /// Elles se ressemblent, et leurs alertes ne diffèrent que par une proposition : l'une dit que le
+    /// début est couvert, l'autre qu'aucun des deux ne l'est. Un cas qui se bornerait à constater un
+    /// avertissement serait vert sur les deux sans éprouver ni l'un ni l'autre.
+    private static final String FIXTURE_FIN_PRECOCE = "sd-fin-precoce";
+
+    private static final String FIXTURE_HORS_FENETRE = "sd-hors-fenetre";
+
     private static final int APPARITION_SECONDES = 30;
 
     private static final long PAUSE_PAR_FICHIER_MS = 900;
@@ -81,12 +90,18 @@ class ScenarioDiagnosticPassageTest {
 
     private Path carteNuitLongue;
 
+    private Path carteFinPrecoce;
+
+    private Path carteHorsFenetre;
+
     private Injector injecteur;
 
     @Start
     void start(Stage stage) throws IOException {
         carteSd = CarteDeRecette.materialiser(FIXTURE);
         carteNuitLongue = CarteDeRecette.materialiser(FIXTURE_NUIT_LONGUE);
+        carteFinPrecoce = CarteDeRecette.materialiser(FIXTURE_FIN_PRECOCE);
+        carteHorsFenetre = CarteDeRecette.materialiser(FIXTURE_HORS_FENETRE);
 
         injecteur = BancDeRecette.surLeChrome()
                 .taille(1180, 900)
@@ -343,5 +358,50 @@ class ScenarioDiagnosticPassageTest {
                         + " en défaut si elle revenait")
                 .contains("couvre la fenêtre du protocole")
                 .doesNotContain("ne couvrent pas");
+    }
+
+    @Test
+    @CasDeRecette(value = "S2-77", portee = Portee.A_L_ECRAN)
+    @DisplayName("S2-77 · la fin manque, et l'alerte dit que le début, lui, est couvert")
+    void la_fin_manque_et_l_alerte_le_nomme(FxRobot robot) throws TimeoutException {
+        ouvrirLeDiagnosticDe(robot, carteFinPrecoce);
+
+        assertThat(texte(robot, "#lblAlerteHorsNuit"))
+                .as("l'alerte doit nommer le bord qui MANQUE, et concéder que l'autre va bien. Se"
+                        + " contenter de constater un avertissement serait vert sur les deux cartes de"
+                        + " ce lot, donc n'éprouverait ni l'une ni l'autre (#5246)")
+                .contains("s'arrêtent moins de 30 minutes après le lever")
+                .contains("le début est bien couvert");
+    }
+
+    @Test
+    @CasDeRecette(value = "S2-78", portee = Portee.A_L_ECRAN)
+    @DisplayName("S2-78 · les deux bords manquent, et l'alerte ne concède rien")
+    void les_deux_bords_manquent_et_l_alerte_ne_concede_rien(FxRobot robot) throws TimeoutException {
+        ouvrirLeDiagnosticDe(robot, carteHorsFenetre);
+
+        assertThat(texte(robot, "#lblAlerteHorsNuit"))
+                .as("aucun des deux bords n'est couvert : la phrase doit les nommer tous les deux et ne"
+                        + " rien concéder. Un « bien » ici dirait à l'observateur qu'une moitié va,"
+                        + " alors que rien ne va")
+                .contains("commencent moins de 30 minutes avant le coucher")
+                .contains("s'arrêtent moins de 30 minutes après le lever")
+                .doesNotContain("bien");
+    }
+
+    /// Importe `carte` et ouvre le diagnostic de la nuit qu'elle porte.
+    ///
+    /// Les trois cas d'alerte ne diffèrent que par leur carte : le chemin, lui, est le même, et le
+    /// répéter trois fois inviterait à ce qu'une des copies dérive.
+    private void ouvrirLeDiagnosticDe(FxRobot robot, Path carte) throws TimeoutException {
+        PreambuleImport.importerUneNuitEtOuvrirSonPassage(robot, injecteur.getInstance(Navigateur.class), carte);
+        Respiration.surLeMomentCle(robot);
+        GesteVisible.cliquer(robot, "#boutonDiagnostic");
+        WaitForAsyncUtils.waitForFxEvents();
+        Attente.que(
+                () -> robot.lookup("#listeAnomalies").tryQuery().isPresent(),
+                "le diagnostic ne s'est pas ouvert depuis le passage",
+                APPARITION_SECONDES * 1000L);
+        Respiration.leTempsDeLire(robot);
     }
 }
