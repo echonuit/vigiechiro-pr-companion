@@ -7,7 +7,7 @@ Le dépôt porte **deux** bancs filmés. Celui de la recette, `lance-test-filme.
 que l'[ADR 5188](../decisions/5188-bash-disparait-une-tolerance-est-un-delai.md) tolère « tant que le
 banc Java n'est pas définitivement validé ». Et celui de la documentation,
 `scripts/doc-video/filme-un-parcours.sh` (2 065 lignes), qui n'a aucune tolérance écrite et qui est
-le dernier lot du chantier #5235.
+le dernier lot du chantier #5235, son **lot D**.
 
 La question s'est posée à l'ouverture de ce lot : convertir 2 065 lignes de shell en Python, ou
 demander d'abord si ce banc doit exister.
@@ -128,14 +128,73 @@ personne.
 Le lecteur de la documentation a besoin de savoir qu'il regarde une fenêtre d'application ; il n'a
 pas besoin que ce soit la sienne.
 
+## Le montage de validation : les deux prototypes posés sur un vrai clip
+
+Les deux images ci-dessus sont des dessins, et une page qui conclut « soluble » sur deux dessins n'a
+pas mesuré grand-chose. Le banc Java a donc été lancé pour de vrai, et ses prototypes composés sur ce
+qu'il a rendu.
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-spike-convergence/spike-convergence-parcours-monte.mp4"></video>
+
+Le film enchaîne l'écran du carré, le clic sur « Importer une nuit », l'assistant d'import au champ
+vide, **le sélecteur de dossier qui s'ouvre** sur le volume `VIGIECHIRO`, puis l'inspection qui
+annonce le journal, le relevé et les six WAV. Le tout dans un cadre de fenêtre.
+
+**Ce qui sort du banc, et ce qui a été ajouté.** L'application, ses écrans, sa carte, son inspection
+et son pointeur sortent du banc Java, tourné sans Xvfb, sans gestionnaire de fenêtres et sans
+xdotool : `3 clips, 49 s de film, 81 s de build`. Le cadre et le dialogue ont été composés après
+coup.
+
+Le contenu du sélecteur n'est pas inventé : `bruts`, `LogPR1925492.txt` (817 o) et
+`PaRecPR1925492_THLog.csv` (205 o) sont l'arbre que `GenerateurCartesSD` produit depuis
+`sd-nominale.yaml`. La flèche non plus : c'est celle du banc, `CalqueDesGestes.FLECHE_X/Y` au même
+facteur, même corps et même liseré.
+
+Il est réel **et pourtant faux**, et c'est le dessin du sélecteur qui l'a fait voir : les vraies
+cartes SD n'ont pas de dossier `bruts/`, les enregistreurs déposent leurs WAV à la racine. Le
+produit accepte les deux dispositions, mais les **seize** specs de recette produisent la seconde,
+si bien que la branche réelle n'est jouée par aucun cas de recette. Consigné en #5281, hors du
+périmètre de ce spike.
+
+!!! warning "Ce montage est un montage, et trois choses y sont fausses"
+
+    **Le cadre et le dialogue n'existent pas.** Aucun code ne les produit aujourd'hui ; ils sont
+    posés sur les images par un script de composition qui ne sera pas livré.
+
+    **Le film ne montre qu'un temps du parcours, et c'est une mesure.** Les trois clips ont d'abord
+    été concaténés : à quarante secondes, le film **repartait** de l'écran du site. Chaque clip est
+    un test, et un test démarre à zéro. Trois clips bout à bout ne font pas un parcours, ils font
+    trois redémarrages - un film de documentation tient en **une** prise, et c'est le vrai travail
+    du portage.
+
+    **Une contradiction est visible et n'a pas été maquillée.** Le sélecteur annonce
+    `/media/VIGIECHIRO/bruts` ; à la seconde suivante, le vrai clip remplit le champ avec le dossier
+    temporaire où le test a matérialisé sa carte. Un double visible devra donc rendre un chemin
+    **montrable**, contrainte que ni les dessins ni le raisonnement n'avaient fait apparaître.
+
+**Ce que le montage a mesuré au-delà de la faisabilité** : décoré et muni d'un sélecteur visible, le
+clip **cesse de ressembler à un clip de recette**. C'était la question que les dessins ne pouvaient
+pas trancher, puisqu'ils ne montraient pas l'application en train de fonctionner.
+
 ## Ce que ce spike n'a PAS mesuré
 
 Trois choses, et elles décident du coût plutôt que de la faisabilité.
 
 **Ce que les huit parcours de documentation font que le banc Java ne sait pas faire.** Le banc bash
 porte une carte (`preparer_la_carte`, `monter_la_carte`, `demonter_la_carte`), un montage à plages
-accélérées (`plages_a_accelerer`, `filtre_de_montage`) et un index (`ecrire_index`). Trois de ces
-quatre ont un équivalent Java - `Encodeur`, `IndexDesCas` - ; **la carte n'en a pas**.
+accélérées (`plages_a_accelerer`, `filtre_de_montage`) et un index (`ecrire_index`).
+
+Cette page a d'abord écrit que **la carte n'avait pas d'équivalent**, et que c'était l'inconnue
+décisive. C'était faux, et le tournage l'a démenti. Le parcours bash déclare
+`recette/fixtures/spec/sd-nominale.yaml` ; le scénario Java déclare `FIXTURE = "sd-nominale"`. Les
+deux passent par `GenerateurCartesSD` sur **la même spec déclarative** - le bash par un fork
+`mvnw exec:java@generer-sd`, le Java en processus via `CarteDeRecette.materialiser`.
+
+Ce qui n'a pas d'équivalent est `monter_la_carte` : un montage `udisksctl` en boucle, qui existe pour
+qu'un volume étiqueté `VIGIECHIRO` paraisse dans le sélecteur **natif**, où le parcours va le lire
+par OCR. Simuler le sélecteur retire donc du même geste la raison d'être du montage : les deux
+obstacles n'en font qu'un, ce que ni le raisonnement ni les dessins n'avaient vu.
 
 **Le coût réel d'un parcours porté**, mesuré et non estimé. Un seul parcours converti dirait ce que
 les huit coûtent.
@@ -160,10 +219,17 @@ Ce qui reste vrai de l'ADR 3788 est respecté dans les deux cas : ce qui est sim
 **illustre**, jamais ne remplace ce qu'un humain doit juger. La mise en page de l'application, elle,
 n'est jamais touchée.
 
-Cela ne dit pas qu'il faut converger. Cela dit que le lot D ne doit **pas** être ouvert comme une
-conversion de 2 065 lignes vers Python avant que la question de la convergence soit tranchée : ce
-serait investir dans un corpus dont on ignore s'il est condamné, ce que le chantier #5215 avait
-justement évité en refusant de bâtir un banc de mutation pour les gardes bash.
+Cela ne dit toujours pas qu'il **faut** converger, et le montage ne le dit pas non plus : il montre
+que l'artefact visé est atteignable, pas qu'il vaut son prix.
+
+Ce que cela tranche est le **chemin**. Le lot D ne doit pas être ouvert comme une conversion de
+2 065 lignes vers Python avant que la convergence soit décidée : ce serait investir dans un corpus
+dont on ignore s'il est condamné, ce que le chantier #5215 avait justement évité en refusant de bâtir
+un banc de mutation pour les gardes bash.
+
+**C'est ce qui a été fait.** Le lot D est ouvert en sous-chantier (#5282), qui tranchera la question
+en portant **un** des huit parcours plutôt qu'en les convertissant tous. Il est le seul à pouvoir
+conclure « non ».
 
 ## Ce qu'il coûterait de se tromper
 
