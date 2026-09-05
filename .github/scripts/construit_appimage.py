@@ -111,7 +111,11 @@ def construire(version: str, arch: str = "x86_64") -> int:
         return rendu.returncode
 
     shutil.rmtree(appdir, ignore_errors=True)
-    print(f"AppImage produite : {sortie}")
+    # `flush` : sans lui, cette ligne sort APRES le `ls` qu elle introduit, et apres la sortie
+    # d appimagetool. La sortie standard de Python est mise en tampon par blocs des qu elle n est
+    # pas un terminal, et un journal de CI n en est jamais un. Mesure faite avec un appimagetool de
+    # comptoir : l annonce arrivait sous le listing de l artefact qu elle annonce (#5245).
+    print(f"AppImage produite : {sortie}", flush=True)
     subprocess.run(["ls", "-lh", str(sortie)], check=False)
     return 0
 
