@@ -15,6 +15,8 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.diagnostic.model.AnalyseCoherenceHoraire;
+import fr.univ_amu.iut.diagnostic.model.CoherenceHoraire;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -510,9 +512,9 @@ class ServiceQualificationTest {
     // --- P3 étape 1 : pré-check 3 feux ----------------------------------------
 
     @Test
-    @DisplayName("Pré-check : nuit creuse bien nommée et bien couverte → orange/vert/vert")
+    @DisplayName("Pré-check : nuit creuse dont la fin n'atteint pas la fenêtre du protocole")
     void precheck_nuit_creuse() {
-        // 3 originaux bien nommés couvrant la fenêtre 20:00 → 06:00 (écarts < 30 min).
+        // 3 originaux bien nommés, de 20:05 à 05:55.
         insererSequence("PaRecPR1925492_20260620_200500.wav");
         insererSequence("PaRecPR1925492_20260621_030000.wav");
         insererSequence("PaRecPR1925492_20260621_055500.wav");
@@ -521,7 +523,17 @@ class ServiceQualificationTest {
 
         assertThat(diagnostic.nombreFichiers()).as("3 fichiers < 50 → creux").isEqualTo(Feu.ORANGE);
         assertThat(diagnostic.coherenceRenommage()).isEqualTo(Feu.VERT);
-        assertThat(diagnostic.couvertureHoraire()).isEqualTo(Feu.VERT);
+
+        // #5055 : ce feu était VERT, et il l'était sur la fenêtre DÉCLARÉE, 20:00 à 06:00, où il ne
+        // manquait que cinq minutes. Mesuré au point du test, 43,5 N et 5,4 E le 2026-06-20 : le
+        // soleil se couche à 21:23 et se lève à 05:58, donc le protocole exige de 20:53 à 06:28. La
+        // fin manque de 33 minutes, au-delà des 30 tolérées.
+        //
+        // L'ancien vert n'était pas faux par erreur de calcul : il répondait à une autre question que
+        // celle que l'écran posait. C'est le défaut que ce lot corrige.
+        assertThat(diagnostic.couvertureHoraire())
+                .as("la fin n'atteint pas la fenêtre du protocole de 33 minutes : orange")
+                .isEqualTo(Feu.ORANGE);
     }
 
     @Test
@@ -650,5 +662,40 @@ class ServiceQualificationTest {
                 .findFirst()
                 .orElseThrow();
         assertThat(rechargee.ecoutee()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#5055 : la qualification et le diagnostic tranchent la MÊME nuit dans le même sens")
+    void les_deux_surfaces_tranchent_la_meme_nuit_pareil() {
+        insererSequence("PaRecPR1925492_20260620_200500.wav");
+        insererSequence("PaRecPR1925492_20260621_030000.wav");
+        insererSequence("PaRecPR1925492_20260621_055500.wav");
+
+        PreCheckNuit.Diagnostic precheck = service.precheck(idPassage);
+        CoherenceHoraire coherence = AnalyseCoherenceHoraire.analyser(43.5, 5.4, "2026-06-20", "20:00:00", "06:00:00");
+
+        // Deux surfaces, une seule nuit. Avant #5055 elles répondaient sur deux fenêtres : la
+        // qualification sur les heures DÉCLARÉES, le diagnostic sur les éphémérides. Rien n'indiquait
+        // laquelle croire, et c'est le défaut que ce cas empêche de revenir.
+        assertThat(precheck.couvertureHoraire() != Feu.VERT)
+                .as(
+                        "la qualification alerte=%s et le diagnostic dit couverture=%s : sur la même nuit,"
+                                + " les deux doivent dire la même chose",
+                        precheck.couvertureHoraire(), coherence.couverture())
+                .isEqualTo(coherence.couverture() == CoherenceHoraire.Couverture.INCOMPLETE);
+    }
+
+    @Test
+    @DisplayName("#5055 : sans coordonnées, la couverture le DIT au lieu de se taire")
+    void sans_coordonnees_la_couverture_dit_sa_fenetre() {
+        // Le repli est explicite, et c'est l'arbitrage du porteur : la qualification continue de
+        // statuer sur les heures déclarées plutôt que de rendre un feu indisponible, mais elle nomme
+        // la fenêtre dont elle parle. Un feu qui disparaît est un feu qu'on cesse de regarder.
+        PreCheckNuit.Mesures sansGps = new PreCheckNuit.Mesures(3, 0, 40L, false, "20:05 à 05:55", "20:00 à 06:00");
+
+        assertThat(new PreCheckNuit().evaluer(sansGps).detailCouverture())
+                .as("sans coordonnées, l'explication doit dire SUR QUOI elle statue : deux mesures"
+                        + " assumées valent mieux qu'une contradiction muette")
+                .contains("fenêtre déclarée, faute de coordonnées");
     }
 }
