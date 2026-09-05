@@ -527,6 +527,7 @@ a22c0cba60aa  src/main/java/fr/univ_amu/iut/commun/view/ConfirmateurModifiable.j
 be82b8aa7af2  src/main/java/fr/univ_amu/iut/commun/view/ConfirmationNavigation.java
 14f8c7b081f1  src/main/java/fr/univ_amu/iut/commun/view/ConstructeurMenuOutils.java
 5556eeb98e70  src/main/java/fr/univ_amu/iut/commun/view/ContenuChoixSauvegarde.java
+8a408f6d8fb7  src/main/java/fr/univ_amu/iut/commun/view/ContenuDesignation.java
 8bcda08bb08b  src/main/java/fr/univ_amu/iut/commun/view/ControleursReglages.java
 8023ca44aae0  src/main/java/fr/univ_amu/iut/commun/view/CritereBooleen.java
 52fd1d750b4e  src/main/java/fr/univ_amu/iut/commun/view/CritereFiltre.java
@@ -1568,6 +1569,7 @@ fc74dffd0f51  src/test/java/fr/univ_amu/iut/commun/view/ConfirmateurModifiableTe
 9b0105a2ce55  src/test/java/fr/univ_amu/iut/commun/view/ConfirmationNavigationTest.java
 95dc87ab8cdc  src/test/java/fr/univ_amu/iut/commun/view/ConstructeurMenuOutilsTest.java
 7004879317c8  src/test/java/fr/univ_amu/iut/commun/view/ContenuChoixSauvegardeTest.java
+a6ee7f2897b6  src/test/java/fr/univ_amu/iut/commun/view/ContenuDesignationTest.java
 3e6e603a89b8  src/test/java/fr/univ_amu/iut/commun/view/ContrasteAATest.java
 8b07950886ff  src/test/java/fr/univ_amu/iut/commun/view/ContrasteVueAudioTest.java
 3722f3a3b25e  src/test/java/fr/univ_amu/iut/commun/view/ContratCartesAccueilTest.java
