@@ -59,7 +59,29 @@ public class PreCheckNuit {
             long ecartCouvertureMinutes,
             boolean moitieNuitManquante,
             String plageObservee,
-            String plageAttendue) {
+            String plageAttendue,
+            boolean couvertureDepuisLesEphemerides,
+            boolean couvertureIndeterminee) {
+
+        /// Les six composantes d'avant #5055, la fenêtre étant alors toujours celle des heures
+        /// déclarées et jamais indéterminée autrement que par des plages nulles.
+        public Mesures(
+                int nombreFichiers,
+                int fichiersMalNommes,
+                long ecartCouvertureMinutes,
+                boolean moitieNuitManquante,
+                String plageObservee,
+                String plageAttendue) {
+            this(
+                    nombreFichiers,
+                    fichiersMalNommes,
+                    ecartCouvertureMinutes,
+                    moitieNuitManquante,
+                    plageObservee,
+                    plageAttendue,
+                    false,
+                    false);
+        }
 
         public Mesures {
             if (nombreFichiers < 0 || fichiersMalNommes < 0 || ecartCouvertureMinutes < 0) {
@@ -196,10 +218,15 @@ public class PreCheckNuit {
     /// mesurables (cas neutre, feu vert).
     private static String detailCouverture(Feu feu, Mesures mesures) {
         if (mesures.plageObservee() == null || mesures.plageAttendue() == null) {
-            return "Couverture horaire : conforme (couverture non mesurable en détail).";
+            // Le feu est vert PAR IGNORANCE. Il disait « conforme », ce qui se lit comme un
+            // acquittement : rien n'a été jugé, et l'observateur doit le savoir (#5055).
+            return "Couverture horaire : non mesurée, faute d'horodatages ou d'horaires exploitables.";
         }
-        String base = "Couverture horaire : enregistrements de " + mesures.plageObservee() + ", nuit de "
-                + mesures.plageAttendue();
+        String source = mesures.couvertureDepuisLesEphemerides()
+                ? "fenêtre du protocole"
+                : "fenêtre déclarée, faute de coordonnées";
+        String base = "Couverture horaire (" + source + ") : enregistrements de " + mesures.plageObservee()
+                + ", nuit de " + mesures.plageAttendue();
         return switch (feu) {
             case VERT -> base + " : plage bien couverte.";
             case ORANGE ->

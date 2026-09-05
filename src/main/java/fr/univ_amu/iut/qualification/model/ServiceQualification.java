@@ -425,14 +425,27 @@ public class ServiceQualification {
                 couverture.ecartMinutes(),
                 couverture.moitieManquante(),
                 couverture.plageObservee(),
-                couverture.plageAttendue());
+                couverture.plageAttendue(),
+                couverture.depuisLesEphemerides(),
+                couverture.indeterminee());
         return preCheck.evaluer(mesures);
     }
 
     /// Résultat de la mesure de couverture horaire : l'écart et le drapeau de moitié manquante
     /// (consommés par le moteur), plus les deux plages **déjà formatées** (`HH:mm à HH:mm`) qui
     /// alimentent l'explication du feu (#1506). Les plages sont `null` si non mesurables.
-    private record Couverture(long ecartMinutes, boolean moitieManquante, String plageObservee, String plageAttendue) {}
+    /// @param depuisLesEphemerides la fenêtre vient du coucher et du lever réels, et non des heures
+    ///     déclarées : c'est ce que l'explication doit dire, faute de quoi deux écrans se contredisent
+    ///     sans que rien n'indique lequel croire (#5055)
+    /// @param indeterminee rien ne permettait de statuer. Le feu est vert PAR IGNORANCE, ce qui n'est
+    ///     pas un acquittement, et l'explication doit le distinguer d'une nuit qui couvre
+    private record Couverture(
+            long ecartMinutes,
+            boolean moitieManquante,
+            String plageObservee,
+            String plageAttendue,
+            boolean depuisLesEphemerides,
+            boolean indeterminee) {}
 
     // --- Helpers de mesure (privés) -------------------------------------------
 
@@ -473,14 +486,17 @@ public class ServiceQualification {
                 .map(Optional::get)
                 .sorted()
                 .toList();
-        Optional<LocalDateTime[]> fenetre = fenetreAttendue(passage);
+        Optional<FenetreDeCouverture.Fenetre> fenetre = FenetreDeCouverture.deReference(
+                pointDao.findById(passage.idPoint()).orElse(null), passage);
         if (horodatages.isEmpty() || fenetre.isEmpty()) {
-            return new Couverture(0L, false, null, null); // pas de quoi statuer : couverture neutre (verte).
+            // Rien à quoi comparer. La couverture est NEUTRE, et l'explication le dira : un feu vert
+            // par ignorance se lit comme un acquittement, ce qu'il n'est pas (#5055).
+            return new Couverture(0L, false, null, null, false, true);
         }
         LocalDateTime debutObserve = horodatages.get(0);
         LocalDateTime finObservee = horodatages.get(horodatages.size() - 1);
-        LocalDateTime debutAttendu = fenetre.get()[0];
-        LocalDateTime finAttendue = fenetre.get()[1];
+        LocalDateTime debutAttendu = fenetre.get().bornes()[0];
+        LocalDateTime finAttendue = fenetre.get().bornes()[1];
 
         long manqueDebut =
                 Math.max(0, Duration.between(debutAttendu, debutObserve).toMinutes());
@@ -490,30 +506,18 @@ public class ServiceQualification {
                 Math.max(1, Duration.between(debutAttendu, finAttendue).toMinutes());
         boolean moitieManquante = ecart * 2 >= dureeFenetre;
         return new Couverture(
-                ecart, moitieManquante, plage(debutObserve, finObservee), plage(debutAttendu, finAttendue));
+                ecart,
+                moitieManquante,
+                plage(debutObserve, finObservee),
+                plage(debutAttendu, finAttendue),
+                fenetre.get().depuisLesEphemerides(),
+                false);
     }
 
     /// Formate une plage `HH:mm à HH:mm` (l'heure seule, la date étant implicite) pour l'affichage
     /// de la couverture (#1506).
     private static String plage(LocalDateTime debut, LocalDateTime fin) {
         return debut.format(HEURE_COURTE) + " à " + fin.format(HEURE_COURTE);
-    }
-
-    /// Fenêtre théorique de la nuit déduite de `start_time`/`end_time` du passage.
-    private static Optional<LocalDateTime[]> fenetreAttendue(Passage passage) {
-        try {
-            LocalDate date = LocalDate.parse(passage.dateEnregistrement());
-            LocalTime heureDebut = LocalTime.parse(passage.heureDebut());
-            LocalTime heureFin = LocalTime.parse(passage.heureFin());
-            LocalDateTime debut = LocalDateTime.of(date, heureDebut);
-            LocalDateTime fin = LocalDateTime.of(date, heureFin);
-            if (!fin.isAfter(debut)) {
-                fin = fin.plusDays(1); // nuit à cheval sur minuit
-            }
-            return Optional.of(new LocalDateTime[] {debut, fin});
-        } catch (RuntimeException invalide) {
-            return Optional.empty();
-        }
     }
 
     /// Extrait l'horodatage `_AAAAMMJJ_HHMMSS` d'un nom de fichier (R7), si présent.
