@@ -308,10 +308,21 @@ principal `vigiechiro-*.jar` reste **mince**. jpackage empaquette donc le `-shad
     [CONTRIBUTING.md](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/CONTRIBUTING.md).
 
 !!! danger "Ce que semantic-release lit réellement : le titre de la PR"
-    Les PR sont fusionnées en **squash** (`squash_merge_commit_title = PR_TITLE`) : le **titre de la
-    PR** devient le sujet du commit sur `main`, et les messages des commits de branche sont écartés à
+    Les PR sont fusionnées en **squash** (`squash_merge_commit_title = PR_TITLE`,
+    `squash_merge_commit_message = PR_BODY`) : le **titre de la PR** devient le sujet du commit sur
+    `main`, son **corps** en devient le corps, et les messages des commits de branche sont écartés à
     la fusion. C'est donc le titre qui pilote la version, et c'est lui que valide
     [titre-pr.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/titre-pr.yml).
+
+    Le second réglage a été posé le 2026-09-05, et la phrase ci-dessus était fausse jusque-là : le
+    dépôt était sur `COMMIT_MESSAGES`, donc les messages de branche n'étaient pas écartés, ils
+    **étaient** le corps. Sur les dix-huit fusions précédentes, quatorze n'y perdaient rien, portant
+    un seul commit dont le message était le texte ; les quatre demandes multi-commits perdaient le
+    corps que `verifie_corps_pr.py` avait validé. La bascule aligne la forge sur ce que cette page
+    décrivait déjà, et fait de ce garde celui de l'historique, ce que l'ADR 4453 suppose (#5248).
+
+    **`gh pr merge --squash` se lance nu.** Un `--body-file` écarte encore le corps validé et lui
+    substitue un texte que rien n'a lu, sous ce réglage comme sous l'autre.
 
     **Pas d'espace avant le `:`** : `feat(scope): …` publie, `feat(scope) : …` ne publie rien. Cette
     seconde forme a arrêté la publication du 18 au 20 juillet 2026, en accumulant 58 commits
