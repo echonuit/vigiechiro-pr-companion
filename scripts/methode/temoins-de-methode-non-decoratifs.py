@@ -148,8 +148,23 @@ def arbre_jetable():
         yield faux
 
 
-def auto_test_rougit(nom: str, faux: pathlib.Path) -> bool:
-    """Son auto-test rougit-il quand le garde perd sa detection ?"""
+TRACE = "Traceback (most recent call last)"
+
+
+def verdict_sous_mutation(nom: str, faux: pathlib.Path) -> tuple[str, str]:
+    """Ce que rend l auto-test du garde MUTE : « tient », « non concluant » ou « decoratif ».
+
+    TROIS valeurs et non deux, et c est la mesure qui l a impose (ADR 5257). La neutralisation
+    remplace chaque fonction par un `lambda` rendant `[]` : un garde dont une fonction rend un tuple,
+    un entier ou un chemin PLANTE au lieu d assertir. Ce rouge-la ne prouve rien (ADR 4918), et le
+    compter comme une reussite revient a annoncer 22 gardes eprouves quand il y en a 16.
+
+    Mesure du 2026-09-05 sur les 23 de la population : 16 tiennent, 6 ne concluent pas, 0 decoratifs.
+
+    La cause est rendue avec le verdict : elle est ce qu on lit pour savoir POURQUOI un garde ne
+    conclut pas, et c est elle qui distingue « il faudrait le rendre mutable » de « le banc a un
+    defaut ».
+    """
     cible = faux / "scripts" / "methode" / nom
     original = cible.read_text(encoding="utf-8")
     try:
@@ -159,12 +174,24 @@ def auto_test_rougit(nom: str, faux: pathlib.Path) -> bool:
         )
     finally:
         cible.write_text(original, encoding="utf-8")
-    return rendu.returncode != 0
+    if rendu.returncode == 0:
+        return "decoratif", "reste vert sans sa detection"
+    erreur = rendu.stderr.decode("utf-8", "replace")
+    if TRACE in erreur:
+        lignes = [l for l in erreur.strip().splitlines() if l and not l.startswith(" ")]
+        return "non concluant", (lignes[-1] if lignes else "trace illisible")[:110]
+    return "tient", ""
 
 
-def suspects() -> tuple[list[str], list[str]]:
-    """Les auto-tests qui restent verts sans detection, et ce qui n a pas pu etre mute."""
-    decoratifs, illisibles = [], []
+def suspects() -> tuple[list[str], list[str], list[str]]:
+    """TROIS listes : les decoratifs, les illisibles, et les NON CONCLUANTS.
+
+    La troisieme est ce que l ADR 5257 ajoute. Elle n est pas un refus - un garde qui plante sous
+    mutation n a rien prouve, mais il n a rien montre de faux non plus - et elle n est pas un
+    silence : chacun est nomme avec sa cause. Le compter parmi les eprouves annoncerait 23 gardes
+    tenus quand il y en a 16.
+    """
+    decoratifs, illisibles, non_concluants = [], [], []
     with arbre_jetable() as faux:
         for nom in corpus():
             f = RACINE / "scripts" / "methode" / nom
@@ -177,9 +204,12 @@ def suspects() -> tuple[list[str], list[str]]:
             if not mutable(source):
                 illisibles.append(f"{nom} : aucun `if __name__` ou inserer la neutralisation")
                 continue
-            if not auto_test_rougit(nom, faux):
+            verdict, cause = verdict_sous_mutation(nom, faux)
+            if verdict == "decoratif":
                 decoratifs.append(f"{nom} : son auto-test reste vert, detection neutralisee")
-    return decoratifs, illisibles
+            elif verdict == "non concluant":
+                non_concluants.append(f"{nom} : {cause}")
+    return decoratifs, illisibles, non_concluants
 
 
 def code_de_sortie(decoratifs: list[str], illisibles: list[str]) -> int:
@@ -229,6 +259,50 @@ def _auto_test() -> int:
         False,
     )
 
+    # #5264. Un garde qui PLANTE sous mutation n est pas eprouve. Sans ce cas, le banc comptait ces
+    # rouges-la parmi les reussites et annoncait 23 gardes tenus quand il y en a 17.
+    with arbre_jetable() as faux_verdict:
+        planteur = faux_verdict / "scripts" / "methode" / "faux-planteur.py"
+        planteur.write_text(
+            "def detecte():\n    return [1], 1\n\n\n"
+            "def _auto_test():\n    liste, compte = detecte()\n"
+            '    print("ok" if compte == 1 else "ECHEC")\n'
+            "    return 0 if compte == 1 else 1\n\n\n"
+            'if __name__ == "__main__":\n    raise SystemExit(_auto_test())\n',
+            encoding="utf-8",
+        )
+        verdict, cause = verdict_sous_mutation("faux-planteur.py", faux_verdict)
+        verifie("un garde qui plante ne CONCLUT pas", verdict, "non concluant")
+        verifie("et sa cause est rendue", "ValueError" in cause or "TypeError" in cause, True)
+
+        tenu = faux_verdict / "scripts" / "methode" / "faux-tenu.py"
+        tenu.write_text(
+            "def detecte():\n    return [1]\n\n\n"
+            "def _auto_test():\n"
+            '    print("ok" if detecte() == [1] else "ECHEC")\n'
+            "    return 0 if detecte() == [1] else 1\n\n\n"
+            'if __name__ == "__main__":\n    raise SystemExit(_auto_test())\n',
+            encoding="utf-8",
+        )
+        verifie(
+            "un garde qui lit sa detection TIENT",
+            verdict_sous_mutation("faux-tenu.py", faux_verdict)[0],
+            "tient",
+        )
+
+        muet = faux_verdict / "scripts" / "methode" / "faux-muet.py"
+        muet.write_text(
+            "def detecte():\n    return [1]\n\n\n"
+            'def _auto_test():\n    print("ok, sans rien lire")\n    return 0\n\n\n'
+            'if __name__ == "__main__":\n    raise SystemExit(_auto_test())\n',
+            encoding="utf-8",
+        )
+        verifie(
+            "un garde qui ne la lit pas est DECORATIF",
+            verdict_sous_mutation("faux-muet.py", faux_verdict)[0],
+            "decoratif",
+        )
+
     # #5263. Le piege qui a fait tomber le banc de `.github/scripts` sur LUI-MEME : un garde qui
     # porte `if __name__` dans une CHAINE avant de le porter pour de vrai. Un motif prenait la
     # premiere occurrence, la neutralisation atterrissait dans le litteral, le garde tournait
@@ -271,7 +345,7 @@ if __name__ == "__main__":
     sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
-    decoratifs, illisibles = suspects()
+    decoratifs, illisibles, non_concluants = suspects()
     for l in illisibles:
         print(f"NON ÉPROUVÉ : {l}", file=sys.stderr)
     for l in decoratifs:
@@ -296,6 +370,21 @@ if __name__ == "__main__":
             "journal sous une CI verte ne se lit pas, et la liste ne se vidait pas.",
             file=sys.stderr,
         )
+    for l in non_concluants:
+        print(f"NON CONCLUANT : {l}", file=sys.stderr)
+    if non_concluants:
+        print(
+            "\nUn garde qui PLANTE sous mutation n'a rien prouvé : il est mort avant sa première\n"
+            "assertion, et un rouge pour la mauvaise raison ne prouve rien (ADR 4918). Ces gardes\n"
+            "ne font pas refuser, parce que refuser dessus reviendrait à refuser sur ce que ce banc\n"
+            "n'a pas su lire. Ils se comptent à part, et les rendre mutables est un travail en soi.",
+            file=sys.stderr,
+        )
     if not code_de_sortie(decoratifs, illisibles):
-        print(f"Les {len(corpus())} gardes de méthode éprouvés rougissent sous mutation.")
+        tenus = len(corpus()) - len(non_concluants) - len(illisibles)
+        print(
+            f"{tenus} garde(s) de méthode rougissent sous mutation, "
+            f"{len(non_concluants)} ne concluent pas, {len(illisibles)} sont illisibles : "
+            f"soit {tenus + len(non_concluants) + len(illisibles)} sur {len(corpus())}."
+        )
     raise SystemExit(code_de_sortie(decoratifs, illisibles))
