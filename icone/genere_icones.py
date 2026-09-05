@@ -86,7 +86,12 @@ def engendrer() -> int:
             output_width=t,
             output_height=t,
         )
-    print("PNG rendus :", ", ".join(str(t) for t in TAILLES))
+    # `flush` sur les lignes de cette fonction : sans lui, elles sortent APRES celles de
+    # `ecrit-icns.py` et de `file`, qui ecrivent sur le descripteur herite. La sortie standard de
+    # Python est mise en tampon par blocs des qu elle n est pas un terminal, et un journal de CI
+    # n en est jamais un. Mesure faite en redirigeant vers un fichier : les trois lignes de `file`
+    # remontaient EN TETE, et « contrôle des formats produits » n annoncait plus rien (#5245).
+    print("PNG rendus :", ", ".join(str(t) for t in TAILLES), flush=True)
 
     # 2. Linux : jpackage attend un PNG unique.
     shutil.copy(DERIVE / "vigiechiro-512.png", DERIVE / "vigiechiro.png")
@@ -112,8 +117,8 @@ def engendrer() -> int:
         shutil.copy(DERIVE / f"vigiechiro-{t}.png", RUNTIME / f"vigiechiro-{t}.png")
 
     # 6. Controle des formats produits.
-    print()
-    print("=== contrôle des formats produits ===")
+    print(flush=True)
+    print("=== contrôle des formats produits ===", flush=True)
     for nom, attendu, refus in FORMATS:
         rendu = subprocess.run(
             ["file", str(DERIVE / nom)], capture_output=True, text=True, check=False
@@ -122,8 +127,11 @@ def engendrer() -> int:
             print(f"::error::{refus}", file=sys.stderr)
             return 1
     subprocess.run(["file"] + [str(DERIVE / nom) for nom, _, _ in FORMATS], check=False)
-    print()
-    print("Icônes dérivées. Penser à committer icone/derive/ et src/main/resources/icones/.")
+    print(flush=True)
+    print(
+        "Icônes dérivées. Penser à committer icone/derive/ et src/main/resources/icones/.",
+        flush=True,
+    )
     return 0
 
 
