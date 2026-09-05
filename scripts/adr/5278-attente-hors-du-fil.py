@@ -126,7 +126,8 @@ def _auto_test() -> int:
             print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
             echecs = 1
 
-    fautif = 'Attente.que(\n () -> !robot.lookup("#t").queryAll().isEmpty(),\n "que ca paraisse");\n'
+    lecture = '() -> !robot.lookup("#t").queryAll().isEmpty()'
+    fautif = f'Attente.que(\n {lecture},\n "que ca paraisse");\n'
     verifie("un que qui lit le graphe est vu", sites(fautif), [1])
 
     surlefil = fautif.replace("Attente.que(", "Attente.queSurLeFil(")

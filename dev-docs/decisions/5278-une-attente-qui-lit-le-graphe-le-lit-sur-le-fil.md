@@ -16,7 +16,7 @@ generated:
   by: "process:assistance-par-agents"
 ---
 
-# Une attente qui lit le graphe de scène le lit sur le fil JavaFX
+# Une attente qui lit le graphe de scène le lit sur le fil JavaFX, ou elle lit ce qu'un autre écrit
 
 ## Le contexte
 

@@ -800,22 +800,32 @@ def test_4468_javadoc_non_relue() -> None:
 
 def test_5278_attente_hors_du_fil() -> None:
     m = _charge("5278-attente-hors-du-fil.py")
+    lecture = '() -> !robot.lookup("#t").queryAll().isEmpty()'
+
+    def classe(appel: str) -> str:
+        return "class A {\n    void t() {\n        " + appel + "\n    }\n}\n"
+
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
-        lecture = '() -> !robot.lookup("#t").queryAll().isEmpty()'
 
-        _ecrire(racine, "fr/a/A.java", f'class A {{\n    void t() {{\n        Attente.que({lecture}, "que ca vienne");\n    }}\n}}\n')
-        _verifie("5278 une attente qui lit le graphe est vue", m.suspects(racine), ["fr/a/A.java:3"])
+        _ecrire(racine, "fr/a/A.java", classe(f'Attente.que({lecture}, "que ca vienne");'))
+        _verifie(
+            "5278 une attente qui lit le graphe est vue",
+            m.suspects(racine),
+            ["fr/a/A.java:3"],
+        )
 
         # LE SECOND FAIT, celui qui distingue ce cliquet d un compte : le MEME site, ecrit sur le
         # fil FX, est la forme JUSTE et sort du compte. Sans ce cas, un detecteur qui accuserait
         # tout `Attente.` passerait le premier.
-        _ecrire(racine, "fr/a/A.java", f'class A {{\n    void t() {{\n        Attente.queSurLeFil({lecture}, "que ca vienne");\n    }}\n}}\n')
+        surlefil = f'Attente.queSurLeFil({lecture}, "que ca vienne");'
+        _ecrire(racine, "fr/a/A.java", classe(surlefil))
         _verifie("5278 le meme site sur le fil FX sort du compte", m.suspects(racine), [])
 
         # Et un predicat qui ne touche pas le graphe n est pas accuse : c est ce qui empeche le
         # detecteur de compter la population entiere et de rendre un cliquet plausible et faux.
-        _ecrire(racine, "fr/a/A.java", 'class A {\n    void t() {\n        Attente.que(() -> vm.pret().get(), "que ca vienne");\n    }\n}\n')
+        sobre = 'Attente.que(() -> vm.pret().get(), "que ca vienne");'
+        _ecrire(racine, "fr/a/A.java", classe(sobre))
         _verifie("5278 un predicat sans lecture de noeud est ignore", m.suspects(racine), [])
         _verifie("5278 et le garde a bien LU cet appel", m.lus(racine), 1)
 
