@@ -108,7 +108,7 @@ jobs:
         env:
           APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: |
-          bash .github/scripts/installer-paquets.sh xvfb xdotool ffmpeg x11-utils openbox tesseract-ocr tesseract-ocr-fra
+          python3 .github/scripts/installer_paquets.py xvfb xdotool ffmpeg x11-utils openbox tesseract-ocr tesseract-ocr-fra
 
       - name: Le banc de recette, ses cas et ses rouges attendus
         run: |
@@ -132,7 +132,7 @@ jobs:
         # recommandations : sans le drapeau, `convert` reste introuvable.
         env:
           APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
-        run: bash .github/scripts/installer-paquets.sh --avec-recommandations imagemagick
+        run: python3 .github/scripts/installer_paquets.py --avec-recommandations imagemagick
 
       - name: Les deux comparaisons visuelles, et leurs grandes images
         # `compare_apercus.py` avait un `--auto-test` de huit cas qui ne tournait NULLE PART. Le
@@ -452,7 +452,7 @@ jobs:
       - name: La porte d installation porte ses cas
         # Elle est en travers du chemin de tous les workflows, y compris ceux qui publient : un
         # défaut y serait indiscernable d'une panne de miroir.
-        run: bash .github/scripts/installer-paquets.sh --auto-test
+        run: python3 .github/scripts/installer_paquets.py --auto-test
 
       - name: Aucun workflow n appelle apt-get directement
         # Trois étapes de trois workflows ont pendu le même jour sur `apt-get update`, jusqu'au
