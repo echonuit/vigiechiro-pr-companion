@@ -1133,6 +1133,24 @@ jobs:
           python3 scripts/methode/temoins-de-methode-non-decoratifs.py --auto-test
           python3 scripts/methode/temoins-de-methode-non-decoratifs.py
 
+      - name: "Les auto-tests des gardes de CI ne sont pas décoratifs (bloquant, #5254)"
+        # Le troisième banc, et il manquait. Les deux autres couvrent `scripts/adr` et
+        # `scripts/methode` ; #5215 avait clos #4865 en affirmant que « converti, un garde entre
+        # gratuitement dans un banc qui existe ». Mesuré à la clôture de #5218 : il n'y entrait pas,
+        # et 43 gardes de CI portaient 178 cas que rien ne mutait.
+        #
+        # SON VERDICT A TROIS VALEURS, et c'est la mesure qui l'a imposé. La neutralisation rend `[]`
+        # pour toute fonction : sur un garde dont les fonctions rendent des tuples ou des chemins,
+        # l'auto-test PLANTE avant sa première assertion. Ce rouge-là ne prouve rien (ADR 4918), donc
+        # les non concluants se comptent à part au lieu d'être rangés avec les rouges. Sur les 43 :
+        # 34 tiennent, 9 ne concluent pas, et AUCUN n'est décoratif.
+        #
+        # Il ne refuse que sur un décoratif. Un non concluant se nomme et se compte : refuser dessus
+        # serait refuser sur ce qu'il n'a pas su lire.
+        run: |
+          python3 .github/scripts/temoins_de_ci_non_decoratifs.py --auto-test
+          python3 .github/scripts/temoins_de_ci_non_decoratifs.py
+
       - name: "La méthode nomme le garde du titre, et ce garde refuse encore l'espace (bloquant, #4598)"
         # Le dépôt pratique deux conventions de titre à un caractère d'écart, et c'est la plus
         # écrite qui est fausse en PR : 62 des 100 derniers titres d'issue portent l'espace avant

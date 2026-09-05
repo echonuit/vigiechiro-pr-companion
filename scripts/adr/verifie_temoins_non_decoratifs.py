@@ -394,8 +394,12 @@ def auto_test() -> int:
 
 CONTRAT = {
     "geste": "temoin decoratif : rien ne rougit quand la detection est neutralisee",
-    "population": "les gardes que verifie_scripts.py charge, ET ceux qui portent leur propre "
-    "--auto-test sans etre charges par lui",
+    # « de scripts/adr » et « du MEME dossier » : precise a la clote de #5218, ou le contrat
+    # annoncait une population plus large que ce que `candidats()` globbe, c est-a-dire DOSSIER.
+    # Les gardes de .github/scripts portent eux aussi leur propre --auto-test et n entraient pas
+    # ici ; ils ont desormais leur banc, `.github/scripts/temoins_de_ci_non_decoratifs.py` (#5254).
+    "population": "les gardes de scripts/adr que verifie_scripts.py charge, ET ceux du MEME "
+    "dossier qui portent leur propre --auto-test sans etre charges par lui",
     "dispositif": "cliquet",
     "seuil": "0, polarite=descend",
     "temoin": "scripts/adr/verifie_temoins_non_decoratifs.py --auto-test",
