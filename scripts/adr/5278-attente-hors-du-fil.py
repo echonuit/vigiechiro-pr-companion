@@ -53,7 +53,6 @@ RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import TESTS_ANCRES, rapporte, sort_si_contrat_demande
 
-
 APPEL = re.compile(r"Attente\.(que|queSurLeFil)\s*\(")
 # Les lectures de noeuds. `getText()` y est parce qu un libelle se lit sur le noeud qui le porte, et
 # que c est la forme la plus frequente de l attente « le texte a change ».
