@@ -113,7 +113,7 @@ class ParcoursPassageVersNonIdentifiesE2ETest {
         // L'ouverture (SonsValidationController.ouvrirSur) charge la table hors du fil JavaFX
         // (occupation.occuper) : sans cette attente, la table est encore vide quand l'appelant lit son
         // contenu, un échec qui ne se produit que sur une machine lente, donc en CI.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !table.getItems().isEmpty(),
                 "la table des observations se remplit : elle charge hors du fil JavaFX, et reste vide"
                         + " un instant après l'ouverture",

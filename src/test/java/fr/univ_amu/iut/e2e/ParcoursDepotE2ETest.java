@@ -122,7 +122,7 @@ class ParcoursDepotE2ETest {
         // venait de choisir (verdictVm.appliquer(...) réapplique l'état lu en base) - le passage reste
         // alors « Transformé ».
         robot.interact(verifier::fire);
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !robot.lookup("#tableSequences")
                         .queryAs(TableView.class)
                         .getItems()

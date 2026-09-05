@@ -212,7 +212,7 @@ class MesSitesViewTest {
 
         robot.clickOn("#champToken").write("jeton-de-recette");
         robot.clickOn("#boutonConnecter");
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible(),
                 "le bandeau de statut paraît",
                 10 * 1000L);

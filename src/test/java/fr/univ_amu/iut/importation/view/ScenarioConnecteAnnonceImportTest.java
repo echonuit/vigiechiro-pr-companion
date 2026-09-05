@@ -174,7 +174,7 @@ class ScenarioConnecteAnnonceImportTest {
         GesteVisible.amenerDansLeCadre(robot, "#boutonImporter");
         GesteVisible.cliquer(robot, "#boutonImporter");
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#compteRenduChiffre").tryQuery().isPresent(),
                 "l'import n'a pas abouti sur le compte de tournage",
                 FIN_SECONDES * 1000L);

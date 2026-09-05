@@ -163,7 +163,7 @@ class ScenarioBandeauLectureSeuleTest {
         GesteVisible.amenerDansLeCadre(robot, "#boutonImporter");
         GesteVisible.cliquer(robot, "#boutonImporter");
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#compteRenduChiffre").tryQuery().isPresent(),
                 "l'import n'a pas abouti alors que le bandeau ne fait qu'informer. C'est LE point du"
                         + " geste : Companion lit la source et n'y écrit jamais, y compris pour poser"

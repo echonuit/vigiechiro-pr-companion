@@ -148,7 +148,7 @@ class ScenarioCourbeActiviteTest {
         GesteVisible.cliquer(robot, "#boutonActivite");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#grapheActivite").query().isVisible(),
                 "la courbe d'activité ne s'est pas ouverte : sans elle, aucun des six cas n'a d'écran",
                 APPARITION_SECONDES * 1000L);

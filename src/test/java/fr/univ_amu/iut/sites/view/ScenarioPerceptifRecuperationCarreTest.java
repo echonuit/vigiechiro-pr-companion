@@ -196,7 +196,7 @@ class ScenarioPerceptifRecuperationCarreTest {
         Respiration.entreDeuxGestes(robot);
         GesteVisible.cliquer(robot, "#btnVerifierCarre");
         // L'exécuteur est asynchrone : le verdict n'est PAS là au retour du clic (ADR 3668).
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#btnRecupererCarre").tryQuery().isPresent(),
                 "le bouton « Récupérer ce carré » paraît",
                 10 * 1000L);
@@ -207,7 +207,7 @@ class ScenarioPerceptifRecuperationCarreTest {
         // C'est ici que se joue le cas : la modale s'efface, l'écran d'où elle venait reste, et son
         // bandeau dit ce qui vient d'être créé. Attendre le TEXTE du bandeau, et non sa présence :
         // le noeud existe dès le chargement de l'écran, invisible et vide.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#lblRetour")
                         .tryQueryAs(Label.class)
                         .filter(libelle -> libelle.getText().contains(CARRE))

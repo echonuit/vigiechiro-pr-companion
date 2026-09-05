@@ -122,7 +122,7 @@ class ScenarioMenuDeLigneImportTest {
     void le_menu_de_ligne_s_ouvre_pendant_l_import(FxRobot robot) throws TimeoutException, IOException {
         lancerUnImportFreine(robot);
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#tableFichiers")
                                 .tryQuery()
                                 .map(Node::isVisible)
@@ -201,7 +201,7 @@ class ScenarioMenuDeLigneImportTest {
         // est passé de 19 minutes à plus de 40, son butoir, et s'est fait couper (#5165).
         //
         // C'est aussi ce que le clip doit montrer : un geste qui se termine.
-        Attente.que(
+        Attente.queSurLeFil(
                 // VISIBLE, et non seulement présent : le panneau existe dans le graphe de scène
                 // avant d'être montré, et `isPresent()` rendait vrai aussitôt - l'attente ne servait
                 // à rien. C'est le piège que `PreambuleImport` évite en testant la visibilité.

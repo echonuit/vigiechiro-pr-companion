@@ -154,7 +154,7 @@ class ScenarioPerceptifConnexionTest {
         // C'est ici que se joue le cas : la zone de progression paraît d'abord, seule, et le bandeau
         // n'arrive qu'à la fin. Attendre le BANDEAU, et non la zone, garantit que le film contient
         // les deux moments - donc le passage de l'un à l'autre, qui est ce qu'on juge.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible(),
                 "le bandeau de statut de connexion paraît",
                 10 * 1000L);
