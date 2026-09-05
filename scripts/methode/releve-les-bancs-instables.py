@@ -106,13 +106,13 @@ def entraineurs(parTentative: list[list[str]]) -> dict[str, dict[str, int]]:
         if not premier:
             continue
         meneur = _classeDe(premier)
-        for autre in suite(ordonnes):
-            victime = _classeDe(autre)
-            if victime == meneur:
-                # Deux methodes d une meme classe tombent ensemble par construction : le Stage de
-                # TestFX est partage dans la classe. Les compter serait mesurer la mecanique, pas un
-                # couplage entre bancs.
-                continue
+        # UNE TENTATIVE EST UNE VOIX. Compter les methodes tombees donnerait le poids d une classe
+        # a son nombre de cas, et surtout laisserait un EFFONDREMENT fabriquer des couplages : une
+        # seule tentative de la fenetre du 2026-09-06 a perdu 550 tests sur 88 classes, et comptee
+        # en methodes elle suffisait a couronner son meneur sur quatorze victimes « a 100 % ». En
+        # tentatives, plus aucune victime n a de dominant (#5312).
+        victimes = {_classeDe(a) for a in suite(ordonnes)} - {meneur}
+        for victime in victimes:
             compte = parVictime.setdefault(victime, {})
             compte[meneur] = compte.get(meneur, 0) + 1
     return parVictime
@@ -396,9 +396,10 @@ def _autoTest() -> int:
     assert dominant(entraineurs(couplage)["SuiveurTest"]) == ("MeneurTest", 5, True)
     # DEUX methodes d une meme classe ne se comptent pas : c est la mecanique du fork.
     assert entraineurs([["MemeTest.a", "MemeTest.b"]]) == {}
-    # Et les methodes d une meme classe victime s agregent en UNE ligne.
+    # UNE TENTATIVE EST UNE VOIX : deux methodes d une meme classe victime ne valent pas deux.
+    # Sans ce cas, un effondrement de 550 tests fabrique des couplages qui n existent pas.
     deuxMethodes = [["MeneurTest.a", "SuiveurTest.b", "SuiveurTest.c"]]
-    assert entraineurs(deuxMethodes) == {"SuiveurTest": {"MeneurTest": 2}}
+    assert entraineurs(deuxMethodes) == {"SuiveurTest": {"MeneurTest": 1}}
 
     disperse = [[f"Meneur{i}Test.a", "SuiveurTest.b"] for i in range(4)]
     qui, n, domine = dominant(entraineurs(disperse)["SuiveurTest"])
@@ -691,6 +692,19 @@ def _derriereQui(parTentative: list[list[str]]) -> None:
     # une classe a regarder. Trier par total seul enterrait les 47 chutes de SonsValidationViewTest
     # sous des victimes a 105 qui n accusent personne.
     lignes.sort(key=lambda l: (not l[4], -l[0], l[1]))
+
+    larges = sorted(
+        (
+            (len(o), len({_classeDe(x) for x in o}), _classeDe(tete(o)))
+            for o in parTentative
+            if tete(o)
+        ),
+        reverse=True,
+    )[:3]
+    if larges and larges[0][0] > 100:
+        print("\n  LES EFFONDREMENTS, qui ne sont pas des cascades a attribuer")
+        for n, nc, meneur in larges:
+            print(f"  {n:4d} tests sur {nc:3d} classes, tentative menee par {meneur}")
 
     print("\n  DERRIERE QUI LES VICTIMES TOMBENT")
     print(
