@@ -46,8 +46,49 @@ Le banc de documentation n'a donc pas besoin d'un dialogue **natif**. Il a besoi
 s'**affiche dans la scène** au lieu de se taire. La couture existe, elle est éprouvée, et elle est
 employée quotidiennement pour une raison qui n'a rien à voir avec le film.
 
-**Ce que cela ne dit pas** : à quoi ce double visible doit ressembler pour qu'un lecteur de la
-documentation reconnaisse ce qu'il aurait vu. C'est de la conception, et ce spike ne la tranche pas.
+#### À quoi ressemble un double visible, et pourquoi c'est la vraie question
+
+La première version de cette page s'arrêtait ici, en renvoyant la question à la conception. C'était
+une échappatoire : un obstacle avait son prototype, l'autre n'avait qu'un argument. Le voici.
+
+![Un sélecteur de dossier du graphe de scène, dans une fenêtre dessinée](apercu-selecteur-simule.png)
+
+Le geste se lit : quelqu'un qui regarde le film comprend qu'il choisit où enregistrer. Mais **ce
+n'est pas le sélecteur du système**. C'est une modale de l'application, dans son style, parce qu'un
+double visible ne peut être que cela : un nœud du graphe de scène.
+
+!!! warning "Cette image est un dessin, et sa qualité ne mesure rien"
+
+    Elle a été composée à la main, et ses trois premières versions portaient des défauts qui étaient
+    ceux du dessin - une colonne mal remplie, une ligne en double, une barre latérale qui descendait
+    sous les boutons - et non ceux de l'approche. Les trois ont été trouvés en REGARDANT l'image, et
+    aucun par la personne qui la dessinait. Un
+    double réel serait un composant JavaFX assemblé de `TreeView`, `TableView`, `TextField` et
+    `ComboBox`, stylé par la feuille de l'application, et il rendrait mieux que ce qu'une main
+    compose dans ImageMagick.
+
+    Ce que ce spike peut honnêtement affirmer se réduit donc à trois faits : **la couture existe**,
+    **les composants existent**, et **le dépôt sait déjà capturer ses modales**. Le rendu réel se
+    mesure en écrivant vingt lignes de JavaFX, pas en les dessinant. Juger l'approche sur cette
+    image reviendrait à juger mon habileté au dessin, ce qui n'est la question de personne.
+
+Un lecteur sous Windows, macOS ou GNOME verra donc, en faisant le geste lui-même, une boîte tout
+autre - arborescence, raccourcis, barre de chemin, boutons à une autre place.
+
+**Cette asymétrie n'est pas la même que celle du cadre.** Une décoration dessinée simule ce qui
+*entoure* l'application, et l'utilisateur ne la confondra pas avec la sienne : il sait qu'il regarde
+une capture. Un sélecteur de fichiers simulé, lui, montre un dialogue **du système** qui n'est celui
+de personne, au moment précis où la documentation explique un geste que le lecteur va refaire.
+
+**Tranché à l'écriture de cette page** : un sélecteur qui se comprend suffit. Les sélecteurs de
+fichiers diffèrent déjà d'une plateforme à l'autre, et un lecteur qui voit « choisir un dossier »
+avec une liste et deux boutons a compris le geste qu'il devra faire. La documentation montre une
+étape, elle ne promet pas une pixel-parité avec le bureau de chacun.
+
+Les deux autres réponses envisagées sont écartées, et il vaut la peine de dire pourquoi. **Couper le
+passage par le sélecteur** ferait un film qui saute l'étape la plus déroutante pour un débutant.
+**Garder un banc qui voit le bureau** pour la poignée de parcours concernés conserverait deux bancs,
+c'est-à-dire exactement ce que la convergence cherche à retirer.
 
 ### La fenêtre : douze lignes de dessin, sur un chemin qui existe
 
@@ -107,9 +148,17 @@ convergence l'élargit sans le changer.
 
 ## Ce que ce spike établit
 
-**Les deux raisons d'être du banc de documentation sont solubles côté Java**, l'une déjà résolue par
+**Les deux raisons d'être du banc de documentation sont solubles TECHNIQUEMENT côté Java**, l'une par
 un dispositif que le dépôt emploie tous les jours, l'autre par douze lignes de dessin sur un chemin
 existant.
+
+**Et les deux sont acceptables**, la question d'auteur ayant été tranchée en écrivant cette page :
+une décoration quelconque suffit pourvu qu'il y en ait une, et un sélecteur qui se comprend suffit
+même s'il n'est celui d'aucune plateforme.
+
+Ce qui reste vrai de l'ADR 3788 est respecté dans les deux cas : ce qui est simulé **entoure** ou
+**illustre**, jamais ne remplace ce qu'un humain doit juger. La mise en page de l'application, elle,
+n'est jamais touchée.
 
 Cela ne dit pas qu'il faut converger. Cela dit que le lot D ne doit **pas** être ouvert comme une
 conversion de 2 065 lignes vers Python avant que la question de la convergence soit tranchée : ce
