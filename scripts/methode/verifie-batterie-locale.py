@@ -31,20 +31,22 @@ exactement le defaut que ce garde combat.
 elle ne peut donc pas rougir sur ce qu on vient d ecrire. `scripts/mkdocs/bandeau_adr.py` n est
 lance qu ainsi, et la page ne lui doit rien.
 
-**Un script qui ne declare aucun `CONTRAT` n est pas un garde.** `scripts/qualite/rapport_mutation.py`
-synthetise un rapport PIT, `scripts/graphify/rebuild.py` reconstruit un graphe : ils produisent, ils
-ne jugent pas. Le champ `CONTRAT` est le meme que celui qu `imprime_contrat` exige, donc la regle
-suit le corpus au lieu de le doubler.
+**Un script qui ne declare aucun `CONTRAT` n est pas un garde.**
+`scripts/qualite/rapport_mutation.py` synthetise un rapport PIT, `scripts/graphify/rebuild.py`
+reconstruit un graphe : ils produisent, ils ne jugent pas. Le champ `CONTRAT` est le meme que
+celui qu `imprime_contrat` exige, donc la regle suit le corpus au lieu de le doubler.
 
 **Ce que `rapport.py` lance deja est couvert.** Il balaie `[0-9]*.py` et `loupe-*.py` de son propre
-repertoire, et la page dit de le lancer. Ces deux globs sont VERIFIES dans son source par l auto-test :
-s il elargissait sa couverture sans que ce garde le sache, la population retrecirait en silence.
+repertoire, et la page dit de le lancer. Ces deux globs sont VERIFIES dans son source par
+l auto-test : s il elargissait sa couverture sans que ce garde le sache, la population retrecirait
+en silence.
 
 ## La population s arrete a `scripts/`, et ce n est pas un oubli
 
-`.github/scripts/` porte trente et un scripts lances par les ateliers, dont `verifie_permissions.py`,
-`verifie_epinglage.py` et `verifie_inventaires_ci.py` : ce sont des gardes, et de vrais. Un seul y
-declare un `CONTRAT`, mesure du 2026-09-05.
+`.github/scripts/` porte trente et un scripts lances par les ateliers, dont
+`verifie_permissions.py`,
+`verifie_epinglage.py` et `verifie_inventaires_ci.py` : ce sont des gardes, et de vrais. Un seul
+y declare un `CONTRAT`, mesure du 2026-09-05.
 
 Y etendre la population appliquerait donc la regle du contrat a un arbre qui ne la suit pas encore,
 et TRENTE gardes en seraient exclus sans un mot. Ce serait le faux vert que ce garde existe pour
@@ -152,16 +154,36 @@ def _auto_test() -> int:
     verifie("un auto-test se distingue", "--auto-test" in eprouve.group(2), True)
 
     noms = ["scripts/adr/verifie_*.py", "scripts/methode/matrice-ergonomie.py"]
-    verifie("un chemin cite tel quel est nomme", est_nomme("scripts/methode/matrice-ergonomie.py", noms), True)
-    verifie("un glob de la page couvre son dossier", est_nomme("scripts/adr/verifie_okf.py", noms), True)
+    verifie(
+        "un chemin cite tel quel est nomme",
+        est_nomme("scripts/methode/matrice-ergonomie.py", noms),
+        True,
+    )
+    verifie(
+        "un glob de la page couvre son dossier", est_nomme("scripts/adr/verifie_okf.py", noms), True
+    )
     # Le sens NEGATIF, sans quoi un `est_nomme` qui rendrait toujours vrai passerait tout ce qui
     # precede, et le garde serait vert sur une page qui ne nomme rien.
-    verifie("un glob ne deborde pas de son dossier", est_nomme("scripts/methode/verifie_okf.py", noms), False)
+    verifie(
+        "un glob ne deborde pas de son dossier",
+        est_nomme("scripts/methode/verifie_okf.py", noms),
+        False,
+    )
     verifie("un chemin absent n est pas nomme", est_nomme("scripts/adr/rapport.py", noms), False)
-    verifie("une page sans aucun chemin ne nomme rien", est_nomme("scripts/adr/verifie_okf.py", []), False)
+    verifie(
+        "une page sans aucun chemin ne nomme rien",
+        est_nomme("scripts/adr/verifie_okf.py", []),
+        False,
+    )
 
-    verifie("un garde declare un contrat", est_un_garde("scripts/methode/verifie-batterie-locale.py"), True)
-    verifie("un script inexistant n en est pas un", est_un_garde("scripts/methode/absent.py"), False)
+    verifie(
+        "un garde declare un contrat",
+        est_un_garde("scripts/methode/verifie-batterie-locale.py"),
+        True,
+    )
+    verifie(
+        "un script inexistant n en est pas un", est_un_garde("scripts/methode/absent.py"), False
+    )
 
     # `rapport.py` balaie-t-il TOUJOURS ce que cette population lui soustrait ? Sans ce cas, une
     # couverture elargie chez lui retrecirait la population ici, et le cliquet baisserait tout seul.
