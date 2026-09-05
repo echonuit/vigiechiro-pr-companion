@@ -687,7 +687,7 @@ f67229c6c5ab  src/main/java/fr/univ_amu/iut/connexion/viewmodel/ConnexionViewMod
 099042d54334  src/main/java/fr/univ_amu/iut/connexion/viewmodel/RefletDuJeton.java
 43688b4b31d0  src/main/java/fr/univ_amu/iut/diagnostic/di/DiagnosticModule.java
 b4dbbeca2cb9  src/main/java/fr/univ_amu/iut/diagnostic/model/AnalyseAnomalies.java
-aa53a8b7a399  src/main/java/fr/univ_amu/iut/diagnostic/model/AnalyseCoherenceHoraire.java
+a3db261267ef  src/main/java/fr/univ_amu/iut/diagnostic/model/AnalyseCoherenceHoraire.java
 2698aa53dc26  src/main/java/fr/univ_amu/iut/diagnostic/model/CoherenceHoraire.java
 a169783f1467  src/main/java/fr/univ_amu/iut/diagnostic/model/Diagnostic.java
 367483c33358  src/main/java/fr/univ_amu/iut/diagnostic/model/ExportDiagnostic.java
@@ -699,7 +699,7 @@ c007723889a6  src/main/java/fr/univ_amu/iut/diagnostic/model/LectureThLog.java
 39bff2c839a0  src/main/java/fr/univ_amu/iut/diagnostic/outils/CaptureDiagnostic.java
 4b5155750f6d  src/main/java/fr/univ_amu/iut/diagnostic/view/DiagnosticController.java
 9fcf0dddc863  src/main/java/fr/univ_amu/iut/diagnostic/view/NavigationDiagnostic.java
-b85b30a93605  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
+60aaa3804e32  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
 6c5ac41a2062  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/PlagesHoraires.java
 72e4bf119771  src/main/java/fr/univ_amu/iut/importation/di/ImportationModule.java
 94bf5669367f  src/main/java/fr/univ_amu/iut/importation/model/AnalyseCoherence.java
@@ -1071,7 +1071,7 @@ c221e37d54a6  src/main/java/fr/univ_amu/iut/qualification/model/SelectionDEcoute
 3cfa8aee6a4b  src/main/java/fr/univ_amu/iut/qualification/model/SequenceEnSelection.java
 5d875b0c1ac4  src/main/java/fr/univ_amu/iut/qualification/model/SequenceSelectionnee.java
 c31324514cf8  src/main/java/fr/univ_amu/iut/qualification/model/ServiceEmport.java
-dfe49ded994d  src/main/java/fr/univ_amu/iut/qualification/model/ServiceQualification.java
+daa4e5bf4acf  src/main/java/fr/univ_amu/iut/qualification/model/ServiceQualification.java
 844f99fffe87  src/main/java/fr/univ_amu/iut/qualification/model/dao/SelectionDao.java
 e5561540ee07  src/main/java/fr/univ_amu/iut/qualification/outils/CaptureQualification.java
 a4759372af72  src/main/java/fr/univ_amu/iut/qualification/view/ActionsEmport.java
@@ -1916,6 +1916,7 @@ cd203af38495  src/test/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduRattach
 59c6503e55be  src/test/java/fr/univ_amu/iut/passage/viewmodel/SaisieHorairesNuitTest.java
 49766a118987  src/test/java/fr/univ_amu/iut/perf/JeuDuBancTest.java
 a915ebf9d263  src/test/java/fr/univ_amu/iut/qualification/AgregationVerdictTest.java
+134e5d009078  src/test/java/fr/univ_amu/iut/qualification/FenetreDeCouvertureTest.java
 7dfaa00febe4  src/test/java/fr/univ_amu/iut/qualification/GenerateurSelectionTest.java
 b175a4d32440  src/test/java/fr/univ_amu/iut/qualification/PlanDeRepriseTest.java
 259055c613bf  src/test/java/fr/univ_amu/iut/qualification/PreCheckNuitTest.java

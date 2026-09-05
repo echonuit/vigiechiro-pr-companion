@@ -398,13 +398,9 @@ public class ServiceQualification {
     /// fichiers, cohérence du renommage. Rassemble les mesures depuis les DAO puis délègue la
     /// décision au moteur pur [PreCheckNuit].
     ///
-    /// **Couverture horaire : limite connue.** La fenêtre théorique « coucher de soleil - 30
-    /// min → lever de soleil + 30 min » (R3) suppose un calcul astronomique (position du soleil
-    /// selon GPS + date) non disponible dans cette couche. À défaut, on utilise comme fenêtre de
-    /// référence la plage déclarée du passage (`start_time` → `end_time`, à cheval sur minuit le
-    /// cas échéant) et on la compare à la plage observée (premier → dernier horodatage
-    /// d'original). C'est un **point d'intégration** : brancher un vrai calcul d'éphémérides
-    /// quand il sera disponible.
+    /// **La couverture se mesure contre la fenêtre du PROTOCOLE** depuis #5055, dérivée des
+    /// coordonnées du point par [FenetreDeCouverture]. Sans elles, la mesure se replie sur la plage
+    /// déclarée et le **dit** : voir l'ADR 5065.
     ///
     /// @throws RegleMetierException si le passage est introuvable
     public PreCheckNuit.Diagnostic precheck(Long idPassage) {

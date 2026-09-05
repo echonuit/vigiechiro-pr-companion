@@ -256,7 +256,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A9 · La dette se tient par un cliquet, pas par un nettoyage | 14 | 6 | `scripts/adr/2843-tiret-cadratin.py`, `PatronDuCliquetTest#tout_cliquet_passe_par_le_patron`, `scripts/adr/verifie_scripts.py`, et 10 autres |
 | A10 · Jamais de suppression d'avertissement | 0 | 0 | **relecture seule** |
 | A11 · L'assumé se déclare, il ne se contourne pas | 10 | 0 | `scripts/adr/verifie_verdicts_declares.py` |
-| A12 · Rendre compte avant de conclure, et aucun échec silencieux | 9 | 5 | `scripts/adr/0008-echec-silencieux.py`, `.github/scripts/verifie_secret_winget.py`, `RetourOperationTest#les_deux_causes_ne_se_melangent_pas`, et 5 autres |
+| A12 · Rendre compte avant de conclure, et aucun échec silencieux | 10 | 6 | `scripts/adr/0008-echec-silencieux.py`, `.github/scripts/verifie_secret_winget.py`, `RetourOperationTest#les_deux_causes_ne_se_melangent_pas`, et 8 autres |
 | A13 · Un refus dit ce qui manque, et ne conseille que le vérifié | 9 | 8 | `scripts/adr/2635-refus-sans-surface.py`, `AuditDepartementDuPointTest#legitime_et_suspecte_indiscernables`, `FiltresLieuTest#le_point_est_filtrable`, et 6 autres |
 | A14 · Un état n'est pas un compte rendu, et ils ne partagent pas de canal | 8 | 2 | `CompteRenduChiffreTest#ventilation_non_exhaustive_refusee`, `CauseLisibleTest#l_enveloppe_de_reflexion_ne_masque_pas_la_panne`, `scripts/adr/3947-message-enveloppe.py` |
 | A15 · Un état est observé, une décision se prend, ni l'un ni l'autre ne se déduit | 21 | 16 | `DecisionsRespecteesTest#archive_n_est_pas_un_statut_de_workflow`, `RapprochementNuitsOpportunistesTest#ne_demarque_jamais_une_saisie_manuelle`, `PolitiqueReessaiTest#refus_definitif_ne_reessaie_pas`, et 13 autres |

@@ -34,7 +34,10 @@ public final class AnalyseCoherenceHoraire {
     /// Ce n'est pas une tolérance et cela ne se règle pas. Une tolérance est une marge d'erreur qu'on
     /// s'accorde ; ceci est ce que le programme demande, et le nommer autrement inviterait à
     /// l'ajuster (#4987).
-    private static final Duration MARGE_DU_PROTOCOLE = Duration.ofMinutes(30);
+    /// La marge que le protocole exige de part et d'autre de la nuit, **publique parce que les
+    /// messages de l'écran la nomment** : la même règle écrite dans une constante et dans de la prose
+    /// ne se corrige jamais aux deux endroits (clôture de #5065).
+    public static final Duration MARGE_DU_PROTOCOLE = Duration.ofMinutes(30);
 
     private AnalyseCoherenceHoraire() {}
 
