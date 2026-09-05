@@ -29,7 +29,8 @@ au moment où on l'a regardé.
 1. LIRE     le verdict : quelles verifications ont conclu, lesquelles jugent CE changement.
 2. JUGER    un rouge avant de le croire : regression, ou bascule ?
 3. RELIRE   le titre et le corps : decrivent-ils ce qui a ETE FAIT, pas ce qui etait prevu ?
-4. FUSIONNER en squash.
+4. FUSIONNER en squash, `gh pr merge --squash` NU : le corps de la demande devient celui du
+            commit, et un `--body-file` ici ecarte le texte que le job `corps` vient de juger.
 5. VERIFIER `main` apres coup, sur ce que la PR touchait.
 6. TENIR    l issue mere : fermee par la PR, ou mise a jour a la main.
 ```
@@ -85,6 +86,26 @@ Une PR grossit : un garde refuse, on corrige, on trouve un défaut adjacent, on 
 
 `gh pr edit --body-file` corrige sans repousser, et la relecture coûte une minute contre un texte que
 personne ne pourra plus rectifier.
+
+### Les deux `--body-file` se ressemblent et font l'inverse
+
+Le dépôt est réglé `squash_merge_commit_message = PR_BODY` : le corps de la demande **est** le corps
+du commit, et c'est ce qui donne son sens à la phrase ci-dessus. Deux commandes portent alors le même
+drapeau, pour des effets opposés.
+
+| Commande | Ce qu'elle fait du corps validé |
+|---|---|
+| `gh pr edit --body-file` | le **corrige** avant la fusion, et le job `corps` rejuge le nouveau |
+| `gh pr merge --squash --body-file` | l'**écarte** à la fusion, au profit d'un texte que rien n'a lu |
+
+La seconde ne se rattrape pas : l'historique est écrit. **Fusionner nu**, donc, et laisser la forge
+prendre le corps qu'elle a sous les yeux.
+
+Ce point est resté muet longtemps, et il a coûté. Jusqu'au 2026-09-05 la forge était réglée
+`COMMIT_MESSAGES`, si bien que le corps du commit était la concaténation des messages de branche :
+9 corps sur 188 dans `main` en sont sortis sans accents, et personne ne l'a vu, le garde ayant jugé
+un texte qui n'atterrissait nulle part. Le réglage a été aligné sur ce que cette page décrivait déjà
+(#5248, mesure et bascule en #5267).
 
 ## L'issue mère ne se ferme pas toute seule
 
