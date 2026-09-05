@@ -46,7 +46,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import sort_si_contrat_demande
+from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 ADR = "4636"
 DOSSIER = pathlib.Path(__file__).resolve().parent
@@ -118,15 +118,7 @@ def _auto_test() -> int:
     """Le mecanisme se prouve dans les DEUX sens : il voit un manque, et il ne crie pas sans."""
     import tempfile
 
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     print("Auto-test du garde des contrats obligatoires (#5149) :")
 
@@ -197,8 +189,8 @@ def _auto_test() -> int:
     verifie("le contrat nomme chaque dossier que le garde lit", oublies, [])
 
     print()
-    print("Auto-test concluant." if not echecs else "Auto-test EN ÉCHEC.")
-    return echecs
+    print("Auto-test concluant." if not echecs() else "Auto-test EN ÉCHEC.")
+    return echecs()
 
 
 # Ce que ce garde DECLARE etre. Il s applique a lui-meme : sa population le contient.

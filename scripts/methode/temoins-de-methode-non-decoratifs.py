@@ -37,7 +37,7 @@ import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import sort_si_contrat_demande
+from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 ATELIER = RACINE / ".github" / "workflows" / "lint.yml"
 LANCE = re.compile(r"scripts/methode/([a-z0-9-]+\.py)")
@@ -147,15 +147,7 @@ def code_de_sortie(decoratifs: list[str], illisibles: list[str]) -> int:
 
 
 def _auto_test() -> int:
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     verifie("le corpus vient de lint.yml, et n est pas vide", len(corpus()) > 5, True)
     verifie(
@@ -196,7 +188,7 @@ def _auto_test() -> int:
     verifie("un garde decoratif refuse", code_de_sortie(["x"], []), 1)
     verifie("un garde SANS POINT D ENTREE refuse aussi", code_de_sortie([], ["y"]), 1)
     verifie("et les deux ensemble refusent", code_de_sortie(["x"], ["y"]), 1)
-    return echecs
+    return echecs()
 
 
 CONTRAT = {

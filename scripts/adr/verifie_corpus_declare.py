@@ -55,7 +55,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, rapporte, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, cas_d_auto_test, rapporte, sort_si_contrat_demande
 
 ADR = "4586"
 
@@ -151,15 +151,7 @@ def auto_test() -> int:
     import os
     import tempfile
 
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     def pose(racine, texte, nom="faux-cliquet.py"):
         (racine / DOSSIER / nom).write_text(texte, encoding="utf-8")
@@ -256,7 +248,7 @@ def auto_test() -> int:
         finally:
             os.chdir(ancien)
 
-    return echecs
+    return echecs()
 
 
 CONTRAT = {

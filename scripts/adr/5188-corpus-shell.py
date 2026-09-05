@@ -40,7 +40,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, rapporte, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, cas_d_auto_test, rapporte, sort_si_contrat_demande
 
 ADR = "5188"
 
@@ -86,15 +86,7 @@ def _auto_test() -> int:
     """Les DEUX sens : le cliquet voit un script de plus, et il ne crie pas sur un corpus vide."""
     import tempfile
 
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     print("Auto-test du cliquet du corpus shell (#5188) :")
 
@@ -131,8 +123,8 @@ def _auto_test() -> int:
     verifie("aucun script n est retire du compte", len(reels), len(fichiers()))
 
     print()
-    print("Auto-test concluant." if not echecs else "Auto-test EN ÉCHEC.")
-    return echecs
+    print("Auto-test concluant." if not echecs() else "Auto-test EN ÉCHEC.")
+    return echecs()
 
 
 # Ce que ce garde DECLARE etre (issue #5009).

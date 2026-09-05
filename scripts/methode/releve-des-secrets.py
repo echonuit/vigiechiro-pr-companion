@@ -21,7 +21,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import sort_si_contrat_demande
+from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 ATELIERS = RACINE / ".github" / "workflows"
 FOURNI_PAR_ACTIONS = {"GITHUB_TOKEN"}
@@ -69,15 +69,7 @@ def auto_test() -> int:
     """
     import tempfile
 
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     print("Auto-test du releve des secrets (#5157) :")
     _, _, motif_secret = FAMILLES[0]
@@ -119,8 +111,8 @@ def auto_test() -> int:
         verifie("un corpus sans atelier ne rend rien", releve(motif_secret, vide), {})
 
     print()
-    print("Auto-test concluant." if not echecs else "Auto-test EN ÉCHEC.")
-    return echecs
+    print("Auto-test concluant." if not echecs() else "Auto-test EN ÉCHEC.")
+    return echecs()
 
 
 def main() -> int:

@@ -26,7 +26,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import DECISIONS, sort_si_contrat_demande
+from _commun import DECISIONS, cas_d_auto_test, sort_si_contrat_demande
 
 # Le titre porte parfois son propre numero, parfois non, et le separateur a deux formes.
 TITRE = re.compile(r"^#\s+(?:ADR\s+)?(?:\S+\s*[-–:]\s*)?(.*)$")
@@ -161,15 +161,7 @@ def auto_test() -> int:
     """
     import tempfile
 
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     print("Auto-test de la conversion vers OKF (#5157) :")
 
@@ -216,8 +208,8 @@ def auto_test() -> int:
         verifie("une ADR deja au format OKF est laissee telle quelle", convertit(deja, "A1"), None)
 
     print()
-    print("Auto-test concluant." if not echecs else "Auto-test EN ÉCHEC.")
-    return echecs
+    print("Auto-test concluant." if not echecs() else "Auto-test EN ÉCHEC.")
+    return echecs()
 
 
 def main() -> int:

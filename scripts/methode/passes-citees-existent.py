@@ -39,7 +39,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import sort_si_contrat_demande
+from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 CYCLE = RACINE / "dev-docs" / "cycle-de-chantier.md"
 
@@ -112,15 +112,7 @@ def suspects():
 
 
 def _auto_test() -> int:
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     cycle = "### 0. Une\n\n### 1. Deux\n\n### 2. Trois\n"
     verifie("les bornes se derivent des titres", bornes(cycle), (0, 2))
@@ -154,7 +146,7 @@ def _auto_test() -> int:
         citations_hors_bornes("les ADR s ecrivent en passe 10", 0, 12),
         [],
     )
-    return echecs
+    return echecs()
 
 
 CONTRAT = {

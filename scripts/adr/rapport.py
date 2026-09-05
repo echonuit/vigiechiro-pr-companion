@@ -23,7 +23,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, cas_d_auto_test, sort_si_contrat_demande
 
 ICI = pathlib.Path(__file__).parent
 # Le champ `lus` (issue #5007) se lit en groupe NON capturant, et ce n'est pas un detail : les
@@ -195,15 +195,7 @@ def auto_test() -> int:
     import os
     import tempfile
 
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     print("Auto-test du lancement des gardes (#4781) :")
     with tempfile.TemporaryDirectory() as brut:
@@ -235,7 +227,7 @@ def auto_test() -> int:
         finally:
             os.chdir(ancien)
 
-    return echecs
+    return echecs()
 
 
 CONTRAT = {
