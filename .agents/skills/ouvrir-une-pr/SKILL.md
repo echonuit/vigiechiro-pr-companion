@@ -50,22 +50,56 @@ suite - c'est même ce qu'on attend d'elle.
 
 ## La batterie locale, et pourquoi elle ne se devine pas
 
-Quatre gardes rougissent en CI alors que la compilation, le format et `scripts/adr/rapport.py`
-passent tous en local. Chacun se lance selon ce qu'on a touché, et aucun ne se lance tout seul.
+**Trente gardes jugent le dépôt en CI hors de ce que `scripts/adr/rapport.py` balaie.** Il en
+lance deux familles de son répertoire, `[0-9]*.py` et `loupe-*.py` ; tout le reste se lance à la
+main, selon ce qu'on a touché, et rien ne se lance tout seul.
+
+Le tableau ci-dessous ne prétend pas les nommer tous, et `scripts/methode/verifie-batterie-locale.py`
+compte ceux qui manquent encore : son cliquet descend à mesure que cette page les rattrape. Ce que le
+tableau doit, c'est la commande à lancer, pas l'inventaire.
 
 | À lancer | Quand |
 |---|---|
-| `python3 scripts/methode/matrice-constitution.py --verifie` | dès qu'une **ADR** est écrite ou modifiée |
+| `python3 scripts/adr/verifie_*.py` | dès qu'on touche une **ADR**, un **garde** ou une **javadoc** : douze gardes que `rapport.py` ne balaie pas, dont `verifie_contrats_tiennent.py`, qui confronte le seuil qu'un garde déclare **sur lui-même** au cliquet de son ADR |
+| `python3 scripts/methode/matrice-constitution.py --verifie` **et** `python3 scripts/methode/matrice-ergonomie.py --verifie` | dès qu'une **ADR** est écrite ou modifiée. Il y a **deux** matrices engendrées depuis les en-têtes : la constitution et les heuristiques. Écrire une ADR qui porte un `nielsen-N` périme la seconde sans toucher la première |
 | `python3 scripts/methode/couverture-relecture.py --marque <fichier>` | dès qu'une **javadoc** est touchée, tests compris |
 | `./mvnw -B -o test-compile pmd:pmd` **puis** `python3 scripts/adr/4617-code-mort-et-zone-de-test.py` | dès qu'on **ajoute du code** : le cliquet refuse si `target/pmd.xml` manque, donc il ne dit rien en local |
 | `./mvnw -o test -Dtest=DocumentationAJourTest` | dès qu'un **chiffre** change dans une ADR ou une doc |
+
+**Et selon ce qu'on a touché d'autre.** Ces gardes-là ne tiennent pas dans un tableau sans le rendre
+illisible, et ils se déclenchent aussi nettement.
+
+Si vous avez touché une **compétence** ou une page de `dev-docs/`, cinq gardes confrontent ce que la
+prose prescrit à ce qui existe : `scripts/methode/concordances-du-cycle.py` relie commandes, passes
+et compétences ; `scripts/methode/passes-citees-existent.py` et `scripts/methode/tests-cites-existent.py` refusent qu'une page cite
+une passe ou un test absent ; `scripts/methode/verifie-renvois-competences.py` tient les renvois barre-oblique ;
+`scripts/methode/mesure-registre.py` recompte les motifs éditoriaux. Et si la compétence vit dans `.agents/skills/`,
+`scripts/methode/synchronise-adaptateurs.py` doit recopier la version canonique vers `.claude/skills/`, sans quoi les
+deux divergent. Un garde de méthode écrit ou modifié appelle en plus
+`scripts/methode/temoins-de-methode-non-decoratifs.py`, qui refuse un auto-test qui ne prouve rien.
+
+Si vous avez touché un **changement OpenSpec**, quatre gardes le tiennent :
+`scripts/methode/verifie-specs-valides.py` valide le corpus, `scripts/methode/verifie-adoption-openspec.py` refuse la
+régénération accidentelle des compétences adoptées, `scripts/methode/verifie-sous-commandes-openspec.py` vérifie que
+les invocations citées existent, et `scripts/methode/verifie-version-openspec.py` que la ligne de commande épinglée
+est bien celle que les compétences déclarent. Les deux derniers ont besoin de l'outil épinglé :
+`npm ci --prefix .github/openspec` d'abord, sinon ils refusent en le disant.
+
+Si vous avez écrit ou modifié un **garde**, `scripts/methode/verifie-dependances-declarees.py` exige
+qu'il déclare ce dont il a besoin. Si vous avez ajouté un **test qui écrit sur disque**,
+`scripts/methode/compte-les-reliquats.py` compte ce que la suite laisse dans le dossier temporaire. Et avant
+d'ouvrir la demande, `scripts/methode/verifie-controle-du-titre.py` éprouve le contrôle local du titre, celui-là même
+qui vous évitera de la rouvrir.
 
 **Les planchers vivent dans trois endroits chacun** : l'en-tête `floor:`, la balise du corps de l'ADR,
 et celle du journal. N'en tenir qu'un laisse les deux autres mentir, et c'est arrivé :
 `DocumentationAJourTest` a rougi sous #4646 sur deux balises restées en arrière, parce que le chiffre
 y porte une espace insécable que le remplacement littéral manquait. `python3
 scripts/methode/releve-les-planchers.py --ecrire` les tient d'un seul geste : il lit le verdict du
-garde plutôt que de recopier une mesure, et préserve le séparateur qu'il trouve.
+garde plutôt que de recopier une mesure, et préserve le séparateur qu'il trouve. Son jumeau pour les cliquets est
+`python3 scripts/adr/resserre_cliquets.py`, et il se lance quand un cliquet **descend** : une marge
+regagnée qu'on ne consigne pas se reperd en silence, et le chiffre vit dans plusieurs endroits à la
+fois.
 
 **Un plancher périmé refuse** (#4683). `a-relever` rend `1`, comme `perte` : la boucle des cliquets
 de la CI l'attrape, et ne pas relever fait rougir. Ce n'est pas un oubli silencieux, c'est un refus.
