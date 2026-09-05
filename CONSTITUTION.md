@@ -245,7 +245,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 
 | Article | Jurisprudence | Dont mécanisée | Tenu par |
 |---|---:|---:|---|
-| A1 · La preuve précède l'affirmation | 4 | 1 | `.github/scripts/verifie_decisions_du_tournage_connecte.py`, `.github/scripts/verifie_jeton_vivant.py`, `.github/scripts/revoque_jeton.py` |
+| A1 · La preuve précède l'affirmation | 5 | 1 | `.github/scripts/verifie_decisions_du_tournage_connecte.py`, `.github/scripts/verifie_jeton_vivant.py`, `.github/scripts/revoque_jeton.py` |
 | A2 · Un garde est vu rouge sur sa propre mutation | 10 | 7 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure_duree_portail.py`, et 2 autres |
 | A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 32 | 24 | `.github/scripts/veille_contrat_api.py`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 25 autres |
 | A4 · Un cas joué n'est pas un cas prouvé | 24 | 15 | `ApercuFxElisionTest#bouton_tronque_refuse`, `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`, `scripts/adr/3053-capture-libelle.py`, et 12 autres |
@@ -273,7 +273,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A26 · La provenance se déclare | 4 | 3 | `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`, `DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier`, `.github/assets/mesure_pixels.py` |
 | A28 · Un avertissement se dit en mots | 1 | 0 | `scripts/adr/4366-avertissement-en-pictogramme.py` |
 | A29 · L'ergonomie se rattache à une heuristique nommée | 1 | 0 | `scripts/adr/verifie_okf.py` |
-| A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 5 | 1 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py`, et 2 autres |
+| A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 6 | 2 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py`, et 3 autres |
 | A31 · La prose visible se relit à l'humaniseur | 4 | 1 | `.github/scripts/verifie_corps_pr.py`, `scripts/adr/4783-traces-d-outil.py` |
 
 **2 article(s) sur 30 ne sont tenus que par la relecture.** C'est la liste des chantiers de garde restants, et elle se lit comme un inventaire, pas comme une fatalité.

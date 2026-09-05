@@ -36,7 +36,7 @@ même prix aux deux bancs.
 
     Cette page a d'abord annoncé **trois**, en comptant l'ADR 3794. C'était un comptage fait sur
     les fichiers qui *contiennent* la chaîne, et non sur ceux dont la **puce de vérification** la
-    nomme : 3794 se vérifie par `verifie-inventaires-ci.sh`. L'ADR 4013 cite elle aussi un banc, mais
+    nomme : 3794 se vérifie par `verifie_inventaires_ci.py`. L'ADR 4013 cite elle aussi un banc, mais
     c'est `filme-un-parcours.sh`, celui des films de **documentation** - un dispositif distinct, que
     le retrait du banc de recette ne touche pas.
 - L'auto-test du banc bash **se vérifie lui-même en permanence** : plus d'un quart de ses cas nomment un
