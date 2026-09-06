@@ -125,7 +125,21 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      # ⟨portee⟩ Voir le chantier #5294. Ce rejeu verifie une PROPRIETE DU CODE : quand ni
+      # `src/**` ni ce qui gouverne la construction ne bougent, elle rend le meme verdict que sur
+      # la base. Le job tourne quand meme et conclut, et c'est cette ETAPE qui decide.
+      - name: "Ce diff peut-il changer la tenue au fuseau (#5300)"
+        id: portee
+        shell: bash
+        # ⟨butoir⟩ L'etape fait un `git fetch` reseau, et #4440 est l'histoire d'un fetch qui part
+        # en vrille jusqu'au butoir du JOB.
+        timeout-minutes: 3
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 .github/scripts/porte_du_job.py fuseau-alternatif
+
       - name: Set up JDK 25
+        if: steps.portee.outputs.concerne == 'oui'
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           java-version: '25'
@@ -134,6 +148,7 @@ jobs:
           cache: maven
 
       - name: Rejouer la suite sous America/Cayenne
+        if: steps.portee.outputs.concerne == 'oui'
         # Le fuseau passe par l'ENVIRONNEMENT, pas par `-Duser.timezone` sur la ligne Maven : surefire
         # fabrique ses propres JVM (`forkCount=1C`), et une propriété donnée à Maven ne descend pas
         # forcément dedans. L'environnement, lui, est hérité par les forks. Une première version de ce
@@ -199,7 +214,21 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      # ⟨portee⟩ Voir le chantier #5294. Ce rejeu verifie une PROPRIETE DU CODE : quand ni
+      # `src/**` ni ce qui gouverne la construction ne bougent, elle rend le meme verdict que sur
+      # la base. Le job tourne quand meme et conclut, et c'est cette ETAPE qui decide.
+      - name: "Ce diff peut-il changer l'ordre de la suite (#5300)"
+        id: portee
+        shell: bash
+        # ⟨butoir⟩ L'etape fait un `git fetch` reseau, et #4440 est l'histoire d'un fetch qui part
+        # en vrille jusqu'au butoir du JOB.
+        timeout-minutes: 3
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 .github/scripts/porte_du_job.py ordre-alternatif
+
       - name: Set up JDK 25
+        if: steps.portee.outputs.concerne == 'oui'
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           java-version: '25'
@@ -208,6 +237,7 @@ jobs:
           cache: maven
 
       - name: Rejouer la suite dans un fork unique, en ordre inverse
+        if: steps.portee.outputs.concerne == 'oui'
         # Les deux propriétés sont celles de surefire, et elles ont été éprouvées à la main avant
         # d'atterrir ici : c'est avec elles que les trois fuites du tableau ci-dessus se reproduisent
         # de façon déterministe en local, et sans elles qu'aucune ne se reproduit. Un job qui poserait

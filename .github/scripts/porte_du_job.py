@@ -94,6 +94,35 @@ mvnw
 .github/workflows/codeql.yml
 """
     + MECANISME,
+    # Les deux rejeux verifient une PROPRIETE DU CODE : que la suite ne depend ni de son ordre
+    # (`ordre-alternatif`, fork unique et ordre inverse) ni du fuseau (`fuseau-alternatif`,
+    # America/Cayenne). Quand ni `src/**` ni ce qui gouverne la construction ne bougent, cette
+    # propriete rend le meme verdict que sur la base.
+    #
+    # Ce que le depot accepte alors de ne pas verifier est nomme, et c est etroit : l ordre et le
+    # fuseau, sur un arbre Java IDENTIQUE a celui que la base a deja juge. Une modification de `.md`
+    # peut faire rougir un test documentaire - `build` reste inconditionnel et le voit - mais elle ne
+    # peut pas introduire une dependance a l ordre ou au fuseau, qui sont des proprietes du code.
+    #
+    # La portee reste VOLONTAIREMENT grossiere, `src/**` et non une liste de classes sensibles :
+    # l ADR 3450 a tranche que « toute la suite, et non une liste de classes sensibles - une liste ne
+    # voit que ce qu on y a mis et se perime ». On ne cherche pas a raffiner ces deux-la.
+    "ordre-alternatif": """
+src/**
+pom.xml
+mvnw
+.mvn/**
+.github/workflows/maven.yml
+"""
+    + MECANISME,
+    "fuseau-alternatif": """
+src/**
+pom.xml
+mvnw
+.mvn/**
+.github/workflows/maven.yml
+"""
+    + MECANISME,
     "outillage-release": """
 .github/release/**
 .github/openspec/**
@@ -115,8 +144,6 @@ INCONDITIONNELS: dict[str, str] = {
     "duree-du-portail": "il porte `needs: build`, mesure une serie de la forge et n execute rien du depot",
     "contrat-fichiers": "il porte sa propre porte depuis #3525, `porte_sur_le_contrat_de_fichiers.py`",
     "banc-filme": "ecarte par ecrit au chantier #5294 : il lance les auto-tests de six dispositifs, et le conditionner en sauterait cinq pour gagner une minute",
-    "fuseau-alternatif": "portee prevue au lot #5300",
-    "ordre-alternatif": "portee prevue au lot #5300",
     "second-compilateur": "arbitrage ouvert au chantier #5294 : le conditionner, ou ecrire pourquoi il tourne toujours",
     "inventaire": "son atelier porte deja un filtre `paths:`",
     "fraicheur-des-actions": "son atelier porte deja un filtre `paths:`",
