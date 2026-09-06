@@ -50,7 +50,7 @@ Filmer les deux côtés du même côté de la barrière. Le contrôle qui le dit
 | Défaut | Écart | Ce que l'avant montrait | Ce que l'après montre |
 |---|---|---|---|
 | #4981 réveil par bouton | 3,12 % | « Réveil non programmé : Wakeup by PINPUSH » porté aux **anomalies** | « Aucune anomalie détectée » |
-| #5093 nuit interrompue | 3,60 % | l'encart **n'existe pas** | « cette nuit s'est interrompue avant son terme » |
+| #5093 nuit interrompue | 3,60 % | l'encart **n'existe pas** | « le journal du capteur s'arrête avant le terme de la nuit » |
 | #4988 plages du diagnostic, chantier #4984 | 8,04 % | rien sous les heures de la nuit | « Protocole : 20:00 à 07:15 · Enregistré : 20:25 à 07:47 » |
 
 ### Les deux défauts qui n'ont pas de paire à eux
@@ -89,7 +89,10 @@ Chaque paire se lit dans l'ordre : l'avant, puis l'après. Le test de l'avant **
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-avant-apres/5093-nuit-interrompue--AVANT.mp4"></video>
 
-**Après.** L'encart paraît : « cette nuit s'est interrompue avant son terme ».
+**Après.** L'encart paraît : « le journal du capteur s'arrête avant le terme de la nuit : la fin
+n'est pas attestée ». Le clip a été tourné avant #5352, qui a retiré de cette phrase une
+conclusion sur les enregistrements que seul le journal pouvait porter : il montre donc
+l'ancienne formulation, et l'écart qu'il démontre est le même.
 
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-avant-apres/5093-nuit-interrompue--APRES.mp4"></video>

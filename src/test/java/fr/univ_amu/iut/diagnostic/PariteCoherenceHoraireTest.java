@@ -151,4 +151,29 @@ class PariteCoherenceHoraireTest {
                 .as("la couverture est tenue, et la nuit s'est pourtant interrompue : les deux se disent")
                 .isEqualTo(Severite.AVERTISSEMENT);
     }
+
+    @Test
+    @DisplayName("#5352 : aucune des deux surfaces ne conclut sur les ENREGISTREMENTS")
+    void le_libelle_ne_conclut_pas_sur_les_enregistrements() {
+        // La complétude se lit dans le JOURNAL du capteur, et le journal peut cesser d'écrire pendant
+        // que l'audio continue. L'écran affichait pourtant « les enregistrements s'arrêtent là », trois
+        // lignes sous « Enregistré : 20:25 à 07:47 » que sa propre fixture d'aperçu produit.
+        //
+        // Les cas de parité voisins comparent le SENS du verdict, et les deux surfaces alertaient bien
+        // toutes les deux : c'est pourquoi aucun ne voyait la divergence. Celui-ci lit le CONTENU.
+        String ecran = fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel.libelleCompletude(Completude.TRONQUEE)
+                .texte();
+        String terminal = fr.univ_amu.iut.cli.commande.Diagnostiquer.completudeLisible(Completude.TRONQUEE);
+
+        assertThat(ecran)
+                .as("l'écran affirmerait sur les enregistrements ce que seul le journal atteste")
+                .doesNotContain("enregistrements");
+        assertThat(terminal)
+                .as("le terminal ne doit pas dériver vers l'affirmation que l'écran vient de quitter")
+                .doesNotContain("enregistrements");
+        assertThat(ecran)
+                .as("les deux surfaces nomment la source de ce qu'elles savent")
+                .contains("journal");
+        assertThat(terminal).contains("journal");
+    }
 }
