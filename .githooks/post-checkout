@@ -22,7 +22,17 @@
 
 [ "$3" = "1" ] || exit 0
 [ "$1" != "$2" ] || exit 0
-case "$1" in 0000000000000000000000000000000000000000) exit 0 ;; esac
+# Le SHA nul dit un checkout INITIAL : un clone, ou un `git worktree add`. Il n'y a alors pas de
+# target/ a nettoyer - mais c'est exactement le moment ou l'arbre neuf n'a aucun des outils que ses
+# gardes reclament, et ou personne n'attend. On pose, puis on sort (#5406).
+#
+# La logique vit en Python : ce dispositif n'a AUCUN gardien en CI - le runner installe tout
+# lui-meme - donc son auto-test porte seul, et il s'eprouve la ou du bash se relit.
+case "$1" in 0000000000000000000000000000000000000000)
+    python3 "$(git rev-parse --show-toplevel)/scripts/methode/prepare-l-environnement.py" || true
+    exit 0
+    ;;
+esac
 git diff --quiet "$1" "$2" -- src pom.xml && exit 0
 
 echo "post-checkout : sources modifiées entre les branches, nettoyage de target/"
