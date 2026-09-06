@@ -97,4 +97,22 @@ class DispositionDesBrutsTest {
                     .toList();
         }
     }
+
+    @Test
+    @DisplayName("le champ est LU depuis le YAML, et pas seulement honoré une fois construit")
+    void le_champ_est_lu_depuis_le_yaml() throws IOException {
+        // Trouvé à la passe 6 de la clôture de #5357 : les trois cas ci-dessus construisent la spec à
+        // la main, donc aucun ne traverse `LecteurSpec`. Un lecteur qui ignorerait la clé ferait
+        // retomber `sd-prefixee` à plat sans que rien ne rougisse - la carte resterait inspectable, et
+        // c'est précisément ce qui rend la perte silencieuse.
+        SpecCarteSd prefixee = lecteur.lire(Path.of("recette", "fixtures", "spec", "sd-prefixee.yaml"));
+        SpecCarteSd nominale = lecteur.lire(SPEC_NOMINALE);
+
+        assertThat(prefixee.brutsDansUnSousDossier())
+                .as("sd-prefixee est la SEULE carte du corpus rangée dans « bruts/ », et elle le déclare")
+                .isTrue();
+        assertThat(nominale.brutsDansUnSousDossier())
+                .as("une spec qui ne dit rien décrit une carte PLATE : c'est le défaut du parc")
+                .isFalse();
+    }
 }
