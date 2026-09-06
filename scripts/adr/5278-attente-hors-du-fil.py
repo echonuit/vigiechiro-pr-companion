@@ -54,7 +54,13 @@ RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import TESTS_ANCRES, rapporte, sort_si_contrat_demande
 
-APPEL = re.compile(r"Attente\.(que|queSurLeFil)\s*\(")
+# `Attente.que` ET le `waitFor` NU, qui porte la meme faute. La limite etait declaree et non
+# comptee : un site y vivait, `AttenteAvantClic.attendreCliquable`, dont le predicat lisait le
+# graphe depuis le fil du test en boucle et dont le revelateur y ECRIVAIT (#5330).
+#
+# `queSurLeFil` reste dans le motif pour que l auto-test puisse montrer qu il SORT du compte :
+# un detecteur qui ne verrait jamais la forme juste ne prouverait pas qu il la distingue.
+APPEL = re.compile(r"Attente\.(que|queSurLeFil)\s*\(|(WaitForAsyncUtils\.waitFor)\s*\(")
 # Les lectures de noeuds, en DEUX familles.
 #
 # La premiere CHERCHE un noeud dans le graphe : `lookup(`, `queryAs`, et les lectures de collection
@@ -72,6 +78,10 @@ APPEL = re.compile(r"Attente\.(que|queSurLeFil)\s*\(")
 LECTURE_DE_NOEUD = re.compile(
     r"lookup\(|queryAs|\.getItems\(\)|\.getScene\(\)|getChildren\(\)|\.getText\(\)"
     r"|(?:::|\.)(?:isVisible|isDisabled|isManaged|isSelected|isFocused)\b"
+    # Les formes qui INTERROGENT une `NodeQuery` deja construite : le predicat peut n avoir
+    # aucun `lookup(` visible et parcourir le graphe quand meme, parce qu une aide le lui a
+    # prepare. Un seul site du depot etait dans ce cas, et c est celui que #5330 corrige.
+    r"|\.tryQuery\(\)|\.queryAll\(\)|\.tryQueryAs\("
 )
 
 # Au-dela, ce n est plus un appel mais un fichier mal ferme : la borne evite de balayer la source
@@ -96,10 +106,18 @@ def sites(source: str) -> list[int]:
     """Les lignes des `Attente.que` dont l argument lit le graphe de scene."""
     trouves = []
     for appel in APPEL.finditer(source):
-        if appel.group(1) != "que":
+        if appel.group(1) == "queSurLeFil":
             continue
-        if LECTURE_DE_NOEUD.search(argument(source, appel.end() - 1)):
-            trouves.append(source[: appel.start()].count("\n") + 1)
+        corps = argument(source, appel.end() - 1)
+        if not LECTURE_DE_NOEUD.search(corps):
+            continue
+        # Un predicat qui passe par `robot.interact(...)` lit SUR le fil FX : c est la forme juste
+        # pour un `waitFor` nu, et `GesteVisible.amenerDansLeCadre` l emploie. Sans cette exception,
+        # le garde accuserait un site correct, et l ADR 4002 dit ce qu il advient d un garde qui crie
+        # sur du bon travail.
+        if "robot.interact(" in corps:
+            continue
+        trouves.append(source[: appel.start()].count("\n") + 1)
     return trouves
 
 
@@ -170,6 +188,19 @@ def _auto_test() -> int:
         sites(parRef.replace("que(", "queSurLeFil(") + parLambda.replace("que(", "queSurLeFil(")),
         [],
     )
+
+    # LE `waitFor` NU, qui porte la meme faute et que la population ignorait. Sa limite etait
+    # DECLAREE et non comptee, et un site y vivait (#5330).
+    nu = "WaitForAsyncUtils.waitFor(5, S, () -> q.tryQuery().isPresent());\n"
+    verifie("un waitFor nu qui interroge le graphe est vu", sites(nu), [1])
+
+    # Et la forme JUSTE d un waitFor nu : le predicat passe par `robot.interact`, donc sur le fil FX.
+    # Sans ce cas, le garde accuserait `GesteVisible.amenerDansLeCadre`, qui est correct.
+    surFil = (
+        "WaitForAsyncUtils.waitFor(5, S, () -> {\n"
+        "  robot.interact(() -> v.set(q.tryQuery().isPresent()));\n  return v.get(); });\n"
+    )
+    verifie("le meme, passant par robot.interact, sort du compte", sites(surFil), [])
 
     # Les cinq lectures de noeud, une par une : sans cela un motif qui n en verrait qu une passerait
     # tout ce qui precede, le premier cas employant `lookup(` ET `queryAll`.
