@@ -300,9 +300,10 @@ l'aperçu au `captures.manifest`.
 souvent plusieurs (donnée absente, GPS non renseigné, alerte levée…). Le seed de la capture principale
 doit produire l'état **ordinaire**, et chaque écart obtenir sa capture **dédiée**, avec sa section dans
 la doc utilisateur. Sinon un état particulier s'installe **par accident** dans l'image de référence : le
-Diagnostic illustrait sa page avec une nuit *hors nuit*, l'alerte y était visible sans être ni nommée ni
-documentée, et un simple ajustement des horaires du seed l'aurait fait disparaître sans que personne ne
-le voie (#2222). Un état montré **incidemment** est presque aussi fragile qu'un état montré nulle part.
+Diagnostic illustrait sa page avec une nuit *hors nuit* - le terme de l'époque, retiré depuis que
+#4984 a montré qu'il nommait la conformité au protocole plutôt qu'un écart - l'alerte y était visible
+sans être ni nommée ni documentée, et un simple ajustement des horaires du seed l'aurait fait
+disparaître sans que personne ne le voie (#2222). Un état montré **incidemment** est presque aussi fragile qu'un état montré nulle part.
 
 !!! note "Exposées au site via un hook"
     Les PNG vivent dans `.github/assets/` ; le hook

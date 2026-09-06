@@ -685,9 +685,13 @@ part - un « bien » ici affirmerait qu'une moitié va, alors que rien ne va.
 > détectée. » La case admet les deux formes, et le banc ne tranche pas à la place du produit : exiger
 > une liste peuplée reviendrait à demander des défauts à une nuit saine.
 
-> L'alerte « hors nuit » paraît, et ce n'est pas un montage : mesuré, l'enregistrement de la carte
-> nominale déborde de sa fenêtre nocturne des deux côtés. Le cas est donc jouable sans fabriquer une
-> seconde carte.
+> L'encart de cohérence horaire paraît, et ce n'est pas un montage : mesuré, l'enregistrement de la
+> carte nominale déborde de sa fenêtre nocturne des deux côtés. Le cas est donc jouable sans fabriquer
+> une seconde carte.
+>
+> Ce que le banc exige y est une **information**, « couvre la fenêtre du protocole », et non une
+> alerte. Cette page a longtemps dit l'inverse : le débordement des deux côtés est exactement ce que
+> le protocole demande, et le signaler était le défaut que #4984 a corrigé.
 
 
 ## ScenarioSelectionEcouteTest
