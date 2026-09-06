@@ -90,7 +90,10 @@ est bien celle que les compétences déclarent. Les deux derniers ont besoin de 
 `npm ci --prefix .github/openspec` d'abord, sinon ils refusent en le disant.
 
 Si vous avez écrit ou modifié un **garde**, `scripts/methode/verifie-dependances-declarees.py` exige
-qu'il déclare ce dont il a besoin. Si vous avez ajouté un **test qui écrit sur disque**,
+qu'il déclare ce dont il a besoin. Et si vous avez touché une **classe de test Java qui lit de la
+prose**, `scripts/methode/gardes-java-declares.py` confronte `batterie.GARDES_JAVA` aux classes qui
+construisent vraiment un chemin vers un `.md` : une sixième classe non déclarée y rougit, faute de
+quoi la porte la tairait. Si vous avez ajouté un **test qui écrit sur disque**,
 `scripts/methode/compte-les-reliquats.py` compte ce que la suite laisse dans le dossier temporaire. Et avant
 d'ouvrir la demande, `scripts/methode/verifie-controle-du-titre.py` éprouve le contrôle local du titre, celui-là même
 qui vous évitera de la rouvrir.
