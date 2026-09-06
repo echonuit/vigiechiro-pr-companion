@@ -47,7 +47,21 @@ jobs:
           # défaut de la tête de la PR : c'est le code qu'on veut rendre.
           ref: ${{ github.event_name == 'push' && 'main' || '' }}
 
+      # ⟨portee⟩ Voir le chantier #5294 : le job tourne toujours et conclut, et c'est cette
+      # ETAPE qui decide. Un atelier qui ne rend aucun verdict fait refuser la fusion (ADR 4571),
+      # et un job absent se lit comme un job vert (ADR 2748).
+      - name: "Ce diff concerne-t-il les apercus des vues (#5299)"
+        id: portee
+        shell: bash
+        # ⟨butoir⟩ L'etape fait un `git fetch` reseau, et #4440 est l'histoire d'un fetch qui part
+        # en vrille jusqu'au butoir du JOB.
+        timeout-minutes: 3
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 .github/scripts/porte_du_job.py capturer
+
       - name: Set up JDK 25
+        if: steps.portee.outputs.concerne == 'oui'
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           java-version: '25'
@@ -75,6 +89,7 @@ jobs:
       # Ce n'est pas un correctif du produit : chez un utilisateur dont le système résout `System`
       # autrement, ce contrôle reste plus large de 4 px. Le sujet est suivi en #3417.
       - name: Cache des paquets APT (fonts-noto-core, imagemagick)
+        if: steps.portee.outputs.concerne == 'oui'
         # Le seul levier qui reste quand l'hébergeur ralentit : ne pas retélécharger. Les
         # runners traînent AVANT de bloquer, donc la panne est en amont ; borner et reprendre
         # évite de pendre, cela ne fait pas descendre 91 Mo plus vite.
@@ -84,6 +99,7 @@ jobs:
           key: apt-${{ runner.os }}-fonts-noto-core-imagemagick
       
       - name: Aligner la police système sur celle de l'application
+        if: steps.portee.outputs.concerne == 'oui'
         env:
           APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: |
@@ -109,6 +125,7 @@ jobs:
       # Sur une PR comme sur `main` : si un écran ne se rend plus, le job échoue ici. C'est le seul
       # endroit qui exerce réellement les injecteurs partiels de capture jusqu'au chargement du FXML.
       - name: Générer les aperçus PNG (hors-écran)
+        if: steps.portee.outputs.concerne == 'oui'
         run: |
           chmod +x .github/assets/capture_screenshots.py
           python3 .github/assets/capture_screenshots.py
@@ -116,6 +133,7 @@ jobs:
       # `filtrer_bruit_cartes.py` compare les aperçus de carte à leur version committée. L'image
       # `ubuntu-latest` ne fournit AUCUN ImageMagick : sans cette étape, la suivante échoue.
       - name: Installer ImageMagick (comparaison des aperçus de carte)
+        if: steps.portee.outputs.concerne == 'oui'
         env:
           APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: python3 .github/scripts/installer_paquets.py --avec-recommandations imagemagick
@@ -127,6 +145,7 @@ jobs:
       # côté PR. Sorti ici, il tourne partout ; sur une PR il ne modifie que des fichiers du plan de
       # travail, que personne ne committe.
       - name: Filtrer le bruit des cartes
+        if: steps.portee.outputs.concerne == 'oui'
         run: |
           chmod +x .github/assets/filtrer_bruit_cartes.py
           python3 .github/assets/filtrer_bruit_cartes.py
@@ -142,7 +161,7 @@ jobs:
         # Le filtrage du bruit doit avoir eu lieu AVANT : sans lui, les aperçus de carte
         # apparaîtraient à chaque fois, et une vraie régression deviendrait indiscernable du bruit de
         # tuiles - jusqu'à 23,8 % d'une image (cf. `filtrer_bruit_cartes.py`).
-        if: github.event_name == 'pull_request'
+        if: steps.portee.outputs.concerne == 'oui' && (github.event_name == 'pull_request')
         run: |
           set -uo pipefail
           chmod +x .github/assets/compare_apercus.py
@@ -153,7 +172,7 @@ jobs:
           cat target/apercus-pr/index.md >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Conserver les avant/après
-        if: ${{ github.event_name == 'pull_request' && hashFiles('target/apercus-pr/*.avant-apres.png') != '' }}
+        if: ${{ steps.portee.outputs.concerne == 'oui' && (github.event_name == 'pull_request' && hashFiles('target/apercus-pr/*.avant-apres.png') != '') }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: apercus-avant-apres
@@ -162,7 +181,7 @@ jobs:
 
       - name: Publier les aperçus via une PR auto-mergée
         # Uniquement sur `main` : une PR vérifie que les écrans se rendent, elle ne publie rien.
-        if: github.event_name == 'push'
+        if: steps.portee.outputs.concerne == 'oui' && (github.event_name == 'push')
         # `main` impose le passage par une PR et github-actions[bot] ne peut PAS pousser en direct.
         # On modélise donc le workflow PR : branche -> PR -> squash-merge. Le squash porte
         # [skip ci] (anti-récursion : un commit d'aperçus n'a pas de code à valider).
