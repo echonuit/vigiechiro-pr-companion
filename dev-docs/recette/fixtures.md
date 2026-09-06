@@ -1,9 +1,23 @@
 # Fixtures : le générateur de cartes SD
 
-Les cartes SD de recette (arbres `LogPR<serie>.txt` + `PaRecPR<serie>_THLog.csv` + `bruts/*.wav`)
+Les cartes SD de recette (arbres `LogPR<serie>.txt` + `PaRecPR<serie>_THLog.csv` + les `*.wav`)
 pesaient autrefois plusieurs centaines de méga-octets et étaient **faites à la main** : impossibles à
 committer (binaire lourd, dépôt public et forké) et **non rejouables** (rien ne garantissait de les
 reconstruire à l'identique).
+
+## Où vivent les WAV, et pourquoi c'est à la racine
+
+Les enregistreurs déposent leurs fichiers **à la racine** de la carte. Le produit accepte aussi un
+sous-dossier `bruts/` - `InspecteurDossier` regarde les deux - mais c'est la racine que le parc porte.
+
+Les seize specs produisaient pourtant un `bruts/`, **sans qu'aucune ne puisse en décider** : le champ
+n'existait pas. La disposition réelle n'était donc jouée par aucun cas de recette, et les parcours
+filmés montraient une carte que le lecteur n'a pas sous les yeux (#5281).
+
+Depuis, `brutsDansUnSousDossier` tranche, et son défaut est **faux** : une spec qui ne dit rien décrit
+ce qu'un enregistreur produit. **`sd-prefixee` est la seule à le poser à vrai**, pour que la branche du
+sous-dossier garde sa recette - c'est la carte de quelqu'un qui a organisé ses fichiers, et le choix
+lui revenait naturellement.
 
 On les décrit désormais par des **specs déclaratives** de quelques kilo-octets, sous
 `recette/fixtures/spec/`, qu'un **générateur déterministe** matérialise sur disque. La spec est la
@@ -44,7 +58,10 @@ wav:                            # paramètres communs des WAV (RIFF mono 16 bits
 
 zip: true                       # produit aussi sd-nominale.zip (chemin de décompression)
 
-enregistreurs:                  # un ou plusieurs enregistreurs présents dans bruts/
+# brutsDansUnSousDossier: true  # range les WAV dans bruts/ ; ABSENT = à la racine, ce que les
+                                # enregistreurs déposent réellement (#5281)
+
+enregistreurs:                  # un ou plusieurs enregistreurs de la carte
   - serie: "1925492"
     horodatages:                # PaRecPR<serie>_<yyyyMMdd>_<HHmmss>.wav
       - "20260422_203922"
@@ -102,7 +119,7 @@ Chaque carte exerce **une** pathologie de l'assistant d'import (voir l'étape 5 
 | `sd-multi-configs` | deux nuits, capteur **reconfiguré entre les deux** (384 puis 256 kHz) -> chaque nuit doit recevoir les paramètres de **sa** session (#3460) | 4 |
 | `sd-sans-journal` | aucun `LogPR` -> mode dégradé (import possible sans journal) | 3 |
 | `sd-journal-corrompu` | `LogPR` illisible -> l'inspection échoue avec un message clair | 3 |
-| `sd-prefixee` | bruts déjà préfixés `Car...` -> état de nommage `PREFIXE` | 3 |
+| `sd-prefixee` | bruts déjà préfixés `Car...` -> état de nommage `PREFIXE`. **La seule carte rangée dans `bruts/`** | 3 |
 | `sd-rejets` | un faux wav parmi huit valides -> l'import aboutit, zone des rejets | 9 |
 | `sd-grosse` | soixante wav -> test de charge (progression, parallélisme, disque) | 60 |
 | `sd-reveil-bouton` | un appui sur une touche au milieu de la nuit -> **une** nuit, complète, et non deux (#4981) | 5 |

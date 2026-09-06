@@ -1777,7 +1777,7 @@ f7da17f4e1d8  src/test/java/fr/univ_amu/iut/importation/view/ParcoursImporterUne
 e37c915aa4db  src/test/java/fr/univ_amu/iut/importation/view/ScenarioBandeauxDInspectionTest.java
 7eed6692ab66  src/test/java/fr/univ_amu/iut/importation/view/ScenarioCarteMultiNuitsTest.java
 4bd33c9c875c  src/test/java/fr/univ_amu/iut/importation/view/ScenarioConnecteAnnonceImportTest.java
-de261e43385f  src/test/java/fr/univ_amu/iut/importation/view/ScenarioImportNominalTest.java
+c9e8e1a12452  src/test/java/fr/univ_amu/iut/importation/view/ScenarioImportNominalTest.java
 7e677ede1765  src/test/java/fr/univ_amu/iut/importation/view/ScenarioJournalAbsentTest.java
 f5134b2729cb  src/test/java/fr/univ_amu/iut/importation/view/ScenarioMenuDeLigneImportTest.java
 61baa82e82c8  src/test/java/fr/univ_amu/iut/importation/view/ScenarioRejetsEtArchiveTest.java
@@ -1977,13 +1977,14 @@ dc61d71a4d14  src/test/java/fr/univ_amu/iut/recette/CasDeRecette.java
 b5e7288906d9  src/test/java/fr/univ_amu/iut/recette/ClipDeModaleTest.java
 adc5cdc4a3fb  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
 e754fd5b8832  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
+fb2f197b3036  src/test/java/fr/univ_amu/iut/recette/DispositionDesBrutsTest.java
 af9b80216119  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheRalenti.java
 bd083deb8799  src/test/java/fr/univ_amu/iut/recette/ExtractionCarteReelleTest.java
 502c93ef7362  src/test/java/fr/univ_amu/iut/recette/FabriqueWav.java
 9c8e7edb2e4f  src/test/java/fr/univ_amu/iut/recette/FenetreDuBanc.java
 20d1d9142ba3  src/test/java/fr/univ_amu/iut/recette/FixtureDeRecette.java
 fdd506b206bf  src/test/java/fr/univ_amu/iut/recette/FixtureMultiConfigsTest.java
-d46df2e869e3  src/test/java/fr/univ_amu/iut/recette/GenerateurCartesSD.java
+70dc392bf31e  src/test/java/fr/univ_amu/iut/recette/GenerateurCartesSD.java
 d36d168d30f5  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDCliquetTest.java
 4576ada12c8a  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDImportCliquetTest.java
 1f9ab292b964  src/test/java/fr/univ_amu/iut/recette/GesteVisible.java
@@ -2010,7 +2011,7 @@ ba84a77dca75  src/test/java/fr/univ_amu/iut/recette/RecetteImportCliGoldenTest.j
 955859ce669d  src/test/java/fr/univ_amu/iut/recette/SansExceptionAvaleeTest.java
 accdcc27fbcd  src/test/java/fr/univ_amu/iut/recette/Seance.java
 d454ecd5ac76  src/test/java/fr/univ_amu/iut/recette/SeanceTest.java
-cfde589c7b2e  src/test/java/fr/univ_amu/iut/recette/SpecCarteSd.java
+00ef5661c40c  src/test/java/fr/univ_amu/iut/recette/SpecCarteSd.java
 e19e055e1fb2  src/test/java/fr/univ_amu/iut/recette/film/CalqueDesGestes.java
 8c9b84d546ab  src/test/java/fr/univ_amu/iut/recette/film/CalqueDesGestesTest.java
 afae0455f945  src/test/java/fr/univ_amu/iut/recette/film/CameraDeScene.java

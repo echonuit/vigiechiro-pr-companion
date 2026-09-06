@@ -52,6 +52,9 @@ final class LecteurSpec {
             List<Enregistreur> enregistreurs = lireEnregistreurs(asList(racine.get("enregistreurs")));
             Prefixe prefixe = lirePrefixe(asMap(racine.get("prefixe")));
             boolean zip = bool(racine, "zip", false);
+            // Défaut FAUX : la carte plate est celle du parc, et une spec qui ne dit rien décrit donc
+            // ce qu'un enregistreur produit.
+            boolean brutsDansUnSousDossier = bool(racine, "brutsDansUnSousDossier", false);
             Attendu attendu = lireAttendu(asMap(racine.get("attendu")), journal, thlog, prefixe != null);
 
             return new SpecCarteSd(
@@ -63,6 +66,7 @@ final class LecteurSpec {
                     enregistreurs,
                     prefixe,
                     zip,
+                    brutsDansUnSousDossier,
                     attendu);
         }
     }

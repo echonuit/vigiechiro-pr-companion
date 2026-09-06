@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Labeled;
@@ -146,7 +147,7 @@ class ScenarioImportNominalTest {
             value = {"S2-01", "S2-02", "S2-03", "S2-04", "S2-05", "S2-06", "S2-07"},
             portee = Portee.A_L_ECRAN)
     @DisplayName("S2-01 à S2-07 · désigner la carte SD, et lire ce que l'inspection en dit")
-    void designer_la_source_et_l_inspecter(FxRobot robot) throws TimeoutException {
+    void designer_la_source_et_l_inspecter(FxRobot robot) throws TimeoutException, IOException {
         Respiration.avantLeGeste(robot);
         GesteVisible.cliquer(robot, "#boutonImporterNuit");
         WaitForAsyncUtils.waitForFxEvents();
@@ -221,11 +222,13 @@ class ScenarioImportNominalTest {
                         + " originaux sont intacts sur la carte tant que l'import n'a pas eu lieu")
                 .isNotBlank();
 
-        assertThat(Files.isDirectory(carteSd.resolve("bruts")))
+        // Les WAV sont À LA RACINE de la carte, comme un enregistreur les dépose : `sd-nominale` a
+        // cessé de produire un `bruts/` en #5281, et c'est cette disposition-là que le parc porte.
+        assertThat(wavSurLaCarte())
                 .as("les originaux sont INTACTS : l'inspection lit la carte, elle n'y touche pas. Un"
                         + " cas qui ne le constaterait pas laisserait passer une inspection qui renomme"
                         + " avant que l'observateur ait dit oui")
-                .isTrue();
+                .hasSize(ORIGINAUX);
 
         Respiration.leTempsDeLire(robot);
     }
@@ -500,6 +503,17 @@ class ScenarioImportNominalTest {
     /// `Injector#getInstance` en rendrait un AUTRE : le contrôleur n'est pas un singleton, et celui de
     /// la scène a été créé par le `FXMLLoader` de la navigation. Poser le double sur un contrôleur qui
     /// n'est pas à l'écran laisserait « Parcourir » ouvrir le dialogue natif, qui fige le banc.
+    /// Les WAV encore présents SUR LA CARTE, où qu'ils soient rangés.
+    ///
+    /// Elle regarde l'arbre entier plutôt que `bruts/` : la carte nominale est plate depuis #5281, et
+    /// un cas qui nommerait le sous-dossier redeviendrait faux à la prochaine bascule de spec.
+    private List<Path> wavSurLaCarte() throws IOException {
+        try (Stream<Path> arbre = Files.walk(carteSd)) {
+            return arbre.filter(f -> f.getFileName().toString().endsWith(".wav"))
+                    .toList();
+        }
+    }
+
     private ImportationController controleur() {
         Navigateur navigateur = injecteur.getInstance(Navigateur.class);
         Object courant = navigateur.historique().getLast().controleur();

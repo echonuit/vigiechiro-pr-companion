@@ -19,6 +19,9 @@ import java.util.List;
 /// @param enregistreurs enregistreurs présents dans `bruts/` (un ou plusieurs pour le cas « mélange »)
 /// @param prefixe préfixe de session à appliquer aux noms de WAV (`Car...`), ou `null` s'ils restent bruts
 /// @param zip si vrai, une archive `<fixture>.zip` de l'arbre est aussi produite (chemin décompression)
+/// @param brutsDansUnSousDossier si vrai, les WAV vont dans `bruts/` ; sinon **à la racine**, qui est
+///     ce que les enregistreurs déposent. Les seize specs produisaient `bruts/` sans qu'aucune ne
+///     puisse en décider, si bien que la disposition du parc n'était jouée par aucune recette (#5281)
 /// @param attendu contrat de recette : ce que l'inspection réelle du code d'import doit constater
 record SpecCarteSd(
         String fixture,
@@ -29,6 +32,7 @@ record SpecCarteSd(
         List<Enregistreur> enregistreurs,
         Prefixe prefixe,
         boolean zip,
+        boolean brutsDansUnSousDossier,
         Attendu attendu) {
 
     SpecCarteSd {
