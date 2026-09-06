@@ -939,6 +939,12 @@ pose le trio du chrome.
     **`Attente.queSurLeFil` quand le prédicat touche la scène** : `waitFor` rappelle le prédicat depuis
     le fil du **test**, et le graphe de scène n'est pas partageable.
 
+    Ce n'est plus une recommandation : `scripts/adr/5278-attente-hors-du-fil.py` la tient par un
+    **cliquet à zéro**, et l'ADR 5278 en porte la décision. Toucher la scène s'entend au sens large,
+    et les deux familles se valent : chercher un nœud (`lookup(`, `queryAs`) et lire une propriété
+    sur un nœud qu'on tient déjà (`isVisible`, `isDisabled`). La seconde s'oubliait, et elle a coûté
+    quatre chutes à `MainViewTest` **après** que #4694 l'eut réparé avec la mauvaise forme.
+
     Quatre bancs de #4804 sont tombés faute de cette attente, entre 3 et 4 fois sur 1 150 passages,
     chacun sous une forme différente : une respiration de tournage qui ne s'arrête que si l'on filme
     (#4694), un commentaire qui **conclut** qu'il n'y a rien à attendre (#4813), rien du tout entre le
