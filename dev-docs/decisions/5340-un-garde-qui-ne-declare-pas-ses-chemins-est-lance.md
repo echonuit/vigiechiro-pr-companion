@@ -8,7 +8,7 @@ decided_at: 2026-09-06
 verification: probable
 enforced_by:
   - "scripts/adr/5340-chemins-non-declares.py"
-ratchet: 62
+ratchet: 48
 verified:
   - by: machine:ci
     at: 2026-09-06
@@ -57,6 +57,18 @@ le premier jour**, avec dix déclarants sur soixante-douze : elle lance trop, ja
 cliquet la rend précise par tranches, sans qu'elle passe par un état où elle en oublie un.
 
 Une porte qui aurait exigé les soixante-douze déclarations avant de servir n'aurait jamais servi.
+
+## Le cliquet est passé de 62 à 48, et ce n'est PAS un progrès
+
+Il faut le dire, sinon le nombre ment sur ce qu'il compte. La baisse ne vient pas de gardes qui se
+seraient mis à déclarer leurs `chemins` : elle vient de #5363, qui a **retiré de la population** les
+quatorze dispositifs qui ne jugent pas - loupes, rapports, générateurs. Ils ne peuvent pas faire
+rougir la CI, donc la porte n'a aucune raison de les lancer, donc leur absence de déclaration ne
+coûte rien.
+
+**Un cliquet qui descend parce que sa population rétrécit n'a rien résorbé.** Le confondre avec un
+gain rendrait la marge regagnée invisible le jour où elle se reperdrait. Les 48 restants sont la
+vraie dette, et c'est elle qui doit descendre.
 
 ## Ce que le cliquet borne, et ce qu'il ne voit pas
 
