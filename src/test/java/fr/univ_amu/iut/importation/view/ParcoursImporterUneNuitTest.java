@@ -208,7 +208,10 @@ class ParcoursImporterUneNuitTest {
                 APPARITION_SECONDES * 1000L);
 
         // ─── Et le chemin ARRIVE dans l'écran, ce qui ferme le geste ─────────────────────────────
-        Attente.que(
+        // SUR LE FIL (ADR 5278) : `texte` fait un `lookup` puis un `getText`, donc lit le graphe. Le
+        // garde ne le voit pas - la lecture est cachée dans l'aide - et 36 autres sites du dépôt sont
+        // dans ce cas, consignés en #5353.
+        Attente.queSurLeFil(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux",
                 APPARITION_SECONDES * 1000L);

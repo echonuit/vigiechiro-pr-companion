@@ -150,6 +150,16 @@ exigent un redémarrage et le disent.
 - [ ] **S7-38** · *geste: lire-les-emplacements* · Chaque chemin porte, **à côté de lui**, un bouton « Copier » ; le cliquer place ce
       chemin dans le presse-papier, et ce qui s'y trouve est **exactement** ce que l'écran affiche
       (le coller dans un éditeur pour le lire). Les deux rangées l'offrent (#3882).
+- [ ] **S7-39** · *geste: choisir-son-dialogue-de-designation* · En tête de l'onglet, la case « Choisir les fichiers avec le sélecteur de
+      l'application » est **décochée** sur une installation neuve. Cliquer « Choisir… » ouvre alors le
+      sélecteur **de votre système**, celui que vous reconnaissez (#5310).
+- [ ] **S7-40** · *geste: choisir-son-dialogue-de-designation* · Cocher la case, puis cliquer « Choisir… » : la fenêtre qui s'ouvre est
+      celle de **l'application** - un champ de chemin en haut, une liste de dossiers, « Dossier
+      parent », « Annuler » et « Choisir ce dossier ». Y désigner un dossier le porte dans l'écran,
+      **exactement** celui qu'on a choisi.
+- [ ] **S7-41** · *geste: choisir-son-dialogue-de-designation* · La case cochée vaut **partout**, pas seulement ici : rouvrir l'écran
+      d'import et cliquer « Parcourir… » ouvre la même fenêtre. Décocher la case rend le sélecteur du
+      système, **sans redémarrer** l'application.
 
     Le numéro sort de la suite : les cases de S7 vont jusqu'à **S7-37**, et les renuméroter
     rendrait faux les renvois que ce script porte déjà entre ses propres cases (S7-24 est cité par

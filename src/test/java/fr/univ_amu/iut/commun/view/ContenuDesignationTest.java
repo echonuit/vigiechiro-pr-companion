@@ -147,4 +147,34 @@ class ContenuDesignationTest {
 
         assertThat(vue.designer()).isEmpty();
     }
+
+    @Test
+    @DisplayName("« Dossier parent » remonte d'un cran, et la liste suit")
+    void remonter_mene_au_parent() {
+        ContenuDesignation vue = contenu(Mode.DOSSIER, null, null);
+        assertThat(vue.dossierCourant()).isEqualTo(bac);
+
+        vue.remonter();
+
+        assertThat(vue.dossierCourant()).isEqualTo(bac.getParent());
+        // La liste suit le dossier, elle ne reste pas sur l'ancien : `bac` y paraît maintenant comme
+        // une entrée parmi ses voisines.
+        assertThat(vue.entrees().stream().map(Entree::nom))
+                .contains(bac.getFileName().toString());
+    }
+
+    @Test
+    @DisplayName("à la RACINE, remonter ne fait rien plutôt que de casser")
+    void remonter_a_la_racine_ne_fait_rien() {
+        // Le cas limite du geste : `Path.getParent()` rend `null` à la racine, et c'est la seule
+        // branche que le bouton porte. Sans ce cas, retirer le `if` ne ferait rougir personne.
+        ContenuDesignation vue = contenu(Mode.DOSSIER, null, null);
+        Path racine = bac.getRoot();
+        vue.allerVers(racine.toString());
+        assertThat(vue.dossierCourant()).isEqualTo(racine);
+
+        vue.remonter();
+
+        assertThat(vue.dossierCourant()).isEqualTo(racine);
+    }
 }

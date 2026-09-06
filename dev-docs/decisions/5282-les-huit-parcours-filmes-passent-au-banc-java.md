@@ -18,11 +18,10 @@ generated:
 ## La question, et pourquoi aucun raisonnement ne pouvait y répondre
 
 Le dépôt tient **deux** bancs filmés : celui de recette, en Java, et celui de documentation, en bash
-(`filme-un-parcours.sh`, 2 065 lignes, plus 1 295 lignes d'orchestration). Le
+(`filme-un-parcours.sh`, 2 065 lignes, plus 1 295 d'orchestration). Le
 [spike de convergence](../spikes/convergence-des-deux-bancs.md) a établi que les deux raisons d'être
-du second - une décoration de fenêtre, un sélecteur de fichiers visible - étaient **techniquement**
-solubles côté Java. Il s'est arrêté là, en écrivant qu'il ne mesurait ni le coût d'un parcours porté,
-ni ce qu'un clip réel donnerait.
+du second - une décoration, un sélecteur visible - étaient **techniquement** solubles côté Java, sans
+mesurer ni le coût d'un parcours porté, ni ce qu'un clip réel donnerait.
 
 Ce chantier a livré les deux manquants et filmé le parcours. **La réponse est oui.**
 
@@ -32,12 +31,11 @@ Ce chantier a livré les deux manquants et filmé le parcours. **La réponse est
 dialogue, où le dossier se désigne, et où le chemin désigné arrive dans l'écran. Aucune composition
 après coup, aucune concaténation.
 
-Les trois choses que le montage de validation avouait fausses sont levées ensemble. La troisième est
-celle qui comptait : le montage annonçait `/media/VIGIECHIRO/bruts` quand le clip réel remplissait le
-champ avec un dossier temporaire, et il en tirait qu'« un double visible devra rendre un chemin
-montrable ». Le dialogue étant réel, il montre le vrai chemin - et `CarteDeRecette.materialiser` rend
-`/tmp/vc-carte-sd-nominale857838373229970727`, qui se tape à l'écran pendant six secondes. Le premier
-tournage était **vert** et le clip était mauvais.
+Les trois choses que le montage avouait fausses sont levées ensemble. La troisième comptait : il
+annonçait `/media/VIGIECHIRO/bruts` quand le clip réel montrait un dossier temporaire, et en tirait
+qu'« un double visible devra rendre un chemin montrable ». Le dialogue étant réel, il montre le vrai
+chemin - et `CarteDeRecette.materialiser` rend `/tmp/vc-carte-sd-nominale857838373229970727`, qui se
+tape à l'écran pendant six secondes. Le premier tournage était **vert** et le clip était mauvais.
 
 ## Le coût réel, mesuré, et il va d'abord dans le mauvais sens
 
@@ -66,6 +64,22 @@ la fois, chacun jouant son geste sans substituer son sélecteur.
 **Ce qui n'est pas décidé ici.** Le retrait de `filme-un-parcours.sh` et la descente du cliquet de
 l'[ADR 5188](5188-bash-disparait-une-tolerance-est-un-delai.md) attendent que les huit soient portés :
 un banc retiré avant que son remplaçant couvre tout laisse la documentation sans clips.
+
+## Ce que deviennent les deux ADR dont `lance-test-filme.sh` est l'applicateur
+
+Les [ADR 3774](3774-le-clip-se-taille-sur-le-test.md) et
+[3788](3788-un-banc-qui-maximise-tout-ne-montre-pas-ce-qu-on-livre.md) déclarent toutes deux
+`verification: certaine`, appliquée par `.github/scripts/lance-test-filme.sh`. Le spike les avait
+nommées sans les trancher ; cette décision les rattrape, puisqu'elle condamne à terme ce script.
+
+**Ce qu'elles disent ne change pas.** Un clip se taille sur le test, et un banc qui maximise tout ne
+montre pas ce qu'on livre : les deux règles valent autant côté Java, et le banc de recette les tient
+déjà - `CameraDeScene` filme la scène à sa taille, pas à celle de l'écran.
+
+**Ce qui change est leur applicateur, et il se déplacera avec le dernier parcours porté.** Le faire
+maintenant serait pire que l'attendre : `lance-test-filme.sh` applique encore ces règles pour les huit
+parcours, et lui retirer son titre pendant qu'il travaille laisserait les deux ADR sans gage. Cette
+bascule appartient au lot qui retire le script, pas à celui qui décide la migration.
 
 ## Conséquences
 

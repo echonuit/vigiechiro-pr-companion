@@ -532,7 +532,7 @@ a22c0cba60aa  src/main/java/fr/univ_amu/iut/commun/view/ConfirmateurModifiable.j
 be82b8aa7af2  src/main/java/fr/univ_amu/iut/commun/view/ConfirmationNavigation.java
 14f8c7b081f1  src/main/java/fr/univ_amu/iut/commun/view/ConstructeurMenuOutils.java
 5556eeb98e70  src/main/java/fr/univ_amu/iut/commun/view/ContenuChoixSauvegarde.java
-8a408f6d8fb7  src/main/java/fr/univ_amu/iut/commun/view/ContenuDesignation.java
+c6195221463e  src/main/java/fr/univ_amu/iut/commun/view/ContenuDesignation.java
 8bcda08bb08b  src/main/java/fr/univ_amu/iut/commun/view/ControleursReglages.java
 8023ca44aae0  src/main/java/fr/univ_amu/iut/commun/view/CritereBooleen.java
 52fd1d750b4e  src/main/java/fr/univ_amu/iut/commun/view/CritereFiltre.java
@@ -554,6 +554,7 @@ e4601d936d6d  src/main/java/fr/univ_amu/iut/commun/view/DialogueProgression.java
 6625b7d2d02b  src/main/java/fr/univ_amu/iut/commun/view/EcranReglagesController.java
 f01699c08b1d  src/main/java/fr/univ_amu/iut/commun/view/EmplacementNavigation.java
 0acc75f3592e  src/main/java/fr/univ_amu/iut/commun/view/EmplacementPassage.java
+5797cacbd7c8  src/main/java/fr/univ_amu/iut/commun/view/EntreesDuDossier.java
 8ad545f7af9d  src/main/java/fr/univ_amu/iut/commun/view/EtapeNavigation.java
 a5e867dd946c  src/main/java/fr/univ_amu/iut/commun/view/ExecuteurFiche.java
 ec05a2179782  src/main/java/fr/univ_amu/iut/commun/view/ExecuteurFicheAsynchrone.java
@@ -1490,6 +1491,7 @@ e942a02ee8c3  src/test/java/fr/univ_amu/iut/commun/model/NormalisationTexteTest.
 e3b0c44298fc  src/test/java/fr/univ_amu/iut/commun/model/NuitTest.java
 29ba4c26f5e3  src/test/java/fr/univ_amu/iut/commun/model/NumeroDeCarreTest.java
 7974a75fdc7f  src/test/java/fr/univ_amu/iut/commun/model/PortailVigieChiroTest.java
+c908e7235d4c  src/test/java/fr/univ_amu/iut/commun/model/PreferenceDesignationPersisteeTest.java
 b9d123809bcd  src/test/java/fr/univ_amu/iut/commun/model/PreferenceSourceEspeceTest.java
 2b860a12e607  src/test/java/fr/univ_amu/iut/commun/model/PrefixeTest.java
 144ed1e7de6a  src/test/java/fr/univ_amu/iut/commun/model/PresenceFichiersTest.java
