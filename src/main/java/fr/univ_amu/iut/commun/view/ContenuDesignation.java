@@ -4,14 +4,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -68,6 +66,8 @@ public final class ContenuDesignation {
     private final Mode mode;
     private final FiltreFichier filtre;
 
+    private final EntreesDuDossier lecture;
+
     private Path dossierCourant;
 
     /// @param mode ce que le dialogue demande
@@ -85,6 +85,7 @@ public final class ContenuDesignation {
             Runnable surAnnuler) {
         this.mode = mode;
         this.filtre = filtre;
+        this.lecture = new EntreesDuDossier(mode, filtre);
         this.dossierCourant = lisible(depart) ? depart : Path.of(System.getProperty("user.home"));
 
         champChemin.setId(ID_CHEMIN);
@@ -106,12 +107,7 @@ public final class ContenuDesignation {
             }
         });
 
-        Button remonter = bouton(ID_REMONTER, "Dossier parent", () -> {
-            Path parent = dossierCourant.getParent();
-            if (parent != null) {
-                afficher(parent);
-            }
-        });
+        Button remonter = bouton(ID_REMONTER, "Dossier parent", this::remonter);
         Button nouveauDossier = bouton(ID_NOUVEAU_DOSSIER, "Nouveau dossier", this::creerUnDossier);
         nouveauDossier.setVisible(mode == Mode.ENREGISTREMENT);
         nouveauDossier.setManaged(mode == Mode.ENREGISTREMENT);
@@ -124,6 +120,11 @@ public final class ContenuDesignation {
         HBox.setHgrow(champChemin, Priority.ALWAYS);
         HBox barreDuBas = new HBox(8, champNom, nouveauDossier, annuler, valider);
         HBox.setHgrow(champNom, Priority.ALWAYS);
+        // À DROITE, comme le pied de `ContenuChoixSauvegarde`. Le `Hgrow` ci-dessus ne suffit pas :
+        // `champNom` n'est managé qu'en mode ENREGISTREMENT, si bien qu'en DOSSIER et en FICHIER -
+        // les deux modes que le produit ouvre le plus - rien ne poussait les boutons, et ils
+        // collaient à gauche. Vu sur le clip du parcours, pas par un test.
+        barreDuBas.setAlignment(Pos.CENTER_RIGHT);
 
         racine = new VBox(10, barreDuHaut, liste, message, barreDuBas);
         racine.setPadding(new Insets(14));
@@ -191,6 +192,18 @@ public final class ContenuDesignation {
     ///
     /// Le nom vient du champ de nom : un sélecteur de destination sert souvent à écrire là où rien
     /// n'existe encore, et demander un second champ pour cela ferait deux saisies pour un geste.
+    /// Remonte au dossier parent, ou ne fait rien s'il n'y en a pas.
+    ///
+    /// Publique comme [#creerUnDossier] et [#allerVers], et pour la même raison : le geste vivait dans
+    /// une lambda anonyme du bouton, donc sans porte pour l'éprouver. C'est ce que la passe 6 de la
+    /// clôture de #5282 a trouvé - le seul des six gestes du dialogue qu'aucun cas ne touchait.
+    public void remonter() {
+        Path parent = dossierCourant.getParent();
+        if (parent != null) {
+            afficher(parent);
+        }
+    }
+
     public void creerUnDossier() {
         String nom = champNom.getText() == null ? "" : champNom.getText().trim();
         if (nom.isEmpty()) {
@@ -242,39 +255,12 @@ public final class ContenuDesignation {
     /// fait pas, et c'est plus facile à ajouter qu'à retirer. Le design du changement laissait la
     /// question ouverte parce qu'elle ne touche ni les exigences ni le découpage.
     private List<Entree> lire(Path dossier) {
-        List<Entree> entrees = new ArrayList<>();
-        try (Stream<Path> flux = Files.list(dossier)) {
-            flux.filter(chemin -> !chemin.getFileName().toString().startsWith("."))
-                    .filter(this::retenu)
-                    .sorted(Comparator.comparing((Path chemin) -> !Files.isDirectory(chemin))
-                            .thenComparing(chemin -> chemin.getFileName().toString()))
-                    .forEach(chemin ->
-                            entrees.add(new Entree(chemin.getFileName().toString(), Files.isDirectory(chemin))));
-        } catch (IOException lecture_impossible) {
-            // Pas un refus : `allerVers` a deja garde l entree, et ceci couvre le cas ou le dossier
-            // devient illisible ENTRE le controle et la lecture. La liste vide est alors exacte.
-            message.setText("Ce dossier n'a pas pu être lu entièrement.");
+        List<Entree> lues = lecture.de(dossier);
+        if (lues == null) {
+            message.setText(EntreesDuDossier.raisonDeLectureIncomplete());
+            return List.of();
         }
-        return entrees;
-    }
-
-    /// Un dossier passe toujours. Un fichier ne passe pas du tout en mode dossier, et sinon seulement
-    /// si le filtre le retient.
-    private boolean retenu(Path chemin) {
-        if (Files.isDirectory(chemin)) {
-            return true;
-        }
-        if (mode == Mode.DOSSIER) {
-            return false;
-        }
-        String motif = filtre == null ? null : filtre.motif();
-        if (motif == null || !motif.startsWith("*.")) {
-            return true;
-        }
-        return chemin.getFileName()
-                .toString()
-                .toLowerCase()
-                .endsWith(motif.substring(1).toLowerCase());
+        return lues;
     }
 
     private void refuser(String raison) {

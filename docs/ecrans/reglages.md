@@ -72,9 +72,27 @@ L'onglet **Emplacements** décide **où vivent** deux choses :
 - le **dossier de travail**, qui contient les sessions et leur audio ;
 - la **base de données** (`vigiechiro.db`) : vos observations, vos validations, les liens avec Vigie-Chiro. C'est le **seul fichier irremplaçable** ; le reste se réimporte ou se recalcule.
 
-Pour chacun, le chemin courant est affiché, un bouton **« Copier »** le place dans le presse-papier, un bouton **« Choisir… »** ouvre un sélecteur de dossier, et l'emplacement **par défaut** est rappelé. Un dossier que l'application ne peut pas utiliser (un fichier, un dossier non inscriptible) est **refusé au moment du choix**, avec la raison : vous ne le découvrez pas au prochain démarrage.
+Pour chacun, le chemin courant est affiché, un bouton **« Copier »** le place dans le presse-papier, un bouton **« Choisir… »** ouvre un sélecteur de dossier (celui de votre système, sauf si vous avez coché la case décrite [juste après](#selecteur-de-l-application)), et l'emplacement **par défaut** est rappelé. Un dossier que l'application ne peut pas utiliser (un fichier, un dossier non inscriptible) est **refusé au moment du choix**, avec la raison : vous ne le découvrez pas au prochain démarrage.
 
 Le bouton **« Copier »** sert précisément quand la suite se passe **ailleurs** : coller le chemin dans votre explorateur de fichiers pour aller y regarder, dans un terminal, ou dans un message où vous demandez de l'aide. Vous n'avez pas à le recopier à l'œil.
+
+### Choisir les fichiers avec le sélecteur de l'application {#selecteur-de-l-application}
+
+Partout où l'application vous demande de **désigner** un fichier ou un dossier - la carte SD à
+importer, l'emplacement de la base, un export à enregistrer - elle ouvre par défaut le **sélecteur de
+votre système** : celui que vous connaissez, avec vos raccourcis et vos favoris.
+
+La case en tête de l'onglet **Emplacements** remplace ce sélecteur par celui de l'application. Deux
+raisons de la cocher :
+
+- vous travaillez sur **plusieurs machines** et voulez les mêmes repères partout ;
+- vous préférez **saisir un chemin à la main**, ce que certains sélecteurs système ne permettent pas.
+
+La case est **décochée** par défaut, et le rester ne vous prive de rien.
+
+!!! info "Ce que cette case ne change pas"
+    Elle change la **fenêtre** qui vous demande où regarder, pas ce que l'application a le **droit**
+    de lire. Sous Flatpak notamment, le bac à sable borne l'accès de la même façon dans les deux cas.
 
 !!! warning "Changer un emplacement ne déplace pas vos données"
     Un emplacement est un **pointeur** : le changer dit à l'application **où aller lire au prochain démarrage**, il ne déplace rien. Si vous pointez la base vers un dossier **vide**, l'application y démarrera sur une base **neuve**, l'ancienne restant **intacte** à son ancien emplacement. Pour l'emporter, **copiez le fichier vous-même** avant de redémarrer. C'est le même principe que pour votre audio : l'application ne touche pas à vos fichiers à votre place.

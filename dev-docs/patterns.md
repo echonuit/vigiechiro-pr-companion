@@ -1192,7 +1192,7 @@ triplet - un **contrat neutre**, une **implémentation réelle**, un **porteur i
 |---|---|---|---|
 | `Confirmateur` (#1013) | le **oui/non** | `ConfirmationNavigation` | répond ce qu'on lui dit |
 | `Notificateur` (#1404) | le **compte rendu** | `NotificationDialogue` | **capture** ce qui a été dit |
-| `SelecteurFichier` (#1425) | la **désignation** d'un fichier / dossier | `SelecteurFichierJavaFx` | répond un chemin, **ou rien** (annulé) |
+| `SelecteurFichier` (#1425) | la **désignation** d'un fichier / dossier | `SelecteurFichierJavaFx` **ou** `SelecteurFichierEnFenetre`, par la fabrique `Selecteurs` (#5307) | répond un chemin, **ou rien** (annulé) |
 | `DemandeurDeChoix<T>` (#1431) | le **choix** parmi plusieurs options | `ChoixDansListe` **ou** `ChoixParBoutons` | répond une option, **ou rien** (renoncé) |
 
 Chaque **écran** détient **une** instance de chaque porteur qu'il utilise, champ `final`, exposée à ses
@@ -1291,9 +1291,18 @@ Deux pièges corollaires, tous deux rencontrés :
   tests s'en servent avec un stub. Vérifier avant d'abstraire.
 
 **Ce qui reste en dur** (et c'est légitime) : les **implémentations** des ports elles-mêmes
-(`ConfirmationNavigation`, `NotificationDialogue`, `SelecteurFichierJavaFx`, `ChoixDansListe`,
-`ChoixParBoutons`), et le **filet global** d'`App.java` (exceptions non capturées, #795) - le seul endroit
-où le dialogue **est** la fonction.
+(`ConfirmationNavigation`, `NotificationDialogue`, `ChoixDansListe`, `ChoixParBoutons`), et le **filet
+global** d'`App.java` (exceptions non capturées, #795) - le seul endroit où le dialogue **est** la
+fonction.
+
+**`SelecteurFichier` a quitté cette liste** (#5307). Il a **deux** implémentations - celle du système
+et celle de l'application - et le choix entre elles dépend d'un réglage. Écrit en dur, ce choix
+l'était douze fois, donc nulle part : la fabrique `Selecteurs` est le seul endroit où il se construit,
+et `scripts/adr/5307-designation-hors-fabrique.py` tient un cliquet à zéro sur les autres.
+
+Le port est donc devenu la couture de **configuration** en plus de celle de testabilité, et les deux
+se superposent sans se remplacer : un écran garde toujours son `SelecteurFichierModifiable` en champ
+`final` pour ses tests.
 
 **Le contre-exemple à connaître.** Un refus **prévenu par l'affordance** n'a pas de notification à
 tester - il n'arrive jamais. Sur M-Site-detail, « Supprimer » est grisé quand un point porte des

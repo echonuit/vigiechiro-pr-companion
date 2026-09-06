@@ -111,9 +111,7 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
                 "Choisir les fichiers avec le sélecteur de l'application",
                 "Remplace le dialogue de votre système par celui de l'application : mêmes repères sur"
                         + " toutes les plateformes, et un chemin qui peut se saisir à la main. Il ne change"
-                        + " pas ce que l'application a le DROIT de lire - sous Flatpak, le bac à sable borne"
-                        + " l'accès de la même façon dans les deux cas (désactivé : le dialogue de votre"
-                        + " système, avec ses raccourcis et ses favoris).",
+                        + " pas ce que l'application a le droit de lire.",
                 ReglageDesignation.DEFAUT));
     }
 
