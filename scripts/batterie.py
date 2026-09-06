@@ -55,7 +55,10 @@ sys.path.insert(0, str(RACINE / "scripts" / "methode"))
 CONTRAT = {
     "geste": "commandes de la batterie locale qu un diff engage, et celles qu il n engage pas",
     "population": "les gardes de scripts/ qui declarent un CONTRAT",
-    "dispositif": "porte",
+    # `rapport` et non un dispositif invente : le vocabulaire est ferme, declare une seule fois dans
+    # `verifie_contrats_tiennent.DISPOSITIFS` (ADR 5125). Cette porte RELEVE ce qu un diff engage et
+    # delegue le jugement aux gardes ; elle ne juge rien elle-meme.
+    "dispositif": "rapport",
     "seuil": "(sans objet)",
     "temoin": "scripts/batterie.py --auto-test",
     "decision": "chantier #5294, lot #5340",
