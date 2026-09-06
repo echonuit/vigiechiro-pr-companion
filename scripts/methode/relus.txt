@@ -1962,10 +1962,11 @@ c4625eadd4c2  src/test/java/fr/univ_amu/iut/qualification/view/ScenarioRaccourci
 69f1f54af525  src/test/java/fr/univ_amu/iut/qualification/viewmodel/SelectionEcouteViewModelTest.java
 bd59f0ae8437  src/test/java/fr/univ_amu/iut/recette/Attente.java
 a0620485d3e1  src/test/java/fr/univ_amu/iut/recette/AttenteTest.java
-933977f22799  src/test/java/fr/univ_amu/iut/recette/BancDeRecette.java
+3519d6cdfe35  src/test/java/fr/univ_amu/iut/recette/BancDeRecette.java
 87701f8fbb55  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteJetonTest.java
 992bf542c672  src/test/java/fr/univ_amu/iut/recette/BancDeRecettePlateformeTest.java
 db5c0b3fb259  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteSansDepotTest.java
+e69970b75410  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteSemisTest.java
 6d05636b96cb  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteUrlTest.java
 bfbc2c64fc3e  src/test/java/fr/univ_amu/iut/recette/BancDesClipsTest.java
 23c234a11ccf  src/test/java/fr/univ_amu/iut/recette/CablageDesReperesTest.java
