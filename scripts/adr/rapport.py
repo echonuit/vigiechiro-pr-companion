@@ -65,8 +65,17 @@ def executer(script: pathlib.Path) -> str:
     return fini.stdout + fini.stderr
 
 
-def collecter():
+def collecter(executeur=None, scripts=None):
     """Les verdicts, et la liste de ceux que ce rapport n a PAS su lire (article A3).
+
+    ## La couture, et ce que son absence a coute
+
+    `executeur` et `scripts` sont INJECTABLES (ADR 3624). Sans eux, le seul moyen d eprouver cette
+    fonction etait de la laisser lancer les trente-quatre gardes du dossier : le cas
+    `test_resserre_cliquets_appelle_le_rapport` de `verifie_scripts.py` mettait **134 s** pour
+    apprendre que `collecter()` rend quatre listes. C etait 97 % du cout de ce garde, et 84 % de ce
+    qui restait de la batterie locale apres #5377. Le travail etait fait DEUX fois, puisque la porte
+    lance deja ces memes gardes un par un (#5389).
 
     Un script lance dont aucune ligne ne correspond rendait un rapport silencieux : il manquait dans
     le tableau, et rien ne disait qu il manquait. Mesure du 2026-08-28 : sur vingt scripts, TROIS
@@ -74,8 +83,9 @@ def collecter():
     Un dispositif dit ce qu il couvre, et ce qu il n a pas pu lire.
     """
     cliquets, planchers, loupes, muets = [], [], [], []
-    for script in sorted(ICI.glob("[0-9]*.py")):
-        sortie = executer(script)
+    lance = executeur or executer
+    for script in sorted(ICI.glob("[0-9]*.py")) if scripts is None else scripts:
+        sortie = lance(script)
         # `verdicts` compte les LIGNES lues dans cette sortie, et non les unites qu'un garde a lues.
         # Les deux s'appelaient `lus`, a un caractere pres du champ : deux sens sous un nom.
         verdicts = 0
@@ -101,8 +111,11 @@ def collecter():
             verdicts += 1
         if not verdicts:
             muets.append((script.name, premiere_ligne_de_verdict(sortie)))
-    for script in sorted(ICI.glob("loupe-*.py")):
-        sortie = executer(script)
+    # ⟨la seconde famille passe par la MEME couture⟩ Elle appelait `executer` en dur : un executeur
+    # injecte ne couvrait donc que la moitie du parcours, et un cas qui croyait ne rien lancer
+    # lancait encore les loupes, dont deux interrogent la forge.
+    for script in sorted(ICI.glob("loupe-*.py")) if scripts is None else []:
+        sortie = lance(script)
         verdicts = 0
         for m in LIGNE_LOUPE.finditer(sortie):
             loupes.append((m.group(1), m.group(2), int(m.group(3))))

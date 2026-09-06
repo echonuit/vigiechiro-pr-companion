@@ -14,6 +14,7 @@ second interdit le retour de la cécité aux commentaires.
 Aucune dépendance hors stdlib : lancé comme les scripts, `python3 scripts/adr/verifie_scripts.py`.
 """
 
+import ast
 import importlib.util
 import pathlib
 import re
@@ -1872,10 +1873,34 @@ def test_resserre_cliquets_appelle_le_rapport() -> None:
     """
     resserre = _charge("resserre_cliquets.py")
     rapport = _charge("rapport.py")
-    attendus = rapport.collecter()
+    # ⟨la couture, plutot que les trente-quatre sous-processus⟩ Ce cas laissait `collecter()` LANCER
+    # tous les gardes du dossier pour apprendre qu elle rend quatre listes : 134 s, soit 97 % du cout
+    # de ce garde, et le meme travail que la porte fait deja un par un. L executeur injecte exerce
+    # exactement le meme chemin - l analyse des lignes et la construction des quatre listes - sans
+    # relancer quoi que ce soit (#5389).
+    attendus = rapport.collecter(
+        executeur=lambda _: "ADR 0099 | lus=42 | suspects=2 | cliquet=5 | verdict=ok\n",
+        scripts=[pathlib.Path("0099-faux.py")],
+    )
     signature = resserre.__doc__ is not None
     _verifie("resserre_cliquets se charge a cote de rapport", signature, True)
     _verifie("collecter() rend le nombre de listes que resserre_cliquets deballe", len(attendus), 4)
+    _verifie(
+        "et l executeur injecte a bien traverse l analyse",
+        attendus[0],
+        [("0099", "42", 2, 5, "ok")],
+    )
+    # ⟨le sens qui manquait⟩ Les cas ci-dessus disent ce que `collecter()` REND ; aucun ne disait ce
+    # que `resserre_cliquets` en DEBALLE, alors que c est la couture que la docstring annonce tenir.
+    deballes = [
+        len(n.targets[0].elts)
+        for n in ast.walk(ast.parse((ICI / "resserre_cliquets.py").read_text(encoding="utf-8")))
+        if isinstance(n, ast.Assign)
+        and isinstance(n.targets[0], ast.Tuple)
+        and isinstance(n.value, ast.Call)
+        and getattr(n.value.func, "attr", "") == "collecter"
+    ]
+    _verifie("resserre_cliquets deballe autant de listes que collecter en rend", deballes, [4])
 
 
 def test_rapport_et_resserrement() -> None:
