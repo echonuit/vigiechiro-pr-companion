@@ -51,6 +51,24 @@ MECANISME = """
 
 # Les portees, une ligne par chemin. La cle EST la cle YAML du job.
 PORTEES: dict[str, str] = {
+    # ⟨#5379⟩ Ces deux jobs etaient les derniers sur le `paths:` que le chantier #5294 a interdit.
+    # Leurs chemins sont ceux que ce filtre portait : ce qui change ce qu on EMBARQUE, et rien
+    # d autre. Ni `src/**` - le code de production ne change aucune dependance - ni la prose.
+    "inventaire": """
+pom.xml
+mvnw
+.mvn/**
+.github/workflows/securite-dependances.yml
+"""
+    + MECANISME,
+    # `verifie_fraicheur_actions.py` est ici pour une raison qui lui est propre : le job ne tourne
+    # POUR DE VRAI que le lundi, par `schedule`. Une etape que seul un `schedule` exerce peut etre
+    # fusionnee cassee, donc la demande qui touche ce script doit l engager.
+    "fraicheur-des-actions": """
+.github/workflows/securite-dependances.yml
+.github/scripts/verifie_fraicheur_actions.py
+"""
+    + MECANISME,
     # `paquet` assemble et eprouve ce qu on EMBALLE. Il ne depend ni de la suite de tests ni de la
     # couverture - il construit avec `-DskipTests` - donc la documentation, les ADR et les
     # competences ne lui apprennent rien. C est le seul job dont la compétence `clore-une-pr` disait
@@ -187,8 +205,6 @@ INCONDITIONNELS: dict[str, str] = {
     "duree-du-portail": "il porte `needs: build`, mesure une serie de la forge et n execute rien du depot",
     "contrat-fichiers": "il porte sa propre porte depuis #3525, `porte_sur_le_contrat_de_fichiers.py`",
     "banc-filme": "ecarte par ecrit au chantier #5294 : il lance les auto-tests de six dispositifs, et le conditionner en sauterait cinq pour gagner une minute",
-    "inventaire": "son atelier porte deja un filtre `paths:`",
-    "fraicheur-des-actions": "son atelier porte deja un filtre `paths:`",
 }
 
 
