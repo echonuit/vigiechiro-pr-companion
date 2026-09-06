@@ -129,7 +129,50 @@ def _git(*arguments: str) -> str:
     return sortie.stdout if sortie.returncode == 0 else ""
 
 
-def portee_du_diff(base: str | None = None, modifies: list[str] | None = None) -> list[str] | None:
+def _modifies_hors_ci() -> list[str] | None:
+    """Ce que ce diff touche HORS CI, ou `None` si `origin/main` n est pas la.
+
+    `GITHUB_BASE_SHA` n existe que dans un atelier. En local il est absent, donc la portee de
+    l ADR 5345 ne s appliquait JAMAIS : le banc mutait tout le corpus a chaque lancement de la
+    batterie. Mesure du 2026-09-06 sur un diff d une seule ligne de documentation : 346,6 s sur
+    les 514 s de la batterie, soit 67 %, pour un mecanisme cense n avoir rien a muter.
+
+    Le repli reste du cote couteux quand il ne sait pas : sans `origin/main`, on mute tout.
+
+    On compte les fichiers NEUFS et NON INDEXES comme `scripts/batterie.py` le fait : un garde
+    qu on vient d ecrire n est pas encore suivi, et l oublier ferait sauter exactement la mutation
+    qui devait le juger.
+    """
+    if _git("rev-parse", "--verify", "origin/main^{commit}").strip() == "":
+        print(
+            "`origin/main` est introuvable et aucune base n est fournie : le banc mute TOUT.",
+            file=sys.stderr,
+        )
+        return None
+    suivis = _git("diff", "--name-only", "origin/main").splitlines()
+    neufs = _git("ls-files", "--others", "--exclude-standard").splitlines()
+    en_cours = _git("diff", "--name-only").splitlines()
+    return sorted({f for f in suivis + neufs + en_cours if f})
+
+
+def _gardes_touches(modifies: list[str]) -> list[str] | None:
+    """La portee que ces fichiers dessinent, ou `None` pour dire « mute tout »."""
+    if not modifies:
+        return None
+    if any(m.startswith(FONDS_PARTAGE) for m in modifies):
+        print(
+            "Le fonds partage a bouge : le banc mute TOUT le corpus.",
+            file=sys.stderr,
+        )
+        return None
+    return sorted({pathlib.Path(m).name for m in modifies if m.startswith("scripts/adr/")})
+
+
+def portee_du_diff(
+    base: str | None = None,
+    modifies: list[str] | None = None,
+    hors_ci=None,
+) -> list[str] | None:
     """Les gardes que CE diff touche, ou `None` pour dire « mute tout ».
 
     ## Pourquoi le banc peut se restreindre
@@ -161,7 +204,8 @@ def portee_du_diff(base: str | None = None, modifies: list[str] | None = None) -
     if modifies is None:
         base = base or os.environ.get("GITHUB_BASE_SHA") or ""
         if not base:
-            return None
+            locaux = (hors_ci or _modifies_hors_ci)()
+            return None if locaux is None else _gardes_touches(locaux)
 
         # ⟨le commit de base n est PAS la⟩ Le checkout est a profondeur 1 : le SHA que la forge
         # fournit designe un commit que ce clone ne porte pas, et `git diff` echoue. Il faut donc le
@@ -195,17 +239,7 @@ def portee_du_diff(base: str | None = None, modifies: list[str] | None = None) -
                 print("`git diff` n a pas su repondre : le banc mute TOUT.", file=sys.stderr)
             return None
         modifies = sortie.splitlines()
-    if not modifies:
-        return None
-    if any(m.startswith(FONDS_PARTAGE) for m in modifies):
-        print(
-            "Le fonds partage a bouge : le banc mute TOUT le corpus.",
-            file=sys.stderr,
-        )
-        return None
-
-    touches = sorted({pathlib.Path(m).name for m in modifies if m.startswith("scripts/adr/")})
-    return touches
+    return _gardes_touches(modifies)
 
 
 @contextlib.contextmanager
@@ -534,6 +568,34 @@ def _auto_test_de_portee() -> int:
         else:
             print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
             echecs += 1
+
+    # ⟨le repli HORS CI⟩ `GITHUB_BASE_SHA` est POSE dans l atelier `temoins` : sans ce retrait, ces
+    # cas emprunteraient la branche de la forge et ne prouveraient rien la ou ils comptent.
+    ancien = os.environ.pop("GITHUB_BASE_SHA", None)
+    try:
+        for libelle, locaux, attendu in (
+            (
+                "hors CI, le diff local restreint le banc",
+                ["scripts/adr/x.py", "docs/a.md"],
+                ["x.py"],
+            ),
+            ("hors CI, un diff sans garde ADR rend une portee VIDE", ["docs/a.md"], []),
+            ("hors CI, `origin/main` introuvable fait muter TOUT", None, None),
+            (
+                "hors CI, toucher le fonds partage fait muter TOUT",
+                [FONDS_PARTAGE[0] + "x.py"],
+                None,
+            ),
+        ):
+            obtenu = portee_du_diff(hors_ci=lambda a=locaux: a)
+            if obtenu == attendu:
+                print(f"  ✔ {libelle}")
+            else:
+                print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
+                echecs += 1
+    finally:
+        if ancien is not None:
+            os.environ["GITHUB_BASE_SHA"] = ancien
     return echecs
 
 
