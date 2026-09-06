@@ -587,10 +587,14 @@ jobs:
         # Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
         # parce que ces paquets ne sont que des fichiers ; les polices et flatpak gardent
         # `installer_paquets.py`, dont le post-install fait foi.
+        #
+        # ⟨parallel⟩ `bats --jobs` DELEGUE a GNU parallel, et sans lui il retombe silencieusement en
+        # sequentiel : le harnais mettrait treize minutes en annoncant qu'il en met quatre, et rien
+        # ne le dirait. L'etape suivante verifie donc que la parallelisation a bien eu lieu.
         uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
         with:
-          packages: bats
-          version: vigiechiro-1
+          packages: bats parallel
+          version: vigiechiro-2
 
       - name: E2E CLI (bats) sur le LANCEUR empaqueté (#4071)
         if: steps.portee.outputs.concerne == 'oui'
@@ -627,8 +631,27 @@ jobs:
           test -x "${VIGIECHIRO_LANCEUR}"
           test -f "$(ls target/vigiechiro-*-shaded.jar | head -1)"
 
+          # ⟨parallel exige, jamais suppose⟩ `bats --jobs` sans GNU parallel retombe en SEQUENTIEL
+          # sans rien dire. On refuse donc plutot que de payer treize minutes en croyant en payer
+          # quatre - c'est la meme forme de silence que ce chantier combat ailleurs.
+          command -v parallel >/dev/null || {
+            echo "::error::GNU parallel absent : \`bats --jobs\` retomberait en sequentiel sans le dire."
+            exit 1
+          }
+
           # Hors TTY, bats rend deja du TAP : pas de formateur a demander.
-          bats src/test/bats | tee bats.tap
+          #
+          # ⟨--jobs 4⟩ Chaque cas lance un vrai processus sur le runtime jlink, donc le harnais est
+          # borne par le temps de demarrage d'une JVM et non par un verrou partage. Mesure du
+          # 2026-09-06 sur un banc de vingt-quatre cas d'une seconde : 25,4 s en sequentiel, 8,5 s a
+          # quatre lots, soit 3,0 fois. Les cas s'isolent par `BATS_TEST_TMPDIR` ; seul
+          # `cli-sauvegarde.bats` partage un `BATS_FILE_TMPDIR`, et il n'y ecrit que dans son
+          # `setup_file`.
+          #
+          # C'est la forme SIMPLE de la decoupe : elle ne coute aucun job de plus, aucune partition a
+          # tenir, et aucun garde d'union - contrairement a une matrice a quatre, ou quatre lots verts
+          # dont l'union ne couvre pas la suite seraient un faux vert parfait.
+          bats --jobs 4 src/test/bats | tee bats.tap
 
           joues=$(grep -cE '^(ok|not ok) ' bats.tap || true)
           sautes=$(grep -cE '^ok .*# skip' bats.tap || true)
