@@ -388,17 +388,27 @@ jobs:
       # ⟨artefact⟩ L'app-image part vers le job `bats`, qui l'eprouve. On l'EMBALLE en tar : un
       # artefact GitHub perd le bit d'execution, et le harnais bats commence par `test -x` sur le
       # lanceur. Le tar le preserve, et c'est le meme geste que l'archive portable ci-dessus.
-      - name: "Deposer l'app-image pour le harnais bats (#5301)"
+      - name: "Deposer l'app-image et le fat-jar pour le harnais bats (#5301)"
         if: steps.portee.outputs.concerne == 'oui'
         shell: bash
-        run: tar -czf app-image.tar.gz -C target/dist VigieChiroCompanion
+        # ⟨les DEUX, et c est le piege⟩ `helper.bash` appelle `decouvrir_jar` dans son `setup()`, et
+        # cette fonction fait `skip` de chaque cas quand le fat-jar manque. Un artefact qui ne
+        # porterait que l app-image ferait donc sauter les 129 cas et rendrait le job VERT en 20 s.
+        # Mesure : c est exactement ce qui est arrive au premier essai de ce lot.
+        run: |
+          set -euo pipefail
+          tar -czf app-image.tar.gz -C target/dist VigieChiroCompanion
+          jar=$(ls target/vigiechiro-*-shaded.jar | head -1)
+          cp "$jar" "fat-jar-$(basename "$jar")"
 
       - name: "Verser l'app-image (#5301)"
         if: steps.portee.outputs.concerne == 'oui'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: app-image
-          path: app-image.tar.gz
+          path: |
+            app-image.tar.gz
+            fat-jar-vigiechiro-*-shaded.jar
           retention-days: 1
           if-no-files-found: error
       - name: "Démarrage réel du paquet (runtime jlink, #2299)"
@@ -467,6 +477,10 @@ jobs:
     name: bats
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      # ⟨plancher⟩ 129 cas au 2026-09-06, sur les quatre fichiers de `src/test/bats`. Il DESCEND
+      # quand on en retire un deliberement, jamais tout seul : c est un cliquet, pas une estimation.
+      PLANCHER_BATS: 129
     needs: emballage
     # ⟨condition⟩ L'etat attendu est NOMME, et non laisse a l'enveloppe implicite de GitHub : un
     # `needs` saute rend la condition inevaluable, et le job passe en `skipped` sans que personne
@@ -499,6 +513,11 @@ jobs:
           mkdir -p target/dist
           tar -xzf app-image.tar.gz -C target/dist
           test -x target/dist/VigieChiroCompanion/bin/vigiechiro
+          # Le fat-jar reprend le nom que `decouvrir_jar` cherche par glob.
+          for f in fat-jar-vigiechiro-*-shaded.jar; do
+            mv "$f" "target/${f#fat-jar-}"
+          done
+          ls -1 target/vigiechiro-*-shaded.jar
 
       - name: Installer bats
         if: steps.portee.outputs.concerne == 'oui'
@@ -525,11 +544,41 @@ jobs:
         # ce qu'il produit. Rien n'a changé de job ni de coût - l'app-image était déjà construite ici.
         #
         # Le fat-jar reste éprouvé par le smoke-test plus haut, qui le lance et vérifie son usage.
+        #
+        # ⟨un bats saute est VERT, et c est le mode de panne de ce job⟩ `helper.bash` appelle
+        # `decouvrir_jar` dans son `setup()`, et cette fonction fait `skip` de chaque cas quand le
+        # fat-jar manque. Bats rend alors 0 en n ayant rien joue. Mesure du 2026-09-06, premier essai
+        # de ce lot : 129 cas sautes, job vert en 20 s au lieu de 13 min.
+        #
+        # Le compte est donc CONFRONTE a un plancher, et tout `skip` refuse. C est le pendant, pour
+        # ce harnais, de ce que `tests-cites-existent.py` tient pour `-Dtest=` : un selecteur qui ne
+        # selectionne rien est un faux vert.
+        #
+        # Refuser TOUT skip est defendable ici, et c est mesure plutot que suppose : le passage de
+        # reference (run 34000568280) joue les 129 cas avec ZERO skip. Les `skip` que le harnais
+        # porte visent des outils absents - `script`, `python3` - que l image `ubuntu-latest`
+        # fournit. Le jour ou un skip deviendra legitime en CI, ce garde le dira au lieu de le taire.
         run: |
           set -euo pipefail
           export VIGIECHIRO_LANCEUR="${PWD}/target/dist/VigieChiroCompanion/bin/vigiechiro"
           test -x "${VIGIECHIRO_LANCEUR}"
-          bats src/test/bats
+          test -f "$(ls target/vigiechiro-*-shaded.jar | head -1)"
+
+          # Hors TTY, bats rend deja du TAP : pas de formateur a demander.
+          bats src/test/bats | tee bats.tap
+
+          joues=$(grep -cE '^(ok|not ok) ' bats.tap || true)
+          sautes=$(grep -cE '^ok .*# skip' bats.tap || true)
+          echo "bats : ${joues} cas joues, ${sautes} sautes."
+          if [ "${sautes}" -gt 0 ]; then
+            echo "::error::${sautes} cas bats SAUTES. Un cas saute est vert sans avoir rien juge : le fat-jar ou le lanceur manque."
+            grep -E '^ok .*# skip' bats.tap | head -5
+            exit 1
+          fi
+          if [ "${joues}" -lt "${PLANCHER_BATS}" ]; then
+            echo "::error::${joues} cas bats joues, plancher ${PLANCHER_BATS}. Le harnais en a perdu : un selecteur qui ne selectionne rien est un faux vert."
+            exit 1
+          fi
 
   duree-du-portail:
     name: duree-du-portail
