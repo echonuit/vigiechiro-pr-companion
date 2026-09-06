@@ -1180,6 +1180,9 @@ jobs:
           python3 scripts/methode/verifie-dependances-declarees.py
           python3 scripts/methode/verifie-commandes-prescrites.py --auto-test
           python3 scripts/methode/verifie-commandes-prescrites.py
+          # L auto-test SEUL : lancer la preparation en CI poserait des outils sur un runner qui
+          # les a deja, et ce chemin n y est jamais joue (#5406).
+          python3 scripts/methode/prepare-l-environnement.py --auto-test
 
   temoins:
     # Les bancs qui prouvent qu un auto-test n est pas decoratif. Le poste le plus cher.
