@@ -252,9 +252,13 @@ def engage(diff: list[str], racine: pathlib.Path | None = None) -> tuple[list[st
     etaient donc aveugles a leur propre reecriture (#5421).
 
     **D office, plutot qu une consigne.** « Chaque garde cite sa source dans ses `chemins` » aurait
-    tenu sur le papier et cede a l usage : le garde livre la veille par qui venait de lire le defaut
-    ne se citait pas. Un garde etroit n a d ailleurs aucune raison legitime de s elargir pour se
-    voir - c est a la porte de le savoir, pas a lui de le declarer.
+    tenu sur le papier et cede a l usage. La preuve est une population, pas un cas : au 2026-09-07,
+    **neuf** des **treize** gardes qui declarent des `chemins` ne se citaient pas. Le chiffre se
+    refait - retenir les gardes dont `chemins` n est pas vide, et voir si l un des motifs couvre le
+    fichier par `correspond()`.
+
+    Un garde etroit n a d ailleurs aucune raison legitime de s elargir pour se voir : c est a la porte
+    de le savoir, pas a lui de le declarer.
     """
     engages, ecartes = [], []
     for garde, chemins in gardes(racine):
