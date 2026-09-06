@@ -1978,6 +1978,8 @@ b5e7288906d9  src/test/java/fr/univ_amu/iut/recette/ClipDeModaleTest.java
 adc5cdc4a3fb  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
 e754fd5b8832  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
 fb2f197b3036  src/test/java/fr/univ_amu/iut/recette/DispositionDesBrutsTest.java
+f77cce1c3b9d  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffere.java
+a0cad8cca4aa  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffereTest.java
 af9b80216119  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheRalenti.java
 bd083deb8799  src/test/java/fr/univ_amu/iut/recette/ExtractionCarteReelleTest.java
 502c93ef7362  src/test/java/fr/univ_amu/iut/recette/FabriqueWav.java
