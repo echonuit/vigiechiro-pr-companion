@@ -127,6 +127,7 @@ src/**
 pom.xml
 mvnw
 .mvn/**
+.github/scripts/partition_de_la_suite.py
 .github/workflows/maven.yml
 """
     + MECANISME,

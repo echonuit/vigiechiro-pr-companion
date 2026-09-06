@@ -514,6 +514,20 @@ jobs:
           chmod +x .github/scripts/mesure_minutes_par_pr.py
           python3 .github/scripts/mesure_minutes_par_pr.py --auto-test
 
+      - name: "L'union des lots de la suite EST la suite (bloquant, #5329)"
+        # `ordre-alternatif` est reparti en quatre depuis #5329. Quatre lots verts dont l'union ne
+        # couvre pas la suite serait un faux vert parfait : chacun rend 0 en n'ayant joue que sa
+        # part, et personne ne voit ce qui manque.
+        #
+        # C'est le defaut de #4544 monte d'un cran - un passage tronque annoncait « toutes les
+        # classes de test » sur 618 des 758, sans un echec, et rendait 0. La confrontation se fait
+        # donc classe par classe et pour TOUTES les graines : un compte egal ne prouve pas une
+        # couverture egale.
+        run: |
+          chmod +x .github/scripts/partition_de_la_suite.py
+          python3 .github/scripts/partition_de_la_suite.py --auto-test
+          python3 .github/scripts/partition_de_la_suite.py --verifie
+
       - name: Tout job porte un butoir
         # Un job sans `timeout-minutes` que GitHub laisse courir SIX HEURES a bloqué une PR
         # 4 h 15 sur un `apt-get install` de police, en `-qq` donc sans une ligne de log. Le butoir
