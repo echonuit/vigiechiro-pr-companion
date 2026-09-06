@@ -246,14 +246,14 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | Article | Jurisprudence | Dont mécanisée | Tenu par |
 |---|---:|---:|---|
 | A1 · La preuve précède l'affirmation | 6 | 1 | `.github/scripts/verifie_decisions_du_tournage_connecte.py`, `.github/scripts/verifie_jeton_vivant.py`, `.github/scripts/revoque_jeton.py`, et 1 autre |
-| A2 · Un garde est vu rouge sur sa propre mutation | 13 | 9 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure_duree_portail.py`, et 4 autres |
+| A2 · Un garde est vu rouge sur sa propre mutation | 14 | 10 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure_duree_portail.py`, et 6 autres |
 | A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 33 | 25 | `.github/scripts/veille_contrat_api.py`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 26 autres |
 | A4 · Un cas joué n'est pas un cas prouvé | 26 | 17 | `ApercuFxElisionTest#bouton_tronque_refuse`, `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`, `scripts/adr/3053-capture-libelle.py`, et 14 autres |
 | A5 · La mesure fait foi, et dit d'où elle vient | 30 | 17 | `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`, `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`, `EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues`, et 13 autres |
 | A6 · La vérification se déclare, sur trois niveaux | 3 | 2 | `DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment`, `EcritureAtomiqueTest#creation_restreinte` |
 | A7 · Le test précède le code | 1 | 1 | `BancDesClipsTest#une_classe_filmee_neuve_declare_son_banc` |
 | A8 · La mutation mesure dès qu'un comportement est complet | 0 | 0 | **relecture seule** |
-| A9 · La dette se tient par un cliquet, pas par un nettoyage | 18 | 9 | `scripts/adr/2843-tiret-cadratin.py`, `PatronDuCliquetTest#tout_cliquet_passe_par_le_patron`, `scripts/adr/verifie_scripts.py`, et 14 autres |
+| A9 · La dette se tient par un cliquet, pas par un nettoyage | 19 | 10 | `scripts/adr/2843-tiret-cadratin.py`, `PatronDuCliquetTest#tout_cliquet_passe_par_le_patron`, `scripts/adr/verifie_scripts.py`, et 16 autres |
 | A10 · Jamais de suppression d'avertissement | 0 | 0 | **relecture seule** |
 | A11 · L'assumé se déclare, il ne se contourne pas | 10 | 0 | `scripts/adr/verifie_verdicts_declares.py` |
 | A12 · Rendre compte avant de conclure, et aucun échec silencieux | 11 | 7 | `scripts/adr/0008-echec-silencieux.py`, `.github/scripts/verifie_secret_winget.py`, `RetourOperationTest#les_deux_causes_ne_se_melangent_pas`, et 9 autres |
