@@ -138,8 +138,18 @@ public final class BancDeRecette {
     /// [#montrer(Stage)] rendra n'est pas encore affecté quand le semis tourne. Une méthode de semis
     /// migrée telle quelle, qui lisait un champ `injector`, part en `NullPointerException` - c'est
     /// arrivé à la première classe migrée.
+    ///
+    /// **Deux appels s'AJOUTENT**, dans l'ordre déclaré. Ils se remplaçaient en silence, et le défaut
+    /// ne paraissait que trois gestes plus loin, sur un nœud introuvable (#5350).
     public BancDeRecette semer(Semis semis) {
-        this.semis = Objects.requireNonNull(semis, "semis");
+        Objects.requireNonNull(semis, "semis");
+        Semis precedent = this.semis;
+        this.semis = precedent == null
+                ? semis
+                : injecteur -> {
+                    precedent.semer(injecteur);
+                    semis.semer(injecteur);
+                };
         return this;
     }
 
