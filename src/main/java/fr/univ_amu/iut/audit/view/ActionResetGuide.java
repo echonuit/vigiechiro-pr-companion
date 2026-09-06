@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.view.ActionMenu;
 import fr.univ_amu.iut.commun.view.GroupeMenu;
 import fr.univ_amu.iut.commun.view.OccupationChrome;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import java.util.Objects;
 import javafx.application.Platform;
 import javafx.stage.Window;
@@ -34,14 +35,16 @@ public final class ActionResetGuide implements ActionMenu {
             Provider<ServiceRecuperabilite> recuperabilite,
             Provider<ServiceReset> reset,
             Provider<ServiceSauvegarde> sauvegarde,
-            OccupationChrome occupation) {
+            OccupationChrome occupation,
+            Selecteurs selecteurs) {
         this.geste = new GesteReset(
                 Objects.requireNonNull(recuperabilite, "recuperabilite")::get,
                 Objects.requireNonNull(reset, "reset")::get,
                 Objects.requireNonNull(sauvegarde, "sauvegarde")::get,
                 Objects.requireNonNull(occupation, "occupation"),
                 () -> proprietaire,
-                Platform::exit);
+                Platform::exit,
+                selecteurs);
     }
 
     @Override

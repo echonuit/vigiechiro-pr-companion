@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
+import fr.univ_amu.iut.commun.view.SelecteursDeTest;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
@@ -88,14 +89,16 @@ class ActionsEmportTest {
                 .insert(new EnregistrementOriginal(null, "o.wav", "/ws/o.wav", 5.0, 384000, null, idSession))
                 .id();
 
-        actions = new ActionsEmport(new ServiceEmport(
-                selectionDao,
-                sequenceDao,
-                new SessionDao(source),
-                new PassageDao(source),
-                new PointDao(source),
-                new SiteDao(source),
-                new UniteDeTravail(source)));
+        actions = new ActionsEmport(
+                new ServiceEmport(
+                        selectionDao,
+                        sequenceDao,
+                        new SessionDao(source),
+                        new PassageDao(source),
+                        new PointDao(source),
+                        new SiteDao(source),
+                        new UniteDeTravail(source)),
+                SelecteursDeTest.auDefaut());
         actions.notificateur().definir((niveau, entete, message) -> {
             dernierNiveau = niveau;
             notifications.add(entete + " | " + message);
@@ -239,14 +242,16 @@ class ActionsEmportTest {
 
         SourceDeDonnees vierge = new SourceDeDonnees(new Workspace(dossier.resolve("vierge")));
         new MigrationSchema(vierge).migrer();
-        ActionsEmport chezVierge = new ActionsEmport(new ServiceEmport(
-                new SelectionDao(vierge),
-                new SequenceDao(vierge),
-                new SessionDao(vierge),
-                new PassageDao(vierge),
-                new PointDao(vierge),
-                new SiteDao(vierge),
-                new UniteDeTravail(vierge)));
+        ActionsEmport chezVierge = new ActionsEmport(
+                new ServiceEmport(
+                        new SelectionDao(vierge),
+                        new SequenceDao(vierge),
+                        new SessionDao(vierge),
+                        new PassageDao(vierge),
+                        new PointDao(vierge),
+                        new SiteDao(vierge),
+                        new UniteDeTravail(vierge)),
+                SelecteursDeTest.auDefaut());
         List<String> refus = new ArrayList<>();
         chezVierge.notificateur().definir((niveau, entete, message) -> refus.add(entete + " | " + message));
         // Le confirmateur est substitué aussi : ouvrir un paquet demande maintenant de confirmer le

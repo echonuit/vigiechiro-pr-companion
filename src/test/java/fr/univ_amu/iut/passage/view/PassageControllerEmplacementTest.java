@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.SelecteursDeTest;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -59,7 +60,8 @@ class PassageControllerEmplacementTest {
                         mock(PortailVigieChiro.class),
                         url -> {},
                         // Synthèse absente : ce test porte sur le fil d'Ariane, pas sur les cartes.
-                        Optional.empty()));
+                        Optional.empty()),
+                SelecteursDeTest.auDefaut());
     }
 
     @Test

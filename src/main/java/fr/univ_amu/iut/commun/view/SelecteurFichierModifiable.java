@@ -37,6 +37,16 @@ public final class SelecteurFichierModifiable implements SelecteurFichier {
     }
 
     /// Remplace la stratégie de désignation (double répondant dans les tests).
+    /// Le dispositif derrière le porteur, **visible du paquet seulement**.
+    ///
+    /// Il sert à un test et à un seul : vérifier que [Selecteurs] choisit bien le dispositif que le
+    /// réglage désigne. Cela ne se constate pas par le comportement - les deux ouvriraient un
+    /// dialogue, et le natif ne se pilote pas sans écran - donc la seule voie est de regarder ce qui
+    /// a été construit.
+    SelecteurFichier delegue() {
+        return delegue;
+    }
+
     public void definir(SelecteurFichier selecteur) {
         this.delegue = Objects.requireNonNull(selecteur, "selecteur");
     }

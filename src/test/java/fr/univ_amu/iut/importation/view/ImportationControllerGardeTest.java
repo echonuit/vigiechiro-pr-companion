@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.view.DefilementChrome;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.SelecteursDeTest;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
@@ -140,6 +141,7 @@ class ImportationControllerGardeTest {
                 fabrique,
                 mock(OuvrirPassage.class),
                 // Aucun chrome ici : le port de révélation (#1486) reste muet, comme en capture.
-                new DefilementChrome());
+                new DefilementChrome(),
+                SelecteursDeTest.auDefaut());
     }
 }

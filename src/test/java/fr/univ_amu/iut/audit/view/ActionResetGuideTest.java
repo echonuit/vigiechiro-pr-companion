@@ -22,6 +22,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.GroupeMenu;
 import fr.univ_amu.iut.commun.view.OccupationChrome;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
+import fr.univ_amu.iut.commun.view.SelecteursDeTest;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.nio.file.Path;
 import java.util.List;
@@ -76,8 +77,8 @@ class ActionResetGuideTest {
     @Test
     @DisplayName("l'entrée s'annonce dans le menu ☰ avec son libellé, son rang et son icône")
     void annonce_sa_place_dans_le_menu() {
-        ActionResetGuide entree =
-                new ActionResetGuide(fournir(recuperabilite), fournir(reset), fournir(sauvegarde), occupation);
+        ActionResetGuide entree = new ActionResetGuide(
+                fournir(recuperabilite), fournir(reset), fournir(sauvegarde), occupation, SelecteursDeTest.auDefaut());
 
         assertThat(entree.groupe()).isEqualTo(GroupeMenu.BASE);
         assertThat(entree.ordre()).isEqualTo(35);
@@ -104,8 +105,8 @@ class ActionResetGuideTest {
     /// d'être jouée.
     private ActionResetGuide entreePrete() {
         when(sauvegarde.dossierParDefaut()).thenReturn(SAUVEGARDES);
-        ActionResetGuide entree =
-                new ActionResetGuide(fournir(recuperabilite), fournir(reset), fournir(sauvegarde), occupation);
+        ActionResetGuide entree = new ActionResetGuide(
+                fournir(recuperabilite), fournir(reset), fournir(sauvegarde), occupation, SelecteursDeTest.auDefaut());
         GesteReset geste = entree.geste();
         geste.selecteur().definir(new SelecteurFichier() {
             @Override

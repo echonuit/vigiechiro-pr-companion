@@ -315,7 +315,7 @@ fba3183746fc  src/main/java/fr/univ_amu/iut/commun/di/Categorie.java
 da8566d56db8  src/main/java/fr/univ_amu/iut/commun/di/Fonctionnalite.java
 7c396ed206bf  src/main/java/fr/univ_amu/iut/commun/di/Fonctionnalites.java
 24a4b05e498f  src/main/java/fr/univ_amu/iut/commun/di/ModuleDeFeature.java
-d935bcf6526c  src/main/java/fr/univ_amu/iut/commun/di/PersistenceModule.java
+3697e55df50f  src/main/java/fr/univ_amu/iut/commun/di/PersistenceModule.java
 1783d2dab932  src/main/java/fr/univ_amu/iut/commun/di/RacineInjecteur.java
 d3e2d5006cfa  src/main/java/fr/univ_amu/iut/commun/model/AcquisitionAncrage.java
 30135a60cae8  src/main/java/fr/univ_amu/iut/commun/model/ActionGroupee.java
@@ -389,6 +389,9 @@ c1b3f9e0e060  src/main/java/fr/univ_amu/iut/commun/model/PlafondLecture.java
 2454e6de1ba7  src/main/java/fr/univ_amu/iut/commun/model/PointsDuCarre.java
 d7b7eaa20a0b  src/main/java/fr/univ_amu/iut/commun/model/PortailVigieChiro.java
 a5600dd10723  src/main/java/fr/univ_amu/iut/commun/model/PositionGeo.java
+91428516cdcc  src/main/java/fr/univ_amu/iut/commun/model/PreferenceDesignation.java
+eb79d66b38de  src/main/java/fr/univ_amu/iut/commun/model/PreferenceDesignationParDefaut.java
+c151a1a8ffab  src/main/java/fr/univ_amu/iut/commun/model/PreferenceDesignationPersistee.java
 448a745bf9c7  src/main/java/fr/univ_amu/iut/commun/model/PreferenceSourceEspece.java
 7489589df193  src/main/java/fr/univ_amu/iut/commun/model/Prefixe.java
 43e955af52e5  src/main/java/fr/univ_amu/iut/commun/model/PresenceFichiers.java
@@ -404,6 +407,7 @@ aa69193a60ce  src/main/java/fr/univ_amu/iut/commun/model/RechercheGlobale.java
 cd5c328caa5c  src/main/java/fr/univ_amu/iut/commun/model/RegionDuCarre.java
 2757cc5244ef  src/main/java/fr/univ_amu/iut/commun/model/RegionsFrancaises.java
 5be563f44d98  src/main/java/fr/univ_amu/iut/commun/model/Reglage.java
+851ee3f8333e  src/main/java/fr/univ_amu/iut/commun/model/ReglageDesignation.java
 04721139110a  src/main/java/fr/univ_amu/iut/commun/model/Reglages.java
 9f1e02cf69e1  src/main/java/fr/univ_amu/iut/commun/model/RegleMetierException.java
 a9ceebaf1063  src/main/java/fr/univ_amu/iut/commun/model/ReleveParticipation.java
@@ -624,8 +628,9 @@ ddb40f952c5b  src/main/java/fr/univ_amu/iut/commun/view/ResumeStatut.java
 f407f6d514b7  src/main/java/fr/univ_amu/iut/commun/view/SelecteurFichier.java
 76b102aa4e59  src/main/java/fr/univ_amu/iut/commun/view/SelecteurFichierEnFenetre.java
 8f90bce5cd3d  src/main/java/fr/univ_amu/iut/commun/view/SelecteurFichierJavaFx.java
-199bfa37dc74  src/main/java/fr/univ_amu/iut/commun/view/SelecteurFichierModifiable.java
-3c3d058e760c  src/main/java/fr/univ_amu/iut/commun/view/Selecteurs.java
+763c741d8b2b  src/main/java/fr/univ_amu/iut/commun/view/SelecteurFichierModifiable.java
+5c42c2b175e6  src/main/java/fr/univ_amu/iut/commun/view/SelecteurSelonLaPreference.java
+e1601255d0bb  src/main/java/fr/univ_amu/iut/commun/view/Selecteurs.java
 3afd27bcd3e9  src/main/java/fr/univ_amu/iut/commun/view/SignalementIncident.java
 dea9554a39e8  src/main/java/fr/univ_amu/iut/commun/view/Stepper.java
 a5b21039076a  src/main/java/fr/univ_amu/iut/commun/view/SuitLaRevision.java
@@ -1079,7 +1084,7 @@ c31324514cf8  src/main/java/fr/univ_amu/iut/qualification/model/ServiceEmport.ja
 daa4e5bf4acf  src/main/java/fr/univ_amu/iut/qualification/model/ServiceQualification.java
 844f99fffe87  src/main/java/fr/univ_amu/iut/qualification/model/dao/SelectionDao.java
 e5561540ee07  src/main/java/fr/univ_amu/iut/qualification/outils/CaptureQualification.java
-a4759372af72  src/main/java/fr/univ_amu/iut/qualification/view/ActionsEmport.java
+57c0ee777653  src/main/java/fr/univ_amu/iut/qualification/view/ActionsEmport.java
 ac046feeabb5  src/main/java/fr/univ_amu/iut/qualification/view/BarreVerdicts.java
 2382be0584af  src/main/java/fr/univ_amu/iut/qualification/view/CompteRenduRegeneration.java
 df451a7b3c93  src/main/java/fr/univ_amu/iut/qualification/view/Feux.java
@@ -1632,7 +1637,8 @@ c1388c59cf3b  src/test/java/fr/univ_amu/iut/commun/view/PoliceCouvreLIhmTest.jav
 2c4c4f0c0ac1  src/test/java/fr/univ_amu/iut/commun/view/ScenarioAccueilTest.java
 3414d522c67b  src/test/java/fr/univ_amu/iut/commun/view/ScenesHabilleesTest.java
 7d396b860754  src/test/java/fr/univ_amu/iut/commun/view/SelecteurFichierEnFenetreTest.java
-8408f360dccf  src/test/java/fr/univ_amu/iut/commun/view/SelecteursTest.java
+b958015834f8  src/test/java/fr/univ_amu/iut/commun/view/SelecteursDeTest.java
+efd885f63217  src/test/java/fr/univ_amu/iut/commun/view/SelecteursTest.java
 e43ce8b62861  src/test/java/fr/univ_amu/iut/commun/view/SignalementIncidentTest.java
 095ac3a159e4  src/test/java/fr/univ_amu/iut/commun/view/SocleHauteurControlesTest.java
 0c2b648b93a5  src/test/java/fr/univ_amu/iut/commun/view/TableDonneesTest.java

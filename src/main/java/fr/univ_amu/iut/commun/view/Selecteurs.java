@@ -1,5 +1,8 @@
 package fr.univ_amu.iut.commun.view;
 
+import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.PreferenceDesignation;
+import java.util.Objects;
 import java.util.function.Supplier;
 import javafx.stage.Window;
 
@@ -20,13 +23,18 @@ import javafx.stage.Window;
 /// Chaque écran fournit sa fenêtre, résolue **au moment de choisir** : l'action est bâtie avant que
 /// l'écran ne soit attaché, et l'injecteur ne connaît pas cette fenêtre.
 ///
-/// Le choix n'est pas encore un paramètre : rien n'est à choisir tant que le second dispositif
-/// n'existe pas, et un paramètre à une seule valeur serait du décor. Le lot du réglage l'ajoutera
-/// ici. Voir l'[ADR
-/// 5307](../../../../../../../dev-docs/decisions/5307-le-dispositif-de-designation-se-choisit-en-un-endroit.md).
+/// **Injectable, sa fenêtre restant un argument de méthode** : c'est ce qui lui permet de lire le
+/// réglage sans qu'aucun écran n'ait à connaître [Reglages]. Elle ne le lit pas ici pour autant -
+/// [SelecteurSelonLaPreference] le lit au moment de désigner. Voir l'[ADR
+/// 5310](../../../../../../../dev-docs/decisions/5310-la-fabrique-est-injectable-la-fenetre-reste-un-argument.md).
 public final class Selecteurs {
 
-    private Selecteurs() {}
+    private final PreferenceDesignation preference;
+
+    @Inject
+    public Selecteurs(PreferenceDesignation preference) {
+        this.preference = Objects.requireNonNull(preference, "preference");
+    }
 
     /// Le porteur de désignation d'un écran, remplaçable par un double en test.
     ///
@@ -36,7 +44,7 @@ public final class Selecteurs {
     /// superposent sans se remplacer.
     ///
     /// @param fenetre la fenêtre propriétaire, évaluée au moment de choisir ; peut rendre `null`
-    public static SelecteurFichierModifiable pour(Supplier<Window> fenetre) {
-        return new SelecteurFichierModifiable(new SelecteurFichierJavaFx(fenetre));
+    public SelecteurFichierModifiable pour(Supplier<Window> fenetre) {
+        return new SelecteurFichierModifiable(new SelecteurSelonLaPreference(preference, fenetre));
     }
 }

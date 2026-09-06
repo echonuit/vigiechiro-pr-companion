@@ -346,7 +346,8 @@ class OngletReglagesEmplacementsTest {
     }
 
     private OngletReglagesEmplacements onglet(SelecteurFichier selecteur, Notificateur notificateur, Runnable sortie) {
-        OngletReglagesEmplacements onglet = new OngletReglagesEmplacements(new ServiceEmplacements());
+        OngletReglagesEmplacements onglet =
+                new OngletReglagesEmplacements(new ServiceEmplacements(), SelecteursDeTest.auDefaut());
         onglet.definirSelecteur(selecteur);
         onglet.definirNotificateur(notificateur);
         onglet.definirSortie(sortie);

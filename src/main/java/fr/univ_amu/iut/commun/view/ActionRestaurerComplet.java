@@ -14,8 +14,9 @@ public final class ActionRestaurerComplet implements ActionMenu {
     private final PorteurSauvegarde porteur;
 
     @Inject
-    ActionRestaurerComplet(ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation) {
-        this.porteur = new PorteurSauvegarde(service, navigateur, occupation);
+    ActionRestaurerComplet(
+            ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation, Selecteurs selecteurs) {
+        this.porteur = new PorteurSauvegarde(service, navigateur, occupation, selecteurs);
     }
 
     @Override

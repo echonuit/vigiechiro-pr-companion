@@ -131,8 +131,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
 
     /// Désignation du fichier, derrière le port du socle : un `FileChooser` natif en dur **fige** un test
     /// headless, et le geste ne serait pas testable.
-    private final SelecteurFichierModifiable selecteur =
-            Selecteurs.pour(() -> this.boutonExporterGraphe.getScene().getWindow());
+    private final SelecteurFichierModifiable selecteur;
 
     /// Porteur de désignation exposé aux tests.
     SelecteurFichierModifiable selecteur() {
@@ -144,11 +143,14 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
             DiagnosticViewModel viewModel,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
-            VersionApplication version) {
+            VersionApplication version,
+            Selecteurs selecteurs) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.version = Objects.requireNonNull(version, "version");
+        this.selecteur =
+                selecteurs.pour(() -> this.boutonExporterGraphe.getScene().getWindow());
     }
 
     /// Version empaquetée, estampillée sur l'image exportée.

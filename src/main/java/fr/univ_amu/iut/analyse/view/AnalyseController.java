@@ -97,10 +97,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, Suit
     /// Désignation du fichier d'export : porteur partagé injectable (#1431), double répondant en test.
     /// Un `FileChooser` en dur **figeait** tout test de l'export - ce que la Javadoc de [#exporter]
     /// avouait sans détour (« le dialog vit dans la vue, non testé en TestFX »).
-    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
-            // `this.boutonExporter` : le champ @FXML est déclaré plus bas (référence en avant interdite
-            // dans un initialiseur). La fenêtre n'est lue qu'au clic.
-            () -> this.boutonExporter.getScene().getWindow());
+    private final SelecteurFichierModifiable selecteur;
 
     /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
     SelecteurFichierModifiable selecteur() {
@@ -248,7 +245,8 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, Suit
             OuvrirAudio ouvrirAudio,
             ActionFicheEspece actionFicheEspece,
             ExecuteurTache executeur,
-            EspecesPrioritaires especesPrioritaires) {
+            EspecesPrioritaires especesPrioritaires,
+            Selecteurs selecteurs) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.memoire = Objects.requireNonNull(memoire, "memoire");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
@@ -256,6 +254,10 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, Suit
         this.actionFicheEspece = Objects.requireNonNull(actionFicheEspece, "actionFicheEspece");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.marqueurEnjeu = new MarqueurEspecesAEnjeu(especesPrioritaires);
+        this.selecteur = selecteurs.pour(
+                // `this.boutonExporter` : le champ @FXML est déclaré plus bas (référence en avant interdite
+                // dans un initialiseur). La fenêtre n'est lue qu'au clic.
+                () -> this.boutonExporter.getScene().getWindow());
     }
 
     @Override

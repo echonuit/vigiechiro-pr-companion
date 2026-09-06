@@ -33,9 +33,10 @@ final class DialoguesAudio {
 
     /// @param fenetre fenêtre propriétaire des dialogues, évaluée **au moment de demander** (l'écran peut
     ///     ne pas encore être attaché à une fenêtre quand le contrôleur est construit)
-    DialoguesAudio(Supplier<Window> fenetre) {
+    DialoguesAudio(Supplier<Window> fenetre, Selecteurs selecteurs) {
         Objects.requireNonNull(fenetre, "fenetre");
-        this.selecteur = Selecteurs.pour(fenetre);
+        Objects.requireNonNull(selecteurs, "selecteurs");
+        this.selecteur = selecteurs.pour(fenetre);
         this.participation = new DemandeurDeChoixModifiable<>(new ChoixDansListe<>(fenetre));
     }
 

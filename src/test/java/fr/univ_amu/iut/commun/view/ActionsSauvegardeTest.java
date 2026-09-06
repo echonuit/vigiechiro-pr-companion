@@ -78,7 +78,8 @@ class ActionsSauvegardeTest {
     @BeforeEach
     void preparer() {
         when(service.dossierParDefaut()).thenReturn(DOSSIER);
-        action = new ActionsSauvegarde(service, occupation, () -> null, () -> relectures++);
+        action =
+                new ActionsSauvegarde(service, occupation, () -> null, () -> relectures++, SelecteursDeTest.auDefaut());
         action.selecteur().definir(new SelecteurFichier() {
             @Override
             public Optional<Path> choisirDossier(String titre, Optional<Path> dossierInitial) {

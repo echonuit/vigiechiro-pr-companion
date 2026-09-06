@@ -228,7 +228,8 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
             ExecuteurTache executeur,
             FabriqueActionImportTransformes fabriqueImportTransformes,
             OuvrirPassage ouvrirPassage,
-            DefilementChrome defilement) {
+            DefilementChrome defilement,
+            Selecteurs selecteurs) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.conservation = Objects.requireNonNull(conservation, "conservation");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
@@ -236,6 +237,10 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.defilement = Objects.requireNonNull(defilement, "defilement");
         this.zoneNumeroPassage = new ZoneNumeroPassage(viewModel, this.ouvrirPassage);
+        this.selecteur = selecteurs.pour(
+                // `this.champDossier` : le champ @FXML est déclaré plus bas (référence en avant interdite
+                // dans un initialiseur). La fenêtre n'est lue qu'au clic.
+                () -> this.champDossier.getScene().getWindow());
     }
 
     @Override
@@ -252,10 +257,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// par lui que **commence** l'import - un `DirectoryChooser` / `FileChooser` en dur y **figeait**
     /// tout test, de sorte que « Parcourir » n'était jamais cliqué : les tests posaient le dossier
     /// **directement sur le ViewModel**, en contournant l'écran.
-    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
-            // `this.champDossier` : le champ @FXML est déclaré plus bas (référence en avant interdite
-            // dans un initialiseur). La fenêtre n'est lue qu'au clic.
-            () -> this.champDossier.getScene().getWindow());
+    private final SelecteurFichierModifiable selecteur;
 
     /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
     SelecteurFichierModifiable selecteur() {

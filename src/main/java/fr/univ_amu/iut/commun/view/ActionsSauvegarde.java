@@ -53,12 +53,14 @@ final class ActionsSauvegarde {
             ServiceSauvegarde service,
             OccupationChrome occupation,
             Supplier<Window> fenetre,
-            Runnable apresRestauration) {
+            Runnable apresRestauration,
+            Selecteurs selecteurs) {
         this.service = Objects.requireNonNull(service, "service");
         this.occupation = Objects.requireNonNull(occupation, "occupation");
         this.apresRestauration = Objects.requireNonNull(apresRestauration, "apresRestauration");
         Objects.requireNonNull(fenetre, "fenetre");
-        this.selecteur = Selecteurs.pour(fenetre);
+        Objects.requireNonNull(selecteurs, "selecteurs");
+        this.selecteur = selecteurs.pour(fenetre);
         this.notificateur = new NotificateurModifiable(new NotificationDialogue(fenetre));
         this.choix = new ChoixSauvegardeModifiable(new ChoixSauvegardeJavaFx(fenetre));
     }
