@@ -1989,8 +1989,11 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
 
     # --- la carte SD ---
     # On n'appelle pas Maven ici : l'auto-test doit rester en secondes. Ce qu'on éprouve, c'est le
-    # CONTRÔLE - qu'une carte absente, vide ou sans bruts soit refusée, puisque c'est le seul rempart
-    # entre un tournage et un film où l'importation ne trouve rien.
+    # CONTRÔLE - qu'une carte absente, ou sans aucun WAV où qu'il soit rangé, soit refusée, puisque
+    # c'est le seul rempart entre un tournage et un film où l'importation ne trouve rien.
+    #
+    # Une carte SANS `bruts/` n'est plus refusée depuis #5281 : c'est la disposition du parc, et ce
+    # commentaire promettait encore le contraire du code qu'il présente (#5388).
     mkdir -p "$bac/carte-vide"
     essai "un dossier sans carte est refusé"             rouge carte_utilisable "$bac/carte-vide"
     mkdir -p "$bac/carte-sans-wav/sd-nominale"
