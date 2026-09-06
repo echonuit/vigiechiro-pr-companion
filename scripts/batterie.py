@@ -244,10 +244,21 @@ def engage_java(diff: list[str]) -> list[str]:
 
 
 def engage(diff: list[str], racine: pathlib.Path | None = None) -> tuple[list[str], list[str]]:
-    """Ce que ce diff engage, et ce qu il n engage pas. Sans `chemins`, on ENGAGE."""
+    """Ce que ce diff engage, et ce qu il n engage pas. Sans `chemins`, on ENGAGE.
+
+    **Un garde se voit LUI-MEME**, quels que soient ses `chemins`. La demande qui reecrit sa source
+    est precisement celle ou l on veut le voir tourner : c est la qu il peut cesser de juger, ou
+    juger faux. Ses `chemins` disent ce qu il LIT, pas ce qui le concerne, et neuf gardes du depot
+    etaient donc aveugles a leur propre reecriture (#5421).
+
+    **D office, plutot qu une consigne.** « Chaque garde cite sa source dans ses `chemins` » aurait
+    tenu sur le papier et cede a l usage : le garde livre la veille par qui venait de lire le defaut
+    ne se citait pas. Un garde etroit n a d ailleurs aucune raison legitime de s elargir pour se
+    voir - c est a la porte de le savoir, pas a lui de le declarer.
+    """
     engages, ecartes = [], []
     for garde, chemins in gardes(racine):
-        if not chemins or any(correspond(f, m) for f in diff for m in chemins):
+        if not chemins or garde in diff or any(correspond(f, m) for f in diff for m in chemins):
             engages.append(garde)
         else:
             ecartes.append(garde)
@@ -506,6 +517,15 @@ def _auto_test() -> int:
         cas = (
             (["dev-docs/decisions/1.md"], True, "ses chemins sont touchés, il est engagé"),
             (["README.md"], False, "ses chemins ne sont pas touchés, il est écarté"),
+            # ⟨un garde se voit LUI-MEME⟩ La demande qui reecrit sa source est precisement celle ou
+            # l on veut le voir tourner, et ses `chemins` etroits l en ecartaient. Neuf gardes du
+            # depot etaient dans ce cas, dont un ecrit la veille par qui venait de lire le defaut
+            # (#5421). D ou l ajout d office : une consigne « chaque garde se cite » s oublie.
+            (
+                ["scripts/methode/declarant.py"],
+                True,
+                "la demande réécrit sa SOURCE, il est engagé même si ses chemins sont étroits",
+            ),
         )
         for diff, attendu, libelle in cas:
             engages, ecartes = engage(diff, faux)
