@@ -799,7 +799,11 @@ def main() -> int:
 # classement lui-meme. Il sort en 0 meme quand les taux sont mauvais.
 CONTRAT = {
     "geste": "combien de fois chaque banc a rougi, sur combien de tirages",
-    "population": "les runs de la forge sur une fenetre de jours",
+    "population": "les runs de la forge sur une fenetre de jours, dont il ne lit que le job "
+    "`build`. `fuseau-alternatif` et `ordre-alternatif` lui sont INVISIBLES, et plusieurs flakes "
+    "du chantier #5273 y ont pourtant ete trouves : ses taux sont donc des minorants. Limite "
+    "declaree a la passe 7 de sa cloture, ou il etait le seul des trois instruments a n en "
+    "declarer aucune",
     "dispositif": "rapport",
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/releve-les-bancs-instables.py --auto-test",
