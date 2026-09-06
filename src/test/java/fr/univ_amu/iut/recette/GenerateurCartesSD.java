@@ -83,9 +83,10 @@ public final class GenerateurCartesSD {
         return carte;
     }
 
-    /// Écrit l'arbre SD décrit par `spec` **directement** sous `racineSd` (journal, relevé, `bruts/`).
+    /// Écrit l'arbre SD décrit par `spec` **directement** sous `racineSd` : journal, relevé, et les WAV
+    /// là où la spec les veut - à la **racine** par défaut, comme un enregistreur les dépose (#5281).
     void genererVers(SpecCarteSd spec, Path racineSd) throws IOException {
-        Path bruts = racineSd.resolve(SOUS_DOSSIER_BRUTS);
+        Path bruts = spec.brutsDansUnSousDossier() ? racineSd.resolve(SOUS_DOSSIER_BRUTS) : racineSd;
         Files.createDirectories(bruts);
 
         if (spec.journal().present()) {

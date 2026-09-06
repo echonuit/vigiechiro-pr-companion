@@ -1246,8 +1246,13 @@ tourner() { # [nom du parcours] [sortie]
 # Le contrôle, SÉPARÉ de la fabrication pour pouvoir être éprouvé sans lancer Maven.
 #
 # Il porte sur ce qui EXISTE, pas sur le code de retour de Maven : `exec:java` rend zéro sur bien
-# des façons de ne rien produire. Une carte utilisable a un dossier, des bruts, et au moins un WAV -
-# sans quoi le film montrerait une importation qui ne trouve rien, et le fichier serait valide.
+# des façons de ne rien produire. Une carte utilisable a un dossier et au moins un WAV - sans quoi
+# le film montrerait une importation qui ne trouve rien, et le fichier serait valide.
+#
+# Les WAV se cherchent PARTOUT sous la carte, et non dans un `bruts/` exigé. Les enregistreurs les
+# déposent à la RACINE, et quinze specs sur seize le font désormais (#5281) ; exiger le sous-dossier
+# rejetait une carte du parc réel. `InspecteurDossier` accepte les deux depuis toujours, et ce
+# contrôle-ci disait le contraire du produit qu'il sert.
 carte_utilisable() { # <dossier de destination>
     local dest="$1" carte bruts
     carte=$(find "$dest" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -1)
@@ -1255,11 +1260,7 @@ carte_utilisable() { # <dossier de destination>
         echo "   - aucune carte matérialisée sous $dest" >&2
         return 1
     fi
-    if [ ! -d "$carte/bruts" ]; then
-        echo "   - la carte $carte n'a pas de dossier « bruts »" >&2
-        return 1
-    fi
-    bruts=$(find "$carte/bruts" -name '*.wav' 2>/dev/null | wc -l)
+    bruts=$(find "$carte" -name '*.wav' 2>/dev/null | wc -l)
     if [ "$bruts" -eq 0 ]; then
         echo "   - la carte $carte ne contient aucun brut" >&2
         return 1
@@ -1992,13 +1993,17 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
     # entre un tournage et un film où l'importation ne trouve rien.
     mkdir -p "$bac/carte-vide"
     essai "un dossier sans carte est refusé"             rouge carte_utilisable "$bac/carte-vide"
-    mkdir -p "$bac/carte-sans-bruts/sd-nominale"
-    essai "une carte sans dossier bruts est refusée"     rouge carte_utilisable "$bac/carte-sans-bruts"
+    mkdir -p "$bac/carte-sans-wav/sd-nominale"
+    essai "une carte sans aucun wav est refusée"         rouge carte_utilisable "$bac/carte-sans-wav"
     mkdir -p "$bac/carte-bruts-vides/sd-nominale/bruts"
-    essai "une carte sans aucun brut est refusée"        rouge carte_utilisable "$bac/carte-bruts-vides"
-    # Et le cas VERT, sans quoi les trois refus ci-dessus passeraient sur une fonction qui refuse tout.
+    essai "un bruts/ vide est refusé aussi"              rouge carte_utilisable "$bac/carte-bruts-vides"
+    # LES DEUX DISPOSITIONS sont acceptées, et le cas plat est le DÉFAUT du parc : les enregistreurs
+    # déposent à la racine, et ce contrôle exigeait `bruts/` (#5281). Sans le cas vert, les refus
+    # ci-dessus passeraient sur une fonction qui refuse tout.
     mkdir -p "$bac/carte-bonne/sd-nominale/bruts" && : > "$bac/carte-bonne/sd-nominale/bruts/a.wav"
-    essai "une carte avec ses bruts est acceptée"        vert  carte_utilisable "$bac/carte-bonne"
+    essai "une carte rangée dans bruts/ est acceptée"    vert  carte_utilisable "$bac/carte-bonne"
+    mkdir -p "$bac/carte-plate/sd-nominale" && : > "$bac/carte-plate/sd-nominale/a.wav"
+    essai "une carte PLATE est acceptée, c'est le parc"  vert  carte_utilisable "$bac/carte-plate"
 
     # --- la carte montée ---
     # Le garde qui compte : cette machine porte de vraies cartes montées. Un banc qui démonterait

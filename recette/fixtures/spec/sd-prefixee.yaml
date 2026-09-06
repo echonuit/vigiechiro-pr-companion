@@ -2,6 +2,13 @@
 fixture: sd-prefixee
 but: "Fichiers déjà préfixés Car... -> état de nommage PREFIXE (discordance de préfixe si mauvais rattachement)."
 
+# La SEULE carte du corpus rangée dans « bruts/ ». Les enregistreurs déposent à la racine, et
+# quinze specs sur seize le font désormais ; celle-ci garde la disposition de l'observateur qui
+# classe ses fichiers - le produit la gère exprès, et la retirer laisserait cette branche sans
+# recette. Le choix est tombé sur elle parce que ses bruts sont DÉJÀ préfixés : c'est la carte de
+# quelqu'un qui a organisé (#5281).
+brutsDansUnSousDossier: true
+
 journal:
   present: true
   serie: "1925492"
