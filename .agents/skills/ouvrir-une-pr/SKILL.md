@@ -128,6 +128,23 @@ Un conflit sur un inventaire ne se résout pas « en prenant le plus grand ». U
 est un gain que quelqu'un a payé, donc on prend le sien ; un **plancher** prend la mesure réelle de la
 branche fusionnée.
 
+## La tête distante se recontrôle À L'INSTANT de pousser
+
+« J'ai rebasé » ne prouve rien : la question n'est pas *ai-je rebasé*, c'est **la tête distante
+a-t-elle bougé depuis mon dernier rebase**. Ce n'est pas un geste, c'est une comparaison, et elle se
+refait au dernier moment.
+
+```bash
+git fetch origin && git merge-base --is-ancestor origin/main <ma-branche>
+```
+
+S'il rend faux, on relit **ce qui a été fusionné entre-temps** avant de pousser.
+
+**Le danger n'est pas le conflit, c'est le retour en arrière silencieux.** Le 6 septembre 2026, une
+branche issue d'un rebase fait **neuf secondes** avant la fusion d'un correctif concurrent n'entrait
+en conflit avec rien : elle était seulement en retard, et la fusionner aurait **annulé** ce correctif
+sans que rien ne rougisse. Le contrôle a manqué parce qu'il avait été fait - trop tôt.
+
 ## Le titre se vérifie avant l'ouverture, pas après
 
 `titre-pr.yml` refuse un titre non conforme, et il le fait bien : les 100 dernières PR fusionnées

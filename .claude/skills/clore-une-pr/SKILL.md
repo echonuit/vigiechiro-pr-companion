@@ -33,6 +33,9 @@ au moment où on l'a regardé.
             commit, et un `--body-file` ici ecarte le texte que le job `corps` vient de juger.
 5. VERIFIER `main` apres coup, sur ce que la PR touchait.
 6. TENIR    l issue mere : fermee par la PR, ou mise a jour a la main.
+7. PREVENIR les sessions pairs de ce qui vient d arriver sur `main`, quand l
+            environnement en expose. Elles travaillent sur une base qui vient de
+            bouger, et rien ne le leur dira.
 ```
 
 ## Toutes les vérifications ne jugent pas tout
@@ -147,6 +150,26 @@ mesure, pas un résultat.
 Une fois fusionnée, [`clore-une-issue`](../clore-une-issue/SKILL.md) prend la suite : l'issue se met
 au net et se ferme. Et fermer la dernière issue d'un chantier n'est pas le clore -
 [`clore-un-chantier`](../clore-un-chantier/SKILL.md) porte les quatorze passes.
+
+## Prévenir les pairs de ce qui vient d'arriver sur `main`
+
+Fusionner déplace la base de **tout le monde**. Les autres sessions travaillent sur un `main` qui vient
+de vieillir, et aucune ne le saura avant son prochain `fetch` - c'est-à-dire, souvent, au moment de
+pousser.
+
+```
+Je viens de fusionner #N sur <depot> : <ce que ca change, en une phrase>.
+Fichiers touchés : <les chemins>. Si vous avez une branche dessus, rebasez avant de pousser.
+```
+
+**Ce que ça évite est précis, et coûteux.** Le 6 septembre 2026, une session a ouvert une demande
+**neuf secondes** avant qu'une autre ne fusionne un correctif au même endroit. La seconde branche
+n'entrait en conflit avec rien : elle était en retard, et la fusionner aurait **annulé** le correctif
+déjà sur `main`. Ce qui a sauvé la situation n'était aucun dispositif du dépôt, mais une session qui a
+regardé la forge et a écrit à l'autre.
+
+**Nommer les fichiers touchés est la partie utile.** Un pair ne peut pas juger si « #5408 a été
+fusionnée » le concerne ; il le peut si la ligne dit `scripts/batterie.py`.
 
 ## Signaux d'alerte : on s'arrête
 

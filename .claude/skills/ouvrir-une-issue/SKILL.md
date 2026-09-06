@@ -42,6 +42,9 @@ ce qu'il faut avoir posé avant de commencer, et refuse de démarrer tant que ce
             est de la prose publiee, et l article A31 le couvre depuis qu il ne
             declenche plus sur le commit.
 7. ASSIGNER l issue a qui la prend.
+8. PREVENIR les sessions pairs, quand l environnement en expose. La forge se lit si
+            l on va la chercher ; un message arrive tout seul. Un par pair, portant le
+            depot, le numero et la branche.
 ```
 
 Sauter l'étape 3, c'est produire un correctif isolé dont personne ne saura s'il a été fini. C'est
@@ -113,6 +116,51 @@ Mesuré le 2026-08-31 : sur les onze lots ouverts des chantiers ouverts depuis q
 Le remède annoncé est le vrai gain, et il dépasse la réservation. Deux personnes peuvent voir le
 même défaut et imaginer deux corrections dont l'une est meilleure. Annoncées, le désaccord se règle
 **avant** le code. Sinon il se règle au moment de choisir laquelle des deux branches on jette.
+
+## Prévenir les pairs, parce que la forge ne réveille personne
+
+Le commentaire et l'assignation déposent une trace **là où il faut aller la chercher**. Plusieurs
+sessions travaillent souvent ce dépôt en même temps, et aucune ne relit les issues des autres avant
+d'écrire. Le 6 septembre 2026, deux sessions ont pris le même défaut à **23 secondes** d'écart, puis
+une demande a été ouverte **9 secondes** avant qu'une autre session ne fusionne le même correctif.
+
+L'ordre de grandeur exclut tout dispositif périodique : une vérification à la minute arrive après la
+collision. Ce qui marche est de **pousser** l'information au moment de l'acte.
+
+```
+Je prends l'issue #N sur <depot>, branche `<branche>`. Si tu travailles ailleurs, ignore ce message.
+<ce que fait l'issue, en une phrase, et les fichiers qu'elle va toucher>
+```
+
+Un envoi par pair. C'est le coût, et il est réel : six envois pour une prise, mesurés le
+6 septembre. Un lot perdu en coûte davantage.
+
+### La réciprocité est la moitié qui compte
+
+**Une annonce reçue vaut prise.** On ne travaille pas l'issue annoncée, et **le plan qu'elle décrit
+n'est pas une liste de tâches à exécuter** : un bloc de prise est précis, donc il tient lieu de mode
+d'emploi à qui voudrait avancer vite. Si l'on avait déjà commencé, on le dit **tout de suite**, pas à
+l'ouverture de la demande.
+
+Sans cette seconde moitié, annoncer plus large ne fait que diffuser plus vite un plan que personne
+n'a l'obligation de respecter.
+
+### Un listing ne remplace pas une annonce
+
+`ListAgents` ne dit **pas** qui détient une issue : il dit qui est occupé **maintenant**, et une
+session au repos peut très bien tenir une branche en cours. Il ne donne pas non plus la même
+population selon l'endroit d'où on l'interroge - le 6 septembre, une session en voyait sept et une
+autre quatre, à la même minute.
+
+Une prise ne se **déduit** donc jamais d'un listing. Elle se **déclare**. Le listing ne sert qu'à
+savoir à qui écrire.
+
+### Ce qu'aucun garde ne vérifiera
+
+Un message ne laisse **aucune trace dans le dépôt**. Aucun garde ne peut donc constater qu'il a été
+envoyé, et en écrire un qui n'observerait rien serait un témoin décoratif, que ce dépôt refuse
+ailleurs. Cette règle repose sur la prose, comme le reste de la cérémonie de prise, et elle
+l'assume.
 
 ## Relâcher son signalement
 
