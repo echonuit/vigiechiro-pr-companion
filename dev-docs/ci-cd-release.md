@@ -8,7 +8,8 @@ publication.
 | Workflow | Déclencheur | Rôle | Bloque la PR ? |
 |---|---|---|---|
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `build` | push `main` + PR | « Java CI » : `./mvnw -B verify -Djacoco.haltOnFailure=true` (compilation + tous les tests dont ArchUnit + **seuils de couverture JaCoCo bloquants** + **hygiène des dépendances**, `dependency:analyze-only` avec `failOnWarning`) | **Oui** |
-| [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `paquet` | push `main` + PR | Assemblage du fat-jar (`package -DskipTests`), smoke-test, idempotence, app-image, puis **E2E CLI bats sur le lanceur empaqueté**. **En parallèle** de `build` | **Oui** |
+| [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `emballage` | push `main` + PR | Assemblage du fat-jar (`package -DskipTests`), smoke-test, idempotence, app-image, démarrage réel, archive portable. Verse l'app-image au job `bats`. **En parallèle** de `build` | **Oui** |
+| [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `bats` | push `main` + PR | **E2E CLI bats sur le lanceur empaqueté**, 129 cas. Sorti d'`emballage` en #5301 : il en faisait 80 % du temps, et un cas rouge cachait l'état de l'emballage | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `second-compilateur` | push `main` + PR | Recompile **tout** avec le compilateur **Eclipse** (`-Pecj`), sans les tests : ce que `javac` accepte, un autre compilateur conforme ne l'accepte pas forcément (cf. plus bas). **En parallèle** des deux autres | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `fuseau-alternatif` | push `main` + PR | Rejoue **toute** la suite sous `America/Cayenne` : *ce que le produit calcule pour une nuit ne dépend pas du fuseau de la machine* ([ADR 3450](decisions/3450-une-propriete-de-fuseau-se-tient-en-rejouant-pas-en-relisant.md)). `TZ` passe par l'**environnement**, hérité des forks surefire, et `FuseauDExecutionTest` vérifie depuis l'intérieur que la zone est bien appliquée | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `duree-du-portail` | push `main` + PR | Compare la **médiane** des 12 dernières exécutions réussies sur `main` à celle des 12 d'avant, et **avertit** au-delà de 20 % d'écart. Une CI riche se dégrade par accumulation, jamais d'un coup : chaque ajout coûte trente secondes que personne ne remarque. Deux **médianes**, et non une exécution contre un seuil : sur trente exécutions, deux durent le double des autres, et un butoir aurait rougi sans qu'aucune PR soit fautive (#3508) | Non - il avertit |
@@ -89,7 +90,7 @@ captures + PMD), `maven.yml` porte les **tests + couverture**. Localement :
 
 **Spotless** (Palantir Java Format) formate via un *hook* pre-commit et est vérifié par `lint.yml` (`spotless:check`).
 
-## Pourquoi `build` et `paquet` sont deux jobs
+## Pourquoi `build`, `emballage` et `bats` sont trois jobs
 
 `maven.yml` portait auparavant quatre préoccupations à la file dans un seul job. Deux coûts en
 découlaient. Le premier, mesuré : 449 s de tests, puis 148 s d'E2E bats, puis 9 s d'idempotence **en
@@ -103,7 +104,8 @@ Or ces étapes ne dépendent pas de la suite de tests, mais de ce qu'on **emball
 | Job | Ce dont il dépend | Ce qu'il prouve |
 |---|---|---|
 | `build` | la suite de tests | le comportement, et la couverture au seuil |
-| `paquet` | l'assemblage, puis l'app-image | que le jar **démarre**, que la CLI répond **depuis le lanceur livré**, que le shade est idempotent |
+| `emballage` | l'assemblage, puis l'app-image | que le jar **démarre**, que le shade est idempotent, que l'archive portable survit à son emballage |
+| `bats` | l'app-image que `emballage` verse | que la CLI répond **depuis le lanceur livré**, sur 129 cas de shell |
 
 Les <!--inv:tests-bats-->129<!--/inv--> tests bats visaient le fat-jar par `java -cp` jusqu'à #4071,
 c'est-à-dire un chemin qu'**aucun utilisateur n'emprunte**. Ils visent désormais `bin/vigiechiro` de

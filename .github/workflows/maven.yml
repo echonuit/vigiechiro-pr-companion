@@ -20,9 +20,13 @@
 # suite rouge cachait l'état du packaging et on ne l'apprenait qu'au tour suivant. Séparés, les deux
 # rendent leur verdict indépendamment, et le chemin critique se ramène au plus long des deux.
 #
-# Ce qui NE gagne rien à être déplacé : l'installation de bats coûte 9 s, pas plus (vérifié) ; les
-# ~140 s du harnais sont les tests eux-mêmes, qui lancent chacun un JVM sur le fat-jar. Inutile
-# d'y chercher un cache apt.
+# Ce qui NE gagne rien à être déplacé : l'installation de bats coûte 9 s, pas plus (vérifié).
+#
+# ⟨mesure périmée, corrigée en #5301⟩ Cette ligne disait aussi « les ~140 s du harnais sont les tests
+# eux-mêmes », et en concluait qu'il n'y avait rien à y gagner. Relevé du 2026-09-05 : le harnais met
+# **787 s**, soit 13,1 min sur les 16,3 du job - un facteur 5,3 accumulé sans que rien ne le dise. La
+# conclusion ne portait donc plus sur ce qu'elle mesurait, et c'est ce qui a fait sortir les bats
+# dans leur propre job. Ce sont bien les tests eux-mêmes, chacun lançant un JVM : 129 cas.
 #
 # `solution` est conservée pendant la transition (avant la consolidation en `main`).
 name: Java CI with Maven
@@ -285,8 +289,8 @@ jobs:
           fi
           echo "Second compilateur : $passes passes ecj (sources et tests), aucune erreur."
 
-  paquet:
-    name: paquet
+  emballage:
+    name: emballage
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -297,7 +301,7 @@ jobs:
       # sur 78 % des demandes (mesure du chantier #5294). Le job tourne quand meme et conclut : un
       # atelier qui ne rend aucun verdict fait refuser la fusion (ADR 4571), et un job absent se lit
       # comme un job vert (ADR 2748). C'est cette ETAPE qui decide, et elle ecrit pourquoi.
-      - name: "Ce diff concerne-t-il l'emballage ? (#5298)"
+      - name: "Ce diff concerne-t-il l'emballage ? (#5298, redecoupe en #5301)"
         id: portee
         shell: bash
         # ⟨butoir⟩ L'etape fait un `git fetch` reseau, et #4440 est l'histoire d'un fetch qui part
@@ -305,7 +309,7 @@ jobs:
         timeout-minutes: 3
         env:
           GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: python3 .github/scripts/porte_du_job.py paquet
+        run: python3 .github/scripts/porte_du_job.py emballage
 
       - name: Set up JDK 25
         if: steps.portee.outputs.concerne == 'oui'
@@ -380,37 +384,33 @@ jobs:
           test -x target/dist/VigieChiroCompanion/bin/vigiechiro
           echo "app-image construite : $(ls -d target/dist/VigieChiroCompanion)"
 
-      - name: Installer bats
-        if: steps.portee.outputs.concerne == 'oui'
-        # Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
-        # parce que ces paquets ne sont que des fichiers ; les polices et flatpak gardent
-        # `installer_paquets.py`, dont le post-install fait foi.
-        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
-        with:
-          packages: bats
-          version: vigiechiro-1
 
-      - name: E2E CLI (bats) sur le LANCEUR empaqueté (#4071)
+      # ⟨artefact⟩ L'app-image part vers le job `bats`, qui l'eprouve. On l'EMBALLE en tar : un
+      # artefact GitHub perd le bit d'execution, et le harnais bats commence par `test -x` sur le
+      # lanceur. Le tar le preserve, et c'est le meme geste que l'archive portable ci-dessus.
+      - name: "Deposer l'app-image et le fat-jar pour le harnais bats (#5301)"
         if: steps.portee.outputs.concerne == 'oui'
-        # Tests bout-en-bout au niveau SHELL : arguments picocli, codes de sortie et refus métier d'un
-        # VRAI processus - ce que les tests Java in-process (CliTest & co.) ne voient pas. Amorce du
-        # harnais (#1572, chantier #1565).
-        #
-        # Ils visaient `java -cp <fat-jar> …cli.Cli`, c'est-à-dire un chemin qu'AUCUN utilisateur
-        # n'emprunte : les 66 commandes étaient éprouvées à côté de la porte par laquelle on entre. Ils
-        # visent maintenant le lanceur de l'app-image construite juste au-dessus, donc le runtime jlink
-        # réellement livré - celui où #2299 avait laissé partir un paquet incapable de démarrer.
-        #
-        # C'est pour cela que cette étape a été déplacée APRÈS le garde-fou app-image : elle a besoin de
-        # ce qu'il produit. Rien n'a changé de job ni de coût - l'app-image était déjà construite ici.
-        #
-        # Le fat-jar reste éprouvé par le smoke-test plus haut, qui le lance et vérifie son usage.
+        shell: bash
+        # ⟨les DEUX, et c est le piege⟩ `helper.bash` appelle `decouvrir_jar` dans son `setup()`, et
+        # cette fonction fait `skip` de chaque cas quand le fat-jar manque. Un artefact qui ne
+        # porterait que l app-image ferait donc sauter les 129 cas et rendrait le job VERT en 20 s.
+        # Mesure : c est exactement ce qui est arrive au premier essai de ce lot.
         run: |
           set -euo pipefail
-          export VIGIECHIRO_LANCEUR="${PWD}/target/dist/VigieChiroCompanion/bin/vigiechiro"
-          test -x "${VIGIECHIRO_LANCEUR}"
-          bats src/test/bats
+          tar -czf app-image.tar.gz -C target/dist VigieChiroCompanion
+          jar=$(ls target/vigiechiro-*-shaded.jar | head -1)
+          cp "$jar" "fat-jar-$(basename "$jar")"
 
+      - name: "Verser l'app-image (#5301)"
+        if: steps.portee.outputs.concerne == 'oui'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: app-image
+          path: |
+            app-image.tar.gz
+            fat-jar-vigiechiro-*-shaded.jar
+          retention-days: 1
+          if-no-files-found: error
       - name: "Démarrage réel du paquet (runtime jlink, #2299)"
         if: steps.portee.outputs.concerne == 'oui'
         # Le pas précédent vérifiait que le lanceur EXISTE. Il ne l'exécutait pas, et c'est très
@@ -462,6 +462,141 @@ jobs:
   # `main` n'est jamais jouée avant sa fusion, et peut être fusionnée cassée - le dépôt l'a déjà payé.
   # Rien n'est écrit ici, donc rien n'exige d'être réservé à `main` : la série lue est de toute façon
   # celle de `main`, et une PR y lit la même tendance que lui.
+
+  # Le harnais E2E du shell, sorti de `paquet` par #5301.
+  #
+  # Il y vivait comme une etape parmi dix, et il en faisait 80 % : 13,1 min sur 16,3. L'en-tete de ce
+  # fichier documentait pourtant « 148 s de bats », mesure du run 29728409116, et concluait « les
+  # ~140 s du harnais sont les tests eux-memes ». Un facteur 5,3 s'est accumule sans que rien ne le
+  # dise, et la conclusion qu'on en tirait ne portait plus sur ce qu'elle mesurait.
+  #
+  # Les separer est l'argument de #2106 applique un cran plus bas. Il disait : « les etapes de
+  # packaging ne s'executaient qu'apres le succes des tests, donc une suite rouge cachait l'etat du
+  # packaging ». Aujourd'hui un cas bats rouge cache l'etat de l'emballage, qui est pret en 2 min.
+  bats:
+    name: bats
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # ⟨plancher⟩ 129 cas au 2026-09-06, sur les quatre fichiers de `src/test/bats`. Il DESCEND
+      # quand on en retire un deliberement, jamais tout seul : c est un cliquet, pas une estimation.
+      PLANCHER_BATS: 129
+    needs: emballage
+    # ⟨condition⟩ L'etat attendu est NOMME, et non laisse a l'enveloppe implicite de GitHub : un
+    # `needs` saute rend la condition inevaluable, et le job passe en `skipped` sans que personne
+    # l'ait decide (ADR 4079). `!cancelled()` laisse le cas ou `emballage` a ete annule.
+    if: ${{ !cancelled() && needs.emballage.result == 'success' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # La portee de ce job est IDENTIQUE a celle d'`emballage`, et ce n'est pas une commodite :
+      # `bats` consomme l'app-image que l'autre depose. Une portee plus large le reveillerait sans
+      # artefact a lire ; une portee plus etroite laisserait l'app-image sans personne pour l'eprouver.
+      - name: "Ce diff concerne-t-il l'emballage ? (#5301)"
+        id: portee
+        shell: bash
+        timeout-minutes: 3
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 .github/scripts/porte_du_job.py bats
+
+      # ⟨le JDK est necessaire ICI, et la mesure le dit⟩ `cli-sauvegarde.bats` engendre la carte SD de
+      # recette dans son `setup_file`, par `./mvnw -q test-compile exec:java@generer-sd`, et il
+      # `skip` ses douze cas s'il n'y parvient pas. L'ancien job `paquet` y arrivait sans y penser :
+      # Maven venait d'y construire l'emballage, donc tout etait chaud.
+      #
+      # Sans JDK, ce job rendait 129 cas dont 12 sautes - un vert qui ne jugeait pas la sauvegarde.
+      # Le garde de plancher plus bas l'a attrape, et c'est la reponse : rendre au job de quoi
+      # engendrer la carte, plutot que d'accepter les douze skips.
+      - name: Set up JDK 25
+        if: steps.portee.outputs.concerne == 'oui'
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
+      - name: "Reprendre l'app-image (#5301)"
+        if: steps.portee.outputs.concerne == 'oui'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: app-image
+
+      - name: "Deballer l'app-image (#5301)"
+        if: steps.portee.outputs.concerne == 'oui'
+        shell: bash
+        run: |
+          mkdir -p target/dist
+          tar -xzf app-image.tar.gz -C target/dist
+          test -x target/dist/VigieChiroCompanion/bin/vigiechiro
+          # Le fat-jar reprend le nom que `decouvrir_jar` cherche par glob.
+          for f in fat-jar-vigiechiro-*-shaded.jar; do
+            mv "$f" "target/${f#fat-jar-}"
+          done
+          ls -1 target/vigiechiro-*-shaded.jar
+
+      - name: Installer bats
+        if: steps.portee.outputs.concerne == 'oui'
+        # Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
+        # parce que ces paquets ne sont que des fichiers ; les polices et flatpak gardent
+        # `installer_paquets.py`, dont le post-install fait foi.
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: bats
+          version: vigiechiro-1
+
+      - name: E2E CLI (bats) sur le LANCEUR empaqueté (#4071)
+        if: steps.portee.outputs.concerne == 'oui'
+        # Tests bout-en-bout au niveau SHELL : arguments picocli, codes de sortie et refus métier d'un
+        # VRAI processus - ce que les tests Java in-process (CliTest & co.) ne voient pas. Amorce du
+        # harnais (#1572, chantier #1565).
+        #
+        # Ils visaient `java -cp <fat-jar> …cli.Cli`, c'est-à-dire un chemin qu'AUCUN utilisateur
+        # n'emprunte : les 66 commandes étaient éprouvées à côté de la porte par laquelle on entre. Ils
+        # visent maintenant le lanceur de l'app-image construite juste au-dessus, donc le runtime jlink
+        # réellement livré - celui où #2299 avait laissé partir un paquet incapable de démarrer.
+        #
+        # C'est pour cela que cette étape a été déplacée APRÈS le garde-fou app-image : elle a besoin de
+        # ce qu'il produit. Rien n'a changé de job ni de coût - l'app-image était déjà construite ici.
+        #
+        # Le fat-jar reste éprouvé par le smoke-test plus haut, qui le lance et vérifie son usage.
+        #
+        # ⟨un bats saute est VERT, et c est le mode de panne de ce job⟩ `helper.bash` appelle
+        # `decouvrir_jar` dans son `setup()`, et cette fonction fait `skip` de chaque cas quand le
+        # fat-jar manque. Bats rend alors 0 en n ayant rien joue. Mesure du 2026-09-06, premier essai
+        # de ce lot : 129 cas sautes, job vert en 20 s au lieu de 13 min.
+        #
+        # Le compte est donc CONFRONTE a un plancher, et tout `skip` refuse. C est le pendant, pour
+        # ce harnais, de ce que `tests-cites-existent.py` tient pour `-Dtest=` : un selecteur qui ne
+        # selectionne rien est un faux vert.
+        #
+        # Refuser TOUT skip est defendable ici, et c est mesure plutot que suppose : le passage de
+        # reference (run 34000568280) joue les 129 cas avec ZERO skip. Les `skip` que le harnais
+        # porte visent des outils absents - `script`, `python3` - que l image `ubuntu-latest`
+        # fournit. Le jour ou un skip deviendra legitime en CI, ce garde le dira au lieu de le taire.
+        run: |
+          set -euo pipefail
+          export VIGIECHIRO_LANCEUR="${PWD}/target/dist/VigieChiroCompanion/bin/vigiechiro"
+          test -x "${VIGIECHIRO_LANCEUR}"
+          test -f "$(ls target/vigiechiro-*-shaded.jar | head -1)"
+
+          # Hors TTY, bats rend deja du TAP : pas de formateur a demander.
+          bats src/test/bats | tee bats.tap
+
+          joues=$(grep -cE '^(ok|not ok) ' bats.tap || true)
+          sautes=$(grep -cE '^ok .*# skip' bats.tap || true)
+          echo "bats : ${joues} cas joues, ${sautes} sautes."
+          if [ "${sautes}" -gt 0 ]; then
+            echo "::error::${sautes} cas bats SAUTES. Un cas saute est vert sans avoir rien juge : le fat-jar ou le lanceur manque."
+            grep -E '^ok .*# skip' bats.tap | head -5
+            exit 1
+          fi
+          if [ "${joues}" -lt "${PLANCHER_BATS}" ]; then
+            echo "::error::${joues} cas bats joues, plancher ${PLANCHER_BATS}. Le harnais en a perdu : un selecteur qui ne selectionne rien est un faux vert."
+            exit 1
+          fi
+
   duree-du-portail:
     name: duree-du-portail
     needs: build

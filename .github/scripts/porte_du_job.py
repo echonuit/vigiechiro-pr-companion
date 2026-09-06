@@ -58,7 +58,22 @@ PORTEES: dict[str, str] = {
     #
     # `mvnw` et `.mvn/**` ne sont pas decoratifs : ils gouvernent la version de Maven qui construit
     # le paquet. `src/test/bats/**` non plus - le harnais bats vit ici, et il fait 80 % du job.
-    "paquet": """
+    # `emballage` et `bats` portent la MEME portee, et ce n est pas une commodite : `bats` consomme
+    # l app-image que l autre depose. Une portee plus large reveillerait `bats` sans artefact a lire ;
+    # une plus etroite laisserait l app-image sans personne pour l eprouver.
+    "emballage": """
+src/main/**
+src/test/bats/**
+pom.xml
+mvnw
+.mvn/**
+jpackage/**
+.github/scripts/verifie_demarrage_emballage.py
+.github/scripts/installer_paquets.py
+.github/workflows/maven.yml
+"""
+    + MECANISME,
+    "bats": """
 src/main/**
 src/test/bats/**
 pom.xml
