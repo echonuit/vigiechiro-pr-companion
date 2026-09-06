@@ -162,9 +162,39 @@ def portee_du_diff(base: str | None = None, modifies: list[str] | None = None) -
         base = base or os.environ.get("GITHUB_BASE_SHA") or ""
         if not base:
             return None
-        modifies = _git("diff", "--name-only", base, "HEAD").splitlines()
-    # Un diff VIDE fait muter tout, et non rien : on ne sait pas pourquoi il est vide, et le defaut
-    # penche du cote couteux.
+
+        # ⟨le commit de base n est PAS la⟩ Le checkout est a profondeur 1 : le SHA que la forge
+        # fournit designe un commit que ce clone ne porte pas, et `git diff` echoue. Il faut donc le
+        # rapatrier d abord, comme `_portee.py` le fait depuis #4440.
+        #
+        # Sans ce fetch, `git diff` rendait une chaine vide, que le code d en dessous confondait avec
+        # « le diff est vide ». Le banc mutait donc TOUT en croyant avoir mesure une portee - et le
+        # mecanisme de #5345 est reste inerte deux demandes durant, en vert.
+        _git("fetch", "--no-tags", "--depth=1", "origin", base)
+        if (
+            _git("cat-file", "-e", f"{base}^{{commit}}") == ""
+            and _git("rev-parse", "--verify", f"{base}^{{commit}}").strip() == ""
+        ):
+            print(
+                f"Le commit de base {base[:9]} reste introuvable apres fetch : le banc mute TOUT.",
+                file=sys.stderr,
+            )
+            return None
+
+        sortie = _git("diff", "--name-only", base, "HEAD")
+        # ⟨git n a pas su repondre, ou le diff est vide : ce n est PAS la meme chose⟩ La premiere est
+        # un accident, la seconde un fait. Les confondre est ce qui a rendu ce mecanisme inerte : une
+        # chaine vide passait pour « rien n a change », et le repli suivant mutait tout sans le dire.
+        if sortie == "":
+            if _git("rev-list", "--count", f"{base}..HEAD").strip() in ("", "0"):
+                print(
+                    "Le diff est vide : le banc mute TOUT, faute de savoir pourquoi.",
+                    file=sys.stderr,
+                )
+            else:
+                print("`git diff` n a pas su repondre : le banc mute TOUT.", file=sys.stderr)
+            return None
+        modifies = sortie.splitlines()
     if not modifies:
         return None
     if any(m.startswith(FONDS_PARTAGE) for m in modifies):
