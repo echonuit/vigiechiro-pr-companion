@@ -261,6 +261,7 @@ NATIF = "couche graphique native absente"
 APPROVISIONNEMENT = "artefact ou action indisponible"
 ANNULATION = "annule parce qu'une autre etape avait deja rouge"
 INCONNU = "aucune cause reconnue dans le journal"
+COURSE_CONNUE = "course JavaFX du depot (#4823) : le rejeu passe, la cause revient"
 
 # Au-dela, ce n'est plus un banc qui tombe : c'est la JVM qui emporte tout ce qui restait a jouer.
 # Le plus gros rouge NORMAL du depot en 21 jours en a fait tomber 2 ; l'effondrement, plus de 1 300.
@@ -273,6 +274,12 @@ _APPRO = re.compile(
     re.I,
 )
 _ANNULE = "The operation was canceled"
+
+# La course de #4823 : `PathUtils.configShape` itere les elements d un `Path` pendant qu un autre
+# fil les modifie. Elle n a AUCUNE ligne du depot dans sa pile, et pourtant elle nous appartient :
+# c est notre usage du graphe qui la declenche, et son remede a existe avant d etre reverte
+# (#5114). Mesure du 2026-09-06 : sur sept effondrements de vingt et un jours, TROIS sont elle.
+_COURSE = re.compile(r"PathUtils\.configShape")
 
 # La FIN du journal, pas le journal : « REFUSE » et les exceptions attendues y trainent partout. Un
 # premier dessin lisait le journal entier et rangeait 20 tentatives sur 20 sous « garde de methode »,
@@ -371,6 +378,11 @@ def classe(journal: str, ordonnes: list[str]) -> tuple[str, str]:
     """A qui ce rouge appartient, et pourquoi. Rend `INDETERMINE` plutot que d'inventer une cause."""
     if _NATIF.search(journal):
         return ("RUNNER", NATIF)
+    # AVANT la taille, et c est tout le correctif. Un effondrement etait range sous RUNNER parce qu il
+    # etait GROS, sans qu on regarde sa cause : trois des sept de la fenetre etaient la course du
+    # depot, et le relevé conseillait de relancer une faute qui est la notre (#5333).
+    if _COURSE.search(journal):
+        return ("DEPOT", COURSE_CONNUE)
     if len(ordonnes) >= SEUIL_EFFONDREMENT:
         return ("RUNNER", EFFONDREMENT)
     if coucheGraphique(journal):
@@ -389,6 +401,18 @@ def classe(journal: str, ordonnes: list[str]) -> tuple[str, str]:
 
 def _autoTest() -> int:
     """Les temoins, sur des extraits de journaux REELS de la forge."""
+    # LES TROIS FORMES D EFFONDREMENT (#5333). La taille seule rangeait les trois sous RUNNER, et le
+    # relevé conseillait donc de relancer une faute qui est la notre.
+    gros = [f"C{i}Test.m" for i in range(60)]
+    natif = "java.lang.UnsatisfiedLinkError: no javafx_font_pango in java.library.path"
+    assert classe(natif, gros) == ("RUNNER", NATIF), classe(natif, gros)
+    course = "Caused by: java.util.ConcurrentModificationException\n  at com.sun.javafx.scene.shape.PathUtils.configShape"
+    assert classe(course, gros) == ("DEPOT", COURSE_CONNUE), classe(course, gros)
+    # Et un effondrement dont le journal ne dit rien reste au runner : sans ce cas, le correctif
+    # aurait pu attribuer TOUT effondrement au depot.
+    assert classe("rien de reconnaissable", gros) == ("RUNNER", EFFONDREMENT)
+    # La course sur un rouge ORDINAIRE, pas un effondrement : elle nous appartient aussi.
+    assert classe(course, ["UnTest.m"]) == ("DEPOT", COURSE_CONNUE)
     # LES DEUX FORMES QUE LE NOMBRE DE VICTIMES CONFOND (#5312). Sans le second cas, un rapport qui
     # nommerait toujours le premier entraineur venu passerait le premier et mentirait sur le second.
     couplage = [["MeneurTest.a", "SuiveurTest.b"]] * 5
@@ -671,10 +695,18 @@ def _classement(jours: int) -> int:
     for (qui, pourquoi), n in sorted(parts.items(), key=lambda c: (-c[1], c[0])):
         print(f"  {n:3d}  {100 * n / lues:5.1f} %  {qui:12s} {pourquoi}")
     rejouables = sum(n for (qui, _), n in parts.items() if qui in ("RUNNER", "FORGE"))
+    course = sum(n for (_, pourquoi), n in parts.items() if pourquoi == COURSE_CONNUE)
     print(
         f"\n  {rejouables}/{lues} valent un rejeu ({100 * rejouables / lues:.0f} %)."
         f" Les autres le rendent inutile : la cause revient au tirage suivant."
     )
+    if course:
+        # La course de #4823 tient les deux bouts, et une ligne qui n en dirait qu un mentirait :
+        # relancer PASSE, parce qu elle est intermittente, et ne repare rien.
+        print(
+            f"  Dont {course} pour la course de #4823 : le rejeu passe, et c est ce qui la rend"
+            f" invisible. Elle n est pas comptee au-dessus, parce que relancer ne la repare pas."
+        )
     _derriereQui(parTentative)
     return 0
 
