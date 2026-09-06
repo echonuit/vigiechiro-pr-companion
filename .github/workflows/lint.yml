@@ -1178,6 +1178,8 @@ jobs:
         run: |
           python3 scripts/methode/verifie-dependances-declarees.py --auto-test
           python3 scripts/methode/verifie-dependances-declarees.py
+          python3 scripts/methode/verifie-commandes-prescrites.py --auto-test
+          python3 scripts/methode/verifie-commandes-prescrites.py
 
   temoins:
     # Les bancs qui prouvent qu un auto-test n est pas decoratif. Le poste le plus cher.
