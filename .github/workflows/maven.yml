@@ -500,6 +500,23 @@ jobs:
           GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: python3 .github/scripts/porte_du_job.py bats
 
+      # ⟨le JDK est necessaire ICI, et la mesure le dit⟩ `cli-sauvegarde.bats` engendre la carte SD de
+      # recette dans son `setup_file`, par `./mvnw -q test-compile exec:java@generer-sd`, et il
+      # `skip` ses douze cas s'il n'y parvient pas. L'ancien job `paquet` y arrivait sans y penser :
+      # Maven venait d'y construire l'emballage, donc tout etait chaud.
+      #
+      # Sans JDK, ce job rendait 129 cas dont 12 sautes - un vert qui ne jugeait pas la sauvegarde.
+      # Le garde de plancher plus bas l'a attrape, et c'est la reponse : rendre au job de quoi
+      # engendrer la carte, plutot que d'accepter les douze skips.
+      - name: Set up JDK 25
+        if: steps.portee.outputs.concerne == 'oui'
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
       - name: "Reprendre l'app-image (#5301)"
         if: steps.portee.outputs.concerne == 'oui'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
