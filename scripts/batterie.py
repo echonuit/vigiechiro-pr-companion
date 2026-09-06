@@ -360,11 +360,13 @@ def rendre(
         joues += 1
         # Les trois issues d un lancement, et pourquoi elles sont trois : voir
         # `verdict_du_lancement`, qui les tient et que l auto-test eprouve.
-        verdict, ligne = verdict_du_lancement(sortie.returncode, sortie.stdout, sortie.stderr)
+        verdict, ligne = verdict_du_lancement(
+            pathlib.Path(g).name, sortie.returncode, sortie.stdout, sortie.stderr
+        )
         if verdict == "arguments":
             print(f"  · {g}  (s attend des arguments, non jugé ici)", flush=True)
             continue
-        if verdict == "rouge":
+        if verdict not in SANS_REFUS:
             rouges.append((g, ligne))
             print(f"  ✘ {g}", flush=True)
         else:
@@ -397,7 +399,28 @@ def rendre(
     return 1
 
 
-def verdict_du_lancement(code: int, stdout: str, stderr: str) -> tuple[str, str]:
+# ⟨une liste, et pourquoi elle n en est pas une⟩ Un garde qui EXIGE des arguments n a pas juge
+# lance nu, et le compter refus ferait croire a un defaut du diff. Deviner cela de la forme de sa
+# sortie ne marche pas : les deux gardes du depot qui exigent des arguments n ont PAS la meme forme.
+# `compte-les-reliquats.py` sort par `raise SystemExit(...)`, donc en 1 avec UNE ligne ;
+# `convertit-adr-okf.py` passe par `argparse`, donc en 2 avec DEUX lignes. Toute condition sur le
+# code ou sur le nombre de lignes est calibree sur l un contre l autre.
+#
+# On declare donc, et `verdict_du_lancement` CONFRONTE la declaration a ce que le garde fait
+# vraiment, dans les deux sens. C est le parti que `GARDES_JAVA` prend vingt lignes plus haut :
+# une liste qu un garde confronte n est plus une liste, c est un inventaire (ADR 3450).
+# ⟨l aiguillage est TOTAL, et par defaut il refuse⟩ Ecrit `verdict == "rouge"`, il laissait
+# `declaration-perimee` tomber dans le `else` et s afficher VERT - le faux vert meme qu on ferme.
+# Un verdict neuf compte donc comme un refus tant que personne ne l a range ici.
+SANS_REFUS = ("vert", "arguments")
+
+EXIGENT_DES_ARGUMENTS = {
+    "compte-les-reliquats.py": "cliquet DIFFERENTIEL : il compare un avant a un apres, donc "
+    "`--avant` ou `--apres` lui est necessaire et il ne juge rien lance nu",
+}
+
+
+def verdict_du_lancement(nom: str, code: int, stdout: str, stderr: str) -> tuple[str, str]:
     """Ce qu un lancement de garde veut dire, et la ligne qui l explique.
 
     **Trois issues, pas deux.** Un garde qui EXIGE DES ARGUMENTS n a pas juge : le compter rouge
@@ -420,9 +443,19 @@ def verdict_du_lancement(code: int, stdout: str, stderr: str) -> tuple[str, str]
     # `compte-les-reliquats.py` est un cliquet differentiel qui sort en **1**, pas en 2 comme le
     # commentaire d origine l affirmait. Le test `returncode == 2` ne pouvait donc jamais etre vrai,
     # et ce garde etait compte rouge a chaque lancement.
-    if lignes and lignes[0].lower().startswith("usage"):
-        return "arguments", lignes[0]
-    return "rouge", lignes[0] if lignes else "(sans sortie)"
+    premiere = lignes[0] if lignes else "(sans sortie)"
+    if nom not in EXIGENT_DES_ARGUMENTS:
+        # ⟨aucune devinette ici, et c est le point⟩ Un garde NEUF qui exigerait des arguments sans
+        # etre declare est compte refus, et sa ligne d usage s affiche : le lecteur voit tout de
+        # suite ce qui se passe. C est un faux ROUGE, visible et sans danger. Deviner a sa place
+        # rouvrirait le faux VERT que cette fonction vient de fermer, puisque « Usage abusif de »
+        # ouvre aussi de vrais refus.
+        return "rouge", premiere
+    # Le DESACCORD qui compte, et le seul : la declaration a vieilli. Elle exempterait alors un vrai
+    # refus, ce qui est un faux vert - la direction dangereuse. On refuse plutot que d exempter.
+    if not lignes or not lignes[0].lower().startswith("usage"):
+        return "declaration-perimee", premiere
+    return "arguments", premiere
 
 
 def _auto_test() -> int:
@@ -520,9 +553,10 @@ def _auto_test() -> int:
 
     # ⟨les trois issues d un lancement⟩ La boucle qui les distingue n avait AUCUN cas : elle vivait
     # dans `rendre`, derriere un `subprocess`. Les deux premiers cas rougissent sur le code d avant.
-    for libelle, code, sortie, erreur, attendu in (
+    for libelle, nom, code, sortie, erreur, attendu in (
         (
             "un refus écrit sur `stderr` est cité",
+            "4617.py",
             1,
             "",
             "pmd.xml est absent\nLancez : ./mvnw",
@@ -530,6 +564,7 @@ def _auto_test() -> int:
         ),
         (
             "un usage sorti en 1 n est pas un rouge",
+            "compte-les-reliquats.py",
             1,
             "",
             "Usage : x.py --avant | --apres",
@@ -537,22 +572,56 @@ def _auto_test() -> int:
         ),
         (
             "un refus sur `stdout` est cité aussi",
+            "un-garde.py",
             1,
             "REFUS : outil absent",
             "",
             ("rouge", "REFUS : outil absent"),
         ),
-        ("un garde muet reste lisible", 1, "", "", ("rouge", "(sans sortie)")),
-        ("un garde vert ne dit rien", 0, "tout va bien", "", ("vert", "")),
+        ("un garde muet reste lisible", "muet.py", 1, "", "", ("rouge", "(sans sortie)")),
+        ("un garde vert ne dit rien", "vert.py", 0, "tout va bien", "", ("vert", "")),
+        # ⟨le faux vert de #5398⟩ « Usage abusif de » est une tournure que la prose de ce depot
+        # emploie. Un garde NON DECLARE qui refuse ainsi etait compte « arguments », donc retire du
+        # compte des refus, et la porte finissait verte.
+        (
+            "un refus qui commence par « Usage » reste un refus",
+            "un-garde-qui-juge.py",
+            1,
+            "",
+            "Usage abusif du selecteur : trois appels non gardes.\nCe garde REFUSE.",
+            ("rouge", "Usage abusif du selecteur : trois appels non gardes."),
+        ),
+        # ⟨la confrontation, dans le sens dangereux⟩ Le jour ou `compte-les-reliquats.py` cessera
+        # d exiger ses arguments, son exemption se mettrait a masquer un VRAI refus. C est ce qui
+        # rend cette declaration un inventaire plutot qu une liste : elle est confrontee a chaque
+        # lancement, et son desaccord refuse au lieu de se taire.
+        (
+            "une déclaration périmée refuse au lieu d exempter",
+            "compte-les-reliquats.py",
+            1,
+            "",
+            "RELIQUATS | lus=0 | verdict=refus",
+            ("declaration-perimee", "RELIQUATS | lus=0 | verdict=refus"),
+        ),
     ):
-        obtenu = verdict_du_lancement(code, sortie, erreur)
+        obtenu = verdict_du_lancement(nom, code, sortie, erreur)
         if obtenu == attendu:
             print(f"  ✔ {libelle}")
         else:
             print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
             echecs += 1
 
-    print("\n11 cas de porte et de bord.")
+    # ⟨l aiguillage de `rendre`, et non la fonction⟩ Un verdict juste que l appelant range du cote
+    # vert ne vaut rien. Ce cas tient la table sur laquelle `rendre` decide, seule chose que
+    # l auto-test puisse atteindre sans lancer de sous-processus.
+    for verdict in ("rouge", "declaration-perimee"):
+        if verdict not in SANS_REFUS:
+            print(f"  ✔ un verdict « {verdict} » est compté refus par `rendre`")
+        else:
+            print(f"  ✘ « {verdict} » est rangé du côté vert : il ne serait jamais montré")
+            echecs += 1
+
+    print("\n15 cas : porte, bord, exemption confrontée et aiguillage.")
     return 1 if echecs else 0
 
 
