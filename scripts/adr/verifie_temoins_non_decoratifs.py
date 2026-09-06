@@ -27,6 +27,7 @@ dit une par une.
 
 import ast
 import contextlib
+import os
 import pathlib
 import shutil
 import subprocess
@@ -34,7 +35,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import rapporte, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, rapporte, sort_si_contrat_demande
 
 ADR = "4490"
 DOSSIER = pathlib.Path(__file__).resolve().parent
@@ -105,6 +106,76 @@ def charges(source: str) -> list[str]:
 def gardes() -> list[str]:
     """Les gardes que la suite charge reellement."""
     return charges(SUITE.read_text(encoding="utf-8"))
+
+
+# Ce qui, touche, fait muter TOUT le corpus : un garde peut cesser de rougir a cause d un module
+# qu il importe, sans que son propre fichier ait bouge. La liste est courte et elle est LARGE a
+# dessein - se tromper ici coute des minutes, l oublier coute un faux vert.
+FONDS_PARTAGE = (
+    "scripts/_commun/",
+    "scripts/adr/_",
+    "scripts/adr/verifie_temoins_non_decoratifs.py",
+    "scripts/adr/verifie_scripts.py",
+    "pyproject.toml",
+)
+
+
+def _git(*arguments: str) -> str:
+    import subprocess
+
+    sortie = subprocess.run(
+        ["git", "-C", str(RACINE_DEPOT), *arguments], capture_output=True, text=True, check=False
+    )
+    return sortie.stdout if sortie.returncode == 0 else ""
+
+
+def portee_du_diff(base: str | None = None, modifies: list[str] | None = None) -> list[str] | None:
+    """Les gardes que CE diff touche, ou `None` pour dire « mute tout ».
+
+    ## Pourquoi le banc peut se restreindre
+
+    Il prouve qu un garde porte un auto-test NON DECORATIF. C est une propriete du **code du garde** :
+    quand ce code n a pas change, elle rend le meme verdict que sur la base.
+
+    Ce que le depot accepte donc de ne pas rejouer est etroit et se nomme : *la non-decorativite d un
+    garde dont le code est identique a celui que la base a deja juge*.
+
+    ## Pourquoi il se restreint quand meme rarement
+
+    Un garde peut cesser de rougir a cause d un module PARTAGE qu il importe, sans que son fichier ait
+    bouge. Toucher `FONDS_PARTAGE` fait donc tout muter.
+
+    Et **sans base, on mute tout** : le defaut penche du cote couteux, jamais du cote muet. C est le
+    meme parti que les portees de job du chantier #5294.
+
+    ## Pourquoi ce n est pas un confort
+
+    Le banc neutralise chaque garde puis le relance : son cout croit LINEAIREMENT avec le corpus. Il
+    est passe de 4,67 a 6,87 min entre le 5 et le 6 septembre, parce que le chantier #5294 y a ajoute
+    quatre gardes. Sans cette portee, `lint` ralentit a chaque garde ecrit - c est-a-dire que mieux
+    garder le depot le rendrait indefiniment plus lent.
+    """
+    # ⟨couture⟩ `modifies` est injectable : sans elle, cette fonction irait chercher ses propres
+    # donnees et aucun cas ne pourrait lui en fabriquer. C est le patron d ADR 3624, deja pose par
+    # `mesure_duree_portail.py`.
+    if modifies is None:
+        base = base or os.environ.get("GITHUB_BASE_SHA") or ""
+        if not base:
+            return None
+        modifies = _git("diff", "--name-only", base, "HEAD").splitlines()
+    # Un diff VIDE fait muter tout, et non rien : on ne sait pas pourquoi il est vide, et le defaut
+    # penche du cote couteux.
+    if not modifies:
+        return None
+    if any(m.startswith(FONDS_PARTAGE) for m in modifies):
+        print(
+            f"Le fonds partage a bouge : le banc mute TOUT le corpus.",
+            file=sys.stderr,
+        )
+        return None
+
+    touches = sorted({pathlib.Path(m).name for m in modifies if m.startswith("scripts/adr/")})
+    return touches
 
 
 @contextlib.contextmanager
@@ -357,6 +428,34 @@ def suspects(noms: list[str] | None = None) -> tuple[list[str], list[str]]:
     return decoratifs, non_concluants
 
 
+CAS_DE_PORTEE = (
+    # (libelle, fichiers modifies, attendu) - `None` veut dire « mute TOUT ».
+    ("un garde touche est le seul mute", ["scripts/adr/2843-tiret-cadratin.py"], ["2843-tiret-cadratin.py"]),
+    ("deux gardes touches, deux mutes", 
+     ["scripts/adr/2843-tiret-cadratin.py", "scripts/adr/4477-longueur-des-adr.py"],
+     ["2843-tiret-cadratin.py", "4477-longueur-des-adr.py"]),
+    # Le CONTROLE NEGATIF du dispositif : le fonds partage fait tout muter. Sans lui, un garde
+    # cesserait de rougir a cause d un module qu il importe, sans que son fichier ait bouge.
+    ("le fonds partage fait tout muter", ["scripts/_commun/__init__.py"], None),
+    ("le banc lui-meme fait tout muter",
+     ["scripts/adr/verifie_temoins_non_decoratifs.py"], None),
+    ("un diff sans garde ne mute rien", ["dev-docs/decisions/1.md"], []),
+    ("un diff vide fait tout muter, faute de savoir pourquoi il est vide", [], None),
+)
+
+
+def _auto_test_de_portee() -> int:
+    echecs = 0
+    for libelle, modifies, attendu in CAS_DE_PORTEE:
+        obtenu = portee_du_diff(modifies=modifies)
+        if obtenu == attendu:
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
+            echecs += 1
+    return echecs
+
+
 def auto_test() -> int:
     """Le mecanisme se prouve dans les DEUX sens, sinon il ne prouve rien.
 
@@ -507,6 +606,9 @@ def auto_test() -> int:
             check=False,
         )
         verifie("sans mutation, son auto-test est vert", sain.returncode, 0)
+    # La PORTEE fait partie du mecanisme depuis #5345 : ses cas tournent ici, sinon ils ne
+    # tourneraient nulle part et seraient decoratifs par construction.
+    echecs += _auto_test_de_portee()
     return echecs
 
 
@@ -529,8 +631,20 @@ if __name__ == "__main__":
     sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(auto_test())
-    decoratifs, non_concluants = suspects()
-    population = len(mutes()) + len(autonomes())
+    # ⟨portee⟩ Le banc ne mute que les gardes que le diff touche, ou TOUT quand il ne sait pas.
+    portee = portee_du_diff()
+    if portee is not None:
+        print(
+            f"Portee du diff : {len(portee)} garde(s) touche(s) sur {len(gardes())}. "
+            "Les autres portent un code identique a celui que la base a deja juge.",
+            file=sys.stderr,
+        )
+    decoratifs, non_concluants = suspects(portee)
+    # ⟨`lus` compte ce qui a ETE MUTE, jamais le corpus⟩ Cette ligne appelait `mutes()` et
+    # `autonomes()` SANS la portee : elle aurait annonce quarante-sept gardes lus quand le banc en
+    # avait joue trois. Un `lus` qui depasse ce qu on a lu est le faux vert que l ADR 5007 refuse, et
+    # c est exactement le defaut que ce chantier combat ailleurs.
+    population = len(mutes(portee)) + len(autonomes(portee))
     # Les NON CONCLUANTS sortent AVANT le verdict, et separement (ADR 5257) : ils ne font pas
     # refuser, parce que refuser dessus reviendrait a refuser sur ce que ce banc n a pas su lire.
     # Les compter parmi les eprouves annoncerait toute la population comme tenue.
