@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.view.DefilementChrome;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
@@ -65,12 +66,22 @@ final class AttenteAvantClic {
     /// `MainController`, ce que la lecture de `MainView.fxml` ne dit pas.
     static void attendreCliquable(FxRobot robot, String libelle, int secondes, DefilementChrome revelateur) {
         try {
+            // Le prédicat est relu en boucle par `waitFor` **depuis le fil du test**, et il fait deux
+            // choses que ce fil n'a pas le droit de faire : il interroge le graphe de scène, et le
+            // révélateur le **modifie** en défilant. Ce fichier connaît la règle, il l'écrit vingt
+            // lignes plus bas pour [#etatObserve] - « des bornes lues depuis le fil de test peuvent
+            // être en cours de recalcul » - et ne se l'appliquait pas ici (#5330, ADR 5278).
             WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, () -> {
-                if (cliquable(robot, libelle).tryQuery().isPresent()) {
-                    return true;
-                }
-                reveler(robot, libelle, revelateur);
-                return cliquable(robot, libelle).tryQuery().isPresent();
+                AtomicBoolean pret = new AtomicBoolean();
+                robot.interact(() -> {
+                    if (cliquable(robot, libelle).tryQuery().isPresent()) {
+                        pret.set(true);
+                        return;
+                    }
+                    reveler(robot, libelle, revelateur);
+                    pret.set(cliquable(robot, libelle).tryQuery().isPresent());
+                });
+                return pret.get();
             });
         } catch (TimeoutException expiration) {
             throw new AssertionError(rapport(robot, libelle, secondes), expiration);
