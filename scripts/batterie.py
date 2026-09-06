@@ -358,21 +358,14 @@ def rendre(
         )
         mesures[g] = round(time.time() - depart, 1)
         joues += 1
-        # ⟨un garde qui exige des arguments n a pas juge⟩ `compte-les-reliquats.py` est un vrai
-        # cliquet, mais DIFFERENTIEL : lance nu, il imprime son usage et sort en 2. Le compter comme
-        # un refus ferait croire a un defaut du diff. On lit donc son comportement plutot que de
-        # tenir une liste d exemptions.
-        premiere = (sortie.stdout + sortie.stderr).strip().splitlines()
-        if (
-            sortie.returncode == 2
-            and premiere
-            and premiere[0].lower().startswith(("usage", "usage :"))
-        ):
+        # Les trois issues d un lancement, et pourquoi elles sont trois : voir
+        # `verdict_du_lancement`, qui les tient et que l auto-test eprouve.
+        verdict, ligne = verdict_du_lancement(sortie.returncode, sortie.stdout, sortie.stderr)
+        if verdict == "arguments":
             print(f"  · {g}  (s attend des arguments, non jugé ici)", flush=True)
             continue
-        if sortie.returncode != 0:
-            derniere = [l for l in sortie.stdout.splitlines() if l.strip()]
-            rouges.append((g, derniere[-1] if derniere else "(sans sortie)"))
+        if verdict == "rouge":
+            rouges.append((g, ligne))
             print(f"  ✘ {g}", flush=True)
         else:
             # ⟨flush⟩ Sans lui, la sortie est tamponnee et une execution interrompue n affiche RIEN.
@@ -402,6 +395,34 @@ def rendre(
     print("  faute d un prerequis - `target/pmd.xml`, l outil OpenSpec, un paquet reel. Leur ligne")
     print("  de refus le dit, et se rejoue sur `main` pour en avoir le coeur net.")
     return 1
+
+
+def verdict_du_lancement(code: int, stdout: str, stderr: str) -> tuple[str, str]:
+    """Ce qu un lancement de garde veut dire, et la ligne qui l explique.
+
+    **Trois issues, pas deux.** Un garde qui EXIGE DES ARGUMENTS n a pas juge : le compter rouge
+    ferait croire a un defaut du diff, qui est exactement le faux signal que cette porte existe pour
+    supprimer.
+
+    **Les deux flux se lisent.** Un garde qui refuse ecrit sur `stderr`, comme la maison le veut.
+    Cette fonction lisait `stdout` seul, si bien que `4617-code-mort-et-zone-de-test.py` sortait
+    « (sans sortie) » alors qu il disait quoi lancer. Un rouge illisible renvoie l agent au banc
+    improvise que cette porte remplace (#5383).
+
+    **La PREMIERE ligne, jamais la derniere.** Un garde bien ecrit explique comment se corriger
+    APRES avoir refuse : sa queue de sortie ressemble donc a de la prose calme, et c est la premiere
+    ligne qui nomme la cause.
+    """
+    lignes = [l.strip() for l in (stdout + "\n" + stderr).splitlines() if l.strip()]
+    if code == 0:
+        return "vert", ""
+    # ⟨on lit le COMPORTEMENT, jamais une liste d exemptions⟩ Le code de sortie ne suffit pas :
+    # `compte-les-reliquats.py` est un cliquet differentiel qui sort en **1**, pas en 2 comme le
+    # commentaire d origine l affirmait. Le test `returncode == 2` ne pouvait donc jamais etre vrai,
+    # et ce garde etait compte rouge a chaque lancement.
+    if lignes and lignes[0].lower().startswith("usage"):
+        return "arguments", lignes[0]
+    return "rouge", lignes[0] if lignes else "(sans sortie)"
 
 
 def _auto_test() -> int:
@@ -497,7 +518,41 @@ def _auto_test() -> int:
             print("  ✘ un corpus vide a engagé quelque chose")
             echecs += 1
 
-    print("\n6 cas de porte et de bord.")
+    # ⟨les trois issues d un lancement⟩ La boucle qui les distingue n avait AUCUN cas : elle vivait
+    # dans `rendre`, derriere un `subprocess`. Les deux premiers cas rougissent sur le code d avant.
+    for libelle, code, sortie, erreur, attendu in (
+        (
+            "un refus écrit sur `stderr` est cité",
+            1,
+            "",
+            "pmd.xml est absent\nLancez : ./mvnw",
+            ("rouge", "pmd.xml est absent"),
+        ),
+        (
+            "un usage sorti en 1 n est pas un rouge",
+            1,
+            "",
+            "Usage : x.py --avant | --apres",
+            ("arguments", "Usage : x.py --avant | --apres"),
+        ),
+        (
+            "un refus sur `stdout` est cité aussi",
+            1,
+            "REFUS : outil absent",
+            "",
+            ("rouge", "REFUS : outil absent"),
+        ),
+        ("un garde muet reste lisible", 1, "", "", ("rouge", "(sans sortie)")),
+        ("un garde vert ne dit rien", 0, "tout va bien", "", ("vert", "")),
+    ):
+        obtenu = verdict_du_lancement(code, sortie, erreur)
+        if obtenu == attendu:
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
+            echecs += 1
+
+    print("\n11 cas de porte et de bord.")
     return 1 if echecs else 0
 
 
