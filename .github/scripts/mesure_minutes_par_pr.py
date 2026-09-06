@@ -144,15 +144,40 @@ def porte_une_portee(job: dict) -> bool:
     return any((e.get("name") or "").startswith(MARQUE_DE_PORTEE) for e in job.get("steps") or [])
 
 
+def _tenue_par_la_forge(etape: dict) -> bool:
+    """Les etapes que la forge ajoute d elle-meme, et qui concluent `success` meme sur un job saute.
+
+    Sans elles, la lecture ci-dessous ne verrait plus AUCUN muet : un job entierement saute porte
+    quand meme un `Post Run actions/checkout` et un `Complete job` en `success`.
+    """
+    nom = (etape.get("name") or "").strip()
+    return nom == "Complete job" or nom.startswith("Post ")
+
+
 def _sans_objet(job: dict) -> bool:
-    """Un job dont la PORTEE a dit non : son pas de portee a conclu, et la suite est sautee.
+    """Un job dont la PORTEE a dit non : son pas de portee a conclu, et TOUTE la suite est sautee.
 
     On le lit dans les etapes plutot que dans la duree : **un job court n est pas un job qui s est
     tu**, et c est precisement la confusion que ce chantier existe pour lever. `titre` met six
     secondes en ayant juge.
+
+    Et on lit la SUITE ENTIERE, jamais « une etape sautee quelque part ». Un job qui a juge saute
+    tres souvent une etape de PUBLICATION, reservee a `main` : lire « une etape » comptait donc
+    `capturer` muet sur douze demandes sur douze, avec l avertissement « il ne se distingue plus d un
+    job supprime », alors qu il avait engendre les apercus a chaque fois (#5381). Un instrument qui
+    designe un job vivant comme mort fait defaire du travail juste.
     """
     etapes = job.get("steps") or []
-    return porte_une_portee(job) and any(e.get("conclusion") == "skipped" for e in etapes)
+    rang = next(
+        (i for i, e in enumerate(etapes) if (e.get("name") or "").startswith(MARQUE_DE_PORTEE)),
+        None,
+    )
+    if rang is None:
+        return False
+    suite = [e for e in etapes[rang + 1 :] if not _tenue_par_la_forge(e)]
+    # ⟨`bool(suite)` n est pas une precaution decorative⟩ Sans lui, `all()` sur une liste vide rend
+    # VRAI : un job dont la portee est la derniere etape serait declare muet sans qu on ait rien lu.
+    return bool(suite) and all(e.get("conclusion") == "skipped" for e in suite)
 
 
 def mediane(valeurs: list[float]) -> float:
@@ -361,10 +386,42 @@ def _auto_test() -> int:
             # Un job COURT sans pas de portee : bref, mais il a juge. C est la confusion que ce
             # chantier existe pour lever, donc elle a son cas.
             bref = {"steps": [{"name": "Titre de la demande", "conclusion": "success"}]}
+            # ⟨la forme qui a fait mentir l instrument⟩ `capturer` a JUGE sur #5370 - portee a oui,
+            # apercus engendres - et ses deux dernieres etapes PUBLIENT, donc elles ne valent que sur
+            # `main`. Lire « une etape sautee » le comptait muet sur douze demandes sur douze, avec
+            # l avertissement « il ne se distingue plus d un job supprime ». C est l inverse du vrai.
+            publie = {
+                "steps": [
+                    {
+                        "name": "Ce diff concerne-t-il les apercus des vues ?",
+                        "conclusion": "success",
+                    },
+                    {"name": "Set up JDK 25", "conclusion": "success"},
+                    {"name": "Generer les apercus PNG (hors-ecran)", "conclusion": "success"},
+                    {"name": "Conserver les avant/apres", "conclusion": "skipped"},
+                    {"name": "Publier les apercus via une PR auto-mergee", "conclusion": "skipped"},
+                    {"name": "Post Run actions/checkout", "conclusion": "success"},
+                    {"name": "Complete job", "conclusion": "success"},
+                ]
+            }
+            # Le temoin oppose du precedent : un job REELLEMENT muet porte lui aussi des etapes
+            # `Post ...` et `Complete job` en `success`, que la forge ajoute toujours. Sans les
+            # ecarter, la correction basculerait dans l autre faux et ne verrait plus aucun muet.
+            muet_avec_post = {
+                "steps": [
+                    {"name": "Ce diff concerne-t-il l emballage ?", "conclusion": "success"},
+                    {"name": "Set up JDK 25", "conclusion": "skipped"},
+                    {"name": "Assembler le fat-jar (sans les tests)", "conclusion": "skipped"},
+                    {"name": "Post Run actions/checkout", "conclusion": "success"},
+                    {"name": "Complete job", "conclusion": "success"},
+                ]
+            }
             for attendu, libelle, job in (
                 (True, "un job dont la portee s est tue est vu muet", muet),
                 (False, "un job dont la portee a dit oui n est pas muet", juge),
                 (False, "un job COURT sans portee n est pas muet", bref),
+                (False, "un job qui a juge puis saute sa PUBLICATION n est pas muet", publie),
+                (True, "un muet reste muet malgre ses etapes `Post ...`", muet_avec_post),
             ):
                 if _sans_objet(job) is attendu:
                     print(f"  ✔ {libelle}")
@@ -376,7 +433,7 @@ def _auto_test() -> int:
             if ancien is not None:
                 os.environ["RELEVE_DEMANDES_FICHIER"] = ancien
 
-    print(f"\n{len(CAS) + 5} cas de lecture et de bord.")
+    print(f"\n{len(CAS) + 7} cas de lecture et de bord.")
     return 1 if echecs else 0
 
 
