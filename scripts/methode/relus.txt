@@ -104,6 +104,7 @@ de6b400a37c9  src/main/java/fr/univ_amu/iut/audio/view/MenuCertitude.java
 065004d0c7fa  src/main/java/fr/univ_amu/iut/audio/view/MessagesEcranAudio.java
 7e4ba4270691  src/main/java/fr/univ_amu/iut/audio/view/MetriquesAcoustiquesAudio.java
 2b1ef443a481  src/main/java/fr/univ_amu/iut/audio/view/NavigationAudio.java
+0ca9524dd485  src/main/java/fr/univ_amu/iut/audio/view/OuverturesDepuisLaValidation.java
 646bf029318e  src/main/java/fr/univ_amu/iut/audio/view/PanneauDiscussion.java
 03fabcb3c55d  src/main/java/fr/univ_amu/iut/audio/view/PanneauEcouteAudio.java
 3be99f051327  src/main/java/fr/univ_amu/iut/audio/view/PublicationCorrectionsUI.java
@@ -1035,6 +1036,7 @@ ec052b9bc411  src/main/java/fr/univ_amu/iut/passage/view/AppuisPassage.java
 702b9b3a633b  src/main/java/fr/univ_amu/iut/passage/view/CartesActionPassage.java
 8df1cd8b65b3  src/main/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleController.java
 08afea411a9e  src/main/java/fr/univ_amu/iut/passage/view/NavigationPassage.java
+888a6ffc8bc5  src/main/java/fr/univ_amu/iut/passage/view/OuverturesDepuisLePassage.java
 17822834eb2b  src/main/java/fr/univ_amu/iut/passage/view/PassageController.java
 0dd6e58afbe5  src/main/java/fr/univ_amu/iut/passage/view/RattachementModaleController.java
 000fb58a763f  src/main/java/fr/univ_amu/iut/passage/view/ReactivationModaleController.java

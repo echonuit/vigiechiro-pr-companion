@@ -30,10 +30,6 @@ import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
-import fr.univ_amu.iut.commun.view.OuvrirActivite;
-import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
-import fr.univ_amu.iut.commun.view.OuvrirLot;
-import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.di.CampagneModule;
 import fr.univ_amu.iut.passage.di.PassageModule;
@@ -64,6 +60,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.passage.view.AppuisPassage;
 import fr.univ_amu.iut.passage.view.NavigationPassage;
+import fr.univ_amu.iut.passage.view.OuverturesDepuisLePassage;
 import fr.univ_amu.iut.passage.view.PassageController;
 import fr.univ_amu.iut.passage.view.RattachementModaleController;
 import fr.univ_amu.iut.passage.view.ReactivationModaleController;
@@ -314,16 +311,18 @@ public final class CapturePassage {
         loader.setControllerFactory(type -> type == PassageController.class
                 ? new PassageController(
                         passageVm,
-                        Optional.<OuvrirVerification>of(idp -> {}),
-                        Optional.<OuvrirDiagnostic>of(idp -> {}),
-                        // Feature `activite-nuit` OPTIONNELLE (offerte par défaut depuis la clôture du lot
-                        // #2352) : la carte figure donc sur l'aperçu, comme dans le produit.
-                        Optional.<OuvrirActivite>of(idp -> {}),
-                        idp -> {},
-                        Optional.<OuvrirLot>of(idp -> {}),
+                        new OuverturesDepuisLePassage(
+                                Optional.of(idp -> {}),
+                                Optional.of(idp -> {}),
+                                // Feature `activite-nuit` OPTIONNELLE (offerte par défaut depuis la
+                                // clôture du lot #2352) : la carte figure sur l'aperçu, comme dans le
+                                // produit.
+                                Optional.of(idp -> {}),
+                                idp -> {},
+                                Optional.of(idp -> {}),
+                                ouvrirSiteNeutre(),
+                                numeroCarre -> {}),
                         injecteur.getInstance(NavigationPassage.class),
-                        ouvrirSiteNeutre(),
-                        numeroCarre -> {},
                         idp -> 0,
                         // Appuis socle (#1213) : l'exécuteur vient de l'injecteur de capture, donc
                         // SYNCHRONE (garde-fou #1278) - le snapshot part une fois l'écran chargé.

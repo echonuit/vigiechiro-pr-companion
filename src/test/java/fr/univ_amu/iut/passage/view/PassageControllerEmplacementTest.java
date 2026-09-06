@@ -9,11 +9,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.Lieu;
-import fr.univ_amu.iut.commun.view.OuvrirActivite;
-import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
-import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
-import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -48,14 +44,15 @@ class PassageControllerEmplacementTest {
     private PassageController controller(PassageViewModel vm, OuvrirSite ouvrirSite) {
         return new PassageController(
                 vm,
-                Optional.<OuvrirVerification>of(idp -> {}),
-                Optional.<OuvrirDiagnostic>of(idp -> {}),
-                Optional.<OuvrirActivite>empty(),
-                idp -> {},
-                Optional.<OuvrirLot>of(idp -> {}),
+                new OuverturesDepuisLePassage(
+                        Optional.of(idp -> {}),
+                        Optional.of(idp -> {}),
+                        Optional.empty(),
+                        idp -> {},
+                        Optional.of(idp -> {}),
+                        ouvrirSite,
+                        numeroCarre -> {}),
                 navigation,
-                ouvrirSite,
-                numeroCarre -> {},
                 idp -> 0,
                 new AppuisPassage(
                         new ExecuteurTacheSynchrone(),

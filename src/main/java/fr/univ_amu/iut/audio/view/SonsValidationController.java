@@ -277,14 +277,17 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
             AudioViewModel viewModel,
             ImportVigieChiroViewModel importVigieChiro,
             PublicationCorrectionsViewModel publicationCorrections,
-            OuvrirSite ouvrirSite,
-            OuvrirPassage ouvrirPassage,
-            Optional<OuvrirAnalyse> ouvrirAnalyse,
-            OuvrirMultisite ouvrirMultisite,
+            OuverturesDepuisLaValidation ouvertures,
             MemoireFiltres memoire,
             AppuisAudio appuis,
             ActionsMenuAudio actionsMenu,
             ReglagesReactifs reactifs) {
+        // Les quatre champs restent : le corps les lit tels quels.
+        Objects.requireNonNull(ouvertures, "ouvertures");
+        OuvrirSite ouvrirSite = ouvertures.site();
+        OuvrirPassage ouvrirPassage = ouvertures.passage();
+        Optional<OuvrirAnalyse> ouvrirAnalyse = ouvertures.analyse();
+        OuvrirMultisite ouvrirMultisite = ouvertures.multisite();
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.importVigieChiro = Objects.requireNonNull(importVigieChiro, "importVigieChiro");
         this.publicationCorrections = Objects.requireNonNull(publicationCorrections, "publicationCorrections");

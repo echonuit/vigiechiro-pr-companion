@@ -250,16 +250,20 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @Inject
     public PassageController(
             PassageViewModel viewModel,
-            Optional<OuvrirVerification> ouvrirVerification,
-            Optional<OuvrirDiagnostic> ouvrirDiagnostic,
-            Optional<OuvrirActivite> ouvrirActivite,
-            OuvrirValidation ouvrirValidation,
-            Optional<OuvrirLot> ouvrirLot,
+            OuverturesDepuisLePassage ouvertures,
             NavigationPassage navigation,
-            OuvrirSite ouvrirSite,
-            OuvrirMultisite ouvrirMultisite,
             CompteurValidations compteurValidations,
             AppuisPassage appuis) {
+        // Les sept champs restent : le corps du contrôleur les lit tels quels, et les défaire ici
+        // ferait un diff de plusieurs centaines de lignes pour un changement de signature.
+        Objects.requireNonNull(ouvertures, "ouvertures");
+        Optional<OuvrirVerification> ouvrirVerification = ouvertures.verification();
+        Optional<OuvrirDiagnostic> ouvrirDiagnostic = ouvertures.diagnostic();
+        Optional<OuvrirActivite> ouvrirActivite = ouvertures.activite();
+        OuvrirValidation ouvrirValidation = ouvertures.validation();
+        Optional<OuvrirLot> ouvrirLot = ouvertures.lot();
+        OuvrirSite ouvrirSite = ouvertures.site();
+        OuvrirMultisite ouvrirMultisite = ouvertures.multisite();
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirVerification = Objects.requireNonNull(ouvrirVerification, "ouvrirVerification");
         this.ouvrirDiagnostic = Objects.requireNonNull(ouvrirDiagnostic, "ouvrirDiagnostic");
