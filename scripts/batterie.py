@@ -109,6 +109,20 @@ def correspond(chemin: str, motif: str) -> bool:
     return re.fullmatch("".join(morceaux), chemin) is not None
 
 
+# Les dispositifs qui JUGENT, et peuvent donc faire rougir la CI. Le vocabulaire est ferme et
+# declare une seule fois dans `verifie_contrats_tiennent.DISPOSITIFS` (ADR 5125) ; on ne retient ici
+# que la moitie qui refuse.
+#
+# ⟨pourquoi ce critere, et pas la duree⟩ Une loupe rend `0` par construction, un rapport releve, un
+# generateur produit : aucun ne peut causer l aller-retour de CI que cette porte existe pour eviter.
+# Les lancer avant de pousser est du temps paye deux fois, pour rien.
+#
+# Mesure du 2026-09-06, les 72 gardes lances un par un : ceux qui JUGENT coutent 810 s, les autres
+# 1123 s. Ecarter ce qui ne juge pas retire donc 58 % du cout SANS PERDRE UN SEUL ROUGE. Le critere
+# n est pas choisi, il est deja declare par chaque garde.
+JUGENT = frozenset({"cliquet", "plancher", "invariant", "harnais"})
+
+
 def gardes(racine: pathlib.Path | None = None) -> list[tuple[str, list[str]]]:
     """Les gardes de `scripts/`, avec leurs `chemins` declares - vide quand ils n en declarent pas.
 
@@ -141,6 +155,7 @@ def gardes(racine: pathlib.Path | None = None) -> list[tuple[str, list[str]]]:
                 trouves.append((f"scripts/{dossier}/{f.name}", []))
                 continue
             declares: list[str] = []
+            dispositif = None
             porte_un_contrat = False
             for noeud in ast.walk(arbre):
                 if not isinstance(noeud, ast.Assign):
@@ -160,7 +175,13 @@ def gardes(racine: pathlib.Path | None = None) -> list[tuple[str, list[str]]]:
                                         for l in str(valeur.value).splitlines()
                                         if l.strip()
                                     ]
-            if porte_un_contrat:
+                                if (
+                                    isinstance(cle, ast.Constant)
+                                    and cle.value == "dispositif"
+                                    and isinstance(valeur, ast.Constant)
+                                ):
+                                    dispositif = valeur.value
+            if porte_un_contrat and dispositif in JUGENT:
                 trouves.append((f"scripts/{dossier}/{f.name}", declares))
     return trouves
 
@@ -174,6 +195,45 @@ def engage(diff: list[str], racine: pathlib.Path | None = None) -> tuple[list[st
         else:
             ecartes.append(garde)
     return engages, ecartes
+
+
+# ⟨la porte se calibre, elle ne se devine pas⟩ Chaque `--lance` releve la duree de ce qu il joue et
+# la garde ici. La fois suivante, la porte ANNONCE ce qu elle va couter au lieu de partir pour une
+# demi-heure sans le dire - c est ce qu elle a fait deux fois le 2026-09-06, tuee a quinze puis a
+# trente minutes.
+#
+# Un fichier plutot qu une constante, parce qu une constante serait une mesure ecrite une fois puis
+# perimee : c est le defaut que l en-tete de `maven.yml` a porte des mois en annoncant 148 s pour un
+# harnais qui en mettait 787.
+DUREES = RACINE / "target" / "batterie-durees.json"
+
+
+def durees_connues() -> dict[str, float]:
+    import json
+
+    try:
+        return json.loads(DUREES.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def annonce_la_duree(engages: list[str]) -> None:
+    """Ce que ce passage va couter, d apres ce que le precedent a mesure."""
+    connues = durees_connues()
+    vues = [connues[g] for g in engages if g in connues]
+    if not vues:
+        print("     (durée inconnue : ce relevé se construit au premier `--lance`)")
+        return
+    total = sum(vues) + (len(engages) - len(vues)) * (sum(vues) / len(vues))
+    manquants = len(engages) - len(vues)
+    apercu = f"     ⏱ environ {total / 60:.0f} min"
+    if manquants:
+        apercu += f", dont {manquants} garde(s) jamais mesuré(s), estimés à la moyenne"
+    print(apercu, flush=True)
+    chers = sorted(((connues.get(g, 0), g) for g in engages), reverse=True)[:2]
+    for d, g in chers:
+        if d > 30:
+            print(f"        {d:5.0f} s  {g}", flush=True)
 
 
 def rendre(
@@ -195,14 +255,8 @@ def rendre(
         return 1
 
     print(f"  ENGAGE ({len(engages)} garde(s))")
-    if lance and len(engages) > 40:
-        print(
-            f"     ⚠ {len(engages)} gardes, dont deux bancs de mutation : comptez plus de quinze"
-            " minutes. Le compte est eleve parce que 62 gardes ne declarent pas encore leurs"
-            " `chemins` et sont donc lances par defaut - c est ce que le cliquet de l ADR 5340"
-            " fait descendre.",
-            flush=True,
-        )
+    if lance:
+        annonce_la_duree(engages)
     for g in engages:
         print(f"    python3 {g}")
     if ecartes:
@@ -228,12 +282,29 @@ def rendre(
     # et c etait un mauvais choix : elle butait au vingtieme garde sur soixante-trois, sur un refus
     # d ENVIRONNEMENT - `4617` exige `target/pmd.xml`. Elle imposait donc autant de passages qu il y
     # a de rouges, ce qui est exactement le va-et-vient qu elle existe pour supprimer.
-    joues, rouges = 0, []
+    import json
+    import time
+
+    joues, rouges, mesures = 0, [], durees_connues()
     for g in engages:
+        depart = time.time()
         sortie = subprocess.run(
             ["python3", g], cwd=str(racine or RACINE), capture_output=True, text=True, check=False
         )
+        mesures[g] = round(time.time() - depart, 1)
         joues += 1
+        # ⟨un garde qui exige des arguments n a pas juge⟩ `compte-les-reliquats.py` est un vrai
+        # cliquet, mais DIFFERENTIEL : lance nu, il imprime son usage et sort en 2. Le compter comme
+        # un refus ferait croire a un defaut du diff. On lit donc son comportement plutot que de
+        # tenir une liste d exemptions.
+        premiere = (sortie.stdout + sortie.stderr).strip().splitlines()
+        if (
+            sortie.returncode == 2
+            and premiere
+            and premiere[0].lower().startswith(("usage", "usage :"))
+        ):
+            print(f"  · {g}  (s attend des arguments, non jugé ici)", flush=True)
+            continue
         if sortie.returncode != 0:
             derniere = [l for l in sortie.stdout.splitlines() if l.strip()]
             rouges.append((g, derniere[-1] if derniere else "(sans sortie)"))
@@ -244,6 +315,12 @@ def rendre(
             # personne n a su ou elle en etait ni ce qu elle avait deja juge. Un outil long qui ne
             # montre rien avant sa fin ne se distingue pas d un outil bloque.
             print(f"  ✔ {g}", flush=True)
+
+    try:
+        DUREES.parent.mkdir(parents=True, exist_ok=True)
+        DUREES.write_text(json.dumps(mesures, indent=1, sort_keys=True), encoding="utf-8")
+    except OSError:
+        pass  # Le relevé est un confort : ne pas pouvoir l ecrire ne doit pas faire echouer la porte.
 
     print(f"\n  {joues} garde(s) joue(s), {len(rouges)} refus.")
     if not rouges:
@@ -286,6 +363,16 @@ def _auto_test() -> int:
             '''),
             encoding="utf-8",
         )
+        # ⟨ce qui ne juge pas est ECARTE⟩ Une loupe rend `0` par construction : elle ne peut pas
+        # causer l aller-retour de CI que cette porte existe pour eviter. C est le controle qui
+        # distingue le critere du DISPOSITIF d un simple seuil de duree.
+        (faux / "scripts" / "methode" / "une_loupe.py").write_text(
+            textwrap.dedent("""
+                CONTRAT = {"geste": "x", "population": "y", "dispositif": "loupe",
+                           "seuil": "(sans objet)", "temoin": "t", "decision": "d"}
+            """),
+            encoding="utf-8",
+        )
         (faux / "scripts" / "adr" / "muet.py").write_text(
             textwrap.dedent("""
                 CONTRAT = {"geste": "x", "population": "y", "dispositif": "invariant",
@@ -320,6 +407,20 @@ def _auto_test() -> int:
             print("  ✘ un garde qui ne déclare rien a été écarté : le repli ne tient pas")
             echecs += 1
 
+        # Le critere du dispositif, dans les DEUX sens : une loupe est absente du corpus, un
+        # invariant y est. Un seul des deux cas passerait par un filtre qui garderait tout.
+        noms = [g for g, _ in gardes(faux)]
+        if not any("une_loupe.py" in g for g in noms):
+            print("  ✔ une loupe est écartée : elle ne peut pas faire rougir la CI")
+        else:
+            print("  ✘ une loupe est restée dans le corpus")
+            echecs += 1
+        if any("muet.py" in g for g in noms):
+            print("  ✔ un invariant reste : il juge, donc il peut rougir")
+        else:
+            print("  ✘ un invariant a été écarté")
+            echecs += 1
+
         # Et le bord ou la porte se tairait : aucun engage sur un diff non vide fait REFUSER.
         vide = pathlib.Path(bac) / "vide"
         (vide / "scripts" / "methode").mkdir(parents=True)
@@ -331,7 +432,7 @@ def _auto_test() -> int:
             print("  ✘ un corpus vide a engagé quelque chose")
             echecs += 1
 
-    print("\n4 cas de porte et de bord.")
+    print("\n6 cas de porte et de bord.")
     return 1 if echecs else 0
 
 
