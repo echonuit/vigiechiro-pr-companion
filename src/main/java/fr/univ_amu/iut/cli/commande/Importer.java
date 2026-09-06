@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.VolumeEnLectureSeule;
 import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.importation.model.ApercuEcrasement;
@@ -180,7 +181,7 @@ public final class Importer implements Callable<Integer> {
         String quadruplet = "carré " + site.numeroCarre()
                 + " / point " + pointDEcoute.code()
                 + " / " + anneeEffective + " / passage " + numeroEffectif;
-        sortie.println(rendreBilan(resultat, quadruplet));
+        sortie.println(rendreBilan(resultat, quadruplet, VolumeEnLectureSeule.vrai(source)));
         Path rapportCsv = Path.of(resultat.session().cheminRacine()).resolve("rapport-import.csv");
         try {
             Files.writeString(rapportCsv, resultat.rapport().versCsv());
@@ -189,6 +190,16 @@ public final class Importer implements Callable<Integer> {
             sortie.println("  (rapport CSV non écrit : " + echec.getMessage() + ")");
         }
         return 0;
+    }
+
+    /// Ce que le terminal dit d'un support en lecture seule (#5361).
+    ///
+    /// Visible pour le banc de parité : `PariteSupportEnLectureSeuleTest` la confronte à celle de
+    /// l'écran, qui n'est pas la même phrase et doit nommer le même état et le même enjeu.
+    public static String supportEnLectureSeuleLisible() {
+        return "carte montée en lecture seule : cet import a fonctionné, mais vérifiez le verrou de la"
+                + " carte avant de repartir - si l'écriture reste impossible, elle n'enregistrera pas la"
+                + " prochaine nuit";
     }
 
     /// Rendu texte de la fin d'import. **Fonction pure** (aucune E/S, aucune base) : c'est ce qui la rend
@@ -202,7 +213,8 @@ public final class Importer implements Callable<Integer> {
     ///
     /// @param resultat ce que l'import a produit
     /// @param quadruplet carré / point / année / passage, composé par l'appelant qui seul les connaît
-    static String rendreBilan(ResultatImport resultat, String quadruplet) {
+    /// @param sourceEnLectureSeule le volume de la source refuse l'écriture (#5361)
+    static String rendreBilan(ResultatImport resultat, String quadruplet, boolean sourceEnLectureSeule) {
         StringBuilder texte = new StringBuilder("Import réussi.\n");
         ligne(texte, "Passage     ", "#" + resultat.passage().id());
         ligne(texte, "Quadruplet  ", quadruplet);
@@ -244,6 +256,17 @@ public final class Importer implements Callable<Integer> {
         }
         for (String anomalie : resultat.anomalies()) {
             ligne(texte, "Anomalie    ", anomalie);
+        }
+        // Parité avec l'IHM (clôture #4980, passe 2) : l'écran dit le support en lecture seule depuis
+        // #4991, la ligne de commande le taisait. C'est le seul constat d'inspection dont le coût est
+        // À VENIR - l'import de cette nuit aboutit, la source n'étant jamais écrite (R9) - donc le seul
+        // que taire laisse repartir sur le terrain avec une carte qui n'enregistrera rien.
+        //
+        // La phrase n'est pas recopiée de `AvertissementsInspection` : chaque surface écrit la sienne,
+        // et `PariteSupportEnLectureSeuleTest` les tient ensemble. C'est le patron de la parité de
+        // complétude, et #5352 a montré ce que coûte une phrase que rien ne confronte.
+        if (sourceEnLectureSeule) {
+            ligne(texte, "Support     ", supportEnLectureSeuleLisible());
         }
         return texte.toString().stripTrailing();
     }

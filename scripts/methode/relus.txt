@@ -199,7 +199,7 @@ ab3e9e1504e6  src/main/java/fr/univ_amu/iut/cli/commande/ExporterObservations.ja
 6d71c75441d2  src/main/java/fr/univ_amu/iut/cli/commande/ExporterVu.java
 f0aa8f94471d  src/main/java/fr/univ_amu/iut/cli/commande/FournisseurVersion.java
 41cdb66b1cf2  src/main/java/fr/univ_amu/iut/cli/commande/GardeJeuExistant.java
-e4d1ff0d5a0f  src/main/java/fr/univ_amu/iut/cli/commande/Importer.java
+d27d5427b2b9  src/main/java/fr/univ_amu/iut/cli/commande/Importer.java
 60098c16b16e  src/main/java/fr/univ_amu/iut/cli/commande/ImporterTadarida.java
 c16315ee421b  src/main/java/fr/univ_amu/iut/cli/commande/ImporterTransformes.java
 b3bc48f69f92  src/main/java/fr/univ_amu/iut/cli/commande/ImporterVigieChiro.java
@@ -791,7 +791,7 @@ a7c8afafb0f8  src/main/java/fr/univ_amu/iut/importation/view/TableNuits.java
 f16563b0fd16  src/main/java/fr/univ_amu/iut/importation/view/ZoneNuits.java
 ef03b0d325da  src/main/java/fr/univ_amu/iut/importation/view/ZoneNumeroPassage.java
 f4f8aa55113b  src/main/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixe.java
-de6f60d6f46e  src/main/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspection.java
+a3fda26fe00f  src/main/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspection.java
 ea4721561642  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduChiffreImport.java
 f791e51a0d7a  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduDInspection.java
 769e9b592a2f  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduImport.java
@@ -1741,6 +1741,7 @@ ba774b0b0cd0  src/test/java/fr/univ_amu/iut/importation/ExtracteurZipQuotasTest.
 4228af73ba11  src/test/java/fr/univ_amu/iut/importation/FrequenceAcquisitionTest.java
 5e58cfbffce8  src/test/java/fr/univ_amu/iut/importation/ImportationModuleTest.java
 8a750e308ae9  src/test/java/fr/univ_amu/iut/importation/InspecteurDossierTest.java
+2d2770579a48  src/test/java/fr/univ_amu/iut/importation/PariteSupportEnLectureSeuleTest.java
 df08aaf9e42e  src/test/java/fr/univ_amu/iut/importation/PartitionNuitsTest.java
 d7ed7a26f062  src/test/java/fr/univ_amu/iut/importation/RapportImportTest.java
 d0112ccc4840  src/test/java/fr/univ_amu/iut/importation/RenommeurTest.java

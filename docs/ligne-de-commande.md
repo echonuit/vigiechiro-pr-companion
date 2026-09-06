@@ -130,6 +130,28 @@ vigiechiro ajouter-point --site 3 --code A1 --lat 44.4467 --lon 6.2981 2> alerte
 Ce contrôle **ne demande rien au réseau** : la grille des carrés est embarquée dans l'application. Il
 fonctionne donc sans connexion et sans jeton, comme le reste de ces deux commandes.
 
+## Quand la carte ne pourra plus rien enregistrer
+
+Une carte SD finit par passer en **lecture seule** : c'est son mode de fin de vie ordinaire, et ce
+peut aussi être un petit verrou poussé sans y penser sur le côté de la carte. Dans les deux cas
+l'import fonctionne, Companion ne faisant que **lire** la source. C'est la nuit **suivante** qui ne
+s'enregistrera pas.
+
+`importer` le dit donc en fin de bilan, comme la fenêtre le fait depuis la 2.189.0 :
+
+```
+Support     : carte montée en lecture seule : cet import a fonctionné, mais vérifiez le verrou de la
+              carte avant de repartir - si l'écriture reste impossible, elle n'enregistrera pas la
+              prochaine nuit
+```
+
+Le geste tient en deux essais : regarder le verrou s'il y en a un, puis tenter de créer un dossier
+sur la carte depuis votre ordinateur. Si l'écriture reste impossible, la carte est à remplacer avant
+la prochaine sortie.
+
+La ligne ne paraît que si le support refuse l'écriture. Companion ne dit rien de plus : il a mesuré
+que le volume est monté en lecture seule, et vous seul pouvez regarder la carte.
+
 ## Quand un fichier est refusé parce qu'il est trop gros
 
 Le compagnon refuse de lire une entrée démesurée : un journal de carte, une réponse du serveur, une
