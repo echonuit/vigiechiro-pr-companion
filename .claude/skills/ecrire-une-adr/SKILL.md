@@ -230,10 +230,20 @@ revue visuelle, et l'ADR 3483 d'une trouvaille faite en retirant ce que 3439 mas
 
 Une ADR neuve doit atteindre son lecteur, et deux dispositifs le vérifient, à des moments différents.
 
+**La porte les lance déjà**, et c'est par elle qu'on passe : une ADR touchée engage
+`verifie_okf.py` comme les autres gardes d'ADR.
+
 ```bash
-python3 scripts/adr/verifie_okf.py            # refuse, neuf formes dont l'atteignabilité
+python3 scripts/batterie.py --lance           # ce que CE diff engage, dont verifie_okf.py
+```
+
+Ce qui reste à lancer à la main est ce que la porte ne peut pas faire, parce qu'il ÉCRIT au lieu de
+juger :
+
+```bash
 python3 scripts/methode/matrice-constitution.py --verifie   # dit si la matrice est périmée
 python3 scripts/methode/matrice-constitution.py             # la régénère
+python3 scripts/methode/matrice-ergonomie.py --verifie      # la SECONDE matrice, si l'ADR porte un `nielsen-N`
 ```
 
 `verifie_okf.py` refuse une ADR **absente de `dev-docs/decisions/index.md` ou de `mkdocs-dev.yml`**,

@@ -135,6 +135,65 @@ def suspects() -> tuple[list[str], int]:
     return manquants, len(lisibles)
 
 
+PORTE = "scripts/batterie.py"
+
+
+def gardes_de_la_porte() -> list[str]:
+    """Tout ce que la porte engage : un fichier de `scripts/` qui DECLARE un contrat.
+
+    Distincte de `population()`, qui soustrait ce que `rapport.py` balaie parce qu elle repond a une
+    autre question - « la page les nomme-t-elle ? ». Ici la question est « la surface envoie-t-elle a
+    la porte ? », et la porte lance les DEUX familles.
+
+    Mesure du 2026-09-06 : sans cette distinction, `AGENTS.md` echappait au garde. Il prescrivait
+    `python3 scripts/adr/4617-code-mort-et-zone-de-test.py`, que `rapport.py` balaie donc que
+    `population()` ecarte - et c est precisement la surface par laquelle le defaut est arrive.
+    """
+    return sorted(
+        str(f.relative_to(RACINE))
+        for f in (RACINE / "scripts").rglob("*.py")
+        if "CONTRAT = {" in f.read_text(encoding="utf-8", errors="replace")
+    )
+
+
+def surfaces_d_instruction() -> list[str]:
+    """Les pages qu un agent lit AVANT de travailler, et qui lui prescrivent des gestes.
+
+    Distinctes des pages de description : une page de `dev-docs/` qui ment egare un lecteur, une
+    surface d instruction qui ment fait AGIR, a chaque session, sans que rien ne rougisse.
+    """
+    fixes = [n for n in ("AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md") if (RACINE / n).is_file()]
+    competences = sorted(
+        str(c.relative_to(RACINE)) for c in (RACINE / ".agents" / "skills").glob("*/SKILL.md")
+    )
+    return fixes + competences
+
+
+def surfaces_sans_la_porte(gardes: list[str] | None = None, lire=None) -> list[str]:
+    """Les surfaces qui prescrivent un garde que la porte engage, sans nommer la porte.
+
+    Le mode de panne qu elle ferme : #5294 a livre `scripts/batterie.py`, `dev-docs/` l a decrite, et
+    `AGENTS.md` a continue de prescrire la liste qu elle remplace. Les agents ont donc continue de se
+    composer un banc, et le chantier etait livre sans etre adopte. Rien ne rougissait.
+
+    La population est DERIVEE, jamais enumeree : ce sont les gardes que la CI lance et que la porte
+    engage donc. Une liste d exemptions serait le defaut que ce fichier combat par ailleurs.
+    """
+    corpus = gardes_de_la_porte() if gardes is None else gardes
+    lecture = lire or (lambda r: (RACINE / r).read_text(encoding="utf-8", errors="replace"))
+    fautives = []
+    for surface in surfaces_d_instruction():
+        texte = lecture(surface)
+        if PORTE in texte:
+            continue
+        prescrits = [g for g in corpus if f"python3 {g}" in texte]
+        if prescrits:
+            fautives.append(
+                f"{surface}  prescrit {len(prescrits)} garde(s) sans nommer la porte, dont {prescrits[0]}"
+            )
+    return fautives
+
+
 def _auto_test() -> int:
     echecs = 0
 
@@ -191,6 +250,39 @@ def _auto_test() -> int:
     for glob in GLOBS_DE_RAPPORT:
         verifie(f"rapport.py balaie toujours {glob}", f'glob("{glob}")' in source, True)
 
+    # ⟨la seconde confrontation⟩ Les DEUX sens, sans quoi une fonction qui ne trouverait jamais rien
+    # passerait le premier cas toute seule.
+    faux = {
+        "AGENTS.md": "Avant de committer : python3 scripts/adr/x.py puis pousser.",
+        "CONTRIBUTING.md": "Lancer python3 scripts/adr/x.py apres scripts/batterie.py --lance.",
+        "CLAUDE.md": "Rien a lancer ici.",
+    }
+    fautives = surfaces_sans_la_porte(
+        gardes=["scripts/adr/x.py"],
+        lire=lambda r: faux.get(r, ""),
+    )
+    verifie(
+        "une surface qui prescrit sans nommer la porte est refusee",
+        [f.split()[0] for f in fautives],
+        ["AGENTS.md"],
+    )
+    verifie(
+        "une surface qui nomme la porte passe, meme en prescrivant",
+        any(f.startswith("CONTRIBUTING.md") for f in fautives),
+        False,
+    )
+    verifie(
+        "une surface qui ne prescrit rien passe",
+        any(f.startswith("CLAUDE.md") for f in fautives),
+        False,
+    )
+    verifie(
+        "les surfaces d instruction sont trouvees",
+        "AGENTS.md" in surfaces_d_instruction()
+        and any(x.endswith("ouvrir-une-pr/SKILL.md") for x in surfaces_d_instruction()),
+        True,
+    )
+
     lisibles = population()
     verifie("la population n est pas vide", len(lisibles) > 0, True)
     return echecs
@@ -219,11 +311,14 @@ if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
     manquants, lus = suspects()
+    # ⟨les deux sens de la meme decision⟩ La page nomme les gardes qui jugent ; et les surfaces qui
+    # prescrivent un garde envoient a la PORTE, qui les derive. Sans le second, on peut nommer
+    # parfaitement des gardes que personne ne passe par la porte pour lancer.
     raise SystemExit(
         rapporte(
             "5258",
-            "gardes que la page de la batterie locale ne nomme pas",
-            manquants,
-            lus=lus,
+            "gardes non nommes par la page, et surfaces qui prescrivent sans passer par la porte",
+            manquants + surfaces_sans_la_porte(),
+            lus=lus + len(surfaces_d_instruction()),
         )
     )

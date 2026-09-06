@@ -577,7 +577,7 @@ trompé : une analyse fausse laissée en place oriente le chantier suivant.
 - [ ] 0. Relecture des ADR existantes (contre `origin/main`) : une décision a-t-elle été **contredite**, et si oui délibérément ?
 - [ ] 1. Audit d'intégration (rebase sur `main`, points d'accroche, régressions)
 - [ ] 2. Cohérence CLI ↔ UI (capacités métier exposées des deux côtés, ou « sans objet »)
-- [ ] 3. Doc développeur (dev-docs) : ce qui manque **et ce qui est devenu FAUX** (partir des fichiers touchés, chercher qui les cite)
+- [ ] 3. Doc développeur (`dev-docs/`) **et surfaces d'instruction** (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `.agents/skills/`) : ce qui manque **et ce qui est devenu FAUX** (partir des fichiers touchés, chercher qui les cite ; et si le chantier REMPLACE un geste, chercher le geste)
 - [ ] 4. Doc utilisateur (docs/) + captures
 - [ ] 5. Brief projet (`brief/`, dans la PR du chantier) répercuté si un élément de conception change
 - [ ] 6. Tests : inventaire des usages **depuis le diff** (chemins non nominaux, parité CLI ↔ IHM), E2E qui **traversent les coutures**, **PIT ciblé** (survivants lus un par un) et **E2E `bats`** si la CLI bouge

@@ -448,16 +448,27 @@ Deux workflows se déclenchent à chaque push :
 | Workflow | Rôle | Bloquant ? |
 |---|---|---|
 | [`maven.yml`](.github/workflows/maven.yml) | Build + tests headless **+ couverture** (`./mvnw verify -Djacoco.haltOnFailure=true`, seuils JaCoCo bloquants). | **Oui** |
-| [`lint.yml`](.github/workflows/lint.yml) | Statique : **`spotless:check`** (formatage) + complétude des captures + **`test-compile pmd:pmd`**, qui produit le rapport sans juger, puis les **cliquets ADR** qui le jugent - dont celui de l'[ADR 4617](dev-docs/decisions/4617-le-portail-voit-les-tests-et-le-code-mort.md). | **Oui** |
+| [`lint.yml`](.github/workflows/lint.yml) | **Cinq jobs** depuis #5294, séparés pour qu'un rouge dise lequel : `lint` (les formateurs et analyseurs, `spotless:check` et `ruff`), `methode` (les gardes de méthode, **`test-compile pmd:pmd`** qui produit le rapport sans juger, puis les **cliquets ADR** qui le jugent, dont celui de l'[ADR 4617](dev-docs/decisions/4617-le-portail-voit-les-tests-et-le-code-mort.md)), `temoins` (les bancs de mutation), `banc-filme` et `outillage-release`. | **Oui** |
 
-Reproduire les contrôles **en local** (la CI les répartit sur les deux workflows) :
+Reproduire les contrôles **en local**. La première commande est une **porte** : elle dérive les
+gardes que votre diff engage et lance ceux qui ne déclarent rien, donc elle lance trop et jamais trop
+peu. Ne composez pas votre propre liste, c'est ce qu'elle remplace.
 
 ```bash
-./mvnw -B test-compile pmd:pmd                  # le rapport PMD, qui ne juge pas (lint.yml)
-python3 scripts/adr/4617-code-mort-et-zone-de-test.py   # le verdict, par zone (lint.yml)
-./mvnw -B verify -Djacoco.haltOnFailure=true    # tests + couverture + dépendances (maven.yml)
-./mvnw spotless:check                           # formatage (lint.yml)
+python3 scripts/batterie.py                     # ce que CE diff engage, sans rien lancer
+python3 scripts/batterie.py --lance             # et on les lance
 ```
+
+Trois contrôles restent **hors** de la porte, parce qu'ils ne sont pas des gardes Python :
+
+```bash
+./mvnw -B test-compile pmd:pmd                  # produit le rapport PMD, qui ne juge pas (job methode)
+./mvnw -B verify -Djacoco.haltOnFailure=true    # tests + couverture + dépendances (maven.yml)
+./mvnw spotless:check                           # le formatage Java, que `ruff` ne tient pas (job lint)
+```
+
+`pmd:pmd` doit tourner **avant** `python3 scripts/adr/4617-code-mort-et-zone-de-test.py`, que la porte
+lance : sans le rapport, ce cliquet REFUSE de conclure et le dit.
 
 Les autres workflows : `capture-vues.yml` (régénère les aperçus de la doc), `docs.yml`
 (construit/publie les trois sites de documentation), `api-live.yml` (contrat de l'API Vigie-Chiro,

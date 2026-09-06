@@ -34,7 +34,7 @@ passe.
 | 0 | Relecture des ADR existantes | la liste des décisions que le chantier a contredites | `ecrire-une-adr` |
 | 1 | Audit d'intégration | ce que `main` a changé pendant le chantier | `auditer-l-integration` |
 | 2 | Cohérence CLI et IHM | la commande manquante, ou son absence justifiée | `confronter-les-deux-surfaces` |
-| 3 | Doc développeur | `dev-docs/` recolle au code livré | `recoller-la-doc-au-code`, `humaniser` en appui |
+| 3 | Doc développeur et surfaces d'instruction | `dev-docs/` **et** `AGENTS.md`, `CONTRIBUTING.md`, les compétences recollent au code livré | `recoller-la-doc-au-code`, `humaniser` en appui |
 | 4 | Doc utilisateur | `docs/` et ses captures | `documenter-pour-l-utilisateur`, `humaniser` en appui |
 | 5 | Brief projet | parcours, maquettes, modèle conceptuel | `aligner-le-brief-au-produit`, `humaniser` en appui |
 | 6 | Tests | chaque usage introduit est couvert | `couvrir-les-usages-livres`, `tdd` et `mutation` en appui |
