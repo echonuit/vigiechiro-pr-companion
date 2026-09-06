@@ -791,6 +791,13 @@ jobs:
         #
         # L'auto-test tient les deux moities : un appel muet est vu, et un appel qui declare ne
         # l'est PAS. Un garde qui refuserait tout passerait la premiere.
+        env:
+          # ⟨sans elle, le banc mute TOUT⟩ Il ne mute que les gardes du diff depuis #5345, et il
+          # derive cette portee du SHA de base que la forge fournit. Ne pas le lui passer le fait
+          # retomber sur « mute tout » - le mecanisme reste ecrit, eprouve, documente, et INERTE.
+          # C'est ce qui s'est passe entre #5356 et #5366, et `verifie_portees_de_ci.py` le refuse
+          # desormais.
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
           python3 scripts/adr/verifie_verdicts_declares.py --auto-test
