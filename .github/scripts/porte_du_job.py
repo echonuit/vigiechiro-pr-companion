@@ -150,6 +150,21 @@ mvnw
 .github/workflows/maven.yml
 """
     + MECANISME,
+    # `temoins` porte les deux bancs de mutation : ils neutralisent chaque garde et le relancent,
+    # donc leur cout croit avec le corpus. Ils n apprennent rien d une demande qui ne touche aucun
+    # garde - c est la meme these que l ADR 5345, portee ici au JOB plutot qu a l etape.
+    #
+    # C est ce qui rend le lot #5303 sans objet : il proposait un concept neuf, des portees d ETAPE
+    # dans un job inconditionnel. Sortir le banc dans son propre job le rend soluble avec ce qui
+    # existe deja.
+    "temoins": """
+scripts/**
+.github/scripts/**
+.github/assets/**
+pyproject.toml
+.github/workflows/lint.yml
+"""
+    + MECANISME,
     "outillage-release": """
 .github/release/**
 .github/openspec/**
@@ -165,7 +180,8 @@ scripts/methode/verifie-sous-commandes-openspec.py
 # NOMMEES, jamais un compte : c est l idiome de `verifie_verdicts_declares.HORS_PORTEE`.
 INCONDITIONNELS: dict[str, str] = {
     "build": "la suite et le seuil de couverture ; la documentation de ce depot est testee comme du code, aucune demande n en est independante",
-    "lint": "le portail des meta-gardes ; il juge les competences, les inventaires et les auto-tests, donc presque tout",
+    "lint": "les formateurs et les analyseurs : Spotless, ruff, shellcheck, PMD. Ils lisent tout l arbre, aucune demande n en est independante",
+    "methode": "les gardes de methode : la prose, les inventaires, les cliquets, les concordances. Ils lisent les competences, les ADR et les pages, donc presque toute demande les engage",
     "corps": "il lit le corps de la demande, pas l arbre : une portee de chemins n y a aucun sens",
     "titre": "il lit le titre de la demande, pas l arbre",
     "duree-du-portail": "il porte `needs: build`, mesure une serie de la forge et n execute rien du depot",
