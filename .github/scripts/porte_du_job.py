@@ -138,6 +138,17 @@ mvnw
 .github/workflows/maven.yml
 """
     + MECANISME,
+    # `second-compilateur` recompile les DEUX arbres avec ecj, sans jouer ni tests ni couverture. Il
+    # depend donc de ce qui se compile, et de rien d autre. Il porte `name: analyser-ecj` : la cle
+    # d une portee est celle du JOB, pas son libelle.
+    "second-compilateur": """
+src/**
+pom.xml
+mvnw
+.mvn/**
+.github/workflows/maven.yml
+"""
+    + MECANISME,
     "outillage-release": """
 .github/release/**
 .github/openspec/**
@@ -159,7 +170,6 @@ INCONDITIONNELS: dict[str, str] = {
     "duree-du-portail": "il porte `needs: build`, mesure une serie de la forge et n execute rien du depot",
     "contrat-fichiers": "il porte sa propre porte depuis #3525, `porte_sur_le_contrat_de_fichiers.py`",
     "banc-filme": "ecarte par ecrit au chantier #5294 : il lance les auto-tests de six dispositifs, et le conditionner en sauterait cinq pour gagner une minute",
-    "second-compilateur": "arbitrage ouvert au chantier #5294 : le conditionner, ou ecrire pourquoi il tourne toujours",
     "inventaire": "son atelier porte deja un filtre `paths:`",
     "fraicheur-des-actions": "son atelier porte deja un filtre `paths:`",
 }
