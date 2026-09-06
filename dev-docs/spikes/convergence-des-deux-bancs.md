@@ -177,6 +177,44 @@ périmètre de ce spike.
 clip **cesse de ressembler à un clip de recette**. C'était la question que les dessins ne pouvaient
 pas trancher, puisqu'ils ne montraient pas l'application en train de fonctionner.
 
+## Le parcours RÉEL : ce que le montage promettait, livré
+
+Le montage ci-dessus était un montage, et il l'écrivait. Le sous-chantier #5282 a livré ce qu'il
+simulait : la décoration est dessinée par le banc (#5285), le dialogue est une vraie fenêtre de
+l'application (#5308, #5309), un réglage le choisit (#5310), et un parcours de documentation le joue
+**sans substituer son sélecteur** (#5311).
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-spike-convergence/parcours-importer-une-nuit-banc-java.mp4"></video>
+
+**Les trois choses fausses du montage sont levées, une par une.**
+
+| Ce que le montage avouait | Ce que ce clip rend |
+|---|---|
+| « le cadre et le dialogue n'existent pas » | ils sortent du code livré, et aucun script de composition n'intervient |
+| « le film ne montre qu'un temps du parcours » | **une seule prise de 30 s**, un seul test, aucune concaténation |
+| « une contradiction est visible » : chemin annoncé ≠ chemin réel | le champ « Dossier source » porte **exactement** ce que le dialogue a désigné |
+
+**La contrainte que le montage avait fait apparaître a été traitée, et pas contournée.** Il concluait
+qu'« un double visible devra rendre un chemin **montrable** ». Le dialogue étant réel, il montre le
+vrai chemin - or `CarteDeRecette.materialiser` rend `/tmp/vc-carte-sd-nominale857838373229970727`, qui
+se tape à l'écran pendant six secondes. Le premier tournage l'a montré, et le clip était vert.
+
+Le parcours recopie donc la carte sous `/tmp/vigiechiro-parcours/VIGIECHIRO` : le geste filmé devient
+« aller au dossier des cartes, **cliquer** sur la carte, valider », ce qu'un observateur ferait. C'est
+la seule chose que le clip arrange, et elle est de l'ordre du décor, pas du comportement.
+
+!!! note "Ce clip montre une configuration qui n'est pas le défaut"
+
+    Le dialogue de l'application se **choisit** : le défaut du produit reste le dialogue du système,
+    et une installation neuve se comporte comme avant. Le parcours arme le réglage comme un
+    utilisateur le poserait, en écrivant la préférence que l'écran des réglages écrit.
+
+    Cela ne tombe pas sous l'[ADR 3788](../decisions/3788-un-banc-qui-maximise-tout-ne-montre-pas-ce-qu-on-livre.md),
+    qui vise une mise en page qu'on ne livre pas. Ici la configuration est livrée et choisissable ; ce
+    que le film montre, un utilisateur peut l'obtenir. La distinction se lit mal si personne ne
+    l'écrit, d'où cet encadré.
+
 ## Ce que ce spike n'a PAS mesuré
 
 Trois choses, et elles décident du coût plutôt que de la faisabilité.
