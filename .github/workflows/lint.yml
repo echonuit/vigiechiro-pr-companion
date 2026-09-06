@@ -300,13 +300,18 @@ jobs:
             echo "La copie locale était en retard sur \`main\` (fusion concurrente) : \`semantic-release\` s'est arrêté avant d'analyser l'historique." >> "$GITHUB_STEP_SUMMARY"
           fi
           exit "$etat"
-
+  # ⟨trois metiers, trois jobs, depuis #5365⟩ Ce job en portait QUATRE-VINGT-ONZE etapes et trois
+  # natures que rien ne distinguait : du lint, de la verification de methode, et deux bancs de
+  # mutation. Un rouge disait « lint a rougi », ce qui n apprend rien sur un job qui fait trois
+  # metiers - il a fallu deux fois ouvrir le job et parcourir 95 etapes pour savoir laquelle.
+  #
+  # Ils tournent desormais EN PARALLELE : le chemin critique passe de la somme au maximum.
   lint:
+    # Le lint au sens propre : les formateurs et les analyseurs, rien qui juge la methode.
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
       - name: Set up JDK 25
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
@@ -316,254 +321,19 @@ jobs:
           # org.openjfx. La Headless Platform (glass.platform=Headless) est 100 % logicielle.
           check-latest: false
           cache: maven
-
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.x"
-
       - name: "Installer les dépendances déclarées des gardes (#5008)"
         # Neuf gardes de ce job portent `import yaml`, et rien ne déclarait PyYAML : ils ne
         # marchaient que parce que l'image `ubuntu-latest` le fournit. Une dépendance qu'on a sans
         # le savoir tombe le jour où l'image change, et l'erreur accuse alors la PR qui passait par
         # là. Elle est désormais épinglée dans `pyproject.toml` et installée ici.
         run: pip install --group gardes
-
       - name: Formatage Spotless (bloquant)
         # Spotless est opt-in (pas de binding Maven) : on l'exécute explicitement ici pour
         # qu'un code non formaté fasse échouer la CI, même sans le hook pre-commit local.
         run: ./mvnw -B spotless:check --file pom.xml
-
-      - name: Épinglage des actions et conteneurs
-        # Un tag peut être repointé sur un autre commit sans que rien ne bouge chez nous : ce qui
-        # s'exécute dans nos workflows changerait alors sans qu'aucun commit ne le dise (#2737).
-        # Sans cette garde, la prochaine action ajoutée le serait par tag et l'épinglage se
-        # déferait en silence.
-        # L'autotest tourne d'abord, comme pour la garde jeton : une règle relâchée passerait sinon au
-        # vert sur un dépôt propre, sans que rien ne le dise.
-        run: |
-          chmod +x .github/scripts/verifie_epinglage.py
-          python3 .github/scripts/verifie_epinglage.py --auto-test
-          python3 .github/scripts/verifie_epinglage.py
-
-      - name: Le Flatpak peut ouvrir une fenêtre sous Wayland
-        # `--socket=fallback-x11` n'accorde X11 que si Wayland est ABSENT, alors que JavaFX rend par
-        # GTK en X11. Sur GNOME et KDE - donc chez la plupart des utilisateurs - le paquet mourait au
-        # démarrage sur « Unable to open DISPLAY », et RIEN ne l'a vu : le pas « Démarrage réel » de
-        # flatpak.yml tourne en headless, donc sans affichage, et les essais locaux passaient tous
-        # `--nosocket=wayland`, ce qui prenait par accident le seul chemin qui marche.
-        # C'est une politique de permissions, lisible dans le manifeste : on la garde ici, hors ligne,
-        # plutôt que d'installer un compositeur sur le runner.
-        run: |
-          chmod +x .github/scripts/verifie_affichage_flatpak.py
-          python3 .github/scripts/verifie_affichage_flatpak.py --auto-test
-          python3 .github/scripts/verifie_affichage_flatpak.py
-
-      - name: Moindre privilège des workflows
-        # #2739 a retiré les droits d'écriture du plancher de release.yml pour les déclarer job par
-        # job. Rien ne l'empêchait de se défaire : une PR qui les remettrait au plancher passerait
-        # toutes les autres gardes (#3294).
-        run: |
-          chmod +x .github/scripts/verifie_permissions.py
-          python3 .github/scripts/verifie_permissions.py --auto-test
-          python3 .github/scripts/verifie_permissions.py
-
-      - name: "Un chemin suivi ne porte que de l'ASCII (bloquant, #5089)"
-        # `git ls-files` et `git diff --name-only` échappent les chemins non-ASCII par défaut, ce
-        # qui les rend invisibles à tout outillage qui teste ensuite l'existence du fichier. Le
-        # 2026-09-01 une passe de mise à jour du graphe a écarté 50 fichiers de `brief/` en silence
-        # et pris 6 renommages pour 56 suppressions. Rien n'a rougi.
-        #
-        # Tolérance zéro plutôt que cliquet : #5089 a renommé les 101 chemins fautifs, la zone est
-        # donc à zéro le jour de la décision. Le garde ne dit rien de la casse, des espaces ni des
-        # apostrophes, que `core.quotePath` n'échappe pas et qui ne sont pas la cause.
-        run: |
-          chmod +x .github/scripts/verifie_chemins_ascii.py
-          python3 .github/scripts/verifie_chemins_ascii.py --auto-test
-          python3 .github/scripts/verifie_chemins_ascii.py
-
-      - name: Un secret de plateforme ne dépasse pas son pas
-        # Posé dans l'`env:` d'un JOB, un jeton Vigie-Chiro n'est pas offert au pas qui en a
-        # besoin : il l'est à tout ce que le job exécute. `ConnexionModule` lit `System.getenv`, les
-        # forks surefire héritent de l'environnement du job, et l'URL de base vaut la production : la
-        # suite de tests entière serait armée face à la plateforme réelle.
-        #
-        # Et rien côté serveur ne peut le rattraper : le rôle `Lecteur` est déclaré mais AUCUNE
-        # route ne l'accepte, `GET /moi` compris. La lecture seule ne tient que par cette portée.
-        run: |
-          chmod +x .github/scripts/verifie_portee_des_secrets.py
-          python3 .github/scripts/verifie_portee_des_secrets.py --auto-test
-          python3 .github/scripts/verifie_portee_des_secrets.py
-
-      - name: Le verdict du tournage lit le XML, pas le texte
-        # Les rapports `.txt` de surefire annoncent « Tests run: 0 » sur une classe à `@Nested` et
-        # rendent 0 : un compteur qui les lirait dirait « aucun échec » sur un tournage à moitié rouge.
-        # Ses deux contrôles négatifs comptent autant que le reste : « aucun rapport » n'est pas
-        # « aucun échec », et une ERREUR compte autant qu'une défaillance - c'est par une erreur qu'un
-        # banc refusant faute de jeton se signale.
-        run: |
-          chmod +x .github/scripts/verdict_du_tournage.py
-          python3 .github/scripts/verdict_du_tournage.py --auto-test
-
-      - name: Le tournage nomme les cas qu'il n'a pas rendus
-        # Son oracle comparait deux nombres, « 111 cas sur 116 », sans jamais dire lesquels : il
-        # fallait refaire son calcul à la main pour l'apprendre. Et le compte attendu incluait les cas
-        # des scénarios exclus du build sans jeton, si bien qu'un tournage non connecté ne pouvait pas
-        # l'atteindre - le train a cessé de verser ses clips Java pendant cinq jours sans le dire.
-        # Son contrôle négatif est celui qui compte : un index illisible REFUSE au lieu de conclure
-        # qu'aucun cas ne manque.
-        run: |
-          chmod +x .github/scripts/cas_manquants_du_tournage.py
-          python3 .github/scripts/cas_manquants_du_tournage.py --auto-test
-
-      - name: La révocation du jeton sait ce qui vaut succès
-        # Sa règle est de celles qu'une relecture distraite retourne : `404` et `401` sont des
-        # SUCCÈS, parce que l'objectif n'est pas « le serveur a répondu 200 » mais « ce jeton ne sert
-        # plus à personne ». Les lire comme des échecs ferait avertir à chaque tournage dont le jeton
-        # avait déjà expiré, et on apprendrait à ignorer la ligne.
-        #
-        # Seul le verdict est éprouvé ici : l'appel réseau reste au bord, et il n'a rien à faire dans
-        # un job de lint.
-        run: |
-          chmod +x .github/scripts/revoque_jeton.py
-          python3 .github/scripts/revoque_jeton.py --auto-test
-
-      - name: Les décisions du tournage connecté tiennent encore
-        # Le refus de `clips-connectes` par `comparer-tournages.yml` EST un garde, et rien ne le
-        # gardait : un `if` mal écrit le neutraliserait sans que rien ne rougisse, et la comparaison
-        # recommencerait à mesurer la plateforme en croyant mesurer le rendu.
-        #
-        # Ce refus n'est pas relu, il est LANCÉ : il vit dans un `run:`, donc du shell. Un garde
-        # qu'on exécute vaut mieux qu'un garde qu'on relit - la technique a sorti un défaut réel
-        # d'`api-live.yml` le jour où elle a été essayée (#4328).
-        run: |
-          chmod +x .github/scripts/verifie_decisions_du_tournage_connecte.py
-          python3 .github/scripts/verifie_decisions_du_tournage_connecte.py --auto-test
-          python3 .github/scripts/verifie_decisions_du_tournage_connecte.py
-
-      - name: La forme d un jeton se cherche, et le garde avoue ce qu il ne lit pas
-        # Trois de ses six cas doivent rester VERTS : empreintes, identifiants et longueurs
-        # voisines ne sont pas des jetons, et une IMAGE portant le motif ne doit pas le faire rougir -
-        # il ne sait pas la lire, et prétendre le contraire serait pire que ne rien faire.
-        #
-        # Un quatrième vérifie qu'il NOMME le fichier qu'il a écarté. C'est ce qui l'empêche d'être
-        # un faux vert : sans cette phrase, on croirait le canal des clips couvert.
-        run: |
-          chmod +x .github/scripts/verifie_forme_du_jeton.py
-          python3 .github/scripts/verifie_forme_du_jeton.py --auto-test
-
-      - name: La sonde partagée rend un code et ne le juge pas
-        # Les trois appelants la partagent, et leurs verdicts sur un `401` diffèrent - refuser,
-        # avertir, ou conclure au succès. C'est pourquoi seule la MESURE descend ici.
-        #
-        # Le cas central est celui qui vérifie qu'elle NE JUGE PAS : le `run:` d'`api-live.yml`
-        # tourne sous `bash -e`, donc une sonde jugeante ferait échouer son pas sur un jeton expiré,
-        # ce que son tri refuse explicitement. Trouvé par mutation : rien ne le gardait.
-        run: |
-          chmod +x .github/scripts/interroge_le_jeton.py
-          python3 .github/scripts/interroge_le_jeton.py --auto-test
-
-      - name: Le contrôle du jeton sépare ses deux causes
-        # Trois verdicts et non deux, et c'est tout l'objet de cet auto-test : « pas 200 » recouvre
-        # un jeton mort - on en pose un frais - et une plateforme muette - poser un jeton frais n'y
-        # changerait rien. Les fondre referait, un cran plus loin, le défaut de #4328.
-        #
-        # Sa table est celle de `revoque_jeton.py` LUE À L'ENVERS : `401` est un refus ici, un
-        # succès là-bas. Les deux passent par leurs codes connus à chaque lint, parce que deux
-        # scripts voisins qui se contredisent finissent par s'harmoniser par erreur.
-        run: |
-          chmod +x .github/scripts/verifie_jeton_vivant.py
-          python3 .github/scripts/verifie_jeton_vivant.py --auto-test
-
-      - name: La porte d installation porte ses cas
-        # Elle est en travers du chemin de tous les workflows, y compris ceux qui publient : un
-        # défaut y serait indiscernable d'une panne de miroir.
-        run: python3 .github/scripts/installer_paquets.py --auto-test
-
-      - name: Aucun workflow n appelle apt-get directement
-        # Trois étapes de trois workflows ont pendu le même jour sur `apt-get update`, jusqu'au
-        # butoir de leur job et jusque sur `main`. Le remède avait été appliqué à UNE des trois.
-        run: |
-          chmod +x .github/scripts/verifie_apt.py
-          python3 .github/scripts/verifie_apt.py --auto-test
-          python3 .github/scripts/verifie_apt.py
-
-      - name: "Une portee de job tient ce qu'elle promet (bloquant, #5297)"
-        # Le chantier #5294 conditionne des jobs par une ETAPE plutot que par un `paths:`, pour
-        # qu'ils rendent toujours un verdict. Le dispositif a donc un mode de panne propre, et c'est
-        # le FAUX VERT : une portee qui ne correspond a rien fait ecrire « sans objet » a un job qui
-        # aurait du juger, et personne ne le voit puisque le job finit vert.
-        #
-        # Cette garde ferme aussi un trou qui lui preexiste : `verifie_conditions_de_job.py` ne lit
-        # que les `if:` de JOB, et seulement quand le job porte un `needs:`. Rien ne regardait les
-        # `if:` d'ETAPE, qui sont precisement la ou ce dispositif-ci se conditionne.
-        run: |
-          chmod +x .github/scripts/verifie_portees_de_ci.py .github/scripts/porte_du_job.py
-          python3 .github/scripts/porte_du_job.py --auto-test
-          python3 .github/scripts/verifie_portees_de_ci.py --auto-test
-          python3 .github/scripts/verifie_portees_de_ci.py
-
-      - name: "L'instrument des minutes par demande sait encore lire (bloquant, #5304)"
-        # Il RELEVE, il ne refuse rien : un chantier qui rend moins que promis est un sujet de bilan,
-        # pas un rouge de CI. Seul son auto-test tourne ici, et il tient le bord qui compte : un
-        # releve VIDE doit faire REFUSER de conclure, jamais annoncer zero.
-        #
-        # `mesure_duree_portail.py` ne peut pas mesurer le chantier #5294 : il lit `main`, ou il n'y a
-        # pas de base de comparaison, donc ou toutes les portees rendent « oui ». Il afficherait zero
-        # gain par construction. Celui-ci lit les DEMANDES.
-        run: |
-          chmod +x .github/scripts/mesure_minutes_par_pr.py
-          python3 .github/scripts/mesure_minutes_par_pr.py --auto-test
-
-      - name: "L'union des lots de la suite EST la suite (bloquant, #5329)"
-        # `ordre-alternatif` est reparti en quatre depuis #5329. Quatre lots verts dont l'union ne
-        # couvre pas la suite serait un faux vert parfait : chacun rend 0 en n'ayant joue que sa
-        # part, et personne ne voit ce qui manque.
-        #
-        # C'est le defaut de #4544 monte d'un cran - un passage tronque annoncait « toutes les
-        # classes de test » sur 618 des 758, sans un echec, et rendait 0. La confrontation se fait
-        # donc classe par classe et pour TOUTES les graines : un compte egal ne prouve pas une
-        # couverture egale.
-        run: |
-          chmod +x .github/scripts/partition_de_la_suite.py
-          python3 .github/scripts/partition_de_la_suite.py --auto-test
-          python3 .github/scripts/partition_de_la_suite.py --verifie
-
-      - name: "La porte de la batterie sait ce qu'elle lance (bloquant, #5340)"
-        # Elle repond a « quels controles ce diff engage-t-il ? », a partir du champ `chemins` que
-        # chaque garde declare, et LANCE ceux qui n'en declarent pas. Le defaut penche du cote
-        # couteux, jamais du cote muet.
-        #
-        # Le cliquet compte les muets et descend. Son auto-test verifie l'ACCORD du cliquet et de la
-        # porte : un second parcours des contrats les ferait diverger, defaut mesure en #5175.
-        run: |
-          chmod +x scripts/batterie.py scripts/adr/5340-chemins-non-declares.py
-          python3 scripts/batterie.py --auto-test
-          python3 scripts/adr/5340-chemins-non-declares.py --auto-test
-
-      - name: Tout job porte un butoir
-        # Un job sans `timeout-minutes` que GitHub laisse courir SIX HEURES a bloqué une PR
-        # 4 h 15 sur un `apt-get install` de police, en `-qq` donc sans une ligne de log. Le butoir
-        # de #3883 avait été apprécié pour le seul `banc-filme` ; vingt-six autres jobs n'en avaient
-        # aucun, dont ceux qui publient.
-        run: |
-          chmod +x .github/scripts/verifie_butoirs.py
-          python3 .github/scripts/verifie_butoirs.py --auto-test
-          python3 .github/scripts/verifie_butoirs.py
-
-      - name: Une entrée booléenne ne se compare pas à une chaîne
-        # `inputs.x == 'true'` vaut TOUJOURS faux, et `!= 'true'` TOUJOURS vrai : une entrée
-        # `type: boolean` arrive comme un vrai booléen, et comparer deux types différents les casse
-        # tous les deux en nombres. Mesuré sur le run 32395513266 : le remuxage des clips était sauté
-        # alors que le film existait, et le témoin « sans gestionnaire de fenêtres » installait quand
-        # même openbox - la garde qui prouve que la vérification du pointeur garde quelque chose ne
-        # gardait donc rien elle-même.
-        run: |
-          chmod +x .github/scripts/verifie_conditions_booleennes.py
-          python3 .github/scripts/verifie_conditions_booleennes.py --auto-test
-          python3 .github/scripts/verifie_conditions_booleennes.py
-          chmod +x .github/scripts/clips_orphelins.py
-          python3 .github/scripts/clips_orphelins.py --auto-test
-
       - name: Les scripts shell passent shellcheck
         # Les RÉGLAGES (exclusions) vivent dans `.shellcheckrc`, pas ici : un contributeur qui
         # lance `shellcheck son-script.sh` doit voir la même chose que ce pas. Seul le SEUIL est un
@@ -590,7 +360,254 @@ jobs:
           )
           echo "${#scripts[@]} script(s) analysé(s)."
           shellcheck --shell=bash -S info "${scripts[@]}"
+      - name: "Le Python des gardes est formaté et sans reproche (bloquant, #5022)"
+        # Le pendant de Spotless et PMD, qui tiennent le Java, et de shellcheck, qui tient le shell.
+        # Cette couche juge tout le reste, et n'avait rien - ni format, ni règles - avant #5022.
+        # Le format d'abord : un diff de forme noierait un diff de fond dans la revue suivante.
+        #
+        # `.github/assets` s'est ajouté avec #5229 et `icone` avec #5236, chaque fois pour la même
+        # raison : du Python venait d'y arriver, et le dossier n'était balayé par rien. Un dossier
+        # absent de cette liste n'échoue pas, il est simplement muet - c'est la même cécité que
+        # celle des inventaires (#4013), et elle se répète à chaque dossier qui gagne un fichier.
+        run: |
+          ruff format --check scripts .github/scripts .github/assets icone
+          ruff check scripts .github/scripts .github/assets icone
 
+  methode:
+    # Les gardes de methode : la prose, les inventaires, les cliquets, les concordances.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up JDK 25
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          # JDK Temurin standard (sans JavaFX) : JavaFX 26 vient des dépendances Maven
+          # org.openjfx. La Headless Platform (glass.platform=Headless) est 100 % logicielle.
+          check-latest: false
+          cache: maven
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.x"
+      - name: "Installer les dépendances déclarées des gardes (#5008)"
+        # Neuf gardes de ce job portent `import yaml`, et rien ne déclarait PyYAML : ils ne
+        # marchaient que parce que l'image `ubuntu-latest` le fournit. Une dépendance qu'on a sans
+        # le savoir tombe le jour où l'image change, et l'erreur accuse alors la PR qui passait par
+        # là. Elle est désormais épinglée dans `pyproject.toml` et installée ici.
+        run: pip install --group gardes
+      - name: Épinglage des actions et conteneurs
+        # Un tag peut être repointé sur un autre commit sans que rien ne bouge chez nous : ce qui
+        # s'exécute dans nos workflows changerait alors sans qu'aucun commit ne le dise (#2737).
+        # Sans cette garde, la prochaine action ajoutée le serait par tag et l'épinglage se
+        # déferait en silence.
+        # L'autotest tourne d'abord, comme pour la garde jeton : une règle relâchée passerait sinon au
+        # vert sur un dépôt propre, sans que rien ne le dise.
+        run: |
+          chmod +x .github/scripts/verifie_epinglage.py
+          python3 .github/scripts/verifie_epinglage.py --auto-test
+          python3 .github/scripts/verifie_epinglage.py
+      - name: Le Flatpak peut ouvrir une fenêtre sous Wayland
+        # `--socket=fallback-x11` n'accorde X11 que si Wayland est ABSENT, alors que JavaFX rend par
+        # GTK en X11. Sur GNOME et KDE - donc chez la plupart des utilisateurs - le paquet mourait au
+        # démarrage sur « Unable to open DISPLAY », et RIEN ne l'a vu : le pas « Démarrage réel » de
+        # flatpak.yml tourne en headless, donc sans affichage, et les essais locaux passaient tous
+        # `--nosocket=wayland`, ce qui prenait par accident le seul chemin qui marche.
+        # C'est une politique de permissions, lisible dans le manifeste : on la garde ici, hors ligne,
+        # plutôt que d'installer un compositeur sur le runner.
+        run: |
+          chmod +x .github/scripts/verifie_affichage_flatpak.py
+          python3 .github/scripts/verifie_affichage_flatpak.py --auto-test
+          python3 .github/scripts/verifie_affichage_flatpak.py
+      - name: Moindre privilège des workflows
+        # #2739 a retiré les droits d'écriture du plancher de release.yml pour les déclarer job par
+        # job. Rien ne l'empêchait de se défaire : une PR qui les remettrait au plancher passerait
+        # toutes les autres gardes (#3294).
+        run: |
+          chmod +x .github/scripts/verifie_permissions.py
+          python3 .github/scripts/verifie_permissions.py --auto-test
+          python3 .github/scripts/verifie_permissions.py
+      - name: "Un chemin suivi ne porte que de l'ASCII (bloquant, #5089)"
+        # `git ls-files` et `git diff --name-only` échappent les chemins non-ASCII par défaut, ce
+        # qui les rend invisibles à tout outillage qui teste ensuite l'existence du fichier. Le
+        # 2026-09-01 une passe de mise à jour du graphe a écarté 50 fichiers de `brief/` en silence
+        # et pris 6 renommages pour 56 suppressions. Rien n'a rougi.
+        #
+        # Tolérance zéro plutôt que cliquet : #5089 a renommé les 101 chemins fautifs, la zone est
+        # donc à zéro le jour de la décision. Le garde ne dit rien de la casse, des espaces ni des
+        # apostrophes, que `core.quotePath` n'échappe pas et qui ne sont pas la cause.
+        run: |
+          chmod +x .github/scripts/verifie_chemins_ascii.py
+          python3 .github/scripts/verifie_chemins_ascii.py --auto-test
+          python3 .github/scripts/verifie_chemins_ascii.py
+      - name: Un secret de plateforme ne dépasse pas son pas
+        # Posé dans l'`env:` d'un JOB, un jeton Vigie-Chiro n'est pas offert au pas qui en a
+        # besoin : il l'est à tout ce que le job exécute. `ConnexionModule` lit `System.getenv`, les
+        # forks surefire héritent de l'environnement du job, et l'URL de base vaut la production : la
+        # suite de tests entière serait armée face à la plateforme réelle.
+        #
+        # Et rien côté serveur ne peut le rattraper : le rôle `Lecteur` est déclaré mais AUCUNE
+        # route ne l'accepte, `GET /moi` compris. La lecture seule ne tient que par cette portée.
+        run: |
+          chmod +x .github/scripts/verifie_portee_des_secrets.py
+          python3 .github/scripts/verifie_portee_des_secrets.py --auto-test
+          python3 .github/scripts/verifie_portee_des_secrets.py
+      - name: Le verdict du tournage lit le XML, pas le texte
+        # Les rapports `.txt` de surefire annoncent « Tests run: 0 » sur une classe à `@Nested` et
+        # rendent 0 : un compteur qui les lirait dirait « aucun échec » sur un tournage à moitié rouge.
+        # Ses deux contrôles négatifs comptent autant que le reste : « aucun rapport » n'est pas
+        # « aucun échec », et une ERREUR compte autant qu'une défaillance - c'est par une erreur qu'un
+        # banc refusant faute de jeton se signale.
+        run: |
+          chmod +x .github/scripts/verdict_du_tournage.py
+          python3 .github/scripts/verdict_du_tournage.py --auto-test
+      - name: Le tournage nomme les cas qu'il n'a pas rendus
+        # Son oracle comparait deux nombres, « 111 cas sur 116 », sans jamais dire lesquels : il
+        # fallait refaire son calcul à la main pour l'apprendre. Et le compte attendu incluait les cas
+        # des scénarios exclus du build sans jeton, si bien qu'un tournage non connecté ne pouvait pas
+        # l'atteindre - le train a cessé de verser ses clips Java pendant cinq jours sans le dire.
+        # Son contrôle négatif est celui qui compte : un index illisible REFUSE au lieu de conclure
+        # qu'aucun cas ne manque.
+        run: |
+          chmod +x .github/scripts/cas_manquants_du_tournage.py
+          python3 .github/scripts/cas_manquants_du_tournage.py --auto-test
+      - name: La révocation du jeton sait ce qui vaut succès
+        # Sa règle est de celles qu'une relecture distraite retourne : `404` et `401` sont des
+        # SUCCÈS, parce que l'objectif n'est pas « le serveur a répondu 200 » mais « ce jeton ne sert
+        # plus à personne ». Les lire comme des échecs ferait avertir à chaque tournage dont le jeton
+        # avait déjà expiré, et on apprendrait à ignorer la ligne.
+        #
+        # Seul le verdict est éprouvé ici : l'appel réseau reste au bord, et il n'a rien à faire dans
+        # un job de lint.
+        run: |
+          chmod +x .github/scripts/revoque_jeton.py
+          python3 .github/scripts/revoque_jeton.py --auto-test
+      - name: Les décisions du tournage connecté tiennent encore
+        # Le refus de `clips-connectes` par `comparer-tournages.yml` EST un garde, et rien ne le
+        # gardait : un `if` mal écrit le neutraliserait sans que rien ne rougisse, et la comparaison
+        # recommencerait à mesurer la plateforme en croyant mesurer le rendu.
+        #
+        # Ce refus n'est pas relu, il est LANCÉ : il vit dans un `run:`, donc du shell. Un garde
+        # qu'on exécute vaut mieux qu'un garde qu'on relit - la technique a sorti un défaut réel
+        # d'`api-live.yml` le jour où elle a été essayée (#4328).
+        run: |
+          chmod +x .github/scripts/verifie_decisions_du_tournage_connecte.py
+          python3 .github/scripts/verifie_decisions_du_tournage_connecte.py --auto-test
+          python3 .github/scripts/verifie_decisions_du_tournage_connecte.py
+      - name: La forme d un jeton se cherche, et le garde avoue ce qu il ne lit pas
+        # Trois de ses six cas doivent rester VERTS : empreintes, identifiants et longueurs
+        # voisines ne sont pas des jetons, et une IMAGE portant le motif ne doit pas le faire rougir -
+        # il ne sait pas la lire, et prétendre le contraire serait pire que ne rien faire.
+        #
+        # Un quatrième vérifie qu'il NOMME le fichier qu'il a écarté. C'est ce qui l'empêche d'être
+        # un faux vert : sans cette phrase, on croirait le canal des clips couvert.
+        run: |
+          chmod +x .github/scripts/verifie_forme_du_jeton.py
+          python3 .github/scripts/verifie_forme_du_jeton.py --auto-test
+      - name: La sonde partagée rend un code et ne le juge pas
+        # Les trois appelants la partagent, et leurs verdicts sur un `401` diffèrent - refuser,
+        # avertir, ou conclure au succès. C'est pourquoi seule la MESURE descend ici.
+        #
+        # Le cas central est celui qui vérifie qu'elle NE JUGE PAS : le `run:` d'`api-live.yml`
+        # tourne sous `bash -e`, donc une sonde jugeante ferait échouer son pas sur un jeton expiré,
+        # ce que son tri refuse explicitement. Trouvé par mutation : rien ne le gardait.
+        run: |
+          chmod +x .github/scripts/interroge_le_jeton.py
+          python3 .github/scripts/interroge_le_jeton.py --auto-test
+      - name: Le contrôle du jeton sépare ses deux causes
+        # Trois verdicts et non deux, et c'est tout l'objet de cet auto-test : « pas 200 » recouvre
+        # un jeton mort - on en pose un frais - et une plateforme muette - poser un jeton frais n'y
+        # changerait rien. Les fondre referait, un cran plus loin, le défaut de #4328.
+        #
+        # Sa table est celle de `revoque_jeton.py` LUE À L'ENVERS : `401` est un refus ici, un
+        # succès là-bas. Les deux passent par leurs codes connus à chaque lint, parce que deux
+        # scripts voisins qui se contredisent finissent par s'harmoniser par erreur.
+        run: |
+          chmod +x .github/scripts/verifie_jeton_vivant.py
+          python3 .github/scripts/verifie_jeton_vivant.py --auto-test
+      - name: La porte d installation porte ses cas
+        # Elle est en travers du chemin de tous les workflows, y compris ceux qui publient : un
+        # défaut y serait indiscernable d'une panne de miroir.
+        run: python3 .github/scripts/installer_paquets.py --auto-test
+      - name: Aucun workflow n appelle apt-get directement
+        # Trois étapes de trois workflows ont pendu le même jour sur `apt-get update`, jusqu'au
+        # butoir de leur job et jusque sur `main`. Le remède avait été appliqué à UNE des trois.
+        run: |
+          chmod +x .github/scripts/verifie_apt.py
+          python3 .github/scripts/verifie_apt.py --auto-test
+          python3 .github/scripts/verifie_apt.py
+      - name: "Une portee de job tient ce qu'elle promet (bloquant, #5297)"
+        # Le chantier #5294 conditionne des jobs par une ETAPE plutot que par un `paths:`, pour
+        # qu'ils rendent toujours un verdict. Le dispositif a donc un mode de panne propre, et c'est
+        # le FAUX VERT : une portee qui ne correspond a rien fait ecrire « sans objet » a un job qui
+        # aurait du juger, et personne ne le voit puisque le job finit vert.
+        #
+        # Cette garde ferme aussi un trou qui lui preexiste : `verifie_conditions_de_job.py` ne lit
+        # que les `if:` de JOB, et seulement quand le job porte un `needs:`. Rien ne regardait les
+        # `if:` d'ETAPE, qui sont precisement la ou ce dispositif-ci se conditionne.
+        run: |
+          chmod +x .github/scripts/verifie_portees_de_ci.py .github/scripts/porte_du_job.py
+          python3 .github/scripts/porte_du_job.py --auto-test
+          python3 .github/scripts/verifie_portees_de_ci.py --auto-test
+          python3 .github/scripts/verifie_portees_de_ci.py
+      - name: "L'instrument des minutes par demande sait encore lire (bloquant, #5304)"
+        # Il RELEVE, il ne refuse rien : un chantier qui rend moins que promis est un sujet de bilan,
+        # pas un rouge de CI. Seul son auto-test tourne ici, et il tient le bord qui compte : un
+        # releve VIDE doit faire REFUSER de conclure, jamais annoncer zero.
+        #
+        # `mesure_duree_portail.py` ne peut pas mesurer le chantier #5294 : il lit `main`, ou il n'y a
+        # pas de base de comparaison, donc ou toutes les portees rendent « oui ». Il afficherait zero
+        # gain par construction. Celui-ci lit les DEMANDES.
+        run: |
+          chmod +x .github/scripts/mesure_minutes_par_pr.py
+          python3 .github/scripts/mesure_minutes_par_pr.py --auto-test
+      - name: "L'union des lots de la suite EST la suite (bloquant, #5329)"
+        # `ordre-alternatif` est reparti en quatre depuis #5329. Quatre lots verts dont l'union ne
+        # couvre pas la suite serait un faux vert parfait : chacun rend 0 en n'ayant joue que sa
+        # part, et personne ne voit ce qui manque.
+        #
+        # C'est le defaut de #4544 monte d'un cran - un passage tronque annoncait « toutes les
+        # classes de test » sur 618 des 758, sans un echec, et rendait 0. La confrontation se fait
+        # donc classe par classe et pour TOUTES les graines : un compte egal ne prouve pas une
+        # couverture egale.
+        run: |
+          chmod +x .github/scripts/partition_de_la_suite.py
+          python3 .github/scripts/partition_de_la_suite.py --auto-test
+          python3 .github/scripts/partition_de_la_suite.py --verifie
+      - name: "La porte de la batterie sait ce qu'elle lance (bloquant, #5340)"
+        # Elle repond a « quels controles ce diff engage-t-il ? », a partir du champ `chemins` que
+        # chaque garde declare, et LANCE ceux qui n'en declarent pas. Le defaut penche du cote
+        # couteux, jamais du cote muet.
+        #
+        # Le cliquet compte les muets et descend. Son auto-test verifie l'ACCORD du cliquet et de la
+        # porte : un second parcours des contrats les ferait diverger, defaut mesure en #5175.
+        run: |
+          chmod +x scripts/batterie.py scripts/adr/5340-chemins-non-declares.py
+          python3 scripts/batterie.py --auto-test
+          python3 scripts/adr/5340-chemins-non-declares.py --auto-test
+      - name: Tout job porte un butoir
+        # Un job sans `timeout-minutes` que GitHub laisse courir SIX HEURES a bloqué une PR
+        # 4 h 15 sur un `apt-get install` de police, en `-qq` donc sans une ligne de log. Le butoir
+        # de #3883 avait été apprécié pour le seul `banc-filme` ; vingt-six autres jobs n'en avaient
+        # aucun, dont ceux qui publient.
+        run: |
+          chmod +x .github/scripts/verifie_butoirs.py
+          python3 .github/scripts/verifie_butoirs.py --auto-test
+          python3 .github/scripts/verifie_butoirs.py
+      - name: Une entrée booléenne ne se compare pas à une chaîne
+        # `inputs.x == 'true'` vaut TOUJOURS faux, et `!= 'true'` TOUJOURS vrai : une entrée
+        # `type: boolean` arrive comme un vrai booléen, et comparer deux types différents les casse
+        # tous les deux en nombres. Mesuré sur le run 32395513266 : le remuxage des clips était sauté
+        # alors que le film existait, et le témoin « sans gestionnaire de fenêtres » installait quand
+        # même openbox - la garde qui prouve que la vérification du pointeur garde quelque chose ne
+        # gardait donc rien elle-même.
+        run: |
+          chmod +x .github/scripts/verifie_conditions_booleennes.py
+          python3 .github/scripts/verifie_conditions_booleennes.py --auto-test
+          python3 .github/scripts/verifie_conditions_booleennes.py
+          chmod +x .github/scripts/clips_orphelins.py
+          python3 .github/scripts/clips_orphelins.py --auto-test
       - name: La condition d'un job appuyé sur un « needs » nomme l'état qu'elle attend
         # GitHub saute un job dès qu'un ANCÊTRE a été sauté, sauf si son `if:` porte une fonction
         # d'état : sans elle, la condition est enveloppée en `success() && (...)` sur tout le graphe
@@ -602,7 +619,6 @@ jobs:
           chmod +x .github/scripts/verifie_conditions_de_job.py
           python3 .github/scripts/verifie_conditions_de_job.py --auto-test
           python3 .github/scripts/verifie_conditions_de_job.py
-
       - name: Les renvois entre workflows visent un libellé existant
         # Un `workflow_run` désigne le workflow attendu par son `name:`, apparié par égalité stricte.
         # Un libellé mort n'arme rien et ne rougit pas : il n'y a AUCUN run à regarder. #3279 l'a payé
@@ -611,7 +627,6 @@ jobs:
           chmod +x .github/scripts/verifie_renvois_workflows.py
           python3 .github/scripts/verifie_renvois_workflows.py --auto-test
           python3 .github/scripts/verifie_renvois_workflows.py
-
       - name: Les inventaires que la CI tient sur elle-même concordent
         # Ce dépôt exige de son PRODUIT que ses inventaires soient prouvés - commandes CLI contre
         # `dev-docs/cli.md`, vues contre captures, ADR contre index et nav. De sa propre description, il
@@ -625,7 +640,6 @@ jobs:
           chmod +x .github/scripts/verifie_inventaires_ci.py
           python3 .github/scripts/verifie_inventaires_ci.py --auto-test
           python3 .github/scripts/verifie_inventaires_ci.py
-
       - name: "Un nom d'étape dit en entier ce qu'il écrit (bloquant, #4255)"
         # Un `#` précédé d'une espace ouvre un commentaire YAML, y compris au milieu d'un nom non
         # cité : `name: Auto-test des scripts ADR (bloquant, #2467)` valait `… (bloquant,`. Six
@@ -649,7 +663,6 @@ jobs:
           chmod +x .github/scripts/verifie_jeton.py
           python3 .github/scripts/verifie_jeton.py --auto-test
           python3 .github/scripts/verifie_jeton.py
-
       - name: Le garde de fraîcheur des épinglages sait encore rougir
         # Il ne mesure pour de vrai que le lundi, dans `securite-dependances.yml`, parce que la mesure
         # demande le réseau et que l'amont bouge sans nous. Son autotest, lui, est hors ligne : c'est
@@ -658,7 +671,6 @@ jobs:
         run: |
           chmod +x .github/scripts/verifie_fraicheur_actions.py
           python3 .github/scripts/verifie_fraicheur_actions.py --auto-test
-
       - name: La veille de fraîcheur du contrat API sait encore rougir
         # Elle ne tourne pour de vrai que dans api-live.yml, une fois par semaine : son autotest est
         # le seul endroit où on la voit à l'œuvre à chaque PR. Sans lui, un durcissement de seuil ou
@@ -667,7 +679,6 @@ jobs:
         run: |
           chmod +x .github/scripts/veille_contrat_api.py
           python3 .github/scripts/veille_contrat_api.py --auto-test
-
       - name: La garde du démarrage des emballages sait encore rougir
         # Elle ne tourne pour de vrai que dans `release.yml` (les enveloppes) et `maven.yml`
         # (l'app-image et l'aller-retour tar.gz). `release.yml` n'étant traversé par AUCUNE PR, son
@@ -676,7 +687,6 @@ jobs:
         run: |
           chmod +x .github/scripts/verifie_demarrage_emballage.py
           python3 .github/scripts/verifie_demarrage_emballage.py --auto-test
-
       - name: La garde du secret winget sait encore rougir
         # Elle ne tourne pour de vrai que dans winget.yml, sur dispatch manuel, c'est-à-dire quelques
         # fois par an : son autotest est le seul endroit où on la voit à l'œuvre entre deux
@@ -685,7 +695,6 @@ jobs:
         run: |
           chmod +x .github/scripts/verifie_secret_winget.py
           python3 .github/scripts/verifie_secret_winget.py --auto-test
-
       - name: Complétude des captures de référence
         # Chaque vue FXML doit avoir au moins une capture de référence déclarée au manifeste
         # (les captures illustrent la documentation).
@@ -694,7 +703,6 @@ jobs:
           chmod +x .github/assets/check_captures.py
           python3 .github/assets/check_captures.py --auto-test
           python3 .github/assets/check_captures.py
-
       - name: Enregistrement des outils de capture
         # Chaque outil de capture (classe outils/Capture* avec un main) doit figurer dans le
         # tableau MAINS de capture_screenshots.py, sinon ses PNG ne seraient jamais régénérés.
@@ -702,6 +710,11 @@ jobs:
           chmod +x .github/assets/check_capture_mains.py
           python3 .github/assets/check_capture_mains.py --auto-test
           python3 .github/assets/check_capture_mains.py
+      # ⟨le producteur vit avec son consommateur⟩ `test-compile pmd:pmd` PRODUIT un rapport ; il
+      # ne rend aucun verdict. Le verdict est le cliquet 4617, qui le lit dans la boucle ci-dessous.
+      # Les separer a casse `methode` au premier essai de #5365 : le cliquet a refuse de conclure sur
+      # un `target/pmd.xml` absent, ce qu il fait a juste titre. Un producteur se deplace avec ce qui
+      # le consomme, ou il faut un artefact et un `needs:` - ce qui coute plus que ce que ca rend.
 
       - name: "Portail qualité (PMD) : le rapport, que le cliquet 4617 juge"
         # `test-compile` et non `compile` depuis #4617 : le portail analyse desormais les DEUX
@@ -716,7 +729,6 @@ jobs:
         # dupliqués, n'a pas de sens dans la zone de test et doit y être écartée. PMD ne sait pas
         # exprimer cette différence : les quatre formes essayées sont dans l'ADR.
         run: ./mvnw -B test-compile pmd:pmd
-
       - name: Cliquets ADR (bloquant)
         # Chaque script `probable` (scripts/adr/NNNN-*.py) rend un code non nul quand le nombre de
         # suspects DÉPASSE le cliquet déclaré dans l'ADR : un cas a été ajouté. C'est ici que le
@@ -735,35 +747,6 @@ jobs:
             python3 "$script" || echec=1
           done
           exit "$echec"
-
-      - name: "Auto-test des scripts ADR (bloquant, #2467)"
-        # L'étape précédente échoue quand un script SUR-compte (un cas s'ajoute). Elle ne voit pas la
-        # déflation : un script qui, par régression, CESSERAIT de détecter ferait baisser son compte
-        # sous le cliquet, et resterait vert pendant qu'une vraie violation passe - un faux vert.
-        # Cet auto-test plante une violation témoin par script et exige qu'il la voie, et la même en
-        # commentaire pour qu'il ne la compte pas. Il ferme le trou de la passe 6 de clôture.
-        #
-        # Et le harnais lui-même a désormais son auto-test, lancé d'abord (#4268). Il prouvait que
-        # chaque détecteur détecte, sans que rien ne prouve qu'il les exerce TOUS : `2635` et `3947`
-        # n'avaient aucun cas témoin, et n'étaient donc tenus que par leur cliquet - c'est-à-dire par
-        # un compte qui ne monte pas, le trou exact que ce mécanisme existe pour fermer.
-        run: |
-          set -euo pipefail
-          python3 scripts/adr/verifie_scripts.py --auto-test
-          python3 scripts/adr/verifie_scripts.py
-
-      - name: "Aucun temoin de la suite n'est decoratif (bloquant, #4490)"
-        # La suite ci-dessus clot sur « les N scripts charges DETECTENT leur violation temoin ». La
-        # phrase affirmait plus que ce qu'elle verifie : un temoin peut exister, s'executer, passer,
-        # et ne rien tenir. Celui du cliquet de longueur d'ADR n'affirmait que
-        # `isinstance(suspects(), list)`, et un garde ayant cesse de detecter le passait (#4487).
-        #
-        # Ce garde-ci rend l'article A2 mecanique : chaque garde perd sa detection, la suite doit
-        # rougir. Cout mesure, 1,2 s pour 23 gardes. Il vient APRES la suite, dont il depend.
-        run: |
-          set -euo pipefail
-          python3 scripts/adr/verifie_temoins_non_decoratifs.py --auto-test
-
       - name: "Un contrat declare ne contredit pas le garde (bloquant, #5108)"
         # `imprime_contrat` refuse un contrat INCOMPLET ; rien ne le confrontait au reel. Un contrat
         # que personne ne confronte est un commentaire, et il derive : la docstring de 2843 a
@@ -775,7 +758,6 @@ jobs:
           set -euo pipefail
           python3 scripts/adr/verifie_contrats_tiennent.py --auto-test
           python3 scripts/adr/verifie_contrats_tiennent.py
-
       - name: "Un point d'entree de scripts/adr declare ce qu'il est (bloquant, #5149)"
         # Le sous-chantier #5117 a porte ce dossier de 2 contrats a 41 sur 41. Rien n empechait le
         # 42e d arriver sans le sien : un garde neuf s ecrit sur le modele d un voisin, dont on
@@ -783,27 +765,6 @@ jobs:
         run: |
           python3 scripts/adr/verifie_contrat_obligatoire.py --auto-test
           python3 scripts/adr/verifie_contrat_obligatoire.py
-
-      - name: "Aucun appel de verdict ne cache ce qu'il a lu (bloquant, #5049)"
-        # Le sous-chantier #5015 a converti 33 appels, et son bilan nommait cette dette : rien
-        # n'empechait un appel neuf de naitre muet. La regression a eu lieu en QUELQUES HEURES,
-        # sur `5068-clic-sur-reference-tenue.py`, dont l'auteur ne pouvait pas le savoir.
-        #
-        # L'auto-test tient les deux moities : un appel muet est vu, et un appel qui declare ne
-        # l'est PAS. Un garde qui refuserait tout passerait la premiere.
-        env:
-          # ⟨sans elle, le banc mute TOUT⟩ Il ne mute que les gardes du diff depuis #5345, et il
-          # derive cette portee du SHA de base que la forge fournit. Ne pas le lui passer le fait
-          # retomber sur « mute tout » - le mecanisme reste ecrit, eprouve, documente, et INERTE.
-          # C'est ce qui s'est passe entre #5356 et #5366, et `verifie_portees_de_ci.py` le refuse
-          # desormais.
-          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          set -euo pipefail
-          python3 scripts/adr/verifie_verdicts_declares.py --auto-test
-          python3 scripts/adr/verifie_verdicts_declares.py
-          python3 scripts/adr/verifie_temoins_non_decoratifs.py
-
       - name: "Le corpus d'un garde se declare une fois (bloquant, #4586)"
         # #4488 a decide que les gardes de code lisent les DEUX arbres. La decision etait tenue par
         # une liste ECRITE A LA MAIN dans `verifie_scripts.py`, et cette liste avait derive : dix
@@ -818,7 +779,6 @@ jobs:
           set -euo pipefail
           python3 scripts/adr/verifie_corpus_declare.py --auto-test
           python3 scripts/adr/verifie_corpus_declare.py
-
       - name: "Un garde tourne dans SON depot, pas celui de l'appelant (bloquant, #4781)"
         # `rapport.py` lancait chaque garde par `subprocess.run` sans `cwd`, donc chacun heritait du
         # repertoire de l'appelant. Mesure : lance depuis `/tmp`, CINQ cliquets sur dix-huit
@@ -832,7 +792,6 @@ jobs:
         # repertoire, et le cas « lance du depot » evite que le cas « lance d'ailleurs » ne passe au
         # vert parce que le repertoire d'essai serait par hasard le bon. Cout mesure : 0,1 s.
         run: python3 scripts/adr/rapport.py --auto-test
-
       - name: "Auto-test des passes du graphe de connaissance (bloquant, #4231)"
         # Ces deux scripts n'avaient aucun dispositif, et les deux annonçaient des chiffres
         # qu'aucune donnée ne soutenait : une couverture CLI de « 128/69 », et un rapport ouvrant
@@ -847,57 +806,47 @@ jobs:
           set -euo pipefail
           python3 scripts/graphify/pont_ressources.py --auto-test
           python3 scripts/graphify/rebuild.py --auto-test
-
       - name: "Auto-test de la veille des plateformes (bloquant, #3526)"
         # Le verdict rougit dans le train de publication ; l'auto-test du JUGE tourne ici, à chaque PR.
         # Un juge qui aurait cessé de juger laisserait partir le train sur une preuve absente, et son
         # silence passerait pour un feu vert - c'est le patron de `veille_contrat_api.py`.
         run: python3 .github/scripts/veille_plateformes.py --auto-test
-
       - name: "Auto-test du tri des échecs de plateforme (bloquant, #4544)"
         # Le juge du passage hebdomadaire n'avait AUCUN témoin, l'un des trois scripts de
         # `.github/scripts` dans ce cas. Le défaut a vécu là : un passage coupé par son plafond se
         # déclarait « complet », sans échec, et rendait 0. Rien ne pouvait le voir.
         run: python3 .github/scripts/trie_les_echecs_de_plateforme.py --auto-test
-
       - name: "Auto-test du garde de verdict avant fusion (bloquant, #4571)"
         # Ce garde-ci ne tourne PAS en CI : il se lance à la main avant de fusionner, parce qu'en
         # faire un check requis repaierait ce que l'ADR 0041 a déjà mesuré - deux chemins d'écriture
         # vers `main` cassés en une heure, dont la chaîne de publication. Seuls ses cas tournent ici,
         # et c'est le seul endroit où il peut être vu rougir.
         run: python3 .github/scripts/verifie_verdict_avant_fusion.py --auto-test
-
       - name: "Auto-test du garde de clôture consignée (bloquant, #4659)"
         # Ses cas tournent HORS LIGNE : la liste des EPIC s'injecte par `CLOTURE_EPICS_FICHIER`, sans
         # quoi il faudrait la forge pour éprouver un garde, et un garde dont les cas ne se relancent
         # pas ne se relance jamais.
         run: python3 .github/scripts/verifie_cloture_consignee.py --auto-test
-
       - name: "Auto-test du garde de spécification consignée (bloquant, #4922)"
         # Copie d'ADR 4659 pour la forme, et son voisin pour le fond : celui-ci compte les clôtures
         # qui n'ont pas répondu à la passe 10. Ses cas s'injectent par `SPEC_EPICS_FICHIER`, donc ils
         # tournent hors ligne. Deux d'entre eux tiennent la raison pour laquelle il lit le CONTENU de
         # la ligne et non son numéro : #4840 a renuméroté le cycle.
         run: python3 .github/scripts/verifie_specification_consignee.py --auto-test
-
       - name: "Auto-test du garde de chantier de l issue (bloquant, #4649)"
         # Ses cas tournent HORS LIGNE : les parents s injectent par `CHANTIER_ISSUES_FICHIER`. Le
         # garde lui-même vit dans `corps-pr.yml`, qui seul dispose du corps de la demande.
         run: python3 .github/scripts/verifie_chantier_de_l_issue.py --auto-test
-
       - name: Auto-test du rappel de critère de fin
         run: python3 .github/scripts/rappelle_le_critere_de_fin.py --auto-test
-
       - name: Auto-test de la loupe des lots sans critère
         run: python3 scripts/adr/loupe-4992-lots-sans-critere.py --auto-test
-
       - name: "Clôture consignée : un EPIC clos porte sa trace (bloquant, #4659)"
         # Celui-ci interroge la forge, d'où le jeton. Il REFUSE si elle ne répond pas : un cliquet qui
         # conclut sur ce qu'il n'a pas lu vaut moins que pas de cliquet.
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 .github/scripts/verifie_cloture_consignee.py
-
       - name: "Spécification consignée : une clôture répond à la passe 10 (bloquant, #4922)"
         # Il interroge la forge, d'où le jeton, et REFUSE si elle ne répond pas. Un EPIC clos SANS
         # AUCUNE trace ne lui appartient pas : c'est le cliquet de #4659 qui monte alors, et compter
@@ -905,13 +854,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 .github/scripts/verifie_specification_consignee.py
-
       - name: "Auto-test du garde de durée du portail (bloquant, #3661)"
         # Il est arrivé avec un fichier `bats` plutôt qu'un auto-test - la seule exception des onze
         # scripts -, ce qui faisait attendre à ses cas l'assemblage d'un fat-jar de 80 Mo dont ils
         # n'ont aucun besoin. Rentré dans le rang, il s'exécute ici, sans rien construire.
         run: python3 .github/scripts/mesure_duree_portail.py --auto-test
-
       - name: "Auto-test du garde de titre de PR (bloquant, #2947)"
         # Même raisonnement que l'étape précédente, appliqué au garde qui vit hors de `scripts/adr`.
         # Il refuse deux choses : un titre hors Conventional Commits, et un tiret cadratin. La seconde
@@ -919,7 +866,6 @@ jobs:
         # squash, et que le CHANGELOG est le seul fichier que la typographie ne peut pas rattraper
         # après coup. Un garde qui cesserait de détecter laisserait la source se rouvrir en silence.
         run: python3 .github/scripts/verifie_titre_pr.py --auto-test
-
       - name: "Auto-test du garde de corps de PR (bloquant, #4453)"
         # Le corps de la PR est de la prose visible au sens de l'article A31, et il n'est jamais
         # commis : aucun garde de fichiers ne pouvait l'atteindre. Celui-ci refuse ce qu'un motif
@@ -928,7 +874,6 @@ jobs:
         # un garde qui cesserait d'épargner un bloc de code se ferait contourner par suppression de
         # la citation, ce qui est pire que muet.
         run: python3 .github/scripts/verifie_corps_pr.py --auto-test
-
       - name: "Auto-test du cliquet de commentaire en corps de methode (bloquant, #4472)"
         # Ce cliquet tient une population que le cliquet 4359 ne voit pas. Le cas qui compte est
         # celui du MEME bloc hors puis dans un corps de methode : hors, c'est de l'en-tete de fichier
@@ -952,7 +897,6 @@ jobs:
         # Ses témoins tiennent ce qui décide : le compte est différentiel, et un dossier étranger à la
         # suite reste dehors.
         run: python3 scripts/methode/compte-les-reliquats.py --auto-test
-
       - name: "Auto-test du relevé des bancs instables (bloquant, #4806)"
         # Ce relevé lit les TENTATIVES d'un run, pas son verdict courant : une relance écrase l'échec
         # précédent, si bien que la signature d'une instabilité est invisible dans `gh run list`.
@@ -980,21 +924,18 @@ jobs:
         #
         # Le coût est mesuré : 5,54 s.
         run: python3 scripts/methode/couverture-relecture.py --verifie
-
       - name: "La loupe de couverture OpenSpec compte juste (bloquant, #4922)"
         # Une LOUPE, pas un garde : elle sort toujours 0 et ne refuse rien. Seul son comptage est tenu
         # ici, et l'un de ses cas dit lequel se trompe le plus facilement - une delta spec archivée
         # compterait deux fois la même capacité, gonflant le numérateur sans que rien ne le montre.
         # Ce qui REFUSE est le cliquet de la même ADR, plus haut dans ce fichier.
         run: python3 scripts/methode/couverture-openspec.py --auto-test
-
       - name: "Le relevé des contrats de garde s'éprouve (bloquant, #4636)"
         # Le relevé COMPARE deux arbres, et l'autre n'existe pas sur le runner : seul son
         # auto-test tourne ici. Sans lui, l'outil qui doit voir les gardes hors service serait
         # lui-même le premier à l'être - c'est le défaut que ce lot corrige, retourné contre son
         # propre outil.
         run: python3 scripts/methode/contrats-des-gardes.py --auto-test
-
       - name: Le paquet OKF des décisions est conforme (bloquant)
         # `dev-docs/decisions` est un paquet OKF depuis #4336 : chaque ADR porte un en-tête typé, se
         # rattache à un article de la constitution, et gage le niveau de vérification qu'elle
@@ -1007,7 +948,6 @@ jobs:
         run: |
           python3 scripts/adr/verifie_okf.py --auto-test
           python3 scripts/adr/verifie_okf.py
-
       - name: "Trois refus portes par la ligne d'origine (bloquant, #4462)"
         # Trois zones a TOLERANCE ZERO, chacune avec son auto-test avant son passage sur le depot.
         #
@@ -1028,7 +968,6 @@ jobs:
           python3 scripts/adr/verifie_encart_de_revision.py
           python3 scripts/adr/verifie_taille_des_cibles.py --auto-test
           python3 scripts/adr/verifie_taille_des_cibles.py
-
       - name: "Aucun lien de javadoc que le formateur casserait (bloquant, #4493)"
         # Palantir replie une ligne trop longue a la derniere espace qui tient. Si cette espace tombe
         # DANS le texte d'un lien markdown, il coupe le lien et NE REPOSE PAS le prefixe `///` : la
@@ -1040,7 +979,6 @@ jobs:
           set -euo pipefail
           python3 scripts/adr/verifie_lien_javadoc_formatable.py --auto-test
           python3 scripts/adr/verifie_lien_javadoc_formatable.py
-
       - name: La matrice de la constitution est à jour (bloquant)
         # La matrice relie chaque article à ce qui l'applique, et NOMME les articles que rien ne
         # tient. C'est cette dernière colonne qui vaut le déplacement : elle est la liste des
@@ -1050,7 +988,6 @@ jobs:
         run: |
           python3 scripts/methode/matrice-constitution.py --auto-test
           python3 scripts/methode/matrice-constitution.py --verifie
-
       - name: La matrice des heuristiques d'ergonomie est à jour (bloquant)
         # Même idée que la matrice de la constitution, sur l'annexe des heuristiques : la ligne qui
         # vaut le déplacement est celle qui rend zéro, car elle nomme ce dont personne n'a décidé.
@@ -1058,7 +995,6 @@ jobs:
         run: |
           python3 scripts/methode/matrice-ergonomie.py --auto-test
           python3 scripts/methode/matrice-ergonomie.py --verifie
-
       - name: Le registre éditorial ne se retourne pas en silence (bloquant)
         # `dev-docs/registre-editorial.md` écarte le connecteur lourd AU MOTIF qu'il rend zéro en
         # ouverture de phrase. Un motif d'écartement qui cesse d'être vrai ne rougit nulle part : la
@@ -1068,7 +1004,6 @@ jobs:
         run: |
           python3 scripts/methode/mesure-registre.py --auto-test
           python3 scripts/methode/mesure-registre.py --verifie
-
       - name: Le bandeau des ADR rend ce qu'il promet (bloquant)
         # `scripts/mkdocs/bandeau_adr.py` redessine le statut, le chantier et la vérification en tête
         # de chaque page d'ADR : la conversion OKF les a fait passer en front-matter, que MkDocs
@@ -1077,7 +1012,6 @@ jobs:
         # le markdown inchangé, 199 pages sortiraient sans bandeau, et `mkdocs --strict` ne dirait
         # rien. Trois mutations plantées le font rougir (#4379).
         run: python3 scripts/mkdocs/bandeau_adr.py --auto-test
-
       - name: Les adaptateurs de compétences suivent leur source (bloquant)
         # Le fonds des compétences vit dans `.agents/skills/`, hors de tout dossier de marque, et
         # `.claude/skills/` n'en est qu'une copie. Sans ce garde, une compétence corrigée à la
@@ -1088,7 +1022,6 @@ jobs:
         run: |
           python3 scripts/methode/synchronise-adaptateurs.py --auto-test
           python3 scripts/methode/synchronise-adaptateurs.py --verifie
-
       - name: "La version d'OpenSpec epinglee vaut celle que les competences declarent (bloquant, #4512)"
         # Les douze fichiers d'OpenSpec portent `generatedBy` et decrivent le contrat de la ligne de
         # commande de CETTE version : ses sous-commandes, les champs de son JSON. Une version
@@ -1102,7 +1035,6 @@ jobs:
         run: |
           python3 scripts/methode/verifie-version-openspec.py --auto-test
           python3 scripts/methode/verifie-version-openspec.py --verifie
-
       - name: "L'adoption des competences OpenSpec resiste a une regeneration (bloquant, #4516)"
         # Les six competences ont ete ADOPTEES par #4515 : reecrites en francais, elles ne sont
         # plus du texte amont. `openspec update --force` les rend a l'anglais amont, et la commande
@@ -1115,7 +1047,6 @@ jobs:
         run: |
           python3 scripts/methode/verifie-adoption-openspec.py --auto-test
           python3 scripts/methode/verifie-adoption-openspec.py --verifie
-
       - name: "Un renvoi cite par une competence a une cible ou un repli (bloquant, #4564)"
         # Une competence qui renvoie vers `/realiser` promet qu'une commande de ce nom existe. Le
         # garde de #4514 lit les invocations de la LIGNE DE COMMANDE, `openspec <sous-commande>` ;
@@ -1130,7 +1061,6 @@ jobs:
         run: |
           python3 scripts/methode/verifie-renvois-competences.py --auto-test
           python3 scripts/methode/verifie-renvois-competences.py --verifie
-
       - name: "Une étape du cycle ne délègue pas vers l'aval (bloquant, #4731)"
         # Les six competences du cycle s'enchainent dans un ordre. Une ETAPE NUMEROTEE qui delegue
         # vers l'aval envoie le lecteur faire maintenant un travail qui ne se fait qu'apres : il ne
@@ -1149,7 +1079,6 @@ jobs:
         run: |
           python3 scripts/methode/etapes-sans-renvoi-aval.py --auto-test
           python3 scripts/methode/etapes-sans-renvoi-aval.py
-
       - name: "Un test cité par une page existe (bloquant, #4745)"
         # `mvn test -Dtest=Classe#methode` rend BUILD SUCCESS et « Tests run: 0 » quand la cible
         # n'existe pas. Une page qui donne un tel exemple ne desinforme pas seulement : elle met en
@@ -1164,7 +1093,6 @@ jobs:
         run: |
           python3 scripts/methode/tests-cites-existent.py --auto-test
           python3 scripts/methode/tests-cites-existent.py
-
       - name: "Une attente qui lit le graphe le lit sur le fil JavaFX (autotest, #5278)"
         # `Attente.queSurLeFil` existe depuis #4408 et n'a pas essaime : 138 appels, dont HUIT sur le
         # fil et 63 qui lisent le graphe depuis le fil du test. RetourApresVerificationE2ETest a leve
@@ -1173,7 +1101,6 @@ jobs:
         # Le verdict lui-meme sort de la boucle des cliquets, que rapport.py balaie. Seul l'auto-test
         # se branche ici, comme pour ses voisins numerotes.
         run: python3 scripts/adr/5278-attente-hors-du-fil.py --auto-test
-
       - name: "La page qu'on lit avant de pousser nomme les gardes qui jugent (bloquant, #5258)"
         # La section « batterie locale » d'`ouvrir-une-pr` annoncait QUATRE gardes rougissant en CI
         # hors de ce que rapport.py balaie. Mesure du 2026-09-05 : ils sont trente, et la page en
@@ -1187,7 +1114,6 @@ jobs:
         run: |
           python3 scripts/methode/verifie-batterie-locale.py --auto-test
           python3 scripts/methode/verifie-batterie-locale.py
-
       - name: "Une citation de passe désigne une passe qui existe (bloquant, #4844)"
         # Le dépôt compte 299 citations de ses passes de clôture, dans 145 fichiers. Avant ce garde,
         # RIEN ne vérifiait qu'une citation désigne encore une passe qui existe : mesuré en #4518, une
@@ -1202,7 +1128,6 @@ jobs:
         run: |
           python3 scripts/methode/passes-citees-existent.py --auto-test
           python3 scripts/methode/passes-citees-existent.py
-
       - name: "Concordances du cycle : commandes, tableau et compétences se répondent (bloquant, #4918)"
         # Quatre concordances, aucune tenue jusqu'ici : une commande ouvre une compétence qui existe,
         # le tableau en nomme une qui existe, la `description` annonce la passe que le tableau lui
@@ -1218,8 +1143,116 @@ jobs:
         run: |
           python3 scripts/methode/concordances-du-cycle.py --auto-test
           python3 scripts/methode/concordances-du-cycle.py
+      - name: "La méthode nomme le garde du titre, et ce garde refuse encore l'espace (bloquant, #4598)"
+        # Le dépôt pratique deux conventions de titre à un caractère d'écart, et c'est la plus
+        # écrite qui est fausse en PR : 62 des 100 derniers titres d'issue portent l'espace avant
+        # les deux-points, quand les 100 dernières PR fusionnées sont à zéro. La seconde colonne
+        # est propre parce que `titre-pr.yml` refuse, pas parce que la main écrit juste.
+        # Le défaut n'entre pas au commit : les quatre PR rouges du 2026-08-26 partaient toutes
+        # d'une branche aux sujets de commit conformes, et 286 des 297 sujets de branche le sont.
+        # Il entre à la frappe du titre, quand la main écrit du français correct et lui applique la
+        # typographie française. Le remède ne crée aucune règle, il fait lancer `verifie_titre_pr.py`
+        # avant l'ouverture de la PR ; ce garde tient les trois documents qui le nomment.
+        # Il RELANCE le script cité sur deux titres témoins, l'un fautif et l'autre conforme : une
+        # méthode qui nommerait une commande devenue permissive vaut moins que rien, son vert
+        # rassurant. L'auto-test l'éprouve sur sept états cassés, dont ce desserrage.
+        run: |
+          python3 scripts/methode/verifie-controle-du-titre.py --auto-test
+          python3 scripts/methode/verifie-controle-du-titre.py --verifie
+      - name: "Un garde déclare ce dont il a besoin, comme le pom le déclare pour Java (bloquant, #5008)"
+        # L'auto-test d'abord : un détecteur relâché passerait sinon au vert sur un dépôt conforme.
+        # Le verdict ensuite, sur les deux arbres de gardes et le Python enfoui dans leurs heredocs.
+        run: |
+          python3 scripts/methode/verifie-dependances-declarees.py --auto-test
+          python3 scripts/methode/verifie-dependances-declarees.py
 
+  temoins:
+    # Les bancs qui prouvent qu un auto-test n est pas decoratif. Le poste le plus cher.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # ⟨portee⟩ Voir le chantier #5294. Les bancs de mutation n apprennent rien d une demande
+      # qui ne touche aucun garde : leur code est identique a celui que la base a deja juge.
+      - name: "Ce diff touche-t-il un garde ? (#5365)"
+        id: portee
+        shell: bash
+        timeout-minutes: 3
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 .github/scripts/porte_du_job.py temoins
+
+      - name: Set up JDK 25
+        if: steps.portee.outputs.concerne == 'oui'
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          # JDK Temurin standard (sans JavaFX) : JavaFX 26 vient des dépendances Maven
+          # org.openjfx. La Headless Platform (glass.platform=Headless) est 100 % logicielle.
+          check-latest: false
+          cache: maven
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        if: steps.portee.outputs.concerne == 'oui'
+        with:
+          python-version: "3.x"
+      - name: "Installer les dépendances déclarées des gardes (#5008)"
+        if: steps.portee.outputs.concerne == 'oui'
+        # Neuf gardes de ce job portent `import yaml`, et rien ne déclarait PyYAML : ils ne
+        # marchaient que parce que l'image `ubuntu-latest` le fournit. Une dépendance qu'on a sans
+        # le savoir tombe le jour où l'image change, et l'erreur accuse alors la PR qui passait par
+        # là. Elle est désormais épinglée dans `pyproject.toml` et installée ici.
+        run: pip install --group gardes
+      - name: "Auto-test des scripts ADR (bloquant, #2467)"
+        if: steps.portee.outputs.concerne == 'oui'
+        # L'étape précédente échoue quand un script SUR-compte (un cas s'ajoute). Elle ne voit pas la
+        # déflation : un script qui, par régression, CESSERAIT de détecter ferait baisser son compte
+        # sous le cliquet, et resterait vert pendant qu'une vraie violation passe - un faux vert.
+        # Cet auto-test plante une violation témoin par script et exige qu'il la voie, et la même en
+        # commentaire pour qu'il ne la compte pas. Il ferme le trou de la passe 6 de clôture.
+        #
+        # Et le harnais lui-même a désormais son auto-test, lancé d'abord (#4268). Il prouvait que
+        # chaque détecteur détecte, sans que rien ne prouve qu'il les exerce TOUS : `2635` et `3947`
+        # n'avaient aucun cas témoin, et n'étaient donc tenus que par leur cliquet - c'est-à-dire par
+        # un compte qui ne monte pas, le trou exact que ce mécanisme existe pour fermer.
+        run: |
+          set -euo pipefail
+          python3 scripts/adr/verifie_scripts.py --auto-test
+          python3 scripts/adr/verifie_scripts.py
+      - name: "Aucun temoin de la suite n'est decoratif (bloquant, #4490)"
+        if: steps.portee.outputs.concerne == 'oui'
+        # La suite ci-dessus clot sur « les N scripts charges DETECTENT leur violation temoin ». La
+        # phrase affirmait plus que ce qu'elle verifie : un temoin peut exister, s'executer, passer,
+        # et ne rien tenir. Celui du cliquet de longueur d'ADR n'affirmait que
+        # `isinstance(suspects(), list)`, et un garde ayant cesse de detecter le passait (#4487).
+        #
+        # Ce garde-ci rend l'article A2 mecanique : chaque garde perd sa detection, la suite doit
+        # rougir. Cout mesure, 1,2 s pour 23 gardes. Il vient APRES la suite, dont il depend.
+        run: |
+          set -euo pipefail
+          python3 scripts/adr/verifie_temoins_non_decoratifs.py --auto-test
+      - name: "Aucun appel de verdict ne cache ce qu'il a lu (bloquant, #5049)"
+        if: steps.portee.outputs.concerne == 'oui'
+        # Le sous-chantier #5015 a converti 33 appels, et son bilan nommait cette dette : rien
+        # n'empechait un appel neuf de naitre muet. La regression a eu lieu en QUELQUES HEURES,
+        # sur `5068-clic-sur-reference-tenue.py`, dont l'auteur ne pouvait pas le savoir.
+        #
+        # L'auto-test tient les deux moities : un appel muet est vu, et un appel qui declare ne
+        # l'est PAS. Un garde qui refuserait tout passerait la premiere.
+        env:
+          # ⟨sans elle, le banc mute TOUT⟩ Il ne mute que les gardes du diff depuis #5345, et il
+          # derive cette portee du SHA de base que la forge fournit. Ne pas le lui passer le fait
+          # retomber sur « mute tout » - le mecanisme reste ecrit, eprouve, documente, et INERTE.
+          # C'est ce qui s'est passe entre #5356 et #5366, et `verifie_portees_de_ci.py` le refuse
+          # desormais.
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          python3 scripts/adr/verifie_verdicts_declares.py --auto-test
+          python3 scripts/adr/verifie_verdicts_declares.py
+          python3 scripts/adr/verifie_temoins_non_decoratifs.py
       - name: "Aucun auto-test de garde de méthode n'est décoratif (bloquant, #4760)"
+        if: steps.portee.outputs.concerne == 'oui'
         # L'article A2 demande qu'un garde soit vu ROUGE sur sa propre mutation.
         # `scripts/adr/verifie_temoins_non_decoratifs.py` le rend mecanique, mais pour `scripts/adr/`
         # seulement : les gardes de methode, dont onze bloquants ici, avaient un `--auto-test` que
@@ -1240,8 +1273,8 @@ jobs:
         run: |
           python3 scripts/methode/temoins-de-methode-non-decoratifs.py --auto-test
           python3 scripts/methode/temoins-de-methode-non-decoratifs.py
-
       - name: "Les auto-tests des gardes de CI ne sont pas décoratifs (bloquant, #5254)"
+        if: steps.portee.outputs.concerne == 'oui'
         # Le troisième banc, et il manquait. Les deux autres couvrent `scripts/adr` et
         # `scripts/methode` ; #5215 avait clos #4865 en affirmant que « converti, un garde entre
         # gratuitement dans un banc qui existe ». Mesuré à la clôture de #5218 : il n'y entrait pas,
@@ -1259,39 +1292,3 @@ jobs:
           python3 .github/scripts/temoins_de_ci_non_decoratifs.py --auto-test
           python3 .github/scripts/temoins_de_ci_non_decoratifs.py
 
-      - name: "La méthode nomme le garde du titre, et ce garde refuse encore l'espace (bloquant, #4598)"
-        # Le dépôt pratique deux conventions de titre à un caractère d'écart, et c'est la plus
-        # écrite qui est fausse en PR : 62 des 100 derniers titres d'issue portent l'espace avant
-        # les deux-points, quand les 100 dernières PR fusionnées sont à zéro. La seconde colonne
-        # est propre parce que `titre-pr.yml` refuse, pas parce que la main écrit juste.
-        # Le défaut n'entre pas au commit : les quatre PR rouges du 2026-08-26 partaient toutes
-        # d'une branche aux sujets de commit conformes, et 286 des 297 sujets de branche le sont.
-        # Il entre à la frappe du titre, quand la main écrit du français correct et lui applique la
-        # typographie française. Le remède ne crée aucune règle, il fait lancer `verifie_titre_pr.py`
-        # avant l'ouverture de la PR ; ce garde tient les trois documents qui le nomment.
-        # Il RELANCE le script cité sur deux titres témoins, l'un fautif et l'autre conforme : une
-        # méthode qui nommerait une commande devenue permissive vaut moins que rien, son vert
-        # rassurant. L'auto-test l'éprouve sur sept états cassés, dont ce desserrage.
-        run: |
-          python3 scripts/methode/verifie-controle-du-titre.py --auto-test
-          python3 scripts/methode/verifie-controle-du-titre.py --verifie
-
-      - name: "Un garde déclare ce dont il a besoin, comme le pom le déclare pour Java (bloquant, #5008)"
-        # L'auto-test d'abord : un détecteur relâché passerait sinon au vert sur un dépôt conforme.
-        # Le verdict ensuite, sur les deux arbres de gardes et le Python enfoui dans leurs heredocs.
-        run: |
-          python3 scripts/methode/verifie-dependances-declarees.py --auto-test
-          python3 scripts/methode/verifie-dependances-declarees.py
-
-      - name: "Le Python des gardes est formaté et sans reproche (bloquant, #5022)"
-        # Le pendant de Spotless et PMD, qui tiennent le Java, et de shellcheck, qui tient le shell.
-        # Cette couche juge tout le reste, et n'avait rien - ni format, ni règles - avant #5022.
-        # Le format d'abord : un diff de forme noierait un diff de fond dans la revue suivante.
-        #
-        # `.github/assets` s'est ajouté avec #5229 et `icone` avec #5236, chaque fois pour la même
-        # raison : du Python venait d'y arriver, et le dossier n'était balayé par rien. Un dossier
-        # absent de cette liste n'échoue pas, il est simplement muet - c'est la même cécité que
-        # celle des inventaires (#4013), et elle se répète à chaque dossier qui gagne un fichier.
-        run: |
-          ruff format --check scripts .github/scripts .github/assets icone
-          ruff check scripts .github/scripts .github/assets icone

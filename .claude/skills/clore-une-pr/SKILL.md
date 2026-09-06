@@ -49,12 +49,17 @@ Ce qui juge, selon ce qu'on a touché :
 
 | Ce que la PR touche | Ce qui la juge |
 |---|---|
-| documentation, compétences, ADR, workflows | `lint`, `corps`, `titre`, `contrat-fichiers`, **et `build`**, `ordre-alternatif`, `fuseau-alternatif` |
+| documentation, compétences, ADR, workflows | `lint`, `methode`, `corps`, `titre`, `contrat-fichiers`, **et `build`**, `ordre-alternatif`, `fuseau-alternatif` |
 | code de production ou de test | tout, y compris `paquet` |
 | une vue ou une capture | `capturer` et les gardes de captures en plus |
 
-**`lint` juge presque tout**, y compris les compétences : il porte les gardes de méthode, les
-inventaires et les auto-tests des gardes de CI.
+**C'est `methode` qui juge presque tout**, y compris les compétences : il porte les gardes de prose,
+les inventaires et les concordances. Le job s'appelait `lint` jusqu'à #5365, où il a été séparé en
+trois : `lint` ne porte plus que les formateurs et les analyseurs, `methode` les gardes, et
+`temoins` les deux bancs de mutation.
+
+**`temoins` porte une portée** : il ne s'exerce que si le diff touche un garde. Sur une demande de
+prose il conclut « sans objet », et c'est un silence explicite, pas une absence.
 
 **Ce que cette page a enseigné de faux, et ce qu'il en a coûté.** Elle affirmait qu'*un changement de
 documentation n'est jugé par aucun job Java*, et son tableau omettait `build`. Le 30 août 2026, #4923
