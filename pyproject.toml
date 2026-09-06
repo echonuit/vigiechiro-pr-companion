@@ -25,7 +25,22 @@ requires-python = ">=3.12"
 # Ce que les GARDES lisent. Ne porte que ce qui est UTILISÉ : déclarer une dépendance dont rien ne
 # se sert est ce que `dependency:analyze-only` refuse côté Java, et il n'y a pas de raison d'être
 # plus permissif ici. `pytest`, `mutmut` et `coverage.py` entreront avec le lot qui les emploie.
-gardes = ["PyYAML==6.0.2", "ruff==0.16.5"]
+#
+# `tree-sitter-language-pack` porte la GRAMMAIRE que `scripts/_commun/arbre.py` interroge, et il est
+# ici plutot que dans `recherche` parce qu'un cliquet l'importe EN CI (chantier #5402). Trois choses
+# se disent sur son épinglage :
+#
+#  - la version fixe la GRAMMAIRE, pas seulement l'outil. Les noms de nœuds lui appartiennent, et un
+#    relèvement pourrait déplacer une population sans que rien ne rougisse. `verifie_grammaire()`
+#    dans `arbre.py` tient l'autre moitié : il confronte ces noms à une source témoin, si bien qu'un
+#    relèvement devient un acte qu'on relit plutôt qu'une dérive qu'on subit. Mesuré entre 1.14.3 et
+#    1.16.1 : 229 types de nœuds, 14 781 `method_declaration`, identiques ;
+#  - le paquet est **abi3**, donc une seule roue couvre les versions futures de Python. Sa dépendance
+#    `tree-sitter`, elle, publie une roue PAR version : c'est ce qui rend #5401 nécessaire, puisque
+#    `python-version: "3.x"` flotte au niveau mineur dans cinq ateliers ;
+#  - il apporte neuf grammaires pour le prix d'une, dont `markdown`. Le dépôt porte 604 fichiers
+#    `.md` contre 2 125 `.java`, et aucun n'a d'analyseur aujourd'hui.
+gardes = ["PyYAML==6.0.2", "ruff==0.16.5", "tree-sitter-language-pack==1.16.1"]
 
 # Ce que la DOCUMENTATION construit. Ces deux versions se tiennent : mkdocs-material < 9.7.0 exige
 # `pymdown-extensions~=10.2`, soit « >= 10.2 et < 11 ». Monter pymdown-extensions en 11 sans monter
@@ -46,6 +61,10 @@ PyYAML = ["yaml"]
 # `ruff` ne s'importe pas : il s'appelle en ligne de commande.
 ruff = []
 mkdocs-material = ["mkdocs", "material"]
+# Les tirets deviennent des soulignés : `pip install tree-sitter-language-pack` répond à
+# `import tree_sitter_language_pack`. C'est l'écart de `PyYAML` / `yaml`, en moins visible, parce
+# qu'ici les deux noms se ressemblent assez pour qu'on croie n'avoir rien à déclarer.
+tree-sitter-language-pack = ["tree_sitter_language_pack"]
 
 # Les COMMANDES que la méthode prescrit, et la distribution qui les installe (issue #4849).
 #

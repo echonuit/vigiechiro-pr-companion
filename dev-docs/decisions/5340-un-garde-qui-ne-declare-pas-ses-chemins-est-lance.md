@@ -8,7 +8,7 @@ decided_at: 2026-09-06
 verification: probable
 enforced_by:
   - "scripts/adr/5340-chemins-non-declares.py"
-ratchet: 48
+ratchet: 47
 verified:
   - by: machine:ci
     at: 2026-09-06
