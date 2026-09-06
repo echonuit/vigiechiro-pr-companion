@@ -575,6 +575,19 @@ jobs:
           chmod +x .github/scripts/partition_de_la_suite.py
           python3 .github/scripts/partition_de_la_suite.py --auto-test
           python3 .github/scripts/partition_de_la_suite.py --verifie
+      - name: "Une classe Java qui juge la prose est declaree (bloquant, #5373)"
+        # La porte de la batterie s'arretait au Python, alors que ce depot teste sa documentation
+        # comme du code : cinq classes Java lisent des `.md`. C'est ce qui a coute un aller-retour
+        # en #5356, sur un `enforced_by` que seul `build` voyait.
+        #
+        # Declarer ces classes est la liste que l'ADR 3450 refuse - sauf que ce garde la CONFRONTE a
+        # une population derivee de l'arbre. Une sixieme classe qui lirait un `.md` sans etre
+        # declaree fait rougir. Une liste qu'un garde confronte n'est plus une liste.
+        run: |
+          chmod +x scripts/methode/gardes-java-declares.py
+          python3 scripts/methode/gardes-java-declares.py --auto-test
+          python3 scripts/methode/gardes-java-declares.py
+
       - name: "La porte de la batterie sait ce qu'elle lance (bloquant, #5340)"
         # Elle repond a « quels controles ce diff engage-t-il ? », a partir du champ `chemins` que
         # chaque garde declare, et LANCE ceux qui n'en declarent pas. Le defaut penche du cote
