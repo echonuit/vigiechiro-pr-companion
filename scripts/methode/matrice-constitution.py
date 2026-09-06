@@ -131,6 +131,10 @@ CONTRAT = {
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/matrice-constitution.py --auto-test",
     "decision": "hygiène, sans décision",
+    "chemins": """
+dev-docs/decisions/**
+CONSTITUTION.md
+""",
 }
 
 

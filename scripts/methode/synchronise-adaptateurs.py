@@ -140,6 +140,10 @@ CONTRAT = {
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/synchronise-adaptateurs.py --auto-test",
     "decision": "hygiene, sans decision",
+    "chemins": """
+.agents/skills/**
+.claude/skills/**
+""",
 }
 
 

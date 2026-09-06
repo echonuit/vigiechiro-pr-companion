@@ -206,6 +206,11 @@ CONTRAT = {
     "seuil": "0, polarite=descend",
     "temoin": "scripts/methode/verifie-batterie-locale.py --auto-test",
     "decision": "ADR 5258",
+    "chemins": """
+.github/workflows/**
+.agents/skills/ouvrir-une-pr/**
+scripts/**
+""",
 }
 
 

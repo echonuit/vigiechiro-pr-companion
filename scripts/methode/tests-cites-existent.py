@@ -105,6 +105,12 @@ CONTRAT = {
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/tests-cites-existent.py --auto-test",
     "decision": "hygiene, sans decision",
+    "chemins": """
+.agents/skills/**
+.claude/skills/**
+dev-docs/**
+src/test/java/**
+""",
 }
 
 

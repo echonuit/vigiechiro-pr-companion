@@ -528,6 +528,18 @@ jobs:
           python3 .github/scripts/partition_de_la_suite.py --auto-test
           python3 .github/scripts/partition_de_la_suite.py --verifie
 
+      - name: "La porte de la batterie sait ce qu'elle lance (bloquant, #5340)"
+        # Elle repond a « quels controles ce diff engage-t-il ? », a partir du champ `chemins` que
+        # chaque garde declare, et LANCE ceux qui n'en declarent pas. Le defaut penche du cote
+        # couteux, jamais du cote muet.
+        #
+        # Le cliquet compte les muets et descend. Son auto-test verifie l'ACCORD du cliquet et de la
+        # porte : un second parcours des contrats les ferait diverger, defaut mesure en #5175.
+        run: |
+          chmod +x scripts/batterie.py scripts/adr/5340-chemins-non-declares.py
+          python3 scripts/batterie.py --auto-test
+          python3 scripts/adr/5340-chemins-non-declares.py --auto-test
+
       - name: Tout job porte un butoir
         # Un job sans `timeout-minutes` que GitHub laisse courir SIX HEURES a bloqué une PR
         # 4 h 15 sur un `apt-get install` de police, en `-qq` donc sans une ligne de log. Le butoir
