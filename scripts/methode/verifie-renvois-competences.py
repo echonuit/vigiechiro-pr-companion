@@ -224,6 +224,10 @@ CONTRAT = {
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/verifie-renvois-competences.py --auto-test",
     "decision": "hygiene, sans decision",
+    "chemins": """
+.agents/skills/**
+.claude/skills/**
+""",
 }
 
 

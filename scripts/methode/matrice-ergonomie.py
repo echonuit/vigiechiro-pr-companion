@@ -209,6 +209,10 @@ CONTRAT = {
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/matrice-ergonomie.py --auto-test",
     "decision": "article A29",
+    "chemins": """
+dev-docs/decisions/**
+dev-docs/ergonomie/**
+""",
 }
 
 

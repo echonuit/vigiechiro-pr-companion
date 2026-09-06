@@ -210,6 +210,9 @@ CONTRAT = {
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/releve-les-planchers.py --auto-test",
     "decision": "hygiene, sans decision",
+    "chemins": """
+dev-docs/decisions/**
+""",
 }
 
 

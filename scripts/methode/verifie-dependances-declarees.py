@@ -327,6 +327,12 @@ CONTRAT = {
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/verifie-dependances-declarees.py --auto-test",
     "decision": "hygiene, sans decision",
+    "chemins": """
+scripts/**
+.github/scripts/**
+.github/assets/**
+pyproject.toml
+""",
 }
 
 

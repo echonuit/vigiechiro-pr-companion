@@ -282,6 +282,22 @@ def rapporte(
 # faux au second site. Ces deux propriétés se DÉRIVENT des workflows, elles ne se déclarent pas.
 CHAMPS_DU_CONTRAT = ("geste", "population", "dispositif", "seuil", "temoin", "decision")
 
+# `chemins` est FACULTATIF, et le rester est une contrainte autant qu'un choix (#5340).
+#
+# La `population` est de la prose - « PRODUCTION + TESTS », « les ADR de dev-docs/decisions ». Elle se
+# lit, elle ne se joint pas à un `git diff`. Et l'inférer est un cul-de-sac déjà mesuré :
+# `loupe-5175-population-non-nommee.py` ne résout le parcours que de 13 gardes sur 41, et écrit
+# qu'« aucune loupe ne les couvrira ». La jointure se DÉCLARE donc.
+#
+# Facultatif, parce que l'ajouter aux champs requis ferait échouer les 71 porteurs d'un coup. Et
+# surtout parce que le repli rend l'absence SÛRE : **un garde qui ne déclare pas ses `chemins` est
+# lancé**. Le défaut penche du côté coûteux, jamais du côté muet, comme la portée CI qui vérifie tout
+# quand la base de comparaison manque.
+#
+# Une ligne par motif, la forme que `SURVEILLES` et `PORTEES` emploient déjà : elle est lisible par un
+# motif, donc gardable de l'extérieur.
+CHAMPS_FACULTATIFS = ("chemins",)
+
 
 def imprime_contrat(garde: str, contrat: dict[str, str]) -> int:
     """Imprime ce qu'un garde DÉCLARE être, et refuse un contrat incomplet.
@@ -314,6 +330,12 @@ def imprime_contrat(garde: str, contrat: dict[str, str]) -> int:
     print(f"CONTRAT | garde={garde}")
     for champ in CHAMPS_DU_CONTRAT:
         print(f"{champ}: {contrat[champ]}")
+    # Les facultatifs viennent APRÈS, et seulement s'ils sont là : un dériveur qui compte les lignes
+    # requises n'est pas dérangé, et celui qui cherche `chemins` le trouve.
+    for champ in CHAMPS_FACULTATIFS:
+        if champ in contrat:
+            valeur = " ".join(str(contrat[champ]).split())
+            print(f"{champ}: {valeur}")
     return 0
 
 

@@ -156,6 +156,14 @@ CONTRAT = {
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/passes-citees-existent.py --auto-test",
     "decision": "hygiene, sans decision",
+    "chemins": """
+.agents/skills/**
+.claude/skills/**
+AGENTS.md
+CONTRIBUTING.md
+CLAUDE.md
+dev-docs/**
+""",
 }
 
 
