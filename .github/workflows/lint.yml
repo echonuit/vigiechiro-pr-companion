@@ -502,6 +502,18 @@ jobs:
           python3 .github/scripts/verifie_portees_de_ci.py --auto-test
           python3 .github/scripts/verifie_portees_de_ci.py
 
+      - name: "L'instrument des minutes par demande sait encore lire (bloquant, #5304)"
+        # Il RELEVE, il ne refuse rien : un chantier qui rend moins que promis est un sujet de bilan,
+        # pas un rouge de CI. Seul son auto-test tourne ici, et il tient le bord qui compte : un
+        # releve VIDE doit faire REFUSER de conclure, jamais annoncer zero.
+        #
+        # `mesure_duree_portail.py` ne peut pas mesurer le chantier #5294 : il lit `main`, ou il n'y a
+        # pas de base de comparaison, donc ou toutes les portees rendent « oui ». Il afficherait zero
+        # gain par construction. Celui-ci lit les DEMANDES.
+        run: |
+          chmod +x .github/scripts/mesure_minutes_par_pr.py
+          python3 .github/scripts/mesure_minutes_par_pr.py --auto-test
+
       - name: Tout job porte un butoir
         # Un job sans `timeout-minutes` que GitHub laisse courir SIX HEURES a bloqué une PR
         # 4 h 15 sur un `apt-get install` de police, en `-qq` donc sans une ligne de log. Le butoir
