@@ -7,7 +7,7 @@ chantier: "#5294 (le coût des ateliers), lot #5345"
 decided_at: 2026-09-06
 verification: certaine
 enforced_by:
-  - "scripts/adr/verifie_temoins_non_decoratifs.py --auto-test"
+  - "scripts/adr/verifie_temoins_non_decoratifs.py"
 ratchet: 0
 verified:
   - by: machine:ci
