@@ -93,6 +93,30 @@ captures + PMD), `maven.yml` porte les **tests + couverture**. Localement :
 
 **Spotless** (Palantir Java Format) formate via un *hook* pre-commit et est vérifié par `lint.yml` (`spotless:check`).
 
+## « Sans objet » dans un récapitulatif, et pourquoi c'est sûr (#5376)
+
+Un job vert dont le journal dit « sans objet » n'a **rien vérifié**, et c'est voulu. La règle est
+qu'**un job de demande tourne toujours et conclut ; sa première étape décide, et les suivantes en
+dépendent**. Sa portée est déclarée dans un seul endroit, `.github/scripts/porte_du_job.py`, où tout
+job de demande figure : avec ses chemins, ou parmi les inconditionnels avec sa raison écrite.
+
+**Le filtre `paths:` de la forge est interdit ici**, et ce n'est pas une préférence. Un job qui ne se
+déclenche pas ne rend aucun verdict, or l'ADR 4571 refuse une fusion sans verdict complet et exclut
+`skipped` de ses conclusions probantes ; et un job **absent** du récapitulatif ne se distingue pas
+d'un job vert, ce qui est le motif de l'ADR 2748. Le silence explicite est donc préféré à l'absence,
+et la différence est tout l'objet du patron.
+
+**Ce que ce silence coûte** : 5 à 9 secondes par job, le temps d'un checkout et du `git fetch` de la
+base. La forge facturant à la minute entamée, un job muet coûte une minute facturée. C'est le prix du
+récapitulatif complet.
+
+**Une demande qui touche l'outillage rallume tout**, et il ne faut pas s'en étonner : chaque portée
+nomme son propre atelier et le mécanisme qui la lit, sans quoi une modification du dispositif ne
+serait jamais éprouvée par lui.
+
+La décision, ses deux verrous et la condition qui la périmerait - l'arrivée d'une protection de
+branche sur `main` - sont dans l'[ADR 5376](decisions/5376-un-job-tourne-toujours-et-une-etape-decide.md).
+
 ## Pourquoi `build`, `emballage` et `bats` sont trois jobs
 
 `maven.yml` portait auparavant quatre préoccupations à la file dans un seul job. Deux coûts en
