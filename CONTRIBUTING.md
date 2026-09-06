@@ -297,7 +297,9 @@ angles, ne se ressemblent pas, et le recoupement se découvre alors au **conflit
 
 Le balayage **par concept** ne se fait pas au `grep`, qui ne sait chercher que des chaînes. Le dépôt se
 donne un **graphe de connaissances** (`graphify-out/`, hors suivi Git : code, workflows, `bats`, docs et
-brief mêlés) qu'on interroge par `graphify query "<question>" --budget 2500`. Il répond à « qui d'autre
+brief mêlés) qu'on interroge par `graphify query "<question>" --budget 2500`. Il s'installe par
+`uv tool install "graphifyy[sql]"` - la distribution est **`graphifyy`**, la commande `graphify`, et
+`pip install graphify` installerait autre chose (voir `AGENTS.md`). Il répond à « qui d'autre
 fait X ? » quand X est une idée, et donne les appelants réels au niveau **méthode**. Il ne modélise
 **que notre code** (rien du JDK ni des bibliothèques) et sa traversée est **bruitée** : sa sortie est une
 **hypothèse à confirmer**, jamais un inventaire.

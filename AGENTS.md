@@ -204,6 +204,9 @@ Trois outils, trois questions. `graphify` d'abord (voir ci-dessous), puis :
 - **`semgrep`** pour une question de forme : « qui appelle X ? », « qui construit un Y à la
   main ? ». Il lit l'arbre syntaxique, pas les lignes.
   `semgrep --lang java --metrics=off --pattern 'Habillage.$M(...)' src/main`
+  Il s'installe **dans le venv d'outils**, comme `ruff` : `~/.venv-outils/bin/pip install semgrep`,
+  et il est déclaré au groupe `recherche` de `pyproject.toml`. La CI ne l'installe pas - elle n'a
+  aucune question de forme à poser.
 - **`grep`** pour un texte : un message, un libellé, une ligne de journal.
 
 Le moteur libre de `semgrep` ne traite pas les **annotations Java** comme motif autonome :
@@ -217,6 +220,26 @@ la ligne suivante et n'est lue qu'à moitié, un fichier à octets NUL rend `gre
 Le détail, avec les cas : `dev-docs/chercher-dans-le-depot.md`.
 
 ## graphify
+
+**Il s'installe, et il ne s'impose pas.** La distribution s'appelle **`graphifyy`**, la commande
+`graphify` :
+
+```bash
+uv tool install "graphifyy[sql]"     # ou : pipx install "graphifyy[sql]"
+```
+
+L'extra `[sql]` n'est pas décoratif : le dépôt porte 45 fichiers `.sql` de migration, que le graphe
+ne voit pas sans lui. Les guillemets non plus - le shell mangerait les crochets.
+
+**Le nom compte plus qu'il n'en a l'air.** `pip install graphify` n'existe pas, et
+`npm i -g graphify` installe **un autre paquet**, un générateur de graphes aléatoires publié par un
+tiers. C'est le piège de `PyYAML` / `yaml`, en plus coûteux : on n'obtient pas une erreur, on obtient
+le mauvais outil. `scripts/methode/verifie-commandes-prescrites.py` tient ce nom-là (#4849).
+
+**`graphify install --project` existe, et le dépôt ne le lance pas.** Cette commande enregistre des
+crochets `PreToolUse` qui s'exécutent avant chaque Bash, Grep, Read et Glob de l'agent, écrit dans
+`CLAUDE.md` et dépose une compétence sous `.claude/skills/`. C'est un **choix individuel** : à qui
+travaille sur le dépôt de le faire ou non, et rien ici ne rougit de son absence.
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
 

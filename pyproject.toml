@@ -32,6 +32,11 @@ gardes = ["PyYAML==6.0.2", "ruff==0.16.5"]
 # mkdocs-material rend l'installation insoluble. Les faire bouger ensemble, ou pas du tout.
 doc = ["mkdocs-material==9.7.7", "pymdown-extensions==11.0.1"]
 
+# Ce qu'on installe pour CHERCHER dans le dépôt, et que la CI n'installe pas. `lint.yml` lance
+# `pip install --group gardes` en trois endroits : y mettre ces outils-ci les poserait sur un runner
+# qui ne s'en sert pas. Ils vivent dans le venv d'outils du poste, `~/.venv-outils` (#4849).
+recherche = ["semgrep"]
+
 # Le nom de la DISTRIBUTION n'est pas celui du MODULE : `PyYAML` répond à `import yaml`, et
 # `mkdocs-material` fournit `mkdocs` et `material`. Deviner la correspondance exigerait d'interroger
 # ce qui est déjà INSTALLÉ, donc de rendre un verdict qui dépend de la machine. Elle se déclare ici,
@@ -41,6 +46,31 @@ PyYAML = ["yaml"]
 # `ruff` ne s'importe pas : il s'appelle en ligne de commande.
 ruff = []
 mkdocs-material = ["mkdocs", "material"]
+
+# Les COMMANDES que la méthode prescrit, et la distribution qui les installe (issue #4849).
+#
+# Table SÉPARÉE de `modules` ci-dessus, et non une colonne de plus : celle-là dit ce qu'un `import`
+# trouve, celle-ci ce qu'un shell trouve. Les fondre demanderait de renommer une table qu'un garde
+# lit déjà, pour un gain nul.
+#
+# **Pourquoi elle existe.** `AGENTS.md`, `CONTRIBUTING.md` et `dev-docs/chercher-dans-le-depot.md`
+# prescrivent `graphify` sans nommer une seule fois ce qui l'installe. Or `pip install graphify`
+# n'existe pas, et `npm i -g graphify` installe **un autre paquet** - un générateur de graphes
+# aléatoires publié par un tiers. Le piège est celui de `PyYAML` / `yaml`, en plus coûteux : ici on
+# n'obtient pas une erreur, on obtient le mauvais outil.
+#
+# Ces distributions ne sont dans AUCUN groupe ci-dessus, et c'est délibéré : `lint.yml` lance
+# `pip install --group gardes` en trois endroits, et `graphify` n'a pas à être installé sur un
+# runner. Le workflow l'écrit déjà - « `graphify` n'est pas installé sur le runner ».
+[tool.vigiechiro.commandes]
+# S'installe par `uv tool install graphifyy`, ou `pipx install graphifyy`, ou `pip install graphifyy`.
+# Pose DEUX exécutables, mesuré le 2026-09-06.
+#
+# **L'extra `[sql]` compte ici** : le dépôt porte 45 fichiers `.sql` sous
+# `src/main/resources/db/migration/`, que le graphe ne voit pas sans lui. La forme complète est donc
+# `pip install "graphifyy[sql]"` - les guillemets ne sont pas décoratifs, le shell mangerait les
+# crochets.
+graphifyy = ["graphify", "graphify-mcp"]
 
 # Le formateur et le linter du Python du dépôt (issue #5022). Le Java avait Spotless et PMD, le
 # shell avait shellcheck, et 13 965 lignes de Python n'avaient rien : c'est la couche qui juge tout
