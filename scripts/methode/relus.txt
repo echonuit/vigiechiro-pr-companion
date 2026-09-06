@@ -1691,7 +1691,7 @@ d9fec5c6ee66  src/test/java/fr/univ_amu/iut/diagnostic/view/DiagnosticVueIntegra
 6182b95cf80f  src/test/java/fr/univ_amu/iut/diagnostic/view/NavigationDiagnosticViewTest.java
 49cdf1740aae  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioDiagnosticPassageTest.java
 db45175c906f  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioDiagnosticSansJournalTest.java
-d8dfd907b1d1  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioNuitInterrompueTest.java
+8525498855c4  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioNuitInterrompueTest.java
 f3d67902b4ad  src/test/java/fr/univ_amu/iut/diagnostic/view/ScenarioReveilParBoutonTest.java
 756472eb3bdd  src/test/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModelTest.java
 9c8a02123e93  src/test/java/fr/univ_amu/iut/documentation/DecisionsRespecteesTest.java

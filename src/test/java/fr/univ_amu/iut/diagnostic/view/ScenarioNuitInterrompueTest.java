@@ -66,7 +66,13 @@ class ScenarioNuitInterrompueTest {
     private static final String FIXTURE = "sd-nuit-interrompue";
 
     /// Ce que l'encart dit, mot pour mot, dans `DiagnosticViewModel#libelleCompletude`.
-    private static final String INTERRUPTION = "interrompue avant son terme";
+    /// Ce que l'encart doit DIRE. La formulation a changé en #5352 : elle disait « les
+    /// enregistrements s'arrêtent là », trois lignes sous la plage enregistrée que le même écran
+    /// affiche en entier. Ce que le journal atteste, c'est sa propre fin, pas celle de l'audio.
+    private static final String INTERRUPTION = "avant le terme de la nuit";
+
+    /// Ce que l'encart ne doit PAS dire : la complétude se lit dans le journal, et lui seul (#5352).
+    private static final String CONCLUSION_DE_TROP = "enregistrements";
 
     private static final int APPARITION_SECONDES = 30;
 
@@ -132,5 +138,11 @@ class ScenarioNuitInterrompueTest {
                         + " phrase-là qui manquait : une nuit s'arrêtait en son milieu sans que rien ne"
                         + " le signale (#5093)")
                 .contains(INTERRUPTION);
+
+        assertThat(encart.getText())
+                .as("l'encart ne conclut pas sur les ENREGISTREMENTS : le journal peut cesser d'écrire"
+                        + " pendant que l'audio continue, et cet écran affiche la plage enregistrée"
+                        + " entière juste au-dessus (#5352)")
+                .doesNotContain(CONCLUSION_DE_TROP);
     }
 }

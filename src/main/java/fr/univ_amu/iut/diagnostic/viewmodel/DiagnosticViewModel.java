@@ -166,8 +166,11 @@ public class DiagnosticViewModel {
         // C'est la règle de #5071 au calcul et de #5084 au report, tenue ici une troisième fois.
         return switch (completude) {
             case TRONQUEE ->
-                RetourOperation.avertissement("Le journal du capteur montre que cette nuit s'est"
-                        + " interrompue avant son terme : les enregistrements s'arrêtent là.");
+                // Ce que le journal atteste, et rien au-delà : il peut cesser d'écrire pendant que
+                // l'audio continue, et l'écran affiche la plage enregistrée trois lignes plus haut
+                // (#5352). Le terminal nommait déjà sa source ; l'écran l'affirmait (ADR 4984).
+                RetourOperation.avertissement(
+                        "Le journal du capteur s'arrête avant le terme de la" + " nuit : la fin n'est pas attestée.");
             case COMPLETE -> RetourOperation.info("Le journal du capteur atteste une fin de nuit normale.");
             case INCONNUE -> RetourOperation.AUCUN;
         };
