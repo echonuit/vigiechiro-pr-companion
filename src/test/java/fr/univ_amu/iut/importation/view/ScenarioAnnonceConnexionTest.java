@@ -122,7 +122,7 @@ class ScenarioAnnonceConnexionTest {
         Respiration.surLeMomentCle(robot);
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, LABEL_ORIGINAUX).isBlank(),
                 "l'inspection n'a jamais conclu",
                 APPARITION_SECONDES * 1000L);
@@ -148,7 +148,7 @@ class ScenarioAnnonceConnexionTest {
         WaitForAsyncUtils.waitForFxEvents();
         GesteVisible.amenerDansLeCadre(robot, BOUTON_IMPORTER);
         GesteVisible.cliquer(robot, BOUTON_IMPORTER);
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> estVisible(robot, "#compteRenduChiffre"),
                 "l'import n'a pas abouti : le compte rendu de fin n'a jamais paru",
                 FIN_SECONDES * 1000L);

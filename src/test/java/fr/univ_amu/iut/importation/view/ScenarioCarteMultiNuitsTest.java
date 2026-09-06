@@ -119,7 +119,7 @@ class ScenarioCarteMultiNuitsTest {
     void la_table_des_nuits_et_ses_badges(FxRobot robot) throws TimeoutException, IOException {
         inspecter(robot, "sd-multi-nuits");
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> lignesDeLaTable(robot).size() >= 3,
                 "la table des nuits n'a pas paru : trois nuits ont été détectées, et c'est elle qui"
                         + " permet d'en exclure une avant d'importer",
@@ -157,7 +157,7 @@ class ScenarioCarteMultiNuitsTest {
     void deux_nuits_deux_configurations(FxRobot robot) throws TimeoutException, IOException {
         inspecter(robot, "sd-multi-configs");
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> lignesDeLaTable(robot).size() >= 2,
                 "la table des nuits n'a pas paru sur une carte qui en porte deux",
                 APPARITION_SECONDES * 1000L);
@@ -205,7 +205,7 @@ class ScenarioCarteMultiNuitsTest {
         // On attend que l'INSPECTION ait conclu, et non qu'un bandeau paraisse : toutes les cartes
         // n'en lèvent pas au même endroit. `sd-prefixee` ne dit rien ici - sa discordance se voit au
         // RATTACHEMENT - et attendre un bandeau d'inspection y expirerait pour rien.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux sur « " + fixture + " » : elle"
                         + " balaie le dossier hors du fil JavaFX, et rien n'a paru dans le temps imparti",

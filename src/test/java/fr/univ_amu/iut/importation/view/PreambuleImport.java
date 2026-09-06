@@ -61,7 +61,7 @@ public final class PreambuleImport {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux : le rattachement ne propose rien"
                         + " tant qu'elle n'a pas lu la carte",
@@ -79,7 +79,7 @@ public final class PreambuleImport {
         GesteVisible.amenerDansLeCadre(robot, "#boutonImporter");
         GesteVisible.cliquer(robot, "#boutonImporter");
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> estVisible(robot, "#compteRenduChiffre"),
                 "l'import n'a pas abouti : sans nuit importée, il n'y a pas de passage à ouvrir, et les"
                         + " gestes qui commencent ici n'ont rien à montrer",
@@ -96,7 +96,7 @@ public final class PreambuleImport {
         GesteVisible.cliquer(robot, LIBELLE_SUITE);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> estVisible(robot, "#stepper"),
                 "le passage pivot ne s'est pas ouvert après l'import : c'est par « " + LIBELLE_SUITE
                         + " » que l'utilisateur y arrive, et un banc qui y sauterait ne montrerait pas ce"

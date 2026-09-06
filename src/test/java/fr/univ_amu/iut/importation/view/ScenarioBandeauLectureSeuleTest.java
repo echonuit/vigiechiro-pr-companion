@@ -140,7 +140,7 @@ class ScenarioBandeauLectureSeuleTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> bandeaux(robot).contains(LECTURE_SEULE),
                 "le quatrième bandeau n'a jamais paru : l'inspection balaie le dossier hors du fil"
                         + " JavaFX, et rien n'a été annoncé dans le temps imparti",
@@ -187,7 +187,7 @@ class ScenarioBandeauLectureSeuleTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux : sans elle, l'absence de bandeau"
                         + " ne prouverait rien, la carte n'ayant pas été lue",

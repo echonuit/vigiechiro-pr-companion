@@ -145,7 +145,7 @@ class ScenarioBandeauxDInspectionTest {
         robot.interact(() -> points.getSelectionModel().select(0));
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, "#labelPrefixeDiscordant").isBlank(),
                 "l'avertissement de discordance n'a pas paru alors que les fichiers portent le préfixe"
                         + " d'un autre carré : sans lui, leurs noms partiraient au dépôt sous le nom"
@@ -184,7 +184,7 @@ class ScenarioBandeauxDInspectionTest {
         // On attend que l'INSPECTION ait conclu, et non qu'un bandeau paraisse : toutes les cartes
         // n'en lèvent pas au même endroit. `sd-prefixee` ne dit rien ici - sa discordance se voit au
         // RATTACHEMENT - et attendre un bandeau d'inspection y expirerait pour rien.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux sur « " + fixture + " » : elle"
                         + " balaie le dossier hors du fil JavaFX, et rien n'a paru dans le temps imparti",
