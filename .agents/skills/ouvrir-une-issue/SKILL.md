@@ -45,6 +45,9 @@ ce qu'il faut avoir posé avant de commencer, et refuse de démarrer tant que ce
 8. PREVENIR les sessions pairs, quand l environnement en expose. La forge se lit si
             l on va la chercher ; un message arrive tout seul. Un par pair, portant le
             depot, le numero et la branche.
+9. RELIRE   l etat distant de l issue AVANT de committer, et pas seulement avant de
+            pousser : `gh issue view <n> --json state,assignees`. Fermee entre-temps,
+            on s arrete avant d ecrire un commit a jeter.
 ```
 
 Sauter l'étape 3, c'est produire un correctif isolé dont personne ne saura s'il a été fini. C'est
@@ -154,6 +157,32 @@ autre quatre, à la même minute.
 
 Une prise ne se **déduit** donc jamais d'un listing. Elle se **déclare**. Le listing ne sert qu'à
 savoir à qui écrire.
+
+### L'état distant se relit AVANT de committer, pas seulement avant de pousser
+
+Une session a perdu **onze fichiers**, jusqu'au nom de la classe de test, parce qu'une autre avait
+livré l'issue pendant qu'elle codait : l'issue était **déjà fermée** quand sa batterie tournait. Le
+remède n'est pas d'annoncer plus tôt, c'est de relire l'état distant au dernier moment utile.
+
+```bash
+gh issue view <N> --json state,assignees
+```
+
+Fermée ou réassignée : on s'arrête et on regarde ce qui a été livré, avant d'avoir écrit un commit
+qu'il faudra jeter.
+
+### Pourquoi aucun dispositif ne pourra détecter la collision à votre place
+
+**Toutes les sessions écrivent sous le même compte.** Commentaires, demandes, commits : la forge
+enregistre le compte, **jamais la session**. Ni `gh pr list`, ni `gh issue view --json assignees`, ni
+`git log --format=%an` ne distinguent deux sessions du même utilisateur.
+
+Il s'ensuit qu'une collision entre sessions est **indétectable en aval**, et qu'aucun garde ne la
+verra jamais. La déclaration entre pairs n'est donc pas le remède le plus commode : c'est le seul.
+
+C'est aussi pourquoi un incident entre sessions est presque toujours **invérifiable après coup** : la
+trace laissée par une session qui pose un bloc puis livre est identique à celle de deux sessions dont
+l'une pose le bloc et l'autre livre. Un incident qu'on ne peut pas rejouer ne se verse pas en preuve.
 
 ### Ce qu'aucun garde ne vérifiera
 
