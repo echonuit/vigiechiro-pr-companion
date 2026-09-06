@@ -229,6 +229,55 @@ class DiagnosticViewModelTest {
     }
 
     @Test
+    @DisplayName("#5368 : les trois plages sont dites quand la cohérence est disponible")
+    void les_trois_plages_sont_dites() {
+        when(service.diagnostiquer(ID_PASSAGE))
+                .thenReturn(diagnostic(SerieClimatique.absente(), 43.5, 5.4, coherenceDe(true, true)));
+
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.plagesHorairesProperty().get())
+                .as("la ligne qui porte les trois faits d'horaire, livrée par #4988")
+                .isNotEmpty();
+        assertThat(viewModel.plageExigeeProperty().get())
+                .as("ce que le protocole demande de couvrir")
+                .contains("Protocole");
+        assertThat(viewModel.plageEnregistreeProperty().get())
+                .as("ce qui a été tenu, l'autre moitié de la comparaison")
+                .contains("Enregistré");
+    }
+
+    @Test
+    @DisplayName("#5368 : passer d'une nuit située à une nuit sans GPS VIDE les quatre horaires")
+    void changer_de_passage_vide_les_horaires() {
+        // Le cas voisin part d'un modèle NEUF, dont les propriétés sont déjà vides : retirer une
+        // écriture du branchement « indisponible » n'y change donc rien, et six mutants y survivaient
+        // (mesuré à la clôture de #4980). Le défaut ne se voit qu'en ENCHAÎNANT : c'est en ouvrant un
+        // second passage que les valeurs du premier peuvent rester à l'écran.
+        //
+        // Ce serait la faute même que tout le chantier #4980 corrige, retournée contre lui : afficher
+        // une valeur qu'on ne sait plus être vraie, sous une ligne qui dit qu'on ne la sait pas.
+        when(service.diagnostiquer(ID_PASSAGE))
+                .thenReturn(diagnostic(SerieClimatique.absente(), 43.5, 5.4, coherenceDe(true, true)));
+        viewModel.ouvrirSur(ID_PASSAGE);
+        assertThat(viewModel.plageExigeeProperty().get())
+                .as("préalable : le premier passage a bien rempli les horaires")
+                .isNotEmpty();
+
+        when(service.diagnostiquer(ID_PASSAGE))
+                .thenReturn(diagnostic(SerieClimatique.absente(), null, null, CoherenceHoraire.indisponible()));
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.fenetreNuitProperty().get()).isEmpty();
+        assertThat(viewModel.plagesHorairesProperty().get())
+                .as("les horaires du passage précédent ne restent pas sous une cohérence indisponible")
+                .isEmpty();
+        assertThat(viewModel.plageExigeeProperty().get()).isEmpty();
+        assertThat(viewModel.plageEnregistreeProperty().get()).isEmpty();
+        assertThat(viewModel.alerteHorsNuitProperty().get()).isEqualTo(RetourOperation.AUCUN);
+    }
+
+    @Test
     @DisplayName("Un passage introuvable est restitué dans le message et laisse l'état vide")
     void passage_introuvable() {
         when(service.diagnostiquer(99L)).thenThrow(new RegleMetierException("Passage introuvable : 99"));
@@ -238,6 +287,28 @@ class DiagnosticViewModelTest {
         assertThat(viewModel.retourProperty().get().texte()).contains("introuvable");
         assertThat(viewModel.enregistreurProperty().get()).isEmpty();
         assertThat(viewModel.mesures()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#5368 : un passage introuvable ne laisse pas les horaires du précédent à l'écran")
+    void passage_introuvable_apres_un_passage_situe() {
+        // `reinitialiser()` vidait `fenetreNuit` et l'alerte, mais PAS les trois plages livrées par
+        // #4988 : elles n'y avaient jamais été ajoutées. Tout chemin qui réinitialise sans appliquer
+        // de cohérence - un passage introuvable, une erreur de chargement - laissait donc les horaires
+        // du passage précédent sous un message d'erreur.
+        when(service.diagnostiquer(ID_PASSAGE))
+                .thenReturn(diagnostic(SerieClimatique.absente(), 43.5, 5.4, coherenceDe(true, true)));
+        viewModel.ouvrirSur(ID_PASSAGE);
+        assertThat(viewModel.plageExigeeProperty().get()).isNotEmpty();
+
+        when(service.diagnostiquer(99L)).thenThrow(new RegleMetierException("Passage introuvable : 99"));
+        viewModel.ouvrirSur(99L);
+
+        assertThat(viewModel.plagesHorairesProperty().get())
+                .as("les horaires d'un autre passage sous « introuvable » seraient faux, et crus")
+                .isEmpty();
+        assertThat(viewModel.plageExigeeProperty().get()).isEmpty();
+        assertThat(viewModel.plageEnregistreeProperty().get()).isEmpty();
     }
 
     @Test
