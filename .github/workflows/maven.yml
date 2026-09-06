@@ -522,7 +522,10 @@ jobs:
   bats:
     name: bats
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # ⟨butoir⟩ 20 min pour un job qui en met 9 depuis la parallelisation (#5302), et 14 avant elle.
+    # La marge couvre le repli sequentiel s il survenait, et un butoir qui ne serre plus rien laisse
+    # pendre - c est la lecon de l ADR 4028. Pose APRES la mesure, jamais sur une estimation.
+    timeout-minutes: 20
     env:
       # ⟨plancher⟩ 129 cas au 2026-09-06, sur les quatre fichiers de `src/test/bats`. Il DESCEND
       # quand on en retire un deliberement, jamais tout seul : c est un cliquet, pas une estimation.
