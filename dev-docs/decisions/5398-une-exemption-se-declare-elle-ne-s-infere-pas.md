@@ -7,7 +7,7 @@ chantier: "#5380 (le dispositif sait dire « sans objet »), lot #5398"
 decided_at: 2026-09-06
 verification: certaine
 enforced_by:
-  - "scripts/batterie.py --auto-test"
+  - "scripts/batterie.py"
 ratchet: 0
 verified:
   - by: machine:ci
