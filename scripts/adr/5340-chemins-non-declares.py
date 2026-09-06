@@ -40,17 +40,22 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "scripts"))
 ADR = "5340"
 
 
-def suspects() -> list[str]:
-    """Les gardes qui portent un CONTRAT sans y declarer leurs `chemins`."""
+def suspects(racine: pathlib.Path | None = None) -> list[str]:
+    """Les gardes qui portent un CONTRAT sans y declarer leurs `chemins`.
+
+    `racine` est injectable pour que `verifie_scripts.py` puisse monter un arbre jouet et eprouver
+    les DEUX sens - un arbre ou tous declarent ne rend rien, un garde muet est vu. Sans elle, le cas
+    temoin devrait muter le depot lui-meme, ce que le harnais refuse (#4700).
+    """
     from batterie import gardes
 
-    return [g for g, chemins in gardes() if not chemins]
+    return [g for g, chemins in gardes(racine) if not chemins]
 
 
-def lus() -> int:
+def lus(racine: pathlib.Path | None = None) -> int:
     from batterie import gardes
 
-    return len(gardes())
+    return len(gardes(racine))
 
 
 def _auto_test() -> int:

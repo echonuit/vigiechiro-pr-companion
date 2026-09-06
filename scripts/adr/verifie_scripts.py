@@ -1182,6 +1182,42 @@ def test_4477_longueur_des_adr() -> None:
         )
 
 
+def test_5340_chemins_non_declares() -> None:
+    """Le cliquet compte les gardes qui portent un CONTRAT sans y declarer leurs `chemins`.
+
+    Il ne detecte pas un MOTIF dans un texte, il lit des declarations : son temoin monte donc un
+    arbre de gardes jouets plutot que de planter une violation dans une fixture.
+
+    Les deux sens, parce qu un seul ne prouverait rien : un arbre ou tous declarent ne rend RIEN, et
+    un garde muet est VU. Un cliquet qui compterait tout le monde passerait le second cas.
+    """
+    m = _charge("5340-chemins-non-declares.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        (racine / "scripts" / "adr").mkdir(parents=True)
+        (racine / "scripts" / "methode").mkdir(parents=True)
+        declarant = (
+            'CONTRAT = {"geste": "g", "population": "p", "dispositif": "invariant",\n'
+            '           "seuil": "(sans objet)", "temoin": "t", "decision": "d",\n'
+            '           "chemins": """\nsrc/**\n"""}\n'
+        )
+        muet = (
+            'CONTRAT = {"geste": "g", "population": "p", "dispositif": "invariant",\n'
+            '           "seuil": "(sans objet)", "temoin": "t", "decision": "d"}\n'
+        )
+        (racine / "scripts" / "adr" / "declarant.py").write_text(declarant, encoding="utf-8")
+        _verifie("5340 sur un arbre ou tous declarent ne rend rien", len(m.suspects(racine)), 0)
+
+        (racine / "scripts" / "methode" / "muet.py").write_text(muet, encoding="utf-8")
+        _verifie("et il voit le garde qui ne declare pas ses chemins", len(m.suspects(racine)), 1)
+        _verifie(
+            "et il le NOMME, plutot que de le compter en aveugle",
+            any("muet.py" in x for x in m.suspects(racine)),
+            True,
+        )
+        _verifie("et `lus` compte le corpus entier, declarants compris", m.lus(racine), 2)
+
+
 def test_5188_corpus_shell() -> None:
     """Le cliquet compte ce qui reste en shell, et sa population est ce que GIT SUIT.
 
@@ -2065,6 +2101,7 @@ if __name__ == "__main__":
         test_4476_javadoc_raconte_son_extraction,
         test_4477_longueur_des_adr,
         test_5188_corpus_shell,
+        test_5340_chemins_non_declares,
         test_loupe_4472_densite_de_commentaire,
         test_un_verdict_se_rend_sur_le_numero_de_son_adr,
         test_les_gardes_de_code_lisent_les_deux_arbres,
