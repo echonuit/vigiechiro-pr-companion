@@ -68,6 +68,49 @@ scripts/**
 }
 
 
+# ⟨les gardes qui ne sont pas en Python⟩ Ce depot teste sa documentation comme du code : des classes
+# Java lisent des `.md` et refusent quand ils derivent. La porte les ignorait, et c est ce qui a coute
+# un aller-retour en #5356 - un `enforced_by` mal forme, vu par `build` et par rien d autre.
+#
+# ⟨pourquoi une liste, alors que l ADR 3450 les refuse⟩ Parce que `gardes-java-declares.py` la TIENT :
+# la population se derive de l arbre - toute classe de test qui CONSTRUIT un chemin vers de la prose -
+# et cette declaration lui est confrontee. Une sixieme classe qui lirait un `.md` sans etre ici fait
+# rougir. Une liste qu un garde confronte n est plus une liste, c est un inventaire.
+#
+# Le cout est ce qui rend l omission chere : `DocumentationAJourTest` met 2,4 s pour vingt et un
+# invariants, contre huit minutes de `build` entier.
+GARDES_JAVA: dict[str, str] = {
+    "DocumentationAJourTest": """
+dev-docs/**
+docs/**
+brief/**
+mkdocs.yml
+mkdocs-dev.yml
+mkdocs-brief.yml
+README.md
+CONTRIBUTING.md
+TESTING.md
+REMERCIEMENTS.md
+.github/workflows/**
+src/test/bats/**
+src/main/resources/db/migration/**
+""",
+    "NomDeLApplicationTest": """
+docs/**
+mkdocs.yml
+""",
+    "CorrespondanceRecetteTest": """
+dev-docs/recette/**
+""",
+    "PageDesClipsTest": """
+dev-docs/recette/**
+""",
+    "InventaireDesSessionsTest": """
+dev-docs/recette/**
+""",
+}
+
+
 def _git(*arguments: str, racine: pathlib.Path | None = None) -> str:
     sortie = subprocess.run(
         ["git", "-C", str(racine or RACINE), *arguments],
@@ -186,6 +229,20 @@ def gardes(racine: pathlib.Path | None = None) -> list[tuple[str, list[str]]]:
     return trouves
 
 
+def engage_java(diff: list[str]) -> list[str]:
+    """Les classes Java que ce diff engage, sous la forme que Maven attend.
+
+    Pas de repli « on lance tout » ici, contrairement aux gardes Python : une classe non declaree
+    n est pas invisible, elle fait ROUGIR `gardes-java-declares.py`. Le silence est ferme ailleurs.
+    """
+    engagees = []
+    for classe, bloc in GARDES_JAVA.items():
+        chemins = [l.strip() for l in bloc.splitlines() if l.strip()]
+        if any(correspond(f, m) for f in diff for m in chemins):
+            engagees.append(classe)
+    return sorted(engagees)
+
+
 def engage(diff: list[str], racine: pathlib.Path | None = None) -> tuple[list[str], list[str]]:
     """Ce que ce diff engage, et ce qu il n engage pas. Sans `chemins`, on ENGAGE."""
     engages, ecartes = [], []
@@ -266,6 +323,14 @@ def rendre(
         )
         for g in ecartes:
             print(f"    · {g}")
+
+    java = engage_java(diff)
+    if java:
+        print()
+        print(f"  ENGAGE ({len(java)} classe(s) Java qui jugent la prose)")
+        print(f"    ./mvnw -B test -Dglass.platform=Headless -Dtest={','.join(java)}")
+        print("       Ce depot teste sa documentation comme du code : ces classes lisent des `.md`")
+        print("       et refusent quand ils derivent. `DocumentationAJourTest` met 2,4 s.")
 
     sans = [g for g, c in gardes(racine) if not c]
     print()
