@@ -420,7 +420,16 @@ def verdict_du_lancement(code: int, stdout: str, stderr: str) -> tuple[str, str]
     # `compte-les-reliquats.py` est un cliquet differentiel qui sort en **1**, pas en 2 comme le
     # commentaire d origine l affirmait. Le test `returncode == 2` ne pouvait donc jamais etre vrai,
     # et ce garde etait compte rouge a chaque lancement.
-    if lignes and lignes[0].lower().startswith("usage"):
+    # ⟨la LONGUEUR departage, pas le premier mot⟩ Un garde qui exige des arguments imprime son usage
+    # et s arrete : son message tient en UNE ligne. Un garde qui refuse EXPLIQUE - `4617` et
+    # `verifie-sous-commandes-openspec` en mettent trois chacun, mesure du 2026-09-06. Sans cette
+    # condition, un refus commencant par « Usage abusif de » etait compte comme n ayant pas juge, et
+    # la porte finissait verte : le faux vert qu elle existe pour fermer, installe dans la porte
+    # elle-meme (#5398).
+    #
+    # La polarite du doute est la bonne : si un message d usage gagnait une seconde ligne, son garde
+    # redeviendrait compte ROUGE. On penche du cote couteux, comme partout ailleurs ici.
+    if len(lignes) == 1 and lignes[0].lower().startswith("usage"):
         return "arguments", lignes[0]
     return "rouge", lignes[0] if lignes else "(sans sortie)"
 
@@ -544,6 +553,18 @@ def _auto_test() -> int:
         ),
         ("un garde muet reste lisible", 1, "", "", ("rouge", "(sans sortie)")),
         ("un garde vert ne dit rien", 0, "tout va bien", "", ("vert", "")),
+        # ⟨le bord ou l exemption mord trop large⟩ Les cinq cas d origine eprouvaient tous des
+        # sorties qui se comportent bien ; aucun n eprouvait celui-ci, et c est par la que le faux
+        # vert est passe (#5398). « Usage abusif de », « Usage interdit de » sont des tournures de
+        # la prose de ce depot, et un garde neuf n a aucune raison de savoir que sa premiere ligne
+        # decide de son verdict.
+        (
+            "un refus qui COMMENCE par « Usage » reste un refus",
+            1,
+            "",
+            "Usage abusif du selecteur : trois appels non gardes.\nCe garde REFUSE.",
+            ("rouge", "Usage abusif du selecteur : trois appels non gardes."),
+        ),
     ):
         obtenu = verdict_du_lancement(code, sortie, erreur)
         if obtenu == attendu:
@@ -552,7 +573,7 @@ def _auto_test() -> int:
             print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
             echecs += 1
 
-    print("\n11 cas de porte et de bord.")
+    print("\n12 cas de porte et de bord.")
     return 1 if echecs else 0
 
 
