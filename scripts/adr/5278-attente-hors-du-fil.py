@@ -55,10 +55,23 @@ sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import TESTS_ANCRES, rapporte, sort_si_contrat_demande
 
 APPEL = re.compile(r"Attente\.(que|queSurLeFil)\s*\(")
-# Les lectures de noeuds. `getText()` y est parce qu un libelle se lit sur le noeud qui le porte, et
-# que c est la forme la plus frequente de l attente « le texte a change ».
+# Les lectures de noeuds, en DEUX familles.
+#
+# La premiere CHERCHE un noeud dans le graphe : `lookup(`, `queryAs`, et les lectures de collection
+# qui la suivent. `getText()` y est parce qu un libelle se lit sur le noeud qui le porte, et que c est
+# la forme la plus frequente de l attente « le texte a change ».
+#
+# La seconde lit une PROPRIETE sur un noeud deja capture, et n emploie aucun motif de la premiere :
+#
+#     Attente.que(bandeau::isVisible, "que les compteurs reflètent la base restaurée");
+#     Attente.que(() -> !verifier.isDisabled(), "le bouton devient actif", 5_000L);
+#
+# Elle manquait, et le trou n etait pas neutre : dix sites, dont un dans chacun des TROIS bancs les
+# plus accuses du releve. `MainViewTest` est tombe quatre fois sur l assertion que gardait une telle
+# attente, posee par #4694 - le bon geste sous la mauvaise forme, que rien ne pouvait dire (#5323).
 LECTURE_DE_NOEUD = re.compile(
     r"lookup\(|queryAs|\.getItems\(\)|\.getScene\(\)|getChildren\(\)|\.getText\(\)"
+    r"|(?:::|\.)(?:isVisible|isDisabled|isManaged|isSelected|isFocused)\b"
 )
 
 # Au-dela, ce n est plus un appel mais un fichier mal ferme : la borne evite de balayer la source
@@ -144,6 +157,19 @@ def _auto_test() -> int:
     verifie("plusieurs sites sont tous vus", len(sites(multiple)), 2)
     # Les deux sauts de jointure decalent le second site : la ligne comptee est la 7, pas la 6.
     verifie("et leurs lignes sont justes", sites(multiple), [1, 7])
+
+    # LES DEUX FORMES DE LA LECTURE DE PROPRIETE, eprouvees separement : une reference de methode
+    # et une lambda ne s ecrivent pas pareil, et un motif qui n en verrait qu une laisserait passer
+    # la moitie des dix sites que #5323 a trouves.
+    parRef = 'Attente.que(bandeau::isVisible, "que ca paraisse");\n'
+    verifie("une reference de methode sur un noeud est vue", sites(parRef), [1])
+    parLambda = 'Attente.que(() -> !verifier.isDisabled(), "que ca s active");\n'
+    verifie("une lambda qui lit une propriete est vue", sites(parLambda), [1])
+    verifie(
+        "les memes en queSurLeFil sortent du compte",
+        sites(parRef.replace("que(", "queSurLeFil(") + parLambda.replace("que(", "queSurLeFil(")),
+        [],
+    )
 
     # Les cinq lectures de noeud, une par une : sans cela un motif qui n en verrait qu une passerait
     # tout ce qui precede, le premier cas employant `lookup(` ET `queryAll`.

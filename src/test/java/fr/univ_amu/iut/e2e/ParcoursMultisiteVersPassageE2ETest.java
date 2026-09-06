@@ -123,7 +123,7 @@ class ParcoursMultisiteVersPassageE2ETest {
         assertThat(verifier).isNotNull();
         // navigation.getVueCourante() bascule dès le changement d'écran, avant que le chargement du
         // passage (lui aussi asynchrone) n'ait appliqué ses données.
-        Attente.que(() -> !verifier.isDisabled(), "le bouton « Vérifier » devient actif", 5 * 1000L);
+        Attente.queSurLeFil(() -> !verifier.isDisabled(), "le bouton « Vérifier » devient actif", 5 * 1000L);
 
         // 3) Le fil d'Ariane GLOBAL situe le passage sous son site, même atteint via multisite (#140) :
         // Accueil › Mes sites › Carré 640380 › Détails du passage N° 1 (emplacement, pas l'historique).
@@ -159,7 +159,7 @@ class ParcoursMultisiteVersPassageE2ETest {
         doubleClicVersPassage(robot, navigation);
         assertThat(navigation.getVueCourante()).isEqualTo("passage");
         Button verifier = robot.lookup("#boutonVerifier").queryAs(Button.class);
-        Attente.que(() -> !verifier.isDisabled(), "le bouton « Vérifier » redevient actif", 5 * 1000L);
+        Attente.queSurLeFil(() -> !verifier.isDisabled(), "le bouton « Vérifier » redevient actif", 5 * 1000L);
 
         // 2) M-Passage → écran enfant (carte « Diagnostic matériel »).
         robot.interact(robot.lookup("#boutonDiagnostic").queryButton()::fire);

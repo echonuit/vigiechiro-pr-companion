@@ -476,7 +476,7 @@ class ScenarioModaleCarreTest {
     private void verifier(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
         GesteVisible.cliquer(robot, "#btnVerifierCarre");
-        Attente.que(() -> encart(robot).isVisible(), "l'encart de vérification du carré paraît", 10_000L);
+        Attente.queSurLeFil(() -> encart(robot).isVisible(), "l'encart de vérification du carré paraît", 10_000L);
         CadreVisible.amener(encart(robot), robot);
         Respiration.surLeMomentCle(robot);
     }
@@ -527,7 +527,7 @@ class ScenarioModaleCarreTest {
         robot.clickOn(champPosition(robot)).write(position);
         WaitForAsyncUtils.waitForFxEvents();
         GesteVisible.cliquer(robot, "#btnSituer");
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> encartPosition(robot).isVisible(),
                 "l'encart de position paraît après avoir situé le point",
                 10_000L);

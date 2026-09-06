@@ -265,7 +265,7 @@ class ScenarioPerceptifRefusDepotTest {
         robot.clickOn("#btnGenererArchives");
 
         Button ouvrir = robot.lookup("#btnOuvrirDepot").queryAs(Button.class);
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !ouvrir.isDisabled(), "les archives sont générées, donc il y a un dossier à ouvrir", 20 * 1000L);
         CadreVisible.amener(ouvrir, robot);
         Respiration.entreDeuxGestes(robot);
