@@ -259,6 +259,13 @@ public class DiagnosticViewModel {
         temperature.set(Formats.VALEUR_ABSENTE);
         coherenceHoraireDisponible.set(false);
         fenetreNuit.set("");
+        // Les trois plages de #4988 manquaient ici, et rien ne le disait : un passage introuvable
+        // laissait « Protocole : 21:28 à 06:18 · Enregistré : 22:30 à 05:30 » du passage PRÉCÉDENT
+        // sous le message d'erreur. C'est la faute que tout #4980 corrige, retournée contre lui :
+        // afficher une valeur qu'on ne sait plus être vraie (#5368).
+        plagesHoraires.set("");
+        plageExigee.set("");
+        plageEnregistree.set("");
         alerteHorsNuit.set(RetourOperation.AUCUN);
         nuitInterrompue.set(RetourOperation.AUCUN);
     }
