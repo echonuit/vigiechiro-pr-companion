@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
@@ -227,7 +228,8 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
             ExecuteurTache executeur,
             NavigationQualification navigation,
             ServiceEmport serviceEmport,
-            StockageConnexion connexion) {
+            StockageConnexion connexion,
+            Selecteurs selecteurs) {
         this.verdictVm = Objects.requireNonNull(verdictVm, "verdictVm");
         this.selectionVm = Objects.requireNonNull(selectionVm, "selectionVm");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
@@ -238,7 +240,8 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         this.gestesEmport = new GestesEmportQualification(
                 serviceEmport,
                 connexion,
-                () -> racine.getScene() == null ? null : racine.getScene().getWindow());
+                () -> racine.getScene() == null ? null : racine.getScene().getWindow(),
+                selecteurs);
         this.gestesEmport.relierAux(notificateur, confirmateur);
     }
 

@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
@@ -105,8 +106,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// Les porteurs de dialogue de l'écran (#1431) : le oui/non et le choix de participation. Réunis dans
     /// [DialoguesAudio] - ils forment une unité (« ce que l'écran demande à l'utilisateur »), et le
     /// contrôleur touchait son plafond de taille.
-    private final DialoguesAudio dialogues =
-            new DialoguesAudio(() -> this.tableauController.table().getScene().getWindow());
+    private final DialoguesAudio dialogues;
 
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
     ConfirmateurModifiable confirmateur() {
@@ -281,7 +281,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
             MemoireFiltres memoire,
             AppuisAudio appuis,
             ActionsMenuAudio actionsMenu,
-            ReglagesReactifs reactifs) {
+            ReglagesReactifs reactifs,
+            Selecteurs selecteurs) {
         // Les quatre champs restent : le corps les lit tels quels.
         Objects.requireNonNull(ouvertures, "ouvertures");
         OuvrirSite ouvrirSite = ouvertures.site();
@@ -299,6 +300,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         this.appuis = Objects.requireNonNull(appuis, "appuis");
         this.actionsMenu = Objects.requireNonNull(actionsMenu, "actionsMenu");
         this.reactifs = Objects.requireNonNull(reactifs, "reactifs");
+
+        this.dialogues = new DialoguesAudio(
+                () -> this.tableauController.table().getScene().getWindow(), selecteurs);
     }
 
     /// Items du ☰ pilotés par le workflow / la source, regroupés ([MenuAudio.Items]).

@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.ReglageDesignation;
 import fr.univ_amu.iut.commun.model.ServiceEmplacements;
 import fr.univ_amu.iut.commun.model.ServiceEmplacements.Emplacements;
 import fr.univ_amu.iut.commun.model.SondeAccessibilite;
@@ -74,9 +75,9 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
     private VBox avisRedemarrage;
 
     @Inject
-    public OngletReglagesEmplacements(ServiceEmplacements service) {
+    public OngletReglagesEmplacements(ServiceEmplacements service, Selecteurs selecteurs) {
         this.service = Objects.requireNonNull(service, "service");
-        this.selecteur = Selecteurs.pour(this::fenetre);
+        this.selecteur = selecteurs.pour(this::fenetre);
         this.notificateur = new NotificateurModifiable(new NotificationDialogue(this::fenetre));
     }
 
@@ -102,7 +103,18 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
 
     @Override
     public List<DescripteurReglage> reglages() {
-        return List.of(); // tout est dans le formulaire personnalisé.
+        // Le reste de cet onglet vit dans le formulaire personnalisé. Ce réglage-ci passe par le
+        // mécanisme générique : c'est une bascule, et lui dessiner une case à part ne dirait rien de
+        // plus que celle que le socle sait déjà rendre et persister.
+        return List.of(new DescripteurReglage.Booleen(
+                ReglageDesignation.CLE,
+                "Choisir les fichiers avec le sélecteur de l'application",
+                "Remplace le dialogue de votre système par celui de l'application : mêmes repères sur"
+                        + " toutes les plateformes, et un chemin qui peut se saisir à la main. Il ne change"
+                        + " pas ce que l'application a le DROIT de lire - sous Flatpak, le bac à sable borne"
+                        + " l'accès de la même façon dans les deux cas (désactivé : le dialogue de votre"
+                        + " système, avec ses raccourcis et ses favoris).",
+                ReglageDesignation.DEFAUT));
     }
 
     @Override

@@ -116,10 +116,7 @@ public class SyntheseController implements EmplacementNavigation, RafraichirAuRe
     /// Le sélecteur de fichier passe par un **port** : un `FileChooser` natif ouvert par `showAndWait()`
     /// fige un test TestFX headless dès la première ligne du geste. Les tests y branchent un double qui
     /// répond un chemin, ou rien du tout (l'utilisateur a annulé).
-    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
-            // Le champ @FXML est déclaré plus haut mais reste nul jusqu'au chargement : la fenêtre se
-            // demande donc au clic, pas à la construction.
-            () -> this.boutonExporter.getScene().getWindow());
+    private final SelecteurFichierModifiable selecteur;
 
     /// Le porteur du sélecteur, pour qu'un test y substitue son double.
     SelecteurFichierModifiable selecteur() {
@@ -131,12 +128,17 @@ public class SyntheseController implements EmplacementNavigation, RafraichirAuRe
             SyntheseViewModel viewModel,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
-            EspecesPrioritaires especesPrioritaires) {
+            EspecesPrioritaires especesPrioritaires,
+            Selecteurs selecteurs) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.marqueurEnjeu =
                 new MarqueurEspecesAEnjeu(Objects.requireNonNull(especesPrioritaires, "especesPrioritaires"));
+        this.selecteur = selecteurs.pour(
+                // Le champ @FXML est déclaré plus haut mais reste nul jusqu'au chargement : la fenêtre se
+                // demande donc au clic, pas à la construction.
+                () -> this.boutonExporter.getScene().getWindow());
     }
 
     @FXML

@@ -3,6 +3,8 @@ package fr.univ_amu.iut.commun.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.model.PreferenceDesignation;
+import fr.univ_amu.iut.commun.model.PreferenceDesignationPersistee;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
@@ -52,6 +54,17 @@ public class PersistenceModule extends AbstractModule {
     @Singleton
     Reglages fournirReglages(ReglagesDao dao) {
         return new Reglages(dao);
+    }
+
+    /// La préférence de désignation, PERSISTÉE, qui remplace ici le défaut `@ImplementedBy` du port.
+    ///
+    /// Le port rend le dialogue du système partout où la persistance n'est pas montée - tests de vue,
+    /// outils de capture. C'est ici, et ici seulement, qu'il devient capable de lire ce que
+    /// l'utilisateur a choisi.
+    @Provides
+    @Singleton
+    PreferenceDesignation fournirPreferenceDesignation(Reglages reglages) {
+        return new PreferenceDesignationPersistee(reglages);
     }
 
     /// DAO des correspondances locale ↔ VigieChiro (#728), transverse comme [UtilisateurDao] :

@@ -36,15 +36,18 @@ public final class ActionsEmport {
     });
 
     /// Pour les tests : sélecteurs remplaçables, sans fenêtre.
-    ActionsEmport(ServiceEmport service) {
-        this(service, () -> null);
+    ///
+    /// La fabrique lui vient quand même : le porteur qu'elle rend est remplacé aussitôt par un
+    /// double, mais le construire demande de savoir quel dispositif l'installation désigne.
+    ActionsEmport(ServiceEmport service, Selecteurs selecteurs) {
+        this(service, () -> null, selecteurs);
     }
 
     /// @param service le parcours d'emport, livré par #4726
     /// @param fenetre la fenêtre où poser les sélecteurs natifs
-    public ActionsEmport(ServiceEmport service, Supplier<Window> fenetre) {
+    public ActionsEmport(ServiceEmport service, Supplier<Window> fenetre, Selecteurs selecteurs) {
         this.service = Objects.requireNonNull(service, "service");
-        this.selecteur = Selecteurs.pour(fenetre);
+        this.selecteur = selecteurs.pour(fenetre);
     }
 
     /// Le porteur du sélecteur, que les tests remplacent.

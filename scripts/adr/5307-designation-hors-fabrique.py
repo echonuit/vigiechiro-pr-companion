@@ -5,7 +5,14 @@ Le choix du dispositif de designation d un fichier etait ecrit DOUZE fois en dur
 controleurs et actions de six paquets. Il n existait donc aucun endroit ou le changer, et le
 changement `selecteur-de-repli` en aurait ecrit douze de plus.
 
-`Selecteurs` est desormais le seul endroit ou ce choix se construit. Ce garde tient cette unicite.
+`SelecteurSelonLaPreference` est desormais le seul endroit ou ce choix se construit. Ce garde tient
+cette unicite.
+
+Le lieu a DEMENAGE une fois, en #5310, et le garde l a suivi SANS s elargir : `Selecteurs` resolvait
+le dispositif dans `pour()`, donc a la construction de l ecran, ce qui figeait le reglage jusqu au
+redemarrage. La resolution est passee au moment de designer, et l endroit permis avec elle. Il en
+reste UN, ce que l ADR demande : autoriser les deux aurait transforme le garde en liste, et une liste
+s allonge.
 
 ## Pourquoi un cliquet plutot que la discipline
 
@@ -26,7 +33,7 @@ le selecteur natif ailleurs. Une construction de plus est une regression, jamais
 `src/main/java`, commentaires retires, la fabrique exclue. Une construction obtenue par REFLEXION
 echapperait au motif ; il n y en a aucune dans ce depot. Une fabrique tierce qui recopierait la ligne
 sous un autre nom y echapperait aussi, mais elle se verrait en relecture : elle demanderait d ecrire
-a nouveau ce que `Selecteurs` ecrit deja.
+a nouveau ce que `SelecteurSelonLaPreference` ecrit deja.
 
 Le garde lit la PRODUCTION seule. Un test qui construit le selecteur natif le fait pour eprouver le
 dispositif lui-meme, ce qui est son role.
@@ -53,9 +60,9 @@ from _commun import (
 
 CONSTRUCTION = re.compile(r"new\s+SelecteurFichierJavaFx\s*\(")
 
-# La fabrique, seule autorisee a construire. Nommee par son chemin et non par son nom de classe :
+# Le lieu du choix, seul autorise a construire. Nomme par son chemin et non par son nom de classe :
 # un fichier homonyme ailleurs ne doit pas heriter de la permission.
-FABRIQUE = PRODUCTION / "fr/univ_amu/iut/commun/view/Selecteurs.java"
+FABRIQUE = PRODUCTION / "fr/univ_amu/iut/commun/view/SelecteurSelonLaPreference.java"
 
 
 def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:

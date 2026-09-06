@@ -104,10 +104,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut, Su
 
     /// Désignation du fichier d'export : porteur partagé injectable (#1431), double répondant en test.
     /// Le `FileChooser` en dur **figeait** tout test du geste.
-    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
-            // `this.menuActions` : le champ @FXML est déclaré plus bas (référence en avant interdite dans
-            // un initialiseur). La fenêtre n'est lue qu'au clic.
-            () -> this.menuActions.getScene().getWindow());
+    private final SelecteurFichierModifiable selecteur;
 
     /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
     SelecteurFichierModifiable selecteur() {
@@ -240,7 +237,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut, Su
             OuvrirAudio ouvrirAudio,
             ExecuteurTache executeur,
             ActionVigieChiroPassage vigieChiro,
-            ActionsDeLot actions) {
+            ActionsDeLot actions,
+            Selecteurs selecteurs) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.memoire = Objects.requireNonNull(memoire, "memoire");
         this.reconstruction = Objects.requireNonNull(reconstruction, "reconstruction");
@@ -251,6 +249,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut, Su
         this.vigieChiro = Objects.requireNonNull(vigieChiro, "vigieChiro");
         this.actions = Objects.requireNonNull(actions, "actions");
         this.lots = new TraitementLot(executeur);
+        this.selecteur = selecteurs.pour(
+                // `this.menuActions` : le champ @FXML est déclaré plus bas (référence en avant interdite dans
+                // un initialiseur). La fenêtre n'est lue qu'au clic.
+                () -> this.menuActions.getScene().getWindow());
     }
 
     /// Traitement en lot, exposé aux tests pour y poser leurs doubles (#1013, #1405).

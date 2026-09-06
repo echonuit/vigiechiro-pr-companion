@@ -147,10 +147,7 @@ public class ActiviteController implements EmplacementNavigation, RafraichirAuRe
 
     /// Désignation du fichier d'export, derrière le port du socle : un `FileChooser` natif en dur **fige**
     /// un test TestFX headless, et l'action ne serait pas testable du tout.
-    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
-            // `this.boutonExporterImage` : le champ @FXML est déclaré plus haut mais reste nul jusqu'au
-            // chargement ; la fenêtre n'est lue qu'au clic.
-            () -> this.boutonExporterImage.getScene().getWindow());
+    private final SelecteurFichierModifiable selecteur;
 
     /// Porteur de désignation exposé aux tests : `selecteur().definir(...)`.
     SelecteurFichierModifiable selecteur() {
@@ -169,7 +166,8 @@ public class ActiviteController implements EmplacementNavigation, RafraichirAuRe
             OuvrirPassage ouvrirPassage,
             VersionApplication version,
             DepotVues depotVues,
-            EspecesPrioritaires especesPrioritaires) {
+            EspecesPrioritaires especesPrioritaires,
+            Selecteurs selecteurs) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.memoire = Objects.requireNonNull(memoire, "memoire");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
@@ -177,6 +175,10 @@ public class ActiviteController implements EmplacementNavigation, RafraichirAuRe
         this.version = Objects.requireNonNull(version, "version");
         this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
         this.marqueurEnjeu = new MarqueurEspecesAEnjeu(especesPrioritaires);
+        this.selecteur = selecteurs.pour(
+                // `this.boutonExporterImage` : le champ @FXML est déclaré plus haut mais reste nul jusqu'au
+                // chargement ; la fenêtre n'est lue qu'au clic.
+                () -> this.boutonExporterImage.getScene().getWindow());
     }
 
     @FXML

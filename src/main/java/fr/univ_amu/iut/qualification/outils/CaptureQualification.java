@@ -132,7 +132,8 @@ public final class CaptureQualification {
                         injecteur.getInstance(fr.univ_amu.iut.commun.view.ExecuteurTache.class),
                         injecteur.getInstance(fr.univ_amu.iut.qualification.view.NavigationQualification.class),
                         injecteur.getInstance(fr.univ_amu.iut.qualification.model.ServiceEmport.class),
-                        injecteur.getInstance(fr.univ_amu.iut.connexion.model.StockageConnexion.class))
+                        injecteur.getInstance(fr.univ_amu.iut.connexion.model.StockageConnexion.class),
+                        injecteur.getInstance(fr.univ_amu.iut.commun.view.Selecteurs.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         QualificationController controleur = loader.getController();

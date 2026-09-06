@@ -67,14 +67,16 @@ final class GesteReset {
             Supplier<ServiceSauvegarde> sauvegarde,
             OccupationChrome occupation,
             Supplier<Window> fenetre,
-            Runnable fermeture) {
+            Runnable fermeture,
+            Selecteurs selecteurs) {
         this.recuperabilite = Objects.requireNonNull(recuperabilite, "recuperabilite");
         this.reset = Objects.requireNonNull(reset, "reset");
         this.sauvegarde = Objects.requireNonNull(sauvegarde, "sauvegarde");
         this.occupation = Objects.requireNonNull(occupation, "occupation");
         this.fermeture = Objects.requireNonNull(fermeture, "fermeture");
         Objects.requireNonNull(fenetre, "fenetre");
-        this.selecteur = Selecteurs.pour(fenetre);
+        Objects.requireNonNull(selecteurs, "selecteurs");
+        this.selecteur = selecteurs.pour(fenetre);
         this.notificateur = new NotificateurModifiable(new NotificationDialogue(fenetre));
     }
 

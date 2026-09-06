@@ -3,6 +3,7 @@ package fr.univ_amu.iut.qualification.view;
 import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.commun.view.Notificateur;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import java.util.Objects;
@@ -29,8 +30,9 @@ final class GestesEmportQualification {
     /// @param service le parcours d'emport
     /// @param connexion l'identité qui signe un avis renvoyé
     /// @param fenetre la fenêtre où poser les sélecteurs natifs
-    GestesEmportQualification(ServiceEmport service, StockageConnexion connexion, Supplier<Window> fenetre) {
-        this.actions = new ActionsEmport(Objects.requireNonNull(service, "service"), fenetre);
+    GestesEmportQualification(
+            ServiceEmport service, StockageConnexion connexion, Supplier<Window> fenetre, Selecteurs selecteurs) {
+        this.actions = new ActionsEmport(Objects.requireNonNull(service, "service"), fenetre, selecteurs);
         this.connexion = Objects.requireNonNull(connexion, "connexion");
     }
 

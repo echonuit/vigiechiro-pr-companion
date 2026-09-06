@@ -135,7 +135,8 @@ public final class CaptureImport {
                         injecteur.getInstance(fr.univ_amu.iut.commun.view.OuvrirPassage.class),
                         // Sans chrome : le port de révélation (#1486) reste muet, ce qui est exactement
                         // son contrat hors `MainView`. Une capture ne défile pas.
-                        new fr.univ_amu.iut.commun.view.DefilementChrome())
+                        new fr.univ_amu.iut.commun.view.DefilementChrome(),
+                        injecteur.getInstance(fr.univ_amu.iut.commun.view.Selecteurs.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         // Seule la LARGEUR compte ici : chaque rendu se fait ensuite à la hauteur de son propre contenu

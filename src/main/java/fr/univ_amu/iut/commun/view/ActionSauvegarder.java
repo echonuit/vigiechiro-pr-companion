@@ -13,8 +13,9 @@ public final class ActionSauvegarder implements ActionMenu {
     private final PorteurSauvegarde porteur;
 
     @Inject
-    ActionSauvegarder(ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation) {
-        this.porteur = new PorteurSauvegarde(service, navigateur, occupation);
+    ActionSauvegarder(
+            ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation, Selecteurs selecteurs) {
+        this.porteur = new PorteurSauvegarde(service, navigateur, occupation, selecteurs);
     }
 
     @Override

@@ -127,10 +127,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     /// geste de l'écran qui en ait besoin est « Réactiver ce passage », et c'est **par lui** qu'il
     /// restait intestable : un `DirectoryChooser` en dur fige un test headless au même titre qu'un
     /// `Alert`, et il ouvre l'action - le test s'arrêtait à la première ligne.
-    private final SelecteurFichierModifiable selecteur = Selecteurs.pour(
-            // `this.racine` (et non `racine`) : le champ @FXML est déclaré plus bas, et une référence
-            // simple en avant est refusée dans un initialiseur. La fenêtre n'est lue qu'au clic.
-            () -> this.racine.getScene().getWindow());
+    private final SelecteurFichierModifiable selecteur;
 
     /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
     SelecteurFichierModifiable selecteur() {
@@ -253,7 +250,8 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
             OuverturesDepuisLePassage ouvertures,
             NavigationPassage navigation,
             CompteurValidations compteurValidations,
-            AppuisPassage appuis) {
+            AppuisPassage appuis,
+            Selecteurs selecteurs) {
         // Les sept champs restent : le corps du contrôleur les lit tels quels, et les défaire ici
         // ferait un diff de plusieurs centaines de lignes pour un changement de signature.
         Objects.requireNonNull(ouvertures, "ouvertures");
@@ -279,6 +277,10 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         this.portail = appuis.portail();
         this.ouvreurDeLien = appuis.ouvreurDeLien();
         this.ouvrirSynthese = appuis.ouvrirSynthese();
+        this.selecteur = selecteurs.pour(
+                // `this.racine` (et non `racine`) : le champ @FXML est déclaré plus bas, et une référence
+                // simple en avant est refusée dans un initialiseur. La fenêtre n'est lue qu'au clic.
+                () -> this.racine.getScene().getWindow());
     }
 
     @Override

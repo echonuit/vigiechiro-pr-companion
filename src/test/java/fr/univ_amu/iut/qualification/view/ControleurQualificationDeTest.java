@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import fr.univ_amu.iut.commun.model.DispositionColonnesEnMemoire;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.SelecteursDeTest;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
@@ -39,7 +40,8 @@ final class ControleurQualificationDeTest {
                 new ExecuteurTacheSynchrone(),
                 mock(NavigationQualification.class),
                 mock(ServiceEmport.class),
-                mock(StockageConnexion.class));
+                mock(StockageConnexion.class),
+                SelecteursDeTest.auDefaut());
     }
 
     /// Une ouverture de site qui ne fait rien : les cas de garde ne naviguent pas.

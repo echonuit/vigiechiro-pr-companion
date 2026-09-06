@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.Notificateur;
 import fr.univ_amu.iut.commun.view.OccupationChrome;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
+import fr.univ_amu.iut.commun.view.SelecteursDeTest;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -71,7 +72,13 @@ class GesteResetTest {
     void preparer() {
         when(sauvegarde.dossierParDefaut()).thenReturn(SAUVEGARDES);
         geste = new GesteReset(
-                () -> recuperabilite, () -> reset, () -> sauvegarde, occupation, () -> null, () -> fermetures++);
+                () -> recuperabilite,
+                () -> reset,
+                () -> sauvegarde,
+                occupation,
+                () -> null,
+                () -> fermetures++,
+                SelecteursDeTest.auDefaut());
         geste.selecteur().definir(new SelecteurFichier() {
             @Override
             public Optional<Path> choisirDossier(String titre, Optional<Path> dossierInitial) {

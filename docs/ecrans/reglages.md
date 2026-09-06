@@ -84,5 +84,15 @@ Une fois le choix **appliqué**, un message rappelle qu'il vaudra **au prochain 
 !!! note "En ligne de commande"
     La commande `vigiechiro emplacements` fait la même chose sans l'interface : sans option elle **affiche** les emplacements, `--definir-travail` / `--definir-base` les **changent** (avec la même vérification), `--reinitialiser` les **rétablit**. Utile pour scripter une installation.
 
+### Choisir les fichiers avec le sélecteur de l'application
+
+Par défaut, quand l'application vous demande un fichier ou un dossier, elle ouvre **le dialogue de votre système** : celui que vous connaissez, avec vos raccourcis, vos favoris et votre recherche.
+
+Cette case le remplace par un sélecteur **de l'application**. Il présente les mêmes repères sur toutes les plateformes, et il accepte qu'on **saisisse un chemin à la main**, ce que le dialogue du système ne permet pas toujours.
+
+Ce qu'il **ne change pas** : ce que l'application a le droit de lire. Sous Flatpak, le bac à sable borne l'accès de la même façon dans les deux cas, et un dossier hors de sa portée reste hors de sa portée. La différence est qu'un chemin inatteignable vous est **dit**, au lieu de vous montrer un dossier qui paraît vide.
+
+Le dialogue du système reste le défaut : une installation qui n'y touche pas se comporte comme avant.
+
 !!! info "Sous Flatpak, un dossier réseau demande une autorisation"
     La version Flatpak est volontairement limitée aux dossiers qu'elle a le droit de lire. Un disque externe ou une carte SD conviennent. Un **partage réseau** (NAS) ouvert depuis votre gestionnaire de fichiers, lui, est monté à un endroit que le bac à sable ne voit pas : pour y ranger vos données, il faut l'**autoriser** (`flatpak override --user --filesystem=xdg-run/gvfs`) ou utiliser la version `.deb`. La version Windows et le `.deb` n'ont pas cette limite.

@@ -13,8 +13,9 @@ public final class ActionRestaurer implements ActionMenu {
     private final PorteurSauvegarde porteur;
 
     @Inject
-    ActionRestaurer(ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation) {
-        this.porteur = new PorteurSauvegarde(service, navigateur, occupation);
+    ActionRestaurer(
+            ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation, Selecteurs selecteurs) {
+        this.porteur = new PorteurSauvegarde(service, navigateur, occupation, selecteurs);
     }
 
     @Override

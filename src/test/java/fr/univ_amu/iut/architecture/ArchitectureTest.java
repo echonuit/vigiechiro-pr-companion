@@ -167,6 +167,21 @@ class ArchitectureTest {
     }
 
     @Test
+    @DisplayName("La couche view demande UNE préférence, jamais le service de réglages (#5310)")
+    void view_sans_service_de_reglages() {
+        // Prolonge `view_sans_jdbc` d'un cran : le défaut qui a fait écrire cette règle-ci était
+        // transitif - une fabrique de vue avait reçu `Reglages`, et 293 tests l'ont dit d'un coup.
+        // Pourquoi elle porte sur le SERVICE DE RÉGLAGES et non sur la persistance : ADR 5310.
+        noClasses()
+                .that()
+                .resideInAPackage("..view..")
+                .should()
+                .dependOnClassesThat()
+                .haveFullyQualifiedName("fr.univ_amu.iut.commun.model.Reglages")
+                .check(classes);
+    }
+
+    @Test
     @DisplayName("Les slices fr.univ_amu.iut.* sont sans cycle (hors racine de composition)")
     void features_sans_cycle() {
         // La racine de composition (commun.di) connaît toutes les features : c'est son rôle.

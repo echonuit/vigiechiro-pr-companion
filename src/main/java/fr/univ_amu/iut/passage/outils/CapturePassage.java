@@ -332,7 +332,8 @@ public final class CapturePassage {
                                 url -> {},
                                 // Synthèse absente de l'injecteur de capture : la carte se masque, comme
                                 // elle le ferait la feature coupée. L'aperçu montre l'écran sans elle.
-                                Optional.empty()))
+                                Optional.empty()),
+                        injecteur.getInstance(fr.univ_amu.iut.commun.view.Selecteurs.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         PassageController controleur = loader.getController();

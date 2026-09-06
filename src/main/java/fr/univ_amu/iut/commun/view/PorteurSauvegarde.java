@@ -31,13 +31,15 @@ final class PorteurSauvegarde {
 
     private final ActionsSauvegarde actions;
 
-    PorteurSauvegarde(ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation) {
+    PorteurSauvegarde(
+            ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation, Selecteurs selecteurs) {
         Objects.requireNonNull(navigateur, "navigateur");
         this.actions = new ActionsSauvegarde(
                 Objects.requireNonNull(service, "service"),
                 Objects.requireNonNull(occupation, "occupation"),
                 () -> proprietaire,
-                navigateur::afficherAccueil);
+                navigateur::afficherAccueil,
+                selecteurs);
     }
 
     /// L'action, prête à jouer sous `proprietaire` (la fenêtre du clic).
