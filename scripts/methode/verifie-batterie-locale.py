@@ -300,7 +300,10 @@ CONTRAT = {
     "decision": "ADR 5258",
     "chemins": """
 .github/workflows/**
-.agents/skills/ouvrir-une-pr/**
+.agents/skills/**
+CLAUDE.md
+CONTRIBUTING.md
+AGENTS.md
 scripts/**
 """,
 }

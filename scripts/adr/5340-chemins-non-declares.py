@@ -58,6 +58,63 @@ def lus(racine: pathlib.Path | None = None) -> int:
     return len(gardes(racine))
 
 
+def _parcours_resolu(source: str, relatif: str) -> set[str]:
+    """Les dossiers qu un garde parcourt, quand l evaluation symbolique sait les resoudre."""
+    import importlib.util
+
+    outil = pathlib.Path(__file__).resolve().parents[1] / "methode" / "contrats-des-gardes.py"
+    spec = importlib.util.spec_from_file_location("_cdg", outil)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.chemins_lus(source, relatif)
+
+
+def _couvre(motifs: list[str], dossier: str) -> bool:
+    """Un dossier parcouru est couvert si un motif y apparie un fichier, a plat ou en profondeur."""
+    from batterie import correspond
+
+    return any(
+        correspond(f"{dossier}/x.txt", m) or correspond(f"{dossier}/a/b/x.txt", m) for m in motifs
+    )
+
+
+def lacunes(racine: pathlib.Path | None = None) -> tuple[list[str], int]:
+    """Les gardes dont le `chemins` DECLARE ne couvre pas un chemin qu ils PARCOURENT, et le compte lu.
+
+    ## Pourquoi ce n est pas le meme defaut que le cliquet ci-dessus
+
+    Un `chemins` **absent** est couvert par un repli : le garde est lance (ADR 5340). Un `chemins`
+    **incomplet** n a aucun repli - il fait TAIRE le garde, en silence, et la porte affiche « non
+    engage », ce qui se lit comme une bonne nouvelle. La lacune est donc plus dangereuse que
+    l absence, alors que la doctrine de ce depot veut l inverse. Elle refuse, elle ne se cliquette
+    pas.
+
+    ## Ce que ce dispositif NE couvre pas, et il faut le lire avant son zero
+
+    Il ne juge que les gardes dont l evaluation symbolique sait resoudre le parcours **et** qui
+    declarent un `chemins`. Mesure du 2026-09-07 : soixante-seize gardes portent un CONTRAT,
+    dix-neuf ont un parcours resolu, quatorze declarent leurs chemins, et **quatre** reunissent les
+    deux. Son zero ne vaut donc que pour ces quatre-la, et c est ce que l article A3 lui demande de
+    dire.
+    """
+    from batterie import gardes
+
+    ecarts, confrontables = [], 0
+    for relatif, chemins in gardes(racine):
+        if not chemins:
+            continue
+        fichier = (racine or pathlib.Path(__file__).resolve().parents[2]) / relatif
+        parcourus = _parcours_resolu(fichier.read_text(encoding="utf-8"), relatif)
+        if not parcourus:
+            continue
+        confrontables += 1
+        motifs = [m.strip() for m in chemins if m.strip()]
+        manquants = sorted(p for p in parcourus if not _couvre(motifs, p))
+        if manquants:
+            ecarts.append(f"{relatif}  parcourt {', '.join(manquants)} sans le declarer")
+    return ecarts, confrontables
+
+
 def _auto_test() -> int:
     """Le cliquet compte ce que la porte lit, donc son temoin est celui de la porte.
 
@@ -90,7 +147,55 @@ def _auto_test() -> int:
         print("  ✘ les muets ne sont pas nommés")
         echecs += 1
 
-    print("\n3 cas d'accord entre le cliquet et la porte.")
+    # ⟨la seconde confrontation, sur un arbre jouet⟩ Les DEUX sens : un `chemins` qui rate un
+    # parcours est vu, un `chemins` qui le couvre ne l est pas. Sans le second, une fonction qui
+    # signalerait tout le monde passerait le premier et serait aussi inutile qu une muette.
+    import tempfile
+    import textwrap
+
+    with tempfile.TemporaryDirectory(prefix="vc-5340-") as bac:
+        faux = pathlib.Path(bac) / "depot"
+        (faux / "scripts" / "adr").mkdir(parents=True)
+        (faux / "scripts" / "methode").mkdir(parents=True)
+
+        def pose(nom: str, motifs: str) -> None:
+            (faux / "scripts" / "methode" / nom).write_text(
+                textwrap.dedent(f'''
+                    import pathlib
+                    RACINE = pathlib.Path(__file__).resolve().parents[2]
+                    def lit():
+                        return sorted((RACINE / "dev-docs").rglob("*.md"))
+                    CONTRAT = {{"geste": "x", "population": "y", "dispositif": "invariant",
+                               "seuil": "(sans objet)", "temoin": "t", "decision": "d",
+                               "chemins": """
+                    {motifs}
+                    """}}
+                '''),
+                encoding="utf-8",
+            )
+
+        pose("etroit.py", "src/main/**")
+        pose("couvrant.py", "dev-docs/**")
+        ecarts, confrontables = lacunes(faux)
+        vus = " ".join(ecarts)
+
+        for libelle, attendu, present in (
+            ("un `chemins` qui rate un parcours est vu", True, "etroit.py" in vus),
+            ("un `chemins` qui couvre son parcours n est pas vu", False, "couvrant.py" in vus),
+        ):
+            if present is attendu:
+                print(f"  ✔ {libelle}")
+            else:
+                print(f"  ✘ {libelle} : {ecarts}")
+                echecs += 1
+
+        if confrontables == 2:
+            print("  ✔ le compte des confrontables est celui des gardes lisibles")
+        else:
+            print(f"  ✘ confrontables={confrontables}, attendu 2")
+            echecs += 1
+
+    print("\n6 cas : l accord avec la porte, et la lacune dans les deux sens.")
     return 1 if echecs else 0
 
 
@@ -111,4 +216,23 @@ if __name__ == "__main__":
     sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
-    sys.exit(rapporte(ADR, "garde qui ne declare pas ses chemins", suspects(), lus=lus()))
+    # ⟨les deux polarites du meme champ⟩ L absence se cliquette parce qu elle est couteuse et sans
+    # danger ; la LACUNE refuse parce qu elle fait taire un garde en silence. Melanger les deux
+    # comptes ferait descendre l un en laissant monter l autre.
+    ecarts, confrontables = lacunes()
+    code = rapporte(ADR, "garde qui ne declare pas ses chemins", suspects(), lus=lus())
+    if ecarts:
+        print(
+            f"\nÉCHEC : {len(ecarts)} `chemins` declare(s) ne couvre(nt) pas ce que le garde PARCOURT.",
+            file=sys.stderr,
+        )
+        print(
+            "Une lacune n a pas de repli : elle fait TAIRE le garde, et la porte affiche « non\n"
+            "engage », ce qui se lit comme une bonne nouvelle. Elargissez le `chemins`.",
+            file=sys.stderr,
+        )
+        for e in ecarts:
+            print(f"  {e}", file=sys.stderr)
+        code = 1
+    print(f"ADR {ADR} | confrontables={confrontables} | lacunes={len(ecarts)}")
+    sys.exit(code)

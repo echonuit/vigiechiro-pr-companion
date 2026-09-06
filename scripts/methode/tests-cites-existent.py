@@ -109,7 +109,8 @@ CONTRAT = {
 .agents/skills/**
 .claude/skills/**
 dev-docs/**
-src/test/java/**
+src/test/**
+.github/**
 """,
 }
 
