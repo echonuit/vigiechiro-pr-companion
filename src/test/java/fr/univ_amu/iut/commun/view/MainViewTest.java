@@ -381,7 +381,7 @@ class MainViewTest {
         // La respiration ci-dessus ne s'arrête QUE si l'on filme : entre le geste et l'assertion, ce
         // banc n'attendait donc rien en CI, et il réussissait parce que la restauration avait le plus
         // souvent fini avant. Quatre fois sur 1 150 elle n'avait pas fini (#4694, mesuré par #4811).
-        Attente.que(bandeau::isVisible, "que les compteurs reflètent la base restaurée");
+        Attente.queSurLeFil(bandeau::isVisible, "que les compteurs reflètent la base restaurée");
 
         assertThat(bandeau.isVisible())
                 .as("les compteurs reflètent la base restaurée sans qu'on ait quitté l'accueil")

@@ -113,7 +113,7 @@ class ParcoursDepotE2ETest {
         // (désactivé), un échec qui ne se produit que sur une machine lente, donc en CI.
         robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));
         Button verifier = robot.lookup("#boutonVerifier").queryAs(Button.class);
-        Attente.que(() -> !verifier.isDisabled(), "le bouton « Vérifier » devient actif", 5 * 1000L);
+        Attente.queSurLeFil(() -> !verifier.isDisabled(), "le bouton « Vérifier » devient actif", 5 * 1000L);
         assertThat(verifier.isDisabled()).isFalse();
 
         // 2) Vérifier → M-Qualification, poser le verdict OK puis enregistrer. M-Qualification se charge
@@ -137,7 +137,7 @@ class ParcoursDepotE2ETest {
         // rechargement du passage est asynchrone.
         robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));
         Button depot = robot.lookup("#boutonDepot").queryAs(Button.class);
-        Attente.que(() -> !depot.isDisabled(), "le bouton de dépôt devient actif", 5 * 1000L);
+        Attente.queSurLeFil(() -> !depot.isDisabled(), "le bouton de dépôt devient actif", 5 * 1000L);
         assertThat(depot.isDisabled()).isFalse();
 
         // 4) Préparer le dépôt → M-Lot : préparer puis déposer.

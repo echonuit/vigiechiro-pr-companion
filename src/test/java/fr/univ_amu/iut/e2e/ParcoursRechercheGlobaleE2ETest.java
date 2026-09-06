@@ -130,7 +130,7 @@ class ParcoursRechercheGlobaleE2ETest {
         robot.interact(() -> champ.setText("zzzz-introuvable"));
         // Le panneau doit s'ouvrir malgré l'absence de résultat (#795) : rester invisible ferait croire
         // que la recherche n'a pas tourné.
-        Attente.que(panneau::isVisible, "le panneau de recherche s'ouvre", 5 * 1000L);
+        Attente.queSurLeFil(panneau::isVisible, "le panneau de recherche s'ouvre", 5 * 1000L);
 
         assertThat(liste.getItems()).isEmpty();
         assertThat(liste.getPlaceholder())
@@ -147,7 +147,8 @@ class ParcoursRechercheGlobaleE2ETest {
 
         saisirEtAttendreDesResultats(robot, "Tuilière"); // le panneau est ouvert...
         robot.interact(() -> champ.setText("   "));
-        Attente.que(() -> !panneau.isVisible(), "le panneau de recherche se referme", 5 * 1000L); // ...puis se referme
+        Attente.queSurLeFil(
+                () -> !panneau.isVisible(), "le panneau de recherche se referme", 5 * 1000L); // ...puis se referme
     }
 
     /// Saisit `requete` dans le champ du chrome et attend que l'**anti-rebond** (180 ms) ait livré des
