@@ -60,6 +60,9 @@ MECANISME = (".github/scripts/porte_du_job.py", ".github/scripts/_portee.py")
 # Un jeton qui RESSEMBLE a un chemin du depot. L existence tranche ensuite : c est elle qui ecarte
 # les faux positifs, pas le motif.
 JETON = re.compile(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.*-]+)+")
+# Un script qui LIT `GITHUB_BASE_SHA` derive sa portee du diff. Lance sans elle, il retombe sur son
+# repli - « verifie tout » - et le mecanisme reste ecrit, eprouve, documente, et INERTE.
+BASE = "GITHUB_BASE_SHA"
 
 
 def ateliers_de_demande(racine: pathlib.Path) -> dict[str, dict]:
@@ -81,6 +84,46 @@ def ateliers_de_demande(racine: pathlib.Path) -> dict[str, dict]:
 
 def etapes(job: dict) -> list[dict]:
     return [e for e in (job.get("steps") or []) if isinstance(e, dict)]
+
+
+def lecteurs_de_base(racine: pathlib.Path) -> set[str]:
+    """Les scripts qui LISENT le SHA de base, par opposition a ceux qui en parlent.
+
+    La recherche brute sur le texte se trompe, et ce garde en a fait les frais a sa premiere
+    ecriture : il porte lui-meme la constante `BASE = "GITHUB_BASE_SHA"`, et s est donc accuse de ne
+    pas se passer une base qu il ne lit pas.
+
+    C est la mise en garde que le depot porte deja, dans `verifie_inventaires_ci.porte_l_option` :
+    « un script qui compte un motif present dans un COMMENTAIRE est faux par construction ; le
+    commentaire cite la chose, il ne la fait pas ». On lit donc l ARBRE : un script lit la base quand
+    il appelle `os.environ.get(...)` ou `os.environ[...]` dessus.
+    """
+    import ast as _ast
+
+    trouves = set()
+    for dossier in (".github/scripts", "scripts/adr", "scripts/methode"):
+        for f in sorted((racine / dossier).glob("*.py")):
+            texte = f.read_text(encoding="utf-8", errors="ignore")
+            if BASE not in texte:
+                continue
+            try:
+                arbre = _ast.parse(texte)
+            except SyntaxError:
+                # On ne conclut pas sur ce qu on ne sait pas lire, et on penche du cote BRUYANT :
+                # exiger a tort une base se voit, l oublier est le silence que ce garde combat.
+                trouves.add(f.name)
+                continue
+            for noeud in _ast.walk(arbre):
+                lu = None
+                if isinstance(noeud, _ast.Call) and isinstance(noeud.func, _ast.Attribute):
+                    if noeud.func.attr == "get" and noeud.args:
+                        lu = noeud.args[0]
+                elif isinstance(noeud, _ast.Subscript):
+                    lu = noeud.slice
+                if isinstance(lu, _ast.Constant) and lu.value == BASE:
+                    trouves.add(f.name)
+                    break
+    return trouves
 
 
 def chemins_ecrits(job: dict, racine: pathlib.Path) -> set[str]:
@@ -170,6 +213,31 @@ def juger(
                 ecarts.append(
                     f"le job `{cle}` de {fichier} conditionne une etape sur `{SORTIE}` sans porter le pas `portee`"
                 )
+
+            # 7. Un script qui derive sa portee d une base RECOIT cette base.
+            #
+            # Sans elle il retombe sur « verifie tout » : le mecanisme est ecrit, eprouve, documente,
+            # et il ne s exerce jamais. C est arrive entre #5356 et #5366 - le banc de mutation a ete
+            # fusionne sans que l etape lui passe `GITHUB_BASE_SHA`, donc il a continue de muter les
+            # quarante-sept gardes a chaque demande, exactement comme avant.
+            #
+            # Une invocation `--auto-test` est ECARTEE : elle eprouve le garde sur des donnees
+            # injectees, elle ne juge pas le depot, et elle n a donc aucune base a recevoir. C est la
+            # meme distinction que `verifie-batterie-locale.py` fait pour sa population.
+            for etape in pas:
+                commande = str(etape.get("run") or "")
+                if not commande:
+                    continue
+                for nu in lecteurs_de_base(racine):
+                    for ligne in commande.splitlines():
+                        if nu in ligne and "--auto-test" not in ligne:
+                            if BASE not in str(etape.get("env") or {}):
+                                ecarts.append(
+                                    f"le job `{cle}` de {fichier} lance `{nu}` sans lui passer "
+                                    f"`{BASE}` : il derivera sa portee d une base absente, donc il "
+                                    "verifiera TOUT en silence"
+                                )
+                            break
 
             # 5. Aucun chemin ecrit dans le job n echappe a sa portee.
             if cle in portees:
@@ -313,6 +381,15 @@ def _monter(bac: pathlib.Path) -> pathlib.Path:
     (depot / ".github/workflows/faux.yml").write_text(ATELIER, encoding="utf-8")
     for outil in MECANISME:
         (depot / outil).write_text("# jouet\n", encoding="utf-8")
+    # Un lecteur de base, pour le cas qui exige qu on la lui passe. Il la LIT, il n en parle pas :
+    # c est la distinction que `lecteurs_de_base` fait par l arbre.
+    (depot / ".github/scripts/lit_la_base.py").write_text(
+        'import os\nbase = os.environ.get("GITHUB_BASE_SHA")\n', encoding="utf-8"
+    )
+    # Et un qui la MENTIONNE seulement : il ne doit RIEN exiger.
+    (depot / ".github/scripts/en_parle.py").write_text(
+        'BASE = "GITHUB_BASE_SHA"  # on la nomme, on ne la lit pas\n', encoding="utf-8"
+    )
     # `_arbre` interroge git ; un depot jouet non versionne le fait retomber sur `rglob`, ce qui est
     # le comportement voulu, mais autant eprouver le chemin nominal.
     subprocess.run(["git", "-C", str(depot), "init", "-q"], check=False)
@@ -344,6 +421,35 @@ def _sans_son_atelier(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> 
 
 def _job_non_declare(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
     del i["deux"]
+
+
+def _base_non_passee(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+    """Un job lance un lecteur de base SANS la lui passer : le mecanisme sera inerte."""
+    f = d / ".github/workflows/faux.yml"
+    f.write_text(
+        f.read_text(encoding="utf-8").replace(
+            "        run: echo rien",
+            "        run: python3 .github/scripts/lit_la_base.py",
+        ),
+        encoding="utf-8",
+    )
+
+
+def _mention_sans_lecture(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+    """Un job lance un script qui MENTIONNE la base sans la lire : rien ne doit etre exige.
+
+    Sans ce cas, une detection par le texte passerait le precedent en accusant tout le monde, et ce
+    garde crierait sur du juste - il s est accuse LUI-MEME a sa premiere ecriture, portant la
+    constante `BASE` sans lire la variable.
+    """
+    f = d / ".github/workflows/faux.yml"
+    f.write_text(
+        f.read_text(encoding="utf-8").replace(
+            "        run: echo rien",
+            "        run: python3 .github/scripts/en_parle.py",
+        ),
+        encoding="utf-8",
+    )
 
 
 def _porte_decorative(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
@@ -387,6 +493,10 @@ CAS = (
     (1, "une porte qui ne conditionne plus aucune étape est vue", _porte_decorative),
     (1, "une étape qui attend une sortie que nul ne produit est vue", _condition_orpheline),
     (1, "une portée dont la clé vit dans deux ateliers est vue", _cle_ambigue),
+    # Le mecanisme INERTE : ecrit, eprouve, documente, et jamais exerce.
+    (1, "un lecteur de base lancé sans sa base est vu", _base_non_passee),
+    # Et son controle negatif : mentionner la base n'est pas la lire.
+    (0, "un script qui mentionne la base sans la lire n'exige rien", _mention_sans_lecture),
 )
 
 
