@@ -48,6 +48,20 @@ public final class AvertissementsInspection {
     ///
     /// Quatrième constat du même compte rendu, et le seul dont le coût est **à venir** : l'import de
     /// cette nuit-ci aboutit, la source n'étant jamais modifiée (R9).
+    /// Ce que l'écran dit d'un support en lecture seule (#4991).
+    ///
+    /// Visible pour le banc de parité : le terminal porte la sienne depuis #5361, et
+    /// `PariteSupportEnLectureSeuleTest` les tient ensemble.
+    public static String supportEnLectureSeuleLisible() {
+        return "Le support de cette source est monté en lecture seule : rien ne peut y être écrit.";
+    }
+
+    /// Ce que l'écran dit de l'ENJEU, séparé de l'état : c'est la partie qu'on est tenté d'abréger,
+    /// et la seule qui empêche de repartir sur le terrain avec la carte (#5361).
+    public static String enjeuDuSupportEnLectureSeule() {
+        return "si l'écriture reste impossible, la carte n'enregistrera pas la prochaine nuit";
+    }
+
     private static Optional<Constat> lectureSeuleConstat(boolean enLectureSeule) {
         if (!enLectureSeule) {
             return Optional.empty();
@@ -57,15 +71,14 @@ public final class AvertissementsInspection {
         // est le mode de fin de vie ordinaire d'une carte, mais ce peut aussi être un verrou
         // mécanique poussé sans y penser, et l'observateur est le seul à pouvoir regarder.
         return Optional.of(new Constat(
-                "Le support de cette source est monté en lecture seule : rien ne peut y être écrit.",
+                supportEnLectureSeuleLisible(),
                 Severite.AVERTISSEMENT,
                 List.of(
                         Detail.de("l'import de cette nuit fonctionne : Companion lit la source, il n'y"
                                 + " écrit jamais"),
                         Detail.de("avant de repartir sur le terrain, vérifiez le verrou de la carte s'il"
                                 + " y en a un, puis essayez d'y créer un dossier depuis votre ordinateur"),
-                        Detail.de("si l'écriture reste impossible, la carte n'enregistrera pas la"
-                                + " prochaine nuit"))));
+                        Detail.de(enjeuDuSupportEnLectureSeule()))));
     }
 
     /// Les avertissements d'inspection **encore vrais une fois l'import fait** (#1488).
