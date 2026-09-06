@@ -66,6 +66,12 @@ autre population du même dépôt.
 coûterait sans rien tenir. Le garde **compte** ; le jugement reste au site, et un site laissé en `que`
 écrit sa raison plutôt que de sortir du compte en silence.
 
+**La décision est plus large que son garde, et l'écart se déclare.** La règle vaut pour tout prédicat
+d'attente ; le garde ne compte que les appels à `Attente.que`. Un `WaitForAsyncUtils.waitFor` **nu**
+porte la même faute et lui échappe, et le dépôt en a un fautif, `AttenteAvantClic.attendreCliquable`,
+trouvé à la passe 7 de la clôture et consigné en #5330. Cette limite était **tue**, et c'est ce
+silence qui a laissé le site invisible : une limite qu'on ne déclare pas se lit comme une couverture.
+
 **Elle ne change rien au comportement de `Attente` sur une exception.** `lireSurLeFil` re-lève
 délibérément un prédicat qui a levé, et sa raison est écrite dans le code : « le taire ferait expirer
 l'attente sur un délai, en accusant la lenteur là où il y a une exception ». Cette décision-ci la

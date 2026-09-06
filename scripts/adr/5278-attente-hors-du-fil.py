@@ -188,7 +188,9 @@ CONTRAT = {
     "geste": "attente dont le predicat lit le graphe de scene depuis le fil du test",
     "population": "les appels a `Attente.que` de src/test/java, l argument etant delimite par "
     "equilibrage de parentheses. `queSurLeFil` en est exclu : c est la forme JUSTE. Un predicat qui "
-    "delegue a une methode privee touchant le graphe echappe au motif, limite declaree dans l en-tete",
+    "delegue a une methode privee touchant le graphe echappe au motif. Un `WaitForAsyncUtils.waitFor` "
+    "NU porte la meme faute sans etre compte : deux limites declarees, la seconde trouvee a la "
+    "passe 7 de la cloture de #5277 (#5330)",
     "dispositif": "cliquet",
     "seuil": "0, polarite=descend",
     "temoin": "scripts/adr/5278-attente-hors-du-fil.py --auto-test",
