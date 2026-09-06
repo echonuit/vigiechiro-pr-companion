@@ -54,6 +54,7 @@ import json
 import math
 import os
 import pathlib
+import re
 import statistics
 import subprocess
 import sys
@@ -61,6 +62,11 @@ import sys
 # Une conclusion qui porte sur le CONTENU. `cancelled`, `skipped` et `stale` sont des fins de course,
 # pas des jugements : les compter melerait des runs qui n ont rien mesure a ceux qui ont conclu.
 PROBANTES = ("success", "failure", "neutral", "timed_out")
+
+
+# ⟨la racine, depuis ce fichier⟩ Ce script vit dans `.github/scripts/`, donc deux crans au-dessus.
+RACINE = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 
 def _gh(*arguments: str) -> str:
@@ -119,8 +125,96 @@ def releve(depot: str, fenetre: int = 40) -> list[dict]:
                             "porte_une_portee": porte_une_portee(j),
                         }
                     )
-        demandes.append({"sha": sha, "facturees": facturees, "jobs": jobs})
+        # ⟨ce que la demande CHANGE⟩ Sans cette lecture, un taux de silence de 100 % ne peut pas se
+        # lire : on ignore si le job s est tu parce que son sujet n a pas bouge, ou parce que sa
+        # portee a derive. Un appel de plus par demande, pour la seule chose qui les departage.
+        commit = _gh("api", f"repos/{depot}/commits/{sha}")
+        fichiers = [f["filename"] for f in json.loads(commit).get("files", [])] if commit else []
+        demandes.append({"sha": sha, "facturees": facturees, "jobs": jobs, "fichiers": fichiers})
     return demandes
+
+
+def cle_du_job(nom_affiche: str, racine: pathlib.Path | None = None) -> str | None:
+    """La cle d atelier d un job, depuis le nom que la forge AFFICHE.
+
+    Deux ecarts a franchir, dont aucun n est un detail de forme : un job de matrice s affiche
+    `cle (valeur)`, et un job peut porter un `name:` different de sa cle - `second-compilateur`
+    s affiche `analyser-ecj`. Une table ecrite a la main se perimerait au premier renommage ; on la
+    DERIVE des ateliers, comme le reste de ce depot.
+    """
+    import yaml
+
+    base = (racine or RACINE) / ".github" / "workflows"
+    sans_matrice = re.sub(r"\s*\([^)]*\)\s*$", "", nom_affiche).strip()
+    for atelier in sorted(base.glob("*.yml")):
+        try:
+            charge = yaml.safe_load(atelier.read_text(encoding="utf-8"))
+        except yaml.YAMLError:
+            continue
+        for cle, corps in (charge or {}).get("jobs", {}).items():
+            if not isinstance(corps, dict):
+                continue
+            affiche = str(corps.get("name") or cle)
+            affiche = re.sub(r"\s*\$\{\{[^}]*\}\}\s*", "", affiche).strip()
+            if sans_matrice in (cle, affiche):
+                return cle
+    return None
+
+
+def chemins_d_un_job(nom_affiche: str, racine: pathlib.Path | None = None) -> list[str]:
+    """Les chemins qu un job surveille, quel que soit l endroit ou sa portee les ecrit.
+
+    DEUX sources, et c est un fait du depot plutot qu un choix de ce releve : les neuf portees vivent
+    dans `porte_du_job.PORTEES`, et `contrat-fichiers` porte SA PROPRE porte depuis #3525, dont la
+    liste est dans `porte_sur_le_contrat_de_fichiers.SURVEILLES`. Les lire aux deux endroits est plus
+    honnete que d en deplacer une pour la commodite d un outil qui ne fait que LIRE. Les unifier
+    serait un lot a soi.
+    """
+    from porte_du_job import PORTEES
+
+    cle = cle_du_job(nom_affiche, racine)
+    if cle in PORTEES:
+        return [l.strip() for l in PORTEES[cle].splitlines() if l.strip()]
+    if cle == "contrat-fichiers":
+        from porte_sur_le_contrat_de_fichiers import SURVEILLES
+
+        return [l.strip() for l in SURVEILLES.splitlines() if l.strip()]
+    return []
+
+
+def alerte_du_taux(nom: str, muets: int, total: int, touches: set[str], chemins=None) -> str | None:
+    """Ce qu un taux de silence veut dire, ou `None` quand il ne veut rien dire.
+
+    **Un taux de 100 % recouvre deux situations**, et les confondre coute cher dans les deux sens :
+
+    - *le sujet n a pas bouge* : aucun chemin surveille n a change sur la fenetre. Le job est une
+      assurance qui n a rien eu a couvrir, et crier dessus apprend a ignorer l alerte ;
+    - *la portee a derive* : des chemins surveilles ont change et le job s est tu quand meme. C est
+      le faux vert que le chantier #5294 existe pour fermer, et il merite une alerte plus forte que
+      celle d avant.
+
+    Mesure du 2026-09-06 : `contrat-fichiers` sortait a 100 % sur dix-sept demandes avec « il ne se
+    distingue plus d un job supprime », alors qu aucune des vingt demandes de la fenetre ne touchait
+    l un de ses vingt et un chemins. L alerte etait vraie et inutile (#5387).
+    """
+    if total < 10:
+        return None
+    surveilles = chemins_d_un_job(nom) if chemins is None else chemins
+    if muets == 0:
+        return "sa portee ne s est jamais tue : elle s est peut-etre elargie en silence."
+    if muets < total:
+        return None
+    from porte_du_job import correspond
+
+    bouges = [c for c in surveilles if any(correspond(f, c) for f in touches)]
+    if not surveilles:
+        return f"ce job n a RIEN juge sur {total} demandes, et sa portee est introuvable : verifiez-la."
+    if not bouges:
+        return None
+    return (
+        f"ce job s est tu sur {total} demandes alors que sa portee a BOUGE ({bouges[0]}) : "
+        "elle ne correspond plus a ce qu elle garde."
+    )
 
 
 def _duree(job: dict) -> float:
@@ -204,6 +298,7 @@ def rendre(depot: str, fenetre: int = 40) -> int:
     modelisees = [sum(math.ceil(j["minutes"]) for j in d["jobs"]) for d in demandes]
     lues = bool(facturees)
 
+    touches = {f for d in demandes for f in d.get("fichiers", [])}
     par_job: dict[str, list[dict]] = collections.defaultdict(list)
     for d in demandes:
         for j in d["jobs"]:
@@ -235,15 +330,14 @@ def rendre(depot: str, fenetre: int = 40) -> int:
         porte = any(j.get("porte_une_portee", j["sans_objet"]) for j in jobs)
         part = f"{muets * 100 / len(jobs):.0f} % ({muets}/{len(jobs)})" if porte else "sans portee"
         print(f"  {nom:28s} {mediane([j['minutes'] for j in jobs]):7.1f}m {part:>12s}")
-        if not porte or len(jobs) < 10:
+        if not porte:
             continue
-        if muets == len(jobs):
+        avertissement = alerte_du_taux(nom, muets, len(jobs), touches)
+        if avertissement:
+            print(f"      ⚠ {avertissement}")
+        elif muets == len(jobs) and len(jobs) >= 10:
             print(
-                f"      ⚠ ce job n a RIEN juge sur {len(jobs)} demandes : il ne se distingue plus d un job supprime."
-            )
-        if muets == 0:
-            print(
-                "      ⚠ sa portee ne s est jamais tue : elle s est peut-etre elargie en silence."
+                f"      · silence ATTENDU : aucun de ses chemins n a bouge sur ces {len(jobs)} demandes."
             )
     return 0
 
@@ -416,6 +510,60 @@ def _auto_test() -> int:
                     {"name": "Complete job", "conclusion": "success"},
                 ]
             }
+            # ⟨les deux situations qu un 100 % recouvre⟩ Le premier cas ROUGIT sur le code
+            # d avant, qui criait des que le taux atteignait 100 %. Le second est le temoin oppose :
+            # sans lui, une regle qui ne dirait plus jamais rien passerait le premier.
+            for libelle, muets, total, touches, chemins, attendu in (
+                (
+                    "un silence total dont la portee n a pas bouge ne se signale pas",
+                    17,
+                    17,
+                    {"docs/a.md"},
+                    ["src/main/java/**"],
+                    None,
+                ),
+                (
+                    "un silence total dont la portee a BOUGE se signale",
+                    17,
+                    17,
+                    {"src/main/java/A.java"},
+                    ["src/main/java/**"],
+                    "a BOUGE",
+                ),
+                (
+                    "une portee qui ne se tait jamais se signale toujours",
+                    0,
+                    17,
+                    {"docs/a.md"},
+                    ["src/main/java/**"],
+                    "elargie",
+                ),
+                (
+                    "une fenetre trop courte ne conclut pas",
+                    9,
+                    9,
+                    {"src/main/java/A.java"},
+                    ["src/main/java/**"],
+                    None,
+                ),
+                (
+                    "un silence partiel ne se signale pas",
+                    8,
+                    17,
+                    {"src/main/java/A.java"},
+                    ["src/main/java/**"],
+                    None,
+                ),
+            ):
+                rendu = alerte_du_taux("peu-importe", muets, total, touches, chemins=chemins)
+                bon = (
+                    (rendu is None) if attendu is None else (rendu is not None and attendu in rendu)
+                )
+                print(f"  {'✔' if bon else '✘'} {libelle}")
+                if not bon:
+                    echecs += 1
+                    print(f"      rendu={rendu!r}")
+
             for attendu, libelle, job in (
                 (True, "un job dont la portee s est tue est vu muet", muet),
                 (False, "un job dont la portee a dit oui n est pas muet", juge),
@@ -433,7 +581,7 @@ def _auto_test() -> int:
             if ancien is not None:
                 os.environ["RELEVE_DEMANDES_FICHIER"] = ancien
 
-    print(f"\n{len(CAS) + 7} cas de lecture et de bord.")
+    print(f"\n{len(CAS) + 12} cas de lecture et de bord.")
     return 1 if echecs else 0
 
 
