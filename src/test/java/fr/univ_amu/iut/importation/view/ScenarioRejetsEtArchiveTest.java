@@ -151,7 +151,7 @@ class ScenarioRejetsEtArchiveTest {
 
         // La progression est posée sur le fil JavaFX AVANT que la décompression démarre (#146) : elle
         // est donc visible dès le clic, et c'est ce que le cas demande de voir.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> estVisible(robot, "#zoneProgression"),
                 "la barre n'a jamais paru : une grosse archive laisserait l'observateur devant un écran"
                         + " figé sans savoir si quelque chose se passe (#146)",
@@ -165,7 +165,7 @@ class ScenarioRejetsEtArchiveTest {
                         + " celle de la décompression - et le cas ne prouverait rien")
                 .doesNotContain("6 enregistrement");
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, LABEL_ORIGINAUX).isBlank(),
                 "l'inspection n'a jamais suivi la décompression : l'archive a été ouverte pour rien",
                 FIN_SECONDES * 1000L);
@@ -197,7 +197,7 @@ class ScenarioRejetsEtArchiveTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, LABEL_ORIGINAUX).isBlank(),
                 "l'inspection n'a jamais conclu sur la seconde désignation",
                 APPARITION_SECONDES * 1000L);
@@ -220,7 +220,7 @@ class ScenarioRejetsEtArchiveTest {
         WaitForAsyncUtils.waitForFxEvents();
         GesteVisible.amenerDansLeCadre(robot, BOUTON_IMPORTER);
         GesteVisible.cliquer(robot, BOUTON_IMPORTER);
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> estVisible(robot, "#compteRenduChiffre"),
                 "l'import n'a pas abouti : le compte rendu de fin n'a jamais paru",
                 FIN_SECONDES * 1000L);
@@ -256,7 +256,7 @@ class ScenarioRejetsEtArchiveTest {
         // On attend que l'INSPECTION ait conclu, et non qu'un bandeau paraisse : toutes les cartes
         // n'en lèvent pas au même endroit. `sd-prefixee` ne dit rien ici - sa discordance se voit au
         // RATTACHEMENT - et attendre un bandeau d'inspection y expirerait pour rien.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, LABEL_ORIGINAUX).isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux sur « " + fixture + " » : elle"
                         + " balaie le dossier hors du fil JavaFX, et rien n'a paru dans le temps imparti",

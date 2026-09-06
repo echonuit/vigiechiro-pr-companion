@@ -107,7 +107,7 @@ class DiagnosticViewTest {
     void les_points_du_graphe_se_disent(FxRobot robot) throws TimeoutException {
         // Le nœud d'un point naît à la mise en page : sans cette attente, la liste est vide et le cas
         // passerait au vert en n'ayant rien regardé.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !grapheClimat(robot).getData().isEmpty()
                         && grapheClimat(robot).getData().get(0).getData().stream()
                                 .anyMatch(d -> d.getNode() != null),

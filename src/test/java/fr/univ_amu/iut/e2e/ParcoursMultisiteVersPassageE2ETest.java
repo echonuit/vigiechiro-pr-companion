@@ -133,7 +133,7 @@ class ParcoursMultisiteVersPassageE2ETest {
         // (#4813, mesuré par #4811). Le bouton suit `PassageViewModel.verificationDisponible`, posé à
         // la fin du chargement du passage ; le fil suit `MainController.rafraichirNavigation`, sur un
         // listener de `navigateur.historique()`. Deux chaînes, deux moments.
-        Attente.que(() -> !segmentsDuFil(fil).isEmpty(), "que le fil d'Ariane porte ses segments");
+        Attente.queSurLeFil(() -> !segmentsDuFil(fil).isEmpty(), "que le fil d'Ariane porte ses segments");
         var libelles = segmentsDuFil(fil);
         assertThat(libelles)
                 .contains("Carré 640380")

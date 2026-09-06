@@ -330,7 +330,7 @@ class ScenarioPassagePivotTest {
         GesteVisible.cliquer(robot, "#boutonRecupererMeteo");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> texte(robot, "#champTemperature").contains(TEMPERATURE_RELEVEE),
                 "« Récupérer la météo » n'a rien rempli : le relevé rendu par le fournisseur doit"
                         + " atterrir dans les champs, sinon le geste ne fait qu'un aller-retour muet",

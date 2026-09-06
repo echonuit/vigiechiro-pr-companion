@@ -260,7 +260,7 @@ class ScenarioMenuDeLigneImportTest {
         controleur().selecteur().definir(repondant(carte));
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais conclu",
                 APPARITION_SECONDES * 1000L);

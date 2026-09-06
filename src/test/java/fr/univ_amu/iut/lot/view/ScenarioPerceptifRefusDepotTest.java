@@ -209,7 +209,7 @@ class ScenarioPerceptifRefusDepotTest {
         // rendait la main dès le titre du compte rendu, alors que les avertissements paraissent à la
         // passe suivante : le test passait sur mon poste et rougissait sur le runner, sur la seule
         // différence de rythme. Une attente qui ne porte pas sur l'assertion ne garde rien.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> texteAffiche(robot).contains(REFUSEES + " archive(s) ont été refusées"),
                 "le compte des archives refusées s'affiche",
                 20 * 1000L);

@@ -184,7 +184,7 @@ class AppTest {
     /// dépôt ne laisse donc le Stage en dimensionnement explicite ; c'est la mesure qui partait trop
     /// tôt.
     private void attendreLaMiseEnPage(double plancher) {
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> hauteurDuContenu() > plancher,
                 () -> "la scène de 40 lignes n'a pas dépassé " + plancher + " : contenu "
                         + hauteurDuContenu() + ". Ce n'est pas un Stage figé, c'est une mise en page"

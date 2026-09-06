@@ -171,7 +171,7 @@ class ScenarioConnecteConnexionTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         // ─── S8-05 · l'avancement paraît DANS la modale ───────────────────────────────────────────
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> visible(robot, "#zoneProgression"),
                 "la progression n'a jamais paru dans la modale",
                 APPARITION_SECONDES * 1000L);
@@ -191,7 +191,7 @@ class ScenarioConnecteConnexionTest {
         Respiration.leTempsDeLire(robot);
 
         // ─── S8-06 · l'identité et le résumé, à la fin ────────────────────────────────────────────
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !visible(robot, "#zoneProgression"),
                 "l'opération n'a pas fini dans le temps imparti. À lire comme « le compte de tournage est"
                         + " plus gros que ce banc ne le prévoit », pas comme un défaut du produit :"
@@ -236,7 +236,7 @@ class ScenarioConnecteConnexionTest {
         GesteVisible.cliquer(robot, "#boutonFermer");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> visible(robot, "#bandeauIndicateurs"),
                 "le bandeau de compteurs n'est jamais apparu sur l'accueil. La connexion a pourtant"
                         + " synchronisé sites et taxons : si rien ne paraît, c'est le bandeau qui ne suit"
@@ -295,7 +295,7 @@ class ScenarioConnecteConnexionTest {
         GesteVisible.cliquer(robot, "#boutonConnecter");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> visible(robot, "#zoneProgression"),
                 "la progression n'a jamais paru dans la modale",
                 APPARITION_SECONDES * 1000L);
@@ -332,7 +332,7 @@ class ScenarioConnecteConnexionTest {
         // ─── S8-02 · la barre AVANCE, et son libellé nomme la nuit ───────────────────────────────
         // « Il ne reste pas figé » ne se constate pas sur UN instantané : une barre arrêtée et une
         // barre qui progresse s'y ressemblent. On compare donc DEUX relevés.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> fraction(robot) > fractionInitiale,
                 "la barre n'a pas bougé entre deux relevés : elle est restée figée à sa valeur"
                         + " d'ouverture, ce que la case S8-02 interdit explicitement",
@@ -347,7 +347,7 @@ class ScenarioConnecteConnexionTest {
         // ─── S8-03 · l'estimation du temps restant ───────────────────────────────────────────────
         // « une fois l'avancement mesurable » : ProgressionOperation extrapole le restant depuis le
         // temps écoulé, donc elle ne peut rien annoncer au premier instant.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> texte(robot, "#" + SuiviProgression.ID_MESSAGE).contains("restant"),
                 "aucune estimation du temps restant n'a paru dans le libellé d'avancement. Elle"
                         + " s'extrapole du temps écoulé : si elle manque, c'est que l'opération n'a jamais"
@@ -364,7 +364,7 @@ class ScenarioConnecteConnexionTest {
 
         // Le geste se termine où l'opération se termine : on laisse la barre finir plutôt que de
         // couper le clip au milieu.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !visible(robot, "#zoneProgression"),
                 "l'opération n'a pas fini dans le temps imparti. À lire comme « le compte de tournage est"
                         + " plus gros que ce banc ne le prévoit », pas comme un défaut du produit",

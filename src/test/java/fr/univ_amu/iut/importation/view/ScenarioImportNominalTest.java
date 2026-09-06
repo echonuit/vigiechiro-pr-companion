@@ -166,7 +166,7 @@ class ScenarioImportNominalTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux : elle balaie le dossier hors du"
                         + " fil JavaFX, et rien n'a paru dans le temps imparti",
@@ -337,7 +337,7 @@ class ScenarioImportNominalTest {
         // CINQ des six cas portent sur ce qui se passe PENDANT l'opération. Attendre la fin puis
         // regarder ne dirait rien d'eux : la barre serait rangée, la table figée, le formulaire
         // dégelé. Le relevé se prend donc au vol, dès que la progression paraît.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> visible(robot, "#zoneProgression"),
                 "la progression n'a jamais paru : l'import de six fichiers passe par une barre, et"
                         + " sans elle les cinq cas de suivi n'ont rien à montrer",
@@ -350,7 +350,7 @@ class ScenarioImportNominalTest {
         //
         // Attendre CE moment-là plutôt que de relever au plus tôt garde les cinq constats
         // contemporains, à un instant où les cinq peuvent exister.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> texte(robot, "#labelProgression").contains("restant"),
                 "aucune estimation du temps restant n'a paru dans l'avancement. Elle s'extrapole du"
                         + " temps écoulé : si elle manque, c'est que l'opération n'a jamais été"
@@ -397,7 +397,7 @@ class ScenarioImportNominalTest {
         Respiration.leTempsDeLire(robot);
 
         // ─── S2-17 · le compte rendu de fin ──────────────────────────────────────────────────────
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> visible(robot, "#compteRenduChiffre"),
                 "l'import n'a pas rendu son compte rendu dans le temps imparti. À lire comme « la"
                         + " carte est plus grosse que ce banc ne le prévoit », pas comme un défaut",
@@ -462,7 +462,7 @@ class ScenarioImportNominalTest {
         GesteVisible.cliquer(robot, "#boutonParcourir");
         WaitForAsyncUtils.waitForFxEvents();
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux : le rattachement ne propose"
                         + " rien tant qu'elle n'a pas lu la carte",

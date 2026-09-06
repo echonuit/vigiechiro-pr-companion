@@ -133,7 +133,7 @@ class ScenarioJournalAbsentTest {
         // (#5145). C'est la même carte sans journal, avec une nuit de plus.
         inspecter(robot, "sd-sans-journal-multi");
 
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> lignesDeLaTable(robot).size() >= 2,
                 "la table des nuits n'a pas paru : sans elle, le badge de complétude n'est pas à"
                         + " l'écran, et ces deux cas n'ont rien à lire",
@@ -176,7 +176,7 @@ class ScenarioJournalAbsentTest {
 
         // Le seul cas du geste qui attend un ÉCHEC. Un écran resté vide ne dirait pas si le refus a eu
         // lieu ou si rien ne s'est passé : c'est le MESSAGE qui fait la différence.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !messageDErreur(robot).isBlank(),
                 "l'inspection n'a rien dit sur un journal illisible. Un écran muet laisse l'observateur"
                         + " devant une carte qu'il croit lue, et il importera en pensant que tout va bien",
@@ -251,7 +251,7 @@ class ScenarioJournalAbsentTest {
         // On attend que l'INSPECTION ait conclu, et non qu'un bandeau paraisse : toutes les cartes
         // n'en lèvent pas au même endroit. `sd-prefixee` ne dit rien ici - sa discordance se voit au
         // RATTACHEMENT - et attendre un bandeau d'inspection y expirerait pour rien.
-        Attente.que(
+        Attente.queSurLeFil(
                 () -> !texte(robot, "#labelOriginaux").isBlank(),
                 "l'inspection n'a jamais rendu son compte d'originaux sur « " + fixture + " » : elle"
                         + " balaie le dossier hors du fil JavaFX, et rien n'a paru dans le temps imparti",

@@ -93,6 +93,40 @@ class AttenteTest {
     }
 
     @Test
+    @DisplayName("#5353 : sur le fil, le message se construit à l'expiration - et SUR LE FIL")
+    void le_message_se_construit_sur_le_fil() {
+        // La surcharge manquait, et son absence se lisait comme une permission : `AppTest` voulait
+        // dire la hauteur qu'il avait mesurée, et n'avait d'autre choix que de lire le graphe hors du
+        // fil pour la dire.
+        //
+        // Ce cas garde DEUX choses, et la seconde est celle qui a fait écrire la surcharge : le
+        // message est composé SUR le fil FX. Composé ailleurs, il rendrait dans le texte de l'échec
+        // exactement ce qu'on reproche au prédicat, et un message faux est pire qu'un message vague.
+        java.util.concurrent.atomic.AtomicBoolean surLeFil = new java.util.concurrent.atomic.AtomicBoolean();
+        java.util.concurrent.atomic.AtomicInteger lu = new java.util.concurrent.atomic.AtomicInteger();
+
+        assertThatThrownBy(() -> Attente.queSurLeFil(
+                        () -> {
+                            lu.incrementAndGet();
+                            return false;
+                        },
+                        () -> {
+                            surLeFil.set(javafx.application.Platform.isFxApplicationThread());
+                            return "la hauteur est restée à " + lu.get();
+                        },
+                        200))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("la hauteur est restée à ")
+                .matches(
+                        e -> !e.getMessage().contains("restée à 0"),
+                        "le message doit porter ce qui a ete observe, pas l'etat d'avant l'attente");
+
+        assertThat(surLeFil)
+                .as("le message se compose sur le fil JavaFX : il lit le graphe pour dire ce qu'il a vu")
+                .isTrue();
+    }
+
+    @Test
     @DisplayName("elle sait lire le prédicat SUR LE FIL JavaFX, le graphe de scène n'y étant pas partageable")
     void elle_lit_sur_le_fil_javafx() {
         AtomicReference<String> filLu = new AtomicReference<>();

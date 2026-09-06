@@ -37,9 +37,19 @@ tour de boucle : la ou le predicat ne touche le graphe que par un chemin sur, la
 sans rien tenir. Le garde COMPTE ; le jugement reste au site, et un site laisse en `que` ecrit sa
 raison plutot que de sortir du compte en silence.
 
-**Il ne suit pas un predicat qui delegue.** Un predicat qui appelle une methode privee touchant, elle,
-le graphe lui echappe. Limite declaree et non oubli : la suivre demanderait un graphe d appels, la ou
-le motif textuel attrape deja la population entiere.
+**Il SUIT un predicat qui delegue, depuis #5353, et cette limite-la est levee.** Elle disait : « la
+suivre demanderait un graphe d appels, la ou le motif textuel attrape deja la population entiere ». La
+seconde moitie etait fausse - TRENTE-NEUF sites lisaient le graphe par une aide de leur propre fichier,
+et aucun n etait compte - et la premiere l etait pour le cas courant : une aide du MEME fichier se
+trouve par deux passes textuelles, sans graphe d appels.
+
+Ce que le garde fait desormais : il releve les methodes du fichier dont le corps lit le graphe, ferme
+cet ensemble transitivement, puis compte tout predicat qui les appelle. `robot.interact(` exempte une
+aide comme il exempte un predicat, sans quoi le garde accusait `GesteVisible.amenerDansLeCadre`.
+
+**Ce qu il ne suit toujours pas** : une aide heritee d une classe mere, ou definie dans un autre
+fichier. Le motif ne lit qu un fichier a la fois. Limite declaree, et mesuree a zero site connu -
+mais cette mesure-la n a PAS de dispositif, contrairement au reste.
 
 Usage :
     python3 scripts/adr/5278-attente-hors-du-fil.py
@@ -84,6 +94,36 @@ LECTURE_DE_NOEUD = re.compile(
     r"|\.tryQuery\(\)|\.queryAll\(\)|\.tryQueryAs\("
 )
 
+# Les DECLARATIONS de methode du fichier, pour suivre un predicat qui delegue.
+#
+# Le garde declarait autrefois qu il ne suivait pas la delegation, « la suivre demanderait un graphe
+# d appels, la ou le motif textuel attrape deja la population entiere ». La seconde moitie etait
+# fausse : 37 sites du depot lisaient le graphe par une aide de leur propre fichier, et aucun n etait
+# compte. La premiere l etait aussi pour le cas courant - une aide du MEME fichier se trouve par deux
+# passes textuelles, sans graphe d appels (#5353).
+#
+# Les mots-cles sont exclus : `if (...) {` et `for (...) {` ressemblent a une declaration.
+DECLARATION = re.compile(
+    r"^[ \t]+(?:[\w<>\[\],?@. \t]+?[ \t])(\w+)[ \t]*\([^;{)]*\)[ \t]*(?:throws [\w, .]+)?\{",
+    re.M,
+)
+MOTS_CLES = frozenset(
+    (
+        "if",
+        "for",
+        "while",
+        "switch",
+        "catch",
+        "try",
+        "synchronized",
+        "else",
+        "do",
+        "return",
+        "new",
+        "case",
+    )
+)
+
 # Au-dela, ce n est plus un appel mais un fichier mal ferme : la borne evite de balayer la source
 # entiere si une parenthese manque, et le dit par un suspect plutot qu en bouclant.
 BORNE = 4000
@@ -102,14 +142,72 @@ def argument(source: str, depuis: int) -> str:
     return source[depuis : depuis + BORNE]
 
 
+def bloc(source: str, depuis: int) -> str:
+    """Le corps qui commence a l accolade `depuis`, par equilibrage - jumeau de [argument]."""
+    profondeur = 0
+    for i in range(depuis, min(depuis + BORNE, len(source))):
+        if source[i] == "{":
+            profondeur += 1
+        elif source[i] == "}":
+            profondeur -= 1
+            if profondeur == 0:
+                return source[depuis : i + 1]
+    return source[depuis : depuis + BORNE]
+
+
+def aides_qui_lisent(source: str) -> frozenset[str]:
+    """Les methodes du fichier dont le corps lit le graphe, DIRECTEMENT ou par une autre aide.
+
+    La fermeture est transitive : une aide qui appelle une aide qui lit, lit. Deux tours suffisent en
+    pratique, mais la boucle va jusqu au point fixe plutot que de parier sur la profondeur.
+    """
+    corps = {}
+    for declaration in DECLARATION.finditer(source):
+        nom = declaration.group(1)
+        if nom in MOTS_CLES:
+            continue
+        corps[nom] = bloc(source, declaration.end() - 1)
+
+    # `robot.interact(` exempte une AIDE comme il exempte un predicat, et pour la meme raison : ce
+    # qu il enveloppe est lu SUR le fil. Sans cette symetrie, le garde accusait
+    # `GesteVisible.amenerDansLeCadre`, dont l aide fait tout son travail dans deux `interact` - du bon
+    # travail, et l ADR 4002 dit ce qu il advient d un garde qui crie dessus.
+    #
+    # L approximation est la MEME que pour les predicats : la presence de l appel suffit, on ne verifie
+    # pas que toute lecture y est enfermee. La declarer ici plutot que de la laisser deviner.
+    surLeFil = {nom for nom, texte in corps.items() if "robot.interact(" in texte}
+    lisent = {
+        nom
+        for nom, texte in corps.items()
+        if LECTURE_DE_NOEUD.search(texte) and nom not in surLeFil
+    }
+    while True:
+        gagnees = {
+            nom
+            for nom, texte in corps.items()
+            if nom not in lisent
+            and nom not in surLeFil
+            and any(re.search(rf"\b{re.escape(a)}\s*\(", texte) for a in lisent)
+        }
+        if not gagnees:
+            return frozenset(lisent)
+        lisent |= gagnees
+
+
+def appelle_une_aide(corps: str, aides: frozenset[str]) -> bool:
+    """Le predicat DELEGUE-t-il a une aide qui lit le graphe ?"""
+    return any(re.search(rf"\b{re.escape(aide)}\s*\(", corps) for aide in aides)
+
+
 def sites(source: str) -> list[int]:
     """Les lignes des `Attente.que` dont l argument lit le graphe de scene."""
     trouves = []
+    aides = aides_qui_lisent(source)
     for appel in APPEL.finditer(source):
         if appel.group(1) == "queSurLeFil":
             continue
         corps = argument(source, appel.end() - 1)
-        if not LECTURE_DE_NOEUD.search(corps):
+        if not LECTURE_DE_NOEUD.search(corps) and not appelle_une_aide(corps, aides):
             continue
         # Un predicat qui passe par `robot.interact(...)` lit SUR le fil FX : c est la forme juste
         # pour un `waitFor` nu, et `GesteVisible.amenerDansLeCadre` l emploie. Sans cette exception,
@@ -207,6 +305,74 @@ def _auto_test() -> int:
     for lecture in (".getItems()", ".getScene()", "getChildren()", ".getText()", "queryAs"):
         un = f'Attente.que(() -> n{lecture}.isEmpty(), "que ca vienne");\n'
         verifie(f"la lecture {lecture} est vue", sites(un), [1])
+
+    # LA DELEGATION A UNE AIDE DU FICHIER, qui etait une limite DECLAREE du garde. Sa raison disait
+    # que le motif « attrape deja la population entiere » : elle en manquait quarante (#5353).
+    parAide = (
+        'Attente.que(() -> !texte(robot, "#lbl").isBlank(), "que ca vienne");\n'
+        "    private static String texte(FxRobot robot, String sel) {\n"
+        "        return robot.lookup(sel).queryAs(Label.class).getText();\n    }\n"
+    )
+    verifie("une attente qui lit par une aide du fichier est vue", sites(parAide), [1])
+
+    # Le sens NEGATIF de la delegation, et c est lui qui distingue « suivre les aides » de « accuser
+    # tout appel » : une aide qui ne touche pas le graphe ne doit rien declencher.
+    parAideSobre = (
+        'Attente.que(() -> compte(vm) > 3, "que ca monte");\n'
+        "    private static int compte(Vm vm) {\n        return vm.total();\n    }\n"
+    )
+    verifie("une aide qui NE lit PAS le graphe ne compte pas", sites(parAideSobre), [])
+
+    # La MEME delegation en queSurLeFil sort du compte, comme les formes directes.
+    verifie(
+        "la meme, en queSurLeFil, sort du compte",
+        sites(parAide.replace("Attente.que(", "Attente.queSurLeFil(")),
+        [],
+    )
+
+    # La chaine TRANSITIVE : l attente appelle une aide qui appelle l aide qui lit. Sans la fermeture,
+    # ce cas passerait au travers, et c est la forme qu un refactoring produit naturellement.
+    parChaine = (
+        'Attente.que(() -> pret(robot), "que ca vienne");\n'
+        "    private static boolean pret(FxRobot robot) {\n        return !texte(robot).isBlank();\n    }\n"
+        "    private static String texte(FxRobot robot) {\n"
+        '        return robot.lookup("#l").queryAs(Label.class).getText();\n    }\n'
+    )
+    verifie("une delegation en DEUX crans est vue", sites(parChaine), [1])
+
+    # UNE AIDE QUI TRAVAILLE DANS `robot.interact` sort du compte, comme un predicat qui le fait.
+    # `GesteVisible.amenerDansLeCadre` est dans ce cas, et le garde l accusait.
+    parAideSurFil = (
+        "WaitForAsyncUtils.waitFor(5, S, () -> unePasse(robot, sel));\n"
+        "    private static boolean unePasse(FxRobot robot, String sel) {\n"
+        "        robot.interact(() -> v.set(robot.lookup(sel).query().isVisible()));\n"
+        "        return v.get();\n    }\n"
+    )
+    verifie("une aide qui travaille dans robot.interact sort du compte", sites(parAideSurFil), [])
+
+    # Et TRANSITIVEMENT : l aide protegee appelle une aide qui lit, et cela ne doit pas la ramener
+    # dans le compte. C est le defaut qu a eu ce garde en s elargissant - la fermeture rattrapait par
+    # un cran ce que l exemption venait de retirer.
+    parAideSurFilTransitive = (
+        "WaitForAsyncUtils.waitFor(5, S, () -> unePasse(robot, sel));\n"
+        "    private static boolean unePasse(FxRobot robot, String sel) {\n"
+        "        robot.interact(() -> v.set(dansLeCadre(robot, sel)));\n        return v.get();\n    }\n"
+        "    private static boolean dansLeCadre(FxRobot robot, String sel) {\n"
+        "        return robot.lookup(sel).query().isVisible();\n    }\n"
+    )
+    verifie(
+        "et transitivement : l aide protegee ne revient pas par celle qu elle appelle",
+        sites(parAideSurFilTransitive),
+        [],
+    )
+
+    # Un `if (...) {` ressemble a une declaration de methode. S il etait pris pour une aide, son nom
+    # `if` finirait dans l ensemble et n importe quel predicat portant `if (` serait accuse.
+    verifie(
+        "un mot-cle n est pas pris pour une aide",
+        sorted(aides_qui_lisent("    if (x) {\n        n.getText();\n    }\n")),
+        [],
+    )
 
     # Un appel non ferme ne doit ni boucler ni faire planter le garde.
     verifie("un appel non ferme ne fait pas planter", sites('Attente.que(() -> lookup("#a")'), [1])

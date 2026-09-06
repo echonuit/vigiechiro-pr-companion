@@ -50,6 +50,18 @@ public final class Attente {
         que(() -> lireSurLeFil(condition), ceQuOnAttend, delaiMs);
     }
 
+    /// La même, avec un message **construit à l'échec** plutôt qu'à chaque tour.
+    ///
+    /// Elle manquait, et son absence se lisait comme une permission : le seul site du dépôt qui veut
+    /// dire *ce qu'il a mesuré* - `AppTest#attendreLaMiseEnPage`, dont le message cite la hauteur
+    /// obtenue - n'avait pas d'autre choix que de lire le graphe hors du fil (#5353).
+    ///
+    /// @param ceQuOnAttend évalué **seulement** si l'attente expire ; il lit souvent le graphe, et le
+    ///     lire hors du fil rendrait dans le message ce qu'on reproche au prédicat
+    public static void queSurLeFil(BooleanSupplier condition, Supplier<String> ceQuOnAttend, long delaiMs) {
+        que(() -> lireSurLeFil(condition), () -> lireSurLeFil(ceQuOnAttend), delaiMs);
+    }
+
     /// Exécute `action` **sur le fil JavaFX** et attend qu'elle rende, en disant ce qu'elle faisait
     /// si elle n'y arrive pas.
     ///
@@ -78,6 +90,25 @@ public final class Attente {
                     "n'a pas pu " + ceQueOnFaisait + " sur le fil JavaFX en " + delaiMs
                             + " ms. Ce n'est pas le code qui a tort tant que ceci n'a pas eu lieu.",
                     echec);
+        }
+    }
+
+    /// Le MESSAGE d'échec, composé sur le fil JavaFX.
+    ///
+    /// Un message qui dit ce qu'il a mesuré lit le graphe pour le dire. Le composer hors du fil
+    /// rendrait dans le texte de l'échec exactement ce que le prédicat a évité, et un message faux
+    /// est pire qu'un message vague : on le croit.
+    ///
+    /// Il ne relève PAS ce qui a échoué en le composant - une attente qui expire est déjà un échec, et
+    /// le second message masquerait le premier.
+    private static String lireSurLeFil(Supplier<String> message) {
+        try {
+            return WaitForAsyncUtils.asyncFx(message::get).get();
+        } catch (InterruptedException interrompu) {
+            Thread.currentThread().interrupt();
+            return "(message non composé : le fil a été interrompu)";
+        } catch (ExecutionException echec) {
+            return "(message non composé : " + echec.getCause() + ")";
         }
     }
 
