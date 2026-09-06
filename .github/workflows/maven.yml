@@ -212,9 +212,20 @@ jobs:
   # fuite entre deux classes qu'aucun des deux ordres ne met dans cette séquence. Il éprouve deux
   # ordres, il ne balaie pas leurs permutations.
   ordre-alternatif:
-    name: ordre-alternatif
+    # ⟨reparti en quatre depuis #5329⟩ Il tenait le chemin critique a 20,4 min. Ce que la repartition
+    # COUTE est nomme dans l ADR : une pollution entre deux classes tombees dans deux lots differents
+    # devient invisible, et c est une part de ce que ce job mesure. La graine tourne pour que les
+    # paires co-localisees changent d un passage a l autre.
+    #
+    # Le butoir descend de 40 a 20 : un lot met un quart du temps, et un butoir qui ne serre plus rien
+    # laisse pendre. #5034 relevait quatre annulations sur dix a 40 min.
+    name: ordre-alternatif (${{ matrix.lot }})
+    strategy:
+      fail-fast: false
+      matrix:
+        lot: [0, 1, 2, 3]
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -247,7 +258,30 @@ jobs:
         # de façon déterministe en local, et sans elles qu'aucune ne se reproduit. Un job qui poserait
         # un nom de propriété inexact tournerait dans la configuration par défaut et serait VERT sans
         # rien vérifier - un dispositif cassé se présentant sous la forme d'un succès (ADR 2748).
-        run: ./mvnw -B test --file pom.xml -Dsurefire.forkCount=1 -Dsurefire.runOrder=reversealphabetical
+        shell: bash
+        env:
+          # ⟨la graine tourne⟩ Elle decale la partition d un passage a l autre, donc les paires de
+          # classes co-localisees changent. C est ce qui limite la perte : une pollution entre deux
+          # classes invisible aujourd hui devient visible quand la graine les reunit. La couverture
+          # se reconstitue au fil des passages, elle n est plus acquise sur un seul.
+          GRAINE: ${{ github.run_number }}
+          LOT: ${{ matrix.lot }}
+        run: |
+          set -euo pipefail
+          classes=$(python3 .github/scripts/partition_de_la_suite.py \
+            --lot "${LOT}" --sur 4 --graine "$(( GRAINE % 4 ))")
+          combien=$(echo "${classes}" | tr ',' '\n' | wc -l)
+          echo "lot ${LOT}/4, graine $(( GRAINE % 4 )) : ${combien} classes."
+
+          ./mvnw -B test --file pom.xml \
+            -Dsurefire.forkCount=1 -Dsurefire.runOrder=reversealphabetical \
+            -Dtest="${classes}"
+
+          # ⟨le temoin de #4544⟩ Un job coupe par son butoir meurt PENDANT Maven, donc avant cette
+          # ligne. Son absence est le seul fait qui distingue un passage entier d un passage tronque,
+          # et c est ce qui manquait quand le tri annoncait « toutes les classes » sur 618 des 758.
+          : > "target/lot-${LOT}-est-alle-au-bout"
+          test -f "target/lot-${LOT}-est-alle-au-bout"
 
   second-compilateur:
     name: analyser-ecj
