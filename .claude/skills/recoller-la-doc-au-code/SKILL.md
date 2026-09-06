@@ -13,6 +13,7 @@ metadata:
 
 ```
 ON CHERCHE CE QUI EST DEVENU FAUX, PAS CE QU'ON A À AJOUTER
+ET LA DOC D'UN AGENT EST DE LA DOC
 ```
 
 « Mettre à jour la doc » se lit spontanément comme « qu'ai-je à **ajouter** ? ». Le mode de panne est
@@ -27,7 +28,10 @@ nulle part, et se lit comme vraie.
 
 ```
 1. PARTIR    des fichiers que le chantier a TOUCHES, jamais de sa memoire.
-2. CHERCHER  qui les cite, dans docs, dev-docs et brief.
+2. CHERCHER  qui les cite, dans DEUX corpus :
+             - les pages de description : docs, dev-docs, brief ;
+             - les surfaces d INSTRUCTION : AGENTS.md, CLAUDE.md, CONTRIBUTING.md,
+               .agents/skills et .claude/skills.
 3. LIRE      la sortie par motif, du plus RARE au plus frequent.
 4. OUVRIR    les pages que les motifs a faible rendement designent.
 5. CORRIGER  ce qui est devenu faux, ou le SUPPRIMER. Une page a moitie vraie
@@ -49,11 +53,44 @@ git diff --name-only <sha-d-ouverture>..origin/main | while read -r fichier; do
     [A-Z]*.java | [A-Z]*.fxml) motif="${nom%.*}" ;;
     *) motif="$nom" ;;
   esac
-  grep -rl -- "$motif" docs dev-docs brief 2>/dev/null | while read -r page; do
+  grep -rl --exclude-dir=node_modules -- "$motif" \
+      docs dev-docs brief \
+      AGENTS.md CLAUDE.md CONTRIBUTING.md .agents .claude 2>/dev/null | while read -r page; do
     printf '%s\t%s\n' "$motif" "$page"
   done
 done | sort -u
 ```
+
+## Les surfaces d'instruction sont de la doc, et ce sont les plus coûteuses à laisser fausses
+
+Une page de `dev-docs/` qui ment égare un lecteur. Une **surface d'instruction** qui ment fait agir :
+`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` et les compétences de `.agents/skills/` sont lues **avant**
+de travailler, et prescrivent des gestes. Une prescription périmée continue d'être exécutée, chaque
+session, sans que rien ne rougisse.
+
+Mesuré à la clôture de #5294 : la porte `scripts/batterie.py` a été livrée, `dev-docs/` l'a décrite,
+et `AGENTS.md` a continué de prescrire la liste qu'elle remplace. Les agents ont donc continué de
+composer leur banc, et le chantier était livré sans être adopté. L'instrument de cette passe ne
+cherchait alors que dans `docs`, `dev-docs` et `brief` : il ne **pouvait pas** voir ces surfaces.
+Rejoué sur le même delta avec le corpus élargi, il rend 134 paires, dont sept désignant `AGENTS.md`
+et huit `CONTRIBUTING.md`.
+
+**Une compétence corrigée dans `.agents/skills/` se recopie** : `python3
+scripts/methode/synchronise-adaptateurs.py`, sans quoi les deux arbres divergent et le garde refuse.
+
+## Ce que le chantier a REMPLACÉ ne se trouve pas par son propre nom
+
+L'instrument ci-dessus cherche qui cite les fichiers **touchés**. Un mécanisme **neuf** n'est cité
+nulle part par construction, donc il ne remonte jamais. Ce n'est pas un défaut de l'instrument, c'est
+sa limite, et elle se comble à la main par une seule question :
+
+```
+CE QUE JE VIENS DE LIVRER REMPLACE-T-IL UN GESTE QU UNE PAGE PRESCRIT ?
+```
+
+Si oui, on cherche **le geste remplacé**, pas le nom du mécanisme. La porte de #5294 ne se serait
+trouvée par aucun grep sur `batterie.py` ; elle se trouvait en cherchant `python3 scripts/adr`, que
+trois surfaces prescrivaient encore.
 
 **La sortie se lit par motif, du plus rare au plus fréquent.** Un motif qui rend plus d'une douzaine
 de pages est trop générique pour dire quoi que ce soit ; ce sont les motifs à **faible rendement** qui
