@@ -226,7 +226,61 @@ def relances(jours: int) -> tuple[list[dict], int]:
     return [r for r in dans if r["tentatives"] > 1], len(dans)
 
 
-def journalDeTentative(idRun: int, tentative: int, atelier: str = "build") -> str:
+# Article A3, [ADR 3627] : une mesure rend ce qu elle a lu ET ce qu elle n a pas pu ouvrir. Le releve
+# n ouvre qu UN flux (`FLUX`) et, dedans, qu UN atelier. Tous les autres ateliers qui lancent la
+# suite lui sont invisibles, et ce n est pas theorique : le flake de #4616 n a ete vu que sous
+# `fuseau-alternatif`, celui de #5073 que sous un fuseau lui aussi. Ses taux sont donc des MINORANTS.
+#
+# La liste des invisibles se DERIVE du workflow, elle ne se recopie pas : recopiee, elle aurait
+# vieilli au premier atelier ajoute, et une limite perimee est pire qu une limite absente. C est
+# l article A5, [ADR 2385] - le point de comparaison n est jamais une liste tenue a la main, c est
+# elle qui derive - applique ici a une sortie machine plutot qu a de la prose.
+#
+# [ADR 3627]: ../../dev-docs/decisions/3627-une-mesure-dit-ce-qu-elle-n-a-pas-pu-lire.md
+# [ADR 2385]: ../../dev-docs/decisions/2385-la-doc-chiffree-est-adossee-au-code.md
+ATELIER_LU = "build"
+FLUX_LU = pathlib.Path(__file__).resolve().parents[2] / ".github/workflows/maven.yml"
+
+_ATELIER = re.compile(r"\n  ([a-z][a-z0-9_-]*):")
+
+
+def ateliersQuiLancentLaSuite(yml: str) -> list[str]:
+    """Les ateliers d un workflow qui lancent la suite Maven, dans l ordre du fichier."""
+    if "jobs:" not in yml:
+        return []
+    corps = "\n" + yml.split("\njobs:", 1)[1]
+    bornes = [(m.start(), m.group(1)) for m in _ATELIER.finditer(corps)]
+    trouves = []
+    for i, (debut, nom) in enumerate(bornes):
+        fin = bornes[i + 1][0] if i + 1 < len(bornes) else len(corps)
+        bloc = corps[debut:fin]
+        if "mvnw" in bloc and re.search(r"\b(test|verify)\b", bloc):
+            trouves.append(nom)
+    return trouves
+
+
+def limiteDeLecture(flux: pathlib.Path | None = None) -> str:
+    """Ce que le releve n a PAS pu lire, derive du workflow qu il interroge."""
+    flux = FLUX_LU if flux is None else flux
+    if not flux.exists():
+        # A3 jusqu au bout : ne pas pouvoir denombrer les invisibles est encore quelque chose qu on
+        # n a pas pu lire, et le taire rendrait la sortie plus rassurante qu elle ne doit l etre.
+        return (
+            f"  Lu : atelier `{ATELIER_LU}` seul. Invisibles : NON DENOMBRES,"
+            f" `{flux.name}` etant introuvable. Les taux ci-dessous sont des MINORANTS (article A3)."
+        )
+    invisibles = [
+        a for a in ateliersQuiLancentLaSuite(flux.read_text(encoding="utf-8")) if a != ATELIER_LU
+    ]
+    return (
+        f"  Lu : `{flux.name}`, atelier `{ATELIER_LU}` seul."
+        f" Invisibles : {len(invisibles)} autre(s) atelier(s) du meme flux"
+        f" ({', '.join(invisibles)}), et TOUS les autres flux qui lancent la suite."
+        " Les taux ci-dessous sont des MINORANTS (article A3)."
+    )
+
+
+def journalDeTentative(idRun: int, tentative: int, atelier: str = ATELIER_LU) -> str:
     """Le journal d'UNE tentative, decompresse. `--log-failed` ne rend que la DERNIERE."""
     if shutil.which("gh") is None or shutil.which("unzip") is None:
         return ""
@@ -655,7 +709,36 @@ def _autoTest() -> int:
     # Et un echec SANS cause enveloppee reste ce qu il etait : un banc qui vacille.
     assert classe(echec, ["AppTest.un_cas"]) == ("DEPOT", UN_BANC)
 
-    print("auto-test : 28 temoins verts")
+    # Article A3 : la liste des ateliers invisibles se DERIVE du workflow. Le temoin la joue sur un
+    # workflow factice, donc sans toucher le disque, et il rougit des qu un atelier qui lance la
+    # suite cesse d etre reconnu - c est exactement la peremption qu une liste recopiee subirait.
+    fauxFlux = """name: CI
+jobs:
+  build:
+    steps:
+      - run: ./mvnw -B verify
+  fuseau-alternatif:
+    steps:
+      - run: ./mvnw -B test -Duser.timezone=Pacific/Kiritimati
+  analyser:
+    steps:
+      - run: ./mvnw -B compile
+"""
+    assert ateliersQuiLancentLaSuite(fauxFlux) == ["build", "fuseau-alternatif"], (
+        ateliersQuiLancentLaSuite(fauxFlux)
+    )
+    # `analyser` compile sans tester : il n est pas un atelier manquant, et l y compter gonflerait
+    # la limite d un atelier qui n aurait de toute facon jamais rougi sur un banc.
+    assert "analyser" not in ateliersQuiLancentLaSuite(fauxFlux)
+    # Et un workflow sans aucun atelier rend une liste vide plutot que de lever : le releve doit
+    # pouvoir dire « je n ai pas pu denombrer », pas mourir. C est le meme article A3.
+    assert ateliersQuiLancentLaSuite("name: rien\n") == []
+    # Et le flux introuvable ne se tait pas non plus : la sortie doit dire qu elle n a pas pu
+    # denombrer, sans quoi un releve lance hors du depot afficherait des taux sans leur limite.
+    absent = limiteDeLecture(pathlib.Path("/n-existe-pas/maven.yml"))
+    assert "NON DENOMBRES" in absent and "MINORANTS" in absent, absent
+
+    print("auto-test : 32 temoins verts")
     return 0
 
 
@@ -774,6 +857,7 @@ def main() -> int:
         f"RELEVE bancs | fenetre={jours}j | tirages={tirages} | relances={len(rejoues)}"
         f" | en tete={len(tetes)} | dans la suite={len(suites)}"
     )
+    print(limiteDeLecture())
     if not tetes:
         print("\nAucun test nomme dans les tentatives echouees.")
     # En tete d'abord : c'est la population des SUSPECTS, et elle est la seule a designer quelque
@@ -799,11 +883,11 @@ def main() -> int:
 # classement lui-meme. Il sort en 0 meme quand les taux sont mauvais.
 CONTRAT = {
     "geste": "combien de fois chaque banc a rougi, sur combien de tirages",
-    "population": "les runs de la forge sur une fenetre de jours, dont il ne lit que le job "
-    "`build`. `fuseau-alternatif` et `ordre-alternatif` lui sont INVISIBLES, et plusieurs flakes "
-    "du chantier #5273 y ont pourtant ete trouves : ses taux sont donc des minorants. Limite "
-    "declaree a la passe 7 de sa cloture, ou il etait le seul des trois instruments a n en "
-    "declarer aucune",
+    "population": "les runs d UN flux (`maven.yml`) sur une fenetre de jours, dont il ne lit "
+    "qu UN atelier (`build`). Les six autres ateliers du meme flux et tous les autres flux qui "
+    "lancent la suite lui sont INVISIBLES : ses taux sont des MINORANTS, la sortie le dit, et la "
+    "liste se derive du workflow. Article A3, ADR 3627 ; limite trouvee a la passe 7 de la cloture "
+    "de #5273, ou il etait le seul des trois instruments a n en declarer aucune",
     "dispositif": "rapport",
     "seuil": "(sans objet)",
     "temoin": "scripts/methode/releve-les-bancs-instables.py --auto-test",
