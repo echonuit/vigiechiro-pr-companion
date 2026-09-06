@@ -56,6 +56,20 @@ autrement.
 ![L'écran de diagnostic quand la fenêtre du protocole n'est pas couverte : l'avertissement nomme la
 plage attendue et la plage enregistrée.](../assets/captures/apercu-diagnostic-protocole-non-couvert.png)
 
+### L'avertissement nomme le bord qui manque
+
+Une nuit peut manquer d'un seul côté, et ce n'est pas le même geste à corriger : un enregistreur qui
+démarre trop tard ne se règle pas comme un enregistreur qui s'arrête trop tôt. L'avertissement dit
+donc **lequel des deux bords** n'est pas tenu, et rappelle que l'autre l'est.
+
+![Le début n'est pas couvert : les enregistrements commencent moins de 30 minutes avant le coucher, et
+la fin est bien couverte.](../assets/captures/apercu-diagnostic-debut-non-couvert.png)
+
+![La fin n'est pas couverte : les enregistrements s'arrêtent moins de 30 minutes après le lever, et le
+début est bien couvert.](../assets/captures/apercu-diagnostic-fin-non-couverte.png)
+
+Quand les deux bords manquent, l'avertissement les dit ensemble plutôt que d'en choisir un.
+
 ## La fin de la nuit
 
 Sous la fenêtre du protocole, un **second encart** dit ce que le journal du capteur établit de la

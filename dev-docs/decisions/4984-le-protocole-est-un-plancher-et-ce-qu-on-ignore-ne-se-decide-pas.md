@@ -12,6 +12,8 @@ enforced_by:
   - "AnalyseCoherenceHoraireTest#commencer_avant_le_coucher_respecte_le_protocole"
   - "AnalyseCoherenceHoraireTest#la_marge_du_protocole_vaut_trente_minutes"
   - "PariteCoherenceHoraireTest#les_deux_surfaces_tranchent_dans_le_meme_sens"
+relations:
+  completee_par: ["5093-la-couverture-et-la-completude-sont-deux-axes"]
 verified:
   - by: machine:ci
     at: 2026-09-01
@@ -21,6 +23,12 @@ generated:
 ---
 
 # Le protocole est un plancher : le respecter est un fait, et ce qu'on ne peut pas savoir ne se décide pas
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-09-06** : le point 4 est **levé** par
+    [5093](5093-la-couverture-et-la-completude-sont-deux-axes.md). La nuit interrompue est livrée,
+    non comme un troisième **niveau** mais comme un **second axe**. Le reste fait foi.
+
 
 ## Contexte
 
