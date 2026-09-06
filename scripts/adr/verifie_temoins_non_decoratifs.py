@@ -169,7 +169,7 @@ def portee_du_diff(base: str | None = None, modifies: list[str] | None = None) -
         return None
     if any(m.startswith(FONDS_PARTAGE) for m in modifies):
         print(
-            f"Le fonds partage a bouge : le banc mute TOUT le corpus.",
+            "Le fonds partage a bouge : le banc mute TOUT le corpus.",
             file=sys.stderr,
         )
         return None
@@ -430,22 +430,73 @@ def suspects(noms: list[str] | None = None) -> tuple[list[str], list[str]]:
 
 CAS_DE_PORTEE = (
     # (libelle, fichiers modifies, attendu) - `None` veut dire « mute TOUT ».
-    ("un garde touche est le seul mute", ["scripts/adr/2843-tiret-cadratin.py"], ["2843-tiret-cadratin.py"]),
-    ("deux gardes touches, deux mutes", 
-     ["scripts/adr/2843-tiret-cadratin.py", "scripts/adr/4477-longueur-des-adr.py"],
-     ["2843-tiret-cadratin.py", "4477-longueur-des-adr.py"]),
+    (
+        "un garde touche est le seul mute",
+        ["scripts/adr/2843-tiret-cadratin.py"],
+        ["2843-tiret-cadratin.py"],
+    ),
+    (
+        "deux gardes touches, deux mutes",
+        ["scripts/adr/2843-tiret-cadratin.py", "scripts/adr/4477-longueur-des-adr.py"],
+        ["2843-tiret-cadratin.py", "4477-longueur-des-adr.py"],
+    ),
     # Le CONTROLE NEGATIF du dispositif : le fonds partage fait tout muter. Sans lui, un garde
     # cesserait de rougir a cause d un module qu il importe, sans que son fichier ait bouge.
     ("le fonds partage fait tout muter", ["scripts/_commun/__init__.py"], None),
-    ("le banc lui-meme fait tout muter",
-     ["scripts/adr/verifie_temoins_non_decoratifs.py"], None),
+    ("le banc lui-meme fait tout muter", ["scripts/adr/verifie_temoins_non_decoratifs.py"], None),
     ("un diff sans garde ne mute rien", ["dev-docs/decisions/1.md"], []),
     ("un diff vide fait tout muter, faute de savoir pourquoi il est vide", [], None),
 )
 
 
+def verdict_sans_objet(portee: list[str] | None, corpus: int) -> tuple[int, str] | None:
+    """Que faire quand la portee est VIDE : conclure, ou refuser ? Et pourquoi.
+
+    ⟨vide par DECISION, vide par ACCIDENT : la nuance decide de ce qu on apprend⟩
+
+    `rapporte` REFUSE sur `lus=0`, et il a raison : un garde dont la population s est videe en
+    silence - un chemin qui a bouge, un motif qui ne s apparie plus - reste vert sans juger.
+
+    Mais une portee vide n est pas cet accident-la. Elle dit « ce diff ne touche aucun garde », ce
+    qui est un fait lisible, pas une cecite. Confondre les deux ferait refuser chaque demande
+    documentaire, et apprendrait a passer outre - ce qui coute bien plus cher que la minute gagnee.
+
+    Le banc conclut donc, et il ECRIT pourquoi : c est la forme de l ADR 2748, un silence explicite
+    et non une absence. L accident, lui, reste refuse : si le CORPUS ENTIER est vide, le harnais ne
+    trouve plus rien, et cela n a aucun rapport avec le diff.
+
+    Rend `None` quand il n y a rien de special a faire, c est-a-dire quand le banc doit muter.
+    """
+    if portee is None or portee:
+        return None
+    if not corpus:
+        return 1, (
+            "ÉCHEC : le corpus entier est vide. Ce n est pas la portee du diff qui est en cause,\n"
+            "c est le harnais : il ne trouve plus aucun garde a muter."
+        )
+    return 0, (
+        f"Sans objet : ce diff ne touche aucun des {corpus} gardes du banc. Leur code est\n"
+        "identique a celui que la base a deja juge, donc leur non-decorativite aussi.\n"
+        "Le banc s execute quand meme, et le dit : un silence explicite n est pas une absence."
+    )
+
+
 def _auto_test_de_portee() -> int:
     echecs = 0
+    # Le silence explicite, et son bord : vide par DECISION conclut, vide par ACCIDENT refuse.
+    for libelle, portee, corpus, attendu in (
+        ("une portee vide sur un corpus plein CONCLUT", [], 46, 0),
+        ("une portee vide sur un corpus VIDE refuse", [], 0, 1),
+        ("une portee pleine ne declenche rien", ["x.py"], 46, None),
+        ("muter tout ne declenche rien non plus", None, 46, None),
+    ):
+        rendu = verdict_sans_objet(portee, corpus)
+        obtenu = None if rendu is None else rendu[0]
+        if obtenu == attendu:
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
+            echecs += 1
     for libelle, modifies, attendu in CAS_DE_PORTEE:
         obtenu = portee_du_diff(modifies=modifies)
         if obtenu == attendu:
@@ -639,6 +690,12 @@ if __name__ == "__main__":
             "Les autres portent un code identique a celui que la base a deja juge.",
             file=sys.stderr,
         )
+    sans_objet = verdict_sans_objet(portee, len(mutes()) + len(autonomes()))
+    if sans_objet is not None:
+        code, message = sans_objet
+        print(message, file=sys.stderr if code else sys.stdout)
+        sys.exit(code)
+
     decoratifs, non_concluants = suspects(portee)
     # ⟨`lus` compte ce qui a ETE MUTE, jamais le corpus⟩ Cette ligne appelait `mutes()` et
     # `autonomes()` SANS la portee : elle aurait annonce quarante-sept gardes lus quand le banc en
