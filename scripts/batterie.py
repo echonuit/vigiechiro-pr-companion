@@ -330,6 +330,78 @@ def annonce_la_duree(engages: list[str]) -> None:
             print(f"        {d:5.0f} s  {g}", flush=True)
 
 
+def modules_attendus(racine: pathlib.Path | None = None) -> dict[str, str]:
+    """Ce que les gardes IMPORTENT, et la distribution qui le fournit.
+
+    Lu dans `[tool.vigiechiro.modules]` par `prepare-l-environnement.py`, plutot que devine : le nom
+    de la distribution n est pas celui du module, et le deviner exigerait d interroger ce qui est
+    installe, donc de rendre un verdict qui depend de la machine.
+    """
+    import importlib.util
+
+    outil = (racine or RACINE) / "scripts" / "methode" / "prepare-l-environnement.py"
+    spec = importlib.util.spec_from_file_location("_prep", outil)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.modules_declares(racine or RACINE)
+
+
+def candidats(racine: pathlib.Path | None = None) -> list[str]:
+    """Les interpretes a essayer, DANS L ORDRE, et l ordre porte une decision.
+
+    **Le `.venv` du worktree passe en premier, et jamais un venv partage.** C est la convention posee
+    par #5426, dont la raison n est pas le confort : une branche qui change une version epinglee doit
+    etre eprouvee contre LA SIENNE, sinon elle l est contre celle d une autre branche. Preferer un
+    venv commun parce qu il est complet reintroduirait exactement ce que la convention ecarte.
+
+    Ensuite l interprete qui lance cette porte, puis celui du PATH. Aucun chemin de poste n est ecrit
+    ici : trois conventions ont circule en deux jours dans ce depot, et coder l une d elles serait la
+    figer au moment ou elle bouge.
+    """
+    base = racine or RACINE
+    return [str(base / ".venv" / "bin" / "python"), sys.executable, "python3"]
+
+
+def porte_les_modules(interprete: str, modules) -> bool:
+    """Cet interprete importe-t-il tout ce que les gardes declarent ?"""
+    if not modules:
+        return True
+    essai = subprocess.run(
+        [interprete, "-c", "import " + ", ".join(sorted(modules))],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return essai.returncode == 0
+
+
+def interprete(racine=None, essais=None, sonde=None) -> tuple[str | None, dict[str, str]]:
+    """Le premier interprete qui porte les modules declares, et ce qui manque quand aucun ne les porte.
+
+    ## Pourquoi la porte ne peut pas se contenter de `python3`
+
+    Les gardes declarent leurs dependances, et l interprete du systeme ne les porte pas toutes.
+    Mesure du 2026-09-07 : `python3` porte `yaml` et pas `tree_sitter_language_pack`, que
+    `4472-commentaire-en-corps.py` importe depuis #5420. La batterie rougissait donc sur un garde
+    sain, avec un `ModuleNotFoundError` tombant au vingtieme lancement.
+
+    ## Pourquoi elle SONDE au lieu de deriver un chemin
+
+    Le paysage a change deux fois en deux jours : `~/.venv-outils` portait `ruff` seul, puis plus
+    rien ; `.venv` n existait pas, puis a porte le groupe entier. Un chemin ecrit en dur aurait ete
+    faux dans les deux sens. On essaie donc, dans l ordre, et le premier qui repond gagne.
+
+    `essais` et `sonde` sont injectables, sans quoi aucun cas ne pourrait fabriquer un poste ou
+    l interprete manque (ADR 3624).
+    """
+    modules = modules_attendus(racine)
+    lance = sonde or porte_les_modules
+    for candidat in essais if essais is not None else candidats(racine):
+        if lance(candidat, modules):
+            return candidat, {}
+    return None, modules
+
+
 def rendre(
     contre: str = "origin/main", lance: bool = False, racine: pathlib.Path | None = None
 ) -> int:
@@ -411,11 +483,32 @@ def rendre(
     import json
     import time
 
+    # ⟨le choix se fait UNE fois, et AVANT le premier garde⟩ Laisser tomber un `ModuleNotFoundError`
+    # au vingtieme lancement fait passer un defaut d environnement pour un defaut du diff. Le refus
+    # arrive donc en tete, et il nomme la distribution qui manque.
+    python, manquants = interprete(racine)
+    if python is None:
+        print(
+            "\nREFUS : aucun interprete ne porte les modules que les gardes declarent.", flush=True
+        )
+        for module, distribution in sorted(manquants.items()):
+            print(f"  {module}  fourni par  {distribution}", flush=True)
+        print(
+            "\nPosez le `.venv` de ce worktree, que `CONTRIBUTING.md` decrit :\n"
+            "  python3 -m venv .venv && .venv/bin/python -m pip install --group gardes\n"
+            "Un venv PAR worktree, jamais partage : une branche qui change une version epinglee\n"
+            "doit etre eprouvee contre la sienne.",
+            flush=True,
+        )
+        return 1
+    if python != "python3":
+        print(f"  interprete : {python}", flush=True)
+
     joues, rouges, mesures = 0, [], durees_connues()
     for g in engages:
         depart = time.time()
         sortie = subprocess.run(
-            ["python3", g], cwd=str(racine or RACINE), capture_output=True, text=True, check=False
+            [python, g], cwd=str(racine or RACINE), capture_output=True, text=True, check=False
         )
         mesures[g] = round(time.time() - depart, 1)
         joues += 1
@@ -705,7 +798,65 @@ def _auto_test() -> int:
             print(f"  ✘ « {verdict} » est rangé du côté vert : il ne serait jamais montré")
             echecs += 1
 
-    print("\n15 cas : porte, bord, exemption confrontée et aiguillage.")
+    # ⟨le choix de l interprete, dans les DEUX sens⟩ Sans le second cas, un sondage qui rendrait
+    # toujours le premier candidat passerait le premier et la porte refuserait de tourner partout.
+    for libelle, essais, repond, attendu in (
+        (
+            "le `.venv` du worktree est essaye EN PREMIER",
+            ["/a/.venv/bin/python", "python3"],
+            lambda c, m: True,
+            "/a/.venv/bin/python",
+        ),
+        (
+            "on passe au suivant quand le premier ne porte rien",
+            ["/a/.venv/bin/python", "python3"],
+            lambda c, m: c == "python3",
+            "python3",
+        ),
+        (
+            "aucun interprete valide rend None, et ce qui manque",
+            ["/a", "/b"],
+            lambda c, m: False,
+            None,
+        ),
+    ):
+        choisi, manquants = interprete(essais=essais, sonde=repond)
+        bon = choisi == attendu and (attendu is not None or bool(manquants))
+        print(f"  {'✔' if bon else '✘'} {libelle}")
+        if not bon:
+            echecs = 1
+            print(f"      choisi={choisi!r} manquants={manquants!r}")
+
+    # ⟨le CHEMIN DE REFUS, et pas seulement le calcul⟩ Les trois cas ci-dessus eprouvent le choix ;
+    # celui-ci eprouve ce que la porte FAIT quand il n y a rien a choisir. Un refus qu aucun cas ne
+    # traverse est le premier a se casser en silence.
+    import contextlib as _ctx
+    import io as _io
+
+    # ⟨le diff est INJECTE, sinon le cas depend du disque⟩ En CI le worktree est sur la reference de
+    # fusion, donc `git diff origin/main` est vide et `rendre` sort avant d atteindre le controle : le
+    # cas passait en local et rougissait en CI. Un cas dont le verdict depend de l etat du disque
+    # n eprouve pas ce qu il annonce.
+    _vrai = globals()["interprete"]
+    _vrai_diff = globals()["fichiers_du_diff"]
+    globals()["interprete"] = lambda racine=None: (None, {"yaml": "PyYAML"})
+    globals()["fichiers_du_diff"] = lambda contre="origin/main", racine=None: ["scripts/adr/x.py"]
+    try:
+        tampon = _io.StringIO()
+        with _ctx.redirect_stdout(tampon):
+            code = rendre(lance=True)
+        sortie = tampon.getvalue()
+    finally:
+        globals()["interprete"] = _vrai
+        globals()["fichiers_du_diff"] = _vrai_diff
+
+    bon = code == 1 and "REFUS" in sortie and "PyYAML" in sortie
+    print(f"  {'✔' if bon else '✘'} sans interprete valide, la porte REFUSE avant le premier garde")
+    if not bon:
+        echecs = 1
+        print(f"      code={code} sortie={sortie[:200]!r}")
+
+    print("\n19 cas : porte, bord, exemption confrontée, aiguillage, interprète et refus.")
     return 1 if echecs else 0
 
 
