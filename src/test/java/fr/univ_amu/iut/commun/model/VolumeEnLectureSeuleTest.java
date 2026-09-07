@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.io.TempDir;
 
 /// La question posée au volume, et **rien de plus** (#4991).
@@ -20,6 +21,12 @@ import org.junit.jupiter.api.io.TempDir;
 ///
 /// La vérification qui manque ici est nommée dans #4991 : une carte réellement passée en lecture
 /// seule, sous Windows, où le drapeau lu est `FILE_READ_ONLY_VOLUME`.
+///
+/// Ce que cette classe éprouve sous Windows se réduit à deux cas sur quatre, pour deux raisons
+/// différentes, et chacune se déclare. Le cas des permissions OPPOSE celles-ci au volume : là où
+/// elles n'existent pas, il n'a rien à opposer. Sans cette déclaration,
+/// `setPosixFilePermissions` jetait `UnsupportedOperationException` avant la première assertion, et
+/// le passage hebdomadaire comptait une erreur là où il n'y avait pas de cas (#5435).
 class VolumeEnLectureSeuleTest {
 
     @TempDir
@@ -33,6 +40,7 @@ class VolumeEnLectureSeuleTest {
 
     @Test
     @DisplayName("#4991 : un dossier dont les PERMISSIONS refusent l'écriture n'est pas le sujet")
+    @EnabledIf("fr.univ_amu.iut.fixture.SystemeDeFichiers#posixDisponible")
     void les_permissions_ne_sont_pas_le_volume() throws IOException {
         // La distinction qui fait tout le lot. `Files.isWritable` répond aux permissions, et ment sur
         // les partages réseau comme sous Windows ; cette classe interroge le VOLUME. Un dossier

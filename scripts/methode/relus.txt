@@ -1508,7 +1508,7 @@ b9d123809bcd  src/test/java/fr/univ_amu/iut/commun/model/PreferenceSourceEspeceT
 8e06582f60e5  src/test/java/fr/univ_amu/iut/commun/model/StatutWorkflowRangTest.java
 04db0e5ad0fc  src/test/java/fr/univ_amu/iut/commun/model/SuiviTraitementTest.java
 2a6dfe16682d  src/test/java/fr/univ_amu/iut/commun/model/VersionApplicationTest.java
-ba165bf8dd3f  src/test/java/fr/univ_amu/iut/commun/model/VolumeEnLectureSeuleTest.java
+a465434be893  src/test/java/fr/univ_amu/iut/commun/model/VolumeEnLectureSeuleTest.java
 2d596762d361  src/test/java/fr/univ_amu/iut/commun/model/WorkspaceTest.java
 0c668d8f8694  src/test/java/fr/univ_amu/iut/commun/model/dao/DispositionColonnesDaoTest.java
 1b6ea3763d0e  src/test/java/fr/univ_amu/iut/commun/model/dao/LienVigieChiroDaoTest.java
@@ -1726,10 +1726,12 @@ a30b6108b6e6  src/test/java/fr/univ_amu/iut/e2e/ParcoursSonsReferenceE2ETest.jav
 fcbe8023fc7e  src/test/java/fr/univ_amu/iut/e2e/ParcoursValidationExpertE2ETest.java
 cc7e7d3e1cb5  src/test/java/fr/univ_amu/iut/e2e/ParcoursVerifierEchantillonnageE2ETest.java
 7d37e6ad4ba2  src/test/java/fr/univ_amu/iut/e2e/RetourApresVerificationE2ETest.java
+0daea473a813  src/test/java/fr/univ_amu/iut/fixture/EmpreinteDeDossier.java
 2704be62020a  src/test/java/fr/univ_amu/iut/fixture/JeuDeDonneesPassage.java
 5aae7e47d836  src/test/java/fr/univ_amu/iut/fixture/JeuDeDonneesPassageTest.java
 f533002f9258  src/test/java/fr/univ_amu/iut/fixture/JournalDeCapteur.java
 8a00f2d62738  src/test/java/fr/univ_amu/iut/fixture/SortieCapturee.java
+11620c9b06e8  src/test/java/fr/univ_amu/iut/fixture/SystemeDeFichiers.java
 c4ecf9dc9e9c  src/test/java/fr/univ_amu/iut/importation/AnalyseCoherenceTest.java
 7ccc080b8069  src/test/java/fr/univ_amu/iut/importation/AnalyseMelangeTest.java
 0dbc5fa9f554  src/test/java/fr/univ_amu/iut/importation/AnalyseurLogPRTest.java
