@@ -32,7 +32,7 @@ Le partage se fait sur un critère net : le crochet ne sait rien du diff, la por
 lancée plusieurs fois par lot. Elle deviendrait aussi un outil qui installe à chaque exécution, ce
 qu'un lecteur n'attend pas d'une commande qui dit « juger ».
 
-**Tout dans le crochet** - écarté. PMD coûte une à deux minutes ; les imposer à un `worktree add` pour
+**Tout dans le crochet** - écarté. PMD coûte vingt secondes sur un arbre neuf, neuf à chaud ; les imposer à un `worktree add` pour
 un lot de prose est le contraire du service rendu, et le crochet ne peut pas savoir ce que la branche
 contiendra.
 
