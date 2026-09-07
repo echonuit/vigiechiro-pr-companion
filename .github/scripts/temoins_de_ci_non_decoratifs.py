@@ -90,8 +90,13 @@ CONTRAT = {
     "garde": ".github/scripts/temoins_de_ci_non_decoratifs.py",
     "geste": "temoin decoratif : l auto-test d un garde de CI reste vert quand la detection est retiree",
     "population": "les gardes de .github/scripts et .github/assets nommes par un atelier, portant --auto-test et un point d entree",
-    "dispositif": "cliquet",
-    "seuil": "0, polarite=descend",
+    # ⟨`invariant` et non `cliquet` (#5498)⟩ Le critere est ecrit dans `dev-docs/ci-cd-release.md` :
+    # « c est un invariant, pas un cliquet : il n y a pas de marge a relever, et l echappatoire est
+    # une liste d exceptions NOMMEES ». Zero decoratif n a pas de marge, et l echappatoire est
+    # `HORS_PORTEE`. Les trois bancs remplissent les deux conditions et le declarent desormais
+    # pareil ; `verifie_contrat_obligatoire.py`, que la meme page decrit ainsi, declare de meme.
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
     "temoin": ".github/scripts/temoins_de_ci_non_decoratifs.py --auto-test",
     "decision": "ADR 4490",
 }
