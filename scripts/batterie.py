@@ -274,6 +274,13 @@ def engage(diff: list[str], racine: pathlib.Path | None = None) -> tuple[list[st
 
     Un garde etroit n a d ailleurs aucune raison legitime de s elargir pour se voir : c est a la porte
     de le savoir, pas a lui de le declarer.
+
+    **Ceci n est pas l inverse de l ADR 5398**, qui refuse qu une EXEMPTION s infere. Cette
+    ADR-la ecrit elle-meme pourquoi les deux sens ne se valent pas : une exemption inferee a tort
+    produit un faux VERT, invisible et dangereux, tandis qu un engagement de trop produit un faux
+    ROUGE, visible et sans danger. Inferer pour ELARGIR le compte va donc dans le sens sur. Le dire
+    ici parce qu un lecteur qui trouve « d office » a cote de « ne s infere pas » conclurait
+    autrement.
     """
     engages, ecartes = [], []
     for garde, chemins in gardes(racine):
