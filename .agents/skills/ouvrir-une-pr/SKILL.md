@@ -66,7 +66,7 @@ tableau doit, c'est la commande à lancer, pas l'inventaire.
 | `python3 scripts/adr/verifie_*.py` | dès qu'on touche une **ADR**, un **garde** ou une **javadoc** : douze gardes que `rapport.py` ne balaie pas, dont `verifie_contrats_tiennent.py`, qui confronte le seuil qu'un garde déclare **sur lui-même** au cliquet de son ADR |
 | `python3 scripts/methode/matrice-constitution.py --verifie` **et** `python3 scripts/methode/matrice-ergonomie.py --verifie` | dès qu'une **ADR** est écrite ou modifiée. Il y a **deux** matrices engendrées depuis les en-têtes : la constitution et les heuristiques. Écrire une ADR qui porte un `nielsen-N` périme la seconde sans toucher la première |
 | `python3 scripts/methode/couverture-relecture.py --marque <fichier>` | dès qu'une **javadoc** est touchée, tests compris |
-| `./mvnw -B -o test-compile pmd:pmd` **puis** `python3 scripts/adr/4617-code-mort-et-zone-de-test.py` | dès qu'on **ajoute du code** : le cliquet refuse si `target/pmd.xml` manque, donc il ne dit rien en local |
+| `./mvnw -B -o test-compile pmd:pmd` **puis** `python3 scripts/adr/4617-code-mort-et-zone-de-test.py` | **la porte le fait désormais** quand le diff porte du `.java` (#5405), en 20 s. À la main seulement si vous lancez le cliquet sans passer par elle : il refuse sans `target/pmd.xml`, et ce refus se classe « environnemental » alors qu'il peut porter un vrai dépassement de seuil |
 | `./mvnw test -Dtest=DocumentationAJourTest` | dès qu'une **ADR** est écrite ou modifiée, et dès qu'un **chiffre** change dans une doc. Le déclencheur disait « un chiffre » seul jusqu'au 2026-09-05, où une ADR neuve a rougi en CI sur `l_entete_d_une_adr_porte_son_titre` sans qu'aucun chiffre ait bougé : ce test tient vingt et un invariants de documentation, pas un seul |
 | `python3 .github/scripts/porte_du_job.py --auto-test` **puis** `python3 .github/scripts/verifie_portees_de_ci.py --auto-test` **puis** sans argument | dès qu'on touche un **atelier** ou la **portée** d'un job. Une portée qui ne correspond plus à rien ne rougit pas : elle fait écrire « sans objet » à un job qui aurait dû juger, et le job finit vert. Ces deux gardes vivent dans `.github/scripts/`, que le garde de cette page ne balaie pas encore : ils sont nommés ici à la main |
 
@@ -89,7 +89,9 @@ Si vous avez touché un **changement OpenSpec**, quatre gardes le tiennent :
 régénération accidentelle des compétences adoptées, `scripts/methode/verifie-sous-commandes-openspec.py` vérifie que
 les invocations citées existent, et `scripts/methode/verifie-version-openspec.py` que la ligne de commande épinglée
 est bien celle que les compétences déclarent. Les deux derniers ont besoin de l'outil épinglé :
-`npm ci --prefix .github/openspec` d'abord, sinon ils refusent en le disant.
+`npm ci --prefix .github/openspec` d'abord, sinon ils refusent en le disant, mais **le crochet
+`post-checkout` le fait à la création du worktree** depuis #5406, en une seconde. Ce geste ne reste
+dû que dans un arbre créé avant ce lot, ou si l'installation a échoué : elle le dit alors en une ligne.
 
 Si vous avez écrit ou modifié un **garde**, `scripts/methode/verifie-dependances-declarees.py` exige
 qu'il déclare ce dont il a besoin. Si vous avez prescrit un **outil externe** dans la méthode,
