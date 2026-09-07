@@ -163,6 +163,33 @@ def dans_un_corps_de_code(racine, ligne: int) -> bool:
     return ancetre_parmi(noeud_a_la_ligne(racine, ligne), CORPS_DE_CODE)
 
 
+def noeuds_de_type(racine, types) -> list:
+    """Tous les nœuds dont le type est dans `types`, dans l'ordre du fichier.
+
+    C'est ce que trois gardes obtenaient en équilibrant des accolades pour découper un corps de
+    méthode ou de `catch`. Le nœud porte son texte : `noeud.text.decode()` rend le corps exact, sans
+    qu'une accolade dans une chaîne ne déplace la fin (#5430).
+    """
+    trouves, a_voir = [], [racine]
+    while a_voir:
+        noeud = a_voir.pop()
+        if noeud.type in types:
+            trouves.append(noeud)
+        a_voir.extend(reversed(noeud.children))
+    return sorted(trouves, key=lambda n: n.start_byte)
+
+
+def arguments(appel) -> list:
+    """Les arguments d'un appel, découpés par la STRUCTURE et non aux virgules de niveau zéro.
+
+    L'équilibrage de parenthèses qu'employaient `5068` et `5278` compte une parenthèse dans un
+    littéral et coupe sur une virgule qui vit dans une chaîne. La liste d'arguments est un nœud, et
+    ses enfants nommés sont les arguments (#5430).
+    """
+    liste = next((e for e in appel.children if e.type == "argument_list"), None)
+    return [] if liste is None else [e for e in liste.named_children]
+
+
 def zones_illisibles(racine) -> list[tuple[int, int]]:
     """Les intervalles de lignes que la grammaire n'a pas su lire, bornes comprises.
 
@@ -223,6 +250,11 @@ TEMOIN = b"""class Exterieure {
         // L18 : encore dans le corps, APRES une accolade fermante posee dans une chaine.
         int x = 1;
     }
+
+    private void aide() {
+        // L23 : le corps d une methode PRIVEE, ce que 4974 et 5278 cherchent.
+        clic(cible(", ici"), autre(1, 2));
+    }
 }
 """
 
@@ -236,10 +268,29 @@ TEMOIN = b"""class Exterieure {
 _ATTENDU = {2: False, 6: False, 11: True, 16: True, 18: True}
 
 
+def _texte(noeuds) -> list[str]:
+    """Le texte de chaque nœud, ou sa représentation s'il n'en est pas un.
+
+    Sert aux cas de [verifie_grammaire] : sous un dispositif fautif, `arguments` peut rendre autre
+    chose que des nœuds, et un cas qui déréférencerait `.text` lèverait au lieu de rougir.
+    """
+    return [n.text.decode() if hasattr(n, "text") else str(n).strip() for n in noeuds]
+
+
 def verifie_grammaire() -> list[tuple[str, bool]]:
     """Les cas que la grammaire doit continuer de classer ainsi. Rend `(nom, réussi)`."""
     racine = arbre(TEMOIN).root_node
     dit = {ligne: dans_un_corps_de_code(racine, ligne) for ligne in _ATTENDU}
+    privees = [
+        n
+        for n in noeuds_de_type(racine, {"method_declaration"})
+        if b"private" in n.text.split(b"(")[0]
+    ]
+    corpsAide = privees[0].text.decode() if privees else ""
+    appels = noeuds_de_type(racine, {"method_invocation"})
+    clic = next((a for a in appels if a.text.startswith(b"clic(")), None)
+    argsDuClic = arguments(clic) if clic is not None else []
+    appelVide = next((a for a in appels if a.text.endswith(b"()")), None)
     return [
         ("L2, entre les membres d'une classe : hors corps", dit[2] is False),
         ("L6, entre les membres d'une classe IMBRIQUÉE : hors corps", dit[6] is False),
@@ -247,4 +298,19 @@ def verifie_grammaire() -> list[tuple[str, bool]]:
         ("L16, dans un corps de méthode : dedans", dit[16] is True),
         ("L18, après une accolade fermante DANS une chaîne : toujours dedans", dit[18] is True),
         ("le témoin lui-même est lisible", zones_illisibles(racine) == []),
+        # LES DEUX PRIMITIVES de #5430, éprouvées sur le même témoin.
+        ("une seule méthode PRIVÉE dans le témoin", len(privees) == 1),
+        ("son corps est rendu ENTIER, accolade de chaîne comprise", "clic(" in corpsAide),
+        (
+            "et il s'arrête à SA fermante, sans emporter la classe",
+            "class Exterieure" not in corpsAide,
+        ),
+        ("l'appel `clic` a DEUX arguments", len(argsDuClic) == 2),
+        # Robuste à dessein : un dispositif fautif rend autre chose qu'un nœud, et le cas doit
+        # ROUGIR plutôt que lever - un cas qui plante masque son verdict au lieu de le rendre.
+        (
+            "la virgule DANS la chaîne n'en fait pas un troisième",
+            _texte(argsDuClic[:1]) == ['cible(", ici")'],
+        ),
+        ("un appel sans argument en rend zéro", arguments(appelVide) == [] if appelVide else True),
     ]
