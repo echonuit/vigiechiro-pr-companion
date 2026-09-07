@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Le lecteur d'arbre des gardes : ce qu'un motif ne sait pas répondre sur du Java (chantier #5402).
 
-Trente-sept scripts lisent les 2 099 fichiers Java du dépôt, et soixante-sept des cent dix-neuf
+Trente-sept scripts lisent les 2 125 fichiers Java du dépôt, et soixante-sept des cent dix-neuf
 scripts d'outillage le font par expression régulière. Neuf **déclarent** leur approximation en toutes
 lettres, dont celui-ci, que ce module sert d'abord :
 
@@ -30,6 +30,21 @@ témoin au lieu de faire taire un garde.
 
 L'épinglage seul ne suffirait pas : il empêche la dérive subie, pas la dérive choisie. C'est le
 témoin qui rend un relèvement délibéré.
+
+## Quand la grammaire manque, ce module REFUSE et ne plante pas
+
+`LecteurAbsent` est levée si le module n'est pas importable par le python qui lance le garde, et son
+message dit quoi faire. Une `ModuleNotFoundError` nue ressemble à un défaut du changement en cours,
+et c'est le reproche que la docstring de `verifie-dependances-declarees.py` adresse à l'état d'avant
+l'issue #5008.
+
+Le cas n'est pas théorique : il est arrivé le lendemain de la livraison de ce module (#5424). En CI
+rien ne casse, `pip install --group gardes` installant dans le python du runner ; le défaut vit en
+local, c'est-à-dire là où l'on cherche ses erreurs.
+
+**Le message avertit du piège qui coûte le plus cher** : poser le module dans un venv ne sert à rien
+tant que les gardes sont lancés par un autre python, ce que font `scripts/batterie.py` et `lint.yml`.
+L'issue #5426 tranche la question de fond ; en attendant, la phrase évite l'heure perdue.
 
 ## Ce que « illisible » veut dire ici, et pourquoi un garde doit le compter
 
@@ -68,6 +83,35 @@ CORPS_DE_CODE = frozenset(
 )
 
 
+class LecteurAbsent(RuntimeError):
+    """La grammaire n'est pas importable par le python qui lance le garde.
+
+    Une exception NOMMÉE plutôt qu'un `SystemExit` levé ici : ce module est une bibliothèque, et un
+    `SystemExit` tuerait un appelant qui voulait seulement savoir. Le garde, lui, la rend en refus.
+
+    Elle ne se lève pas non plus à l'import du module : un garde qui importe le fonds commun sans
+    lire de Java n'a aucune raison d'échouer.
+    """
+
+
+# Ce que le refus dit, et pourquoi ces quatre lignes. La première nomme ce qui manque, la deuxième
+# reprend mot pour mot la formule du cliquet 4617 devant un `target/pmd.xml` absent, les deux
+# dernières disent quoi faire.
+#
+# **La quatrième ligne est celle qui coûte le plus cher à omettre.** Poser le module dans un venv ne
+# sert à rien tant que les gardes sont lancés par un autre python, ce que font `scripts/batterie.py`
+# et `lint.yml`, qui appellent `python3` du PATH. Un contributeur qui installe puis relance sans
+# changer de python voit la même erreur et conclut que l'installation a échoué. L'issue #5426 tranche
+# la question de fond ; en attendant, la phrase évite l'heure perdue.
+_REFUS = (
+    "Le lecteur d arbre est absent : `tree_sitter_language_pack` n est pas importable.\n"
+    "Ce garde REFUSE plutot que de conclure sur ce qu il n a pas lu.\n"
+    "Lancez d abord : pip install --group gardes\n"
+    'Et verifiez que c est le MEME python qui lance le garde : `python3 -c "import '
+    'tree_sitter_language_pack"` doit passer (issue #5426).'
+)
+
+
 @functools.cache
 def _analyseur():
     """L'analyseur Java, construit une fois par processus.
@@ -77,7 +121,10 @@ def _analyseur():
     secondes au tout premier lancement d'un environnement neuf, où il ne mesure que la compilation du
     bytecode de Python.
     """
-    from tree_sitter_language_pack import get_parser
+    try:
+        from tree_sitter_language_pack import get_parser
+    except ImportError as absent:
+        raise LecteurAbsent(_REFUS) from absent
 
     return get_parser("java")
 

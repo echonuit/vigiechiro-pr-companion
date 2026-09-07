@@ -35,7 +35,13 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import RACINE_DEPOT, RACINES_ANCREES, rapporte, sort_si_contrat_demande
-from _commun.arbre import arbre, dans_un_corps_de_code, verifie_grammaire, zones_illisibles
+from _commun.arbre import (
+    LecteurAbsent,
+    arbre,
+    dans_un_corps_de_code,
+    verifie_grammaire,
+    zones_illisibles,
+)
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4472"
@@ -235,6 +241,49 @@ def _auto_test() -> int:
     # relevement qui les renommerait doit rougir ICI plutot que vider la population en silence.
     cas += [(f"grammaire : {nom}", ok) for nom, ok in verifie_grammaire()]
 
+    # L ABSENCE DU LECTEUR, simulee et non provoquee. Desinstaller le module pour eprouver ce cas
+    # casserait l environnement de qui lance l auto-test, et un cas qui exige une manipulation
+    # exterieure est un cas qu on ne joue pas. Poser `None` dans `sys.modules` fait echouer l import
+    # sans rien toucher au disque, et le cache de l analyseur se vide pour que l import soit retente.
+    from _commun import arbre as module_arbre
+
+    module_arbre._analyseur.cache_clear()
+    garde = sys.modules.get("tree_sitter_language_pack")
+    sys.modules["tree_sitter_language_pack"] = None
+    try:
+        try:
+            module_arbre.arbre(b"class A {}")
+            leve, message = False, "aucune exception : le lecteur absent n a pas ete remarque"
+        except LecteurAbsent as absent:
+            leve, message = True, str(absent)
+        except ImportError as nue:
+            # Le cas que la MUTATION produit : sans l enveloppe, l `ImportError` remonte telle
+            # quelle, et c est bien une `ImportError`. L attraper ici fait RAPPORTER un cas rouge au lieu de laisser le temoin
+            # exploser - un harnais qui meurt ne dit pas lequel de ses controles a rougi (ADR 4918).
+            leve, message = False, f"{type(nue).__name__} nue : {nue}"
+    finally:
+        if garde is None:
+            del sys.modules["tree_sitter_language_pack"]
+        else:
+            sys.modules["tree_sitter_language_pack"] = garde
+        module_arbre._analyseur.cache_clear()
+
+    cas.append(("sans le lecteur, une LecteurAbsent est levee, pas une trace nue", leve))
+    cas.append(
+        ("le refus NOMME la distribution qui manque", "tree_sitter_language_pack" in message)
+    )
+    cas.append(("le refus dit QUOI FAIRE", "pip install --group gardes" in message))
+    cas.append(("et il avertit du piege du python qui lance", "MEME python" in message))
+
+    # Le lecteur est bien revenu : sans ce controle, un echec de restauration ferait passer tous les
+    # cas suivants pour verts dans un processus qui ne sait plus lire.
+    cas.append(
+        (
+            "le lecteur est restaure apres la simulation",
+            module_arbre.arbre(b"class A {}") is not None,
+        )
+    )
+
     for nom, ok in cas:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
@@ -288,7 +337,13 @@ if __name__ == "__main__":
     # UNE passe, dont sortent le verdict et ce que la grammaire n a pas su lire. Ce dernier se DIT
     # sur la sortie d erreur avant le verdict : le compte est nul aujourd hui, et le jour ou il ne
     # le sera plus, le silence serait un faux vert.
-    listes, zones = analyse()
+    try:
+        listes, zones = analyse()
+    except LecteurAbsent as absent:
+        # Un REFUS, pas une trace. Une `ModuleNotFoundError` nue ressemble a un defaut du changement
+        # en cours, et c est le reproche que la docstring de `verifie-dependances-declarees.py` fait
+        # a l etat d avant #5008. Le message dit ce qui manque ET quoi faire.
+        raise SystemExit(str(absent)) from absent
     for zone in zones:
         print(f"zone non lue par la grammaire : {zone}", file=sys.stderr)
     if "--releve" in sys.argv:
