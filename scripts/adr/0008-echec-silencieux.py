@@ -98,6 +98,16 @@ CONTRAT = {
     "seuil": "0, polarite=descend",
     "temoin": "scripts/adr/verifie_scripts.py#test_0008_echec_silencieux",
     "decision": "ADR 0008",
+    # Lire par l arbre coute, et #5400 retire du temps a la batterie. Declarer les chemins rend la
+    # hausse indolore sur toute demande qui ne touche pas de Java (ADR 5340). Un `chemins`
+    # INCOMPLET tait le garde en silence, la ou son absence le fait LANCER.
+    "chemins": """
+src/main/java/**
+src/test/java/**
+scripts/adr/0008-echec-silencieux.py
+scripts/_commun/**
+dev-docs/decisions/0008-aucun-echec-silencieux-severite-a-l-emission.md
+""",
 }
 
 

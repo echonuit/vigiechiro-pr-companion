@@ -214,9 +214,17 @@ def appels_d_attente(racine_ast) -> list:
 
 
 def sites(source: str) -> list[int]:
-    """Les lignes des `Attente.que` dont l argument lit le graphe de scene."""
+    """Les lignes des `Attente.que` dont l argument lit le graphe, depuis une SOURCE.
+
+    Garde une source en entree parce que les cas d auto-test et le banc externe l exercent ainsi ;
+    le corpus, lui, passe par [sites_de] pour ne parser qu une fois.
+    """
+    return sites_de(arbre(source.encode("utf-8")).root_node)
+
+
+def sites_de(racine_ast) -> list[int]:
+    """Les lignes des `Attente.que` dont l argument lit le graphe, depuis un ARBRE deja lu."""
     trouves = []
-    racine_ast = arbre(source.encode("utf-8")).root_node
     aides = aides_qui_lisent(racine_ast)
     for appel in appels_d_attente(racine_ast):
         if appel.child_by_field_name("name").text.decode() == "queSurLeFil":
@@ -234,6 +242,25 @@ def sites(source: str) -> list[int]:
     return trouves
 
 
+def analyse(racine: pathlib.Path | None = None) -> tuple[list[str], int, list[str]]:
+    """UNE passe sur le corpus, TROIS sorties : les suspects, les appels lus, les zones illisibles.
+
+    Une par fonction coutait TROIS parsings du meme arbre, soit 2,49 s contre 0,93 s mesurees le
+    2026-09-07. La lecon vient de `4472`, qui a fait le meme chemin : le depot retire du temps a sa
+    batterie en ce moment meme (#5400), et un garde qui en rajoute par negligence irait contre ce
+    travail.
+    """
+    racine = TESTS_ANCRES if racine is None else racine
+    fautifs, combien, zones_dites = [], 0, []
+    for fichier in sorted(racine.rglob("*.java")):
+        racine_ast = arbre(fichier.read_bytes()).root_node
+        ou = fichier.relative_to(racine)
+        zones_dites += [f"{ou}:{d}-{b}" for d, b in zones_illisibles(racine_ast)]
+        combien += len(appels_d_attente(racine_ast))
+        fautifs += [f"{ou}:{ligne}" for ligne in sites_de(racine_ast)]
+    return fautifs, combien, zones_dites
+
+
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
     """Les sites fautifs sous `racine`, nommes par leur chemin et leur ligne.
 
@@ -241,21 +268,12 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     un detecteur qui ne lit qu un chemin fixe n est tenu que par son cliquet, c est-a-dire par un
     compte qui ne monte pas.
     """
-    racine = TESTS_ANCRES if racine is None else racine
-    fautifs = []
-    for fichier in sorted(racine.rglob("*.java")):
-        source = fichier.read_text(encoding="utf-8", errors="replace")
-        ou = fichier.relative_to(racine)
-        fautifs += [f"{ou}:{ligne}" for ligne in sites(source)]
-    return fautifs
+    return analyse(racine)[0]
 
 
 def lus(racine: pathlib.Path | None = None) -> int:
     """Le nombre d appels a `Attente` lus : ce que le garde a REGARDE, pas ce qu il a retenu."""
-    racine = TESTS_ANCRES if racine is None else racine
-    return sum(
-        len(appels_d_attente(arbre(f.read_bytes()).root_node)) for f in racine.rglob("*.java")
-    )
+    return analyse(racine)[1]
 
 
 def _auto_test() -> int:
@@ -469,15 +487,11 @@ if __name__ == "__main__":
     # Le cliquet est a ZERO : un garde qui ne sait pas lire rendrait zero suspect, et ce zero-la
     # serait indiscernable d un succes. Il REFUSE plutot, et il DIT ce que la grammaire n a pas lu.
     try:
-        fautifs = suspects()
-        combien = lus()
+        fautifs, combien, zones = analyse()
     except LecteurAbsent as absent:
         raise SystemExit(str(absent)) from absent
-    for fichier in sorted(TESTS_ANCRES.rglob("*.java")):
-        for depart, borne in zones_illisibles(arbre(fichier.read_bytes()).root_node):
-            print(
-                f"zone non lue par la grammaire : {fichier.name}:{depart}-{borne}", file=sys.stderr
-            )
+    for zone in zones:
+        print(f"zone non lue par la grammaire : {zone}", file=sys.stderr)
     raise SystemExit(
         rapporte(
             "5278",
