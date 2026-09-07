@@ -41,7 +41,11 @@ issues sur le même sujet, écrites depuis deux angles, ne se ressemblent pas.
 2. CHERCHER  les EPIC vivants qui couvriraient deja le besoin, et les issues FERMEES
              qui l ont differe. « differe de #N » signale un parent dont la moitie
              restante n a plus de toit.
-3. VERIFIER  ce qui est deja pris : gh issue list --assignee "*", et git worktree list.
+3. VERIFIER  ce qui est deja pris, par TROIS signaux qui ne repondent pas a la meme
+             question. Aucun ne suffit, et les confondre fait prendre une issue tenue :
+             - `gh issue list --assignee "*"` : dit qu une issue est prise, JAMAIS par qui.
+             - `git worktree list` : dit qu une SESSION de ce poste la tient, et laquelle.
+             - demander aux pairs : le seul qui traverse les machines.
              Une revendication ANCIENNE se verifie au lieu de se croire.
 4. DECIDER   du rattachement : une issue appartient au chantier qui traite sa CAUSE,
              pas a celui qui a remarque son symptome.
@@ -103,6 +107,42 @@ l'**investigation d'un défaut**, l'**audit global**.
   vieillit, et une part de ses arêtes est inférée. Il **oriente** la recherche, il ne remplace pas
   la lecture. Un zéro se confirme à la main.
 
+## Les trois signaux, et ce que chacun répond
+
+Plusieurs sessions travaillent souvent ce dépôt en même temps. « Cette issue est-elle prise ? » et
+« est-elle prise **par moi** ? » sont deux questions, et un seul des trois signaux répond à la seconde
+sans sortir de la machine.
+
+| Signal | Répond « c'est pris » ? | Répond « par qui » ? |
+|---|---|---|
+| `gh issue list --assignee "*"` | oui | **non** |
+| `git worktree list` | oui, sur ce poste | **oui**, par le nom de branche |
+| demander aux pairs | oui | oui, et **hors de ce poste** |
+
+**L'assignee ne peut pas départager deux sessions.** Toutes écrivent sous le même compte : relevé le
+2026-09-07, les issues assignées du dépôt le sont **toutes au même nom**. Une issue prise par un pair
+et une prise par soi rendent la même ligne. C'est le même fait que l'ADR 5414 nomme : la forge
+enregistre le compte, jamais la session.
+
+**Le worktree, lui, distingue - et il est sous-employé.** Relevé le même jour : **cinquante
+worktrees, dont trente-neuf portent une branche nommée par son numéro d'issue**. Le travail en cours
+d'un pair y est lisible, avec son sujet, sans rien demander à personne.
+
+```bash
+git worktree list | grep -oE '\[[^]]+\]'     # les branches, donc les numeros d issue
+```
+
+Ce qu'il ne voit pas, et qu'il faut savoir avant de s'y fier : il ne montre que **cette machine**, et
+qu'une session ayant **déjà créé** son worktree. Dans la collision du 6 septembre, où deux blocs ont
+été déposés à vingt-trois secondes d'écart, il n'aurait probablement rien montré.
+
+**Demander aux pairs est le seul signal qui traverse les machines**, et c'est celui que
+[`ouvrir-une-issue`](../ouvrir-une-issue/SKILL.md) institue à la prise. Ici il sert en amont : avant
+de décider qu'il y a lieu d'ouvrir ou de prendre, on peut déjà savoir qui travaille quoi.
+
+**Aucun garde ne vérifiera que vous avez regardé.** Un signal consulté ne laisse aucune trace, et
+l'ADR 5414 en fait une décision plutôt qu'un oubli : une règle que rien ne peut garder se déclare.
+
 ## Signaux d'alerte : on s'arrête
 
 | Pensée | Réalité |
@@ -111,6 +151,8 @@ l'**investigation d'un défaut**, l'**audit global**.
 | « Le graphe rend zéro, donc ça n'existe pas » | Zéro sur du code externe est une absence de modèle |
 | « Cette issue est libre, personne n'est assigné » | L'assignation est muette. Lire `git worktree list` |
 | « Elle est revendiquée depuis longtemps » | Vérifier : branche vivante ? PR ouverte ? |
+| « L'assignee dit que c'est pris, donc je sais par qui » | Il dit le **compte**, jamais la session. Toutes écrivent sous le même |
+| « `ListAgents` me montre mes pairs, je saurai » | Il dit qui est occupé **maintenant**, pas qui détient une issue. Et il ne rend pas la même population selon l'endroit d'où on l'interroge |
 | « J'ai compté 28 occurrences » | Un comptage n'est pas une lecture |
 | « Ce lot tiendra bien sous une case à cocher » | Combien de PR ? Plus de deux, il lui faut un sous-chantier |
 | « Les autres EPIC font comme ça » | La forme observée enseigne l'erreur : #4511 porte sept lots et zéro sous-chantier |
