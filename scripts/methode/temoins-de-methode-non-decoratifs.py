@@ -88,6 +88,62 @@ def declare_un_contrat(chemin: pathlib.Path) -> bool:
     )
 
 
+# Les gardes de `scripts/methode` qui declarent un CONTRAT et que ce banc ne mute PAS, avec la
+# raison et l ADR qui la decide. C est l idiome de `verifie_temoins_non_decoratifs.HORS_PORTEE`, que
+# le banc voisin porte depuis longtemps et qui manquait ici (#5479).
+#
+# Ces deux-la ne sont dans AUCUN atelier, et c est assume : l ADR 5157 ecrit qu « une regle indexee
+# sur la CI est muette la ou la CI est muette », et qu « un outil qu on lance a la main garde un
+# dispositif ». Le corpus de ce banc se derivant de `lint.yml`, ils en sortent par construction.
+#
+# La liste est CONFRONTEE dans les deux sens : une entree qui ne correspond plus a rien fait rougir,
+# et un garde ni couvert ni exempte aussi. Sans quoi elle serait le tapis sous lequel on pousse ce
+# qu on ne veut pas muter - le mot du banc voisin, et il vaut ici.
+HORS_PORTEE: dict[str, str] = {
+    "convertit-adr-okf.py": "dans aucun atelier ; `generateur` sans mode, il rend un apercu et ne "
+    "juge rien (ADR 5157)",
+    "releve-des-secrets.py": "dans aucun atelier ; `rapport` sans mode, il releve et ne juge pas "
+    "(ADR 5157)",
+}
+
+
+def exemptions_perimees(
+    racine: pathlib.Path | None = None, exemptions: dict[str, str] | None = None
+) -> list[str]:
+    """Les entrees de `HORS_PORTEE` qui ne correspondent plus a aucun fichier du dossier.
+
+    C est la moitie qui fait d une liste un INVENTAIRE : sans elle, une entree survivrait a ce
+    qu elle exempte et couvrirait alors un garde neuf portant le meme nom, en silence. Meme
+    exigence que l ADR 5398 pose sur la porte locale.
+    """
+    racine = racine or RACINE
+    exemptions = HORS_PORTEE if exemptions is None else exemptions
+    return sorted(n for n in exemptions if not (racine / "scripts" / "methode" / n).exists())
+
+
+def sans_domicile(
+    racine: pathlib.Path | None = None,
+    dedans: set[str] | None = None,
+    exemptions: dict[str, str] | None = None,
+) -> list[str]:
+    """Les gardes du dossier qui declarent un CONTRAT, hors du corpus et hors des exemptions.
+
+    Un garde oublie et un garde deliberement hors champ rendaient le meme resultat - rien - et
+    c est ce qui a laisse `scripts/batterie.py` invisible jusqu a #5397. Cette confrontation les
+    separe : le second est NOMME, le premier fait rougir.
+    """
+    racine = racine or RACINE
+    dedans = set(corpus()) if dedans is None else dedans
+    exemptions = HORS_PORTEE if exemptions is None else exemptions
+    trouves = []
+    for f in sorted((racine / "scripts" / "methode").glob("*.py")):
+        if f.name in exemptions or f"methode/{f.name}" in dedans:
+            continue
+        if declare_un_contrat(f):
+            trouves.append(f.name)
+    return trouves
+
+
 def corpus() -> list[str]:
     """Les gardes que `lint.yml` lance sous `scripts/`, derives et non enumeres.
 
@@ -261,6 +317,39 @@ def _auto_test() -> int:
     verifie(
         "le corpus prend la porte, qui vit hors de scripts/methode", "batterie.py" in corpus(), True
     )
+    # ⟨#5479⟩ Un garde du dossier qui declare un CONTRAT est soit dans le corpus, soit EXEMPTE
+    # avec sa raison. Sans cette confrontation, un garde oublie et un garde deliberement hors champ
+    # rendent le meme resultat : rien. C est ce qui est arrive a `scripts/batterie.py` jusqu a #5397.
+    verifie("aucun garde du dossier ne sort du compte en silence", sans_domicile(), [])
+    verifie("aucune exemption n a survécu à son motif", exemptions_perimees(), [])
+
+    # ⟨les DEUX confrontations, sur un depot fabrique⟩ Sur le depot reel, les deux cas ci-dessus sont
+    # vrais A VIDE : aucun garde ne sort du compte, et aucune exemption n a peri. Un cas qui ne peut
+    # pas rougir ne prouve rien - le defaut consigne en #5418 - donc on fabrique les deux situations.
+    with tempfile.TemporaryDirectory(prefix="vc-hors-portee-") as bac:
+        faux = pathlib.Path(bac)
+        (faux / "scripts" / "methode").mkdir(parents=True)
+        contrat = '\nCONTRAT = {"geste": "x", "dispositif": "invariant"}\n'
+        (faux / "scripts" / "methode" / "oublie.py").write_text(contrat, encoding="utf-8")
+        (faux / "scripts" / "methode" / "exempte.py").write_text(contrat, encoding="utf-8")
+
+        verifie(
+            "un garde a CONTRAT ni couvert ni exempte est nomme",
+            sans_domicile(faux, dedans=set(), exemptions={}),
+            ["exempte.py", "oublie.py"],
+        )
+        verifie(
+            "le meme, une fois exempte, ne l est plus",
+            sans_domicile(
+                faux, dedans=set(), exemptions={"exempte.py": "raison", "oublie.py": "raison"}
+            ),
+            [],
+        )
+        verifie(
+            "une exemption qui ne correspond a aucun fichier est nommee",
+            exemptions_perimees(faux, {"disparu.py": "raison", "exempte.py": "raison"}),
+            ["disparu.py"],
+        )
     # ⟨le filtre par CONTRAT⟩ `lint.yml` lance aussi `scripts/graphify/rebuild.py` et
     # `scripts/mkdocs/bandeau_adr.py`, qui PRODUISENT sans juger. Sans ce filtre, l elargissement du
     # motif les compterait comme des gardes, et le banc muterait un generateur de graphe.
