@@ -144,6 +144,45 @@ def sans_domicile(
     return trouves
 
 
+# Les trois bancs de mutation du depot, un par famille de gardes. Ils font la MEME chose - neutraliser
+# une detection et exiger que le temoin rougisse - et #5498 a mesure qu ils ne le DECLARAIENT pas
+# pareil : deux disaient `cliquet`, celui-ci `invariant`, pour un comportement identique.
+#
+# Le critere qui departage est ecrit dans `dev-docs/ci-cd-release.md` a propos de
+# `verifie_contrat_obligatoire.py` : « c est un invariant, pas un cliquet : il n y a pas de marge a
+# relever, et l echappatoire est une liste d exceptions NOMMEES ». Les trois remplissent les deux
+# conditions - leur nombre est zero decoratif, sans marge, et leur echappatoire est `HORS_PORTEE`.
+LES_TROIS_BANCS = (
+    "scripts/adr/verifie_temoins_non_decoratifs.py",
+    "scripts/methode/temoins-de-methode-non-decoratifs.py",
+    ".github/scripts/temoins_de_ci_non_decoratifs.py",
+)
+
+
+def declarations_des_bancs(racine: pathlib.Path | None = None) -> list[tuple[str, str, str]]:
+    """Ce que chaque banc declare : son nom, son dispositif, son seuil.
+
+    Derive du fichier plutot que recopie, pour qu une divergence se voie au lieu de se supposer.
+    """
+    racine = racine or RACINE
+    rendu = []
+    for chemin in LES_TROIS_BANCS:
+        arbre = ast.parse((racine / chemin).read_text(encoding="utf-8"))
+        for noeud in ast.walk(arbre):
+            if not (isinstance(noeud, ast.Assign) and isinstance(noeud.value, ast.Dict)):
+                continue
+            if not any(getattr(c, "id", "") == "CONTRAT" for c in noeud.targets):
+                continue
+            d = {
+                k.value: getattr(v, "value", None)
+                for k, v in zip(noeud.value.keys, noeud.value.values)
+                if hasattr(k, "value")
+            }
+            rendu.append((chemin.split("/")[-1], str(d.get("dispositif")), str(d.get("seuil"))))
+            break
+    return rendu
+
+
 def corpus() -> list[str]:
     """Les gardes que `lint.yml` lance sous `scripts/`, derives et non enumeres.
 
@@ -322,6 +361,22 @@ def _auto_test() -> int:
     # rendent le meme resultat : rien. C est ce qui est arrive a `scripts/batterie.py` jusqu a #5397.
     verifie("aucun garde du dossier ne sort du compte en silence", sans_domicile(), [])
     verifie("aucune exemption n a survécu à son motif", exemptions_perimees(), [])
+    # ⟨#5498⟩ Les trois bancs font la meme chose : ils doivent la declarer pareil, sans quoi aucun
+    # dispositif ne les retrouve ensemble.
+    declarations = declarations_des_bancs()
+    # ⟨le compte AVANT l ensemble⟩ Sans lui, une derivation qui ne lirait qu un seul banc rendrait
+    # un ensemble d un element, qui satisfait les deux attentes suivantes sans rien prouver.
+    verifie("les trois bancs sont bien lus", len(declarations), 3)
+    verifie(
+        "les trois bancs déclarent le même dispositif",
+        sorted({d for _, d, _ in declarations}),
+        ["invariant"],
+    )
+    verifie(
+        "et le même genre de seuil",
+        sorted({s for _, _, s in declarations}),
+        ["(sans objet)"],
+    )
 
     # ⟨les DEUX confrontations, sur un depot fabrique⟩ Sur le depot reel, les deux cas ci-dessus sont
     # vrais A VIDE : aucun garde ne sort du compte, et aucune exemption n a peri. Un cas qui ne peut

@@ -794,8 +794,13 @@ CONTRAT = {
     # ici ; ils ont desormais leur banc, `.github/scripts/temoins_de_ci_non_decoratifs.py` (#5254).
     "population": "les gardes de scripts/adr que verifie_scripts.py charge, ET ceux du MEME "
     "dossier qui portent leur propre --auto-test sans etre charges par lui",
-    "dispositif": "cliquet",
-    "seuil": "0, polarite=descend",
+    # ⟨`invariant` et non `cliquet` (#5498)⟩ Le critere est ecrit dans `dev-docs/ci-cd-release.md` :
+    # « c est un invariant, pas un cliquet : il n y a pas de marge a relever, et l echappatoire est
+    # une liste d exceptions NOMMEES ». Zero decoratif n a pas de marge, et l echappatoire est
+    # `HORS_PORTEE`. Les trois bancs remplissent les deux conditions et le declarent desormais
+    # pareil ; `verifie_contrat_obligatoire.py`, que la meme page decrit ainsi, declare de meme.
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
     "temoin": "scripts/adr/verifie_temoins_non_decoratifs.py --auto-test",
     "decision": "ADR 4490",
 }
