@@ -16,7 +16,7 @@ erreur qui ressemble à un défaut du changement en cours ». Le même mécanism
 | `.github/openspec/node_modules` | absent de tout worktree neuf | `npm ci --prefix .github/openspec` | **2 s** |
 | `ruff` | absent du poste | venv + `ruff==0.16.5` | **4 s** |
 | `graphifyy` | absent du poste **et** du runner | `uv tool install graphifyy` | non mesurée |
-| `target/pmd.xml` | absent tant que PMD n'a pas tourné | `./mvnw -B -o test-compile pmd:pmd` | ~1-2 min |
+| `target/pmd.xml` | absent tant que PMD n'a pas tourné | `./mvnw -B -o test-compile pmd:pmd` | **20 s** (9 s à chaud) |
 
 Les durées sont des mesures `date +%s` autour de la commande, cache chaud, pas des estimations.
 
@@ -41,7 +41,7 @@ un refus à interpréter.
 Trois familles, et elles n'appellent pas le même geste :
 
 - **déclaré et bon marché** (openspec, ruff) : posé sans discussion, 6 secondes au total ;
-- **déclaré et cher** (`target/pmd.xml`, 1 à 2 minutes) : posé **seulement si le diff touche du
+- **déclaré et cher** (`target/pmd.xml`, 20 secondes sur un arbre neuf, 9 à chaud) : posé **seulement si le diff touche du
   `.java`** - la porte le sait déjà, c'est sa raison d'être ;
 - **irréductible** (un paquet réel, une carte SD montée) : inchangé. La ligne de refus reste le bon
   geste, et la porte la rend déjà bien.

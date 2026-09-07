@@ -33,7 +33,7 @@ changement.
 La porte SHALL décider de poser un prérequis coûteux d'après ce que le diff touche, et non
 systématiquement.
 
-`target/pmd.xml` demande une à deux minutes, contre deux à six secondes pour les autres. L'imposer à
+`target/pmd.xml` demande vingt secondes sur un arbre neuf, neuf à chaud, contre deux à six secondes pour les autres. L'imposer à
 un lot qui ne touche que de la prose serait le contraire du service rendu. La porte sait déjà dériver
 ce qu'un diff engage : c'est sa raison d'être ([ADR 5340]).
 

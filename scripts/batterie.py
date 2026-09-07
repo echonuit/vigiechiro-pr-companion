@@ -243,6 +243,21 @@ def engage_java(diff: list[str]) -> list[str]:
     return sorted(engagees)
 
 
+def engage_pmd(diff: list[str]) -> bool:
+    """Ce diff demande-t-il un rapport PMD ?
+
+    `4617` REFUSE quand `target/pmd.xml` manque, et ce refus est sa qualite - « ce garde REFUSE
+    plutot que de conclure sur ce qu il n a pas lu ». Mais rien ne produisait ce rapport en local :
+    il se taisait donc a chaque lot Java, et un refus repete se classe « environnemental ». Il a
+    ainsi tu six fois de suite un vrai depassement de seuil le 2026-09-06 (#5405).
+
+    **Seulement si le diff porte du `.java`.** Mesure du 2026-09-07 : 20 s sur un arbre neuf, 9 s a
+    chaud. C est peu au regard d une minute de CI, et beaucoup au regard des 6 s que coute le reste
+    de la preparation - assez pour qu on ne le paie pas sur un lot de prose.
+    """
+    return any(f.endswith(".java") for f in diff)
+
+
 def engage(diff: list[str], racine: pathlib.Path | None = None) -> tuple[list[str], list[str]]:
     """Ce que ce diff engage, et ce qu il n engage pas. Sans `chemins`, on ENGAGE.
 
@@ -356,6 +371,30 @@ def rendre(
 
     if not lance:
         return 0
+
+    # ⟨la porte POSE ce qui est cher et conditionnel⟩ Le crochet `post-checkout` pose ce qui est bon
+    # marche - six secondes - a la creation d un worktree (#5406). PMD, lui, depend de ce que le diff
+    # touche, et la porte est le seul endroit qui le sache.
+    if engage_pmd(diff):
+        print()
+        print("  Rapport PMD : `4617` REFUSE sans lui, et se classerait « environnemental ».")
+        depart_pmd = __import__("time").time()
+        rendu = subprocess.run(
+            ["./mvnw", "-B", "-o", "-q", "test-compile", "pmd:pmd"],
+            cwd=racine or RACINE,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        mis = __import__("time").time() - depart_pmd
+        if rendu.returncode == 0:
+            print(f"    produit en {mis:.0f} s")
+        else:
+            # Dire, et poursuivre. Une preparation muette qui echoue rendrait la porte MOINS sure
+            # qu avant : le lecteur croirait l environnement complet, et `4617` refuserait sans qu on
+            # sache si c est le rapport ou le code.
+            print(f"    ECHEC apres {mis:.0f} s : `./mvnw -o test-compile pmd:pmd`.")
+            print("    `4617` refusera donc, et son refus ne dira RIEN de ce diff.")
 
     print()
     # ⟨on va AU BOUT, et on rend tous les rouges⟩ La premiere ecriture s arretait au premier refus,
@@ -514,6 +553,20 @@ def _auto_test() -> int:
             """),
             encoding="utf-8",
         )
+
+        # ⟨PMD se paie sur le Java, et seulement la⟩ Les deux sens, car un dispositif qui rendrait
+        # toujours vrai passerait le premier cas sans rien trier (#5405).
+        for diff, attendu, libelle in (
+            (["src/main/java/X.java"], True, "un diff Java demande le rapport PMD"),
+            (["src/test/java/XTest.java"], True, "un diff de test Java aussi"),
+            (["dev-docs/x.md"], False, "un diff de prose ne le paie PAS"),
+            ([], False, "un diff vide non plus"),
+        ):
+            if engage_pmd(diff) != attendu:
+                print(f"  ✘ {libelle}")
+                echecs = 1
+            else:
+                print(f"  ✔ {libelle}")
 
         # Les deux moities de la regle, sur le MEME garde declarant : engage quand ses chemins sont
         # touches, ecarte quand ils ne le sont pas. Un seul des deux cas serait passe par une porte
