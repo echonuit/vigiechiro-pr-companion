@@ -2010,9 +2010,14 @@ def test_resserre_cliquets_appelle_le_rapport() -> None:
     signature = resserre.__doc__ is not None
     _verifie("resserre_cliquets se charge a cote de rapport", signature, True)
     _verifie("collecter() rend le nombre de listes que resserre_cliquets deballe", len(attendus), 4)
+    # ⟨on COMPARE, on n INDEXE pas⟩ Sous mutation, la fonction neutralisee rend `[]` : `attendus[0]`
+    # levait alors une IndexError, et le harnais entier mourait AVANT que l assertion ne puisse
+    # echouer. Le banc classait donc ce garde « non concluant » plutot que tenu - un rouge pour la
+    # mauvaise raison ne prouve rien (ADR 4918). La forme qui suit echoue par l assertion, quelle que
+    # soit la longueur de ce que `collecter` rend (#5476).
     _verifie(
         "et l executeur injecte a bien traverse l analyse",
-        attendus[0],
+        attendus[0] if attendus else None,
         [("0099", "42", 2, 5, "ok")],
     )
     # ⟨le sens qui manquait⟩ Les cas ci-dessus disent ce que `collecter()` REND ; aucun ne disait ce
