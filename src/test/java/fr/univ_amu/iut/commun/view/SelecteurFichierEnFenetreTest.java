@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.GesteVisible;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -141,10 +142,8 @@ class SelecteurFichierEnFenetreTest {
         // Le contrat d'`enregistrerFichier` ne prend AUCUN dossier de départ - c'est vrai du natif
         // aussi - donc le dialogue s'ouvre sur le dossier personnel. On saisit le bac pour ne pas
         // dépendre de la machine, en REMPLAÇANT le texte : `write` ajoute au champ, il ne le vide pas.
-        robot.clickOn("#" + ContenuDesignation.ID_CHEMIN)
-                .push(KeyCode.CONTROL, KeyCode.A)
-                .write(bac.toString())
-                .push(KeyCode.ENTER);
+        GesteVisible.remplacerLeTexte(robot, "#" + ContenuDesignation.ID_CHEMIN, bac.toString());
+        robot.push(KeyCode.ENTER);
         robot.clickOn("#" + ContenuDesignation.ID_VALIDER);
 
         Attente.que(() -> resultat.get() != null, "l'appel bloquant a rendu la main");

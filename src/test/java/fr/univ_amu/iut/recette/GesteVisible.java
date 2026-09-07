@@ -3,11 +3,13 @@ package fr.univ_amu.iut.recette;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextInputControl;
 import org.testfx.api.FxRobot;
 import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
@@ -38,6 +40,9 @@ public final class GesteVisible {
     /// Le temps laissé à la mise en page pour établir ses bornes. Généreux : ce délai n'est atteint
     /// que si la cible ne vient JAMAIS, cas où l'on veut un message plutôt qu'un silence.
     private static final int SECONDES_CADRE = 10;
+
+    /// De quoi laisser passer une mise en page, jamais de quoi masquer un blocage.
+    private static final long SELECTION_MS = 5_000;
 
     private GesteVisible() {}
 
@@ -142,6 +147,32 @@ public final class GesteVisible {
 
         robot.clickOn(cible);
         WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    /// Remplace le contenu du champ désigné par `texte`, et relit pour s'assurer de l'avoir fait.
+    ///
+    /// La sélection se pose sur le fil JavaFX, jamais au clavier : « tout sélectionner » est `⌘A` sur
+    /// macOS et `^A` ailleurs, et `SHORTCUT_DOWN` ne résout pas la différence puisque `TypeRobotImpl`
+    /// de TestFX 4.0.18 enfonce littéralement `KeyCode.SHORTCUT`, une touche virtuelle. La saisie,
+    /// elle, reste un geste du robot, donc visible dans un clip.
+    ///
+    /// La relecture finale est là parce que le défaut d'origine était silencieux : le récit est dans
+    /// [GesteVisibleRemplacementTest] (#5436).
+    public static void remplacerLeTexte(FxRobot robot, String selecteur, String texte) {
+        cliquer(robot, selecteur);
+        TextInputControl champ = robot.lookup(selecteur).queryAs(TextInputControl.class);
+
+        Attente.surLeFil(champ::selectAll, "sélectionner le contenu de « " + selecteur + " »", SELECTION_MS);
+        robot.write(texte);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Callable<String> relecture = champ::getText;
+        String lu = Attente.surLeFil(relecture, "relire « " + selecteur + " »", SELECTION_MS);
+        if (!texte.equals(lu)) {
+            throw new IllegalStateException("« " + selecteur + " » devait contenir « " + texte
+                    + " » et contient « " + lu + " ». Rendre la main ici reporterait l'échec sur"
+                    + " l'assertion suivante, qui l'annoncerait comme un défaut du dialogue.");
+        }
     }
 
     /// Amène le pointeur sur `cible` et y fait paraître son infobulle, pour qu'un clip la montre.
