@@ -356,7 +356,7 @@ publiée (`feat:` mineure, `fix:` patch, `BREAKING CHANGE:` majeure ; cf.
 - [ ] Module de feature déclaré comme service `ModuleDeFeature` dans les **deux** listes `ServiceLoader` (auto-découverte, cf. [Injection](injection.md#la-racine-de-composition)) - **pas** dans `RacineInjecteur` - et l'app démarre (`./mvnw javafx:run`).
 - [ ] Navigation branchée par contrat `Ouvrir*` si ouverte depuis un autre écran.
 - [ ] Capture + manifeste si l'écran est documenté.
-- [ ] Tests verts, **`./mvnw -B test-compile pmd:pmd`** puis le cliquet 4617 vert, et la couverture
+- [ ] Tests verts, le cliquet 4617 vert - **`scripts/batterie.py --lance` produit le rapport PMD** quand le diff porte du `.java` (#5405) ; à la main seulement hors de la porte - et la couverture
       tenue par `./mvnw -B verify -Djacoco.haltOnFailure=true`.
 - [ ] Si le chantier porte un changement OpenSpec, **la tâche réalisée est cochée** dans les commits
       du travail, et le corps de la demande la nomme.

@@ -45,7 +45,8 @@ Trois familles, et elles n'appellent pas le même geste :
 
 | famille | exemple | ce que le dépôt fait |
 |---|---|---|
-| déclarée, posable | l'outil OpenSpec, le `.venv` et son groupe `gardes` | il la **pose**, à la création du worktree |
+| déclarée, posable, **dont un garde dépend** | l'outil OpenSpec, le `.venv` et son groupe `gardes` | il la **pose**, à la création du worktree |
+| déclarée, posable, **dont aucun garde ne dépend** | le groupe `recherche` et son `semgrep` | il la **propose** : la poser coûterait à chaque worktree pour un outil qu'on ouvre rarement |
 | déclarée, chère et conditionnelle | `target/pmd.xml` | il la pose **si le diff l'engage**, et la porte seule le sait |
 | non posable | un paquet réel, une carte montée, un module dans un interpréteur qu'on n'a pas choisi | il **refuse en le disant**, avec le remède |
 

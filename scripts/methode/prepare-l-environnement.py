@@ -18,6 +18,12 @@ crochet, et une commande qui empeche de creer un worktree coute plus qu elle ne 
 **Il ne ment jamais non plus.** Une preparation muette qui echoue rendrait la porte MOINS sure
 qu avant : le lecteur croirait l environnement complet. Chaque echec nomme la commande.
 
+**Il n importe que la STDLIB, et c est necessaire.** `post-commit` et `post-merge` choisissent leur
+interpreteur - « uv tool, pipx ou systeme » - parce qu ils lancent un script qui importe `graphify`.
+Celui-ci n a pas ce besoin et ne doit pas l avoir : il POSE ce dont les autres dependent, donc il ne
+peut dependre de rien. Un lecteur qui l alignerait sur ses voisins par souci de coherence le rendrait
+incapable de tourner sur le poste ou il sert le plus - celui ou rien n est encore installe.
+
 **Pourquoi en Python et non dans le crochet.** Ce dispositif n a **aucun gardien en CI** - le runner
 installe tout lui-meme et ne joue jamais ce chemin. Son auto-test porte donc seul, et trente lignes
 de bash se relisent la ou un script Python s eprouve.
