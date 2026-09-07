@@ -56,6 +56,12 @@
         <maven.dependency.plugin.version>3.11.0</maven.dependency.plugin.version>
         <cyclonedx.maven.plugin.version>2.9.3</cyclonedx.maven.plugin.version>
         <guava.version>33.4.8-jre</guava.version>
+        <!-- Spoon bâtit le modèle que `target/index-*.json` porte : types, méthodes et appels
+             RÉSOLUS, ce qu'aucun lecteur fichier par fichier ne sait rendre (#5464). Épinglée au
+             correctif : #5473 a mesuré que 11.1.0 et 11.2.1 se comportent identiquement sur les
+             commentaires, mais l'extracteur dépend de son JDT, dont les options de compliance
+             changent d'une version à l'autre. -->
+        <spoon.version>11.2.1</spoon.version>
         <exec.maven.plugin.version>3.6.3</exec.maven.plugin.version>
         <spotless.maven.plugin.version>3.10.1</spotless.maven.plugin.version>
         <palantir.java.format.version>2.91.0</palantir.java.format.version>
@@ -184,6 +190,20 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- L'extracteur d'index vit en PORTÉE TEST, sous `src/test/java/.../outillage/`, et
+             c'est délibéré : il produit un artefact que des gardes lisent, il n'est pas du produit.
+             Le livrable JavaFX ne l'emporte donc pas, et `mvn dependency:analyze` ne le compte pas
+             comme une dépendance de production inutilisée.
+
+             ATTENTION à son JDT : Spoon déduit son niveau de compliance du JDK courant, et refuse
+             `-25` avec « Unrecognized option ». L'extracteur pose `setComplianceLevel` explicitement
+             plutôt que de laisser deviner, sans quoi il casse au prochain JDK du runner (#5473). -->
+        <dependency>
+            <groupId>fr.inria.gforge.spoon</groupId>
+            <artifactId>spoon-core</artifactId>
+            <version>${spoon.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- Éprouver une extension JUnit en la faisant EXÉCUTER par le moteur, plutôt qu'en simulant
