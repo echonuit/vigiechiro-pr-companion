@@ -439,9 +439,16 @@ def autonomes(noms: list[str] | None = None) -> list[str]:
     Population DERIVEE et non enumeree : un garde neuf y entre tout seul. C est la lecon que
     `gardes()` avait apprise avant d etre elle-meme prise en defaut par une constante (#5134).
     """
-    if noms is not None:
-        return [n for n in noms if n not in HORS_PORTEE and porte_son_auto_test(n)]
     par_le_harnais = set(gardes())
+    if noms is not None:
+        # Le meme filtre que la branche sans portee, et pour la meme raison : un garde que la suite
+        # charge appartient a l AUTRE moitie. L omettre ici mettait dix-huit gardes dans les deux,
+        # et la partition ne tenait que tant que personne ne passait de portee (#5484).
+        return [
+            n
+            for n in noms
+            if n not in HORS_PORTEE and n not in par_le_harnais and porte_son_auto_test(n)
+        ]
     return sorted(
         f.name
         for f in DOSSIER.glob("*.py")
@@ -456,14 +463,22 @@ def autonomes(noms: list[str] | None = None) -> list[str]:
 def mutes(noms: list[str] | None = None) -> list[str]:
     """Les gardes que ce garde MUTE reellement, extraits pour que `lus` les compte (issue #5007).
 
-    L unite n est ni le fichier ni la ligne : c est le GARDE. Et c est bien le garde MUTE, non
-    celui que la suite charge : `HORS_PORTEE` et les absents ne sont jamais neutralises, donc
-    jamais lus. Les compter gonflerait le nombre d une population que ce garde n eprouve pas.
+    L unite n est ni le fichier ni la ligne : c est le GARDE. `HORS_PORTEE` et les absents ne sont
+    jamais neutralises, donc jamais lus. Les compter gonflerait le nombre d une population que ce
+    garde n eprouve pas.
+
+    **Et un garde que la SUITE ne charge pas n entre pas ici.** Ce chemin neutralise le garde puis
+    joue `verifie_scripts.py` : si la suite ignore le garde, elle reste verte quoi qu il arrive, et
+    le verdict « decoratif » ne dit rien de lui. Ces gardes ont leur propre moitie, `autonomes`, qui
+    joue leur `--auto-test`. Sans portee la partition tenait, parce que la liste par defaut EST celle
+    du harnais ; avec une portee elle etait perdue, et les dix gardes autonomes du depot tombaient
+    dans les deux moities. Un diff qui en touchait un recevait donc un refus faux (#5484).
     """
+    par_le_harnais = set(gardes())
     return [
         nom
         for nom in (noms if noms is not None else gardes())
-        if nom not in HORS_PORTEE and (DOSSIER / nom).is_file()
+        if nom not in HORS_PORTEE and (DOSSIER / nom).is_file() and nom in par_le_harnais
     ]
 
 
@@ -596,6 +611,22 @@ def _auto_test_de_portee() -> int:
     finally:
         if ancien is not None:
             os.environ["GITHUB_BASE_SHA"] = ancien
+
+    # ⟨les deux moities ne se recouvrent jamais⟩ Aucun cas n eprouvait la PARTITION elle-meme : les
+    # cas ci-dessus verifient QUELS gardes une portee retient, jamais par quel chemin ils passent.
+    # Le cas se derive du DOSSIER, et non de l une des deux fonctions qu il eprouve : le batir
+    # depuis `autonomes()` le rendrait incapable de voir cette fonction se tromper (#5491).
+    tous = sorted(
+        f.name for f in DOSSIER.glob("*.py") if not f.name.startswith("_") and f.name != MOI
+    )
+    chevauchement = sorted(set(mutes(tous)) & set(autonomes(tous)))
+    if chevauchement:
+        print(
+            f"  ✘ sous portee, {len(chevauchement)} garde(s) dans les DEUX moities : {chevauchement[:3]}"
+        )
+        echecs += 1
+    else:
+        print("  ✔ sous portee, les deux moities restent disjointes")
     return echecs
 
 

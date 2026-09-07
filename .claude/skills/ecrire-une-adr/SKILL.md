@@ -67,6 +67,21 @@ et se pose dans les champs de l'en-tête OKF :
 prétendrait qu'il refuse, quand il ne fait que relever, et un garde qui promet plus qu'il ne tient
 emprunte la solidité de ses voisins.
 
+**Et un `enforced_by:` se choisit par ce qu'il RÉPOND, pas par ce à quoi il ressemble.** Nommer un
+fichier qui existe ne suffit plus : depuis #5484, le garde refuse quatre formes de gage qui ne
+peuvent faire rougir aucune demande.
+
+| Ce qu'on nomme | Pourquoi ce n'est pas un juge |
+|---|---|
+| un document (`.md`, `.txt`, `.json`) | un document se lit, il ne s'exécute pas |
+| un atelier en `schedule` ou `workflow_dispatch` seuls | aucune demande ne le déclenche, donc il ne peut rien refuser à personne |
+| une bibliothèque sans point d'entrée | c'est le code **régi**, pas son juge |
+| un script qu'aucun atelier de demande n'invoque | il existe, il pourrait juger, et rien ne le lance |
+
+Les trois premières formes viennent de cas réels : les ADR 3802, 4993 et 5239 se disaient `certaine`
+en nommant respectivement un détecteur hebdomadaire, 119 lignes de prose, et le code que l'ADR
+régit. Aucune n'a été trouvée par un dispositif : il a fallu #5448 pour les compter.
+
 ## Deux moments, et le second n'est pas le premier
 
 Cette compétence sert **deux passes** de la clôture, et elles ne demandent pas le même geste.
