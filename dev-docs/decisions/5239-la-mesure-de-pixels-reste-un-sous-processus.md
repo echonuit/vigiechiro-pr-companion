@@ -5,12 +5,11 @@ status: stable
 article: A26
 chantier: "#5239 (sous-chantier #5235, chantier #5215)"
 decided_at: 2026-09-05
-verification: certaine
-enforced_by:
-  - ".github/assets/mesure_pixels.py"
+verification: humaine
+enforced_by: []
 verified:
-  - by: machine:ci
-    at: 2026-09-05
+  - by: humain
+    at: 2026-09-07
 generated:
   by: "process:assistance-par-agents"
   at: 2026-09-05
@@ -69,3 +68,22 @@ rectangle - trois choses qu'ImageMagick fait en une commande.
 `mesure_pixels.py` porte l'appel, et son en-tête porte cette décision. Le fichier est le seul endroit
 du dépôt où la part de pixels se calcule : c'est déjà ce que #4295 avait établi, après que le même
 défaut a dû être corrigé deux fois dans deux copies.
+
+**Ce fichier ne juge pourtant rien, et il a figuré en `enforced_by` jusqu'au 2026-09-07.** C'est le
+**code régi** par la décision, pas son applicateur : qui remplacerait le sous-processus par un appel
+de bibliothèque obtiendrait un fichier différent, et rien ne rougirait. Un gage qui est son propre
+sujet ne peut pas constater sa propre violation. Ses deux appelants, `compare_tournages.py` et
+`compare_apercus.py`, ne tournent d'ailleurs que sous `comparer-tournages.yml`, en
+`workflow_dispatch` seul.
+
+**Ce qui en est tout de même tenu, et jusqu'où.**
+`scripts/methode/verifie-dependances-declarees.py` refuse un import hors
+bibliothèque standard qui ne figure dans aucun fichier de dépendances : un `import PIL` glissé dans la
+couche des gardes rougirait sur la demande qui l'introduit. Il ne refuse pas l'import **déclaré**, et
+c'est précisément la façon dont cette décision se violerait délibérément. La couverture est donc
+partielle, et une partie de la règle repose sur la revue.
+
+Le niveau est `humaine` pour cette raison, et non parce que la règle serait invérifiable : un contrôle
+qui refuse une bibliothèque d'images sous `scripts/` et `.github/` est possible, il n'est pas posé,
+et l'[ADR 5414](5414-une-regle-que-rien-ne-peut-garder-se-declare.md) tranche ce cas : on le déclare, au lieu de se
+donner un gage qui n'observe rien. Mesuré et corrigé par #5448.

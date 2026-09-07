@@ -248,7 +248,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A1 · La preuve précède l'affirmation | 6 | 1 | `.github/scripts/verifie_decisions_du_tournage_connecte.py`, `.github/scripts/verifie_jeton_vivant.py`, `.github/scripts/revoque_jeton.py`, et 1 autre |
 | A2 · Un garde est vu rouge sur sa propre mutation | 15 | 10 | `src/test/bats/cli.bats`, `src/test/java/fr/univ_amu/iut/architecture/AnnonceDesMutationsTest.java`, `.github/scripts/mesure_duree_portail.py`, et 7 autres |
 | A3 · Un dispositif dit ce qu'il couvre, et ce qu'il n'a pas pu lire | 35 | 27 | `.github/scripts/veille_contrat_api.py`, `AnalyseViewTest#colonne_commune_sur_la_table_des_observations`, `SiteEditRechercheCarreTest#un_verdict_arrive_en_retard_est_ecarte`, et 28 autres |
-| A4 · Un cas joué n'est pas un cas prouvé | 26 | 17 | `ApercuFxElisionTest#bouton_tronque_refuse`, `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`, `scripts/adr/3053-capture-libelle.py`, et 14 autres |
+| A4 · Un cas joué n'est pas un cas prouvé | 26 | 15 | `ApercuFxElisionTest#bouton_tronque_refuse`, `ActiviteViewTest#l_export_image_redessine_un_graphe_reellement_dessine`, `scripts/adr/3053-capture-libelle.py`, et 13 autres |
 | A5 · La mesure fait foi, et dit d'où elle vient | 31 | 17 | `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`, `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`, `EspecesPrioritairesReferentielTest#marque_toutes_les_prioritaires_connues`, et 13 autres |
 | A6 · La vérification se déclare, sur trois niveaux | 3 | 2 | `DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment`, `EcritureAtomiqueTest#creation_restreinte` |
 | A7 · Le test précède le code | 1 | 1 | `BancDesClipsTest#une_classe_filmee_neuve_declare_son_banc` |
@@ -270,7 +270,7 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-constitutio
 | A23 · Ce qui s'affiche est embarqué et montré en entier, et rien ne s'offre qui ne se montre | 17 | 11 | `scripts/adr/0035-pictogramme-caractere.py`, `scripts/adr/0037-slot-actions-hbox.py`, `scripts/adr/2493-modale-suit-croissance.py`, et 12 autres |
 | A24 · La langue du dépôt est le français | 2 | 2 | `.github/scripts/verifie_titre_pr.py`, `scripts/methode/verifie-controle-du-titre.py` |
 | A25 · Le travail de branche est isolé | 3 | 1 | `.github/scripts/verifie_epinglage.py` |
-| A26 · La provenance se déclare | 4 | 3 | `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`, `DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier`, `.github/assets/mesure_pixels.py` |
+| A26 · La provenance se déclare | 4 | 2 | `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`, `DocumentationAJourTest#une_adr_recente_porte_le_numero_de_son_chantier` |
 | A28 · Un avertissement se dit en mots | 1 | 0 | `scripts/adr/4366-avertissement-en-pictogramme.py` |
 | A29 · L'ergonomie se rattache à une heuristique nommée | 1 | 0 | `scripts/adr/verifie_okf.py` |
 | A30 · Le code dit ce qu'il fait, la javadoc dit son contrat, l'ADR dit pourquoi | 6 | 2 | `scripts/adr/4359-javadoc-narratif.py`, `scripts/adr/4359-blocs-relus.py`, `scripts/adr/4395-renvois-en-javadoc.py`, et 3 autres |

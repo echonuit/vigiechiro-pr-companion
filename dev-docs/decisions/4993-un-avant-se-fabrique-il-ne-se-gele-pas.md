@@ -5,9 +5,8 @@ status: stable
 article: A4
 chantier: "#4980 (le retour de terrain de la 2.189.0), sous-chantier #4993"
 decided_at: 2026-08-31
-verification: certaine
-enforced_by:
-  - "dev-docs/recette/avant-apres-de-la-2189.md"
+verification: humaine
+enforced_by: []
 verified:
   - by: humain:porteur-du-produit
     at: 2026-08-31
@@ -58,6 +57,16 @@ produit quand même, l'enregistreur indexant délibérément le film d'un cas ro
 Le mode d'emploi complet, avec le piège qui invalide la paire et le témoin qui le dit, vit dans
 [Ce que la 2.189.0 montrait, et ce qu'elle montre maintenant](../recette/avant-apres-de-la-2189.md).
 Cette ADR ne porte que la décision : **on ne gèle pas le dépôt pour produire une preuve**.
+
+**Et cette page n'est pas ce qui tient la décision.** Elle a figuré en `enforced_by` jusqu'au
+2026-09-07, l'ADR se déclarant `certaine`. Une page de prose ne s'exécute pas : elle ne peut faire
+rougir aucune demande de fusion, et le champ promettait donc quelque chose que rien ne rendait. Le
+renvoi était juste, seul son emplacement était faux.
+
+Ce que la décision règle - à partir de quoi on fabrique un avant, et qu'aucune fusion n'attend - est
+un geste de méthode qu'aucun dispositif ne peut observer. Le niveau est donc `humaine`, ce que le
+champ `verified:` disait déjà en nommant le porteur du produit, et c'est ce que l'[ADR 5414](5414-une-regle-que-rien-ne-peut-garder-se-declare.md)
+prescrit : une règle que rien ne peut garder se déclare. Mesuré et corrigé par #5448.
 
 Elle prolonge l'[ADR 4111](4111-un-clip-montre-la-version-qu-on-valide.md), qui exige qu'un
 clip dise la version qu'il montre. Un avant fabriqué n'échappe pas à la règle : il montre un état qui
