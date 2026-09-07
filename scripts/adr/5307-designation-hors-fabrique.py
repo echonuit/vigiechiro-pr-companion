@@ -157,7 +157,7 @@ if __name__ == "__main__":
     raise SystemExit(
         rapporte(
             "5307",
-            "constructions du selecteur natif hors de la fabrique",
+            "constructions du sélecteur natif hors de la fabrique",
             suspects(),
             apercu=12,
             lus=lus(),

@@ -697,7 +697,9 @@ introduites, et vérifier à la main les garde-fous que PIT ne peut pas atteindr
 ### Où vivent les fonds communs des gardes
 
 **Il y en a DEUX, et chacun sert son arbre.** `scripts/_commun/` porte le vocabulaire des corpus, les
-verdicts, l'aide `--contrat` et l'assertion des auto-tests. `.github/scripts/_forge.py` porte ce que
+verdicts, l'aide `--contrat`, l'assertion des auto-tests et, depuis #5420, le **lecteur d'arbre**
+`arbre.py` : six gardes lui délèguent la lecture de la structure du Java plutôt que de compter des
+accolades. `.github/scripts/_forge.py` porte ce que
 les cliquets de forge partagent : la lecture du cliquet dans un en-tête d'ADR, l'interrogation de la
 forge avec son refus quand `gh` ne répond pas, et le banc de leurs cas (#4954).
 
@@ -715,11 +717,19 @@ from _commun import DECISIONS, rapporte
 
 **Il a vécu dans `scripts/adr/` jusqu'à #5216**, c'est-à-dire chez l'un de ses usagers, et quatre formes de chemin coexistaient pour l'atteindre. La quatrième n'a été trouvée ni par le motif de réécriture ni par la relecture du diff, mais par un relevé des 54 auto-tests avant et après : un refactoring à comportement constant se prouve en comparant deux mesures.
 
-**Soixante-huit points d'entrée** répondent à `--contrat` et déclarent six champs : les **44** de
-`scripts/adr` et les **24** de `scripts/methode`. Le total n'a pas bougé mais sa composition si :
-la page annonçait « 43, 24, et le dernier garde shell », et **aucun des deux scripts shell restants
-ne répond à `--contrat`**. Relevé à la clôture de #5257, en lançant les 70 points d'entrée un par un
-plutôt qu'en recopiant le chiffre. La réponse s'obtient sans rien
+**Soixante-seize points d'entrée** répondent à `--contrat` et déclarent six champs : les **47** de
+`scripts/adr`, les **28** de `scripts/methode`, et **la porte elle-même**, `scripts/batterie.py`, qui
+vit à la racine de `scripts/`. Cette troisième famille ne compte qu'un fichier, et la page l'a ignorée
+tant qu'elle n'énumérait que deux dossiers : c'est le même angle mort que l'issue #5397 relève pour
+les bancs de mutation, où un garde à la racine tombe entre eux.
+
+Relevé à la clôture de #5402, en **lançant** les points d'entrée un par un plutôt qu'en recopiant le
+chiffre. Le geste n'est pas décoratif : chercher `sort_si_contrat_demande` dans le texte en rend
+**75**, un de moins, parce qu'un script atteint l'aide sans écrire son nom. Une mention n'est pas un
+dispatch, et une absence de mention n'est pas une absence de capacité.
+
+Le chiffre a valu 68 à la clôture de #5257, quand la page annonçait « 43, 24, et le dernier garde
+shell » alors qu'**aucun des deux scripts shell restants ne répond à `--contrat`**. La réponse s'obtient sans rien
 lire du dépôt : la branche s'imprime **avant tout le reste**, pour qu'un garde dont une dépendance
 manque rende quand même sa déclaration.
 
