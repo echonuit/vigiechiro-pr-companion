@@ -41,6 +41,40 @@ _echecs: list[str] = []
 _charges: set[str] = set()
 
 
+def _joue(essai) -> None:
+    """Joue un cas, et SURVIT a un garde qui refuse de lire (issue #5462).
+
+    **Un refus doit rester local.** Avant, la premiere `LecteurAbsent` qui remontait tuait la boucle :
+    mesure du 2026-09-07, ce harnais rendait 186 lignes de verdict avec la grammaire et **zero** sans,
+    parce qu il mourait avant d en ecrire une seule. Un seul des gardes eprouves etait concerne.
+
+    C est la discipline du cliquet 4617 devant un `target/pmd.xml` absent, portee d un cran plus haut :
+    un dispositif qui ne peut pas lire le DIT et s arrete la, il n emporte pas ce qui l entoure.
+
+    **Le refus compte comme un ECHEC, jamais comme un silence.** Poursuivre en concluant vert rendrait
+    un zero sur une population amputee - le defaut que l issue #5007 a corrige pour les cliquets, et
+    que celui-ci referait a l etage du harnais.
+
+    La surface n a cesse de croitre : six gardes peuvent lever, contre un seul la veille. Ce qui est
+    attrape est donc le TYPE, non un garde nomme.
+
+    **La classe se resout depuis `sys.modules`, et pas par un import.** Ce harnais ne touche pas au
+    `sys.path` : il charge tout PAR CHEMIN, ce que `_charge` fait pour de bonnes raisons. Recharger
+    `arbre.py` par chemin donnerait une AUTRE classe que celle du garde, et l `except` ne prendrait
+    rien - un attrape-tout qui n attrape pas, c est-a-dire pire que rien. Le module est en revanche
+    dans `sys.modules` des qu un garde l a importe, et c est celui-la qui a leve.
+    """
+    try:
+        essai()
+    except Exception as leve:
+        lecteur = sys.modules.get("_commun.arbre")
+        if lecteur is None or not isinstance(leve, lecteur.LecteurAbsent):
+            raise
+        premiere = str(leve).split("\n")[0]
+        print(f"  ✘ {essai.__name__} : le garde REFUSE de conclure - {premiere}", file=sys.stderr)
+        _echecs.append(essai.__name__)
+
+
 def _charge(nom: str):
     """Importe un script au nom non-importable (chiffres, tirets) par son chemin.
 
@@ -2059,8 +2093,10 @@ def auto_test() -> int:
     sous les cas, et se voit a la relecture.
     """
     echecs: list[str] = []
+    joues_du_harnais = [0]
 
     def verifie(cas: str, obtenu, attendu) -> None:
+        joues_du_harnais[0] += 1
         if obtenu == attendu:
             print(f"  ✔ {cas}")
         else:
@@ -2086,6 +2122,56 @@ def auto_test() -> int:
             [],
         )
 
+    # `_joue` : un garde qui REFUSE de lire ne doit pas emporter les autres (#5462). Le cas fabrique
+    # un faux module `_commun.arbre` dans `sys.modules`, parce que c est de LA que `_joue` resout la
+    # classe - la resoudre autrement donnerait un attrape-tout qui n attrape pas.
+    import types
+
+    faux_arbre = types.ModuleType("_commun.arbre")
+
+    class _LecteurAbsentDEssai(RuntimeError):
+        pass
+
+    faux_arbre.LecteurAbsent = _LecteurAbsentDEssai
+    garde_reel = sys.modules.get("_commun.arbre")
+    sys.modules["_commun.arbre"] = faux_arbre
+    marque_avant = len(_echecs)
+    joues = []
+
+    def _refuse() -> None:
+        raise _LecteurAbsentDEssai("Le lecteur d arbre est absent : essai\nseconde ligne")
+
+    def _conclut() -> None:
+        joues.append(1)
+
+    try:
+        _joue(_refuse)
+        _joue(_conclut)
+        survecu, compte = True, len(joues)
+    except _LecteurAbsentDEssai:
+        survecu, compte = False, len(joues)
+
+    # Une exception d un AUTRE type doit passer, sinon l enveloppe masquerait de vrais defauts.
+    def _plante() -> None:
+        raise ValueError("un vrai defaut")
+
+    try:
+        _joue(_plante)
+        relance = False
+    except ValueError:
+        relance = True
+    finally:
+        if garde_reel is None:
+            del sys.modules["_commun.arbre"]
+        else:
+            sys.modules["_commun.arbre"] = garde_reel
+
+    verifie("un garde qui refuse n emporte pas le suivant", survecu, True)
+    verifie("et le suivant a bien conclu", compte, 1)
+    verifie("le refus compte comme un echec", len(_echecs) - marque_avant, 1)
+    verifie("une exception d un autre type est RELANCEE", relance, True)
+    del _echecs[marque_avant:]
+
     # Un dossier sans detecteur accuse le HARNAIS : il ne rend pas un vert rassurant. C'est le
     # patron des autres gardes du depot - distinguer « rien a redire » de « je n'ai rien lu ».
     with tempfile.TemporaryDirectory() as d:
@@ -2096,7 +2182,9 @@ def auto_test() -> int:
             accuse = True
     verifie("un dossier sans détecteur accuse le harnais, au lieu de rendre un vert", accuse, True)
 
-    print("\n3 cas, dont 1 qui DOIT rougir sur un harnais aveugle.")
+    # Le compte se DERIVE, il ne s ecrit plus : il disait « 3 cas » alors que sept sont joues, et un
+    # nombre en dur vieillit des qu on ajoute un cas - sans rougir, puisque c est de la prose.
+    print(f"\n{joues_du_harnais[0]} cas, dont 1 qui DOIT rougir sur un harnais aveugle.")
     if echecs:
         print(
             f"{len(echecs)} cas en échec : ne pas se fier au verdict de ce harnais.",
@@ -2196,7 +2284,7 @@ if __name__ == "__main__":
         test_rapport_et_resserrement,
         test_le_refus_s_eprouve_sur_un_garde_reel,
     ):
-        essai()
+        _joue(essai)
     decouverts = _completude()
     if decouverts:
         print(
