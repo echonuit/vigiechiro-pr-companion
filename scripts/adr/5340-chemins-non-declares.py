@@ -203,7 +203,7 @@ CONTRAT = {
     "geste": "garde qui porte un contrat sans y declarer ses `chemins`, donc lance a chaque appel",
     "population": "les gardes de scripts/adr et scripts/methode qui portent un CONTRAT",
     "dispositif": "cliquet",
-    "seuil": "43, polarite=descend",
+    "seuil": "42, polarite=descend",
     "temoin": "scripts/adr/5340-chemins-non-declares.py --auto-test",
     "decision": "ADR 5340",
     "chemins": """

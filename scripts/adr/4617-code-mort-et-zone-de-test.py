@@ -134,6 +134,18 @@ CONTRAT = {
     "seuil": "cliquets 40 (ADR 4617) et 0 (ADR 4682), polarite=descend",
     "temoin": "scripts/adr/verifie_scripts.py#test_4617_code_mort_et_zone_de_test",
     "decision": "ADR 4617 et ADR 4682",
+    # ⟨les DEUX arbres, et les DEUX ADR⟩ Ce garde parcourt `src/main/java` et `src/test/java` pour
+    # compter ce que PMD a lu, et il porte deux cliquets. Une valeur de `ratchet:` qui bouge dans
+    # l une des deux ADR doit le relancer, sinon `resserre_cliquets.py` deplacerait un seuil sans que
+    # le garde ne le confronte. Son propre fichier n est PAS liste : depuis #5421 un garde se voit
+    # lui-meme quels que soient ses chemins, et l y ecrire ferait croire que la regle vient d ici.
+    "chemins": """
+src/main/java/**
+src/test/java/**
+scripts/_commun/**
+dev-docs/decisions/4617-*.md
+dev-docs/decisions/4682-*.md
+""",
 }
 
 
