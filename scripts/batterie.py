@@ -833,8 +833,14 @@ def _auto_test() -> int:
     import contextlib as _ctx
     import io as _io
 
+    # ⟨le diff est INJECTE, sinon le cas depend du disque⟩ En CI le worktree est sur la reference de
+    # fusion, donc `git diff origin/main` est vide et `rendre` sort avant d atteindre le controle : le
+    # cas passait en local et rougissait en CI. Un cas dont le verdict depend de l etat du disque
+    # n eprouve pas ce qu il annonce.
     _vrai = globals()["interprete"]
+    _vrai_diff = globals()["fichiers_du_diff"]
     globals()["interprete"] = lambda racine=None: (None, {"yaml": "PyYAML"})
+    globals()["fichiers_du_diff"] = lambda contre="origin/main", racine=None: ["scripts/adr/x.py"]
     try:
         tampon = _io.StringIO()
         with _ctx.redirect_stdout(tampon):
@@ -842,6 +848,7 @@ def _auto_test() -> int:
         sortie = tampon.getvalue()
     finally:
         globals()["interprete"] = _vrai
+        globals()["fichiers_du_diff"] = _vrai_diff
 
     bon = code == 1 and "REFUS" in sortie and "PyYAML" in sortie
     print(f"  {'✔' if bon else '✘'} sans interprete valide, la porte REFUSE avant le premier garde")
