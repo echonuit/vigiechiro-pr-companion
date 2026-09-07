@@ -549,7 +549,8 @@ def rendre(
     print()
     for g, ligne in rouges:
         print(f"  ✘ {g}")
-        print(f"      {ligne[:160]}")
+        for affichee in refus_affiche(ligne):
+            print(affichee)
     print()
     # Un garde qui REFUSE faute d un prerequis n est pas un garde qui a juge, et la nuance decide de
     # ce qu on apprend. La porte ne tranche pas a la place du lecteur : elle rend la ligne de refus,
@@ -581,6 +582,17 @@ EXIGENT_DES_ARGUMENTS = {
 }
 
 
+def refus_affiche(ligne: str) -> list[str]:
+    """Les lignes du recapitulatif pour un refus, indentees et bornees CHACUNE.
+
+    `verdict_du_lancement` rend jusqu a DEUX lignes depuis #5395. Les imprimer telles quelles
+    laissait la seconde sans indentation, et la troncature a 160 s appliquait a la chaine JOINTE :
+    un refus dont la premiere ligne est longue perdait la seconde, c est-a-dire exactement le geste
+    qu on venait de rendre visible.
+    """
+    return [f"      {l[:160]}" for l in ligne.splitlines() if l.strip()]
+
+
 def verdict_du_lancement(nom: str, code: int, stdout: str, stderr: str) -> tuple[str, str]:
     """Ce qu un lancement de garde veut dire, et la ligne qui l explique.
 
@@ -604,7 +616,16 @@ def verdict_du_lancement(nom: str, code: int, stdout: str, stderr: str) -> tuple
     # `compte-les-reliquats.py` est un cliquet differentiel qui sort en **1**, pas en 2 comme le
     # commentaire d origine l affirmait. Le test `returncode == 2` ne pouvait donc jamais etre vrai,
     # et ce garde etait compte rouge a chaque lancement.
-    premiere = lignes[0] if lignes else "(sans sortie)"
+    # ⟨DEUX lignes, et pourquoi pas une regle de position⟩ Mesure de #5395 sur les trois refus reels
+    # d une batterie : `4617` et `verifie-specs-valides` commencent par la cause,
+    # `verifie-sous-commandes-openspec` par un en-tete suivi de deux points. Un sur trois, et aucune
+    # position ne dit systematiquement quoi faire.
+    #
+    # Prendre « la deuxieme ligne quand la premiere finit par deux points » serait une INFERENCE sur
+    # la forme du texte. Ce depot a tranche deux fois contre l inference cette nuit, dont l ADR 5398
+    # sur cette porte meme. On MONTRE PLUS a la place : les deux premieres lignes non vides couvrent
+    # les trois formes sans rien deviner, et coutent une ligne de plus au recapitulatif.
+    premiere = "\n".join(lignes[:2]) if lignes else "(sans sortie)"
     if nom not in EXIGENT_DES_ARGUMENTS:
         # ⟨aucune devinette ici, et c est le point⟩ Un garde NEUF qui exigerait des arguments sans
         # etre declare est compte refus, et sa ligne d usage s affiche : le lecteur voit tout de
@@ -744,7 +765,8 @@ def _auto_test() -> int:
             1,
             "",
             "pmd.xml est absent\nLancez : ./mvnw",
-            ("rouge", "pmd.xml est absent"),
+            # La seconde ligne est le GESTE, et c est elle que la regle d une seule ligne perdait.
+            ("rouge", "pmd.xml est absent\nLancez : ./mvnw"),
         ),
         (
             "un usage sorti en 1 n est pas un rouge",
@@ -764,6 +786,38 @@ def _auto_test() -> int:
         ),
         ("un garde muet reste lisible", "muet.py", 1, "", "", ("rouge", "(sans sortie)")),
         ("un garde vert ne dit rien", "vert.py", 0, "tout va bien", "", ("vert", "")),
+        # ⟨le refus dont la PREMIERE ligne est un en-tete⟩ Mesure de #5395 sur les trois refus reels
+        # d une batterie : deux commencent par la cause, le troisieme par un titre suivi de deux
+        # points. Aucune POSITION n est donc fiable, et deviner d apres le deux-points serait une
+        # inference sur la forme du texte - ce que l ADR 5398 vient de refuser sur cette porte meme.
+        # ⟨la borne haute, et elle est annoncee⟩ « les DEUX premieres lignes » : sans ce cas, en
+        # montrer trois ne ferait rougir personne. `4617` refuse en trois lignes, dont la derniere
+        # est la commande - on la perd deliberement, et le cout est ecrit dans #5395.
+        (
+            "un refus de trois lignes n en montre que deux",
+            "4617-code-mort-et-zone-de-test.py",
+            1,
+            "",
+            "target/pmd.xml est absent : PMD n a pas tourne.\n"
+            "Ce garde REFUSE plutot que de conclure sur ce qu il n a pas lu.\n"
+            "Lancez d abord : ./mvnw -B -o test-compile pmd:pmd",
+            (
+                "rouge",
+                "target/pmd.xml est absent : PMD n a pas tourne.\n"
+                "Ce garde REFUSE plutot que de conclure sur ce qu il n a pas lu.",
+            ),
+        ),
+        (
+            "un refus dont la première ligne est un en-tête montre quand même la cause",
+            "verifie-sous-commandes-openspec.py",
+            1,
+            "",
+            "Invocations d OpenSpec qui n existent pas :\n  openspec est absent. Lancez « npm ci »",
+            (
+                "rouge",
+                "Invocations d OpenSpec qui n existent pas :\nopenspec est absent. Lancez « npm ci »",
+            ),
+        ),
         # ⟨le faux vert de #5398⟩ « Usage abusif de » est une tournure que la prose de ce depot
         # emploie. Un garde NON DECLARE qui refuse ainsi etait compte « arguments », donc retire du
         # compte des refus, et la porte finissait verte.
@@ -773,7 +827,7 @@ def _auto_test() -> int:
             1,
             "",
             "Usage abusif du selecteur : trois appels non gardes.\nCe garde REFUSE.",
-            ("rouge", "Usage abusif du selecteur : trois appels non gardes."),
+            ("rouge", "Usage abusif du selecteur : trois appels non gardes.\nCe garde REFUSE."),
         ),
         # ⟨la confrontation, dans le sens dangereux⟩ Le jour ou `compte-les-reliquats.py` cessera
         # d exiger ses arguments, son exemption se mettrait a masquer un VRAI refus. C est ce qui
@@ -887,7 +941,38 @@ def _auto_test() -> int:
             print(f"  ✘ {libelle} : 4617 engage={joue}, PMD produit={engage_pmd(diff)}")
             echecs = 1
 
-    print("\n24 cas : porte, bord, exemption confrontée, aiguillage, interprète et refus.")
+    # ⟨l affichage, et non la fonction⟩ Deux lignes justes que `rendre` imprimerait mal ne valent
+    # rien. Ces cas tiennent l INDENTATION et la troncature PAR LIGNE : bornee sur la chaine jointe,
+    # elle mangeait la seconde quand la premiere etait longue - le geste qu on venait de rendre
+    # visible (#5395).
+    for libelle, entree, attendu in (
+        (
+            "les deux lignes d un refus sont indentées",
+            "Invocations qui n existent pas :\nopenspec est absent. Lancez « npm ci »",
+            [
+                "      Invocations qui n existent pas :",
+                "      openspec est absent. Lancez « npm ci »",
+            ],
+        ),
+        (
+            "un refus d une seule ligne n en gagne pas une vide",
+            "pmd.xml est absent",
+            ["      pmd.xml est absent"],
+        ),
+        (
+            "chaque ligne est bornée séparément, pas la chaîne jointe",
+            "x" * 200 + "\nLancez : ./mvnw",
+            ["      " + "x" * 160, "      Lancez : ./mvnw"],
+        ),
+    ):
+        obtenu = refus_affiche(entree)
+        if obtenu == attendu:
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
+            echecs += 1
+
+    print("\n28 cas : porte, bord, exemption confrontée, aiguillage, interprète et refus.")
     return 1 if echecs else 0
 
 
