@@ -11,7 +11,7 @@ approximatif « lisible », donc vert, et la conformité ne voudrait plus rien d
 lecteur EST le premier des huit contrôles. Aucune dépendance hors stdlib, comme ses voisins :
 `lint.yml` n'installe rien, et un garde qui exige un paquet absent ne garde rien du tout.
 
-Les neuf refus, et ce qui prouve qu'ils manquaient :
+Les dix refus, et ce qui prouve qu'ils manquaient :
 
 | Refus | Ce qu'il attrape | Pourquoi il manquait |
 |---|---|---|
@@ -20,6 +20,7 @@ Les neuf refus, et ce qui prouve qu'ils manquaient :
 | statut et graphe | une ADR `stable` qu'une autre renverse | zéro `deprecated` pour 21 amendements |
 | succession | une `deprecated` qui ne nomme pas ce qui la remplace | les annulations n'avaient pas de cible |
 | confiance | `certaine` sans applicateur, `probable` sans cliquet | le niveau se déclarait sans gage |
+| gage qui juge | un `enforced_by` qu'aucune demande ne peut faire rougir | le seul contrôle vérifiait que le fichier **existe** |
 | atteignabilité | une ADR absente de `index.md` ou de la nav | 172 fichiers, aucun contrôle |
 | liens | un renvoi croisé vers un fichier absent | OKF le tolère, le dépôt ne doit pas |
 | cliquet de corpus | une disparition silencieuse d'ADR | une consolidation peut perdre une décision |
@@ -45,6 +46,27 @@ RACINE = pathlib.Path(__file__).resolve().parents[2]
 CONSTITUTION = RACINE / "CONSTITUTION.md"
 NAV = RACINE / "mkdocs-dev.yml"
 RESERVES = {"index.md", "log.md"}
+
+# Un gage qui ne s'execute pas. Un document se lit, il ne juge rien : l'ADR 4993 nommait 119 lignes
+# de prose en applicateur, et son propre `verified:` disait pourtant `humain:porteur-du-produit`.
+GAGES_INERTES = {".md", ".txt", ".json", ".csv", ".rst", ".adoc"}
+
+# Les declencheurs qu'une DEMANDE produit. Un atelier qui n'en porte aucun ne tournera jamais sur une
+# pull request : il peut etre vert, rouge ou absent sans qu'aucune demande en sache rien. L'ADR 3802
+# nommait un atelier `schedule` + `workflow_dispatch`, donc un detecteur hebdomadaire.
+DECLENCHEURS_DE_DEMANDE = {"pull_request", "push", "merge_group", "pull_request_target"}
+
+ATELIERS = ".github/workflows"
+
+# Le point d'entree qui fait d'un script un juge plutot qu'une bibliotheque. L'ADR 5239 nommait
+# `.github/assets/mesure_pixels.py`, importe par trois autres scripts et lance par aucun : c'etait
+# le code REGI, pas son juge.
+POINT_D_ENTREE = re.compile(r'if __name__ == ["\']__main__["\']')
+
+# Assemblee plutot qu'ecrite d'un bloc : ce garde porte lui-meme l'option, et une constante litterale
+# le ferait se reconnaitre comme juge pour la mauvaise raison. Meme idiome que `_forge.py`, qui vit
+# dans un autre paquet et ne s'importe pas d'ici.
+OPTION_AUTO_TEST = "--auto" + "-test"
 
 # Le corpus ne descend jamais sous ce plancher sans qu'on l'ait décidé. Un cliquet, pas un nombre
 # exact : une ADR nouvelle est un progrès, une ADR disparue est une décision perdue.
@@ -237,15 +259,104 @@ RENVOI = re.compile(r"\]\(([a-z0-9][a-z0-9-]*\.md)(?:#[^)]*)?\)")
 DEPASSEMENT = {"renverse", "remplace", "annule"}
 
 
+def ateliers_de_demande(racine: pathlib.Path) -> list[pathlib.Path]:
+    """Les ateliers qu'une demande declenche, lus a la racine donnee.
+
+    La lecture s'arrete a `jobs:`, parce que la cle `on:` d'un atelier vit au-dessus et qu'une etape
+    peut parfaitement contenir le mot `push` sans etre un declencheur.
+    """
+    dossier = racine / ATELIERS
+    rendus = []
+    for f in sorted(dossier.glob("*.yml")) if dossier.is_dir() else []:
+        tete = f.read_text(encoding="utf-8").split("\njobs:")[0]
+        if DECLENCHEURS_DE_DEMANDE & set(re.findall(r"^\s{2}([a-z_]+):", tete, re.M)):
+            rendus.append(f)
+    return rendus
+
+
+def _nomme_par(cible: str, texte: str, profondeur_min: int = 2) -> bool:
+    """Un atelier nomme un gage par son chemin, ou par un repertoire qui le contient.
+
+    `bats --jobs 4 src/test/bats` joue `src/test/bats/cli.bats` sans jamais l'ecrire. Chercher le
+    chemin exact rendait donc ce gage introuvable, et c'etait le seul faux positif de la mesure
+    d'ouverture. On remonte les ancetres, mais jamais jusqu'a `src` ou `scripts` : un segment unique
+    apparait partout, et tout le depot deviendrait « joue ».
+    """
+    if cible in texte:
+        return True
+    parts = pathlib.PurePath(cible).parts
+    return any("/".join(parts[:k]) in texte for k in range(len(parts) - 1, profondeur_min - 1, -1))
+
+
+def _contexte_des_gages(racine: pathlib.Path) -> tuple[list[pathlib.Path], str, set[str]]:
+    """Ce qu'il faut savoir du depot pour juger un gage : qui tourne, et qui lance quoi.
+
+    Se calcule UNE fois par passe. La boucle des cliquets entre ici parce qu'un garde qu'elle balaie
+    est joue sur chaque demande sans qu'aucun atelier ne l'ecrive : dix des soixante-deux gages `.py`
+    du corpus sont dans ce cas, et les compter absents aurait fait dix faux refus.
+    """
+    ateliers = ateliers_de_demande(racine)
+    texte = "\n".join(f.read_text(encoding="utf-8") for f in ateliers)
+    boucle = {p.relative_to(racine).as_posix() for p in (racine / "scripts/adr").glob("[0-9]*.py")}
+    boucle |= {
+        p.relative_to(racine).as_posix() for p in (racine / "scripts/adr").glob("loupe-*.py")
+    }
+    return ateliers, texte, boucle
+
+
+def refus_du_gage(gage: str, racine: pathlib.Path, contexte) -> str | None:
+    """La forme sous laquelle ce gage ne peut pas rougir, ou None s'il juge vraiment.
+
+    Nommer la FORME est le service rendu (ADR 4918) : « ce gage ne juge pas » laisserait l'auteur
+    chercher, alors que chaque diagnostic dit quoi faire. QUATRE formes ne peuvent pas rougir, et
+    elles ne sont pas quatre facons de dire la meme chose ; l'ordre va du plus informatif au moins
+    informatif, car les dernieres attrapent ce que les premieres ont laisse passer. Un cinquieme
+    refus, le gage INTROUVABLE, double ici `DocumentationAJourTest` : ce garde resout les chemins de
+    toute facon, et laisser passer un gage absent serait plus etrange que le dire deux fois.
+    """
+    ateliers, texte, boucle = contexte
+    cible = gage.split("#")[0]
+    if "/" not in cible:
+        # `DecisionsRespecteesTest#aucun_cycle` : la suite Java entiere, que `maven.yml` joue par
+        # `./mvnw -B test` SANS `-Dtest`. Cent quarante-quatre gages sur deux cent dix-huit.
+        return None
+    if pathlib.PurePath(cible).suffix in GAGES_INERTES:
+        return "gage non executable, un document ne juge rien"
+    chemin = racine / cible
+    if not chemin.exists():
+        return "gage introuvable"
+    if pathlib.PurePath(cible).suffix == ".java":
+        return None
+    if cible.startswith(ATELIERS):
+        if chemin in ateliers:
+            return None
+        return "atelier qu'aucune demande ne declenche"
+    if pathlib.PurePath(cible).suffix == ".py":
+        source = chemin.read_text(encoding="utf-8")
+        if not POINT_D_ENTREE.search(source) and OPTION_AUTO_TEST not in source:
+            return "gage qui est le code regi, pas son juge"
+    if _nomme_par(cible, texte) or cible in boucle:
+        return None
+    return "gage qu'aucune demande n'invoque"
+
+
 def verifie(
     decisions: pathlib.Path | None = None,
     constitution: pathlib.Path | None = None,
     nav: pathlib.Path | None = None,
     plancher: int | None = None,
     annexe: pathlib.Path | None = None,
+    racine: pathlib.Path | None = None,
 ) -> list[str]:
-    """Les manquements du paquet, un par ligne. Liste vide : le paquet est conforme."""
+    """Les manquements du paquet, un par ligne. Liste vide : le paquet est conforme.
+
+    `racine` est le depot contre lequel les gages se resolvent. Elle s'injecte pour que le banc
+    puisse monter un depot jetable : sans elle, eprouver le refus d'un atelier hors demande exigerait
+    d'en poser un vrai dans `.github/workflows`, donc de rendre le depot faux pour le tester.
+    """
     decisions = decisions or DECISIONS
+    racine = racine or RACINE
+    contexte = _contexte_des_gages(racine)
     plancher = PLANCHER_CORPUS if plancher is None else plancher
     connus = articles(constitution)
     vocabulaire = heuristiques_connues(annexe)
@@ -287,6 +398,16 @@ def verifie(
             fautes.append(f"{f.name} : niveau de vérification « {niveau} » inconnu")
         if niveau == "certaine" and not e.get("enforced_by"):
             fautes.append(f"{f.name} : « certaine » sans applicateur nommé")
+        # Nommer un applicateur n'est pas en avoir un. Le seul controle qui existait, dans
+        # `DocumentationAJourTest`, verifie que le fichier nomme EXISTE ; exister n'est pas juger.
+        # Trois ADR sur 187 nommaient un gage qu'aucune demande ne pouvait faire rougir, et elles
+        # echouaient de trois facons qui ne se ressemblent pas (#5483). Mesure a la pose : zero
+        # refus sur les 218 gages des 184 `certaine`, et les trois cas d'avant #5490 rouges.
+        if niveau == "certaine":
+            for gage in e.get("enforced_by") or []:
+                forme = refus_du_gage(gage, racine, contexte)
+                if forme:
+                    fautes.append(f"{f.name} : {forme} ({gage})")
         if niveau == "probable" and e.get("ratchet") is None:
             fautes.append(f"{f.name} : « probable » sans cliquet déclaré")
         # Une ADR `humaine` ne peut pas nommer d'applicateur : si quelque chose l'appliquait, elle
@@ -351,7 +472,13 @@ def verifie(
     return fautes
 
 
-def _fixture(d: str, documents: dict[str, str], plancher: int, annexe: bool = True) -> list[str]:
+def _fixture(
+    d: str,
+    documents: dict[str, str],
+    plancher: int,
+    annexe: bool = True,
+    fichiers: dict[str, str] | None = None,
+) -> list[str]:
     """Monte un paquet jetable et rend les manquements que le garde y voit.
 
     La constitution et la navigation vivent HORS du dossier des décisions, comme dans le dépôt.
@@ -363,6 +490,14 @@ def _fixture(d: str, documents: dict[str, str], plancher: int, annexe: bool = Tr
     decisions.mkdir(exist_ok=True)
     for nom, contenu in documents.items():
         (decisions / nom).write_text(contenu, encoding="utf-8")
+    # Les gages se resolvent contre CETTE racine. Un cas qui eprouve le refus d'un atelier hors
+    # demande ecrit donc un vrai `.github/workflows/*.yml` ici, et le garde le lit comme il lirait
+    # celui du depot. C'est ce qui evite la faute de #5491, ou un temoin batissait sa fixture depuis
+    # la constante du garde et ne pouvait donc pas voir que cette constante etait fausse.
+    for chemin, contenu in (fichiers or {}).items():
+        cible = racine / chemin
+        cible.parent.mkdir(parents=True, exist_ok=True)
+        cible.write_text(contenu, encoding="utf-8")
     index = "".join(f"- [x]({n})\n" for n in documents)
     (decisions / "index.md").write_text(index, encoding="utf-8")
     const = racine / "CONSTITUTION.md"
@@ -377,7 +512,7 @@ def _fixture(d: str, documents: dict[str, str], plancher: int, annexe: bool = Tr
             "| Clé | Nom |\n|---|---|\n| `nielsen-1` | Un témoin |\n| `gestalt-cloture` | Un autre |\n",
             encoding="utf-8",
         )
-    return verifie(decisions, const, nav, plancher=plancher, annexe=fichier_annexe)
+    return verifie(decisions, const, nav, plancher=plancher, annexe=fichier_annexe, racine=racine)
 
 
 MODELE = (
@@ -404,9 +539,10 @@ def auto_test() -> int:
         attendu: str | None,
         plancher: int = 1,
         annexe: bool = True,
+        fichiers: dict[str, str] | None = None,
     ) -> None:
         with tempfile.TemporaryDirectory() as d:
-            fautes = _fixture(d, documents, plancher, annexe=annexe)
+            fautes = _fixture(d, documents, plancher, annexe=annexe, fichiers=fichiers)
         vu = any(attendu in f for f in fautes) if attendu else not fautes
         etat = (
             ("rouge" if vu else "VERT, ce qui est le défaut")
@@ -495,6 +631,67 @@ def auto_test() -> int:
             )
         },
         None,
+    )
+
+    # Les quatre formes sous lesquelles un gage NOMME ne juge pas, et les deux contrastes sans
+    # lesquels le refus serait juste une facon de tout refuser. Aucun de ces cas ne partage de
+    # constante avec le garde : chacun ecrit un vrai atelier ou un vrai script dans le depot
+    # jetable, et le garde les lit comme il lit ceux du depot. Ils portent toute la charge de
+    # preuve, parce que le lot 1 (#5490) a supprime les trois seuls positifs vivants du corpus.
+    def avec_gage(chemin: str) -> str:
+        return MODELE.replace('"TemoinTest#cas"', f'"{chemin}"')
+
+    NOCTURNE = 'name: n\non:\n  schedule:\n    - cron: "0 3 * * *"\njobs:\n  x:\n    runs-on: u\n'
+    SUR_DEMANDE = "name: d\non:\n  pull_request:\njobs:\n  x:\n    runs-on: u\n"
+
+    cas(
+        "gage de prose",
+        {"0001-t.md": avec_gage("dev-docs/note.md")},
+        "non executable",
+        fichiers={"dev-docs/note.md": "Une note, et rien qui s execute.\n"},
+    )
+    cas(
+        "gage : atelier hors demande",
+        {"0001-t.md": avec_gage(".github/workflows/nocturne.yml")},
+        "aucune demande ne declenche",
+        fichiers={".github/workflows/nocturne.yml": NOCTURNE},
+    )
+    cas(
+        "gage : atelier sur demande accepte",
+        {"0001-t.md": avec_gage(".github/workflows/porte.yml")},
+        None,
+        fichiers={".github/workflows/porte.yml": SUR_DEMANDE},
+    )
+    cas(
+        "gage : bibliotheque sans entree",
+        {"0001-t.md": avec_gage("scripts/mesure.py")},
+        "code regi",
+        fichiers={
+            "scripts/mesure.py": "def mesure():\n    return 1\n",
+            ".github/workflows/porte.yml": SUR_DEMANDE.replace(
+                "runs-on: u", "runs-on: u\n    steps:\n      - run: python scripts/mesure.py"
+            ),
+        },
+    )
+    cas(
+        "gage : script qu aucune demande n invoque",
+        {"0001-t.md": avec_gage("scripts/orphelin.py")},
+        "n'invoque",
+        fichiers={
+            "scripts/orphelin.py": 'def f():\n    return 1\n\n\nif __name__ == "__main__":\n    f()\n',
+            ".github/workflows/porte.yml": SUR_DEMANDE,
+        },
+    )
+    cas(
+        "gage : script joue par une demande accepte",
+        {"0001-t.md": avec_gage("scripts/juge.py")},
+        None,
+        fichiers={
+            "scripts/juge.py": 'def f():\n    return 1\n\n\nif __name__ == "__main__":\n    f()\n',
+            ".github/workflows/porte.yml": SUR_DEMANDE.replace(
+                "runs-on: u", "runs-on: u\n    steps:\n      - run: python scripts/juge.py"
+            ),
+        },
     )
     cas("corpus sain", {"0001-t.md": MODELE, "0002-s.md": MODELE}, None, plancher=2)
 
