@@ -16,11 +16,11 @@ un état incohérent, une opération qui « n'a rien fait » sans dire pourquoi.
 """
 
 import pathlib
-import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINES, rapporte, sans_commentaires_java, sort_si_contrat_demande
+from _commun import RACINES, rapporte, sort_si_contrat_demande
+from _commun.arbre import arbre, noeuds_de_type
 
 # Les DEUX arbres. Un test qui avale son echec ment de la meme facon qu une classe de production :
 # il rend vert sans avoir rien prouve, et c est precisement le defaut que l ADR 0008 nomme. La
@@ -30,8 +30,10 @@ from _commun import RACINES, rapporte, sans_commentaires_java, sort_si_contrat_d
 # deux boucles de reprise dont l assertion de l appelant tranche, une fermeture de banc. Aucun n est
 # un echec avale, et c est pourquoi ils entrent dans le cliquet plutot que de le faire rougir.
 
-# Un bloc catch sans accolade imbriquée : suffisant pour repérer les corps vides ou quasi vides.
-CATCH = re.compile(r"catch\s*\([^)]*\)\s*\{([^{}]*)\}", re.S)
+
+# Les types de noeud qu une grammaire Java donne aux commentaires. Un corps qui n en porte que
+# reste VIDE : l ADR veut une trace a l execution, pas une note dans le source.
+COMMENTAIRES = {"line_comment", "block_comment", "comment"}
 
 
 def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
@@ -46,16 +48,45 @@ def fichiers(racine: pathlib.Path | None = None) -> list[pathlib.Path]:
 
 
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
-    # Les commentaires sont retirés du fichier ENTIER d'abord (helper mutualisé) : le corps devient
-    # vide s'il ne portait qu'un « // ignoré volontairement », et un catch écrit dans un commentaire ne
-    # se fait pas prendre pour du code. L'ADR veut une trace observable À L'EXÉCUTION, pas une note.
+    r"""Les `catch` dont le corps ne porte aucune instruction, commentaires exceptés.
+
+    **La lecture se fait par la STRUCTURE depuis #5430**, et l'ancienne dépendait d'un motif faux.
+    Le corps était découpé par `catch\s*\([^)]*\)\s*\{([^{}]*)\}` sur un texte préalablement
+    débarrassé de ses commentaires par `sans_commentaires_java`, qui est une expression régulière et
+    ne sait pas ce qu'est une chaîne :
+
+        String url = "https://exemple.fr/a";   ->   String url = "https:
+
+    Le `//` d'une URL est pris pour un commentaire de ligne, et la chaîne est tronquée. Le corpus
+    porte 161 lignes où un `://` vit dans une chaîne. Aucune ne fausse le verdict AUJOURD'HUI,
+    parce que la troncature détruit le motif au lieu de le déplacer, et un catch qu'on ne voit plus
+    n'est ni un faux positif ni un faux négatif. C'est une fragilité, pas un défaut constaté, et
+    elle disparaît avec la lecture par l'arbre.
+
+    Un `catch` dont le corps porte des accolades imbriquées devient visible au passage : le motif
+    `[^{}]*` l'écartait par construction. Mesuré sur le corpus le 2026-09-07, 630 `catch` vus par
+    le motif contre 638 par l'arbre.
+
+    **Ces huit-là ne pouvaient pas être des faux négatifs**, et il faut le dire plutôt que de
+    laisser croire à une correction : un `catch` VIDE ne porte aucune accolade, donc le motif ne
+    pouvait pas le manquer pour cette raison. Ce lot ne fait donc rougir aucun site nouveau. Ce
+    qu'il retire est une dépendance à un découpage faux, sur un garde dont le cliquet est à zéro et
+    dont un seul faux négatif suffirait à rendre le verdict muet.
+
+    Les commentaires n'ont plus à être retirés : ce sont des nœuds, et un corps qui n'en porte que
+    reste vide. L'ADR veut une trace observable À L'EXÉCUTION, pas une note dans le source.
+    """
     trouves = []
     for source in fichiers(racine):
-        texte = sans_commentaires_java(source.read_text(encoding="utf-8"))
-        for bloc in CATCH.finditer(texte):
-            if not bloc.group(1).strip():
-                ligne = texte[: bloc.start()].count("\n") + 1
-                trouves.append(f"{source}:{ligne}  catch au corps vide")
+        racine_ast = arbre(source.read_bytes()).root_node
+        for attrape in noeuds_de_type(racine_ast, {"catch_clause"}):
+            corps = attrape.child_by_field_name("body")
+            if corps is None:
+                continue
+            # `named_children` écarte la ponctuation ET les commentaires : un corps qui ne porte
+            # qu un « // ignoré volontairement » est vide au sens de l ADR.
+            if not [e for e in corps.named_children if e.type not in COMMENTAIRES]:
+                trouves.append(f"{source}:{attrape.start_point[0] + 1}  catch au corps vide")
     return trouves
 
 
@@ -67,6 +98,16 @@ CONTRAT = {
     "seuil": "0, polarite=descend",
     "temoin": "scripts/adr/verifie_scripts.py#test_0008_echec_silencieux",
     "decision": "ADR 0008",
+    # Lire par l arbre coute, et #5400 retire du temps a la batterie. Declarer les chemins rend la
+    # hausse indolore sur toute demande qui ne touche pas de Java (ADR 5340). Un `chemins`
+    # INCOMPLET tait le garde en silence, la ou son absence le fait LANCER.
+    "chemins": """
+src/main/java/**
+src/test/java/**
+scripts/adr/0008-echec-silencieux.py
+scripts/_commun/**
+dev-docs/decisions/0008-aucun-echec-silencieux-severite-a-l-emission.md
+""",
 }
 
 
