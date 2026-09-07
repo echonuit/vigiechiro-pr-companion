@@ -51,6 +51,28 @@ MECANISME = """
 
 # Les portees, une ligne par chemin. La cle EST la cle YAML du job.
 PORTEES: dict[str, str] = {
+    # ⟨#5415⟩ Ce job construit trois sites MkDocs en `--strict`. Ses chemins sont ceux que le
+    # `paths:` de `pull_request` portait, mot pour mot : les sources des trois sites, leurs
+    # configurations, le hook qui injecte les captures, et les deux gardes de medias avec ce qu ils
+    # lisent. Le `paths:` du declencheur `push` reste, lui : il gouverne la PUBLICATION, pas le
+    # verdict d une demande, et ce sont deux questions differentes.
+    "site": """
+docs/**
+mkdocs.yml
+dev-docs/**
+mkdocs-dev.yml
+brief/**
+mkdocs-brief.yml
+scripts/mkdocs_hooks.py
+.github/assets/apercu-*.png
+.github/assets/captures.manifest
+.github/assets/check_doc_images.py
+.github/assets/parcours-*.mp4
+.github/assets/check_doc_videos.py
+scripts/doc-video/filme-un-parcours.sh
+.github/workflows/docs.yml
+"""
+    + MECANISME,
     # ⟨#5379⟩ Ces deux jobs etaient les derniers sur le `paths:` que le chantier #5294 a interdit.
     # Leurs chemins sont ceux que ce filtre portait : ce qui change ce qu on EMBARQUE, et rien
     # d autre. Ni `src/**` - le code de production ne change aucune dependance - ni la prose.
