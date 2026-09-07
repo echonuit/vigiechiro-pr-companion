@@ -186,10 +186,8 @@ class ParcoursImporterUneNuitTest {
         // on désigne la carte en cliquant dessus. Taper le chemin complet marcherait aussi, et ne
         // montrerait pas que la liste sert à naviguer.
         Respiration.surLeMomentCle(robot);
-        robot.clickOn("#" + ContenuDesignation.ID_CHEMIN)
-                .push(KeyCode.CONTROL, KeyCode.A)
-                .write(dossierDesCartes.toString())
-                .push(KeyCode.ENTER);
+        GesteVisible.remplacerLeTexte(robot, "#" + ContenuDesignation.ID_CHEMIN, dossierDesCartes.toString());
+        robot.push(KeyCode.ENTER);
 
         Attente.queSurLeFil(
                 () -> robot.lookup(NOM_DE_LA_CARTE + "/").tryQuery().isPresent(),
