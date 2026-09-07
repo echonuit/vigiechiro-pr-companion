@@ -33,6 +33,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import RACINE_DEPOT, RACINES_ANCREES, loupe, sort_si_contrat_demande
+from _commun.arbre import LecteurAbsent, arbre, noeuds_de_type
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4472"
@@ -81,56 +82,62 @@ def par_classe(fichier: pathlib.Path) -> tuple[str, int, int] | None:
 def par_methode(fichier: pathlib.Path) -> list[tuple[str, int, int, int]]:
     """(nom, ligne, lignes de commentaire, lignes de code) pour chaque methode du fichier.
 
-    Le commentaire d une methode est sa javadoc **plus** les `//` de son corps : les deux parlent de
-    la meme implementation, et les separer ferait passer pour maigre une methode dont tout le
-    commentaire est descendu dans le corps.
+    Le commentaire d une methode est sa doc-comment **plus** les `//` de son corps : les deux
+    parlent de la meme implementation, et les separer ferait passer pour maigre une methode dont
+    tout le commentaire est descendu dans le corps.
+
+    **Le corps se borne par la STRUCTURE depuis #5430.** La version d avant equilibrait les
+    accolades en comptant `{` et `}` par ligne, sans voir celles qui vivent dans une chaine. Mesure
+    sur temoin le 2026-09-07, sur deux methodes de cinq lignes dont la premiere declare `String
+    motif = "{";` :
+
+        avant  ('avecAccolade', 3, 2, 11)   <- 11 lignes au lieu de 5, et `suivante` DISPARAIT
+        apres  ('avecAccolade', 3, 1, 5) et ('suivante', 12, 1, 5)
+
+    Une accolade non fermee ne borne pas une methode : elle en avale les suivantes, et la loupe
+    rapporte alors une densite calculee sur un corps qui n existe pas.
     """
-    lignes = fichier.read_text(encoding="utf-8").split("\n")
-    trouves, i, profondeur = [], 0, 0
-    while i < len(lignes):
-        nu = lignes[i].strip()
-        if not _commentaire(nu) and profondeur == 1 and DECLARATION.search(nu):
-            # La javadoc qui precede, annotations sautees.
-            j, entete = i - 1, 0
-            while j >= 0:
-                avant = lignes[j].strip()
-                if ANNOTATION.match(avant) or not avant:
-                    j -= 1
-                    continue
-                if avant.startswith("//"):
-                    if avant.lstrip("/").strip():
-                        entete += 1
-                    j -= 1
-                    continue
-                break
-            # Le corps, jusqu a l accolade qui le referme.
-            depart, corps, dedans, ouvert = i + 1, 0, 0, profondeur
-            k = i
-            while k < len(lignes):
-                ligne = lignes[k].strip()
-                if _commentaire(ligne):
-                    if k > i and ligne.lstrip("/").strip():
-                        dedans += 1
-                else:
-                    ouvert += ligne.count("{") - ligne.count("}")
-                    if k > i and _code(ligne):
-                        corps += 1
-                    if ouvert <= profondeur and k > i:
-                        break
-                k += 1
-            # Une declaration qui s ouvre sur `(` - un appel enchaine, un lambda - n a pas de nom
-            # avant la parenthese : la ligne entiere fait alors office d etiquette.
-            avant_paren = nu.split("(")[0].split()
-            nom = avant_paren[-1] if avant_paren else nu[:40]
-            if corps >= PLANCHER_METHODE:
-                trouves.append((nom, depart, entete + dedans, corps))
-            i = k + 1
-            profondeur = ouvert
-            continue
-        if not _commentaire(nu):
-            profondeur += nu.count("{") - nu.count("}")
-        i += 1
-    return trouves
+    source = fichier.read_bytes()
+    racine_ast = arbre(source).root_node
+    lignes = source.decode("utf-8").split("\n")
+    trouves = []
+    for declaration in noeuds_de_type(
+        racine_ast, {"method_declaration", "constructor_declaration"}
+    ):
+        corps_noeud = declaration.child_by_field_name("body")
+        nom_noeud = declaration.child_by_field_name("name")
+        if corps_noeud is None or nom_noeud is None:
+            continue  # une methode abstraite ou d interface n a pas de corps a mesurer
+
+        # Le corps, sans son accolade ouvrante : la structure en donne les bornes exactes.
+        dedans = corps = 0
+        for rang in range(corps_noeud.start_point[0] + 1, corps_noeud.end_point[0] + 1):
+            nu = lignes[rang].strip()
+            if _commentaire(nu):
+                if nu.lstrip("/").strip():
+                    dedans += 1
+            elif _code(nu):
+                corps += 1
+
+        # La doc-comment qui precede. Le noeud de declaration porte DEJA ses annotations, donc
+        # remonter depuis sa premiere ligne les saute sans avoir a les reconnaitre.
+        entete, rang = 0, declaration.start_point[0] - 1
+        while rang >= 0:
+            avant = lignes[rang].strip()
+            if not avant:
+                rang -= 1
+                continue
+            if avant.startswith("//"):
+                if avant.lstrip("/").strip():
+                    entete += 1
+                rang -= 1
+                continue
+            break
+
+        if corps >= PLANCHER_METHODE:
+            depart = nom_noeud.start_point[0] + 1
+            trouves.append((nom_noeud.text.decode(), depart, entete + dedans, corps))
+    return sorted(trouves, key=lambda e: e[1])
 
 
 def _ou(f: pathlib.Path) -> str:
@@ -228,6 +235,57 @@ def _auto_test() -> int:
         )
         cas.append(("une methode sans commentaire ne sort pas", methodes([r]) == []))
 
+        # LES TROIS DEFAUTS DE L EQUILIBRAGE, tous rencontres sur le corpus reel, tous corriges
+        # par #5430. Chacun donnait une densite calculee sur un corps qui n existe pas.
+
+        # 1. UNE ACCOLADE DANS UNE CHAINE n ouvre pas un bloc. Sans cela le corps ne se referme
+        # jamais et AVALE les methodes suivantes : mesure a 55 lignes de code au lieu de 11 sur
+        # `ScenesHabilleesTest.methodesQuiRoutent`, qui ecrit `code.indexOf('{', ...)`.
+        pose(
+            "class F {\n"
+            "    /// Une.\n"
+            "    void avec() {\n"
+            '        String motif = "{";\n'
+            + "\n".join(f"        int v{i} = {i};" for i in range(5))
+            + "\n    }\n"
+            "    /// Deux.\n"
+            "    void suivante() {\n"
+            + "\n".join(f"        int w{i} = {i};" for i in range(5))
+            + "\n    }\n}\n"
+        )
+        m = methodes([r])
+        cas.append(("une accolade dans une chaine n ouvre pas un bloc", len(m) == 2))
+        cas.append(("et la methode suivante n est pas avalee", all(e[3] <= 6 for e in m)))
+
+        # 2. LA SUITE D UNE SIGNATURE n est pas du corps. La lecture par motif comptait la ligne
+        # de continuation dans le denominateur : 166 methodes du depot en etaient affectees, et
+        # TOUTES avaient une signature sur plusieurs lignes.
+        pose(
+            "class G {\n"
+            "    /// Une.\n"
+            "    void longue(\n            int a, int b) {\n"
+            + "\n".join(f"        int v{i} = {i};" for i in range(5))
+            + "\n    }\n}\n"
+        )
+        m = methodes([r])
+        cas.append(("la suite d une signature n est pas du corps", len(m) == 1 and m[0][3] == 5))
+
+        # 3. UNE ANNOTATION SUR PLUSIEURS LIGNES ne coupe pas la remontee vers la doc-comment. La
+        # version d avant s arretait sur la ligne de continuation, qui ne ressemble ni a une
+        # annotation ni a un commentaire, et perdait la prose entiere.
+        pose(
+            "class H {\n"
+            "    /// Une.\n    /// Deux.\n"
+            '    @DisplayName("GET /donnees/{id} : un titre long"\n            + " et sa suite")\n'
+            "    void f() {\n"
+            + "\n".join(f"        int v{i} = {i};" for i in range(5))
+            + "\n    }\n}\n"
+        )
+        m = methodes([r])
+        cas.append(
+            ("une annotation sur deux lignes ne coupe pas la doc", len(m) == 1 and m[0][2] == 2)
+        )
+
     for nom, ok in cas:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
@@ -249,6 +307,12 @@ def _rend(titre: str, mesures: list[tuple[float, str, int, int]], combien: int) 
 
 
 def main() -> int:
+    # Une loupe rend 0 en signalant, donc un 0 muet se lit « rien a signaler ». Sans lecteur, elle
+    # REFUSE plutot que de rendre ce zero-la : c est le cas ou le silence coute le plus cher.
+    try:
+        arbre(b"class Sonde {}")
+    except LecteurAbsent as absent:
+        raise SystemExit(str(absent)) from absent
     combien = 20
     for drapeau in ("--classes", "--methodes"):
         if drapeau in sys.argv:
@@ -280,6 +344,16 @@ CONTRAT = {
     "seuil": "(sans objet)",
     "temoin": "scripts/adr/loupe-4472-densite-de-commentaire.py --auto-test",
     "decision": "ADR 4472",
+    # Lire par l arbre coute, et #5400 retire du temps a la batterie. Declarer les chemins rend la
+    # hausse indolore sur toute demande qui ne touche pas de Java (ADR 5340). Un `chemins`
+    # INCOMPLET tait le garde en silence, la ou son absence le fait LANCER.
+    "chemins": """
+src/main/java/**
+src/test/java/**
+scripts/adr/loupe-4472-densite-de-commentaire.py
+scripts/_commun/**
+dev-docs/decisions/4472-un-commentaire-long-en-corps-de-methode-est-un-signal.md
+""",
 }
 
 
