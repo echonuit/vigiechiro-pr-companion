@@ -26,11 +26,11 @@ la boucle n aurait plus que l apparence d une reprise.
 from __future__ import annotations
 
 import pathlib
-import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import TESTS_ANCRES, rapporte, sort_si_contrat_demande
+from _commun.arbre import LecteurAbsent, arbre, noeuds_de_type, zones_illisibles
 
 ADR = "4974"
 
@@ -41,34 +41,11 @@ RACINE = TESTS_ANCRES
 # `Attente` EST l attente partagee : elle appelle `waitFor` par construction.
 EXEMPTES = {"Attente.java"}
 
-# Le corps d une methode privee, quel que soit son NOM et quel que soit son type de retour.
-SIGNATURE = re.compile(r"^[ \t]*private (?:static )?[\w<>\[\], ]+ (\w+)\(", re.M)
 # `waitFor` attend une CONDITION, `waitForAsyncFx` execute une ACTION sur le fil : deux gestes,
 # une seule dette, et `Attente` porte les deux depuis #4997. Ne compter que le premier serait
 # le contournement par renommage que cette ADR existe pour empecher.
-SONDE = re.compile(r"WaitForAsyncUtils\.(waitFor|waitForAsyncFx)\(")
-
-# Une methode plus longue que cela n est plus une aide : la lecture s arrete et le cas se voit a l
-# oeil. Borner evite qu un fichier pathologique fasse lire tout le reste du corps de la classe.
-LIGNES_MAX = 60
-
-
-def corpsDe(texte: str, debut: int) -> str:
-    """Le corps de la methode qui commence a `debut`, accolades equilibrees."""
-    profondeur, lignes = 0, []
-    for ligne in texte[debut:].split("\n"):
-        lignes.append(ligne)
-        profondeur += ligne.count("{") - ligne.count("}")
-        if profondeur == 0 and any("{" in vue for vue in lignes):
-            break
-        if len(lignes) > LIGNES_MAX:
-            break
-    return "\n".join(lignes)
-
-
-# Une ligne de COMMENTAIRE qui cite l appel n est pas un appel. Sans cela, la javadoc d
-# `AttenteAvantClic` qui explique pourquoi elle rattrape comptait comme une attente reinventee.
-COMMENTAIRE = re.compile(r"^\s*(///|//|\*|/\*)")
+SONDES = {"waitFor", "waitForAsyncFx"}
+PORTEUR = "WaitForAsyncUtils"
 
 
 def fichiers(racine: pathlib.Path = RACINE) -> list[pathlib.Path]:
@@ -80,6 +57,39 @@ def fichiers(racine: pathlib.Path = RACINE) -> list[pathlib.Path]:
     return sorted(racine.rglob("*.java"))
 
 
+def analyse(racine: pathlib.Path = RACINE) -> tuple[list[str], list[str]]:
+    """UNE passe sur le corpus, DEUX sorties : les suspects, et ce que la grammaire n a pas lu.
+
+    **La lecture se fait par la STRUCTURE depuis #5430, et ce n est pas de l elegance.** La version
+    d avant cherchait `WaitForAsyncUtils.waitFor(` par une expression reguliere, ligne par ligne, et
+    ecartait les commentaires en regardant si la ligne COMMENCE par `//`, `*` ou `/*`. Cette
+    heuristique se trompait dans les deux directions, mesure sur temoin le 2026-09-07 :
+
+        String aide = "utilisez WaitForAsyncUtils.waitFor(1, S, cond)";   -> compte, a tort
+        /*
+           WaitForAsyncUtils.waitFor(1, S, cond);                        -> compte, a tort
+         */
+
+    Une chaine de caracteres n est pas un appel, et la ligne MEDIANE d un commentaire de bloc ne
+    porte aucun marqueur. L arbre connait les deux sans heuristique : un `method_invocation` est un
+    appel, le reste ne l est pas.
+    """
+    trouves, zones_dites = [], []
+    for fichier in fichiers(racine):
+        if fichier.name in EXEMPTES:
+            continue
+        racine_ast = arbre(fichier.read_bytes()).root_node
+        zones_dites += [f"{fichier.name}:{d}-{b}" for d, b in zones_illisibles(racine_ast)]
+        for appel in noeuds_de_type(racine_ast, {"method_invocation"}):
+            nom = appel.child_by_field_name("name")
+            objet = appel.child_by_field_name("object")
+            if nom is None or objet is None:
+                continue
+            if nom.text.decode() in SONDES and objet.text.decode() == PORTEUR:
+                trouves.append(f"{fichier.name}:{appel.start_point[0] + 1}")
+    return trouves, zones_dites
+
+
 def suspects(racine: pathlib.Path = RACINE) -> list[str]:
     """Tout appel a `waitFor` hors de l aide partagee, une entree par site.
 
@@ -87,14 +97,16 @@ def suspects(racine: pathlib.Path = RACINE) -> list[str]:
     en clair dans un cas de test tait exactement la meme chose, et la restriction ne tenait qu a la
     facon dont le defaut avait ete trouve.
     """
-    trouves = []
-    for fichier in fichiers(racine):
-        if fichier.name in EXEMPTES:
-            continue
-        for rang, ligne in enumerate(fichier.read_text(encoding="utf-8").splitlines(), 1):
-            if SONDE.search(ligne) and not COMMENTAIRE.match(ligne):
-                trouves.append(f"{fichier.name}:{rang}")
-    return trouves
+    return analyse(racine)[0]
+
+
+def non_lus(racine: pathlib.Path = RACINE) -> list[str]:
+    """Les zones qu aucune grammaire n a su lire, nommees pour etre DITES et non reparees.
+
+    Sans elles, un garde qui lit par l arbre rend zero suspect sur une population amputee, et ce
+    zero ressemble a un succes : le defaut que #5007 a corrige en faisant compter les unites LUES.
+    """
+    return analyse(racine)[1]
 
 
 def _autoTest() -> int:
@@ -171,6 +183,40 @@ def _autoTest() -> int:
             )
         )
 
+        # LES DEUX CAS QUE LA LECTURE PAR MOTIF RATAIT, et qui sont la raison de #5430. Mesures
+        # sur le garde d avant migration le 2026-09-07 : il rendait `G.java:3` et `H.java:4`.
+        #
+        # Une CHAINE qui cite l appel n est pas un appel. L heuristique d avant n ecartait que les
+        # lignes COMMENCANT par un marqueur de commentaire, et une chaine n en porte aucun.
+        (r / "G.java").write_text(
+            "class G {\n    void message() {\n"
+            '        String aide = "utilisez WaitForAsyncUtils.waitFor(1, S, cond)";\n'
+            "    }\n}\n",
+            encoding="utf-8",
+        )
+        cas.append(
+            ("une chaine qui cite l appel n est pas un appel", "G.java:3" not in suspects(r))
+        )
+
+        # La ligne MEDIANE d un commentaire de bloc ne porte ni `//`, ni `*`, ni `/*`. C est le
+        # trou de l heuristique : elle ne regardait que le DEBUT de la ligne.
+        (r / "H.java").write_text(
+            "class H {\n    /*\n       Ancienne mise en place, retiree en #4847 :\n"
+            "       WaitForAsyncUtils.waitFor(1, S, cond);\n     */\n"
+            "    void propre() {}\n}\n",
+            encoding="utf-8",
+        )
+        cas.append(
+            ("une ligne mediane de commentaire de bloc non plus", "H.java:4" not in suspects(r))
+        )
+
+        # ET LE CONTRASTE, sans lequel les deux cas ci-dessus passeraient sur un garde qui ne
+        # trouve plus rien du tout. Un garde muet satisfait toutes les negations.
+        (r / "I.java").write_text(
+            "class I {\n    void vrai() {\n" + sonde + "    }\n}\n", encoding="utf-8"
+        )
+        cas.append(("et le vrai appel, lui, est toujours vu", "I.java:3" in suspects(r)))
+
     for nom, ok in cas:
         print(f"  {'✔' if ok else '✘'} {nom}")
     rates = [n for n, ok in cas if not ok]
@@ -191,6 +237,25 @@ CONTRAT = {
     "seuil": "5, polarite=descend",
     "temoin": "scripts/adr/4974-attente-reinventee.py --auto-test",
     "decision": "ADR 4974",
+    # Lire par l arbre coute, et #5400 retire du temps a la batterie en ce moment meme. Declarer les
+    # chemins rend la hausse indolore sur toute demande qui ne touche pas de Java (ADR 5340).
+    #
+    # **Un `chemins` INCOMPLET est plus dangereux qu un `chemins` absent** : il tait le garde en
+    # silence, la ou son absence le fait LANCER. Quatre lignes, et chacune a sa raison :
+    #
+    #  - `src/test/java/**` SEUL, parce que ce garde lit `TESTS_ANCRES` et rien d autre ;
+    #  - **ce fichier meme** : `batterie.engage()` confronte les `chemins` au diff sans regle
+    #    particuliere sur la source du garde, donc sans cette ligne une demande qui REECRIT ce
+    #    cliquet ne le lance pas ;
+    #  - `scripts/_commun/**`, ou vivent `rapporte`, `cliquet` et le lecteur d arbre dont ce garde
+    #    delegue desormais sa question centrale ;
+    #  - la ligne `ratchet:` de sa propre decision, que `resserre_cliquets.py` deplace.
+    "chemins": """
+src/test/java/**
+scripts/adr/4974-attente-reinventee.py
+scripts/_commun/**
+dev-docs/decisions/4974-un-garde-qui-lit-un-nom-se-contourne-en-renommant.md
+""",
 }
 
 
@@ -198,11 +263,22 @@ if __name__ == "__main__":
     sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         sys.exit(_autoTest())
+    # UNE passe, dont sortent le verdict et ce que la grammaire n a pas su lire. Ce dernier se DIT
+    # sur la sortie d erreur avant le verdict : le compte est nul aujourd hui, et le jour ou il ne
+    # le sera plus, le silence serait un faux vert.
+    try:
+        listes, zones = analyse()
+    except LecteurAbsent as absent:
+        # Un REFUS, pas une trace. Une `ModuleNotFoundError` nue ressemble a un defaut du changement
+        # en cours ; le message dit ce qui manque ET quoi faire.
+        raise SystemExit(str(absent)) from absent
+    for zone in zones:
+        print(f"zone non lue par la grammaire : {zone}", file=sys.stderr)
     sys.exit(
         rapporte(
             ADR,
             "attentes réinventées : un `waitFor` hors de l'aide partagée",
-            suspects(),
+            listes,
             lus=len(fichiers()),
         )
     )

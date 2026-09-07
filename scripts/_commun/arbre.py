@@ -163,6 +163,32 @@ def dans_un_corps_de_code(racine, ligne: int) -> bool:
     return ancetre_parmi(noeud_a_la_ligne(racine, ligne), CORPS_DE_CODE)
 
 
+@functools.cache
+def _requete(types: frozenset):
+    """La requête compilée pour un jeu de types, construite UNE fois par jeu.
+
+    Le cache n'est pas du confort : la primitive est appelée une fois par fichier, et recompiler la
+    requête à chaque appel coûte plus cher que le parcours Python qu'elle remplace.
+
+    L'import est PARESSEUX pour la même raison que celui de `_analyseur` : un garde qui importe ce
+    fonds sans lire de Java ne doit pas payer la grammaire.
+    """
+    try:
+        from tree_sitter import Query
+        from tree_sitter_language_pack import get_language
+    except ImportError as absent:
+        raise LecteurAbsent(_REFUS) from absent
+
+    return Query(get_language("java"), " ".join(f"({t}) @t" for t in sorted(types)))
+
+
+def _curseur(requete):
+    """Un curseur neuf par lecture : `QueryCursor` porte l'état du parcours, il ne se partage pas."""
+    from tree_sitter import QueryCursor
+
+    return QueryCursor(requete)
+
+
 def noeuds_de_type(racine, types) -> list:
     """Tous les nœuds dont le type est dans `types`, dans l'ordre du fichier.
 
@@ -170,12 +196,7 @@ def noeuds_de_type(racine, types) -> list:
     méthode ou de `catch`. Le nœud porte son texte : `noeud.text.decode()` rend le corps exact, sans
     qu'une accolade dans une chaîne ne déplace la fin (#5430).
     """
-    trouves, a_voir = [], [racine]
-    while a_voir:
-        noeud = a_voir.pop()
-        if noeud.type in types:
-            trouves.append(noeud)
-        a_voir.extend(reversed(noeud.children))
+    trouves = _curseur(_requete(frozenset(types))).captures(racine).get("t", [])
     return sorted(trouves, key=lambda n: n.start_byte)
 
 
