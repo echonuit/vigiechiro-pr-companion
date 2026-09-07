@@ -34,6 +34,18 @@ la réponse est non, le job écrit « sans objet » et finit **vert en ayant con
 La portée d'un job est déclarée dans un seul endroit, `.github/scripts/porte_du_job.py`, et tout job
 de demande y figure : soit avec ses chemins, soit dans les inconditionnels avec **sa raison écrite**.
 
+## La correspondance job vers portée est une bijection, et ce n'est pas une commodité
+
+Un nom de job ne désigne qu'un seul job. Cette contrainte a l'air d'un détail d'implémentation ;
+c'est elle qui empêche qu'un job soit **couvert par la déclaration d'un autre**.
+
+Mesuré le 2026-09-07, avant #5439 : `docs.yml` et `maven.yml` portaient tous deux un job `build`. Le
+garde comptant par nom, une seule entrée les satisfaisait, avec une raison écrite qui appartenait à
+l'un et était fausse pour l'autre. Vingt couples se déclenchaient pour dix-neuf noms distincts, et le
+garde d'exhaustivité était **vert sur un job qu'il n'avait jamais examiné**.
+
+Le dispositif reproduisait donc chez lui le défaut qu'il ferme partout ailleurs.
+
 ## Pourquoi `paths:` est interdit, et ce n'est pas une préférence
 
 Deux décisions antérieures le condamnent, chacune de son côté.
