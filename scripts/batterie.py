@@ -798,13 +798,17 @@ def _auto_test() -> int:
             "4617-code-mort-et-zone-de-test.py",
             1,
             "",
-            "target/pmd.xml est absent : PMD n a pas tourne.\n"
-            "Ce garde REFUSE plutot que de conclure sur ce qu il n a pas lu.\n"
-            "Lancez d abord : ./mvnw -B -o test-compile pmd:pmd",
+            (
+                "target/pmd.xml est absent : PMD n a pas tourne.\n"
+                "Ce garde REFUSE plutot que de conclure sur ce qu il n a pas lu.\n"
+                "Lancez d abord : ./mvnw -B -o test-compile pmd:pmd"
+            ),
             (
                 "rouge",
-                "target/pmd.xml est absent : PMD n a pas tourne.\n"
-                "Ce garde REFUSE plutot que de conclure sur ce qu il n a pas lu.",
+                (
+                    "target/pmd.xml est absent : PMD n a pas tourne.\n"
+                    "Ce garde REFUSE plutot que de conclure sur ce qu il n a pas lu."
+                ),
             ),
         ),
         (
