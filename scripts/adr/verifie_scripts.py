@@ -1526,6 +1526,60 @@ def test_un_plancher_sans_population_dit_pourquoi() -> None:
     _verifie("et il dit que rien n a ete lu", "population-vide" in sortie.getvalue(), True)
 
 
+def test_un_cas_qui_leve_se_nomme() -> None:
+    """Un cas dont l expression LEVE doit rougir en se nommant, pas arreter le temoin (#5444).
+
+    L ADR 4918 exige qu un auto-test dise lequel de ses controles a rougi. La forme a VALEUR ne le
+    peut pas : l expression est evaluee au site d appel, donc elle plante avant que `verifie` prenne
+    la main. Deux sessions ont ecrit la meme forme fautive sur le meme fichier les 6 et 7 septembre
+    2026, ce qui designe la signature et non les personnes.
+
+    Les quatre cas ci-dessous tiennent les quatre promesses de la forme differee : elle rougit, elle
+    NOMME le cas, elle dit le TYPE de ce qui a ete leve, et elle laisse le temoin continuer.
+    """
+    import contextlib
+    import io
+
+    commun = _charge("_commun.py")
+
+    # Le compteur n est pas un ornement : sans lui, les cas ci-dessous passent MEME si l enveloppe
+    # est retiree. Sans elle, `verifie` compare l objet fonction a la chaine attendue, ce qui rougit
+    # et se nomme de la meme facon - une mutation simulee le 2026-09-07 a montre trois cas verts sur
+    # quatre. Ce qui distingue les deux formes est que l expression ait ete EVALUEE.
+    appels = []
+
+    def leve():
+        appels.append(1)
+        raise ValueError("la sonde n a pas su lire")
+
+    sortie = io.StringIO()
+    with contextlib.redirect_stdout(sortie):
+        verifie, echecs = commun.cas_d_auto_test()
+        verifie("un cas qui leve", leve, "peu importe")
+        verifie("un cas qui suit", 1, 1)
+    ecrit = sortie.getvalue()
+
+    _verifie("l expression differee est EVALUEE", len(appels), 1)
+    _verifie(
+        "le cas rougit en disant qu il a leve",
+        "un cas qui leve : l expression a levé" in ecrit,
+        True,
+    )
+    _verifie("il dit le type de ce qui a ete leve", "ValueError" in ecrit, True)
+    _verifie("la marque porte l echec", echecs(), 1)
+    _verifie("et le temoin conclut sur les cas suivants", "✔ un cas qui suit" in ecrit, True)
+
+    # La forme A VALEUR n a pas bouge : 186 sites d appel en dependent, et les convertir aurait
+    # coute 79 reprises a la main pour un gain nul, aucun ne levant aujourd hui.
+    sortie = io.StringIO()
+    with contextlib.redirect_stdout(sortie):
+        verifie, echecs = commun.cas_d_auto_test()
+        verifie("une valeur juste passe", 2, 2)
+        verifie("une valeur fausse rougit", 2, 3)
+    _verifie("la forme a valeur juge encore", echecs(), 1)
+    _verifie("et elle rend son ecart", "attendu 3, obtenu 2" in sortie.getvalue(), True)
+
+
 def test_le_rapport_lit_encore_les_trois_lignes() -> None:
     """La COUTURE entre ce que `_commun` ECRIT et ce que `rapport.py` LIT (issue #5007).
 
