@@ -838,7 +838,13 @@ def test_5437_fixture_suppose_la_plateforme() -> None:
     APPEL = 'Files.setPosixFilePermissions(p, PosixFilePermissions.fromString("r-xr-xr-x"));'
 
     def classe(entete: str, corps: str) -> str:
-        return "class A {\n" + entete + "    void t() throws IOException {\n        " + corps + "\n    }\n}\n"
+        return (
+            "class A {\n"
+            + entete
+            + "    void t() throws IOException {\n        "
+            + corps
+            + "\n    }\n}\n"
+        )
 
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)

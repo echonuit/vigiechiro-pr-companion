@@ -123,9 +123,10 @@ def _rattrape_le_refus(appel) -> bool:
     """
     noeud = appel
     while noeud is not None:
-        if noeud.type == "try_statement":
-            if "UnsupportedOperationException" in noeud.text.decode("utf-8", "replace"):
-                return True
+        if noeud.type == "try_statement" and "UnsupportedOperationException" in noeud.text.decode(
+            "utf-8", "replace"
+        ):
+            return True
         noeud = noeud.parent
     return False
 
@@ -189,7 +190,9 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
             ):
                 continue
             ligne = appel.start_point[0] + 1
-            trouves.append(f"{source.relative_to(base)}:{ligne}  {nom.text.decode()} sans exigence déclarée")
+            trouves.append(
+                f"{source.relative_to(base)}:{ligne}  {nom.text.decode()} sans exigence déclarée"
+            )
     return trouves
 
 
@@ -238,15 +241,26 @@ def _auto_test() -> int:
     )
     verifie(
         "un assumeTrue en tete de methode le declare",
-        len(_sur_source(NU.replace("        Files.set", "        assumeTrue(SystemeDeFichiers.posixDisponible());\n        Files.set"))),
+        len(
+            _sur_source(
+                NU.replace(
+                    "        Files.set",
+                    "        assumeTrue(SystemeDeFichiers.posixDisponible());\n        Files.set",
+                )
+            )
+        ),
         0,
     )
     verifie(
         "un appel qui rattrape UnsupportedOperationException se garde seul",
-        len(_sur_source(NU.replace(
-            "        Files.setPosixFilePermissions(p, PosixFilePermissions.fromString(\"r-xr-xr-x\"));",
-            "        try {\n            Files.setPosixFilePermissions(p, null);\n        } catch (UnsupportedOperationException hors) {\n            p.toFile().setExecutable(true);\n        }",
-        ))),
+        len(
+            _sur_source(
+                NU.replace(
+                    '        Files.setPosixFilePermissions(p, PosixFilePermissions.fromString("r-xr-xr-x"));',
+                    "        try {\n            Files.setPosixFilePermissions(p, null);\n        } catch (UnsupportedOperationException hors) {\n            p.toFile().setExecutable(true);\n        }",
+                )
+            )
+        ),
         0,
     )
 
@@ -254,21 +268,27 @@ def _auto_test() -> int:
     # l arbre du 2026-09-06, un grep retenait SEPT fichiers la ou le garde en retient deux.
     verifie(
         "une citation en commentaire n est pas un appel",
-        len(_sur_source("""class CasTest {
+        len(
+            _sur_source("""class CasTest {
     /// Ici, `Files.setPosixFilePermissions` jetterait sous Windows.
     // et Files.getPosixFilePermissions aussi.
     @Test
     void cas() {}
 }
-""")),
+""")
+        ),
         0,
     )
     verifie(
         "fromString seule ne touche aucun fichier",
-        len(_sur_source(NU.replace(
-            "Files.setPosixFilePermissions(p, PosixFilePermissions.fromString(\"r-xr-xr-x\"))",
-            "var m = PosixFilePermissions.fromString(\"r-xr-xr-x\")",
-        ))),
+        len(
+            _sur_source(
+                NU.replace(
+                    'Files.setPosixFilePermissions(p, PosixFilePermissions.fromString("r-xr-xr-x"))',
+                    'var m = PosixFilePermissions.fromString("r-xr-xr-x")',
+                )
+            )
+        ),
         0,
     )
 
@@ -330,5 +350,10 @@ if __name__ == "__main__":
         print(absent)
         raise SystemExit(1) from absent
     raise SystemExit(
-        rapporte(ADR, "fixture qui appelle une API POSIX sans déclarer qu'elle l'exige", listes, lus=len(fichiers()))
+        rapporte(
+            ADR,
+            "fixture qui appelle une API POSIX sans déclarer qu'elle l'exige",
+            listes,
+            lus=len(fichiers()),
+        )
     )
