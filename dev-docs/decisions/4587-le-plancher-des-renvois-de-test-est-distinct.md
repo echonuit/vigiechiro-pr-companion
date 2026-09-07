@@ -8,7 +8,7 @@ decided_at: 2026-08-28
 verification: certaine
 enforced_by:
   - "scripts/adr/4395-renvois-en-javadoc.py"
-floor: 1201
+floor: 1205
 inv_key: plancher-renvois-test
 verified:
   - by: machine:ci

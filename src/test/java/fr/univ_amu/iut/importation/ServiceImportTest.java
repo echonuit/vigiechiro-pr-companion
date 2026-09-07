@@ -29,6 +29,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.fixture.EmpreinteDeDossier;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
@@ -63,6 +64,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -71,6 +73,7 @@ import java.util.function.LongConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.io.TempDir;
 
 /// Test d'orchestration de bout en bout de [ServiceImport] (parcours P2), sur une base SQLite
@@ -193,17 +196,40 @@ class ServiceImportTest {
     }
 
     @Test
-    @DisplayName("#4991 : un import depuis une source en LECTURE SEULE aboutit, avec ses fichiers")
-    void import_depuis_une_source_en_lecture_seule_aboutit() throws IOException {
-        // LE garde de ce lot, et il ne porte pas sur le message. Signaler une carte en lecture seule
-        // n'a de valeur que si l'import continue de fonctionner : le renommage opère dans le
-        // workspace, jamais sur la carte (R9), donc rien ne l'empêche. Si ce test rougit, le remède a
-        // transformé une information en obstacle, ce qui serait PIRE que le silence d'avant.
+    @DisplayName("#4991 : un import ne touche PAS à la carte, quoi qu'il fasse par ailleurs")
+    void import_ne_touche_pas_a_la_carte() throws IOException {
+        // LE garde du lot #4991, et sa forme portable. Signaler une carte en lecture seule n'a de
+        // valeur que si l'import continue de fonctionner : le renommage opère dans le workspace,
+        // jamais sur la carte (R9), donc rien ne l'empêche. Si ce test rougit, le remède a transformé
+        // une information en obstacle, ce qui serait PIRE que le silence d'avant.
         //
-        // La source est rendue non inscriptible par ses permissions, faute de pouvoir monter un
-        // volume en lecture seule depuis un banc. Ce n'est pas le même mécanisme que celui qu'on
-        // détecte - le drapeau du volume - et c'est voulu : ce test-ci n'éprouve pas la détection,
-        // il éprouve que l'import n'a jamais eu besoin d'écrire sur la carte.
+        // Le cas frère éprouvait la même chose EN EMPÊCHANT d'écrire, par les permissions POSIX. Cette
+        // forme-ci CONSTATE qu'on n'a pas écrit, ce qui se joue partout et attrape en plus l'écriture
+        // que des permissions permissives auraient laissée passer. C'est la couture que demande
+        // l'ADR 3802 : la borne s'éprouve sans dépendre de ce que le système sait refuser (#5435).
+        Map<Path, String> avant = EmpreinteDeDossier.de(sd);
+
+        ResultatImport resultat = service.importer(sd, idPoint, prefixe);
+
+        assertThat(resultat.nombreOriginaux()).isEqualTo(2);
+        assertThat(EmpreinteDeDossier.de(sd))
+                .as("l'import lit la carte et n'y écrit rien : ni fichier ajouté, ni fichier renommé, "
+                        + "ni contenu modifié")
+                .isEqualTo(avant);
+    }
+
+    @Test
+    @DisplayName("#4991 : un import depuis une source en LECTURE SEULE aboutit, avec ses fichiers")
+    @EnabledIf("fr.univ_amu.iut.fixture.SystemeDeFichiers#posixDisponible")
+    void import_depuis_une_source_en_lecture_seule_aboutit() throws IOException {
+        // Ce qui reste ici, la propriété étant passée dans le cas ci-dessus : le CÂBLAGE, sur une
+        // source que le système refuse réellement d'écrire. L'ADR 3802 sépare les deux et dit que
+        // l'un ne remplace pas l'autre.
+        //
+        // Les permissions tiennent lieu de volume monté en lecture seule, faute de pouvoir en monter
+        // un depuis un banc. La fixture EXIGE donc POSIX et le déclare : sans la déclaration, elle
+        // jetait `UnsupportedOperationException` sous Windows avant la première assertion, et le
+        // garde du lot ne s'y jouait pas (#5435).
         Files.setPosixFilePermissions(sd, PosixFilePermissions.fromString("r-xr-xr-x"));
         try {
             ResultatImport resultat = service.importer(sd, idPoint, prefixe);

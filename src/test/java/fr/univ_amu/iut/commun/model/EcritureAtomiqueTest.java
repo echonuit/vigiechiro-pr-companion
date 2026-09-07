@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import fr.univ_amu.iut.commun.model.EcritureAtomique.Deplacement;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -67,7 +66,7 @@ class EcritureAtomiqueTest {
 
     @Test
     @DisplayName("Réécriture par-dessus un fichier laissé permissif : le nouveau reste privé")
-    @EnabledIf("fr.univ_amu.iut.commun.model.EcritureAtomiqueTest#posixDisponible")
+    @EnabledIf("fr.univ_amu.iut.fixture.SystemeDeFichiers#posixDisponible")
     void reecriture_ne_herite_pas_des_permissions_laxistes() throws IOException {
         // `@EnabledIf` plutôt qu'un `assumeTrue` en cours de route : la fixture elle-même exige
         // POSIX (elle CRÉE un fichier `rw-rw-rw-`), donc le cas n'a pas de sens ailleurs. Déclaratif,
@@ -89,7 +88,7 @@ class EcritureAtomiqueTest {
     // y survivaient. Une propriété de sécurité qui ne sait pas dire « non » ne dit rien.
     @Test
     @DisplayName("Un fichier ouvert à tous n'est PAS déclaré restreint")
-    @EnabledIf("fr.univ_amu.iut.commun.model.EcritureAtomiqueTest#posixDisponible")
+    @EnabledIf("fr.univ_amu.iut.fixture.SystemeDeFichiers#posixDisponible")
     void un_fichier_permissif_n_est_pas_restreint() throws IOException {
         Path ouvert = dossier.resolve("ouvert.txt");
         Files.createFile(ouvert, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-rw-rw-")));
@@ -127,10 +126,6 @@ class EcritureAtomiqueTest {
         assertThat(temporairesResiduels())
                 .as("un temporaire abandonné garderait le secret sur le disque")
                 .isEmpty();
-    }
-
-    static boolean posixDisponible() {
-        return FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
     }
 
     /// Plus d'`assumeTrue` ici : il interrompait le test APPELANT au milieu de ses assertions, et
