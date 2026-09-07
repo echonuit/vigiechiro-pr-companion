@@ -41,7 +41,12 @@ sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 ATELIER = RACINE / ".github" / "workflows" / "lint.yml"
-LANCE = re.compile(r"scripts/methode/([a-z0-9-]+\.py)")
+# ⟨l ancre negative, et elle n est pas decorative⟩ Sans elle, le motif attrape la QUEUE des chemins
+# `.github/scripts/...` et le corpus passe de 26 a 71. Mesure du 2026-09-07 en ecrivant #5397.
+#
+# ⟨`scripts/adr` est exclu⟩ Il a son propre banc, `verifie_temoins_non_decoratifs.py`. Deux bancs
+# mutant le meme garde compteraient deux fois, et la somme cesserait de valoir la population.
+LANCE = re.compile(r"(?<![\w./-])scripts/(?!adr/)([a-z0-9_/-]+\.py)")
 
 # Ce qu on insere pour retirer sa detection a un garde, sans toucher a ce qui le decrit.
 #
@@ -65,9 +70,33 @@ for _nom_mutation, _val_mutation in list(globals().items()):
 """
 
 
+def declare_un_contrat(chemin: pathlib.Path) -> bool:
+    """Ce fichier declare-t-il un `CONTRAT` ? Sinon ce n est pas un garde.
+
+    La regle est celle que `verifie-batterie-locale.py` porte deja : « un script qui ne declare
+    aucun CONTRAT n est pas un garde ». `scripts/graphify/rebuild.py` reconstruit un graphe et
+    `scripts/mkdocs/bandeau_adr.py` engendre un bandeau : ils PRODUISENT, ils ne jugent pas, et
+    `lint.yml` les lance pourtant. Sans ce filtre, l elargissement du motif les compterait.
+    """
+    try:
+        arbre = ast.parse(chemin.read_text(encoding="utf-8"))
+    except (OSError, SyntaxError):
+        return False
+    return any(
+        isinstance(n, ast.Assign) and any(getattr(c, "id", "") == "CONTRAT" for c in n.targets)
+        for n in ast.walk(arbre)
+    )
+
+
 def corpus() -> list[str]:
-    """Les gardes de methode que `lint.yml` lance, derives et non enumeres."""
-    return sorted(set(LANCE.findall(ATELIER.read_text(encoding="utf-8"))))
+    """Les gardes que `lint.yml` lance sous `scripts/`, derives et non enumeres.
+
+    Rendus RELATIFS a `scripts/`, donc `methode/x.py` et `batterie.py` : la porte vit a la racine du
+    dossier, et le motif d avant la manquait alors que la prose de ce banc annonce « les gardes que
+    la CI lance vraiment » (#5397).
+    """
+    trouves = set(LANCE.findall(ATELIER.read_text(encoding="utf-8")))
+    return sorted(c for c in trouves if declare_un_contrat(RACINE / "scripts" / c))
 
 
 def porte_un_auto_test(source: str) -> bool:
@@ -165,7 +194,7 @@ def verdict_sous_mutation(nom: str, faux: pathlib.Path) -> tuple[str, str]:
     conclut pas, et c est elle qui distingue « il faudrait le rendre mutable » de « le banc a un
     defaut ».
     """
-    cible = faux / "scripts" / "methode" / nom
+    cible = faux / "scripts" / nom
     original = cible.read_text(encoding="utf-8")
     try:
         cible.write_text(mute(original), encoding="utf-8")
@@ -194,7 +223,7 @@ def suspects() -> tuple[list[str], list[str], list[str]]:
     decoratifs, illisibles, non_concluants = [], [], []
     with arbre_jetable() as faux:
         for nom in corpus():
-            f = RACINE / "scripts" / "methode" / nom
+            f = RACINE / "scripts" / nom
             if not f.is_file():
                 illisibles.append(f"{nom} : absent de scripts/methode")
                 continue
@@ -226,6 +255,29 @@ def _auto_test() -> int:
     verifie, echecs = cas_d_auto_test()
 
     verifie("le corpus vient de lint.yml, et n est pas vide", len(corpus()) > 5, True)
+    # ⟨#5397⟩ La prose de ce banc dit « les gardes que la CI lance ». Son motif disait
+    # `scripts/methode/` seulement, si bien que `scripts/batterie.py` - lance par `lint.yml:600`,
+    # portant un CONTRAT et un temoin - n etait mute par AUCUN des trois bancs.
+    verifie(
+        "le corpus prend la porte, qui vit hors de scripts/methode", "batterie.py" in corpus(), True
+    )
+    # ⟨le filtre par CONTRAT⟩ `lint.yml` lance aussi `scripts/graphify/rebuild.py` et
+    # `scripts/mkdocs/bandeau_adr.py`, qui PRODUISENT sans juger. Sans ce filtre, l elargissement du
+    # motif les compterait comme des gardes, et le banc muterait un generateur de graphe.
+    verifie(
+        "un script lance par la CI mais sans CONTRAT n est pas un garde",
+        any("rebuild.py" in c or "bandeau_adr.py" in c for c in corpus()),
+        False,
+    )
+    # ⟨l ancre negative, eprouvee sur le MOTIF⟩ Elle empeche d attraper la queue des chemins
+    # `.github/scripts/...`. Son effet est invisible depuis `corpus()`, que le filtre par CONTRAT
+    # rattrape ; c est donc le motif qu il faut interroger, sans quoi cette propriete n a aucun
+    # temoin - le defaut consigne en #5418.
+    verifie(
+        "le motif ne prend pas la queue d un chemin de .github/scripts",
+        LANCE.findall("python3 .github/scripts/verifie_corps_pr.py\n"),
+        [],
+    )
     verifie(
         "un garde a point d entree est mutable",
         mutable('def f():\n    pass\n\n\nif __name__ == "__main__":\n    f()\n'),
@@ -271,7 +323,7 @@ def _auto_test() -> int:
             'if __name__ == "__main__":\n    raise SystemExit(_auto_test())\n',
             encoding="utf-8",
         )
-        verdict, cause = verdict_sous_mutation("faux-planteur.py", faux_verdict)
+        verdict, cause = verdict_sous_mutation("methode/faux-planteur.py", faux_verdict)
         verifie("un garde qui plante ne CONCLUT pas", verdict, "non concluant")
         verifie("et sa cause est rendue", "ValueError" in cause or "TypeError" in cause, True)
 
@@ -286,7 +338,7 @@ def _auto_test() -> int:
         )
         verifie(
             "un garde qui lit sa detection TIENT",
-            verdict_sous_mutation("faux-tenu.py", faux_verdict)[0],
+            verdict_sous_mutation("methode/faux-tenu.py", faux_verdict)[0],
             "tient",
         )
 
@@ -299,7 +351,7 @@ def _auto_test() -> int:
         )
         verifie(
             "un garde qui ne la lit pas est DECORATIF",
-            verdict_sous_mutation("faux-muet.py", faux_verdict)[0],
+            verdict_sous_mutation("methode/faux-muet.py", faux_verdict)[0],
             "decoratif",
         )
 
