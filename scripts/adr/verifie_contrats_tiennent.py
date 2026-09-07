@@ -46,6 +46,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import (
     CHAMPS_DU_CONTRAT,
+    CHAMPS_FACULTATIFS,
     RACINE_DEPOT,
     cas_d_auto_test,
     cliquet,
@@ -558,8 +559,15 @@ def _auto_test() -> int:
     # sens, sinon un controle qui repondrait toujours `True` passerait le premier.
     # L aide SORT, elle ne se contente pas d imprimer (issue #5137). Si elle rendait la main, le
     # garde ferait son travail apres avoir declare : `--contrat` deviendrait un balayage du depot,
-    # et le `startswith` de `contrat_de` resterait vrai, donc rien ne rougirait. Le controle est le
-    # NOMBRE de lignes : sept, l en-tete et les six champs, et rien apres.
+    # et le `startswith` de `contrat_de` resterait vrai, donc rien ne rougirait.
+    #
+    # LE CONTROLE PORTE SUR CE QUE CHAQUE LIGNE EST, ET NON SUR LEUR NOMBRE. Il a compte sept
+    # lignes jusqu au 2026-09-07, soit l en-tete et les six champs REQUIS, et il a rougi le jour ou
+    # le cobaye a gagne un `chemins` (#5430). Le champ etait pourtant prevu : `sort_si_contrat_...`
+    # ecrit en toutes lettres que les facultatifs viennent apres « seulement s ils sont la ». Un cas
+    # qui compte un total fige interdit donc ce que le code autorise, et il rougit sur du bon
+    # travail, ce que l ADR 4002 refuse. Ce qu il doit prouver est qu AUCUNE ligne etrangere ne
+    # suit le contrat, et c est ce qu il verifie desormais.
     rendu_reel = subprocess.run(
         [
             sys.executable,
@@ -571,10 +579,17 @@ def _auto_test() -> int:
         cwd=RACINE_DEPOT,
         check=False,
     ).stdout
+    lignes_rendues = [l for l in rendu_reel.split("\n") if l.strip()]
+    connus = tuple(f"{c}:" for c in CHAMPS_DU_CONTRAT + CHAMPS_FACULTATIFS)
     verifie(
         "repondre son contrat n entraine AUCUN autre travail",
-        len([l for l in rendu_reel.split("\n") if l.strip()]),
-        1 + len(CHAMPS_DU_CONTRAT),
+        [l for l in lignes_rendues[1:] if not l.startswith(connus)],
+        [],
+    )
+    verifie(
+        "et les six champs REQUIS y sont, dans l ordre",
+        [l.split(":")[0] for l in lignes_rendues[1 : 1 + len(CHAMPS_DU_CONTRAT)]],
+        list(CHAMPS_DU_CONTRAT),
     )
 
     verifie(
