@@ -37,37 +37,11 @@ on:
       - ".github/assets/check_doc_videos.py"
       - "scripts/doc-video/filme-un-parcours.sh"
       - ".github/workflows/docs.yml"
-  pull_request:
-    paths:
-      - "docs/**"
-      - "mkdocs.yml"
-      - "dev-docs/**"
-      - "mkdocs-dev.yml"
-      - "brief/**"
-      - "mkdocs-brief.yml"
-      - "scripts/mkdocs_hooks.py"
-      - ".github/assets/apercu-*.png"
-      - ".github/assets/captures.manifest"
-      - ".github/assets/check_doc_images.py"
-      - ".github/assets/parcours-*.mp4"
-      - ".github/assets/check_doc_videos.py"
-      - "scripts/doc-video/filme-un-parcours.sh"
-      - ".github/workflows/docs.yml"
-  # Republie la doc APRÈS régénération des captures par « Aperçus des vues » :
-  # ce workflow commit les PNG en `[skip ci]` (anti-récursion), ce qui bloquerait
-  # un déclencheur push mais PAS workflow_run (immunisé au [skip ci]). Sans cela,
-  # une capture régénérée serait mergée sans reconstruire le site -> images
-  # publiées périmées.
-  # Corollaire : ne JAMAIS écrire ce marqueur de saut dans un message de commit
-  # qui modifie la doc, sinon la republication par push est sautée elle aussi.
-  #
-  # Le nom doit suivre `name:` de capture-vues.yml À LA LETTRE : GitHub apparie par
-  # égalité stricte, et un nom qui ne correspond à rien n'arme rien SANS jamais rougir.
-  # Vécu (#3279) : #1439 a renommé « Aperçus des vues (main) » en « Aperçus des vues »,
-  # la référence est restée ici, et la republication a cessé pendant trois semaines.
-  # C'est pourquoi la restriction à `main` vit maintenant dans le `if:` du job et non
-  # dans le nom : capture-vues.yml tourne aussi sur les PR, et une intention rangée
-  # dans un libellé se recasse au renommage suivant.
+  # ⟨aucun `paths:` ici, et c'est une décision⟩ Un atelier filtré par chemins ne se déclenche pas,
+  # donc son job est ABSENT du récapitulatif d'une demande. Ni vert, ni sauté : absent, et
+  # `verifie_verdict_avant_fusion.py` compte ce qui est présent (ADR 2748, ADR 4571, #5415).
+  # Le job tourne donc toujours sur une demande, et c'est une ÉTAPE qui décide.
+  pull_request: {}
   workflow_run:
     workflows: ["Aperçus des vues"]
     types: [completed]
@@ -104,7 +78,11 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  build:
+  # ⟨`site` et non `build`⟩ Ce job portait le meme nom que celui de `maven.yml`, si bien que le
+  # recapitulatif d une demande montrait DEUX entrees `build` que rien ne distinguait (#5415). Et
+  # tant qu il gardait ce nom, aucune portee ne pouvait lui etre declaree : `verifie_portees_de_ci`
+  # exige que la cle d une portee SOIT le nom du job.
+  site:
     # Déclenché par « Aperçus des vues » : ne reconstruire que si la régénération
     # des captures a réussi (sinon rien de neuf à publier) ET si elle vient de `main`.
     # Le filtre de branche n'est pas une précaution : « Aperçus des vues » tourne aussi
@@ -119,24 +97,43 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # ⟨portee⟩ Chantier #5294, issue #5415. Ce job construit trois sites MkDocs en `--strict` : il
+      # juge la documentation, et rien d autre. Sur `push`, `workflow_run` et `workflow_dispatch` il
+      # n y a pas de base de comparaison, et `sans_base()` rend `oui` en l ecrivant au recapitulatif :
+      # la publication n est donc pas conditionnee par cette etape, elle tourne comme avant.
+      - name: "Ce diff touche-t-il la documentation (#5415)"
+        id: portee
+        shell: bash
+        timeout-minutes: 3
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 .github/scripts/porte_du_job.py site
+
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        if: steps.portee.outputs.concerne == 'oui'
         with:
           python-version: "3.x"
       - name: Installer MkDocs Material
+        if: steps.portee.outputs.concerne == 'oui'
         run: pip install --group doc
       - name: Garde-fou captures de doc
+        if: steps.portee.outputs.concerne == 'oui'
         # L'auto-test d'abord : une règle relâchée passerait sinon au vert sur un dépôt cohérent.
         run: |
           python3 .github/assets/check_doc_images.py --auto-test
           python3 .github/assets/check_doc_images.py
       - name: Garde-fou parcours filmés
+        if: steps.portee.outputs.concerne == 'oui'
         # Même ordre, et pour la même raison : le garde se prouve avant de juger.
         run: |
           python3 .github/assets/check_doc_videos.py --auto-test
           python3 .github/assets/check_doc_videos.py
       - name: Construire le site utilisateur (strict)
+        if: steps.portee.outputs.concerne == 'oui'
         run: mkdocs build --strict
       - name: Les parcours filmés résolvent dans le site construit
+        if: steps.portee.outputs.concerne == 'oui'
         # APRÈS la construction, et c'est tout l'intérêt : MkDocs ne réécrit pas les chemins du
         # HTML brut. Un `<source src>` d'un cran trop haut donne une page valide, un lecteur vidéo
         # vide, et aucune erreur de build. Seul le site construit le dit.
@@ -144,12 +141,14 @@ jobs:
       # Site DÉVELOPPEUR (config autonome) construit dans site-dev/, plus imbriqué sous le site
       # user : les deux sites sont désormais publiés SÉPARÉMENT, chacun sur son domaine.
       - name: Construire le site développeur (strict)
+        if: steps.portee.outputs.concerne == 'oui'
         run: mkdocs build -f mkdocs-dev.yml --strict
 
       # Le brief a rejoint ce dépôt : ses sources vivent sous `brief/`, sa construction
       # et sa publication suivent donc exactement le même chemin que les deux autres
       # sites, au lieu d'un dépôt et d'un workflow séparés à tenir à jour.
       - name: Construire le brief projet (strict)
+        if: steps.portee.outputs.concerne == 'oui'
         run: mkdocs build -f mkdocs-brief.yml --strict
 
       # Publication SYMÉTRIQUE : chaque site est poussé dans son propre dépôt de publication,
