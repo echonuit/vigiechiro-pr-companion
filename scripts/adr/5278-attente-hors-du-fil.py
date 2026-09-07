@@ -63,6 +63,7 @@ import sys
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import TESTS_ANCRES, rapporte, sort_si_contrat_demande
+from _commun.arbre import LecteurAbsent, arbre, noeuds_de_type, zones_illisibles
 
 # `Attente.que` ET le `waitFor` NU, qui porte la meme faute. La limite etait declaree et non
 # comptee : un site y vivait, `AttenteAvantClic.attendreCliquable`, dont le predicat lisait le
@@ -129,44 +130,35 @@ MOTS_CLES = frozenset(
 BORNE = 4000
 
 
-def argument(source: str, depuis: int) -> str:
-    """Le texte de l appel qui commence a `depuis`, par equilibrage de parentheses."""
-    profondeur = 0
-    for i in range(depuis, min(depuis + BORNE, len(source))):
-        if source[i] == "(":
-            profondeur += 1
-        elif source[i] == ")":
-            profondeur -= 1
-            if profondeur == 0:
-                return source[depuis : i + 1]
-    return source[depuis : depuis + BORNE]
-
-
-def bloc(source: str, depuis: int) -> str:
-    """Le corps qui commence a l accolade `depuis`, par equilibrage - jumeau de [argument]."""
-    profondeur = 0
-    for i in range(depuis, min(depuis + BORNE, len(source))):
-        if source[i] == "{":
-            profondeur += 1
-        elif source[i] == "}":
-            profondeur -= 1
-            if profondeur == 0:
-                return source[depuis : i + 1]
-    return source[depuis : depuis + BORNE]
-
-
-def aides_qui_lisent(source: str) -> frozenset[str]:
+def aides_qui_lisent(racine_ast) -> frozenset[str]:
     """Les methodes du fichier dont le corps lit le graphe, DIRECTEMENT ou par une autre aide.
 
     La fermeture est transitive : une aide qui appelle une aide qui lit, lit. Deux tours suffisent en
     pratique, mais la boucle va jusqu au point fixe plutot que de parier sur la profondeur.
+
+    **Le corps se borne par la STRUCTURE depuis #5430.** L equilibrage d accolades qui le decoupait
+    s arretait sur une accolade vivant dans une CHAINE, et rendait un corps tronque :
+
+        void aide() { String s = "}"; lookup(".x"); }   ->   '{ String s = "}'
+
+    Le `lookup(` disparaissait, l aide n etait donc pas reconnue comme lisant le graphe, et
+    l attente qui lui delegue echappait au cliquet. Un faux negatif SILENCIEUX, sur un cliquet a
+    zero. Et l equilibrage abandonnait au-dela de `BORNE`, soit 4 000 caracteres : 27 corps du
+    corpus la depassent, le plus long faisant 11 248 caracteres, et tout ce qu ils ecrivent
+    au-dela etait invisible.
+
+    Les mots-cles n ont plus a etre exclus : `if (...) {` n est pas une declaration de methode pour
+    la grammaire, alors qu il en avait l apparence pour un motif.
     """
     corps = {}
-    for declaration in DECLARATION.finditer(source):
-        nom = declaration.group(1)
-        if nom in MOTS_CLES:
+    for declaration in noeuds_de_type(
+        racine_ast, {"method_declaration", "constructor_declaration"}
+    ):
+        nom_noeud = declaration.child_by_field_name("name")
+        corps_noeud = declaration.child_by_field_name("body")
+        if nom_noeud is None or corps_noeud is None:
             continue
-        corps[nom] = bloc(source, declaration.end() - 1)
+        corps[nom_noeud.text.decode()] = corps_noeud.text.decode()
 
     # `robot.interact(` exempte une AIDE comme il exempte un predicat, et pour la meme raison : ce
     # qu il enveloppe est lu SUR le fil. Sans cette symetrie, le garde accusait
@@ -199,14 +191,37 @@ def appelle_une_aide(corps: str, aides: frozenset[str]) -> bool:
     return any(re.search(rf"\b{re.escape(aide)}\s*\(", corps) for aide in aides)
 
 
+# Les gestes d attente que ce garde regarde, par le NOM de la methode appelee. `queSurLeFil` est
+# la forme juste, elle sort du compte plus bas.
+ATTENTES = {"que", "queSurLeFil", "waitFor"}
+
+
+def appels_d_attente(racine_ast) -> list:
+    """Les appels d attente du fichier, par la structure et non par un motif.
+
+    Un motif compte ce qui est ECRIT `Attente.que(`, y compris dans une chaine ou un commentaire.
+    La grammaire ne rend que des appels.
+    """
+    trouves = []
+    for appel in noeuds_de_type(racine_ast, {"method_invocation"}):
+        nom = appel.child_by_field_name("name")
+        objet = appel.child_by_field_name("object")
+        if nom is None or objet is None or nom.text.decode() not in ATTENTES:
+            continue
+        if objet.text.decode() in {"Attente", "WaitForAsyncUtils"}:
+            trouves.append(appel)
+    return trouves
+
+
 def sites(source: str) -> list[int]:
     """Les lignes des `Attente.que` dont l argument lit le graphe de scene."""
     trouves = []
-    aides = aides_qui_lisent(source)
-    for appel in APPEL.finditer(source):
-        if appel.group(1) == "queSurLeFil":
+    racine_ast = arbre(source.encode("utf-8")).root_node
+    aides = aides_qui_lisent(racine_ast)
+    for appel in appels_d_attente(racine_ast):
+        if appel.child_by_field_name("name").text.decode() == "queSurLeFil":
             continue
-        corps = argument(source, appel.end() - 1)
+        corps = appel.text.decode()
         if not LECTURE_DE_NOEUD.search(corps) and not appelle_une_aide(corps, aides):
             continue
         # Un predicat qui passe par `robot.interact(...)` lit SUR le fil FX : c est la forme juste
@@ -215,7 +230,7 @@ def sites(source: str) -> list[int]:
         # sur du bon travail.
         if "robot.interact(" in corps:
             continue
-        trouves.append(source[: appel.start()].count("\n") + 1)
+        trouves.append(appel.start_point[0] + 1)
     return trouves
 
 
@@ -239,8 +254,7 @@ def lus(racine: pathlib.Path | None = None) -> int:
     """Le nombre d appels a `Attente` lus : ce que le garde a REGARDE, pas ce qu il a retenu."""
     racine = TESTS_ANCRES if racine is None else racine
     return sum(
-        len(APPEL.findall(f.read_text(encoding="utf-8", errors="replace")))
-        for f in racine.rglob("*.java")
+        len(appels_d_attente(arbre(f.read_bytes()).root_node)) for f in racine.rglob("*.java")
     )
 
 
@@ -366,16 +380,59 @@ def _auto_test() -> int:
         [],
     )
 
-    # Un `if (...) {` ressemble a une declaration de methode. S il etait pris pour une aide, son nom
-    # `if` finirait dans l ensemble et n importe quel predicat portant `if (` serait accuse.
+    # Un `if (...) {` ressemble a une declaration de methode POUR UN MOTIF. S il etait pris pour une
+    # aide, son nom `if` finirait dans l ensemble et n importe quel predicat portant `if (` serait
+    # accuse. Depuis #5430 la grammaire tranche : un `if_statement` n est pas une declaration.
     verifie(
         "un mot-cle n est pas pris pour une aide",
-        sorted(aides_qui_lisent("    if (x) {\n        n.getText();\n    }\n")),
-        [],
+        "if"
+        in aides_qui_lisent(arbre(b"class T { void f() { if (x) { n.getText(); } } }").root_node),
+        False,
     )
 
-    # Un appel non ferme ne doit ni boucler ni faire planter le garde.
-    verifie("un appel non ferme ne fait pas planter", sites('Attente.que(() -> lookup("#a")'), [1])
+    # UNE ACCOLADE DANS UNE CHAINE ne borne pas un corps. L equilibrage rendait `{ String s = "}`,
+    # donc le `lookup(` disparaissait, donc l aide n etait pas reconnue, donc l attente qui lui
+    # delegue echappait au cliquet : un faux negatif silencieux, sur un cliquet a zero.
+    verifie(
+        "une accolade dans une chaine ne tronque pas le corps d une aide",
+        sorted(
+            aides_qui_lisent(
+                arbre(b'class T { void aide() { String s = "}"; lookup(".x"); } }').root_node
+            )
+        ),
+        ["aide"],
+    )
+
+    # UNE ATTENTE CITEE EN DOC-COMMENT n est pas un appel. Le motif en comptait une de plus dans
+    # `AttenteAvantClic`, ou la doc-comment cite `WaitForAsyncUtils.waitFor(...)` pour l expliquer :
+    # le garde s attribuait la lecture d un appel qui n existe pas.
+    verifie(
+        "une attente citee en doc-comment n est pas lue",
+        len(
+            appels_d_attente(
+                arbre(
+                    b"class T {\n    /// Voir Attente.que(...) pour la forme.\n    void f() {}\n}"
+                ).root_node
+            )
+        ),
+        0,
+    )
+
+    # Un appel non ferme ne doit ni boucler ni faire planter le garde. Il n est PLUS compte comme
+    # un site depuis #5430, et c est le bon comportement : la grammaire ne rend pas un appel qu elle
+    # n a pas su lire. Mais un garde qui se tait sur ce qu il n a pas lu conclut sur une population
+    # amputee, et ce zero ressemble a un succes (#5007) : la zone se DIT.
+    verifie("un appel non ferme ne fait pas planter", sites('Attente.que(() -> lookup("#a")'), [])
+    verifie(
+        "et la zone illisible est NOMMEE plutot que tue",
+        len(
+            zones_illisibles(
+                arbre(b'class T { void f() { Attente.que(() -> lookup("#a") } }').root_node
+            )
+        )
+        > 0,
+        True,
+    )
 
     verifie("le garde a lu des appels reels", lus() > 0, True)
     return echecs
@@ -383,15 +440,25 @@ def _auto_test() -> int:
 
 CONTRAT = {
     "geste": "attente dont le predicat lit le graphe de scene depuis le fil du test",
-    "population": "les appels a `Attente.que` de src/test/java, l argument etant delimite par "
-    "equilibrage de parentheses. `queSurLeFil` en est exclu : c est la forme JUSTE. Un predicat qui "
-    "delegue a une methode privee touchant le graphe echappe au motif. Un `WaitForAsyncUtils.waitFor` "
-    "NU porte la meme faute sans etre compte : deux limites declarees, la seconde trouvee a la "
-    "passe 7 de la cloture de #5277 (#5330)",
+    "population": "les appels a `Attente.que` de src/test/java, l argument etant delimite par la "
+    "STRUCTURE depuis #5430. `queSurLeFil` en est exclu : c est la forme JUSTE. Un predicat qui "
+    "delegue a une aide du meme fichier EST suivi, transitivement, depuis #5353. Un "
+    "`WaitForAsyncUtils.waitFor` NU porte la meme faute sans etre compte, et une aide vivant dans un "
+    "AUTRE fichier echappe encore : deux limites declarees, la seconde trouvee a la passe 7 de la "
+    "cloture de #5277 (#5330)",
     "dispositif": "cliquet",
     "seuil": "0, polarite=descend",
     "temoin": "scripts/adr/5278-attente-hors-du-fil.py --auto-test",
     "decision": "ADR 5278",
+    # Lire par l arbre coute, et #5400 retire du temps a la batterie. Declarer les chemins rend la
+    # hausse indolore sur toute demande qui ne touche pas de Java (ADR 5340). Un `chemins`
+    # INCOMPLET tait le garde en silence, la ou son absence le fait LANCER.
+    "chemins": """
+src/test/java/**
+scripts/adr/5278-attente-hors-du-fil.py
+scripts/_commun/**
+dev-docs/decisions/5278-une-attente-qui-lit-le-graphe-le-lit-sur-le-fil.md
+""",
 }
 
 
@@ -399,12 +466,24 @@ if __name__ == "__main__":
     sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
+    # Le cliquet est a ZERO : un garde qui ne sait pas lire rendrait zero suspect, et ce zero-la
+    # serait indiscernable d un succes. Il REFUSE plutot, et il DIT ce que la grammaire n a pas lu.
+    try:
+        fautifs = suspects()
+        combien = lus()
+    except LecteurAbsent as absent:
+        raise SystemExit(str(absent)) from absent
+    for fichier in sorted(TESTS_ANCRES.rglob("*.java")):
+        for depart, borne in zones_illisibles(arbre(fichier.read_bytes()).root_node):
+            print(
+                f"zone non lue par la grammaire : {fichier.name}:{depart}-{borne}", file=sys.stderr
+            )
     raise SystemExit(
         rapporte(
             "5278",
             "attentes qui lisent le graphe de scene hors du fil JavaFX",
-            suspects(),
+            fautifs,
             apercu=12,
-            lus=lus(),
+            lus=combien,
         )
     )
