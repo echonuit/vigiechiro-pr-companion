@@ -254,8 +254,15 @@ def engage_pmd(diff: list[str]) -> bool:
     **Seulement si le diff porte du `.java`.** Mesure du 2026-09-07 : 20 s sur un arbre neuf, 9 s a
     chaud. C est peu au regard d une minute de CI, et beaucoup au regard des 6 s que coute le reste
     de la preparation - assez pour qu on ne le paie pas sur un lot de prose.
+
+    **La question posee est « son consommateur est-il engage ? », et non « y a-t-il du Java ? ».** Les
+    deux se confondaient tant que `4617` ne declarait aucun `chemins` : il etait alors lance partout,
+    donc refuse partout ou le rapport n existait pas (#5465). Une fois ses chemins declares, les deux
+    questions divergent sur un cas reel - une demande qui touche le garde LUI-MEME, que la regle de
+    #5421 engage quels que soient ses chemins. Deriver la reponse du consommateur ferme ce cas sans
+    liste a tenir : le rapport existe exactement quand quelqu un le lit.
     """
-    return any(f.endswith(".java") for f in diff)
+    return any("4617" in g for g in engage(diff)[0])
 
 
 def engage(diff: list[str], racine: pathlib.Path | None = None) -> tuple[list[str], list[str]]:
@@ -856,7 +863,31 @@ def _auto_test() -> int:
         echecs = 1
         print(f"      code={code} sortie={sortie[:200]!r}")
 
-    print("\n19 cas : porte, bord, exemption confrontée, aiguillage, interprète et refus.")
+    # ⟨le rapport existe exactement quand quelqu un le lit⟩ La coherence se verifie sur les DEUX
+    # sens : un diff qui n engage pas `4617` ne doit pas payer PMD, et un diff qui l engage doit le
+    # payer - y compris celui qui touche le garde lui-meme, que la regle de #5421 engage sans que ses
+    # `chemins` le disent (#5465).
+    for libelle, diff in (
+        ("un diff de prose ne paie pas PMD", ["dev-docs/une-page.md"]),
+        ("un diff Python non plus", ["scripts/x.py"]),
+        ("un diff Java le paie", ["src/main/java/X.java"]),
+        (
+            "le garde lui-meme le paie, par la regle du garde qui se voit",
+            ["scripts/adr/4617-code-mort-et-zone-de-test.py"],
+        ),
+        (
+            "son ADR aussi, parce qu un cliquet qui bouge doit se confronter",
+            ["dev-docs/decisions/4682-le-portail-compte-chaque-zone-a-part.md"],
+        ),
+    ):
+        joue = any("4617" in g for g in engage(diff)[0])
+        if joue == engage_pmd(diff):
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : 4617 engage={joue}, PMD produit={engage_pmd(diff)}")
+            echecs = 1
+
+    print("\n24 cas : porte, bord, exemption confrontée, aiguillage, interprète et refus.")
     return 1 if echecs else 0
 
 
