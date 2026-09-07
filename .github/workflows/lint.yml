@@ -323,7 +323,7 @@ jobs:
           cache: maven
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          python-version: "3.x"
+          python-version: "3.14"
       - name: "Installer les dépendances déclarées des gardes (#5008)"
         # Neuf gardes de ce job portent `import yaml`, et rien ne déclarait PyYAML : ils ne
         # marchaient que parce que l'image `ubuntu-latest` le fournit. Une dépendance qu'on a sans
@@ -390,7 +390,7 @@ jobs:
           cache: maven
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          python-version: "3.x"
+          python-version: "3.14"
       - name: "Installer les dépendances déclarées des gardes (#5008)"
         # Neuf gardes de ce job portent `import yaml`, et rien ne déclarait PyYAML : ils ne
         # marchaient que parce que l'image `ubuntu-latest` le fournit. Une dépendance qu'on a sans
@@ -1213,7 +1213,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         if: steps.portee.outputs.concerne == 'oui'
         with:
-          python-version: "3.x"
+          python-version: "3.14"
       - name: "Installer les dépendances déclarées des gardes (#5008)"
         if: steps.portee.outputs.concerne == 'oui'
         # Neuf gardes de ce job portent `import yaml`, et rien ne déclarait PyYAML : ils ne
