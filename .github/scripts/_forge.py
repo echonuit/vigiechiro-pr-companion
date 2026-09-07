@@ -108,6 +108,71 @@ def vue_issue(numero: int, champs: str) -> dict:
     return json.loads(vue.stdout)
 
 
+# ⟨ce module ne doit pas contenir le litteral qu il cherche⟩ En l ecrivant tel quel, la regle
+# ci-dessous se reconnaissait elle-meme : `_forge.py` entrait dans l inventaire des gardes, alors
+# qu il n a aucun point d entree. Mesure du 2026-09-07 : la population passait de 110 a 111, et le
+# onzieme etait ce fichier. La chaine est donc ASSEMBLEE, et les constantes de ce module ne la
+# portent jamais entiere. C est le meme piege que `_portee.py` a rencontre au chantier #5294.
+OPTION_AUTO_TEST = "--auto" + "-test"
+
+
+def dispatche_l_option(chemin: str, texte: str) -> bool:
+    """Un fichier DISPATCHE `--auto-test`, ou il se contente d en parler.
+
+    Deux gardes voisins tiraient deux populations du meme dossier, sur un point qui n etait ecrit
+    nulle part : `temoins_de_ci_non_decoratifs.corpus()` ecartait les modules a souligne initial PAR
+    LEUR NOM, `verifie_inventaires_ci.porte_l_option()` ne les ecartait pas (#5318). La regle est
+    posee ici pour que les deux la partagent, et elle est DERIVEE de ce que le fichier fait plutot
+    que de la forme de son nom.
+
+    ## Ce qui compte comme un dispatch, mesure sur le corpus
+
+    Le 2026-09-07, sur les cent dix fichiers qui citent la chaine : quatre-vingt-seize la portent
+    dans un TEST (`if "--auto-test" in sys.argv`), et **sept la portent dans un APPEL** sans aucun
+    test - ce sont ceux qui passent par `argparse`, `p.add_argument("--auto-test", ...)`. Exiger un
+    test les aurait sortis a tort du tableau des gardes, ce qui est le faux negatif que #5318 demande
+    d eviter.
+
+    ## Ce qui n en est pas un
+
+    Une constante posee ailleurs : un `USAGE = "... --auto-test"`, ou le champ `temoin` d un CONTRAT.
+    Cinquante-cinq gardes portent les deux, le dispatch et la mention, et c est la mention seule qui
+    ne suffit pas.
+
+    ## La polarite du doute
+
+    Un `print("lancez --auto-test")` serait compte a tort. C est voulu, et c est le parti que ce
+    dispositif prenait deja : compter a tort se voit et se corrige, ne pas compter est le silence
+    qu un inventaire combat.
+    """
+    import ast
+
+    if not chemin.endswith(".py"):
+        # En shell, retirer les lignes de commentaire suffit.
+        nu = "\n".join(l for l in texte.split("\n") if not l.lstrip().startswith("#"))
+        return OPTION_AUTO_TEST in nu
+    try:
+        arbre = ast.parse(texte)
+    except SyntaxError:
+        # On ne conclut pas sur ce qu on ne sait pas lire, et on penche du cote BRUYANT.
+        return OPTION_AUTO_TEST in texte
+
+    def cite(noeud) -> bool:
+        return any(
+            isinstance(c, ast.Constant) and isinstance(c.value, str) and OPTION_AUTO_TEST in c.value
+            for c in ast.walk(noeud)
+        )
+
+    for noeud in ast.walk(arbre):
+        if isinstance(noeud, (ast.If, ast.While, ast.IfExp)) and cite(noeud.test):
+            return True
+        if isinstance(noeud, ast.Call) and any(
+            cite(a) for a in list(noeud.args) + [k.value for k in noeud.keywords]
+        ):
+            return True
+    return False
+
+
 def joue_pour_auto_test(juger: Callable[[], int]) -> tuple[object, str]:
     """Lance `juger` en capturant tout ce qu il ecrit, et rend (code, sortie).
 
