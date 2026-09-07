@@ -204,9 +204,9 @@ Trois outils, trois questions. `graphify` d'abord (voir ci-dessous), puis :
 - **`semgrep`** pour une question de forme : « qui appelle X ? », « qui construit un Y à la
   main ? ». Il lit l'arbre syntaxique, pas les lignes.
   `semgrep --lang java --metrics=off --pattern 'Habillage.$M(...)' src/main`
-  Il s'installe **dans le venv d'outils**, comme `ruff` : `~/.venv-outils/bin/pip install semgrep`,
-  et il est déclaré au groupe `recherche` de `pyproject.toml`. La CI ne l'installe pas - elle n'a
-  aucune question de forme à poser.
+  Il s'installe **dans le `.venv` du worktree**, comme `ruff` :
+  `.venv/bin/pip install --group recherche`, et il est déclaré au groupe `recherche` de
+  `pyproject.toml`. La CI ne l'installe pas - elle n'a aucune question de forme à poser.
 - **`grep`** pour un texte : un message, un libellé, une ligne de journal.
 
 Le moteur libre de `semgrep` ne traite pas les **annotations Java** comme motif autonome :
