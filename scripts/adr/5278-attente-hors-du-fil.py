@@ -495,7 +495,7 @@ if __name__ == "__main__":
     raise SystemExit(
         rapporte(
             "5278",
-            "attentes qui lisent le graphe de scene hors du fil JavaFX",
+            "attentes qui lisent le graphe de scène hors du fil JavaFX",
             fautifs,
             apercu=12,
             lus=combien,

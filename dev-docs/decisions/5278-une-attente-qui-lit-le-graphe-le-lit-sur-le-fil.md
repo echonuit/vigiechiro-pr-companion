@@ -75,6 +75,9 @@ laissé le site invisible : une limite qu'on ne déclare pas se lit comme une co
 fichier, au motif que « le motif attrape déjà la population entière ». C'était faux - **trente-neuf**
 sites - et une limite dont l'argument ne tient pas se lit, elle aussi, comme une couverture.
 
+**Une troisième en #5430** : une accolade dans une chaîne tronquait le corps d'une aide, cachant son
+`lookup(`. La lecture passe à la structure.
+
 **Elle ne change rien au comportement de `Attente` sur une exception.** `lireSurLeFil` re-lève
 délibérément un prédicat qui a levé, et sa raison est écrite dans le code : « le taire ferait expirer
 l'attente sur un délai, en accusant la lenteur là où il y a une exception ». Cette décision-ci la

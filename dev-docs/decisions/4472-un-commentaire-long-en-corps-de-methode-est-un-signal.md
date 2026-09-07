@@ -76,19 +76,27 @@ laisserait un raccourcissement de javadoc compenser un débordement en corps, po
 un verdict vert - la règle 2 de l'ADR
 [« Une dette qu'on migre au fil de l'eau se tient par un cliquet »](2867-une-dette-se-tient-par-un-cliquet.md).
 
-**La borne est la profondeur d'accolades.** À la profondeur 1, entre les membres d'une classe, un
-bloc de `//` documente une **section** et non du code : il ne compte pas. À la profondeur 0, avant la
-classe, c'est un en-tête de fichier. Les trois cas sont tenus par des témoins.
+**La borne est le corps de code.** Dans un corps de méthode, de constructeur ou de lambda, un bloc de
+`//` documente du code. Entre les membres d'une classe, il documente une **section** et ne compte
+pas. Avant la classe, c'est un en-tête de fichier. Les trois cas sont tenus par des témoins.
+
+Elle s'énonçait « profondeur d'accolades » jusqu'au 2026-09-06, parce que le garde la calculait
+ainsi. Elle se pose désormais à la **structure**.
 
 ## Conséquences
 
 Le niveau est `probable` : un bloc long peut être justifié - une formule, un protocole, un
 contre-exemple - et le script rend des **suspects** qu'un humain trie.
 
-**Le comptage des accolades est naïf** : il ne comprend ni les chaînes ni les caractères, donc une
-accolade dans un littéral fausse la profondeur. C'est assumé, parce que le verdict ne bascule que si
-elle déplace un bloc de part et d'autre de la borne, et qu'un faux positif se trie à la lecture comme
-les autres.
+**L'approximation de lecture a été retirée le 2026-09-06, par le lot 0 de #5402 livré en #5420.**
+
+Le comptage ne comprenait ni les chaînes ni les caractères. C'était assumé, le verdict ne basculant
+que si l'accolade déplace un bloc de part et d'autre de la borne. La dette était réelle : sur
+5 079 blocs, l'arbre contredisait le comptage **huit fois**, sans qu'aucun ne franchisse le seuil.
+
+`arbre.py` lit désormais la structure, et la migration a rendu **43 suspects contre 43**, sans un
+désaccord sur leur identité. Ce que le comptage rendait juste par chance du corpus, la structure le
+rend juste par construction.
 
 ## Alternative écartée
 
