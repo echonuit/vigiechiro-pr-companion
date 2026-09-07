@@ -182,7 +182,9 @@ def chemins_d_un_job(nom_affiche: str, racine: pathlib.Path | None = None) -> li
     return []
 
 
-def alerte_du_taux(nom: str, muets: int, total: int, touches: set[str], chemins=None) -> str | None:
+def alerte_du_taux(
+    nom: str, muets: int, total: int, touches: set[str], chemins=None, fenetre: int | None = None
+) -> str | None:
     """Ce qu un taux de silence veut dire, ou `None` quand il ne veut rien dire.
 
     **Un taux de 100 % recouvre deux situations**, et les confondre coute cher dans les deux sens :
@@ -201,6 +203,18 @@ def alerte_du_taux(nom: str, muets: int, total: int, touches: set[str], chemins=
         return None
     surveilles = chemins_d_un_job(nom) if chemins is None else chemins
     if muets == 0:
+        # ⟨un taux ne se lit pas sur deux regimes⟩ Un job ABSENT d une partie de la fenetre n a pas eu
+        # le meme declencheur tout du long : conclure sur son taux compare deux populations. Mesure du
+        # 2026-09-07 sur quarante demandes : les jobs stables sont vus sur 75 % de la fenetre ou plus,
+        # et les deux qui venaient de passer du `paths:` a une portee sont a 30 % et 45 % - `site`
+        # apres #5439, `inventaire` et `fraicheur-des-actions` apres #5416. Le premier sortait a 0 %
+        # avec « elle s est peut-etre elargie en silence », alors que le mecanisme fonctionne : sur
+        # #5449, posterieure au correctif, le job se tait correctement (#5453).
+        if fenetre is not None and total < fenetre:
+            return (
+                f"observe sur {total} demandes d une fenetre de {fenetre} : son declencheur a change "
+                "pendant la fenetre, et son taux ne se lit pas."
+            )
         return "sa portee ne s est jamais tue : elle s est peut-etre elargie en silence."
     if muets < total:
         return None
@@ -332,7 +346,7 @@ def rendre(depot: str, fenetre: int = 40) -> int:
         print(f"  {nom:28s} {mediane([j['minutes'] for j in jobs]):7.1f}m {part:>12s}")
         if not porte:
             continue
-        avertissement = alerte_du_taux(nom, muets, len(jobs), touches)
+        avertissement = alerte_du_taux(nom, muets, len(jobs), touches, fenetre=len(demandes))
         if avertissement:
             print(f"      ⚠ {avertissement}")
         elif muets == len(jobs) and len(jobs) >= 10:
@@ -555,10 +569,33 @@ def _auto_test() -> int:
                     None,
                 ),
             ):
-                rendu = alerte_du_taux("peu-importe", muets, total, touches, chemins=chemins)
+                rendu = alerte_du_taux(
+                    "peu-importe", muets, total, touches, chemins=chemins, fenetre=total
+                )
                 bon = (
                     (rendu is None) if attendu is None else (rendu is not None and attendu in rendu)
                 )
+                print(f"  {'✔' if bon else '✘'} {libelle}")
+                if not bon:
+                    echecs += 1
+                    print(f"      rendu={rendu!r}")
+
+            # ⟨un taux ne se lit pas sur deux regimes⟩ Les DEUX sens : un job absent d une partie de
+            # la fenetre cesse d alerter EN LE DISANT, un job vu partout alerte toujours. Sans le
+            # second, une regle qui ne dirait plus rien passerait le premier (#5453).
+            for libelle, total, fenetre, attendu in (
+                ("un job vu sur toute la fenetre alerte encore", 40, 40, "elargie"),
+                (
+                    "un job vu sur une FRACTION de la fenetre ne conclut pas",
+                    12,
+                    40,
+                    "declencheur a change",
+                ),
+            ):
+                rendu = alerte_du_taux(
+                    "peu-importe", 0, total, {"docs/a.md"}, chemins=["src/main/**"], fenetre=fenetre
+                )
+                bon = rendu is not None and attendu in rendu
                 print(f"  {'✔' if bon else '✘'} {libelle}")
                 if not bon:
                     echecs += 1
@@ -581,7 +618,7 @@ def _auto_test() -> int:
             if ancien is not None:
                 os.environ["RELEVE_DEMANDES_FICHIER"] = ancien
 
-    print(f"\n{len(CAS) + 12} cas de lecture et de bord.")
+    print(f"\n{len(CAS) + 14} cas de lecture et de bord.")
     return 1 if echecs else 0
 
 
