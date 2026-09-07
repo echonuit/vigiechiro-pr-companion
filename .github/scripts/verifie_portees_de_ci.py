@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import pathlib
 import re
+import subprocess
 import sys
 
 import yaml
@@ -59,7 +60,12 @@ SORTIE = "steps.portee.outputs.concerne"
 MECANISME = (".github/scripts/porte_du_job.py", ".github/scripts/_portee.py")
 # Un jeton qui RESSEMBLE a un chemin du depot. L existence tranche ensuite : c est elle qui ecarte
 # les faux positifs, pas le motif.
-JETON = re.compile(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.*-]+)+")
+# ⟨le groupe de fin est FACULTATIF, et c est tout le correctif de #5432⟩ Il etait obligatoire, si
+# bien qu un fichier de la RACINE n etait jamais extrait : `pom.xml`, `mvnw`, `pyproject.toml` et les
+# trois `mkdocs*.yml` echappaient a la cinquieme confrontation, soit 20 chemins sur les douze
+# portees. La phrase de la regle 5 promettait « aucun chemin ECRIT dans le job », l expression en
+# tenait « aucun chemin CONTENANT UNE BARRE OBLIQUE ».
+JETON = re.compile(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.*-]+)*")
 # Un script qui LIT `GITHUB_BASE_SHA` derive sa portee du diff. Lance sans elle, il retombe sur son
 # repli - « verifie tout » - et le mecanisme reste ecrit, eprouve, documente, et INERTE.
 BASE = "GITHUB_BASE_SHA"
@@ -126,6 +132,49 @@ def lecteurs_de_base(racine: pathlib.Path) -> set[str]:
     return trouves
 
 
+# ⟨ce qu un job NOMME sans le lire⟩ La cinquieme confrontation lit les jetons d un `run:`, et un
+# `run:` contient aussi des messages. `outillage-release` ecrit
+# `throw new Error('parserOpts non herites de .releaserc.json : ...')` : il LIT
+# `.github/release/release.config.js`, qui est dans sa portee, et ne fait que NOMMER l autre.
+#
+# C est « le commentaire cite la chose, il ne la fait pas », un cran plus profond : un commentaire
+# se reconnait syntaxiquement, une chaine de message non. Et les guillemets ne departagent pas,
+# puisque `require('./.github/release/release.config.js')` est cite de la meme facon et constitue
+# une vraie lecture.
+#
+# On DECLARE donc, avec le motif, plutot que d inferer - c est ce que l ADR 5398 vient de trancher
+# pour la porte locale, et l idiome de `verifie_verdicts_declares.HORS_PORTEE` : une liste avec sa
+# raison, jamais un compte. Une entree qui ne correspond plus a rien fait rougir.
+NOMMES_SANS_ETRE_LUS: dict[tuple[str, str], str] = {
+    ("outillage-release", ".releaserc.json"): "cite dans le texte d un `throw new Error(...)` ; "
+    "le job lit `.github/release/release.config.js`, qui est dans sa portee",
+}
+
+
+def _ignores(racine: pathlib.Path, chemins: set[str]) -> set[str]:
+    """Ceux que git ignore, et qui ne peuvent donc JAMAIS paraitre dans un diff.
+
+    Sans ce filtre, l elargissement de #5432 confrontait `target`, le repertoire de construction :
+    il est ignore, mais il EXISTE des qu on a construit - et la porte locale l ecrit elle-meme en y
+    posant `batterie-durees.json`. Le verdict de la cinquieme confrontation aurait donc dependu de
+    si quelqu un avait bati avant de le lancer, ce qui est exactement une mesure dont la premisse
+    varie sans qu on le sache.
+
+    Hors depot git - le depot jouet de l auto-test - rien n est ignore, et c est le bon repli : on
+    confronte plutot que de se taire.
+    """
+    if not chemins:
+        return set()
+    rendu = subprocess.run(
+        ["git", "-C", str(racine), "check-ignore", "--stdin"],
+        input="\n".join(sorted(chemins)),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return {l.strip() for l in rendu.stdout.splitlines() if l.strip()}
+
+
 def chemins_ecrits(job: dict, racine: pathlib.Path) -> set[str]:
     """Les chemins du depot que les `run:` de ce job citent litteralement.
 
@@ -138,9 +187,13 @@ def chemins_ecrits(job: dict, racine: pathlib.Path) -> set[str]:
         for jeton in JETON.findall(str(etape.get("run") or "")):
             nu = jeton.strip("'\"").rstrip(".,;:")
             nu = nu.removeprefix("./")
-            if "*" not in nu and (racine / nu).exists():
+            # ⟨`nu` non vide⟩ Le motif elargi de #5432 peut rendre une chaine vide apres le
+            # nettoyage, et `(racine / "").exists()` est VRAI : c est la racine du depot. Sans ce
+            # garde-fou, la racine entrait dans les chemins confrontes et faisait echouer l appel a
+            # `git check-ignore`, donc le filtre des ignores ne filtrait plus rien.
+            if nu and "*" not in nu and (racine / nu).exists():
                 trouves.add(nu)
-    return trouves
+    return trouves - _ignores(racine, trouves)
 
 
 def couvre(chemin: str, surveilles: list[str], racine: pathlib.Path) -> bool:
@@ -167,11 +220,13 @@ def juger(
     racine: pathlib.Path | None = None,
     portees: dict[str, str] | None = None,
     inconditionnels: dict[str, str] | None = None,
+    exemptions: dict[tuple[str, str], str] | None = None,
 ) -> int:
     """Les cinq confrontations, plus l exhaustivite. Les donnees sont injectables pour l auto-test."""
     racine = racine or pathlib.Path(__file__).resolve().parents[2]
     portees = PORTEES if portees is None else portees
     inconditionnels = INCONDITIONNELS if inconditionnels is None else inconditionnels
+    exemptions = NOMMES_SANS_ETRE_LUS if exemptions is None else exemptions
     ecarts: list[str] = []
 
     ateliers = ateliers_de_demande(racine)
@@ -242,11 +297,22 @@ def juger(
             # 5. Aucun chemin ecrit dans le job n echappe a sa portee.
             if cle in portees:
                 surveilles = [l.strip() for l in portees[cle].splitlines() if l.strip()]
-                for ecrit in sorted(chemins_ecrits(job, racine)):
-                    if not couvre(ecrit, surveilles, racine):
+                vus = sorted(chemins_ecrits(job, racine))
+                for ecrit in vus:
+                    if couvre(ecrit, surveilles, racine) or (cle, ecrit) in exemptions:
+                        continue
+                    ecarts.append(
+                        f"le job `{cle}` lance `{ecrit}`, que sa portee ne couvre pas : "
+                        "une modification de ce fichier ne le reveillerait pas"
+                    )
+                # L exemption est CONFRONTEE : une entree qui ne correspond plus a rien a survecu a
+                # ce qu elle exemptait, et elle exempterait alors un vrai ecart sans que rien ne le
+                # dise. C est la moitie qui fait d une liste un inventaire (ADR 5373, ADR 5398).
+                for (job_exempte, chemin), motif in exemptions.items():
+                    if job_exempte == cle and chemin not in vus:
                         ecarts.append(
-                            f"le job `{cle}` lance `{ecrit}`, que sa portee ne couvre pas : "
-                            "une modification de ce fichier ne le reveillerait pas"
+                            f"le job `{cle}` n ecrit plus `{chemin}`, exempte pour : {motif}. "
+                            "L exemption a survecu a son motif, retirez-la"
                         )
 
     # 1. Bijection, dans l autre sens.
@@ -398,32 +464,32 @@ def _monter(bac: pathlib.Path) -> pathlib.Path:
     return depot
 
 
-def _sans_appel(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+def _sans_appel(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
     p["orpheline"] = PORTEE_SAINE
 
 
-def _appel_inconnu(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+def _appel_inconnu(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
     del p["un"]
     i["un"] = "raison quelconque"
 
 
-def _chemin_mort(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+def _chemin_mort(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
     p["un"] = PORTEE_SAINE + "src/inexistant/**\n"
 
 
-def _sans_mecanisme(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+def _sans_mecanisme(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
     p["un"] = ".github/workflows/faux.yml\n.github/scripts/_portee.py\n"
 
 
-def _sans_son_atelier(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+def _sans_son_atelier(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
     p["un"] = ".github/scripts/porte_du_job.py\n.github/scripts/_portee.py\n"
 
 
-def _job_non_declare(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+def _job_non_declare(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
     del i["deux"]
 
 
-def _base_non_passee(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+def _base_non_passee(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
     """Un job lance un lecteur de base SANS la lui passer : le mecanisme sera inerte."""
     f = d / ".github/workflows/faux.yml"
     f.write_text(
@@ -435,7 +501,7 @@ def _base_non_passee(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> N
     )
 
 
-def _mention_sans_lecture(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+def _mention_sans_lecture(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
     """Un job lance un script qui MENTIONNE la base sans la lire : rien ne doit etre exige.
 
     Sans ce cas, une detection par le texte passerait le precedent en accusant tout le monde, et ce
@@ -452,7 +518,7 @@ def _mention_sans_lecture(d: pathlib.Path, p: dict[str, str], i: dict[str, str])
     )
 
 
-def _porte_decorative(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+def _porte_decorative(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
     """La porte decide, et plus personne n ecoute : le `if:` a saute."""
     f = d / ".github/workflows/faux.yml"
     f.write_text(
@@ -463,7 +529,7 @@ def _porte_decorative(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> 
     )
 
 
-def _condition_orpheline(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+def _condition_orpheline(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
     """Une etape attend une sortie que plus aucun pas ne produit : elle ne tournera JAMAIS."""
     f = d / ".github/workflows/faux.yml"
     f.write_text(
@@ -471,11 +537,62 @@ def _condition_orpheline(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) 
     )
 
 
-def _cle_ambigue(d: pathlib.Path, p: dict[str, str], i: dict[str, str]) -> None:
+def _cle_ambigue(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
     """Un SECOND atelier porte un job `un`, et la portee ne sait plus lequel elle designe."""
     (d / ".github/workflows/jumeau.yml").write_text(
         ATELIER.replace("name: Faux", "name: Jumeau"), encoding="utf-8"
     )
+
+
+def _fichier_de_racine_hors_portee(
+    d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict
+) -> None:
+    """Un job lit un fichier de la RACINE que sa portee ne couvre pas.
+
+    C est le cas que la cinquieme confrontation promettait d attraper et laissait passer : son motif
+    exigeait une barre oblique, si bien qu un nom nu ne lui parvenait jamais (#5432).
+    """
+    (d / "reglage.toml").write_text("# jouet\n", encoding="utf-8")
+    f = d / ".github/workflows/faux.yml"
+    # Le job `un` et non `deux` : `deux` est INCONDITIONNEL, et la cinquieme confrontation ne
+    # s applique qu aux jobs qui portent une portee.
+    avant = f.read_text(encoding="utf-8")
+    apres = avant.replace("        run: echo cher", "        run: cat reglage.toml")
+    assert apres != avant, "le degradeur n a rien change : le cas ne prouverait rien"
+    f.write_text(apres, encoding="utf-8")
+
+
+def _exemption_perimee(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
+    """Une exemption declaree pour un chemin que le job n ecrit plus.
+
+    Sans ce cas, la table de #5432 serait une liste que rien ne tient : une entree y survivrait a ce
+    qu elle exemptait, et exempterait alors un vrai ecart en silence.
+    """
+    n[("un", "jamais-ecrit.toml")] = "motif qui n a plus d objet"
+
+
+def _chemin_ignore_par_git(d: pathlib.Path, p: dict[str, str], i: dict[str, str], n: dict) -> None:
+    """Un job ecrit un chemin que git IGNORE : il ne peut jamais paraitre dans un diff.
+
+    Le confronter rendrait le verdict dependant de l etat du disque - `target` existe des qu on a
+    bati, et la porte locale l ecrit elle-meme. Le controle NEGATIF du filtre de #5432.
+    """
+    (d / ".gitignore").write_text("bati/\n", encoding="utf-8")
+    (d / "bati").mkdir()
+    (d / "bati" / "trace.txt").write_text("jouet\n", encoding="utf-8")
+    import subprocess
+
+    subprocess.run(["git", "-C", str(d), "init", "-q"], check=False)
+    f = d / ".github/workflows/faux.yml"
+    avant = f.read_text(encoding="utf-8")
+    # ⟨le `...` n est pas decoratif⟩ Il rend un jeton que le nettoyage vide entierement, et
+    # `(racine / "")` EXISTE. Sans le garde-fou, la chaine vide entre dans les chemins confrontes et
+    # fait ECHOUER `git check-ignore`, donc le filtre des ignores ne filtre plus : `bati` remonte
+    # alors comme un ecart. Les deux defauts de #5432 ne se manifestent QUE reunis, et un cas qui
+    # n en porte qu un reste vert sous sa propre mutation.
+    apres = avant.replace("        run: echo cher", "        run: ls bati ...")
+    assert apres != avant, "le degradeur n a rien change"
+    f.write_text(apres, encoding="utf-8")
 
 
 CAS = (
@@ -497,6 +614,12 @@ CAS = (
     (1, "un lecteur de base lancé sans sa base est vu", _base_non_passee),
     # Et son controle negatif : mentionner la base n'est pas la lire.
     (0, "un script qui mentionne la base sans la lire n'exige rien", _mention_sans_lecture),
+    # Le chemin de RACINE : sans barre oblique, il echappait au motif (#5432).
+    (1, "un fichier de la racine hors de la portée est vu", _fichier_de_racine_hors_portee),
+    # Et le controle dans l AUTRE sens : la table est confrontee, donc c est un inventaire.
+    (1, "une exemption qui a survécu à son motif est vue", _exemption_perimee),
+    # Le controle NEGATIF du filtre : ce que git ignore ne se confronte pas.
+    (0, "ce que git ignore n'est pas confronté, et le jeton vide non plus", _chemin_ignore_par_git),
 )
 
 
@@ -510,10 +633,17 @@ def _auto_test() -> int:
             depot = _monter(pathlib.Path(bac))
             portees = {"un": PORTEE_SAINE}
             inconditionnels = {"deux": "il ne fait rien de cher"}
+            # Le depot jouet n exempte rien : chaque cas la remplit s il en a besoin.
+            exemptions: dict[tuple[str, str], str] = {}
             if degrade is not None:
-                degrade(depot, portees, inconditionnels)
+                degrade(depot, portees, inconditionnels, exemptions)
             _CACHE.clear()
-            obtenu = juger(depot, copy.deepcopy(portees), copy.deepcopy(inconditionnels))
+            obtenu = juger(
+                depot,
+                copy.deepcopy(portees),
+                copy.deepcopy(inconditionnels),
+                copy.deepcopy(exemptions),
+            )
             if obtenu == attendu:
                 print(f"  ✔ {libelle}")
             else:
