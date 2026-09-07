@@ -499,6 +499,41 @@ def cas_d_auto_test() -> tuple:
     marque = [0]
 
     def verifie(libelle: str, obtenu: object, attendu: object) -> None:
+        """Compare `obtenu` a `attendu`. Un APPELABLE est evalue ICI, et son echec se NOMME.
+
+        **Pourquoi deux formes**, dans un depot qui tient a la forme unique (issue #5444).
+
+        `obtenu` est une VALEUR, donc evaluee par l appelant, avant que cette fonction prenne la
+        main. Quand son expression leve, le temoin entier s arrete sur une trace de pile : il sort
+        en code non nul, donc la CI l attrape, mais il ne dit pas lequel de ses controles a rougi -
+        ce que l ADR 4918 refuse en toutes lettres.
+
+        Ce n est pas une negligence : deux sessions ont ecrit la meme forme fautive sur le meme
+        fichier a quelques heures d ecart, les 6 et 7 septembre 2026. C est la signature qui l
+        invite.
+
+        N accepter qu un appelable aurait ete plus propre. Le cout a ete mesure et refuse : 186
+        sites d appel, dont 79 multilignes a reprendre a la main, et **aucun ne leve aujourd hui**.
+        La protection vise le prochain cas fragile, pas un defaut en cours. Les 186 restent donc
+        valides, et un cas dont l expression peut lever s ecrit desormais :
+
+            verifie("le lecteur absent se signale", lambda: sonde(fichier), "refus")
+
+        **La limite de `callable`, declaree plutot que decouverte.** Un cas qui comparerait une
+        FONCTION serait pris pour differe. Aucun des 186 ne le fait - les sept qui passent un nom nu
+        rendent un entier, une chaine ou une liste, verifies un par un le 2026-09-07. Un tel cas
+        devrait envelopper deux fois : `lambda: la_fonction`.
+        """
+        if callable(obtenu):
+            try:
+                obtenu = obtenu()
+            except Exception as leve:  # noqa: BLE001
+                # LARGE, et c est le but : une expression de cas peut lever n importe quoi, et le
+                # propos est justement qu elle se NOMME au lieu d arreter le temoin. Restreindre
+                # ici rendrait la moitie des cas fragiles muets de nouveau.
+                print(f"  ✘ {libelle} : l expression a levé {type(leve).__name__} : {leve}")
+                marque[0] = 1
+                return
         if obtenu == attendu:
             print(f"  ✔ {libelle}")
         else:
