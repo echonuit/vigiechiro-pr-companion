@@ -13,9 +13,15 @@ verified:
     at: 2026-08-16
 relations:
   prolonge: ["3664"]
+  completee_par: ["5437-une-fixture-qui-suppose-la-plateforme-se-refuse-localement"]
 ---
 
 # Un défaut de plateforme se sonde, il ne se déduit pas
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-09-07** : l'`enforced_by` ci-dessus ne nomme qu'un détecteur hebdomadaire. Un garde local
+    refuse désormais la fixture non déclarée, par
+    [5437](5437-une-fixture-qui-suppose-la-plateforme-se-refuse-localement.md).
 
 ## Contexte
 

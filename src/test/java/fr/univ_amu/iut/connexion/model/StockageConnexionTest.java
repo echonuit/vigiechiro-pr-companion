@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.fixture.SystemeDeFichiers;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
@@ -84,9 +84,7 @@ class StockageConnexionTest {
     @Test
     @DisplayName("le fichier de connexion est restreint au propriétaire (POSIX 600)")
     void permissions_restreintes() throws IOException {
-        assumeTrue(
-                FileSystems.getDefault().supportedFileAttributeViews().contains("posix"),
-                "système de fichiers non POSIX : permissions non applicables");
+        assumeTrue(SystemeDeFichiers.posixDisponible(), "système de fichiers non POSIX : permissions non applicables");
         StockageConnexion stockage = stockage(JOUR);
 
         stockage.enregistrer("TOK123", PROFIL);
