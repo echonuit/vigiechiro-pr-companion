@@ -14,13 +14,12 @@ on:
   schedule:
     # Lundi 6 h UTC : le rapport est là au début de la semaine, pas au milieu d'une soirée de travail.
     - cron: "0 6 * * 1"
-  pull_request:
-    paths:
-      - "pom.xml"
-      - ".github/workflows/securite-dependances.yml"
-      # Le garde de fraîcheur ne tourne pour de vrai que le lundi. Une étape que seul un `schedule`
-      # exerce peut être fusionnée cassée : ce chemin la fait tourner sur la PR qui la modifie.
-      - ".github/scripts/verifie_fraicheur_actions.py"
+  # ⟨aucun `paths:` ici, et c'est une décision⟩ Un atelier filtré par chemins ne se déclenche pas,
+  # donc ses jobs sont ABSENTS du récapitulatif d'une demande. Ni verts, ni sautés : absents. Or
+  # `verifie_verdict_avant_fusion.py` compte ce qui est présent, si bien qu'il déclarait un verdict
+  # complet sans eux (ADR 2748, ADR 4571, chantier #5294, issue #5379). Les deux jobs tournent donc
+  # toujours, et c'est une ÉTAPE qui décide - le patron des neuf autres jobs du dépôt.
+  pull_request: {}
   workflow_dispatch: {}
 
 concurrency:
@@ -37,7 +36,20 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      # ⟨portee⟩ Chantier #5294, issue #5379. Ce job juge ce que le fat-jar EMBARQUE : quand rien de
+      # ce qui resout les dependances ne bouge, il n a rien a dire. Le job tourne quand meme et
+      # conclut « sans objet », plutot que d etre absent du recapitulatif.
+      - name: "Ce diff change-t-il ce que nous embarquons (#5379)"
+        id: portee
+        shell: bash
+        # ⟨butoir⟩ L etape fait un `git fetch` reseau, comme les neuf autres portees.
+        timeout-minutes: 3
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 .github/scripts/porte_du_job.py inventaire
+
       - name: Set up JDK 25
+        if: steps.portee.outputs.concerne == 'oui'
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           java-version: '25'
@@ -46,11 +58,13 @@ jobs:
           cache: maven
 
       - name: Produire le SBOM CycloneDX
+        if: steps.portee.outputs.concerne == 'oui'
         # `makeBom` seul : l'inventaire vient de la RÉSOLUTION Maven, il n'a pas besoin que le
         # fat-jar soit construit ni que les tests tournent.
         run: ./mvnw -B org.cyclonedx:cyclonedx-maven-plugin:makeBom
 
       - name: Ce que le SBOM déclare
+        if: steps.portee.outputs.concerne == 'oui'
         # Une ligne lisible dans le journal : un inventaire qu'on ne lit jamais ne sert à personne.
         run: |
           python3 - <<'FIN'
@@ -64,6 +78,7 @@ jobs:
           FIN
 
       - name: Scanner le SBOM
+        if: steps.portee.outputs.concerne == 'oui'
         id: scan
         uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
         with:
@@ -77,8 +92,10 @@ jobs:
           output-format: table
 
       - name: Conserver le rapport
-        # Même quand le scan échoue : c'est là qu'on en a le plus besoin.
-        if: always()
+        # Même quand le scan échoue : c'est là qu'on en a le plus besoin. Mais pas quand la portée a
+        # dit non : il n'y a alors aucun SBOM à conserver, et `always()` seul ferait chercher un
+        # fichier que rien n'a produit.
+        if: always() && steps.portee.outputs.concerne == 'oui'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: sbom-et-scan
@@ -104,7 +121,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      # ⟨portee⟩ Chantier #5294, issue #5379. Ce job juge les actions qui CONSTRUISENT et PUBLIENT.
+      # Il ne tourne pour de vrai que le lundi, par `schedule`, ou la portee n a pas de base et rend
+      # `oui`. Sur une demande, il conclut « sans objet » plutot que d etre absent du recapitulatif.
+      - name: "Ce diff touche-t-il le garde de fraîcheur ou son atelier (#5379)"
+        id: portee
+        shell: bash
+        timeout-minutes: 3
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 .github/scripts/porte_du_job.py fraicheur-des-actions
+
       - name: Les actions épinglées ont-elles pris du retard ?
+        if: steps.portee.outputs.concerne == 'oui'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
