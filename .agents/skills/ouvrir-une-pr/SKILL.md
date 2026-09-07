@@ -31,7 +31,7 @@ Ce n'est pas un défaut rare : les sessions **disent** attendre la CI et ne le f
 2. LANCER   la batterie locale, selon ce qui a ete touche.
 3. REBASER  sur `origin/main`, puis RELANCER ce que le rebase peut avoir perime.
 4. EPROUVER le titre AVANT `gh pr create`.
-5. ECRIRE   le corps en evitant les quatre refus que seule la forge rend.
+5. ECRIRE   le corps en evitant ses quatre refus, et l EPROUVER en local avant de l ouvrir.
 6. POUSSER, ouvrir, puis LANCER LE MONITEUR dans le meme geste.
 ```
 
@@ -69,6 +69,8 @@ tableau doit, c'est la commande à lancer, pas l'inventaire.
 | `./mvnw -B -o test-compile pmd:pmd` **puis** `python3 scripts/adr/4617-code-mort-et-zone-de-test.py` | dès qu'on **ajoute du code** : le cliquet refuse si `target/pmd.xml` manque, donc il ne dit rien en local |
 | `./mvnw test -Dtest=DocumentationAJourTest` | dès qu'une **ADR** est écrite ou modifiée, et dès qu'un **chiffre** change dans une doc. Le déclencheur disait « un chiffre » seul jusqu'au 2026-09-05, où une ADR neuve a rougi en CI sur `l_entete_d_une_adr_porte_son_titre` sans qu'aucun chiffre ait bougé : ce test tient vingt et un invariants de documentation, pas un seul |
 | `python3 .github/scripts/porte_du_job.py --auto-test` **puis** `python3 .github/scripts/verifie_portees_de_ci.py --auto-test` **puis** sans argument | dès qu'on touche un **atelier** ou la **portée** d'un job. Une portée qui ne correspond plus à rien ne rougit pas : elle fait écrire « sans objet » à un job qui aurait dû juger, et le job finit vert. Ces deux gardes vivent dans `.github/scripts/`, que le garde de cette page ne balaie pas encore : ils sont nommés ici à la main |
+
+| `python3 .github/scripts/verifie_titre_pr.py "<titre>"` **puis** `python3 .github/scripts/verifie_corps_pr.py "<corps>"` | **avant `gh pr create`**, toujours. Ni l'un ni l'autre n'est dans un fichier du dépôt, donc aucune boucle ne les atteint : ils se lancent à la main, sur le texte qu'on s'apprête à taper. C'est la seule ligne de ce tableau dont l'oubli coûte une demande à rouvrir |
 
 **Et selon ce qu'on a touché d'autre.** Ces gardes-là ne tiennent pas dans un tableau sans le rendre
 illisible, et ils se déclenchent aussi nettement.
@@ -175,10 +177,21 @@ Le 2026-08-28 a ajouté une cinquième forme, du même geste : une **élision sa
 `d accuser` pour `d'accuser`. La main qui évite l'espace avant le deux-points peut encore buter sur
 l'apostrophe, et le script les refuse toutes les deux.
 
-## Les quatre refus que seule la forge rend
+## Les quatre refus du corps, qui s'éprouvent en local
 
-Aucune batterie locale ne lit le corps ni le titre d'une PR : ils ne sont dans aucun fichier. Le
-workflow `corps-pr.yml` les refuse, et c'est trop tard pour les découvrir.
+Le corps et le titre ne sont dans aucun fichier du dépôt, donc aucune boucle ne les balaie. **Mais
+les deux gardes qui les jugent s'exécutent en local, avec le texte en argument**, et ce sont ceux-là
+mêmes que `corps-pr.yml` et `titre-pr.yml` appellent :
+
+```bash
+python3 .github/scripts/verifie_corps_pr.py "$(cat mon-corps.md)"
+```
+
+Cette page a longtemps écrit le contraire - « ils ne sont dans aucun fichier », donc rien à lancer -
+tout en prescrivant trente lignes plus haut d'éprouver le titre. Un lecteur qui a les deux phrases
+choisit celle qui lui dit qu'il n'y a rien à faire. Trois refus en deux demandes le 2026-09-07, dont
+un tiret cadratin dans un corps qui venait d'être relu, et trois autres chez une session pair le même
+jour.
 
 | Refus | Ce qu'il faut écrire |
 |---|---|
