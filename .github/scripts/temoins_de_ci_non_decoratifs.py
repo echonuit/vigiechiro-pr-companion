@@ -55,6 +55,10 @@ import subprocess
 import sys
 import tempfile
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+
+from _forge import dispatche_l_option
+
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 ATELIERS = RACINE / ".github" / "workflows"
 DOSSIERS = (".github/scripts", ".github/assets")
@@ -110,12 +114,17 @@ def corpus(texte: str | None = None) -> list[pathlib.Path]:
     trouves = []
     for dossier in DOSSIERS:
         for f in sorted((RACINE / dossier).glob("*.py")):
-            if f.name == MOI or f.name.startswith("_"):
+            # ⟨plus d exclusion par le NOM⟩ Le souligne initial ecartait les modules de mecanisme
+            # par leur forme, quand `verifie_inventaires_ci` ne les ecartait pas du tout : deux
+            # populations tirees du meme dossier, sur une regle qui n etait ecrite nulle part. Les
+            # deux partagent desormais `_forge.dispatche_l_option`, qui derive de ce que le fichier
+            # FAIT (#5318). Un module de mecanisme ne dispatche rien, donc il sort tout seul.
+            if f.name == MOI:
                 continue
             source = f.read_text(encoding="utf-8")
             if (
                 f.name in texte
-                and "--auto-test" in source
+                and dispatche_l_option(str(f), source)
                 and ligne_du_point_d_entree(source) is not None
             ):
                 trouves.append(f)

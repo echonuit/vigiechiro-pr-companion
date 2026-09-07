@@ -56,7 +56,6 @@ Usage : python3 .github/scripts/verifie_inventaires_ci.py [--auto-test]
 
 from __future__ import annotations
 
-import ast
 import glob
 import os
 import pathlib
@@ -120,37 +119,14 @@ def porte_l_option(chemin: str, texte: str) -> bool:
     `scripts/adr/_commun.py` en a fait les frais : documenter le champ `temoin` du contrat suffisait
     a l exiger au tableau, alors qu il n a aucun point d entree (#5032).
 
-    C est la mise en garde que le fonds porte lui-meme pour les gardes de code, jamais appliquee a
-    ce garde-ci : « un script qui compte un motif present dans un COMMENTAIRE est faux par
-    construction ; le commentaire cite la chose, il ne la fait pas ».
+    Ecarter les docstrings ne suffisait pas : un `USAGE = "... --auto-test"` restait compte, et le
+    champ `temoin` d un CONTRAT aussi. La regle vit desormais dans `_forge.dispatche_l_option`, que
+    `temoins_de_ci_non_decoratifs.py` partage : les deux gardes tiraient deux populations du meme
+    dossier, sur un point qui n etait ecrit nulle part (#5318).
     """
-    if not chemin.endswith(".py"):
-        # En shell, retirer les lignes de commentaire suffit.
-        nu = "\n".join(l for l in texte.split("\n") if not l.lstrip().startswith("#"))
-        return "--auto-test" in nu
-    try:
-        arbre = ast.parse(texte)
-    except SyntaxError:
-        # On ne conclut pas sur ce qu on ne sait pas lire, et on penche du cote BRUYANT : compter a
-        # tort se voit et se corrige, ne pas compter est le silence que cet inventaire combat.
-        return "--auto-test" in texte
-    # Les commentaires n entrent pas dans l arbre : `ast` les ecarte seul. Restent les docstrings,
-    # seules constantes qui ne sont pas du code, et qu il faut donc reconnaitre pour les exclure.
-    docstrings = set()
-    for noeud in ast.walk(arbre):
-        corps = getattr(noeud, "body", None)
-        porteur = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
-        if isinstance(noeud, porteur) and corps and isinstance(corps[0], ast.Expr):
-            tete = corps[0].value
-            if isinstance(tete, ast.Constant) and isinstance(tete.value, str):
-                docstrings.add(id(tete))
-    return any(
-        isinstance(n, ast.Constant)
-        and isinstance(n.value, str)
-        and "--auto-test" in n.value
-        and id(n) not in docstrings
-        for n in ast.walk(arbre)
-    )
+    from _forge import dispatche_l_option
+
+    return dispatche_l_option(chemin, texte)
 
 
 def bloc_surveille(texte: str) -> str:
@@ -493,6 +469,38 @@ def _auto_test() -> int:
                 echecs = 1
             else:
                 print(f"  ✔ {libelle}")
+
+    # ⟨la regle partagee, dans les DEUX sens⟩ Sans le second cas, une regle qui ne verrait plus
+    # personne passerait le premier et viderait l inventaire en silence (#5318).
+    for libelle, source, attendu in (
+        (
+            "un module de mecanisme qui MENTIONNE l option n est pas un garde",
+            'USAGE = "python3 x.py --auto" "-test"\n',
+            False,
+        ),
+        (
+            "un garde qui DISPATCHE par un test en est un",
+            'import sys\nif "--auto" "-test" in sys.argv:\n    raise SystemExit(0)\n',
+            True,
+        ),
+        (
+            "un garde qui DISPATCHE par argparse en est un aussi",
+            'import argparse\np = argparse.ArgumentParser()\np.add_argument("--auto" "-test")\n',
+            True,
+        ),
+        (
+            "une docstring qui en parle ne suffit pas",
+            '"""Ce module explique --auto" "-test sans le porter."""\n',
+            False,
+        ),
+    ):
+        cas += 1
+        obtenu = porte_l_option("x.py", source)
+        if obtenu is attendu:
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
+            echecs = 1
 
     print()
     verbe = "DOIT" if rouges == 1 else "DOIVENT"
