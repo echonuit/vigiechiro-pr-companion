@@ -37,7 +37,7 @@ l'appliquait au moment où elle aurait servi.
 **Un appel POSIX qui peut jeter, dans l'arbre de test, déclare l'exigence qu'il porte.** Un garde
 local le refuse à chaque demande, cliquet à zéro.
 
-Quatre formes valent déclaration, et ce sont celles que le dépôt employait déjà :
+Cinq formes valent déclaration, et ce sont celles que le dépôt employait déjà :
 
 | Forme | Ce qu'elle dit |
 |---|---|
@@ -45,6 +45,13 @@ Quatre formes valent déclaration, et ce sont celles que le dépôt employait d�
 | `assumeTrue` en tête de méthode | la même exigence, moins visible |
 | `try` / `catch (UnsupportedOperationException)` | le code se replie, il n'éprouve rien de la plateforme |
 | une aide dont tous les appelants du fichier déclarent | la délégation que #3778 a voulue |
+| un `if` dont la **condition** nomme le prédicat | les deux branches sont éprouvées, l'une attendant le succès, l'autre le refus |
+
+**La cinquième a été trouvée en clôturant**, et par le garde lui-même : la passe 6 a écrit le banc qui
+manquait au prédicat, lequel appelle l'API dans les deux branches d'un `if` pour confronter ce que le
+prédicat annonce à ce que le système fait. Le garde a refusé son propre banc de clôture, à juste
+titre : il ne connaissait pas cette écriture. Seule la **condition** est lue, jamais le `if` entier,
+sinon n'importe quel `if` placé autour de l'appel vaudrait déclaration.
 
 `assumeTrue` est accepté à côté de `@EnabledIf`, alors que #3778 préfère le second. Le mal que cette
 ADR nomme est celui d'un `assumeTrue` posé **au milieu** d'une méthode, qui emporte les assertions
@@ -54,11 +61,9 @@ garde sur des cas justes, pour une préférence de style qu'une autre décision 
 ## Pourquoi l'arbre syntaxique, et non un motif de ligne
 
 Mesuré sur l'arbre du 2026-09-06 : un motif textuel retient **sept** fichiers, le garde en retient
-**deux**, et ce sont les deux qui étaient réellement cassés. Cinq des sept sont légitimes : une
-citation en commentaire, deux `assumeTrue`, une aide qui délègue, une aide qui rattrape l'exception.
-
-Un motif qui se trompe cinq fois sur sept ne peut pas annoncer un zéro qui veuille dire quelque
-chose. Le garde lit donc `scripts/_commun/arbre.py`.
+**deux**, et ce sont les deux qui étaient cassés. Cinq des sept sont légitimes. Un motif qui se
+trompe ainsi ne peut pas annoncer un zéro qui veuille dire quelque chose : le garde lit donc
+`scripts/_commun/arbre.py`.
 
 Deux des faux positifs sont de plus des `///` du JEP 467, et `tree-sitter` est le seul lecteur du
 dépôt qui les rende fidèlement : Spoon les classe en `//` et re-sérialise en `// /`, JavaParser ne
@@ -94,5 +99,4 @@ ici plutôt qu'un principe : `MainViewTest` pousse `^F` et a raison de le faire.
 
 - **Amender l'`enforced_by` de la 3802.** Une ADR acceptée ne se réécrit pas ici : elle se complète.
 - **Poser le cliquet au-dessus de zéro pour tolérer les deux `assumeTrue`.** Ils sont justes, pas
-  tolérés. Un cliquet les aurait comptés comme une dette, et aurait appris à lire un chiffre non nul
-  comme normal.
+  tolérés : un cliquet les aurait comptés comme une dette.

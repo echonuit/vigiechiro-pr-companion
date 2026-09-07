@@ -1728,11 +1728,13 @@ fcbe8023fc7e  src/test/java/fr/univ_amu/iut/e2e/ParcoursValidationExpertE2ETest.
 cc7e7d3e1cb5  src/test/java/fr/univ_amu/iut/e2e/ParcoursVerifierEchantillonnageE2ETest.java
 7d37e6ad4ba2  src/test/java/fr/univ_amu/iut/e2e/RetourApresVerificationE2ETest.java
 0daea473a813  src/test/java/fr/univ_amu/iut/fixture/EmpreinteDeDossier.java
+9a32125e88b1  src/test/java/fr/univ_amu/iut/fixture/EmpreinteDeDossierTest.java
 2704be62020a  src/test/java/fr/univ_amu/iut/fixture/JeuDeDonneesPassage.java
 5aae7e47d836  src/test/java/fr/univ_amu/iut/fixture/JeuDeDonneesPassageTest.java
 f533002f9258  src/test/java/fr/univ_amu/iut/fixture/JournalDeCapteur.java
 8a00f2d62738  src/test/java/fr/univ_amu/iut/fixture/SortieCapturee.java
 11620c9b06e8  src/test/java/fr/univ_amu/iut/fixture/SystemeDeFichiers.java
+2d2e67f7e0f7  src/test/java/fr/univ_amu/iut/fixture/SystemeDeFichiersTest.java
 c4ecf9dc9e9c  src/test/java/fr/univ_amu/iut/importation/AnalyseCoherenceTest.java
 7ccc080b8069  src/test/java/fr/univ_amu/iut/importation/AnalyseMelangeTest.java
 0dbc5fa9f554  src/test/java/fr/univ_amu/iut/importation/AnalyseurLogPRTest.java

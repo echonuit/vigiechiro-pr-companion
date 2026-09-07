@@ -113,6 +113,27 @@ def _garde_en_tete(methode, avant_octet: int) -> bool:
     return False
 
 
+def _sous_un_si_qui_declare(appel) -> bool:
+    """L appel vit-il sous un `if` dont la CONDITION nomme le predicat ?
+
+    Cinquieme forme, trouvee en clouturant : le banc du predicat lui-meme
+    (`SystemeDeFichiersTest`) appelle l API dans les DEUX branches, pour confronter ce que le
+    predicat annonce a ce que le systeme fait. Les deux branches sont declarees - l une attend le
+    succes, l autre attend le refus - et c est la condition qui le dit.
+
+    On lit la CONDITION seule, jamais le `if` entier : son corps contient l appel, donc chercher le
+    predicat dans tout le noeud accepterait n importe quel `if` place autour.
+    """
+    noeud = appel
+    while noeud is not None:
+        if noeud.type == "if_statement":
+            condition = noeud.child_by_field_name("condition")
+            if condition is not None and PREDICAT in condition.text.decode("utf-8", "replace"):
+                return True
+        noeud = noeud.parent
+    return False
+
+
 def _rattrape_le_refus(appel) -> bool:
     """L appel est-il sous un `try` dont un `catch` nomme `UnsupportedOperationException` ?
 
@@ -185,6 +206,7 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
                 _annonce_posix(methode)
                 or _annonce_posix(classe)
                 or _garde_en_tete(methode, appel.start_byte)
+                or _sous_un_si_qui_declare(appel)
                 or _rattrape_le_refus(appel)
                 or _appelants_declarent(racine_ast, methode)
             ):
@@ -250,6 +272,32 @@ def _auto_test() -> int:
             )
         ),
         0,
+    )
+    verifie(
+        "un appel sous un if qui nomme le predicat est declare",
+        len(
+            _sur_source(
+                NU.replace(
+                    "        Files.set",
+                    "        if (SystemeDeFichiers.posixDisponible()) Files.set",
+                )
+            )
+        ),
+        0,
+    )
+    # Le CONTROLE NEGATIF de la cinquieme forme : un `if` qui ne nomme pas le predicat ne declare
+    # rien. Sans lui, la regle accepterait n importe quel `if` place autour de l appel.
+    verifie(
+        "un if qui ne nomme PAS le predicat ne declare rien",
+        len(
+            _sur_source(
+                NU.replace(
+                    "        Files.set",
+                    "        if (dossier.exists()) Files.set",
+                )
+            )
+        ),
+        1,
     )
     verifie(
         "un appel qui rattrape UnsupportedOperationException se garde seul",
@@ -344,11 +392,13 @@ if __name__ == "__main__":
     sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
+    # Un REFUS, pas une trace, et sur STDERR comme les autres gardes qui lisent l arbre : le message
+    # dit ce qui manque ET quoi faire. L imprimer sur stdout le placait la ou la porte lit un
+    # verdict, non la ou elle lit une erreur (passe 1 de la cloture de #5433).
     try:
         listes = suspects()
     except LecteurAbsent as absent:
-        print(absent)
-        raise SystemExit(1) from absent
+        raise SystemExit(str(absent)) from absent
     raise SystemExit(
         rapporte(
             ADR,

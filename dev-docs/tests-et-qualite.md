@@ -865,6 +865,33 @@ aurait asserté l'hypothèse serait passée au rouge sans qu'on sache pourquoi.
 
 Détail : [ADR 3802](decisions/3802-un-defaut-de-plateforme-se-sonde-il-ne-se-deduit-pas.md).
 
+### Et le test qui RESTE déclare ce qu'il exige de la plateforme
+
+La sonde dit quel comportement câbler. Le test qui subsiste doit, lui, être jouable **partout** : une
+fixture qui suppose son système meurt avant sa première assertion, et le rapport compte alors une
+**erreur** sur ce qu'elle préparait, jamais un rouge sur ce qu'elle éprouvait.
+
+`Files.setPosixFilePermissions` et ses voisines jettent `UnsupportedOperationException` là où la vue
+`posix` n'existe pas, NTFS en tête. Cinq écritures satisfont le garde, et ce sont celles que le
+dépôt employait déjà :
+
+| Forme | Quand l'employer |
+|---|---|
+| `@EnabledIf("fr.univ_amu.iut.fixture.SystemeDeFichiers#posixDisponible")` | la fixture EXIGE POSIX et le cas n'a pas de sens ailleurs. La forme préférée : elle se voit dans le rapport |
+| `assumeTrue(SystemeDeFichiers.posixDisponible())` en **tête** de méthode | même exigence, moins visible. Jamais au milieu : elle emporterait les assertions qui n'ont rien de POSIX |
+| `try` / `catch (UnsupportedOperationException)` | le code se replie et n'éprouve rien de la plateforme |
+| une aide privée dont **tous** les appelants du fichier déclarent | la délégation voulue par #3778, pour que l'hypothèse ne vive pas dans le helper |
+| `if (SystemeDeFichiers.posixDisponible())` | les deux branches sont éprouvées, l'une attendant le succès et l'autre le refus |
+
+Le prédicat a **une seule écriture**, `fixture.SystemeDeFichiers.posixDisponible()`. Il en a eu cinq,
+et une copie qui diverge de ses soeurs ne fait rougir personne.
+
+`scripts/adr/5437-fixture-suppose-la-plateforme.py` refuse toute autre forme, cliquet à zéro. Ce qu'il
+ne voit pas est déclaré : une aide appelée depuis un **autre** fichier, et un `@EnabledIf` dont le
+prédicat rendrait toujours vrai, suivi par son nom et non par son corps.
+
+Détail : [ADR 5437](decisions/5437-une-fixture-qui-suppose-la-plateforme-se-refuse-localement.md).
+
 ### La police d'un test n'est pas celle du produit, sauf si on la lui donne
 
 `Typographie.installer()` garde un `static boolean` : l'enregistrement de la police embarquée est
