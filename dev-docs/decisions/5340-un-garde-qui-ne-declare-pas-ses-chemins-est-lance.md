@@ -93,3 +93,12 @@ Un garde illisible est donc signalé **et engagé**, avec sa raison.
 
 La CI. `AGENTS.md` le pose : la mesure fait foi en CI, pas sur le poste. La porte est le **premier
 lecteur**, celui qui évite l'aller-retour, pas l'autorité.
+
+## Une lacune n'a pas de repli, donc elle refuse (#5378)
+
+L'absence se cliquette : elle coûte, sans danger. Un `chemins` **incomplet** n'a aucun repli : il fait
+**taire** le garde, et la porte affiche « non engagé », ce qui se lit comme une bonne nouvelle. Le
+garde confronte donc le `chemins` déclaré au parcours résolu, et **refuse**.
+
+Il ne juge que les gardes dont le parcours se résout : quatre sur soixante-seize au 2026-09-07. Son
+zéro ne vaut que pour ceux-là, et il le dit.
