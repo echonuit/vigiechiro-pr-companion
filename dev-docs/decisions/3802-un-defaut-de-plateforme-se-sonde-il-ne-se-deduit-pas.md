@@ -5,12 +5,13 @@ status: stable
 article: A4
 chantier: "#3802, suites du chantier #3518"
 decided_at: 2026-08-16
-verification: certaine
+verification: probable
 enforced_by:
-  - ".github/workflows/suite-sous-windows-et-macos.yml"
+  - "scripts/adr/5437-fixture-suppose-la-plateforme.py"
+ratchet: 0
 verified:
-  - by: machine:ci
-    at: 2026-08-16
+  - by: machine:suspects
+    at: 2026-09-07
 relations:
   prolonge: ["3664"]
   completee_par: ["5437-une-fixture-qui-suppose-la-plateforme-se-refuse-localement"]
@@ -19,9 +20,23 @@ relations:
 # Un défaut de plateforme se sonde, il ne se déduit pas
 
 !!! warning "Ce qui fait foi aujourd'hui"
-    **2026-09-07** : l'`enforced_by` ci-dessus ne nomme qu'un détecteur hebdomadaire. Un garde local
-    refuse désormais la fixture non déclarée, par
-    [5437](5437-une-fixture-qui-suppose-la-plateforme-se-refuse-localement.md).
+    **Complétée le 2026-09-07** par
+    [ADR 5437](5437-une-fixture-qui-suppose-la-plateforme-se-refuse-localement.md) : un garde local
+    refuse la fixture qui suppose la plateforme, au lieu de la détecter le mardi suivant.
+
+## Ce qui tient cette décision
+
+**`probable`, et non `certaine`.** La règle est de méthode : rien ne peut prouver qu'une sonde a
+précédé un test, et l'ADR 2465 réserve `certaine` à un invariant qui échoue en CI.
+
+La moitié mécanisable, elle, existe : `scripts/adr/5437-fixture-suppose-la-plateforme.py` liste les
+fixtures qui appellent une API POSIX sans déclarer qu'elles l'exigent, cliquet à zéro, sur chaque
+demande. C'est la définition de `probable`.
+
+L'`enforced_by` nommait `suite-sous-windows-et-macos.yml`, qui ne se déclenche ni sur une demande ni
+sur une poussée. Ce détecteur hebdomadaire reste en place ; il n'était pas ce que `certaine`
+promettait. Le geste suit l'[ADR 5414](5414-une-regle-que-rien-ne-peut-garder-se-declare.md) : ce que
+rien ne peut garder se déclare. Mesuré par #5448.
 
 ## Contexte
 
