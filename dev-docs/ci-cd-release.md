@@ -114,6 +114,11 @@ récapitulatif complet.
 nomme son propre atelier et le mécanisme qui la lit, sans quoi une modification du dispositif ne
 serait jamais éprouvée par lui.
 
+**Un nom de job ne désigne qu'un seul job**, et cette contrainte porte le dispositif entier. Jusqu'à
+#5439, `docs.yml` et `maven.yml` avaient tous deux un job `build` : une seule déclaration les
+satisfaisait, avec une raison écrite qui appartenait à l'un et était fausse pour l'autre. Le garde
+d'exhaustivité était vert sur un job qu'il n'avait jamais examiné.
+
 La décision, ses deux verrous et la condition qui la périmerait - l'arrivée d'une protection de
 branche sur `main` - sont dans l'[ADR 5376](decisions/5376-un-job-tourne-toujours-et-une-etape-decide.md).
 
