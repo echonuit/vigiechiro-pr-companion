@@ -14,10 +14,10 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.fixture.SystemeDeFichiers;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
-import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -749,7 +749,7 @@ class DocumentationAJourTest {
         // **garde de documentation** : elle n'est pas livrée sous Windows, et n'y rencontrera jamais un
         // dossier illisible. Y coudre un port serait de la mécanique sans contrepartie.
         assumeTrue(
-                FileSystems.getDefault().supportedFileAttributeViews().contains("posix"),
+                SystemeDeFichiers.posixDisponible(),
                 "système de fichiers non POSIX : un dossier illisible ne s'y fabrique pas ainsi");
 
         Path atteignable = Files.createDirectories(racine.resolve("atteignable"));

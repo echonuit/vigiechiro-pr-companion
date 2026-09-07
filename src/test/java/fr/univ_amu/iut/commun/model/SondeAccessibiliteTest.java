@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import fr.univ_amu.iut.commun.model.SondeAccessibilite.Verdict;
+import fr.univ_amu.iut.fixture.SystemeDeFichiers;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -59,7 +59,7 @@ class SondeAccessibiliteTest {
     @Test
     @DisplayName("Un dossier en lecture seule est NON_INSCRIPTIBLE")
     void lecture_seule(@TempDir Path racine) throws IOException {
-        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"), "POSIX requis");
+        assumeTrue(SystemeDeFichiers.posixDisponible(), "POSIX requis");
         Path lecture = Files.createDirectory(racine.resolve("lecture-seule"));
         Files.setPosixFilePermissions(lecture, PosixFilePermissions.fromString("r-xr-xr-x"));
         try {

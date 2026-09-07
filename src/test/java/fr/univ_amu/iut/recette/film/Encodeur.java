@@ -1,11 +1,11 @@
 package fr.univ_amu.iut.recette.film;
 
+import fr.univ_amu.iut.fixture.SystemeDeFichiers;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -115,8 +115,11 @@ public interface Encodeur extends AutoCloseable {
         }
 
         /// La vue POSIX est-elle là ? C'est elle qui décide de la façon dont on juge l'exécutabilité.
+        ///
+        /// Déléguée à la couture depuis #5437 : la même question s'écrivait en cinq endroits, et une
+        /// copie qui diverge de ses soeurs ne fait rougir personne.
         static boolean vuePosixDisponible() {
-            return FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+            return SystemeDeFichiers.posixDisponible();
         }
 
         /// Ce chemin désigne-t-il un exécutable ?

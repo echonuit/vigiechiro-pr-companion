@@ -833,6 +833,37 @@ def test_4468_javadoc_non_relue() -> None:
         )
 
 
+def test_5437_fixture_suppose_la_plateforme() -> None:
+    m = _charge("5437-fixture-suppose-la-plateforme.py")
+    APPEL = 'Files.setPosixFilePermissions(p, PosixFilePermissions.fromString("r-xr-xr-x"));'
+
+    def classe(entete: str, corps: str) -> str:
+        return "class A {\n" + entete + "    void t() throws IOException {\n        " + corps + "\n    }\n}\n"
+
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        chemin = "src/test/java/fr/a/A.java"
+
+        _ecrire(racine, chemin, classe("", APPEL))
+        _verifie(
+            "5437 un appel POSIX sans exigence declaree est vu",
+            [s.split("  ")[0] for s in m.suspects(racine)],
+            ["src/test/java/fr/a/A.java:3"],
+        )
+
+        # LE SECOND FAIT, celui qui distingue ce cliquet d un compte : le MEME appel, DECLARE, sort du
+        # compte. Sans ce cas, un detecteur qui accuserait tout `setPosixFilePermissions` passerait le
+        # premier, et compterait la population entiere.
+        _ecrire(racine, chemin, classe('    @EnabledIf("X#posixDisponible")\n', APPEL))
+        _verifie("5437 le meme appel declare sort du compte", m.suspects(racine), [])
+
+        # LA CITATION EN COMMENTAIRE, qui est la raison d etre de la lecture par l arbre : sur l etat
+        # du 2026-09-06, un motif textuel retenait SEPT fichiers la ou ce garde en retient deux.
+        _ecrire(racine, chemin, classe("", "// " + APPEL))
+        _verifie("5437 une citation en commentaire n est pas un appel", m.suspects(racine), [])
+        _verifie("5437 et le garde a bien LU ce fichier", len(m.fichiers(racine)), 1)
+
+
 def test_5278_attente_hors_du_fil() -> None:
     m = _charge("5278-attente-hors-du-fil.py")
     lecture = '() -> !robot.lookup("#t").queryAll().isEmpty()'
@@ -2261,6 +2292,7 @@ if __name__ == "__main__":
         test_4468_javadoc_non_relue,
         test_5068_clic_sur_reference_tenue,
         test_4974_attente_reinventee,
+        test_5437_fixture_suppose_la_plateforme,
         test_5278_attente_hors_du_fil,
         test_5307_designation_hors_fabrique,
         test_4475_stage_non_dimensionne,
