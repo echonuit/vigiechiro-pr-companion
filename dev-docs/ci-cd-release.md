@@ -323,7 +323,8 @@ l'auto-exclusion qu'imposait une liste (le fichier ne devait pas figurer dans sa
 **Ce qu'une empreinte prouve, et ce qu'elle ne prouve pas.** Elle atteste que le fichier est
 **identique** à celui publié : elle détecte un téléchargement corrompu ou tronqué. Elle ne remplace
 **pas** une signature - publiée au même endroit que les fichiers, elle n'atteste d'aucune identité.
-La signature de code reste cadrée en #2112, où elle est suspendue à une décision de financement.
+La signature de code n'est pas financée : l'[ADR 2112](decisions/2112-on-ne-signe-pas-les-installeurs.md)
+tranche que le produit s'arrête à la notification de mise à jour.
 
 Chaque installeur embarque son **runtime** (jpackage, profil `-Pinstaller`) : l'utilisateur final
 **n'installe pas Java**. Construire un installeur localement :
@@ -1165,7 +1166,7 @@ sont exclus - attester une empreinte de trois lignes n'apprend rien.
 construit, `attestations: write` n'écrit que dans le magasin d'attestations du dépôt. Ni l'un ni
 l'autre ne touche au code, aux issues ou aux pull requests - le moindre privilège de #2739 tient.
 
-**Elle ne remplace pas la signature des installeurs** (#2112, EPIC #2104) : la signature parle aux
+**Elle ne remplace pas la signature des installeurs** ([ADR 2112](decisions/2112-on-ne-signe-pas-les-installeurs.md)) : la signature parle aux
 systèmes d'exploitation (SmartScreen, Gatekeeper), l'attestation parle à qui veut auditer. Les deux
 sont complémentaires, aucune ne rend l'autre inutile.
 
