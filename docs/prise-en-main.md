@@ -174,7 +174,8 @@ publication**. Elle nomme le dépôt, le workflow et le commit d'origine.
     demanderait de compromettre ce journal, pas seulement notre dépôt.
 
     Elle ne remplace pas la **signature** des installeurs, qui parle aux systèmes d'exploitation
-    (SmartScreen, Gatekeeper) : celle-là viendra séparément. L'attestation parle à qui veut vérifier.
+    (SmartScreen, Gatekeeper) : nous avons décidé de ne pas la financer, et l'avertissement de votre
+    système reste donc possible. L'attestation parle à qui veut vérifier.
 
 Le **SBOM** - `sbom-vX.Y.Z.json`, l'inventaire des bibliothèques embarquées - se vérifie de la même
 manière que les installeurs.

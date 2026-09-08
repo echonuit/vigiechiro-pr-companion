@@ -421,6 +421,74 @@ def test_loupe_0020() -> None:
         _verifie("loupe 0020 liste les écritures, pas les lectures", n, 1)
 
 
+def test_loupe_2112() -> None:
+    m = _charge("loupe-2112-signature-presentee-comme-a-venir.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(
+            racine,
+            "promesse-sur-deux-lignes.md",
+            # La promesse qui a motivé l'ADR : « signature » et « viendra » sur DEUX lignes.
+            "Elle ne remplace pas la **signature** des installeurs, qui parle aux systèmes\n"
+            "(SmartScreen) : celle-là viendra séparément.\n",
+        )
+        _ecrire(
+            racine,
+            "mots-caches-dans-d-autres.md",
+            # « designer » contient « signer », « deviendra » contient « viendra » : ni l'un ni
+            # l'autre ne parle de signature, et les deux étaient attrapés sans bornes de mot.
+            "Le geste designer-la-source annonce le renommage à venir.\n\n"
+            "Une URL signée expirée ne deviendra jamais valide.\n",
+        )
+        _ecrire(
+            racine,
+            "tableau.md",
+            # Deux lignes sans rapport : les joindre ferait un faux constat de leur rencontre.
+            "| Garde | Ce qu'elle vérifie |\n"
+            "|---|---|\n"
+            "| `verifie_signature.py` | la signature du manifeste |\n"
+            "| `verifie_delai.py` | ce qui est prévu plus tard |\n",
+        )
+        _ecrire(
+            racine,
+            "renvoi-qui-lie-la-decision.md",
+            "La question (#2112) est tranchée par l'[ADR](2112-on-ne-signe-pas-les-installeurs.md).\n",
+        )
+        _ecrire(
+            racine,
+            "renvoi-en-suspens.md",
+            "La signature des installeurs (#2112, EPIC #2104) parle aux systèmes d'exploitation.\n",
+        )
+        trouves = m.candidats(racine=racine)
+        pages = " ".join(trouves)
+        _verifie("loupe 2112 ne retient que les deux vrais passages", len(trouves), 2)
+        _verifie(
+            "loupe 2112 voit la promesse étalée sur deux lignes",
+            "promesse-sur-deux-lignes.md" in pages,
+            True,
+        )
+        _verifie(
+            "loupe 2112 voit le renvoi laissé en suspens",
+            "renvoi-en-suspens.md" in pages,
+            True,
+        )
+        _verifie(
+            "loupe 2112 ignore « designer » et « deviendra »",
+            "mots-caches" in pages,
+            False,
+        )
+        _verifie(
+            "loupe 2112 ne joint pas deux lignes de tableau",
+            "tableau.md" in pages,
+            False,
+        )
+        _verifie(
+            "loupe 2112 se tait quand le paragraphe lie déjà la décision",
+            "renvoi-qui-lie" in pages,
+            False,
+        )
+
+
 def test_loupe_0044() -> None:
     m = _charge("loupe-0044-mecanisme-parallelisme.py")
     with tempfile.TemporaryDirectory() as d:
@@ -2298,6 +2366,7 @@ if __name__ == "__main__":
         test_4359_blocs_relus,
         test_loupe_4359_javadoc_vieillie,
         test_loupe_0020,
+        test_loupe_2112,
         test_loupe_0044,
         test_4472_commentaire_en_corps,
         test_4468_javadoc_non_relue,

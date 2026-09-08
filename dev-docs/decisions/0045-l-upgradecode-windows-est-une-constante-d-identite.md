@@ -73,5 +73,6 @@ d'acceptation de #2213.
 
 **Ce qui suit.** La soumission du manifeste à `microsoft/winget-pkgs` (première fois à la main, revue
 par un modérateur) puis son automatisation sur `release: published` (#2213). La signature de code, qui
-ferait taire l'avertissement SmartScreen, reste une question distincte (#2112) : winget accepte un MSI
-non signé.
+ferait taire l'avertissement SmartScreen, était alors une question distincte : elle a été tranchée
+depuis par l'[ADR 2112](2112-on-ne-signe-pas-les-installeurs.md), qui décide de ne pas la financer.
+Cela ne change rien ici : winget accepte un MSI non signé.
