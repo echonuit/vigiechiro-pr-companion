@@ -1301,6 +1301,18 @@ def test_4477_longueur_des_adr() -> None:
     dont la DECISION tient en trois lignes, et c est la decision que le seuil borne.
     """
     m = _charge("4477-longueur-des-adr.py")
+    marque_reelle = '!!! warning "Ce qui fait foi aujourd\'hui"'
+    documents = [
+        chemin.read_text(encoding="utf-8")
+        for chemin in sorted(m.DECISIONS.glob("*.md"))
+        if marque_reelle in chemin.read_text(encoding="utf-8")
+    ]
+    _verifie("5491 le corpus contient des encarts de revision", bool(documents), True)
+    _verifie(
+        "5491 chaque encart reel est retire du texte mesure",
+        all(len(m.sans_encart(texte)) < len(texte) for texte in documents),
+        True,
+    )
     entete = '---\ntype: adr\ntitle: "Une decision"\n---\n'
     long_ = " ".join(f"mot{i}" for i in range(m.SEUIL + 100))
     court = " ".join(f"mot{i}" for i in range(100))
