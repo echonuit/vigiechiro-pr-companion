@@ -137,7 +137,7 @@ def _auto_test_plafond() -> None:
     from io import StringIO
     from unittest.mock import patch
 
-    for nombre in (800 - 1, 800, 800 + 1):
+    for nombre in (PLAFOND - 1, PLAFOND, PLAFOND + 1):
         corps = json.dumps([{"title": "ordinaire", "labels": []}] * nombre)
         sortie = subprocess.CompletedProcess([], 0, stdout=corps)
         erreur = StringIO()
@@ -151,10 +151,10 @@ def _auto_test_plafond() -> None:
                 _issues()
             except SystemExit as refus:
                 code = refus.code
-        assert code == (2 if nombre >= 800 else 0), (
-            f"collecte de {nombre} issues : code {code}, refus attendu au plafond 800"
+        assert code == (2 if nombre >= PLAFOND else 0), (
+            f"collecte de {nombre} issues : code {code}, refus attendu au plafond {PLAFOND}"
         )
-        if nombre >= 800:
+        if nombre >= PLAFOND:
             assert "plafond" in erreur.getvalue(), erreur.getvalue()
 
 
