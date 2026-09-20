@@ -41,12 +41,20 @@ class TableNuitsTest {
                 .map(TableCell.class::cast)
                 .filter(cellule -> cellule.getStyleClass().contains("badge") && !cellule.isEmpty())
                 .toList();
-        assertThat(cellules).hasSize(3);
+        assertThat(cellules)
+                .extracting(cellule -> cellule.getText())
+                .containsExactlyInAnyOrder("complète", "incomplète", "complétude inconnue");
         for (var cellule : cellules) {
             Text rendu = (Text) cellule.lookup(".text");
             assertThat(rendu.getText())
                     .as("le badge « %s » doit rester lisible sans survol", cellule.getText())
                     .isEqualTo(cellule.getText());
+            double largeurDisponible = cellule.getWidth()
+                    - cellule.getInsets().getLeft()
+                    - cellule.getInsets().getRight();
+            assertThat(rendu.getLayoutBounds().getWidth())
+                    .as("le texte du badge doit tenir entre les marges de la cellule")
+                    .isLessThanOrEqualTo(largeurDisponible);
         }
     }
 }
