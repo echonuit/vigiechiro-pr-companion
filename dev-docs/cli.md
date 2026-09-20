@@ -199,7 +199,9 @@ reversait donc sa pile sur la sortie d'erreur, en plus de la phrase.
 Les deux sont corrigés : le classement exception vers code vit dans `VerdictCli`, appelable des deux
 côtés, et la CLI **retire la console** au démarrage (`ConfigurationJournalisation.configurerSansConsole`).
 L'IHM garde la sienne : le trajet des journaux est un choix de surface, et personne ne script la sortie
-d'une fenêtre. La trace n'est pas perdue, elle est dans `<workspace>/logs/`.
+d'une fenêtre. Pour un incident, la sortie d'erreur indique le chemin des journaux du workspace
+et invite à joindre le fichier `vigiechiro-*.log` le plus récent au signalement.
+Les refus métier et les erreurs d'arguments ne portent pas cette indication.
 
 ### Workspace surchargeable
 

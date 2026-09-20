@@ -168,7 +168,7 @@ e0dc73cbf498  src/main/java/fr/univ_amu/iut/bibliotheque/di/BibliothequeModule.j
 acf53781814d  src/main/java/fr/univ_amu/iut/bibliotheque/model/EntreeBiblio.java
 1ec6b6df5d22  src/main/java/fr/univ_amu/iut/bibliotheque/model/ExportBiblioSons.java
 eb709b57da4f  src/main/java/fr/univ_amu/iut/bibliotheque/model/ServiceBibliotheque.java
-3dbcfcefbf54  src/main/java/fr/univ_amu/iut/cli/Cli.java
+eacbfa63fb99  src/main/java/fr/univ_amu/iut/cli/Cli.java
 cef533cc30a1  src/main/java/fr/univ_amu/iut/cli/CouleurCli.java
 8931262df131  src/main/java/fr/univ_amu/iut/cli/FabriqueGuice.java
 4fa3471c5621  src/main/java/fr/univ_amu/iut/cli/FormatJson.java
@@ -1362,6 +1362,7 @@ bb5d34b1f464  src/test/java/fr/univ_amu/iut/cli/CliGestesRevueTest.java
 e70de6efaeef  src/test/java/fr/univ_amu/iut/cli/CliImportTest.java
 f94d25cc8ed1  src/test/java/fr/univ_amu/iut/cli/CliImportTransformesTest.java
 b74817f361ca  src/test/java/fr/univ_amu/iut/cli/CliInventaireTest.java
+a046d897b3db  src/test/java/fr/univ_amu/iut/cli/CliJournauxTest.java
 80cc5208149d  src/test/java/fr/univ_amu/iut/cli/CliListerObservationsTest.java
 195002d369e4  src/test/java/fr/univ_amu/iut/cli/CliListerPassagesFiltresTest.java
 7fe794e67601  src/test/java/fr/univ_amu/iut/cli/CliMarquageRevueTest.java

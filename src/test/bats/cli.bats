@@ -1005,6 +1005,7 @@ FIN
   # Une base illisible est un incident, pas un refus : l'état est incertain (convention #2294).
   [ "${status}" -eq 1 ]
   [[ "${output}" == *"Échec"* ]]
+  [[ "${output}" == *"${BATS_TEST_TMPDIR}/logs"* ]]
 }
 
 @test "la trace retirée de la console est bien dans le journal, et emplacements dit où (#3624)" {

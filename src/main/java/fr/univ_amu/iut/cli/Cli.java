@@ -199,8 +199,17 @@ public final class Cli {
     private static int gererErreurExecution(Exception exception, CommandLine ligne, ParseResult parseResult) {
         VerdictCli verdict = VerdictCli.de(exception);
         journaliser(verdict, exception);
-        ligne.getErr().println(verdict.phrase());
+        rendreErreur(verdict, ligne.getErr());
         return verdict.code();
+    }
+
+    /// Indique où retrouver la trace d'un incident dans le workspace de cette invocation.
+    private static void rendreErreur(VerdictCli verdict, PrintWriter erreur) {
+        erreur.println(verdict.phrase());
+        if (verdict.nature() == VerdictCli.Nature.INCIDENT) {
+            erreur.println("Journaux : " + Workspace.resolu().dossierLogs()
+                    + " (joignez le fichier vigiechiro-*.log le plus récent à un signalement).");
+        }
     }
 
     /// Journalise selon la nature, à la parité de l'IHM : un refus discrètement, un incident avec sa
@@ -265,7 +274,7 @@ public final class Cli {
             journaliser(verdict, echec);
             // `System.err` et non une `CommandLine` : picocli n'a pas encore été construit, et c'est
             // précisément la raison pour laquelle ce chemin n'avait pas de gestionnaire.
-            System.err.println(verdict.phrase());
+            rendreErreur(verdict, new PrintWriter(System.err, true, StandardCharsets.UTF_8));
             return verdict.code();
         }
     }
