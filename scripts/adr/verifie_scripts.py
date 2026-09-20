@@ -1310,7 +1310,10 @@ def test_4477_longueur_des_adr() -> None:
     _verifie("5491 le corpus contient des encarts de revision", bool(documents), True)
     _verifie(
         "5491 chaque encart reel est retire du texte mesure",
-        all(len(m.sans_encart(texte)) < len(texte) for texte in documents),
+        all(
+            marque_reelle not in m.sans_encart(texte) and len(m.sans_encart(texte)) < len(texte)
+            for texte in documents
+        ),
         True,
     )
     entete = '---\ntype: adr\ntitle: "Une decision"\n---\n'
