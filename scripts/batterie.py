@@ -35,6 +35,10 @@ ete jouee. La CI a trouve le rouge que la batterie annoncait absent.
 
 Cette porte DIT donc combien elle a lance, et refuse d en lancer zero sur un diff non vide.
 
+Un fichier neuf hors de l index ouvre le meme silence : la porte voit son chemin, mais les gardes
+qui construisent leur population avec `git ls-files` ne le voient pas encore. Elle le nomme et
+refuse donc de conclure jusqu a son indexation.
+
 ## Ce qu elle ne fait pas
 
 Elle ne remplace pas la CI. `AGENTS.md` le pose : la mesure fait foi en CI, pas sur le poste. Elle
@@ -121,6 +125,11 @@ def _git(*arguments: str, racine: pathlib.Path | None = None) -> str:
     return sortie.stdout if sortie.returncode == 0 else ""
 
 
+def fichiers_non_suivis(racine: pathlib.Path | None = None) -> list[str]:
+    """Les fichiers non ignores que les populations fondees sur `git ls-files` ne voient pas."""
+    return sorted(_git("ls-files", "--others", "--exclude-standard", racine=racine).splitlines())
+
+
 def fichiers_du_diff(contre: str = "origin/main", racine: pathlib.Path | None = None) -> list[str]:
     """Ce que ce diff touche, suivi ET non suivi.
 
@@ -128,7 +137,7 @@ def fichiers_du_diff(contre: str = "origin/main", racine: pathlib.Path | None = 
     ferait taire exactement la porte qui devait le juger.
     """
     modifies = _git("diff", "--name-only", contre, racine=racine).splitlines()
-    neufs = _git("ls-files", "--others", "--exclude-standard", racine=racine).splitlines()
+    neufs = fichiers_non_suivis(racine)
     en_cours = _git("diff", "--name-only", racine=racine).splitlines()
     return sorted({f for f in modifies + neufs + en_cours if f})
 
@@ -417,6 +426,16 @@ def rendre(
         print(f"Aucun fichier ne differe de `{contre}` : rien a lancer.")
         return 0
 
+    non_suivis = fichiers_non_suivis(racine)
+    if non_suivis:
+        print("REFUS : des fichiers neufs restent hors de l index Git.")
+        for chemin in non_suivis:
+            print(f"  {chemin}")
+        print()
+        print("Des gardes construisent leur population avec `git ls-files` et ne les voient pas.")
+        print("Indexez-les avec `git add`, puis relancez la batterie.")
+        return 1
+
     engages, ecartes = engage(diff, racine)
     print(f"{len(diff)} fichier(s) modifie(s) contre `{contre}`.")
     print()
@@ -646,6 +665,8 @@ def _auto_test() -> int:
     Une porte qui lance TOUT passerait le premier cas sans rien trier : c est pourquoi le second cas
     exige qu un garde declarant soit ECARTE.
     """
+    import contextlib as _ctx
+    import io as _io
     import tempfile
     import textwrap
 
@@ -744,6 +765,55 @@ def _auto_test() -> int:
         else:
             print("  ✘ un invariant a été écarté")
             echecs += 1
+
+        # ⟨un fichier NEUF ne peut pas rester hors de la population⟩ La porte voyait son chemin et
+        # engageait les gardes, mais ceux qui construisent leur corpus avec `git ls-files` jugeaient
+        # encore l ancien arbre. #5514 l a mesure : la batterie annonçait 56 gardes sans refus avant
+        # le premier commit, puis deux planchers ont refusé les mêmes fichiers une fois suivis.
+        subprocess.run(["git", "-C", str(faux), "init", "-q"], check=True)
+        subprocess.run(["git", "-C", str(faux), "add", "."], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(faux),
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.invalid",
+                "commit",
+                "-qm",
+                "socle",
+            ],
+            check=True,
+        )
+        nouveau = faux / "src" / "main" / "java" / "Nouveau.java"
+        nouveau.parent.mkdir(parents=True)
+        nouveau.write_text("/// Voir #5515.\nclass Nouveau {}\n", encoding="utf-8")
+
+        tampon = _io.StringIO()
+        with _ctx.redirect_stdout(tampon):
+            code_avant = rendre(contre="HEAD", racine=faux)
+        sortie_avant = tampon.getvalue()
+        bon = (
+            code_avant == 1
+            and "src/main/java/Nouveau.java" in sortie_avant
+            and "git add" in sortie_avant
+        )
+        print(f"  {'✔' if bon else '✘'} un fichier neuf non indexé empêche la batterie de conclure")
+        if not bon:
+            echecs += 1
+            print(f"      code={code_avant} sortie={sortie_avant[:200]!r}")
+
+        subprocess.run(["git", "-C", str(faux), "add", "src/main/java/Nouveau.java"], check=True)
+        tampon = _io.StringIO()
+        with _ctx.redirect_stdout(tampon):
+            code_apres = rendre(contre="HEAD", racine=faux)
+        bon = code_apres == 0
+        print(f"  {'✔' if bon else '✘'} le même fichier indexé rejoint la population du diff")
+        if not bon:
+            echecs += 1
+            print(f"      code={code_apres} sortie={tampon.getvalue()[:200]!r}")
 
         # Et le bord ou la porte se tairait : aucun engage sur un diff non vide fait REFUSER.
         vide = pathlib.Path(bac) / "vide"
@@ -895,9 +965,6 @@ def _auto_test() -> int:
     # ⟨le CHEMIN DE REFUS, et pas seulement le calcul⟩ Les trois cas ci-dessus eprouvent le choix ;
     # celui-ci eprouve ce que la porte FAIT quand il n y a rien a choisir. Un refus qu aucun cas ne
     # traverse est le premier a se casser en silence.
-    import contextlib as _ctx
-    import io as _io
-
     # ⟨le diff est INJECTE, sinon le cas depend du disque⟩ En CI le worktree est sur la reference de
     # fusion, donc `git diff origin/main` est vide et `rendre` sort avant d atteindre le controle : le
     # cas passait en local et rougissait en CI. Un cas dont le verdict depend de l etat du disque
@@ -976,7 +1043,7 @@ def _auto_test() -> int:
             print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
             echecs += 1
 
-    print("\n28 cas : porte, bord, exemption confrontée, aiguillage, interprète et refus.")
+    print("\n30 cas : porte, bord, fichiers neufs, aiguillage, interprète et refus.")
     return 1 if echecs else 0
 
 
