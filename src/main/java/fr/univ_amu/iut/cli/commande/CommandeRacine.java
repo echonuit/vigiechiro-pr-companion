@@ -88,6 +88,8 @@ import picocli.CommandLine.Spec;
             PublierCorrectionsVigieChiro.class,
             ListerObservations.class,
             ListerEspeces.class,
+            LienEspece.class,
+            LienParticipation.class,
             ListerCarres.class,
             SituerCarre.class,
             ValiderObservations.class,

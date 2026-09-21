@@ -69,6 +69,18 @@ vigiechiro importer --point 12 --source /media/moi/CARTE_SD
 vigiechiro lister-especes --sortie especes.csv
 ```
 
+## Retrouver une fiche
+
+```bash
+vigiechiro lien-espece --code Pippip
+vigiechiro lien-participation --passage 42
+```
+
+Chaque commande écrit l'URL seule. Copiez-la dans votre navigateur ou récupérez-la dans un script.
+Le lien d'espèce suit les mêmes sources que l'écran : PNA en priorité, puis GBIF ou Wikipédia selon
+votre réglage. L'identifiant de passage est celui du workspace local. Sans rattachement à une
+participation Vigie-Chiro, la commande explique l'absence et rend le code 2.
+
 ## Ouvrir la fenêtre depuis le terminal
 
 ```bash

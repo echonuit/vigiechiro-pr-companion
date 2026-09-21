@@ -19,6 +19,7 @@
 # (ou définir VIGIECHIRO_JAR=/chemin/vers/le-fat-jar.jar)
 
 load helper
+bats_require_minimum_version 1.5.0
 
 setup() {
   decouvrir_jar
@@ -1080,4 +1081,38 @@ FIN
   run cli reprendre-avis --fichier "${BATS_TEST_TMPDIR}/absent.zip"
   [ "${status}" -ne 0 ]
   [[ "${output}" != *"rangés"* ]]
+}
+
+@test "les fiches espèces exposent leur URL ou expliquent leur absence (#1874)" {
+  run --separate-stderr cli lien-espece --code Pippip
+  [ "${status}" -eq 0 ]
+  [ "${output}" = "https://plan-actions-chiropteres.fr/les-chauves-souris/les-especes/pipistrelle-commune/" ]
+
+  run --separate-stderr cli lien-espece --code Turmer
+  [ "${status}" -eq 0 ]
+  [ "${output}" = "https://www.gbif.org/species/search?q=Turdus+merula" ]
+
+  run --separate-stderr cli lien-espece --code noise
+  [ "${status}" -eq 2 ]
+  [ -z "${output}" ]
+  [[ "${stderr}" == *"Aucune fiche"* ]]
+}
+
+@test "le lien participation utilise le rattachement local (#1874)" {
+  run --separate-stderr cli lien-participation --passage 42
+  [ "${status}" -eq 2 ]
+  [ -z "${output}" ]
+  [[ "${stderr}" == *"Aucune participation liée"* ]]
+
+  # Le rattachement serait normalement créé par le dépôt sur le serveur. Ce cas reste hors ligne.
+  python3 - "${BATS_TEST_TMPDIR}/vigiechiro.db" <<'FIN'
+import sqlite3
+import sys
+with sqlite3.connect(sys.argv[1]) as connexion:
+    connexion.execute("INSERT INTO vigiechiro_link(entite, ref_locale, objectid) VALUES (?, ?, ?)",
+                      ("passage", "42", "6a4961f587bc8dba39481180"))
+FIN
+  run --separate-stderr cli lien-participation --passage 42
+  [ "${status}" -eq 0 ]
+  [ "${output}" = "https://vigiechiro.herokuapp.com/#/participations/6a4961f587bc8dba39481180" ]
 }
