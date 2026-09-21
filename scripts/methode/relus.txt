@@ -168,7 +168,7 @@ e0dc73cbf498  src/main/java/fr/univ_amu/iut/bibliotheque/di/BibliothequeModule.j
 acf53781814d  src/main/java/fr/univ_amu/iut/bibliotheque/model/EntreeBiblio.java
 1ec6b6df5d22  src/main/java/fr/univ_amu/iut/bibliotheque/model/ExportBiblioSons.java
 eb709b57da4f  src/main/java/fr/univ_amu/iut/bibliotheque/model/ServiceBibliotheque.java
-eacbfa63fb99  src/main/java/fr/univ_amu/iut/cli/Cli.java
+0e693c4a8c19  src/main/java/fr/univ_amu/iut/cli/Cli.java
 cef533cc30a1  src/main/java/fr/univ_amu/iut/cli/CouleurCli.java
 8931262df131  src/main/java/fr/univ_amu/iut/cli/FabriqueGuice.java
 4fa3471c5621  src/main/java/fr/univ_amu/iut/cli/FormatJson.java

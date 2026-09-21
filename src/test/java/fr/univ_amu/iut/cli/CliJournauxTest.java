@@ -22,16 +22,7 @@ class CliJournauxTest {
 
     @Test
     void un_incident_indique_les_journaux() throws SQLException {
-        System.setProperty("vigiechiro.workspace", workspace.toString());
-        var injecteur = Cli.injecteurApplicatif();
-        Cli cli = new Cli(injecteur);
-        injecteur
-                .getInstance(fr.univ_amu.iut.commun.persistence.MigrationSchema.class)
-                .migrer();
-        try (var connexion = injecteur.getInstance(SourceDeDonnees.class).getConnection();
-                var requete = connexion.createStatement()) {
-            requete.execute("DROP TABLE monitoring_site");
-        }
+        Cli cli = cliAvecTableSitesAbsente();
         SortieCapturee capture = new SortieCapturee();
 
         int code = cli.executer(new String[] {"lister-sites"}, capture.sortie(), capture.erreur());
@@ -39,6 +30,34 @@ class CliJournauxTest {
         assertThat(code).isEqualTo(1);
         assertThat(capture.texteErreur()).contains(workspace.resolve("logs").toString());
         assertThat(capture.texte()).isEmpty();
+    }
+
+    @Test
+    void un_workspace_invalide_ne_masque_pas_l_incident() throws SQLException {
+        Cli cli = cliAvecTableSitesAbsente();
+        System.setProperty("vigiechiro.workspace", "\0");
+        SortieCapturee capture = new SortieCapturee();
+
+        int code = cli.executer(new String[] {"lister-sites"}, capture.sortie(), capture.erreur());
+
+        assertThat(code).isEqualTo(1);
+        assertThat(capture.texteErreur())
+                .contains("monitoring_site", "Journaux indisponibles")
+                .doesNotContain("InvalidPathException", "at fr.");
+        assertThat(capture.texte()).isEmpty();
+    }
+
+    private Cli cliAvecTableSitesAbsente() throws SQLException {
+        System.setProperty("vigiechiro.workspace", workspace.toString());
+        var injecteur = Cli.injecteurApplicatif();
+        injecteur
+                .getInstance(fr.univ_amu.iut.commun.persistence.MigrationSchema.class)
+                .migrer();
+        try (var connexion = injecteur.getInstance(SourceDeDonnees.class).getConnection();
+                var requete = connexion.createStatement()) {
+            requete.execute("DROP TABLE monitoring_site");
+        }
+        return new Cli(injecteur);
     }
 
     @Test

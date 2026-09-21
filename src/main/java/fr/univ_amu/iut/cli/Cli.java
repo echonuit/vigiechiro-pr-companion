@@ -207,8 +207,17 @@ public final class Cli {
     private static void rendreErreur(VerdictCli verdict, PrintWriter erreur) {
         erreur.println(verdict.phrase());
         if (verdict.nature() == VerdictCli.Nature.INCIDENT) {
-            erreur.println("Journaux : " + Workspace.resolu().dossierLogs()
-                    + " (joignez le fichier vigiechiro-*.log le plus récent à un signalement).");
+            erreur.println(indicationJournaux());
+        }
+    }
+
+    /// Le diagnostic reste lisible même si le dossier de travail ne peut plus être résolu.
+    private static String indicationJournaux() {
+        try {
+            return "Journaux : " + Workspace.resolu().dossierLogs()
+                    + " (joignez le fichier vigiechiro-*.log le plus récent à un signalement).";
+        } catch (RuntimeException indisponible) {
+            return "Journaux indisponibles : le dossier de travail n'a pas pu être résolu.";
         }
     }
 
