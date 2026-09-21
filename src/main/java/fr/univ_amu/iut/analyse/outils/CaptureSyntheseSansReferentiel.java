@@ -53,7 +53,7 @@ import javafx.scene.Scene;
 /// Le référentiel devient un **collaborateur** de `ServiceSynthese`, pour que cet état soit atteignable
 /// autrement qu'en supprimant une ressource du jar.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureSyntheseSansReferentiel {
 
     private CaptureSyntheseSansReferentiel() {}

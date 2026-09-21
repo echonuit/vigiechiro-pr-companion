@@ -23,7 +23,7 @@ import javafx.scene.layout.VBox;
 /// donne : la seule donnée de démonstration est donc ce bilan. Le rendu, lui, passe par le composant de
 /// production et ses feuilles réelles (ADR 0025) - un fac-similé assemblé ici n'engagerait personne.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureImportVigieChiro {
 
     /// Largeur de rendu : celle de la zone de restitution sous le menu de la vue audio.

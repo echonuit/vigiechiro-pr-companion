@@ -25,7 +25,7 @@ import javafx.scene.control.ButtonType;
 /// la variante « dossier hors de l'espace de travail » (le cas courant : un NAS, un disque externe), celle
 /// où l'application recommande de référencer.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureImportTransformes {
 
     private CaptureImportTransformes() {}

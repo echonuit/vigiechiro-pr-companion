@@ -42,7 +42,7 @@ import javafx.scene.control.Label;
 /// La première ligne de la table est ensuite sélectionnée (comme [CaptureSonsValidation]) : sa séquence
 /// diverge, l'`AudioView` s'efface et l'encart s'affiche à sa place.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureSonsValidationDivergence {
 
     private static final int FREQUENCE_ECHANTILLONNAGE = 44_100;

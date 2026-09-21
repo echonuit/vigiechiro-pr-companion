@@ -32,7 +32,7 @@ import javafx.scene.layout.VBox;
 ///   d'un coup d'œil, là où « 9 sur 12 » demandait de lire - et l'avertissement dit ce que la barre ne
 ///   peut pas dire, que rien n'est perdu.
 ///
-/// Lancement : `./mvnw exec:exec` avec cette classe en `mainClass` (headless, cf. capture-screenshots.sh).
+/// Lancement hors écran : voir `.github/assets/README.md`, section « Régénérer ».
 public final class CaptureCompteRenduReleve {
 
     /// Largeur d'insertion dans l'écran multisite, sous le tableau.

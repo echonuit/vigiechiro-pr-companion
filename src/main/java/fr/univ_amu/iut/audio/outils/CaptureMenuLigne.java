@@ -31,13 +31,13 @@ import javax.imageio.ImageIO;
 ///
 /// **Le menu photographié est celui que le contrôleur construit**, récupéré par
 /// `table.getContextMenu()` après chargement réel de l'écran - il n'est **pas** reconstruit ici. Une
-/// capture reconstruite dérive du produit sans que rien ne l'signale (#1468) : le jour où un item change
+/// capture reconstruite dérive du produit sans que rien ne le signale (#1468) : le jour où un item change
 /// d'ordre ou de libellé, cette capture le montre.
 ///
 /// Le popup n'appartenant pas à la scène, le `snapshot` de scène ne le saisit pas : on **affiche** le
 /// menu puis on photographie la racine de sa propre scène, comme [fr.univ_amu.iut.commun.outils.CaptureFicheEspece].
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureMenuLigne {
 
     private CaptureMenuLigne() {}

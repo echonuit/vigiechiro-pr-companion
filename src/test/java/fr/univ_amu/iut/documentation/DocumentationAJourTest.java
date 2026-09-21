@@ -936,7 +936,7 @@ class DocumentationAJourTest {
         return seuils;
     }
 
-    /// L en-tete YAML d une ADR, ou une chaine vide. Meme borne que `scripts/adr/_commun.py` : une
+    /// L en-tete YAML d une ADR, ou une chaine vide. Meme borne que `scripts/_commun/__init__.py` : une
     /// valeur qui ressemblerait a un champ, plus bas dans la prose, n est pas une declaration.
     private static String enteteDe(String texte) {
         Matcher entete =

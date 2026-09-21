@@ -35,7 +35,7 @@ import javafx.scene.layout.VBox;
 ///
 /// Charge le vrai `ConnexionModale.fxml` avec la `controllerFactory` Guice (socle + persistence +
 /// connexion), puis rend la scène hors-écran via [ApercuFx]. Lancement headless :
-/// `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureConnexion {
 
     private static final String APERCU_ECRIT = "Apercu ecrit dans ";

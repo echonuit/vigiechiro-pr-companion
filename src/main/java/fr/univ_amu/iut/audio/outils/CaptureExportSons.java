@@ -24,7 +24,7 @@ import javafx.scene.layout.VBox;
 /// `EcrivainZip` (« Archive : X / N · nom du fichier »), avec les ordres de grandeur du cas réel de la
 /// recette (721 sons, 658 Mo) - le contenu vient de [DialogueProgression#apercu], du code de production.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureExportSons {
 
     private CaptureExportSons() {}

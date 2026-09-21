@@ -18,7 +18,7 @@ import javafx.application.Platform;
 /// donc défiler la table jusqu'à elle : c'est ce qu'un utilisateur fait lui-même pour lire le verdict de
 /// l'expert.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureAvisValidateur {
 
     private CaptureAvisValidateur() {}

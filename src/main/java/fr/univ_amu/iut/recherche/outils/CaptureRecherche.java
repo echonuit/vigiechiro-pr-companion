@@ -62,7 +62,7 @@ import javafx.scene.layout.VBox;
 /// [ApercuFx]. Le seed précède toute résolution de l'utilisateur courant (premier utilisateur en base),
 /// pour que les données seedées lui appartiennent.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureRecherche {
 
     private static final String ID_UTILISATEUR = "demo-enseignant";

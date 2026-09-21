@@ -64,7 +64,7 @@ import javafx.scene.Scene;
 ///    (choix du dossier -> inspection -> sélection site/point) avant le rendu hors-écran par
 ///    [ApercuFx].
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureImport {
 
     private static final String ID_UTILISATEUR = "demo-enseignant";

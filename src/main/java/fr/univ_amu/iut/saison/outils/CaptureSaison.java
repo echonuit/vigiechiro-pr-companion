@@ -53,7 +53,7 @@ import javafx.scene.Scene;
 /// passage manquant). L'**horloge est figée** au 20/07/2026 pour que la saison courante et les échéances
 /// de fenêtre soient déterministes, quel que soit le jour où la galerie est régénérée.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureSaison {
 
     private static final String ID_UTILISATEUR = "demo-enseignant";

@@ -101,7 +101,7 @@ import javafx.scene.control.TableView;
 /// Le site et le point (cibles de clé étrangère) sont insérés en SQL brut, sans les DAO de la feature
 /// `sites` : la feature `audio` ne doit pas en dépendre (cycle ArchUnit).
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureValidationTadarida {
 
     private static final String RACINE_DEMO = "/home/observateur/VigieChiro";

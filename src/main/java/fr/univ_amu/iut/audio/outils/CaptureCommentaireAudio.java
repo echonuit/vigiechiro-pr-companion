@@ -26,7 +26,7 @@ import javafx.scene.layout.VBox;
 /// style vient de `sons-validation.css` (classes `popup-commentaire` / `bouton-enregistrer-commentaire`) +
 /// palette et base partagées.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureCommentaireAudio {
 
     private CaptureCommentaireAudio() {}

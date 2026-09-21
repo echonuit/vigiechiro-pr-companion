@@ -30,7 +30,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// - `apercu-fiche-espece.png` : le menu ☰ de **Sons & validation**, où « Fiche de l'espèce » ouvre la
 ///   fiche de la proposition Tadarida sélectionnée.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh`.
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer ».
 public final class CaptureFicheEspece {
 
     private CaptureFicheEspece() {}

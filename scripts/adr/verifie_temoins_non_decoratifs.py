@@ -165,7 +165,13 @@ def _gardes_touches(modifies: list[str]) -> list[str] | None:
             file=sys.stderr,
         )
         return None
-    return sorted({pathlib.Path(m).name for m in modifies if m.startswith("scripts/adr/")})
+    return sorted(
+        {
+            pathlib.Path(m).name
+            for m in modifies
+            if m.startswith("scripts/adr/") and m.endswith(".py")
+        }
+    )
 
 
 def portee_du_diff(
@@ -524,6 +530,7 @@ CAS_DE_PORTEE = (
     ("le fonds partage fait tout muter", ["scripts/_commun/__init__.py"], None),
     ("le banc lui-meme fait tout muter", ["scripts/adr/verifie_temoins_non_decoratifs.py"], None),
     ("un diff sans garde ne mute rien", ["dev-docs/decisions/1.md"], []),
+    ("un registre TSV n est pas un garde", ["scripts/adr/4359-blocs-relus.tsv"], []),
     ("un diff vide fait tout muter, faute de savoir pourquoi il est vide", [], None),
 )
 

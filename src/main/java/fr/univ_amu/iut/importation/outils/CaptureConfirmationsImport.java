@@ -42,7 +42,7 @@ import javafx.scene.control.Alert;
 /// C'est le port `Confirmateur` (#1013) qui rend cela possible : ce qu'on a mis en place pour **tester** un
 /// geste sert ici à le **photographier** honnêtement.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureConfirmationsImport {
 
     /// Nuit de démonstration déjà importée (#147) : **les passages**, et non une phrase. La question est

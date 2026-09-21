@@ -71,7 +71,7 @@ import javafx.scene.layout.VBox;
 /// 3. chaque vue est chargée via la `controllerFactory` Guice du `FXMLLoader`, puis rendue
 ///    hors-écran par [ApercuFx] (snapshot + SwingFXUtils) dans `.github/assets/`.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26,
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26,
 /// `glass.platform=Headless`, sans xvfb). Patron réutilisable : chaque future feature ajoute son
 /// propre `<feature>.outils.CaptureEcrans`.
 public final class CaptureEcrans {

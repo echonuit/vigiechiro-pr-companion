@@ -63,7 +63,7 @@ import javafx.scene.Scene;
 /// Codes de taxon à la casse du référentiel : `Pipkuh`, et non `PIPKUH` (piège relevé au lot #2353).
 /// Ce que l'outil ne fait plus, et ne doit pas refaire : voir #3018.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureSynthese {
 
     private static final String ID_UTILISATEUR = "u-capture";

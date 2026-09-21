@@ -51,7 +51,7 @@ import javafx.scene.layout.VBox;
 /// inventaire **par espèce** (par défaut) et **par carré** (richesse spécifique). Seede une base SQLite
 /// temporaire avec un site, un passage et quelques observations (statuts variés) pour peupler la table.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureAnalyse {
 
     private static final String ID_UTILISATEUR = "demo-analyse";

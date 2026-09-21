@@ -62,7 +62,7 @@ import javafx.scene.layout.Pane;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Capture l'écran M-Multisite en PNG pour le comparer à la maquette du brief, en **deux vues** afin
+/// Capture l'écran M-Multisite en PNG pour le comparer à la maquette du brief, en plusieurs états afin
 /// d'en montrer les particularités :
 ///
 /// - `apercu-multisite.png` : la **vue agrégée**, tableau de tous les passages (deux sites, statuts
@@ -81,7 +81,7 @@ import javafx.scene.layout.Pane;
 /// **Déterminisme** : le tableau n'affiche que des métadonnées de passage (carré, point, date,
 /// statut, verdict) : aucun chemin de fichier, donc aucune dépendance au dossier temporaire.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureMultisite {
 
     private static final String ID_UTILISATEUR = "demo-enseignant";
