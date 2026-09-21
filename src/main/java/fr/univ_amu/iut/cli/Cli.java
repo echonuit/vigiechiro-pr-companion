@@ -199,8 +199,26 @@ public final class Cli {
     private static int gererErreurExecution(Exception exception, CommandLine ligne, ParseResult parseResult) {
         VerdictCli verdict = VerdictCli.de(exception);
         journaliser(verdict, exception);
-        ligne.getErr().println(verdict.phrase());
+        rendreErreur(verdict, ligne.getErr());
         return verdict.code();
+    }
+
+    /// Indique où retrouver la trace d'un incident dans le workspace de cette invocation.
+    private static void rendreErreur(VerdictCli verdict, PrintWriter erreur) {
+        erreur.println(verdict.phrase());
+        if (verdict.nature() == VerdictCli.Nature.INCIDENT) {
+            erreur.println(indicationJournaux());
+        }
+    }
+
+    /// Le diagnostic reste lisible même si le dossier de travail ne peut plus être résolu.
+    private static String indicationJournaux() {
+        try {
+            return "Journaux : " + Workspace.resolu().dossierLogs()
+                    + " (joignez le fichier vigiechiro-*.log le plus récent à un signalement).";
+        } catch (RuntimeException indisponible) {
+            return "Journaux indisponibles : le dossier de travail n'a pas pu être résolu.";
+        }
     }
 
     /// Journalise selon la nature, à la parité de l'IHM : un refus discrètement, un incident avec sa
@@ -265,7 +283,7 @@ public final class Cli {
             journaliser(verdict, echec);
             // `System.err` et non une `CommandLine` : picocli n'a pas encore été construit, et c'est
             // précisément la raison pour laquelle ce chemin n'avait pas de gestionnaire.
-            System.err.println(verdict.phrase());
+            rendreErreur(verdict, new PrintWriter(System.err, true, StandardCharsets.UTF_8));
             return verdict.code();
         }
     }
