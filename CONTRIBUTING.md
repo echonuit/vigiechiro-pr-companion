@@ -454,7 +454,9 @@ Deux workflows se déclenchent à chaque push :
 
 Reproduire les contrôles **en local**. La première commande est une **porte** : elle dérive les
 gardes que votre diff engage et lance ceux qui ne déclarent rien, donc elle lance trop et jamais trop
-peu. Ne composez pas votre propre liste, c'est ce qu'elle remplace.
+peu. Ne composez pas votre propre liste, c'est ce qu'elle remplace. Indexez d'abord les fichiers
+neufs avec `git add` : plusieurs gardes dérivent leur population de `git ls-files`, et la batterie
+refuse de conclure tant qu'ils restent hors de cette population.
 
 ```bash
 python3 scripts/batterie.py                     # ce que CE diff engage, sans rien lancer
