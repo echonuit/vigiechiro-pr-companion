@@ -19,18 +19,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
-/// Outil de capture/mesure, utilisable tel quel.
+/// Aperçus des onglets de réglages (#927), fournis par les features de l'injecteur applicatif complet.
+/// Chaque onglet est sélectionné par son titre avant le rendu ; un titre absent fait échouer la
+/// capture au lieu de photographier le premier onglet sous une autre légende.
 ///
-/// Capture l'écran « Réglages » du socle (`EcranReglages.fxml`, #927) en PNG. Comme l'accueil
-/// (cf. [CaptureAccueil]), l'écran appartient au socle `commun` et **agrège** les
-// [fr.univ_amu.iut.commun.view.OngletReglages]
-/// publiés par les features : on utilise donc l'injecteur applicatif complet
-/// ([RacineInjecteur#creer()]). Tant qu'aucune feature ne contribue d'onglet (P1.2), l'aperçu
-/// illustre l'état vide (« Aucun réglage disponible ») ; il se remplira quand les features en
-/// déclareront (P1.3), sans toucher cet outil.
-///
-/// Rendu hors-écran par [ApercuFx] dans `.github/assets/`. Lancement headless :
-/// `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement hors écran : voir `.github/assets/README.md`, section « Régénérer ».
 public final class CaptureEcranReglages {
 
     private static final String ECRAN = "/fr/univ_amu/iut/commun/view/EcranReglages.fxml";

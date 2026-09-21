@@ -30,7 +30,7 @@ import javafx.scene.layout.VBox;
 /// **Aucune base, aucun injecteur, aucun réseau.** La bande ne dépend que du bilan et du plan qu'on lui
 /// donne. Le rendu passe par le composant de production et ses feuilles réelles (ADR 0025).
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureCompteRenduDepot {
 
     /// Largeur de rendu : celle de la zone de restitution sous la table de suivi de l'étape 3.

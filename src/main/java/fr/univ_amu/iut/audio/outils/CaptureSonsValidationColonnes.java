@@ -19,7 +19,7 @@ import javafx.scene.control.TableView;
 ///
 /// Le seed et le rendu sont factorisés dans [GraineSonsValidation]. Un `main` distinct (une JVM par PNG).
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureSonsValidationColonnes {
 
     private CaptureSonsValidationColonnes() {}

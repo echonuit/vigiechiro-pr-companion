@@ -108,7 +108,7 @@ import javafx.scene.control.TextField;
 /// feature `sites` : `passage` ne doit pas en dépendre (cycle ArchUnit `features_sans_cycle`, et
 /// `sites` dépend déjà de `passage`).
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CapturePassage {
 
     private static final String ID_UTILISATEUR = "demo-enseignant";

@@ -46,7 +46,7 @@ import javafx.scene.Scene;
 /// **partiel** : socle + fourniture directe de [ServiceAuditCoherence] / [AuditViewModel] (sans
 /// `AuditModule`, pour ne pas tirer la carte d'accueil et le `Navigateur` du chrome).
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureAudit {
 
     private static final String ID_UTILISATEUR = "u-demo";

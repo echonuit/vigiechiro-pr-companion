@@ -15,7 +15,7 @@ import java.util.Objects;
 /// validation » (table des observations du passage + écoute + valider/corriger/référence + import CSV /
 /// export `_Vu`). Les appelants historiques (M-Passage, et l'analyse via la cible de focus) restent
 /// inchangés : ils continuent d'appeler `OuvrirValidation`, qui ouvre maintenant l'écran unifié. L'ancien
-/// écran `Validation.fxml` n'est plus chargé en production (il sera retiré au démantèlement).
+/// écran de validation a été retiré ; la vue chargée est `SonsValidation.fxml`.
 ///
 /// `OuvrirValidation` reste bindé par `ValidationModule` ; cette feature ne dépend que du **contrat
 /// socle** `OuvrirAudio` (commun), pas de `audio.view` (le graphe de slices reste acyclique).

@@ -42,7 +42,7 @@ import javafx.scene.layout.VBox;
 /// assemblé ici n'engagerait personne, et c'est ainsi que des dialogues documentés ont dérivé du produit
 /// (#1468). Ce que la doc montre est ce que l'utilisateur verra.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CapturePublicationCorrections {
 
     /// Une observation **sans contenu** : le récapitulatif ne lit que `publiables().size()`. Lui composer

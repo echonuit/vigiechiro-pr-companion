@@ -48,7 +48,7 @@ import javafx.scene.layout.VBox;
 /// production (ADR 0025). Une capture qui reconstruit son contenu finit par montrer un produit qui
 /// n'existe plus - c'est le mode de panne de #1468.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureCompteRenduParticipation {
 
     /// Largeur d'un panneau intégré sous l'écran d'import, forme d'insertion retenue par #2358.

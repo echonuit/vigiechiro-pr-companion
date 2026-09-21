@@ -39,7 +39,7 @@ import javafx.scene.control.TextField;
 /// n'a que des nuits de **2026**, quand **640380 · A1** en a une de **2025**. Cocher B2 puis restreindre
 /// à 2025 fait sortir B2 du jeu en laissant la ligne de A1.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh`.
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer ».
 public final class CaptureValeurHorsJeu {
 
     private static final String LIEU_A_COCHER = "640381 · B2";

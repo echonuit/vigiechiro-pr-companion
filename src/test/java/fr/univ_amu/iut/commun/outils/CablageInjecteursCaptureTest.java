@@ -51,7 +51,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 /// « exposé pour le garde-fou de câblage ». Le commentaire revendiquait une couverture qui n'existait
 /// pas, et rien ne pouvait le contredire.
 ///
-/// Les outils sont donc **balayés depuis les sources**, comme le fait déjà `check-capture-mains.sh`.
+/// Les outils sont donc **balayés depuis les sources**, comme le fait déjà `.github/assets/check_capture_mains.py`.
 /// Un outil neuf est couvert d'office ; un outil qui n'expose pas de fabrique doit figurer dans
 /// [#EXEMPTES] **avec sa raison**. L'oubli d'une exemption fait rougir, jamais passer en silence.
 class CablageInjecteursCaptureTest {

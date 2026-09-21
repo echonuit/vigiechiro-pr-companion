@@ -31,7 +31,7 @@ import javafx.scene.Scene;
 /// `FXMLLoader` (le `MainController` peuple les cartes a l'initialisation), puis rendu hors-ecran
 /// par [ApercuFx] dans `.github/assets/`.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureAccueil {
 
     private static final String CHROME = "/fr/univ_amu/iut/commun/view/MainView.fxml";

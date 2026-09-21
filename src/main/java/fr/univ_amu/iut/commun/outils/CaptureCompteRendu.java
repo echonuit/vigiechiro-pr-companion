@@ -23,7 +23,7 @@ import javafx.scene.layout.VBox;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Rend le **compte rendu chiffré** ([PanneauCompteRendu], #2358) dans ses trois états, avec le composant
+/// Rend le **compte rendu chiffré** ([PanneauCompteRendu], #2358) dans ses différents états, avec le composant
 /// de production et ses feuilles de style réelles (ADR 0025 : une capture passe par le code de
 /// production, jamais par un fac-similé) :
 ///
@@ -39,7 +39,7 @@ import javafx.scene.layout.VBox;
 /// Les chiffres sont ceux de la maquette M-CompteRendu (612 enregistrements : 583 importés, 21 déjà
 /// présents, 8 rejetés ; 5,0 Go lus, 6,8 Go écrits), pour que la capture et la maquette se confrontent.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureCompteRendu {
 
     /// Largeur de rendu : celle d'un panneau intégré sous l'écran d'import, forme d'insertion retenue.

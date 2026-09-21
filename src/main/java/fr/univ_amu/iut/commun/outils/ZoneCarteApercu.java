@@ -12,7 +12,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 
 /// Où se trouve la **carte** dans un aperçu, mesuré sur la scène qui vient d'être rendue (#3439).
-/// `filtrer-bruit-cartes.sh` compare chaque aperçu à sa version committée **hors** de ce rectangle,
+/// `.github/assets/filtrer_bruit_cartes.py` compare chaque aperçu à sa version committée **hors** de ce rectangle,
 /// à tolérance zéro : le fond OpenStreetMap change presque à chaque exécution, jusqu'à 23,8 % de
 /// l'image. Le rectangle est **dérivé de la scène**, pas recopié : l'un des rectangles recopiés
 /// était faux des deux côtés à la fois - de la carte laissée dehors, où le bruit repassait, et du

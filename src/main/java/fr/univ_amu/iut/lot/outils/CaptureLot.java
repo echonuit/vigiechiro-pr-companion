@@ -96,7 +96,7 @@ import javafx.scene.Scene;
 ///    rencontré une coupure, en « Nouvelle tentative dans N s… ».
 ///
 /// Les aperçus connectés ont besoin d'un `Optional<DepotVigieChiro>` non vide, sans quoi l'étape ③ et le
-/// second mode du bouton ④ ne se rendent pas. Headless : `.github/assets/capture-screenshots.sh`.
+/// second mode du bouton ④ ne se rendent pas. Headless : voir `.github/assets/README.md`, section « Régénérer ».
 public final class CaptureLot {
 
     private static final String ID_UTILISATEUR = "demo-enseignant";

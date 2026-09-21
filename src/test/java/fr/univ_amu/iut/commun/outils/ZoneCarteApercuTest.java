@@ -18,7 +18,8 @@ import org.testfx.framework.junit5.ApplicationExtension;
 ///
 /// ## Ce que ces cas défendent
 ///
-/// Ces rectangles étaient recopiés à la main dans `filtrer-bruit-cartes.sh`, et un rectangle recopié se
+/// Ces rectangles étaient recopiés à la main dans le prédécesseur shell de `.github/assets/filtrer_bruit_cartes.py`, et
+/// un rectangle recopié se
 /// démode en silence. La liste relevée le 2026-08-06 était fausse **des deux côtés** :
 ///
 /// | Aperçu | Déclaré à la main | Réel |

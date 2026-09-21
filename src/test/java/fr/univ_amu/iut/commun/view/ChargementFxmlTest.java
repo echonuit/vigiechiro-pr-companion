@@ -33,7 +33,7 @@ import org.testfx.util.WaitForAsyncUtils;
 
 /// Garde-fou « le FXML se charge ». Pour CHAQUE fichier `.fxml` du projet, on rejoue exactement le
 /// chargement effectué par la CI **« Aperçus des vues »** (`.github/workflows/capture-vues.yml` →
-/// `capture-screenshots.sh` → les `outils.CaptureXxx`) : `FXMLLoader.load()` avec la
+/// `capture_screenshots.py` → les `outils.CaptureXxx`) : `FXMLLoader.load()` avec la
 /// `controllerFactory` Guice, sur une base SQLite jetable migrée. Si le chargement échoue, le test
 /// nomme le fichier et la cause racine, et propose une checklist d'erreurs FXML courantes.
 ///

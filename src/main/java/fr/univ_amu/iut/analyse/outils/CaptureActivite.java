@@ -50,7 +50,7 @@ import javafx.scene.control.MenuItem;
 /// **synchrones** de [ModuleCaptureCommun], garde-fou #510) ; les contrats de fil d'Ariane
 /// ([OuvrirSite], [OuvrirPassage]) sont inertes, la capture étant rendue hors-chrome.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureActivite {
 
     /// Date du soir de la nuit de démonstration ; les contacts vont du soir 20 h au matin 05 h.

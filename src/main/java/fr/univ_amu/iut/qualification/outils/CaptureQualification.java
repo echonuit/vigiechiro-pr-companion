@@ -72,7 +72,7 @@ import javafx.scene.Scene;
 /// et le label migré `lblAvertissement` ([fr.univ_amu.iut.commun.view.LibelleRetour], #2050) affiche
 /// l'alerte, couleur et icône posées depuis la sévérité - un état que rien ne montrait jusqu'ici.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureQualification {
 
     private static final String ID_UTILISATEUR = "demo-enseignant";

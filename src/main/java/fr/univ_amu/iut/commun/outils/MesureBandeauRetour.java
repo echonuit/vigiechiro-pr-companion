@@ -21,7 +21,7 @@ import javafx.scene.layout.VBox;
 /// Cet outil répond à la question par la mesure, avant toute décision : il rend le bandeau avec des
 /// messages de longueurs réelles et **imprime la hauteur** qu'il prend, à la largeur d'un écran.
 ///
-/// Lancement : `./mvnw exec:exec` avec cette classe en `mainClass` (headless, cf. capture-screenshots.sh).
+/// Lancement hors écran : voir `.github/assets/README.md`, section « Régénérer ».
 public final class MesureBandeauRetour {
 
     /// Largeur d'un écran de l'application, celle des captures.

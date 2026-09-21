@@ -25,21 +25,13 @@ import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 
-/// Outil de capture/mesure, utilisable tel quel.
+/// Aperçus des dialogues du socle : garde de saisie, informations sur l'application, dossier occupé
+/// et restauration de sauvegardes. Les données de démonstration sont fixes ; les dialogues sont
+/// habillés puis rendus hors écran par [ApercuFx].
 ///
-/// Capture les **dialogues programmatiques** (confirmations et modales de saisie) que le harness de
-/// captures d'écran ne pouvait pas illustrer avant [ApercuFx#enregistrerDialog] (#534) : ces modales
-/// sont montrées par `showAndWait` et n'ont pas de `.fxml`. On les **reconstruit** ici à l'identique
-/// (mêmes libellés, mêmes boutons) avec des données de démo, puis on les rend hors-écran en appliquant
-/// les feuilles de style partagées (palette + base), sans jamais ouvrir de fenêtre modale.
-///
-/// Trois états, rattachés dans le manifeste à la **vue parente** de chaque dialogue :
-/// - `apercu-import-doublon.png` / `apercu-import-ecrasement.png` : confirmations d'import (#147/#279) ;
-/// - `apercu-navigation-garde-saisie.png` : garde « quitter sans enregistrer » (#178).
-///
-/// Reconstruction en JavaFX pur (aucun type de feature) pour rester dans `commun` sans dépendre de
-/// `sites` / `qualification` / `importation` (contrainte de dépendances). Lancement headless :
-/// `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Le rendu des dialogues par [ApercuFx] vient de #534. Les confirmations d'import (#147, #279)
+/// sont désormais rendues par l'outil de la feature `importation`.
+/// Lancement hors écran : voir `.github/assets/README.md`, section « Régénérer ».
 public final class CaptureDialogues {
 
     /// Trace commune des trois ecritures : PMD refuse le litteral repete, et un seul endroit

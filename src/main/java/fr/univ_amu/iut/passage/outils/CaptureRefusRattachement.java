@@ -40,7 +40,7 @@ import javafx.scene.layout.VBox;
 /// bandeau de trois lignes ressemble à un choix de mise en page plutôt qu'à un écran dont le tableau a
 /// reculé.
 ///
-/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+/// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureRefusRattachement {
 
     private static final String CARRE = "130711";
