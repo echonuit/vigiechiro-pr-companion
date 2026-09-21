@@ -1786,6 +1786,7 @@ c9e8e1a12452  src/test/java/fr/univ_amu/iut/importation/view/ScenarioImportNomin
 7e677ede1765  src/test/java/fr/univ_amu/iut/importation/view/ScenarioJournalAbsentTest.java
 f5134b2729cb  src/test/java/fr/univ_amu/iut/importation/view/ScenarioMenuDeLigneImportTest.java
 61baa82e82c8  src/test/java/fr/univ_amu/iut/importation/view/ScenarioRejetsEtArchiveTest.java
+1969990fca89  src/test/java/fr/univ_amu/iut/importation/view/TableNuitsTest.java
 fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
 140614766d08  src/test/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixeTest.java
 4d3bfc4da711  src/test/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspectionTest.java
