@@ -65,6 +65,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import loupe, sort_si_contrat_demande
 
+PLAFOND = 1600
+
 # Le commit qui a ecrit la regle, en UTC. Fait historique, il ne se met pas a jour.
 NAISSANCE = "2026-08-29T05:37:52Z"
 
@@ -122,12 +124,18 @@ def _corpus() -> tuple[list[dict], dict[int, list[dict]]]:
                 "--state",
                 "all",
                 "--limit",
-                "1600",
+                str(PLAFOND),
                 "--json",
                 "number,title,createdAt,labels",
             ]
         )
     )
+    if len(issues) >= PLAFOND:
+        print(
+            f"REFUS : plafond de {PLAFOND} issues atteint ; la collecte peut etre tronquee.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
     chantiers = [i for i in issues if estEpic(i) and i["createdAt"] > NAISSANCE]
     lots: dict[int, list[dict]] = {}
     for chantier in chantiers:
@@ -159,8 +167,35 @@ def candidats(chantiers: list[dict], lots: dict[int, list[dict]]) -> list[str]:
     return lignes
 
 
+def _auto_test_plafond() -> None:
+    from contextlib import redirect_stderr
+    from io import StringIO
+    from unittest.mock import patch
+
+    for nombre in (PLAFOND - 1, PLAFOND, PLAFOND + 1):
+        corps = json.dumps([{"title": "ordinaire", "labels": []}] * nombre)
+        sortie = subprocess.CompletedProcess([], 0, stdout=corps)
+        erreur = StringIO()
+        with (
+            patch.object(shutil, "which", return_value="gh"),
+            patch.object(subprocess, "run", return_value=sortie),
+            redirect_stderr(erreur),
+        ):
+            code = 0
+            try:
+                _corpus()
+            except SystemExit as refus:
+                code = refus.code
+        assert code == (2 if nombre >= PLAFOND else 0), (
+            f"collecte de {nombre} issues : code {code}, refus attendu au plafond {PLAFOND}"
+        )
+        if nombre >= PLAFOND:
+            assert "plafond" in erreur.getvalue(), erreur.getvalue()
+
+
 def _autoTest() -> int:
     """Les temoins : une par formulation du motif, un lot muet sort, la borne tient."""
+    _auto_test_plafond()
     assert ditSonCritere("blabla\n\n## Fini quand\n\nil rougit."), "« Fini quand » doit compter"
     assert ditSonCritere("**Fait quand** : les six y sont."), "« Fait quand » doit compter"
     assert ditSonCritere("## Comment on saura que chaque lot est fini\n\nil rougit."), (

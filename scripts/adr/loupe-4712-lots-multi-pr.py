@@ -40,6 +40,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import loupe, sort_si_contrat_demande
 
+PLAFOND = 800
+
 LOT = re.compile(r"^- \[[ x]\] \*\*Lot[^\n]*(?:\n(?:    |\t)[^\n]*)*", re.M)
 RATTACHEMENT = "Fait partie de #"
 
@@ -78,7 +80,7 @@ def _issues() -> list[dict]:
             "--state",
             "open",
             "--limit",
-            "800",
+            str(PLAFOND),
             "--json",
             "number,title,body,labels",
         ],
@@ -89,7 +91,14 @@ def _issues() -> list[dict]:
     if sortie.returncode != 0:
         print("REFUS : la forge n'a pas repondu.", file=sys.stderr)
         raise SystemExit(2)
-    return json.loads(sortie.stdout)
+    issues = json.loads(sortie.stdout)
+    if len(issues) >= PLAFOND:
+        print(
+            f"REFUS : plafond de {PLAFOND} issues atteint ; la collecte peut etre tronquee.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    return issues
 
 
 def rapport(issues: list[dict]) -> list[str]:
@@ -123,8 +132,35 @@ def sansLot(issues: list[dict]) -> list[int]:
     )
 
 
+def _auto_test_plafond() -> None:
+    from contextlib import redirect_stderr
+    from io import StringIO
+    from unittest.mock import patch
+
+    for nombre in (PLAFOND - 1, PLAFOND, PLAFOND + 1):
+        corps = json.dumps([{"title": "ordinaire", "labels": []}] * nombre)
+        sortie = subprocess.CompletedProcess([], 0, stdout=corps)
+        erreur = StringIO()
+        with (
+            patch.object(shutil, "which", return_value="gh"),
+            patch.object(subprocess, "run", return_value=sortie),
+            redirect_stderr(erreur),
+        ):
+            code = 0
+            try:
+                _issues()
+            except SystemExit as refus:
+                code = refus.code
+        assert code == (2 if nombre >= PLAFOND else 0), (
+            f"collecte de {nombre} issues : code {code}, refus attendu au plafond {PLAFOND}"
+        )
+        if nombre >= PLAFOND:
+            assert "plafond" in erreur.getvalue(), erreur.getvalue()
+
+
 def _autoTest() -> int:
     """Les temoins : la loupe voit un lot, recolle ses continuations, et ne confond pas 46 avec 4."""
+    _auto_test_plafond()
     corpsEpic = (
         "- [x] **Lot 0 - Instruction.** Fait.\n"
         "- [ ] **Lot 1 - Porter.** Sous-chantier #99, parce qu'il porte deux issues\n"
