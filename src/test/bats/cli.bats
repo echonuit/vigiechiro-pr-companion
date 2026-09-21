@@ -22,6 +22,9 @@ load helper
 bats_require_minimum_version 1.5.0
 
 setup() {
+  # Le verdict des cas de couleur dépend de ces entrées. Les hériter du poste fait échouer les cas
+  # qui attendent de l'ANSI avant même qu'ils aient posé la variable qu'ils éprouvent (#5512).
+  unset NO_COLOR FORCE_COLOR
   decouvrir_jar
 }
 
