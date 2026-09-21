@@ -38,7 +38,7 @@ SEUIL = 800
 RESERVES = {"index.md", "log.md"}
 
 # L encart qui annonce ce qui depasse la decision. Sa forme est fixe, et un autre garde la verifie.
-ENCART = '!!! warning "Ce qui fait foi aujourd\u2019hui"'
+ENCART = '!!! warning "Ce qui fait foi aujourd\'hui"'
 
 
 def corps(chemin: pathlib.Path) -> str:
