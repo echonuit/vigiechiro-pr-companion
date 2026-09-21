@@ -35,7 +35,7 @@ COMMANDES_OPTIONS_REQUISES=(
   vigiechiro
   creer-campagne rattacher-campagne modifier-campagne supprimer-campagne
   modifier-site supprimer-site modifier-point
-  recuperer-carre situer-carre
+  recuperer-carre situer-carre lien-espece lien-participation
 )
 
 @test "surface : chaque commande à options requises refuse l'absence d'arguments (exit 2) (#1592)" {
@@ -55,7 +55,8 @@ COMMANDES_OPTIONS_REQUISES=(
   # l'inventaire (#3960). Passé à 42 par « situer-carre », dont --position est requise (#4660), puis à
   # 46 par les quatre gestes du parcours d'emport (#4729) : emporter-nuit et renvoyer-avis exigent
   # --passage et --vers, ouvrir-paquet-recu et reprendre-avis exigent --fichier.
-  [ "${n}" -eq 46 ]
+  # Les deux liens exigent leur code ou identifiant local (#1874).
+  [ "${n}" -eq 48 ]
 }
 
 # Commandes LOCALES sans option requise : s'exécutent telles quelles sur la base fraîche (migrée au

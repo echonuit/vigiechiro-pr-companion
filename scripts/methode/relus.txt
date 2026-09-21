@@ -205,6 +205,8 @@ c16315ee421b  src/main/java/fr/univ_amu/iut/cli/commande/ImporterTransformes.jav
 b3bc48f69f92  src/main/java/fr/univ_amu/iut/cli/commande/ImporterVigieChiro.java
 326fb8a3b9d7  src/main/java/fr/univ_amu/iut/cli/commande/InventaireFiltre.java
 a578d727c1be  src/main/java/fr/univ_amu/iut/cli/commande/LancerTraitementVigieChiro.java
+b07e84f86da5  src/main/java/fr/univ_amu/iut/cli/commande/LienEspece.java
+003e6775b4f8  src/main/java/fr/univ_amu/iut/cli/commande/LienParticipation.java
 9bdbf8555676  src/main/java/fr/univ_amu/iut/cli/commande/ListerCampagnes.java
 fd78726e104a  src/main/java/fr/univ_amu/iut/cli/commande/ListerCarres.java
 898f57c3af3e  src/main/java/fr/univ_amu/iut/cli/commande/ListerEspeces.java
@@ -1363,6 +1365,7 @@ e70de6efaeef  src/test/java/fr/univ_amu/iut/cli/CliImportTest.java
 f94d25cc8ed1  src/test/java/fr/univ_amu/iut/cli/CliImportTransformesTest.java
 b74817f361ca  src/test/java/fr/univ_amu/iut/cli/CliInventaireTest.java
 a046d897b3db  src/test/java/fr/univ_amu/iut/cli/CliJournauxTest.java
+c519cd92b438  src/test/java/fr/univ_amu/iut/cli/CliLiensTest.java
 80cc5208149d  src/test/java/fr/univ_amu/iut/cli/CliListerObservationsTest.java
 195002d369e4  src/test/java/fr/univ_amu/iut/cli/CliListerPassagesFiltresTest.java
 7fe794e67601  src/test/java/fr/univ_amu/iut/cli/CliMarquageRevueTest.java
