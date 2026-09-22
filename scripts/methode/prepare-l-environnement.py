@@ -40,7 +40,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import sort_si_contrat_demande
+from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 
 # `.venv` DANS le worktree, et non un venv partage hors du depot.
@@ -314,15 +314,7 @@ def version_de_ruff(racine: pathlib.Path) -> str:
 def _auto_test() -> int:
     import tempfile
 
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     bac = pathlib.Path(tempfile.mkdtemp())
     (bac / "pyproject.toml").write_text(
@@ -407,7 +399,7 @@ def _auto_test() -> int:
         verifie("rien a poser ne lance rien", (pose(complet, lance=espion), len(lances)), (0, 0))
 
     print()
-    return echecs
+    return echecs()
 
 
 if __name__ == "__main__":

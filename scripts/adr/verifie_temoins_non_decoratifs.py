@@ -35,7 +35,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, rapporte, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, cas_d_auto_test, rapporte, sort_si_contrat_demande
 
 ADR = "4490"
 DOSSIER = pathlib.Path(__file__).resolve().parent
@@ -642,15 +642,7 @@ def auto_test() -> int:
 
     Un script qui ne saurait que dire « tout va bien » passerait le premier sens tout seul.
     """
-    echecs = 0
-
-    def verifie(libelle: str, obtenu, attendu) -> None:
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     print("Auto-test du garde des temoins non decoratifs (#4490) :")
     # 1. La liste se derive de la suite, et elle n est pas vide.
@@ -789,8 +781,9 @@ def auto_test() -> int:
         verifie("sans mutation, son auto-test est vert", sain.returncode, 0)
     # La PORTEE fait partie du mecanisme depuis #5345 : ses cas tournent ici, sinon ils ne
     # tourneraient nulle part et seraient decoratifs par construction.
-    echecs += _auto_test_de_portee()
-    return echecs
+    # `echecs` est le LECTEUR de la marque depuis #5460, pas un entier : il se LIT, il ne
+    # s additionne pas. Le sous-auto-test de la portee garde son compte a lui.
+    return echecs() + _auto_test_de_portee()
 
 
 CONTRAT = {

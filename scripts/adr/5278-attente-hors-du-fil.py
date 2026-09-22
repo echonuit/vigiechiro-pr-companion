@@ -62,7 +62,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import TESTS_ANCRES, rapporte, sort_si_contrat_demande
+from _commun import TESTS_ANCRES, cas_d_auto_test, rapporte, sort_si_contrat_demande
 from _commun.arbre import LecteurAbsent, arbre, noeuds_de_type, zones_illisibles
 
 # `Attente.que` ET le `waitFor` NU, qui porte la meme faute. La limite etait declaree et non
@@ -277,15 +277,7 @@ def lus(racine: pathlib.Path | None = None) -> int:
 
 
 def _auto_test() -> int:
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     lecture = '() -> !robot.lookup("#t").queryAll().isEmpty()'
     fautif = f'Attente.que(\n {lecture},\n "que ca paraisse");\n'
@@ -453,7 +445,7 @@ def _auto_test() -> int:
     )
 
     verifie("le garde a lu des appels reels", lus() > 0, True)
-    return echecs
+    return echecs()
 
 
 CONTRAT = {

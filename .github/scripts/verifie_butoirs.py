@@ -32,7 +32,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import sort_si_contrat_demande
+from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 # Injectable pour l auto-test : sans cela ses cas exigeraient le depot reel, et un garde dont les
 # cas ne tournent pas sur un arbre a eux ne peut pas eprouver le cas « aucun workflow ».
@@ -124,19 +124,19 @@ def _auto_test() -> int:
     """Les cinq cas de la version bash, et le compte qui distingue le vide de la panne."""
     import tempfile
 
-    echecs = cas = rouges = 0
+    # L assertion DELEGUE au fonds, en gardant sa signature de domaine : ses sites d appel ne
+    # bougent pas, et `juge(racine)` passe en APPELABLE, donc une exception nomme le cas au lieu
+    # de tuer le temoin (#5460). Le compte de `cas` et `rouges` reste local : la fabrique marque
+    # zero ou un, elle ne compte pas.
+    asserte, echecs = cas_d_auto_test()
+    cas = rouges = 0
 
     def verifie(attendu, libelle, racine):
-        nonlocal echecs, cas, rouges
+        nonlocal cas, rouges
         cas += 1
         if attendu != 0:
             rouges += 1
-        code = juge(racine)
-        if code == attendu:
-            print(f"  [OK   ] {libelle:<52} -> {code}")
-        else:
-            print(f"  [ÉCHEC] {libelle:<52} -> {code} (attendu {attendu})")
-            echecs += 1
+        asserte(f"{libelle} -> attendu {attendu}", lambda: juge(racine), attendu)
 
     print("AUTO-TEST")
     with tempfile.TemporaryDirectory(prefix="vc-5219-") as tmp:
@@ -162,10 +162,10 @@ def _auto_test() -> int:
 
     print()
     print(f"{cas} cas, dont {rouges} qui DOIVENT rougir.")
-    if echecs == 0:
+    if echecs() == 0:
         print("Auto-test concluant.")
         return 0
-    print(f"AUTO-TEST EN ÉCHEC ({echecs}) : ne pas se fier au verdict de cette garde.")
+    print(f"AUTO-TEST EN ÉCHEC ({echecs()}) : ne pas se fier au verdict de cette garde.")
     return 1
 
 

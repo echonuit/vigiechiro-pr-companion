@@ -56,7 +56,11 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+# Le fonds de `scripts/` porte l assertion d auto-test partagee (#5460) : ce banc la reprend plutot
+# que d en recopier une, comme `verifie_butoirs.py` du meme dossier.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "scripts"))
 
+from _commun import cas_d_auto_test
 from _forge import dispatche_l_option
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
@@ -315,23 +319,32 @@ def _auto_test() -> int:
     trois etats, pas qu il a raison sur les 43. C est le lancement sans argument qui le dit, et il
     est en CI.
     """
+    # `echecs` ne compte plus que les deux cas de POPULATION, ecrits a la main plus bas : l arret
+    # anticipe porte sur eux. Les cas de VERDICT delèguent au fonds (#5460), et leur depaquetage
+    # passe en APPELABLE : sous la mutation de ce banc, `eprouve_fichier` rend `[]` et
+    # `obtenu, cause = ...` leve, ce que la fabrique nomme au lieu de laisser le banc mourir.
+    asserte, verdicts = cas_d_auto_test()
     echecs = cas = rouges = 0
 
     def verifie(attendu: str, source: str, libelle: str) -> None:
-        nonlocal echecs, cas, rouges
+        nonlocal cas, rouges
         cas += 1
         if attendu != "tient":
             rouges += 1
-        with tempfile.TemporaryDirectory(prefix="vc-temoins-ci-test-") as tmp:
-            faux = pathlib.Path(tmp) / "faux_garde.py"
-            faux.write_text(source, encoding="utf-8")
-            obtenu, cause = eprouve_fichier(faux)
-        marque = "OK   " if obtenu == attendu else "ÉCHEC"
-        if obtenu != attendu:
-            echecs += 1
-        print(f"  [{marque}] {libelle:<52} -> {obtenu}")
-        if obtenu != attendu:
-            print(f"          attendu {attendu}, cause « {cause} »")
+        vu: dict[str, str] = {}
+
+        def juger() -> str:
+            with tempfile.TemporaryDirectory(prefix="vc-temoins-ci-test-") as tmp:
+                faux = pathlib.Path(tmp) / "faux_garde.py"
+                faux.write_text(source, encoding="utf-8")
+                vu["obtenu"], vu["cause"] = eprouve_fichier(faux)
+            return vu["obtenu"]
+
+        asserte(libelle, juger, attendu)
+        # La CAUSE n est connue que si le jugement a abouti ; la fabrique ne la porte pas, et sans
+        # elle un echec dirait QUE le verdict est faux sans dire POURQUOI.
+        if vu.get("obtenu", attendu) != attendu:
+            print(f"          cause « {vu['cause']} »")
 
     print("AUTO-TEST")
     # La population se DERIVE : un garde absent des ateliers n y entre pas.
@@ -366,10 +379,10 @@ def _auto_test() -> int:
 
     print()
     print(f"{cas} cas, dont {rouges} qui DOIVENT rougir.")
-    if echecs == 0:
+    if echecs == 0 and verdicts() == 0:
         print("Auto-test concluant.")
         return 0
-    print(f"AUTO-TEST EN ÉCHEC ({echecs}) : ne pas se fier au verdict de ce banc.")
+    print(f"AUTO-TEST EN ÉCHEC ({echecs + verdicts()}) : ne pas se fier au verdict de ce banc.")
     return 1
 
 

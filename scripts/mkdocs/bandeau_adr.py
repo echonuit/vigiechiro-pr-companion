@@ -155,10 +155,23 @@ def _auto_test() -> int:
     }
     echecs = []
 
+    # L impression et la marque viennent du fonds (#5460) ; le DETAIL et la liste restent ici, parce
+    # que le fonds ne porte ni l un ni l autre et que le message final compte les echecs par titre.
+    # `ok` arrive deja evalue : cette delegation ne protege pas encore d une exception, elle fait
+    # seulement que ce banc herite de ce que le fonds gagnera.
+    # Importe ICI et non en tete : ce fichier est un hook mkdocs, charge a chaque construction du
+    # site, et le fonds des gardes n a rien a faire dans ce chargement.
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+    from _commun import cas_d_auto_test
+
+    asserte, _ = cas_d_auto_test()
+
     def verifie(titre: str, ok: bool, detail: str = "") -> None:
-        print(f"  {'✔' if ok else '✘'} {titre}{'' if ok else '  -> ' + detail}")
+        asserte(titre, ok, True)
         if not ok:
             echecs.append(titre)
+            if detail:
+                print(f"          -> {detail}")
 
     complet = {
         "type": "adr",
