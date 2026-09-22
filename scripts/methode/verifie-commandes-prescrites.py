@@ -35,7 +35,7 @@ import tomllib
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import sort_si_contrat_demande
+from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 DECLARATION = "pyproject.toml"
 
@@ -132,15 +132,7 @@ def lus(racine: pathlib.Path | None = None) -> int:
 def _auto_test() -> int:
     import tempfile
 
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     def arbre(toml: str, agents: str) -> pathlib.Path:
         bac = pathlib.Path(tempfile.mkdtemp())
@@ -168,7 +160,7 @@ def _auto_test() -> int:
     verifie("le garde a lu des declarations reelles", lus() > 0, True)
 
     print()
-    return echecs
+    return echecs()
 
 
 if __name__ == "__main__":

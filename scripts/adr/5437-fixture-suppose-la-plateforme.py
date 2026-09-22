@@ -55,7 +55,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, rapporte, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, cas_d_auto_test, rapporte, sort_si_contrat_demande
 from _commun.arbre import LecteurAbsent, arbre, noeuds_de_type
 
 ADR = "5437"
@@ -231,15 +231,7 @@ def _sur_source(java: str) -> list[str]:
 
 
 def _auto_test() -> int:
-    echecs = 0
-
-    def verifie(libelle, obtenu, attendu):
-        nonlocal echecs
-        if obtenu == attendu:
-            print(f"  ✔ {libelle}")
-        else:
-            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
-            echecs = 1
+    verifie, echecs = cas_d_auto_test()
 
     NU = """class CasTest {
     @Test
@@ -362,8 +354,10 @@ def _auto_test() -> int:
     )
 
     print()
-    print("Auto-test en échec." if echecs else "Auto-test concluant.")
-    return echecs
+    # `echecs` est le LECTEUR de la marque : sans l appel, une fonction etant toujours vraie, ce
+    # message annoncerait l echec d un auto-test vert (#5460).
+    print("Auto-test en échec." if echecs() else "Auto-test concluant.")
+    return echecs()
 
 
 CONTRAT = {
