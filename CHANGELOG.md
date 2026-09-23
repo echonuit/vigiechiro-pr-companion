@@ -2,6 +2,22 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.194.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.193.0...v2.194.0) (2026-09-23)
+
+
+### Bug Fixes
+
+* **batterie:** refuser les fichiers neufs hors index ([#5517](https://github.com/echonuit/vigiechiro-pr-companion/issues/5517)) ([0c15f9e](https://github.com/echonuit/vigiechiro-pr-companion/commit/0c15f9ed81d6a35d29cb3bb19db8eff431162eff)), closes [#5515](https://github.com/echonuit/vigiechiro-pr-companion/issues/5515)
+* **cli:** indiquer les journaux après un incident ([#5511](https://github.com/echonuit/vigiechiro-pr-companion/issues/5511)) ([a70c901](https://github.com/echonuit/vigiechiro-pr-companion/commit/a70c9015b9b6ce22ecc9ff5db05d49fb460e9a8e)), closes [#1578](https://github.com/echonuit/vigiechiro-pr-companion/issues/1578)
+* **gardes:** exclure les encarts réels du compte des ADR ([#5508](https://github.com/echonuit/vigiechiro-pr-companion/issues/5508)) ([907bc90](https://github.com/echonuit/vigiechiro-pr-companion/commit/907bc9078064a4f8e0f2ef86fd50b33d048a3153)), closes [#5491](https://github.com/echonuit/vigiechiro-pr-companion/issues/5491)
+* **gardes:** refuser les collectes au plafond de la forge ([#5507](https://github.com/echonuit/vigiechiro-pr-companion/issues/5507)) ([9196854](https://github.com/echonuit/vigiechiro-pr-companion/commit/91968546b9fa36119d3e4a3479d40556af779d56)), closes [#5348](https://github.com/echonuit/vigiechiro-pr-companion/issues/5348)
+* **importation:** afficher le badge de complétude en entier ([#5510](https://github.com/echonuit/vigiechiro-pr-companion/issues/5510)) ([1ef3a71](https://github.com/echonuit/vigiechiro-pr-companion/commit/1ef3a7146a1a5dc5ec0771c9e6d5a2648da85d11)), closes [#5111](https://github.com/echonuit/vigiechiro-pr-companion/issues/5111)
+
+
+### Features
+
+* **cli:** retrouver les fiches des espèces et des participations ([#5514](https://github.com/echonuit/vigiechiro-pr-companion/issues/5514)) ([a12adc1](https://github.com/echonuit/vigiechiro-pr-companion/commit/a12adc159f7eec61ed95226fa211613fc415b39e)), closes [#1874](https://github.com/echonuit/vigiechiro-pr-companion/issues/1874)
+
 # [2.193.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.192.0...v2.193.0) (2026-09-09)
 
 
