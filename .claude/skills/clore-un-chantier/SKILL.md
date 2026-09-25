@@ -192,7 +192,7 @@ relit comme telle.
 | « Cette ADR ne concerne pas mon delta » | Elle régit peut-être du code hors delta qu'il faut aligner |
 | « Je relis les ADR de ma branche » | Contre `origin/main`, sinon vous manquez celles écrites pendant |
 | « Les suites, on verra plus tard » | Elles se closent par les mêmes quatorze passes |
-| « Le garde est sorti en 0, tout va bien » | Les cinq loupes signalent en rendant `0`. Passe 1 : on **lit** ce que les gardes écrivent |
+| « Le garde est sorti en 0, tout va bien » | Les loupes signalent en rendant `0`. Passe 1 : on **lit** ce que les gardes écrivent |
 | « Je refais la passe qui manquait » | Elle en invalide d'autres si elle les balayait. La 10 se rejoue **en dernier** |
 | « La capture est produite, la passe 8 est faite » | Elle se **regarde**. Une image peut montrer le bon état et rester invraisemblable |
 | « Cette trouvaille aura le numéro suivant » | Un numéro d'issue **supposé** est le numéro de quelqu'un d'autre. On l'ouvre, ou on cite l'EPIC |
