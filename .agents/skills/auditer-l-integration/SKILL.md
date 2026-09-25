@@ -77,7 +77,7 @@ entre pas. Hors périmètre, donc, et c'est cette lecture qui l'établit, pas la
 Un plancher périmé **refuse** (#4683) : le dépôt en porte plus que ce qu'il a verrouillé, et ne pas
 relever fait rougir. Ce n'est pas un oubli silencieux.
 
-L'inverse existe aussi. Les cinq loupes du dépôt rendent **0** en signalant, parce qu'elles observent
+L'inverse existe aussi. Les loupes du dépôt rendent **0** en signalant, parce qu'elles observent
 sans juger, et `rapport.py` nomme séparément les scripts dont il n'a pas su lire le verdict. On lit
 donc ce que les gardes écrivent, pour ce qu'un code ne dit pas.
 
