@@ -25,7 +25,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import PRODUCTION_ANCREE, sort_si_contrat_demande
+from _commun import PRODUCTION_ANCREE, cas_d_auto_test, sort_si_contrat_demande
 
 VUES = PRODUCTION_ANCREE
 
@@ -60,20 +60,38 @@ def fautes(racine: pathlib.Path | None = None) -> list[str]:
 
 
 def _auto_test() -> int:
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as d:
         r = pathlib.Path(d)
         (r / "sain.fxml").write_text(
             '<VBox><Button fx:id="a" prefHeight="34.0" text="Bien"/></VBox>', encoding="utf-8"
         )
-        cas.append(("une cible de 34 px passe", fautes(r) == []))
+        cas_de(
+            "une cible de 34 px passe",
+            lambda: fautes(r) == [],
+        )
 
         (r / "petit.fxml").write_text(
             '<VBox><Button fx:id="b" prefHeight="16.0" text="Trop bas"/></VBox>', encoding="utf-8"
         )
         f = fautes(r)
-        cas.append(("une cible de 16 px rougit", len(f) == 1 and "prefHeight=16.0" in f[0]))
-        cas.append(("le refus nomme le contrôle", any("« b »" in x for x in f)))
+        cas_de(
+            "une cible de 16 px rougit",
+            lambda: len(f) == 1 and "prefHeight=16.0" in f[0],
+        )
+        cas_de(
+            "le refus nomme le contrôle",
+            lambda: any("« b »" in x for x in f),
+        )
 
         # LE cas qui borne la portee : un noeud NON cliquable a le droit d etre petit, et le dire
         # est ce qui empeche le garde de crier sur une jauge ou un separateur.
@@ -81,31 +99,30 @@ def _auto_test() -> int:
             '<VBox><Region fx:id="c" prefHeight="1.0"/><Label prefHeight="14.0"/></VBox>',
             encoding="utf-8",
         )
-        cas.append(("un noeud non cliquable a le droit d être petit", fautes(r) == []))
+        cas_de(
+            "un noeud non cliquable a le droit d être petit",
+            lambda: fautes(r) == [],
+        )
 
         (r / "petit.fxml").write_text(
             '<VBox><CheckBox fx:id="d" minWidth="12.0"/></VBox>', encoding="utf-8"
         )
-        cas.append(
-            (
-                "la largeur compte aussi, sur une case à cocher",
-                any("minWidth=12.0" in x for x in fautes(r)),
-            )
+        cas_de(
+            "la largeur compte aussi, sur une case à cocher",
+            lambda: any("minWidth=12.0" in x for x in fautes(r)),
         )
 
         (r / "petit.fxml").unlink()
         (r / "sain.fxml").unlink()
-        cas.append(("sans aucune vue, le garde ne prétend rien", fautes(r) == []))
-
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
-        print(
-            f"\n{len(rates)} cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr
+        cas_de(
+            "sans aucune vue, le garde ne prétend rien",
+            lambda: fautes(r) == [],
         )
+
+    if echecs():
+        print("\nDes cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr)
         return 1
-    print(f"\n{len(cas)} cas : le garde voit une cible trop petite et laisse passer le reste.")
+    print(f"\n{joues[0]} cas : le garde voit une cible trop petite et laisse passer le reste.")
     return 0
 
 

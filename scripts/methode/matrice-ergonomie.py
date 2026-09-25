@@ -23,7 +23,7 @@ import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import DECISIONS, sort_si_contrat_demande
+from _commun import DECISIONS, cas_d_auto_test, sort_si_contrat_demande
 
 # `verifie_okf` vit chez les gardes d ADR ; le fonds commun a quitte ce dossier en #5216.
 sys.path.insert(0, str(RACINE / "scripts" / "adr"))
@@ -130,7 +130,16 @@ def remplace(texte: str, matrice: str) -> str:
 
 
 def _auto_test() -> int:
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
         decisions = racine / "decisions"
@@ -147,12 +156,24 @@ def _auto_test() -> int:
         (decisions / "b.md").write_text(tete.format('["nielsen-1"]'), encoding="utf-8")
 
         r = recense(decisions, annexe)
-        cas.append(("trois rattachements", r["rattachements"] == 3))
+        cas_de(
+            "trois rattachements",
+            lambda: r["rattachements"] == 3,
+        )
         # LE cas qui justifie les deux nombres : trois rattachements pour deux decisions.
-        cas.append(("portés par deux décisions", r["adr"] == 2))
-        cas.append(("nielsen-1 est servie deux fois", r["par_cle"]["nielsen-1"] == ["a", "b"]))
+        cas_de(
+            "portés par deux décisions",
+            lambda: r["adr"] == 2,
+        )
+        cas_de(
+            "nielsen-1 est servie deux fois",
+            lambda: r["par_cle"]["nielsen-1"] == ["a", "b"],
+        )
         # `nielsen-10` contient `nielsen-1` : un comptage par sous-chaine la dirait servie.
-        cas.append(("nielsen-10 n'est servie par rien", r["par_cle"]["nielsen-10"] == []))
+        cas_de(
+            "nielsen-10 n'est servie par rien",
+            lambda: r["par_cle"]["nielsen-10"] == [],
+        )
 
         texte = annexe.read_text(encoding="utf-8")
         une = remplace(texte, rend(r, annexe))
@@ -160,15 +181,18 @@ def _auto_test() -> int:
         # Deuxieme passe : la matrice engendree porte des cles entre accents graves. Si elle se
         # relisait, le vocabulaire doublerait a chaque execution.
         deux = remplace(une, rend(recense(decisions, annexe), annexe))
-        cas.append(("engendrer deux fois rend le même texte", une == deux))
-        cas.append(("le vocabulaire ne se relit pas lui-même", len(vocabulaire(annexe)) == 3))
+        cas_de(
+            "engendrer deux fois rend le même texte",
+            lambda: une == deux,
+        )
+        cas_de(
+            "le vocabulaire ne se relit pas lui-même",
+            lambda: len(vocabulaire(annexe)) == 3,
+        )
 
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
+    if echecs():
         print(
-            f"\n{len(rates)} cas en échec : la matrice ne dit pas ce qu'elle annonce.",
+            "\nDes cas en échec : la matrice ne dit pas ce qu'elle annonce.",
             file=sys.stderr,
         )
         return 1

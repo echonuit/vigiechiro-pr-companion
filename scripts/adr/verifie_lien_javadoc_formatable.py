@@ -46,7 +46,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, RACINES, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, RACINES, cas_d_auto_test, sort_si_contrat_demande
 
 # `RACINE_DEPOT` etait IMPORTE puis RECALCULE deux lignes plus bas, a l identique (#5022). La seconde
 # ecriture gagnait, et c est precisement ce que l ADR 4586 interdit : un corpus se declare une fois.
@@ -92,7 +92,17 @@ def _auto_test() -> int:
     garde bavard sur de la javadoc finit desactive - ce qui coute plus cher que son absence.
     """
     print("Auto-test du garde des liens de javadoc formatables :")
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation : ici chaque cas réécrit `A.java`, et juger plus tard les jugerait tous
+    # sur le dernier état.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     lien = "(../../../../../../dev-docs/decisions/4134-un-banc-n-emprunte-pas-l-etat-partage.md)"
     with tempfile.TemporaryDirectory() as d:
         r = pathlib.Path(d)
@@ -106,17 +116,24 @@ def _auto_test() -> int:
         ecrire(
             "A.java", f"/// Le defaut est revenu quatre fois ([ADR 4134]{lien}).\nclass A {{}}\n"
         )
-        cas.append(
-            ("une ligne longue avec un lien a texte espace est refusee", len(a_risque(r)) == 1)
+        cas_de(
+            "une ligne longue avec un lien a texte espace est refusee",
+            lambda: len(a_risque(r)) == 1,
         )
 
         # 2. Longue, mais SANS lien : le formateur la replie correctement, mesure a l appui.
         ecrire("A.java", "/// " + "mot " * 40 + "\nclass A {}\n")
-        cas.append(("une ligne longue sans lien passe", a_risque(r) == []))
+        cas_de(
+            "une ligne longue sans lien passe",
+            lambda: a_risque(r) == [],
+        )
 
         # 3. Un lien a texte espace, mais ligne COURTE : rien a replier.
         ecrire("A.java", "/// Voir l [ADR 4134](a.md).\nclass A {}\n")
-        cas.append(("un lien a texte espace sur une ligne courte passe", a_risque(r) == []))
+        cas_de(
+            "un lien a texte espace sur une ligne courte passe",
+            lambda: a_risque(r) == [],
+        )
 
         # 4. Longue avec un lien dont le texte n a PAS d espace : le formateur ne peut couper
         #    qu avant le crochet, ce qui est sans dommage.
@@ -124,18 +141,16 @@ def _auto_test() -> int:
             "A.java",
             f"/// Le defaut est revenu quatre fois, voir ici ([ADR4134]{lien}).\nclass A {{}}\n",
         )
-        cas.append(("une ligne longue dont le lien n a pas d espace passe", a_risque(r) == []))
-
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
-        print(
-            f"\n{len(rates)} cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr
+        cas_de(
+            "une ligne longue dont le lien n a pas d espace passe",
+            lambda: a_risque(r) == [],
         )
+
+    if echecs():
+        print("\nDes cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr)
         return 1
     print(
-        f"\n{len(cas)} cas : le garde voit la forme à risque et laisse passer les trois voisines."
+        f"\n{joues[0]} cas : le garde voit la forme à risque et laisse passer les trois voisines."
     )
     return 0
 

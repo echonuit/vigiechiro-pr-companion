@@ -39,7 +39,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import sort_si_contrat_demande
+from _commun import cas_d_auto_test, sort_si_contrat_demande
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 JAVA = RACINE / "src"
@@ -140,24 +140,45 @@ def blocsJumeaux(fichier: pathlib.Path, racine: pathlib.Path) -> list[str]:
 
 
 def _auto_test() -> int:
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as d:
         r = pathlib.Path(d)
 
         (r / "A.java").write_text("/// Une phrase.\n/// Une autre.\nclass A {}\n", encoding="utf-8")
-        cas.append(("deux lignes différentes passent", doublons(r) == []))
+        cas_de(
+            "deux lignes différentes passent",
+            lambda: doublons(r) == [],
+        )
 
         (r / "A.java").write_text(
             "/// Une phrase.\n/// Une phrase.\nclass A {}\n", encoding="utf-8"
         )
         f = doublons(r)
-        cas.append(("la même ligne deux fois rougit", len(f) == 1))
-        cas.append(("le refus cite la ligne", any("Une phrase." in x for x in f)))
+        cas_de(
+            "la même ligne deux fois rougit",
+            lambda: len(f) == 1,
+        )
+        cas_de(
+            "le refus cite la ligne",
+            lambda: any("Une phrase." in x for x in f),
+        )
 
         # LE cas qui borne la portee : les lignes `///` vides separent des paragraphes et se
         # suivent legitimement. Sans cette exception, tout bloc aere serait un suspect.
         (r / "A.java").write_text("/// Un.\n///\n///\n/// Deux.\nclass A {}\n", encoding="utf-8")
-        cas.append(("deux lignes vides ne sont pas un doublon", doublons(r) == []))
+        cas_de(
+            "deux lignes vides ne sont pas un doublon",
+            lambda: doublons(r) == [],
+        )
 
         # LA seconde forme : la ligne d avant est le DEBUT TRONQUE de la suivante. Une coupe
         # posee au mauvais endroit laisse le debut de l ancienne phrase devant la nouvelle, et le
@@ -169,9 +190,13 @@ def _auto_test() -> int:
             encoding="utf-8",
         )
         f = doublons(r)
-        cas.append(("un début tronqué de la ligne suivante rougit", len(f) == 1))
-        cas.append(
-            ("le refus dit qu'il s'agit d'un prolongement", any("prolongeant" in x for x in f))
+        cas_de(
+            "un début tronqué de la ligne suivante rougit",
+            lambda: len(f) == 1,
+        )
+        cas_de(
+            "le refus dit qu'il s'agit d'un prolongement",
+            lambda: any("prolongeant" in x for x in f),
         )
 
         # Et la borne : deux lignes voisines peuvent partager un debut court sans que ce soit le
@@ -179,21 +204,33 @@ def _auto_test() -> int:
         (r / "A.java").write_text(
             "/// Le point\n/// Le point est libre.\nclass A {}\n", encoding="utf-8"
         )
-        cas.append(("un début commun trop court ne compte pas", doublons(r) == []))
+        cas_de(
+            "un début commun trop court ne compte pas",
+            lambda: doublons(r) == [],
+        )
 
         # Deux phrases identiques SEPAREES ne sont pas le defaut vise : le defaut est la coupe
         # ratee, qui laisse la ligne juste avant sa remplacante.
         (r / "A.java").write_text("/// Un.\n/// Deux.\n/// Un.\nclass A {}\n", encoding="utf-8")
-        cas.append(("la même phrase plus loin passe", doublons(r) == []))
+        cas_de(
+            "la même phrase plus loin passe",
+            lambda: doublons(r) == [],
+        )
 
         # Du code Java repete n est pas notre affaire : ce garde ne lit que la javadoc.
         (r / "A.java").write_text(
             "class A {\n    int x = 1;\n    int x = 1;\n}\n", encoding="utf-8"
         )
-        cas.append(("le code répété ne le concerne pas", doublons(r) == []))
+        cas_de(
+            "le code répété ne le concerne pas",
+            lambda: doublons(r) == [],
+        )
 
         (r / "A.java").unlink()
-        cas.append(("sans source, le garde ne prétend rien", doublons(r) == []))
+        cas_de(
+            "sans source, le garde ne prétend rien",
+            lambda: doublons(r) == [],
+        )
 
         # Le SENS INVERSE : une ligne entiere suivie de son propre debut. C'est la forme que prend
         # un bloc recolle sur lui-meme - la premiere ligne survit au repli qui l'a reecrite - et le
@@ -205,14 +242,23 @@ def _auto_test() -> int:
             encoding="utf-8",
         )
         f = doublons(r)
-        cas.append(("une ligne suivie de son propre début rougit", len(f) == 1))
-        cas.append(("et le refus dit laquelle", any("reprend le début" in x for x in f)))
+        cas_de(
+            "une ligne suivie de son propre début rougit",
+            lambda: len(f) == 1,
+        )
+        cas_de(
+            "et le refus dit laquelle",
+            lambda: any("reprend le début" in x for x in f),
+        )
 
         # Le meme plancher borne les deux sens : un debut commun court reste une coincidence.
         (r / "A.java").write_text(
             "/// Un mot de plus.\n/// Un mot.\nclass A {}\n", encoding="utf-8"
         )
-        cas.append(("un début commun trop court passe", doublons(r) == []))
+        cas_de(
+            "un début commun trop court passe",
+            lambda: doublons(r) == [],
+        )
 
         # LA TROISIEME forme : deux blocs entiers identiques, separes par du code. L adjacence ne
         # peut pas les voir. `RapprochementSites` documentait son champ avec la phrase de sa constante.
@@ -224,12 +270,13 @@ def _auto_test() -> int:
             encoding="utf-8",
         )
         f = doublons(r)
-        cas.append(("deux blocs jumeaux rougissent", len(f) == 1))
-        cas.append(
-            (
-                "et le refus nomme les deux lignes",
-                any("répète mot pour mot le bloc" in x for x in f),
-            )
+        cas_de(
+            "deux blocs jumeaux rougissent",
+            lambda: len(f) == 1,
+        )
+        cas_de(
+            "et le refus nomme les deux lignes",
+            lambda: any("répète mot pour mot le bloc" in x for x in f),
         )
 
         # Deux blocs VOISINS mais differents ne se repetent pas : le controle porte sur le contenu.
@@ -238,11 +285,17 @@ def _auto_test() -> int:
             "/// Les liens vers la plateforme.\nprivate final Dao liens;\n",
             encoding="utf-8",
         )
-        cas.append(("deux blocs différents passent", doublons(r) == []))
+        cas_de(
+            "deux blocs différents passent",
+            lambda: doublons(r) == [],
+        )
 
         # Deux blocs faits de lignes `///` VIDES ne disent rien : ils ne se repetent pas.
         (r / "A.java").write_text("///\nclass A {}\n\n///\nclass B {}\n", encoding="utf-8")
-        cas.append(("deux blocs vides ne se répètent pas", doublons(r) == []))
+        cas_de(
+            "deux blocs vides ne se répètent pas",
+            lambda: doublons(r) == [],
+        )
 
         # LA TROISIEME forme : deux lignes qui partagent un long DEBUT puis divergent. C est ce que
         # laisse une premiere ligne reecrite dont l ancienne survit ; ni l egalite ni le prefixe strict
@@ -254,12 +307,13 @@ def _auto_test() -> int:
             encoding="utf-8",
         )
         f = doublons(r)
-        cas.append(("deux lignes au même long début rougissent", len(f) == 1))
-        cas.append(
-            (
-                "et le refus chiffre le début commun",
-                any("recommence la ligne précédente" in x for x in f),
-            )
+        cas_de(
+            "deux lignes au même long début rougissent",
+            lambda: len(f) == 1,
+        )
+        cas_de(
+            "et le refus chiffre le début commun",
+            lambda: any("recommence la ligne précédente" in x for x in f),
         )
 
         # Le plancher borne la regle : deux phrases qui ouvrent pareil sur trente caracteres arrivent.
@@ -268,7 +322,10 @@ def _auto_test() -> int:
             "/// Le fichier de résultats est écrit par l'export.\nclass A {}\n",
             encoding="utf-8",
         )
-        cas.append(("un début commun sous le plancher passe", doublons(r) == []))
+        cas_de(
+            "un début commun sous le plancher passe",
+            lambda: doublons(r) == [],
+        )
 
         # ET l exception qui rend la regle tenable : deux PUCES d une meme liste ouvrent legitimement
         # pareil. Sans elle, toute enumeration de fichiers voisins serait un suspect.
@@ -278,7 +335,10 @@ def _auto_test() -> int:
             "class A {}\n",
             encoding="utf-8",
         )
-        cas.append(("deux puces d'une même liste passent", doublons(r) == []))
+        cas_de(
+            "deux puces d'une même liste passent",
+            lambda: doublons(r) == [],
+        )
 
         # Idem dans un bloc de code : deux lignes d un exemple se ressemblent par construction.
         (r / "A.java").write_text(
@@ -288,17 +348,15 @@ def _auto_test() -> int:
             "/// ```\nclass A {}\n",
             encoding="utf-8",
         )
-        cas.append(("deux lignes d'un bloc de code passent", doublons(r) == []))
-
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
-        print(
-            f"\n{len(rates)} cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr
+        cas_de(
+            "deux lignes d'un bloc de code passent",
+            lambda: doublons(r) == [],
         )
+
+    if echecs():
+        print("\nDes cas en échec : le garde ne dit pas ce qu'il vérifie.", file=sys.stderr)
         return 1
-    print(f"\n{len(cas)} cas : le garde voit une ligne répétée et laisse passer le reste.")
+    print(f"\n{joues[0]} cas : le garde voit une ligne répétée et laisse passer le reste.")
     return 0
 
 

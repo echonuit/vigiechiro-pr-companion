@@ -28,7 +28,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import DECISIONS, sort_si_contrat_demande
+from _commun import DECISIONS, cas_d_auto_test, sort_si_contrat_demande
 
 TITRE_ENCART = '!!! warning "Ce qui fait foi aujourd\'hui"'
 
@@ -133,22 +133,33 @@ def _saine(
 
 
 def _auto_test() -> int:
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as d:
         r = _fixture(d, {"sujet.md": _saine(), "voisine.md": "---\ntype: adr\n---\n\n# Voisine\n"})
-        cas.append(("un corpus sain est vert", fautes(r) == []))
+        cas_de(
+            "un corpus sain est vert",
+            lambda: fautes(r) == [],
+        )
 
         (r / "sujet.md").write_text(_saine(encart_pose=False), encoding="utf-8")
-        cas.append(
-            ("une relation subie sans encart rougit", any("aucun encart" in f for f in fautes(r)))
+        cas_de(
+            "une relation subie sans encart rougit",
+            lambda: any("aucun encart" in f for f in fautes(r)),
         )
 
         (r / "sujet.md").write_text(_saine(relation=""), encoding="utf-8")
-        cas.append(
-            (
-                "un encart sans relation declaree rougit",
-                any("sans aucune relation" in f for f in fautes(r)),
-            )
+        cas_de(
+            "un encart sans relation declaree rougit",
+            lambda: any("sans aucune relation" in f for f in fautes(r)),
         )
 
         (r / "sujet.md").write_text(
@@ -156,14 +167,13 @@ def _auto_test() -> int:
         )
         (r / "autre.md").write_text("---\ntype: adr\n---\n\n# Autre\n", encoding="utf-8")
         f = fautes(r)
-        cas.append(
-            ("une cible declaree absente de l encart rougit", any("n annonce pas" in x for x in f))
+        cas_de(
+            "une cible declaree absente de l encart rougit",
+            lambda: any("n annonce pas" in x for x in f),
         )
-        cas.append(
-            (
-                "une cible de l encart non declaree rougit",
-                any("qui n est pas declaree" in x for x in f),
-            )
+        cas_de(
+            "une cible de l encart non declaree rougit",
+            lambda: any("qui n est pas declaree" in x for x in f),
         )
 
         # La faille que l exclusion du cliquet de longueur ouvrirait : de la prose rangee dans l
@@ -175,11 +185,9 @@ def _auto_test() -> int:
             ),
             encoding="utf-8",
         )
-        cas.append(
-            (
-                "de la prose glissee dans l encart rougit",
-                any("qui n est pas declaree" in x for x in fautes(r)),
-            )
+        cas_de(
+            "de la prose glissee dans l encart rougit",
+            lambda: any("qui n est pas declaree" in x for x in fautes(r)),
         )
 
         (r / "sujet.md").write_text(
@@ -188,16 +196,14 @@ def _auto_test() -> int:
             ),
             encoding="utf-8",
         )
-        cas.append(
-            ("un encart loin du titre rougit", any("lignes du titre" in x for x in fautes(r)))
+        cas_de(
+            "un encart loin du titre rougit",
+            lambda: any("lignes du titre" in x for x in fautes(r)),
         )
 
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
+    if echecs():
         print(
-            f"\n{len(rates)} cas en echec : le garde ne detecte plus ce qu il annonce.",
+            f"\n{joues[0]} cas en echec : le garde ne detecte plus ce qu il annonce.",
             file=sys.stderr,
         )
         return 1

@@ -57,7 +57,13 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, RACINES_ANCREES, rapporte, sort_si_contrat_demande
+from _commun import (
+    RACINE_DEPOT,
+    RACINES_ANCREES,
+    cas_d_auto_test,
+    rapporte,
+    sort_si_contrat_demande,
+)
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero, et `_commun.py` la
 # retrouve par `dev-docs/decisions/{numero}-*.md`.
@@ -228,7 +234,16 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
 def _auto_test() -> int:
     import tempfile
 
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as d:
         r = pathlib.Path(d)
 
@@ -241,47 +256,70 @@ def _auto_test() -> int:
         ST, SM = SEUILS["type"], SEUILS["methode"]
 
         pose("A.java", bloc(ST, "class A {}"))
-        cas.append(("un bloc de type au seuil passe", suspects(r) == []))
+        cas_de(
+            "un bloc de type au seuil passe",
+            lambda: suspects(r) == [],
+        )
 
         pose("A.java", bloc(ST + 3, "class B {}"))
         f = suspects(r)
         # Trois lignes au-dela du seuil : trois suspects. C est ce grain qui fait qu une reecriture
         # partielle se voit, au lieu d attendre que le bloc passe sous le seuil pour compter.
-        cas.append((f"un bloc de type de {ST + 3} lignes coute trois", len(f) == 3))
-        cas.append(("le suspect dit la taille du bloc", any(f"bloc de {ST + 3}" in x for x in f)))
-        cas.append(("et il dit la nature", any("(type)" in x for x in f)))
+        cas_de(
+            f"un bloc de type de {ST + 3} lignes coute trois",
+            lambda: len(f) == 3,
+        )
+        cas_de(
+            "le suspect dit la taille du bloc",
+            lambda: any(f"bloc de {ST + 3}" in x for x in f),
+        )
+        cas_de(
+            "et il dit la nature",
+            lambda: any("(type)" in x for x in f),
+        )
 
         # LE cas qui justifie les seuils par nature : la MEME longueur, au-dessus d une methode,
         # coute. Sans cette distinction, le cliquet comptait pareil un paragraphe de pourquoi sur
         # une classe - ou il est a sa place - et le meme sur un accesseur.
         pose("A.java", "class C {\n" + bloc(SM + 2, "    void f() {}") + "}")
         f = suspects(r)
-        cas.append(("la meme longueur sur une methode coute", len(f) == 2))
-        cas.append(("la nature methode est reconnue", any("(methode)" in x for x in f)))
+        cas_de(
+            "la meme longueur sur une methode coute",
+            lambda: len(f) == 2,
+        )
+        cas_de(
+            "la nature methode est reconnue",
+            lambda: any("(methode)" in x for x in f),
+        )
 
         # Et la borne : ce meme bloc, au-dessus d une CLASSE, ne coute rien.
         pose("A.java", bloc(SM + 2, "class C {}"))
-        cas.append(("le meme bloc sur une classe ne coute rien", suspects(r) == []))
+        cas_de(
+            "le meme bloc sur une classe ne coute rien",
+            lambda: suspects(r) == [],
+        )
 
         # Un champ suit le regime de la methode, pas celui du type.
         pose("A.java", "class D {\n" + bloc(SM + 1, "    private int x = 1;") + "}")
         f = suspects(r)
-        cas.append(("un champ suit le seuil court", len(f) == 1 and "(champ)" in f[0]))
+        cas_de(
+            "un champ suit le seuil court",
+            lambda: len(f) == 1 and "(champ)" in f[0],
+        )
 
         # Une constante d enum aussi - et sa forme a arguments ne doit pas passer pour une methode.
         pose("A.java", "enum E {\n" + bloc(SM + 1, '    ROUGE("r"),') + "}")
         f = suspects(r)
-        cas.append(
-            ("une constante d enum n est pas une methode", len(f) == 1 and "(constante)" in f[0])
+        cas_de(
+            "une constante d enum n est pas une methode",
+            lambda: len(f) == 1 and "(constante)" in f[0],
         )
 
         # Une annotation entre le bloc et la declaration ne doit pas brouiller la lecture.
         pose("A.java", "class F {\n" + bloc(SM + 2, "    @Override\n    void g() {}") + "}")
-        cas.append(
-            (
-                "une annotation ne cache pas la declaration",
-                len(suspects(r)) == 2 and "(methode)" in suspects(r)[0],
-            )
+        cas_de(
+            "une annotation ne cache pas la declaration",
+            lambda: len(suspects(r)) == 2 and "(methode)" in suspects(r)[0],
         )
 
         # LE cas qui a fausse cinquante-huit mesures : une annotation MULTILIGNE. Sauter sa seule
@@ -291,18 +329,17 @@ def _auto_test() -> int:
             '@Command(\n        name = "faire",\n        description = "fait")\npublic class G {}'
         )
         pose("A.java", bloc(SM + 2, commande))
-        cas.append(
-            (
-                "une annotation multiligne ne fait pas passer une classe pour un champ",
-                suspects(r) == [],
-            )
+        cas_de(
+            "une annotation multiligne ne fait pas passer une classe pour un champ",
+            lambda: suspects(r) == [],
         )
 
         # Et la borne : au-dela du seuil du TYPE, la meme classe annotee coute bien.
         pose("A.java", bloc(ST + 2, commande))
         f = suspects(r)
-        cas.append(
-            ("cette classe annotee coute au seuil du type", len(f) == 2 and "(type)" in f[0])
+        cas_de(
+            "cette classe annotee coute au seuil du type",
+            lambda: len(f) == 2 and "(type)" in f[0],
         )
 
         # LE cas qui rend le seuil juste : les etiquettes de contrat ne racontent rien. Sans cette
@@ -314,7 +351,10 @@ def _auto_test() -> int:
             + "\nclass C {}\n"
         )
         pose("A.java", tags)
-        cas.append(("trente @param ne racontent rien", suspects(r) == []))
+        cas_de(
+            "trente @param ne racontent rien",
+            lambda: suspects(r) == [],
+        )
 
         # Une etiquette tient souvent sur plusieurs lignes. Sans ce cas, les SUITES comptaient
         # comme de la prose et un record bien documente devenait le pire suspect du depot - ce que
@@ -328,7 +368,10 @@ def _auto_test() -> int:
             + "\nclass C {}\n"
         )
         pose("A.java", longs)
-        cas.append(("les suites d une etiquette non plus", suspects(r) == []))
+        cas_de(
+            "les suites d une etiquette non plus",
+            lambda: suspects(r) == [],
+        )
 
         # Un TABLEAU specifie, il ne raconte pas : ses lignes ne comptent pas, meme argument que
         # pour les etiquettes de contrat. Sans ce cas, une matrice de decision se paierait comme
@@ -339,7 +382,10 @@ def _auto_test() -> int:
             + "\nclass T {}\n"
         )
         pose("A.java", table)
-        cas.append(("un tableau ne compte pas comme de la prose", suspects(r) == []))
+        cas_de(
+            "un tableau ne compte pas comme de la prose",
+            lambda: suspects(r) == [],
+        )
 
         # Un bloc de CODE montre un usage : il ne compte pas davantage, cloture comprise.
         exemple = (
@@ -348,7 +394,10 @@ def _auto_test() -> int:
             + "\n/// ```\nclass U {}\n"
         )
         pose("A.java", exemple)
-        cas.append(("un bloc de code non plus", suspects(r) == []))
+        cas_de(
+            "un bloc de code non plus",
+            lambda: suspects(r) == [],
+        )
 
         # LA borne : ce qui SUIT un bloc de code referme compte de nouveau. Sans elle, une fence
         # ouverte en tete blanchirait tout le bloc.
@@ -358,30 +407,39 @@ def _auto_test() -> int:
             + "\nclass V {}\n"
         )
         pose("A.java", apres_code)
-        cas.append(("ce qui suit un bloc de code referme compte", len(suspects(r)) == 2))
+        cas_de(
+            "ce qui suit un bloc de code referme compte",
+            lambda: len(suspects(r)) == 2,
+        )
 
         # Une ligne `///` vide ne compte pas non plus : elle aere, elle ne dit rien.
         aere = "\n".join(f"/// Ligne {i}.\n///" for i in range(SEUILS["type"])) + "\nclass D {}\n"
         pose("A.java", aere)
-        cas.append(("les lignes vides n allongent pas le bloc", suspects(r) == []))
+        cas_de(
+            "les lignes vides n allongent pas le bloc",
+            lambda: suspects(r) == [],
+        )
 
         pose("A.java", "class E {}\n")
-        cas.append(("un fichier sans javadoc ne rend rien", suspects(r) == []))
+        cas_de(
+            "un fichier sans javadoc ne rend rien",
+            lambda: suspects(r) == [],
+        )
 
         # Deux blocs dans un meme fichier cumulent leur dette : le grain est la ligne.
         pose("A.java", bloc(ST + 3, "class G {}") + "\n" + bloc(ST + 3, "class H {}"))
-        cas.append(("deux blocs longs cumulent leur dette", len(suspects(r)) == 6))
+        cas_de(
+            "deux blocs longs cumulent leur dette",
+            lambda: len(suspects(r)) == 6,
+        )
 
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
+    if echecs():
         print(
-            f"\n{len(rates)} cas en échec : le cliquet ne compte pas ce qu'il annonce.",
+            "\nDes cas en échec : le cliquet ne compte pas ce qu'il annonce.",
             file=sys.stderr,
         )
         return 1
-    print(f"\n{len(cas)} cas : le cliquet voit un bloc narratif et laisse passer le contrat.")
+    print(f"\n{joues[0]} cas : le cliquet voit un bloc narratif et laisse passer le contrat.")
     return 0
 
 

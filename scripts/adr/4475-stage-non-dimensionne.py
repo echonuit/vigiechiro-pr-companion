@@ -23,7 +23,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, TESTS_ANCRES, rapporte, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, TESTS_ANCRES, cas_d_auto_test, rapporte, sort_si_contrat_demande
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4475"
@@ -101,7 +101,16 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
 def _auto_test() -> int:
     import tempfile
 
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as d:
         r = pathlib.Path(d)
 
@@ -113,27 +122,43 @@ def _auto_test() -> int:
             "        stage.setScene(new Scene(vue, 980, 980));\n        stage.show();\n    }\n}\n"
         )
         pose(nu)
-        cas.append(
-            ("une scène dimensionnée sans stage dimensionné est un suspect", len(suspects(r)) == 1)
+        cas_de(
+            "une scène dimensionnée sans stage dimensionné est un suspect",
+            lambda: len(suspects(r)) == 1,
         )
 
         pose(nu.replace("stage.show();", "stage.setWidth(980);\n        stage.show();"))
-        cas.append(("dimensionner le stage lève le suspect", suspects(r) == []))
+        cas_de(
+            "dimensionner le stage lève le suspect",
+            lambda: suspects(r) == [],
+        )
 
         pose(nu.replace("stage.show();", "stage.sizeToScene();\n        stage.show();"))
-        cas.append(("`sizeToScene` aussi", suspects(r) == []))
+        cas_de(
+            "`sizeToScene` aussi",
+            lambda: suspects(r) == [],
+        )
 
         # LA borne : une scene SANS dimensions ne promet aucune taille, donc n a rien a tenir.
         pose(nu.replace("new Scene(vue, 980, 980)", "new Scene(vue)"))
-        cas.append(("une scène sans dimensions n'est pas un suspect", suspects(r) == []))
+        cas_de(
+            "une scène sans dimensions n'est pas un suspect",
+            lambda: suspects(r) == [],
+        )
 
         # Un test qui n est pas un test TestFX n a pas de stage a dimensionner.
         pose(nu.replace("@Start\n", ""))
-        cas.append(("sans `@Start`, aucun stage n'est en jeu", suspects(r) == []))
+        cas_de(
+            "sans `@Start`, aucun stage n'est en jeu",
+            lambda: suspects(r) == [],
+        )
 
         # La seconde forme rencontree dans le depot : le decorateur maison.
         pose(nu.replace("new Scene(vue, 980, 980)", "Habillage.scene(vue, 900, 400)"))
-        cas.append(("`Habillage.scene` compte comme une scène dimensionnée", len(suspects(r)) == 1))
+        cas_de(
+            "`Habillage.scene` compte comme une scène dimensionnée",
+            lambda: len(suspects(r)) == 1,
+        )
 
         # LE defaut que le garde a eu lui-meme : la moitie des `@Start` renomment leur stage, et
         # chercher `stage.setWidth` les declarait verts sans les avoir lus.
@@ -142,7 +167,10 @@ def _auto_test() -> int:
             .replace("Stage stage", "Stage modale")
             .replace("modale.show();", "modale.setWidth(980);\n        modale.show();")
         )
-        cas.append(("un stage renomme compte comme dimensionne", suspects(r) == []))
+        cas_de(
+            "un stage renomme compte comme dimensionne",
+            lambda: suspects(r) == [],
+        )
 
         # La declaration s etale souvent sur plusieurs lignes : le motif doit la suivre.
         pose(
@@ -151,7 +179,10 @@ def _auto_test() -> int:
                 "stage.setScene(new Scene(\n                vue,\n                980,\n                980));",
             )
         )
-        cas.append(("une déclaration repliée compte aussi", len(suspects(r)) == 1))
+        cas_de(
+            "une déclaration repliée compte aussi",
+            lambda: len(suspects(r)) == 1,
+        )
 
         # Une fenetre A SOI n est pas partagee : la figer ne coute rien a personne, et
         # `ConventionsDEcritureTest` l ecrit deja. Deux modales privees etaient comptees avant
@@ -161,7 +192,10 @@ def _auto_test() -> int:
             "        Stage modale = new Stage();\n"
             "        modale.setScene(new Scene(vue, 980, 980));\n        modale.show();\n    }\n}\n"
         )
-        cas.append(("une fenêtre à soi n'est pas comptée", suspects(r) == []))
+        cas_de(
+            "une fenêtre à soi n'est pas comptée",
+            lambda: suspects(r) == [],
+        )
 
         # LE cas qui rend l exemption sure : une pose privee ne doit pas MASQUER la pose partagee
         # qui la suit. Sans lui, exempter reviendrait a rendre aveugle tout fichier qui ouvre une
@@ -172,18 +206,18 @@ def _auto_test() -> int:
             "        modale.setScene(new Scene(vue, 400, 300));\n"
             "        stage.setScene(new Scene(vue, 980, 980));\n        stage.show();\n    }\n}\n"
         )
-        cas.append(("une pose privée ne masque pas la pose partagée", len(suspects(r)) == 1))
+        cas_de(
+            "une pose privée ne masque pas la pose partagée",
+            lambda: len(suspects(r)) == 1,
+        )
 
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
+    if echecs():
         print(
-            f"\n{len(rates)} cas en échec : le cliquet ne compte pas ce qu'il annonce.",
+            "\nDes cas en échec : le cliquet ne compte pas ce qu'il annonce.",
             file=sys.stderr,
         )
         return 1
-    print(f"\n{len(cas)} cas : le cliquet voit le stage hérité, et laisse le reste.")
+    print(f"\n{joues[0]} cas : le cliquet voit le stage hérité, et laisse le reste.")
     return 0
 
 

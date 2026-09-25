@@ -47,7 +47,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import rapporte, sort_si_contrat_demande
+from _commun import cas_d_auto_test, rapporte, sort_si_contrat_demande
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4468"
@@ -112,38 +112,52 @@ def suspects(racine: pathlib.Path | None = None, table: dict[str, str] | None = 
 def _auto_test() -> int:
     import tempfile
 
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as d:
         r = pathlib.Path(d)
         (r / "A.java").write_text("/// Un contrat.\nclass A {}\n", encoding="utf-8")
 
-        cas.append(
-            (
-                "un fichier absent du manifeste est suspect",
-                suspects(r, {}) == ["A.java : jamais relu"],
-            )
+        cas_de(
+            "un fichier absent du manifeste est suspect",
+            lambda: suspects(r, {}) == ["A.java : jamais relu"],
         )
 
         bonne = empreinte(r / "A.java")
-        cas.append(("le meme fichier marque ne l est plus", suspects(r, {"A.java": bonne}) == []))
+        cas_de(
+            "le meme fichier marque ne l est plus",
+            lambda: suspects(r, {"A.java": bonne}) == [],
+        )
 
         # LE cas qui justifie l empreinte : sans elle, reecrire la javadoc d un fichier relu le
         # laisserait marque, et le manifeste affirmerait qu on a lu une prose qui n existe plus.
         (r / "A.java").write_text("/// Un contrat, reformule.\nclass A {}\n", encoding="utf-8")
         apres = suspects(r, {"A.java": bonne})
-        cas.append(("une javadoc reecrite redevient suspecte", len(apres) == 1))
-        cas.append(("et le suspect dit pourquoi", "modifiée depuis" in apres[0]))
+        cas_de(
+            "une javadoc reecrite redevient suspecte",
+            lambda: len(apres) == 1,
+        )
+        cas_de(
+            "et le suspect dit pourquoi",
+            lambda: "modifiée depuis" in apres[0],
+        )
 
         # L indentation appartient au formateur : une passe de spotless ne doit pas rouvrir la dette
         # de tout le depot. C est la seule variation que l empreinte ignore.
         (r / "A.java").write_text(
             "    /// Un contrat, reformule.\n    class A {}\n", encoding="utf-8"
         )
-        cas.append(
-            (
-                "mais un simple decalage ne la rouvre pas",
-                suspects(r, {"A.java": empreinte(r / "A.java")}) == [],
-            )
+        cas_de(
+            "mais un simple decalage ne la rouvre pas",
+            lambda: suspects(r, {"A.java": empreinte(r / "A.java")}) == [],
         )
 
         # Une etiquette de contrat compte : la relire est un geste, pas une formalite.
@@ -151,21 +165,23 @@ def _auto_test() -> int:
             "/// Un contrat.\n/// @param x rien\nclass B {}\n", encoding="utf-8"
         )
         sansTag = hashlib.sha256(b"Un contrat.").hexdigest()[:12]
-        cas.append(("une etiquette entre dans l empreinte", empreinte(r / "B.java") != sansTag))
+        cas_de(
+            "une etiquette entre dans l empreinte",
+            lambda: empreinte(r / "B.java") != sansTag,
+        )
 
         # Un fichier neuf arrive suspect sans qu on ait rien a declarer : c est la moitie du contrat.
         table = {"A.java": empreinte(r / "A.java")}
-        cas.append(
-            ("un fichier neuf est suspect d office", suspects(r, table) == ["B.java : jamais relu"])
+        cas_de(
+            "un fichier neuf est suspect d office",
+            lambda: suspects(r, table) == ["B.java : jamais relu"],
         )
 
         # Un manifeste vide ne doit pas rendre le depot vierge de dette.
         (r / "vide.txt").write_text("# rien\n", encoding="utf-8")
-        cas.append(
-            (
-                "un manifeste sans entree ne blanchit rien",
-                len(suspects(r, manifeste(r / "vide.txt"))) == 2,
-            )
+        cas_de(
+            "un manifeste sans entree ne blanchit rien",
+            lambda: len(suspects(r, manifeste(r / "vide.txt"))) == 2,
         )
 
         # Une ligne mal formee est une affirmation illisible : elle se refuse, elle ne s ignore pas.
@@ -177,19 +193,19 @@ def _auto_test() -> int:
             refuse = False
         except SystemExit:
             refuse = True
-        cas.append(("une ligne de manifeste mal formee est refusee", refuse))
+        cas_de(
+            "une ligne de manifeste mal formee est refusee",
+            lambda: refuse,
+        )
 
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
+    if echecs():
         print(
-            f"\n{len(rates)} cas en échec : le cliquet ne tient pas ce qu'il annonce.",
+            "\nDes cas en échec : le cliquet ne tient pas ce qu'il annonce.",
             file=sys.stderr,
         )
         return 1
     print(
-        f"\n{len(cas)} cas : le cliquet voit un fichier jamais lu et une javadoc réécrite en douce."
+        f"\n{joues[0]} cas : le cliquet voit un fichier jamais lu et une javadoc réécrite en douce."
     )
     return 0
 
