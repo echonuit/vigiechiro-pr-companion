@@ -45,14 +45,23 @@ MOI = pathlib.Path(__file__).name
 SUITE = DOSSIER / "verifie_scripts.py"
 
 # Ce qu on ajoute a la fin d un garde pour lui retirer sa detection, sans toucher a ce qui le decrit.
-# `rapporte` est epargne : il vient de `_commun` et sert a rendre le verdict, il ne detecte rien.
-NEUTRALISATION = """
+#
+# Quatre noms sont epargnes, et aucun ne detecte. `rapporte` rend le verdict. Les trois autres sont la
+# mecanique d ENTREE d un auto-test (#5499) : `main` et `auto_test`, les deux points d entree de ce
+# dossier, et `cas_d_auto_test`, la fabrique partagee. Les detruire faisait sortir sept gardes en 1
+# sans qu un seul cas ait joue, et ce banc les comptait comme eprouves.
+#
+# Par NOM EXACT, jamais par motif. Le banc de methode epargne tout nom portant « auto » et « test » ;
+# ici, ce motif epargnerait aussi `auto_test_rougit` et `porte_son_auto_test`, qui SONT la detection de
+# ce banc - et il se mute lui-meme par sa moitie `mutes`. Mesure du 2026-09-08 sur quarante-sept gardes.
+EPARGNES = ("rapporte", "main", "auto_test", "cas_d_auto_test")
+NEUTRALISATION = f"""
 
 import types as _t_mutation
 for _nom_mutation, _val_mutation in list(globals().items()):
     if (isinstance(_val_mutation, _t_mutation.FunctionType)
             and not _nom_mutation.startswith("_")
-            and _nom_mutation != "rapporte"):
+            and _nom_mutation not in {EPARGNES!r}):
         globals()[_nom_mutation] = (lambda *a, **k: [])
 """
 
@@ -61,6 +70,14 @@ for _nom_mutation, _val_mutation in list(globals().items()):
 # lequel on pousse les temoins faibles.
 HORS_PORTEE = {
     "resserre_cliquets.py": "eprouve une expression reguliere et la PRESENCE d une fonction, pas son effet",
+    # Entre ici le 2026-09-23 (#5499), et il y entre parce que la mesure l a REVELE, pas parce qu il
+    # genait : son point d entree etait detruit par la neutralisation, il sortait muet, et ce banc le
+    # comptait « tient ». Une fois `auto_test` epargne, son auto-test tourne enfin - et rend la MEME
+    # sortie mutee que saine, 7 ✔ et 1 ✘, code 0. Il n eprouve que `_completude`, et le souligné
+    # initial la met hors d atteinte de la neutralisation. Ce n est donc pas un temoin faible qu on
+    # pousse sous le tapis : c est un temoin que CE banc ne peut pas atteindre, et l issue #5524 porte
+    # la faille generale - une detection nommee avec un souligne echappe a la mutation.
+    "verifie_scripts.py": "eprouve `_completude`, que la neutralisation epargne par son souligne",
 }
 
 
@@ -335,6 +352,38 @@ def classe_le_rouge(rendu) -> tuple[str, str]:
     return "tient", ""
 
 
+# Ce que `sys.exit()` imprime quand on lui passe ce que rend une fonction neutralisee : `[]`. C est la
+# signature d un point d entree detruit (#5499). Le temoin `_FABRIQUE_MUET` passe par la VRAIE
+# neutralisation : si elle venait a rendre autre chose, c est lui qui rougirait, pas ce banc qui mentirait.
+SORTIE_NEUTRALISEE = repr([])
+
+
+def rouge_muet(rendu) -> bool:
+    """Ce rouge est-il MUET : sorti non nul sans rien dire, hormis ce que rend la neutralisation ?
+
+    Le cas de #5499. La neutralisation detruisait le POINT D ENTREE d un auto-test, `main` ou
+    `auto_test`, et `sys.exit([])` rendait 1 sans qu un seul cas ait joue. Aucune trace, donc
+    `classe_le_rouge` concluait « tient ». Mesure du 2026-09-22 : sept gardes `autonomes` sur dix, et
+    une sortie IDENTIQUE pour les sept - rien sur stdout, `[]` seul sur stderr.
+
+    Un rouge qui dit quoi que ce soit n est PAS muet, meme sans `✘`. Un auto-test ecrit a la main
+    nomme ses echecs a sa facon : `loupe-4992` n imprime aucun `✔`. Exiger le glyphe l aurait declare
+    non concluant a tort, et juger de la forme d un auto-test revient a l ADR 4918, pas a ce banc.
+
+    **Sa portee est la moitie `autonomes`, et elle s arrete la.** `suite_rougit` neutralise le garde
+    puis joue `verifie_scripts.py` : il n execute JAMAIS l auto-test du garde. Un cas qui leve y reste
+    donc invisible, et ce controle n y peut rien - il ne juge que les rouges d un auto-test que le
+    banc a lui-meme lance.
+    """
+
+    def texte(flux) -> str:
+        return (
+            flux.decode("utf-8", "replace") if isinstance(flux, bytes) else (flux or "")
+        ).strip()
+
+    return not texte(rendu.stdout) and texte(rendu.stderr) in ("", SORTIE_NEUTRALISEE)
+
+
 MARQUE_MAIN = 'if __name__ == "__main__":'
 
 
@@ -436,6 +485,13 @@ def auto_test_rougit(nom: str, faux: pathlib.Path) -> tuple[str, str]:
         return "non concluant", "butoir de 300 s atteint"
     finally:
         cible.write_text(original, encoding="utf-8")
+    # Ici seulement, et pas dans `classe_le_rouge` : l autre moitie joue `verifie_scripts.py` en
+    # entier, qui nomme toujours ses cas. Un rouge muet ne peut naitre que d un auto-test PROPRE.
+    if rendu.returncode != 0 and rouge_muet(rendu):
+        return (
+            "non concluant",
+            "rouge muet : son point d entree a ete neutralise, aucun cas n a joue",
+        )
     return classe_le_rouge(rendu)
 
 
@@ -637,6 +693,113 @@ def _auto_test_de_portee() -> int:
     return echecs
 
 
+# Trois gardes FABRIQUES pour `_auto_test_du_rouge_muet`. Chacun porte son propre point d entree et
+# sa propre detection, et aucun ne reprend une constante de ce banc : c est la VRAIE neutralisation
+# qui les mute. Un temoin bati sur la constante qu il verifie l epouserait, juste ou fausse (#5491).
+_FABRIQUE_MUET = """import sys
+
+
+def lance():
+    print("  ✔ jamais atteint")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(lance())
+"""
+# La detection porte « auto » ET « test » dans son nom, comme `auto_test_rougit` ici : une epargne
+# par MOTIF la protegerait, et ce garde resterait vert. Seule une epargne par NOM EXACT le fait tenir.
+_FABRIQUE_PAR_MAIN = """import sys
+
+
+def auto_test_rougit_temoin():
+    return 42
+
+
+def _auto_test():
+    obtenu = auto_test_rougit_temoin()
+    if obtenu == 42:
+        print("  ✔ la detection repond")
+        return 0
+    print(f"  ✘ la detection repond : attendu 42, obtenu {obtenu}")
+    return 1
+
+
+def main():
+    if "--auto-test" in sys.argv:
+        return _auto_test()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+"""
+_FABRIQUE_PAR_FABRIQUE = """import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+from _commun import cas_d_auto_test
+
+
+def detecte():
+    return 1
+
+
+def _auto_test():
+    verifie, echecs = cas_d_auto_test()
+    verifie("la detection repond", detecte(), 1)
+    return echecs()
+
+
+if __name__ == "__main__":
+    sys.exit(_auto_test())
+"""
+
+
+def _auto_test_du_rouge_muet() -> int:
+    """Un rouge MUET ne tient pas, et la mecanique d entree survit a la neutralisation (#5499).
+
+    Six gardes de ce dossier sortaient en 1 sans jouer un seul cas : la neutralisation detruisait
+    leur POINT D ENTREE, `main` ou `auto_test`, et `sys.exit([])` rend 1 sans rien avoir eprouve.
+    `classe_le_rouge` n y voyait pas de trace et concluait « tient ». Ces trois cas les rejouent
+    dans un arbre a part, par `auto_test_rougit` lui-meme.
+    """
+    echecs = 0
+    with tempfile.TemporaryDirectory(prefix="vc-rouge-muet-") as tmp:
+        faux = pathlib.Path(tmp)
+        (faux / "scripts" / "adr").mkdir(parents=True)
+        # Le vrai `_commun`, pour la fabrique : c est elle qu on eprouve, pas une copie.
+        (faux / "scripts" / "_commun").symlink_to(DOSSIER.parent / "_commun")
+        for libelle, nom, source, attendu in (
+            (
+                "un point d entree detruit rend un rouge MUET, qui ne tient pas",
+                "muet.py",
+                _FABRIQUE_MUET,
+                "non concluant",
+            ),
+            (
+                "`main` survit, et une detection nommee « auto_test... » est bien mutee",
+                "par_main.py",
+                _FABRIQUE_PAR_MAIN,
+                "tient",
+            ),
+            (
+                "la fabrique partagee survit, et son cas rougit en se nommant",
+                "par_fabrique.py",
+                _FABRIQUE_PAR_FABRIQUE,
+                "tient",
+            ),
+        ):
+            (faux / "scripts" / "adr" / nom).write_text(source, encoding="utf-8")
+            obtenu, cause = auto_test_rougit(nom, faux)
+            if obtenu == attendu:
+                print(f"  ✔ {libelle}")
+            else:
+                print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r} ({cause})")
+                echecs += 1
+    return echecs
+
+
 def auto_test() -> int:
     """Le mecanisme se prouve dans les DEUX sens, sinon il ne prouve rien.
 
@@ -782,8 +945,9 @@ def auto_test() -> int:
     # La PORTEE fait partie du mecanisme depuis #5345 : ses cas tournent ici, sinon ils ne
     # tourneraient nulle part et seraient decoratifs par construction.
     # `echecs` est le LECTEUR de la marque depuis #5460, pas un entier : il se LIT, il ne
-    # s additionne pas. Le sous-auto-test de la portee garde son compte a lui.
-    return echecs() + _auto_test_de_portee()
+    # s additionne pas. Les sous-auto-tests de la portee et du rouge MUET (#5499) gardent chacun
+    # leur compte a eux.
+    return echecs() + _auto_test_de_portee() + _auto_test_du_rouge_muet()
 
 
 CONTRAT = {
