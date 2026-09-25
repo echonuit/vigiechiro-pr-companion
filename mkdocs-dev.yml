@@ -131,6 +131,7 @@ nav:
     - 0047 · L'identité de distribution est le projet Echonuit: decisions/0047-l-identite-de-distribution-est-le-projet-echonuit.md
     - 0048 · L'utilisateur possède ses fichiers, l'app observe: decisions/0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md
     - 1038 · La configuration d'amorçage vit hors de la base: decisions/1038-la-configuration-d-amorcage-vit-hors-de-la-base.md
+    - 1874 · La CLI rend le lien sans navigateur: decisions/1874-la-cli-rend-le-lien-sans-ouvrir-de-navigateur.md
     - 1881 · Le numéro d'une ADR est celui de son chantier: decisions/1881-l-identifiant-d-une-adr-est-le-numero-de-son-chantier.md
     - 2112 · On ne signe pas les installeurs: decisions/2112-on-ne-signe-pas-les-installeurs.md
     - 2213 · Un dispositif rapporte avant de conclure: decisions/2213-un-dispositif-rapporte-avant-de-conclure.md
@@ -382,6 +383,7 @@ nav:
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md
+    - CLI, journaux et fiches avant et après: retours/5505-avant-apres.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
     - Regarder les clips:
       - Vue d'ensemble: recette/clips.md
