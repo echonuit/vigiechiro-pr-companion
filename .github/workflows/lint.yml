@@ -854,6 +854,8 @@ jobs:
         run: python3 .github/scripts/rappelle_le_critere_de_fin.py --auto-test
       - name: Auto-test de la loupe des lots sans critère
         run: python3 scripts/adr/loupe-4992-lots-sans-critere.py --auto-test
+      - name: Auto-test de la loupe des échéances non tenues
+        run: python3 scripts/adr/loupe-5539-echeances-non-tenues.py --auto-test
       - name: "Clôture consignée : un EPIC clos porte sa trace (bloquant, #4659)"
         # Celui-ci interroge la forge, d'où le jeton. Il REFUSE si elle ne répond pas : un cliquet qui
         # conclut sur ce qu'il n'a pas lu vaut moins que pas de cliquet.

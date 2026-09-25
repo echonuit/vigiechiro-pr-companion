@@ -44,7 +44,7 @@ jobs:
 
       - name: Publier le rapport dans le résumé du job
         env:
-          # `rapport.py` lance les loupes, dont deux interrogent la forge. Le jeton leur est passé
+          # `rapport.py` lance les loupes, dont trois interrogent la forge. Le jeton leur est passé
           # ici et non au niveau du job : les cliquets, eux, lisent l'arbre et n'en ont pas besoin.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
