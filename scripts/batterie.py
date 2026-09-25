@@ -47,6 +47,7 @@ est le PREMIER lecteur, celui qui evite l aller-retour, pas l autorite.
 
 from __future__ import annotations
 
+import collections
 import pathlib
 import re
 import subprocess
@@ -238,6 +239,74 @@ def gardes(racine: pathlib.Path | None = None) -> list[tuple[str, list[str]]]:
     return trouves
 
 
+ATELIERS = ".github/workflows"
+
+# Une invocation d atelier : `python3 <script>.py <arguments>`, ou `ruff <arguments>`. Les deux
+# formes se lisent ligne a ligne plutot qu en analysant le YAML : un `run:` est un bloc de shell,
+# et l analyser vraiment demanderait un shell.
+INVOCATION_PY = re.compile(r"python3?\s+((?:scripts|\.github/scripts)/[\w./-]+\.py)([^\n|&;]*)")
+INVOCATION_RUFF = re.compile(r"(?:^|\s)(ruff\s+[\w-]+(?:\s+--check)?)\s+([\w./ -]+)$")
+
+# Une forme utilisable est faite de DRAPEAUX, et de rien d autre. Les ateliers passent aussi des
+# chemins, des variables et des redirections - `"${CORPS}"`, `>> "$GITHUB_STEP_SUMMARY"` - qui ne
+# veulent rien dire hors de la CI. La porte ne les rejoue pas : elle lance nu, comme avant.
+DRAPEAUX_SEULS = re.compile(r"^--?[\w-]+(?: --?[\w-]+)*$")
+
+
+def _lignes_des_ateliers(racine: pathlib.Path | None = None) -> list[str]:
+    base = (racine or RACINE) / ATELIERS
+    lignes: list[str] = []
+    for atelier in sorted(base.glob("*.yml")) if base.is_dir() else []:
+        lignes += atelier.read_text(encoding="utf-8").splitlines()
+    return lignes
+
+
+def arguments_des_ateliers(racine: pathlib.Path | None = None) -> dict[str, list[str]]:
+    """Les arguments avec lesquels les ATELIERS lancent chaque garde.
+
+    **Pourquoi derive, et non ecrit ici.** La porte lancait chaque garde NU, et la CI en lance dix
+    avec `--verifie`. Pour plusieurs d entre eux, le mode nu ECRIT au lieu de juger : sur une ADR
+    modifiee, `matrice-constitution.py --verifie` rend 1 quand le meme garde nu rend 0 et reecrit
+    `CONSTITUTION.md`. La porte rendait donc vert en rendant le depot conforme, au lieu de constater
+    qu il l etait (#5481).
+
+    Une liste ecrite ici se perimerait au premier garde qui gagne un mode. L atelier, lui, est la
+    reference : c est lui qui decide du rouge que la porte existe pour anticiper.
+
+    **Une forme, et une seule.** Un garde que les ateliers lancent tantot nu, tantot avec des
+    arguments, reste lance nu : la porte ne choisit pas a la place de l atelier. `compte-les-reliquats.py`
+    est dans ce cas, et `EXIGENT_DES_ARGUMENTS` dit deja qu il ne juge rien lance nu.
+    """
+    formes: dict[str, set[str]] = collections.defaultdict(set)
+    for ligne in _lignes_des_ateliers(racine):
+        for trouve in INVOCATION_PY.finditer(ligne):
+            arguments = trouve.group(2).split("#")[0].strip()
+            if "--auto-test" in arguments:
+                continue  # L auto-test du garde n est pas son emploi.
+            formes[trouve.group(1)].add(arguments)
+    return {
+        garde: next(iter(f)).split()
+        for garde, f in formes.items()
+        if len(f) == 1 and DRAPEAUX_SEULS.match(next(iter(f)))
+    }
+
+
+def outils_des_ateliers(racine: pathlib.Path | None = None) -> list[tuple[str, list[str]]]:
+    """Les outils que les ateliers lancent et que la porte ne lancait pas, avec LEURS dossiers.
+
+    `ruff` seul ici, et derive pour la meme raison que les arguments : recopier ses quatre dossiers
+    les ferait diverger de ceux de `lint.yml` sans que rien ne le dise. Mesure du 2026-09-22 :
+    0,02 s a froid, sans cache, contre plusieurs dizaines de secondes pour la porte entiere. Le
+    conditionner couterait plus cher que de le lancer.
+    """
+    vus: dict[str, list[str]] = {}
+    for ligne in _lignes_des_ateliers(racine):
+        trouve = INVOCATION_RUFF.search(ligne)
+        if trouve:
+            vus.setdefault(trouve.group(1), trouve.group(1).split() + trouve.group(2).split())
+    return sorted(vus.items())
+
+
 def engage_java(diff: list[str]) -> list[str]:
     """Les classes Java que ce diff engage, sous la forme que Maven attend.
 
@@ -356,6 +425,11 @@ def modules_attendus(racine: pathlib.Path | None = None) -> dict[str, str]:
     import importlib.util
 
     outil = (racine or RACINE) / "scripts" / "methode" / "prepare-l-environnement.py"
+    # ⟨une racine qui ne porte pas le declarant ne DECLARE rien⟩ Sans ce retour, un arbre jetable
+    # - celui d un cas, celui d un pair - faisait planter la porte avant son premier garde, sur une
+    # trace qui ne parle pas de son diff.
+    if not outil.exists():
+        return {}
     spec = importlib.util.spec_from_file_location("_prep", outil)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -413,9 +487,73 @@ def interprete(racine=None, essais=None, sonde=None) -> tuple[str | None, dict[s
     modules = modules_attendus(racine)
     lance = sonde or porte_les_modules
     for candidat in essais if essais is not None else candidats(racine):
+        # ⟨un chemin qui n existe pas n est pas un candidat⟩ Quand RIEN n est declare, la sonde rend
+        # vrai sans rien lancer, et le premier candidat est un `.venv` qui peut ne pas exister : la
+        # porte partait alors avec un interprete introuvable, et chaque garde echouait sur un
+        # `FileNotFoundError` qui ne parle ni du diff ni du poste.
+        if sonde is None and "/" in candidat and not pathlib.Path(candidat).exists():
+            continue
         if lance(candidat, modules):
             return candidat, {}
     return None, modules
+
+
+def _suffixe(arguments: list[str]) -> str:
+    """Les arguments affiches a cote du garde. Sans eux, deux lancements differents se ressemblent."""
+    return (" " + " ".join(arguments)) if arguments else ""
+
+
+def hors_de_la_porte(racine: pathlib.Path | None = None) -> list[str]:
+    """Les scripts de `.github/scripts` que les ateliers lancent, et que la porte n engage pas.
+
+    Ils ne declarent pas de `CONTRAT`, donc ils n existent pas pour elle (#5525). Les compter EST le
+    service : la porte ne peut pas les jouer, et un lecteur qui ne sait pas qu ils existent croit
+    son vert complet.
+    """
+    corpus = {g for g, _ in gardes(racine)}
+    vus = set()
+    for ligne in _lignes_des_ateliers(racine):
+        for trouve in INVOCATION_PY.finditer(ligne):
+            nom = trouve.group(1)
+            if nom.startswith(".github/scripts/") and "--auto-test" not in trouve.group(2):
+                vus.add(nom)
+    return sorted(vus - corpus)
+
+
+def reste_a_lancer(
+    diff: list[str], absents: list[tuple[str, str]], racine: pathlib.Path | None = None
+) -> list[str]:
+    """Ce que la porte n a PAS joue, dit SOUS sa ligne de verdict.
+
+    **La position est le defaut qu on ferme.** Ce que la porte ne couvre pas etait annonce plus
+    haut, dans une section qui nomme des commandes sans les lancer, et sa ligne de verdict avait la
+    forme d une conclusion : un compte, des refus, une phrase. Un lecteur qui descend jusqu au
+    resume, ce que sa position invite a faire, croyait avoir tout vu. Cinq fois en vingt-quatre
+    heures, une porte verte a precede une CI rouge (#5481).
+
+    C est l article A3 applique a la porte : un dispositif dit ce qu il couvre, ET ce qu il n a pas
+    pu lire.
+    """
+    lignes = ["", "  RESTE A LANCER, que cette porte ne joue pas :"]
+    java = engage_java(diff)
+    if java:
+        lignes.append(
+            f"    ./mvnw -B test -Dglass.platform=Headless -Dtest={','.join(java)}"
+            f"   ({len(java)} classe(s) Java qui jugent la prose)"
+        )
+    for libelle, distribution in absents:
+        lignes.append(f"    {libelle}   absent de l interprete, fourni par `{distribution}`")
+    lignes.append(
+        '    python3 .github/scripts/verifie_titre_pr.py "<titre>"  puis  verifie_corps_pr.py'
+        ' "<corps>"'
+    )
+    dehors = hors_de_la_porte(racine)
+    if dehors:
+        lignes.append(
+            f"    {len(dehors)} script(s) de `.github/scripts` que les ateliers lancent : hors de"
+        )
+        lignes.append("      cette porte, faute de `CONTRAT` declare (#5525)")
+    return lignes
 
 
 def rendre(
@@ -449,8 +587,11 @@ def rendre(
     print(f"  ENGAGE ({len(engages)} garde(s))")
     if lance:
         annonce_la_duree(engages)
+    # ⟨la liste montre ce qui sera LANCE⟩ Sans les arguments, elle invite a copier une commande que
+    # la porte ne joue pas - et pour dix gardes, cette commande ECRIT au lieu de juger (#5481).
+    des_ateliers = arguments_des_ateliers(racine)
     for g in engages:
-        print(f"    python3 {g}")
+        print(f"    python3 {g}{_suffixe(des_ateliers.get(g, []))}")
     if ecartes:
         print()
         print(
@@ -533,8 +674,13 @@ def rendre(
     joues, rouges, mesures = 0, [], durees_connues()
     for g in engages:
         depart = time.time()
+        arguments = des_ateliers.get(g, [])
         sortie = subprocess.run(
-            [python, g], cwd=str(racine or RACINE), capture_output=True, text=True, check=False
+            [python, g, *arguments],
+            cwd=str(racine or RACINE),
+            capture_output=True,
+            text=True,
+            check=False,
         )
         mesures[g] = round(time.time() - depart, 1)
         joues += 1
@@ -548,13 +694,13 @@ def rendre(
             continue
         if verdict not in SANS_REFUS:
             rouges.append((g, ligne))
-            print(f"  ✘ {g}", flush=True)
+            print(f"  ✘ {g}{_suffixe(arguments)}", flush=True)
         else:
             # ⟨flush⟩ Sans lui, la sortie est tamponnee et une execution interrompue n affiche RIEN.
             # Mesure du 2026-09-06 : tuee a quinze minutes, cette porte a laisse un journal VIDE, donc
             # personne n a su ou elle en etait ni ce qu elle avait deja juge. Un outil long qui ne
             # montre rien avant sa fin ne se distingue pas d un outil bloque.
-            print(f"  ✔ {g}", flush=True)
+            print(f"  ✔ {g}{_suffixe(arguments)}", flush=True)
 
     try:
         DUREES.parent.mkdir(parents=True, exist_ok=True)
@@ -562,7 +708,33 @@ def rendre(
     except OSError:
         pass  # Le relevé est un confort : ne pas pouvoir l ecrire ne doit pas faire echouer la porte.
 
-    print(f"\n  {joues} garde(s) joue(s), {len(rouges)} refus.")
+    outils, absents = 0, []
+    for libelle, commande in outils_des_ateliers(racine):
+        # ⟨un outil absent se DIT, il ne se compte pas refus⟩ Un refus ferait croire a un defaut du
+        # diff ; l absence parle du poste. C est la distinction de l ADR 5407, appliquee aux outils.
+        if not porte_les_modules(python, {commande[0]: commande[0]}):
+            absents.append((libelle, commande[0]))
+            continue
+        rendu = subprocess.run(
+            [python, "-m", *commande],
+            cwd=str(racine or RACINE),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        outils += 1
+        if rendu.returncode == 0:
+            print(f"  ✔ {libelle}", flush=True)
+        else:
+            premiere = next(
+                (l for l in (rendu.stdout + rendu.stderr).splitlines() if l.strip()), "sans ligne"
+            )
+            rouges.append((libelle, premiere))
+            print(f"  ✘ {libelle}", flush=True)
+
+    print(f"\n  {joues} garde(s) et {outils} outil(s) joue(s), {len(rouges)} refus.")
+    for ligne in reste_a_lancer(diff, absents, racine):
+        print(ligne)
     if not rouges:
         return 0
     print()
@@ -665,12 +837,23 @@ def _auto_test() -> int:
     Une porte qui lance TOUT passerait le premier cas sans rien trier : c est pourquoi le second cas
     exige qu un garde declarant soit ECARTE.
     """
+    import builtins
     import contextlib as _ctx
     import io as _io
     import tempfile
     import textwrap
 
     echecs = 0
+    # ⟨le compte se DERIVE des cas joues⟩ Il etait ecrit en dur - « 30 cas » pour quarante-sept
+    # reellement imprimes - et personne ne l avait vu : c est l inventaire qui se dit exhaustif sans
+    # l etre, dans le fichier meme que ce lot corrige pour cela. Ce `print` local ne reecrit pas les
+    # quarante-sept sites : il les compte au passage.
+    dits: list[str] = []
+
+    def print(*morceaux, **nommes):
+        dits.append(" ".join(str(m) for m in morceaux))
+        builtins.print(*morceaux, **nommes)
+
     with tempfile.TemporaryDirectory(prefix="vc-batterie-") as bac:
         faux = pathlib.Path(bac) / "depot"
         (faux / "scripts" / "methode").mkdir(parents=True)
@@ -825,6 +1008,158 @@ def _auto_test() -> int:
         else:
             print("  ✘ un corpus vide a engagé quelque chose")
             echecs += 1
+
+        # ⟨les arguments viennent des ATELIERS⟩ La porte lancait chaque garde NU, et dix gardes que
+        # la CI lance avec `--verifie` ECRIVENT dans ce mode au lieu de juger (#5481). Les cinq cas
+        # tiennent la regle ET ses bords : une seule forme se rejoue, tout le reste se lance nu.
+        ateliers = pathlib.Path(bac) / "ateliers"
+        (ateliers / ".github" / "workflows").mkdir(parents=True)
+        (ateliers / ".github" / "workflows" / "x.yml").write_text(
+            textwrap.dedent("""
+                jobs:
+                  a:
+                    steps:
+                      - run: python3 scripts/methode/declarant.py --verifie
+                      - run: python3 scripts/methode/nu.py
+                      - run: python3 scripts/methode/deux.py --verifie
+                      - run: python3 scripts/methode/deux.py
+                      - run: python3 scripts/methode/auto.py --auto-test
+                      - run: python3 scripts/methode/shell.py "${CORPS}"
+                      - run: ruff check scripts icone
+            """),
+            encoding="utf-8",
+        )
+        derives = arguments_des_ateliers(ateliers)
+        for libelle, garde, attendu in (
+            ("une forme unique se rejoue", "declarant.py", ["--verifie"]),
+            ("un garde que la CI lance nu le reste", "nu.py", None),
+            ("deux formes : la porte ne choisit pas", "deux.py", None),
+            ("un auto-test n est pas un emploi", "auto.py", None),
+            ("une variable de shell ne se rejoue pas", "shell.py", None),
+        ):
+            obtenu = derives.get(f"scripts/methode/{garde}")
+            bon = obtenu == attendu
+            print(f"  {'✔' if bon else '✘'} arguments des ateliers : {libelle}")
+            if not bon:
+                echecs += 1
+                print(f"      {garde} : attendu {attendu}, obtenu {obtenu}")
+
+        attendu_outils = [("ruff check", ["ruff", "check", "scripts", "icone"])]
+        obtenu_outils = outils_des_ateliers(ateliers)
+        bon = obtenu_outils == attendu_outils
+        print(f"  {'✔' if bon else '✘'} un outil et SES dossiers se derivent de l atelier")
+        if not bon:
+            echecs += 1
+            print(f"      attendu {attendu_outils}, obtenu {obtenu_outils}")
+
+        # ⟨de bout en bout, et dans les deux sens⟩ Le garde ci-dessous REFUSE avec `--verifie` et se
+        # tait sans lui : c est le comportement exact des dix gardes ecrivains. Un seul des deux cas
+        # passerait par une porte qui lancerait toujours nu, ou toujours avec les arguments.
+        bout = pathlib.Path(bac) / "bout"
+        (bout / "scripts" / "methode").mkdir(parents=True)
+        (bout / "scripts" / "adr").mkdir(parents=True)
+        (bout / ".github" / "workflows").mkdir(parents=True)
+        (bout / "scripts" / "methode" / "sensible.py").write_text(
+            textwrap.dedent("""
+                import sys
+
+                CONTRAT = {"geste": "x", "population": "y", "dispositif": "invariant",
+                           "seuil": "(sans objet)", "temoin": "t", "decision": "d"}
+
+                if "--verifie" in sys.argv:
+                    print("REFUS : la matrice est perimee")
+                    raise SystemExit(1)
+                print("regeneree")
+            """),
+            encoding="utf-8",
+        )
+        (bout / "lu.md").write_text("socle\n", encoding="utf-8")
+        # ⟨l outil se JOUE, il ne se derive pas seulement⟩ Sans ce fichier mal formate, retirer la
+        # boucle des outils ne tuerait aucun cas : elle serait decorative.
+        (bout / "scripts" / "mal_formate.py").write_text("x = [1,2,\n  3]\n", encoding="utf-8")
+        atelier = bout / ".github" / "workflows" / "x.yml"
+        atelier.write_text(
+            "jobs:\n  a:\n    steps:\n      - run: python3 scripts/methode/sensible.py --verifie\n",
+            encoding="utf-8",
+        )
+        for commande in (
+            ["init", "-q"],
+            ["add", "."],
+            ["-c", "user.name=T", "-c", "user.email=t@example.invalid", "commit", "-qm", "socle"],
+        ):
+            subprocess.run(["git", "-C", str(bout), *commande], check=True)
+        (bout / "lu.md").write_text("socle\nune ligne de plus\n", encoding="utf-8")
+
+        # ⟨deux citations⟩ La liste ENGAGE et la ligne du lancement doivent TOUTES DEUX porter les
+        # arguments : sans cela, la liste invite a copier une commande que la porte ne joue pas.
+        for libelle, avec_atelier, code_attendu in (
+            (
+                "l atelier le lance avec `--verifie` : la porte REFUSE, et le dit aux deux endroits",
+                True,
+                1,
+            ),
+            ("sans atelier, le meme garde est lance nu et se tait", False, 0),
+        ):
+            if avec_atelier:
+                atelier.write_text(
+                    "jobs:\n  a:\n    steps:\n      - run: python3 scripts/methode/sensible.py"
+                    " --verifie\n      - run: ruff format --check scripts\n",
+                    encoding="utf-8",
+                )
+            else:
+                atelier.write_text("jobs:\n  a:\n    steps: []\n", encoding="utf-8")
+            tampon = _io.StringIO()
+            with _ctx.redirect_stdout(tampon):
+                code = rendre(contre="HEAD", lance=True, racine=bout)
+            rendu = tampon.getvalue()
+            # ⟨deux assertions, pas un compte⟩ Un compte se satisfait de n importe quelle
+            # occurrence : la premiere ecriture comptait `sensible.py --verifie` deux fois et
+            # survivait a la mutation qui cesse de PASSER les arguments, parce qu un refus de
+            # `ruff` dans la meme fixture rendait deja le code attendu. On nomme donc les deux
+            # endroits qui doivent le dire.
+            liste = f"    python3 scripts/methode/sensible.py{' --verifie' if avec_atelier else ''}"
+            lance_ainsi = f"  {'✘' if avec_atelier else '✔'} scripts/methode/sensible.py"
+            lance_ainsi += " --verifie" if avec_atelier else ""
+            bon = code == code_attendu and liste in rendu and lance_ainsi in rendu
+            print(f"  {'✔' if bon else '✘'} {libelle}")
+            if not bon:
+                echecs += 1
+                print(f"      code={code} attendu={code_attendu} sortie={rendu[-300:]!r}")
+            if avec_atelier:
+                # ⟨la POSITION est le defaut qu on ferme⟩ Ce qui reste a lancer etait annonce
+                # AU-DESSUS de la ligne de verdict, et un lecteur qui descend jusqu au resume
+                # croyait avoir tout vu.
+                place = rendu.find("RESTE A LANCER") > rendu.find(" joue(s), ") > -1
+                print(f"  {'✔' if place else '✘'} ce qui reste est dit SOUS la ligne de verdict")
+                if not place:
+                    echecs += 1
+
+            if avec_atelier:
+                joue = "✘ ruff format --check" in rendu
+                print(f"  {'✔' if joue else '✘'} l outil derive est JOUE, et son refus compte")
+                if not joue:
+                    echecs += 1
+                    print(
+                        "      ruff absent de l interprete : posez le `.venv` du worktree"
+                        if "absent de l interprete" in rendu
+                        else f"      sortie={rendu[-300:]!r}"
+                    )
+
+        # Et ce que la queue nomme, dans les deux sens : une ADR engage une classe Java, un texte non.
+        for diff, doit, libelle in (
+            (
+                ["dev-docs/decisions/9999-x.md"],
+                True,
+                "une ADR fait nommer la classe Java non jouee",
+            ),
+            (["notes.txt"], False, "un diff sans prose jugee ne nomme aucune classe"),
+        ):
+            lignes = "\n".join(reste_a_lancer(diff, [], None))
+            bon = ("./mvnw" in lignes) is doit and "verifie_titre_pr.py" in lignes
+            print(f"  {'✔' if bon else '✘'} {libelle}")
+            if not bon:
+                echecs += 1
+                print(f"      {lignes!r}")
 
     # ⟨les trois issues d un lancement⟩ La boucle qui les distingue n avait AUCUN cas : elle vivait
     # dans `rendre`, derriere un `subprocess`. Les deux premiers cas rougissent sur le code d avant.
@@ -1043,7 +1378,8 @@ def _auto_test() -> int:
             print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
             echecs += 1
 
-    print("\n30 cas : porte, bord, fichiers neufs, aiguillage, interprète et refus.")
+    joues = sum(1 for ligne in dits if ligne.startswith(("  ✔", "  ✘")))
+    print(f"\n{joues} cas : porte, bord, fichiers neufs, aiguillage, interprète et refus.")
     return 1 if echecs else 0
 
 
