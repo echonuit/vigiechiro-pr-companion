@@ -480,9 +480,19 @@ def cas_d_auto_test() -> tuple:
     plus de `verifie`, ils en recoivent un. C est ce que #5216 demandait sous « les 20 definitions
     locales sont UNE ».
 
-    SON NOM PORTE « auto » ET « test », ET CE N EST PAS UN ORNEMENT. Les bancs de mutation epargnent
-    toute fonction dont le nom porte ces deux mots, parce que neutraliser la machinerie d un
-    auto-test le fait echouer trivialement au lieu de prouver qu il a cesse de detecter. `verifie`
+    SON NOM PORTE « auto » ET « test », ET CE N EST PAS UN ORNEMENT. Neutraliser la machinerie d un
+    auto-test le fait echouer trivialement au lieu de prouver qu il a cesse de detecter, et les trois
+    bancs de mutation l epargnent - mais pas de la meme facon, et ce paragraphe l a longtemps tu :
+
+    - le banc de methode, `scripts/methode/temoins-de-methode-non-decoratifs.py`, et celui de CI,
+      `.github/scripts/temoins_de_ci_non_decoratifs.py`, epargnent tout nom portant ces deux mots,
+      par MOTIF ;
+    - `scripts/adr/verifie_temoins_non_decoratifs.py` l epargne par son NOM EXACT, depuis #5499. Le
+      motif y protegerait aussi `auto_test_rougit` et `porte_son_auto_test`, qui sont la detection
+      de ce banc-la. Jusqu a #5499 il ne l epargnait pas du tout, et trois gardes plantaient sur le
+      depaquetage de cette fabrique : la phrase « les bancs epargnent » etait vraie de deux sur trois.
+
+    `verifie`
     etait jusqu ici une fonction IMBRIQUEE, donc hors des globals et hors d atteinte ; extraite, elle
     devenait un import de module, donc neutralisee, et les seize gardes passaient de « rougit
     proprement » a « plante avant d assertir ». Mesure faite sur trois d entre eux avant et apres.
