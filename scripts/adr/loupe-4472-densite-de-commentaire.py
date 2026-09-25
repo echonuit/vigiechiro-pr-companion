@@ -32,7 +32,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, RACINES_ANCREES, loupe, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, RACINES_ANCREES, cas_d_auto_test, loupe, sort_si_contrat_demande
 from _commun.arbre import LecteurAbsent, arbre, noeuds_de_type
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
@@ -181,7 +181,16 @@ def methodes(racines=None) -> list[tuple[float, str, int, int]]:
 def _auto_test() -> int:
     import tempfile
 
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as d:
         r = pathlib.Path(d)
 
@@ -196,14 +205,18 @@ def _auto_test() -> int:
             + "\n}\n"
         )
         c = classes([r])
-        cas.append(
-            ("la densite d une classe se mesure", len(c) == 1 and c[0][2] == 30 and c[0][3] == 26)
+        cas_de(
+            "la densite d une classe se mesure",
+            lambda: len(c) == 1 and c[0][2] == 30 and c[0][3] == 26,
         )
 
         # LE PLANCHER, et c est ce qui rend la loupe lisible : un port d une methode plafonne a
         # 300 % quoi qu on y fasse, et sans lui il trone en tete a la place des vrais cas.
         pose("/// Un contrat.\n/// Sur deux lignes.\ninterface B {\n    void f();\n}\n")
-        cas.append(("un type sous le plancher est ignore", classes([r]) == []))
+        cas_de(
+            "un type sous le plancher est ignore",
+            lambda: classes([r]) == [],
+        )
 
         # Une methode : sa javadoc PLUS les `//` de son corps, sur les lignes de son corps.
         pose(
@@ -214,9 +227,18 @@ def _auto_test() -> int:
             "    }\n}\n"
         )
         m = methodes([r])
-        cas.append(("la javadoc et le corps comptent ensemble", len(m) == 1 and m[0][2] == 3))
-        cas.append(("le denominateur est le corps seul", m[0][3] == 5))
-        cas.append(("la methode est nommee", "f()" in m[0][1]))
+        cas_de(
+            "la javadoc et le corps comptent ensemble",
+            lambda: len(m) == 1 and m[0][2] == 3,
+        )
+        cas_de(
+            "le denominateur est le corps seul",
+            lambda: m[0][3] == 5,
+        )
+        cas_de(
+            "la methode est nommee",
+            lambda: "f()" in m[0][1],
+        )
 
         # LA borne qui distingue les deux lectures : un CHAMP surmonte de javadoc ne doit pas
         # passer pour une methode. Sans elle, chaque champ documente serait un faux positif.
@@ -225,7 +247,10 @@ def _auto_test() -> int:
             + "\n".join(f"    private int y{i} = {i};" for i in range(6))
             + "\n}\n"
         )
-        cas.append(("un champ n est pas une methode", methodes([r]) == []))
+        cas_de(
+            "un champ n est pas une methode",
+            lambda: methodes([r]) == [],
+        )
 
         # Une methode sans commentaire n a pas de densite a montrer.
         pose(
@@ -233,7 +258,10 @@ def _auto_test() -> int:
             + "\n".join(f"        int v{i} = {i};" for i in range(6))
             + "\n    }\n}\n"
         )
-        cas.append(("une methode sans commentaire ne sort pas", methodes([r]) == []))
+        cas_de(
+            "une methode sans commentaire ne sort pas",
+            lambda: methodes([r]) == [],
+        )
 
         # LES TROIS DEFAUTS DE L EQUILIBRAGE, tous rencontres sur le corpus reel, tous corriges
         # par #5430. Chacun donnait une densite calculee sur un corps qui n existe pas.
@@ -254,8 +282,14 @@ def _auto_test() -> int:
             + "\n    }\n}\n"
         )
         m = methodes([r])
-        cas.append(("une accolade dans une chaine n ouvre pas un bloc", len(m) == 2))
-        cas.append(("et la methode suivante n est pas avalee", all(e[3] <= 6 for e in m)))
+        cas_de(
+            "une accolade dans une chaine n ouvre pas un bloc",
+            lambda: len(m) == 2,
+        )
+        cas_de(
+            "et la methode suivante n est pas avalee",
+            lambda: all(e[3] <= 6 for e in m),
+        )
 
         # 2. LA SUITE D UNE SIGNATURE n est pas du corps. La lecture par motif comptait la ligne
         # de continuation dans le denominateur : 166 methodes du depot en etaient affectees, et
@@ -268,7 +302,10 @@ def _auto_test() -> int:
             + "\n    }\n}\n"
         )
         m = methodes([r])
-        cas.append(("la suite d une signature n est pas du corps", len(m) == 1 and m[0][3] == 5))
+        cas_de(
+            "la suite d une signature n est pas du corps",
+            lambda: len(m) == 1 and m[0][3] == 5,
+        )
 
         # 3. UNE ANNOTATION SUR PLUSIEURS LIGNES ne coupe pas la remontee vers la doc-comment. La
         # version d avant s arretait sur la ligne de continuation, qui ne ressemble ni a une
@@ -282,20 +319,18 @@ def _auto_test() -> int:
             + "\n    }\n}\n"
         )
         m = methodes([r])
-        cas.append(
-            ("une annotation sur deux lignes ne coupe pas la doc", len(m) == 1 and m[0][2] == 2)
+        cas_de(
+            "une annotation sur deux lignes ne coupe pas la doc",
+            lambda: len(m) == 1 and m[0][2] == 2,
         )
 
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
+    if echecs():
         print(
-            f"\n{len(rates)} cas en échec : la loupe ne mesure pas ce qu'elle annonce.",
+            "\nDes cas en échec : la loupe ne mesure pas ce qu'elle annonce.",
             file=sys.stderr,
         )
         return 1
-    print(f"\n{len(cas)} cas : la loupe mesure les deux densités et ignore ce qui n'en a pas.")
+    print(f"\n{joues[0]} cas : la loupe mesure les deux densités et ignore ce qui n'en a pas.")
     return 0
 
 

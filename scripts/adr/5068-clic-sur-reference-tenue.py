@@ -27,7 +27,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import TESTS_ANCRES, rapporte, sort_si_contrat_demande
+from _commun import TESTS_ANCRES, cas_d_auto_test, rapporte, sort_si_contrat_demande
 from _commun.arbre import LecteurAbsent, arbre, arguments, noeuds_de_type, zones_illisibles
 
 ADR = "5068"
@@ -148,7 +148,16 @@ def non_lus(racine: pathlib.Path = TESTS_ANCRES) -> list[str]:
 def _autoTest() -> int:
     import tempfile
 
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as brut:
         r = pathlib.Path(brut)
 
@@ -158,14 +167,20 @@ def _autoTest() -> int:
             "        robot.clickOn(carte);\n    }\n}\n",
             encoding="utf-8",
         )
-        cas.append(("un noeud deja resolu est vu", suspects(r) == ["A.java:4"]))
+        cas_de(
+            "un noeud deja resolu est vu",
+            lambda: suspects(r) == ["A.java:4"],
+        )
 
         # NEGATIF 1 : un selecteur litteral se RESOUT au moment du clic.
         (r / "B.java").write_text(
             'class B {\n    void cas() {\n        robot.clickOn("#champCode");\n    }\n}\n',
             encoding="utf-8",
         )
-        cas.append(("un selecteur litteral ne compte pas", "B.java:3" not in suspects(r)))
+        cas_de(
+            "un selecteur litteral ne compte pas",
+            lambda: "B.java:3" not in suspects(r),
+        )
 
         # NEGATIF 2 : une constante String est un selecteur sous un autre nom. Elle a fait
         # surcompter trois sites lors de la premiere mesure de #4804.
@@ -174,7 +189,10 @@ def _autoTest() -> int:
             "        robot.clickOn(BOUTON);\n    }\n}\n",
             encoding="utf-8",
         )
-        cas.append(("une constante String ne compte pas", "C.java:4" not in suspects(r)))
+        cas_de(
+            "une constante String ne compte pas",
+            lambda: "C.java:4" not in suspects(r),
+        )
 
         # NEGATIF 3 : une CITATION en commentaire n est pas un appel. Elle en a fait surcompter un.
         (r / "D.java").write_text(
@@ -182,7 +200,10 @@ def _autoTest() -> int:
             "    void cas() {}\n}\n",
             encoding="utf-8",
         )
-        cas.append(("une citation en commentaire ne compte pas", "D.java:2" not in suspects(r)))
+        cas_de(
+            "une citation en commentaire ne compte pas",
+            lambda: "D.java:2" not in suspects(r),
+        )
 
         # L aide partagee est exemptee : elle EST le geste commun sur un noeud en main.
         (r / "GesteVisible.java").write_text(
@@ -190,11 +211,9 @@ def _autoTest() -> int:
             "        robot.clickOn(cible);\n    }\n}\n",
             encoding="utf-8",
         )
-        cas.append(
-            (
-                "l aide partagee est exemptee",
-                not any(s.startswith("GesteVisible") for s in suspects(r)),
-            )
+        cas_de(
+            "l aide partagee est exemptee",
+            lambda: not any(s.startswith("GesteVisible") for s in suspects(r)),
         )
 
         # LE temoin qui a manque au premier jet : un clic sur noeud AVEC un second argument. Une
@@ -204,7 +223,10 @@ def _autoTest() -> int:
             "class E {\n    void cas() {\n        robot.clickOn(carte, MouseButton.SECONDARY);\n    }\n}\n",
             encoding="utf-8",
         )
-        cas.append(("un second argument ne soustrait pas le site", "E.java:3" in suspects(r)))
+        cas_de(
+            "un second argument ne soustrait pas le site",
+            lambda: "E.java:3" in suspects(r),
+        )
 
         # Et le compte tient sur plusieurs sites d un meme fichier.
         (r / "A.java").write_text(
@@ -214,11 +236,9 @@ def _autoTest() -> int:
         )
         # L assertion porte sur le SEUL fichier vise : les cas partagent un dossier jetable, et
         # comparer la liste entiere ferait rougir ce temoin des qu un voisin s ajoute.
-        cas.append(
-            (
-                "deux sites d un meme fichier comptent deux fois",
-                [s for s in suspects(r) if s.startswith("A.java")] == ["A.java:3", "A.java:4"],
-            )
+        cas_de(
+            "deux sites d un meme fichier comptent deux fois",
+            lambda: [s for s in suspects(r) if s.startswith("A.java")] == ["A.java:3", "A.java:4"],
         )
 
         # LA CONCATENATION, et c est le cas le plus important du lot. Le depot ecrit massivement
@@ -229,7 +249,10 @@ def _autoTest() -> int:
             'class P {\n    void cas() {\n        robot.clickOn("#" + ID_VALIDER);\n    }\n}\n',
             encoding="utf-8",
         )
-        cas.append(("une concatenation de selecteur ne compte pas", "P.java:3" not in suspects(r)))
+        cas_de(
+            "une concatenation de selecteur ne compte pas",
+            lambda: "P.java:3" not in suspects(r),
+        )
 
         # ET DANS L AUTRE ORDRE, que la lecture par `startswith` ne voyait pas : elle testait le
         # debut du TEXTE, donc `ID + "#"` lui echappait. La structure ne depend pas de l ordre.
@@ -237,7 +260,10 @@ def _autoTest() -> int:
             'class Q {\n    void cas() {\n        robot.clickOn(ID_VALIDER + "#");\n    }\n}\n',
             encoding="utf-8",
         )
-        cas.append(("dans l autre ordre non plus", "Q.java:3" not in suspects(r)))
+        cas_de(
+            "dans l autre ordre non plus",
+            lambda: "Q.java:3" not in suspects(r),
+        )
 
         # Une CHAINE qui cite l appel n est pas un appel.
         (r / "R.java").write_text(
@@ -246,8 +272,9 @@ def _autoTest() -> int:
             "    }\n}\n",
             encoding="utf-8",
         )
-        cas.append(
-            ("une chaine qui cite l appel n est pas un appel", "R.java:3" not in suspects(r))
+        cas_de(
+            "une chaine qui cite l appel n est pas un appel",
+            lambda: "R.java:3" not in suspects(r),
         )
 
         # UN APPEL SUR DEUX LIGNES. La lecture par motif s arretait a la fin de ligne, lisait un
@@ -258,7 +285,10 @@ def _autoTest() -> int:
             "                carteDejaResolue);\n    }\n}\n",
             encoding="utf-8",
         )
-        cas.append(("un appel sur deux lignes est lu entier", "S.java:3" in suspects(r)))
+        cas_de(
+            "un appel sur deux lignes est lu entier",
+            lambda: "S.java:3" in suspects(r),
+        )
 
         # ET LE CONTRASTE : un selecteur ecrit sur deux lignes ne compte toujours pas. Sans lui,
         # les trois negations ci-dessus passeraient sur un garde devenu muet.
@@ -267,19 +297,19 @@ def _autoTest() -> int:
             '                "#" + ID_VALIDER);\n    }\n}\n',
             encoding="utf-8",
         )
-        cas.append(("et un selecteur sur deux lignes ne compte pas", "T.java:3" not in suspects(r)))
+        cas_de(
+            "et un selecteur sur deux lignes ne compte pas",
+            lambda: "T.java:3" not in suspects(r),
+        )
 
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
+    if echecs():
         print(
-            f"\n{len(rates)} cas en échec : le cliquet ne tient pas ce qu'il annonce.",
+            "\nDes cas en échec : le cliquet ne tient pas ce qu'il annonce.",
             file=sys.stderr,
         )
         return 1
     print(
-        f"\n{len(cas)} cas : il voit un noeud tenu, et écarte les trois formes qui font surcompter."
+        f"\n{joues[0]} cas : il voit un noeud tenu, et écarte les trois formes qui font surcompter."
     )
     return 0
 

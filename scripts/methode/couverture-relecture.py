@@ -25,7 +25,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import RACINES_ANCREES, sort_si_contrat_demande
+from _commun import RACINES_ANCREES, cas_d_auto_test, sort_si_contrat_demande
 
 # Les chemins du manifeste sont relatifs a la RACINE, et non a l un des deux arbres Java : une cle
 # « fr/…/Machin.java » ne dirait pas de quel arbre elle vient, et un homonyme entre production et
@@ -206,7 +206,16 @@ def _auto_test() -> int:
     """
     import tempfile
 
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as d:
         r = pathlib.Path(d)
         production = r / "src" / "main" / "java"
@@ -216,11 +225,9 @@ def _auto_test() -> int:
         registre = r / "relus.txt"
 
         marque(["src/main/java/A.java"], r, registre)
-        cas.append(
-            (
-                "un .java du corpus entre au manifeste",
-                list(relus(registre)) == ["src/main/java/A.java"],
-            )
+        cas_de(
+            "un .java du corpus entre au manifeste",
+            lambda: list(relus(registre)) == ["src/main/java/A.java"],
         )
 
         # LE cas de #4527. Sans ce refus, la ligne entrait, aucun parcours ne la voyait, et le total
@@ -230,12 +237,13 @@ def _auto_test() -> int:
             refuse = False
         except SystemExit:
             refuse = True
-        cas.append(("un fichier hors corpus est refuse", refuse))
-        cas.append(
-            (
-                "et il n a rien laisse derriere lui",
-                list(relus(registre)) == ["src/main/java/A.java"],
-            )
+        cas_de(
+            "un fichier hors corpus est refuse",
+            lambda: refuse,
+        )
+        cas_de(
+            "et il n a rien laisse derriere lui",
+            lambda: list(relus(registre)) == ["src/main/java/A.java"],
         )
 
         # Le refus porte sur l APPARTENANCE, pas sur le suffixe seul : un `.java` range ailleurs
@@ -246,7 +254,10 @@ def _auto_test() -> int:
             refuse_hors_arbre = False
         except SystemExit:
             refuse_hors_arbre = True
-        cas.append(("un .java hors des deux arbres est refuse", refuse_hors_arbre))
+        cas_de(
+            "un .java hors des deux arbres est refuse",
+            lambda: refuse_hors_arbre,
+        )
 
         # Un chemin qui n existe pas se refuse toujours, et pas pour la meme raison.
         try:
@@ -254,39 +265,50 @@ def _auto_test() -> int:
             refuse_absent = False
         except SystemExit:
             refuse_absent = True
-        cas.append(("un fichier introuvable est refuse", refuse_absent))
+        cas_de(
+            "un fichier introuvable est refuse",
+            lambda: refuse_absent,
+        )
 
         lus, _reste, perdues = etat(r, registre)
-        cas.append(
-            ("le fichier marque est compte relu", [c for _, c in lus] == ["src/main/java/A.java"])
+        cas_de(
+            "le fichier marque est compte relu",
+            lambda: [c for _, c in lus] == ["src/main/java/A.java"],
         )
-        cas.append(("et rien n est mort", perdues == []))
+        cas_de(
+            "et rien n est mort",
+            lambda: perdues == [],
+        )
 
         # L autre moitie : une entree qui ne designe plus rien. Elle arrive par une suppression, ou
         # par une edition a la main du manifeste - le refus ci-dessus ne ferme que la porte d entree.
         (production / "A.java").unlink()
         lus, _reste, perdues = etat(r, registre)
-        cas.append(
-            ("un fichier supprime laisse une entree morte", perdues == ["src/main/java/A.java"])
+        cas_de(
+            "un fichier supprime laisse une entree morte",
+            lambda: perdues == ["src/main/java/A.java"],
         )
-        cas.append(("et il ne compte plus parmi les relus", lus == []))
+        cas_de(
+            "et il ne compte plus parmi les relus",
+            lambda: lus == [],
+        )
 
         # Controle NEGATIF : un manifeste vide sur un corpus vide ne signale rien.
         vide = r / "vide.txt"
         vide.write_text("# rien\n", encoding="utf-8")
-        cas.append(("un manifeste vide ne rend aucune morte", etat(r, vide)[2] == []))
+        cas_de(
+            "un manifeste vide ne rend aucune morte",
+            lambda: etat(r, vide)[2] == [],
+        )
 
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
+    if echecs():
         print(
-            f"\n{len(rates)} cas en échec : le compteur ne tient pas ce qu'il annonce.",
+            "\nDes cas en échec : le compteur ne tient pas ce qu'il annonce.",
             file=sys.stderr,
         )
         return 1
     print(
-        f"\n{len(cas)} cas : le manifeste refuse ce qu'il ne saurait garder, et signale ce qu'il a perdu."
+        f"\n{joues[0]} cas : le manifeste refuse ce qu'il ne saurait garder, et signale ce qu'il a perdu."
     )
     return 0
 

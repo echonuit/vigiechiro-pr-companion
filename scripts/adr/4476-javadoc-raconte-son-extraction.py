@@ -35,7 +35,13 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, RACINES_ANCREES, rapporte, sort_si_contrat_demande
+from _commun import (
+    RACINE_DEPOT,
+    RACINES_ANCREES,
+    cas_d_auto_test,
+    rapporte,
+    sort_si_contrat_demande,
+)
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
 ADR = "4476"
@@ -107,7 +113,16 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
 def _auto_test() -> int:
     import tempfile
 
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as d:
         r = pathlib.Path(d)
 
@@ -117,14 +132,23 @@ def _auto_test() -> int:
             encoding="utf-8",
         )
         vus = suspects(r)
-        cas.append(("le recit d une extraction est vu", len(vus) == 1))
-        cas.append(("et le suspect cite la phrase", "plafond de taille" in vus[0]))
+        cas_de(
+            "le recit d une extraction est vu",
+            lambda: len(vus) == 1,
+        )
+        cas_de(
+            "et le suspect cite la phrase",
+            lambda: "plafond de taille" in vus[0],
+        )
 
         # Le geste attendu : dire ce que la classe fait. Le cliquet doit alors se taire.
         (r / "A.java").write_text(
             "/// Libelles du bandeau de qualification.\nclass A {}\n", encoding="utf-8"
         )
-        cas.append(("une javadoc qui contracte ne l est pas", suspects(r) == []))
+        cas_de(
+            "une javadoc qui contracte ne l est pas",
+            lambda: suspects(r) == [],
+        )
 
         # LA borne qui justifie la proximite : un bloc peut nommer l outil pour dire ou en est la
         # classe AUJOURD HUI. Sans la contrainte de phrase, ces blocs-la seraient comptes a tort, et
@@ -137,32 +161,38 @@ def _auto_test() -> int:
             "class B {}\n",
             encoding="utf-8",
         )
-        cas.append(("une contrainte du jour n est pas un recit", suspects(r) == []))
+        cas_de(
+            "une contrainte du jour n est pas un recit",
+            lambda: suspects(r) == [],
+        )
 
         # Et la borne inverse : le verbe seul, sans outil, decrit souvent un geste du domaine.
         (r / "C.java").write_text(
             "/// Le taxon extrait de la ligne Tadarida.\nclass C {}\n", encoding="utf-8"
         )
-        cas.append(("un verbe sans outil ne suffit pas", suspects(r) == []))
+        cas_de(
+            "un verbe sans outil ne suffit pas",
+            lambda: suspects(r) == [],
+        )
 
         # Un outil seul non plus : le depot cite PMD dans des blocs qui ne racontent rien.
         (r / "D.java").write_text(
             "/// Exempte de `ExcessiveParameterList` par son annotation.\nclass D {}\n",
             encoding="utf-8",
         )
-        cas.append(("un outil sans verbe ne suffit pas", suspects(r) == []))
+        cas_de(
+            "un outil sans verbe ne suffit pas",
+            lambda: suspects(r) == [],
+        )
 
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
+    if echecs():
         print(
-            f"\n{len(rates)} cas en échec : le cliquet ne tient pas ce qu'il annonce.",
+            "\nDes cas en échec : le cliquet ne tient pas ce qu'il annonce.",
             file=sys.stderr,
         )
         return 1
     print(
-        f"\n{len(cas)} cas : le cliquet voit le récit d'une extraction, et pas la contrainte du jour."
+        f"\n{joues[0]} cas : le cliquet voit le récit d'une extraction, et pas la contrainte du jour."
     )
     return 0
 

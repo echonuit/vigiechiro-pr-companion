@@ -34,7 +34,13 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, RACINES_ANCREES, rapporte, sort_si_contrat_demande
+from _commun import (
+    RACINE_DEPOT,
+    RACINES_ANCREES,
+    cas_d_auto_test,
+    rapporte,
+    sort_si_contrat_demande,
+)
 from _commun.arbre import (
     LecteurAbsent,
     arbre,
@@ -149,7 +155,16 @@ def non_lus(racine: pathlib.Path | None = None) -> list[str]:
 def _auto_test() -> int:
     import tempfile
 
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as d:
         r = pathlib.Path(d)
 
@@ -161,18 +176,30 @@ def _auto_test() -> int:
             return "class A {\n    void f() {\n" + lignes + "\n        int x = 1;\n    }\n}\n"
 
         pose(corps(SEUIL))
-        cas.append(("un bloc au seuil passe", suspects(r) == []))
+        cas_de(
+            "un bloc au seuil passe",
+            lambda: suspects(r) == [],
+        )
 
         pose(corps(SEUIL + 3))
         vus = suspects(r)
-        cas.append((f"un bloc de {SEUIL + 3} lignes coute trois", len(vus) == 3))
-        cas.append(("le suspect dit la taille du bloc", f"bloc de {SEUIL + 3}" in vus[0]))
+        cas_de(
+            f"un bloc de {SEUIL + 3} lignes coute trois",
+            lambda: len(vus) == 3,
+        )
+        cas_de(
+            "le suspect dit la taille du bloc",
+            lambda: f"bloc de {SEUIL + 3}" in vus[0],
+        )
 
         # LA borne du dispositif : le MEME bloc, entre les membres d une classe, ne coute rien.
         # C est ce qui distingue « le corps est obscur » de « cette section a besoin d un titre ».
         entete = "\n".join(f"    // Ligne {i}." for i in range(SEUIL + 3))
         pose("class A {\n" + entete + "\n    private int x = 1;\n}\n")
-        cas.append(("le meme bloc hors corps ne coute rien", suspects(r) == []))
+        cas_de(
+            "le meme bloc hors corps ne coute rien",
+            lambda: suspects(r) == [],
+        )
 
         # LES DEUX CAS QUE LE COMPTAGE D ACCOLADES CLASSAIT FAUX, et la raison d avoir migre.
         # Chacun isole SA cause : les enchainer les laisserait se compenser, et le temoin passerait
@@ -183,8 +210,9 @@ def _auto_test() -> int:
         # bloc ; la structure repond « hors corps ».
         imbrique = "\n".join(f"        // Ligne {i}." for i in range(SEUIL + 3))
         pose("class A {\n    class B {\n" + imbrique + "\n        private int x = 1;\n    }\n}\n")
-        cas.append(
-            ("un bloc entre les membres d une classe imbriquee ne coute rien", suspects(r) == [])
+        cas_de(
+            "un bloc entre les membres d une classe imbriquee ne coute rien",
+            lambda: suspects(r) == [],
         )
 
         # Second : une accolade fermante posee dans une CHAINE fermait un bloc qui n etait pas
@@ -195,7 +223,10 @@ def _auto_test() -> int:
             + apres
             + "\n        int x = 1;\n    }\n}\n"
         )
-        cas.append(("un bloc apres une accolade en chaine coute toujours", len(suspects(r)) == 3))
+        cas_de(
+            "un bloc apres une accolade en chaine coute toujours",
+            lambda: len(suspects(r)) == 3,
+        )
 
         # Le garde doit VOIR ce qu il n a pas lu. La borne exacte de la grammaire epinglee est le
         # motif de deconstruction d enregistrement dont le type est QUALIFIE : `case B.P(int x)`
@@ -209,23 +240,38 @@ def _auto_test() -> int:
             '            case B.Point(int x) -> "ok";\n            default -> "";\n'
             "        };\n    }\n}\n"
         )
-        cas.append(("une zone que la grammaire ne sait pas lire est NOMMEE", non_lus(r) != []))
-        cas.append(("et le fichier reste lisible autour", suspects(r) == []))
+        cas_de(
+            "une zone que la grammaire ne sait pas lire est NOMMEE",
+            lambda: non_lus(r) != [],
+        )
+        cas_de(
+            "et le fichier reste lisible autour",
+            lambda: suspects(r) == [],
+        )
 
         # Un bloc a la profondeur 0, avant la classe (licence, en-tete de fichier), non plus.
         pose("\n".join(f"// Ligne {i}." for i in range(SEUIL + 3)) + "\nclass A {}\n")
-        cas.append(("un en-tete de fichier ne coute rien", suspects(r) == []))
+        cas_de(
+            "un en-tete de fichier ne coute rien",
+            lambda: suspects(r) == [],
+        )
 
         # La javadoc n est PAS de ce compteur : elle a le sien, et les meler laisserait l un
         # compenser l autre.
         javadoc = "\n".join(f"        /// Ligne {i}." for i in range(SEUIL + 3))
         pose("class A {\n    void f() {\n" + javadoc + "\n        int x = 1;\n    }\n}\n")
-        cas.append(("la javadoc n entre pas dans ce compte", suspects(r) == []))
+        cas_de(
+            "la javadoc n entre pas dans ce compte",
+            lambda: suspects(r) == [],
+        )
 
         # Une ligne `//` vide aere, elle ne dit rien : elle ne doit pas allonger le bloc.
         vides = "\n".join(f"        // Ligne {i}.\n        //" for i in range(SEUIL))
         pose("class A {\n    void f() {\n" + vides + "\n        int x = 1;\n    }\n}\n")
-        cas.append(("les lignes vides n allongent pas le bloc", suspects(r) == []))
+        cas_de(
+            "les lignes vides n allongent pas le bloc",
+            lambda: suspects(r) == [],
+        )
 
         # Deux blocs d un meme corps cumulent : le grain est la ligne, comme pour la javadoc.
         deux = corps(SEUIL + 3).replace(
@@ -235,11 +281,18 @@ def _auto_test() -> int:
             + "\n        int y = 2;",
         )
         pose(deux)
-        cas.append(("deux blocs cumulent leur dette", len(suspects(r)) == 5))
+        cas_de(
+            "deux blocs cumulent leur dette",
+            lambda: len(suspects(r)) == 5,
+        )
 
     # Le temoin de la grammaire elle-meme : ce sont les noms de noeuds dont ce garde depend, et un
     # relevement qui les renommerait doit rougir ICI plutot que vider la population en silence.
-    cas += [(f"grammaire : {nom}", ok) for nom, ok in verifie_grammaire()]
+    # `verifie_grammaire()` rend des couples DEJA evalues : les differer n apporte rien ici, et
+    # le declarer vaut mieux que de le laisser croire. Ce que la conversion gagne sur cette ligne
+    # est l impression et la marque, plus la boucle qui les recopiait.
+    for nom, ok in verifie_grammaire():
+        cas_de(f"grammaire : {nom}", lambda ok=ok: ok)
 
     # L ABSENCE DU LECTEUR, simulee et non provoquee. Desinstaller le module pour eprouver ce cas
     # casserait l environnement de qui lance l auto-test, et un cas qui exige une manipulation
@@ -268,32 +321,37 @@ def _auto_test() -> int:
             sys.modules["tree_sitter_language_pack"] = garde
         module_arbre._analyseur.cache_clear()
 
-    cas.append(("sans le lecteur, une LecteurAbsent est levee, pas une trace nue", leve))
-    cas.append(
-        ("le refus NOMME la distribution qui manque", "tree_sitter_language_pack" in message)
+    cas_de(
+        "sans le lecteur, une LecteurAbsent est levee, pas une trace nue",
+        lambda: leve,
     )
-    cas.append(("le refus dit QUOI FAIRE", "pip install --group gardes" in message))
-    cas.append(("et il avertit du piege du python qui lance", "MEME python" in message))
+    cas_de(
+        "le refus NOMME la distribution qui manque",
+        lambda: "tree_sitter_language_pack" in message,
+    )
+    cas_de(
+        "le refus dit QUOI FAIRE",
+        lambda: "pip install --group gardes" in message,
+    )
+    cas_de(
+        "et il avertit du piege du python qui lance",
+        lambda: "MEME python" in message,
+    )
 
     # Le lecteur est bien revenu : sans ce controle, un echec de restauration ferait passer tous les
     # cas suivants pour verts dans un processus qui ne sait plus lire.
-    cas.append(
-        (
-            "le lecteur est restaure apres la simulation",
-            module_arbre.arbre(b"class A {}") is not None,
-        )
+    cas_de(
+        "le lecteur est restaure apres la simulation",
+        lambda: module_arbre.arbre(b"class A {}") is not None,
     )
 
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
+    if echecs():
         print(
-            f"\n{len(rates)} cas en échec : le cliquet ne compte pas ce qu'il annonce.",
+            "\nDes cas en échec : le cliquet ne compte pas ce qu'il annonce.",
             file=sys.stderr,
         )
         return 1
-    print(f"\n{len(cas)} cas : le cliquet voit le débordement en corps, et laisse le reste.")
+    print(f"\n{joues[0]} cas : le cliquet voit le débordement en corps, et laisse le reste.")
     return 0
 
 

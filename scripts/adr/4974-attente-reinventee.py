@@ -29,7 +29,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import TESTS_ANCRES, rapporte, sort_si_contrat_demande
+from _commun import TESTS_ANCRES, cas_d_auto_test, rapporte, sort_si_contrat_demande
 from _commun.arbre import LecteurAbsent, arbre, noeuds_de_type, zones_illisibles
 
 ADR = "4974"
@@ -112,7 +112,16 @@ def non_lus(racine: pathlib.Path = RACINE) -> list[str]:
 def _autoTest() -> int:
     import tempfile
 
-    cas = []
+    # Les cas passent par le fonds (#5461) : leur expression est DIFFEREE, donc celle qui lève
+    # nomme son cas au lieu d'arrêter le témoin. La fabrique l'appelle AUSSITÔT, ce qui préserve
+    # l'ordre d'évaluation, plusieurs de ces auto-tests réécrivant leur fixture entre deux cas.
+    verifie, echecs = cas_d_auto_test()
+    joues = [0]
+
+    def cas_de(libelle, juger):
+        joues[0] += 1
+        verifie(libelle, juger, True)
+
     with tempfile.TemporaryDirectory() as brut:
         r = pathlib.Path(brut)
         sonde = "        WaitForAsyncUtils.waitFor(1, S, () -> vrai());\n"
@@ -122,11 +131,17 @@ def _autoTest() -> int:
             "class A {\n    private void ouvrirLaFiche() {\n" + sonde + "    }\n}\n",
             encoding="utf-8",
         )
-        cas.append(("un nom quelconque est vu", suspects(r) == ["A.java:3"]))
+        cas_de(
+            "un nom quelconque est vu",
+            lambda: suspects(r) == ["A.java:3"],
+        )
         (r / "A.java").write_text(
             "class A {\n    private void patienter() {\n" + sonde + "    }\n}\n", encoding="utf-8"
         )
-        cas.append(("renommer ne soustrait pas", suspects(r) == ["A.java:3"]))
+        cas_de(
+            "renommer ne soustrait pas",
+            lambda: suspects(r) == ["A.java:3"],
+        )
 
         # LA population elargie par #4845 : une attente ecrite en clair dans un CAS DE TEST tait
         # exactement la meme chose. La restriction aux methodes privees ne tenait qu a la facon dont
@@ -134,7 +149,10 @@ def _autoTest() -> int:
         (r / "B.java").write_text(
             "class B {\n    @Test\n    void un_cas() {\n" + sonde + "    }\n}\n", encoding="utf-8"
         )
-        cas.append(("un cas de test compte aussi", "B.java:4" in suspects(r)))
+        cas_de(
+            "un cas de test compte aussi",
+            lambda: "B.java:4" in suspects(r),
+        )
 
         # LE temoin de #4997 : `waitForAsyncFx` est la meme dette sous un autre nom. Sans lui, le
         # garde ne comptait que `waitFor` et sept sites lui echappaient - le contournement par
@@ -144,7 +162,10 @@ def _autoTest() -> int:
             "        WaitForAsyncUtils.waitForAsyncFx(5_000, a);\n    }\n}\n",
             encoding="utf-8",
         )
-        cas.append(("waitForAsyncFx compte aussi", "F.java:3" in suspects(r)))
+        cas_de(
+            "waitForAsyncFx compte aussi",
+            lambda: "F.java:3" in suspects(r),
+        )
 
         # Le sens NEGATIF : une ligne de COMMENTAIRE qui cite l appel n est pas un appel. Sans ce
         # temoin, la javadoc d `AttenteAvantClic` expliquant pourquoi elle rattrape comptait comme
@@ -154,7 +175,10 @@ def _autoTest() -> int:
             "    void rien() {}\n}\n",
             encoding="utf-8",
         )
-        cas.append(("une citation en commentaire ne compte pas", "C.java:2" not in suspects(r)))
+        cas_de(
+            "une citation en commentaire ne compte pas",
+            lambda: "C.java:2" not in suspects(r),
+        )
 
         # Un sleep n attend aucune condition.
         (r / "D.java").write_text(
@@ -162,7 +186,10 @@ def _autoTest() -> int:
             "        WaitForAsyncUtils.sleep(350, MS);\n    }\n}\n",
             encoding="utf-8",
         )
-        cas.append(("un sleep n est pas une attente", "D.java:3" not in suspects(r)))
+        cas_de(
+            "un sleep n est pas une attente",
+            lambda: "D.java:3" not in suspects(r),
+        )
 
         # `waitForFxEvents` vide la file sans attendre de condition.
         (r / "E.java").write_text(
@@ -170,17 +197,18 @@ def _autoTest() -> int:
             "        WaitForAsyncUtils.waitForFxEvents();\n    }\n}\n",
             encoding="utf-8",
         )
-        cas.append(("waitForFxEvents n est pas une sonde", "E.java:3" not in suspects(r)))
+        cas_de(
+            "waitForFxEvents n est pas une sonde",
+            lambda: "E.java:3" not in suspects(r),
+        )
 
         # L aide partagee est exemptee, sinon le cliquet compterait le remede.
         (r / "Attente.java").write_text(
             "class Attente {\n    static void que() {\n" + sonde + "    }\n}\n", encoding="utf-8"
         )
-        cas.append(
-            (
-                "l aide partagee est exemptee",
-                not any(s.startswith("Attente.java") for s in suspects(r)),
-            )
+        cas_de(
+            "l aide partagee est exemptee",
+            lambda: not any(s.startswith("Attente.java") for s in suspects(r)),
         )
 
         # LES DEUX CAS QUE LA LECTURE PAR MOTIF RATAIT, et qui sont la raison de #5430. Mesures
@@ -194,8 +222,9 @@ def _autoTest() -> int:
             "    }\n}\n",
             encoding="utf-8",
         )
-        cas.append(
-            ("une chaine qui cite l appel n est pas un appel", "G.java:3" not in suspects(r))
+        cas_de(
+            "une chaine qui cite l appel n est pas un appel",
+            lambda: "G.java:3" not in suspects(r),
         )
 
         # La ligne MEDIANE d un commentaire de bloc ne porte ni `//`, ni `*`, ni `/*`. C est le
@@ -206,8 +235,9 @@ def _autoTest() -> int:
             "    void propre() {}\n}\n",
             encoding="utf-8",
         )
-        cas.append(
-            ("une ligne mediane de commentaire de bloc non plus", "H.java:4" not in suspects(r))
+        cas_de(
+            "une ligne mediane de commentaire de bloc non plus",
+            lambda: "H.java:4" not in suspects(r),
         )
 
         # ET LE CONTRASTE, sans lequel les deux cas ci-dessus passeraient sur un garde qui ne
@@ -215,18 +245,18 @@ def _autoTest() -> int:
         (r / "I.java").write_text(
             "class I {\n    void vrai() {\n" + sonde + "    }\n}\n", encoding="utf-8"
         )
-        cas.append(("et le vrai appel, lui, est toujours vu", "I.java:3" in suspects(r)))
+        cas_de(
+            "et le vrai appel, lui, est toujours vu",
+            lambda: "I.java:3" in suspects(r),
+        )
 
-    for nom, ok in cas:
-        print(f"  {'✔' if ok else '✘'} {nom}")
-    rates = [n for n, ok in cas if not ok]
-    if rates:
+    if echecs():
         print(
-            f"\n{len(rates)} cas en échec : le cliquet ne tient pas ce qu'il annonce.",
+            "\nDes cas en échec : le cliquet ne tient pas ce qu'il annonce.",
             file=sys.stderr,
         )
         return 1
-    print(f"\n{len(cas)} cas : il voit une attente hors de l'aide partagée, sous ses deux noms.")
+    print(f"\n{joues[0]} cas : il voit une attente hors de l'aide partagée, sous ses deux noms.")
     return 0
 
 
