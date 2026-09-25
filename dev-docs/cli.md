@@ -205,6 +205,12 @@ d'une fenêtre. Pour un incident, la sortie d'erreur indique le chemin des journ
 et invite à joindre le fichier `vigiechiro-*.log` le plus récent au signalement.
 Les refus métier et les erreurs d'arguments ne portent pas cette indication.
 
+Les appels en processus à `Cli.executer` passent par `StrategieExecutionCli` : elle migre la base,
+réserve le dossier si la commande écrit, puis exécute la commande. Les incidents et les refus de
+migration ou de verrou utilisent le même rendu et la même journalisation que ceux des commandes
+(#5506). Une base devenue illisible après la construction de l'injecteur rend ainsi le code `1`,
+un message et le chemin des journaux, sans pile sur le flux d'erreur fourni par l'appelant.
+
 ### Workspace surchargeable
 
 Comme l'IHM, la CLI travaille dans un **workspace** (qui contient la base `vigiechiro.db`). L'option
@@ -247,7 +253,7 @@ compris celles de la plateforme.
 L'application graphique **réserve** le dossier de travail pour toute sa durée (`VerrouWorkspace`,
 #2731) ; la CLI ne le demandait jamais et écrivait donc par-dessus, alors que la doc du verrou nomme
 elle-même le cas : « deux instances graphiques, **une IHM et une CLI**, ou une restauration pendant un
-import ». Depuis #3498, `Cli.migrerPuisExecuter` prend le verrou **par défaut**, pour toute la durée
+import ». Depuis #3498, `StrategieExecutionCli` prend le verrou **par défaut**, pour toute la durée
 de la commande. Un dossier déjà occupé donne un refus : code `2`, état intact.
 
 Une commande s'en dispense en portant l'interface marqueur `fr.univ_amu.iut.cli.LectureSeule`. **La

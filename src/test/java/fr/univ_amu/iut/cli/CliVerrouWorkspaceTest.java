@@ -79,6 +79,22 @@ class CliVerrouWorkspaceTest {
     }
 
     @Test
+    @DisplayName("#5506 : une migration sur un dossier occupé reste un refus, code 2")
+    void une_migration_est_refusee_sur_un_dossier_occupe() throws IOException {
+        try (Occupation ignore = new Occupation(workspace)) {
+            int code = cli.executer(new String[] {"lister-sites"}, sortie, erreur);
+
+            assertThat(code).isEqualTo(Cli.CODE_REFUS);
+            assertThat(capture.texteErreur())
+                    .startsWith("Refus :")
+                    .contains("déjà utilisé")
+                    .doesNotContain("Journaux :")
+                    .doesNotContain("at fr.univ_amu.iut");
+            assertThat(capture.texte()).isEmpty();
+        }
+    }
+
+    @Test
     @DisplayName("une commande qui ne fait que lire passe, même sur un dossier occupé")
     void une_commande_de_lecture_passe_sur_un_dossier_occupe() throws IOException {
         // Refuser une lecture coûterait plus que la protection ne rapporte : c'est déjà écrit dans
