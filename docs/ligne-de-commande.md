@@ -104,6 +104,11 @@ La différence entre `1` et `2` est celle qui compte : un refus (`2`) laisse vos
 comme elles étaient, alors qu'un échec (`1`) demande de regarder ce qui a été écrit avant de
 recommencer.
 
+Si un incident rend le code `1`, le message indique le dossier des journaux du workspace. Ouvrez-y
+le fichier `vigiechiro-*.log` le plus récent pour retrouver la trace et le joindre à un signalement.
+Le terminal ne montre pas la pile Java. Si le dossier de travail lui-même ne peut plus être résolu,
+la commande le dit ; le diagnostic initial reste affiché.
+
 ```bash
 if vigiechiro deposer --passage 3; then
     echo "déposé"

@@ -68,9 +68,27 @@ depuis que le postinst du dépôt a remplacé celui de jpackage.
 - **S11-13** · *hors-portée: une réponse en texte dans un terminal : le banc filme une scène JavaFX, pas un shell* · `./VigieChiroCompanion-<version>-linux-x86_64.AppImage --version` répond en texte dans
   un terminal.
 
+## Étape 5 · Retrouver une fiche et diagnostiquer un incident
+
+Sur le poste qui vient d'installer le paquet Debian, créer un workspace jetable avec
+`RECETTE_CLI=$(mktemp -d)`. Utiliser `vigiechiro --workspace "$RECETTE_CLI"` pour chaque commande
+ci-dessous ; supprimer ce dossier après la session. La première commande crée la base locale et
+charge le référentiel livré avec l'application.
+
+- **S11-14** · *hors-portée: la réponse est dans le terminal* · `vigiechiro --workspace "$RECETTE_CLI" lien-espece --code Pippip` rend le code 0 et écrit seulement l'URL PNA de la pipistrelle commune.
+- **S11-15** · *hors-portée: la réponse est dans le terminal* · `vigiechiro --workspace "$RECETTE_CLI" lien-espece --code inconnu` rend le code 2, explique que le taxon est inconnu sur stderr et ne donne aucune URL sur stdout.
+- **S11-16** · *hors-portée: la réponse est dans le terminal* · `vigiechiro --workspace "$RECETTE_CLI" lien-participation --passage 42` rend le code 2 et indique qu'aucune participation n'est liée au passage local.
+
+Pour éprouver le diagnostic, créer **un second** workspace jetable avec
+`RECETTE_INCIDENT=$(mktemp -d)`, puis y écrire une fausse base avec
+`printf 'ceci n est pas une base SQLite' > "$RECETTE_INCIDENT/vigiechiro.db"`.
+Ne jamais altérer le workspace de travail habituel.
+
+- **S11-17** · *hors-portée: la réponse et le journal sont hors de l'application* · `vigiechiro --workspace "$RECETTE_INCIDENT" lister-sites` rend le code 1. Le message sur stderr désigne `"$RECETTE_INCIDENT/logs"` sans afficher de pile Java ; le fichier `vigiechiro-*.log` le plus récent y porte la trace de l'incident.
+
 ## Ce que cette session ne prouve pas
 
 - **macOS** : la commande y est installée mais hors du `PATH` (#4088). Rien ici ne la concerne.
 - **Windows** : couvert par S9 (winget) et S10 (le poste Windows).
-- **Le contenu** des commandes : ce sont les E2E `bats` qui l'éprouvent, sur le lanceur livré. Cette
-  session vérifie qu'on peut les **atteindre**, pas ce qu'elles font.
+- Le contenu des autres commandes : les E2E `bats` l'éprouvent sur le lanceur livré. Les cases
+  S11-14 à S11-17 rejouent les nouveaux gestes de ce chantier sur un poste installé.
