@@ -168,12 +168,13 @@ e0dc73cbf498  src/main/java/fr/univ_amu/iut/bibliotheque/di/BibliothequeModule.j
 acf53781814d  src/main/java/fr/univ_amu/iut/bibliotheque/model/EntreeBiblio.java
 1ec6b6df5d22  src/main/java/fr/univ_amu/iut/bibliotheque/model/ExportBiblioSons.java
 eb709b57da4f  src/main/java/fr/univ_amu/iut/bibliotheque/model/ServiceBibliotheque.java
-0e693c4a8c19  src/main/java/fr/univ_amu/iut/cli/Cli.java
+a8621b6370d8  src/main/java/fr/univ_amu/iut/cli/Cli.java
 cef533cc30a1  src/main/java/fr/univ_amu/iut/cli/CouleurCli.java
 8931262df131  src/main/java/fr/univ_amu/iut/cli/FabriqueGuice.java
 4fa3471c5621  src/main/java/fr/univ_amu/iut/cli/FormatJson.java
 982f8b405ac9  src/main/java/fr/univ_amu/iut/cli/GesteAttenduCli.java
 e614e795bc57  src/main/java/fr/univ_amu/iut/cli/LectureSeule.java
+e3b0c44298fc  src/main/java/fr/univ_amu/iut/cli/StrategieExecutionCli.java
 b97f2eb85f2c  src/main/java/fr/univ_amu/iut/cli/VerdictCli.java
 6edb0b0ce728  src/main/java/fr/univ_amu/iut/cli/commande/AfficherSoldeSaison.java
 2472b5e0d886  src/main/java/fr/univ_amu/iut/cli/commande/AjouterPoint.java
@@ -1369,6 +1370,7 @@ c519cd92b438  src/test/java/fr/univ_amu/iut/cli/CliLiensTest.java
 80cc5208149d  src/test/java/fr/univ_amu/iut/cli/CliListerObservationsTest.java
 195002d369e4  src/test/java/fr/univ_amu/iut/cli/CliListerPassagesFiltresTest.java
 7fe794e67601  src/test/java/fr/univ_amu/iut/cli/CliMarquageRevueTest.java
+5bfbfd85a1bf  src/test/java/fr/univ_amu/iut/cli/CliMigrationTest.java
 e151cdcec01f  src/test/java/fr/univ_amu/iut/cli/CliRattacherCampagneTest.java
 4972c44c044b  src/test/java/fr/univ_amu/iut/cli/CliRattraperCommunesTest.java
 922ac22ffc0d  src/test/java/fr/univ_amu/iut/cli/CliReactiverTest.java
