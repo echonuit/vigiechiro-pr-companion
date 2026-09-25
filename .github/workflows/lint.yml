@@ -742,6 +742,41 @@ jobs:
         # dupliqués, n'a pas de sens dans la zone de test et doit y être écartée. PMD ne sait pas
         # exprimer cette différence : les quatre formes essayées sont dans l'ADR.
         run: ./mvnw -B test-compile pmd:pmd
+
+      # ⟨le producteur vit avec son consommateur⟩ encore, et pour la même raison que le rapport PMD
+      # ci-dessus : le pas précédent vient de payer `test-compile`, l'extracteur n'a besoin que de
+      # cela, et son consommateur est le garde de #5532, qui vivra dans ce job. Mesuré avant de
+      # choisir : `methode` tient en 3,3 min de médiane et 3,7 min au pire cas sous un butoir de
+      # 15 min, donc 11,3 min de marge. Mesuré ENSUITE sur la forge, run 36116876314 : le pas coûte
+      # **25 s**, soit 3,7 % de cette marge, et le job passe de 3,3 min de médiane à 3,95 min. La
+      # mesure locale annonçait 52 s : elle donnait l'ordre de grandeur et rien de plus, le
+      # démarrage de Maven et la résolution du classpath ne coûtant pas la même chose ici et là-bas.
+      # Le mettre dans `adr-rapport.yml` aurait mangé la moitié de son plafond et laissé l'index
+      # ABSENT des demandes ordinaires, c'est-à-dire absent de là où il sert.
+      - name: "L'index des appels : produit target/index-appels.json, que le garde de #5532 lira"
+        # `exec:exec` et NON `exec:java`, et ce n'est pas un goût. `<mainClass>fr.univ_amu.iut.App`
+        # est déclaré au niveau du PLUGIN dans le pom, donc il bat `-Dexec.mainClass`. Mesuré le
+        # 2026-09-25 : `exec:java -Dexec.mainClass=...ExtracteurIndex` a lancé l'App, tourné 263 s,
+        # rendu **0**, et n'a produit AUCUN index. Un pas écrit ainsi serait vert et muet, et le
+        # garde de #5532 refuserait ensuite sur un index qu'il croirait simplement pas encore posé.
+        # L'idiome retenu est celui de `capture_screenshots.py`, qui lance ses mains de la même façon.
+        #
+        # Ce pas ne juge RIEN du contenu : il refuse si l'extracteur échoue, et sur cela seul. La
+        # population dérive - 14 790 méthodes au 2026-09-09, 14 811 au 2026-09-25, seize commits de
+        # `main` plus tard dont cinq touchant `src/` - donc un compte attendu se périmerait en
+        # silence, et rougirait chez l'innocent qui ajoute une méthode. La question « ce compte est-il
+        # vraisemblable ? » revient au garde qui LIT l'index, pas au pas qui le produit.
+        run: |
+          set -euo pipefail
+          ./mvnw -B -q org.codehaus.mojo:exec-maven-plugin:exec \
+            -Dexec.executable=java \
+            -Dexec.classpathScope=test \
+            -Dexec.args='-cp %classpath fr.univ_amu.iut.commun.outils.ExtracteurIndex'
+          # Le vert muet mesuré plus haut, rendu mécanique : un extracteur qui sort 0 sans rien
+          # écrire ne passe pas ce pas. C'est le seul contrôle de ce pas qui ne vienne pas du code
+          # de sortie, et il existe parce que le cas s'est produit.
+          test -s target/index-appels.json
+          echo "Index des appels : $(wc -c < target/index-appels.json) octets."
       - name: Cliquets ADR (bloquant)
         # Chaque script `probable` (scripts/adr/NNNN-*.py) rend un code non nul quand le nombre de
         # suspects DÉPASSE le cliquet déclaré dans l'ADR : un cas a été ajouté. C'est ici que le
