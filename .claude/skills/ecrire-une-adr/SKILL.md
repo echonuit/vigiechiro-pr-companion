@@ -261,6 +261,10 @@ python3 scripts/methode/matrice-constitution.py             # la régénère
 python3 scripts/methode/matrice-ergonomie.py --verifie      # la SECONDE matrice, si l'ADR porte un `nielsen-N`
 ```
 
+**La porte les joue déjà** : leurs `chemins` portent `dev-docs/decisions/**`, et depuis #5481 elle les
+lance avec `--verifie`, c'est-à-dire dans le mode qui refuse au lieu de régénérer. Ces commandes
+restent utiles pour régénérer, et pour qui ne passe pas par la porte.
+
 `verifie_okf.py` refuse une ADR **absente de `dev-docs/decisions/index.md` ou de `mkdocs-dev.yml`**,
 sous le motif « atteignabilité ». Ce n'est pas théorique : les ADR 4649 et 4829, écrites le 30 août
 2026, ont été refusées tant qu'elles ne figuraient pas aux deux endroits.

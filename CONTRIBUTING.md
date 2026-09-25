@@ -59,9 +59,14 @@ pas les mêmes règles, donc aucune attention ne pouvait rattraper l'écart. Les
 bloquent la CI, à jouer avant de pousser :
 
 ```bash
-.venv/bin/ruff check         scripts .github/scripts
-.venv/bin/ruff format --check scripts .github/scripts
+.venv/bin/ruff check          scripts .github/scripts .github/assets icone
+.venv/bin/ruff format --check scripts .github/scripts .github/assets icone
 ```
+
+**Les quatre dossiers, et non deux.** `lint.yml` couvre `.github/assets` et `icone`, qui portent onze
+fichiers Python : cette page n'en prescrivait que deux, si bien qu'on pouvait être vert en local et
+rouge en CI. Depuis #5481, `scripts/batterie.py` joue ces deux commandes avec les dossiers que
+`lint.yml` lui donne, donc passer par la porte suffit et cette ligne ne sert qu'à qui ne le fait pas.
 
 ### La ligne de commande OpenSpec, si vous touchez à la spécification vivante
 
