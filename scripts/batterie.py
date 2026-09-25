@@ -273,6 +273,13 @@ def arguments_des_ateliers(racine: pathlib.Path | None = None) -> dict[str, list
     Une liste ecrite ici se perimerait au premier garde qui gagne un mode. L atelier, lui, est la
     reference : c est lui qui decide du rouge que la porte existe pour anticiper.
 
+    **Cette derivation est INDEXEE SUR LA CI, donc muette la ou la CI est muette.** L ADR 5157 a
+    rejete une regle indexee sur la CI pour choisir le `dispositif` d un garde, et sa raison vaut
+    ici : un outil qu aucun atelier ne nomme garde un comportement par defaut que rien ne declare.
+    Mesure du 2026-09-25 : vingt-quatre gardes du corpus ne sont dans aucun atelier, et AUCUN d eux
+    ne porte de mode `--verifie` ou `--ecrire`. Le trou est donc vide aujourd hui, et rien ne le
+    maintient vide : le premier garde hors atelier qui gagnera un mode sera lance dans le mauvais.
+
     **Une forme, et une seule.** Un garde que les ateliers lancent tantot nu, tantot avec des
     arguments, reste lance nu : la porte ne choisit pas a la place de l atelier. `compte-les-reliquats.py`
     est dans ce cas, et `EXIGENT_DES_ARGUMENTS` dit deja qu il ne juge rien lance nu.
