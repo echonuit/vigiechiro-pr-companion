@@ -4,7 +4,7 @@
 > système et dans un terminal.
 > **Features** : aucune ; elle porte sur l'**exposition de la ligne de commande** (#4071, suite de
 > l'EPIC #2104).
-> · **Statut : à jouer.**
+> · **Statut : partielle sur Ubuntu 26.04 avec GNOME ; menu Debian à revoir et Flatpak 2.194.0 absent (#5548).**
 > Retour à la [méthode](../index.md).
 
 ## Objectif
@@ -85,6 +85,27 @@ Pour éprouver le diagnostic, créer **un second** workspace jetable avec
 Ne jamais altérer le workspace de travail habituel.
 
 - **S11-17** · *hors-portée: la réponse et le journal sont hors de l'application* · `vigiechiro --workspace "$RECETTE_INCIDENT" lister-sites` rend le code 1. Le message sur stderr désigne `"$RECETTE_INCIDENT/logs"` sans afficher de pile Java ; le fichier `vigiechiro-*.log` le plus récent y porte la trace de l'incident.
+
+## Essai sur le poste Ubuntu, les 25 et 28 septembre 2026
+
+Le 25 septembre, les sommes SHA-256 des paquets `.deb` et AppImage publiés en 2.194.0 ont été
+vérifiées. Le poste était sous Ubuntu 26.04 avec GNOME. Un Flatpak 2.193.0 y était déjà installé :
+il a été retiré temporairement, sans effacer ses données, puis restauré à la même version.
+
+| Cases | Observation |
+|---|---|
+| S11-01, S11-03, S11-05, S11-06 | Le `.deb` 2.194.0 s'installe avec le statut `ii`. `/usr/bin/vigiechiro` pointe vers `/opt/vigiechirocompanion/bin/vigiechiro` ; `--version` donne 2.194.0, `ihm` ouvre la fenêtre et `lister-sites` répond « Aucun site enregistré. » dans un workspace jetable. |
+| S11-02, S11-04, S11-08 | Le menu et son double-clic ont été observés une première fois alors que le Flatpak 2.193.0 portait le même nom. Cette observation ne prouve pas que l'entrée venait du `.deb`. Après retrait des deux installations, les fichiers d'entrée ont disparu du système, mais le menu GNOME n'a pas été vérifié. Ces trois cases restent à rejouer avec le `.deb` seul. |
+| S11-07 | Après `apt remove`, la commande et son lien sous `/usr/bin` ont disparu. |
+| S11-12, S11-13 | Le double-clic sur l'AppImage 2.194.0 ouvre la fenêtre ; `--version` répond en texte avec le numéro 2.194.0. |
+| S11-14 à S11-17 | Sur le `.deb` 2.194.0, les codes sont 0, 2, 2 et 1. L'espèce rend seulement l'URL PNA ; les refus n'écrivent aucune URL ; l'incident désigne `logs/` sans pile sur stderr, et le fichier `vigiechiro-0.log` contient `SQLITE_NOTADB`. |
+| S11-09 à S11-11 | Le Flatpak disponible sur le dépôt officiel reste en 2.193.0. Son entrée de menu ouvre la fenêtre ; son lancement sans argument ouvre aussi la fenêtre et `lister-sites` répond en texte. Ces observations ne valident pas les cases pour la version publiée 2.194.0. |
+
+Le [job de publication Flatpak de la 2.194.0](https://github.com/echonuit/vigiechiro-pr-companion/actions/runs/35826167683/job/107069355439)
+a échoué sur l'authentification du `git push` vers `echonuit/flatpak.git`. L'issue [#5548](https://github.com/echonuit/vigiechiro-pr-companion/issues/5548)
+porte ce défaut. Rejouer les cases Flatpak sur une même version que le `.deb` et l'AppImage après
+sa correction. Rejouer aussi S11-02, S11-04 et S11-08 avec le `.deb` comme seule installation.
+Le Flatpak 2.193.0 et ses données utilisateur ont été restaurés ; le `.deb` a été retiré.
 
 ## Ce que cette session ne prouve pas
 
