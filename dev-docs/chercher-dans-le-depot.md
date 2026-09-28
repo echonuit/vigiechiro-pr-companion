@@ -1,13 +1,33 @@
 # Chercher dans le dépôt
 
-Trois outils, et ils ne répondent pas aux mêmes questions. Se tromper d'outil coûte rarement une
+Quatre outils, et ils ne répondent pas aux mêmes questions. Se tromper d'outil coûte rarement une
 erreur visible : cela coûte une réponse **fausse et plausible**, ce qui est pire.
 
 | La question porte sur… | L'outil | Ce qu'il rend |
 |---|---|---|
-| un concept, ses voisins, qui l'appelle | `graphify` | un sous-graphe déjà réduit |
+| un concept, ses voisins, ce qui lui ressemble | `graphify` | un sous-graphe déjà réduit |
+| **qui appelle CETTE méthode Java**, résolu | `scripts/qualite/appelants.py` | ses porteurs et leurs appelants, types résolus |
 | une **forme de code** (appel, constructeur, structure) | `semgrep` | les occurrences, avec leur position |
 | un **texte** (message, libellé, ligne de journal) | `grep` / `rg` | les lignes qui contiennent le motif |
+
+## Les appelants d'une méthode Java se RÉSOLVENT
+
+Le dépôt déclare **1 235 noms de méthode dans plusieurs classes** : `preparer` dans 188, `start` dans
+150, `nettoyer` dans 77. Devant eux, `grep` et `semgrep` rendent une liste de fichiers à ouvrir, et le
+graphe rend des arêtes en partie **inférées**. Aucun des trois ne dit laquelle des 188 est appelée.
+
+```bash
+python3 scripts/qualite/appelants.py preparer
+```
+
+Il lit l'index que Spoon produit à la compilation, que la CI rebâtit à chaque demande de fusion. Sur
+`preparer`, la question passe de **243 fichiers à lire** à **neuf porteurs** appelés d'ailleurs, dont
+le premier voit ses dix appelants nommés. Il **refuse** si l'index manque, plutôt que de rendre
+« aucun appelant » pour toute méthode, ce qui se lirait exactement comme du code mort.
+
+**Ce qu'il ne dit pas**, et le contresens à ne pas commettre : « aucun appelant hors de son fichier »
+n'est pas du code mort. C'est l'état normal d'une aide privée, et cela vaut **70 %** du corpus, dont
+5 014 cas que JUnit appelle par réflexion.
 
 ## Le graphe d'abord
 
