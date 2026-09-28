@@ -509,10 +509,16 @@ def autonomes(noms: list[str] | None = None) -> list[str]:
     return sorted(
         f.name
         for f in DOSSIER.glob("*.py")
+        # ⟨plus de `f.name != MOI`⟩ Ce filtre ne pouvait pas changer le resultat : 11 gardes avec,
+        # 11 sans, parce que `f.name not in par_le_harnais` exclut deja ce banc - la suite le charge.
+        # Une condition inatteignable a deux lectures qui ne se departagent pas seules, vacante ou
+        # defensive, et la seconde n etait ecrite nulle part. La propriete qu elle semblait tenir est
+        # affirmee par un cas, « ce garde ne s eprouve jamais lui-meme », qui la tient par la VRAIE
+        # raison. Et si la suite cessait un jour de charger ce banc, y entrer serait le comportement
+        # juste : il serait eprouve comme tout autre garde autonome (#5549).
         if not f.name.startswith("_")
         and f.name not in par_le_harnais
         and f.name not in HORS_PORTEE
-        and f.name != MOI
         and porte_son_auto_test(f.name)
     )
 
@@ -674,13 +680,34 @@ def _auto_test_de_portee() -> int:
     # cas ci-dessus verifient QUELS gardes une portee retient, jamais par quel chemin ils passent.
     # Le cas se derive du DOSSIER, et non de l une des deux fonctions qu il eprouve : le batir
     # depuis `autonomes()` le rendrait incapable de voir cette fonction se tromper (#5491).
-    tous = sorted(
-        f.name for f in DOSSIER.glob("*.py") if not f.name.startswith("_") and f.name != MOI
-    )
+    #
+    # ⟨et il n exclut PLUS le banc⟩ Il portait `f.name != MOI`, donc il jugeait 49 gardes quand le
+    # chemin par defaut en compte 50 : `gardes()` part de ce que la SUITE charge, et elle charge ce
+    # banc. Les deux arithmetiques fermaient - 37+11+1 et 38+11+1 - ce qui rend l angle mort
+    # discret : on les lit toutes deux comme coherentes et l on conclut qu il n y a rien a voir. Le
+    # cas jugeait donc une population qui n est pas celle du dispositif, et ne pouvait pas voir le
+    # banc tomber dans les deux moities (#5549).
+    tous = sorted(f.name for f in DOSSIER.glob("*.py") if not f.name.startswith("_"))
     # ⟨et la DISJONCTION seule est vraie de deux listes vides⟩ Le cas d origine n affirmait que
     # « les deux moities ne se recouvrent pas », ce qu un corpus vide satisfait sans rien eprouver :
     # un vert a vide, l autre moitie du rouge muet que #5499 a ferme. Il affirme donc trois choses,
     # et la premiere est la population sur laquelle les deux autres concluent (#5500).
+    # ⟨LE cas de #5549⟩ Les trois assertions de `_partition_du_corpus` ne valent que si la population
+    # jugee est celle que le dispositif emploie. Elle ne l etait pas : le corpus excluait ce banc, que
+    # `mutes()` inclut, et rien ne pouvait le dire - les deux arithmetiques fermaient, 37+11+1 et
+    # 38+11+1. Ce cas est le seul ici qui compare les DEUX populations au lieu d en juger une seule.
+    #
+    # Il vit chez l appelant et non dans `_partition_du_corpus`, parce que celle-ci est aussi appelee
+    # sur des populations FABRIQUEES, ou la comparaison au chemin reel n aurait aucun sens.
+    hors_du_corpus = sorted((set(mutes()) | set(autonomes())) - set(tous))
+    if hors_du_corpus:
+        print(
+            f"  ✘ le chemin par defaut voit {len(hors_du_corpus)} garde(s) hors du corpus juge :"
+            f" {hors_du_corpus}"
+        )
+        echecs += 1
+    else:
+        print("  ✔ le corpus juge est celui du chemin par defaut, ce banc compris")
     echecs += _partition_du_corpus(tous)
 
     # ⟨et le cas s eprouve LUI-MEME⟩ Les trois assertions ci-dessus ne s exercent que sur le corpus
@@ -707,14 +734,18 @@ def _auto_test_de_portee() -> int:
 def _partition_du_corpus(tous: list[str]) -> int:
     """Les deux moities PARTAGENT le corpus : ni recouvrement, ni orphelin, sur une population reelle.
 
-    Mesure du 2026-09-28 : 49 gardes, 37 mutes, 11 autonomes, intersection vide, et UN seul dans
+    Mesure du 2026-09-28 : **50** gardes, 38 mutes, 11 autonomes, intersection vide, et UN seul dans
     aucune des deux moities - `resserre_cliquets.py`, declare dans `HORS_PORTEE` avec sa raison. La
     couverture est donc exacte aux exemptions pres, et l affirmer attrape un garde que personne ne
     muterait sans que personne ne l ait decide.
 
-    Le 2026-09-25 ils etaient DEUX : `verifie_scripts.py` en est sorti avec #5524, la neutralisation
-    ayant cesse de se fier au prefixe. Ce chiffre bouge donc quand une exemption cesse de valoir,
-    et c est exactement ce qu on veut qu il fasse.
+    **50 et non 49** : le corpus de ce cas inclut desormais le banc lui-meme, parce que le chemin par
+    defaut l inclut - `gardes()` part de ce que la suite charge, et elle le charge. En l excluant, le
+    cas jugeait la population d a cote (#5549).
+
+    Le 2026-09-25 les orphelins etaient DEUX : `verifie_scripts.py` en est sorti avec #5524, la
+    neutralisation ayant cesse de se fier au prefixe. Ce chiffre bouge donc quand une exemption cesse
+    de valoir, et c est exactement ce qu on veut qu il fasse.
     """
     echecs = 0
     m, a = set(mutes(tous)), set(autonomes(tous))
