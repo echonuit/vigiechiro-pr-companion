@@ -6,6 +6,7 @@ article: A4
 chantier: "#4787 (EPIC #4416)"
 decided_at: 2026-08-30
 verification: humaine
+verification_note: "aucun code ne sait qu une assertion porte sur une absence, ni qu elle est appariee ; la question est semantique, pas syntaxique"
 verified:
   - by: humain:mutation
     at: 2026-08-30

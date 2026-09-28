@@ -6,6 +6,7 @@ article: A9
 chantier: "#5282 (convergence des deux bancs filmés), lot #5311"
 decided_at: 2026-09-06
 verification: humaine
+verification_note: "un clip se REGARDE : un test de documentation dont on ne lit que le verdict garde une execution, pas un film"
 verified:
   - by: machine:ci
     at: 2026-09-06

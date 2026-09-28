@@ -6,6 +6,7 @@ article: A26
 chantier: "#5239 (sous-chantier #5235, chantier #5215)"
 decided_at: 2026-09-05
 verification: humaine
+verification_note: "un controle qui refuserait une bibliotheque d images sous scripts/ est possible, il n est pas pose ; la revue tient le reste"
 enforced_by: []
 verified:
   - by: humain

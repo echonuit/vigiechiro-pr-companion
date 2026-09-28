@@ -6,6 +6,7 @@ article: A4
 chantier: "#4406 (EPIC #4386)"
 decided_at: 2026-08-25
 verification: humaine
+verification_note: "le generateur n existe pas encore : une decision se prend quand la question se pose, pas quand l outil est pret"
 verified:
   - by: humain
     at: 2026-08-25

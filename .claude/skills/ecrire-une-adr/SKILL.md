@@ -62,6 +62,18 @@ et se pose dans les champs de l'en-tête OKF :
 | `enforced_by:` | le test ou le script qui **refuse**, pour `certaine` et `probable` |
 | `ratchet:` | le cliquet, que `probable` exige en plus |
 | `loupe:` | pour `humaine`, à la place d'un applicateur |
+| `verification_note:` | le **motif** d'une `humaine` : pourquoi rien ne peut la tenir |
+
+**Une `humaine` dit POURQUOI rien ne la tient, par `verification_note:` ou par `loupe:`, et le garde
+refuse celle qui n'a ni l'un ni l'autre** (#5536). Le champ n'est pas du confort : trois dispositifs
+le lisent, dont `scripts/mkdocs/bandeau_adr.py`, qui l'affiche dans le bandeau de **chaque page
+d'ADR**, et `DocumentationAJourTest`, qui s'en sert comme motif. Sans note ni loupe, ce test reçoit une
+référence **vide**, et une référence vide ne se vérifie pas : l'ADR traversait le contrôle sans que
+rien ne soit lu. Sept `humaine` sur 92 étaient dans ce cas, dont l'ADR 5414 elle-même, celle qui porte
+la règle « ce que rien ne peut garder se déclare ».
+
+**Le motif tient en une ligne, et il se trouve en général déjà écrit dans le corps.** Les sept l'y
+avaient : le champ l'y a déplacé, aucune n'a eu à l'inventer.
 
 **Une vérification `humaine` déclare une loupe, jamais un `enforced_by:`.** Y nommer un script
 prétendrait qu'il refuse, quand il ne fait que relever, et un garde qui promet plus qu'il ne tient
