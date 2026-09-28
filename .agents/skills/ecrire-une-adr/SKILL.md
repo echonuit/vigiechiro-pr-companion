@@ -69,7 +69,14 @@ emprunte la solidité de ses voisins.
 
 **Et un `enforced_by:` se choisit par ce qu'il RÉPOND, pas par ce à quoi il ressemble.** Nommer un
 fichier qui existe ne suffit plus : depuis #5484, le garde refuse quatre formes de gage qui ne
-peuvent faire rougir aucune demande.
+peuvent faire rougir aucune demande. Le refus vaut pour `certaine` **et pour `probable`** (#5535),
+les deux niveaux qui nomment un applicateur, et le message dit lequel des deux il refuse.
+
+**La raison n'est pas la même des deux côtés, et c'est ce qui se saute.** Une `certaine` promet un
+dispositif qui échoue quand la règle est violée ; une `probable` promet un script qui liste des
+suspects, bornés par un cliquet. Mais l'ADR 2465 ajoute que « le portail qualité fait rougir la CI
+dès qu'un suspect s'ajoute » : un gage que la demande ne joue pas laisse donc le cliquet sans rien à
+confronter. Les quatre formes se transposent, leur justification se redérive.
 
 | Ce qu'on nomme | Pourquoi ce n'est pas un juge |
 |---|---|
