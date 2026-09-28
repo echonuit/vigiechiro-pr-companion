@@ -280,6 +280,19 @@ def rapporte(
 # `bloquant` et `ou_tourne` n'y sont PAS, et c'est une décision. 46 gardes sur 104 tournent depuis
 # plus d'un site, aux sémantiques différentes : un champ déclaré serait vrai le jour où on l'écrit et
 # faux au second site. Ces deux propriétés se DÉRIVENT des workflows, elles ne se déclarent pas.
+# Le plafond de `gh issue list --state all`. Au-dela, il tronque SANS le dire (#4834), et une loupe
+# qui conclurait sur une collecte tronquee mentirait en silence - d ou un refus plutot qu un verdict.
+#
+# **Il est ici parce qu il etait ailleurs DEUX fois.** `loupe-4992` et `loupe-5539` lisent exactement
+# la meme population et portaient deux constantes : 1600 et 4000. Relever l une sans l autre a suffi
+# pour que la premiere cesse de rendre le moindre verdict, sans que rien ne rougisse - une loupe ne
+# bloque pas, et son refus en 2 ressemble a un refus sain. Mesure du 2026-09-28 : le depot porte 1870
+# issues, la premiere en taisait 270 (#5558).
+#
+# Un plafond ABSOLU se perime en silence : celui-ci porte une marge d un facteur deux sur la mesure du
+# jour, et les loupes qui le portent PUBLIENT ce qu elles ont lu, pour que la marge se relise.
+PLAFOND_ISSUES = 4000
+
 CHAMPS_DU_CONTRAT = ("geste", "population", "dispositif", "seuil", "temoin", "decision")
 
 # `chemins` est FACULTATIF, et le rester est une contrainte autant qu'un choix (#5340).

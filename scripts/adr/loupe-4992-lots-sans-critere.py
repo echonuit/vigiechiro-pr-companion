@@ -63,9 +63,9 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import loupe, sort_si_contrat_demande
+from _commun import PLAFOND_ISSUES, loupe, sort_si_contrat_demande
 
-PLAFOND = 1600
+PLAFOND = PLAFOND_ISSUES
 
 # Le commit qui a ecrit la regle, en UTC. Fait historique, il ne se met pas a jour.
 NAISSANCE = "2026-08-29T05:37:52Z"
@@ -136,6 +136,11 @@ def _corpus() -> tuple[list[dict], dict[int, list[dict]]]:
             file=sys.stderr,
         )
         raise SystemExit(2)
+    # ⟨la marge se RELIT⟩ Sa ligne de verdict dit `lus=<nombre de LOTS>`, pas le nombre d issues
+    # collectees : la marge contre le plafond y etait donc invisible, et cette loupe a refuse
+    # plusieurs semaines sans que personne ne le voie. Ce qui se publie ici est la collecte, avec son
+    # plafond a cote, seule forme ou un lecteur peut juger qu on approche du mur (#5558).
+    print(f"  collecte : {len(issues)} issue(s) lue(s), plafond {PLAFOND}")
     chantiers = [i for i in issues if estEpic(i) and i["createdAt"] > NAISSANCE]
     lots: dict[int, list[dict]] = {}
     for chantier in chantiers:

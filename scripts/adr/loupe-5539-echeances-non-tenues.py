@@ -50,12 +50,12 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
-from _commun import loupe, sort_si_contrat_demande
+from _commun import PLAFOND_ISSUES, loupe, sort_si_contrat_demande
 
 # Le plafond de `gh issue list`. Au-dela, il tronque SANS le dire (#4834). Mesure du 2026-09-25 :
 # le depot porte 1856 issues, et un plafond a 1600 en taisait 256. La marge est volontaire, et la
 # troncature se DIT plutot que de se deviner.
-PLAFOND = 4000
+PLAFOND = PLAFOND_ISSUES
 
 # Un ENGAGEMENT est un verbe colle a une date. La liste vient des formes reellement ecrites dans le
 # depot, relevees le 2026-09-25 : rien n y est ajoute par anticipation.
