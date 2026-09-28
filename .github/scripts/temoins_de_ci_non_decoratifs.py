@@ -61,6 +61,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "scripts"))
 
 from _commun import cas_d_auto_test
+from _commun.mutation import neutralisation
 from _forge import dispatche_l_option
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
@@ -79,16 +80,7 @@ TRACE = "Traceback (most recent call last)"
 #
 # Identique a celle du banc de methode, et deliberement : deux neutralisations differentes
 # rendraient deux mesures qu on ne pourrait plus comparer.
-NEUTRALISATION = """
-import types as _t_mutation
-for _nom_mutation, _val_mutation in list(globals().items()):
-    _bas_mutation = _nom_mutation.lower()
-    if (isinstance(_val_mutation, _t_mutation.FunctionType)
-            and not _nom_mutation.startswith("_")
-            and not ("auto" in _bas_mutation and "test" in _bas_mutation)):
-        globals()[_nom_mutation] = (lambda *a, **k: [])
 
-"""
 
 CONTRAT = {
     "garde": ".github/scripts/temoins_de_ci_non_decoratifs.py",
@@ -168,7 +160,7 @@ def mute(source: str) -> str:
     """La source, neutralisation INSEREE avant le point d entree de module."""
     ligne = ligne_du_point_d_entree(source)
     lignes = source.splitlines(keepends=True)
-    return "".join(lignes[: ligne - 1]) + NEUTRALISATION + "".join(lignes[ligne - 1 :])
+    return "".join(lignes[: ligne - 1]) + neutralisation(source) + "".join(lignes[ligne - 1 :])
 
 
 def eprouve(garde: pathlib.Path) -> tuple[str, str]:
