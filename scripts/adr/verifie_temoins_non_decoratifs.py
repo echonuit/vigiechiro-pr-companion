@@ -36,6 +36,7 @@ import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import RACINE_DEPOT, cas_d_auto_test, rapporte, sort_si_contrat_demande
+from _commun.mutation import neutralisation
 
 ADR = "4490"
 DOSSIER = pathlib.Path(__file__).resolve().parent
@@ -55,29 +56,18 @@ SUITE = DOSSIER / "verifie_scripts.py"
 # ici, ce motif epargnerait aussi `auto_test_rougit` et `porte_son_auto_test`, qui SONT la detection de
 # ce banc - et il se mute lui-meme par sa moitie `mutes`. Mesure du 2026-09-08 sur quarante-sept gardes.
 EPARGNES = ("rapporte", "main", "auto_test", "cas_d_auto_test")
-NEUTRALISATION = f"""
-
-import types as _t_mutation
-for _nom_mutation, _val_mutation in list(globals().items()):
-    if (isinstance(_val_mutation, _t_mutation.FunctionType)
-            and not _nom_mutation.startswith("_")
-            and _nom_mutation not in {EPARGNES!r}):
-        globals()[_nom_mutation] = (lambda *a, **k: [])
-"""
 
 # Les temoins qui n eprouvent AUCUNE fonction de module, et que la mutation ne peut donc pas tuer.
 # Chacun est nomme avec ce qu il eprouve reellement, sinon cette liste deviendrait le tapis sous
 # lequel on pousse les temoins faibles.
 HORS_PORTEE = {
     "resserre_cliquets.py": "eprouve une expression reguliere et la PRESENCE d une fonction, pas son effet",
-    # Entre ici le 2026-09-23 (#5499), et il y entre parce que la mesure l a REVELE, pas parce qu il
-    # genait : son point d entree etait detruit par la neutralisation, il sortait muet, et ce banc le
-    # comptait « tient ». Une fois `auto_test` epargne, son auto-test tourne enfin - et rend la MEME
-    # sortie mutee que saine, 7 ✔ et 1 ✘, code 0. Il n eprouve que `_completude`, et le souligné
-    # initial la met hors d atteinte de la neutralisation. Ce n est donc pas un temoin faible qu on
-    # pousse sous le tapis : c est un temoin que CE banc ne peut pas atteindre, et l issue #5524 porte
-    # la faille generale - une detection nommee avec un souligne echappe a la mutation.
-    "verifie_scripts.py": "eprouve `_completude`, que la neutralisation epargne par son souligne",
+    # ⟨`verifie_scripts.py` est SORTI d ici le 2026-09-28 (#5524)⟩ Il y etait entre le 2026-09-23
+    # avec sa raison : « eprouve `_completude`, que la neutralisation epargne par son souligne ».
+    # La raison etait exacte, et elle a cesse de valoir le jour ou la neutralisation a cesse de se
+    # fier au prefixe. Mesure : `_completude` est desormais mutee, son auto-test rougit, et le banc
+    # le classe « tient ». Une exemption qui ne tient plus se retire, sinon cette table devient le
+    # tapis sous lequel on pousse les temoins que l outil a appris a juger.
 }
 
 
@@ -312,7 +302,7 @@ def suite_rougit(nom: str, faux: pathlib.Path) -> tuple[str, str]:
     cible = faux / "scripts" / "adr" / nom
     original = cible.read_text(encoding="utf-8")
     try:
-        cible.write_text(original + NEUTRALISATION, encoding="utf-8")
+        cible.write_text(original + neutralisation(original, EPARGNES), encoding="utf-8")
         rendu = subprocess.run(
             [sys.executable, str(faux / "scripts" / "adr" / "verifie_scripts.py")],
             capture_output=True,
@@ -429,7 +419,12 @@ def neutralise_avant_main(source: str) -> str | None:
     if ligne is None:
         return None
     lignes = source.splitlines(keepends=True)
-    return "".join(lignes[: ligne - 1]) + NEUTRALISATION + "\n" + "".join(lignes[ligne - 1 :])
+    return (
+        "".join(lignes[: ligne - 1])
+        + neutralisation(source, EPARGNES)
+        + "\n"
+        + "".join(lignes[ligne - 1 :])
+    )
 
 
 def ligne_du_point_d_entree(source: str) -> int | None:
@@ -712,10 +707,14 @@ def _auto_test_de_portee() -> int:
 def _partition_du_corpus(tous: list[str]) -> int:
     """Les deux moities PARTAGENT le corpus : ni recouvrement, ni orphelin, sur une population reelle.
 
-    Mesure du 2026-09-25 : 49 gardes, 37 mutes, 10 autonomes, intersection vide, et DEUX dans aucune
-    des deux moities - tous deux declares dans `HORS_PORTEE`, avec leur raison. La couverture est
-    donc exacte aux exemptions pres, et l affirmer attrape un garde que personne ne muterait sans
-    que personne ne l ait decide.
+    Mesure du 2026-09-28 : 49 gardes, 37 mutes, 11 autonomes, intersection vide, et UN seul dans
+    aucune des deux moities - `resserre_cliquets.py`, declare dans `HORS_PORTEE` avec sa raison. La
+    couverture est donc exacte aux exemptions pres, et l affirmer attrape un garde que personne ne
+    muterait sans que personne ne l ait decide.
+
+    Le 2026-09-25 ils etaient DEUX : `verifie_scripts.py` en est sorti avec #5524, la neutralisation
+    ayant cesse de se fier au prefixe. Ce chiffre bouge donc quand une exemption cesse de valoir,
+    et c est exactement ce qu on veut qu il fasse.
     """
     echecs = 0
     m, a = set(mutes(tous)), set(autonomes(tous))
@@ -807,6 +806,33 @@ if __name__ == "__main__":
 """
 
 
+_FABRIQUE_DETECTION_SOULIGNEE = """import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+from _commun import cas_d_auto_test
+
+
+def _detecte(texte):
+    return [l for l in texte.splitlines() if "X" in l]
+
+
+def main():
+    return 1 if _detecte("aX") else 0
+
+
+def _auto_test():
+    verifie, echecs = cas_d_auto_test()
+    verifie("la detection voit", _detecte("aX"), ["aX"])
+    verifie("et ne voit pas ce qui n y est pas", _detecte("b"), [])
+    return echecs()
+
+
+if __name__ == "__main__":
+    sys.exit(_auto_test() if "--auto-test" in sys.argv else main())
+"""
+
+
 def _auto_test_du_rouge_muet() -> int:
     """Un rouge MUET ne tient pas, et la mecanique d entree survit a la neutralisation (#5499).
 
@@ -838,6 +864,16 @@ def _auto_test_du_rouge_muet() -> int:
                 "la fabrique partagee survit, et son cas rougit en se nommant",
                 "par_fabrique.py",
                 _FABRIQUE_PAR_FABRIQUE,
+                "tient",
+            ),
+            # ⟨LE cas de #5524⟩ Sa detection s appelle `_detecte`, et rien d autre ne detecte. Sous
+            # l ancienne regle le souligne l epargnait : l auto-test restait vert sans sa detection,
+            # et le banc concluait « decoratif » sur un temoin qui tient parfaitement. C est le
+            # CONTRASTE du lot, et il change de verdict d un cote a l autre du changement.
+            (
+                "une detection nommee avec un souligne est MUTEE, et son garde tient",
+                "detection_soulignee.py",
+                _FABRIQUE_DETECTION_SOULIGNEE,
                 "tient",
             ),
         ):
@@ -876,7 +912,7 @@ def auto_test() -> int:
     verifie("et le litteral l est toujours", charges('_charge("h.py")\n'), ["h.py"])
     verifie("2843 est desormais dans la population", "2843-tiret-cadratin.py" in gardes(), True)
 
-    # La NEUTRALISATION se pose AVANT le bloc `__main__`, sinon elle ne s applique jamais quand le
+    # La neutralisation se pose AVANT le bloc `__main__`, sinon elle ne s applique jamais quand le
     # fichier est lance en SCRIPT : `sys.exit` part avant la fin du fichier. La version qui ajoutait
     # en queue rendait huit faux suspects, et son erreur ressemblait a une trouvaille.
     avec_main = 'def f():\n    return [1]\n\n\nif __name__ == "__main__":\n    print(f())\n'
@@ -966,7 +1002,11 @@ def auto_test() -> int:
         # 4. Ce que ce lot prouve (#4700) : muter n a PAS touche le depot. Sans ce cas, une
         #    reecriture qui reviendrait a muter la source passerait les trois precedents.
         vraie = (DOSSIER / "2843-tiret-cadratin.py").read_text(encoding="utf-8")
-        verifie("la mutation n a pas touche le depot", NEUTRALISATION.strip() in vraie, False)
+        verifie(
+            "la mutation n a pas touche le depot",
+            neutralisation(vraie, EPARGNES).strip() in vraie,
+            False,
+        )
         # 5. Et l arbre jetable est bien un AUTRE arbre, sinon le quatrieme cas ne prouve rien.
         verifie(
             "l arbre mute n est pas le depot", faux.resolve() == DOSSIER.parents[1].resolve(), False

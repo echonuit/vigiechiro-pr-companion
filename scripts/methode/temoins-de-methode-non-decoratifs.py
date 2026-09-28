@@ -39,6 +39,7 @@ import tempfile
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import cas_d_auto_test, sort_si_contrat_demande
+from _commun.mutation import neutralisation
 
 ATELIER = RACINE / ".github" / "workflows" / "lint.yml"
 # ⟨l ancre negative, et elle n est pas decorative⟩ Sans elle, le motif attrape la QUEUE des chemins
@@ -58,16 +59,6 @@ LANCE = re.compile(r"(?<![\w./-])scripts/(?!adr/)([a-z0-9_/-]+\.py)")
 # L exemption se DERIVE du nom, elle ne s enumere pas : toute fonction dont le nom porte « auto »
 # et « test ». Une liste aurait vieilli au premier garde neuf, comme trois listes tenues a la main
 # l ont fait dans ce depot.
-NEUTRALISATION = """
-import types as _t_mutation
-for _nom_mutation, _val_mutation in list(globals().items()):
-    _bas_mutation = _nom_mutation.lower()
-    if (isinstance(_val_mutation, _t_mutation.FunctionType)
-            and not _nom_mutation.startswith("_")
-            and not ("auto" in _bas_mutation and "test" in _bas_mutation)):
-        globals()[_nom_mutation] = (lambda *a, **k: [])
-
-"""
 
 
 def declare_un_contrat(chemin: pathlib.Path) -> bool:
@@ -256,7 +247,7 @@ def mute(source: str) -> str:
     """La source, neutralisation INSEREE avant le point d entree de module."""
     ligne = ligne_du_point_d_entree(source)
     lignes = source.splitlines(keepends=True)
-    return "".join(lignes[: ligne - 1]) + NEUTRALISATION + "".join(lignes[ligne - 1 :])
+    return "".join(lignes[: ligne - 1]) + neutralisation(source) + "".join(lignes[ligne - 1 :])
 
 
 @contextlib.contextmanager
@@ -443,15 +434,35 @@ def _auto_test() -> int:
     verifie("la source est bien changee", mute(src) != src, True)
 
     # La fonction d auto-test est epargnee, sinon le garde rougit pour la mauvaise raison (#4760).
-    verifie(
-        "`auto_test` est épargnée par la neutralisation",
-        'not ("auto" in _bas_mutation and "test" in _bas_mutation)' in NEUTRALISATION,
-        True,
+    # ⟨eprouve par le COMPORTEMENT, non par le texte⟩ Ce cas lisait une sous-chaine de la constante
+    # de neutralisation. Il passait donc sans qu aucune fonction n ait ete epargnee pour de vrai, et
+    # il serait mort d une simple reecriture de la condition. Depuis #5524 la regle se derive par
+    # fichier : il n y a plus de constante a lire, et c est l occasion de l eprouver pour ce qu elle
+    # FAIT.
+    fabrique = (
+        "def detecte():\n"
+        "    return 1\n"
+        "\n"
+        "\n"
+        "def auto_test():\n"
+        "    return 0 if detecte() == 1 else 1\n"
+        "\n"
+        "\n"
+        'if __name__ == "__main__":\n'
+        "    raise SystemExit(auto_test())\n"
     )
-    # Et l exemption se derive : elle ne nomme aucun garde en particulier.
+    espace: dict[str, object] = {}
+    exec(compile(mute(fabrique), "<mutation>", "exec"), espace)  # noqa: S102
+    verifie("apres mutation, `detecte` ne detecte plus", espace["detecte"](), [])
+    # Le CONTRASTE, et il porte tout : si `auto_test` etait mutee elle aussi, elle rendrait `[]` au
+    # lieu de 1, et l on ne saurait pas distinguer « le temoin a vu la detection tomber » de « le
+    # temoin est mort avec elle ».
+    verifie("`auto_test` survit et VOIT la detection tombee", espace["auto_test"](), 1)
+
+    # Et l exemption se derive : elle ne nomme aucun GARDE, seulement des fonctions du fichier mute.
     verifie(
         "l exemption ne cite aucun nom de garde",
-        any(g.split(".")[0] in NEUTRALISATION for g in corpus()),
+        any(g.split(".")[0] in mute(fabrique) for g in corpus()),
         False,
     )
 

@@ -41,9 +41,24 @@ La mutation devient mécanique. Pour chaque garde chargée par `verifie_scripts.
 - Un témoin nouveau est éprouvé dès sa PR, et non à la clôture suivante.
 - L'auto-test du garde prouve le mécanisme dans les **deux** sens : qu'un témoin solide fait bien rougir la suite sous mutation, et que sans mutation la suite est verte. Sans le second, un script qui répondrait toujours « tout va bien » passerait le premier.
 
+## Révision du 2026-09-28 : le préfixe ne distinguait pas la machinerie de la détection
+
+La décision tient, sa mécanique change. « La mutation ne remplace que les fonctions de module non
+préfixées » définissait une cécité, et en cachait une seconde : **un nom ne dit pas si une fonction
+est de la machinerie ou de la détection**. Une détection nommée `_completude` ou `_forge` par
+convention d'interne était hors d'atteinte, et son garde passait pour éprouvé ou décoratif sans que
+rien de vrai n'ait été mesuré. Le motif « auto » + « test » des deux autres bancs épargnait de même
+quatre détections.
+
+L'exemption se **dérive** désormais du graphe d'appel : est machinerie ce que seul le point d'entrée
+d'auto-test atteint. Le préfixe n'est conservé que comme filtre, ce qui rend le changement monotone.
+
+Mesuré : 119 fonctions entrent dans la portée de la mutation, et `verifie_scripts.py` sort de la
+liste ci-dessous, sa détection étant enfin atteinte. Issue #5524.
+
 ## La cécité déclarée
 
-La mutation ne remplace que les **fonctions de module non préfixées**. Un témoin qui n'éprouverait qu'une constante, une expression régulière ou une classe y survit sans être décoratif pour autant. Le garde ne prononce donc rien sur ceux-là, et il nomme ses exemptions une par une plutôt que de les taire :
+La mutation ne remplace que les fonctions de module que l'exemption dérivée ci-dessus ne protège pas. Un témoin qui n'éprouverait qu'une constante, une expression régulière ou une classe y survit sans être décoratif pour autant. Le garde ne prononce donc rien sur ceux-là, et il nomme ses exemptions une par une plutôt que de les taire :
 
 | Script | Ce que son témoin éprouve réellement |
 |---|---|
