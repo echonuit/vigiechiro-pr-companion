@@ -6,6 +6,7 @@ article: A4
 chantier: "#4980 (le retour de terrain de la 2.189.0), sous-chantier #4993"
 decided_at: 2026-08-31
 verification: humaine
+verification_note: "fabriquer un avant a partir de l histoire est un geste de methode qu aucun dispositif ne peut observer"
 enforced_by: []
 verified:
   - by: humain:porteur-du-produit

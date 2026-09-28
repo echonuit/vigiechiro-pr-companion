@@ -6,6 +6,7 @@ article: A11
 chantier: "#5414 (la méthode est écrite pour une session, et il en travaille huit), lot #5412"
 decided_at: 2026-09-07
 verification: humaine
+verification_note: "un message entre sessions ne laisse aucune trace dans le depot, et la forge n enregistre pas qui a agi : l information n existe nulle part"
 enforced_by: []
 verified:
   - by: humain

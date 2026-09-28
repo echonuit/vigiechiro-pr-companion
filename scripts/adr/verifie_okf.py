@@ -426,6 +426,16 @@ def verifie(
         # declarer un article « tenu par » une capture d'ecran.
         if niveau == "humaine" and e.get("enforced_by"):
             fautes.append(f"{f.name} : « humaine » qui nomme un applicateur ; est-ce une loupe ?")
+        # Une `humaine` dit POURQUOI rien ne la tient (#5536). Le champ n'est pas du confort : trois
+        # dispositifs le lisent, dont le bandeau de chaque page d'ADR, et surtout
+        # `DocumentationAJourTest.referenceLegacy`, qui rend une chaine VIDE quand ni la note ni la
+        # loupe n'est la. Une reference vide ne se verifie pas : l'ADR traverse le controle sans que
+        # rien ne soit lu. Sept `humaine` sur 92 etaient dans ce cas, dont l'ADR 5414 elle-meme.
+        if niveau == "humaine" and not e.get("verification_note") and not e.get("loupe"):
+            fautes.append(
+                f"{f.name} : « humaine » qui ne dit pas pourquoi ; "
+                "il faut `verification_note:`, ou `loupe:` quand un motif se relève"
+            )
         if not e.get("verified"):
             fautes.append(f"{f.name} : aucune trace de vérification")
         # 9. Les heuristiques déclarées appartiennent au vocabulaire CLOS de l'annexe, et se
@@ -594,6 +604,45 @@ def auto_test() -> int:
         "humaine qui nomme un applicateur",
         {"0001-t.md": MODELE.replace("verification: certaine", "verification: humaine")},
         "est-ce une loupe",
+    )
+    # Une `humaine` dit POURQUOI rien ne la tient, par `verification_note:` ou par `loupe:` (#5536).
+    # Sans l un ni l autre, `DocumentationAJourTest.referenceLegacy` rend une chaine VIDE, et une
+    # reference vide ne se verifie pas : l ADR traverse le controle sans que rien ne soit lu. Sept
+    # `humaine` sur 92 etaient dans ce cas au 2026-09-28, dont l ADR 5414 elle-meme, qui porte la
+    # regle « ce que rien ne peut garder se declare ».
+    #
+    # Les deux acceptations ne sont pas decoratives : sans elles, un refus devenu systematique
+    # resterait vert sur un corpus ou toutes les `humaine` portent l un des deux. La mutation qui
+    # les tient est au contrat - le refus systematique doit les faire tomber toutes les deux.
+    HUMAINE_NUE = MODELE.replace(
+        'verification: certaine\nenforced_by:\n  - "TemoinTest#cas"\n', "verification: humaine\n"
+    )
+
+    cas(
+        "humaine sans motif ni loupe",
+        {"0001-t.md": HUMAINE_NUE},
+        "ne dit pas pourquoi",
+    )
+    cas(
+        "humaine avec un motif accepte",
+        {
+            "0001-t.md": HUMAINE_NUE.replace(
+                "verification: humaine\n",
+                'verification: humaine\nverification_note: "aucun code ne lit une intention"\n',
+            )
+        },
+        None,
+    )
+    cas(
+        "humaine avec une loupe accepte",
+        {
+            "0001-t.md": HUMAINE_NUE.replace(
+                "verification: humaine\n",
+                'verification: humaine\nloupe:\n  - "scripts/adr/loupe-0001-t.py"\n',
+            )
+        },
+        None,
+        fichiers={"scripts/adr/loupe-0001-t.py": "def f():\n    return []\n"},
     )
     cas(
         "aucune vérification",

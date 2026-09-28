@@ -6,6 +6,7 @@ article: A4
 chantier: "#4447 (EPIC #4416)"
 decided_at: 2026-08-30
 verification: humaine
+verification_note: "aucun code ne distingue un port substitue pour franchir une frontiere d un port substitue par commodite ; c est l intention qui les separe, et elle ne se lit pas"
 verified:
   - by: humain:relecture
     at: 2026-08-30
