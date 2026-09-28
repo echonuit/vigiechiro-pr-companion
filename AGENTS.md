@@ -199,10 +199,17 @@ Les passes **0 à 9 gardent leur numéro**, et les deux dernières ont glissé d
 
 ## Chercher dans le dépôt
 
-Trois outils, trois questions. `graphify` d'abord (voir ci-dessous), puis :
+Quatre outils, quatre questions. `graphify` d'abord (voir ci-dessous), puis :
 
-- **`semgrep`** pour une question de forme : « qui appelle X ? », « qui construit un Y à la
-  main ? ». Il lit l'arbre syntaxique, pas les lignes.
+- **`scripts/qualite/appelants.py`** pour « **qui appelle cette méthode ?** » quand la réponse doit
+  être RÉSOLUE. C'est le seul qui distingue deux méthodes de même nom, et le dépôt en déclare
+  **1 235** dans plusieurs classes : `preparer` dans 188, `start` dans 150, `nettoyer` dans 77.
+  `python3 scripts/qualite/appelants.py preparer` rend les neuf porteurs appelés d'ailleurs, là où un
+  `grep -rl` rend 243 fichiers à lire. Il lit l'index que la CI produit à chaque demande de fusion, et
+  **refuse** si l'index manque plutôt que de rendre « aucun appelant » (#5532).
+- **`semgrep`** pour une question de **forme** : « qui construit un Y à la main ? », « où ce motif
+  apparaît-il ? ». Il lit l'arbre syntaxique, pas les lignes. Il ne résout pas les types, donc sur un
+  nom ambigu il rend les 188 `preparer` comme le ferait un `grep`.
   `semgrep --lang java --metrics=off --pattern 'Habillage.$M(...)' src/main`
   Il s'installe **dans le `.venv` du worktree**, comme `ruff` :
   `.venv/bin/pip install --group recherche`, et il est déclaré au groupe `recherche` de

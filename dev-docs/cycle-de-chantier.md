@@ -94,7 +94,9 @@ graphify query "<question>" --budget 2500   # depuis la racine du dépôt
 Ce qu'il apporte et que `grep` ne peut pas donner :
 
 - les arêtes `calls` descendent au niveau **méthode** : « qui appelle réellement ceci ? » et,
-  symétriquement, « ce code sert-il encore à quelqu'un ? » ;
+  symétriquement, « ce code sert-il encore à quelqu'un ? ». Pour une méthode **Java** dont le nom est
+  porté par plusieurs classes, `scripts/qualite/appelants.py` rend la réponse **résolue** plutôt
+  qu'inférée, et c'est là que les deux se complètent (#5532) ;
 - les arêtes `conceptually_related_to` répondent à « **qui d'autre fait X ?** » quand X est une **idée**
   et non un identifiant ;
 - il **traverse les corpus** : quelles maquettes du brief décrivent ce composant, quelles pages

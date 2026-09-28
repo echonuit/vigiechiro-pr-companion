@@ -95,6 +95,22 @@ valent mieux que la même deux fois**, et un « aucun test » sorti d'un grep n'
 confirmer en ouvrant les fichiers **avant** d'en faire une issue. Une issue fausse coûte plus cher que
 le trou qu'elle prétend signaler.
 
+**Et depuis #5532, une réponse RÉSOLUE existe pour cette question-là**, ce qui vaut mieux qu'une
+seconde hypothèse :
+
+```bash
+python3 scripts/qualite/appelants.py <nom de la méthode>
+```
+
+Elle lit l'index que Spoon produit à la compilation, donc ses appelants sont résolus et non inférés.
+C'est ce qui la sépare du graphe sur **un** point précis : elle distingue deux méthodes de même nom,
+et le dépôt en déclare 1 235 dans plusieurs classes. Elle ne remplace pas le graphe, qui traverse les
+corpus et répond aux questions conceptuelles ; elle tranche celle-ci.
+
+Ce qu'elle ne dit PAS, et le contresens à ne pas commettre : « aucun appelant hors de son fichier »
+n'est **pas** un manque de test. C'est l'état normal d'une aide privée, et cela vaut **70 %** du
+corpus, dont 5 014 cas que JUnit appelle par réflexion.
+
 ## La mutation est la condition de fin, pas un geste facultatif
 
 Un garde-fou de non-régression ne prouve rien tant qu'on ne l'a pas vu **échouer** avec le défaut en
