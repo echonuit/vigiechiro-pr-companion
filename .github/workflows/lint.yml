@@ -1220,6 +1220,11 @@ jobs:
           # L auto-test SEUL : lancer la preparation en CI poserait des outils sur un runner qui
           # les a deja, et ce chemin n y est jamais joue (#5406).
           python3 scripts/methode/prepare-l-environnement.py --auto-test
+          # L auto-test SEUL, pour une autre raison : `appelants.py` REPOND a une question, il ne
+          # juge rien et n a aucun verdict a rendre en CI. Le lancer sur l index du depot
+          # imprimerait une reponse que personne ne lit. Son auto-test, lui, tourne sur un index
+          # FABRIQUE, donc il ne depend pas de l index que le job vient de produire (#5532).
+          python3 scripts/qualite/appelants.py --auto-test
 
   temoins:
     # Les bancs qui prouvent qu un auto-test n est pas decoratif. Le poste le plus cher.
