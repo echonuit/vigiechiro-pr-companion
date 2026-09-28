@@ -40,6 +40,11 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import loupe, sort_si_contrat_demande
 
+# Cette loupe ne lit que les issues OUVERTES, population neuf fois plus petite que le corpus
+# entier : son plafond n a donc pas a suivre celui de `_commun.PLAFOND_ISSUES`, qui couvre
+# `--state all`. Mesure du 2026-09-28 : 163 issues ouvertes contre 800, soit un facteur 4,9.
+# Le chiffre est ecrit ici parce que c est le seul endroit ou quelqu un le relira avant de le
+# croire perime (#5558).
 PLAFOND = 800
 
 LOT = re.compile(r"^- \[[ x]\] \*\*Lot[^\n]*(?:\n(?:    |\t)[^\n]*)*", re.M)
