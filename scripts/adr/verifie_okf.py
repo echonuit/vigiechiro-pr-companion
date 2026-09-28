@@ -403,11 +403,21 @@ def verifie(
         # Trois ADR sur 187 nommaient un gage qu'aucune demande ne pouvait faire rougir, et elles
         # echouaient de trois facons qui ne se ressemblent pas (#5483). Mesure a la pose : zero
         # refus sur les 218 gages des 184 `certaine`, et les trois cas d'avant #5490 rouges.
-        if niveau == "certaine":
+        # `probable` depuis #5535, et pour la meme conclusion par un autre chemin. Il ne promet pas
+        # un refus mais des SUSPECTS bornes par un cliquet ; or l ADR 2465 ajoute « le portail
+        # qualite fait rougir la CI des qu un suspect s ajoute », donc un gage que la demande ne
+        # joue pas laisse le cliquet sans rien a confronter. Les quatre formes se transposent, leur
+        # justification se REDERIVE - transposer un dispositif et transposer sa raison sont deux
+        # gestes, et le second est celui qu on saute.
+        #
+        # La convention `scripts/adr/NNNN-*.py` de l ADR 2465 n est PAS un critere utilisable :
+        # mesure du 2026-09-28, 7 des 34 gages de `probable` en sortent et sont de vrais gardes,
+        # tous invoques. L exiger refuserait un cinquieme de la population a tort.
+        if niveau in ("certaine", "probable"):
             for gage in e.get("enforced_by") or []:
                 forme = refus_du_gage(gage, racine, contexte)
                 if forme:
-                    fautes.append(f"{f.name} : {forme} ({gage})")
+                    fautes.append(f"{f.name} : « {niveau} », {forme} ({gage})")
         if niveau == "probable" and e.get("ratchet") is None:
             fautes.append(f"{f.name} : « probable » sans cliquet déclaré")
         # Une ADR `humaine` ne peut pas nommer d'applicateur : si quelque chose l'appliquait, elle
@@ -693,6 +703,73 @@ def auto_test() -> int:
             ),
         },
     )
+
+    # Les MEMES quatre formes, et les MEMES deux contrastes, pour `probable` (#5535). Le niveau ne
+    # promet pas la meme chose - l ADR 2465 lui demande un script qui liste des SUSPECTS, bornes par
+    # un cliquet - mais la conclusion est la meme par un autre chemin : « le portail qualite fait
+    # rougir la CI des qu un suspect s ajoute », donc un gage que la demande ne joue pas laisse le
+    # cliquet sans rien a confronter.
+    #
+    # Ces six cas passent par `verifie()` comme les six precedents, et non par `refus_du_gage()` :
+    # eprouver la fonction prouverait qu ELLE classe, pas que le GARDE refuse. La mutation qui le
+    # tient est dans le contrat : rendre le refus systematique doit faire tomber les DEUX
+    # acceptations, et pas seulement un refus.
+    def avec_gage_probable(chemin: str) -> str:
+        return MODELE.replace(
+            'verification: certaine\nenforced_by:\n  - "TemoinTest#cas"\n',
+            f'verification: probable\nenforced_by:\n  - "{chemin}"\nratchet: 0\n',
+        )
+
+    cas(
+        "probable, gage de prose",
+        {"0001-t.md": avec_gage_probable("dev-docs/note.md")},
+        "non executable",
+        fichiers={"dev-docs/note.md": "Une note, et rien qui s execute.\n"},
+    )
+    cas(
+        "probable, atelier hors demande",
+        {"0001-t.md": avec_gage_probable(".github/workflows/nocturne.yml")},
+        "aucune demande ne declenche",
+        fichiers={".github/workflows/nocturne.yml": NOCTURNE},
+    )
+    cas(
+        "probable, atelier sur demande accepte",
+        {"0001-t.md": avec_gage_probable(".github/workflows/porte.yml")},
+        None,
+        fichiers={".github/workflows/porte.yml": SUR_DEMANDE},
+    )
+    cas(
+        "probable, bibliotheque sans entree",
+        {"0001-t.md": avec_gage_probable("scripts/mesure.py")},
+        "code regi",
+        fichiers={
+            "scripts/mesure.py": "def mesure():\n    return 1\n",
+            ".github/workflows/porte.yml": SUR_DEMANDE.replace(
+                "runs-on: u", "runs-on: u\n    steps:\n      - run: python scripts/mesure.py"
+            ),
+        },
+    )
+    cas(
+        "probable, script qu aucune demande n invoque",
+        {"0001-t.md": avec_gage_probable("scripts/orphelin.py")},
+        "n'invoque",
+        fichiers={
+            "scripts/orphelin.py": 'def f():\n    return 1\n\n\nif __name__ == "__main__":\n    f()\n',
+            ".github/workflows/porte.yml": SUR_DEMANDE,
+        },
+    )
+    cas(
+        "probable, script joue par une demande accepte",
+        {"0001-t.md": avec_gage_probable("scripts/juge.py")},
+        None,
+        fichiers={
+            "scripts/juge.py": 'def f():\n    return 1\n\n\nif __name__ == "__main__":\n    f()\n',
+            ".github/workflows/porte.yml": SUR_DEMANDE.replace(
+                "runs-on: u", "runs-on: u\n    steps:\n      - run: python scripts/juge.py"
+            ),
+        },
+    )
+
     cas("corpus sain", {"0001-t.md": MODELE, "0002-s.md": MODELE}, None, plancher=2)
 
     if echecs:
