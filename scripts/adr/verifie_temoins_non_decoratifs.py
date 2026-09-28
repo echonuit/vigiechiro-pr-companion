@@ -682,7 +682,49 @@ def _auto_test_de_portee() -> int:
     tous = sorted(
         f.name for f in DOSSIER.glob("*.py") if not f.name.startswith("_") and f.name != MOI
     )
-    chevauchement = sorted(set(mutes(tous)) & set(autonomes(tous)))
+    # ⟨et la DISJONCTION seule est vraie de deux listes vides⟩ Le cas d origine n affirmait que
+    # « les deux moities ne se recouvrent pas », ce qu un corpus vide satisfait sans rien eprouver :
+    # un vert a vide, l autre moitie du rouge muet que #5499 a ferme. Il affirme donc trois choses,
+    # et la premiere est la population sur laquelle les deux autres concluent (#5500).
+    echecs += _partition_du_corpus(tous)
+
+    # ⟨et le cas s eprouve LUI-MEME⟩ Les trois assertions ci-dessus ne s exercent que sur le corpus
+    # reel, qui n est jamais vide ni orphelin : leurs branches de refus ne seraient donc jamais
+    # jouees, et c est le defaut de #5500 repete d un cran plus haut. On leur donne ici les deux
+    # populations qui doivent les faire rougir.
+    import contextlib as _c
+    import io as _i
+
+    for libelle, population in (
+        ("une population VIDE fait rougir le cas", []),
+        ("un garde dans aucune moitie le fait rougir aussi", ["inexistant-de-ce-depot.py"]),
+    ):
+        with _c.redirect_stdout(_i.StringIO()):
+            rendu = _partition_du_corpus(population)
+        if rendu:
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : il a rendu {rendu}")
+            echecs += 1
+    return echecs
+
+
+def _partition_du_corpus(tous: list[str]) -> int:
+    """Les deux moities PARTAGENT le corpus : ni recouvrement, ni orphelin, sur une population reelle.
+
+    Mesure du 2026-09-25 : 49 gardes, 37 mutes, 10 autonomes, intersection vide, et DEUX dans aucune
+    des deux moities - tous deux declares dans `HORS_PORTEE`, avec leur raison. La couverture est
+    donc exacte aux exemptions pres, et l affirmer attrape un garde que personne ne muterait sans
+    que personne ne l ait decide.
+    """
+    echecs = 0
+    m, a = set(mutes(tous)), set(autonomes(tous))
+    if not tous:
+        print("  ✘ la population lue est VIDE : les deux assertions suivantes ne prouveraient rien")
+        return 1
+    print(f"  ✔ la population lue porte {len(tous)} garde(s), et non zero")
+
+    chevauchement = sorted(m & a)
     if chevauchement:
         print(
             f"  ✘ sous portee, {len(chevauchement)} garde(s) dans les DEUX moities : {chevauchement[:3]}"
@@ -690,6 +732,15 @@ def _auto_test_de_portee() -> int:
         echecs += 1
     else:
         print("  ✔ sous portee, les deux moities restent disjointes")
+
+    orphelins = sorted(set(tous) - m - a - set(HORS_PORTEE))
+    if orphelins:
+        print(
+            f"  ✘ {len(orphelins)} garde(s) dans AUCUNE moitie, sans etre declares hors portee : {orphelins[:3]}"
+        )
+        echecs += 1
+    else:
+        print("  ✔ aucun garde ne tombe hors des deux moities sans etre declare")
     return echecs
 
 
