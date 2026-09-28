@@ -838,6 +838,48 @@ def verdict_du_lancement(nom: str, code: int, stdout: str, stderr: str) -> tuple
     return "arguments", premiere
 
 
+# ⟨le dernier cas JOUE, retenu hors de l auto-test⟩ Ce harnais est procedural : ses cas evaluent
+# leur expression dans un `if`, donc une expression qui leve arrete le temoin AVANT que le libelle
+# n ait ete imprime. Le harnais sortait alors sur une trace de pile, non nulle - donc la CI
+# l attrapait - sans dire lequel de ses quarante-sept controles avait rougi, ce que l ADR 4918
+# refuse (#5530).
+#
+# Cette liste vit au niveau module pour survivre a la remontee de l exception. Elle retient les
+# lignes de cas, et le rattrapage nomme la DERNIERE : le leve s est donc produit entre elle et la
+# suivante, ce qui localise la panne a un cas pres sans rien deferer.
+_CAS_JOUES: list[str] = []
+
+
+def _auto_test_nomme() -> int:
+    """Joue l auto-test, et NOMME le dernier cas joue si une expression leve.
+
+    Le rattrapage est LARGE, et c est le but : une expression de cas peut lever n importe quoi, et
+    le propos est qu elle se situe au lieu d arreter le temoin sans un mot. Restreindre ici rendrait
+    muettes exactement les pannes que ce lot existe pour nommer.
+    """
+    _CAS_JOUES.clear()
+    try:
+        return _auto_test()
+    except Exception as leve:  # noqa: BLE001
+        print(situe_le_leve(leve, _CAS_JOUES))
+        return 1
+
+
+def situe_le_leve(leve: BaseException, joues: list[str]) -> str:
+    """Le message qui SITUE un levé, extrait pour que l auto-test puisse l eprouver lui-meme.
+
+    Batir ce message dans le `except` le rendait intestable : aucun cas ne pouvait le lire sans
+    faire lever le harnais entier, donc sans se detruire. C est la lecon de #5530 appliquee a son
+    propre remede - une capacite qu on ne peut pas interroger n est pas une capacite.
+    """
+    dernier = joues[-1].strip() if joues else "(aucun cas joué avant le levé)"
+    return (
+        f"\n  ✘ l auto-test a levé {type(leve).__name__} : {leve}"
+        f"\n      dernier cas joué : {dernier}"
+        f"\n      le levé est donc survenu entre ce cas et le suivant."
+    )
+
+
 def _auto_test() -> int:
     """Les deux moities, et le bord ou la porte se tairait.
 
@@ -858,7 +900,11 @@ def _auto_test() -> int:
     dits: list[str] = []
 
     def print(*morceaux, **nommes):
-        dits.append(" ".join(str(m) for m in morceaux))
+        ligne = " ".join(str(m) for m in morceaux)
+        dits.append(ligne)
+        # Les lignes de CAS seulement : le rattrapage nomme un cas, pas un titre de section.
+        if ligne.startswith(("  ✔", "  ✘")):
+            _CAS_JOUES.append(ligne)
         builtins.print(*morceaux, **nommes)
 
     with tempfile.TemporaryDirectory(prefix="vc-batterie-") as bac:
@@ -1385,6 +1431,38 @@ def _auto_test() -> int:
             print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
             echecs += 1
 
+    # ⟨le harnais nomme le cas qui leve, et ces cas-ci le prouvent⟩ Avant #5530, une expression qui
+    # levait arretait ce temoin sur une trace de pile : non nulle, donc attrapee par la CI, mais
+    # muette sur lequel des quarante-sept controles avait rougi. Ces trois cas lisent le message que
+    # le rattrapage construit, sans avoir a faire lever le harnais entier.
+    # ⟨ces cas-ci passent leur expression DIFFEREE⟩ Les ecrire en ligne aurait ajoute trois sites a
+    # la dette que ce meme lot mesure, dans le fichier qui en porte deja le plus. L aide est locale
+    # et non la fabrique partagee : l importer ici change ce que `interprete` voit, et fait rougir
+    # le cas qui eprouve un interprete demuni. Mesure faite, puis defaite.
+    def juge(libelle: str, calcul) -> int:
+        try:
+            bon = bool(calcul())
+        except Exception as leve:  # noqa: BLE001
+            print(f"  ✘ {libelle} : l expression a levé {type(leve).__name__} : {leve}")
+            return 1
+        print(f"  {'✔' if bon else '✘'} {libelle}")
+        return 0 if bon else 1
+
+    situe = situe_le_leve(ValueError("un cas qui leve"), ["  ✔ le cas d avant", "  ✔ le dernier"])
+    echecs += juge(
+        "le levé nomme son type et son message",
+        lambda: "ValueError : un cas qui leve" in situe,
+    )
+    echecs += juge(
+        "il nomme le DERNIER cas joué", lambda: "dernier cas joué : ✔ le dernier" in situe
+    )
+    # Le CONTRASTE : sans lui, un message qui nommerait toujours le premier cas passerait le
+    # precedent, et un harnais qui leve avant tout cas rendrait une ligne vide.
+    echecs += juge(
+        "et sans aucun cas joué, il le DIT",
+        lambda: "aucun cas joué" in situe_le_leve(ValueError("x"), []),
+    )
+
     joues = sum(1 for ligne in dits if ligne.startswith(("  ✔", "  ✘")))
     print(f"\n{joues} cas : porte, bord, fichiers neufs, aiguillage, interprète et refus.")
     return 1 if echecs else 0
@@ -1395,6 +1473,6 @@ if __name__ == "__main__":
 
     sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
-        sys.exit(_auto_test())
+        sys.exit(_auto_test_nomme())
     contre = sys.argv[sys.argv.index("--contre") + 1] if "--contre" in sys.argv else "origin/main"
     sys.exit(rendre(contre, "--lance" in sys.argv))

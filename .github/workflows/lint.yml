@@ -954,6 +954,14 @@ jobs:
         # surefire nomme un test échoué, et le tri par fréquence, dont la mutation a d'abord survécu
         # parce que le témoin rangeait ses noms dans le même ordre que l'alphabet.
         run: python3 scripts/methode/releve-les-bancs-instables.py --auto-test
+      - name: "Auto-test du relevé des harnais muets (bloquant, #5530)"
+        # Il dérive la population de ce que le harnais FAIT de son échec, jamais de la forme de son
+        # écriture : les deux populations de #5460 et #5461 étaient définies par un idiome, et une
+        # troisième forme y échappait - `scripts/batterie.py`, dix-sept sites, qui n'écrit ni
+        # définition locale de `verifie` ni `cas.append`. Son témoin négatif porte tout : un harnais
+        # dont tous les cas sont différés ne doit figurer dans aucune des deux formes, sans quoi un
+        # relevé qui compterait tout le monde passerait les autres cas.
+        run: python3 scripts/methode/releve-les-harnais-muets.py --auto-test
       - name: "Auto-test du compteur qui ÉCRIT le manifeste (bloquant, #4527)"
         # Le cliquet ci-dessus VÉRIFIE le manifeste ; ce compteur l'ÉCRIT, et il n'avait aucun cas.
         # `--marque` acceptait n'importe quel fichier existant : l'entrée n'était ensuite ni relue,
