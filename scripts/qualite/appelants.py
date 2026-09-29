@@ -12,15 +12,16 @@ lecteur du depot ne repondait. Mesure du 2026-09-28, sur 14 816 methodes indexee
     grep -rl preparer --include=*.java src/   ->  243 fichiers a lire
     cet outil                                 ->  188 declarations, dont 9 appelees d ailleurs
 
-Le depot porte **1 235 noms declares dans plusieurs classes**, sur 9 835 noms distincts. Les pires
+Le depot porte **1 422 noms declares dans plusieurs classes** - 1 235 avant que #5564 fasse entrer
+les types imbriques - sur 9 835 noms distincts. Les pires
 sont massifs : `preparer` dans 188 classes, `start` dans 150, `nettoyer` dans 77. Devant eux, un
 `grep` par nom ne rend pas une reponse, il rend une liste de fichiers a ouvrir.
 
 ## Ce qu il ne dit PAS, et le contresens que ce fichier existe pour ne pas commettre
 
 « Aucun appelant hors de son fichier » n est PAS du code mort. C est l etat normal d un helper privé,
-et `index.py` l ecrit deja dans sa propre docstring. Mesure : 10 376 methodes sur 14 816 sont dans ce
-cas, soit **70 % du corpus**, dont 5 014 cas de test que JUnit appelle par reflexion, et le reste
+et `index.py` l ecrit deja dans sa propre docstring. Mesure : 11 517 methodes sur 16 680 sont dans ce
+cas, soit **69 % du corpus**, dont 5 014 cas de test que JUnit appelle par reflexion, et le reste
 domine par des helpers appeles dans leur propre fichier et des `configure` / `fournir*` de Guice.
 
 Cet outil ne juge donc rien, ne compte aucun suspect et n a pas de cliquet. Il REPOND. Le seul cas ou
