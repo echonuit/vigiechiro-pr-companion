@@ -338,6 +338,9 @@ class SaisonViewTest {
 
         assertThat(table.getItems()).hasSize(1);
 
+        // Hors du périmètre de DoubleClicDeterministe (#4554) : le geste vise un CHAMP DE
+        // TEXTE pour en sélectionner le contenu, et non une ligne de tableau. Le helper
+        // résout un index de ligne, ce qui n'a pas de sens ici.
         robot.doubleClickOn("#champRechercheLieu").eraseText("640002".length());
 
         assertThat(table.getItems())
