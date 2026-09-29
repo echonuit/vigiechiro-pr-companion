@@ -16,11 +16,18 @@ import pathlib
 import sys
 import xml.etree.ElementTree as ET
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+
+from _commun import PLAFOND_RENDU
+
 RAPPORT = pathlib.Path("target/pit-reports/mutations.xml")
 
 # Au-delà, la liste cesse d'être une liste et devient un mur. Les classes sont triées par nombre de
 # survivants : les premières sont celles où une garantie se raconte.
-PLAFOND_CLASSES = 15
+#
+# La valeur vient de `_commun` depuis la passe 7 de #5553 : elle y était en double avec celle des
+# trois outils d'index, pour la même raison écrite deux fois (#5567, #5568).
+PLAFOND_CLASSES = PLAFOND_RENDU
 
 # Ce que PIT appelle « tué » : le mutant a été DÉTECTÉ, peu importe comment. Un mutant qui fait boucler
 # le code est détecté par le butoir (`TIMED_OUT`) aussi sûrement que par une assertion. Ne compter que

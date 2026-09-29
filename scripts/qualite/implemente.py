@@ -11,7 +11,7 @@ Mesure du 2026-09-29, sur les 123 contrats du depot :
     cet outil                                                 ->  30 porteurs, qualifies, en une ligne
 
 Le gain n est pas le compte, c est la RESOLUTION. Un `grep` sur `implements Contrat` rate la classe qui
-l obtient par sa mere, et rate les 22 interfaces imbriquees du depot - `EcritureAtomique.Attente`,
+l obtient par sa mere, et rate les 25 contrats imbriques du depot - `EcritureAtomique.Attente`,
 `TransportVigieChiro.CorpsAEnvoyer` - dont la declaration ne porte pas le nom du fichier.
 
 ## Ce qu il ne dit PAS

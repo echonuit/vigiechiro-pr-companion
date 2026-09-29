@@ -18,7 +18,9 @@ temps que les deux autres et sur le MEME modele : deux modeles dans une JVM leve
 ## Ce qu il ne dit PAS, et le contresens a ne pas commettre
 
 **Un champ sans lecteur externe n est pas un champ mort**, et ici la proportion rend le contresens
-couteux : sur les 8 933 champs du depot, mesure du 2026-09-29, **8 195 n en ont aucun, soit 92 %**.
+couteux : **92 % des champs du depot n en ont aucun**, soit 8 196 sur 8 934 au 2026-09-29. Le RATIO
+est ce qui se cite ; les deux comptes bougent a chaque fusion, et se remesurent en une ligne :
+`python3 -c "import json;d=json.load(open('target/index-champs.json'));print(sum(1 for v in d.values() if not v),len(d))"`.
 C est l etat normal d un etat prive, lu par les methodes de sa propre classe. Un garde bati sur cette
 liste signalerait presque tout le corpus, et c est l ADR 5532 appliquee au troisieme index comme aux
 deux premiers : il REPOND, il ne refuse pas.
@@ -70,7 +72,7 @@ def sans_lecteur_externe(index: dict[str, list[str]] | None = None) -> list[str]
     """Les champs que rien ne lit hors de leur classe.
 
     **Ce n est pas une liste de champs morts**, et c est ici que les confondre coute le plus cher :
-    ils sont 8 195 sur 8 933, soit 92 % du corpus. Un champ prive lu par les methodes de sa propre
+    ils sont 92 % du corpus, 8 196 sur 8 934 au 2026-09-29. Un champ prive lu par les methodes de sa propre
     classe est vivant et figure ici. Ce que cette liste designe est plus etroit : un etat expose qui
     n avait pas besoin de l etre.
     """

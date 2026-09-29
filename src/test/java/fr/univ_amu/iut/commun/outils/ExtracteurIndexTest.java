@@ -161,7 +161,7 @@ class ExtracteurIndexTest {
 
     /// Un champ que personne ne lit ailleurs est une CLE, avec une liste vide. Sans cela l index ne
     /// distinguerait pas « aucun lecteur » de « champ inconnu », et `lecteurs.py` ne pourrait pas
-    /// compter les 8 195 champs muets du corpus : il les confondrait avec des fautes de frappe.
+    /// compter les 92 % de champs muets du corpus : il les confondrait avec des fautes de frappe.
     @Test
     void un_champ_sans_lecteur_externe_est_une_cle_a_liste_vide(@TempDir Path ou) throws IOException {
         Map<String, List<String>> index =
