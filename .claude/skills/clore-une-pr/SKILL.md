@@ -26,7 +26,10 @@ au moment où on l'a regardé.
 ## Fonction de garde
 
 ```
-1. LIRE     le verdict : quelles verifications ont conclu, lesquelles jugent CE changement.
+1. LIRE     le verdict, et le faire lire par le garde qui existe pour ca :
+            `python3 .github/scripts/verifie_verdict_avant_fusion.py --pr <N>`.
+            Il ne juge pas la couleur, seulement l ABSENCE de couleur. Il ne tourne
+            PAS en CI, par decision : rien ne le lance a votre place.
 2. JUGER    un rouge avant de le croire : regression, ou bascule ?
 3. RELIRE   le titre et le corps : decrivent-ils ce qui a ETE FAIT, pas ce qui etait prevu ?
 4. FUSIONNER en squash, `gh pr merge --squash` NU : le corps de la demande devient celui du
@@ -37,6 +40,32 @@ au moment où on l'a regardé.
             environnement en expose. Elles travaillent sur une base qui vient de
             bouger, et rien ne le leur dira.
 ```
+
+## Le garde du verdict complet ne se lance pas tout seul
+
+`verifie_verdict_avant_fusion.py` refuse une fusion dont le commit de tête n'a **pas** de verdict
+complet : ni zéro run, ni un run rapide conclu pendant que les gardes bloquants courent encore. Il
+existe parce que #4560 a été fusionnée avec **zéro run** sur son commit de tête, les sept qu'elle a
+fini par avoir étant nés deux minutes trop tard.
+
+**Il ne tourne pas en CI, et c'est délibéré** : en faire un check requis casserait les chemins
+d'écriture vers `main`, ce que l'[ADR 0041](../../../dev-docs/decisions/0041-un-check-requis-gouverne-la-branche.md)
+a déjà mesuré. Seuls ses cas tournent dans `lint.yml`, et c'est le seul endroit où on peut le voir
+rougir.
+
+**Sa valeur repose donc entièrement sur un geste humain**, et ce geste n'était prescrit nulle part
+jusqu'à la clôture de #4650 : ni ici, ni dans `AGENTS.md`, ni dans `CONTRIBUTING.md`. Un garde livré,
+documenté dans le tableau des gardes comme « à la main avant de fusionner », que rien ne demandait de
+lancer. C'est la forme que le chantier #4650 traque - un dispositif qui ne juge pas - déplacée du
+dispositif vers la conduite.
+
+```bash
+python3 .github/scripts/verifie_verdict_avant_fusion.py --pr <N>
+```
+
+Ce qu'il rend : `0` quand le verdict est complet, en nommant le commit de tête qu'il a jugé ; `2`
+quand il refuse. Lire le commit qu'il nomme, car un verdict complet sur le **mauvais** commit ne dit
+rien de celui qu'on fusionne.
 
 ## Toutes les vérifications ne jugent pas tout
 
