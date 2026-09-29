@@ -529,19 +529,14 @@ public final class ClientVigieChiro {
     /// de la finalisation, ou la **première** issue en échec (URL, partie ou finalisation) - à charge de
     /// l'appelant d'[#abandonnerFichier] pour ne pas laisser de parties orphelines côté serveur.
     public ReponseApi<String> deposerEnParts(
-            String fichierId, Path fichier, String mime, DoubleConsumer progression, SuiviReprise reprise) {
-        return deposerEnParts(fichierId, fichier, mime, SEUIL_MULTIPART_OCTETS, progression, reprise);
+            String fichierId, Path fichier, DoubleConsumer progression, SuiviReprise reprise) {
+        return deposerEnParts(fichierId, fichier, SEUIL_MULTIPART_OCTETS, progression, reprise);
     }
 
     /// Variante à **taille de chunk** explicite (#2354) : la production découpe en [#SEUIL_MULTIPART_OCTETS],
     /// les tests en petits chunks pour exercer la boucle sur un fichier minuscule.
     ReponseApi<String> deposerEnParts(
-            String fichierId,
-            Path fichier,
-            String mime,
-            long tailleChunk,
-            DoubleConsumer progression,
-            SuiviReprise reprise) {
+            String fichierId, Path fichier, long tailleChunk, DoubleConsumer progression, SuiviReprise reprise) {
         long taille;
         try {
             taille = Files.size(fichier);
@@ -573,7 +568,7 @@ public final class ClientVigieChiro {
                     return url;
                 }
                 ReponseApi<String> partie = transport.deposerPartie(
-                        urlSignee, () -> HttpRequest.BodyPublishers.ofByteArray(chunk), mime, reprise);
+                        urlSignee, () -> HttpRequest.BodyPublishers.ofByteArray(chunk), reprise);
                 if (!(partie instanceof ReponseApi.Succes<String>(String etag))) {
                     return partie;
                 }

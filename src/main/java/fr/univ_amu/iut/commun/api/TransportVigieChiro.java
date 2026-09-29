@@ -246,15 +246,23 @@ final class TransportVigieChiro {
     /// car le dépôt est attendu. `Retry-After` du serveur fait autorité (cf. [PolitiqueReessai]). `suivi`
     /// est prévenu avant chaque nouvelle tentative (mention discrète).
     ReponseApi<String> deposerVersS3(String urlSignee, CorpsAEnvoyer corps, String mime, SuiviReprise suivi) {
-        return deposerPartie(urlSignee, corps, mime, suivi);
+        return deposer(urlSignee, corps, Optional.of(mime), suivi);
     }
 
     /// **PUT** d'une **partie** multipart (#2354) vers son URL S3 signée, réessayé comme un dépôt entier
-    /// (idempotent, INSISTANT, `Retry-After`). Rend l'issue triée : un succès **porte l'`ETag`** de la
-    /// partie (requis pour recoller l'objet à la finalisation), un échec sa cause.
-    ReponseApi<String> deposerPartie(String urlSignee, CorpsAEnvoyer corps, String mime, SuiviReprise suivi) {
+    /// (idempotent, INSISTANT, `Retry-After`). Un succès **porte l'`ETag`** de la partie, requis pour
+    /// recoller l'objet à la finalisation.
+    ///
+    /// **Sans `Content-Type`** (#5597) : le serveur signe l'URL d'une partie sans type, le type de l'objet
+    /// ayant été fixé à l'ouverture du multipart. En envoyer un faisait refuser toute archive réelle.
+    ReponseApi<String> deposerPartie(String urlSignee, CorpsAEnvoyer corps, SuiviReprise suivi) {
+        return deposer(urlSignee, corps, Optional.empty(), suivi);
+    }
+
+    private ReponseApi<String> deposer(
+            String urlSignee, CorpsAEnvoyer corps, Optional<String> typeSigne, SuiviReprise suivi) {
         return politique.executer(
-                PolitiqueReessai.Profil.INSISTANT, suivi, suivi::renonce, () -> uneDepose(urlSignee, corps, mime));
+                PolitiqueReessai.Profil.INSISTANT, suivi, suivi::renonce, () -> uneDepose(urlSignee, corps, typeSigne));
     }
 
     /// Un **unique** envoi S3 : construit la requête, l'émet, la consigne, et rend l'issue **avec** le
@@ -262,7 +270,8 @@ final class TransportVigieChiro {
     /// compte. Un succès porte l'`ETag` S3 (utile au multipart ; ignoré par le dépôt entier, qui ne lit
     /// que la variante de l'issue). Une panne réseau ou un fichier illisible devient une issue
     /// [ReponseApi.Injoignable] (réessayable), un statut hors 2xx un [ReponseApi.Refuse] (429/5xx seulement).
-    private PolitiqueReessai.Issue<String> uneDepose(String urlSignee, CorpsAEnvoyer corps, String mime) {
+    private PolitiqueReessai.Issue<String> uneDepose(
+            String urlSignee, CorpsAEnvoyer corps, Optional<String> typeSigne) {
         Optional<String> refus = UrlSigneeAdmise.motifDeRefus(urlSignee);
         if (refus.isPresent()) {
             // Refus AVANT d'ouvrir la moindre connexion : les octets d'une nuit ne partent pas vers un
@@ -273,11 +282,11 @@ final class TransportVigieChiro {
         long debut = System.nanoTime();
         String chemin = "?";
         try {
-            HttpRequest requete = HttpRequest.newBuilder(URI.create(urlSignee))
-                    .timeout(DELAI_UPLOAD)
-                    .header(ENTETE_CONTENT_TYPE, mime)
-                    .PUT(corps.corps())
-                    .build();
+            HttpRequest.Builder construction =
+                    HttpRequest.newBuilder(URI.create(urlSignee)).timeout(DELAI_UPLOAD);
+            // Le type fait partie de la chaîne signée (S3 v2) : on n'envoie que celui que l'URL couvre.
+            typeSigne.ifPresent(type -> construction.header(ENTETE_CONTENT_TYPE, type));
+            HttpRequest requete = construction.PUT(corps.corps()).build();
             // Chemin SEUL : une URL S3 pré-signée porte sa signature dans sa requête (#1845).
             chemin = requete.uri().getPath();
             // Le corps est LU quel que soit le statut, comme partout ailleurs ici. `discarding()` le
