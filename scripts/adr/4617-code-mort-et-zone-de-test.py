@@ -42,7 +42,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import PRODUCTION, RACINE_DEPOT, TESTS, rapporte, sort_si_contrat_demande
+from _commun import PRODUCTION, RACINE_DEPOT, TESTS, rapporte, refuse, sort_si_contrat_demande
 
 # DEUX cliquets, un par zone, et surtout pas un seul sur les deux (#4682).
 #
@@ -101,10 +101,13 @@ def suspects(rapport: pathlib.Path | None = None, zone: str | None = None) -> li
     """
     source = rapport or RAPPORT
     if not source.exists():
-        raise SystemExit(
-            f"{source} est absent : PMD n a pas tourne.\n"
-            "Ce garde REFUSE plutot que de conclure sur ce qu il n a pas lu.\n"
-            "Lancez d abord : ./mvnw -B -o test-compile pmd:pmd"
+        # ⟨forme declaree⟩ Son geste vivait en TROISIEME ligne, et la porte n en montrait que deux :
+        # elle affichait la cause et la doctrine, jamais quoi lancer. C est le cas qui a fait ecrire
+        # cette forme (#5485).
+        refuse(
+            f"{source} est absent : PMD n a pas tourne, et ce garde ne conclut pas sur ce qu il n a"
+            " pas lu",
+            "./mvnw -B -o test-compile pmd:pmd",
         )
     arbre = ET.parse(source).getroot()
     espace = arbre.tag.split("}")[0].strip("{") if "}" in arbre.tag else None
