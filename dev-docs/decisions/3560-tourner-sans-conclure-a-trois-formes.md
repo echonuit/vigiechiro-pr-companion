@@ -137,7 +137,7 @@ est corrigée sur un fait, et la correction se lit ici.
 
 - `pom.xml` : quatre dépendances de test déclarées, `archunit-junit5` remplacé par `archunit`, sortie
   d'analyse à zéro écart, `failOnWarning` actif.
-- `maven.yml` : job `duree-du-portail`, non bloquant, exercé par chaque PR.
+- `maven.yml` : job `duree-du-portail`, non bloquant, exercé par chaque PR. **Ce job vit dans `lint.yml` depuis #5540** : les deux mesures de durée ont été croisées pour qu'aucun atelier ne se mesure lui-même, et `maven.yml` porte désormais `duree-de-l-atelier-des-gardes`, qui lit `lint.yml`.
 - `src/test/bats/scripts-ci.bats` : quatre cas, dont la série réelle du dépôt qui doit rester muette.
 - **Un seul script de CI sur onze est éprouvé.** Les dix autres rendent des jugements que rien ne
   vérifie, et deux pannes vécues sur l'un d'eux ne vivent qu'en commentaire. Consigné en #3661.
