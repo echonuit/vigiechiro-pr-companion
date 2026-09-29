@@ -5,21 +5,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
-import spoon.reflect.code.CtInvocation;
-import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.CtType;
-import spoon.reflect.declaration.ModifierKind;
-import spoon.reflect.reference.CtExecutableReference;
-import spoon.reflect.reference.CtTypeReference;
-import spoon.reflect.visitor.filter.TypeFilter;
 
 /// Produit les index de `target/index-*.json`, en UN passage sur UN modele :
 ///
@@ -29,12 +18,16 @@ import spoon.reflect.visitor.filter.TypeFilter;
 /// Ni `arbre.py` ni PMD ne repondent a ces questions : le premier lit un fichier a la fois, le second
 /// ne juge que des regles de conception.
 ///
-/// La population vient de `tousLesTypes`, non de `getAllTypes()`, et le detail de ce que ce choix a
-/// corrige vit dans #5564 : la limite declaree ici etait fausse de 1 226 methodes, et le defaut etait
-/// asymetrique - 154 types imbriques figuraient comme APPELANTS sans qu aucune de leurs methodes soit
-/// une cle. La soustraction ferme desormais :
+/// La population vient de `TypesDuModele.tous`, non de `getAllTypes()`, et le detail de ce que ce
+/// choix a corrige vit dans #5564 : la limite declaree ici etait fausse de 1 226 methodes, et le
+/// defaut etait asymetrique - 154 types imbriques figuraient comme APPELANTS sans qu aucune de leurs
+/// methodes soit une cle. La soustraction fermait ainsi, AU 2026-09-28 :
 ///
 ///     14 828 (premier niveau) + 1 226 (imbriques NOMMES) + 626 (ANONYMES) = 16 680
+///
+/// La date n est pas un ornement. Ce total suit la population, et il a bouge de huit le 2026-09-29
+/// quand #5565 a decoupe cette classe en quatre : une fermeture arithmetique sans date se lit comme
+/// un invariant, et devient fausse au premier fichier ajoute sans que rien ne rougisse.
 ///
 public final class ExtracteurIndex {
 
@@ -65,7 +58,7 @@ public final class ExtracteurIndex {
         // bibliothèque qu'on appelle deux fois.
         CtModel modele = modele();
 
-        Map<String, List<String>> appelants = appelantsHorsDuFichier(modele);
+        Map<String, List<String>> appelants = IndexDesAppels.appelantsHorsDuFichier(modele);
         ecrire(ou.resolve("index-appels.json"), appelants);
         long sansAppelant = appelants.values().stream().filter(List::isEmpty).count();
         System.out.println("index écrit : " + ou.resolve("index-appels.json")
@@ -73,7 +66,7 @@ public final class ExtracteurIndex {
                 + "  avec appelant externe=" + (appelants.size() - sansAppelant)
                 + "  sans=" + sansAppelant);
 
-        Map<String, List<String>> implementations = implementationsParContrat(modele);
+        Map<String, List<String>> implementations = IndexDesImplementations.implementationsParContrat(modele);
         ecrire(ou.resolve("index-implementations.json"), implementations);
         long sansImplementation =
                 implementations.values().stream().filter(List::isEmpty).count();
@@ -81,6 +74,14 @@ public final class ExtracteurIndex {
                 + "  contrats=" + implementations.size()
                 + "  implémentés=" + (implementations.size() - sansImplementation)
                 + "  sans=" + sansImplementation);
+
+        Map<String, List<String>> champs = IndexDesChamps.lecteursHorsDeLaClasse(modele);
+        ecrire(ou.resolve("index-champs.json"), champs);
+        long sansLecteur = champs.values().stream().filter(List::isEmpty).count();
+        System.out.println("index écrit : " + ou.resolve("index-champs.json")
+                + "  champs=" + champs.size()
+                + "  lus ailleurs=" + (champs.size() - sansLecteur)
+                + "  sans=" + sansLecteur);
     }
 
     /// Écriture ATOMIQUE : un fichier temporaire, puis un renommage. C'est ce qui remplace l'argument
@@ -90,69 +91,6 @@ public final class ExtracteurIndex {
         Path provisoire = sortie.resolveSibling(sortie.getFileName() + ".partiel");
         Files.writeString(provisoire, enJson(contenu), StandardCharsets.UTF_8);
         Files.move(provisoire, sortie, StandardCopyOption.REPLACE_EXISTING);
-    }
-
-    /// Pour chaque contrat DÉCLARÉ DANS LE MODÈLE, les types qui l'implémentent ou l'étendent.
-    ///
-    /// « Déclaré dans le modèle » est le filtre qui rend cet index utile, et c'est le même esprit que
-    /// celui de `appelantsHorsDuFichier` : sans lui, chaque `Comparable`, `Runnable` ou `List` du JDK
-    /// entrerait avec ses porteurs, et la réponse à « qui implémente ce contrat » se lirait dans du
-    /// bruit. La question posée porte sur les contrats DU DÉPÔT.
-    ///
-    /// Les interfaces ET les classes abstraites, parce que la question est la même : un contrat est
-    /// ce qu'un autre type promet de tenir. Une classe concrète étendue y figure aussi, et c'est
-    /// voulu - la hiérarchie est ce qu'on interroge, pas la seule abstraction.
-    static Map<String, List<String>> implementationsParContrat(CtModel modele) {
-        Map<String, List<String>> parContrat = new TreeMap<>();
-        List<? extends CtType<?>> tous = tousLesTypes(modele);
-        for (CtType<?> type : tous) {
-            if (type.isInterface() || type.getModifiers().contains(ModifierKind.ABSTRACT)) {
-                parContrat.putIfAbsent(type.getQualifiedName(), new ArrayList<>());
-            }
-        }
-        for (CtType<?> type : tous) {
-            for (String contrat : contratsDe(type)) {
-                List<String> porteurs = parContrat.get(contrat);
-                if (porteurs != null && !porteurs.contains(type.getQualifiedName())) {
-                    porteurs.add(type.getQualifiedName());
-                }
-            }
-        }
-        parContrat.values().forEach(v -> v.sort(Comparator.naturalOrder()));
-        return parContrat;
-    }
-
-    /// TOUS les types, IMBRIQUÉS COMPRIS, et c'est la différence avec `getAllTypes()`.
-    ///
-    /// `getAllTypes()` ne rend que les types de premier niveau : 2 139 contre 2 960, mesuré le
-    /// 2026-09-28. La différence porte **564 types imbriqués nommés**, et parmi eux 22 interfaces -
-    /// `EcritureAtomique.Attente`, `PresenceFichiers.Balayeur`, `TransportVigieChiro.CorpsAEnvoyer`
-    /// et les autres. Une interface imbriquée est un contrat comme une autre ; l'écarter aurait fait
-    /// répondre « personne ne l'implémente » à une question dont la réponse existe.
-    private static List<? extends CtType<?>> tousLesTypes(CtModel modele) {
-        return modele.getElements(new TypeFilter<CtType<?>>(CtType.class));
-    }
-
-    /// Les contrats qu'un type déclare tenir : ses interfaces directes et sa superclasse, SANS filtrer.
-    ///
-    /// Le filtre `getDeclaration() != null` a été écrit ici puis **retiré**, et la raison vaut d'être
-    /// dite : la garde du dictionnaire fait déjà ce travail, et les deux en série rendaient la
-    /// propriété intenable par mutation. Ni retirer ce filtre, ni retirer la garde ne faisait rougir
-    /// le cas qui surveille les contrats hors du modèle - il aurait fallu muter les deux à la fois,
-    /// et un témoin qui exige deux mutations simultanées ne prouve rien d'une seule.
-    ///
-    /// Une seule couche décide donc, et c'est `parContrat` : n'est un contrat que ce qui y a été
-    /// pré-inscrit, c'est-à-dire une interface ou une classe abstraite DU MODÈLE.
-    private static List<String> contratsDe(CtType<?> type) {
-        List<String> contrats = new ArrayList<>();
-        for (CtTypeReference<?> vue : type.getSuperInterfaces()) {
-            contrats.add(vue.getQualifiedName());
-        }
-        CtTypeReference<?> mere = type.getSuperclass();
-        if (mere != null) {
-            contrats.add(mere.getQualifiedName());
-        }
-        return contrats;
     }
 
     /// Le modèle des deux arbres, bâti une fois. UN modèle par processus : deux dans une même JVM
@@ -165,56 +103,6 @@ public final class ExtracteurIndex {
         lanceur.getEnvironment().setComplianceLevel(COMPLIANCE);
         lanceur.buildModel();
         return lanceur.getModel();
-    }
-
-    /// Pour chaque méthode, ses appelants vivant dans un AUTRE fichier. Le filtre est ce qui
-    /// distingue cet index : l'intra-fichier est déjà vu par `arbre.py` et par PMD.
-    static Map<String, List<String>> appelantsHorsDuFichier(CtModel modele) {
-        Map<String, List<String>> par_appelee = new TreeMap<>();
-        for (CtType<?> type : tousLesTypes(modele)) {
-            for (CtMethod<?> methode : type.getMethods()) {
-                par_appelee.putIfAbsent(signature(methode), new ArrayList<>());
-            }
-        }
-        for (CtInvocation<?> appel : modele.getElements(new AppelsSeuls())) {
-            CtExecutableReference<?> vise = appel.getExecutable();
-            if (vise == null || vise.getDeclaration() == null) {
-                continue;
-            }
-            CtExecutable<?> declaree = vise.getDeclaration();
-            String appelee = signature(declaree);
-            String appelant = ouVit(appel);
-            if (appelant == null || appelant.equals(ouVit(declaree)) || !par_appelee.containsKey(appelee)) {
-                continue;
-            }
-            List<String> vus = par_appelee.get(appelee);
-            if (!vus.contains(appelant)) {
-                vus.add(appelant);
-            }
-        }
-        par_appelee.values().forEach(v -> v.sort(Comparator.naturalOrder()));
-        return par_appelee;
-    }
-
-    /// `fr.X.Y#methode(int,String)` : le type QUALIFIÉ écarte les 1 155 homonymes du corpus, les
-    /// paramètres écartent les 436 surcharges que `Type#nom` fusionnait.
-    private static String signature(CtExecutable<?> executable) {
-        String porteur = executable.getParent(CtType.class) == null
-                ? "?"
-                : executable.getParent(CtType.class).getQualifiedName();
-        StringBuilder parametres = new StringBuilder();
-        for (int i = 0; i < executable.getParameters().size(); i++) {
-            String type = executable.getParameters().get(i).getType() == null
-                    ? "?"
-                    : executable.getParameters().get(i).getType().getSimpleName();
-            parametres.append(i == 0 ? "" : ",").append(type);
-        }
-        return porteur + "#" + executable.getSimpleName() + "(" + parametres + ")";
-    }
-
-    private static String ouVit(spoon.reflect.declaration.CtElement element) {
-        CtType<?> type = element instanceof CtType<?> t ? t : element.getParent(CtType.class);
-        return type == null ? null : type.getQualifiedName();
     }
 
     private static String enJson(Map<String, List<String>> appelants) {
@@ -235,14 +123,5 @@ public final class ExtracteurIndex {
 
     private static String echappe(String s) {
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
-    }
-
-    /// Ne retenir que les invocations, sans filtrer sur autre chose : le tri se fait plus haut, où
-    /// l'on sait ce qui a été résolu.
-    private static final class AppelsSeuls implements spoon.reflect.visitor.Filter<CtInvocation<?>> {
-        @Override
-        public boolean matches(CtInvocation<?> element) {
-            return true;
-        }
     }
 }

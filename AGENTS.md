@@ -199,14 +199,26 @@ Les passes **0 à 9 gardent leur numéro**, et les deux dernières ont glissé d
 
 ## Chercher dans le dépôt
 
-Quatre outils, quatre questions. `graphify` d'abord (voir ci-dessous), puis :
+Six outils, six questions. `graphify` d'abord (voir ci-dessous), puis :
 
 - **`scripts/qualite/appelants.py`** pour « **qui appelle cette méthode ?** » quand la réponse doit
   être RÉSOLUE. C'est le seul qui distingue deux méthodes de même nom, et le dépôt en déclare
-  **1 235** dans plusieurs classes : `preparer` dans 188, `start` dans 150, `nettoyer` dans 77.
+  **1 422** dans plusieurs classes : `preparer` dans 188, `start` dans 150, `nettoyer` dans 77.
   `python3 scripts/qualite/appelants.py preparer` rend les neuf porteurs appelés d'ailleurs, là où un
   `grep -rl` rend 243 fichiers à lire. Il lit l'index que la CI produit à chaque demande de fusion, et
   **refuse** si l'index manque plutôt que de rendre « aucun appelant » (#5532).
+- **`scripts/qualite/implemente.py`** pour « **qui tient ce contrat ?** ». Un `grep` sur
+  `implements Contrat` rate la classe qui l'obtient par sa mère, et rate les **22 interfaces
+  imbriquées** du dépôt, dont la déclaration ne porte pas le nom du fichier (#5564).
+- **`scripts/qualite/lecteurs.py`** pour « **qui lit ce champ, hors de sa classe ?** ». Un `grep` sur
+  un nom de champ ne le distingue pas de la variable locale, du paramètre ni de la méthode homonymes :
+  sur `service` il rend **3 398 lignes**, là où l'outil rend 168 déclarations dont 24 lues d'ailleurs.
+  Les **lectures seules**, jamais les écritures (#5565).
+
+  Les trois lisent le même modèle Spoon, bâti une fois à la compilation, et **refusent** si leur index
+  manque. Et aucun des trois ne rend une liste de code mort : 69 % des méthodes n'ont pas d'appelant
+  externe, 27 des 123 contrats aucun porteur, 92 % des champs aucun lecteur externe. Ce sont les états
+  normaux d'une aide privée, d'un point d'extension et d'un état privé.
 - **`semgrep`** pour une question de **forme** : « qui construit un Y à la main ? », « où ce motif
   apparaît-il ? ». Il lit l'arbre syntaxique, pas les lignes. Il ne résout pas les types, donc sur un
   nom ambigu il rend les 188 `preparer` comme le ferait un `grep`.

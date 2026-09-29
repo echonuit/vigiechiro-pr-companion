@@ -23,6 +23,11 @@ import spoon.reflect.CtModel;
 ///
 /// Le modèle est bâti sur deux sources jetables plutôt que sur le dépôt : `modele()` balaie les deux
 /// racines de paquet et coûte 25 s, ce qui n'a pas sa place dans la suite.
+///
+/// Les trois index vivent depuis #5565 dans `IndexDesAppels`, `IndexDesImplementations` et
+/// `IndexDesChamps`, le troisième ayant fait de `ExtracteurIndex` une `GodClass` au sens du portail.
+/// Cette classe les éprouve ensemble parce que ce qu'elle surveille est la SORTIE de l'extraction,
+/// non la découpe interne qui la produit.
 class ExtracteurIndexTest {
 
     /// Le niveau que l'extracteur pose lui-même : Spoon le déduirait du JDK courant et refuserait
@@ -137,14 +142,101 @@ class ExtracteurIndexTest {
         assertThat(index.keySet()).noneMatch(c -> c.contains("Runnable"));
     }
 
+    @Test
+    void un_champ_lu_depuis_un_autre_type_compte_et_le_nomme(@TempDir Path ou) throws IOException {
+        ecrire(ou, "Porte", "package p; public class Porte { public int compte = 0; }");
+        Map<String, List<String>> index =
+                champsDe(ou, "Lit", "package p; public class Lit { int f() { return new Porte().compte; } }");
+
+        assertThat(index.get("p.Porte#compte")).containsExactly("p.Lit");
+    }
+
+    @Test
+    void une_lecture_depuis_la_MEME_classe_ne_compte_pas(@TempDir Path ou) throws IOException {
+        Map<String, List<String>> index =
+                champsDe(ou, "Seule", "package p; public class Seule { int etat = 0; int f() { return etat; } }");
+
+        assertThat(index.get("p.Seule#etat")).isEmpty();
+    }
+
+    /// Un champ que personne ne lit ailleurs est une CLE, avec une liste vide. Sans cela l index ne
+    /// distinguerait pas « aucun lecteur » de « champ inconnu », et `lecteurs.py` ne pourrait pas
+    /// compter les 8 195 champs muets du corpus : il les confondrait avec des fautes de frappe.
+    @Test
+    void un_champ_sans_lecteur_externe_est_une_cle_a_liste_vide(@TempDir Path ou) throws IOException {
+        Map<String, List<String>> index =
+                champsDe(ou, "Muette", "package p; public class Muette { private int rien = 0; }");
+
+        assertThat(index).containsKey("p.Muette#rien");
+        assertThat(index.get("p.Muette#rien")).isEmpty();
+    }
+
+    /// **Une ECRITURE ne compte pas**, et c est la limite declaree de cet index plutot qu un oubli.
+    ///
+    /// Spoon distingue `CtFieldRead` de `CtFieldWrite`. Les confondre ferait passer un champ qu un
+    /// constructeur ecrit et que personne ne lit pour « utilise ailleurs », soit le faux negatif exact
+    /// que l index existe pour eviter. Les 4 347 ecritures du corpus ne sont donc pas indexees, et ce
+    /// cas est le seul endroit qui le tienne : rien dans la docstring ne rougirait.
+    @Test
+    void une_ECRITURE_depuis_un_autre_type_ne_compte_pas(@TempDir Path ou) throws IOException {
+        ecrire(ou, "Cible", "package p; public class Cible { public int compte = 0; }");
+        Map<String, List<String>> index =
+                champsDe(ou, "Ecrit", "package p; public class Ecrit { void f() { new Cible().compte = 3; } }");
+
+        assertThat(index.get("p.Cible#compte")).isEmpty();
+    }
+
+    @Test
+    void le_champ_d_un_type_IMBRIQUE_est_une_cle(@TempDir Path ou) throws IOException {
+        Map<String, List<String>> index = champsDe(
+                ou, "Englobante", "package p; public class Englobante { static class Dedans { int cache = 0; } }");
+
+        assertThat(index.keySet()).contains("p.Englobante$Dedans#cache");
+    }
+
+    /// Comme pour les appels, « hors de la classe » se mesure par TYPE et non par fichier : une classe
+    /// imbriquee qui lit le champ de son englobante compte comme un lecteur venu d ailleurs.
+    @Test
+    void hors_de_la_classe_se_mesure_par_TYPE_donc_une_imbriquee_compte(@TempDir Path ou) throws IOException {
+        Map<String, List<String>> index = champsDe(
+                ou,
+                "Hote",
+                "package p; public class Hote {" + " int etat = 0;" + " class Dedans { int f() { return etat; } } }");
+
+        assertThat(index.get("p.Hote#etat")).containsExactly("p.Hote$Dedans");
+    }
+
+    /// Deux lecteurs du meme champ ne se dedoublonnent pas l un l autre, et un lecteur qui lit DEUX
+    /// fois ne compte qu une. C est la derniere marche de l effondrement mesure le 2026-09-29, de
+    /// 5 993 lectures hors classe a 3 173 aretes, et sans ce cas rien ne distinguerait le
+    /// dedoublonnage d une perte.
+    @Test
+    void deux_lecteurs_sont_nommes_une_fois_chacun(@TempDir Path ou) throws IOException {
+        ecrire(ou, "Bien", "package p; public class Bien { public int compte = 0; }");
+        ecrire(ou, "Un", "package p; public class Un { int f() { return new Bien().compte; } }");
+        Map<String, List<String>> index = champsDe(
+                ou,
+                "Deux",
+                "package p; public class Deux {"
+                        + " int f() { return new Bien().compte; }"
+                        + " int g() { return new Bien().compte; } }");
+
+        assertThat(index.get("p.Bien#compte")).containsExactly("p.Deux", "p.Un");
+    }
+
+    private static Map<String, List<String>> champsDe(Path ou, String nom, String source) throws IOException {
+        ecrire(ou, nom, source);
+        return IndexDesChamps.lecteursHorsDeLaClasse(modeleDe(ou));
+    }
+
     private static Map<String, List<String>> contratsDe(Path ou, String nom, String source) throws IOException {
         ecrire(ou, nom, source);
-        return ExtracteurIndex.implementationsParContrat(modeleDe(ou));
+        return IndexDesImplementations.implementationsParContrat(modeleDe(ou));
     }
 
     private static Map<String, List<String>> indexDe(Path ou, String nom, String source) throws IOException {
         ecrire(ou, nom, source);
-        return ExtracteurIndex.appelantsHorsDuFichier(modeleDe(ou));
+        return IndexDesAppels.appelantsHorsDuFichier(modeleDe(ou));
     }
 
     private static void ecrire(Path ou, String nom, String source) throws IOException {

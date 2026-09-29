@@ -753,7 +753,7 @@ jobs:
       # démarrage de Maven et la résolution du classpath ne coûtant pas la même chose ici et là-bas.
       # Le mettre dans `adr-rapport.yml` aurait mangé la moitié de son plafond et laissé l'index
       # ABSENT des demandes ordinaires, c'est-à-dire absent de là où il sert.
-      - name: "L'index des appels : produit target/index-appels.json, que le garde de #5532 lira"
+      - name: "Les trois index : produits en un modèle, lus par appelants.py, implemente.py et lecteurs.py"
         # `exec:exec` et NON `exec:java`, et ce n'est pas un goût. `<mainClass>fr.univ_amu.iut.App`
         # est déclaré au niveau du PLUGIN dans le pom, donc il bat `-Dexec.mainClass`. Mesuré le
         # 2026-09-25 : `exec:java -Dexec.mainClass=...ExtracteurIndex` a lancé l'App, tourné 263 s,
@@ -772,11 +772,13 @@ jobs:
             -Dexec.executable=java \
             -Dexec.classpathScope=test \
             -Dexec.args='-cp %classpath fr.univ_amu.iut.commun.outils.ExtracteurIndex'
-          # Le vert muet mesuré plus haut, rendu mécanique : un extracteur qui sort 0 sans rien
-          # écrire ne passe pas ce pas. C'est le seul contrôle de ce pas qui ne vienne pas du code
-          # de sortie, et il existe parce que le cas s'est produit.
-          test -s target/index-appels.json
-          echo "Index des appels : $(wc -c < target/index-appels.json) octets."
+          # Le vert muet mesuré plus haut, rendu mécanique, et il vaut pour les TROIS. Un seul
+          # `test -s` sur l'index des appels laisserait un extracteur qui écrit le premier puis
+          # échoue passer ce pas : les trois sortent du MÊME modèle, mais pas de la même écriture.
+          for index in appels implementations champs; do
+            test -s "target/index-$index.json"
+            echo "Index des $index : $(wc -c < "target/index-$index.json") octets."
+          done
       - name: Cliquets ADR (bloquant)
         # Chaque script `probable` (scripts/adr/NNNN-*.py) rend un code non nul quand le nombre de
         # suspects DÉPASSE le cliquet déclaré dans l'ADR : un cas a été ajouté. C'est ici que le
@@ -1234,6 +1236,7 @@ jobs:
           # FABRIQUE, donc il ne depend pas de l index que le job vient de produire (#5532).
           python3 scripts/qualite/appelants.py --auto-test
           python3 scripts/qualite/implemente.py --auto-test
+          python3 scripts/qualite/lecteurs.py --auto-test
 
   temoins:
     # Les bancs qui prouvent qu un auto-test n est pas decoratif. Le poste le plus cher.
