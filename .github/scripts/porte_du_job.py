@@ -224,7 +224,8 @@ INCONDITIONNELS: dict[str, str] = {
     "methode": "les gardes de methode : la prose, les inventaires, les cliquets, les concordances. Ils lisent les competences, les ADR et les pages, donc presque toute demande les engage",
     "corps": "il lit le corps de la demande, pas l arbre : une portee de chemins n y a aucun sens",
     "titre": "il lit le titre de la demande, pas l arbre",
-    "duree-du-portail": "il porte `needs: build`, mesure une serie de la forge et n execute rien du depot",
+    "duree-du-portail": "il mesure une serie de la forge et n execute rien du depot. Son `needs: build` est tombe avec #5540, qui l a deplace dans `lint.yml` : un atelier qui se mesure entre dans la fenetre qu il calcule",
+    "duree-de-l-atelier-des-gardes": "meme raison, en miroir : il mesure `lint.yml` depuis `maven.yml`, lit l API de la forge et n execute rien du depot (#5540)",
     "contrat-fichiers": "il porte sa propre porte depuis #3525, `porte_sur_le_contrat_de_fichiers.py`",
     "banc-filme": "ecarte par ecrit au chantier #5294 : il lance les auto-tests de six dispositifs, et le conditionner en sauterait cinq pour gagner une minute",
 }

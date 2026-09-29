@@ -669,9 +669,8 @@ jobs:
             exit 1
           fi
 
-  duree-du-portail:
-    name: duree-du-portail
-    needs: build
+  duree-de-l-atelier-des-gardes:
+    name: duree-de-l-atelier-des-gardes
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -680,26 +679,25 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Le portail met-il plus de temps qu'avant ?
+      # ⟨pourquoi `lint.yml` se mesure ICI, chez son voisin⟩ Cet instrument lit l'API de la forge : il
+      # n'a besoin de RIEN de l'atelier qu'il mesure, et c'est ce qui rend le placement libre. Le
+      # placer dans `lint.yml` le ferait entrer dans la fenêtre qu'il calcule, et ce n'est pas une
+      # affaire de magnitude : un classement décale d'une unité une fois, une rétroaction se COMPOSE,
+      # chaque exécution nourrissant la suivante. Il ne pourrait plus séparer son propre coût de la
+      # dérive qu'il annonce (#5540).
+      #
+      # Les deux mesures sont donc CROISÉES : celle-ci lit `lint.yml` depuis `maven.yml`, et
+      # `duree-du-portail` lit `maven.yml` depuis `lint.yml`. Aucun atelier ne se mesure, et un cas de
+      # `--auto-test` le refuse désormais - il a rougi sur l'état d'avant, où `maven.yml` se mesurait
+      # depuis #3508. Mesuré alors : 0,9 % du flux et 0,2 point de dérive, donc bénin, et corrigé
+      # quand même parce qu'une rétroaction se compose là où un compte se constate.
+      - name: L'atelier des gardes met-il plus de temps qu'avant ?
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           chmod +x .github/scripts/mesure_duree_portail.py
-          python3 .github/scripts/mesure_duree_portail.py "${{ github.repository }}" maven.yml
+          python3 .github/scripts/mesure_duree_portail.py "${{ github.repository }}" lint.yml
 
-  # Le contrat de SYSTÈME DE FICHIERS sur les trois plateformes livrées (#3525). Le produit part en
-  # MSI, DMG et DEB ; ses tests ne tournaient que sous Linux - 21 jobs contre un, et ce dernier lance
-  # `msiexec`, pas la suite. Le premier contact du code avec Windows avait donc lieu APRÈS la fusion.
-  #
-  # Ciblé, et non la suite entière : le gate dure onze minutes, et les minutes Windows coûtent le
-  # double, macOS dix fois. Ce qui mérite les trois plateformes, c'est ce qui touche le disque -
-  # renommage atomique, verrou, ZIP, copie entre volumes, emplacement de la configuration -, pas l'IHM
-  # ni le domaine.
-  #
-  # Il s'exécute sur CHAQUE PR et décide lui-même s'il a quelque chose à vérifier. Un filtre
-  # `paths:` l'aurait rendu ABSENT du récapitulatif la plupart du temps - et dans un dépôt sans
-  # protection de branche, un job absent se lit exactement comme un job vert (ADR 2748). Ici son
-  # silence est explicite : il le dit et il finit vert.
   contrat-fichiers:
     name: contrat-fichiers (${{ matrix.os }})
     strategy:

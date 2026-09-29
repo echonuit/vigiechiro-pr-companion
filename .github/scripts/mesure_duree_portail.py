@@ -42,6 +42,7 @@ import datetime as dt
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import time
@@ -101,6 +102,23 @@ def rendre(texte: str) -> None:
             f.write(texte + "\n")
 
 
+def titre(workflow: str) -> str:
+    """Le titre du rendu NOMME le workflow mesure, et ce n est pas cosmetique.
+
+    Il etait « Durée du portail qualité » en dur, du temps ou l instrument ne mesurait que
+    `maven.yml`. Depuis #5540 il en mesure deux, et deux jobs publiaient le MEME en-tete dont un
+    mentait : `lint.yml` n est pas le portail. Un resume qui nomme le mauvais sujet est pire qu un
+    resume absent, parce qu on le lit.
+    """
+    # Le titre ENTIER, non composé : « Durée du » + « atelier des gardes » rend « Durée du atelier »,
+    # et l élision ne se devine pas depuis un nom de workflow.
+    connus = {
+        "maven.yml": "Durée du portail qualité",
+        "lint.yml": "Durée de l'atelier des gardes",
+    }
+    return connus.get(workflow, f"Durée de `{workflow}`")
+
+
 def mesurer(depot: str, workflow: str, fenetre: int = 12) -> int:
     """La mesure, et 0 quoi qu elle dise : ce dispositif avertit, il ne bloque pas."""
     besoin = fenetre * 2
@@ -117,13 +135,13 @@ def mesurer(depot: str, workflow: str, fenetre: int = 12) -> int:
 
     if not durees:
         print(
-            "::warning title=Durée du portail::Historique des exécutions illisible après trois tentatives."
+            f"::warning title={titre(workflow)}::Historique des exécutions illisible après trois tentatives."
         )
         return 0
 
     if len(durees) < besoin:
         rendre(
-            "### Durée du portail qualité\n\n"
+            f"### {titre(workflow)}\n\n"
             f"Pas encore assez d'historique : {len(durees)} exécution(s) réussie(s) sur "
             f"{besoin} nécessaires."
         )
@@ -134,7 +152,7 @@ def mesurer(depot: str, workflow: str, fenetre: int = 12) -> int:
     derive = ((recente / precedente) - 1) * 100
 
     rendre(
-        "### Durée du portail qualité\n\n"
+        f"### {titre(workflow)}\n\n"
         "| Fenêtre | Médiane |\n"
         "|---|---|\n"
         f"| {fenetre} dernières exécutions | **{recente:.1f} min** |\n"
@@ -258,6 +276,32 @@ CAS = (
 )
 
 
+def invocations(racine: pathlib.Path | None = None) -> list[tuple[str, str]]:
+    """Les couples (atelier qui LANCE, workflow MESURE), lus dans les ateliers.
+
+    Derives et non enumeres : une liste ecrite ici se perimerait au premier pas ajoute, et c est
+    exactement ce que ce dispositif reproche aux inventaires tenus a la main.
+    """
+    base = (racine or pathlib.Path(__file__).resolve().parents[2]) / ".github" / "workflows"
+    motif = re.compile(r"mesure_duree_portail\.py[^\n]*?\s([a-z0-9_-]+\.yml)")
+    couples = []
+    for atelier in sorted(base.glob("*.yml")):
+        for mesure in motif.findall(atelier.read_text(encoding="utf-8")):
+            couples.append((atelier.name, mesure))
+    return couples
+
+
+def auto_mesure(racine: pathlib.Path | None = None) -> list[str]:
+    """Les ateliers qui se mesurent EUX-MEMES, ce qui rend la mesure aveugle a son propre cout.
+
+    Un atelier qui se mesure entre dans la fenetre qu il calcule, et ce n est pas une affaire de
+    magnitude : un classement decale d une unite une fois, une RETROACTION se compose, chaque
+    execution nourrissant la suivante. L instrument ne peut alors plus separer son propre cout de la
+    derive qu il annonce.
+    """
+    return [f"{ou} mesure {quoi}" for ou, quoi in invocations(racine) if ou == quoi]
+
+
 def _auto_test() -> int:
     """Quatre series connues, et TROIS etats : muet, avertit, ou refuse de conclure.
 
@@ -301,6 +345,46 @@ def _auto_test() -> int:
                 os.environ.pop("SERIE_DUREES_FICHIER", None)
             else:
                 os.environ["SERIE_DUREES_FICHIER"] = ancien
+
+    # ⟨le titre est de la prose, donc il s eprouve⟩ Il etait en dur du temps d un seul workflow, et
+    # deux jobs publiaient le meme en-tete dont un mentait. Le cas tient aussi l elision, qu un titre
+    # compose rendait faux : « Durée du atelier des gardes ».
+    cas += 1
+    attendus = {
+        "maven.yml": "Durée du portail qualité",
+        "lint.yml": "Durée de l'atelier des gardes",
+    }
+    faux_titres = [f"{w} -> {titre(w)}" for w, a in attendus.items() if titre(w) != a]
+    if faux_titres:
+        print(f"  ✘ le titre nomme le workflow mesure : {', '.join(faux_titres)}")
+        echecs = 1
+    elif titre("inconnu.yml") == attendus["maven.yml"]:
+        print("  ✘ un workflow inconnu ne doit pas heriter du titre du portail")
+        echecs = 1
+    else:
+        print(f"  ✔ le titre nomme le workflow mesure ({titre('lint.yml')})")
+
+    # ⟨le cas que #5540 ajoute, et il ne porte pas sur l arithmetique⟩ Les quatre series ci-dessus
+    # prouvent que l instrument PARLE quand il doit. Elles ne disent rien de l endroit d ou il
+    # regarde, et c est la que le placement peut casser la mesure en silence : un pas deplace dans
+    # l atelier qu il mesure paraitrait plus lisible et rendrait la fenetre aveugle a son propre
+    # cout. Vert aujourd hui par construction ; il rougira le jour du deplacement.
+    # Le cas affirme DEUX choses, et la premiere n y etait pas a la premiere ecriture : la population
+    # lue n est pas vide. Sans elle, vider la derivation rendait zero coupable, donc un VERT - et une
+    # mutation de `invocations` passait sans rien faire rougir. C est la forme exacte de #5500, « deux
+    # listes vides sont disjointes », reproduite ici par celui qui venait de la citer.
+    cas += 1
+    vues = invocations()
+    coupables = auto_mesure()
+    if not vues:
+        print("  ✘ la derivation ne lit aucune invocation : le cas suivant serait vert a vide")
+        echecs = 1
+    elif coupables:
+        print(f"  ✘ aucun atelier ne se mesure lui-meme : {', '.join(coupables)}")
+        echecs = 1
+    else:
+        vus = ", ".join(f"{ou}->{quoi}" for ou, quoi in vues)
+        print(f"  ✔ {len(vues)} invocation(s) lue(s), aucun atelier ne se mesure lui-meme ({vus})")
 
     print()
     v1 = "DOIT" if avertit == 1 else "DOIVENT"
