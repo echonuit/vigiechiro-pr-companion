@@ -78,6 +78,70 @@ class ExtracteurIndexTest {
         assertThat(index.get("p.Englobante#aide()")).containsExactly("p.Englobante$Dedans");
     }
 
+    /// La méthode d'un type IMBRIQUÉ est une clé, et c'est le défaut que #5564 a corrigé.
+    ///
+    /// `getAllTypes()` ne rend que le premier niveau, si bien que 1 226 méthodes de types imbriqués
+    /// nommés n'étaient pas des clés - alors que 154 de ces types figuraient comme APPELANTS. Aucun
+    /// cas ne surveillait cette moitié, et la limite déclarée de la classe affirmait le contraire.
+    @Test
+    void la_methode_d_un_type_imbrique_est_une_cle(@TempDir Path ou) throws IOException {
+        Map<String, List<String>> index = indexDe(
+                ou, "Porteuse", "package p; public class Porteuse {" + " static class Dedans { void aide() {} } }");
+
+        assertThat(index.keySet()).contains("p.Porteuse$Dedans#aide()");
+    }
+
+    @Test
+    void un_contrat_du_modele_rend_les_types_qui_le_tiennent(@TempDir Path ou) throws IOException {
+        ecrire(ou, "Contrat", "package p; public interface Contrat { void tenir(); }");
+        ecrire(ou, "Une", "package p; public class Une implements Contrat { public void tenir() {} }");
+        Map<String, List<String>> index =
+                contratsDe(ou, "Autre", "package p; public class Autre implements Contrat { public void tenir() {} }");
+
+        assertThat(index.get("p.Contrat")).containsExactly("p.Autre", "p.Une");
+    }
+
+    /// Vingt-deux des 117 interfaces du dépôt sont imbriquées - `EcritureAtomique.Attente`,
+    /// `TransportVigieChiro.CorpsAEnvoyer` et les autres. Les écarter faisait répondre « personne ne
+    /// l'implémente » à une question dont la réponse existe.
+    @Test
+    void une_interface_IMBRIQUEE_est_un_contrat_comme_une_autre(@TempDir Path ou) throws IOException {
+        Map<String, List<String>> index = contratsDe(
+                ou,
+                "Englobe",
+                "package p; public class Englobe {"
+                        + " interface Dedans { void tenir(); }"
+                        + " static class Tient implements Dedans { public void tenir() {} } }");
+
+        assertThat(index.get("p.Englobe$Dedans")).containsExactly("p.Englobe$Tient");
+    }
+
+    @Test
+    void une_classe_abstraite_est_un_contrat_et_sa_fille_le_tient(@TempDir Path ou) throws IOException {
+        ecrire(ou, "Socle", "package p; public abstract class Socle { abstract void tenir(); }");
+        Map<String, List<String>> index =
+                contratsDe(ou, "Fille", "package p; public class Fille extends Socle { void tenir() {} }");
+
+        assertThat(index.get("p.Socle")).containsExactly("p.Fille");
+    }
+
+    /// Un contrat HORS du modèle n'est pas une clé, et c'est le filtre qui rend l'index lisible : sans
+    /// lui, chaque `Comparable` ou `Runnable` du JDK entrerait avec ses porteurs.
+    @Test
+    void un_contrat_hors_du_modele_n_est_pas_une_cle(@TempDir Path ou) throws IOException {
+        Map<String, List<String>> index = contratsDe(
+                ou,
+                "Comparable",
+                "package p; public class Sujet implements java.lang.Runnable { public void run() {} }");
+
+        assertThat(index.keySet()).noneMatch(c -> c.contains("Runnable"));
+    }
+
+    private static Map<String, List<String>> contratsDe(Path ou, String nom, String source) throws IOException {
+        ecrire(ou, nom, source);
+        return ExtracteurIndex.implementationsParContrat(modeleDe(ou));
+    }
+
     private static Map<String, List<String>> indexDe(Path ou, String nom, String source) throws IOException {
         ecrire(ou, nom, source);
         return ExtracteurIndex.appelantsHorsDuFichier(modeleDe(ou));

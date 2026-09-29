@@ -1233,6 +1233,7 @@ jobs:
           # imprimerait une reponse que personne ne lit. Son auto-test, lui, tourne sur un index
           # FABRIQUE, donc il ne depend pas de l index que le job vient de produire (#5532).
           python3 scripts/qualite/appelants.py --auto-test
+          python3 scripts/qualite/implemente.py --auto-test
 
   temoins:
     # Les bancs qui prouvent qu un auto-test n est pas decoratif. Le poste le plus cher.

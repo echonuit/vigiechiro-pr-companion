@@ -33,29 +33,54 @@ class IndexAbsent(RuntimeError):
     """
 
 
-_REFUS = (
-    "L index des appels est absent : `target/index-appels.json` n a pas ete produit.\n"
-    "Ce garde REFUSE plutot que de conclure sur ce qu il n a pas lu : un index manquant rendrait\n"
-    "« zero appelant » pour TOUTE methode, ce qui se lit exactement comme du code mort.\n"
+# La RECETTE, une fois, pour tous les index. Elle disait `$(cat cp.txt)`, un fichier que rien ne
+# produit : la recette etait donc injouable telle quelle. Celle-ci est l invocation que la CI joue
+# depuis #5531, et elle marche sans rien preparer.
+_RECETTE = (
     "Produisez-le : ./mvnw -B test-compile puis\n"
-    "  java -cp target/test-classes:target/classes:$(cat cp.txt) \\\n"
-    "       fr.univ_amu.iut.commun.outils.ExtracteurIndex"
+    "  ./mvnw -B -q org.codehaus.mojo:exec-maven-plugin:exec \\\n"
+    "    -Dexec.executable=java -Dexec.classpathScope=test \\\n"
+    "    -Dexec.args='-cp %classpath fr.univ_amu.iut.commun.outils.ExtracteurIndex'"
+)
+
+
+def refus_de(fichier: str, quoi: str, faux_verdict: str) -> str:
+    """Le message d un index absent, construit ICI pour les trois lecteurs.
+
+    UN SEUL endroit, et ce n est pas une economie de lignes. Deux loupes du depot ont partage un
+    plafond en s y conduisant differemment - l une refusant, l autre avertissant - et le partage a
+    REVELE la divergence plutot que de la causer (#5567). Trois lecteurs qui recopieraient chacun
+    leur refus y sont exposes de la meme facon, et rien ne le dirait tant que chacun garderait le
+    sien.
+    """
+    return (
+        f"L index {quoi} est absent : `target/{fichier}` n a pas ete produit.\n"
+        f"Ce lecteur REFUSE plutot que de conclure sur ce qu il n a pas lu : un index manquant\n"
+        f"rendrait « {faux_verdict} », ce qui se lit comme un depot sain.\n" + _RECETTE
+    )
+
+
+def charge_index(chemin: pathlib.Path, refus: str) -> dict[str, list[str]]:
+    """Un index, ou un REFUS. Le chargement des trois lecteurs passe par ici.
+
+    Le refus est le point de cette fonction. Un index absent rendrait un dictionnaire vide, donc le
+    verdict le plus rassurant sur chaque question posee. C est le faux negatif le plus couteux qu un
+    lecteur d index puisse produire, et le seul que rien d autre ne rattraperait.
+    """
+    try:
+        return json.loads(chemin.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as absent:
+        raise IndexAbsent(refus) from absent
+
+
+_REFUS = refus_de(
+    "index-appels.json", "des appels", "zero appelant pour TOUTE methode, donc du code mort partout"
 )
 
 
 def charge(chemin: pathlib.Path | None = None) -> dict[str, list[str]]:
-    """L index entier, ou un REFUS.
-
-    Le refus est le point de cette fonction. Un index absent rendrait un dictionnaire vide, donc
-    « aucun appelant » pour chaque methode interrogee, donc un verdict de code mort sur le depot
-    entier. C est le faux negatif le plus couteux que ce lecteur puisse produire, et le seul que
-    rien d autre ne rattraperait.
-    """
-    ou = INDEX if chemin is None else chemin
-    try:
-        return json.loads(ou.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as absent:
-        raise IndexAbsent(_REFUS) from absent
+    """L index des appels entier, ou un REFUS."""
+    return charge_index(INDEX if chemin is None else chemin, _REFUS)
 
 
 def appelants(signature: str, index: dict[str, list[str]] | None = None) -> list[str]:
