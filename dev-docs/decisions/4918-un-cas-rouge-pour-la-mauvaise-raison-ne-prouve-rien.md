@@ -7,12 +7,17 @@ chantier: "#4918 (chantier #4946, sous #4828)"
 decided_at: 2026-08-31
 verification: humaine
 loupe: "aucun motif ne lit si un cas rougit pour la bonne raison : la question se pose à l'écriture de chaque auto-test portant plus d'un contrôle"
+relations:
+  completee_par: ["5572-un-verdict-se-remesure-la-ou-il-retire-une-question"]
 verified:
   - by: humain
     at: 2026-08-31
 ---
 
 # Un cas rouge pour la mauvaise raison ne prouve rien, et un auto-test doit dire lequel de ses contrôles a rougi
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Complétée le 2026-09-29** par [ADR 5572](5572-un-verdict-se-remesure-la-ou-il-retire-une-question.md) : nommer le contrôle qui a rougi reste dû ; la 5572 situe cette exigence dans la famille des verdicts rendus sans avoir exercé ce qu'ils jugent, et dit où la remesure est due.
 
 ## Contexte
 

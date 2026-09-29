@@ -10,6 +10,8 @@ verification_note: "qu'une population vide soit la réussite d'un garde reste un
 enforced_by:
   - "scripts/adr/verifie_verdicts_declares.py"
 ratchet: 0
+relations:
+  completee_par: ["5572-un-verdict-se-remesure-la-ou-il-retire-une-question"]
 verified:
   - by: human:nedseb
     at: 2026-09-01
@@ -19,6 +21,9 @@ generated:
 ---
 
 # Un garde sans unité à compter le déclare chez lui, avec sa raison
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Complétée le 2026-09-29** par [ADR 5572](5572-un-verdict-se-remesure-la-ou-il-retire-une-question.md) : la règle du `lus` déclaré ne change pas ; la 5572 nomme la famille dont sa `verification_note` décrivait déjà l'irréductible, une population vide étant indistinguable d'un ciblage manqué.
 
 ## Contexte
 

@@ -9,6 +9,8 @@ verification: certaine
 enforced_by:
   - "scripts/adr/verifie_temoins_non_decoratifs.py"
 ratchet: 0
+relations:
+  completee_par: ["5572-un-verdict-se-remesure-la-ou-il-retire-une-question"]
 verified:
   - by: machine:suspects
     at: 2026-08-26
@@ -18,6 +20,9 @@ generated:
 ---
 
 # Un témoin se prouve par mutation, et la mutation est mécanique
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Complétée le 2026-09-29** par [ADR 5572](5572-un-verdict-se-remesure-la-ou-il-retire-une-question.md) : sa mutation reste le dispositif de l'article A2 ; la 5572 la relie aux six autres décisions du même défaut, et dit où un verdict se remesure quand aucune mutation ne le couvre.
 
 ## Contexte
 
