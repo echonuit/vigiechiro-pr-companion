@@ -8,8 +8,10 @@ decided_at: 2026-08-25
 verification: probable
 enforced_by:
   - "scripts/adr/4472-commentaire-en-corps.py"
-ratchet: 43
+ratchet: 24
 inv_key: cliquet-commentaire-corps
+relations:
+  amendee_par: ["5582-le-budget-de-commentaire-se-compte-par-zone"]
 verified:
   - by: machine:ci
     at: 2026-08-25
@@ -19,6 +21,9 @@ generated:
 ---
 
 # Un commentaire long en corps de méthode est un signal, pas un décor
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-09-29** par [ADR 5582](5582-le-budget-de-commentaire-se-compte-par-zone.md) : le budget de huit lignes ne change pas, mais son cliquet ne couvre plus que la PRODUCTION, à 24. La zone de test porte le sien, à 19, et le garde sort sur le pire des deux.
 
 ## Contexte
 
@@ -56,7 +61,7 @@ c'est la règle du dépôt : *ce qui n'est pas compté grandit*.
 une. Le seuil est le double du 9ᵉ décile : il laisse passer le régime normal et ne signale que ce qui
 en sort franchement.
 
-Le cliquet est posé à **<!--inv:cliquet-commentaire-corps-->43<!--/inv-->**, l'état du jour.
+Le cliquet est posé à **<!--inv:cliquet-commentaire-corps-->24<!--/inv-->**, l'état du jour.
 
 **79 → 43** (#4583). Le chantier #4502 avait écarté ce ruban en invoquant cette ADR, et le motif
 n'avait pas voix : son objet était d'aligner sur `vigiechiro-companion`, qui en compte 59.

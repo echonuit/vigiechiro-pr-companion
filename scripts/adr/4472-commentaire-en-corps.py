@@ -35,8 +35,10 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import (
+    PRODUCTION_ANCREE,
     RACINE_DEPOT,
     RACINES_ANCREES,
+    TESTS_ANCRES,
     cas_d_auto_test,
     rapporte,
     sort_si_contrat_demande,
@@ -50,7 +52,14 @@ from _commun.arbre import (
 )
 
 # Le numero, et non le slug : ici l identite d une ADR est son numero.
-ADR = "4472"
+#
+# **Un cliquet par zone, et jamais un compteur unique** (ADR 4682, appliquee ici par #5582). Le
+# depot portait 43 lignes au-dela du seuil, 24 en production et 19 en test, sous un seuil unique :
+# un gain de cinq d un cote payait une regression de cinq de l autre, et le cliquet restait vert.
+# La regle de l ADR 4472 ne change pas - le budget de huit lignes vaut des deux cotes - seul le
+# COMPTAGE se separe.
+ADR_PRODUCTION = "4472"
+ADR_TEST = "5582"
 
 RACINES = RACINES_ANCREES
 
@@ -359,9 +368,9 @@ CONTRAT = {
     "geste": "commentaire qui deborde en corps de methode",
     "population": "PRODUCTION + TESTS",
     "dispositif": "cliquet",
-    "seuil": "43, polarite=descend",
+    "seuil": "cliquets 24 (ADR 4472) et 19 (ADR 5582), polarite=descend",
     "temoin": "scripts/adr/4472-commentaire-en-corps.py --auto-test",
-    "decision": "ADR 4472",
+    "decision": "ADR 4472 et ADR 5582",
     # Ce garde coute 1,13 s par demande, contre 0,23 s avant sa migration - le prix de l arbre,
     # mesure le 2026-09-07 sur les memes 2 125 fichiers. Declarer ses chemins rend cette hausse
     # indolore sur toute demande qui ne touche pas de Java (ADR 5340).
@@ -384,6 +393,7 @@ src/test/java/**
 scripts/adr/4472-commentaire-en-corps.py
 scripts/_commun/**
 dev-docs/decisions/4472-un-commentaire-long-en-corps-de-methode-est-un-signal.md
+dev-docs/decisions/5582-*.md
 """,
 }
 
@@ -396,25 +406,40 @@ if __name__ == "__main__":
     # sur la sortie d erreur avant le verdict : le compte est nul aujourd hui, et le jour ou il ne
     # le sera plus, le silence serait un faux vert.
     try:
-        listes, zones = analyse()
+        par_zone = {
+            "production": analyse(PRODUCTION_ANCREE),
+            "test": analyse(TESTS_ANCRES),
+        }
     except LecteurAbsent as absent:
         # Un REFUS, pas une trace. Une `ModuleNotFoundError` nue ressemble a un defaut du changement
         # en cours, et c est le reproche que la docstring de `verifie-dependances-declarees.py` fait
         # a l etat d avant #5008. Le message dit ce qui manque ET quoi faire.
         raise SystemExit(str(absent)) from absent
-    for zone in zones:
-        print(f"zone non lue par la grammaire : {zone}", file=sys.stderr)
+    for _, illisibles in par_zone.values():
+        for zone in illisibles:
+            print(f"zone non lue par la grammaire : {zone}", file=sys.stderr)
     if "--releve" in sys.argv:
-        for s in listes:
-            print(f"  {s}")
-        print(f"\n{len(listes)} lignes de commentaire au-delà du seuil, en corps de méthode")
+        for nom, (listes, _) in par_zone.items():
+            for s in listes:
+                print(f"  {s}")
+            print(f"\n{len(listes)} lignes au-delà du seuil en corps de méthode, zone {nom}")
         sys.exit(0)
-    sys.exit(
+    # Les deux cliquets, l un apres l autre. Le code de sortie est le PIRE des deux : une regression
+    # dans une zone doit faire rougir, meme si l autre a gagne (ADR 4682).
+    codes = [
         rapporte(
-            ADR,
-            "commentaire qui déborde en corps de méthode",
-            listes,
+            ADR_PRODUCTION,
+            "commentaire qui déborde en corps de méthode, en production",
+            par_zone["production"][0],
             apercu=15,
-            lus=len(fichiers()),
-        )
-    )
+            lus=len(fichiers(PRODUCTION_ANCREE)),
+        ),
+        rapporte(
+            ADR_TEST,
+            "commentaire qui déborde en corps de méthode, en zone de test",
+            par_zone["test"][0],
+            apercu=15,
+            lus=len(fichiers(TESTS_ANCRES)),
+        ),
+    ]
+    sys.exit(max(codes))
