@@ -12,12 +12,16 @@ verified:
   - by: machine:ci
     at: 2026-09-07
 relations:
+  amendee_par: ["5533-un-refus-declare-sa-forme-la-porte-ne-la-devine-pas"]
   complete: ["5398-une-exemption-se-declare-elle-ne-s-infere-pas"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # Aucune position n'est fiable dans le refus d'un garde, donc on en montre plus
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-09-29** par l'[ADR 5533](5533-un-refus-declare-sa-forme-la-porte-ne-la-devine-pas.md) : la porte lit d'abord une forme **déclarée** - `REFUS :` et `POUR REPARER :` - et n'en montre les deux premières lignes non vides que si le garde ne l'emploie pas. L'esprit de cette décision tient : elle refusait de **deviner** une structure, et lire une structure déclarée n'est pas deviner.
 
 ## Le contexte
 
@@ -36,6 +40,12 @@ refus dont la conduite à tenir était invisible.
 
 **On montre plus au lieu de deviner : les deux premières lignes non vides**, chacune bornée
 séparément.
+
+**Amendé (#5485).** Ce qui suit reste vrai d'un garde qui n'a pas de forme déclarée, et c'est le cas
+de la plupart. Pour les autres, la porte lit la forme et montre la cause et le geste **où qu'ils
+soient**. La différence n'est pas le nombre de lignes, c'est **qui décide lesquelles** : la position
+avant, le garde lui-même désormais. Le geste de `4617` vivait en troisième ligne et se perdait ; il
+s'affiche.
 
 Ce n'est pas un compromis sur le nombre, c'est le refus d'une inférence. Deviner la position de la
 cause ou du geste reviendrait à inférer une **structure** que les gardes ne partagent pas, et l'ADR
