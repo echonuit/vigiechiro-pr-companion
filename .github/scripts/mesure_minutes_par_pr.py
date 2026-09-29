@@ -75,6 +75,57 @@ def _gh(*arguments: str) -> str:
     return sortie.stdout if sortie.returncode == 0 else ""
 
 
+# La base contre laquelle une branche se compare. `main` et non le commit de base reel : la forge
+# calcule le point de divergence elle-meme dans une comparaison a trois points, et le lui demander
+# evite de recopier une regle qu elle applique deja.
+BASE = "main"
+
+# Ce qui fait qu une demande est « avec Java », selon la definition posee a l ouverture de #5294.
+JAVA_PREFIXES = ("src/",)
+JAVA_EXACTS = frozenset({"pom.xml", ".github/workflows/maven.yml"})
+
+
+def fichiers_de_la_branche(depot: str, sha: str) -> tuple[list[str], bool]:
+    """Les fichiers que la BRANCHE de ce sha change, et si la forge a REPONDU.
+
+    ## Pourquoi deux valeurs et non une liste
+
+    Une liste vide se lit « cette demande ne touche rien », donc « sans Java », donc une
+    classification plausible et fausse. Une absence de reponse n est pas une reponse negative, et
+    confondre les deux est le defaut que ce depot appelle un vert a vide.
+
+    ## Pourquoi `compare` et non `commits/<sha>/pulls`
+
+    La seconde route est la plus officielle et elle **echoue en silence** : mesure du 2026-09-29 sur
+    les trois demandes que le corps de #5521 nomme, elle rend VIDE pour `3b7d10adc`, un commit
+    intermediaire qu elle n associe a aucune demande. Un sur trois. `compare` repond pour les trois.
+    """
+    brut = _gh("api", f"repos/{depot}/compare/{BASE}...{sha}")
+    if not brut:
+        return [], False
+    try:
+        rendu = json.loads(brut)
+    except json.JSONDecodeError:
+        return [], False
+    return [f["filename"] for f in rendu.get("files", [])], True
+
+
+def porte_du_java(fichiers: list[str]) -> bool:
+    """Cette demande engage-t-elle le regime Java ? Definition de l ouverture de #5294."""
+    return any(f.startswith(JAVA_PREFIXES) or f in JAVA_EXACTS for f in fichiers)
+
+
+def classe_de(demande: dict) -> str:
+    """« avec Java », « sans Java », ou « indeterminee » quand la forge n a pas repondu.
+
+    La troisieme classe n est pas un ornement : sans elle, une demande dont on ignore le contenu
+    tombe dans « sans Java » et tire sa mediane vers le bas.
+    """
+    if not demande.get("lus", True):
+        return "indeterminee"
+    return "avec Java" if porte_du_java(demande.get("fichiers", [])) else "sans Java"
+
+
 def releve(depot: str, fenetre: int = 40) -> list[dict]:
     """Les demandes de la fenetre, chacune avec ses jobs et ses minutes facturees.
 
@@ -128,9 +179,15 @@ def releve(depot: str, fenetre: int = 40) -> list[dict]:
         # ⟨ce que la demande CHANGE⟩ Sans cette lecture, un taux de silence de 100 % ne peut pas se
         # lire : on ignore si le job s est tu parce que son sujet n a pas bouge, ou parce que sa
         # portee a derive. Un appel de plus par demande, pour la seule chose qui les departage.
-        commit = _gh("api", f"repos/{depot}/commits/{sha}")
-        fichiers = [f["filename"] for f in json.loads(commit).get("files", [])] if commit else []
-        demandes.append({"sha": sha, "facturees": facturees, "jobs": jobs, "fichiers": fichiers})
+        #
+        # ⟨la BRANCHE, pas le commit de tete⟩ `commits/<sha>` rend les fichiers du DERNIER commit,
+        # quand la portee decide sur le diff de la branche depuis sa base. Mesure du 2026-09-22 :
+        # trois demandes sur dix-huit paraissaient sans Java par leur tete et en touchaient six
+        # fichiers par leur branche - elles payaient 87 a 98 minutes (#5521).
+        fichiers, lus = fichiers_de_la_branche(depot, sha)
+        demandes.append(
+            {"sha": sha, "facturees": facturees, "jobs": jobs, "fichiers": fichiers, "lus": lus}
+        )
     return demandes
 
 
@@ -332,6 +389,30 @@ def rendre(depot: str, fenetre: int = 40) -> int:
             "     est donc la somme des durees de job ARRONDIES a la minute, pas un releve de facture."
         )
     print(f"  attente jusqu au dernier verdict        : {mediane(attentes):6.1f} min")
+
+    # ⟨PAR CLASSE, parce que la population est bimodale⟩ Le chiffre global suit le melange de la
+    # fenetre et change sans que le regime change. Mesure du 2026-09-22 : 36,0 min sur une fenetre a
+    # 82 % sans Java, 62,5 min sur une fenetre a 39 %, pour le meme regime. Le contrat de #5384
+    # demandait deux attentes, une par classe ; l instrument n en rendait qu une (#5521).
+    par_classe: dict[str, list[dict]] = collections.defaultdict(list)
+    for d in demandes:
+        par_classe[classe_de(d)].append(d)
+    print()
+    print(f"  {'classe':16s} {'demandes':>9s} {'minutes':>9s} {'attente':>9s}")
+    for nom in ("avec Java", "sans Java", "indeterminee"):
+        lot = par_classe.get(nom, [])
+        if not lot:
+            continue
+        # ⟨l EFFECTIF avec la mediane, toujours⟩ « 39 min sur douze demandes » et « 39 min sur deux »
+        # ne se lisent pas pareil, et rien dans le chiffre ne le dit.
+        m = mediane([sum(math.ceil(j["minutes"]) for j in d["jobs"]) for d in lot])
+        a = mediane([max((j["minutes"] for j in d["jobs"]), default=0) for d in lot])
+        print(f"  {nom:16s} {len(lot):9d} {m:8.1f}m {a:8.1f}m")
+    if par_classe.get("indeterminee"):
+        print(
+            f"     {len(par_classe['indeterminee'])} demande(s) dont la forge n a pas rendu les"
+            " fichiers : elles ne sont PAS comptees « sans Java »."
+        )
     print()
     print(f"  {'job':28s} {'mediane':>8s} {'sans objet':>12s}")
     for nom, jobs in sorted(
@@ -618,7 +699,84 @@ def _auto_test() -> int:
             if ancien is not None:
                 os.environ["RELEVE_DEMANDES_FICHIER"] = ancien
 
-    print(f"\n{len(CAS) + 14} cas de lecture et de bord.")
+    # ⟨LES cas de #5521⟩ La classe se lit sur les fichiers de la BRANCHE, et une absence de reponse
+    # n est pas une reponse negative. Les deux contrastes portent tout : sans eux, un classement qui
+    # dirait toujours « sans Java » passerait le cas positif.
+    joues = 0
+    for libelle, demande, attendu in (
+        (
+            "une branche qui touche `src/` est avec Java",
+            {"fichiers": ["dev-docs/x.md", "src/main/java/A.java"], "lus": True},
+            "avec Java",
+        ),
+        ("`pom.xml` aussi", {"fichiers": ["pom.xml"], "lus": True}, "avec Java"),
+        (
+            "une branche qui n en touche pas est sans Java",
+            {"fichiers": ["dev-docs/x.md", "scripts/y.py"], "lus": True},
+            "sans Java",
+        ),
+        # LE contraste de #5521 : une forge muette ne vaut pas « sans Java ». Sans ce cas, une
+        # reponse vide tirerait la mediane de cette classe vers le bas sans que rien ne le dise.
+        (
+            "une forge qui n a pas repondu rend « indeterminee »",
+            {"fichiers": [], "lus": False},
+            "indeterminee",
+        ),
+        # Et son jumeau : une demande qui ne touche RIEN, mais dont on a bien lu, reste sans Java.
+        (
+            "une demande vide dont on a LU reste sans Java",
+            {"fichiers": [], "lus": True},
+            "sans Java",
+        ),
+    ):
+        joues += 1
+        obtenu = classe_de(demande)
+        if obtenu == attendu:
+            print(f"  ✔ {libelle}")
+        else:
+            print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
+            echecs += 1
+
+    # ⟨la forge muette, eprouvee de bout en bout⟩ Les cas ci-dessus lisent `classe_de` ; celui-ci
+    # eprouve le chemin entier, de l appel a la forge au classement. Sans lui, un jour ou la lecture
+    # cesserait de rendre son second membre, les cinq precedents passeraient encore.
+    joues += 1
+    vrai_gh = globals()["_gh"]
+    globals()["_gh"] = lambda *_a: ""
+    try:
+        fichiers, lus = fichiers_de_la_branche("x/y", "deadbeef")
+        bon = (fichiers, lus) == ([], False)
+    finally:
+        globals()["_gh"] = vrai_gh
+    if bon:
+        print("  ✔ une forge muette rend une lecture NON FAITE, pas une liste vide")
+    else:
+        print(f"  ✘ une forge muette : attendu ([], False), obtenu {(fichiers, lus)}")
+        echecs += 1
+
+    # ⟨LA question posee, et non seulement la reponse⟩ Les cas ci-dessus valent quelle que soit la
+    # route interrogee : ils passeraient encore si l on revenait a `commits/<sha>`, qui rend les
+    # fichiers du dernier commit. Celui-ci capture l appel et rougit a ce retour en arriere, qui est
+    # exactement le defaut que #5521 corrige.
+    joues += 1
+    demande = []
+    vrai_gh = globals()["_gh"]
+    globals()["_gh"] = lambda *a: demande.append(a) or ""
+    try:
+        fichiers_de_la_branche("x/y", "abc123")
+    finally:
+        globals()["_gh"] = vrai_gh
+    pose = demande[0][1] if demande else ""
+    bon = "compare/" in pose and "..." in pose and "/commits/abc123" not in pose
+    if bon:
+        print("  ✔ la question porte sur la BRANCHE, pas sur le commit de tete")
+    else:
+        print(f"  ✘ la question porte sur le commit de tete : {pose!r}")
+        echecs += 1
+
+    # ⟨le compte se DERIVE⟩ Il etait ecrit `len(CAS) + 14`, un nombre fige a cote d une liste qui
+    # grandit : le meme defaut que la porte portait avant #5525, dans un fichier qui mesure.
+    print(f"\n{len(CAS) + 14 + joues} cas de lecture, de bord et de classe.")
     return 1 if echecs else 0
 
 
