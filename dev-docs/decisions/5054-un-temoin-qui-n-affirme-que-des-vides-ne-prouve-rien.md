@@ -8,6 +8,8 @@ decided_at: 2026-09-01
 verification: certaine
 enforced_by:
   - "scripts/adr/verifie_temoins_non_decoratifs.py"
+relations:
+  completee_par: ["5572-un-verdict-se-remesure-la-ou-il-retire-une-question"]
 verified:
   - by: machine:ci
     at: 2026-09-01
@@ -17,6 +19,9 @@ generated:
 ---
 
 # Un témoin qui n'affirme que des vides ne prouve rien
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Complétée le 2026-09-29** par [ADR 5572](5572-un-verdict-se-remesure-la-ou-il-retire-une-question.md) : le contraste reste ce qui fait d'un cas un témoin ; la 5572 étend le constat du témoin au dispositif, et dit où le verdict d'un dispositif se remesure.
 
 ## Contexte
 

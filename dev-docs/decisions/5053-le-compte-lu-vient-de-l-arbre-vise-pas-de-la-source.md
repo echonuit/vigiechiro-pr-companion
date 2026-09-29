@@ -8,6 +8,8 @@ decided_at: 2026-09-01
 verification: certaine
 enforced_by:
   - "scripts/adr/verifie_scripts.py"
+relations:
+  completee_par: ["5572-un-verdict-se-remesure-la-ou-il-retire-une-question"]
 verified:
   - by: machine:ci
     at: 2026-09-01
@@ -17,6 +19,9 @@ generated:
 ---
 
 # Le compte lu vient de l'arbre visé, pas de ce que la source en rapporte
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Complétée le 2026-09-29** par [ADR 5572](5572-un-verdict-se-remesure-la-ou-il-retire-une-question.md) : le compte lu vient toujours de l'arbre visé ; la 5572 relie cette décision aux six autres qui traitent le même défaut sous un autre vocabulaire.
 
 ## Contexte
 

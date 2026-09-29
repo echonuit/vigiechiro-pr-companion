@@ -12,6 +12,7 @@ verified:
   - by: machine:ci
     at: 2026-09-25
 relations:
+  completee_par: ["5572-un-verdict-se-remesure-la-ou-il-retire-une-question"]
   prolonge: ["2465"]
 generated:
   by: "process:assistance-par-agents"
@@ -19,6 +20,9 @@ generated:
 ---
 
 # Un gage inerte est un défaut de l'ADR, pas un quatrième niveau de vérification
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Complétée le 2026-09-29** par [ADR 5572](5572-un-verdict-se-remesure-la-ou-il-retire-une-question.md) : un gage inerte reste un défaut de l'ADR ; la 5572 nomme la famille à laquelle ce défaut appartient, et explique pourquoi elle se déclare `humaine` plutôt que de se donner un tel gage.
 
 ## Contexte
 

@@ -13,12 +13,16 @@ verified:
   - by: machine:ci
     at: 2026-09-28
 relations:
+  completee_par: ["5572-un-verdict-se-remesure-la-ou-il-retire-une-question"]
   complete: ["5398-une-exemption-se-declare-elle-ne-s-infere-pas", "4490-un-temoin-se-prouve-par-mutation-mecaniquement"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # Une exemption se dérive de ce que la chose fait, jamais de la forme de son écriture
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Complétée le 2026-09-29** par [ADR 5572](5572-un-verdict-se-remesure-la-ou-il-retire-une-question.md) : la dérivation d'une exemption ne change pas ; la 5572 la situe parmi les sept formes d'un même défaut et porte la conduite qu'aucune des sept ne portait.
 
 ## Le contexte
 
