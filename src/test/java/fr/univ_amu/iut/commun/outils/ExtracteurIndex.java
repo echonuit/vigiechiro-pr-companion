@@ -134,21 +134,13 @@ public final class ExtracteurIndex {
 
     /// Pour chaque champ, les types qui le LISENT hors de sa classe.
     ///
-    /// **Les LECTURES seules, et c'est une limite déclarée plutôt qu'un oubli.** Spoon distingue
-    /// `CtFieldRead` de `CtFieldWrite`, et la question de #5464 est « ce champ est-il **lu** ailleurs ».
-    /// Les confondre ferait passer un champ qu'un constructeur écrit et que personne ne lit pour
-    /// « utilisé ailleurs », soit le faux négatif exact que cet index existe pour éviter. Les 4 347
-    /// écritures du corpus ne sont donc pas indexées, et cet index ne répond pas à « qui écrit ce
-    /// champ ».
+    /// **Les LECTURES seules**, limite déclarée et non oubli : confondre `CtFieldRead` et
+    /// `CtFieldWrite` ferait passer un champ qu'un constructeur écrit et que personne ne lit pour
+    /// « utilisé ailleurs », le faux négatif que cet index existe pour éviter. Les 4 347 écritures du
+    /// corpus ne sont pas indexées.
     ///
-    /// Mesure du 2026-09-29, et elle a démenti la crainte qui avait fait de ce lot le plus risqué des
-    /// trois : les **38 580** accès résolus du corpus s'effondrent à **3 173 arêtes**, la plupart étant
-    /// intra-classe et se dédoublonnant par type lecteur. L'index pèse 775 Ko contre 2,1 Mo pour celui
-    /// des appels, et son calcul coûte 2,5 s sur un modèle déjà bâti.
-    ///
-    /// Ce qu'il ne dit PAS, et c'est l'ADR 5532 appliquée ici : **8 195 champs sur 8 933 n'ont aucun
-    /// lecteur externe**, soit 92 %. C'est l'état normal d'un état privé, pas un défaut, et un garde
-    /// bâti là-dessus signalerait presque tout le corpus.
+    /// Un champ sans lecteur externe n'est PAS mort : ils sont 8 195 sur 8 933. Les chiffres et leur
+    /// lecture sont dans `scripts/_commun/champs.py`, que cet index alimente.
     static Map<String, List<String>> lecteursHorsDeLaClasse(CtModel modele) {
         Map<String, List<String>> parChamp = new TreeMap<>();
         for (CtType<?> type : tousLesTypes(modele)) {

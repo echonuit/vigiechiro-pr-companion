@@ -51,9 +51,9 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from _commun import cas_d_auto_test
-from _commun.outil_d_index import PLAFOND, index_temoin, joue, message_du_refus, sans_bruit
 from _commun import index as lecteur
 from _commun.index import charge
+from _commun.outil_d_index import PLAFOND, index_temoin, joue, message_du_refus, sans_bruit
 
 
 def declarations(cible: str, index: dict[str, list[str]]) -> list[str]:
@@ -221,7 +221,10 @@ def main(argv: list[str]) -> int:
         return auto_test()
     return joue(
         argv,
-        nom="appelants.py",
+        usage=(
+            "Usage : appelants.py <nom|signature> [--index CHEMIN]",
+            "        appelants.py --auto-test",
+        ),
         charge=charge,
         repond=lambda cible, index: rendu(cible, *reponse(cible, index)),
     )

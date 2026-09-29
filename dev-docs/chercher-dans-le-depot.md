@@ -1,18 +1,24 @@
 # Chercher dans le dépôt
 
-Quatre outils, et ils ne répondent pas aux mêmes questions. Se tromper d'outil coûte rarement une
+Six outils, et ils ne répondent pas aux mêmes questions. Se tromper d'outil coûte rarement une
 erreur visible : cela coûte une réponse **fausse et plausible**, ce qui est pire.
 
 | La question porte sur… | L'outil | Ce qu'il rend |
 |---|---|---|
 | un concept, ses voisins, ce qui lui ressemble | `graphify` | un sous-graphe déjà réduit |
 | **qui appelle CETTE méthode Java**, résolu | `scripts/qualite/appelants.py` | ses porteurs et leurs appelants, types résolus |
+| **qui tient CE contrat Java**, résolu | `scripts/qualite/implemente.py` | ses porteurs, noms qualifiés |
+| **qui lit CE champ Java**, hors de sa classe | `scripts/qualite/lecteurs.py` | ses déclarations, et qui les lit |
 | une **forme de code** (appel, constructeur, structure) | `semgrep` | les occurrences, avec leur position |
 | un **texte** (message, libellé, ligne de journal) | `grep` / `rg` | les lignes qui contiennent le motif |
 
+Les trois du milieu lisent le même modèle Spoon, bâti une fois à la compilation, et refusent de
+répondre si leur index manque. Ce qu'ils partagent surtout est ce qu'ils **ne** disent pas : aucun des
+trois ne rend une liste de code mort, et les trois taux qui suivent disent pourquoi.
+
 ## Les appelants d'une méthode Java se RÉSOLVENT
 
-Le dépôt déclare **1 235 noms de méthode dans plusieurs classes** : `preparer` dans 188, `start` dans
+Le dépôt déclare **1 422 noms de méthode dans plusieurs classes** : `preparer` dans 188, `start` dans
 150, `nettoyer` dans 77. Devant eux, `grep` et `semgrep` rendent une liste de fichiers à ouvrir, et le
 graphe rend des arêtes en partie **inférées**. Aucun des trois ne dit laquelle des 188 est appelée.
 
@@ -26,8 +32,32 @@ le premier voit ses dix appelants nommés. Il **refuse** si l'index manque, plut
 « aucun appelant » pour toute méthode, ce qui se lirait exactement comme du code mort.
 
 **Ce qu'il ne dit pas**, et le contresens à ne pas commettre : « aucun appelant hors de son fichier »
-n'est pas du code mort. C'est l'état normal d'une aide privée, et cela vaut **70 %** du corpus, dont
+n'est pas du code mort. C'est l'état normal d'une aide privée, et cela vaut **69 %** du corpus, dont
 5 014 cas que JUnit appelle par réflexion.
+
+## Les porteurs d'un contrat, et les lecteurs d'un champ
+
+Deux questions de la même famille, deux outils bâtis sur le même patron.
+
+```bash
+python3 scripts/qualite/implemente.py DaoGenerique   # 30 porteurs, qualifiés
+python3 scripts/qualite/lecteurs.py service          # 168 déclarations, dont 24 lues d'ailleurs
+```
+
+Le gain n'est pas le compte, c'est la **résolution**. Un `grep` sur `implements Contrat` rate la classe
+qui l'obtient par sa mère, et rate les **22 interfaces imbriquées** du dépôt. Un `grep` sur un nom de
+champ ne distingue pas le champ de la variable locale, du paramètre ni de la méthode homonymes :
+sur `service`, il rend **3 398 lignes** à trier, et **995 des 3 730** noms de champ du dépôt sont
+déclarés dans plusieurs classes.
+
+**Ce qu'ils ne disent pas**, et c'est la même mise en garde qu'au-dessus, avec des taux plus raides :
+**27 des 123 contrats** n'ont aucun porteur, et **8 195 des 8 933 champs** n'ont aucun lecteur hors de
+leur classe, soit 92 %. Ni les uns ni les autres ne sont morts : un contrat posé pour un point
+d'extension, un état privé lu par les méthodes de sa propre classe sont exactement cela.
+
+`lecteurs.py` ne retient que les **lectures**, jamais les écritures. Les confondre ferait passer un
+champ qu'un constructeur écrit et que personne ne lit pour « utilisé ailleurs », soit le faux négatif
+que l'index existe pour éviter ; les 4 347 écritures du corpus ne sont donc pas indexées.
 
 ## Le graphe d'abord
 

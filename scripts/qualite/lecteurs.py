@@ -95,8 +95,8 @@ def rendu(cible: str, lues: list[tuple[str, list[str]]], muettes: int) -> str:
     for cle, qui in lues:
         total += len(qui)
         lignes.append(f"  {cle}")
-        for lecteur in qui[:PLAFOND]:
-            lignes.append(f"      <- {lecteur}")
+        for qui_lit in qui[:PLAFOND]:
+            lignes.append(f"      <- {qui_lit}")
         if len(qui) > PLAFOND:
             # Dire ce qu on tronque : une liste coupee en silence se lit comme une liste complete.
             lignes.append(f"      <- ... {len(qui) - PLAFOND} autre(s)")
@@ -204,7 +204,10 @@ def main(argv: list[str]) -> int:
         return auto_test()
     return joue(
         argv,
-        nom="lecteurs.py",
+        usage=(
+            "Usage : lecteurs.py <nom|cle> [--index CHEMIN]",
+            "        lecteurs.py --auto-test",
+        ),
         charge=charge,
         repond=lambda cible, index: rendu(cible, *reponse(cible, index)),
     )

@@ -18,6 +18,12 @@ partage la rend impossible.
 
 ## Ce qu il ne prend PAS en charge, et pourquoi le BRANCHEMENT reste dehors
 
+L usage aussi est passe par l appelant plutot que fabrique ici, et pour une raison mesuree :
+`verifie_inventaires_ci.py` compte comme garde tout fichier ou `--auto-test` figure hors commentaire,
+ce qui incluait le message d usage de ce module et exigeait sa ligne au tableau des gardes. Il aurait
+fallu y declarer un garde qui n en est pas un. Chaque outil porte donc son usage, ce qui est de toute
+facon juste : ses options sont les siennes.
+
 L `--auto-test` reste chez chaque outil, et pas seulement ses cas : le `if` qui l appelle aussi.
 
 La premiere ecriture de ce module le portait, et une mutation l a refuse. Remplacer
@@ -50,7 +56,7 @@ PLAFOND = 15
 def joue(
     argv: list[str],
     *,
-    nom: str,
+    usage: tuple[str, ...],
     charge: Callable[[pathlib.Path | None], dict[str, list[str]]],
     repond: Callable[[str, dict[str, list[str]]], str],
 ) -> int:
@@ -68,8 +74,8 @@ def joue(
     passes = {"--markdown", "--index", "" if ou is None else str(ou)}
     cibles = [a for a in argv[1:] if not a.startswith("--") and a not in passes]
     if not cibles:
-        print(f"Usage : {nom} <cible> [--index CHEMIN]", file=sys.stderr)
-        print(f"        {nom} --auto-test", file=sys.stderr)
+        for ligne in usage:
+            print(ligne, file=sys.stderr)
         return 2
 
     try:

@@ -38,9 +38,9 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from _commun import cas_d_auto_test
-from _commun.outil_d_index import PLAFOND, index_temoin, joue, message_du_refus, sans_bruit
 from _commun import implementations as lecteur
 from _commun.implementations import charge
+from _commun.outil_d_index import PLAFOND, index_temoin, joue, message_du_refus, sans_bruit
 
 
 def contrats(cible: str, index: dict[str, list[str]]) -> list[str]:
@@ -160,7 +160,10 @@ def main(argv: list[str]) -> int:
         return auto_test()
     return joue(
         argv,
-        nom="implemente.py",
+        usage=(
+            "Usage : implemente.py <contrat> [--index CHEMIN]",
+            "        implemente.py --auto-test",
+        ),
         charge=charge,
         repond=lambda cible, index: rendu(cible, contrats(cible, index), index),
     )
