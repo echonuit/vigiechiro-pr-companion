@@ -86,6 +86,14 @@ CONTRAT = {
     "garde": ".github/scripts/temoins_de_ci_non_decoratifs.py",
     "geste": "temoin decoratif : l auto-test d un garde de CI reste vert quand la detection est retiree",
     "population": "les gardes de .github/scripts et .github/assets nommes par un atelier, portant --auto-test et un point d entree",
+    # Les trois surfaces dont son verdict depend : les deux dossiers qu il mute, et les ateliers
+    # d ou il derive sa population. Mesure du 2026-09-29 : 10,36 s. Sans cette ligne, la porte le
+    # lancait a CHAQUE diff, ce qui aurait ajoute dix secondes a un changement de javadoc (#5525).
+    "chemins": """
+.github/scripts/**
+.github/assets/**
+.github/workflows/**
+""",
     # ⟨`invariant` et non `cliquet` (#5498)⟩ Le critere est ecrit dans `dev-docs/ci-cd-release.md` :
     # « c est un invariant, pas un cliquet : il n y a pas de marge a relever, et l echappatoire est
     # une liste d exceptions NOMMEES ». Zero decoratif n a pas de marge, et l echappatoire est
