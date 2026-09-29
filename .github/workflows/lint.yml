@@ -1361,3 +1361,24 @@ jobs:
           python3 .github/scripts/temoins_de_ci_non_decoratifs.py --auto-test
           python3 .github/scripts/temoins_de_ci_non_decoratifs.py
 
+  duree-du-portail:
+    name: duree-du-portail
+    # Plus de `needs: build` : ce job vit desormais dans `lint.yml`, ou il n y a pas de build, et rien
+    # du build ne lui servait - il lit l API de la forge et n execute rien du depot (#5540).
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Il mesure `maven.yml` depuis `lint.yml`, et non plus depuis `maven.yml` : un atelier qui se
+      # mesure entre dans la fenetre qu il calcule (#5540). Son nom reste exact, c est bien le portail
+      # qu il mesure.
+      - name: Le portail met-il plus de temps qu'avant ?
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          chmod +x .github/scripts/mesure_duree_portail.py
+          python3 .github/scripts/mesure_duree_portail.py "${{ github.repository }}" maven.yml
