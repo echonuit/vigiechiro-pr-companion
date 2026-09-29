@@ -309,7 +309,7 @@ bfe826020e84  src/main/java/fr/univ_amu/iut/commun/api/SitesVigieChiro.java
 61da48b5dcb0  src/main/java/fr/univ_amu/iut/commun/api/TaxonVigieChiro.java
 4c5f7b876806  src/main/java/fr/univ_amu/iut/commun/api/Traitement.java
 4717693095cd  src/main/java/fr/univ_amu/iut/commun/api/TraitementVigieChiro.java
-118bf78879c5  src/main/java/fr/univ_amu/iut/commun/api/TransportVigieChiro.java
+c6d9fe551511  src/main/java/fr/univ_amu/iut/commun/api/TransportVigieChiro.java
 97edde32559d  src/main/java/fr/univ_amu/iut/commun/api/TypePieceJointe.java
 4ef3206718d8  src/main/java/fr/univ_amu/iut/commun/api/UrlSigneeAdmise.java
 5660bdb6fe35  src/main/java/fr/univ_amu/iut/commun/di/Amorcage.java
@@ -1449,6 +1449,7 @@ b3aaf034461c  src/test/java/fr/univ_amu/iut/commun/api/ReponsesGrilleStocTest.ja
 38cbe72aa330  src/test/java/fr/univ_amu/iut/commun/api/RequetesVigieChiroTest.java
 630ff74b69a4  src/test/java/fr/univ_amu/iut/commun/api/ResolveurCommuneApiGeoTest.java
 7e59ff688b18  src/test/java/fr/univ_amu/iut/commun/api/ResultatLancementTest.java
+2707471520ac  src/test/java/fr/univ_amu/iut/commun/api/SignatureS3DepotTest.java
 0d3d255f3ada  src/test/java/fr/univ_amu/iut/commun/api/SitesVigieChiroTest.java
 07fb601235e0  src/test/java/fr/univ_amu/iut/commun/api/TraitementVigieChiroTest.java
 39defdc92f7f  src/test/java/fr/univ_amu/iut/commun/api/TransportVigieChiroTest.java

@@ -820,13 +820,12 @@ class DepotVigieChiroTest {
         Path gros = grosFichier(dossier, "Car-1.zip");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
         when(client.creerFichierMultipart(anyString(), anyString())).thenReturn(ReponseApi.succes("f-multi"));
-        when(client.deposerEnParts(anyString(), any(Path.class), anyString(), any(), any()))
-                .thenReturn(ReponseApi.succes("{}"));
+        when(client.deposerEnParts(anyString(), any(Path.class), any(), any())).thenReturn(ReponseApi.succes("{}"));
 
         depot.deposer(idPassage, List.of(gros));
 
         verify(client).creerFichierMultipart(eq("Car-1.zip"), eq("part-1"));
-        verify(client).deposerEnParts(eq("f-multi"), eq(gros), anyString(), any(), any());
+        verify(client).deposerEnParts(eq("f-multi"), eq(gros), any(), any());
         verify(client, never()).creerFichier(anyString(), anyString());
     }
 
@@ -836,7 +835,7 @@ class DepotVigieChiroTest {
         Path gros = grosFichier(dossier, "Car-1.zip");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
         when(client.creerFichierMultipart(anyString(), anyString())).thenReturn(ReponseApi.succes("f-multi"));
-        when(client.deposerEnParts(anyString(), any(Path.class), anyString(), any(), any()))
+        when(client.deposerEnParts(anyString(), any(Path.class), any(), any()))
                 .thenReturn(ReponseApi.injoignable("coupure"));
 
         depot.deposer(idPassage, List.of(gros));

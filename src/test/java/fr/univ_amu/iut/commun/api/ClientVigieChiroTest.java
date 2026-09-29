@@ -232,8 +232,7 @@ class ClientVigieChiroTest {
         });
         ClientVigieChiro client = clientAvec(http);
 
-        ReponseApi<String> issue =
-                client.deposerEnParts("f-1", fichier, "application/zip", 3, fraction -> {}, SuiviReprise.SILENCIEUX);
+        ReponseApi<String> issue = client.deposerEnParts("f-1", fichier, 3, fraction -> {}, SuiviReprise.SILENCIEUX);
 
         assertThat(issue).as("la finalisation aboutit").isInstanceOf(ReponseApi.Succes.class);
         assertThat(putsS3).as("7 octets en chunks de 3 → 3 parties déposées").hasValue(3);
@@ -264,8 +263,7 @@ class ClientVigieChiroTest {
         });
         ClientVigieChiro client = clientAvec(http);
 
-        ReponseApi<String> issue =
-                client.deposerEnParts("f-1", fichier, "application/zip", 3, fraction -> {}, SuiviReprise.SILENCIEUX);
+        ReponseApi<String> issue = client.deposerEnParts("f-1", fichier, 3, fraction -> {}, SuiviReprise.SILENCIEUX);
 
         assertThat(issue).as("le refus de la partie est propagé").isInstanceOf(ReponseApi.Refuse.class);
         assertThat(finalisations)

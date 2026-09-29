@@ -71,7 +71,7 @@ final class TeleverseurArchive {
         if (!(declaration instanceof ReponseApi.Succes<String>(String fichierId))) {
             return Resultat.echec("déclaration multipart : " + causeDe(declaration), declaration);
         }
-        ReponseApi<String> depot = client.deposerEnParts(fichierId, fichier, mime(titre), progression, reprise);
+        ReponseApi<String> depot = client.deposerEnParts(fichierId, fichier, progression, reprise);
         if (depot.echec().isPresent()) {
             client.abandonnerFichier(fichierId);
             return Resultat.echec("téléversement multipart : " + causeDe(depot), depot);

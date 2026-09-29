@@ -487,8 +487,7 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente());
 
-        ReponseApi<String> issue =
-                transport.deposerPartie(URL_S3_PARTIE, octetUnique(), "application/zip", SuiviReprise.SILENCIEUX);
+        ReponseApi<String> issue = transport.deposerPartie(URL_S3_PARTIE, octetUnique(), SuiviReprise.SILENCIEUX);
 
         assertThat(issue).isEqualTo(ReponseApi.succes("etag-abc"));
     }
@@ -503,8 +502,7 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
 
-        ReponseApi<String> issue =
-                transport.deposerPartie(URL_S3_PARTIE, octetUnique(), "application/zip", SuiviReprise.SILENCIEUX);
+        ReponseApi<String> issue = transport.deposerPartie(URL_S3_PARTIE, octetUnique(), SuiviReprise.SILENCIEUX);
 
         assertThat(issue).isEqualTo(ReponseApi.succes("etag-2"));
         assertThat(attentes).hasSize(1);
