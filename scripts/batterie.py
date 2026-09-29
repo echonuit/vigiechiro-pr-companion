@@ -186,8 +186,13 @@ def gardes(racine: pathlib.Path | None = None) -> list[tuple[str, list[str]]]:
 
     base = racine or RACINE
     trouves = []
-    for dossier in ("adr", "methode"):
-        for f in sorted((base / "scripts" / dossier).glob("*.py")):
+    # ⟨`.github/scripts` entre par la MEME regle⟩ La porte ne lisait que `scripts/`, donc les gardes
+    # de CI n existaient pas pour elle : elle ne pouvait ni les engager ni dire qu elle les ecartait.
+    # Le critere ne change pas d un dossier a l autre - c est le `CONTRAT` declare, jamais le chemin
+    # du fichier. La CI lance aussi `revoque_jeton.py` et `installer_paquets.py` dans ce dossier : une
+    # regle fondee sur le dossier ferait revoquer un jeton depuis un poste (#5525).
+    for dossier in ("scripts/adr", "scripts/methode", ".github/scripts"):
+        for f in sorted((base / dossier).glob("*.py")):
             if f.name.startswith("_"):
                 continue
             try:
@@ -235,7 +240,7 @@ def gardes(racine: pathlib.Path | None = None) -> list[tuple[str, list[str]]]:
                                 ):
                                     dispositif = valeur.value
             if porte_un_contrat and dispositif in JUGENT:
-                trouves.append((f"scripts/{dossier}/{f.name}", declares))
+                trouves.append((f"{dossier}/{f.name}", declares))
     return trouves
 
 
@@ -1575,6 +1580,43 @@ def _auto_test() -> int:
     echecs += juge(
         "et sans aucun cas joué, il le DIT",
         lambda: "aucun cas joué" in situe_le_leve(ValueError("x"), []),
+    )
+
+    # ⟨LES cas de #5525⟩ Les gardes de `.github/scripts` entrent par leur `CONTRAT`, jamais par leur
+    # dossier : la CI lance aussi `revoque_jeton.py` et `installer_paquets.py` dans ce meme dossier,
+    # et une regle fondee sur le chemin ferait revoquer un jeton depuis un poste. Ces cas portent le
+    # positif ET les deux contrastes, sans quoi une porte qui engagerait TOUT le dossier passerait
+    # le premier.
+    for libelle, diff, attendu in (
+        (
+            "un garde de CI est engage par ses chemins",
+            [".github/scripts/neuf.py"],
+            "verifie_inventaires_ci.py",
+        ),
+        (
+            "la page des gardes l engage aussi",
+            ["dev-docs/ci-cd-release.md"],
+            "verifie_inventaires_ci.py",
+        ),
+    ):
+        echecs += juge(libelle, lambda d=diff, a=attendu: any(a in g for g in engage(d)[0]))
+    # Le CONTRASTE du cout : le banc de mutation de CI met 10,36 s, et un diff qui ne touche pas
+    # `.github/` ne doit pas le payer. Sans ce cas, des `chemins` oublies passeraient inapercus.
+    echecs += juge(
+        "un diff sans `.github/` n engage aucun garde de CI",
+        lambda: not any(g.startswith(".github") for g in engage(["src/main/java/fr/A.java"])[0]),
+    )
+    # Le CONTRASTE du critere : un script du meme dossier SANS contrat n est jamais engage, quel
+    # que soit le diff. C est ce qui separe « la porte lit un dossier » de « la porte lit un contrat ».
+    echecs += juge(
+        "un script sans contrat du meme dossier n est JAMAIS engage",
+        lambda: (
+            not any(
+                "revoque_jeton" in g
+                for d in ([".github/scripts/neuf.py"], [".github/workflows/lint.yml"], ["x.txt"])
+                for g in engage(d)[0]
+            )
+        ),
     )
 
     joues = sum(1 for ligne in dits if ligne.startswith(("  ✔", "  ✘")))

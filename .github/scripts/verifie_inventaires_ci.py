@@ -508,6 +508,34 @@ def _auto_test() -> int:
     return echecs
 
 
+# Pourquoi `invariant` et non `cliquet` : il n y a pas de marge a relever. Un atelier absent du
+# tableau, un garde autoteste qui n y figure pas, sont des ecarts a zero tolerance - c est ce que
+# l ADR 3794 decide, et ce que l ADR 5373 nomme « un inventaire ».
+#
+# Il porte un `CONTRAT` depuis #5525, et ce n est pas une formalite : la porte construit sa
+# population depuis les contrats declares, jamais depuis un dossier. Sans celui-ci, ce garde
+# n existait pas pour elle - elle ne pouvait ni l engager ni dire qu elle l ecartait, alors qu il
+# coute 0,23 s et n a besoin ni de jeton, ni de reseau, ni d affichage.
+CONTRAT = {
+    "garde": ".github/scripts/verifie_inventaires_ci.py",
+    "geste": "inventaire de la CI qui a derive : atelier, garde autoteste ou correspondance absents",
+    "population": "les ateliers de .github/workflows, les scripts de .github/scripts et "
+    ".github/assets qui repondent a --auto-test, et les deux tableaux de dev-docs/ci-cd-release.md",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": ".github/scripts/verifie_inventaires_ci.py --auto-test",
+    "decision": "ADR 3794",
+    # Les quatre surfaces dont son verdict depend. La page en fait partie : c est elle qu il
+    # confronte, et une ligne ajoutee au tableau des gardes le fait changer d avis.
+    "chemins": """
+.github/workflows/**
+.github/scripts/**
+.github/assets/**
+dev-docs/ci-cd-release.md
+""",
+}
+
+
 if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())

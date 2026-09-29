@@ -174,6 +174,13 @@ def _auto_test() -> int:
 CONTRAT = {
     "geste": "job de workflow sans butoir de durée",
     "population": "WORKFLOWS",
+    # Il ne lit QUE les ateliers : hors d eux, son verdict est identique a celui de la base. La
+    # porte l engage donc sur eux seuls (#5525) - sans cette ligne il serait lance a chaque diff,
+    # ce que la regle du repli impose a bon droit a qui ne declare rien.
+    "chemins": """
+.github/workflows/**
+.github/scripts/verifie_butoirs.py
+""",
     "dispositif": "invariant",
     "seuil": "(sans objet)",
     "temoin": ".github/scripts/verifie_butoirs.py --auto-test",
