@@ -51,7 +51,7 @@ import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import sort_si_contrat_demande
+from _commun import message_de_refus, sort_si_contrat_demande
 
 BINAIRE_EPINGLE = pathlib.Path(".github") / "openspec" / "node_modules" / ".bin" / "openspec"
 
@@ -88,9 +88,10 @@ def binaire(racine: pathlib.Path) -> tuple[str | None, str | None]:
     epingle = racine / BINAIRE_EPINGLE
     if epingle.exists():
         return str(epingle), None
-    return None, (
-        f"{BINAIRE_EPINGLE} est absent. Lancez « npm ci --prefix .github/openspec » : le garde "
-        "compare a l outil EPINGLE, jamais a celui du PATH, qui peut etre d une autre version"
+    return None, message_de_refus(
+        f"{BINAIRE_EPINGLE} est absent, et ce garde compare a l outil EPINGLE jamais a celui du"
+        " PATH, qui peut etre d une autre version",
+        "npm ci --prefix .github/openspec",
     )
 
 

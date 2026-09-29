@@ -564,3 +564,66 @@ def cas_d_auto_test() -> tuple:
             marque[0] = 1
 
     return verifie, (lambda: marque[0])
+
+
+# ⟨la forme d un refus se DECLARE⟩ La porte montrait les deux premieres lignes non vides d un refus,
+# et c etait le meilleur choix sans idiome : mesure de #5395 sur trois refus reels, aucune position
+# ne nomme systematiquement le geste. Elle ratait donc celui de `4617-code-mort-et-zone-de-test.py`,
+# qui est en TROISIEME ligne.
+#
+# Deviner la position serait une inference sur la forme du texte, que l ADR 5398 refuse sur cette
+# porte meme. Ce qui suit est l autre branche : une forme declaree, que la porte LIT au lieu de la
+# deviner, et un repli inchange pour les gardes qui ne l emploient pas encore (#5485).
+MARQUE_CAUSE = "REFUS :"
+MARQUE_GESTE = "POUR REPARER :"
+
+
+def message_de_refus(cause: str, geste: str) -> str:
+    """La forme declaree, SANS sortir. Pour les gardes qui rendent un message a leur appelant.
+
+    Plusieurs gardes ne levent pas : ils rendent `(code, message)` et laissent l appelant decider.
+    Leur imposer `refuse` changerait leur flot de controle pour une question de forme, ce qui est
+    exactement le genre d elargissement qu un lot doit refuser. Les deux moities partagent donc les
+    memes marques, et la porte lit les deux pareil.
+    """
+    return f"{MARQUE_CAUSE} {cause}\n{MARQUE_GESTE} {geste}"
+
+
+def refuse(cause: str, geste: str, code: int = 2) -> None:
+    """Refuse de conclure, en NOMMANT la cause et le geste qui repare.
+
+    ## Pourquoi deux champs et non un message libre
+
+    Un refus porte deux choses de nature differente : **pourquoi je ne peux pas conclure**, et **ce
+    qu il faut faire**. Melangees dans une prose, aucune machine ne les separe - et c est ce que les
+    deux tentatives de mesure de #5475 ont paye, rendant 13 gardes puis 0 sur la meme question.
+
+    ## Pourquoi le code 2, et pas 1
+
+    Mesure du 2026-09-29 sur les quatre dossiers de gardes : 28 sites sortent en **2**, dans 16
+    gardes, contre 22 en 1. Le 2 est donc la convention du depot, non ecrite jusqu ici. Un `1` dit
+    « j ai juge et c est rouge » ; un `2` dit « je n ai pas pu juger », ce que l ADR 5407 separe.
+
+    Trois sites divergent et ne sont pas convertis par ce lot : `sys.exit(64)` dans
+    `clips_orphelins.py`, deux `sys.exit(3)` dans `compare_tournages.py`. Ils sont nommes ici plutot
+    que tus.
+    """
+    print(message_de_refus(cause, geste), file=sys.stderr)
+    raise SystemExit(code)
+
+
+def lit_le_refus(sortie: str) -> tuple[str, str] | None:
+    """La cause et le geste d un refus DECLARE, ou `None` si le garde n emploie pas la forme.
+
+    Rendre `None` plutot que de deviner est le point : un garde qui n a pas encore la forme garde le
+    repli d avant, et rien ne se lit de travers. C est ce qui permet de convertir les gardes un a un
+    sans fausser la porte entre-temps.
+    """
+    cause = geste = ""
+    for ligne in sortie.splitlines():
+        nu = ligne.strip()
+        if nu.startswith(MARQUE_CAUSE):
+            cause = nu[len(MARQUE_CAUSE) :].strip()
+        elif nu.startswith(MARQUE_GESTE):
+            geste = nu[len(MARQUE_GESTE) :].strip()
+    return (cause, geste) if cause and geste else None

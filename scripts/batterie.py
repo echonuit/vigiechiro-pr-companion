@@ -911,7 +911,18 @@ def verdict_du_lancement(nom: str, code: int, stdout: str, stderr: str) -> tuple
     # la forme du texte. Ce depot a tranche deux fois contre l inference cette nuit, dont l ADR 5398
     # sur cette porte meme. On MONTRE PLUS a la place : les deux premieres lignes non vides couvrent
     # les trois formes sans rien deviner, et coutent une ligne de plus au recapitulatif.
-    premiere = "\n".join(lignes[:2]) if lignes else "(sans sortie)"
+    # ⟨la forme DECLAREE d abord, le repli ensuite⟩ Un garde qui emploie `_commun.refuse` nomme sa
+    # cause et son geste, et la porte les lit OU QU ILS SOIENT. Le repli a deux lignes reste pour les
+    # gardes non convertis : rendre `None` plutot que de deviner est ce qui permet de les convertir
+    # un a un sans fausser la porte entre-temps (#5485).
+    from _commun import lit_le_refus
+
+    declare = lit_le_refus(stdout + "\n" + stderr)
+    premiere = (
+        f"{declare[0]}\n{declare[1]}"
+        if declare
+        else ("\n".join(lignes[:2]) if lignes else "(sans sortie)")
+    )
     if nom not in EXIGENT_DES_ARGUMENTS:
         # ⟨aucune devinette ici, et c est le point⟩ Un garde NEUF qui exigerait des arguments sans
         # etre declare est compte refus, et sa ligne d usage s affiche : le lecteur voit tout de
@@ -1616,6 +1627,43 @@ def _auto_test() -> int:
                 for d in ([".github/scripts/neuf.py"], [".github/workflows/lint.yml"], ["x.txt"])
                 for g in engage(d)[0]
             )
+        ),
+    )
+
+    # ⟨LES cas de #5485⟩ La porte montrait les DEUX PREMIERES lignes d un refus, et c etait le
+    # meilleur choix sans idiome : aucune position ne nomme systematiquement le geste. Elle ratait
+    # donc celui de `4617`, en troisieme ligne. Ces cas tiennent les deux chemins - la forme
+    # declaree, et le repli pour les gardes non convertis - et le CONTRASTE qui les separe.
+    declare_loin = (
+        "un en-tete\n"
+        "REFUS : le lecteur est absent\n"
+        "de la prose\n"
+        "encore de la prose\n"
+        "POUR REPARER : pip install --group gardes\n"
+    )
+    echecs += juge(
+        "un geste declare se lit, meme en cinquieme ligne",
+        lambda: (
+            verdict_du_lancement("x.py", 2, declare_loin, "")[1]
+            == "le lecteur est absent\npip install --group gardes"
+        ),
+    )
+    # Le CONTRASTE du repli : un garde NON converti garde le comportement d avant, mot pour mot.
+    # Sans ce cas, une lecture qui devinerait la position passerait le precedent.
+    echecs += juge(
+        "un refus non declare garde le repli a deux lignes",
+        lambda: (
+            verdict_du_lancement("x.py", 2, "la cause\nde la prose\nle geste", "")[1]
+            == "la cause\nde la prose"
+        ),
+    )
+    # Le CONTRASTE de la forme : la cause SEULE ne suffit pas. Rendre le geste vide serait pire que
+    # le repli, puisque le lecteur croirait avoir tout vu.
+    echecs += juge(
+        "une cause sans geste retombe sur le repli",
+        lambda: (
+            verdict_du_lancement("x.py", 2, "REFUS : x\nautre chose", "")[1]
+            == "REFUS : x\nautre chose"
         ),
     )
 

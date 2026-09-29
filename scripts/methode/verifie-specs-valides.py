@@ -46,7 +46,7 @@ import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import sort_si_contrat_demande
+from _commun import message_de_refus, sort_si_contrat_demande
 
 BINAIRE_EPINGLE = pathlib.Path(".github") / "openspec" / "node_modules" / ".bin" / "openspec"
 
@@ -69,9 +69,9 @@ def valide(base: pathlib.Path) -> tuple[int, str]:
     """Lance l outil epingle sur `base`, et rend (code, sortie fusionnee)."""
     epingle = base / BINAIRE_EPINGLE
     if not epingle.exists():
-        return 2, (
-            f"REFUS : {BINAIRE_EPINGLE} est absent. Lancez « npm ci --prefix .github/openspec » : "
-            "ce garde ne conclut pas sur un outil qu il n a pas lu."
+        return 2, message_de_refus(
+            f"{BINAIRE_EPINGLE} est absent, et ce garde ne conclut pas sur un outil qu il n a pas lu",
+            "npm ci --prefix .github/openspec",
         )
     rendu = subprocess.run(
         [str(epingle), "validate", "--specs"],
