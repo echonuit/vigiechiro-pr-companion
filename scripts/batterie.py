@@ -244,6 +244,11 @@ ATELIERS = ".github/workflows"
 # Une invocation d atelier : `python3 <script>.py <arguments>`, ou `ruff <arguments>`. Les deux
 # formes se lisent ligne a ligne plutot qu en analysant le YAML : un `run:` est un bloc de shell,
 # et l analyser vraiment demanderait un shell.
+# Le nom de ce fichier. Les trois bancs de mutation portent chacun le sien, et pour la meme raison :
+# un dispositif qui derive sa population des ateliers s y trouve lui-meme, et se relance a l interieur
+# de sa propre execution. Mesure du 2026-09-29 : 6,32 s, et un rouge qui n est pas celui du diff.
+MOI = pathlib.Path(__file__).name
+
 INVOCATION_PY = re.compile(r"python3?\s+((?:scripts|\.github/scripts)/[\w./-]+\.py)([^\n|&;]*)")
 INVOCATION_RUFF = re.compile(r"(?:^|\s)(ruff\s+[\w-]+(?:\s+--check)?)\s+([\w./ -]+)$")
 
@@ -298,13 +303,63 @@ def arguments_des_ateliers(racine: pathlib.Path | None = None) -> dict[str, list
     }
 
 
+def auto_tests_des_ateliers(racine: pathlib.Path | None = None) -> list[str]:
+    """Les scripts qu un atelier lance en `--auto-test` et que la population de la porte ignore.
+
+    ## Le trou, et pourquoi aucune des cinq exclusions n etait fautive
+
+    `gardes()` ne balaie que `scripts/adr` et `scripts/methode`, et c est sa regle ecrite. Les trois
+    bancs de mutation declarent la leur. Un script sans `CONTRAT` sort du banc de methode par le
+    filtre qui le dit. **Aucune de ces regles n est fautive prise isolement** : c est leur conjonction
+    qui laissait quatre auto-tests sans autre lecteur que la CI, et aucune des cinq n avait de raison
+    de le voir (#5555).
+
+    ## Le critere est le MODE, ni la liste ni le contrat
+
+    Mesure du 2026-09-29 sur les vingt ateliers : **53** invocations `python3 scripts/...` distinctes,
+    dont **48** declarent un `CONTRAT` et sont deja jouees par la porte. Des cinq restantes, quatre
+    sont lancees en `--auto-test` et une en `--markdown`.
+
+    Les quatre tournent en local, vertes, en **0,05 s chacune**. La cinquieme,
+    `qualite/rapport_mutation.py --markdown`, sort en **1** en reclamant un passage de PIT : elle n a
+    aucun sens hors de la CI, et elle s exclut **d elle-meme** par son mode.
+
+    Un auto-test est autonome par construction - c est ce que ce depot exige de lui - donc le jouer
+    localement est sur. Le risque que l issue nommait, « rejouer en local ce qui n a de sens qu en
+    CI », est donc **retire** par le critere plutot qu assume : c est la difference entre deriver de
+    ce que la chose FAIT et declarer une liste (ADR 5452).
+    """
+    deja = {nom for nom, _ in gardes(racine)}
+    vus: dict[str, None] = {}
+    for ligne in _lignes_des_ateliers(racine):
+        for trouve in INVOCATION_PY.finditer(ligne):
+            chemin, arguments = trouve.group(1), trouve.group(2).split("#")[0].strip()
+            # `.github/scripts` est le terrain de #5525, et il a ses propres raisons d etre hors de
+            # cette porte : on ne l elargit pas ici sans l avoir mesure la-bas.
+            if not chemin.startswith("scripts/"):
+                continue
+            # ⟨la porte ne se joue pas ELLE-MEME⟩ Sans cette ligne, son auto-test se relance a
+            # l interieur de sa propre execution : 6,32 s, et un rouge qui n est pas celui du diff.
+            # C est la bombe a fork que les trois bancs evitent chacun avec sa constante `MOI`.
+            if chemin.endswith(MOI):
+                continue
+            if "--auto-test" not in arguments or chemin in deja:
+                continue
+            vus[chemin] = None
+    return sorted(vus)
+
+
 def outils_des_ateliers(racine: pathlib.Path | None = None) -> list[tuple[str, list[str]]]:
-    """Les outils que les ateliers lancent et que la porte ne lancait pas, avec LEURS dossiers.
+    """Les outils NON PYTHON que les ateliers lancent, avec LEURS dossiers.
 
     `ruff` seul ici, et derive pour la meme raison que les arguments : recopier ses quatre dossiers
     les ferait diverger de ceux de `lint.yml` sans que rien ne le dise. Mesure du 2026-09-22 :
     0,02 s a froid, sans cache, contre plusieurs dizaines de secondes pour la porte entiere. Le
     conditionner couterait plus cher que de le lancer.
+
+    **Son nom promettait plus que son corps** jusqu a #5555 : « les outils que les ateliers lancent »
+    couvrait aussi les scripts Python, dont quatre n avaient pour premier lecteur que la CI. Ceux-la
+    sont desormais derives par `auto_tests_des_ateliers`, et ce nom-ci dit ce qu il fait.
     """
     vus: dict[str, list[str]] = {}
     for ligne in _lignes_des_ateliers(racine):
@@ -715,6 +770,28 @@ def rendre(
     except OSError:
         pass  # Le relevé est un confort : ne pas pouvoir l ecrire ne doit pas faire echouer la porte.
 
+    # ⟨les auto-tests que les ateliers lancent et que la population de la porte ignore⟩ Quatre
+    # d entre eux n avaient pour premier lecteur que la CI ; neuf autres sont des loupes et des
+    # releves, hors de la population de gardes parce qu ils ne JUGENT pas, donc hors de la porte
+    # aussi. Mesure du 2026-09-29 : treize scripts, 1,64 s au total, la porte exclue d elle-meme.
+    autotests = 0
+    for chemin in auto_tests_des_ateliers(racine):
+        rendu = subprocess.run(
+            [python, chemin, "--auto-test"],
+            cwd=str(racine or RACINE),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        autotests += 1
+        if rendu.returncode == 0:
+            print(f"  ✔ {chemin} --auto-test", flush=True)
+        else:
+            rouges.append(f"{chemin} --auto-test")
+            print(f"  ✘ {chemin} --auto-test", flush=True)
+            for ligne in (rendu.stdout + rendu.stderr).strip().splitlines()[-3:]:
+                print(f"      {ligne}", flush=True)
+
     outils, absents = 0, []
     for libelle, commande in outils_des_ateliers(racine):
         # ⟨un outil absent se DIT, il ne se compte pas refus⟩ Un refus ferait croire a un defaut du
@@ -739,7 +816,13 @@ def rendre(
             rouges.append((libelle, premiere))
             print(f"  ✘ {libelle}", flush=True)
 
-    print(f"\n  {joues} garde(s) et {outils} outil(s) joue(s), {len(rouges)} refus.")
+    # ⟨trois comptes, pas un⟩ Un auto-test derive d un atelier n est pas un garde de la population :
+    # les confondre ferait croire que la porte couvre treize gardes de plus, quand elle joue treize
+    # auto-tests de scripts qu elle n engage pas autrement (#5555).
+    print(
+        f"\n  {joues} garde(s), {autotests} auto-test(s) d atelier et {outils} outil(s) joue(s),"
+        f" {len(rouges)} refus."
+    )
     for ligne in reste_a_lancer(diff, absents, racine):
         print(ligne)
     if not rouges:
@@ -1096,6 +1179,37 @@ def _auto_test() -> int:
             if not bon:
                 echecs += 1
                 print(f"      {garde} : attendu {attendu}, obtenu {obtenu}")
+
+        # ⟨LES cas de #5555⟩ Le critere est le MODE, ni le dossier ni le contrat. L atelier ci-dessus
+        # lance `auto.py --auto-test`, qui n a pas de `CONTRAT` et ne vit ni dans `adr` ni dans
+        # `methode/` au sens de `gardes()` : il doit donc etre joue. Les trois autres portent le
+        # CONTRASTE, sans lequel un critere fonde sur le dossier passerait le premier.
+        derives_auto = auto_tests_des_ateliers(ateliers)
+        for libelle, chemin, attendu in (
+            ("un auto-test sans contrat est JOUE", "scripts/methode/auto.py", True),
+            (
+                "un script lance dans un AUTRE mode ne l est pas",
+                "scripts/methode/declarant.py",
+                False,
+            ),
+            ("ni un script lance nu", "scripts/methode/nu.py", False),
+            (
+                "et `.github/scripts` reste hors de cette porte (#5525)",
+                ".github/scripts/x.py",
+                False,
+            ),
+        ):
+            bon = (chemin in derives_auto) == attendu
+            print(f"  {'✔' if bon else '✘'} auto-tests des ateliers : {libelle}")
+            if not bon:
+                echecs += 1
+                print(f"      {chemin} : attendu {attendu}, derives={derives_auto}")
+        # La porte ne se joue jamais elle-meme : sans cette ligne, son auto-test se relance a
+        # l interieur de sa propre execution. Mesure du 2026-09-29 : 6,32 s, et un rouge etranger.
+        bon = not any(MOI in c for c in auto_tests_des_ateliers())
+        print(f"  {'✔' if bon else '✘'} auto-tests des ateliers : la porte s exclut d elle-meme")
+        if not bon:
+            echecs += 1
 
         attendu_outils = [("ruff check", ["ruff", "check", "scripts", "icone"])]
         obtenu_outils = outils_des_ateliers(ateliers)
