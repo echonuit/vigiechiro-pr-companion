@@ -18,8 +18,9 @@ trois ne rend une liste de code mort, et les trois taux qui suivent disent pourq
 
 ## Les appelants d'une méthode Java se RÉSOLVENT
 
-Le dépôt déclare **1 422 noms de méthode dans plusieurs classes** : `preparer` dans 188, `start` dans
-150, `nettoyer` dans 77. Devant eux, `grep` et `semgrep` rendent une liste de fichiers à ouvrir, et le
+Le dépôt déclare **1 424 noms de méthode dans plusieurs classes**, sur 10 360 noms distincts :
+`preparer` dans 188, `start` dans 150, `nettoyer` dans 77. Ces deux comptes suivent la population et
+valent au 2026-09-29 ; le rapport, lui, tient. Devant eux, `grep` et `semgrep` rendent une liste de fichiers à ouvrir, et le
 graphe rend des arêtes en partie **inférées**. Aucun des trois ne dit laquelle des 188 est appelée.
 
 ```bash
@@ -45,13 +46,13 @@ python3 scripts/qualite/lecteurs.py service          # 168 déclarations, dont 2
 ```
 
 Le gain n'est pas le compte, c'est la **résolution**. Un `grep` sur `implements Contrat` rate la classe
-qui l'obtient par sa mère, et rate les **22 interfaces imbriquées** du dépôt. Un `grep` sur un nom de
+qui l'obtient par sa mère, et rate les **25 contrats imbriqués** du dépôt. Un `grep` sur un nom de
 champ ne distingue pas le champ de la variable locale, du paramètre ni de la méthode homonymes :
 sur `service`, il rend **3 398 lignes** à trier, et **995 des 3 730** noms de champ du dépôt sont
 déclarés dans plusieurs classes.
 
 **Ce qu'ils ne disent pas**, et c'est la même mise en garde qu'au-dessus, avec des taux plus raides :
-**27 des 123 contrats** n'ont aucun porteur, et **8 195 des 8 933 champs** n'ont aucun lecteur hors de
+**27 des 123 contrats** n'ont aucun porteur, et **8 196 des 8 934 champs** n'ont aucun lecteur hors de
 leur classe, soit 92 %. Ni les uns ni les autres ne sont morts : un contrat posé pour un point
 d'extension, un état privé lu par les méthodes de sa propre classe sont exactement cela.
 

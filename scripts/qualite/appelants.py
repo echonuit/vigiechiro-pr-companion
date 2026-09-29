@@ -12,8 +12,10 @@ lecteur du depot ne repondait. Mesure du 2026-09-28, sur 14 816 methodes indexee
     grep -rl preparer --include=*.java src/   ->  243 fichiers a lire
     cet outil                                 ->  188 declarations, dont 9 appelees d ailleurs
 
-Le depot porte **1 422 noms declares dans plusieurs classes** - 1 235 avant que #5564 fasse entrer
-les types imbriques - sur 9 835 noms distincts. Les pires
+Le depot porte **1 424 noms declares dans plusieurs classes** sur 10 360 noms distincts, mesure du
+2026-09-29. Le couple a longtemps ete faux d une moitie : #5564 a releve le NUMERATEUR - 1 235
+devient 1 422 quand les types imbriques entrent - et a laisse le DENOMINATEUR a sa valeur d avant,
+9 835. Une fraction dont on ne corrige qu un terme se lit comme une fraction juste. Les pires
 sont massifs : `preparer` dans 188 classes, `start` dans 150, `nettoyer` dans 77. Devant eux, un
 `grep` par nom ne rend pas une reponse, il rend une liste de fichiers a ouvrir.
 

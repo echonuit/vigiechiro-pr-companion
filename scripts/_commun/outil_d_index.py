@@ -46,11 +46,12 @@ import sys
 import tempfile
 from collections.abc import Callable
 
+from _commun import PLAFOND_RENDU
 from _commun.index import IndexAbsent
 
-# Au-dela, la liste cesse d etre une reponse et devient un mur. Le meme plafond que les quinze
-# classes de `rapport_mutation.py`, et pour la meme raison.
-PLAFOND = 15
+# Re-exporte pour que les trois outils l importent d ICI, avec le reste de leur squelette. Le
+# plafond lui-meme vit dans `_commun`, partage avec `rapport_mutation.py` depuis la passe 7 de #5553.
+PLAFOND = PLAFOND_RENDU
 
 
 def joue(

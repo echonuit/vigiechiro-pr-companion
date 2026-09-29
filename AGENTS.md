@@ -203,13 +203,13 @@ Six outils, six questions. `graphify` d'abord (voir ci-dessous), puis :
 
 - **`scripts/qualite/appelants.py`** pour « **qui appelle cette méthode ?** » quand la réponse doit
   être RÉSOLUE. C'est le seul qui distingue deux méthodes de même nom, et le dépôt en déclare
-  **1 422** dans plusieurs classes : `preparer` dans 188, `start` dans 150, `nettoyer` dans 77.
+  **1 424** sur 10 360 dans plusieurs classes : `preparer` dans 188, `start` dans 150, `nettoyer` dans 77.
   `python3 scripts/qualite/appelants.py preparer` rend les neuf porteurs appelés d'ailleurs, là où un
   `grep -rl` rend 243 fichiers à lire. Il lit l'index que la CI produit à chaque demande de fusion, et
   **refuse** si l'index manque plutôt que de rendre « aucun appelant » (#5532).
 - **`scripts/qualite/implemente.py`** pour « **qui tient ce contrat ?** ». Un `grep` sur
-  `implements Contrat` rate la classe qui l'obtient par sa mère, et rate les **22 interfaces
-  imbriquées** du dépôt, dont la déclaration ne porte pas le nom du fichier (#5564).
+  `implements Contrat` rate la classe qui l'obtient par sa mère, et rate les **25 contrats
+  imbriqués** du dépôt, dont la déclaration ne porte pas le nom du fichier (#5564).
 - **`scripts/qualite/lecteurs.py`** pour « **qui lit ce champ, hors de sa classe ?** ». Un `grep` sur
   un nom de champ ne le distingue pas de la variable locale, du paramètre ni de la méthode homonymes :
   sur `service` il rend **3 398 lignes**, là où l'outil rend 168 déclarations dont 24 lues d'ailleurs.

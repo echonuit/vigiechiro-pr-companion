@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Qui lit ce champ hors de sa classe, quand le depot en declare 8 933.
+"""Qui lit ce champ hors de sa classe, quand le depot en declare pres de neuf mille.
 
 `arbre.py` voit qu une classe declare un champ. Il ne voit pas **qui le lit** ailleurs, parce qu il
 lit un fichier a la fois. PMD juge `UnusedPrivateField` dans la seule classe qui le declare. La
 question « qui lit ce champ » est la troisieme des trois que #5464 ecrivait dans sa frontiere, et la
 derniere a n avoir aucun repondant.
 
-Mesure du 2026-09-29, sur les 8 933 champs indexes :
+Mesure du 2026-09-29, sur les 8 934 champs alors indexes :
 
     grep -rn service --include=*.java src/   ->  3 398 lignes a trier
     cet outil                                ->  168 declarations, dont 24 lues d ailleurs
@@ -23,7 +23,7 @@ fichiers a ouvrir.
 ## Ce qu il ne dit PAS, et le contresens que ce fichier existe pour ne pas commettre
 
 « Aucun lecteur hors de sa classe » n est PAS un champ mort, et c est sur ce troisieme index que la
-confusion couterait le plus cher : **8 195 champs sur 8 933 sont dans ce cas, soit 92 % du corpus**,
+confusion couterait le plus cher : **92 % du corpus est dans ce cas**, 8 196 champs sur 8 934,
 contre 69 % des methodes pour l index des appels. Un etat prive lu par les methodes de sa propre
 classe est exactement cela, et c est la forme normale d une classe.
 

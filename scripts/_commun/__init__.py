@@ -293,6 +293,17 @@ def rapporte(
 # jour, et les loupes qui le portent PUBLIENT ce qu elles ont lu, pour que la marge se relise.
 PLAFOND_ISSUES = 4000
 
+# Le plafond de RENDU : au-dela, une liste cesse d etre une reponse et devient un mur. A ne pas
+# confondre avec `PLAFOND_ISSUES` au-dessus, qui est un seuil de REFUS sur une collecte tronquee -
+# l un protege le LECTEUR, l autre protege le VERDICT.
+#
+# **Il est ici parce qu il etait ailleurs DEUX fois**, et c est la lecon de #5568 appliquee a la
+# paire suivante : `outil_d_index.py` et `rapport_mutation.py` portaient chacun 15, pour la meme
+# raison ecrite deux fois. La docstring du premier DISAIT meme « le meme plafond que les quinze
+# classes de rapport_mutation.py » - documenter une duplication n est pas la retirer, et deux
+# constantes qu un commentaire relie divergent aussi bien que deux qui s ignorent (#5567).
+PLAFOND_RENDU = 15
+
 CHAMPS_DU_CONTRAT = ("geste", "population", "dispositif", "seuil", "temoin", "decision")
 
 # `chemins` est FACULTATIF, et le rester est une contrainte autant qu'un choix (#5340).

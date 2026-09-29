@@ -23,7 +23,7 @@ final class IndexDesChamps {
     /// « utilisé ailleurs », le faux négatif que cet index existe pour éviter. Les 4 347 écritures du
     /// corpus ne sont pas indexées.
     ///
-    /// Un champ sans lecteur externe n'est PAS mort : ils sont 8 195 sur 8 933. Les chiffres et leur
+    /// Un champ sans lecteur externe n'est PAS mort : ils sont 92 % du corpus. Les chiffres et leur
     /// lecture sont dans `scripts/_commun/champs.py`, que cet index alimente.
     static Map<String, List<String>> lecteursHorsDeLaClasse(CtModel modele) {
         Map<String, List<String>> parChamp = new TreeMap<>();
