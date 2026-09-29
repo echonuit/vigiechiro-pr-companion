@@ -23,6 +23,11 @@ import spoon.reflect.CtModel;
 ///
 /// Le modèle est bâti sur deux sources jetables plutôt que sur le dépôt : `modele()` balaie les deux
 /// racines de paquet et coûte 25 s, ce qui n'a pas sa place dans la suite.
+///
+/// Les trois index vivent depuis #5565 dans `IndexDesAppels`, `IndexDesImplementations` et
+/// `IndexDesChamps`, le troisième ayant fait de `ExtracteurIndex` une `GodClass` au sens du portail.
+/// Cette classe les éprouve ensemble parce que ce qu'elle surveille est la SORTIE de l'extraction,
+/// non la découpe interne qui la produit.
 class ExtracteurIndexTest {
 
     /// Le niveau que l'extracteur pose lui-même : Spoon le déduirait du JDK courant et refuserait
@@ -220,17 +225,17 @@ class ExtracteurIndexTest {
 
     private static Map<String, List<String>> champsDe(Path ou, String nom, String source) throws IOException {
         ecrire(ou, nom, source);
-        return ExtracteurIndex.lecteursHorsDeLaClasse(modeleDe(ou));
+        return IndexDesChamps.lecteursHorsDeLaClasse(modeleDe(ou));
     }
 
     private static Map<String, List<String>> contratsDe(Path ou, String nom, String source) throws IOException {
         ecrire(ou, nom, source);
-        return ExtracteurIndex.implementationsParContrat(modeleDe(ou));
+        return IndexDesImplementations.implementationsParContrat(modeleDe(ou));
     }
 
     private static Map<String, List<String>> indexDe(Path ou, String nom, String source) throws IOException {
         ecrire(ou, nom, source);
-        return ExtracteurIndex.appelantsHorsDuFichier(modeleDe(ou));
+        return IndexDesAppels.appelantsHorsDuFichier(modeleDe(ou));
     }
 
     private static void ecrire(Path ou, String nom, String source) throws IOException {
