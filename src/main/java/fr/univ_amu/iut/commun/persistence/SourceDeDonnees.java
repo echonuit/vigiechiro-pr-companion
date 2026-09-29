@@ -56,15 +56,24 @@ public class SourceDeDonnees {
             // créer la racine ne servirait alors à rien pour ouvrir le fichier.
             Files.createDirectories(workspace.cheminBaseDeDonnees().getParent());
             Connection connexion = dataSource.getConnection();
-            try (Statement st = connexion.createStatement()) {
-                st.execute("PRAGMA foreign_keys = ON");
-                st.execute("PRAGMA busy_timeout = " + DELAI_VERROU_MS);
-                // WAL : un lecteur ne bloque plus l'écrivain (#4983). En journal rollback, une lecture
-                // longue - et un import lit longtemps - tient un verrou partagé qui fait échouer toute
-                // écriture. Le `busy_timeout` ci-dessus ne fait alors qu'attendre l'échec.
-                st.execute("PRAGMA journal_mode = WAL");
+            try {
+                try (Statement st = connexion.createStatement()) {
+                    st.execute("PRAGMA foreign_keys = ON");
+                    st.execute("PRAGMA busy_timeout = " + DELAI_VERROU_MS);
+                    // WAL : un lecteur ne bloque plus l'écrivain (#4983). En journal rollback, une lecture
+                    // longue - et un import lit longtemps - tient un verrou partagé qui fait échouer toute
+                    // écriture. Le `busy_timeout` ci-dessus ne fait alors qu'attendre l'échec.
+                    st.execute("PRAGMA journal_mode = WAL");
+                }
+                return connexion;
+            } catch (SQLException | RuntimeException e) {
+                try {
+                    connexion.close();
+                } catch (SQLException fermeture) {
+                    e.addSuppressed(fermeture);
+                }
+                throw e;
             }
-            return connexion;
         } catch (SQLException | IOException e) {
             throw new DataAccessException("Connexion SQLite impossible (" + workspace + ")", e);
         }
