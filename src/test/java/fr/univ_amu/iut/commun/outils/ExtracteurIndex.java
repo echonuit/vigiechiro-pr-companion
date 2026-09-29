@@ -12,8 +12,10 @@ import java.util.Map;
 import java.util.TreeMap;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
+import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
+import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.ModifierKind;
@@ -81,6 +83,14 @@ public final class ExtracteurIndex {
                 + "  contrats=" + implementations.size()
                 + "  implémentés=" + (implementations.size() - sansImplementation)
                 + "  sans=" + sansImplementation);
+
+        Map<String, List<String>> champs = lecteursHorsDeLaClasse(modele);
+        ecrire(ou.resolve("index-champs.json"), champs);
+        long sansLecteur = champs.values().stream().filter(List::isEmpty).count();
+        System.out.println("index écrit : " + ou.resolve("index-champs.json")
+                + "  champs=" + champs.size()
+                + "  lus ailleurs=" + (champs.size() - sansLecteur)
+                + "  sans=" + sansLecteur);
     }
 
     /// Écriture ATOMIQUE : un fichier temporaire, puis un renommage. C'est ce qui remplace l'argument
@@ -120,6 +130,54 @@ public final class ExtracteurIndex {
         }
         parContrat.values().forEach(v -> v.sort(Comparator.naturalOrder()));
         return parContrat;
+    }
+
+    /// Pour chaque champ, les types qui le LISENT hors de sa classe.
+    ///
+    /// **Les LECTURES seules, et c'est une limite déclarée plutôt qu'un oubli.** Spoon distingue
+    /// `CtFieldRead` de `CtFieldWrite`, et la question de #5464 est « ce champ est-il **lu** ailleurs ».
+    /// Les confondre ferait passer un champ qu'un constructeur écrit et que personne ne lit pour
+    /// « utilisé ailleurs », soit le faux négatif exact que cet index existe pour éviter. Les 4 347
+    /// écritures du corpus ne sont donc pas indexées, et cet index ne répond pas à « qui écrit ce
+    /// champ ».
+    ///
+    /// Mesure du 2026-09-29, et elle a démenti la crainte qui avait fait de ce lot le plus risqué des
+    /// trois : les **38 580** accès résolus du corpus s'effondrent à **3 173 arêtes**, la plupart étant
+    /// intra-classe et se dédoublonnant par type lecteur. L'index pèse 775 Ko contre 2,1 Mo pour celui
+    /// des appels, et son calcul coûte 2,5 s sur un modèle déjà bâti.
+    ///
+    /// Ce qu'il ne dit PAS, et c'est l'ADR 5532 appliquée ici : **8 195 champs sur 8 933 n'ont aucun
+    /// lecteur externe**, soit 92 %. C'est l'état normal d'un état privé, pas un défaut, et un garde
+    /// bâti là-dessus signalerait presque tout le corpus.
+    static Map<String, List<String>> lecteursHorsDeLaClasse(CtModel modele) {
+        Map<String, List<String>> parChamp = new TreeMap<>();
+        for (CtType<?> type : tousLesTypes(modele)) {
+            for (CtField<?> champ : type.getFields()) {
+                parChamp.putIfAbsent(cle(type, champ.getSimpleName()), new ArrayList<>());
+            }
+        }
+        for (CtFieldRead<?> lecture : modele.getElements(new TypeFilter<CtFieldRead<?>>(CtFieldRead.class))) {
+            if (lecture.getVariable() == null || lecture.getVariable().getDeclaration() == null) {
+                continue;
+            }
+            CtType<?> porteur = lecture.getVariable().getDeclaration().getParent(CtType.class);
+            CtType<?> lecteur = lecture.getParent(CtType.class);
+            if (porteur == null || lecteur == null || porteur == lecteur) {
+                continue;
+            }
+            List<String> vus = parChamp.get(cle(porteur, lecture.getVariable().getSimpleName()));
+            if (vus != null && !vus.contains(lecteur.getQualifiedName())) {
+                vus.add(lecteur.getQualifiedName());
+            }
+        }
+        parChamp.values().forEach(v -> v.sort(Comparator.naturalOrder()));
+        return parChamp;
+    }
+
+    /// `fr.X.Y#champ` : la même forme que la signature d'une méthode, sans les parenthèses - un champ
+    /// n'a pas de surcharge, donc rien à désambiguïser au-delà de son porteur qualifié.
+    private static String cle(CtType<?> porteur, String champ) {
+        return porteur.getQualifiedName() + "#" + champ;
     }
 
     /// TOUS les types, IMBRIQUÉS COMPRIS, et c'est la différence avec `getAllTypes()`.

@@ -32,20 +32,15 @@ Usage :
     python3 scripts/qualite/implemente.py --auto-test
 """
 
-import io
-import json
 import pathlib
 import sys
-import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from _commun import cas_d_auto_test
-from _commun.implementations import IndexAbsent, charge
-
-# Le meme plafond que `appelants.py` et `rapport_mutation.py`, et pour la meme raison : au-dela, la
-# liste cesse d etre une reponse et devient un mur.
-PLAFOND = 15
+from _commun.outil_d_index import PLAFOND, index_temoin, joue, message_du_refus, sans_bruit
+from _commun import implementations as lecteur
+from _commun.implementations import charge
 
 
 def contrats(cible: str, index: dict[str, list[str]]) -> list[str]:
@@ -137,65 +132,38 @@ def auto_test() -> int:
     )
     verifie(
         "et le refus DIT comment produire l index",
-        lambda: "ExtracteurIndex" in _message_du_refus(absent),
+        lambda: "ExtracteurIndex" in message_du_refus(charge, absent),
         True,
     )
     verifie(
         "sur un index FABRIQUE, le meme chemin rend la reponse et sort en 0",
-        lambda: _sans_bruit(["implemente.py", "--index", str(_index_temoin(faux)), "Contrat"]),
+        lambda: sans_bruit(
+            main, ["implemente.py", "--index", str(index_temoin(faux, "implemente")), "Contrat"]
+        ),
         0,
     )
 
+    # ⟨les cas du LECTEUR, joues ici parce que rien d autre ne les jouait⟩ Les trois modules de
+    # `_commun` portent un `verifie_grammaire()` depuis #5473 et #5564, et la mesure du 2026-09-29
+    # dit qu AUCUN harnais ne les appelait : seul celui d `arbre.py` est joue, par
+    # `scripts/adr/4472-commentaire-en-corps.py`. Trois gages inertes, ce que l ADR 5546 nomme un
+    # defaut. L outil est le bon endroit : il est le seul lecteur de son module, et son `--auto-test`
+    # est joue par la porte comme par `lint.yml`.
+    for libelle, tenu in lecteur.verifie_grammaire():
+        verifie(f"lecteur des implementations : {libelle}", lambda tenu=tenu: tenu, True)
+
     return echecs()
-
-
-def _sans_bruit(argv: list[str]) -> int:
-    vraie = sys.stdout
-    try:
-        sys.stdout = io.StringIO()
-        return main(argv)
-    finally:
-        sys.stdout = vraie
-
-
-def _message_du_refus(chemin: pathlib.Path) -> str:
-    try:
-        charge(chemin)
-    except IndexAbsent as refus:
-        return str(refus)
-    return ""
-
-
-def _index_temoin(faux: dict[str, list[str]]) -> pathlib.Path:
-    ou = pathlib.Path(tempfile.gettempdir()) / "implemente-auto-test-index.json"
-    ou.write_text(json.dumps(faux), encoding="utf-8")
-    return ou
 
 
 def main(argv: list[str]) -> int:
     if "--auto-test" in argv[1:]:
         return auto_test()
-
-    ou = None
-    if "--index" in argv:
-        ou = pathlib.Path(argv[argv.index("--index") + 1])
-
-    passes = {"--index", "" if ou is None else str(ou)}
-    cibles = [a for a in argv[1:] if not a.startswith("--") and a not in passes]
-    if not cibles:
-        print("Usage : implemente.py <contrat> [--index CHEMIN]", file=sys.stderr)
-        print("        implemente.py --auto-test", file=sys.stderr)
-        return 2
-
-    try:
-        index = charge(ou)
-    except IndexAbsent as refus:
-        print(refus, file=sys.stderr)
-        return 1
-
-    for cible in cibles:
-        print(rendu(cible, contrats(cible, index), index))
-    return 0
+    return joue(
+        argv,
+        nom="implemente.py",
+        charge=charge,
+        repond=lambda cible, index: rendu(cible, contrats(cible, index), index),
+    )
 
 
 if __name__ == "__main__":

@@ -45,20 +45,15 @@ Usage :
     python3 scripts/qualite/appelants.py --auto-test
 """
 
-import io
-import json
 import pathlib
 import sys
-import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from _commun import cas_d_auto_test
-from _commun.index import IndexAbsent, charge
-
-# Au-dela, la liste cesse d etre une reponse et devient un mur. C est le meme plafond, et pour la
-# meme raison, que les quinze classes de `rapport_mutation.py`.
-PLAFOND = 15
+from _commun.outil_d_index import PLAFOND, index_temoin, joue, message_du_refus, sans_bruit
+from _commun import index as lecteur
+from _commun.index import charge
 
 
 def declarations(cible: str, index: dict[str, list[str]]) -> list[str]:
@@ -198,75 +193,38 @@ def auto_test() -> int:
     )
     verifie(
         "et le refus DIT comment produire l index",
-        lambda: "ExtracteurIndex" in _message_du_refus(absent),
+        lambda: "ExtracteurIndex" in message_du_refus(charge, absent),
         True,
     )
     verifie(
         "sur un index FABRIQUE, le meme chemin rend la reponse et sort en 0",
-        lambda: _sans_bruit(["appelants.py", "--index", str(_index_temoin(faux)), "preparer"]),
+        lambda: sans_bruit(
+            main, ["appelants.py", "--index", str(index_temoin(faux, "appelants")), "preparer"]
+        ),
         0,
     )
 
+    # ⟨les cas du LECTEUR, joues ici parce que rien d autre ne les jouait⟩ Les trois modules de
+    # `_commun` portent un `verifie_grammaire()` depuis #5473 et #5564, et la mesure du 2026-09-29
+    # dit qu AUCUN harnais ne les appelait : seul celui d `arbre.py` est joue, par
+    # `scripts/adr/4472-commentaire-en-corps.py`. Trois gages inertes, ce que l ADR 5546 nomme un
+    # defaut. L outil est le bon endroit : il est le seul lecteur de son module, et son `--auto-test`
+    # est joue par la porte comme par `lint.yml`.
+    for libelle, tenu in lecteur.verifie_grammaire():
+        verifie(f"lecteur des appels : {libelle}", lambda tenu=tenu: tenu, True)
+
     return echecs()
-
-
-def _sans_bruit(argv: list[str]) -> int:
-    """`main` sans sa sortie, pour que la reponse du cas positif ne se lise pas comme des cas.
-
-    Un auto-test dont la trace porte les lignes de l outil lui-meme se compte mal : un releve qui
-    cherche les cas joues y voit la reponse, et le nombre annonce cesse d etre le nombre de cas.
-    """
-    vraie = sys.stdout
-    try:
-        sys.stdout = io.StringIO()
-        return main(argv)
-    finally:
-        sys.stdout = vraie
-
-
-def _message_du_refus(chemin: pathlib.Path) -> str:
-    try:
-        charge(chemin)
-    except IndexAbsent as refus:
-        return str(refus)
-    return ""
-
-
-def _index_temoin(faux: dict[str, list[str]]) -> pathlib.Path:
-    """Un index ecrit sur disque, pour que le cas positif emprunte le MEME chemin que le refus.
-
-    Sans lui, le cas de refus serait le seul a passer par `main`, et rien ne dirait si l outil refuse
-    parce que l index manque ou parce qu il refuse toujours. C est le controle de contraste.
-    """
-    ou = pathlib.Path(tempfile.gettempdir()) / "appelants-auto-test-index.json"
-    ou.write_text(json.dumps(faux), encoding="utf-8")
-    return ou
 
 
 def main(argv: list[str]) -> int:
     if "--auto-test" in argv[1:]:
         return auto_test()
-
-    ou = None
-    if "--index" in argv:
-        ou = pathlib.Path(argv[argv.index("--index") + 1])
-
-    passes = {"--markdown", "--index", "" if ou is None else str(ou)}
-    cibles = [a for a in argv[1:] if not a.startswith("--") and a not in passes]
-    if not cibles:
-        print("Usage : appelants.py <nom|signature> [--index CHEMIN]", file=sys.stderr)
-        print("        appelants.py --auto-test", file=sys.stderr)
-        return 2
-
-    try:
-        index = charge(ou)
-    except IndexAbsent as refus:
-        print(refus, file=sys.stderr)
-        return 1
-
-    for cible in cibles:
-        print(rendu(cible, *reponse(cible, index)))
-    return 0
+    return joue(
+        argv,
+        nom="appelants.py",
+        charge=charge,
+        repond=lambda cible, index: rendu(cible, *reponse(cible, index)),
+    )
 
 
 if __name__ == "__main__":
