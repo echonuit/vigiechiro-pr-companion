@@ -469,14 +469,29 @@ def _auto_test() -> int:
     # garde deviendrait vert en ayant cesse de juger. Les deux bouts se lisent, aucun n est ecrit
     # en dur, si bien que resserrer le cliquet de 4472 laisse ce cas vert.
     _releve = releve_des_contrats(RACINE_DEPOT)
-    _garde_a_une_adr = RACINE_DEPOT / "scripts" / "adr" / "4472-commentaire-en-corps.py"
-    _rendu = _releve.seuil(
-        _garde_a_une_adr.read_text(encoding="utf-8"), RACINE_DEPOT / "dev-docs" / "decisions"
-    )
+    _decisions = RACINE_DEPOT / "dev-docs" / "decisions"
+
+    def _seuil_de(nom: str) -> str:
+        chemin = RACINE_DEPOT / "scripts" / "adr" / nom
+        return _releve.seuil(chemin.read_text(encoding="utf-8"), _decisions)
+
+    _garde_a_une_adr = "5340-chemins-non-declares.py"
     verifie(
         "le seuil d un garde reel se resout, et sur le cliquet que son ADR declare",
-        seuil_resolu(_rendu),
-        str(cliquet("4472")),
+        seuil_resolu(_seuil_de(_garde_a_une_adr)),
+        str(cliquet("5340")),
+    )
+
+    # DEUX familles, parce qu un garde peut rendre DEUX verdicts sous deux ADR (ADR 4682, et
+    # ADR 5582 depuis la cloture de #4650). Ce cas-la n avait aucun temoin : le fixture pointait
+    # `4472`, qui portait alors une seule ADR, et la scission de son cliquet par zone a fait rendre
+    # None a `seuil_resolu` - un rouge juste, sur un cas qui ne couvrait qu une des deux formes.
+    _rendu_a_deux = _seuil_de("4472-commentaire-en-corps.py")
+    verifie("un seuil a deux ADR ne se resout pas en un nombre", seuil_resolu(_rendu_a_deux), None)
+    verifie(
+        "mais il NOMME les deux decisions",
+        all(n in _rendu_a_deux for n in ("4472", "5582")),
+        True,
     )
 
     # Le VOCABULAIRE des dispositifs (ADR 5125). Un mot hors de l ensemble est refuse ; les sept

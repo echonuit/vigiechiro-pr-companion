@@ -854,6 +854,39 @@ def test_loupe_4359_javadoc_vieillie() -> None:
     )
 
 
+def test_4650_double_clic_vise_la_donnee() -> None:
+    m = _charge("4650-double-clic-vise-la-donnee.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        # Le cas qui compte : le MEME appel positionnel, nu puis declare. Un garde qui refuserait
+        # tout appel passerait la premiere moitie, et les trois parcours legitimes du depot
+        # rougiraient sans raison.
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/a/NuTest.java",
+            "class NuTest {\n    void c(FxRobot r) {\n        r.doubleClickOn(D);\n    }\n}\n",
+        )
+        _verifie("4650 un appel positionnel nu est compte", len(m.suspects(racine)), 1)
+
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/a/NuTest.java",
+            "class NuTest {\n    void c(FxRobot r) {\n"
+            "        // Le vrai geste, et non DoubleClicDeterministe : ce cas est filme.\n"
+            "        r.doubleClickOn(D);\n    }\n}\n",
+        )
+        _verifie("4650 le meme appel DECLARE ne coute rien", len(m.suspects(racine)), 0)
+
+        # Et la citation en commentaire n est pas un appel : c est le faux positif qu un `grep`
+        # rendait sur la javadoc du helper, pendant la passe 7 de la cloture de #4650.
+        _ecrire(
+            racine,
+            "fr/univ_amu/iut/a/NuTest.java",
+            "/// Comme le fait doubleClickOn(String) de TestFX.\nclass NuTest {}\n",
+        )
+        _verifie("4650 une citation en commentaire n est pas un appel", len(m.suspects(racine)), 0)
+
+
 def test_4472_commentaire_en_corps() -> None:
     m = _charge("4472-commentaire-en-corps.py")
     with tempfile.TemporaryDirectory() as d:
@@ -2384,6 +2417,7 @@ if __name__ == "__main__":
         test_loupe_2112,
         test_loupe_0044,
         test_4472_commentaire_en_corps,
+        test_4650_double_clic_vise_la_donnee,
         test_4468_javadoc_non_relue,
         test_5068_clic_sur_reference_tenue,
         test_4974_attente_reinventee,
