@@ -23,9 +23,16 @@ C est l etat normal d un etat prive, lu par les methodes de sa propre classe. Un
 liste signalerait presque tout le corpus, et c est l ADR 5532 appliquee au troisieme index comme aux
 deux premiers : il REPOND, il ne refuse pas.
 
-Le chiffre a une autre lecture, et elle etait la crainte de ce lot : les **38 580** acces resolus du
-corpus s effondrent a **3 173 aretes**, la plupart des lectures etant intra-classe. L index pese donc
-785 Ko contre 2 351 pour celui des appels, et son calcul coute 2,5 s sur un modele deja bati.
+La crainte de ce lot etait le volume, et la chaine mesuree le 2026-09-29 la dement. Elle vaut d etre
+lue en entier, parce qu aucune de ses trois marches n a la meme cause :
+
+    40 175 lectures brutes
+    34 234 resolues            (les autres visent un champ hors du modele)
+     5 993 hors de leur classe (la plupart des lectures sont intra-classe)
+     3 173 aretes              (un lecteur qui lit deux fois ne compte qu une)
+
+Plus 4 347 ecritures, jamais candidates. L index pese donc 785 Ko contre 2 353 pour celui des appels,
+et son calcul coute 2,5 s sur un modele deja bati.
 """
 
 from __future__ import annotations

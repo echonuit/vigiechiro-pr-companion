@@ -207,8 +207,9 @@ class ExtracteurIndexTest {
     }
 
     /// Deux lecteurs du meme champ ne se dedoublonnent pas l un l autre, et un lecteur qui lit DEUX
-    /// fois ne compte qu une. C est ce qui fait tomber les 38 580 acces resolus du corpus a 3 173
-    /// aretes, et sans ce cas rien ne distinguerait le dedoublonnage d une perte.
+    /// fois ne compte qu une. C est la derniere marche de l effondrement mesure le 2026-09-29, de
+    /// 5 993 lectures hors classe a 3 173 aretes, et sans ce cas rien ne distinguerait le
+    /// dedoublonnage d une perte.
     @Test
     void deux_lecteurs_sont_nommes_une_fois_chacun(@TempDir Path ou) throws IOException {
         ecrire(ou, "Bien", "package p; public class Bien { public int compte = 0; }");
