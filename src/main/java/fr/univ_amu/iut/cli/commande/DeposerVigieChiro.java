@@ -192,24 +192,32 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         if (droits > 0) {
             gestes.append(" ")
                     .append(droits)
-                    .append(" d'entre elles tenaient à vos droits : reconnectez-vous, puis relancez.");
+                    .append(accord(droits, " d'entre elles tenait", " d'entre elles tenaient"))
+                    .append(" à vos droits : reconnectez-vous, puis relancez.");
         }
         if (stockage > 0) {
             gestes.append(" ")
                     .append(stockage)
-                    .append(" d'entre elles ont été refusées par le stockage : ")
+                    .append(accord(stockage, " d'entre elles a été refusée", " d'entre elles ont été refusées"))
+                    .append(" par le stockage : ")
                     .append(GESTE_STOCKAGE);
         }
         if (contenu > 0) {
             gestes.append(" ")
                     .append(contenu)
-                    .append(" d'entre elles ont un contenu refusé : régénérez les archives, puis relancez.");
+                    .append(accord(contenu, " d'entre elles a", " d'entre elles ont"))
+                    .append(" un contenu refusé : régénérez les archives, puis relancez.");
         }
         return gestes.toString();
     }
 
     private static long compter(List<EchecUnite> refuses, CauseRefus cause) {
         return refuses.stream().filter(refus -> refus.cause() == cause).count();
+    }
+
+    /// Le verbe suit le nombre : « 1 d'entre elles ont été refusées » s'est vu à la relecture de l'aperçu.
+    private static String accord(long nombre, String singulier, String pluriel) {
+        return nombre == 1 ? singulier : pluriel;
     }
 
     /// Le volume en ligne, **s'il a été mesuré**. Rien à zéro : un « 0 Ko téléversé » annoncerait une

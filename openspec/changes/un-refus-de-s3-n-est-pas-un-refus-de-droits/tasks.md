@@ -40,7 +40,7 @@ Chaque tâche commence par son test rouge (article A7).
 - [x] 4.2 Réécrire `CompteRenduChiffreDepot.phraseDesRefus` pour un conseil par cause. Vert : 4.1.
 - [x] 4.3 Même chose pour `DeposerVigieChiro` et `DeposerVigieChiroTest`, avec le cas de parité : le
       même bilan donne les mêmes gestes sur les deux surfaces.
-- [ ] 4.4 Étendre l'aperçu `CaptureCompteRenduDepot` d'un refus du stockage, régénérer la capture de
+- [x] 4.4 Étendre l'aperçu `CaptureCompteRenduDepot` d'un refus du stockage, régénérer la capture de
       `docs/ecrans/lot.md` et la relire ; mettre à jour la légende et le texte de la page s'ils
       nomment la reconnexion comme seul conseil.
 

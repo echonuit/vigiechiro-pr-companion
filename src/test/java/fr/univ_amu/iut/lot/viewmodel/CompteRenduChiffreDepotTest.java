@@ -246,6 +246,27 @@ class CompteRenduChiffreDepotTest {
         assertThat(textes).anyMatch(texte -> texte.contains("3 d'entre elles ont été refusées par le stockage"));
     }
 
+    @Test
+    @DisplayName("#5598 : une seule archive d'une cause s'écrit au singulier")
+    void une_seule_archive_s_ecrit_au_singulier() {
+        // Vu à la relecture de l'aperçu, pas par un test : « 1 d'entre elles ont été refusées ».
+        BilanDepot bilan = new BilanDepot(
+                "p-1",
+                11,
+                List.of(
+                        new EchecUnite("Car-12.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                        new EchecUnite("Car-13.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                        new EchecUnite("Car-14.zip", "HTTP 422", true, CauseRefus.CONTENU),
+                        new EchecUnite("Car-15.zip", "HTTP 403", true, CauseRefus.STOCKAGE)),
+                3_400_000_000L);
+
+        List<String> textes = textes(traduire(bilan, plan(15, 11, false)));
+
+        assertThat(textes).anyMatch(texte -> texte.contains("1 d'entre elles a été refusée par le stockage"));
+        assertThat(textes).anyMatch(texte -> texte.contains("1 d'entre elles a un contenu refusé"));
+        assertThat(textes).anyMatch(texte -> texte.contains("2 d'entre elles tenaient à vos droits"));
+    }
+
     /// Le lot que l'aperçu montre : deux refus de droits, un contenu refusé.
     private record BitmapMele() {
         BilanDepot bilan() {
