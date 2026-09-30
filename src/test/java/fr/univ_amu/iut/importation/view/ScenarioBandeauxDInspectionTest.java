@@ -223,6 +223,10 @@ class ScenarioBandeauxDInspectionTest {
                 "l'inspection n'a jamais rendu son compte d'originaux sur « " + fixture + " » : elle"
                         + " balaie le dossier hors du fil JavaFX, et rien n'a paru dans le temps imparti",
                 APPARITION_SECONDES * 1000L);
+        // Le verdict doit rester à l'écran le temps que le film le capte : sans cet arrêt, le test lisait
+        // le bandeau puis se terminait, et les cinq clips de la classe s'arrêtaient au clic sur
+        // « Parcourir… », avant tout résultat (#5698). Hors séance filmée, l'arrêt ne coûte rien.
+        Respiration.leTempsDeLire(robot);
         return bandeaux(robot);
     }
 
