@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ce qu une demande PAIE et ce qu elle ATTEND, par job, sur une fenetre de demandes (#5304).
+"""Ce qu une POUSSEE paie et ce qu elle attend, par job, sur une fenetre de poussees (#5304).
 
     python3 .github/scripts/mesure_minutes_par_pr.py <depot> [fenetre]
     python3 .github/scripts/mesure_minutes_par_pr.py --auto-test
@@ -15,6 +15,22 @@ qui affirme ce qu elle n a pas regarde. Il garde en revanche la non-regression d
 c est utile : si une portee cassait quelque chose sur `main`, il le verrait.
 
 Ce script-ci lit donc les **demandes**, pas `main`.
+
+## Une POUSSEE, et pourquoi ce n est pas une demande (#5587)
+
+L unite de ce releve est le `headSha` : c est lui qui declenche les ateliers, donc lui qui coute. Une
+demande poussee trois fois entre donc trois fois dans la fenetre, et c est JUSTE pour un cout.
+
+Ce qui ne l etait pas est le mot. Ce script ecrivait « demande » partout, et les bilans du depot
+citaient ce chiffre comme un cout par pull request. Mesure du 2026-09-30 sur une fenetre de 18 :
+**16 demandes distinctes**, une poussee que la forge n attribue a aucune, et une demande comptee deux
+fois. L ecart etait de 11 %, et sa COMPOSITION change d une fenetre a l autre - le 2026-09-29 il
+valait aussi 2, mais avec deux non attribuees et aucun doublon.
+
+Le releve affiche donc l ecart, et ne se contente pas de renommer : un lecteur doit pouvoir juger si
+11 % le concerne. `ecart_avec_les_demandes()` lit le JSON BRUT de `commits/<sha>/pulls` et non un
+filtre `-q`, parce que `-q` rend la meme chaine vide pour « aucune demande » et pour « la forge n a
+pas repondu ». Trois issues, pas deux.
 
 ## Trois chiffres, et le troisieme est le plus utile
 
@@ -50,6 +66,8 @@ mesure qui ne parle pas d elle.
 from __future__ import annotations
 
 import collections
+import contextlib
+import io
 import json
 import math
 import os
@@ -58,6 +76,7 @@ import re
 import statistics
 import subprocess
 import sys
+import tempfile
 
 # Une conclusion qui porte sur le CONTENU. `cancelled`, `skipped` et `stale` sont des fins de course,
 # pas des jugements : les compter melerait des runs qui n ont rien mesure a ceux qui ont conclu.
@@ -70,8 +89,18 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 
 def _gh(*arguments: str) -> str:
-    """Un appel a la forge, ou une chaine vide : l appelant decide de ce que le silence vaut."""
-    sortie = subprocess.run(["gh", *arguments], capture_output=True, text=True, check=False)
+    """Un appel a la forge, ou une chaine vide : l appelant decide de ce que le silence vaut.
+
+    **`gh` ABSENT compte comme un silence, et ne levait pas avant #5587.** `check=False` couvre un
+    code de retour non nul, pas un executable introuvable : `subprocess.run` leve alors un
+    `FileNotFoundError` que rien ne rattrapait, et la promesse de cette docstring n etait pas tenue.
+    Trouve par un cas d auto-test qui retire `gh` du `PATH` - sans lui, le defaut attendait un poste
+    sans `gh`, c est-a-dire le poste de quelqu un d autre.
+    """
+    try:
+        sortie = subprocess.run(["gh", *arguments], capture_output=True, text=True, check=False)
+    except (FileNotFoundError, OSError):
+        return ""
     return sortie.stdout if sortie.returncode == 0 else ""
 
 
@@ -269,7 +298,7 @@ def alerte_du_taux(
         # #5449, posterieure au correctif, le job se tait correctement (#5453).
         if fenetre is not None and total < fenetre:
             return (
-                f"observe sur {total} demandes d une fenetre de {fenetre} : son declencheur a change "
+                f"observe sur {total} poussees d une fenetre de {fenetre} : son declencheur a change "
                 "pendant la fenetre, et son taux ne se lit pas."
             )
         return "sa portee ne s est jamais tue : elle s est peut-etre elargie en silence."
@@ -279,11 +308,11 @@ def alerte_du_taux(
 
     bouges = [c for c in surveilles if any(correspond(f, c) for f in touches)]
     if not surveilles:
-        return f"ce job n a RIEN juge sur {total} demandes, et sa portee est introuvable : verifiez-la."
+        return f"ce job n a RIEN juge sur {total} poussees, et sa portee est introuvable : verifiez-la."
     if not bouges:
         return None
     return (
-        f"ce job s est tu sur {total} demandes alors que sa portee a BOUGE ({bouges[0]}) : "
+        f"ce job s est tu sur {total} poussees alors que sa portee a BOUGE ({bouges[0]}) : "
         "elle ne correspond plus a ce qu elle garde."
     )
 
@@ -349,10 +378,43 @@ def mediane(valeurs: list[float]) -> float:
     return statistics.median(valeurs) if valeurs else 0.0
 
 
+def ecart_avec_les_demandes(depot: str, shas: list[str]) -> tuple[int, int, int]:
+    """Combien de DEMANDES distinctes ces poussees representent, et combien la forge n attribue pas.
+
+    Ce releve compte des POUSSEES : son unite est le `headSha`, parce que c est lui qui declenche les
+    ateliers et donc lui qui coute. Une demande poussee trois fois y entre trois fois, et c est juste
+    pour un cout - ce ne l est pas pour un lecteur qui lit « demande » et pense « pull request ».
+
+    On interroge donc `commits/<sha>/pulls` pour CHIFFRER l ecart, jamais pour classer. La distinction
+    compte : cette route rend vide sur un commit rebase, et #5521 l a ecartee pour la classification
+    a cause de cela. Ici son vide est une REPONSE - « la forge n attribue pas cette poussee » - et non
+    une valeur par defaut.
+    """
+    demandes, sans_demande, muettes = set(), 0, 0
+    for sha in shas:
+        # ⟨le JSON BRUT, pas `-q`⟩ Un filtre `-q` rend la meme chaine vide pour « la liste est vide »
+        # et pour « la forge n a pas repondu ». Le brut les separe : `[]` contre rien du tout. C est
+        # la distinction que ce depot refuse de perdre, et elle se perd par commodite d ecriture.
+        brut = _gh("api", f"repos/{depot}/commits/{sha}/pulls")
+        if not brut:
+            muettes += 1
+            continue
+        try:
+            rendu = json.loads(brut)
+        except json.JSONDecodeError:
+            muettes += 1
+            continue
+        if rendu:
+            demandes.add(rendu[0]["number"])
+        else:
+            sans_demande += 1
+    return len(demandes), sans_demande, muettes
+
+
 def rendre(depot: str, fenetre: int = 40) -> int:
     demandes = releve(depot, fenetre)
     if not demandes:
-        print("Aucune demande relevee : la forge n a pas repondu, ou la fenetre est vide.")
+        print("Aucune poussee relevee : la forge n a pas repondu, ou la fenetre est vide.")
         print("Ce releve REFUSE de conclure plutot que d annoncer zero.")
         return 1
 
@@ -375,13 +437,29 @@ def rendre(depot: str, fenetre: int = 40) -> int:
         for j in d["jobs"]:
             par_job[j["nom"]].append(j)
 
-    print(f"Fenetre : {len(demandes)} demande(s).")
+    distinctes, sans_demande, muettes = ecart_avec_les_demandes(depot, [d["sha"] for d in demandes])
+    if muettes == len(demandes):
+        print(f"Fenetre : {len(demandes)} poussee(s). La forge n a pas dit a quelles demandes.")
+    else:
+        print(f"Fenetre : {len(demandes)} poussee(s), soit {distinctes} demande(s) distincte(s).")
+    if sans_demande:
+        print(f"  dont {sans_demande} que la forge n attribue a aucune demande (commit rebase).")
+    if muettes and muettes != len(demandes):
+        print(f"  et {muettes} sur lesquelles la forge ne s est pas prononcee : lecture NON FAITE.")
+    if len(demandes) != distinctes:
+        ecart = len(demandes) - distinctes
+        print(
+            f"  Ce releve compte des POUSSEES, pas des demandes : l ecart est de {ecart} "
+            f"({100 * ecart / len(demandes):.0f} %) sur cette fenetre."
+        )
+        print("  Une poussee declenche les ateliers, donc c est elle qui coute. Un bilan qui cite")
+        print("  « par demande » sur ce chiffre dit autre chose que ce qui a ete mesure.")
     if lues:
         print(
-            f"  minutes FACTUREES par demande (mediane) : {mediane(facturees):6.1f}   (source : billable)"
+            f"  minutes FACTUREES par poussee (mediane) : {mediane(facturees):6.1f}   (source : billable)"
         )
     else:
-        print(f"  minutes MODELISEES par demande (mediane): {mediane(modelisees):6.1f}")
+        print(f"  minutes MODELISEES par poussee (mediane): {mediane(modelisees):6.1f}")
         print(
             "     `billable` rend zero sur ce depot : la facturation ne s'y applique pas. Ce chiffre"
         )
@@ -398,7 +476,7 @@ def rendre(depot: str, fenetre: int = 40) -> int:
     for d in demandes:
         par_classe[classe_de(d)].append(d)
     print()
-    print(f"  {'classe':16s} {'demandes':>9s} {'minutes':>9s} {'attente':>9s}")
+    print(f"  {'classe':16s} {'poussees':>9s} {'minutes':>9s} {'attente':>9s}")
     for nom in ("avec Java", "sans Java", "indeterminee"):
         lot = par_classe.get(nom, [])
         if not lot:
@@ -410,7 +488,7 @@ def rendre(depot: str, fenetre: int = 40) -> int:
         print(f"  {nom:16s} {len(lot):9d} {m:8.1f}m {a:8.1f}m")
     if par_classe.get("indeterminee"):
         print(
-            f"     {len(par_classe['indeterminee'])} demande(s) dont la forge n a pas rendu les"
+            f"     {len(par_classe['indeterminee'])} poussee(s) dont la forge n a pas rendu les"
             " fichiers : elles ne sont PAS comptees « sans Java »."
         )
     print()
@@ -432,7 +510,7 @@ def rendre(depot: str, fenetre: int = 40) -> int:
             print(f"      ⚠ {avertissement}")
         elif muets == len(jobs) and len(jobs) >= 10:
             print(
-                f"      · silence ATTENDU : aucun de ses chemins n a bouge sur ces {len(jobs)} demandes."
+                f"      · silence ATTENDU : aucun de ses chemins n a bouge sur ces {len(jobs)} poussees."
             )
     return 0
 
@@ -495,9 +573,6 @@ def _auto_test() -> int:
     annoncer zero. Un instrument qui rend « 0 minute » sur une forge muette dirait exactement le
     contraire de ce qu il a mesure.
     """
-    import contextlib
-    import io
-    import tempfile
 
     echecs = 0
     with tempfile.TemporaryDirectory(prefix="vc-minutes-") as tmp:
@@ -774,9 +849,69 @@ def _auto_test() -> int:
         print(f"  ✘ la question porte sur le commit de tete : {pose!r}")
         echecs += 1
 
+    # ⟨le MOT, pas seulement le calcul⟩ Ce releve compte des `headSha`. Le jour ou une ligne de son
+    # rendu requalifie ce compte en « demande », le chiffre reste juste et le bilan qui le cite dit
+    # autre chose que ce qui a ete mesure (#5587). Ce cas lit le rendu REEL, injecte, et non le
+    # source : c est ce que le lecteur voit qui compte.
+    ancien = os.environ.get("RELEVE_DEMANDES_FICHIER")
+    with tempfile.TemporaryDirectory() as dossier:
+        injecte = pathlib.Path(dossier) / "releve.json"
+        injecte.write_text(
+            json.dumps(
+                [
+                    {
+                        "sha": "a",
+                        "facturees": 0,
+                        "jobs": [{"nom": "build", "minutes": 3.0, "sans_objet": False}],
+                    }
+                ]
+            ),
+            encoding="utf-8",
+        )
+        os.environ["RELEVE_DEMANDES_FICHIER"] = str(injecte)
+        try:
+            tampon = io.StringIO()
+            with contextlib.redirect_stdout(tampon):
+                rendre("depot/injecte", 1)
+            sortie = tampon.getvalue()
+        finally:
+            if ancien is None:
+                os.environ.pop("RELEVE_DEMANDES_FICHIER", None)
+            else:
+                os.environ["RELEVE_DEMANDES_FICHIER"] = ancien
+
+    # ⟨une CITATION n est pas une requalification⟩ La ligne qui MET EN GARDE contre le mot le
+    # contient, entre guillemets. `loupe-5539` a resolu le meme probleme en retirant les citations
+    # avant de chercher : on reprend son geste plutot que d inventer une exception.
+    sans_citation = re.sub(r"«[^»]*»", " ", sortie)
+    fautives = [
+        ligne.strip()
+        for ligne in sans_citation.splitlines()
+        if "par demande" in ligne or "Fenetre : 1 demande" in ligne
+    ]
+    if not fautives:
+        print("  ✔ le rendu compte des POUSSEES et ne les requalifie pas en demandes")
+    else:
+        print(f"  ✘ le rendu requalifie un compte de headSha : {fautives[0]!r}")
+        echecs += 1
+
+    # ⟨la forge muette n est pas une liste vide⟩ Sans `gh`, l ecart ne se lit pas, et le releve doit
+    # le DIRE plutot que d annoncer zero demande distincte.
+    chemin = os.environ.get("PATH", "")
+    os.environ["PATH"] = "/nonexistant"
+    try:
+        distinctes, sans, muettes = ecart_avec_les_demandes("depot/x", ["a", "b"])
+    finally:
+        os.environ["PATH"] = chemin
+    if (distinctes, sans, muettes) == (0, 0, 2):
+        print("  ✔ une forge muette rend des lectures NON FAITES, pas zero demande")
+    else:
+        print(f"  ✘ une forge muette rend {(distinctes, sans, muettes)}, attendu (0, 0, 2)")
+        echecs += 1
+
     # ⟨le compte se DERIVE⟩ Il etait ecrit `len(CAS) + 14`, un nombre fige a cote d une liste qui
     # grandit : le meme defaut que la porte portait avant #5525, dans un fichier qui mesure.
-    print(f"\n{len(CAS) + 14 + joues} cas de lecture, de bord et de classe.")
+    print(f"\n{len(CAS) + 16 + joues} cas de lecture, de bord et de classe.")
     return 1 if echecs else 0
 
 
