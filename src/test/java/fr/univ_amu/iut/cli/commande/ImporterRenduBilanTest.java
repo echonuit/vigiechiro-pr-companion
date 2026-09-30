@@ -3,11 +3,13 @@ package fr.univ_amu.iut.cli.commande;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.importation.model.AnalyseCoherence;
 import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.VolumesImport;
 import fr.univ_amu.iut.passage.model.Passage;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,7 +29,7 @@ class ImporterRenduBilanTest {
     @Test
     @DisplayName("#5361 : la carte en lecture seule est dite, comme l'écran depuis #4991")
     void la_carte_en_lecture_seule_est_dite() {
-        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, false), QUADRUPLET, true);
+        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, false), QUADRUPLET, true, null);
 
         assertThat(texte)
                 .as("l'import de CETTE nuit aboutit, la source n'étant jamais écrite : le coût est à"
@@ -41,7 +43,7 @@ class ImporterRenduBilanTest {
     @Test
     @DisplayName("#5361 : un support ordinaire ne produit aucune ligne, pas une ligne vide")
     void un_support_ordinaire_ne_dit_rien() {
-        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, false), QUADRUPLET, false);
+        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, false), QUADRUPLET, false, null);
 
         assertThat(texte)
                 .as("un avertissement qui paraît toujours cesse d'être lu")
@@ -51,7 +53,7 @@ class ImporterRenduBilanTest {
     @Test
     @DisplayName("#1488 : la participation créée est dite - l'écran le fait, la commande le taisait")
     void la_participation_creee_est_dite() {
-        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, true), QUADRUPLET, false);
+        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, true), QUADRUPLET, false, null);
 
         assertThat(texte)
                 .as("une écriture sur un serveur distant ne doit pas se découvrir ailleurs")
@@ -61,7 +63,7 @@ class ImporterRenduBilanTest {
     @Test
     @DisplayName("#3942 : la ligne dit aussi ce qu'il RESTE à faire, comme l'écran depuis #3473")
     void la_participation_creee_dit_ce_qu_il_reste_a_faire() {
-        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, true), QUADRUPLET, false);
+        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, true), QUADRUPLET, false, null);
 
         assertThat(texte)
                 .as("annoncer une création se lit « c'est fait », or la fiche web attend encore ce que"
@@ -72,7 +74,7 @@ class ImporterRenduBilanTest {
     @Test
     @DisplayName("#1488 : sans participation créée, la ligne n'existe pas - pas une ligne vide")
     void sans_participation_rien_n_est_dit() {
-        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, false), QUADRUPLET, false);
+        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, false), QUADRUPLET, false, null);
 
         assertThat(texte).doesNotContain("Vigie-Chiro");
     }
@@ -80,8 +82,8 @@ class ImporterRenduBilanTest {
     @Test
     @DisplayName("#2350 : les volumes lus et écrits sont dits, comme la bande de l'écran")
     void les_volumes_sont_dits() {
-        String texte =
-                Importer.rendreBilan(resultat(new VolumesImport(7_000_000, 0, 7_000_000), false), QUADRUPLET, false);
+        String texte = Importer.rendreBilan(
+                resultat(new VolumesImport(7_000_000, 0, 7_000_000), false), QUADRUPLET, false, null);
 
         assertThat(texte).contains("Lu / écrit  : 7,0 Mo lus sur la source, 7,0 Mo écrits");
     }
@@ -89,10 +91,10 @@ class ImporterRenduBilanTest {
     @Test
     @DisplayName("#2677 : la part des bruts n'est dite que si elle existe, jamais « dont 0 Ko »")
     void la_part_des_bruts_n_est_dite_que_si_elle_existe() {
-        String sansBruts =
-                Importer.rendreBilan(resultat(new VolumesImport(7_000_000, 0, 7_000_000), false), QUADRUPLET, false);
+        String sansBruts = Importer.rendreBilan(
+                resultat(new VolumesImport(7_000_000, 0, 7_000_000), false), QUADRUPLET, false, null);
         String avecBruts = Importer.rendreBilan(
-                resultat(new VolumesImport(7_000_000, 3_000_000, 4_000_000), false), QUADRUPLET, false);
+                resultat(new VolumesImport(7_000_000, 3_000_000, 4_000_000), false), QUADRUPLET, false, null);
 
         assertThat(sansBruts)
                 .as("annoncer une part à zéro fait chercher ce qui n'a pas eu lieu")
@@ -103,7 +105,7 @@ class ImporterRenduBilanTest {
     @Test
     @DisplayName("volumes non mesurés : aucune ligne, plutôt qu'une ligne à zéro")
     void volumes_non_mesures_ne_sont_pas_dits() {
-        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, false), QUADRUPLET, false);
+        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, false), QUADRUPLET, false, null);
 
         assertThat(texte).doesNotContain("Lu / écrit");
     }
@@ -122,7 +124,7 @@ class ImporterRenduBilanTest {
                 VolumesImport.AUCUN,
                 false);
 
-        String texte = Importer.rendreBilan(resultat, QUADRUPLET, false);
+        String texte = Importer.rendreBilan(resultat, QUADRUPLET, false, null);
 
         assertThat(texte).contains("Doublon     : nuit déjà importée en passage n° 7");
         assertThat(texte).contains("Anomalie    : Tension faible");
@@ -150,5 +152,21 @@ class ImporterRenduBilanTest {
                 7L,
                 "1925492",
                 null);
+    }
+
+    @Test
+    @DisplayName("#5670 : un journal qui ne correspond pas aux enregistrements se dit en une ligne « Journal »")
+    void journal_incoherent_dit_en_une_ligne() {
+        AnalyseCoherence etranger = AnalyseCoherence.depuis(
+                null, Path.of("PaRecPR9999999_THLog.csv"), List.of(Path.of("PaRecPR1925492_20260422_203922.wav")));
+
+        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, false), QUADRUPLET, false, etranger);
+
+        assertThat(texte)
+                .contains("Journal     : ne correspond pas aux enregistrements")
+                .contains("9999999");
+        assertThat(Importer.rendreBilan(resultat(VolumesImport.AUCUN, false), QUADRUPLET, false, null))
+                .as("sans cohérence lue, rien n'est affirmé")
+                .doesNotContain("Journal     :");
     }
 }

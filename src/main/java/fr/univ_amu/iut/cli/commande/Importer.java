@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.VolumeEnLectureSeule;
 import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
+import fr.univ_amu.iut.importation.model.AnalyseCoherence;
 import fr.univ_amu.iut.importation.model.ApercuEcrasement;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.PassageExistant;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import picocli.CommandLine.Command;
@@ -181,7 +183,7 @@ public final class Importer implements Callable<Integer> {
         String quadruplet = "carré " + site.numeroCarre()
                 + " / point " + pointDEcoute.code()
                 + " / " + anneeEffective + " / passage " + numeroEffectif;
-        sortie.println(rendreBilan(resultat, quadruplet, VolumeEnLectureSeule.vrai(source)));
+        sortie.println(rendreBilan(resultat, quadruplet, VolumeEnLectureSeule.vrai(source), coherenceDe(source)));
         Path rapportCsv = Path.of(resultat.session().cheminRacine()).resolve("rapport-import.csv");
         try {
             Files.writeString(rapportCsv, resultat.rapport().versCsv());
@@ -190,6 +192,35 @@ public final class Importer implements Callable<Integer> {
             sortie.println("  (rapport CSV non écrit : " + echec.getMessage() + ")");
         }
         return 0;
+    }
+
+    /// La cohérence du journal avec les enregistrements, telle que l'inspection la juge (#5670). Lue
+    /// **après** l'import, qui a abouti : une inspection qui échouerait ici ne doit pas taire le bilan.
+    private AnalyseCoherence coherenceDe(Path source) {
+        try {
+            return service.inspecter(source).coherence();
+        } catch (RuntimeException illisible) {
+            return null;
+        }
+    }
+
+    /// Ce que le terminal dit d'un journal qui ne correspond pas aux enregistrements (#5670), vide s'il
+    /// y correspond.
+    ///
+    /// La phrase est celle du terminal ; les données sont celles de l'écran, lues dans
+    /// [AnalyseCoherence#desaccords], qui seul les compose. `PariteCoherenceDuJournalTest`
+    /// confronte les deux surfaces.
+    public static String journalIncoherentLisible(AnalyseCoherence coherence) {
+        List<AnalyseCoherence.Desaccord> desaccords = coherence == null ? List.of() : coherence.desaccords();
+        if (desaccords.isEmpty()) {
+            return "";
+        }
+        return "ne correspond pas aux enregistrements, vérifiez qu'il vient bien de cette carte - "
+                + String.join(
+                        " ; ",
+                        desaccords.stream()
+                                .map(desaccord -> desaccord.sujet() + " : " + desaccord.precision())
+                                .toList());
     }
 
     /// Ce que le terminal dit d'un support en lecture seule (#5361).
@@ -214,7 +245,9 @@ public final class Importer implements Callable<Integer> {
     /// @param resultat ce que l'import a produit
     /// @param quadruplet carré / point / année / passage, composé par l'appelant qui seul les connaît
     /// @param sourceEnLectureSeule le volume de la source refuse l'écriture (#5361)
-    static String rendreBilan(ResultatImport resultat, String quadruplet, boolean sourceEnLectureSeule) {
+    /// @param coherence la cohérence du journal avec les enregistrements, `null` si elle n'a pu être lue
+    static String rendreBilan(
+            ResultatImport resultat, String quadruplet, boolean sourceEnLectureSeule, AnalyseCoherence coherence) {
         StringBuilder texte = new StringBuilder("Import réussi.\n");
         ligne(texte, "Passage     ", "#" + resultat.passage().id());
         ligne(texte, "Quadruplet  ", quadruplet);
@@ -267,6 +300,12 @@ public final class Importer implements Callable<Integer> {
         // complétude, et #5352 a montré ce que coûte une phrase que rien ne confronte.
         if (sourceEnLectureSeule) {
             ligne(texte, "Support     ", supportEnLectureSeuleLisible());
+        }
+        // Parité avec l'IHM (#5670) : l'écran dit à l'inspection que le journal ne correspond pas aux
+        // enregistrements, la ligne de commande importait un journal étranger sans un mot.
+        String journal = journalIncoherentLisible(coherence);
+        if (!journal.isEmpty()) {
+            ligne(texte, "Journal     ", journal);
         }
         return texte.toString().stripTrailing();
     }
