@@ -134,6 +134,22 @@ class ScenarioBandeauxDInspectionTest {
     }
 
     @Test
+    @CasDeRecette(value = "S2-82", portee = Portee.A_L_ECRAN)
+    @DisplayName("S2-82 · une carte réutilisée à une nuit : aucun bandeau « incohérence »")
+    void une_carte_reutilisee_ne_leve_aucune_incoherence(FxRobot robot) throws TimeoutException, IOException {
+        // Le journal commence le 19/08, cinq nuits avant la seule nuit de la carte, et la raconte aussi
+        // (#5631). Juger sa première ligne signalait à tort un journal étranger.
+        String dit = inspecter(robot, "sd-carte-reutilisee");
+
+        assertThat(dit)
+                .as(
+                        "le journal raconte la nuit de la carte : rien ne dit qu'il ne lui correspond pas."
+                                + "%nLes bandeaux disent : %s",
+                        dit)
+                .doesNotContain("ne correspond pas");
+    }
+
+    @Test
     @CasDeRecette(value = "S2-46", portee = Portee.A_L_ECRAN)
     @DisplayName("S2-46 · des fichiers préfixés pour un autre rattachement : le bandeau de discordance")
     void le_bandeau_de_la_discordance_de_prefixe(FxRobot robot) throws TimeoutException, IOException {

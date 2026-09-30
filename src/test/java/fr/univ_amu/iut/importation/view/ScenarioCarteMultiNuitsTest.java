@@ -11,11 +11,13 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
@@ -35,8 +37,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
@@ -82,6 +87,10 @@ class ScenarioCarteMultiNuitsTest {
     /// Et pour une nuit dont le journal ne dit rien. Le libellé s'affiche tronqué dans une colonne de
     /// 130 px (#5111) : le banc cherche donc son début, qui suffit à la distinguer de « complète ».
     private static final String INCONNUE = "complétude inco";
+
+    private static final String BOUTON_IMPORTER = "#boutonImporter";
+
+    private static final int FIN_SECONDES = 180;
 
     private Injector injecteur;
 
@@ -167,6 +176,97 @@ class ScenarioCarteMultiNuitsTest {
                         + " deux, et #3460 a corrigé le fait qu'une nuit repartait avec les réglages"
                         + " d'une AUTRE : c'est ce que ce cas garde")
                 .hasSize(2);
+    }
+
+    @Test
+    @CasDeRecette(
+            value = {"S2-80", "S2-81"},
+            portee = Portee.A_L_ECRAN)
+    @DisplayName("S2-80 et S2-81 · deux nuits importées, puis la carte rebranchée : elles seules sont nommées")
+    void les_nuits_deja_importees_sont_celles_de_la_carte(FxRobot robot) throws TimeoutException, IOException {
+        // PREMIER TEMPS : le 04/07 et le 05/07 sont importés pour de bon, le 03/07 décoché. Le 03/07 est
+        // la nuit que le journal raconte en premier : c'est elle que l'inspection jugeait avant #5600.
+        inspecter(robot, "sd-multi-nuits");
+        Attente.queSurLeFil(
+                () -> lignesDeLaTable(robot).size() >= 3,
+                "la table des nuits n'a pas paru sur une carte qui en porte trois",
+                APPARITION_SECONDES * 1000L);
+        rattacherAuPremierPoint(robot);
+        robot.clickOn(caseDeLaNuit(robot, "2026-07-03"));
+        WaitForAsyncUtils.waitForFxEvents();
+        GesteVisible.amenerDansLeCadre(robot, BOUTON_IMPORTER);
+        GesteVisible.cliquer(robot, BOUTON_IMPORTER);
+        Attente.queSurLeFil(
+                () -> robot.lookup("#compteRenduChiffre")
+                        .tryQuery()
+                        .map(Node::isVisible)
+                        .orElse(false),
+                "l'import des deux nuits n'a pas abouti : le compte rendu de fin n'a jamais paru",
+                FIN_SECONDES * 1000L);
+
+        // SECOND TEMPS : la même carte, rebranchée.
+        Respiration.avantLeGeste(robot);
+        robot.interact(() -> injecteur.getInstance(NavigationSites.class).ouvrirDetail(CARRE));
+        WaitForAsyncUtils.waitForFxEvents();
+        String dit = inspecter(robot, "sd-multi-nuits");
+
+        // ─── S2-80 · le bandeau nomme les nuits importées, et non la première du journal ─────────
+        assertThat(dit)
+                .as(
+                        "les deux nuits importées sont sur la carte, et le bandeau les nomme avec leur date."
+                                + "%nLe bandeau dit : %s",
+                        dit)
+                .contains("2 nuits de cette carte ont déjà été importées")
+                .contains("04/07/2026")
+                .contains("05/07/2026")
+                .doesNotContain("03/07/2026");
+
+        // ─── S2-81 · la question, au pluriel ─────────────────────────────────────────────────────
+        AtomicReference<CompteRendu> question = new AtomicReference<>();
+        controleur().confirmateur().definir(new Confirmateur() {
+            @Override
+            public boolean confirmer(String message) {
+                throw new AssertionError("la question est un compte rendu structuré, pas une phrase : " + message);
+            }
+
+            @Override
+            public boolean confirmer(CompteRendu compteRendu) {
+                question.set(compteRendu);
+                return false;
+            }
+        });
+        rattacherAuPremierPoint(robot);
+        GesteVisible.amenerDansLeCadre(robot, BOUTON_IMPORTER);
+        GesteVisible.cliquer(robot, BOUTON_IMPORTER);
+        Attente.queSurLeFil(
+                () -> question.get() != null,
+                "Importer n'a posé aucune question alors que deux nuits cochées sont déjà en base",
+                APPARITION_SECONDES * 1000L);
+
+        assertThat(question.get().conclusion()).isEqualTo("Importer quand même comme nouveaux passages ?");
+        assertThat(question.get().constats().getFirst().details())
+                .extracting(CompteRendu.Detail::sujet)
+                .anySatisfy(sujet -> assertThat(sujet).startsWith("nuit du 04/07/2026"))
+                .anySatisfy(sujet -> assertThat(sujet).startsWith("nuit du 05/07/2026"));
+    }
+
+    private static void rattacherAuPremierPoint(FxRobot robot) {
+        ComboBox<?> points = robot.lookup("#comboPoints").queryAs(ComboBox.class);
+        robot.interact(() -> points.getSelectionModel().select(0));
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    /// La case « Importer » de la ligne d'une nuit, trouvée par la date qu'elle affiche.
+    private static CheckBox caseDeLaNuit(FxRobot robot, String date) {
+        Parent zone = robot.lookup("#zoneNuits").queryAs(Parent.class);
+        for (Node ligne : zone.lookupAll(".table-row-cell")) {
+            StringBuilder dit = new StringBuilder();
+            collecter(ligne, dit);
+            if (dit.toString().contains(date) && ligne.lookup(".check-box") instanceof CheckBox caseACocher) {
+                return caseACocher;
+            }
+        }
+        throw new AssertionError("aucune ligne de la table ne porte la nuit du " + date);
     }
 
     /// Le texte rendu de chaque ligne de la table des nuits, dans l'ordre de l'écran.
