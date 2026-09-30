@@ -12,7 +12,7 @@ verified:
   - by: machine:ci
     at: 2026-07-21
 relations:
-  fait évoluer: ["0045"]
+  amende: ["0045"]
 ---
 
 # L'identité de distribution est le projet Echonuit, distincte de l'auteur et de la plateforme

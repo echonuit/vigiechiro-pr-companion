@@ -29,11 +29,12 @@ import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import DECISIONS, cas_d_auto_test, sort_si_contrat_demande
+from _commun.relations import est_subie, verbes
 
 TITRE_ENCART = '!!! warning "Ce qui fait foi aujourd\'hui"'
 
-# Les relations que l ADR SUBIT, par opposition a celles qu elle exerce.
-SUBIES = ("amendee_par", "completee_par", "remplacee_par")
+# `SUBIES`, `est_subie` et la lecture du bloc viennent de `_commun/relations.py` depuis #5579 :
+# elles etaient ecrites ici ET dans `verifie_okf.py`, et les deux ne lisaient pas la meme chose.
 
 RESERVES = {"index.md", "log.md"}
 
@@ -43,15 +44,12 @@ MARGE = 3
 
 
 def relations(texte: str) -> dict[str, list[str]]:
-    """Les relations declarees en en-tete, par verbe."""
-    m = re.search(r"^relations:\s*$", texte, re.M)
-    if not m:
-        return {}
-    bloc = texte[m.end() :].split("\n---", 1)[0]
-    return {
-        verbe: [c.strip().strip('"') for c in cibles.split(",") if c.strip()]
-        for verbe, cibles in re.findall(r"^\s{2}([a-zé_]+):\s*\[([^\]]*)\]", bloc, re.M)
-    }
+    """Les relations declarees en en-tete, par verbe. Le nom reste, la regle est commune (#5579).
+
+    Son motif d avant, `[a-zé_]+`, ratait « complète » a l accent grave et « fait évoluer » a
+    l espace : neuf ADR sur 101 etaient lues autrement que par `lit_entete`.
+    """
+    return verbes(texte)
 
 
 def encart(texte: str) -> tuple[list[str], int] | tuple[None, None]:
@@ -78,7 +76,10 @@ def fautes(racine: pathlib.Path | None = None) -> list[str]:
         if chemin.name in RESERVES:
             continue
         texte = chemin.read_text(encoding="utf-8")
-        attendues = [c for v, cs in relations(texte).items() if v in SUBIES for c in cs]
+        # `est_subie` et non `v in SUBIES` : la comparaison litterale ratait « amendée_par »,
+        # que le motif VOYAIT pourtant. C etait la, et non dans le motif, que le defaut de
+        # #5579 vivait, et le garde sortait vert sur une ADR amendee sans encart.
+        attendues = [c for v, cs in relations(texte).items() if est_subie(v) for c in cs]
         citees, distance = encart(texte)
         if attendues and citees is None:
             trouvees.append(
@@ -160,6 +161,36 @@ def _auto_test() -> int:
         cas_de(
             "un encart sans relation declaree rougit",
             lambda: any("sans aucune relation" in f for f in fautes(r)),
+        )
+
+        # #5579, et c est LE cas du lot : la meme ADR, la meme absence d encart, mais la relation
+        # ecrite avec son accent. Avant le remede, `v in SUBIES` ne la reconnaissait pas et ce garde
+        # sortait VERT sur une ADR amendee qui n annoncait rien sous son titre.
+        (r / "sujet.md").write_text(
+            _saine(relation='relations:\n  amendée_par: ["voisine"]\n', encart_pose=False),
+            encoding="utf-8",
+        )
+        cas_de(
+            "une relation subie ACCENTUEE sans encart rougit aussi",
+            lambda: any("aucun encart" in f for f in fautes(r)),
+        )
+        # Le contraste dans l autre sens : une relation EXERCEE ne doit rien exiger, sans quoi le
+        # remede aurait simplement rendu le garde bavard.
+        (r / "sujet.md").write_text(
+            _saine(relation='relations:\n  amende: ["voisine"]\n', encart_pose=False),
+            encoding="utf-8",
+        )
+        cas_de(
+            "une relation EXERCEE sans encart reste verte",
+            lambda: fautes(r) == [],
+        )
+        # Et la regle commune joue ses propres cas ICI : sans un joueur, elle serait un gage inerte,
+        # ce que `verifie_gages_joues.py` refuse depuis #5594.
+        from _commun import relations as regle
+
+        cas_de(
+            "la regle commune des relations tient ses cas",
+            lambda: [libelle for libelle, tenu in regle.verifie_grammaire() if not tenu] == [],
         )
 
         (r / "sujet.md").write_text(

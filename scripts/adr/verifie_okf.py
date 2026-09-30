@@ -39,6 +39,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 import tempfile
 
 from _commun import DECISIONS, rapporte, sort_si_contrat_demande
+from _commun.relations import depasse, mal_ecrits, nomme_un_successeur
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 # `DECISIONS` s importe : le corpus se declare dans `_commun` et nulle part ailleurs (ADR 4586).
@@ -93,9 +94,12 @@ ARTICLES_D_USAGE = {"A12", "A13", "A14", "A15", "A18", "A19", "A23", "A28"}
 
 # Le numero de l ADR qui porte ce cliquet. Ici l identite d une ADR est son numero, non son slug.
 ADR_ERGONOMIE = "4342"
-RENVOI = re.compile(r"\]\((\d[a-z0-9-]*\.md)(?:#[^)]*)?\)")
-# Les verbes qui DÉPASSENT une décision, par opposition à ceux qui la citent ou la prolongent.
-DEPASSEMENT = {"renverse", "remplace", "annule"}
+# `RENVOI` et `DEPASSEMENT` etaient declares ICI et plus bas, la seconde declaration masquant la
+# premiere (#5579). Les deux motifs de `RENVOI` DIFFERAIENT, celui-ci exigeant un chiffre en tete la
+# ou l autre admet une lettre : qui lisait le haut du fichier croyait appliquer un motif plus strict
+# que celui en vigueur. Mesure avant retrait : les deux trouvent les MEMES 605 renvois sur le corpus,
+# 0 fichier ne differe, donc le retrait ne change aucun comportement. `DEPASSEMENT` vit maintenant
+# dans `_commun/relations.py`, avec le reste du vocabulaire de relation.
 
 
 class EnteteInvalide(ValueError):
@@ -255,8 +259,6 @@ def heuristiques_sans_emploi(
 # l identite est le slug, il ne commence plus par un chiffre ; exiger un chiffre rendrait
 # « 0 renvoi » sur un corpus qui n en manque aucun, soit la forme exacte du succes.
 RENVOI = re.compile(r"\]\(([a-z0-9][a-z0-9-]*\.md)(?:#[^)]*)?\)")
-# Les verbes qui DÉPASSENT une décision, par opposition à ceux qui la citent ou la prolongent.
-DEPASSEMENT = {"renverse", "remplace", "annule"}
 
 
 def ateliers_de_demande(racine: pathlib.Path) -> list[pathlib.Path]:
@@ -459,8 +461,21 @@ def verifie(
         # 4. Succession : une décision dépassée nomme ce qui la remplace.
         if e.get("status") == "deprecated":
             liens = e.get("relations") or {}
-            if not any(liens.get(v) for v in ("remplacee_par", "renversee_par")):
+            # `nomme_un_successeur` et non une liste en dur : la comparaison litterale ratait une
+            # relation accentuee, et une ADR « deprecated » ecrivant « remplacée_par » aurait ete
+            # declaree sans successeur (#5579).
+            if not nomme_un_successeur(liens):
                 fautes.append(f"{f.name} : « deprecated » sans successeur nommé")
+        # 8. Vocabulaire : un verbe de relation est une CLE, pas une phrase (#5579).
+        #
+        # Les deux `fait évoluer` du corpus etaient illisibles par tout motif de cle, donc leurs
+        # relations etaient invisibles au garde d encart. Ce refus existe pour qu une troisieme ne
+        # s installe pas en silence : la regle commune les VOIT, et c est ici qu on les refuse.
+        for verbe in mal_ecrits(f.read_text(encoding="utf-8")):
+            fautes.append(
+                f"{f.name} : le verbe de relation « {verbe} » porte une espace ; "
+                "un verbe est une clé, employez-en un d'un seul mot"
+            )
         # 7. Liens : tout renvoi croisé résout.
         for cible in RENVOI.findall(f.read_text(encoding="utf-8")):
             if cible not in noms and cible not in RESERVES:
@@ -469,7 +484,7 @@ def verifie(
     # 3. Statut et graphe : ce qu'une autre ADR dépasse ne peut pas rester en vigueur.
     for nom, e in entetes.items():
         for verbe, cibles in (e.get("relations") or {}).items():
-            if verbe not in DEPASSEMENT:
+            if not depasse(verbe):
                 continue
             for cible in cibles if isinstance(cibles, list) else [cibles]:
                 vise = next((n for n in noms if n.startswith(f"{cible}-")), None)
@@ -819,6 +834,41 @@ def auto_test() -> int:
         },
     )
 
+    # #5579 : le vocabulaire des relations. Un verbe est une CLE, pas une phrase, et la comparaison
+    # qui decide passe par `normalise` plutot que par une liste en dur.
+    cas(
+        "un verbe de relation a ESPACE",
+        {
+            "0001-t.md": MODELE.replace(
+                "## Contexte", 'relations:\n  fait évoluer: ["0002"]\n---\n\n## Contexte', 1
+            )
+        },
+        "porte une espace",
+    )
+    cas(
+        "un verbe d un seul mot ne refuse pas, meme accentue",
+        {
+            "0001-t.md": MODELE.replace(
+                "verified:", 'relations:\n  complète: ["0002-s"]\nverified:', 1
+            ),
+            "0002-s.md": MODELE,
+        },
+        None,
+        plancher=2,
+    )
+    # Une « deprecated » qui nomme son successeur AVEC un accent : sans `normalise`, la liste en dur
+    # la declarait sans successeur, et le refus tombait sur une ADR conforme.
+    cas(
+        "« deprecated » dont le successeur est ACCENTUE",
+        {
+            "0001-t.md": MODELE.replace("status: stable", "status: deprecated").replace(
+                "verified:", 'relations:\n  remplacée_par: ["0002-s"]\nverified:', 1
+            ),
+            "0002-s.md": MODELE,
+        },
+        None,
+        plancher=2,
+    )
     cas("corpus sain", {"0001-t.md": MODELE, "0002-s.md": MODELE}, None, plancher=2)
 
     if echecs:
