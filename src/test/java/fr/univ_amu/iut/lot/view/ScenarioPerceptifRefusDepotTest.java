@@ -271,14 +271,21 @@ class ScenarioPerceptifRefusDepotTest {
         Respiration.entreDeuxGestes(robot);
 
         robot.clickOn("#btnOuvrirDepot");
-        // Le clic passe par l'exécuteur ASYNCHRONE de ce banc, déclaré plus haut : le port est écrit
-        // sur un autre fil, plus tard. `Respiration` ne tient rien ici, sa propre javadoc le dit
-        // - « hors tournage, rien ne dort » - et l'assertion courait donc après le geste au lieu
-        // d'attendre son effet. Mesuré : le banc tombait 4 fois sur 884 tirages, toujours en tête
-        // du classement, jamais en victime (#5152).
-        Attente.que(
+        // Le port est écrit SUR LE FIL FX, dans le clic : `onAction="#ouvrirDossierDepot"` l'appelle
+        // directement, sans exécuteur (#5686). On lit donc du même côté qu'on écrit - `queSurLeFil`
+        // et non `que` - et l'attente DIT ce qu'elle a observé, sans quoi son expiration ne
+        // distingue pas « le geste n'a pas eu lieu » de « le travail n'a pas fini ».
+        Attente.queSurLeFil(
                 () -> !dossiersOuverts.isEmpty(),
-                "le port a reçu le dossier que le geste « ouvrir » lui envoie",
+                () -> "le port a reçu le dossier que le geste « ouvrir » lui envoie. À l'expiration,"
+                        + " le bouton était "
+                        + (ouvrir.isDisabled() ? "DÉSACTIVÉ" : "actif")
+                        + ", à "
+                        + ouvrir.localToScene(ouvrir.getBoundsInLocal())
+                        + " dans une scène de "
+                        + ouvrir.getScene().getWidth()
+                        + "x"
+                        + ouvrir.getScene().getHeight(),
                 10_000L);
         Respiration.surLeMomentCle(robot);
 
