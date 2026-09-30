@@ -40,9 +40,10 @@ class PariteCoherenceHoraireTest {
         String ecran = fr.univ_amu.iut.diagnostic.viewmodel.PlagesHoraires.lisible(coherence);
         String terminal = fr.univ_amu.iut.cli.commande.Diagnostiquer.plagesLisibles(coherence);
 
+        // Les heures EXIGÉES se citent telles qu'on les programme, arrondies du côté du plancher (#5601).
         for (java.time.LocalTime heure : java.util.List.of(
-                coherence.debutExige(),
-                coherence.finExigee(),
+                coherence.debutExigeAffiche(),
+                coherence.finExigeeAffichee(),
                 coherence.debutEnregistre(),
                 coherence.finEnregistree())) {
             assertThat(ecran).as("l'écran cite %s", heure).contains(HEURE.format(heure));
@@ -175,5 +176,32 @@ class PariteCoherenceHoraireTest {
                 .as("les deux surfaces nomment la source de ce qu'elles savent")
                 .contains("journal");
         assertThat(terminal).contains("journal");
+    }
+
+    @Test
+    @DisplayName("#5601 : programmer la fin que l'écran et le terminal affichent tient la fenêtre exigée")
+    void programmer_la_fin_affichee_tient_la_fenetre() {
+        CoherenceHoraire exacte =
+                AnalyseCoherenceHoraire.analyser(AIX_LAT, AIX_LON, "2026-06-20", "20:00:00", "07:00:00");
+        assertThat(exacte.finExigee().getSecond())
+                .as("la fin exigée porte des secondes : sans elles, ce cas ne distinguerait rien")
+                .isNotZero();
+
+        // Le défaut de Samuel : l'écran affichait la fin tronquée à la minute, l'enregistreur programmé
+        // sur cette heure s'arrêtait quelques secondes avant la fin exigée, et l'alerte partait.
+        String ecran = fr.univ_amu.iut.diagnostic.viewmodel.PlagesHoraires.plageExigee(exacte);
+        String terminal = fr.univ_amu.iut.cli.commande.Diagnostiquer.plagesLisibles(exacte);
+        String finEcran = ecran.substring(ecran.lastIndexOf(' ') + 1);
+        String finTerminal = terminal.substring(terminal.indexOf(" → ") + 3, terminal.indexOf(','));
+
+        for (String fin : java.util.List.of(finEcran, finTerminal)) {
+            CoherenceHoraire programmee =
+                    AnalyseCoherenceHoraire.analyser(AIX_LAT, AIX_LON, "2026-06-20", "20:00:00", fin + ":00");
+            assertThat(programmee.finTenue())
+                    .as(
+                            "un arrêt programmé à %s, l'heure affichée, doit tenir la fin exigée %s",
+                            fin, exacte.finExigee())
+                    .isTrue();
+        }
     }
 }

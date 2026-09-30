@@ -177,7 +177,8 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
         if (!coherence.disponible()) {
             return "";
         }
-        return "protocole " + HEURE.format(coherence.debutExige()) + VERS + HEURE.format(coherence.finExigee())
+        return "protocole " + HEURE.format(coherence.debutExigeAffiche()) + VERS
+                + HEURE.format(coherence.finExigeeAffichee())
                 + ", enregistré " + HEURE.format(coherence.debutEnregistre()) + VERS
                 + HEURE.format(coherence.finEnregistree());
     }
@@ -206,8 +207,8 @@ public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
         // Autre axe que la couverture : une nuit peut être couverte ET tronquée. Un script qui veut
         // alerter sur l'une ne doit pas la déduire de l'autre (#5093).
         objet.put("completudeDeLaNuit", d.completude().name());
-        objet.put("debutExige", coherence.disponible() ? HEURE.format(coherence.debutExige()) : null);
-        objet.put("finExigee", coherence.disponible() ? HEURE.format(coherence.finExigee()) : null);
+        objet.put("debutExige", coherence.disponible() ? HEURE.format(coherence.debutExigeAffiche()) : null);
+        objet.put("finExigee", coherence.disponible() ? HEURE.format(coherence.finExigeeAffichee()) : null);
         objet.put("debutEnregistre", coherence.disponible() ? HEURE.format(coherence.debutEnregistre()) : null);
         objet.put("finEnregistree", coherence.disponible() ? HEURE.format(coherence.finEnregistree()) : null);
         objet.put("gpsDisponible", d.coordonneesGpsDisponibles());
