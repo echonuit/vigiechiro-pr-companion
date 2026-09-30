@@ -18,8 +18,8 @@ import picocli.CommandLine.Spec;
 /// de dépôt Tadarida), via [ServiceLot].
 @Command(
         name = "exporter-lot",
-        description =
-                "Prépare le dépôt d'un passage vérifié, ou régénère les archives ZIP d'un dépôt déjà préparé ou entamé.")
+        description = "Prépare le dépôt d'un passage vérifié, ou régénère les archives ZIP d'un dépôt"
+                + " déjà préparé ou entamé.")
 public final class ExporterLot implements Callable<Integer> {
 
     @Option(
