@@ -192,7 +192,9 @@ class ScenarioCarteMultiNuitsTest {
                 "la table des nuits n'a pas paru sur une carte qui en porte trois",
                 APPARITION_SECONDES * 1000L);
         rattacherAuPremierPoint(robot);
-        robot.clickOn(caseDeLaNuit(robot, "2026-07-03"));
+        // Résolue et basculée d'un même geste sur le fil JavaFX : une ligne de table se recycle, et une
+        // référence tenue jusqu'au clic pourrait viser une autre nuit (ADR 5068).
+        robot.interact(() -> caseDeLaNuit(robot, "2026-07-03").fire());
         WaitForAsyncUtils.waitForFxEvents();
         GesteVisible.amenerDansLeCadre(robot, BOUTON_IMPORTER);
         GesteVisible.cliquer(robot, BOUTON_IMPORTER);
