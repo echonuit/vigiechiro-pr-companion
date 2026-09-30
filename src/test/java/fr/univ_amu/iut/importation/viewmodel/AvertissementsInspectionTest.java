@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.importation.model.AnalyseCoherence;
 import fr.univ_amu.iut.importation.model.AnalyseMelange;
+import fr.univ_amu.iut.importation.model.CycleAcquisition;
 import fr.univ_amu.iut.importation.model.JournalParse;
 import fr.univ_amu.iut.importation.model.PassageExistant;
 import java.nio.file.Path;
@@ -128,6 +129,46 @@ class AvertissementsInspectionTest {
             assertThat(detail.sujet()).isEqualTo("date du journal hors de la nuit des fichiers");
             assertThat(detail.precision()).isEqualTo("22/04/2026 (fichiers : 30/04/2026)");
         });
+    }
+
+    @Test
+    @DisplayName("#5653 : le détail nomme les nuits que le journal raconte, pas sa seule première date")
+    void incoherence_date_nomme_les_nuits_racontees() {
+        AnalyseCoherence coherence = AnalyseCoherence.depuis(
+                journal("1925492"),
+                null,
+                List.of(Path.of("PaRecPR1925492_20260824_213000.wav")),
+                List.of(cycle(LocalDate.of(2026, 8, 19)), cycle(LocalDate.of(2026, 8, 22))));
+
+        CompteRendu rendu = AvertissementsInspection.rediger(null, coherence, List.of(), false);
+
+        // La règle juge les nuits racontées (#5631) : nommer la seule première taisait le 22/08, et
+        // laissait croire que la première ligne du journal avait été jugée seule.
+        assertThat(constatUnique(rendu).details()).singleElement().satisfies(detail -> {
+            assertThat(detail.sujet()).isEqualTo("nuits racontées par le journal, toutes hors de la nuit des fichiers");
+            assertThat(detail.precision()).isEqualTo("19/08/2026, 22/08/2026 (fichiers : 24/08/2026)");
+        });
+    }
+
+    @Test
+    @DisplayName("#5653 : une seule nuit racontée se dit au singulier")
+    void incoherence_date_une_seule_nuit_racontee() {
+        AnalyseCoherence coherence = AnalyseCoherence.depuis(
+                journal("1925492"),
+                null,
+                List.of(Path.of("PaRecPR1925492_20260824_213000.wav")),
+                List.of(cycle(LocalDate.of(2026, 8, 19))));
+
+        CompteRendu rendu = AvertissementsInspection.rediger(null, coherence, List.of(), false);
+
+        assertThat(constatUnique(rendu).details()).singleElement().satisfies(detail -> {
+            assertThat(detail.sujet()).isEqualTo("nuit racontée par le journal hors de la nuit des fichiers");
+            assertThat(detail.precision()).isEqualTo("19/08/2026 (fichiers : 24/08/2026)");
+        });
+    }
+
+    private static CycleAcquisition cycle(LocalDate nuit) {
+        return new CycleAcquisition(1, nuit.atTime(21, 0), nuit.plusDays(1).atTime(6, 0), true, null);
     }
 
     @Test

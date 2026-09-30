@@ -243,6 +243,40 @@ public final class CaptureImport {
                 rapport,
                 new VolumesImport(5_100_273_664L, 5_100_273_664L, 1_932_735_283L)));
         rendre(scene, sortie.resolve("apercu-import-rejets.png"));
+
+        capturerNuitsDejaImportees(injecteur, vm, scene, sortie);
+    }
+
+    /// État « nuits déjà importées » d'une carte multi-nuits (#5600) : deux des trois nuits ont déjà un
+    /// passage en base, et l'inspection les nomme chacune avec sa date, les lignes de la table portant
+    /// leur badge. Rendu en **dernier** parce qu'il sème deux passages : placé plus tôt, il changerait
+    /// la numérotation proposée par les aperçus qui le suivent (#5653).
+    private static void capturerNuitsDejaImportees(
+            Injector injecteur, ImportationViewModel vm, Scene scene, Path sortie) throws IOException {
+        PassageDao passages = new PassageDao(injecteur.getInstance(SourceDeDonnees.class));
+        long idPoint = vm.rattachement().points().get(0).id();
+        for (int numero : List.of(2, 3)) {
+            String nuit = numero == 2 ? "2026-07-04" : "2026-07-05";
+            passages.insert(new Passage(
+                    null,
+                    numero,
+                    2026,
+                    nuit,
+                    "20:25:00",
+                    "07:47:00",
+                    null,
+                    StatutWorkflow.TRANSFORME,
+                    Verdict.OK,
+                    null,
+                    null,
+                    null,
+                    idPoint,
+                    SERIE,
+                    null));
+        }
+        vm.inspection().dossierSourceProperty().set(creerDossierMultiNuits());
+        vm.inspecter();
+        rendre(scene, sortie.resolve("apercu-import-multi-nuits-deja-importees.png"));
     }
 
     /// Le passage créé par l'import capturé : ce que le compte rendu nomme en titre et ce que son action
