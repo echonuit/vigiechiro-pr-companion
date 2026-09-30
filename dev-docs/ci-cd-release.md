@@ -74,6 +74,59 @@ publication.
     Pages et release ne s'activent que via des **variables de dépôt** (`ENABLE_PAGES`,
     `ENABLE_RELEASE` = `true`). Tant qu'elles sont absentes, ces étapes ne rougissent pas la CI.
 
+## Quels ateliers portent un suivi de durée, et pourquoi les autres non (#5591)
+
+`mesure_duree_portail.py` compare deux médianes glissantes de **douze** exécutions réussies sur
+`main`, donc il lui en faut **vingt-quatre**. Ce n'est pas un réglage : c'est la condition sans
+laquelle il refuse de conclure, et elle décide à elle seule quels ateliers peuvent être suivis.
+
+Mesuré le 2026-09-30 en jouant l'instrument sur les vingt ateliers, avec sa propre requête
+(`?branch=main&status=success&per_page=24`) plutôt qu'un comptage réécrit.
+
+| Atelier | Exécutions vertes sur `main` | Suivi |
+|---|---:|---|
+| `critere-de-fin.yml` | assez | **possible** |
+| `release.yml` | assez | **possible** |
+| `codeql.yml` | assez | **possible** |
+| `lint.yml` | assez | **suivi** depuis #5540 |
+| `maven.yml` | assez | **suivi** depuis #3508 |
+| `capture-vues.yml` | assez | **possible** |
+| `docs.yml` | assez | **possible** |
+| `mutation-ihm.yml` | assez | **possible** |
+| `mutation-model.yml` | assez | **possible** |
+| `recette-filmee.yml` | assez | **possible** |
+| `api-live.yml` | 16 | non : sous les 24 |
+| `tournage-recette.yml` | 16 | non : sous les 24 |
+| `suite-sous-windows-et-macos.yml` | 11 | non : sous les 24 |
+| `adr-rapport.yml` | 10 | non : sous les 24 |
+| `securite-dependances.yml` | 8 | non : sous les 24 |
+| `flatpak.yml` | 6 | non : sous les 24 |
+| `comparer-tournages.yml` | 3 | non : sous les 24 |
+| `winget.yml` | 1 | non : sous les 24 |
+| `titre-pr.yml` | **aucune, par construction** | non : ne tourne jamais sur `main` |
+| `corps-pr.yml` | **aucune, par construction** | non : ne tourne jamais sur `main` |
+
+**Dix des vingt peuvent être suivis, deux ne pourront jamais l'être.** `titre-pr.yml` et `corps-pr.yml`
+ne se déclenchent que sur `pull_request` : ils n'ont aucune exécution sur `main` et n'en auront jamais.
+Les huit autres sont sous le seuil parce qu'ils tournent rarement - un rapport du lundi, une release,
+un tournage appelé - et le temps seul ne les y amènera pas tous.
+
+**Le critère, en une phrase** : un atelier mérite un suivi quand il tourne sur `main` assez souvent
+pour porter deux médianes de douze, et que son allongement ne serait signalé par rien d'autre. Un
+atelier rare n'y échappe pas par indulgence : l'instrument ne saurait pas conclure sur lui, et un
+avertissement qu'on ne peut pas fonder s'apprend à ignorer.
+
+**Ce que la mesure a trouvé en chemin, et qui n'est pas de la documentation.** Trois des dix
+mesurables dépassent le seuil de 20 % **en ce moment**, et rien ne le dit puisque rien ne les joue :
+`release.yml` à **+597 %** (0,9 puis 6,4 min), `recette-filmee.yml` à **+196 %** (6,2 puis 18,3 min,
+ce qui confirme la mesure de #4842), `mutation-ihm.yml` à **+24 %** (51,9 puis 64,5 min). Consigné en
+**#5615** plutôt que traité ici, chaque dérive demandant une décision distincte.
+
+**Et les deux derniers rendent un message faux.** Sur `titre-pr.yml` et `corps-pr.yml`, l'instrument
+écrit « Historique des exécutions illisible après trois tentatives » là où il n'y a rien à lire. Il
+confond une absence avec un échec de lecture, ce qui est le défaut que ce dépôt refuse ailleurs.
+Consigné avec les trois dérives, en **#5615**.
+
 ## Le portail qualité (`-Pquality-gate`)
 
 Le profil Maven `quality-gate` rend **bloquants** des contrôles tolérants par défaut :
