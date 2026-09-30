@@ -1,0 +1,17 @@
+# Les versions d artefact qu AUCUN flux declenche par une demande de fusion n exerce, et ce qui les
+# atteste. Une ligne par propriete : <propriete>  <valeur>  <ce qui l atteste>.
+#
+# Le patron est celui de `relus.txt` : la valeur EST la marque. Si le pom bouge et que cette ligne ne
+# suit pas, `scripts/adr/5087-versions-hors-des-checks.py` refuse - personne n a a se souvenir de la
+# question « quel check aurait rougi si mon changement etait faux », puisque changer la chose invalide
+# l attestation.
+#
+# La population n est pas tenue a la main : elle se DERIVE du `pom.xml` et des flux. Ajouter une ligne
+# ici sans qu un artefact de profil non exerce la reference ne sert a rien, et en oublier une fait
+# rougir le garde en nommant le profil.
+#
+# Ce que ce fichier n atteste PAS : que la version soit la meilleure, ni qu elle soit a jour. Il
+# atteste qu un humain a regarde, et ou.
+
+pitest.version         1.30.0  #5078 : joue a la main dans un worktree avant fusion, 1.30.0 contre 1.25.8 sur une classe pure et une classe de vue sous minion TestFX, memes mutants et memes statuts, empreinte identique ligne a ligne, avec temoin negatif sur cible inexistante. Compte rendu en commentaire de la demande.
+pitest.junit5.version  1.2.3   jamais bumpe depuis sa pose. Exerce par les flux nocturnes `mutation-model.yml` et `mutation-ihm.yml`, dont l etape « Mesurer » tourne sous `set -euo pipefail` sans `continue-on-error` : leurs seize dernieres executions sont vertes. Ce n est pas une verification de bump, c est une verification d usage - et c est ce qui manquerait le jour d un bump.

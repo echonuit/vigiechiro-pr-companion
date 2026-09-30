@@ -1406,6 +1406,93 @@ def test_5340_chemins_non_declares() -> None:
         _verifie("et `lus` compte le corpus entier, declarants compris", m.lus(racine), 2)
 
 
+def test_5087_versions_hors_des_checks() -> None:
+    """Le contraste dans les DEUX sens, sur un depot fabrique (ADR 5087).
+
+    Un garde qui refuserait aussi sur un profil exerce en demande ne dirait rien de plus qu un garde
+    absent : les deux cas negatifs comptent donc autant que le positif.
+    """
+    m = _charge("5087-versions-hors-des-checks.py")
+    pom = (
+        '<project xmlns="http://maven.apache.org/POM/4.0.0">\n'
+        "  <properties>\n"
+        "    <expose.version>1.0.0</expose.version>\n"
+        "    <exerce.version>2.0.0</exerce.version>\n"
+        "  </properties>\n"
+        "  <build><plugins>\n"
+        "    <plugin><groupId>g</groupId><artifactId>du-build</artifactId></plugin>\n"
+        "  </plugins></build>\n"
+        "  <profiles>\n"
+        "    <profile><id>nocturne</id><build><plugins>\n"
+        "      <plugin><groupId>g</groupId><artifactId>a-expose</artifactId>\n"
+        "        <version>${expose.version}</version></plugin>\n"
+        "    </plugins></build></profile>\n"
+        "    <profile><id>enDemande</id><build><plugins>\n"
+        "      <plugin><groupId>g</groupId><artifactId>a-exerce</artifactId>\n"
+        "        <version>${exerce.version}</version></plugin>\n"
+        "    </plugins></build></profile>\n"
+        "    <profile><id>parOs</id><activation><os><family>unix</family></os></activation>\n"
+        "      <build><plugins>\n"
+        "      <plugin><groupId>g</groupId><artifactId>du-build</artifactId></plugin>\n"
+        "    </plugins></build></profile>\n"
+        "  </profiles>\n"
+        "</project>\n"
+    )
+    nuit = "name: nuit\non:\n  schedule:\n    - cron: '0 3 * * *'\njobs:\n  m:\n    steps:\n"
+    nuit += "      - run: ./mvnw -Pnocturne test\n"
+    jour = "name: jour\non:\n  pull_request:\n  push:\njobs:\n  m:\n    steps:\n"
+    jour += "      - run: ./mvnw -PenDemande test\n"
+    # Le piege du relevé libre : ces deux-la ne sont PAS des profils.
+    bruit = "name: bruit\non:\n  pull_request:\njobs:\n  m:\n    steps:\n"
+    bruit += "      - run: pwsh -Command 'Get-Item -Path x -PassThru'\n"
+    bruit += '      - name: "Auto-test de la loupe des lots multi-PR"\n        run: echo ok\n'
+
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(racine, "pom.xml", pom)
+        _ecrire(racine, ".github/workflows/nuit.yml", nuit)
+        _ecrire(racine, ".github/workflows/jour.yml", jour)
+        _ecrire(racine, ".github/workflows/bruit.yml", bruit)
+
+        # La population se DERIVE : un seul profil porte une version sans etre exerce en demande.
+        exposees = m.exposees(racine)
+        assert set(exposees) == {"expose.version"}, exposees
+        assert "exerce.version" not in exposees, (
+            "un profil exerce par un flux `pull_request` ne doit PAS etre expose"
+        )
+
+        # Le NOM seul ne resout rien : `-PassThru` et `multi-PR` ne sont pas des profils.
+        actives = m.activations(racine)
+        assert set(actives) == {"nocturne", "enDemande", "parOs"}, actives
+        assert actives["nocturne"] == {"schedule"}, actives["nocturne"]
+        assert "pull_request" in actives["enDemande"], actives["enDemande"]
+
+        # Un profil active par `<os>` est NOMME plutot que tu.
+        assert m.hors_de_la_carte(racine) == ["parOs"], m.hors_de_la_carte(racine)
+
+        # Sans manifeste, la version exposee n est attestee par rien : elle est suspecte.
+        assert len(m.suspects(racine)) == 1, m.suspects(racine)
+
+        # Attestee a la bonne valeur, elle se tait.
+        _ecrire(
+            racine,
+            "scripts/methode/versions-verifiees.txt",
+            "expose.version 1.0.0 joue a la main\n",
+        )
+        assert m.suspects(racine) == [], m.suspects(racine)
+
+        # Attestee a une AUTRE valeur, elle redevient suspecte : c est le bump qui invalide la marque.
+        _ecrire(
+            racine,
+            "scripts/methode/versions-verifiees.txt",
+            "expose.version 0.9.0 joue a la main\n",
+        )
+        assert len(m.suspects(racine)) == 1, m.suspects(racine)
+
+        # Et `lus` ne peut pas etre zero : un garde qui ne balaie rien n est jamais legitime.
+        assert len(m.fichiers(racine)) >= 5, m.fichiers(racine)
+
+
 def test_5188_corpus_shell() -> None:
     """Le cliquet compte ce qui reste en shell, et sa population est ce que GIT SUIT.
 
@@ -2428,6 +2515,7 @@ if __name__ == "__main__":
         test_4617_code_mort_et_zone_de_test,
         test_4476_javadoc_raconte_son_extraction,
         test_4477_longueur_des_adr,
+        test_5087_versions_hors_des_checks,
         test_5188_corpus_shell,
         test_5340_chemins_non_declares,
         test_loupe_4472_densite_de_commentaire,
