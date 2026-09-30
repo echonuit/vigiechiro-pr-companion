@@ -84,6 +84,7 @@
         <!-- Suite de contrat API « vivante » (profil -Papi-live, hors CI) : REST-assured tape l'API
              VigieChiro réelle et valide les réponses contre les JSON Schema de src/test/resources. -->
         <restassured.version>6.0.1</restassured.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
 
         <!-- Lecture des specs YAML du générateur de cartes SD de recette (scope test uniquement,
              cf. recette/fixtures/spec/ ; jamais embarqué dans le binaire distribué). -->
@@ -119,9 +120,11 @@
              Le profil -Papi-live inverse ces deux propriétés pour ne lancer QUE la suite de contrat.
              Le tournage connecté (#4307) fait de même avec `recette-connectee` : il passe
              -Dsurefire.groups=recette-connectee, et ne joue donc QUE les scénarios écrits pour la
-             plateforme, jamais les autres. -->
+             plateforme, jamais les autres.
+             `plateforme-de-test` (#5663) exige Docker, que les runners Windows et macOS n'ont pas : il
+             ne tourne que sous -Pplateforme-de-test, qui monte la plateforme de test par Testcontainers. -->
         <surefire.groups></surefire.groups>
-        <surefire.excludedGroups>api-live,recette-connectee</surefire.excludedGroups>
+        <surefire.excludedGroups>api-live,recette-connectee,plateforme-de-test</surefire.excludedGroups>
 
         <!-- Forks Surefire parallèles : une JVM par cœur (1C). Le toolkit JavaFX est un
              singleton PAR JVM : la parallélisation intra-JVM est impossible pour les tests
@@ -394,6 +397,17 @@
             <groupId>io.rest-assured</groupId>
             <artifactId>json-schema-validator</artifactId>
             <version>${restassured.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Testcontainers : monte la plateforme de test (l'API épinglée, Mongo, le faux S3) pour
+             @Tag("plateforme-de-test"), sous -Pplateforme-de-test (#5663, ADR 5641). Le coeur seul :
+             l'extension JUnit est la nôtre. Déclaré ici et non dans le profil, pour qu'il se compile
+             à chaque build ; seule l'EXÉCUTION demande Docker. -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -1498,6 +1512,15 @@
                ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true  (+ probes d'écriture)
              Sans token, les tests se SKIPPENT proprement (Assumptions). Le token/baseUrl/write sont
              transmis au JVM de test via systemPropertyVariables (valeurs par défaut ci-dessous). -->
+        <profile>
+            <!-- La plateforme de test (#5663, ADR 5641) : ne lance QUE @Tag("plateforme-de-test"), que
+                 l'extension PlateformeDeTest monte par Testcontainers. Il faut Docker, et aucun jeton. -->
+            <id>plateforme-de-test</id>
+            <properties>
+                <surefire.groups>plateforme-de-test</surefire.groups>
+                <surefire.excludedGroups>api-live,recette-connectee</surefire.excludedGroups>
+            </properties>
+        </profile>
         <profile>
             <id>api-live</id>
             <properties>
