@@ -12,7 +12,7 @@ verified:
   - by: machine:ci
     at: 2026-08-11
 relations:
-  fait évoluer: ["3501"]
+  amende: ["3501"]
   prolonge: ["2748"]
 ---
 
@@ -78,7 +78,7 @@ Trois conséquences, qui sont les trois remèdes du chantier :
    ne rien prouver. `WINGET_SONDE` permet à l'auto-test de jouer hors ligne les issues qui comptent,
    dont la moins évidente : le jeton qui **s'authentifie mais ne voit pas** la ressource.
 
-## Ce que cette ADR fait évoluer dans l'ADR 3501
+## Ce que cette ADR amende dans l'ADR 3501
 
 L'ADR 3501 exige que chaque `uses:` porte « **le tag lisible en commentaire** », commentaire déclaré
 « obligatoire, pas décoratif ». Deux points bougent, et aucun ne relâche la règle.
