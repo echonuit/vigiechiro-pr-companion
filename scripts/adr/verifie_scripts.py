@@ -1454,24 +1454,53 @@ def test_5087_versions_hors_des_checks() -> None:
         _ecrire(racine, ".github/workflows/jour.yml", jour)
         _ecrire(racine, ".github/workflows/bruit.yml", bruit)
 
+        # ⟨`_verifie` et non `assert` nu, et ce n est pas un gout⟩ `_joue` RELANCE toute exception
+        # qui n est pas un `LecteurAbsent`, donc un `assert` nu produit une trace de pile. Le banc
+        # de mutation classe alors le garde « NON CONCLUANT » et non « tient » : la neutralisation
+        # rend `[]` pour toute fonction, l assertion casse au lieu d assertir, et ce rouge ne
+        # prouve rien (ADR 4918 et 5257). Mesure du 2026-09-30 : ce temoin portait DIX `assert`
+        # nus et le banc ne concluait pas, la ou `test_0035_pictogramme` et son `_verifie`
+        # tenaient. L article A2 veut qu un garde soit vu rouge sur sa propre mutation : avec des
+        # `assert` nus, celui-ci ne l etait pas.
+        #
         # La population se DERIVE : un seul profil porte une version sans etre exerce en demande.
         exposees = m.exposees(racine)
-        assert set(exposees) == {"expose.version"}, exposees
-        assert "exerce.version" not in exposees, (
-            "un profil exerce par un flux `pull_request` ne doit PAS etre expose"
+        _verifie("5087 : la population exposee se DERIVE", set(exposees), {"expose.version"})
+        _verifie(
+            "5087 : un profil exerce en demande n est PAS expose",
+            "exerce.version" in exposees,
+            False,
         )
 
         # Le NOM seul ne resout rien : `-PassThru` et `multi-PR` ne sont pas des profils.
-        actives = m.activations(racine)
-        assert set(actives) == {"nocturne", "enDemande", "parOs"}, actives
-        assert actives["nocturne"] == {"schedule"}, actives["nocturne"]
-        assert "pull_request" in actives["enDemande"], actives["enDemande"]
+        # ⟨la valeur ENTIERE, jamais un index dedans⟩ La neutralisation du banc fait rendre `[]`
+        # a toute fonction : `actives["nocturne"]` casse alors en `TypeError` au lieu d assertir, et
+        # ce rouge ne prouve rien. Comparer le dictionnaire complet echoue PROPREMENT sur `[]`, et
+        # epingle en prime toute la derivation d un coup - c est la meme famille de defaut que
+        # `4359-javadoc-narratif` et `loupe-5175`, qui ne concluent pas pour cette raison.
+        _verifie(
+            "5087 : `-P` se RESOUT contre les profils du pom, et rien d autre n entre",
+            m.activations(racine),
+            {
+                "nocturne": {"schedule"},
+                "enDemande": {"pull_request", "push"},
+                "parOs": set(),
+            },
+        )
 
         # Un profil active par `<os>` est NOMME plutot que tu.
-        assert m.hors_de_la_carte(racine) == ["parOs"], m.hors_de_la_carte(racine)
+        _verifie(
+            "5087 : un profil active par os est NOMME",
+            m.hors_de_la_carte(racine),
+            ["parOs"],
+        )
 
         # Sans manifeste, la version exposee n est attestee par rien : elle est suspecte.
-        assert len(m.suspects(racine)) == 1, m.suspects(racine)
+        _verifie(
+            "5087 : sans manifeste, la version exposee est suspecte",
+            len(m.suspects(racine)),
+            1,
+        )
 
         # Attestee a la bonne valeur, elle se tait.
         _ecrire(
@@ -1479,7 +1508,7 @@ def test_5087_versions_hors_des_checks() -> None:
             "scripts/methode/versions-verifiees.txt",
             "expose.version 1.0.0 joue a la main\n",
         )
-        assert m.suspects(racine) == [], m.suspects(racine)
+        _verifie("5087 : attestee a la bonne valeur, elle se tait", m.suspects(racine), [])
 
         # Attestee a une AUTRE valeur, elle redevient suspecte : c est le bump qui invalide la marque.
         _ecrire(
@@ -1487,10 +1516,10 @@ def test_5087_versions_hors_des_checks() -> None:
             "scripts/methode/versions-verifiees.txt",
             "expose.version 0.9.0 joue a la main\n",
         )
-        assert len(m.suspects(racine)) == 1, m.suspects(racine)
+        _verifie("5087 : un bump invalide la marque du manifeste", len(m.suspects(racine)), 1)
 
         # Et `lus` ne peut pas etre zero : un garde qui ne balaie rien n est jamais legitime.
-        assert len(m.fichiers(racine)) >= 5, m.fichiers(racine)
+        _verifie("5087 : le garde balaie au moins cinq unites", len(m.fichiers(racine)) >= 5, True)
 
 
 def test_5188_corpus_shell() -> None:
