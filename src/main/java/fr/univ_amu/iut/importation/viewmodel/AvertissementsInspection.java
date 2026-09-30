@@ -145,8 +145,8 @@ public final class AvertissementsInspection {
             return Optional.empty();
         }
         return Optional.of(new Constat(
-                "Le journal du capteur ne correspond pas aux enregistrements : vérifiez qu'ils viennent"
-                        + " bien de la même nuit.",
+                "Le journal du capteur ne correspond pas aux enregistrements : vérifiez qu'il vient bien de"
+                        + " cette carte.",
                 Severite.AVERTISSEMENT,
                 coherence.desaccords().stream()
                         .map(desaccord -> new Detail(desaccord.sujet(), desaccord.precision()))
