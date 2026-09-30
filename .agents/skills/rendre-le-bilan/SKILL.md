@@ -47,6 +47,32 @@ Redérouler leur raisonnement produit deux textes qui divergeront.
 comprendre au moment de l'écrire. Quand une suite est traitée, relire ce que le bilan en disait et le
 corriger s'il s'est trompé : une analyse fausse laissée en place oriente le chantier suivant.
 
+## Ce qu'un bilan DIFFÈRE se renvoie aussi, et son classement dit sa portée
+
+Un bilan qui ne peut pas conclure tout de suite - un taux qui demande des tirages, une mesure qui
+demande du recul - ouvre une issue pour plus tard et y écrit une **prédiction**, pour ne pas lire
+ensuite dans les chiffres ce qui arrange. Deux règles s'y appliquent, et ce sont celles de la section
+précédente.
+
+**La prédiction vit à UN endroit, et l'issue différée y renvoie.** Recopiée en abrégé, elle devient
+deux prédictions, et rien ne dit laquelle fait foi - or c'est la copie qu'on a sous les yeux au moment
+de conclure, puisque c'est l'issue différée qu'on ouvre pour tenir le report. Si la reprise est
+nécessaire, elle s'identifie comme copie.
+
+**Et chaque classement dit DE QUELLE PORTÉE il parle.** C'est le piège propre au différé : entre
+l'écriture de la prédiction et la mesure, d'autres lots passent. Un banc « non traité par le lot 2 »
+peut être « traité au début de la fenêtre », et les deux phrases sont vraies. Un classement qui ne
+nomme pas sa portée rend la mesure ininterprétable, sans jamais se contredire.
+
+**Vécu sur #5277, mesuré en #5557.** Sa prédiction séparait quinze bancs en traités et témoins, en
+justifiant les témoins par « ils n'ont jamais eu de site ». Mesuré avec la fonction du garde :
+**deux des six témoins en portaient**, deux et cinq, invisibles au motif d'alors et convertis le
+lendemain par une autre cascade. La clause de réfutabilité - les voir tomber **confirme** - ne tenait
+donc sur aucun des deux, et la seule mesure ayant de la force portait précisément sur l'un d'eux.
+
+**Le contrôle** : relire la prédiction en demandant, pour chaque ligne, « vraie à quelle date, et
+selon quel instrument ? ». Un motif de garde élargi entre-temps suffit à déplacer un banc de groupe.
+
 ## L'artefact, et ce qu'il sert deux fois
 
 Le bilan est un texte : il décrit des états que son lecteur n'a pas sous les yeux. La passe 8 les a
