@@ -23,6 +23,7 @@ import fr.univ_amu.iut.lot.model.PreparationGroupee;
 import fr.univ_amu.iut.lot.model.RearmementDepotUnites;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.TeleversementGroupe;
+import fr.univ_amu.iut.lot.model.TeleversementsEnCours;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
 import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
@@ -133,6 +134,15 @@ public class LotModule extends ModuleDeFeature {
         }
         return ModeDepot.parValeur(
                 reglages.lireTexte(OngletReglagesDepot.CLE_MODE_DEPOT, ModeDepot.ARCHIVES_ZIP.valeur()));
+    }
+
+    /// Les téléversements en cours dans ce processus (#5599), PARTAGÉS entre le moteur de dépôt, qui s'y
+    /// inscrit, et le service de lot, qui les consulte avant de générer. Fourni ici parce que ce module
+    /// est toujours présent, alors que le moteur de dépôt est une liaison optionnelle.
+    @Provides
+    @Singleton
+    TeleversementsEnCours fournirTeleversementsEnCours() {
+        return new TeleversementsEnCours();
     }
 
     @Provides

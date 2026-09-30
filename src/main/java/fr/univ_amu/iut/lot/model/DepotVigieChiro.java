@@ -74,6 +74,12 @@ public final class DepotVigieChiro {
     private final Horloge horloge;
     private final ReconciliationDepot reconciliation;
 
+    /// Où ce dépôt s'inscrit pendant qu'il tourne, pour que la génération des archives ne vienne pas
+    /// écrire dans le même dossier (#5599).
+    private final TeleversementsEnCours televersements;
+
+    /// Sans registre partagé : ce dépôt s'inscrit dans un registre à lui, que personne d'autre ne lit.
+    /// C'est le cas des bancs et des outils de capture ; l'application passe le registre partagé.
     public DepotVigieChiro(
             SynchronisationParticipation participations,
             ClientVigieChiro client,
@@ -83,6 +89,29 @@ public final class DepotVigieChiro {
             PassageDao passageDao,
             MoteurWorkflowPassage moteurWorkflow,
             Horloge horloge) {
+        this(
+                participations,
+                client,
+                traitement,
+                depotUnites,
+                depotPlans,
+                passageDao,
+                moteurWorkflow,
+                horloge,
+                new TeleversementsEnCours());
+    }
+
+    public DepotVigieChiro(
+            SynchronisationParticipation participations,
+            ClientVigieChiro client,
+            TraitementVigieChiro traitement,
+            DepotUniteDao depotUnites,
+            DepotPlanDao depotPlans,
+            PassageDao passageDao,
+            MoteurWorkflowPassage moteurWorkflow,
+            Horloge horloge,
+            TeleversementsEnCours televersements) {
+        this.televersements = Objects.requireNonNull(televersements, "televersements");
         this.participations = Objects.requireNonNull(participations, "participations");
         this.client = Objects.requireNonNull(client, "client");
         this.televerseur = new TeleverseurArchive(client);
@@ -183,6 +212,14 @@ public final class DepotVigieChiro {
         Objects.requireNonNull(source, "source");
         Objects.requireNonNull(annule, "annule");
         Objects.requireNonNull(suivi, "suivi");
+        // Inscrit pendant tout le téléversement, retiré quoi qu'il arrive : succès, refus, annulation
+        // ou exception (#5599).
+        try (TeleversementsEnCours.Inscription ignore = televersements.inscrire(idPassage)) {
+            return deposerInscrit(idPassage, source, annule, suivi);
+        }
+    }
+
+    private BilanDepot deposerInscrit(Long idPassage, SourceDepot source, BooleanSupplier annule, SuiviDepot suivi) {
         chargerPassage(idPassage); // échec rapide : passage inexistant → refus métier avant toute écriture
 
         String participationId =

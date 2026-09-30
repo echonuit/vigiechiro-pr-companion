@@ -17,9 +17,9 @@ Chaque tâche commence par son test rouge (article A7).
 
 ## 2. Pas de génération pendant un téléversement
 
-- [ ] 2.1 Écrire les cas du registre `TeleversementsEnCours` : inscrit pendant, retiré après un succès,
+- [x] 2.1 Écrire les cas du registre `TeleversementsEnCours` : inscrit pendant, retiré après un succès,
       après une exception et après une annulation. Rouge attendu : le registre n'existe pas.
-- [ ] 2.2 Le registre, fourni en `@Singleton` par `LotModule`, et `DepotVigieChiro.deposer` qui s'y
+- [x] 2.2 Le registre, fourni en `@Singleton` par `LotModule`, et `DepotVigieChiro.deposer` qui s'y
       inscrit par un jeton `AutoCloseable`. Vert : 2.1 passe ; `DepotVigieChiroTest` reste vert.
 - [ ] 2.3 Écrire le cas du service : génération refusée pendant un téléversement inscrit, avec un
       message qui dit d'attendre la fin ou d'annuler, et aucune archive écrite ; admise après le

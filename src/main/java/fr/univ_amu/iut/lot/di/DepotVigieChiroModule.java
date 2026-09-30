@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
+import fr.univ_amu.iut.lot.model.TeleversementsEnCours;
 import fr.univ_amu.iut.lot.model.VerificationDepot;
 import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
@@ -91,8 +92,18 @@ public class DepotVigieChiroModule extends ModuleDeFeature {
             DepotPlanDao depotPlans,
             PassageDao passageDao,
             MoteurWorkflowPassage moteurWorkflow,
-            Horloge horloge) {
+            Horloge horloge,
+            TeleversementsEnCours televersements) {
+        // Le registre PARTAGÉ avec le service de lot, qui le consulte avant de générer (#5599).
         return new DepotVigieChiro(
-                participations, client, traitement, depotUnites, depotPlans, passageDao, moteurWorkflow, horloge);
+                participations,
+                client,
+                traitement,
+                depotUnites,
+                depotPlans,
+                passageDao,
+                moteurWorkflow,
+                horloge,
+                televersements);
     }
 }

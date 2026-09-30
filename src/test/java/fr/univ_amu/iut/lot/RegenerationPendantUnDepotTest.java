@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.lot;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -29,6 +30,7 @@ import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ModeDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.SuiviDepot;
+import fr.univ_amu.iut.lot.model.TeleversementsEnCours;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
 import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
@@ -83,6 +85,9 @@ class RegenerationPendantUnDepotTest {
     private ClientVigieChiro client;
     private PassageDao passageDao;
 
+    /// Le registre PARTAGÉ, comme dans l'application : le dépôt s'y inscrit, le service le consulte.
+    private final TeleversementsEnCours televersements = new TeleversementsEnCours();
+
     @BeforeEach
     void preparer() {
         source = new SourceDeDonnees(new Workspace(dossier));
@@ -128,7 +133,8 @@ class RegenerationPendantUnDepotTest {
                 depotPlans,
                 passageDao,
                 new MoteurWorkflowPassage(),
-                horloge);
+                horloge,
+                televersements);
     }
 
     @Test
@@ -165,6 +171,31 @@ class RegenerationPendantUnDepotTest {
         assertThat(second.echecs()).isEmpty();
         verify(client, times(1)).creerFichier(eq(PREFIXE.nomDossierSession() + "-1.zip"), anyString());
         assertThat(statut(id)).isEqualTo(StatutWorkflow.DEPOSE);
+    }
+
+    @Test
+    @DisplayName("#5599 : un dépôt s'inscrit pendant qu'il tourne, et se retire après, même sur une exception")
+    void un_depot_s_inscrit_pendant_qu_il_tourne() throws Exception {
+        Long id = passagePrepare();
+        AtomicBoolean vuEnCours = new AtomicBoolean();
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenAnswer(appel -> {
+                    vuEnCours.set(televersements.enCours(id));
+                    return ReponseApi.succes("");
+                });
+
+        depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+
+        assertThat(vuEnCours).as("pendant l'envoi, le passage est en cours").isTrue();
+        assertThat(televersements.enCours(id)).as("après, il ne l'est plus").isFalse();
+
+        // Un passage introuvable fait lever `deposer` : l'inscription ne doit pas lui survivre.
+        assertThatThrownBy(
+                        () -> depot.deposer(9_999L, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte()))
+                .isInstanceOf(RuntimeException.class);
+        assertThat(televersements.enCours(9_999L))
+                .as("un registre resté armé bloquerait la génération à tort")
+                .isFalse();
     }
 
     private StatutWorkflow statut(Long id) {
