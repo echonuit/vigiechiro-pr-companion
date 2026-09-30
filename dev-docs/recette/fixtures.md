@@ -129,6 +129,7 @@ Chaque carte exerce **une** pathologie de l'assistant d'import (voir l'étape 5 
 | `sd-fin-precoce` | le début est couvert, la fin non : l'enregistrement s'arrête avant 30 min après le lever -> au diagnostic, l'alerte nomme ce bord (#5200) | 6 |
 | `sd-hors-fenetre` | aucun des deux bords : l'enregistrement commence trop tard **et** s'arrête trop tôt -> au diagnostic, l'alerte nomme les deux (#5200) | 6 |
 | `sd-carte-reutilisee` | une nuit de wav, un journal qui commence cinq nuits plus tôt et raconte aussi la leur -> **aucune** incohérence (#5631) | 2 |
+| `sd-journal-etranger-multi` | trois nuits de juillet sous un journal qui ne raconte que deux nuits d'août -> incohérence de date, que l'exemption multi-nuits taisait (#5669) | 6 |
 
 ## Régénérer les cartes
 

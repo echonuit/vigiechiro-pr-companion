@@ -21,9 +21,9 @@ import java.util.regex.Pattern;
 ///   (une nuit s'étale du soir `J` au matin `J + 1`). Le journal est circulaire : sur une carte
 ///   réutilisée, sa première ligne raconte souvent une nuit effacée depuis, et c'est pourquoi on
 ///   juge les nuits qu'il raconte plutôt que sa première date, laquelle ne sert que faute de cycle
-///   lisible. **Exception multi-nuits** : si les WAV s'étalent sur **plus d'une nuit** (carte laissée
-///   tourner plusieurs nuits, cas géré par le découpage par nuit), la date n'est pas jugée
-///   incohérente, le journal ne racontant parfois que les premières.
+///   lisible. **Carte de plusieurs nuits** : le journal circulaire ne raconte parfois que les
+///   premières, donc une seule nuit racontée suffit, et la date n'est incohérente que si le journal
+///   n'en raconte **aucune** (#5669) ; sans cycle lisible, elle n'est pas jugée.
 ///
 /// C'est un **avertissement** à l'inspection (jamais un blocage). Objet de transport pur (aucune
 /// dépendance JavaFX) ; les sources illisibles ou absentes sont simplement neutres.
@@ -137,30 +137,36 @@ public final class AnalyseCoherence {
     }
 
     /// Vrai si **au moins une** date de fichier ne tombe dans la fenêtre `[J, J + 1]` d'aucune nuit que
-    /// le journal raconte, ou, faute de cycle lisible, de sa première date. On exige que **toutes** les
-    /// dates des WAV y tiennent : un simple recouvrement ne suffit pas, sinon des fichiers de la nuit
-    /// *suivante* (`{J+1, J+2}`) passeraient à la faveur du seul `J+1`. Neutre si la date du journal ou
-    /// les dates des WAV manquent.
+    /// le journal raconte, ou, faute de cycle lisible, de sa première date : un simple recouvrement ne
+    /// suffit pas, sinon des fichiers de la nuit *suivante* passeraient à la faveur du seul `J+1`. Sur
+    /// une carte de plusieurs nuits, vrai seulement si **aucune** n'est racontée, et jamais sans cycle.
+    /// Neutre si la date du journal ou les dates des WAV manquent.
     public boolean dateIncoherente() {
         if (dateJournal == null || nuitsFichiers.isEmpty()) {
             return false;
         }
-        // Carte **multi-nuits** : les WAV s'étalent sur plus d'une nuit (plus d'un jour d'écart entre la
-        // première et la dernière date). C'est désormais un cas **géré** (un passage par nuit) et non une
-        // anomalie : la fenêtre mono-nuit `[J, J+1]` du journal ne s'y applique pas → pas d'incohérence.
-        if (ChronoUnit.DAYS.between(nuitsFichiers.first(), nuitsFichiers.last()) > 1) {
-            return false;
-        }
+        boolean plusieursNuits = ChronoUnit.DAYS.between(nuitsFichiers.first(), nuitsFichiers.last()) > 1;
         if (!nuitsJournal.isEmpty()) {
-            // Chaque date de fichier doit tomber dans la fenêtre soir → matin d'une nuit que le journal
-            // raconte (#5631), et non plus de la seule première : sur une carte réutilisée, celle-ci est
-            // la nuit du déploiement, souvent effacée depuis.
-            return nuitsFichiers.stream()
-                    .anyMatch(date -> nuitsJournal.stream()
-                            .noneMatch(nuit -> !date.isBefore(nuit) && !date.isAfter(nuit.plusDays(1))));
+            // Les nuits que le journal raconte, et non sa première ligne (#5631). Sur une carte de
+            // plusieurs nuits, le journal circulaire a pu perdre les dernières : une seule nuit racontée
+            // suffit à dire qu'il vient de cette carte, et aucune dit qu'il n'en vient pas (#5669).
+            return plusieursNuits
+                    ? nuitsFichiers.stream().noneMatch(this::estRacontee)
+                    : nuitsFichiers.stream().anyMatch(date -> !estRacontee(date));
+        }
+        // Sans cycle lisible, seule la première ligne reste, et elle ne date qu'une nuit : une carte de
+        // plusieurs nuits n'est pas jugée sur elle.
+        if (plusieursNuits) {
+            return false;
         }
         LocalDate matin = dateJournal.plusDays(1);
         return nuitsFichiers.stream().anyMatch(nuit -> nuit.isBefore(dateJournal) || nuit.isAfter(matin));
+    }
+
+    /// Vrai si la date d'un enregistrement tombe dans la fenêtre soir `J`, matin `J + 1` d'une nuit que
+    /// le journal raconte.
+    private boolean estRacontee(LocalDate date) {
+        return nuitsJournal.stream().anyMatch(nuit -> !date.isBefore(nuit) && !date.isAfter(nuit.plusDays(1)));
     }
 
     /// Vrai si une incohérence (série ou date) est détectée → avertissement à l'inspection.

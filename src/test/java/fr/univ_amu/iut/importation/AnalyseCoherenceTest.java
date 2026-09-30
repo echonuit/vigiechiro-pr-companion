@@ -167,6 +167,39 @@ class AnalyseCoherenceTest {
         assertThat(c.dateIncoherente()).isTrue();
     }
 
+    private static final List<String> TROIS_NUITS = List.of("20260703", "20260704", "20260705");
+
+    @Test
+    @DisplayName("#5669 : une carte de plusieurs nuits dont le journal n'en raconte aucune est incohérente")
+    void carte_multi_nuits_et_journal_etranger_incoherente(@org.junit.jupiter.api.io.TempDir Path racine)
+            throws java.io.IOException {
+        // L'exemption multi-nuits la déclarait cohérente : un journal d'août posé sur trois nuits de
+        // juillet n'était signalé que si sa série différait.
+        AnalyseCoherence c =
+                coherenceDeLaCarte(racine, List.of(LocalDate.of(2026, 8, 19), LocalDate.of(2026, 8, 22)), TROIS_NUITS);
+
+        assertThat(c.dateIncoherente()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#5669 : une carte de plusieurs nuits dont le journal ne raconte que la première reste cohérente")
+    void carte_multi_nuits_journal_circulaire_coherente(@org.junit.jupiter.api.io.TempDir Path racine)
+            throws java.io.IOException {
+        // Le cas de sd-multi-nuits : la carte a tourné trois nuits, le journal n'en garde qu'une.
+        AnalyseCoherence c = coherenceDeLaCarte(racine, List.of(LocalDate.of(2026, 7, 3)), TROIS_NUITS);
+
+        assertThat(c.dateIncoherente()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#5669 : une seule nuit racontée suffit, même la dernière de la carte")
+    void carte_multi_nuits_derniere_nuit_racontee_coherente(@org.junit.jupiter.api.io.TempDir Path racine)
+            throws java.io.IOException {
+        AnalyseCoherence c = coherenceDeLaCarte(racine, List.of(LocalDate.of(2026, 7, 5)), TROIS_NUITS);
+
+        assertThat(c.dateIncoherente()).isFalse();
+    }
+
     private static JournalParse journal(String serie, LocalDate date) {
         return new JournalParse(
                 serie, null, date, null, null, null, null, null, true, null, List.of(), List.of(), List.of());

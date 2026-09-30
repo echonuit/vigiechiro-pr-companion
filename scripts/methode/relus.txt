@@ -717,7 +717,7 @@ c332b3db4891  src/main/java/fr/univ_amu/iut/diagnostic/outils/CaptureDiagnostic.
 60aaa3804e32  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
 6c5ac41a2062  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/PlagesHoraires.java
 72e4bf119771  src/main/java/fr/univ_amu/iut/importation/di/ImportationModule.java
-05a1db94e2ba  src/main/java/fr/univ_amu/iut/importation/model/AnalyseCoherence.java
+2a1e08db282b  src/main/java/fr/univ_amu/iut/importation/model/AnalyseCoherence.java
 7bce3b47c375  src/main/java/fr/univ_amu/iut/importation/model/AnalyseMelange.java
 f9cc636c0690  src/main/java/fr/univ_amu/iut/importation/model/AnalyseurLogPR.java
 d525e43a76d0  src/main/java/fr/univ_amu/iut/importation/model/ApercuEcrasement.java
@@ -774,7 +774,7 @@ cb04d6bf7a47  src/main/java/fr/univ_amu/iut/importation/model/TransformationOrig
 115237ceb22c  src/main/java/fr/univ_amu/iut/importation/model/dao/AgregatImportDao.java
 c7deb470e8cb  src/main/java/fr/univ_amu/iut/importation/outils/CaptureCompteRenduParticipation.java
 54829c06769f  src/main/java/fr/univ_amu/iut/importation/outils/CaptureConfirmationsImport.java
-eb7541bab622  src/main/java/fr/univ_amu/iut/importation/outils/CaptureImport.java
+3a817a59be56  src/main/java/fr/univ_amu/iut/importation/outils/CaptureImport.java
 7804e6e65050  src/main/java/fr/univ_amu/iut/importation/outils/CaptureImportTransformes.java
 e4617e0562ad  src/main/java/fr/univ_amu/iut/importation/outils/DossierDeFixture.java
 f217191c6101  src/main/java/fr/univ_amu/iut/importation/view/ActionImportTransformes.java
@@ -1814,6 +1814,7 @@ fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
 be005305ed51  src/test/java/fr/univ_amu/iut/importation/viewmodel/ImportationViewModelTest.java
 2617c11d93d8  src/test/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModelTest.java
 3ca0577cb634  src/test/java/fr/univ_amu/iut/importation/viewmodel/NuitVMBadgeTest.java
+d5f0438815d0  src/test/java/fr/univ_amu/iut/importation/viewmodel/NuitsDeLaCarteTest.java
 06972cec9f47  src/test/java/fr/univ_amu/iut/importation/viewmodel/PreferenceConservationTest.java
 5856a70ce966  src/test/java/fr/univ_amu/iut/importation/viewmodel/RattachementImportViewModelTest.java
 25fecdcaf3fa  src/test/java/fr/univ_amu/iut/importation/viewmodel/SuiviLignesFichiersTest.java
