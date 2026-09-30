@@ -38,8 +38,10 @@ Chaque tâche commence par son test rouge (article A7).
       bouton et lit le bandeau (vu rouge sur la mutation de la règle) ; les deux états ont été rendus
       par `CaptureLot` **en local** et relus, sans ajouter d'aperçu permanent au manifeste, ce qui
       toucherait les inventaires de captures : à décider avec le porteur.
-- [ ] 3.3 La commande `exporter-lot` sur un passage « Dépôt en cours » : elle génère. Un cas dans son
-      banc.
+- [x] 3.3 La commande `exporter-lot` ne prépare que si le passage ne l'est pas encore, puis génère selon
+      `ServiceLot.archivesSeGenerent` (option a, décidée pendant la réalisation : elle préparait
+      toujours, donc refusait tout passage déjà préparé). Cas d'`ExporterLotTest` : « Dépôt en cours » génère
+      sans préparer ; « Vérifié » prépare puis génère. Rouge attendu sur le premier.
 
 ## 4. Avant la demande de fusion
 

@@ -30,6 +30,28 @@ déposée. À écrire. Le test de #3946 simulait la génération et ne pouvait p
 - **WHEN** onze archives sur quatorze sont en ligne et l'observateur régénère les archives
 - **THEN** une relance ne renvoie que les trois qui manquent
 
+### Requirement: La commande génère ce que l'écran génère
+
+La commande `exporter-lot` SHALL préparer le dépôt seulement s'il ne l'est pas encore, puis générer
+les archives, selon la même règle que l'écran : un passage « Prêt à déposer », « Dépôt en cours » ou
+« Déposé » voit ses archives générées sans nouvelle préparation (ADR 0014, parité).
+
+Décidé par Sébastien pendant la réalisation (option a) : la commande refusait jusque-là tout passage
+déjà préparé, parce qu'elle préparait avant de générer et que la préparation n'admet que « Vérifié ».
+
+*Vérifié par* : `ExporterLotTest`, la commande sur un service simulé, avec un passage « Vérifié » (préparé puis généré) et un
+passage « Dépôt en cours » (généré sans préparation). À écrire.
+
+#### Scenario: Régénérer un dépôt entamé en ligne de commande
+
+- **WHEN** le passage est « Dépôt en cours » et l'observateur lance `exporter-lot`
+- **THEN** les archives sont générées, et la commande ne tente pas de préparer le dépôt à nouveau
+
+#### Scenario: Un passage vérifié se prépare puis se génère
+
+- **WHEN** le passage est « Vérifié » et l'observateur lance `exporter-lot`
+- **THEN** le dépôt est préparé, puis les archives sont générées, comme aujourd'hui
+
 ### Requirement: Pas de génération pendant un téléversement
 
 Le système SHALL refuser la génération des archives d'un passage dont un téléversement est **en train

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
+import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.Lot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import java.io.PrintWriter;
@@ -15,7 +16,10 @@ import picocli.CommandLine.Spec;
 
 /// `exporter-lot` (P4) : prépare le **dépôt** d'un passage vérifié (récapitulatif + archives ZIP
 /// de dépôt Tadarida), via [ServiceLot].
-@Command(name = "exporter-lot", description = "Prépare le dépôt d'un passage vérifié (récapitulatif + archives ZIP).")
+@Command(
+        name = "exporter-lot",
+        description =
+                "Prépare le dépôt d'un passage vérifié, ou régénère les archives ZIP d'un dépôt déjà préparé ou entamé.")
 public final class ExporterLot implements Callable<Integer> {
 
     @Option(
@@ -39,12 +43,18 @@ public final class ExporterLot implements Callable<Integer> {
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
 
-        Lot lot = serviceLot.preparerLot(passage);
-        sortie.println("Dépôt prêt pour le passage #" + lot.idPassage() + ".");
-        sortie.println("  Séquences : " + lot.nombreSequences());
-        sortie.println("  Volume    : "
-                + (lot.volumeSequencesOctets() == null ? "-" : lot.volumeSequencesOctets() + " octets"));
-        sortie.println("  Dossier   : " + lot.cheminDossier());
+        // Préparer seulement ce qui ne l'est pas (#5599) : la préparation n'admet que « Vérifié », et la
+        // commande refusait donc tout passage déjà préparé, dont un dépôt entamé, que l'écran régénère.
+        EtatLot etat = serviceLot.consulterLot(passage);
+        if (ServiceLot.archivesSeGenerent(etat.statut())) {
+            sortie.println("Dépôt déjà préparé pour le passage #" + passage + " ("
+                    + etat.statut().libelle() + ").");
+            decrire(sortie, etat.nombreSequences(), etat.volumeSequencesOctets(), etat.cheminDossier());
+        } else {
+            Lot lot = serviceLot.preparerLot(passage);
+            sortie.println("Dépôt prêt pour le passage #" + lot.idPassage() + ".");
+            decrire(sortie, lot.nombreSequences(), lot.volumeSequencesOctets(), lot.cheminDossier());
+        }
 
         List<ArchiveDepot> archives = serviceLot.genererArchivesDepot(passage);
         sortie.println("  Archives de dépôt (" + archives.size() + ") :");
@@ -53,5 +63,11 @@ public final class ExporterLot implements Callable<Integer> {
                     + archive.tailleOctets() + " octets)");
         }
         return 0;
+    }
+
+    private static void decrire(PrintWriter sortie, int sequences, Long volumeOctets, String dossier) {
+        sortie.println("  Séquences : " + sequences);
+        sortie.println("  Volume    : " + (volumeOctets == null ? "-" : volumeOctets + " octets"));
+        sortie.println("  Dossier   : " + dossier);
     }
 }
