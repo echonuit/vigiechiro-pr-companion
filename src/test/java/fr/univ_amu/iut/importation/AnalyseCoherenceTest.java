@@ -152,7 +152,7 @@ class AnalyseCoherenceTest {
                 racine, List.of(LocalDate.of(2026, 8, 19), LocalDate.of(2026, 8, 22)), List.of("20260822"));
 
         assertThat(c.dateIncoherente())
-                .as("« vérifiez qu'ils viennent bien de la même nuit » : ils en viennent")
+                .as("« vérifiez qu'il vient bien de cette carte » : il en vient")
                 .isFalse();
     }
 

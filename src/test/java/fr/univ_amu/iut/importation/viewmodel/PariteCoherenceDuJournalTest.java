@@ -80,6 +80,15 @@ class PariteCoherenceDuJournalTest {
     }
 
     @Test
+    @DisplayName("#5691 : les deux disent le même geste, vérifier que le journal vient de cette carte")
+    void les_deux_disent_le_meme_geste() {
+        // L'écran disait « de la même nuit », qui ne veut rien dire sur une carte de plusieurs nuits
+        // (#5669) ; le terminal disait déjà « de cette carte ».
+        assertThat(Importer.journalIncoherentLisible(DATE_ETRANGERE)).contains("vient bien de cette carte");
+        assertThat(ecran(DATE_ETRANGERE)).contains("vient bien de cette carte").doesNotContain("même nuit");
+    }
+
+    @Test
     @DisplayName("#5670 : les deux nomment les nuits que le journal raconte, et celles de la carte")
     void les_deux_nomment_les_nuits() {
         for (String nuit : List.of("19/08/2026", "22/08/2026", "24/08/2026")) {
