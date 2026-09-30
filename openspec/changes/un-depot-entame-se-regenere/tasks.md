@@ -28,7 +28,7 @@ Chaque tâche commence par son test rouge (article A7).
 
 ## 3. Les deux surfaces et ce qui en dépend
 
-- [ ] 3.1 Relever les autres gardes du lot qui testent `PRET_A_DEPOSER` sans `DEPOT_EN_COURS`
+- [x] 3.1 Relever les autres gardes du lot qui testent `PRET_A_DEPOSER` sans `DEPOT_EN_COURS`
       (`ActionsLotPossibles`, `TeleversementGroupe`, `PreparationGroupee`, `ServiceRattachement`,
       `FormatsLot`…), une par une, et consigner dans #5599 ce qu'on en fait. Toute correction qui
       déborde la génération se pose comme question au lieu de s'absorber.

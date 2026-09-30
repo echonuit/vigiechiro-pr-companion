@@ -2,6 +2,7 @@ package fr.univ_amu.iut.lot.viewmodel;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.lot.model.EtatLot;
+import fr.univ_amu.iut.lot.model.ServiceLot;
 
 /// Actions de dépôt possibles pour un état de lot, dérivées du **statut** ET de la **cohérence** (recalculée
 /// à chaque chargement). Extrait du [LotViewModel] pour y concentrer la règle « un contrôle bloquant rend le
@@ -28,10 +29,7 @@ record ActionsLotPossibles(boolean preparer, boolean deposer, boolean genererArc
         boolean preparer = statut == StatutWorkflow.VERIFIE || (!coherent && !depose);
         boolean deposer =
                 coherent && (statut == StatutWorkflow.PRET_A_DEPOSER || statut == StatutWorkflow.DEPOT_EN_COURS);
-        boolean genererArchives = coherent
-                && (statut == StatutWorkflow.PRET_A_DEPOSER
-                        || statut == StatutWorkflow.DEPOT_EN_COURS
-                        || statut == StatutWorkflow.DEPOSE);
+        boolean genererArchives = coherent && ServiceLot.archivesSeGenerent(statut);
         return new ActionsLotPossibles(preparer, deposer, genererArchives, depose);
     }
 }

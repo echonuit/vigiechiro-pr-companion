@@ -52,6 +52,14 @@ public class ServiceLot {
     private static final Set<StatutWorkflow> STATUTS_QUI_SE_GENERENT =
             EnumSet.of(StatutWorkflow.PRET_A_DEPOSER, StatutWorkflow.DEPOT_EN_COURS, StatutWorkflow.DEPOSE);
 
+    /// Les archives de ce statut se génèrent-elles ? La **seule** écriture de la règle (#5599) : le
+    /// service, le bouton de l'écran et le garde-fou d'espace disque la lisent tous trois. Écrite trois
+    /// fois, elle avait divergé : l'écran offrait la génération d'un dépôt entamé, que le service
+    /// refusait.
+    public static boolean archivesSeGenerent(StatutWorkflow statut) {
+        return STATUTS_QUI_SE_GENERENT.contains(statut);
+    }
+
     /// Nom du paramètre `idPassage` pour les messages `requireNonNull` (factorisé, évite le littéral dupliqué).
     private static final String PARAM_ID_PASSAGE = "idPassage";
 
@@ -314,7 +322,7 @@ public class ServiceLot {
             throw new RegleMetierException("Cette nuit vient de Vigie-Chiro, où elle est déjà déposée :"
                     + " il n'y a pas d'archives de dépôt à générer.");
         }
-        if (!STATUTS_QUI_SE_GENERENT.contains(passage.statutWorkflow())) {
+        if (!archivesSeGenerent(passage.statutWorkflow())) {
             throw new RegleMetierException("Les archives de dépôt ne peuvent être générées qu'une fois le dépôt"
                     + " préparé (statut « Prêt à déposer ») : préparez-le d'abord.");
         }
