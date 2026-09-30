@@ -27,4 +27,4 @@ une demande de fusion chacun. Chaque tâche commence par son test rouge (article
       lignes brutes du journal, que la forme à trois arguments ne reçoit pas.
 - [x] 2.2 `AnalyseCoherence` reçoit les nuits des cycles du journal, repli sur `dateDebut` sans cycle.
       Vert : 2.1, le contrôle négatif et les cas existants de `AnalyseCoherenceTest`.
-- [ ] 2.3 Mutation, PIT sur `AnalyseCoherence`, batterie, PR.
+- [x] 2.3 Mutation, PIT sur `AnalyseCoherence`, batterie, PR.
