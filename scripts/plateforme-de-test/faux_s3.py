@@ -79,10 +79,26 @@ def gestionnaire(depot: Depot) -> type[http.server.BaseHTTPRequestHandler]:
             if corps and self.command != "HEAD":
                 self.wfile.write(corps)
 
+        def _draine_les_morceaux(self) -> None:
+            while True:
+                taille = int(self.rfile.readline().split(b";")[0].strip() or b"0", 16)
+                if taille == 0:
+                    while self.rfile.readline() not in (b"\r\n", b"\n", b""):
+                        pass
+                    return
+                self.rfile.read(taille + 2)
+
         def do_PUT(self) -> None:
             longueur = self.headers.get("Content-Length")
             if longueur is None:
-                self._repond(411, b"Content-Length requis\n")
+                # Le corps en morceaux se LIT avant le refus, puis la connexion se ferme. Refuser sans
+                # le lire laissait ses morceaux dans le flux : le serveur les prenait pour la requete
+                # suivante, fermait, et le client qui ecrivait encore recevait un tuyau casse. Vert sur
+                # un poste, rouge sur le runner de CI (#5674).
+                if "chunked" in (self.headers.get("Transfer-Encoding") or "").lower():
+                    self._draine_les_morceaux()
+                self.close_connection = True
+                self._repond(411, b"Content-Length requis\n", {"Connection": "close"})
                 return
             corps = self.rfile.read(int(longueur))
             etag = depot.ecrit(self.path, corps, self.headers.get("Content-Type"))
