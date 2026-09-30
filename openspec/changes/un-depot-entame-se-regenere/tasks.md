@@ -46,5 +46,5 @@ Chaque tâche commence par son test rouge (article A7).
 ## 4. Avant la demande de fusion
 
 - [x] 4.1 PIT sur `TeleversementsEnCours` et sur la garde de `ServiceLot`, survivants lus un par un.
-- [ ] 4.2 La batterie locale sans refus, `DocumentationAJourTest` vert, et `docs/ecrans/lot.md` relue :
+- [x] 4.2 La batterie locale sans refus, `DocumentationAJourTest` vert, et `docs/ecrans/lot.md` relue :
       elle doit dire qu'on peut régénérer pendant un dépôt entamé, et pas pendant un téléversement.
