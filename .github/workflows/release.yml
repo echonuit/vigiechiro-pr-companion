@@ -597,7 +597,7 @@ jobs:
   # Les clips servent à jouer la recette d'UNE version. Tournés à date fixe, ils
   # montreraient `main` à cette heure-là - un état qui n'existe nulle part ailleurs -
   # et « la veille » suppose que rien ne fusionnera d'ici 6 h : le 2026-08-21, douze
-  # commits ont fusionné dans la journée. À chaque commit, ce serait 5 min et 58
+  # commits ont fusionné dans la journée. À chaque commit, ce serait 36 min et 58
   # fichiers réécrits par fusion, sur une pré-version ROULANTE : on effacerait sans
   # cesse des clips que personne n'a eu le temps de regarder.
   #
@@ -607,8 +607,21 @@ jobs:
   #
   # ## Ce que ça coûte
   #
-  # Cinq minutes, mesurées sur le tournage complet du 2026-08-20 (58 clips). Le job
+  # Trente-six minutes, médiane de sept tournages du train entre le 2026-08-23 et le
+  # 2026-09-30 : 20,7 min au plus court, 50,1 au plus long, écart-type 9,2. Le job
   # ne dépend pas de `flatpak` : les deux partent ensemble après `publish`.
+  #
+  # Cette ligne a annoncé « cinq minutes, mesurées le 2026-08-20 » jusqu'au 2026-09-30,
+  # soit un facteur SEPT. #4842 en donne la cause : les bancs du palier de #4447
+  # importent une nuit entière avant leur geste, quand le nombre de clips n'a bougé que
+  # de 12 %. Le porteur a tranché de payer ce coût plutôt que de le réduire (#5627).
+  #
+  # Et l'instrument de dérive ne rattrapera pas cette ligne, parce qu'il ne voit pas ce
+  # coût : `mesure_duree_portail.py` lit les exécutions du FICHIER `recette-filmee.yml`,
+  # or un `workflow_call` n'en crée aucune - il tourne comme des jobs dans l'exécution de
+  # l'appelant. Les 24 qu'il lit sont toutes des `workflow_dispatch`, c'est-à-dire des
+  # tournages manuels d'UNE classe. Ses +196 % mesurent donc autre chose que cette
+  # ligne-ci, et le chiffre ci-dessus se remesure à la main, sur les jobs du train.
   #
   # La condition NOMME l'état attendu (ADR 4079), comme celle du Flatpak : sans
   # `!cancelled()` ni `needs.publish.result`, le « sauté » de `contournement-declare`
@@ -647,8 +660,13 @@ jobs:
   #
   # ## Ce que ça coûte
   #
-  # Cinq minutes quarante, mesurées sur le tournage complet des 43 cas. Les deux bancs partent
+  # Neuf minutes trente-six, médiane de six tournages du train entre le 2026-08-23 et le
+  # 2026-09-30 : 5,8 min au plus court, 10,6 au plus long. Les deux bancs partent
   # ensemble après `publish` et ne s'attendent pas.
+  #
+  # Cette ligne a annoncé « cinq minutes quarante » jusqu'au 2026-09-30, soit un facteur
+  # 1,7. Corrigée du même geste que sa voisine et pour la même raison : une annonce fausse
+  # à quarante lignes d'une annonce à jour se lit comme à jour (#5627).
   clips-de-recette-java:
     needs: [release, publish]
     if: >-

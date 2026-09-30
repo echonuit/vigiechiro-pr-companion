@@ -118,8 +118,8 @@ avertissement qu'on ne peut pas fonder s'apprend à ignorer.
 
 **Ce que la mesure a trouvé en chemin, et qui n'est pas de la documentation.** Trois des dix
 mesurables dépassent le seuil de 20 % **en ce moment**, et rien ne le dit puisque rien ne les joue :
-`release.yml` à **+597 %** (0,9 puis 6,4 min), `recette-filmee.yml` à **+196 %** (6,2 puis 18,3 min,
-ce qui confirme la mesure de #4842), `mutation-ihm.yml` à **+24 %** (51,9 puis 64,5 min). Consigné en
+`release.yml` à **+597 %** (0,9 puis 6,4 min), `recette-filmee.yml` à **+196 %** (6,2 puis 18,3 min - ces
+exécutions-là sont des tournages MANUELS et non le train, voir #5627), `mutation-ihm.yml` à **+24 %** (51,9 puis 64,5 min). Consigné en
 **#5615** plutôt que traité ici, chaque dérive demandant une décision distincte.
 
 **Et les deux derniers rendent un message faux.** Sur `titre-pr.yml` et `corps-pr.yml`, l'instrument
