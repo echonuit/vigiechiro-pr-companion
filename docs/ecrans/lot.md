@@ -128,6 +128,11 @@ La table garde le détail : la cause de chaque échec y est lisible, archive par
     et celles qui viennent d'être régénérées passeront cette fois. Les archives déjà en ligne, elles,
     ne repartent pas.
 
+    **« Générer les archives de dépôt » reste disponible pendant un dépôt entamé**, pour cette raison
+    même : c'est le geste qu'un contenu refusé demande. Il n'est refusé que **pendant** un
+    téléversement, parce que celui-ci produit lui-même ses archives dans le même dossier : le message
+    vous dit alors d'attendre la fin du téléversement ou de l'annuler.
+
 ### Ce que le dépôt vous rend à la fin
 
 Quand le téléversement se termine, un **compte rendu** dit ce qui est en ligne, en proportions.

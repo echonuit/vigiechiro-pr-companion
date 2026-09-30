@@ -16,9 +16,11 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -45,6 +47,19 @@ import java.util.function.Supplier;
 /// dépôt manuel des archives reste possible en repli.
 public class ServiceLot {
 
+    /// Les statuts dont les archives se génèrent : un lot préparé, un dépôt entamé (#5599), un passage
+    /// déposé. Le dépôt entamé garde ses identifiants d'archives, donc sa progression.
+    private static final Set<StatutWorkflow> STATUTS_QUI_SE_GENERENT =
+            EnumSet.of(StatutWorkflow.PRET_A_DEPOSER, StatutWorkflow.DEPOT_EN_COURS, StatutWorkflow.DEPOSE);
+
+    /// Les archives de ce statut se génèrent-elles ? La **seule** écriture de la règle (#5599) : le
+    /// service, le bouton de l'écran et le garde-fou d'espace disque la lisent tous trois. Écrite trois
+    /// fois, elle avait divergé : l'écran offrait la génération d'un dépôt entamé, que le service
+    /// refusait.
+    public static boolean archivesSeGenerent(StatutWorkflow statut) {
+        return STATUTS_QUI_SE_GENERENT.contains(statut);
+    }
+
     /// Nom du paramètre `idPassage` pour les messages `requireNonNull` (factorisé, évite le littéral dupliqué).
     private static final String PARAM_ID_PASSAGE = "idPassage";
 
@@ -65,9 +80,15 @@ public class ServiceLot {
     private final DepotUniteDao depotUnites;
     private final DepotPlanDao depotPlans;
 
+    /// Les téléversements en cours, partagés avec le moteur de dépôt : la génération ne doit pas écrire
+    /// dans le dossier où un téléversement produit ses archives (#5599).
+    private final TeleversementsEnCours televersements;
+
     /// Politique ZIP / WAV du depot, extraite pour la cohesion (#1994) : voir [ChoixSourceDepot].
     private final ChoixSourceDepot choixSource;
 
+    /// Sans registre partagé : ce service consulte un registre à lui, où aucun téléversement ne
+    /// s'inscrit. C'est le cas des bancs ; l'application passe le registre partagé avec le dépôt.
     public ServiceLot(
             PassageDao passageDao,
             SessionDao sessionDao,
@@ -79,6 +100,33 @@ public class ServiceLot {
             Supplier<ModeDepot> modeDepot,
             DepotUniteDao depotUnites,
             DepotPlanDao depotPlans) {
+        this(
+                passageDao,
+                sessionDao,
+                sequenceDao,
+                verification,
+                moteurWorkflow,
+                horloge,
+                compacteur,
+                modeDepot,
+                depotUnites,
+                depotPlans,
+                new TeleversementsEnCours());
+    }
+
+    public ServiceLot(
+            PassageDao passageDao,
+            SessionDao sessionDao,
+            SequenceDao sequenceDao,
+            VerificationCoherence verification,
+            MoteurWorkflowPassage moteurWorkflow,
+            Horloge horloge,
+            Supplier<CompacteurDepot> compacteur,
+            Supplier<ModeDepot> modeDepot,
+            DepotUniteDao depotUnites,
+            DepotPlanDao depotPlans,
+            TeleversementsEnCours televersements) {
+        this.televersements = Objects.requireNonNull(televersements, "televersements");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
@@ -256,17 +304,25 @@ public class ServiceLot {
         Objects.requireNonNull(progres, "progres");
         Objects.requireNonNull(suivi, "suivi");
         Passage passage = chargerPassage(idPassage);
+        // AVANT la garde de statut : pendant un téléversement le passage est justement « Dépôt en
+        // cours », et c'est le téléversement qui dit vrai. Sa source produit ses archives dans le même
+        // dossier `depot/` ; générer maintenant y écrirait les mêmes fichiers (#5599).
+        if (televersements.enCours(idPassage)) {
+            throw new RegleMetierException("Un téléversement de ce passage est en cours : attendez qu'il se"
+                    + " termine, ou annulez-le, avant de régénérer les archives.");
+        }
         // Le lot doit avoir été **préparé** (preparerLot a déjà validé R14 + cohérence et posé le statut).
-        // On n'archive donc que des passages Prêt à déposer ou déjà Déposé : l'API ne court-circuite pas
-        // ces contrôles, même si l'IHM masque déjà le bouton avant cet état.
+        // On n'archive donc que des passages préparés : l'API ne court-circuite pas ces contrôles, même si
+        // l'IHM masque déjà le bouton avant cet état. Un dépôt ENTAMÉ l'est aussi (#5599) : c'est l'état où
+        // le compte rendu conseille de régénérer après un contenu refusé, et « préparez-le d'abord » y
+        // était un conseil impossible, l'écran affichant le jalon « Prêt à déposer ».
         if (passage.statutWorkflow() == StatutWorkflow.RECUPERE) {
             // Sans ce cas, le refus disait « préparez-le d'abord » (#2581) : un conseil impossible à
             // suivre, puisque la préparation refuse - à raison - une nuit déjà sur la plateforme.
             throw new RegleMetierException("Cette nuit vient de Vigie-Chiro, où elle est déjà déposée :"
                     + " il n'y a pas d'archives de dépôt à générer.");
         }
-        if (passage.statutWorkflow() != StatutWorkflow.PRET_A_DEPOSER
-                && passage.statutWorkflow() != StatutWorkflow.DEPOSE) {
+        if (!archivesSeGenerent(passage.statutWorkflow())) {
             throw new RegleMetierException("Les archives de dépôt ne peuvent être générées qu'une fois le dépôt"
                     + " préparé (statut « Prêt à déposer ») : préparez-le d'abord.");
         }

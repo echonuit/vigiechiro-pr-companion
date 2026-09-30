@@ -58,6 +58,18 @@ class AnticipationEspaceDisqueTest {
     }
 
     @Test
+    @DisplayName("#5599 : un dépôt entamé se régénère, donc le manque de place s'y annonce aussi")
+    void depot_entame_annonce_le_manque_de_place() {
+        disqueEtBesoin(4 * GIGA - 1, 4 * GIGA);
+
+        anticipation.majDepuis(etat(StatutWorkflow.DEPOT_EN_COURS, GIGA));
+
+        assertThat(anticipation.suffisantProperty().get())
+                .as("la génération y est admise depuis #5599 : elle ne doit pas partir sans place")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("Espace disponible nul : disque illisible, on ne bloque pas plutôt que de bloquer à tort")
     void disque_illisible_ne_bloque_pas() {
         // 0 n'est pas « le disque est plein » mais « on n'a pas su lire » : bloquer sur cette valeur

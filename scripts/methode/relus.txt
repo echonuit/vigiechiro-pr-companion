@@ -816,7 +816,7 @@ e5b954ad709d  src/main/java/fr/univ_amu/iut/importation/viewmodel/PreferenceCons
 88ce55fd990b  src/main/java/fr/univ_amu/iut/importation/viewmodel/SourceDesignee.java
 0723a9f6b364  src/main/java/fr/univ_amu/iut/importation/viewmodel/SuiviLignesFichiers.java
 82093f2a3058  src/main/java/fr/univ_amu/iut/lot/di/DepotVigieChiroModule.java
-b7f6b95451df  src/main/java/fr/univ_amu/iut/lot/di/LotModule.java
+9f55f23e9d8b  src/main/java/fr/univ_amu/iut/lot/di/LotModule.java
 4abf3fce4b8d  src/main/java/fr/univ_amu/iut/lot/model/ArchiveDepot.java
 c6a9df8dba67  src/main/java/fr/univ_amu/iut/lot/model/ArchivePlanifiee.java
 6e4db13d669d  src/main/java/fr/univ_amu/iut/lot/model/BilanDepot.java
@@ -827,7 +827,7 @@ d4116335de13  src/main/java/fr/univ_amu/iut/lot/model/CompacteurDepot.java
 2f7519ebd64e  src/main/java/fr/univ_amu/iut/lot/model/ControleCoherence.java
 0f05eb591837  src/main/java/fr/univ_amu/iut/lot/model/DepotPlan.java
 0ddd2da58bd7  src/main/java/fr/univ_amu/iut/lot/model/DepotUnite.java
-6be21cd91dc1  src/main/java/fr/univ_amu/iut/lot/model/DepotVigieChiro.java
+030a36c1272d  src/main/java/fr/univ_amu/iut/lot/model/DepotVigieChiro.java
 b58d86c051cc  src/main/java/fr/univ_amu/iut/lot/model/EchecUnite.java
 f474078974d5  src/main/java/fr/univ_amu/iut/lot/model/EmpreinteLot.java
 785b9a3ba8ad  src/main/java/fr/univ_amu/iut/lot/model/EtatLot.java
@@ -839,7 +839,7 @@ f474078974d5  src/main/java/fr/univ_amu/iut/lot/model/EmpreinteLot.java
 c1e446585a9d  src/main/java/fr/univ_amu/iut/lot/model/RearmementDepotUnites.java
 f6ac91375e04  src/main/java/fr/univ_amu/iut/lot/model/ReconciliationDepot.java
 aa4d07317db3  src/main/java/fr/univ_amu/iut/lot/model/RepertoireDepot.java
-e21a98db1a9f  src/main/java/fr/univ_amu/iut/lot/model/ServiceLot.java
+19453abb089c  src/main/java/fr/univ_amu/iut/lot/model/ServiceLot.java
 19603165f2e6  src/main/java/fr/univ_amu/iut/lot/model/SourceArchivesRegenerables.java
 d91d0e80b23a  src/main/java/fr/univ_amu/iut/lot/model/SourceDepot.java
 f01c64b74a73  src/main/java/fr/univ_amu/iut/lot/model/StatutControle.java
@@ -847,6 +847,7 @@ a4446efbfef4  src/main/java/fr/univ_amu/iut/lot/model/StatutDepotUnite.java
 5b0dddef0198  src/main/java/fr/univ_amu/iut/lot/model/SuiviArchives.java
 7dc1f6bfe8e5  src/main/java/fr/univ_amu/iut/lot/model/SuiviDepot.java
 748c23785ef4  src/main/java/fr/univ_amu/iut/lot/model/TeleversementGroupe.java
+e020c8fc5120  src/main/java/fr/univ_amu/iut/lot/model/TeleversementsEnCours.java
 e9bed929e696  src/main/java/fr/univ_amu/iut/lot/model/TeleverseurArchive.java
 1d2e16a9b7cb  src/main/java/fr/univ_amu/iut/lot/model/TypeDepotUnite.java
 49210aed5340  src/main/java/fr/univ_amu/iut/lot/model/VerificationCoherence.java
@@ -1400,6 +1401,7 @@ b6ca95df025b  src/test/java/fr/univ_amu/iut/cli/RequetesDeListerSitesTest.java
 d7b4ada3e18e  src/test/java/fr/univ_amu/iut/cli/commande/DiagnostiquerTest.java
 0598351a2e52  src/test/java/fr/univ_amu/iut/cli/commande/EtatTraitementVigieChiroInstantTest.java
 4a1bfa519940  src/test/java/fr/univ_amu/iut/cli/commande/EtatTraitementVigieChiroTest.java
+f39aade84c87  src/test/java/fr/univ_amu/iut/cli/commande/ExporterLotTest.java
 911a6ddefb19  src/test/java/fr/univ_amu/iut/cli/commande/GardeJeuExistantTest.java
 9a44e7418863  src/test/java/fr/univ_amu/iut/cli/commande/ImporterRenduBilanTest.java
 66992066684a  src/test/java/fr/univ_amu/iut/cli/commande/ImporterTadaridaTest.java
@@ -1822,6 +1824,7 @@ fa53eeacc796  src/test/java/fr/univ_amu/iut/lot/CompacteurDepotTest.java
 2a3bfd660174  src/test/java/fr/univ_amu/iut/lot/LancementCalculGroupeTest.java
 9cd611a22679  src/test/java/fr/univ_amu/iut/lot/LotModuleTest.java
 35665db495dd  src/test/java/fr/univ_amu/iut/lot/PreparationGroupeeTest.java
+51d900e039b6  src/test/java/fr/univ_amu/iut/lot/RegenerationPendantUnDepotTest.java
 9f96a1ede18a  src/test/java/fr/univ_amu/iut/lot/ServiceLotMockTest.java
 c297d804ea4c  src/test/java/fr/univ_amu/iut/lot/ServiceLotTest.java
 cf6b5fa299a2  src/test/java/fr/univ_amu/iut/lot/SeuilDisqueDepotTest.java
@@ -1834,6 +1837,7 @@ e6c7d6f41bb3  src/test/java/fr/univ_amu/iut/lot/di/PlafondArchiveTest.java
 ae11ec951a61  src/test/java/fr/univ_amu/iut/lot/model/CauseRefusTest.java
 27e9acc288cc  src/test/java/fr/univ_amu/iut/lot/model/ChoixSourceDepotTest.java
 ae8befae454c  src/test/java/fr/univ_amu/iut/lot/model/EchecUniteTest.java
+96b01547377d  src/test/java/fr/univ_amu/iut/lot/model/TeleversementsEnCoursTest.java
 e5e661641791  src/test/java/fr/univ_amu/iut/lot/model/TeleverseurArchiveTest.java
 ff8a444634fb  src/test/java/fr/univ_amu/iut/lot/view/LotDepotConnecteViewTest.java
 d290c4438c53  src/test/java/fr/univ_amu/iut/lot/view/LotIdentiteStatutViewTest.java

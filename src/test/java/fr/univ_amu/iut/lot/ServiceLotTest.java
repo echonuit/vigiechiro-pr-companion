@@ -49,6 +49,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 /// Tests du service [ServiceLot] de bout en bout sur une base SQLite jetable (`@TempDir` +
 /// [MigrationSchema]), avec le vrai moteur [VerificationCoherence] et une [HorlogeFigee]
@@ -228,6 +230,44 @@ class ServiceLotTest {
         assertThat(archives.get(0).chemin())
                 .exists()
                 .hasParent(dossier.resolve(PREFIXE.nomDossierSession()).resolve("depot"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(StatutWorkflow.class)
+    @DisplayName("#5599 : « préparez-le d'abord » ne se dit qu'à un passage non préparé")
+    void la_garde_de_generation_statut_par_statut(StatutWorkflow statut) throws IOException {
+        Passage passage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("040962")
+                .nomSite("Étang")
+                .point("A1")
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .statut(statut)
+                .verdict(Verdict.OK)
+                .semerPassage()
+                .lePassage();
+        creerSessionCoherente(passage.id());
+        Path transformes = Files.createDirectories(
+                dossier.resolve(PREFIXE.nomDossierSession()).resolve("transformes"));
+        for (int i = 0; i < 2; i++) {
+            Files.write(transformes.resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, i)), new byte[1024]);
+        }
+
+        switch (statut) {
+            case PRET_A_DEPOSER, DEPOT_EN_COURS, DEPOSE ->
+                assertThat(service.genererArchivesDepot(passage.id()))
+                        .as("un passage %s est préparé : ses archives se génèrent", statut)
+                        .isNotEmpty();
+            case RECUPERE ->
+                assertThatThrownBy(() -> service.genererArchivesDepot(passage.id()))
+                        .isInstanceOf(RegleMetierException.class)
+                        .hasMessageNotContaining("préparez");
+            default ->
+                assertThatThrownBy(() -> service.genererArchivesDepot(passage.id()))
+                        .isInstanceOf(RegleMetierException.class)
+                        .hasMessageContaining("préparez-le d'abord");
+        }
     }
 
     @Test

@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.lot.di.LotModule;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.TeleversementsEnCours;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
 import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
@@ -83,5 +84,10 @@ class LotModuleTest {
 
         assertThat(injecteur.getInstance(VerificationCoherence.class)).isNotNull();
         assertThat(injecteur.getInstance(ServiceLot.class)).isNotNull();
+        // #5599 : le moteur de dépôt s'inscrit dans ce registre et le service de lot le consulte. Deux
+        // instances rendraient la garde inerte en production, sans qu'aucun banc unitaire ne rougisse.
+        assertThat(injecteur.getInstance(TeleversementsEnCours.class))
+                .as("un registre par consommateur : la génération ne verrait jamais un téléversement")
+                .isSameAs(injecteur.getInstance(TeleversementsEnCours.class));
     }
 }

@@ -1,6 +1,5 @@
 package fr.univ_amu.iut.lot.viewmodel;
 
-import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import java.util.Objects;
@@ -60,8 +59,7 @@ final class AnticipationEspaceDisque {
     /// Recalcule depuis l'état chargé. Indéterminé (génération non pertinente, volume ou chemin inconnu,
     /// disque illisible) → on ne bloque pas.
     void majDepuis(EtatLot etat) {
-        boolean generationPertinente =
-                etat.statut() == StatutWorkflow.PRET_A_DEPOSER || etat.statut() == StatutWorkflow.DEPOSE;
+        boolean generationPertinente = ServiceLot.archivesSeGenerent(etat.statut());
         Long volume = etat.volumeSequencesOctets();
         long disponible = service.espaceDisqueDisponible(etat.cheminDossier());
         long requis = volume == null ? 0L : service.estimationTailleDepotOctets(volume);

@@ -589,6 +589,33 @@ class LotVueIntegrationTest {
     }
 
     @Test
+    @DisplayName(
+            "#5599 : sur un dépôt entamé, « Générer » est offert, et un refus dit sa vraie raison sans figer l'écran")
+    void generer_sur_un_depot_entame(FxRobot robot) {
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.DEPOT_EN_COURS, "/ws/session-42", 2, 8192L, List.of(), null));
+        Button generer = robot.lookup("#btnGenererArchives").queryAs(Button.class);
+        assertThat(generer.isDisabled())
+                .as("le jalon affiché est « Prêt à déposer » : on peut régénérer")
+                .isFalse();
+        when(service.genererArchivesDepot(anyLong(), any(), any()))
+                .thenThrow(new fr.univ_amu.iut.commun.model.RegleMetierException(
+                        "Un téléversement de ce passage est en cours : attendez qu'il se termine, ou annulez-le,"
+                                + " avant de régénérer les archives."));
+
+        robot.clickOn("#btnGenererArchives");
+
+        HBox bandeau = robot.lookup("#bandeauRetour").queryAs(HBox.class);
+        String texte = robot.from(bandeau).lookup(".label").queryAllAs(Label.class).stream()
+                .map(Label::getText)
+                .reduce("", String::concat);
+        assertThat(bandeau.isVisible()).isTrue();
+        assertThat(texte).contains("téléversement").doesNotContain("préparez");
+        assertThat(generer.isDisabled())
+                .as("Samuel a dû redémarrer : le bouton doit rester disponible pour réessayer")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("#259 : pendant la génération, « Ouvrir le dossier » et « Marquer déposé » sont désactivés")
     void ouvrir_et_deposer_desactives_pendant_generation(FxRobot robot) {
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
