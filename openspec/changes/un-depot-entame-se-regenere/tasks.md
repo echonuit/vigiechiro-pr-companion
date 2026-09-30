@@ -32,9 +32,12 @@ Chaque tâche commence par son test rouge (article A7).
       (`ActionsLotPossibles`, `TeleversementGroupe`, `PreparationGroupee`, `ServiceRattachement`,
       `FormatsLot`…), une par une, et consigner dans #5599 ce qu'on en fait. Toute correction qui
       déborde la génération se pose comme question au lieu de s'absorber.
-- [ ] 3.2 L'écran : le bouton « Générer les archives » est offert en « Dépôt en cours » hors
+- [x] 3.2 L'écran : le bouton « Générer les archives » est offert en « Dépôt en cours » hors
       téléversement, et le refus pendant un téléversement s'affiche sans redémarrage. Un test de vue ;
-      l'aperçu de l'écran dans cet état, régénéré et relu.
+      l'aperçu de l'écran dans cet état, régénéré et relu. **Tenu ainsi** : le test de vue clique le
+      bouton et lit le bandeau (vu rouge sur la mutation de la règle) ; les deux états ont été rendus
+      par `CaptureLot` **en local** et relus, sans ajouter d'aperçu permanent au manifeste, ce qui
+      toucherait les inventaires de captures : à décider avec le porteur.
 - [ ] 3.3 La commande `exporter-lot` sur un passage « Dépôt en cours » : elle génère. Un cas dans son
       banc.
 
