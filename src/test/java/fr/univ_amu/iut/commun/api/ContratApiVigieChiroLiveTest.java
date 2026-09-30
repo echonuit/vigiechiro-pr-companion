@@ -62,7 +62,7 @@ class ContratApiVigieChiroLiveTest {
         assumeTrue(
                 token != null && !token.isBlank(),
                 "Suite de contrat API ignorée : fournir -Dvigiechiro.token=… (profil -Papi-live).");
-        baseUrl = System.getProperty("vigiechiro.baseUrl", "https://vigiechiro.herokuapp.com/api/v1");
+        baseUrl = System.getProperty("vigiechiro.url", "https://vigiechiro.herokuapp.com/api/v1");
         RestAssured.baseURI = baseUrl;
     }
 
