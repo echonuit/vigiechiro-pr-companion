@@ -26,10 +26,10 @@ Chaque tâche commence par son test rouge (article A7).
 
 ## 3. Le réarmement
 
-- [ ] 3.1 Étendre `DepotUniteDaoTest` : une unité refusée pour `STOCKAGE` n'est pas réarmée par
+- [x] 3.1 Étendre `DepotUniteDaoTest` : une unité refusée pour `STOCKAGE` n'est pas réarmée par
       `rearmer(AUTHENTIFICATION, …)`, une unité `AUTHENTIFICATION` l'est. Vert dès 1.2 si le DAO n'a
       pas à changer, ce que ce test doit établir plutôt que supposer.
-- [ ] 3.2 Couvrir `EchecUnite.seRearmeParUneReconnexion()` : faux pour `STOCKAGE`. Mutation : le
+- [x] 3.2 Couvrir `EchecUnite.seRearmeParUneReconnexion()` : faux pour `STOCKAGE`. Mutation : le
       rendre vrai pour `STOCKAGE` doit faire rougir le test.
 
 ## 4. Le conseil, sur les deux surfaces

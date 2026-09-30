@@ -83,7 +83,7 @@ class DepotUniteDaoTest {
                                 false,
                                 MAINTENANT)));
         List<DepotUnite> posees = dao.parPassage(idPassage);
-        // 403 : jeton mort ou droits S3. Une reconnexion peut lever cette cause.
+        // 403 de l'API : jeton mort ou droits manquants. Une reconnexion peut lever cette cause.
         dao.marquerEchec(posees.get(0).id(), "HTTP 403 : refus", true, CauseRefus.AUTHENTIFICATION, MAINTENANT);
         // 422 : le contenu est refusé. Rien dans une reconnexion ne le change.
         dao.marquerEchec(posees.get(1).id(), "HTTP 422 : refus", true, CauseRefus.CONTENU, MAINTENANT);
@@ -105,6 +105,35 @@ class DepotUniteDaoTest {
                 .as("un contenu refusé n'est pas réparé par une reconnexion : il ne bouge pas")
                 .isEqualTo(StatutDepotUnite.ECHEC);
         assertThat(contenu.echecDefinitif()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#5598 : un refus du stockage n'est pas réarmé par une reconnexion")
+    void un_refus_du_stockage_n_est_pas_rearme() {
+        dao.synchroniserPlan(
+                idPassage,
+                List.of(new DepotUnite(
+                        null,
+                        idPassage,
+                        "stockage.zip",
+                        TypeDepotUnite.ZIP,
+                        StatutDepotUnite.A_DEPOSER,
+                        null,
+                        null,
+                        false,
+                        MAINTENANT)));
+        Long id = dao.parPassage(idPassage).get(0).id();
+        // Le cas de Samuel le 14 septembre : S3 refuse l'URL pré-signée, le jeton de l'API n'y est pour rien.
+        dao.marquerEchec(id, "HTTP 403 : SignatureDoesNotMatch", true, CauseRefus.STOCKAGE, MAINTENANT);
+
+        int rearmees = dao.rearmer(CauseRefus.AUTHENTIFICATION, "2026-07-11T13:00:00");
+
+        assertThat(rearmees)
+                .as("se reconnecter ne répare pas une URL pré-signée")
+                .isZero();
+        DepotUnite stockage = dao.parPassage(idPassage).get(0);
+        assertThat(stockage.statut()).isEqualTo(StatutDepotUnite.ECHEC);
+        assertThat(stockage.echecDefinitif()).isTrue();
     }
 
     @Test
