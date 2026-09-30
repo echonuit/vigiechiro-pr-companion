@@ -71,13 +71,22 @@ public final class CaptureImport {
     private static final LocalDate REFERENCE = LocalDate.of(2026, 9, 20);
     private static final String IMPORT_FXML = "/fr/univ_amu/iut/importation/view/Importation.fxml";
 
+    /// Fins de ligne communes aux journaux de démonstration : le démarrage et les paramètres
+    /// d'acquisition s'écrivent de même d'un journal à l'autre, seules la date et l'heure changent.
+    private static final String FIN_DEMARRAGE = " CPU 600000000, T4.1\n";
+
+    private static final String FIN_PARAMETRES = " 8-120kHz\n";
+
+    /// Début du nom d'un enregistrement brut de l'enregistreur de démonstration.
+    private static final String WAV_DE_LA_SERIE = "PaRecPR1925492_";
+
     private static final String LOG =
             "22/04/26 - 16:02:20 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
-                    + " CPU 600000000, T4.1\n"
+                    + FIN_DEMARRAGE
                     + "22/04/26 - 16:02:21 PR1925492 Sonde temperature/hygrometrie presente, lecture toutes"
                     + " les 600s\n"
                     + "22/04/26 - 16:02:21 PR1925492 Parametres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
-                    + " 8-120kHz\n";
+                    + FIN_PARAMETRES;
 
     /// Série de l'enregistreur de démonstration (celui du journal `LOG`), partagée par le seed et les
     /// scénarios pour rester cohérente d'un état à l'autre.
@@ -465,11 +474,11 @@ public final class CaptureImport {
     /// états de complétude côte à côte, « complète » et « complétude inconnue » (#5101).
     private static final String LOG_MULTI =
             "03/07/26 - 20:25:00 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
-                    + " CPU 600000000, T4.1\n"
+                    + FIN_DEMARRAGE
                     + "03/07/26 - 20:25:01 PR1925492 Sonde temperature/hygrometrie presente, lecture toutes"
                     + " les 600s\n"
                     + "03/07/26 - 20:25:01 PR1925492 Parametres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
-                    + " 8-120kHz\n"
+                    + FIN_PARAMETRES
                     // Le cycle de la PREMIÈRE nuit, et de celle-là seulement. C'est le cas ordinaire de
                     // R19 sur le terrain : la carte tourne plusieurs nuits, le journal est circulaire, et
                     // ce sont les entrées les plus ANCIENNES qu'il perd - ici les deux nuits suivantes.
@@ -533,9 +542,9 @@ public final class CaptureImport {
     /// la date le trahit.
     private static final String LOG_ETRANGER =
             "19/08/26 - 20:25:00 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
-                    + " CPU 600000000, T4.1\n"
+                    + FIN_DEMARRAGE
                     + "19/08/26 - 20:25:01 PR1925492 Parametres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
-                    + " 8-120kHz\n"
+                    + FIN_PARAMETRES
                     + "19/08/26 - 20:25:02 PR1925492 Wakeup by ALARM Cpt 1\n"
                     + "20/08/26 - 07:47:00 PR1925492 ### Passage en mode Veille\n"
                     + "22/08/26 - 20:25:02 PR1925492 Wakeup by ALARM Cpt 2\n"
@@ -544,7 +553,7 @@ public final class CaptureImport {
     private static Path creerDossierJournalEtranger() throws IOException {
         List<String> wavs = new ArrayList<>();
         for (String jour : List.of("20260703", "20260704", "20260705")) {
-            wavs.add("PaRecPR1925492_" + jour + "_203922.wav");
+            wavs.add(WAV_DE_LA_SERIE + jour + "_203922.wav");
         }
         return creerDossierAvecWav("vigiechiro-sd-journal-etranger", LOG_ETRANGER, wavs);
     }
@@ -552,8 +561,8 @@ public final class CaptureImport {
     private static Path creerDossierMultiNuits() throws IOException {
         List<String> wavs = new ArrayList<>();
         for (String jour : List.of("20260703", "20260704", "20260705")) {
-            wavs.add("PaRecPR1925492_" + jour + "_203922.wav");
-            wavs.add("PaRecPR1925492_" + jour + "_204326.wav");
+            wavs.add(WAV_DE_LA_SERIE + jour + "_203922.wav");
+            wavs.add(WAV_DE_LA_SERIE + jour + "_204326.wav");
         }
         return creerDossierAvecWav("vigiechiro-sd-multi-nuits", LOG_MULTI, wavs);
     }
