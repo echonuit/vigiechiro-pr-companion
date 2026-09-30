@@ -1,0 +1,107 @@
+{
+  "_lisez_moi": "L etat de depart de la plateforme de test (#5662, ADR 4406). amorcer.py le materialise dans Mongo. Chaque objet porte une cle, et c est par elle que les autres le citent : pas par `nom`, qui est un vrai champ de l API. Aucun jeton ici : ils sont frappes a chaque amorcage et rendus a qui l a demande.",
+  "date_de_reference": "2026-09-01T00:00:00",
+  "utilisateurs": [
+    {
+      "cle": "observatrice",
+      "role": "Observateur",
+      "pseudo": "Observatrice",
+      "email": "observatrice@plateforme-de-test.invalid"
+    },
+    {
+      "cle": "validatrice",
+      "role": "Validateur",
+      "pseudo": "Validatrice",
+      "email": "validatrice@plateforme-de-test.invalid"
+    },
+    {
+      "cle": "administratrice",
+      "role": "Administrateur",
+      "pseudo": "Administratrice",
+      "email": "administratrice@plateforme-de-test.invalid"
+    }
+  ],
+  "taxons": [
+    {
+      "cle": "pippip",
+      "libelle_long": "Pipistrellus pipistrellus",
+      "libelle_court": "Pippip"
+    }
+  ],
+  "protocoles": [
+    {
+      "cle": "point-fixe",
+      "titre": "Vigiechiro - Point Fixe",
+      "type_site": "POINT_FIXE",
+      "taxon": "pippip",
+      "autojoin": true
+    }
+  ],
+  "inscriptions": [
+    {
+      "utilisateur": "observatrice",
+      "protocole": "point-fixe",
+      "valide": true
+    }
+  ],
+  "grille_stoc": [
+    {
+      "cle": "130711",
+      "numero": "130711",
+      "centre": [
+        5.3698,
+        43.2965
+      ]
+    }
+  ],
+  "sites": [
+    {
+      "cle": "carre-130711",
+      "titre": "Vigiechiro - Point Fixe-130711",
+      "protocole": "point-fixe",
+      "observateur": "observatrice",
+      "grille_stoc": "130711",
+      "verrouille": false,
+      "localites": [
+        {
+          "nom": "Z1"
+        }
+      ]
+    }
+  ],
+  "participations": [
+    {
+      "cle": "nuit-vierge",
+      "site": "carre-130711",
+      "observateur": "observatrice",
+      "date_debut": "2026-06-14T21:00:00",
+      "point": "Z1"
+    },
+    {
+      "cle": "nuit-traitee",
+      "site": "carre-130711",
+      "observateur": "observatrice",
+      "date_debut": "2026-06-15T21:00:00",
+      "point": "Z1",
+      "traitement": {
+        "etat": "FINI"
+      }
+    }
+  ],
+  "donnees": [
+    {
+      "cle": "sequence-1",
+      "participation": "nuit-traitee",
+      "titre": "Car130711-2026-Pass1-Z1-PaRec_20260615_220000_000",
+      "observations": [
+        {
+          "temps_debut": 0.5,
+          "temps_fin": 1.25,
+          "frequence_mediane": 45.0,
+          "tadarida_taxon": "pippip",
+          "tadarida_probabilite": 0.92
+        }
+      ]
+    }
+  ]
+}
