@@ -46,6 +46,6 @@ Chaque tâche commence par son test rouge (article A7).
 
 ## 5. Avant la demande de fusion
 
-- [ ] 5.1 PIT sur `CauseRefus`, `EchecUnite` et `CompteRenduChiffreDepot`, survivants lus un par un.
+- [x] 5.1 PIT sur `CauseRefus`, `EchecUnite` et `CompteRenduChiffreDepot`, survivants lus un par un.
 - [ ] 5.2 La batterie locale (`scripts/batterie.py --lance`) sans refus, et `DocumentationAJourTest`
       vert si la page ou la capture a changé.

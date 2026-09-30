@@ -280,6 +280,24 @@ class DeposerVigieChiroTest {
         }
     }
 
+    @Test
+    @DisplayName("#5598 : sur un lot mêlé, une cause absente n'est pas nommée, et une seule s'écrit au singulier")
+    void rendre_bilan_une_cause_absente_n_est_pas_nommee() {
+        EchecUnite droits = new EchecUnite("Car-10.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION);
+        EchecUnite stockage = new EchecUnite("Car-11.zip", "HTTP 403", true, CauseRefus.STOCKAGE);
+        EchecUnite contenu = new EchecUnite("Car-12.zip", "HTTP 422", true, CauseRefus.CONTENU);
+
+        assertThat(DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 9, List.of(droits, stockage), 0)))
+                .doesNotContain("contenu refusé")
+                .contains("1 d'entre elles tenait à vos droits")
+                .contains("1 d'entre elles a été refusée par le stockage");
+        assertThat(DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 9, List.of(droits, contenu), 0)))
+                .doesNotContain("par le stockage")
+                .contains("1 d'entre elles a un contenu refusé");
+        assertThat(DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 9, List.of(stockage, contenu), 0)))
+                .doesNotContain("vos droits");
+    }
+
     /// Le cas de Samuel le 14 septembre, réduit à trois archives.
     private static BilanDepot refusDuStockage() {
         return new BilanDepot(

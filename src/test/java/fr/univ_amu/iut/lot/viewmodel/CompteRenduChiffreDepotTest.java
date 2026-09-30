@@ -267,6 +267,22 @@ class CompteRenduChiffreDepotTest {
         assertThat(textes).anyMatch(texte -> texte.contains("2 d'entre elles tenaient à vos droits"));
     }
 
+    @Test
+    @DisplayName("#5598 : sur un lot mêlé, une cause absente n'est pas nommée")
+    void une_cause_absente_n_est_pas_nommee() {
+        // Trouvé par PIT : « 0 d'entre elles ont un contenu refusé » passait tous les autres cas.
+        EchecUnite droits = new EchecUnite("Car-10.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION);
+        EchecUnite stockage = new EchecUnite("Car-11.zip", "HTTP 403", true, CauseRefus.STOCKAGE);
+        EchecUnite contenu = new EchecUnite("Car-12.zip", "HTTP 422", true, CauseRefus.CONTENU);
+
+        assertThat(textes(traduire(new BilanDepot("p-1", 9, List.of(droits, stockage), 0L), plan(11, 9, false))))
+                .noneMatch(texte -> texte.contains("contenu refusé"));
+        assertThat(textes(traduire(new BilanDepot("p-1", 9, List.of(droits, contenu), 0L), plan(11, 9, false))))
+                .noneMatch(texte -> texte.contains("par le stockage"));
+        assertThat(textes(traduire(new BilanDepot("p-1", 9, List.of(stockage, contenu), 0L), plan(11, 9, false))))
+                .noneMatch(texte -> texte.contains("vos droits"));
+    }
+
     /// Le lot que l'aperçu montre : deux refus de droits, un contenu refusé.
     private record BitmapMele() {
         BilanDepot bilan() {
