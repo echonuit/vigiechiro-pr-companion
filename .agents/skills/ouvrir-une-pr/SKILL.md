@@ -234,14 +234,42 @@ dépôt n'en portent pas.
 Ce qu'il surveille : un rouge, et la fin des vérifications. Ce qu'il ne fait pas : conclure à votre
 place.
 
-Deux pièges vécus :
+**Il ne se réécrit plus à chaque demande**, depuis #5621 :
+
+```bash
+python3 .github/scripts/surveille_la_demande.py <dépôt> <numéro> [budget-en-secondes]
+```
+
+Deux moniteurs écrits à la main le 2026-09-30, par deux sessions qui ne se parlaient pas, portaient
+chacun une moitié du même défaut. Un geste qu'on réécrit à chaque fois se repose à chaque fois.
+
+Deux pièges vécus, que ce script tient :
 
 - `gh pr checks` **sort non nul** dès qu'une vérification échoue. Un moniteur qui s'arrête sur ce code
   meurt à chaque rouge, c'est-à-dire exactement quand il servait ;
 - l'état `skipping` n'est **pas** un échec. Un filtre qui le compte comme tel crie sur des PR saines.
 
-On ne surveille que `FAILURE`, `CANCELLED` et `TIMED_OUT`, et on sort en `0` quel que soit le verdict :
-c'est le message qui informe, pas le code de sortie du moniteur.
+**Et un troisième, que la règle suivant les deux autres rendait invisible.** Cette page prescrivait
+« sortir en `0` quel que soit le verdict ». C'est juste pour un rouge et faux pour une panne de
+lecture : elle ne distinguait pas **j'ai lu un verdict** de **je n'ai pas pu lire**. Un moniteur sorti
+en 0 sur une coupure réseau laisse un journal qui se termine comme une surveillance conclue - vécu sur
+une demande qui était verte, 26 vérifications, sans que le moniteur l'ait jamais dit.
+
+Trois issues, donc trois codes :
+
+| Code | Ce qu'il dit |
+|---|---|
+| `0` | **conclu** : toutes ont rendu un verdict, quelle que soit leur couleur |
+| `3` | **pas conclu** : le budget est épuisé et il en restait en cours |
+| `4` | **pas pu lire** : trois lectures de suite n'ont rien rendu, ou `gh` est absent |
+
+Un rouge sort donc bien en `0` et l'intention d'origine tient. Ce que le script ajoute à la règle tient
+en une phrase : **ne pas avoir lu n'est pas un verdict**.
+
+**Une liste vide n'est pas une panne.** La forge rend `[]` tant qu'elle n'a pas créé les check-runs,
+et c'est une lecture réussie qui dit « rien encore ». Les deux moniteurs du 2026-09-30 en étaient
+protégés **par accident** : leur garde `-gt 0` visait ce cas-là, et attrapait la coupure réseau par
+coïncidence. Une protection qu'on ne s'est pas formulée ne se rejoue pas à volonté.
 
 Quand le verdict tombe, [`clore-une-pr`](../clore-une-pr/SKILL.md) prend la suite : ce qui juge
 vraiment ce changement, ce qu'un rouge vaut, et l'issue mère qui ne se ferme pas toute seule.

@@ -911,6 +911,12 @@ jobs:
         # scripts -, ce qui faisait attendre à ses cas l'assemblage d'un fat-jar de 80 Mo dont ils
         # n'ont aucun besoin. Rentré dans le rang, il s'exécute ici, sans rien construire.
         run: python3 .github/scripts/mesure_duree_portail.py --auto-test
+      - name: "Auto-test du moniteur de demande (bloquant, #5621)"
+        # Il ne tourne nulle part ailleurs : c'est une session qui le lance quand elle ouvre une
+        # demande, pas un atelier. Son auto-test est donc le SEUL endroit où ses trois issues sont
+        # exercées, et la troisième - « je n'ai pas pu lire » - est celle qui n'existait pas avant
+        # lui : deux moniteurs écrits à la main le 2026-09-30 sortaient en 0 sans avoir lu.
+        run: python3 .github/scripts/surveille_la_demande.py --auto-test
       - name: "Auto-test du garde de titre de PR (bloquant, #2947)"
         # Même raisonnement que l'étape précédente, appliqué au garde qui vit hors de `scripts/adr`.
         # Il refuse deux choses : un titre hors Conventional Commits, et un tiret cadratin. La seconde
