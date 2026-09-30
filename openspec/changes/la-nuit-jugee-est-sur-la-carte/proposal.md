@@ -8,7 +8,10 @@ point G1 » au-dessus de trois nuits neuves, dont aucune n'était concernée. Le
 l'enquête sont dans #5600 (chantier #5596).
 
 L'identité fausse n'alimente pas qu'un avertissement : la confirmation demandée au lancement de
-l'import (#214) et le contrôle du numéro de passage (#2580) la lisent aussi.
+l'import (#214) et le contrôle du numéro de passage (#2580) la lisent aussi, et le contrôle de
+cohérence du journal (`AnalyseCoherence`) compare les WAV à cette même première ligne. Le tout forme le
+sous-chantier #5629 : #5600 pour les trois premiers, #5631 pour le quatrième. `ServiceImport` avait
+déjà corrigé ce défaut pour dater un passage.
 
 ## What Changes
 
@@ -20,6 +23,8 @@ l'import (#214) et le contrôle du numéro de passage (#2580) la lisent aussi.
 - Le contrôle du numéro de passage ne reconnaît une nuit récupérée de Vigie-Chiro que si elle est parmi
   les nuits cochées.
 - Une nuit que seul le journal cite, sans WAV sur la carte, n'est plus jamais jugée.
+- Le contrôle de cohérence ne juge une date incohérente que si **aucune** nuit racontée par le
+  journal ne correspond aux nuits des WAV ; un journal étranger à la carte reste signalé.
 
 ## Capabilities
 
@@ -39,6 +44,9 @@ Aucune.
   (l'avertissement, la confirmation), `AvertissementsInspection` (la rédaction multi-nuits),
   `ControleNumeroPassage` et `ImportationViewModel` (le contrôle du n° de passage).
 - `importation/view/ImportationController` : la confirmation, qui n'a pas à changer d'appel.
+- `importation/model/AnalyseCoherence` et `RapportInspection.coherence()` : les nuits racontées par
+  le journal, lues de ses cycles d'acquisition.
 - Aucun changement de données. La table des nuits, déjà juste, ne change pas.
-- Les trois tests de reproduction sont écrits et rouges (`InspectionImportViewModelTest`,
-  `ImportationViewModelTest`, commit `79d085f60`).
+- Les tests de reproduction sont écrits et rouges : trois pour #5600 (`InspectionImportViewModelTest`,
+  `ImportationViewModelTest`, commit `79d085f60`), un pour #5631 avec son contrôle négatif
+  (`AnalyseCoherenceTest`, commit `ba2351fc6`).
