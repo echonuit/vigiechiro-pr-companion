@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
+import fr.univ_amu.iut.commun.view.ConfigurationAudioView;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
@@ -24,6 +25,7 @@ import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.Selecteurs;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
+import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
@@ -57,13 +59,8 @@ import javafx.scene.layout.StackPane;
 /// (règle ArchUnit `view_sans_jdbc`).
 public class QualificationController implements GardeQuitter, EmplacementNavigation, ResumeStatut {
 
-    /// Facteur d'expansion temporelle ×10 du protocole Vigie-Chiro : les séquences transformées sont les
-    /// originaux ralentis ×10 (cf. `TransformationAudio` côté import). Posé sur l'[AudioView] pour que ses
-    /// axes affichent les grandeurs **réelles** (fréquences × 10), et non celles du fichier ralenti. Même
-    /// valeur que la vue « Sons & validation » (`ConfigurationAudioView`).
-    private static final double FACTEUR_EXPANSION_TEMPS = 10;
-
     private final QualificationViewModel verdictVm;
+    private final ReglagesReactifs reactifs;
     private final SelectionEcouteViewModel selectionVm;
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirSite ouvrirSite;
@@ -229,7 +226,8 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
             NavigationQualification navigation,
             ServiceEmport serviceEmport,
             StockageConnexion connexion,
-            Selecteurs selecteurs) {
+            Selecteurs selecteurs,
+            ReglagesReactifs reactifs) {
         this.verdictVm = Objects.requireNonNull(verdictVm, "verdictVm");
         this.selectionVm = Objects.requireNonNull(selectionVm, "selectionVm");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
@@ -237,6 +235,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
+        this.reactifs = Objects.requireNonNull(reactifs, "reactifs");
         this.gestesEmport = new GestesEmportQualification(
                 serviceEmport,
                 connexion,
@@ -334,24 +333,13 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
                                 selectionVm.sequenceCouranteProperty().get()),
                         selectionVm.sequenceCouranteProperty()));
 
-        // Normalisation du niveau à l'écoute (#109) : les cris ont des amplitudes très variables ;
-        // audio-view égalise le rendu (gain seulement, fichier R9 inchangé). Activée par défaut.
-        audioView.setNormalisation(true);
-        // Expansion temporelle ×10 du protocole Vigie-Chiro : les séquences sont les originaux ralentis ×10,
-        // l'axe des fréquences doit donc afficher les valeurs RÉELLES (× 10) et non celles du fichier ralenti.
-        // Sans ce réglage, l'axe plafonnait à ~19 kHz au lieu des ~192 kHz réels (fréquences ÷10).
-        audioView.setTimeExpansionFactor(FACTEUR_EXPANSION_TEMPS);
-        // Vue audio (composant fourni) : la source suit la séquence courante ; le marquage écouté (R10)
-        // se déclenche au début de la lecture ; le clip est libéré quand la vue quitte la scène.
-        audioView.audioFileProperty().bind(selectionVm.cheminSequenceCouranteProperty());
+        // La vue audio se configure comme sur Sons & validation, par le même geste (#5603) : les
+        // normalisations, l'expansion ×10, le réglage daltonien, la source et la libération du clip.
+        ConfigurationAudioView.installer(audioView, selectionVm.cheminSequenceCouranteProperty(), reactifs);
+        // Le marquage écouté (R10) se déclenche au début de la lecture.
         audioView.playingProperty().addListener((obs, avant, lecture) -> {
             if (Boolean.TRUE.equals(lecture)) {
                 selectionVm.marquerCouranteEcoutee();
-            }
-        });
-        audioView.sceneProperty().addListener((obs, avant, scene) -> {
-            if (scene == null) {
-                audioView.dispose();
             }
         });
         lierEtatChargement();

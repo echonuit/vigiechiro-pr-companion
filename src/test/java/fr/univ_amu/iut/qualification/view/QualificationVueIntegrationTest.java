@@ -117,6 +117,13 @@ class QualificationVueIntegrationTest {
                 .thenReturn(new SelectionDEcoute(99L, MethodeSelection.ALEATOIRE, 3, ID_PASSAGE));
 
         Injector injector = Guice.createInjector(new AbstractModule() {
+            // La vue audio suit le réglage daltonien, comme sur Sons & validation (#5603) : un réglage
+            // simulé suffit, ce test ne l'éprouve pas.
+            @Provides
+            fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs reglages() {
+                return new fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs(
+                        mock(fr.univ_amu.iut.commun.model.Reglages.class));
+            }
 
             /// Le `Navigateur` du socle abonne les écrans qui déclarent `SuitLaRevision` (ADR 3651) :
             /// il réclame donc la révision, que cet injecteur partiel doit lier comme les autres

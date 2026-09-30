@@ -66,6 +66,14 @@ class QualificationIdentiteStatutViewTest {
                 .when(service)
                 .precheck(anyLong());
         Injector injector = Guice.createInjector(new AbstractModule() {
+            // La vue audio suit le réglage daltonien, comme sur Sons & validation (#5603) : un réglage
+            // simulé suffit, ce test ne l'éprouve pas.
+            @Provides
+            fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs reglages() {
+                return new fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs(
+                        mock(fr.univ_amu.iut.commun.model.Reglages.class));
+            }
+
             @Provides
             QualificationViewModel verdict() {
                 return new QualificationViewModel(service);

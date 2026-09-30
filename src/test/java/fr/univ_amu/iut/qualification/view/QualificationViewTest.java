@@ -92,6 +92,14 @@ class QualificationViewTest {
         when(service.detaillerSelection(anyLong())).thenReturn(new DetailSelection(lignes(3), List.of()));
 
         Injector injector = Guice.createInjector(new AbstractModule() {
+            // La vue audio suit le réglage daltonien, comme sur Sons & validation (#5603) : un réglage
+            // simulé suffit, ce test ne l'éprouve pas.
+            @Provides
+            fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs reglages() {
+                return new fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs(
+                        mock(fr.univ_amu.iut.commun.model.Reglages.class));
+            }
+
             @Provides
             QualificationViewModel verdict() {
                 return new QualificationViewModel(service);
@@ -310,6 +318,23 @@ class QualificationViewTest {
         // pour afficher les fréquences RÉELLES (× 10). Sans ce réglage, l'axe plafonnait à ~19 kHz au lieu
         // des ~192 kHz réels (fréquences ÷10 sur l'écran « Vérifier l'enregistrement »).
         assertThat(audio.getTimeExpansionFactor()).isEqualTo(10.0);
+    }
+
+    @Test
+    @DisplayName("#5603 : la vue audio reçoit la configuration de Sons & validation, réglage daltonien compris")
+    void vue_audio_configuree_comme_sons_et_validation(FxRobot robot) {
+        AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
+
+        // Samuel : le spectrogramme de la Qualification était moins lisible que celui de Sons &
+        // validation. Même composant, configuré ailleurs à la main, sans les deux normalisations
+        // visuelles d'audio-view 1.14 ni le réglage daltonien.
+        assertThat(audio.isWaveNormalisation()).as("normalisation de l'onde").isTrue();
+        assertThat(audio.isSpectrogramNormalisation())
+                .as("normalisation du spectrogramme")
+                .isTrue();
+        assertThat(audio.colorblindFriendlyProperty().isBound())
+                .as("le mode daltonien suit le réglage persistant, comme sur Sons & validation")
+                .isTrue();
     }
 
     @Test
