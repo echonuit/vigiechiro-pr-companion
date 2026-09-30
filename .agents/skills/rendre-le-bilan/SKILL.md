@@ -73,6 +73,54 @@ donc sur aucun des deux, et la seule mesure ayant de la force portait précisém
 **Le contrôle** : relire la prédiction en demandant, pour chaque ligne, « vraie à quelle date, et
 selon quel instrument ? ». Un motif de garde élargi entre-temps suffit à déplacer un banc de groupe.
 
+## Et sa CONDITION se pose dans l'unité que l'instrument compte
+
+Un report dit quand il se relève. Écrit en jours de calendrier, il promet ce que le calendrier ne peut
+pas tenir dès lors que l'instrument compte autre chose que des jours.
+
+**Vécu sur #5327, mesuré en #5556.** Sa condition disait « à relever à partir du 2026-09-20 »,
+quatorze jours après la clôture, et sa raison était juste : une fenêtre de quatorze jours est
+nécessaire pour que le relevé dise quelque chose. Mais l'instrument compte des **tirages**, et un
+tirage n'existe que si quelqu'un pousse.
+
+```
+ligne de base (2026-09-06)  fenetre=14j | tirages=884
+releve du 2026-09-28        fenetre=21j | tirages=76
+```
+
+**Vingt-et-un jours ont produit onze fois moins que quatorze**, le dépôt n'ayant eu aucun run du 09-10
+au 09-17. Quinze lignes du relevé sur seize sont sorties « non concluant », et il aurait été facile de
+les lire comme des succès : aux taux de la ligne de base, **observer zéro était le résultat attendu
+que le remède ait agi ou non**.
+
+**La condition porte donc les deux, et pas l'un ou l'autre.**
+
+```
+à relever quand <l instrument> rend au moins N <unites>, N derive de la ligne de base ;
+et à remesurer 2026-12-01 quoi qu il arrive.
+```
+
+L'unité décide **quand la mesure conclut**. La date ne décide rien, elle rend le report **visible** :
+`scripts/adr/loupe-5539-echeances-non-tenues.py` veille sur les engagements différés en cherchant un
+**verbe collé à une date**, et une condition sans date lui est invisible. Une condition juste que rien
+ne surveille est un report qu'on oublie.
+
+**La forme de la date est libre depuis #5556, et elle ne l'était pas.** Le motif de la loupe exigeait
+la date **collée** au verbe, si bien que « à relever **le** 2026-12-01 » - la formulation la plus
+naturelle - lui échappait. Mesuré sur neuf formulations le 2026-09-30 : trois vues, trois invisibles,
+et les invisibles étaient celles qu'on écrit spontanément.
+
+Le motif traverse désormais l'article, et l'élargissement n'a pas mangé le signal : « constaté le
+2026-09-20 » et « mesure du 2026-09-07 » restent invisibles, car ce qui engage est le **verbe**, pas la
+date. Deux cas de son auto-test le tiennent, dont un **négatif** - sans lui, élargir aurait pu faire
+passer n'importe quel verbe suivi d'une date.
+
+Écrivez donc la date comme elle vient. Ce qui reste à vérifier est qu'elle soit **précédée d'un verbe
+qui engage** : « à relever », « à remesurer », « à tenir », « à rejouer », « à refaire ».
+
+**Le contrôle, et il se fait avant de poser le report** : appeler `engagements()` de la loupe sur le
+corps qu'on s'apprête à écrire. Une ligne, et elle répond par la date ou par le vide.
+
 ## L'artefact, et ce qu'il sert deux fois
 
 Le bilan est un texte : il décrit des états que son lecteur n'a pas sous les yeux. La passe 8 les a

@@ -58,9 +58,14 @@ PLAFOND = PLAFOND_ISSUES
 
 # Un ENGAGEMENT est un verbe colle a une date. La liste vient des formes reellement ecrites dans le
 # depot, relevees le 2026-09-25 : rien n y est ajoute par anticipation.
+# ⟨l ARTICLE entre le verbe et la date⟩ Le motif d origine exigeait la date juste apres le verbe, et
+# « a relever LE 2026-12-01 » - la formulation la plus naturelle en francais - lui echappait. Mesure du
+# 2026-09-30 sur neuf formulations : trois vues, trois invisibles, et les invisibles etaient celles
+# qu on ecrit spontanement. L article ne porte aucun sens ici : il se traverse.
 ENGAGEMENT = re.compile(
     r"(?:[àa]\s+tenir|[àa]\s+relever|[àa]\s+remesurer|[àa]\s+refaire|[àa]\s+rejouer"
     r"|vers\s+le|[àa]\s+partir\s+du)"
+    r"(?:\s+(?:le|la|l['’]|du|de\s+la|au|pour\s+le))?"
     r"[\s*_]*(20\d{2}-\d{2}-\d{2})",
     re.I,
 )
@@ -193,6 +198,26 @@ def _auto_test() -> int:
                 "number": 5,
                 "title": "x",
                 "body": "La seconde cloture de #5294, prevue vers le 2026-09-20, rendra son bilan.",
+                "state": "OPEN",
+            },
+            False,
+        ),
+        (
+            "un ARTICLE entre le verbe et la date ne cache plus l engagement",
+            {
+                "number": 9,
+                "title": "x",
+                "body": "A relever le 2026-09-20, quand le releve aura assez de tirages.",
+                "state": "OPEN",
+            },
+            True,
+        ),
+        (
+            "elargir l article ne fait pas passer un verbe qui n engage pas",
+            {
+                "number": 10,
+                "title": "x",
+                "body": "Constate le 2026-09-20, et corrige depuis.",
                 "state": "OPEN",
             },
             False,
