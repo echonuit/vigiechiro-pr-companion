@@ -36,10 +36,19 @@ public final class AvertissementsInspection {
             AnalyseCoherence coherence,
             List<PassageExistant> existants,
             boolean sourceEnLectureSeule) {
+        return redigerPourLesNuits(melange, coherence, sansDate(existants), sourceEnLectureSeule);
+    }
+
+    /// Le compte rendu d'inspection, avec les nuits de la carte **déjà importées** (#5600).
+    static CompteRendu redigerPourLesNuits(
+            AnalyseMelange melange,
+            AnalyseCoherence coherence,
+            List<NuitDejaImportee> nuitsDejaImportees,
+            boolean sourceEnLectureSeule) {
         List<Constat> constats = new ArrayList<>();
         melangeConstat(melange).ifPresent(constats::add);
         coherenceConstat(coherence).ifPresent(constats::add);
-        nuitExistanteConstat(existants).ifPresent(constats::add);
+        nuitExistanteConstat(nuitsDejaImportees).ifPresent(constats::add);
         lectureSeuleConstat(sourceEnLectureSeule).ifPresent(constats::add);
         return constats.isEmpty() ? CompteRendu.de("", List.of()) : CompteRendu.de("", constats);
     }
@@ -155,14 +164,39 @@ public final class AvertissementsInspection {
     }
 
     /// Nuit déjà importée (#147) : non bloquant, l'utilisateur peut vouloir un nouveau passage.
-    private static Optional<Constat> nuitExistanteConstat(List<PassageExistant> existants) {
-        if (existants == null || existants.isEmpty()) {
+    ///
+    /// Une seule nuit concernée : le texte d'origine, sans date, la carte ne portant qu'elle. Plusieurs
+    /// (#5600) : chaque passage est précédé de la date de sa nuit, sans quoi deux passages voisins ne
+    /// disent pas quelle nuit ils concernent.
+    private static Optional<Constat> nuitExistanteConstat(List<NuitDejaImportee> nuits) {
+        if (nuits == null || nuits.isEmpty()) {
             return Optional.empty();
         }
+        if (nuits.size() == 1) {
+            return Optional.of(new Constat(
+                    "Cette nuit a déjà été importée : l'importer créera un nouveau passage.",
+                    Severite.AVERTISSEMENT,
+                    nuits.getFirst().existants().stream()
+                            .map(AvertissementsInspection::detail)
+                            .toList()));
+        }
         return Optional.of(new Constat(
-                "Cette nuit a déjà été importée : l'importer créera un nouveau passage.",
+                nuits.size() + " nuits de cette carte ont déjà été importées : les importer créera de nouveaux"
+                        + " passages.",
                 Severite.AVERTISSEMENT,
-                existants.stream().map(AvertissementsInspection::detail).toList()));
+                nuits.stream()
+                        .flatMap(nuit -> nuit.existants().stream()
+                                .map(passage ->
+                                        Detail.de("nuit du " + JOUR.format(nuit.nuit()) + " : " + libelle(passage))))
+                        .toList()));
+    }
+
+    /// Une liste de passages SANS date de nuit, rendue comme une nuit unique : la forme d'avant #5600,
+    /// que gardent les appelants qui ne parlent que d'une nuit (l'outil de capture, les bancs).
+    private static List<NuitDejaImportee> sansDate(List<PassageExistant> existants) {
+        return existants == null || existants.isEmpty()
+                ? List.of()
+                : List.of(new NuitDejaImportee(LocalDate.MIN, existants));
     }
 
     /// Le libellé d'un passage déjà présent, **écrit une seule fois**.
@@ -197,7 +231,12 @@ public final class AvertissementsInspection {
     /// dialogue passait par le code de production, son contenu non (ADR 0025). Désormais les deux passent
     /// par ce compte rendu.
     public static CompteRendu questionNuitDejaImportee(List<PassageExistant> existants) {
-        return nuitExistanteConstat(existants)
+        return questionNuitsDejaImportees(sansDate(existants));
+    }
+
+    /// La même question, pour les nuits **cochées** déjà importées d'une carte (#5600).
+    public static CompteRendu questionNuitsDejaImportees(List<NuitDejaImportee> nuits) {
+        return nuitExistanteConstat(nuits)
                 .map(constat ->
                         new CompteRendu("", "", List.of(constat), "Importer quand même comme nouveau passage ?"))
                 .orElse(CompteRendu.de("", List.of()));

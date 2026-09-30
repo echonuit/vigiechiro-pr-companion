@@ -44,9 +44,12 @@ final class CompteRenduDInspection {
     /// Le support est interrogé **ici**, une fois par rédaction : le volume peut être retiré entre
     /// deux gestes, et la question ne se pose qu'au moment où l'on regarde la carte. La lecture
     /// n'écrit rien (#4991).
-    CompteRendu rediger(RapportInspection rapport, List<PassageExistant> existants) {
-        return AvertissementsInspection.rediger(
-                rapport.melange(), rapport.coherence(), existants, supportEnLectureSeule.test(rapport.dossierSource()));
+    CompteRendu rediger(RapportInspection rapport, List<NuitDejaImportee> nuitsDejaImportees) {
+        return AvertissementsInspection.redigerPourLesNuits(
+                rapport.melange(),
+                rapport.coherence(),
+                nuitsDejaImportees,
+                supportEnLectureSeule.test(rapport.dossierSource()));
     }
 
     /// Passages **déjà en base** pour cette nuit (#147) : même enregistreur, même date.

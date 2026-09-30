@@ -263,6 +263,55 @@ class InspectionImportViewModelTest {
         assertThat(vm.questionNuitDejaImportee().constats()).isNotEmpty();
     }
 
+    /// Les nuits de la carte réutilisée déjà en base, une réponse par date (voir le cas précédent).
+    private void dejaImportees(String... dates) {
+        List<String> importees = List.of(dates);
+        when(serviceImport.nuitDejaImportee(eq("1925492"), anyString()))
+                .thenAnswer(appel -> importees.contains(appel.<String>getArgument(1))
+                        ? List.of(new PassageExistant(
+                                importees.indexOf(appel.<String>getArgument(1)) + 1, 2026, "202013", "Z1"))
+                        : List.of());
+    }
+
+    @Test
+    @DisplayName("#5600 : la seule nuit déjà importée est décochée, et l'import ne demande plus de confirmation")
+    void une_nuit_decochee_ne_declenche_pas_la_confirmation() throws IOException {
+        Path carte = carteReutilisee();
+        dejaImportees("2026-08-23");
+        vm.dossierSourceProperty().set(carte);
+        vm.inspecter();
+
+        vm.nuits().stream()
+                .filter(nuit -> nuit.date().equals(LocalDate.of(2026, 8, 23)))
+                .forEach(nuit -> nuit.inclureProperty().set(false));
+        vm.rafraichirNuitExistante();
+
+        assertThat(vm.questionNuitDejaImportee().constats())
+                .as("on n'importe pas cette nuit : la question n'a pas d'objet")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#5600 : deux nuits cochées déjà importées sont nommées chacune avec sa date")
+    void deux_nuits_deja_importees_sont_nommees_avec_leur_date() throws IOException {
+        Path carte = carteReutilisee();
+        dejaImportees("2026-08-22", "2026-08-24");
+        vm.dossierSourceProperty().set(carte);
+        vm.inspecter();
+        vm.rafraichirNuitExistante();
+
+        assertThat(vm.questionNuitDejaImportee().constats())
+                .singleElement()
+                .satisfies(constat -> assertThat(constat.details())
+                        .extracting(Detail::sujet)
+                        .as("sans la date, deux passages voisins ne disent pas quelle nuit ils concernent")
+                        .satisfiesExactly(
+                                sujet ->
+                                        assertThat(sujet).contains("22/08/2026").contains("n° 1 (2026)"),
+                                sujet ->
+                                        assertThat(sujet).contains("24/08/2026").contains("n° 2 (2026)")));
+    }
+
     @Test
     @DisplayName("#147 par nuit : seule la nuit déjà en base porte le badge « déjà importée »")
     void nuit_deja_importee_par_ligne() throws IOException {

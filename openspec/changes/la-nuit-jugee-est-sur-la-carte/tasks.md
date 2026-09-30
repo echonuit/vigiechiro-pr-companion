@@ -8,9 +8,9 @@ une demande de fusion chacun. Chaque tâche commence par son test rouge (article
       une nuit récupérée absente. Trois tests rouges, commit `79d085f60`.
 - [x] 1.2 Les identités des nuits de la table remplacent `identiteNuit` ; l'avertissement et la
       question de confirmation les jugent. Vert : les deux tests d'inspection de 1.1.
-- [ ] 1.3 Un cas où la seule nuit déjà importée est décochée : pas de confirmation. Un cas à deux nuits
+- [x] 1.3 Un cas où la seule nuit déjà importée est décochée : pas de confirmation. Un cas à deux nuits
       cochées déjà importées : les deux nommées avec leur date. Rouges avant 1.4.
-- [ ] 1.4 La rédaction multi-nuits dans `AvertissementsInspection`, le texte mono-nuit inchangé.
+- [x] 1.4 La rédaction multi-nuits dans `AvertissementsInspection`, le texte mono-nuit inchangé.
       Vert : 1.3, et `AvertissementsInspectionTest` reste vert.
 - [ ] 1.5 `ControleNumeroPassage` reçoit les nuits cochées. Vert : le test de 1.1, et le cas #2580
       existant reste vert.

@@ -66,7 +66,7 @@ public class InspectionImportViewModel {
     /// Les passages déjà en base pour la nuit inspectée (#147). Retenus **en donnée** et non en phrase :
     /// la vue en tire une confirmation, le compte rendu en tire des détails, chacun avec la place dont il
     /// dispose.
-    private List<PassageExistant> passagesDejaImportes = List.of();
+    private List<NuitDejaImportee> nuitsDejaImportees = List.of();
 
     /// Message d'erreur **propre à l'inspection** (dossier non choisi, chemin invalide), vide après une
     /// inspection réussie. L'orchestrateur le compose avec l'erreur d'exécution dans son message unifié.
@@ -123,8 +123,8 @@ public class InspectionImportViewModel {
             // La table d'abord : les nuits jugées sont les SIENNES (#5600). Le journal circulaire commence
             // par la nuit de son déploiement, souvent effacée de la carte depuis.
             peuplerNuits(inspection);
-            passagesDejaImportes = passagesDesNuitsCochees(inspection);
-            avertissements.set(compteRendu.rediger(inspection, passagesDejaImportes));
+            nuitsDejaImportees = nuitsCocheesDejaImportees(inspection);
+            avertissements.set(compteRendu.rediger(inspection, nuitsDejaImportees));
             inspecte.set(true);
             messageErreur.set("");
         } catch (RuntimeException echec) {
@@ -146,7 +146,7 @@ public class InspectionImportViewModel {
         etatNommage.set(null);
         resumeJournal.set("");
         avertissements.set(CompteRenduDInspection.vide());
-        passagesDejaImportes = List.of();
+        nuitsDejaImportees = List.of();
         messageErreur.set("");
         nuits.clear();
         plusieursNuits.set(false);
@@ -184,22 +184,26 @@ public class InspectionImportViewModel {
         return analyse.series().isEmpty() ? null : analyse.series().first();
     }
 
-    /// Les passages déjà en base pour les nuits **cochées** de la table (#5600) : même enregistreur, même
-    /// date. Ce sont les nuits présentes sur la carte, tirées des noms des WAV ; la première ligne du
-    /// journal, elle, désigne souvent une nuit effacée depuis, et c'est elle que l'on jugeait.
-    private List<PassageExistant> passagesDesNuitsCochees(RapportInspection inspection) {
+    /// Les nuits **cochées** de la table déjà en base (#5600) : même enregistreur, même date, chacune
+    /// avec ses passages. Ce sont les nuits présentes sur la carte, tirées des noms des WAV ; la première
+    /// ligne du journal, elle, désigne souvent une nuit effacée depuis, et c'est elle que l'on jugeait.
+    private List<NuitDejaImportee> nuitsCocheesDejaImportees(RapportInspection inspection) {
         String serie = serieDeLaCarte(inspection);
         if (serie == null) {
             return List.of();
         }
-        return nuits.stream()
-                .filter(NuitVM::estIncluse)
-                .flatMap(nuit -> {
-                    List<PassageExistant> existants =
-                            serviceImport.nuitDejaImportee(serie, nuit.date().toString());
-                    return existants == null ? java.util.stream.Stream.empty() : existants.stream();
-                })
-                .toList();
+        List<NuitDejaImportee> dejaImportees = new java.util.ArrayList<>();
+        for (NuitVM nuit : nuits) {
+            if (!nuit.estIncluse()) {
+                continue;
+            }
+            List<PassageExistant> existants =
+                    serviceImport.nuitDejaImportee(serie, nuit.date().toString());
+            if (existants != null && !existants.isEmpty()) {
+                dejaImportees.add(new NuitDejaImportee(nuit.date(), existants));
+            }
+        }
+        return List.copyOf(dejaImportees);
     }
 
     /// Badge « déjà importée » (#147) d'une nuit (même enregistreur + même date en base), vide sinon.
@@ -227,9 +231,9 @@ public class InspectionImportViewModel {
     /// non l'instantané figé à l'inspection (sinon réimporter la même nuit sur un n° libre passerait sans
     /// confirmation). Sans inspection courante, l'avertissement reste vide.
     public void rafraichirNuitExistante() {
-        passagesDejaImportes = rapport == null ? List.of() : passagesDesNuitsCochees(rapport);
+        nuitsDejaImportees = rapport == null ? List.of() : nuitsCocheesDejaImportees(rapport);
         avertissements.set(
-                rapport == null ? CompteRenduDInspection.vide() : compteRendu.rediger(rapport, passagesDejaImportes));
+                rapport == null ? CompteRenduDInspection.vide() : compteRendu.rediger(rapport, nuitsDejaImportees));
         if (rapport != null) {
             // Rafraîchit les badges par nuit **en place** (sans reconstruire la table, pour préserver les
             // cases « inclure » cochées par l'utilisateur).
@@ -345,7 +349,7 @@ public class InspectionImportViewModel {
     /// (#2060), **vide** s'il n'y a rien à confirmer. Chaque passage est un détail sur sa propre ligne
     /// alignée, que la modale rend via [fr.univ_amu.iut.commun.view.VueCompteRendu].
     public CompteRendu questionNuitDejaImportee() {
-        return AvertissementsInspection.questionNuitDejaImportee(passagesDejaImportes);
+        return AvertissementsInspection.questionNuitsDejaImportees(nuitsDejaImportees);
     }
 
     /// Message d'erreur **propre à l'inspection** (dossier non choisi, chemin invalide), vide après un
