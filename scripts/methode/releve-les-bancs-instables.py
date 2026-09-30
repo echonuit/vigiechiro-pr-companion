@@ -15,6 +15,7 @@ Usage : releve-les-bancs-instables.py [--jours N] [--classe] [--auto-test]
 
 from __future__ import annotations
 
+import os
 import pathlib
 import re
 import shutil
@@ -25,6 +26,7 @@ import tempfile
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import sort_si_contrat_demande
+from _commun.forge import interroge
 
 # Surefire nomme un test echoue sous deux formes, et il faut les deux : la premiere seule rate les
 # erreurs, la seconde seule rate les echecs d'assertion quand la classe entiere tombe.
@@ -180,14 +182,6 @@ DEPOT = "echonuit/vigiechiro-pr-companion"
 FLUX = 286171791  # « Java CI with Maven »
 
 
-def _forge(*args: str) -> str:
-    """Sortie de `gh`, ou une chaine vide s'il n'est pas installe."""
-    if shutil.which("gh") is None:
-        return ""
-    fait = subprocess.run(["gh", *args], capture_output=True, text=True, check=False)
-    return fait.stdout
-
-
 def _borne(jours: int) -> str:
     return subprocess.run(
         ["date", "-u", "-d", f"-{jours} days", "+%Y-%m-%dT%H:%M:%SZ"],
@@ -202,12 +196,20 @@ def relances(jours: int) -> tuple[list[dict], int]:
 
     `gh run list` ne suffit pas : il plafonne, et surtout il ne porte pas `run_attempt`.
     """
-    brut = _forge(
-        "api",
-        "--paginate",
-        f"repos/{DEPOT}/actions/workflows/{FLUX}/runs?per_page=100",
-        "-q",
-        ".workflow_runs[] | [.id, .run_attempt, .conclusion, .created_at, .head_sha] | @tsv",
+    # ⟨ce releve REFUSE desormais, la ou il rendait du vide⟩ Son ancien `_forge` rendait `""` quand
+    # `gh` manquait ET avalait le code de retour, si bien qu une forge qui repond par une erreur
+    # devenait « aucun banc instable » : `"".splitlines()` rend `[]`, la boucle ne tourne pas, et le
+    # releve conclut. Un releve ne bloque pas, c est son regime - mais « je n ai pas pu lire » n est
+    # pas « rien a signaler », et c est la seule distinction que son silence effacait (#5544).
+    brut = interroge(
+        [
+            "api",
+            "--paginate",
+            f"repos/{DEPOT}/actions/workflows/{FLUX}/runs?per_page=100",
+            "-q",
+            ".workflow_runs[] | [.id, .run_attempt, .conclusion, .created_at, .head_sha] | @tsv",
+        ],
+        quoi=f"les tirages de « Java CI with Maven » (flux {FLUX})",
     )
     borne = _borne(jours)
     dans = []
@@ -281,7 +283,21 @@ def limiteDeLecture(flux: pathlib.Path | None = None) -> str:
 
 
 def journalDeTentative(idRun: int, tentative: int, atelier: str = ATELIER_LU) -> str:
-    """Le journal d'UNE tentative, decompresse. `--log-failed` ne rend que la DERNIERE."""
+    """Le journal d'UNE tentative, decompresse. `--log-failed` ne rend que la DERNIERE.
+
+    **Cet appel NE passe PAS par `_commun.forge.interroge`, et c est nomme plutot que tu** (#5544).
+    Trois raisons, chacune suffisante :
+
+    - il rend des **octets**, pas du texte : c est une archive zip, et `interroge` rend `stdout`
+      decode ;
+    - il exige un **second outil**, `unzip`, dont l absence est aussi une raison de renoncer ;
+    - un journal **vide est legitime** ici : les journaux de tentative expirent, donc `""` est une
+      reponse et non un silence. C est exactement l inverse du cas que #5544 corrige ailleurs dans ce
+      fichier, ou le vide effacait une erreur.
+
+    L y forcer demanderait une variante binaire de `interroge` pour un seul appelant, et ferait
+    disparaitre la troisieme distinction. Elle reste donc ici, sciemment.
+    """
     if shutil.which("gh") is None or shutil.which("unzip") is None:
         return ""
     with tempfile.TemporaryDirectory() as dossier:
@@ -738,7 +754,23 @@ jobs:
     absent = limiteDeLecture(pathlib.Path("/n-existe-pas/maven.yml"))
     assert "NON DENOMBRES" in absent and "MINORANTS" in absent, absent
 
-    print("auto-test : 32 temoins verts")
+    # ⟨l APPEL, et non le verdict (ADR 4331)⟩ Aucun cas de cet auto-test n exercait le chemin de la
+    # forge avant #5544 : `relances` n y est jamais appelee. Une mutation le montrait - retirer le
+    # refus laissait ces 32 temoins verts - et c est le defaut que `loupe-4992` avait corrige chez
+    # lui pour la meme raison. On lance donc le vrai chemin avec un PATH ou `gh` n existe pas, sans
+    # reseau et en une milliseconde.
+    chemin = os.environ.get("PATH", "")
+    os.environ["PATH"] = str(pathlib.Path(__file__).parent)
+    try:
+        relances(1)
+    except SystemExit as sortie:
+        assert sortie.code == 2, f"le refus doit sortir en 2, pas en {sortie.code}"
+    else:
+        raise AssertionError("sans « gh », ce releve doit REFUSER au lieu de conclure a zero banc")
+    finally:
+        os.environ["PATH"] = chemin
+
+    print("auto-test : 33 temoins verts")
     return 0
 
 
