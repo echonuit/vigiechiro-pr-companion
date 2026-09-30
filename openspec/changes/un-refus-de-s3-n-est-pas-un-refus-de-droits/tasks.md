@@ -6,11 +6,11 @@ Chaque tâche commence par son test rouge (article A7).
 
 ## 1. La cause selon la provenance
 
-- [ ] 1.1 Écrire les cas unitaires de la règle de classement, un par couple statut et provenance
+- [x] 1.1 Écrire les cas unitaires de la règle de classement, un par couple statut et provenance
       (`403` API, `401` API, `403` stockage, `401` stockage, `400` stockage, `422` API, `429` et
       `5xx` sans cause). Rouge attendu : `CauseRefus.de` n'accepte pas de provenance, et un `403` du
       stockage rend `AUTHENTIFICATION`.
-- [ ] 1.2 Ajouter `Provenance` (`API`, `STOCKAGE`) à `commun/api` et la cause `STOCKAGE` à
+- [x] 1.2 Ajouter `Provenance` (`API`, `STOCKAGE`) à `commun/api` et la cause `STOCKAGE` à
       `CauseRefus`, puis réécrire sa javadoc : « la cause vient du statut et de la provenance, jamais
       du texte ». Vert : les cas de 1.1 passent.
 

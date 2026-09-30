@@ -2,6 +2,7 @@ package fr.univ_amu.iut.lot.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FichierSigne;
+import fr.univ_amu.iut.commun.api.Provenance;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SuiviReprise;
 import java.io.IOException;
@@ -134,7 +135,7 @@ final class TeleverseurArchive {
         /// lever - une reconnexion reussie pour un refus d authentification, rien pour un contenu
         /// refuse. Nulle sur un echec rejouable, qui n a pas a en porter.
         static Resultat echec(String raison, ReponseApi<?> reponse) {
-            return new Resultat(null, raison, !reponse.estReessayable(), CauseRefus.de(reponse), 0);
+            return new Resultat(null, raison, !reponse.estReessayable(), CauseRefus.de(reponse, Provenance.API), 0);
         }
 
         boolean reussi() {
