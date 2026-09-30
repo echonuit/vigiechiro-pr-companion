@@ -717,7 +717,7 @@ c332b3db4891  src/main/java/fr/univ_amu/iut/diagnostic/outils/CaptureDiagnostic.
 60aaa3804e32  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
 6c5ac41a2062  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/PlagesHoraires.java
 72e4bf119771  src/main/java/fr/univ_amu/iut/importation/di/ImportationModule.java
-94bf5669367f  src/main/java/fr/univ_amu/iut/importation/model/AnalyseCoherence.java
+ccff54d77ac0  src/main/java/fr/univ_amu/iut/importation/model/AnalyseCoherence.java
 7bce3b47c375  src/main/java/fr/univ_amu/iut/importation/model/AnalyseMelange.java
 f9cc636c0690  src/main/java/fr/univ_amu/iut/importation/model/AnalyseurLogPR.java
 d525e43a76d0  src/main/java/fr/univ_amu/iut/importation/model/ApercuEcrasement.java
@@ -1755,7 +1755,7 @@ f533002f9258  src/test/java/fr/univ_amu/iut/fixture/JournalDeCapteur.java
 8a00f2d62738  src/test/java/fr/univ_amu/iut/fixture/SortieCapturee.java
 11620c9b06e8  src/test/java/fr/univ_amu/iut/fixture/SystemeDeFichiers.java
 2d2e67f7e0f7  src/test/java/fr/univ_amu/iut/fixture/SystemeDeFichiersTest.java
-c4ecf9dc9e9c  src/test/java/fr/univ_amu/iut/importation/AnalyseCoherenceTest.java
+59eb50b0e3b2  src/test/java/fr/univ_amu/iut/importation/AnalyseCoherenceTest.java
 7ccc080b8069  src/test/java/fr/univ_amu/iut/importation/AnalyseMelangeTest.java
 0dbc5fa9f554  src/test/java/fr/univ_amu/iut/importation/AnalyseurLogPRTest.java
 185cf3407ed7  src/test/java/fr/univ_amu/iut/importation/BornesExtractionTest.java
