@@ -6,7 +6,7 @@ article: A17
 chantier: "#4659 (EPIC #4650)"
 decided_at: 2026-08-28
 verification: probable
-ratchet: 42
+ratchet: 65
 enforced_by:
   - ".github/scripts/verifie_cloture_consignee.py"
 verified:
@@ -25,7 +25,8 @@ Le dépôt écrit à **trois** endroits que tout chantier se clôt par douze pas
 à l'indicatif, `dev-docs/cycle-de-chantier.md` avec la raison de chaque passe, et la compétence
 `clore-un-chantier` dont la loi d'airain garde leur ordre.
 
-Rien ne le vérifiait. Mesuré le 2026-08-28 sur les EPIC clos, corps **et** commentaires cherchés :
+Rien ne le vérifiait. Mesuré le 2026-08-28 sur les EPIC clos **portant le label `epic`**, corps
+**et** commentaires cherchés :
 
 | | |
 |---|---|
@@ -61,11 +62,28 @@ avaient réellement eu lieu. Refuser tout net rendrait le dépôt rouge sans qu'
 fautive, et le garde se ferait désactiver la première semaine - le dépôt sait déjà qu'un avertisseur
 qui crie sur l'historique existant s'apprend à ignorer dès le premier jour.
 
-Le cliquet ne peut que **descendre**. Fermer un EPIC sans trace le fait monter à 43, et c'est ce
+Le cliquet ne peut que **descendre**. Fermer un EPIC sans trace le fait monter d'un, et c'est ce
 mouvement-là qui rougit. Il est déjà descendu une fois, le jour de son écriture.
 
-**Les 42 sont assumées, pas rattrapées.** Rejouer douze passes sur un chantier clos depuis un an
+**Elles sont assumées, pas rattrapées.** Rejouer quatorze passes sur un chantier clos depuis un an
 n'aurait pas de sens ; le dire une fois, dans ce chiffre, en a.
+
+## Révision du 2026-09-30 : la population était fausse d'un tiers
+
+Le garde demandait `--label epic`, donc la **forge** filtrait pour lui, alors que le dépôt désigne
+aussi un EPIC par le préfixe de son titre.
+
+| Sur les 1 737 issues closes | |
+|---|---|
+| par le label, ce qu'il lisait | **96** |
+| par l'union, ce qu'il devait lire | **154** |
+| jamais lus | **58**, dont **23** sans trace |
+
+D'où le cliquet à **65**. Le compte monte parce que la mesure commence à dire vrai, non parce qu'une
+clôture a régressé, et les 23 sont assumées comme les 42 l'ont été.
+
+Le contrôle : compter les manques parmi les 96 rend exactement **42**, le chiffre que cet en-tête
+portait. La divergence était dans la population, pas dans la détection. Voir [ADR 4967].
 
 ## Ce que le garde ne prétend pas
 
@@ -86,9 +104,16 @@ coûte à personne.
 
 ## Comment on saurait qu'elle est rompue
 
-`.github/scripts/verifie-cloture-consignee.sh --auto-test` porte sept cas, dont **trois qui doivent
+`.github/scripts/verifie_cloture_consignee.py --auto-test` porte **28 cas, dont 5 qui doivent
 refuser**. Le premier est celui qui compte : un EPIC de plus sans trace doit faire rougir le garde.
 Sans lui, tous ses verts ne vaudraient rien.
 
-Les deux derniers tiennent le refus lui-même : une ADR sans cliquet lisible, et une ADR introuvable,
-font **refuser** et non conclure.
+Trois des cinq tiennent le refus lui-même : une ADR sans cliquet lisible, une ADR introuvable, et
+la marque disparue du modèle.
+
+Les **dix-neuf** derniers, ajoutés par #4967, éprouvent la **définition** d'un EPIC et la
+**collecte** élargie, dont son refus **au plafond** : un corpus tronqué rend moins de manques, donc un
+cliquet qui passe, et c'est le cinquième qui doit refuser. Ils vivent ici parce que le leurre du garde
+injecte le corpus déjà constitué et court-circuite la requête.
+
+[ADR 4967]: 4967-une-seule-definition-d-un-epic-pour-les-quatre-dispositifs.md
