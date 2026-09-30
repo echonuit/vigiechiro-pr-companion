@@ -16,9 +16,11 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -44,6 +46,11 @@ import java.util.function.Supplier;
 /// Vigie-Chiro (#142) est porté par `DepotVigieChiro` (feature `lot`, appelé via `DepotViewModel`) ; un
 /// dépôt manuel des archives reste possible en repli.
 public class ServiceLot {
+
+    /// Les statuts dont les archives se génèrent : un lot préparé, un dépôt entamé (#5599), un passage
+    /// déposé. Le dépôt entamé garde ses identifiants d'archives, donc sa progression.
+    private static final Set<StatutWorkflow> STATUTS_QUI_SE_GENERENT =
+            EnumSet.of(StatutWorkflow.PRET_A_DEPOSER, StatutWorkflow.DEPOT_EN_COURS, StatutWorkflow.DEPOSE);
 
     /// Nom du paramètre `idPassage` pour les messages `requireNonNull` (factorisé, évite le littéral dupliqué).
     private static final String PARAM_ID_PASSAGE = "idPassage";
@@ -257,16 +264,17 @@ public class ServiceLot {
         Objects.requireNonNull(suivi, "suivi");
         Passage passage = chargerPassage(idPassage);
         // Le lot doit avoir été **préparé** (preparerLot a déjà validé R14 + cohérence et posé le statut).
-        // On n'archive donc que des passages Prêt à déposer ou déjà Déposé : l'API ne court-circuite pas
-        // ces contrôles, même si l'IHM masque déjà le bouton avant cet état.
+        // On n'archive donc que des passages préparés : l'API ne court-circuite pas ces contrôles, même si
+        // l'IHM masque déjà le bouton avant cet état. Un dépôt ENTAMÉ l'est aussi (#5599) : c'est l'état où
+        // le compte rendu conseille de régénérer après un contenu refusé, et « préparez-le d'abord » y
+        // était un conseil impossible, l'écran affichant le jalon « Prêt à déposer ».
         if (passage.statutWorkflow() == StatutWorkflow.RECUPERE) {
             // Sans ce cas, le refus disait « préparez-le d'abord » (#2581) : un conseil impossible à
             // suivre, puisque la préparation refuse - à raison - une nuit déjà sur la plateforme.
             throw new RegleMetierException("Cette nuit vient de Vigie-Chiro, où elle est déjà déposée :"
                     + " il n'y a pas d'archives de dépôt à générer.");
         }
-        if (passage.statutWorkflow() != StatutWorkflow.PRET_A_DEPOSER
-                && passage.statutWorkflow() != StatutWorkflow.DEPOSE) {
+        if (!STATUTS_QUI_SE_GENERENT.contains(passage.statutWorkflow())) {
             throw new RegleMetierException("Les archives de dépôt ne peuvent être générées qu'une fois le dépôt"
                     + " préparé (statut « Prêt à déposer ») : préparez-le d'abord.");
         }

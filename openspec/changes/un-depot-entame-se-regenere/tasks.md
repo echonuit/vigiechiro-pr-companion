@@ -5,13 +5,13 @@ Chaque tâche commence par son test rouge (article A7).
 
 ## 1. Le geste conseillé, de bout en bout
 
-- [ ] 1.1 Écrire le banc de bout en bout, sur base réelle : un dépôt dont une archive est refusée pour
+- [x] 1.1 Écrire le banc de bout en bout, sur base réelle : un dépôt dont une archive est refusée pour
       son contenu laisse le passage « Dépôt en cours » ; la génération **par le service de lot** (pas
       une réponse simulée) ; la relance ; l'unité déposée, et les unités déjà en ligne non renvoyées.
       Rouge attendu : la génération refuse avec « préparez-le d'abord ».
-- [ ] 1.2 Admettre `DEPOT_EN_COURS` dans la garde de statut de `ServiceLot.genererArchivesDepot`,
+- [x] 1.2 Admettre `DEPOT_EN_COURS` dans la garde de statut de `ServiceLot.genererArchivesDepot`,
       en gardant le message propre à `RECUPERE`. Vert : 1.1 passe.
-- [ ] 1.3 Un cas par statut sur la garde : « préparez-le d'abord » pour les statuts non préparés
+- [x] 1.3 Un cas par statut sur la garde : « préparez-le d'abord » pour les statuts non préparés
       seulement, jamais pour `PRET_A_DEPOSER`, `DEPOT_EN_COURS` ni `DEPOSE`. Mutation : retirer
       `DEPOT_EN_COURS` de la liste doit faire rougir.
 
