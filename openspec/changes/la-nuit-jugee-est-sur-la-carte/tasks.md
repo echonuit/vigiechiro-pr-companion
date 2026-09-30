@@ -12,7 +12,7 @@ une demande de fusion chacun. Chaque tâche commence par son test rouge (article
       cochées déjà importées : les deux nommées avec leur date. Rouges avant 1.4.
 - [x] 1.4 La rédaction multi-nuits dans `AvertissementsInspection`, le texte mono-nuit inchangé.
       Vert : 1.3, et `AvertissementsInspectionTest` reste vert.
-- [ ] 1.5 `ControleNumeroPassage` reçoit les nuits cochées. Vert : le test de 1.1, et le cas #2580
+- [x] 1.5 `ControleNumeroPassage` reçoit les nuits cochées. Vert : le test de 1.1, et le cas #2580
       existant reste vert.
 - [ ] 1.6 Mutation : revenir à `journal.dateDebut()` fait rougir ; PIT sur les classes touchées,
       survivants lus ; aperçu de l'inspection sur une carte réutilisée relu ; batterie ; PR.

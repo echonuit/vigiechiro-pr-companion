@@ -145,7 +145,8 @@ public class ImportationViewModel {
         this.marquageNuits = new MarquageNuitsImportees(
                 marquageOpportuniste, rattachement::estOpportuniste, campagnes, rattachement::idCampagneRetenue);
         // Pré-contrôle R5 proactif (#108) : observe lui-même le rattachement et entretient son état.
-        this.controleNumeroPassage = new ControleNumeroPassage(serviceImport, rattachement, inspection::identiteNuit);
+        this.controleNumeroPassage =
+                new ControleNumeroPassage(serviceImport, rattachement, inspection::identitesDesNuitsCochees);
         // Coordination multi-nuits (#664) : s'abonne au rattachement et à la table des nuits pour
         // auto-numéroter les nuits incluses et exposer la validité de cette numérotation.
         this.coordinationNuits = new CoordinationNuits(serviceImport, inspection, rattachement);

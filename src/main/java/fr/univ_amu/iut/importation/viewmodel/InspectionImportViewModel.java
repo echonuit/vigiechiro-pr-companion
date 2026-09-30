@@ -90,7 +90,7 @@ public class InspectionImportViewModel {
 
     public InspectionImportViewModel(ServiceImport serviceImport) {
         this.serviceImport = Objects.requireNonNull(serviceImport, "serviceImport");
-        this.compteRendu = new CompteRenduDInspection(this.serviceImport);
+        this.compteRendu = new CompteRenduDInspection();
     }
 
     /// Remplace la sonde du support (double de test, et jeu d'essai des aperçus).
@@ -216,13 +216,21 @@ public class InspectionImportViewModel {
         return (existants == null || existants.isEmpty()) ? "" : "déjà importée";
     }
 
-    /// Détecte (lecture base via le service) si la nuit inspectée a déjà été importée (#147) : même
-    /// enregistreur + même date. L'identité vient du **journal** s'il est présent, sinon (mode dégradé
-    /// #107) elle est **reconstituée des noms de WAV** (comme à l'import), pour que la détection couvre
-    /// aussi les réimports sans journal. Sans identité exploitable, rien à signaler. La mise en forme
-    /// Identité de la **dernière nuit inspectée**, ou vide tant qu'aucune inspection n'a abouti.
-    public java.util.Optional<IdentiteNuit> identiteNuit() {
-        return rapport == null ? java.util.Optional.empty() : CompteRenduDInspection.identiteNuit(rapport);
+    /// L'identité de chaque nuit **cochée** de la table (#5600) : l'enregistreur de la carte et la date de
+    /// la nuit. Vide tant qu'aucune inspection n'a abouti, ou sans série exploitable.
+    ///
+    /// Elle remplace l'identité unique tirée de la première ligne du journal circulaire, qui désignait
+    /// souvent une nuit effacée de la carte : le contrôle du n° de passage (#2580) reconnaissait alors
+    /// une nuit récupérée que l'on n'importait pas.
+    public List<IdentiteNuit> identitesDesNuitsCochees() {
+        String serie = rapport == null ? null : serieDeLaCarte(rapport);
+        if (serie == null) {
+            return List.of();
+        }
+        return nuits.stream()
+                .filter(NuitVM::estIncluse)
+                .map(nuit -> new IdentiteNuit(serie, nuit.date().toString()))
+                .toList();
     }
 
     /// Recalcule l'avertissement « nuit déjà importée » (#147) depuis la **dernière inspection**, sans
