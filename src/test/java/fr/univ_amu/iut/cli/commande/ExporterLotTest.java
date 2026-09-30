@@ -33,15 +33,21 @@ class ExporterLotTest {
 
     private final ServiceLot service = mock(ServiceLot.class);
 
+    private final StringWriter sortie = new StringWriter();
+
     private int executer() {
         CommandLine ligne = new CommandLine(new ExporterLot(service));
-        ligne.setOut(new PrintWriter(new StringWriter()));
+        ligne.setOut(new PrintWriter(sortie));
         ligne.setErr(new PrintWriter(new StringWriter()));
         return ligne.execute("--passage", String.valueOf(PASSAGE));
     }
 
     private void passageAuStatut(StatutWorkflow statut) {
-        when(service.consulterLot(PASSAGE)).thenReturn(new EtatLot(statut, "/ws/s", 2, 2048L, List.of(), null));
+        passageAuStatut(statut, 2048L);
+    }
+
+    private void passageAuStatut(StatutWorkflow statut, Long volume) {
+        when(service.consulterLot(PASSAGE)).thenReturn(new EtatLot(statut, "/ws/s", 2, volume, List.of(), null));
         when(service.preparerLot(anyLong())).thenReturn(new Lot(PASSAGE, "/ws/s", List.of(), 2048L));
         when(service.genererArchivesDepot(PASSAGE))
                 .thenReturn(List.of(new ArchiveDepot(Path.of("/ws/s/depot/Car-1.zip"), 1, 2048L, 2)));
@@ -56,6 +62,23 @@ class ExporterLotTest {
 
         verify(service, never()).preparerLot(anyLong());
         verify(service).genererArchivesDepot(PASSAGE);
+        assertThat(sortie.toString())
+                .contains("Dépôt déjà préparé pour le passage #42 (Dépôt en cours).")
+                .contains("Séquences : 2")
+                .contains("Volume    : 2048 octets")
+                .contains("Dossier   : /ws/s")
+                .contains("Archives de dépôt (1)")
+                .contains("Car-1.zip (2 fichiers, 2048 octets)");
+    }
+
+    @Test
+    @DisplayName("un volume inconnu s'écrit « - », pas « null octets »")
+    void un_volume_inconnu_s_ecrit_tiret() {
+        passageAuStatut(StatutWorkflow.DEPOT_EN_COURS, null);
+
+        executer();
+
+        assertThat(sortie.toString()).contains("Volume    : -").doesNotContain("null");
     }
 
     @Test
@@ -68,5 +91,8 @@ class ExporterLotTest {
         InOrder ordre = inOrder(service);
         ordre.verify(service).preparerLot(PASSAGE);
         ordre.verify(service).genererArchivesDepot(PASSAGE);
+        assertThat(sortie.toString())
+                .contains("Dépôt prêt pour le passage #42.")
+                .contains("Dossier   : /ws/s");
     }
 }
