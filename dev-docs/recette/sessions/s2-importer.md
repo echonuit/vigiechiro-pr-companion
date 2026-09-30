@@ -181,6 +181,9 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
 - **S2-82** · *geste: une-carte-reutilisee-a-une-nuit* · `sd-carte-reutilisee` : l'inspection ne montre **aucun**
   bandeau « incohérence », bien que le journal commence le 19/08 et que la carte ne porte que la nuit du 24/08 : le
   journal raconte aussi cette nuit-là (#5631).
+- **S2-83** · *geste: un-journal-etranger-a-la-carte* · `sd-journal-etranger-multi` : l'inspection montre le bandeau
+  « incohérence », et son détail nomme les nuits que le journal raconte, « 19/08/2026, 22/08/2026 », face aux
+  trois nuits de juillet de la carte (#5669).
 - **S2-50** · *geste: reimporter-une-nuit-deja-connue* · Rattachement au même point + année + n° : bandeau « n° déjà pris » avec « Utiliser ce n° » et
 
 **Bloc · Gestes de ligne (EPIC #1792)** : **automatisable**, contrairement à ce qui était écrit ici.

@@ -71,13 +71,22 @@ public final class CaptureImport {
     private static final LocalDate REFERENCE = LocalDate.of(2026, 9, 20);
     private static final String IMPORT_FXML = "/fr/univ_amu/iut/importation/view/Importation.fxml";
 
+    /// Fins de ligne communes aux journaux de démonstration : le démarrage et les paramètres
+    /// d'acquisition s'écrivent de même d'un journal à l'autre, seules la date et l'heure changent.
+    private static final String FIN_DEMARRAGE = " CPU 600000000, T4.1\n";
+
+    private static final String FIN_PARAMETRES = " 8-120kHz\n";
+
+    /// Début du nom d'un enregistrement brut de l'enregistreur de démonstration.
+    private static final String WAV_DE_LA_SERIE = "PaRecPR1925492_";
+
     private static final String LOG =
             "22/04/26 - 16:02:20 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
-                    + " CPU 600000000, T4.1\n"
+                    + FIN_DEMARRAGE
                     + "22/04/26 - 16:02:21 PR1925492 Sonde temperature/hygrometrie presente, lecture toutes"
                     + " les 600s\n"
                     + "22/04/26 - 16:02:21 PR1925492 Parametres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
-                    + " 8-120kHz\n";
+                    + FIN_PARAMETRES;
 
     /// Série de l'enregistreur de démonstration (celui du journal `LOG`), partagée par le seed et les
     /// scénarios pour rester cohérente d'un état à l'autre.
@@ -350,6 +359,13 @@ public final class CaptureImport {
         vm.inspecter();
         rendre(scene, sortie.resolve("apercu-import-multi-nuits.png"));
 
+        // État « journal étranger » (#5669) : la même carte de trois nuits, sous un journal qui raconte
+        // deux nuits d'août et aucune des siennes. Le détail nomme les nuits racontées (#5653), et non
+        // la seule première ligne du journal.
+        vm.inspection().dossierSourceProperty().set(creerDossierJournalEtranger());
+        vm.inspecter();
+        rendre(scene, sortie.resolve("apercu-import-journal-etranger.png"));
+
         // État « support en lecture seule » (#5091) : le quatrième constat de l'inspection. La source
         // est une carte dont le volume n'accepte plus l'écriture - le mode de fin de vie normal de
         // cette mémoire - et l'import fonctionne quand même, ce que le bandeau dit en premier.
@@ -458,11 +474,11 @@ public final class CaptureImport {
     /// états de complétude côte à côte, « complète » et « complétude inconnue » (#5101).
     private static final String LOG_MULTI =
             "03/07/26 - 20:25:00 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
-                    + " CPU 600000000, T4.1\n"
+                    + FIN_DEMARRAGE
                     + "03/07/26 - 20:25:01 PR1925492 Sonde temperature/hygrometrie presente, lecture toutes"
                     + " les 600s\n"
                     + "03/07/26 - 20:25:01 PR1925492 Parametres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
-                    + " 8-120kHz\n"
+                    + FIN_PARAMETRES
                     // Le cycle de la PREMIÈRE nuit, et de celle-là seulement. C'est le cas ordinaire de
                     // R19 sur le terrain : la carte tourne plusieurs nuits, le journal est circulaire, et
                     // ce sont les entrées les plus ANCIENNES qu'il perd - ici les deux nuits suivantes.
@@ -521,11 +537,32 @@ public final class CaptureImport {
                         "Car130711-2026-Pass1-Z1-PaRecPR1925492_20260422_223045.wav"));
     }
 
+    /// Journal d'un **autre déploiement** (#5669) : il raconte les nuits du 19 et du 22 août, un cycle
+    /// chacune, sur la carte de trois nuits de juillet de [#creerDossierMultiNuits]. Même série : seule
+    /// la date le trahit.
+    private static final String LOG_ETRANGER =
+            "19/08/26 - 20:25:00 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
+                    + FIN_DEMARRAGE
+                    + "19/08/26 - 20:25:01 PR1925492 Parametres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
+                    + FIN_PARAMETRES
+                    + "19/08/26 - 20:25:02 PR1925492 Wakeup by ALARM Cpt 1\n"
+                    + "20/08/26 - 07:47:00 PR1925492 ### Passage en mode Veille\n"
+                    + "22/08/26 - 20:25:02 PR1925492 Wakeup by ALARM Cpt 2\n"
+                    + "23/08/26 - 07:47:00 PR1925492 ### Passage en mode Veille\n";
+
+    private static Path creerDossierJournalEtranger() throws IOException {
+        List<String> wavs = new ArrayList<>();
+        for (String jour : List.of("20260703", "20260704", "20260705")) {
+            wavs.add(WAV_DE_LA_SERIE + jour + "_203922.wav");
+        }
+        return creerDossierAvecWav("vigiechiro-sd-journal-etranger", LOG_ETRANGER, wavs);
+    }
+
     private static Path creerDossierMultiNuits() throws IOException {
         List<String> wavs = new ArrayList<>();
         for (String jour : List.of("20260703", "20260704", "20260705")) {
-            wavs.add("PaRecPR1925492_" + jour + "_203922.wav");
-            wavs.add("PaRecPR1925492_" + jour + "_204326.wav");
+            wavs.add(WAV_DE_LA_SERIE + jour + "_203922.wav");
+            wavs.add(WAV_DE_LA_SERIE + jour + "_204326.wav");
         }
         return creerDossierAvecWav("vigiechiro-sd-multi-nuits", LOG_MULTI, wavs);
     }

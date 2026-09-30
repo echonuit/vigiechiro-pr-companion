@@ -230,6 +230,13 @@ correspondent pas) est signalée plus fermement :
 
 ![Cas « incohérence » : le journal ne correspond pas aux enregistrements (série et date).](../assets/captures/apercu-import-incoherence.png)
 
+La date se juge sur les **nuits que le journal raconte**, et pas sur sa seule première ligne : le
+journal du capteur est circulaire, et sur une carte réutilisée il commence souvent par une nuit dont les
+fichiers ont été effacés depuis. Sur une carte de plusieurs nuits, il suffit qu'il en raconte une ; il
+est signalé quand il n'en raconte **aucune**, et le détail nomme alors les nuits qu'il raconte :
+
+![Cas « journal étranger » : trois nuits de juillet sous un journal qui raconte deux nuits d'août.](../assets/captures/apercu-import-journal-etranger.png)
+
 ### Une carte qui n'accepte plus l'écriture
 
 Si le support de la source est **monté en lecture seule**, l'inspection le dit. C'est le mode de fin

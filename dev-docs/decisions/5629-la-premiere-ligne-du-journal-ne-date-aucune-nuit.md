@@ -14,11 +14,18 @@ verified:
     at: 2026-09-30
 relations:
   complete: ["0009"]
+  amendee_par: ["5669-une-carte-de-plusieurs-nuits-se-juge-sur-les-nuits-racontees"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # La première ligne du journal ne date aucune nuit
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-09-30** : l'exemption multi-nuits est levée par
+    [5669](5669-une-carte-de-plusieurs-nuits-se-juge-sur-les-nuits-racontees.md). Une carte de plusieurs
+    nuits est jugée incohérente quand le journal n'en raconte aucune, et une seule nuit racontée suffit.
+    Le reste fait foi.
 
 ## Contexte
 

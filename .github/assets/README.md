@@ -457,6 +457,15 @@ L'assistant et **tous ses chemins non nominaux** : c'est la vue la plus riche en
 </tr>
 </table>
 
+<table>
+<tr>
+<th width="50%">Journal étranger</th>
+</tr>
+<tr>
+<td><a href="apercu-import-journal-etranger.png"><img src="apercu-import-journal-etranger.png" width="430" alt="Journal étranger"></a></td>
+</tr>
+</table>
+
 ## Qualification
 
 <sub>`qualification/view/Qualification.fxml` &middot; 3 capture(s)</sub>

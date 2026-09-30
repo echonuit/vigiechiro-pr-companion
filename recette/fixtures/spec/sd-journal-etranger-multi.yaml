@@ -1,0 +1,40 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-journal-etranger-multi
+but: "Trois nuits de juillet sous un journal qui ne raconte que deux nuits d'août -> incohérence de date (#5669)."
+
+# Le pendant de sd-multi-nuits : même carte, même série, mais le journal vient d'un autre déploiement.
+# Il raconte des nuits, et aucune n'est sur la carte. L'exemption multi-nuits le déclarait cohérent,
+# et seul un numéro de série différent l'aurait fait signaler.
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-08-19"
+  sessions:
+    - nuit: "2026-08-22"
+      frequenceKhz: 384
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260703_210000"
+      - "20260703_233000"
+      - "20260704_210000"
+      - "20260704_233000"
+      - "20260705_210000"
+      - "20260705_233000"
+
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: true
+  nuits: 3
