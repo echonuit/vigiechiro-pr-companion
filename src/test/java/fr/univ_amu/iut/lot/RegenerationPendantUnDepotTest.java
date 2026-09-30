@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Prefixe;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -115,7 +116,8 @@ class RegenerationPendantUnDepotTest {
                 () -> new CompacteurDepot(PLAFOND),
                 () -> ModeDepot.ARCHIVES_ZIP,
                 depotUnites,
-                depotPlans);
+                depotPlans,
+                televersements);
 
         SynchronisationParticipation participations = mock(SynchronisationParticipation.class);
         when(participations.participationDe(any())).thenReturn(Optional.of("part-1"));
@@ -196,6 +198,28 @@ class RegenerationPendantUnDepotTest {
         assertThat(televersements.enCours(9_999L))
                 .as("un registre resté armé bloquerait la génération à tort")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#5599 : pas de génération pendant un téléversement, et elle revient dès qu'il se termine")
+    void pas_de_generation_pendant_un_televersement() throws Exception {
+        Long id = passagePrepare();
+        Path depotDuPassage = dossier.resolve(PREFIXE.nomDossierSession()).resolve("depot");
+
+        try (TeleversementsEnCours.Inscription ignore = televersements.inscrire(id)) {
+            assertThatThrownBy(() -> service.genererArchivesDepot(id))
+                    .isInstanceOf(RegleMetierException.class)
+                    .hasMessageContaining("téléversement")
+                    .hasMessageContaining("annulez")
+                    .hasMessageNotContaining("préparez");
+            assertThat(depotDuPassage)
+                    .as("la source du téléversement écrit dans ce dossier : rien ne doit y être généré")
+                    .doesNotExist();
+        }
+
+        assertThat(service.genererArchivesDepot(id))
+                .as("le téléversement fini, la génération revient")
+                .hasSize(2);
     }
 
     private StatutWorkflow statut(Long id) {

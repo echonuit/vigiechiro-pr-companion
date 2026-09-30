@@ -21,7 +21,7 @@ Chaque tâche commence par son test rouge (article A7).
       après une exception et après une annulation. Rouge attendu : le registre n'existe pas.
 - [x] 2.2 Le registre, fourni en `@Singleton` par `LotModule`, et `DepotVigieChiro.deposer` qui s'y
       inscrit par un jeton `AutoCloseable`. Vert : 2.1 passe ; `DepotVigieChiroTest` reste vert.
-- [ ] 2.3 Écrire le cas du service : génération refusée pendant un téléversement inscrit, avec un
+- [x] 2.3 Écrire le cas du service : génération refusée pendant un téléversement inscrit, avec un
       message qui dit d'attendre la fin ou d'annuler, et aucune archive écrite ; admise après le
       retrait. Puis la garde dans `genererArchivesDepot`, **avant** la garde de statut. Mutation :
       retirer la garde doit faire rougir.

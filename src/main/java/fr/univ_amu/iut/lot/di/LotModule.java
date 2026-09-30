@@ -156,7 +156,8 @@ public class LotModule extends ModuleDeFeature {
             Horloge horloge,
             Reglages reglages,
             DepotUniteDao depotUnites,
-            DepotPlanDao depotPlans) {
+            DepotPlanDao depotPlans,
+            TeleversementsEnCours televersements) {
         return new ServiceLot(
                 passageDao,
                 sessionDao,
@@ -167,7 +168,8 @@ public class LotModule extends ModuleDeFeature {
                 () -> new CompacteurDepot(plafondArchiveOctets(reglages)),
                 () -> modeDepot(reglages),
                 depotUnites,
-                depotPlans);
+                depotPlans,
+                televersements);
     }
 
     /// ViewModel de M-Lot. **Non-singleton** (un VM frais par chargement FXML).

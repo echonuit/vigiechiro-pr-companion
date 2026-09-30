@@ -72,9 +72,15 @@ public class ServiceLot {
     private final DepotUniteDao depotUnites;
     private final DepotPlanDao depotPlans;
 
+    /// Les téléversements en cours, partagés avec le moteur de dépôt : la génération ne doit pas écrire
+    /// dans le dossier où un téléversement produit ses archives (#5599).
+    private final TeleversementsEnCours televersements;
+
     /// Politique ZIP / WAV du depot, extraite pour la cohesion (#1994) : voir [ChoixSourceDepot].
     private final ChoixSourceDepot choixSource;
 
+    /// Sans registre partagé : ce service consulte un registre à lui, où aucun téléversement ne
+    /// s'inscrit. C'est le cas des bancs ; l'application passe le registre partagé avec le dépôt.
     public ServiceLot(
             PassageDao passageDao,
             SessionDao sessionDao,
@@ -86,6 +92,33 @@ public class ServiceLot {
             Supplier<ModeDepot> modeDepot,
             DepotUniteDao depotUnites,
             DepotPlanDao depotPlans) {
+        this(
+                passageDao,
+                sessionDao,
+                sequenceDao,
+                verification,
+                moteurWorkflow,
+                horloge,
+                compacteur,
+                modeDepot,
+                depotUnites,
+                depotPlans,
+                new TeleversementsEnCours());
+    }
+
+    public ServiceLot(
+            PassageDao passageDao,
+            SessionDao sessionDao,
+            SequenceDao sequenceDao,
+            VerificationCoherence verification,
+            MoteurWorkflowPassage moteurWorkflow,
+            Horloge horloge,
+            Supplier<CompacteurDepot> compacteur,
+            Supplier<ModeDepot> modeDepot,
+            DepotUniteDao depotUnites,
+            DepotPlanDao depotPlans,
+            TeleversementsEnCours televersements) {
+        this.televersements = Objects.requireNonNull(televersements, "televersements");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
@@ -263,6 +296,13 @@ public class ServiceLot {
         Objects.requireNonNull(progres, "progres");
         Objects.requireNonNull(suivi, "suivi");
         Passage passage = chargerPassage(idPassage);
+        // AVANT la garde de statut : pendant un téléversement le passage est justement « Dépôt en
+        // cours », et c'est le téléversement qui dit vrai. Sa source produit ses archives dans le même
+        // dossier `depot/` ; générer maintenant y écrirait les mêmes fichiers (#5599).
+        if (televersements.enCours(idPassage)) {
+            throw new RegleMetierException("Un téléversement de ce passage est en cours : attendez qu'il se"
+                    + " termine, ou annulez-le, avant de régénérer les archives.");
+        }
         // Le lot doit avoir été **préparé** (preparerLot a déjà validé R14 + cohérence et posé le statut).
         // On n'archive donc que des passages préparés : l'API ne court-circuite pas ces contrôles, même si
         // l'IHM masque déjà le bouton avant cet état. Un dépôt ENTAMÉ l'est aussi (#5599) : c'est l'état où
