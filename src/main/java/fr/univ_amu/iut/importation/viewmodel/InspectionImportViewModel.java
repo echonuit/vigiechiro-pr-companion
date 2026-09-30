@@ -120,9 +120,11 @@ public class InspectionImportViewModel {
                     .journalOptionnel()
                     .map(journal -> "PR n° " + journal.numeroSerie())
                     .orElse(""));
-            passagesDejaImportes = compteRendu.passagesDeLaNuit(inspection);
-            avertissements.set(compteRendu.rediger(inspection, passagesDejaImportes));
+            // La table d'abord : les nuits jugées sont les SIENNES (#5600). Le journal circulaire commence
+            // par la nuit de son déploiement, souvent effacée de la carte depuis.
             peuplerNuits(inspection);
+            passagesDejaImportes = passagesDesNuitsCochees(inspection);
+            avertissements.set(compteRendu.rediger(inspection, passagesDejaImportes));
             inspecte.set(true);
             messageErreur.set("");
         } catch (RuntimeException echec) {
@@ -182,6 +184,24 @@ public class InspectionImportViewModel {
         return analyse.series().isEmpty() ? null : analyse.series().first();
     }
 
+    /// Les passages déjà en base pour les nuits **cochées** de la table (#5600) : même enregistreur, même
+    /// date. Ce sont les nuits présentes sur la carte, tirées des noms des WAV ; la première ligne du
+    /// journal, elle, désigne souvent une nuit effacée depuis, et c'est elle que l'on jugeait.
+    private List<PassageExistant> passagesDesNuitsCochees(RapportInspection inspection) {
+        String serie = serieDeLaCarte(inspection);
+        if (serie == null) {
+            return List.of();
+        }
+        return nuits.stream()
+                .filter(NuitVM::estIncluse)
+                .flatMap(nuit -> {
+                    List<PassageExistant> existants =
+                            serviceImport.nuitDejaImportee(serie, nuit.date().toString());
+                    return existants == null ? java.util.stream.Stream.empty() : existants.stream();
+                })
+                .toList();
+    }
+
     /// Badge « déjà importée » (#147) d'une nuit (même enregistreur + même date en base), vide sinon.
     private String statutDejaImporteeDe(String serie, NuitDetectee nuit) {
         if (serie == null) {
@@ -207,7 +227,7 @@ public class InspectionImportViewModel {
     /// non l'instantané figé à l'inspection (sinon réimporter la même nuit sur un n° libre passerait sans
     /// confirmation). Sans inspection courante, l'avertissement reste vide.
     public void rafraichirNuitExistante() {
-        passagesDejaImportes = rapport == null ? List.of() : compteRendu.passagesDeLaNuit(rapport);
+        passagesDejaImportes = rapport == null ? List.of() : passagesDesNuitsCochees(rapport);
         avertissements.set(
                 rapport == null ? CompteRenduDInspection.vide() : compteRendu.rediger(rapport, passagesDejaImportes));
         if (rapport != null) {

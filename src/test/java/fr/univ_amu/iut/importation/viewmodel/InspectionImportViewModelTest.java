@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -243,8 +245,12 @@ class InspectionImportViewModelTest {
             "#5600 : une nuit présente sur la carte et déjà importée est nommée, même si le journal commence avant")
     void une_nuit_presente_deja_importee_est_nommee() throws IOException {
         Path carte = carteReutilisee();
-        when(serviceImport.nuitDejaImportee("1925492", "2026-08-23"))
-                .thenReturn(List.of(new PassageExistant(2, 2026, "202013", "Z1")));
+        // Une réponse PAR date : le mode strict de Mockito lèverait sur les autres nuits, et `inspecter`
+        // avalerait l'exception en réinitialisant la table - un rouge qui ne dirait rien du produit.
+        when(serviceImport.nuitDejaImportee(eq("1925492"), anyString()))
+                .thenAnswer(appel -> "2026-08-23".equals(appel.getArgument(1))
+                        ? List.of(new PassageExistant(2, 2026, "202013", "Z1"))
+                        : List.of());
         vm.dossierSourceProperty().set(carte);
 
         vm.inspecter();

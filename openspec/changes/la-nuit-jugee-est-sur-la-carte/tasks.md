@@ -6,7 +6,7 @@ une demande de fusion chacun. Chaque tâche commence par son test rouge (article
 - [x] 1.1 Reproduire sur la carte de Samuel (journal du 19 août, nuits du 22 au 24) : l'avertissement
       nomme 202016 G1, une nuit présente déjà importée n'est pas nommée, le contrôle du n° reconnaît
       une nuit récupérée absente. Trois tests rouges, commit `79d085f60`.
-- [ ] 1.2 Les identités des nuits de la table remplacent `identiteNuit` ; l'avertissement et la
+- [x] 1.2 Les identités des nuits de la table remplacent `identiteNuit` ; l'avertissement et la
       question de confirmation les jugent. Vert : les deux tests d'inspection de 1.1.
 - [ ] 1.3 Un cas où la seule nuit déjà importée est décochée : pas de confirmation. Un cas à deux nuits
       cochées déjà importées : les deux nommées avec leur date. Rouges avant 1.4.
