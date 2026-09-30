@@ -121,6 +121,52 @@ class AnalyseCoherenceTest {
         assertThat(c.serieReleve()).isEmpty();
     }
 
+    /// Une carte sur disque, inspectée par le vrai chemin (#5631) : un journal circulaire qui raconte
+    /// chaque nuit donnée, dans l'ordre, et un WAV par nuit enregistrée. La cohérence se lit sur le
+    /// rapport, là où l'écran la lit, avec les cycles d'acquisition que l'inspection tire du journal.
+    private static AnalyseCoherence coherenceDeLaCarte(
+            Path racine, List<LocalDate> nuitsDuJournal, List<String> joursDesWav) throws java.io.IOException {
+        java.nio.file.Files.createDirectories(racine);
+        java.util.List<String> lignes = new java.util.ArrayList<>();
+        for (LocalDate nuit : nuitsDuJournal) {
+            lignes.addAll(fr.univ_amu.iut.fixture.JournalDeCapteur.lignes("1925492", nuit, true));
+        }
+        java.nio.file.Files.write(racine.resolve("LogPR1925492.txt"), lignes);
+        for (String jour : joursDesWav) {
+            java.nio.file.Files.writeString(racine.resolve("PaRecPR1925492_" + jour + "_213000.wav"), "wav");
+        }
+        return new fr.univ_amu.iut.importation.model.InspecteurDossier(
+                        new fr.univ_amu.iut.importation.model.AnalyseurLogPR())
+                .inspecter(racine)
+                .coherence();
+    }
+
+    @Test
+    @DisplayName(
+            "#5631 : une carte réutilisée à une seule nuit n'est pas incohérente parce que le journal commence avant")
+    void carte_reutilisee_a_une_nuit_n_est_pas_incoherente(@org.junit.jupiter.api.io.TempDir Path racine)
+            throws java.io.IOException {
+        // Le journal raconte la nuit effacée du 19 août, puis la nuit présente du 22 : il vient bien du
+        // même capteur que les WAV, et décrit leur nuit. Seule sa PREMIÈRE ligne sort de leur fenêtre.
+        AnalyseCoherence c = coherenceDeLaCarte(
+                racine, List.of(LocalDate.of(2026, 8, 19), LocalDate.of(2026, 8, 22)), List.of("20260822"));
+
+        assertThat(c.dateIncoherente())
+                .as("« vérifiez qu'ils viennent bien de la même nuit » : ils en viennent")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#5631 : un journal qui ne raconte aucune nuit des WAV reste incohérent")
+    void un_journal_etranger_reste_incoherent(@org.junit.jupiter.api.io.TempDir Path racine)
+            throws java.io.IOException {
+        // Contrôle négatif : sans lui, un remède qui ne jugerait plus aucune date passerait le cas
+        // d'au-dessus.
+        AnalyseCoherence c = coherenceDeLaCarte(racine, List.of(LocalDate.of(2026, 4, 1)), List.of("20260822"));
+
+        assertThat(c.dateIncoherente()).isTrue();
+    }
+
     private static JournalParse journal(String serie, LocalDate date) {
         return new JournalParse(
                 serie, null, date, null, null, null, null, null, true, null, List.of(), List.of(), List.of());
