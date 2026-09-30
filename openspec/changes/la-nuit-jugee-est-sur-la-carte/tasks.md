@@ -14,13 +14,15 @@ une demande de fusion chacun. Chaque tâche commence par son test rouge (article
       Vert : 1.3, et `AvertissementsInspectionTest` reste vert.
 - [x] 1.5 `ControleNumeroPassage` reçoit les nuits cochées. Vert : le test de 1.1, et le cas #2580
       existant reste vert.
-- [ ] 1.6 Mutation : revenir à `journal.dateDebut()` fait rougir ; PIT sur les classes touchées,
+- [x] 1.6 Mutation : revenir à `journal.dateDebut()` fait rougir ; PIT sur les classes touchées,
       survivants lus ; aperçu de l'inspection sur une carte réutilisée relu ; batterie ; PR.
 
 ## 2. Le contrôle de cohérence juge les nuits racontées (#5631)
 
 - [x] 2.1 Reproduire : un vrai journal circulaire (19 puis 22 août), des WAV du 22 seul, date jugée
-      incohérente ; contrôle négatif (journal du 1er avril seul) incohérent. Commit `ba2351fc6`.
+      incohérente ; contrôle négatif (journal du 1er avril seul) incohérent. Écrite au commit
+      `ba2351fc6`, puis retirée de la branche de #5600 pour ne pas en rougir la CI : elle se
+      réapplique sur la branche de #5631 (`git show ba2351fc6 -- …/AnalyseCoherenceTest.java`).
 - [ ] 2.2 `AnalyseCoherence` reçoit les nuits des cycles du journal, repli sur `dateDebut` sans cycle.
       Vert : 2.1, le contrôle négatif et les cas existants de `AnalyseCoherenceTest`.
 - [ ] 2.3 Mutation, PIT sur `AnalyseCoherence`, batterie, PR.

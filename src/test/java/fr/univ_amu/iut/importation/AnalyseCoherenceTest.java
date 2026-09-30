@@ -121,44 +121,6 @@ class AnalyseCoherenceTest {
         assertThat(c.serieReleve()).isEmpty();
     }
 
-    /// Un VRAI journal circulaire, lu par l'analyseur : il raconte chaque nuit donnée, dans l'ordre.
-    private static JournalParse journalCirculaire(LocalDate... nuits) {
-        java.util.List<String> lignes = new java.util.ArrayList<>();
-        for (LocalDate nuit : nuits) {
-            lignes.addAll(fr.univ_amu.iut.fixture.JournalDeCapteur.lignes("1925492", nuit, true));
-        }
-        return new fr.univ_amu.iut.importation.model.AnalyseurLogPR().analyser(lignes);
-    }
-
-    @Test
-    @DisplayName(
-            "#5631 : une carte réutilisée à une seule nuit n'est pas incohérente parce que le journal commence avant")
-    void carte_reutilisee_a_une_nuit_n_est_pas_incoherente() {
-        // Le journal raconte la nuit effacée du 19 août, puis la nuit présente du 22 : il vient bien du
-        // même capteur que les WAV, et décrit leur nuit. Seule sa PREMIÈRE ligne sort de leur fenêtre.
-        AnalyseCoherence c = AnalyseCoherence.depuis(
-                journalCirculaire(LocalDate.of(2026, 8, 19), LocalDate.of(2026, 8, 22)),
-                null,
-                List.of(Path.of("PaRecPR1925492_20260822_213000.wav")));
-
-        assertThat(c.dateIncoherente())
-                .as("« vérifiez qu'ils viennent bien de la même nuit » : ils en viennent")
-                .isFalse();
-    }
-
-    @Test
-    @DisplayName("#5631 : un journal qui ne raconte aucune nuit des WAV reste incohérent")
-    void un_journal_etranger_reste_incoherent() {
-        // Contrôle négatif : sans lui, un remède qui ne jugerait plus aucune date passerait le cas
-        // d'au-dessus.
-        AnalyseCoherence c = AnalyseCoherence.depuis(
-                journalCirculaire(LocalDate.of(2026, 4, 1)),
-                null,
-                List.of(Path.of("PaRecPR1925492_20260822_213000.wav")));
-
-        assertThat(c.dateIncoherente()).isTrue();
-    }
-
     private static JournalParse journal(String serie, LocalDate date) {
         return new JournalParse(
                 serie, null, date, null, null, null, null, null, true, null, List.of(), List.of(), List.of());
