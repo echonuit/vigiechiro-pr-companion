@@ -16,11 +16,11 @@ Chaque tâche commence par son test rouge (article A7).
 
 ## 2. La provenance remonte jusqu'au résultat
 
-- [ ] 2.1 Écrire le banc de `TeleverseurArchive`, qui n'existe pas : un `403` provoqué à la
+- [x] 2.1 Écrire le banc de `TeleverseurArchive`, qui n'existe pas : un `403` provoqué à la
       déclaration, au `PUT` d'un seul bloc, à la demande d'URL de partie, au `PUT` d'une partie et à
       la finalisation, avec la cause lue sur le `Resultat`. Rouge attendu : les deux `PUT` rendent
       `AUTHENTIFICATION`.
-- [ ] 2.2 Faire rendre à `ClientVigieChiro.deposerEnParts` son issue avec la provenance de l'étape en
+- [x] 2.2 Faire rendre à `ClientVigieChiro.deposerEnParts` son issue avec la provenance de l'étape en
       échec, et à `TeleverseurArchive` celle du chemin d'un seul bloc. Vert : le banc de 2.1 passe, et
       `ClientVigieChiroTest` comme `SignatureS3DepotTest` restent verts.
 
