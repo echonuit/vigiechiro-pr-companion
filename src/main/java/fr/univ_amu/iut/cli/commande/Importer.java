@@ -19,7 +19,6 @@ import fr.univ_amu.iut.importation.model.ReglageConservationOriginaux;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.VolumesImport;
-import fr.univ_amu.iut.importation.viewmodel.AvertissementsInspection;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -30,6 +29,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import picocli.CommandLine.Command;
@@ -208,18 +208,18 @@ public final class Importer implements Callable<Integer> {
     /// y correspond.
     ///
     /// La phrase est celle du terminal ; les données sont celles de l'écran, lues dans
-    /// [AvertissementsInspection#detailsDeCoherence], qui seul les compose. `PariteCoherenceDuJournalTest`
+    /// [AnalyseCoherence#desaccords], qui seul les compose. `PariteCoherenceDuJournalTest`
     /// confronte les deux surfaces.
     public static String journalIncoherentLisible(AnalyseCoherence coherence) {
-        var details = AvertissementsInspection.detailsDeCoherence(coherence);
-        if (details.isEmpty()) {
+        List<AnalyseCoherence.Desaccord> desaccords = coherence == null ? List.of() : coherence.desaccords();
+        if (desaccords.isEmpty()) {
             return "";
         }
         return "ne correspond pas aux enregistrements, vérifiez qu'il vient bien de cette carte - "
                 + String.join(
                         " ; ",
-                        details.stream()
-                                .map(detail -> detail.sujet() + " : " + detail.precision())
+                        desaccords.stream()
+                                .map(desaccord -> desaccord.sujet() + " : " + desaccord.precision())
                                 .toList());
     }
 

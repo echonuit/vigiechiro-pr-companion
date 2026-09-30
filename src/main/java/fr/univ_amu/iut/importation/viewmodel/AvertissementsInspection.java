@@ -138,7 +138,8 @@ public final class AvertissementsInspection {
 
     /// Désaccord entre le journal du capteur et les fichiers : sur la série, sur la date, ou les deux.
     /// Chaque désaccord est un détail à part - la phrase les liait par un « et » qui obligeait à
-    /// reconstruire mentalement ce qui portait sur quoi.
+    /// reconstruire mentalement ce qui portait sur quoi. Les détails viennent de [AnalyseCoherence#desaccords],
+    /// qui nomme les nuits que le journal raconte plutôt que sa première ligne (#5653).
     private static Optional<Constat> coherenceConstat(AnalyseCoherence coherence) {
         if (coherence == null || !coherence.incoherent()) {
             return Optional.empty();
@@ -147,27 +148,9 @@ public final class AvertissementsInspection {
                 "Le journal du capteur ne correspond pas aux enregistrements : vérifiez qu'ils viennent"
                         + " bien de la même nuit.",
                 Severite.AVERTISSEMENT,
-                detailsDeCoherence(coherence)));
-    }
-
-    /// Les désaccords du journal avec les enregistrements, un détail chacun : la série déclarée absente,
-    /// puis la date. Vide si le journal est cohérent. Public parce que la ligne de commande dit les
-    /// mêmes données dans sa propre phrase (#5670), et qu'elles ne se composent qu'ici.
-    public static List<Detail> detailsDeCoherence(AnalyseCoherence coherence) {
-        List<Detail> details = new ArrayList<>();
-        if (coherence == null || !coherence.incoherent()) {
-            return details;
-        }
-        if (coherence.serieIncoherente()) {
-            details.add(new Detail(
-                    "série déclarée absente des fichiers",
-                    String.join(", ", coherence.seriesDeclareesAbsentes()) + " (fichiers : "
-                            + String.join(", ", coherence.seriesFichiers()) + ")"));
-        }
-        if (coherence.dateIncoherente()) {
-            details.add(dateHorsDesFichiers(coherence));
-        }
-        return details;
+                coherence.desaccords().stream()
+                        .map(desaccord -> new Detail(desaccord.sujet(), desaccord.precision()))
+                        .toList()));
     }
 
     /// Nuit déjà importée (#147) : non bloquant, l'utilisateur peut vouloir un nouveau passage.
@@ -249,27 +232,5 @@ public final class AvertissementsInspection {
         return nuitExistanteConstat(nuits)
                 .map(constat -> new CompteRendu("", "", List.of(constat), question))
                 .orElse(CompteRendu.de("", List.of()));
-    }
-
-    /// Le détail d'une date en désaccord nomme ce qui a été **jugé** : les nuits que le journal raconte
-    /// (#5631), et sa première date seulement faute de cycle lisible. Nommer la seule première taisait
-    /// les autres, et énonçait une règle que le calcul n'appliquait plus (#5653).
-    private static Detail dateHorsDesFichiers(AnalyseCoherence coherence) {
-        String fichiers = " (fichiers : " + dates(coherence.nuitsFichiers()) + ")";
-        if (coherence.nuitsJournal().isEmpty()) {
-            return new Detail(
-                    "date du journal hors de la nuit des fichiers",
-                    coherence.dateJournal().map(JOUR::format).orElse("?") + fichiers);
-        }
-        String sujet = coherence.nuitsJournal().size() == 1
-                ? "nuit racontée par le journal hors de la nuit des fichiers"
-                : "nuits racontées par le journal, toutes hors de la nuit des fichiers";
-        return new Detail(sujet, dates(coherence.nuitsJournal()) + fichiers);
-    }
-
-    private static String dates(Iterable<LocalDate> nuits) {
-        List<String> rendues = new ArrayList<>();
-        nuits.forEach(nuit -> rendues.add(JOUR.format(nuit)));
-        return String.join(", ", rendues);
     }
 }

@@ -2,8 +2,11 @@ package fr.univ_amu.iut.importation.model;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -30,6 +33,15 @@ import java.util.regex.Pattern;
 public final class AnalyseCoherence {
 
     private static final Pattern MOTIF_RELEVE = Pattern.compile("PaRecPR(\\d+)_THLog");
+
+    private static final DateTimeFormatter JOUR = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
+
+    /// Un désaccord du journal avec les enregistrements : ce qui est faux, puis les valeurs en présence.
+    ///
+    /// Composé ici, près des données, pour que l'écran et la ligne de commande le disent chacun dans sa
+    /// phrase sans le recomposer (#5670) : la ligne de commande ne voit pas les ViewModels d'une autre
+    /// fonctionnalité.
+    public record Desaccord(String sujet, String precision) {}
 
     private final String serieJournal;
     private final String serieReleve;
@@ -167,6 +179,41 @@ public final class AnalyseCoherence {
     /// le journal raconte.
     private boolean estRacontee(LocalDate date) {
         return nuitsJournal.stream().anyMatch(nuit -> !date.isBefore(nuit) && !date.isAfter(nuit.plusDays(1)));
+    }
+
+    /// Les désaccords, la série déclarée absente puis la date ; vide si le journal est cohérent.
+    ///
+    /// Le détail d'une date nomme ce qui a été **jugé** : les nuits que le journal raconte (#5631), et
+    /// sa première date seulement faute de cycle lisible (#5653).
+    public List<Desaccord> desaccords() {
+        List<Desaccord> desaccords = new ArrayList<>();
+        if (serieIncoherente()) {
+            desaccords.add(new Desaccord(
+                    "série déclarée absente des fichiers",
+                    String.join(", ", seriesDeclareesAbsentes()) + " (fichiers : " + String.join(", ", seriesFichiers)
+                            + ")"));
+        }
+        if (dateIncoherente()) {
+            String fichiers = " (fichiers : " + dates(nuitsFichiers) + ")";
+            if (nuitsJournal.isEmpty()) {
+                desaccords.add(new Desaccord(
+                        "date du journal hors de la nuit des fichiers",
+                        dateJournal().map(JOUR::format).orElse("?") + fichiers));
+            } else {
+                desaccords.add(new Desaccord(
+                        nuitsJournal.size() == 1
+                                ? "nuit racontée par le journal hors de la nuit des fichiers"
+                                : "nuits racontées par le journal, toutes hors de la nuit des fichiers",
+                        dates(nuitsJournal) + fichiers));
+            }
+        }
+        return desaccords;
+    }
+
+    private static String dates(Iterable<LocalDate> nuits) {
+        List<String> rendues = new ArrayList<>();
+        nuits.forEach(nuit -> rendues.add(JOUR.format(nuit)));
+        return String.join(", ", rendues);
     }
 
     /// Vrai si une incohérence (série ou date) est détectée → avertissement à l'inspection.

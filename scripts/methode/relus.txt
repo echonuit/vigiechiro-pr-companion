@@ -200,7 +200,7 @@ ab3e9e1504e6  src/main/java/fr/univ_amu/iut/cli/commande/ExporterObservations.ja
 6d71c75441d2  src/main/java/fr/univ_amu/iut/cli/commande/ExporterVu.java
 f0aa8f94471d  src/main/java/fr/univ_amu/iut/cli/commande/FournisseurVersion.java
 41cdb66b1cf2  src/main/java/fr/univ_amu/iut/cli/commande/GardeJeuExistant.java
-25814abb81d5  src/main/java/fr/univ_amu/iut/cli/commande/Importer.java
+9fe3e364a17f  src/main/java/fr/univ_amu/iut/cli/commande/Importer.java
 60098c16b16e  src/main/java/fr/univ_amu/iut/cli/commande/ImporterTadarida.java
 c16315ee421b  src/main/java/fr/univ_amu/iut/cli/commande/ImporterTransformes.java
 b3bc48f69f92  src/main/java/fr/univ_amu/iut/cli/commande/ImporterVigieChiro.java
@@ -717,7 +717,7 @@ c332b3db4891  src/main/java/fr/univ_amu/iut/diagnostic/outils/CaptureDiagnostic.
 60aaa3804e32  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/DiagnosticViewModel.java
 6c5ac41a2062  src/main/java/fr/univ_amu/iut/diagnostic/viewmodel/PlagesHoraires.java
 72e4bf119771  src/main/java/fr/univ_amu/iut/importation/di/ImportationModule.java
-2a1e08db282b  src/main/java/fr/univ_amu/iut/importation/model/AnalyseCoherence.java
+c1be3d3a00e2  src/main/java/fr/univ_amu/iut/importation/model/AnalyseCoherence.java
 7bce3b47c375  src/main/java/fr/univ_amu/iut/importation/model/AnalyseMelange.java
 f9cc636c0690  src/main/java/fr/univ_amu/iut/importation/model/AnalyseurLogPR.java
 d525e43a76d0  src/main/java/fr/univ_amu/iut/importation/model/ApercuEcrasement.java
@@ -796,7 +796,7 @@ a7c8afafb0f8  src/main/java/fr/univ_amu/iut/importation/view/TableNuits.java
 f16563b0fd16  src/main/java/fr/univ_amu/iut/importation/view/ZoneNuits.java
 ef03b0d325da  src/main/java/fr/univ_amu/iut/importation/view/ZoneNumeroPassage.java
 f4f8aa55113b  src/main/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixe.java
-0e851db2928d  src/main/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspection.java
+6ebea44e4266  src/main/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspection.java
 ea4721561642  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduChiffreImport.java
 af9890a9cd3e  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduDInspection.java
 769e9b592a2f  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduImport.java
