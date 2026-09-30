@@ -63,9 +63,9 @@ sens qu'on oublie en corrigeant, et le chiffre a d'abord été mesuré faux, par
 
 `.github/scripts/_forge.py` pose de ne pas verser « de logique de forge » dans `scripts/_commun/`, sur
 la mesure de #5216. `epics.py` la frôle et s'en distingue : il ne lance rien, ne lit aucun réseau, ne
-connaît pas `gh`, et répond à une question de vocabulaire sur un dictionnaire déjà lu. Ce qui restait
-interdit reste chez `_forge.py`. La direction de l'import est celle qui existait déjà, deux gardes de
-CI important `scripts/_commun`.
+connaît pas `gh`, et répond sur un dictionnaire déjà lu. Ce qui restait
+interdit reste chez `_forge.py`. La direction de l'import existait déjà : deux gardes de CI
+importent `scripts/_commun`.
 
 ## Le remède révèle, il ne cause pas
 
@@ -79,9 +79,12 @@ donc dans la population, et non dans la détection.
 ## Comment on saurait qu'elle est rompue
 
 `verifie_grammaire()` porte **dix-sept cas**, joués des **deux côtés de la barrière** : par
-l'auto-test de `loupe-4712-lots-multi-pr.py` et par celui de `verifie_cloture_consignee.py`. Deux
-joueurs et non quatre, mais un de chaque paquet : ce qu'il faut prouver est que la même définition les
-traverse, et un seul joueur ne le montrerait pas.
+l'auto-test de `loupe-4712-lots-multi-pr.py` et par celui de `verifie_cloture_consignee.py`, un de
+chaque paquet.
+
+Ce qu'il fallait prouver est que la **même** définition les traverse tous, et la ressemblance n'y
+suffit pas. Muter `est_epic` en son défaut d'origine fait rougir **trois** harnais indépendants, ceux
+des deux loupes et du garde de clôture, tous verts après restauration.
 
 La **décision** de tronquer vit dans `retenus_parmi`, pure, donc jouable hors ligne. Le **refus**
 lui-même ne peut pas y vivre : il est traversé par deux cas du garde de clôture, au plafond et sous
