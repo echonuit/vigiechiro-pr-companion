@@ -40,9 +40,12 @@ import json
 import os
 import pathlib
 import re
-import shutil
 import subprocess
 import sys
+
+RACINE_DU_DEPOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RACINE_DU_DEPOT / "scripts"))
+from _commun.forge import interroge
 
 SAS = 4562
 
@@ -87,23 +90,20 @@ def _leurre() -> dict | None:
 
 
 def _forge(numero: int, champ: str, filtre: str) -> str:
-    """Interroge la forge, ou REFUSE. Un garde ne conclut pas sur ce qu il n a pas lu."""
-    if shutil.which("gh") is None:
-        print(
-            "REFUS : « gh » est absent. Ce garde ne conclut pas sur ce qu'il n'a pas lu.",
-            file=sys.stderr,
-        )
-        raise SystemExit(2)
-    rendu = subprocess.run(
-        ["gh", "issue", "view", str(numero), "--json", champ, "-q", filtre],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if rendu.returncode != 0:
-        print(f"REFUS : la forge n'a pas répondu pour #{numero}.", file=sys.stderr)
-        raise SystemExit(2)
-    return rendu.stdout.strip()
+    """Un champ d une issue, ou un REFUS. Le refus vient de `_commun.forge`, la commande reste ici.
+
+    **Ce qui reste local est du DOMAINE, ce qui part est du TRANSPORT** (#5544). Cette fonction sait
+    ce qu est une issue - un numero, un champ, un filtre `jq` - et `interroge` ne le sait pas : il sait
+    lancer `gh`, lire un code de retour, et distinguer trois silences. Les melanger est ce qui rendait
+    la duplication tentante : on recopie douze lignes plutot que d importer un module qui parle
+    d issues quand on n en veut pas.
+
+    Le `quoi` nomme l issue, ce que ce garde etait le seul des quatre a faire avant l unification.
+    """
+    return interroge(
+        ["issue", "view", str(numero), "--json", champ, "-q", filtre],
+        quoi=f"le champ « {champ} » de l issue #{numero}",
+    ).strip()
 
 
 def parent_de(numero: int) -> str:

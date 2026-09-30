@@ -63,7 +63,8 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import PLAFOND_ISSUES, loupe, sort_si_contrat_demande
+from _commun import PLAFOND_ISSUES, forge, loupe, sort_si_contrat_demande
+from _commun.forge import interroge
 
 PLAFOND = PLAFOND_ISSUES
 
@@ -100,24 +101,10 @@ def ditSonCritere(corps: str) -> bool:
     return bool(CRITERE.search(corps or ""))
 
 
-def _forge(arguments: list[str]) -> str:
-    if not shutil.which("gh"):
-        print(
-            "REFUS : « gh » est absent. Cette loupe ne conclut pas sur ce qu'elle n'a pas lu.",
-            file=sys.stderr,
-        )
-        raise SystemExit(2)
-    sortie = subprocess.run(["gh", *arguments], capture_output=True, text=True, check=False)
-    if sortie.returncode != 0:
-        print("REFUS : la forge n'a pas repondu.", file=sys.stderr)
-        raise SystemExit(2)
-    return sortie.stdout
-
-
 def _corpus() -> tuple[list[dict], dict[int, list[dict]]]:
     """Les chantiers ouverts depuis la regle, et les sous-issues de chacun."""
     issues = json.loads(
-        _forge(
+        interroge(
             [
                 "issue",
                 "list",
@@ -127,7 +114,8 @@ def _corpus() -> tuple[list[dict], dict[int, list[dict]]]:
                 str(PLAFOND),
                 "--json",
                 "number,title,createdAt,labels",
-            ]
+            ],
+            quoi="les chantiers ouverts",
         )
     )
     if len(issues) >= PLAFOND:
@@ -145,7 +133,10 @@ def _corpus() -> tuple[list[dict], dict[int, list[dict]]]:
     lots: dict[int, list[dict]] = {}
     for chantier in chantiers:
         rendu = json.loads(
-            _forge(["issue", "view", str(chantier["number"]), "--json", "subIssues"])
+            interroge(
+                ["issue", "view", str(chantier["number"]), "--json", "subIssues"],
+                quoi=f"les lots du chantier #{chantier['number']}",
+            )
         )
         numeros = [
             n["number"]
@@ -153,7 +144,12 @@ def _corpus() -> tuple[list[dict], dict[int, list[dict]]]:
             if n.get("state") == "OPEN"
         ]
         lots[chantier["number"]] = [
-            json.loads(_forge(["issue", "view", str(n), "--json", "number,title,body"]))
+            json.loads(
+                interroge(
+                    ["issue", "view", str(n), "--json", "number,title,body"],
+                    quoi=f"le lot #{n}",
+                )
+            )
             for n in numeros
         ]
     return chantiers, lots
@@ -251,13 +247,21 @@ def _autoTest() -> int:
     # appliquee dans `_corpus`, qui lit la forge ; on eprouve ici la COMPARAISON qui la porte.
     assert "2026-08-28T23:59:59Z" < NAISSANCE < "2026-08-29T06:00:00Z", "la borne a bouge"
 
+    # ⟨les cas du module PARTAGE, joues ici⟩ `_commun/forge.py` porte l appel des quatre
+    # dispositifs depuis #5544, et ses cas doivent etre joues par quelqu un sous peine d etre inertes
+    # (ADR 5546, et #5594 pour l espece). UN seul joueur, et c est celui-ci : il portait deja le cas
+    # qui exerce l APPEL et non le verdict, apres qu une mutation ait montre que retirer le refus
+    # laissait cet auto-test vert.
+    for libelle, tenu in forge.verifie_grammaire():
+        assert tenu, f"appel a la forge : {libelle}"
+
     # L APPEL, et non le verdict (ADR 4331). Les cas ci-dessus n exercent jamais `_forge`, et une
     # mutation l a montre : retirer le refus laissait l auto-test VERT. On lance donc le vrai chemin
     # avec un PATH ou `gh` n existe pas, sans reseau et en une milliseconde.
     chemin = os.environ.get("PATH", "")
     os.environ["PATH"] = str(pathlib.Path(__file__).parent)
     try:
-        _forge(["issue", "list"])
+        interroge(["issue", "list"], quoi="un cas")
     except SystemExit as sortie:
         assert sortie.code == 2, f"le refus doit sortir en 2, pas en {sortie.code}"
     else:

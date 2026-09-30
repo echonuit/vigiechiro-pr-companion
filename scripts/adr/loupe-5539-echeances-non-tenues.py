@@ -44,13 +44,12 @@ import json
 import os
 import pathlib
 import re
-import shutil
-import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from _commun import PLAFOND_ISSUES, loupe, sort_si_contrat_demande
+from _commun.forge import interroge
 
 # Le plafond de `gh issue list`. Au-dela, il tronque SANS le dire (#4834). Mesure du 2026-09-25 :
 # le depot porte 1856 issues, et un plafond a 1600 en taisait 256. La marge est volontaire, et la
@@ -122,20 +121,6 @@ def non_tenus(issues: list[dict], aujourd_hui: datetime.date) -> list[str]:
     return rendus
 
 
-def _forge(arguments: list[str]) -> str:
-    if not shutil.which("gh"):
-        print(
-            "REFUS : « gh » est absent. Cette loupe ne conclut pas sur ce qu'elle n'a pas lu.",
-            file=sys.stderr,
-        )
-        raise SystemExit(2)
-    sortie = subprocess.run(["gh", *arguments], capture_output=True, text=True, check=False)
-    if sortie.returncode != 0:
-        print("REFUS : la forge n'a pas repondu.", file=sys.stderr)
-        raise SystemExit(2)
-    return sortie.stdout
-
-
 def corpus() -> list[dict]:
     """Toutes les issues, ouvertes et fermees. La couture passe AVANT l appel a la forge.
 
@@ -146,7 +131,7 @@ def corpus() -> list[dict]:
     if injecte:
         return json.loads(pathlib.Path(injecte).read_text(encoding="utf-8"))
     return json.loads(
-        _forge(
+        interroge(
             [
                 "issue",
                 "list",
@@ -156,7 +141,8 @@ def corpus() -> list[dict]:
                 str(PLAFOND),
                 "--json",
                 "number,title,body,state,closedAt",
-            ]
+            ],
+            quoi="toutes les issues, ouvertes et fermees",
         )
     )
 
@@ -287,6 +273,25 @@ def _auto_test() -> int:
     if echecs:
         print(f"\n{echecs} cas en échec.", file=sys.stderr)
         return 1
+    # ⟨l APPEL, et non le verdict (ADR 4331)⟩ Tous les cas ci-dessus passent par la couture
+    # `ECHEANCES_RELEVE_FICHIER`, qui court-circuite AVANT l appel a la forge : le chemin reel
+    # n etait donc eprouve par rien. Ajoute par #5544, en meme temps que le partage de l appel, parce
+    # qu unifier un refus sans l eprouver chez chaque appelant ne prouve que le module partage. On
+    # retire la couture ET `gh` du PATH : aucun reseau, une milliseconde.
+    injecte = os.environ.pop("ECHEANCES_RELEVE_FICHIER", None)
+    chemin = os.environ.get("PATH", "")
+    os.environ["PATH"] = str(pathlib.Path(__file__).parent)
+    try:
+        corpus()
+    except SystemExit as sortie:
+        assert sortie.code == 2, f"le refus doit sortir en 2, pas en {sortie.code}"
+    else:
+        raise AssertionError("sans « gh », cette loupe doit REFUSER au lieu de conclure")
+    finally:
+        os.environ["PATH"] = chemin
+        if injecte is not None:
+            os.environ["ECHEANCES_RELEVE_FICHIER"] = injecte
+
     print("\nAuto-test concluant : les deux moitiés, leurs contraires, et la règle d'exclusion.")
     return 0
 
