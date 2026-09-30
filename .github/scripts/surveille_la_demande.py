@@ -144,12 +144,19 @@ def surveille(
             return PAS_PU_LIRE
 
         restantes = en_cours(checks)
-        print(f"[{ecoule:5d}s] {len(checks)} verification(s) : {composition(checks)}")
+        # ⟨`flush` n est pas un ornement⟩ Python tamponne `stdout` des qu il n est pas un
+        # terminal, et un moniteur redirige toujours. Sans lui, les lignes de progression
+        # n arrivent qu a la SORTIE du processus : le journal reste vide pendant toute la
+        # surveillance, ce qui se lit « il ne se passe rien ». Vu sur la demande de ce lot meme.
+        print(
+            f"[{ecoule:5d}s] {len(checks)} verification(s) : {composition(checks)}",
+            flush=True,
+        )
 
         # ⟨une liste VIDE n est pas une conclusion⟩ Sans cette moitie, une demande dont la forge n a
         # pas encore cree les check-runs serait declaree conclue a la premiere sonde.
         if checks and restantes == 0:
-            print(f"CONCLU : {composition(checks)}")
+            print(f"CONCLU : {composition(checks)}", flush=True)
             return CONCLU
 
         if ecoule + pause > budget:
