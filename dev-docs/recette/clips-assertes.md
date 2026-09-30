@@ -535,6 +535,16 @@ la situation la plus fréquente du terrain, pas un cas limite.
 
 > Le capteur a été repris et reconfiguré entre les deux nuits. #3460 a corrigé le fait qu'une nuit
 > repartait avec les réglages d'une **autre** ; ce cas garde la correction.
+
+### S2-80 et S2-81 · `les_nuits_deja_importees_sont_celles_de_la_carte`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioCarteMultiNuitsTest.les_nuits_deja_importees_sont_celles_de_la_carte.mp4"></video>
+
+> Deux temps. Le 04/07 et le 05/07 sont importés pour de bon, le 03/07 décoché ; puis la même carte
+> est rebranchée. Ce qui se juge est **quelle** nuit le bandeau nomme : le 04/07 et le 05/07, jamais le
+> 03/07, qui est pourtant la nuit que le journal raconte en premier et celle que l'inspection jugeait
+> avant #5600. La question qui suit est au pluriel (#5639).
 ## ScenarioBandeauLectureSeuleTest
 
 Le quatrième bandeau de l'inspection : le support est monté en **lecture seule**. Ces cas dormaient
@@ -592,6 +602,23 @@ carte qui fait la pathologie.
 > commentaire du contrôleur l'annonçait ainsi depuis #111. Le comportement est le bon - importer des
 > fichiers préfixés pour un autre carré les enverrait au dépôt sous ce nom-là - et ce sont les écrits
 > qui ont vieilli. Le commentaire est corrigé ici ; le classement du cas revient au porteur.
+
+### S2-82 · `une_carte_reutilisee_ne_leve_aucune_incoherence`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioBandeauxDInspectionTest.une_carte_reutilisee_ne_leve_aucune_incoherence.mp4"></video>
+
+> Ce qui se juge est une **absence** : le journal commence cinq nuits avant la seule nuit de la carte,
+> mais la raconte aussi, et aucun bandeau d'incohérence ne paraît (#5631).
+
+### S2-83 · `un_journal_etranger_nomme_les_nuits_racontees`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioBandeauxDInspectionTest.un_journal_etranger_nomme_les_nuits_racontees.mp4"></video>
+
+> Le pendant du précédent : trois nuits de juillet sous un journal qui ne raconte que deux nuits
+> d'août. Le bandeau paraît, et son détail nomme les **nuits racontées**, 19/08 et 22/08, et non la
+> seule première ligne du journal (#5653, #5669).
 ## ScenarioReveilParBoutonTest
 
 Samuel est venu regarder l'écran de son enregistreur pendant la nuit. Le firmware sort alors de la
