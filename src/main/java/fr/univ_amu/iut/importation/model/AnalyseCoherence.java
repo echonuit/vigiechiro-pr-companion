@@ -35,30 +35,49 @@ public final class AnalyseCoherence {
     private final SortedSet<String> seriesFichiers;
     private final SortedSet<LocalDate> nuitsFichiers;
 
+    /// Les nuits que le journal **raconte**, une par cycle d'acquisition (#5631). Vide sans cycle lisible :
+    /// la date se juge alors sur la première ligne du journal, comme avant.
+    private final SortedSet<LocalDate> nuitsJournal;
+
     private AnalyseCoherence(
             String serieJournal,
             String serieReleve,
             LocalDate dateJournal,
             SortedSet<String> seriesFichiers,
-            SortedSet<LocalDate> nuitsFichiers) {
+            SortedSet<LocalDate> nuitsFichiers,
+            SortedSet<LocalDate> nuitsJournal) {
         this.serieJournal = serieJournal;
         this.serieReleve = serieReleve;
         this.dateJournal = dateJournal;
         this.seriesFichiers = seriesFichiers;
         this.nuitsFichiers = nuitsFichiers;
+        this.nuitsJournal = nuitsJournal;
     }
 
     /// Confronte l'identité déclarée (journal, nom du relevé) aux séries/nuits dérivées des `originaux`
     /// (réutilise [AnalyseMelange] pour l'extraction côté WAV).
     public static AnalyseCoherence depuis(JournalParse journal, Path cheminReleve, List<Path> originaux) {
+        return depuis(journal, cheminReleve, originaux, List.of());
+    }
+
+    /// La même confrontation, avec les **cycles d'acquisition** que l'inspection tire du journal (#5631) :
+    /// le journal est circulaire, et sa première ligne raconte souvent une nuit effacée de la carte
+    /// depuis. Ce sont les nuits qu'il raconte, pas la première, qui disent s'il décrit les
+    /// enregistrements.
+    public static AnalyseCoherence depuis(
+            JournalParse journal, Path cheminReleve, List<Path> originaux, List<CycleAcquisition> cycles) {
         Objects.requireNonNull(originaux, "originaux");
+        Objects.requireNonNull(cycles, "cycles");
+        SortedSet<LocalDate> nuitsJournal = new java.util.TreeSet<>();
+        cycles.forEach(cycle -> nuitsJournal.add(cycle.dateNuit()));
         AnalyseMelange fichiers = AnalyseMelange.depuis(originaux);
         return new AnalyseCoherence(
                 journal == null ? null : journal.numeroSerie(),
                 serieDuReleve(cheminReleve),
                 journal == null ? null : journal.dateDebut(),
                 fichiers.series(),
-                fichiers.nuits());
+                fichiers.nuits(),
+                nuitsJournal);
     }
 
     private static String serieDuReleve(Path cheminReleve) {
@@ -122,6 +141,14 @@ public final class AnalyseCoherence {
         // anomalie : la fenêtre mono-nuit `[J, J+1]` du journal ne s'y applique pas → pas d'incohérence.
         if (ChronoUnit.DAYS.between(nuitsFichiers.first(), nuitsFichiers.last()) > 1) {
             return false;
+        }
+        if (!nuitsJournal.isEmpty()) {
+            // Chaque date de fichier doit tomber dans la fenêtre soir → matin d'une nuit que le journal
+            // raconte (#5631), et non plus de la seule première : sur une carte réutilisée, celle-ci est
+            // la nuit du déploiement, souvent effacée depuis.
+            return nuitsFichiers.stream()
+                    .anyMatch(date -> nuitsJournal.stream()
+                            .noneMatch(nuit -> !date.isBefore(nuit) && !date.isAfter(nuit.plusDays(1))));
         }
         LocalDate matin = dateJournal.plusDays(1);
         return nuitsFichiers.stream().anyMatch(nuit -> nuit.isBefore(dateJournal) || nuit.isAfter(matin));

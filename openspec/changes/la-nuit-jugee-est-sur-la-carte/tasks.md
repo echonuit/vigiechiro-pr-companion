@@ -23,6 +23,8 @@ une demande de fusion chacun. Chaque tâche commence par son test rouge (article
       incohérente ; contrôle négatif (journal du 1er avril seul) incohérent. Écrite au commit
       `ba2351fc6`, puis retirée de la branche de #5600 pour ne pas en rougir la CI : elle se
       réapplique sur la branche de #5631 (`git show ba2351fc6 -- …/AnalyseCoherenceTest.java`).
-- [ ] 2.2 `AnalyseCoherence` reçoit les nuits des cycles du journal, repli sur `dateDebut` sans cycle.
+      Réappliquée, puis réécrite sur le vrai chemin (`InspecteurDossier`) : les cycles se tirent des
+      lignes brutes du journal, que la forme à trois arguments ne reçoit pas.
+- [x] 2.2 `AnalyseCoherence` reçoit les nuits des cycles du journal, repli sur `dateDebut` sans cycle.
       Vert : 2.1, le contrôle négatif et les cas existants de `AnalyseCoherenceTest`.
 - [ ] 2.3 Mutation, PIT sur `AnalyseCoherence`, batterie, PR.
