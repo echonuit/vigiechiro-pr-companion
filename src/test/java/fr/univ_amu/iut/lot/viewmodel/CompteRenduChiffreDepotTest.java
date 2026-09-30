@@ -205,6 +205,47 @@ class CompteRenduChiffreDepotTest {
                 .anyMatch(texte -> texte.contains("2 d'entre elles tenaient à vos droits"));
     }
 
+    @Test
+    @DisplayName("#5598 : un refus du stockage ne conseille pas de se reconnecter, et nomme ce qui s'applique")
+    void un_refus_du_stockage_nomme_la_relance_puis_le_depot_manuel() {
+        List<EchecUnite> refus = new java.util.ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            refus.add(new EchecUnite("Car-" + i + ".zip", "HTTP 403", true, CauseRefus.STOCKAGE));
+        }
+        BilanDepot bilan = new BilanDepot("p-1", 0, refus, 0L);
+
+        List<String> textes = textes(traduire(bilan, plan(10, 0, false)));
+
+        assertThat(textes)
+                .as("Samuel s'est reconnecté sur ce conseil le 14 septembre, pour le même refus")
+                .noneMatch(texte -> texte.contains("Reconnectez-vous") || texte.contains("reconnectez-vous"));
+        assertThat(textes).anyMatch(texte -> texte.contains("se reconnecter n'y changera rien"));
+        assertThat(textes).anyMatch(texte -> texte.contains("Relancez le téléversement"));
+        assertThat(textes)
+                .as("le dépôt manuel est le geste qui a marché chaque fois")
+                .anyMatch(texte -> texte.contains("manuellement"));
+    }
+
+    @Test
+    @DisplayName("#5598 : sur un lot mêlé de droits et de stockage, chaque geste est nommé avec son nombre")
+    void droits_et_stockage_melanges() {
+        BilanDepot bilan = new BilanDepot(
+                "p-1",
+                9,
+                List.of(
+                        new EchecUnite("Car-10.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                        new EchecUnite("Car-11.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                        new EchecUnite("Car-12.zip", "HTTP 403", true, CauseRefus.STOCKAGE),
+                        new EchecUnite("Car-13.zip", "HTTP 403", true, CauseRefus.STOCKAGE),
+                        new EchecUnite("Car-14.zip", "HTTP 403", true, CauseRefus.STOCKAGE)),
+                3_000_000_000L);
+
+        List<String> textes = textes(traduire(bilan, plan(14, 9, false)));
+
+        assertThat(textes).anyMatch(texte -> texte.contains("2 d'entre elles tenaient à vos droits"));
+        assertThat(textes).anyMatch(texte -> texte.contains("3 d'entre elles ont été refusées par le stockage"));
+    }
+
     /// Le lot que l'aperçu montre : deux refus de droits, un contenu refusé.
     private record BitmapMele() {
         BilanDepot bilan() {

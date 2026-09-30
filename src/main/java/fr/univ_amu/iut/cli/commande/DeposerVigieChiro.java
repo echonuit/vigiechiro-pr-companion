@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.BilanDepot;
+import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.EchecUnite;
@@ -43,6 +44,12 @@ import picocli.CommandLine.Spec;
         name = "deposer-vigiechiro",
         description = "Téléverse un passage sur Vigie-Chiro (reprenable : seuls les fichiers manquants repartent).")
 public final class DeposerVigieChiro implements Callable<Integer> {
+
+    /// Ce qui s'applique à un refus du stockage (#5598) : chaque relance redéclare le fichier, donc
+    /// redemande des URL signées neuves, et le dépôt manuel reste possible.
+    private static final String GESTE_STOCKAGE = "se reconnecter n'y changera rien. Relancez la commande,"
+            + " qui redemande de nouvelles autorisations d'envoi ; si le refus persiste, déposez-les"
+            + " manuellement depuis le dossier de la nuit.";
 
     @Option(
             names = "--passage",
@@ -156,17 +163,53 @@ public final class DeposerVigieChiro implements Callable<Integer> {
                     .append(" (")
                     .append(refus.raison())
                     .append(")"));
-            conseil.append(".");
-            if (refuses.stream().allMatch(EchecUnite::seRearmeParUneReconnexion)) {
-                conseil.append(" Reconnectez-vous, puis relancez : elles redeviendront reprenables.");
-            } else if (refuses.stream().noneMatch(EchecUnite::seRearmeParUneReconnexion)) {
-                // Geste VÉRIFIÉ (#3946) : la relance retente bien ces unités - `restantes()` rend « tout
-                // sauf déposé » et rien ne les écarte sur leur drapeau. Ce qu'il faut changer, c'est le
-                // CONTENU de l'archive, pas la façon de la renvoyer.
-                conseil.append(" Régénérez les archives, puis relancez : les nouvelles repartiront.");
-            }
+            conseil.append(".").append(gestesDesRefus(refuses));
         }
         return conseil.toString();
+    }
+
+    /// Un geste par cause, avec la part qu'il concerne quand les causes sont mêlées (#5598). Les mêmes
+    /// gestes que l'écran (`CompteRenduChiffreDepot`), dans les mots de la commande (ADR 0014).
+    private static String gestesDesRefus(List<EchecUnite> refuses) {
+        // Le prédicat reste la seule autorité sur « une reconnexion répare ceci » (#3961).
+        long droits =
+                refuses.stream().filter(EchecUnite::seRearmeParUneReconnexion).count();
+        long stockage = compter(refuses, CauseRefus.STOCKAGE);
+        long contenu = refuses.size() - droits - stockage;
+        if (droits == refuses.size()) {
+            return " Reconnectez-vous, puis relancez : elles redeviendront reprenables.";
+        }
+        if (contenu == refuses.size()) {
+            // Geste VÉRIFIÉ (#3946) : la relance retente bien ces unités - `restantes()` rend « tout
+            // sauf déposé » et rien ne les écarte sur leur drapeau. Ce qu'il faut changer, c'est le
+            // CONTENU de l'archive, pas la façon de la renvoyer.
+            return " Régénérez les archives, puis relancez : les nouvelles repartiront.";
+        }
+        if (stockage == refuses.size()) {
+            return " Refusées par le stockage de Vigie-Chiro : " + GESTE_STOCKAGE;
+        }
+        StringBuilder gestes = new StringBuilder();
+        if (droits > 0) {
+            gestes.append(" ")
+                    .append(droits)
+                    .append(" d'entre elles tenaient à vos droits : reconnectez-vous, puis relancez.");
+        }
+        if (stockage > 0) {
+            gestes.append(" ")
+                    .append(stockage)
+                    .append(" d'entre elles ont été refusées par le stockage : ")
+                    .append(GESTE_STOCKAGE);
+        }
+        if (contenu > 0) {
+            gestes.append(" ")
+                    .append(contenu)
+                    .append(" d'entre elles ont un contenu refusé : régénérez les archives, puis relancez.");
+        }
+        return gestes.toString();
+    }
+
+    private static long compter(List<EchecUnite> refuses, CauseRefus cause) {
+        return refuses.stream().filter(refus -> refus.cause() == cause).count();
     }
 
     /// Le volume en ligne, **s'il a été mesuré**. Rien à zéro : un « 0 Ko téléversé » annoncerait une

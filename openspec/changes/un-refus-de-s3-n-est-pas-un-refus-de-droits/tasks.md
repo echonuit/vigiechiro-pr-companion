@@ -34,11 +34,11 @@ Chaque tâche commence par son test rouge (article A7).
 
 ## 4. Le conseil, sur les deux surfaces
 
-- [ ] 4.1 Étendre `CompteRenduChiffreDepotTest` : dix refus du stockage ne produisent pas
+- [x] 4.1 Étendre `CompteRenduChiffreDepotTest` : dix refus du stockage ne produisent pas
       « Reconnectez-vous » et nomment la relance puis le dépôt manuel ; un cas mêlé droits et stockage
       nomme les deux gestes avec leur nombre. Rouge attendu avant 4.2.
-- [ ] 4.2 Réécrire `CompteRenduChiffreDepot.phraseDesRefus` pour un conseil par cause. Vert : 4.1.
-- [ ] 4.3 Même chose pour `DeposerVigieChiro` et `DeposerVigieChiroTest`, avec le cas de parité : le
+- [x] 4.2 Réécrire `CompteRenduChiffreDepot.phraseDesRefus` pour un conseil par cause. Vert : 4.1.
+- [x] 4.3 Même chose pour `DeposerVigieChiro` et `DeposerVigieChiroTest`, avec le cas de parité : le
       même bilan donne les mêmes gestes sur les deux surfaces.
 - [ ] 4.4 Étendre l'aperçu `CaptureCompteRenduDepot` d'un refus du stockage, régénérer la capture de
       `docs/ecrans/lot.md` et la relire ; mettre à jour la légende et le texte de la page s'ils
