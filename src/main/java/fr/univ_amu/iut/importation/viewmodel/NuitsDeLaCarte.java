@@ -11,10 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 /// Ce que l'import juge des **nuits présentes sur la carte** : déjà importées, et sous quelle identité
-/// (#5600).
-///
-/// Extrait d'[InspectionImportViewModel] (Extract Class), qui repassait le seuil `GodClass` du portail
-/// en gagnant ces jugements, comme il l'avait passé avant l'extraction de [CompteRenduDInspection].
+/// (#5600). [InspectionImportViewModel] tient la table des nuits et lui délègue ces jugements.
 ///
 /// Les nuits jugées sont celles de la **table**, tirées des noms des WAV. Le journal de l'enregistreur
 /// ne donne que la série : il est circulaire, et sa première ligne désigne souvent une nuit effacée de

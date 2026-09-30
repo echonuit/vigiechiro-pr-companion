@@ -806,11 +806,12 @@ e228832ae4ee  src/main/java/fr/univ_amu/iut/importation/viewmodel/EtatImport.jav
 ef0a4852afcd  src/main/java/fr/univ_amu/iut/importation/viewmodel/ExecutionImport.java
 6596a0f4b04a  src/main/java/fr/univ_amu/iut/importation/viewmodel/IdentiteNuit.java
 02c16404d4ff  src/main/java/fr/univ_amu/iut/importation/viewmodel/ImportationViewModel.java
-241fac847a0d  src/main/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModel.java
+cd5c6242ab04  src/main/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModel.java
 abff5608525f  src/main/java/fr/univ_amu/iut/importation/viewmodel/LigneFichierImport.java
 2b4c9642c974  src/main/java/fr/univ_amu/iut/importation/viewmodel/MarquageNuitsImportees.java
 64c81c272ab2  src/main/java/fr/univ_amu/iut/importation/viewmodel/NuitDejaImportee.java
 634f110f130f  src/main/java/fr/univ_amu/iut/importation/viewmodel/NuitVM.java
+e98d9c385ab4  src/main/java/fr/univ_amu/iut/importation/viewmodel/NuitsDeLaCarte.java
 4a96d6e97d6d  src/main/java/fr/univ_amu/iut/importation/viewmodel/OngletReglagesImport.java
 e5b954ad709d  src/main/java/fr/univ_amu/iut/importation/viewmodel/PreferenceConservation.java
 5a172c6fc117  src/main/java/fr/univ_amu/iut/importation/viewmodel/RattachementImportViewModel.java

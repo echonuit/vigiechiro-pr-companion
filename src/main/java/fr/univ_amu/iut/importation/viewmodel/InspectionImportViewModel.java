@@ -73,7 +73,7 @@ public class InspectionImportViewModel {
     /// n'affiche la table que lorsqu'il y en a plusieurs ([#plusieursNuitsProperty()]).
     private final ObservableList<NuitVM> nuits = FXCollections.observableArrayList();
 
-    /// Ce qui juge les nuits de la table (#5600), extrait pour tenir le seuil `GodClass`.
+    /// Ce qui juge les nuits de la table : déjà importées, et sous quelle identité (#5600).
     private final NuitsDeLaCarte nuitsDeLaCarte;
 
     /// `true` quand la carte contient **plus d'une** nuit : pilote l'affichage de la table des nuits et
