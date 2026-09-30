@@ -8,6 +8,7 @@ decided_at: 2026-09-25
 verification: certaine
 enforced_by:
   - "scripts/adr/verifie_okf.py"
+  - "scripts/adr/verifie_gages_joues.py"
 verified:
   - by: machine:ci
     at: 2026-09-25
@@ -58,6 +59,12 @@ en `humaine`, leur règle étant de méthode.
 
 - **Le niveau se choisit par ce que le gage RÉPOND**, non par ce à quoi il ressemble. Un
   `enforced_by` se relit en demandant : qu'est-ce qui rougit, sur quelle demande ?
+- **Les deux espèces sont mécanisées depuis #5594**, et par deux gardes distincts :
+  `verifie_okf.py` refuse le gage d'**en-tête**, un `enforced_by:` que la demande ne joue pas ;
+  `verifie_gages_joues.py` refuse le gage de **code**, une fonction qui juge et qu'aucun harnais
+  n'appelle. Mesuré au commit et non au jour, **deux des cinq gages de `scripts/_commun/` sont nés
+  inertes**, dont un pendant vingt-deux jours, et tous deux ont été trouvés par accident en remontant
+  un faux verdict de mutation.
 - **Le refus est mécanique depuis #5484** : `verifie_okf.py` refuse quatre formes de gage inerte, et
   la quatrième - un script qu'aucun atelier de demande n'invoque - a été trouvée en écrivant le garde.
 - **Une décision que rien ne peut tenir se déclare `humaine`**, ce que

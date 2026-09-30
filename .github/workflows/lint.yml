@@ -1008,6 +1008,18 @@ jobs:
         run: |
           python3 scripts/adr/verifie_okf.py --auto-test
           python3 scripts/adr/verifie_okf.py
+      - name: "Aucun gage de CODE n'est inerte (bloquant, #5594)"
+        # La SECONDE espèce de l'ADR 5483, que rien ne gardait. `verifie_okf.py`, juste au-dessus,
+        # refuse un `enforced_by:` d'en-tête que la demande ne joue pas ; celui-ci refuse une
+        # fonction qui JUGE et qu'aucun harnais n'appelle. Mesuré au commit et non au jour : deux des
+        # cinq gages de `scripts/_commun/` sont nés inertes, dont un pendant vingt-deux jours, et
+        # tous deux ont été trouvés par accident en remontant un faux verdict de mutation.
+        # La résolution passe par les IMPORTS, jamais par le nom : `verifie_grammaire` est déclaré
+        # cinq fois, et un garde qui chercherait le nom trouverait un appelant pour les cinq dès
+        # qu'un seul est appelé.
+        run: |
+          python3 scripts/adr/verifie_gages_joues.py --auto-test
+          python3 scripts/adr/verifie_gages_joues.py
       - name: "Trois refus portes par la ligne d'origine (bloquant, #4462)"
         # Trois zones a TOLERANCE ZERO, chacune avec son auto-test avant son passage sur le depot.
         #
