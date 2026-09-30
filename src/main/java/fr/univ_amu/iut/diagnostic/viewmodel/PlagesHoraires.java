@@ -24,13 +24,13 @@ public final class PlagesHoraires {
         if (!coherence.disponible()) {
             return "";
         }
-        return "Protocole : " + plage(coherence.debutExige(), coherence.finExigee()) + " · Enregistré : "
+        return "Protocole : " + plage(coherence.debutExigeAffiche(), coherence.finExigeeAffichee()) + " · Enregistré : "
                 + plage(coherence.debutEnregistre(), coherence.finEnregistree());
     }
 
     /// La plage EXIGÉE par le protocole, seule, pour l'alerte qui la nomme (#5200).
     public static String plageExigee(CoherenceHoraire coherence) {
-        return plage(coherence.debutExige(), coherence.finExigee());
+        return plage(coherence.debutExigeAffiche(), coherence.finExigeeAffichee());
     }
 
     /// La plage réellement ENREGISTRÉE, seule, pour la même alerte.

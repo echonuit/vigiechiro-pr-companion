@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.diagnostic.model;
 
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 /// Ce que la nuit enregistrée doit au protocole Vigie-Chiro Point Fixe, et ce qu'elle lui rend.
 ///
@@ -36,6 +37,24 @@ public record CoherenceHoraire(
         boolean debutTenu,
         boolean finTenue,
         Couverture couverture) {
+
+    /// Le début exigé tel qu'on le programme : arrondi à la minute **inférieure** (#5601), ou `null`.
+    ///
+    /// L'heure exacte porte les secondes de l'éphéméride et se compare à la seconde. L'afficher tronquée
+    /// ferait programmer trop tard un début, ou trop tôt une fin ; chaque arrondi va donc du côté qui
+    /// respecte le plancher du protocole.
+    public LocalTime debutExigeAffiche() {
+        return debutExige == null ? null : debutExige.truncatedTo(ChronoUnit.MINUTES);
+    }
+
+    /// La fin exigée telle qu'on la programme : arrondie à la minute **supérieure** (#5601), ou `null`.
+    public LocalTime finExigeeAffichee() {
+        if (finExigee == null) {
+            return null;
+        }
+        LocalTime minute = finExigee.truncatedTo(ChronoUnit.MINUTES);
+        return minute.equals(finExigee) ? minute : minute.plusMinutes(1);
+    }
 
     /// Ce que les horaires disent de la fenêtre que le protocole exige.
     ///
