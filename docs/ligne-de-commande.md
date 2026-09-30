@@ -169,6 +169,22 @@ la prochaine sortie.
 La ligne ne paraît que si le support refuse l'écriture. Companion ne dit rien de plus : il a mesuré
 que le volume est monté en lecture seule, et vous seul pouvez regarder la carte.
 
+## Quand le journal ne vient pas de cette carte
+
+Le journal du capteur dit son numéro de série et les nuits qu'il a enregistrées. S'il ne correspond pas
+aux enregistrements de la carte (un autre capteur, ou un autre déploiement), `importer` le dit en fin
+de bilan, comme l'écran le dit à l'inspection :
+
+```
+Journal     : ne correspond pas aux enregistrements, vérifiez qu'il vient bien de cette carte -
+              nuits racontées par le journal, toutes hors de la nuit des fichiers : 19/08/2026,
+              22/08/2026 (fichiers : 24/08/2026)
+```
+
+L'import a eu lieu : la ligne ne bloque rien, elle vous invite à vérifier que la carte et le journal
+vont ensemble. Le journal étant circulaire, il peut raconter des nuits anciennes en plus de celles de
+la carte : il n'est signalé que s'il ne raconte **aucune** de ses nuits.
+
 ## Quand un fichier est refusé parce qu'il est trop gros
 
 Le compagnon refuse de lire une entrée démesurée : un journal de carte, une réponse du serveur, une

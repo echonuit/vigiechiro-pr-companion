@@ -200,7 +200,7 @@ ab3e9e1504e6  src/main/java/fr/univ_amu/iut/cli/commande/ExporterObservations.ja
 6d71c75441d2  src/main/java/fr/univ_amu/iut/cli/commande/ExporterVu.java
 f0aa8f94471d  src/main/java/fr/univ_amu/iut/cli/commande/FournisseurVersion.java
 41cdb66b1cf2  src/main/java/fr/univ_amu/iut/cli/commande/GardeJeuExistant.java
-d27d5427b2b9  src/main/java/fr/univ_amu/iut/cli/commande/Importer.java
+25814abb81d5  src/main/java/fr/univ_amu/iut/cli/commande/Importer.java
 60098c16b16e  src/main/java/fr/univ_amu/iut/cli/commande/ImporterTadarida.java
 c16315ee421b  src/main/java/fr/univ_amu/iut/cli/commande/ImporterTransformes.java
 b3bc48f69f92  src/main/java/fr/univ_amu/iut/cli/commande/ImporterVigieChiro.java
@@ -796,7 +796,7 @@ a7c8afafb0f8  src/main/java/fr/univ_amu/iut/importation/view/TableNuits.java
 f16563b0fd16  src/main/java/fr/univ_amu/iut/importation/view/ZoneNuits.java
 ef03b0d325da  src/main/java/fr/univ_amu/iut/importation/view/ZoneNumeroPassage.java
 f4f8aa55113b  src/main/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixe.java
-83eb4a6a2301  src/main/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspection.java
+0e851db2928d  src/main/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspection.java
 ea4721561642  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduChiffreImport.java
 af9890a9cd3e  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduDInspection.java
 769e9b592a2f  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduImport.java
@@ -1815,6 +1815,7 @@ be005305ed51  src/test/java/fr/univ_amu/iut/importation/viewmodel/ImportationVie
 2617c11d93d8  src/test/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModelTest.java
 3ca0577cb634  src/test/java/fr/univ_amu/iut/importation/viewmodel/NuitVMBadgeTest.java
 d5f0438815d0  src/test/java/fr/univ_amu/iut/importation/viewmodel/NuitsDeLaCarteTest.java
+5981f3a67b85  src/test/java/fr/univ_amu/iut/importation/viewmodel/PariteCoherenceDuJournalTest.java
 06972cec9f47  src/test/java/fr/univ_amu/iut/importation/viewmodel/PreferenceConservationTest.java
 5856a70ce966  src/test/java/fr/univ_amu/iut/importation/viewmodel/RattachementImportViewModelTest.java
 25fecdcaf3fa  src/test/java/fr/univ_amu/iut/importation/viewmodel/SuiviLignesFichiersTest.java

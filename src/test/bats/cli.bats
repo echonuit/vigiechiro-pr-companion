@@ -414,6 +414,36 @@ echappement() { printf '\033'; }
   [ -z "$(find "${BATS_TEST_TMPDIR}" -maxdepth 1 -type d -name 'import-zip-*' 2>/dev/null)" ]
 }
 
+@test "importer : un journal qui ne correspond pas aux enregistrements se dit, exit 0 (#5670)" {
+  # L ecran le dit a l inspection depuis #33 ; la commande importait un journal etranger sans un mot.
+  command -v python3 >/dev/null 2>&1 || skip "python3 requis pour fabriquer le WAV"
+
+  local sd="${BATS_TEST_TMPDIR}/sd-etrangere"
+  mkdir -p "${sd}"
+  cat > "${sd}/LogPR1925492.txt" << 'EOF'
+22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série 1925492, V1.01, CPU 600000000, T4.1
+22/04/26 - 16:02:21 PR1925492 Paramètres : Acquisi. 20:25-07:47, Fe384kHz FL N FPH 00, S. R. 16dB 1dt. GN0, Bd. Freq. 8-120kHz, Wav 2-30s SD 99%
+EOF
+  printf 'Date\tHour\n' > "${sd}/PaRecPR1925492_THLog.csv"
+  python3 - "${sd}/PaRecPR1925492_20260430_203922.wav" << 'EOF'
+import sys, wave
+with wave.open(sys.argv[1], "wb") as w:
+    w.setnchannels(1)
+    w.setsampwidth(2)
+    w.setframerate(384000)
+    w.writeframes(b"\x00\x00" * 384000)
+EOF
+
+  local site point
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  point=$(cli ajouter-point --site "${site}" --code A1 2>/dev/null)
+  run cli importer --point "${point}" --source "${sd}"
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Journal     : ne correspond pas aux enregistrements"* ]]
+  [[ "${output}" == *"22/04/2026"* ]]
+  [[ "${output}" == *"30/04/2026"* ]]
+}
+
 @test "importer : --conserver-originaux et --sans-originaux s'excluent, exit 2 (#2181, #2294)" {
   # Contrat HORS-LIGNE : le conflit de flags est vérifié dès le lancement, AVANT toute lecture de la
   # source ou accès réseau. On sème un point (creer-site -> ajouter-point, qui écrit l'id sur stdout),

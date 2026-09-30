@@ -143,7 +143,21 @@ public final class AvertissementsInspection {
         if (coherence == null || !coherence.incoherent()) {
             return Optional.empty();
         }
+        return Optional.of(new Constat(
+                "Le journal du capteur ne correspond pas aux enregistrements : vérifiez qu'ils viennent"
+                        + " bien de la même nuit.",
+                Severite.AVERTISSEMENT,
+                detailsDeCoherence(coherence)));
+    }
+
+    /// Les désaccords du journal avec les enregistrements, un détail chacun : la série déclarée absente,
+    /// puis la date. Vide si le journal est cohérent. Public parce que la ligne de commande dit les
+    /// mêmes données dans sa propre phrase (#5670), et qu'elles ne se composent qu'ici.
+    public static List<Detail> detailsDeCoherence(AnalyseCoherence coherence) {
         List<Detail> details = new ArrayList<>();
+        if (coherence == null || !coherence.incoherent()) {
+            return details;
+        }
         if (coherence.serieIncoherente()) {
             details.add(new Detail(
                     "série déclarée absente des fichiers",
@@ -153,11 +167,7 @@ public final class AvertissementsInspection {
         if (coherence.dateIncoherente()) {
             details.add(dateHorsDesFichiers(coherence));
         }
-        return Optional.of(new Constat(
-                "Le journal du capteur ne correspond pas aux enregistrements : vérifiez qu'ils viennent"
-                        + " bien de la même nuit.",
-                Severite.AVERTISSEMENT,
-                details));
+        return details;
     }
 
     /// Nuit déjà importée (#147) : non bloquant, l'utilisateur peut vouloir un nouveau passage.
