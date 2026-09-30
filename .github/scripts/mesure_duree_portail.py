@@ -94,6 +94,45 @@ def durees_de(charge: dict) -> list[float]:
     return minutes
 
 
+def evenements_de(charge: dict) -> list[str]:
+    """Le declencheur de chaque execution, dans le meme ordre que `durees_de`.
+
+    Deux listes paralleles plutot qu une liste de couples : la couture d injection
+    `SERIE_DUREES_FICHIER` porte des flottants depuis l origine, et changer sa forme casserait les
+    cas qui s en servent. Le depot prefere un second sceau a une rupture de contrat.
+    """
+    evenements = []
+    for run in charge.get("workflow_runs") or []:
+        if run.get("run_started_at") and run.get("updated_at"):
+            evenements.append(run.get("event") or "?")
+    return evenements
+
+
+def composition(evenements: list[str]) -> dict[str, int]:
+    """Combien d executions par declencheur, pour DIRE de quoi une fenetre est faite (ADR 5562)."""
+    compte: dict[str, int] = {}
+    for e in evenements:
+        compte[e] = compte.get(e, 0) + 1
+    return dict(sorted(compte.items(), key=lambda kv: (-kv[1], kv[0])))
+
+
+def compositions_comparables(recents: list[str], anciens: list[str]) -> bool:
+    """Les deux fenetres sont-elles faites des MEMES declencheurs ?
+
+    Une mediane compare ce qu on lui donne. Si une fenetre est faite de poussees et l autre de
+    releases nocturnes, l ecart mesure le changement de POPULATION et non un allongement - et il ne
+    se resorbera jamais si le declencheur d avant a ete retire. Vecu sur `release.yml` : douze
+    poussees d aout, retirees du bloc `on:` depuis, contre des releases de septembre, soit +709 %.
+
+    L egalite porte sur l ENSEMBLE des declencheurs, pas sur leurs proportions : exiger les memes
+    proportions ferait refuser presque toujours, et une release nocturne de plus qu hier ne change
+    pas la nature de ce qu on mesure.
+    """
+    if not recents or not anciens:
+        return True
+    return set(recents) == set(anciens)
+
+
 def mediane(valeurs: list[float]) -> float:
     """La mediane, et non la moyenne : c est tout l objet du dispositif."""
     tries = sorted(valeurs)
@@ -183,14 +222,21 @@ def mesurer(depot: str, workflow: str, fenetre: int = 12) -> int:
     besoin = fenetre * 2
 
     injectee = os.environ.get("SERIE_DUREES_FICHIER")
+    evenements: list[str] = []
     if injectee:
         durees = json.loads(pathlib.Path(injectee).read_text(encoding="utf-8"))
+        # ⟨un SECOND sceau, pour la composition⟩ Le premier porte des flottants depuis l origine ;
+        # on ne change pas sa forme, on en ajoute un a cote (#5626).
+        injectes = os.environ.get("SERIE_EVENEMENTS_FICHIER")
+        if injectes:
+            evenements = json.loads(pathlib.Path(injectes).read_text(encoding="utf-8"))
     else:
         charge = insiste(
             f"repos/{depot}/actions/workflows/{workflow}/runs"
             f"?branch=main&status=success&per_page={besoin}"
         )
         durees = durees_de(charge) if charge else None
+        evenements = evenements_de(charge) if charge else []
 
     if not durees:
         # ⟨TROIS issues, pas deux⟩ Un historique vide et une forge muette se ressemblaient : les deux
@@ -223,6 +269,21 @@ def mesurer(depot: str, workflow: str, fenetre: int = 12) -> int:
         )
         return 0
 
+    # ⟨DIRE de quoi les deux fenetres sont faites, toujours⟩ L ADR 5562 : une mesure declare la
+    # composition de ce qu elle resume. Un lecteur doit pouvoir juger sans relancer la mesure.
+    rec_ev, anc_ev = evenements[0:fenetre], evenements[fenetre:besoin]
+    if not compositions_comparables(rec_ev, anc_ev):
+        rendre(
+            f"### {titre(workflow)}\n\n"
+            f"**Refus de conclure : les deux fenetres ne sont pas faites des memes declencheurs.**\n\n"
+            f"| Fenetre | Composition |\n|---|---|\n"
+            f"| {fenetre} dernieres | {composition(rec_ev)} |\n"
+            f"| les {fenetre} d avant | {composition(anc_ev)} |\n\n"
+            f"L ecart mesurerait le changement de POPULATION et non un allongement. Si le "
+            f"declencheur d avant a ete retire du bloc `on:`, il ne se resorbera jamais."
+        )
+        return 0
+
     recente = mediane(durees[0:fenetre])
     precedente = mediane(durees[fenetre:besoin])
     derive = ((recente / precedente) - 1) * 100
@@ -235,6 +296,12 @@ def mesurer(depot: str, workflow: str, fenetre: int = 12) -> int:
         f"| les {fenetre} d'avant | {precedente:.1f} min |\n"
         f"| dérive | **{derive:+.1f} %** (seuil d'avertissement : {SEUIL_POURCENT} %) |\n\n"
         "Comparaison de deux **médianes** : une exécution isolément longue ne la déplace pas."
+        + (
+            f"\n\nComposition : {composition(rec_ev)} contre {composition(anc_ev)} - "
+            "mêmes déclencheurs des deux côtés, donc l'écart mesure bien une durée."
+            if rec_ev and anc_ev
+            else ""
+        )
     )
 
     if derive > SEUIL_POURCENT:
@@ -421,6 +488,64 @@ def _auto_test() -> int:
                 os.environ.pop("SERIE_DUREES_FICHIER", None)
             else:
                 os.environ["SERIE_DUREES_FICHIER"] = ancien
+
+    # ⟨la COMPOSITION, et le cas NEGATIF qui protege les vraies derives⟩ Une mediane compare ce
+    # qu on lui donne : deux fenetres faites de declencheurs differents mesurent un changement de
+    # POPULATION, pas un allongement (#5626). Vecu sur `release.yml`, +709 % entre douze poussees
+    # d aout - retirees du bloc `on:` depuis - et des releases de septembre.
+    cas += 1
+    ok = (
+        compositions_comparables(["push"] * 12, ["schedule"] * 12) is False
+        and compositions_comparables(["schedule"] * 12, ["schedule"] * 12) is True
+        and compositions_comparables(["schedule"] * 6 + ["push"] * 6, ["push", "schedule"]) is True
+    )
+    if ok:
+        print("  ✔ deux fenetres de declencheurs differents ne se comparent pas")
+    else:
+        print("  ✘ la comparabilite des compositions est mal derivee")
+        echecs = 1
+
+    # ⟨le cas NEGATIF⟩ Sans lui, refuser sur une composition differente pourrait devenir refuser
+    # tout court, et les deux derives REELLES du depot - `recette-filmee` a +196 %, `mutation-ihm`
+    # a +59 % - s eteindraient avec le faux positif.
+    cas += 1
+    ancien_d = os.environ.get("SERIE_DUREES_FICHIER")
+    ancien_e = os.environ.get("SERIE_EVENEMENTS_FICHIER")
+    with tempfile.TemporaryDirectory(prefix="vc-compo-") as dossier:
+        base = pathlib.Path(dossier)
+        (base / "d.json").write_text(json.dumps([60.0] * 12 + [10.0] * 12), encoding="utf-8")
+        sorties = {}
+        for nom, evs in (("meme", ["schedule"] * 24), ("mixte", ["schedule"] * 12 + ["push"] * 12)):
+            (base / f"{nom}.json").write_text(json.dumps(evs), encoding="utf-8")
+            os.environ["SERIE_DUREES_FICHIER"] = str(base / "d.json")
+            os.environ["SERIE_EVENEMENTS_FICHIER"] = str(base / f"{nom}.json")
+            tampon = io.StringIO()
+            with contextlib.redirect_stdout(tampon), contextlib.redirect_stderr(tampon):
+                mesurer("depot/quelconque", "maven.yml")
+            sorties[nom] = tampon.getvalue()
+        for cle, ancien in (
+            ("SERIE_DUREES_FICHIER", ancien_d),
+            ("SERIE_EVENEMENTS_FICHIER", ancien_e),
+        ):
+            if ancien is None:
+                os.environ.pop(cle, None)
+            else:
+                os.environ[cle] = ancien
+    # ⟨la composition se DIT meme quand elle est homogene⟩ Ce cas a ete ajoute parce qu une
+    # mutation SURVIVAIT : retirer la composition du rendu normal ne faisait rougir personne, alors
+    # que le critere l exigeait « dans tous les cas ». Un survivant designe le cas qui manque.
+    compo_dite = "Composition :" in sorties["meme"]
+    avertit_meme = "::warning" in sorties["meme"]
+    refuse_mixte = "Refus de conclure" in sorties["mixte"] and "::warning" not in sorties["mixte"]
+    if avertit_meme and refuse_mixte and compo_dite:
+        print("  ✔ une composition homogene AVERTIT toujours, la DIT, et une mixte refuse")
+    else:
+        print(
+            f"  ✘ homogene avertit={avertit_meme}, composition dite={compo_dite}, "
+            f"mixte refuse={refuse_mixte} : le remede a eteint une vraie derive, tu la "
+            "composition, ou n a pas eteint le faux positif"
+        )
+        echecs = 1
 
     # ⟨RIEN A LIRE n est pas ILLISIBLE, et le predicat se confronte a la forge⟩ Un atelier declenche
     # par `pull_request` seul n aura jamais d execution sur `main`. Annoncer « illisible » y produit
