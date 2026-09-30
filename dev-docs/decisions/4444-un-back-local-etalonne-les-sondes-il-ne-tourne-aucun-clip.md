@@ -15,11 +15,15 @@ verified:
     at: 2026-08-26
 relations:
   prolonge: ["4142", "4291", "4406"]
+  amendee_par: ["5641-les-tests-connectes-ont-deux-cibles"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # Un back local étalonne les sondes, il ne tourne aucun clip
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-09-30** par l'[ADR 5641](5641-les-tests-connectes-ont-deux-cibles.md) : le back local devient une **plateforme de test** qui vit en intégration continue, et la plateforme nationale la confronte régulièrement, si bien que la dérive redoutée ici se voit au lieu de rester silencieuse. Ce qui tient : un transfert ou une durée ne se prouvent pas sur un lien local nu, et un contrat d'écriture n'atteste pas la lecture.
 
 ## Contexte
 

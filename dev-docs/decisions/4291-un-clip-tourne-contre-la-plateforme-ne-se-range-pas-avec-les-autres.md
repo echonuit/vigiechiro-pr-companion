@@ -13,9 +13,13 @@ verified:
     at: 2026-08-24
 relations:
   prolonge: ["4142", "4134"]
+  amendee_par: ["5641-les-tests-connectes-ont-deux-cibles"]
 ---
 
 # Un clip tourné contre la plateforme ne se range pas avec les autres
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-09-30** par l'[ADR 5641](5641-les-tests-connectes-ont-deux-cibles.md) : le refus de comparer un clip connecté vaut pour la **plateforme nationale**, dont l'écran suit des données vivantes. Un clip tourné sur la **plateforme de test** part d'un état de départ déclaré et peut se comparer, à condition que deux tournages du même commit restent sous le plancher de bruit de l'ADR 4287. Cela se mesure au lot qui tournera ces clips.
 
 ## Contexte
 
