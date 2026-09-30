@@ -105,7 +105,7 @@ Deux variantes utiles :
           intervalleSecondes: 300
     ```
 
-## Les 12 cartes de recette
+## Les cartes de recette
 
 Chaque carte exerce **une** pathologie de l'assistant d'import (voir l'étape 5 de
 [S2 · Importer une nuit](sessions/s2-importer.md)).
@@ -118,12 +118,17 @@ Chaque carte exerce **une** pathologie de l'assistant d'import (voir l'étape 5 
 | `sd-multi-nuits` | trois nuits sous un journal unique -> table des nuits | 6 |
 | `sd-multi-configs` | deux nuits, capteur **reconfiguré entre les deux** (384 puis 256 kHz) -> chaque nuit doit recevoir les paramètres de **sa** session (#3460) | 4 |
 | `sd-sans-journal` | aucun `LogPR` -> mode dégradé (import possible sans journal) | 3 |
+| `sd-sans-journal-multi` | deux nuits **sans** journal -> la table paraît, et ses deux badges disent « complétude inconnue » (#5145) | 4 |
 | `sd-journal-corrompu` | `LogPR` illisible -> l'inspection échoue avec un message clair | 3 |
 | `sd-prefixee` | bruts déjà préfixés `Car...` -> état de nommage `PREFIXE`. **La seule carte rangée dans `bruts/`** | 3 |
 | `sd-rejets` | un faux wav parmi huit valides -> l'import aboutit, zone des rejets | 9 |
 | `sd-grosse` | soixante wav -> test de charge (progression, parallélisme, disque) | 60 |
 | `sd-reveil-bouton` | un appui sur une touche au milieu de la nuit -> **une** nuit, complète, et non deux (#4981) | 5 |
 | `sd-nuit-interrompue` | le journal ne se referme jamais -> nuit **tronquée** (#5093) | 3 |
+| `sd-nuit-longue` | une nuit qui **couvre** la fenêtre du protocole et la dépasse -> aucune alerte : la règle est un plancher (#5061) | 6 |
+| `sd-fin-precoce` | le début est couvert, la fin non : l'enregistrement s'arrête avant 30 min après le lever -> au diagnostic, l'alerte nomme ce bord (#5200) | 6 |
+| `sd-hors-fenetre` | aucun des deux bords : l'enregistrement commence trop tard **et** s'arrête trop tôt -> au diagnostic, l'alerte nomme les deux (#5200) | 6 |
+| `sd-carte-reutilisee` | une nuit de wav, un journal qui commence cinq nuits plus tôt et raconte aussi la leur -> **aucune** incohérence (#5631) | 2 |
 
 ## Régénérer les cartes
 

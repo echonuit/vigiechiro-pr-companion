@@ -9,7 +9,9 @@ import fr.univ_amu.iut.importation.model.ApercuEcrasement;
 import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.view.ConfirmationsImport;
 import fr.univ_amu.iut.importation.viewmodel.AvertissementsInspection;
+import fr.univ_amu.iut.importation.viewmodel.NuitDejaImportee;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -45,13 +47,24 @@ import javafx.scene.control.Alert;
 /// Lancement headless : voir `.github/assets/README.md`, section « Régénérer » (Headless Platform JavaFX 26).
 public final class CaptureConfirmationsImport {
 
+    /// Le carré et le point de démonstration, communs à tous les passages déjà présents des aperçus.
+    private static final String CARRE = "640380";
+
+    private static final String POINT = "A1";
+
     /// Nuit de démonstration déjà importée (#147) : **les passages**, et non une phrase. La question est
     /// composée par le code de production, comme le dialogue qui la porte.
     ///
     /// Cette constante portait auparavant une phrase écrite à la main, que l'application ne produisait
     /// pas. La capture était donc une fiction plausible : le dialogue était authentique, son contenu
     /// inventé - et rien ne pouvait le signaler, puisque aucun test ne compare une capture au réel.
-    private static final List<PassageExistant> DOUBLONS = List.of(new PassageExistant(2, 2026, "640380", "A1"));
+    private static final List<PassageExistant> DOUBLONS = List.of(new PassageExistant(2, 2026, CARRE, POINT));
+
+    /// Deux nuits cochées d'une même carte, déjà importées (#5600) : la question les nomme chacune avec sa
+    /// date, et se pose au pluriel (#5639).
+    private static final List<NuitDejaImportee> NUITS_DOUBLONS = List.of(
+            new NuitDejaImportee(LocalDate.of(2026, 8, 22), List.of(new PassageExistant(1, 2026, CARRE, POINT))),
+            new NuitDejaImportee(LocalDate.of(2026, 8, 24), List.of(new PassageExistant(2, 2026, CARRE, POINT))));
 
     /// Passage écrasé de démonstration : 342 séquences, dont 87 validations observateur (#279).
     private static final ApercuEcrasement ECRASEMENT = new ApercuEcrasement(342, 87);
@@ -86,6 +99,9 @@ public final class CaptureConfirmationsImport {
         ConfirmateurCapturant doublon = new ConfirmateurCapturant();
         new ConfirmationsImport(doublon)
                 .confirmerImportNuitDejaImportee(AvertissementsInspection.questionNuitDejaImportee(DOUBLONS));
+        ConfirmateurCapturant doublons = new ConfirmateurCapturant();
+        new ConfirmationsImport(doublons)
+                .confirmerImportNuitDejaImportee(AvertissementsInspection.questionNuitsDejaImportees(NUITS_DOUBLONS));
 
         ConfirmateurCapturant ecrasement = new ConfirmateurCapturant(true);
         new ConfirmationsImport(ecrasement).confirmerEcrasement(ECRASEMENT);
@@ -94,6 +110,8 @@ public final class CaptureConfirmationsImport {
         // alignés par VueCompteRendu et réenroulés pour le snapshot (#2243). La 1ʳᵉ d'écrasement (le
         // principe) reste une phrase.
         enregistrerCompteRendu(doublon.comptesRendus().get(0), sortie.resolve("apercu-import-doublon.png"));
+        enregistrerCompteRendu(
+                doublons.comptesRendus().get(0), sortie.resolve("apercu-import-doublon-multi-nuits.png"));
         enregistrer(ecrasement.messages().get(0), sortie.resolve("apercu-import-ecrasement-principe.png"));
         enregistrerCompteRendu(ecrasement.comptesRendus().get(0), sortie.resolve("apercu-import-ecrasement.png"));
     }

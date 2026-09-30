@@ -195,6 +195,20 @@ class AvertissementsInspectionTest {
     }
 
     @Test
+    @DisplayName("#5639 : deux nuits déjà importées posent la question au pluriel, comme leur constat")
+    void question_de_confirmation_pour_deux_nuits() {
+        CompteRendu question = AvertissementsInspection.questionNuitsDejaImportees(List.of(
+                new NuitDejaImportee(LocalDate.of(2026, 8, 22), List.of(new PassageExistant(1, 2026, "640380", "A1"))),
+                new NuitDejaImportee(
+                        LocalDate.of(2026, 8, 24), List.of(new PassageExistant(2, 2026, "640380", "A1")))));
+
+        assertThat(question.constats())
+                .singleElement()
+                .satisfies(constat -> assertThat(constat.fait()).startsWith("2 nuits de cette carte"));
+        assertThat(question.conclusion()).isEqualTo("Importer quand même comme nouveaux passages ?");
+    }
+
+    @Test
     @DisplayName("#4991 : un support en lecture seule est dit, avec la conduite à tenir")
     void support_en_lecture_seule() {
         Constat constat = constatUnique(AvertissementsInspection.rediger(

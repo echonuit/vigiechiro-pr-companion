@@ -236,9 +236,11 @@ public final class AvertissementsInspection {
 
     /// La même question, pour les nuits **cochées** déjà importées d'une carte (#5600).
     public static CompteRendu questionNuitsDejaImportees(List<NuitDejaImportee> nuits) {
+        String question = nuits != null && nuits.size() > 1
+                ? "Importer quand même comme nouveaux passages ?"
+                : "Importer quand même comme nouveau passage ?";
         return nuitExistanteConstat(nuits)
-                .map(constat ->
-                        new CompteRendu("", "", List.of(constat), "Importer quand même comme nouveau passage ?"))
+                .map(constat -> new CompteRendu("", "", List.of(constat), question))
                 .orElse(CompteRendu.de("", List.of()));
     }
 

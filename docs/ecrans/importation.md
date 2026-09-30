@@ -447,6 +447,14 @@ intermédiaire. Le rapport final distingue les enregistrements **importés**, **
 
 ![Confirmation d'une nuit déjà importée : importer quand même comme nouveau passage, ou annuler.](../assets/captures/apercu-import-doublon.png)
 
+Sur une carte qui porte **plusieurs nuits**, la confirmation ne concerne que les nuits **cochées** qui
+ont déjà un passage en base, et elle les nomme **chacune avec sa date**. Ce sont les nuits trouvées dans
+les enregistrements de la carte qui comptent, pas la première date du journal : le journal du capteur
+est circulaire, et sur une carte réutilisée il commence souvent par une nuit dont les fichiers ont été
+effacés depuis. Décocher une nuit déjà importée la retire de la question.
+
+![Confirmation de deux nuits déjà importées d'une même carte, chacune nommée avec sa date et son passage.](../assets/captures/apercu-import-doublon-multi-nuits.png)
+
 Choisir d'**écraser** demande **deux** confirmations. La première pose le principe : ce numéro de passage
 est déjà pris, voulez-vous remplacer la nuit existante ?
 
