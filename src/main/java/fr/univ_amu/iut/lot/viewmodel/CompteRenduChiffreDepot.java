@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Teinte;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Ventilation;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.BilanDepot;
+import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.EchecUnite;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,12 @@ import java.util.List;
 /// Le bandeau d'une ligne qu'elle remplace disparaît : deux restitutions du même fait, à deux endroits
 /// et dans deux vocabulaires, est précisément ce que ce lot corrige ailleurs.
 public final class CompteRenduChiffreDepot {
+
+    /// Ce qui s'applique à un refus du stockage, et que la relance a vérifié (#5598) : chaque tentative
+    /// redéclare le fichier, donc redemande des URL signées neuves, et le dépôt manuel reste possible.
+    private static final String GESTE_STOCKAGE = "se reconnecter n'y changera rien. Relancez le téléversement,"
+            + " qui redemande de nouvelles autorisations d'envoi ; si le refus persiste, déposez-les"
+            + " manuellement depuis le dossier de la nuit.";
 
     private CompteRenduChiffreDepot() {}
 
@@ -149,15 +156,22 @@ public final class CompteRenduChiffreDepot {
 
     /// Ce qu'on dit d'un refus définitif, **et le geste qu'on nomme seulement s'il s'applique**.
     ///
-    /// Une reconnexion répare des droits (401 / 403) ; elle ne répare pas un contenu refusé (400 / 422).
-    /// Nommer « reconnectez-vous » devant un contenu refusé serait conseiller à côté de la cause -
-    /// exactement le défaut que l'ADR 3854 a fermé ailleurs, et que #3689 a écarté côté réarmement.
+    /// Un geste par cause (#5598) : une reconnexion répare des droits refusés par l'API ; elle ne répare
+    /// ni une URL que le stockage refuse, ni un contenu refusé. Nommer « reconnectez-vous » à côté de la
+    /// cause est le défaut que l'ADR 3854 a fermé ailleurs, et que Samuel a payé d'une reconnexion puis
+    /// d'un redémarrage le 14 septembre.
     private static String phraseDesRefus(List<EchecUnite> refuses) {
+        // Le prédicat reste la seule autorité sur « une reconnexion répare ceci » (#3961).
+        long droits =
+                refuses.stream().filter(EchecUnite::seRearmeParUneReconnexion).count();
+        long stockage = compter(refuses, CauseRefus.STOCKAGE);
+        long contenu = refuses.size() - droits - stockage;
         String debut = refuses.size() + " archive(s) ont été refusées par Vigie-Chiro : les renvoyer telles"
                 + " quelles serait refusé de même.";
-        long parDroits =
-                refuses.stream().filter(EchecUnite::seRearmeParUneReconnexion).count();
-        if (parDroits == 0) {
+        if (droits == refuses.size()) {
+            return debut + " Reconnectez-vous : elles redeviendront reprenables.";
+        }
+        if (contenu == refuses.size()) {
             // Le geste est nommé parce qu'il est VÉRIFIÉ (#3946) : régénérer produit des archives de
             // mêmes identifiants, la synchronisation du plan conserve les lignes, et le téléversement
             // suivant les retente - `restantes()` rend « tout sauf déposé », et le moteur n'écarte
@@ -165,15 +179,42 @@ public final class CompteRenduChiffreDepot {
             // d'une reprise, pas la POSSIBILITÉ d'un nouvel essai.
             return debut + " Régénérez les archives de la nuit, puis relancez le téléversement.";
         }
-        if (parDroits == refuses.size()) {
-            return debut + " Reconnectez-vous : elles redeviendront reprenables.";
+        if (stockage == refuses.size()) {
+            return refuses.size() + " archive(s) ont été refusées par le stockage de Vigie-Chiro : " + GESTE_STOCKAGE;
         }
-        // Le cas mêlé, trouvé en ouvrant l'aperçu : deux refus de droits et un contenu refusé. La
-        // première rédaction se taisait dès qu'une seule archive n'était pas réparable, et perdait un
-        // geste **vérifié** pour les autres. L'ADR 3854 demande de ne nommer que ce qui s'applique, pas
-        // de se taire quand cela s'applique à une partie.
-        return debut + " " + parDroits + " d'entre elles tenaient à vos droits : reconnectez-vous et"
-                + " elles redeviendront reprenables. Le détail par archive est dans la table.";
+        // Le cas mêlé, trouvé en ouvrant l'aperçu (#3962) : l'ADR 3854 demande de ne nommer que ce qui
+        // s'applique, pas de se taire quand cela s'applique à une partie. Chaque cause dit donc son
+        // geste, avec la part qu'il concerne.
+        StringBuilder phrase = new StringBuilder(refuses.size() + " archive(s) ont été refusées par Vigie-Chiro.");
+        if (droits > 0) {
+            phrase.append(" ")
+                    .append(droits)
+                    .append(accord(droits, " d'entre elles tenait", " d'entre elles tenaient"))
+                    .append(" à vos droits : reconnectez-vous et elles redeviendront" + " reprenables.");
+        }
+        if (stockage > 0) {
+            phrase.append(" ")
+                    .append(stockage)
+                    .append(accord(stockage, " d'entre elles a été refusée", " d'entre elles ont été refusées"))
+                    .append(" par le stockage : ")
+                    .append(GESTE_STOCKAGE);
+        }
+        if (contenu > 0) {
+            phrase.append(" ")
+                    .append(contenu)
+                    .append(accord(contenu, " d'entre elles a", " d'entre elles ont"))
+                    .append(" un contenu refusé : régénérez les archives, puis relancez.");
+        }
+        return phrase.append(" Le détail par archive est dans la table.").toString();
+    }
+
+    private static long compter(List<EchecUnite> refuses, CauseRefus cause) {
+        return refuses.stream().filter(refus -> refus.cause() == cause).count();
+    }
+
+    /// Le verbe suit le nombre : « 1 d'entre elles ont été refusées » s'est vu à la relecture de l'aperçu.
+    private static String accord(long nombre, String singulier, String pluriel) {
+        return nombre == 1 ? singulier : pluriel;
     }
 
     /// Ce que la ventilation ne porte pas : **quoi faire** de ce qui manque, et ce que la reprise promet.

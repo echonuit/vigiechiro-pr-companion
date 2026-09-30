@@ -526,22 +526,23 @@ public final class ClientVigieChiro {
     /// Téléverse `fichier` en **parties** (#2354) sous le fichier déjà déclaré `fichierId` : pour chaque
     /// chunk de [#SEUIL_MULTIPART_OCTETS], demande son URL signée (`PUT /fichiers/{id}/multipart`), la
     /// dépose (réessayée, `ETag` collecté), puis finalise (`POST /fichiers/{id} {parts}`). Rend le succès
-    /// de la finalisation, ou la **première** issue en échec (URL, partie ou finalisation) - à charge de
-    /// l'appelant d'[#abandonnerFichier] pour ne pas laisser de parties orphelines côté serveur.
-    public ReponseApi<String> deposerEnParts(
+    /// de la finalisation, ou la **première** issue en échec (URL, partie ou finalisation), avec la
+    /// [Provenance] de son étape (#5598) - à charge de l'appelant d'[#abandonnerFichier] pour ne pas
+    /// laisser de parties orphelines côté serveur.
+    public IssueDeDepot deposerEnParts(
             String fichierId, Path fichier, DoubleConsumer progression, SuiviReprise reprise) {
         return deposerEnParts(fichierId, fichier, SEUIL_MULTIPART_OCTETS, progression, reprise);
     }
 
     /// Variante à **taille de chunk** explicite (#2354) : la production découpe en [#SEUIL_MULTIPART_OCTETS],
     /// les tests en petits chunks pour exercer la boucle sur un fichier minuscule.
-    ReponseApi<String> deposerEnParts(
+    IssueDeDepot deposerEnParts(
             String fichierId, Path fichier, long tailleChunk, DoubleConsumer progression, SuiviReprise reprise) {
         long taille;
         try {
             taille = Files.size(fichier);
         } catch (IOException illisible) {
-            return ReponseApi.injoignable("fichier illisible : " + illisible.getMessage());
+            return IssueDeDepot.api(ReponseApi.injoignable("fichier illisible : " + illisible.getMessage()));
         }
         List<PartieDeposee> parties = new ArrayList<>();
         long envoye = 0;
@@ -565,21 +566,23 @@ public final class ClientVigieChiro {
                                 TransportVigieChiro.Rejeu.AUTORISE)
                         .lireAvec(ReponsesVigieChiro::urlDePartie);
                 if (!(url instanceof ReponseApi.Succes<String>(String urlSignee))) {
-                    return url;
+                    return IssueDeDepot.api(url);
                 }
                 ReponseApi<String> partie = transport.deposerPartie(
                         urlSignee, () -> HttpRequest.BodyPublishers.ofByteArray(chunk), reprise);
                 if (!(partie instanceof ReponseApi.Succes<String>(String etag))) {
-                    return partie;
+                    return IssueDeDepot.stockage(partie);
                 }
                 parties.add(new PartieDeposee(numero, etag));
                 envoye += lus;
                 progression.accept(taille == 0 ? 1.0 : (double) envoye / taille);
             }
         } catch (IOException interrompu) {
-            return ReponseApi.injoignable("lecture du fichier interrompue : " + interrompu.getMessage());
+            return IssueDeDepot.api(
+                    ReponseApi.injoignable("lecture du fichier interrompue : " + interrompu.getMessage()));
         }
-        return poster(CHEMIN_FICHIERS + "/" + fichierId, RequetesVigieChiro.finalisationMultipart(parties));
+        return IssueDeDepot.api(
+                poster(CHEMIN_FICHIERS + "/" + fichierId, RequetesVigieChiro.finalisationMultipart(parties)));
     }
 
     /// Abandonne un upload multipart (#2354, `DELETE /fichiers/{id}`) : à appeler quand une partie a

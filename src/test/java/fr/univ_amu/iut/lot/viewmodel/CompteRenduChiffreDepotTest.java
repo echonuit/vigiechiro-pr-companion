@@ -205,6 +205,84 @@ class CompteRenduChiffreDepotTest {
                 .anyMatch(texte -> texte.contains("2 d'entre elles tenaient à vos droits"));
     }
 
+    @Test
+    @DisplayName("#5598 : un refus du stockage ne conseille pas de se reconnecter, et nomme ce qui s'applique")
+    void un_refus_du_stockage_nomme_la_relance_puis_le_depot_manuel() {
+        List<EchecUnite> refus = new java.util.ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            refus.add(new EchecUnite("Car-" + i + ".zip", "HTTP 403", true, CauseRefus.STOCKAGE));
+        }
+        BilanDepot bilan = new BilanDepot("p-1", 0, refus, 0L);
+
+        List<String> textes = textes(traduire(bilan, plan(10, 0, false)));
+
+        assertThat(textes)
+                .as("Samuel s'est reconnecté sur ce conseil le 14 septembre, pour le même refus")
+                .noneMatch(texte -> texte.contains("Reconnectez-vous") || texte.contains("reconnectez-vous"));
+        assertThat(textes).anyMatch(texte -> texte.contains("se reconnecter n'y changera rien"));
+        assertThat(textes).anyMatch(texte -> texte.contains("Relancez le téléversement"));
+        assertThat(textes)
+                .as("le dépôt manuel est le geste qui a marché chaque fois")
+                .anyMatch(texte -> texte.contains("manuellement"));
+    }
+
+    @Test
+    @DisplayName("#5598 : sur un lot mêlé de droits et de stockage, chaque geste est nommé avec son nombre")
+    void droits_et_stockage_melanges() {
+        BilanDepot bilan = new BilanDepot(
+                "p-1",
+                9,
+                List.of(
+                        new EchecUnite("Car-10.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                        new EchecUnite("Car-11.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                        new EchecUnite("Car-12.zip", "HTTP 403", true, CauseRefus.STOCKAGE),
+                        new EchecUnite("Car-13.zip", "HTTP 403", true, CauseRefus.STOCKAGE),
+                        new EchecUnite("Car-14.zip", "HTTP 403", true, CauseRefus.STOCKAGE)),
+                3_000_000_000L);
+
+        List<String> textes = textes(traduire(bilan, plan(14, 9, false)));
+
+        assertThat(textes).anyMatch(texte -> texte.contains("2 d'entre elles tenaient à vos droits"));
+        assertThat(textes).anyMatch(texte -> texte.contains("3 d'entre elles ont été refusées par le stockage"));
+    }
+
+    @Test
+    @DisplayName("#5598 : une seule archive d'une cause s'écrit au singulier")
+    void une_seule_archive_s_ecrit_au_singulier() {
+        // Vu à la relecture de l'aperçu, pas par un test : « 1 d'entre elles ont été refusées ».
+        BilanDepot bilan = new BilanDepot(
+                "p-1",
+                11,
+                List.of(
+                        new EchecUnite("Car-12.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                        new EchecUnite("Car-13.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                        new EchecUnite("Car-14.zip", "HTTP 422", true, CauseRefus.CONTENU),
+                        new EchecUnite("Car-15.zip", "HTTP 403", true, CauseRefus.STOCKAGE)),
+                3_400_000_000L);
+
+        List<String> textes = textes(traduire(bilan, plan(15, 11, false)));
+
+        assertThat(textes).anyMatch(texte -> texte.contains("1 d'entre elles a été refusée par le stockage"));
+        assertThat(textes).anyMatch(texte -> texte.contains("1 d'entre elles a un contenu refusé"));
+        assertThat(textes).anyMatch(texte -> texte.contains("2 d'entre elles tenaient à vos droits"));
+    }
+
+    @Test
+    @DisplayName("#5598 : sur un lot mêlé, une cause absente n'est pas nommée")
+    void une_cause_absente_n_est_pas_nommee() {
+        // Trouvé par PIT : « 0 d'entre elles ont un contenu refusé » passait tous les autres cas.
+        EchecUnite droits = new EchecUnite("Car-10.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION);
+        EchecUnite stockage = new EchecUnite("Car-11.zip", "HTTP 403", true, CauseRefus.STOCKAGE);
+        EchecUnite contenu = new EchecUnite("Car-12.zip", "HTTP 422", true, CauseRefus.CONTENU);
+
+        assertThat(textes(traduire(new BilanDepot("p-1", 9, List.of(droits, stockage), 0L), plan(11, 9, false))))
+                .noneMatch(texte -> texte.contains("contenu refusé"));
+        assertThat(textes(traduire(new BilanDepot("p-1", 9, List.of(droits, contenu), 0L), plan(11, 9, false))))
+                .noneMatch(texte -> texte.contains("par le stockage"));
+        assertThat(textes(traduire(new BilanDepot("p-1", 9, List.of(stockage, contenu), 0L), plan(11, 9, false))))
+                .noneMatch(texte -> texte.contains("vos droits"));
+    }
+
     /// Le lot que l'aperçu montre : deux refus de droits, un contenu refusé.
     private record BitmapMele() {
         BilanDepot bilan() {

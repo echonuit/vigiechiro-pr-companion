@@ -81,9 +81,10 @@ public final class CaptureCompteRenduDepot {
                 List.of(),
                 sortie.resolve("apercu-lot-depot-interrompu.png"));
         // L'état que la passe 4 de la clôture #3900 a trouvé SANS APERÇU, alors que c'est celui où
-        // l'utilisateur a le plus besoin d'être renseigné : des archives refusées définitivement, dont
-        // deux réparables par une reconnexion et une qui ne le sera jamais. C'est aussi le seul état où
-        // le bouton cesse de s'appeler « Reprendre le dépôt ».
+        // l'utilisateur a le plus besoin d'être renseigné : des archives refusées définitivement, une
+        // par cause - deux réparables par une reconnexion, une refusée par le stockage (#5598), qui ne
+        // l'est pas, et un contenu refusé. C'est aussi le seul état où le bouton cesse de s'appeler
+        // « Reprendre le dépôt ».
         rendre(
                 new BilanDepot(
                         PARTICIPATION,
@@ -91,9 +92,11 @@ public final class CaptureCompteRenduDepot {
                         List.of(
                                 new EchecUnite("Car-12.zip", DROITS_INSUFFISANTS, true, CauseRefus.AUTHENTIFICATION),
                                 new EchecUnite("Car-13.zip", DROITS_INSUFFISANTS, true, CauseRefus.AUTHENTIFICATION),
-                                new EchecUnite("Car-14.zip", "HTTP 422 : archive refusée", true, CauseRefus.CONTENU)),
+                                new EchecUnite("Car-14.zip", "HTTP 422 : archive refusée", true, CauseRefus.CONTENU),
+                                new EchecUnite(
+                                        "Car-15.zip", "HTTP 403 : SignatureDoesNotMatch", true, CauseRefus.STOCKAGE)),
                         3_400_000_000L),
-                new CompteRenduChiffreDepot.Plan(14, 11, false),
+                new CompteRenduChiffreDepot.Plan(15, 11, false),
                 List.of(),
                 sortie.resolve("apercu-lot-depot-refus-definitif.png"));
     }

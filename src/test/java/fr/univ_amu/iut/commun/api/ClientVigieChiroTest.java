@@ -232,7 +232,8 @@ class ClientVigieChiroTest {
         });
         ClientVigieChiro client = clientAvec(http);
 
-        ReponseApi<String> issue = client.deposerEnParts("f-1", fichier, 3, fraction -> {}, SuiviReprise.SILENCIEUX);
+        ReponseApi<String> issue = client.deposerEnParts("f-1", fichier, 3, fraction -> {}, SuiviReprise.SILENCIEUX)
+                .reponse();
 
         assertThat(issue).as("la finalisation aboutit").isInstanceOf(ReponseApi.Succes.class);
         assertThat(putsS3).as("7 octets en chunks de 3 → 3 parties déposées").hasValue(3);
@@ -263,9 +264,13 @@ class ClientVigieChiroTest {
         });
         ClientVigieChiro client = clientAvec(http);
 
-        ReponseApi<String> issue = client.deposerEnParts("f-1", fichier, 3, fraction -> {}, SuiviReprise.SILENCIEUX);
+        IssueDeDepot depot = client.deposerEnParts("f-1", fichier, 3, fraction -> {}, SuiviReprise.SILENCIEUX);
+        ReponseApi<String> issue = depot.reponse();
 
         assertThat(issue).as("le refus de la partie est propagé").isInstanceOf(ReponseApi.Refuse.class);
+        assertThat(depot.provenance())
+                .as("c'est le stockage qui a refusé la partie, pas l'API (#5598)")
+                .isEqualTo(Provenance.STOCKAGE);
         assertThat(finalisations)
                 .as("aucune finalisation quand une partie a échoué")
                 .hasValue(0);

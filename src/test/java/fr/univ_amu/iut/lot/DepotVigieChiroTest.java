@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.FichierSigne;
+import fr.univ_amu.iut.commun.api.IssueDeDepot;
 import fr.univ_amu.iut.commun.api.IssueLancement;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
@@ -820,7 +821,8 @@ class DepotVigieChiroTest {
         Path gros = grosFichier(dossier, "Car-1.zip");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
         when(client.creerFichierMultipart(anyString(), anyString())).thenReturn(ReponseApi.succes("f-multi"));
-        when(client.deposerEnParts(anyString(), any(Path.class), any(), any())).thenReturn(ReponseApi.succes("{}"));
+        when(client.deposerEnParts(anyString(), any(Path.class), any(), any()))
+                .thenReturn(IssueDeDepot.api(ReponseApi.succes("{}")));
 
         depot.deposer(idPassage, List.of(gros));
 
@@ -836,7 +838,7 @@ class DepotVigieChiroTest {
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
         when(client.creerFichierMultipart(anyString(), anyString())).thenReturn(ReponseApi.succes("f-multi"));
         when(client.deposerEnParts(anyString(), any(Path.class), any(), any()))
-                .thenReturn(ReponseApi.injoignable("coupure"));
+                .thenReturn(IssueDeDepot.api(ReponseApi.injoignable("coupure")));
 
         depot.deposer(idPassage, List.of(gros));
 

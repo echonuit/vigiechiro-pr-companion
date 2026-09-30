@@ -65,8 +65,9 @@ class SignatureS3DepotTest {
             return reponse(200, "{}", Map.of());
         });
 
-        ReponseApi<String> issue =
-                clientAvec(http).deposerEnParts("f-1", fichier, 3, fraction -> {}, SuiviReprise.SILENCIEUX);
+        ReponseApi<String> issue = clientAvec(http)
+                .deposerEnParts("f-1", fichier, 3, fraction -> {}, SuiviReprise.SILENCIEUX)
+                .reponse();
 
         assertThat(refus)
                 .as("S3 recalcule la chaîne avec le Content-Type reçu : une partie qui en porte un que"

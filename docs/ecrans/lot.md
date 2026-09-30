@@ -112,7 +112,7 @@ plus rien à reprendre.
 
 La table garde le détail : la cause de chaque échec y est lisible, archive par archive.
 
-![Le compte rendu d'un dépôt incomplet : 11 archives sur 14 en ligne, trois refusées par Vigie-Chiro, dont deux qui redeviendront reprenables après une reconnexion.](../assets/captures/apercu-lot-depot-refus-definitif.png)
+![Le compte rendu d'un dépôt incomplet : 11 archives sur 15 en ligne, quatre refusées par Vigie-Chiro. Deux redeviendront reprenables après une reconnexion, une a été refusée par le stockage et se relance, une a un contenu refusé et demande de régénérer les archives.](../assets/captures/apercu-lot-depot-refus-definitif.png)
 
 #### Ce qui peut lever un refus, et ce qui ne le peut pas
 
@@ -120,6 +120,7 @@ La table garde le détail : la cause de chaque échec y est lisible, archive par
 |---|---|
 | **droits ou jeton** (session expirée, autorisation manquante) | **vous reconnecter**. Les archives refusées pour cette raison redeviennent reprenables aussitôt, sans autre geste |
 | **contenu refusé** (l'archive elle-même ne convient pas) | se reconnecter n'y change rien : il faut **régénérer les archives** de la nuit, puis relancer le téléversement |
+| **stockage** (l'espace de stockage de Vigie-Chiro refuse l'envoi des octets) | se reconnecter n'y change rien : **relancez le téléversement**, qui redemande de nouvelles autorisations d'envoi. Si le refus persiste, déposez depuis le dossier de la nuit, comme le permet le dépôt manuel |
 
 !!! tip "Après une régénération, relancez simplement le téléversement"
     Le bouton s'appelle alors « Téléverser sur Vigie-Chiro » et non « Reprendre le dépôt » : c'est

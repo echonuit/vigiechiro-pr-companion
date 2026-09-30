@@ -2,6 +2,8 @@ package fr.univ_amu.iut.lot.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FichierSigne;
+import fr.univ_amu.iut.commun.api.IssueDeDepot;
+import fr.univ_amu.iut.commun.api.Provenance;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SuiviReprise;
 import java.io.IOException;
@@ -42,16 +44,16 @@ final class TeleverseurArchive {
         // plus jamais un « refusé par VigieChiro » générique quand c'était le réseau.
         ReponseApi<FichierSigne> declaration = client.creerFichier(titre, participationId);
         if (!(declaration instanceof ReponseApi.Succes<FichierSigne>(FichierSigne signe))) {
-            return Resultat.echec("déclaration du fichier : " + causeDe(declaration), declaration);
+            return Resultat.echec("déclaration du fichier : " + causeDe(declaration), declaration, Provenance.API);
         }
         ReponseApi<String> depose =
                 client.televerserVersS3(signe.urlSignee(), fichier, mime(titre), progression, reprise);
         if (depose.echec().isPresent()) {
-            return Resultat.echec("téléversement S3 : " + causeDe(depose), depose);
+            return Resultat.echec("téléversement S3 : " + causeDe(depose), depose, Provenance.STOCKAGE);
         }
         ReponseApi<String> finalisation = client.finaliserFichier(signe.id());
         if (finalisation.echec().isPresent()) {
-            return Resultat.echec("finalisation : " + causeDe(finalisation), finalisation);
+            return Resultat.echec("finalisation : " + causeDe(finalisation), finalisation, Provenance.API);
         }
         return Resultat.reussi(signe.id(), octets);
     }
@@ -69,12 +71,13 @@ final class TeleverseurArchive {
             long octets) {
         ReponseApi<String> declaration = client.creerFichierMultipart(titre, participationId);
         if (!(declaration instanceof ReponseApi.Succes<String>(String fichierId))) {
-            return Resultat.echec("déclaration multipart : " + causeDe(declaration), declaration);
+            return Resultat.echec("déclaration multipart : " + causeDe(declaration), declaration, Provenance.API);
         }
-        ReponseApi<String> depot = client.deposerEnParts(fichierId, fichier, progression, reprise);
-        if (depot.echec().isPresent()) {
+        IssueDeDepot depot = client.deposerEnParts(fichierId, fichier, progression, reprise);
+        if (depot.reponse().echec().isPresent()) {
             client.abandonnerFichier(fichierId);
-            return Resultat.echec("téléversement multipart : " + causeDe(depot), depot);
+            return Resultat.echec(
+                    "téléversement multipart : " + causeDe(depot.reponse()), depot.reponse(), depot.provenance());
         }
         return Resultat.reussi(fichierId, octets);
     }
@@ -130,11 +133,10 @@ final class TeleverseurArchive {
         ///
         /// Le caractère définitif vient de `ReponseApi.estReessayable()`, et jamais d'une lecture du
         /// texte de la raison : la même panne s'y écrit de trop de façons pour qu'on la redevine.
-        /// La cause vient du **statut**, decidee ici (#3689) : elle dira plus tard ce qui peut la
-        /// lever - une reconnexion reussie pour un refus d authentification, rien pour un contenu
-        /// refuse. Nulle sur un echec rejouable, qui n a pas a en porter.
-        static Resultat echec(String raison, ReponseApi<?> reponse) {
-            return new Resultat(null, raison, !reponse.estReessayable(), CauseRefus.de(reponse), 0);
+        /// La cause vient du **statut** et de la **provenance** de l'étape, décidées ici (#3689, #5598) :
+        /// elle dira plus tard ce qui peut la lever. Nulle sur un échec rejouable.
+        static Resultat echec(String raison, ReponseApi<?> reponse, Provenance provenance) {
+            return new Resultat(null, raison, !reponse.estReessayable(), CauseRefus.de(reponse, provenance), 0);
         }
 
         boolean reussi() {

@@ -229,6 +229,101 @@ class DeposerVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#5598 : un refus du stockage ne conseille ni la reconnexion ni la régénération")
+    void rendre_bilan_un_refus_du_stockage() {
+        String texte = DeposerVigieChiro.rendreBilan(refusDuStockage());
+
+        assertThat(texte)
+                .doesNotContain("Reconnectez-vous")
+                .doesNotContain("Régénérez")
+                .contains("se reconnecter n'y changera rien")
+                .contains("manuellement");
+    }
+
+    @Test
+    @DisplayName("#5598 : sur un lot mêlé de droits et de stockage, chaque geste est nommé avec son nombre")
+    void rendre_bilan_droits_et_stockage_melanges() {
+        String texte = DeposerVigieChiro.rendreBilan(droitsEtStockage());
+
+        assertThat(texte)
+                .contains("2 d'entre elles tenaient à vos droits")
+                .contains("3 d'entre elles ont été refusées par le stockage");
+    }
+
+    @Test
+    @DisplayName("#5598 : l'écran et la commande nomment les mêmes gestes pour les mêmes causes (ADR 0014)")
+    void l_ecran_et_la_commande_nomment_les_memes_gestes() {
+        // La parité porte sur les GESTES, pas sur la phrase : la commande énumère les archives et dit
+        // « relancez la commande », l'écran les compte et dit « relancez le téléversement ».
+        for (BilanDepot bilan : List.of(refusDuStockage(), droitsEtStockage())) {
+            String commande = DeposerVigieChiro.rendreBilan(bilan);
+            String ecran = fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot.de(
+                            bilan,
+                            new fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot.Plan(
+                                    bilan.deposees() + bilan.echecs().size(), bilan.deposees(), false),
+                            List.of())
+                    .avertissements()
+                    .stream()
+                    .map(fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Avertissement::texte)
+                    .reduce("", String::concat);
+            for (String geste : List.of("n'y changera rien", "manuellement")) {
+                assertThat(commande).as("la commande nomme « %s »", geste).contains(geste);
+                assertThat(ecran).as("l'écran nomme « %s »", geste).contains(geste);
+            }
+            boolean droits = bilan.echecs().stream().anyMatch(e -> e.cause() == CauseRefus.AUTHENTIFICATION);
+            assertThat(commande.toLowerCase(java.util.Locale.ROOT).contains("reconnectez-vous"))
+                    .as("la commande ne conseille la reconnexion que s'il y a des refus de droits")
+                    .isEqualTo(droits);
+            assertThat(ecran.toLowerCase(java.util.Locale.ROOT).contains("reconnectez-vous"))
+                    .as("l'écran non plus")
+                    .isEqualTo(droits);
+        }
+    }
+
+    @Test
+    @DisplayName("#5598 : sur un lot mêlé, une cause absente n'est pas nommée, et une seule s'écrit au singulier")
+    void rendre_bilan_une_cause_absente_n_est_pas_nommee() {
+        EchecUnite droits = new EchecUnite("Car-10.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION);
+        EchecUnite stockage = new EchecUnite("Car-11.zip", "HTTP 403", true, CauseRefus.STOCKAGE);
+        EchecUnite contenu = new EchecUnite("Car-12.zip", "HTTP 422", true, CauseRefus.CONTENU);
+
+        assertThat(DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 9, List.of(droits, stockage), 0)))
+                .doesNotContain("contenu refusé")
+                .contains("1 d'entre elles tenait à vos droits")
+                .contains("1 d'entre elles a été refusée par le stockage");
+        assertThat(DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 9, List.of(droits, contenu), 0)))
+                .doesNotContain("par le stockage")
+                .contains("1 d'entre elles a un contenu refusé");
+        assertThat(DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 9, List.of(stockage, contenu), 0)))
+                .doesNotContain("vos droits");
+    }
+
+    /// Le cas de Samuel le 14 septembre, réduit à trois archives.
+    private static BilanDepot refusDuStockage() {
+        return new BilanDepot(
+                "p-1",
+                0,
+                List.of(
+                        new EchecUnite("Car-1.zip", "HTTP 403", true, CauseRefus.STOCKAGE),
+                        new EchecUnite("Car-2.zip", "HTTP 403", true, CauseRefus.STOCKAGE),
+                        new EchecUnite("Car-3.zip", "HTTP 403", true, CauseRefus.STOCKAGE)),
+                0);
+    }
+
+    private static BilanDepot droitsEtStockage() {
+        return new BilanDepot(
+                "p-1",
+                9,
+                List.of(
+                        new EchecUnite("Car-10.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                        new EchecUnite("Car-11.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                        new EchecUnite("Car-12.zip", "HTTP 403", true, CauseRefus.STOCKAGE),
+                        new EchecUnite("Car-13.zip", "HTTP 403", true, CauseRefus.STOCKAGE),
+                        new EchecUnite("Car-14.zip", "HTTP 403", true, CauseRefus.STOCKAGE)),
+                0);
+    }
+
+    @Test
     @DisplayName("volume non mesuré : rien n'est dit, plutôt qu'un « 0 Ko téléversé »")
     void rendre_bilan_tait_un_volume_absent() {
         String texte = DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 3, List.of()));
