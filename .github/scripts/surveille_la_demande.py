@@ -42,6 +42,31 @@ qui dit « rien encore », donc `en cours`, et surtout pas `illisible`. C est la
 `-gt 0` couvrait sans le dire, et la confondre ferait abandonner la surveillance a la seconde ou elle
 commence.
 
+## Un ensemble PARTIELLEMENT CREE ressemble a un ensemble conclu
+
+Troisieme forme du meme defaut, et celle-ci m a fait conclure faux en m en servant pour de bon. Le
+moniteur a lu **7 verifications, toutes vertes**, et a dit CONCLU. La demande en portait **25, dont
+17 en attente** : la forge cree ses check-runs PROGRESSIVEMENT, et zero en attente parmi sept crees
+n est pas zero en attente.
+
+La liste vide etait le cas facile, et le traiter seul laissait le cas difficile intact : une liste
+PARTIELLE est non vide, donc elle passait le garde `if checks`.
+
+**Le signal qui tranche n est pas dans les verifications, il est dans les EXECUTIONS d atelier.**
+Tant qu une execution de la tete est `queued` ou `in_progress`, d autres verifications peuvent
+apparaitre. Mesure faite au moment ou le moniteur concluait faux :
+
+    gh pr checks                         26 verifications
+    actions/runs?head_sha=<tete>         8 completed, 1 in_progress, 1 queued
+
+Le moniteur conclut donc a DEUX conditions : aucune verification en attente, ET aucune execution en
+vol. La seconde est celle qui manquait.
+
+**Sa limite, declaree plutot que decouverte** : elle repond pour les ateliers de la forge. Une
+verification tierce, creee par un service exterieur, pourrait encore arriver apres. Le depot n en a
+aucune aujourd hui - les 26 verifications de la derniere demande viennent toutes d executions
+d atelier - et si cela change, ce paragraphe est faux.
+
 ## Ce qu il ne fait pas
 
 **Il ne juge pas la couleur.** Conclure que la demande est verte, et decider de fusionner, reste le
@@ -76,11 +101,11 @@ TENTATIVES = 3
 EN_ATTENTE = "pending"
 
 
-def interroge(depot: str, numero: int, lanceur=subprocess.run, dors=time.sleep) -> list | None:
-    """Les verifications de la demande, ou `None` quand on n a PAS PU LIRE.
+def _lit(arguments: list[str], lanceur, dors) -> object | None:
+    """Le JSON rendu par `gh`, ou `None` quand on n a PAS PU LIRE. Trois tentatives.
 
-    Le `lanceur` est une couture : sans elle, les cas de ce script exigeraient le reseau, et un
-    dispositif dont les cas ne tournent pas hors ligne ne se relance jamais.
+    Un seul endroit lit la forge, parce que les deux interrogations de ce script doivent refuser de
+    la MEME facon : deux refus ecrits a deux endroits divergent a la premiere reformulation.
     """
     for essai in range(1, TENTATIVES + 1):
         # ⟨`gh` ABSENT leve, et `check=False` ne le couvre pas⟩ `check=False` parle du code de sortie ;
@@ -88,12 +113,7 @@ def interroge(depot: str, numero: int, lanceur=subprocess.run, dors=time.sleep) 
         # defaut vivait dans `mesure_duree_portail` et `mesure_minutes_par_pr`, repare dans les deux,
         # et il reste dans six appels du depot (#5692).
         try:
-            rendu = lanceur(
-                ["gh", "pr", "checks", str(numero), "--repo", depot, "--json", "name,bucket"],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
+            rendu = lanceur(arguments, capture_output=True, text=True, check=False)
         except OSError:
             return None
         # ⟨on juge sur le CONTENU, jamais sur le code⟩ `gh pr checks` sort non nul des qu une
@@ -107,6 +127,42 @@ def interroge(depot: str, numero: int, lanceur=subprocess.run, dors=time.sleep) 
         if essai < TENTATIVES:
             dors(PAUSE_DE_REPRISE)
     return None
+
+
+def interroge(depot: str, numero: int, lanceur=subprocess.run, dors=time.sleep) -> list | None:
+    """Les verifications de la demande, ou `None` quand on n a PAS PU LIRE.
+
+    Le `lanceur` est une couture : sans elle, les cas de ce script exigeraient le reseau, et un
+    dispositif dont les cas ne tournent pas hors ligne ne se relance jamais.
+    """
+    rendu = _lit(
+        ["gh", "pr", "checks", str(numero), "--repo", depot, "--json", "name,bucket"],
+        lanceur,
+        dors,
+    )
+    return rendu if isinstance(rendu, list) else None
+
+
+def tete(depot: str, numero: int, lanceur=subprocess.run, dors=time.sleep) -> str | None:
+    """Le SHA de la tete de la demande, ou `None`. Lu une fois, il ancre la question suivante."""
+    rendu = _lit(
+        ["gh", "pr", "view", str(numero), "--repo", depot, "--json", "headRefOid"], lanceur, dors
+    )
+    return rendu.get("headRefOid") if isinstance(rendu, dict) else None
+
+
+def ateliers_en_vol(depot: str, sha: str, lanceur=subprocess.run, dors=time.sleep) -> int | None:
+    """Combien d executions d atelier de cette tete ne sont pas `completed`, ou `None`.
+
+    C est LE signal qui manquait : tant qu une execution est `queued` ou `in_progress`, la forge peut
+    encore creer des verifications, et « zero en attente » ne veut rien dire.
+    """
+    rendu = _lit(
+        ["gh", "api", f"repos/{depot}/actions/runs?head_sha={sha}&per_page=100"], lanceur, dors
+    )
+    if not isinstance(rendu, dict) or "workflow_runs" not in rendu:
+        return None
+    return sum(1 for r in rendu["workflow_runs"] if r.get("status") != "completed")
 
 
 def en_cours(checks: list) -> int:
@@ -128,14 +184,34 @@ def surveille(
     budget: int = BUDGET_PAR_DEFAUT,
     pause: int = PAUSE_ENTRE_SONDES,
     lire=None,
+    en_vol=None,
     dors=time.sleep,
 ) -> int:
-    """Sonde jusqu a conclusion, epuisement du budget, ou echec de lecture."""
+    """Sonde jusqu a conclusion, epuisement du budget, ou echec de lecture.
+
+    `lire` rend les verifications, `en_vol` le nombre d executions d atelier non terminees. Les deux
+    sont des coutures, et les deux doivent pouvoir rendre `None` : ne pas avoir lu l un des deux est
+    ne pas avoir lu.
+    """
     lire = lire or (lambda: interroge(depot, numero))
+    if en_vol is None:
+        sha = tete(depot, numero)
+        if sha is None:
+            print(
+                f"JE N AI PAS CONCLU : la tete de #{numero} est illisible, donc je ne peux pas "
+                f"savoir si la forge a fini de creer ses verifications.",
+                file=sys.stderr,
+            )
+            return PAS_PU_LIRE
+
+        def en_vol():
+            return ateliers_en_vol(depot, sha)
+
     ecoule = 0
     while True:
         checks = lire()
-        if checks is None:
+        restants = en_vol()
+        if checks is None or restants is None:
             print(
                 f"JE N AI PAS CONCLU : {TENTATIVES} lectures de suite n ont rien rendu "
                 f"(« gh » absent, ou la forge muette). Le verdict de #{numero} reste inconnu.",
@@ -143,24 +219,27 @@ def surveille(
             )
             return PAS_PU_LIRE
 
-        restantes = en_cours(checks)
-        # ⟨`flush` n est pas un ornement⟩ Python tamponne `stdout` des qu il n est pas un
-        # terminal, et un moniteur redirige toujours. Sans lui, les lignes de progression
-        # n arrivent qu a la SORTIE du processus : le journal reste vide pendant toute la
-        # surveillance, ce qui se lit « il ne se passe rien ». Vu sur la demande de ce lot meme.
+        attente = en_cours(checks)
         print(
-            f"[{ecoule:5d}s] {len(checks)} verification(s) : {composition(checks)}",
+            f"[{ecoule:5d}s] {len(checks)} verification(s) : {composition(checks)}"
+            f" | {restants} atelier(s) en vol",
             flush=True,
         )
 
-        # ⟨une liste VIDE n est pas une conclusion⟩ Sans cette moitie, une demande dont la forge n a
-        # pas encore cree les check-runs serait declaree conclue a la premiere sonde.
-        if checks and restantes == 0:
+        # ⟨DEUX conditions, et la seconde est celle qui manquait⟩ Zero en attente parmi SEPT crees
+        # n est pas zero en attente : la forge cree ses check-runs progressivement, et un ensemble
+        # partiel est non vide donc il passait le garde `if checks`. Vecu sur la demande de ce lot,
+        # ou ce moniteur a annonce CONCLU sur 7 vertes quand il y en avait 25 dont 17 en attente.
+        if checks and attente == 0 and restants == 0:
             print(f"CONCLU : {composition(checks)}", flush=True)
             return CONCLU
 
         if ecoule + pause > budget:
-            quoi = f"{restantes} en cours" if checks else "aucune verification creee"
+            quoi = (
+                f"{attente} en attente, {restants} atelier(s) en vol"
+                if checks
+                else "aucune verification creee"
+            )
             print(
                 f"JE N AI PAS CONCLU : budget de {budget} s epuise, {quoi}. "
                 f"Le verdict de #{numero} reste inconnu.",
@@ -192,56 +271,82 @@ def _auto_test() -> int:
     ROUGE = [{"name": "build", "bucket": "fail"}, {"name": "lint", "bucket": "pass"}]
     ENCOURS = [{"name": "build", "bucket": EN_ATTENTE}]
 
-    muet = {"ecoule": 0}
-
     def dors(_):
-        muet["ecoule"] += 1
+        return None
+
+    def rien_en_vol():
+        return 0
 
     # ⟨LES TROIS ISSUES, une par code⟩ C est la partition entiere, et chacune doit etre atteinte par
     # un chemin different : sans les trois, ce script n aurait fait qu inverser le defaut d origine.
     verifie(
         "une demande conclue rend 0",
-        lambda: surveille("d", 1, lire=_serie([VERT]), dors=dors),
+        lambda: surveille("d", 1, lire=_serie([VERT]), en_vol=rien_en_vol, dors=dors),
         CONCLU,
     )
     verifie(
         "une demande ROUGE conclue rend 0 aussi : un rouge est un verdict",
-        lambda: surveille("d", 1, lire=_serie([ROUGE]), dors=dors),
+        lambda: surveille("d", 1, lire=_serie([ROUGE]), en_vol=rien_en_vol, dors=dors),
         CONCLU,
     )
     verifie(
-        "ne pas avoir pu lire rend 4, et ne se confond avec aucun verdict",
-        lambda: surveille("d", 1, lire=_serie([None]), dors=dors),
+        "ne pas avoir pu lire les verifications rend 4",
+        lambda: surveille("d", 1, lire=_serie([None]), en_vol=rien_en_vol, dors=dors),
+        PAS_PU_LIRE,
+    )
+    verifie(
+        "ne pas avoir pu lire les ATELIERS rend 4 aussi : les deux lectures comptent",
+        lambda: surveille("d", 1, lire=_serie([VERT]), en_vol=_serie([None]), dors=dors),
         PAS_PU_LIRE,
     )
     verifie(
         "un budget epuise sur une demande en cours rend 3",
-        lambda: surveille("d", 1, budget=60, pause=30, lire=_serie([ENCOURS]), dors=dors),
+        lambda: surveille(
+            "d", 1, budget=60, pause=30, lire=_serie([ENCOURS]), en_vol=rien_en_vol, dors=dors
+        ),
         PAS_CONCLU,
+    )
+
+    # ⟨LE CAS QUI M A FAIT CONCLURE FAUX⟩ Sept vertes et zero en attente, mais la forge cree encore
+    # ses check-runs. Sans ce cas, le remede serait vert et le defaut intact : c est la seule chose
+    # que ce lot a apprise en se servant de lui-meme.
+    verifie(
+        "sept vertes pendant qu un atelier est EN VOL ne conclut pas",
+        lambda: surveille(
+            "d", 1, budget=60, pause=30, lire=_serie([VERT]), en_vol=_serie([1]), dors=dors
+        ),
+        PAS_CONCLU,
+    )
+    verifie(
+        "et des que l atelier a fini, la meme liste conclut",
+        lambda: surveille("d", 1, lire=_serie([VERT]), en_vol=_serie([1, 0]), dors=dors),
+        CONCLU,
     )
 
     # ⟨la liste VIDE, qui est le cas que la protection accidentelle couvrait⟩ Elle ne doit etre ni
     # une conclusion ni une panne : la forge n a pas encore cree les check-runs.
     verifie(
         "une liste vide au demarrage n est pas une conclusion",
-        lambda: surveille("d", 1, budget=60, pause=30, lire=_serie([[]]), dors=dors),
+        lambda: surveille(
+            "d", 1, budget=60, pause=30, lire=_serie([[]]), en_vol=rien_en_vol, dors=dors
+        ),
         PAS_CONCLU,
     )
     verifie(
         "et elle n est pas une panne non plus : la sonde suivante conclut",
-        lambda: surveille("d", 1, lire=_serie([[], VERT]), dors=dors),
+        lambda: surveille("d", 1, lire=_serie([[], VERT]), en_vol=rien_en_vol, dors=dors),
         CONCLU,
     )
 
-    # ⟨la lecture elle-meme, par une COUTURE et non par le reseau⟩ Les cas ci-dessus remplacent
-    # `interroge` ; ceux-ci l exercent, sans quoi rien ne prouverait que ses branches repondent.
+    # ⟨les lectures elles-memes, par une COUTURE et non par le reseau⟩ Les cas ci-dessus remplacent
+    # les lecteurs ; ceux-ci les exercent, sans quoi rien ne prouverait que leurs branches repondent.
     class Rendu:
         def __init__(self, code, sortie):
             self.returncode, self.stdout, self.stderr = code, sortie, ""
 
     verifie(
         "gh NON NUL avec du JSON valide est une LECTURE, pas une panne",
-        lambda: interroge("d", 1, lanceur=lambda *a, **k: Rendu(1, json.dumps(ROUGE))),
+        lambda: interroge("d", 1, lanceur=lambda *a, **k: Rendu(1, json.dumps(ROUGE)), dors=dors),
         ROUGE,
     )
     verifie(
@@ -251,8 +356,41 @@ def _auto_test() -> int:
     )
     verifie(
         "gh qui rend [] est une lecture reussie, et rend []",
-        lambda: interroge("d", 1, lanceur=lambda *a, **k: Rendu(0, "[]")),
+        lambda: interroge("d", 1, lanceur=lambda *a, **k: Rendu(0, "[]"), dors=dors),
         [],
+    )
+    verifie(
+        "la tete se lit dans headRefOid",
+        lambda: tete(
+            "d", 1, lanceur=lambda *a, **k: Rendu(0, '{"headRefOid": "abc123"}'), dors=dors
+        ),
+        "abc123",
+    )
+    verifie(
+        "les ateliers en vol comptent ce qui n est pas « completed »",
+        lambda: ateliers_en_vol(
+            "d",
+            "abc",
+            lanceur=lambda *a, **k: Rendu(
+                0,
+                json.dumps(
+                    {
+                        "workflow_runs": [
+                            {"status": "completed"},
+                            {"status": "in_progress"},
+                            {"status": "queued"},
+                        ]
+                    }
+                ),
+            ),
+            dors=dors,
+        ),
+        2,
+    )
+    verifie(
+        "et une charge sans « workflow_runs » est une panne, pas un zero",
+        lambda: ateliers_en_vol("d", "abc", lanceur=lambda *a, **k: Rendu(0, "{}"), dors=dors),
+        None,
     )
 
     # ⟨et le VRAI `subprocess`, sur un PATH vide⟩ Les coutures ci-dessus prouvent les branches ; elles
@@ -264,6 +402,11 @@ def _auto_test() -> int:
         verifie(
             "« gh » absent du PATH rend None, et ne leve pas",
             lambda: interroge("d", 1, dors=dors),
+            None,
+        )
+        verifie(
+            "et la lecture des ateliers rend None pareillement",
+            lambda: ateliers_en_vol("d", "abc", dors=dors),
             None,
         )
     finally:
