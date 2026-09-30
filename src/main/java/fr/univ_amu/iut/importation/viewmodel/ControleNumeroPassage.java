@@ -9,6 +9,7 @@ import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.SuiviFichiers;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel.DemandeImport;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -57,7 +58,7 @@ public final class ControleNumeroPassage {
 
     /// L'identité de la nuit qu'on s'apprête à importer (série, date), quand l'inspection l'a établie.
     /// Fournie par l'orchestrateur : ce contrôle ne lit pas la carte, il consulte ce que d'autres ont vu.
-    private final Supplier<Optional<IdentiteNuit>> identiteNuit;
+    private final Supplier<List<IdentiteNuit>> identitesDesNuitsCochees;
 
     /// La nuit **déjà récupérée de Vigie-Chiro** que le n° courant heurte (#2580), s'il y en a une.
     private final ReadOnlyObjectWrapper<Optional<Long>> nuitRecuperee =
@@ -66,10 +67,10 @@ public final class ControleNumeroPassage {
     ControleNumeroPassage(
             ServiceImport serviceImport,
             RattachementImportViewModel rattachement,
-            Supplier<Optional<IdentiteNuit>> identiteNuit) {
+            Supplier<List<IdentiteNuit>> identitesDesNuitsCochees) {
         this.serviceImport = Objects.requireNonNull(serviceImport, "serviceImport");
         this.rattachement = Objects.requireNonNull(rattachement, "rattachement");
-        this.identiteNuit = Objects.requireNonNull(identiteNuit, "identiteNuit");
+        this.identitesDesNuitsCochees = Objects.requireNonNull(identitesDesNuitsCochees, "identitesDesNuitsCochees");
         // Recalcule le pré-contrôle dès qu'un champ déterminant du rattachement change (le PRÉ-REMPLISSAGE
         // du n° au prochain bloc libre est porté par CoordinationNuits, qui connaît le nombre de nuits).
         rattachement.pointSelectionneProperty().addListener((obs, ancien, nouveau) -> verifier());
@@ -96,9 +97,12 @@ public final class ControleNumeroPassage {
         // Cette nuit est-elle DÉJÀ LÀ, récupérée de Vigie-Chiro ? Depuis #2557, c'est le cas ordinaire
         // après une synchro : la nuit porte ses observations et son rattachement, mais pas son audio.
         // L'importer une seconde fois, sur ce n° ou sur le suivant, en ferait DEUX (#2580).
-        Optional<Long> recuperee = identiteNuit
-                .get()
-                .flatMap(identite -> serviceImport.nuitRecuperee(identite.numeroSerie(), identite.dateNuit()));
+        // Parmi les nuits COCHÉES seulement (#5600) : la première ligne du journal désignait souvent une
+        // nuit effacée de la carte, que l'on renvoyait réactiver alors qu'on ne l'importait pas.
+        Optional<Long> recuperee = identitesDesNuitsCochees.get().stream()
+                .map(identite -> serviceImport.nuitRecuperee(identite.numeroSerie(), identite.dateNuit()))
+                .flatMap(Optional::stream)
+                .findFirst();
         nuitRecuperee.set(recuperee);
         boolean numeroPris = serviceImport.numeroPassageDejaUtilise(point.id(), annee, numero);
         dejaUtilise.set(numeroPris);

@@ -796,9 +796,9 @@ a7c8afafb0f8  src/main/java/fr/univ_amu/iut/importation/view/TableNuits.java
 f16563b0fd16  src/main/java/fr/univ_amu/iut/importation/view/ZoneNuits.java
 ef03b0d325da  src/main/java/fr/univ_amu/iut/importation/view/ZoneNumeroPassage.java
 f4f8aa55113b  src/main/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixe.java
-a3fda26fe00f  src/main/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspection.java
+fdeac8fdb1ce  src/main/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspection.java
 ea4721561642  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduChiffreImport.java
-f791e51a0d7a  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduDInspection.java
+af9890a9cd3e  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduDInspection.java
 769e9b592a2f  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduImport.java
 2b3d83c5cf76  src/main/java/fr/univ_amu/iut/importation/viewmodel/ControleNumeroPassage.java
 3345eeaeb800  src/main/java/fr/univ_amu/iut/importation/viewmodel/CoordinationNuits.java
@@ -806,10 +806,12 @@ e228832ae4ee  src/main/java/fr/univ_amu/iut/importation/viewmodel/EtatImport.jav
 ef0a4852afcd  src/main/java/fr/univ_amu/iut/importation/viewmodel/ExecutionImport.java
 6596a0f4b04a  src/main/java/fr/univ_amu/iut/importation/viewmodel/IdentiteNuit.java
 02c16404d4ff  src/main/java/fr/univ_amu/iut/importation/viewmodel/ImportationViewModel.java
-de5411e45e15  src/main/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModel.java
+cd5c6242ab04  src/main/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModel.java
 abff5608525f  src/main/java/fr/univ_amu/iut/importation/viewmodel/LigneFichierImport.java
 2b4c9642c974  src/main/java/fr/univ_amu/iut/importation/viewmodel/MarquageNuitsImportees.java
+64c81c272ab2  src/main/java/fr/univ_amu/iut/importation/viewmodel/NuitDejaImportee.java
 634f110f130f  src/main/java/fr/univ_amu/iut/importation/viewmodel/NuitVM.java
+e98d9c385ab4  src/main/java/fr/univ_amu/iut/importation/viewmodel/NuitsDeLaCarte.java
 4a96d6e97d6d  src/main/java/fr/univ_amu/iut/importation/viewmodel/OngletReglagesImport.java
 e5b954ad709d  src/main/java/fr/univ_amu/iut/importation/viewmodel/PreferenceConservation.java
 5a172c6fc117  src/main/java/fr/univ_amu/iut/importation/viewmodel/RattachementImportViewModel.java
@@ -1810,7 +1812,7 @@ fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
 4d3bfc4da711  src/test/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspectionTest.java
 61591c87b641  src/test/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduChiffreImportTest.java
 be005305ed51  src/test/java/fr/univ_amu/iut/importation/viewmodel/ImportationViewModelTest.java
-aaf555731b37  src/test/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModelTest.java
+2617c11d93d8  src/test/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModelTest.java
 3ca0577cb634  src/test/java/fr/univ_amu/iut/importation/viewmodel/NuitVMBadgeTest.java
 06972cec9f47  src/test/java/fr/univ_amu/iut/importation/viewmodel/PreferenceConservationTest.java
 5856a70ce966  src/test/java/fr/univ_amu/iut/importation/viewmodel/RattachementImportViewModelTest.java

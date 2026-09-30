@@ -1,11 +1,7 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
-import fr.univ_amu.iut.importation.model.AnalyseMelange;
 import fr.univ_amu.iut.importation.model.EtatNommage;
-import fr.univ_amu.iut.importation.model.JournalParse;
-import fr.univ_amu.iut.importation.model.NuitDetectee;
-import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.model.RapportInspection;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import java.nio.file.Path;
@@ -66,7 +62,7 @@ public class InspectionImportViewModel {
     /// Les passages déjà en base pour la nuit inspectée (#147). Retenus **en donnée** et non en phrase :
     /// la vue en tire une confirmation, le compte rendu en tire des détails, chacun avec la place dont il
     /// dispose.
-    private List<PassageExistant> passagesDejaImportes = List.of();
+    private List<NuitDejaImportee> nuitsDejaImportees = List.of();
 
     /// Message d'erreur **propre à l'inspection** (dossier non choisi, chemin invalide), vide après une
     /// inspection réussie. L'orchestrateur le compose avec l'erreur d'exécution dans son message unifié.
@@ -76,6 +72,9 @@ public class InspectionImportViewModel {
     /// plusieurs (une ligne [NuitVM] par nuit), sinon une seule. Repeuplée à chaque inspection. La vue
     /// n'affiche la table que lorsqu'il y en a plusieurs ([#plusieursNuitsProperty()]).
     private final ObservableList<NuitVM> nuits = FXCollections.observableArrayList();
+
+    /// Ce qui juge les nuits de la table : déjà importées, et sous quelle identité (#5600).
+    private final NuitsDeLaCarte nuitsDeLaCarte;
 
     /// `true` quand la carte contient **plus d'une** nuit : pilote l'affichage de la table des nuits et
     /// bascule l'import sur le chemin multi-nuits (un passage par nuit incluse).
@@ -90,7 +89,8 @@ public class InspectionImportViewModel {
 
     public InspectionImportViewModel(ServiceImport serviceImport) {
         this.serviceImport = Objects.requireNonNull(serviceImport, "serviceImport");
-        this.compteRendu = new CompteRenduDInspection(this.serviceImport);
+        this.compteRendu = new CompteRenduDInspection();
+        this.nuitsDeLaCarte = new NuitsDeLaCarte(this.serviceImport, nuits);
     }
 
     /// Remplace la sonde du support (double de test, et jeu d'essai des aperçus).
@@ -120,9 +120,11 @@ public class InspectionImportViewModel {
                     .journalOptionnel()
                     .map(journal -> "PR n° " + journal.numeroSerie())
                     .orElse(""));
-            passagesDejaImportes = compteRendu.passagesDeLaNuit(inspection);
-            avertissements.set(compteRendu.rediger(inspection, passagesDejaImportes));
+            // La table d'abord : les nuits jugées sont les SIENNES (#5600). Le journal circulaire commence
+            // par la nuit de son déploiement, souvent effacée de la carte depuis.
             peuplerNuits(inspection);
+            nuitsDejaImportees = nuitsDeLaCarte.cocheesDejaImportees(NuitsDeLaCarte.serie(inspection));
+            avertissements.set(compteRendu.rediger(inspection, nuitsDejaImportees));
             inspecte.set(true);
             messageErreur.set("");
         } catch (RuntimeException echec) {
@@ -144,7 +146,7 @@ public class InspectionImportViewModel {
         etatNommage.set(null);
         resumeJournal.set("");
         avertissements.set(CompteRenduDInspection.vide());
-        passagesDejaImportes = List.of();
+        nuitsDejaImportees = List.of();
         messageErreur.set("");
         nuits.clear();
         plusieursNuits.set(false);
@@ -156,11 +158,11 @@ public class InspectionImportViewModel {
     /// vraies par défaut ; la numérotation proposée est fixée plus tard par l'orchestrateur (elle dépend
     /// du rattachement).
     private void peuplerNuits(RapportInspection inspection) {
-        String serie = serieDeLaCarte(inspection);
+        String serie = NuitsDeLaCarte.serie(inspection);
         List<NuitVM> lignes = inspection.partitionNuits().stream()
                 .map(nuit -> {
                     NuitVM ligne = new NuitVM(nuit);
-                    ligne.definirStatutDejaImportee(statutDejaImporteeDe(serie, nuit));
+                    ligne.definirStatutDejaImportee(nuitsDeLaCarte.badge(serie, nuit));
                     return ligne;
                 })
                 .toList();
@@ -168,37 +170,14 @@ public class InspectionImportViewModel {
         plusieursNuits.set(lignes.size() > 1);
     }
 
-    /// Numéro de série de l'enregistreur de la carte (commun à toutes les nuits) : issu du **journal**
-    /// s'il est présent, sinon **reconstitué des noms de WAV** (mode dégradé #107). `null` si indéterminable.
-    private String serieDeLaCarte(RapportInspection inspection) {
-        JournalParse journal = inspection
-                .journalOptionnel()
-                .filter(j -> j.numeroSerie() != null)
-                .orElse(null);
-        if (journal != null) {
-            return journal.numeroSerie();
-        }
-        AnalyseMelange analyse = AnalyseMelange.depuis(inspection.originaux());
-        return analyse.series().isEmpty() ? null : analyse.series().first();
-    }
-
-    /// Badge « déjà importée » (#147) d'une nuit (même enregistreur + même date en base), vide sinon.
-    private String statutDejaImporteeDe(String serie, NuitDetectee nuit) {
-        if (serie == null) {
-            return "";
-        }
-        List<PassageExistant> existants =
-                serviceImport.nuitDejaImportee(serie, nuit.dateNuit().toString());
-        return (existants == null || existants.isEmpty()) ? "" : "déjà importée";
-    }
-
-    /// Détecte (lecture base via le service) si la nuit inspectée a déjà été importée (#147) : même
-    /// enregistreur + même date. L'identité vient du **journal** s'il est présent, sinon (mode dégradé
-    /// #107) elle est **reconstituée des noms de WAV** (comme à l'import), pour que la détection couvre
-    /// aussi les réimports sans journal. Sans identité exploitable, rien à signaler. La mise en forme
-    /// Identité de la **dernière nuit inspectée**, ou vide tant qu'aucune inspection n'a abouti.
-    public java.util.Optional<IdentiteNuit> identiteNuit() {
-        return rapport == null ? java.util.Optional.empty() : CompteRenduDInspection.identiteNuit(rapport);
+    /// L'identité de chaque nuit **cochée** de la table (#5600) : l'enregistreur de la carte et la date de
+    /// la nuit. Vide tant qu'aucune inspection n'a abouti, ou sans série exploitable.
+    ///
+    /// Elle remplace l'identité unique tirée de la première ligne du journal circulaire, qui désignait
+    /// souvent une nuit effacée de la carte : le contrôle du n° de passage (#2580) reconnaissait alors
+    /// une nuit récupérée que l'on n'importait pas.
+    public List<IdentiteNuit> identitesDesNuitsCochees() {
+        return rapport == null ? List.of() : nuitsDeLaCarte.identitesCochees(NuitsDeLaCarte.serie(rapport));
     }
 
     /// Recalcule l'avertissement « nuit déjà importée » (#147) depuis la **dernière inspection**, sans
@@ -207,15 +186,16 @@ public class InspectionImportViewModel {
     /// non l'instantané figé à l'inspection (sinon réimporter la même nuit sur un n° libre passerait sans
     /// confirmation). Sans inspection courante, l'avertissement reste vide.
     public void rafraichirNuitExistante() {
-        passagesDejaImportes = rapport == null ? List.of() : compteRendu.passagesDeLaNuit(rapport);
+        nuitsDejaImportees =
+                rapport == null ? List.of() : nuitsDeLaCarte.cocheesDejaImportees(NuitsDeLaCarte.serie(rapport));
         avertissements.set(
-                rapport == null ? CompteRenduDInspection.vide() : compteRendu.rediger(rapport, passagesDejaImportes));
+                rapport == null ? CompteRenduDInspection.vide() : compteRendu.rediger(rapport, nuitsDejaImportees));
         if (rapport != null) {
             // Rafraîchit les badges par nuit **en place** (sans reconstruire la table, pour préserver les
             // cases « inclure » cochées par l'utilisateur).
-            String serie = serieDeLaCarte(rapport);
+            String serie = NuitsDeLaCarte.serie(rapport);
             for (NuitVM ligne : nuits) {
-                ligne.definirStatutDejaImportee(statutDejaImporteeDe(serie, ligne.nuit()));
+                ligne.definirStatutDejaImportee(nuitsDeLaCarte.badge(serie, ligne.nuit()));
             }
         }
     }
@@ -325,7 +305,7 @@ public class InspectionImportViewModel {
     /// (#2060), **vide** s'il n'y a rien à confirmer. Chaque passage est un détail sur sa propre ligne
     /// alignée, que la modale rend via [fr.univ_amu.iut.commun.view.VueCompteRendu].
     public CompteRendu questionNuitDejaImportee() {
-        return AvertissementsInspection.questionNuitDejaImportee(passagesDejaImportes);
+        return AvertissementsInspection.questionNuitsDejaImportees(nuitsDejaImportees);
     }
 
     /// Message d'erreur **propre à l'inspection** (dossier non choisi, chemin invalide), vide après un

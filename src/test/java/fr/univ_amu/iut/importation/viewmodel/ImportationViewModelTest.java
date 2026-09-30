@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -415,6 +416,31 @@ class ImportationViewModelTest {
                 .as("n° libre adopté : plus aucun avertissement")
                 .isFalse();
         assertThat(viewModel.peutImporter().get()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#5600 : une nuit récupérée que seul le journal cite, absente de la carte, n'est pas reconnue")
+    void une_nuit_recuperee_absente_de_la_carte_n_est_pas_reconnue() throws IOException {
+        Path carte = Files.createDirectories(racine.resolve("reutilisee"));
+        JournalDeCapteur.ecrire(carte, "1925492", LocalDate.of(2026, 8, 19));
+        Files.writeString(carte.resolve("PaRecPR1925492_20260822_213000.wav"), "wav");
+        Site site = site(1L, "202013");
+        PointDEcoute point = point(10L, "Z1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(carte)).thenReturn(inspecteur.inspecter(carte));
+        // La nuit du 19 août est en base, récupérée de Vigie-Chiro : mais ses WAV ne sont plus sur la
+        // carte, qui ne porte que celle du 22. Le contrôle la reconnaissait sur la foi du journal.
+        lenient().when(serviceImport.nuitRecuperee("1925492", "2026-08-19")).thenReturn(Optional.of(77L));
+
+        viewModel.inspection().dossierSourceProperty().set(carte);
+        viewModel.inspecter();
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+        viewModel.rattachement().numeroPassageProperty().set(1);
+
+        assertThat(viewModel.controleNumero().nuitRecupereeProperty().get())
+                .as("renvoyer vers la réactivation d'une nuit qu'on n'importe pas bloquerait l'import à tort")
+                .isEmpty();
     }
 
     @Test

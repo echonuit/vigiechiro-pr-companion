@@ -1,6 +1,9 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
@@ -197,6 +200,116 @@ class InspectionImportViewModelTest {
             assertThat(nuit.nombreFichiers()).isEqualTo(2);
             assertThat(nuit.estIncluse()).isTrue();
         });
+    }
+
+    /// La carte de Samuel le 14 septembre (#5600) : le journal circulaire commence par une nuit dont les
+    /// WAV ont été effacés après import, et la carte porte trois nuits nouvelles.
+    private Path carteReutilisee() throws IOException {
+        Path carte = Files.createDirectories(racine.resolve("reutilisee"));
+        JournalDeCapteur.ecrire(carte, "1925492", LocalDate.of(2026, 8, 19));
+        for (String jour : List.of("20260822", "20260823", "20260824")) {
+            Files.writeString(carte.resolve("PaRecPR1925492_" + jour + "_213000.wav"), "wav");
+        }
+        when(serviceImport.inspecter(carte)).thenReturn(inspecteur.inspecter(carte));
+        return carte;
+    }
+
+    @Test
+    @DisplayName("#5600 : une nuit absente de la carte, seulement citée par le journal, n'est pas « déjà importée »")
+    void une_nuit_absente_de_la_carte_n_est_pas_signalee() throws IOException {
+        Path carte = carteReutilisee();
+        // La nuit effacée a bien été importée (au carré 202016, le 29 août) : c'est elle que le journal
+        // cite en premier, et c'est elle que l'avertissement nommait.
+        lenient()
+                .when(serviceImport.nuitDejaImportee("1925492", "2026-08-19"))
+                .thenReturn(List.of(new PassageExistant(1, 2026, "202016", "G1")));
+        vm.dossierSourceProperty().set(carte);
+
+        vm.inspecter();
+        vm.rafraichirNuitExistante();
+
+        assertThat(vm.nuits())
+                .as("la table ne montre que les trois nuits présentes")
+                .hasSize(3);
+        assertThat(vm.avertissementsProperty().get().constats())
+                .as("Samuel a lu « Cette nuit a déjà été importée … carré 202016, point G1 » au-dessus de trois"
+                        + " nuits neuves")
+                .noneSatisfy(constat -> assertThat(constat.fait()).contains("déjà été importée"));
+        assertThat(vm.questionNuitDejaImportee().constats())
+                .as("la confirmation au lancement de l'import interrogeait sur la même nuit absente")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName(
+            "#5600 : une nuit présente sur la carte et déjà importée est nommée, même si le journal commence avant")
+    void une_nuit_presente_deja_importee_est_nommee() throws IOException {
+        Path carte = carteReutilisee();
+        // Une réponse PAR date : le mode strict de Mockito lèverait sur les autres nuits, et `inspecter`
+        // avalerait l'exception en réinitialisant la table - un rouge qui ne dirait rien du produit.
+        when(serviceImport.nuitDejaImportee(eq("1925492"), anyString()))
+                .thenAnswer(appel -> "2026-08-23".equals(appel.getArgument(1))
+                        ? List.of(new PassageExistant(2, 2026, "202013", "Z1"))
+                        : List.of());
+        vm.dossierSourceProperty().set(carte);
+
+        vm.inspecter();
+        vm.rafraichirNuitExistante();
+
+        assertThat(vm.avertissementsProperty().get().constats())
+                .anySatisfy(constat -> assertThat(constat.details())
+                        .extracting(Detail::sujet)
+                        .anySatisfy(sujet -> assertThat(sujet).contains("n° 2 (2026) au carré 202013, point Z1")));
+        assertThat(vm.questionNuitDejaImportee().constats()).isNotEmpty();
+    }
+
+    /// Les nuits de la carte réutilisée déjà en base, une réponse par date (voir le cas précédent).
+    private void dejaImportees(String... dates) {
+        List<String> importees = List.of(dates);
+        when(serviceImport.nuitDejaImportee(eq("1925492"), anyString()))
+                .thenAnswer(appel -> importees.contains(appel.<String>getArgument(1))
+                        ? List.of(new PassageExistant(
+                                importees.indexOf(appel.<String>getArgument(1)) + 1, 2026, "202013", "Z1"))
+                        : List.of());
+    }
+
+    @Test
+    @DisplayName("#5600 : la seule nuit déjà importée est décochée, et l'import ne demande plus de confirmation")
+    void une_nuit_decochee_ne_declenche_pas_la_confirmation() throws IOException {
+        Path carte = carteReutilisee();
+        dejaImportees("2026-08-23");
+        vm.dossierSourceProperty().set(carte);
+        vm.inspecter();
+
+        vm.nuits().stream()
+                .filter(nuit -> nuit.date().equals(LocalDate.of(2026, 8, 23)))
+                .forEach(nuit -> nuit.inclureProperty().set(false));
+        vm.rafraichirNuitExistante();
+
+        assertThat(vm.questionNuitDejaImportee().constats())
+                .as("on n'importe pas cette nuit : la question n'a pas d'objet")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#5600 : deux nuits cochées déjà importées sont nommées chacune avec sa date")
+    void deux_nuits_deja_importees_sont_nommees_avec_leur_date() throws IOException {
+        Path carte = carteReutilisee();
+        dejaImportees("2026-08-22", "2026-08-24");
+        vm.dossierSourceProperty().set(carte);
+        vm.inspecter();
+        vm.rafraichirNuitExistante();
+
+        assertThat(vm.questionNuitDejaImportee().constats())
+                .singleElement()
+                .satisfies(constat -> assertThat(constat.details())
+                        .extracting(Detail::sujet)
+                        .as("sans la date, deux passages voisins ne disent pas quelle nuit ils concernent")
+                        .satisfiesExactly(
+                                sujet ->
+                                        assertThat(sujet).contains("22/08/2026").contains("n° 1 (2026)"),
+                                sujet ->
+                                        assertThat(sujet).contains("24/08/2026").contains("n° 2 (2026)")));
     }
 
     @Test
