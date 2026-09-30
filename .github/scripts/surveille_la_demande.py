@@ -195,17 +195,14 @@ def surveille(
     """
     lire = lire or (lambda: interroge(depot, numero))
     if en_vol is None:
-        sha = tete(depot, numero)
-        if sha is None:
-            print(
-                f"JE N AI PAS CONCLU : la tete de #{numero} est illisible, donc je ne peux pas "
-                f"savoir si la forge a fini de creer ses verifications.",
-                file=sys.stderr,
-            )
-            return PAS_PU_LIRE
-
+        # ⟨la tete se relit a CHAQUE sonde, et ce n est pas du gaspillage⟩ Une branche peut etre
+        # repoussee pendant la surveillance - un rebase, une correction. Lue une seule fois, la tete
+        # ferait juger les executions d un commit DEPASSE pendant que `gh pr checks` suit deja le
+        # nouveau : le moniteur conclurait sur un etat qui n existe plus. Deux appels par sonde sont
+        # le prix de repondre a « la CI de la tete ACTUELLE a-t-elle conclu ».
         def en_vol():
-            return ateliers_en_vol(depot, sha)
+            sha = tete(depot, numero)
+            return None if sha is None else ateliers_en_vol(depot, sha)
 
     ecoule = 0
     while True:
@@ -358,6 +355,11 @@ def _auto_test() -> int:
         "gh qui rend [] est une lecture reussie, et rend []",
         lambda: interroge("d", 1, lanceur=lambda *a, **k: Rendu(0, "[]"), dors=dors),
         [],
+    )
+    verifie(
+        "une tete illisible rend 4 : on ne juge pas les ateliers d un commit inconnu",
+        lambda: surveille("d", 1, lire=_serie([VERT]), en_vol=lambda: None, dors=dors),
+        PAS_PU_LIRE,
     )
     verifie(
         "la tete se lit dans headRefOid",
