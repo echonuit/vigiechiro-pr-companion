@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -310,6 +311,43 @@ class InspectionImportViewModelTest {
                                         assertThat(sujet).contains("22/08/2026").contains("n° 1 (2026)"),
                                 sujet ->
                                         assertThat(sujet).contains("24/08/2026").contains("n° 2 (2026)")));
+    }
+
+    @Test
+    @DisplayName("#5639 : une nuit importée APRÈS l'inspection est vue au rafraîchissement, avertissement et badge")
+    void le_rafraichissement_voit_une_nuit_importee_depuis_l_inspection() throws IOException {
+        Path carte = carteReutilisee();
+        List<String> enBase = new ArrayList<>();
+        when(serviceImport.nuitDejaImportee(eq("1925492"), anyString()))
+                .thenAnswer(appel -> enBase.contains(appel.<String>getArgument(1))
+                        ? List.of(new PassageExistant(2, 2026, "202013", "Z1"))
+                        : List.of());
+        vm.dossierSourceProperty().set(carte);
+        vm.inspecter();
+        assertThat(vm.questionNuitDejaImportee().constats()).isEmpty();
+
+        // Entre l'inspection et le clic sur Importer, la nuit du 23 est importée ailleurs (#214).
+        enBase.add("2026-08-23");
+        vm.rafraichirNuitExistante();
+
+        assertThat(vm.avertissementsProperty().get().constats())
+                .anySatisfy(constat -> assertThat(constat.fait()).contains("déjà été importée"));
+        assertThat(vm.nuits())
+                .extracting(nuit -> nuit.statutDejaImporteeProperty().get())
+                .as("le badge suit la base, sur la seule nuit concernée, sans reconstruire la table")
+                .satisfiesExactly(
+                        statut -> assertThat(statut).isEmpty(),
+                        statut -> assertThat(statut).contains("déjà importée"),
+                        statut -> assertThat(statut).isEmpty());
+    }
+
+    @Test
+    @DisplayName("#5639 : sans inspection, le rafraîchissement publie un compte rendu vide, jamais null")
+    void le_rafraichissement_sans_inspection_publie_un_compte_rendu_vide() {
+        vm.rafraichirNuitExistante();
+
+        assertThat(vm.avertissementsProperty().get()).isNotNull();
+        assertThat(vm.avertissementsProperty().get().estVide()).isTrue();
     }
 
     @Test

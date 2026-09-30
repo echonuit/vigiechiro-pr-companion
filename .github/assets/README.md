@@ -446,6 +446,15 @@ L'assistant et **tous ses chemins non nominaux** : c'est la vue la plus riche en
 </tr>
 </table>
 
+<table>
+<tr>
+<th width="50%">Doublon multi-nuits</th>
+</tr>
+<tr>
+<td><a href="apercu-import-doublon-multi-nuits.png"><img src="apercu-import-doublon-multi-nuits.png" width="430" alt="Doublon multi-nuits"></a></td>
+</tr>
+</table>
+
 ## Qualification
 
 <sub>`qualification/view/Qualification.fxml` &middot; 3 capture(s)</sub>

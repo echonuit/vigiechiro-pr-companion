@@ -17,11 +17,13 @@ import java.util.regex.Pattern;
 ///
 /// - **série incohérente** : le n° de série annoncé par le journal et/ou par le nom du relevé
 ///   `PaRecPR<série>_THLog.csv` ne figure pas parmi les séries portées par les WAV ;
-/// - **date incohérente** : la date du journal ne tombe pas dans la nuit des WAV (une nuit s'étale
-///   au plus de `dateJournal` (soir) à `dateJournal + 1` (matin)). **Exception multi-nuits** : si les
-///   WAV s'étalent sur **plus d'une nuit** (carte laissée tourner plusieurs nuits, cas géré par le
-///   découpage par nuit), la fenêtre mono-nuit du journal ne s'applique plus et la date n'est pas
-///   jugée incohérente (le journal décrit légitimement la première d'une série de nuits).
+/// - **date incohérente** : une date des WAV ne tombe dans aucune des nuits que le journal raconte
+///   (une nuit s'étale du soir `J` au matin `J + 1`). Le journal est circulaire : sur une carte
+///   réutilisée, sa première ligne raconte souvent une nuit effacée depuis, et c'est pourquoi on
+///   juge les nuits qu'il raconte plutôt que sa première date, laquelle ne sert que faute de cycle
+///   lisible. **Exception multi-nuits** : si les WAV s'étalent sur **plus d'une nuit** (carte laissée
+///   tourner plusieurs nuits, cas géré par le découpage par nuit), la date n'est pas jugée
+///   incohérente, le journal ne racontant parfois que les premières.
 ///
 /// C'est un **avertissement** à l'inspection (jamais un blocage). Objet de transport pur (aucune
 /// dépendance JavaFX) ; les sources illisibles ou absentes sont simplement neutres.
@@ -128,10 +130,11 @@ public final class AnalyseCoherence {
         return !seriesFichiers.isEmpty() && !seriesDeclareesAbsentes().isEmpty();
     }
 
-    /// Vrai si **au moins une** date de fichier sort de la nuit du journal (`[dateJournal,
-    /// dateJournal + 1]`). On exige que **toutes** les dates des WAV tiennent dans cette fenêtre : un
-    /// simple recouvrement ne suffit pas, sinon des fichiers de la nuit *suivante* (`{J+1, J+2}`)
-    /// passeraient à la faveur du seul `J+1`. Neutre si la date du journal ou les dates des WAV manquent.
+    /// Vrai si **au moins une** date de fichier ne tombe dans la fenêtre `[J, J + 1]` d'aucune nuit que
+    /// le journal raconte, ou, faute de cycle lisible, de sa première date. On exige que **toutes** les
+    /// dates des WAV y tiennent : un simple recouvrement ne suffit pas, sinon des fichiers de la nuit
+    /// *suivante* (`{J+1, J+2}`) passeraient à la faveur du seul `J+1`. Neutre si la date du journal ou
+    /// les dates des WAV manquent.
     public boolean dateIncoherente() {
         if (dateJournal == null || nuitsFichiers.isEmpty()) {
             return false;

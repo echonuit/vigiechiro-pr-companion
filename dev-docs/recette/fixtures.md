@@ -105,7 +105,7 @@ Deux variantes utiles :
           intervalleSecondes: 300
     ```
 
-## Les 12 cartes de recette
+## Les cartes de recette
 
 Chaque carte exerce **une** pathologie de l'assistant d'import (voir l'étape 5 de
 [S2 · Importer une nuit](sessions/s2-importer.md)).
@@ -124,6 +124,7 @@ Chaque carte exerce **une** pathologie de l'assistant d'import (voir l'étape 5 
 | `sd-grosse` | soixante wav -> test de charge (progression, parallélisme, disque) | 60 |
 | `sd-reveil-bouton` | un appui sur une touche au milieu de la nuit -> **une** nuit, complète, et non deux (#4981) | 5 |
 | `sd-nuit-interrompue` | le journal ne se referme jamais -> nuit **tronquée** (#5093) | 3 |
+| `sd-carte-reutilisee` | une nuit de wav, un journal qui commence cinq nuits plus tôt et raconte aussi la leur -> **aucune** incohérence (#5631) | 2 |
 
 ## Régénérer les cartes
 

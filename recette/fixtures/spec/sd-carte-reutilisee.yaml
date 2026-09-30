@@ -1,0 +1,36 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-carte-reutilisee
+but: "Carte réutilisée : une seule nuit de WAV, un journal qui commence cinq nuits plus tôt -> aucune incohérence (#5631)."
+
+# Le cas de Samuel (#5631) : la carte a été vidée de ses WAV après un premier import, mais le journal
+# circulaire garde sa première ligne, celle du déploiement. Il raconte aussi la nuit des WAV, et c'est
+# elle qui dit qu'il les décrit. Juger la première date seule levait « incohérence » à tort.
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-08-19"
+  sessions:
+    - nuit: "2026-08-24"
+      frequenceKhz: 384
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260824_213000"
+      - "20260824_233000"
+
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 1

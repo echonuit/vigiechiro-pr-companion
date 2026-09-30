@@ -173,7 +173,7 @@ C'est l'écran central de la chaîne de production. L'assistant est une **page u
 Quand la carte SD (ou l'archive) contient **plusieurs nuits** enregistrées à la suite (le cas de [Samuel](../Personas/Samuel.md), dont les enregistreurs tournent plusieurs nuits d'affilée), l'inspection les **détecte** et insère, sous la section « Dossier source », un **tableau des nuits détectées** : une ligne par nuit (date, plage horaire, nombre de fichiers, complétude), chacune cochable.
 
 - Chaque nuit retenue devient un **passage distinct** ([E2.S9](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s9)) : le découpage suit la nuit **soir J → matin J+1** (bascule à midi).
-- Une nuit **tronquée** (cycle mal terminé, SD pleine) est signalée avec son motif, sans être exclue d'office ; une nuit **déjà importée** est signalée (doublon) et décochée par défaut.
+- Une nuit **tronquée** (cycle mal terminé, SD pleine) est signalée avec son motif, sans être exclue d'office ; une nuit **déjà importée** est signalée (doublon) et reste cochée : c'est à l'utilisateur de la décocher, et la confirmation avant import nomme chaque nuit cochée concernée, avec sa date.
 - Le **rattachement** (site, point, n° de passage) est demandé par nuit ; le n° de passage s'incrémente d'une nuit à l'autre.
 
 Le reste de l'assistant (copie protégée, renommage, transformation, progression) est identique, appliqué à chaque nuit retenue.
@@ -322,8 +322,8 @@ Après le clic sur **📥 Importer cette nuit**, l'écran passe en mode progress
 À l'inspection, l'application **signale sans bloquer** ([R30](../Modele%20conceptuel/Regles%20metier.md#r30)) ; l'utilisateur décide de poursuivre :
 
 - **Mélange** : le dossier contient des fichiers de **plusieurs enregistreurs**. Un bandeau l'indique ; l'import reste possible.
-- **Incohérence** : le journal du capteur (n° de série, nuit) **contredit** les WAV (autre série / autre date). Bandeau rouge non bloquant.
-- **Nuit déjà importée** : un passage existe déjà pour le même enregistreur et la même date. Réimporter crée simplement un nouveau passage (autre point / autre numéro), ce que l'utilisateur peut vouloir ou non.
+- **Incohérence** : le journal du capteur (n° de série, nuit) **contredit** les WAV (autre série, ou aucune nuit racontée par le journal qui soit celle des WAV). Bandeau rouge non bloquant.
+- **Nuit déjà importée** : un passage existe déjà pour le même enregistreur et l'une des nuits de la carte, tirées de ses enregistrements et non du journal. Réimporter crée simplement un nouveau passage (autre point / autre numéro), ce que l'utilisateur peut vouloir ou non.
 
 ## Notes pour l'implémentation
 
