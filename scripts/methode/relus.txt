@@ -576,7 +576,7 @@ f6d365a0f00e  src/main/java/fr/univ_amu/iut/commun/view/GestionnaireFiltres.java
 37ab453e674c  src/main/java/fr/univ_amu/iut/commun/view/GestionnaireVues.java
 6cc9999a9e1f  src/main/java/fr/univ_amu/iut/commun/view/GrapheNocturne.java
 c12684009280  src/main/java/fr/univ_amu/iut/commun/view/GroupeMenu.java
-613f152145f1  src/main/java/fr/univ_amu/iut/commun/view/Habillage.java
+6829089d652d  src/main/java/fr/univ_amu/iut/commun/view/Habillage.java
 b8e36cb2bf98  src/main/java/fr/univ_amu/iut/commun/view/IconeSelonEtat.java
 fdd52d70bae5  src/main/java/fr/univ_amu/iut/commun/view/IconesSeverite.java
 f8b3b2fb20e7  src/main/java/fr/univ_amu/iut/commun/view/IndicateurBlocage.java

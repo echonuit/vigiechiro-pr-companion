@@ -6,6 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.DialogPane;
 import javafx.scene.layout.Region;
+import javafx.stage.PopupWindow;
 
 /// Ce qu'une fenêtre de l'application porte **toujours** : sa police et ses feuilles de socle.
 ///
@@ -120,6 +121,17 @@ public final class Habillage {
             return;
         }
         feuilles.add(feuilles.indexOf(base) + 1, design);
+    }
+
+    /// Pose `palette.css` puis `design.css` sur le **nœud racine** d'une fenêtre surgissante (#5602).
+    ///
+    /// `palette.css` déclare ses jetons sous `.root`, que porte ce nœud racine et lui seul. Posées sur
+    /// un panneau placé **dans** le popup, les deux feuilles s'y chargeaient sans que les jetons se
+    /// résolvent : le bouton secondaire perdait sa couleur et sa hauteur, et le journal l'écrivait. Et
+    /// pas sur la **scène** du popup : JavaFX y recopie les feuilles de la fenêtre propriétaire, et
+    /// celles qu'on y pose avant l'affichage disparaissent.
+    public static void poserSurLaFenetre(PopupWindow fenetre) {
+        fenetre.getScene().getRoot().getStylesheets().addAll(url(FEUILLE_PALETTE), url(FEUILLE_DESIGN));
     }
 
     /// Pose les feuilles de socle sur le panneau d'un **dialogue** (#1499).
