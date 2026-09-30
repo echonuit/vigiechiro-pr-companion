@@ -187,7 +187,7 @@ fbf30790a4bb  src/main/java/fr/univ_amu/iut/cli/commande/CorrigerObservations.ja
 3d02f7cf90be  src/main/java/fr/univ_amu/iut/cli/commande/CreerCampagne.java
 305c8df46a5c  src/main/java/fr/univ_amu/iut/cli/commande/CreerSite.java
 458204361d12  src/main/java/fr/univ_amu/iut/cli/commande/Deposer.java
-c06c3950b192  src/main/java/fr/univ_amu/iut/cli/commande/DeposerVigieChiro.java
+2ac6cd52fcec  src/main/java/fr/univ_amu/iut/cli/commande/DeposerVigieChiro.java
 7895d00d681b  src/main/java/fr/univ_amu/iut/cli/commande/Diagnostiquer.java
 1a231defbcc3  src/main/java/fr/univ_amu/iut/cli/commande/Discussion.java
 f6bf33df2d69  src/main/java/fr/univ_amu/iut/cli/commande/Emplacements.java
@@ -264,7 +264,7 @@ dc00d22288af  src/main/java/fr/univ_amu/iut/cli/model/ErreurUsage.java
 0ebcb1e9dfb6  src/main/java/fr/univ_amu/iut/cli/model/RegistrePassages.java
 afd418f97e22  src/main/java/fr/univ_amu/iut/commun/api/CatalogueApi.java
 8cff5613e037  src/main/java/fr/univ_amu/iut/commun/api/ClientGbif.java
-0e80b0d33e4b  src/main/java/fr/univ_amu/iut/commun/api/ClientVigieChiro.java
+e4175f8e6296  src/main/java/fr/univ_amu/iut/commun/api/ClientVigieChiro.java
 ead5f91ebcf9  src/main/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgression.java
 06f404203a9c  src/main/java/fr/univ_amu/iut/commun/api/CorpsReponse.java
 55f6b2e2c266  src/main/java/fr/univ_amu/iut/commun/api/DonneeVigieChiro.java
@@ -272,6 +272,7 @@ ead5f91ebcf9  src/main/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgressi
 ae6b14bd1665  src/main/java/fr/univ_amu/iut/commun/api/EtatTraitement.java
 761bd8fdf66d  src/main/java/fr/univ_amu/iut/commun/api/FichierSigne.java
 e31e1c8d01c4  src/main/java/fr/univ_amu/iut/commun/api/FournisseurToken.java
+5508e00430dc  src/main/java/fr/univ_amu/iut/commun/api/IssueDeDepot.java
 aa7e5d0f3b6b  src/main/java/fr/univ_amu/iut/commun/api/IssueLancement.java
 f9cae524b20e  src/main/java/fr/univ_amu/iut/commun/api/JournalEchange.java
 f4a6ca9f7e53  src/main/java/fr/univ_amu/iut/commun/api/JournalVigieChiro.java
@@ -293,6 +294,7 @@ f88e99f1c20a  src/main/java/fr/univ_amu/iut/commun/api/PiecesJointesVigieChiro.j
 36fb7958331a  src/main/java/fr/univ_amu/iut/commun/api/PointVigieChiro.java
 6cc2da14496c  src/main/java/fr/univ_amu/iut/commun/api/PolitiqueReessai.java
 6ea875c793f5  src/main/java/fr/univ_amu/iut/commun/api/ProfilVigieChiro.java
+a92430a50d9a  src/main/java/fr/univ_amu/iut/commun/api/Provenance.java
 21c04a1d1c8d  src/main/java/fr/univ_amu/iut/commun/api/RapportSynchro.java
 330cebbb90e4  src/main/java/fr/univ_amu/iut/commun/api/RapprochementVigieChiro.java
 8a5ab9c7b954  src/main/java/fr/univ_amu/iut/commun/api/ReponseApi.java
@@ -819,7 +821,7 @@ b7f6b95451df  src/main/java/fr/univ_amu/iut/lot/di/LotModule.java
 c6a9df8dba67  src/main/java/fr/univ_amu/iut/lot/model/ArchivePlanifiee.java
 6e4db13d669d  src/main/java/fr/univ_amu/iut/lot/model/BilanDepot.java
 16d0a50e02ad  src/main/java/fr/univ_amu/iut/lot/model/BilanVerification.java
-c597414e79d4  src/main/java/fr/univ_amu/iut/lot/model/CauseRefus.java
+307ad3eb152c  src/main/java/fr/univ_amu/iut/lot/model/CauseRefus.java
 45a5528b7fa5  src/main/java/fr/univ_amu/iut/lot/model/ChoixSourceDepot.java
 d4116335de13  src/main/java/fr/univ_amu/iut/lot/model/CompacteurDepot.java
 2f7519ebd64e  src/main/java/fr/univ_amu/iut/lot/model/ControleCoherence.java
@@ -845,7 +847,7 @@ a4446efbfef4  src/main/java/fr/univ_amu/iut/lot/model/StatutDepotUnite.java
 5b0dddef0198  src/main/java/fr/univ_amu/iut/lot/model/SuiviArchives.java
 7dc1f6bfe8e5  src/main/java/fr/univ_amu/iut/lot/model/SuiviDepot.java
 748c23785ef4  src/main/java/fr/univ_amu/iut/lot/model/TeleversementGroupe.java
-37aad4be3213  src/main/java/fr/univ_amu/iut/lot/model/TeleverseurArchive.java
+e9bed929e696  src/main/java/fr/univ_amu/iut/lot/model/TeleverseurArchive.java
 1d2e16a9b7cb  src/main/java/fr/univ_amu/iut/lot/model/TypeDepotUnite.java
 49210aed5340  src/main/java/fr/univ_amu/iut/lot/model/VerificationCoherence.java
 66b08c7abbf2  src/main/java/fr/univ_amu/iut/lot/model/VerificationDepot.java
@@ -868,7 +870,7 @@ e554f3487a58  src/main/java/fr/univ_amu/iut/lot/view/TableSuiviDepot.java
 6fd25edee160  src/main/java/fr/univ_amu/iut/lot/view/ZonesStatutLot.java
 ccafcb35d57b  src/main/java/fr/univ_amu/iut/lot/viewmodel/ActionsLotPossibles.java
 461afae750d9  src/main/java/fr/univ_amu/iut/lot/viewmodel/AnticipationEspaceDisque.java
-59d7f779a63b  src/main/java/fr/univ_amu/iut/lot/viewmodel/CompteRenduChiffreDepot.java
+9a5993fe0101  src/main/java/fr/univ_amu/iut/lot/viewmodel/CompteRenduChiffreDepot.java
 968f86e35002  src/main/java/fr/univ_amu/iut/lot/viewmodel/DepotViewModel.java
 e9f04bc3d4e2  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapeDepot.java
 50dc6253c4b3  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepot.java
@@ -1394,7 +1396,7 @@ b6ca95df025b  src/test/java/fr/univ_amu/iut/cli/RequetesDeListerSitesTest.java
 2490bb0174cb  src/test/java/fr/univ_amu/iut/cli/commande/ConstituerSelectionTest.java
 797c7471eade  src/test/java/fr/univ_amu/iut/cli/commande/CreerSiteTest.java
 4eb76a65213b  src/test/java/fr/univ_amu/iut/cli/commande/DeposerTest.java
-1f6fbe82c06a  src/test/java/fr/univ_amu/iut/cli/commande/DeposerVigieChiroTest.java
+712e34722279  src/test/java/fr/univ_amu/iut/cli/commande/DeposerVigieChiroTest.java
 d7b4ada3e18e  src/test/java/fr/univ_amu/iut/cli/commande/DiagnostiquerTest.java
 0598351a2e52  src/test/java/fr/univ_amu/iut/cli/commande/EtatTraitementVigieChiroInstantTest.java
 4a1bfa519940  src/test/java/fr/univ_amu/iut/cli/commande/EtatTraitementVigieChiroTest.java
@@ -1431,6 +1433,7 @@ ffd3c4583804  src/test/java/fr/univ_amu/iut/cliquet/CliquetFixturePassageTest.ja
 662d57b062f5  src/test/java/fr/univ_amu/iut/commun/api/CatalogueApiTest.java
 bfa1642021af  src/test/java/fr/univ_amu/iut/commun/api/ChaineDuCarreStocTest.java
 80a2127fd522  src/test/java/fr/univ_amu/iut/commun/api/ClientGbifTest.java
+d40353c406b2  src/test/java/fr/univ_amu/iut/commun/api/ClientSurReseauSimule.java
 78ebdc58f018  src/test/java/fr/univ_amu/iut/commun/api/ClientVigieChiroTest.java
 1e5ff4971e8a  src/test/java/fr/univ_amu/iut/commun/api/ContratApiVigieChiroLiveTest.java
 3031abb0adaf  src/test/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgressionTest.java
@@ -1828,8 +1831,10 @@ f160a298192a  src/test/java/fr/univ_amu/iut/lot/SourceArchivesRegenerablesTest.j
 1342e2dc9ac6  src/test/java/fr/univ_amu/iut/lot/VerificationCoherenceTest.java
 96443493ed1d  src/test/java/fr/univ_amu/iut/lot/VerificationDepotTest.java
 e6c7d6f41bb3  src/test/java/fr/univ_amu/iut/lot/di/PlafondArchiveTest.java
-6a01d030a1d3  src/test/java/fr/univ_amu/iut/lot/model/CauseRefusTest.java
+ae11ec951a61  src/test/java/fr/univ_amu/iut/lot/model/CauseRefusTest.java
 27e9acc288cc  src/test/java/fr/univ_amu/iut/lot/model/ChoixSourceDepotTest.java
+ae8befae454c  src/test/java/fr/univ_amu/iut/lot/model/EchecUniteTest.java
+e5e661641791  src/test/java/fr/univ_amu/iut/lot/model/TeleverseurArchiveTest.java
 ff8a444634fb  src/test/java/fr/univ_amu/iut/lot/view/LotDepotConnecteViewTest.java
 d290c4438c53  src/test/java/fr/univ_amu/iut/lot/view/LotIdentiteStatutViewTest.java
 21de420b4e35  src/test/java/fr/univ_amu/iut/lot/view/LotViewTest.java
