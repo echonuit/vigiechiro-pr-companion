@@ -130,11 +130,9 @@ public final class GestionnaireColonnes {
         VBox panneau = construirePanneau(table, colonnes, popup::hide);
         popup.getContent().add(panneau);
         // Le Popup a sa propre scène et n'hérite pas des feuilles de l'écran : on y joint palette + design
-        // pour que les classes d'affordance du panneau (poignee-colonne, ligne-colonne) prennent effet (#801).
-        panneau.getStylesheets()
-                .addAll(
-                        GestionnaireColonnes.class.getResource("palette.css").toExternalForm(),
-                        GestionnaireColonnes.class.getResource("design.css").toExternalForm());
+        // pour que les classes d'affordance du panneau (poignee-colonne, ligne-colonne) prennent effet
+        // (#801), sur la SCÈNE du popup, où les jetons de la palette se résolvent (#5602).
+        Habillage.poserSurLaFenetre(popup);
         Bounds ecran = ancre.localToScreen(ancre.getBoundsInLocal());
         popup.show(ancre, ecran.getMinX(), ecran.getMaxY());
     }

@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.DispositionColonnesEnMemoire;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuButton;
@@ -16,6 +17,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Tests du composant réutilisable [GestionnaireColonnes] : réordonnancement des colonnes (cœur du
 /// glisser-déposer), tolérance aux colonnes non gérées, et panneau (liste + cases de visibilité liées).
@@ -92,6 +95,38 @@ class GestionnaireColonnesTest {
             ref.set(table);
         });
         assertThat(ref.get().getColumns()).extracting(TableColumn::getText).containsExactly("B", "C", "A");
+    }
+
+    @Test
+    @DisplayName("#5602 : le popup ouvert résout la palette, son bouton secondaire a sa hauteur et sa couleur")
+    void le_popup_resout_la_palette(FxRobot robot) {
+        robot.interact(() -> {
+            TableView<String> table = tableAvec("A", "B");
+            racine.getChildren().setAll(table);
+            GestionnaireColonnes.ouvrir(
+                    table,
+                    List.of(
+                            new GestionnaireColonnes.Colonne(table.getColumns().get(0), "A", true),
+                            new GestionnaireColonnes.Colonne(table.getColumns().get(1), "B", false)),
+                    table);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Button fermer = robot.lookup("Fermer").queryAs(Button.class);
+        robot.interact(() -> {
+            fermer.getScene().getRoot().applyCss();
+            fermer.getScene().getRoot().layout();
+        });
+        // Le journal de Samuel : « Could not resolve '-hauteur-controle-barre' » et « '-couleur-texte' »
+        // pour `.bouton-secondaire`. Sans la palette, la hauteur reste celle par défaut du bouton, et
+        // le fond n'a pas de couleur de l'application.
+        assertThat(fermer.getHeight())
+                .as("la hauteur rendue vient du jeton -hauteur-controle-barre de palette.css")
+                .isCloseTo(34.0, org.assertj.core.data.Offset.offset(1.0));
+        assertThat(fermer.getTextFill())
+                .as("la couleur du texte vient du jeton -couleur-texte, et non du noir par défaut")
+                .isNotEqualTo(Color.BLACK);
+        robot.interact(() -> fermer.getScene().getWindow().hide());
     }
 
     @Test
