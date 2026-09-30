@@ -100,6 +100,12 @@ public final class AnalyseCoherence {
         return Optional.ofNullable(serieReleve);
     }
 
+    /// Les nuits que le journal raconte, une par cycle d'acquisition (#5631) : c'est sur elles que la date
+    /// se juge. Vide sans cycle lisible, et c'est alors [#dateJournal] qui est jugée.
+    public SortedSet<LocalDate> nuitsJournal() {
+        return nuitsJournal;
+    }
+
     /// Date de la nuit annoncée par le journal, si elle a été lue.
     public Optional<LocalDate> dateJournal() {
         return Optional.ofNullable(dateJournal);

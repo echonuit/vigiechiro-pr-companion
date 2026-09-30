@@ -151,10 +151,7 @@ public final class AvertissementsInspection {
                             + String.join(", ", coherence.seriesFichiers()) + ")"));
         }
         if (coherence.dateIncoherente()) {
-            details.add(new Detail(
-                    "date du journal hors de la nuit des fichiers",
-                    coherence.dateJournal().map(JOUR::format).orElse("?") + " (fichiers : "
-                            + dates(coherence.nuitsFichiers()) + ")"));
+            details.add(dateHorsDesFichiers(coherence));
         }
         return Optional.of(new Constat(
                 "Le journal du capteur ne correspond pas aux enregistrements : vérifiez qu'ils viennent"
@@ -242,6 +239,22 @@ public final class AvertissementsInspection {
         return nuitExistanteConstat(nuits)
                 .map(constat -> new CompteRendu("", "", List.of(constat), question))
                 .orElse(CompteRendu.de("", List.of()));
+    }
+
+    /// Le détail d'une date en désaccord nomme ce qui a été **jugé** : les nuits que le journal raconte
+    /// (#5631), et sa première date seulement faute de cycle lisible. Nommer la seule première taisait
+    /// les autres, et énonçait une règle que le calcul n'appliquait plus (#5653).
+    private static Detail dateHorsDesFichiers(AnalyseCoherence coherence) {
+        String fichiers = " (fichiers : " + dates(coherence.nuitsFichiers()) + ")";
+        if (coherence.nuitsJournal().isEmpty()) {
+            return new Detail(
+                    "date du journal hors de la nuit des fichiers",
+                    coherence.dateJournal().map(JOUR::format).orElse("?") + fichiers);
+        }
+        String sujet = coherence.nuitsJournal().size() == 1
+                ? "nuit racontée par le journal hors de la nuit des fichiers"
+                : "nuits racontées par le journal, toutes hors de la nuit des fichiers";
+        return new Detail(sujet, dates(coherence.nuitsJournal()) + fichiers);
     }
 
     private static String dates(Iterable<LocalDate> nuits) {

@@ -339,6 +339,12 @@ Une **table des nuits** apparaît alors, une ligne par nuit :
   point (« — » si la nuit est décochée).
 - La mention **« déjà importée »** rappelle qu'un passage existe déjà en base pour cette nuit.
 
+Quand des nuits de la carte sont déjà en base, l'inspection le dit aussi au-dessus de la table, en
+nommant chacune avec sa date et le passage qui l'a reçue. La nuit reste cochée : c'est à vous de décider
+de la réimporter ou non.
+
+![Carte de trois nuits dont deux sont déjà importées : l'inspection les nomme avec leur date, et leurs lignes portent « déjà importée ».](../assets/captures/apercu-import-multi-nuits-deja-importees.png)
+
 Les numéros sont proposés **automatiquement** (consécutifs depuis le prochain libre) ; le bouton
 **Importer** reste indisponible tant qu'aucune nuit n'est cochée ou qu'un numéro proposé est déjà pris.
 Chaque nuit incluse est importée **indépendamment** (une transaction par nuit) : si l'une échoue, les

@@ -449,9 +449,11 @@ L'assistant et **tous ses chemins non nominaux** : c'est la vue la plus riche en
 <table>
 <tr>
 <th width="50%">Doublon multi-nuits</th>
+<th width="50%">Multi-nuits déjà importées</th>
 </tr>
 <tr>
 <td><a href="apercu-import-doublon-multi-nuits.png"><img src="apercu-import-doublon-multi-nuits.png" width="430" alt="Doublon multi-nuits"></a></td>
+<td><a href="apercu-import-multi-nuits-deja-importees.png"><img src="apercu-import-multi-nuits-deja-importees.png" width="430" alt="Multi-nuits déjà importées"></a></td>
 </tr>
 </table>
 
