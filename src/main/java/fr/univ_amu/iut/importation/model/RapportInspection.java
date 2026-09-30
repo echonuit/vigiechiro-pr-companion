@@ -86,7 +86,7 @@ public record RapportInspection(
     /// nom du relevé climatique) confrontée aux séries/dates portées par les [#originaux]. Sert
     /// d'avertissement non bloquant à l'inspection.
     public AnalyseCoherence coherence() {
-        return AnalyseCoherence.depuis(journal, cheminReleveClimatique, originaux);
+        return AnalyseCoherence.depuis(journal, cheminReleveClimatique, originaux, cyclesJournal);
     }
 
     /// Partition des [#originaux] en **nuits** (soir → matin), avec l'état complet/tronqué de chacune
