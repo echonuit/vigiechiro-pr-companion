@@ -1249,6 +1249,9 @@ jobs:
           python3 scripts/qualite/appelants.py --auto-test
           python3 scripts/qualite/implemente.py --auto-test
           python3 scripts/qualite/lecteurs.py --auto-test
+          # L auto-test SEUL, encore : le faux S3 de la plateforme de test ne juge rien, il SERT.
+          # Ses cas le font tourner en processus, sans TLS ni conteneur (#5660).
+          python3 scripts/plateforme-de-test/faux_s3.py --auto-test
 
   temoins:
     # Les bancs qui prouvent qu un auto-test n est pas decoratif. Le poste le plus cher.
