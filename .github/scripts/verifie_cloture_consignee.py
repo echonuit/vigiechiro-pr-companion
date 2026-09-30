@@ -16,10 +16,24 @@ documentation la demande - ce qui suffit a rendre la regle verifiable, et c est 
 
 ## Un cliquet, pas un butoir
 
-43 clotures manquent deja. Refuser tout net rendrait le depot rouge sans qu aucune PR soit fautive,
+65 clotures manquent deja. Refuser tout net rendrait le depot rouge sans qu aucune PR soit fautive,
 et le garde se ferait desactiver la premiere semaine. Le cliquet ne peut que DESCENDRE : fermer un
-EPIC sans trace le fait monter a 44, et c est ce mouvement-la qui rougit. Rejouer quatorze passes sur
-un chantier clos depuis un an n aurait pas de sens ; les 43 sont assumees une fois par ce chiffre.
+EPIC sans trace le fait monter d un, et c est ce mouvement-la qui rougit. Rejouer quatorze passes sur
+un chantier clos depuis un an n aurait pas de sens ; elles sont assumees une fois par ce chiffre.
+
+## La POPULATION, corrigee le 2026-09-30 (#4967)
+
+Ce garde demandait `--label epic`, donc la FORGE filtrait pour lui, alors que le depot designe aussi
+un EPIC par le prefixe de son titre, `[epic]` ou `[chantier]`. Mesure sur les 1 737 issues closes :
+96 par le label, 154 par l union, donc 58 jamais lues, dont 23 sans aucune trace. D ou le cliquet a
+65 et non 42.
+
+Le compte monte parce que la mesure commence a dire vrai, non parce qu une cloture a regresse. Le
+controle qui l etablit : compter les manques parmi les 96 que ce garde lisait rend exactement 42, le
+chiffre que l ADR portait. La divergence etait dans la population, pas dans la detection.
+
+La definition vit desormais dans `scripts/_commun/epics.py`, partagee par les quatre dispositifs qui
+lisaient cette notion, et dont trois en lisaient la fausse.
 
 ## La PREMISSE, verifiee a chaque passage (#4948)
 
@@ -46,9 +60,9 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _forge import (
+    candidats_clos,
     cas_d_auto_test_de_forge,
     cliquet_declare,
-    liste_issues,
     racine,
     vue_issue,
 )
@@ -81,10 +95,11 @@ def epics() -> list[dict]:
         # milieu des cas. Constate en rebranchant ce garde.
         return json.loads(pathlib.Path(injectee).read_text(encoding="utf-8"))
 
+    # `candidats_clos` remplace un `--label epic` qui faisait FILTRER la forge (#4967). Le compte
+    # d appels monte de 96 a 154 sur la mesure du 2026-09-30, et c est le prix de lire le corpus que
+    # ce garde pretend juger : 58 EPIC clos lui etaient invisibles, dont 23 sans aucune trace.
     corpus = []
-    for entree in liste_issues(
-        ["--label", "epic", "--state", "closed", "--limit", "300", "--json", "number,title"]
-    ):
+    for entree in candidats_clos():
         corpus.append(vue_issue(entree["number"], "number,title,body,comments"))
     return corpus
 
@@ -257,6 +272,38 @@ def _auto_test() -> int:
 
     for cle in ("CLOTURE_EPICS_FICHIER", "CLOTURE_ADR_FICHIER", "CLOTURE_MODELE_FICHIER"):
         os.environ.pop(cle, None)
+
+    # #4967, et ces deux familles ne se remplacent pas.
+    #
+    # La DEFINITION se joue ici parce que ce garde est de l autre cote de la barriere : les memes cas
+    # tournent dans l auto-test de `scripts/adr/loupe-4712-lots-multi-pr.py`, et ce qu il faut
+    # prouver est que la MEME definition traverse les deux paquets. Un seul joueur ne le montrerait
+    # pas, et c est precisement la divergence entre les deux paquets qui a produit ce defaut.
+    #
+    # La COLLECTE se joue ici parce que le leurre ci-dessus la court-circuite : il injecte le corpus
+    # deja constitue, donc l elargissement de la requete et son refus au plafond ne sont traverses
+    # par aucun des neuf cas precedents.
+    from _commun.epics import verifie_grammaire
+    from _forge import PLAFOND_CLOSES, refus_au_plafond
+
+    for libelle, tenu in verifie_grammaire():
+        cas += 1
+        # `tenu` passe par un defaut d argument : sans lui, la fermeture lirait la DERNIERE valeur
+        # de la boucle et les cas se jugeraient tous sur le meme booleen.
+        verifie("ok", f"#4967 : {libelle}", "", lambda tenu=tenu: 0 if tenu else 1)
+
+    # Le CHEMIN DE REFUS, a part : il sort en 2 et se juge donc comme les trois refus ci-dessus.
+    # Une fonction pure ne peut pas porter un refus, et un refus non traverse se casse sans bruit.
+    for combien, attendu in ((PLAFOND_CLOSES, "refus"), (PLAFOND_CLOSES - 1, "ok")):
+        cas += 1
+        if attendu != "ok":
+            rouges += 1
+        verifie(
+            attendu,
+            f"#4967 : une collecte de {combien} contre le plafond {PLAFOND_CLOSES}",
+            "",
+            lambda combien=combien: refus_au_plafond(combien) or 0,
+        )
 
     print()
     print(f"{cas} cas, dont {rouges} qui DOIVENT refuser.")

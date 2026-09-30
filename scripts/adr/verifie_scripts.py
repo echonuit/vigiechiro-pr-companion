@@ -2084,6 +2084,40 @@ def test_le_refus_s_eprouve_sur_un_garde_reel() -> None:
         _verifie("4712 sur un corps d EPIC voit ses lots", len(forge.lots(corps_d_epic)), 2)
         sans_issue: list[dict] = []
         _verifie("4712 sans aucune issue n a rien lu", len(forge.rapport(sans_issue)), 0)
+
+        # #4967 : les deux moities du defaut, eprouvees DEPUIS LA SUITE, parce que c est ce chemin
+        # que le banc de mutation joue pour ce garde. Les valeurs se comparent ENTIERES et jamais
+        # par un index : la neutralisation fait rendre `[]` a toute fonction, et `x[0]` leverait une
+        # TypeError au lieu d echouer proprement, ce que le banc classe « non concluant » (#5637).
+        _verifie(
+            "4712 voit un EPIC au TITRE, la ou le label seul le ratait",
+            [
+                forge.est_epic({"title": t, "labels": []})
+                for t in ("[epic] a", "[chantier] b", "fix : c")
+            ],
+            [True, True, False],
+        )
+        deux_sources = [
+            {"number": 30, "title": "[epic] deux sources", "body": "rien", "labels": []},
+            {"number": 31, "title": "relation", "body": "", "labels": [], "parent": {"number": 30}},
+            {"number": 32, "title": "marque", "body": "Fait partie de #30", "labels": []},
+        ]
+        _verifie(
+            "4712 unit la relation NATIVE et la marque de corps",
+            sorted(i["number"] for i in forge.enfants(30, deux_sources)),
+            [31, 32],
+        )
+        # Un EPIC dont les lots ne sont QUE des sous-issues : il etait declare « sans lot ».
+        _verifie(
+            "4712 ne declare plus sans lot un EPIC dont les lots sont des sous-issues",
+            forge.sansLot(deux_sources),
+            [],
+        )
+        _verifie(
+            "et il en rend un candidat PAR sous-issue",
+            len(forge.rapport(deux_sources)),
+            2,
+        )
         code, dit = verdict(
             lambda: commun.loupe(
                 "4712", "temoin de famille", forge.rapport(sans_issue), lus=len(sans_issue)

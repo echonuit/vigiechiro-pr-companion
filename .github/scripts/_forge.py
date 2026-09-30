@@ -41,6 +41,29 @@ from collections.abc import Callable
 
 CLIQUET_DANS_L_ENTETE = re.compile(r"^ratchet:[ \t]*([0-9]+)[ \t]*$", re.M)
 
+# Ce qu est un EPIC vient de `scripts/_commun/epics.py`, et c est un DEPASSEMENT DELIBERE de ce que
+# l en-tete ci-dessus pose (#4967). Il se declare plutot que de se taire.
+#
+# L en-tete refuse de verser « de la logique de forge » dans `scripts/_commun/`, sur la mesure de
+# #5216. `epics.py` n en est pas : il ne lance rien, ne lit aucun reseau, et ne connait pas `gh`. Il
+# repond a une question de vocabulaire, « cette issue est-elle un EPIC », sur un dictionnaire deja
+# lu. Ce qui restait interdit - `liste_issues`, `vue_issue`, les champs demandes - reste ici.
+#
+# Et ce qui rend le partage necessaire est une mesure, non une preference : quatre dispositifs
+# lisaient cette notion, trois en lisaient la fausse, et l ecart valait 68 issues. La divergence
+# ETAIT le defaut, donc c est le cas ou le commun se justifie.
+#
+# La direction de l import est celle qui existe deja : `verifie_butoirs.py` et
+# `temoins_de_ci_non_decoratifs.py`, tous deux ici, importent `scripts/_commun` de la meme facon.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "scripts"))
+from _commun.epics import retenus_parmi
+
+# Mesure du 2026-09-30 : 1 737 issues closes, et 1 919 en tout. Le plafond n est pas un confort de
+# pagination, c est un REFUS : sans lui, une collecte tronquee rend MOINS d EPIC, donc moins de
+# traces manquantes, donc un cliquet qui PASSE a tort. Les deux gardes filtraient `--label epic` et
+# tenaient sous 300 ; en elargissant a l union, 300 tronquait 1 737.
+PLAFOND_CLOSES = 4000
+
 
 def racine() -> pathlib.Path:
     """La racine du depot, ou le dossier courant si git ne repond pas."""
@@ -89,6 +112,66 @@ def liste_issues(arguments: list[str], injectee: str | None = None) -> list[dict
         )
         raise SystemExit(2)
     return json.loads(rendu.stdout or "[]")
+
+
+def candidats_clos() -> list[dict]:
+    """Les EPIC CLOS, par l UNION du label et du titre, et un REFUS si la collecte est tronquee.
+
+    Les deux cliquets demandaient `--label epic --state closed`, donc la forge FILTRAIT pour eux.
+    Aucun predicat local ne pouvait elargir cela : il fallait changer ce qu ils vont chercher.
+
+    Ce que le filtre leur cachait, mesure le 2026-09-30 : 96 EPIC clos par le label, 154 par l union,
+    donc 58 jamais lus - et 23 de ces 58 ne portaient aucune trace de cloture. Le cliquet 4659
+    jugeait « les EPIC clos sans trace » en ayant regarde les deux tiers du corpus.
+
+    Le refus au plafond n est pas une precaution de pagination. Une collecte tronquee rend MOINS
+    d EPIC, donc moins de manques, donc un cliquet qui PASSE : c est la seule facon dont ce garde
+    puisse se tromper en silence et dans le sens rassurant.
+    """
+    brut = liste_issues(
+        [
+            "--state",
+            "closed",
+            "--limit",
+            str(PLAFOND_CLOSES),
+            "--json",
+            "number,title,labels,closedAt",
+        ]
+    )
+    # La DECISION vit dans `_commun/epics.py`, pure et jouee hors ligne par les cas de sa
+    # `verifie_grammaire`. Ici il ne reste que de dire le refus, ce qu une fonction pure ne peut
+    # pas faire.
+    retenus, tronquee = retenus_parmi(brut, PLAFOND_CLOSES)
+    if tronquee:
+        print(
+            f"REFUS : plafond de {PLAFOND_CLOSES} issues closes atteint ; la collecte peut être"
+            " tronquée, et un corpus tronqué fait PASSER ce cliquet au lieu de le faire rougir.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    return retenus
+
+
+def refus_au_plafond(combien: int) -> int | None:
+    """Le CHEMIN DE REFUS de `candidats_clos`, joue avec une collecte fabriquee.
+
+    Il ne rend pas une liste de couples, donc ce n est pas un gage au sens de
+    `verifie_gages_joues.py` : la DECISION est eprouvee par `epics.verifie_grammaire`, et cette
+    fonction-ci n eprouve que le refus, qu une fonction pure ne peut pas porter. Un refus non
+    traverse est ce qui se casse sans bruit.
+    """
+    from unittest.mock import patch
+
+    faux = [{"number": n, "title": "[epic] x", "labels": []} for n in range(combien)]
+    with (
+        patch.object(sys.modules[__name__], "liste_issues", return_value=faux),
+        contextlib.redirect_stderr(io.StringIO()),
+    ):
+        try:
+            candidats_clos()
+        except SystemExit as refus:
+            return refus.code
+    return None
 
 
 def vue_issue(numero: int, champs: str) -> dict:

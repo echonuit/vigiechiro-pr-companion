@@ -64,6 +64,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from _commun import PLAFOND_ISSUES, forge, loupe, sort_si_contrat_demande
+from _commun.epics import est_epic
 from _commun.forge import interroge
 
 PLAFOND = PLAFOND_ISSUES
@@ -91,10 +92,15 @@ CRITERE = re.compile(MOTIF.read_text(encoding="utf-8").splitlines()[0], re.I)
 
 
 def estEpic(issue: dict) -> bool:
-    """L UNION du label et du titre : rater un chantier, c est ne pas poser la question."""
-    parLabel = any(e.get("name") == "epic" for e in issue.get("labels") or [])
-    titre = (issue.get("title") or "").lower()
-    return parLabel or titre.startswith(("[epic]", "[chantier]"))
+    """L UNION du label et du titre, desormais IMPORTEE plutot que reecrite ici (#4967).
+
+    Cette loupe portait la seule definition juste des quatre dispositifs qui lisent cette notion, et
+    c est la sienne qui a ete retenue. Elle ne la garde plus en copie : une definition juste en double
+    est une divergence qui attend, et c est exactement le defaut que #4967 corrige.
+
+    Le nom reste, en camel, parce que ses appelants et ses cas l ecrivent ainsi.
+    """
+    return est_epic(issue)
 
 
 def ditSonCritere(corps: str) -> bool:

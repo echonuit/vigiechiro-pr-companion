@@ -52,9 +52,9 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _forge import (
+    candidats_clos,
     cas_d_auto_test_de_forge,
     cliquet_declare,
-    liste_issues,
     racine,
     vue_issue,
 )
@@ -84,10 +84,12 @@ def epics() -> list[dict]:
     if injectee:
         return json.loads(pathlib.Path(injectee).read_text(encoding="utf-8"))
 
+    # `candidats_clos` remplace un `--label epic` qui faisait FILTRER la forge (#4967). Mesure du
+    # 2026-09-30 sur la population de ce garde, les EPIC clos apres DEPUIS : 30 par le label, 51 par
+    # l union, donc 21 invisibles - et 20 d entre eux PORTAIENT la marque, donc entraient dans ce
+    # qu il juge. Le cliquet passe de 1 a 2, la trouvaille etant #5414.
     corpus = []
-    for entree in liste_issues(
-        ["--label", "epic", "--state", "closed", "--limit", "300", "--json", "number,closedAt"]
-    ):
+    for entree in candidats_clos():
         if (entree.get("closedAt") or "") <= DEPUIS:
             continue
         corpus.append(vue_issue(entree["number"], "number,body,comments"))

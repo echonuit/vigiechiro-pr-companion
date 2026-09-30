@@ -6,7 +6,7 @@ article: A9
 chantier: "#4922 (EPIC #4511)"
 decided_at: 2026-08-30
 verification: probable
-ratchet: 1
+ratchet: 2
 enforced_by:
   - ".github/scripts/verifie_specification_consignee.py"
 verified:
@@ -80,13 +80,14 @@ appliquerait celle qu'il trouve en premier.
 La convention de nommage qui la complète, `<paquet de fonctionnalité>/<geste>`, vit dans
 `openspec-propose` avec sa raison.
 
-## Pourquoi le cliquet vaut 1
+## Pourquoi le cliquet vaut 2
 
-La passe est entrée dans le cycle le 2026-08-30 à 09:00:15Z, par #4840. Trois EPIC ont été clos après
-cette borne : #4873 et #4874 y ont répondu par un « sans objet » motivé, et **#4841 ne l'a pas fait**.
+La passe est entrée dans le cycle le 2026-08-30 à 09:00:15Z, par #4840. **#4841** ne lui a pas
+répondu : clos **neuf minutes** après, sa trace portait l'ancienne numérotation, rédigée avant que la
+règle n'existe. Artefact de frontière, assumé et non rattrapé.
 
-Il a été clos **neuf minutes** après, sa trace portant encore l'ancienne numérotation : elle était
-rédigée avant que la règle n'existe. Artefact de frontière, assumé par ce chiffre et non rattrapé.
+Le second est **#5414**, que #4967 a révélé en élargissant la population : ce garde ne lisait que les
+EPIC au label `epic`.
 
 ## Ce que le garde ne prétend pas
 
