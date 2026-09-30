@@ -14,11 +14,18 @@ verified:
     at: 2026-09-30
 relations:
   complete: ["4659-une-cloture-sans-trace-ne-se-distingue-pas-d-une-cloture-absente"]
+  amendee_par: ["5684-une-decision-pure-et-son-refus-se-separent-pour-etre-vus-rouges"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # Une seule définition d'un EPIC, parce que la divergence était le défaut
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-09-30** par [ADR 5684](5684-une-decision-pure-et-son-refus-se-separent-pour-etre-vus-rouges.md) :
+    la séparation de `retenus_parmi` et de son refus tient, mais pas pour la raison écrite ici.
+    Le défaut de `verifie_gages_joues.py` qu'elle invoque a été corrigé par #5673 le même jour ;
+    la raison durable est qu'une fonction pure se joue hors ligne, et qu'un refus non.
 
 ## Le contexte
 
