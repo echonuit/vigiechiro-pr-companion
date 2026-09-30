@@ -1528,7 +1528,7 @@
                 <surefire.groups>api-live</surefire.groups>
                 <surefire.excludedGroups></surefire.excludedGroups>
                 <vigiechiro.token></vigiechiro.token>
-                <vigiechiro.baseUrl>https://vigiechiro.herokuapp.com/api/v1</vigiechiro.baseUrl>
+                <vigiechiro.url>https://vigiechiro.herokuapp.com/api/v1</vigiechiro.url>
                 <vigiechiro.write>false</vigiechiro.write>
             </properties>
             <build>
@@ -1537,11 +1537,11 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <!-- Transmet token/baseUrl/write au JVM de test (la sélection des tags est
+                            <!-- Transmet token/url/write au JVM de test (la sélection des tags est
                                  pilotée par les propriétés surefire.groups/excludedGroups ci-dessus). -->
                             <systemPropertyVariables>
                                 <vigiechiro.token>${vigiechiro.token}</vigiechiro.token>
-                                <vigiechiro.baseUrl>${vigiechiro.baseUrl}</vigiechiro.baseUrl>
+                                <vigiechiro.url>${vigiechiro.url}</vigiechiro.url>
                                 <vigiechiro.write>${vigiechiro.write}</vigiechiro.write>
                             </systemPropertyVariables>
                         </configuration>

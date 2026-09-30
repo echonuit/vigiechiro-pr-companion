@@ -82,7 +82,7 @@ class AllerRetourParticipationLiveTest {
                 participation != null && !participation.isBlank(),
                 "Sonde d'aller-retour ignorée : fournir -Dvigiechiro.participationEssai=<participation de rebut>."
                         + " JAMAIS une participation réelle : ces probes réécrivent sa configuration.");
-        String baseUrl = System.getProperty("vigiechiro.baseUrl", "https://vigiechiro.herokuapp.com/api/v1");
+        String baseUrl = System.getProperty("vigiechiro.url", "https://vigiechiro.herokuapp.com/api/v1");
         client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
         ParticipationDetail avant = relire();
         configurationInitiale = avant.configuration();

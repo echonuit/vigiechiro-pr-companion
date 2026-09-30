@@ -30,13 +30,13 @@ L'amorçage imprime l'identifiant de la participation qu'il pose. Une sonde se r
 
 ```bash
 ./mvnw -B -Papi-live test -Dtest=ContratApiVigieChiroLiveTest#<la sonde> \
-  -Dvigiechiro.baseUrl=http://localhost:8080 \
+  -Dvigiechiro.url=http://localhost:8080 \
   -Dvigiechiro.token=<le jeton frappé> \
   -Dvigiechiro.write=true \
   -Dvigiechiro.participationEssai=<la participation amorcée>
 ```
 
-Le même appel sans `-Dvigiechiro.baseUrl` tire contre la **vraie plateforme**. C'est la seule
+Le même appel sans `-Dvigiechiro.url` tire contre la **vraie plateforme**. C'est la seule
 différence entre une répétition et un tir, et c'est voulu : la sonde ne change pas entre les deux.
 
 ## Le ranger
