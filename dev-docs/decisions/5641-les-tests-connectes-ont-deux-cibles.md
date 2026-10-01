@@ -6,7 +6,7 @@ article: A5
 chantier: "#5640 (deux cibles pour les tests connectés), lot #5641"
 decided_at: 2026-09-30
 verification: humaine
-verification_note: "la plateforme de test et la confrontation n existent pas encore : les gardes qui tiendront la decision arrivent avec les lots 2, 4 et 7 du chantier #5640"
+verification_note: "deux tests tiennent deja la plateforme de test et la cible d un scenario, mais rien ne tient encore la confrontation, qui est le coeur de la decision : elle recoit son garde avec #5647, et la decision passera alors a certaine"
 enforced_by: []
 verified:
   - by: humain
@@ -89,15 +89,13 @@ peut écrire les localités de n'importe quel site des trois protocoles.
 **Le worker de traitement dans la plateforme de test.** Écarté pour ce chantier : une image lourde et
 des binaires anciens, pour les seuls cas qui regardent un état de traitement bouger.
 
-## Pourquoi aucun garde ne la tient encore
+## Ce qui la tient, et ce qui manque encore
 
-Les deux gardes des décisions amendées ne deviennent pas faux.
-`BancDeRecetteUrlTest#le_banc_ignore_l_url_ambiante` épingle hors ligne un scénario qui n'a déclaré
-aucun serveur, et `verifie_decisions_du_tournage_connecte.py` refuse de comparer les clips de la
-plateforme nationale. Ce qu'il faudra accepter en plus, une cible de test déclarée et des clips
-tournés sur elle, n'existe pas encore. Élargir ces gardes maintenant les ferait accepter une source
-que rien ne produit.
+`BancDeRecettePlateformeDeTestTest#le_banc_vise_la_plateforme_de_test_declaree` tient que la
+déclaration produit la bonne cible : un scénario qui déclare la plateforme de test la compose, et
+jamais l'adresse ambiante. `DepotSurLaPlateformeDeTestTest` tient que la plateforme se monte et que
+Companion y dépose une archive en parties ; le job `plateforme-de-test` le joue à chaque demande.
 
-Chacun s'élargit donc avec le lot qui crée ce qu'il accepte : le premier avec la plateforme de test
-(#5642), le second avec les tournages (#5644). La confrontation reçoit son garde avec le lot de la
-dérive (#5647). Cette décision passera alors à `certaine`.
+Il manque la confrontation : rien n'ouvre encore d'issue quand un test passe sur une cible et rougit
+sur l'autre. Elle reçoit son garde avec #5647, et cette décision passera alors à `certaine`. Le garde
+qui refuse de comparer les clips connectés s'élargit avec les tournages (#5644).
