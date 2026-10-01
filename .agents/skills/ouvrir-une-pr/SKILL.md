@@ -101,7 +101,10 @@ nommée : le dépôt prescrivait `graphify` dans vingt fichiers sans jamais écr
 prose**, `scripts/methode/gardes-java-declares.py` confronte `batterie.GARDES_JAVA` aux classes qui
 construisent vraiment un chemin vers un `.md` : une sixième classe non déclarée y rougit, faute de
 quoi la porte la tairait. Si vous avez ajouté un **test qui écrit sur disque**,
-`scripts/methode/compte-les-reliquats.py` compte ce que la suite laisse dans le dossier temporaire. Et avant
+`scripts/methode/compte-les-reliquats.py` compte ce que la suite laisse dans le dossier temporaire.
+Si vous avez touché `scripts/methode/releve-les-bancs-instables.py`, son auto-test suffit en local :
+le relevé lui-même lit l'historique de la forge et dézippe des archives, et c'est l'atelier nocturne
+`releve-des-bancs-instables.yml` qui le joue depuis #5617 - avant lui, personne ne le jouait. Et avant
 d'ouvrir la demande, `scripts/methode/verifie-controle-du-titre.py` éprouve le contrôle local du titre, celui-là même
 qui vous évitera de la rouvrir.
 

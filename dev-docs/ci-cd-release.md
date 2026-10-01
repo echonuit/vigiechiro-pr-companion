@@ -32,6 +32,7 @@ publication.
 | [adr-rapport.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/adr-rapport.yml) | hebdomadaire + manuel | Rapport ADR (calibration des cliquets et des loupes) | — |
 | [mutation-model.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-model.yml) | quotidien (3 h UTC) + manuel | Mesure de mutation PIT sur **un paquet `model` par tour** (rotation sans état, cycle de 17 jours), **E2E et `commun.api` exclus** : bilan dans le résumé du job, rapport détaillé en artefact | — |
 | [mutation-ihm.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-ihm.yml) | quotidien (5 h UTC) + manuel | Mesure de mutation PIT sur les vues d'**une feature par tour** (rotation sans état, cycle de 15 jours), **E2E exclus** | — |
+| [releve-des-bancs-instables.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/releve-des-bancs-instables.yml) | quotidien (7 h UTC) + manuel | **Taux d'intermittence des bancs**, lu dans les exécutions passées : il ne rejoue rien, « les runs passés SONT les tirages ». Il existait et n'était **jamais joué** avant #5617 - `lint.yml` ne lançait que son auto-test - donc son verdict ne déclenchait rien parce qu'il n'était jamais produit. Nocturne parce qu'il dézippe l'archive de journaux de chaque tentative rejouée : le coût est borné par les **relances** et non par les runs, huit archives pour 144 tirages sur sept jours. Il **ne refuse rien** - un taux n'est pas un verdict sur une demande, et bloquer punirait celle qui a croisé le banc - son seul code non nul étant un refus de conclure. Sortie portée au résumé de l'exécution |
 | [flatpak.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/flatpak.yml) | **appelé par le train** (`workflow_call` depuis `release.yml`), ou manuel | Paquet Flatpak (cf. plus bas) | — |
 | [winget.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/winget.yml) | **manuel** (`workflow_dispatch`) | Soumission d'une version choisie à winget-pkgs (cf. plus bas) | — |
 | [recette-filmee.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/recette-filmee.yml) | **manuel** (`workflow_dispatch`) | Éprouve qu'un runner **pilote** un test filmé, et pas seulement qu'il l'exécute. Porte son **témoin** : sans gestionnaire de fenêtres, le lancement doit être refusé (cf. plus bas). Avec `publier_les_clips`, il verse le tournage complet sur `clips-recette` **et**, quand le train lui passe une version, une copie préfixée `bash-` sur le **tag** de cette version, qui lui ne bougera jamais (#4258) | — |
@@ -104,8 +105,33 @@ Mesuré le 2026-09-30 en jouant l'instrument sur les vingt ateliers, avec sa pro
 | `flatpak.yml` | 6 | non : sous les 24 |
 | `comparer-tournages.yml` | 3 | non : sous les 24 |
 | `winget.yml` | 1 | non : sous les 24 |
+| `releve-des-bancs-instables.yml` | **aucune, neuf** | non : sous les 24, et pour 24 nuits |
 | `titre-pr.yml` | **aucune, par construction** | non : ne tourne jamais sur `main` |
 | `corps-pr.yml` | **aucune, par construction** | non : ne tourne jamais sur `main` |
+
+### Le relevé des bancs instables, et pourquoi il est nocturne (#5617)
+
+`releve-des-bancs-instables.yml` joue `scripts/methode/releve-les-bancs-instables.py` chaque nuit à
+7 h UTC, sur une fenêtre de trente jours, et porte sa sortie au **résumé de l'exécution**.
+
+**Il existait et n'était jamais joué.** `lint.yml` lançait son `--auto-test`, de façon bloquante, et
+rien d'autre : son verdict ne déclenchait rien parce qu'il n'était jamais **produit**. Six bancs du
+dépôt rougissent par intermittence, le relevé sait dire leur taux, et personne ne le lui demandait.
+
+**Pas dans `lint.yml`**, parce qu'il lit les exécutions passées et **dézippe l'archive de journaux**
+de chaque tentative rejouée. Le coût est borné par le nombre de **relances**, pas de runs : sur sept
+jours, 144 tirages pour **8 relances**, donc huit archives. Trente jours en coûtent une trentaine, ce
+qui tient dans une nuit et que personne n'attend.
+
+**Il ne refuse rien.** Un taux d'intermittence n'est pas un verdict sur une demande, et un atelier qui
+bloquerait sur un banc instable punirait celle qui a eu la malchance de le croiser. Son seul code non
+nul est un **refus de conclure** - `gh` ou `unzip` absent, forge muette - et celui-là doit rougir.
+
+**Sa déclaration de limite a menti jusqu'à ce lot.** Elle annonçait « atelier `build` seul, 7
+invisibles », alors que `joindreLesJournaux` joint **un journal par atelier** de l'archive, soit les
+huit qui lancent la suite. Une limitation déclarée à tort est pire qu'une réelle : qui lit « je ne
+vois qu'un atelier sur huit » escompte un taux qui n'a pas besoin de l'être. Les taux **restent** des
+minorants, mais pour l'autre moitié de la phrase - les autres flux qui lancent la suite.
 
 **Dix des vingt peuvent être suivis, deux ne pourront jamais l'être.** `titre-pr.yml` et `corps-pr.yml`
 ne se déclenchent que sur `pull_request` : ils n'ont aucune exécution sur `main` et n'en auront jamais.
