@@ -11,9 +11,17 @@ enforced_by:
 verified:
   - by: machine:ci
     at: 2026-08-13
+relations:
+  completee_par: ["5628-un-ecart-de-medianes-ne-se-conclut-pas-sans-sa-dispersion"]
 ---
 
 # « Tourner sans conclure » a trois formes, et la mesure les départage
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-01** : le choix des deux médianes glissantes est **complété** par
+    [5628](5628-un-ecart-de-medianes-ne-se-conclut-pas-sans-sa-dispersion.md). Il ne disait pas de
+    combien deux médianes doivent différer : un écart plus petit que la dispersion de ses fenêtres ne
+    se conclut plus, et la dispersion d'une médiane est l'écart absolu médian. Le reste fait foi.
 
 ## Contexte
 
