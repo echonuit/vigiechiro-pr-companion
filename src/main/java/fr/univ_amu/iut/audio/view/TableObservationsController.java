@@ -37,6 +37,12 @@ public class TableObservationsController {
     private TableColumn<LigneObservationAudio, String> colTadarida;
 
     @FXML
+    private TableColumn<LigneObservationAudio, String> colCodeTadarida;
+
+    @FXML
+    private TableColumn<LigneObservationAudio, String> colLatinTadarida;
+
+    @FXML
     private TableColumn<LigneObservationAudio, String> colProba;
 
     @FXML
@@ -153,6 +159,8 @@ public class TableObservationsController {
         marqueurEnjeu = new MarqueurEspecesAEnjeu(appuis.especesPrioritaires());
         colonnes = new ColonnesAudio.Colonnes(
                 colTadarida,
+                colCodeTadarida,
+                colLatinTadarida,
                 colProba,
                 colFrequence,
                 colDebut,

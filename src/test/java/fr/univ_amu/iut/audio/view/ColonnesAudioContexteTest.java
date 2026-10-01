@@ -36,6 +36,8 @@ class ColonnesAudioContexteTest {
                 colonne(),
                 colonne(),
                 colonne(),
+                colonne(),
+                colonne(),
                 new TableColumn<LigneObservationAudio, java.time.LocalDate>(),
                 new TableColumn<LigneObservationAudio, LocalDateTime>(),
                 colonne(),

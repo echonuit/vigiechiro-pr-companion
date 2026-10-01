@@ -29,6 +29,8 @@ final class ColonnesAudio {
     /// est exempté d'`ExcessiveParameterList` (là où une méthode à quinze paramètres serait refusée).
     record Colonnes(
             TableColumn<LigneObservationAudio, String> tadarida,
+            TableColumn<LigneObservationAudio, String> codeTadarida,
+            TableColumn<LigneObservationAudio, String> latinTadarida,
             TableColumn<LigneObservationAudio, String> proba,
             TableColumn<LigneObservationAudio, String> frequence,
             TableColumn<LigneObservationAudio, String> debut,
@@ -69,6 +71,13 @@ final class ColonnesAudio {
     static void configurer(
             Colonnes col, Predicate<LigneObservationAudio> aEnjeu, BiConsumer<Long, String> enregistrerCommentaire) {
         col.tadarida().setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.tadarida(c.getValue())));
+        // Le code court et le nom latin de la proposition (#5605), tels que le modèle les porte.
+        col.codeTadarida()
+                .setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                        FormatLigneAudio.ouTiret(c.getValue().taxonTadarida())));
+        col.latinTadarida()
+                .setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                        FormatLigneAudio.ouTiret(c.getValue().latinTadarida())));
         col.proba()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(
                         FormatLigneAudio.probabilite(c.getValue().probTadarida())));
@@ -183,6 +192,8 @@ final class ColonnesAudio {
             TableColumn<LigneObservationAudio, String> freqTerminale) {
         return List.of(
                 new GestionnaireColonnes.Colonne(col.tadarida(), "Proposition Tadarida", true),
+                new GestionnaireColonnes.Colonne(col.codeTadarida(), "Code", false),
+                new GestionnaireColonnes.Colonne(col.latinTadarida(), "Nom latin", false),
                 new GestionnaireColonnes.Colonne(col.proba(), "Proba.", false),
                 new GestionnaireColonnes.Colonne(col.frequence(), "Fréquence", false),
                 new GestionnaireColonnes.Colonne(fme, "FME", false),
