@@ -8,7 +8,7 @@ decided_at: 2026-08-31
 verification: humaine
 loupe: "aucun motif ne lit si un cas rougit pour la bonne raison : la question se pose à l'écriture de chaque auto-test portant plus d'un contrôle"
 relations:
-  completee_par: ["5572-un-verdict-se-remesure-la-ou-il-retire-une-question"]
+  completee_par: ["5572-un-verdict-se-remesure-la-ou-il-retire-une-question", "5570-un-compte-subi-se-tient-par-un-cliquet"]
 verified:
   - by: humain
     at: 2026-08-31
@@ -18,6 +18,8 @@ verified:
 
 !!! warning "Ce qui fait foi aujourd'hui"
     **Complétée le 2026-09-29** par [ADR 5572](5572-un-verdict-se-remesure-la-ou-il-retire-une-question.md) : nommer le contrôle qui a rougi reste dû ; la 5572 situe cette exigence dans la famille des verdicts rendus sans avoir exercé ce qu'ils jugent, et dit où la remesure est due.
+
+    **Complétée le 2026-10-01** par [ADR 5570](5570-un-compte-subi-se-tient-par-un-cliquet.md) : l'exigence ne bouge pas, et le COMPTE de ce qui ne la tient pas cesse d'être subi. Le relevé de #5530 comptait sans juger ; il refuse désormais au-dessus de 81, et sa population se dérive au lieu de s'énumérer.
 
 ## Contexte
 

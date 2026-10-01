@@ -41,11 +41,18 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import cas_d_auto_test, sort_si_contrat_demande
+from _commun import cas_d_auto_test, rapporte, sort_si_contrat_demande
 
 # Les dossiers ou vivent les gardes du depot. Une LISTE, et elle est declaree : la deriver des
 # ateliers donnerait la population d UN flux, quand ce releve veut celle du depot (article A3).
-DOSSIERS = ("scripts/adr", "scripts/methode", ".github/scripts", ".github/assets", "scripts")
+#
+# Trois entrees et non cinq depuis #5570. Le balayage etant devenu recursif, `scripts/adr` et
+# `scripts/methode` etaient devenus redondants avec `scripts`, et cette redondance n etait pas
+# inoffensive : elle a NEUTRALISE une mutation. Ecarter les fichiers dont le parent est la base ne
+# retirait presque rien, puisque `scripts/adr/x.py` reste atteint par le rglob parti de `scripts`.
+# Un temoin a donc paru tenir sans discriminer. Mesure : les deux declarations rendent les memes
+# 161 fichiers, ecart nul.
+DOSSIERS = ("scripts", ".github/scripts", ".github/assets")
 
 # Les noms sous lesquels un harnais marque son echec lui-meme.
 MARQUES = ("echecs", "echec", "rouges")
@@ -59,13 +66,32 @@ DIFFEREE = (ast.Lambda, ast.Name, ast.Attribute)
 
 
 def fichiers() -> list[pathlib.Path]:
-    """Les fichiers Python des dossiers de gardes, sans doublon."""
+    """Les fichiers Python des dossiers de gardes et de LEURS sous-dossiers, sans doublon.
+
+    Le balayage est RECURSIF depuis #5570, et il ne l etait pas. Un `glob("*.py")` ne voit que le
+    premier niveau : `scripts` y figurait, donc ses fichiers de tete etaient lus, mais
+    `scripts/graphify`, `scripts/mkdocs`, `scripts/plateforme-de-test` et `scripts/qualite` ne
+    l etaient pas. Mesure du 2026-10-01 : HUIT gardes dont la porte joue l auto-test etaient hors
+    population, et SIX d entre eux muets. Le compte passait de `muets=75` a `muets=81`.
+
+    Un cliquet pose sur cette population-la aurait verrouille le mauvais chiffre, et le jour ou
+    quelqu un aurait nomme les quatre dossiers il aurait rougi pour une raison qui n est pas la
+    sienne : non qu un harnais muet ait ete ajoute, mais que la mesure ait commence a dire vrai.
+
+    Le recursif se derive, une liste de sous-dossiers s enumere et vieillit. C est le meme choix que
+    le compte de reference pris sur l en-tete d un tableau plutot qu inscrit dans un garde (#5700).
+
+    La regle des noms a tiret bas ne bouge pas : ce sont des aides, pas des gardes. Elle ne couvre
+    pas les DOSSIERS prives, et c est sans effet aujourd hui, mesure : les deux harnais de
+    `scripts/_commun` rendent des comptes nuls, donc le releve les ecarte de toute facon. Y ajouter
+    une regle sur les dossiers serait une branche que rien ne peut faire rougir.
+    """
     vus: dict[pathlib.Path, None] = {}
     for dossier in DOSSIERS:
         base = RACINE / dossier
         if not base.is_dir():
             continue
-        for f in sorted(base.glob("*.py")):
+        for f in sorted(base.rglob("*.py")):
             if not f.name.startswith("_"):
                 vus[f.resolve()] = None
     return list(vus)
@@ -146,33 +172,37 @@ def releve() -> tuple[list[tuple[int, str]], list[tuple[int, str]], int]:
     return (forme_b, forme_a, sains)
 
 
-def main() -> int:
+def suspects() -> tuple[list[str], int, int, int]:
+    """Un suspect par harnais muet, et les trois comptes qui disent de quoi la population est faite.
+
+    Un suspect PAR HARNAIS, et non par site : la dette se resorbe harnais par harnais, et compter les
+    sites ferait descendre le cliquet quand un gros harnais maigrit sans cesser d etre muet.
+    """
     forme_b, forme_a, sains = releve()
-    print("RELEVE 5530 - harnais qui ne peuvent pas nommer le cas qui leve")
+    lignes = [f"{nom} : {n} site(s), marque posee EN LIGNE (famille B)" for n, nom in forme_b]
+    lignes += [f"{nom} : {n} cas passe(s) EN VALEUR a son aide (famille A)" for n, nom in forme_a]
+    return lignes, len(forme_b), len(forme_a), sains
+
+
+def main() -> int:
+    muets, b, a, sains = suspects()
     print(
-        f"\n  B. la marque d echec est posee EN LIGNE, aucune aide ne tient le libelle : "
-        f"{len(forme_b)}"
+        f"  B. la marque d echec est posee EN LIGNE, aucune aide ne tient le libelle : {b}\n"
+        f"  A. une aide tient le libelle, mais des cas lui sont passes EN VALEUR : {a}\n"
+        f"  harnais dont TOUS les cas sont differes : {sains}\n"
     )
-    for n, nom in forme_b[:10]:
-        print(f"     {n:4} site(s)   {nom}")
-    if len(forme_b) > 10:
-        print(f"     ... et {len(forme_b) - 10} autre(s)")
-    print(
-        f"\n  A. une aide tient le libelle, mais des cas lui sont passes EN VALEUR : {len(forme_a)}"
-    )
-    for n, nom in forme_a[:10]:
-        print(f"     {n:4} cas       {nom}")
-    if len(forme_a) > 10:
-        print(f"     ... et {len(forme_a) - 10} autre(s)")
-    print(f"\n  harnais dont TOUS les cas sont differes : {sains}")
-    print(
-        f"\nRELEVE 5530 | lus={len(forme_b) + len(forme_a) + sains}"
-        f" | muets={len(forme_b) + len(forme_a)}"
+    code = rapporte(
+        "5570",
+        "harnais qui ne peuvent pas nommer le cas qui leve",
+        muets,
+        apercu=12,
+        lus=b + a + sains,
     )
     print(
-        "\nUn cas qui leve dans l un d eux arrete son temoin sans dire lequel a rougi (ADR 4918)."
+        "\nUn cas qui leve dans l un d eux arrete son temoin sans dire lequel a rougi (ADR 4918).\n"
+        "La capacite de s y conformer existe depuis #5444 : `cas_d_auto_test` accepte un appelable."
     )
-    return 0
+    return code
 
 
 def _auto_test() -> int:
@@ -229,11 +259,36 @@ def _auto_test() -> int:
 
     # Un fichier qui ne porte pas d auto-test n entre pas dans la population.
     verifie("un fichier sans harnais rend des comptes nuls", lambda: comptes("x = 1\n"), (0, 0, 0))
+
+    # #5570 : la population DESCEND sous les dossiers declares. Le balayage ne le faisait pas, et
+    # huit gardes dont la porte joue l auto-test en etaient absents, six muets. Le cas se derive des
+    # DOSSIERS plutot que de nommer un fichier : un fichier renomme le rendrait vert a tort.
+    declares = {RACINE / d for d in DOSSIERS}
+    dessous = [p for p in fichiers() if p.parent not in declares]
+    dessus = [p for p in fichiers() if p.parent in declares]
+    print(f"     population : {len(dessus)} au premier niveau, {len(dessous)} dans un sous-dossier")
+    verifie("la population descend sous les dossiers declares", lambda: len(dessous) > 0, True)
+    # ET LE CONTRASTE, sans quoi un balayage qui ne rendrait QUE les sous-dossiers passerait le cas
+    # precedent : le premier niveau est toujours lu.
+    verifie("et elle lit toujours le premier niveau", lambda: len(dessus) > 0, True)
+
+    # Un suspect PAR HARNAIS, jamais par site : compter les sites ferait descendre le cliquet quand
+    # un gros harnais maigrit sans cesser d etre muet, donc le resserrerait sur une fausse bonne
+    # nouvelle. Le cas confronte la longueur de la liste aux deux comptes de familles.
+    muets, b, a, _ = suspects()
+    verifie("un suspect par harnais, pas par site", lambda: len(muets) == b + a, True)
+    verifie("et chaque suspect nomme sa famille", lambda: all("famille" in s for s in muets), True)
     return echecs()
 
 
-# Pourquoi `rapport` : il COMPTE, il ne juge pas. Convertir un harnais est un travail par garde, et
-# refuser dessus reviendrait a bloquer le depot sur une dette que ce releve sert a rendre visible.
+# Pourquoi `cliquet` et plus `rapport` (#5570). La phrase qui vivait ici disait : « il COMPTE, il ne
+# juge pas, et refuser dessus reviendrait a bloquer le depot sur une dette que ce releve sert a rendre
+# visible. » C est l argument d un BUTOIR, et il est faux d un cliquet : pose a la valeur mesuree, il
+# n exige rien des 81 harnais muets et exige tout des suivants. Elle est remplacee et non laissee a
+# cote, parce que deux arguments opposes dans un meme depot font appliquer celui qu on trouve d abord.
+#
+# Ce qui a rendu la question urgente : le compte etait SUBI. `lus=89 muets=74` en septembre,
+# `lus=93 muets=75` trois semaines plus tard, sans que personne l ait decide.
 CONTRAT = {
     "geste": "harnais d auto-test qui ne peuvent pas nommer le cas qui leve",
     "population": "les fichiers Python portant `--auto-test` dans les dossiers de gardes du depot. "
@@ -241,10 +296,19 @@ CONTRAT = {
     "de #5460 et #5461 etaient definies par un idiome, et une troisieme forme y echappait "
     "(`scripts/batterie.py`, seize sites). Il ne voit pas un harnais dont l aide vit dans un autre "
     "module et porte un autre nom que `verifie` : ses comptes sont des MINORANTS",
-    "dispositif": "rapport",
-    "seuil": "(sans objet)",
+    "dispositif": "cliquet",
+    "seuil": "81, polarite=descend",
     "temoin": "scripts/methode/releve-les-harnais-muets.py --auto-test",
-    "decision": "ADR 4918",
+    "decision": "ADR 5570",
+    # Devenu obligatoire en devenant cliquet : l ADR 5340 compte les gardes qui portent un CONTRAT
+    # sans dire ce qu ils lisent, et le repli LANCE ceux qui se taisent. Mesure : passer de `rapport`
+    # a `cliquet` a fait entrer ce fichier dans sa population, suspects=43 contre un cliquet de 42.
+    # Les trois entrees sont exactement DOSSIERS, et le `**` dit que le balayage est recursif.
+    "chemins": """
+scripts/**
+.github/scripts/**
+.github/assets/**
+""",
 }
 
 
