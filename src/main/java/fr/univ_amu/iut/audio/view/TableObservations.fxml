@@ -35,6 +35,10 @@
       <TableColumn fx:id="colCommune" text="Commune" prefWidth="140.0"/>
       <TableColumn fx:id="colFichier" text="Fichier" prefWidth="200.0"/>
       <TableColumn fx:id="colTadarida" text="Proposition Tadarida" prefWidth="180.0"/>
+      <!-- Le code court de la proposition (#5605) : c'est lui qu'on tape dans la barre de validation.
+           Le nom latin est masqué par défaut, activable par le gestionnaire de colonnes. -->
+      <TableColumn fx:id="colCodeTadarida" text="Code" prefWidth="80.0"/>
+      <TableColumn fx:id="colLatinTadarida" text="Nom latin" prefWidth="170.0" visible="false"/>
       <TableColumn fx:id="colProba" text="Proba." prefWidth="70.0"/>
       <TableColumn fx:id="colObservateur" text="Votre taxon" prefWidth="180.0"/>
       <TableColumn fx:id="colCertitude" text="Certitude" prefWidth="90.0"/>

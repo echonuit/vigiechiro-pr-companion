@@ -155,7 +155,7 @@ class SonsValidationViewTest {
                 45,
                 nomEspece,
                 nomTadarida,
-                null,
+                "Pippip".equals(tadarida) ? "Pipistrellus pipistrellus" : "Nyctalus leisleri",
                 "Chiroptères",
                 "PaRec_" + seq + "_000.wav",
                 0.20,
@@ -531,6 +531,22 @@ class SonsValidationViewTest {
     }
 
     @Test
+    @DisplayName("#5605 : la proposition Tadarida a son code court, visible, et son nom latin, masqué par défaut")
+    void la_proposition_a_son_code_et_son_nom_latin(FxRobot robot) {
+        // Samuel : le code court « c'est ça qu'on va chercher dans la barre de validation ensuite ».
+        TableColumn<?, ?> code = colonne(robot, "Code");
+        assertThat(code.getCellData(0)).isEqualTo("Pippip");
+        assertThat(code.getCellData(1)).isEqualTo("Nyclei");
+        assertThat(code.isVisible()).as("le code est visible par défaut").isTrue();
+
+        TableColumn<?, ?> latin = colonne(robot, "Nom latin");
+        assertThat(latin.getCellData(0)).isEqualTo("Pipistrellus pipistrellus");
+        assertThat(latin.isVisible())
+                .as("le nom latin est masqué par défaut, et s'active par le gestionnaire de colonnes")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("Proposition Tadarida et Votre taxon affichent le vernaculaire ; Proba la probabilité")
     void affiche_nom_vernaculaire_et_proba(FxRobot robot) {
         // Les deux lignes sont revues (taxon observateur renseigné) : « Votre taxon » montre le
@@ -837,9 +853,9 @@ class SonsValidationViewTest {
             "Ordre par défaut des colonnes (contexte, fichier, identification, indicateurs) et indicateurs non triables")
     void ordre_par_defaut_et_indicateurs_non_triables(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
-        // Les 19 premières colonnes par en-tête ; les 3 indicateurs (icônes, sans texte) par leur id.
+        // Les 21 premières colonnes par en-tête ; les 3 indicateurs (icônes, sans texte) par leur id.
         assertThat(table.getColumns().stream()
-                        .limit(19)
+                        .limit(21)
                         .map(TableColumn::getText)
                         .toList())
                 .containsExactly(
@@ -857,6 +873,8 @@ class SonsValidationViewTest {
                         "Commune",
                         "Fichier",
                         "Proposition Tadarida",
+                        "Code",
+                        "Nom latin",
                         "Proba.",
                         "Votre taxon",
                         "Certitude",
@@ -872,11 +890,11 @@ class SonsValidationViewTest {
                         "Statut");
         // Les indices ont glissé d'un cran avec « Nom du carré » (#3300), puis d'un autre avec
         // « Commentaire (texte) » (#3348), posée contre son indicateur : le texte et l'icône qui en
-        // signale l'existence se lisent au même endroit.
-        assertThat(table.getColumns().get(19).getId()).isEqualTo("colReference");
-        assertThat(table.getColumns().get(20).getId()).isEqualTo("colCommentaire");
-        assertThat(table.getColumns().get(21).getId()).isEqualTo("colTexteCommentaire");
-        assertThat(table.getColumns().get(22).getId()).isEqualTo("colFil");
+        // signale l'existence se lisent au même endroit. Puis de deux avec le code et le nom latin (#5605).
+        assertThat(table.getColumns().get(21).getId()).isEqualTo("colReference");
+        assertThat(table.getColumns().get(22).getId()).isEqualTo("colCommentaire");
+        assertThat(table.getColumns().get(23).getId()).isEqualTo("colTexteCommentaire");
+        assertThat(table.getColumns().get(24).getId()).isEqualTo("colFil");
         // Colonnes-indicateurs : non triables (trier une icône est déroutant, cf. « colonne vide triable »).
         assertThat(colonneParId(robot, "colReference").isSortable()).isFalse();
         assertThat(colonneParId(robot, "colCommentaire").isSortable()).isFalse();
