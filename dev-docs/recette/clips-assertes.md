@@ -289,6 +289,22 @@ les nomme, et l'observateur tranche - lui seul sait de quel côté était le mic
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.sur_une_frontiere_rien_ne_se_remplit.mp4"></video>
 
+### S1-41 · `creer_sans_verifier_un_carre_absent_le_dit`
+
+« Créer » sur un carré que personne n'a vérifié : le portail est interrogé d'abord, le site se crée, et
+c'est le bandeau de « Mes sites » qui dit ce qu'il faudra faire avant de déposer (#5607).
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioCarreAbsentTest.creer_sans_verifier_un_carre_absent_le_dit.mp4"></video>
+
+### S1-42 · `le_carre_en_routier_dit_le_geste_du_portail`
+
+Le carré existe, mais en Routier : l'encart le dit, nomme le site, et ne propose pas de récupérer ce
+qu'aucun rapatriement ne saurait rattacher (#5607).
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioCarreAbsentTest.le_carre_en_routier_dit_le_geste_du_portail.mp4"></video>
+
 
 ## ScenarioImportNominalTest
 

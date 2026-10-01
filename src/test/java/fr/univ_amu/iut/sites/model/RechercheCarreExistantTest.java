@@ -91,4 +91,27 @@ class RechercheCarreExistantTest {
         when(client.chercherCarre("130711")).thenReturn(ReponseApi.refuse(403, ""));
         assertThat(recherche.chercher("130711")).isInstanceOf(RechercheCarreExistant.Verdict.Indisponible.class);
     }
+
+    /// Lu dans « Mes sites » après la déclaration, le verdict nomme le carré et ne propose plus de le
+    /// déclarer (#5607) : la modale qui le portait s'est fermée.
+    @Test
+    @DisplayName("#5607 : après déclaration, le verdict nomme le carré et garde le geste du portail")
+    void apres_declaration_le_verdict_nomme_le_carre() {
+        String absent = new RechercheCarreExistant.Verdict.Inexistant().apresDeclaration("202013");
+        String routier = new RechercheCarreExistant.Verdict.AutreProtocole(List.of("Vigiechiro - Routier-202013"))
+                .apresDeclaration("202013");
+        String nonVerifie = new RechercheCarreExistant.Verdict.Indisponible().apresDeclaration("202013");
+
+        assertThat(absent)
+                .startsWith("Carré 202013 déclaré.")
+                .contains("n'existe pas encore")
+                .contains(PresenceDuCarre.GESTE_DU_PORTAIL)
+                .doesNotContain("déclarer ici");
+        assertThat(routier)
+                .startsWith("Carré 202013 déclaré.")
+                .contains("Vigiechiro - Routier-202013")
+                .contains(PresenceDuCarre.GESTE_DU_PORTAIL)
+                .doesNotContain("déclarer ici");
+        assertThat(nonVerifie).startsWith("Carré 202013 déclaré.").contains("PAS été vérifié");
+    }
 }

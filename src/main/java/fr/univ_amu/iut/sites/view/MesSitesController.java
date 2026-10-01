@@ -219,7 +219,10 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         // ici se terminait par un showAndWait : déclarer un site - l'entrée du produit - n'était jouable
         // dans aucun test.
         navigation.ouvrirModaleCreationSite(
-                listeCartes.getScene().getWindow(), viewModel::rafraichir, this::annoncerRapatriement);
+                listeCartes.getScene().getWindow(),
+                viewModel::rafraichir,
+                this::annoncerRapatriement,
+                this::annoncerLeVerdict);
     }
 
     /// Conclut un **rapatriement** sur cet écran : la liste montre le carré récupéré, et le bandeau dit
@@ -240,6 +243,12 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
     /// rechargement ne le rend pas plus sûr, il crée un second chemin qu'il faudra maintenir.
     public void annoncerRapatriement(RapatriementCarre.Resultat.Rapatrie rapatrie) {
         viewModel.compteRendu().rendre(new RetourOperation(rapatrie.message(), rapatrie.severite()));
+    }
+
+    /// Conclut une **déclaration** sur cet écran : le bandeau porte le verdict d'existence du carré créé
+    /// (#5607), puisque la modale qui l'a obtenu vient de se fermer. Même chemin que le rapatriement.
+    public void annoncerLeVerdict(RetourOperation verdict) {
+        viewModel.compteRendu().rendre(verdict);
     }
 
     private void reconstruire() {

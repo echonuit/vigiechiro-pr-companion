@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.sites.model.PresenceDuCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.io.PrintWriter;
@@ -92,6 +93,37 @@ class CreerSiteTest {
 
         // Companion ne gère que le Point Fixe : il n'y a aucun homologue à rattacher, donc aucun doublon.
         verify(service).creerSite(anyString(), any(), any(), any(), anyString());
+    }
+
+    /// Un carré absent se crée, mais ne recevra aucune nuit déposée tant qu'il n'est pas activé en Point
+    /// Fixe sur le portail (#5607). La commande créait sans rien dire, comme la modale disait « vous pouvez
+    /// le déclarer ici » : Samuel l'a appris au dépôt.
+    @Test
+    @DisplayName("#5607 : carré absent → on crée, et la sortie d'erreur dit le geste du portail")
+    void un_carre_absent_dit_le_geste_du_portail() {
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
+        siteCree();
+
+        assertThat(executer("--carre", CARRE)).isZero();
+
+        assertThat(sortie.toString())
+                .as("la sortie standard ne porte que l'identifiant : les scripts la lisent")
+                .isEqualTo("7" + System.lineSeparator());
+        assertThat(erreur.toString()).contains(CARRE).contains(PresenceDuCarre.GESTE_DU_PORTAIL);
+    }
+
+    @Test
+    @DisplayName("#5607 : carré seulement en Routier → on crée, et la sortie d'erreur dit le geste du portail")
+    void un_carre_routier_seul_dit_le_geste_du_portail() {
+        when(client.chercherCarre(CARRE))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a50", "Vigie-chiro - Routier-" + CARRE, true))));
+        siteCree();
+
+        assertThat(executer("--carre", CARRE)).isZero();
+
+        assertThat(sortie.toString()).isEqualTo("7" + System.lineSeparator());
+        assertThat(erreur.toString()).contains("pas en Point Fixe").contains(PresenceDuCarre.GESTE_DU_PORTAIL);
     }
 
     @Test

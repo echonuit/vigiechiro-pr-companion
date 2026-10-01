@@ -39,6 +39,9 @@ public final class CarreExistantViewModel {
     /// et la déclaration reste entière. Même montage que `ControleCarreStoc`.
     private final Optional<RechercheCarreExistant> recherche;
 
+    /// Le dernier verdict appliqué, pour l'annonce d'après la déclaration ; `null` sans verdict.
+    private RechercheCarreExistant.Verdict verdict;
+
     /// « Récupérer ce carré » (#3806). **Optionnel** pour la même raison : il interroge la plateforme.
     /// Absent, le geste n'est pas offert et la déclaration reste entière.
     private final Optional<RapatriementCarre> rapatriement;
@@ -104,6 +107,7 @@ public final class CarreExistantViewModel {
         }
         retour.set(new RetourOperation(
                 resultat.verdict().message(), resultat.verdict().severite()));
+        verdict = resultat.verdict();
         // Le geste suit le verdict : on ne propose de récupérer que ce qui est là-bas, et seulement si
         // le rapatriement est installé (sinon le bouton serait mort).
         recuperable.set(
@@ -136,8 +140,27 @@ public final class CarreExistantViewModel {
         }
     }
 
+    /// La vérification est-elle installée ? Sans elle, il n'y a rien à demander au portail.
+    public boolean peutChercher() {
+        return recherche.isPresent();
+    }
+
+    /// Un verdict est-il affiché pour le numéro à l'écran ? Il s'efface dès que le numéro change.
+    public boolean aUnVerdict() {
+        return retour.get() != RetourOperation.AUCUN;
+    }
+
+    /// Ce que « Mes sites » dira du carré qu'on vient de déclarer, ou [RetourOperation#AUCUN] si aucun
+    /// verdict ne le juge (#5607).
+    public RetourOperation annonceApresDeclaration(String numeroCarre) {
+        return verdict == null
+                ? RetourOperation.AUCUN
+                : new RetourOperation(verdict.apresDeclaration(numeroCarre), verdict.severite());
+    }
+
     /// Le verdict ne juge plus ce qui est à l'écran : on l'oublie, geste compris.
     public void oublier() {
+        verdict = null;
         retour.set(RetourOperation.AUCUN);
         recuperable.set(false);
     }

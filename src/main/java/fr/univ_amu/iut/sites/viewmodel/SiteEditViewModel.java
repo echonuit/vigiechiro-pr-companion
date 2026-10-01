@@ -199,6 +199,13 @@ public class SiteEditViewModel {
         return carre.chercher(demande);
     }
 
+    /// « Créer » doit-il interroger le portail avant d'enregistrer (#5607) ? Oui en déclaration, sur un
+    /// numéro complet qu'aucun verdict ne juge encore : sans cela, un carré absent ou déjà en Point Fixe
+    /// se déclarait sans que rien ne le dise avant le dépôt.
+    public boolean doitVerifierAvantDeCreer() {
+        return enCreation.get() && carreValide.get() && carre.peutChercher() && !carre.aUnVerdict();
+    }
+
     /// Récupère le carré saisi depuis la plateforme, avec le protocole choisi dans la modale.
     ///
     /// **Bloquant** (réseau) : à appeler hors du fil JavaFX. Même raison qu'au-dessus pour la garde de

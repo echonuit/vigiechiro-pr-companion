@@ -30,6 +30,7 @@ import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.recette.SansExceptionAvalee;
 import fr.univ_amu.iut.recette.Seance;
 import fr.univ_amu.iut.sites.model.ImportSiteDistant;
+import fr.univ_amu.iut.sites.model.PresenceDuCarre;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -207,7 +208,7 @@ class ScenarioModaleCarreTest {
 
     @Test
     @CasDeRecette(value = "S1-30", portee = Portee.A_L_ECRAN)
-    @DisplayName("S1-30 · un carré libre : l'encart vert dit qu'on peut le déclarer ici")
+    @DisplayName("S1-30 · un carré libre : l'encart avertit qu'il faudra l'activer sur le portail avant de déposer")
     void le_carre_libre_s_annonce_libre(FxRobot robot) throws TimeoutException {
         laPlateformeNeConnaitPas(CARRE_LIBRE);
         ouvrirLaDeclaration(robot);
@@ -215,8 +216,8 @@ class ScenarioModaleCarreTest {
 
         verifier(robot);
 
-        assertThat(encart(robot).getText()).contains("n'existe pas encore");
-        assertThat(encart(robot).getStyleClass()).contains("encart-succes");
+        assertThat(encart(robot).getText()).contains("n'existe pas encore").contains(PresenceDuCarre.GESTE_DU_PORTAIL);
+        assertThat(encart(robot).getStyleClass()).contains("encart-avertissement");
     }
 
     @Test

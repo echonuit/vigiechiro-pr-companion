@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -123,12 +124,17 @@ public class NavigationSites implements OuvrirSite {
     /// @param apresRapatriement action exécutée quand le carré déclaré **existait déjà** sur la
     ///     plateforme et vient d'être récupéré (#4099) : l'écran appelant conclut le geste lui-même,
     ///     puisque c'est de lui que la modale est partie
+    /// @param annoncer ce que l'appelant fait du verdict d'existence du carré créé (#5607) : la modale se
+    ///     ferme, c'est donc son bandeau qui le porte
     public void ouvrirModaleCreationSite(
-            Window parent, Runnable apresSucces, Consumer<RapatriementCarre.Resultat.Rapatrie> apresRapatriement) {
+            Window parent,
+            Runnable apresSucces,
+            Consumer<RapatriementCarre.Resultat.Rapatrie> apresRapatriement,
+            Consumer<RetourOperation> annoncer) {
         FXMLLoader loader = charger("ModaleSite.fxml");
         Parent vue = lire(loader);
         ModaleSiteController controller = loader.getController();
-        controller.demarrerCreation(apresSucces, apresRapatriement::accept);
+        controller.demarrerCreation(apresSucces, apresRapatriement::accept, annoncer);
         afficherModale(parent, vue, "Site de suivi");
     }
 

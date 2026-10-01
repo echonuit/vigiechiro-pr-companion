@@ -144,6 +144,25 @@ demarrer_stub() {
   [[ "${output}" == *"0 site(s) trouvé(s)"* ]]
 }
 
+# #5607 : un carré absent de Vigie-Chiro se crée, mais la commande dit tout de suite qu'il faudra
+# l'activer sur le portail, au lieu de le laisser découvrir au dépôt. Le catalogue du stub ne porte que
+# les carrés 130000 à 130249 : 999999 y est absent. La sortie standard reste l'identifiant du site.
+@test "creer-site : un carré absent de Vigie-Chiro dit le geste du portail, sur la sortie d'erreur (#5607)" {
+  demarrer_stub 250
+
+  export VIGIECHIRO_URL="http://127.0.0.1:${STUB_PORT}/api/v1"
+  export VIGIECHIRO_TOKEN="jeton-bidon"
+  local site
+  site=$(cli creer-site --carre 999999 2>"${BATS_TEST_TMPDIR}/erreur")
+  local code=$?
+  unset VIGIECHIRO_URL VIGIECHIRO_TOKEN
+
+  [ "${code}" -eq 0 ]
+  [[ "${site}" =~ ^[0-9]+$ ]]
+  grep -q "n'existe pas sur Vigie-Chiro" "${BATS_TEST_TMPDIR}/erreur"
+  grep -q "il faudra l'activer en Point Fixe sur le portail" "${BATS_TEST_TMPDIR}/erreur"
+}
+
 # #4867 : une nuit LIEE a une participation, l etat qu aucune commande ne sait poser.
 #
 # Le lien nait du depot sur le serveur, et aucune commande ne le cree : `lien-participation` l AFFICHE.
