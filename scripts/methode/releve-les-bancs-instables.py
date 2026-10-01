@@ -804,6 +804,19 @@ jobs:
     dite = limiteDeLecture()
     assert " seul." not in dite, f"la declaration pretend encore lire un atelier seul : {dite}"
     attendus = ateliersQuiLancentLaSuite(FLUX_LU.read_text(encoding="utf-8"))
+    # ⟨UNE ANCRE INDEPENDANTE, et c est ce qui manquait⟩ Deriver l attente de la fonction qu on
+    # controle rend le cas TAUTOLOGIQUE : si `ateliersQuiLancentLaSuite` rendait `[]`, la boucle
+    # ci-dessous tournerait zero fois et la declaration dirait « ses 0 atelier(s) », donc le cas
+    # passerait. Deux jobs de `maven.yml` sont connus pour lancer la suite depuis des mois : les
+    # exiger NOMMEMENT ancre le cas sur autre chose que lui-meme.
+    #
+    # Trouve en appliquant une lecon d une session pair : quand on change le dessin d un controle, la
+    # matrice de contraste se rejoue en ENTIER, car un temoin peut cesser de discriminer sans cesser
+    # de passer - et une relecture ne le voit pas.
+    for connu in ("build", "fuseau-alternatif"):
+        assert connu in attendus, f"« {connu} » lance la suite et n est plus derive : {attendus}"
+        assert connu in dite, f"« {connu} » est lu et n est pas nomme : {dite}"
+    assert len(attendus) >= 2, attendus
     assert f"{len(attendus)} atelier" in dite, dite
     for atelier in attendus:
         assert atelier in dite, f"« {atelier} » est lu et n est pas nomme : {dite}"

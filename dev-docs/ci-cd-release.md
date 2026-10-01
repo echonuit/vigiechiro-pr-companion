@@ -1,6 +1,6 @@
 # CI/CD et release
 
-Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->20<!--/inv--> workflows et le processus de
+Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->21<!--/inv--> workflows et le processus de
 publication.
 
 ## Les workflows
@@ -133,7 +133,7 @@ huit qui lancent la suite. Une limitation déclarée à tort est pire qu'une ré
 vois qu'un atelier sur huit » escompte un taux qui n'a pas besoin de l'être. Les taux **restent** des
 minorants, mais pour l'autre moitié de la phrase - les autres flux qui lancent la suite.
 
-**Dix des vingt peuvent être suivis, deux ne pourront jamais l'être.** `titre-pr.yml` et `corps-pr.yml`
+**Dix des vingt et un peuvent être suivis, deux ne pourront jamais l'être.** Le vingt et unième est `releve-des-bancs-instables.yml`, neuf depuis #5617, qui n'aura pas vingt-quatre exécutions avant vingt-quatre nuits. `titre-pr.yml` et `corps-pr.yml`
 ne se déclenchent que sur `pull_request` : ils n'ont aucune exécution sur `main` et n'en auront jamais.
 Les huit autres sont sous le seuil parce qu'ils tournent rarement - un rapport du lundi, une release,
 un tournage appelé - et le temps seul ne les y amènera pas tous.
