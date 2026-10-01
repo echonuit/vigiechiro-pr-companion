@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextInputControl;
@@ -141,11 +142,13 @@ public final class GesteVisible {
     /// « Récupérer ce carré » (#4181) comme sur les entrées de menu (#4177) - c'est le même défaut, et
     /// la doctrine n'est pas « le menu » mais « on doit voir le geste ».
     public static void cliquer(FxRobot robot, String cible) {
-        robot.moveTo(cible);
+        robot.moveTo(pointSurLeFil(robot, cible));
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.entreDeuxGestes(robot);
 
-        robot.clickOn(cible);
+        // Le point se RECALCULE : entre l'arrivée et l'appui, la mise en page a pu bouger, et c'est
+        // ce que la seconde résolution de `clickOn(cible)` faisait avant #5707.
+        robot.clickOn(pointSurLeFil(robot, cible));
         WaitForAsyncUtils.waitForFxEvents();
     }
 
@@ -184,7 +187,7 @@ public final class GesteVisible {
     /// donne à voir ce qu'un utilisateur voit, jamais qu'il y arrive : la case `S2-79` garde la
     /// question.
     public static void survoler(FxRobot robot, Node cible) throws TimeoutException {
-        robot.moveTo(cible);
+        robot.moveTo(pointSurLeFil(robot, cible));
         WaitForAsyncUtils.waitForFxEvents();
         InfobulleDeBlocage.montrerParEntreeDeSouris(cible, robot);
         Respiration.leTempsDeLire(robot);
@@ -192,11 +195,11 @@ public final class GesteVisible {
 
     /// Même chose sur un noeud déjà en main, quand le scénario le tient plutôt que son sélecteur.
     public static void cliquer(FxRobot robot, Node cible) {
-        robot.moveTo(cible);
+        robot.moveTo(pointSurLeFil(robot, cible));
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.entreDeuxGestes(robot);
 
-        robot.clickOn(cible);
+        robot.clickOn(pointSurLeFil(robot, cible));
         WaitForAsyncUtils.waitForFxEvents();
     }
 
@@ -228,7 +231,7 @@ public final class GesteVisible {
     /// Un menu qui ne s'ouvre pas rendrait un clip immobile que personne ne signalerait : l'attente
     /// **dit** donc ce qu'elle guettait (#4845).
     public static void choisir(FxRobot robot, String idDuMenu, String libelle) {
-        robot.clickOn(idDuMenu);
+        robot.clickOn(pointSurLeFil(robot, idDuMenu));
         WaitForAsyncUtils.waitForFxEvents();
         Attente.queSurLeFil(
                 () -> robot.lookup(libelle).tryQuery().isPresent(),
@@ -240,5 +243,46 @@ public final class GesteVisible {
         // fermeture du menu tombent sur la même trame : on voit le menu, puis l'écran d'après, et jamais
         // le choix.
         cliquer(robot, libelle);
+    }
+
+    /// Le point d'écran où le pointeur doit aller, **situé sur le fil JavaFX** (ADR 5707).
+    ///
+    /// `moveTo("#id")` ne fait pas que bouger le pointeur : il **situe** sa cible, sur le fil
+    /// appelant, en lisant les bornes de chaque candidat. Cela itère les éléments de tout `Path` du
+    /// sous-arbre - le caret d'un champ en est un - pendant que le fil JavaFX les rebâtit.
+    ///
+    /// Le point vient de `robot.point(...)` et non d'un calcul à nous : `BoundsLocatorImpl`
+    /// **intersecte** les bornes avec la scène avant d'ajouter les décalages, et le centre naïf
+    /// tombait hors de la fenêtre pour un champ qui dépasse. L'ADR porte la mesure et le récit.
+    private static Point2D pointSurLeFil(FxRobot robot, String cible) {
+        return Attente.surLeFil(
+                () -> robot.point(exigerVisible(robot, cible)).query(),
+                "situer « " + cible + " » sur le fil JavaFX",
+                SELECTION_MS);
+    }
+
+    /// La même, pour un nœud déjà en main : `moveTo(Node)` situe ses bornes hors du fil tout autant.
+    ///
+    /// **Aucun contrôle de visibilité ici, et c'est voulu** : `moveTo(Node)` n'en faisait pas non
+    /// plus, seule la forme par sélecteur passant par `pointOfVisibleNode`. En ajouter un
+    /// changerait le comportement des gestes qui tiennent un nœud, sous couvert de corriger un
+    /// défaut de fil.
+    private static Point2D pointSurLeFil(FxRobot robot, Node cible) {
+        return Attente.surLeFil(
+                () -> robot.point(cible).query(), "situer le nœud en main sur le fil JavaFX", SELECTION_MS);
+    }
+
+    /// Le nœud que `cible` désigne, **visible au sens de TestFX**, ou un refus qui le dit.
+    ///
+    /// Le prédicat est celui de TestFX, importé et non réécrit : une seconde façon de juger la
+    /// visibilité divergerait de celle sur laquelle [#amenerDansLeCadre] s'appuie pour savoir quand
+    /// défiler, et c'est ce refus-là - « returned n nodes, but no nodes were visible » - que le
+    /// geste doit continuer de rendre.
+    private static Node exigerVisible(FxRobot robot, String cible) {
+        return robot.lookup(cible)
+                .match(NodeQueryUtils.isVisible())
+                .tryQuery()
+                .orElseThrow(() -> new IllegalStateException("« " + cible + " » ne désigne aucun nœud"
+                        + " VISIBLE : soit il n'existe pas, soit il est sous un bord."));
     }
 }
