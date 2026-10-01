@@ -494,7 +494,7 @@ touche le code ou `scripts/plateforme-de-test/`.
 
 ### Ce qu'elle monte
 
-[`PlateformeDeTest`](../src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java)
+[`PlateformeDeTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java)
 monte une plateforme **par JVM**, au premier test qui la demande, dans cet ordre :
 
 1. Mongo, par le digest de `scripts/plateforme-de-test/epingles.properties` ;
@@ -514,11 +514,11 @@ fork, ce que garantit le profil, qui ne joue que ce tag.
 - Un test d'API : `PlateformeDeTest.acces()` rend l'URL de base, les jetons par clé d'utilisateur
   déclarée (`observatrice`, `validatrice`, `administratrice`) et les identifiants de l'état de départ
   (`participations:nuit-traitee`). Exemple :
-  [`DepotSurLaPlateformeDeTestTest`](../src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java).
+  [`DepotSurLaPlateformeDeTestTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java).
 - Un scénario d'écran : `BancDeRecette.surLaPlateformeDeTest("observatrice")`, exclusive des autres
   déclarations du banc. Le banc vise la plateforme et dépose le jeton sans profil ; la modale le
   revérifie seule. Exemple :
-  [`ScenarioPlateformeDeTestConnexionTest`](../src/test/java/fr/univ_amu/iut/connexion/view/ScenarioPlateformeDeTestConnexionTest.java).
+  [`ScenarioPlateformeDeTestConnexionTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/connexion/view/ScenarioPlateformeDeTestConnexionTest.java).
 
 Dans les deux cas la classe porte `@Tag("plateforme-de-test")`, et `DeclarationDeLaPlateformeTest`
 le refuse sinon pour un scénario.
