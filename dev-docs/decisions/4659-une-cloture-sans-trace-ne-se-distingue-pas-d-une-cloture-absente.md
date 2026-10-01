@@ -9,6 +9,8 @@ verification: probable
 ratchet: 65
 enforced_by:
   - ".github/scripts/verifie_cloture_consignee.py"
+relations:
+  completee_par: ["5335-la-profondeur-d-une-passe-ne-se-mecanise-pas"]
 verified:
   - by: machine:ci
     at: 2026-08-28
@@ -18,6 +20,9 @@ generated:
 ---
 
 # Une clôture sans trace ne se distingue pas d'une clôture absente
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Complétée le 2026-10-01** par [ADR 5335](5335-la-profondeur-d-une-passe-ne-se-mecanise-pas.md) : cette ADR tient la FORME d'une clôture, et un garde la compte. La 5335 dit que sa PROFONDEUR ne se mécanise pas, parce qu'une trace est un auto-rapport dont un dispositif ne peut exiger que la forme. Trois candidats y ont été joués contre les deux traces de #5277, et aucun ne les sépare.
 
 ## Contexte
 

@@ -347,6 +347,7 @@ nav:
     - 5307 · Le dispositif de désignation se choisit en un endroit: decisions/5307-le-dispositif-de-designation-se-choisit-en-un-endroit.md
     - 5329 · Une suite répartie éprouve l'ordre par quarts: decisions/5329-une-suite-repartie-eprouve-l-ordre-par-quarts.md
     - 5310 · La fabrique est injectable, la fenêtre reste un argument: decisions/5310-la-fabrique-est-injectable-la-fenetre-reste-un-argument.md
+    - 5335 · La profondeur d'une passe de clôture ne se mécanise pas: decisions/5335-la-profondeur-d-une-passe-ne-se-mecanise-pas.md
     - 5340 · Un garde qui ne déclare pas ses chemins est lancé: decisions/5340-un-garde-qui-ne-declare-pas-ses-chemins-est-lance.md
     - 5282 · Les huit parcours filmés passent au banc Java: decisions/5282-les-huit-parcours-filmes-passent-au-banc-java.md
     - 5334 · Un motif statique ne distingue pas une assertion pressée: decisions/5334-un-motif-statique-ne-distingue-pas-une-assertion-pressee.md
