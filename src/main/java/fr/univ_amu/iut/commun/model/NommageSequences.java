@@ -65,8 +65,8 @@ public final class NommageSequences {
     /// tranches **dans l'ordre des index**.
     ///
     /// Règle (inchangée, validée sur les données réelles Car640380) : le **plus ancien enregistrement
-    /// l'emporte** et garde son `_000` - c'est ce que porte l'`observations.csv`, donc la jointure
-    /// observation ↔ audio reste correcte. Le perdant n'est pas perdu : il passe en `_001`, `_002`…
+    /// l'emporte** et garde son `_000`, comme chez Kaleidoscope, donc la jointure observation ↔ audio reste
+    /// correcte. Le perdant passe en `_001`, `_002`…, et n'a d'observations que si notre application dépose.
     ///
     /// L'ordre chronologique se lit dans les **noms horodatés** des originaux. Trier sur le nom R6 ou sur
     /// le nom d'enregistreur donne le même ordre, le préfixe de session étant commun à tous.

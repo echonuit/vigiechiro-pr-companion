@@ -26,10 +26,10 @@ import java.util.Set;
 ///
 /// ## Règle (validée sur les données réelles Car640380)
 ///
-/// Le **plus ancien enregistrement l'emporte** : il garde le `_000` (c'est ce que porte l'`observations.csv`,
-/// donc la jointure observation ↔ audio reste correcte). Le perdant n'est **pas perdu** : il est renommé en
-/// `_001` (puis `_002`…), disponible à l'écoute mais sans observation associée. Le traitement dans l'ordre
-/// chronologique (noms de fichiers horodatés triés) rend l'attribution **déterministe** (R11).
+/// Le **plus ancien enregistrement l'emporte** : il garde le `_000`, comme chez Kaleidoscope. Le perdant n'est
+/// **pas perdu** : il passe en `_001` (puis `_002`…), et n'a d'observations que si notre application a déposé
+/// la nuit, Kaleidoscope ne produisant que des `_000` (#5717). Le traitement dans l'ordre chronologique (noms
+/// de fichiers horodatés triés) rend l'attribution **déterministe** (R11).
 ///
 /// La **règle** elle-même vit dans [NommageSequences] (`commun`), parce que la réactivation depuis les
 /// bruts doit la rejouer à l'identique et ne peut pas dépendre de cette feature. Ne subsiste ici que ce
