@@ -239,9 +239,11 @@ et `ServiceValidation` **relie une observation à sa séquence par ce nom** (san
 queue d'un long (ex. `…_225332` de 10 s → séquence `…_225342_000`) tombe sur l'heure de début d'un
 enregistrement plus récent (`…_225342`, dont la tête vise aussi `…_225342_000`).
 [`ReconciliationNoms`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/importation/model/ReconciliationNoms.java)
-tranche de façon **déterministe** : le **plus ancien enregistrement garde le `_000`** (c'est ce que
-référence l'`observations.csv`), le perdant passe en **`_001`** (disponible à l'écoute, sans
-observation associée : **aucune donnée perdue**). Comme le découpage est parallèle
+tranche de façon **déterministe** : le **plus ancien enregistrement garde le `_000`**, comme chez
+Kaleidoscope, et le perdant passe en **`_001`** : **aucune donnée perdue**. Ce que porte ce `_001`
+dépend de l'outil qui a déposé la nuit. Kaleidoscope ne produit que des `_000`, donc après un dépôt
+découpé par lui, le perdant n'a aucune observation. Notre application dépose **toutes** les séquences,
+`_001` compris : Tadarida les analyse, et leurs observations se rattachent par le nom comme les autres. Comme le découpage est parallèle
 ([`DecoupageParallele`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/importation/model/DecoupageParallele.java)),
 chaque original écrit d'abord dans un **dossier temporaire propre**, puis les noms définitifs sont
 attribués en une passe séquentielle qui déplace les fichiers vers `transformes/`.
