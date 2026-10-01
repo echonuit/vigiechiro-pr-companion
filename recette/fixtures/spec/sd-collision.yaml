@@ -1,0 +1,33 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-collision
+but: "Deux enregistrements qui se chevauchent sur la grille de 5 s : l'import écrit une tranche en _001 (#5720)."
+
+# Deux WAV de 6 s, à 5 s d'écart. La seconde tranche du premier porte l'heure 21:30:05, celle où le
+# second commence : l'import garde « _000 » pour le plus ancien et écrit l'autre en « _001 ». Un
+# dossier découpé par Kaleidoscope, qui ne produit que des « _000 », ne contiendrait pas cette tranche.
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-08-24"
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 6
+
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260824_213000"
+      - "20260824_213005"
+
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 1

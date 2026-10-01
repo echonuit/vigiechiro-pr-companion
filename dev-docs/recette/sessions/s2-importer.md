@@ -184,6 +184,11 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
 - **S2-83** · *geste: un-journal-etranger-a-la-carte* · `sd-journal-etranger-multi` : l'inspection montre le bandeau
   « incohérence », et son détail nomme les nuits que le journal raconte, « 19/08/2026, 22/08/2026 », face aux
   trois nuits de juillet de la carte (#5669).
+- **S2-84** · *geste: reactiver-sans-les-perdants-de-collision* · `sd-collision` : importer la nuit, copier les seuls
+  fichiers en « _000 » de son dossier `transformes/` dans un dossier à part, comme le ferait Kaleidoscope, effacer
+  ceux de `transformes/`, puis **Réactiver ce passage** depuis ce dossier. Le compte rendu montre un segment
+  « Perdants de collision » (1) distinct de « Manquantes », un motif qui nomme le fichier en « _001 », et la mention
+  qui conseille de réactiver depuis les enregistrements bruts (#5720).
 - **S2-50** · *geste: reimporter-une-nuit-deja-connue* · Rattachement au même point + année + n° : bandeau « n° déjà pris » avec « Utiliser ce n° » et
 
 **Bloc · Gestes de ligne (EPIC #1792)** : **automatisable**, contrairement à ce qui était écrit ici.

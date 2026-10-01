@@ -93,6 +93,17 @@ public final class NommageSequences {
         return Map.copyOf(parOriginal);
     }
 
+    /// Le nom est-il celui d'un **perdant de collision** (#5720) ? Sous le nommage horodaté, toute tranche
+    /// finit par `_000` : seul [#premierNomLibre] écrit `_001` ou au-delà. Sans horodatage, le nom retombe
+    /// sur le suffixe indexé de [Prefixe#nommerSequence(String, int)], où `_001` est une tranche ordinaire.
+    public static boolean perdantDeCollision(String nomFichier) {
+        if (nomFichier == null || Prefixe.horodatageDe(nomFichier).isEmpty()) {
+            return false;
+        }
+        Matcher marqueur = SUFFIXE_SEQUENCE.matcher(nomFichier);
+        return marqueur.find() && Integer.parseInt(marqueur.group(1)) > 0;
+    }
+
     /// Premier nom libre à partir de `nom` : `nom` s'il est disponible, sinon son suffixe `_000` incrémenté
     /// en `_001`, `_002`… jusqu'à un nom non pris. Le nom retenu est marqué pris.
     public static String premierNomLibre(String nom, Set<String> pris) {

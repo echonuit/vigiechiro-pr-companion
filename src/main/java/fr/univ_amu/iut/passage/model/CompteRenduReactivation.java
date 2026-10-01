@@ -42,11 +42,19 @@ public final class CompteRenduReactivation {
             constats.add(
                     Constat.de(rapport.dejaPresentes() + " séquence(s) étaient déjà sur le disque.", Severite.INFO));
         }
-        if (rapport.manquantes() > 0) {
+        if (rapport.introuvables() > 0) {
             constats.add(new Constat(
-                    rapport.manquantes() + " séquence(s) restent introuvables dans ce dossier.",
+                    rapport.introuvables() + " séquence(s) restent introuvables dans ce dossier.",
                     Severite.ERREUR,
                     detailsAbsences(rapport.absences())));
+        }
+        if (!rapport.perdants().isEmpty()) {
+            constats.add(new Constat(
+                    faitPerdants(rapport),
+                    Severite.AVERTISSEMENT,
+                    rapport.perdants().stream()
+                            .map(nom -> new Detail(nom, MOTIF_PERDANT))
+                            .toList()));
         }
         ajouterEcarts(constats, rapport.ecarts());
         ajouterIndiceAcoustique(constats, rapport.indiceAcoustique());
@@ -73,6 +81,21 @@ public final class CompteRenduReactivation {
         String preuve =
                 rapport.confianceMinimale() == null ? "" : " (identité vérifiée : " + libelleConfiance(rapport) + ")";
         return rapport.reactivees() + " séquence(s) réactivée(s)" + preuve + ".";
+    }
+
+    /// Ce que vaut un perdant de collision absent du dossier (#5720), pour le détail qui le nomme.
+    static final String MOTIF_PERDANT =
+            "perdant d'une collision de noms, renommé en « _001 » à l'import et absent des dossiers découpés"
+                    + " par un autre outil";
+
+    /// **Les perdants de collision**, en une phrase lue par les deux comptes rendus (#5720). Elle reste
+    /// conditionnelle sur Vigie-Chiro : le statut du passage ne dit pas quel outil a déposé la nuit.
+    static String faitPerdants(RapportReactivation rapport) {
+        return rapport.perdants().size() + " séquence(s) viennent d'enregistrements qui se chevauchent :"
+                + " renommées en « _001 » à l'import, elles manquent aux dossiers découpés par un autre outil,"
+                + " Kaleidoscope compris. Réactivez depuis les enregistrements bruts pour les réécouter. Si la"
+                + " nuit a été déposée avec Kaleidoscope, Vigie-Chiro ne les a jamais reçues : elles n'auront"
+                + " pas d'observations.";
     }
 
     static String conclusion(RapportReactivation rapport) {

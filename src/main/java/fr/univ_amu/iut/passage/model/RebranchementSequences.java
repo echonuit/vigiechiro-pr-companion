@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.passage.model;
 
+import fr.univ_amu.iut.commun.model.NommageSequences;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.Acceptee;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.Refusee;
@@ -110,7 +111,12 @@ final class RebranchementSequences {
             if (homonymes.isEmpty()) {
                 // Aucun fichier de ce nom parmi les candidats. Ce que cela signifie dépend d'où ils
                 // viennent : dossier de l'utilisateur, ou tranches que nous venons de régénérer (#1943).
-                bilan.absenter(sequence.nomFichier(), origine.motifAbsence(), 1);
+                // Un perdant de collision manque à tout dossier découpé par un autre outil (#5720).
+                if (origine == OrigineCandidats.DOSSIER && NommageSequences.perdantDeCollision(sequence.nomFichier())) {
+                    bilan.perdre(sequence.nomFichier());
+                } else {
+                    bilan.absenter(sequence.nomFichier(), origine.motifAbsence(), 1);
+                }
                 continue;
             }
             appliquer(bilan, sequence, homonymes, destination, poseur);

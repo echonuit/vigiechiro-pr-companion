@@ -425,7 +425,8 @@ public class ServiceReactivationPassage {
                 voie,
                 indiceAcoustique(bilan),
                 RapportAncrage.aucun(),
-                List.copyOf(bilan.absences));
+                List.copyOf(bilan.absences),
+                List.copyOf(bilan.perdants));
     }
 
     /// Indice acoustique **non bloquant** (#1682) du bilan, ou `null` s'il n'a rien mesuré (voies autres que
