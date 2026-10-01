@@ -169,6 +169,51 @@ jobs:
           echo "Fuseau du shell : $(date +%Z' (%z)')"
           ./mvnw -B test --file pom.xml
 
+  # Joue la plateforme de test (ADR 5641, chantier #5640) : l'API Vigie-Chiro a la revision epinglee,
+  # Mongo et le faux S3, montes par Testcontainers, puis Companion contre eux, SANS aucun jeton de
+  # la plateforme nationale. Les autres jobs compilent l'extension et ses tests, aucun ne demarre un
+  # conteneur : sans ce job, une regression de la plateforme ou de ce que Companion lui envoie passait
+  # au vert (#5666).
+  #
+  # Ubuntu seulement : Docker y est. Les runners Windows et macOS n'en ont pas d'utilisable, et le tag
+  # `plateforme-de-test` reste exclu de `./mvnw test`, qu'ils jouent.
+  plateforme-de-test:
+    name: plateforme-de-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # ⟨portee⟩ Voir le chantier #5294. La plateforme depend du code, de ce qui le construit, et des
+      # images que `scripts/plateforme-de-test/` decrit : une demande qui ne touche rien de cela rend
+      # le meme verdict que sur la base.
+      - name: "Ce diff peut-il changer la plateforme de test (#5666)"
+        id: portee
+        shell: bash
+        # ⟨butoir⟩ L'etape fait un `git fetch` reseau, et #4440 est l'histoire d'un fetch qui part
+        # en vrille jusqu'au butoir du JOB.
+        timeout-minutes: 3
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 .github/scripts/porte_du_job.py plateforme-de-test
+
+      - name: Set up JDK 25
+        if: steps.portee.outputs.concerne == 'oui'
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
+      - name: Monter la plateforme de test et y jouer Companion
+        if: steps.portee.outputs.concerne == 'oui'
+        # Le profil ne joue QUE le tag `plateforme-de-test`, dans des forks ou aucun autre test n'a
+        # construit de client HTTP : l'extension peut alors faire accepter le certificat du faux S3
+        # par `SSLContext.setDefault`. La premiere construction des deux images est comprise dans la
+        # duree de ce pas.
+        run: ./mvnw -B -Pplateforme-de-test test --file pom.xml
+
   # Rejoue TOUTE la suite dans UN SEUL fork, en ordre inverse (#1967). Ce n'est pas une redite du job
   # `build` : c'est le seul dispositif qui tienne la propriété « une classe de test rend le harnais
   # comme elle l'a trouvé ».

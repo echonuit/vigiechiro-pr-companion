@@ -179,6 +179,19 @@ mvnw
 .github/workflows/maven.yml
 """
     + MECANISME,
+    # `plateforme-de-test` (#5666) monte l API epinglee, Mongo et le faux S3, puis y joue Companion. Il
+    # depend du code et de ce qui le construit, comme `fuseau-alternatif`, et EN PLUS des images et de
+    # l etat de depart que decrit `scripts/plateforme-de-test/` : une epingle remontee change le
+    # verdict sans toucher une ligne de Java.
+    "plateforme-de-test": """
+src/**
+pom.xml
+mvnw
+.mvn/**
+scripts/plateforme-de-test/**
+.github/workflows/maven.yml
+"""
+    + MECANISME,
     # `second-compilateur` recompile les DEUX arbres avec ecj, sans jouer ni tests ni couverture. Il
     # depend donc de ce qui se compile, et de rien d autre. Il porte `name: analyser-ecj` : la cle
     # d une portee est celle du JOB, pas son libelle.
