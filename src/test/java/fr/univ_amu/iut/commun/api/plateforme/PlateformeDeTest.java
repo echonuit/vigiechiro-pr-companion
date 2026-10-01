@@ -235,7 +235,7 @@ public final class PlateformeDeTest implements BeforeAllCallback {
 
     /// `scripts/plateforme-de-test/`, cherché en remontant depuis le dossier de travail : surefire lance
     /// les tests à la racine du module, un IDE parfois ailleurs.
-    private static Path dossierDeLaPlateforme() {
+    static Path dossierDeLaPlateforme() {
         for (Path courant = Path.of("").toAbsolutePath(); courant != null; courant = courant.getParent()) {
             Path candidat = courant.resolve("scripts/plateforme-de-test");
             if (Files.isRegularFile(candidat.resolve("epingles.properties"))) {

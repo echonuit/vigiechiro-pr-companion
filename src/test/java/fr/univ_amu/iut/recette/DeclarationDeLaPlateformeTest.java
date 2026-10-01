@@ -77,31 +77,37 @@ class DeclarationDeLaPlateformeTest {
     /// fabriqué, ne monte rien, et `BancDeRecettePlateformeDeTestTest` l'emploie sans Docker.
     private static final String DECLARE_LA_PLATEFORME_DE_TEST = ".surLaPlateformeDeTest(\"";
 
+    /// L'autre manière de la monter, celle d'un test d'API (clôture de #5642, ADR 5663) : l'extension
+    /// elle-même. `DepotSurLaPlateformeDeTestTest` est écrit ainsi, et le relevé ne cherchait que la
+    /// déclaration du banc : un test d'API sans tag lui échappait.
+    private static final String MONTE_LA_PLATEFORME_DE_TEST = "@ExtendWith(PlateformeDeTest.class)";
+
     /// Ce qui sort une classe du build par défaut et la met dans le job `plateforme-de-test`.
     private static final String TAG_PLATEFORME_DE_TEST = "@Tag(\"plateforme-de-test\")";
 
     @Test
-    @DisplayName("#5665 : tout scénario qui déclare la plateforme de test porte le tag qui l'écarte du build")
-    void un_scenario_sur_la_plateforme_de_test_porte_son_tag() throws IOException {
-        List<Path> declarants;
-        try (Stream<Path> arbre = Files.walk(SOURCES)) {
-            declarants = arbre.filter(Files::isRegularFile)
-                    .filter(fichier -> fichier.toString().endsWith(".java"))
-                    .filter(fichier -> commenceUneLigne(fichier, DECLARE_LA_PLATEFORME_DE_TEST))
-                    .sorted()
-                    .toList();
-        } catch (UncheckedIOException parcoursInterrompu) {
-            throw parcoursInterrompu.getCause();
-        }
+    @DisplayName("#5665 : toute classe qui monte la plateforme de test porte le tag qui l'écarte du build")
+    void une_classe_qui_monte_la_plateforme_de_test_porte_son_tag() throws IOException {
+        List<Path> scenarios = classesOuUneLigneCommencePar(DECLARE_LA_PLATEFORME_DE_TEST);
+        List<Path> testsDApi = classesOuUneLigneCommencePar(MONTE_LA_PLATEFORME_DE_TEST);
 
-        // Le sens inverse du cas précédent, et le même piège : zéro déclarant voudrait dire que le
-        // motif ne correspond plus, pas que la propriété tient.
-        assertThat(declarants)
+        // Le sens inverse du cas précédent, et le même piège, une fois PAR MOTIF : un motif qui ne
+        // correspond plus serait masqué par l'autre si l'on ne comptait que leur union.
+        assertThat(scenarios)
                 .as(
                         "Aucun scénario ne déclare la plateforme de test : le relevé cherche `%s` en tête de"
                                 + " ligne sous `%s`.",
                         DECLARE_LA_PLATEFORME_DE_TEST, SOURCES)
                 .isNotEmpty();
+        assertThat(testsDApi)
+                .as(
+                        "Aucun test d'API ne monte la plateforme de test : le relevé cherche `%s` en tête de"
+                                + " ligne sous `%s`.",
+                        MONTE_LA_PLATEFORME_DE_TEST, SOURCES)
+                .isNotEmpty();
+
+        List<Path> declarants =
+                Stream.concat(scenarios.stream(), testsDApi.stream()).distinct().toList();
 
         List<Path> sansTag = declarants.stream()
                 .filter(fichier -> !commenceUneLigne(fichier, TAG_PLATEFORME_DE_TEST))
@@ -114,6 +120,39 @@ class DeclarationDeLaPlateformeTest {
                         par défaut y rougirait sur une cause étrangère au code.
 
                         Ajouter `@Tag("plateforme-de-test")` : la classe passe dans le job du même nom.""").isEmpty();
+    }
+
+    /// L'autre moitié du même contrat (#5642, passe 6 de sa clôture) : porter le tag ne sert que si le build
+    /// par défaut l'exclut. Retirer `plateforme-de-test` de `surefire.excludedGroups` ne faisait rougir
+    /// aucune demande, le job `plateforme-de-test` jouant ce tag de toute façon : seuls les runners Windows
+    /// et macOS de `suite-sous-windows-et-macos.yml`, le mardi, auraient cassé, faute de Docker.
+    ///
+    /// La propriété se lit à sa PREMIÈRE occurrence, qui est la valeur par défaut : les profils, plus bas,
+    /// la redéfinissent pour leur seul usage.
+    @Test
+    @DisplayName("#5642 : le build par défaut exclut le tag plateforme-de-test")
+    void le_build_par_defaut_exclut_la_plateforme_de_test() {
+        String defaut = lignes(Path.of("pom.xml"))
+                .map(String::strip)
+                .filter(ligne -> ligne.startsWith("<surefire.excludedGroups>"))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("`pom.xml` ne déclare plus `surefire.excludedGroups`"));
+
+        assertThat(defaut).as("""
+                        `./mvnw test` doit exclure `plateforme-de-test` : ce tag monte Docker, que les runners
+                        Windows et macOS n'ont pas. Valeur lue : %s""", defaut).contains("plateforme-de-test");
+    }
+
+    private static List<Path> classesOuUneLigneCommencePar(String motif) throws IOException {
+        try (Stream<Path> arbre = Files.walk(SOURCES)) {
+            return arbre.filter(Files::isRegularFile)
+                    .filter(fichier -> fichier.toString().endsWith(".java"))
+                    .filter(fichier -> commenceUneLigne(fichier, motif))
+                    .sorted()
+                    .toList();
+        } catch (UncheckedIOException parcoursInterrompu) {
+            throw parcoursInterrompu.getCause();
+        }
     }
 
     /// La ligne dépouillée COMMENCE par le motif : un appel ou une annotation, jamais une mention en
