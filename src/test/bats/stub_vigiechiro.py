@@ -89,6 +89,48 @@ def page_de_sites(requete):
 # 403 : droits refuses, reparable par une reconnexion. 422 : contenu refuse, que rien ne repare.
 REFUS_DEPOT = int(os.environ.get("VIGIECHIRO_STUB_REFUS", "0"))
 
+# #4867 : le DETAIL d une participation, servi seulement quand on le demande. Sans ces variables, le
+# bouchon rend la collection vide comme avant, et les six cas d origine ne bougent pas d un pouce.
+#
+# Pourquoi un detail et non un refus HTTP : la garde de concurrence de `metadonnees-passage` est COTE
+# CLIENT. Elle relit la participation juste avant d ecrire et renonce si la configuration a bouge
+# depuis sa reference (#4552, deplacee par #4707). Il n y a donc aucun 412 a servir, et il ne FAUDRAIT
+# pas : #4523 a mesure que `PATCH /participations/{id}` rend 200 avec ou sans `If-Match`, meme faux.
+# Enseigner ici une garde que la plateforme n a pas rendrait ce bouchon menteur.
+PARTICIPATION = os.environ.get("VIGIECHIRO_STUB_PARTICIPATION", "")
+
+# La configuration servie, et celle servie a partir du SECOND appel. Deux valeurs differentes font
+# renoncer le client ; une seule le laisse ecrire. C est la succession qui porte le cas, pas un statut.
+CONFIG = os.environ.get("VIGIECHIRO_STUB_CONFIG", "{}")
+CONFIG_RELECTURE = os.environ.get("VIGIECHIRO_STUB_CONFIG_RELECTURE", "")
+
+# Le statut a servir sur un PATCH de participation, pour eprouver le refus d ECRITURE. Distinct de
+# `VIGIECHIRO_STUB_REFUS`, qui ne vise que les routes de depot d archive : les melanger ferait refuser
+# un depot quand on voulait refuser une metadonnee.
+REFUS_PATCH = int(os.environ.get("VIGIECHIRO_STUB_REFUS_PATCH", "0"))
+
+# Combien de fois la participation a deja ete lue. Le client lit DEUX fois par envoi, et c est cette
+# seconde lecture que la garde compare : la relecture est le coeur du mecanisme.
+lectures = [0]
+
+
+def detail_de_participation():
+    """Le corps d une participation lisible, dont la configuration change a la relecture.
+
+    `_id` est ce que `ParticipationsVigieChiro.detail` exige pour ne pas rendre un optionnel vide.
+    `_etag` est servi parce que le client le renvoie dans son PATCH, non parce qu il le compare.
+    """
+    lectures[0] += 1
+    brute = CONFIG_RELECTURE if (lectures[0] > 1 and CONFIG_RELECTURE) else CONFIG
+    return json.dumps({
+        "_id": PARTICIPATION,
+        "_etag": "etag-de-test",
+        "point": "A1",
+        "date_debut": "2026-04-22T20:25:00Z",
+        "date_fin": "2026-04-23T07:47:00Z",
+        "configuration": json.loads(brute),
+    }).encode()
+
 # Les routes par lesquelles une archive part. Refuser ailleurs empecherait d ARRIVER au depot.
 ROUTES_DE_DEPOT = ("/fichiers", "/multipart")
 
@@ -113,7 +155,21 @@ class Stub(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(corps)
             return
-        corps = page_de_sites(self.path) if urlparse(self.path).path.endswith("/sites") else VIDE
+        chemin = urlparse(self.path).path
+        if REFUS_PATCH and self.command == "PATCH" and "/participations/" in chemin:
+            corps = json.dumps({"_status": "ERR", "_error": {"code": REFUS_PATCH}}).encode()
+            self.send_response(REFUS_PATCH)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(corps)))
+            self.end_headers()
+            self.wfile.write(corps)
+            return
+        if PARTICIPATION and self.command == "GET" and chemin.endswith(PARTICIPATION):
+            corps = detail_de_participation()
+        elif chemin.endswith("/sites"):
+            corps = page_de_sites(self.path)
+        else:
+            corps = VIDE
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(corps)))

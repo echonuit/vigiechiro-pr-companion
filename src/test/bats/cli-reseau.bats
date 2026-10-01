@@ -143,3 +143,80 @@ demarrer_stub() {
   [[ "${output}" == *"Recherche du carré 999999"* ]]
   [[ "${output}" == *"0 site(s) trouvé(s)"* ]]
 }
+
+# #4867 : une nuit LIEE a une participation, l etat qu aucune commande ne sait poser.
+#
+# Le lien nait du depot sur le serveur, et aucune commande ne le cree : `lien-participation` l AFFICHE.
+# Un banc le pose donc en base, par le MODULE `sqlite3` de Python, comme `cli.bats` le fait deja pour le
+# lien de participation. Aucune exigence nouvelle sur le runner : pas de binaire `sqlite3`.
+#
+# Rend l identifiant du passage sur la sortie standard.
+monter_une_nuit_liee() {
+  local objectid="$1"
+  local sd="${BATS_TEST_TMPDIR}/sd"
+  fabriquer_carte_sd "${sd}"
+  local site point
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  point=$(cli ajouter-point --site "${site}" --code A1 2>/dev/null)
+  cli importer --point "${point}" --source "${sd}" >/dev/null 2>&1
+  python3 - "${BATS_TEST_TMPDIR}/vigiechiro.db" "${objectid}" <<'FIN'
+import sqlite3
+import sys
+
+with sqlite3.connect(sys.argv[1]) as connexion:
+    connexion.execute(
+        "INSERT INTO vigiechiro_link(entite, ref_locale, objectid) VALUES (?, ?, ?)",
+        ("passage", "1", sys.argv[2]))
+FIN
+  echo 1
+}
+
+@test "metadonnees-passage : un envoi refusé par la plateforme sort en 1 et le dit (#4867)" {
+  local objectid="6a4961f587bc8dba39481180"
+  local passage
+  passage=$(monter_une_nuit_liee "${objectid}")
+
+  # Le detail est lisible et ne BOUGE pas entre les deux lectures : la garde de concurrence laisse
+  # donc passer, et c est le PATCH qui refuse. Sans cela on mesurerait l autre motif.
+  export VIGIECHIRO_STUB_PARTICIPATION="${objectid}"
+  export VIGIECHIRO_STUB_CONFIG='{"detecteur": "PR1925492"}'
+  export VIGIECHIRO_STUB_REFUS_PATCH=422
+  demarrer_stub
+  export VIGIECHIRO_URL="http://127.0.0.1:${STUB_PORT}/api/v1"
+  export VIGIECHIRO_TOKEN="jeton-de-test"
+  run cli metadonnees-passage --passage "${passage}" --envoyer
+  unset VIGIECHIRO_URL VIGIECHIRO_TOKEN VIGIECHIRO_STUB_PARTICIPATION \
+    VIGIECHIRO_STUB_CONFIG VIGIECHIRO_STUB_REFUS_PATCH
+
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"Envoi refusé"* ]]
+  # Le PATCH est bien parti : sans cette ligne, un refus survenu AVANT l ecriture passerait pour un
+  # refus de la plateforme.
+  grep -q "^PATCH /api/v1/participations/${objectid}" "${STUB_JOURNAL}"
+}
+
+@test "metadonnees-passage : une nuit modifiée entre-temps fait renoncer, sortie 1, rien n'est parti (#4867)" {
+  local objectid="6a4961f587bc8dba39481181"
+  local passage
+  passage=$(monter_une_nuit_liee "${objectid}")
+
+  # La garde est COTE CLIENT : elle relit avant d ecrire et renonce si la configuration a bouge depuis
+  # sa reference (#4552, deplacee par #4707). Faute de base enregistree, la premiere lecture en tient
+  # lieu, donc DEUX configurations differentes suffisent. Aucun 412 : #4523 a mesure que la plateforme
+  # rend 200 avec ou sans `If-Match`, et le bouchon n a pas a lui inventer une garde.
+  export VIGIECHIRO_STUB_PARTICIPATION="${objectid}"
+  export VIGIECHIRO_STUB_CONFIG='{"detecteur": "PR1925492"}'
+  export VIGIECHIRO_STUB_CONFIG_RELECTURE='{"detecteur": "PR1925492", "ajoute-par-un-autre-poste": "oui"}'
+  demarrer_stub
+  export VIGIECHIRO_URL="http://127.0.0.1:${STUB_PORT}/api/v1"
+  export VIGIECHIRO_TOKEN="jeton-de-test"
+  run cli metadonnees-passage --passage "${passage}" --envoyer
+  unset VIGIECHIRO_URL VIGIECHIRO_TOKEN VIGIECHIRO_STUB_PARTICIPATION \
+    VIGIECHIRO_STUB_CONFIG VIGIECHIRO_STUB_CONFIG_RELECTURE
+
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"modifiee-entre-temps"* || "${output}" == *"Rien n'a été envoyé"* ]]
+  # Le contraste qui porte le cas : AUCUN PATCH n est parti. C est ce que « rien n a ete envoye »
+  # promet, et c est la seule facon de le distinguer du motif voisin.
+  ! grep -q "^PATCH /api/v1/participations/" "${STUB_JOURNAL}"
+}
