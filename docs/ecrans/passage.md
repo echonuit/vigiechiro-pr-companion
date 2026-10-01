@@ -315,6 +315,18 @@ qu'elles n'appellent pas la même suite :
 - un **enregistrement absent du dossier** : vous pouvez le retrouver et relancer ;
 - une **tranche non régénérée** : le brut était là, la tranche n'a pas pu en sortir.
 
+Une troisième situation a son propre segment dans la barre, et rien n'est à chercher : les
+**perdants de collision**. Quand deux enregistrements se chevauchent, leurs tranches de 5 secondes
+peuvent vouloir le même nom ; l'import garde « _000 » pour la plus ancienne et nomme l'autre « _001 ».
+Kaleidoscope, lui, ne produit que des « _000 » : un dossier qu'il a découpé ne contient donc jamais ces
+séquences.
+
+![Réactivation depuis un dossier Kaleidoscope : trois perdants de collision dans leur segment, à côté d'une séquence introuvable.](../assets/captures/apercu-passage-reactivation-collisions.png)
+
+Pour les réécouter, relancez la réactivation en désignant vos **enregistrements bruts** : seuls les
+enregistrements concernés sont redécoupés. Si la nuit avait été déposée avec Kaleidoscope, Vigie-Chiro
+n'a jamais reçu ces séquences : elles n'auront pas d'observations.
+
 Un fichier qui portait le **bon nom sans être le bon audio** forme son propre motif. Il n'est **jamais**
 rebranché en silence : vos observations pointeraient alors sur un autre son que celui qu'elles décrivent.
 

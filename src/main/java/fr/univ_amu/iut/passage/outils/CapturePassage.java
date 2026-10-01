@@ -212,8 +212,12 @@ public final class CapturePassage {
         // mock. Aucun aperçu ne montrait de bandeau avant cette passe.
         rendrePivot(injecteur, PASSAGE_INEXISTANT, sortie.resolve("apercu-passage-retour.png"));
         rendreRattachementRetour(injecteur, idVerifie, sortie.resolve("apercu-passage-rattachement-retour.png"));
-        rendreCompteRenduReactivation(injecteur, sortie.resolve("apercu-passage-reactivation-compte-rendu.png"), true);
-        rendreCompteRenduReactivation(injecteur, sortie.resolve("apercu-passage-reactivation-lacunes.png"), false);
+        rendreCompteRenduReactivation(
+                injecteur, sortie.resolve("apercu-passage-reactivation-compte-rendu.png"), rapportComplet());
+        rendreCompteRenduReactivation(
+                injecteur, sortie.resolve("apercu-passage-reactivation-lacunes.png"), rapportAvecLacunes());
+        rendreCompteRenduReactivation(
+                injecteur, sortie.resolve("apercu-passage-reactivation-collisions.png"), rapportAvecPerdants());
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
@@ -444,13 +448,13 @@ public final class CapturePassage {
     /// L'état vient d'un vrai [RapportReactivation] passé au ViewModel : la mise en forme est celle de la
     /// production, pas une reconstitution (ADR 0025). C'est ce qui rend la capture capable de mentir moins
     /// que le texte qu'on aurait recopié - et de dériver visiblement le jour où le compte rendu changera.
-    private static void rendreCompteRenduReactivation(Injector injecteur, Path fichier, boolean complet)
+    private static void rendreCompteRenduReactivation(Injector injecteur, Path fichier, RapportReactivation rapport)
             throws IOException {
         FXMLLoader loader = new FXMLLoader(ReactivationModaleController.class.getResource("ReactivationModale.fxml"));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         ReactivationModaleController controleur = loader.getController();
-        controleur.apercuCompteRendu(complet ? rapportComplet() : rapportAvecLacunes());
+        controleur.apercuCompteRendu(rapport);
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
@@ -496,6 +500,31 @@ public final class CapturePassage {
                                 "Car130711-2026-Pass2-Z41-PaRecPR1997632_20260705_012327_001.wav",
                                 "tranche non régénérée depuis son enregistrement",
                                 1)));
+    }
+
+    /// Une nuit réactivée depuis un dossier découpé par Kaleidoscope (#5720) : trois perdants de collision
+    /// y manquent, sans que l'utilisateur ait rien à chercher, à côté d'une séquence vraiment introuvable.
+    /// La capture doit montrer les deux segments côte à côte, et la phrase qui conseille les bruts.
+    private static RapportReactivation rapportAvecPerdants() {
+        return new RapportReactivation(
+                4232,
+                0,
+                4,
+                0,
+                NiveauConfiance.CERTITUDE,
+                List.of(),
+                new DecompteAudio(4232, 4236),
+                VoieReactivation.TRANSFORMES,
+                null,
+                RapportAncrage.aucun(),
+                List.of(new AbsenceReactivation(
+                        "Car130711-2026-Pass2-Z41-PaRecPR1997632_20260704_223507_000.wav",
+                        "aucun fichier de ce nom dans le dossier",
+                        1)),
+                List.of(
+                        "Car130711-2026-Pass2-Z41-PaRecPR1997632_20260704_224112_001.wav",
+                        "Car130711-2026-Pass2-Z41-PaRecPR1997632_20260705_001835_001.wav",
+                        "Car130711-2026-Pass2-Z41-PaRecPR1997632_20260705_030250_001.wav"));
     }
 
     private static void rendreModaleReactivation(Injector injecteur, Path fichier) throws IOException {

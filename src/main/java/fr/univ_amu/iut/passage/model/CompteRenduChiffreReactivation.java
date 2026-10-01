@@ -80,7 +80,10 @@ public final class CompteRenduChiffreReactivation {
         List<Segment> segments = new ArrayList<>();
         ajouterSiPresent(segments, "Réactivées", rapport.reactivees(), Teinte.RETENU);
         ajouterSiPresent(segments, "Déjà présentes", rapport.dejaPresentes(), Teinte.REFERENCE);
-        ajouterSiPresent(segments, "Manquantes", rapport.manquantes(), Teinte.ECARTE);
+        ajouterSiPresent(segments, "Manquantes", rapport.introuvables(), Teinte.ECARTE);
+        // Les perdants de collision ne sont pas à chercher (#5720) : les compter « Manquantes » rendrait
+        // fausse la part de ce qui reste à retrouver.
+        ajouterSiPresent(segments, "Perdants de collision", rapport.perdants().size(), Teinte.EXPLIQUE);
         // Le reliquat porte un nom plutôt que de faire échouer la construction : un décompte qui ne
         // retombe pas juste est un fait à montrer, pas une raison de taire tout le compte rendu.
         long nommees = segments.stream().mapToLong(Segment::quantite).sum();
@@ -101,6 +104,11 @@ public final class CompteRenduChiffreReactivation {
     /// absent emporte plusieurs séquences là où une tranche non régénérée n'en emporte qu'une.
     private static List<Motif> motifs(RapportReactivation rapport) {
         List<Motif> motifs = new ArrayList<>(motifsDesAbsences(rapport.absences()));
+        if (!rapport.perdants().isEmpty()) {
+            // Court, parce que la ligne repliée des motifs les met bout à bout : la phrase entière est dans
+            // les mentions.
+            motifs.add(new Motif("fichier(s) : perdants de collision", rapport.perdants()));
+        }
         if (!rapport.ecarts().isEmpty()) {
             motifs.add(new Motif(
                     "fichier(s) au bon nom mais au mauvais audio, non rebranchés",
@@ -151,6 +159,9 @@ public final class CompteRenduChiffreReactivation {
                 rapport.complete()
                         ? Avertissement.succes(CompteRenduReactivation.conclusion(rapport))
                         : Avertissement.de(CompteRenduReactivation.conclusion(rapport)));
+        if (!rapport.perdants().isEmpty()) {
+            avertissements.add(Avertissement.de(CompteRenduReactivation.faitPerdants(rapport)));
+        }
         IndiceAcoustique indice = rapport.indiceAcoustique();
         if (indice != null && indice.estRenseigne()) {
             avertissements.add(Avertissement.info("Concordance acoustique (indice, non bloquant) : "

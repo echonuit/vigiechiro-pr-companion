@@ -187,6 +187,10 @@ public record CompteRenduChiffre(
         ECARTE,
         /// Ce qui a été refusé ou a échoué.
         REFUSE,
+        /// Ce qui manque pour une cause connue, sans que l'utilisateur ait rien à chercher (#5720) : les
+        /// perdants de collision qu'un dossier découpé par un autre outil ne contient pas. Distincte de
+        /// [#ECARTE], dont elle est souvent la voisine dans la même barre.
+        EXPLIQUE,
         /// Une quantité de référence, sans jugement (ce qui a été lu).
         REFERENCE,
         /// La part principale d'un volume écrit (les bruts conservés).

@@ -564,7 +564,7 @@ L'écran qui porte l'état d'avancement d'une nuit.
 
 ## Modale de réactivation
 
-<sub>`passage/view/ReactivationModale.fxml` &middot; 3 capture(s)</sub>
+<sub>`passage/view/ReactivationModale.fxml` &middot; 4 capture(s)</sub>
 
 <table>
 <tr>
@@ -580,9 +580,11 @@ L'écran qui porte l'état d'avancement d'une nuit.
 <table>
 <tr>
 <th width="50%">Réactivation lacunes</th>
+<th width="50%">Réactivation collisions</th>
 </tr>
 <tr>
 <td><a href="apercu-passage-reactivation-lacunes.png"><img src="apercu-passage-reactivation-lacunes.png" width="430" alt="Réactivation lacunes"></a></td>
+<td><a href="apercu-passage-reactivation-collisions.png"><img src="apercu-passage-reactivation-collisions.png" width="430" alt="Réactivation collisions"></a></td>
 </tr>
 </table>
 

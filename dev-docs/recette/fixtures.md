@@ -130,6 +130,7 @@ Chaque carte exerce **une** pathologie de l'assistant d'import (voir l'étape 5 
 | `sd-hors-fenetre` | aucun des deux bords : l'enregistrement commence trop tard **et** s'arrête trop tôt -> au diagnostic, l'alerte nomme les deux (#5200) | 6 |
 | `sd-carte-reutilisee` | une nuit de wav, un journal qui commence cinq nuits plus tôt et raconte aussi la leur -> **aucune** incohérence (#5631) | 2 |
 | `sd-journal-etranger-multi` | trois nuits de juillet sous un journal qui ne raconte que deux nuits d'août -> incohérence de date, que l'exemption multi-nuits taisait (#5669) | 6 |
+| `sd-collision` | deux enregistrements de 6 s à 5 s d'écart -> l'import écrit une tranche en `_001`, qu'un dossier découpé par Kaleidoscope ne contiendrait pas (#5720) | 2 |
 
 ## Régénérer les cartes
 

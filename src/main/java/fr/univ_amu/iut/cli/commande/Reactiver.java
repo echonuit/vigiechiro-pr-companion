@@ -117,6 +117,8 @@ public final class Reactiver implements Callable<Integer> {
         objet.put("reactivees", rapport.reactivees());
         objet.put("divergentes", rapport.divergentes());
         objet.put("manquantes", rapport.manquantes());
+        // Sous-ensemble de `manquantes` (#5720), qui garde son sens pour les scripts qui la lisent.
+        objet.put("perdantsDeCollision", rapport.perdants().size());
         objet.put("dejaPresentes", rapport.dejaPresentes());
         objet.put(
                 "confianceMinimale",

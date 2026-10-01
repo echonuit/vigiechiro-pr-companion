@@ -29,6 +29,8 @@ import java.util.List;
 /// @param rapatriement compte rendu, **prêt à afficher**, de la phase d'ancrage qui a suivi la
 ///     réactivation (#1571) : elle ramène aussi les **échanges avec le validateur** (#1867). Chaîne
 ///     **vide** quand aucun ancrage n'était à acquérir, ce qui est le cas d'une réactivation ordinaire
+/// @param perdants les perdants de collision restés absents (#5720), comptés dans `manquantes` mais
+///     pas dans `absences`
 public record RapportReactivation(
         int reactivees,
         int divergentes,
@@ -40,11 +42,46 @@ public record RapportReactivation(
         VoieReactivation voie,
         IndiceAcoustique indiceAcoustique,
         RapportAncrage rapatriement,
-        List<AbsenceReactivation> absences) {
+        List<AbsenceReactivation> absences,
+        List<String> perdants) {
 
     public RapportReactivation {
         ecarts = List.copyOf(ecarts);
         absences = List.copyOf(absences);
+        perdants = List.copyOf(perdants);
+    }
+
+    /// Constructeur de **commodité** sans perdant de collision : les rapports antérieurs à #5720.
+    public RapportReactivation(
+            int reactivees,
+            int divergentes,
+            int manquantes,
+            int dejaPresentes,
+            NiveauConfiance confianceMinimale,
+            List<EcartReactivation> ecarts,
+            DecompteAudio decompte,
+            VoieReactivation voie,
+            IndiceAcoustique indiceAcoustique,
+            RapportAncrage rapatriement,
+            List<AbsenceReactivation> absences) {
+        this(
+                reactivees,
+                divergentes,
+                manquantes,
+                dejaPresentes,
+                confianceMinimale,
+                ecarts,
+                decompte,
+                voie,
+                indiceAcoustique,
+                rapatriement,
+                absences,
+                List.of());
+    }
+
+    /// Les séquences restées absentes **hors** perdants de collision : celles qu'on peut chercher.
+    public int introuvables() {
+        return manquantes - perdants.size();
     }
 
     /// Constructeur de **commodité** sans compte rendu de rapatriement : les voies qui n'acquièrent aucun
@@ -86,7 +123,8 @@ public record RapportReactivation(
                 voie,
                 indiceAcoustique,
                 rapatriement,
-                absences);
+                absences,
+                perdants);
     }
 
     /// Constructeur de **commodité** sans indice acoustique (`null`) : préserve les appels des voies qui ne

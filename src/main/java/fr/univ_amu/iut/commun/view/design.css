@@ -1328,11 +1328,14 @@
     -fx-background-radius: 2;
 }
 
-/* Les six roles de teinte. Les trois premiers qualifient un DEVENIR (severite pertinente), les trois
+/* Les sept roles de teinte. Les quatre premiers qualifient un DEVENIR (severite pertinente), les trois
    suivants un VOLUME, ou aucune severite n a de sens : des bruts conserves ne sont ni bons ni mauvais. */
 .cr-seg-retenu { -fx-background-color: -couleur-succes; }
 .cr-seg-ecarte { -fx-background-color: -couleur-avertissement; }
 .cr-seg-refuse { -fx-background-color: -couleur-danger; }
+/* Ambre bruni (#5720) : distinct de l ambre de .cr-seg-ecarte, son voisin dans la barre d une
+   reactivation, et a 6,1:1 sur le fond. */
+.cr-seg-explique { -fx-background-color: #6f6046; }
 /* Gris-bleu de reference, comme les autres gris de cadre du fichier : aucun jeton de palette ne porte
    un neutre de remplissage. */
 .cr-seg-reference { -fx-background-color: #9fb2c9; }

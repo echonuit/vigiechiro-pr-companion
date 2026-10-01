@@ -382,7 +382,7 @@ d8cbc436204a  src/main/java/fr/univ_amu/iut/commun/model/LieuQualifie.java
 856f346cd153  src/main/java/fr/univ_amu/iut/commun/model/MethodeSelection.java
 af8d8b83ba0c  src/main/java/fr/univ_amu/iut/commun/model/ModeValidation.java
 790cb390fc04  src/main/java/fr/univ_amu/iut/commun/model/MoteurTraitementGroupe.java
-a5256e7a906f  src/main/java/fr/univ_amu/iut/commun/model/NommageSequences.java
+194454c0d22e  src/main/java/fr/univ_amu/iut/commun/model/NommageSequences.java
 ba1fe389b24f  src/main/java/fr/univ_amu/iut/commun/model/NormalisationTexte.java
 191741a0ca59  src/main/java/fr/univ_amu/iut/commun/model/Nuit.java
 f6fb90622ad9  src/main/java/fr/univ_amu/iut/commun/model/NumeroDeCarre.java
@@ -668,7 +668,7 @@ cdb1209cb534  src/main/java/fr/univ_amu/iut/commun/view/carte/PointGeo.java
 3dcdaec2a896  src/main/java/fr/univ_amu/iut/commun/viewmodel/AccueilViewModel.java
 f152ea1edf44  src/main/java/fr/univ_amu/iut/commun/viewmodel/ClasseBadge.java
 a5983fb3006f  src/main/java/fr/univ_amu/iut/commun/viewmodel/CompteRendu.java
-c55dac1ff8e1  src/main/java/fr/univ_amu/iut/commun/viewmodel/CompteRenduChiffre.java
+a8110967e13c  src/main/java/fr/univ_amu/iut/commun/viewmodel/CompteRenduChiffre.java
 205f1da6fbf1  src/main/java/fr/univ_amu/iut/commun/viewmodel/CompteRenduEcran.java
 fefc133b779a  src/main/java/fr/univ_amu/iut/commun/viewmodel/ContextePassage.java
 09d45065864b  src/main/java/fr/univ_amu/iut/commun/viewmodel/ContexteSite.java
@@ -945,14 +945,14 @@ c1e5fa209e4c  src/main/java/fr/univ_amu/iut/passage/di/ReconstructionModule.java
 2a1f9ff6bea5  src/main/java/fr/univ_amu/iut/passage/model/AppuisReactivation.java
 35abf992f60e  src/main/java/fr/univ_amu/iut/passage/model/BackfillEmpreintes.java
 9455547a7583  src/main/java/fr/univ_amu/iut/passage/model/BackfillHorodatageCapture.java
-c01d265857d3  src/main/java/fr/univ_amu/iut/passage/model/BilanReactivation.java
+1f2081f605c0  src/main/java/fr/univ_amu/iut/passage/model/BilanReactivation.java
 ab8f98d51add  src/main/java/fr/univ_amu/iut/passage/model/BrutInventorie.java
 b29f2f2ac0ad  src/main/java/fr/univ_amu/iut/passage/model/BrutRebranche.java
 c4b5536040e5  src/main/java/fr/univ_amu/iut/passage/model/Campagne.java
 4859953b129e  src/main/java/fr/univ_amu/iut/passage/model/CandidatsReactivation.java
 c3bb0a70d076  src/main/java/fr/univ_amu/iut/passage/model/ChoixRebranchement.java
 343ee6c4f22c  src/main/java/fr/univ_amu/iut/passage/model/CompteRenduChiffreReactivation.java
-3c6051a3033c  src/main/java/fr/univ_amu/iut/passage/model/CompteRenduReactivation.java
+38240a727bbd  src/main/java/fr/univ_amu/iut/passage/model/CompteRenduReactivation.java
 c307350ce434  src/main/java/fr/univ_amu/iut/passage/model/ConseilSiteNonRattache.java
 07873904e9df  src/main/java/fr/univ_amu/iut/passage/model/CorrespondanceParticipation.java
 5af874a13b89  src/main/java/fr/univ_amu/iut/passage/model/CouvertureNuageuse.java
@@ -1002,7 +1002,7 @@ acee2b6ce71f  src/main/java/fr/univ_amu/iut/passage/model/PlanDePaquet.java
 cdca476d018e  src/main/java/fr/univ_amu/iut/passage/model/ProgressionTelechargement.java
 5bd15a02f5f2  src/main/java/fr/univ_amu/iut/passage/model/PropositionCampagne.java
 9f560aae3423  src/main/java/fr/univ_amu/iut/passage/model/PropositionsEnregistreur.java
-c1e9e61ee624  src/main/java/fr/univ_amu/iut/passage/model/RapportReactivation.java
+3624205d7c72  src/main/java/fr/univ_amu/iut/passage/model/RapportReactivation.java
 59076822ac02  src/main/java/fr/univ_amu/iut/passage/model/RapportReconstruction.java
 308d037d33d2  src/main/java/fr/univ_amu/iut/passage/model/RattrapageMetadonnees.java
 26afaf1dce11  src/main/java/fr/univ_amu/iut/passage/model/ReactivationDepuisBruts.java
@@ -1043,7 +1043,7 @@ f5c33fd4d3c2  src/main/java/fr/univ_amu/iut/passage/model/dao/PassageDao.java
 382c52bc1d1d  src/main/java/fr/univ_amu/iut/passage/model/dao/ReleveClimatiqueDao.java
 a9b019d36690  src/main/java/fr/univ_amu/iut/passage/model/dao/SequenceDao.java
 0b6900fcf0e9  src/main/java/fr/univ_amu/iut/passage/model/dao/SessionDao.java
-42f1b1b9e72a  src/main/java/fr/univ_amu/iut/passage/outils/CapturePassage.java
+1d19f514872a  src/main/java/fr/univ_amu/iut/passage/outils/CapturePassage.java
 101ec8ac88cf  src/main/java/fr/univ_amu/iut/passage/outils/CaptureRefusRattachement.java
 bd14d0cfff4a  src/main/java/fr/univ_amu/iut/passage/view/ActionReactivation.java
 a5d98d1a51d1  src/main/java/fr/univ_amu/iut/passage/view/ActionsFichePassage.java
@@ -1416,6 +1416,7 @@ ce970b3c71e4  src/test/java/fr/univ_amu/iut/cli/commande/ListerSitesVigieChiroTe
 535c148316eb  src/test/java/fr/univ_amu/iut/cli/commande/PublierCorrectionsVigieChiroTest.java
 df5fbb5aeec1  src/test/java/fr/univ_amu/iut/cli/commande/QualifierFichierTest.java
 d4fb1b3e6813  src/test/java/fr/univ_amu/iut/cli/commande/QualifierTest.java
+6138b93f383e  src/test/java/fr/univ_amu/iut/cli/commande/ReactiverProjectionTest.java
 d73272b0e764  src/test/java/fr/univ_amu/iut/cli/commande/ReconstruirePassageTest.java
 6fc4d0a6ea3d  src/test/java/fr/univ_amu/iut/cli/commande/RecupererCarreTest.java
 e121610792e9  src/test/java/fr/univ_amu/iut/cli/commande/RecupererVigieChiroTest.java
@@ -1507,6 +1508,7 @@ e492ccb0b3e2  src/test/java/fr/univ_amu/iut/commun/model/LienGbifTest.java
 e942a02ee8c3  src/test/java/fr/univ_amu/iut/commun/model/NormalisationTexteTest.java
 e3b0c44298fc  src/test/java/fr/univ_amu/iut/commun/model/NuitTest.java
 29ba4c26f5e3  src/test/java/fr/univ_amu/iut/commun/model/NumeroDeCarreTest.java
+7b0fb28ab176  src/test/java/fr/univ_amu/iut/commun/model/PerdantDeCollisionTest.java
 7974a75fdc7f  src/test/java/fr/univ_amu/iut/commun/model/PortailVigieChiroTest.java
 c908e7235d4c  src/test/java/fr/univ_amu/iut/commun/model/PreferenceDesignationPersisteeTest.java
 b9d123809bcd  src/test/java/fr/univ_amu/iut/commun/model/PreferenceSourceEspeceTest.java
@@ -1669,6 +1671,7 @@ e43ce8b62861  src/test/java/fr/univ_amu/iut/commun/view/SignalementIncidentTest.
 095ac3a159e4  src/test/java/fr/univ_amu/iut/commun/view/SocleHauteurControlesTest.java
 0c2b648b93a5  src/test/java/fr/univ_amu/iut/commun/view/TableDonneesTest.java
 6d5ce8dfeaa0  src/test/java/fr/univ_amu/iut/commun/view/TailleOuvertureTest.java
+e5eec657ffbe  src/test/java/fr/univ_amu/iut/commun/view/TeintesDuCompteRenduTest.java
 27103577498f  src/test/java/fr/univ_amu/iut/commun/view/TypographieTest.java
 ad1b9c615ecc  src/test/java/fr/univ_amu/iut/commun/view/ValeursPresentesTest.java
 3800b1c9aadd  src/test/java/fr/univ_amu/iut/commun/view/ValidationFormulaireTest.java
@@ -1919,7 +1922,9 @@ b6755c17dc45  src/test/java/fr/univ_amu/iut/passage/ServicePassageMockTest.java
 3492aad1bb18  src/test/java/fr/univ_amu/iut/passage/model/AdoptionOriginauxReconstruitsTest.java
 306f62d73c89  src/test/java/fr/univ_amu/iut/passage/model/AllerRetourParticipationLiveTest.java
 c45263937ade  src/test/java/fr/univ_amu/iut/passage/model/AnalyseAcoustiqueTest.java
+8f79925592e6  src/test/java/fr/univ_amu/iut/passage/model/CompteRenduChiffrePerdantsTest.java
 32027e2c77c2  src/test/java/fr/univ_amu/iut/passage/model/CompteRenduChiffreReactivationTest.java
+88ff1fea981f  src/test/java/fr/univ_amu/iut/passage/model/CompteRenduPerdantsDeCollisionTest.java
 75e3dae55c8c  src/test/java/fr/univ_amu/iut/passage/model/CorrespondanceParticipationTest.java
 1f65281861a1  src/test/java/fr/univ_amu/iut/passage/model/CreationPassageArchiveTest.java
 cb7e86dcc417  src/test/java/fr/univ_amu/iut/passage/model/DecompteAudioTest.java
@@ -1938,6 +1943,7 @@ b03f97a20dc3  src/test/java/fr/univ_amu/iut/passage/model/ParticipationOrpheline
 90b5ce16b4e7  src/test/java/fr/univ_amu/iut/passage/model/PlanDePaquetTest.java
 3567263e5189  src/test/java/fr/univ_amu/iut/passage/model/ProgressionTelechargementTest.java
 acd643d069e5  src/test/java/fr/univ_amu/iut/passage/model/PropositionsEnregistreurTest.java
+627563b26dcd  src/test/java/fr/univ_amu/iut/passage/model/RebranchementPerdantDeCollisionTest.java
 9cf3b89edd5f  src/test/java/fr/univ_amu/iut/passage/model/ReleveDeParticipationTest.java
 5ad7c6668356  src/test/java/fr/univ_amu/iut/passage/model/ReliquatPlaceholderTest.java
 68ad9ca6f88d  src/test/java/fr/univ_amu/iut/passage/model/ReprefixeurSessionTest.java

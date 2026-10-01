@@ -97,6 +97,42 @@ echappement() { printf '\033'; }
   [[ "${output}" == *"--source"* ]]
 }
 
+# Deux enregistrements qui se chevauchent sur la grille de 5 s : le premier dure 6 s, sa seconde tranche
+# porte l'heure 20:39:27, celle où le second commence. L'import garde `_000` pour le premier et écrit le
+# second en `_001`. Le dossier de réactivation ne contient que les `_000`, comme un dossier Kaleidoscope.
+@test "reactiver : un perdant de collision absent du dossier se dit pour ce qu'il est (#5720)" {
+  local sd="${BATS_TEST_TMPDIR}/sd"
+  fabriquer_carte_sd "${sd}"
+  python3 - "${sd}" << 'FIN'
+import struct, sys, wave
+for nom, secondes in (("PaRecPR1925492_20260422_203922.wav", 6), ("PaRecPR1925492_20260422_203927.wav", 1)):
+    with wave.open(sys.argv[1] + "/" + nom, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(384000)
+        w.writeframes(b"".join(struct.pack("<h", ((i * 37) % 900) - 450) for i in range(384000 * secondes)))
+FIN
+  local site point
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  point=$(cli ajouter-point --site "${site}" --code A1 2>/dev/null)
+  cli importer --point "${point}" --source "${sd}" >/dev/null 2>&1
+  local kaleidoscope="${BATS_TEST_TMPDIR}/kaleidoscope"
+  mkdir -p "${kaleidoscope}"
+  find "${BATS_TEST_TMPDIR}" -path '*/transformes/*_000.wav' -exec cp {} "${kaleidoscope}" \;
+  [ "$(find "${BATS_TEST_TMPDIR}" -path '*/transformes/*_001.wav' | wc -l)" -eq 1 ]
+  find "${BATS_TEST_TMPDIR}" -path '*/transformes/*.wav' -delete
+
+  run cli reactiver --passage 1 --source "${kaleidoscope}"
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"1 séquence(s) viennent d'enregistrements qui se chevauchent"* ]]
+  [[ "${output}" == *"Réactivez depuis les enregistrements bruts"* ]]
+  [[ "${output}" != *"introuvables dans ce dossier"* ]]
+
+  run cli reactiver --passage 1 --source "${kaleidoscope}" --json
+  [[ "${output}" == *'"perdantsDeCollision": 1'* ]]
+  [[ "${output}" == *'"manquantes": 1'* ]]
+}
+
 @test "reconstruire-passage --help : décrit la commande, exit 0 (#1592)" {
   run cli reconstruire-passage --help
   [ "${status}" -eq 0 ]

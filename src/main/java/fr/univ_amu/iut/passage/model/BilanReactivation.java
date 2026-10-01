@@ -23,6 +23,9 @@ final class BilanReactivation {
 
     /// Ce qui manquait, et pourquoi (#1943). `manquantes` en donne le total ; cette liste dit **quoi**.
     final List<AbsenceReactivation> absences = new ArrayList<>();
+    /// Les perdants de collision restés absents (#5720) : comptés dans `manquantes`, nommés ici et non
+    /// dans `absences`, parce que leur absence ne dit rien du dossier de l'utilisateur.
+    final List<String> perdants = new ArrayList<>();
 
     /// Indice acoustique **non bloquant** (#1682) : séquences dont les cris étaient mesurables, et parmi
     /// elles celles où les cris ont été retrouvés. Alimenté par la voie hydratation (l'acoustique y est un
@@ -60,6 +63,13 @@ final class BilanReactivation {
         absences.add(new AbsenceReactivation(nomFichier, motif, sequences));
     }
 
+    /// Un perdant de collision que le dossier ne contient pas (#5720) : une séquence de moins, sans motif
+    /// d'absence, puisque l'outil qui a découpé ce dossier ne la produit jamais.
+    void perdre(String nomFichier) {
+        manquantes++;
+        perdants.add(nomFichier);
+    }
+
     void refuser(String nomFichier, String motif, int nombreHomonymes) {
         String complet = nombreHomonymes <= 1
                 ? motif
@@ -76,6 +86,7 @@ final class BilanReactivation {
         acoustiqueConcordantes += partiel.acoustiqueConcordantes;
         ecarts.addAll(partiel.ecarts);
         absences.addAll(partiel.absences);
+        perdants.addAll(partiel.perdants);
         if (partiel.confianceMinimale != null) {
             retenirConfiance(partiel.confianceMinimale);
         }
