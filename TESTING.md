@@ -56,6 +56,7 @@ Monocle. Le headless vient de `glass.platform=Headless`, pas de TestFX.
 | `./mvnw -B test-compile pmd:pmd` | Le rapport PMD. Il **ne juge pas** : le verdict est le cliquet de l'ADR 4617. |
 | `python3 scripts/adr/4617-code-mort-et-zone-de-test.py` | Le verdict du portail, par zone. Refuse si le rapport manque. |
 | `./mvnw spotless:check` | Vérifie le formatage (sans modifier). |
+| `./mvnw -Pplateforme-de-test test` | Monte la **plateforme de test** par Testcontainers et joue le seul tag `plateforme-de-test`. Il faut Docker, et **aucun** jeton. Exclu de `./mvnw test`. |
 
 ---
 
@@ -105,6 +106,15 @@ Trois exigences, dans l'ordre d'importance :
 4. **Renoncer n'est pas abandonner.** Quand un dialogue offre plusieurs issues, l'une d'elles **détruit**
    souvent quelque chose et une autre **ne fait rien**. Les deux ferment le dialogue : un test doit les
    **distinguer**.
+
+### Tests contre la plateforme de test
+
+Une API Vigie-Chiro épinglée, son Mongo et un faux S3, montés par les tests eux-mêmes
+([ADR 5641](dev-docs/decisions/5641-les-tests-connectes-ont-deux-cibles.md)). Un test d'API y joue
+Companion par `PlateformeDeTest.acces()`, un scénario d'écran par
+`BancDeRecette.surLaPlateformeDeTest(cle)`, et tous portent `@Tag("plateforme-de-test")`. Ce qu'elle
+monte, ses épingles et ce qu'elle ne prouve pas : la section « La plateforme de test » de
+[`dev-docs/tests-et-qualite.md`](dev-docs/tests-et-qualite.md).
 
 ### Tests d'architecture (ArchUnit)
 
