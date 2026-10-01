@@ -1026,6 +1026,19 @@ jobs:
         run: |
           python3 scripts/adr/verifie_gages_joues.py --auto-test
           python3 scripts/adr/verifie_gages_joues.py
+      - name: "Un outil externe absent REFUSE, il ne lève pas (bloquant, #5692)"
+        # `check=False` ne couvre PAS un exécutable introuvable : `subprocess.run` lève un
+        # `FileNotFoundError` avant qu'il y ait un code de sortie. `_forge.liste_issues` PROMETTAIT ce
+        # refus dans sa docstring et levait avant d'atteindre son propre test - et cette promesse a
+        # été citée, #5621 ayant pris cette partition pour modèle.
+        #
+        # La protection se lit par l'ARBRE et non par un motif : un `try` ailleurs dans le même module
+        # ne protège rien. Deux formes sont admises, le filet qui rattrape et la sonde `shutil.which`
+        # qui nomme la cause avant d'essayer - la seconde est la meilleure, et ce garde a commencé par
+        # la punir, accusant quatre sites sains puis `_forge.py` APRÈS sa réparation.
+        run: |
+          python3 scripts/adr/verifie_outils_absents_refusent.py --auto-test
+          python3 scripts/adr/verifie_outils_absents_refusent.py
       - name: "Trois refus portes par la ligne d'origine (bloquant, #4462)"
         # Trois zones a TOLERANCE ZERO, chacune avec son auto-test avant son passage sur le depot.
         #

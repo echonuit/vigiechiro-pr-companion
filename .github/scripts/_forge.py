@@ -35,6 +35,7 @@ import io
 import json
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 from collections.abc import Callable
@@ -91,6 +92,28 @@ def cliquet_declare(fichier: pathlib.Path) -> int:
     return int(trouve.group(1))
 
 
+def _gh_present_ou_refuse() -> None:
+    """Refuse si `gh` est absent, AVANT de l appeler.
+
+    `check=False` ne couvre pas un executable introuvable : `subprocess.run` leve un
+    `FileNotFoundError` avant qu il y ait un code de sortie. Les deux fonctions de ce module
+    PROMETTAIENT ce refus et ne le rendaient pas - la docstring de `liste_issues` l ecrit encore,
+    et elle levait avant d atteindre son propre test (#5692).
+
+    La sonde plutot qu un filet, par coherence avec les quatre autres appels du depot qui lancent
+    `gh` : `scripts/_commun/forge.py`, `rappelle_le_critere_de_fin.py`, `loupe-4712-lots-multi-pr.py`
+    et `releve-les-bancs-instables.py` sondent tous ainsi. Et c est la meilleure des deux formes :
+    elle nomme la cause AVANT d essayer, la ou un filet la rattrape apres.
+    """
+    if shutil.which("gh") is None:
+        print(
+            "REFUS : « gh » est absent du PATH. Ce dispositif ne conclut pas sur ce qu'il n'a pas"
+            " lu, et ce refus ne parle pas de votre diff.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+
+
 def liste_issues(arguments: list[str], injectee: str | None = None) -> list[dict]:
     """`gh issue list` avec les arguments donnes, ou le contenu du leurre injecte.
 
@@ -102,6 +125,7 @@ def liste_issues(arguments: list[str], injectee: str | None = None) -> list[dict
     """
     if injectee:
         return json.loads(pathlib.Path(injectee).read_text(encoding="utf-8"))
+    _gh_present_ou_refuse()
     rendu = subprocess.run(
         ["gh", "issue", "list", *arguments], capture_output=True, text=True, check=False
     )
@@ -179,6 +203,7 @@ def vue_issue(numero: int, champs: str) -> dict:
 
     Nommer le numero est ce qui distingue « la forge est muette » de « cette issue-la a disparu ».
     """
+    _gh_present_ou_refuse()
     vue = subprocess.run(
         ["gh", "issue", "view", str(numero), "--json", champs],
         capture_output=True,
