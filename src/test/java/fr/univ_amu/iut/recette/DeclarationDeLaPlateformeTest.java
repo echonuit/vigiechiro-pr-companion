@@ -72,6 +72,56 @@ class DeclarationDeLaPlateformeTest {
                         rien qui dise pourquoi.""").isEmpty();
     }
 
+    /// Ce qui fait monter la VRAIE plateforme de test, donc demande Docker (#5665) : la déclaration
+    /// publique, qui reçoit une clé d'utilisateur LITTÉRALE. La surcharge de paquet, qui reçoit un accès
+    /// fabriqué, ne monte rien, et `BancDeRecettePlateformeDeTestTest` l'emploie sans Docker.
+    private static final String DECLARE_LA_PLATEFORME_DE_TEST = ".surLaPlateformeDeTest(\"";
+
+    /// Ce qui sort une classe du build par défaut et la met dans le job `plateforme-de-test`.
+    private static final String TAG_PLATEFORME_DE_TEST = "@Tag(\"plateforme-de-test\")";
+
+    @Test
+    @DisplayName("#5665 : tout scénario qui déclare la plateforme de test porte le tag qui l'écarte du build")
+    void un_scenario_sur_la_plateforme_de_test_porte_son_tag() throws IOException {
+        List<Path> declarants;
+        try (Stream<Path> arbre = Files.walk(SOURCES)) {
+            declarants = arbre.filter(Files::isRegularFile)
+                    .filter(fichier -> fichier.toString().endsWith(".java"))
+                    .filter(fichier -> commenceUneLigne(fichier, DECLARE_LA_PLATEFORME_DE_TEST))
+                    .sorted()
+                    .toList();
+        } catch (UncheckedIOException parcoursInterrompu) {
+            throw parcoursInterrompu.getCause();
+        }
+
+        // Le sens inverse du cas précédent, et le même piège : zéro déclarant voudrait dire que le
+        // motif ne correspond plus, pas que la propriété tient.
+        assertThat(declarants)
+                .as(
+                        "Aucun scénario ne déclare la plateforme de test : le relevé cherche `%s` en tête de"
+                                + " ligne sous `%s`.",
+                        DECLARE_LA_PLATEFORME_DE_TEST, SOURCES)
+                .isNotEmpty();
+
+        List<Path> sansTag = declarants.stream()
+                .filter(fichier -> !commenceUneLigne(fichier, TAG_PLATEFORME_DE_TEST))
+                .toList();
+
+        assertThat(sansTag).as("""
+                        Ces classes montent la plateforme de test, donc Docker, sans porter
+                        `@Tag("plateforme-de-test")`. Elles tournent alors sous `./mvnw test`, que jouent
+                        aussi les runners Windows et macOS, qui n'ont pas de Docker utilisable : le build
+                        par défaut y rougirait sur une cause étrangère au code.
+
+                        Ajouter `@Tag("plateforme-de-test")` : la classe passe dans le job du même nom.""").isEmpty();
+    }
+
+    /// La ligne dépouillée COMMENCE par le motif : un appel ou une annotation, jamais une mention en
+    /// commentaire, et jamais les constantes de ce fichier-ci, qui portent le motif entre guillemets.
+    private static boolean commenceUneLigne(Path fichier, String motif) {
+        return lignes(fichier).anyMatch(ligne -> ligne.strip().startsWith(motif));
+    }
+
     /// L'appel, et non la mention : la ligne dépouillée doit COMMENCER par la déclaration. Un
     /// commentaire qui cite le nom l'a en milieu de ligne, derrière ses `//`.
     private static boolean appelleUneDeclaration(Path fichier) {

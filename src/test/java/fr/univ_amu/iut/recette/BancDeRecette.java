@@ -11,6 +11,7 @@ import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.api.plateforme.PlateformeDeTest;
 import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
@@ -95,6 +96,12 @@ public final class BancDeRecette {
     /// dans l'environnement, et un `ConnectException` sur le port 1.
     private boolean deposerLeJeton;
 
+    /// La plateforme de test que ce scénario a déclarée, et l'utilisateur sous lequel il y part (#5665).
+    /// Nulle tant qu'il ne l'a pas déclarée : le banc reste alors hors ligne ou vise la plateforme réelle.
+    private PlateformeDeTest.Acces plateformeDeTest;
+
+    private String utilisateurDeTest;
+
     /// Ce qu'un scénario écrit avant que l'écran ne s'ouvre.
     ///
     /// Il peut **lever** : un semis qui pose des fichiers de nuit fait des entrées/sorties, et un
@@ -161,7 +168,7 @@ public final class BancDeRecette {
     /// **Factice veut dire factice**, y compris pendant un tournage connecté : le banc lie sa propre
     /// source de jeton et ignore celui du processus (cf. [#montrer(Stage)]).
     public BancDeRecette connecte(String id, String pseudo, String role) {
-        if (surLaPlateforme) {
+        if (surLaPlateforme || plateformeDeTest != null) {
             throw new IllegalStateException(exclusion());
         }
         this.profilConnecte = new ProfilVigieChiro(id, pseudo, role);
@@ -183,7 +190,7 @@ public final class BancDeRecette {
     /// **muet sur son propre objet** (ADR 4142). Un scénario qui déclare vouloir la plateforme et ne la
     /// trouve pas n'a rien à montrer : il s'arrête, et il dit quoi poser.
     public BancDeRecette connecteALaPlateforme() {
-        if (profilConnecte != null) {
+        if (profilConnecte != null || plateformeDeTest != null) {
             throw new IllegalStateException(exclusion());
         }
         this.surLaPlateforme = true;
@@ -201,17 +208,42 @@ public final class BancDeRecette {
     /// `BancDeRecetteSansDepotTest` porte la mesure, et `DeclarationDeLaPlateformeTest` exige la
     /// declaration de tout scenario connecte.
     public BancDeRecette parleALaPlateforme() {
-        if (profilConnecte != null) {
+        if (profilConnecte != null || plateformeDeTest != null) {
             throw new IllegalStateException(exclusion());
         }
         this.surLaPlateforme = true;
         return this;
     }
 
+    /// Part connecté à la **plateforme de test** de l'ADR 5641 (#5665), sous l'utilisateur que l'état de
+    /// départ déclare avec cette clé.
+    ///
+    /// Le client du banc vise l'URL que [PlateformeDeTest] rend, et non l'ambiante ni `localhost:1`. Le
+    /// jeton frappé pour cet utilisateur est déposé **sans profil**, comme [#connecteALaPlateforme()] le
+    /// fait du jeton réel : la modale le revérifie seule à l'ouverture, contre le vrai code serveur.
+    ///
+    /// Monter la plateforme demande Docker : un scénario qui appelle cette déclaration porte
+    /// `@Tag("plateforme-de-test")`, et `DeclarationDeLaPlateformeTest` le vérifie.
+    public BancDeRecette surLaPlateformeDeTest(String cleUtilisateur) {
+        return surLaPlateformeDeTest(PlateformeDeTest.acces(), cleUtilisateur);
+    }
+
+    /// La même déclaration, l'accès fourni : `BancDeRecettePlateformeDeTestTest` l'éprouve sans Docker,
+    /// contre une prise locale qui compte les connexions.
+    BancDeRecette surLaPlateformeDeTest(PlateformeDeTest.Acces acces, String cleUtilisateur) {
+        if (profilConnecte != null || surLaPlateforme) {
+            throw new IllegalStateException(exclusion());
+        }
+        acces.jeton(cleUtilisateur);
+        this.plateformeDeTest = acces;
+        this.utilisateurDeTest = cleUtilisateur;
+        return this;
+    }
+
     private static String exclusion() {
-        return "Un banc est connecté en factice ou à la plateforme réelle, jamais les deux : le premier"
-                + " montre un écran, le second éprouve une frontière. Choisir lequel des deux ce"
-                + " scénario est.";
+        return "Un banc est connecté en factice, à la plateforme réelle ou à la plateforme de test, jamais"
+                + " deux à la fois : le premier montre un écran, les deux autres éprouvent une frontière,"
+                + " chacun la sienne. Choisir lequel ce scénario est.";
     }
 
     /// Le jeton du tournage connecté, **rendu au scénario** au lieu d'être déposé pour lui.
@@ -323,11 +355,12 @@ public final class BancDeRecette {
         // ambiante, qu'il a précisément demandée. Ne rien lier est ici plus juste que lier la valeur par
         // défaut : le tournage connecté déclare `VIGIECHIRO_URL`, et un jour un serveur de recette.
         if (!surLaPlateforme) {
+            String urlDuBanc = plateformeDeTest != null ? plateformeDeTest.urlDeBase() : URL_HORS_LIGNE;
             surcharges.add(new AbstractModule() {
                 @Provides
                 @Singleton
                 ClientVigieChiro clientDuBanc(FournisseurToken jetons) {
-                    return new ClientVigieChiro(URL_HORS_LIGNE, jetons);
+                    return new ClientVigieChiro(urlDuBanc, jetons);
                 }
             });
         }
@@ -348,6 +381,11 @@ public final class BancDeRecette {
             // connexion réelle sans qu'un caractère du jeton passe par le champ.
             String jeton = jetonDeLaPlateforme();
             injecteur.getInstance(StockageConnexion.class).enregistrer(jeton, null);
+            injecteur.getInstance(RefletDuJeton.class).relire();
+        } else if (plateformeDeTest != null) {
+            // Même geste que le jeton réel, avec celui que la plateforme de test a frappé pour
+            // l'utilisateur déclaré : aucun secret, aucun jeton du processus.
+            injecteur.getInstance(StockageConnexion.class).enregistrer(plateformeDeTest.jeton(utilisateurDeTest), null);
             injecteur.getInstance(RefletDuJeton.class).relire();
         }
 
