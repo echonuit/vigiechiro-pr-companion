@@ -478,6 +478,66 @@ par clé, pour qu'un inventaire ne perde pas discrètement son ancre. Enfin, `au
 fait le trajet **inverse** du tableau CLI : une commande décrite dans `cli.md` mais **absente** du câblage
 (renommée, supprimée) fait rougir tout autant.
 
+## La plateforme de test
+
+Les tests connectés ont deux cibles ([ADR 5641](decisions/5641-les-tests-connectes-ont-deux-cibles.md)) :
+la plateforme nationale, qui demande un jeton et sert à une confrontation régulière, et la **plateforme
+de test**, que les tests montent eux-mêmes par Testcontainers, sans jeton ni secret.
+
+```bash
+./mvnw -Pplateforme-de-test test   # Docker requis ; joue le seul tag `plateforme-de-test`
+```
+
+Le tag est exclu de `./mvnw test`, que jouent aussi les runners Windows et macOS, sans Docker
+utilisable. En CI, le job `plateforme-de-test` de `maven.yml` le joue sur Ubuntu à chaque demande qui
+touche le code ou `scripts/plateforme-de-test/`.
+
+### Ce qu'elle monte
+
+[`PlateformeDeTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java)
+monte une plateforme **par JVM**, au premier test qui la demande, dans cet ordre :
+
+1. Mongo, par le digest de `scripts/plateforme-de-test/epingles.properties` ;
+2. le faux S3 en TLS (`faux_s3.py`, `faux-s3.Dockerfile`), dont le certificat couvre l'hôte que
+   Testcontainers rend ;
+3. l'API Vigie-Chiro (`api.Dockerfile`), à la révision épinglée, sous `/api/v1`, avec
+   `DEV_FAKE_S3_URL` pointé sur l'adresse du faux S3 **vue depuis la JVM**, d'où l'ordre ;
+4. l'état de départ déclaré (`etat-de-depart.json`), matérialisé par `amorcer.py` dans le
+   conteneur de l'API.
+
+Elle pose ensuite `vigiechiro.s3.hotes` et fait accepter le certificat du faux S3 par
+`SSLContext.setDefault`. Cela ne tient que si aucun client HTTP n'a été construit avant dans le
+fork, ce que garantit le profil, qui ne joue que ce tag.
+
+### L'employer
+
+- Un test d'API : `PlateformeDeTest.acces()` rend l'URL de base, les jetons par clé d'utilisateur
+  déclarée (`observatrice`, `validatrice`, `administratrice`) et les identifiants de l'état de départ
+  (`participations:nuit-traitee`). Exemple :
+  [`DepotSurLaPlateformeDeTestTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java).
+- Un scénario d'écran : `BancDeRecette.surLaPlateformeDeTest("observatrice")`, exclusive des autres
+  déclarations du banc. Le banc vise la plateforme et dépose le jeton sans profil ; la modale le
+  revérifie seule. Exemple :
+  [`ScenarioPlateformeDeTestConnexionTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/connexion/view/ScenarioPlateformeDeTestConnexionTest.java).
+
+Dans les deux cas la classe porte `@Tag("plateforme-de-test")`, et `DeclarationDeLaPlateformeTest`
+le refuse sinon pour un scénario.
+
+### Ses épingles
+
+`epingles.properties` est le **seul** endroit qui porte la révision de l'API et le digest de Mongo.
+Remonter la révision est le remède d'une dérive constatée face à la plateforme nationale : c'est une
+décision, qui se dit dans la demande qui la porte.
+
+### Ce qu'elle ne prouve pas
+
+- **La signature v2** des dépôts : en mode `DEV_FAKE_S3_URL`, l'API ne signe aucune URL, et toutes
+  les parties d'un multipart arrivent sur la même adresse (#5658).
+- **Le traitement** : pas de worker Tadarida. Une participation « traitée » vient de l'état
+  déclaré, et un calcul lancé reste planifié.
+- **La lecture par la fiche web** des écritures de Companion : c'est le lot #5645.
+- **Un transfert ou une durée** : sur un lien local, la latence est nulle (lot #5646).
+
 ## Les outils qualité
 
 | Outil | Rôle | Bloquant ? |

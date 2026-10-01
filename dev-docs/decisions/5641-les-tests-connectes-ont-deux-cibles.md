@@ -27,7 +27,7 @@ contrat `api-live`, chaque semaine et sans aucune écriture, et les tournages co
 main. Les deux dépendent d'un jeton de quatorze jours renouvelé à la main. Sans lui,
 `ContratApiVigieChiroLiveTest` est sauté en entier.
 
-Le dépôt fait déjà tourner une copie de la plateforme, `banc-etalonnage/`, avec l'API épinglée et
+Le dépôt faisait déjà tourner une copie de la plateforme, `banc-etalonnage/` (retiré en #5667), avec l'API épinglée et
 Mongo. L'[ADR 4444](4444-un-back-local-etalonne-les-sondes-il-ne-tourne-aucun-clip.md) l'a tenue hors
 de la CI parce qu'une copie figée **dériverait en silence**. L'argument est juste pour une copie
 seule, et c'est la seule forme que 4444 a examinée.
