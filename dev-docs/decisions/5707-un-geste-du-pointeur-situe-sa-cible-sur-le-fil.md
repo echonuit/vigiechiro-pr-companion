@@ -50,6 +50,10 @@ La pile est celle du fil **du test** : c'est lui qui itère, et le fil JavaFX qu
 n'abîme rien, contrairement aux deux que nomme `CadreVisible.lireSurLeFilFx` : elle est levée chez le
 lecteur, le graphe reste intact, et le journal montre 5 603 tests pour une erreur, sans cascade.
 
+**Révision du 2026-10-01** : ce minorant a une **seconde** raison, trouvée par #5738 - le relevé ne
+lit que les tirages **rejoués**, 21 sur les 59 qui portent un rouge. La décision ne change pas : elle
+tient sur le mécanisme, pas sur le taux.
+
 ## La décision
 
 > Un geste du pointeur **situe sa cible sur le fil JavaFX**, et ne reçoit ensuite qu'un point.

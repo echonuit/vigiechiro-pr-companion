@@ -15,6 +15,7 @@ Usage : releve-les-bancs-instables.py [--jours N] [--classe] [--auto-test]
 
 from __future__ import annotations
 
+import ast
 import os
 import pathlib
 import re
@@ -191,10 +192,25 @@ def _borne(jours: int) -> str:
     ).stdout.strip()
 
 
-def relances(jours: int) -> tuple[list[dict], int]:
-    """Les runs RELANCES de la fenetre, et le nombre de tirages (conclus, annules exclus).
+def relances(jours: int) -> tuple[list[dict], int, int]:
+    """Les runs RELANCES, le nombre de tirages, et le nombre de ROUGES QUE CE FILTRE ECARTE.
 
     `gh run list` ne suffit pas : il plafonne, et surtout il ne porte pas `run_attempt`.
+
+    ⟨le troisieme nombre est la correction de #5738⟩ Ne garder que `tentatives > 1` n est pas une
+    faute : **relancer est le geste par lequel quelqu un juge qu un rouge est une bascule plutot
+    qu une regression**, et sans ce filtre le releve melangerait un defaut pousse puis corrige au
+    commit suivant avec un banc qui vacille. Le filtre reste donc.
+
+    Ce qui etait fautif, c est qu il ne se DISAIT pas. Mesure du 2026-10-01 sur trente jours :
+    **38** tirages ont rougi sans etre rejoues, contre **21** rejoues. Les tirages porteurs d un
+    rouge sont donc 59, et le releve en lit 21. Qui lisait « 1/564 » escomptait un minorant sur la
+    fenetre, sans savoir qu il portait sur une sous-population dont il ignorait l existence.
+
+    Ce nombre remonte pour que `limiteDeLecture` le dise, parce qu une limite qui vit dans une
+    docstring n atteint pas le lecteur du rapport. C est l article A3, et c est le defaut que #5617
+    a corrige sur l AUTRE limite de cette meme fonction - la, une limite declaree etait fausse par
+    exces de modestie ; ici, une limite reelle n etait pas declaree du tout.
     """
     # ⟨ce releve REFUSE desormais, la ou il rendait du vide⟩ Son ancien `_forge` rendait `""` quand
     # `gh` manquait ET avalait le code de retour, si bien qu une forge qui repond par une erreur
@@ -211,7 +227,19 @@ def relances(jours: int) -> tuple[list[dict], int]:
         ],
         quoi=f"les tirages de « Java CI with Maven » (flux {FLUX})",
     )
-    borne = _borne(jours)
+    return comptesDesTirages(brut, _borne(jours))
+
+
+def comptesDesTirages(brut: str, borne: str) -> tuple[list[dict], int, int]:
+    """Le tri des tirages, extrait pour etre eprouvable HORS LIGNE.
+
+    Il vivait dans le corps de `relances`, donc derriere un appel reseau, donc hors d atteinte de
+    tout cas. Rien ne reliait le troisieme nombre - les rouges ecartes - a ce que les lignes disent :
+    une mutation qui l aurait fixe a zero aurait laisse l auto-test vert, et la phrase de limite
+    aurait annonce « 0 tirage qui a rougi sans etre rejoue » sur une fenetre qui en porte 38.
+
+    C est l extraction que #5617 a faite de `joindreLesJournaux`, et pour la meme raison.
+    """
     dans = []
     for ligne in brut.splitlines():
         champs = ligne.split("\t")
@@ -225,7 +253,8 @@ def relances(jours: int) -> tuple[list[dict], int]:
                 "sha": champs[4],
             }
         )
-    return [r for r in dans if r["tentatives"] > 1], len(dans)
+    rougesEcartes = sum(1 for r in dans if r["verdict"] == "failure" and r["tentatives"] == 1)
+    return [r for r in dans if r["tentatives"] > 1], len(dans), rougesEcartes
 
 
 # Article A3, [ADR 3627] : une mesure rend ce qu elle a lu ET ce qu elle n a pas pu ouvrir. Le releve
@@ -269,28 +298,57 @@ def ateliersQuiLancentLaSuite(yml: str) -> list[str]:
     return trouves
 
 
-def limiteDeLecture(flux: pathlib.Path | None = None) -> str:
-    """Ce que le releve n a PAS pu lire. Et ce n est PAS un atelier : c est un flux.
+def limiteDeLecture(
+    flux: pathlib.Path | None = None,
+    rejoues: int | None = None,
+    rougesEcartes: int | None = None,
+) -> str:
+    """Ce que le releve n a PAS pu lire. Il y en a DEUX, et la seconde a longtemps manque.
 
     Cette phrase a menti jusqu a #5617. Elle annoncait « atelier `build` seul, 7 invisibles », alors
     que `joindreLesJournaux` joint UN fichier par atelier de l archive - les treize de `maven.yml`.
-    La limite reelle est ailleurs et elle tient : les autres FLUX qui lancent la suite restent
-    dehors, puisque le releve n interroge que celui-ci.
+    Cette limite-la est reparee : les autres FLUX restent dehors, et c est dit.
+
+    ⟨la seconde limite, #5738⟩ Le releve ne lit que les tirages **rejoues**. Un rouge resolu par une
+    poussee - un rebase, un commit de correction - garde `run_attempt=1` et son journal n est jamais
+    ouvert. Mesure du 2026-10-01 : 38 tirages dans ce cas contre 21 rejoues, soit 21 lus sur les 59
+    qui portent un rouge. Elle vivait dans la docstring de `relances`, c est-a-dire nulle part pour
+    qui lit le rapport.
+
+    Trouvee par le rouge d une session pair, qui avait rebase au lieu de relancer : son banc
+    n apparaissait pas au releve, et l instrument rendait une sortie parfaitement plausible -
+    quatorze tests en tete, des taux a trois decimales, un denominateur juste.
+
+    Les deux comptes s INJECTENT plutot que d etre recalcules : les recalculer ici demanderait un
+    second appel reseau pour dire ce que l appelant vient d apprendre. Absents, la phrase dit qu ils
+    sont NON DENOMBRES, parce qu un appelant qui ne les fournit pas ne doit pas obtenir une limite
+    qui a l air chiffree.
     """
+
+    def combien(n: int | None, quoi: str) -> str:
+        return f"{n} {quoi}" if n is not None else f"un nombre NON DENOMBRE de {quoi}"
+
+    rejoint = (
+        f" Lus parmi les tirages : les {combien(rejoues, 'tirages REJOUES')} seulement."
+        f" Jamais ouverts : les {combien(rougesEcartes, 'tirages qui ont ROUGI SANS etre rejoues')}."
+    )
     flux = FLUX_LU if flux is None else flux
     if not flux.exists():
         # A3 jusqu au bout : ne pas pouvoir denombrer ce qu on lit est encore quelque chose qu on n a
         # pas pu lire, et le taire rendrait la sortie plus rassurante qu elle ne doit l etre.
         return (
             f"  Lu : tous les ateliers de chaque archive, mais leur nombre est NON DENOMBRE,"
-            f" `{flux.name}` etant introuvable. Invisibles : tous les autres flux qui lancent la"
-            " suite. Les taux ci-dessous sont des MINORANTS (article A3)."
+            f" `{flux.name}` etant introuvable."
+            + rejoint
+            + " Invisibles : tous les autres flux qui"
+            " lancent la suite. Les taux ci-dessous sont des MINORANTS (article A3)."
         )
     lus = ateliersQuiLancentLaSuite(flux.read_text(encoding="utf-8"))
     return (
         f"  Lu : `{flux.name}`, ses {len(lus)} atelier(s) qui lancent la suite"
         f" ({', '.join(lus)}) - l archive d une tentative en porte un journal par atelier."
-        " Invisibles : tous les autres flux qui lancent la suite."
+        + rejoint
+        + " Invisibles : tous les autres flux qui lancent la suite."
         " Les taux ci-dessous sont des MINORANTS (article A3)."
     )
 
@@ -492,6 +550,20 @@ def classe(journal: str, ordonnes: list[str]) -> tuple[str, str]:
     if _ANNULE in fin:
         return ("CASCADE", ANNULATION)
     return ("INDETERMINE", INCONNU)
+
+
+def _assertions() -> list[int]:
+    """Les lignes des `assert` de [#_autoTest], comptees dans la source plutot qu a la main.
+
+    Un compte ecrit en dur derive des le cas suivant, et il derive **vers le bas** : on ajoute des
+    cas plus souvent qu on en retire. Le derive ne peut pas mentir, et il refuse si la fonction
+    disparait - ce qui est la seule facon pour ce compte de devenir faux.
+    """
+    source = pathlib.Path(__file__).read_text(encoding="utf-8")
+    for noeud in ast.walk(ast.parse(source)):
+        if isinstance(noeud, ast.FunctionDef) and noeud.name == "_autoTest":
+            return [n.lineno for n in ast.walk(noeud) if isinstance(n, ast.Assert)]
+    raise SystemExit("REFUS : `_autoTest` est introuvable dans ma propre source.")
 
 
 def _autoTest() -> int:
@@ -822,6 +894,85 @@ jobs:
         assert atelier in dite, f"« {atelier} » est lu et n est pas nomme : {dite}"
     assert "MINORANTS" in dite, dite
 
+    # ⟨LA SECONDE LIMITE SE DIT, ET AVEC SON CHIFFRE (#5738)⟩ Le releve ne lit que les tirages
+    # rejoues. Cette limite vivait dans la docstring de `relances`, donc nulle part pour qui lit le
+    # rapport. Les deux cas ci-dessous tiennent les deux etats de la phrase : chiffree quand
+    # l appelant fournit les comptes, et explicitement NON DENOMBREE quand il ne les fournit pas.
+    #
+    # Le second n est pas decoratif : sans lui, une phrase qui tairait la limite en l absence de
+    # comptes passerait le premier cas, et c est exactement la forme du defaut que ce lot corrige -
+    # une limite qui n apparait que dans les conditions ou on pense a la chercher.
+    chiffree = limiteDeLecture(rejoues=21, rougesEcartes=38)
+    assert "21 tirages REJOUES" in chiffree, f"le compte des rejoues doit paraitre : {chiffree}"
+    assert "38 tirages qui ont ROUGI SANS etre rejoues" in chiffree, (
+        f"le compte des rouges ecartes doit paraitre : {chiffree}"
+    )
+    assert "NON DENOMBRE" not in chiffree, (
+        f"chiffree, la phrase ne doit plus dire NON DENOMBRE : {chiffree}"
+    )
+
+    assert "NON DENOMBRE" in dite, f"sans comptes, la phrase doit le DIRE : {dite}"
+    assert "REJOUES" in dite, f"la limite des rejoues doit etre dite meme sans chiffre : {dite}"
+    assert "ROUGI SANS etre rejoues" in dite, (
+        f"la limite des rouges non rejoues doit etre dite : {dite}"
+    )
+
+    # ⟨ET LA PHRASE PEUT ETRE CHIFFREE⟩ Un appelant qui ne pourrait pas lui passer les comptes
+    # rendrait les deux cas ci-dessus vrais et sans effet sur le rapport.
+    #
+    # Le premier jet de ce cas cherchait le mot « rougesEcartes » dans la SOURCE de `relances`. Il a
+    # rougi des que `relances` a delegue son tri a `comptesDesTirages` : la ressemblance avait change,
+    # le comportement non. Un cas qui lit du texte de code mesure la forme, pas ce que la chose rend.
+    import inspect as _inspect
+
+    assert _inspect.signature(limiteDeLecture).parameters.keys() >= {
+        "rejoues",
+        "rougesEcartes",
+    }, "la phrase doit pouvoir etre chiffree"
+
+    # ⟨LE COMPTE DE LA LIGNE DE VERDICT EST DERIVE⟩ Il valait « 33 » en dur pour 66 assertions. Un
+    # chiffre invente dans une ligne de verdict est ce que ce lot reproche a l instrument, et il
+    # n aurait pas ete coherent de le laisser ici. L ancre est independante du compte : des LIGNES
+    # reelles, en nombre superieur a un plancher que ce fichier depasse largement depuis #5617.
+    lignesDesCas = _assertions()
+    assert len(lignesDesCas) > 40, f"le compte derive ne trouve que {len(lignesDesCas)} cas"
+    assert all(ligne > 0 for ligne in lignesDesCas), lignesDesCas
+
+    # ⟨LE TRI DES TIRAGES, EPROUVE HORS LIGNE⟩ Les quatre formes que la fenetre rencontre, dans un
+    # corpus ou chacune est presente une fois de plus que la precedente - sans quoi un detecteur qui
+    # confondrait deux colonnes rendrait les bons totaux.
+    lignesDuCorpus = (
+        "1\t2\tsuccess\t2026-09-20T00:00:00Z\taaa",  # rejoue, vert  -> LU
+        "2\t2\tfailure\t2026-09-21T00:00:00Z\tbbb",  # rejoue, rouge -> LU
+        "3\t2\tfailure\t2026-09-22T00:00:00Z\tccc",
+        "4\t1\tfailure\t2026-09-23T00:00:00Z\tddd",  # rouge NON rejoue -> ECARTE
+        "5\t1\tfailure\t2026-09-24T00:00:00Z\teee",
+        "6\t1\tfailure\t2026-09-25T00:00:00Z\tfff",
+        "7\t1\tsuccess\t2026-09-26T00:00:00Z\tggg",  # vert simple -> ni lu ni ecarte
+        "8\t1\tcancelled\t2026-09-27T00:00:00Z\thhh",  # hors CONCLUS
+        "9\t1\tfailure\t2026-01-01T00:00:00Z\tiii",  # hors fenetre
+    )
+    tsv = "\n".join(lignesDuCorpus)
+    borne = "2026-09-01T00:00:00Z"
+    rejouesVus, tiragesVus, ecartesVus = comptesDesTirages(tsv, borne)
+    assert [r["id"] for r in rejouesVus] == [1, 2, 3], rejouesVus
+    assert tiragesVus == 7, f"les conclus de la fenetre sont 7, pas {tiragesVus}"
+    assert ecartesVus == 3, f"les rouges non rejoues sont 3, pas {ecartesVus}"
+
+    # LE SENS NEGATIF, et c est lui qui tient le troisieme nombre : un rouge REJOUE ne doit pas
+    # compter comme ecarte, et un VERT non rejoue non plus. Sans ces deux cas, compter tous les
+    # rouges, ou tous les non-rejoues, passerait le cas ci-dessus sur un corpus moins varie.
+    _, _, sansRougeEcarte = comptesDesTirages(
+        "1\t2\tfailure\t2026-09-21T00:00:00Z\tbbb\n7\t1\tsuccess\t2026-09-26T00:00:00Z\tggg",
+        borne,
+    )
+    assert sansRougeEcarte == 0, (
+        f"ni un rouge rejoue ni un vert simple n est ecarte : {sansRougeEcarte}"
+    )
+
+    # Et la fenetre mord : une borne posterieure a tout vide les trois.
+    assert comptesDesTirages(tsv, "2027-01-01T00:00:00Z") == ([], 0, 0)
+
     # ⟨l APPEL, et non le verdict (ADR 4331)⟩ Aucun cas de cet auto-test n exercait le chemin de la
     # forge avant #5544 : `relances` n y est jamais appelee. Une mutation le montrait - retirer le
     # refus laissait ces 32 temoins verts - et c est le defaut que `loupe-4992` avait corrige chez
@@ -838,7 +989,13 @@ jobs:
     finally:
         os.environ["PATH"] = chemin
 
-    print("auto-test : 33 temoins verts")
+    # ⟨le compte se DERIVE, il ne s ecrit plus a la main (#5738)⟩ Cette ligne annoncait « 33 temoins »
+    # en dur, et le fichier en portait **66**. Le nombre etait donc faux avant ce lot, et il l est
+    # devenu davantage en ajoutant des cas : une ligne de verdict qui porte un chiffre invente est
+    # exactement ce que ce lot reproche au reste de l instrument. L unite change en meme temps, et
+    # elle le dit : on compte des ASSERTIONS, pas des « temoins » dont personne ne savait plus la
+    # definition.
+    print(f"auto-test : {len(_assertions())} assertion(s) verte(s)")
     return 0
 
 
@@ -850,7 +1007,7 @@ def _jours() -> int:
 
 def _classement(jours: int) -> int:
     """A qui appartiennent les rouges rejoues, et donc lesquels valent un rejeu."""
-    rejoues, tirages = relances(jours)
+    rejoues, tirages, rougesEcartes = relances(jours)
     if not tirages:
         print("Aucun tirage lu : `gh` est-il installe et authentifie ?")
         return 1
@@ -871,6 +1028,11 @@ def _classement(jours: int) -> int:
         f"CLASSEMENT | fenetre={jours}j | tirages={tirages} | relances={len(rejoues)}"
         f" | tentatives rouges lues={lues}"
     )
+    # ⟨cette sous-commande ne disait AUCUNE limite (#5738)⟩ Elle rend des pourcentages - « 43 % valent
+    # un rejeu » - sur une population dont elle taisait la composition. Et c est la surface la plus
+    # exposee au defaut : qui lit un classement cherche a decider d une conduite, pas a estimer un
+    # taux. La meme phrase que le relevé, parce qu une seconde formulation divergerait.
+    print(limiteDeLecture(rejoues=len(rejoues), rougesEcartes=rougesEcartes))
     if not lues:
         print("\nAucune tentative lue : rien a classer.")
         return 0
@@ -940,7 +1102,7 @@ def main() -> int:
     jours = _jours()
     if "--classe" in sys.argv:
         return _classement(jours)
-    rejoues, tirages = relances(jours)
+    rejoues, tirages, rougesEcartes = relances(jours)
     if not tirages:
         print("Aucun tirage lu : `gh` est-il installe et authentifie ?")
         return 1
@@ -957,7 +1119,7 @@ def main() -> int:
         f"RELEVE bancs | fenetre={jours}j | tirages={tirages} | relances={len(rejoues)}"
         f" | en tete={len(tetes)} | dans la suite={len(suites)}"
     )
-    print(limiteDeLecture())
+    print(limiteDeLecture(rejoues=len(rejoues), rougesEcartes=rougesEcartes))
     if not tetes:
         print("\nAucun test nomme dans les tentatives echouees.")
     # En tete d'abord : c'est la population des SUSPECTS, et elle est la seule a designer quelque
