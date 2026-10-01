@@ -864,7 +864,7 @@ c8830e19de44  src/main/java/fr/univ_amu/iut/lot/view/BandeauLotUI.java
 7f43cce2950d  src/main/java/fr/univ_amu/iut/lot/view/CompteRenduDepotUI.java
 afc956093fe2  src/main/java/fr/univ_amu/iut/lot/view/EtapeDeposerUI.java
 2e483544fe6d  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleversementController.java
-20531ccad085  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleverserUI.java
+46cb0d44f356  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleverserUI.java
 4785f518bf6b  src/main/java/fr/univ_amu/iut/lot/view/LotController.java
 2020a70711b5  src/main/java/fr/univ_amu/iut/lot/view/NavigationLot.java
 c5fa1ea4b7ca  src/main/java/fr/univ_amu/iut/lot/view/RelaisSuiviDepot.java
@@ -875,7 +875,7 @@ e554f3487a58  src/main/java/fr/univ_amu/iut/lot/view/TableSuiviDepot.java
 ccafcb35d57b  src/main/java/fr/univ_amu/iut/lot/viewmodel/ActionsLotPossibles.java
 461afae750d9  src/main/java/fr/univ_amu/iut/lot/viewmodel/AnticipationEspaceDisque.java
 9a5993fe0101  src/main/java/fr/univ_amu/iut/lot/viewmodel/CompteRenduChiffreDepot.java
-968f86e35002  src/main/java/fr/univ_amu/iut/lot/viewmodel/DepotViewModel.java
+18909b0c9d94  src/main/java/fr/univ_amu/iut/lot/viewmodel/DepotViewModel.java
 e9f04bc3d4e2  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapeDepot.java
 50dc6253c4b3  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepot.java
 9d29ec9ca248  src/main/java/fr/univ_amu/iut/lot/viewmodel/FormatsLot.java
@@ -1440,7 +1440,7 @@ ffd3c4583804  src/test/java/fr/univ_amu/iut/cliquet/CliquetFixturePassageTest.ja
 bfa1642021af  src/test/java/fr/univ_amu/iut/commun/api/ChaineDuCarreStocTest.java
 80a2127fd522  src/test/java/fr/univ_amu/iut/commun/api/ClientGbifTest.java
 d40353c406b2  src/test/java/fr/univ_amu/iut/commun/api/ClientSurReseauSimule.java
-78ebdc58f018  src/test/java/fr/univ_amu/iut/commun/api/ClientVigieChiroTest.java
+118a7c65bece  src/test/java/fr/univ_amu/iut/commun/api/ClientVigieChiroTest.java
 1e5ff4971e8a  src/test/java/fr/univ_amu/iut/commun/api/ContratApiVigieChiroLiveTest.java
 3031abb0adaf  src/test/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgressionTest.java
 11e5d8601181  src/test/java/fr/univ_amu/iut/commun/api/DonneesVigieChiroTest.java

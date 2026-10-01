@@ -549,6 +549,12 @@ public final class ClientVigieChiro {
         try (InputStream flux = Files.newInputStream(fichier)) {
             byte[] tampon = new byte[(int) tailleChunk];
             for (int numero = 1; ; numero++) {
+                // Le renoncement se lit entre deux parties, première comprise (#5625) : une archive de
+                // 370 Mo en compte environ 74, et « Annuler » attendait la dernière. L'issue reste
+                // rejouable, comme celle d'une temporisation interrompue : la reprise renverra l'unité.
+                if (reprise.renonce()) {
+                    return IssueDeDepot.stockage(ReponseApi.injoignable("envoi interrompu à votre demande"));
+                }
                 int lus = flux.readNBytes(tampon, 0, tampon.length);
                 if (lus == 0) {
                     break;

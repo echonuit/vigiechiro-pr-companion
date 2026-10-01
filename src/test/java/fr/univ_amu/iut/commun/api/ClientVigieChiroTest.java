@@ -16,6 +16,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -237,6 +238,57 @@ class ClientVigieChiroTest {
 
         assertThat(issue).as("la finalisation aboutit").isInstanceOf(ReponseApi.Succes.class);
         assertThat(putsS3).as("7 octets en chunks de 3 → 3 parties déposées").hasValue(3);
+    }
+
+    /// **Annuler arrête l'envoi entre deux parties** (#5625). La boucle ne lisait pas le renoncement : une
+    /// archive de 370 Mo, soit environ 74 parties, partait en entier après le clic, et l'écran restait sur
+    /// « Annulation… » jusqu'au bout (capture 4 de Samuel). Le suivi renonce ici dès la première partie
+    /// déposée, ce qui reproduit le clic à chaque tirage, sans fil ni minuterie.
+    @Test
+    @DisplayName("#5625 : un renoncement entre deux parties arrête l'envoi, sans finaliser, et reste rejouable")
+    void depot_en_parts_s_arrete_au_renoncement(@TempDir Path dossier) throws Exception {
+        Path fichier = dossier.resolve("Car-1.zip");
+        Files.write(fichier, new byte[] {1, 2, 3, 4, 5, 6, 7}); // 7 octets, chunk 3 → 3 parties attendues
+
+        AtomicInteger putsS3 = new AtomicInteger();
+        AtomicInteger finalisations = new AtomicInteger();
+        HttpResponse<Object> urlPartie = reponse(
+                200, "{\"s3_signed_url\": \"https://vigiechiro.s3.amazonaws.com/part?Signature=abc\"}", Map.of());
+        HttpResponse<Object> s3ok = reponse(200, "", Map.of("ETag", List.of("\"etag-x\"")));
+        HttpResponse<Object> finale = reponse(200, "{}", Map.of());
+        HttpClient http = mock(HttpClient.class);
+        when(http.send(any(), any())).thenAnswer(invocation -> {
+            HttpRequest requete = invocation.getArgument(0);
+            if ("vigiechiro.s3.amazonaws.com".equals(requete.uri().getHost())) {
+                putsS3.incrementAndGet();
+                return s3ok;
+            }
+            if (requete.uri().getPath().endsWith("/multipart")) {
+                return urlPartie;
+            }
+            finalisations.incrementAndGet();
+            return finale;
+        });
+        ClientVigieChiro client = clientAvec(http);
+        SuiviReprise annuleApresLaPremiere = new SuiviReprise() {
+            @Override
+            public void nouvelleTentative(int tentative, Duration delai) {}
+
+            @Override
+            public boolean renonce() {
+                return putsS3.get() >= 1;
+            }
+        };
+
+        ReponseApi<String> issue = client.deposerEnParts("f-1", fichier, 3, fraction -> {}, annuleApresLaPremiere)
+                .reponse();
+
+        assertThat(putsS3).as("la première partie part, les deux suivantes non").hasValue(1);
+        assertThat(finalisations).as("un envoi interrompu ne se finalise pas").hasValue(0);
+        assertThat(issue.estReessayable())
+                .as("l'unité reste à reprendre : « Reprendre le dépôt » la renverra")
+                .isTrue();
+        assertThat(issue.echec()).get(as(InstanceOfAssertFactories.STRING)).contains("interrompu");
     }
 
     @Test
