@@ -12,6 +12,8 @@ ratchet: 163
 verified:
   - by: machine:suspects
     at: 2026-10-01
+relations:
+  complete: ["5068-une-dette-assumee-se-compte"]
 generated:
   by: "process:assistance-par-agents"
 ---
@@ -34,36 +36,44 @@ champ de saisie en est un, reconstruit à chaque clignotement.
 
 ## Ce que cela produit
 
-`SelecteurFichierEnFenetreTest.enregistrer_rend_le_chemin_complet` a levé en CI :
+`SelecteurFichierEnFenetreTest.enregistrer_rend_le_chemin_complet` a levé en CI, **une fois sur 558
+tirages** de trente jours - un minorant, le relevé ne lisant que `maven.yml` :
 
 ```
 java.util.ConcurrentModificationException
   at com.sun.javafx.scene.shape.PathUtils.configShape(PathUtils.java:45)
-  ...
   at org.testfx.api.FxRobot.pointOfVisibleNode(FxRobot.java:922)
   at fr.univ_amu.iut.recette.GesteVisible.cliquer(GesteVisible.java:144)
 ```
 
-**Une fois sur 558 tirages** de trente jours, et c'est un minorant : le relevé des bancs instables ne
-lit que `maven.yml`. La pile est celle du fil **du test** - c'est lui qui itère, et le fil JavaFX qui
-écrit. La `ConcurrentModificationException` est une **troisième** forme de ce que la javadoc de
-`CadreVisible.lireSurLeFilFx` nomme, après l'index de -1 et le tableau de segments nul, et la seule
-qui n'abîme rien : elle est levée chez le lecteur, et le graphe reste intact. Le journal le confirme,
-5 603 tests et une erreur, sans cascade.
+La pile est celle du fil **du test** : c'est lui qui itère, et le fil JavaFX qui écrit. Cette forme
+n'abîme rien, contrairement aux deux que nomme `CadreVisible.lireSurLeFilFx` : elle est levée chez le
+lecteur, le graphe reste intact, et le journal montre 5 603 tests pour une erreur, sans cascade.
 
 ## La décision
 
-> Un geste du pointeur **situe sa cible sur le fil JavaFX**, et ne reçoit ensuite qu'un point
-> d'écran.
+> Un geste du pointeur **situe sa cible sur le fil JavaFX**, et ne reçoit ensuite qu'un point.
 
-Le repère est celui de l'**écran**, parce que c'est ce que `moveTo(Point2D)` attend. Rendre un point
-de scène donnerait un geste décalé de la position de la fenêtre, et **rien ne refuserait** : le clic
-partirait simplement à côté.
+Le point vient de `robot.point(...)`, appelé **dans** l'aller-retour de fil. Un calcul à nous serait
+faux : la première version prenait le centre de `localToScreen(getBoundsInLocal())`, là où
+`BoundsLocatorImpl` **intersecte** d'abord les bornes avec la scène. Un champ qui dépasse de sa
+fenêtre avait donc un centre hors de la fenêtre ; le clic partait à côté, et deux bancs ont rougi sur
+un champ resté à sa valeur d'origine. On importe l'instrument au lieu de le réécrire, comme pour le
+prédicat de visibilité qu'`amenerDansLeCadre` partage.
 
-Le refus de TestFX est conservé plutôt que perdu. `GesteVisible.exigerVisible` emploie
-`NodeQueryUtils.isVisible()`, le prédicat même de TestFX, importé et non réécrit : une seconde façon
-de juger la visibilité divergerait de celle sur laquelle `amenerDansLeCadre` s'appuie pour savoir
-quand défiler.
+## Trois voisines, et le trou entre elles
+
+L'**ADR 5278** tient les **prédicats d'attente** qui lisent le graphe hors du fil. Son cliquet à
+zéro est sincère et ne dit rien d'ici : une lecture hors de toute attente n'entre pas dans sa
+population.
+
+Le garde Java de **#4246** tient les **helpers qui lisent le graphe eux-mêmes**. Il ne pouvait pas
+voir ce défaut, la lecture étant **déléguée à TestFX** - mais il a bien accusé la première version
+de ce lot, qui calculait les bornes elle-même.
+
+L'**ADR 5068** compte les `clickOn` tenant une référence résolue. Sa population est **strictement
+contenue** dans celle-ci, 38 sur 38. Les deux remèdes ne se valent donc pas : passer au sélecteur
+retire un site de son cliquet et le laisse dans celui-ci, `pointSurLeFil` le retire des **deux**.
 
 ## Pourquoi un cliquet, et non un banc
 
@@ -88,15 +98,12 @@ au-dessus de **163**. Mesure du 2026-10-01 : **169 lus, 169 fautifs** avant ce l
 fautifs** après. La population ne bouge pas et les suspects descendent, ce qui distingue un gain d'un
 ciblage manqué (ADR 4002).
 
-Les 163 restants sont la **dette déclarée des bancs**, hors périmètre de ce lot par arbitrage : ils
-résolvent leur sélecteur directement, sans passer par `GesteVisible`. Le cliquet ne leur demande
-rien ; il refuse le **suivant**.
-
-Un grep sur `clickOn("` n'en voyait que 110 : les 59 autres passent un identifiant, un `lookup`
-imbriqué, une concaténation ou un transtypage. Le compte juste se lit à l'arbre.
+Les 163 restants sont la dette déclarée des bancs, hors périmètre par arbitrage : le cliquet ne leur
+demande rien, il refuse le **suivant**. Un grep sur `clickOn("` n'en voyait que 110 ; les autres
+passent un identifiant, un `lookup` imbriqué, une concaténation ou un transtypage. Le compte juste
+se lit à l'arbre.
 
 ## La limite, déclarée
 
-Le garde reconnaît un **nom**, `pointSurLeFil(`, et non une propriété. Une cible située sur le fil par
-une aide portant un autre nom échapperait au compte. C'est le prix d'un détecteur statique, et il est
-écrit dans son `CONTRAT` plutôt que découvert.
+Le garde reconnaît un **nom**, `pointSurLeFil(`, et non une propriété. Une cible située sur le fil
+par une aide portant un autre nom échapperait au compte, et son `CONTRAT` le déclare.

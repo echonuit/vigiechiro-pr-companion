@@ -12,12 +12,22 @@ ratchet: 38
 verified:
   - by: machine:ci
     at: 2026-09-01
+relations:
+  completee_par: ["5707-un-geste-du-pointeur-situe-sa-cible-sur-le-fil"]
 generated:
   by: "process:assistance-par-agents"
   at: 2026-09-01
 ---
 
 # Une dette assumée se compte
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-01** : cette décision est **complétée** par
+    [5707](5707-un-geste-du-pointeur-situe-sa-cible-sur-le-fil.md). Les 38 sites qu'elle compte sont
+    tous dans la population de 5707, 38 sur 38, qui demande davantage : un geste du pointeur situe sa
+    cible **sur le fil JavaFX**. Le remède prescrit ici - passer au sélecteur plutôt que tenir une
+    référence - retire un site de ce cliquet et le laisse dans celui de 5707 ; passer par
+    `GesteVisible.pointSurLeFil` le retire des deux. Le reste fait foi.
 
 ## Contexte
 

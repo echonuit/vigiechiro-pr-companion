@@ -399,6 +399,7 @@ nav:
     - 5169 · Un inventaire s'adosse au code, ou au document qui fait autorité: decisions/5169-un-inventaire-s-adosse-au-code-ou-au-document.md
     - 5628 · Un écart de médianes ne se conclut pas sans sa dispersion: decisions/5628-un-ecart-de-medianes-ne-se-conclut-pas-sans-sa-dispersion.md
     - 5684 · Une décision pure et son refus se séparent: decisions/5684-une-decision-pure-et-son-refus-se-separent-pour-etre-vus-rouges.md
+    - 5707 · Un geste du pointeur situe sa cible sur le fil JavaFX: decisions/5707-un-geste-du-pointeur-situe-sa-cible-sur-le-fil.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md

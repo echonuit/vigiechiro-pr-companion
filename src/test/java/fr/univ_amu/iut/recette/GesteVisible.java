@@ -245,36 +245,15 @@ public final class GesteVisible {
         cliquer(robot, libelle);
     }
 
-    /// Le point d'écran où le pointeur doit aller, **situé sur le fil JavaFX** (#5707).
+    /// Le point d'écran où le pointeur doit aller, **situé sur le fil JavaFX** (ADR 5707).
     ///
-    /// ## Ce que ce détour évite
+    /// `moveTo("#id")` ne fait pas que bouger le pointeur : il **situe** sa cible, sur le fil
+    /// appelant, en lisant les bornes de chaque candidat. Cela itère les éléments de tout `Path` du
+    /// sous-arbre - le caret d'un champ en est un - pendant que le fil JavaFX les rebâtit.
     ///
-    /// `robot.moveTo("#id")` et `robot.clickOn("#id")` ne font pas que bouger le pointeur : ils
-    /// **situent** leur cible, et sur le fil **appelant**. L'octet-code de TestFX 4.0.18 dit ce que
-    /// `NodeQueryUtils.isNodeVisible` lit de chaque candidat :
-    ///
-    /// ```
-    /// Node.getScene -> Node.getBoundsInLocal -> Node.localToScene -> Scene.getWidth/getHeight
-    /// ```
-    ///
-    /// Lire des bornes recalcule la géométrie du sous-arbre, donc **itère les éléments** de tout
-    /// `Path` qui s'y trouve - le caret d'un champ de saisie en est un, que JavaFX rebâtit à chaque
-    /// clignotement. Les deux se croisent **une fois sur 558 tirages** de trente jours, et le banc
-    /// meurt d'une `ConcurrentModificationException` dont la pile est entièrement dans JavaFX.
-    ///
-    /// ## Pourquoi le point vient de TestFX, et non d'un calcul à nous
-    ///
-    /// La première version calculait le centre de `localToScreen(getBoundsInLocal())`. **Elle était
-    /// fausse**, et deux bancs l'ont dit : `BoundsLocatorImpl.boundsOnScreenFor` **intersecte**
-    /// d'abord les bornes de scène avec la scène elle-même, puis ajoute les décalages de la fenêtre
-    /// ET de la scène. Un champ qui dépasse de sa fenêtre a donc un centre naïf **hors** de la
-    /// fenêtre : le clic partait à côté, le champ ne prenait pas le focus, et la saisie n'allait
-    /// nulle part. `SelecteurFichierEnFenetreTest` et `ParcoursImporterUneNuitTest` ont rougi sur un
-    /// champ resté à sa valeur d'origine, ce qui ne ressemblait en rien à une erreur de géométrie.
-    ///
-    /// `robot.point(...)` est donc appelé tel quel, **dans** l'aller-retour de fil : on importe
-    /// l'instrument au lieu de le réécrire. C'est le même geste que pour le prédicat de visibilité
-    /// ci-dessous, et pour la même raison.
+    /// Le point vient de `robot.point(...)` et non d'un calcul à nous : `BoundsLocatorImpl`
+    /// **intersecte** les bornes avec la scène avant d'ajouter les décalages, et le centre naïf
+    /// tombait hors de la fenêtre pour un champ qui dépasse. L'ADR porte la mesure et le récit.
     private static Point2D pointSurLeFil(FxRobot robot, String cible) {
         return Attente.surLeFil(
                 () -> robot.point(exigerVisible(robot, cible)).query(),
