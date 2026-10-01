@@ -61,7 +61,7 @@
              correctif : #5473 a mesuré que 11.1.0 et 11.2.1 se comportent identiquement sur les
              commentaires, mais l'extracteur dépend de son JDT, dont les options de compliance
              changent d'une version à l'autre. -->
-        <spoon.version>11.2.1</spoon.version>
+        <spoon.version>11.5.0</spoon.version>
         <exec.maven.plugin.version>3.6.3</exec.maven.plugin.version>
         <spotless.maven.plugin.version>3.10.1</spotless.maven.plugin.version>
         <palantir.java.format.version>2.91.0</palantir.java.format.version>
