@@ -87,13 +87,13 @@ class BancDeRecettePlateformeTest {
         assertThatThrownBy(() ->
                         BancDeRecette.surLeChrome().connecteALaPlateforme().connecte("u-banc", "chiro", "Observateur"))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("jamais les deux");
+                .hasMessageContaining("jamais deux à la fois");
 
         assertThatThrownBy(() -> BancDeRecette.surLeChrome()
                         .connecte("u-banc", "chiro", "Observateur")
                         .connecteALaPlateforme())
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("jamais les deux");
+                .hasMessageContaining("jamais deux à la fois");
     }
 
     @Test
