@@ -107,7 +107,30 @@ sous le fil à mesure que l'issue vit. Le corps est ce qui survit à l'onglet fe
 journal. Un critère écrit en commentaire est un critère que la clôture ne relira pas.
 
 Mesuré le 2026-08-31 : sur les onze lots ouverts des chantiers ouverts depuis que la règle existe,
-**neuf** ne portaient aucun critère dans leur corps (#4951).
+**neuf** ne portaient aucun critère dans leur corps (#4951). Remesuré le 2026-10-01 sur la population
+complète des lots clos depuis la règle : **59 sur 289 rattachés** restent muets dans leur corps, soit
+20 %, et c'est un minorant puisque la mesure lit les corps tels qu'ils sont aujourd'hui (#5211).
+
+**Deux rappels parlent, et aucun ne refuse.** L'un à l'ouverture de l'issue, l'autre à l'ouverture
+d'une demande qui ferme le lot. Le second existe parce que le premier **ne repasse pas** : il arrive
+parfois avant que vous sachiez votre critère, et rien ne reparlait ensuite. Si vous voyez le second,
+c'est que votre lot est muet au moment où vous le livrez, et c'est le dernier endroit où l'écrire coûte
+encore peu.
+
+## Et si le remède change, le critère se relit
+
+Un critère écrit avant que la conception ne change devient une promesse que personne ne peut vérifier,
+et la clôture la lit comme si elle valait encore.
+
+Vécu sur #5180 : son critère disait « la **balise** rougit sur un chiffre faux, vérifié par mutation ».
+La livraison n'a **aucune balise** - l'analyse a montré que les deux chiffres ne portaient rien. L'esprit
+du critère était tenu, un refus éprouvé par mutation, et sa **lettre** désignait une chose qui n'existe
+pas. Personne ne l'a vu avant la clôture, parce que le critère n'a pas été rouvert quand la conception
+a changé.
+
+**Tout changement de périmètre en cours d'issue se re-demande, et le critère de fin fait partie de ce
+qu'il faut alors relire.** C'est une consigne et non un garde : aucun motif ne distingue un critère
+périmé d'un critère tenu, et l'ADR 5335 dit pourquoi cette famille-là ne se mécanise pas.
 
 ## Pourquoi le commentaire **et** l'assignation, pas l'un ou l'autre
 

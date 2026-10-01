@@ -84,6 +84,28 @@ une autre issue.
 Qui ouvre ces issues aujourd'hui lit **d'abord l'erreur**, et la correction ensuite, s'il descend
 jusque-là.
 
+## Le critère de fin se relit à sa LETTRE, pas seulement à son esprit
+
+L'étape 1 demande si la prémisse d'ouverture tient encore. Le **critère de fin** est dans ce qu'il faut
+relire, et par sa lettre : un critère écrit avant que la conception ne change désigne parfois une chose
+qui n'existe pas.
+
+Vécu sur #5180, dont le critère annonçait « la **balise** rougit sur un chiffre faux ». La livraison
+n'en portait aucune, l'analyse ayant montré que les deux chiffres ne tenaient rien. L'esprit du critère
+était tenu, un refus éprouvé par mutation ; sa lettre nommait un dispositif abandonné. Personne ne l'a
+vu avant la clôture du chantier.
+
+Deux issues, et une seule est acceptable :
+
+| Ce qu'on trouve | Ce qu'on fait |
+|---|---|
+| la lettre du critère désigne ce qui a été livré | rien, et c'est le cas courant |
+| elle désigne un remède abandonné | **le corps se corrige**, en disant ce qui a remplacé quoi |
+
+Ce qui n'est pas permis est de cocher en se disant que l'esprit est tenu : la clôture du chantier
+relira la lettre, et elle n'aura pas la conversation qui la rendait vraie. Aucun garde ne le vérifie,
+et l'ADR 5335 dit pourquoi cette famille ne se mécanise pas.
+
 ## Le test de lecture à froid
 
 **Le corps de l'issue se lit-il correctement dans six mois, sans la discussion ?**
