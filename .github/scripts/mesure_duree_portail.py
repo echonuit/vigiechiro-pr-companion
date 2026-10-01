@@ -49,6 +49,29 @@ import time
 
 SEUIL_POURCENT = 20
 
+# ⟨l ecart minimal, en dispersions ROBUSTES⟩ Un ecart de medianes ne se conclut pas sans sa
+# dispersion : sur `mutation-ihm.yml`, +59 % annonces valaient 0,42 dispersion, c est-a-dire du bruit.
+#
+# Le seuil vaut UN, et pour deux raisons qui se rejoignent. La premiere est de sens : un ecart egal a
+# la dispersion est un ecart aussi grand que l ecart habituel, ce qui est le minimum pour le dire
+# autre chose qu un tirage. La seconde est mesuree, sur les ateliers qui ATTEIGNENT cette regle le
+# 2026-10-01 - c est-a-dire au-dela de 20 % de derive, et dont les compositions sont comparables :
+#
+#     recette-filmee.yml   +224 %   ecart/dispersion 3,24   -> avertit
+#     ------------------------------- le trou -------------------------------
+#     mutation-ihm.yml      +59 %   ecart/dispersion 0,42   -> se tait
+#     mutation-model.yml  +20,5 %   ecart/dispersion 0,41   -> se tait
+#
+# UN est dans le trou avec de la marge des deux cotes : 2,4 fois au-dessus du plus haut des muets,
+# 3,2 fois en dessous du seul parlant. Aucun des deux cotes ne se decide a une decimale.
+#
+# TROIS POINTS, ET UNE PREMIERE DERIVATION FAUSSE. J avais d abord lu un trou entre 0,42 et 1,01 et
+# propose 0,7, en comptant `release.yml` et ses +708 % parmi les parlants. Il n atteint jamais cette
+# regle : le refus des compositions non comparables (#5626) l arrete avant, ses fenetres melant
+# `schedule` et `push`. Un seuil ajuste sur un cas que la regle ne juge pas aurait ete ajuste sur
+# rien. Le chiffre se perimera si la distribution bouge ; d ou cette mesure, datee (ADR 5628).
+ECART_MINIMAL_EN_MAD = 1.0
+
 # ⟨la racine, depuis ce fichier⟩ Ce script vit dans `.github/scripts/`, donc deux crans au-dessus.
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 
@@ -138,6 +161,22 @@ def mediane(valeurs: list[float]) -> float:
     tries = sorted(valeurs)
     n = len(tries)
     return tries[n // 2] if n % 2 else (tries[n // 2 - 1] + tries[n // 2]) / 2
+
+
+def dispersion_robuste(valeurs: list[float]) -> float:
+    """L ecart absolu median : la dispersion qui va avec une MEDIANE.
+
+    L ecart-type ne va pas avec elle, et deux mesures du 2026-10-01 le disent. Groupe sur les 24, il
+    inclut le changement de regime lui-meme, donc plus l ecart est reel plus il gonfle : aucun des dix
+    ateliers n atteignait 1, `release.yml` et ses +708 % compris, et un seuil la aurait rendu cet
+    avertisseur ENTIEREMENT muet. Calcule par fenetre, il reste trompe par une population BIMODALE -
+    la fenetre recente de `release.yml` va de 1 a 50 min, donc son ecart-type de 19,5 ecrase un ecart
+    de 7,6 min qui est pourtant un triplement.
+
+    Une mediane resiste aux aberrantes (ADR 3560) ; sa dispersion doit y resister aussi.
+    """
+    centre = mediane(valeurs)
+    return mediane([abs(valeur - centre) for valeur in valeurs])
 
 
 def rendre(texte: str) -> None:
@@ -288,6 +327,20 @@ def mesurer(depot: str, workflow: str, fenetre: int = 12) -> int:
     precedente = mediane(durees[fenetre:besoin])
     derive = ((recente / precedente) - 1) * 100
 
+    # ⟨la dispersion se calcule TOUJOURS, et s affiche toujours⟩ #5626 a appris qu une declaration
+    # qu on ne montre que lorsqu elle fait taire ne se relit pas : le lecteur ne sait alors pas si
+    # elle a ete regardee. Elle est donc dans le tableau meme quand elle laisse conclure.
+    dispersion = max(
+        dispersion_robuste(durees[0:fenetre]), dispersion_robuste(durees[fenetre:besoin])
+    )
+    ecart = abs(recente - precedente)
+    # ⟨une dispersion NULLE laisse conclure⟩ Elle dit que la moitie des executions ont la meme duree
+    # a la seconde pres : un atelier parfaitement stable qui se deplace EST un signal. Le cas n a pas
+    # ete observe le 2026-10-01 - la plus petite dispersion du depot vaut une seconde, sur
+    # `critere-de-fin.yml` - mais la forge rend des secondes entieres et un job de moins de dix
+    # secondes peut l atteindre. Declare plutot que subi.
+    en_dispersions = float("inf") if dispersion == 0 else ecart / dispersion
+
     rendre(
         f"### {titre(workflow)}\n\n"
         "| Fenêtre | Médiane |\n"
@@ -295,7 +348,11 @@ def mesurer(depot: str, workflow: str, fenetre: int = 12) -> int:
         f"| {fenetre} dernières exécutions | **{recente:.1f} min** |\n"
         f"| les {fenetre} d'avant | {precedente:.1f} min |\n"
         f"| dérive | **{derive:+.1f} %** (seuil d'avertissement : {SEUIL_POURCENT} %) |\n\n"
-        "Comparaison de deux **médianes** : une exécution isolément longue ne la déplace pas."
+        f"| dispersion | **{dispersion:.1f} min**, et l'écart en vaut "
+        f"**{'∞' if en_dispersions == float('inf') else f'{en_dispersions:.2f}'}** "
+        f"(minimum pour conclure : {ECART_MINIMAL_EN_MAD}) |\n\n"
+        "Comparaison de deux **médianes** : une exécution isolément longue ne la déplace pas, et la "
+        "dispersion est l'**écart absolu médian**, qui y résiste comme elle."
         + (
             f"\n\nComposition : {composition(rec_ev)} contre {composition(anc_ev)} - "
             "mêmes déclencheurs des deux côtés, donc l'écart mesure bien une durée."
@@ -303,6 +360,20 @@ def mesurer(depot: str, workflow: str, fenetre: int = 12) -> int:
             else ""
         )
     )
+
+    # ⟨l instrument REFUSE de conclure quand la dispersion ecrase l ecart⟩ Troisieme raison de
+    # refuser, apres l historique illisible (#5615) et les compositions non comparables (#5626).
+    # Celle-ci ne porte pas sur ce qu il LIT mais sur ce qu il CONCLUT : un ecart plus petit que la
+    # dispersion de ses propres fenetres est un tirage, pas une derive, et l annoncer fait chercher
+    # une cause qui n existe pas (ADR 5628).
+    if derive > SEUIL_POURCENT and en_dispersions < ECART_MINIMAL_EN_MAD:
+        print(
+            f"::notice title={titre(workflow)}::JE NE CONCLUS PAS : l'écart des deux médianes vaut "
+            f"{ecart:.1f} min pour une dispersion de {dispersion:.1f} min, soit "
+            f"{en_dispersions:.2f} dispersion. Les {derive:+.1f} % annoncés ne se distinguent pas "
+            f"d'un tirage, et le minimum pour conclure est {ECART_MINIMAL_EN_MAD}."
+        )
+        return 0
 
     if derive > SEUIL_POURCENT:
         print(
@@ -416,6 +487,49 @@ CAS = (
         "sans assez d'historique, il le dit au lieu de conclure",
         [11.0, 10.9, 11.2, 10.8, 11.1],
     ),
+    # ⟨LA DISPERSION QUI ECRASE L ECART⟩ Calque sur `mutation-ihm.yml` : les deux fenetres sont
+    # enormement dispersees, les medianes se deplacent de 37 %, et l ecart ne vaut qu une fraction
+    # de dispersion. L annoncer fait chercher une cause qui n existe pas (ADR 5628).
+    (
+        "refuse",
+        "une dérive dont l'écart est plus petit que la dispersion ne se conclut pas",
+        [1.0, 100.0, 50.0, 120.0, 20.0, 90.0, 30.0, 110.0, 60.0, 15.0, 130.0, 70.0]
+        + [1.0, 80.0, 40.0, 90.0, 15.0, 70.0, 25.0, 85.0, 45.0, 10.0, 95.0, 50.0],
+    ),
+    # ⟨LE SENS INVERSE, et il compte autant⟩ Deux fenetres NETTES dont les centres se deplacent : la
+    # regle doit laisser passer. Sans ce cas, refuser pourrait devenir se taire tout court, et
+    # j aurais rendu l avertisseur muet au lieu de le rendre juste.
+    (
+        "avertit",
+        "deux fenêtres nettes dont les centres se déplacent avertissent encore",
+        [30.0, 31.0, 30.0, 32.0, 31.0, 30.0, 31.0, 32.0, 30.0, 31.0, 30.0, 31.0]
+        + [20.0, 21.0, 20.0, 22.0, 21.0, 20.0, 21.0, 22.0, 20.0, 21.0, 20.0, 21.0],
+    ),
+    # ⟨UNE POPULATION BIMODALE, et c est le cas qui exige une dispersion ROBUSTE⟩ Dix executions
+    # serrees autour de 8 et deux a 50 : l ecart absolu median vaut 0,1, l ecart-type une quinzaine.
+    # Un quadruplement REEL - de 2 a 8 min - se conclut avec la mediane et s eteindrait avec
+    # l ecart-type. Calque sur la fenetre recente de `release.yml`, qui va de 1 a 50 min.
+    #
+    # Ce cas a ete ajoute parce qu une mutation SURVIVAIT : remplacer la dispersion robuste par
+    # `statistics.pstdev` ne faisait rougir personne, alors que c est tout le propos de l ADR 5628.
+    (
+        "avertit",
+        "une fenêtre BIMODALE se juge sur l'écart absolu médian, pas sur l'écart-type",
+        [7.9, 8.0, 8.1, 8.0, 7.9, 8.1, 8.0, 7.9, 8.1, 8.0, 50.0, 50.0]
+        + [2.0, 2.1, 1.9, 2.0, 2.1, 1.9, 2.0, 2.1, 1.9, 2.0, 2.0, 2.1],
+    ),
+    # ⟨LA PLUS GRANDE des deux dispersions, et non la plus petite⟩ Conclure demande que les DEUX
+    # fenetres soient assez nettes : une fenetre dispersee face a une fenetre serree ne permet pas
+    # de dire ou son centre est. Ici la recente a une dispersion de 5 et l ancienne de 0,1, pour un
+    # ecart de 3 : avec le maximum on se tait, avec le minimum on crierait.
+    #
+    # Ajoute pour la meme raison que le precedent - la mutation `max` -> `min` survivait.
+    (
+        "refuse",
+        "une fenêtre dispersée face à une fenêtre nette ne laisse pas conclure",
+        [13.0, 3.0, 23.0, 13.0, 3.0, 23.0, 13.0, 3.0, 23.0, 13.0, 13.0, 13.0]
+        + [10.0, 10.1, 9.9, 10.0, 10.1, 9.9, 10.0, 10.1, 9.9, 10.0, 10.0, 10.1],
+    ),
 )
 
 
@@ -456,7 +570,7 @@ def _auto_test() -> int:
     import io
     import tempfile
 
-    echecs = cas = avertit = court = 0
+    echecs = cas = avertit = court = refuse = 0
     with tempfile.TemporaryDirectory(prefix="vc-portail-") as tmp:
         serie = pathlib.Path(tmp) / "serie.json"
         ancien = os.environ.get("SERIE_DUREES_FICHIER")
@@ -468,6 +582,8 @@ def _auto_test() -> int:
                     avertit += 1
                 if attendu == "court":
                     court += 1
+                if attendu == "refuse":
+                    refuse += 1
                 serie.write_text(json.dumps(durees), encoding="utf-8")
                 tampon = io.StringIO()
                 with contextlib.redirect_stdout(tampon), contextlib.redirect_stderr(tampon):
@@ -478,6 +594,8 @@ def _auto_test() -> int:
                     obtenu = "avertit"
                 if "Pas encore assez d'historique" in sortie:
                     obtenu = "court"
+                if "JE NE CONCLUS PAS" in sortie:
+                    obtenu = "refuse"
                 if obtenu == attendu:
                     print(f"  ✔ {libelle}")
                 else:
@@ -630,7 +748,14 @@ def _auto_test() -> int:
     print()
     v1 = "DOIT" if avertit == 1 else "DOIVENT"
     v2 = "DOIT" if court == 1 else "DOIVENT"
-    print(f"{cas} cas, dont {avertit} qui {v1} avertir et {court} qui {v2} refuser de conclure.")
+    # ⟨chaque etat AFFICHE son compte⟩ Le compteur de `refuse` existait et ne se voyait pas : la
+    # ligne ne montrait que `court`, et un etat qu on ne compte pas a voix haute est un etat qu on
+    # peut perdre sans que la ligne bouge.
+    print(
+        f"{cas} cas, dont {avertit} qui {v1} avertir, {court} qui {v2} refuser faute"
+        f" d'historique, et {refuse} qui doi{'vent' if refuse > 1 else 't'} refuser parce que la"
+        f" dispersion ecrase l ecart."
+    )
     return echecs
 
 
