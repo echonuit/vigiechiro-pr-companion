@@ -185,7 +185,7 @@ jobs:
         # jour - n'y est pas, alors que notre fork prend des milliers de commits de retard entre deux
         # soumissions. Un tag figé rend l'action INVISIBLE à `verifie_fraicheur_actions.py`, qui compare
         # des tags : v2 face à v2, aucun écart, rien à signaler (#2213).
-        uses: vedantmgoyal9/winget-releaser@b3a5dae0047c6180023acba3f548c55fdf6b7193 # main @ 2026-07-28
+        uses: vedantmgoyal9/winget-releaser@a8fff44b123f115ce4c21543edf8b677376fc7e0 # main @ 2026-07-28
         with:
           # Identifiant stable, à vie. Éditeur = le projet Echonuit (cohérent avec le
           # --vendor de l'installeur et l'app-id Flatpak fr.echonuit.* ; ADR 0047).
