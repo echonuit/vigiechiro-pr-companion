@@ -6,10 +6,6 @@ import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.concurrent.atomic.AtomicInteger;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,38 +27,25 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Ces cas sont le symétrique de [BancDeRecetteUrlTest] : là-bas, un banc qui n'a rien déclaré ne doit
 /// recevoir **aucune** connexion ; ici, un banc qui a déclaré doit en recevoir **au moins une**. Même
-/// prise TCP sur port éphémère, pour la raison écrite là-bas.
+/// [GuichetQuiCompte].
 @ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class BancDeRecetteSansDepotTest {
 
     /// La forme exacte d'un jeton Vigie-Chiro : trente-deux caractères tirés dans `A-Z0-9`.
     private static final String JETON_REEL = "PLATEFORMESANSDEPOTPOURLEBANC123";
 
-    private final AtomicInteger recues = new AtomicInteger();
-
-    private ServerSocket guichet;
+    private GuichetQuiCompte guichet;
 
     private Injector injecteur;
 
     @Start
     void start(Stage stage) throws IOException {
-        guichet = new ServerSocket(0, 0, InetAddress.getLoopbackAddress());
-        Thread accueil = new Thread(() -> {
-            while (!guichet.isClosed()) {
-                try (Socket entrant = guichet.accept()) {
-                    recues.incrementAndGet();
-                } catch (IOException fermeture) {
-                    return;
-                }
-            }
-        });
-        accueil.setDaemon(true);
-        accueil.start();
+        guichet = GuichetQuiCompte.ouvrir();
 
         // Posées AVANT le banc, comme dans les deux classes voisines : `@Start` s'exécute avant les
         // `@BeforeEach`, et une propriété posée plus tard arriverait après la construction de
         // l'injecteur.
-        System.setProperty("vigiechiro.url", "http://127.0.0.1:" + guichet.getLocalPort() + "/api/v1");
+        System.setProperty("vigiechiro.url", guichet.urlApi());
         System.setProperty("vigiechiro.token", JETON_REEL);
 
         injecteur = BancDeRecette.surLeChrome()
@@ -115,7 +98,7 @@ class BancDeRecetteSansDepotTest {
 
         injecteur.getInstance(ClientVigieChiro.class).moi();
 
-        assertThat(recues.get()).as("""
+        assertThat(guichet.connexionsRecues()).as("""
                         L'adresse désignée par `vigiechiro.url` doit recevoir AU MOINS une connexion.
 
                         Ce banc a déclaré `parleALaPlateforme()` : son client doit garder le câblage de

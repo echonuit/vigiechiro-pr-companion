@@ -13,9 +13,13 @@ verified:
     at: 2026-08-22
 relations:
   prolonge: ["3960"]
+  amendee_par: ["5663-la-plateforme-de-test-pose-l-etat-de-la-jvm-dans-un-fork-a-elle"]
 ---
 
 # Un banc n'emprunte pas l'état partagé du harnais, il ouvre le sien
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-10-01** par l'[ADR 5663](5663-la-plateforme-de-test-pose-l-etat-de-la-jvm-dans-un-fork-a-elle.md) : la plateforme de test écrit l'état de la JVM (contexte TLS par défaut, hôtes S3 admis) sans le rendre, parce qu'elle ne peut pas ouvrir le sien. La règle tient un cran plus haut : le fork est à elle seule, son tag étant exclu du build par défaut et joué par un profil dédié.
 
 ## Contexte
 

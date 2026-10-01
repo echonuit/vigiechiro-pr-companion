@@ -1464,6 +1464,7 @@ b3aaf034461c  src/test/java/fr/univ_amu/iut/commun/api/ReponsesGrilleStocTest.ja
 39defdc92f7f  src/test/java/fr/univ_amu/iut/commun/api/TransportVigieChiroTest.java
 efdb83418f82  src/test/java/fr/univ_amu/iut/commun/api/UrlSigneeAdmiseTest.java
 306bdc2a1902  src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java
+fa9a82d31b32  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ImageDeLApiSansRevisionTest.java
 a3832e038085  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
 08562833df8b  src/test/java/fr/univ_amu/iut/commun/di/AmorcageTest.java
 9ceb8cd1b78e  src/test/java/fr/univ_amu/iut/commun/di/DecouverteModulesTest.java
@@ -2006,9 +2007,9 @@ bd59f0ae8437  src/test/java/fr/univ_amu/iut/recette/Attente.java
 a0620485d3e1  src/test/java/fr/univ_amu/iut/recette/AttenteTest.java
 6ef3a87818b1  src/test/java/fr/univ_amu/iut/recette/BancDeRecette.java
 87701f8fbb55  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteJetonTest.java
-aaba1d256c1e  src/test/java/fr/univ_amu/iut/recette/BancDeRecettePlateformeDeTestTest.java
+3d17b492fb0f  src/test/java/fr/univ_amu/iut/recette/BancDeRecettePlateformeDeTestTest.java
 992bf542c672  src/test/java/fr/univ_amu/iut/recette/BancDeRecettePlateformeTest.java
-db5c0b3fb259  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteSansDepotTest.java
+02732a094cd7  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteSansDepotTest.java
 e69970b75410  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteSemisTest.java
 6d05636b96cb  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteUrlTest.java
 bfbc2c64fc3e  src/test/java/fr/univ_amu/iut/recette/BancDesClipsTest.java
@@ -2019,7 +2020,7 @@ dd0bd72a760f  src/test/java/fr/univ_amu/iut/recette/CarteDeRecette.java
 dc61d71a4d14  src/test/java/fr/univ_amu/iut/recette/CasDeRecette.java
 b5e7288906d9  src/test/java/fr/univ_amu/iut/recette/ClipDeModaleTest.java
 adc5cdc4a3fb  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
-a07b57ca0b8c  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
+8b4720eac270  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
 fb2f197b3036  src/test/java/fr/univ_amu/iut/recette/DispositionDesBrutsTest.java
 f77cce1c3b9d  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffere.java
 a0cad8cca4aa  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffereTest.java
@@ -2036,6 +2037,7 @@ d36d168d30f5  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDCliquetTes
 e2160d2b8a89  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreImbriqueTest.java
 4159f62c57b5  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreTest.java
 e20d6b203e0e  src/test/java/fr/univ_amu/iut/recette/GesteVisibleRemplacementTest.java
+14c1819af275  src/test/java/fr/univ_amu/iut/recette/GuichetQuiCompte.java
 17cebae60967  src/test/java/fr/univ_amu/iut/recette/InventaireDesSessionsTest.java
 d074a44cd5f7  src/test/java/fr/univ_amu/iut/recette/JournalDesReperes.java
 6d929019e49c  src/test/java/fr/univ_amu/iut/recette/JournalDesReperesTest.java

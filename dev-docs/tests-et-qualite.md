@@ -526,6 +526,8 @@ le refuse sinon pour un scénario.
 ### Ses épingles
 
 `epingles.properties` est le **seul** endroit qui porte la révision de l'API et le digest de Mongo.
+`api.Dockerfile` ne donne donc aucune valeur par défaut à `REVISION`, et `ImageDeLApiSansRevisionTest`
+exige qu'il refuse de se construire sans elle.
 Remonter la révision est le remède d'une dérive constatée face à la plateforme nationale : c'est une
 décision, qui se dit dans la demande qui la porte.
 

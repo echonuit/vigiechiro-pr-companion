@@ -31,7 +31,9 @@ compréhension de l'API est **exécutable** : une suite qui tape l'API réelle e
 
 !!! warning "Jamais en CI"
     Ces vérifications frappent l'API **de production** et exigent un token 14 j. Elles sont **exclues du
-    build par défaut** (`surefire.excludedGroups=api-live`) et ne tournent qu'à la demande.
+    build par défaut** (le tag `api-live` figure dans `surefire.excludedGroups`) et ne tournent qu'à la
+    demande. Ce qui se vérifie **sans jeton**, contre une API Vigie-Chiro montée par les tests eux-mêmes :
+    la [plateforme de test](tests-et-qualite.md#la-plateforme-de-test).
 
 Récupérer un token : sur le site VigieChiro connecté, exécuter le marque-page qui lit
 `localStorage['auth-session-token']`.

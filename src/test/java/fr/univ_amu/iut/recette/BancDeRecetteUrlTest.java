@@ -5,10 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.concurrent.atomic.AtomicInteger;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,11 +36,7 @@ import org.testfx.framework.junit5.Start;
 @ExtendWith({ApplicationExtension.class, SansExceptionAvalee.class})
 class BancDeRecetteUrlTest {
 
-    private final AtomicInteger recues = new AtomicInteger();
-
-    private ServerSocket guichet;
-
-    private Thread accueil;
+    private GuichetQuiCompte guichet;
 
     private Injector injecteur;
 
@@ -52,23 +44,8 @@ class BancDeRecetteUrlTest {
     void start(Stage stage) throws IOException {
         // Monté et désigné AVANT le banc, comme la propriété du jeton : `@Start` s'exécute avant les
         // `@BeforeEach`, et une URL posée plus tard arriverait après la construction de l'injecteur.
-        // Une simple prise TCP, et non un serveur HTTP : `com.sun.net.httpserver` vit dans le module
-        // `jdk.httpserver`, que le `module-info.java` de production ne lit pas. L'y ajouter pour un test
-        // élargirait la surface du produit pour la commodité de l'éprouver. Or compter les CONNEXIONS
-        // suffit : ce qu'on veut savoir est si le banc a composé cette adresse, pas ce qu'il y a dit.
-        guichet = new ServerSocket(0, 0, InetAddress.getLoopbackAddress());
-        accueil = new Thread(() -> {
-            while (!guichet.isClosed()) {
-                try (Socket entrant = guichet.accept()) {
-                    recues.incrementAndGet();
-                } catch (IOException fermeture) {
-                    return;
-                }
-            }
-        });
-        accueil.setDaemon(true);
-        accueil.start();
-        System.setProperty("vigiechiro.url", "http://127.0.0.1:" + guichet.getLocalPort() + "/api/v1");
+        guichet = GuichetQuiCompte.ouvrir();
+        System.setProperty("vigiechiro.url", guichet.urlApi());
 
         injecteur = BancDeRecette.surLeChrome()
                 .executeur(BancDeRecette.Executeur.SYNCHRONE)
@@ -102,7 +79,7 @@ class BancDeRecetteUrlTest {
     void le_banc_ignore_l_url_ambiante() {
         injecteur.getInstance(ClientVigieChiro.class).moi();
 
-        assertThat(recues.get()).as("""
+        assertThat(guichet.connexionsRecues()).as("""
                         L'adresse désignée par `vigiechiro.url` ne doit recevoir AUCUNE connexion.
 
                         Ce scénario n'a rien déclaré : ni client remplacé, ni `connecteALaPlateforme()`.

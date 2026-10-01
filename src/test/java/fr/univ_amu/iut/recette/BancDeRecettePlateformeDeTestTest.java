@@ -7,11 +7,7 @@ import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.plateforme.PlateformeDeTest;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,8 +19,8 @@ import org.testfx.framework.junit5.Start;
 /// Vers quel serveur parle un banc qui a déclaré la **plateforme de test** (#5665).
 ///
 /// La quatrième cible du banc, à côté du hors-ligne, de la plateforme réelle et de la connexion
-/// factice. Sœur de `BancDeRecetteUrlTest`, qui tient le hors-ligne, et sur le même patron : deux prises
-/// TCP comptent leurs connexions, sans serveur HTTP ni Docker. L'une est désignée par `vigiechiro.url`,
+/// factice. Sœur de `BancDeRecetteUrlTest`, qui tient le hors-ligne, et sur le même patron : deux
+/// [GuichetQuiCompte] comptent leurs connexions, sans serveur HTTP ni Docker. L'une est désignée par `vigiechiro.url`,
 /// l'**ambiante**, qui ne doit rien recevoir ; l'autre est l'adresse de la plateforme déclarée, qui doit
 /// être composée.
 ///
@@ -35,18 +31,15 @@ class BancDeRecettePlateformeDeTestTest {
 
     private static final String JETON_FACTICE = "JETONFACTICEDELAPLATEFORMEDETEST";
 
-    private final AtomicInteger recuesAmbiante = new AtomicInteger();
-    private final AtomicInteger recuesPlateforme = new AtomicInteger();
-
-    private ServerSocket ambiante;
-    private ServerSocket plateforme;
+    private GuichetQuiCompte ambiante;
+    private GuichetQuiCompte plateforme;
     private Injector injecteur;
 
     @Start
     void start(Stage stage) throws IOException {
-        ambiante = guichet(recuesAmbiante);
-        plateforme = guichet(recuesPlateforme);
-        System.setProperty("vigiechiro.url", "http://127.0.0.1:" + ambiante.getLocalPort() + "/api/v1");
+        ambiante = GuichetQuiCompte.ouvrir();
+        plateforme = GuichetQuiCompte.ouvrir();
+        System.setProperty("vigiechiro.url", ambiante.urlApi());
 
         injecteur = BancDeRecette.surLeChrome()
                 .executeur(BancDeRecette.Executeur.SYNCHRONE)
@@ -56,28 +49,7 @@ class BancDeRecettePlateformeDeTestTest {
 
     private PlateformeDeTest.Acces acces() {
         return new PlateformeDeTest.Acces(
-                "http://127.0.0.1:" + plateforme.getLocalPort() + "/api/v1",
-                "https://127.0.0.1:1",
-                Map.of("observatrice", JETON_FACTICE),
-                Map.of());
-    }
-
-    /// Une prise TCP qui compte ce qu'elle reçoit et le referme : ce qu'on veut savoir est si le banc a
-    /// composé cette adresse, pas ce qu'il y a dit.
-    private static ServerSocket guichet(AtomicInteger recues) throws IOException {
-        ServerSocket prise = new ServerSocket(0, 0, InetAddress.getLoopbackAddress());
-        Thread accueil = new Thread(() -> {
-            while (!prise.isClosed()) {
-                try (Socket entrant = prise.accept()) {
-                    recues.incrementAndGet();
-                } catch (IOException fermeture) {
-                    return;
-                }
-            }
-        });
-        accueil.setDaemon(true);
-        accueil.start();
-        return prise;
+                plateforme.urlApi(), "https://127.0.0.1:1", Map.of("observatrice", JETON_FACTICE), Map.of());
     }
 
     /// Le fork est partagé : une propriété ou un port laissés derrière soi serviraient aux classes
@@ -99,10 +71,10 @@ class BancDeRecettePlateformeDeTestTest {
     void le_banc_vise_la_plateforme_de_test_declaree() {
         injecteur.getInstance(ClientVigieChiro.class).moi();
 
-        assertThat(recuesAmbiante.get()).as("""
+        assertThat(ambiante.connexionsRecues()).as("""
                         L'adresse désignée par `vigiechiro.url` ne doit recevoir AUCUNE connexion : ce
                         scénario a déclaré la plateforme de test, et c'est elle qu'il vise.""").isZero();
-        assertThat(recuesPlateforme.get()).as("""
+        assertThat(plateforme.connexionsRecues()).as("""
                         L'adresse de la plateforme de test déclarée doit être composée. Zéro voudrait
                         dire que le banc l'a ignorée, et qu'un scénario qui croit jouer contre la vraie
                         API joue en réalité hors ligne.""").isPositive();
