@@ -15,8 +15,8 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// - **Téléverser** devient **Reprendre le dépôt** dès qu'un dépôt interrompu laisse des fichiers à
 ///   renvoyer (#1044) - l'icône suit, sans quoi le nuage du premier envoi resterait sur un bouton qui
 ///   reprend ;
-/// - **Annuler le dépôt** se fige sur **Annulation…** le temps que le fichier en vol se termine :
-///   l'annulation est coopérative, jamais une interruption brutale.
+/// - **Annuler le dépôt** se fige sur **Annulation…** le temps que la partie en vol, ou l'archive en
+///   compression, se termine : l'annulation est coopérative, jamais une interruption brutale (#5625).
 ///
 /// Sœur d'[EtapeDeposerUI], extraite pour la même raison : le contrôleur du lot est au plafond de taille
 /// que le portail qualité lui accorde, et chaque étape du dépôt est un morceau cohérent qui vit mieux

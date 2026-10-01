@@ -216,16 +216,18 @@ public class DepotViewModel {
         enCours.set(true);
     }
 
-    /// Demande l'**annulation coopérative** du dépôt en cours (#1044) : le moteur termine le fichier en
-    /// vol puis s'arrête (jamais d'arrêt au milieu d'un fichier : aucune unité fantôme). Le passage reste
-    /// « Dépôt en cours », « Reprendre le dépôt » ne renverra que les fichiers manquants. Au fil JavaFX.
+    /// Demande l'**annulation coopérative** du dépôt en cours (#1044) : le moteur termine la partie en
+    /// vol, ou la compression d'une archive commencée avant le clic, puis s'arrête (#5625). Une archive
+    /// interrompue est abandonnée côté serveur et reste à reprendre : aucune unité fantôme. Le passage
+    /// reste « Dépôt en cours », « Reprendre le dépôt » ne renverra que les fichiers manquants. Au fil
+    /// JavaFX.
     public void demanderAnnulation() {
         jeton.annuler();
         annulationDemandee.set(true);
     }
 
     /// `true` entre la demande d'annulation et la fin effective du dépôt : l'IHM désactive le bouton et
-    /// affiche « Annulation… » le temps que le fichier en cours se termine.
+    /// affiche « Annulation… » le temps que la partie en vol, ou l'archive en compression, se termine.
     public ReadOnlyBooleanProperty annulationDemandeeProperty() {
         return annulationDemandee.getReadOnlyProperty();
     }

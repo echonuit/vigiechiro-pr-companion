@@ -74,13 +74,13 @@
         </graphic>
       </Button>
     </StackPane>
-    <!-- Annulation coopérative du dépôt (#1044) : visible seulement pendant un téléversement. Le
-         fichier en cours se termine d'abord (jamais d'arrêt au milieu d'un fichier) ; « Reprendre le
-         dépôt » ne renverra ensuite que les manquants. -->
+    <!-- Annulation coopérative du dépôt (#1044) : visible seulement pendant un téléversement. La partie
+         en cours d'envoi, ou l'archive en cours de compression, se termine d'abord (#5625) ; « Reprendre
+         le dépôt » ne renverra ensuite que les manquants. -->
     <Button fx:id="btnAnnulerDepot" styleClass="bouton-secondaire" onAction="#annulerDepotVigieChiro"
             visible="false" managed="false">
       <tooltip>
-        <Tooltip text="Termine le fichier en cours puis s'arrête. Le passage reste « Dépôt en cours » : reprendre le dépôt ne renverra que les fichiers manquants."/>
+        <Tooltip text="Termine la partie en cours d'envoi, ou l'archive en cours de compression, puis s'arrête. Le passage reste « Dépôt en cours » : reprendre le dépôt ne renverra que les fichiers manquants."/>
       </tooltip>
     </Button>
     <!-- Réinitialiser le dépôt (#984) : efface le suivi local pour forcer un nouveau téléversement.
