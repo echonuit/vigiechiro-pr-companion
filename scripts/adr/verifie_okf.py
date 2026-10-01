@@ -359,15 +359,22 @@ def lignes_amputees(texte: str) -> list[str]:
 
     Le compte de reference vient de l en-tete `| # | Decision | Chantier |`, et non d un nombre inscrit
     ici. Sans en-tete lisible, on ne juge rien : conclure sur un compte devine serait pire que se taire.
+
+    Et c est le dernier en-tete rencontre AU-DESSUS de la ligne qui fait reference, jamais le premier du
+    fichier. L index n en porte qu un seul aujourd hui - mesure : un en-tete ligne 79, 329 lignes d ADR
+    contigues de 81 a 409 - donc les deux lectures concluent pareil, et c est bien le probleme : la
+    premiere serait juste par accident. Une session pair a vu sa ligne atterrir 760 lignes plus bas, dans
+    un tableau plus large ; son compte ne l a attrapee que parce que les largeurs differaient. La
+    reference juste est la plus PROCHE au-dessus, comme pour tout discriminant par fenetre.
     """
-    entete = next((l for l in texte.splitlines() if l.startswith("| # |")), None)
-    if entete is None:
-        return []
-    attendu = len(SEPARATEUR.findall(entete))
+    attendu = None
     fautes = []
     for ligne in texte.splitlines():
+        if ligne.startswith("| # |"):
+            attendu = len(SEPARATEUR.findall(ligne))
+            continue
         trouve = LIGNE_D_INDEX.match(ligne)
-        if not trouve:
+        if not trouve or attendu is None:
             continue
         vus = len(SEPARATEUR.findall(ligne))
         if vus != attendu:
@@ -941,15 +948,26 @@ def auto_test() -> int:
         None,
         index=UN_INDEX + "| [0001](0001-t.md) | Témoin « Taxon parent \\| Chiroptères » | #1 |\n",
     )
-    # Et le compte de reference vient de l en-tete de l INDEX, pas du premier tableau rencontre. Sans
-    # cela, une legende de deux colonnes posee au-dessus rendrait toutes les lignes amputees d un coup.
+    # La reference est le dernier en-tete rencontre AU-DESSUS, et non le premier du fichier. Le cas le
+    # dit avec DEUX en-tetes de largeurs differentes, et une legende qui n en est pas un : juge contre
+    # le premier, la ligne du bas passerait pour amputee. Une session pair a vu sa ligne atterrir 760
+    # lignes plus bas dans un tableau plus large, et son compte ne l a attrapee que par chance.
     cas(
-        "un tableau qui n est pas l index ne sert pas de reference",
-        {"0001-t.md": MODELE},
+        "la reference est l en-tete le PLUS PROCHE au-dessus",
+        {"0001-t.md": MODELE, "0002-s.md": MODELE},
         None,
+        plancher=2,
         index="| Légende | Sens |\n|---|---|\n| ⚠ | attention |\n\n"
+        "| # | Décision |\n|---|---|\n| [0002](0002-s.md) | Témoin |\n\n"
         + UN_INDEX
         + "| [0001](0001-t.md) | Témoin | #1 |\n",
+    )
+    # Et sans aucun en-tete, on ne juge rien : un compte inscrit dans le garde ferait rougir l innocent.
+    cas(
+        "sans en-tete d index, aucune ligne n est jugee",
+        {"0001-t.md": MODELE},
+        None,
+        index="| Numéro | Décision |\n|---|---|\n| [0001](0001-t.md) | Témoin |\n",
     )
 
     cas("corpus sain", {"0001-t.md": MODELE, "0002-s.md": MODELE}, None, plancher=2)
