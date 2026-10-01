@@ -240,7 +240,15 @@ def relances(jours: int) -> tuple[list[dict], int]:
 #
 # [ADR 3627]: ../../dev-docs/decisions/3627-une-mesure-dit-ce-qu-elle-n-a-pas-pu-lire.md
 # [ADR 2385]: ../../dev-docs/decisions/2385-la-doc-chiffree-est-adossee-au-code.md
-ATELIER_LU = "build"
+# ⟨il n y a PAS d atelier lu, et c est la correction de #5617⟩ Une constante `ATELIER_LU = "build"`
+# vivait ici, et un parametre `atelier` dans `journalDeTentative`. NI L UN NI L AUTRE N ETAIT
+# EMPLOYE : l appel telecharge l archive du RUN ENTIER et joint tous ses fichiers, soit un par
+# atelier. Le releve lisait donc les treize ateliers de `maven.yml` tout en DECLARANT n en lire qu un.
+#
+# Une limitation declaree a tort est pire qu une limitation reelle : qui lit « je ne vois qu un
+# atelier sur huit » escompte un taux qui n a pas besoin de l etre. Prouve sur l execution
+# 36747543152, dont `fuseau-alternatif` avait rouge : son journal est dans l archive, et les bancs qui
+# n y tombent que la figurent bien dans la sortie.
 FLUX_LU = pathlib.Path(__file__).resolve().parents[2] / ".github/workflows/maven.yml"
 
 _ATELIER = re.compile(r"\n  ([a-z][a-z0-9_-]*):")
@@ -262,27 +270,32 @@ def ateliersQuiLancentLaSuite(yml: str) -> list[str]:
 
 
 def limiteDeLecture(flux: pathlib.Path | None = None) -> str:
-    """Ce que le releve n a PAS pu lire, derive du workflow qu il interroge."""
+    """Ce que le releve n a PAS pu lire. Et ce n est PAS un atelier : c est un flux.
+
+    Cette phrase a menti jusqu a #5617. Elle annoncait « atelier `build` seul, 7 invisibles », alors
+    que `joindreLesJournaux` joint UN fichier par atelier de l archive - les treize de `maven.yml`.
+    La limite reelle est ailleurs et elle tient : les autres FLUX qui lancent la suite restent
+    dehors, puisque le releve n interroge que celui-ci.
+    """
     flux = FLUX_LU if flux is None else flux
     if not flux.exists():
-        # A3 jusqu au bout : ne pas pouvoir denombrer les invisibles est encore quelque chose qu on
-        # n a pas pu lire, et le taire rendrait la sortie plus rassurante qu elle ne doit l etre.
+        # A3 jusqu au bout : ne pas pouvoir denombrer ce qu on lit est encore quelque chose qu on n a
+        # pas pu lire, et le taire rendrait la sortie plus rassurante qu elle ne doit l etre.
         return (
-            f"  Lu : atelier `{ATELIER_LU}` seul. Invisibles : NON DENOMBRES,"
-            f" `{flux.name}` etant introuvable. Les taux ci-dessous sont des MINORANTS (article A3)."
+            f"  Lu : tous les ateliers de chaque archive, mais leur nombre est NON DENOMBRE,"
+            f" `{flux.name}` etant introuvable. Invisibles : tous les autres flux qui lancent la"
+            " suite. Les taux ci-dessous sont des MINORANTS (article A3)."
         )
-    invisibles = [
-        a for a in ateliersQuiLancentLaSuite(flux.read_text(encoding="utf-8")) if a != ATELIER_LU
-    ]
+    lus = ateliersQuiLancentLaSuite(flux.read_text(encoding="utf-8"))
     return (
-        f"  Lu : `{flux.name}`, atelier `{ATELIER_LU}` seul."
-        f" Invisibles : {len(invisibles)} autre(s) atelier(s) du meme flux"
-        f" ({', '.join(invisibles)}), et TOUS les autres flux qui lancent la suite."
+        f"  Lu : `{flux.name}`, ses {len(lus)} atelier(s) qui lancent la suite"
+        f" ({', '.join(lus)}) - l archive d une tentative en porte un journal par atelier."
+        " Invisibles : tous les autres flux qui lancent la suite."
         " Les taux ci-dessous sont des MINORANTS (article A3)."
     )
 
 
-def journalDeTentative(idRun: int, tentative: int, atelier: str = ATELIER_LU) -> str:
+def journalDeTentative(idRun: int, tentative: int) -> str:
     """Le journal d'UNE tentative, decompresse. `--log-failed` ne rend que la DERNIERE.
 
     **Cet appel NE passe PAS par `_commun.forge.interroge`, et c est nomme plutot que tu** (#5544).
@@ -313,10 +326,22 @@ def journalDeTentative(idRun: int, tentative: int, atelier: str = ATELIER_LU) ->
         subprocess.run(
             ["unzip", "-qq", "-o", str(zipDeRun), "-d", dossier], capture_output=True, check=False
         )
-        morceaux = []
-        for fichier in pathlib.Path(dossier).glob("*.txt"):
-            morceaux.append(fichier.read_text(encoding="utf-8", errors="replace"))
-        return "\n".join(morceaux)
+        return joindreLesJournaux(pathlib.Path(dossier))
+
+
+def joindreLesJournaux(dossier: pathlib.Path) -> str:
+    """Tous les journaux d atelier de l archive, joints. UN fichier par atelier, a la racine.
+
+    Extrait pour etre eprouvable : c est CETTE fonction qui decide ce que le releve lit, et la
+    declaration de `limiteDeLecture` doit lui correspondre. Tant qu elle vivait dans le corps d un
+    appel reseau, aucun cas ne pouvait confronter les deux, et la declaration a menti pendant des
+    semaines (#5617).
+    """
+    morceaux = [
+        fichier.read_text(encoding="utf-8", errors="replace")
+        for fichier in sorted(dossier.glob("*.txt"))
+    ]
+    return "\n".join(morceaux)
 
 
 # ---- Classer une tentative rouge (#4187) ----
@@ -752,7 +777,50 @@ jobs:
     # Et le flux introuvable ne se tait pas non plus : la sortie doit dire qu elle n a pas pu
     # denombrer, sans quoi un releve lance hors du depot afficherait des taux sans leur limite.
     absent = limiteDeLecture(pathlib.Path("/n-existe-pas/maven.yml"))
-    assert "NON DENOMBRES" in absent and "MINORANTS" in absent, absent
+    assert "NON DENOMBRE" in absent and "MINORANTS" in absent, absent
+
+    # ⟨LA JONCTION LIT TOUS LES ATELIERS, et c est elle qui decide⟩ L archive d une tentative porte
+    # UN fichier par atelier a sa racine. Extraite pour etre eprouvable hors ligne : tant qu elle
+    # vivait dans le corps d un appel reseau, aucun cas ne pouvait confronter ce qu elle lit a ce que
+    # `limiteDeLecture` declare - et la declaration a menti pendant des semaines (#5617).
+    with tempfile.TemporaryDirectory(prefix="vc-5617-") as bac:
+        archive = pathlib.Path(bac)
+        for nom, corps in (
+            ("0_bats.txt", "rouge de bats"),
+            ("2_fuseau-alternatif.txt", "rouge de fuseau"),
+            ("3_build.txt", "rouge de build"),
+            ("notes.md", "ceci n est pas un journal"),
+        ):
+            (archive / nom).write_text(corps, encoding="utf-8")
+        joint = joindreLesJournaux(archive)
+        for attendu in ("rouge de bats", "rouge de fuseau", "rouge de build"):
+            assert attendu in joint, f"{attendu} manque du joint : {joint!r}"
+        # Le negatif : seuls les `.txt` de la RACINE entrent, pas n importe quel fichier.
+        assert "ceci n est pas un journal" not in joint, joint
+
+    # ⟨LA DECLARATION SE CONFRONTE A LA JONCTION⟩ C est le cas qui aurait attrape le mensonge. Il ne
+    # relit pas la phrase, il verifie qu elle ne pretend pas lire UN atelier quand la jonction les
+    # lit TOUS, et qu elle nomme ceux qu elle lit.
+    dite = limiteDeLecture()
+    assert " seul." not in dite, f"la declaration pretend encore lire un atelier seul : {dite}"
+    attendus = ateliersQuiLancentLaSuite(FLUX_LU.read_text(encoding="utf-8"))
+    # ⟨UNE ANCRE INDEPENDANTE, et c est ce qui manquait⟩ Deriver l attente de la fonction qu on
+    # controle rend le cas TAUTOLOGIQUE : si `ateliersQuiLancentLaSuite` rendait `[]`, la boucle
+    # ci-dessous tournerait zero fois et la declaration dirait « ses 0 atelier(s) », donc le cas
+    # passerait. Deux jobs de `maven.yml` sont connus pour lancer la suite depuis des mois : les
+    # exiger NOMMEMENT ancre le cas sur autre chose que lui-meme.
+    #
+    # Trouve en appliquant une lecon d une session pair : quand on change le dessin d un controle, la
+    # matrice de contraste se rejoue en ENTIER, car un temoin peut cesser de discriminer sans cesser
+    # de passer - et une relecture ne le voit pas.
+    for connu in ("build", "fuseau-alternatif"):
+        assert connu in attendus, f"« {connu} » lance la suite et n est plus derive : {attendus}"
+        assert connu in dite, f"« {connu} » est lu et n est pas nomme : {dite}"
+    assert len(attendus) >= 2, attendus
+    assert f"{len(attendus)} atelier" in dite, dite
+    for atelier in attendus:
+        assert atelier in dite, f"« {atelier} » est lu et n est pas nomme : {dite}"
+    assert "MINORANTS" in dite, dite
 
     # ⟨l APPEL, et non le verdict (ADR 4331)⟩ Aucun cas de cet auto-test n exercait le chemin de la
     # forge avant #5544 : `relances` n y est jamais appelee. Une mutation le montrait - retirer le

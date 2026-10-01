@@ -1,0 +1,77 @@
+# Le relevé des bancs instables existait et n'était JAMAIS joué (#5617).
+#
+# `lint.yml` lançait son `--auto-test`, de façon bloquante, et rien d'autre. Son verdict ne
+# déclenchait donc rien parce qu'il n'était jamais **produit** : six bancs du dépôt rougissent par
+# intermittence, le relevé sait dire leur taux, et personne ne le lui demandait.
+#
+# ## Pourquoi un atelier à part, et nocturne
+#
+# Pas dans `lint.yml` : le relevé lit les exécutions passées et **télécharge l'archive de journaux**
+# de chaque tentative rejouée, qu'il dézippe. Le faire à chaque demande ferait payer à tout le monde
+# une lecture d'historique qui ne juge pas la demande.
+#
+# Le coût est borné par le nombre de RELANCES, pas de runs : sur sept jours, 144 tirages pour
+# **8 relances**, donc huit archives. Une fenêtre de trente jours en coûte une trentaine, ce qui tient
+# largement dans une nuit.
+#
+# ## Ce qu'il ne fait pas
+#
+# **Il ne refuse rien.** Un taux d'intermittence n'est pas un verdict sur une demande : c'est une
+# observation qui s'accumule, et dont la conduite appartient au chantier #5697. Un atelier qui
+# bloquerait sur un banc instable punirait la demande qui a eu la malchance de le croiser.
+#
+# **Il ne remplace pas les enquêtes.** Il dit QUI tombe et à quel taux, jamais POURQUOI.
+
+name: releve-des-bancs-instables
+
+on:
+  schedule:
+    # 7 h UTC, après `mutation-model` à 3 h et `mutation-ihm` à 5 h : les trois résumés nocturnes se
+    # lisent alors l'un après l'autre, et aucun ne dispute un runner aux deux autres.
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+    inputs:
+      jours:
+        description: "Fenêtre en jours (vide = 30)"
+        required: false
+        default: ""
+
+permissions:
+  # Il LIT l'historique des exécutions et leurs journaux, et n'écrit rien dans le dépôt.
+  contents: read
+  actions: read
+
+jobs:
+  relever:
+    name: Taux d'intermittence des bancs
+    runs-on: ubuntu-latest
+    # ADR 4028 : tout job porte un butoir. Celui-ci est large parce que son coût dépend du nombre de
+    # relances de la fenêtre, qui n'est pas borné par le dépôt - une semaine agitée en porte plus.
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Relever les bancs qui rougissent par intermittence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOURS: ${{ inputs.jours }}
+        # Le relevé rend 0 quoi qu'il trouve : il OBSERVE, il ne juge pas. Son seul code non nul est
+        # un REFUS de conclure - `gh` ou `unzip` absent, forge muette - et celui-là doit faire rougir,
+        # sans quoi un atelier muet se présenterait en succès (ADR 2748).
+        run: |
+          python3 scripts/methode/releve-les-bancs-instables.py \
+            --jours "${JOURS:-30}" | tee /tmp/releve.txt
+
+      - name: Porter le relevé au résumé de l'exécution
+        # Sans ce pas, la sortie vit dans le journal d'un job que personne n'ouvre. Le résumé est le
+        # destinataire qui manquait : c'est la page qu'on atteint depuis la liste des exécutions.
+        if: always()
+        run: |
+          {
+            echo "## Bancs instables"
+            echo
+            echo '```'
+            cat /tmp/releve.txt 2>/dev/null || echo "Le relevé n'a rien rendu."
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
