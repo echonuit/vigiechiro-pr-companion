@@ -3,9 +3,11 @@ package fr.univ_amu.iut.qualification.view;
 import static org.mockito.Mockito.mock;
 
 import fr.univ_amu.iut.commun.model.DispositionColonnesEnMemoire;
+import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.SelecteursDeTest;
+import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.qualification.model.ServiceEmport;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
@@ -13,7 +15,7 @@ import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
 
 /// Construit un [QualificationController] avec des doubles par défaut (#4767).
 ///
-/// Le contrôleur porte neuf paramètres, et trois cas de garde les recopiaient à l'identique : un
+/// Le contrôleur porte onze paramètres, et trois cas de garde les recopiaient à l'identique : un
 /// paramètre de plus obligeait à quatre alignements. Il n'en touche plus qu'un, ici.
 ///
 /// **Ce que cette fabrique ne prétend pas être** : la mesure de #4767 dit que l'alignement est peu
@@ -41,7 +43,8 @@ final class ControleurQualificationDeTest {
                 mock(NavigationQualification.class),
                 mock(ServiceEmport.class),
                 mock(StockageConnexion.class),
-                SelecteursDeTest.auDefaut());
+                SelecteursDeTest.auDefaut(),
+                new ReglagesReactifs(mock(Reglages.class)));
     }
 
     /// Une ouverture de site qui ne fait rien : les cas de garde ne naviguent pas.

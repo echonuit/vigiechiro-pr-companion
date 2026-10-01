@@ -84,7 +84,6 @@ fe4156d33452  src/main/java/fr/univ_amu/iut/audio/view/AppuisAudio.java
 01cb8ccfbeda  src/main/java/fr/univ_amu/iut/audio/view/CellulesAudio.java
 37784fcc63eb  src/main/java/fr/univ_amu/iut/audio/view/ChromeAudio.java
 58ea3264900a  src/main/java/fr/univ_amu/iut/audio/view/ColonnesAudio.java
-acfd5f1d9153  src/main/java/fr/univ_amu/iut/audio/view/ConfigurationAudioView.java
 e7fe08de1063  src/main/java/fr/univ_amu/iut/audio/view/CriteresAudio.java
 35ca7d2ab69d  src/main/java/fr/univ_amu/iut/audio/view/DecisionRemplacementJeu.java
 c0eccf3c6124  src/main/java/fr/univ_amu/iut/audio/view/DepotFichier.java
@@ -108,7 +107,7 @@ de6b400a37c9  src/main/java/fr/univ_amu/iut/audio/view/MenuCertitude.java
 646bf029318e  src/main/java/fr/univ_amu/iut/audio/view/PanneauDiscussion.java
 03fabcb3c55d  src/main/java/fr/univ_amu/iut/audio/view/PanneauEcouteAudio.java
 3be99f051327  src/main/java/fr/univ_amu/iut/audio/view/PublicationCorrectionsUI.java
-23d8c63139f4  src/main/java/fr/univ_amu/iut/audio/view/RepereCriAudio.java
+c80099d8c4fc  src/main/java/fr/univ_amu/iut/audio/view/RepereCriAudio.java
 93cfd01fca2e  src/main/java/fr/univ_amu/iut/audio/view/RevueClavier.java
 bbeca9cd5c26  src/main/java/fr/univ_amu/iut/audio/view/SelectionTableAudio.java
 b97d6a7fa4b8  src/main/java/fr/univ_amu/iut/audio/view/SonsValidationController.java
@@ -532,6 +531,7 @@ ec175ad4e9cc  src/main/java/fr/univ_amu/iut/commun/view/ChoixSauvegardeModifiabl
 2c5573129543  src/main/java/fr/univ_amu/iut/commun/view/ClesCriteres.java
 e71bfad2c20d  src/main/java/fr/univ_amu/iut/commun/view/ColonneBadge.java
 37e5c3601f71  src/main/java/fr/univ_amu/iut/commun/view/ColonneDate.java
+60f03d8455fe  src/main/java/fr/univ_amu/iut/commun/view/ConfigurationAudioView.java
 3b6971ef6545  src/main/java/fr/univ_amu/iut/commun/view/Confirmateur.java
 a22c0cba60aa  src/main/java/fr/univ_amu/iut/commun/view/ConfirmateurModifiable.java
 be82b8aa7af2  src/main/java/fr/univ_amu/iut/commun/view/ConfirmationNavigation.java
@@ -683,6 +683,7 @@ bb9f113343aa  src/main/java/fr/univ_amu/iut/commun/viewmodel/IndicateurAccueil.j
 9eba46564d76  src/main/java/fr/univ_amu/iut/commun/viewmodel/NavigationViewModel.java
 96c014d9dafa  src/main/java/fr/univ_amu/iut/commun/viewmodel/OngletReglagesGeneral.java
 e02ca9c7d2c7  src/main/java/fr/univ_amu/iut/commun/viewmodel/ProgressionOperation.java
+5139be34992d  src/main/java/fr/univ_amu/iut/commun/viewmodel/ReglageDaltonien.java
 d41abaf67314  src/main/java/fr/univ_amu/iut/commun/viewmodel/ReglagesReactifs.java
 fc14a869c97a  src/main/java/fr/univ_amu/iut/commun/viewmodel/ResteDeRestauration.java
 44205f40f953  src/main/java/fr/univ_amu/iut/commun/viewmodel/RetourOperation.java
@@ -1101,7 +1102,7 @@ df451a7b3c93  src/main/java/fr/univ_amu/iut/qualification/view/Feux.java
 8c6b0f04f4ac  src/main/java/fr/univ_amu/iut/qualification/view/MarqueurEcoute.java
 d6bc83900cd6  src/main/java/fr/univ_amu/iut/qualification/view/ModaleSelectionController.java
 bf48bc7f3059  src/main/java/fr/univ_amu/iut/qualification/view/NavigationQualification.java
-c04a177ff057  src/main/java/fr/univ_amu/iut/qualification/view/QualificationController.java
+755ffdbcde13  src/main/java/fr/univ_amu/iut/qualification/view/QualificationController.java
 30deda080eb8  src/main/java/fr/univ_amu/iut/qualification/view/SelectionEcouteController.java
 f16ef267eaa4  src/main/java/fr/univ_amu/iut/qualification/view/StatutQualification.java
 d434d1c3c7be  src/main/java/fr/univ_amu/iut/qualification/view/VerdictParFichier.java
@@ -1981,7 +1982,7 @@ b175a4d32440  src/test/java/fr/univ_amu/iut/qualification/PlanDeRepriseTest.java
 a343b5ab6bf1  src/test/java/fr/univ_amu/iut/qualification/ServiceQualificationMockTest.java
 ecf099c1b090  src/test/java/fr/univ_amu/iut/qualification/ServiceQualificationTest.java
 42fd2ea144a2  src/test/java/fr/univ_amu/iut/qualification/view/ActionsEmportTest.java
-5daf9fa3fa46  src/test/java/fr/univ_amu/iut/qualification/view/ControleurQualificationDeTest.java
+e866f5366e00  src/test/java/fr/univ_amu/iut/qualification/view/ControleurQualificationDeTest.java
 3e3363f10944  src/test/java/fr/univ_amu/iut/qualification/view/ModaleSelectionViewTest.java
 200f4826ca5c  src/test/java/fr/univ_amu/iut/qualification/view/NavigationQualificationViewTest.java
 da2c9aca2459  src/test/java/fr/univ_amu/iut/qualification/view/QualificationControllerGardeTest.java

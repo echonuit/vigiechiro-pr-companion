@@ -13,14 +13,9 @@ import javafx.beans.value.ObservableValue;
 /// **Convention de temps.** Les bornes `debutS`/`finS` (temps Tadarida) sont **déjà en secondes réelles**
 /// au sein de la tranche de 5 s. Les API temporelles de l'AudioView (`seek`, `highlightWindow`) attendent
 /// aussi des **secondes réelles** (l'axe est réel grâce à `setTimeExpansionFactor`). On passe donc les
-/// bornes **telles quelles**, sans conversion. [#FACTEUR_EXPANSION_TEMPS] ne sert plus qu'à configurer
-/// l'AudioView (le fichier joué est, lui, ralenti ×10).
+/// bornes **telles quelles**, sans conversion. Le facteur d'expansion ne sert qu'à configurer l'AudioView
+/// ([fr.univ_amu.iut.commun.view.ConfigurationAudioView#FACTEUR_EXPANSION_TEMPS]).
 final class RepereCriAudio {
-
-    /// Facteur d'expansion temporelle ×10 du fichier d'écoute, passé à `AudioView.setTimeExpansionFactor`
-    /// pour que ses axes affichent les grandeurs réelles. **Ne sert pas** à convertir les temps du cri
-    /// (déjà réels).
-    static final double FACTEUR_EXPANSION_TEMPS = 10;
 
     private RepereCriAudio() {}
 

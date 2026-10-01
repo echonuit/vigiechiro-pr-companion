@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.view;
 
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.commun.view.ConfigurationAudioView;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import javafx.scene.control.MenuButton;

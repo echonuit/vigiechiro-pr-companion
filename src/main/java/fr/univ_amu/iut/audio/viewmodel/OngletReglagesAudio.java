@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.commun.view.DescripteurReglage;
 import fr.univ_amu.iut.commun.view.OngletReglages;
+import fr.univ_amu.iut.commun.viewmodel.ReglageDaltonien;
 import java.util.List;
 
 /// Onglet « Audio » de l'écran Réglages (#1006) : préférences de **lecture** de la vue audio,
@@ -23,9 +24,9 @@ public final class OngletReglagesAudio implements OngletReglages {
     public static final boolean DEFAUT_BOUCLE = false;
 
     /// Spectrogramme en **palette adaptée au daltonisme** (défaut : non).
-    public static final String CLE_DALTONIEN = "audio.daltonien";
+    public static final String CLE_DALTONIEN = ReglageDaltonien.CLE;
 
-    public static final boolean DEFAUT_DALTONIEN = false;
+    public static final boolean DEFAUT_DALTONIEN = ReglageDaltonien.DEFAUT;
 
     /// Inclure la colonne « mode de validation » dans l'export _Vu (défaut : oui).
     public static final String CLE_INCLURE_MODE = "audio.export.inclure-mode";
