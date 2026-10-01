@@ -241,6 +241,8 @@ INCONDITIONNELS: dict[str, str] = {
     "duree-de-l-atelier-des-gardes": "meme raison, en miroir : il mesure `lint.yml` depuis `maven.yml`, lit l API de la forge et n execute rien du depot (#5540)",
     "contrat-fichiers": "il porte sa propre porte depuis #3525, `porte_sur_le_contrat_de_fichiers.py`",
     "banc-filme": "ecarte par ecrit au chantier #5294 : il lance les auto-tests de six dispositifs, et le conditionner en sauterait cinq pour gagner une minute",
+    "rappeler-sur-la-demande": "il lit le CORPS de la demande pour y trouver les lots qu elle ferme, pas l arbre : aucune portee de chemins ne predit si une demande ferme un lot, et une demande de prose seule en ferme un aussi souvent qu une demande de code (#5211)",
+    "rappeler": "le meme atelier, cote `issues` : son `if: github.event_name == 'issues'` le fait SAUTER sur toute demande, et il ne lit donc jamais l arbre. Il figure ici parce que cette garde lit l atelier statiquement et voit ses deux jobs sous le declencheur `pull_request` (#5211)",
 }
 
 

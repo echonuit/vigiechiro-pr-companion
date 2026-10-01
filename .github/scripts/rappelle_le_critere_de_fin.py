@@ -26,10 +26,27 @@ son corps, qui est la moitie versionnee du meme rattachement.
 
 ## Le cout d une erreur, et ce qu il autorise
 
-**Signaler a tort coute un commentaire inutile ; se taire a tort ne coute rien de plus**, la loupe
-hebdomadaire balayant le stock. C est ce qui separe cette loupe d un cliquet : un cliquet faux bloque,
-celui-ci parle a cote ou se tait. Le motif peut donc rester genereux la ou un cliquet aurait du etre
-exact.
+**Signaler a tort coute un commentaire inutile.** C est ce qui separe cette loupe d un cliquet : un
+cliquet faux bloque, celui-ci parle a cote ou se tait. Le motif peut donc rester genereux la ou un
+cliquet aurait du etre exact.
+
+**Se taire a tort, en revanche, coute, et la phrase qui disait le contraire etait FAUSSE** (#5211).
+Elle s appuyait sur « la loupe hebdomadaire balayant le stock ». La loupe ne balaie pas le stock : elle
+ne lit que les sous-issues OUVERTES, `state == "OPEN"`, et ne passe que le lundi a 6 h UTC. Mesure du
+2026-10-01 sur la population complete, 441 issues closes lues sur 441 annoncees :
+
+    lots clos nes depuis la regle          : 386
+    dont la loupe a pu en voir UN passage  : 49  (13 %)
+    dont elle n a JAMAIS pu les voir       : 337 (87 %)
+
+La cause est la duree de vie : MEDIANE 4,4 h pour un lot, 97 % sous la semaine, contre-mesuree sur deux
+tranches choisies par la date, 90 % pour les lots d avant aout et 96 % pour ceux de septembre.
+
+Un silence assume sur une fausse raison est pire qu un silence non assume : il a l air d avoir ete
+pese. D ou le second rappel, `--demande`, qui arrive au moment ou quelqu un TRAVAILLE le lot plutot
+qu au moment ou il l ouvre. Il ne refuse pas davantage : l arbitrage de #4961 a ecarte le ROUGE, pas
+le signalement, et les trois auditeurs visaient un garde jugeant un chantier ouvert des jours plus tot
+par quelqu un d autre.
 
 ## Le motif vit dans UN fichier
 
@@ -81,6 +98,30 @@ Le corps, et non un commentaire : un commentaire descend sous le fil, le corps e
 relit. Rien ne bloque, et cette loupe ne repassera pas."""
 
 
+# La marque du rappel pose sur la DEMANDE, distincte de celle du rappel pose sur l issue : les deux
+# doivent pouvoir exister sans s annuler, et chacune rend son commentaire idempotent de son cote.
+MARQUE_DEMANDE = "<!-- rappel-critere-de-fin-demande -->"
+
+
+def rappel_de_demande(muets: list[int]) -> str:
+    """Le texte pose sur la demande, qui NOMME les lots muets. Jamais un refus (#5211)."""
+    liste = ", ".join(f"#{n}" for n in muets)
+    return f"""{MARQUE_DEMANDE}
+Cette demande ferme {liste}, et {"ce lot ne dit pas" if len(muets) == 1 else "ces lots ne disent pas"}
+**comment on saura qu'{"il est" if len(muets) == 1 else "ils sont"} fini{"" if len(muets) == 1 else "s"}**
+dans son corps. `AGENTS.md` le demande depuis #4975.
+
+Le rappel a pu etre pose a l ouverture de l issue, des jours plus tot, et il ne repasse pas. Celui-ci
+arrive au moment ou vous travaillez le lot, qui est le dernier ou le critere coute encore peu : apres
+la fusion, la cloture le relira et il sera trop tard pour l ecrire.
+
+Un critere se verifie. « Fini quand la loupe est ecrite » ne dit rien de plus que le titre ; « fini
+quand elle rougit sur un lot muet et se tait sur un lot qui dit son critere » se joue.
+
+Le corps de l issue, et non un commentaire : un commentaire descend sous le fil, le corps est ce que
+la cloture relit. **Rien ne bloque**, et ce rappel ne repassera pas."""
+
+
 def critere() -> re.Pattern[str]:
     """Le motif partage, ou un REFUS : cette loupe ne conclut pas sans lui."""
     chemin = pathlib.Path(
@@ -127,6 +168,36 @@ def est_un_lot(corps: str, parent: str) -> bool:
     if parent and parent != SAS:
         return True
     return not parent and bool(RATTACHEMENT.search(corps))
+
+
+def lots_muets_de(corps_de_demande: str) -> list[int]:
+    """Parmi les lots que la demande declare fermer, ceux qui ne disent pas leur critere.
+
+    L extracteur est IMPORTE de `verifie_chantier_de_l_issue`, jamais reecrit : le motif de fermeture
+    y couvre neuf verbes et leurs flexions, et ce fichier a deja paye une fois le prix d une copie -
+    le motif du critere vivait en double et les deux copies avaient diverge sur deux caracteres,
+    la cinquieme formulation manquant aux deux sans que rien ne le dise (#4995).
+    """
+    from verifie_chantier_de_l_issue import issues_fermees
+
+    motif = critere()
+    muets = []
+    for numero in issues_fermees(corps_de_demande):
+        corps = lit(str(numero), "corps")
+        parent = lit(str(numero), "parent")
+        if not est_un_lot(corps, parent):
+            continue
+        if not motif.search(corps):
+            muets.append(numero)
+    return muets
+
+
+def juge_la_demande(corps_de_demande: str) -> int:
+    """Le rappel sur la sortie standard, ou rien. Jamais un refus de fusion (#5211)."""
+    muets = lots_muets_de(corps_de_demande)
+    if muets:
+        print(rappel_de_demande(muets))
+    return 0
 
 
 def juge(numero: str) -> int:
@@ -240,6 +311,55 @@ def _auto_test() -> int:
             print(f"  ✘ un motif illisible fait REFUSER au lieu de se taire : code {code}")
             echecs = 1
 
+        # #5211 : le MEME jugement, au moment ou l on travaille. Le rappel de l issue arrive a son
+        # ouverture et ne repasse pas ; celui-ci arrive sur la demande, et il NOMME les lots muets.
+        def joue_demande(attendu: str, libelle: str, corps: str) -> str:
+            nonlocal echecs, cas, signale
+            cas += 1
+            if attendu == "rappel":
+                signale += 1
+            os.environ["CRITERE_ISSUES_FICHIER"] = str(bac / "issues.json")
+            tampon = io.StringIO()
+            with contextlib.redirect_stdout(tampon), contextlib.redirect_stderr(io.StringIO()):
+                juge_la_demande(corps)
+            sortie = tampon.getvalue()
+            obtenu = "rappel" if sortie.strip() else "silence"
+            if obtenu == attendu:
+                print(f"  ✔ {libelle}")
+            else:
+                print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
+                echecs = 1
+            return sortie
+
+        joue_demande("rappel", "une demande qui ferme un lot MUET est rappelée", "Closes #1")
+        joue_demande("silence", "une demande dont le lot dit son critère se tait", "Closes #2")
+        joue_demande(
+            "silence", "une demande qui ne ferme rien se tait", "Du texte, et rien d autre."
+        )
+        joue_demande("silence", "une demande qui ferme une issue du SAS se tait", "Closes #5")
+        # LE CONTRASTE : deux lots fermes, un seul muet. Une implementation qui rappellerait des que
+        # l un manque, sans les departager, nommerait les deux - et le rappel designerait un innocent.
+        deux = joue_demande(
+            "rappel",
+            "deux lots fermés, un seul muet : seul le muet est nommé",
+            "Closes #1\nCloses #2",
+        )
+        if "#1" in deux and "#2" not in deux:
+            cas += 1
+            print("  ✔ et le lot qui dit son critère n'est PAS nommé")
+        else:
+            cas += 1
+            echecs = 1
+            print(f"  ✘ et le lot qui dit son critère n'est PAS nommé : {deux[:120]!r}")
+        # La marque du rappel de demande est DISTINCTE de celle de l issue : sans cela, le
+        # commentaire pose sur l issue ferait croire au workflow que la demande a deja le sien.
+        cas += 1
+        if MARQUE_DEMANDE in deux and MARQUE_DEMANDE != MARQUE:
+            print("  ✔ le rappel de demande porte SA marque, distincte de celle de l'issue")
+        else:
+            echecs = 1
+            print("  ✘ le rappel de demande porte SA marque, distincte de celle de l'issue")
+
         # La MARQUE doit etre dans le rappel, sinon le workflow reposterait a chaque edition.
         cas += 1
         sortie = joue("rappel", "le rappel porte sa marque d'idempotence en première ligne", "1")
@@ -287,7 +407,14 @@ def _auto_test() -> int:
 if __name__ == "__main__":
     if "--auto-test" in sys.argv[1:2]:
         sys.exit(_auto_test())
+    if sys.argv[1:2] == ["--demande"]:
+        # Le corps arrive sur l entree standard : un corps de demande porte des sauts de ligne, des
+        # accents graves et des guillemets, et le passer en argument l expose au shell de l atelier.
+        sys.exit(juge_la_demande(sys.stdin.read()))
     if len(sys.argv) < 2:
-        print(f"Usage : {sys.argv[0]} <numéro d'issue> | --auto-test", file=sys.stderr)
+        print(
+            f"Usage : {sys.argv[0]} <numéro d'issue> | --demande (corps sur stdin) | --auto-test",
+            file=sys.stderr,
+        )
         sys.exit(2)
     sys.exit(juge(sys.argv[1]))

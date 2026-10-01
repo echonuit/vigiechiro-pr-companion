@@ -9,6 +9,8 @@ verification: humaine
 verification_note: "un critère de fin est de la prose dans le corps d'une issue, et savoir s'il est vérifiable est un jugement. Deux dispositifs le tiennent sans juger : un rappel au moment de l'ouverture, une loupe hebdomadaire sur le stock. Aucun des deux ne refuse"
 loupe:
   - "scripts/adr/loupe-4992-lots-sans-critere.py"
+relations:
+  amendee_par: ["5211-un-rappel-parle-au-moment-ou-l-on-travaille"]
 verified:
   - by: human:nedseb
     at: 2026-08-31
@@ -18,6 +20,9 @@ generated:
 ---
 
 # Le critère de fin d'un lot se rappelle et se mesure, il ne se refuse pas
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-10-01** par [ADR 5211](5211-un-rappel-parle-au-moment-ou-l-on-travaille.md) : les deux dispositifs et le refus de bloquer tiennent. En revanche la phrase qui assumait le silence du rappel, « la loupe hebdomadaire balayant le stock », était fausse : la loupe ne lit que les sous-issues OUVERTES le lundi à 6 h UTC, soit 13 % des 386 lots clos nés depuis la règle. Le rappel parle désormais à deux moments, et il ne refuse pas davantage.
 
 ## Contexte
 

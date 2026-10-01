@@ -7,8 +7,15 @@
 #
 # La forge enregistre `parent_issue_added`, mais aucun workflow ne peut s'y abonner : les types
 # d'activité de `issues` s'arrêtent à `opened`, `edited`, `labeled` et quinze autres. Un lot rattaché
-# après coup et jamais réédité échappe donc à ce workflow, et c'est la loupe hebdomadaire du lot 3
-# qui balaie le stock. La règle et son pourquoi sont dans .github/scripts/rappelle_le_critere_de_fin.py.
+# après coup et jamais réédité échappe donc au rappel sur l'issue.
+#
+# Ce trou était assumé par « la loupe hebdomadaire balaie le stock », et cette phrase était FAUSSE
+# (#5211). La loupe ne lit que les sous-issues OUVERTES et ne passe que le lundi à 6 h UTC : sur les
+# 386 lots clos nés depuis la règle, 49 seulement ont pu traverser un de ses passages, soit 13 %. La
+# médiane de vie d'un lot est de 4,4 h. Le second rappel ci-dessous arrive donc là où quelqu'un
+# travaille, à l'ouverture d'une demande, et il ne refuse pas plus que le premier.
+#
+# La règle et son pourquoi sont dans .github/scripts/rappelle_le_critere_de_fin.py.
 name: Critère de fin d'un lot
 
 on:
@@ -16,16 +23,23 @@ on:
     # `edited` rattrape le lot dont la marque de rattachement est écrite après l'ouverture, cas le
     # plus fréquent puisque `gh issue edit --parent` suit toujours `gh issue create`.
     types: [opened, edited, reopened]
+  pull_request:
+    # `edited` rattrape la demande dont le `Closes #N` est écrit après l'ouverture. `synchronize` est
+    # volontairement absent : le rappel est idempotent, donc repasser à chaque poussée n'ajouterait
+    # rien et consommerait un job par commit.
+    types: [opened, edited, reopened]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.issue.number }}
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}
   cancel-in-progress: true
 
-permissions:
-  issues: write
+permissions: {}
 
 jobs:
   rappeler:
+    if: github.event_name == 'issues'
+    permissions:
+      issues: write
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -61,3 +75,50 @@ jobs:
           fi
           gh issue comment "${NUMERO}" --body-file rappel.txt
           echo "::notice::Rappel posé sur #${NUMERO}."
+
+  # #5211 : le MEME jugement, au moment où l'on travaille. Le rappel sur l'issue arrive à son
+  # ouverture et ne repasse pas ; celui-ci arrive quand quelqu'un ouvre la demande qui ferme le lot,
+  # dernier moment où écrire le critère coûte encore peu. Il NOMME les lots muets, parce qu'une
+  # demande peut en fermer plusieurs et qu'un rappel qui ne dit pas lequel se relit mal.
+  rappeler-sur-la-demande:
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Les lots que cette demande ferme disent-ils leur critère
+        id: loupe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CORPS: ${{ github.event.pull_request.body }}
+        run: |
+          chmod +x .github/scripts/rappelle_le_critere_de_fin.py
+          # Le corps passe par l'ENTREE STANDARD et non par un argument : il porte des sauts de
+          # ligne, des accents graves et des guillemets, que le shell de l'atelier interpréterait.
+          printf '%s' "${CORPS}" \
+            | python3 .github/scripts/rappelle_le_critere_de_fin.py --demande > rappel.txt
+          if [ -s rappel.txt ]; then
+            echo "rappel=oui" >> "${GITHUB_OUTPUT}"
+          else
+            echo "rappel=non" >> "${GITHUB_OUTPUT}"
+            echo "::notice::Les lots que cette demande ferme disent leur critère, ou elle n'en ferme aucun."
+          fi
+
+      - name: Le rappel se pose une fois, jamais deux
+        if: steps.loupe.outputs.rappel == 'oui'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NUMERO: ${{ github.event.pull_request.number }}
+        run: |
+          # Sa marque est DISTINCTE de celle du rappel posé sur l'issue : chercher la mauvaise ferait
+          # croire que la demande a déjà le sien dès que le lot a reçu le premier.
+          if gh pr view "${NUMERO}" --json comments \
+              -q '.comments[].body' | grep -q 'rappel-critere-de-fin-demande'; then
+            echo "::notice::Le rappel a déjà été posé sur la demande #${NUMERO} : rien à ajouter."
+            exit 0
+          fi
+          gh pr comment "${NUMERO}" --body-file rappel.txt
+          echo "::notice::Rappel posé sur la demande #${NUMERO}."
