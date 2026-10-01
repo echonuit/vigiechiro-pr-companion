@@ -260,6 +260,15 @@ def heuristiques_sans_emploi(
 # « 0 renvoi » sur un corpus qui n en manque aucun, soit la forme exacte du succes.
 RENVOI = re.compile(r"\]\(([a-z0-9][a-z0-9-]*\.md)(?:#[^)]*)?\)")
 
+# Une ligne du tableau d index, et le SEPARATEUR de ses cellules (#5700).
+#
+# `(?<!\\)` n est pas une precaution : un `\|` est un pipe LITTERAL, pas un separateur, et le corpus en
+# porte un - l ADR 3099 cite « Taxon parent \| Chiropteres », de la prose d interface ou la barre fait
+# partie du texte. Compter les barres brutes la declarerait malformee a jamais, et un garde qui crie
+# sur du bon travail est un garde qu on apprend a ignorer (ADR 4002).
+LIGNE_D_INDEX = re.compile(r"^\| \[(\d+)\]", re.M)
+SEPARATEUR = re.compile(r"(?<!\\)\|")
+
 
 def ateliers_de_demande(racine: pathlib.Path) -> list[pathlib.Path]:
     """Les ateliers qu'une demande declenche, lus a la racine donnee.
@@ -340,6 +349,40 @@ def refus_du_gage(gage: str, racine: pathlib.Path, contexte) -> str | None:
     if _nomme_par(cible, texte) or cible in boucle:
         return None
     return "gage qu'aucune demande n'invoque"
+
+
+def lignes_amputees(texte: str) -> list[str]:
+    """Les lignes du tableau d index dont le compte de cellules differe de l en-tete.
+
+    Mesure du 2026-10-01 : six lignes sur 329, cinq a trois separateurs au lieu de quatre, donc sans
+    colonne « Chantier », et une a cinq par un pipe litteral non echappe.
+
+    Le compte de reference vient de l en-tete `| # | Decision | Chantier |`, et non d un nombre inscrit
+    ici. Sans en-tete lisible, on ne juge rien : conclure sur un compte devine serait pire que se taire.
+
+    Et c est le dernier en-tete rencontre AU-DESSUS de la ligne qui fait reference, jamais le premier du
+    fichier. L index n en porte qu un seul aujourd hui - mesure : un en-tete ligne 79, 329 lignes d ADR
+    contigues de 81 a 409 - donc les deux lectures concluent pareil, et c est bien le probleme : la
+    premiere serait juste par accident. Une session pair a vu sa ligne atterrir 760 lignes plus bas, dans
+    un tableau plus large ; son compte ne l a attrapee que parce que les largeurs differaient. La
+    reference juste est la plus PROCHE au-dessus, comme pour tout discriminant par fenetre.
+    """
+    attendu = None
+    fautes = []
+    for ligne in texte.splitlines():
+        if ligne.startswith("| # |"):
+            attendu = len(SEPARATEUR.findall(ligne))
+            continue
+        trouve = LIGNE_D_INDEX.match(ligne)
+        if not trouve or attendu is None:
+            continue
+        vus = len(SEPARATEUR.findall(ligne))
+        if vus != attendu:
+            fautes.append(
+                f"index.md : la ligne de l ADR {trouve.group(1)} porte {vus} separateurs "
+                f"au lieu de {attendu} ; une cellule manque ou un « | » de prose n est pas echappe"
+            )
+    return fautes
 
 
 def verifie(
@@ -497,6 +540,15 @@ def verifie(
         cites = set(RENVOI.findall(index.read_text(encoding="utf-8")))
         for orpheline in sorted(noms - cites):
             fautes.append(f"{orpheline} : absente de index.md")
+        # 9. La FORME de la ligne qui cite, et pas seulement sa presence (#5700).
+        #
+        # L atteignabilite ci-dessus se contente qu une ADR soit CITEE. Une ligne pouvait donc etre
+        # presente et amputee : six l etaient sur 329, dont cinq sans colonne « Chantier », et le
+        # chantier d origine de ces cinq decisions n etait lisible nulle part dans l index.
+        #
+        # Le compte attendu se prend sur l EN-TETE du tableau, non sur un nombre ecrit ici : si une
+        # colonne est ajoutee un jour, le controle suit sans qu on y pense.
+        fautes.extend(lignes_amputees(index.read_text(encoding="utf-8")))
     chemin_nav = nav or NAV
     if chemin_nav.exists():
         vus = set(
@@ -513,6 +565,7 @@ def _fixture(
     plancher: int,
     annexe: bool = True,
     fichiers: dict[str, str] | None = None,
+    index: str | None = None,
 ) -> list[str]:
     """Monte un paquet jetable et rend les manquements que le garde y voit.
 
@@ -533,7 +586,13 @@ def _fixture(
         cible = racine / chemin
         cible.parent.mkdir(parents=True, exist_ok=True)
         cible.write_text(contenu, encoding="utf-8")
-    index = "".join(f"- [x]({n})\n" for n in documents)
+    # Un TABLEAU, comme le depot, et non une liste de puces (#5700). La forme compte : le controle de
+    # forme ne juge rien sans l en-tete `| # |`, donc un index en puces rendait son cas VIDE, et vert.
+    # Une fixture qui ne ressemble pas a la chose ne l eprouve pas.
+    if index is None:
+        lignes = ["| # | Décision | Chantier |", "|---|---|---|"]
+        lignes += [f"| [{n[:4]}]({n}) | Témoin | #1 |" for n in documents]
+        index = "\n".join(lignes) + "\n"
     (decisions / "index.md").write_text(index, encoding="utf-8")
     const = racine / "CONSTITUTION.md"
     const.write_text("### A1 : Un témoin\n", encoding="utf-8")
@@ -575,9 +634,10 @@ def auto_test() -> int:
         plancher: int = 1,
         annexe: bool = True,
         fichiers: dict[str, str] | None = None,
+        index: str | None = None,
     ) -> None:
         with tempfile.TemporaryDirectory() as d:
-            fautes = _fixture(d, documents, plancher, annexe=annexe, fichiers=fichiers)
+            fautes = _fixture(d, documents, plancher, annexe=annexe, fichiers=fichiers, index=index)
         vu = any(attendu in f for f in fautes) if attendu else not fautes
         etat = (
             ("rouge" if vu else "VERT, ce qui est le défaut")
@@ -869,6 +929,47 @@ def auto_test() -> int:
         None,
         plancher=2,
     )
+    # #5700 : la FORME de la ligne d index. Les trois cas sont un contraste, et aucun ne vaut seul -
+    # le premier tient le refus, les deux autres tiennent ce que le refus ne doit PAS attraper.
+    #
+    # Le deuxieme est celui qui compte. Un controle ecrit avec `ligne.count("|")` passe le cas rouge
+    # et declare malformee l ADR 3099, qui cite « Taxon parent \| Chiropteres » : la barre y est de la
+    # prose, pas une colonne. C est l erreur que j avais ecrite avant de la mesurer sur le corpus.
+    UN_INDEX = "| # | Décision | Chantier |\n|---|---|---|\n"
+    cas(
+        "une ligne d index SANS sa cellule de chantier",
+        {"0001-t.md": MODELE},
+        "separateurs",
+        index=UN_INDEX + "| [0001](0001-t.md) | Témoin |\n",
+    )
+    cas(
+        "un « | » de prose ECHAPPE ne compte pas pour une colonne",
+        {"0001-t.md": MODELE},
+        None,
+        index=UN_INDEX + "| [0001](0001-t.md) | Témoin « Taxon parent \\| Chiroptères » | #1 |\n",
+    )
+    # La reference est le dernier en-tete rencontre AU-DESSUS, et non le premier du fichier. Le cas le
+    # dit avec DEUX en-tetes de largeurs differentes, et une legende qui n en est pas un : juge contre
+    # le premier, la ligne du bas passerait pour amputee. Une session pair a vu sa ligne atterrir 760
+    # lignes plus bas dans un tableau plus large, et son compte ne l a attrapee que par chance.
+    cas(
+        "la reference est l en-tete le PLUS PROCHE au-dessus",
+        {"0001-t.md": MODELE, "0002-s.md": MODELE},
+        None,
+        plancher=2,
+        index="| Légende | Sens |\n|---|---|\n| ⚠ | attention |\n\n"
+        "| # | Décision |\n|---|---|\n| [0002](0002-s.md) | Témoin |\n\n"
+        + UN_INDEX
+        + "| [0001](0001-t.md) | Témoin | #1 |\n",
+    )
+    # Et sans aucun en-tete, on ne juge rien : un compte inscrit dans le garde ferait rougir l innocent.
+    cas(
+        "sans en-tete d index, aucune ligne n est jugee",
+        {"0001-t.md": MODELE},
+        None,
+        index="| Numéro | Décision |\n|---|---|\n| [0001](0001-t.md) | Témoin |\n",
+    )
+
     cas("corpus sain", {"0001-t.md": MODELE, "0002-s.md": MODELE}, None, plancher=2)
 
     if echecs:
@@ -919,7 +1020,10 @@ def main() -> int:
             print(f"  {f}")
         return 1
     total = len([f for f in DECISIONS.glob("*.md") if f.name not in RESERVES])
-    print(f"{total} ADR conformes : en-tête, rattachement, confiance, atteignabilité, liens.")
+    print(
+        f"{total} ADR conformes : en-tête, rattachement, confiance, atteignabilité, "
+        "forme de leur ligne d'index, liens."
+    )
 
     # Contrôle 2 : ce que le vocabulaire couvre, et ce que rien ne sert. Sans rougir : c'est un
     # manque à connaître, pas une faute à corriger.
