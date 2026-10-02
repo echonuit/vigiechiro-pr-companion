@@ -55,7 +55,7 @@
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
         <maven.dependency.plugin.version>3.11.0</maven.dependency.plugin.version>
         <cyclonedx.maven.plugin.version>2.9.3</cyclonedx.maven.plugin.version>
-        <guava.version>33.4.8-jre</guava.version>
+        <guava.version>33.7.1-jre</guava.version>
         <!-- Spoon bâtit le modèle que `target/index-*.json` porte : types, méthodes et appels
              RÉSOLUS, ce qu'aucun lecteur fichier par fichier ne sait rendre (#5464). Épinglée au
              correctif : #5473 a mesuré que 11.1.0 et 11.2.1 se comportent identiquement sur les
