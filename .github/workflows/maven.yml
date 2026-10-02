@@ -214,6 +214,14 @@ jobs:
         # duree de ce pas.
         run: ./mvnw -B -Pplateforme-de-test test --file pom.xml
 
+      - name: Ce que la passe a saute, et pourquoi (#5748)
+        # Un saut par `assumeTrue` sort vert, et une classe interrompue dans son `@BeforeAll` sort en
+        # « Tests run: 0 ». Le releve affiche les sautes et leur motif, et refuse un saut du au jeton
+        # ou a un verrou d ecriture : ici, cela veut dire que la cible n a pas ete cablee. Joue meme
+        # quand Maven echoue, pour que le motif d un rouge se lise.
+        if: ${{ always() && steps.portee.outputs.concerne == 'oui' }}
+        run: python3 scripts/plateforme-de-test/releve_des_sautes.py
+
   # Rejoue TOUTE la suite dans UN SEUL fork, en ordre inverse (#1967). Ce n'est pas une redite du job
   # `build` : c'est le seul dispositif qui tienne la propriété « une classe de test rend le harnais
   # comme elle l'a trouvé ».
