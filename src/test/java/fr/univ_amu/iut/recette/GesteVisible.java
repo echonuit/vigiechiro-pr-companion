@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
@@ -152,6 +153,29 @@ public final class GesteVisible {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /// Clique la cible que `reconnue` désigne, **résolue au moment du clic** (ADR 5068, #5734).
+    ///
+    /// Tenir une référence entre la résolution et le clic suppose que le graphe ne bouge pas. Il
+    /// bouge : `MesSitesController` reconstruit sa liste de cartes à chaque changement, la carte
+    /// tenue se détache, et `getScene()` rend `null`. Onze occurrences en trente jours.
+    ///
+    /// `robot.point(Predicate)` résout **et** situe : la référence ne traverse rien, et la lecture
+    /// reste sur le fil JavaFX. Les ADR 5068 et 5707 sont satisfaites par le même geste, là où le
+    /// remède de 5068 seul - passer un sélecteur - laissait la lecture hors du fil.
+    ///
+    /// @param reconnue ce qui distingue la cible, évalué SUR LE FIL
+    /// @param ceQueOnCherche dit à la première personne du banc, et repris dans l'échec
+    public static void cliquerLaCible(FxRobot robot, Predicate<Node> reconnue, String ceQueOnCherche) {
+        robot.moveTo(pointSurLeFil(robot, reconnue, ceQueOnCherche));
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.entreDeuxGestes(robot);
+
+        // La cible se RERESOLUT : c'est tout l'objet de ce geste. Entre l'arrivée du pointeur et
+        // l'appui, la liste a pu se reconstruire une seconde fois.
+        robot.clickOn(pointSurLeFil(robot, reconnue, ceQueOnCherche));
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
     /// Remplace le contenu du champ désigné par `texte`, et relit pour s'assurer de l'avoir fait.
     ///
     /// La sélection se pose sur le fil JavaFX, jamais au clavier : « tout sélectionner » est `⌘A` sur
@@ -270,6 +294,15 @@ public final class GesteVisible {
     private static Point2D pointSurLeFil(FxRobot robot, Node cible) {
         return Attente.surLeFil(
                 () -> robot.point(cible).query(), "situer le nœud en main sur le fil JavaFX", SELECTION_MS);
+    }
+
+    /// Le point de la cible que `reconnue` désigne, résolu ET situé sur le fil (#5734).
+    ///
+    /// `robot.point(Predicate)` fait les deux, donc aucune référence ne sort de l'aller-retour. Si
+    /// le prédicat ne reconnaît rien, TestFX lève, et `Attente.surLeFil` nomme ce qu'on cherchait.
+    private static Point2D pointSurLeFil(FxRobot robot, Predicate<Node> reconnue, String ceQueOnCherche) {
+        return Attente.surLeFil(
+                () -> robot.point(reconnue).query(), "situer " + ceQueOnCherche + " sur le fil JavaFX", SELECTION_MS);
     }
 
     /// Le nœud que `cible` désigne, **visible au sens de TestFX**, ou un refus qui le dit.

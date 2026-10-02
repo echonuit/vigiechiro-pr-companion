@@ -29,6 +29,7 @@ import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -489,11 +490,11 @@ class ScenarioFicheSiteTest {
     /// pose une seconde - c'est le défaut qu'`ApercuFx.exigerParLibelle` a corrigé côté aperçus.
     private void ouvrirLaFiche(FxRobot robot, String titre) throws TimeoutException {
         Respiration.avantLeGeste(robot);
-        HBox carte = robot.lookup(".carte-site").queryAllAs(HBox.class).stream()
-                .filter(candidate -> porteLeTitre(candidate, titre))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("aucune carte de site intitulée « " + titre + " »"));
-        robot.clickOn(carte);
+        // ⟨la cible se resout AU MOMENT DU CLIC (#5734)⟩ Tenir la carte supposait que l'écran ne
+        // bouge pas entre la résolution et le clic. `MesSitesController` écoute sa liste et
+        // reconstruit TOUT à chaque changement, donc la carte tenue se détachait et `getScene()`
+        // rendait nul : onze occurrences en trente jours, dont deux où ce banc tombe le premier.
+        GesteVisible.cliquerLaCible(robot, carteIntitulee(titre), "la carte de site intitulée « " + titre + " »");
         Attente.queSurLeFil(
                 () -> robot.lookup("#valNumeroCarre").tryQuery().isPresent(),
                 "la fiche du site s'ouvre, reconnue à son numéro de carré",
@@ -506,6 +507,16 @@ class ScenarioFicheSiteTest {
         return robot.lookup(".carte-point").queryAll().stream()
                 .filter(carte -> !carte.lookupAll(marque).isEmpty())
                 .count();
+    }
+
+    /// Ce qui distingue une carte de site : sa classe, et le titre que porte un de ses enfants.
+    ///
+    /// Un prédicat et non un sélecteur, parce que cinq cartes partagent `.carte-site` et que c'est
+    /// leur titre qui les sépare. Il est évalué **sur le fil** par [GesteVisible#cliquerLaCible].
+    private static Predicate<Node> carteIntitulee(String titre) {
+        return noeud -> noeud instanceof HBox carte
+                && carte.getStyleClass().contains("carte-site")
+                && porteLeTitre(carte, titre);
     }
 
     private static boolean porteLeTitre(HBox carte, String titre) {

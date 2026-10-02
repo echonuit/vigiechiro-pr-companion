@@ -8,7 +8,7 @@ decided_at: 2026-09-01
 verification: certaine
 enforced_by:
   - "scripts/adr/5068-clic-sur-reference-tenue.py"
-ratchet: 38
+ratchet: 37
 verified:
   - by: machine:ci
     at: 2026-09-01
