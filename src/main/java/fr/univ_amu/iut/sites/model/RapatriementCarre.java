@@ -75,8 +75,8 @@ public class RapatriementCarre {
         record Inexistant(String numeroCarre) implements Resultat {
             @Override
             public String message() {
-                return "Le carré " + numeroCarre + " n'existe pas sur Vigie-Chiro : déclarez-le ici, puis"
-                        + " activez-le sur le portail avant de déposer.";
+                return "Le carré " + numeroCarre + " n'existe pas sur Vigie-Chiro. Vous pouvez le déclarer ici ; "
+                        + PresenceDuCarre.GESTE_DU_PORTAIL;
             }
 
             @Override
@@ -98,7 +98,8 @@ public class RapatriementCarre {
             @Override
             public String message() {
                 return "Ce carré existe sur Vigie-Chiro, mais pas en Point Fixe (" + String.join(", ", titres)
-                        + "). Companion ne gère que le Point Fixe : rien n'a été récupéré.";
+                        + "). Companion ne gère que le Point Fixe : rien n'a été récupéré. Vous pouvez le déclarer"
+                        + " ici ; " + PresenceDuCarre.GESTE_DU_PORTAIL;
             }
 
             @Override
@@ -160,18 +161,14 @@ public class RapatriementCarre {
     /// protocole : prendre le premier venu rattacherait au hasard, et la nuit partirait au mauvais
     /// endroit.
     private Resultat poser(SouhaitDeclaration souhait, List<SiteVigieChiro> trouves) {
-        if (trouves.isEmpty()) {
-            return new Resultat.Inexistant(souhait.numeroCarre());
-        }
-        Optional<SiteVigieChiro> pointFixe =
-                trouves.stream().filter(SiteVigieChiro::estPointFixe).findFirst();
-        if (pointFixe.isEmpty()) {
-            return new Resultat.AutreProtocole(trouves.stream()
-                    .map(SiteVigieChiro::titre)
-                    .filter(Objects::nonNull)
-                    .toList());
-        }
-        SiteVigieChiro distant = pointFixe.get();
+        return switch (PresenceDuCarre.de(trouves)) {
+            case PresenceDuCarre.Absent absent -> new Resultat.Inexistant(souhait.numeroCarre());
+            case PresenceDuCarre.AutreProtocole(List<String> titres) -> new Resultat.AutreProtocole(titres);
+            case PresenceDuCarre.PointFixe(SiteVigieChiro distant) -> rattacher(souhait, distant);
+        };
+    }
+
+    private Resultat rattacher(SouhaitDeclaration souhait, SiteVigieChiro distant) {
         Map<String, Site> locauxParCarre = imports.sitesLocauxParCarre();
         Optional<ImportSiteDistant.ResultatImport> importe =
                 imports.importerOuLier(distant, locauxParCarre, idProfilConnecte(), souhait);

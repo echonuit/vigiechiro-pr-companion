@@ -22,6 +22,7 @@ import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.sites.model.PresenceDuCarre;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -203,7 +204,8 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
-    @DisplayName("#3458 : carré libre : le verdict s'affiche dans la modale, en succès")
+    @DisplayName(
+            "#5607 : carré libre : le verdict s'affiche dans la modale, en avertissement, avec le geste du portail")
     void carre_libre_le_verdict_s_affiche(FxRobot robot) {
         enCreation(robot);
         when(client.chercherCarre(CARRE_LIBRE)).thenReturn(ReponseApi.succes(List.of()));
@@ -212,8 +214,8 @@ class ModaleSiteVerifierCarreViewTest {
         verifierLeCarre(robot);
 
         assertThat(message(robot).isVisible()).isTrue();
-        assertThat(message(robot).getText()).contains("n'existe pas encore");
-        assertThat(message(robot).getStyleClass()).contains("encart-succes");
+        assertThat(message(robot).getText()).contains("n'existe pas encore").contains(PresenceDuCarre.GESTE_DU_PORTAIL);
+        assertThat(message(robot).getStyleClass()).contains("encart-avertissement");
     }
 
     @Test

@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CarreExistantViewModel;
@@ -125,6 +126,9 @@ public class ModaleSiteController {
     /// Ce que l'appelant fait d'un carré rapatrié : ouvrir sa fiche, et y porter le compte rendu. La
     /// modale ne le sait pas - elle se contente de fermer derrière elle.
     private Consumer<RapatriementCarre.Resultat.Rapatrie> apresRapatriement = rapatrie -> {};
+
+    /// Ce que l'appelant fait du verdict d'existence d'un carré qu'on vient de créer (#5607).
+    private Consumer<RetourOperation> annoncer = verdict -> {};
 
     /// Exécuteur du socle (#1014) : interroger la plateforme est un appel **réseau**, il ne doit pas
     /// tourner sur le fil JavaFX. Synchrone en test (déterministe), en arrière-plan en production.
@@ -339,8 +343,18 @@ public class ModaleSiteController {
     /// l'appelant ouvre sa fiche et y porte le compte rendu, la modale se contente de fermer.
     public void demarrerCreation(
             Runnable apresSucces, Consumer<RapatriementCarre.Resultat.Rapatrie> apresRapatriement) {
+        demarrerCreation(apresSucces, apresRapatriement, verdict -> {});
+    }
+
+    /// Même chose, en disant aussi à l'appelant le **verdict d'existence** du carré créé (#5607) : il le
+    /// porte à son bandeau, puisque la modale se ferme.
+    public void demarrerCreation(
+            Runnable apresSucces,
+            Consumer<RapatriementCarre.Resultat.Rapatrie> apresRapatriement,
+            Consumer<RetourOperation> annoncer) {
         this.apresSucces = Objects.requireNonNull(apresSucces, "apresSucces");
         this.apresRapatriement = Objects.requireNonNull(apresRapatriement, "apresRapatriement");
+        this.annoncer = Objects.requireNonNull(annoncer, "annoncer");
         viewModel.preparerCreation();
         majStyleCarre();
     }
@@ -359,7 +373,52 @@ public class ModaleSiteController {
 
     @FXML
     private void valider() {
+        if (viewModel.doitVerifierAvantDeCreer()) {
+            verifierPuisCreer();
+            return;
+        }
+        conclureLaCreation();
+    }
+
+    /// « Créer » sur un carré que rien n'a vérifié (#5607) : le portail est interrogé d'abord, hors du fil
+    /// JavaFX, et c'est son verdict qui décide. Un échec technique vaut verdict « non vérifié » : on crée
+    /// quand même, en le disant, comme `creer-site`.
+    private void verifierPuisCreer() {
+        rechercheEnCours.set(true);
+        String demande = viewModel.numeroCarreProperty().get();
+        executeur.executer(
+                viewModel::chercherCarreExistant,
+                resultat -> {
+                    rechercheEnCours.set(false);
+                    viewModel
+                            .carre()
+                            .appliquer(resultat, viewModel.numeroCarreProperty().get());
+                    conclureLaCreation();
+                },
+                echec -> {
+                    rechercheEnCours.set(false);
+                    viewModel
+                            .carre()
+                            .appliquer(
+                                    CarreExistantViewModel.ResultatRechercheCarre.indisponible(demande),
+                                    viewModel.numeroCarreProperty().get());
+                    conclureLaCreation();
+                });
+    }
+
+    /// Enregistre si rien ne s'y oppose, puis passe le verdict à l'appelant et ferme. Un carré déjà en
+    /// Point Fixe ferme « Créer » : la modale reste ouverte sur son verdict et « Récupérer ce carré ».
+    private void conclureLaCreation() {
+        if (!viewModel.peutEnregistrer().get()) {
+            return;
+        }
         if (viewModel.enregistrer()) {
+            RetourOperation verdict = viewModel
+                    .carre()
+                    .annonceApresDeclaration(viewModel.numeroCarreProperty().get());
+            if (verdict != RetourOperation.AUCUN) {
+                annoncer.accept(verdict);
+            }
             apresSucces.run();
             fermer();
         }

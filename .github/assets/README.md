@@ -222,7 +222,7 @@ Un onglet par famille de préférences.
 
 La liste des carrés suivis, peuplée et à l'état initial.
 
-<sub>`sites/view/MesSites.fxml` &middot; 3 capture(s)</sub>
+<sub>`sites/view/MesSites.fxml` &middot; 4 capture(s)</sub>
 
 <table>
 <tr>
@@ -261,7 +261,7 @@ La liste des carrés suivis, peuplée et à l'état initial.
 
 ## Modale site
 
-<sub>`sites/view/ModaleSite.fxml` &middot; 5 capture(s)</sub>
+<sub>`sites/view/ModaleSite.fxml` &middot; 7 capture(s)</sub>
 
 <table>
 <tr>
@@ -278,7 +278,15 @@ La liste des carrés suivis, peuplée et à l'état initial.
 </tr>
 <tr>
 <td><a href="apercu-sites-modale-site-carre-existant.png"><img src="apercu-sites-modale-site-carre-existant.png" width="430" alt="Modale site : le carré vérifié existe déjà sur Vigie-Chiro, et peut être récupéré"></a></td>
-<td><a href="apercu-sites-modale-site-autre-protocole.png"><img src="apercu-sites-modale-site-autre-protocole.png" width="430" alt="Modale site : le carré existe en Routier, protocole que Companion ne gère pas"></a></td>
+<td><a href="apercu-sites-modale-site-autre-protocole.png"><img src="apercu-sites-modale-site-autre-protocole.png" width="430" alt="Modale site : le carré existe en Routier seulement ; la vérification dit qu'il faudra l'activer en Point Fixe sur le portail"></a></td>
+</tr>
+<tr>
+<th width="50%">Modale site : carré absent de Vigie-Chiro</th>
+<th width="50%">Modale site : carré non vérifié</th>
+</tr>
+<tr>
+<td><a href="apercu-sites-modale-site-carre-absent.png"><img src="apercu-sites-modale-site-carre-absent.png" width="430" alt="Modale site : le carré n'existe pas sur Vigie-Chiro ; il se déclare ici, et il faudra l'activer en Point Fixe sur le portail avant de déposer"></a></td>
+<td><a href="apercu-sites-modale-site-carre-non-verifie.png"><img src="apercu-sites-modale-site-carre-non-verifie.png" width="430" alt="Modale site : Vigie-Chiro injoignable, le carré n'a pas été vérifié"></a></td>
 </tr>
 <tr>
 <th width="50%">Modale site : position située</th>
@@ -290,11 +298,11 @@ La liste des carrés suivis, peuplée et à l'état initial.
 </tr>
 <tr>
 <th width="50%">Compte rendu : carré récupéré</th>
-<th width="50%"></th>
+<th width="50%">Compte rendu : carré déclaré, absent de Vigie-Chiro</th>
 </tr>
 <tr>
 <td><a href="apercu-sites-carre-recupere.png"><img src="apercu-sites-carre-recupere.png" width="430" alt="Mes sites après une récupération : le carré paraît dans la liste et le bandeau annonce ses points"></a></td>
-<td></td>
+<td><a href="apercu-sites-mes-sites-carre-absent.png"><img src="apercu-sites-mes-sites-carre-absent.png" width="430" alt="Mes sites après la déclaration d'un carré absent de Vigie-Chiro : le bandeau dit qu'il faudra l'activer en Point Fixe sur le portail avant de déposer"></a></td>
 </tr>
 </table>
 

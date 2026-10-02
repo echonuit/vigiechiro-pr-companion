@@ -13,6 +13,8 @@ import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.sites.model.PresenceDuCarre;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -108,8 +110,11 @@ class SiteEditRechercheCarreTest {
         verify(client, never()).chercherCarre(anyString());
     }
 
+    /// Un carré libre se déclare ici, mais ne reçoit de nuit déposée qu'une fois activé en Point Fixe sur
+    /// le portail (#5607). Le verdict disait « vous pouvez le déclarer ici », en succès, et Samuel ne l'a
+    /// appris qu'au dépôt, sa nuit déjà transformée.
     @Test
-    @DisplayName("#3458 : carré libre : la modale le dit, en succès")
+    @DisplayName("#5607 : carré libre : la modale dit le geste du portail, en avertissement")
     void carre_libre_le_verdict_le_dit() {
         SiteEditViewModel viewModel = avecRecherche();
         viewModel.numeroCarreProperty().set(CARRE);
@@ -117,8 +122,39 @@ class SiteEditRechercheCarreTest {
 
         verifier(viewModel);
 
-        assertThat(viewModel.carre().retourProperty().get().texte()).contains("n'existe pas encore");
-        assertThat(viewModel.carre().retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
+        assertThat(viewModel.carre().retourProperty().get().texte())
+                .contains("n'existe pas encore")
+                .contains(PresenceDuCarre.GESTE_DU_PORTAIL);
+        assertThat(viewModel.carre().retourProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
+        assertThat(viewModel.peutEnregistrer().get())
+                .as("on peut toujours le déclarer ici")
+                .isTrue();
+    }
+
+    /// Un carré présent seulement sous un autre protocole n'est pas récupérable (#5607) : le rapatriement ne
+    /// rattache que le Point Fixe. La vérification l'annonçait pourtant « existe déjà, récupérez-le ».
+    @Test
+    @DisplayName("#5607 : carré présent seulement en Routier : ni « récupérer », ni blocage, et le geste du portail")
+    void carre_routier_seul_dit_le_geste_du_portail() {
+        SiteEditViewModel viewModel = avecRecherche();
+        viewModel.numeroCarreProperty().set(CARRE);
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro("rt", "Vigiechiro - Routier-640380", false))));
+
+        verifier(viewModel);
+
+        assertThat(viewModel.carre().retourProperty().get().texte())
+                .contains("pas en Point Fixe")
+                .contains("Vigiechiro - Routier-640380")
+                .contains(PresenceDuCarre.GESTE_DU_PORTAIL)
+                .doesNotContain("rattaché");
+        assertThat(viewModel.carre().retourProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
+        assertThat(viewModel.carre().recuperable().get())
+                .as("rien à récupérer en Point Fixe")
+                .isFalse();
+        assertThat(viewModel.peutEnregistrer().get())
+                .as("on peut le déclarer ici")
+                .isTrue();
     }
 
     @Test
@@ -264,5 +300,43 @@ class SiteEditRechercheCarreTest {
         // Un site édité est déjà déclaré : que la plateforme le connaisse aussi est le cas NOMINAL.
         // Fermer « Enregistrer » ici interdirait de corriger un nom ou un commentaire.
         assertThat(viewModel.peutEnregistrer().get()).isTrue();
+    }
+
+    /// « Créer » ne vérifie que ce qui ne l'a pas été (#5607) : un verdict affiché pour le numéro saisi
+    /// en dispense, et changer le numéro l'efface, donc rend la vérification de nouveau due.
+    @Test
+    @DisplayName("#5607 : « Créer » vérifie tant qu'aucun verdict ne juge le numéro saisi")
+    void creer_verifie_tant_qu_aucun_verdict_ne_juge() {
+        SiteEditViewModel viewModel = avecRecherche();
+        viewModel.numeroCarreProperty().set(CARRE);
+        assertThat(viewModel.doitVerifierAvantDeCreer())
+                .as("rien n'a été demandé")
+                .isTrue();
+        assertThat(viewModel.carre().annonceApresDeclaration(CARRE)).isEqualTo(RetourOperation.AUCUN);
+
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
+        verifier(viewModel);
+        assertThat(viewModel.doitVerifierAvantDeCreer())
+                .as("un verdict juge ce numéro")
+                .isFalse();
+        assertThat(viewModel.carre().annonceApresDeclaration(CARRE).texte()).startsWith("Carré " + CARRE + " déclaré.");
+
+        viewModel.numeroCarreProperty().set("640381");
+        assertThat(viewModel.doitVerifierAvantDeCreer())
+                .as("le verdict portait sur l'ancien numéro")
+                .isTrue();
+        assertThat(viewModel.carre().annonceApresDeclaration("640381")).isEqualTo(RetourOperation.AUCUN);
+    }
+
+    @Test
+    @DisplayName("#5607 : sans vérification installée, ou en édition, « Créer » n'interroge rien")
+    void creer_n_interroge_rien_sans_recherche_ni_en_edition() {
+        SiteEditViewModel sansRecherche = sansRecherche();
+        sansRecherche.numeroCarreProperty().set(CARRE);
+        assertThat(sansRecherche.doitVerifierAvantDeCreer()).isFalse();
+
+        SiteEditViewModel enEdition =
+                enEditionDe(new Site(7L, CARRE, "Étang", Protocole.STANDARD, null, "2026-01-01", "u-1"));
+        assertThat(enEdition.doitVerifierAvantDeCreer()).isFalse();
     }
 }

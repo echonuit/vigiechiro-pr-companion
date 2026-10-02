@@ -86,17 +86,40 @@ répond en une seconde.
 
 Il reste fermé aussi **tant que vous n'êtes pas connecté** : sans connexion, la question ne peut être
 posée à personne. Le motif au survol le dit et rappelle où se connecter. **Déclarer le carré reste
-possible** : c'est la vérification qui attend, pas votre saisie - travailler hors ligne est normal. Trois réponses possibles :
+possible** : c'est la vérification qui attend, pas votre saisie - travailler hors ligne est normal.
 
-- **le carré n'y est pas encore** : vous pouvez le déclarer ici ;
-- **le carré y est déjà** : le message **nomme le site trouvé**, protocole compris - un même carré porte
-  un site par protocole - et un bouton **Récupérer ce carré** apparaît. Le bouton **Créer** se ferme le
-  temps que dure ce verdict : déclarer un carré qui existe déjà là-bas produirait un doublon local sans
-  rattachement, et votre dépôt serait refusé plus tard ;
-- **la vérification n'a pas pu se faire** (hors connexion, portail injoignable) : c'est dit tel quel.
-  Ce n'est **pas** « le carré est libre ».
+Un carré ne reçoit vos nuits déposées que s'il existe en **Point Fixe** sur Vigie-Chiro. Chaque réponse
+dit donc ce qu'elle implique pour le dépôt, et il y en a quatre.
+
+**Le carré n'y est pas encore.** Vous pouvez le déclarer ici, mais pour y déposer des nuits, il faudra
+l'**activer en Point Fixe sur le portail** Vigie-Chiro (y créer un point), puis le récupérer ici.
+L'encart est orange : il reste un geste à faire avant de déposer.
+
+![La fenêtre de déclaration après vérification : le carré n'existe pas sur Vigie-Chiro ; il se déclare ici, et il faudra l'activer en Point Fixe sur le portail avant de déposer.](../assets/captures/apercu-sites-modale-site-carre-absent.png)
+
+**Le carré y est, mais sous un autre protocole seulement** (Routier, Pédestre). Companion ne traite que
+le Point Fixe : le message nomme le site trouvé et dit le même geste du portail. Aucun bouton
+« Récupérer » n'apparaît, puisqu'il n'y a rien à rattacher en Point Fixe.
+
+![La fenêtre de déclaration après vérification : le carré existe en Routier seulement ; il faudra l'activer en Point Fixe sur le portail.](../assets/captures/apercu-sites-modale-site-autre-protocole.png)
+
+**Le carré y est déjà en Point Fixe.** Le message **nomme le site trouvé**, et un bouton **Récupérer ce
+carré** apparaît. Le bouton **Créer** se ferme le temps que dure ce verdict : déclarer un carré qui existe
+déjà là-bas produirait un doublon local sans rattachement, et votre dépôt serait refusé plus tard.
 
 ![La fenêtre de déclaration après vérification : le carré cherché existe déjà sur Vigie-Chiro, et le message dit sous quel protocole et quoi faire à la place.](../assets/captures/apercu-sites-modale-site-carre-existant.png)
+
+**La vérification n'a pas pu se faire** (hors connexion, portail injoignable) : c'est dit tel quel. Ce
+n'est **pas** « le carré est libre ».
+
+![La fenêtre de déclaration après une vérification impossible : le message dit que le carré n'a pas été vérifié.](../assets/captures/apercu-sites-modale-site-carre-non-verifie.png)
+
+**Si vous cliquez Créer sans avoir vérifié**, l'application pose la question d'elle-même avant
+d'enregistrer. Un carré déjà en Point Fixe n'est pas créé : la fenêtre reste ouverte sur le verdict et le
+bouton **Récupérer ce carré**. Dans les autres cas, le site est créé, et le bandeau de **Mes sites** dit ce
+qu'il en est, carré nommé.
+
+![La liste « Mes sites » après la déclaration d'un carré absent de Vigie-Chiro : le bandeau dit qu'il faudra l'activer en Point Fixe sur le portail avant de déposer.](../assets/captures/apercu-sites-mes-sites-carre-absent.png)
 
 Si vous corrigez le numéro après avoir vérifié, la réponse **disparaît** : elle portait sur l'ancien
 numéro, et la laisser affichée vous ferait croire que le nouveau a été vérifié. Recliquez pour poser la
@@ -124,10 +147,8 @@ récupéré les porte. Sinon il prend le titre de la plateforme.
 
 !!! warning "Un carré peut exister sous un autre protocole"
     Le même numéro peut désigner un site **Point Fixe**, **Pédestre** ou **Routier**. Companion ne traite
-    que le Point Fixe : si le carré n'existe que sous un autre protocole, il vous le dit et ne récupère
-    rien, plutôt que de vous rattacher au mauvais site.
-
-    ![La fenêtre après une récupération refusée : le carré existe en Routier, protocole que l'application ne gère pas.](../assets/captures/apercu-sites-modale-site-autre-protocole.png)
+    que le Point Fixe : la vérification le dit avant toute récupération, et la récupération, si on la
+    demande par la ligne de commande, ne rattache rien plutôt que de vous lier au mauvais site.
 
 !!! tip "Pourquoi ce détour évite un dépôt manqué"
     Le portail n'autorise pas à activer un carré sans y créer un point. Un carré activé là-bas puis

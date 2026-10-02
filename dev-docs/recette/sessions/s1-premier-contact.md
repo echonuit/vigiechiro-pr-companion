@@ -49,8 +49,9 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 - **S1-12** · État vide : icône 🌐, « + Ajouter mon premier site de suivi », hint-box.
 - **S1-13** · Création : carré 6 chiffres, « Créer » grisé tant qu'invalide, le champ rougit.
 - **S1-30** · Vérification, carré **libre** : saisir `999999`, cliquer « Vérifier sur Vigie-Chiro ». Un encart
-  **vert** apparaît sous le champ : « Ce carré n'existe pas encore sur Vigie-Chiro : vous pouvez le déclarer
-  ici. » Le bouton redevient cliquable aussitôt après.
+  **ambre** apparaît sous le champ : « Ce carré n'existe pas encore sur Vigie-Chiro. Vous pouvez le déclarer
+  ici ; pour y déposer des nuits, il faudra l'activer en Point Fixe sur le portail Vigie-Chiro (y créer un
+  point), puis le récupérer ici. » (#5607) Le bouton redevient cliquable aussitôt après.
 - **S1-31** · Vérification, carré **déjà déclaré** : saisir le carré du site plateforme synchronisé (prérequis),
   cliquer. Un encart **ambre** nomme le site trouvé, protocole compris (« Vigiechiro - Point Fixe-<carré> »), et
   renvoie à « Mes sites », « Récupérer depuis Vigie-Chiro ». Il ne propose **pas** de déclarer quand même.
@@ -108,6 +109,15 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
   où se trouvait le micro. Le champ garde ce qu'il avait, et « Créer » reste fermé s'il était vide.
   L'application ne tranche pas : les deux centres sont à distance égale, et elle ne sait pas de quel
   côté était le micro.
+- **S1-41** · « Créer » **sans avoir vérifié** un carré absent de Vigie-Chiro : saisir `999999`, cliquer
+  directement « Créer ». L'application interroge le portail, crée le site, et le bandeau de « Mes sites »
+  dit qu'il faudra activer le carré en Point Fixe sur le portail (y créer un point), puis le récupérer,
+  avant de pouvoir y déposer des nuits (#5607). Rejoué avec un carré déjà en Point Fixe, « Créer » ne
+  crée rien : la fenêtre reste ouverte sur « Récupérer ce carré ».
+- **S1-42** · Vérification d'un carré que Vigie-Chiro porte **seulement en Routier** (prérequis : un tel carré
+  sur le compte de recette, ou la plateforme de test) : l'encart ambre dit qu'il existe, mais pas en Point
+  Fixe, nomme le site Routier, et dit le geste du portail. « Récupérer ce carré » **n'apparaît pas** : il
+  n'y a rien à rattacher en Point Fixe (#5607).
 - **S1-14** · Carte de site complète : nom, points, passages, badge fraîcheur, badges « Enregistré / Verrouillé
   sur Vigie-Chiro », chevron ›.
 - **S1-15** · Navigation clavier (Tab / Entrée / Espace) sur les cartes.

@@ -44,16 +44,35 @@ public class RechercheCarreExistant {
         /// La gravité, dont la vue tire sa couleur et son icône.
         Severite severite();
 
-        /// Aucun site ne porte ce carré : il est libre, la déclaration a un sens.
+        /// Le message lu **après** la déclaration du carré, dans « Mes sites » (#5607) : la modale s'est
+        /// fermée, il nomme donc le carré, et ne propose plus de le déclarer.
+        default String apresDeclaration(String numeroCarre) {
+            return declare(numeroCarre) + message();
+        }
+
+        /// L'entrée commune des messages d'après déclaration : le carré, nommé.
+        private static String declare(String numeroCarre) {
+            return "Carré " + numeroCarre + " déclaré. ";
+        }
+
+        /// Aucun site ne porte ce carré : il est libre, la déclaration a un sens, mais aucune nuit n'y sera
+        /// déposée tant qu'il n'est pas activé en Point Fixe sur le portail (#5607). D'où l'avertissement.
         record Inexistant() implements Verdict {
             @Override
             public String message() {
-                return "Ce carré n'existe pas encore sur Vigie-Chiro : vous pouvez le déclarer ici.";
+                return "Ce carré n'existe pas encore sur Vigie-Chiro. Vous pouvez le déclarer ici ; "
+                        + PresenceDuCarre.GESTE_DU_PORTAIL;
+            }
+
+            @Override
+            public String apresDeclaration(String numeroCarre) {
+                return declare(numeroCarre) + "Il n'existe pas encore sur Vigie-Chiro : "
+                        + PresenceDuCarre.GESTE_DU_PORTAIL;
             }
 
             @Override
             public Severite severite() {
-                return Severite.SUCCES;
+                return Severite.AVERTISSEMENT;
             }
         }
 
@@ -78,6 +97,34 @@ public class RechercheCarreExistant {
                 return "Ce carré existe déjà sur Vigie-Chiro (" + String.join(", ", titres)
                         + "). Récupérez-le ici : il sera rattaché au carré de la plateforme, avec ses"
                         + " points d'écoute déjà positionnés.";
+            }
+
+            @Override
+            public Severite severite() {
+                return Severite.AVERTISSEMENT;
+            }
+        }
+
+        /// Le carré existe, mais sous un autre protocole seulement (#5607). Le rapatriement ne rattache que
+        /// le Point Fixe : « récupérez-le » aurait abouti à « rien n'a été récupéré ».
+        ///
+        /// @param titres les sites trouvés, dont le titre nomme le protocole
+        record AutreProtocole(List<String> titres) implements Verdict {
+
+            public AutreProtocole {
+                titres = List.copyOf(titres);
+            }
+
+            @Override
+            public String message() {
+                return "Ce carré existe sur Vigie-Chiro, mais pas en Point Fixe (" + String.join(", ", titres)
+                        + "). Vous pouvez le déclarer ici ; " + PresenceDuCarre.GESTE_DU_PORTAIL;
+            }
+
+            @Override
+            public String apresDeclaration(String numeroCarre) {
+                return declare(numeroCarre) + "Il existe sur Vigie-Chiro, mais pas en Point Fixe ("
+                        + String.join(", ", titres) + ") : " + PresenceDuCarre.GESTE_DU_PORTAIL;
             }
 
             @Override
@@ -131,12 +178,14 @@ public class RechercheCarreExistant {
     }
 
     private static Verdict verdict(List<SiteVigieChiro> trouves) {
-        if (trouves.isEmpty()) {
-            return new Verdict.Inexistant();
-        }
-        return new Verdict.DejaDeclare(trouves.stream()
-                .map(SiteVigieChiro::titre)
-                .filter(Objects::nonNull)
-                .toList());
+        return switch (PresenceDuCarre.de(trouves)) {
+            case PresenceDuCarre.Absent absent -> new Verdict.Inexistant();
+            case PresenceDuCarre.AutreProtocole(List<String> titres) -> new Verdict.AutreProtocole(titres);
+            case PresenceDuCarre.PointFixe pointFixe ->
+                new Verdict.DejaDeclare(trouves.stream()
+                        .map(SiteVigieChiro::titre)
+                        .filter(Objects::nonNull)
+                        .toList());
+        };
     }
 }

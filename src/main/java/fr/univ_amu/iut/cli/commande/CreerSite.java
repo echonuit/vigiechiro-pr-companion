@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.sites.model.PresenceDuCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.util.List;
@@ -45,6 +46,10 @@ public final class CreerSite implements Callable<Integer> {
             description = "Ne demande pas à Vigie-Chiro si ce carré y existe déjà (hors connexion, ou script"
                     + " qui sait ce qu'il fait).")
     private boolean sansVerification;
+
+    /// L'entrée des trois messages sur le carré demandé : le refus du doublon, et les deux gestes du
+    /// portail (#5607).
+    private static final String LE_CARRE = "Le carré ";
 
     @Spec
     private CommandSpec spec;
@@ -94,7 +99,7 @@ public final class CreerSite implements Callable<Integer> {
     /// croire qu'elle a réussi - c'est la règle de l'ADR 3854, appliquée dans l'autre sens.
     private void refuserSiLeCarreExisteLaBas() {
         switch (client.chercherCarre(carre)) {
-            case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> trouves) -> refuserSiPointFixe(trouves);
+            case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> trouves) -> examiner(trouves);
             case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte ->
                 prevenirSansVerifier("vous n'êtes pas connecté");
             case ReponseApi.Injoignable<List<SiteVigieChiro>>(String cause) ->
@@ -104,13 +109,29 @@ public final class CreerSite implements Callable<Integer> {
         }
     }
 
-    private void refuserSiPointFixe(List<SiteVigieChiro> trouves) {
-        trouves.stream().filter(SiteVigieChiro::estPointFixe).findFirst().ifPresent(existant -> {
-            throw new RegleMetierException("Le carré " + carre + " existe déjà sur Vigie-Chiro en Point Fixe ("
-                    + existant.titre() + "). Le créer ici produirait un doublon, et le dépôt échouerait faute"
-                    + " de rattachement. Récupérez-le depuis l'application (« Mes sites » › « Nouveau site »"
-                    + " › « Récupérer ce carré »), ou passez --sans-verification pour créer quand même.");
-        });
+    /// Refuse le doublon d'un carré déjà en Point Fixe, et dit le geste du portail pour un carré absent ou
+    /// présent sous un autre protocole (#5607) : sans lui, le site se créait sans que rien ne dise, avant
+    /// le dépôt, qu'aucune nuit n'y serait reçue. Sur la sortie d'erreur : la standard porte l'identifiant.
+    private void examiner(List<SiteVigieChiro> trouves) {
+        switch (PresenceDuCarre.de(trouves)) {
+            case PresenceDuCarre.PointFixe(SiteVigieChiro existant) -> refuserLeDoublon(existant);
+            case PresenceDuCarre.AutreProtocole(List<String> titres) ->
+                prevenir(LE_CARRE + carre + " existe sur Vigie-Chiro, mais pas en Point Fixe ("
+                        + String.join(", ", titres) + ") : " + PresenceDuCarre.GESTE_DU_PORTAIL);
+            case PresenceDuCarre.Absent absent ->
+                prevenir(LE_CARRE + carre + " n'existe pas sur Vigie-Chiro : " + PresenceDuCarre.GESTE_DU_PORTAIL);
+        }
+    }
+
+    private void refuserLeDoublon(SiteVigieChiro existant) {
+        throw new RegleMetierException(LE_CARRE + carre + " existe déjà sur Vigie-Chiro en Point Fixe ("
+                + existant.titre() + "). Le créer ici produirait un doublon, et le dépôt échouerait faute"
+                + " de rattachement. Récupérez-le depuis l'application (« Mes sites » › « Nouveau site »"
+                + " › « Récupérer ce carré »), ou passez --sans-verification pour créer quand même.");
+    }
+
+    private void prevenir(String message) {
+        spec.commandLine().getErr().println(message);
     }
 
     private void prevenirSansVerifier(String cause) {
