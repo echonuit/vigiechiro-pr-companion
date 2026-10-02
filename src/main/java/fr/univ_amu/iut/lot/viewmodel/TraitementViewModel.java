@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import java.time.ZoneId;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -26,6 +27,10 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 /// Hors connexion, la zone affiche le **dernier état connu** (cache #1262) plutôt que rien, en disant
 /// honnêtement de quand il date.
 public class TraitementViewModel {
+
+    /// Le fuseau des heures affichées : celui du **poste**, comme la commande depuis #3678 (#5683). C'est
+    /// l'heure de celui qui lit, et c'est elle qui lui dit s'il attend ou s'il revient plus tard.
+    private static final ZoneId FUSEAU = ZoneId.systemDefault();
 
     private final Optional<SuiviTraitement> suivi;
     private final Horloge horloge;
@@ -68,7 +73,7 @@ public class TraitementViewModel {
             return;
         }
         appliquer(releve.get().traitement());
-        fraicheur.set(FormatsTraitement.fraicheur(releve.get()));
+        fraicheur.set(FormatsTraitement.fraicheur(releve.get(), FUSEAU));
     }
 
     /// Demande au serveur où il en est. **Bloquant** (réseau) : à appeler **hors du fil JavaFX**, via le
@@ -82,7 +87,7 @@ public class TraitementViewModel {
     /// Restitue un état fraîchement relevé, **sur le fil JavaFX**.
     public void appliquer(Traitement traitement) {
         Objects.requireNonNull(traitement, "traitement");
-        message.set(FormatsTraitement.libelle(traitement));
+        message.set(FormatsTraitement.libelle(traitement, FUSEAU));
         alerte.set(FormatsTraitement.alerte(traitement, horloge));
         // Une nuit terminée ou en échec a déjà été calculée : la relancer détruirait ses observations.
         relanceBloquee.set(traitement.resultatsDisponibles() || traitement.enEchec());

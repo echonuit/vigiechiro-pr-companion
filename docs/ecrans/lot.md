@@ -191,6 +191,10 @@ vous dit où en est le calcul :
 | **Un premier essai a échoué…** | La plateforme a relancé le calcul d'elle-même. Patientez. |
 | **L'analyse a échoué** | Le motif est indiqué. |
 
+Les heures de la carte sont celles de votre poste, même si la plateforme les donne en temps universel.
+
+![La carte « Traitement Vigie-Chiro » sur une analyse en cours, avec son heure de départ.](../assets/captures/apercu-lot-traitement-en-cours.png)
+
 !!! note "« URL de stockage refusée »"
     Vos enregistrements montent vers un espace de stockage dont **la plateforme fournit l'adresse**.
     L'application vérifie cette adresse avant d'y envoyer quoi que ce soit : si elle n'est pas celle

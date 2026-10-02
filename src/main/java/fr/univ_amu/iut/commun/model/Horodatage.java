@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.model;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
@@ -76,12 +77,19 @@ public final class Horodatage {
         try {
             return Optional.of(
                     OffsetDateTime.parse(borne).atZoneSameInstant(fuseau).toLocalDateTime());
-        } catch (DateTimeParseException premiere) {
+        } catch (DateTimeParseException iso) {
             try {
-                // Sans décalage, rien à convertir : la borne est déjà une heure murale.
-                return Optional.of(LocalDateTime.parse(borne));
-            } catch (DateTimeParseException seconde) {
-                return Optional.empty();
+                // La plateforme rend aussi la forme des en-têtes HTTP, « Wed, 30 Sep 2026 14:07:45 GMT » (#3678).
+                return Optional.of(ZonedDateTime.parse(borne, DateTimeFormatter.RFC_1123_DATE_TIME)
+                        .withZoneSameInstant(fuseau)
+                        .toLocalDateTime());
+            } catch (DateTimeParseException premiere) {
+                try {
+                    // Sans décalage, rien à convertir : la borne est déjà une heure murale.
+                    return Optional.of(LocalDateTime.parse(borne));
+                } catch (DateTimeParseException seconde) {
+                    return Optional.empty();
+                }
             }
         }
     }
@@ -109,6 +117,13 @@ public final class Horodatage {
         return heureMurale(borne, fuseau)
                 .map(instant -> DATE_SEULE.format(instant))
                 .orElse(borne);
+    }
+
+    /// « 30/09/2026 à 16:07 » - un instant de la plateforme, **dans une phrase**, à l'heure de `fuseau`
+    /// (#5683). La carte du traitement recopiait l'heure UTC ; la commande convertissait depuis #3678.
+    /// Une valeur illisible reste telle quelle : une donnée abîmée doit se voir.
+    public static String instantDansUnePhrase(String borne, ZoneId fuseau) {
+        return heureMurale(borne, fuseau).map(Horodatage::dansUnePhrase).orElse(borne);
     }
 
     /// « 03/07/2026 à 21:00 » - pour un instant **inséré dans une phrase**.

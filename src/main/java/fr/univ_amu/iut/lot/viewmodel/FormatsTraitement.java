@@ -5,8 +5,8 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 
@@ -26,30 +26,33 @@ final class FormatsTraitement {
 
     private FormatsTraitement() {}
 
-    /// Où en est l'analyse, en une phrase, et ce que cela implique pour l'observateur.
-    static String libelle(Traitement traitement) {
+    /// Où en est l'analyse, en une phrase, et ce que cela implique pour l'observateur. Les instants du
+    /// serveur se lisent à l'heure de `fuseau`, celui du poste en production (#5683).
+    static String libelle(Traitement traitement, ZoneId fuseau) {
         if (traitement.estInconnu()) {
             return "Analyse non lancée : les observations n'existent pas encore côté Vigie-Chiro.";
         }
         return switch (traitement.etat()) {
             case PLANIFIE ->
-                "Analyse planifiée" + le(traitement.datePlanification())
+                "Analyse planifiée" + le(traitement.datePlanification(), fuseau)
                         + " : elle attend un calculateur. Vous pouvez fermer l'application.";
             case EN_COURS ->
-                "Analyse en cours" + depuis(traitement.dateDebut())
+                "Analyse en cours" + depuis(traitement.dateDebut(), fuseau)
                         + ". Comptez plusieurs dizaines de minutes ; vous pouvez fermer l'application.";
             case RETRY ->
                 "Un premier essai a échoué : Vigie-Chiro a relancé l'analyse" + essai(traitement) + ". Patientez.";
             case FINI ->
-                "Analyse terminée" + le(traitement.dateFin()) + " : les observations sont prêtes à être importées.";
-            case ERREUR -> "L'analyse a échoué côté Vigie-Chiro" + le(traitement.dateFin()) + "." + trace(traitement);
+                "Analyse terminée" + le(traitement.dateFin(), fuseau)
+                        + " : les observations sont prêtes à être importées.";
+            case ERREUR ->
+                "L'analyse a échoué côté Vigie-Chiro" + le(traitement.dateFin(), fuseau) + "." + trace(traitement);
         };
     }
 
     /// « Dernier état connu le … » : la fraîcheur de l'information, que l'on doit à l'utilisateur, surtout
     /// hors connexion, où l'écran affiche un souvenir et non une vérité.
-    static String fraicheur(ReleveTraitement releve) {
-        return "Dernier état connu le " + lisible(releve.releveLe()) + ".";
+    static String fraicheur(ReleveTraitement releve, ZoneId fuseau) {
+        return "Dernier état connu le " + lisible(releve.releveLe(), fuseau) + ".";
     }
 
     /// Avertissement quand le calcul **traîne** (plus de 24 h) : le serveur ne signale jamais qu'il a
@@ -81,12 +84,12 @@ final class FormatsTraitement {
         }
     }
 
-    private static String le(String date) {
-        return date == null ? "" : " le " + lisible(date);
+    private static String le(String date, ZoneId fuseau) {
+        return date == null ? "" : " le " + lisible(date, fuseau);
     }
 
-    private static String depuis(String date) {
-        return date == null ? "" : " depuis le " + lisible(date);
+    private static String depuis(String date, ZoneId fuseau) {
+        return date == null ? "" : " depuis le " + lisible(date, fuseau);
     }
 
     private static String essai(Traitement traitement) {
@@ -98,16 +101,9 @@ final class FormatsTraitement {
         return traitement.motifCourt().map(motif -> " Motif : " + motif).orElse("");
     }
 
-    /// Date lisible par un humain, ou la date brute si elle ne se laisse pas lire (on n'invente rien).
-    private static String lisible(String date) {
-        try {
-            return Horodatage.dansUnePhrase(OffsetDateTime.parse(date));
-        } catch (DateTimeParseException maisPeutEtreLocale) {
-            try {
-                return Horodatage.dansUnePhrase(LocalDateTime.parse(date));
-            } catch (DateTimeParseException illisible) {
-                return date;
-            }
-        }
+    /// Date lisible par un humain, à l'heure de `fuseau`, ou la date brute si elle ne se laisse pas lire
+    /// (on n'invente rien). Une heure sans décalage est déjà locale, et se lit telle quelle.
+    private static String lisible(String date, ZoneId fuseau) {
+        return Horodatage.instantDansUnePhrase(date, fuseau);
     }
 }

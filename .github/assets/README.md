@@ -686,7 +686,7 @@ L'écran qui porte l'état d'avancement d'une nuit.
 
 Le second gros pourvoyeur d'états : préparation, téléversement, reprise, interruption.
 
-<sub>`lot/view/Lot.fxml` &middot; 13 capture(s)</sub>
+<sub>`lot/view/Lot.fxml` &middot; 14 capture(s)</sub>
 
 <table>
 <tr>
@@ -764,9 +764,11 @@ Le second gros pourvoyeur d'états : préparation, téléversement, reprise, int
 </tr>
 <tr>
 <th width="50%">Dépôt incomplet : des archives refusées</th>
+<th width="50%">Traitement en cours</th>
 </tr>
 <tr>
 <td><a href="apercu-lot-depot-refus-definitif.png"><img src="apercu-lot-depot-refus-definitif.png" width="430" alt="Dépôt incomplet : onze archives en ligne sur quatorze, trois refusées par Vigie-Chiro, dont deux qui redeviendront reprenables après une reconnexion"></a></td>
+<td><a href="apercu-lot-traitement-en-cours.png"><img src="apercu-lot-traitement-en-cours.png" width="430" alt="Traitement en cours : l'heure de départ de l'analyse se lit à l'heure du poste"></a></td>
 </tr>
 </table>
 

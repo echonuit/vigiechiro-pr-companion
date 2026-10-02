@@ -4,19 +4,14 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.GesteAttenduCli;
 import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import java.io.PrintWriter;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -52,17 +47,6 @@ import picocli.CommandLine.Spec;
         description = "Où en est l'analyse Tadarida de la nuit déposée ? (0 = terminé, 3 = en cours,"
                 + " 1 = en échec, 4 = jamais lancée, 2 = indisponible)")
 public final class EtatTraitementVigieChiro implements Callable<Integer>, LectureSeule {
-
-    private static final Logger LOG = Logger.getLogger(EtatTraitementVigieChiro.class.getName());
-
-    /// Motif **purement numérique**, donc insensible à la locale : c'est justement le « Fri » et le
-    /// « Jul » du serveur qu'on remplace. `'à'` plutôt qu'un espace, parce que la valeur atterrit au
-    /// milieu d'une phrase.
-    private static final DateTimeFormatter AFFICHAGE = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
-
-    /// Les deux formes que la plateforme rend, vues l'une et l'autre dans les fixtures du dépôt.
-    private static final List<DateTimeFormatter> FORMES_DU_SERVEUR =
-            List.of(DateTimeFormatter.RFC_1123_DATE_TIME, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
     /// Analyse terminée : les observations sont récupérables.
     private static final int TERMINE = 0;
@@ -182,17 +166,10 @@ public final class EtatTraitementVigieChiro implements Callable<Integer>, Lectur
         return date == null ? "" : " (le " + lisible(date, fuseau) + ")";
     }
 
-    /// L'instant dans le fuseau demandé, ou la chaîne d'origine si elle ne se lit pas.
+    /// L'instant dans le fuseau demandé, ou la chaîne d'origine si elle ne se lit pas. La lecture est celle
+    /// de la carte de l'écran : une seule pour les deux surfaces depuis #5683.
     private static String lisible(String date, ZoneId fuseau) {
-        for (DateTimeFormatter forme : FORMES_DU_SERVEUR) {
-            try {
-                return AFFICHAGE.format(ZonedDateTime.parse(date, forme).withZoneSameInstant(fuseau));
-            } catch (DateTimeParseException autreForme) {
-                // La forme suivante, et à défaut la chaîne telle quelle.
-                LOG.log(Level.FINEST, autreForme, () -> "Date « " + date + " » illisible dans la forme " + forme);
-            }
-        }
-        return date;
+        return Horodatage.instantDansUnePhrase(date, fuseau);
     }
 
     private static String essais(Traitement traitement) {
