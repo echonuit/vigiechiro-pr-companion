@@ -1273,6 +1273,9 @@ jobs:
           python3 scripts/plateforme-de-test/faux_s3.py --auto-test
           # Et son etat de depart : l auto-test joue la moitie PURE du generateur, sans Mongo (#5662).
           python3 scripts/plateforme-de-test/amorcer.py --auto-test
+          # Et le releve des sautes du job `plateforme-de-test` : ses cas fabriquent des rapports
+          # surefire, sans JVM (#5748).
+          python3 scripts/plateforme-de-test/releve_des_sautes.py --auto-test
 
   temoins:
     # Les bancs qui prouvent qu un auto-test n est pas decoratif. Le poste le plus cher.
