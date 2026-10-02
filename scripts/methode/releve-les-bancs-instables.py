@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
@@ -326,10 +327,10 @@ def limiteDeLecture(
     """
 
     def combien(n: int | None, quoi: str) -> str:
-        return f"{n} {quoi}" if n is not None else f"un nombre NON DENOMBRE de {quoi}"
+        return f"{n} {quoi}" if n is not None else f"{quoi} en nombre NON DENOMBRE"
 
     rejoint = (
-        f" Lus parmi les tirages : les {combien(rejoues, 'tirages REJOUES')} seulement."
+        f" Parmi les tirages, lus : les {combien(rejoues, 'tirages REJOUES')}, et eux seuls."
         f" Jamais ouverts : les {combien(rougesEcartes, 'tirages qui ont ROUGI SANS etre rejoues')}."
     )
     flux = FLUX_LU if flux is None else flux
@@ -353,8 +354,10 @@ def limiteDeLecture(
     )
 
 
-def journalDeTentative(idRun: int, tentative: int) -> str:
-    """Le journal d'UNE tentative, decompresse. `--log-failed` ne rend que la DERNIERE.
+def journalDeTentative(
+    idRun: int, tentative: int, lanceur=subprocess.run, dors=time.sleep
+) -> str | None:
+    """Le journal d'UNE tentative, ou `None` si on n'a PAS PU le lire.
 
     **Cet appel NE passe PAS par `_commun.forge.interroge`, et c est nomme plutot que tu** (#5544).
     Trois raisons, chacune suffisante :
@@ -362,28 +365,58 @@ def journalDeTentative(idRun: int, tentative: int) -> str:
     - il rend des **octets**, pas du texte : c est une archive zip, et `interroge` rend `stdout`
       decode ;
     - il exige un **second outil**, `unzip`, dont l absence est aussi une raison de renoncer ;
-    - un journal **vide est legitime** ici : les journaux de tentative expirent, donc `""` est une
-      reponse et non un silence. C est exactement l inverse du cas que #5544 corrige ailleurs dans ce
-      fichier, ou le vide effacait une erreur.
+    ⟨LA TROISIEME RAISON EST TOMBEE (#5741)⟩ Elle disait : « un journal vide est legitime ici, les
+    journaux de tentative expirent, donc `""` est une reponse et non un silence ». La moitie en est
+    vraie - un journal expire rend bien du vide. Mais un **refus de la forge** rend du vide aussi, et
+    les deux etaient indiscernables : exactement la forme que #5544 corrige quinze lignes plus haut.
 
-    L y forcer demanderait une variante binaire de `interroge` pour un seul appelant, et ferait
-    disparaitre la troisieme distinction. Elle reste donc ici, sciemment.
+    Mesure du 2026-10-01 sur 38 tirages : **26 journaux vides** en un essai, **5** en quatre. Vingt et
+    un n avaient pas expire, la forge avait refuse de les servir.
+
+    **Et le garde qui devait l attraper ne se declenchait jamais.** Il testait `if not fait.stdout`,
+    or un refus de `gh` ecrit 146 octets sur stdout - son message d erreur en JSON. Mesure : code 1
+    avec 146 octets sur un 404 comme sur une tentative inexistante, code 0 avec 210 417 octets sur une
+    lecture. Le test passait donc, les 146 octets etaient ecrits comme une archive, l `unzip`
+    echouait en silence sous `check=False`, et le vide naissait trois etapes plus loin que le garde.
+    Un dispositif vacant non par sa population, mais par sa **premisse**.
+
+    Trois etats, donc, et c est l idiome de `mesure_duree_portail.py:insiste()` : **`None` quand on n a
+    PAS PU lire**, `""` quand on a lu et qu il n y avait rien, le texte sinon. Les trois essais et
+    l ADR 2748 viennent du meme voisin.
+
+    Les deux autres raisons de ne pas passer par `interroge` tiennent : octets contre texte, et le
+    second outil. Elle reste donc ici, sur deux raisons au lieu de trois.
+
+    @param lanceur injecte pour que les trois etats s eprouvent HORS LIGNE
     """
     if shutil.which("gh") is None or shutil.which("unzip") is None:
-        return ""
+        # On ne peut PAS lire : ce n est pas un journal vide. Rendre `""` ici effacait la difference
+        # entre « ce poste n a pas les outils » et « ce tirage n a plus de journal ».
+        return None
     with tempfile.TemporaryDirectory() as dossier:
         zipDeRun = pathlib.Path(dossier) / "l.zip"
-        fait = subprocess.run(
-            ["gh", "api", f"repos/{DEPOT}/actions/runs/{idRun}/attempts/{tentative}/logs"],
-            capture_output=True,
-            check=False,
-        )
-        if not fait.stdout:
-            return ""
+        appel = ["gh", "api", f"repos/{DEPOT}/actions/runs/{idRun}/attempts/{tentative}/logs"]
+        for essai in (1, 2, 3):
+            try:
+                fait = lanceur(appel, capture_output=True, check=False)
+            except OSError:
+                # `check=False` couvre un code non nul, pas un executable introuvable : la lecon est
+                # celle de `insiste()`, qui l a payee en #5615.
+                return None
+            if fait.returncode == 0:
+                break
+            if essai < 3:
+                dors(3)
+        else:
+            return None
         zipDeRun.write_bytes(fait.stdout)
-        subprocess.run(
+        ouvert = lanceur(
             ["unzip", "-qq", "-o", str(zipDeRun), "-d", dossier], capture_output=True, check=False
         )
+        # `unzip` rend 1 pour un simple avertissement et extrait quand meme ; au-dela, il n a pas
+        # ouvert l archive, et un joint vide serait alors une lecture manquee prise pour un vide.
+        if ouvert.returncode > 1:
+            return None
         return joindreLesJournaux(pathlib.Path(dossier))
 
 
@@ -550,6 +583,51 @@ def classe(journal: str, ordonnes: list[str]) -> tuple[str, str]:
     if _ANNULE in fin:
         return ("CASCADE", ANNULATION)
     return ("INDETERMINE", INCONNU)
+
+
+def pasPuLire(journal: str | None) -> bool:
+    """A-t-on echoue a LIRE ce journal, par opposition a l avoir lu vide ?
+
+    ⟨une seule forme de ce test dans tout le fichier (#5741)⟩ Il etait ecrit deux fois, dans le relevé
+    et dans `--classe`, et une mutation du second SURVIVAIT : le banc de mutation l a montre avant la
+    livraison, N7 restant verte quand N6 mourait. Deux ecritures de la meme decision, un seul cas.
+
+    Le nom dit la question, pas la valeur : `journal is None` se relit mal a l appel, et c est
+    precisement la distinction que ce lot existe pour rendre lisible.
+    """
+    return journal is None
+
+
+def sortsDesTentatives(
+    rejoues: list[dict], journalDe=journalDeTentative
+) -> tuple[list[list[str]], list[int], list[int]]:
+    """Les tests tombes par tentative, les tentatives MUETTES, et celles qu on n a PAS PU lire.
+
+    ⟨extraite pour que la distinction soit eprouvable (#5741)⟩ Ce tri vivait dans le corps de `main`,
+    donc derriere un appel reseau, donc hors d atteinte de tout cas. Et c est precisement la ou
+    « muet » et « illisible » etaient confondus : une mutation qui recollait les deux aurait laisse
+    l auto-test vert, et le rapport aurait continue d annoncer « donc echouees pour autre chose » sur
+    des tentatives dont il n avait rien lu.
+
+    C est la troisieme extraction de ce fichier pour la meme raison, apres `joindreLesJournaux`
+    (#5617) et `comptesDesTirages` (#5738). Le motif se repete parce que ce fichier parle a la forge
+    partout, et qu un jugement enveloppe dans un appel reseau n a pas de cas.
+    """
+    parTentative: list[list[str]] = []
+    muets: list[int] = []
+    illisibles: list[int] = []
+    for r in rejoues:
+        for tentative in range(1, r["tentatives"]):
+            journal = journalDe(r["id"], tentative)
+            if pasPuLire(journal):
+                illisibles.append(r["id"])
+                continue
+            ordonnes = testsEchouesOrdonnes(journal)
+            if ordonnes:
+                parTentative.append(ordonnes)
+            else:
+                muets.append(r["id"])
+    return parTentative, muets, illisibles
 
 
 def _assertions() -> list[int]:
@@ -938,6 +1016,122 @@ jobs:
     assert len(lignesDesCas) > 40, f"le compte derive ne trouve que {len(lignesDesCas)} cas"
     assert all(ligne > 0 for ligne in lignesDesCas), lignesDesCas
 
+    # ⟨LES TROIS ETATS DU JOURNAL, EPROUVES HORS LIGNE (#5741)⟩ « Je n ai pas pu lire » valait `""`
+    # comme « j ai lu et il n y avait rien », et le second appelant en tirait une CONCLUSION. Le
+    # lanceur s injecte pour que les trois se distinguent sans reseau et sans archive.
+    class _Rendu:
+        def __init__(self, code: int, sortie: bytes = b"") -> None:
+            self.returncode, self.stdout, self.stderr = code, sortie, b""
+
+    def _faussaire(codesGh: list[int], codeUnzip: int = 0, ecrit: dict | None = None):
+        """Un lanceur qui rend les codes qu on lui donne, et ecrit des journaux au lieu d extraire."""
+        vus: list[str] = []
+
+        def lance(args, **_):
+            vus.append(args[0])
+            if args[0] == "unzip":
+                if codeUnzip <= 1 and ecrit:
+                    ou = pathlib.Path(args[args.index("-d") + 1])
+                    for nom, corps in ecrit.items():
+                        (ou / nom).write_text(corps, encoding="utf-8")
+                return _Rendu(codeUnzip)
+            return _Rendu(codesGh.pop(0) if codesGh else 0, b"PK des octets")
+
+        return lance, vus
+
+    dormi: list[int] = []
+
+    # 1. LU : le journal arrive, et c est le texte qui revient.
+    lance, vus = _faussaire([0], ecrit={"0_build.txt": "rouge de build"})
+    lu = journalDeTentative(1, 1, lanceur=lance, dors=dormi.append)
+    assert lu is not None and "rouge de build" in lu, f"un journal lu doit revenir : {lu!r}"
+    assert vus == ["gh", "unzip"], vus
+
+    # 2. LU ET VIDE : l archive s ouvre et ne porte aucun journal. C est une REPONSE, donc `""`.
+    lance, _ = _faussaire([0], ecrit={"notes.md": "pas un journal"})
+    vide = journalDeTentative(1, 1, lanceur=lance, dors=dormi.append)
+    assert vide == "", f"une archive sans journal rend du vide, pas None : {vide!r}"
+
+    # 3. PAS PU LIRE, et c est le cas que ce lot ajoute. Trois refus de la forge, trois essais, deux
+    # attentes - et `None`, jamais `""`.
+    dormi.clear()
+    lance, vus = _faussaire([1, 1, 1])
+    assert journalDeTentative(1, 1, lanceur=lance, dors=dormi.append) is None, "trois refus -> None"
+    assert vus.count("gh") == 3, f"trois essais, pas {vus.count('gh')}"
+    assert len(dormi) == 2, f"deux attentes entre trois essais, pas {len(dormi)}"
+    assert "unzip" not in vus, "on n ouvre pas une archive qu on n a pas obtenue"
+
+    # 4. LA REPRISE SERT : deux refus puis une lecture rend le texte, et non `None`.
+    lance, vus = _faussaire([1, 1, 0], ecrit={"0_bats.txt": "rouge de bats"})
+    repris = journalDeTentative(1, 1, lanceur=lance, dors=dormi.append)
+    assert repris is not None and "rouge de bats" in repris, f"la reprise doit aboutir : {repris!r}"
+    assert vus.count("gh") == 3, vus
+
+    # 5. UNE ARCHIVE QU UNZIP N OUVRE PAS n est pas un journal vide. C est l etape ou le vide naissait
+    # trois crans apres le garde qui devait l attraper.
+    lance, _ = _faussaire([0], codeUnzip=2)
+    assert journalDeTentative(1, 1, lanceur=lance, dors=dormi.append) is None, "unzip > 1 -> None"
+
+    # 6. UN OUTIL INTROUVABLE LEVE, et `check=False` ne couvre pas ce cas - la lecon de `insiste()`.
+    def _absent(*_, **__):
+        raise OSError("gh introuvable")
+
+    assert journalDeTentative(1, 1, lanceur=_absent, dors=dormi.append) is None, "OSError -> None"
+
+    # ⟨LA DECISION N A QU UNE FORME, ET ELLE S EPROUVE D ABORD⟩ `pasPuLire` est le seul endroit du
+    # fichier qui tranche, et les deux appelants y passent. Ses cas viennent AVANT ceux de ses
+    # usagers : places apres, une mutation qui la neutralise faisait planter le cas suivant sur un
+    # `AttributeError` - le banc de mutation l a dit « MORT SANS CAS », et un plantage n est pas un
+    # cas rouge nomme.
+    assert pasPuLire(None) is True, "None veut dire : je n ai pas pu lire"
+    assert pasPuLire("") is False, "du vide LU est une reponse, pas un echec de lecture"
+    assert pasPuLire("un journal") is False, "un journal lu n est pas un echec de lecture"
+
+    # ⟨LES TROIS SORTS D UNE TENTATIVE, CHEZ L APPELANT (#5741)⟩ C est ici que la confusion coutait :
+    # un journal illisible partait dans « donc echouees pour autre chose », une CONCLUSION. Les trois
+    # sorts se distinguent sur un corpus ou chacun est present, et un seul lecteur injecte suffit.
+    rejouesFeints = [
+        {"id": 10, "tentatives": 2},  # une tentative : journal LU, un test nomme
+        {"id": 20, "tentatives": 2},  # une tentative : journal lu et MUET
+        {"id": 30, "tentatives": 2},  # une tentative : PAS PU LIRE
+    ]
+    # La forme du journal est celle du fichier, reprise d un extrait REEL de la forge et non inventee -
+    # mon premier jet avait compose un format plausible, et le cas a rougi en annoncant le bon defaut
+    # pour la mauvaise raison.
+    journaux = {
+        10: (
+            "b\tB\t2026-08-29T14:31:22Z [ERROR] fr.univ_amu.iut.analyse.view.ActiviteViewTest"
+            ".ouvrir_tout_charge_les_passages(FxRobot) -- Time elapsed: 0.002 s <<< ERROR!\n"
+        ),
+        20: "b\tB\t2026-08-29T14:31:22Z rien de reconnaissable dans ce journal\n",
+        30: None,
+    }
+    tombes, muetsVus, illisiblesVus = sortsDesTentatives(
+        rejouesFeints, journalDe=lambda idRun, _t: journaux[idRun]
+    )
+    assert illisiblesVus == [30], f"le journal illisible doit etre a part : {illisiblesVus}"
+    assert muetsVus == [20], f"le journal lu et muet reste muet : {muetsVus}"
+    assert len(tombes) == 1 and tombes[0], f"le journal lu doit rendre ses tests : {tombes}"
+
+    # LE SENS NEGATIF, et c est lui qui tient la distinction : un journal lu et VIDE est muet, pas
+    # illisible. Sans ce cas, traiter tout vide comme illisible passerait les trois assertions
+    # ci-dessus - c est exactement l etat d avant ce lot, a l envers.
+    _, muetsDuVide, illisiblesDuVide = sortsDesTentatives(
+        [{"id": 40, "tentatives": 2}], journalDe=lambda *_: ""
+    )
+    assert muetsDuVide == [40], f"un journal lu et vide est MUET : {muetsDuVide}"
+    assert illisiblesDuVide == [], f"et il n est PAS illisible : {illisiblesDuVide}"
+
+    # ⟨UN POSTE SANS LES OUTILS NE PEUT PAS LIRE⟩ `shutil.which` n est pas injecte, donc ce cas le
+    # remplace le temps d une lecture. Sans lui, la branche qui rendait `""` - et confondait « ce
+    # poste n a pas `unzip` » avec « ce tirage n a plus de journal » - n aurait aucun temoin.
+    vraiWhich = shutil.which
+    try:
+        shutil.which = lambda _nom: None
+        assert journalDeTentative(1, 1) is None, "sans gh ni unzip, on n a PAS PU lire"
+    finally:
+        shutil.which = vraiWhich
+
     # ⟨LE TRI DES TIRAGES, EPROUVE HORS LIGNE⟩ Les quatre formes que la fenetre rencontre, dans un
     # corpus ou chacune est presente une fois de plus que la precedente - sans quoi un detecteur qui
     # confondrait deux colonnes rendrait les bons totaux.
@@ -1014,9 +1208,16 @@ def _classement(jours: int) -> int:
     parts: dict[tuple[str, str], int] = {}
     parTentative: list[list[str]] = []
     lues = 0
+    # ⟨le `continue` ne laissait AUCUNE trace (#5741)⟩ Cette sous-commande rend des pourcentages sur
+    # `lues`, et un journal perdu en sortait sans un mot : le denominateur rapetissait en silence, ce
+    # qui FLATTE les pourcentages au lieu de les fausser visiblement.
+    illisibles: list[int] = []
     for r in rejoues:
         for tentative in range(1, r["tentatives"]):
             journal = journalDeTentative(r["id"], tentative)
+            if pasPuLire(journal):
+                illisibles.append(r["id"])
+                continue
             if not journal:
                 continue
             lues += 1
@@ -1033,6 +1234,11 @@ def _classement(jours: int) -> int:
     # exposee au defaut : qui lit un classement cherche a decider d une conduite, pas a estimer un
     # taux. La meme phrase que le relevé, parce qu une seconde formulation divergerait.
     print(limiteDeLecture(rejoues=len(rejoues), rougesEcartes=rougesEcartes))
+    if illisibles:
+        print(
+            f"\n{len(illisibles)} tentative(s) dont le journal n a PAS PU etre lu, donc hors des"
+            f" pourcentages ci-dessous : {', '.join(str(i) for i in sorted(set(illisibles)))}."
+        )
     if not lues:
         print("\nAucune tentative lue : rien a classer.")
         return 0
@@ -1106,14 +1312,7 @@ def main() -> int:
     if not tirages:
         print("Aucun tirage lu : `gh` est-il installe et authentifie ?")
         return 1
-    parTentative, muets = [], []
-    for r in rejoues:
-        for tentative in range(1, r["tentatives"]):
-            ordonnes = testsEchouesOrdonnes(journalDeTentative(r["id"], tentative))
-            if ordonnes:
-                parTentative.append(ordonnes)
-            else:
-                muets.append(r["id"])
+    parTentative, muets, illisibles = sortsDesTentatives(rejoues)
     tetes, suites = comptesParRang(parTentative)
     print(
         f"RELEVE bancs | fenetre={jours}j | tirages={tirages} | relances={len(rejoues)}"
@@ -1132,6 +1331,13 @@ def main() -> int:
     emportes = {t: n for t, n in suites.items() if t not in tetes}
     if emportes:
         print(f"\n  {len(emportes)} test(s) JAMAIS en tete : victimes seules, rien ne les accuse.")
+    if illisibles:
+        # Separe des muets, et AVANT eux : c est la seule des deux lignes qui parle de ce que le
+        # releve n a pas pu faire, et l article A3 veut qu elle se lise en premier.
+        print(
+            f"\n{len(illisibles)} tentative(s) dont le journal n a PAS PU etre lu, donc ni muettes"
+            f" ni classees : {', '.join(str(i) for i in sorted(set(illisibles)))}."
+        )
     if muets:
         print(
             f"\n{len(muets)} tentative(s) echouee(s) sans aucun test nomme, donc "
