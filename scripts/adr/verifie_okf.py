@@ -38,7 +38,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 import tempfile
 
-from _commun import DECISIONS, rapporte, sort_si_contrat_demande
+from _commun import DECISIONS, rapporte, sort_si_contrat_demande, tableaux
 from _commun.relations import depasse, mal_ecrits, nomme_un_successeur
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
@@ -260,14 +260,11 @@ def heuristiques_sans_emploi(
 # « 0 renvoi » sur un corpus qui n en manque aucun, soit la forme exacte du succes.
 RENVOI = re.compile(r"\]\(([a-z0-9][a-z0-9-]*\.md)(?:#[^)]*)?\)")
 
-# Une ligne du tableau d index, et le SEPARATEUR de ses cellules (#5700).
-#
-# `(?<!\\)` n est pas une precaution : un `\|` est un pipe LITTERAL, pas un separateur, et le corpus en
-# porte un - l ADR 3099 cite « Taxon parent \| Chiropteres », de la prose d interface ou la barre fait
-# partie du texte. Compter les barres brutes la declarerait malformee a jamais, et un garde qui crie
-# sur du bon travail est un garde qu on apprend a ignorer (ADR 4002).
-LIGNE_D_INDEX = re.compile(r"^\| \[(\d+)\]", re.M)
-SEPARATEUR = re.compile(r"(?<!\\)\|")
+# Une ligne du tableau d index. Le compte des cellules, lui, vit dans `_commun/tableaux.py` depuis la
+# passe 7 de la cloture de #5584 : il ne jugeait qu un tableau sur les 651 du depot, et la passe 0 a
+# trouve le meme defaut dans `dev-docs/ci-cd-release.md`. Un concept qui vit dans un seul lecteur est un
+# cas particulier.
+LIGNE_D_INDEX = re.compile(r"^\| \[(\d+)\]")
 
 
 def ateliers_de_demande(racine: pathlib.Path) -> list[pathlib.Path]:
@@ -352,36 +349,23 @@ def refus_du_gage(gage: str, racine: pathlib.Path, contexte) -> str | None:
 
 
 def lignes_amputees(texte: str) -> list[str]:
-    """Les lignes du tableau d index dont le compte de cellules differe de l en-tete.
+    """Les lignes du tableau d index dont le compte de cellules differe de leur en-tete.
 
-    Mesure du 2026-10-01 : six lignes sur 329, cinq a trois separateurs au lieu de quatre, donc sans
-    colonne « Chantier », et une a cinq par un pipe litteral non echappe.
+    Le compte est delegue a `_commun.tableaux.amputees`, qui juge TOUS les tableaux d un texte contre
+    leur en-tete le plus proche. Ce qui reste ici est la PHRASE : elle nomme le numero de la decision,
+    ce qu un module partage ne peut pas faire sans imposer son vocabulaire a son autre appelant.
 
-    Le compte de reference vient de l en-tete `| # | Decision | Chantier |`, et non d un nombre inscrit
-    ici. Sans en-tete lisible, on ne juge rien : conclure sur un compte devine serait pire que se taire.
-
-    Et c est le dernier en-tete rencontre AU-DESSUS de la ligne qui fait reference, jamais le premier du
-    fichier. L index n en porte qu un seul aujourd hui - mesure : un en-tete ligne 79, 329 lignes d ADR
-    contigues de 81 a 409 - donc les deux lectures concluent pareil, et c est bien le probleme : la
-    premiere serait juste par accident. Une session pair a vu sa ligne atterrir 760 lignes plus bas, dans
-    un tableau plus large ; son compte ne l a attrapee que parce que les largeurs differaient. La
-    reference juste est la plus PROCHE au-dessus, comme pour tout discriminant par fenetre.
+    Mesure du 2026-10-01 : six lignes sur 329 etaient amputees, cinq sans colonne « Chantier » et une
+    par un pipe litteral non echappe.
     """
-    attendu = None
     fautes = []
-    for ligne in texte.splitlines():
-        if ligne.startswith("| # |"):
-            attendu = len(SEPARATEUR.findall(ligne))
-            continue
+    for _no, ligne, vus, attendu in tableaux.amputees(texte):
         trouve = LIGNE_D_INDEX.match(ligne)
-        if not trouve or attendu is None:
-            continue
-        vus = len(SEPARATEUR.findall(ligne))
-        if vus != attendu:
-            fautes.append(
-                f"index.md : la ligne de l ADR {trouve.group(1)} porte {vus} separateurs "
-                f"au lieu de {attendu} ; une cellule manque ou un « | » de prose n est pas echappe"
-            )
+        quoi = f"la ligne de l ADR {trouve.group(1)}" if trouve else f"la ligne « {ligne[:40]}… »"
+        fautes.append(
+            f"index.md : {quoi} porte {vus} separateurs au lieu de {attendu} ; "
+            "une cellule manque ou un « | » de prose n est pas echappe"
+        )
     return fautes
 
 
@@ -963,12 +947,33 @@ def auto_test() -> int:
         + "| [0001](0001-t.md) | Témoin | #1 |\n",
     )
     # Et sans aucun en-tete, on ne juge rien : un compte inscrit dans le garde ferait rougir l innocent.
+    # Le libelle de ce cas a change en passe 7 de la cloture de #5584, et c est la delegation qui l a
+    # rendu faux : il disait « sans en-tete d index, aucune ligne n est jugee », ce qui etait vrai du
+    # dessin d avant. Depuis, les lignes SONT jugees - contre l en-tete de LEUR tableau. Ce qu il dit
+    # maintenant est ce qu il a toujours eprouve : un tableau de deux colonnes se juge sur deux.
     cas(
-        "sans en-tete d index, aucune ligne n est jugee",
+        "un tableau de DEUX colonnes se juge sur deux, pas sur celles de l index",
         {"0001-t.md": MODELE},
         None,
         index="| Numéro | Décision |\n|---|---|\n| [0001](0001-t.md) | Témoin |\n",
     )
+    # Et son CONTRASTE, sans quoi le cas precedent passerait sur un controle qui ne juge plus rien :
+    # la meme ligne, amputee d une cellule dans ce meme tableau de deux colonnes.
+    cas(
+        "et une ligne amputee dans ce tableau-la est vue aussi",
+        {"0001-t.md": MODELE},
+        "separateurs",
+        index="| Numéro | Décision |\n|---|---|\n| [0001](0001-t.md)\n",
+    )
+
+    # Les cas du module PARTAGE, joues ici comme `epics.verifie_grammaire` l est depuis deux
+    # dispositifs : un gage qu aucun harnais n appelle est inerte, et `verifie_gages_joues.py` le
+    # refuse. Les douze cas portent la forme ; les cinq ci-dessus portent ce que l INDEX en fait.
+    for libelle, tenu in tableaux.verifie_grammaire():
+        cas_du_module = f"forme d un tableau : {libelle}"
+        print(f"  {'✔' if tenu else '✘'} {cas_du_module}")
+        if not tenu:
+            echecs.append(cas_du_module)
 
     cas("corpus sain", {"0001-t.md": MODELE, "0002-s.md": MODELE}, None, plancher=2)
 

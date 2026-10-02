@@ -147,10 +147,17 @@ sans continuité écrite devient un correctif isolé dont personne ne sait s'il 
 se déposent en commentaire ; le critère, lui, s'écrit dans le **corps** de l'issue, qui est un lot de
 son chantier. La compétence `ouvrir-une-issue` porte le geste et dit pourquoi le corps et non le fil.
 
-Deux dispositifs le tiennent, et **aucun ne bloque** ([ADR 4992](decisions/4992-le-critere-de-fin-se-rappelle-et-se-mesure-il-ne-se-refuse-pas.md)) :
-un lot ouvert sans critère reçoit un **commentaire** de rappel, une seule fois ; et la loupe
-`scripts/adr/loupe-4992-lots-sans-critere.py` compte les lots muets au rapport du lundi. Aucune
-demande de fusion ne peut rougir pour cette raison.
+**Trois** moments le tiennent, et **aucun ne bloque** ([ADR 4992](decisions/4992-le-critere-de-fin-se-rappelle-et-se-mesure-il-ne-se-refuse-pas.md),
+[ADR 5211](decisions/5211-un-rappel-parle-au-moment-ou-l-on-travaille.md)) : un lot ouvert sans critère
+reçoit un **commentaire** de rappel, une seule fois ; une demande qui ferme un lot muet en reçoit un
+second, qui **nomme** les lots concernés ; et la loupe `scripts/adr/loupe-4992-lots-sans-critere.py`
+compte les lots muets au rapport du lundi. **Aucune demande de fusion ne peut rougir pour cette
+raison**, et c'est délibéré : l'arbitrage de #4961 a écarté le rouge, pas le signalement.
+
+Le deuxième est arrivé en #5211, parce que le premier **ne repasse pas** et que le troisième voit moins
+qu'on ne croyait : la loupe ne lit que les sous-issues **ouvertes** et ne passe que le lundi, donc sur
+386 lots clos nés depuis la règle, **49 seulement**, soit 13 %, ont pu traverser un de ses passages. La
+médiane de vie d'un lot est de 4,4 h.
 
 ### Et se signaler : dire qu'on la prend, et ce qu'on va faire
 
