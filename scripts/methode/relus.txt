@@ -2037,9 +2037,10 @@ fdd506b206bf  src/test/java/fr/univ_amu/iut/recette/FixtureMultiConfigsTest.java
 70dc392bf31e  src/test/java/fr/univ_amu/iut/recette/GenerateurCartesSD.java
 d36d168d30f5  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDCliquetTest.java
 4576ada12c8a  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDImportCliquetTest.java
-139f39a33637  src/test/java/fr/univ_amu/iut/recette/GesteVisible.java
+3380ab428530  src/test/java/fr/univ_amu/iut/recette/GesteVisible.java
 e2160d2b8a89  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreImbriqueTest.java
 4159f62c57b5  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreTest.java
+c5ea5b2b360d  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCibleReconstruiteTest.java
 e20d6b203e0e  src/test/java/fr/univ_amu/iut/recette/GesteVisibleRemplacementTest.java
 14c1819af275  src/test/java/fr/univ_amu/iut/recette/GuichetQuiCompte.java
 17cebae60967  src/test/java/fr/univ_amu/iut/recette/InventaireDesSessionsTest.java
@@ -2125,7 +2126,7 @@ d8a89dd5ca6b  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteVerifierCarreVi
 11f259be9047  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteViewTest.java
 9ceba7fd6252  src/test/java/fr/univ_amu/iut/sites/view/NavigationSitesRapatriementTest.java
 ee14b0a35c3c  src/test/java/fr/univ_amu/iut/sites/view/ScenarioCarreAbsentTest.java
-95b30117689d  src/test/java/fr/univ_amu/iut/sites/view/ScenarioFicheSiteTest.java
+24b461a7d296  src/test/java/fr/univ_amu/iut/sites/view/ScenarioFicheSiteTest.java
 b450728d5f05  src/test/java/fr/univ_amu/iut/sites/view/ScenarioModaleCarreTest.java
 37b56139befb  src/test/java/fr/univ_amu/iut/sites/view/ScenarioPerceptifRecuperationCarreTest.java
 97956d5222da  src/test/java/fr/univ_amu/iut/sites/view/SiteDetailBadgePlateformeViewTest.java

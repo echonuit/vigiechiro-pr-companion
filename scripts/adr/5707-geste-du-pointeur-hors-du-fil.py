@@ -200,7 +200,7 @@ CONTRAT = {
     "sur le fil par une aide d un AUTRE nom echapperait - le garde reconnait un nom, pas une "
     "propriete",
     "dispositif": "cliquet",
-    "seuil": "163, polarite=descend",
+    "seuil": "162, polarite=descend",
     "temoin": "scripts/adr/5707-geste-du-pointeur-hors-du-fil.py --auto-test",
     "decision": "ADR 5707",
     # Lire par l arbre coute. Declarer les chemins rend la hausse indolore sur toute demande qui ne
