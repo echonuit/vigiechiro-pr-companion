@@ -151,8 +151,15 @@ chaque lot, quand il est là ; à défaut le corps de l'EPIC, sa section « ce q
 liste de lots ; et le bilan de la passe 12, qui liste ce qui a été livré.
 
 **Combien de lots portent le leur, et comment le savoir.** `scripts/adr/loupe-4992-lots-sans-critere.py`
-le dit pour le dépôt entier, et le rapport du lundi le publie. Mesuré le 2026-08-31 : **13 lots
-ouverts sur 21 n'en portaient aucun**, sur les 26 chantiers ouverts depuis que la règle existe.
+le relève au rapport du lundi. Mesuré le 2026-08-31 : **13 lots ouverts sur 21 n'en portaient aucun**,
+sur les 26 chantiers ouverts depuis que la règle existe.
+
+**Mais cette loupe ne répond pas pour le dépôt entier, et il ne faut pas l'attendre d'elle** (#5211).
+Elle ne lit que les sous-issues **ouvertes**, et seulement le lundi à 6 h UTC : sur les 386 lots clos
+nés depuis la règle, **49**, soit 13 %, ont pu traverser un de ses passages. La médiane de vie d'un lot
+est de 4,4 h. Pour cette passe, qui relit une promesse **lot par lot**, les lots se lisent donc
+directement - `gh issue view <EPIC> --json subIssues` puis le corps de chacun contre
+`scripts/adr/critere-de-fin.motif`.
 
 Ce chiffre remplace un « 3 sur 70 » qui a longtemps servi à justifier qu'on ne relise pas les
 critères. Il mêlait deux populations, 67 des 70 chantiers étant antérieurs à la règle, et ne

@@ -61,8 +61,18 @@ import os
 import pathlib
 import re
 import sys
+import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
+
+# La FORME des lignes de cette page vient de `scripts/_commun/tableaux.py`, par le meme chemin que
+# `_forge.py` et `temoins_de_ci_non_decoratifs.py` importent `scripts/_commun`. Cette garde parcourait
+# les deux tableaux pour juger leur PRESENCE sans lire leur FORME : le 2026-10-01 elle rendait
+# « 21 ateliers et 123 gardes concordent » sur une page qui portait QUATRE lignes amputees, dont trois
+# ecrites le jour meme (passe 7 de la cloture de #5584).
+sys.path.insert(0, str(RACINE / "scripts"))
+from _commun import tableaux
+
 RACINE_INJECTEE = "INVENTAIRES_RACINE"
 
 SECTION_GARDES = "## Toute garde de CI porte sa propre preuve"
@@ -253,8 +263,27 @@ def juger(racine: pathlib.Path | None = None) -> int:
         )
         return 1
 
+    amputees = tableaux.amputees(texte)
+    if amputees:
+        print(
+            f"❌ {len(amputees)} ligne(s) de cette page n'ont pas le compte de cellules de leur en-tête :"
+        )
+        for no, ligne, vus, attendu in amputees:
+            print(
+                f"   · ligne {no} : {vus} séparateurs au lieu de {attendu} - {ligne.strip()[:66]}"
+            )
+        print(
+            "\n   Une cellule manque, ou un « | » de prose n'est pas échappé en « \\| » : un accent"
+        )
+        print(
+            "   grave ne protège pas un pipe dans un tableau. Le rendu perd la colonne, et cette garde"
+        )
+        print("   confrontait la page sans voir sa forme.")
+        return 1
+
     print(
-        f"✔ {len(reels)} workflow(s) et {len(portees)} garde(s) autotestée(s) : les inventaires concordent."
+        f"✔ {len(reels)} workflow(s) et {len(portees)} garde(s) autotestée(s) : les inventaires"
+        f" concordent, et les {len(texte.splitlines())} lignes de la page ont leurs cellules."
     )
     return 0
 
@@ -440,7 +469,6 @@ def _auto_test() -> int:
     """Les onze cas de la version bash, et chacun exige le MESSAGE autant que le code."""
     import contextlib
     import io
-    import tempfile
 
     echecs = 0
     cas = rouges = 0
@@ -500,6 +528,39 @@ def _auto_test() -> int:
             print(f"  ✔ {libelle}")
         else:
             print(f"  ✘ {libelle} : attendu {attendu}, obtenu {obtenu}")
+            echecs = 1
+
+    # Les cas du module PARTAGE, joues ici ET depuis `scripts/adr/verifie_okf.py`. Un gage qu aucun
+    # harnais n appelle est inerte, et `verifie_gages_joues.py` le refuse (ADR 5483).
+    for libelle, tenu in tableaux.verifie_grammaire():
+        cas += 1
+        if tenu:
+            print(f"  ✔ forme d un tableau : {libelle}")
+        else:
+            print(f"  ✘ forme d un tableau : {libelle}")
+            echecs = 1
+
+    # ET LE CONTRASTE sur la page REELLE, sans quoi les douze cas ci-dessus passeraient sur un
+    # controle branche sur rien : une page dont une ligne est amputee doit faire rougir CE juge.
+    cas += 1
+    rouges += 1
+    with tempfile.TemporaryDirectory(prefix="vc-inv-forme-") as tmp:
+        bac = pathlib.Path(tmp)
+        depot = _monter(bac)
+        page = depot / "dev-docs" / "ci-cd-release.md"
+        # La ligne s insere DANS un tableau existant, et non a la fin de la page : ajoutee apres de
+        # la prose, elle ouvrirait son PROPRE tableau et serait son propre en-tete, donc jamais
+        # jugee. Mon premier essai faisait exactement cela, et le cas a rougi en disant vrai - il ne
+        # discriminait rien. Un contraste qui ne mord pas est un temoin decoratif.
+        dedans = "| `verifie-truc.sh` | un truc | `lint.yml` |"
+        page.write_text(
+            page.read_text(encoding="utf-8").replace(dedans, dedans + "\n| amputee |", 1),
+            encoding="utf-8",
+        )
+        if juger(depot) != 0:
+            print("  ✔ une ligne amputée de la vraie page fait rougir ce juge")
+        else:
+            print("  ✘ une ligne amputée de la vraie page fait rougir ce juge")
             echecs = 1
 
     print()
