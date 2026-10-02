@@ -47,11 +47,16 @@ public class PreparationGroupee implements ActionGroupee {
         } catch (RegleMetierException introuvable) {
             return Optional.of(introuvable.getMessage());
         }
-        if (etat.statut().estSurLaPlateforme() || etat.statut() == StatutWorkflow.DEPOT_EN_COURS) {
+        if (etat.statut().estSurLaPlateforme()) {
             // Une nuit récupérée tombait sinon jusqu'au « pas encore vérifié » du bas (#2581) : un refus
             // exact sur la lettre et faux sur le fond - ce n'est pas qu'elle attend d'être vérifiée,
             // c'est qu'elle est déjà là-bas.
             return Optional.of("déjà déposé");
+        }
+        if (etat.statut() == StatutWorkflow.DEPOT_EN_COURS) {
+            // Il lui manque des archives : la dire « déjà déposée » mentait (#5623). Elle se reprend là
+            // où elle a été entamée, la préparation n'ayant plus rien à y faire.
+            return Optional.of("dépôt entamé : reprenez-le depuis l'écran de dépôt");
         }
         if (etat.statut() == StatutWorkflow.PRET_A_DEPOSER) {
             return Optional.of("dépôt déjà préparé");

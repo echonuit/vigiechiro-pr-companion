@@ -58,6 +58,24 @@ class PreparationGroupeeTest {
     }
 
     @Test
+    @DisplayName("#5623 : une nuit récupérée de Vigie-Chiro est écartée comme déjà déposée")
+    void recuperee_est_ecartee_comme_deja_deposee() {
+        when(service.consulterLot(42L)).thenReturn(etat(StatutWorkflow.RECUPERE, List.of()));
+
+        assertThat(action.motifNonEligible(CIBLE)).contains("déjà déposé");
+    }
+
+    /// Un dépôt entamé n'est pas déposé : il lui manque des archives. Le passage reste écarté, la
+    /// préparation n'admettant que « Vérifié », mais le motif dit où le reprendre.
+    @Test
+    @DisplayName("#5623 : un dépôt entamé est écarté sans être dit « déjà déposé », et le motif dit où le reprendre")
+    void depot_entame_n_est_pas_dit_deja_depose() {
+        when(service.consulterLot(42L)).thenReturn(etat(StatutWorkflow.DEPOT_EN_COURS, List.of()));
+
+        assertThat(action.motifNonEligible(CIBLE)).contains("dépôt entamé : reprenez-le depuis l'écran de dépôt");
+    }
+
+    @Test
     @DisplayName("un dépôt déjà préparé est écarté : le relancer ne ferait rien de plus")
     void deja_prepare_est_ecarte() {
         when(service.consulterLot(42L)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of()));
