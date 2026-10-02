@@ -137,7 +137,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 - **S4-48** · *hors-portée: un état de traitement qui bouge côté serveur entre deux relevés, sans quoi « Actualiser » ne relève rien* · « 🔄 Actualiser » relève l'état, **sans polling** automatique.
 - **S4-49** · *hors-portée: une manipulation du réseau en cours d'opération - coupure, bridage à quelques dizaines de ko/s - que le banc ne sait pas provoquer sans mentir sur la cause* · Hors connexion, « Actualiser » dit « Impossible de joindre Vigie-Chiro » **sans effacer** le dernier
   état connu.
-- **S4-50** · *prérequis: une base de départ portant un état de traitement déjà relevé, avec sa date (générateur de bases déclarées de #4325)* · Fermer/rouvrir l'application : le dernier état connu est réaffiché avec sa date, sans réseau.
+- **S4-50** · *prérequis: une base de départ portant un état de traitement déjà relevé, avec sa date (générateur de bases déclarées de #4325)* · Fermer/rouvrir l'application : le dernier état connu est réaffiché avec sa date, sans réseau. La date se lit à l'heure du poste, pas à celle du serveur : une analyse partie à 14:07 UTC s'affiche « à 16:07 » l'été à Paris (#5683).
 - **S4-51** · *hors-portée: rien à observer. C'est une consigne à l'opérateur pour la suite, pas un fait d'écran* · **Noter l'identifiant de la participation** (nettoyage manuel éventuel + matériau de S5).
 
 ### Traitement en lot : ce qu'un seul poste ne peut pas prouver (#2357)

@@ -11,6 +11,8 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.EtatTraitement;
+import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Completude;
@@ -46,6 +48,7 @@ import fr.univ_amu.iut.lot.view.LotController;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.SuiviLignesDepot;
+import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
@@ -218,6 +221,9 @@ public final class CaptureLot {
         // (« 🚀 Lancer la participation ») : jamais rendu jusqu'ici, faute de lien en base.
         lierParticipation(injecteur, idCoherent);
         rendre(connecte, idCoherent, sortie.resolve("apercu-lot-participation.png"));
+        // La carte « Traitement Vigie-Chiro » (#5683) : une analyse partie à 14:07 UTC, l'instant du relevé
+        // de la recette réelle. Le fuseau de la capture est Paris : l'heure lue est celle du poste.
+        rendreTraitementEnCours(connecte, idCoherent, sortie.resolve("apercu-lot-traitement-en-cours.png"));
         // Cas bloquant : Vérifié incohérent → zone d'alertes (R14), « Préparer » désactivé.
         rendre(injecteur, idIncoherent, sortie.resolve("apercu-lot-alertes.png"));
         // Bandeau en ERREUR (#1917) : le succès est déjà couvert par apercu-lot-archives.png, produit par
@@ -359,6 +365,20 @@ public final class CaptureLot {
             int hauteur,
             BiConsumer<LotViewModel, DepotViewModel> pilote)
             throws IOException {
+        // Suivi du traitement serveur (#1263) : l'injecteur de capture n'a pas de `connexion`, donc pas de
+        // client : le suivi est absent, et la zone reste masquée.
+        rendrePilote(injecteur, idPassage, fichier, hauteur, injecteur.getInstance(TraitementViewModel.class), pilote);
+    }
+
+    /// Variante qui fournit le ViewModel du **traitement serveur**, pour l'aperçu qui le montre (#5683).
+    private static void rendrePilote(
+            Injector injecteur,
+            long idPassage,
+            Path fichier,
+            int hauteur,
+            TraitementViewModel traitement,
+            BiConsumer<LotViewModel, DepotViewModel> pilote)
+            throws IOException {
         LotViewModel vm = injecteur.getInstance(LotViewModel.class);
         // Tenue en local : l'instance n'est pas un singleton de l'injecteur de capture, donc un pilote qui
         // la repêcherait par getInstance en obtiendrait une AUTRE que celle du controller (#2354).
@@ -374,9 +394,7 @@ public final class CaptureLot {
                         injecteur.getInstance(OuvreurDeLien.class),
                         injecteur.getInstance(DepotDispositionColonnes.class),
                         injecteur.getInstance(fr.univ_amu.iut.commun.view.ExecuteurTache.class),
-                        // Suivi du traitement serveur (#1263) : l'injecteur de capture n'a pas de
-                        // `connexion`, donc pas de client : le suivi est absent, et la zone reste masquée.
-                        injecteur.getInstance(fr.univ_amu.iut.lot.viewmodel.TraitementViewModel.class))
+                        traitement)
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         LotController controleur = loader.getController();
@@ -388,6 +406,27 @@ public final class CaptureLot {
         // (dont le bouton « Supprimer les archives ») sans écraser la zone d'alertes (R14).
         ApercuFx.enregistrerPng(new Scene(vue, 980, hauteur), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// La carte du **traitement serveur** sur une analyse en cours (#5683). L'injecteur de capture n'a pas de
+    /// client, donc pas de suivi : un ViewModel qui se dit disponible fait paraître la carte, et l'état lui
+    /// est appliqué une fois l'écran ouvert, l'ouverture relisant d'abord un relevé qui n'existe pas.
+    private static void rendreTraitementEnCours(Injector injecteur, long idPassage, Path fichier) throws IOException {
+        TraitementViewModel traitement =
+                new TraitementViewModel(Optional.empty(), injecteur.getInstance(Horloge.class)) {
+                    @Override
+                    public boolean disponible() {
+                        return true;
+                    }
+                };
+        rendrePilote(
+                injecteur,
+                idPassage,
+                fichier,
+                1200,
+                traitement,
+                (vm, depot) -> traitement.appliquer(new Traitement(
+                        EtatTraitement.EN_COURS, null, "2026-09-30T14:07:45.136000+00:00", null, null, null)));
     }
 
     /// Archives ZIP de **démonstration** (#251) pour l'aperçu « archives générées » : on ne zippe pas
