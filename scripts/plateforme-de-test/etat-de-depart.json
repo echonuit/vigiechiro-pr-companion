@@ -75,6 +75,7 @@
       "site": "carre-130711",
       "observateur": "observatrice",
       "date_debut": "2026-06-14T21:00:00",
+      "date_fin": "2026-06-15T06:00:00",
       "point": "Z1"
     },
     {
@@ -82,6 +83,7 @@
       "site": "carre-130711",
       "observateur": "observatrice",
       "date_debut": "2026-06-15T21:00:00",
+      "date_fin": "2026-06-16T06:00:00",
       "point": "Z1",
       "traitement": {
         "etat": "FINI"

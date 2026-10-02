@@ -1518,8 +1518,26 @@
             <id>plateforme-de-test</id>
             <properties>
                 <surefire.groups>plateforme-de-test</surefire.groups>
-                <surefire.excludedGroups>api-live,recette-connectee</surefire.excludedGroups>
+                <!-- `api-live` n'est PAS exclu (#5746) : les deux classes du contrat live portent les deux
+                     tags, et une exclusion l'emporterait sur la sélection. Les autres classes `api-live`
+                     restent dehors, faute du tag `plateforme-de-test`. -->
+                <surefire.excludedGroups>recette-connectee</surefire.excludedGroups>
             </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <!-- La cible se DÉCLARE (ADR 5641) : CibleLive la lit, et ne la déduit pas
+                                 de l'absence de jeton. -->
+                            <systemPropertyVariables>
+                                <vigiechiro.cible>plateforme-de-test</vigiechiro.cible>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
         <profile>
             <id>api-live</id>

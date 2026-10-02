@@ -1442,7 +1442,7 @@ bfa1642021af  src/test/java/fr/univ_amu/iut/commun/api/ChaineDuCarreStocTest.jav
 80a2127fd522  src/test/java/fr/univ_amu/iut/commun/api/ClientGbifTest.java
 d40353c406b2  src/test/java/fr/univ_amu/iut/commun/api/ClientSurReseauSimule.java
 118a7c65bece  src/test/java/fr/univ_amu/iut/commun/api/ClientVigieChiroTest.java
-1e5ff4971e8a  src/test/java/fr/univ_amu/iut/commun/api/ContratApiVigieChiroLiveTest.java
+31737ccd5a47  src/test/java/fr/univ_amu/iut/commun/api/ContratApiVigieChiroLiveTest.java
 3031abb0adaf  src/test/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgressionTest.java
 11e5d8601181  src/test/java/fr/univ_amu/iut/commun/api/DonneesVigieChiroTest.java
 5a7a570e1068  src/test/java/fr/univ_amu/iut/commun/api/EtatTraitementTest.java
@@ -1464,6 +1464,8 @@ b3aaf034461c  src/test/java/fr/univ_amu/iut/commun/api/ReponsesGrilleStocTest.ja
 07fb601235e0  src/test/java/fr/univ_amu/iut/commun/api/TraitementVigieChiroTest.java
 39defdc92f7f  src/test/java/fr/univ_amu/iut/commun/api/TransportVigieChiroTest.java
 efdb83418f82  src/test/java/fr/univ_amu/iut/commun/api/UrlSigneeAdmiseTest.java
+570d5203f8e4  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLive.java
+eb4b2f869205  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLiveTest.java
 306bdc2a1902  src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java
 fa9a82d31b32  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ImageDeLApiSansRevisionTest.java
 a3832e038085  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
@@ -1922,7 +1924,7 @@ b6755c17dc45  src/test/java/fr/univ_amu/iut/passage/ServicePassageMockTest.java
 5a715cc1eb96  src/test/java/fr/univ_amu/iut/passage/SortieDeRecuperationTest.java
 41d7f3a357f9  src/test/java/fr/univ_amu/iut/passage/dao/RattachementDaoTest.java
 3492aad1bb18  src/test/java/fr/univ_amu/iut/passage/model/AdoptionOriginauxReconstruitsTest.java
-306f62d73c89  src/test/java/fr/univ_amu/iut/passage/model/AllerRetourParticipationLiveTest.java
+fe97de68a990  src/test/java/fr/univ_amu/iut/passage/model/AllerRetourParticipationLiveTest.java
 c45263937ade  src/test/java/fr/univ_amu/iut/passage/model/AnalyseAcoustiqueTest.java
 8f79925592e6  src/test/java/fr/univ_amu/iut/passage/model/CompteRenduChiffrePerdantsTest.java
 32027e2c77c2  src/test/java/fr/univ_amu/iut/passage/model/CompteRenduChiffreReactivationTest.java
