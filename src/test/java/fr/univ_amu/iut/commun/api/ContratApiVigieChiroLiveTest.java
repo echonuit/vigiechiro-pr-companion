@@ -9,6 +9,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import fr.univ_amu.iut.commun.api.plateforme.CibleLive;
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
 import java.io.ByteArrayOutputStream;
@@ -29,40 +30,40 @@ import org.junit.jupiter.api.Test;
 /// VigieChiro (backend Python-Eve). Elle tape l'API réelle et vérifie d'un coup que l'API n'a pas bougé
 /// (schéma, formats, domaines) et que `ClientVigieChiro` et ses parseurs la lisent toujours.
 ///
-/// **Hors CI et hors build par défaut** : `@Tag("api-live")`, exclue par `surefire.excludedGroups`.
+/// **Deux cibles** (#5746) : à chaque demande la plateforme de test, sans jeton ni verrou ([CibleLive]) ;
+/// chaque lundi la nationale, en lecture seule (`api-live.yml`), seule à qui valent les verrous ci-dessous.
 ///
 /// ```
 /// ./mvnw -Papi-live test -Dvigiechiro.token=XXXX
 /// ```
 ///
-/// Sans `-Dvigiechiro.token`, toute la suite se skippe par `Assumptions`. Le jeton de 14 jours se prend
-/// sur le marque-page `localStorage['auth-session-token']`. Les `@DisplayName` **sont** la documentation ;
-/// la forme des objets vit dans `src/test/resources/vigiechiro/*.schema.json`, validés ici et réutilisés
-/// par la collection Postman.
+/// Sans jeton, la suite se skippe (`Assumptions`) ; il se prend sur `localStorage['auth-session-token']`.
+/// Les `@DisplayName` **sont** la documentation ; les schémas `vigiechiro/*.schema.json` servent aussi à Postman.
 ///
-/// Le mode lecture est idempotent. Les écritures sont opt-in par `-Dvigiechiro.write=true`, et les probes
-/// de corrections (#1203) exigent en plus une participation de banc d'essai désignée par
-/// `-Dvigiechiro.participationEssai=<id>` : une correction posée ne se retire pas.
+/// Lecture idempotente ; écritures opt-in par `-Dvigiechiro.write=true`, et les corrections (#1203)
+/// exigent une participation d'essai, `-Dvigiechiro.participationEssai=<id>`, car elles ne se retirent pas.
 ///
-/// **`PUT /donnees/{id}/observations/{index}/messages` ne se défait pas** (#1456). Le serveur ajoute par
-/// `$push`, et aucune route ne supprime ni ne modifie un message : ce qu'elle écrit reste, sur des
-/// données que lit un validateur du MNHN. Elle exige donc un **troisième** verrou,
-/// `-Dvigiechiro.message=true`, sans quoi qui éprouve les corrections pousserait une trace définitive
-/// sans le vouloir. Le contrat hebdomadaire (`api-live.yml`) est en lecture seule et n'en passe aucun.
+/// **`PUT /donnees/{id}/observations/{index}/messages` ne se défait pas** (#1456) : le serveur ajoute par
+/// `$push`, aucune route ne supprime ni ne modifie un message, et un validateur du MNHN lit ces données.
+/// D'où un **troisième** verrou, `-Dvigiechiro.message=true`, sans quoi qui éprouve les corrections
+/// pousserait une trace définitive sans le vouloir. Le contrat hebdomadaire n'en passe aucun.
 @Tag("api-live")
+@Tag("plateforme-de-test")
 @DisplayName("Contrat API Vigie-Chiro (live, lecture) : documentation vivante du schéma")
 class ContratApiVigieChiroLiveTest {
 
+    private static CibleLive cible;
     private static String baseUrl;
     private static String token;
 
     @BeforeAll
     static void configurer() {
-        token = System.getProperty("vigiechiro.token");
+        cible = CibleLive.declaree();
+        token = cible.jeton();
         assumeTrue(
                 token != null && !token.isBlank(),
                 "Suite de contrat API ignorée : fournir -Dvigiechiro.token=… (profil -Papi-live).");
-        baseUrl = System.getProperty("vigiechiro.url", "https://vigiechiro.herokuapp.com/api/v1");
+        baseUrl = cible.urlDeBase();
         RestAssured.baseURI = baseUrl;
     }
 
@@ -496,7 +497,7 @@ class ContratApiVigieChiroLiveTest {
     /// Garde des probes d'écriture : ignorées sans l'opt-in explicite.
     private static void supposerEcritureAutorisee() {
         assumeTrue(
-                Boolean.getBoolean("vigiechiro.write"),
+                cible.ecritureOuverte(),
                 "Probe d'écriture ignorée : opt-in -Dvigiechiro.write=true (écrit sur la plateforme).");
     }
 
@@ -512,7 +513,7 @@ class ContratApiVigieChiroLiveTest {
     /// que lit un validateur du MNHN. Ce verrou-ci ne s'ouvre qu'en le **nommant**.
     private static void supposerEcritureIrreversibleAutorisee() {
         assumeTrue(
-                Boolean.getBoolean("vigiechiro.message"),
+                cible.messageOuvert(),
                 "Probe de message ignorée : opt-in -Dvigiechiro.message=true. ATTENTION, cette écriture est"
                         + " DÉFINITIVE (le serveur $push, aucune route ne retire ni ne modifie un message).");
     }
@@ -525,7 +526,7 @@ class ContratApiVigieChiroLiveTest {
         // Participation de rebut fournie par l'observateur (vide, non supprimable côté plateforme) : on
         // peut y lancer un calcul sans conséquence. Sans elle, la probe est ignorée : on ne lance JAMAIS un
         // compute sur une participation réelle : il détruirait ses observations pour les recalculer (#1244).
-        String participationId = System.getProperty("vigiechiro.participationRebut");
+        String participationId = cible.participationRebut();
         assumeTrue(
                 participationId != null && !participationId.isBlank(),
                 "Probe ignorée : fournir -Dvigiechiro.participationRebut=<id d'une participation jetable>.");
@@ -590,7 +591,7 @@ class ContratApiVigieChiroLiveTest {
     /// réelle : les probes d'écriture y laissent des fichiers déclarés, et un fichier déclaré ne se retire
     /// pas d'un simple revers de main.
     private static String participationDeRebut() {
-        String participation = System.getProperty("vigiechiro.participationEssai");
+        String participation = cible.participationEssai();
         assumeTrue(
                 participation != null && !participation.isBlank(),
                 "Probe ignorée : fournir -Dvigiechiro.participationEssai=<participation banc d'essai>.");
@@ -998,7 +999,7 @@ class ContratApiVigieChiroLiveTest {
     /// est fourni (et non vide), sinon la première trouvée en balayant la première page. Les `donnees`
     /// n'existent qu'après traitement serveur : skip (assume) si rien n'a encore été calculé.
     private static String participationTraitee() {
-        String essai = System.getProperty("vigiechiro.participationEssai");
+        String essai = cible.participationEssai();
         List<String> candidates = new ArrayList<>();
         if (essai != null && !essai.isBlank()) {
             candidates.add(essai);

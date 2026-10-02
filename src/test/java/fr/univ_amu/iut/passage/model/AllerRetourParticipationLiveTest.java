@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
+import fr.univ_amu.iut.commun.api.plateforme.CibleLive;
 import fr.univ_amu.iut.commun.model.FuseauDuSite;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -32,9 +33,9 @@ import org.junit.jupiter.api.Test;
 /// la langue du lecteur - plus la fidélité des dates (#1860). Si l'une tombe, c'est la décision qu'il
 /// faut rouvrir.
 ///
-/// **Elles écrivent**, donc elles exigent `-Dvigiechiro.token=…`, `-Dvigiechiro.write=true` et une
-/// participation de rebut désignée par `-Dvigiechiro.participationEssai=<id>`. Sans les trois, tout se
-/// skippe, et le contrat live hebdomadaire (`api-live.yml`), en lecture seule, ne les passe jamais.
+/// **Elles écrivent** : sur la nationale, elles exigent `-Dvigiechiro.token=…`, `-Dvigiechiro.write=true`
+/// et `-Dvigiechiro.participationEssai=<id>`, sans quoi tout se skippe, et `api-live.yml` ne les passe
+/// jamais. Sous `-Pplateforme-de-test`, [CibleLive] fournit les trois, rien n'y étant à abîmer (#5746).
 ///
 /// ```
 /// ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true \
@@ -45,6 +46,7 @@ import org.junit.jupiter.api.Test;
 /// restauration **vérifiée**. Elles vivent dans `passage.model` parce qu'elles traversent
 /// [CorrespondanceParticipation], où #1844 et #1860 se jouaient ; le formulaire web reste en recette.
 @Tag("api-live")
+@Tag("plateforme-de-test")
 @DisplayName("Aller-retour d'écriture sur une participation (live) : ce que la plateforme en fait")
 class AllerRetourParticipationLiveTest {
 
@@ -70,19 +72,20 @@ class AllerRetourParticipationLiveTest {
 
     @BeforeAll
     static void configurer() {
-        String token = System.getProperty("vigiechiro.token");
+        CibleLive cible = CibleLive.declaree();
+        String token = cible.jeton();
         assumeTrue(
                 token != null && !token.isBlank(),
                 "Sonde d'aller-retour ignorée : fournir -Dvigiechiro.token=… (profil -Papi-live).");
         assumeTrue(
-                Boolean.getBoolean("vigiechiro.write"),
+                cible.ecritureOuverte(),
                 "Sonde d'aller-retour ignorée : opt-in -Dvigiechiro.write=true (elle écrit sur la plateforme).");
-        participation = System.getProperty("vigiechiro.participationEssai");
+        participation = cible.participationEssai();
         assumeTrue(
                 participation != null && !participation.isBlank(),
                 "Sonde d'aller-retour ignorée : fournir -Dvigiechiro.participationEssai=<participation de rebut>."
                         + " JAMAIS une participation réelle : ces probes réécrivent sa configuration.");
-        String baseUrl = System.getProperty("vigiechiro.url", "https://vigiechiro.herokuapp.com/api/v1");
+        String baseUrl = cible.urlDeBase();
         client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
         ParticipationDetail avant = relire();
         configurationInitiale = avant.configuration();

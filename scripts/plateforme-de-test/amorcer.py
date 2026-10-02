@@ -136,11 +136,15 @@ def documents(declaration: dict) -> dict[str, list[dict]]:
 
     observateur_de = {}
     for p in declaration.get("participations", []):
-        doc = meta("participations", p["cle"]) | corps(p, ("site", "observateur", "date_debut"))
+        doc = meta("participations", p["cle"]) | corps(
+            p, ("site", "observateur", "date_debut", "date_fin")
+        )
         doc["site"] = ref("sites", p["site"], f"la participation {p['cle']}")
         doc["observateur"] = ref("utilisateurs", p["observateur"], f"la participation {p['cle']}")
         doc["protocole"] = _oid("protocoles", protocole_du_site[p["site"]])
         doc["date_debut"] = _date(p["date_debut"])
+        # Les deux bornes, en dates : le schema de participation exige `date_fin` (#5746).
+        doc["date_fin"] = _date(p["date_fin"])
         observateur_de[p["cle"]] = p["observateur"]
         rendu["participations"].append(doc)
 
@@ -246,6 +250,14 @@ def auto_test() -> int:
         "la participation traitee dit FINI, et porte au moins une observation",
         lambda: (traitee["traitement"]["etat"], len(donnee["observations"]) > 0),
         ("FINI", True),
+    )
+    verifie(
+        "une participation porte ses deux bornes en dates, la fin apres le debut",
+        lambda: [
+            isinstance(x["date_fin"], datetime.datetime) and x["date_fin"] > x["date_debut"]
+            for x in (vierge, traitee)
+        ],
+        [True, True],
     )
     verifie(
         "aucun jeton ne sort de la moitie pure",
