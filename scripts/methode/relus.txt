@@ -1838,7 +1838,7 @@ fa53eeacc796  src/test/java/fr/univ_amu/iut/lot/CompacteurDepotTest.java
 14d54c7c7981  src/test/java/fr/univ_amu/iut/lot/FenetreDepotTest.java
 2a3bfd660174  src/test/java/fr/univ_amu/iut/lot/LancementCalculGroupeTest.java
 9cd611a22679  src/test/java/fr/univ_amu/iut/lot/LotModuleTest.java
-35665db495dd  src/test/java/fr/univ_amu/iut/lot/PreparationGroupeeTest.java
+0b05eabc5c5d  src/test/java/fr/univ_amu/iut/lot/PreparationGroupeeTest.java
 51d900e039b6  src/test/java/fr/univ_amu/iut/lot/RegenerationPendantUnDepotTest.java
 9f96a1ede18a  src/test/java/fr/univ_amu/iut/lot/ServiceLotMockTest.java
 c297d804ea4c  src/test/java/fr/univ_amu/iut/lot/ServiceLotTest.java
