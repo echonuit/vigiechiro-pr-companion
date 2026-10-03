@@ -83,6 +83,23 @@ export PATH="$PWD/.github/openspec/node_modules/.bin:$PATH"
 openspec --version        # 1.12.0
 ```
 
+**Deux conditions que cette recette suppose, et qui ont coûté huit corps de demande** (#5774).
+
+**`node` et `npm` doivent être sur le `PATH`, et `node` doit y RESTER.** Si votre poste les range
+sous un gestionnaire de version (nvm, asdf, volta, fnm), ils sont absents du `PATH` d'un shell non
+interactif, donc absents pour un crochet git et pour une batterie lancée par un agent. Sourcez ce
+qu'il faut **avant** la recette ci-dessus, par exemple `. "$HOME/.nvm/nvm.sh"`. Et gardez-le ensuite :
+le lien installé pointe sur un script dont le shebang est `#!/usr/bin/env node`, donc l'outil posé
+reste inutilisable sans `node` au moment où un garde l'appelle. Deux sessions ont appliqué la première
+moitié et manqué la seconde.
+
+**Et la recette se rejoue dans CHAQUE arbre de travail.** `node_modules` est ignoré par git, et c'est
+voulu : une branche qui change une version épinglée serait sinon éprouvée contre celle d'une autre
+(#4849). Un `git worktree add` donne donc un arbre sans l'outil. Le crochet `post-checkout` tente de
+le poser depuis #5406, et il échoue en silence quand `npm` lui est introuvable : mesuré le
+2026-10-03, **12 des 23 arbres du poste** n'avaient aucun `node_modules`. Les deux gardes qui en
+dépendent le disent maintenant en nommant ce qui manque, et c'est l'issue #5775 qui traite la pose.
+
 **Le nom compte.** Les compétences déclarent `allowed-tools: Bash(openspec:*)`, un motif littéral
 qui n'autorise que les commandes commençant par le mot `openspec` : `npx @fission-ai/openspec` est
 refusé. C'est le lien `node_modules/.bin/openspec` qu'il faut exposer, sous ce nom exact.

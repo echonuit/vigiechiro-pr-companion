@@ -46,7 +46,13 @@ import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import message_de_refus, sort_si_contrat_demande
+from _commun import (
+    cas_d_auto_test,
+    lit_le_refus,
+    message_de_refus,
+    prerequis,
+    sort_si_contrat_demande,
+)
 
 BINAIRE_EPINGLE = pathlib.Path(".github") / "openspec" / "node_modules" / ".bin" / "openspec"
 
@@ -68,11 +74,16 @@ def racine() -> pathlib.Path:
 def valide(base: pathlib.Path) -> tuple[int, str]:
     """Lance l outil epingle sur `base`, et rend (code, sortie fusionnee)."""
     epingle = base / BINAIRE_EPINGLE
-    if not epingle.exists():
-        return 2, message_de_refus(
-            f"{BINAIRE_EPINGLE} est absent, et ce garde ne conclut pas sur un outil qu il n a pas lu",
-            "npm ci --prefix .github/openspec",
-        )
+
+    # ⟨le prerequis LE PLUS PROFOND, et pas seulement le binaire⟩ Ce garde ne testait que la presence
+    # du binaire. Quand il etait la et que son interprete manquait, il le lancait quand meme : le
+    # sous-processus echouait sur « env: 'node' », la sortie ne portait aucune ligne « Totals: », et
+    # ce garde refusait en accusant la SORTIE DE L OUTIL - une consequence prise pour la cause. Deux
+    # sessions ont traine ce refus sur huit corps de demande (#5774).
+    manque = prerequis.manque_pour(epingle, "npm ci --prefix .github/openspec")
+    if manque:
+        return 2, message_de_refus(*manque)
+
     rendu = subprocess.run(
         [str(epingle), "validate", "--specs"],
         capture_output=True,
@@ -154,9 +165,105 @@ def auto_test() -> int:
 
     joue("l outil epingle absent fait REFUSER", 2, desinstaller)
 
+    # ⟨ce que le code interne ne dit pas⟩ Les cas ci-dessus lisent `juge(r)[0]`, qui distinguait deja
+    # le refus de l ecart. Le defaut de #5774 etait ailleurs, dans le TEXTE du refus et dans le code
+    # rendu au shell. Les cas qui suivent lisent les deux.
+    # L aide PARTAGEE et non une locale : elle evalue un appelable et nomme ce qui leve, et un cas
+    # differe est ce qui separe un harnais qui peut nommer sa panne d un harnais muet (ADR 5570).
+    assertion, forme_a_rougi = cas_d_auto_test()
+    cas_de_forme = [0]
+
+    def forme(libelle: str, obtenu: object, attendu: object) -> None:
+        cas_de_forme[0] += 1
+        assertion(libelle, obtenu, attendu)
+
+    def message_quand(prepare) -> tuple[int, str]:
+        with tempfile.TemporaryDirectory() as bac:
+            r = pathlib.Path(bac) / "arbre"
+            shutil.copytree(
+                base,
+                r,
+                symlinks=True,
+                ignore=shutil.ignore_patterns(".git", "target", "graphify-out"),
+            )
+            prepare(r)
+            return juge(r)
+
+    code_sans_outil, dit_sans_outil = message_quand(desinstaller)
+    declare = lit_le_refus(dit_sans_outil)
+    forme("outil absent : les DEUX champs sont lus par la porte", lambda: declare is not None, True)
+    forme("outil absent : le code interne reste le refus", code_sans_outil, 2)
+    forme(
+        "outil absent : le geste est la commande d installation",
+        lambda: declare is not None and declare[1] == "npm ci --prefix .github/openspec",
+        True,
+    )
+
+    # Le cas que ce lot existe pour couvrir : l outil POSE et son interprete absent. Il se decrit en
+    # rendant le shebang irresolvable plutot qu en touchant au PATH du harnais : un PATH modifie
+    # eprouverait l environnement du processus courant, et non ce garde.
+    def interprete_introuvable(r: pathlib.Path) -> None:
+        cible = (r / BINAIRE_EPINGLE).resolve()
+        cible.write_text(
+            "#!/usr/bin/env interprete-qui-n-existe-pas\n"
+            + cible.read_text(encoding="utf-8").split("\n", 1)[1],
+            encoding="utf-8",
+        )
+
+    code_sans_interprete, dit_sans_interprete = message_quand(interprete_introuvable)
+    declare_i = lit_le_refus(dit_sans_interprete)
+    forme("interprete absent : le code interne est le refus", code_sans_interprete, 2)
+    forme("interprete absent : les deux champs sont lus", lambda: declare_i is not None, True)
+    forme(
+        "interprete absent : la cause NOMME l interprete du shebang",
+        lambda: declare_i is not None and "interprete-qui-n-existe-pas" in declare_i[0],
+        True,
+    )
+    forme(
+        "interprete absent : la cause ne parle PAS de la sortie de l outil",
+        lambda: declare_i is not None and "Totals" in declare_i[0],
+        False,
+    )
+    forme(
+        "interprete absent : aucun gestionnaire de version n est nomme",
+        lambda: any(g in dit_sans_interprete for g in ("nvm", "asdf", "volta", "fnm")),
+        False,
+    )
+
+    # ⟨le code rendu au SHELL, et pas seulement celui de `juge`⟩ Les cas ci-dessus lisent le code
+    # interne, que ce garde distinguait deja. Le defaut etait a la sortie, qui l ecrasait en 1 : sans
+    # ce cas, remettre l ecrasement ne ferait rougir personne. Mesure du 2026-10-03.
+    def code_au_shell(prepare) -> int:
+        with tempfile.TemporaryDirectory() as bac:
+            r = pathlib.Path(bac) / "arbre"
+            shutil.copytree(
+                base,
+                r,
+                symlinks=True,
+                ignore=shutil.ignore_patterns(".git", "target", "graphify-out"),
+            )
+            prepare(r)
+            return subprocess.run(
+                [sys.executable, str(r / "scripts" / "methode" / pathlib.Path(__file__).name)],
+                capture_output=True,
+                check=False,
+                cwd=r,
+            ).returncode
+
+    forme("outil absent : le SHELL recoit 2, pas 1", lambda: code_au_shell(desinstaller), 2)
+    forme("arbre sain : le SHELL recoit 0", lambda: code_au_shell(lambda r: None), 0)
+
+    # Le gage du module partage, joue ici ET dans l autre garde du couple (ADR 5483).
+    for libelle, tenu in prerequis.verifie_grammaire():
+        forme(f"prerequis : {libelle}", tenu, True)
+
+    if forme_a_rougi():
+        echecs = 1
+
     print()
     print(
-        "Auto-test concluant : le garde voit un corpus vide et une spec cassee."
+        f"Auto-test concluant : le garde voit un corpus vide et une spec cassee, et"
+        f" {cas_de_forme[0]} cas de forme rendent leur verdict."
         if not echecs
         else "Auto-test EN ÉCHEC."
     )
@@ -178,5 +285,9 @@ if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(auto_test())
     code, message = juge(racine())
-    print(message)
-    sys.exit(0 if code == 0 else 1)
+    # ⟨le code de juge, tel quel⟩ Il vaut deja 0, 1 ou 2, et sa docstring le dit depuis toujours :
+    # « 0 = valide, 1 = ecart, 2 = refus de conclure ». Cette ligne l ECRASAIT en 1, donc un refus
+    # sortait comme un verdict rouge et le lecteur cherchait dans son diff. Le garde distinguait, et
+    # il jetait sa distinction sur le pas de la porte (#5774).
+    print(message, file=sys.stderr if code else sys.stdout)
+    sys.exit(code)

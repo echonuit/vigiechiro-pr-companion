@@ -88,10 +88,29 @@ Si vous avez touché un **changement OpenSpec**, quatre gardes le tiennent :
 `scripts/methode/verifie-specs-valides.py` valide le corpus, `scripts/methode/verifie-adoption-openspec.py` refuse la
 régénération accidentelle des compétences adoptées, `scripts/methode/verifie-sous-commandes-openspec.py` vérifie que
 les invocations citées existent, et `scripts/methode/verifie-version-openspec.py` que la ligne de commande épinglée
-est bien celle que les compétences déclarent. Les deux derniers ont besoin de l'outil épinglé :
-`npm ci --prefix .github/openspec` d'abord, sinon ils refusent en le disant, mais **le crochet
-`post-checkout` le fait à la création du worktree** depuis #5406, en une seconde. Ce geste ne reste
-dû que dans un arbre créé avant ce lot, ou si l'installation a échoué : elle le dit alors en une ligne.
+est bien celle que les compétences déclarent.
+
+**Deux d'entre eux ont besoin de l'outil épinglé, et ce ne sont pas les deux derniers** :
+`verifie-specs-valides.py` et `verifie-sous-commandes-openspec.py`. `verifie-version-openspec.py` lit
+le **lockfile** et conclut sans l'outil, ce qui se mesure en le lançant sur un arbre sans
+`node_modules` : il sort vert. La phrase d'avant nommait la mauvaise paire, et personne ne l'avait
+vérifiée (#5774).
+
+**Ne comptez pas sur le crochet pour vous l'avoir posé.** Il essaie depuis #5406, et il échoue sans
+bruit quand `npm` lui est introuvable, ce qui est le cas dès que le poste range `node` sous un
+gestionnaire de version : mesuré le 2026-10-03, **12 des 23 arbres du poste** n'avaient aucun
+`node_modules`. La phrase d'avant affirmait l'inverse, « en une seconde », et c'est elle qui a fait
+classer ces refus « environnementaux » dans **huit** corps de demande sur deux sessions. Le geste
+complet est en deux temps et se rejoue **à chaque arbre** :
+
+```bash
+. "$HOME/.nvm/nvm.sh"            # ou ce que votre poste demande ; node doit RESTER sur le PATH
+npm ci --prefix .github/openspec
+```
+
+Si vous l'oubliez, les deux gardes ne vous laisseront plus chercher dans votre diff : ils nomment ce
+qui manque, `npm` ou l'interprète du shebang, et disent que le refus ne parle pas de votre diff. La
+pose automatique est l'issue #5775.
 
 Si vous avez écrit ou modifié un **garde**, `scripts/methode/verifie-dependances-declarees.py` exige
 qu'il déclare ce dont il a besoin. Si vous avez prescrit un **outil externe** dans la méthode,
