@@ -96,21 +96,24 @@ le **lockfile** et conclut sans l'outil, ce qui se mesure en le lançant sur un 
 `node_modules` : il sort vert. La phrase d'avant nommait la mauvaise paire, et personne ne l'avait
 vérifiée (#5774).
 
-**Ne comptez pas sur le crochet pour vous l'avoir posé.** Il essaie depuis #5406, et il échoue sans
-bruit quand `npm` lui est introuvable, ce qui est le cas dès que le poste range `node` sous un
-gestionnaire de version : mesuré le 2026-10-03, **12 des 23 arbres du poste** n'avaient aucun
-`node_modules`. La phrase d'avant affirmait l'inverse, « en une seconde », et c'est elle qui a fait
-classer ces refus « environnementaux » dans **huit** corps de demande sur deux sessions. Le geste
-complet est en deux temps et se rejoue **à chaque arbre** :
+**Le crochet `post-checkout` le pose, et depuis #5775 il y arrive.** Il essayait depuis #5406 et
+échouait sans bruit dès que le poste rangeait `node` sous un gestionnaire de version : mesuré le
+2026-10-03, **12 des 23 arbres du poste** n'avaient aucun `node_modules`. La phrase qui vivait ici
+affirmait l'inverse, « en une seconde », et c'est elle qui a fait classer ces refus
+« environnementaux » dans **huit** corps de demande sur deux sessions.
+
+Ce qui a changé : le crochet ne cherche plus l'outil dans son propre `PATH`, il **demande au poste** où
+vit le sien, en interrogeant le profil du shell que le poste déclare. **Le contrôle qui le dit tient en
+une ligne**, et il vaut mieux que la confiance :
 
 ```bash
-. "$HOME/.nvm/nvm.sh"            # ou ce que votre poste demande ; node doit RESTER sur le PATH
-npm ci --prefix .github/openspec
+ls .github/openspec/node_modules | wc -l    # 53 attendu dans un arbre neuf
 ```
 
-Si vous l'oubliez, les deux gardes ne vous laisseront plus chercher dans votre diff : ils nomment ce
-qui manque, `npm` ou l'interprète du shebang, et disent que le refus ne parle pas de votre diff. La
-pose automatique est l'issue #5775.
+Si ce compte est nul, le crochet a dit pourquoi au moment du `worktree add`, et le relancer à la main
+le redit : `python3 scripts/methode/prepare-l-environnement.py`, qui sort **2** quand il n'a pas pu
+poser. Et les deux gardes OpenSpec ne vous laisseront pas chercher dans votre diff : ils nomment ce
+qui manque, `npm` ou l'interprète du shebang, et disent que le refus ne parle pas de votre diff.
 
 Si vous avez écrit ou modifié un **garde**, `scripts/methode/verifie-dependances-declarees.py` exige
 qu'il déclare ce dont il a besoin. Si vous avez prescrit un **outil externe** dans la méthode,

@@ -33,6 +33,7 @@ Usage :
     python3 scripts/methode/prepare-l-environnement.py --auto-test
 """
 
+import os
 import pathlib
 import re
 import subprocess
@@ -207,6 +208,100 @@ def a_faire(base: pathlib.Path) -> list[tuple[str, list[str]]]:
     return manques
 
 
+# Combien de temps on laisse au profil du poste. Un shell INTERACTIF lit le profil entier, et un
+# profil peut etre lent, bavard, ou attendre un terminal : un crochet qui pend est pire qu un crochet
+# qui echoue, parce qu il n a pas de symptome.
+DELAI_DU_POSTE_S = 10.0
+
+
+def resolu_par_le_poste(
+    outil: str, shell: str | None = None, delai: float = DELAI_DU_POSTE_S, lance=subprocess.run
+) -> tuple[str | None, str | None]:
+    """Le chemin absolu de `outil` tel que le POSTE le declare. Rend (chemin, cause d echec).
+
+    ## Le depot ne CHERCHE pas l outil, il DEMANDE au poste
+
+    Mesure du 2026-10-03 sur le poste de developpement, ou `node` vit sous un gestionnaire de version :
+
+        /bin/sh -c    'command -v npm'  -> INTROUVABLE   (ce que le crochet voit)
+        bash -lc      'command -v npm'  -> INTROUVABLE   (nvm vit dans .zshrc, pas dans .profile)
+        bash -ic      'command -v npm'  -> INTROUVABLE
+        "$SHELL" -ic  'command -v npm'  -> .../nvm/versions/node/v24.21.0/bin/npm
+
+    Le poste **declare deja** ou vit son outil, dans le profil de son propre shell, et cette
+    declaration est tenue par son proprietaire. Trois autres formes ont ete pesees et ecartees : une
+    table de dispositions connues - nvm, asdf, volta, fnm - que le depot devrait maintenir et qui
+    vieillit ; un fichier non versionne a faire ecrire, qui duplique une declaration existante et que
+    personne ne pense a ecrire ; et ne rien chercher, qui etait le perimetre plus petit refuse par le
+    porteur.
+
+    Aucun gestionnaire de version n est donc nomme ici, et il n y a pas de liste a tenir. C est ce qui
+    retire a ce lot la decision de portabilite qu il croyait devoir prendre.
+
+    ## Pourquoi `stdout` SEUL, et le dernier chemin EXISTANT
+
+    Le profil de ce poste ecrit une ligne parasite sur `stderr` - un `source ~/.cargo/env` casse,
+    present dans `.profile` comme dans `.zshrc`. Melanger les deux flux ferait lire cette ligne comme
+    un chemin. Et un profil peut aussi ecrire sur `stdout` : on retient donc la derniere ligne qui
+    EST un chemin absolu existant, ce qui se verifie au lieu de se supposer.
+    """
+    shell = shell or os.environ.get("SHELL") or "/bin/sh"
+    try:
+        rendu = lance(
+            [shell, "-ic", f"command -v {outil}"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=delai,
+        )
+    except FileNotFoundError:
+        return None, f"le shell du poste « {shell} » est introuvable"
+    except subprocess.TimeoutExpired:
+        return None, (
+            f"le profil interactif de « {shell} » n a pas rendu la main en {delai:.0f} s :"
+            " la cause est le PROFIL du poste, pas l outil"
+        )
+
+    for ligne in reversed(rendu.stdout.splitlines()):
+        chemin = pathlib.Path(ligne.strip())
+        if chemin.is_absolute() and chemin.exists():
+            return str(chemin), None
+    return None, (
+        f"le poste ne declare pas « {outil} » dans le profil de son shell « {shell} » :"
+        " ce refus ne parle pas de votre diff"
+    )
+
+
+def avec_le_voisinage(chemin: str) -> dict[str, str]:
+    """L environnement courant, plus le repertoire de `chemin` en TETE du PATH.
+
+    ## Pourquoi resoudre le chemin ne suffit pas
+
+    Trouve en eprouvant ce lot sur le poste reel, et c est le maillon 3 de #5774 qui mordait mon
+    propre correctif. Le poste declare bien ou vit `npm`, on le lance par son chemin absolu, et il
+    echoue : `npm` est un script dont le shebang est `#!/usr/bin/env node`, donc il reclame son
+    INTERPRETE sur le PATH de l enfant. Resoudre l outil sans resoudre son interprete reproduit
+    exactement le defaut que #5774 a corrige cote message.
+
+    ## La premisse, mesuree avant d en dependre
+
+    L outil et son interprete sont **voisins**, installes dans le meme `bin/` :
+
+        .../nvm/versions/node/v24.21.0/bin/  ->  corepack  node  npm  npx
+
+    Mettre ce repertoire en tete du PATH suffit donc, et se verifie : le meme `npm` lance avec son
+    voisinage rend sa version au lieu d echouer. C est vrai des gestionnaires qui installent une
+    distribution complete par version - nvm, asdf, volta, fnm, un paquet systeme.
+
+    **La limite se declare** : un poste qui rangerait l outil loin de son interprete ne serait pas
+    couvert. Il obtiendrait l echec nomme du lanceur plutot qu un silence, ce qui est le comportement
+    voulu, et non une pose.
+    """
+    dossier = str(pathlib.Path(chemin).parent)
+    chemins = [dossier, *os.environ.get("PATH", "").split(os.pathsep)]
+    return {**os.environ, "PATH": os.pathsep.join(c for c in chemins if c)}
+
+
 def pose(racine: pathlib.Path | None = None, lance=subprocess.run) -> int:
     """Pose ce qui manque. Rend le nombre d echecs, et n en fait jamais un motif de blocage."""
     base = racine or RACINE
@@ -223,9 +318,31 @@ def pose(racine: pathlib.Path | None = None, lance=subprocess.run) -> int:
         try:
             rendu = lance(commande, capture_output=True, text=True, check=False)
         except FileNotFoundError:
-            echecs += 1
-            print(f"preparation : {quoi} n a pas pu etre pose, « {commande[0]} » est introuvable")
-            continue
+            # ⟨on ne demande au poste QU ICI, et le « quand » a son cas⟩ Le PATH ordinaire vient
+            # d echouer : c est le seul moment ou interroger le profil du poste se justifie. Le faire
+            # d avance couterait 0,6 s a chaque arbre pour une question deja resolue, et un cas
+            # d auto-test rougit si cette interrogation devient inconditionnelle.
+            chemin, cause = resolu_par_le_poste(commande[0], lance=lance)
+            if chemin is None:
+                echecs += 1
+                print(f"preparation : {quoi} n a pas pu etre pose, {cause}")
+                continue
+            print(f"preparation : « {commande[0]} » hors du PATH ; le poste le declare en {chemin}")
+            try:
+                rendu = lance(
+                    [chemin, *commande[1:]],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    env=avec_le_voisinage(chemin),
+                )
+            except OSError as leve:
+                echecs += 1
+                print(
+                    f"preparation : {quoi} n a pas pu etre pose, {chemin} a leve"
+                    f" {type(leve).__name__}"
+                )
+                continue
         if rendu.returncode != 0:
             echecs += 1
             print(f"preparation : {quoi} n a pas pu etre pose ({' '.join(commande[:3])}...)")
@@ -312,6 +429,7 @@ def version_de_ruff(racine: pathlib.Path) -> str:
 
 
 def _auto_test() -> int:
+    import shutil
     import tempfile
 
     verifie, echecs = cas_d_auto_test()
@@ -398,6 +516,263 @@ def _auto_test() -> int:
     if ruff_pose(complet):
         verifie("rien a poser ne lance rien", (pose(complet, lance=espion), len(lances)), (0, 0))
 
+    # ⟨LE DEPOT DEMANDE AU POSTE⟩ Cas de #5775. Tous DIFFERES : un cas passe en valeur fait de son
+    # harnais un harnais muet, qui ne peut pas nommer l expression qui leve (cliquet 5570).
+    class Rendu:
+        def __init__(self, code=0, sortie="", erreur=""):
+            self.returncode, self.stdout, self.stderr = code, sortie, erreur
+
+    def poste(declare, leve=None, journal=None, kwargs_vus=None, sur_erreur=None):
+        """Un `lance` ou le PATH ordinaire n a pas `npm`, et ou le poste rend `declare` sur stdout.
+
+        `declare` est une LISTE de lignes et non une chaine : un profil peut ecrire plusieurs lignes
+        sur `stdout`, et c est exactement ce que les cas du `reversed` et du chemin relatif doivent
+        pouvoir decrire. Un bouchon a une seule ligne rendait ces deux cas decoratifs.
+        """
+
+        def faux(commande, **kwargs):
+            if journal is not None:
+                journal.append(commande)
+            if "-ic" in commande:
+                if kwargs_vus is not None:
+                    kwargs_vus.append(kwargs)
+                if leve is not None:
+                    raise leve
+                # Le profil ecrit sur les DEUX flux : `stderr` porte une ligne parasite, comme sur
+                # le poste reel, et elle ne doit jamais etre lue comme un chemin.
+                return Rendu(
+                    0,
+                    "".join(l + "\n" for l in (declare or [])),
+                    "".join(l + "\n" for l in (sur_erreur or [])),
+                )
+            if commande[0] == "npm":
+                raise FileNotFoundError(2, "No such file or directory", "npm")
+            return Rendu(0)
+
+        return faux
+
+    nu = pathlib.Path(tempfile.mkdtemp())
+
+    # Le cas que ce lot existe pour couvrir : l arbre naissait vide, il naît equipe.
+    verifie(
+        "un outil hors du PATH mais DECLARE par le poste est pose",
+        lambda: pose(nu, lance=poste([sys.executable])),
+        0,
+    )
+
+    # ⟨LE « QUAND », et non le « quoi »⟩ Sans ce cas, demander au poste a chaque fois passerait :
+    # le resultat serait juste et couterait 0,6 s par arbre. C est la forme de defaut qu une session
+    # pair a payee sur son propre instrument le meme jour - un verdict juste, un gaspillage invisible.
+    journal: list = []
+
+    def path_suffit(ou):
+        """Un `lance` ou TOUT reussit du premier coup : le PATH ordinaire porte les outils."""
+
+        def faux(commande, **kwargs):
+            ou.append(commande)
+            return Rendu(0)
+
+        return faux
+
+    verifie(
+        "le poste N EST PAS interroge quand le PATH suffit",
+        lambda: (
+            pose(nu, lance=path_suffit(journal)),
+            any("-ic" in c for c in journal),
+            len(journal) > 0,
+        ),
+        (0, False, True),
+    )
+
+    # Et le sens inverse, qui prouve que le cas precedent discrimine.
+    journal_bis: list = []
+    verifie(
+        "il EST interroge quand le PATH a echoue",
+        lambda: (
+            pose(nu, lance=poste([sys.executable], journal=journal_bis)),
+            any("-ic" in c for c in journal_bis),
+        ),
+        (0, True),
+    )
+
+    verifie(
+        "un poste qui ne declare rien fait ECHOUER",
+        lambda: pose(nu, lance=poste(None)) > 0,
+        True,
+    )
+
+    # Les causes se lisent, et chacune nomme ce qui manque plutot que ce qui en resulte.
+    verifie(
+        "un poste muet rend None, et non une ligne de son profil",
+        lambda: resolu_par_le_poste(
+            "npm", shell="/bin/sh", lance=poste(None, sur_erreur=["/home/x/.zshrc: pas de fichier"])
+        )[0],
+        None,
+    )
+    # Le cas qui DISCRIMINE : un chemin EXISTANT sur `stderr`, et un autre sur `stdout`. Avec une
+    # ligne parasite qui n est pas un chemin, melanger les flux ne changeait rien et ce cas ne
+    # prouvait rien - trouve par mutation, pas par relecture.
+    verifie(
+        "un chemin existant ecrit sur STDERR est ignore, celui de STDOUT gagne",
+        lambda: resolu_par_le_poste(
+            "npm", shell="/bin/sh", lance=poste(["/bin/sh"], sur_erreur=[sys.executable])
+        )[0],
+        "/bin/sh",
+    )
+    verifie(
+        "un chemin declare mais INEXISTANT est refuse",
+        lambda: resolu_par_le_poste("npm", shell="/bin/sh", lance=poste(["/n-existe-pas/npm"]))[0],
+        None,
+    )
+    # DEUX chemins existants, et le bon est le DERNIER : `command -v` s execute apres le profil, donc
+    # sa ligne est la derniere. Sans ce cas a deux lignes, le `reversed` n etait exerce par rien.
+    verifie(
+        "le DERNIER chemin existant est retenu, pas le premier",
+        lambda: resolu_par_le_poste(
+            "npm", shell="/bin/sh", lance=poste(["/bin/sh", sys.executable])
+        )[0],
+        sys.executable,
+    )
+
+    # ⟨une ligne relative QUI EXISTE⟩ « npm » ne designe aucun fichier, donc `exists()` le rejetait
+    # deja et le cas ne prouvait rien de `is_absolute`. Le risque reel est un profil qui ecrit un mot
+    # NU qui se trouve designer un fichier du repertoire courant - `docs`, `scripts`, `pom.xml` sont
+    # tous a la racine d un worktree, qui est le repertoire ou le crochet tourne.
+    def relatif_existant() -> str | None:
+        bac = pathlib.Path(tempfile.mkdtemp())
+        (bac / "docs").mkdir()
+        avant_cwd = pathlib.Path.cwd()
+        try:
+            os.chdir(bac)
+            return resolu_par_le_poste("npm", shell="/bin/sh", lance=poste(["docs"]))[0]
+        finally:
+            os.chdir(avant_cwd)
+
+    verifie("un mot NU qui designe un fichier du cwd est refuse", relatif_existant, None)
+    # Le DELAI est-il reellement passe au lanceur ? Le cas du depassement eprouve le traitement, pas
+    # la transmission : sans celui-ci, retirer `timeout=` ne ferait rougir personne.
+    kwargs_vus: list = []
+    verifie(
+        "le delai de garde est TRANSMIS au lanceur",
+        lambda: (
+            resolu_par_le_poste(
+                "npm", shell="/bin/sh", lance=poste([sys.executable], kwargs_vus=kwargs_vus)
+            )[0],
+            [k.get("timeout") for k in kwargs_vus],
+        ),
+        (sys.executable, [DELAI_DU_POSTE_S]),
+    )
+    verifie(
+        "un DELAI depasse nomme le PROFIL et non l outil",
+        lambda: (
+            "PROFIL"
+            in (
+                resolu_par_le_poste(
+                    "npm",
+                    shell="/bin/sh",
+                    lance=poste(None, leve=subprocess.TimeoutExpired("sh", 10)),
+                )[1]
+                or ""
+            )
+        ),
+        True,
+    )
+    verifie(
+        "un shell du poste ABSENT se nomme",
+        lambda: (
+            "shell du poste"
+            in (
+                resolu_par_le_poste(
+                    "npm", shell="/pas-de-shell", lance=poste(None, leve=FileNotFoundError())
+                )[1]
+                or ""
+            )
+        ),
+        True,
+    )
+    verifie(
+        "une cause qui tient au POSTE dit qu elle ne parle pas du diff",
+        lambda: (
+            "votre diff"
+            in (resolu_par_le_poste("npm", shell="/bin/sh", lance=poste(None))[1] or "")
+        ),
+        True,
+    )
+
+    # ⟨LE CODE RENDU AU SHELL, et pas seulement le compte interne⟩ `pose` comptait juste et `__main__`
+    # jetait le compte. Sans ce cas, remettre le `SystemExit(0)` ne ferait rougir personne : c est
+    # exactement le trou que #5774 a trouve dans son propre harnais, et je le comble ici d avance.
+    def code_au_shell(avec_outil: bool) -> int:
+        arbre = pathlib.Path(tempfile.mkdtemp()) / "depot"
+        (arbre / "scripts").mkdir(parents=True)
+        for quoi in ("methode", "_commun"):
+            shutil.copytree(RACINE / "scripts" / quoi, arbre / "scripts" / quoi)
+        # `ruff` pose et aucun `pyproject.toml` : `a_faire` ne rend alors QUE l outil OpenSpec, ce qui
+        # evite de creer un venv reel et son groupe - vingt secondes pour une question deja tranchee.
+        (arbre / ".venv" / "bin").mkdir(parents=True)
+        (arbre / ".venv" / "bin" / "ruff").touch()
+        if avec_outil:
+            (arbre / ".github" / "openspec" / "node_modules").mkdir(parents=True)
+        # `SHELL=/bin/sh` : un poste qui ne declare rien, donc l echec sans lancer de vrai `npm`.
+        return subprocess.run(
+            [sys.executable, str(arbre / "scripts" / "methode" / pathlib.Path(__file__).name)],
+            capture_output=True,
+            check=False,
+            env={**os.environ, "SHELL": "/bin/sh", "PATH": "/usr/bin:/bin"},
+        ).returncode
+
+    verifie("rien a poser : le SHELL recoit 0", lambda: code_au_shell(True), 0)
+    verifie("un outil introuvable : le SHELL recoit 2, pas 0", lambda: code_au_shell(False), 2)
+
+    # ⟨LE VOISINAGE⟩ Resoudre l outil ne suffit pas : son shebang reclame son interprete. Ces cas
+    # sont nes de l echec du lot sur le poste reel, pas d une relecture.
+    verifie(
+        "le repertoire de l outil resolu est en TETE du PATH de l enfant",
+        lambda: avec_le_voisinage("/opt/truc/bin/npm")["PATH"].split(os.pathsep)[0],
+        "/opt/truc/bin",
+    )
+    verifie(
+        "et le PATH existant est conserve DERRIERE, pas remplace",
+        lambda: avec_le_voisinage("/opt/truc/bin/npm")["PATH"].split(os.pathsep)[1:],
+        [c for c in os.environ.get("PATH", "").split(os.pathsep) if c],
+    )
+    verifie(
+        "le reste de l environnement est conserve",
+        lambda: avec_le_voisinage("/opt/truc/bin/npm").get("HOME"),
+        os.environ.get("HOME"),
+    )
+    # Et le cas d INTEGRATION : l environnement est reellement transmis au lanceur de l outil resolu.
+    envs_vus: list = []
+
+    def poste_qui_note_l_env(declare):
+        def faux(commande, **kwargs):
+            if "-ic" in commande:
+                return Rendu(0, declare + "\n")
+            if commande[0] == "npm":
+                raise FileNotFoundError(2, "No such file or directory", "npm")
+            envs_vus.append(kwargs.get("env"))
+            return Rendu(0)
+
+        return faux
+
+    verifie(
+        "l outil resolu est lance AVEC son voisinage",
+        lambda: (
+            pose(nu, lance=poste_qui_note_l_env(sys.executable)),
+            [(e or {}).get("PATH", "").split(os.pathsep)[0] for e in envs_vus if e is not None],
+        ),
+        (0, [str(pathlib.Path(sys.executable).parent)]),
+    )
+
+    verifie(
+        "AUCUN gestionnaire de version n est nomme dans les causes",
+        lambda: any(
+            g in (resolu_par_le_poste("npm", shell="/bin/sh", lance=poste(None))[1] or "")
+            for g in ("nvm", "asdf", "volta", "fnm", "nodenv")
+        ),
+        False,
+    )
+
     print()
     return echecs()
 
@@ -406,7 +781,21 @@ if __name__ == "__main__":
     sort_si_contrat_demande(__file__, CONTRAT)
     if "--auto-test" in sys.argv:
         raise SystemExit(_auto_test())
-    # JAMAIS un motif de blocage : le crochet qui l appelle doit rendre la main quoi qu il arrive.
-    pose()
+    # ⟨le compte, et non un zero de politesse⟩ Ce script rendait TOUJOURS 0, en se justifiant par
+    # « jamais un motif de blocage : le crochet doit rendre la main quoi qu il arrive ». La raison est
+    # bonne et ne couvre pas ce qu elle justifiait : le crochet se protege DEJA lui-meme, par
+    # `|| true` suivi d un `exit 0`. La non-blocance est la propriete de l APPELANT, et elle est tenue.
+    #
+    # Le script n avait donc pas besoin de mentir sur son code, et ce mensonge coutait : `pose`
+    # comptait ses echecs, et personne ne pouvait les lire. Meme forme que celle que #5774 vient de
+    # corriger dans `verifie-specs-valides.py`, troisieme dispositif a jeter un compte juste sur le
+    # pas de sa porte. Un `2` dit « je n ai pas pu », ce que le depot separe d un `1` (#5485).
+    echecs = pose()
+    # ⟨les modules N ENTRENT PAS dans ce code, et c est une decision⟩ Un module absent de
+    # l interpreteur courant n est pas un echec du depot a poser : `modules_manquants` le DIT sans
+    # rien poser, parce que choisir ou vit l interpreteur appartient a qui travaille. Mesure sur un
+    # arbre neuf de ce poste : `/usr/bin/python3` en signale un, ce qui est l etat NORMAL puisque les
+    # gardes se lancent par le venv. Les compter ferait sortir 2 a chaque creation d arbre, et un
+    # refus qui crie sur du bon travail est un refus qu on apprend a ignorer (ADR 4002).
     dit_les_modules_manquants()
-    raise SystemExit(0)
+    raise SystemExit(2 if echecs else 0)
