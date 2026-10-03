@@ -112,7 +112,8 @@ Trois exigences, dans l'ordre d'importance :
 Une API Vigie-Chiro épinglée, son Mongo et un faux S3, montés par les tests eux-mêmes
 ([ADR 5641](dev-docs/decisions/5641-les-tests-connectes-ont-deux-cibles.md)). Un test d'API y joue
 Companion par `PlateformeDeTest.acces()`, un scénario d'écran par
-`BancDeRecette.surLaPlateformeDeTest(cle)`, et tous portent `@Tag("plateforme-de-test")`. Ce qu'elle
+`BancDeRecette.surLaPlateformeDeTest(cle)`, une sonde du contrat live par `CibleLive.declaree()`,
+qui lit la cible que le profil déclare, et tous portent `@Tag("plateforme-de-test")`. Ce qu'elle
 monte, ses épingles et ce qu'elle ne prouve pas : la section « La plateforme de test » de
 [`dev-docs/tests-et-qualite.md`](dev-docs/tests-et-qualite.md).
 

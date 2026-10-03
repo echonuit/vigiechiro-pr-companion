@@ -15,11 +15,15 @@ verified:
 relations:
   amende: ["4134-un-banc-n-emprunte-pas-l-etat-partage-il-ouvre-le-sien"]
   prolonge: ["5641-les-tests-connectes-ont-deux-cibles"]
+  amendee_par: ["5746-une-sonde-live-declare-sa-cible-et-ce-qu-elle-saute-se-dit"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # La plateforme de test pose l'état de la JVM sans le rendre, dans un fork qui n'est qu'à elle
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-10-03** par l'[ADR 5746](5746-une-sonde-live-declare-sa-cible-et-ce-qu-elle-saute-se-dit.md) : une troisième façon de monter la plateforme s'ajoute au banc et à l'extension, `CibleLive.declaree()`, par laquelle une sonde du contrat live déclare sa cible. Le garde la compte, et une telle classe porte le même tag.
 
 ## Le contexte
 
