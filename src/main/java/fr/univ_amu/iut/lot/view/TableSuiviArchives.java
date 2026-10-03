@@ -7,14 +7,21 @@ import fr.univ_amu.iut.lot.viewmodel.LigneArchive;
 import java.util.List;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ObservableValue;
+import javafx.geometry.Insets;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.text.TextAlignment;
 
 /// Configure la table de suivi du dépôt (#820) : une [LigneArchive] par ZIP. Délègue au socle
 /// [TableSuivi] (colonnes `#`/Progression, cellule état/barre, coloration de la ligne selon l'état) et
 /// n'ajoute que les colonnes propres au dépôt : Fichiers et Taille. Encapsulé hors du controller pour
 /// garder celui-ci en pur câblage.
 final class TableSuiviArchives {
+
+    /// Marge de part et d'autre du texte vide : enroulé sur deux lignes, il ne touche pas les bords.
+    private static final double MARGE_DU_TEXTE_VIDE = 48;
 
     private TableSuiviArchives() {}
 
@@ -23,10 +30,19 @@ final class TableSuiviArchives {
     /// de la table de suivi) sont verrouillées ; « Fichiers » et « Taille » sont masquables. `#` et
     /// « Progression » sont posées par le socle [TableSuivi] (première et dernière colonnes), on les relit donc
     /// sur la table plutôt que de les reconstruire.
-    static List<GestionnaireColonnes.Colonne> configurer(TableView<LigneArchive> table) {
+    ///
+    /// `texteVide` est ce que la table dit sans archive : il suit l'état du dépôt (#5679).
+    static List<GestionnaireColonnes.Colonne> configurer(
+            TableView<LigneArchive> table, ObservableValue<String> texteVide) {
         TableColumn<LigneArchive, Integer> fichiers = colFichiers();
         TableColumn<LigneArchive, String> taille = colTaille();
-        TableSuivi.configurer(table, "Aucune archive de dépôt pour l'instant.", fichiers, taille);
+        TableSuivi.configurer(table, texteVide.getValue(), fichiers, taille);
+        Label vide = new Label();
+        vide.setWrapText(true);
+        vide.setTextAlignment(TextAlignment.CENTER);
+        vide.setPadding(new Insets(0, MARGE_DU_TEXTE_VIDE, 0, MARGE_DU_TEXTE_VIDE));
+        vide.textProperty().bind(texteVide);
+        table.setPlaceholder(vide);
         TableColumn<?, ?> numero = table.getColumns().get(0);
         TableColumn<?, ?> progression =
                 table.getColumns().get(table.getColumns().size() - 1);

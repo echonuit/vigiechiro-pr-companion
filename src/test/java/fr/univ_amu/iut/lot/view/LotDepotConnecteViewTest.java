@@ -35,12 +35,14 @@ import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
+import fr.univ_amu.iut.recette.Attente;
 import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -71,11 +73,13 @@ class LotDepotConnecteViewTest {
     private DepotVigieChiro depot;
     private SuiviTraitement suivi;
     private LotController controleur;
+    private DepotViewModel depotViewModel;
 
     @Start
     void start(Stage stage) throws Exception {
         service = mock(ServiceLot.class);
         depot = mock(DepotVigieChiro.class);
+        depotViewModel = new DepotViewModel(service, Optional.of(depot));
         suivi = mock(SuiviTraitement.class);
         // État réel après un dépôt par l'API : nuit téléversée (plan rempli), participation liée.
         when(service.consulterLot(anyLong()))
@@ -96,7 +100,7 @@ class LotDepotConnecteViewTest {
 
                     @Provides
                     DepotViewModel depotViewModel() {
-                        return new DepotViewModel(service, Optional.of(depot));
+                        return depotViewModel;
                     }
 
                     @Provides
@@ -118,6 +122,37 @@ class LotDepotConnecteViewTest {
         controleur.ouvrirSur(CONTEXTE);
         FenetreAjustable.poser(stage, vue, 980, 980);
         FenetreAjustable.afficher(stage);
+    }
+
+    /// Connecté, le téléversement produit ses ZIP et les supprime une fois en ligne : l'étape 2 vide
+    /// disait « aucune archive » pendant que l'étape 3 les envoyait (#5679, recette de #5597).
+    @Test
+    @DisplayName(
+            "#5679 : connecté sans envoi en cours, l'étape 2 dit que le téléversement produit et supprime ses archives")
+    void connecte_l_etape_2_dit_ou_sont_les_archives(FxRobot robot) {
+        assertThat(texteDeLEtape2(robot))
+                .doesNotContain("pour l'instant")
+                .contains("Aucune archive conservée sur ce poste")
+                .contains("dépôt manuel");
+    }
+
+    @Test
+    @DisplayName("#5679 : pendant un téléversement, l'étape 2 renvoie à l'étape 3 qui suit les archives")
+    void pendant_un_televersement_l_etape_2_renvoie_a_l_etape_3(FxRobot robot) {
+        Attente.surLeFil(depotViewModel::marquerEnCours, "un téléversement démarre", 5_000L);
+
+        assertThat(texteDeLEtape2(robot)).contains("au fil de l'envoi").contains("suivez-les à l'étape 3");
+    }
+
+    /// Le texte que la table de l'étape 2 affiche quand elle est vide, lu sur le fil JavaFX.
+    private static String texteDeLEtape2(FxRobot robot) {
+        return Attente.surLeFil(
+                () -> ((Label) robot.lookup("#tableArchives")
+                                .queryAs(TableView.class)
+                                .getPlaceholder())
+                        .getText(),
+                "lire le texte vide de l'étape 2",
+                5_000L);
     }
 
     @Test
