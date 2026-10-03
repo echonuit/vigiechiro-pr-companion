@@ -22,12 +22,14 @@ import java.util.stream.Stream;
 /// Inventaire d'un dossier de séquences audio **déjà transformées** (×10 + découpe déjà appliqués), en
 /// vue d'un import qui les **référence en place** sans rien re-transformer.
 ///
-/// Parcourt le dossier, retient les `.wav`, et les regroupe par **original** : le nom sans son suffixe de
-/// tranche `_NNN` (même convention que [fr.univ_amu.iut.commun.model.NommageSequences]). Un original
-/// rassemble ainsi ses tranches `_000`, `_001`… Contrairement à un import ordinaire, il n'y a **pas de
-/// brut** derrière ces séquences : l'original n'est qu'un **placeholder** dont le chemin sentinelle
-/// (`<dossier>/<nomOriginal>`) est une provenance, jamais un fichier ouvrable (même esprit que le
-/// placeholder `reconstruit.wav` de [fr.univ_amu.iut.passage.model.CreationPassageArchive]).
+/// Parcourt le dossier, retient les `.wav`, et les regroupe par **original** : le nom sans le suffixe
+/// `_NNN`, numéro de tranche dans un nom **sans** horodatage. Dans un nom horodaté, un `_001` est un
+/// perdant de collision ([fr.univ_amu.iut.commun.model.NommageSequences]), son propre original (#5719).
+///
+/// Contrairement à un import ordinaire, il n'y a **pas de brut** derrière ces séquences : l'original
+/// n'est qu'un **placeholder** dont le chemin sentinelle (`<dossier>/<nomOriginal>`) est une provenance,
+/// jamais un fichier ouvrable (même esprit que le placeholder `reconstruit.wav` de
+/// [fr.univ_amu.iut.passage.model.CreationPassageArchive]).
 ///
 /// Pour chaque tranche, l'inventaire calcule **dès l'inscription** ses preuves d'identité (taille,
 /// [Empreintes#empreinteCourte] : la réactivation les revérifiera au réveil), sa **durée réelle**
@@ -42,8 +44,8 @@ public final class InventaireTransformesReferences {
     /// par 10 (#1051, même constante que `VerificationIdentiteAudio`).
     private static final int FACTEUR_EXPANSION = 10;
 
-    /// Suffixe `_NNN` (3 chiffres) juste avant l'extension : délimite la tranche au sein de son original
-    /// (`_000`, `_001`…). Même forme que le marqueur de `NommageSequences`.
+    /// Suffixe `_NNN` (3 chiffres) juste avant l'extension : un numéro de tranche dans un nom sans
+    /// horodatage, un marqueur de collision dans un nom horodaté. Même forme que celui de `NommageSequences`.
     private static final Pattern SUFFIXE_SEQUENCE = Pattern.compile("_(\\d{3})(\\.[^.]+)$");
 
     private InventaireTransformesReferences() {}
@@ -119,10 +121,16 @@ public final class InventaireTransformesReferences {
 
     private static Decoupe decouper(String nomFichier) {
         Matcher marqueur = SUFFIXE_SEQUENCE.matcher(nomFichier);
-        if (marqueur.find()) {
-            return new Decoupe(nomFichier.substring(0, marqueur.start()) + marqueur.group(2), parserIndex(marqueur));
+        if (!marqueur.find()) {
+            return new Decoupe(nomFichier, 0);
         }
-        return new Decoupe(nomFichier, 0);
+        int index = parserIndex(marqueur);
+        if (index > 0 && Prefixe.horodatageDe(nomFichier).isPresent()) {
+            // Un nom horodaté porte l'heure de sa tranche et un `_000` : un suffixe non nul y marque le
+            // perdant d'une collision, venu d'un autre enregistrement (#5719). Il est son propre original.
+            return new Decoupe(nomFichier, 0);
+        }
+        return new Decoupe(nomFichier.substring(0, marqueur.start()) + marqueur.group(2), index);
     }
 
     private static int parserIndex(Matcher marqueur) {
