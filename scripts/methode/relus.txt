@@ -737,7 +737,7 @@ d97064e1dd7d  src/main/java/fr/univ_amu/iut/importation/model/FiltreThLogNuit.ja
 d8ce0601f5dd  src/main/java/fr/univ_amu/iut/importation/model/InspecteurDossier.java
 cf19ac27fdcd  src/main/java/fr/univ_amu/iut/importation/model/InventaireArchive.java
 c1fe0b5b344b  src/main/java/fr/univ_amu/iut/importation/model/InventaireParInspection.java
-17c86b66781f  src/main/java/fr/univ_amu/iut/importation/model/InventaireTransformesReferences.java
+4e60d21149ea  src/main/java/fr/univ_amu/iut/importation/model/InventaireTransformesReferences.java
 7839f3b8cbbc  src/main/java/fr/univ_amu/iut/importation/model/JournalDeRepli.java
 3423c91f80b3  src/main/java/fr/univ_amu/iut/importation/model/JournalParse.java
 91c8727d53d8  src/main/java/fr/univ_amu/iut/importation/model/LigneJournal.java
@@ -1777,11 +1777,12 @@ ba774b0b0cd0  src/test/java/fr/univ_amu/iut/importation/ExtracteurZipQuotasTest.
 4228af73ba11  src/test/java/fr/univ_amu/iut/importation/FrequenceAcquisitionTest.java
 5e58cfbffce8  src/test/java/fr/univ_amu/iut/importation/ImportationModuleTest.java
 8a750e308ae9  src/test/java/fr/univ_amu/iut/importation/InspecteurDossierTest.java
+141946411ce6  src/test/java/fr/univ_amu/iut/importation/InventaireTransformesReferencesTest.java
 2d2770579a48  src/test/java/fr/univ_amu/iut/importation/PariteSupportEnLectureSeuleTest.java
 df08aaf9e42e  src/test/java/fr/univ_amu/iut/importation/PartitionNuitsTest.java
 d7ed7a26f062  src/test/java/fr/univ_amu/iut/importation/RapportImportTest.java
 d0112ccc4840  src/test/java/fr/univ_amu/iut/importation/RenommeurTest.java
-ea01f0141e5c  src/test/java/fr/univ_amu/iut/importation/ServiceImportReferenceTest.java
+b02c517c2878  src/test/java/fr/univ_amu/iut/importation/ServiceImportReferenceTest.java
 e45fa97b00a2  src/test/java/fr/univ_amu/iut/importation/ServiceImportTest.java
 963e62993246  src/test/java/fr/univ_amu/iut/importation/SuiviFichiersImportTest.java
 7d8e5cc1e7d0  src/test/java/fr/univ_amu/iut/importation/TransformationAudioTest.java

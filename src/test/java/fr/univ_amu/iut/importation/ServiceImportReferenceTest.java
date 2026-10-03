@@ -142,10 +142,10 @@ class ServiceImportReferenceTest {
         ResultatImportReference resultat =
                 service.importer(externe, idPoint, 2026, 1, true, p -> {}, JetonAnnulation.neutre());
 
-        assertThat(resultat.nombreSequences()).isEqualTo(3); // 2 tranches + 1 tranche
+        assertThat(resultat.nombreSequences()).isEqualTo(3); // une paire de collision + 1 tranche
         Long idSession =
                 sessionDao.trouverParPassage(resultat.idPassage()).orElseThrow().id();
-        assertThat(originalDao.findBySession(idSession)).hasSize(2); // 2 originaux placeholders
+        assertThat(originalDao.findBySession(idSession)).hasSize(3); // un placeholder par séquence (#5719)
 
         // (a) Les séquences pointent le dossier EXTERNE, pas l'espace de travail.
         assertThat(sequenceDao.findBySession(idSession))
@@ -166,7 +166,7 @@ class ServiceImportReferenceTest {
 
         service.importer(externe, idPoint, 2026, 1, true, p -> {}, JetonAnnulation.neutre());
 
-        // Un passage, une session, deux originaux et trois séquences écrits : une seule annonce. Le
+        // Un passage, une session, trois originaux et trois séquences écrits : une seule annonce. Le
         // signal porte l'opération métier, pas la ligne (ADR 3537).
         assertThat(annonces[0])
                 .as("un passage de référence est un passage de plus à l'inventaire")
@@ -265,9 +265,12 @@ class ServiceImportReferenceTest {
                         .isCloseTo(0.01, within(1e-6)));
     }
 
+    /// Un `_001` horodaté est le **perdant d'une collision**, venu d'un autre enregistrement que le `_000`
+    /// du même nom : ni sa seconde tranche, ni 5 s plus loin (#5719). Il était rangé sous le même original,
+    /// d'index 1 et décalé de 5 s, alors que son nom dit qu'il commence à la même seconde.
     @Test
-    @DisplayName("Index et offset : la tranche _001 porte index 1 et offset 5,0 s ; _000 index 0 et offset 0,0 s")
-    void index_et_offset_derives_du_suffixe_nnn() throws IOException {
+    @DisplayName("#5719 : un perdant de collision horodaté est son propre original, d'index 0 et sans décalage")
+    void un_perdant_de_collision_n_est_pas_une_seconde_tranche() throws IOException {
         Path externe = preparerDossierTransforme(racine.resolve("externe"));
 
         ResultatImportReference resultat =
@@ -276,22 +279,23 @@ class ServiceImportReferenceTest {
                 sessionDao.trouverParPassage(resultat.idPassage()).orElseThrow().id();
         List<SequenceDEcoute> sequences = sequenceDao.findBySession(idSession);
 
-        // La deuxième tranche du même original : index 1, offset 1 × 5 s = 5,0 s (offset = index × durée
-        // de séquence). Un index figé à 0 donnerait 0,0 s ; un offset divisé au lieu de multiplié, 0,2 s.
-        assertThat(sequences)
-                .filteredOn(s -> s.nomFichier().endsWith("203922_001.wav"))
-                .singleElement()
-                .satisfies(s -> {
-                    assertThat(s.indexSource()).isEqualTo(1);
-                    assertThat(s.offsetSourceSecondes()).isEqualTo(5.0);
-                });
-        assertThat(sequences)
-                .filteredOn(s -> s.nomFichier().endsWith("203922_000.wav"))
-                .singleElement()
-                .satisfies(s -> {
-                    assertThat(s.indexSource()).isZero();
-                    assertThat(s.offsetSourceSecondes()).isEqualTo(0.0);
-                });
+        SequenceDEcoute gagnant = seule(sequences, "203922_000.wav");
+        SequenceDEcoute perdant = seule(sequences, "203922_001.wav");
+        assertThat(perdant.indexSource()).isZero();
+        assertThat(perdant.offsetSourceSecondes()).isEqualTo(0.0);
+        assertThat(perdant.idEnregistrementOriginal())
+                .as("deux enregistrements distincts, donc deux originaux")
+                .isNotEqualTo(gagnant.idEnregistrementOriginal());
+        assertThat(perdant.horodatageCapture()).isEqualTo(gagnant.horodatageCapture());
+    }
+
+    private static SequenceDEcoute seule(List<SequenceDEcoute> sequences, String fin) {
+        return sequences.stream()
+                .filter(s -> s.nomFichier().endsWith(fin))
+                .reduce((a, b) -> {
+                    throw new AssertionError("plusieurs séquences finissent par " + fin);
+                })
+                .orElseThrow();
     }
 
     @Test
@@ -376,7 +380,7 @@ class ServiceImportReferenceTest {
                 .isEqualTo(3);
         Long idSession =
                 sessionDao.trouverParPassage(resultat.idPassage()).orElseThrow().id();
-        assertThat(originalDao.findBySession(idSession)).hasSize(2);
+        assertThat(originalDao.findBySession(idSession)).hasSize(3);
     }
 
     @Test
@@ -431,9 +435,9 @@ class ServiceImportReferenceTest {
                 .hasMessageContaining("Point d'écoute introuvable");
     }
 
-    /// Prépare un dossier **externe** de séquences déjà transformées : deux originaux (2 tranches + 1
-    /// tranche), noms horodatés portant la série (`PaRecPR<série>_<date>_<heure>_NNN.wav`) pour que le
-    /// journal de repli déduise série et date.
+    /// Prépare un dossier **externe** de séquences déjà transformées : une paire de collision
+    /// (`203922_000` et son perdant `203922_001`) et une tranche seule. Les noms horodatés portent la
+    /// série (`PaRecPR<série>_<date>_<heure>_NNN.wav`) pour que le journal de repli déduise série et date.
     private static Path preparerDossierTransforme(Path dossier) throws IOException {
         Files.createDirectories(dossier);
         String base = "Car640380-2026-Pass1-Z1-PaRecPR" + SERIE + "_20260422_";
