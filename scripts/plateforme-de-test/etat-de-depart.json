@@ -64,7 +64,11 @@
       "verrouille": false,
       "localites": [
         {
-          "nom": "Z1"
+          "nom": "Z1",
+          "point": [
+            43.3005,
+            5.3728
+          ]
         }
       ]
     }
@@ -104,6 +108,26 @@
           "tadarida_probabilite": 0.92
         }
       ]
+    },
+    {
+      "cle": "sequence-2",
+      "participation": "nuit-traitee",
+      "titre": "Car130711-2026-Pass1-Z1-PaRec_20260615_221500_000",
+      "observations": [
+        {
+          "temps_debut": 2.0,
+          "temps_fin": 2.6,
+          "frequence_mediane": 45.0,
+          "tadarida_taxon": "pippip",
+          "tadarida_probabilite": 0.92
+        }
+      ]
+    }
+  ],
+  "fichiers": [
+    {
+      "cle": "observations-csv",
+      "participation": "nuit-traitee"
     }
   ]
 }

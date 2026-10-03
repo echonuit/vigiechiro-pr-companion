@@ -1442,7 +1442,7 @@ bfa1642021af  src/test/java/fr/univ_amu/iut/commun/api/ChaineDuCarreStocTest.jav
 80a2127fd522  src/test/java/fr/univ_amu/iut/commun/api/ClientGbifTest.java
 d40353c406b2  src/test/java/fr/univ_amu/iut/commun/api/ClientSurReseauSimule.java
 118a7c65bece  src/test/java/fr/univ_amu/iut/commun/api/ClientVigieChiroTest.java
-31737ccd5a47  src/test/java/fr/univ_amu/iut/commun/api/ContratApiVigieChiroLiveTest.java
+c3f19600dfb9  src/test/java/fr/univ_amu/iut/commun/api/ContratApiVigieChiroLiveTest.java
 3031abb0adaf  src/test/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgressionTest.java
 11e5d8601181  src/test/java/fr/univ_amu/iut/commun/api/DonneesVigieChiroTest.java
 5a7a570e1068  src/test/java/fr/univ_amu/iut/commun/api/EtatTraitementTest.java
@@ -1468,7 +1468,7 @@ efdb83418f82  src/test/java/fr/univ_amu/iut/commun/api/UrlSigneeAdmiseTest.java
 eb4b2f869205  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLiveTest.java
 306bdc2a1902  src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java
 fa9a82d31b32  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ImageDeLApiSansRevisionTest.java
-a3832e038085  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
+9120b24c101a  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
 08562833df8b  src/test/java/fr/univ_amu/iut/commun/di/AmorcageTest.java
 9ceb8cd1b78e  src/test/java/fr/univ_amu/iut/commun/di/DecouverteModulesTest.java
 65f32a89bdfc  src/test/java/fr/univ_amu/iut/commun/di/DiagnosticGuice.java
