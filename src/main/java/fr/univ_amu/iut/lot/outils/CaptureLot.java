@@ -22,6 +22,7 @@ import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
@@ -41,6 +42,8 @@ import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.SuiviArchives;
+import fr.univ_amu.iut.lot.model.TeleversementsEnCours;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
@@ -119,6 +122,13 @@ public final class CaptureLot {
     /// n'utilise pas le `@TempDir` aléatoire : son suffixe se retrouverait dans les PNG commités et
     /// salirait les assets à chaque régénération (le contenu réel n'est de toute façon pas lu).
     private static final String RACINE_DEMO = "/home/observateur/VigieChiro";
+
+    /// L'archive qu'un dépôt en cours est en train d'envoyer, dans les aperçus qui montrent la table.
+    private static final String ARCHIVE_EN_COURS = "Car040962-2026-Pass1-A1-sequences.zip";
+
+    /// Hauteur de scène d'un dépôt suivi **et** d'un bandeau d'erreur : les deux s'empilent, et 1200
+    /// laissait au garde-fou anti-troncature « 8 px » de manque au rendu local de #5599.
+    private static final int HAUTEUR_DEPOT_SUIVI = 1300;
 
     private CaptureLot() {}
 
@@ -201,19 +211,20 @@ public final class CaptureLot {
         rendrePilote(connecte, idCoherent, sortie.resolve("apercu-lot-reprise.png"), (vm, depot) -> {
             // Dépôt EN COURS : l'écran bascule sur la table de suivi (le prompt « Téléverser… » cède la
             // place), état où la reprise se donne à voir.
-            depot.marquerEnCours();
-            SuiviLignesDepot lignes = depot.suiviLignes();
-            String deposee = "Car040962-2026-Pass1-A1-originaux.zip";
-            String enCours = "Car040962-2026-Pass1-A1-sequences.zip";
-            lignes.planifier(List.of(
-                    DepotUnite.aDeposer(idCoherent, deposee, TypeDepotUnite.ZIP, "2026-06-21T09:00:00"),
-                    DepotUnite.aDeposer(idCoherent, enCours, TypeDepotUnite.ZIP, "2026-06-21T09:00:00")));
-            lignes.demarree(deposee);
-            lignes.deposee(deposee);
-            lignes.demarree(enCours);
-            lignes.progresse(enCours, 0.4);
-            lignes.reprise(enCours, Duration.ofSeconds(3));
+            depotEnCours(depot, idCoherent).reprise(ARCHIVE_EN_COURS, Duration.ofSeconds(3));
         });
+        // #5624 : dépôt ENTAMÉ (#5599), le statut posé en base comme après un téléversement interrompu.
+        // « Générer les archives de dépôt » reste offert : c'est là qu'on régénère un contenu refusé.
+        entamerLeDepot(injecteur, idCoherent);
+        rendre(connecte, idCoherent, sortie.resolve("apercu-lot-depot-entame.png"));
+        // #5624 : la génération REFUSÉE pendant un téléversement (#5599). Le refus est celui du service,
+        // obtenu pendant une inscription réelle au registre des téléversements, et non un texte recopié.
+        rendrePilote(
+                connecte,
+                idCoherent,
+                sortie.resolve("apercu-lot-generation-refusee.png"),
+                HAUTEUR_DEPOT_SUIVI,
+                (vm, depot) -> refuserLaGeneration(connecte, idCoherent, vm, depot));
         // ④ Déposé : état final, toutes les étapes franchies.
         service.marquerDepose(idCoherent);
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-depose.png"));
@@ -229,6 +240,62 @@ public final class CaptureLot {
         // Bandeau en ERREUR (#1917) : le succès est déjà couvert par apercu-lot-archives.png, produit par
         // la génération. Ouvrir sur un passage inexistant donne l'autre extrémité de l'échelle.
         rendre(injecteur, PASSAGE_INEXISTANT, sortie.resolve("apercu-lot-retour.png"));
+    }
+
+    /// Pose le passage en « Dépôt en cours » comme le moteur de dépôt le fait au premier envoi (#5599),
+    /// transition validée par le moteur de workflow.
+    private static void entamerLeDepot(Injector injecteur, long idPassage) {
+        PassageDao passages = injecteur.getInstance(PassageDao.class);
+        Passage passage = passages.findById(idPassage).orElseThrow();
+        injecteur
+                .getInstance(MoteurWorkflowPassage.class)
+                .exigerTransitionAutorisee(passage.statutWorkflow(), StatutWorkflow.DEPOT_EN_COURS);
+        passages.update(new Passage(
+                passage.id(),
+                passage.numeroPassage(),
+                passage.annee(),
+                passage.dateEnregistrement(),
+                passage.heureDebut(),
+                passage.heureFin(),
+                passage.parametresAcquisition(),
+                StatutWorkflow.DEPOT_EN_COURS,
+                passage.verdictVerification(),
+                passage.commentaire(),
+                passage.donneesMeteo(),
+                passage.deposeLe(),
+                passage.idPoint(),
+                passage.idEnregistreur(),
+                passage.idCampagne()));
+    }
+
+    /// Un téléversement en cours, sa table de suivi peuplée, puis une génération demandée pendant ce
+    /// temps : le service la refuse, et c'est ce refus que l'écran restitue (#5599).
+    private static void refuserLaGeneration(Injector injecteur, long idPassage, LotViewModel vm, DepotViewModel depot) {
+        depotEnCours(depot, idPassage);
+        try (TeleversementsEnCours.Inscription televersement =
+                injecteur.getInstance(TeleversementsEnCours.class).inscrire(idPassage)) {
+            vm.marquerGenerationEnCours();
+            vm.calculerArchivesDepot(progres -> {}, SuiviArchives.inerte());
+            throw new IllegalStateException("La génération devait être refusée pendant un téléversement");
+        } catch (RegleMetierException refus) {
+            vm.echecGeneration(refus);
+        }
+    }
+
+    /// Un dépôt **en cours** sur deux archives : l'une déposée, l'autre partie à 40 %. L'écran bascule sur
+    /// la table de suivi, le prompt « Téléverser… » cédant la place.
+    private static SuiviLignesDepot depotEnCours(DepotViewModel depot, long idPassage) {
+        depot.marquerEnCours();
+        SuiviLignesDepot lignes = depot.suiviLignes();
+        String deposee = "Car040962-2026-Pass1-A1-originaux.zip";
+        lignes.planifier(List.of(
+                DepotUnite.aDeposer(idPassage, deposee, TypeDepotUnite.ZIP, "2026-06-21T09:00:00"),
+                DepotUnite.aDeposer(idPassage, ARCHIVE_EN_COURS, TypeDepotUnite.ZIP, "2026-06-21T09:00:00")));
+        lignes.demarree(deposee);
+        lignes.deposee(deposee);
+        lignes.demarree(ARCHIVE_EN_COURS);
+        lignes.progresse(ARCHIVE_EN_COURS, 0.4);
+        return lignes;
     }
 
     /// Mémorise un lien `passage → participation` (#1890) : c'est ce que lit `participationLiee`, et
