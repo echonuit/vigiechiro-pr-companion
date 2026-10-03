@@ -133,6 +133,10 @@ La table garde le détail : la cause de chaque échec y est lisible, archive par
     téléversement, parce que celui-ci produit lui-même ses archives dans le même dossier : le message
     vous dit alors d'attendre la fin du téléversement ou de l'annuler.
 
+![Un dépôt entamé : l'en-tête dit « Dépôt Vigie-Chiro entamé », l'étape 3 reste courante, et « Générer les archives de dépôt » reste offert.](../assets/captures/apercu-lot-depot-entame.png)
+
+![Pendant un téléversement, la génération est refusée : le bandeau demande d'attendre la fin du téléversement ou de l'annuler, et « Annuler le dépôt » est offert au-dessus de la table de suivi.](../assets/captures/apercu-lot-generation-refusee.png)
+
 ### Ce que le dépôt vous rend à la fin
 
 Quand le téléversement se termine, un **compte rendu** dit ce qui est en ligne, en proportions.
