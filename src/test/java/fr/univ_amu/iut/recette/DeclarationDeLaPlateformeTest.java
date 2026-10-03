@@ -82,6 +82,11 @@ class DeclarationDeLaPlateformeTest {
     /// déclaration du banc : un test d'API sans tag lui échappait.
     private static final String MONTE_LA_PLATEFORME_DE_TEST = "@ExtendWith(PlateformeDeTest.class)";
 
+    /// La troisième manière (clôture de #5643) : une sonde du contrat live qui DÉCLARE sa cible. Elle ne
+    /// monte la plateforme que sous le profil de test ; ailleurs elle vise la nationale. Sans le tag, le
+    /// job `plateforme-de-test` ne la jouerait jamais, et rien ne le dirait.
+    private static final String DECLARE_SA_CIBLE = "CibleLive.declaree()";
+
     /// Ce qui sort une classe du build par défaut et la met dans le job `plateforme-de-test`.
     private static final String TAG_PLATEFORME_DE_TEST = "@Tag(\"plateforme-de-test\")";
 
@@ -120,6 +125,37 @@ class DeclarationDeLaPlateformeTest {
                         par défaut y rougirait sur une cause étrangère au code.
 
                         Ajouter `@Tag("plateforme-de-test")` : la classe passe dans le job du même nom.""").isEmpty();
+
+        // Un APPEL, cherché dans la ligne : `cible = CibleLive.declaree();` ne commence pas par lui. Ce
+        // fichier-ci porte le motif dans sa constante, d'où son exclusion par nom.
+        List<Path> sondesLive = javaSous(SOURCES)
+                .filter(fichier -> !fichier.endsWith("DeclarationDeLaPlateformeTest.java"))
+                .filter(fichier -> contient(fichier, DECLARE_SA_CIBLE))
+                .toList();
+        assertThat(sondesLive)
+                .as("Aucune sonde ne déclare sa cible : le relevé cherche `%s` sous `%s`.", DECLARE_SA_CIBLE, SOURCES)
+                .isNotEmpty();
+        assertThat(sondesLive.stream()
+                        .filter(fichier -> !commenceUneLigne(fichier, TAG_PLATEFORME_DE_TEST))
+                        .toList())
+                .as("""
+                        Ces classes déclarent leur cible par `CibleLive` sans porter
+                        `@Tag("plateforme-de-test")`. Le job du même nom ne les joue donc jamais, et leur
+                        cible de test reste lettre morte sans que rien ne le dise (#5643).""")
+                .isEmpty();
+    }
+
+    private static Stream<Path> javaSous(Path racine) throws IOException {
+        try (Stream<Path> arbre = Files.walk(racine)) {
+            return arbre
+                    .filter(Files::isRegularFile)
+                    .filter(fichier -> fichier.toString().endsWith(".java"))
+                    .sorted()
+                    .toList()
+                    .stream();
+        } catch (UncheckedIOException parcoursInterrompu) {
+            throw parcoursInterrompu.getCause();
+        }
     }
 
     /// L'autre moitié du même contrat (#5642, passe 6 de sa clôture) : porter le tag ne sert que si le build

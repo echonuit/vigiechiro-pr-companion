@@ -15,15 +15,24 @@ de l element `<skipped>`, apres « Assumption failed: », et non son attribut `m
 
 ## Ce qu il refuse
 
+TOUT saut, quel qu en soit le motif (cloture de #5643). Depuis #5772, l etat de depart porte tout
+ce que les sondes supposent : sur la plateforme de test, rien ne doit sauter, et une sonde neuve qui
+suppose une donnee absente rougit, ce qui force a la declarer. Le verdict ne depend donc d aucun
+texte. Les deux diagnostics ci-dessous disent seulement POURQUOI, quand ils le savent :
+
 - un saut dont le motif cite le jeton ou un verrou d ecriture (`vigiechiro.token`, `.write`,
   `.message`, `.participationRebut`, `.participationEssai`) : sur la plateforme de test, ces verrous
   sont ouverts par `CibleLive`, donc un tel saut veut dire que la cible n a pas ete cablee ;
+- un rapport dont TOUS les tests sont sautes, quel qu en soit le motif : c est la signature d une
+  classe interrompue dans son `@BeforeAll`, et jamais celle d un manque de donnees, qui reste partiel.
+  Le motif reconnait un TEXTE ; ce refus-ci reconnait l EFFET, et attrape un verrou dont le message ne
+  nommerait pas `vigiechiro.*` (cloture de #5643, signale par une session pair) ;
 - aucun rapport lu : un releve qui ne lit rien ne peut pas conclure qu il n y a rien ;
 - un rapport anterieur a `--depuis` : `target/` garde les rapports d un run precedent si rien ne les
   efface, et un poste qui le rejoue a la main lirait alors un autre run que le sien. Dans le job,
   `target/` est neuf ; l option sert au poste.
 
-Les autres sauts, faute de donnees dans l etat de depart, sont AFFICHES et ne refusent pas (#5747).
+Un saut faute de donnees refuse lui aussi : la donnee se declare dans `etat-de-depart.json` (#5747).
 
 Distinct de `scripts/methode/releve-les-bancs-instables.py`, qui lit les journaux de jobs archives
 sur la forge pour classer les rouges : celui-ci lit les rapports XML du run, dans le job.
@@ -65,9 +74,13 @@ def releve(dossier: pathlib.Path, depuis: float | None = None) -> tuple[int, lis
         ] + [f"  {nom}" for nom in perimes]
 
     tests = 0
+    entierement_sautes: list[str] = []
     par_motif: dict[str, list[str]] = collections.defaultdict(list)
     for rapport in rapports:
-        for cas in ET.parse(rapport).getroot().iter("testcase"):
+        cas_du_rapport = list(ET.parse(rapport).getroot().iter("testcase"))
+        if cas_du_rapport and all(c.find("skipped") is not None for c in cas_du_rapport):
+            entierement_sautes.append(rapport.name)
+        for cas in cas_du_rapport:
             tests += 1
             saute = cas.find("skipped")
             if saute is not None:
@@ -86,13 +99,23 @@ def releve(dossier: pathlib.Path, depuis: float | None = None) -> tuple[int, lis
         lignes.extend(f"         {c}" for c in cas[:5])
         if len(cas) > 5:
             lignes.append(f"         ... et {len(cas) - 5} autre(s)")
+    refus = []
+    if sautes:
+        refus.append(
+            f"REFUS : {sautes} saut(s). Sur la plateforme de test, rien ne doit sauter : declarer la "
+            "donnee manquante dans etat-de-depart.json plutot que de la sauter (#5747)."
+        )
     if fautifs:
-        lignes.append(
+        refus.append(
             f"REFUS : {fautifs} saut(s) dus au jeton ou a un verrou d ecriture. Sur la plateforme de test, "
             "`CibleLive` les ouvre : la cible n a pas ete cablee (#5746)."
         )
-        return 1, lignes
-    return 0, lignes
+    if entierement_sautes:
+        refus.append(
+            f"REFUS : {len(entierement_sautes)} classe(s) dont TOUS les tests sont sautes, la signature "
+            "d une classe interrompue avant ses tests : " + ", ".join(entierement_sautes)
+        )
+    return (1 if refus else 0), lignes + refus
 
 
 def auto_test() -> int:
@@ -134,7 +157,7 @@ def auto_test() -> int:
             ("c", None),
         )
         code, lignes = releve(donnees)
-        verifie("un saut faute de donnees s affiche et ne refuse pas", lambda: code, 0)
+        verifie("un saut faute de donnees refuse aussi : rien ne doit sauter", lambda: code, 1)
         verifie(
             "le compte dit les tests et les sautes",
             lambda: lignes[0],
@@ -166,8 +189,36 @@ def auto_test() -> int:
 
         voisin = d / "voisin"
         voisin.mkdir()
-        rapport(voisin, "Contrat", ("a", "Il faut vigiechiro.writer, pas un verrou"))
-        verifie("un mot voisin d un verrou ne refuse pas", lambda: releve(voisin)[0], 0)
+        rapport(voisin, "Contrat", ("a", "Il faut vigiechiro.writer, pas un verrou"), ("b", None))
+        verifie(
+            "un mot voisin d un verrou n est pas pris pour un verrou",
+            lambda: any("JETON OU VERROU" in ligne for ligne in releve(voisin)[1]),
+            False,
+        )
+
+        joue = d / "joue"
+        joue.mkdir()
+        rapport(joue, "Contrat", ("a", None), ("b", None))
+        code, lignes = releve(joue)
+        verifie("aucun saut : vert", lambda: code, 0)
+        verifie(
+            "le compte dit les tests joues",
+            lambda: lignes,
+            ["Releve des sautes : 1 rapport(s), 2 test(s), 0 saute(s)."],
+        )
+
+        entiere = d / "entiere"
+        entiere.mkdir()
+        rapport(
+            entiere, "Contrat", ("a", "Aucun site sur ce compte"), ("b", "Aucun site sur ce compte")
+        )
+        code, lignes = releve(entiere)
+        verifie(
+            "une classe dont tous les tests sautent refuse, meme pour un motif de donnees",
+            lambda: code,
+            1,
+        )
+        verifie("le refus nomme le rapport", lambda: "TEST-fr.x.Contrat.xml" in lignes[-1], True)
 
         verifie(
             "un rapport anterieur a la passe refuse",

@@ -376,6 +376,8 @@ nav:
     - 5641 · Les tests connectés ont deux cibles: decisions/5641-les-tests-connectes-ont-deux-cibles.md
     - 5663 · La plateforme de test pose l'état de la JVM dans un fork à elle: decisions/5663-la-plateforme-de-test-pose-l-etat-de-la-jvm-dans-un-fork-a-elle.md
     - 5666 · La plateforme de test se construit sans cache: decisions/5666-la-plateforme-de-test-se-construit-sans-cache.md
+    - 5746 · Une sonde live déclare sa cible, et ce qu'elle saute se dit: decisions/5746-une-sonde-live-declare-sa-cible-et-ce-qu-elle-saute-se-dit.md
+    - 4356 · Le bouchon n'apprend pas ce que le serveur réel éprouve: decisions/4356-le-bouchon-n-apprend-pas-ce-que-le-serveur-reel-eprouve.md
     - 5629 · La première ligne du journal ne date aucune nuit: decisions/5629-la-premiere-ligne-du-journal-ne-date-aucune-nuit.md
     - 5669 · Une carte de plusieurs nuits se juge sur les nuits racontées: decisions/5669-une-carte-de-plusieurs-nuits-se-juge-sur-les-nuits-racontees.md
     - 4650 · Un geste de test vise une donnée, pas une position: decisions/4650-un-geste-de-test-vise-une-donnee-pas-une-position.md

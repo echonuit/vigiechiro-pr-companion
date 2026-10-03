@@ -299,8 +299,11 @@ D'où la propriété système `vigiechiro.s3.hotes`, qui **remplace** la liste, 
 nomme l'hôte observé **et** la propriété : un changement d'hébergement doit être une ligne à ajouter,
 pas un mur.
 
-Une **sonde live** (`ContratApiVigieChiroLiveTest`, hors CI) confronte l'allowlist à l'URL que la
-plateforme sert vraiment : si l'hébergement change, elle rougit là plutôt que chez un utilisateur.
+Une **sonde live** (`ContratApiVigieChiroLiveTest`) confronte l'allowlist à l'URL que la plateforme
+sert vraiment : si l'hébergement change, elle rougit là plutôt que chez un utilisateur. Elle joue
+**chaque lundi** contre la plateforme nationale (`api-live.yml`), seule à servir le vrai hébergement ;
+à chaque demande, elle joue aussi contre la plateforme de test, dont le faux S3 est admis par
+`vigiechiro.s3.hotes` (#5643).
 
 ## Chaîne d'approvisionnement
 
