@@ -114,6 +114,23 @@ class ContratApiVigieChiroLiveTest {
     }
 
     @Test
+    @DisplayName("Transport #4356 : un jeton inconnu revient en Refuse 401, ni « non connecté » (l'appel n'a"
+            + " pas eu lieu) ni « injoignable » : les quatre issues d'un appel restent distinctes")
+    void un_jeton_inconnu_est_un_refus_401() {
+        // Trente-deux caractères tirés dans `A-Z0-9`, la forme d'un vrai jeton : seul le serveur peut
+        // dire qu'il ne le connaît pas, et c'est ce verdict qu'on veut voir traverser le transport.
+        TransportVigieChiro transport =
+                new TransportVigieChiro(baseUrl, () -> Optional.of("JETONINCONNUDELASONDE401XXXXXXXX"));
+
+        ReponseApi<String> reponse = transport.lire("/moi");
+
+        assertThat(reponse)
+                .as("un jeton refusé par le serveur n'est ni une absence de jeton ni une panne réseau")
+                .isInstanceOf(ReponseApi.Refuse.class);
+        assertThat(((ReponseApi.Refuse<String>) reponse).statut()).isEqualTo(401);
+    }
+
+    @Test
     @DisplayName("GET /participations/{id} : conforme au JSON Schema participation"
             + " (meteo/configuration/traitement optionnels, enums vent/couverture, dates ISO +00:00, _etag)")
     void participation_respecte_le_schema() {
