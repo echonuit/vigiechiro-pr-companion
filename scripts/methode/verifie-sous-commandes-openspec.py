@@ -27,9 +27,15 @@ La cause n etait pas dans les fichiers : `\\s` franchit la fin de ligne, et l en
 `author: openspec` suivi de `version: "1.0"` a la ligne d apres. D ou les deux precautions du
 releve, chacune avec son cas d auto-test : on lit LIGNE PAR LIGNE, et l en-tete est ecarte.
 
-**Ce qu il ne peut pas lire, il le refuse.** Sans binaire, code 1 avec la cause. Un garde qui
-passerait au vert faute d avoir pu comparer annoncerait une verification qu il n a pas faite
-(article A3).
+**Ce qu il ne peut pas lire, il le refuse.** Code **2**, et non 1 : « je n ai pas pu juger » et « j ai
+juge et c est rouge » sont deux verdicts, que le depot separe (#5485). Un garde qui passerait au vert
+faute d avoir pu comparer annoncerait une verification qu il n a pas faite (article A3) ; un garde qui
+sortirait en 1 ferait chercher le defaut dans le diff, ce qui a coute huit corps de demande (#5774).
+
+**Et il nomme le prerequis le plus PROFOND.** Le binaire pose ne suffit pas : c est un script, son
+shebang reclame un interprete, et cet interprete doit etre sur le PATH quand ce garde tourne. Sans
+lui, ce garde rendait « Invocations d OpenSpec qui n existent pas », donc accusait le diff de ce qui
+tenait au poste. La sonde vit dans `_commun/prerequis.py`, partagee avec `verifie-specs-valides.py`.
 
 **Sur l ADR 3645, qui veut qu un detecteur textuel s exclue de son corpus.** La question se pose,
 puisque ce fichier nomme des sous-commandes dans sa prose et en fabrique de fausses dans son
@@ -42,6 +48,7 @@ atteindre `scripts/methode/`. La raison est ecrite ici pour qu elle ne se repose
                   devrait rougir, ou s il rougit sur un arbre sain.
 """
 
+import os
 import pathlib
 import re
 import shutil
@@ -51,7 +58,13 @@ import tempfile
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import message_de_refus, sort_si_contrat_demande
+from _commun import (
+    cas_d_auto_test,
+    lit_le_refus,
+    prerequis,
+    refuse,
+    sort_si_contrat_demande,
+)
 
 BINAIRE_EPINGLE = pathlib.Path(".github") / "openspec" / "node_modules" / ".bin" / "openspec"
 
@@ -74,8 +87,8 @@ INVOCATION = re.compile(r"\bopenspec[ \t]+([a-z][a-z0-9-]*)(?:[ \t]+([a-z][a-z0-
 LIGNE_COMMANDE = re.compile(r"^\s{2}([a-z][a-z0-9-]*)")
 
 
-def binaire(racine: pathlib.Path) -> tuple[str | None, str | None]:
-    """Le chemin de l outil EPINGLE. Rend (chemin, cause d echec).
+def binaire(racine: pathlib.Path) -> str:
+    """Le chemin de l outil EPINGLE, sans jamais se rabattre sur le PATH.
 
     Aucun repli sur le PATH, et ce n est pas une precaution de style. Un poste peut porter une
     installation globale d une AUTRE version, dont l arbre de commandes differe : comparer nos
@@ -84,15 +97,44 @@ def binaire(racine: pathlib.Path) -> tuple[str | None, str | None]:
 
     L auto-test l a trouve plutot que la relecture : son cas « binaire absent » ressortait VERT,
     parce que `shutil.which` trouvait l installation globale de la machine qui le lancait.
+
+    Il ne dit plus s il est la : c est `refus_de_conclure` qui le demande, et pour une raison de
+    CANAL plutot que de gout. Cette fonction rendait sa cause d echec comme un second element de
+    couple, qui remontait dans la liste d `ecarts` et heritait de son en-tete - « Invocations
+    d OpenSpec qui n existent pas ». Un refus portait donc le titre des constats, et accusait le diff
+    de ce qui tenait au poste (#5774).
     """
-    epingle = racine / BINAIRE_EPINGLE
-    if epingle.exists():
-        return str(epingle), None
-    return None, message_de_refus(
-        f"{BINAIRE_EPINGLE} est absent, et ce garde compare a l outil EPINGLE jamais a celui du"
-        " PATH, qui peut etre d une autre version",
-        "npm ci --prefix .github/openspec",
-    )
+    return str(racine / BINAIRE_EPINGLE)
+
+
+def refus_de_conclure(racine: pathlib.Path) -> tuple[str, str] | None:
+    """Ce qui empeche de juger, en (cause, geste), ou `None` si l on peut juger.
+
+    SEPARE des ecarts, et c est tout le point. Un garde qui ne peut pas conclure et un garde qui a
+    trouve des invocations fausses disent deux choses de nature differente ; les faire voyager dans
+    la meme liste donne au premier le titre du second. Huit corps de demande sur deux sessions ont
+    classe ce refus « environnemental, etranger a ce diff » apres avoir lu ce titre (#5774).
+
+    L ordre des deux questions est celui du prerequis le plus profond : ce que le poste n a pas
+    d abord, ce que l outil ne rend pas ensuite. Inverse, il refuserait sur une aide vide en taisant
+    que l interprete manque, ce qui est exactement le message qu une session a traine.
+    """
+    manque = prerequis.manque_pour(racine / BINAIRE_EPINGLE, "npm ci --prefix .github/openspec")
+    if manque:
+        return manque
+
+    if not arbre_des_commandes(binaire(racine)):
+        return (
+            (
+                "l aide de l outil epingle ne rend aucune commande, et ce garde compare les"
+                " citations a cette aide : il n y a rien a comparer"
+            ),
+            (
+                "verifiez que « openspec --help » rend un bloc « Commands: » ; si l outil a change"
+                " de forme d aide, c est la version epinglee qu il faut reprendre"
+            ),
+        )
+    return None
 
 
 def sous_commandes(outil: str, chemin: list[str]) -> set[str]:
@@ -168,14 +210,13 @@ def corpus_incomplet(racine: pathlib.Path) -> list[str]:
 
 
 def ecarts(racine: pathlib.Path) -> list[str]:
-    """Les invocations citees qui n existent pas. Liste vide = le garde est au vert."""
-    outil, panne = binaire(racine)
-    if panne:
-        return [panne]
+    """Les invocations citees qui n existent pas. Liste vide = le garde est au vert.
 
-    arbre = arbre_des_commandes(outil)
-    if not arbre:
-        return ["l aide de l outil ne rend aucune commande : rien a comparer"]
+    Ne porte QUE des constats. Ce qui empeche de juger passe par `refus_de_conclure`, et l appelant
+    le demande avant : une liste vide veut donc dire « j ai juge et c est vert », jamais « je n ai
+    pas pu juger ».
+    """
+    arbre = arbre_des_commandes(binaire(racine))
 
     incomplet = corpus_incomplet(racine)
     if incomplet:
@@ -208,7 +249,17 @@ def auto_test() -> int:
 
     Le quatrieme cas est le plus important : il rejoue le faux positif que ce garde a failli
     embarquer, `author: openspec` suivi de `version:` a la ligne d apres. Il doit rester VERT.
+
+    **Et il REFUSE plutot que d echouer quand le prerequis manque**, ce qui est le sujet de ce garde
+    applique a son propre harnais. Mesure du 2026-10-03 sur ce poste, `node` hors du PATH : l
+    auto-test rendait « Le garde ne tient pas : le temoin rougit », donc il accusait le garde de ce
+    qui tenait au poste - exactement le faux signal que #5774 corrige ailleurs. Il le produisait chez
+    lui (#5774).
     """
+    empeche = prerequis.manque_pour(RACINE / BINAIRE_EPINGLE, "npm ci --prefix .github/openspec")
+    if empeche:
+        refuse(*empeche)
+
     script = pathlib.Path(__file__).resolve()
 
     def premier_fichier(r: pathlib.Path) -> pathlib.Path:
@@ -250,7 +301,10 @@ def auto_test() -> int:
     cas = [
         ("commande inventee", commande_inventee, 1),
         ("sous-commande inventee", sous_commande_inventee, 1),
-        ("binaire absent", sans_binaire, 1),
+        # 2 et non 1 depuis #5774 : un outil absent est « je n ai pas pu juger », pas « j ai juge et
+        # c est rouge ». Cette attente est le controle de la version d avant : elle rougit sur le
+        # garde tel qu il etait, qui ecrasait le 2 en 1.
+        ("binaire absent", sans_binaire, 2),
         ("une entree du corpus absente", entree_absente, 1),
         ("un arbre ampute d une competence", arbre_ampute, 1),
         ("en-tete YAML a cheval", entete_yaml, 0),
@@ -265,17 +319,37 @@ def auto_test() -> int:
                 shutil.copytree(source, copie / dossier, symlinks=True)
         return copie
 
-    def code_sur(copie: pathlib.Path) -> int:
-        return subprocess.run(
+    def path_sans(outil: str) -> str:
+        """Le PATH courant prive de tout repertoire qui porte `outil`.
+
+        Calcule plutot qu ecrit en dur. Un cas qui poserait « PATH=/usr/bin:/bin » decrirait CE
+        poste, ou `node` vit sous un gestionnaire de version ; ailleurs il laisserait passer un
+        `node` de /usr/bin et le cas deviendrait vert sans rien prouver.
+        """
+        garde = [
+            d
+            for d in os.environ.get("PATH", "").split(os.pathsep)
+            if d and not (pathlib.Path(d) / outil).exists()
+        ]
+        return os.pathsep.join(garde)
+
+    def lance(copie: pathlib.Path, sans: str | None = None) -> tuple[int, str]:
+        env = dict(os.environ)
+        if sans:
+            env["PATH"] = path_sans(sans)
+        rendu = subprocess.run(
             [sys.executable, str(copie / script.relative_to(RACINE)), "--verifie"],
             capture_output=True,
+            text=True,
             check=False,
-        ).returncode
+            env=env,
+        )
+        return rendu.returncode, rendu.stdout + rendu.stderr
 
     echecs = []
 
     with tempfile.TemporaryDirectory() as tmp:
-        temoin = code_sur(copie_jetable(tmp))
+        temoin, _ = lance(copie_jetable(tmp))
         print(f"  {'temoin, arbre sain':30s} -> {'vert' if temoin == 0 else f'ROUGE ({temoin})'}")
         if temoin != 0:
             echecs.append("le temoin rougit, donc les rouges qui suivent ne prouvent rien")
@@ -284,18 +358,84 @@ def auto_test() -> int:
         with tempfile.TemporaryDirectory() as tmp:
             copie = copie_jetable(tmp)
             monter(copie)
-            code = code_sur(copie)
+            code, _ = lance(copie)
             veut = "rouge" if attendu else "vert"
             obtenu = "rouge" if code == 1 else ("vert" if code == 0 else f"code {code}")
             print(f"  {nom:30s} -> {obtenu} (attendu {veut})")
             if code != attendu:
                 echecs.append(nom)
 
+    # ⟨ce que le code de sortie ne dit pas⟩ Les cas ci-dessus n assertent qu un code, et c est
+    # precisement ce qui a laisse passer le defaut de #5774 : le garde sortait bien non nul, et son
+    # TEXTE accusait le diff. Les cas qui suivent lisent la sortie.
+    # `forme_a_rougi` et non « marque » : le second rendu de la fabrique est un LECTEUR qu on
+    # APPELLE, pas la marque elle-meme. Nomme comme une marque, il finit lu comme une marque, et
+    # `if marque:` est alors toujours vrai - le defaut que la fabrique documente deja pour la
+    # liste nue. Un nom qui mente ne rougit nulle part.
+    assertion, forme_a_rougi = cas_d_auto_test()
+    comptes = [0]
+
+    def verifie(libelle: str, obtenu: object, attendu: object) -> None:
+        comptes[0] += 1
+        assertion(libelle, obtenu, attendu)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        copie = copie_jetable(tmp)
+        sans_binaire(copie)
+        code, sortie = lance(copie)
+        declare = lit_le_refus(sortie)
+        verifie("outil absent : le refus sort en 2, « je n ai pas pu juger »", code, 2)
+        verifie(
+            "outil absent : la forme DECLAREE est lue par la porte",
+            lambda: declare is not None,
+            True,
+        )
+        verifie(
+            "outil absent : le titre des constats n apparait PAS",
+            lambda: "Invocations d OpenSpec qui n existent pas" in sortie,
+            False,
+        )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        copie = copie_jetable(tmp)
+        code, sortie = lance(copie, sans="node")
+        declare = lit_le_refus(sortie)
+        verifie("interprete absent : le refus sort en 2", code, 2)
+        verifie("interprete absent : la forme declaree est lue", lambda: declare is not None, True)
+        verifie(
+            "interprete absent : la cause NOMME l interprete",
+            lambda: declare is not None and "node" in declare[0],
+            True,
+        )
+        verifie(
+            "interprete absent : la cause ne renvoie PAS a « npm ci »",
+            lambda: declare is not None and "npm ci" in declare[0],
+            False,
+        )
+        verifie(
+            "interprete absent : aucun gestionnaire de version n est nomme",
+            lambda: any(g in sortie for g in ("nvm", "asdf", "volta", "fnm")),
+            False,
+        )
+        verifie(
+            "interprete absent : le titre des constats n apparait PAS",
+            lambda: "Invocations d OpenSpec qui n existent pas" in sortie,
+            False,
+        )
+
+    # Le gage du module partage, joue ici ET dans l autre garde qui l appelle (ADR 5483).
+    for libelle, tenu in prerequis.verifie_grammaire():
+        verifie(f"prerequis : {libelle}", tenu, True)
+
+    if forme_a_rougi():
+        echecs.append("des cas de forme rougissent, lire les lignes marquees ci-dessus")
+
     if echecs:
         print("\nLe garde ne tient pas : " + ", ".join(echecs), file=sys.stderr)
         return 1
     print(
-        f"\nAuto-test concluant : vert sur l arbre sain, et les {len(cas)} cas rendent leur verdict."
+        f"\nAuto-test concluant : vert sur l arbre sain, {len(cas)} cas de code de sortie et"
+        f" {comptes[0]} cas de forme rendent leur verdict."
     )
     return 0
 
@@ -315,6 +455,12 @@ if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(auto_test())
 
+    # Le refus AVANT les constats, et son canal est le sien. `refuse` sort en 2 : « je n ai pas pu
+    # juger », que le depot distingue de « j ai juge et c est rouge » (#5485, 28 sites sur 50).
+    empeche = refus_de_conclure(RACINE)
+    if empeche:
+        refuse(*empeche)
+
     trouves = ecarts(RACINE)
     if trouves:
         print("Invocations d OpenSpec qui n existent pas :", file=sys.stderr)
@@ -328,7 +474,6 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    outil, _ = binaire(RACINE)
     print(
         f"{len(fichiers(RACINE))} fichier(s) d OpenSpec relus : toutes les invocations citees existent."
     )
