@@ -95,10 +95,15 @@ moitié et manqué la seconde.
 
 **Et la recette se rejoue dans CHAQUE arbre de travail.** `node_modules` est ignoré par git, et c'est
 voulu : une branche qui change une version épinglée serait sinon éprouvée contre celle d'une autre
-(#4849). Un `git worktree add` donne donc un arbre sans l'outil. Le crochet `post-checkout` tente de
-le poser depuis #5406, et il échoue en silence quand `npm` lui est introuvable : mesuré le
-2026-10-03, **12 des 23 arbres du poste** n'avaient aucun `node_modules`. Les deux gardes qui en
-dépendent le disent maintenant en nommant ce qui manque, et c'est l'issue #5775 qui traite la pose.
+(#4849). Un `git worktree add` donne donc un arbre sans l'outil, et c'est le crochet
+`post-checkout` qui le pose, depuis #5406.
+
+**Il y arrive désormais même si votre gestionnaire de version n'est pas sur le `PATH` d'un shell non
+interactif.** Il échouait en silence jusqu'au 2026-10-03, et **12 des 23 arbres du poste** n'avaient
+aucun `node_modules` : il cherchait `npm` dans son propre `PATH`, où le poste ne l'avait pas mis.
+Depuis #5775 il ne cherche plus, il **demande au poste** où vit son outil, en interrogeant le profil
+du shell que le poste déclare. La recette ci-dessus ne reste donc due que si ce profil ne déclare rien
+non plus, et le crochet le dit alors en nommant le shell qu'il a interrogé.
 
 **Le nom compte.** Les compétences déclarent `allowed-tools: Bash(openspec:*)`, un motif littéral
 qui n'autorise que les commandes commençant par le mot `openspec` : `npx @fission-ai/openspec` est
