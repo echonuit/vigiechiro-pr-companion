@@ -519,9 +519,15 @@ fork, ce que garantit le profil, qui ne joue que ce tag.
   déclarations du banc. Le banc vise la plateforme et dépose le jeton sans profil ; la modale le
   revérifie seule. Exemple :
   [`ScenarioPlateformeDeTestConnexionTest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/test/java/fr/univ_amu/iut/connexion/view/ScenarioPlateformeDeTestConnexionTest.java).
+- Une sonde du contrat live : `CibleLive.declaree()` rend la cible que le profil déclare
+  (`vigiechiro.cible`), la plateforme de test sous `-Pplateforme-de-test`, verrous d'écriture
+  ouverts, et la plateforme nationale sinon (#5643). Exemples : `ContratApiVigieChiroLiveTest` et
+  `AllerRetourParticipationLiveTest`, qui portent les deux tags. Le job affiche ce qu'il a sauté et
+  refuse tout saut (`scripts/plateforme-de-test/releve_des_sautes.py`) : une donnée qu'une sonde suppose
+  se déclare dans l'état de départ.
 
-Dans les deux cas la classe porte `@Tag("plateforme-de-test")`, et `DeclarationDeLaPlateformeTest`
-le refuse sinon pour un scénario.
+Dans les trois cas la classe porte `@Tag("plateforme-de-test")`, et `DeclarationDeLaPlateformeTest`
+le refuse sinon.
 
 ### Ses épingles
 

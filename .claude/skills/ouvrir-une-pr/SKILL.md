@@ -115,6 +115,11 @@ le redit : `python3 scripts/methode/prepare-l-environnement.py`, qui sort **2** 
 poser. Et les deux gardes OpenSpec ne vous laisseront pas chercher dans votre diff : ils nomment ce
 qui manque, `npm` ou l'interprète du shebang, et disent que le refus ne parle pas de votre diff.
 
+Si un **outil** a écrit des fichiers pour vous (un générateur, un bot, un éditeur sous Windows),
+`scripts/methode/verifie-normalisation-git.py` refuse un blob texte rangé en CRLF contre
+`.gitattributes` : sans lui, la demande suivante porte la renormalisation du fichier sans l'avoir
+voulue, comme `mvnw.cmd` après un bump de dependabot (#5781). `git add --renormalize` le répare.
+
 Si vous avez écrit ou modifié un **garde**, `scripts/methode/verifie-dependances-declarees.py` exige
 qu'il déclare ce dont il a besoin. Si vous avez prescrit un **outil externe** dans la méthode,
 `scripts/methode/verifie-commandes-prescrites.py` exige que la **distribution** qui l'installe soit
