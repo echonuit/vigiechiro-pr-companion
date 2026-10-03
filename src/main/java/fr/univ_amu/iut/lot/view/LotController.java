@@ -32,6 +32,7 @@ import fr.univ_amu.iut.lot.model.StatutControle;
 import fr.univ_amu.iut.lot.model.SuiviArchives;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.EtapeDepot;
+import fr.univ_amu.iut.lot.viewmodel.FormatsLot;
 import fr.univ_amu.iut.lot.viewmodel.LigneArchive;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
@@ -374,7 +375,13 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         GestionnaireColonnes.installerEtPersister(
                 tableArchives,
                 menuOutils,
-                TableSuiviArchives.configurer(tableArchives),
+                TableSuiviArchives.configurer(
+                        tableArchives,
+                        Bindings.createStringBinding(
+                                () -> FormatsLot.archivesAbsentes(
+                                        depotViewModel.disponible(),
+                                        depotViewModel.enCoursProperty().get()),
+                                depotViewModel.enCoursProperty())),
                 depotColonnes,
                 "lot",
                 "principale",

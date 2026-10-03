@@ -40,6 +40,10 @@ sont neutralisées le temps de l'écriture (on ne risque pas de téléverser une
     Conséquence directe : il n'est plus nécessaire d'avoir la place pour **toutes** les archives à la
     fois. Le téléversement n'en garde que **deux** sur le disque à un instant donné.
 
+    C'est pourquoi le tableau de cette étape reste **vide pendant et après un téléversement** : il ne
+    liste que les archives conservées sur votre machine. Il le dit, et vous renvoie à l'étape 3, qui
+    suit celles qui partent.
+
 ![Génération des archives en cours : indicateur d'activité, actions désactivées.](../assets/captures/apercu-lot-generation.png)
 
 Le tableau de suivi des archives laisse **choisir et réordonner ses colonnes** (clic droit ou menu principal (☰)

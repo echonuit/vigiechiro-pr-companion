@@ -49,7 +49,7 @@ class DeclarationDesBindingsTest {
     /// `carreRecuperable`. Les trois derniers sont déclarés ; `carreValide` ne l'est pas **directement**,
     /// mais `peutEnregistrer` en dépend par construction (`carreValide.and(…)`), donc toute invalidation
     /// du carré invalide le binding. Déclaration jugée **complète**.
-    private static final int SITES_RELEVES = 64;
+    private static final int SITES_RELEVES = 65; // +1 #5679 : texte de l'étape 2 vide, lit enCours (déclaré)
 
     private static final Pattern APPEL = Pattern.compile("Bindings\\.create[A-Za-z]*Binding\\s*\\(");
 

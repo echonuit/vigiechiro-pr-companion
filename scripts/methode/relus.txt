@@ -869,7 +869,7 @@ afc956093fe2  src/main/java/fr/univ_amu/iut/lot/view/EtapeDeposerUI.java
 2020a70711b5  src/main/java/fr/univ_amu/iut/lot/view/NavigationLot.java
 c5fa1ea4b7ca  src/main/java/fr/univ_amu/iut/lot/view/RelaisSuiviDepot.java
 477cfe8018aa  src/main/java/fr/univ_amu/iut/lot/view/SuiviTraitementUI.java
-03755605e5fc  src/main/java/fr/univ_amu/iut/lot/view/TableSuiviArchives.java
+8c6ff3cba951  src/main/java/fr/univ_amu/iut/lot/view/TableSuiviArchives.java
 e554f3487a58  src/main/java/fr/univ_amu/iut/lot/view/TableSuiviDepot.java
 6fd25edee160  src/main/java/fr/univ_amu/iut/lot/view/ZonesStatutLot.java
 ccafcb35d57b  src/main/java/fr/univ_amu/iut/lot/viewmodel/ActionsLotPossibles.java
@@ -878,7 +878,7 @@ ccafcb35d57b  src/main/java/fr/univ_amu/iut/lot/viewmodel/ActionsLotPossibles.ja
 18909b0c9d94  src/main/java/fr/univ_amu/iut/lot/viewmodel/DepotViewModel.java
 e9f04bc3d4e2  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapeDepot.java
 50dc6253c4b3  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepot.java
-9d29ec9ca248  src/main/java/fr/univ_amu/iut/lot/viewmodel/FormatsLot.java
+60af85f48ec1  src/main/java/fr/univ_amu/iut/lot/viewmodel/FormatsLot.java
 f34d4fc31171  src/main/java/fr/univ_amu/iut/lot/viewmodel/FormatsTraitement.java
 134f854b8d1d  src/main/java/fr/univ_amu/iut/lot/viewmodel/LigneArchive.java
 1491fefec699  src/main/java/fr/univ_amu/iut/lot/viewmodel/LigneDepot.java
@@ -1855,7 +1855,7 @@ ae11ec951a61  src/test/java/fr/univ_amu/iut/lot/model/CauseRefusTest.java
 ae8befae454c  src/test/java/fr/univ_amu/iut/lot/model/EchecUniteTest.java
 96b01547377d  src/test/java/fr/univ_amu/iut/lot/model/TeleversementsEnCoursTest.java
 e5e661641791  src/test/java/fr/univ_amu/iut/lot/model/TeleverseurArchiveTest.java
-ff8a444634fb  src/test/java/fr/univ_amu/iut/lot/view/LotDepotConnecteViewTest.java
+f6b2bf813d1e  src/test/java/fr/univ_amu/iut/lot/view/LotDepotConnecteViewTest.java
 d290c4438c53  src/test/java/fr/univ_amu/iut/lot/view/LotIdentiteStatutViewTest.java
 21de420b4e35  src/test/java/fr/univ_amu/iut/lot/view/LotViewTest.java
 0296639e177a  src/test/java/fr/univ_amu/iut/lot/view/LotVueIntegrationTest.java
@@ -1866,7 +1866,7 @@ a11734ef6c52  src/test/java/fr/univ_amu/iut/lot/view/ScenarioPerceptifRefusDepot
 9ac41c207f58  src/test/java/fr/univ_amu/iut/lot/viewmodel/CompteRenduChiffreDepotTest.java
 574d9a5f5500  src/test/java/fr/univ_amu/iut/lot/viewmodel/DepotViewModelTest.java
 f61a0b707877  src/test/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepotTest.java
-2e3bac8e0115  src/test/java/fr/univ_amu/iut/lot/viewmodel/FormatsLotTest.java
+c8d105f62892  src/test/java/fr/univ_amu/iut/lot/viewmodel/FormatsLotTest.java
 d6631c931ec3  src/test/java/fr/univ_amu/iut/lot/viewmodel/FormatsTraitementFuseauTest.java
 37db91b43485  src/test/java/fr/univ_amu/iut/lot/viewmodel/LotViewModelTest.java
 33cf48ab34a4  src/test/java/fr/univ_amu/iut/lot/viewmodel/MessagesLotTest.java

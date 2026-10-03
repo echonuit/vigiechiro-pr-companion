@@ -81,6 +81,26 @@ public final class FormatsLot {
                 + (definitif ? "." : " Réessayez plus tard.");
     }
 
+    /// Ce que dit l'étape 2 quand aucune archive n'est sur le disque (#5679). Le téléversement produit
+    /// ses ZIP au fil de l'envoi et supprime chacun une fois en ligne : « aucune archive » y contredisait
+    /// l'étape 3, qui les montrait partir. Le dépôt automatique est présent dans toute l'application,
+    /// connecté ou non ; seuls les contextes partiels (outils, tests) s'en passent.
+    ///
+    /// @param depotAutomatique `true` si le téléversement vers Vigie-Chiro est offert
+    /// @param televersementEnCours `true` pendant un téléversement
+    /// @return le texte, jamais vide
+    public static String archivesAbsentes(boolean depotAutomatique, boolean televersementEnCours) {
+        if (!depotAutomatique) {
+            return "Aucune archive de dépôt pour l'instant.";
+        }
+        if (televersementEnCours) {
+            return "Le téléversement produit ses archives au fil de l'envoi et les supprime une fois en ligne :"
+                    + " suivez-les à l'étape 3.";
+        }
+        return "Aucune archive conservée sur ce poste. Le téléversement (étape 3) produit les siennes et les"
+                + " supprime une fois en ligne ; générez-les ici seulement pour un dépôt manuel.";
+    }
+
     public static String libelleDepotEnCours(int deposees, int enCours, int echecs, int total) {
         if (total == 0) {
             return "Dépôt en préparation…";

@@ -66,4 +66,18 @@ class FormatsLotTest {
         assertThat(FormatsLot.libelleDepotEnCours(3, 5, 1, 21))
                 .isEqualTo("Dépôt : 3/21 déposé(s) · 5 en cours · 1 échec(s)");
     }
+
+    /// Trois états, trois textes (#5679) : l'étape 2 vide ne doit pas contredire l'étape 3, qui envoie
+    /// des archives produites puis supprimées au fil du téléversement.
+    @Test
+    @DisplayName("#5679 : le texte de l'étape 2 vide suit la connexion et le téléversement")
+    void l_etape_2_vide_suit_la_connexion_et_le_televersement() {
+        assertThat(FormatsLot.archivesAbsentes(false, false)).isEqualTo("Aucune archive de dépôt pour l'instant.");
+        assertThat(FormatsLot.archivesAbsentes(true, false))
+                .isEqualTo("Aucune archive conservée sur ce poste. Le téléversement (étape 3) produit les siennes"
+                        + " et les supprime une fois en ligne ; générez-les ici seulement pour un dépôt manuel.");
+        assertThat(FormatsLot.archivesAbsentes(true, true))
+                .isEqualTo("Le téléversement produit ses archives au fil de l'envoi et les supprime une fois en"
+                        + " ligne : suivez-les à l'étape 3.");
+    }
 }
