@@ -31,6 +31,18 @@ Le titre de l'étape 4 est un libellé figé de `Lot.fxml`.
 
 **D5. Le titre de l'étape 4 se lie au lien de participation.** Le même lien qui change déjà le texte et l'icône du bouton change le titre : un seul critère pour les trois.
 
+**D6. Les textes, validés par le porteur le 3 octobre 2026** (tâche 2.1) :
+
+| Issue | Zone de retour de l'étape 4 |
+|---|---|
+| acceptée | Analyse demandée à Vigie-Chiro. Elle prend souvent plusieurs dizaines de minutes : vous pouvez fermer l'application, et la suivre ci-dessous. |
+| déjà demandée | L'analyse de cette nuit est déjà demandée : il n'y a qu'à attendre. Suivez-la ci-dessous. |
+| déjà analysée | le texte actuel, inchangé |
+| refus | Vigie-Chiro a refusé de lancer l'analyse : <motif de la plateforme>. |
+| injoignable | Vigie-Chiro est injoignable : l'analyse n'a pas été demandée. Réessayez plus tard. |
+
+Bouton grisé, analyse demandée : « L'analyse de cette nuit est demandée à Vigie-Chiro : suivez-la dans la carte « Traitement Vigie-Chiro » ci-dessous. »
+
 ## Risks / Trade-offs
 
 - [Le relevé qui suit un lancement accepté échoue (plateforme injoignable)] : l'état « analyse demandée » reste inconnu et le bouton se réactive. Un second clic reçoit « analyse déjà demandée », que la zone de l'étape 4 dit sans ambiguïté. → Accepté : ne rien affirmer qu'on n'a pas relevé.
@@ -39,4 +51,4 @@ Le titre de l'étape 4 est un libellé figé de `Lot.fxml`.
 
 ## Open Questions
 
-Aucune qui change les specs ou le découpage. Les textes de la zone de retour et de l'explication du bouton grisé restent à valider par le porteur : c'est la tâche 2.1, avant le code du groupe 2, comme pour les libellés du lot 16.
+Aucune : les textes du groupe 2 sont validés (D6).
