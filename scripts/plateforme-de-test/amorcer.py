@@ -29,9 +29,12 @@ Un objet se cite par sa `cle`, jamais par `nom`, qui est un vrai champ de l API.
 from __future__ import annotations
 
 import argparse
+import csv
 import datetime
 import hashlib
+import io
 import json
+import math
 import pathlib
 import secrets
 import string
@@ -47,7 +50,26 @@ COLLECTIONS = (
     "sites",
     "participations",
     "donnees",
+    "fichiers",
 )
+
+# Le CSV d observations que le worker produit, et que la plateforme de test DECLARE faute de worker
+# (ADR 5641) : memes colonnes, meme separateur, meme guillemetage que
+# `vigiechiro/scripts/task_observations_csv.py` a la revision epinglee (#5747).
+COLONNES_DU_CSV = (
+    "nom du fichier",
+    "temps_debut",
+    "temps_fin",
+    "frequence_mediane",
+    "tadarida_taxon",
+    "tadarida_probabilite",
+    "tadarida_taxon_autre",
+    "observateur_taxon",
+    "observateur_probabilite",
+    "validateur_taxon",
+    "validateur_probabilite",
+)
+MIME_PROCESSING_EXTRA = "application/x-processing-extra"
 
 
 def identifiant(collection: str, cle: str) -> str:
@@ -126,7 +148,10 @@ def documents(declaration: dict) -> dict[str, list[dict]]:
 
     protocole_du_site = {}
     for s in declaration.get("sites", []):
-        doc = meta("sites", s["cle"]) | corps(s, ("protocole", "observateur", "grille_stoc"))
+        doc = meta("sites", s["cle"]) | corps(
+            s, ("protocole", "observateur", "grille_stoc", "localites")
+        )
+        doc["localites"] = [_localite(loc) for loc in s.get("localites", [])]
         doc["protocole"] = ref("protocoles", s["protocole"], f"le site {s['cle']}")
         doc["observateur"] = ref("utilisateurs", s["observateur"], f"le site {s['cle']}")
         if "grille_stoc" in s:
@@ -158,6 +183,73 @@ def documents(declaration: dict) -> dict[str, list[dict]]:
         ]
         rendu["donnees"].append(doc)
 
+    for f in declaration.get("fichiers", []):
+        participation = ref("participations", f["participation"], f"le fichier {f['cle']}")
+        doc = meta("fichiers", f["cle"]) | {
+            "titre": _titre_du_csv(f),
+            "mime": MIME_PROCESSING_EXTRA,
+            "proprietaire": _oid("utilisateurs", observateur_de[f["participation"]]),
+            "disponible": True,
+            "s3_id": _s3_id(f),
+            "lien_participation": participation,
+        }
+        rendu["fichiers"].append(doc)
+
+    return rendu
+
+
+def _localite(declaree: dict) -> dict:
+    """Une localite comme la plateforme la stocke : `[lat, lon]`, a rebours du GeoJSON.
+
+    C est l ordre qu ecrit et relit `LocalitesVigieChiro` cote Companion. Une localite sans `point`
+    reste sans geometrie, donc sans point lisible.
+    """
+    localite = {"nom": declaree["nom"], "representatif": False}
+    if "point" in declaree:
+        lat, lon = declaree["point"]
+        localite["geometries"] = {
+            "type": "GeometryCollection",
+            "geometries": [{"type": "Point", "coordinates": [lat, lon]}],
+        }
+    return localite
+
+
+def _titre_du_csv(fichier: dict) -> str:
+    return (
+        f"participation-{identifiant('participations', fichier['participation'])}-observations.csv"
+    )
+
+
+def _s3_id(fichier: dict) -> str:
+    return f"plateforme-de-test/{fichier['cle']}"
+
+
+def objets(declaration: dict) -> dict[str, str]:
+    """Le contenu de chaque fichier declare, par `s3_id`. Pure.
+
+    Le CSV d observations se derive des donnees declarees de sa participation, rangees par titre, au
+    format du worker : `;`, guillemets sur ce qui n est pas un nombre, le taxon par son libelle court.
+    """
+    libelle = {t["cle"]: t["libelle_court"] for t in declaration.get("taxons", [])}
+    rendu = {}
+    for f in declaration.get("fichiers", []):
+        tampon = io.StringIO()
+        ecrivain = csv.writer(tampon, delimiter=";", quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+        ecrivain.writerow(COLONNES_DU_CSV)
+        donnees = sorted(
+            (d for d in declaration.get("donnees", []) if d["participation"] == f["participation"]),
+            key=lambda d: d["titre"],
+        )
+        for d in donnees:
+            for o in d.get("observations", []):
+                valeurs = {
+                    "nom du fichier": d["titre"],
+                    "temps_debut": o.get("temps_debut") or "0.0",
+                    "temps_fin": o.get("temps_fin") or "0.0",
+                    "tadarida_taxon": libelle[o["tadarida_taxon"]],
+                }
+                ecrivain.writerow([valeurs.get(c, o.get(c)) or "" for c in COLONNES_DU_CSV])
+        rendu[_s3_id(f)] = tampon.getvalue()
     return rendu
 
 
@@ -202,7 +294,7 @@ def materialise(declaration: dict, url_mongo: str, init_db: str | None) -> dict:
         for c in COLLECTIONS
         for o in declaration.get(c, [])
     }
-    return {"jetons": jetons, "ids": ids}
+    return {"jetons": jetons, "ids": ids, "objets": objets(declaration)}
 
 
 def auto_test() -> int:
@@ -229,7 +321,7 @@ def auto_test() -> int:
     )
     (site,) = docs["sites"]
     vierge, traitee = docs["participations"]
-    (donnee,) = docs["donnees"]
+    donnee = docs["donnees"][0]
     observatrice = next(u for u in docs["utilisateurs"] if u["role"] == "Observateur")
     verifie(
         "une participation porte le protocole de son site, sans qu on le repete",
@@ -258,6 +350,53 @@ def auto_test() -> int:
             for x in (vierge, traitee)
         ],
         [True, True],
+    )
+    lat, lon = site["localites"][0]["geometries"]["geometries"][0]["coordinates"]
+    centre_lon, centre_lat = docs["grille_stoc"][0]["centre"]["coordinates"]
+    verifie(
+        "la localite porte son point en [lat, lon], dans son carre mais LOIN de son centre",
+        # Un point AU centre rend son carre meme a r = 1 m, ce que la sonde de grille lit comme une
+        # grille en polygones : mesure sur #5747. Un point de terrain en est a des centaines de metres.
+        lambda: (
+            300
+            < math.hypot(
+                (lat - centre_lat) * 111_320,
+                (lon - centre_lon) * 111_320 * math.cos(math.radians(centre_lat)),
+            )
+            < 1_000
+        ),
+        True,
+    )
+    verifie(
+        "la nuit traitee porte au moins deux donnees, pour la sonde du filtre",
+        lambda: sum(d["participation"] == traitee["_id"] for d in docs["donnees"]) >= 2,
+        True,
+    )
+    (fichier,) = docs["fichiers"]
+    verifie(
+        "le CSV est une piece jointe processing_extra de la nuit traitee, disponible",
+        lambda: (fichier["mime"], fichier["lien_participation"], fichier["disponible"]),
+        ("application/x-processing-extra", traitee["_id"], True),
+    )
+    verifie(
+        "son titre est celui que le worker donne",
+        lambda: fichier["titre"],
+        f"participation-{traitee['_id']['$oid']}-observations.csv",
+    )
+    contenu = objets(declaration)
+    lignes = contenu[fichier["s3_id"]].splitlines()
+    verifie(
+        "le contenu est range sous le s3_id du fichier", lambda: list(contenu), [fichier["s3_id"]]
+    )
+    verifie(
+        "l entete est celle du worker, au separateur `;`",
+        lambda: lignes[0].replace('"', "").split(";"),
+        list(COLONNES_DU_CSV),
+    )
+    verifie(
+        "une ligne par observation declaree, le taxon par son libelle court",
+        lambda: [ligne.split(";")[4] for ligne in lignes[1:]],
+        ['"Pippip"', '"Pippip"'],
     )
     verifie(
         "aucun jeton ne sort de la moitie pure",

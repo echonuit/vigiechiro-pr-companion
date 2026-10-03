@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.api.plateforme;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.ByteArrayInputStream;
@@ -141,6 +142,7 @@ public final class PlateformeDeTest implements BeforeAllCallback {
         api.start();
 
         JsonObject amorce = amorcer(api, dossier);
+        deposer(urlS3, amorce.getAsJsonObject("objets"));
         return new Acces(
                 "http://" + api.getHost() + ":" + api.getMappedPort(8080) + "/api/v1",
                 urlS3,
@@ -162,6 +164,32 @@ public final class PlateformeDeTest implements BeforeAllCallback {
                 throw new IllegalStateException("l'amorçage a échoué : " + rendu.getStderr());
             }
             return JsonParser.parseString(rendu.getStdout()).getAsJsonObject();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /// Dépose dans le faux S3 les fichiers que l'état de départ déclare, chacun à sa clé `s3_id` (#5747).
+    ///
+    /// C'est la JVM qui dépose, et non l'amorçage : en mode `DEV_FAKE_S3_URL`, l'API rend comme URL
+    /// d'accès l'adresse que la JVM joint, et son propre conteneur ne la joint pas. Le contexte TLS
+    /// par défaut accepte déjà le certificat du faux S3.
+    private static void deposer(String urlS3, JsonObject objets) {
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            for (Map.Entry<String, JsonElement> objet : objets.entrySet()) {
+                HttpRequest requete = HttpRequest.newBuilder(URI.create(urlS3 + "/" + objet.getKey()))
+                        .PUT(HttpRequest.BodyPublishers.ofString(
+                                objet.getValue().getAsString()))
+                        .build();
+                int statut = client.send(requete, HttpResponse.BodyHandlers.discarding())
+                        .statusCode();
+                if (statut != 200) {
+                    throw new IllegalStateException("le faux S3 refuse " + objet.getKey() + " : " + statut);
+                }
+            }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (InterruptedException e) {

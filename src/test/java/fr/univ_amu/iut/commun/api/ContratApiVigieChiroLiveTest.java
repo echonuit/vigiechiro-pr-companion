@@ -13,6 +13,11 @@ import fr.univ_amu.iut.commun.api.plateforme.CibleLive;
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -367,7 +372,7 @@ class ContratApiVigieChiroLiveTest {
             + " Découverte via pieces_jointes?processing_extra=true (PAS /fichiers, non listable), puis"
             + " /fichiers/{id}/acces -> URL signée. Entête Tadarida BRUT, sans _id : un seul téléchargement"
             + " remplace les ~48 pages de donnees (reconstruction quasi instantanée)")
-    void csv_observations_est_telechargeable_via_pieces_jointes() {
+    void csv_observations_est_telechargeable_via_pieces_jointes() throws IOException, InterruptedException {
         String participation = participationTraitee();
 
         // La BONNE route de découverte : pieces_jointes filtré sur processing_extra. Le CSV d'observations
@@ -404,14 +409,10 @@ class ContratApiVigieChiroLiveTest {
                 .isEmpty();
 
         // Téléchargement direct, SANS Authorization (la signature de l'URL fait foi) et SANS ré-encoder
-        // l'URL (sinon la signature casse). Un seul appel ramène toutes les observations.
-        String csv = given().urlEncodingEnabled(false)
-                .when()
-                .get(urlSignee)
-                .then()
-                .statusCode(200)
-                .extract()
-                .asString();
+        // l'URL (sinon la signature casse). Un seul appel ramène toutes les observations. Par le
+        // client du JDK, comme Companion, et non par RestAssured : lui seul suit le contexte TLS par
+        // défaut, celui qui accepte le faux S3 de la plateforme de test (#5747).
+        String csv = telecharger(urlSignee);
         String entete = csv.lines().findFirst().orElse("");
         assertThat(entete)
                 .as("entête Tadarida BRUT (séparateur ';', champs quotés)")
@@ -493,6 +494,16 @@ class ContratApiVigieChiroLiveTest {
     // ÉCRIVENT sur la plateforme (fichier d'essai, PATCH quasi no-op) : à lancer sciemment, jamais
     // en veille périodique. Leur échec est un VERDICT documenté, pas forcément une régression.
     // ---------------------------------------------------------------------------------------------
+
+    /// Le corps d'une URL signée, attendue en `200`, sans en-tête d'authentification.
+    private static String telecharger(String url) throws IOException, InterruptedException {
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpResponse<String> reponse =
+                    client.send(HttpRequest.newBuilder(URI.create(url)).build(), HttpResponse.BodyHandlers.ofString());
+            assertThat(reponse.statusCode()).as("téléchargement de %s", url).isEqualTo(200);
+            return reponse.body();
+        }
+    }
 
     /// Garde des probes d'écriture : ignorées sans l'opt-in explicite.
     private static void supposerEcritureAutorisee() {
