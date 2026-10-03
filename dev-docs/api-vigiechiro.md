@@ -29,14 +29,28 @@ compréhension de l'API est **exécutable** : une suite qui tape l'API réelle e
 
 ## Lancer la vérification
 
-!!! warning "Jamais en CI"
-    Ces vérifications frappent l'API **de production** et exigent un token 14 j. Elles sont **exclues du
-    build par défaut** (le tag `api-live` figure dans `surefire.excludedGroups`) et ne tournent qu'à la
-    demande. Ce qui se vérifie **sans jeton**, contre une API Vigie-Chiro montée par les tests eux-mêmes :
-    la [plateforme de test](tests-et-qualite.md#la-plateforme-de-test).
+!!! warning "Deux cibles, et une seule à chaque demande de fusion"
+    Ces vérifications sont **exclues du build par défaut** (le tag `api-live` figure dans
+    `surefire.excludedGroups`). Elles jouent sur deux cibles (ADR 5641, #5643) :
 
-Récupérer un token : sur le site VigieChiro connecté, exécuter le marque-page qui lit
-`localStorage['auth-session-token']`.
+    - **la plateforme de test, à chaque demande de fusion**, dans le job `plateforme-de-test` de
+      `maven.yml` : l'API épinglée, montée par les tests eux-mêmes, sans jeton, écritures comprises,
+      rien n'y étant à abîmer. Le job affiche ses tests sautés et leur motif, et refuse un saut dû au
+      jeton (#5748) ;
+    - **la plateforme nationale, chaque lundi, en lecture seule**, dans `api-live.yml`, avec le secret
+      `VIGIECHIRO_TOKEN` ; `veille_contrat_api.py` fait rougir si trois passages manquent.
+
+    Aucune demande de fusion ne joue la plateforme nationale, et **aucune écriture n'y part en CI** :
+    les sondes d'écriture ne la visent qu'à la main, derrière les verrous ci-dessous.
+
+Sans jeton, sur la plateforme de test (il faut Docker) :
+
+```bash
+./mvnw -Pplateforme-de-test test
+```
+
+Sur la plateforme nationale, récupérer un token : sur le site VigieChiro connecté, exécuter le
+marque-page qui lit `localStorage['auth-session-token']`.
 
 === "REST-assured (référence)"
 
