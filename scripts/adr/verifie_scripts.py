@@ -1022,9 +1022,34 @@ def test_5707_geste_du_pointeur_hors_du_fil() -> None:
         # LE SECOND FAIT, celui qui distingue ce cliquet d un compte : le MEME geste, situe sur le
         # fil, sort des suspects et RESTE dans la population. Sans le second nombre, un detecteur
         # qui aurait simplement cesse de VOIR la forme juste passerait ce cas.
-        _ecrire(racine, "fr/a/A.java", classe('robot.clickOn(pointSurLeFil(robot, "#valider"));'))
+        #
+        # ⟨LA FIXTURE DECLARE SON AIDE depuis #5767⟩ Elle appelait `pointSurLeFil` sans la definir, et
+        # le detecteur la tenait pour saine : il lisait le NOM. Elle porte desormais l aide, et l aide
+        # ROUTE - c est ce que le detecteur verifie.
+        def avecAide(corps: str) -> str:
+            return (
+                "class A {\n"
+                '    void t() { robot.clickOn(pointSurLeFil(robot, "#valider")); }\n'
+                "    private Point2D pointSurLeFil(FxRobot r, String c) {\n"
+                f"        {corps}\n"
+                "    }\n"
+                "}\n"
+            )
+
+        _ecrire(
+            racine, "fr/a/A.java", avecAide('return Attente.surLeFil(() -> r.point(c), "x", 5L);')
+        )
         _verifie("5707 le meme geste situe sur le fil sort du compte", m.suspects(racine), [])
         _verifie("5707 et la forme juste reste LUE", m.lus(racine), 1)
+
+        # ⟨LE CAS QUI MANQUAIT (#5767)⟩ La MEME aide, sous le MEME nom, SANS aller-retour de fil. Le
+        # detecteur d avant la tenait pour saine, et la mutation qui retirait le routage SURVIVAIT.
+        _ecrire(racine, "fr/a/A.java", avecAide("return r.point(c).query();"))
+        _verifie(
+            "5707 une aide qui garde le nom et perd le routage est vue",
+            m.suspects(racine),
+            ["fr/a/A.java:2"],
+        )
 
         # Et un clic SANS CIBLE n est pas accuse : c est ce qui empeche le detecteur de compter tout
         # `clickOn` et de rendre un cliquet plausible et faux.

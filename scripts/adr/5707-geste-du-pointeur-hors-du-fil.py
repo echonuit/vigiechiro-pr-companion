@@ -45,10 +45,49 @@ GESTES = frozenset({"moveTo", "clickOn", "doubleClickOn", "rightClickOn", "drag"
 # branche qu aucun cas ne peut exercer est une branche qui ne tient rien.
 HORS_CIBLE = re.compile(r"^MouseButton\s*\.")
 
-# La forme JUSTE : la cible a ete situee SUR LE FIL, et le geste ne recoit plus qu un point d ecran.
-# Elle reste dans la population pour que l auto-test puisse montrer qu elle en SORT : un detecteur
-# qui ne verrait jamais la forme juste ne prouverait pas qu il la distingue.
-SUR_LE_FIL = "pointSurLeFil("
+# ⟨LA FORME JUSTE SE LIT A LA STRUCTURE, PLUS AU NOM (#5767)⟩ Ce garde tenait une cible pour saine
+# parce que son argument contenait `pointSurLeFil(`. Le banc de mutation de #5734 l a pris en defaut :
+# une aide qui **garde** ce nom et **perd** son aller-retour de fil passait, et la mutation SURVIVAIT.
+#
+# L ADR 5707 declarait l autre sens de cette limite, le benin - une aide correcte sous un AUTRE nom
+# serait comptee a tort, donc le cliquet trop haut, une perte de precision. Celui-ci est le dangereux :
+# le cliquet trop bas, et il atteste d une propriete que plus rien ne tient.
+#
+# Un site est donc sain quand son argument NOMME une aide du fichier dont le corps ROUTE vers le fil.
+# C est la machinerie de l ADR 5278, qui suit la delegation par la structure depuis #5430, et dont
+# j herite l approximation declaree : la presence de l appel suffit, on ne verifie pas que toute
+# lecture y est enfermee. Une aide qui route PUIS lit hors du fil passe encore - c est la propriete
+# plus faible mais vraie du garde Java de #4246, « un helper qui lit le graphe route quelque part ».
+#
+# Mesure du 2026-10-02, avant d ecrire : 162 suspects sous l ancienne regle comme sous la nouvelle, et
+# ZERO site change de statut. Elargir une definition fait monter un cliquet, et un cliquet qui monte
+# est une decision ; il n y en a pas ici, les 162 ne nommant aucune aide.
+ROUTAGE = re.compile(
+    r"Attente\.surLeFil\(|robot\.interact\(|WaitForAsyncUtils\.asyncFx\(|Platform\.runLater\("
+)
+
+# Un appel de fonction par son nom, pour savoir quelles aides l argument nomme. Le motif est large
+# a dessein : il rend aussi `point(` ou `query(`, qui ne sont pas des aides du fichier et que
+# l intersection avec `aidesQuiRoutent` ecarte sans qu on ait a les enumerer.
+APPEL_NOMME = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(")
+
+
+def aidesQuiRoutent(racine_ast) -> frozenset[str]:
+    """Les methodes du fichier dont le corps contient un appel de ROUTAGE vers le fil JavaFX.
+
+    Le corps se borne par la STRUCTURE et non par equilibrage d accolades : c est la lecon que
+    l ADR 5278 a payee en #5430, ou une accolade vivant dans une chaine tronquait le corps et faisait
+    perdre l aide. Un faux negatif silencieux, sur un cliquet.
+    """
+    routent = set()
+    for declaration in noeuds_de_type(racine_ast, ["method_declaration"]):
+        nom = declaration.child_by_field_name("name")
+        corps = declaration.child_by_field_name("body")
+        if nom is None or corps is None:
+            continue
+        if ROUTAGE.search(corps.text.decode()):
+            routent.add(nom.text.decode())
+    return frozenset(routent)
 
 
 def appels_de_pointeur(racine_ast) -> list:
@@ -74,11 +113,17 @@ def appels_de_pointeur(racine_ast) -> list:
 
 
 def sites_de(racine_ast) -> list[int]:
-    """Les lignes des gestes dont la cible est situee HORS du fil, depuis un ARBRE deja lu."""
+    """Les lignes des gestes dont la cible est situee HORS du fil, depuis un ARBRE deja lu.
+
+    LIMITE DECLAREE : l aide doit vivre dans le MEME fichier. Une aide importee d ailleurs echappe,
+    comme chez l ADR 5278 qui le declare depuis #5330. Le corpus n en porte aucune aujourd hui -
+    `GesteVisible` heberge ses six sites et leurs aides - et rien ne l interdit.
+    """
+    routent = aidesQuiRoutent(racine_ast)
     return [
         appel.start_point[0] + 1
         for appel, cible in appels_de_pointeur(racine_ast)
-        if SUR_LE_FIL not in cible.text.decode()
+        if not (set(APPEL_NOMME.findall(cible.text.decode())) & routent)
     ]
 
 
@@ -126,12 +171,46 @@ def _auto_test() -> int:
     litteral = 'class T { void f() { robot.clickOn("#valider"); } }\n'
     verifie("un selecteur LITTERAL est vu", lambda: sites(litteral), [1])
 
-    juste = 'class T { void f() { robot.clickOn(pointSurLeFil(robot, "#valider")); } }\n'
+    # ⟨LA FORME JUSTE DECLARE SON AIDE (#5767)⟩ Jusqu ici cette fixture appelait `pointSurLeFil` sans
+    # la definir, et le garde la tenait pour saine : il lisait le NOM. Elle porte desormais l aide, et
+    # l aide route - c est ce que le garde verifie.
+    def classeAvecAide(corps_de_l_aide: str) -> str:
+        return (
+            "class T {\n"
+            '    void f() { robot.clickOn(pointSurLeFil(robot, "#valider")); }\n'
+            "    private Point2D pointSurLeFil(FxRobot robot, String cible) {\n"
+            f"        {corps_de_l_aide}\n"
+            "    }\n"
+            "}\n"
+        )
+
+    juste = classeAvecAide('return Attente.surLeFil(() -> robot.point(cible).query(), "x", 5L);')
     verifie("le MEME geste, situe sur le fil, ne l est plus", lambda: sites(juste), [])
 
     # LA POPULATION, a part de ce qui est retenu : la forme juste doit RESTER lue, sans quoi le
     # garde ne prouverait pas qu il la distingue - il pourrait simplement ne pas la voir.
     verifie("et la forme juste reste DANS la population", lambda: lus_de(juste), 1)
+
+    # ⟨LE CAS QUI MANQUAIT, ET QUI EST TOUT L OBJET DE #5767⟩ La MEME aide, sous le MEME nom, SANS
+    # aller-retour de fil. L ancien garde la tenait pour saine ; celui-ci la voit. La mutation M2 du
+    # banc de #5734 faisait exactement cela, et elle SURVIVAIT.
+    menteuse = classeAvecAide("return robot.point(cible).query();")
+    verifie("une aide qui GARDE le nom et PERD le routage est vue", lambda: sites(menteuse), [2])
+    verifie("et elle reste dans la population", lambda: lus_de(menteuse), 1)
+
+    # ⟨LES AUTRES FORMES DE ROUTAGE comptent aussi⟩ `robot.interact` et `asyncFx` routent comme
+    # `Attente.surLeFil`, et l ADR 5278 les traite de meme. Sans ce cas, le garde n accepterait
+    # qu une seule ecriture du bon geste et crierait sur les deux autres.
+    for routage in (
+        "robot.interact(() -> {});",
+        "WaitForAsyncUtils.asyncFx(() -> null);",
+        "Platform.runLater(() -> {});",
+    ):
+        verifie(
+            f"« {routage.split('(')[0]} » route aussi",
+            lambda r=routage: sites(classeAvecAide("" + r)),
+            [],
+        )
 
     # LES CINQ FORMES REELLES DU DEPOT, mesurees a l arbre le 2026-10-01 sur 170 appels : 110
     # selecteurs litteraux, 30 identifiants, 21 `lookup` imbriques, 7 concatenations, 1 transtypage.
@@ -195,10 +274,13 @@ CONTRAT = {
     "`dropTo` de src/test/java qui SITUENT une cible, l argument etant delimite par la STRUCTURE. "
     "`press` et `release` en sortent : ils agissent ou le pointeur est deja. Un premier argument "
     "`MouseButton.*` ou `KeyCode.*` en sort aussi, et un appel NU `clickOn()` egalement. La forme "
-    "JUSTE, `pointSurLeFil(...)`, reste DANS la population et hors des suspects, pour que l "
-    "auto-test prouve qu elle est distinguee. LIMITE DECLAREE : un geste dont la cible est situee "
-    "sur le fil par une aide d un AUTRE nom echapperait - le garde reconnait un nom, pas une "
-    "propriete",
+    "JUSTE - un argument qui NOMME une aide du fichier dont le corps ROUTE vers le fil - reste "
+    "DANS la population et hors des suspects, pour que l auto-test prouve qu elle est distinguee. "
+    "Depuis #5767 le garde lit la STRUCTURE de l aide et non son nom : une aide qui garde le nom "
+    "et perd son routage est vue. DEUX LIMITES DECLAREES : une aide vivant dans un AUTRE fichier "
+    "echappe, comme chez l ADR 5278 depuis #5330 ; et la presence de l appel de routage suffit, "
+    "on ne verifie pas que toute lecture y est enfermee - une aide qui route PUIS lit hors du fil "
+    "passe encore",
     "dispositif": "cliquet",
     "seuil": "162, polarite=descend",
     "temoin": "scripts/adr/5707-geste-du-pointeur-hors-du-fil.py --auto-test",
