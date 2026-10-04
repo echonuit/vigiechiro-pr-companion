@@ -256,10 +256,10 @@ peuvent pas dire si le premier import « paraît instantané » ni si « Annuler
   **progresse** : noter la durée totale.
 - **S4-89** · *hors-portée: une récupération assez longue pour que « Annuler » puisse rendre la main AVANT la fin. Sans durée, il n'y a rien à interrompre* · Le bouton **Annuler** de cette fenêtre rend la main **avant** la fin, et le bandeau n'annonce aucune
   publication.
-- **S4-90** · *hors-portée: des corrections réellement publiées, et un bandeau qui rend compte de ce que la plateforme en a fait* · Après une publication menée à son terme, le bandeau annonce les corrections envoyées **sans écart
+- **S4-90** · Après une publication menée à son terme, le bandeau annonce les corrections envoyées **sans écart
   « sans ancrage »**.
 - **S4-91** · *hors-portée: la fiche WEB de la plateforme, dans un navigateur. Aucun carton n'y peut rien : il remplace une ÉTAPE muette, pas l'observable lui-même* · Sur le portail Vigie-Chiro, l'observation porte le taxon et la certitude déclarés ici.
-- **S4-92** · *hors-portée: une première publication réelle, sans quoi la seconde n'a aucun identifiant en base à ne pas récupérer deux fois* · Republier immédiatement : la publication repart **sans** repasser par la récupération des
+- **S4-92** · Republier immédiatement : la publication repart **sans** repasser par la récupération des
   identifiants (ils sont désormais en base).
 - **S4-93** · *hors-portée: le verdict d'un validateur du MNHN. Aucun dispositif ne le fabrique : il faut qu'un humain ait tranché* · « ☰ → Réimporter depuis Vigie-Chiro… » repasse, lui, par la fenêtre **paginée**, et la colonne « Avis
   validateur » se **remplit** si le MNHN a tranché.
