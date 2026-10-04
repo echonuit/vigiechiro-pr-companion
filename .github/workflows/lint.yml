@@ -1250,6 +1250,13 @@ jobs:
         run: |
           python3 scripts/methode/verifie-controle-du-titre.py --auto-test
           python3 scripts/methode/verifie-controle-du-titre.py --verifie
+      - name: "Aucun blob texte n'est rangé en CRLF contre .gitattributes (bloquant, #5781)"
+        # Un outil qui commite sans les filtres de git (le bump de dependabot #5749) range un blob en
+        # CRLF, et la demande SUIVANTE en porte la renormalisation sans l'avoir voulue : son diff
+        # cesse de dire ce qu'elle fait. L'auto-test l'éprouve dans un dépôt jetable, blob compris.
+        run: |
+          python3 scripts/methode/verifie-normalisation-git.py --auto-test
+          python3 scripts/methode/verifie-normalisation-git.py
       - name: "Un garde déclare ce dont il a besoin, comme le pom le déclare pour Java (bloquant, #5008)"
         # L'auto-test d'abord : un détecteur relâché passerait sinon au vert sur un dépôt conforme.
         # Le verdict ensuite, sur les deux arbres de gardes et le Python enfoui dans leurs heredocs.

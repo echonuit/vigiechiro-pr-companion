@@ -35,8 +35,8 @@ compréhension de l'API est **exécutable** : une suite qui tape l'API réelle e
 
     - **la plateforme de test, à chaque demande de fusion**, dans le job `plateforme-de-test` de
       `maven.yml` : l'API épinglée, montée par les tests eux-mêmes, sans jeton, écritures comprises,
-      rien n'y étant à abîmer. Le job affiche ses tests sautés et leur motif, et refuse un saut dû au
-      jeton (#5748) ;
+      rien n'y étant à abîmer. Le job affiche ses tests sautés et leur motif, et **refuse tout saut** :
+      l'état de départ porte ce que les sondes supposent (#5748, #5747) ;
     - **la plateforme nationale, chaque lundi, en lecture seule**, dans `api-live.yml`, avec le secret
       `VIGIECHIRO_TOKEN` ; `veille_contrat_api.py` fait rougir si trois passages manquent.
 

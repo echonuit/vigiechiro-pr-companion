@@ -2025,7 +2025,7 @@ dd0bd72a760f  src/test/java/fr/univ_amu/iut/recette/CarteDeRecette.java
 dc61d71a4d14  src/test/java/fr/univ_amu/iut/recette/CasDeRecette.java
 b5e7288906d9  src/test/java/fr/univ_amu/iut/recette/ClipDeModaleTest.java
 adc5cdc4a3fb  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
-8b4720eac270  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
+c6c666b5e159  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
 fb2f197b3036  src/test/java/fr/univ_amu/iut/recette/DispositionDesBrutsTest.java
 f77cce1c3b9d  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffere.java
 a0cad8cca4aa  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffereTest.java
