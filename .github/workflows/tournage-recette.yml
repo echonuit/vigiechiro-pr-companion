@@ -353,7 +353,11 @@ jobs:
             # `groups` seul ne lève pas l'exclusion, et surefire n'a rien sélectionné. Le tournage
             # a rendu « Tests run: 0 », un build VERT, et n'a échoué qu'à l'étape suivante sur un
             # index absent. C'est ce que fait le profil `-Papi-live` : il inverse les deux.
-            selection=(-Dsurefire.groups=recette-connectee -Dsurefire.excludedGroups=api-live)
+            #
+            # `plateforme-de-test-seule` est exclu (#5795) : un scénario qui lance une analyse n'a de
+            # sens que sur un état qu'on jette, et écrirait ici pour de bon. L'oracle ne l'attend pas
+            # non plus : `cas-connectes.txt` compte ce que CE tournage joue.
+            selection=(-Dsurefire.groups=recette-connectee "-Dsurefire.excludedGroups=api-live,plateforme-de-test-seule")
           elif [ "${{ inputs.plateforme_de_test }}" = "true" ]; then
             # Les cas connectés qui ont un sens sur la plateforme de test (#5793) : l'EXPRESSION, que
             # JUnit évalue par méthode, et le profil qui pose `vigiechiro.cible` et monte la plateforme.

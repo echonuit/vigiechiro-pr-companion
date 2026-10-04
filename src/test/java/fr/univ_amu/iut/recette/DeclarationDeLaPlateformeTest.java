@@ -14,7 +14,8 @@ import org.junit.jupiter.api.Test;
 /// Un scénario connecté déclare vers QUI son banc parle (#4447).
 ///
 /// `@Tag("recette-connectee")` décide de la **sélection** ; le **câblage**, lui, se déclare au banc, par
-/// [BancDeRecette#parleALaPlateforme()] ou [BancDeRecette#connecteALaPlateforme()]. Deux interrupteurs
+/// [BancDeRecette#parleALaPlateforme()], [BancDeRecette#connecteALaPlateforme()] ou, pour un scénario
+/// propre à la plateforme de test, [BancDeRecette#surLaPlateformeDeTest(String)]. Deux interrupteurs
 /// pour une seule intention, et `ScenarioConnecteConnexionTest` n'en avait levé qu'un : trois tournages
 /// ont filmé un écran hors ligne sans que rien ne le dise. La mesure est chez [BancDeRecetteSansDepotTest].
 ///
@@ -36,7 +37,16 @@ class DeclarationDeLaPlateformeTest {
     /// joué avec eux, mais il dérive le corpus au lieu de monter un écran.
     private static final String MONTE_UN_BANC = "BancDeRecette.surLeChrome()";
 
-    private static final List<String> DECLARATIONS = List.of(".parleALaPlateforme()", ".connecteALaPlateforme()");
+    /// Ce qui fait monter la VRAIE plateforme de test, donc demande Docker (#5665) : la déclaration
+    /// publique, qui reçoit une clé d'utilisateur LITTÉRALE. La surcharge de paquet, qui reçoit un accès
+    /// fabriqué, ne monte rien, et `BancDeRecettePlateformeDeTestTest` l'emploie sans Docker.
+    private static final String DECLARE_LA_PLATEFORME_DE_TEST = ".surLaPlateformeDeTest(\"";
+
+    /// Les trois manières de dire au banc vers qui parler. La troisième (#5795) vise la plateforme de
+    /// test SANS lire la cible déclarée : c'est celle d'un scénario qui écrit, et qui ne doit pouvoir
+    /// écrire nulle part ailleurs même sélectionné par erreur dans un tournage national.
+    private static final List<String> DECLARATIONS =
+            List.of(".parleALaPlateforme()", ".connecteALaPlateforme()", DECLARE_LA_PLATEFORME_DE_TEST);
 
     @Test
     @DisplayName("#4447 : tout scénario connecté qui monte un banc déclare parler à la plateforme")
@@ -65,17 +75,14 @@ class DeclarationDeLaPlateformeTest {
 
                         `@Tag("recette-connectee")` décide de la SÉLECTION, pas du câblage. Ajouter
                         `.parleALaPlateforme()` (le scénario colle le jeton lui-même) ou
-                        `.connecteALaPlateforme()` (le banc le dépose, la modale revérifie seule).
+                        `.connecteALaPlateforme()` (le banc le dépose, la modale revérifie seule), ou
+                        `.surLaPlateformeDeTest("observatrice")` si le scénario n'a de sens que sur la plateforme
+                        de test.
 
                         Sans cela le clip n'est pas faux, il est MUET SUR SON PROPRE OBJET (ADR 4142) :
                         un jeton réel, une connexion instantanée, un badge d'identité qui reste gris, et
                         rien qui dise pourquoi.""").isEmpty();
     }
-
-    /// Ce qui fait monter la VRAIE plateforme de test, donc demande Docker (#5665) : la déclaration
-    /// publique, qui reçoit une clé d'utilisateur LITTÉRALE. La surcharge de paquet, qui reçoit un accès
-    /// fabriqué, ne monte rien, et `BancDeRecettePlateformeDeTestTest` l'emploie sans Docker.
-    private static final String DECLARE_LA_PLATEFORME_DE_TEST = ".surLaPlateformeDeTest(\"";
 
     /// L'autre manière de la monter, celle d'un test d'API (clôture de #5642, ADR 5663) : l'extension
     /// elle-même. `DepotSurLaPlateformeDeTestTest` est écrit ainsi, et le relevé ne cherchait que la

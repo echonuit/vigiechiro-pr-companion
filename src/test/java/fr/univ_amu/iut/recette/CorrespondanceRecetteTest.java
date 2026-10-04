@@ -129,6 +129,11 @@ class CorrespondanceRecetteTest {
 
     private static final String TAG_PLATEFORME_DE_TEST = "plateforme-de-test";
 
+    /// L'étiquette d'un scénario connecté qui n'a de sens QUE sur la plateforme de test (#5795) :
+    /// le tournage national ne le joue pas, et son oracle ne l'attend pas. Lancer une analyse, par
+    /// exemple, écrirait pour de bon sur la plateforme nationale.
+    private static final String TAG_PLATEFORME_DE_TEST_SEULE = "plateforme-de-test-seule";
+
     /// Le motif vit dans [MotifDeCas] : trois lecteurs de ces fichiers coexistent, et deux ont
     /// découvert séparément que certaines sessions cochent leurs puces.
     private static final Pattern CAS = MotifDeCas.CAS;
@@ -172,6 +177,10 @@ class CorrespondanceRecetteTest {
     /// Ceux d'entre eux que cite une classe portant [#TAG_CONNECTE].
     private static Set<String> casConnectes;
 
+    /// Ceux des cas connectés que le tournage NATIONAL filme : tous, sauf ceux d'une classe
+    /// portant [#TAG_PLATEFORME_DE_TEST_SEULE]. C'est ce compte-là que son oracle attend.
+    private static Set<String> casDuTournageNational;
+
     /// Ceux d'entre eux que le tournage sur la plateforme de test filme.
     private static Set<String> casPlateformeDeTest;
 
@@ -207,6 +216,7 @@ class CorrespondanceRecetteTest {
 
         cites = new LinkedHashMap<>();
         casConnectes = new LinkedHashSet<>();
+        casDuTournageNational = new LinkedHashSet<>();
         casPlateformeDeTest = new LinkedHashSet<>();
         jugements = new LinkedHashMap<>();
         citations = new ArrayList<>();
@@ -708,10 +718,13 @@ class CorrespondanceRecetteTest {
     /// Un seul nombre, sur une ligne : c'est tout ce dont le tournage a besoin pour dire s'il a rendu
     /// ce qu'il devait rendre. Zéro est une valeur légitime - aucun scénario connecté n'existe encore
     /// dans certaines branches - et le tournage la lit comme telle.
+    ///
+    /// Le compte est celui que le tournage **national** joue : un cas propre à la plateforme de test
+    /// reste un cas connecté, exclu des clips ordinaires, mais ce tournage-là ne le filme pas (#5795).
     private static void deposerLesCasConnectes() {
         try {
             Files.createDirectories(CAS_CONNECTES.getParent());
-            Files.write(CAS_CONNECTES, List.of(String.valueOf(casConnectes.size())));
+            Files.write(CAS_CONNECTES, List.of(String.valueOf(casDuTournageNational.size())));
             Files.write(CAS_PLATEFORME_DE_TEST, List.of(String.valueOf(casPlateformeDeTest.size())));
         } catch (IOException e) {
             throw new UncheckedIOException("Compte des cas connectés impossible à écrire", e);
@@ -805,6 +818,7 @@ class CorrespondanceRecetteTest {
             // classe, et un tag posé sur une méthode ne dirait pas ce que le tournage jouera.
             boolean connectee = porteLeTag(classe, TAG_CONNECTE);
             boolean classeDeTest = porteLeTag(classe, TAG_PLATEFORME_DE_TEST);
+            boolean seule = porteLeTag(classe, TAG_PLATEFORME_DE_TEST_SEULE);
             classe.getMethods()
                     .forEach(methode -> methode.tryGetAnnotationOfType(CasDeRecette.class)
                             .ifPresent(annotation -> {
@@ -812,6 +826,9 @@ class CorrespondanceRecetteTest {
                                 for (String id : List.of(annotation.value())) {
                                     if (connectee) {
                                         casConnectes.add(id);
+                                    }
+                                    if (connectee && !seule) {
+                                        casDuTournageNational.add(id);
                                     }
                                     if (connectee && (classeDeTest || porteLeTag(methode, TAG_PLATEFORME_DE_TEST))) {
                                         casPlateformeDeTest.add(id);
