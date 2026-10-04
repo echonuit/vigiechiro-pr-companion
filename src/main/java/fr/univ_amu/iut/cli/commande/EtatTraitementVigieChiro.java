@@ -5,6 +5,8 @@ import fr.univ_amu.iut.cli.GesteAttenduCli;
 import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.Horodatage;
+import fr.univ_amu.iut.commun.model.ImportApresReleve;
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import java.io.PrintWriter;
@@ -30,7 +32,7 @@ import picocli.CommandLine.Spec;
 ///
 /// | Code | Situation | Que faire |
 /// |---|---|---|
-/// | `0` | **terminé** | importer les observations (`importer-vigiechiro`) |
+/// | `0` | **terminé** | importer les observations (`--importer`, ou `importer-vigiechiro`) |
 /// | `3` | planifié, en cours, ou nouvel essai | **patienter** |
 /// | `1` | **en échec** côté serveur | lire la trace, éventuellement relancer |
 /// | `4` | jamais lancée (le serveur répond, #1284) | lancer l'analyse (`lancer-traitement-vigiechiro`) |
@@ -82,14 +84,23 @@ public final class EtatTraitementVigieChiro implements Callable<Integer>, Lectur
                     + " enregistrée dans l'application).")
     private String token;
 
+    @Option(
+            names = "--importer",
+            description = "Importe les observations de la nuit quand l'analyse est terminée, comme le fait"
+                    + " « Actualiser » sur l'écran de lot. Une nuit déjà importée n'est pas réimportée."
+                    + " Sans cette option, la commande ne modifie rien.")
+    private boolean importer;
+
     @Spec
     private CommandSpec spec;
 
     private final Optional<SuiviTraitement> suivi;
+    private final Optional<ImportObservations> importation;
 
     @Inject
-    public EtatTraitementVigieChiro(Optional<SuiviTraitement> suivi) {
+    public EtatTraitementVigieChiro(Optional<SuiviTraitement> suivi, Optional<ImportObservations> importation) {
         this.suivi = Objects.requireNonNull(suivi, "suivi");
+        this.importation = Objects.requireNonNull(importation, "importation");
     }
 
     @Override
@@ -107,11 +118,40 @@ public final class EtatTraitementVigieChiro implements Callable<Integer>, Lectur
             Traitement traitement = moteur.relever(idPassage);
             PrintWriter sortie = spec.commandLine().getOut();
             sortie.println(compteRendu(traitement));
-            return code(traitement);
+            return importer ? importerSiTermine(traitement, sortie) : code(traitement);
         } catch (RegleMetierException indisponible) {
             spec.commandLine().getErr().println("Indisponible : " + GesteAttenduCli.message(indisponible));
             return INDISPONIBLE;
         }
+    }
+
+    /// Lecture seule tant qu'on ne demande pas d'importer : le verrou suit l'invocation (#5784).
+    @Override
+    public boolean neFaitQueLire() {
+        return !importer;
+    }
+
+    /// `--importer` : le geste d'« Actualiser » sur l'écran de lot, par la même règle (#5784). Un import
+    /// qui n'a pas pu se faire rend [#INDISPONIBLE] ; sinon le code reste celui de l'état.
+    private int importerSiTermine(Traitement traitement, PrintWriter sortie) {
+        if (traitement.resultatsDisponibles() && importation.isEmpty()) {
+            throw new RegleMetierException("Import Vigie-Chiro indisponible dans ce contexte d'exécution.");
+        }
+        return switch (ImportApresReleve.pour(importation, idPassage, traitement)) {
+            case ImportApresReleve.Issue.SansObjet sansObjet -> code(traitement);
+            case ImportApresReleve.Issue.Fait fait -> {
+                sortie.println(fait.compteRendu());
+                yield code(traitement);
+            }
+            case ImportApresReleve.Issue.DejaLa dejaLa -> {
+                sortie.println("Les observations de cette nuit sont déjà importées : rien n'a été réimporté.");
+                yield code(traitement);
+            }
+            case ImportApresReleve.Issue.Echoue echoue -> {
+                spec.commandLine().getErr().println("Import impossible : " + echoue.motif());
+                yield INDISPONIBLE;
+            }
+        };
     }
 
     /// Code de retour, pensé pour un `until … ; [ $? -ne 3 ]` : c'est la seule interface que lit un script.
@@ -136,7 +176,7 @@ public final class EtatTraitementVigieChiro implements Callable<Integer>, Lectur
                 + switch (traitement.etat()) {
                     case FINI ->
                         "analyse TERMINÉE" + depuis(traitement.dateFin())
-                                + ". Les observations sont récupérables (importer-vigiechiro).";
+                                + ". Les observations sont récupérables (--importer, ou importer-vigiechiro).";
                     case PLANIFIE ->
                         "analyse PLANIFIÉE" + depuis(traitement.datePlanification())
                                 + ", en attente d'un calculateur. Patientez.";

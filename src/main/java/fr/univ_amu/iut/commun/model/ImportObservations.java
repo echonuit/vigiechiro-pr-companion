@@ -21,6 +21,10 @@ public interface ImportObservations {
     /// rattachement se fait depuis « Sons & validation »).
     boolean estRattache(Long idPassage);
 
+    /// La nuit a-t-elle **déjà ses observations** en base (#5784) ? Lecture locale, sans réseau : elle
+    /// sert à ne pas réimporter en silence quand un relevé redit qu'une analyse est terminée.
+    boolean aDejaSesObservations(Long idPassage);
+
     /// Importe les observations de la nuit. **Bloquant** (réseau) : à appeler hors du fil JavaFX.
     ///
     /// Lève une [RegleMetierException] quand il n'y a rien à importer : avec la **raison** (analyse jamais

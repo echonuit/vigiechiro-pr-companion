@@ -209,6 +209,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private Label lblFraicheurTraitement;
 
     @FXML
+    private Label lblImportTraitement;
+
+    @FXML
     private Label lblAlerteTraitement;
 
     @FXML
@@ -273,11 +276,13 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 executeur,
                 () -> contexte.get().idPassage(),
                 depotViewModel.participationLieeProperty(),
-                zoneTraitement,
-                lblEtatTraitement,
-                lblFraicheurTraitement,
-                lblAlerteTraitement,
-                btnActualiserTraitement);
+                new SuiviTraitementUI.Vue(
+                        zoneTraitement,
+                        lblEtatTraitement,
+                        lblImportTraitement,
+                        lblFraicheurTraitement,
+                        lblAlerteTraitement,
+                        btnActualiserTraitement));
 
         // Opération critique en cours (#906) : la génération d'archives et le dépôt sont des tâches longues
         // qu'on ne doit pas abandonner en silence. On pose leur libellé sur le chrome (qui avertit avant de

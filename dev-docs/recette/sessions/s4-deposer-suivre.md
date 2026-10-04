@@ -141,6 +141,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
   état connu.
 - **S4-50** · *prérequis: une base de départ portant un état de traitement déjà relevé, avec sa date (générateur de bases déclarées de #4325)* · Fermer/rouvrir l'application : le dernier état connu est réaffiché avec sa date, sans réseau. La date se lit à l'heure du poste, pas à celle du serveur : une analyse partie à 14:07 UTC s'affiche « à 16:07 » l'été à Paris (#5683).
 - **S4-51** · *hors-portée: rien à observer. C'est une consigne à l'opérateur pour la suite, pas un fait d'écran* · **Noter l'identifiant de la participation** (nettoyage manuel éventuel + matériau de S5).
+- **S4-98** · Une fois l'analyse terminée côté plateforme, « 🔄 Actualiser » : la carte affiche « Analyse terminée » et, dessous, « Observations importées depuis Vigie-Chiro : … » avec leur nombre. Ouvrir « Sons & validation » : les observations y sont, sans être passé par le menu ☰. Cliquer de nouveau « Actualiser » : la carte dit que les observations sont déjà importées, et rien n'est réimporté. En ligne de commande, `etat-traitement-vigiechiro --importer` fait le même geste (#5784).
 
 ### Traitement en lot : ce qu'un seul poste ne peut pas prouver (#2357)
 

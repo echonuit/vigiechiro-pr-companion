@@ -3,6 +3,7 @@ package fr.univ_amu.iut.validation.model;
 import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.model.ImportObservations;
+import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,9 +16,17 @@ import java.util.Objects;
 public class ImportObservationsVigieChiro implements ImportObservations {
 
     private final ImportVigieChiro importateur;
+    private final ResultatsIdentificationDao resultats;
 
-    public ImportObservationsVigieChiro(ImportVigieChiro importateur) {
+    public ImportObservationsVigieChiro(ImportVigieChiro importateur, ResultatsIdentificationDao resultats) {
         this.importateur = Objects.requireNonNull(importateur, "importateur");
+        this.resultats = Objects.requireNonNull(resultats, "resultats");
+    }
+
+    /// Même lecture que l'action groupée [ImportResultatsGroupe] : un jeu de résultats existe pour la nuit.
+    @Override
+    public boolean aDejaSesObservations(Long idPassage) {
+        return resultats.findByPassage(idPassage).isPresent();
     }
 
     @Override

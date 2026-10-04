@@ -794,9 +794,11 @@ Le second gros pourvoyeur d'états : préparation, téléversement, reprise, int
 </tr>
 <tr>
 <th width="50%">Lancement refusé</th>
+<th width="50%">Analyse terminée, observations importées</th>
 </tr>
 <tr>
 <td><a href="apercu-lot-lancement-refuse.png"><img src="apercu-lot-lancement-refuse.png" width="430" alt="Lancement refusé : l'étape 4 dit le refus et cite le motif donné par la plateforme"></a></td>
+<td><a href="apercu-lot-traitement-termine.png"><img src="apercu-lot-traitement-termine.png" width="430" alt="Analyse terminée : « Actualiser » a importé les observations, et la carte dit combien sous l'état"></a></td>
 </tr>
 </table>
 

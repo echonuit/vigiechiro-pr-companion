@@ -52,7 +52,8 @@ final class StrategieExecutionCli {
     }
 
     private static boolean litSeulement(ParseResult resultat) {
-        return feuille(resultat).commandSpec().userObject() instanceof LectureSeule;
+        return feuille(resultat).commandSpec().userObject() instanceof LectureSeule commande
+                && commande.neFaitQueLire();
     }
 
     private static String nomDe(ParseResult resultat) {

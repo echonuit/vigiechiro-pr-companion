@@ -3,6 +3,7 @@ package fr.univ_amu.iut.lot.viewmodel;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Horodatage;
+import fr.univ_amu.iut.commun.model.ImportApresReleve;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -41,11 +42,29 @@ final class FormatsTraitement {
                         + ". Comptez plusieurs dizaines de minutes ; vous pouvez fermer l'application.";
             case RETRY ->
                 "Un premier essai a échoué : Vigie-Chiro a relancé l'analyse" + essai(traitement) + ". Patientez.";
-            case FINI ->
-                "Analyse terminée" + le(traitement.dateFin(), fuseau)
-                        + " : les observations sont prêtes à être importées.";
+            case FINI -> "Analyse terminée" + le(traitement.dateFin(), fuseau) + ".";
             case ERREUR ->
                 "L'analyse a échoué côté Vigie-Chiro" + le(traitement.dateFin(), fuseau) + "." + trace(traitement);
+        };
+    }
+
+    /// Les observations de la nuit sont déjà en base : la carte ne réimporte pas (#5784).
+    static final String OBSERVATIONS_DEJA_IMPORTEES = "Les observations de cette nuit sont déjà importées."
+            + " Pour les remplacer, passez par « Sons & validation ».";
+
+    /// L'analyse est terminée et rien n'est importé : l'état vient du cache, seul un relevé importe.
+    static final String OBSERVATIONS_A_IMPORTER = "Cliquez « Actualiser » pour importer les observations.";
+
+    /// La ligne d'import de la carte : ce qu'un relevé a fait des observations (#5784). Vide quand il n'y
+    /// avait rien à en faire.
+    static String importObservations(ImportApresReleve.Issue issue) {
+        return switch (issue) {
+            case ImportApresReleve.Issue.SansObjet sansObjet -> "";
+            case ImportApresReleve.Issue.Fait fait -> fait.compteRendu();
+            case ImportApresReleve.Issue.DejaLa dejaLa -> OBSERVATIONS_DEJA_IMPORTEES;
+            case ImportApresReleve.Issue.Echoue echoue ->
+                "L'import des observations a échoué : " + echoue.motif()
+                        + ". Cliquez de nouveau « Actualiser », ou importez depuis « Sons & validation ».";
         };
     }
 

@@ -110,6 +110,31 @@ class CliVerrouWorkspaceTest {
         }
     }
 
+    /// `etat-traitement-vigiechiro` ne lit que tant qu'on ne lui demande pas d'importer : le verrou
+    /// suit l'invocation, pas la classe (#5784). Les deux codes valent 2, d'où la lecture du message.
+    @Test
+    @DisplayName("#5784 : etat-traitement-vigiechiro passe sur un dossier occupé, sauf avec --importer")
+    void l_etat_du_traitement_ne_prend_le_verrou_que_pour_importer() throws IOException {
+        cli.executer(new String[] {"lister-sites"}, sortie, erreur);
+        capture.vider();
+
+        try (Occupation ignore = new Occupation(workspace)) {
+            cli.executer(new String[] {"etat-traitement-vigiechiro", "--passage", "1"}, sortie, erreur);
+            assertThat(capture.texteErreur())
+                    .as("sans l'option, la commande lit : le dossier occupé ne la concerne pas")
+                    .doesNotContain("déjà utilisé");
+            capture.vider();
+
+            int code = cli.executer(
+                    new String[] {"etat-traitement-vigiechiro", "--passage", "1", "--importer"}, sortie, erreur);
+
+            assertThat(code).isEqualTo(Cli.CODE_REFUS);
+            assertThat(capture.texteErreur())
+                    .as("avec l'option, elle écrit des observations : elle demande le dossier")
+                    .contains("déjà utilisé");
+        }
+    }
+
     @Test
     @DisplayName("emplacements passe sur un dossier occupé : elle sert justement à en changer")
     void emplacements_passe_sur_un_dossier_occupe() throws IOException {
