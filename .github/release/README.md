@@ -40,6 +40,17 @@ cd .github/release && ./node_modules/.bin/semantic-release --dry-run
 
 `node_modules/` n'est pas versionné : seul le lockfile l'est.
 
+**Et `node` doit être sur le `PATH`, pas seulement `npm`.** C'est le second arbre de dépendances npm
+du dépôt, et il porte le même piège que celui d'OpenSpec : si votre poste range `node` sous un
+gestionnaire de version (nvm, asdf, volta, fnm), il est absent du `PATH` d'un shell non interactif,
+donc `npm ci` échoue par `npm: command not found`. Et il doit y **rester** : les binaires installés
+sous `node_modules/.bin/` sont des scripts dont le shebang le réclame au moment où ils tournent.
+
+Le piège a coûté huit corps de demande sur l'arbre d'OpenSpec, deux sessions les ayant classés
+« environnementaux » après avoir vérifié qu'ils rougissaient aussi sur `main` (#5774). **Celui-ci
+n'est pas posé par le crochet `post-checkout`**, contrairement à l'arbre d'OpenSpec depuis #5775 :
+il reste à poser à la main, dans chaque arbre de travail où l'on veut vérifier la publication.
+
 ## Ce que l'audit dit aujourd'hui
 
 `npm audit` signale **7 paquets vulnérables** (2 hautes, 5 moyennes), contre **18** (15 hautes) avant

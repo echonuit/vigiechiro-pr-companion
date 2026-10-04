@@ -33,23 +33,15 @@ poste range `node` sous un gestionnaire de version. L'échappatoire de l'ADR 540
 sa commande », tenait en lettre et c'est ce qui la rendait inopérante : la commande nommée était
 `npm ci`, celle qui ne peut pas s'exécuter.
 
-Le coût s'est payé ailleurs : **huit corps de demande** sur deux sessions ont classé les refus des
-gardes OpenSpec « environnementaux, étrangers à ce diff », ce que #5774 vient de corriger côté
-message.
-
 ## Décision
 
 **Le dépôt ne cherche pas l'outil, il demande au poste.** Quand le PATH ordinaire ne porte pas l'outil,
 le script interroge le shell que le poste déclare, par `command -v`, et utilise le chemin absolu rendu.
 
 Le poste **déclare déjà** où vit son outil, dans le profil de son propre shell, et cette déclaration
-est tenue par son propriétaire. Mesure qui tranche :
-
-| Ce qu'on interroge | Ce qu'on obtient |
-|---|---|
-| `/bin/sh -c 'command -v npm'` | introuvable, et c'est ce que le crochet voit |
-| `bash -lc` | introuvable : ici, le gestionnaire vit dans `.zshrc`, pas dans un profil que `bash` lit |
-| le shell **déclaré par le poste**, en interactif | le chemin absolu de l'outil |
+est tenue par son propriétaire. La mesure qui tranche : `/bin/sh -c` et `bash -lc` ne trouvent rien,
+le second parce que le gestionnaire vit ici dans `.zshrc` ; le shell **déclaré par le poste**, en
+interactif, rend le chemin absolu.
 
 **Quatre propriétés font partie de la décision**, chacune avec son cas d'auto-test.
 
@@ -75,8 +67,17 @@ poste. Un cas d'auto-test balaie le texte rendu contre cinq noms.
 **Tenir une table de dispositions connues.** Elle vieillit, et le dépôt devrait la maintenir pour des
 postes qu'il ne voit pas.
 
-**Faire écrire un fichier non versionné** où le poste déclarerait ses outils. Il dupliquerait une
-déclaration qui existe déjà, et personne ne penserait à l'écrire.
+**Faire écrire un fichier non versionné** où le poste déclarerait ses outils. Ici il dupliquerait
+une déclaration qui existe déjà, celle du profil du shell. **Le dépôt emploie pourtant cette forme
+ailleurs**, et il faut le dire plutôt que de l'écarter : `.githooks/post-merge` lit
+`graphify-out/.graphify_python`. La différence est que `graphify` n'est déclaré par aucun profil,
+alors que `node` l'est par construction, puisque le gestionnaire de version qui l'installe écrit
+dans ce profil. Le critère n'est donc pas la forme, c'est : **le poste déclare-t-il déjà cet outil
+quelque part ?**
+
+Avec `batterie.interprete()`, qui sonde une liste **fermée** de candidats connus du dépôt, cela fait
+trois stratégies, et leur choix se décide par l'état de l'ensemble des emplacements plausibles :
+fermé, on sonde ; déclaré par le poste, on demande ; ni l'un ni l'autre, le poste l'écrit.
 
 ## Conséquences
 
@@ -85,9 +86,8 @@ motif de blocage ». La raison est bonne et ne couvre pas ce qu'elle justifiait 
 **déjà** lui-même, par `|| true` suivi d'un `exit 0`. La non-blocance est la propriété de l'appelant.
 Le script rend donc `2` quand il n'a pas pu poser, ce que le dépôt distingue d'un `1`.
 
-**Les modules déclarés n'entrent pas dans ce code**, et c'est une décision : un module absent de
-l'interprète courant n'est pas un échec du dépôt à poser, et les compter ferait sortir `2` à chaque
-création d'arbre sur un poste sain.
+**Les modules déclarés n'entrent pas dans ce code** : un module absent de l'interprète courant n'est
+pas un échec du dépôt à poser, et les compter ferait sortir `2` sur un poste sain.
 
 **Ce que cette décision laisse ouvert.** Un poste dont le profil est muet sur son outil obtient un
 refus qui le nomme, et rien de plus. C'est le bon comportement et ce n'est pas une pose : la famille

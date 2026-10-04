@@ -71,8 +71,13 @@ def racine() -> pathlib.Path:
     return pathlib.Path(rendu.stdout.strip() or ".")
 
 
-def valide(base: pathlib.Path) -> tuple[int, str]:
-    """Lance l outil epingle sur `base`, et rend (code, sortie fusionnee)."""
+def valide(base: pathlib.Path, lance=subprocess.run) -> tuple[int, str]:
+    """Lance l outil epingle sur `base`, et rend (code, sortie fusionnee).
+
+    `lance` est injecte pour qu un cas puisse constater que l outil n est PAS lance quand le
+    prerequis manque : sans cette couture, le « quand » du refus ne s eprouve pas, et un refus qui
+    arriverait APRES une execution inutile passerait pour correct (ADR 3624).
+    """
     epingle = base / BINAIRE_EPINGLE
 
     # ⟨le prerequis LE PLUS PROFOND, et pas seulement le binaire⟩ Ce garde ne testait que la presence
@@ -84,7 +89,7 @@ def valide(base: pathlib.Path) -> tuple[int, str]:
     if manque:
         return 2, message_de_refus(*manque)
 
-    rendu = subprocess.run(
+    rendu = lance(
         [str(epingle), "validate", "--specs"],
         capture_output=True,
         text=True,
@@ -94,31 +99,50 @@ def valide(base: pathlib.Path) -> tuple[int, str]:
     return rendu.returncode, rendu.stdout + rendu.stderr
 
 
-def juge(base: pathlib.Path) -> tuple[int, str]:
+def juge(base: pathlib.Path, lance=subprocess.run) -> tuple[int, str]:
     """Rend (code, message). 0 = valide, 1 = ecart, 2 = refus de conclure."""
-    code, sortie = valide(base)
-    if code == 2 and sortie.startswith("REFUS"):
+    code, sortie = valide(base, lance=lance)
+    # ⟨on LIT la forme declaree, on ne devine pas un prefixe⟩ `startswith("REFUS")` etait une
+    # inference sur le texte, que l ADR 5398 refuse la ou le depot porte un lecteur. `lit_le_refus`
+    # exige les DEUX champs, donc il ne confond pas un refus avec une sortie d outil qui commencerait
+    # par ce mot.
+    if code == 2 and lit_le_refus(sortie) is not None:
         return 2, sortie
 
+    # ⟨les TROIS autres refus portent la forme declaree, et le rouge ne la porte PAS⟩ Ils ecrivaient
+    # « REFUS : » a la main, sans champ `POUR REPARER :`, donc `lit_le_refus` rendait `None` et la
+    # porte retombait sur son repli a deux lignes. Dette nommee a la cloture de #5762 et traitee la.
     if RIEN_A_VALIDER.search(sortie):
-        return 2, (
-            "REFUS : l outil n a trouve AUCUNE spec principale a valider, et il sort en 0 pour le "
-            "dire. Un corpus vide n est pas un corpus valide. Verifiez que « openspec/specs/ » "
-            "existe et porte au moins une capacite."
+        return 2, message_de_refus(
+            "l outil n a trouve AUCUNE spec principale a valider, et il sort en 0 pour le dire."
+            " Un corpus vide n est pas un corpus valide",
+            "verifiez que « openspec/specs/ » existe et porte au moins une capacite",
         )
 
     totaux = TOTAUX.search(sortie)
     if totaux is None:
         return 2, (
-            "REFUS : la sortie de l outil ne porte aucune ligne « Totals: N passed, M failed ». "
-            "Ce garde ne conclut pas sur une sortie qu il n a pas su lire.\n" + sortie.strip()
+            message_de_refus(
+                "la sortie de l outil ne porte aucune ligne « Totals: N passed, M failed », et ce"
+                " garde ne conclut pas sur une sortie qu il n a pas su lire",
+                "lisez la sortie de l outil ci-dessous ; si elle est vide, l outil n a pas demarre",
+            )
+            + "\n"
+            + sortie.strip()
         )
 
     passes, echoues = int(totaux.group(1)), int(totaux.group(2))
     if passes == 0 and echoues == 0:
-        return 2, "REFUS : « 0 passed, 0 failed ». Rien n a ete valide, ce qui n est pas un succes."
+        return 2, message_de_refus(
+            "l outil rend « 0 passed, 0 failed » : rien n a ete valide, ce qui n est pas un succes",
+            "verifiez que « openspec/specs/ » porte au moins une capacite principale",
+        )
     if echoues or code != 0:
-        return 1, f"REFUS : {echoues} spec(s) principale(s) ne valident pas.\n" + sortie.strip()
+        # ⟨un ROUGE n est pas un refus, et il cessait de le dire⟩ Cette branche a JUGE : elle sort en
+        # 1 et porte le defaut. Elle ecrivait pourtant « REFUS : », donc elle se faisait lire comme
+        # un empechement par qui lisait la marque - l inverse exact du defaut des trois branches
+        # ci-dessus. Le mot et le code disent desormais la meme chose.
+        return 1, f"{echoues} spec(s) principale(s) ne valident pas.\n" + sortie.strip()
     return 0, f"Les {passes} spec(s) principale(s) valident."
 
 
@@ -252,6 +276,152 @@ def auto_test() -> int:
 
     forme("outil absent : le SHELL recoit 2, pas 1", lambda: code_au_shell(desinstaller), 2)
     forme("arbre sain : le SHELL recoit 0", lambda: code_au_shell(lambda r: None), 0)
+
+    # ⟨LE « QUAND » DU REFUS, dette nommee a la cloture de #5762⟩ Les cas ci-dessus eprouvent ce que
+    # le refus DIT. Aucun n eprouvait qu il arrive AVANT d avoir lance l outil, et un refus juste
+    # rendu apres une execution inutile aurait passe tous les cas. Une session pair a paye cette
+    # forme exacte le meme jour sur son propre instrument : le verdict restait juste, et c etait le
+    # gaspillage qui n etait pas couvert.
+    lances: list = []
+
+    class RenduFeint:
+        returncode = 0
+        stdout = "Totals: 1 passed, 0 failed\n"
+        stderr = ""
+
+    def espion_de_lancement(commande, **kwargs):
+        lances.append(commande)
+        return RenduFeint()
+
+    with tempfile.TemporaryDirectory() as bac:
+        r = pathlib.Path(bac) / "arbre"
+        shutil.copytree(
+            base,
+            r,
+            symlinks=True,
+            ignore=shutil.ignore_patterns(".git", "target", "graphify-out"),
+        )
+        desinstaller(r)
+        forme(
+            "outil absent : l outil n est PAS lance, le refus arrive AVANT",
+            lambda: (valide(r, lance=espion_de_lancement)[0], len(lances)),
+            (2, 0),
+        )
+
+    # Et le sens inverse, sans quoi le cas precedent passerait sur un garde qui ne lance JAMAIS rien.
+    with tempfile.TemporaryDirectory() as bac:
+        r = pathlib.Path(bac) / "arbre"
+        shutil.copytree(
+            base,
+            r,
+            symlinks=True,
+            ignore=shutil.ignore_patterns(".git", "target", "graphify-out"),
+        )
+        lances.clear()
+        forme(
+            "prerequis tenu : l outil EST lance, donc le cas precedent discrimine",
+            lambda: (valide(r, lance=espion_de_lancement)[0], len(lances)),
+            (0, 1),
+        )
+
+    # ⟨CE QUI DISCRIMINE le lecteur declare d un prefixe de chaine⟩ Un outil dont la sortie COMMENCE
+    # par ce mot n est pas un refus de ce garde. Avec `startswith("REFUS")`, elle etait prise pour
+    # tel et remontee telle quelle ; `lit_le_refus` exige les deux champs, donc elle retombe sur la
+    # branche « sortie illisible », qui rend un refus DECLARE. Sans ce cas, remettre le prefixe ne
+    # ferait rougir personne.
+    def outil_qui_dit_refus(commande, **kwargs):
+        if commande[1:2] == ["validate"]:
+            return type(
+                "R", (), {"returncode": 2, "stdout": "REFUS : je suis l outil\n", "stderr": ""}
+            )()
+        return RenduFeint()
+
+    with tempfile.TemporaryDirectory() as bac:
+        r = pathlib.Path(bac) / "arbre"
+        shutil.copytree(
+            base,
+            r,
+            symlinks=True,
+            ignore=shutil.ignore_patterns(".git", "target", "graphify-out"),
+        )
+        forme(
+            "une sortie d OUTIL qui commence par « REFUS » n est pas prise pour le notre",
+            lambda: lit_le_refus(juge(r, lance=outil_qui_dit_refus)[1]) is not None,
+            True,
+        )
+        forme(
+            "et elle est bien passee par la branche « sortie illisible »",
+            lambda: "n a pas su lire" in juge(r, lance=outil_qui_dit_refus)[1],
+            True,
+        )
+
+    # ⟨UN ROUGE NE PORTE PAS la marque d un refus⟩ Cette branche a juge et sort en 1. Elle ecrivait
+    # « REFUS : », donc la porte la lisait comme un empechement - l inverse du defaut des trois
+    # autres branches. Sans ce cas, remettre le mot ne ferait rougir personne.
+    def outil_qui_echoue(commande, **kwargs):
+        if commande[1:2] == ["validate"]:
+            return type(
+                "R", (), {"returncode": 1, "stdout": "Totals: 2 passed, 1 failed\n", "stderr": ""}
+            )()
+        return RenduFeint()
+
+    with tempfile.TemporaryDirectory() as bac:
+        r = pathlib.Path(bac) / "arbre"
+        shutil.copytree(
+            base,
+            r,
+            symlinks=True,
+            ignore=shutil.ignore_patterns(".git", "target", "graphify-out"),
+        )
+        forme(
+            "un ecart REEL sort en 1 et ne porte AUCUNE marque de refus",
+            lambda: (
+                juge(r, lance=outil_qui_echoue)[0],
+                lit_le_refus(juge(r, lance=outil_qui_echoue)[1]) is None,
+                "REFUS" in juge(r, lance=outil_qui_echoue)[1],
+            ),
+            (1, True, False),
+        )
+
+    # ⟨LES DEUX AUTRES REFUS, que la matrice a trouves SANS temoin⟩ Deux de mes trois refus etaient
+    # eprouves, pas le troisieme : retirer son champ de geste ne faisait rougir personne. Trouve par
+    # mutation, et c est le genre de trou qu une relecture ne voit pas - les trois se ressemblent.
+    def outil_qui_rend(stdout: str):
+        def faux(commande, **kwargs):
+            if commande[1:2] == ["validate"]:
+                return type("R", (), {"returncode": 0, "stdout": stdout, "stderr": ""})()
+            return RenduFeint()
+
+        return faux
+
+    with tempfile.TemporaryDirectory() as bac:
+        r = pathlib.Path(bac) / "arbre"
+        shutil.copytree(
+            base,
+            r,
+            symlinks=True,
+            ignore=shutil.ignore_patterns(".git", "target", "graphify-out"),
+        )
+        for libelle, sortie_feinte in (
+            ("corpus vide", "No items found to validate\n"),
+            ("zero valide sur zero", "Totals: 0 passed, 0 failed\n"),
+        ):
+            lanceur = outil_qui_rend(sortie_feinte)
+            forme(
+                f"refus « {libelle} » : les DEUX champs sont declares",
+                lambda ln=lanceur: (
+                    juge(r, lance=ln)[0],
+                    lit_le_refus(juge(r, lance=ln)[1]) is not None,
+                ),
+                (2, True),
+            )
+            forme(
+                f"refus « {libelle} » : son geste n est pas vide",
+                lambda ln=lanceur: bool(
+                    (lit_le_refus(juge(r, lance=ln)[1]) or ("", ""))[1].strip()
+                ),
+                True,
+            )
 
     # Le gage du module partage, joue ici ET dans l autre garde du couple (ADR 5483).
     for libelle, tenu in prerequis.verifie_grammaire():

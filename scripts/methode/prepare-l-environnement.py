@@ -11,9 +11,15 @@ cours ». Celui-ci le corrige pour les OUTILS.
 l un, quatre pour l autre, mesure le 2026-09-06. `target/pmd.xml` demande une a deux minutes et
 depend de ce que le diff touche : il appartient a la porte, qui sait le derive (#5405).
 
-**Il ne bloque JAMAIS.** Une preparation qui echoue le dit en une ligne et rend la main. Le crochet
-qui l appelle a deja ce dessin pour son `clean`, et sa raison vaut ici : personne ne regarde un
-crochet, et une commande qui empeche de creer un worktree coute plus qu elle ne rend.
+**Il ne bloque JAMAIS, et ce n est pas son code de sortie qui le garantit.** Une preparation qui
+echoue le dit en une ligne et rend la main. Le crochet qui l appelle a deja ce dessin pour son
+`clean`, et sa raison vaut ici : personne ne regarde un crochet, et une commande qui empeche de creer
+un worktree coute plus qu elle ne rend.
+
+La non-blocance est la propriete de l APPELANT : le crochet se protege par son `|| true` suivi d un
+`exit 0`. Ce script rendait pourtant toujours `0`, donc son compte d echecs n etait lisible par
+personne. Il rend desormais **2** quand il n a pas pu poser - « je n ai pas pu juger », que le depot
+separe d un `1` - sans que cela bloque quoi que ce soit (ADR 5775).
 
 **Il ne ment jamais non plus.** Une preparation muette qui echoue rendrait la porte MOINS sure
 qu avant : le lecteur croirait l environnement complet. Chaque echec nomme la commande.
@@ -599,6 +605,33 @@ def _auto_test() -> int:
         "un poste qui ne declare rien fait ECHOUER",
         lambda: pose(nu, lance=poste(None)) > 0,
         True,
+    )
+
+    # ⟨LE « QUAND » DE L ECHEC⟩ Dette nommee a la cloture de #5762. Quand le poste ne declare rien,
+    # il ne reste RIEN a lancer : la seule commande passee au lanceur est la question posee au poste,
+    # et aucune tentative d execution ne la suit. Sans ce cas, un echec rendu APRES une execution
+    # vouee a echouer aurait passe tous les autres.
+    # On compte les TENTATIVES de poser cet outil-la, et non les commandes du journal : l arbre a
+    # aussi un venv a poser, dont les commandes sont lancees a juste titre. Le cas d abord ecrit
+    # comptait tout, donc il rougissait sur du bon travail.
+    def tentatives(journal) -> int:
+        return len([c for c in journal if len(c) > 1 and c[1] == "ci"])
+
+    journal_muet: list = []
+    verifie(
+        "poste muet : UNE seule tentative, aucune apres l echec de la question",
+        lambda: (pose(nu, lance=poste(None, journal=journal_muet)) > 0, tentatives(journal_muet)),
+        (True, 1),
+    )
+    # Le contraste, sans quoi le cas ci-dessus passerait sur un code qui ne retenterait JAMAIS.
+    journal_declare: list = []
+    verifie(
+        "poste qui declare : DEUX tentatives, la seconde par le chemin resolu",
+        lambda: (
+            pose(nu, lance=poste([sys.executable], journal=journal_declare)),
+            tentatives(journal_declare),
+        ),
+        (0, 2),
     )
 
     # Les causes se lisent, et chacune nomme ce qui manque plutot que ce qui en resulte.

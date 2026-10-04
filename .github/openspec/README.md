@@ -62,6 +62,20 @@ la cérémonie du bloc de `CLAUDE.md`. Deux portages à la main, et rien d'autre
 
 ## Vérifier en local
 
+**Le crochet `post-checkout` l'a normalement déjà posé**, depuis #5406, et depuis #5775 il y arrive
+même quand votre poste range `node` sous un gestionnaire de version : il demande au poste où vit son
+outil au lieu de le chercher dans son propre `PATH`. Le contrôle tient en une ligne, et il vaut mieux
+que la confiance :
+
+```bash
+ls .github/openspec/node_modules | wc -l    # 53 attendu
+```
+
+S'il rend zéro, relancez `python3 scripts/methode/prepare-l-environnement.py`, qui nomme ce qui manque
+et sort **2** quand il n'a pas pu poser. Et si vous posez à la main, `node` doit être sur le `PATH`
+**au moment où l'outil tourne**, pas seulement à l'installation : le lien installé est un script dont
+le shebang le réclame.
+
 ```bash
 npm ci --prefix .github/openspec
 

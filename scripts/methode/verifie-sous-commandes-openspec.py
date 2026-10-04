@@ -422,6 +422,14 @@ def auto_test() -> int:
             lambda: "Invocations d OpenSpec qui n existent pas" in sortie,
             False,
         )
+        # ⟨LE « QUAND », observable sans couture⟩ Dette nommee a la cloture de #5762. Si le refus
+        # arrivait APRES avoir lance l outil, la sortie porterait l erreur du lanceur - « env: node
+        # introuvable ». Son absence prouve que rien n a ete lance, et aucun cas ne l eprouvait.
+        verifie(
+            "interprete absent : l outil n est PAS lance, le refus arrive AVANT",
+            lambda: "env:" in sortie,
+            False,
+        )
 
     # Le gage du module partage, joue ici ET dans l autre garde qui l appelle (ADR 5483).
     for libelle, tenu in prerequis.verifie_grammaire():
