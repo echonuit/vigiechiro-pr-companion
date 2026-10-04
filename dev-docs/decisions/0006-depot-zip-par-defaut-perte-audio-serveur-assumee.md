@@ -16,6 +16,13 @@ verified:
 
 # Le dépôt par ZIP est le mode par défaut ; la perte de l'audio serveur est assumée
 
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-04** : le **mode par défaut** n'est plus le ZIP. Il est **amendé** par
+    [5677](5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode.md) : sans réglage, le dépôt part en séquences WAV. L'« acquis de vitesse » qui
+    justifiait le ZIP n'a pas été constaté au dépôt, où la compression prend du temps et du disque.
+    Ce que cette page dit de l'audio d'un dépôt ZIP, non récupérable côté serveur, et du passage
+    archivé qui en découle, fait toujours foi.
+
 ## Contexte
 
 VigieChiro accepte deux façons de déposer une nuit : téléverser les **WAV** un à un, ou pousser un **ZIP** de la nuit. Le ZIP est nettement plus **rapide** (un transfert au lieu de centaines). Mais un doute persistait depuis des semaines : le serveur **conserve-t-il** l'audio d'un dépôt ZIP, récupérable plus tard ?

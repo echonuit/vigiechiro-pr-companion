@@ -17,6 +17,13 @@ relations:
 
 # La forme du dépôt se choisit, elle ne se déduit pas de la place disponible
 
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-04** : les points 3 et 5 de la décision sont **amendés** par
+    [5677](5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode.md). Le défaut n'est plus le ZIP mais les séquences WAV, et un réglage absent ou
+    illisible retombe sur le WAV. Le retour de terrain que cette page attendait est venu, et il ne
+    confirme pas que le ZIP soit « le plus rapide ». S'y ajoute qu'un dépôt entamé garde le mode dans
+    lequel il a commencé. Le reste fait foi : la forme se choisit, et son aide en dit la conséquence.
+
 ## Contexte
 
 Le mode de dépôt n'était pas un choix, c'était une conséquence :

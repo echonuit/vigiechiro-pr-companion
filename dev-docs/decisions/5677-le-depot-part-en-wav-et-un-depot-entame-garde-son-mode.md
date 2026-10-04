@@ -3,6 +3,8 @@ type: adr
 title: "Le dépôt part en WAV par défaut, et un dépôt entamé garde le mode dans lequel il a commencé"
 status: stable
 article: A15
+heuristiques:
+  - "nielsen-5"
 chantier: "#5677, lot 18 du chantier #5596 (retour de terrain 2.193.0)"
 decided_at: 2026-10-04
 verification: certaine

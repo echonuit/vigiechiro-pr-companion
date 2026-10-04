@@ -212,6 +212,30 @@ class RegenerationPendantUnDepotTest {
     }
 
     @Test
+    @DisplayName("#5677 : un dépôt entamé en WAV se reprend en WAV, même si le réglage dit désormais ZIP")
+    void un_depot_entame_en_wav_reste_en_wav() throws Exception {
+        Long id = passagePrepare();
+        mode.set(ModeDepot.SEQUENCES_WAV);
+        AtomicBoolean refuser = new AtomicBoolean(true);
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenAnswer(appel ->
+                        refuser.getAndSet(false) ? ReponseApi.refuse(422, "contenu refusé") : ReponseApi.succes(""));
+        BilanDepot premier = depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+        assertThat(premier.echecs())
+                .as("une séquence refusée : le dépôt reste entamé")
+                .hasSize(1);
+
+        mode.set(ModeDepot.ARCHIVES_ZIP);
+        BilanDepot reprise = depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+
+        assertThat(reprise.deposees())
+                .as("seule la séquence manquante repart, en WAV")
+                .isEqualTo(1);
+        verify(client, never()).creerFichier(endsWith(".zip"), anyString());
+        assertThat(statut(id)).isEqualTo(StatutWorkflow.DEPOSE);
+    }
+
+    @Test
     @DisplayName("#5677 : un dépôt qui commence suit le réglage, WAV compris")
     void un_depot_qui_commence_suit_le_reglage() throws Exception {
         Long id = passagePrepare();
