@@ -1,0 +1,14 @@
+# Le fond de carte des bancs : une tuile blanche, servie sans réseau (#5789).
+#
+# Ce fichier est ce qui ÉVITE le réseau, et il agit seul : le module `com.gluonhq.maps` déclare
+# `uses com.gluonhq.maps.tile.TileRetriever`, et `TileRetrieverProvider.load()` prend le premier
+# service trouvé. À défaut, il construit un `CachedOsmTileRetriever` qui interroge
+# `tile.openstreetmap.org` - c'est ce repli qui faisait rougir quatre bancs sur cinq.
+#
+# Les tests tournent sur le chemin de CLASSES (`useModulePath=false` dans `pom.xml`), donc cette
+# déclaration suffit et aucun `module-info` de test n'est nécessaire.
+#
+# Portée TEST seulement : les outils de capture sont des classes PRINCIPALES lancées par
+# `.github/assets/capture_screenshots.py`, donc ce service n'est pas sur leur chemin et une capture
+# de carte dépend toujours du réseau. Limite déclarée en #5789, pas corrigée par lui.
+fr.univ_amu.iut.recette.TuilesSansReseau
