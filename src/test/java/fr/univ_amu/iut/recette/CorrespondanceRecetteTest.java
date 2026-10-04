@@ -69,6 +69,14 @@ class CorrespondanceRecetteTest {
 
     private static final Path PAGE_ASSERTES = Path.of("dev-docs", "recette", "clips-assertes.md");
 
+    /// La page des clips tournés contre une plateforme (#4306). Elle s'écrit à la main et titre ses
+    /// sections par la LISTE des cas (`### S4-90, S4-92 · ...`), là où les deux autres, dérivées,
+    /// titrent par cas et par méthode. Une réserve s'y cherche donc sous cette autre forme (#5796).
+    private static final Path PAGE_CONNECTES = Path.of("dev-docs", "recette", "clips-connectes.md");
+
+    /// Le titre d'une section de la page connectée : ses cas, séparés par des virgules, puis ` · `.
+    private static final Pattern TITRE_CONNECTE = Pattern.compile("^### ([^·\\n]+) · ", Pattern.MULTILINE);
+
     /// Les sessions dont ce garde ne lit aucun cas, et dont le silence est assumé (#3884).
     ///
     /// Cette liste est une **dette chiffrée**, pas une dispense. Chaque ligne dit pourquoi la
@@ -493,19 +501,36 @@ class CorrespondanceRecetteTest {
             if (debut < 0) {
                 continue;
             }
-            int fin = texte.indexOf("\n### ", debut + 1);
-            int finSection = texte.indexOf("\n## ", debut + 1);
-            if (finSection >= 0 && (fin < 0 || finSection < fin)) {
-                fin = finSection;
+            trouve.append(sectionDepuis(texte, debut));
+        }
+        // Un scénario connecté n'a sa section que sur la page connectée. Sans cette lecture, sa réserve
+        // ne pouvait être trouvée nulle part : aucun clip tourné contre une plateforme ne pouvait dire
+        // ce qu'il ne prouve pas, alors que ce sont les plus convaincants (#5796).
+        if (Files.isRegularFile(PAGE_CONNECTES)) {
+            String texte = lire(PAGE_CONNECTES);
+            Matcher titres = TITRE_CONNECTE.matcher(texte);
+            while (titres.find()) {
+                if (List.of(titres.group(1).split(",\\s*")).contains(citation.cas())) {
+                    trouve.append(sectionDepuis(texte, titres.start()));
+                }
             }
-            // La section COURT jusqu'à la fin de la page quand rien ne la suit. La forme précédente
-            // passait alors `texte.substring(debut)` comme séquence, tout en l'indexant avec les
-            // bornes de la page entière : `IndexOutOfBoundsException`. Le défaut a survécu parce
-            // qu'aucun cas hors application n'était encore le DERNIER de sa page - S4-18 l'est, et
-            // c'est lui qui a fait tomber le garde (#4982).
-            trouve.append(texte, debut, fin < 0 ? texte.length() : fin);
         }
         return trouve.toString();
+    }
+
+    /// La section qui commence à `debut`, jusqu'au titre suivant de son niveau ou du niveau supérieur.
+    ///
+    /// Elle COURT jusqu'à la fin de la page quand rien ne la suit. La forme précédente passait alors
+    /// `texte.substring(debut)` comme séquence, tout en l'indexant avec les bornes de la page entière :
+    /// `IndexOutOfBoundsException`. Le défaut a survécu parce qu'aucun cas hors application n'était
+    /// encore le DERNIER de sa page - S4-18 l'est, et c'est lui qui a fait tomber le garde (#4982).
+    private static String sectionDepuis(String texte, int debut) {
+        int fin = texte.indexOf("\n### ", debut + 1);
+        int finSection = texte.indexOf("\n## ", debut + 1);
+        if (finSection >= 0 && (fin < 0 || finSection < fin)) {
+            fin = finSection;
+        }
+        return texte.substring(debut, fin < 0 ? texte.length() : fin);
     }
 
     @Test

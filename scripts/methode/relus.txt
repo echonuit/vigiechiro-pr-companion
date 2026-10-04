@@ -1325,6 +1325,7 @@ b2938ad316fb  src/test/java/fr/univ_amu/iut/audio/view/LibellesAudioTest.java
 3f93944ed9df  src/test/java/fr/univ_amu/iut/audio/view/PanneauDiscussionTest.java
 70849ea7e398  src/test/java/fr/univ_amu/iut/audio/view/PublicationCorrectionsUITest.java
 45935e4c9d37  src/test/java/fr/univ_amu/iut/audio/view/RevueClavierTest.java
+51fc348606d2  src/test/java/fr/univ_amu/iut/audio/view/ScenarioConnectePublicationTest.java
 d3c3716067cf  src/test/java/fr/univ_amu/iut/audio/view/ScenarioPerceptifFiltresTest.java
 5335e33cc9a7  src/test/java/fr/univ_amu/iut/audio/view/SonsValidationArchiveViewTest.java
 df42bcd62303  src/test/java/fr/univ_amu/iut/audio/view/SonsValidationDepotViewTest.java
@@ -2029,7 +2030,7 @@ bfbc2c64fc3e  src/test/java/fr/univ_amu/iut/recette/BancDesClipsTest.java
 dd0bd72a760f  src/test/java/fr/univ_amu/iut/recette/CarteDeRecette.java
 dc61d71a4d14  src/test/java/fr/univ_amu/iut/recette/CasDeRecette.java
 b5e7288906d9  src/test/java/fr/univ_amu/iut/recette/ClipDeModaleTest.java
-e7b1d18c5e43  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
+03f3d8fd682d  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
 430d522b9848  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
 fb2f197b3036  src/test/java/fr/univ_amu/iut/recette/DispositionDesBrutsTest.java
 f77cce1c3b9d  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffere.java
