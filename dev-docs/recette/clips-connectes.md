@@ -19,7 +19,10 @@ l'[ADR 5641](../decisions/5641-les-tests-connectes-ont-deux-cibles.md), par l'en
 `plateforme_de_test` de `tournage-recette.yml` (#5793) : l'API Vigie-Chiro épinglée, montée par les
 tests eux-mêmes, sur un état de départ déclaré, sans jeton, sur Ubuntu seul. Le scénario est le même :
 le banc lit la cible que le profil déclare, et seuls ses cas qui ont un sens sur cette cible sont
-joués (`recette-connectee & plateforme-de-test`), aujourd'hui S8-01, S8-05, S8-06, S2-59 et S2-60.
+joués (`recette-connectee & plateforme-de-test`), aujourd'hui S8-01, S8-05, S8-06, S2-59, S2-60 et S4-47.
+
+S4-47 est le premier cas qui n'existe **que** là (#5795) : son scénario porte en plus
+`plateforme-de-test-seule`, que le tournage national exclut et que son oracle n'attend pas.
 
 Ses clips vont sur une pré-version à elle, `clips-plateforme-de-test`, et non sur `clips-connectes`.
 Leur état de départ étant déclaré, ils pourront se comparer, sous la condition que l'ADR 5641 pose et
@@ -178,6 +181,28 @@ participation » l'ouvre sur le portail, et cette moitié-là se juge à l'oeil,
 l'annonce déjà : deux de ces cas « exigent de regarder ailleurs que dans l'application ».
 
 <video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-connectes/ScenarioConnecteAnnonceImportTest.connecte_l_import_annonce_la_participation.mp4"></video>
+
+### S4-47 · lancer la participation, et lire l'état que la plateforme rend
+
+> **S4-47** « Lancer la participation » : la carte « Traitement Vigie-Chiro » apparaît (« Analyse
+> planifiée »).
+
+**D'où vient ce clip.** De la **plateforme de test**, et d'elle seule : il vit sur la pré-version
+`clips-plateforme-de-test`, pas sur `clips-connectes`. Contre un double, « Analyse planifiée » serait
+ce qu'on a fait dire au double. Contre la plateforme nationale, le geste lancerait pour de bon une
+analyse sur un compte réel. La plateforme de test joue le vrai code serveur sur un état qu'on jette.
+
+**Ce qu'il sème.** Un passage local déjà téléversé, relié à la participation `nuit-a-lancer` de l'état
+de départ, réservée à ce geste (#5794).
+
+**Ce qu'il prouve.** Avant le clic, la carte ne dit rien de planifié ; après, l'étape 4 dit que
+l'analyse est demandée, et la carte dit « Analyse planifiée ». Sans worker, la plateforme de test en
+reste là, et c'est l'état que le cas décrit.
+
+**Ce qu'il ne prouve pas.** Que l'analyse **aboutisse** : rien ne la traite sur la plateforme de test.
+
+<video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-plateforme-de-test/ScenarioConnecteLancementTest.lancer_la_participation_rend_l_analyse_planifiee.mp4"></video>
+
 
 ## Ce que ces clips publient, et le compte que cela engage
 

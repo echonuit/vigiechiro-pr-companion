@@ -135,7 +135,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 - **S4-44** · *hors-portée: un serveur qui a réellement gardé une partie des archives, et qui dit lesquelles : la reprise se juge sur ce qu'il en reste chez LUI* · Reprendre ne renvoie que les archives manquantes.
 - **S4-45** · *prérequis: une base de départ où un dépôt est en cours, une partie des unités déposées et le reste non (générateur de bases déclarées de #4325)* · Fermer puis rouvrir l'écran : la table se réhydrate.
 - **S4-46** · *hors-portée: toutes les unités réellement déposées, donc autant de transferts menés à bout* · Le passage ne devient « Déposé » que lorsque **toutes** les unités le sont.
-- **S4-47** · *hors-portée: la plateforme qui accepte un calcul et rend son état. « Analyse planifiée » est SA réponse, pas la nôtre* · « 🚀 Lancer la participation » : la carte « Traitement Vigie-Chiro » apparaît (« Analyse planifiée »).
+- **S4-47** · « 🚀 Lancer la participation » : la carte « Traitement Vigie-Chiro » apparaît (« Analyse planifiée »).
 - **S4-48** · *hors-portée: un état de traitement qui bouge côté serveur entre deux relevés, sans quoi « Actualiser » ne relève rien* · « 🔄 Actualiser » relève l'état, **sans polling** automatique.
 - **S4-49** · *hors-portée: une manipulation du réseau en cours d'opération - coupure, bridage à quelques dizaines de ko/s - que le banc ne sait pas provoquer sans mentir sur la cause* · Hors connexion, « Actualiser » dit « Impossible de joindre Vigie-Chiro » **sans effacer** le dernier
   état connu.

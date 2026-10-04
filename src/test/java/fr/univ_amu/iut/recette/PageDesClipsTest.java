@@ -64,11 +64,14 @@ class PageDesClipsTest {
     /// L'adresse d'un clip dans une page : `.../clips-recette/<Classe>.<methode>.mp4`, ou la même
     /// sous `clips-connectes` pour un clip tourné contre la plateforme (#4306).
     ///
-    /// Les deux pré-versions, et pas un motif ouvert sur n'importe quelle destination : une
+    /// Ou encore sous `clips-plateforme-de-test`, pour un clip tourné contre la plateforme de test
+    /// (#5795) : un cas qui n'a de sens que là n'a pas d'autre adresse.
+    ///
+    /// Les trois pré-versions, et pas un motif ouvert sur n'importe quelle destination : une
     /// adresse qui pointerait ailleurs - un tag de version, par exemple - montrerait un clip figé
     /// pendant que la page prétend montrer le tournage courant.
-    private static final Pattern CLIP =
-            Pattern.compile("/releases/download/(?:clips-recette|clips-connectes)/([A-Za-z0-9]+)\\.([a-z0-9_]+)\\.mp4");
+    private static final Pattern CLIP = Pattern.compile(
+            "/releases/download/(?:clips-recette|clips-connectes|clips-plateforme-de-test)/([A-Za-z0-9]+)\\.([a-z0-9_]+)\\.mp4");
 
     /// Le titre d'une section de cas : `### S6-27 · ...`.
     private static final Pattern SECTION = Pattern.compile("^### (S\\d+-\\d+) ·", Pattern.MULTILINE);

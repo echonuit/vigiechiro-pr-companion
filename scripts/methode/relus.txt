@@ -1862,6 +1862,7 @@ d290c4438c53  src/test/java/fr/univ_amu/iut/lot/view/LotIdentiteStatutViewTest.j
 21de420b4e35  src/test/java/fr/univ_amu/iut/lot/view/LotViewTest.java
 0296639e177a  src/test/java/fr/univ_amu/iut/lot/view/LotVueIntegrationTest.java
 59fbfe99d0e1  src/test/java/fr/univ_amu/iut/lot/view/NavigationLotViewTest.java
+e7d064ad6306  src/test/java/fr/univ_amu/iut/lot/view/ScenarioConnecteLancementTest.java
 a11734ef6c52  src/test/java/fr/univ_amu/iut/lot/view/ScenarioPerceptifRefusDepotTest.java
 029a40b4f056  src/test/java/fr/univ_amu/iut/lot/viewmodel/ActionsLotPossiblesTest.java
 227eb4b62ef9  src/test/java/fr/univ_amu/iut/lot/viewmodel/AnticipationEspaceDisqueTest.java
@@ -2027,8 +2028,8 @@ bfbc2c64fc3e  src/test/java/fr/univ_amu/iut/recette/BancDesClipsTest.java
 dd0bd72a760f  src/test/java/fr/univ_amu/iut/recette/CarteDeRecette.java
 dc61d71a4d14  src/test/java/fr/univ_amu/iut/recette/CasDeRecette.java
 b5e7288906d9  src/test/java/fr/univ_amu/iut/recette/ClipDeModaleTest.java
-e64d08c2013b  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
-c6c666b5e159  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
+e7b1d18c5e43  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
+430d522b9848  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
 fb2f197b3036  src/test/java/fr/univ_amu/iut/recette/DispositionDesBrutsTest.java
 f77cce1c3b9d  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffere.java
 a0cad8cca4aa  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffereTest.java
@@ -2053,7 +2054,7 @@ d074a44cd5f7  src/test/java/fr/univ_amu/iut/recette/JournalDesReperes.java
 a8ebe81a91bf  src/test/java/fr/univ_amu/iut/recette/Jugement.java
 23ea2a6b45e9  src/test/java/fr/univ_amu/iut/recette/LecteurSpec.java
 1af59295a807  src/test/java/fr/univ_amu/iut/recette/MotifDeCas.java
-328603688575  src/test/java/fr/univ_amu/iut/recette/PageDesClipsTest.java
+7a4f1005e083  src/test/java/fr/univ_amu/iut/recette/PageDesClipsTest.java
 a5d5dc3a5941  src/test/java/fr/univ_amu/iut/recette/PerimetreDesSessions.java
 a371b59567a4  src/test/java/fr/univ_amu/iut/recette/PerimetreDesSessionsTest.java
 1fa606665207  src/test/java/fr/univ_amu/iut/recette/Portee.java
