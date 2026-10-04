@@ -1,14 +1,16 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
-import fr.univ_amu.iut.commun.model.AnalyseurCoordonnees;
 import fr.univ_amu.iut.commun.model.validation.ValidateurCodePoint;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.sites.model.CodePointLibre;
 import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.PointVoisin;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.VerdictCarre;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
@@ -37,12 +39,6 @@ import javafx.beans.property.StringProperty;
 /// `false` (la modale reste ouverte).
 public class PointEditViewModel {
 
-    /// Bornes de validité d'une latitude décimale (degrés).
-    private static final double LATITUDE_MAX = 90.0;
-
-    /// Bornes de validité d'une longitude décimale (degrés).
-    private static final double LONGITUDE_MAX = 180.0;
-
     private final ServiceSites service;
 
     /// Tenue à jour de la commune des points (#2791) : sollicitée après un enregistrement réussi,
@@ -55,8 +51,8 @@ public class PointEditViewModel {
 
     private final StringProperty code = new SimpleStringProperty(this, "code", "");
     private final StringProperty description = new SimpleStringProperty(this, "description", "");
-    private final StringProperty latitude = new SimpleStringProperty(this, "latitude", "");
-    private final StringProperty longitude = new SimpleStringProperty(this, "longitude", "");
+    /// La position, saisie dans un seul champ et lue comme celle du site (#5688).
+    private final PositionSaisie position = new PositionSaisie();
     private final ReadOnlyStringWrapper titre = new ReadOnlyStringWrapper(this, "titre", "");
     private final ReadOnlyStringWrapper libelleBouton = new ReadOnlyStringWrapper(this, "libelleBouton", "+ Ajouter");
     /// Compte rendu de la dernière tentative d'enregistrement, avec sa sévérité (#1917). Il s'appelait
@@ -74,8 +70,6 @@ public class PointEditViewModel {
     /// confirmation : la vue le colore en conséquence.
 
     private final BooleanBinding codeValide;
-    private final BooleanBinding latitudeValide;
-    private final BooleanBinding longitudeValide;
     private final BooleanBinding peutEnregistrer;
 
     private Long idSite;
@@ -102,13 +96,10 @@ public class PointEditViewModel {
         this.intentionPublication =
                 new IntentionPublication(Objects.requireNonNull(publication, "publication"), this::gpsRenseigne);
         codeValide = Bindings.createBooleanBinding(() -> ValidateurCodePoint.estValide(code.get()), code);
-        latitudeValide = Bindings.createBooleanBinding(() -> coordonneeValide(latitude.get(), LATITUDE_MAX), latitude);
-        longitudeValide =
-                Bindings.createBooleanBinding(() -> coordonneeValide(longitude.get(), LONGITUDE_MAX), longitude);
-        peutEnregistrer = codeValide.and(latitudeValide).and(longitudeValide);
-        // Le motif du gris suit la saisie : on peut cocher la case, puis effacer les coordonnées.
-        latitude.addListener((observable, avant, apres) -> intentionPublication.recalculer());
-        longitude.addListener((observable, avant, apres) -> intentionPublication.recalculer());
+        peutEnregistrer = codeValide.and(position.valide());
+        // Le motif du gris suit la saisie : on peut cocher la case, puis effacer la position.
+        position.texte().addListener((observable, avant, apres) -> intentionPublication.recalculer());
+        position.texte().addListener((observable, avant, apres) -> signalerLeVoisin());
     }
 
     /// Configure la modale en **mode création** d'un point pour le site donné.
@@ -118,6 +109,11 @@ public class PointEditViewModel {
         this.idPointEnEdition = null;
         this.carreDuSite = site.numeroCarre();
         reinitialiserChamps();
+        // Proposé, pas imposé : le Z suivant est la règle du portail pour un point libre (#5688), et les
+        // points systématiques A1 à H2 restent à nommer à la main tant que #5608 n'est pas tranchée.
+        pointsDuSite = service.listerPoints(site.id());
+        code.set(CodePointLibre.suivant(
+                pointsDuSite.stream().map(PointDEcoute::code).toList()));
         titre.set("Nouveau point d'écoute · Carré " + site.numeroCarre());
         libelleBouton.set("+ Ajouter");
         intentionPublication.aLaCreation(site.id());
@@ -131,10 +127,14 @@ public class PointEditViewModel {
         this.idPointEnEdition = point.id();
         this.carreDuSite = site.numeroCarre();
         intentionPublication.aLEdition();
+        pointsDuSite = List.of();
         code.set(point.code());
         description.set(point.description() == null ? "" : point.description());
-        latitude.set(point.latitude() == null ? "" : Double.toString(point.latitude()));
-        longitude.set(point.longitude() == null ? "" : Double.toString(point.longitude()));
+        if (point.latitude() == null || point.longitude() == null) {
+            position.texte().set("");
+        } else {
+            position.placer(point.latitude(), point.longitude());
+        }
         retour.set(RetourOperation.AUCUN);
         titre.set("Modifier le point " + point.code() + " · Carré " + site.numeroCarre());
         libelleBouton.set("Modifier");
@@ -149,8 +149,9 @@ public class PointEditViewModel {
             return false;
         }
         try {
-            Double lat = parserCoordonnee(latitude.get());
-            Double lon = parserCoordonnee(longitude.get());
+            Optional<double[]> coordonnees = position.coordonnees();
+            Double lat = coordonnees.map(c -> c[0]).orElse(null);
+            Double lon = coordonnees.map(c -> c[1]).orElse(null);
             String desc = description.get().isBlank() ? null : description.get();
             PointDEcoute enregistre;
             if (idPointEnEdition == null) {
@@ -204,26 +205,51 @@ public class PointEditViewModel {
     /// Trouvé par une mutation destinée à éprouver un autre test (#4232) : c'est le hasard d'un mutant
     /// qui a nommé un défaut que personne ne cherchait.
     private boolean gpsRenseigne() {
-        return latitudeValide.get()
-                && longitudeValide.get()
-                && !latitude.get().isBlank()
-                && !longitude.get().isBlank();
+        return position.coordonnees().isPresent();
     }
 
     public StringProperty codeProperty() {
         return code;
     }
 
+    /// Le champ unique « Position » (#5688) : latitude puis longitude, lu comme à la déclaration du site.
+    public StringProperty positionProperty() {
+        return position.texte();
+    }
+
+    /// Le motif d'une position illisible ou hors des limites, vide sinon.
+    public ReadOnlyObjectProperty<RetourOperation> retourPositionProperty() {
+        return position.retour();
+    }
+
+    /// Un point du même site à 40 m au plus de la position saisie, en création (#5688). Un avertissement :
+    /// il nomme le voisin et n'empêche pas d'enregistrer.
+    private final ReadOnlyObjectWrapper<RetourOperation> retourVoisin =
+            new ReadOnlyObjectWrapper<>(this, "retourVoisin", RetourOperation.AUCUN);
+
+    /// Les points du site à l'ouverture d'une création ; vide en édition, où le point serait son voisin.
+    private List<PointDEcoute> pointsDuSite = List.of();
+
+    public ReadOnlyObjectProperty<RetourOperation> retourVoisinProperty() {
+        return retourVoisin.getReadOnlyProperty();
+    }
+
+    private void signalerLeVoisin() {
+        retourVoisin.set(position.coordonnees()
+                .flatMap(lue -> PointVoisin.lePlusProche(lue[0], lue[1], pointsDuSite))
+                .map(voisin -> RetourOperation.avertissement("Le point "
+                        + voisin.point().code() + " de ce site est à " + voisin.metres()
+                        + " m de cette position. Vérifiez que vous ne le créez pas une seconde fois."))
+                .orElse(RetourOperation.AUCUN));
+    }
+
+    /// Écrit une position dans le champ, sous la forme qu'il relit : ce que fait le marqueur qu'on glisse.
+    public void placer(double latitude, double longitude) {
+        position.placer(latitude, longitude);
+    }
+
     public StringProperty descriptionProperty() {
         return description;
-    }
-
-    public StringProperty latitudeProperty() {
-        return latitude;
-    }
-
-    public StringProperty longitudeProperty() {
-        return longitude;
     }
 
     public ReadOnlyStringProperty titreProperty() {
@@ -262,11 +288,11 @@ public class PointEditViewModel {
     /// incomplètes, ou plateforme hors d'atteinte. Le contrôle est un **confort**, jamais une condition de
     /// saisie.
     public VerdictCarre controlerCarre() {
-        Optional<double[]> position = coordonneesValides();
-        if (controleCarre.isEmpty() || position.isEmpty() || carreDuSite == null) {
+        Optional<double[]> saisie = coordonneesValides();
+        if (controleCarre.isEmpty() || saisie.isEmpty() || carreDuSite == null) {
             return new VerdictCarre.Indisponible();
         }
-        double[] coordonnees = position.get();
+        double[] coordonnees = saisie.get();
         return controleCarre.get().confronter(carreDuSite, coordonnees[0], coordonnees[1]);
     }
 
@@ -285,49 +311,16 @@ public class PointEditViewModel {
         return retourCarre.getReadOnlyProperty();
     }
 
-    /// Coordonnées GPS saisies **uniquement si les deux champs sont renseignés et valides** (bornes
-    /// incluses : latitude −90..90, longitude −180..180), sinon vide. Pensé pour la **carte-outil** : elle
-    /// ne pose un marqueur à une position réelle que pour un couple complet et borné (un champ vide, ou
-    /// un nombre hors bornes que le formulaire refuse déjà, ne doit pas être projeté). Tableau `{lat, lon}`.
+    /// La position saisie, `{latitude, longitude}`, **seulement** si elle se lit et tient dans les limites
+    /// du globe, vide sinon. Pensée pour la carte-outil : un champ vide ou refusé ne pose pas de marqueur.
     public Optional<double[]> coordonneesValides() {
-        if (!latitudeValide.get() || !longitudeValide.get()) {
-            return Optional.empty();
-        }
-        Double lat = parserCoordonnee(latitude.get());
-        Double lon = parserCoordonnee(longitude.get());
-        return lat == null || lon == null ? Optional.empty() : Optional.of(new double[] {lat, lon});
+        return position.coordonnees();
     }
 
     private void reinitialiserChamps() {
         code.set("");
         description.set("");
-        latitude.set("");
-        longitude.set("");
+        position.texte().set("");
         retour.set(RetourOperation.AUCUN);
-    }
-
-    /// Une coordonnée est valide si elle est vide (GPS optionnel) ou décimale dans `[-borne, borne]`.
-    private static boolean coordonneeValide(String texte, double borneAbsolue) {
-        if (texte == null || texte.isBlank()) {
-            return true;
-        }
-        try {
-            double valeur = parserDouble(texte);
-            return valeur >= -borneAbsolue && valeur <= borneAbsolue;
-        } catch (NumberFormatException malForme) {
-            return false;
-        }
-    }
-
-    /// Parse une coordonnée saisie, ou `null` si le champ est vide (GPS optionnel).
-    private static Double parserCoordonnee(String texte) {
-        return texte == null || texte.isBlank() ? null : parserDouble(texte);
-    }
-
-    /// Parse une coordonnée en **degrés décimaux**, en acceptant décimal (DD) **et** degrés/minutes/secondes
-    /// (DMS), via [AnalyseurCoordonnees] (#153). Lève `NumberFormatException` sur une saisie inanalysable
-    /// (la validité de plage est vérifiée à part par [#coordonneeValide]).
-    private static double parserDouble(String texte) {
-        return AnalyseurCoordonnees.enDegresDecimaux(texte);
     }
 }

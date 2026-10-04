@@ -308,7 +308,7 @@ La liste des carrés suivis, peuplée et à l'état initial.
 
 ## Modale point d'écoute
 
-<sub>`sites/view/ModalePoint.fxml` &middot; 3 capture(s)</sub>
+<sub>`sites/view/ModalePoint.fxml` &middot; 4 capture(s)</sub>
 
 <table>
 <tr>
@@ -321,11 +321,11 @@ La liste des carrés suivis, peuplée et à l'état initial.
 </tr>
 <tr>
 <th width="50%">Modale point carré divergent</th>
-<th width="50%"></th>
+<th width="50%">Modale point voisin</th>
 </tr>
 <tr>
 <td><a href="apercu-sites-modale-point-carre-divergent.png"><img src="apercu-sites-modale-point-carre-divergent.png" width="430" alt="Modale point carré divergent"></a></td>
-<td></td>
+<td><a href="apercu-sites-modale-point-voisin.png"><img src="apercu-sites-modale-point-voisin.png" width="430" alt="Création d'un point à 20 m d'un point du site : le champ unique Position, le code Z1 proposé, et l'avertissement qui nomme le voisin"></a></td>
 </tr>
 </table>
 

@@ -313,12 +313,13 @@ Sur un site qui n'a pas encore de passage, le tableau est simplement vide :
 ## Ajouter ou modifier un point d'écoute
 
 L'ajout ou la modification d'un point d'écoute se fait dans une **fenêtre dédiée** : code du point,
-description, et coordonnées GPS (facultatives). En création, le formulaire est vierge ; en
-modification, il est pré-rempli avec les valeurs existantes.
+description, et position (facultative). En création, le code est **proposé** : `Z` suivi du premier
+numéro libre du site, comme le fait le portail Vigie-Chiro pour un point libre. Vous pouvez le
+remplacer. En modification, le formulaire est pré-rempli avec les valeurs existantes.
 
 La fenêtre intègre une **carte-outil** centrée sur le carré du site, **synchronisée dans les deux
-sens** avec les champs latitude / longitude (#153) : **glissez le marqueur** sur la carte pour fixer
-la position (les champs se remplissent), ou **saisissez les coordonnées** (le marqueur se déplace).
+sens** avec le champ « Position » (#153) : **glissez le marqueur** sur la carte pour fixer la position
+(le champ se remplit), ou **saisissez la position** (le marqueur se déplace).
 
 Dès qu'un point géolocalisé est enregistré, sa **commune** est déterminée automatiquement depuis ses
 coordonnées (service public de géocodage, connexion requise) et mémorisée : c'est elle que retrouvent
@@ -327,14 +328,24 @@ l'export CSV des observations. Hors ligne, la commune attend simplement une proc
 synchronisation, un nouvel enregistrement du point, ou la commande `rattraper-communes` en ligne de
 commande.
 
-Les champs acceptent **deux formats**, au choix : **degrés décimaux** (`43.5298`, la virgule est
-tolérée) **ou** **degrés/minutes/secondes** (`43°31'47"N`, `1°34'26.4"W`). Vous pouvez donc **coller**
-des coordonnées depuis n'importe quelle source ; elles sont converties automatiquement, et une saisie
-hors plage (latitude −90..90, longitude −180..180) est refusée.
+La position se saisit dans **un seul champ**, exactement comme à la déclaration du site : **latitude
+puis longitude**, en degrés décimaux (`43.296482, 5.369780`), en degrés, minutes et secondes
+(`43°17'47.3"N 5°22'11.2"E`) ou en degrés et minutes décimales, la forme des GPS de terrain
+(`43°24.06'N 5°26.85'E`). Vous pouvez donc **coller** ce que donne une carte. Un texte qui ne se lit
+pas dit pourquoi sous le champ, et l'enregistrement attend : une virgule décimale (`43,401`), par
+exemple, se confond avec le séparateur des deux nombres, et le message demande le point décimal. Une
+position hors du globe (latitude −90..90, longitude −180..180) est refusée de même.
+
+Si un point du même site se trouve déjà **à 40 m au plus** de la position saisie, la fenêtre le
+signale par son code et sa distance. C'est un avertissement, pas un refus : 40 m est le rayon en deçà
+duquel le portail tient deux points pour le même endroit, et il vaut mieux le savoir avant de créer un
+doublon.
 Tant qu'aucun GPS n'est renseigné, le marqueur démarre **au centre du carré** en position
 **approximative** (anneau pointillé) : un point de départ à caler, pas une position mesurée.
 
-![La fenêtre de création d'un point d'écoute : formulaire vierge.](../assets/captures/apercu-sites-modale-point-creation.png)
+![La fenêtre de création d'un point d'écoute : le code est proposé, la position reste à saisir.](../assets/captures/apercu-sites-modale-point-creation.png)
+
+![Un point du site est à 20 m de la position saisie : la fenêtre le nomme, sans empêcher d'enregistrer.](../assets/captures/apercu-sites-modale-point-voisin.png)
 
 ![La même fenêtre en modification : les champs sont pré-remplis avec les valeurs du point existant.](../assets/captures/apercu-sites-modale-point.png)
 

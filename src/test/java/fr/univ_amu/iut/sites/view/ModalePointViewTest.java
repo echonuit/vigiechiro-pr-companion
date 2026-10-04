@@ -97,10 +97,9 @@ class ModalePointViewTest {
         TextField champCode = robot.lookup("#champCode").queryAs(TextField.class);
         Respiration.avantLeGeste(robot);
 
-        // Le code se TAPE : ce cas fait juger un bouton qui s'active à la saisie, et `setText` posait
-        // le code d'un coup - le bouton changeait d'état sans qu'on voie ce qui le fait changer (#4149).
-        robot.clickOn(champCode).write("B2");
-        WaitForAsyncUtils.waitForFxEvents();
+        // Le code est PROPOSÉ (#5688) : le Z suivant du site, ici Z1 puisque le site ne porte que A1. Le
+        // bouton est donc actif d'emblée, et l'observateur n'a qu'à enregistrer.
+        assertThat(champCode.getText()).isEqualTo("Z1");
         Button valider = robot.lookup("#boutonValider").queryAs(Button.class);
         assertThat(valider.isDisabled()).isFalse();
         Respiration.leTempsDeLire(robot);
@@ -112,7 +111,7 @@ class ModalePointViewTest {
         List<String> codes = robot.lookup(".carte-point-code").queryAllAs(Label.class).stream()
                 .map(Label::getText)
                 .toList();
-        assertThat(codes).contains("A1", "B2");
+        assertThat(codes).contains("A1", "Z1");
     }
 
     @Test
@@ -162,13 +161,9 @@ class ModalePointViewTest {
                 .isNotEmpty();
 
         // Saisir un GPS valide (dans le carré) déplace le marqueur, qui devient une position réelle :
-        // pastille pleine, sans pointillés. C'est la synchro champs → carte.
-        TextField latitude = robot.lookup("#champLatitude").queryAs(TextField.class);
-        TextField longitude = robot.lookup("#champLongitude").queryAs(TextField.class);
-        robot.interact(() -> {
-            latitude.setText("43.4031");
-            longitude.setText("-1.5708");
-        });
+        // pastille pleine, sans pointillés. C'est la synchro champ → carte, par le champ unique (#5688).
+        TextField position = robot.lookup("#champPosition").queryAs(TextField.class);
+        robot.interact(() -> position.setText("43.4031, -1.5708"));
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(premierePastille(robot).getStrokeDashArray())
@@ -177,7 +172,7 @@ class ModalePointViewTest {
 
         // Une latitude hors bornes (200) est refusée par le formulaire ET ne doit pas être projetée :
         // le marqueur redevient approximatif (au centre du carré) plutôt qu'un point réel aberrant.
-        robot.interact(() -> latitude.setText("200"));
+        robot.interact(() -> position.setText("200, -1.5708"));
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(premierePastille(robot).getStrokeDashArray())
                 .as("GPS hors bornes : pas de projection, retour au marqueur approximatif")
@@ -206,6 +201,8 @@ class ModalePointViewTest {
         ouvrirModale(robot);
         StackPane enveloppe = robot.lookup("#enveloppeValider").queryAs(StackPane.class);
         Button valider = robot.lookup("#boutonValider").queryAs(Button.class);
+        // Le code proposé (#5688) rend le bouton actif : on l'efface pour retrouver un grisage.
+        robot.interact(() -> robot.lookup("#champCode").queryAs(TextField.class).setText(""));
 
         assertThat(valider.isDisabled()).isTrue();
         assertThat(InfobulleDeBlocage.texteDe(enveloppe))

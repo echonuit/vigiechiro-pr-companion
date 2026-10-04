@@ -401,18 +401,15 @@ class ScenarioFicheSiteTest {
                 () -> robot.lookup("#champCode").tryQuery().isPresent(), "le champ de code paraît", 10 * 1000L);
         Respiration.leTempsDeLire(robot);
 
-        robot.clickOn(robot.lookup("#champCode").queryAs(TextField.class)).write("E5");
+        // Le code est proposé (Z suivant, #5688) : l'observateur le remplace par le sien.
+        GesteVisible.remplacerLeTexte(robot, "#champCode", "E5");
         WaitForAsyncUtils.waitForFxEvents();
 
         // Le geste qu'un observateur de terrain fait vraiment : il relève sur son GPS de randonnée des
         // degrés/minutes/secondes, et les colle dans une application qui parle en décimal. Le script
         // promet que les deux formats se synchronisent ; c'est la moitié du cas que personne ne filmait,
-        // couverte en unitaire seulement (#4232).
-        robot.clickOn(robot.lookup("#champLatitude").queryAs(TextField.class)).write("43°31'47\"N");
-        WaitForAsyncUtils.waitForFxEvents();
-        Respiration.entreDeuxGestes(robot);
-
-        robot.clickOn(robot.lookup("#champLongitude").queryAs(TextField.class)).write("5°26'51\"E");
+        // couverte en unitaire seulement (#4232). Depuis #5688, la paire se colle dans un seul champ.
+        robot.clickOn(robot.lookup("#champPosition").queryAs(TextField.class)).write("43°31'47\"N 5°26'51\"E");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
 
@@ -464,7 +461,8 @@ class ScenarioFicheSiteTest {
                 () -> robot.lookup("#champCode").tryQuery().isPresent(), "le champ de code paraît", 10 * 1000L);
         Respiration.leTempsDeLire(robot);
 
-        robot.clickOn(robot.lookup("#champCode").queryAs(TextField.class)).write("D4");
+        // Le code est proposé (Z suivant, #5688) : l'observateur le remplace par le sien.
+        GesteVisible.remplacerLeTexte(robot, "#champCode", "D4");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.avantLeGeste(robot);
 

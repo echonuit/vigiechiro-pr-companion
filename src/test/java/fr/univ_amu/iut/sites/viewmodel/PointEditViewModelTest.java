@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FournisseurToken;
@@ -33,8 +34,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/// Tests du [PointEditViewModel] : validation R2 du code, validation des coordonnées (optionnelles,
-/// virgule décimale), pilotage du bouton, et enregistrement (création et édition via le service)
+/// Tests du [PointEditViewModel] : validation R2 du code, validation de la position (optionnelle, lue
+/// comme celle du site, #5688), pilotage du bouton, et enregistrement (création et édition via le service)
 /// sur base SQLite jetable.
 class PointEditViewModelTest {
 
@@ -91,8 +92,7 @@ class PointEditViewModelTest {
     void sans_controle_carre_le_silence() {
         viewModel.preparerCreation(site);
         viewModel.codeProperty().set("A1");
-        viewModel.latitudeProperty().set("43.5298");
-        viewModel.longitudeProperty().set("5.4474");
+        viewModel.positionProperty().set("43.5298, 5.4474");
 
         viewModel.appliquerControleCarre(viewModel.controlerCarre());
 
@@ -109,6 +109,7 @@ class PointEditViewModelTest {
     @DisplayName("En création, un code vide interdit l'enregistrement (R2)")
     void code_vide_interdit() {
         viewModel.preparerCreation(site);
+        viewModel.codeProperty().set("");
 
         assertThat(viewModel.codeValide().get()).isFalse();
         assertThat(viewModel.peutEnregistrer().get()).isFalse();
@@ -130,32 +131,32 @@ class PointEditViewModelTest {
     }
 
     @Test
-    @DisplayName("Une coordonnée hors bornes bloque, la virgule décimale est tolérée")
+    @DisplayName("#5688 : une position hors bornes bloque, une position lue l'autorise")
     void coordonnees_validees() {
         viewModel.preparerCreation(site);
         viewModel.codeProperty().set("A1");
 
-        viewModel.latitudeProperty().set("200");
+        viewModel.positionProperty().set("200, 5.4474");
         assertThat(viewModel.peutEnregistrer().get()).isFalse();
 
-        viewModel.latitudeProperty().set("43,4010");
+        viewModel.positionProperty().set("43.4010, 5.4474");
         assertThat(viewModel.peutEnregistrer().get()).isTrue();
     }
 
     @Test
-    @DisplayName("coordonneesValides() : couple complet et borné seulement (sert à la carte-outil, #153)")
+    @DisplayName("coordonneesValides() : position lue et bornée seulement (sert à la carte-outil, #153)")
     void coordonnees_valides_pour_la_carte() {
         viewModel.preparerCreation(site);
 
         // Aucune saisie → vide (pas de marqueur réel à projeter).
         assertThat(viewModel.coordonneesValides()).isEmpty();
 
-        // Latitude seule → couple incomplet → vide.
-        viewModel.latitudeProperty().set("43.4010");
+        // Un seul nombre ne fait pas une position (#5688) → vide.
+        viewModel.positionProperty().set("43.4010");
         assertThat(viewModel.coordonneesValides()).isEmpty();
 
-        // Couple complet et borné (virgule tolérée) → présent, parsé.
-        viewModel.longitudeProperty().set("-1,5740");
+        // Paire complète et bornée → présente, lue.
+        viewModel.positionProperty().set("43.4010, -1.5740");
         assertThat(viewModel.coordonneesValides()).hasValueSatisfying(gps -> {
             assertThat(gps[0]).isEqualTo(43.4010);
             assertThat(gps[1]).isEqualTo(-1.5740);
@@ -163,24 +164,23 @@ class PointEditViewModelTest {
 
         // Latitude hors bornes (200, refusée par le formulaire) → vide : la carte ne projette pas un
         // point hors [-90,90] (finding #345).
-        viewModel.latitudeProperty().set("200");
+        viewModel.positionProperty().set("200, -1.5740");
         assertThat(viewModel.coordonneesValides()).isEmpty();
     }
 
     @Test
-    @DisplayName("Une saisie DMS est acceptée et convertie en degrés décimaux (#153)")
+    @DisplayName("Une saisie DMS est acceptée et convertie en degrés décimaux (#153, #5688)")
     void coordonnees_dms() {
         viewModel.preparerCreation(site);
         viewModel.codeProperty().set("A1");
 
-        // Latitude en degrés/minutes/secondes, longitude en DMS ouest (négative).
-        viewModel.latitudeProperty().set("43°24'3.6\"N");
-        viewModel.longitudeProperty().set("1°34'26.4\"W");
+        // Degrés/minutes/secondes, longitude ouest (négative), en une seule paire.
+        viewModel.positionProperty().set("43°24'3.6\"N 1°34'26.4\"W");
         assertThat(viewModel.peutEnregistrer().get()).isTrue();
 
         assertThat(viewModel.coordonneesValides()).hasValueSatisfying(gps -> {
-            assertThat(gps[0]).isCloseTo(43.401, org.assertj.core.api.Assertions.within(1e-6));
-            assertThat(gps[1]).isCloseTo(-1.574, org.assertj.core.api.Assertions.within(1e-6));
+            assertThat(gps[0]).isCloseTo(43.401, within(1e-6));
+            assertThat(gps[1]).isCloseTo(-1.574, within(1e-6));
         });
     }
 
@@ -189,8 +189,7 @@ class PointEditViewModelTest {
     void enregistrer_creation() {
         viewModel.preparerCreation(site);
         viewModel.codeProperty().set("A1");
-        viewModel.latitudeProperty().set("43,4010");
-        viewModel.longitudeProperty().set("-1,5740");
+        viewModel.positionProperty().set("43.4010, -1.5740");
         viewModel.descriptionProperty().set("Près du chêne");
 
         boolean ok = viewModel.enregistrer();
@@ -224,6 +223,9 @@ class PointEditViewModelTest {
         viewModel.preparerEdition(site, existant);
 
         assertThat(viewModel.codeProperty().get()).isEqualTo("A1");
+        assertThat(viewModel.positionProperty().get())
+                .as("#5688 : la position enregistrée se montre dans le champ unique, sous la forme qu'il relit")
+                .isEqualTo("43.400000, -1.570000");
         assertThat(viewModel.libelleBoutonProperty().get()).isEqualTo("Modifier");
 
         viewModel.descriptionProperty().set("Nouvelle note");
@@ -265,8 +267,7 @@ class PointEditViewModelTest {
         PointEditViewModel vm = vmResolvantAix();
         vm.preparerCreation(site);
         vm.codeProperty().set("A1");
-        vm.latitudeProperty().set("43.5297");
-        vm.longitudeProperty().set("5.4474");
+        vm.positionProperty().set("43.5297, 5.4474");
         assertThat(vm.enregistrer()).isTrue();
 
         vm.resoudreCommune();
@@ -319,12 +320,11 @@ class PointEditViewModelTest {
         PointEditViewModel vm = avecPublication();
         vm.preparerCreation(site);
         vm.codeProperty().set("A1");
-        vm.latitudeProperty().set("43.52");
-        vm.longitudeProperty().set("5.46");
+        vm.positionProperty().set("43.52, 5.46");
         assertThat(vm.publication().empechementProperty().get()).isEmpty();
 
         vm.publication().demandeeProperty().set(true);
-        vm.longitudeProperty().set("");
+        vm.positionProperty().set("");
 
         // Laisser la case cochée sous un contrôle désactivé donnerait à lire une intention qui ne
         // partira pas. La décocher est visible ; le silence ne le serait pas.
@@ -338,8 +338,7 @@ class PointEditViewModelTest {
     void un_carre_non_relie_empeche_la_publication() {
         PointEditViewModel vm = avecPublication();
         vm.preparerCreation(site);
-        vm.latitudeProperty().set("43.52");
-        vm.longitudeProperty().set("5.46");
+        vm.positionProperty().set("43.52, 5.46");
 
         assertThat(vm.publication().empechementProperty().get()).contains("pas encore enregistré");
     }
@@ -351,8 +350,7 @@ class PointEditViewModelTest {
         PointEditViewModel vm = avecPublication();
         vm.preparerCreation(site);
         vm.codeProperty().set("A1");
-        vm.latitudeProperty().set("43.52");
-        vm.longitudeProperty().set("5.46");
+        vm.positionProperty().set("43.52, 5.46");
         vm.publication().demandeeProperty().set(true);
 
         assertThat(vm.enregistrer()).isTrue();
@@ -374,8 +372,7 @@ class PointEditViewModelTest {
         PointEditViewModel vm = avecPublication();
         vm.preparerCreation(site);
         vm.codeProperty().set("A1");
-        vm.latitudeProperty().set("43.52");
-        vm.longitudeProperty().set("5.46");
+        vm.positionProperty().set("43.52, 5.46");
 
         assertThat(vm.enregistrer()).isTrue();
 
@@ -391,8 +388,7 @@ class PointEditViewModelTest {
         PointEditViewModel vm = avecPublication();
         vm.preparerCreation(site);
         vm.codeProperty().set("A1");
-        vm.latitudeProperty().set("43.52");
-        vm.longitudeProperty().set("5.46");
+        vm.positionProperty().set("43.52, 5.46");
         vm.publication().demandeeProperty().set(true);
         assertThat(vm.enregistrer()).isTrue();
 

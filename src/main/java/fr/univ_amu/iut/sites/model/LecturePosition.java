@@ -29,6 +29,16 @@ public sealed interface LecturePosition {
         }
     }
 
+    /// Deux nombres écrits avec la **virgule décimale** française : dans une paire, la virgule sépare déjà
+    /// la latitude de la longitude, et lire « 43,401, 5,447 » demanderait de deviner (#5688).
+    record VirguleDecimale() implements LecturePosition {
+        @Override
+        public String message() {
+            return "Écrivez le point décimal : la virgule sépare la latitude de la longitude, par exemple"
+                    + " 43.401, 5.447.";
+        }
+    }
+
     /// Le texte ne porte pas deux nombres lisibles. On ne devine rien : le refus dit ce qu'on attend.
     record Illisible() implements LecturePosition {
         @Override
