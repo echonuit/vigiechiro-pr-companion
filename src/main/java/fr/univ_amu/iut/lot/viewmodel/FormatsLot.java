@@ -75,9 +75,11 @@ public final class FormatsLot {
     ///
     /// @param raison ce que la réponse a dit d'elle-même
     /// @param definitif `true` quand un nouvel essai est inutile
+    /// @param unite ce que ce dépôt envoie : le mot « archives » était faux pour des séquences (#5824)
     /// @return le libellé, jamais vide
-    public static String libelleReconciliationImpossible(String raison, boolean definitif) {
-        return "Déjà déposées : impossible à vérifier, des archives vont repartir pour rien (" + raison + ")"
+    public static String libelleReconciliationImpossible(String raison, boolean definitif, UniteDeDepot unite) {
+        return "Déjà déposées : impossible à vérifier, des " + unite.pluriel() + " vont repartir pour rien (" + raison
+                + ")"
                 + (definitif ? "." : " Réessayez plus tard.");
     }
 

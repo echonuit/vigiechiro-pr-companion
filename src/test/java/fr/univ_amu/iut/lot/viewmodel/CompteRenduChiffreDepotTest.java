@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.EchecUnite;
+import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot.Plan;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -295,6 +296,74 @@ class CompteRenduChiffreDepotTest {
                             new EchecUnite("Car-14.zip", "HTTP 422", true, CauseRefus.CONTENU)),
                     3_400_000_000L);
         }
+    }
+
+    /// Un dépôt en séquences WAV, le défaut depuis #5677, se racontait en « archives » (#5824).
+    @Test
+    @DisplayName("#5824 : un dépôt complet en séquences dit que les séquences sont en ligne, pas les archives")
+    void un_depot_complet_en_sequences_nomme_les_sequences() {
+        CompteRenduChiffre rendu = traduire(new BilanDepot("p-1", 412, List.of(), 1L), sequences(412, 412, false));
+
+        assertThat(textes(rendu))
+                .anyMatch(texte -> texte.startsWith("Toutes les séquences de la nuit sont sur Vigie-Chiro."));
+        assertThat(rendu.ventilation().libelle()).isEqualTo("Devenir des 412 séquences du plan");
+        assertThat(toutLeTexte(rendu)).doesNotContain("archive");
+    }
+
+    @Test
+    @DisplayName("#5824 : interrompu ou en échec, un dépôt en séquences compte des séquences manquantes")
+    void un_depot_en_sequences_compte_des_sequences_manquantes() {
+        CompteRenduChiffre interrompu = traduire(new BilanDepot("p-1", 9, List.of(), 1L), sequences(14, 9, true));
+        assertThat(textes(interrompu)).anyMatch(texte -> texte.contains("que les 5 séquence(s) manquante(s)."));
+
+        BilanDepot avecEchec = new BilanDepot("p-1", 9, List.of(EchecUnite.rejouable("Car_000.wav", "HTTP 503")), 1L);
+        CompteRenduChiffre echec = traduire(avecEchec, sequences(10, 9, false));
+        assertThat(textes(echec)).anyMatch(texte -> texte.startsWith("1 séquence(s) ne sont pas en ligne"));
+        assertThat(toutLeTexte(interrompu) + toutLeTexte(echec)).doesNotContain("archive");
+    }
+
+    /// « Régénérez les archives » est un geste vérifié pour des archives (#3946). Pour des séquences,
+    /// aucun geste de l'écran ne change leur contenu : on ne nomme que ce qui s'applique (ADR 3854).
+    @Test
+    @DisplayName("#5824 : un contenu refusé en séquences ne conseille pas de régénérer des archives")
+    void un_contenu_refuse_en_sequences_ne_nomme_pas_la_regeneration() {
+        BilanDepot bilan = new BilanDepot(
+                "p-1",
+                9,
+                List.of(
+                        new EchecUnite("Car_000.wav", "HTTP 422", true, CauseRefus.CONTENU),
+                        new EchecUnite("Car_001.wav", "HTTP 422", true, CauseRefus.CONTENU)),
+                1L);
+
+        CompteRenduChiffre rendu = traduire(bilan, sequences(11, 9, false));
+
+        assertThat(textes(rendu))
+                .anyMatch(texte -> texte.equals("2 séquence(s) ont été refusées par Vigie-Chiro : les renvoyer telles"
+                        + " quelles serait refusé de même. Le détail par séquence est dans la table."));
+        assertThat(toutLeTexte(rendu)).doesNotContain("égénérez").doesNotContain("archive");
+    }
+
+    @Test
+    @DisplayName("#5824 : un plan qui mêle archives et séquences parle d'unités ; un plan d'archives, d'archives")
+    void le_nom_de_l_unite_vient_des_types_du_plan() {
+        assertThat(UniteDeDepot.de(List.of(TypeDepotUnite.WAV, TypeDepotUnite.WAV)))
+                .isEqualTo(UniteDeDepot.SEQUENCE);
+        assertThat(UniteDeDepot.de(List.of(TypeDepotUnite.ZIP))).isEqualTo(UniteDeDepot.ARCHIVE);
+        assertThat(UniteDeDepot.de(List.of(TypeDepotUnite.ZIP, TypeDepotUnite.WAV)))
+                .isEqualTo(UniteDeDepot.UNITE);
+        assertThat(UniteDeDepot.de(List.of())).isEqualTo(UniteDeDepot.ARCHIVE);
+
+        CompteRenduChiffre archives = traduire(new BilanDepot("p-1", 14, List.of(), 1L), plan(14, 14, false));
+        assertThat(textes(archives)).anyMatch(texte -> texte.startsWith("Toutes les archives de la nuit"));
+    }
+
+    private static Plan sequences(int unitesDuPlan, int enLigne, boolean interrompu) {
+        return new Plan(unitesDuPlan, enLigne, interrompu, UniteDeDepot.SEQUENCE);
+    }
+
+    /// Tout ce que le compte rendu donne à lire : titre de ventilation, motifs, avertissements.
+    private static String toutLeTexte(CompteRenduChiffre rendu) {
+        return rendu.ventilation().libelle() + " " + rendu.motifs() + " " + textes(rendu);
     }
 
     private static Plan plan(int unitesDuPlan, int enLigne, boolean interrompu) {

@@ -272,6 +272,7 @@ public class LotViewModel {
         peutGenererArchives.set(actions.genererArchives());
         // (peutSupprimerArchives est une liaison vivante sur les lignes : rien à poser ici.)
         espaceDisque.majDepuis(etat);
+        suiviEtapes.declarerForme(service.formeDuDepot(idPassage));
         suiviEtapes.appliquer(etat.statut());
         messages.etat(FormatsLot.messageEtat(etat));
     }
@@ -324,6 +325,12 @@ public class LotViewModel {
     /// ③ Téléverser · ④ Marquer déposé, chacune avec son état d'avancement. Vide si pas de lot ouvert.
     public ObservableList<EtapeDepot> etapes() {
         return suiviEtapes.etapes();
+    }
+
+    /// L'étape « Générer les archives » est-elle offerte (#5824) ? Fausse connecté pour un dépôt en
+    /// séquences WAV, où rien ne produit d'archive ; les étapes suivantes se renumérotent alors.
+    public ReadOnlyBooleanProperty etapeArchivesOfferteProperty() {
+        return suiviEtapes.etapeArchivesOfferteProperty();
     }
 
     /// Récapitulatif du lot (`N séquences · X Mo`).

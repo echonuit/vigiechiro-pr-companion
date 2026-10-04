@@ -27,6 +27,10 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// Et il **dit toujours pourquoi** il est désactivé (#789) : un bouton muet est une impasse.
 final class EtapeDeposerUI {
 
+    /// Ce qu'on fait d'une nuit déjà analysée, quelle que soit la forme de son dépôt.
+    private static final String SUITE_D_UN_BLOCAGE = " Importez-les plutôt dans « Sons & validation ». Pour forcer"
+            + " malgré tout, après un échec, par exemple : lancer-traitement-vigiechiro --forcer.";
+
     private EtapeDeposerUI() {}
 
     /// Les nœuds de l'étape ④ : son bouton, son icône, l'enveloppe qui porte l'explication d'un blocage,
@@ -53,9 +57,13 @@ final class EtapeDeposerUI {
         // participation », il laissait croire à deux gestes (#5676).
         vue.titre()
                 .textProperty()
-                .bind(Bindings.when(depot.participationLieeProperty())
-                        .then("4. Lancer la participation")
-                        .otherwise("4. Marquer le passage déposé"));
+                // Le numéro suit l'étape des archives (#5824) : sans elle, celle-ci est la troisième.
+                .bind(Bindings.when(lot.etapeArchivesOfferteProperty())
+                        .then("4. ")
+                        .otherwise("3. ")
+                        .concat(Bindings.when(depot.participationLieeProperty())
+                                .then("Lancer la participation")
+                                .otherwise("Marquer le passage déposé")));
         vue.consigne()
                 .textProperty()
                 .bind(Bindings.when(depot.participationLieeProperty())
@@ -88,11 +96,16 @@ final class EtapeDeposerUI {
         IndicateurBlocage.expliquer(
                 enveloppe,
                 Bindings.when(traitement.relanceBloqueeProperty())
-                        .then("Cette nuit a déjà été analysée par Vigie-Chiro. La relancer effacerait ses"
-                                + " observations côté serveur, qui ne pourraient pas être recalculées (l'audio"
-                                + " n'est pas conservé après un dépôt en archives). Importez-les plutôt dans"
-                                + " « Sons & validation ». Pour forcer malgré tout, après un échec, par"
-                                + " exemple : lancer-traitement-vigiechiro --forcer.")
+                        // Le blocage vaut pour les deux formes ; sa raison, non (#5824). Connecté, l'étape des
+                        // archives n'est offerte qu'en forme ZIP : elle dit donc laquelle est en jeu.
+                        .then(Bindings.when(lot.etapeArchivesOfferteProperty())
+                                .then("Cette nuit a déjà été analysée par Vigie-Chiro. La relancer effacerait ses"
+                                        + " observations côté serveur, qui ne pourraient pas être recalculées"
+                                        + " (l'audio n'est pas conservé après un dépôt en archives)."
+                                        + SUITE_D_UN_BLOCAGE)
+                                .otherwise("Cette nuit a déjà été analysée par Vigie-Chiro. La relancer effacerait"
+                                        + " ses observations côté serveur avant de les recalculer."
+                                        + SUITE_D_UN_BLOCAGE))
                         .otherwise(Bindings.when(traitement.analyseDemandeeProperty())
                                 .then("L'analyse de cette nuit est demandée à Vigie-Chiro : suivez-la dans la carte"
                                         + " « Traitement Vigie-Chiro » ci-dessous.")

@@ -1,8 +1,11 @@
 package fr.univ_amu.iut.lot.viewmodel;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.lot.model.ModeDepot;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -28,6 +31,13 @@ final class SuiviEtapesLot {
 
     private StatutWorkflow statutCourant;
     private boolean depotAutomatiqueDisponible;
+
+    /// La forme du depot de la nuit, ou `null` tant qu'elle n'est pas connue (#5824).
+    private ModeDepot forme;
+
+    /// L'etape « Generer les archives » sert-elle ? Vraie tant qu'on ne sait pas le contraire : on ne
+    /// retire une etape que sur une forme WAV averee, application connectee.
+    private final ReadOnlyBooleanWrapper etapeArchivesOfferte = new ReadOnlyBooleanWrapper(true);
 
     SuiviEtapesLot(BooleanSupplier archivesGenerees) {
         this.archivesGenerees = Objects.requireNonNull(archivesGenerees, "archivesGenerees");
@@ -56,18 +66,40 @@ final class SuiviEtapesLot {
         recalculer();
     }
 
+    /// Declare la forme du depot de la nuit (#5824) : en sequences WAV et connecte, l'etape des archives
+    /// n'a plus lieu d'etre.
+    void declarerForme(ModeDepot formeDuDepot) {
+        this.forme = formeDuDepot;
+        recalculer();
+    }
+
+    /// L'etape des archives est-elle offerte ? Vraie en forme ZIP, et hors connexion ou elle sert au
+    /// depot manuel.
+    ReadOnlyBooleanProperty etapeArchivesOfferteProperty() {
+        return etapeArchivesOfferte.getReadOnlyProperty();
+    }
+
     /// Recalcule a statut inchange : appele quand les archives apparaissent ou disparaissent.
     void recalculer() {
+        // Seule une forme WAV averee retire l'etape, et seulement si l'application peut televerser :
+        // hors connexion, les archives sont la seule voie du depot manuel.
+        etapeArchivesOfferte.set(forme != ModeDepot.SEQUENCES_WAV || !depotAutomatiqueDisponible);
         if (statutCourant == null) {
             return;
         }
-        etapes.setAll(EtapesDepot.calculer(statutCourant, archivesGenerees.getAsBoolean(), depotAutomatiqueDisponible));
+        etapes.setAll(EtapesDepot.calculer(
+                statutCourant,
+                archivesGenerees.getAsBoolean(),
+                depotAutomatiqueDisponible,
+                etapeArchivesOfferte.get()));
     }
 
     /// Oublie tout : plus d'etapes, plus de statut. La disponibilite du depot, elle, est une propriete
     /// de l'application et non du lot : elle survit au changement de passage.
     void reinitialiser() {
         statutCourant = null;
+        forme = null;
+        etapeArchivesOfferte.set(true);
         etapes.clear();
     }
 }

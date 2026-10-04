@@ -80,4 +80,14 @@ class FormatsLotTest {
                 .isEqualTo("Le téléversement produit ses archives au fil de l'envoi et les supprime une fois en"
                         + " ligne : suivez-les à l'étape 3.");
     }
+
+    @Test
+    @DisplayName("#5824 : la réconciliation impossible nomme ce qui va repartir, séquences ou archives")
+    void la_reconciliation_impossible_nomme_ce_qui_repart() {
+        assertThat(FormatsLot.libelleReconciliationImpossible("HTTP 503", false, UniteDeDepot.SEQUENCE))
+                .isEqualTo("Déjà déposées : impossible à vérifier, des séquences vont repartir pour rien (HTTP 503)"
+                        + " Réessayez plus tard.");
+        assertThat(FormatsLot.libelleReconciliationImpossible("HTTP 403", true, UniteDeDepot.ARCHIVE))
+                .isEqualTo("Déjà déposées : impossible à vérifier, des archives vont repartir pour rien (HTTP 403).");
+    }
 }

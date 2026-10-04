@@ -235,6 +235,27 @@ class RegenerationPendantUnDepotTest {
         assertThat(statut(id)).isEqualTo(StatutWorkflow.DEPOSE);
     }
 
+    /// L'écran de lot lit la forme du dépôt pour n'offrir que les étapes qui servent (#5824) : ce doit
+    /// être la règle même qui décide de ce qui part.
+    @Test
+    @DisplayName("#5824 : la forme du dépôt suit le réglage, puis le dépôt entamé quand il y en a un")
+    void la_forme_du_depot_suit_le_reglage_puis_le_depot_entame() throws Exception {
+        Long id = passagePrepare();
+        assertThat(service.formeDuDepot(id)).as("sans dépôt entamé, le réglage").isEqualTo(ModeDepot.ARCHIVES_ZIP);
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenAnswer(appel ->
+                        ((Path) appel.getArgument(1)).getFileName().toString().endsWith("-2.zip")
+                                ? ReponseApi.refuse(422, "contenu refusé")
+                                : ReponseApi.succes(""));
+        depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+
+        mode.set(ModeDepot.SEQUENCES_WAV);
+
+        assertThat(service.formeDuDepot(id))
+                .as("une archive est en ligne : le dépôt reste en ZIP, quoi que dise le réglage")
+                .isEqualTo(ModeDepot.ARCHIVES_ZIP);
+    }
+
     @Test
     @DisplayName("#5677 : un dépôt qui commence suit le réglage, WAV compris")
     void un_depot_qui_commence_suit_le_reglage() throws Exception {

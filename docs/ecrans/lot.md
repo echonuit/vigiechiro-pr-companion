@@ -1,13 +1,25 @@
 # Préparer le dépôt
 
 L'écran **Préparer le dépôt** prépare et trace le **dépôt** d'une nuit vérifiée sur la
-plateforme Vigie-Chiro. Le dépôt suit un **flux ordonné en quatre étapes**, rappelé en haut de l'écran
-par un fil d'étapes (l'étape courante est mise en avant) :
+plateforme Vigie-Chiro. Le dépôt suit un **flux ordonné**, rappelé en haut de l'écran par un fil
+d'étapes (l'étape courante est mise en avant). Le nombre d'étapes dépend de la **forme du dépôt**,
+choisie dans [Réglages](reglages.md) ▸ Dépôt :
 
-**« 1 · Préparer »**, **« 2 · Générer les archives »**, **« 3 · Téléverser »**,
-**« 4 · Marquer déposé »**.
+| Forme du dépôt | Les étapes |
+|---|---|
+| **Séquences WAV** (par défaut), application connectée | **« 1 · Préparer »**, **« 2 · Téléverser »**, **« 3 · Marquer déposé »** |
+| **Archives ZIP**, ou application non connectée | **« 1 · Préparer »**, **« 2 · Générer les archives »**, **« 3 · Téléverser »**, **« 4 · Marquer déposé »** |
 
-## 1. Vérifier et préparer le dépôt
+En séquences WAV, rien ne produit d'archive : l'étape « Générer les archives » n'a pas lieu d'être, et
+l'écran ne l'affiche pas. Elle revient si vous choisissez les archives ZIP, et elle reste quand
+l'application n'est pas connectée, parce qu'elle sert alors au dépôt manuel.
+
+Un dépôt **déjà entamé garde sa forme** : si une archive de la nuit est en ligne, l'écran reste celui
+des archives, quoi que dise le réglage.
+
+![L'écran en forme par défaut, prêt à déposer : trois étapes, et « Téléverser sur Vigie-Chiro » pour la deuxième.](../assets/captures/apercu-lot-sequences.png)
+
+## Vérifier et préparer le dépôt
 
 ![L'écran Préparer le dépôt : récapitulatif du dépôt et première étape « Vérifier et préparer le dépôt ».](../assets/captures/apercu-lot-preparer.png)
 
@@ -19,19 +31,21 @@ climatique absent). « Vérifier et préparer le dépôt » **verrouille** ensui
 partiront. Vos fichiers d'origine ne sont pas modifiés. Le passage passe alors au statut « Prêt à
 déposer ».
 
-## 2. Générer les archives de dépôt
+## Générer les archives de dépôt (archives ZIP, ou sans connexion)
+
+Cette étape n'apparaît pas pour un dépôt en séquences WAV fait par l'application.
 
 ![L'état « Prêt à déposer » : l'étape « Générer les archives » devient active.](../assets/captures/apercu-lot-deposer.png)
 
-Ce que l'on téléverse sur Vigie-Chiro, ce sont des **archives ZIP** (au plus 700 Mo par défaut, réglable dans [Réglages](reglages.md)), découpées depuis les
+En forme ZIP, ce que l'on téléverse sur Vigie-Chiro, ce sont des **archives** (au plus 700 Mo par défaut, réglable dans [Réglages](reglages.md)), découpées depuis les
 séquences et écrites dans le sous-dossier `depot/` de la session. La génération peut être **longue**
 sur une grosse nuit : elle s'exécute en arrière-plan, avec un indicateur d'activité, et les actions
 sont neutralisées le temps de l'écriture (on ne risque pas de téléverser une archive incomplète).
 
 !!! tip "Si vous êtes connecté, cette étape est facultative"
-    Le téléversement de l'étape 3 **produit lui-même les archives dont il a besoin**, au fur et à
+    Le téléversement **produit lui-même les archives dont il a besoin**, au fur et à
     mesure, et les efface du disque dès qu'elles sont en ligne. Vous pouvez donc passer directement de
-    la préparation au téléversement : le stepper indique d'ailleurs « 3 · Téléverser » comme étape
+    la préparation au téléversement : le fil d'étapes indique d'ailleurs « 3 · Téléverser » comme étape
     courante, sans archive sur le disque.
 
     Générer d'abord reste utile pour un **dépôt manuel** (hors connexion, ou pour déposer depuis le
@@ -41,39 +55,44 @@ sont neutralisées le temps de l'écriture (on ne risque pas de téléverser une
     fois. Le téléversement n'en garde que **deux** sur le disque à un instant donné.
 
     C'est pourquoi le tableau de cette étape reste **vide pendant et après un téléversement** : il ne
-    liste que les archives conservées sur votre machine. Il le dit, et vous renvoie à l'étape 3, qui
-    suit celles qui partent.
+    liste que les archives conservées sur votre machine. Il le dit, et vous renvoie à l'étape de
+    téléversement, qui suit celles qui partent.
 
 ![Génération des archives en cours : indicateur d'activité, actions désactivées.](../assets/captures/apercu-lot-generation.png)
 
 Le tableau de suivi des archives laisse **choisir et réordonner ses colonnes** (clic droit ou menu principal (☰)
 « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md). La **table de dépôt**
-de l'étape 3 offre le même réglage, mémorisé séparément.
+de l'étape de téléversement offre le même réglage, mémorisé séparément.
 
-## 3. Téléverser sur Vigie-Chiro
+## Téléverser sur Vigie-Chiro
+
+En séquences WAV, l'application envoie les **séquences transformées une à une**, plusieurs à la fois.
+Il n'y a rien à générer avant, et l'étape ne propose pas de dépôt manuel : pour déposer à la main,
+choisissez les archives ZIP dans les réglages. Ce qui suit décrit l'étape en forme ZIP ; la table de
+dépôt, la reprise et le compte rendu valent pour les deux formes.
 
 ![Archives générées : la liste des ZIP s'affiche et « Ouvrir le dossier » s'active.](../assets/captures/apercu-lot-archives.png)
 
-Connecté, vous pouvez téléverser **sans avoir rien généré** : l'étape 3 est déjà l'étape courante, et
-la table des archives est vide.
+Connecté, vous pouvez téléverser **sans avoir rien généré** : le téléversement est déjà l'étape
+courante, et la table des archives est vide.
 
-![L'étape 3 courante sans archives : le téléversement produit lui-même ce dont il a besoin.](../assets/captures/apercu-lot-televerser-sans-archives.png)
+![Le téléversement est l'étape courante sans archives : le téléversement produit lui-même ce dont il a besoin.](../assets/captures/apercu-lot-televerser-sans-archives.png)
 
 Deux chemins s'offrent à vous :
 
 - **Téléversement automatique** (application connectée à Vigie-Chiro) : le bouton
   **« Téléverser sur Vigie-Chiro »** dépose la nuit directement : la participation est créée (ou
-  réutilisée si elle l'a été à l'import), puis les **archives ZIP** sont téléversées **plusieurs à la
-  fois** (5 en parallèle), ce qui raccourcit nettement le dépôt d'une grosse nuit. Une **table de
-  dépôt** suit chaque archive (en attente → en cours → déposé, ou échec avec la raison au survol) avec
-  une **barre de progression par archive** qui reflète les octets réellement envoyés, et la **barre de
+  réutilisée si elle l'a été à l'import), puis les **archives ZIP**, ou les séquences WAV, sont
+  téléversées **plusieurs à la fois** (5 en parallèle), ce qui raccourcit nettement le dépôt d'une grosse
+  nuit. Une **table de dépôt** suit chaque fichier (en attente → en cours → déposé, ou échec avec la
+  raison au survol) avec une **barre de progression par fichier** qui reflète les octets réellement envoyés, et la **barre de
   statut** en bas de la fenêtre affiche l'avancement d'ensemble en continu, même quand vous faites
   défiler l'écran.
 
-    Si l'espace disque n'a pas permis de générer les archives, l'application se replie automatiquement
-    sur le téléversement des **séquences WAV** une à une (plus long, mais équivalent pour la
-    plateforme).
-- **Téléversement manuel** (repli, sans connexion) : **« Ouvrir le dossier »** ouvre le sous-dossier
+    L'application **ne change jamais de forme à votre place**. Si l'espace disque ne permet pas de
+    produire les archives, le dépôt en ZIP est refusé en le disant, et vous choisissez : libérer de
+    l'espace, ou passer aux séquences WAV dans les réglages.
+- **Téléversement manuel** (forme ZIP, ou sans connexion) : **« Ouvrir le dossier »** ouvre le sous-dossier
   `depot/` dans le gestionnaire de fichiers, et vous déposez les archives sur Vigie-Chiro depuis votre
   navigateur.
 
@@ -137,7 +156,7 @@ La table garde le détail : la cause de chaque échec y est lisible, archive par
     téléversement, parce que celui-ci produit lui-même ses archives dans le même dossier : le message
     vous dit alors d'attendre la fin du téléversement ou de l'annuler.
 
-![Un dépôt entamé : l'en-tête dit « Dépôt Vigie-Chiro entamé », l'étape 3 reste courante, et « Générer les archives de dépôt » reste offert.](../assets/captures/apercu-lot-depot-entame.png)
+![Un dépôt entamé : l'en-tête dit « Dépôt Vigie-Chiro entamé », le téléversement reste l'étape courante, et « Générer les archives de dépôt » reste offert.](../assets/captures/apercu-lot-depot-entame.png)
 
 ![Pendant un téléversement, la génération est refusée : le bandeau demande d'attendre la fin du téléversement ou de l'annuler, et « Annuler le dépôt » est offert au-dessus de la table de suivi.](../assets/captures/apercu-lot-generation-refusee.png)
 
@@ -147,12 +166,17 @@ Quand le téléversement se termine, un **compte rendu** dit ce qui est en ligne
 
 ![Le compte rendu d'un dépôt complet : la barre est pleine, le volume téléversé est dit, et l'étape suivante est nommée.](../assets/captures/apercu-lot-depot-compte-rendu.png)
 
+Le compte rendu **nomme ce qui est parti** : des archives pour un dépôt en ZIP, des séquences pour un
+dépôt en WAV.
+
+![Le compte rendu d'un dépôt complet en séquences WAV : il compte des séquences, pas des archives.](../assets/captures/apercu-lot-depot-compte-rendu-sequences.png)
+
 Il ne remplace pas la table : celle-ci garde le **détail par fichier**, avec la cause de chaque échec.
 Le compte rendu répond à la question qu'on se pose à cet instant - **quelle part est arrivée** - et il
 ajoute deux choses que la table ne donne pas : le **volume téléversé**, et **ce qu'il reste à faire**.
 
 Quand **tout** est en ligne, il dit qu'il reste à **lancer la participation** : téléverser ne suffit
-pas, et rien ne le disait à ce moment-là. Le bouton qui le fait est celui de l'étape 4, juste en
+pas, et rien ne le disait à ce moment-là. Le bouton qui le fait est celui de la dernière étape, juste en
 dessous, et lui seul : le compte rendu ne le double pas.
 
 Si vous avez **arrêté** le dépôt en cours de route, le compte rendu le dit sans le déguiser :
@@ -160,10 +184,12 @@ Si vous avez **arrêté** le dépôt en cours de route, le compte rendu le dit s
 ![Le compte rendu d'un dépôt interrompu : la part restante apparaît, et la reprise est annoncée.](../assets/captures/apercu-lot-depot-interrompu.png)
 
 La part **« Restantes »** est la différence entre ce que vous avez arrêté et un dépôt réussi : sans
-elle, la barre serait pleine alors qu'il manque des archives sur la plateforme. Aucune action n'est
+elle, la barre serait pleine alors qu'il manque des fichiers sur la plateforme. Aucune action n'est
 proposée en pied, parce que la suite est **« Reprendre le dépôt »**, un bouton déjà sous vos yeux.
 
-## 4. Lancer la participation (ou marquer le passage déposé)
+## Lancer la participation (ou marquer le passage déposé)
+
+C'est la dernière étape : la quatrième en forme ZIP, la troisième en séquences WAV.
 
 ![L'état « Déposé » : toutes les étapes sont franchies.](../assets/captures/apercu-lot-depose.png)
 
@@ -182,13 +208,13 @@ vous venez de déposer : la plateforme décompresse les archives, puis lance l'i
 Ce que Vigie-Chiro répond s'affiche **juste sous le bouton** : la demande est acceptée, l'analyse était
 déjà demandée, ou la plateforme refuse, et elle dit alors pourquoi.
 
-![Après « Lancer la participation » : l'étape 4 dit, sous son bouton, que l'analyse est demandée.](../assets/captures/apercu-lot-lancement-accepte.png)
+![Après « Lancer la participation » : la dernière étape dit, sous son bouton, que l'analyse est demandée.](../assets/captures/apercu-lot-lancement-accepte.png)
 
 Tant que l'analyse est **planifiée, en cours ou relancée** par la plateforme, le bouton reste grisé :
 il n'y a rien à relancer, et la carte « Traitement Vigie-Chiro » ci-dessous dit où en est le calcul.
 L'application le sait par le dernier état relevé, y compris quand vous rouvrez l'écran.
 
-![Un refus : l'étape 4 cite le motif que la plateforme a donné.](../assets/captures/apercu-lot-lancement-refuse.png)
+![Un refus : la dernière étape cite le motif que la plateforme a donné.](../assets/captures/apercu-lot-lancement-refuse.png)
 
 **Vous avez téléversé depuis le navigateur** (repli manuel) : le bouton reste **« Marquer
 déposé »**. Il fait passer le passage au statut « Déposé » (ce qui déverrouille la validation
@@ -250,8 +276,11 @@ peut valoir la peine de la relancer.
 !!! danger "Une nuit déjà analysée ne se relance pas"
     Une fois l'analyse terminée, le bouton « Lancer la participation » se **verrouille**. Ce n'est pas
     une limitation arbitraire : relancer un calcul **efface d'abord les observations** côté serveur
-    pour les recalculer : or l'audio d'un dépôt en archives n'est **pas conservé** par la plateforme.
-    Le recalcul rendrait donc une participation **vide, définitivement**.
+    pour les recalculer. Pour un dépôt en **archives ZIP**, l'audio n'est **pas conservé** par la
+    plateforme : le recalcul rendrait une participation **vide, définitivement**. Pour un dépôt en
+    **séquences WAV**, l'audio est conservé et le recalcul est possible, mais les observations sont
+    effacées le temps qu'il aboutisse : le verrou reste, et l'infobulle du bouton dit laquelle de ces
+    deux raisons vaut pour votre nuit.
 
     Si vous devez tout de même relancer (typiquement après un échec, où il n'y a plus rien à perdre),
     cela reste possible en ligne de commande, délibérément :

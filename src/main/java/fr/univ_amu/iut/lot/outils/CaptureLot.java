@@ -159,6 +159,9 @@ public final class CaptureLot {
     /// Identifiant volontairement absent de la base : l'ouverture échoue et l'écran rend son bandeau.
     private static final long PASSAGE_INEXISTANT = 999_999L;
 
+    /// La propriété qui impose la forme du dépôt, relue à chaque dépôt par `LotModule`.
+    private static final String FORME_DU_DEPOT = "vigiechiro.depot.mode";
+
     private static void capturer() throws IOException {
         Path workspace = Files.createTempDirectory("vc-capture-lot");
         System.setProperty("vigiechiro.workspace", workspace.toString());
@@ -166,6 +169,10 @@ public final class CaptureLot {
 
         // Horloge figée : la date de dépôt (marquerDepose) est ainsi **déterministe** dans l'aperçu
         // « déposé » (sinon l'horodatage système changerait le PNG à chaque régénération).
+        // Ces aperçus racontent le dépôt en ARCHIVES : génération, table des ZIP, dépôt manuel. Depuis
+        // #5824 l'écran ne les offre qu'en forme ZIP, et le défaut est le WAV (#5677) : sans ce réglage
+        // ils montreraient tous trois étapes et aucune archive. La forme par défaut a son aperçu à elle.
+        System.setProperty(FORME_DU_DEPOT, "zip");
         Injector injecteur = creerInjecteur();
         // Second injecteur, connecté : il partage la même base (le workspace est un chemin, pas un objet),
         // donc il voit les mêmes passages. Seuls les deux aperçus connectés passent par lui.
@@ -183,6 +190,12 @@ public final class CaptureLot {
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-preparer.png"));
         // Après préparation : Prêt à déposer (étape ② à faire), « Générer les archives » actif.
         service.preparerLot(idCoherent);
+        // La forme par défaut (#5824) : connecté, en séquences WAV, l'étape des archives et son dépôt
+        // manuel sont absents, et les étapes se numérotent 1, 2, 3. Rendu AVANT qu'une archive ne soit
+        // déposée, un dépôt entamé gardant sa forme.
+        System.clearProperty(FORME_DU_DEPOT);
+        rendre(connecte, idCoherent, sortie.resolve("apercu-lot-sequences.png"));
+        System.setProperty(FORME_DU_DEPOT, "zip");
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-deposer.png"));
         // ② bis (#1998) : **connecté et sans archives**. C'est l'état neuf du chantier, le téléversement
         // produisant lui-même ce dont il a besoin, l'étape ③ est courante alors qu'aucune archive n'existe

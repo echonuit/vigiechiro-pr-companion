@@ -9,12 +9,15 @@ import fr.univ_amu.iut.lot.viewmodel.LigneDepot;
 import java.nio.file.Path;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -31,11 +34,27 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// est gardée par `DecisionsRespecteesTest#une_sous_vue_ne_s_injecte_pas_son_modele` (ADR 2745).
 public class EtapeTeleversementController {
 
+    /// Ce qu'une annulation laisse derrière elle, quelle que soit la forme du dépôt.
+    private static final String SUITE_D_UNE_ANNULATION =
+            " Le passage reste « Dépôt en cours » : reprendre le dépôt ne renverra que les fichiers manquants.";
+
     private AppuisTeleversement appuis;
 
     /// Chemin du sous-dossier `depot/`, cible du téléversement manuel.
     @FXML
     private Label lblCheminDepot;
+
+    /// Le titre numéroté et la consigne de l'étape, qui suivent l'étape des archives (#5824).
+    @FXML
+    private Label lblTitreTeleversement;
+
+    @FXML
+    private Label lblConsigneTeleversement;
+
+    /// La ligne du chemin de `depot/` et de son bouton de copie : elle ne sert qu'au dépôt manuel
+    /// d'archives.
+    @FXML
+    private HBox ligneCheminDepot;
 
     /// Copie du chemin ci-dessus (#3464) : c'est au moment où le téléversement échoue qu'on dépose à
     /// la main, donc qu'on a besoin de ce chemin ailleurs.
@@ -86,10 +105,52 @@ public class EtapeTeleversementController {
         // Étape ③ : la cible du téléversement est le sous-dossier depot/ (archives ZIP), pas la session.
         lblCheminDepot.textProperty().bind(appuis.viewModel().cheminDepotProperty());
 
+        cablerSelonLEtapeDesArchives();
         cablerTeleversement();
         cablerCopieDuChemin();
         cablerOuvertureManuelle();
         cablerTableDepot();
+    }
+
+    /// Ce qui, dans cette étape, tient à l'étape des archives (#5824) : son numéro, sa consigne, et tout
+    /// ce qui sert au dépôt manuel d'archives. Connecté pour un dépôt en séquences WAV, rien ne produit
+    /// d'archive : l'étape devient la deuxième, et n'offre plus de déposer à la main.
+    private void cablerSelonLEtapeDesArchives() {
+        ReadOnlyBooleanProperty archives = appuis.viewModel().etapeArchivesOfferteProperty();
+        lblTitreTeleversement
+                .textProperty()
+                .bind(Bindings.when(archives)
+                        .then("3. Téléverser sur Vigie-Chiro")
+                        .otherwise("2. Téléverser sur Vigie-Chiro"));
+        lblConsigneTeleversement
+                .textProperty()
+                .bind(Bindings.when(archives)
+                        .then("Téléversez la nuit directement sur Vigie-Chiro (les séquences transformées, au"
+                                + " format attendu par la plateforme). En cas de besoin, un dépôt manuel des"
+                                + " archives ZIP reste possible depuis le dossier :")
+                        .otherwise("Téléversez la nuit directement sur Vigie-Chiro : les séquences transformées"
+                                + " partent une à une, au format attendu par la plateforme."));
+        ligneCheminDepot.visibleProperty().bind(archives);
+        ligneCheminDepot.managedProperty().bind(archives);
+        enveloppeOuvrirDepot.visibleProperty().bind(archives);
+        enveloppeOuvrirDepot.managedProperty().bind(archives);
+        Tooltip annulation = new Tooltip();
+        annulation
+                .textProperty()
+                .bind(Bindings.when(archives)
+                        .then("Termine la partie en cours d'envoi, ou l'archive en cours de compression, puis"
+                                + " s'arrête." + SUITE_D_UNE_ANNULATION)
+                        .otherwise("Termine les séquences en cours d'envoi, puis s'arrête." + SUITE_D_UNE_ANNULATION));
+        btnAnnulerDepot.setTooltip(annulation);
+        Tooltip reinitialisation = new Tooltip();
+        reinitialisation
+                .textProperty()
+                .bind(Bindings.when(archives)
+                        .then("Efface le suivi local de dépôt pour permettre un nouveau téléversement. Les"
+                                + " archives ZIP sur disque et la participation Vigie-Chiro sont conservées.")
+                        .otherwise("Efface le suivi local de dépôt pour permettre un nouveau téléversement. La"
+                                + " participation Vigie-Chiro est conservée."));
+        btnReinitialiserDepot.setTooltip(reinitialisation);
     }
 
     /// Bouton de téléversement : visible seulement quand l'application est connectée, actif une fois le
@@ -114,10 +175,13 @@ public class EtapeTeleversementController {
                 Bindings.when(appuis.viewModel().deposeProperty())
                         .then("Passage déjà déposé sur Vigie-Chiro : le téléversement est terminé.")
                         .otherwise(Bindings.when(btnTeleverser.disableProperty())
-                                .then("Téléversement possible une fois le dépôt préparé (statut « Prêt à"
-                                        + " déposer »), et hors génération ou envoi en cours. Générer les"
-                                        + " archives n'est pas un préalable : le téléversement produit"
-                                        + " lui-même ce dont il a besoin.")
+                                .then(Bindings.when(appuis.viewModel().etapeArchivesOfferteProperty())
+                                        .then("Téléversement possible une fois le dépôt préparé (statut « Prêt à"
+                                                + " déposer »), et hors génération ou envoi en cours. Générer les"
+                                                + " archives n'est pas un préalable : le téléversement produit"
+                                                + " lui-même ce dont il a besoin.")
+                                        .otherwise("Téléversement possible une fois le dépôt préparé (statut"
+                                                + " « Prêt à déposer »), et hors envoi en cours."))
                                 .otherwise("Téléverser la nuit sur Vigie-Chiro (marque ensuite le passage"
                                         + " déposé).")));
     }

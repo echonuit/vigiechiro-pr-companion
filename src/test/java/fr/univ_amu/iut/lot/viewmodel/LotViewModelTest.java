@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.ControleCoherence;
 import fr.univ_amu.iut.lot.model.EtatLot;
+import fr.univ_amu.iut.lot.model.ModeDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.StatutControle;
 import fr.univ_amu.iut.lot.model.SuiviArchives;
@@ -42,6 +43,59 @@ class LotViewModelTest {
     @BeforeEach
     void preparer() {
         viewModel = new LotViewModel(service);
+    }
+
+    /// L'étape « Générer les archives » ne sert ni ne dit vrai pour un dépôt qui part en séquences
+    /// (#5824). Elle reste hors connexion, où elle prépare le dépôt manuel.
+    @Test
+    @DisplayName("#5824 : connecté en forme WAV, l'étape des archives n'est pas offerte et il reste trois étapes")
+    void connecte_en_wav_l_etape_des_archives_n_est_pas_offerte() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        when(service.formeDuDepot(ID_PASSAGE)).thenReturn(ModeDepot.SEQUENCES_WAV);
+        viewModel.declarerDepotAutomatiqueDisponible(true);
+
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.etapeArchivesOfferteProperty().get()).isFalse();
+        assertThat(viewModel.etapes()).hasSize(3);
+    }
+
+    @Test
+    @DisplayName("#5824 : connecté en forme ZIP, l'étape des archives reste offerte, quatre étapes")
+    void connecte_en_zip_l_etape_des_archives_reste() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        when(service.formeDuDepot(ID_PASSAGE)).thenReturn(ModeDepot.ARCHIVES_ZIP);
+        viewModel.declarerDepotAutomatiqueDisponible(true);
+
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.etapeArchivesOfferteProperty().get()).isTrue();
+        assertThat(viewModel.etapes()).hasSize(4);
+    }
+
+    @Test
+    @DisplayName("#5824 : hors connexion en forme WAV, l'étape des archives reste : elle sert au dépôt manuel")
+    void hors_connexion_en_wav_l_etape_des_archives_reste() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        when(service.formeDuDepot(ID_PASSAGE)).thenReturn(ModeDepot.SEQUENCES_WAV);
+
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.etapeArchivesOfferteProperty().get()).isTrue();
+        assertThat(viewModel.etapes()).hasSize(4);
+    }
+
+    @Test
+    @DisplayName("#5824 : la connexion déclarée après l'ouverture retire l'étape, sans rouvrir l'écran")
+    void la_connexion_declaree_apres_l_ouverture_retire_l_etape() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        when(service.formeDuDepot(ID_PASSAGE)).thenReturn(ModeDepot.SEQUENCES_WAV);
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        viewModel.declarerDepotAutomatiqueDisponible(true);
+
+        assertThat(viewModel.etapeArchivesOfferteProperty().get()).isFalse();
+        assertThat(viewModel.etapes()).hasSize(3);
     }
 
     @Test

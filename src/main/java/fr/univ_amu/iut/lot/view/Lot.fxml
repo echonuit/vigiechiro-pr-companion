@@ -75,8 +75,9 @@
     </StackPane>
   </VBox>
 
-  <!-- Étape 2 - Générer les archives ZIP (le payload réellement déposé) -->
-  <VBox spacing="4.0" styleClass="carte-section">
+  <!-- Étape 2 - Générer les archives ZIP. Offerte seulement si elle sert (#5824) : en forme ZIP, ou
+       hors connexion pour le dépôt manuel. Connecté en séquences WAV, rien ne produit d'archive. -->
+  <VBox fx:id="carteArchives" spacing="4.0" styleClass="carte-section">
     <HBox alignment="CENTER_LEFT" spacing="8.0">
       <Label text="2. Générer les archives de dépôt" styleClass="section-titre" HBox.hgrow="ALWAYS"/>
       <MenuButton fx:id="menuOutils" styleClass="menu-actions" accessibleText="Outils : colonnes">
