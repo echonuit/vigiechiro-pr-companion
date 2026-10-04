@@ -28,7 +28,6 @@ import java.util.function.Supplier;
 /// @param confirmateur porteur de confirmation, **partagé avec le parent** dont les tests le remplacent
 /// @param notificateur porteur de compte rendu, partagé de même : un geste qui n'aboutit pas se dit
 /// @param idPassage passage courant, lu à chaque geste (le contexte change sans recharger la vue)
-/// @param lancerParticipation étape ④, offerte par le compte rendu de fin de dépôt (#2653)
 record AppuisTeleversement(
         LotViewModel viewModel,
         DepotViewModel depotViewModel,
@@ -37,8 +36,7 @@ record AppuisTeleversement(
         OuvreurDeLien ouvreurDeLien,
         ConfirmateurModifiable confirmateur,
         NotificateurModifiable notificateur,
-        Supplier<Long> idPassage,
-        Runnable lancerParticipation) {
+        Supplier<Long> idPassage) {
 
     AppuisTeleversement {
         Objects.requireNonNull(viewModel, "viewModel");
@@ -49,6 +47,5 @@ record AppuisTeleversement(
         Objects.requireNonNull(confirmateur, "confirmateur");
         Objects.requireNonNull(notificateur, "notificateur");
         Objects.requireNonNull(idPassage, "idPassage");
-        Objects.requireNonNull(lancerParticipation, "lancerParticipation");
     }
 }

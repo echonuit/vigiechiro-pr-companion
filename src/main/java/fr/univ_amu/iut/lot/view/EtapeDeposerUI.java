@@ -8,6 +8,7 @@ import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -27,16 +28,36 @@ final class EtapeDeposerUI {
 
     private EtapeDeposerUI() {}
 
-    static void cabler(
-            Button bouton,
-            FontIcon icone,
-            StackPane enveloppe,
-            LotViewModel lot,
-            DepotViewModel depot,
-            TraitementViewModel traitement) {
-        Objects.requireNonNull(bouton, "bouton");
-        Objects.requireNonNull(icone, "icone");
-        Objects.requireNonNull(enveloppe, "enveloppe");
+    /// Les nœuds de l'étape ④ : son bouton, son icône, l'enveloppe qui porte l'explication d'un blocage,
+    /// et le titre et la consigne qui disent le même geste que le bouton (#5676).
+    record Vue(Button bouton, FontIcon icone, StackPane enveloppe, Label titre, Label consigne) {
+
+        Vue {
+            Objects.requireNonNull(bouton, "bouton");
+            Objects.requireNonNull(icone, "icone");
+            Objects.requireNonNull(enveloppe, "enveloppe");
+            Objects.requireNonNull(titre, "titre");
+            Objects.requireNonNull(consigne, "consigne");
+        }
+    }
+
+    static void cabler(Vue vue, LotViewModel lot, DepotViewModel depot, TraitementViewModel traitement) {
+        Button bouton = vue.bouton();
+        FontIcon icone = vue.icone();
+        StackPane enveloppe = vue.enveloppe();
+        // Le titre de l'étape suit le bouton : resté « Marquer le passage déposé » au-dessus de « Lancer la
+        // participation », il laissait croire à deux gestes (#5676).
+        vue.titre()
+                .textProperty()
+                .bind(Bindings.when(depot.participationLieeProperty())
+                        .then("4. Lancer la participation")
+                        .otherwise("4. Marquer le passage déposé"));
+        vue.consigne()
+                .textProperty()
+                .bind(Bindings.when(depot.participationLieeProperty())
+                        .then("Demandez à Vigie-Chiro d'analyser la nuit déposée : ses observations arriveront"
+                                + " une fois l'analyse terminée.")
+                        .otherwise("Une fois le téléversement effectué sur Vigie-Chiro, enregistrez le dépôt."));
         // L'icône suit le sens du bouton : une fusée quand il lance la participation, une coche quand il
         // marque le dépôt à la main. Une icône figée dirait le contraire du mot une fois sur deux.
         IconeSelonEtat.lier(icone, depot.participationLieeProperty(), FontAwesomeSolid.ROCKET, FontAwesomeSolid.CHECK);

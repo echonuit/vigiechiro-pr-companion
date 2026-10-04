@@ -73,7 +73,8 @@ public final class CaptureCompteRenduDepot {
         rendre(
                 new BilanDepot(PARTICIPATION, 14, List.of(), 4_500_000_000L),
                 new CompteRenduChiffreDepot.Plan(14, 14, false),
-                List.of(new CompteRenduChiffre.Action("Lancer la participation", true, () -> {})),
+                // Sans bouton : l'écran ne lui en donne plus, l'étape 4 porte le geste (#5676).
+                List.of(),
                 sortie.resolve("apercu-lot-depot-compte-rendu.png"));
         rendre(
                 new BilanDepot(PARTICIPATION, 9, List.of(), 2_900_000_000L),
