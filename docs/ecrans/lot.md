@@ -35,7 +35,7 @@ déposer ».
 
 Cette étape n'apparaît pas pour un dépôt en séquences WAV fait par l'application.
 
-![L'état « Prêt à déposer » : l'étape « Générer les archives » devient active.](../assets/captures/apercu-lot-deposer.png)
+![L'état « Prêt à déposer » en archives ZIP : l'étape « Générer les archives » est offerte, et le téléversement est déjà l'étape courante.](../assets/captures/apercu-lot-deposer.png)
 
 En forme ZIP, ce que l'on téléverse sur Vigie-Chiro, ce sont des **archives** (au plus 700 Mo par défaut, réglable dans [Réglages](reglages.md)), découpées depuis les
 séquences et écrites dans le sous-dossier `depot/` de la session. La génération peut être **longue**

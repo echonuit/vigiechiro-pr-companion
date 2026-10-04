@@ -5,9 +5,9 @@
 > **Parcours couverts** : [P4 - Préparer le dépôt](../Parcours%20utilisateurs/P4%20-%20Preparer%20un%20lot%20pret%20a%20deposer.md).
 > **Issue** : #2337 (recadrage de la maquette sur l'écran livré), chantier #2369.
 
-La vue déroule le dépôt en **quatre étapes** (un stepper les rappelle en tête), suivies de deux sections de suivi et d'entretien. Le chemin nominal est un **dépôt direct sur Vigie-Chiro depuis l'application** : elle crée la participation, téléverse les séquences au bon format, reprend sur coupure, puis on **lance l'analyse** Tadarida. L'ouverture du dossier pour un **dépôt navigateur** est un **repli** hors connexion, jamais le mode par défaut.
+La vue déroule le dépôt en **trois ou quatre étapes** selon la forme du dépôt (un stepper les rappelle en tête), suivies de deux sections de suivi et d'entretien. La maquette ci-dessous dessine la forme à quatre étapes, celle des archives ZIP. Le chemin nominal est un **dépôt direct sur Vigie-Chiro depuis l'application** : elle crée la participation, téléverse les séquences au bon format, reprend sur coupure, puis on **lance l'analyse** Tadarida. L'ouverture du dossier pour un **dépôt navigateur** est un **repli** hors connexion, jamais le mode par défaut.
 
-> **Forme du dépôt** : le dépôt part en **archives ZIP** (≤ 700 Mo) ou en **séquences WAV**, selon le réglage *Réglages ▸ Dépôt*. En ZIP, la plateforme **ne conserve pas les sons** et la participation **n'est plus relançable** : c'est un arbitrage à connaître, rappelé à l'écran.
+> **Forme du dépôt** : le dépôt part en **séquences WAV**, par défaut, ou en **archives ZIP** (≤ 700 Mo), selon le réglage *Réglages ▸ Dépôt*. Connecté en WAV, l'étape « Générer les archives » et le dépôt manuel d'archives n'ont pas lieu d'être : l'écran ne les offre pas, et les étapes se numérotent 1, 2, 3. Elles reviennent en ZIP, et hors connexion. En ZIP, la plateforme **ne conserve pas les sons** et la participation **n'est plus relançable** : c'est un arbitrage à connaître, rappelé à l'écran.
 
 ## Maquette principale - la nuit est vérifiée, prête à déposer
 
@@ -150,12 +150,12 @@ La vue déroule le dépôt en **quatre étapes** (un stepper les rappelle en tê
 ### Annotations
 
 - **Fil d'Ariane et retour** : portés par le **chrome** via le contrat `EmplacementNavigation` ; l'écran ne dessine pas son propre fil. Emplacement : `Accueil › Mes sites › Carré N › Passage N° X › Préparer le dépôt`.
-- **Stepper** (`1 · Préparer` / `2 · Générer les archives` / `3 · Téléverser` / `4 · Marquer déposé`) : rappelle les quatre temps. L'étape 2 devient **facultative** quand on est connecté : le téléversement produit les archives à la volée et n'en garde que quelques-unes sur disque.
+- **Stepper** : en archives ZIP ou hors connexion, `1 · Préparer` / `2 · Générer les archives` / `3 · Téléverser` / `4 · Marquer déposé`. Connecté en séquences WAV, `1 · Préparer` / `2 · Téléverser` / `3 · Marquer déposé`. En ZIP connecté, l'étape 2 est **facultative** : le téléversement produit les archives à la volée et n'en garde que quelques-unes sur disque.
 - **Bandeau passage** : rappel du passage, du verdict, du statut, du volume, et de la **forme du dépôt** (ZIP ou WAV, réglable).
 - **1. Vérifier et préparer** : la checklist de cohérence (R33) affiche **quatre contrôles bloquants** (verdict, transformation, nommage, journal) et **un avertissement non bloquant** (relevé climatique absent). Un ✗ interdit la préparation ; un ⚠ laisse déposer. Le bouton verrouille ensuite la liste des séquences et fait passer le passage à `Prêt à déposer`.
-- **2. Générer les archives** : découpe les séquences en `préfixe-N.zip` (≤ 700 Mo, réglable), écrites dans `depot/`. La table suit chaque archive (numéro, fichiers, taille, progression). Facultatif si connecté (cf. stepper).
-- **3. Téléverser** : le bouton **☁ Téléverser sur Vigie-Chiro** est le chemin nominal (participation créée, envoi **reprenable** unité par unité). **📁 Ouvrir le dossier** ouvre `depot/` pour un **dépôt navigateur de repli** hors connexion.
-- **Traitement Vigie-Chiro** : téléverser **ne suffit pas** à lancer l'analyse. **▶ Lancer la participation** déclenche le calcul Tadarida serveur ; **↻ Actualiser** relève son état (Planifiée / En cours / Terminée / Échec) **à la demande**, sans sondage automatique.
+- **2. Générer les archives** (forme ZIP, ou hors connexion) : découpe les séquences en `préfixe-N.zip` (≤ 700 Mo, réglable), écrites dans `depot/`. La table suit chaque archive (numéro, fichiers, taille, progression). Facultatif si connecté (cf. stepper).
+- **3. Téléverser** : le bouton **☁ Téléverser sur Vigie-Chiro** est le chemin nominal (participation créée, envoi **reprenable** unité par unité). **📁 Ouvrir le dossier** ouvre `depot/` pour un **dépôt navigateur de repli** ; il n'est offert qu'avec l'étape des archives. Le compte rendu du dépôt nomme ce qui est parti : des séquences ou des archives.
+- **Traitement Vigie-Chiro** : téléverser **ne suffit pas** à lancer l'analyse. **▶ Lancer la participation** déclenche le calcul Tadarida serveur : c'est le bouton de la **dernière étape**, et le seul ; son résultat se lit sous lui, et une analyse demandée ne s'offre pas à être relancée. **↻ Actualiser** relève l'état (Planifiée / En cours / Terminée / Échec) **à la demande**, sans sondage automatique, et **importe les observations** quand il trouve l'analyse terminée.
 - **4. Marquer déposé / Libérer l'espace** : « **✔ Marquer déposé** » trace le dépôt à la main, en **repli** du dépôt navigateur (le dépôt direct pose `Déposé` tout seul une fois tout en ligne). « **🗑 Supprimer les archives de dépôt** » libère l'espace : les ZIP sont régénérables à l'identique.
 
 ### Interactions clés
@@ -216,7 +216,7 @@ Une fois le dépôt effectué, l'écran montre l'état atteint et oriente vers l
 
 - **Encart vert** « Déposé le DD/MM/AAAA » : trace le dépôt et rappelle que la **participation** a été créée et l'analyse lancée. Un lien **« Voir la participation »** ouvre la page sur le portail.
 - **Annuler le dépôt** : le retour du statut `Déposé` → `Prêt à déposer` (validations conservées) se fait depuis [M-Passage](M-Passage.md) ; sur M-Lot, l'action d'interruption ne concerne qu'un **téléversement en cours** (arrêt coopératif). Il n'y a **pas** de « corriger la date de dépôt ».
-- **Bannière « Et maintenant ? »** : oriente vers la validation ([M-SonsValidation](M-SonsValidation.md)). Les résultats se récupèrent **directement par l'API** (☰ ▸ « Importer depuis Vigie-Chiro »), l'import d'un CSV téléchargé restant un repli.
+- **Bannière « Et maintenant ? »** : oriente vers la validation ([M-SonsValidation](M-SonsValidation.md)). Les résultats se récupèrent **directement par l'API** : « Actualiser » les importe quand l'analyse est terminée, et ☰ ▸ « Importer depuis Vigie-Chiro » permet de les réimporter ; l'import d'un CSV téléchargé reste un repli.
 
 ---
 
@@ -288,6 +288,6 @@ Si le verdict du passage est `Inexploitable` (R14) ou si un contrôle **bloquant
 - **Contrôles de cohérence** : rejoués à l'ouverture (pas mémorisés en base). Bloquants : verdict, transformation, nommage, journal ; non bloquant : relevé climatique.
 - **Forme du dépôt** : réglage global (*Réglages ▸ Dépôt*), WAV par défaut ; un dépôt entamé garde sa forme. En ZIP, la plateforme ne conserve pas les sons et la participation n'est pas relançable : la conséquence est rappelée à l'écran.
 - **Dépôt reprenable** : le plan est persisté unité par unité (`depot_plan`, `depot_unite`), statut `Dépôt en cours` ; un dépôt interrompu se **reprend** (« Reprendre le dépôt »), il ne se rejoue pas. Une unité refusée **définitivement** fait exception : elle porte `echec_definitif`, la reprise ne la reprend plus, et le bouton cesse de la promettre.
-- **Lancement du traitement** : `▶ Lancer la participation` déclenche le calcul serveur ; l'état est **relevé à la demande** (pas de sondage automatique).
+- **Lancement du traitement** : `▶ Lancer la participation` déclenche le calcul serveur ; l'état est **relevé à la demande** (pas de sondage automatique), et un relevé qui rend l'analyse terminée importe les observations, sans jamais remplacer celles qui existent.
 - **Ouverture du dossier** : `java.awt.Desktop.open(File)` sur `depot/` ; désactivée proprement en environnement sans bureau graphique (chemin copiable en repli).
 - **Icônes** : `FontIcon` Ikonli, pas d'emoji (règle #700) ; les emojis de la maquette ne sont qu'un substitut basse fidélité.

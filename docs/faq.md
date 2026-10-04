@@ -106,7 +106,7 @@ Déposer, puis Valider. Voir le [Parcours métier](parcours/index.md).
 
 ### Où récupérer les résultats Tadarida ?
 
-24 à 48 h après le dépôt, **directement depuis l'application** : ☰ ▸ « Importer depuis Vigie-Chiro » récupère les résultats par l'API. Vous pouvez aussi, en repli, télécharger le CSV de résultats sur le portail et l'**importer** dans l'écran [Validation](ecrans/validation.md).
+24 à 48 h après le dépôt, **directement depuis l'application**. Le plus direct : sur l'écran [Préparer le dépôt](ecrans/lot.md), **« Actualiser »** dans la carte « Traitement Vigie-Chiro » importe les observations dès que l'analyse est terminée. Depuis « Sons & validation », ☰ ▸ « Importer depuis Vigie-Chiro » fait la même chose, et permet de les réimporter. Vous pouvez aussi, en repli, télécharger le CSV de résultats sur le portail et l'**importer** dans l'écran [Validation](ecrans/validation.md).
 
 ## Espace disque et archives
 

@@ -13,8 +13,8 @@ Marie a importé et vérifié une nuit (parcours [P2](P2%20-%20Importer%20une%20
     - le journal du capteur et le relevé climatique sont-ils présents ?
 3. L'application affiche un **récapitulatif du dépôt** : nombre de séquences d'écoute, taille totale, forme du dépôt (archives ZIP ou séquences WAV).
 4. **Connectée à Vigie-Chiro**, Marie **téléverse directement depuis l'application** : celle-ci crée la participation, envoie les séquences au bon format, et **reprend là où elle s'est arrêtée** si la connexion coupe. Le passage passe à `Déposé` une fois **tout** en ligne. Puis Marie **lance la participation**, ce qui déclenche l'analyse Tadarida côté serveur.
-5. **Sans connexion**, un **repli** reste possible : « Ouvrir le dossier » puis dépôt depuis le navigateur sur <https://vigiechiro.herokuapp.com/>, suivi de « **Marquer déposé** » pour tracer la date à la main.
-6. Marie attend ensuite 24-48 h le retour Tadarida pour entamer le parcours [P7](P7%20-%20Valider%20les%20resultats%20Tadarida.md).
+5. **Sans connexion**, ou en ayant choisi les archives ZIP, un **repli** reste possible : générer les archives, « Ouvrir le dossier », puis dépôt depuis le navigateur sur <https://vigiechiro.herokuapp.com/>, suivi de « **Marquer déposé** » pour tracer la date à la main.
+6. Marie attend ensuite 24-48 h le retour Tadarida. Sur le même écran, « Actualiser » lui dit où en est l'analyse et, quand elle est terminée, **importe les observations** d'office. Elle peut alors entamer le parcours [P7](P7%20-%20Valider%20les%20resultats%20Tadarida.md).
 
 ## Ce que le dépôt encaisse, et ce qu'il rend
 
