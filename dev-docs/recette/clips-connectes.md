@@ -19,7 +19,7 @@ l'[ADR 5641](../decisions/5641-les-tests-connectes-ont-deux-cibles.md), par l'en
 `plateforme_de_test` de `tournage-recette.yml` (#5793) : l'API Vigie-Chiro épinglée, montée par les
 tests eux-mêmes, sur un état de départ déclaré, sans jeton, sur Ubuntu seul. Le scénario est le même :
 le banc lit la cible que le profil déclare, et seuls ses cas qui ont un sens sur cette cible sont
-joués (`recette-connectee & plateforme-de-test`), aujourd'hui S8-01, S8-05 et S8-06.
+joués (`recette-connectee & plateforme-de-test`), aujourd'hui S8-01, S8-05, S8-06, S2-59 et S2-60.
 
 Ses clips vont sur une pré-version à elle, `clips-plateforme-de-test`, et non sur `clips-connectes`.
 Leur état de départ étant déclaré, ils pourront se comparer, sous la condition que l'ADR 5641 pose et
@@ -166,7 +166,12 @@ prévu pour cela, jamais un compte portant de vraies nuits.
 
 **Sa précondition.** Le compte doit porter au moins un site : sans lui, il n'y a rien à quoi rattacher
 la nuit, et la participation ne peut pas naître. Le scénario s'arrête alors en le disant, plutôt que
-d'échouer comme si le produit était en cause.
+d'échouer comme si le produit était en cause. Sur la plateforme de test, l'état de départ la tient :
+l'observatrice y porte le site du carré 130711, et la participation créée disparaît avec le run.
+
+**Il attend le texte du compte rendu, pas son nœud** (#5804). Le nœud paraît avant que son texte soit
+posé ; la nationale, lente, masquait cette course, et la plateforme de test faisait lire un compte
+rendu vide.
 
 **Ce qu'il ne prouve pas.** Que la participation soit correctement **remplie**. « Voir la
 participation » l'ouvre sur le portail, et cette moitié-là se juge à l'oeil, hors du banc - la session

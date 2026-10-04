@@ -66,7 +66,8 @@ import org.testfx.util.WaitForAsyncUtils;
 /// l'ouvre sur le portail, et cette moitié se juge à l'oeil.
 ///
 /// `@Tag("recette-connectee")`, exclu par `surefire.excludedGroups` : ne tourne que dans le flux
-/// **tournage de recette** avec le drapeau `connecte`, qui exige `VIGIECHIRO_TOKEN_TOURNAGE`.
+/// **tournage de recette** avec le drapeau `connecte`, qui exige `VIGIECHIRO_TOKEN_TOURNAGE`, ou avec le
+/// drapeau `plateforme_de_test`, où le banc vise la plateforme de test que le profil déclare.
 @Tag("recette-connectee")
 @ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class, SansExceptionAvalee.class})
 class ScenarioConnecteAnnonceImportTest {
@@ -135,6 +136,9 @@ class ScenarioConnecteAnnonceImportTest {
     }
 
     @Test
+    // Les deux cibles le servent (#5804) : l'observatrice de la plateforme de test porte un site, et la
+    // participation y naît comme sur la nationale, dans un état qu'on jette à la fin du run.
+    @Tag("plateforme-de-test")
     @CasDeRecette(
             value = {"S2-59", "S2-60"},
             portee = Portee.A_L_ECRAN)
@@ -174,8 +178,10 @@ class ScenarioConnecteAnnonceImportTest {
         GesteVisible.amenerDansLeCadre(robot, "#boutonImporter");
         GesteVisible.cliquer(robot, "#boutonImporter");
 
+        // Le TEXTE, et non la seule présence du nœud : le nœud paraît avant que son texte soit posé, et
+        // la plateforme de test, plus rapide que la nationale, faisait lire un compte rendu vide (#5804).
         Attente.queSurLeFil(
-                () -> robot.lookup("#compteRenduChiffre").tryQuery().isPresent(),
+                () -> !texteDe(robot, "#compteRenduChiffre").isBlank(),
                 "l'import n'a pas abouti sur le compte de tournage",
                 FIN_SECONDES * 1000L);
 
