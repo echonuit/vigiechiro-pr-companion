@@ -30,9 +30,15 @@ public record CibleLive(
 
     private static final String NATIONALE = "https://vigiechiro.herokuapp.com/api/v1";
 
+    /// Vrai quand le profil a déclaré la plateforme de test : la seule lecture de `vigiechiro.cible`,
+    /// que le banc de recette partage avec les sondes (#5793).
+    public static boolean plateformeDeTestDeclaree() {
+        return PLATEFORME_DE_TEST.equals(System.getProperty("vigiechiro.cible"));
+    }
+
     /// La cible que le profil a déclarée.
     public static CibleLive declaree() {
-        if (PLATEFORME_DE_TEST.equals(System.getProperty("vigiechiro.cible"))) {
+        if (plateformeDeTestDeclaree()) {
             PlateformeDeTest.Acces acces = PlateformeDeTest.acces();
             return new CibleLive(
                     acces.urlDeBase(),

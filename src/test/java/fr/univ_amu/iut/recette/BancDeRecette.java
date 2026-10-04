@@ -11,6 +11,7 @@ import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.api.plateforme.CibleLive;
 import fr.univ_amu.iut.commun.api.plateforme.PlateformeDeTest;
 import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
@@ -102,6 +103,14 @@ public final class BancDeRecette {
 
     private String utilisateurDeTest;
 
+    /// Déposer le jeton de la plateforme de test avant l'ouverture, ou le laisser au scénario : le
+    /// pendant de [#deposerLeJeton] pour la plateforme de test (#5793).
+    private boolean deposerLeJetonDeTest;
+
+    /// L'utilisateur sous lequel un scénario qui demande « la plateforme » part sur la plateforme de
+    /// test, quand le profil la déclare : celui que l'état de départ réserve à l'observateur.
+    static final String UTILISATRICE_DU_TOURNAGE = "observatrice";
+
     /// Ce qu'un scénario écrit avant que l'écran ne s'ouvre.
     ///
     /// Il peut **lever** : un semis qui pose des fichiers de nuit fait des entrées/sorties, et un
@@ -190,6 +199,9 @@ public final class BancDeRecette {
     /// **muet sur son propre objet** (ADR 4142). Un scénario qui déclare vouloir la plateforme et ne la
     /// trouve pas n'a rien à montrer : il s'arrête, et il dit quoi poser.
     public BancDeRecette connecteALaPlateforme() {
+        if (CibleLive.plateformeDeTestDeclaree()) {
+            return surLaPlateformeDeTest(UTILISATRICE_DU_TOURNAGE);
+        }
         if (profilConnecte != null || plateformeDeTest != null) {
             throw new IllegalStateException(exclusion());
         }
@@ -208,6 +220,11 @@ public final class BancDeRecette {
     /// `BancDeRecetteSansDepotTest` porte la mesure, et `DeclarationDeLaPlateformeTest` exige la
     /// declaration de tout scenario connecte.
     public BancDeRecette parleALaPlateforme() {
+        if (CibleLive.plateformeDeTestDeclaree()) {
+            surLaPlateformeDeTest(UTILISATRICE_DU_TOURNAGE);
+            this.deposerLeJetonDeTest = false;
+            return this;
+        }
         if (profilConnecte != null || plateformeDeTest != null) {
             throw new IllegalStateException(exclusion());
         }
@@ -237,7 +254,18 @@ public final class BancDeRecette {
         acces.jeton(cleUtilisateur);
         this.plateformeDeTest = acces;
         this.utilisateurDeTest = cleUtilisateur;
+        this.deposerLeJetonDeTest = true;
         return this;
+    }
+
+    /// Vrai quand ce banc vise la plateforme de test, déclarée ou résolue depuis la cible du profil.
+    boolean viseLaPlateformeDeTest() {
+        return plateformeDeTest != null;
+    }
+
+    /// Vrai quand ce banc dépose lui-même le jeton de la plateforme de test avant l'ouverture.
+    boolean deposeLeJetonDeTest() {
+        return plateformeDeTest != null && deposerLeJetonDeTest;
     }
 
     private static String exclusion() {
@@ -257,6 +285,9 @@ public final class BancDeRecette {
     /// publication n'a lieu que si la révocation a **confirmé** son retrait. Refuse, comme l'autre voie,
     /// plutôt que de rendre vide.
     public static String jetonDeLaPlateforme() {
+        if (CibleLive.plateformeDeTestDeclaree()) {
+            return PlateformeDeTest.acces().jeton(UTILISATRICE_DU_TOURNAGE);
+        }
         return ConnexionModule.jetonPonctuel().orElseThrow(() -> new IllegalStateException(SANS_JETON));
     }
 
@@ -372,6 +403,14 @@ public final class BancDeRecette {
         Injector injecteur = Guice.createInjector(Modules.override(socleDuBanc).with(remplacements));
 
         new MigrationSchema(injecteur.getInstance(SourceDeDonnees.class)).migrer();
+        if (plateformeDeTest != null && deposerLeJetonDeTest) {
+            // Même geste que le jeton réel, avec celui que la plateforme de test a frappé pour
+            // l'utilisateur déclaré : aucun secret, aucun jeton du processus. AVANT le semis : un semis
+            // qui lit la plateforme (les sites du compte) n'aurait sinon aucun jeton, là où la
+            // plateforme nationale prend le sien dans l'environnement (#5793).
+            injecteur.getInstance(StockageConnexion.class).enregistrer(plateformeDeTest.jeton(utilisateurDeTest), null);
+            injecteur.getInstance(RefletDuJeton.class).relire();
+        }
         semis.semer(injecteur);
         if (profilConnecte != null) {
             injecteur.getInstance(StockageConnexion.class).enregistrer("jeton-de-recette", profilConnecte);
@@ -381,11 +420,6 @@ public final class BancDeRecette {
             // connexion réelle sans qu'un caractère du jeton passe par le champ.
             String jeton = jetonDeLaPlateforme();
             injecteur.getInstance(StockageConnexion.class).enregistrer(jeton, null);
-            injecteur.getInstance(RefletDuJeton.class).relire();
-        } else if (plateformeDeTest != null) {
-            // Même geste que le jeton réel, avec celui que la plateforme de test a frappé pour
-            // l'utilisateur déclaré : aucun secret, aucun jeton du processus.
-            injecteur.getInstance(StockageConnexion.class).enregistrer(plateformeDeTest.jeton(utilisateurDeTest), null);
             injecteur.getInstance(RefletDuJeton.class).relire();
         }
 

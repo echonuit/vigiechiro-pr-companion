@@ -124,6 +124,9 @@ class ScenarioConnecteConnexionTest {
     }
 
     @Test
+    // Le seul cas de cette classe qui ait un sens sur la plateforme de test (#5793) : coller un jeton
+    // et lire l'identité. La barre d'avancement, elle, n'a rien à estimer sur deux nuits déclarées.
+    @Tag("plateforme-de-test")
     @CasDeRecette(
             value = {"S8-01", "S8-05", "S8-06"},
             portee = Portee.A_L_ECRAN)
