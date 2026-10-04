@@ -5,8 +5,9 @@ import fr.univ_amu.iut.commun.viewmodel.EtatEtape;
 import java.util.ArrayList;
 import java.util.List;
 
-/// Calcule le **stepper du dépôt** (#251) : les 4 étapes ordonnées (① Préparer · ② Générer les
-/// archives · ③ Téléverser · ④ Marquer déposé) avec leur état d'avancement (franchie / courante / à
+/// Calcule le **stepper du dépôt** (#251) : les étapes ordonnées (① Préparer · ② Générer les
+/// archives · ③ Téléverser · ④ Marquer déposé, ou trois sans celle des archives, #5824) avec leur état d'avancement
+/// (franchie / courante / à
 /// venir), déduit du statut workflow et de la génération d'archives. Pur (aucun état JavaFX), extrait de
 /// [LotViewModel] pour garder le ViewModel mince.
 ///
@@ -19,6 +20,9 @@ final class EtapesDepot {
     private static final List<String> LIBELLES =
             List.of("Préparer", "Générer les archives", "Téléverser", "Marquer déposé");
 
+    /// Les étapes d'un dépôt qui ne produit aucune archive : connecté, en séquences WAV (#5824).
+    private static final List<String> LIBELLES_SANS_ARCHIVES = List.of("Préparer", "Téléverser", "Marquer déposé");
+
     private EtapesDepot() {}
 
     /// Étapes ordonnées avec leur état relatif à l'étape courante (préfixées de leur rang « N · »).
@@ -27,17 +31,43 @@ final class EtapesDepot {
     /// @param archivesGenerees `true` si des archives ont déjà été générées dans la session
     /// @param depotAutomatiqueDisponible `true` si l'application est connectée (étape ③ atteignable
     ///     directement, l'étape ② n'étant plus qu'une option pour le dépôt manuel)
+    /// Les étapes telles que l'écran les offre (#5824) : sans celle des archives quand elle ne sert pas,
+    /// c'est-à-dire connecté pour un dépôt en séquences WAV. Les rangs se suivent alors de 1 à 3.
+    ///
+    /// @param etapeArchivesOfferte `false` quand l'étape « Générer les archives » n'a pas lieu d'être
     static List<EtapeDepot> calculer(
-            StatutWorkflow statut, boolean archivesGenerees, boolean depotAutomatiqueDisponible) {
-        int courante = rangCourant(statut, archivesGenerees, depotAutomatiqueDisponible);
-        List<EtapeDepot> etapes = new ArrayList<>(LIBELLES.size());
-        for (int i = 0; i < LIBELLES.size(); i++) {
+            StatutWorkflow statut,
+            boolean archivesGenerees,
+            boolean depotAutomatiqueDisponible,
+            boolean etapeArchivesOfferte) {
+        if (etapeArchivesOfferte) {
+            return calculer(statut, archivesGenerees, depotAutomatiqueDisponible);
+        }
+        return numeroter(LIBELLES_SANS_ARCHIVES, rangCourantSansArchives(statut));
+    }
+
+    /// Rang (1..3) de l'étape courante quand celle des archives est absente, ou 4 quand tout est accompli.
+    private static int rangCourantSansArchives(StatutWorkflow statut) {
+        if (statut.estSurLaPlateforme()) {
+            return LIBELLES_SANS_ARCHIVES.size() + 1;
+        }
+        return statut == StatutWorkflow.DEPOT_EN_COURS || statut == StatutWorkflow.PRET_A_DEPOSER ? 2 : 1;
+    }
+
+    private static List<EtapeDepot> numeroter(List<String> libelles, int courante) {
+        List<EtapeDepot> etapes = new ArrayList<>(libelles.size());
+        for (int i = 0; i < libelles.size(); i++) {
             int rang = i + 1;
             EtatEtape etat =
                     rang < courante ? EtatEtape.FRANCHIE : rang == courante ? EtatEtape.COURANTE : EtatEtape.A_VENIR;
-            etapes.add(new EtapeDepot(rang + " · " + LIBELLES.get(i), etat));
+            etapes.add(new EtapeDepot(rang + " · " + libelles.get(i), etat));
         }
         return etapes;
+    }
+
+    static List<EtapeDepot> calculer(
+            StatutWorkflow statut, boolean archivesGenerees, boolean depotAutomatiqueDisponible) {
+        return numeroter(LIBELLES, rangCourant(statut, archivesGenerees, depotAutomatiqueDisponible));
     }
 
     /// Rang (1..4) de l'étape courante, ou 5 quand tout est accompli (passage déposé). L'étape ③

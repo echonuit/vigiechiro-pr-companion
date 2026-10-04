@@ -8,6 +8,7 @@ import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.EchecUnite;
 import fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot;
+import fr.univ_amu.iut.lot.viewmodel.UniteDeDepot;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -76,6 +77,13 @@ public final class CaptureCompteRenduDepot {
                 // Sans bouton : l'écran ne lui en donne plus, l'étape 4 porte le geste (#5676).
                 List.of(),
                 sortie.resolve("apercu-lot-depot-compte-rendu.png"));
+        // Le même dépôt complet, en séquences WAV, la forme par défaut (#5824) : le compte rendu nomme
+        // ce qui est parti, et ne parle plus d'archives.
+        rendre(
+                new BilanDepot(PARTICIPATION, 412, List.of(), 5_100_000_000L),
+                new CompteRenduChiffreDepot.Plan(412, 412, false, UniteDeDepot.SEQUENCE),
+                List.of(),
+                sortie.resolve("apercu-lot-depot-compte-rendu-sequences.png"));
         rendre(
                 new BilanDepot(PARTICIPATION, 9, List.of(), 2_900_000_000L),
                 new CompteRenduChiffreDepot.Plan(14, 9, true),

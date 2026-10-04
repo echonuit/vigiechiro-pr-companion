@@ -269,7 +269,11 @@ public class DepotViewModel {
                                 suiviLignes.totalProperty().get(),
                                 enLigne + bilan.echecs().size()),
                         enLigne,
-                        annulationDemandee.get())));
+                        annulationDemandee.get(),
+                        // Le compte rendu nomme ce qui est parti, d'après les lignes de la table (#5824).
+                        UniteDeDepot.de(suiviLignes.lignes().stream()
+                                .map(LigneDepot::type)
+                                .toList()))));
     }
 
     /// Ce qu'une fin de dépôt donne à restituer : le bilan de la tentative et ce que le **plan** sait.

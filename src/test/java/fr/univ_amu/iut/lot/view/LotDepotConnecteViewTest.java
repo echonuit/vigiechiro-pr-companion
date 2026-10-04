@@ -32,6 +32,7 @@ import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.EtatLot;
+import fr.univ_amu.iut.lot.model.ModeDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
@@ -52,6 +53,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -473,6 +475,104 @@ class LotDepotConnecteViewTest {
                 .as("une analyse en cours ne s'offre pas à être relancée, même après réouverture")
                 .isTrue();
         verify(suivi, never()).relever(anyLong());
+    }
+
+    /// Depuis #5677 le dépôt part en séquences WAV, et l'écran offrait toujours l'étape « Générer les
+    /// archives », son dépôt manuel et des numéros qui la comptaient (#5824).
+    @Test
+    @DisplayName("#5824 : connecté en forme WAV, l'étape des archives et le dépôt manuel disparaissent, 1-2-3")
+    void connecte_en_wav_l_etape_des_archives_disparait(FxRobot robot) {
+        when(service.formeDuDepot(ID_PASSAGE)).thenReturn(ModeDepot.SEQUENCES_WAV);
+
+        robot.interact(() -> controleur.ouvrirSur(CONTEXTE));
+
+        assertThat(visible(robot, "#carteArchives"))
+                .as("la carte « Générer les archives »")
+                .isFalse();
+        assertThat(visible(robot, "#ligneCheminDepot"))
+                .as("le chemin du dossier depot/")
+                .isFalse();
+        assertThat(visible(robot, "#enveloppeOuvrirDepot"))
+                .as("« Ouvrir le dossier (dépôt manuel) »")
+                .isFalse();
+        assertThat(texte(robot, "#lblTitreTeleversement")).isEqualTo("2. Téléverser sur Vigie-Chiro");
+        assertThat(texte(robot, "#lblTitreDeposer")).isEqualTo("3. Lancer la participation");
+        assertThat(texte(robot, "#lblConsigneTeleversement"))
+                .contains("les séquences transformées partent une à une")
+                .doesNotContain("archives");
+        assertThat(Attente.surLeFil(
+                        () -> robot.lookup("#stepper")
+                                .queryAs(HBox.class)
+                                .getChildren()
+                                .size(),
+                        "compter les puces du fil d'étapes",
+                        5_000L))
+                .isEqualTo(3);
+        assertThat(infobulle(robot, "#btnAnnulerDepot"))
+                .contains("Termine les séquences en cours d'envoi")
+                .doesNotContain("compression");
+        assertThat(infobulle(robot, "#btnReinitialiserDepot"))
+                .contains("La participation Vigie-Chiro est conservée")
+                .doesNotContain("archives");
+    }
+
+    @Test
+    @DisplayName("#5824 : connecté en forme ZIP, l'écran garde ses quatre étapes et son dépôt manuel")
+    void connecte_en_zip_l_ecran_garde_ses_quatre_etapes(FxRobot robot) {
+        when(service.formeDuDepot(ID_PASSAGE)).thenReturn(ModeDepot.ARCHIVES_ZIP);
+
+        robot.interact(() -> controleur.ouvrirSur(CONTEXTE));
+
+        assertThat(visible(robot, "#carteArchives")).isTrue();
+        assertThat(visible(robot, "#ligneCheminDepot")).isTrue();
+        assertThat(visible(robot, "#enveloppeOuvrirDepot")).isTrue();
+        assertThat(texte(robot, "#lblTitreTeleversement")).isEqualTo("3. Téléverser sur Vigie-Chiro");
+        assertThat(texte(robot, "#lblTitreDeposer")).isEqualTo("4. Lancer la participation");
+        assertThat(texte(robot, "#lblConsigneTeleversement")).contains("dépôt manuel des archives ZIP");
+        assertThat(infobulle(robot, "#btnAnnulerDepot")).contains("compression");
+        assertThat(infobulle(robot, "#btnReinitialiserDepot")).contains("archives ZIP sur disque");
+    }
+
+    /// Le blocage est gardé dans les deux formes (décision du porteur) ; sa raison, elle, n'est pas la
+    /// même : en WAV l'audio est conservé, c'est l'effacement avant recalcul qui coûte.
+    @Test
+    @DisplayName("#5824 : une nuit analysée reste non relançable en WAV, pour la raison qui vaut en WAV")
+    void une_nuit_analysee_en_wav_dit_la_raison_qui_vaut(FxRobot robot) {
+        when(service.formeDuDepot(ID_PASSAGE)).thenReturn(ModeDepot.SEQUENCES_WAV);
+        when(suivi.relever(ID_PASSAGE))
+                .thenReturn(new Traitement(EtatTraitement.FINI, null, null, "2026-07-13T10:05:00+00:00", null, null));
+        robot.interact(() -> controleur.ouvrirSur(CONTEXTE));
+
+        actualiser(robot);
+        Attente.queSurLeFil(
+                () -> robot.lookup("#btnDeposer").queryAs(Button.class).isDisabled(), "le bouton se grise", 5_000L);
+
+        assertThat(explicationDuBouton(robot))
+                .contains("effacerait ses observations côté serveur avant de les recalculer")
+                .contains("--forcer")
+                .doesNotContain("archives");
+    }
+
+    private static boolean visible(FxRobot robot, String selecteur) {
+        return Attente.surLeFil(
+                () -> {
+                    Node noeud = robot.lookup(selecteur).query();
+                    return noeud.isVisible() && noeud.isManaged();
+                },
+                "lire la présence de " + selecteur,
+                5_000L);
+    }
+
+    private static String texte(FxRobot robot, String selecteur) {
+        return Attente.surLeFil(
+                () -> robot.lookup(selecteur).queryAs(Label.class).getText(), "lire " + selecteur, 5_000L);
+    }
+
+    private static String infobulle(FxRobot robot, String selecteur) {
+        return Attente.surLeFil(
+                () -> robot.lookup(selecteur).queryAs(Button.class).getTooltip().getText(),
+                "lire l'infobulle de " + selecteur,
+                5_000L);
     }
 
     /// L'infobulle que l'enveloppe du bouton porte, là où `Tooltip.install` la range.

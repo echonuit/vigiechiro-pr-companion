@@ -802,6 +802,17 @@ Le second gros pourvoyeur d'états : préparation, téléversement, reprise, int
 </tr>
 </table>
 
+<table>
+<tr>
+<th width="50%">Forme par défaut : séquences WAV, trois étapes</th>
+<th width="50%">Compte rendu d'un dépôt en séquences</th>
+</tr>
+<tr>
+<td><a href="apercu-lot-sequences.png"><img src="apercu-lot-sequences.png" width="430" alt="Forme par défaut : connecté en séquences WAV, l'étape des archives est absente et les étapes se numérotent 1, 2, 3"></a></td>
+<td><a href="apercu-lot-depot-compte-rendu-sequences.png"><img src="apercu-lot-depot-compte-rendu-sequences.png" width="430" alt="Compte rendu d'un dépôt complet en séquences WAV : il compte des séquences, pas des archives"></a></td>
+</tr>
+</table>
+
 
 ---
 

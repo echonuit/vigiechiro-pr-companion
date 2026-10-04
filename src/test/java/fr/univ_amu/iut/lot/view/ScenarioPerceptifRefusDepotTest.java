@@ -130,6 +130,10 @@ class ScenarioPerceptifRefusDepotTest {
 
     @Start
     void start(Stage stage) throws IOException {
+        // Ces deux cas se jouent en forme ZIP : des archives refusées, et le dépôt manuel d'archives.
+        // Depuis #5824 l'écran n'offre plus l'étape des archives ni son dépôt manuel en forme WAV, le
+        // défaut depuis #5677 : sans ce réglage, il n'y aurait ni « Générer » ni « Ouvrir le dossier ».
+        System.setProperty("vigiechiro.depot.mode", "zip");
         injector = BancDeRecette.surLeChrome()
                 .taille(1180, 900)
                 // Asynchrone, comme les autres scénarios perceptifs : en synchrone le dépôt se ferait sur
@@ -188,6 +192,7 @@ class ScenarioPerceptifRefusDepotTest {
     @AfterEach
     void nettoyerWorkspace() {
         System.clearProperty("vigiechiro.workspace");
+        System.clearProperty("vigiechiro.depot.mode");
     }
 
     @Test

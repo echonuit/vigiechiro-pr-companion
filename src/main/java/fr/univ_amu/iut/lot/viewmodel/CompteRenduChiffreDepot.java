@@ -52,7 +52,14 @@ public final class CompteRenduChiffreDepot {
     /// @param unitesDuPlan nombre total d'unités à déposer pour cette nuit
     /// @param enLigne nombre d'unités effectivement en ligne, toutes tentatives confondues
     /// @param interrompu l'utilisateur a demandé l'arrêt : ni un succès, ni une erreur
-    public record Plan(int unitesDuPlan, int enLigne, boolean interrompu) {}
+    /// @param unite le nom de ce que ce dépôt envoie : archives, séquences, ou les deux (#5824)
+    public record Plan(int unitesDuPlan, int enLigne, boolean interrompu, UniteDeDepot unite) {
+
+        /// Un plan d'archives, le seul que l'on savait nommer avant #5824.
+        public Plan(int unitesDuPlan, int enLigne, boolean interrompu) {
+            this(unitesDuPlan, enLigne, interrompu, UniteDeDepot.ARCHIVE);
+        }
+    }
 
     /// Le compte rendu chiffré d'un dépôt terminé.
     ///
@@ -66,7 +73,7 @@ public final class CompteRenduChiffreDepot {
                 severite(bilan, plan),
                 List.of(),
                 ventilation(bilan, plan),
-                motifs(bilan),
+                motifs(bilan, plan.unite()),
                 avertissements(bilan, plan),
                 actions);
     }
@@ -126,7 +133,7 @@ public final class CompteRenduChiffreDepot {
         ajouterSiPresent(segments, "Déposées", plan.enLigne(), Teinte.RETENU);
         ajouterSiPresent(segments, "En échec", bilan.echecs().size(), Teinte.REFUSE);
         ajouterSiPresent(segments, "Restantes", restantes, Teinte.ECARTE);
-        return new Ventilation("Devenir des " + total + " archives du plan", total, segments);
+        return new Ventilation("Devenir des " + total + " " + plan.unite().pluriel() + " du plan", total, segments);
     }
 
     private static void ajouterSiPresent(List<Segment> segments, String libelle, int quantite, Teinte teinte) {
@@ -140,10 +147,10 @@ public final class CompteRenduChiffreDepot {
     /// Depuis #3962, `BilanDepot.echecs` porte `definitif` : les deux familles ne se lisent plus de la
     /// même façon, et les mélanger sous un seul motif reviendrait à taire la seule chose qui change ce
     /// que l'utilisateur peut faire. La **raison** de chaque unité reste dans la table, ligne par ligne.
-    private static List<Motif> motifs(BilanDepot bilan) {
+    private static List<Motif> motifs(BilanDepot bilan, UniteDeDepot unite) {
         List<Motif> motifs = new ArrayList<>();
-        ajouterMotif(motifs, "archive(s) en échec, cause détaillée dans la table", bilan.reprenables());
-        ajouterMotif(motifs, "archive(s) refusée(s) par Vigie-Chiro", bilan.refusesDefinitivement());
+        ajouterMotif(motifs, unite.singulier() + "(s) en échec, cause détaillée dans la table", bilan.reprenables());
+        ajouterMotif(motifs, unite.singulier() + "(s) refusée(s) par Vigie-Chiro", bilan.refusesDefinitivement());
         return List.copyOf(motifs);
     }
 
@@ -160,13 +167,14 @@ public final class CompteRenduChiffreDepot {
     /// ni une URL que le stockage refuse, ni un contenu refusé. Nommer « reconnectez-vous » à côté de la
     /// cause est le défaut que l'ADR 3854 a fermé ailleurs, et que Samuel a payé d'une reconnexion puis
     /// d'un redémarrage le 14 septembre.
-    private static String phraseDesRefus(List<EchecUnite> refuses) {
+    private static String phraseDesRefus(List<EchecUnite> refuses, UniteDeDepot unite) {
+        String nom = unite.singulier() + "(s)";
         // Le prédicat reste la seule autorité sur « une reconnexion répare ceci » (#3961).
         long droits =
                 refuses.stream().filter(EchecUnite::seRearmeParUneReconnexion).count();
         long stockage = compter(refuses, CauseRefus.STOCKAGE);
         long contenu = refuses.size() - droits - stockage;
-        String debut = refuses.size() + " archive(s) ont été refusées par Vigie-Chiro : les renvoyer telles"
+        String debut = refuses.size() + " " + nom + " ont été refusées par Vigie-Chiro : les renvoyer telles"
                 + " quelles serait refusé de même.";
         if (droits == refuses.size()) {
             return debut + " Reconnectez-vous : elles redeviendront reprenables.";
@@ -177,15 +185,19 @@ public final class CompteRenduChiffreDepot {
             // suivant les retente - `restantes()` rend « tout sauf déposé », et le moteur n'écarte
             // jamais une unité sur son drapeau `definitif`. Ce que #3687 a retiré, c'est la PROMESSE
             // d'une reprise, pas la POSSIBILITÉ d'un nouvel essai.
-            return debut + " Régénérez les archives de la nuit, puis relancez le téléversement.";
+            // Et il n'est vérifié QUE pour des archives (#5824) : régénérer ne change pas le contenu d'une
+            // séquence. Pour elle, aucun geste de l'écran ne s'applique, et l'on renvoie à la table.
+            return unite == UniteDeDepot.ARCHIVE
+                    ? debut + " Régénérez les archives de la nuit, puis relancez le téléversement."
+                    : debut + " Le détail par " + unite.singulier() + " est dans la table.";
         }
         if (stockage == refuses.size()) {
-            return refuses.size() + " archive(s) ont été refusées par le stockage de Vigie-Chiro : " + GESTE_STOCKAGE;
+            return refuses.size() + " " + nom + " ont été refusées par le stockage de Vigie-Chiro : " + GESTE_STOCKAGE;
         }
         // Le cas mêlé, trouvé en ouvrant l'aperçu (#3962) : l'ADR 3854 demande de ne nommer que ce qui
         // s'applique, pas de se taire quand cela s'applique à une partie. Chaque cause dit donc son
         // geste, avec la part qu'il concerne.
-        StringBuilder phrase = new StringBuilder(refuses.size() + " archive(s) ont été refusées par Vigie-Chiro.");
+        StringBuilder phrase = new StringBuilder(refuses.size() + " " + nom + " ont été refusées par Vigie-Chiro.");
         if (droits > 0) {
             phrase.append(" ")
                     .append(droits)
@@ -203,9 +215,15 @@ public final class CompteRenduChiffreDepot {
             phrase.append(" ")
                     .append(contenu)
                     .append(accord(contenu, " d'entre elles a", " d'entre elles ont"))
-                    .append(" un contenu refusé : régénérez les archives, puis relancez.");
+                    .append(
+                            unite == UniteDeDepot.ARCHIVE
+                                    ? " un contenu refusé : régénérez les archives, puis relancez."
+                                    : " un contenu refusé.");
         }
-        return phrase.append(" Le détail par archive est dans la table.").toString();
+        return phrase.append(" Le détail par ")
+                .append(unite.singulier())
+                .append(" est dans la table.")
+                .toString();
     }
 
     private static long compter(List<EchecUnite> refuses, CauseRefus cause) {
@@ -235,7 +253,9 @@ public final class CompteRenduChiffreDepot {
             // Ni un succès ni une erreur : la reprise ne renverra que le reste, et le dire évite qu'on
             // recommence tout par précaution (#1044).
             avertissements.add(Avertissement.de("Vous avez arrêté le dépôt. « Reprendre le dépôt » ne renverra"
-                    + " que les " + Math.max(0, total - plan.enLigne()) + " archive(s) manquante(s)."));
+                    + " que les " + Math.max(0, total - plan.enLigne()) + " "
+                    + plan.unite().singulier()
+                    + "(s) manquante(s)."));
         } else if (!bilan.echecs().isEmpty()) {
             // Deux phrases et non une. Annoncer « « Reprendre le dépôt » ne renverra que celles-là »
             // sur un refus définitif nommait un geste que le produit ne propose plus : dans cet état, le
@@ -244,17 +264,18 @@ public final class CompteRenduChiffreDepot {
             List<EchecUnite> reprenables = bilan.reprenables();
             if (!reprenables.isEmpty()) {
                 avertissements.add(Avertissement.de(reprenables.size()
-                        + " archive(s) ne sont pas en ligne : « Reprendre le dépôt » ne renverra que celles-là."));
+                        + " " + plan.unite().singulier()
+                        + "(s) ne sont pas en ligne : « Reprendre le dépôt » ne renverra que celles-là."));
             }
             List<EchecUnite> refuses = bilan.refusesDefinitivement();
             if (!refuses.isEmpty()) {
-                avertissements.add(Avertissement.de(phraseDesRefus(refuses)));
+                avertissements.add(Avertissement.de(phraseDesRefus(refuses, plan.unite())));
             }
         }
         if (plan.enLigne() == total && total > 0) {
-            avertissements.add(Avertissement.succes(
-                    "Toutes les archives de la nuit sont sur Vigie-Chiro. Il reste à lancer la participation"
-                            + " pour que la plateforme les analyse."));
+            avertissements.add(Avertissement.succes("Toutes les " + plan.unite().pluriel()
+                    + " de la nuit sont sur Vigie-Chiro. Il reste à lancer la participation"
+                    + " pour que la plateforme les analyse."));
         }
         return avertissements;
     }

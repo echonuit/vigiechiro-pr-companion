@@ -342,26 +342,27 @@ public class ServiceLot {
                 .compacter(fichiers, prefixe, repertoireDepot.dossier(session.cheminRacine()), progres, suivi);
     }
 
+    /// La **forme** du dépôt de la nuit : celle d'un dépôt entamé, sinon celle du réglage (#5824).
+    ///
+    /// C'est la règle de [#sourceDepotParDefaut], rendue lisible par l'écran : il n'offrait l'étape des
+    /// archives, et ne parlait d'archives, que parce qu'il ignorait ce qui partirait.
+    public ModeDepot formeDuDepot(Long idPassage) {
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
+        return modeDuDepotEntame(idPassage).orElseGet(choixSource::modeRegle);
+    }
+
     /// La [SourceDepot] du dépôt **par défaut** du passage (#1994), remplaçante de
     /// [#sourceDepotParDefaut] pour les appelants qui téléversent.
     ///
-    /// Même politique qu'avant : les archives ZIP sont privilégiées, le repli WAV n'intervient que si le
-    /// disque ne permet pas de les créer. Une différence, et c'est tout l'objet du lot : quand le mode
-    /// ZIP s'applique, la source est **régénérable** ([SourceArchivesRegenerables]). Ses identifiants
-    /// viennent de la partition et non du contenu du dossier, donc des archives effacées ne font plus
+    /// Elle suit la [#formeDuDepot] de la nuit : le mode d'un dépôt entamé, sinon le réglage. Quand le
+    /// mode ZIP s'applique, la source est **régénérable** ([SourceArchivesRegenerables]). Ses identifiants
+    /// viennent de la partition et non du contenu du dossier, donc des archives effacées ne font pas
     /// basculer le dépôt en mode WAV ni perdre la progression déjà acquise : elles sont reproduites.
     ///
     /// @throws RegleMetierException si le passage n'a aucune séquence transformée à déposer
     public SourceDepot sourceDepotParDefaut(Long idPassage) {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
-        Optional<ModeDepot> entame = modeDuDepotEntame(idPassage);
-        if (entame.isPresent()) {
-            return sourceDepot(idPassage, entame.get());
-        }
-        return choixSource.pour(
-                consulterLot(idPassage),
-                sequencesADeposer(idPassage),
-                Path.of(chargerSession(idPassage).cheminRacine()));
+        return sourceDepot(idPassage, formeDuDepot(idPassage));
     }
 
     /// Le mode d'un dépôt **entamé** : celui des unités déjà en ligne, vide si rien n'est encore déposé

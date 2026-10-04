@@ -20,4 +20,4 @@ Un lot du chantier #5596, une demande de fusion : #5784 (lot 24).
 - [x] 3.1 Capture de la carte après un import, déclarée aux trois endroits (classe de capture, script, manifeste), ouverte et relue ; les trois gardes de captures rejoués à la main.
 - [x] 3.2 `docs/ecrans/lot.md` et `dev-docs/cli.md` disent le geste ; un cas de recette S4 le pose, sans toucher aux lignes S4-47 à S4-50, S4-90 et S4-92.
 - [x] 3.3 Faire rejouer `ScenarioConnecteLancementTest` sur la branche par la session qui le porte, avant la fusion. Fait quand elle le rend vert.
-- [ ] 3.4 Mutation ciblée sur le chemin d'import de `TraitementViewModel` et sur la décision du verrou ; survivants lus un par un.
+- [x] 3.4 Mutation ciblée sur le chemin d'import de `TraitementViewModel` et sur la décision du verrou ; survivants lus un par un. Tenue après la fusion, depuis la branche de #5824 : PIT sur `ImportApresReleve`, 10 mutants, 10 tués. La décision du verrou n'a pas été mutée par PIT : elle a été vue rouge contre l'option sans effet (`CliVerrouWorkspaceTest`).

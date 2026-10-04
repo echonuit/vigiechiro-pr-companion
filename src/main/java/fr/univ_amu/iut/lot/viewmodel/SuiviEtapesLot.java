@@ -1,8 +1,10 @@
 package fr.univ_amu.iut.lot.viewmodel;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.lot.model.ModeDepot;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -29,8 +31,14 @@ final class SuiviEtapesLot {
     private StatutWorkflow statutCourant;
     private boolean depotAutomatiqueDisponible;
 
-    SuiviEtapesLot(BooleanSupplier archivesGenerees) {
+    /// La forme du depot de la nuit ouverte, relue a chaque recalcul (#5824) : un depot entame garde la
+    /// sienne, donc elle peut changer apres un televersement. Fournie plutot que poussee, pour que
+    /// [LotViewModel] n'ait pas a la porter a chaque rechargement.
+    private final Supplier<ModeDepot> forme;
+
+    SuiviEtapesLot(BooleanSupplier archivesGenerees, Supplier<ModeDepot> forme) {
         this.archivesGenerees = Objects.requireNonNull(archivesGenerees, "archivesGenerees");
+        this.forme = Objects.requireNonNull(forme, "forme");
     }
 
     /// Les etapes, dans l'ordre, telles que la vue les rend.
@@ -61,7 +69,11 @@ final class SuiviEtapesLot {
         if (statutCourant == null) {
             return;
         }
-        etapes.setAll(EtapesDepot.calculer(statutCourant, archivesGenerees.getAsBoolean(), depotAutomatiqueDisponible));
+        // Seule une forme WAV averee retire l'etape des archives, et seulement si l'application peut
+        // televerser : hors connexion, les archives sont la seule voie du depot manuel (#5824).
+        boolean etapeArchivesOfferte = !depotAutomatiqueDisponible || forme.get() != ModeDepot.SEQUENCES_WAV;
+        etapes.setAll(EtapesDepot.calculer(
+                statutCourant, archivesGenerees.getAsBoolean(), depotAutomatiqueDisponible, etapeArchivesOfferte));
     }
 
     /// Oublie tout : plus d'etapes, plus de statut. La disponibilite du depot, elle, est une propriete

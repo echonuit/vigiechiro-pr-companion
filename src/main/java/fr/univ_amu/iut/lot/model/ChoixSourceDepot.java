@@ -72,6 +72,11 @@ final class ChoixSourceDepot {
         return pour(lot, sequences, racineSession, mode.get());
     }
 
+    /// Le mode que dit le reglage, relu a chaque appel (#5824).
+    ModeDepot modeRegle() {
+        return mode.get();
+    }
+
     /// La source a deposer sous un mode **impose**, sans consulter le reglage : c'est ce que forcent les
     /// options `--archives` / `--wav` de la CLI. Le reglage n'est qu'un defaut, pas une fatalite.
     ///

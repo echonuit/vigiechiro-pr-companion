@@ -75,7 +75,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
   « synchronisez vos sites », qui ne ramène pas un carré sans nuit déposée.
 - **S4-17** · *geste: un-site-non-rattache-refuse-le-televersement* · Rien, avant ce clic, n'annonçait le dépôt impossible sur ce site (S4-C01 : le garde-fou arrive après
   la génération).
-- **S4-18** · *geste: le-dossier-de-depot-et-son-chemin* · « 📂 Ouvrir le dossier (dépôt manuel) » ouvre le dossier `depot/`.
+- **S4-18** · *geste: le-dossier-de-depot-et-son-chemin* · En forme ZIP (Réglages ▸ Dépôt), « 📂 Ouvrir le dossier (dépôt manuel) » ouvre le dossier `depot/`.
 - **S4-19** · *geste: le-dossier-de-depot-et-son-chemin* · Ce bouton est grisé sans archives, avec une infobulle explicative.
 - **S4-20** · *geste: le-dossier-de-depot-et-son-chemin* · Le chemin du dossier de dépôt porte, **à côté de lui**, un bouton « Copier » ; le cliquer place ce
   chemin dans le presse-papier, et ce qui s'y trouve est **exactement** ce que l'écran affiche (le
@@ -142,6 +142,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 - **S4-50** · *prérequis: une base de départ portant un état de traitement déjà relevé, avec sa date (générateur de bases déclarées de #4325)* · Fermer/rouvrir l'application : le dernier état connu est réaffiché avec sa date, sans réseau. La date se lit à l'heure du poste, pas à celle du serveur : une analyse partie à 14:07 UTC s'affiche « à 16:07 » l'été à Paris (#5683).
 - **S4-51** · *hors-portée: rien à observer. C'est une consigne à l'opérateur pour la suite, pas un fait d'écran* · **Noter l'identifiant de la participation** (nettoyage manuel éventuel + matériau de S5).
 - **S4-98** · Une fois l'analyse terminée côté plateforme, « 🔄 Actualiser » : la carte affiche « Analyse terminée » et, dessous, « Observations importées depuis Vigie-Chiro : … » avec leur nombre. Ouvrir « Sons & validation » : les observations y sont, sans être passé par le menu ☰. Cliquer de nouveau « Actualiser » : la carte dit que les observations sont déjà importées, et rien n'est réimporté. En ligne de commande, `etat-traitement-vigiechiro --importer` fait le même geste (#5784).
+- **S4-99** · Sans réglage de forme (séquences WAV, le défaut) et connecté, ouvrir « Préparer le dépôt » : le fil d'étapes compte **trois** puces, aucune carte « Générer les archives », et l'étape « 2. Téléverser sur Vigie-Chiro » ne propose ni chemin de dossier ni « Ouvrir le dossier (dépôt manuel) ». Après le téléversement, le compte rendu compte des **séquences**. Passer aux archives ZIP dans Réglages ▸ Dépôt puis rouvrir l'écran d'une nuit non déposée : les quatre étapes et le dépôt manuel reviennent (#5824).
 
 ### Traitement en lot : ce qu'un seul poste ne peut pas prouver (#2357)
 

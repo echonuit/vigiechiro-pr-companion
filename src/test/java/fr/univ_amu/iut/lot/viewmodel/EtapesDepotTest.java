@@ -72,6 +72,41 @@ class EtapesDepotTest {
                 .isEqualTo(EtatEtape.COURANTE);
     }
 
+    @Test
+    @DisplayName("#5824 : sans l'étape des archives, trois étapes numérotées de 1 à 3, sans trou")
+    void sans_l_etape_des_archives_trois_etapes() {
+        java.util.List<EtapeDepot> etapes = EtapesDepot.calculer(StatutWorkflow.PRET_A_DEPOSER, false, CONNECTE, false);
+
+        assertThat(etapes)
+                .extracting(EtapeDepot::libelle)
+                .containsExactly("1 · Préparer", "2 · Téléverser", "3 · Marquer déposé");
+        assertThat(etatDe(etapes, 1)).isEqualTo(EtatEtape.FRANCHIE);
+        assertThat(etatDe(etapes, 2))
+                .as("le téléversement est l'étape courante")
+                .isEqualTo(EtatEtape.COURANTE);
+        assertThat(etatDe(etapes, 3)).isEqualTo(EtatEtape.A_VENIR);
+    }
+
+    @Test
+    @DisplayName("#5824 : sans l'étape des archives, le rang courant suit le statut, du début à la fin")
+    void sans_l_etape_des_archives_le_rang_courant_suit_le_statut() {
+        assertThat(etatDe(EtapesDepot.calculer(StatutWorkflow.TRANSFORME, false, CONNECTE, false), 1))
+                .isEqualTo(EtatEtape.COURANTE);
+        assertThat(etatDe(EtapesDepot.calculer(StatutWorkflow.DEPOT_EN_COURS, false, CONNECTE, false), 2))
+                .as("un dépôt entamé reste au téléversement")
+                .isEqualTo(EtatEtape.COURANTE);
+        EtapesDepot.calculer(StatutWorkflow.DEPOSE, false, CONNECTE, false)
+                .forEach(etape -> assertThat(etape.etat()).isEqualTo(EtatEtape.FRANCHIE));
+    }
+
+    @Test
+    @DisplayName("#5824 : avec l'étape des archives, les quatre étapes d'avant, inchangées")
+    void avec_l_etape_des_archives_quatre_etapes() {
+        assertThat(EtapesDepot.calculer(StatutWorkflow.PRET_A_DEPOSER, false, CONNECTE, true))
+                .isEqualTo(EtapesDepot.calculer(StatutWorkflow.PRET_A_DEPOSER, false, CONNECTE))
+                .hasSize(4);
+    }
+
     private static EtatEtape etatDe(java.util.List<EtapeDepot> etapes, int rang) {
         return etapes.get(rang - 1).etat();
     }

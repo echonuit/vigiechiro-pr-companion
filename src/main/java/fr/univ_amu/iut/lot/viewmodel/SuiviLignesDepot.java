@@ -97,7 +97,10 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
     /// @param raison ce que la réponse a dit d'elle-même
     /// @param definitif `true` quand un nouvel essai est inutile
     public void reconciliationImpossible(String raison, boolean definitif) {
-        reconciliationImpossible.set(FormatsLot.libelleReconciliationImpossible(raison, definitif));
+        reconciliationImpossible.set(FormatsLot.libelleReconciliationImpossible(
+                raison,
+                definitif,
+                UniteDeDepot.de(lignes().stream().map(LigneDepot::type).toList())));
     }
 
     /// L'avertissement de réconciliation, vide quand elle a pu lire.
