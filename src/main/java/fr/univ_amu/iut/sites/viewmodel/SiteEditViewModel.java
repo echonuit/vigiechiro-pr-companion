@@ -111,6 +111,8 @@ public class SiteEditViewModel {
     /// veut rien dire, puisque le site édité est par construction déjà déclaré.
     private final ReadOnlyBooleanWrapper enCreation = new ReadOnlyBooleanWrapper(this, "enCreation", true);
 
+    private final PremierPoint premierPoint;
+
     /// Le formulaire est enregistrable : carré valide, et pas de carré à récupérer à la place (#3806).
     private final BooleanBinding peutEnregistrer;
 
@@ -124,6 +126,7 @@ public class SiteEditViewModel {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
         this.carre = new CarreExistantViewModel(recherche, rapatriement);
+        this.premierPoint = new PremierPoint(service, position.texte(), enCreation);
         carreValide = Bindings.createBooleanBinding(() -> numeroCarre.get().matches("\\d{6}"), numeroCarre);
         carreInvalideEtSaisi = Bindings.createBooleanBinding(
                 () -> !numeroCarre.get().isEmpty() && !numeroCarre.get().matches("\\d{6}"), numeroCarre);
@@ -152,6 +155,11 @@ public class SiteEditViewModel {
     /// Le versant « partir d'un lieu » de cette modale (#4577).
     public PositionColleeViewModel position() {
         return position;
+    }
+
+    /// La case « créer aussi le premier point d'écoute à cette position » (#5687).
+    public PremierPoint premierPoint() {
+        return premierPoint;
     }
 
     /// Situe la position collée, et dépose le carré déduit **quand il y en a un seul**.
@@ -277,8 +285,8 @@ public class SiteEditViewModel {
         }
         try {
             if (siteEnEdition == null) {
-                service.creerSite(
-                        numeroCarre.get(), vide(nom.get()), protocole.get(), vide(commentaire.get()), idUtilisateur);
+                premierPoint.creerPour(service.creerSite(
+                        numeroCarre.get(), vide(nom.get()), protocole.get(), vide(commentaire.get()), idUtilisateur));
             } else {
                 service.modifierSite(
                         siteEnEdition.id(),

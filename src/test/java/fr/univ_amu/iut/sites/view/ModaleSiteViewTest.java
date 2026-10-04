@@ -30,6 +30,7 @@ import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
@@ -109,6 +110,9 @@ class ModaleSiteViewTest {
     private void enEdition(FxRobot robot, Site site) {
         robot.interact(() -> controleur.demarrerEdition(site, () -> rafraichissements++));
     }
+
+    /// Une position qui tombe sans ambiguïté dans le carré 040110.
+    private static final String POSITION = "44.44674980384396, 6.298116860416506";
 
     private static Site site() {
         return new Site(7L, "640380", "Étang de la Tuilière", Protocole.STANDARD, "Aix", "2026-01-01", ID_USER);
@@ -302,9 +306,8 @@ class ModaleSiteViewTest {
     void situer_une_position_remplit_le_carre(FxRobot robot) {
         enCreation(robot);
 
-        robot.interact(() -> robot.lookup("#champPosition")
-                .queryAs(TextField.class)
-                .setText("44.44674980384396, 6.298116860416506"));
+        robot.interact(
+                () -> robot.lookup("#champPosition").queryAs(TextField.class).setText(POSITION));
         robot.interact(() -> robot.lookup("#btnSituer").queryAs(Button.class).fire());
 
         assertThat(robot.lookup("#champCarre").queryAs(TextField.class).getText())
@@ -312,6 +315,43 @@ class ModaleSiteViewTest {
                 .isEqualTo("040110");
         assertThat(robot.lookup("#messagePosition").queryAs(Label.class).getText())
                 .contains("040110");
+    }
+
+    /// La position collée pour trouver le carré sert aussi au premier point (#5687) : la case paraît dès
+    /// qu'elle se lit, et cochée, la création du site crée le point `Z1` à cet endroit.
+    @Test
+    @DisplayName("#5687 : position collée et case cochée, « Créer » crée le site et son premier point Z1")
+    void la_case_cochee_cree_le_premier_point(FxRobot robot) {
+        enCreation(robot);
+        when(service.creerSite(anyString(), any(), any(), any(), anyString())).thenReturn(site());
+        CheckBox premierPoint = robot.lookup("#chkPremierPoint").queryAs(CheckBox.class);
+        assertThat(premierPoint.isVisible()).as("sans position, pas de case").isFalse();
+
+        robot.interact(() -> {
+            robot.lookup("#champPosition").queryAs(TextField.class).setText(POSITION);
+            robot.lookup("#btnSituer").queryAs(Button.class).fire();
+        });
+        assertThat(premierPoint.isVisible())
+                .as("la position se lit : la case paraît")
+                .isTrue();
+        assertThat(premierPoint.isSelected()).as("décochée par défaut").isFalse();
+
+        robot.interact(() -> premierPoint.setSelected(true));
+        robot.interact(() -> valider(robot).fire());
+
+        verify(service).ajouterPoint(7L, "Z1", 44.44674980384396, 6.298116860416506, null);
+    }
+
+    @Test
+    @DisplayName("#5687 : en modification d'un site, la case n'est pas offerte")
+    void en_modification_pas_de_case(FxRobot robot) {
+        enEdition(robot, site());
+
+        robot.interact(
+                () -> robot.lookup("#champPosition").queryAs(TextField.class).setText(POSITION));
+
+        assertThat(robot.lookup("#chkPremierPoint").queryAs(CheckBox.class).isVisible())
+                .isFalse();
     }
 
     @Test

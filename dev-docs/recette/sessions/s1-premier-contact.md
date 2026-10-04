@@ -123,6 +123,10 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
   place aux deux fois au même endroit. Coller `43,401, 5,447` : le motif demande le point décimal, et
   « + Ajouter » se grise. Glisser le marqueur : le champ se réécrit. Saisir une position à moins de 40 m
   d'un point du site : l'avertissement le nomme, et l'ajout reste possible (#5688).
+- **S1-44** · « + Nouveau site », coller une position et « Situer » : sous le champ paraît la case
+  « Créer aussi le premier point d'écoute à cette position », **décochée**. La cocher et « Créer » : la
+  fiche du site montre un point `Z1`, situé, sans ressaisie. Refaire sans cocher : le site n'a aucun
+  point. Saisir un numéro sans coller de position : la case ne paraît pas (#5687).
 - **S1-14** · Carte de site complète : nom, points, passages, badge fraîcheur, badges « Enregistré / Verrouillé
   sur Vigie-Chiro », chevron ›.
 - **S1-15** · Navigation clavier (Tab / Entrée / Espace) sur les cartes.

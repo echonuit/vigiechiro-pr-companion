@@ -78,6 +78,18 @@ Trois réponses possibles, et deux ne remplissent rien :
 
 Un **lien** de carte n'est pas accepté : collez les coordonnées, pas l'adresse de la page.
 
+### Créer le premier point d'écoute en même temps
+
+Dès que la position collée se lit, une case apparaît sous le champ : **« Créer aussi le premier point
+d'écoute à cette position »**. Elle est décochée : la position qui sert à trouver un carré n'est pas
+forcément l'endroit où vous poserez l'enregistreur. Cochez-la si c'est le cas, et « Créer » enregistre
+le site **et** son premier point, nommé `Z1`, à cette position. Vous n'aurez pas à la ressaisir dans
+« Ajouter un point d'écoute ».
+
+Sans la case, rien ne change : le site est créé sans point, et vous ajoutez les vôtres ensuite. Si le
+site est créé mais que le point ne peut pas l'être, le message de retour le dit, et le point s'ajoute
+à la main.
+
 ### Savoir si le carré existe déjà sur Vigie-Chiro
 
 Le bouton **Vérifier sur Vigie-Chiro**, à droite du numéro, pose la question **au portail** avant que

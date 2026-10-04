@@ -1171,7 +1171,7 @@ d81f9a8bdbc3  src/main/java/fr/univ_amu/iut/sites/model/dao/PointPublieDao.java
 87542e5ea72f  src/main/java/fr/univ_amu/iut/sites/view/CartesPointsSite.java
 64c970f1990c  src/main/java/fr/univ_amu/iut/sites/view/MesSitesController.java
 1abf5f607ed2  src/main/java/fr/univ_amu/iut/sites/view/ModalePointController.java
-3c6a93e74afa  src/main/java/fr/univ_amu/iut/sites/view/ModaleSiteController.java
+f8ad3453e10a  src/main/java/fr/univ_amu/iut/sites/view/ModaleSiteController.java
 09d1c5c08d5a  src/main/java/fr/univ_amu/iut/sites/view/NavigationSites.java
 77cd257dfe2f  src/main/java/fr/univ_amu/iut/sites/view/SiteDetailController.java
 7b8d5007d8a2  src/main/java/fr/univ_amu/iut/sites/viewmodel/CarreExistantViewModel.java
@@ -1185,10 +1185,11 @@ d556506fcedb  src/main/java/fr/univ_amu/iut/sites/viewmodel/CartePoint.java
 833618b22d4e  src/main/java/fr/univ_amu/iut/sites/viewmodel/PointEditViewModel.java
 fa4299154920  src/main/java/fr/univ_amu/iut/sites/viewmodel/PositionColleeViewModel.java
 553774ce00eb  src/main/java/fr/univ_amu/iut/sites/viewmodel/PositionSaisie.java
+19b54475fe90  src/main/java/fr/univ_amu/iut/sites/viewmodel/PremierPoint.java
 5f1a81d5f766  src/main/java/fr/univ_amu/iut/sites/viewmodel/ProximitePoints.java
 f144baa782c5  src/main/java/fr/univ_amu/iut/sites/viewmodel/PublicationDepuisLaFiche.java
 0121a2e8c45a  src/main/java/fr/univ_amu/iut/sites/viewmodel/SiteDetailViewModel.java
-ed781afb4d1d  src/main/java/fr/univ_amu/iut/sites/viewmodel/SiteEditViewModel.java
+b094edbd72b2  src/main/java/fr/univ_amu/iut/sites/viewmodel/SiteEditViewModel.java
 a4b84b016826  src/main/java/fr/univ_amu/iut/sites/viewmodel/SitesViewModel.java
 6742ec73c80f  src/main/java/fr/univ_amu/iut/sites/viewmodel/StatutPlateforme.java
 828df6c98234  src/main/java/fr/univ_amu/iut/validation/di/ValidationModule.java
@@ -2130,7 +2131,7 @@ be40f4ceca19  src/test/java/fr/univ_amu/iut/sites/view/MesSitesEtatVideViewTest.
 0fe36f7ea18d  src/test/java/fr/univ_amu/iut/sites/view/ModalePointViewTest.java
 2b1b46ec4bf0  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteCreerSansVerifierTest.java
 d8a89dd5ca6b  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteVerifierCarreViewTest.java
-11f259be9047  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteViewTest.java
+11514d1ee977  src/test/java/fr/univ_amu/iut/sites/view/ModaleSiteViewTest.java
 9ceba7fd6252  src/test/java/fr/univ_amu/iut/sites/view/NavigationSitesRapatriementTest.java
 ee14b0a35c3c  src/test/java/fr/univ_amu/iut/sites/view/ScenarioCarreAbsentTest.java
 24b461a7d296  src/test/java/fr/univ_amu/iut/sites/view/ScenarioFicheSiteTest.java
@@ -2153,6 +2154,7 @@ c33345011ec1  src/test/java/fr/univ_amu/iut/sites/viewmodel/PointEditViewModelTe
 d78ce89d6667  src/test/java/fr/univ_amu/iut/sites/viewmodel/SiteDetailViewModelTest.java
 836f585ed0be  src/test/java/fr/univ_amu/iut/sites/viewmodel/SiteEditCycleDeVieTest.java
 8bc1439b6575  src/test/java/fr/univ_amu/iut/sites/viewmodel/SiteEditPorteeTest.java
+51e1541ad62e  src/test/java/fr/univ_amu/iut/sites/viewmodel/SiteEditPremierPointTest.java
 36cf45a89533  src/test/java/fr/univ_amu/iut/sites/viewmodel/SiteEditRechercheCarreTest.java
 72ddd5fa7473  src/test/java/fr/univ_amu/iut/sites/viewmodel/SiteEditSituerPositionTest.java
 3a272085b9a4  src/test/java/fr/univ_amu/iut/sites/viewmodel/SitesViewModelTest.java
