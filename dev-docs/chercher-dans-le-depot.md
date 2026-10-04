@@ -66,6 +66,32 @@ C'est la règle du dépôt, et elle est dans `AGENTS.md` : quand `graphify-out/g
 `graphify query "<question>"` passe avant tout le reste. Il oriente ; les deux autres outils
 précisent ensuite.
 
+### Ce qu'il lit, et ce qu'il ne lit pas
+
+Le graphe a deux couches, et elles ne couvrent pas la même chose.
+
+| Couche | Ce qu'elle lit | Où |
+|---|---|---|
+| de structure | les classes, les méthodes, et pour une page son fichier et ses titres | tout le dépôt |
+| sémantique | les concepts, les décisions et les règles que la **prose** porte, avec leur raison | `brief/`, `dev-docs/`, `docs/`, les `.md` de la racine hors `CHANGELOG.md` |
+
+Hors de ce périmètre, une page n'est connue que par ses titres : c'est le cas de `.github/`,
+d'`openspec/`, des compétences et de `recette/`. Une question conceptuelle n'y lira aucune prose, et
+le graphe ne le dira pas. Le périmètre, son coût et ses parades sont dans l'[ADR 5790].
+
+Cela ne veut pas dire que personne ne lit ces pages. La prose de `.github/` est lue par l'instrument
+textuel de la passe 3 de la clôture, que porte la compétence `recoller-la-doc-au-code` depuis #5791 :
+le graphe n'en connaît que les titres, et cet instrument en est le lecteur.
+
+!!! warning "Une page récente répond avec sa version d'avant"
+
+    La couche sémantique date d'un commit. Une page modifiée depuis garde ses nœuds d'avant, sans
+    rien signaler : le graphe répond, et il répond l'ancienne prose. Sur une page qui vient de
+    changer, lire la page.
+
+Personne n'écrit ce graphe à la main : quand `VIGIECHIRO_GRAPHIFY=1` est posé, le crochet
+`post-commit` le refait par `scripts/graphify/rebuild.py`, qui conserve la couche sémantique.
+
 ## `semgrep` pour les questions de forme
 
 `semgrep` lit l'arbre syntaxique, pas les lignes. Il répond juste là où `grep` ne peut que deviner :
@@ -115,3 +141,5 @@ son inventaire.
 
 Un chiffre transporté d'un contexte à l'autre garde sa forme et perd son objet : « 33 » a déjà été
 relu comme « 33 clips » alors qu'il comptait les cas d'un auto-test.
+
+[ADR 5790]: decisions/5790-le-graphe-lit-la-prose-d-un-perimetre-declare.md
