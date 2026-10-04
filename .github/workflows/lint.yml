@@ -970,6 +970,17 @@ jobs:
         # dont tous les cas sont différés ne doit figurer dans aucune des deux formes, sans quoi un
         # relevé qui compterait tout le monde passerait les autres cas.
         run: python3 scripts/methode/releve-les-harnais-muets.py --auto-test
+      - name: "Auto-test de la mesure du coût d'un geste (bloquant, #5732)"
+        # Seul l'AUTO-TEST tourne ici : la mesure elle-même demande le poste seul pendant une heure,
+        # et deux tentatives ont été perdues parce qu'une JVM de pair est apparue. Ses trois refus
+        # sont ce qu'il faut tenir, et ils ne se confondent pas : une charge subie rejoue la passe,
+        # un `/proc` illisible sort en 2 parce que le verdict porte alors sur le poste, et une suite
+        # qui a rougi n'est pas comptée - une passe à cinq erreurs n'a pas fait le même travail.
+        # Trois défauts de mesure l'ont traversé sans rien faire rougir : des durées toutes multiples
+        # de la cadence de sondage, une aberrante de compilation qui écrasait la DISPERSION sans
+        # abîmer la médiane, et « est-ce une JVM » lu dans le TEXTE de `cmdline` plutôt qu'à
+        # `/proc/<pid>/exe`.
+        run: python3 scripts/methode/mesure-le-cout-du-geste.py --auto-test
       - name: "Auto-test du compteur qui ÉCRIT le manifeste (bloquant, #4527)"
         # Le cliquet ci-dessus VÉRIFIE le manifeste ; ce compteur l'ÉCRIT, et il n'avait aucun cas.
         # `--marque` acceptait n'importe quel fichier existant : l'entrée n'était ensuite ni relue,
