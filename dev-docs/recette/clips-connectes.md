@@ -12,6 +12,20 @@ et cette page dit pourquoi et comment les lire.
     autres pages, et `PageDesClipsTest` garde la correspondance entre les cas et les adresses, pas la
     présence des fichiers.
 
+## Une seconde cible : la plateforme de test
+
+Un tournage connecté peut aussi viser la **plateforme de test** de
+l'[ADR 5641](../decisions/5641-les-tests-connectes-ont-deux-cibles.md), par l'entrée
+`plateforme_de_test` de `tournage-recette.yml` (#5793) : l'API Vigie-Chiro épinglée, montée par les
+tests eux-mêmes, sur un état de départ déclaré, sans jeton, sur Ubuntu seul. Le scénario est le même :
+le banc lit la cible que le profil déclare, et seuls ses cas qui ont un sens sur cette cible sont
+joués (`recette-connectee & plateforme-de-test`), aujourd'hui S8-01, S8-05 et S8-06.
+
+Ses clips vont sur une pré-version à elle, `clips-plateforme-de-test`, et non sur `clips-connectes`.
+Leur état de départ étant déclaré, ils pourront se comparer, sous la condition que l'ADR 5641 pose et
+que #5797 mesure : deux tournages du même commit sous le plancher de l'ADR 4287. D'ici là, ne pas les
+comparer.
+
 ## Ce qu'un clip connecté prouve, et qu'un autre ne peut pas
 
 L'[ADR 4142](../decisions/4142-un-cas-dit-ou-se-lit-son-verdict.md) a mesuré que sur les 360 cas de

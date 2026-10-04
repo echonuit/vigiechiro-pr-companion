@@ -1464,7 +1464,7 @@ b3aaf034461c  src/test/java/fr/univ_amu/iut/commun/api/ReponsesGrilleStocTest.ja
 07fb601235e0  src/test/java/fr/univ_amu/iut/commun/api/TraitementVigieChiroTest.java
 39defdc92f7f  src/test/java/fr/univ_amu/iut/commun/api/TransportVigieChiroTest.java
 efdb83418f82  src/test/java/fr/univ_amu/iut/commun/api/UrlSigneeAdmiseTest.java
-570d5203f8e4  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLive.java
+720ef0063de2  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLive.java
 eb4b2f869205  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLiveTest.java
 306bdc2a1902  src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java
 fa9a82d31b32  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ImageDeLApiSansRevisionTest.java
@@ -2010,7 +2010,8 @@ c4625eadd4c2  src/test/java/fr/univ_amu/iut/qualification/view/ScenarioRaccourci
 69f1f54af525  src/test/java/fr/univ_amu/iut/qualification/viewmodel/SelectionEcouteViewModelTest.java
 bd59f0ae8437  src/test/java/fr/univ_amu/iut/recette/Attente.java
 a0620485d3e1  src/test/java/fr/univ_amu/iut/recette/AttenteTest.java
-6ef3a87818b1  src/test/java/fr/univ_amu/iut/recette/BancDeRecette.java
+855a6b5ecd46  src/test/java/fr/univ_amu/iut/recette/BancDeRecette.java
+aa623e23a369  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteCibleDeclareeTest.java
 87701f8fbb55  src/test/java/fr/univ_amu/iut/recette/BancDeRecetteJetonTest.java
 3d17b492fb0f  src/test/java/fr/univ_amu/iut/recette/BancDeRecettePlateformeDeTestTest.java
 992bf542c672  src/test/java/fr/univ_amu/iut/recette/BancDeRecettePlateformeTest.java
@@ -2024,7 +2025,7 @@ bfbc2c64fc3e  src/test/java/fr/univ_amu/iut/recette/BancDesClipsTest.java
 dd0bd72a760f  src/test/java/fr/univ_amu/iut/recette/CarteDeRecette.java
 dc61d71a4d14  src/test/java/fr/univ_amu/iut/recette/CasDeRecette.java
 b5e7288906d9  src/test/java/fr/univ_amu/iut/recette/ClipDeModaleTest.java
-adc5cdc4a3fb  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
+e64d08c2013b  src/test/java/fr/univ_amu/iut/recette/CorrespondanceRecetteTest.java
 c6c666b5e159  src/test/java/fr/univ_amu/iut/recette/DeclarationDeLaPlateformeTest.java
 fb2f197b3036  src/test/java/fr/univ_amu/iut/recette/DispositionDesBrutsTest.java
 f77cce1c3b9d  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffere.java

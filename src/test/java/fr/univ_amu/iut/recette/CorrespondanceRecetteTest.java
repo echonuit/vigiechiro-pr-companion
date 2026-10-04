@@ -3,12 +3,14 @@ package fr.univ_amu.iut.recette;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.properties.HasAnnotations;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -27,6 +29,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 /// Le garde de correspondance entre les sessions de recette et le code qui les couvre (#3728).
@@ -116,6 +119,16 @@ class CorrespondanceRecetteTest {
     /// L'étiquette qui désigne un scénario tourné contre la plateforme réelle (#4307).
     private static final String TAG_CONNECTE = "recette-connectee";
 
+    /// Le nombre de cas que le tournage sur la **plateforme de test** doit filmer (#5793) : ceux d'une
+    /// méthode connectée qui porte aussi `plateforme-de-test`, sur sa classe ou sur elle-même.
+    ///
+    /// Le tag se lit AUSSI sur la méthode, à la différence du corpus connecté : la sélection du
+    /// tournage est l'expression `recette-connectee & plateforme-de-test`, que JUnit évalue par
+    /// méthode, et un scénario ne sert la plateforme de test que pour ses cas qui y ont un sens.
+    private static final Path CAS_PLATEFORME_DE_TEST = Path.of("target", "recette", "cas-plateforme-de-test.txt");
+
+    private static final String TAG_PLATEFORME_DE_TEST = "plateforme-de-test";
+
     /// Le motif vit dans [MotifDeCas] : trois lecteurs de ces fichiers coexistent, et deux ont
     /// découvert séparément que certaines sessions cochent leurs puces.
     private static final Pattern CAS = MotifDeCas.CAS;
@@ -159,6 +172,9 @@ class CorrespondanceRecetteTest {
     /// Ceux d'entre eux que cite une classe portant [#TAG_CONNECTE].
     private static Set<String> casConnectes;
 
+    /// Ceux d'entre eux que le tournage sur la plateforme de test filme.
+    private static Set<String> casPlateformeDeTest;
+
     /// Ce que les tests qui les citent prétendent prouver.
     private static Map<String, Set<Jugement>> jugements;
 
@@ -191,6 +207,7 @@ class CorrespondanceRecetteTest {
 
         cites = new LinkedHashMap<>();
         casConnectes = new LinkedHashSet<>();
+        casPlateformeDeTest = new LinkedHashSet<>();
         jugements = new LinkedHashMap<>();
         citations = new ArrayList<>();
         lireLeCode();
@@ -695,6 +712,7 @@ class CorrespondanceRecetteTest {
         try {
             Files.createDirectories(CAS_CONNECTES.getParent());
             Files.write(CAS_CONNECTES, List.of(String.valueOf(casConnectes.size())));
+            Files.write(CAS_PLATEFORME_DE_TEST, List.of(String.valueOf(casPlateformeDeTest.size())));
         } catch (IOException e) {
             throw new UncheckedIOException("Compte des cas connectés impossible à écrire", e);
         }
@@ -785,9 +803,8 @@ class CorrespondanceRecetteTest {
             }
             // Lu sur la CLASSE, parce que c'est là que vit `@Tag` : surefire sélectionne par
             // classe, et un tag posé sur une méthode ne dirait pas ce que le tournage jouera.
-            boolean connectee = classe.tryGetAnnotationOfType(Tag.class)
-                    .map(tag -> TAG_CONNECTE.equals(tag.value()))
-                    .orElse(false);
+            boolean connectee = porteLeTag(classe, TAG_CONNECTE);
+            boolean classeDeTest = porteLeTag(classe, TAG_PLATEFORME_DE_TEST);
             classe.getMethods()
                     .forEach(methode -> methode.tryGetAnnotationOfType(CasDeRecette.class)
                             .ifPresent(annotation -> {
@@ -795,6 +812,9 @@ class CorrespondanceRecetteTest {
                                 for (String id : List.of(annotation.value())) {
                                     if (connectee) {
                                         casConnectes.add(id);
+                                    }
+                                    if (connectee && (classeDeTest || porteLeTag(methode, TAG_PLATEFORME_DE_TEST))) {
+                                        casPlateformeDeTest.add(id);
                                     }
                                     cites.computeIfAbsent(id, k -> new LinkedHashSet<>())
                                             .add(nom);
@@ -805,6 +825,18 @@ class CorrespondanceRecetteTest {
                                 }
                             }));
         });
+    }
+
+    /// Le tag, posé seul ou parmi d'autres : deux `@Tag` sur un même élément se compilent dans le
+    /// conteneur `@Tags`, que `tryGetAnnotationOfType(Tag.class)` ne voit pas.
+    private static boolean porteLeTag(HasAnnotations<?> element, String valeur) {
+        boolean seul = element.tryGetAnnotationOfType(Tag.class)
+                .map(tag -> valeur.equals(tag.value()))
+                .orElse(false);
+        boolean parmiDautres = element.tryGetAnnotationOfType(Tags.class)
+                .map(tags -> Arrays.stream(tags.value()).anyMatch(tag -> valeur.equals(tag.value())))
+                .orElse(false);
+        return seul || parmiDautres;
     }
 
     private static String lire(Path fichier) {

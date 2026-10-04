@@ -92,6 +92,13 @@ def refus_de_la_source_connectee(flux: pathlib.Path) -> bool:
             )
             print("   du produit et rend un chiffre qui a l air juste (#4306).")
             return False
+        # La plateforme de test, elle, n est PAS refusee (#5793, ADR 5641) : son etat de depart est
+        # declare, et la condition de sa comparaison se mesure (#5797), elle ne se refuse pas.
+        if "ne se compare pas" in lance("clips-plateforme-de-test", "v1.0.0"):
+            print("❌ comparer-tournages.yml refuse la source « clips-plateforme-de-test ».")
+            print("   L ADR 5641 leve ce refus pour la plateforme de test : il ne vaut que pour la")
+            print("   plateforme nationale, dont l ecran suit des donnees vivantes.")
+            return False
         # Le controle de l autre bord : une source ordinaire ne doit PAS declencher ce refus.
         if "ne se compare pas" in lance("v2.186.0", "v2.187.0"):
             print(
@@ -103,27 +110,34 @@ def refus_de_la_source_connectee(flux: pathlib.Path) -> bool:
 
 
 def versement_conditionne(flux: pathlib.Path) -> bool:
-    """La deuxieme : `publier-connecte` depend de `filmer` et porte une fonction d etat."""
+    """La deuxieme : chaque job qui verse des clips depend de `filmer` et porte une fonction d etat.
+
+    `publier-connecte` depuis #4306, `publier-plateforme-de-test` depuis #5793 : un tournage ampute
+    n a pas a se publier, ni sur l une ni sur l autre pre-version.
+    """
     f = _charge(flux / "tournage-recette.yml")
-    job = f["jobs"].get("publier-connecte")
-    if job is None:
-        print("❌ Le job `publier-connecte` a disparu de tournage-recette.yml.")
-        return False
-    besoins = job.get("needs") or []
-    if isinstance(besoins, str):
-        besoins = [besoins]
-    if "filmer" not in besoins:
-        print(
-            "❌ `publier-connecte` ne dépend plus de `filmer` : un tournage amputé pourrait publier."
-        )
-        return False
-    condition = str(job.get("if", ""))
-    if not ETAT.search(condition):
-        print("❌ La condition de `publier-connecte` ne porte aucune fonction d'état :")
-        print(f"     if: {condition or '(absente)'}")
-        print("   Le « sauté » se propage transitivement : cette porte ne serait jamais évaluée.")
-        return False
-    return True
+    tiennent = True
+    for nom in ("publier-connecte", "publier-plateforme-de-test"):
+        job = f["jobs"].get(nom)
+        if job is None:
+            print(f"❌ Le job `{nom}` a disparu de tournage-recette.yml.")
+            tiennent = False
+            continue
+        besoins = job.get("needs") or []
+        if isinstance(besoins, str):
+            besoins = [besoins]
+        if "filmer" not in besoins:
+            print(f"❌ `{nom}` ne dépend plus de `filmer` : un tournage amputé pourrait publier.")
+            tiennent = False
+        condition = str(job.get("if", ""))
+        if not ETAT.search(condition):
+            print(f"❌ La condition de `{nom}` ne porte aucune fonction d'état :")
+            print(f"     if: {condition or '(absente)'}")
+            print(
+                "   Le « sauté » se propage transitivement : cette porte ne serait jamais évaluée."
+            )
+            tiennent = False
+    return tiennent
 
 
 def controle_avant_le_tournage(flux: pathlib.Path) -> bool:
@@ -199,6 +213,32 @@ def _casse_la_fonction_d_etat(dossier: pathlib.Path) -> None:
     )
 
 
+def _refuse_aussi_la_plateforme_de_test(dossier: pathlib.Path) -> None:
+    p = dossier / "comparer-tournages.yml"
+    t = p.read_text(encoding="utf-8")
+    p.write_text(
+        t.replace(
+            '            if [ "$source" = "clips-connectes" ]; then',
+            '            if [ "$source" = "clips-connectes" ] || [ "$source" = "clips-plateforme-de-test" ]; then',
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+
+def _casse_la_fonction_d_etat_de_test(dossier: pathlib.Path) -> None:
+    p = dossier / "tournage-recette.yml"
+    t = p.read_text(encoding="utf-8")
+    p.write_text(
+        t.replace(
+            "    if: ${{ success() && inputs.plateforme_de_test }}",
+            "    if: ${{ inputs.plateforme_de_test }}",
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+
 def _deplace_la_sonde(dossier: pathlib.Path) -> None:
     import yaml
 
@@ -217,6 +257,8 @@ CASSURES = (
     (_casse_le_refus, "le refus de clips-connectes neutralisé"),
     (_casse_la_fonction_d_etat, "publier-connecte privé de sa fonction d état"),
     (_deplace_la_sonde, "le contrôle du jeton déplacé après le tournage"),
+    (_refuse_aussi_la_plateforme_de_test, "refus étendu à clips-plateforme-de-test"),
+    (_casse_la_fonction_d_etat_de_test, "publier-plateforme-de-test privé de sa fonction d état"),
 )
 
 

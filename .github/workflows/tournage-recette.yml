@@ -38,7 +38,7 @@ name: tournage de recette
 # Le `run-name` est PUBLIC : sur ce dépôt, le `display_title` d'un run se lit sans authentification
 # (mesuré, cf. `dev-docs/spikes/tournage-contre-la-plateforme.md`). On y met donc des choix, jamais une
 # valeur. « connecté » est un fait utile à lire dans la liste des runs ; le jeton, lui, n'y passe pas.
-run-name: "tournage ${{ inputs.session }} sur ${{ inputs.plateforme }}${{ inputs.connecte && ' · connecté' || '' }}"
+run-name: "tournage ${{ inputs.session }} sur ${{ inputs.plateforme }}${{ inputs.connecte && ' · connecté' || '' }}${{ inputs.plateforme_de_test && ' · plateforme de test' || '' }}"
 
 on:
   workflow_dispatch:
@@ -72,6 +72,10 @@ on:
         description: "Parler à la VRAIE plateforme Vigie-Chiro (lecture seule) au lieu des fixtures"
         type: boolean
         default: false
+      plateforme_de_test:
+        description: "Parler à la plateforme de test (ADR 5641) : sans jeton, Ubuntu seul, clips à part (#5793)"
+        type: boolean
+        default: false
 
   # Un second bloc, et non le même : `workflow_call` ne connaît pas `type: choice`. Les valeurs
   # possibles restent celles de la liste ci-dessus, et c'est l'appelant qui en répond.
@@ -96,6 +100,10 @@ on:
         default: ""
       connecte:
         description: "Parler à la VRAIE plateforme Vigie-Chiro (lecture seule) au lieu des fixtures"
+        type: boolean
+        default: false
+      plateforme_de_test:
+        description: "Parler à la plateforme de test (ADR 5641) : sans jeton, Ubuntu seul, clips à part (#5793)"
         type: boolean
         default: false
 
@@ -140,6 +148,18 @@ jobs:
               exit 1
               ;;
           esac
+          # La plateforme de test se monte par Testcontainers : Docker n'existe que sur Ubuntu (#5793).
+          # Et elle exclut la plateforme nationale : un tournage parle à une cible, pas à deux.
+          if [ "${{ inputs.plateforme_de_test }}" = "true" ]; then
+            [ "${{ inputs.connecte }}" != "true" ] || {
+              echo "::error::« connecte » et « plateforme_de_test » s'excluent : un tournage vise une cible, la nationale OU la plateforme de test."
+              exit 1
+            }
+            [ "${runner}" = "ubuntu-latest" ] || {
+              echo "::error::La plateforme de test demande Docker, qui n'existe que sur Ubuntu : « ${{ inputs.plateforme }} » est refusée."
+              exit 1
+            }
+          fi
           echo "runner=${runner}" >> "${GITHUB_OUTPUT}"
           echo "Tournage de ${{ inputs.session }} sur ${runner}." >> "${GITHUB_STEP_SUMMARY}"
 
@@ -221,6 +241,7 @@ jobs:
         env:
           SESSION: ${{ inputs.session }}
           CONNECTE: ${{ inputs.connecte }}
+          PLATEFORME_DE_TEST: ${{ inputs.plateforme_de_test }}
         run: |
           set -euo pipefail
           ./mvnw -B -q test --file pom.xml -Dtest=CorrespondanceRecetteTest -DfailIfNoTests=false
@@ -231,9 +252,11 @@ jobs:
           # choisi par un TAG, pas par une session, et le compte de la session mélangerait les
           # scénarios bouchonnés avec les autres. L'oracle exhaustif est donc remplacé, plus bas, par
           # un contrôle plus faible - et qui le DIT.
-          if [ "${CONNECTE}" = "true" ]; then
+          if [ "${CONNECTE}" = "true" ] || [ "${PLATEFORME_DE_TEST}" = "true" ]; then
+            # La plateforme de test aussi se choisit par un tag (#5793) ; son oracle est plus bas.
             classes=""
             attendus=0
+            cas_attendus=""
           elif [ "${SESSION}" = "toutes" ]; then
             classes=$(awk -F'\t' '{print $3}' "${derive}" | tr ',' '\n' | sort -u | paste -sd,)
             cas_attendus=$(awk -F'\t' '$4 != "" {print $4}' "${derive}" | paste -sd,)
@@ -331,6 +354,12 @@ jobs:
             # a rendu « Tests run: 0 », un build VERT, et n'a échoué qu'à l'étape suivante sur un
             # index absent. C'est ce que fait le profil `-Papi-live` : il inverse les deux.
             selection=(-Dsurefire.groups=recette-connectee -Dsurefire.excludedGroups=api-live)
+          elif [ "${{ inputs.plateforme_de_test }}" = "true" ]; then
+            # Les cas connectés qui ont un sens sur la plateforme de test (#5793) : l'EXPRESSION, que
+            # JUnit évalue par méthode, et le profil qui pose `vigiechiro.cible` et monte la plateforme.
+            # Le profil exclut `recette-connectee` ; l'exclusion est donc redéfinie, sinon surefire ne
+            # sélectionnerait rien et rendrait « Tests run: 0 » (mesuré sur #5793).
+            selection=(-Pplateforme-de-test "-Dsurefire.groups=recette-connectee & plateforme-de-test" -Dsurefire.excludedGroups=api-live)
           fi
           ./mvnw -B test --file pom.xml \
             "${selection[@]}" \
@@ -351,6 +380,7 @@ jobs:
           ATTENDUS: ${{ steps.liste.outputs.attendus }}
           CAS_ATTENDUS: ${{ steps.liste.outputs.cas_attendus }}
           CONNECTE: ${{ inputs.connecte }}
+          PLATEFORME_DE_TEST: ${{ inputs.plateforme_de_test }}
         run: |
           set -uo pipefail
           index=target/recette/clips/index.md
@@ -418,6 +448,24 @@ jobs:
             echo "cas connectés : ${obtenus} / ${attendus_connectes}"
             [ "${obtenus}" -eq "${attendus_connectes}" ] || {
               echo "::error::${obtenus} cas sur ${attendus_connectes} : le tournage connecté est incomplet."
+              exit 1
+            }
+            exit 0
+          fi
+
+          # Sur la plateforme de test, même contrôle, contre le compte que `CorrespondanceRecetteTest`
+          # dérive pour elle (#5793) : les cas d'une méthode connectée qui porte aussi le tag.
+          if [ "${PLATEFORME_DE_TEST}" = "true" ]; then
+            derive=target/recette/cas-plateforme-de-test.txt
+            [ -s "${derive}" ] || {
+              echo "::error::${derive} est absent : la dérivation des cas de la plateforme de test n'a rien produit."
+              exit 1
+            }
+            attendus_test=$(tr -d '[:space:]' < "${derive}")
+            echo "- cas de la plateforme de test attendus : ${attendus_test}" >> "${GITHUB_STEP_SUMMARY}"
+            echo "cas de la plateforme de test : ${obtenus} / ${attendus_test}"
+            [ "${obtenus}" -eq "${attendus_test}" ] || {
+              echo "::error::${obtenus} cas sur ${attendus_test} : le tournage sur la plateforme de test est incomplet."
               exit 1
             }
             exit 0
@@ -641,6 +689,93 @@ jobs:
             [ -n "$nom" ] || continue
             echo "Retrait de « $nom » : aucun cas de recette ne porte plus ce nom."
             gh release delete-asset clips-connectes "$nom" --yes
+          done <<< "$orphelins"
+
+  # ------------------------------------------------------------------------------------------------
+  # La plateforme de test a sa pré-version À ELLE (#5793), distincte de `clips-connectes`. Son état de
+  # départ est déclaré (ADR 4406), donc ses clips peuvent se comparer, sous la condition de l'ADR 5641 :
+  # deux tournages du même commit sous le plancher de l'ADR 4287, ce que mesure #5797. Les verser sur
+  # `clips-connectes` les rangerait avec des clips qui, eux, ne se comparent pas.
+  #
+  # Ni jeton ni révocation à attendre : la plateforme de test n'a aucun secret.
+  publier-plateforme-de-test:
+    name: Verser les clips de la plateforme de test sur leur pré-version
+    needs: filmer
+    if: ${{ success() && inputs.plateforme_de_test }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Reprendre les clips du tournage
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}
+          path: repris
+
+      - name: Ouvrir la pré-version, et dire ce qu elle montre
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERDICT: ${{ needs.filmer.outputs.verdict }}
+        run: |
+          set -euo pipefail
+          corps=$(cat <<'FIN'
+          Clips tournés contre la **plateforme de test** (ADR 5641) : l'API Vigie-Chiro épinglée,
+          montée par les tests eux-mêmes, sur un état de départ déclaré, sans jeton.
+
+          **Ils se compareront sous condition.** Deux tournages du même commit doivent rester sous le
+          plancher de bruit de l'ADR 4287 ; la mesure est l'objet de #5797. D'ici là, ne pas les
+          comparer.
+          FIN
+          )
+          corps="${corps}"$'\n\n'"Dernier versement le $(date -u +%F) à $(date -u +%H:%M) UTC."$'\n\n'"${VERDICT}"
+          if gh release view clips-plateforme-de-test >/dev/null 2>&1; then
+            gh release edit clips-plateforme-de-test --notes "${corps}"
+          else
+            gh release create clips-plateforme-de-test \
+              --prerelease \
+              --title "Clips tournés contre la plateforme de test (roulant)" \
+              --notes "${corps}"
+          fi
+
+      - name: Verser les clips et leur index
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          clips=(repris/target/recette/clips/*.mp4)
+          [ -e "${clips[0]}" ] || {
+            echo "::error::Aucun clip mp4 dans l'artefact repris. Arborescence trouvée :"
+            find repris -type f | head -20
+            exit 1
+          }
+          gh release upload clips-plateforme-de-test "${clips[@]}" --clobber
+          if [ -f repris/target/recette/clips/index.md ]; then
+            gh release upload clips-plateforme-de-test repris/target/recette/clips/index.md --clobber
+          fi
+          echo "${#clips[@]} clip(s) versé(s) sur « clips-plateforme-de-test »." >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Retirer les clips dont le cas a disparu
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          chmod +x .github/scripts/clips_orphelins.py
+          orphelins=$(gh release view clips-plateforme-de-test --json assets --jq '.assets[].name' \
+            | python3 .github/scripts/clips_orphelins.py repris/target/recette/clips)
+          if [ -z "$orphelins" ]; then
+            echo "Aucun clip orphelin : la pré-version ne porte que des cas qui existent."
+            exit 0
+          fi
+          while IFS= read -r nom; do
+            [ -n "$nom" ] || continue
+            echo "Retrait de « $nom » : aucun cas de recette ne porte plus ce nom."
+            gh release delete-asset clips-plateforme-de-test "$nom" --yes
           done <<< "$orphelins"
 
   publier:
