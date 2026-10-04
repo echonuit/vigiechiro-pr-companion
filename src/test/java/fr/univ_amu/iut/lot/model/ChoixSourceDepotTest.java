@@ -108,12 +108,13 @@ class ChoixSourceDepotTest {
     }
 
     @Test
-    @DisplayName("un réglage absent ou corrompu retombe sur les archives ZIP, sans empêcher de déposer")
-    void reglage_illisible_retombe_sur_zip() {
-        assertThat(ModeDepot.parValeur(null)).isEqualTo(ModeDepot.ARCHIVES_ZIP);
-        assertThat(ModeDepot.parValeur("")).isEqualTo(ModeDepot.ARCHIVES_ZIP);
-        assertThat(ModeDepot.parValeur("n-importe-quoi")).isEqualTo(ModeDepot.ARCHIVES_ZIP);
+    @DisplayName("#5677 : un réglage absent ou corrompu retombe sur les séquences WAV, sans empêcher de déposer")
+    void reglage_illisible_retombe_sur_wav() {
+        assertThat(ModeDepot.parValeur(null)).isEqualTo(ModeDepot.SEQUENCES_WAV);
+        assertThat(ModeDepot.parValeur("")).isEqualTo(ModeDepot.SEQUENCES_WAV);
+        assertThat(ModeDepot.parValeur("n-importe-quoi")).isEqualTo(ModeDepot.SEQUENCES_WAV);
         assertThat(ModeDepot.parValeur("wav")).isEqualTo(ModeDepot.SEQUENCES_WAV);
+        assertThat(ModeDepot.parValeur("zip")).isEqualTo(ModeDepot.ARCHIVES_ZIP);
     }
 
     @Test
