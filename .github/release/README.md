@@ -40,6 +40,15 @@ cd .github/release && ./node_modules/.bin/semantic-release --dry-run
 
 `node_modules/` n'est pas versionné : seul le lockfile l'est.
 
+**Cet arbre n'est pas posé par le crochet, et c'est une décision.** L'ADR 5407 range un prérequis
+selon qu'un garde en dépend : celui dont un garde dépend se **pose** à la création du worktree, celui
+dont aucun ne dépend se **propose**, parce que « la poser coûterait à chaque worktree pour un outil
+qu'on ouvre rarement ». Mesuré le 2026-10-04 : **aucun garde local ne lit
+`.github/release/node_modules`**, les deux scripts qui citent `.github/release` ne parlent que de
+`release.config.js` et de portées, la porte ne l'engage pas, et son lockfile porte **476 paquets**.
+Il reste donc à poser à la main, dans chaque arbre où l'on veut vérifier la publication, à la
+différence de l'arbre d'OpenSpec, dont un garde dépend et que le crochet pose depuis #5775.
+
 **Et `node` doit être sur le `PATH`, pas seulement `npm`.** C'est le second arbre de dépendances npm
 du dépôt, et il porte le même piège que celui d'OpenSpec : si votre poste range `node` sous un
 gestionnaire de version (nvm, asdf, volta, fnm), il est absent du `PATH` d'un shell non interactif,
