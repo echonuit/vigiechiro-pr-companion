@@ -878,7 +878,7 @@ ccafcb35d57b  src/main/java/fr/univ_amu/iut/lot/viewmodel/ActionsLotPossibles.ja
 01f05c356415  src/main/java/fr/univ_amu/iut/lot/viewmodel/CompteRenduChiffreDepot.java
 36b5ad122295  src/main/java/fr/univ_amu/iut/lot/viewmodel/DepotViewModel.java
 e9f04bc3d4e2  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapeDepot.java
-fe5ead6b6412  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepot.java
+048fd54b68ea  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepot.java
 95a96e7df5a1  src/main/java/fr/univ_amu/iut/lot/viewmodel/FormatsLot.java
 bb5803005851  src/main/java/fr/univ_amu/iut/lot/viewmodel/FormatsTraitement.java
 134f854b8d1d  src/main/java/fr/univ_amu/iut/lot/viewmodel/LigneArchive.java
