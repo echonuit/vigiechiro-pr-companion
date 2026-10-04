@@ -92,6 +92,21 @@ def cliquet(numero: str) -> int:
 PLANCHER = re.compile(r"^floor:\s*(\d+)\s*$", re.M)
 
 
+# ⟨le motif de la ligne de VERDICT, partage parce qu il etait deja ecrit deux fois⟩ `rapporte` et
+# `rapporte_plancher` declarent leur sortie « normalisee, pour que le rapport hebdomadaire puisse
+# agreger sans deviner » : cette ligne est donc une INTERFACE, pas de la prose. Cinq lecteurs la
+# lisent deja, et aucun ne partageait son motif - `rapport.py` en porte deux versions strictes,
+# `releve-les-planchers.py` une version lache qui ne connait que `PLANCHER`. Le troisieme lecteur
+# qui en aurait reecrit une est la porte (#5817), et reecrire le motif d un dispositif plutot que
+# l importer est precisement ce qui fait diverger deux lectures de la meme chose.
+#
+# Il reste LACHE sur le milieu de la ligne, a dessein : les champs entre le numero et le verdict
+# different selon le dispositif (`suspects`/`cliquet` pour un cliquet, `mesure`/`plancher` pour un
+# plancher) et `lus` vaut `?` quand la population ne se compte pas. Ce qui fait foi est le couple
+# que tout dispositif rend : le NUMERO de l ADR, et son VERDICT.
+LIGNE_VERDICT = re.compile(r"^(?:ADR|PLANCHER) (\d+) \|.*?\bverdict=(\S+)\s*$", re.M)
+
+
 def plancher(numero: str) -> int:
     """Le plancher déclaré par l'ADR `numero`, lu dans son en-tête OKF."""
     fichiers = sorted(DECISIONS.glob(f"{numero}-*.md"))
