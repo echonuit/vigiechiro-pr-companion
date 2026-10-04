@@ -17,8 +17,8 @@ import java.util.function.ToLongFunction;
 ///
 /// ## La regle
 ///
-/// Le mode vient du **reglage** `depot.mode` ([ModeDepot], #1997) : archives ZIP par defaut, ou
-/// sequences WAV. Ce n'est plus la place disque qui tranche - elle ne fait plus que **refuser** un
+/// Le mode vient du **reglage** `depot.mode` ([ModeDepot], #1997) : sequences WAV par defaut
+/// (#5677), ou archives ZIP. Ce n'est plus la place disque qui tranche - elle ne fait plus que **refuser** un
 /// depot ZIP qu'elle ne peut pas honorer, sans jamais changer de mode a la place de l'utilisateur.
 ///
 /// Quand le mode ZIP s'applique, la source rendue est **regenerable**

@@ -7,12 +7,21 @@ chantier: "spike #984 (ZIP vs WAV) ; EPIC #1297 (décision produit)"
 decided_at: 2026-07-13
 verification: humaine
 verification_note: "le ZIP comme mode par défaut et la perte assumée de l'audio serveur sont un arbitrage produit, non un invariant du code"
+relations:
+  amendee_par: ["5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode"]
 verified:
   - by: human:nedseb
     at: 2026-07-13
 ---
 
 # Le dépôt par ZIP est le mode par défaut ; la perte de l'audio serveur est assumée
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-04** : le **mode par défaut** n'est plus le ZIP. Il est **amendé** par
+    [5677](5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode.md) : sans réglage, le dépôt part en séquences WAV. L'« acquis de vitesse » qui
+    justifiait le ZIP n'a pas été constaté au dépôt, où la compression prend du temps et du disque.
+    Ce que cette page dit de l'audio d'un dépôt ZIP, non récupérable côté serveur, et du passage
+    archivé qui en découle, fait toujours foi.
 
 ## Contexte
 

@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.endsWith;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,6 +58,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -89,6 +92,9 @@ class RegenerationPendantUnDepotTest {
     /// Le registre PARTAGÉ, comme dans l'application : le dépôt s'y inscrit, le service le consulte.
     private final TeleversementsEnCours televersements = new TeleversementsEnCours();
 
+    /// Le réglage du mode, relu à chaque dépôt comme dans l'application : un cas peut le changer en route.
+    private final AtomicReference<ModeDepot> mode = new AtomicReference<>(ModeDepot.ARCHIVES_ZIP);
+
     @BeforeEach
     void preparer() {
         source = new SourceDeDonnees(new Workspace(dossier));
@@ -114,7 +120,7 @@ class RegenerationPendantUnDepotTest {
                 new MoteurWorkflowPassage(),
                 horloge,
                 () -> new CompacteurDepot(PLAFOND),
-                () -> ModeDepot.ARCHIVES_ZIP,
+                mode::get,
                 depotUnites,
                 depotPlans,
                 televersements);
@@ -173,6 +179,71 @@ class RegenerationPendantUnDepotTest {
         assertThat(second.echecs()).isEmpty();
         verify(client, times(1)).creerFichier(eq(PREFIXE.nomDossierSession() + "-1.zip"), anyString());
         assertThat(statut(id)).isEqualTo(StatutWorkflow.DEPOSE);
+    }
+
+    /// Le mode n'était pas mémorisé avec le dépôt : relu dans les réglages à chaque tentative, il faisait
+    /// reprendre en WAV un dépôt entamé en ZIP. La reprise n'était pas refusée : l'empreinte du lot est la
+    /// même dans les deux modes. Elle renvoyait toutes les séquences à côté de l'archive en ligne (#5677).
+    @Test
+    @DisplayName("#5677 : un dépôt entamé en ZIP se reprend en ZIP, même si le réglage dit désormais WAV")
+    void un_depot_entame_garde_son_mode() throws Exception {
+        Long id = passagePrepare();
+        AtomicBoolean refuserLaSeconde = new AtomicBoolean(true);
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenAnswer(appel -> {
+                    Path archive = appel.getArgument(1);
+                    boolean seconde = archive.getFileName().toString().endsWith("-2.zip");
+                    return seconde && refuserLaSeconde.get()
+                            ? ReponseApi.refuse(422, "contenu refusé")
+                            : ReponseApi.succes("");
+                });
+        depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+
+        mode.set(ModeDepot.SEQUENCES_WAV);
+        refuserLaSeconde.set(false);
+        BilanDepot reprise = depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+
+        assertThat(reprise.deposees())
+                .as("seule l'archive manquante repart, en ZIP")
+                .isEqualTo(1);
+        assertThat(reprise.echecs()).isEmpty();
+        verify(client, never()).creerFichier(endsWith(".wav"), anyString());
+        assertThat(statut(id)).isEqualTo(StatutWorkflow.DEPOSE);
+    }
+
+    @Test
+    @DisplayName("#5677 : un dépôt entamé en WAV se reprend en WAV, même si le réglage dit désormais ZIP")
+    void un_depot_entame_en_wav_reste_en_wav() throws Exception {
+        Long id = passagePrepare();
+        mode.set(ModeDepot.SEQUENCES_WAV);
+        AtomicBoolean refuser = new AtomicBoolean(true);
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenAnswer(appel ->
+                        refuser.getAndSet(false) ? ReponseApi.refuse(422, "contenu refusé") : ReponseApi.succes(""));
+        BilanDepot premier = depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+        assertThat(premier.echecs())
+                .as("une séquence refusée : le dépôt reste entamé")
+                .hasSize(1);
+
+        mode.set(ModeDepot.ARCHIVES_ZIP);
+        BilanDepot reprise = depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+
+        assertThat(reprise.deposees())
+                .as("seule la séquence manquante repart, en WAV")
+                .isEqualTo(1);
+        verify(client, never()).creerFichier(endsWith(".zip"), anyString());
+        assertThat(statut(id)).isEqualTo(StatutWorkflow.DEPOSE);
+    }
+
+    @Test
+    @DisplayName("#5677 : un dépôt qui commence suit le réglage, WAV compris")
+    void un_depot_qui_commence_suit_le_reglage() throws Exception {
+        Long id = passagePrepare();
+        mode.set(ModeDepot.SEQUENCES_WAV);
+
+        assertThat(service.sourceDepotParDefaut(id).identifiants())
+                .isNotEmpty()
+                .allSatisfy(identifiant -> assertThat(identifiant).endsWith(".wav"));
     }
 
     @Test

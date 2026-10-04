@@ -112,8 +112,8 @@ exigent un redémarrage et le disent.
 
 ### Étape 5 · Dépôt : une énumération et un entier
 
-- [ ] **S7-15** · *geste: regler-la-forme-du-depot* · Onglet **Dépôt**, « Forme du dépôt » propose **deux** formes (archives ZIP, séquences
-      WAV) et retient celle qu'on choisit.
+- [ ] **S7-15** · *geste: regler-la-forme-du-depot* · Onglet **Dépôt**, « Forme du dépôt » propose **deux** formes (séquences WAV, la
+      forme par défaut, et archives ZIP) et retient celle qu'on choisit.
 - [ ] **S7-16** · *geste: regler-la-forme-du-depot* · « Taille maximale d'une archive (Mo) » accepte une valeur, et la **refuse** si elle
       est absurde (zéro, négative, texte) en le disant plutôt qu'en l'ignorant.
 - [ ] **S7-17** · *geste: regler-la-forme-du-depot* · Rouvrir les Réglages : les deux valeurs choisies sont **toujours là**.

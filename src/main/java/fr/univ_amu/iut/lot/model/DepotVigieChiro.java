@@ -150,8 +150,8 @@ public final class DepotVigieChiro {
     /// Lance le traitement serveur, en autorisant éventuellement une **relance**.
     ///
     /// **Une relance n'est pas un simple « réessayer ».** À chaque compute le serveur supprime toutes les
-    /// `donnees` avant de recalculer, et sur une nuit déposée en archives ZIP (le mode par défaut depuis
-    /// #984) les WAV extraits ne sont pas conservés sur S3 (#1244) : le recalcul ne peut pas les relire, et
+    /// `donnees` avant de recalculer, et sur une nuit déposée en archives ZIP (le mode par défaut de #984
+    /// à #5677) les WAV extraits ne sont pas conservés sur S3 (#1244) : le recalcul ne peut pas les relire, et
     /// les observations sont **définitivement perdues**. Tant que la participation n'a jamais été calculée le
     /// lancement est sûr ; ensuite il détruit, d'où `forcer`, demandé explicitement (`--forcer`, #1265).
     ///

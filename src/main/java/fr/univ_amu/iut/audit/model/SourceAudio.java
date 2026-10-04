@@ -13,7 +13,7 @@ public enum SourceAudio {
     DISQUE("l'audio est sur le disque : il se réimporte"),
 
     /// Le disque ne les a plus, mais la nuit a été déposée **en WAV** et **rattachée** : le serveur les a
-    /// gardés (`pieces_jointes?wav=true` → S3). Cas rare : le mode par défaut est le ZIP.
+    /// gardés (`pieces_jointes?wav=true` → S3). Rare avant #5677, où le défaut était le ZIP.
     SERVEUR("l'audio n'est plus sur le disque, mais la nuit a été déposée en WAV : le serveur peut le rendre"),
 
     /// Ni disque, ni serveur. **Ce n'est pas une impasse** : depuis #1297, la nuit devient un **passage

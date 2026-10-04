@@ -125,7 +125,7 @@ public class LotModule extends ModuleDeFeature {
     }
 
     /// Mode de dépôt choisi (#1997), par priorité : propriété système `vigiechiro.depot.mode`
-    /// (tests/outils), sinon le réglage persisté, sinon les archives ZIP. Relu à **chaque dépôt**
+    /// (tests/outils), sinon le réglage persisté, sinon [ModeDepot#PAR_DEFAUT]. Relu à **chaque dépôt**
     /// (fournisseur dans [ServiceLot]), comme le plafond d'archive.
     static ModeDepot modeDepot(Reglages reglages) {
         String surcharge = System.getProperty("vigiechiro.depot.mode");
@@ -133,7 +133,7 @@ public class LotModule extends ModuleDeFeature {
             return ModeDepot.parValeur(surcharge.trim());
         }
         return ModeDepot.parValeur(
-                reglages.lireTexte(OngletReglagesDepot.CLE_MODE_DEPOT, ModeDepot.ARCHIVES_ZIP.valeur()));
+                reglages.lireTexte(OngletReglagesDepot.CLE_MODE_DEPOT, ModeDepot.PAR_DEFAUT.valeur()));
     }
 
     /// Les téléversements en cours dans ce processus (#5599), PARTAGÉS entre le moteur de dépôt, qui s'y

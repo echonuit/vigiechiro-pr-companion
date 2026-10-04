@@ -286,7 +286,7 @@ Si le verdict du passage est `Inexploitable` (R14) ou si un contrôle **bloquant
 ## Notes pour l'implémentation
 
 - **Contrôles de cohérence** : rejoués à l'ouverture (pas mémorisés en base). Bloquants : verdict, transformation, nommage, journal ; non bloquant : relevé climatique.
-- **Forme du dépôt** : réglage global (*Réglages ▸ Dépôt*), ZIP par défaut. En ZIP, la plateforme ne conserve pas les sons et la participation n'est pas relançable : la conséquence est rappelée à l'écran.
+- **Forme du dépôt** : réglage global (*Réglages ▸ Dépôt*), WAV par défaut ; un dépôt entamé garde sa forme. En ZIP, la plateforme ne conserve pas les sons et la participation n'est pas relançable : la conséquence est rappelée à l'écran.
 - **Dépôt reprenable** : le plan est persisté unité par unité (`depot_plan`, `depot_unite`), statut `Dépôt en cours` ; un dépôt interrompu se **reprend** (« Reprendre le dépôt »), il ne se rejoue pas. Une unité refusée **définitivement** fait exception : elle porte `echec_definitif`, la reprise ne la reprend plus, et le bouton cesse de la promettre.
 - **Lancement du traitement** : `▶ Lancer la participation` déclenche le calcul serveur ; l'état est **relevé à la demande** (pas de sondage automatique).
 - **Ouverture du dossier** : `java.awt.Desktop.open(File)` sur `depot/` ; désactivée proprement en environnement sans bureau graphique (chemin copiable en repli).

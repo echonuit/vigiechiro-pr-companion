@@ -53,17 +53,18 @@ public final class OngletReglagesDepot implements OngletReglages {
                 new DescripteurReglage.Enumeration(
                         CLE_MODE_DEPOT,
                         "Forme du dépôt",
-                        "En archives ZIP, la plateforme extrait puis supprime l'archive sans conserver les"
-                                + " sons : l'audio n'est plus téléchargeable depuis Vigie-Chiro, et la"
-                                + " participation ne pourra pas être relancée. En séquences WAV, chaque son"
-                                + " reste en ligne et la participation reste relançable, au prix d'un dépôt"
-                                + " plus long.",
+                        "En séquences WAV, chaque son reste en ligne sur Vigie-Chiro et la participation"
+                                + " reste relançable ; l'envoi demande plus de bande passante. En archives"
+                                + " ZIP, la plateforme extrait puis supprime l'archive sans conserver les"
+                                + " sons : l'audio n'est plus téléchargeable, la participation ne pourra pas"
+                                + " être relancée, et la compression prend du temps et de la place sur le"
+                                + " disque. Un dépôt déjà entamé garde le mode dans lequel il a commencé.",
                         List.of(
                                 new DescripteurReglage.Enumeration.Option(
-                                        ModeDepot.ARCHIVES_ZIP.valeur(), ModeDepot.ARCHIVES_ZIP.libelle()),
+                                        ModeDepot.SEQUENCES_WAV.valeur(), ModeDepot.SEQUENCES_WAV.libelle()),
                                 new DescripteurReglage.Enumeration.Option(
-                                        ModeDepot.SEQUENCES_WAV.valeur(), ModeDepot.SEQUENCES_WAV.libelle())),
-                        ModeDepot.ARCHIVES_ZIP.valeur()),
+                                        ModeDepot.ARCHIVES_ZIP.valeur(), ModeDepot.ARCHIVES_ZIP.libelle())),
+                        ModeDepot.PAR_DEFAUT.valeur()),
                 new DescripteurReglage.Entier(
                         CLE_TAILLE_MAX,
                         "Taille maximale d'une archive (Mo)",

@@ -584,8 +584,8 @@ class ContratApiVigieChiroLiveTest {
 
     @Test
     @DisplayName("PROBE #984/#1231 : la plateforme ACCEPTE un ZIP (déclaration + PUT S3 application/zip +"
-            + " finalisation). C'est le mode de dépôt PAR DÉFAUT : un échec ici veut dire que le dépôt"
-            + " par défaut est cassé, pas qu'il faut revenir au WAV")
+            + " finalisation). Un échec ici veut dire que le dépôt en archives ZIP est cassé, pas que"
+            + " le WAV, mode par défaut depuis #5677, le serait")
     void probe_zip_vs_wav() {
         supposerEcritureAutorisee();
         // #1287 : la probe passait « probe » en second argument. Depuis #1239 c'est le lien_participation,

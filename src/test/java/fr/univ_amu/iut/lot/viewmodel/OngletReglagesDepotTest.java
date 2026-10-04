@@ -29,7 +29,7 @@ class OngletReglagesDepotTest {
     }
 
     @Test
-    @DisplayName("#1997 : l'onglet déclare la forme du dépôt, ZIP par défaut, avec ses deux modes")
+    @DisplayName("#1997 : l'onglet déclare la forme du dépôt, WAV par défaut (#5677), avec ses deux modes")
     void declare_le_mode_de_depot() {
         OngletReglagesDepot onglet = new OngletReglagesDepot();
 
@@ -41,10 +41,10 @@ class OngletReglagesDepotTest {
         assertThat(mode.cle()).isEqualTo(OngletReglagesDepot.CLE_MODE_DEPOT);
         assertThat(mode.defaut())
                 .as("le défaut reste le comportement établi")
-                .isEqualTo(ModeDepot.ARCHIVES_ZIP.valeur());
+                .isEqualTo(ModeDepot.SEQUENCES_WAV.valeur());
         assertThat(mode.options())
                 .extracting(DescripteurReglage.Enumeration.Option::valeur)
-                .containsExactly(ModeDepot.ARCHIVES_ZIP.valeur(), ModeDepot.SEQUENCES_WAV.valeur());
+                .containsExactly(ModeDepot.SEQUENCES_WAV.valeur(), ModeDepot.ARCHIVES_ZIP.valeur());
     }
 
     @Test

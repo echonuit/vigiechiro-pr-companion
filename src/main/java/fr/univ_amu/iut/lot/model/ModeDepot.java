@@ -18,17 +18,22 @@ import java.util.Arrays;
 /// En **WAV**, chaque séquence déposée garde son `s3_id` et survit au traitement : l'audio reste
 /// téléchargeable, la participation relançable.
 ///
-/// Le défaut reste [#ARCHIVES_ZIP], comportement établi et le plus rapide, mais c'en est maintenant un
-/// que l'on choisit.
+/// Le défaut est [#SEQUENCES_WAV] depuis #5677 (ADR 5677). Il a longtemps été le ZIP, dit « le plus
+/// rapide » sans qu'aucune mesure l'établisse.
 public enum ModeDepot {
 
-    /// Archives ZIP (défaut) : rapide, peu de requêtes. L'audio n'est **pas** récupérable côté serveur
-    /// après traitement, et la participation ne pourra pas être relancée (#1244).
-    ARCHIVES_ZIP("zip", "Archives ZIP (rapide)"),
+    /// Archives ZIP : peu de requêtes et moins de bande passante, au prix d'une compression qui prend du
+    /// temps et du disque. L'audio n'est **pas** récupérable côté serveur après traitement, et la
+    /// participation ne pourra pas être relancée (#1244).
+    ARCHIVES_ZIP("zip", "Archives ZIP (audio non conservé en ligne)"),
 
-    /// Séquences WAV une à une : plus lent (une requête par séquence), mais l'audio est **conservé** côté
-    /// serveur et la participation reste relançable.
+    /// Séquences WAV une à une (défaut) : une requête par séquence, sans compression. L'audio est
+    /// **conservé** côté serveur et la participation reste relançable.
     SEQUENCES_WAV("wav", "Séquences WAV (audio conservé en ligne)");
+
+    /// Le mode retenu sans réglage (#5677, ADR 5677) : un seul défaut, que le module, l'onglet des
+    /// réglages et la lecture d'une valeur inconnue partagent.
+    public static final ModeDepot PAR_DEFAUT = SEQUENCES_WAV;
 
     private final String valeur;
     private final String libelle;
@@ -48,12 +53,12 @@ public enum ModeDepot {
         return libelle;
     }
 
-    /// Le mode désigné par sa valeur persistée, ou [#ARCHIVES_ZIP] si elle est absente ou inconnue :
+    /// Le mode désigné par sa valeur persistée, ou [#PAR_DEFAUT] si elle est absente ou inconnue :
     /// un réglage corrompu ne doit pas empêcher de déposer.
     public static ModeDepot parValeur(String valeur) {
         return Arrays.stream(values())
                 .filter(mode -> mode.valeur.equals(valeur))
                 .findFirst()
-                .orElse(ARCHIVES_ZIP);
+                .orElse(PAR_DEFAUT);
     }
 }
