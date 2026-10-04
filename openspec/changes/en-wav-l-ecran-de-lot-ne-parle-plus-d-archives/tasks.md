@@ -27,5 +27,5 @@ Un lot du chantier #5596, une demande de fusion : #5824 (lot 25).
 
 - [x] 5.1 Captures du lot dans la forme WAV, déclarées aux trois endroits, ouvertes et relues une par une ; les trois gardes de captures rejoués à la main.
 - [x] 5.2 `docs/ecrans/lot.md` décrit les deux formes dans l'ordre du défaut, sans le repli automatique disparu ; recette S4 sans toucher aux lignes S4-47, S4-90 et S4-92.
-- [ ] 5.3 Faire rejouer `ScenarioConnecteLancementTest` sur la branche par la session qui le porte. Fait quand elle le rend vert.
-- [x] 5.4 Mutation ciblée sur la décision de l'étape des archives, sur `EtapesDepot` et sur le nom de l'unité. Tenue à la main, pas par PIT : chaque règle a été vue rouge contre un stub avant d'être écrite, et la mutation de `EtapeDesArchives.offerte` (trois puces prises pour quatre) fait tomber cinq cas de `LotDepotConnecteViewTest`.
+- [x] 5.3 Faire rejouer `ScenarioConnecteLancementTest` sur la branche par la session qui le porte. Fait quand elle le rend vert.
+- [x] 5.4 Mutation ciblée sur la décision de l'étape des archives, sur `EtapesDepot` et sur le nom de l'unité. PIT sur `EtapesDepot`, `SuiviEtapesLot` et `UniteDeDepot` : 42 mutants, 40 tués. Le survivant (le fil d'étapes qui ne se vide pas) a reçu son test ; le mutant non couvert est un accesseur d'avant ce lot. À la main, la mutation de `EtapeDesArchives.offerte` (trois puces prises pour quatre) fait tomber cinq cas de `LotDepotConnecteViewTest`.

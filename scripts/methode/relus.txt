@@ -1876,7 +1876,7 @@ a11734ef6c52  src/test/java/fr/univ_amu/iut/lot/view/ScenarioPerceptifRefusDepot
 f61a0b707877  src/test/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepotTest.java
 c8d105f62892  src/test/java/fr/univ_amu/iut/lot/viewmodel/FormatsLotTest.java
 d6631c931ec3  src/test/java/fr/univ_amu/iut/lot/viewmodel/FormatsTraitementFuseauTest.java
-2c56a036743b  src/test/java/fr/univ_amu/iut/lot/viewmodel/LotViewModelTest.java
+8223d90ad531  src/test/java/fr/univ_amu/iut/lot/viewmodel/LotViewModelTest.java
 33cf48ab34a4  src/test/java/fr/univ_amu/iut/lot/viewmodel/MessagesLotTest.java
 2569a85cd5fb  src/test/java/fr/univ_amu/iut/lot/viewmodel/OngletReglagesDepotTest.java
 fba37f0ed141  src/test/java/fr/univ_amu/iut/lot/viewmodel/SuiviLignesArchivesTest.java

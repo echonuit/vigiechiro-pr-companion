@@ -96,6 +96,22 @@ class LotViewModelTest {
         assertThat(viewModel.etapes()).hasSize(3);
     }
 
+    /// Trouvé par mutation (PIT, #5824) : rien ne tenait que le fil d'étapes se vide. Depuis ce lot la
+    /// vue y lit si l'étape des archives est offerte ; un fil resté plein dirait l'écran de la nuit
+    /// d'avant.
+    @Test
+    @DisplayName("#5824 : un passage introuvable vide le fil d'étapes, il ne garde pas celui de la nuit d'avant")
+    void un_passage_introuvable_vide_le_fil_d_etapes() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        viewModel.ouvrirSur(ID_PASSAGE);
+        assertThat(viewModel.etapes()).isNotEmpty();
+        when(service.consulterLot(43L)).thenThrow(new IllegalStateException("passage introuvable"));
+
+        viewModel.ouvrirSur(43L);
+
+        assertThat(viewModel.etapes()).isEmpty();
+    }
+
     @Test
     @DisplayName("#784 : en Déposé, peutSupprimerArchives suit la présence d'archives sur disque")
     void peut_supprimer_en_depose_selon_volume() {
