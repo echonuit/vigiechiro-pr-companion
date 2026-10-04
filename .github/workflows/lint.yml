@@ -856,6 +856,9 @@ jobs:
           set -euo pipefail
           python3 scripts/graphify/pont_ressources.py --auto-test
           python3 scripts/graphify/rebuild.py --auto-test
+          # L'outillage de la couche sémantique (#5813) : ses cinq parades s'éprouvent sur des lots
+          # fabriqués, donc sans `graphify` non plus. Seule sa commande `fusionne` l'importe.
+          python3 scripts/graphify/couche_semantique.py --auto-test
       - name: "Auto-test de la veille des plateformes (bloquant, #3526)"
         # Le verdict rougit dans le train de publication ; l'auto-test du JUGE tourne ici, à chaque PR.
         # Un juge qui aurait cessé de juger laisserait partir le train sur une preuve absente, et son
