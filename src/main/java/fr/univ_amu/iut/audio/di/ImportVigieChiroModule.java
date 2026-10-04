@@ -79,8 +79,9 @@ public class ImportVigieChiroModule extends ModuleDeFeature {
     @Provides
     @Singleton
     @Named(QUALIFIANT)
-    ImportObservations fournirImportObservations(@Named(QUALIFIANT) ImportVigieChiro importateur) {
-        return new ImportObservationsVigieChiro(importateur);
+    ImportObservations fournirImportObservations(
+            @Named(QUALIFIANT) ImportVigieChiro importateur, ResultatsIdentificationDao resultats) {
+        return new ImportObservationsVigieChiro(importateur, resultats);
     }
 
     @Provides

@@ -34,19 +34,18 @@ final class SuiviTraitementUI {
             ExecuteurTache executeur,
             Supplier<Long> idPassage,
             ObservableBooleanValue participationLiee,
-            VBox zone,
-            Label etat,
-            Label fraicheur,
-            Label alerte,
-            Button actualiser) {
+            Vue vue) {
         SuiviTraitementUI composant = new SuiviTraitementUI(viewModel, executeur, idPassage);
-        composant.cabler(zone, etat, fraicheur, alerte, actualiser);
+        composant.cabler(vue);
         if (viewModel.disponible()) {
-            zone.visibleProperty().bind(participationLiee);
-            zone.managedProperty().bind(zone.visibleProperty());
+            vue.zone().visibleProperty().bind(participationLiee);
+            vue.zone().managedProperty().bind(vue.zone().visibleProperty());
         }
         return composant;
     }
+
+    /// Les nœuds de la carte, dans l'ordre où elle les montre.
+    record Vue(VBox zone, Label etat, Label importation, Label fraicheur, Label alerte, Button actualiser) {}
 
     private SuiviTraitementUI(TraitementViewModel viewModel, ExecuteurTache executeur, Supplier<Long> idPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -55,8 +54,18 @@ final class SuiviTraitementUI {
     }
 
     /// Lie la zone au ViewModel : textes, visibilité de l'avertissement, bouton en attente pendant un relevé.
-    private void cabler(VBox zone, Label etat, Label fraicheur, Label alerte, Button actualiser) {
+    private void cabler(Vue vue) {
+        Label etat = vue.etat();
+        Label fraicheur = vue.fraicheur();
+        Label alerte = vue.alerte();
+        Button actualiser = vue.actualiser();
         etat.textProperty().bind(viewModel.messageProperty());
+        // La ligne d'import (#5784) : absente tant que le relevé n'a rien à dire des observations.
+        vue.importation().textProperty().bind(viewModel.importObservationsProperty());
+        vue.importation()
+                .visibleProperty()
+                .bind(viewModel.importObservationsProperty().isNotEmpty());
+        vue.importation().managedProperty().bind(vue.importation().visibleProperty());
         fraicheur.textProperty().bind(viewModel.fraicheurProperty());
         alerte.textProperty().bind(viewModel.alerteProperty());
         // Un avertissement vide ne doit pas laisser un blanc dans la carte.
@@ -71,8 +80,8 @@ final class SuiviTraitementUI {
                         .then("Relevé en cours…")
                         .otherwise("Actualiser"));
         actualiser.setOnAction(evenement -> actualiser());
-        zone.setVisible(false);
-        zone.setManaged(false);
+        vue.zone().setVisible(false);
+        vue.zone().setManaged(false);
     }
 
     /// Affiche le **dernier état connu** (cache, sans réseau) : à l'ouverture de l'écran, la zone dit déjà
@@ -84,11 +93,12 @@ final class SuiviTraitementUI {
         }
     }
 
-    /// Demande au serveur où il en est, **hors du fil JavaFX**.
+    /// Demande au serveur où il en est, **hors du fil JavaFX**. Si l'analyse est terminée, les
+    /// observations sont importées dans la même tâche (#5784) : le bouton reste en attente jusqu'au bout.
     void actualiser() {
         Long passage = idPassage.get();
         viewModel.marquerEnCours();
-        executeur.executer(() -> viewModel.relever(passage), viewModel::appliquer, viewModel::echec);
+        executeur.executer(() -> viewModel.releverEtImporter(passage), viewModel::appliquer, viewModel::echec);
     }
 
     /// Lance le **traitement serveur** (compute, #984) **hors du fil JavaFX**, puis **relit l'état** : le

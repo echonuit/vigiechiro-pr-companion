@@ -4,11 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.ImportObservations;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import java.time.LocalDate;
@@ -23,7 +26,10 @@ class TraitementViewModelTest {
     private static final Long ID_PASSAGE = 42L;
     private static final Horloge LE_13_JUILLET = Horloge.figeeAu(LocalDate.of(2026, 7, 13));
 
+    private static final String COMPTE_RENDU = "Observations importées depuis Vigie-Chiro : 1284 observation(s).";
+
     private final SuiviTraitement suivi = mock(SuiviTraitement.class);
+    private final ImportObservations importation = mock(ImportObservations.class);
 
     @Test
     @DisplayName("hors connexion, le suivi est absent : la zone n'a rien à afficher")
@@ -91,7 +97,7 @@ class TraitementViewModelTest {
 
         vm.appliquer(new Traitement(EtatTraitement.FINI, null, null, "2026-07-13T10:05:00+00:00", null, null));
 
-        assertThat(vm.messageProperty().get()).contains("Analyse terminée", "prêtes à être importées");
+        assertThat(vm.messageProperty().get()).contains("Analyse terminée").doesNotContain("prêtes à être importées");
         assertThat(vm.relanceBloqueeProperty().get())
                 .as("le serveur, lui, accepterait de recalculer, et détruirait tout (#1244)")
                 .isTrue();
@@ -158,8 +164,117 @@ class TraitementViewModelTest {
         assertThat(vm.enCoursProperty().get()).isFalse();
     }
 
+    @Test
+    @DisplayName("#5784 : un relevé qui rend l'analyse terminée importe les observations, et la carte le dit")
+    void un_releve_termine_importe() {
+        when(suivi.relever(ID_PASSAGE)).thenReturn(terminee());
+        when(importation.aDejaSesObservations(ID_PASSAGE)).thenReturn(false);
+        when(importation.importer(ID_PASSAGE, false)).thenReturn(COMPTE_RENDU);
+        TraitementViewModel vm = viewModelAvecImport();
+
+        vm.appliquer(vm.releverEtImporter(ID_PASSAGE));
+
+        verify(importation).importer(ID_PASSAGE, false);
+        assertThat(vm.messageProperty().get()).contains("Analyse terminée");
+        assertThat(vm.importObservationsProperty().get()).isEqualTo(COMPTE_RENDU);
+    }
+
+    @Test
+    @DisplayName("#5784 : une nuit qui a déjà ses observations n'est pas réimportée, et la carte dit où les remplacer")
+    void une_nuit_deja_importee_n_est_pas_reimportee() {
+        when(suivi.relever(ID_PASSAGE)).thenReturn(terminee());
+        when(importation.aDejaSesObservations(ID_PASSAGE)).thenReturn(true);
+        TraitementViewModel vm = viewModelAvecImport();
+
+        vm.appliquer(vm.releverEtImporter(ID_PASSAGE));
+
+        verify(importation, never()).importer(ID_PASSAGE, false);
+        verify(importation, never()).importer(ID_PASSAGE, true);
+        assertThat(vm.importObservationsProperty().get()).contains("déjà importées", "Sons & validation");
+    }
+
+    @Test
+    @DisplayName("#5784 : un import qui échoue se dit avec son motif, sans masquer que l'analyse est terminée")
+    void un_import_qui_echoue_se_dit() {
+        when(suivi.relever(ID_PASSAGE)).thenReturn(terminee());
+        when(importation.importer(ID_PASSAGE, false)).thenThrow(new RegleMetierException("aucune donnée renvoyée"));
+        TraitementViewModel vm = viewModelAvecImport();
+
+        vm.appliquer(vm.releverEtImporter(ID_PASSAGE));
+
+        assertThat(vm.messageProperty().get()).contains("Analyse terminée");
+        assertThat(vm.importObservationsProperty().get())
+                .contains("L'import des observations a échoué", "aucune donnée renvoyée", "Actualiser");
+        assertThat(vm.alerteProperty().get())
+                .as("l'alerte parle du calcul, pas de l'import")
+                .isEmpty();
+        assertThat(vm.enCoursProperty().get()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#5784 : tant que l'analyse n'est pas terminée, rien n'est importé et la ligne d'import reste vide")
+    void un_releve_en_cours_n_importe_rien() {
+        when(suivi.relever(ID_PASSAGE)).thenReturn(enCours());
+        TraitementViewModel vm = viewModelAvecImport();
+
+        vm.appliquer(vm.releverEtImporter(ID_PASSAGE));
+
+        verifyNoInteractions(importation);
+        assertThat(vm.importObservationsProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#5784 : à l'ouverture, un cache « terminée » n'importe rien et dit le geste qui reste")
+    void l_ouverture_n_importe_jamais() {
+        when(suivi.dernierReleve(ID_PASSAGE))
+                .thenReturn(Optional.of(new ReleveTraitement(ID_PASSAGE, "part-1", terminee(), "2026-07-13T09:05:00")));
+        when(importation.aDejaSesObservations(ID_PASSAGE)).thenReturn(false);
+        TraitementViewModel vm = viewModelAvecImport();
+
+        vm.chargerDernierReleve(ID_PASSAGE);
+
+        verify(importation, never()).importer(ID_PASSAGE, false);
+        verify(suivi, never()).relever(ID_PASSAGE);
+        assertThat(vm.importObservationsProperty().get())
+                .isEqualTo("Cliquez « Actualiser » pour importer les observations.");
+    }
+
+    @Test
+    @DisplayName("#5784 : à l'ouverture, une nuit terminée et déjà importée le dit")
+    void l_ouverture_dit_une_nuit_deja_importee() {
+        when(suivi.dernierReleve(ID_PASSAGE))
+                .thenReturn(Optional.of(new ReleveTraitement(ID_PASSAGE, "part-1", terminee(), "2026-07-13T09:05:00")));
+        when(importation.aDejaSesObservations(ID_PASSAGE)).thenReturn(true);
+        TraitementViewModel vm = viewModelAvecImport();
+
+        vm.chargerDernierReleve(ID_PASSAGE);
+
+        assertThat(vm.importObservationsProperty().get()).contains("déjà importées");
+    }
+
+    @Test
+    @DisplayName("#5784 : un état qui cesse d'être « terminée » efface la ligne d'import")
+    void la_ligne_d_import_ne_survit_pas_a_un_autre_etat() {
+        when(suivi.relever(ID_PASSAGE)).thenReturn(terminee(), enCours());
+        when(importation.importer(ID_PASSAGE, false)).thenReturn(COMPTE_RENDU);
+        TraitementViewModel vm = viewModelAvecImport();
+        vm.appliquer(vm.releverEtImporter(ID_PASSAGE));
+
+        vm.appliquer(vm.releverEtImporter(ID_PASSAGE));
+
+        assertThat(vm.importObservationsProperty().get()).isEmpty();
+    }
+
     private TraitementViewModel viewModel() {
         return new TraitementViewModel(Optional.of(suivi), LE_13_JUILLET);
+    }
+
+    private TraitementViewModel viewModelAvecImport() {
+        return new TraitementViewModel(Optional.of(suivi), Optional.of(importation), LE_13_JUILLET);
+    }
+
+    private static Traitement terminee() {
+        return new Traitement(EtatTraitement.FINI, null, null, "2026-07-13T10:05:00+00:00", null, null);
     }
 
     /// Analyse démarrée le matin même du jour figé (aucun retard).

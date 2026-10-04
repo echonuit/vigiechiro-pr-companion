@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.model.Completude;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.ImportApresReleve;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -81,6 +82,7 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -235,7 +237,22 @@ public final class CaptureLot {
         rendre(connecte, idCoherent, sortie.resolve("apercu-lot-participation.png"));
         // La carte « Traitement Vigie-Chiro » (#5683) : une analyse partie à 14:07 UTC, l'instant du relevé
         // de la recette réelle. Le fuseau de la capture est Paris : l'heure lue est celle du poste.
-        rendreTraitementEnCours(connecte, idCoherent, sortie.resolve("apercu-lot-traitement-en-cours.png"));
+        rendreTraitement(
+                connecte,
+                idCoherent,
+                sortie.resolve("apercu-lot-traitement-en-cours.png"),
+                traitement -> traitement.appliquer(new Traitement(
+                        EtatTraitement.EN_COURS, null, "2026-09-30T14:07:45.136000+00:00", null, null, null)));
+        // « Actualiser » a trouvé l'analyse terminée : les observations sont importées, la carte le dit
+        // sous l'état (#5784).
+        rendreTraitement(
+                connecte,
+                idCoherent,
+                sortie.resolve("apercu-lot-traitement-termine.png"),
+                traitement -> traitement.appliquer(new TraitementViewModel.Releve(
+                        new Traitement(EtatTraitement.FINI, null, null, "2026-09-30T14:52:10.000000+00:00", null, null),
+                        new ImportApresReleve.Issue.Fait(
+                                "Observations importées depuis Vigie-Chiro : 1284 observation(s)."))));
         // Le résultat du lancement, sous le bouton de l'étape ④ (#5682) : une issue par aperçu.
         rendrePilote(
                 connecte,
@@ -492,10 +509,12 @@ public final class CaptureLot {
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
-    /// La carte du **traitement serveur** sur une analyse en cours (#5683). L'injecteur de capture n'a pas de
+    /// La carte du **traitement serveur** dans l'état que `etat` lui applique (#5683, #5784). L'injecteur de capture
+    /// n'a pas de
     /// client, donc pas de suivi : un ViewModel qui se dit disponible fait paraître la carte, et l'état lui
     /// est appliqué une fois l'écran ouvert, l'ouverture relisant d'abord un relevé qui n'existe pas.
-    private static void rendreTraitementEnCours(Injector injecteur, long idPassage, Path fichier) throws IOException {
+    private static void rendreTraitement(
+            Injector injecteur, long idPassage, Path fichier, Consumer<TraitementViewModel> etat) throws IOException {
         TraitementViewModel traitement =
                 new TraitementViewModel(Optional.empty(), injecteur.getInstance(Horloge.class)) {
                     @Override
@@ -503,14 +522,7 @@ public final class CaptureLot {
                         return true;
                     }
                 };
-        rendrePilote(
-                injecteur,
-                idPassage,
-                fichier,
-                1200,
-                traitement,
-                (vm, depot) -> traitement.appliquer(new Traitement(
-                        EtatTraitement.EN_COURS, null, "2026-09-30T14:07:45.136000+00:00", null, null, null)));
+        rendrePilote(injecteur, idPassage, fichier, 1200, traitement, (vm, depot) -> etat.accept(traitement));
     }
 
     /// Archives ZIP de **démonstration** (#251) pour l'aperçu « archives générées » : on ne zippe pas

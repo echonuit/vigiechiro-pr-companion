@@ -8,4 +8,12 @@ package fr.univ_amu.iut.cli;
 /// pas le disque. Le journal fait exception (#3575), toute commande y écrivant dès l'amorçage ; et
 /// la migration prend le verrou de son côté quand elle a quelque chose à appliquer
 /// ([MigrationSchema]), si bien qu'une lecture sur une base à mettre à jour peut être refusée.
-public interface LectureSeule {}
+public interface LectureSeule {
+
+    /// Cette **invocation** ne fait-elle que lire ? Vrai par défaut : le marqueur suffit à presque toutes
+    /// les commandes. Une commande qui lit sauf sur une option qui écrit le redéfinit, et prend alors le
+    /// verrou comme les autres (#5784, `etat-traitement-vigiechiro --importer`).
+    default boolean neFaitQueLire() {
+        return true;
+    }
+}

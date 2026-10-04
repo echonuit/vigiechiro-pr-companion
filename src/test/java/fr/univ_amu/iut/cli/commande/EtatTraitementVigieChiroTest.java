@@ -2,10 +2,15 @@ package fr.univ_amu.iut.cli.commande;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.model.ImportObservations;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -20,7 +25,10 @@ import picocli.CommandLine;
 /// « ça n'a jamais tourné », « je n'ai pas pu demander ». Suivi mocké, aucun réseau.
 class EtatTraitementVigieChiroTest {
 
+    private static final String COMPTE_RENDU = "Observations importées depuis Vigie-Chiro : 1284 observation(s).";
+
     private final SuiviTraitement suivi = mock(SuiviTraitement.class);
+    private final ImportObservations importation = mock(ImportObservations.class);
 
     @AfterEach
     void nettoyerJetonPonctuel() {
@@ -28,10 +36,83 @@ class EtatTraitementVigieChiroTest {
     }
 
     private CommandLine ligne(Optional<SuiviTraitement> moteur, StringWriter sortie) {
-        CommandLine ligne = new CommandLine(new EtatTraitementVigieChiro(moteur));
+        return ligne(moteur, sortie, new StringWriter());
+    }
+
+    private CommandLine ligne(Optional<SuiviTraitement> moteur, StringWriter sortie, StringWriter erreur) {
+        CommandLine ligne = new CommandLine(new EtatTraitementVigieChiro(moteur, Optional.of(importation)));
         ligne.setOut(new PrintWriter(sortie, true));
-        ligne.setErr(new PrintWriter(new StringWriter(), true));
+        ligne.setErr(new PrintWriter(erreur, true));
         return ligne;
+    }
+
+    /// La commande ne modifie rien tant qu'on ne le lui demande pas : c'est ce sur quoi un script
+    /// compte, et ce qui la dispense du verrou du dossier de travail (#5784).
+    @Test
+    @DisplayName("#5784 : sans --importer, une analyse terminée n'importe rien et renvoie à l'option")
+    void sans_l_option_rien_n_est_importe() {
+        when(suivi.relever(42L)).thenReturn(traitement(EtatTraitement.FINI));
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(Optional.of(suivi), sortie).execute("--passage", "42");
+
+        assertThat(code).isZero();
+        verifyNoInteractions(importation);
+        assertThat(sortie.toString()).contains("--importer");
+    }
+
+    @Test
+    @DisplayName("#5784 : --importer sur une analyse terminée importe les observations et le dit, code 0")
+    void avec_l_option_l_import_part() {
+        when(suivi.relever(42L)).thenReturn(traitement(EtatTraitement.FINI));
+        when(importation.importer(42L, false)).thenReturn(COMPTE_RENDU);
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(Optional.of(suivi), sortie).execute("--passage", "42", "--importer");
+
+        assertThat(code).isZero();
+        verify(importation).importer(42L, false);
+        assertThat(sortie.toString()).contains("TERMINÉE", COMPTE_RENDU);
+    }
+
+    @Test
+    @DisplayName("#5784 : --importer sur une nuit déjà importée ne réimporte pas, le dit, et rend 0")
+    void avec_l_option_une_nuit_deja_importee_n_est_pas_reimportee() {
+        when(suivi.relever(42L)).thenReturn(traitement(EtatTraitement.FINI));
+        when(importation.aDejaSesObservations(42L)).thenReturn(true);
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(Optional.of(suivi), sortie).execute("--passage", "42", "--importer");
+
+        assertThat(code).isZero();
+        verify(importation, never()).importer(42L, false);
+        assertThat(sortie.toString()).contains("déjà importées");
+    }
+
+    @Test
+    @DisplayName("#5784 : un import demandé qui échoue rend 2 et dit son motif, l'état restant affiché")
+    void avec_l_option_un_import_qui_echoue_rend_deux() {
+        when(suivi.relever(42L)).thenReturn(traitement(EtatTraitement.FINI));
+        when(importation.importer(42L, false)).thenThrow(new RegleMetierException("aucune donnée renvoyée"));
+        StringWriter sortie = new StringWriter();
+        StringWriter erreur = new StringWriter();
+
+        int code = ligne(Optional.of(suivi), sortie, erreur).execute("--passage", "42", "--importer");
+
+        assertThat(code).isEqualTo(2);
+        assertThat(sortie.toString()).contains("TERMINÉE");
+        assertThat(erreur.toString()).contains("aucune donnée renvoyée");
+    }
+
+    @Test
+    @DisplayName("#5784 : --importer sur une analyse en cours n'importe rien et rend 3, comme sans l'option")
+    void avec_l_option_une_analyse_en_cours_rend_trois() {
+        when(suivi.relever(42L)).thenReturn(traitement(EtatTraitement.EN_COURS));
+
+        int code = ligne(Optional.of(suivi), new StringWriter()).execute("--passage", "42", "--importer");
+
+        assertThat(code).isEqualTo(3);
+        verifyNoInteractions(importation);
     }
 
     @Test

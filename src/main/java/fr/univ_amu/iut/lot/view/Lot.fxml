@@ -145,6 +145,9 @@
   <VBox fx:id="zoneTraitement" spacing="4.0" styleClass="carte-section" visible="false" managed="false">
     <Label text="Traitement Vigie-Chiro" styleClass="section-titre"/>
     <Label fx:id="lblEtatTraitement" styleClass="section-sous" wrapText="true"/>
+    <!-- Ce que le relevé a fait des observations, ou ce qu'il reste à faire (#5784). Absente tant
+         qu'elle n'a rien à dire : l'analyse n'est pas terminée. -->
+    <Label fx:id="lblImportTraitement" styleClass="section-sous" wrapText="true"/>
     <Label fx:id="lblFraicheurTraitement" styleClass="section-sous" wrapText="true"/>
     <Label fx:id="lblAlerteTraitement" styleClass="message-lot" wrapText="true"/>
     <Button fx:id="btnActualiserTraitement" text="Actualiser" styleClass="bouton-secondaire">

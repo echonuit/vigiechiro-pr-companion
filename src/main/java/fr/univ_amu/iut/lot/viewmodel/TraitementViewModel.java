@@ -3,6 +3,8 @@ package fr.univ_amu.iut.lot.viewmodel;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.ImportApresReleve;
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
@@ -33,6 +35,7 @@ public class TraitementViewModel {
     private static final ZoneId FUSEAU = ZoneId.systemDefault();
 
     private final Optional<SuiviTraitement> suivi;
+    private final Optional<ImportObservations> importation;
     private final Horloge horloge;
 
     /// Ce que dit l'analyse, en une phrase.
@@ -55,11 +58,28 @@ public class TraitementViewModel {
     /// dans le relevé, jamais dans la réponse au clic : elle survit ainsi à la réouverture de l'écran.
     private final ReadOnlyBooleanWrapper analyseDemandee = new ReadOnlyBooleanWrapper(false);
 
-    @Inject
+    /// Ce que le dernier relevé a fait des observations, ou ce qu'il reste à faire (#5784). Vide tant que
+    /// l'analyse n'est pas terminée.
+    private final ReadOnlyStringWrapper importObservations = new ReadOnlyStringWrapper("");
+
+    /// Sans import : les outils de capture et les écrans montés hors connexion.
     public TraitementViewModel(Optional<SuiviTraitement> suivi, Horloge horloge) {
+        this(suivi, Optional.empty(), horloge);
+    }
+
+    @Inject
+    public TraitementViewModel(
+            Optional<SuiviTraitement> suivi, Optional<ImportObservations> importation, Horloge horloge) {
         this.suivi = Objects.requireNonNull(suivi, "suivi");
+        this.importation = Objects.requireNonNull(importation, "importation");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
     }
+
+    /// Un relevé, et ce qu'il a fait des observations de la nuit.
+    ///
+    /// @param traitement l'état rendu par la plateforme
+    /// @param issue ce que le relevé a fait des observations
+    public record Releve(Traitement traitement, ImportApresReleve.Issue issue) {}
 
     /// Le suivi est-il disponible ? Faux hors application connectée (outils de capture, mode hors ligne) :
     /// la zone est alors simplement absente.
@@ -76,7 +96,14 @@ public class TraitementViewModel {
             reinitialiser();
             return;
         }
-        appliquer(releve.get().traitement());
+        Traitement traitement = releve.get().traitement();
+        appliquer(traitement);
+        // Aucun import ici, et aucun réseau : la carte dit seulement ce qu'il reste à faire (#5784).
+        importObservations.set(ImportApresReleve.dejaImportee(importation, idPassage, traitement)
+                .map(deja -> deja
+                        ? FormatsTraitement.OBSERVATIONS_DEJA_IMPORTEES
+                        : FormatsTraitement.OBSERVATIONS_A_IMPORTER)
+                .orElse(""));
         fraicheur.set(FormatsTraitement.fraicheur(releve.get(), FUSEAU));
     }
 
@@ -88,6 +115,20 @@ public class TraitementViewModel {
                 .relever(idPassage);
     }
 
+    /// Relève l'état puis, s'il dit l'analyse terminée, importe les observations dans le même geste
+    /// (#5784). **Bloquant** (réseau) : à appeler hors du fil JavaFX, comme [#relever].
+    public Releve releverEtImporter(Long idPassage) {
+        Traitement traitement = relever(idPassage);
+        return new Releve(traitement, ImportApresReleve.pour(importation, idPassage, traitement));
+    }
+
+    /// Restitue un relevé et ce qu'il a fait des observations, **sur le fil JavaFX**.
+    public void appliquer(Releve releve) {
+        Objects.requireNonNull(releve, "releve");
+        appliquer(releve.traitement());
+        importObservations.set(FormatsTraitement.importObservations(releve.issue()));
+    }
+
     /// Restitue un état fraîchement relevé, **sur le fil JavaFX**.
     public void appliquer(Traitement traitement) {
         Objects.requireNonNull(traitement, "traitement");
@@ -96,6 +137,7 @@ public class TraitementViewModel {
         // Une nuit terminée ou en échec a déjà été calculée : la relancer détruirait ses observations.
         relanceBloquee.set(traitement.resultatsDisponibles() || traitement.enEchec());
         analyseDemandee.set(traitement.enAttente());
+        importObservations.set("");
         fraicheur.set("À l'instant.");
         enCours.set(false);
     }
@@ -124,6 +166,7 @@ public class TraitementViewModel {
         message.set("Analyse non lancée : les observations n'existent pas encore côté Vigie-Chiro.");
         fraicheur.set("");
         alerte.set("");
+        importObservations.set("");
         relanceBloquee.set(false);
         analyseDemandee.set(false);
         enCours.set(false);
@@ -147,6 +190,11 @@ public class TraitementViewModel {
 
     public ReadOnlyBooleanProperty relanceBloqueeProperty() {
         return relanceBloquee.getReadOnlyProperty();
+    }
+
+    /// Ce que le dernier relevé a fait des observations, vide s'il n'y a rien à en dire (#5784).
+    public ReadOnlyStringProperty importObservationsProperty() {
+        return importObservations.getReadOnlyProperty();
     }
 
     /// Vrai tant que la plateforme travaille sur une analyse demandée (#5682).

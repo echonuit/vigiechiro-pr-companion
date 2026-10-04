@@ -14,7 +14,7 @@ traitement, et le bouton « Actualiser » SHALL rester en attente jusqu'à la fi
 
 *Vérifié par* : un cas de `TraitementViewModelTest` (le relevé terminé appelle l'import, et son compte
 rendu est restitué), et un test d'interface sur l'écran de lot monté avec un suivi et un import bouchons,
-qui clique « Actualiser » et lit la carte. À écrire, rouges avant la réalisation.
+qui clique « Actualiser » et lit la carte.
 
 #### Scenario: L'analyse vient de se terminer
 
@@ -34,7 +34,7 @@ Quand un relevé rend une analyse terminée pour une nuit qui a déjà des obser
 ne pas appeler l'import. La carte SHALL dire que les observations sont déjà là, et où les remplacer.
 
 *Vérifié par* : un cas de `TraitementViewModelTest` qui constate qu'aucun import n'est appelé, et lit la
-phrase de la carte. À écrire.
+phrase de la carte.
 
 #### Scenario: Observations déjà importées
 
@@ -47,8 +47,7 @@ Si l'import échoue après un relevé terminé, la carte SHALL garder l'état «
 dire, dessous, que l'import a échoué, avec son motif et le geste qui reste : cliquer de nouveau
 « Actualiser », ou passer par « Sons & validation ».
 
-*Vérifié par* : un cas de `TraitementViewModelTest` avec un import qui lève, qui lit les deux textes. À
-écrire.
+*Vérifié par* : un cas de `TraitementViewModelTest` avec un import qui lève, qui lit les deux textes.
 
 #### Scenario: La plateforme refuse l'import
 
@@ -61,7 +60,7 @@ L'ouverture de l'écran de lot SHALL NOT déclencher d'import, y compris quand l
 « terminée ». L'application SHALL NOT sonder la plateforme.
 
 *Vérifié par* : un cas de `TraitementViewModelTest` qui charge un dernier relevé « terminée » et constate
-qu'aucun import n'est appelé. À écrire. Le scénario filmé S4-47 (`ScenarioConnecteLancementTest`) tient
+qu'aucun import n'est appelé. Le scénario filmé S4-47 (`ScenarioConnecteLancementTest`) tient
 par ailleurs que la carte ne montre que l'état planifié après un lancement.
 
 #### Scenario: Réouverture sur une analyse terminée
@@ -77,10 +76,9 @@ SHALL ne rien écrire dans le dossier de travail et SHALL rester dispensée du v
 `--importer`, elle SHALL prendre ce verrou. Les codes de retour de l'état SHALL rester ceux d'aujourd'hui ;
 un import demandé qui échoue SHALL rendre `2`.
 
-*Vérifié par* : `EtatTraitementVigieChiroTest`, quatre cas (sans l'option rien n'est importé ; avec
+*Vérifié par* : `EtatTraitementVigieChiroTest`, cinq cas (sans l'option rien n'est importé ; avec
 l'option sur une analyse terminée l'import part ; sur une nuit déjà importée il ne part pas ; un import
-qui échoue rend `2`), et un cas sur `StrategieExecutionCli` qui tient le verrou dans les deux sens. À
-écrire.
+qui échoue rend `2`), et un cas de `CliVerrouWorkspaceTest` qui tient le verrou dans les deux sens.
 
 #### Scenario: Sans l'option
 

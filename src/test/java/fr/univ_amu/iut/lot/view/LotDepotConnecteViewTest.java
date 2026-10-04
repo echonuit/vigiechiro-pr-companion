@@ -2,6 +2,7 @@ package fr.univ_amu.iut.lot.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -18,6 +19,7 @@ import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
@@ -73,12 +75,15 @@ import org.testfx.framework.junit5.Start;
 class LotDepotConnecteViewTest {
 
     private static final long ID_PASSAGE = 42L;
+    private static final String COMPTE_RENDU_IMPORT =
+            "Observations importées depuis Vigie-Chiro : 1284 observation(s).";
     private static final ContextePassage CONTEXTE =
             new ContextePassage(ID_PASSAGE, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière"));
 
     private ServiceLot service;
     private DepotVigieChiro depot;
     private SuiviTraitement suivi;
+    private ImportObservations importation;
     private LotController controleur;
     private DepotViewModel depotViewModel;
 
@@ -97,6 +102,8 @@ class LotDepotConnecteViewTest {
         // stubber ferait tomber l IHM sur un NPE etranger a ce qu il verifie.
         lenient().when(suivi.relever(anyLong())).thenReturn(Traitement.absent());
         lenient().when(suivi.dernierReleve(anyLong())).thenReturn(Optional.empty());
+        importation = mock(ImportObservations.class);
+        lenient().when(importation.importer(anyLong(), eq(false))).thenReturn(COMPTE_RENDU_IMPORT);
 
         Injector injector = Guice.createInjector(
                 new AbstractModule() {
@@ -112,7 +119,7 @@ class LotDepotConnecteViewTest {
 
                     @Provides
                     TraitementViewModel traitementViewModel() {
-                        return new TraitementViewModel(Optional.of(suivi), Horloge.systeme());
+                        return new TraitementViewModel(Optional.of(suivi), Optional.of(importation), Horloge.systeme());
                     }
 
                     @Provides
@@ -367,7 +374,42 @@ class LotDepotConnecteViewTest {
 
         verify(suivi, timeout(5_000)).relever(ID_PASSAGE);
         assertThat(robot.lookup("#lblEtatTraitement").queryAs(Label.class).getText())
-                .contains("Analyse terminée", "prêtes à être importées");
+                .contains("Analyse terminée");
+    }
+
+    /// Le détour par « Sons & validation » et son menu ☰ pour obtenir ce que l'on vient de voir prêt
+    /// (#5784, recette de #5597).
+    @Test
+    @DisplayName("#5784 : « Actualiser » sur une analyse terminée importe les observations, et la carte le dit")
+    void actualiser_sur_une_analyse_terminee_importe_les_observations(FxRobot robot) {
+        when(suivi.relever(ID_PASSAGE))
+                .thenReturn(new Traitement(EtatTraitement.FINI, null, null, "2026-07-13T10:05:00+00:00", null, null));
+        assertThat(texteDeLImport(robot))
+                .as("avant le relevé, la carte ne dit rien d'un import")
+                .isEmpty();
+
+        actualiser(robot);
+
+        Attente.queSurLeFil(
+                () -> texteDeLImport(robot).equals(COMPTE_RENDU_IMPORT), "la carte dit ce qui a été importé", 5_000L);
+        verify(importation).importer(ID_PASSAGE, false);
+        assertThat(Attente.surLeFil(
+                        () -> robot.lookup("#lblEtatTraitement")
+                                .queryAs(Label.class)
+                                .getText(),
+                        "l'état du traitement",
+                        5_000L))
+                .contains("Analyse terminée");
+    }
+
+    private static String texteDeLImport(FxRobot robot) {
+        return Attente.surLeFil(
+                () -> {
+                    Label ligne = robot.lookup("#lblImportTraitement").queryAs(Label.class);
+                    return ligne.isVisible() ? ligne.getText() : "";
+                },
+                "la ligne d'import de la carte du traitement",
+                5_000L);
     }
 
     @Test
@@ -386,9 +428,9 @@ class LotDepotConnecteViewTest {
                 .as("relance interdite une fois la nuit analysée : ses observations seraient perdues")
                 .isTrue();
         // Le bouton désactivé n'est pas muet (#789) : l'infobulle de l'enveloppe explique le refus et
-        // renvoie vers l'import. Et la zone, elle, dit ce qu'il y a à faire.
-        assertThat(robot.lookup("#lblEtatTraitement").queryAs(Label.class).getText())
-                .contains("prêtes à être importées");
+        // renvoie vers l'import. Et la zone, elle, dit ce qui vient d'être fait (#5784).
+        Attente.queSurLeFil(
+                () -> texteDeLImport(robot).equals(COMPTE_RENDU_IMPORT), "la carte dit ce qui a été importé", 5_000L);
     }
 
     /// Une analyse planifiée laissait le bouton cliquable : deux clics ont reçu `400 Already PLANIFIE` dans
