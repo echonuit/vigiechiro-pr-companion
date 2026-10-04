@@ -130,6 +130,8 @@ arrive.
   et c'est elle qui signera ses verdicts.
 - **S3-52** · *geste: relire-une-nuit-confiee* · « Renvoyer mon avis… » écrit un paquet **signé de
   lui**, sans les séquences que l'expéditeur possède déjà.
+- **S3-53** · Diagnostic d'une nuit, plages horaires : la fin exigée par le protocole s'affiche **arrondie à la minute supérieure**, le début à la minute inférieure. Programmer l'enregistreur sur l'heure de fin affichée ne déclenche pas l'alerte « horaires non respectés ». `vigiechiro diagnostiquer` donne les mêmes heures (#5601).
+- **S3-54** · Qualification : le spectrogramme et l'onde d'un son se lisent comme dans « Sons & validation » (onde qui remplit sa gouttière, cris contrastés), et le réglage daltonien s'y applique (#5603).
 
 ## Corrections à confirmer (constats du 14/07, tous mergés)
 
