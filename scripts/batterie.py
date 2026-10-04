@@ -945,13 +945,36 @@ def verdict_du_lancement(nom: str, code: int, stdout: str, stderr: str) -> tuple
     # cause et son geste, et la porte les lit OU QU ILS SOIENT. Le repli a deux lignes reste pour les
     # gardes non convertis : rendre `None` plutot que de deviner est ce qui permet de les convertir
     # un a un sans fausser la porte entre-temps (#5485).
-    from _commun import lit_le_refus
+    from _commun import LIGNE_VERDICT, lit_le_refus
 
     declare = lit_le_refus(stdout + "\n" + stderr)
+    # ⟨la ligne de VERDICT avant les deux premieres lignes, et pourquoi ce n est pas une inference⟩
+    # Un garde qui juge PLUSIEURS ADR rend une ligne de verdict par ADR, et le refus n appartient
+    # qu a l une d elles. Les deux premieres lignes non vides tombent alors sur le TITRE de la
+    # premiere ADR et sur son verdict `ok` : un refus du plancher 4587 s affichait sous l ADR 4395,
+    # et chercher « 4587 » dans la sortie de la porte ne rendait rien (#5817). Il fallait relancer
+    # le garde seul pour savoir laquelle des deux parlait.
+    #
+    # Lire cette ligne n est pas deviner la forme d une prose : `rapporte` et `rapporte_plancher`
+    # declarent leur sortie « normalisee, pour que le rapport hebdomadaire puisse agreger sans
+    # deviner », et cinq lecteurs du depot la lisent deja. Le motif est donc IMPORTE de `_commun`
+    # plutot que reecrit ici, ce qui aurait ete sa troisieme ecriture.
+    #
+    # Le repli a deux lignes reste pour tout ce qui ne rend pas de ligne de verdict - un garde non
+    # converti, une trace d exception, un `Usage abusif de`. Et seules les lignes dont le verdict
+    # n est PAS `ok` sont montrees : les rendre toutes noierait le refus de `verifie_scripts.py`,
+    # qui en rend douze.
+    refusants = [
+        l for l in lignes if (trouve := LIGNE_VERDICT.match(l)) and trouve.group(2) != "ok"
+    ]
     premiere = (
         f"{declare[0]}\n{declare[1]}"
         if declare
-        else ("\n".join(lignes[:2]) if lignes else "(sans sortie)")
+        else (
+            "\n".join(refusants)
+            if refusants
+            else ("\n".join(lignes[:2]) if lignes else "(sans sortie)")
+        )
     )
     if nom not in EXIGENT_DES_ARGUMENTS:
         # ⟨LE TROISIEME VERDICT, decide sur ce que cette fonction LIT DEJA⟩ Un garde qui emploie la
@@ -1620,6 +1643,87 @@ def _auto_test() -> int:
             "quelque chose a casse\net une seconde ligne",
             ("rouge", "quelque chose a casse\net une seconde ligne"),
         ),
+        # ⟨le defaut de #5817⟩ Un garde qui juge DEUX ADR rend deux lignes de verdict, et le refus
+        # n appartient qu a l une. Les deux premieres lignes non vides tombaient sur le TITRE de la
+        # premiere et son verdict `ok` : « 4587 » n apparaissait nulle part.
+        (
+            "un refus de la SECONDE ADR nomme la seconde, pas la premiere",
+            "scripts/adr/4395-renvois-en-javadoc.py",
+            1,
+            (
+                "ADR 4395 - production\n"
+                "\nPLANCHER 4395 | lus=1254 | mesure=3393 | plancher=3393 | verdict=ok\n"
+                "ADR 4587 - test\n"
+                "\nPLANCHER 4587 | lus=937 | mesure=1305 | plancher=1304 | verdict=a-relever\n"
+            ),
+            "",
+            ("rouge", "PLANCHER 4587 | lus=937 | mesure=1305 | plancher=1304 | verdict=a-relever"),
+        ),
+        # Le CONTRASTE a UNE ADR : sans lui, une lecture qui prendrait « la derniere ligne de
+        # verdict » passerait le cas precedent. Ici la ligne utile est la SEULE, et elle vient
+        # apres un apercu de suspects qui occupait les deux premieres lignes.
+        (
+            "un cliquet depasse montre son compte, pas son premier suspect",
+            "scripts/adr/4359-javadoc-narratif.py",
+            1,
+            (
+                "ADR 4359 - javadoc narrative\n"
+                "  src/main/java/fr/univ_amu/iut/Launcher.java\n"
+                "  src/main/java/fr/univ_amu/iut/A.java\n"
+                "\nADR 4359 | lus=1254 | suspects=742 | cliquet=740 | verdict=regression\n"
+            ),
+            "",
+            ("rouge", "ADR 4359 | lus=1254 | suspects=742 | cliquet=740 | verdict=regression"),
+        ),
+        # Le CONTRASTE NEGATIF : tous les verdicts `ok` et un code non nul. Montrer une ligne `ok`
+        # dirait au lecteur que tout va bien sur un garde qui refuse ; on retombe donc sur le repli,
+        # qui ne pretend rien.
+        (
+            "des verdicts tous ok avec un code non nul retombent sur le repli",
+            "x.py",
+            1,
+            "ADR 9999 - x\n\nADR 9999 | lus=10 | suspects=0 | cliquet=0 | verdict=ok\n",
+            "",
+            ("rouge", "ADR 9999 - x\nADR 9999 | lus=10 | suspects=0 | cliquet=0 | verdict=ok"),
+        ),
+        # ⟨pourquoi la ligne est ANCREE, et non cherchee n importe ou dedans⟩ Un garde peut CITER
+        # une ligne de verdict dans sa prose de refus, pour renvoyer a un rapport. Chercher le motif
+        # sans l ancrer ferait alors nommer une ADR que ce garde ne juge meme pas, ce qui est pire
+        # que le defaut de #5817 : celui-la montrait la mauvaise ADR du BON garde, celui-ci
+        # montrerait l ADR d un AUTRE.
+        #
+        # ⟨ce cas ne meurt d aucune mutation simple, et c est mesure⟩ Le comportement est tenu TROIS
+        # fois : `match` part de la position 0, le motif porte `^`, et il porte `$`. Mesure du
+        # 2026-10-04 sur la ligne « ECHEC : comparez avec ADR 4587 | verdict=perte du rapport » :
+        # `search` seul ne la prend pas, `search` sans `^` ne la prend pas non plus - le `$` refuse,
+        # « perte » etant suivi de prose. Seule la reecriture LACHE, `search` sans `^` ni `$`, prend
+        # « 4587 » et fait rougir ce cas. Il ne garde donc aucun de ces trois choix isolement ; il
+        # garde l INTENTION d un motif ancre, et c est contre un motif reecrit a la legere qu il
+        # tire. Ne pas le lire comme vacant parce qu une mutation d un caractere le laisse vert.
+        (
+            "une ligne de verdict CITEE dans la prose n est pas prise pour un verdict",
+            "x.py",
+            1,
+            (
+                "ADR 1234 - x\n"
+                "\nADR 1234 | lus=5 | suspects=0 | cliquet=0 | verdict=ok\n"
+                "ECHEC : comparez avec ADR 4587 | verdict=perte du rapport hebdomadaire\n"
+            ),
+            "",
+            ("rouge", "ADR 1234 - x\nADR 1234 | lus=5 | suspects=0 | cliquet=0 | verdict=ok"),
+        ),
+        # La PRECEDENCE, et c est elle qui decide de l ordre du code : un garde qui porte la forme
+        # declaree ET une ligne de verdict non `ok` rend sa cause et son geste. La forme declaree
+        # dit « je n ai pas pu juger » ; la ligne de verdict dirait « j ai juge et c est rouge ».
+        # Les inverser rouvrirait le faux rouge que #5780 a ferme.
+        (
+            "la forme declaree l emporte sur une ligne de verdict non ok",
+            "x.py",
+            2,
+            "ADR 7777 | lus=5 | suspects=9 | cliquet=1 | verdict=regression\n",
+            "REFUS : le lecteur est absent\nPOUR REPARER : posez-le",
+            ("muet", "le lecteur est absent\nposez-le"),
+        ),
     ):
         obtenu = verdict_du_lancement(nom, code, sortie, erreur)
         if obtenu == attendu:
@@ -1864,7 +1968,9 @@ def _auto_test() -> int:
     )
 
     joues = sum(1 for ligne in dits if ligne.startswith(("  ✔", "  ✘")))
-    print(f"\n{joues} cas : porte, bord, fichiers neufs, aiguillage, interprète et refus.")
+    print(
+        f"\n{joues} cas : porte, bord, fichiers neufs, aiguillage, interprète et refus, dont l'attribution d'un refus a son ADR."
+    )
     return 1 if echecs else 0
 
 
