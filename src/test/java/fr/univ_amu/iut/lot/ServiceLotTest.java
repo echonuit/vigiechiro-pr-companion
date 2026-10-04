@@ -368,7 +368,7 @@ class ServiceLotTest {
         SourceDepot source = service.sourceDepotParDefaut(passage.id());
 
         assertThat(source.identifiants())
-                .as("le mode ZIP par défaut nomme ses archives sans qu'elles existent")
+                .as("le mode ZIP nomme ses archives sans qu'elles existent")
                 .isNotEmpty()
                 .allSatisfy(id -> assertThat(id).endsWith(".zip"));
     }

@@ -12,6 +12,7 @@ verified:
     at: 2026-07-19
 relations:
   amende: ["0006"]
+  amendee_par: ["5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode"]
 ---
 
 # La forme du dépôt se choisit, elle ne se déduit pas de la place disponible

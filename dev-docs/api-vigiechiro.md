@@ -632,7 +632,7 @@ booléen aveugle.
     Le serveur **supprime toutes les `donnees` avant de recalculer** (`task_participation.py:726-731`),
     puis relit les WAV via `get_file_from_s3` : qui **renvoie `None` sans lever** quand le fichier n'a
     pas de `s3_id` (`fichiers.py:118-121`). Or sur un dépôt en **archives ZIP** (notre mode par défaut
-    depuis #984), les WAV extraits n'ont **jamais** de `s3_id` (#1244) et les ZIP ont été supprimés de
+    de #984 à #5677), les WAV extraits n'ont **jamais** de `s3_id` (#1244) et les ZIP ont été supprimés de
     S3. Le recalcul rend donc une participation **vide, définitivement**.
 
     Vérifié en réel : un `compute` sur une participation `FINI` est **accepté (HTTP 200)**. **Seule
@@ -705,13 +705,13 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
   participation canonique `6a4961f5…` (déposée en zip via le site web, 4806 `donnees`), puis reproduit
   par **notre chemin d'upload** (API directe) sur une vraie nuit (`Car130711-2026-Pass2-Z41`, 04/07) :
   les 19 archives ZIP téléversées, `compute` lancé, WAV extraits et listés côté serveur. Le dépôt
-  **en ZIP est désormais le mode par défaut** (repli WAV seulement si l'espace disque est insuffisant),
+  **en ZIP devient alors le mode par défaut** (il l'est resté jusqu'à #5677, ADR 5677),
   déposé **en parallèle** (5 uploads simultanés, cf. `DepotVigieChiro`). La seule pièce manquante était
   `lien_participation` (§ « Téléversement d'un fichier », sans quoi les uploads étaient orphelins).
   Depuis #1287, `probe_zip_vs_wav` **garde** ce verdict au lieu de le contredire : elle **affirme** que la
   plateforme accepte un ZIP, et elle a été **tirée** (2026-07-14, participation de rebut) - déclaration,
   `PUT` S3 `application/zip`, finalisation : **verte**. Un rouge sur cette probe veut donc dire que **le
-  mode de dépôt par défaut est cassé**, et non, comme son libellé le laissait croire, qu'il faudrait
+  dépôt en archives ZIP est cassé**, et non, comme son libellé le laissait croire, qu'il faudrait
   revenir au WAV.
 - **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur. **Ce verdict était exact et la conclusion
   qu'on en tirait était fausse** (#3694). Il en avait été déduit que le « push point→site » était

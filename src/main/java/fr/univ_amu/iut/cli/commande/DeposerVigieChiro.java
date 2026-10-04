@@ -28,8 +28,8 @@ import picocli.CommandLine.Spec;
 /// persisté, seuls les fichiers manquants sont téléversés : la commande est **relançable** telle quelle
 /// après une coupure. À ne pas confondre avec `deposer`, le marquage manuel.
 ///
-/// **Ce qui est déposé** suit le réglage `depot.mode` (#1997), comme M-Lot : archives ZIP par défaut, ou
-/// séquences WAV, `--archives` et `--wav` primant pour un dépôt ponctuel. L'espace disque ne tranche
+/// **Ce qui est déposé** suit le réglage `depot.mode` (#1997), comme M-Lot : séquences WAV par défaut
+/// (#5677), ou archives ZIP, `--archives` et `--wav` primant pour un dépôt ponctuel. L'espace disque ne tranche
 /// plus, il ne fait que **refuser** un dépôt ZIP qu'il ne peut pas honorer. Le mode n'est pas qu'une
 /// question de vitesse : en ZIP la plateforme détruit l'archive après extraction sans conserver les sons
 /// (#1244), donc l'audio n'est pas récupérable côté serveur.
@@ -67,14 +67,14 @@ public final class DeposerVigieChiro implements Callable<Integer> {
 
     @Option(
             names = "--archives",
-            description = "Force le dépôt des archives ZIP générées (depot/*.zip). Par défaut, elles sont déjà"
-                    + " privilégiées si présentes (comme M-Lot) ; cette option échoue si elles manquent.")
+            description = "Force le dépôt en archives ZIP, quel que soit le réglage du mode de dépôt. Un dépôt"
+                    + " déjà entamé garde son mode sans cette option.")
     private boolean archives;
 
     @Option(
             names = "--wav",
-            description = "Force le dépôt des séquences WAV une à une, même si des archives ZIP existent"
-                    + " (par défaut : ZIP si présentes, repli WAV sinon). Incompatible avec --archives.")
+            description = "Force le dépôt des séquences WAV une à une, quel que soit le réglage du mode de"
+                    + " dépôt (WAV par défaut). Incompatible avec --archives.")
     private boolean wav;
 
     @Spec

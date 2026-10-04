@@ -34,7 +34,7 @@ import java.util.Optional;
 ///    le seul rapide.
 /// 2. **Serveur** : le disque ne les a plus, mais la nuit a été déposée **en WAV** *et* rattachée à une
 ///    participation, seul cas où le serveur les a gardées (`POST /fichiers` pose un `s3_id` définitif).
-///    Rare, le mode par défaut étant le **ZIP** depuis #984.
+///    Rare avant #5677, le mode par défaut ayant été le **ZIP** depuis #984.
 /// 3. **Perdu**, ni l'un ni l'autre : un dépôt ZIP ne laisse aucun audio côté serveur, les archives
 ///    étant détruites après extraction.
 ///

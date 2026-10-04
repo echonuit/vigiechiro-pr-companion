@@ -7,6 +7,8 @@ chantier: "spike #984 (ZIP vs WAV) ; EPIC #1297 (décision produit)"
 decided_at: 2026-07-13
 verification: humaine
 verification_note: "le ZIP comme mode par défaut et la perte assumée de l'audio serveur sont un arbitrage produit, non un invariant du code"
+relations:
+  amendee_par: ["5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode"]
 verified:
   - by: human:nedseb
     at: 2026-07-13

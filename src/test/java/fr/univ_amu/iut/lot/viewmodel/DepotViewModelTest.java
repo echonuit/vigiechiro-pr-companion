@@ -53,7 +53,7 @@ class DepotViewModelTest {
     }
 
     @Test
-    @DisplayName("televerser dépose les fichiers résolus par ServiceLot (ZIP par défaut) et renvoie le bilan")
+    @DisplayName("televerser dépose les fichiers résolus par ServiceLot et renvoie le bilan")
     void televerser_depose_les_fichiers_par_defaut() {
         SourceDepot archives = SourceDepot.desFichiers(
                 List.of(Path.of("/ws/session-42/depot/Car-1.zip"), Path.of("/ws/session-42/depot/Car-2.zip")));

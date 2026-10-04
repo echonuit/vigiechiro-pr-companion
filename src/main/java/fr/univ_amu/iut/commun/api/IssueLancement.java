@@ -13,8 +13,8 @@ public enum IssueLancement {
 
     /// Refus **de notre fait**, avant même d'appeler le serveur : la participation a **déjà été calculée**,
     /// et le serveur, à chaque compute, **supprime toutes les `donnees` avant de recalculer**
-    /// (`task_participation.py:726-731`). Sur une nuit déposée en archives ZIP, le mode par défaut depuis
-    /// #984, les WAV ne sont pas conservés sur S3 (#1244) : le recalcul ne pourrait pas les relire et les
+    /// (`task_participation.py:726-731`). Sur une nuit déposée en archives ZIP, le mode par défaut de #984
+    /// à #5677, les WAV ne sont pas conservés sur S3 (#1244) : le recalcul ne pourrait pas les relire et les
     /// observations seraient **définitivement perdues**. Un premier lancement est sûr, une relance ne l'est
     /// pas : elle exige un accord explicite (option `--forcer` de la commande, #1265).
     RELANCE_BLOQUEE,

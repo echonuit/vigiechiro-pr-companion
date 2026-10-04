@@ -144,7 +144,7 @@ apparaît en simple **information**, avec le décompte des séquences encore pr�
 
 !!! warning "La plateforme ne vous rendra pas l'audio d'un dépôt ZIP"
     Pour réécouter, il faut **vos** fichiers. La plateforme Vigie-Chiro **ne rend pas** l'audio d'un
-    dépôt au format ZIP (le mode par défaut) : le serveur n'en conserve pas de copie téléchargeable.
+    dépôt au format ZIP (longtemps le mode par défaut) : le serveur n'en conserve pas de copie téléchargeable.
     Gardez donc une **sauvegarde** de ce à quoi vous tenez.
 
 ## Réactiver un passage : réimporter les fichiers d'origine

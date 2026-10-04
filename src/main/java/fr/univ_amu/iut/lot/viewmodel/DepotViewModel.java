@@ -106,10 +106,9 @@ public class DepotViewModel {
         Objects.requireNonNull(suivi, "suivi");
         DepotVigieChiro depotVigieChiro =
                 depot.orElseThrow(() -> new RegleMetierException("Dépôt Vigie-Chiro indisponible dans ce contexte."));
-        // Dépôt ZIP par défaut (#984), comme le web : une archive = une unité. Repli WAV seulement si le
-        // disque ne permet pas de créer les archives. La source est **régénérable** (#1994) : une archive
-        // effacée est reproduite au lieu de faire basculer le dépôt en mode WAV et de perdre sa
-        // progression.
+        // Le mode suit le réglage, WAV par défaut (#5677), et un dépôt entamé garde le sien. En ZIP, la
+        // source est **régénérable** (#1994) : une archive effacée est reproduite au lieu de faire
+        // basculer le dépôt en mode WAV et de perdre sa progression.
         SourceDepot source = service.sourceDepotParDefaut(idPassage);
         return depotVigieChiro.deposer(idPassage, source, jeton::estAnnule, suivi);
     }

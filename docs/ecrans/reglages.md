@@ -27,13 +27,15 @@ ce domaine propose. Aujourd'hui :
     La **forme du dépôt** décide de ce qui part sur Vigie-Chiro, et ce choix a une conséquence qu'il
     vaut la peine de connaître :
 
-    | Forme | Durée | L'audio après traitement |
+    | Forme | Ce que l'envoi demande | L'audio après traitement |
     |---|---|---|
-    | **Archives ZIP** (par défaut) | rapide | la plateforme extrait puis **supprime** l'archive sans conserver les sons : ils ne sont plus téléchargeables depuis Vigie-Chiro, et la participation **ne pourra pas être relancée** |
-    | **Séquences WAV** | plus lent (un envoi par son) | chaque son **reste en ligne**, et la participation **reste relançable** |
+    | **Séquences WAV** (par défaut) | un envoi par son, sans compression ; davantage de bande passante | chaque son **reste en ligne**, et la participation **reste relançable** |
+    | **Archives ZIP** | moins de bande passante, mais une compression qui prend du temps et de la place sur le disque | la plateforme extrait puis **supprime** l'archive sans conserver les sons : ils ne sont plus téléchargeables depuis Vigie-Chiro, et la participation **ne pourra pas être relancée** |
 
-    Si vous comptez pouvoir relancer l'analyse plus tard, ou réécouter vos sons depuis le site,
-    choisissez les séquences WAV.
+    Les archives ZIP gardent leur intérêt sur une connexion lente ou limitée en volume.
+
+    Un dépôt **déjà entamé garde la forme dans laquelle il a commencé** : changer ce réglage ne vaut que
+    pour les dépôts suivants. Si vous aviez choisi vous-même les archives ZIP, votre choix est conservé.
 
     La **taille maximale d'une archive** (700 Mo par défaut, la limite acceptée par la plateforme) est
     utile pour générer des archives plus petites (connexion fragile) ; le changement s'applique à la

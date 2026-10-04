@@ -12,7 +12,7 @@ import java.util.Optional;
 /// **Une relance n'est pas anodine.** Le serveur remplace tout le bloc `traitement` au `compute`, et
 /// surtout il **supprime toutes les `donnees` existantes** avant de recalculer
 /// (`task_participation.py:726-731`). Sur une nuit déposée en **archives ZIP**, notre mode par défaut
-/// depuis #984, les WAV extraits ne sont pas conservés sur S3 : le recalcul ne peut donc pas les relire,
+/// de #984 à #5677, les WAV extraits ne sont pas conservés sur S3 : le recalcul ne peut donc pas les relire,
 /// et les observations sont **définitivement perdues** (#1244). Un premier lancement est sûr ; une relance
 /// ne l'est pas.
 ///

@@ -153,7 +153,7 @@ Vous n'êtes pas obligé de les rapatrier : l'application demande si elle doit l
 doublon, au prix d'une nuit muette quand le support n'est pas branché.
 
 En revanche, **la plateforme Vigie-Chiro ne vous rendra pas cet audio** si votre dépôt a été fait au
-format ZIP (le mode par défaut) : le serveur n'en conserve pas de copie téléchargeable. Sans vos
+format ZIP (longtemps le mode par défaut) : le serveur n'en conserve pas de copie téléchargeable. Sans vos
 fichiers d'origine, la perte est **définitive** : c'est exactement ce que la confirmation vous
 rappelle.
 

@@ -354,10 +354,29 @@ public class ServiceLot {
     /// @throws RegleMetierException si le passage n'a aucune séquence transformée à déposer
     public SourceDepot sourceDepotParDefaut(Long idPassage) {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
+        Optional<ModeDepot> entame = modeDuDepotEntame(idPassage);
+        if (entame.isPresent()) {
+            return sourceDepot(idPassage, entame.get());
+        }
         return choixSource.pour(
                 consulterLot(idPassage),
                 sequencesADeposer(idPassage),
                 Path.of(chargerSession(idPassage).cheminRacine()));
+    }
+
+    /// Le mode d'un dépôt **entamé** : celui des unités déjà en ligne, vide si rien n'est encore déposé
+    /// (#5677, ADR 5677).
+    ///
+    /// Le mode n'est pas mémorisé avec le plan : il était relu dans les réglages à chaque tentative. Un
+    /// dépôt entamé en ZIP, repris sous un réglage WAV, renvoyait donc toutes les séquences en WAV à côté
+    /// des archives déjà en ligne, sans rien dire : l'empreinte du lot ne couvre que la liste des
+    /// séquences, la même dans les deux modes. Ce qui est en ligne décide : le réglage, et son défaut, ne
+    /// valent que pour un dépôt qui commence.
+    private Optional<ModeDepot> modeDuDepotEntame(Long idPassage) {
+        return depotUnites.parPassage(idPassage).stream()
+                .filter(unite -> unite.statut() == StatutDepotUnite.DEPOSE)
+                .findFirst()
+                .map(unite -> unite.type() == TypeDepotUnite.ZIP ? ModeDepot.ARCHIVES_ZIP : ModeDepot.SEQUENCES_WAV);
     }
 
     /// La source a deposer sous un mode **impose** (CLI `--archives` / `--wav`), sans consulter le

@@ -35,7 +35,7 @@ import picocli.CommandLine.Spec;
 /// 6. `audit-coherence` : le workspace doit être sain.
 ///
 /// Ce que la procédure ne dit pas d'elle-même, et que cette commande dit : **l'étape 5 va-t-elle
-/// aboutir ?** Une nuit déposée en ZIP, le mode par défaut, ne laisse aucun audio côté serveur. D'où
+/// aboutir ?** Une nuit déposée en ZIP, longtemps le mode par défaut, ne laisse aucun audio côté serveur. D'où
 /// cette commande, **en lecture seule**, qui établit le bilan avant qu'on écrive quoi que ce soit, et
 /// rend **2** s'il existe au moins une nuit en « perdu », pour qu'un script puisse refuser d'enchaîner.
 /// « Perdu » n'est pas une impasse (#1297), mais c'est une perte, et elle doit être dite avant.

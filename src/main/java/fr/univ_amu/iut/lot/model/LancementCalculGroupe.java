@@ -16,7 +16,7 @@ import java.util.Optional;
 /// ## Jamais de relance, jamais de `forcer`
 ///
 /// À chaque calcul, le serveur **supprime toutes les `donnees` avant de recalculer**. Sur une nuit
-/// déposée en **archives ZIP** - le mode par défaut - les WAV extraits ne sont pas conservés côté
+/// déposée en **archives ZIP** - le mode par défaut avant #5677 - les WAV extraits ne sont pas conservés côté
 /// plateforme : le recalcul ne peut pas les relire, et les observations sont **définitivement
 /// perdues**.
 ///
