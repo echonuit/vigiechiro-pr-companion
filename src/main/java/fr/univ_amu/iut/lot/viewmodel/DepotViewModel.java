@@ -60,6 +60,11 @@ public class DepotViewModel {
     private final ReadOnlyObjectWrapper<RetourOperation> retour =
             new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
 
+    /// Le résultat du dernier **lancement** de l'analyse, que l'étape ④ affiche sous son bouton (#5682).
+    /// Distinct de [#retour] : le bandeau du haut de page était hors de vue au moment du clic.
+    private final ReadOnlyObjectWrapper<RetourOperation> retourLancement =
+            new ReadOnlyObjectWrapper<>(this, "retourLancement", RetourOperation.AUCUN);
+
     /// `true` quand une participation VigieChiro est **liée** au passage courant (dépôt via l'API
     /// effectué, #984) : l'IHM bascule alors l'étape ④ de « Marquer déposé » à « Lancer la participation »
     /// (compute). Posée à la réhydratation et après un dépôt (au fil JavaFX).
@@ -144,6 +149,7 @@ public class DepotViewModel {
     /// **distinct** de [#enCoursProperty], que le téléversement occupe déjà avec ses propres compteurs.
     public void marquerLancementEnCours() {
         retour.set(RetourOperation.AUCUN);
+        retourLancement.set(RetourOperation.AUCUN);
         lancementEnCours.set(true);
         enCours.set(true);
     }
@@ -152,7 +158,7 @@ public class DepotViewModel {
     /// issue** pour la zone de statut du dépôt (#1261). Le message unique d'avant s'achevait sur un point
     /// d'interrogation (« déjà en cours ? ») : le code ne savait pas, l'utilisateur non plus.
     public void restituerLancement(ResultatLancement resultat) {
-        retour.set(libelle(resultat));
+        retourLancement.set(libelle(resultat));
         lancementEnCours.set(false);
         enCours.set(false);
     }
@@ -164,19 +170,26 @@ public class DepotViewModel {
     /// simplement rien à faire, et le second protège délibérément les observations du serveur. Seuls un
     /// refus et une injoignabilité sont des erreurs.
     private static RetourOperation libelle(ResultatLancement resultat) {
+        // Textes validés par le porteur le 3 octobre 2026 (#5682, D6 du changement OpenSpec).
         return switch (resultat.issue()) {
             case ACCEPTE ->
-                RetourOperation.succes(
-                        "Traitement lancé sur Vigie-Chiro : les résultats arriveront après" + " le calcul serveur.");
+                RetourOperation.succes("Analyse demandée à Vigie-Chiro. Elle prend souvent plusieurs dizaines de"
+                        + " minutes : vous pouvez fermer l'application, et la suivre ci-dessous.");
             case DEJA_LANCE ->
                 RetourOperation.info(
-                        "Le traitement est déjà en cours sur Vigie-Chiro : il n'y a plus qu'à" + " attendre.");
+                        "L'analyse de cette nuit est déjà demandée : il n'y a qu'à attendre. Suivez-la ci-dessous.");
             case RELANCE_BLOQUEE ->
                 RetourOperation.info("Cette nuit a déjà été analysée par Vigie-Chiro. La relancer effacerait"
                         + " les observations du serveur sans pouvoir les recalculer : importez-les plutôt.");
-            case REFUSE -> RetourOperation.erreur("Vigie-Chiro a refusé le lancement du traitement.");
+            // Le motif, la commande le disait déjà ; l'écran le taisait (#5682).
+            case REFUSE ->
+                RetourOperation.erreur(
+                        resultat.detail() == null
+                                ? "Vigie-Chiro a refusé de lancer l'analyse."
+                                : "Vigie-Chiro a refusé de lancer l'analyse : " + resultat.detail() + ".");
             case INJOIGNABLE ->
-                RetourOperation.erreur("Vigie-Chiro est injoignable : le traitement n'a pas pu être lancé.");
+                RetourOperation.erreur(
+                        "Vigie-Chiro est injoignable : l'analyse n'a pas été demandée. Réessayez plus tard.");
         };
     }
 
@@ -186,6 +199,9 @@ public class DepotViewModel {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         suiviLignes.planifier(service.unitesDepot(idPassage));
         participationLiee.set(depot.map(d -> d.participationLiee(idPassage)).orElse(false));
+        // Le résultat d'un lancement appartient au passage qui l'a demandé : un autre passage ouvert ne le
+        // reprend pas. L'état connu de l'analyse, lui, revient par le dernier relevé.
+        retourLancement.set(RetourOperation.AUCUN);
     }
 
     /// Réinitialise le dépôt du passage (#984) : efface son plan de dépôt (via [ServiceLot]) et le ramène
@@ -289,6 +305,11 @@ public class DepotViewModel {
 
     public ReadOnlyObjectProperty<RetourOperation> retourProperty() {
         return retour.getReadOnlyProperty();
+    }
+
+    /// Le résultat du dernier lancement, pour la zone de l'étape ④ (#5682).
+    public ReadOnlyObjectProperty<RetourOperation> retourLancementProperty() {
+        return retourLancement.getReadOnlyProperty();
     }
 
     /// Efface le retour (l'utilisateur a lu le bandeau et le ferme).

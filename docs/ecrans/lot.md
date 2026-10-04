@@ -179,6 +179,17 @@ vous venez de déposer : la plateforme décompresse les archives, puis lance l'i
     n'arrivera. C'est une action volontaire, et le seul moyen de déclencher le calcul depuis
     l'application (vous pouvez aussi le faire depuis la page de la participation, sur le site).
 
+Ce que Vigie-Chiro répond s'affiche **juste sous le bouton** : la demande est acceptée, l'analyse était
+déjà demandée, ou la plateforme refuse, et elle dit alors pourquoi.
+
+![Après « Lancer la participation » : l'étape 4 dit, sous son bouton, que l'analyse est demandée.](../assets/captures/apercu-lot-lancement-accepte.png)
+
+Tant que l'analyse est **planifiée, en cours ou relancée** par la plateforme, le bouton reste grisé :
+il n'y a rien à relancer, et la carte « Traitement Vigie-Chiro » ci-dessous dit où en est le calcul.
+L'application le sait par le dernier état relevé, y compris quand vous rouvrez l'écran.
+
+![Un refus : l'étape 4 cite le motif que la plateforme a donné.](../assets/captures/apercu-lot-lancement-refuse.png)
+
 **Vous avez téléversé depuis le navigateur** (repli manuel) : le bouton reste **« Marquer
 déposé »**. Il fait passer le passage au statut « Déposé » (ce qui déverrouille la validation
 Tadarida) et trace la date du dépôt : c'est une **écriture locale**, l'application ne peut pas deviner

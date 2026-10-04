@@ -51,6 +51,10 @@ public class TraitementViewModel {
     /// recalculer (#1244) : le bouton de lancement doit être gardé (#1261).
     private final ReadOnlyBooleanWrapper relanceBloquee = new ReadOnlyBooleanWrapper(false);
 
+    /// L'analyse est demandée et la plateforme y travaille : planifiée, en cours, ou relancée (#5682). Lue
+    /// dans le relevé, jamais dans la réponse au clic : elle survit ainsi à la réouverture de l'écran.
+    private final ReadOnlyBooleanWrapper analyseDemandee = new ReadOnlyBooleanWrapper(false);
+
     @Inject
     public TraitementViewModel(Optional<SuiviTraitement> suivi, Horloge horloge) {
         this.suivi = Objects.requireNonNull(suivi, "suivi");
@@ -91,6 +95,7 @@ public class TraitementViewModel {
         alerte.set(FormatsTraitement.alerte(traitement, horloge));
         // Une nuit terminée ou en échec a déjà été calculée : la relancer détruirait ses observations.
         relanceBloquee.set(traitement.resultatsDisponibles() || traitement.enEchec());
+        analyseDemandee.set(traitement.enAttente());
         fraicheur.set("À l'instant.");
         enCours.set(false);
     }
@@ -120,6 +125,7 @@ public class TraitementViewModel {
         fraicheur.set("");
         alerte.set("");
         relanceBloquee.set(false);
+        analyseDemandee.set(false);
         enCours.set(false);
     }
 
@@ -141,5 +147,10 @@ public class TraitementViewModel {
 
     public ReadOnlyBooleanProperty relanceBloqueeProperty() {
         return relanceBloquee.getReadOnlyProperty();
+    }
+
+    /// Vrai tant que la plateforme travaille sur une analyse demandée (#5682).
+    public ReadOnlyBooleanProperty analyseDemandeeProperty() {
+        return analyseDemandee.getReadOnlyProperty();
     }
 }

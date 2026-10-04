@@ -862,7 +862,7 @@ f6c82105d491  src/main/java/fr/univ_amu/iut/lot/outils/CaptureLot.java
 394d221b0074  src/main/java/fr/univ_amu/iut/lot/view/AppuisTeleversement.java
 c8830e19de44  src/main/java/fr/univ_amu/iut/lot/view/BandeauLotUI.java
 5f0fe8966cb3  src/main/java/fr/univ_amu/iut/lot/view/CompteRenduDepotUI.java
-f3fc1adecb07  src/main/java/fr/univ_amu/iut/lot/view/EtapeDeposerUI.java
+ed774901f041  src/main/java/fr/univ_amu/iut/lot/view/EtapeDeposerUI.java
 2e483544fe6d  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleversementController.java
 46cb0d44f356  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleverserUI.java
 c49d676befe9  src/main/java/fr/univ_amu/iut/lot/view/LotController.java
@@ -875,7 +875,7 @@ e554f3487a58  src/main/java/fr/univ_amu/iut/lot/view/TableSuiviDepot.java
 ccafcb35d57b  src/main/java/fr/univ_amu/iut/lot/viewmodel/ActionsLotPossibles.java
 461afae750d9  src/main/java/fr/univ_amu/iut/lot/viewmodel/AnticipationEspaceDisque.java
 9a5993fe0101  src/main/java/fr/univ_amu/iut/lot/viewmodel/CompteRenduChiffreDepot.java
-18909b0c9d94  src/main/java/fr/univ_amu/iut/lot/viewmodel/DepotViewModel.java
+36b5ad122295  src/main/java/fr/univ_amu/iut/lot/viewmodel/DepotViewModel.java
 e9f04bc3d4e2  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapeDepot.java
 50dc6253c4b3  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepot.java
 60af85f48ec1  src/main/java/fr/univ_amu/iut/lot/viewmodel/FormatsLot.java
@@ -888,7 +888,7 @@ d6e9c69ce390  src/main/java/fr/univ_amu/iut/lot/viewmodel/MessagesLot.java
 a49389b9968b  src/main/java/fr/univ_amu/iut/lot/viewmodel/SuiviEtapesLot.java
 2566b15f8dfb  src/main/java/fr/univ_amu/iut/lot/viewmodel/SuiviLignesArchives.java
 da6d0a1d368a  src/main/java/fr/univ_amu/iut/lot/viewmodel/SuiviLignesDepot.java
-dc925371635a  src/main/java/fr/univ_amu/iut/lot/viewmodel/TraitementViewModel.java
+25f478766f5a  src/main/java/fr/univ_amu/iut/lot/viewmodel/TraitementViewModel.java
 c8097b9ba37e  src/main/java/fr/univ_amu/iut/maj/api/DerniereVersionGitHub.java
 d4f2c00a5c12  src/main/java/fr/univ_amu/iut/maj/di/MajModule.java
 146a336421c9  src/main/java/fr/univ_amu/iut/maj/model/ConseilDeMiseAJour.java
@@ -1855,7 +1855,7 @@ ae11ec951a61  src/test/java/fr/univ_amu/iut/lot/model/CauseRefusTest.java
 ae8befae454c  src/test/java/fr/univ_amu/iut/lot/model/EchecUniteTest.java
 96b01547377d  src/test/java/fr/univ_amu/iut/lot/model/TeleversementsEnCoursTest.java
 e5e661641791  src/test/java/fr/univ_amu/iut/lot/model/TeleverseurArchiveTest.java
-e61c8591c82c  src/test/java/fr/univ_amu/iut/lot/view/LotDepotConnecteViewTest.java
+980a3732383f  src/test/java/fr/univ_amu/iut/lot/view/LotDepotConnecteViewTest.java
 d290c4438c53  src/test/java/fr/univ_amu/iut/lot/view/LotIdentiteStatutViewTest.java
 21de420b4e35  src/test/java/fr/univ_amu/iut/lot/view/LotViewTest.java
 0296639e177a  src/test/java/fr/univ_amu/iut/lot/view/LotVueIntegrationTest.java
@@ -1864,7 +1864,7 @@ a11734ef6c52  src/test/java/fr/univ_amu/iut/lot/view/ScenarioPerceptifRefusDepot
 029a40b4f056  src/test/java/fr/univ_amu/iut/lot/viewmodel/ActionsLotPossiblesTest.java
 227eb4b62ef9  src/test/java/fr/univ_amu/iut/lot/viewmodel/AnticipationEspaceDisqueTest.java
 9ac41c207f58  src/test/java/fr/univ_amu/iut/lot/viewmodel/CompteRenduChiffreDepotTest.java
-574d9a5f5500  src/test/java/fr/univ_amu/iut/lot/viewmodel/DepotViewModelTest.java
+58a0ef002422  src/test/java/fr/univ_amu/iut/lot/viewmodel/DepotViewModelTest.java
 f61a0b707877  src/test/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepotTest.java
 c8d105f62892  src/test/java/fr/univ_amu/iut/lot/viewmodel/FormatsLotTest.java
 d6631c931ec3  src/test/java/fr/univ_amu/iut/lot/viewmodel/FormatsTraitementFuseauTest.java
@@ -1873,7 +1873,7 @@ d6631c931ec3  src/test/java/fr/univ_amu/iut/lot/viewmodel/FormatsTraitementFusea
 2569a85cd5fb  src/test/java/fr/univ_amu/iut/lot/viewmodel/OngletReglagesDepotTest.java
 fba37f0ed141  src/test/java/fr/univ_amu/iut/lot/viewmodel/SuiviLignesArchivesTest.java
 766648ef52c4  src/test/java/fr/univ_amu/iut/lot/viewmodel/SuiviLignesDepotTest.java
-8e11cdfb7826  src/test/java/fr/univ_amu/iut/lot/viewmodel/TraitementViewModelTest.java
+b7c8226f8fd1  src/test/java/fr/univ_amu/iut/lot/viewmodel/TraitementViewModelTest.java
 7d26d8333e53  src/test/java/fr/univ_amu/iut/maj/api/DerniereVersionGitHubTest.java
 ba4246a4e004  src/test/java/fr/univ_amu/iut/maj/model/ConseilDeMiseAJourTest.java
 e5cfdc5ae19a  src/test/java/fr/univ_amu/iut/maj/model/JarDeVersion.java
