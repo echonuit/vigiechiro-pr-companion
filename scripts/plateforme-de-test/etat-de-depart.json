@@ -26,6 +26,11 @@
       "cle": "pippip",
       "libelle_long": "Pipistrellus pipistrellus",
       "libelle_court": "Pippip"
+    },
+    {
+      "cle": "barbar",
+      "libelle_long": "Barbastella barbastellus",
+      "libelle_court": "Barbar"
     }
   ],
   "protocoles": [
@@ -92,6 +97,14 @@
       "traitement": {
         "etat": "FINI"
       }
+    },
+    {
+      "cle": "nuit-a-lancer",
+      "site": "carre-130711",
+      "observateur": "observatrice",
+      "date_debut": "2026-06-16T21:00:00",
+      "date_fin": "2026-06-17T06:00:00",
+      "point": "Z1"
     }
   ],
   "donnees": [

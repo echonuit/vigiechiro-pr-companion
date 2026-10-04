@@ -320,7 +320,10 @@ def auto_test() -> int:
         True,
     )
     (site,) = docs["sites"]
-    vierge, traitee = docs["participations"]
+    par_id = {p["_id"]["$oid"]: p for p in docs["participations"]}
+    vierge = par_id[identifiant("participations", "nuit-vierge")]
+    traitee = par_id[identifiant("participations", "nuit-traitee")]
+    a_lancer = par_id[identifiant("participations", "nuit-a-lancer")]
     donnee = docs["donnees"][0]
     observatrice = next(u for u in docs["utilisateurs"] if u["role"] == "Observateur")
     verifie(
@@ -397,6 +400,16 @@ def auto_test() -> int:
         "une ligne par observation declaree, le taxon par son libelle court",
         lambda: [ligne.split(";")[4] for ligne in lignes[1:]],
         ['"Pippip"', '"Pippip"'],
+    )
+    verifie(
+        "une participation est reservee au lancement, sans traitement, distincte du rebut",
+        lambda: ("traitement" in a_lancer, a_lancer["_id"] != vierge["_id"]),
+        (False, True),
+    )
+    verifie(
+        "deux taxons, pour qu une correction publiee se voie",
+        lambda: sorted(t["libelle_court"] for t in docs["taxons"]),
+        ["Barbar", "Pippip"],
     )
     verifie(
         "aucun jeton ne sort de la moitie pure",
