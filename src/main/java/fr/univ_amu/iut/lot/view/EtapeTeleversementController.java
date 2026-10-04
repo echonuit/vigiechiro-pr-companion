@@ -182,7 +182,7 @@ public class EtapeTeleversementController {
         // Compte rendu de fin de dépôt (#2653) : l'action suivante est fournie par le parent, parce que
         // « Lancer la participation » est l'étape ④ de l'écran et que le ViewModel n'a pas à savoir où
         // mènent ses boutons. Même geste que le bouton de l'étape ④, pour qu'il n'y ait qu'un seul chemin.
-        CompteRenduDepotUI.cabler(zoneCompteRenduDepot, appuis.depotViewModel(), appuis.lancerParticipation());
+        CompteRenduDepotUI.cabler(zoneCompteRenduDepot, appuis.depotViewModel());
     }
 
     /// Téléverse la nuit sur Vigie-Chiro. Le statut (« Dépôt en cours », « Déposé ») est posé par le

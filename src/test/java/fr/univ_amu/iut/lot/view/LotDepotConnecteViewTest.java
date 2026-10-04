@@ -26,6 +26,7 @@ import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.EtatLot;
@@ -39,8 +40,10 @@ import fr.univ_amu.iut.recette.Attente;
 import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBase;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.VBox;
@@ -155,6 +158,49 @@ class LotDepotConnecteViewTest {
                 5_000L);
     }
 
+    /// Après un dépôt connecté complet, deux boutons « Lancer la participation » coexistaient : celui du
+    /// compte rendu et celui de l'étape 4, sous un titre resté « Marquer le passage déposé » (#5676,
+    /// recette de #5597). Le compte rendu nomme la prochaine étape ; seule l'étape 4 la porte.
+    @Test
+    @DisplayName("#5676 : après un dépôt complet, un seul bouton lance la participation, sous un titre qui le dit")
+    void apres_un_depot_complet_un_seul_bouton_lance_la_participation(FxRobot robot) {
+        Attente.surLeFil(
+                () -> depotViewModel.appliquerBilan(new BilanDepot("p-1", 1, List.of())),
+                "un dépôt complet se termine",
+                5_000L);
+
+        assertThat(Attente.surLeFil(
+                        () -> robot.lookup(LotDepotConnecteViewTest::lanceLaParticipation)
+                                .queryAll()
+                                .size(),
+                        "compter les boutons qui lancent la participation",
+                        5_000L))
+                .as("le compte rendu et l'étape 4 ne doivent pas offrir le même geste")
+                .isEqualTo(1);
+        assertThat(Attente.surLeFil(
+                        () -> robot.lookup(".section-titre").queryAllAs(Label.class).stream()
+                                .map(Label::getText)
+                                .filter(titre -> titre.startsWith("4."))
+                                .findFirst()
+                                .orElseThrow(),
+                        "lire le titre de l'étape 4",
+                        5_000L))
+                .isEqualTo("4. Lancer la participation");
+    }
+
+    /// Un bouton « Lancer la participation » que l'on voit : lui et tous ses parents sont visibles.
+    private static boolean lanceLaParticipation(Node noeud) {
+        if (!(noeud instanceof ButtonBase bouton) || !"Lancer la participation".equals(bouton.getText())) {
+            return false;
+        }
+        for (Node n = noeud; n != null; n = n.getParent()) {
+            if (!n.isVisible()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Test
     @DisplayName("#1998 : connecté et sans archives, un SEUL bouton primaire, « Téléverser », pas « Générer »")
     void un_seul_bouton_primaire_quand_connecte_sans_archives(FxRobot robot) {
@@ -210,12 +256,19 @@ class LotDepotConnecteViewTest {
     }
 
     @Test
-    @DisplayName("#984 : sans participation liée, l'étape ④ reste « Marquer déposé » (dépôt manuel)")
+    @DisplayName("#984, #5676 : sans participation liée, l'étape ④ reste « Marquer déposé », titre compris")
     void sans_participation_le_bouton_reste_marquer_depose(FxRobot robot) {
         when(depot.participationLiee(ID_PASSAGE)).thenReturn(false);
         robot.interact(() -> controleur.ouvrirSur(CONTEXTE)); // réhydrate depuis le lien local
 
         assertThat(robot.lookup("#btnDeposer").queryAs(Button.class).getText()).isEqualTo("Marquer déposé");
+        assertThat(Attente.surLeFil(
+                        () -> robot.lookup("#lblTitreDeposer")
+                                .queryAs(Label.class)
+                                .getText(),
+                        "lire le titre de l'étape 4",
+                        5_000L))
+                .isEqualTo("4. Marquer le passage déposé");
     }
 
     @Test

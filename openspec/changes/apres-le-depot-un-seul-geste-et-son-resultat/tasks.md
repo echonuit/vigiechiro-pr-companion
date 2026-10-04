@@ -2,10 +2,10 @@ Deux lots du chantier #5596, une demande de fusion chacun : le groupe 1 est #567
 
 ## 1. Un seul point d'action (#5676)
 
-- [ ] 1.1 Écrire le cas rouge : après un dépôt connecté complet, l'écran ne montre qu'un bouton « Lancer la participation », et le titre de l'étape 4 est « 4. Lancer la participation ». Rouge avant le correctif, sur les deux boutons et sur le titre resté « Marquer le passage déposé ».
-- [ ] 1.2 Retirer l'action du compte rendu du dépôt, qui nomme alors la prochaine étape sans bouton. Fait quand 1.1 passe sur le nombre de boutons et que les tests existants du compte rendu restent verts.
-- [ ] 1.3 Lier le titre de l'étape 4 au lien de participation. Fait quand 1.1 passe en entier, et qu'un cas témoin sans participation liée lit « 4. Marquer le passage déposé » et « Marquer déposé ».
-- [ ] 1.4 Régénérer les captures du lot touchées, les ouvrir, et ajuster `docs/ecrans/lot.md`, qui parle de l'étape 4. Fait quand les captures montrent un seul bouton et le nouveau titre, sans troncature.
+- [x] 1.1 Écrire le cas rouge : après un dépôt connecté complet, l'écran ne montre qu'un bouton « Lancer la participation », et le titre de l'étape 4 est « 4. Lancer la participation ». Rouge avant le correctif, sur les deux boutons et sur le titre resté « Marquer le passage déposé ».
+- [x] 1.2 Retirer l'action du compte rendu du dépôt, qui nomme alors la prochaine étape sans bouton. Fait quand 1.1 passe sur le nombre de boutons et que les tests existants du compte rendu restent verts.
+- [x] 1.3 Lier le titre de l'étape 4 au lien de participation. Fait quand 1.1 passe en entier, et qu'un cas témoin sans participation liée lit « 4. Marquer le passage déposé » et « Marquer déposé ».
+- [x] 1.4 Régénérer les captures du lot touchées, les ouvrir, et ajuster `docs/ecrans/lot.md`, qui parle de l'étape 4. Fait quand les captures montrent un seul bouton et le nouveau titre, sans troncature.
 
 ## 2. Le résultat se dit près du bouton (#5682)
 

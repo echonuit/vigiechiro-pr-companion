@@ -122,11 +122,10 @@
        pour un plafond de 200. Son controller est injecté ici sous le nom `televersementController`. -->
   <fx:include fx:id="televersement" source="EtapeTeleversement.fxml"/>
 
-  <!-- Étape 4 - Marquer déposé -->
+  <!-- Étape 4 - Marquer déposé, ou lancer la participation (#5676) -->
   <VBox spacing="4.0" styleClass="carte-section">
-    <Label text="4. Marquer le passage déposé" styleClass="section-titre"/>
-    <Label text="Une fois le téléversement effectué sur Vigie-Chiro, enregistrez le dépôt."
-           styleClass="section-sous" wrapText="true"/>
+    <Label fx:id="lblTitreDeposer" styleClass="section-titre"/>
+    <Label fx:id="lblConsigneDeposer" styleClass="section-sous" wrapText="true"/>
     <StackPane fx:id="enveloppeDeposer" alignment="CENTER_LEFT">
       <Button fx:id="btnDeposer" text="Marquer déposé"
               styleClass="bouton-secondaire" onAction="#deposer">

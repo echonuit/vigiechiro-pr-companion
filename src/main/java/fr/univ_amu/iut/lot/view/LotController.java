@@ -135,6 +135,13 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     @FXML
     private Button btnDeposer;
 
+    /// Titre et consigne de l'étape 4 : ils disent le geste que le bouton offre (#5676).
+    @FXML
+    private Label lblTitreDeposer;
+
+    @FXML
+    private Label lblConsigneDeposer;
+
     /// Icône du bouton de dépôt : elle suit son libellé, qui change de sens (marquer / lancer).
     @FXML
     private FontIcon iconeDeposer;
@@ -311,8 +318,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 ouvreurDeLien,
                 confirmateur,
                 notificateur,
-                () -> contexte.get().idPassage(),
-                () -> suiviTraitement.lancer(depotViewModel)));
+                () -> contexte.get().idPassage()));
 
         // Stepper du dépôt (#251), reconstruit à chaque changement d'étapes (mêmes styles que M-Passage).
         viewModel.etapes().addListener((ListChangeListener<EtapeDepot>) changement -> majStepper());
@@ -334,7 +340,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // Bouton de l'étape ④ : trois règles (libellé qui change de sens, cliquable après un dépôt
         // partiel, verrouillé si la nuit est déjà analysée), câblées à part (#1263).
         EtapeDeposerUI.cabler(
-                btnDeposer, iconeDeposer, enveloppeDeposer, viewModel, depotViewModel, traitementViewModel);
+                new EtapeDeposerUI.Vue(btnDeposer, iconeDeposer, enveloppeDeposer, lblTitreDeposer, lblConsigneDeposer),
+                viewModel,
+                depotViewModel,
+                traitementViewModel);
 
         // Archives de dépôt (#110) : titre = plafond configuré ; bouton actif une fois le lot préparé et
         // hors génération en cours ; la liste reflète les ZIP produits.

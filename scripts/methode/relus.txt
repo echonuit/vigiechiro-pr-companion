@@ -859,13 +859,13 @@ c848e5b9066b  src/main/java/fr/univ_amu/iut/lot/model/dao/DepotPlanDao.java
 6c85dd916dd6  src/main/java/fr/univ_amu/iut/lot/model/dao/DepotUniteDao.java
 b8e03297c7d5  src/main/java/fr/univ_amu/iut/lot/outils/CaptureCompteRenduDepot.java
 f6c82105d491  src/main/java/fr/univ_amu/iut/lot/outils/CaptureLot.java
-d85b40ab44da  src/main/java/fr/univ_amu/iut/lot/view/AppuisTeleversement.java
+394d221b0074  src/main/java/fr/univ_amu/iut/lot/view/AppuisTeleversement.java
 c8830e19de44  src/main/java/fr/univ_amu/iut/lot/view/BandeauLotUI.java
-7f43cce2950d  src/main/java/fr/univ_amu/iut/lot/view/CompteRenduDepotUI.java
-afc956093fe2  src/main/java/fr/univ_amu/iut/lot/view/EtapeDeposerUI.java
+5f0fe8966cb3  src/main/java/fr/univ_amu/iut/lot/view/CompteRenduDepotUI.java
+f3fc1adecb07  src/main/java/fr/univ_amu/iut/lot/view/EtapeDeposerUI.java
 2e483544fe6d  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleversementController.java
 46cb0d44f356  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleverserUI.java
-4785f518bf6b  src/main/java/fr/univ_amu/iut/lot/view/LotController.java
+c49d676befe9  src/main/java/fr/univ_amu/iut/lot/view/LotController.java
 2020a70711b5  src/main/java/fr/univ_amu/iut/lot/view/NavigationLot.java
 c5fa1ea4b7ca  src/main/java/fr/univ_amu/iut/lot/view/RelaisSuiviDepot.java
 477cfe8018aa  src/main/java/fr/univ_amu/iut/lot/view/SuiviTraitementUI.java
@@ -1855,7 +1855,7 @@ ae11ec951a61  src/test/java/fr/univ_amu/iut/lot/model/CauseRefusTest.java
 ae8befae454c  src/test/java/fr/univ_amu/iut/lot/model/EchecUniteTest.java
 96b01547377d  src/test/java/fr/univ_amu/iut/lot/model/TeleversementsEnCoursTest.java
 e5e661641791  src/test/java/fr/univ_amu/iut/lot/model/TeleverseurArchiveTest.java
-f6b2bf813d1e  src/test/java/fr/univ_amu/iut/lot/view/LotDepotConnecteViewTest.java
+e61c8591c82c  src/test/java/fr/univ_amu/iut/lot/view/LotDepotConnecteViewTest.java
 d290c4438c53  src/test/java/fr/univ_amu/iut/lot/view/LotIdentiteStatutViewTest.java
 21de420b4e35  src/test/java/fr/univ_amu/iut/lot/view/LotViewTest.java
 0296639e177a  src/test/java/fr/univ_amu/iut/lot/view/LotVueIntegrationTest.java

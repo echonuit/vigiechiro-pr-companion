@@ -145,15 +145,15 @@ La table garde le détail : la cause de chaque échec y est lisible, archive par
 
 Quand le téléversement se termine, un **compte rendu** dit ce qui est en ligne, en proportions.
 
-![Le compte rendu d'un dépôt complet : la barre est pleine, le volume téléversé est dit, et l'étape suivante est proposée.](../assets/captures/apercu-lot-depot-compte-rendu.png)
+![Le compte rendu d'un dépôt complet : la barre est pleine, le volume téléversé est dit, et l'étape suivante est nommée.](../assets/captures/apercu-lot-depot-compte-rendu.png)
 
 Il ne remplace pas la table : celle-ci garde le **détail par fichier**, avec la cause de chaque échec.
 Le compte rendu répond à la question qu'on se pose à cet instant - **quelle part est arrivée** - et il
 ajoute deux choses que la table ne donne pas : le **volume téléversé**, et **ce qu'il reste à faire**.
 
-C'est le sens du bouton **« Lancer la participation »** en pied de compte rendu : téléverser ne suffit
-pas, et rien ne le disait à ce moment-là. Il n'apparaît que lorsque **tout** est en ligne : lancer
-l'analyse d'une nuit incomplète la ferait analyser incomplète.
+Quand **tout** est en ligne, il dit qu'il reste à **lancer la participation** : téléverser ne suffit
+pas, et rien ne le disait à ce moment-là. Le bouton qui le fait est celui de l'étape 4, juste en
+dessous, et lui seul : le compte rendu ne le double pas.
 
 Si vous avez **arrêté** le dépôt en cours de route, le compte rendu le dit sans le déguiser :
 
@@ -169,8 +169,8 @@ proposée en pied, parce que la suite est **« Reprendre le dépôt »**, un bou
 
 Le bouton de cette dernière étape **change selon votre situation**.
 
-**Vous avez téléversé depuis l'application** (une participation est rattachée à la nuit) : le bouton
-devient **« Lancer la participation »**. Il demande à Vigie-Chiro de **traiter** les fichiers que
+**Vous avez téléversé depuis l'application** (une participation est rattachée à la nuit) : l'étape
+s'intitule **« 4. Lancer la participation »**, et son bouton aussi. Il demande à Vigie-Chiro de **traiter** les fichiers que
 vous venez de déposer : la plateforme décompresse les archives, puis lance l'identification Tadarida.
 
 !!! warning "Téléverser ne suffit pas : il faut lancer la participation"
