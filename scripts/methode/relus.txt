@@ -2067,6 +2067,8 @@ ba84a77dca75  src/test/java/fr/univ_amu/iut/recette/RecetteImportCliGoldenTest.j
 accdcc27fbcd  src/test/java/fr/univ_amu/iut/recette/Seance.java
 d454ecd5ac76  src/test/java/fr/univ_amu/iut/recette/SeanceTest.java
 00ef5661c40c  src/test/java/fr/univ_amu/iut/recette/SpecCarteSd.java
+ca6bbad7b5be  src/test/java/fr/univ_amu/iut/recette/TuilesSansReseau.java
+320bdd236330  src/test/java/fr/univ_amu/iut/recette/TuilesSansReseauTest.java
 e19e055e1fb2  src/test/java/fr/univ_amu/iut/recette/film/CalqueDesGestes.java
 8c9b84d546ab  src/test/java/fr/univ_amu/iut/recette/film/CalqueDesGestesTest.java
 afae0455f945  src/test/java/fr/univ_amu/iut/recette/film/CameraDeScene.java
