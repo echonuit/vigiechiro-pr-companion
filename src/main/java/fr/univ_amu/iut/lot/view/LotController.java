@@ -333,7 +333,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 () -> contexte.get().idPassage()));
 
         // L'étape des archives n'est offerte que si elle sert (#5824) : sa carte suit le ViewModel.
-        carteArchives.visibleProperty().bind(viewModel.etapeArchivesOfferteProperty());
+        carteArchives.visibleProperty().bind(EtapeDesArchives.offerte(viewModel));
         carteArchives.managedProperty().bind(carteArchives.visibleProperty());
 
         // Stepper du dépôt (#251), reconstruit à chaque changement d'étapes (mêmes styles que M-Passage).

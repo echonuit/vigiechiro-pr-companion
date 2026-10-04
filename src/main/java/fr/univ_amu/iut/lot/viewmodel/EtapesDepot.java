@@ -5,8 +5,9 @@ import fr.univ_amu.iut.commun.viewmodel.EtatEtape;
 import java.util.ArrayList;
 import java.util.List;
 
-/// Calcule le **stepper du dépôt** (#251) : les 4 étapes ordonnées (① Préparer · ② Générer les
-/// archives · ③ Téléverser · ④ Marquer déposé) avec leur état d'avancement (franchie / courante / à
+/// Calcule le **stepper du dépôt** (#251) : les étapes ordonnées (① Préparer · ② Générer les
+/// archives · ③ Téléverser · ④ Marquer déposé, ou trois sans celle des archives, #5824) avec leur état d'avancement
+/// (franchie / courante / à
 /// venir), déduit du statut workflow et de la génération d'archives. Pur (aucun état JavaFX), extrait de
 /// [LotViewModel] pour garder le ViewModel mince.
 ///

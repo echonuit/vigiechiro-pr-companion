@@ -3,6 +3,7 @@ package fr.univ_amu.iut.lot.viewmodel;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -56,7 +57,6 @@ class LotViewModelTest {
 
         viewModel.ouvrirSur(ID_PASSAGE);
 
-        assertThat(viewModel.etapeArchivesOfferteProperty().get()).isFalse();
         assertThat(viewModel.etapes()).hasSize(3);
     }
 
@@ -69,7 +69,6 @@ class LotViewModelTest {
 
         viewModel.ouvrirSur(ID_PASSAGE);
 
-        assertThat(viewModel.etapeArchivesOfferteProperty().get()).isTrue();
         assertThat(viewModel.etapes()).hasSize(4);
     }
 
@@ -77,11 +76,11 @@ class LotViewModelTest {
     @DisplayName("#5824 : hors connexion en forme WAV, l'étape des archives reste : elle sert au dépôt manuel")
     void hors_connexion_en_wav_l_etape_des_archives_reste() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
-        when(service.formeDuDepot(ID_PASSAGE)).thenReturn(ModeDepot.SEQUENCES_WAV);
+        // Hors connexion la forme n'est même pas consultée : les archives sont la seule voie.
+        lenient().when(service.formeDuDepot(ID_PASSAGE)).thenReturn(ModeDepot.SEQUENCES_WAV);
 
         viewModel.ouvrirSur(ID_PASSAGE);
 
-        assertThat(viewModel.etapeArchivesOfferteProperty().get()).isTrue();
         assertThat(viewModel.etapes()).hasSize(4);
     }
 
@@ -94,7 +93,6 @@ class LotViewModelTest {
 
         viewModel.declarerDepotAutomatiqueDisponible(true);
 
-        assertThat(viewModel.etapeArchivesOfferteProperty().get()).isFalse();
         assertThat(viewModel.etapes()).hasSize(3);
     }
 

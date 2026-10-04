@@ -10,7 +10,7 @@ Un lot du chantier #5596, une demande de fusion : #5824 (lot 25).
 
 - [x] 2.1 Cas rouges de `ServiceLotTest` : la forme d'une nuit sans dépôt suit le réglage, celle d'un dépôt entamé suit ses unités. Puis `ServiceLot.formeDuDepot`, sur laquelle `sourceDepotParDefaut` s'appuie. Fait quand ces cas passent et que `RegenerationPendantUnDepotTest` reste vert.
 - [x] 2.2 Cas rouges de `EtapesDepotTest` : trois étapes sans l'étape des archives, quatre avec, et le rang courant dans chaque cas. Puis le calcul. Fait quand ils passent.
-- [x] 2.3 `LotViewModel` publie `etapeArchivesOfferte` et le rang de chaque étape. Fait quand un cas de `LotViewModelTest` le lit dans les trois situations (WAV connecté, ZIP connecté, WAV hors connexion).
+- [x] 2.3 Le fil d'étapes de `LotViewModel` compte trois ou quatre étapes selon la forme et la connexion. Fait quand un cas de `LotViewModelTest` le lit dans les trois situations (WAV connecté, ZIP connecté, WAV hors connexion). La propriété `etapeArchivesOfferte` prévue ici a été écartée : elle faisait franchir à `LotViewModel` le plafond `GodClass` ; la vue lit le fil d'étapes (D2).
 
 ## 3. L'écran n'offre que ce qui sert
 
@@ -28,4 +28,4 @@ Un lot du chantier #5596, une demande de fusion : #5824 (lot 25).
 - [x] 5.1 Captures du lot dans la forme WAV, déclarées aux trois endroits, ouvertes et relues une par une ; les trois gardes de captures rejoués à la main.
 - [x] 5.2 `docs/ecrans/lot.md` décrit les deux formes dans l'ordre du défaut, sans le repli automatique disparu ; recette S4 sans toucher aux lignes S4-47, S4-90 et S4-92.
 - [ ] 5.3 Faire rejouer `ScenarioConnecteLancementTest` sur la branche par la session qui le porte. Fait quand elle le rend vert.
-- [ ] 5.4 Mutation ciblée sur la décision `etapeArchivesOfferte`, sur `EtapesDepot` et sur le nom de l'unité ; survivants lus un par un.
+- [x] 5.4 Mutation ciblée sur la décision de l'étape des archives, sur `EtapesDepot` et sur le nom de l'unité. Tenue à la main, pas par PIT : chaque règle a été vue rouge contre un stub avant d'être écrite, et la mutation de `EtapeDesArchives.offerte` (trois puces prises pour quatre) fait tomber cinq cas de `LotDepotConnecteViewTest`.

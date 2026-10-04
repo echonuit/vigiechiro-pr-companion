@@ -58,7 +58,7 @@ final class EtapeDeposerUI {
         vue.titre()
                 .textProperty()
                 // Le numéro suit l'étape des archives (#5824) : sans elle, celle-ci est la troisième.
-                .bind(Bindings.when(lot.etapeArchivesOfferteProperty())
+                .bind(Bindings.when(EtapeDesArchives.offerte(lot))
                         .then("4. ")
                         .otherwise("3. ")
                         .concat(Bindings.when(depot.participationLieeProperty())
@@ -98,7 +98,7 @@ final class EtapeDeposerUI {
                 Bindings.when(traitement.relanceBloqueeProperty())
                         // Le blocage vaut pour les deux formes ; sa raison, non (#5824). Connecté, l'étape des
                         // archives n'est offerte qu'en forme ZIP : elle dit donc laquelle est en jeu.
-                        .then(Bindings.when(lot.etapeArchivesOfferteProperty())
+                        .then(Bindings.when(EtapeDesArchives.offerte(lot))
                                 .then("Cette nuit a déjà été analysée par Vigie-Chiro. La relancer effacerait ses"
                                         + " observations côté serveur, qui ne pourraient pas être recalculées"
                                         + " (l'audio n'est pas conservé après un dépôt en archives)."

@@ -21,9 +21,9 @@ Cette carte a été retouchée par #5782, #5788 et #5799. Le scénario filmé S4
 
 **D1. La forme se demande à `ServiceLot`.** `ServiceLot.formeDuDepot(idPassage)` rend le mode d'un dépôt entamé, sinon le réglage : c'est la règle de `sourceDepotParDefaut`, qui s'appuie désormais sur elle. Écarté : lire le réglage dans le ViewModel, qui referait la règle de #5677 à un second endroit et la raterait pour un dépôt entamé.
 
-**D2. Une seule propriété décide de l'étape des archives.** `LotViewModel` expose `etapeArchivesOfferte` : vraie si la forme est le ZIP ou si le dépôt automatique est indisponible. La carte de l'étape, les éléments de dépôt manuel de l'étape de téléversement, le nombre d'étapes et les numéros en dérivent tous. Elle se recalcule à l'ouverture et à chaque rafraîchissement du lot.
+**D2. Le fil d'étapes est la source, et la vue le lit à un seul endroit.** `SuiviEtapesLot` demande la forme à chaque recalcul et décide : l'étape des archives est offerte en forme ZIP, ou quand le dépôt automatique est indisponible. Le fil d'étapes compte alors trois puces ou quatre. La vue en dérive tout le reste par `EtapeDesArchives.offerte` : la carte de l'étape, les éléments de dépôt manuel, les numéros et les infobulles. Écarté en cours de réalisation : une propriété de plus sur `LotViewModel`, qui lui faisait franchir le plafond `GodClass` du portail qualité (ADR 4682, cliquet à zéro).
 
-**D3. `EtapesDepot` calcule trois ou quatre étapes.** Il reçoit `etapeArchivesOfferte` et omet « Générer les archives » quand elle est fausse ; les rangs se décalent. Les titres des cartes sont liés au rang que le ViewModel publie, au lieu d'être écrits dans le FXML.
+**D3. `EtapesDepot` calcule trois ou quatre étapes.** Il reçoit `etapeArchivesOfferte` et omet « Générer les archives » quand elle est fausse ; les rangs se décalent. Les titres des cartes sont liés à la présence de l'étape des archives, au lieu d'être écrits dans le FXML.
 
 **D4. Le dépôt manuel suit l'étape des archives.** Connecté en forme WAV, l'étape de téléversement perd la mention du dépôt manuel, le chemin du dossier, « Copier » et « Ouvrir le dossier (dépôt manuel) » : ils pointent vers des archives que rien ne produit. Qui veut déposer des archives à la main choisit le ZIP dans les réglages, et l'étape revient.
 

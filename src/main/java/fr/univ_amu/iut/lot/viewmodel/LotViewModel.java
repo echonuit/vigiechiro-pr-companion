@@ -63,8 +63,7 @@ public class LotViewModel {
     /// mise à jour au fil de la compression parallèle, réhydratée du disque à la réouverture).
     private final SuiviLignesArchives suiviLignes = new SuiviLignesArchives();
 
-    private final SuiviEtapesLot suiviEtapes =
-            new SuiviEtapesLot(() -> !suiviLignes.lignes().isEmpty());
+    private final SuiviEtapesLot suiviEtapes;
 
     /// Suppression des archives possible (#2916) : **liaison vivante** sur les lignes, vraie dès qu'il existe
     /// des archives (régénérables), recalculée quand la liste change (génération, réhydratation, suppression).
@@ -82,6 +81,9 @@ public class LotViewModel {
     public LotViewModel(ServiceLot service) {
         this.service = Objects.requireNonNull(service, "service");
         this.espaceDisque = new AnticipationEspaceDisque(service);
+        // La forme du dépôt est demandée au service à chaque recalcul des étapes (#5824).
+        this.suiviEtapes =
+                new SuiviEtapesLot(() -> !suiviLignes.lignes().isEmpty(), () -> service.formeDuDepot(idPassage));
         // Titre reflétant le **plafond configuré** (#110). La conversion était faite ici parce que
         // `Formats` raisonnait en base 1024, incompatible avec la contrainte « 700 Mo » de Tadarida ;
         // depuis #3573 il compte en base 1000 comme le reste du produit, et cette raison a disparu.
@@ -272,7 +274,6 @@ public class LotViewModel {
         peutGenererArchives.set(actions.genererArchives());
         // (peutSupprimerArchives est une liaison vivante sur les lignes : rien à poser ici.)
         espaceDisque.majDepuis(etat);
-        suiviEtapes.declarerForme(service.formeDuDepot(idPassage));
         suiviEtapes.appliquer(etat.statut());
         messages.etat(FormatsLot.messageEtat(etat));
     }
@@ -322,15 +323,10 @@ public class LotViewModel {
     }
 
     /// Étapes ordonnées du dépôt pour le stepper (#251) : ① Préparer · ② Générer les archives ·
-    /// ③ Téléverser · ④ Marquer déposé, chacune avec son état d'avancement. Vide si pas de lot ouvert.
+    /// ③ Téléverser · ④ Marquer déposé, ou trois quand celle des archives n'est pas offerte (#5824),
+    /// chacune avec son état d'avancement. Vide si pas de lot ouvert.
     public ObservableList<EtapeDepot> etapes() {
         return suiviEtapes.etapes();
-    }
-
-    /// L'étape « Générer les archives » est-elle offerte (#5824) ? Fausse connecté pour un dépôt en
-    /// séquences WAV, où rien ne produit d'archive ; les étapes suivantes se renumérotent alors.
-    public ReadOnlyBooleanProperty etapeArchivesOfferteProperty() {
-        return suiviEtapes.etapeArchivesOfferteProperty();
     }
 
     /// Récapitulatif du lot (`N séquences · X Mo`).

@@ -9,7 +9,7 @@ import fr.univ_amu.iut.lot.viewmodel.LigneDepot;
 import java.nio.file.Path;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -116,7 +116,7 @@ public class EtapeTeleversementController {
     /// ce qui sert au dépôt manuel d'archives. Connecté pour un dépôt en séquences WAV, rien ne produit
     /// d'archive : l'étape devient la deuxième, et n'offre plus de déposer à la main.
     private void cablerSelonLEtapeDesArchives() {
-        ReadOnlyBooleanProperty archives = appuis.viewModel().etapeArchivesOfferteProperty();
+        BooleanBinding archives = EtapeDesArchives.offerte(appuis.viewModel());
         lblTitreTeleversement
                 .textProperty()
                 .bind(Bindings.when(archives)
@@ -175,7 +175,7 @@ public class EtapeTeleversementController {
                 Bindings.when(appuis.viewModel().deposeProperty())
                         .then("Passage déjà déposé sur Vigie-Chiro : le téléversement est terminé.")
                         .otherwise(Bindings.when(btnTeleverser.disableProperty())
-                                .then(Bindings.when(appuis.viewModel().etapeArchivesOfferteProperty())
+                                .then(Bindings.when(EtapeDesArchives.offerte(appuis.viewModel()))
                                         .then("Téléversement possible une fois le dépôt préparé (statut « Prêt à"
                                                 + " déposer »), et hors génération ou envoi en cours. Générer les"
                                                 + " archives n'est pas un préalable : le téléversement produit"
