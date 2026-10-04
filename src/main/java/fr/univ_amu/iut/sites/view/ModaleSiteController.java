@@ -23,6 +23,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -114,6 +115,10 @@ public class ModaleSiteController {
     /// portail. Les confondre effacerait l'un par l'autre.
     @FXML
     private Label messagePosition;
+
+    /// La case du premier point d'écoute (#5687).
+    @FXML
+    private CheckBox chkPremierPoint;
 
     /// Ligne du geste « Récupérer ce carré » (#3806) : elle n'existe qu'après un verdict « il existe
     /// déjà », et se retire de la mise en page le reste du temps.
@@ -309,7 +314,12 @@ public class ModaleSiteController {
                                 + " le menu principal, entrée « Se connecter à Vigie-Chiro… »."));
         champPosition.textProperty().bindBidirectional(viewModel.position().texte());
         LibelleRetour.installer(messagePosition, viewModel.position().retour());
-        Modales.suivreLaCroissance(racine, messagePosition.managedProperty());
+        chkPremierPoint
+                .selectedProperty()
+                .bindBidirectional(viewModel.premierPoint().demande());
+        chkPremierPoint.visibleProperty().bind(viewModel.premierPoint().offert());
+        chkPremierPoint.managedProperty().bind(chkPremierPoint.visibleProperty());
+        Modales.suivreLaCroissance(racine, messagePosition.managedProperty(), chkPremierPoint.managedProperty());
         // Fermé tant qu'il n'y a rien à situer, et JAMAIS pour cause de connexion : le carroyage est
         // embarqué. C'est la difference avec « Vérifier sur Vigie-Chiro », dont le motif ci-dessus parle
         // de jeton.
@@ -416,7 +426,12 @@ public class ModaleSiteController {
             RetourOperation verdict = viewModel
                     .carre()
                     .annonceApresDeclaration(viewModel.numeroCarreProperty().get());
-            if (verdict != RetourOperation.AUCUN) {
+            // Le premier point refusé alors que le site est créé (#5687) : il se dit dans la même annonce,
+            // et passe devant un verdict de carré s'il y en a un, l'écran n'ayant qu'un bandeau.
+            RetourOperation point = viewModel.premierPoint().annonce();
+            if (point != RetourOperation.AUCUN) {
+                annoncer.accept(point);
+            } else if (verdict != RetourOperation.AUCUN) {
                 annoncer.accept(verdict);
             }
             apresSucces.run();

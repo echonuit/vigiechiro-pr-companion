@@ -14,7 +14,7 @@ Deux lots du chantier #5596, une demande de fusion chacun : le groupe 1 est #568
 
 ## 2. Le premier point se crée avec son site (#5687)
 
-- [ ] 2.1 Écrire les cas rouges d'interface : position collée, case cochée, un site et un seul point `Z1` à cette position ; case décochée, un site sans point ; numéro saisi sans position et carré récupéré, pas de case.
-- [ ] 2.2 Porter la case dans `SiteEditViewModel` et la modale de site, et créer le point après le site. Fait quand 2.1 passe et que les tests de la modale de site restent verts.
-- [ ] 2.3 Dire le cas où le site est créé et le point non : le retour nomme l'échec et renvoie à « Ajouter un point d'écoute ». Un cas de ViewModel le tient.
-- [ ] 2.4 Régénérer les captures de la modale de site, les ouvrir ; mettre à jour `docs/ecrans/sites.md` ; poser la case de recette S1.
+- [x] 2.1 Écrire les cas rouges d'interface : position collée, case cochée, un site et un seul point `Z1` à cette position ; case décochée, un site sans point ; numéro saisi sans position et carré récupéré, pas de case. *Tenu ainsi* : la case cochée, décochée et la position effacée au ViewModel (`SiteEditPremierPointTest`) ; la case cochée et l'édition à l'interface (`ModaleSiteViewTest`). Un carré récupéré ne passe pas par « Créer » : « Récupérer ce carré » est un autre geste, que la case ne touche pas, et aucun cas ne le rejoue ici.
+- [x] 2.2 Porter la case dans `SiteEditViewModel` et la modale de site, et créer le point après le site. Fait quand 2.1 passe et que les tests de la modale de site restent verts.
+- [x] 2.3 Dire le cas où le site est créé et le point non : le retour nomme l'échec et renvoie à « Ajouter un point d'écoute ». Un cas de ViewModel le tient.
+- [x] 2.4 Régénérer les captures de la modale de site, les ouvrir ; mettre à jour `docs/ecrans/sites.md` ; poser la case de recette S1.
