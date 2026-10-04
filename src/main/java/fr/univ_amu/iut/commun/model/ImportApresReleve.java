@@ -54,8 +54,7 @@ public final class ImportApresReleve {
         } catch (RuntimeException echec) {
             // L'analyse est terminée quoi qu'il arrive à l'import : son échec se rend, il ne se propage pas,
             // sans quoi l'appelant perdrait l'état qu'il vient de relever.
-            return new Issue.Echoue(
-                    echec.getMessage() == null ? echec.getClass().getSimpleName() : echec.getMessage());
+            return new Issue.Echoue(CauseLisible.messageDe(echec));
         }
     }
 
