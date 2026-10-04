@@ -686,7 +686,7 @@ L'écran qui porte l'état d'avancement d'une nuit.
 
 Le second gros pourvoyeur d'états : préparation, téléversement, reprise, interruption.
 
-<sub>`lot/view/Lot.fxml` &middot; 16 capture(s)</sub>
+<sub>`lot/view/Lot.fxml` &middot; 19 capture(s)</sub>
 
 <table>
 <tr>
@@ -780,6 +780,23 @@ Le second gros pourvoyeur d'états : préparation, téléversement, reprise, int
 <tr>
 <td><a href="apercu-lot-depot-entame.png"><img src="apercu-lot-depot-entame.png" width="430" alt="Dépôt entamé : l'étape 3 reste courante, et « Générer les archives de dépôt » reste offert pour régénérer un contenu refusé"></a></td>
 <td><a href="apercu-lot-generation-refusee.png"><img src="apercu-lot-generation-refusee.png" width="430" alt="Génération refusée : un téléversement est en cours, le bandeau dit d'attendre sa fin ou de l'annuler avant de régénérer"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<th width="50%">Lancement accepté</th>
+<th width="50%">Analyse déjà demandée</th>
+</tr>
+<tr>
+<td><a href="apercu-lot-lancement-accepte.png"><img src="apercu-lot-lancement-accepte.png" width="430" alt="Lancement accepté : l'étape 4 dit sous son bouton que l'analyse est demandée, qu'elle prend du temps, et qu'on peut fermer l'application"></a></td>
+<td><a href="apercu-lot-lancement-deja-demande.png"><img src="apercu-lot-lancement-deja-demande.png" width="430" alt="Analyse déjà demandée : l'étape 4 dit qu'il n'y a qu'à attendre, et renvoie à la carte du traitement"></a></td>
+</tr>
+<tr>
+<th width="50%">Lancement refusé</th>
+</tr>
+<tr>
+<td><a href="apercu-lot-lancement-refuse.png"><img src="apercu-lot-lancement-refuse.png" width="430" alt="Lancement refusé : l'étape 4 dit le refus et cite le motif donné par la plateforme"></a></td>
 </tr>
 </table>
 

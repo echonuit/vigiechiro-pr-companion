@@ -224,29 +224,53 @@ class DepotViewModelTest {
         DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
 
         vm.restituerLancement(ResultatLancement.accepte());
-        assertThat(vm.retourProperty().get().texte()).contains("Traitement lancé");
-        assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
+        assertThat(vm.retourLancementProperty().get().texte()).contains("Analyse demandée à Vigie-Chiro");
+        assertThat(vm.retourLancementProperty().get().severite()).isEqualTo(Severite.SUCCES);
 
         // « Déjà en cours » n'est PAS un échec : le serveur travaille, il n'y a qu'à attendre. Avant
         // #1261, ce cas s'affichait comme un échec, avec un point d'interrogation en prime.
         vm.restituerLancement(ResultatLancement.dejaLance(traitement(EtatTraitement.EN_COURS)));
-        assertThat(vm.retourProperty().get().texte()).contains("déjà en cours").doesNotContain("Échec");
-        assertThat(vm.retourProperty().get().severite())
+        assertThat(vm.retourLancementProperty().get().texte())
+                .contains("déjà demandée")
+                .doesNotContain("Échec");
+        assertThat(vm.retourLancementProperty().get().severite())
                 .as("#1890 : un traitement déjà lancé n'est pas un échec, il n'y a rien à faire")
                 .isEqualTo(Severite.INFO);
 
         vm.restituerLancement(ResultatLancement.relanceBloquee(traitement(EtatTraitement.FINI)));
-        assertThat(vm.retourProperty().get().texte()).contains("déjà été analysée", "effacerait");
-        assertThat(vm.retourProperty().get().severite())
+        assertThat(vm.retourLancementProperty().get().texte()).contains("déjà été analysée", "effacerait");
+        assertThat(vm.retourLancementProperty().get().severite())
                 .as("#1890 : la relance bloquée protège les observations, elle ne rapporte pas une panne")
                 .isEqualTo(Severite.INFO);
 
         vm.restituerLancement(ResultatLancement.refuse(403, "interdit"));
-        assertThat(vm.retourProperty().get().texte()).contains("refusé");
-        assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
+        assertThat(vm.retourLancementProperty().get().texte())
+                .as("#5682 : le motif du refus se dit, comme en ligne de commande")
+                .isEqualTo("Vigie-Chiro a refusé de lancer l'analyse : HTTP 403 interdit.");
+        assertThat(vm.retourLancementProperty().get().severite()).isEqualTo(Severite.ERREUR);
 
         vm.restituerLancement(ResultatLancement.injoignable());
-        assertThat(vm.retourProperty().get().texte()).contains("injoignable");
+        assertThat(vm.retourLancementProperty().get().texte()).contains("injoignable");
+    }
+
+    /// Le résultat d'un lancement appartient au lancement et au passage qui l'ont produit (#5682) : un
+    /// nouveau lancement l'efface pendant qu'il travaille, et un autre passage ouvert ne le reprend pas.
+    @Test
+    @DisplayName("#5682 : le résultat du lancement s'efface au lancement suivant et à l'ouverture d'un passage")
+    void le_resultat_du_lancement_s_efface() {
+        DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
+
+        vm.restituerLancement(ResultatLancement.accepte());
+        vm.marquerLancementEnCours();
+        assertThat(vm.retourLancementProperty().get().texte())
+                .as("un lancement en cours")
+                .isEmpty();
+
+        vm.restituerLancement(ResultatLancement.accepte());
+        vm.rehydrater(43L);
+        assertThat(vm.retourLancementProperty().get().texte())
+                .as("un autre passage ouvert")
+                .isEmpty();
     }
 
     @Test
@@ -274,9 +298,12 @@ class DepotViewModelTest {
         assertThat(vm.lancementEnCoursProperty().get())
                 .as("l'annonce s'éteint avec le lancement")
                 .isFalse();
-        assertThat(vm.retourProperty().get().texte())
-                .as("le résultat, lui, va bien dans le retour")
+        assertThat(vm.retourLancementProperty().get().texte())
+                .as("#5682 : le résultat va dans la zone de l'étape ④")
                 .isNotEmpty();
+        assertThat(vm.retourProperty().get().texte())
+                .as("#5682 : et pas au bandeau du haut, hors de vue au moment du clic")
+                .isEmpty();
     }
 
     /// Traitement serveur dans l'état voulu (les dates n'entrent pas en jeu dans les messages).

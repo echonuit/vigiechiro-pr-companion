@@ -12,6 +12,7 @@ import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.EtatTraitement;
+import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
@@ -235,6 +236,22 @@ public final class CaptureLot {
         // La carte « Traitement Vigie-Chiro » (#5683) : une analyse partie à 14:07 UTC, l'instant du relevé
         // de la recette réelle. Le fuseau de la capture est Paris : l'heure lue est celle du poste.
         rendreTraitementEnCours(connecte, idCoherent, sortie.resolve("apercu-lot-traitement-en-cours.png"));
+        // Le résultat du lancement, sous le bouton de l'étape ④ (#5682) : une issue par aperçu.
+        rendrePilote(
+                connecte,
+                idCoherent,
+                sortie.resolve("apercu-lot-lancement-accepte.png"),
+                (vm, depot) -> depot.restituerLancement(ResultatLancement.accepte()));
+        rendrePilote(
+                connecte,
+                idCoherent,
+                sortie.resolve("apercu-lot-lancement-deja-demande.png"),
+                (vm, depot) -> depot.restituerLancement(ResultatLancement.dejaLance(Traitement.absent())));
+        rendrePilote(
+                connecte,
+                idCoherent,
+                sortie.resolve("apercu-lot-lancement-refuse.png"),
+                (vm, depot) -> depot.restituerLancement(ResultatLancement.refuse(403, "droits insuffisants")));
         // Cas bloquant : Vérifié incohérent → zone d'alertes (R14), « Préparer » désactivé.
         rendre(injecteur, idIncoherent, sortie.resolve("apercu-lot-alertes.png"));
         // Bandeau en ERREUR (#1917) : le succès est déjà couvert par apercu-lot-archives.png, produit par

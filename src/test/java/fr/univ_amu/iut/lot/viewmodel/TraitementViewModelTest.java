@@ -62,6 +62,28 @@ class TraitementViewModelTest {
         assertThat(vm.relanceBloqueeProperty().get()).isFalse();
     }
 
+    /// Planifiée, en cours ou relancée : la plateforme travaille, une relance n'a rien à faire (#5682).
+    /// Terminée, ou jamais relevée : rien n'est demandé.
+    @Test
+    @DisplayName("#5682 : l'analyse est « demandée » tant que la plateforme y travaille, et seulement alors")
+    void analyse_demandee_suit_le_releve() {
+        when(suivi.dernierReleve(ID_PASSAGE)).thenReturn(Optional.empty());
+        TraitementViewModel vm = viewModel();
+
+        vm.appliquer(new Traitement(EtatTraitement.PLANIFIE, "2026-07-13T09:00:00+00:00", null, null, null, null));
+        assertThat(vm.analyseDemandeeProperty().get()).as("planifiée").isTrue();
+        vm.appliquer(enCours());
+        assertThat(vm.analyseDemandeeProperty().get()).as("en cours").isTrue();
+        vm.appliquer(new Traitement(EtatTraitement.FINI, null, null, "2026-07-13T10:05:00+00:00", null, null));
+        assertThat(vm.analyseDemandeeProperty().get()).as("terminée").isFalse();
+
+        vm.appliquer(enCours());
+        vm.chargerDernierReleve(ID_PASSAGE);
+        assertThat(vm.analyseDemandeeProperty().get())
+                .as("une nuit jamais relevée n'a rien de demandé, même après une autre")
+                .isFalse();
+    }
+
     @Test
     @DisplayName("analyse TERMINÉE : la relance est bloquée (elle effacerait les observations du serveur)")
     void terminee_bloque_la_relance() {

@@ -37,15 +37,19 @@ import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.GesteVisible;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.Label;
+import javafx.scene.control.Labeled;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -243,6 +247,52 @@ class LotDepotConnecteViewTest {
         verify(depot, timeout(5_000)).lancerTraitement(ID_PASSAGE);
     }
 
+    /// Le bouton se grisait quelques secondes puis revenait à l'identique, le résultat étant parti dans le
+    /// bandeau du haut de page, hors de vue (#5682, recette de #5597). Il se dit maintenant dans l'étape 4,
+    /// pour chacune des issues, et un refus cite son motif comme la commande le fait déjà.
+    @Test
+    @DisplayName("#5682 : le résultat du lancement se dit dans l'étape 4, motif du refus compris, et pas au bandeau")
+    void le_resultat_du_lancement_se_dit_dans_l_etape_4(FxRobot robot) {
+        when(depot.lancerTraitement(ID_PASSAGE))
+                .thenReturn(ResultatLancement.accepte())
+                .thenReturn(ResultatLancement.dejaLance(Traitement.absent()))
+                .thenReturn(ResultatLancement.refuse(403, "droits insuffisants"));
+
+        lancerEtAttendre(robot, "Analyse demandée à Vigie-Chiro");
+        assertThat(texteDuBandeau(robot))
+                .as("le résultat ne se répète pas en haut de page")
+                .isEmpty();
+        lancerEtAttendre(robot, "L'analyse de cette nuit est déjà demandée");
+        lancerEtAttendre(robot, "Vigie-Chiro a refusé de lancer l'analyse : HTTP 403 droits insuffisants.");
+    }
+
+    /// Clique « Lancer la participation » et attend que l'étape 4 dise `attendu`.
+    private static void lancerEtAttendre(FxRobot robot, String attendu) {
+        GesteVisible.cliquer(robot, "#btnDeposer");
+        Attente.queSurLeFil(() -> texteDeLEtape4(robot).contains(attendu), "l'étape 4 dit « " + attendu + " »", 5_000L);
+    }
+
+    /// Tout le texte visible de la carte de l'étape 4, celle qui porte le bouton de lancement.
+    private static String texteDeLEtape4(FxRobot robot) {
+        Node carte = robot.lookup("#btnDeposer").query();
+        while (carte != null && !carte.getStyleClass().contains("carte-section")) {
+            carte = carte.getParent();
+        }
+        return robot
+                .from(carte)
+                .lookup((Node n) -> n instanceof Labeled && n.isVisible())
+                .queryAllAs(Labeled.class)
+                .stream()
+                .map(Labeled::getText)
+                .filter(texte -> texte != null && !texte.isBlank())
+                .collect(Collectors.joining(" | "));
+    }
+
+    private static String texteDuBandeau(FxRobot robot) {
+        return Attente.surLeFil(
+                () -> robot.lookup("#lblRetour").queryAs(Label.class).getText(), "lire le bandeau", 5_000L);
+    }
+
     @Test
     @DisplayName("#984 : « Réinitialiser le dépôt » visible dès qu'un plan existe et efface le suivi local")
     void reinitialiser_efface_le_suivi_local(FxRobot robot) {
@@ -339,6 +389,60 @@ class LotDepotConnecteViewTest {
         // renvoie vers l'import. Et la zone, elle, dit ce qu'il y a à faire.
         assertThat(robot.lookup("#lblEtatTraitement").queryAs(Label.class).getText())
                 .contains("prêtes à être importées");
+    }
+
+    /// Une analyse planifiée laissait le bouton cliquable : deux clics ont reçu `400 Already PLANIFIE` dans
+    /// le journal de #5597. Le relevé qui suit le lancement suffit à le griser (#5682).
+    @Test
+    @DisplayName("#5682 : une analyse demandée grise le bouton, et son explication renvoie à la carte du traitement")
+    void une_analyse_demandee_grise_le_bouton(FxRobot robot) {
+        when(depot.lancerTraitement(ID_PASSAGE)).thenReturn(ResultatLancement.accepte());
+        when(suivi.relever(ID_PASSAGE))
+                .thenReturn(
+                        new Traitement(EtatTraitement.PLANIFIE, "2026-07-13T09:00:00+00:00", null, null, null, null));
+
+        GesteVisible.cliquer(robot, "#btnDeposer");
+
+        Attente.queSurLeFil(
+                () -> robot.lookup("#btnDeposer").queryAs(Button.class).isDisabled(),
+                "le bouton se grise une fois l'analyse planifiée",
+                5_000L);
+        assertThat(explicationDuBouton(robot))
+                .isEqualTo("L'analyse de cette nuit est demandée à Vigie-Chiro : suivez-la dans la carte"
+                        + " « Traitement Vigie-Chiro » ci-dessous.");
+    }
+
+    @Test
+    @DisplayName("#5682 : à la réouverture, le dernier relevé « en cours » grise le bouton sans relevé réseau")
+    void a_la_reouverture_le_dernier_releve_grise_le_bouton(FxRobot robot) {
+        when(suivi.dernierReleve(ID_PASSAGE))
+                .thenReturn(Optional.of(new ReleveTraitement(
+                        ID_PASSAGE,
+                        "part-1",
+                        new Traitement(EtatTraitement.EN_COURS, null, "2026-07-13T09:00:00+00:00", null, null, null),
+                        "2026-07-13T09:05:00")));
+
+        robot.interact(() -> controleur.ouvrirSur(CONTEXTE));
+
+        assertThat(Attente.surLeFil(
+                        () -> robot.lookup("#btnDeposer").queryAs(Button.class).isDisabled(),
+                        "lire l'état du bouton",
+                        5_000L))
+                .as("une analyse en cours ne s'offre pas à être relancée, même après réouverture")
+                .isTrue();
+        verify(suivi, never()).relever(anyLong());
+    }
+
+    /// L'infobulle que l'enveloppe du bouton porte, là où `Tooltip.install` la range.
+    private static String explicationDuBouton(FxRobot robot) {
+        return Attente.surLeFil(
+                () -> ((Tooltip) robot.lookup("#enveloppeDeposer")
+                                .query()
+                                .getProperties()
+                                .get("javafx.scene.control.Tooltip"))
+                        .getText(),
+                "lire l'explication du bouton",
+                5_000L);
     }
 
     /// Declenche « Actualiser » par son action plutot que par un clic : la carte « Traitement » est en bas

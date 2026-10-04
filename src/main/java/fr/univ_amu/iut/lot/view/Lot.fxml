@@ -134,6 +134,8 @@
         </graphic>
       </Button>
     </StackPane>
+    <!-- Le résultat du lancement, sous le bouton qui l'a demandé (#5682). -->
+    <Label fx:id="lblRetourLancement" wrapText="true" maxWidth="Infinity"/>
   </VBox>
 
   <!-- Traitement serveur (#1263) : « Déposé » n'est pas la fin. Vigie-Chiro analyse ensuite la nuit avec

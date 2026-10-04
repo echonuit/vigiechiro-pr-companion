@@ -2,6 +2,7 @@ package fr.univ_amu.iut.lot.view;
 
 import fr.univ_amu.iut.commun.view.IconeSelonEtat;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
@@ -29,8 +30,9 @@ final class EtapeDeposerUI {
     private EtapeDeposerUI() {}
 
     /// Les nœuds de l'étape ④ : son bouton, son icône, l'enveloppe qui porte l'explication d'un blocage,
-    /// et le titre et la consigne qui disent le même geste que le bouton (#5676).
-    record Vue(Button bouton, FontIcon icone, StackPane enveloppe, Label titre, Label consigne) {
+    /// le titre et la consigne qui disent le même geste que le bouton (#5676), et le résultat du
+    /// lancement, sous le bouton qui l'a demandé (#5682).
+    record Vue(Button bouton, FontIcon icone, StackPane enveloppe, Label titre, Label consigne, Label retour) {
 
         Vue {
             Objects.requireNonNull(bouton, "bouton");
@@ -38,10 +40,12 @@ final class EtapeDeposerUI {
             Objects.requireNonNull(enveloppe, "enveloppe");
             Objects.requireNonNull(titre, "titre");
             Objects.requireNonNull(consigne, "consigne");
+            Objects.requireNonNull(retour, "retour");
         }
     }
 
     static void cabler(Vue vue, LotViewModel lot, DepotViewModel depot, TraitementViewModel traitement) {
+        LibelleRetour.installer(vue.retour(), depot.retourLancementProperty());
         Button bouton = vue.bouton();
         FontIcon icone = vue.icone();
         StackPane enveloppe = vue.enveloppe();
@@ -66,9 +70,12 @@ final class EtapeDeposerUI {
                         // Mode « Lancer la participation » : cliquable quel que soit le statut de dépôt (même
                         // « Dépôt en cours » après une annulation ou un dépôt partiel), sauf pendant une
                         // opération en cours, et sauf si la nuit a déjà été analysée.
+                        // Une analyse demandée ne s'offre pas à être relancée : deux clics de plus avaient
+                        // reçu « Already PLANIFIE » pendant la recette de #5597 (#5682).
                         .then(depot.enCoursProperty()
                                 .or(lot.generationEnCoursProperty())
-                                .or(traitement.relanceBloqueeProperty()))
+                                .or(traitement.relanceBloqueeProperty())
+                                .or(traitement.analyseDemandeeProperty()))
                         // Mode « Marquer déposé » : garde d'origine (« Prêt à déposer », hors génération/dépôt).
                         .otherwise(lot.peutDeposerProperty()
                                 .not()
@@ -86,9 +93,13 @@ final class EtapeDeposerUI {
                                 + " n'est pas conservé après un dépôt en archives). Importez-les plutôt dans"
                                 + " « Sons & validation ». Pour forcer malgré tout, après un échec, par"
                                 + " exemple : lancer-traitement-vigiechiro --forcer.")
-                        .otherwise(Bindings.when(lot.peutDeposerProperty()
-                                        .and(lot.generationEnCoursProperty().not()))
-                                .then("Marquer le passage comme déposé sur Vigie-Chiro.")
-                                .otherwise("À faire une fois la nuit téléversée sur Vigie-Chiro.")));
+                        .otherwise(Bindings.when(traitement.analyseDemandeeProperty())
+                                .then("L'analyse de cette nuit est demandée à Vigie-Chiro : suivez-la dans la carte"
+                                        + " « Traitement Vigie-Chiro » ci-dessous.")
+                                .otherwise(Bindings.when(lot.peutDeposerProperty()
+                                                .and(lot.generationEnCoursProperty()
+                                                        .not()))
+                                        .then("Marquer le passage comme déposé sur Vigie-Chiro.")
+                                        .otherwise("À faire une fois la nuit téléversée sur Vigie-Chiro."))));
     }
 }

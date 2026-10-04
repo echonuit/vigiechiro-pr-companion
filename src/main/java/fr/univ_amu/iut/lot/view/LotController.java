@@ -142,6 +142,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     @FXML
     private Label lblConsigneDeposer;
 
+    @FXML
+    private Label lblRetourLancement;
+
     /// Icône du bouton de dépôt : elle suit son libellé, qui change de sens (marquer / lancer).
     @FXML
     private FontIcon iconeDeposer;
@@ -340,7 +343,13 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // Bouton de l'étape ④ : trois règles (libellé qui change de sens, cliquable après un dépôt
         // partiel, verrouillé si la nuit est déjà analysée), câblées à part (#1263).
         EtapeDeposerUI.cabler(
-                new EtapeDeposerUI.Vue(btnDeposer, iconeDeposer, enveloppeDeposer, lblTitreDeposer, lblConsigneDeposer),
+                new EtapeDeposerUI.Vue(
+                        btnDeposer,
+                        iconeDeposer,
+                        enveloppeDeposer,
+                        lblTitreDeposer,
+                        lblConsigneDeposer,
+                        lblRetourLancement),
                 viewModel,
                 depotViewModel,
                 traitementViewModel);
