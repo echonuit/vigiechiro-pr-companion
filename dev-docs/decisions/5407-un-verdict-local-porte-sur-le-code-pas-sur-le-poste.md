@@ -9,6 +9,8 @@ verification: certaine
 enforced_by:
   - "scripts/methode/prepare-l-environnement.py"
   - "scripts/methode/verifie-commandes-prescrites.py"
+relations:
+  completee_par: ["5775-le-depot-demande-au-poste-ou-vit-son-outil"]
 verified:
   - by: machine:ci
     at: 2026-09-07
@@ -17,6 +19,15 @@ generated:
 ---
 
 # Un verdict local porte sur le code, pas sur l'état du poste
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-03** : la décision de **poser** l'outil OpenSpec à la création du worktree est
+    **complétée** par
+    [5775](5775-le-depot-demande-au-poste-ou-vit-son-outil.md). Elle était juste et inappliquée : sur
+    les 23 arbres du poste, 12 n'avaient aucun `node_modules`, parce que `npm` est introuvable dans le
+    PATH d'un shell non interactif. L'échappatoire « chaque échec nomme sa commande » tenait en lettre
+    et nommait la commande qui ne peut pas s'exécuter. Le dépôt demande désormais au poste où vit son
+    outil, au lieu de le chercher. Le reste fait foi.
 
 ## Le défaut, et pourquoi il ne se voyait pas
 
