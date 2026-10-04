@@ -410,6 +410,7 @@ nav:
     - 5700 · Un contrôle de forme suit son lecteur: decisions/5700-un-controle-de-forme-suit-son-lecteur.md
     - 5774 · Un refus ne voyage pas dans le canal des constats: decisions/5774-un-refus-ne-voyage-pas-dans-le-canal-des-constats.md
     - 5775 · Le dépôt demande au poste où vit son outil: decisions/5775-le-depot-demande-au-poste-ou-vit-son-outil.md
+    - 5790 · Le graphe lit la prose d'un périmètre déclaré: decisions/5790-le-graphe-lit-la-prose-d-un-perimetre-declare.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md
