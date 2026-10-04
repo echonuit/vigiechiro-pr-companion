@@ -53,13 +53,58 @@ git diff --name-only <sha-d-ouverture>..origin/main | while read -r fichier; do
     [A-Z]*.java | [A-Z]*.fxml) motif="${nom%.*}" ;;
     *) motif="$nom" ;;
   esac
-  grep -rl --exclude-dir=node_modules -- "$motif" \
-      docs dev-docs brief \
-      AGENTS.md CLAUDE.md CONTRIBUTING.md .agents .claude 2>/dev/null | while read -r page; do
+  {
+    grep -rl --exclude-dir=node_modules -- "$motif" \
+        docs dev-docs brief \
+        AGENTS.md CLAUDE.md CONTRIBUTING.md .agents .claude 2>/dev/null
+    # `.github/` porte CINQ pages de prose, et `--include` les isole des ateliers et des scripts.
+    # Il se place AVANT le `--`, sans quoi `grep` le prend pour un nom de fichier - mesuré.
+    grep -rl --exclude-dir=node_modules --include='*.md' -- "$motif" .github 2>/dev/null
+  } | while read -r page; do
     printf '%s\t%s\n' "$motif" "$page"
   done
 done | sort -u
 ```
+
+## Le corpus a été élargi DEUX fois, et la seconde fois pour la même raison
+
+La première fois, il ne cherchait que `docs`, `dev-docs` et `brief` : il ne **pouvait pas** voir
+`AGENTS.md` continuer de prescrire la liste que la porte de #5294 remplaçait. Les surfaces
+d'instruction sont entrées là.
+
+La seconde fois, il oubliait `.github/`. Mesuré à la clôture de #5762 : `.github/openspec/README.md`
+prescrivait le même geste incomplet que `CONTRIBUTING.md` et que cette compétence-ci, et il a échappé
+aux **deux** lots du sous-chantier, parce que l'instrument ne le regardait pas (#5791).
+
+**Ce que l'élargissement coûte, mesuré sur le delta de #5762 en jouant l'instrument lui-même** -
+une transcription en Python rendait 591 et 613, un pair près, et c'est le genre d'écart qui fait
+croire qu'on a mesuré ce qu'on juge :
+
+```
+corpus d avant             592 paires
++ .github, *.md            614 paires   (+22, soit +3,7 %)
+rendement max par motif    102 -> 102   inchange, donc aucun bruit ajoute
+pages atteintes            5
+```
+
+**La borne est le `grep` avec ses deux drapeaux, et non un glob.** Un `pathlib.Path('.github').rglob('*.md')`
+rend **94** fichiers sur un arbre installé et **5** sur un arbre neuf : son corpus dépendrait de
+`node_modules`, qui est posé par worktree. L'`--exclude-dir=node_modules` que l'instrument porte déjà
+est ce qui rend ce corpus indépendant de l'installation, et c'est pourquoi il n'a pas été remplacé par
+une énumération `git`. Mesuré aussi : `git ls-files '.github/**/*.md'` rend **3** fichiers, le motif ne
+descendant pas d'un seul niveau, donc il manque `copilot-instructions.md`, la page qui justifie
+l'élargissement.
+
+**Et `.github/copilot-instructions.md` est la raison qui suffit.** C'est une surface d'**instruction**
+pour un autre agent, hors du corpus qu'on avait élargi pour inclure exactement cela : il avait gagné
+`.agents` et `.claude`, et oublié celle-là.
+
+**Une page absorbe beaucoup de motifs sans rien dire, et on la lit en dernier.**
+`.github/assets/README.md` est la galerie des captures : sur un delta qui touche des aperçus, elle
+rend **18 paires sur 22**, dont **16 noms d'image**. C'est du volume et non du signal, et
+`check_captures.py` tient déjà ce que ces noms promettent. La règle de lecture du bas vaut donc dans
+les deux sens : un **motif** à fort rendement ne désigne rien, et une **page** qui absorbe beaucoup de
+motifs non plus.
 
 ## Les surfaces d'instruction sont de la doc, et ce sont les plus coûteuses à laisser fausses
 
