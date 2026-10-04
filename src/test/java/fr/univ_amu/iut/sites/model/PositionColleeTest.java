@@ -72,4 +72,37 @@ class PositionColleeTest {
         LecturePosition.Lue lue = (LecturePosition.Lue) lecture;
         assertThat(lue.longitude()).isCloseTo(-3.25, within(0.0001));
     }
+
+    /// La forme des récepteurs GPS de terrain : degrés, puis minutes décimales. Le point lisait cette
+    /// forme axe par axe, le site la refusait ; une seule règle les lit désormais (#5688).
+    @Test
+    @DisplayName("#5688 : degrés-minutes décimales, lus comme leur équivalent décimal et non comme des secondes")
+    void degres_minutes_decimales_valent_leur_equivalent_decimal() {
+        LecturePosition lecture = PositionCollee.lire("43°24.06'N 5°26.85'E");
+
+        assertThat(lecture).isInstanceOf(LecturePosition.Lue.class);
+        LecturePosition.Lue lue = (LecturePosition.Lue) lecture;
+        // 43 + 24.06/60 et 5 + 26.85/60. Lues comme 24' 06", elles donneraient 43.4017 : 75 m plus loin.
+        assertThat(lue.latitude()).isCloseTo(43.401, within(0.00001));
+        assertThat(lue.longitude()).isCloseTo(5.4475, within(0.00001));
+    }
+
+    @Test
+    @DisplayName("#5688 : un décimal suivi de son cardinal porte le signe du cardinal")
+    void decimal_suivi_de_son_cardinal() {
+        LecturePosition lecture = PositionCollee.lire("43.401 N, 1.574 W");
+
+        assertThat(lecture).isEqualTo(new LecturePosition.Lue(43.401, -1.574));
+    }
+
+    /// Dans une paire, la virgule sépare déjà les deux nombres : « 43,401, 5,447 » ne se lit pas sans
+    /// deviner. Le refus le dit, au lieu du motif générique qui ne parle que de virgule (#5688).
+    @Test
+    @DisplayName("#5688 : une virgule décimale est refusée, et le refus dit d'écrire le point décimal")
+    void virgule_decimale_refusee_en_disant_quoi_ecrire() {
+        LecturePosition lecture = PositionCollee.lire("43,401, 5,447");
+
+        assertThat(lecture).isInstanceOf(LecturePosition.VirguleDecimale.class);
+        assertThat(lecture.message()).contains("point décimal").contains("43.401, 5.447");
+    }
 }

@@ -17,7 +17,6 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.VerdictCarre;
 import fr.univ_amu.iut.sites.viewmodel.PointEditViewModel;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.LongConsumer;
@@ -97,11 +96,15 @@ public class ModalePointController {
     @FXML
     private TextArea champDescription;
 
+    /// Le champ unique de la position (#5688), et le motif quand elle ne se lit pas.
     @FXML
-    private TextField champLatitude;
+    private TextField champPosition;
 
     @FXML
-    private TextField champLongitude;
+    private Label messagePosition;
+
+    @FXML
+    private Label messageVoisin;
 
     /// Enveloppe non désactivée du bouton : porte l'infobulle du grisage (#789, #1970).
     @FXML
@@ -134,12 +137,18 @@ public class ModalePointController {
         // Une modale est dimensionnée à son ouverture ; un bandeau de retour qui paraît ensuite
         // pousserait les boutons du bas hors du cadre. On fait suivre à la fenêtre la croissance de
         // son contenu (ADR 2493, #1534).
-        Modales.suivreLaCroissance(racine, bandeauRetour.managedProperty(), messageCarre.managedProperty());
+        Modales.suivreLaCroissance(
+                racine,
+                bandeauRetour.managedProperty(),
+                messageCarre.managedProperty(),
+                messagePosition.managedProperty(),
+                messageVoisin.managedProperty());
         titreModale.textProperty().bind(viewModel.titreProperty());
         champCode.textProperty().bindBidirectional(viewModel.codeProperty());
         champDescription.textProperty().bindBidirectional(viewModel.descriptionProperty());
-        champLatitude.textProperty().bindBidirectional(viewModel.latitudeProperty());
-        champLongitude.textProperty().bindBidirectional(viewModel.longitudeProperty());
+        champPosition.textProperty().bindBidirectional(viewModel.positionProperty());
+        LibelleRetour.installer(messagePosition, viewModel.retourPositionProperty());
+        LibelleRetour.installer(messageVoisin, viewModel.retourVoisinProperty());
         boutonValider.textProperty().bind(viewModel.libelleBoutonProperty());
         boutonValider.disableProperty().bind(viewModel.peutEnregistrer().not());
         // Le motif du grisage se dit ici (#1970) : la garde du ViewModel teste exactement ce prédicat,
@@ -148,7 +157,9 @@ public class ModalePointController {
                 enveloppeValider,
                 Bindings.when(viewModel.peutEnregistrer())
                         .then("Enregistrer ce point d'écoute.")
-                        .otherwise("Corrigez d'abord les champs signalés en rouge (code, latitude, longitude)."));
+                        .otherwise(
+                                "Corrigez d'abord le code, signalé en rouge, ou la position, dont le motif est affiché"
+                                        + " sous le champ."));
         // Publier après l'enregistrement (#3458). La case n'existe qu'en création, et se grise avec son
         // motif dès qu'un obstacle apparaît - typiquement les coordonnées effacées après l'avoir cochée.
         chkPublier.selectedProperty().bindBidirectional(viewModel.publication().demandeeProperty());
@@ -169,19 +180,17 @@ public class ModalePointController {
         viewModel.codeValide().addListener((observable, avant, valide) -> majStyleCode());
         viewModel.codeProperty().addListener((observable, avant, apres) -> majStyleCode());
 
-        // Carte-outil de saisie GPS (#153), synchronisée dans les deux sens avec les champs lat/lon.
+        // Carte-outil de saisie GPS (#153), synchronisée dans les deux sens avec le champ « Position ».
         zoneCarte.getChildren().add(carte);
         carte.setEditionActive(true);
         carte.setOnPointDeplace((point, lat, lon) -> {
-            // Glisser/clavier → on écrit les champs (donc le ViewModel), sans relancer un rendu par champ.
+            // Glisser/clavier → on écrit le champ (donc le ViewModel), sans relancer un rendu.
             synchronisationDepuisCarte = true;
-            viewModel.latitudeProperty().set(formatCoordonnee(lat));
-            viewModel.longitudeProperty().set(formatCoordonnee(lon));
+            viewModel.placer(lat, lon);
             synchronisationDepuisCarte = false;
             majMarqueur();
         });
-        viewModel.latitudeProperty().addListener((observable, avant, apres) -> majMarqueurSiSaisie());
-        viewModel.longitudeProperty().addListener((observable, avant, apres) -> majMarqueurSiSaisie());
+        viewModel.positionProperty().addListener((observable, avant, apres) -> majMarqueurSiSaisie());
         viewModel.codeProperty().addListener((observable, avant, apres) -> majMarqueur());
 
         // Contrôle du carré STOC (#733) : ce que la grille officielle dit de la position saisie. Message
@@ -190,8 +199,7 @@ public class ModalePointController {
         // (#2159). La confirmation se peint désormais en succès, là où le booléen la confondait avec un
         // silence.
         LibelleRetour.installer(messageCarre, viewModel.retourCarreProperty());
-        viewModel.latitudeProperty().addListener((observable, avant, apres) -> controlerCarre());
-        viewModel.longitudeProperty().addListener((observable, avant, apres) -> controlerCarre());
+        viewModel.positionProperty().addListener((observable, avant, apres) -> controlerCarre());
     }
 
     /// Demande à la grille STOC ce qu'elle sait de la position saisie, **hors du fil JavaFX** (c'est un appel
@@ -284,11 +292,6 @@ public class ModalePointController {
     private String libelleMarqueur() {
         String code = viewModel.codeProperty().get();
         return code == null || code.isBlank() ? "Point" : code;
-    }
-
-    /// Formate une coordonnée issue du glisser : 6 décimales (~0,1 m), point décimal.
-    private static String formatCoordonnee(double valeur) {
-        return String.format(Locale.ROOT, "%.6f", valeur);
     }
 
     @FXML

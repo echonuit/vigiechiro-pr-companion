@@ -118,6 +118,11 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
   sur le compte de recette, ou la plateforme de test) : l'encart ambre dit qu'il existe, mais pas en Point
   Fixe, nomme le site Routier, et dit le geste du portail. « Récupérer ce carré » **n'apparaît pas** : il
   n'y a rien à rattacher en Point Fixe (#5607).
+- **S1-43** · « + Ajouter un point » : le code est **proposé** (`Z` et le premier numéro libre du site). Coller
+  dans « Position » la paire d'une carte, `43.296482, 5.369780` puis `43°17'47.3"N 5°22'11.2"E` : le marqueur se
+  place aux deux fois au même endroit. Coller `43,401, 5,447` : le motif demande le point décimal, et
+  « + Ajouter » se grise. Glisser le marqueur : le champ se réécrit. Saisir une position à moins de 40 m
+  d'un point du site : l'avertissement le nomme, et l'ajout reste possible (#5688).
 - **S1-14** · Carte de site complète : nom, points, passages, badge fraîcheur, badges « Enregistré / Verrouillé
   sur Vigie-Chiro », chevron ›.
 - **S1-15** · Navigation clavier (Tab / Entrée / Espace) sur les cartes.

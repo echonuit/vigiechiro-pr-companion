@@ -45,9 +45,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.fxml.FXMLLoader;
@@ -55,6 +57,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 
@@ -151,6 +154,8 @@ public final class CaptureEcrans {
         capturerModaleEdition(
                 creerInjecteur(), seed.site(), seed.point(), sortie.resolve("apercu-sites-modale-point.png"));
         capturerModaleCreation(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-point-creation.png"));
+        capturerModalePointVoisin(
+                creerInjecteur(), seed.site(), seed.point(), sortie.resolve("apercu-sites-modale-point-voisin.png"));
         capturerModalePointCarreDivergent(
                 seed.site(), seed.point(), sortie.resolve("apercu-sites-modale-point-carre-divergent.png"));
         capturerModaleSiteEdition(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-site.png"));
@@ -220,14 +225,42 @@ public final class CaptureEcrans {
     /// Modale de création d'un point d'écoute (formulaire vierge), rendue seule (fenêtre modale). Comme
     /// l'édition, on laisse les tuiles OSM de la carte-outil se charger avant le snapshot (#153).
     private static void capturerModaleCreation(Injector injecteur, Site site, Path fichier) throws IOException {
+        capturerModaleCreation(injecteur, site, fichier, vue -> {});
+    }
+
+    /// Variante qui **prépare la modale ouverte** avant le rendu : une saisie, par exemple.
+    private static void capturerModaleCreation(Injector injecteur, Site site, Path fichier, Consumer<Parent> saisie)
+            throws IOException {
         FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         // L'injecteur de capture n'a pas la connexion : la case « publier » y est donc absente, et
         // l'aperçu montre la modale telle qu'elle est hors ligne (#3458).
         ((ModalePointController) loader.getController()).demarrerCreation(site, () -> {}, identifiant -> {});
+        saisie.accept(vue);
         ApercuFx.capturerApresPreparation(new Scene(vue), AttenteTuiles::attendre, fichier);
     }
+
+    /// Modale de création quand un point du site est **à 40 m au plus** de la position saisie (#5688) :
+    /// l'avertissement nomme le voisin et sa distance. La position est saisie à une vingtaine de mètres au
+    /// nord du point existant, dans le champ unique, comme le ferait l'observateur.
+    private static void capturerModalePointVoisin(Injector injecteur, Site site, PointDEcoute voisin, Path fichier)
+            throws IOException {
+        capturerModaleCreation(injecteur, site, fichier, vue -> {
+            ((TextField) vue.lookup(CHAMP_POSITION))
+                    .setText(String.format(
+                            Locale.ROOT, "%.6f, %.6f", voisin.latitude() + VINGT_METRES_AU_NORD, voisin.longitude()));
+            if (((Label) vue.lookup("#messageVoisin")).getText().isBlank()) {
+                throw new IllegalStateException("L'aperçu du point voisin n'affiche aucun avertissement");
+            }
+        });
+    }
+
+    /// Le champ où se colle une position : il porte le même identifiant dans les deux modales.
+    private static final String CHAMP_POSITION = "#champPosition";
+
+    /// Vingt mètres vers le nord, en degrés de latitude.
+    private static final double VINGT_METRES_AU_NORD = 0.00018;
 
     /// Modale de point quand la position **ne tombe pas** dans le carré déclaré par le site (#733).
     ///
@@ -367,7 +400,7 @@ public final class CaptureEcrans {
         Parent vue = loader.load();
         ((ModaleSiteController) loader.getController()).demarrerCreation(() -> {});
         Scene scene = new Scene(vue);
-        ((TextField) exiger(scene, "#champPosition")).setText("44.44674980384396, 6.298116860416506");
+        ((TextField) exiger(scene, CHAMP_POSITION)).setText("44.44674980384396, 6.298116860416506");
         ((Button) exiger(scene, "#btnSituer")).fire();
         ApercuFx.enregistrerPng(scene, fichier);
     }
@@ -383,7 +416,7 @@ public final class CaptureEcrans {
         Parent vue = loader.load();
         ((ModaleSiteController) loader.getController()).demarrerCreation(() -> {});
         Scene scene = new Scene(vue);
-        ((TextField) exiger(scene, "#champPosition")).setText("44.444990, 6.306335");
+        ((TextField) exiger(scene, CHAMP_POSITION)).setText("44.444990, 6.306335");
         ((Button) exiger(scene, "#btnSituer")).fire();
         ApercuFx.enregistrerPng(scene, fichier);
     }
