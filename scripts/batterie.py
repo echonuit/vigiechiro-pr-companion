@@ -738,7 +738,7 @@ def rendre(
     if python != "python3":
         print(f"  interprete : {python}", flush=True)
 
-    joues, rouges, mesures = 0, [], durees_connues()
+    joues, rouges, muets, mesures = 0, [], [], durees_connues()
     for g in engages:
         depart = time.time()
         arguments = des_ateliers.get(g, [])
@@ -759,7 +759,12 @@ def rendre(
         if verdict == "arguments":
             print(f"  · {g}  (s attend des arguments, non jugé ici)", flush=True)
             continue
-        if verdict not in SANS_REFUS:
+        if verdict == "muet":
+            # `?` et non `✘` : l ADR 2748 pose cette distinction entre `0` et `?`, et l ADR 5407
+            # ecrit qu un garde qui refuse faute de donnees « n est pas vert, il est MUET ».
+            muets.append((g, ligne))
+            print(f"  ? {g}{_suffixe(arguments)}", flush=True)
+        elif verdict not in SANS_REFUS:
             rouges.append((g, ligne))
             print(f"  ✘ {g}{_suffixe(arguments)}", flush=True)
         else:
@@ -792,9 +797,16 @@ def rendre(
         if rendu.returncode == 0:
             print(f"  ✔ {chemin} --auto-test", flush=True)
         else:
-            rouges.append(f"{chemin} --auto-test")
+            # ⟨un COUPLE, comme les deux autres familles⟩ Cette ligne ajoutait une CHAINE la ou
+            # les gardes et les outils ajoutent `(nom, ligne)`, et le recapitulatif depaquette en
+            # deux : un auto-test d atelier qui echouait faisait LEVER la porte sur un `ValueError`
+            # au lieu de rendre son verdict. Jamais vu, parce que ces dix-sept passent - et c est
+            # exactement le chemin ou l on a le plus besoin qu elle parle. Trouve en lisant le
+            # fichier pour #5780.
+            queue = (rendu.stdout + rendu.stderr).strip().splitlines()[-3:]
+            rouges.append((f"{chemin} --auto-test", queue[0] if queue else "sans ligne"))
             print(f"  ✘ {chemin} --auto-test", flush=True)
-            for ligne in (rendu.stdout + rendu.stderr).strip().splitlines()[-3:]:
+            for ligne in queue:
                 print(f"      {ligne}", flush=True)
 
     outils, absents = 0, []
@@ -824,13 +836,31 @@ def rendre(
     # ⟨trois comptes, pas un⟩ Un auto-test derive d un atelier n est pas un garde de la population :
     # les confondre ferait croire que la porte couvre treize gardes de plus, quand elle joue treize
     # auto-tests de scripts qu elle n engage pas autrement (#5555).
+    # ⟨TROIS comptes dans la ligne de verdict, pas deux⟩ Deux sessions ont fait la meme objection :
+    # si un garde muet cesse d etre compte refus, une porte avec deux muets dirait « 0 refus » et
+    # sortirait 0, donc le garde cesserait de mentir et la porte commencerait. Un faux vert est la
+    # direction dangereuse, et c est celle que ce compte ferme.
     print(
         f"\n  {joues} garde(s), {autotests} auto-test(s) d atelier et {outils} outil(s) joue(s),"
-        f" {len(rouges)} refus."
+        f" {len(rouges)} refus, {len(muets)} muet(s)."
     )
+    # ⟨les muets se NOMMENT, et dans la QUEUE⟩ Une session pair a lu « 0 refus » dans un code 1 en
+    # filtrant la sortie sur `✘` : un verdict qui ne se voit que dans le corps du texte se perd.
+    for g, ligne in muets:
+        print(f"  ? {g} n a PAS pu juger")
+        for affichee in refus_affiche(ligne):
+            print(affichee)
     for ligne in reste_a_lancer(diff, absents, racine):
         print(ligne)
     if not rouges:
+        if muets:
+            print()
+            print("  Rien n est rouge, et tout n a pas ete juge : les gardes ci-dessus ont REFUSE")
+            print(
+                "  de conclure faute d un prerequis. Leur refus ne parle pas de votre diff, et il"
+            )
+            print("  ne vaut pas un vert. Code 2 : « je n ai pas pu tout juger ».")
+            return 2
         return 0
     print()
     for g, ligne in rouges:
@@ -924,6 +954,20 @@ def verdict_du_lancement(nom: str, code: int, stdout: str, stderr: str) -> tuple
         else ("\n".join(lignes[:2]) if lignes else "(sans sortie)")
     )
     if nom not in EXIGENT_DES_ARGUMENTS:
+        # ⟨LE TROISIEME VERDICT, decide sur ce que cette fonction LIT DEJA⟩ Un garde qui emploie la
+        # forme declaree dit « je n ai pas pu juger », et c est une autre chose que « j ai juge et
+        # c est rouge ». Cette fonction lisait les deux champs pour mieux les AFFICHER, puis jetait
+        # ce que leur presence signifie : huit corps de demande sur deux sessions ont cherche dans
+        # leur diff un defaut qui tenait au poste (#5780).
+        #
+        # Aucune inference : on ne devine pas, on lit une forme que le garde DECLARE. Et la lecture
+        # des CODES de sortie n est pas rouverte - la porte l a quittee parce qu un test
+        # `returncode == 2` ne pouvait jamais etre vrai sur `compte-les-reliquats`.
+        #
+        # Un garde NON CONVERTI, qui sort non nul sans la forme, reste compte comme avant : c est le
+        # repli de #5485, qui permet de convertir un a un sans fausser la porte entre-temps.
+        if declare:
+            return "muet", premiere
         # ⟨aucune devinette ici, et c est le point⟩ Un garde NEUF qui exigerait des arguments sans
         # etre declare est compte refus, et sa ligne d usage s affiche : le lecteur voit tout de
         # suite ce qui se passe. C est un faux ROUGE, visible et sans danger. Deviner a sa place
@@ -1328,6 +1372,117 @@ def _auto_test() -> int:
                         else f"      sortie={rendu[-300:]!r}"
                     )
 
+        # ⟨LE TROISIEME VERDICT, DE BOUT EN BOUT (#5780)⟩ Les cas de `verdict_du_lancement` tiennent
+        # la fonction ; ceux-ci tiennent ce que la PORTE en fait - sa ligne de verdict, le nom du
+        # muet dans la QUEUE, et son code de sortie. Deux sessions pairs ont fait la meme objection :
+        # un muet qui cesse d etre compte refus, sans etre montre ailleurs, ferait dire « 0 refus »
+        # et sortir 0. Le garde cesserait de mentir, la porte commencerait.
+        for libelle, forme_declaree, code_attendu, muets_attendus in (
+            ("un garde MUET fait sortir la porte en 2, et se nomme", True, 2, 1),
+            ("le MEME garde sans la forme declaree reste rouge, code 1", False, 1, 0),
+        ):
+            # ⟨DEUX sources entieres, et non un fragment interpole⟩ La premiere ecriture glissait
+            # un fragment multiligne dans une position indentee, et produisait un fichier que Python
+            # ne lisait pas. La porte l a DIT - « sensible.py est illisible (IndentationError) » -
+            # et c est elle qui a diagnostique ma fixture, pas moi.
+            declare = textwrap.dedent("""
+                import sys
+
+                CONTRAT = {"geste": "x", "population": "y", "dispositif": "invariant",
+                           "seuil": "(sans objet)", "temoin": "t", "decision": "d"}
+
+                print("REFUS : un prerequis manque", file=sys.stderr)
+                print("POUR REPARER : posez-le", file=sys.stderr)
+                raise SystemExit(2)
+            """)
+            nu = textwrap.dedent("""
+                import sys
+
+                CONTRAT = {"geste": "x", "population": "y", "dispositif": "invariant",
+                           "seuil": "(sans objet)", "temoin": "t", "decision": "d"}
+
+                print("quelque chose a casse", file=sys.stderr)
+                raise SystemExit(2)
+            """)
+            (bout / "scripts" / "methode" / "sensible.py").write_text(
+                declare if forme_declaree else nu, encoding="utf-8"
+            )
+            atelier.write_text("jobs:\n  a:\n    steps: []\n", encoding="utf-8")
+            # ⟨on INDEXE avant de lancer, et ce n est pas une commodite⟩ La premiere ecriture de ce
+            # cas rendait code=1 sans aucun muet, et j ai cru mon code faux. Le bac portait un
+            # fichier NON INDEXE laisse par les cas voisins, donc la porte refusait AVANT le premier
+            # garde - le piege exact qu une session pair avait rencontre le matin meme, et dont elle
+            # m avait dit de me defier. Un cas qui ne maitrise pas l etat de son bac n eprouve pas
+            # ce qu il croit.
+            subprocess.run(["git", "-C", str(bout), "add", "."], check=True)
+            tampon = _io.StringIO()
+            with _ctx.redirect_stdout(tampon):
+                code = rendre(contre="HEAD", lance=True, racine=bout)
+            rendu = tampon.getvalue()
+            # QUATRE choses, et chacune ferme une porte de sortie : le code, le compte de la ligne
+            # de verdict, le nom dans la queue, et - pour le muet - la phrase qui dit pourquoi ce
+            # n est pas un vert. Un seul de ces controles laisserait passer le faux vert.
+            compte = f"{muets_attendus} muet(s)." in rendu
+            nomme = ("n a PAS pu juger" in rendu) == bool(muets_attendus)
+            dit_le_code = ("Code 2" in rendu) == bool(muets_attendus)
+            bon = code == code_attendu and compte and nomme and dit_le_code
+            print(f"  {'✔' if bon else '✘'} {libelle}")
+            if not bon:
+                echecs += 1
+                print(
+                    f"      code={code} attendu={code_attendu} compte={compte}"
+                    f" nomme={nomme} dit_le_code={dit_le_code}"
+                )
+
+        # ⟨UN AUTO-TEST D ATELIER QUI ECHOUE ne doit pas faire LEVER la porte⟩ Ces auto-tests
+        # ajoutaient une CHAINE la ou les gardes ajoutent un couple, et le recapitulatif depaquette
+        # en deux : la porte levait un `ValueError` au lieu de rendre son verdict. Aucun cas ne
+        # jouait ce chemin, parce que les dix-sept auto-tests reels passent - donc le defaut vivait
+        # exactement la ou l on a le plus besoin d un verdict. Trouve en lisant le fichier (#5780).
+        #
+        # Un auto-test SANS `CONTRAT` sort de la population des gardes et n est lu que par
+        # `auto_tests_des_ateliers`, d ou le fichier distinct.
+        (bout / "scripts" / "methode" / "muet_d_atelier.py").write_text(
+            textwrap.dedent("""
+                import sys
+
+                print("  ✘ un cas du harnais a rougi", file=sys.stderr)
+                raise SystemExit(1)
+            """),
+            encoding="utf-8",
+        )
+        atelier.write_text(
+            "jobs:\n  a:\n    steps:\n      - run: python3"
+            " scripts/methode/muet_d_atelier.py --auto-test\n",
+            encoding="utf-8",
+        )
+        subprocess.run(["git", "-C", str(bout), "add", "."], check=True)
+        tampon = _io.StringIO()
+        # ⟨ce cas RATTRAPE, et c est le point⟩ Le defaut qu il garde est un LEVE, pas un faux
+        # verdict. Laisse nu, il faisait remonter le `ValueError` jusqu au rattrapage du harnais : la
+        # mutation etait detectee, mais en « non concluant » plutot qu en cas rouge nomme. Un cas qui
+        # plante vaut moins qu un cas qui rougit en se nommant - la lecon de #5530, appliquee ici.
+        leve = None
+        code = None
+        try:
+            with _ctx.redirect_stdout(tampon):
+                code = rendre(contre="HEAD", lance=True, racine=bout)
+        except Exception as attrape:  # noqa: BLE001
+            leve = attrape
+        rendu = tampon.getvalue()
+        # La porte doit CONCLURE : ne pas lever, un code non nul, et sa ligne de verdict presente.
+        conclut = leve is None and code != 0 and " joue(s), " in rendu
+        print(
+            f"  {'✔' if conclut else '✘'} un auto-test d atelier qui échoue ne fait pas LEVER la porte"
+        )
+        if not conclut:
+            echecs += 1
+            print(
+                f"      levé {type(leve).__name__} : {leve}"
+                if leve
+                else f"      code={code} sortie={rendu[-300:]!r}"
+            )
+
         # Et ce que la queue nomme, dans les deux sens : une ADR engage une classe Java, un texte non.
         for diff, doit, libelle in (
             (
@@ -1433,6 +1588,38 @@ def _auto_test() -> int:
             "RELIQUATS | lus=0 | verdict=refus",
             ("declaration-perimee", "RELIQUATS | lus=0 | verdict=refus"),
         ),
+        # ⟨LE TROISIEME VERDICT, #5780⟩ Aucun cas de cette table n assertait le VERDICT d un refus
+        # DECLARE : les trois cas voisins ne lisent que sa LIGNE. C est pour cela que le defaut a
+        # vecu - la fonction lisait les deux champs pour mieux les afficher, et rendait « rouge ».
+        (
+            "un refus DECLARE est muet, pas rouge",
+            "x.py",
+            2,
+            "",
+            "REFUS : node est absent du PATH\nPOUR REPARER : mettez node sur le PATH",
+            ("muet", "node est absent du PATH\nmettez node sur le PATH"),
+        ),
+        # Le CONTRASTE qui compte le plus : un garde qui a JUGE et qui est rouge reste rouge. Sans
+        # lui, le cas ci-dessus passerait sur une porte qui appellerait TOUT muet.
+        (
+            "un ecart JUGE reste rouge, et ne devient pas muet",
+            "x.py",
+            1,
+            "",
+            "3 spec(s) principale(s) ne valident pas",
+            ("rouge", "3 spec(s) principale(s) ne valident pas"),
+        ),
+        # Le second contraste : un garde NON CONVERTI, non nul et sans la forme, est compte comme
+        # avant. C est le repli de #5485, et le retirer ferait basculer d un coup des gardes dont
+        # personne n a relu le refus.
+        (
+            "un garde NON CONVERTI reste rouge, forme absente",
+            "x.py",
+            2,
+            "",
+            "quelque chose a casse\net une seconde ligne",
+            ("rouge", "quelque chose a casse\net une seconde ligne"),
+        ),
     ):
         obtenu = verdict_du_lancement(nom, code, sortie, erreur)
         if obtenu == attendu:
@@ -1450,6 +1637,15 @@ def _auto_test() -> int:
         else:
             print(f"  ✘ « {verdict} » est rangé du côté vert : il ne serait jamais montré")
             echecs += 1
+
+    # ⟨« muet » n est NI vert NI refus, et les deux erreurs sont dangereuses⟩ Rangé du côté vert, il
+    # disparaitrait et la porte dirait « tout est juge ». Rangé avec les refus, il ferait chercher
+    # dans le diff. C est la troisieme place que ce lot ouvre, et `rendre` la tient par son `if`
+    # dedie plutot que par cette table.
+    muet_hors_du_vert = "muet" not in SANS_REFUS
+    print(f"  {'✔' if muet_hors_du_vert else '✘'} « muet » n est pas rangé du côté vert")
+    if not muet_hors_du_vert:
+        echecs += 1
 
     # ⟨le choix de l interprete, dans les DEUX sens⟩ Sans le second cas, un sondage qui rendrait
     # toujours le premier candidat passerait le premier et la porte refuserait de tourner partout.
