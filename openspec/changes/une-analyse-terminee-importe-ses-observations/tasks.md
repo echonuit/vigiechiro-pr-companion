@@ -19,5 +19,5 @@ Un lot du chantier #5596, une demande de fusion : #5784 (lot 24).
 
 - [x] 3.1 Capture de la carte après un import, déclarée aux trois endroits (classe de capture, script, manifeste), ouverte et relue ; les trois gardes de captures rejoués à la main.
 - [x] 3.2 `docs/ecrans/lot.md` et `dev-docs/cli.md` disent le geste ; un cas de recette S4 le pose, sans toucher aux lignes S4-47 à S4-50, S4-90 et S4-92.
-- [ ] 3.3 Faire rejouer `ScenarioConnecteLancementTest` sur la branche par la session qui le porte, avant la fusion. Fait quand elle le rend vert.
+- [x] 3.3 Faire rejouer `ScenarioConnecteLancementTest` sur la branche par la session qui le porte, avant la fusion. Fait quand elle le rend vert.
 - [ ] 3.4 Mutation ciblée sur le chemin d'import de `TraitementViewModel` et sur la décision du verrou ; survivants lus un par un.
