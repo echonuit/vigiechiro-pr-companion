@@ -22,11 +22,11 @@ on:
   workflow_dispatch:
     inputs:
       avant:
-        description: "Ce à quoi on compare : un tag de version, ou « clips-recette »"
+        description: "Ce à quoi on compare : un tag de version, « clips-recette », ou « clips-plateforme-de-test-precedent »"
         type: string
         required: true
       apres:
-        description: "Ce qu'on regarde : un tag de version, ou « clips-recette »"
+        description: "Ce qu'on regarde : un tag de version, « clips-recette », ou « clips-plateforme-de-test »"
         type: string
         default: "clips-recette"
       banc:

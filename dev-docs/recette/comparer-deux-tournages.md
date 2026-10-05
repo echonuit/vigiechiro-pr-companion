@@ -11,7 +11,7 @@ Le flux `comparer-tournages.yml` (`workflow_dispatch`) prend quatre entrées :
 
 | Entrée | Ce qu'elle attend |
 |---|---|
-| `avant` | ce à quoi on compare : un tag de version (`v2.188.0`) ou `clips-recette` |
+| `avant` | ce à quoi on compare : un tag de version (`v2.188.0`), `clips-recette`, ou `clips-plateforme-de-test-precedent` |
 | `apres` | ce qu'on regarde, mêmes valeurs |
 | `banc` | `bash` ou `java`, pour choisir le préfixe sur les tags de version |
 | `tolerance` | la tolérance de couleur, en pourcentage. 5 par défaut |
@@ -21,6 +21,12 @@ travail non publié change à l'écran**.
 
 Le résultat s'écrit dans le **résumé du job** et les images partent dans un artefact, gardé quatorze
 jours.
+
+Les clips de la **plateforme de test** se comparent d'un tournage au suivant : `avant` =
+`clips-plateforme-de-test-precedent`, `apres` = `clips-plateforme-de-test` (#5854). Chaque tournage
+sur cette cible recopie la pré-version sous le premier nom avant de l'écraser, et les notes des deux
+disent l'exécution et le commit qui les ont tournées : c'est là qu'on lit ce qu'on compare. Deux
+tournages du même commit mesurent du bruit ; deux commits différents, ce que le second a changé.
 
 !!! note "Pourquoi rien n'est committé"
 

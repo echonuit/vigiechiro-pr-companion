@@ -31,10 +31,15 @@ mesurée (#5797) : quatre tournages du même commit, six paires, et aucun des ci
 plus de 0,267 %. Leurs planchers sont dans `planchers-tournages.tsv`, et
 [la page de la comparaison](comparer-deux-tournages.md) dit comment les lire.
 
-Ce qui manque encore n'est pas une permission mais un **second côté** : `comparer-tournages.yml` prend
-ses deux tournages dans des versions publiées, et il n'existe qu'une pré-version
-`clips-plateforme-de-test`, écrasée à chaque tournage. D'ici là, deux tournages se comparent à la main,
-depuis les artefacts de leurs exécutions.
+`comparer-tournages.yml` prend ses deux tournages dans des versions publiées, et celle-ci est écrasée à
+chaque tournage. Le tournage d'avant est donc **gardé** : avant de verser, le job de publication
+recopie la pré-version sur `clips-plateforme-de-test-precedent` (#5854). La comparaison se lance de
+l'une à l'autre, `avant` = `clips-plateforme-de-test-precedent`, `apres` = `clips-plateforme-de-test`.
+
+Les notes de chaque pré-version disent l'exécution et le commit qui l'ont tournée. Elles se lisent
+**avant** le rapport : deux tournages du même commit mesurent du bruit, deux commits différents
+mesurent ce que le second a changé. Seuls deux tournages consécutifs se comparent ainsi ; au-delà, les
+artefacts de leurs exécutions restent disponibles quatorze jours.
 
 ## Ce qu'un clip connecté prouve, et qu'un autre ne peut pas
 

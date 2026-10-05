@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Quatre decisions du tournage connecte tiennent dans le YAML (#5221, porte du bash).
+"""Cinq decisions du tournage connecte tiennent dans le YAML (#5221, porte du bash).
 
 Elles ne se tiennent pas par un test : elles vivent dans la forme de deux ateliers, et rien ne les
 relisait. Chacune a un cout connu si elle lache.
@@ -17,6 +17,10 @@ relisait. Chacune a un cout connu si elle lache.
    tentatives d une meme execution versaient sous le meme nom, et une publication relancee reprenait
    l artefact de la tentative ECHOUEE : sur l execution 37229250872, l oracle disait « 8 / 8 » et la
    pre-version recevait 3 clips et un index de 5 cas, sans que rien ne rougisse (#5797).
+5. **Le tournage precedent de la plateforme de test est garde AVANT d etre ecrase.** La comparaison
+   veut deux tournages, et la pre-version n en porte qu un. Recopier apres le versement garderait
+   le tournage courant sous les deux noms : la comparaison dirait « rien n a change » entre un
+   tournage et lui-meme, et ce serait vert (#5854).
 
 ## Le leurre pour `gh`, et pourquoi le verdict se prend sur le MESSAGE
 
@@ -103,6 +107,12 @@ def refus_de_la_source_connectee(flux: pathlib.Path) -> bool:
             print("   L ADR 5641 leve ce refus pour la plateforme de test : il ne vaut que pour la")
             print("   plateforme nationale, dont l ecran suit des donnees vivantes.")
             return False
+        # Ni son tournage precedent, qui est l autre cote de sa comparaison (#5854).
+        if "ne se compare pas" in lance(PRECEDENTE, "clips-plateforme-de-test"):
+            print(f"❌ comparer-tournages.yml refuse la source « {PRECEDENTE} ».")
+            print("   C est le second cote de la comparaison des clips de la plateforme de test :")
+            print("   sans lui, elle n a rien a comparer.")
+            return False
         # Le controle de l autre bord : une source ordinaire ne doit PAS declencher ce refus.
         if "ne se compare pas" in lance("v2.186.0", "v2.187.0"):
             print(
@@ -181,6 +191,53 @@ def controle_avant_le_tournage(flux: pathlib.Path) -> bool:
     return True
 
 
+PRECEDENTE = "clips-plateforme-de-test-precedent"
+
+# Ce qui ECRIT sur la pre-version courante. Le nom est suivi d une espace ou d une fin de mot, pour
+# qu une ecriture sur la precedente, dont le nom commence pareil, ne compte pas.
+ECRIT_SUR_LA_COURANTE = re.compile(
+    r"gh release (?:upload|edit|create|delete-asset) clips-plateforme-de-test(?![-\w])"
+)
+
+
+def precedent_garde_avant_l_ecrasement(flux: pathlib.Path) -> bool:
+    """La cinquieme : le tournage precedent se recopie AVANT toute ecriture sur la pre-version.
+
+    L ordre se lit sur les pas du job, par ce que leur `run:` fait et non par leur nom : un pas
+    renomme resterait juge, et un pas deplace rougit.
+    """
+    f = _charge(flux / "tournage-recette.yml")
+    pas = (f["jobs"].get("publier-plateforme-de-test") or {}).get("steps") or []
+    blocs = [str(e.get("run", "")) for e in pas]
+    recopies = [i for i, b in enumerate(blocs) if f"gh release upload {PRECEDENTE} " in b]
+    ecritures = [i for i, b in enumerate(blocs) if ECRIT_SUR_LA_COURANTE.search(b)]
+    if not recopies:
+        print(f"❌ Aucun pas de `publier-plateforme-de-test` ne verse sur « {PRECEDENTE} ».")
+        print(
+            "   Le tournage precedent est ecrase sans etre garde : la comparaison n a qu un cote."
+        )
+        return False
+    if not ecritures:
+        print(
+            "❌ Aucun pas de `publier-plateforme-de-test` n ecrit sur « clips-plateforme-de-test » :"
+        )
+        print("   ce garde ne sait plus par rapport a quoi juger l ordre, et il le dit.")
+        return False
+    if min(recopies) > min(ecritures):
+        print(
+            f"❌ La recopie du tournage precedent vient APRES une ecriture sur la pre-version "
+            f"courante (pas {min(ecritures) + 1} puis {min(recopies) + 1})."
+        )
+        print("   Elle garderait le tournage courant sous les deux noms, et la comparaison dirait")
+        print("   « rien n a change » entre un tournage et lui-meme.")
+        return False
+    if "gh release download clips-plateforme-de-test " not in blocs[min(recopies)]:
+        print("❌ Le pas qui verse sur la precedente ne reprend pas les pieces de la courante :")
+        print("   ce qu il garde ne vient pas du tournage precedent.")
+        return False
+    return True
+
+
 SORTIE_ARTEFACT = "${{ needs.filmer.outputs.artefact }}"
 
 
@@ -235,12 +292,13 @@ def artefact_nomme_par_le_tournage(flux: pathlib.Path) -> bool:
 
 
 def verdict(flux: pathlib.Path) -> bool:
-    """Les quatre, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
+    """Les cinq, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
     tiennent = [
         refus_de_la_source_connectee(flux),
         versement_conditionne(flux),
         controle_avant_le_tournage(flux),
         artefact_nomme_par_le_tournage(flux),
+        precedent_garde_avant_l_ecrasement(flux),
     ]
     return all(tiennent)
 
@@ -346,6 +404,49 @@ def _verse_sous_un_autre_nom(dossier: pathlib.Path) -> None:
     )
 
 
+def _recopie_apres_le_versement(dossier: pathlib.Path) -> None:
+    """Le pas qui garde le precedent passe en DERNIER : il garderait le tournage courant."""
+    import yaml
+
+    p = dossier / "tournage-recette.yml"
+    f = yaml.safe_load(p.read_text(encoding="utf-8"))
+    pas = f["jobs"]["publier-plateforme-de-test"]["steps"]
+    i = next(
+        k for k, e in enumerate(pas) if f"gh release upload {PRECEDENTE} " in str(e.get("run", ""))
+    )
+    pas.append(pas.pop(i))
+    p.write_text(yaml.safe_dump(f, allow_unicode=True, sort_keys=False), encoding="utf-8")
+
+
+def _retire_la_recopie(dossier: pathlib.Path) -> None:
+    """Plus aucun pas ne garde le tournage precedent."""
+    import yaml
+
+    p = dossier / "tournage-recette.yml"
+    f = yaml.safe_load(p.read_text(encoding="utf-8"))
+    pas = f["jobs"]["publier-plateforme-de-test"]["steps"]
+    f["jobs"]["publier-plateforme-de-test"]["steps"] = [
+        e for e in pas if f"gh release upload {PRECEDENTE} " not in str(e.get("run", ""))
+    ]
+    p.write_text(yaml.safe_dump(f, allow_unicode=True, sort_keys=False), encoding="utf-8")
+
+
+def _refuse_la_precedente(dossier: pathlib.Path) -> None:
+    """Le refus de `clips-connectes` s etend au tournage precedent de la plateforme de test."""
+    p = dossier / "comparer-tournages.yml"
+    t = p.read_text(encoding="utf-8")
+    p.write_text(
+        t.replace(
+            '            if [ "$source" = "clips-connectes" ]; then',
+            '            if [ "$source" = "clips-connectes" ] || [ "$source" = "'
+            + PRECEDENTE
+            + '" ]; then',
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+
 CASSURES = (
     (_casse_le_refus, "le refus de clips-connectes neutralisé"),
     (_casse_la_fonction_d_etat, "publier-connecte privé de sa fonction d état"),
@@ -355,6 +456,9 @@ CASSURES = (
     (_recalcule_le_nom_a_la_reprise, "une reprise recalcule le nom de l artefact"),
     (_retire_la_tentative_du_nom, "nom d artefact sans numéro de tentative"),
     (_verse_sous_un_autre_nom, "versement sous un autre nom que la sortie"),
+    (_recopie_apres_le_versement, "tournage précédent recopié après le versement"),
+    (_retire_la_recopie, "aucun pas ne garde le tournage précédent"),
+    (_refuse_la_precedente, "comparaison qui refuse le tournage précédent"),
 )
 
 
@@ -410,10 +514,11 @@ if __name__ == "__main__":
     flux = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else RACINE / ".github" / "workflows"
     if verdict(flux):
         print(
-            "✓ Les quatre décisions du tournage connecté tiennent : refus de clips-connectes,"
+            "✓ Les cinq décisions du tournage connecté tiennent : refus de clips-connectes,"
             " versement"
         )
-        print("  conditionné, contrôle du jeton avant le tournage, artefact nommé par le tournage.")
+        print("  conditionné, contrôle du jeton avant le tournage, artefact nommé par le tournage,")
+        print("  tournage précédent gardé avant l'écrasement.")
         sys.exit(0)
     print("::error::Une décision du tournage connecté n est plus tenue par le YAML, cf. ci-dessus.")
     sys.exit(1)
