@@ -190,7 +190,16 @@ def noeud_de_document(identifiant, libelle, fichier, **plus):
 
 
 def joue_sur_un_depot_fabrique(passe, noeuds, aretes, fichiers):
-    """Joue une passe sur un depot FABRIQUE, et rend (code de sortie, noeuds, aretes) d'apres.
+    """Joue une passe sur un depot FABRIQUE, et rend (code de sortie, noeuds, aretes) d'apres."""
+    return joue_et_rend_le_journal(passe, noeuds, aretes, fichiers)[:3]
+
+
+def joue_et_rend_le_journal(passe, noeuds, aretes, fichiers):
+    """Joue une passe sur un depot FABRIQUE : (code de sortie, noeuds, aretes, lignes du journal).
+
+    Le journal est ce que la passe IMPRIME. Il se lit ici parce qu une passe compte ce qu elle
+    ajoute, et qu un zero y dit aussi bien « tout etait deja relie » que « rien n a ete
+    reconnu » : ce qu elle dit avoir LU se tient donc par un cas, comme le reste (#5919).
 
     Les passes lisent le depot relativement au dossier courant : on les joue donc telles quelles,
     dans un dossier temporaire. C'est le script qui est eprouve, pas une fonction qu'on en aurait
@@ -230,7 +239,7 @@ def joue_sur_un_depot_fabrique(passe, noeuds, aretes, fichiers):
             else {"nodes": [], "edges": []}
         )
     code = rendu.returncode if MAIN_RENDUE in rendu.stdout else PASSE_SORTIE_SANS_RENDRE_LA_MAIN
-    return code, extrait["nodes"], extrait["edges"]
+    return code, extrait["nodes"], extrait["edges"], rendu.stdout.splitlines()
 
 
 def auto_test():
