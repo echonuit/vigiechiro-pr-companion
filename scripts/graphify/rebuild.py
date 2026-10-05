@@ -15,8 +15,8 @@ pages, puis `decoupe`, les agents et `fusionne` font le reste. Ce n'est PAS
 les parades de l'ADR 5790.
 
 Usage :
-    python3 scripts/graphify/rebuild.py [fichier ...]
-    python3 scripts/graphify/rebuild.py --mets-a-jour
+    python3 scripts/graphify/rebuild.py [--repartitionne] [fichier ...]
+    python3 scripts/graphify/rebuild.py --mets-a-jour [--repartitionne]
 
 Sans argument, reconstruit a partir du graphe existant sans rien re-extraire.
 Les chemins passes en argument sont relatifs a la racine du depot.
@@ -25,6 +25,12 @@ Les chemins passes en argument sont relatifs a la racine du depot.
 rejoue les ponts et la reconstruction en reportant les libelles de communautes de
 l'etat d'AVANT. `graphify update .` seul les renomme toutes d'apres leur noeud le plus
 connecte : 1 074 communautes le 4 octobre 2026 (#5814).
+
+La PARTITION est gardee d'une reconstruction a la suivante : chaque noeud qui existait reste
+dans sa communaute, un noeud neuf va chez ses voisins, et les libelles se reportent par
+identifiant. La refaire en entier a chaque fois recomposait les deux tiers des communautes pour
+365 noeuds de plus sur 36 000, et un libelle sur quatre se perdait (#5940). `--repartitionne`
+la refait, quand elle a trop vieilli ; la premiere ligne du journal dit laquelle a eu lieu.
 
 La relecture des pages n'est pas un doublon de `graphify update .`. Il reextrait le code
 et les pages qui n'ont que leur structure, mais laisse telle quelle la structure d'une
@@ -298,7 +304,9 @@ def reporte(libelles_avant: dict, membres_avant: dict, communautes: dict) -> dic
     return repris
 
 
-def libeller(communautes: dict, noeuds: dict, reference: Path | None = None) -> dict:
+def libeller(
+    communautes: dict, noeuds: dict, reference: Path | None = None, par_identifiant: bool = False
+) -> dict:
     """Nomme les communautes, en reprenant les libelles de la passe precedente.
 
     Les identifiants de communaute changent a chaque clustering : le report se fait
@@ -319,7 +327,16 @@ def libeller(communautes: dict, noeuds: dict, reference: Path | None = None) -> 
         for n in json.loads(ancien_graphe.read_text(encoding="utf-8"))["nodes"]:
             if n.get("community") is not None:
                 membres_avant.setdefault(int(n["community"]), set()).add(n["id"])
-        repris = reporte(libelles_avant, membres_avant, communautes)
+        if par_identifiant:
+            # La partition a ete gardee : l'identifiant d'une communaute EST celui d'avant. Le
+            # recouvrement perdrait le libelle d'une communaute qui a fondu.
+            repris = {
+                int(cid): libelles_avant[str(cid)]
+                for cid in communautes
+                if str(cid) in libelles_avant
+            }
+        else:
+            repris = reporte(libelles_avant, membres_avant, communautes)
 
     def paquet(n):
         sf = n.get("source_file") or ""
@@ -344,7 +361,68 @@ def libeller(communautes: dict, noeuds: dict, reference: Path | None = None) -> 
     return libelles
 
 
-def reconstruire(reference: Path | None = None) -> None:
+def communautes_d_avant(dossier: Path) -> dict[str, int]:
+    """La communaute de chaque noeud dans le graphe d'un dossier, vide s'il n'y en a pas."""
+    graphe = dossier / "graph.json"
+    if not graphe.exists():
+        return {}
+    return {
+        n["id"]: int(n["community"])
+        for n in json.loads(graphe.read_text(encoding="utf-8"))["nodes"]
+        if n.get("community") is not None
+    }
+
+
+def partition_de(noeuds, voisins, d_avant: dict[str, int], repartitionne: bool, partitionne):
+    """Les communautes du graphe, la phrase qui dit comment elles ont ete obtenues, et si
+    la partition d'avant a ete GARDEE.
+
+    La reconstruction repartitionnait le graphe entier a chaque fois. Le partitionneur du moteur
+    est deterministe pour un graphe donne et sensible au moindre changement : l'ajout de 365
+    noeuds sur 36 000 a recompose les deux tiers des communautes, et 702 libelles sur 969 se
+    retrouvaient (#5940). Un libelle suit sa communaute : quand elle n'existe plus, il n'a plus
+    ou aller, quelle que soit la regle de report.
+
+    Chaque noeud qui existait garde donc sa communaute. Un noeud neuf va dans celle de la
+    majorite de ses voisins deja ranges, le plus petit identifiant departageant ; un neuf dont
+    le seul voisin est neuf attend le tour suivant. Celui qui n'a aucun voisin range recoit une
+    communaute a lui. La partition vieillit ainsi tant que personne ne la redemande : c'est le
+    prix de libelles stables, et `--repartitionne` la refait.
+    """
+    if repartitionne or not d_avant:
+        communautes = partitionne()
+        return communautes, f"partition refaite : {len(communautes)} communautes", False
+    communaute = {n: d_avant[n] for n in noeuds if n in d_avant}
+    en_attente = sorted(n for n in noeuds if n not in d_avant)
+    ranges = 0
+    while en_attente:
+        restent = []
+        for n in en_attente:
+            voix = Counter(communaute[v] for v in voisins(n) if v in communaute)
+            if voix:
+                communaute[n] = min(voix, key=lambda c: (-voix[c], c))
+                ranges += 1
+            else:
+                restent.append(n)
+        if len(restent) == len(en_attente):
+            break
+        en_attente = restent
+    suivante = max(d_avant.values()) + 1
+    for n in en_attente:
+        communaute[n] = suivante
+        suivante += 1
+    communautes: dict[int, list[str]] = {}
+    for n in sorted(communaute):
+        communautes.setdefault(communaute[n], []).append(n)
+    phrase = (
+        f"partition gardee : {len(communautes)} communautes ; {ranges} noeud(s) neuf(s) range(s) "
+        f"chez leurs voisins, {len(en_attente)} en communaute neuve. "
+        "Repartition entiere : --repartitionne"
+    )
+    return dict(sorted(communautes.items())), phrase, True
+
+
+def reconstruire(reference: Path | None = None, repartitionne: bool = False) -> None:
     from graphify.analyze import god_nodes, suggest_questions, surprising_connections
     from graphify.build import build_from_json
     from graphify.cluster import cluster, score_all
@@ -362,9 +440,16 @@ def reconstruire(reference: Path | None = None) -> None:
     if graphe.number_of_nodes() == 0:
         journal("graphe vide, reconstruction abandonnee")
         raise SystemExit(1)
-    communautes = cluster(graphe)
+    communautes, phrase, gardee = partition_de(
+        list(graphe.nodes),
+        graphe.neighbors,
+        communautes_d_avant(reference or SORTIE),
+        repartitionne,
+        lambda: cluster(graphe),
+    )
+    journal(phrase)
     noeuds = {n["id"]: n for n in extraction["nodes"]}
-    libelles = libeller(communautes, noeuds, reference)
+    libelles = libeller(communautes, noeuds, reference, par_identifiant=gardee)
     cohesion = score_all(graphe, communautes)
     dieux = god_nodes(graphe)
     surprises = surprising_connections(graphe, communautes)
@@ -562,12 +647,17 @@ def auto_test():
     # ponts (#5877). Le moteur ne relit plus une page qui porte une couche : sans ce geste, ses
     # titres datent du jour ou elle l'a recue. On remplace l'outil et les trois etapes par des
     # temoins, pour lire l'ordre sans graphify ni graphe.
-    def ordre_de_la_mise_a_jour(code_de_l_outil, moteur_present=True):
+    recu_par_la_reconstruction: dict = {}
+
+    def ordre_de_la_mise_a_jour(code_de_l_outil, moteur_present=True, repartitionne=False):
         appels = []
         temoins = {
             "relire_la_structure": lambda: appels.append("structure"),
             "jouer_les_passes": lambda: appels.append("ponts"),
-            "reconstruire": lambda reference=None: appels.append("reconstruction"),
+            "reconstruire": lambda reference=None, repartitionne=False: (
+                recu_par_la_reconstruction.update(repartitionne=repartitionne),
+                appels.append("reconstruction"),
+            ),
         }
         portee = globals()
         d_avant = {nom: portee.get(nom) for nom in temoins}
@@ -586,7 +676,7 @@ def auto_test():
             # sortie d un auto-test qui PASSE, et la porte les citerait comme la cause le jour
             # ou cet auto-test rougirait pour une autre raison (#5890).
             with contextlib.redirect_stdout(io.StringIO()):
-                code = mets_a_jour()
+                code = mets_a_jour(repartitionne)
         finally:
             shutil.which, subprocess.run = which, run
             if moteur_d_avant is None:
@@ -927,8 +1017,12 @@ def auto_test():
 
     # 12 : le chemin du crochet de commit, `rebuild.py <fichiers>`. Meme refus que la mise a jour
     # quand le module manque, et le meme ordre sinon : extraction, ponts, reconstruction.
-    def chemin_du_crochet(moteur_present):
+    vus: dict = {}
+
+    def chemin_du_crochet(moteur_present, arguments=("src/Classe.java", "docs/page.md")):
         appels = []
+        recus = vus
+        recus.clear()
         with tempfile.TemporaryDirectory() as temporaire:
             sortie = Path(temporaire)
             (sortie / "graph.json").write_text("{}", encoding="utf-8")
@@ -936,9 +1030,16 @@ def auto_test():
                 "GRAPHE": sortie / "graph.json",
                 "SORTIE": sortie,
                 "EXTRAIT": sortie / "extrait.json",
-                "extraire_les_modifies": lambda changes: appels.append("extraction"),
+                "extraire_les_modifies": lambda changes: (
+                    recus.update(fichiers=[str(c) for c in changes]),
+                    appels.append("extraction"),
+                ),
                 "jouer_les_passes": lambda: appels.append("ponts"),
-                "reconstruire": lambda reference=None: appels.append("reconstruction"),
+                "mets_a_jour": lambda repartitionne=False: recus.update(maj=repartitionne) or 0,
+                "reconstruire": lambda reference=None, repartitionne=False: (
+                    recus.update(repartitionne=repartitionne),
+                    appels.append("reconstruction"),
+                ),
             }
             portee = globals()
             d_avant = {nom: portee.get(nom) for nom in temoins}
@@ -947,7 +1048,7 @@ def auto_test():
                 portee.update(temoins)
                 sys.modules["graphify"] = types.ModuleType("graphify") if moteur_present else None
                 with contextlib.redirect_stdout(io.StringIO()):
-                    code = main(["src/Classe.java", "docs/page.md"])
+                    code = main(list(arguments))
             finally:
                 if moteur_d_avant is None:
                     sys.modules.pop("graphify", None)
@@ -970,6 +1071,148 @@ def auto_test():
         f"obtenu : {obtenu}",
     )
 
+    ordre_de_la_mise_a_jour(0, repartitionne=True)
+    demandee_a_la_reconstruction = recu_par_la_reconstruction.get("repartitionne")
+    ordre_de_la_mise_a_jour(0)
+    verifier(
+        "la mise a jour transmet a la reconstruction la repartition qu on lui demande",
+        (demandee_a_la_reconstruction, recu_par_la_reconstruction.get("repartitionne"))
+        == (True, False),
+        f"obtenu : {(demandee_a_la_reconstruction, dict(recu_par_la_reconstruction))}",
+    )
+
+    # 12 bis : le drapeau de repartition (#5940) traverse les deux chemins, et n'est pas pris pour
+    # un fichier a extraire.
+    obtenu = chemin_du_crochet(True, ("src/Classe.java", "--repartitionne"))
+    verifier(
+        "le drapeau de repartition n est pas pris pour un fichier, et arrive a la reconstruction",
+        (obtenu[0], vus.get("fichiers"), vus.get("repartitionne"))
+        == (0, ["src/Classe.java"], True),
+        f"obtenu : {(obtenu[0], dict(vus))}",
+    )
+    chemin_du_crochet(True)
+    verifier(
+        "sans drapeau, la reconstruction garde la partition",
+        vus.get("repartitionne") is False,
+        f"obtenu : {dict(vus)}",
+    )
+    chemin_du_crochet(True, ("--mets-a-jour", "--repartitionne"))
+    avec_drapeau = vus.get("maj")
+    chemin_du_crochet(True, ("--mets-a-jour",))
+    verifier(
+        "`--mets-a-jour --repartitionne` demande la repartition, `--mets-a-jour` seul la garde",
+        (avec_drapeau, vus.get("maj")) == (True, False),
+        f"obtenu : {(avec_drapeau, vus.get('maj'))}",
+    )
+
+    # 13 : la partition gardee (#5940). La reconstruction repartitionnait le graphe entier a
+    # chaque fois, et l'ajout de 365 noeuds sur 36 000 recomposait les deux tiers des communautes :
+    # 388 sur 1 119 restaient identiques, et un libelle dont la communaute n'existe plus n'a plus
+    # ou aller. Chaque noeud qui existait garde la sienne ; un neuf va chez ses voisins.
+    # `neuf_aa_derriere` n'a pour voisin que `neuf_zz_relie`, neuf lui aussi, et passe AVANT lui
+    # dans l'ordre : il lui faut un second tour.
+    liens_fabriques = {
+        "a": ["b", "neuf_chez_un"],
+        "b": ["a"],
+        "c": ["d", "neuf_partage", "neuf_zz_relie"],
+        "d": ["c", "neuf_partage"],
+        "neuf_chez_un": ["a"],
+        "neuf_partage": ["a", "c", "d"],
+        "neuf_zz_relie": ["c", "neuf_aa_derriere"],
+        "neuf_aa_derriere": ["neuf_zz_relie"],
+        "neuf_seul": [],
+        "autre_neuf_seul": [],
+        "deplace": ["c", "d"],
+    }
+    d_avant = {"a": 1, "b": 1, "c": 2, "d": 2, "deplace": 1, "parti": 3}
+
+    def jamais():
+        # Un rendu reconnaissable plutot qu'une exception : le cas rougit, au lieu que l'auto-test
+        # tombe hors de tout cas.
+        return {-1: ["la partition entiere a ete demandee"]}
+
+    phrase_attendue = (
+        "partition gardee : 4 communautes ; 4 noeud(s) neuf(s) range(s) chez leurs voisins, "
+        "2 en communaute neuve. Repartition entiere : --repartitionne"
+    )
+    obtenu = partition_de(
+        sorted(liens_fabriques), lambda n: liens_fabriques[n], d_avant, False, jamais
+    )
+    attendu = (
+        {
+            1: ["a", "b", "deplace", "neuf_chez_un"],
+            2: ["c", "d", "neuf_aa_derriere", "neuf_partage", "neuf_zz_relie"],
+            4: ["autre_neuf_seul"],
+            5: ["neuf_seul"],
+        },
+        phrase_attendue,
+        True,
+    )
+    verifier(
+        "un noeud qui existait garde sa communaute, un neuf va chez la majorite de ses voisins",
+        obtenu == attendu,
+        f"obtenu : {obtenu}",
+    )
+    a_egalite = partition_de(
+        ["a", "c", "neuf"],
+        lambda n: {"neuf": ["a", "c"]}.get(n, []),
+        {"a": 7, "c": 3},
+        False,
+        jamais,
+    )[0]
+    verifier(
+        "a egalite de voisins, le neuf va dans la communaute au plus petit identifiant",
+        a_egalite == {3: ["c", "neuf"], 7: ["a"]},
+        f"obtenu : {a_egalite}",
+    )
+    refaite = {0: ["a", "b"], 1: ["c"]}
+    demandee = partition_de(["a", "b", "c"], lambda n: [], {"a": 5}, True, lambda: refaite)
+    sans_avant = partition_de(["a", "b", "c"], lambda n: [], {}, False, lambda: refaite)
+    verifier(
+        "la repartition entiere se fait sur demande, et quand il n y a aucun etat d avant",
+        demandee == sans_avant == (refaite, "partition refaite : 2 communautes", False),
+        f"obtenu : {demandee} puis {sans_avant}",
+    )
+
+    # 14 : les libelles d'une partition gardee se reportent par IDENTIFIANT. Le recouvrement les
+    # perdrait pour une communaute qui a fondu : dix membres avant, un seul aujourd'hui, c'est
+    # 0,1 de recouvrement, sous le seuil.
+    with tempfile.TemporaryDirectory() as temporaire:
+        dossier = Path(temporaire)
+        fondue = {0: [f"n{i}" for i in range(10)], 1: ["x", "y"]}
+        (dossier / ".graphify_labels.json").write_text(
+            json.dumps({"0": "La grande", "1": "La petite"}), encoding="utf-8"
+        )
+        (dossier / "graph.json").write_text(
+            json.dumps(
+                {"nodes": [{"id": i, "community": c} for c, ids in fondue.items() for i in ids]}
+            ),
+            encoding="utf-8",
+        )
+        reste = {0: ["n0"], 1: ["x", "y"], 2: ["z"]}
+        noeuds = {
+            i: {"id": i, "source_file": "docs/page.md"} for ids in reste.values() for i in ids
+        }
+        par_id = libeller(reste, noeuds, dossier, par_identifiant=True)
+        par_recouvrement = libeller(reste, noeuds, dossier)
+        lues = communautes_d_avant(dossier)
+        aucune = communautes_d_avant(dossier / "absent")
+    verifier(
+        "un libelle dont la communaute garde un seul membre se retrouve, par identifiant",
+        par_id == {0: "La grande", 1: "La petite", 2: "docs - page"},
+        f"obtenu : {par_id}",
+    )
+    verifier(
+        "par recouvrement, ce meme libelle etait perdu : c est ce que la garde repare",
+        par_recouvrement == {0: "docs - page", 1: "La petite", 2: "docs - page"},
+        f"obtenu : {par_recouvrement}",
+    )
+    verifier(
+        "l etat d avant se lit dans le graphe du dossier, et un dossier sans graphe n en a pas",
+        (lues.get("n3"), lues.get("y"), len(lues), aucune) == (0, 1, 12, {}),
+        f"obtenu : {(lues.get('n3'), lues.get('y'), len(lues), aucune)}",
+    )
+
     if echecs:
         print(f"\n{len(echecs)} cas en echec : {', '.join(echecs)}")
         return 1
@@ -977,7 +1220,7 @@ def auto_test():
     return 0
 
 
-def mets_a_jour() -> int:
+def mets_a_jour(repartitionne: bool = False) -> int:
     """`graphify update .`, puis ponts et reconstruction avec les libelles de l'etat d'avant."""
     if refus_sans_le_moteur():
         return 2
@@ -1000,7 +1243,7 @@ def mets_a_jour() -> int:
             # que les ponts n'y cherchent leurs noeuds de page.
             relire_la_structure()
             jouer_les_passes()
-            reconstruire(reference)
+            reconstruire(reference, repartitionne)
         finally:
             EXTRAIT.unlink(missing_ok=True)
     return 0
@@ -1014,11 +1257,12 @@ def main(argv: list[str]) -> int:
             "aucun graphe existant, rien a mettre a jour (lancer /graphify . une premiere fois)"
         )
         return 0
+    repartitionne = "--repartitionne" in argv
     if "--mets-a-jour" in argv:
-        return mets_a_jour()
+        return mets_a_jour(repartitionne)
     if refus_sans_le_moteur():
         return 2
-    changes = [Path(a) for a in argv]
+    changes = [Path(a) for a in argv if not a.startswith("--")]
     if any(p.suffix in EXT_DOC for p in changes):
         (SORTIE / ".needs_update").write_text(
             "documentation modifiee : scripts/graphify/couche_semantique.py a-reextraire"
@@ -1029,7 +1273,7 @@ def main(argv: list[str]) -> int:
     try:
         extraire_les_modifies(changes)
         jouer_les_passes()
-        reconstruire()
+        reconstruire(None, repartitionne)
     finally:
         EXTRAIT.unlink(missing_ok=True)
     return 0

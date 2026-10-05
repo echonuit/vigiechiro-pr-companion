@@ -277,8 +277,8 @@ celle du dépôt, depuis la copie principale et avec l'interprète de graphify :
 "$(cat graphify-out/.graphify_python)" scripts/graphify/rebuild.py --mets-a-jour
 ```
 
-Elle lance l'outil, relit les titres de toutes les pages, rejoue les ponts et reporte les libellés
-des communautés qu'elle retrouve.
+Elle lance l'outil, relit les titres de toutes les pages, rejoue les ponts et garde la partition
+du graphe, donc les libellés de ses communautés. `--repartitionne` la refait quand elle a vieilli.
 Ce que le graphe lit et ne lit pas est dans
 [`dev-docs/chercher-dans-le-depot.md`](dev-docs/chercher-dans-le-depot.md).
 

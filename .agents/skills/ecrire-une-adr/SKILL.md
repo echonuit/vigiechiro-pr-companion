@@ -192,7 +192,7 @@ côté, et il vieillit sans le dire.
 **Ce n'est plus `graphify update .` seul.** Depuis que le graphe porte une couche sémantique, cet
 outil ne relit plus la structure d'une page qui en porte une : le titre périmé de la mesure
 ci-dessous y resterait. La commande du dépôt le lance, relit ensuite les titres de toutes les pages,
-rejoue les ponts et reporte les libellés des communautés qu'elle retrouve
+rejoue les ponts et garde la partition du graphe, donc les libellés de ses communautés
 ([ADR 5877](../../../dev-docs/decisions/5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages.md)).
 
 Elle se lance depuis la copie principale, où vit le graphe, et avec l'interprète de graphify : avec
