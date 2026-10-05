@@ -38,6 +38,15 @@ public class EtapeTeleversementController {
     private static final String SUITE_D_UNE_ANNULATION =
             " Le passage reste « Dépôt en cours » : reprendre le dépôt ne renverra que les fichiers manquants.";
 
+    /// Ce qu'une réinitialisation laisse derrière elle. Elle ne nomme d'archives que s'il y en a
+    /// (#5824) ; l'infobulle du bouton et la question qu'il pose ensuite le disent par la même phrase
+    /// (#5859), la seconde étant restée en archives pour un dépôt en séquences.
+    private static final String RESTE_APRES_REINITIALISATION_EN_ARCHIVES =
+            "Les archives ZIP sur disque et la participation Vigie-Chiro sont conservées.";
+
+    private static final String RESTE_APRES_REINITIALISATION_EN_SEQUENCES =
+            "La participation Vigie-Chiro est conservée.";
+
     private AppuisTeleversement appuis;
 
     /// Chemin du sous-dossier `depot/`, cible du téléversement manuel.
@@ -146,10 +155,10 @@ public class EtapeTeleversementController {
         reinitialisation
                 .textProperty()
                 .bind(Bindings.when(archives)
-                        .then("Efface le suivi local de dépôt pour permettre un nouveau téléversement. Les"
-                                + " archives ZIP sur disque et la participation Vigie-Chiro sont conservées.")
-                        .otherwise("Efface le suivi local de dépôt pour permettre un nouveau téléversement. La"
-                                + " participation Vigie-Chiro est conservée."));
+                        .then("Efface le suivi local de dépôt pour permettre un nouveau téléversement. "
+                                + RESTE_APRES_REINITIALISATION_EN_ARCHIVES)
+                        .otherwise("Efface le suivi local de dépôt pour permettre un nouveau téléversement. "
+                                + RESTE_APRES_REINITIALISATION_EN_SEQUENCES));
         btnReinitialiserDepot.setTooltip(reinitialisation);
     }
 
@@ -321,10 +330,11 @@ public class EtapeTeleversementController {
     /// l'état du passage (retour « Prêt à déposer »).
     @FXML
     private void reinitialiserDepot() {
-        if (appuis.confirmateur().confirmer("""
-                Réinitialiser le dépôt de cette nuit ?
-
-                Le suivi local est effacé pour permettre un nouveau téléversement ; les archives ZIP sur disque et la participation Vigie-Chiro sont conservées.""")) {
+        boolean archives = EtapeDesArchives.offerte(appuis.viewModel()).get();
+        String reste = archives ? RESTE_APRES_REINITIALISATION_EN_ARCHIVES : RESTE_APRES_REINITIALISATION_EN_SEQUENCES;
+        if (appuis.confirmateur()
+                .confirmer("Réinitialiser le dépôt de cette nuit ?\n\nLe suivi local est effacé pour permettre un"
+                        + " nouveau téléversement. " + reste)) {
             appuis.depotViewModel().reinitialiser(appuis.idPassage().get());
             appuis.viewModel().ouvrirSur(appuis.idPassage().get());
         }

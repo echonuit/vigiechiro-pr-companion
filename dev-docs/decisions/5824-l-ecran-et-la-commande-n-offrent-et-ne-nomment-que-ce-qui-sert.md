@@ -17,6 +17,7 @@ enforced_by:
 verification_note: "les quatre classes tiennent l étape absente et la numérotation en forme WAV, l écran inchangé en forme ZIP, le nom de l unité dans le compte rendu, et la parité avec la commande. Le cas hors connexion en forme WAV n est tenu qu au modèle de vue : aucun test d interface ni aucun aperçu ne le montre (#5838)"
 relations:
   complete: ["5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode"]
+  completee_par: ["5859-le-fil-d-etapes-suit-le-dernier-geste-du-depot"]
 verified:
   - by: machine:ci
     at: 2026-10-05
@@ -26,6 +27,13 @@ generated:
 ---
 
 # L'écran et la commande n'offrent et ne nomment que ce qui sert à la forme du dépôt
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-05** : cette décision est **complétée** par
+    [5859](5859-le-fil-d-etapes-suit-le-dernier-geste-du-depot.md). L'infobulle de « Réinitialiser le
+    dépôt » suivait la forme du dépôt, pas la question que le bouton pose ensuite : les deux lisent
+    désormais la même phrase. Le reste fait foi.
+
 ## Contexte
 
 L'[ADR 5677](5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode.md) a fait des séquences WAV

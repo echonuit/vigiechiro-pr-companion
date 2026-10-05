@@ -49,7 +49,11 @@ class DeclarationDesBindingsTest {
     /// `carreRecuperable`. Les trois derniers sont déclarés ; `carreValide` ne l'est pas **directement**,
     /// mais `peutEnregistrer` en dépend par construction (`carreValide.and(…)`), donc toute invalidation
     /// du carré invalide le binding. Déclaration jugée **complète**.
-    private static final int SITES_RELEVES = 65; // +1 #5687 : la case du premier point, lit position et enCreation
+    ///
+    /// **+1 le 05/10/2026 (#5859)** : `EtapeDeposerUI.dernierGeste` compose le dernier geste du dépôt. Son
+    /// calcul lit `participationLiee`, `relanceBloquee` et `analyseDemandee`, et les déclare tous les
+    /// trois ; `DernierGesteDuDepot.de` est pur. Déclaration jugée **complète**.
+    private static final int SITES_RELEVES = 66; // +1 #5687 (case du premier point), +1 #5859 (dernier geste)
 
     private static final Pattern APPEL = Pattern.compile("Bindings\\.create[A-Za-z]*Binding\\s*\\(");
 
