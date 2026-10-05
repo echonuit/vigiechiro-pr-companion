@@ -62,8 +62,8 @@ que notre client parle à **notre idée** de la plateforme.
 **Un clip connecté ne se compare pas.**
 
 Son écran dépend de **données vivantes**. Deux tournages du même commit peuvent différer parce qu'une
-nuit a été traitée entre les deux, et le plancher de bruit établi en #4287 - médiane 0,008 %, pire cas
-0,809 % - mesurerait alors la plateforme au lieu du rendu. Le plancher par cas n'y répond pas non plus :
+nuit a été traitée entre les deux, et le plancher de bruit des clips ordinaires - médiane 0,147 %, pire
+cas 0,953 %, mesurés par #5885 - mesurerait alors la plateforme au lieu du rendu. Le plancher par cas n'y répond pas non plus :
 un cas connecté aurait un bruit énorme et se retrouverait durablement en bas du classement, y compris
 le jour où il change pour une vraie raison.
 

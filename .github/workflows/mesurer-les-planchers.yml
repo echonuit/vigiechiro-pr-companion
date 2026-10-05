@@ -1,0 +1,233 @@
+# Mesure les planchers de bruit des clips, avec l'instrument qui les lira (#5885).
+#
+# ## Pourquoi un atelier, et non une commande
+#
+# Un plancher dit de combien deux tournages du MÊME commit diffèrent : c'est contre lui que
+# `comparer-tournages.yml` lit un écart. Il se mesurait à la main, sur un poste, et le même clip n'y
+# rend pas le même chiffre : 0,020 % avec ffmpeg 8.0.1 et ImageMagick 7.1.2, 0,134 % avec les
+# versions de ce runner. Sur 95 clips, l'écart du runner n'est jamais inférieur à celui du poste, et
+# sa médiane en vaut 5,5 fois. La comparaison annonçait donc une trentaine de clips « changés » pour
+# un code identique.
+#
+# Mesurer ici rend le bon instrument par construction : c'est la même image de runner, et les mêmes
+# paquets, que la comparaison. Et le jour où cette image changera de version, l'outil refusera de
+# comparer contre des planchers pris par l'ancienne, en nommant les deux.
+#
+# ## Ce qu'il ne fait pas
+#
+# Il ne tourne RIEN : il reçoit des numéros d'exécution de `tournage-recette.yml`, et vaut donc pour
+# les clips ordinaires comme pour ceux de la plateforme de test.
+#
+# Il n'écrit RIEN sur le dépôt : il rend le fichier en artefact, et une demande le committe. Un
+# plancher qui monte rend la comparaison moins sensible ; cela se relit.
+#
+# ## D'où il part
+#
+# Du fichier de planchers de la référence sur laquelle on le lance, qu'il COMPLÈTE : le pire observé
+# est gardé, les paires s'ajoutent. Pour remesurer un clip dont l'écran a changé, retirer sa ligne
+# sur une branche et lancer l'atelier sur cette branche. `repartir_de_zero` oublie tout le fichier :
+# c'est le geste d'un changement d'instrument, où aucune ligne ne vaut plus.
+name: mesurer les planchers des tournages
+
+run-name: "planchers mesurés sur ${{ inputs.executions }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      executions:
+        description: "Numéros d'exécution de tournages du MÊME commit, séparés par des espaces (au moins deux)"
+        type: string
+        required: true
+      temoins:
+        description: "Deux autres exécutions du même commit, HORS de la mesure, comparées aux planchers rendus (facultatif)"
+        type: string
+        default: ""
+      repartir_de_zero:
+        description: "Oublier le fichier du dépôt au lieu de le compléter (changement d'instrument)"
+        type: boolean
+        default: false
+
+# Lire les artefacts d'autres exécutions demande `actions: read`. Rien d'autre, et surtout aucune
+# écriture : le fichier sort en artefact, il ne se pousse pas.
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  mesurer:
+    name: Mesurer les planchers
+    runs-on: ubuntu-latest
+    # Quatre tournages de cent clips font quatre cents extractions et six cents comparaisons. Le
+    # butoir est large parce qu'une mesure coupée ne rend rien, pas même les paires déjà jouées.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Refuser des tournages qui ne sont pas du même commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          EXECUTIONS: ${{ inputs.executions }}
+          TEMOINS: ${{ inputs.temoins }}
+        run: |
+          set -euo pipefail
+
+          du_meme_commit() { # <numéro d'exécution>...
+            local n lu sha fin reference="" premier=""
+            for n in "$@"; do
+              if ! [[ "$n" =~ ^[0-9]+$ ]]; then
+                echo "::error::« $n » n'est pas un numéro d'exécution."
+                exit 1
+              fi
+              if ! lu=$(gh run view "$n" --json headSha,conclusion --jq '.headSha + " " + .conclusion'); then
+                echo "::error::L'exécution $n ne se lit pas : ni son commit ni sa conclusion."
+                exit 1
+              fi
+              sha=${lu%% *}
+              fin=${lu##* }
+              # Un tournage amputé ne mesure rien : il lui manque des clips, et ceux qu'il porte
+              # peuvent s'être arrêtés avant leur fin.
+              if [ "$fin" != "success" ]; then
+                echo "::error::L'exécution $n n'a pas conclu en succès (« $fin »)."
+                exit 1
+              fi
+              if [ -z "$reference" ]; then
+                reference="$sha"
+                premier="$n"
+              elif [ "$sha" != "$reference" ]; then
+                # Le refus qui compte. Un plancher mesure le bruit entre deux tournages IDENTIQUES :
+                # entre deux commits, il prendrait un changement du produit pour du bruit, et la
+                # comparaison ne verrait plus jamais ce changement-là.
+                echo "::error::Les exécutions $premier et $n ne sont pas du même commit (${reference:0:9} et ${sha:0:9})."
+                echo "::error::Un plancher pris entre deux commits range un changement du produit parmi le bruit."
+                exit 1
+              fi
+            done
+            echo "Même commit pour $# exécution(s) : ${reference:0:9}."
+          }
+
+          read -r -a mesurees <<< "${EXECUTIONS}"
+          read -r -a hors_mesure <<< "${TEMOINS}"
+          if [ "${#mesurees[@]}" -lt 2 ]; then
+            echo "::error::Il faut au moins deux tournages pour faire une paire, reçu : « ${EXECUTIONS} »."
+            exit 1
+          fi
+          if [ "${#hors_mesure[@]}" -ne 0 ] && [ "${#hors_mesure[@]}" -ne 2 ]; then
+            echo "::error::Les témoins vont par deux, reçu : « ${TEMOINS} »."
+            exit 1
+          fi
+          # Un témoin pris dans la mesure resterait dans son plancher PAR CONSTRUCTION : le plancher
+          # est le pire de ses propres paires. Le contrôle ne vaut que hors échantillon.
+          for t in "${hors_mesure[@]}"; do
+            for m in "${mesurees[@]}"; do
+              if [ "$t" = "$m" ]; then
+                echo "::error::Le témoin $t fait partie de la mesure : il ne peut pas la contrôler."
+                exit 1
+              fi
+            done
+          done
+
+          du_meme_commit "${mesurees[@]}" "${hors_mesure[@]}"
+
+      - name: Reprendre les clips de chaque tournage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          EXECUTIONS: ${{ inputs.executions }}
+          TEMOINS: ${{ inputs.temoins }}
+        run: |
+          set -euo pipefail
+          read -r -a toutes <<< "${EXECUTIONS} ${TEMOINS}"
+          for n in "${toutes[@]}"; do
+            # UN artefact de clips, et un seul. Une exécution relancée en porte un par tentative, et
+            # reprendre « les clips » en mêlerait deux tournages sous le même numéro (#5797).
+            liste=$(gh api "repos/${GH_REPO}/actions/runs/${n}/artifacts" --paginate \
+              --jq '.artifacts[] | select(.name | startswith("clips-")) | .name')
+            if [ -z "$liste" ] || [ "$(printf '%s\n' "$liste" | wc -l)" -ne 1 ]; then
+              echo "::error::L'exécution $n ne porte pas UN artefact de clips, mais : « ${liste//$'\n'/, } »."
+              exit 1
+            fi
+            gh run download "$n" --name "$liste" --dir "repris/$n"
+            # Les clips à plat, sous le numéro : l'outil nomme chaque paire par ses deux dossiers.
+            mkdir -p "tournages/$n"
+            find "repris/$n" -name '*.mp4' -exec mv -t "tournages/$n" {} +
+            compte=$(find "tournages/$n" -name '*.mp4' | wc -l)
+            echo "Exécution $n : ${compte} clip(s)."
+            if [ "$compte" -eq 0 ]; then
+              echo "::error::Aucun clip repris de l'exécution $n. Un dossier vide ne mesure rien."
+              exit 1
+            fi
+          done
+
+      - name: Cache des paquets APT (ffmpeg, imagemagick)
+        # La même clé que `comparer-tournages.yml`, et ce n'est pas une économie : les deux ateliers
+        # doivent installer le MÊME instrument, et partager les `.deb` y contribue.
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/apt-vigiechiro
+          key: apt-${{ runner.os }}-comparer-tournages-ffmpeg-imagemagick
+
+      - name: Installer l'instrument, le même que celui de la comparaison
+        env:
+          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/installer_paquets.py ffmpeg
+          python3 .github/scripts/installer_paquets.py --avec-recommandations imagemagick
+
+      - name: Mesurer, toutes paires
+        env:
+          EXECUTIONS: ${{ inputs.executions }}
+          REPARTIR: ${{ inputs.repartir_de_zero }}
+        run: |
+          set -euo pipefail
+          fichier=.github/assets/planchers-tournages.tsv
+          if [ "${REPARTIR}" = "true" ]; then
+            rm -f "$fichier"
+          fi
+          read -r -a mesurees <<< "${EXECUTIONS}"
+          dossiers=()
+          for n in "${mesurees[@]}"; do
+            dossiers+=("tournages/$n")
+          done
+          python3 .github/assets/compare_tournages.py --planchers "$fichier" "${dossiers[@]}" | tee mesure.log
+          mkdir -p rendu
+          cp "$fichier" mesure.log rendu/
+          {
+            echo "### Planchers mesurés"
+            echo
+            echo "Sur les exécutions \`${EXECUTIONS}\`. $(grep '^Planchers écrits' mesure.log)"
+            echo
+            echo "Le fichier est dans l'artefact de cette exécution : il se committe par une demande."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Comparer les deux témoins aux planchers rendus
+        if: ${{ inputs.temoins != '' }}
+        env:
+          TEMOINS: ${{ inputs.temoins }}
+        run: |
+          set -euo pipefail
+          read -r -a hors_mesure <<< "${TEMOINS}"
+          python3 .github/assets/compare_tournages.py "tournages/${hors_mesure[0]}" "tournages/${hors_mesure[1]}" \
+            rendu/temoins 5 .github/assets/planchers-tournages.tsv
+          {
+            echo
+            echo "### Les deux témoins, hors de la mesure"
+            echo
+            echo "Même commit, donc tout écart est du bruit. Un cas loin au-dessus de son plancher dit"
+            echo "que ce plancher est pris sur trop peu de paires, pas que le produit a changé."
+            echo
+            cat rendu/temoins/index.md
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Rendre le fichier de planchers
+        # Même si la comparaison des témoins a refusé : le fichier mesuré est là, et c'est lui
+        # qu'on est venu chercher. Un refus AVANT la mesure ne laisse rien, et cela se dit sans
+        # rougir une seconde fois.
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: planchers-${{ github.run_id }}-${{ github.run_attempt }}
+          path: rendu/
+          retention-days: 14
+          if-no-files-found: warn

@@ -80,39 +80,57 @@ ci-dessus le montre.
 
 ## Le plancher du runner, mesuré
 
-Deux tournages des 51 cas, sur le **même commit**, lancés sur deux runners GitHub distincts - la
-situation réelle, chaque publication filmant sur une machine neuve.
+**Quatre** tournages des 95 clips ordinaires, sur le **même commit** (`f9c9e1218`), lancés sur quatre
+runners GitHub distincts, soit **six paires** par clip. Mesurés le 5 octobre 2026 avec l'instrument du
+flux, ffmpeg 6.1.1 et ImageMagick 6.9.12-98 (#5885).
+
+Sept clips n'ont pas de plancher, parce qu'ils ont deux fins (voir plus bas). Sur les **88** autres :
 
 | plancher à 5 % de tolérance | cas |
 |---|---|
-| ≥ 0,5 % | 1 |
-| 0,1 à 0,5 % | 2 |
-| < 0,05 % | 48 |
+| 0,5 à 1 % | 8 |
+| 0,1 à 0,5 % | 44 |
+| 0,05 à 0,1 % | 8 |
+| < 0,05 % | 28, dont 8 à zéro |
 
-**Médiane : 0,008 %.** Le plancher n'est donc pas haut partout. Il est bas sur 48 cas, et haut sur
-trois :
-
-| cas | son plancher |
-|---|---|
-| `ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce` | 0,809 % |
-| `ScenarioPerceptifRefusDepotTest.le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion` | 0,230 % |
-| `ScenarioFicheSiteTest.les_boutons_disent_ce_qui_les_empeche` | 0,101 % |
+**Médiane : 0,147 %.** Le pire vaut 0,953 %, sur
+`ScenarioJournalAbsentTest.sans_journal_la_nuit_est_inconnue`.
 
 !!! danger "Un seuil global mentirait dans les deux sens"
 
-    Retenir le pire plancher, 0,809 %, comme seuil unique **aveuglerait 48 cas pour se protéger de
-    trois** : un libellé entier changé, qui vaut 0,364 %, passerait sous le seuil sans être vu.
+    Retenir le pire plancher, 0,953 %, comme seuil unique **aveuglerait 80 cas pour se protéger de
+    huit** : un libellé entier changé, qui vaut 0,364 %, passerait sous le seuil sans être vu.
 
-    Retenir la médiane laisserait au contraire ces trois cas crier au changement à chaque tournage.
+    Retenir la médiane laisserait au contraire la moitié des cas crier au changement à chaque
+    tournage.
 
     Un écart se lit donc contre **le plancher de son propre cas**, pas contre un seuil unique.
 
-!!! warning "Ces planchers viennent d'un seul tirage"
+!!! warning "Six paires voient un mode qui sort une fois sur quatre, pas une fois sur vingt"
 
-    Une paire de tournages donne UNE mesure par cas. Un cas dont le plancher est ressorti à 0,000 %
-    n'est pas prouvé stable : il l'était cette fois-là. Les rapports que ce plancher permet de calculer
-    - « douze fois son bruit » - ne valent donc pas mieux que leur échantillon, et un cas ne se déclare
-    instable qu'après plusieurs paires.
+    Un cas dont le plancher est ressorti à 0,000 % sur six paires n'est pas prouvé stable : il l'était
+    ces quatre fois-là. Quatre clips n'ont montré leur seconde fin que dans **un** tournage sur les
+    quatre (#5911), et la paire unique qui avait précédé cette mesure ne l'avait pas vue.
+
+!!! warning "Six paires ne font pas encore le plancher : le contrôle hors échantillon"
+
+    Deux **autres** tournages du même commit, qui n'ont pas servi à la mesure, ont été comparés
+    contre ces planchers. Sur les 88 clips, **22** dépassent le leur, dont **8** de plus du double.
+
+    Ces écarts sont petits : les huit vont de 0,010 à 0,318 %. Les plus gros rapports viennent des
+    clips dont le plancher vaut 0,000 % sur six paires, où un écart de 0,024 % s'affiche « ×24 ».
+    Le plancher est le pire de six valeurs, et une septième le dépasse à peu près une fois sur sept :
+    c'est ce que le contrôle montre, pas un défaut de ces clips.
+
+    Un rapport élevé sur un plancher proche de zéro se lit donc avec son écart absolu, et la carte
+    des différences tranche. Ajouter des paires est le remède, et c'est ce que fait l'atelier.
+
+!!! note "Ce que valaient les planchers d'avant"
+
+    Le fichier portait 51 planchers ordinaires, médiane **0,009 %**, pris sur un poste. Remesurés
+    avec l'instrument du flux, 39 des 50 clips communs montent, et la médiane est seize fois plus
+    haute. Deux tournages du même commit, comparés par le flux contre ces planchers, sortaient 32
+    clips sur 51 à plus du double de leur plancher.
 
 ### Les clips de la plateforme de test, mesurés
 
@@ -129,7 +147,7 @@ mesurées avec l'instrument du flux (#5870).
 | `ScenarioConnecteAnnonceImportTest` | S2-59, S2-60 | 0,325 % |
 | `ScenarioConnecteLancementTest` | S4-47 | 0,503 % |
 
-Aucun ne dépasse le pire plancher des clips ordinaires, 0,809 % : ces clips se comparent.
+Aucun ne dépasse le pire plancher des clips ordinaires, 0,953 % : ces clips se comparent.
 
 !!! danger "Un plancher se mesure avec l'instrument du flux, pas avec celui du poste"
 
@@ -143,17 +161,9 @@ Aucun ne dépasse le pire plancher des clips ordinaires, 0,809 % : ces clips se 
     pour deux tournages du même commit. Une partie de ce qu'on a d'abord pris pour un défaut des clips
     était cet écart d'instrument.
 
-    Les planchers se mesurent donc dans un conteneur de la distribution du runner, qui rend les
-    chiffres du flux à la troisième décimale :
-
-    ```
-    docker run --rm -v <tournages>:/t -v "$PWD/.github/assets":/a ubuntu:24.04 bash -c '
-      apt-get update -qq && apt-get install -y -qq ffmpeg imagemagick python3 &&
-      python3 /a/compare_tournages.py --plancher /t/<A> /t/<B> /a/planchers-tournages.tsv'
-    ```
-
-    L'instrument qui a mesuré les planchers des clips ordinaires, plus bas dans ce fichier, n'est pas
-    connu : c'est l'objet de #5885.
+    Les planchers se mesurent donc par l'atelier `mesurer-les-planchers.yml`, qui joue avec
+    l'instrument du flux, et l'outil refuse depuis de lire un plancher pris par un autre (#5885,
+    voir « Le fichier de planchers »).
 
 !!! danger "Peu de paires ne voient pas le second mode d'un clip"
 
@@ -175,7 +185,10 @@ Aucun ne dépasse le pire plancher des clips ordinaires, 0,809 % : ces clips se 
     un poste. Une fois son compte rendu amené dans le cadre, 0,040 % avec le même instrument. Un
     plancher aberrant désigne d'abord un clip qui ne finit pas sur ce qu'il doit montrer.
 
-### Ce que cette mesure a corrigé
+### Ce que le plancher par cas a corrigé, à son introduction
+
+L'exemple date de #4287, et ses planchers sont ceux de l'époque, pris sur un poste : ils ne sont plus
+dans le fichier. Le raisonnement, lui, tient toujours.
 
 Sur une comparaison réelle, deux cas dépassaient 1 % et semblaient donc être les vrais changements.
 Rapportés à leur propre plancher, ils se séparent :
@@ -190,25 +203,78 @@ Rapportés à leur propre plancher, ils se séparent :
 
 ## Le fichier de planchers
 
-Les planchers mesurés vivent dans `.github/assets/planchers-tournages.tsv`, une ligne par cas :
+Les planchers mesurés vivent dans `.github/assets/planchers-tournages.tsv`. Son en-tête dit par quel
+instrument ils ont été pris, puis vient une ligne par cas :
 
 ```
-ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce	0.809	1
+# Instrument : ffmpeg 6.1.1 · ImageMagick 6.9.12-98
+ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce	0.000	0.412	6
 ```
 
-Le cas, son plancher en pourcentage, et **le nombre de paires de tournages qui l'ont produit**.
+Le cas, le plancher de sa **première** image, celui de sa **dernière**, et **le nombre de paires de
+tournages qui les ont produits**.
 
 Le flux de comparaison le passe automatiquement, et chaque cas est alors classé par son **rapport à
 son propre bruit** plutôt que par son écart absolu. Le résumé compte les cas « au-dessus de leur
 propre plancher », qui est le nombre à regarder.
 
-### L'enrichir
+### Un plancher appartient à l'instrument qui l'a pris
 
-```
-compare_tournages.py --plancher <tournage A> <tournage B> .github/assets/planchers-tournages.tsv
-```
+L'outil lit sa propre version de ffmpeg et d'ImageMagick et la confronte à celle de l'en-tête, dans
+les deux sens (#5885) :
 
-Relancer sur une **autre** paire garde le **pire** plancher observé et compte une paire de plus.
+- il **refuse de comparer** contre des planchers pris par un autre instrument ;
+- il **refuse de compléter** un fichier pris par un autre instrument.
+
+Le refus nomme les deux instruments. Il n'y a pas d'avertissement à la place : le même clip rend
+0,020 % sur un poste et 0,134 % sur le runner, et un index classé contre le mauvais sol a l'air aussi
+juste que l'autre.
+
+C'est la version amont qui compte (`6.1.1`), pas la révision du paquet (`6.1.1-3ubuntu5`) : un
+correctif de sécurité reporté par la distribution ne fait pas remesurer cent clips.
+
+!!! warning "Sur un poste, la comparaison avec planchers est donc refusée"
+
+    C'est voulu. Pour regarder une paire chez soi, comparer **sans** fichier de planchers : les écarts
+    sortent en valeur absolue, et ne se lisent contre aucun sol.
+
+### Le mesurer : l'atelier `mesurer-les-planchers.yml`
+
+Les planchers se mesurent par un atelier, qui joue sur la même image de runner et installe les mêmes
+paquets que la comparaison. Il ne tourne rien : il reçoit des **numéros d'exécution** de
+`tournage-recette.yml`.
+
+| Entrée | Ce qu'elle attend |
+|---|---|
+| `executions` | au moins deux tournages **du même commit**, séparés par des espaces |
+| `temoins` | facultatif : deux autres tournages du même commit, **hors** de la mesure |
+| `repartir_de_zero` | oublier le fichier du dépôt au lieu de le compléter |
+
+Toutes les paires sont jouées : quatre tournages en font six. Le **pire** plancher observé est gardé,
+et le compte de paires s'ajoute à celui du fichier.
+
+L'atelier **n'écrit rien sur le dépôt**. Il rend le fichier dans un artefact, et une demande le
+committe : un plancher qui monte rend la comparaison moins sensible, et cela se relit.
+
+**Il refuse des tournages de commits différents.** Un plancher est le bruit entre deux tournages
+identiques. Pris entre deux commits, il rangerait un changement du produit parmi le bruit, et la
+comparaison ne verrait plus jamais ce changement.
+
+**Les témoins contrôlent hors échantillon.** Le plancher d'un cas est le pire de ses propres paires :
+un tournage qui a servi à le mesurer reste dessous par construction. Les deux témoins n'y ont pas
+servi, et l'atelier écrit leur comparaison dans son résumé. Un cas loin au-dessus de son plancher y
+dit que ce plancher est pris sur trop peu de paires, pas que le produit a changé.
+
+Trois usages, et le geste de chacun :
+
+| Ce qu'on veut | Le geste |
+|---|---|
+| ajouter des paires | lancer l'atelier sur `main`, avec de nouveaux tournages |
+| remesurer un clip dont l'écran a changé | retirer sa ligne sur une branche, lancer l'atelier **sur cette branche** |
+| l'image du runner a changé de version | `repartir_de_zero`, une fois par famille de tournages |
+
+Les clips ordinaires et ceux de la plateforme de test ne sortent pas des mêmes tournages : ce sont
+deux lancements, le second complétant le fichier rendu par le premier.
 
 !!! warning "Le pire, et non la moyenne"
 
@@ -216,21 +282,52 @@ Relancer sur une **autre** paire garde le **pire** plancher observé et compte u
     cherche à éviter. Mieux vaut rater un petit changement sur un cas instable que crier au changement
     à chaque tournage.
 
-!!! danger "Le fichier livré ne porte qu'UNE paire"
+!!! note "Mesurer ailleurs que dans l'atelier"
 
-    Il le dit dans sa troisième colonne. Un cas dont le plancher est ressorti à 0,000 % n'est donc pas
-    prouvé stable, et les rapports calculés dessus - « quatre-vingts fois son bruit » pour un écart
-    absolu de 0,084 %, soit moins qu'un mot changé - ne valent pas mieux que leur échantillon.
+    `compare_tournages.py --planchers <fichier> <A> <B> [<C> ...]` fait la même mesure, et écrit
+    l'instrument de la machine qui la joue. Un conteneur `ubuntu:24.04` avec les paquets `ffmpeg` et
+    `imagemagick` de la distribution rend les chiffres du runner à la troisième décimale : c'est ce
+    qui a rempli le fichier avant que l'atelier existe. Sur un poste, le fichier obtenu porte
+    l'instrument du poste, et le flux refusera de le lire.
 
-    Chaque paire supplémentaire rend le fichier plus juste. Le lire, c'est lire aussi cette colonne.
+### Les clips auxquels on refuse un plancher
 
-### Deux silences que le fichier ne produit pas
+Un plancher mesure le bruit d'un clip qui **finit sur son verdict**. Sept clips ont deux fins : deux
+tournages du même commit y diffèrent de 3 à 26 %, parce que le clip s'arrête pendant une
+transformation, pendant un fondu, ou sur une page que rien n'a calée.
+
+| clip | ses six paires vont jusqu'à | issue |
+|---|---|---|
+| `ScenarioAnnonceConnexionTest.deconnecte_le_compte_rendu_ne_pretend_rien` | 23,3 % | #5893 |
+| `ScenarioRejetsEtArchiveTest.l_import_aboutit_malgre_les_rejets` | 23,2 % | #5893 |
+| `ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection` | 22,5 % | #5893 |
+| `ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce` | 26,2 % | #5911 |
+| `ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit` | 21,2 % | #5911 |
+| `ScenarioMenuDeLigneImportTest.le_menu_de_ligne_s_ouvre_pendant_l_import` | 9,7 % | #5911 |
+| `ScenarioPassagePivotTest.modifier_le_passage` | 2,9 % | #5911 |
+
+Leur écrire ce chiffre rendrait la comparaison aveugle, sur ces clips, à tout changement plus petit.
+
+Ils sont donc nommés dans l'outil (`SANS_PLANCHER`), avec leur issue. La mesure affiche leur écart
+sans l'écrire, et la comparaison les annonce « sans plancher », suivi du numéro. Une ligne s'en
+retire avec l'issue qui la porte.
+
+Le critère n'est pas un seuil : c'est la **dernière image**, regardée. Un clip y entre quand deux
+tournages du même commit ne montrent pas le même écran, pas quand son chiffre est haut.
+
+### Quatre silences que le fichier ne produit pas
 
 Un cas **absent** du fichier est annoncé « plancher inconnu ». Le prendre pour stable reviendrait à
 inventer une mesure qui n'a pas été faite.
 
+Un cas auquel on **refuse** un plancher est annoncé « sans plancher », avec son issue : ce n'est pas
+le même silence, et les deux ne se réparent pas au même endroit.
+
 Un fichier **annoncé mais introuvable** fait échouer la comparaison. Sans ce refus, les cinquante cas
 diraient tous « plancher inconnu » et personne n'irait chercher le chemin fautif.
+
+Un fichier **pris par un autre instrument**, ou qui ne dit pas le sien, fait échouer la comparaison
+elle aussi.
 
 ## Les deux bouts, et ce que la seconde paire a appris
 
@@ -238,22 +335,24 @@ Depuis l'[ADR 4296](../decisions/4296-on-compare-les-deux-bouts-du-clip.md), la 
 **première** image du clip autant que sur la dernière. Chacune a son plancher, et le classement retient
 le plus grand des deux rapports.
 
-La première image est **plus stable que la dernière** : sur 51 cas et deux paires de tournages, soit
-102 mesures, son plancher vaut **0,000 % sans exception**. Elle n'est pas pour autant aveugle - les
-premières images de deux cas différents diffèrent de 2,4 à 3 %.
+La première image est **plus stable que la dernière** : sur 95 clips et six paires de tournages, soit
+570 mesures avec l'instrument du flux, son plancher vaut **0,000 % sans exception** (#5885). Elle
+n'est pas pour autant aveugle - les premières images de deux cas différents diffèrent de 2,4 à 3 %.
 
-!!! warning "Un plancher haut peut n'être qu'un mauvais tirage"
+!!! warning "Un plancher haut peut n'être qu'un mauvais tirage, ou un clip à deux fins"
 
-    `chaque_carte_ouvre_ce_qu_elle_annonce` a rendu **0,809 %** sur la première paire et **0,073 %** sur
-    la seconde, onze fois moins. Ce plancher n'était donc pas une propriété du cas.
+    Avec deux paires, prises sur un poste, `chaque_carte_ouvre_ce_qu_elle_annonce` avait rendu
+    **0,809 %** puis **0,073 %**, onze fois moins. On en avait conclu que ce plancher n'était pas une
+    propriété du cas, mais un mauvais tirage.
 
-    Sur les 51 cas, 3 planchers diffèrent de plus de 0,1 % d'une paire à l'autre, 10 de 0,01 à 0,1 %, et
-    38 de moins de 0,01 %.
+    La règle du **pire observé** le gardait pourtant, et c'est son prix assumé : un plancher ne
+    redescend jamais, donc **un seul mauvais tirage aveugle un cas pour de bon**. Avec assez de
+    paires, un centile vaudrait mieux qu'un maximum (#4309).
 
-    La règle du **pire observé** garde 0,809 % pour ce cas, définitivement. C'est le prix assumé de
-    ne pas fabriquer de faux positifs : un plancher ne redescend jamais, donc **un seul mauvais tirage
-    aveugle un cas pour de bon**. Avec assez de paires, un centile vaudrait mieux qu'un maximum ; avec
-    deux, il n'y a pas de quoi le calculer.
+    Six paires, avec l'instrument du flux, ont dit ce que deux ne pouvaient pas : ce clip a un fond de
+    1,6 à 2,2 % et une seconde fin à **26 %**, prise pendant un fondu, un tournage sur quatre (#5911).
+    Ce n'était ni un tirage ni du bruit. Il n'a plus de plancher tant qu'il ne finit pas sur une
+    image posée.
 
 ### Les images du début ne sortent que si le début a bougé
 
