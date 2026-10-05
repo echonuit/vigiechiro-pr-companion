@@ -19,8 +19,9 @@ public final class DistanceGeo {
     /// 60° N. La comparaison passe donc par [#metresEntre], qui ne varie pas.
     ///
     /// La valeur n'absorbe pas un bruit d'arrondi, les coordonnées voyageant à six décimales, mais la
-    /// **variation humaine et instrumentale** : quinze mètres restent un ordre de grandeur sous le seuil de
-    /// protocole (200 m), qui interdit à deux points distincts d'être aussi proches.
+    /// **variation humaine et instrumentale** : quinze mètres restent nettement sous les 40 m du rayon dans
+    /// lequel le portail rattache une position à un point, et sous lequel l'application signale un voisin à
+    /// la création. Le Point Fixe n'impose par ailleurs aucune distance entre deux points (#5839).
     public static final double ECART_MEME_ENDROIT_METRES = 15.0;
 
     private DistanceGeo() {}

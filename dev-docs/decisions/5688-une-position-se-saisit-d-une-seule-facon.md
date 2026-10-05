@@ -14,7 +14,9 @@ enforced_by:
   - "src/test/java/fr/univ_amu/iut/sites/viewmodel/PointEditPositionTest.java"
   - "src/test/java/fr/univ_amu/iut/sites/viewmodel/SiteEditPremierPointTest.java"
   - "src/test/java/fr/univ_amu/iut/sites/model/PointVoisinTest.java"
-verification_note: "les quatre classes tiennent la lecture d une position, le champ unique du point, la case du premier point et le voisinage à 40 m. Elles ne disent rien du seuil de 200 m que la fiche d un site applique par ailleurs, dont l origine est instruite en #5839"
+verification_note: "les quatre classes tiennent la lecture d une position, le champ unique du point, la case du premier point et le voisinage à 40 m. Le seuil de 200 m que la fiche d un site appliquait par ailleurs est retiré par l ADR 5839"
+relations:
+  completee_par: ["5839-le-point-fixe-n-impose-aucune-distance-entre-deux-points"]
 verified:
   - by: machine:ci
     at: 2026-10-05
@@ -24,6 +26,13 @@ generated:
 ---
 
 # Une position se saisit d'une seule façon, pour un site comme pour un point
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-05** : cette décision est **complétée** par
+    [5839](5839-le-point-fixe-n-impose-aucune-distance-entre-deux-points.md). Elle posait un voisinage
+    à 40 m sans toucher au seuil de 200 m que la fiche d'un site appliquait encore. Ce second seuil est
+    retiré : il venait du protocole Carré du portail. Le reste fait foi.
+
 ## Contexte
 
 L'observateur qui déclare un site colle une position pour trouver son carré : un champ, une paire, lue
