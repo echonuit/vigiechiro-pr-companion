@@ -51,7 +51,7 @@ public class DetailObservationsController {
     private TableView<ObservationEspece> tableObservations;
 
     @FXML
-    private TableColumn<ObservationEspece, String> colObsPassage;
+    private TableColumn<ObservationEspece, PassageObserve> colObsPassage;
 
     @FXML
     private TableColumn<ObservationEspece, String> colObsCarre;

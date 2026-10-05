@@ -209,6 +209,11 @@ class ServicePassageTest {
         assertThat(resultat.estBloquant()).as("R3 jamais bloquant").isFalse();
         assertThat(resultat.messages()).hasSize(1);
         assertThat(resultat.messages().get(0)).contains("hors de la fenêtre");
+        // La date du passage et les bornes de la fenêtre se lisent en français (#5901).
+        assertThat(resultat.messages().get(0))
+                .contains("du 01/08/2026")
+                .contains("[15/06/2026 -> 31/07/2026]")
+                .doesNotContain("2026-");
     }
 
     @Test

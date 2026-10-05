@@ -80,6 +80,10 @@ class ReconstructionViewModelTest {
         viewModel.restituer(ORPHELINE, viewModel.reconstruire(ORPHELINE, progression -> {}, JetonAnnulation.neutre()));
 
         assertThat(viewModel.retourProperty().get().texte())
+                // La nuit se dit comme la commande la dit, à l'heure du site (#5901) : la plateforme la
+                // rend en instant ISO avec son décalage, que l'écran recopiait tel quel.
+                .contains("Nuit du 03/07/2026 à 22:00")
+                .doesNotContain("2026-07-03T")
                 .contains("56 séquence(s)")
                 .contains("132 observation(s)")
                 .contains("Réactiver ce passage");

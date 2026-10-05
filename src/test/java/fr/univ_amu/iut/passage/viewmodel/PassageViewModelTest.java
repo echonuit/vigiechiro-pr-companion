@@ -92,7 +92,9 @@ class PassageViewModelTest {
                 .doesNotContain("/");
         // Numéro de passage exposé pour le libellé du fil d'Ariane (« Détails du passage N° 2 »).
         assertThat(viewModel.getNumeroPassage()).isEqualTo(2);
-        assertThat(viewModel.plageHoraireProperty().get()).contains("20:25:00").contains("07:47:00");
+        // La date en français et les heures sans leurs secondes (#5901) : la base porte « 2026-06-22 »,
+        // « 20:25:00 » et « 07:47:00 », et la fiche les recopiait tels quels.
+        assertThat(viewModel.plageHoraireProperty().get()).isEqualTo("22/06/2026  20:25 -> 07:47");
         assertThat(viewModel.enregistreurProperty().get()).isEqualTo("PR 1925492");
         assertThat(viewModel.statutProperty().get()).isEqualTo(StatutWorkflow.TRANSFORME);
         assertThat(viewModel.nombreSequencesProperty().get()).isEqualTo(30);

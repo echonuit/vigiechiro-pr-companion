@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ public final class LegendeExport {
     /// Ligne de **provenance** : ce qui a produit l'image et quand. Sans elle, impossible de savoir si une
     /// image trouvée dans un dossier reflète encore l'état des données.
     public static String provenance(String version, LocalDate date) {
-        return "VigieChiro Companion " + version + " · exporté le " + date;
+        // La date se lit comme partout dans l'application, pas comme Java l'écrit (#5901).
+        return "VigieChiro Companion " + version + " · exporté le " + Horodatage.dateSeule(date.toString());
     }
 }

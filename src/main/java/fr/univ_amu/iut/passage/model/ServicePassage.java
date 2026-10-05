@@ -2,6 +2,7 @@ package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.model.Alerte;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -242,11 +243,11 @@ public class ServicePassage {
         return ResultatVerification.de(Alerte.soft("Le passage n°"
                 + passage.numeroPassage()
                 + " du "
-                + date
+                + Horodatage.dateSeule(date.toString())
                 + " est hors de la fenêtre attendue ["
-                + fenetre.get().debut()
+                + Horodatage.dateSeule(fenetre.get().debut().toString())
                 + " -> "
-                + fenetre.get().fin()
+                + Horodatage.dateSeule(fenetre.get().fin().toString())
                 + "] pour un site PointFixeStandard. Alerte non bloquante."));
     }
 

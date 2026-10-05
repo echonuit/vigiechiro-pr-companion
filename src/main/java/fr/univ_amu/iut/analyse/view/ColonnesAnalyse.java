@@ -6,6 +6,7 @@ import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import java.util.function.Function;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.TableColumn;
@@ -44,7 +45,7 @@ final class ColonnesAnalyse {
 
     /// Colonnes du **détail** : les observations de l'espèce sélectionnée, à travers les passages.
     record Observations(
-            TableColumn<ObservationEspece, String> passage,
+            TableColumn<ObservationEspece, PassageObserve> passage,
             TableColumn<ObservationEspece, String> carre,
             TableColumn<ObservationEspece, String> richesse,
             TableColumn<ObservationEspece, String> point,
@@ -87,7 +88,8 @@ final class ColonnesAnalyse {
     /// Le détail des observations. `richesseDuCarre` est fourni par l'écran : la richesse d'un carré se lit
     /// sur l'agrégation courante, que cette classe n'a pas à connaître.
     static void observations(Observations col, Function<String, String> richesseDuCarre) {
-        col.passage().setCellValueFactory(c -> texte(FormatAnalyse.libellePassage(c.getValue())));
+        // La valeur porte la date et le numéro, et se trie sur eux ; son libellé est en français (#5901).
+        col.passage().setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(PassageObserve.de(c.getValue())));
         col.carre().setCellValueFactory(c -> texte(c.getValue().numeroCarre()));
         col.richesse()
                 .setCellValueFactory(

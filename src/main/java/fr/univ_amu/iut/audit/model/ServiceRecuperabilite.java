@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.audit.model;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.PresenceFichiers;
 import fr.univ_amu.iut.commun.model.PresenceFichiers.Presence;
@@ -162,6 +163,7 @@ public class ServiceRecuperabilite {
                 .flatMap(point ->
                         siteDao.findById(point.idSite()).map(site -> site.numeroCarre() + " · point " + point.code()))
                 .orElse("site inconnu");
-        return "Carré " + carre + " · passage " + passage.numeroPassage() + " · " + passage.dateEnregistrement();
+        return "Carré " + carre + " · passage " + passage.numeroPassage() + " · "
+                + Horodatage.dateSeule(passage.dateEnregistrement());
     }
 }

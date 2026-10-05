@@ -787,8 +787,10 @@ class SynchronisationParticipationTest {
         assertThat(sync.ecartsAvecDistant(42L))
                 .singleElement()
                 .asString()
-                .contains("2026-07-03")
-                .contains("2026-07-04");
+                // Les deux nuits se lisent en français (#5901) : l'écart est un texte affiché.
+                .contains("nuit du 03/07/2026 en local")
+                .contains("du 04/07/2026 sur la participation")
+                .doesNotContain("2026-07");
     }
 
     @Test

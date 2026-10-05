@@ -80,7 +80,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
   <!-- Bandeau d'identité (4 cellules) -->
   <rect x="40" y="152" width="1120" height="58" rx="4" class="info-bar"/>
   <text x="60" y="174" class="info-label">DATE / PLAGE</text>
-  <text x="60" y="195" class="info-value">2026-06-22  20:25 → 07:47</text>
+  <text x="60" y="195" class="info-value">22/06/2026  20:25 → 07:47</text>
   <text x="430" y="174" class="info-label">ENREGISTREUR</text>
   <text x="430" y="195" class="info-mono">PR 1925492</text>
   <text x="700" y="174" class="info-label">STATUT</text>

@@ -148,7 +148,7 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
   <text x="980" y="431" class="col-head">STATUT</text>
 
   <rect x="58" y="440" width="1084" height="28" class="row-sel"/>
-  <text x="74" y="459" class="cell">2026-06-22 · n° 2</text>
+  <text x="74" y="459" class="cell">22/06/2026 · n° 2</text>
   <text x="290" y="459" class="cell">640380</text>
   <text x="380" y="459" class="cell">A1</text>
   <text x="470" y="459" class="cell">Pippip (0,94)</text>
@@ -156,7 +156,7 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
   <text x="980" y="459" class="cell">Transformé</text>
 
   <rect x="58" y="468" width="1084" height="28" class="row-alt"/>
-  <text x="74" y="487" class="cell">2026-06-15 · n° 1</text>
+  <text x="74" y="487" class="cell">15/06/2026 · n° 1</text>
   <text x="290" y="487" class="cell">640380</text>
   <text x="380" y="487" class="cell">B2</text>
   <text x="470" y="487" class="cell">Pippip (0,88)</text>
@@ -164,7 +164,7 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
   <text x="980" y="487" class="cell">Déposé</text>
 
   <rect x="58" y="496" width="1084" height="28" class="row"/>
-  <text x="74" y="515" class="cell">2026-04-22 · n° 1</text>
+  <text x="74" y="515" class="cell">22/04/2026 · n° 1</text>
   <text x="290" y="515" class="cell">640380</text>
   <text x="380" y="515" class="cell">A1</text>
   <text x="470" y="515" class="cell">Pipkuh (0,61)</text>
