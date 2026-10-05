@@ -121,23 +121,59 @@ def _fichiers(racine: pathlib.Path) -> list[pathlib.Path]:
     return [racine / ligne for ligne in rendu.stdout.split() if ligne]
 
 
+def _sans_init(relatif: pathlib.Path) -> str:
+    """`_commun/arbre.py` devient `_commun.arbre`, et `_commun/__init__.py` devient `_commun`.
+
+    **Un paquet s atteint par SON nom, jamais par `<paquet>.__init__`.** Aucun import n ecrit la
+    seconde forme, donc un gage declare dans un `__init__.py` rendait `_commun.__init__` du cote
+    DECLARATION tandis que `appels_resolus` rendait `_commun` du cote APPEL : les deux noms ne se
+    rencontraient jamais, et ce garde refusait un cablage correct POUR TOUJOURS (#5858).
+
+    Le defaut n existait pas en pratique parce que les neuf gages du depot vivent tous dans un
+    sous-module, ou le nom derive du chemin et le nom d import coincident. C est la forme d un garde
+    vert parce que son cas limite n existait pas encore dans le depot.
+    """
+    parts = relatif.with_suffix("").parts
+    if parts and parts[-1] == "__init__":
+        # ⟨un `__init__.py` A LA RACINE d une racine d import⟩ Il n en existe aucun aujourd hui :
+        # ni `scripts/` ni `.github/scripts/` n en porte. S il en naissait un, il designerait la
+        # racine elle-meme, qu aucun import ne nomme ; on garde alors le nom non ampute plutot que
+        # de rendre la chaine VIDE, qui s apparierait a n importe quel appel.
+        parts = parts[:-1] or parts
+    return ".".join(parts)
+
+
+def _depuis_sa_racine(chemin: pathlib.Path, racine: pathlib.Path) -> pathlib.Path:
+    """Le chemin relatif a la racine d import qui le couvre, ou au DEPOT si aucune ne le couvre.
+
+    ⟨hors de toute racine d import⟩ `icone/`, `.github/assets/`, `src/test/bats/` : aucun import ne
+    les atteint, mais leur nom se derive quand meme de la RACINE DU DEPOT. Le repli rendait le chemin
+    ABSOLU, donc un nom qui portait le repertoire de travail du poste (#5657).
+    """
+    for depuis in RACINES_D_IMPORT:
+        base = racine / depuis
+        if base in chemin.parents:
+            return chemin.relative_to(base)
+    return chemin.relative_to(racine)
+
+
 def _module_de(chemin: pathlib.Path, racine: pathlib.Path) -> str:
     """`scripts/_commun/arbre.py` devient `_commun.arbre`, `.github/scripts/_forge.py` devient
     `_forge` : le nom est celui par lequel un IMPORT atteint le module, donc il se derive de la
     racine d import qui le couvre, et jamais du seul chemin.
     """
-    for depuis in RACINES_D_IMPORT:
-        base = racine / depuis
-        if base in chemin.parents:
-            return ".".join(chemin.relative_to(base).with_suffix("").parts)
-    # ⟨hors de toute racine d import⟩ `icone/`, `.github/assets/`, `src/test/bats/` : aucun import ne
-    # les atteint, mais leur nom se derive quand meme de la RACINE DU DEPOT. Le repli rendait le
-    # chemin ABSOLU, donc un nom qui portait le repertoire de travail du poste (#5657).
-    return ".".join(chemin.relative_to(racine).with_suffix("").parts)
+    return _sans_init(_depuis_sa_racine(chemin, racine))
 
 
-def gages(racine: pathlib.Path) -> list[tuple[str, str, int]]:
-    """Les fonctions qui DECLARENT le contrat d un gage : (module, nom, ligne)."""
+def gages(racine: pathlib.Path) -> list[tuple[str, str, int, str]]:
+    """Les fonctions qui DECLARENT le contrat d un gage : (module, nom, ligne, chemin).
+
+    **Le nom de module sert a APPARIER, le chemin sert a MONTRER**, et les confondre coute des deux
+    cotes. Jusqu a #5858 le libelle du refus se derivait du nom de module, ce qui marchait tant que
+    les deux coincidaient : `_forge` rend bien `_forge.py`. Pour un paquet, ils divergent - le nom
+    qui apparie est `_commun`, le fichier qui existe est `_commun/__init__.py` - et deriver l un de
+    l autre forcait a choisir lequel des deux serait faux.
+    """
     trouves = []
     for fichier in _fichiers(racine):
         try:
@@ -148,7 +184,14 @@ def gages(racine: pathlib.Path) -> list[tuple[str, str, int]]:
             if not isinstance(noeud, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
             if noeud.returns is not None and ast.unparse(noeud.returns) == ANNOTATION:
-                trouves.append((_module_de(fichier, racine), noeud.name, noeud.lineno))
+                trouves.append(
+                    (
+                        _module_de(fichier, racine),
+                        noeud.name,
+                        noeud.lineno,
+                        _depuis_sa_racine(fichier, racine).as_posix(),
+                    )
+                )
     return sorted(trouves)
 
 
@@ -203,8 +246,8 @@ def inertes(racine: pathlib.Path | None = None) -> list[str]:
             continue
         joues |= appels_resolus(source, _module_de(fichier, racine))
     return [
-        f"{module.replace('.', '/')}.py:{ligne} {nom}()"
-        for module, nom, ligne in gages(racine)
+        f"{chemin}:{ligne} {nom}()"
+        for module, nom, ligne, chemin in gages(racine)
         if (module, nom) not in joues
     ]
 
@@ -215,8 +258,8 @@ def juge(racine: pathlib.Path | None = None) -> int:
     muets = inertes(racine)
     print(f"GAGES DE CODE | lus={len(tous)} | inertes={len(muets)}")
     for gage in tous:
-        module, nom, ligne = gage
-        libelle = f"{module.replace('.', '/')}.py:{ligne} {nom}()"
+        _, nom, ligne, chemin = gage
+        libelle = f"{chemin}:{ligne} {nom}()"
         print(f"  {'✘' if libelle in muets else '✔'} {libelle}")
     if muets:
         refuse(
@@ -315,6 +358,64 @@ def _auto_test() -> int:
         subprocess.run(["git", "-C", str(faux), "add", "-A"], check=True)
         verifie(
             "le MEME gage, joue depuis son repertoire, est vu joue",
+            lambda: inertes(faux),
+            [],
+        )
+
+    # ⟨un gage declare dans l `__init__.py` d un PAQUET⟩ Le nom derive du chemin rendait
+    # `_commun.__init__`, qu aucun import n ecrit : la forme qui atteint un paquet est `_commun`.
+    # Du cote appel, `appels_resolus` rendait deja `_commun`, donc les deux noms ne se rencontraient
+    # jamais et ce garde refusait un cablage CORRECT, pour toujours (#5858).
+    #
+    # Les neuf gages du depot vivant tous dans un sous-module, ou les deux noms coincident, le defaut
+    # n existait pas en pratique et ce fichier ne portait AUCUNE occurrence de `__init__`. C est la
+    # forme d un garde vert parce que son cas limite n etait pas encore ne dans le depot.
+    verifie(
+        "un gage de l `__init__.py` d un paquet se nomme par le PAQUET",
+        lambda: _module_de(pathlib.Path("/bac/scripts/_commun/__init__.py"), pathlib.Path("/bac")),
+        "_commun",
+    )
+    verifie(
+        "et hors racine d import aussi, car l amputation d un seul cote laisse vivre la moitie",
+        lambda: _module_de(pathlib.Path("/bac/icone/__init__.py"), pathlib.Path("/bac")),
+        "icone",
+    )
+    # ⟨le paquet RACINE, qui n existe pas et dont la branche existe quand meme⟩ Ni `scripts/` ni
+    # `.github/scripts/` ne porte d `__init__.py`, donc aucun arbre ne peut mener ici ; le cas
+    # appelle donc `_sans_init` DIRECTEMENT, sans quoi la branche serait du code qu aucun cas ne peut
+    # faire rougir. Amputer rendrait la chaine VIDE, qui s apparierait a n importe quel appel : le
+    # garde deviendrait aveugle, et un aveugle est VERT.
+    verifie(
+        "ampute jusqu au vide, le nom n est pas ampute du tout",
+        lambda: _sans_init(pathlib.Path("__init__.py")),
+        "__init__",
+    )
+
+    # ⟨la paire qui FRANCHIT la frontiere du paquet⟩ Les deux cas ci-dessus eprouvent une fonction ;
+    # celui-ci eprouve la RENCONTRE des deux moities sur un arbre reel, et c est la rencontre qui
+    # etait cassee. Un remede qui ne reparerait qu une moitie les laisserait verts tous les deux.
+    with tempfile.TemporaryDirectory(prefix="vc-5858-") as bac:
+        faux = pathlib.Path(bac) / "depot"
+        (faux / "scripts" / "_commun").mkdir(parents=True)
+        subprocess.run(["git", "-C", str(faux), "init", "-q"], check=True)
+
+        (faux / "scripts" / "_commun" / "__init__.py").write_text(UN_GAGE, encoding="utf-8")
+        subprocess.run(["git", "-C", str(faux), "add", "-A"], check=True)
+        # Et le libelle nomme le FICHIER QUI EXISTE. Deriver le libelle du nom de module rendait
+        # `_commun.py`, absent du disque : le remede de l appariement aurait casse l affichage, et un
+        # refus qui montre un chemin inexistant envoie corriger ce qui n est pas la.
+        verifie(
+            "un gage de paquet que rien ne joue est dit inerte, et nomme le fichier qui EXISTE",
+            lambda: inertes(faux),
+            ["_commun/__init__.py:1 verifie_grammaire()"],
+        )
+
+        (faux / "scripts" / "harnais.py").write_text(
+            "from _commun import verifie_grammaire\n\nverifie_grammaire()\n", encoding="utf-8"
+        )
+        subprocess.run(["git", "-C", str(faux), "add", "-A"], check=True)
+        verifie(
+            "le MEME gage de paquet, appele par le nom du paquet, est vu joue",
             lambda: inertes(faux),
             [],
         )
