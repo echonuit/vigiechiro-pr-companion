@@ -12,8 +12,10 @@ import com.google.inject.Provides;
 import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -283,6 +285,9 @@ class PassageVueIntegrationTest {
                 // construire l'Optional et le contrôleur devient inconstructible.
                 OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirSynthese.class);
+                // Hors connexion (#5862) : deux binders VIDES rendent « Vérifier le traitement » constructible.
+                OptionalBinder.newOptionalBinder(binder(), SuiviTraitement.class);
+                OptionalBinder.newOptionalBinder(binder(), ImportObservations.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
                         .setBinding()
                         .toInstance(passage -> diagnosticOuvert.set(passage.idPassage()));

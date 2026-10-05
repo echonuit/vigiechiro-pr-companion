@@ -1,4 +1,4 @@
-package fr.univ_amu.iut.lot.viewmodel;
+package fr.univ_amu.iut.commun.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -1,4 +1,4 @@
-package fr.univ_amu.iut.lot.viewmodel;
+package fr.univ_amu.iut.commun.viewmodel;
 
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -12,14 +12,15 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 
 /// Mise en mots de l'état du traitement serveur (#1263) : ce que l'utilisateur lit dans la zone
-/// « Traitement Vigie-Chiro » de M-Lot.
+/// « Traitement Vigie-Chiro » de M-Lot, et dans le bandeau de la vue d'un passage (#5862). Les deux écrans
+/// lisent ces phrases ici, pour ne pas dire deux choses du même relevé.
 ///
 /// Fonctions **pures**, séparées du ViewModel : les phrases sont ce que l'on relit le plus souvent, et il
 /// vaut mieux pouvoir les éprouver sans monter d'IHM.
 ///
 /// Le vocabulaire est délibérément celui de l'observateur (« analyse », « nuit », « observations ») et
 /// non celui de la plateforme (« compute », « donnees », « participation »).
-final class FormatsTraitement {
+public final class FormatsTraitement {
 
     /// Au-delà de ce délai, un calcul planifié ou en cours **semble bloqué**. Le site officiel applique la
     /// même heuristique, côté navigateur : le serveur, lui, ne dit jamais qu'il a renoncé.
@@ -29,7 +30,7 @@ final class FormatsTraitement {
 
     /// Où en est l'analyse, en une phrase, et ce que cela implique pour l'observateur. Les instants du
     /// serveur se lisent à l'heure de `fuseau`, celui du poste en production (#5683).
-    static String libelle(Traitement traitement, ZoneId fuseau) {
+    public static String libelle(Traitement traitement, ZoneId fuseau) {
         if (traitement.estInconnu()) {
             return "Analyse non lancée : les observations n'existent pas encore côté Vigie-Chiro.";
         }
@@ -49,34 +50,36 @@ final class FormatsTraitement {
     }
 
     /// Les observations de la nuit sont déjà en base : la carte ne réimporte pas (#5784).
-    static final String OBSERVATIONS_DEJA_IMPORTEES = "Les observations de cette nuit sont déjà importées."
+    public static final String OBSERVATIONS_DEJA_IMPORTEES = "Les observations de cette nuit sont déjà importées."
             + " Pour les remplacer, passez par « Sons & validation ».";
 
     /// L'analyse est terminée et rien n'est importé : l'état vient du cache, seul un relevé importe.
-    static final String OBSERVATIONS_A_IMPORTER = "Cliquez « Actualiser » pour importer les observations.";
+    public static final String OBSERVATIONS_A_IMPORTER = "Cliquez « Actualiser » pour importer les observations.";
 
-    /// La ligne d'import de la carte : ce qu'un relevé a fait des observations (#5784). Vide quand il n'y
-    /// avait rien à en faire.
-    static String importObservations(ImportApresReleve.Issue issue) {
+    /// Ce qu'un relevé a fait des observations (#5784). Vide quand il n'y avait rien à en faire.
+    ///
+    /// @param geste le nom du bouton qui relève, tel que l'écran appelant le montre : la phrase d'échec
+    ///     invite à le cliquer de nouveau, et un écran ne nomme pas le bouton d'un autre (#5862)
+    public static String importObservations(ImportApresReleve.Issue issue, String geste) {
         return switch (issue) {
             case ImportApresReleve.Issue.SansObjet sansObjet -> "";
             case ImportApresReleve.Issue.Fait fait -> fait.compteRendu();
             case ImportApresReleve.Issue.DejaLa dejaLa -> OBSERVATIONS_DEJA_IMPORTEES;
             case ImportApresReleve.Issue.Echoue echoue ->
-                "L'import des observations a échoué : " + echoue.motif()
-                        + ". Cliquez de nouveau « Actualiser », ou importez depuis « Sons & validation ».";
+                "L'import des observations a échoué : " + echoue.motif() + ". Cliquez de nouveau « " + geste
+                        + " », ou importez depuis « Sons & validation ».";
         };
     }
 
     /// « Dernier état connu le … » : la fraîcheur de l'information, que l'on doit à l'utilisateur, surtout
     /// hors connexion, où l'écran affiche un souvenir et non une vérité.
-    static String fraicheur(ReleveTraitement releve, ZoneId fuseau) {
+    public static String fraicheur(ReleveTraitement releve, ZoneId fuseau) {
         return "Dernier état connu le " + lisible(releve.releveLe(), fuseau) + ".";
     }
 
     /// Avertissement quand le calcul **traîne** (plus de 24 h) : le serveur ne signale jamais qu'il a
     /// renoncé, c'est donc à nous de le suggérer. Chaîne vide s'il n'y a rien à signaler.
-    static String alerte(Traitement traitement, Horloge horloge) {
+    public static String alerte(Traitement traitement, Horloge horloge) {
         if (traitement.estInconnu() || !traitement.enAttente()) {
             return "";
         }

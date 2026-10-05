@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirSynthese;
+import fr.univ_amu.iut.passage.viewmodel.VerificationDuTraitement;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,16 +25,21 @@ public final class AppuisPassage {
     /// feature est conditionnable, et la carte se masque quand elle est coupée.
     private final Optional<OuvrirSynthese> ouvrirSynthese;
 
+    /// Le geste « Vérifier le traitement » (#5862), par le même chemin que la Synthèse.
+    private final VerificationDuTraitement verification;
+
     @Inject
     public AppuisPassage(
             ExecuteurTache executeur,
             PortailVigieChiro portail,
             OuvreurDeLien ouvreurDeLien,
-            Optional<OuvrirSynthese> ouvrirSynthese) {
+            Optional<OuvrirSynthese> ouvrirSynthese,
+            VerificationDuTraitement verification) {
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.portail = Objects.requireNonNull(portail, "portail");
         this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
         this.ouvrirSynthese = Objects.requireNonNull(ouvrirSynthese, "ouvrirSynthese");
+        this.verification = Objects.requireNonNull(verification, "verification");
     }
 
     ExecuteurTache executeur() {
@@ -50,5 +56,9 @@ public final class AppuisPassage {
 
     OuvreurDeLien ouvreurDeLien() {
         return ouvreurDeLien;
+    }
+
+    VerificationDuTraitement verification() {
+        return verification;
     }
 }

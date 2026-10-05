@@ -528,7 +528,7 @@ L'assistant et **tous ses chemins non nominaux** : c'est la vue la plus riche en
 
 L'écran qui porte l'état d'avancement d'une nuit.
 
-<sub>`passage/view/Passage.fxml` &middot; 4 capture(s)</sub>
+<sub>`passage/view/Passage.fxml` &middot; 5 capture(s)</sub>
 
 <table>
 <tr>
@@ -549,6 +549,15 @@ L'écran qui porte l'état d'avancement d'une nuit.
 <tr>
 <td><a href="apercu-passage-retour.png"><img src="apercu-passage-retour.png" width="430" alt="Retour"></a></td>
 <td><a href="apercu-passage-squelette.png"><img src="apercu-passage-squelette.png" width="430" alt="Squelette"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<th width="50%">Traitement vérifié</th>
+</tr>
+<tr>
+<td><a href="apercu-passage-traitement-verifie.png"><img src="apercu-passage-traitement-verifie.png" width="430" alt="Après « Vérifier le traitement » : le bandeau dit l'analyse terminée et les observations importées"></a></td>
 </tr>
 </table>
 
