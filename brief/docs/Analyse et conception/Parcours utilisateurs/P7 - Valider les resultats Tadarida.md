@@ -6,31 +6,34 @@
 
 24-48 h après le dépôt sur Vigie-Chiro (parcours [P4](P4%20-%20Preparer%20un%20lot%20pret%20a%20deposer.md)), Tadarida a analysé les séquences d'écoute et restitué un fichier de **résultats d'identification** (CSV listant les espèces détectées dans chaque séquence, avec leur probabilité). Marie veut **passer en revue ces résultats** pour valider ou corriger les classifications avant que les données ne soient consolidées dans la base nationale.
 
-1. Le plus souvent, Marie n'a rien à télécharger : « Actualiser » sur l'écran de lot, ou « **Vérifier le traitement** » sur la fiche du passage, a importé les observations dès que l'analyse s'est terminée ([P4](P4%20-%20Preparer%20un%20lot%20pret%20a%20deposer.md)). En repli, elle télécharge le fichier de résultats depuis le portail Vigie-Chiro et le sauvegarde sur son disque.
-2. Dans l'application, elle ouvre « **Sons & validation** ». Si elle part du fichier téléchargé, elle le dépose sur l'écran ; ☰ ▸ « Importer depuis Vigie-Chiro » redemande les résultats à la plateforme.
-3. L'application parse le fichier (formats `Brut` ou `Vu` reconnus, R17), associe chaque ligne à la séquence d'écoute correspondante en base, et affiche la **vue de validation** :
-    - liste des observations à gauche (triable par séquence, taxon Tadarida, probabilité, statut)
-    - panneau de détail à droite : taxon proposé, probabilité, fréquence médiane, lecteur audio pour la séquence, bouton de validation
-4. Marie sélectionne une observation. La séquence d'écoute associée se charge dans le lecteur (déjà ralentie ×10, lecture immédiate). Elle peut aussi visualiser la **forme d'onde** et un **spectrogramme** (avec **zoom variable**, opération très fréquente en analyse acoustique).
+1. Le plus souvent, Marie n'a rien à télécharger : « Actualiser » sur l'écran de lot, ou « **Vérifier le traitement** » sur la fiche du passage, a importé les observations dès que l'analyse s'est terminée ([P4](P4%20-%20Preparer%20un%20lot%20pret%20a%20deposer.md)).
+2. Elle ouvre « **Sons & validation** » sur son passage. Si les observations n'y sont pas encore, ☰ ▸ « **Importer depuis Vigie-Chiro…** » les demande à la plateforme ; le même geste, rejoué plus tard, va chercher ce qui a changé, à commencer par l'avis du validateur. En repli, ☰ ▸ « Importer un CSV Tadarida… » lit un fichier de résultats téléchargé sur le portail (formats `Brut` ou `Vu`, R17), que l'on peut aussi déposer sur l'écran.
+3. L'application associe chaque ligne à la séquence d'écoute correspondante et affiche la **vue de validation** :
+    - la **table des observations** : l'espèce retenue, la proposition de Tadarida, sa probabilité, le statut (À revoir, Validée, Corrigée) en pastille. Marie la trie, la filtre et choisit ses colonnes ;
+    - sous la table, le **panneau d'écoute** pleine largeur de la ligne sélectionnée : sonogramme et spectrogramme.
+4. Marie sélectionne une observation. La séquence se charge et se joue aussitôt, ralentie dix fois pour devenir audible ; la fenêtre du cri est surlignée, et la lecture s'y positionne. Elle peut agrandir le temps ou la fréquence du **sonogramme** et du **spectrogramme**, opération très fréquente en analyse acoustique, et rejouer en boucle.
 5. Marie écoute, regarde, décide :
-    - si le taxon Tadarida lui semble correct, elle valide en un clic (`taxon observateur = taxon Tadarida`, R15)
-    - sinon, elle saisit un autre taxon dans le sélecteur. L'observation passe en statut `corrigée` (R16)
-    - elle peut ajouter un commentaire libre (« pic 39 kHz, morphologie atypique »)
-    - en cas de doute, elle **consulte la fiche de l'espèce** proposée (double-clic sur la ligne) : critères acoustiques et répartition s'ouvrent dans son navigateur, sur la fiche du **Plan National d'Actions Chiroptères** pour une chauve-souris, sur une source universelle par nom scientifique sinon. C'est la **troisième source de preuve**, à côté du son et du spectrogramme, et elle est nécessaire précisément parce que la probabilité Tadarida ne tranche pas (voir les notes ci-dessous)
+    - si le taxon Tadarida lui semble correct, elle **valide** d'un geste (`taxon observateur = taxon Tadarida`, R15) ;
+    - sinon, elle **corrige** en retenant un autre taxon dans la liste. L'observation passe au statut « Corrigée » (R16) ;
+    - elle déclare sa **certitude** (Sûr, Probable, Possible) : c'est la « Confiance observateur » du portail, jamais déduite d'une probabilité ;
+    - elle peut marquer l'observation **douteuse** pour y revenir, ou la garder comme **son de référence** ;
+    - elle peut ajouter un commentaire libre (« pic 39 kHz, morphologie atypique ») ;
+    - en cas de doute, elle **consulte la fiche de l'espèce** proposée (double-clic sur la ligne) : critères acoustiques et répartition s'ouvrent dans son navigateur, sur la fiche du **Plan National d'Actions Chiroptères** pour une chauve-souris, sur une source universelle par nom scientifique sinon. C'est la **troisième source de preuve**, à côté du son et du spectrogramme, et elle est nécessaire précisément parce que la probabilité Tadarida ne tranche pas (voir les notes ci-dessous).
 
-    Ces décisions sont toutes atteignables **depuis la ligne elle-même** (clic droit), sans remonter aux boutons ni au menu de l'écran : la revue se fait au fil de la liste, là où l'œil et le curseur se trouvent déjà.
-6. Marie peut **filtrer** par taxon, par groupe taxonomique (« toutes les pipistrelles », « tous les murins »), par seuil de probabilité, par plage horaire.
-7. Elle peut **quitter et reprendre plus tard** : son contexte (dernière observation vue, filtres actifs) est restauré. La validation peut s'étaler sur plusieurs jours sans rien perdre.
-8. Une fois la revue terminée, Marie exporte le **fichier de résultats validés** (`*_Vu.csv`) et le téléverse sur Vigie-Chiro pour finaliser sa contribution.
+    Ces décisions sont toutes atteignables **depuis la ligne elle-même** (clic droit) et au clavier, sans remonter aux boutons ni au menu de l'écran : la revue se fait au fil de la liste, là où l'œil et le curseur se trouvent déjà. Plusieurs lignes sélectionnées se valident ou se corrigent d'un coup.
+
+6. Marie peut **filtrer** par statut, par taxon parent (« chauves-souris uniquement »), par espèce, par certitude, par lieu, par seuil de probabilité, par plage horaire, et ne garder que les espèces à enjeu, les douteuses, les références ou les séquences sans proposition.
+7. Elle peut **quitter et reprendre plus tard** : chaque décision est enregistrée au fil de l'eau, le statut « À revoir » dit ce qui reste, et une touche saute à la prochaine observation à revoir. Le tri et les filtres tiennent le temps de la session ; une vue sauvegardée les retrouve d'un jour sur l'autre. La validation peut s'étaler sur plusieurs jours sans rien perdre.
+8. Une fois la revue terminée, ☰ ▸ « **Publier les corrections vers Vigie-Chiro…** » pousse ses décisions vers la plateforme, taxon retenu et certitude, après un récapitulatif de ce qui part et de ce qui reste à quai. En repli, elle exporte le **fichier de résultats validés** (`*_Vu.csv`) et le téléverse sur le portail.
 
 ## Notes importantes
 
 - **Les probabilités Tadarida ne sont pas fiables** au sens strict : il arrive régulièrement qu'une observation à 99 % soit fausse et qu'une observation à 20 % soit correcte. La probabilité reste une **heuristique de tri** utile, mais pas un raccourci de validation automatique.
 - **Deux modes de validation coexistent** (R18) :
-    - **Mode inventaire** : Marie cherche juste à savoir quelles espèces sont présentes sur son site. Une fois une espèce validée avec confiance sur une nuit, les autres détections de la même espèce sur la même nuit ne sont plus validées.
+    - **Mode inventaire** : Marie cherche juste à savoir quelles espèces sont présentes sur son site. Une fois une espèce validée avec confiance sur une nuit, les autres détections de la même espèce sur la même nuit, celles qu'elle n'a pas encore touchées, reçoivent la même décision automatiquement : elle n'a plus à les valider une à une, et chacune garde la trace d'avoir été propagée.
     - **Mode activité** : Samuel cherche à quantifier l'activité. Toutes les observations doivent être passées en revue pour produire des statistiques d'activité fiables.
 
-  L'utilisateur choisit le mode au démarrage du parcours (configurable par passage).
+  Le mode se choisit sur l'écran, à tout moment de la revue : « Activité (une par une) » ou « Inventaire (propage l'espèce) ». Une action sur plusieurs lignes s'enregistre toujours en mode activité : propager n'aurait pas de sens sur une sélection hétérogène.
 
 ## Ce que la revue a gagné
 
