@@ -12,6 +12,8 @@ verification: certaine
 enforced_by:
   - "src/test/java/fr/univ_amu/iut/lot/view/LotDepotConnecteViewTest.java"
 verification_note: "la classe compte les boutons de lancement après un dépôt complet, lit le titre de l étape dans les deux états, lit le résultat du lancement sous le bouton pour chaque issue, et constate le blocage d une analyse demandée, y compris à la réouverture. Elle ne juge pas la lisibilité : les aperçus `apercu-lot-lancement-*` se regardent"
+relations:
+  completee_par: ["5859-le-fil-d-etapes-suit-le-dernier-geste-du-depot"]
 verified:
   - by: machine:ci
     at: 2026-10-05
@@ -21,6 +23,13 @@ generated:
 ---
 
 # Un geste a un seul point d'action, et son résultat se lit près de lui
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-05** : cette décision est **complétée** par
+    [5859](5859-le-fil-d-etapes-suit-le-dernier-geste-du-depot.md). Elle donnait au titre et au bouton
+    de la dernière étape le nom du geste, sans toucher au fil d'étapes, qui le nommait autrement et le
+    disait fait. Le fil suit désormais le nom et l'état du bouton. Le reste fait foi.
+
 ## Contexte
 
 Pendant le dépôt réel de #5597, la fin du dépôt a laissé l'utilisateur sans savoir quoi faire, puis

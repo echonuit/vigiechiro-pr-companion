@@ -4,10 +4,12 @@ import fr.univ_amu.iut.commun.view.IconeSelonEtat;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
+import fr.univ_amu.iut.lot.viewmodel.DernierGesteDuDepot;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
@@ -32,6 +34,20 @@ final class EtapeDeposerUI {
             + " malgré tout, après un échec, par exemple : lancer-traitement-vigiechiro --forcer.";
 
     private EtapeDeposerUI() {}
+
+    /// Le dernier geste du dépôt, tel que ce bouton le vit (#5859) : son nom suit la participation liée,
+    /// et il est accompli quand l'analyse est demandée ou faite, les deux faits qui le désactivent pour
+    /// de bon. Le fil d'étapes lit cette liaison, pour ne plus dire autre chose que la carte.
+    static ObjectBinding<DernierGesteDuDepot> dernierGeste(DepotViewModel depot, TraitementViewModel traitement) {
+        return Bindings.createObjectBinding(
+                () -> DernierGesteDuDepot.de(
+                        depot.participationLieeProperty().get(),
+                        traitement.relanceBloqueeProperty().get()
+                                || traitement.analyseDemandeeProperty().get()),
+                depot.participationLieeProperty(),
+                traitement.relanceBloqueeProperty(),
+                traitement.analyseDemandeeProperty());
+    }
 
     /// Les nœuds de l'étape ④ : son bouton, son icône, l'enveloppe qui porte l'explication d'un blocage,
     /// le titre et la consigne qui disent le même geste que le bouton (#5676), et le résultat du
@@ -62,7 +78,7 @@ final class EtapeDeposerUI {
                         .then("4. ")
                         .otherwise("3. ")
                         .concat(Bindings.when(depot.participationLieeProperty())
-                                .then("Lancer la participation")
+                                .then(DernierGesteDuDepot.LANCER_LA_PARTICIPATION.nom())
                                 .otherwise("Marquer le passage déposé")));
         vue.consigne()
                 .textProperty()
@@ -91,8 +107,8 @@ final class EtapeDeposerUI {
                                 .or(depot.enCoursProperty())));
         bouton.textProperty()
                 .bind(Bindings.when(depot.participationLieeProperty())
-                        .then("Lancer la participation")
-                        .otherwise("Marquer déposé"));
+                        .then(DernierGesteDuDepot.LANCER_LA_PARTICIPATION.nom())
+                        .otherwise(DernierGesteDuDepot.MARQUER_DEPOSE.nom()));
         IndicateurBlocage.expliquer(
                 enveloppe,
                 Bindings.when(traitement.relanceBloqueeProperty())

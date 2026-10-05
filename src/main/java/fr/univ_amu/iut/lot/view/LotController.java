@@ -31,6 +31,7 @@ import fr.univ_amu.iut.lot.model.ControleCoherence;
 import fr.univ_amu.iut.lot.model.StatutControle;
 import fr.univ_amu.iut.lot.model.SuiviArchives;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
+import fr.univ_amu.iut.lot.viewmodel.DernierGesteDuDepot;
 import fr.univ_amu.iut.lot.viewmodel.EtapeDepot;
 import fr.univ_amu.iut.lot.viewmodel.FormatsLot;
 import fr.univ_amu.iut.lot.viewmodel.LigneArchive;
@@ -43,6 +44,7 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -95,6 +97,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     /// Suivi du traitement serveur (#1263), séparé de [LotViewModel] (déjà au plafond de complexité).
     private final TraitementViewModel traitementViewModel;
+
+    /// Le dernier geste du dépôt, tenu ici pour que sa liaison vive autant que l'écran : une liaison que
+    /// seul son écouteur retient est ramassée, et le fil cesserait de suivre sans rien dire (#5859).
+    private ObjectBinding<DernierGesteDuDepot> dernierGeste;
 
     /// Calcul des 3 zones de la barre de statut (#823), extrait de ce contrôleur pour la cohésion (#984).
     private final ZonesStatutLot zonesStatutLot;
@@ -338,6 +344,11 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
         // Stepper du dépôt (#251), reconstruit à chaque changement d'étapes (mêmes styles que M-Passage).
         viewModel.etapes().addListener((ListChangeListener<EtapeDepot>) changement -> majStepper());
+        // La dernière puce suit sa carte, nom et état (#5859). Ce qu'il faut pour le dire vit dans deux
+        // autres ViewModels, et ce controller est le seul à les connaître tous. Le fil est donc corrigé
+        // ici, à l'affichage : le porter par `LotViewModel` lui faisait franchir le plafond `GodClass`.
+        dernierGeste = EtapeDeposerUI.dernierGeste(depotViewModel, traitementViewModel);
+        dernierGeste.addListener((observable, avant, geste) -> majStepper());
         majStepper();
 
         // Checklist de cohérence (#254), reconstruite à chaque changement (✓ / ✗ / ⚠), comme le stepper.
@@ -502,7 +513,8 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// Reconstruit le stepper du dépôt (#251) depuis [LotViewModel#etapes()] : une puce par étape,
     /// stylée selon son état (franchie / courante / à venir), comme le stepper de M-Passage.
     private void majStepper() {
-        Stepper.reconstruire(stepper, viewModel.etapes(), EtapeDepot::libelle, EtapeDepot::etat);
+        Stepper.reconstruire(
+                stepper, dernierGeste.get().appliquerAuFil(viewModel.etapes()), EtapeDepot::libelle, EtapeDepot::etat);
     }
 
     /// Reconstruit la **checklist de cohérence** (#254) depuis [LotViewModel#controles()] : une ligne par

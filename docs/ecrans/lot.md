@@ -10,6 +10,11 @@ choisie dans [Réglages](reglages.md) ▸ Dépôt :
 | **Séquences WAV** (par défaut), application connectée | **« 1 · Préparer »**, **« 2 · Téléverser »**, **« 3 · Marquer déposé »** |
 | **Archives ZIP**, ou application non connectée | **« 1 · Préparer »**, **« 2 · Générer les archives »**, **« 3 · Téléverser »**, **« 4 · Marquer déposé »** |
 
+La **dernière étape** porte le nom de son bouton. Elle s'appelle « Marquer déposé » tant qu'aucune
+participation n'est liée au passage, et **« Lancer la participation »** dès que l'application a déposé la
+nuit elle-même. Elle reste alors l'étape courante tant que la participation n'est pas lancée : une nuit
+déposée n'est pas une nuit traitée. Elle n'est franchie qu'une fois l'analyse demandée à Vigie-Chiro.
+
 En séquences WAV, rien ne produit d'archive : l'étape « Générer les archives » n'a pas lieu d'être, et
 l'écran ne l'affiche pas. Elle revient si vous choisissez les archives ZIP, et elle reste quand
 l'application n'est pas connectée, parce qu'elle sert alors au dépôt manuel.

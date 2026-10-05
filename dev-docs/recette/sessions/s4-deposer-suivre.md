@@ -86,8 +86,8 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 *A4 · Marquer déposé, réinitialiser, régression*
 
 - **S4-22** · *geste: marquer-depose-a-la-main* · Sans participation liée, le bouton est « ✅ Marquer déposé ».
-- **S4-23** · *geste: marquer-depose-a-la-main* · Après « Marquer déposé » : statut « Déposé », et **toutes** les étapes du stepper sont franchies
-  (S4-C03 : y compris « Lancer la participation », qui n'a pas eu lieu).
+- **S4-23** · *geste: marquer-depose-a-la-main* · Après « Marquer déposé » : statut « Déposé », et **toutes** les étapes du stepper sont franchies.
+  Le dépôt fait à la main n'a pas de suite dans l'application : sa dernière étape se nomme « Marquer déposé », et elle est faite.
 - **S4-24** · *geste: marquer-depose-a-la-main* · Sur le passage déposé, la carte « Sons & validation » se déverrouille.
 - **S4-25** · *geste: reinitialiser-le-depot* · « 🔄 Réinitialiser le dépôt » est visible, avec son infobulle.
 - **S4-26** · *geste: reinitialiser-le-depot* · Après réinitialisation : table vidée, statut « Prêt à déposer », message explicite.
@@ -145,6 +145,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 - **S4-99** · Sans réglage de forme (séquences WAV, le défaut) et connecté, ouvrir « Préparer le dépôt » : le fil d'étapes compte **trois** puces, aucune carte « Générer les archives », et l'étape « 2. Téléverser sur Vigie-Chiro » ne propose ni chemin de dossier ni « Ouvrir le dossier (dépôt manuel) ». Après le téléversement, le compte rendu compte des **séquences**. Passer aux archives ZIP dans Réglages ▸ Dépôt puis rouvrir l'écran d'une nuit non déposée : les quatre étapes et le dépôt manuel reviennent (#5824).
 - **S4-100** · Entamer un dépôt en archives ZIP (une archive en ligne, puis « Annuler »), passer le réglage à « Séquences WAV », rouvrir l'écran : il reste celui des archives, quatre étapes, et « Reprendre le dépôt » ne renvoie que les archives manquantes, **en ZIP**. Aucune séquence WAV ne part à côté des archives déjà en ligne (#5677).
 - **S4-101** · Cocher une nuit dont le dépôt est entamé et « Préparer le dépôt des lignes cochées… » : l'annonce l'écarte en disant « dépôt entamé : reprenez-le depuis l'écran de dépôt », et non « déjà déposé » (#5623).
+- **S4-102** · Sur une nuit que l'application vient de déposer, avant de lancer la participation : la dernière étape du fil dit « Lancer la participation », comme sa carte et son bouton, et elle est l'étape **courante**, pas une étape franchie. Après « Lancer la participation », une fois l'analyse planifiée, elle passe franchie (#5859). Sur un dépôt marqué à la main (S4-23), elle dit « Marquer déposé ».
 
 ### Traitement en lot : ce qu'un seul poste ne peut pas prouver (#2357)
 
@@ -274,7 +275,7 @@ peuvent pas dire si le premier import « paraît instantané » ni si « Annuler
 |---|---|---|
 | S4-C01 | E/F | Le dépôt exige un site relié mais **rien ne le dit avant le clic** : bouton actif, archives générées, échec à la fin. À griser dès l'ouverture ou à mettre dans la checklist |
 | S4-C02 | C/D | **Aucun retour arrière serveur** : « Réinitialiser » / « Annuler » sont locaux ; la doc ne dit pas que les fichiers téléversés restent en ligne ; « réinitialiser puis re-téléverser » **duplique** (avec S4-C08) |
-| S4-C03 | F | Le stepper affiche **toutes les étapes franchies** dès « Déposé », alors que « Lancer la participation » reste à faire (la doc martèle « déposer ≠ faire traiter ») |
+| S4-C03 | F | Le stepper affiche **toutes les étapes franchies** dès « Déposé », alors que « Lancer la participation » reste à faire (la doc martèle « déposer ≠ faire traiter »). **Traité par #5859** : quand une participation est liée, la dernière étape se nomme « Lancer la participation » et reste courante jusqu'à ce que l'analyse soit demandée (cas S4-102) |
 | S4-C04 | F | Cette action critique n'est **jamais mise en avant** : bouton secondaire, libellés qui disent encore « Marquer le passage déposé » |
 | S4-C05 | C | La fiche affirme que « Préparer » **reste grisé** tant qu'un contrôle échoue ; le code le laisse **actif** (relançable). C'est la fiche qui est fausse |
 | S4-C06 | P/E | Le choix **ZIP / WAV** n'existe **ni en IHM ni en Réglages** : l'IHM impose le ZIP, WAV n'est atteignable qu'en CLI ; or ce choix détermine si l'audio reste récupérable côté serveur (→ #1515) |
