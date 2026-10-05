@@ -170,7 +170,7 @@ class ScenarioPerceptifRecuperationCarreTest {
         // commence au « + Nouveau site » demande de le croire sur parole. L'entrée de menu porte le
         // pseudo une fois connecté et « Se connecter à Vigie-Chiro… » sinon : c'est le produit qui
         // établit la situation, pas une phrase posée par-dessus.
-        robot.clickOn("#menuOutils");
+        GesteVisible.cliquer(robot, "#menuOutils");
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(robot.lookup(IDENTITE_AU_MENU).tryQuery())
                 .as("le menu nomme l'identité connectée : c'est ce qui rend le rapatriement lisible")
@@ -185,7 +185,7 @@ class ScenarioPerceptifRecuperationCarreTest {
         // `ouvrirModaleCreationSite(...)` : le bon chemin de code, et un mauvais film - la modale
         // paraissait sans qu'aucun geste ne l'explique. Retour de la revue de `S1-26`, qui vaut ici
         // aussi.
-        robot.clickOn("+ Nouveau site");
+        GesteVisible.cliquer(robot, "+ Nouveau site");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.entreDeuxGestes(robot);
 
@@ -202,7 +202,7 @@ class ScenarioPerceptifRecuperationCarreTest {
                 10 * 1000L);
         Respiration.entreDeuxGestes(robot);
 
-        robot.clickOn("#btnRecupererCarre");
+        GesteVisible.cliquer(robot, "#btnRecupererCarre");
 
         // C'est ici que se joue le cas : la modale s'efface, l'écran d'où elle venait reste, et son
         // bandeau dit ce qui vient d'être créé. Attendre le TEXTE du bandeau, et non sa présence :
