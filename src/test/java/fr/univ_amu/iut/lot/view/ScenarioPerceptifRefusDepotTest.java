@@ -43,6 +43,7 @@ import fr.univ_amu.iut.recette.Attente;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
@@ -208,7 +209,7 @@ class ScenarioPerceptifRefusDepotTest {
         CadreVisible.amener(robot.lookup("#btnTeleverser").query(), robot);
         Respiration.entreDeuxGestes(robot);
 
-        robot.clickOn("#btnTeleverser");
+        GesteVisible.cliquer(robot, "#btnTeleverser");
         // L'exécuteur est asynchrone : le compte rendu n'est PAS là au retour du clic.
         // On attend LA PHRASE QU'ON AFFIRME, et non un texte voisin. Attendre « Dépôt incomplet »
         // rendait la main dès le titre du compte rendu, alors que les avertissements paraissent à la
@@ -267,7 +268,7 @@ class ScenarioPerceptifRefusDepotTest {
         // cliquait à l'ouverture de l'écran, sur un bouton grisé - le clic ne portait pas, et rien
         // ne le disait sinon une liste vide au moment d'asserter.
         CadreVisible.amener(robot.lookup("#btnGenererArchives").query(), robot);
-        robot.clickOn("#btnGenererArchives");
+        GesteVisible.cliquer(robot, "#btnGenererArchives");
 
         Button ouvrir = robot.lookup("#btnOuvrirDepot").queryAs(Button.class);
         Attente.queSurLeFil(
@@ -275,7 +276,7 @@ class ScenarioPerceptifRefusDepotTest {
         CadreVisible.amener(ouvrir, robot);
         Respiration.entreDeuxGestes(robot);
 
-        robot.clickOn("#btnOuvrirDepot");
+        GesteVisible.cliquer(robot, "#btnOuvrirDepot");
         // Le port est écrit SUR LE FIL FX, dans le clic : `onAction="#ouvrirDossierDepot"` l'appelle
         // directement, sans exécuteur (#5686). On lit donc du même côté qu'on écrit - `queSurLeFil`
         // et non `que` - et l'attente DIT ce qu'elle a observé, sans quoi son expiration ne
