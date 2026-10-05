@@ -46,11 +46,31 @@ def norm_id(p):
     return re.sub(r"[^a-z0-9]+", "_", str(p).rsplit(".", 1)[0].lower()).strip("_")
 
 
-def pages_du_depot():
-    """Les pages dont les passes relient les citations : trois dossiers, et la racine."""
-    pages = [p for d in ("brief", "dev-docs", "docs") for p in Path(d).rglob("*.md")]
-    pages += [p for p in Path(".").glob("*.md") if p.name != "CHANGELOG.md"]
-    return sorted(pages)
+# Les pages que les ponts ne relient pas, nommement. Le journal des versions cite tout le depot ;
+# `.claude/skills` est une COPIE de `.agents/skills`, que `synchronise-adaptateurs.py` tient : ses
+# citations entreraient en double. 32 pages sur 32 y etaient identiques octet pour octet le
+# 5 octobre 2026.
+PAGES_NON_RELIEES = ("CHANGELOG.md",)
+DOSSIERS_NON_RELIES = (".claude/skills/",)
+
+
+def pages_reliees(noeuds, racine=None):
+    """Les pages dont les ponts relient les citations : celles qui ont un noeud de page.
+
+    Le parcours se DERIVE du graphe. Il venait d'une liste de dossiers, `brief/`, `dev-docs/`,
+    `docs/` et la racine, pendant que le noeud de fichier se reconnaissait par une autre regle :
+    deux ecritures de « quelles pages », et c'est leur ecart qui a fait perdre leur noeud de page
+    a cinq pages de la racine (#5868). Une seule regle ne peut pas diverger d'elle-meme. Elle relie
+    aussi les 173 pages qui vivaient hors de la liste, celles d'`openspec/` surtout (#5904).
+    """
+    racine = racine or Path(".")
+    return sorted(
+        Path(chemin)
+        for chemin in noeuds_de_page(noeuds)
+        if chemin not in PAGES_NON_RELIEES
+        and not chemin.startswith(DOSSIERS_NON_RELIES)
+        and (racine / chemin).is_file()
+    )
 
 
 def est_fabrique(n):
@@ -86,7 +106,7 @@ def identifiant_libre(base, pris):
     return candidat
 
 
-def resorbe(noeuds, aretes, hyperaretes, pages):
+def resorbe(noeuds, aretes, hyperaretes):
     """Retire ce que l'ancienne passe B a laisse, et ancre les citations des ponts sur la page.
 
     Un noeud qu'elle avait fabrique se replie sur le noeud de page des que la page en a un, et ses
@@ -100,7 +120,8 @@ def resorbe(noeuds, aretes, hyperaretes, pages):
     devient = {}
     for n in noeuds.values():
         sf = n.get("source_file")
-        if sf not in pages or not est_fabrique(n):
+        # Seules les pages : une autre passe fabrique le noeud de document d'un schema `.mcd`.
+        if not str(sf).endswith(".md") or not est_fabrique(n):
             continue
         if sf in page:
             devient[n["id"]] = page[sf]["id"]
@@ -200,8 +221,13 @@ def joue_sur_un_depot_fabrique(passe, noeuds, aretes, fichiers):
             text=True,
             check=False,
         )
-        extrait = json.loads(
-            (depot / "graphify-out" / ".graphify_extract.json").read_text(encoding="utf-8")
+        ecrit = depot / "graphify-out" / ".graphify_extract.json"
+        # Une passe qui plante n'ecrit rien : le cas le lit alors dans le code rendu, au lieu que
+        # ce harnais leve a sa place sans dire lequel.
+        extrait = (
+            json.loads(ecrit.read_text(encoding="utf-8"))
+            if ecrit.is_file()
+            else {"nodes": [], "edges": []}
         )
     code = rendu.returncode if MAIN_RENDUE in rendu.stdout else PASSE_SORTIE_SANS_RENDRE_LA_MAIN
     return code, extrait["nodes"], extrait["edges"]
@@ -275,6 +301,47 @@ def auto_test():
         "une page de la racine qui cite une classe garde son noeud de page, et la citation en part",
         lambda: bilan(structure + [page_readme, titre_readme], [], fichiers),
         (0, [], [], [("agents", cid), ("docs_guide", cid), ("readme", cid)]),
+    )
+
+    # Le parcours se derive des noeuds de page du graphe, et non d une liste de dossiers (#5904).
+    # Les ponts ne reliaient que `brief/`, `dev-docs/`, `docs/` et la racine : 173 pages qui ont un
+    # noeud de page vivaient ailleurs le 5 octobre 2026, et 445 citations de classe n etaient pas
+    # reliees. Deux exclusions restent, nommees : le journal des versions, et `.claude/skills`, qui
+    # est une copie de `.agents/skills`.
+    def page(identifiant, chemin):
+        return noeud_de_document(identifiant, Path(chemin).name, chemin, node_kind="page")
+
+    hors_des_quatre = {
+        "openspec/specs/lot/spec.md": "openspec_specs_lot_spec",
+        ".agents/skills/clore/SKILL.md": "agents_skills_clore_skill",
+        ".claude/skills/clore/SKILL.md": "claude_skills_clore_skill",
+        ".claude/commands/clore.md": "claude_commands_clore",
+        "CHANGELOG.md": "changelog",
+    }
+    partout = {chemin: "# Titre\n\nVoir `ImporterNuit`.\n" for chemin in hors_des_quatre}
+    partout["docs/sans-noeud.md"] = "# Titre\n\nVoir `ImporterNuit`.\n"
+    verifie(
+        "une page qui a un noeud de page est reliee ou qu elle vive, hors journal et copie",
+        lambda: bilan(
+            [
+                classe,
+                *(page(i, chemin) for chemin, i in hors_des_quatre.items()),
+                # Le graphe porte encore cette page, le disque ne l'a plus : elle ne se lit pas.
+                page("docs_partie", "docs/partie.md"),
+            ],
+            [],
+            partout,
+        ),
+        (
+            0,
+            [],
+            [],
+            [
+                ("agents_skills_clore_skill", cid),
+                ("claude_commands_clore", cid),
+                ("openspec_specs_lot_spec", cid),
+            ],
+        ),
     )
 
     # Une page que la structure ne porte pas attend son noeud de page. La passe ne lui en fabrique
@@ -376,9 +443,7 @@ def auto_test():
 
     def resorbee():
         hyperaretes = [{"id": "h", "nodes": ["readme_doc", cid]}, {"id": "sans_membres"}]
-        _, _, membres, comptes = resorbe(
-            {n["id"]: n for n in revenu}, aretes_revenues, hyperaretes, set(fichiers)
-        )
+        _, _, membres, comptes = resorbe({n["id"]: n for n in revenu}, aretes_revenues, hyperaretes)
         return comptes, membres
 
     verifie(
@@ -451,8 +516,8 @@ def auto_test():
     verifie(
         "le noeud de document d un fichier qui n est pas une page reste en place",
         lambda: [
-            sorted(resorbe({"docs_schema_mcd": schema}, [], [], {"README.md"})[0]),
-            resorbe({"docs_schema_mcd": schema}, [], [], {"README.md"})[3],
+            sorted(resorbe({"docs_schema_mcd": schema}, [], [])[0]),
+            resorbe({"docs_schema_mcd": schema}, [], [])[3],
         ],
         [["docs_schema_mcd"], {"replies": 0, "renommes": 0, "reancrees": 0}],
     )
@@ -549,19 +614,17 @@ def passe():
     edges = propres
 
     # ------------------------------------------------------- PASSE B : citations
-    docs = pages_du_depot()
-    nodes, edges, hyperaretes, comptes = resorbe(
-        nodes, edges, g.get("hyperedges", []), {str(p) for p in docs}
-    )
+    nodes, edges, hyperaretes, comptes = resorbe(nodes, edges, g.get("hyperedges", []))
     print(
         f"passe B : {comptes['replies']} doublons replies sur leur page, "
         f"{comptes['renommes']} sortis du suffixe reserve, "
         f"{comptes['reancrees']} citations reancrees"
     )
     page_de = noeuds_de_page(nodes.values())
+    docs = pages_reliees(nodes.values())
 
     existantes = {(e["source"], e["target"]) for e in edges}
-    ajoutees, sans_page = 0, 0
+    ajoutees = 0
     for p in docs:
         sf = str(p)
         texte = p.read_text(encoding="utf-8", errors="ignore")
@@ -588,12 +651,7 @@ def passe():
                     trouves.setdefault(hit[1], no)
         if not trouves:
             continue
-        src = page_de.get(sf)
-        if src is None:
-            # La structure ne porte pas cette page : elle attend son noeud de page. Lui en
-            # fabriquer un l'empecherait d'en recevoir un, voir `noeuds_de_page`.
-            sans_page += 1
-            continue
+        src = page_de[sf]
         for cid, no in trouves.items():
             if (src["id"], cid) in existantes or (cid, src["id"]) in existantes or src["id"] == cid:
                 continue
@@ -613,10 +671,7 @@ def passe():
             )
             existantes.add((src["id"], cid))
             ajoutees += 1
-    print(
-        f"         {ajoutees} aretes de citation ajoutees ; "
-        f"{sans_page} pages sans noeud de page attendent leur structure"
-    )
+    print(f"         {ajoutees} aretes de citation ajoutees, depuis {len(docs)} pages reliees")
 
     # --------------------------------------------------------------- ecriture
     extraction = {
