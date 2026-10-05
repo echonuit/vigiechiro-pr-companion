@@ -130,9 +130,11 @@ public final class FormatsLot {
             return "Passage déposé le " + Horodatage.dateSeule(etat.deposeLe()) + ".";
         }
         if (etat.statut() == StatutWorkflow.DEPOT_EN_COURS) {
-            // Dépôt automatique entamé mais incomplet (#980) : interrompu ou en cours d'exécution. La
-            // reprise ne re-téléverse que le manquant (moteur reprenable, #982).
-            return "Dépôt Vigie-Chiro entamé : des fichiers restent à téléverser (reprise possible).";
+            // Dépôt automatique entamé mais incomplet (#980) : interrompu ou en cours d'exécution.
+            // La ligne ne promet plus de reprise (#5932) : l'état du lot ne connaît pas le plan, et
+            // quand tout ce qui reste est refusé définitivement elle contredisait le bouton et la carte
+            // du repli, qui le lisent. Ce sont eux qui disent s'il y a quelque chose à reprendre.
+            return "Dépôt Vigie-Chiro entamé : des fichiers restent à téléverser.";
         }
         if (etat.aDesEchecs()) {
             return "Cohérence : corrigez les contrôles en échec avant de préparer le dépôt.";

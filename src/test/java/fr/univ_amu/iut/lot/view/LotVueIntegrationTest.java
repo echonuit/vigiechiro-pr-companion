@@ -35,6 +35,7 @@ import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
+import fr.univ_amu.iut.recette.Attente;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -183,6 +184,33 @@ class LotVueIntegrationTest {
         // Ce que le bouton copie est ce que l'écran montre, et non une valeur recomposée à côté : une
         // copie qui diverge de l'affichage serait pire que pas de copie du tout.
         assertThat(copie.get()).isEqualTo(chemin.getText()).isEqualTo("/ws/session-42/depot");
+    }
+
+    /// Hors connexion, le bouton de téléversement n'est pas affiché : il ne reste que le dépôt manuel. La
+    /// consigne invitait pourtant à « téléverser directement », et présentait comme un recours le seul
+    /// chemin possible (#5897). Cet écran est monté sans dépôt Vigie-Chiro, donc hors connexion.
+    @Test
+    @DisplayName("#5897 : hors connexion, la consigne de l'étape 3 dit de déposer à la main, pas de téléverser")
+    void hors_connexion_la_consigne_dit_de_deposer_a_la_main(FxRobot robot) {
+        String consigne = Attente.surLeFil(
+                () -> robot.lookup("#lblConsigneTeleversement")
+                        .queryAs(Label.class)
+                        .getText(),
+                "lire la consigne de l'étape 3",
+                5_000L);
+
+        assertThat(consigne)
+                .isEqualTo("L'application n'est pas connectée à Vigie-Chiro : déposez les archives ZIP à la main"
+                        + " sur le portail, depuis le dossier :")
+                .doesNotContain("Téléversez la nuit directement");
+        assertThat(Attente.surLeFil(
+                        () -> robot.lookup("#lblTitreTeleversement")
+                                .queryAs(Label.class)
+                                .getText(),
+                        "lire le titre de l'étape 3",
+                        5_000L))
+                .as("le geste reste un téléversement, fait à la main : le titre ne change pas")
+                .isEqualTo("3. Téléverser sur Vigie-Chiro");
     }
 
     @Test

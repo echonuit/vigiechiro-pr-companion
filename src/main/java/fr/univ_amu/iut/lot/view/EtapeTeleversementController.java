@@ -121,6 +121,11 @@ public class EtapeTeleversementController {
         cablerTableDepot();
     }
 
+    /// Ce que l'étape dit quand l'application n'est pas connectée (#5897) : il ne reste que le dépôt
+    /// manuel, et la consigne le dit au lieu d'inviter à un téléversement que l'écran n'offre pas.
+    static final String CONSIGNE_HORS_CONNEXION = "L'application n'est pas connectée à Vigie-Chiro : déposez les"
+            + " archives ZIP à la main sur le portail, depuis le dossier :";
+
     /// Ce qui, dans cette étape, tient à l'étape des archives (#5824) : son numéro, sa consigne, et tout
     /// ce qui sert au dépôt manuel d'archives. Connecté pour un dépôt en séquences WAV, rien ne produit
     /// d'archive : l'étape devient la deuxième, et n'offre plus de déposer à la main.
@@ -134,9 +139,16 @@ public class EtapeTeleversementController {
         lblConsigneTeleversement
                 .textProperty()
                 .bind(Bindings.when(archives)
-                        .then("Téléversez la nuit directement sur Vigie-Chiro (les séquences transformées, au"
-                                + " format attendu par la plateforme). En cas de besoin, un dépôt manuel des"
-                                + " archives ZIP reste possible depuis le dossier :")
+                        // Hors connexion le bouton de téléversement n'est pas affiché : la consigne ne
+                        // peut pas inviter à téléverser directement, ni présenter comme un recours le
+                        // seul chemin qui reste (#5897).
+                        .then(
+                                appuis.depotViewModel().disponible()
+                                        ? "Téléversez la nuit directement sur Vigie-Chiro (les séquences"
+                                                + " transformées, au format attendu par la plateforme). En cas"
+                                                + " de besoin, un dépôt manuel des archives ZIP reste possible"
+                                                + " depuis le dossier :"
+                                        : CONSIGNE_HORS_CONNEXION)
                         .otherwise("Téléversez la nuit directement sur Vigie-Chiro : les séquences transformées"
                                 + " partent une à une, au format attendu par la plateforme."));
         // Le chemin et « Ouvrir le dossier » servent au dépôt manuel : ils reviennent aussi en repli

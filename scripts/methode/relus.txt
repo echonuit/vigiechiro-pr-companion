@@ -866,7 +866,7 @@ c8830e19de44  src/main/java/fr/univ_amu/iut/lot/view/BandeauLotUI.java
 5f0fe8966cb3  src/main/java/fr/univ_amu/iut/lot/view/CompteRenduDepotUI.java
 d763e75481b9  src/main/java/fr/univ_amu/iut/lot/view/EtapeDeposerUI.java
 60e3cf9d035c  src/main/java/fr/univ_amu/iut/lot/view/EtapeDesArchives.java
-1a9d36d4369d  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleversementController.java
+0ab4e45822c2  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleversementController.java
 46cb0d44f356  src/main/java/fr/univ_amu/iut/lot/view/EtapeTeleverserUI.java
 9da3bf9dc37a  src/main/java/fr/univ_amu/iut/lot/view/LotController.java
 2020a70711b5  src/main/java/fr/univ_amu/iut/lot/view/NavigationLot.java
@@ -1877,7 +1877,7 @@ cb3b8a4aed6c  src/test/java/fr/univ_amu/iut/lot/view/LotFilDEtapesViewTest.java
 d290c4438c53  src/test/java/fr/univ_amu/iut/lot/view/LotIdentiteStatutViewTest.java
 8c55e780dc3d  src/test/java/fr/univ_amu/iut/lot/view/LotRepliManuelViewTest.java
 21de420b4e35  src/test/java/fr/univ_amu/iut/lot/view/LotViewTest.java
-0296639e177a  src/test/java/fr/univ_amu/iut/lot/view/LotVueIntegrationTest.java
+4df6d9d190cf  src/test/java/fr/univ_amu/iut/lot/view/LotVueIntegrationTest.java
 59fbfe99d0e1  src/test/java/fr/univ_amu/iut/lot/view/NavigationLotViewTest.java
 6f59867a2770  src/test/java/fr/univ_amu/iut/lot/view/ScenarioConnecteActualisationTest.java
 e7d064ad6306  src/test/java/fr/univ_amu/iut/lot/view/ScenarioConnecteLancementTest.java

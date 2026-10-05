@@ -51,11 +51,14 @@ class FormatsLotTest {
     }
 
     @Test
-    @DisplayName("#980 : messageEtat signale un dépôt entamé mais incomplet (reprise possible)")
+    @DisplayName(
+            "#980, #5932 : messageEtat signale un dépôt entamé, sans promettre une reprise que le plan peut interdire")
     void message_etat_depot_en_cours() {
+        // L'état du lot ne connaît pas le plan de dépôt : quand tout ce qui reste est refusé
+        // définitivement, « reprise possible » contredisait le bouton et la carte du repli, qui le lisent.
         assertThat(FormatsLot.messageEtat(new EtatLot(StatutWorkflow.DEPOT_EN_COURS, "/ws", 5, 8192L, List.of(), null)))
-                .contains("Dépôt Vigie-Chiro entamé")
-                .contains("reprise");
+                .isEqualTo("Dépôt Vigie-Chiro entamé : des fichiers restent à téléverser.")
+                .doesNotContain("reprise");
     }
 
     @Test
