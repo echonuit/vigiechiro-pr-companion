@@ -96,6 +96,12 @@ le graphe n'en connaît que les titres, et cet instrument en est le lecteur.
 Personne n'écrit ce graphe à la main : quand `VIGIECHIRO_GRAPHIFY=1` est posé, le crochet
 `post-commit` le refait par `scripts/graphify/rebuild.py`, qui conserve la couche sémantique.
 
+Ce crochet ne relit que le code. Les titres d'une page ne suivent qu'à
+`python3 scripts/graphify/rebuild.py --mets-a-jour`, qui relit la structure de toutes les pages et
+dit ce qu'il retire. `graphify update .` seul ne le fait pas : il laisse telle quelle la structure
+d'une page qui porte une couche, et ses titres datent alors du jour où elle l'a reçue. La raison et
+la mesure sont dans l'[ADR 5877].
+
 ## `semgrep` pour les questions de forme
 
 `semgrep` lit l'arbre syntaxique, pas les lignes. Il répond juste là où `grep` ne peut que deviner :
@@ -147,3 +153,4 @@ Un chiffre transporté d'un contexte à l'autre garde sa forme et perd son objet
 relu comme « 33 clips » alors qu'il comptait les cas d'un auto-test.
 
 [ADR 5790]: decisions/5790-le-graphe-lit-la-prose-d-un-perimetre-declare.md
+[ADR 5877]: decisions/5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages.md

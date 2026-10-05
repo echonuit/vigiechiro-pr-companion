@@ -20,10 +20,17 @@ Usage :
 Sans argument, reconstruit a partir du graphe existant sans rien re-extraire.
 Les chemins passes en argument sont relatifs a la racine du depot.
 
-`--mets-a-jour` lance `graphify update .`, qui reextrait toute la structure, puis
+`--mets-a-jour` lance `graphify update .`, relit la structure des pages, puis
 rejoue les ponts et la reconstruction en reportant les libelles de communautes de
 l'etat d'AVANT. `graphify update .` seul les renomme toutes d'apres leur noeud le plus
 connecte : 1 074 communautes le 4 octobre 2026 (#5814).
+
+La relecture des pages n'est pas un doublon de `graphify update .`. Il reextrait le code
+et les pages qui n'ont que leur structure, mais laisse telle quelle la structure d'une
+page qui porte une autre couche : ses titres dateraient du jour ou elle l'a recue. 586
+pages etaient dans ce cas le 5 octobre 2026, et six avaient des titres perimes (#5877).
+Un titre que le disque ne porte plus sort du graphe, et la commande dit combien d'aretes
+semantiques tombent avec lui, et sur quelles pages.
 """
 
 from __future__ import annotations
@@ -62,6 +69,23 @@ def extraire_le_code(changes: list[Path]) -> bool:
     # root= est obligatoire : sans lui, source_file ET les identifiants sont
     # tronques au nom de fichier, ce qui rend les noeuds introuvables par chemin.
     resultat = extract([RACINE / p for p in fichiers], cache_root=RACINE, root=RACINE)
+    graphe = fusionner_une_extraction(resultat, build_merge)
+    journal(f"fusion : {graphe.number_of_nodes()} noeuds, {graphe.number_of_edges()} aretes")
+    return True
+
+
+def fusionner_une_extraction(
+    resultat: dict,
+    build_merge,
+    graphe: Path = GRAPHE,
+    extrait: Path = EXTRAIT,
+    racine: Path = RACINE,
+):
+    """Fusionne une extraction de structure dans le graphe, et ecrit l'extrait que les ponts lisent.
+
+    La fusion remplace la structure de chaque fichier extrait et laisse ses autres couches. Elle
+    n'ecrit pas le graphe : c'est `reconstruire` qui le fera, depuis l'extrait.
+    """
     nouveau = {
         "nodes": resultat["nodes"],
         "edges": resultat["edges"],
@@ -69,11 +93,11 @@ def extraire_le_code(changes: list[Path]) -> bool:
         "input_tokens": 0,
         "output_tokens": 0,
     }
-    graphe = build_merge([nouveau], graph_path=str(GRAPHE), root=str(RACINE), directed=False)
-    EXTRAIT.write_text(
+    fusion = build_merge([nouveau], graph_path=str(graphe), root=str(racine), directed=False)
+    extrait.write_text(
         json.dumps(
             {
-                "nodes": [{"id": n, **d} for n, d in graphe.nodes(data=True)],
+                "nodes": [{"id": n, **d} for n, d in fusion.nodes(data=True)],
                 "edges": [
                     {
                         **{
@@ -84,9 +108,9 @@ def extraire_le_code(changes: list[Path]) -> bool:
                         "source": d.get("_src", u),
                         "target": d.get("_tgt", v),
                     }
-                    for u, v, d in graphe.edges(data=True)
+                    for u, v, d in fusion.edges(data=True)
                 ],
-                "hyperedges": list(graphe.graph.get("hyperedges", [])),
+                "hyperedges": list(fusion.graph.get("hyperedges", [])),
                 "input_tokens": 0,
                 "output_tokens": 0,
             },
@@ -94,7 +118,86 @@ def extraire_le_code(changes: list[Path]) -> bool:
         ),
         encoding="utf-8",
     )
-    journal(f"fusion : {graphe.number_of_nodes()} noeuds, {graphe.number_of_edges()} aretes")
+    return fusion
+
+
+def pages_a_relire(noeuds: list[dict], racine: Path = RACINE) -> list[Path]:
+    """Les pages dont la structure se relit : toute page que le graphe porte et que le disque a.
+
+    TOUTES, et non les seules pages qui portent une couche. Le moteur de graphify ne relit plus
+    la structure d'un document qui porte un noeud d'une autre couche, et c'est ce defaut qu'on
+    repare (#5877). Mais reconnaitre une page couverte, ce serait recopier ici la regle du moteur.
+    Relire tout rend le meme graphe, mesure le 5 octobre 2026 sur 753 pages contre 586, pour une
+    seconde de plus.
+    """
+    chemins = {n.get("source_file") for n in noeuds}
+    return sorted(
+        Path(c) for c in chemins if c and Path(c).suffix in EXT_DOC and (racine / c).is_file()
+    )
+
+
+def bilan_de_relecture(noeuds: list[dict], aretes: list[dict], extraits: list[dict]) -> dict:
+    """Ce que la relecture retire du graphe, par page : une mise a jour declare ce qu'elle lache.
+
+    Un titre que le disque ne porte plus sort du graphe, et les aretes semantiques qui y etaient
+    ancrees tombent avec lui. Le concept qu'elles reliaient reste, sans son ancrage : la page est
+    de celles que `couche_semantique.py a-reextraire` rend, son empreinte ayant change.
+
+    Seules les pages que l'extraction a rendues sont jugees. Une page qu'elle n'a pas su lire
+    garde sa structure : la fusion ne remplace que ce qu'elle recoit.
+    """
+    frais: dict[str, set] = {}
+    for n in extraits:
+        if n.get("source_file"):
+            frais.setdefault(n["source_file"], set()).add(n["id"])
+    retires: dict[str, list[str]] = {}
+    page_de: dict[str, str] = {}
+    for n in noeuds:
+        sf = n.get("source_file")
+        if n.get("_origin") == "ast" and sf in frais and n["id"] not in frais[sf]:
+            retires.setdefault(sf, []).append(n["id"])
+            page_de[n["id"]] = sf
+    laches: dict[str, int] = {}
+    for e in aretes:
+        if e.get("_origin") != "semantic":
+            continue
+        sf = page_de.get(e.get("source")) or page_de.get(e.get("target"))
+        if sf:
+            laches[sf] = laches.get(sf, 0) + 1
+    return {
+        "pages": len(frais),
+        "retires": {sf: sorted(ids) for sf, ids in sorted(retires.items())},
+        "laches": dict(sorted(laches.items())),
+    }
+
+
+def relire_la_structure(
+    graphe: Path = GRAPHE, extrait: Path = EXTRAIT, racine: Path = RACINE
+) -> bool:
+    """Relit la structure de toutes les pages du graphe et la fusionne, en disant ce qui tombe."""
+    from graphify.build import build_merge
+    from graphify.extract import extract
+
+    brut = json.loads(graphe.read_text(encoding="utf-8"))
+    pages = pages_a_relire(brut["nodes"], racine)
+    if not pages:
+        return False
+    resultat = extract([racine / p for p in pages], cache_root=racine, root=racine)
+    bilan = bilan_de_relecture(
+        brut["nodes"], brut.get("edges") if "edges" in brut else brut["links"], resultat["nodes"]
+    )
+    journal(
+        f"structure relue : {bilan['pages']} page(s) sur {len(pages)} ; "
+        f"{sum(len(v) for v in bilan['retires'].values())} titre(s) retire(s) "
+        f"sur {len(bilan['retires'])} page(s)"
+    )
+    if bilan["laches"]:
+        journal(
+            f"{sum(bilan['laches'].values())} arete(s) semantique(s) lachee(s), ancree(s) sur un "
+            f"titre disparu : {', '.join(f'{sf} ({n})' for sf, n in bilan['laches'].items())}"
+        )
+        journal("ces pages sont a reextraire : scripts/graphify/couche_semantique.py a-reextraire")
+    fusionner_une_extraction(resultat, build_merge, graphe, extrait, racine)
     return True
 
 
@@ -395,6 +498,205 @@ def auto_test():
         f"obtenu : {sans_reference}",
     )
 
+    # 6 : `--mets-a-jour` relit la structure des pages APRES `graphify update .` et AVANT les
+    # ponts (#5877). Le moteur ne relit plus une page qui porte une couche : sans ce geste, ses
+    # titres datent du jour ou elle l'a recue. On remplace l'outil et les trois etapes par des
+    # temoins, pour lire l'ordre sans graphify ni graphe.
+    def ordre_de_la_mise_a_jour(code_de_l_outil):
+        appels = []
+        temoins = {
+            "relire_la_structure": lambda: appels.append("structure"),
+            "jouer_les_passes": lambda: appels.append("ponts"),
+            "reconstruire": lambda reference=None: appels.append("reconstruction"),
+        }
+        portee = globals()
+        d_avant = {nom: portee.get(nom) for nom in temoins}
+        which, run = shutil.which, subprocess.run
+        try:
+            portee.update(temoins)
+            shutil.which = lambda nom: "/faux/graphify"
+            subprocess.run = lambda *a, **k: (
+                appels.append("update"),
+                types.SimpleNamespace(returncode=code_de_l_outil),
+            )[1]
+            code = mets_a_jour()
+        finally:
+            shutil.which, subprocess.run = which, run
+            for nom, valeur in d_avant.items():
+                if valeur is None:
+                    portee.pop(nom, None)
+                else:
+                    portee[nom] = valeur
+        return code, appels
+
+    obtenu = ordre_de_la_mise_a_jour(0)
+    verifier(
+        "la mise a jour relit la structure des pages entre l outil et les ponts",
+        obtenu == (0, ["update", "structure", "ponts", "reconstruction"]),
+        f"obtenu : {obtenu}",
+    )
+    obtenu = ordre_de_la_mise_a_jour(3)
+    verifier(
+        "si l outil echoue, rien n est relu ni reconstruit, et son code remonte",
+        obtenu == (3, ["update"]),
+        f"obtenu : {obtenu}",
+    )
+
+    # 7 : le choix des pages a relire. Toute page que le graphe porte et que le disque a encore,
+    # qu'elle porte une couche ou non ; ni le code, ni un registre, ni un schema, ni une page partie.
+    with tempfile.TemporaryDirectory() as temporaire:
+        racine = Path(temporaire)
+        for chemin in (
+            "docs/couverte.md",
+            "docs/nue.md",
+            "src/Classe.java",
+            "scripts/registre.txt",
+        ):
+            (racine / chemin).parent.mkdir(parents=True, exist_ok=True)
+            (racine / chemin).write_text("x", encoding="utf-8")
+        (racine / "docs" / "schema.mcd").write_text("x", encoding="utf-8")
+        (racine / "docs" / "dossier.md").mkdir()
+        fabrique = [
+            {"id": "docs_couverte", "source_file": "docs/couverte.md", "_origin": "ast"},
+            {"id": "docs_couverte_idee", "source_file": "docs/couverte.md", "_origin": "semantic"},
+            {"id": "docs_nue", "source_file": "docs/nue.md", "_origin": "ast"},
+            {"id": "docs_partie", "source_file": "docs/partie.md", "_origin": "ast"},
+            {"id": "docs_dossier", "source_file": "docs/dossier.md", "_origin": "ast"},
+            {"id": "classe", "source_file": "src/Classe.java", "_origin": "ast"},
+            {"id": "registre", "source_file": "scripts/registre.txt", "_origin": "semantic"},
+            {"id": "schema", "source_file": "docs/schema.mcd", "_origin": "pont"},
+            {"id": "sans_fichier"},
+        ]
+        choisies = pages_a_relire(fabrique, racine)
+    verifier(
+        "toute page du graphe encore sur le disque se relit, couverte ou non, et rien d autre",
+        choisies == [Path("docs/couverte.md"), Path("docs/nue.md")],
+        f"obtenu : {choisies}",
+    )
+
+    # 8 : ce que la relecture declare lacher. Un titre renomme sort du graphe avec les aretes
+    # semantiques qui y tenaient, par l'un ou l'autre bout. Quatre temoins ne comptent pas : le
+    # titre garde, l'arete de structure, l'arete de pont, et la page que l'extraction n'a pas rendue.
+    page = "docs/ecran.md"
+    avant_relecture = [
+        {"id": "ecran", "source_file": page, "_origin": "ast"},
+        {"id": "ecran_garde", "source_file": page, "_origin": "ast"},
+        {"id": "ecran_renomme", "source_file": page, "_origin": "ast"},
+        {"id": "ecran_idee", "source_file": page, "_origin": "semantic"},
+        {"id": "illisible_titre", "source_file": "docs/illisible.md", "_origin": "ast"},
+        {"id": "autre", "source_file": "docs/autre.md", "_origin": "ast"},
+    ]
+    liens = [
+        {"source": "ecran_renomme", "target": "ecran_idee", "_origin": "semantic"},
+        {"source": "ecran_idee", "target": "ecran_renomme", "_origin": "semantic"},
+        {"source": "ecran_garde", "target": "ecran_idee", "_origin": "semantic"},
+        {"source": "ecran", "target": "ecran_renomme", "_origin": "ast"},
+        {"source": "ecran_renomme", "target": "classe", "_origin": "pont"},
+        {"source": "illisible_titre", "target": "ecran_idee", "_origin": "semantic"},
+    ]
+    relus = [
+        {"id": "ecran", "source_file": page},
+        {"id": "ecran_garde", "source_file": page},
+        {"id": "ecran_nouveau", "source_file": page},
+        {"id": "autre", "source_file": "docs/autre.md"},
+    ]
+    bilan = bilan_de_relecture(avant_relecture, liens, relus)
+    verifier(
+        "un titre que le disque ne porte plus est declare retire, avec ses aretes semantiques",
+        bilan == {"pages": 2, "retires": {page: ["ecran_renomme"]}, "laches": {page: 2}},
+        f"obtenu : {bilan}",
+    )
+
+    # 9 : la relecture elle-meme, avec un faux moteur. Elle extrait les pages choisies depuis la
+    # racine, fusionne dans le graphe qu'elle a lu, et ecrit l'extrait que les ponts liront.
+    class Fusion:
+        def __init__(self):
+            self.graph = {"hyperedges": [{"id": "h"}]}
+
+        def nodes(self, data=False):
+            return [("ecran", {"label": "Ecran"})]
+
+        def edges(self, data=False):
+            return [("ecran", "x", {"relation": "contains", "_src": "x", "_tgt": "ecran"})]
+
+    recu = {"extractions": 0}
+
+    def faux_extract(chemins, cache_root=None, root=None):
+        recu["extractions"] += 1
+        recu["chemins"], recu["root"] = list(chemins), root
+        return {"nodes": relus, "edges": []}
+
+    def faux_build_merge(lots, graph_path=None, root=None, directed=False):
+        recu["lot"], recu["graphe"], recu["racine"] = lots, graph_path, root
+        return Fusion()
+
+    noms = ("graphify", "graphify.extract", "graphify.build")
+    sauvegarde = {n: sys.modules.get(n) for n in noms}
+    with tempfile.TemporaryDirectory() as temporaire:
+        racine = Path(temporaire)
+        (racine / "docs").mkdir()
+        (racine / page).write_text("# Ecran\n", encoding="utf-8")
+        lu, ecrit, sans_page = racine / "graph.json", racine / "extrait.json", racine / "vide.json"
+        lu.write_text(json.dumps({"nodes": avant_relecture, "links": liens}), encoding="utf-8")
+        sans_page.write_text(json.dumps({"nodes": [fabrique[5]], "links": []}), encoding="utf-8")
+        try:
+            paquet = types.ModuleType("graphify")
+            paquet.__path__ = []
+            for nom, attribut, faux_objet in (
+                ("graphify.extract", "extract", faux_extract),
+                ("graphify.build", "build_merge", faux_build_merge),
+            ):
+                module = types.ModuleType(nom)
+                setattr(module, attribut, faux_objet)
+                sys.modules[nom] = module
+            sys.modules["graphify"] = paquet
+            relue = relire_la_structure(lu, ecrit, racine)
+            rien = relire_la_structure(sans_page, racine / "jamais.json", racine)
+        finally:
+            for nom, mod in sauvegarde.items():
+                if mod is None:
+                    sys.modules.pop(nom, None)
+                else:
+                    sys.modules[nom] = mod
+        # Un extrait absent se lit vide : le cas qui le juge rougit, au lieu que la lecture leve
+        # hors de tout cas et arrete l'auto-test sans dire lequel.
+        extrait_ecrit = json.loads(ecrit.read_text(encoding="utf-8")) if ecrit.exists() else {}
+        obtenu = (
+            relue,
+            recu.get("chemins"),
+            recu.get("root"),
+            recu.get("graphe"),
+            recu.get("racine"),
+            [n["id"] for n in recu["lot"][0]["nodes"]],
+        )
+        attendu = (
+            True,
+            [racine / page],
+            racine,
+            str(lu),
+            str(racine),
+            ["ecran", "ecran_garde", "ecran_nouveau", "autre"],
+        )
+        jamais_ecrit = (racine / "jamais.json").exists()
+    verifier(
+        "la relecture extrait les pages choisies depuis la racine et fusionne dans le graphe lu",
+        obtenu == attendu,
+        f"obtenu : {obtenu}",
+    )
+    verifier(
+        "l extrait porte ce que la fusion rend, et une arete y garde son sens d origine",
+        extrait_ecrit.get("nodes") == [{"id": "ecran", "label": "Ecran"}]
+        and extrait_ecrit.get("edges")
+        == [{"relation": "contains", "source": "x", "target": "ecran"}]
+        and extrait_ecrit.get("hyperedges") == [{"id": "h"}],
+        f"obtenu : {extrait_ecrit}",
+    )
+    verifier(
+        "un graphe sans page ne lance aucune extraction et n ecrit aucun extrait",
+        (rien, recu["extractions"], jamais_ecrit) == (False, 1, False),
+        f"obtenu : {(rien, recu['extractions'], jamais_ecrit)}",
+    )
+
     if echecs:
         print(f"\n{len(echecs)} cas en echec : {', '.join(echecs)}")
         return 1
@@ -418,6 +720,10 @@ def mets_a_jour() -> int:
             journal(f"`graphify update .` est sorti en {rendu.returncode}, rien n est reconstruit")
             return rendu.returncode
         try:
+            # L'outil vient de relire le code et les pages sans autre couche. Les pages qui en
+            # portent une, il les a laissees telles quelles : on relit leur structure ici, avant
+            # que les ponts n'y cherchent leurs noeuds de page.
+            relire_la_structure()
             jouer_les_passes()
             reconstruire(reference)
         finally:
