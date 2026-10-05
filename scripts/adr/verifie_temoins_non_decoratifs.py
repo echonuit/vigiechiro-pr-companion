@@ -27,6 +27,7 @@ dit une par une.
 
 import ast
 import contextlib
+import io
 import os
 import pathlib
 import shutil
@@ -35,7 +36,14 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, cas_d_auto_test, rapporte, sort_si_contrat_demande
+from _commun import (
+    MARQUE_CAUSE,
+    MARQUE_GESTE,
+    RACINE_DEPOT,
+    cas_d_auto_test,
+    rapporte,
+    sort_si_contrat_demande,
+)
 from _commun.mutation import neutralisation
 
 ADR = "4490"
@@ -60,6 +68,38 @@ EPARGNES = ("rapporte", "main", "auto_test", "cas_d_auto_test")
 # Les temoins qui n eprouvent AUCUNE fonction de module, et que la mutation ne peut donc pas tuer.
 # Chacun est nomme avec ce qu il eprouve reellement, sinon cette liste deviendrait le tapis sous
 # lequel on pousse les temoins faibles.
+# ⟨les gardes qui PLANTENT sous mutation, nommes un par un (#5743)⟩ Un plantage ne prouve pas qu un
+# temoin est decoratif, donc il n entre pas dans les suspects : c est juste, et c est ce qui laissait
+# QUATRE gardes n avoir rien etabli pendant que la derniere ligne du banc disait `verdict=ok`.
+# L information ne vivait que dans la prose, et rien n empechait de passer de 4 a 40.
+#
+# **C est une liste NOMMEE et non un cliquet, et le contrat de ce banc dit pourquoi** : il se declare
+# `invariant`, « il n y a pas de marge a relever, et l echappatoire est une liste d exceptions
+# NOMMEES » (`dev-docs/ci-cd-release.md`). Une marge a quatre autoriserait d echanger un plantage
+# repare contre un plantage neuf sans que rien ne bouge, ce que l ADR 4682 interdit.
+#
+# **Elle se verifie DANS LES DEUX SENS**, comme `HORS_PORTEE` juste en dessous : une entree qui ne
+# plante plus se retire, sinon cette table devient a son tour le tapis sous lequel on pousse ce que
+# l outil a appris a juger.
+#
+# Les quatre ne sont pas le meme defaut, et la valeur de chaque entree EST sa classification : trois
+# sont des erreurs de type sous neutralisation, ou le garde recoit une forme que sa version neutralisee
+# ne produit plus et plante avant d assertir ; le quatrieme est une assertion de son PROPRE auto-test,
+# d une autre nature, et sa reparation ne sera pas la meme. Aucun n est repare ici : borner la
+# population n est pas la vider, et quatre reparations sont quatre lots.
+PLANTENT_SOUS_MUTATION = {
+    "4359-javadoc-narratif.py": "type sous neutralisation : une liste la ou un dict est attendu",
+    "verifie_contrats_tiennent.py": "type sous neutralisation : un deballage de deux valeurs sur un vide",
+    "loupe-4992-lots-sans-critere.py": "son PROPRE auto-test constate, « refus attendu au plafond 4000 »",
+    "loupe-5175-population-non-nommee.py": "type sous neutralisation : un `.get` sur une liste",
+}
+
+CONDUITE_SUR_LA_TABLE = (
+    "Un garde qui plante : le reparer pour qu il ASSERTE au lieu de planter, ou le nommer dans "
+    "PLANTENT_SOUS_MUTATION avec sa raison. Une entree qui ne plante plus : la retirer."
+)
+
+
 HORS_PORTEE = {
     "resserre_cliquets.py": "eprouve une expression reguliere et la PRESENCE d une fonction, pas son effet",
     # ⟨`verifie_scripts.py` est SORTI d ici le 2026-09-28 (#5524)⟩ Il y etait entre le 2026-09-23
@@ -545,6 +585,75 @@ def mutes(noms: list[str] | None = None) -> list[str]:
     ]
 
 
+def ecarts_de_la_table(
+    non_concluants: list[str], portee: list[str] | None
+) -> tuple[list[str], list[str]]:
+    """Les deux ecarts entre ce qui plante et ce que la table nomme : (inattendus, perimes).
+
+    **Le second sens exige le corpus ENTIER, et c est la subtilite du dispositif.** Le banc ne mute
+    que les gardes que le diff touche, sauf quand le fonds partage a bouge - `portee is None` voulant
+    dire « mute tout ». Sur une portee PARTIELLE, aucun des quatre connus n est mute, donc tous les
+    quatre paraitraient perimes : un diff d un seul garde ferait refuser le banc en annoncant que
+    quatre plantages sont repares. C est l echantillon pris pour le tout, et il penche ici du cote de
+    la fausse bonne nouvelle.
+
+    Le premier sens, lui, vaut toujours : un garde qui plante alors qu il n est pas nomme est un
+    plantage de plus, que la portee soit entiere ou non.
+    """
+    plantent = {ligne.split("  ", 1)[0] for ligne in non_concluants}
+    inattendus = sorted(plantent - set(PLANTENT_SOUS_MUTATION))
+    if portee is not None:
+        return inattendus, []
+    return inattendus, sorted(set(PLANTENT_SOUS_MUTATION) - plantent)
+
+
+def conclut_sur_la_table(non_concluants: list[str], portee: list[str] | None) -> None:
+    """Sort en 1 avec un CONSTAT si la table ne decrit plus ce qui plante, et rien sinon.
+
+    **Elle vit ici et non dans `__main__`, et c est le point.** Ecrite en ligne sous le
+    `if __name__`, la confrontation etait du code qu AUCUN cas ne pouvait atteindre : importer ce
+    fichier n execute pas son bloc principal. Le dispositif aurait eu six cas verts sur la fonction
+    pure et rien du tout sur le geste qui agit, ce qui est la forme d un champ construit a la main
+    plutot que lu. Il reste une ligne d appel non eprouvee, et c est assume : elle ne porte aucune
+    decision.
+
+    ## Le CANAL, et pourquoi ce n est pas `refuse`
+
+    L ADR 5774 tranche : **ce qui empeche de juger et ce qui a ete juge voyagent par deux canaux
+    distincts**, et le code de sortie suit le canal - un refus sort en `2`, un constat rouge en `1`.
+    Un ecart de table est un constat : le banc a mute le corpus, observe les plantages, compare a la
+    table, et trouve une difference. Il a JUGE.
+
+    **Et la porte classe par les MARQUES, pas par le code.** Mesure du 2026-10-05 sur
+    `verdict_du_lancement` de `scripts/batterie.py` :
+
+        code=1 AVEC « REFUS : » et « POUR REPARER : »  ->  muet
+        code=1 SANS ces marques                        ->  rouge
+
+    Un premier jet appelait `refuse(..., code=1)`, croyant que le code suffisait a dire « j ai juge ».
+    La porte aurait rendu « 1 muet », qui se lit « ce garde n a pas pu conclure, ca ne vient pas de
+    mon diff » - le faux signal exact que l ADR 5774 existe pour empecher, et que l issue #5890
+    releve ailleurs. Les marques de refus sont donc absentes d ici, et un cas l exige.
+    """
+    inattendus, perimes = ecarts_de_la_table(non_concluants, portee)
+    if not (inattendus or perimes):
+        return
+    dits = []
+    if inattendus:
+        dits.append(
+            f"{len(inattendus)} garde(s) plantent sous mutation sans etre nommes : "
+            + ", ".join(inattendus)
+        )
+    if perimes:
+        dits.append(
+            f"{len(perimes)} entree(s) de PLANTENT_SOUS_MUTATION ne plantent plus : "
+            + ", ".join(perimes)
+        )
+    print("\n" + " ; ".join(dits), file=sys.stderr)
+    print(CONDUITE_SUR_LA_TABLE, file=sys.stderr)
+    raise SystemExit(1)
+
+
 def suspects(noms: list[str] | None = None) -> tuple[list[str], list[str]]:
     """DEUX listes : les decoratifs, et les NON CONCLUANTS.
 
@@ -864,6 +973,118 @@ if __name__ == "__main__":
 """
 
 
+def _auto_test_de_la_table() -> int:
+    """La table des non concluants se confronte dans les deux sens, et la PORTEE la borne (#5743).
+
+    Ces cas eprouvent `ecarts_de_la_table` et non le banc entier : la fonction est pure, donc le cas
+    n a pas a muter cinquante-quatre gardes pour savoir ce qu elle repond. Le banc, lui, est eprouve
+    par les cas de portee juste au-dessus.
+    """
+    verifie, echecs = cas_d_auto_test()
+    quatre = [f"{nom}  peu importe" for nom in PLANTENT_SOUS_MUTATION]
+
+    verifie(
+        "les quatre nommes qui plantent ne font aucun ecart",
+        lambda: ecarts_de_la_table(quatre, None),
+        ([], []),
+    )
+    verifie(
+        "un CINQUIEME qui plante est un inattendu, et il se nomme",
+        lambda: ecarts_de_la_table([*quatre, "neuf.py  boum"], None),
+        (["neuf.py"], []),
+    )
+    # ⟨le sens que n aurait pas un cliquet⟩ Un compteur a quatre reste VERT quand un plantage est
+    # repare, donc il perd l information au moment ou elle est bonne. Ici l entree devient perimee.
+    verifie(
+        "une entree qui ne plante plus est perimee, et elle se nomme aussi",
+        lambda: ecarts_de_la_table(quatre[:3], None),
+        ([], ["loupe-5175-population-non-nommee.py"]),
+    )
+    # ⟨LE cas qui tient la borne de portee⟩ Sur un diff qui ne touche qu un garde, le banc ne mute pas
+    # les quatre connus : sans cette borne, les quatre paraitraient tous perimes et le banc refuserait
+    # en annoncant quatre reparations imaginaires. L echantillon pris pour le tout, penchant du cote
+    # de la fausse bonne nouvelle.
+    verifie(
+        "sur une portee PARTIELLE, aucune entree n est dite perimee",
+        lambda: ecarts_de_la_table([], ["un-garde-quelconque.py"]),
+        ([], []),
+    )
+    verifie(
+        "mais un inattendu se voit meme sur une portee partielle",
+        lambda: ecarts_de_la_table(["neuf.py  boum"], ["neuf.py"]),
+        (["neuf.py"], []),
+    )
+    # ⟨la table n est pas vide, et un cas le dit⟩ Vidée, elle ferait de chaque plantage un inattendu et
+    # le banc refuserait partout ; remplie de noms morts, elle refuserait pour des entrees perimees.
+    # Sa taille est donc un fait du depot, et elle se relit.
+    verifie(
+        "la table nomme les quatre gardes mesures, et rien de plus",
+        lambda: sorted(PLANTENT_SOUS_MUTATION),
+        sorted(
+            [
+                "4359-javadoc-narratif.py",
+                "loupe-4992-lots-sans-critere.py",
+                "loupe-5175-population-non-nommee.py",
+                "verifie_contrats_tiennent.py",
+            ]
+        ),
+    )
+
+    # ⟨le GESTE, et non le calcul⟩ Les six cas ci-dessus eprouvent une fonction pure ; ceux-ci
+    # eprouvent qu on AGIT dessus. Muter le refus et non seulement le calcul est ce qui separe un
+    # dispositif qui juge d un dispositif qui compte - et le chemin de refus survit aux mutations du
+    # calcul, donc il se mute a part.
+    def sortie_de(non_concluants, portee):
+        """Le code de sortie ET ce qui a ete ecrit, car le CANAL compte autant que le code.
+
+        La sortie se capture : un cas qui laisserait fuir des marques de refus les mettrait dans la
+        sortie de ce garde, et la porte lit le refus declare avant tout repli - elle annoncerait la
+        cause d un cas de ce harnais comme si c etait celle du garde (#5890).
+        """
+        tampon = io.StringIO()
+        with contextlib.redirect_stderr(tampon):
+            try:
+                conclut_sur_la_table(non_concluants, portee)
+            except SystemExit as sortie:
+                return sortie.code, tampon.getvalue()
+        return "aucun constat", tampon.getvalue()
+
+    verifie(
+        "un cinquieme plantage rend un constat ROUGE, en 1 : ce banc a juge",
+        lambda: sortie_de([*quatre, "neuf.py  boum"], None)[0],
+        1,
+    )
+    verifie(
+        "une entree perimee rend un constat rouge aussi",
+        lambda: sortie_de(quatre[:3], None)[0],
+        1,
+    )
+    verifie(
+        "et les quatre connus ne rendent aucun constat",
+        lambda: sortie_de(quatre, None)[0],
+        "aucun constat",
+    )
+    # ⟨LE CANAL, et c est ce qu un code de sortie seul ne tient pas⟩ La porte classe par les MARQUES :
+    # `code=1` AVEC « REFUS : » rend **muet**, `code=1` sans elles rend **rouge**. Un constat qui
+    # porterait ces marques serait donc lu « ce garde n a pas pu juger, ca ne vient pas de mon diff »,
+    # ce que l ADR 5774 interdit et ce qu un premier jet de ce lot faisait.
+    verifie(
+        "et le constat ne porte AUCUNE marque de refus, sinon la porte le classerait muet",
+        lambda: [
+            m
+            for m in (MARQUE_CAUSE, MARQUE_GESTE)
+            if m in sortie_de([*quatre, "neuf.py  boum"], None)[1]
+        ],
+        [],
+    )
+
+    print(
+        f"\n{echecs.joues()} cas joue(s) : la table des non concluants, ses deux sens, la borne"
+        " de portee qui la protege, et le CANAL du constat qu elle rend."
+    )
+    return echecs()
+
+
 def _auto_test_du_rouge_muet() -> int:
     """Un rouge MUET ne tient pas, et la mecanique d entree survit a la neutralisation (#5499).
 
@@ -1069,7 +1290,7 @@ def auto_test() -> int:
     # `echecs` est le LECTEUR de la marque depuis #5460, pas un entier : il se LIT, il ne
     # s additionne pas. Les sous-auto-tests de la portee et du rouge MUET (#5499) gardent chacun
     # leur compte a eux.
-    return echecs() + _auto_test_de_portee() + _auto_test_du_rouge_muet()
+    return echecs() + _auto_test_de_portee() + _auto_test_du_rouge_muet() + _auto_test_de_la_table()
 
 
 CONTRAT = {
@@ -1129,13 +1350,16 @@ if __name__ == "__main__":
             f"{population}.",
             file=sys.stderr,
         )
-    sys.exit(
-        rapporte(
-            ADR,
-            "temoin decoratif : la suite reste verte sans detection",
-            decoratifs,
-            # Les DEUX populations : n en compter qu une ferait mentir `lus` de huit unites,
-            # ce que l ADR 5007 refuse.
-            lus=population,
-        )
+    # La ligne de verdict sort AVANT la confrontation de la table : la porte lit cette ligne, et un
+    # refus qui la precederait la ferait disparaitre de la sortie.
+    code = rapporte(
+        ADR,
+        "temoin decoratif : la suite reste verte sans detection",
+        decoratifs,
+        # Les DEUX populations : n en compter qu une ferait mentir `lus` de huit unites,
+        # ce que l ADR 5007 refuse.
+        lus=population,
     )
+
+    conclut_sur_la_table(non_concluants, portee)
+    sys.exit(code)
