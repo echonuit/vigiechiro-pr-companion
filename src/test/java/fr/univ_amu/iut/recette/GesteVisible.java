@@ -202,6 +202,33 @@ public final class GesteVisible {
         }
     }
 
+    /// Écrit `texte` à la suite du contenu du champ, caret posé à la fin, et relit pour le vérifier.
+    ///
+    /// **Pas un remplaçant exact** de `clickOn("#x").write("t")`, qui tape au pixel visé, donc au
+    /// milieu d'un texte : « à la fin » par [TextInputControl#end] est la seule sémantique qu'une
+    /// aide puisse promettre. Pour écraser le contenu, c'est [#remplacerLeTexte].
+    ///
+    /// La relecture confronte `avant + texte` et non `texte`, pour que l'échec tombe ici plutôt que
+    /// sur l'assertion suivante. Les deux champs pré-remplis qui l'ont fait écrire sont dans #5869.
+    public static void ecrireALaSuite(FxRobot robot, String selecteur, String texte) {
+        cliquer(robot, selecteur);
+        TextInputControl champ = robot.lookup(selecteur).queryAs(TextInputControl.class);
+
+        Callable<String> lecture = champ::getText;
+        String avant = Attente.surLeFil(lecture, "lire « " + selecteur + " » avant d'écrire", SELECTION_MS);
+        Attente.surLeFil(champ::end, "poser le caret à la fin de « " + selecteur + " »", SELECTION_MS);
+        robot.write(texte);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        String lu = Attente.surLeFil(lecture, "relire « " + selecteur + " »", SELECTION_MS);
+        if (!(avant + texte).equals(lu)) {
+            throw new IllegalStateException("« " + selecteur + " » contenait « " + avant
+                    + " » et devait contenir « " + avant + texte + " » après la saisie ; il contient"
+                    + " « " + lu + " ». Rendre la main ici reporterait l'échec sur l'assertion"
+                    + " suivante, qui l'annoncerait comme un défaut du dialogue.");
+        }
+    }
+
     /// Amène le pointeur sur `cible` et y fait paraître son infobulle, pour qu'un clip la montre.
     ///
     /// **Deux gestes, pas un** : `moveTo` met le pointeur à l'image et rien de plus, car sur un symbole

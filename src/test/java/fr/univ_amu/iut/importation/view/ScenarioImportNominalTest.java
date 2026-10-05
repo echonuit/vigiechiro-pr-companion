@@ -297,7 +297,7 @@ class ScenarioImportNominalTest {
         String avant = texte(robot, "#labelApercu");
 
         Respiration.surLeMomentCle(robot);
-        robot.clickOn("#champPassage").write("2");
+        GesteVisible.ecrireALaSuite(robot, "#champPassage", "2");
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(texte(robot, "#labelApercu"))

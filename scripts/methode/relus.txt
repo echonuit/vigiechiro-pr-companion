@@ -2048,11 +2048,12 @@ fdd506b206bf  src/test/java/fr/univ_amu/iut/recette/FixtureMultiConfigsTest.java
 70dc392bf31e  src/test/java/fr/univ_amu/iut/recette/GenerateurCartesSD.java
 d36d168d30f5  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDCliquetTest.java
 4576ada12c8a  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDImportCliquetTest.java
-3380ab428530  src/test/java/fr/univ_amu/iut/recette/GesteVisible.java
+2e0471687b5d  src/test/java/fr/univ_amu/iut/recette/GesteVisible.java
 e2160d2b8a89  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreImbriqueTest.java
 4159f62c57b5  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreTest.java
 c5ea5b2b360d  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCibleReconstruiteTest.java
 e20d6b203e0e  src/test/java/fr/univ_amu/iut/recette/GesteVisibleRemplacementTest.java
+dafa1a11a4e7  src/test/java/fr/univ_amu/iut/recette/GesteVisibleSuiteTest.java
 14c1819af275  src/test/java/fr/univ_amu/iut/recette/GuichetQuiCompte.java
 17cebae60967  src/test/java/fr/univ_amu/iut/recette/InventaireDesSessionsTest.java
 d074a44cd5f7  src/test/java/fr/univ_amu/iut/recette/JournalDesReperes.java
