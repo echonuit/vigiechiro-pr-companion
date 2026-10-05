@@ -1194,6 +1194,11 @@ def _auto_test() -> int:
             (".github/assets/check_captures.py", "la completude des captures est vue"),
             (".github/assets/check_doc_images.py", "les images de la doc aussi"),
             (".github/assets/check_capture_mains.py", "et le garde des mains de capture"),
+            # ⟨le QUATRIEME, reste dehors quand #5809 en a converti trois⟩ `docs.yml` le lance
+            # exactement comme `check_doc_images.py`, lignes voisines, et il juge : son propre
+            # commentaire dit « il faut refuser, pas passer ». Une page qui pointait un CLIP absent
+            # n etait donc attrapee qu en CI, la ou une image absente l etait avant la poussee (#5909).
+            (".github/assets/check_doc_videos.py", "et celui des parcours filmes"),
         ):
             if attendu in vus:
                 print(f"  ✔ {libelle}")
@@ -1220,14 +1225,27 @@ def _auto_test() -> int:
         for diff, attendus, libelle in (
             (
                 [".github/assets/apercu-x.png"],
-                2,
-                "un PNG engage la completude ET les images de doc",
+                3,
+                "un PNG engage la completude, les images de doc ET les parcours filmes",
             ),
-            (["docs/ecrans/lot.md"], 1, "une page de doc n engage que les images de doc"),
+            (
+                ["docs/ecrans/lot.md"],
+                2,
+                "une page de doc engage les images de doc et les parcours filmes",
+            ),
             (
                 ["src/main/java/fr/univ_amu/iut/lot/outils/CaptureLot.java"],
                 1,
                 "un outil de capture n engage que le garde des mains",
+            ),
+            # ⟨le TROISIEME cote, et le seul garde qui l a⟩ La source de verite des noms de parcours
+            # est le BANC : un parcours renomme rend orphelin un film present, sans qu aucune page ni
+            # aucun film n ait bouge. Ce cas tient le chemin que les trois voisins n ont pas, et sans
+            # lui le defaut le plus discret des trois resterait hors de la porte.
+            (
+                ["scripts/doc-video/filme-un-parcours.sh"],
+                1,
+                "le BANC des parcours n engage que le garde des parcours filmes",
             ),
             (["dev-docs/x.md"], 0, "un diff de prose n engage aucun garde de captures"),
         ):

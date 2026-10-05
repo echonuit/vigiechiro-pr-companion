@@ -259,6 +259,30 @@ def _auto_test() -> int:
     return 1
 
 
+CONTRAT = {
+    "geste": "parcours filme cite par la doc et absent, ou film present que le banc ne sait plus tourner",
+    "population": "les pages de docs/**/*.md, les films de .github/assets et les parcours du banc",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": ".github/assets/check_doc_videos.py --auto-test",
+    "decision": "porte du bash en #5229, entre dans la porte en #5909",
+    # ⟨la relation a TROIS cotes, et c est ce qui distingue ce garde de son voisin⟩
+    # `check_doc_images.py` confronte deux choses, les pages et le manifeste. Ici la source de verite
+    # des noms est le BANC : un parcours qu on renomme rend orphelin un film present, sans qu aucune
+    # page ni aucun film n ait bouge. Omettre le banc des chemins laisserait donc le defaut le plus
+    # discret des trois hors de la porte.
+    #
+    # ⟨le mode `--site` n y est PAS, et ce n est pas un oubli⟩ Il suit chaque reference comme un
+    # navigateur, sur un site CONSTRUIT. La porte n en a pas : c est un controle d apres-construction,
+    # et l y engager le ferait refuser faute de `site/` sur tout poste.
+    "chemins": """
+    .github/assets/**
+    docs/**/*.md
+    scripts/doc-video/filme-un-parcours.sh
+    """,
+}
+
+
 if __name__ == "__main__":
     if "--site" in sys.argv[1:2]:
         sys.exit(juger_le_site(sys.argv[2] if len(sys.argv) > 2 else "site"))
