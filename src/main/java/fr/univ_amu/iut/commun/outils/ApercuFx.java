@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.view.RenduPng;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
@@ -13,7 +14,9 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
+import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -171,6 +174,38 @@ public final class ApercuFx {
             apercu.hide();
             hote.hide();
             apercu.getItems().clear();
+        }
+    }
+
+    /// Capture la **fenêtre surgissante** qu'ouvre `ouverture`, telle que le produit la rend (#5861).
+    ///
+    /// Un `Popup` vit dans sa propre scène, que le `snapshot` de l'écran ne voit pas. Reconstruire son
+    /// contenu dans la scène de l'écran change justement ce qui compte : les jetons de la palette s'y
+    /// résolvent toujours, alors que c'est dans le popup qu'ils manquaient (#5602).
+    ///
+    /// @return `true` si l'aperçu a été écrit, `false` si le geste n'a ouvert aucune fenêtre surgissante
+    public static boolean enregistrerFenetreSurgissante(Runnable ouverture, Path fichier) {
+        List<Window> avant = List.copyOf(Window.getWindows());
+        ouverture.run();
+        Optional<PopupWindow> surgie = Window.getWindows().stream()
+                .filter(fenetre -> !avant.contains(fenetre))
+                .filter(PopupWindow.class::isInstance)
+                .map(PopupWindow.class::cast)
+                .findFirst();
+        if (surgie.isEmpty()) {
+            return false;
+        }
+        try {
+            javafx.scene.Parent racine = surgie.get().getScene().getRoot();
+            racine.applyCss();
+            racine.layout();
+            LisibiliteCapture.refuserToutTexteIllisible(surgie.get().getScene());
+            SnapshotParameters params = new SnapshotParameters();
+            params.setFill(Color.WHITE);
+            RenduPng.ecrire(racine.snapshot(params, null), fichier);
+            return true;
+        } finally {
+            surgie.get().hide();
         }
     }
 

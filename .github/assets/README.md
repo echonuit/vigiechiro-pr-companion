@@ -1035,7 +1035,7 @@ L'écran de revue, ses filtres, ses menus et ses états de sélection.
 
 ## Espèces & observations
 
-<sub>`analyse/view/Analyse.fxml` &middot; 5 capture(s)</sub>
+<sub>`analyse/view/Analyse.fxml` &middot; 6 capture(s)</sub>
 
 <table>
 <tr>
@@ -1062,9 +1062,11 @@ L'écran de revue, ses filtres, ses menus et ses états de sélection.
 <table>
 <tr>
 <th width="50%">Lieu</th>
+<th width="50%">Colonnes, le popup lui-même</th>
 </tr>
 <tr>
 <td><a href="apercu-analyse-lieu.png"><img src="apercu-analyse-lieu.png" width="430" alt="Lieu"></a></td>
+<td><a href="apercu-analyse-colonnes-popup.png"><img src="apercu-analyse-colonnes-popup.png" width="282" alt="Le popup du réglage des colonnes, rendu par le geste du produit : son bouton « Fermer » porte la palette de l'application"></a></td>
 </tr>
 </table>
 
