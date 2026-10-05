@@ -69,6 +69,11 @@ La comparaison ne dit rien d'un changement sur ces sept clips tant qu'ils ne son
 le dit, à chaque fois, avec le numéro à suivre : #5893 pour trois d'entre eux, #5911 pour les quatre
 autres.
 
+**Mise à jour du 5 octobre 2026.** Le compte de sept est celui du jour de cette décision, et il
+baisse à mesure que les clips reçoivent leur remède. Le premier est sorti de la table : le clip du
+menu de ligne de l'import finit désormais sur son compte rendu, calé au bas de sa page, et a reçu son
+plancher (#5952). Six restent, et tout ce que cette page décide vaut pour eux sans changement.
+
 Une table de noms dans un outil vieillit si personne ne la relit. Chaque entrée porte donc son issue,
 dont le critère de fin comprend la sortie de la table.
 

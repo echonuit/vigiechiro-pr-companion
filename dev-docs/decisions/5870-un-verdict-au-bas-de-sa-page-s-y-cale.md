@@ -74,3 +74,8 @@ lit la première et la dernière image, pas le chemin.
 
 Sept autres clips ont deux fins, pour des causes voisines, et n'ont pas encore reçu de remède
 ([ADR 5911](5911-un-clip-a-deux-fins-n-a-pas-de-plancher.md)).
+
+**Mise à jour du 5 octobre 2026.** Le premier de ces sept a reçu ce remède-ci, et pour la raison que
+cette page a mesurée : le clip du menu de ligne de l'import n'amenait pas du tout son compte rendu,
+et sa page retombait où la recomposition la laissait - deux fois sur trois en bas, la troisième sur le
+haut de l'assistant, verdict hors du cadre. `allerAuBasDeLaPage` l'a calée (#5952). Six restent.

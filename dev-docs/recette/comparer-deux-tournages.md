@@ -298,7 +298,7 @@ deux lancements, le second complétant le fichier rendu par le premier.
 
 ### Les clips auxquels on refuse un plancher
 
-Un plancher mesure le bruit d'un clip qui **finit sur son verdict**. Sept clips ont deux fins : deux
+Un plancher mesure le bruit d'un clip qui **finit sur son verdict**. Six clips ont deux fins : deux
 tournages du même commit y diffèrent de 3 à 26 %, parce que le clip s'arrête pendant une
 transformation, pendant un fondu, ou sur une page que rien n'a calée.
 
@@ -309,7 +309,6 @@ transformation, pendant un fondu, ou sur une page que rien n'a calée.
 | `ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection` | 22,5 % | #5893 |
 | `ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce` | 26,2 % | #5911 |
 | `ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit` | 21,2 % | #5911 |
-| `ScenarioMenuDeLigneImportTest.le_menu_de_ligne_s_ouvre_pendant_l_import` | 9,7 % | #5911 |
 | `ScenarioPassagePivotTest.modifier_le_passage` | 2,9 % | #5911 |
 
 Leur écrire ce chiffre rendrait la comparaison aveugle, sur ces clips, à tout changement plus petit.
