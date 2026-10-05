@@ -397,6 +397,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         VisibiliteGeree.lier(
                 tableFichiers, Bindings.isNotEmpty(viewModel.suiviFichiers().lignes()));
         boutonImporter.disableProperty().bind(viewModel.peutImporter().not().or(traitement));
+        // Le bouton dit combien de nuits partiront (#5843) : écrit en dur dans la vue, il disait « cette
+        // nuit » pour trois.
+        boutonImporter.textProperty().bind(viewModel.coordinationNuits().libelleImportProperty());
         // Explique le grisage (#789) sur l'enveloppe (un Button désactivé n'affiche pas de tooltip). Le
         // grisage pendant l'import est déjà signalé par la zone de progression ; on nomme surtout les
         // prérequis manquants (config incomplète) quand l'import n'est pas en cours.

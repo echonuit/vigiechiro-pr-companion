@@ -143,7 +143,7 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
   y compris pour poser cette question - elle est posée au **volume**, sans aucune écriture.
 - **S2-73** · *geste: les-bandeaux-d-inspection-non-bloquants* · Sur `sd-nominale`, ce quatrième bandeau **n'apparaît pas**. Un message qui paraîtrait
   sur toutes les cartes est un message qu'on apprend à ignorer.
-- **S2-42** · *geste: une-carte-qui-porte-plusieurs-nuits* · `sd-multi-nuits` : la table des nuits apparaît (3 lignes, n° automatiques, cases Inclure).
+- **S2-42** · *geste: une-carte-qui-porte-plusieurs-nuits* · `sd-multi-nuits` : la table des nuits apparaît (3 lignes, n° automatiques, cases Inclure). Le bouton du bas dit « Importer ces 3 nuits », puis « Importer ces 2 nuits » et « Importer cette nuit » à mesure qu'on décoche.
 - **S2-43** · *geste: une-carte-qui-porte-plusieurs-nuits* · `sd-multi-configs` : deux nuits, et le capteur a été **reconfiguré entre les deux** (384 kHz puis
   256 kHz). Importer les deux, puis ouvrir chaque nuit : chacune annonce la fréquence
   d'acquisition de **sa** session, et non celle de la première (#3460).

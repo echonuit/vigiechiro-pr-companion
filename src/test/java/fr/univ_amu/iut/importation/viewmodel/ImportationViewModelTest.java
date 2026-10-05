@@ -1049,6 +1049,41 @@ class ImportationViewModelTest {
         assertThat(viewModel.peutImporter().get()).isTrue();
     }
 
+    /// Le bouton disait « Importer cette nuit » au-dessus d'une table de trois nuits cochées, que le texte
+    /// voisin annonçait comme trois passages distincts (#5843).
+    @Test
+    @DisplayName("#5843 : le libellé de l'import dit combien de nuits partiront, et suit les cases")
+    void multi_nuits_le_libelle_de_l_import_suit_les_nuits_cochees() throws IOException {
+        assertThat(viewModel.coordinationNuits().libelleImportProperty().get())
+                .as("avant toute inspection, et pour une carte d'une seule nuit")
+                .isEqualTo("Importer cette nuit");
+
+        Path multi = carteMultiNuits();
+        when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
+        viewModel.inspection().dossierSourceProperty().set(multi);
+        viewModel.inspecter();
+
+        assertThat(viewModel.coordinationNuits().libelleImportProperty().get())
+                .as("trois nuits cochées, sans même que le rattachement soit fait")
+                .isEqualTo("Importer ces 3 nuits");
+
+        viewModel.inspection().nuits().get(1).inclureProperty().set(false);
+        assertThat(viewModel.coordinationNuits().libelleImportProperty().get()).isEqualTo("Importer ces 2 nuits");
+
+        viewModel.inspection().nuits().get(0).inclureProperty().set(false);
+        assertThat(viewModel.coordinationNuits().libelleImportProperty().get())
+                .as("une seule nuit reste cochée : le singulier revient")
+                .isEqualTo("Importer cette nuit");
+
+        viewModel.inspection().nuits().get(2).inclureProperty().set(false);
+        assertThat(viewModel.coordinationNuits().libelleImportProperty().get())
+                .as("plus aucune nuit cochée : le bouton, alors grisé, ne promet aucune nuit")
+                .isEqualTo("Importer");
+
+        viewModel.inspection().nuits().get(2).inclureProperty().set(true);
+        assertThat(viewModel.coordinationNuits().libelleImportProperty().get()).isEqualTo("Importer cette nuit");
+    }
+
     @Test
     @DisplayName("Multi-nuits : décocher une nuit la met à 0 et renumérote les incluses consécutivement")
     void multi_nuits_exclure_renumerote() throws IOException {
