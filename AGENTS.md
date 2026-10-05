@@ -267,3 +267,17 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+**Dans ce dépôt, `graphify update .` seul ne suffit plus.** Le graphe porte une couche sémantique
+depuis #5812, et l'outil ne relit plus la structure d'une page qui en porte une : ses titres datent
+alors du jour où elle l'a reçue. Il renomme aussi toutes les communautés. La commande à lancer est
+celle du dépôt, depuis la copie principale et avec l'interprète de graphify :
+
+```bash
+"$(cat graphify-out/.graphify_python)" scripts/graphify/rebuild.py --mets-a-jour
+```
+
+Elle lance l'outil, relit les titres de toutes les pages, rejoue les ponts et reporte les libellés
+des communautés qu'elle retrouve.
+Ce que le graphe lit et ne lit pas est dans
+[`dev-docs/chercher-dans-le-depot.md`](dev-docs/chercher-dans-le-depot.md).

@@ -79,9 +79,27 @@ Hors de ce périmètre, une page n'est connue que par ses titres : c'est le cas 
 d'`openspec/`, des compétences et de `recette/`. Une question conceptuelle n'y lira aucune prose, et
 le graphe ne le dira pas. Le périmètre, son coût et ses parades sont dans l'[ADR 5790].
 
+Ces pages sont pourtant reliées au code : toute page que la structure porte reçoit une arête vers
+chaque classe, chaque workflow et chaque profil qu'elle cite. « Quelle page parle de cette classe ? »
+y trouve donc sa réponse, même là où « que dit cette page ? » n'en a pas. Deux exclusions, nommées
+dans l'[ADR 5904] : `CHANGELOG.md`, et `.claude/skills`, copie de `.agents/skills`.
+
 Cela ne veut pas dire que personne ne lit ces pages. La prose de `.github/` est lue par l'instrument
 textuel de la passe 3 de la clôture, que porte la compétence `recoller-la-doc-au-code` depuis #5791 :
 le graphe n'en connaît que les titres, et cet instrument en est le lecteur.
+
+!!! warning "Une question en langage courant n'atteint pas toujours la prose"
+
+    `graphify query` part des libellés qui ressemblent aux mots de la question, et un symbole de
+    code homonyme capte le départ. « Pourquoi le dépôt se fait en WAV par défaut plutôt qu'en
+    ZIP » ne rend que du code : `WAV` et `ZIP` sont aussi deux constantes Java, alors que la
+    couche porte plus de trente énoncés sur le sujet. Posée avec les mots de la page, « forme du
+    dépôt par défaut », la même question rend les deux énoncés qui y répondent.
+
+    Mesuré le 5 octobre 2026 sur sept questions, posées au graphe avec puis sans sa couche : cinq
+    reçoivent de la prose qui touche au sujet, une reçoit une prose sans rapport, une n'en reçoit
+    aucune. Quand
+    la réponse ne rend que du code, reposer la question avec les mots d'un titre ou d'une règle.
 
 !!! warning "Une page récente répond avec sa version d'avant"
 
@@ -93,14 +111,49 @@ le graphe n'en connaît que les titres, et cet instrument en est le lecteur.
     le graphe est ignoré par git et ne vit que dans la copie principale, donc depuis un worktree
     il se désigne par `--graphe`.
 
+### Refaire la couche d'une page
+
+La couche sémantique ne se refait pas par une commande : quelqu'un relit la page. Le script borde
+ce travail en quatre gestes, et son en-tête en donne le détail.
+
+```bash
+python3 scripts/graphify/couche_semantique.py a-reextraire                    # quelles pages
+python3 scripts/graphify/couche_semantique.py decoupe --dossier DIR PAGE      # ce qu'il faut lire
+python3 scripts/graphify/couche_semantique.py audite --dossier DIR            # le rendu tient-il
+"$(cat graphify-out/.graphify_python)" scripts/graphify/couche_semantique.py fusionne --dossier DIR
+```
+
+Entre `decoupe` et `audite`, le lecteur écrit `rendu_NN.json` dans `DIR`, en suivant
+`scripts/graphify/consigne-des-agents.md`. La fiche que `decoupe` pose dit ce que la page portait :
+ses nœuds, ses arêtes, ses hyperarêtes, et les deux empreintes entre lesquelles `git diff` montre
+ce qui a changé.
+
+`fusionne` écrit le graphe de l'arbre d'où il est lancé, et refuse un graphe désigné ailleurs : il
+se lance donc depuis la copie principale, avec l'interprète de graphify. Les trois autres tournent
+avec n'importe quel `python3`.
+
+Ce que le rendu doit déclarer quand il lâche un nœud ou une hyperarête, et pourquoi la fusion le
+refuse sinon, est dans l'[ADR 5813] et l'[ADR 5904].
+
+### Ce qui le tient à jour
+
 Personne n'écrit ce graphe à la main : quand `VIGIECHIRO_GRAPHIFY=1` est posé, le crochet
 `post-commit` le refait par `scripts/graphify/rebuild.py`, qui conserve la couche sémantique.
 
-Ce crochet ne relit que le code. Les titres d'une page ne suivent qu'à
-`python3 scripts/graphify/rebuild.py --mets-a-jour`, qui relit la structure de toutes les pages et
-dit ce qu'il retire. `graphify update .` seul ne le fait pas : il laisse telle quelle la structure
-d'une page qui porte une couche, et ses titres datent alors du jour où elle l'a reçue. La raison et
-la mesure sont dans l'[ADR 5877].
+Ce crochet ne relit que le code. Les titres d'une page ne suivent qu'à la mise à jour, qui relit la
+structure de toutes les pages et dit ce qu'elle retire :
+
+```bash
+"$(cat graphify-out/.graphify_python)" scripts/graphify/rebuild.py --mets-a-jour
+```
+
+Elle se lance depuis la copie principale, et avec l'interprète de graphify, que ce fichier nomme. Le
+`python3` du poste peut trouver la commande `graphify` sans importer son module : la mise à jour
+refuse alors en le disant, avant d'avoir touché au graphe.
+
+`graphify update .` seul ne suffit pas : il laisse telle quelle la structure d'une page qui porte une
+couche, et ses titres datent alors du jour où elle l'a reçue. La raison et la mesure sont dans
+l'[ADR 5877].
 
 ## `semgrep` pour les questions de forme
 
@@ -153,4 +206,6 @@ Un chiffre transporté d'un contexte à l'autre garde sa forme et perd son objet
 relu comme « 33 clips » alors qu'il comptait les cas d'un auto-test.
 
 [ADR 5790]: decisions/5790-le-graphe-lit-la-prose-d-un-perimetre-declare.md
+[ADR 5813]: decisions/5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache.md
+[ADR 5904]: decisions/5904-une-hyperarete-se-declare-et-les-ponts-parcourent-les-pages-du-graphe.md
 [ADR 5877]: decisions/5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages.md
