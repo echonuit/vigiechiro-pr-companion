@@ -85,23 +85,29 @@ runners GitHub distincts, soit **quinze paires** par clip. Mesurés le 5 octobre
 `mesurer-les-planchers.yml`, avec l'instrument du flux, ffmpeg 6.1.1 et ImageMagick 6.9.12-98
 (#5885).
 
-Six clips n'ont pas de plancher, parce qu'ils ont deux fins (voir plus bas). Sur les **94** autres :
+**Le fichier s'est complété depuis, et les paires ne sont plus uniformes.** Les clips de la session
+S2 en portent **vingt et une**, mesurées sur quatre tournages de plus (#5956), et celui du menu de
+ligne en porte **six**, sa ligne étant neuve. Au total : 68 lignes à quinze paires, 25 à vingt et une,
+une à six. La quatrième colonne de `planchers-tournages.tsv` dit, pour chaque clip, sur combien de
+paires son plancher a été pris - et un plancher tiré de peu de paires en prouve d'autant moins.
+
+Six clips n'ont pas de plancher, parce qu'ils ont deux fins (voir plus bas). Sur les **89** autres, clips ordinaires seuls - les cinq clips de la plateforme de test ont leur propre section :
 
 | plancher à 5 % de tolérance | cas |
 |---|---|
 | > 1 % | 1 |
-| 0,5 à 1 % | 10 |
-| 0,1 à 0,5 % | 53 |
+| 0,5 à 1 % | 9 |
+| 0,1 à 0,5 % | 50 |
 | 0,05 à 0,1 % | 8 |
-| < 0,05 % | 22, dont 5 à zéro |
+| < 0,05 % | 21, dont 5 à zéro |
 
-**Médiane : 0,173 %.** Le pire vaut 1,033 %, sur
+**Médiane : 0,167 %.** Le pire vaut 1,033 %, sur
 `ScenarioJournalAbsentTest.sans_journal_la_nuit_est_inconnue`.
 
 !!! danger "Un seuil global mentirait dans les deux sens"
 
-    Retenir le pire plancher, 1,033 %, comme seuil unique **aveuglerait 83 cas pour se protéger de
-    onze** : un libellé entier changé, qui vaut 0,364 %, passerait sous le seuil sans être vu.
+    Retenir le pire plancher, 1,033 %, comme seuil unique **aveuglerait 79 cas pour se protéger de
+    dix** : un libellé entier changé, qui vaut 0,364 %, passerait sous le seuil sans être vu.
 
     Retenir la médiane laisserait au contraire la moitié des cas crier au changement à chaque
     tournage.
@@ -154,7 +160,7 @@ mesurées avec l'instrument du flux (#5870).
 | `ScenarioConnecteAnnonceImportTest` | S2-59, S2-60 | 0,325 % |
 | `ScenarioConnecteLancementTest` | S4-47 | 0,503 % |
 
-Aucun ne dépasse le pire plancher des clips ordinaires, 0,979 % : ces clips se comparent.
+Aucun ne dépasse le pire plancher des clips ordinaires, 1,033 % : ces clips se comparent.
 
 !!! danger "Un plancher se mesure avec l'instrument du flux, pas avec celui du poste"
 
