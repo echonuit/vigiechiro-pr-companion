@@ -715,6 +715,53 @@ def hors_de_la_porte(racine: pathlib.Path | None = None) -> list[str]:
     return sorted(vus - corpus)
 
 
+# Un controle de la PROSE DE LA DEMANDE : l atelier lie une variable au titre ou au corps de la
+# demande, puis la passe en argument a un script. Il juge un texte qui n est jamais commis et que le
+# poste de travail n a pas, donc la porte ne peut pas le jouer - elle le NOMME.
+PROSE_LIEE = re.compile(
+    r"^\s*(\w+):\s*\$\{\{\s*github\.event\.pull_request\.(title|body)\s*\}\}", re.M
+)
+# Les DEUX arbres, comme `INVOCATION_PY` : restreindre a `.github/scripts` etait un arbitraire
+# qu aucun cas ne pouvait tuer, et un controle de la prose de la demande peut vivre sous
+# `scripts/` sans cesser d en etre un.
+APPEL_SUR_VARIABLE = re.compile(
+    r"python3\s+((?:scripts|\.github/scripts)/[\w./-]+\.py)\s+\"\$\{?(\w+)\}?\""
+)
+
+
+def gardes_de_la_prose_de_la_demande(
+    racine: pathlib.Path | None = None,
+) -> list[tuple[str, str]]:
+    """Les controles que les ateliers jouent sur le TITRE et sur le CORPS de la demande.
+
+    **Ils se derivent, et c est la decision.** La porte en nommait DEUX dans une ligne ecrite a la
+    main, quand les ateliers en jouent trois : `verifie_chantier_de_l_issue.py` manquait chez elle
+    comme dans la competence `ouvrir-une-pr`, et il a rendu un check rouge sur une demande dont tout
+    le reste etait vert, apres une porte a zero refus (#5931). Une liste ecrite se perime au premier
+    controle ajoute ; la liaison `github.event.pull_request.<champ>` de l atelier est la reference.
+
+    **Et le critere n est pas « ce que la CI lance avec un argument ».** Cette regle-la rend
+    dix-sept scripts, dont `installer_paquets.py` et `construit_appimage.py`, ce qui est exactement
+    le piege que l ADR 5481 nomme en refusant d indexer la porte sur la ressemblance avec la CI. Ce
+    qui fait la famille est la NATURE de l argument : un texte que la demande porte, et dont aucune
+    copie locale ne dispose.
+    """
+    base = (racine or RACINE) / ATELIERS
+    trouves: dict[str, str] = {}
+    for atelier in sorted(base.glob("*.yml")) if base.is_dir() else []:
+        texte = atelier.read_text(encoding="utf-8")
+        liees = dict(PROSE_LIEE.findall(texte))
+        for script, variable in APPEL_SUR_VARIABLE.findall(texte):
+            # ⟨`get`, et non `in` puis l index⟩ Muter la condition en `True` faisait LEVER une
+            # KeyError au lieu de rendre un faux verdict, et un harnais qui plante ne dit pas quelle
+            # propriete a casse. Avec `get`, le mutant rend une derivation trop large, que le cas de
+            # la variable hors prose juge.
+            champ = liees.get(variable)
+            if champ:
+                trouves[script] = "titre" if champ == "title" else "corps"
+    return sorted(trouves.items())
+
+
 def reste_a_lancer(
     diff: list[str], absents: list[tuple[str, str]], racine: pathlib.Path | None = None
 ) -> list[str]:
@@ -738,10 +785,8 @@ def reste_a_lancer(
         )
     for libelle, distribution in absents:
         lignes.append(f"    {libelle}   absent de l interprete, fourni par `{distribution}`")
-    lignes.append(
-        '    python3 .github/scripts/verifie_titre_pr.py "<titre>"  puis  verifie_corps_pr.py'
-        ' "<corps>"'
-    )
+    for script, champ in gardes_de_la_prose_de_la_demande(racine):
+        lignes.append(f'    python3 {script} "<{champ}>"')
     dehors = hors_de_la_porte(racine)
     if dehors:
         lignes.append(
@@ -1763,11 +1808,88 @@ def _auto_test() -> int:
             (["notes.txt"], False, "un diff sans prose jugee ne nomme aucune classe"),
         ):
             lignes = "\n".join(reste_a_lancer(diff, [], None))
-            bon = ("./mvnw" in lignes) is doit and "verifie_titre_pr.py" in lignes
+            # ⟨les TROIS, pas le premier⟩ Ce cas n exigeait que `verifie_titre_pr.py`, donc il
+            # restait vert pendant que la ligne taisait le controle du chantier de l issue (#5931).
+            bon = ("./mvnw" in lignes) is doit and all(
+                nom in lignes for nom, _ in gardes_de_la_prose_de_la_demande(None)
+            )
             print(f"  {'✔' if bon else '✘'} {libelle}")
             if not bon:
                 echecs += 1
                 print(f"      {lignes!r}")
+
+        # ⟨la derivation de la prose de la demande⟩ Elle remplace une ligne ecrite a la main qui
+        # nommait deux controles sur trois (#5931). Les deux premiers cas disent ce que le depot
+        # porte ; les trois suivants la font DISCRIMINER sur un arbre temoin, sans quoi elle
+        # pourrait nommer n importe quel script lance avec un argument.
+        prose = gardes_de_la_prose_de_la_demande(None)
+        for libelle, obtenu, attendu in (
+            ("la prose de la demande a trois controles, et non deux", len(prose), 3),
+            (
+                "et chacun dit DE QUOI il juge, le titre ou le corps",
+                sorted({champ for _, champ in prose}),
+                ["corps", "titre"],
+            ),
+            (
+                "le controle du chantier de l issue y est, lui qui manquait",
+                any("verifie_chantier_de_l_issue.py" in s for s, _ in prose),
+                True,
+            ),
+        ):
+            bon = obtenu == attendu
+            print(f"  {'✔' if bon else '✘'} {libelle}")
+            if not bon:
+                echecs += 1
+                print(f"      attendu {attendu!r}, obtenu {obtenu!r}")
+
+        prose_bac = pathlib.Path(bac) / "prose"
+        (prose_bac / ".github" / "workflows").mkdir(parents=True)
+
+        def atelier_temoin(liaison: str, appel: str) -> str:
+            """Un atelier d une seule etape : sa liaison d environnement, et son appel."""
+            return f"jobs:\n  a:\n    steps:\n      - env:\n          {liaison}\n        run: {appel}\n"
+
+        for libelle, yaml, attendu in (
+            (
+                "un atelier qui LIE le corps fait nommer son script",
+                atelier_temoin(
+                    "CORPS: ${{ github.event.pull_request.body }}",
+                    'python3 .github/scripts/juge.py "${CORPS}"',
+                ),
+                [(".github/scripts/juge.py", "corps")],
+            ),
+            (
+                "le MEME atelier sans la liaison ne nomme plus rien",
+                atelier_temoin(
+                    "CORPS: un texte quelconque",
+                    'python3 .github/scripts/juge.py "${CORPS}"',
+                ),
+                [],
+            ),
+            (
+                "un controle de la prose sous `scripts/` est nomme aussi",
+                atelier_temoin(
+                    "TITRE: ${{ github.event.pull_request.title }}",
+                    'python3 scripts/methode/juge-le-titre.py "${TITRE}"',
+                ),
+                [("scripts/methode/juge-le-titre.py", "titre")],
+            ),
+            (
+                "et une variable qui ne porte pas la prose n entre pas",
+                atelier_temoin(
+                    "CORPS: ${{ github.event.pull_request.body }}",
+                    'python3 .github/scripts/installe.py "${PAQUETS}"',
+                ),
+                [],
+            ),
+        ):
+            (prose_bac / ".github" / "workflows" / "x.yml").write_text(yaml, encoding="utf-8")
+            obtenu = gardes_de_la_prose_de_la_demande(prose_bac)
+            bon = obtenu == attendu
+            print(f"  {'✔' if bon else '✘'} {libelle}")
+            if not bon:
+                echecs += 1
+                print(f"      attendu {attendu!r}, obtenu {obtenu!r}")
 
     # ⟨les trois issues d un lancement⟩ La boucle qui les distingue n avait AUCUN cas : elle vivait
     # dans `rendre`, derriere un `subprocess`. Les deux premiers cas rougissent sur le code d avant.

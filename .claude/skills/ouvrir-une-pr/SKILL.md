@@ -70,7 +70,7 @@ tableau doit, c'est la commande à lancer, pas l'inventaire.
 | `./mvnw test -Dtest=DocumentationAJourTest` | dès qu'une **ADR** est écrite ou modifiée, et dès qu'un **chiffre** change dans une doc. Le déclencheur disait « un chiffre » seul jusqu'au 2026-09-05, où une ADR neuve a rougi en CI sur `l_entete_d_une_adr_porte_son_titre` sans qu'aucun chiffre ait bougé : ce test tient vingt et un invariants de documentation, pas un seul |
 | `python3 .github/scripts/porte_du_job.py --auto-test` **puis** `python3 .github/scripts/verifie_portees_de_ci.py --auto-test` **puis** sans argument | dès qu'on touche un **atelier** ou la **portée** d'un job. Une portée qui ne correspond plus à rien ne rougit pas : elle fait écrire « sans objet » à un job qui aurait dû juger, et le job finit vert. Ces deux gardes vivent dans `.github/scripts/`, que le garde de cette page ne balaie pas encore : ils sont nommés ici à la main |
 
-| `python3 .github/scripts/verifie_titre_pr.py "<titre>"` **puis** `python3 .github/scripts/verifie_corps_pr.py "<corps>"` | **avant `gh pr create`**, toujours. Ni l'un ni l'autre n'est dans un fichier du dépôt, donc aucune boucle ne les atteint : ils se lancent à la main, sur le texte qu'on s'apprête à taper. C'est la seule ligne de ce tableau dont l'oubli coûte une demande à rouvrir |
+| `python3 .github/scripts/verifie_titre_pr.py "<titre>"` **puis** `python3 .github/scripts/verifie_corps_pr.py "<corps>"` **puis** `python3 .github/scripts/verifie_chantier_de_l_issue.py "<corps>"` | **avant `gh pr create`**, toujours, et **les trois** : aucun des textes jugés n'est dans un fichier du dépôt, donc aucune boucle ne les atteint. C'est la seule ligne de ce tableau dont l'oubli coûte une demande à rouvrir. Le troisième manquait ici et dans la ligne de la porte jusqu'à #5931, et il a rendu un check rouge sur une demande dont tout le reste était vert, après une porte à zéro refus. Il demande `gh`, puisqu'il lit le `parent` de l'issue sur la forge : c'est pour cela que la porte le **nomme** sans le jouer |
 
 **Et selon ce qu'on a touché d'autre.** Ces gardes-là ne tiennent pas dans un tableau sans le rendre
 illisible, et ils se déclenchent aussi nettement.
@@ -212,12 +212,20 @@ l'apostrophe, et le script les refuse toutes les deux.
 ## Les quatre refus du corps, qui s'éprouvent en local
 
 Le corps et le titre ne sont dans aucun fichier du dépôt, donc aucune boucle ne les balaie. **Mais
-les deux gardes qui les jugent s'exécutent en local, avec le texte en argument**, et ce sont ceux-là
+les trois gardes qui les jugent s'exécutent en local, avec le texte en argument**, et ce sont ceux-là
 mêmes que `corps-pr.yml` et `titre-pr.yml` appellent :
 
 ```bash
-python3 .github/scripts/verifie_corps_pr.py "$(cat mon-corps.md)"
+python3 .github/scripts/verifie_corps_pr.py          "$(cat mon-corps.md)"
+python3 .github/scripts/verifie_chantier_de_l_issue.py "$(cat mon-corps.md)"
 ```
+
+**Le troisième a longtemps manqué à cette page et à la porte** (#5931). Il juge une autre chose que
+la grille de prose : que chaque issue fermée par la demande appartienne à un chantier, le sas des
+suites n'en étant pas un. Il lit donc la forge, et c'est pourquoi la porte le nomme sans le jouer :
+un garde qui interroge la forge depuis un poste de travail n'entre pas dans ce qu'elle joue, par la
+même raison qui lui interdit `revoque_jeton.py` ([ADR
+5481](https://companion-dev.echonuit.fr/decisions/5481-la-porte-joue-ce-que-les-ateliers-jouent/)).
 
 Cette page a longtemps écrit le contraire - « ils ne sont dans aucun fichier », donc rien à lancer -
 tout en prescrivant trente lignes plus haut d'éprouver le titre. Un lecteur qui a les deux phrases
