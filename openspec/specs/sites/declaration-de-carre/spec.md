@@ -33,16 +33,23 @@ et le parcours `ParcoursDeclarerSiteE2ETest` qui traverse la couture jusqu'au si
 
 ### Requirement: Les formats de position acceptés, et ceux qui sont refusés
 
-L'écran SHALL accepter une position en **degrés décimaux** et en **degrés-minutes-secondes**, dans
-l'ordre **latitude puis longitude**.
+L'écran SHALL accepter une position en **degrés décimaux**, en **degrés-minutes-secondes** et en
+**degrés-minutes décimales**, dans l'ordre **latitude puis longitude**. Un décimal suivi de son point
+cardinal (`43.401 N`) SHALL se lire comme le décimal signé correspondant.
 
 L'écran MUST refuser un texte qu'il ne sait pas lire, et son refus MUST dire quoi coller à la place.
-Il ne devine ni l'ordre des deux nombres, ni une position à partir d'une URL de carte.
+Il ne devine ni l'ordre des deux nombres, ni une position à partir d'une URL de carte. Une paire
+écrite avec la virgule décimale française MUST être refusée, et son refus MUST dire d'écrire le point
+décimal : la virgule y est aussi le séparateur des deux nombres.
+
+La même règle lit la position du site et celle d'un point d'écoute.
 
 **Vérifié par** : `PositionColleeTest`, six cas sur l'analyseur pur -
 `degres_decimaux_latitude_puis_longitude`, `degres_minutes_secondes_valent_leur_equivalent_decimal`,
 `sud_et_ouest_comptent_negativement`, `ouest_s_ecrit_aussi_en_francais`,
-`url_de_carte_refuse_avec_son_propre_motif`, `texte_illisible_refuse_en_disant_quoi_coller`.
+`url_de_carte_refuse_avec_son_propre_motif`, `texte_illisible_refuse_en_disant_quoi_coller`. Trois autres
+cas tiennent les degrés-minutes décimales, le cardinal après un décimal, et la virgule décimale refusée
+avec son motif.
 
 #### Scenario: Position en degrés décimaux
 
@@ -54,6 +61,22 @@ Il ne devine ni l'ordre des deux nombres, ni une position à partir d'une URL de
 - **WHEN** l'observateur colle une position écrite en degrés, minutes et secondes avec ses points
   cardinaux
 - **THEN** elle est lue comme la même position que son équivalent décimal
+
+#### Scenario: Position en degrés-minutes décimales
+
+- **WHEN** l'observateur colle « 43°24.06'N 5°26.85'E », la forme des récepteurs GPS de terrain
+- **THEN** elle est lue comme la même position que son équivalent décimal
+
+#### Scenario: Un décimal suivi de son cardinal
+
+- **WHEN** l'observateur colle « 43.401 N, 1.574 W »
+- **THEN** la position est lue comme latitude 43.401 et longitude -1.574
+
+#### Scenario: Une virgule décimale est refusée, et le refus dit quoi écrire
+
+- **WHEN** l'observateur colle « 43,401, 5,447 »
+- **THEN** aucune position n'est lue
+- **AND** le motif affiché dit d'écrire le point décimal
 
 #### Scenario: Une URL de carte est refusée, et le refus dit quoi coller
 
@@ -152,8 +175,20 @@ NOT interroger le portail sur l'existence de ce carré sans que l'observateur l'
 Deux questions distinctes se posent au portail, et les enchaîner ferait payer un aller-retour réseau
 que l'observateur n'a pas demandé, sur un numéro qu'il n'a pas encore relu.
 
+**Créer est une demande** (#5607). Quand l'observateur clique « Créer » sans qu'aucun verdict
+d'existence ne soit affiché pour ce numéro, la modale SHALL interroger le portail avant d'enregistrer.
+Un carré qu'on n'a pas vérifié serait sinon déclaré sans que rien ne dise, avant le dépôt, qu'il n'est
+pas sur la plateforme : c'est le cas de Samuel sur le carré 202013.
+
+- carré déjà déclaré en Point Fixe : la modale MUST NOT créer le site ; elle reste ouverte, affiche le
+  verdict et propose « Récupérer ce carré » ;
+- carré absent, présent seulement sous un autre protocole, ou portail injoignable : la modale crée le
+  site, et le bandeau de retour de « Mes sites » SHALL porter le verdict.
+
 **Vérifié par** : `SiteEditSituerPositionTest#situer_n_interroge_pas_la_plateforme`, qui compte les
-appels au portail, et `#le_depot_efface_le_verdict_d_existence` pour la frontière inverse.
+appels au portail, et `#le_depot_efface_le_verdict_d_existence` pour la frontière inverse. Le volet
+« Créer » n'a encore aucun dispositif : ce changement écrit les tests de la modale qui comptent les
+appels au portail et lisent le bandeau de « Mes sites », un par issue.
 
 #### Scenario: Situer ne déclenche aucune vérification
 
@@ -161,6 +196,24 @@ appels au portail, et `#le_depot_efface_le_verdict_d_existence` pour la frontiè
 - **THEN** le champ du carré est rempli
 - **AND** aucun verdict d'existence sur Vigie-Chiro n'est affiché tant qu'il n'a pas cliqué
   « Vérifier sur Vigie-Chiro »
+
+#### Scenario: Créer sans avoir vérifié un carré absent
+
+- **WHEN** l'observateur saisit un carré absent de Vigie-Chiro et clique « Créer » sans avoir vérifié
+- **THEN** le portail est interrogé une fois, le site est créé
+- **AND** le bandeau de « Mes sites » dit qu'il faudra activer le carré en Point Fixe sur le portail
+  avant de pouvoir déposer
+
+#### Scenario: Créer sans avoir vérifié un carré déjà en Point Fixe
+
+- **WHEN** l'observateur saisit un carré déjà déclaré en Point Fixe et clique « Créer » sans avoir vérifié
+- **THEN** aucun site n'est créé, la modale reste ouverte avec le verdict « existe déjà »
+- **AND** « Récupérer ce carré » est proposé
+
+#### Scenario: Créer après avoir vérifié n'interroge pas une seconde fois
+
+- **WHEN** un verdict d'existence est déjà affiché pour le numéro saisi et l'observateur clique « Créer »
+- **THEN** le portail n'est pas interrogé de nouveau
 
 ### Requirement: Le numéro déduit porte six chiffres, département en tête
 
@@ -228,3 +281,44 @@ bord.
 
 - **WHEN** la grille ne rend qu'un carré
 - **THEN** il est déposé dans le champ, sans mention de frontière
+
+### Requirement: Le verdict d'existence dit ce qu'il implique pour le dépôt
+
+Un carré ne reçoit des nuits déposées que s'il existe en **Point Fixe** sur Vigie-Chiro. Le verdict
+d'existence, à l'écran comme dans `creer-site`, SHALL dire pour chacun des quatre cas ce qu'il implique
+pour le dépôt :
+
+| Cas | Ce que dit le verdict | Gravité à l'écran |
+|---|---|---|
+| Présent en Point Fixe | il existe déjà : le récupérer ici, pour qu'il soit rattaché | avertissement |
+| Présent seulement sous un autre protocole | il existe, mais pas en Point Fixe ; on peut le déclarer ici, et pour y déposer des nuits il faudra l'activer en Point Fixe sur le portail (y créer un point), puis le récupérer ici | avertissement |
+| Absent | il n'existe pas encore ; on peut le déclarer ici, et pour y déposer des nuits il faudra l'activer en Point Fixe sur le portail (y créer un point), puis le récupérer ici | avertissement |
+| Portail injoignable ou non connecté | la vérification n'a pas eu lieu, et le verdict le dit | information |
+
+La phrase sur le portail SHALL être la même partout où elle paraît : vérification, rapatriement et
+`creer-site`. `creer-site` SHALL l'écrire sur sa sortie d'erreur et MUST NOT changer sa sortie
+standard, qui ne porte que l'identifiant du site créé.
+
+**Vérifié par** : aucun dispositif encore. Ce changement écrit un test par cas sur le texte rendu de
+la vérification, un test de `creer-site` sur ses deux sorties, et un cas `bats`. Rouges avant le
+correctif : le verdict « absent » y est « vous pouvez le déclarer ici », en succès ; le carré sous un
+autre protocole y est « existe déjà, récupérez-le » ; `creer-site` y crée sans rien écrire.
+
+#### Scenario: Un carré absent
+
+- **WHEN** l'observateur vérifie un carré qu'aucun site de Vigie-Chiro ne porte
+- **THEN** le verdict, en avertissement, dit qu'on peut le déclarer ici et qu'il faudra l'activer en
+  Point Fixe sur le portail avant de pouvoir déposer
+
+#### Scenario: Un carré présent seulement en Routier
+
+- **WHEN** l'observateur vérifie un carré que Vigie-Chiro porte en Routier et pas en Point Fixe
+- **THEN** le verdict nomme le site Routier et dit qu'il faudra activer le carré en Point Fixe sur le
+  portail
+- **AND** « Récupérer ce carré » n'est pas proposé
+
+#### Scenario: creer-site sur un carré absent
+
+- **WHEN** `creer-site` crée un site dont le carré n'existe pas en Point Fixe sur Vigie-Chiro
+- **THEN** la commande sort en 0, sa sortie standard ne porte que l'identifiant du site
+- **AND** sa sortie d'erreur porte la phrase sur le portail

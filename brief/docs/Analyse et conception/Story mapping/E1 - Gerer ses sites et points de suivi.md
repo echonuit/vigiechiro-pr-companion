@@ -67,7 +67,7 @@
 
 **Critères d'acceptation** :
 
-- [x] Le formulaire de création/édition d'un point inclut deux champs optionnels : `Latitude` (décimal, ex. 43.5298) et `Longitude` (décimal, ex. 5.4474).
+- [x] Le formulaire de création/édition d'un point inclut un champ optionnel `Position`, où l'on colle ou saisit la paire latitude, longitude (ex. `43.5298, 5.4474`), lue comme celle du site.
 - [x] Un champ texte libre `Descriptif` (multi-ligne, optionnel) permet d'ajouter des notes (« près du chêne, à 30 m du chemin »).
 - [x] Si les coordonnées sont saisies, elles sont validées comme étant dans des plages plausibles (latitude entre -90 et 90, longitude entre -180 et 180).
 - [x] Les coordonnées et le descriptif sont persistés.

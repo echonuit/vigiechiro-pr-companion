@@ -385,6 +385,7 @@ Qui le prend, et pour combien de temps :
 | **toute commande CLI**, sauf celles déclarées `LectureSeule` | toute la durée de la commande (#3498) |
 | la restauration (simple et complète), la remise à zéro | le temps de l'opération |
 | les commandes de lecture | jamais - c'est le sens de la déclaration `LectureSeule` |
+| une lectrice appelée avec une option qui écrit (`etat-traitement-vigiechiro --importer`, #5784) | toute la durée de cette invocation : le verrou suit l'invocation, pas la classe |
 
 Qui est lectrice ne se recopie pas ici : la liste vit dans le code, portée par l'interface marqueur, et
 `ClassementLectureEcritureTest` exige que **chaque** commande soit classée. Voir

@@ -69,3 +69,5 @@ Consignées lors de la clôture du lot E (#2796), CLI sur machine de développem
 - **S5-14** · *hors-portée: une réponse en texte dans un terminal : le banc filme une scène JavaFX, pas un shell* · `vigiechiro exporter-sons --espece <code> --sortie <zip>` produit une archive de même structure
   (mêmes dossiers, même CSV) que le geste IHM sur le même sous-ensemble.
 - **S5-15** · *hors-portée: une réponse en texte dans un terminal : le banc filme une scène JavaFX, pas un shell* · `--passage` + `--espece` simultanés : refus expliqué, code 2, rien d'écrit.
+- **S5-16** · Table des observations : une colonne **Code** montre le code court de la proposition Tadarida (« Pippip ») à côté de son nom français. La colonne **Nom latin** est masquée par défaut et le sélecteur de colonnes l'ouvre. Une proposition absente s'affiche « - » (#5605).
+- **S5-17** · Le sélecteur de colonnes d'une table (clic droit ou menu ☰ « outils ») s'ouvre aux couleurs de l'application, dans le thème clair comme dans le sombre : ni fond blanc brut, ni texte illisible (#5602).

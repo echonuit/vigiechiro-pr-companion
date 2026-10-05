@@ -8,12 +8,21 @@ decided_at: 2026-08-09
 verification: certaine
 enforced_by:
   - "ClassementLectureEcritureTest#aucune_commande_n_est_sans_classement"
+relations:
+  amendee_par: ["5851-une-lectrice-peut-cesser-de-l-etre-sur-une-option"]
 verified:
   - by: machine:ci
     at: 2026-08-09
 ---
 
 # La déclaration porte sur les lectrices, pas sur les écrivaines
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-04** : « une commande qui lit le restera » est **amendé** par
+    [5851](5851-une-lectrice-peut-cesser-de-l-etre-sur-une-option.md). `etat-traitement-vigiechiro` lit
+    sans son option `--importer` et écrit avec. Le marqueur porte donc une réponse, `neFaitQueLire()`,
+    vraie par défaut, et le verrou suit l'invocation et non plus la classe. Le reste fait foi : le
+    verrou se prend par défaut, et c'est la lectrice qui se déclare.
 
 ## Contexte
 

@@ -413,6 +413,17 @@ nav:
     - 5790 · Le graphe lit la prose d'un périmètre déclaré: decisions/5790-le-graphe-lit-la-prose-d-un-perimetre-declare.md
     - 5813 · Une hyperarête porte un identifiant, une mise à jour déclare ce qu'elle lâche: decisions/5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache.md
     - 5677 · Le dépôt part en WAV, un dépôt entamé garde son mode: decisions/5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode.md
+    - 5597 · Une partie multipart part sans le type que sa signature ne couvre pas: decisions/5597-une-partie-multipart-part-sans-le-type-que-sa-signature-ne-couvre-pas.md
+    - 5598 · La provenance d'un refus remonte par le dépôt: decisions/5598-la-provenance-d-un-refus-remonte-par-le-depot.md
+    - 5599 · Un dépôt entamé se régénère, sauf pendant un téléversement: decisions/5599-un-depot-entame-se-regenere-sauf-pendant-un-televersement.md
+    - 5601 · L'heure exigée s'affiche arrondie du côté du plancher: decisions/5601-l-heure-exigee-s-affiche-arrondie-du-cote-du-plancher.md
+    - 5607 · La présence d'un carré se classe à un seul endroit: decisions/5607-un-carre-se-classe-a-un-seul-endroit-et-creer-est-une-demande.md
+    - 5720 · Un perdant de collision est une absence attendue: decisions/5720-un-perdant-de-collision-est-une-absence-attendue.md
+    - 5676 · Un geste a un seul point d'action, et son résultat se lit près de lui: decisions/5676-un-geste-a-un-seul-point-d-action-et-son-resultat-se-lit-pres-de-lui.md
+    - 5688 · Une position se saisit d'une seule façon: decisions/5688-une-position-se-saisit-d-une-seule-facon.md
+    - 5784 · Un relevé qui trouve l'analyse terminée importe: decisions/5784-un-releve-qui-trouve-l-analyse-terminee-importe.md
+    - 5851 · Une lectrice peut cesser de l'être sur une option: decisions/5851-une-lectrice-peut-cesser-de-l-etre-sur-une-option.md
+    - 5824 · L'écran et la commande ne nomment que ce qui sert à la forme du dépôt: decisions/5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md

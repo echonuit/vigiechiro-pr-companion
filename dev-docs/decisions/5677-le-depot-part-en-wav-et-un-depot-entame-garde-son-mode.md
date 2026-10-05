@@ -14,6 +14,7 @@ enforced_by:
 verification_note: "les deux classes tiennent le comportement : le mode sans réglage, le mode d une valeur inconnue, le défaut que l onglet affiche, et la reprise d un dépôt entamé. Elles ne disent rien du bien-fondé du défaut, qui repose sur un retour d expérience du porteur et non sur une mesure : aucun dispositif du dépôt ne compare la durée d un dépôt ZIP à celle d un dépôt WAV"
 relations:
   amende: ["0006-depot-zip-par-defaut-perte-audio-serveur-assumee", "0034-la-forme-du-depot-se-choisit"]
+  completee_par: ["5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert"]
 verified:
   - by: machine:ci
     at: 2026-10-04
@@ -23,6 +24,13 @@ generated:
 ---
 
 # Le dépôt part en WAV par défaut, et un dépôt entamé garde le mode dans lequel il a commencé
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-04** : cette décision est **complétée** par
+    [5824](5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert.md). Elle changeait le
+    défaut sans avoir cherché ce qui supposait l'ancien : l'écran de lot et la ligne de commande
+    parlaient encore d'archives pour un dépôt en séquences. Ils lisent désormais la forme du dépôt et
+    n'offrent que ce qui la sert. Le reste fait foi.
 
 ## Contexte
 

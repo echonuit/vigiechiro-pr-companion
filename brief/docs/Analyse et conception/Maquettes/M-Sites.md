@@ -132,7 +132,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
 | Élément | Action |
 |---|---|
 | Clic sur une carte | Ouvre [M-Site-detail](M-Site-detail.md) avec le site sélectionné |
-| Bouton **+ Nouveau site** | Ouvre le formulaire de création d'un site (n° de carré, points) |
+| Bouton **+ Nouveau site** | Ouvre le formulaire de création d'un site (n° de carré, points). Une position collée y situe le carré ; dès qu'elle se lit, une case offre de créer aussi le **premier point d'écoute** à cette position |
 | Bouton **☁️ Récupérer depuis Vigie-Chiro** | Synchronise les sites et points depuis la plateforme (rapatrie ceux qui existent côté web) |
 | Champ **Rechercher** (ou Ctrl+F) | Recherche globale : saute à un site, un point ou un passage ([P8](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md)) |
 | Fil d'Ariane **Accueil** | Revient à l'accueil (cartes d'activités) |

@@ -380,13 +380,21 @@ public final class CaptureEcrans {
     /// « Mes sites » juste après la déclaration d'un carré absent de Vigie-Chiro (#5607) : la modale s'est
     /// fermée, et c'est le bandeau qui dit ce qu'il faudra faire avant de déposer. Le message est celui
     /// que la vérification compose, passé par le même chemin que celui de la modale.
+    ///
+    /// Le carré est **réellement déclaré** le temps de l'aperçu : le bandeau annonçait « Carré 202013
+    /// déclaré » au-dessus d'une liste qui ne le portait pas, vu en rouvrant l'image à la clôture de
+    /// #5596. Il est retiré ensuite, les aperçus suivants partageant la même base.
     private static void capturerVerdictApresCreation(Injector injecteur, Path fichier) throws IOException {
+        Site declare = injecteur
+                .getInstance(ServiceSites.class)
+                .creerSite(CARRE_ABSENT, null, Protocole.STANDARD, null, ID_UTILISATEUR);
         Parent chrome = chargerFxml(injecteur, CHROME);
         injecteur.getInstance(NavigationSites.class).ouvrirAccueil();
         RechercheCarreExistant.Verdict absent = new RechercheCarreExistant.Verdict.Inexistant();
         ecranMesSites(injecteur)
                 .annoncerLeVerdict(new RetourOperation(absent.apresDeclaration(CARRE_ABSENT), absent.severite()));
         ApercuFx.enregistrerPng(new Scene(chrome, 1180, 920), fichier);
+        injecteur.getInstance(ServiceSites.class).supprimerSite(declare.id());
     }
 
     /// Modale de déclaration **après avoir situé une position** (#4573).

@@ -73,20 +73,22 @@ efficacement au clavier (voir [Raccourcis clavier](../raccourcis-clavier.md)).
 
 ## Déposer le passage
 
-Sur l'écran **Préparer le dépôt**, le dépôt se fait en quatre temps :
+Sur l'écran **Préparer le dépôt**, connecté à Vigie-Chiro, le dépôt se fait en trois temps :
 
-![L'écran de préparation du dépôt : récapitulatif et étapes du dépôt.](../assets/captures/apercu-lot-preparer.png)
+![L'écran de préparation du dépôt, prêt à déposer : trois étapes, et « Téléverser sur Vigie-Chiro » pour la deuxième.](../assets/captures/apercu-lot-sequences.png)
 
 1. **Préparer le dépôt** : l'application contrôle la cohérence du passage (préfixes, complétude).
-2. **Générer les archives** : les séquences sont regroupées en archives ZIP prêtes à partir.
-3. **Téléverser sur Vigie-Chiro** : si l'application est connectée, elle dépose les archives
-   elle-même (plusieurs en parallèle, avec une reprise en cas de coupure). Sinon, repli : « Ouvrir le
-   dossier » et dépôt **manuel** depuis votre navigateur.
-4. **Lancer la participation** : demande à la plateforme de **traiter** ce que vous venez de déposer
-   (décompression puis identification Tadarida). Après un dépôt manuel, ce bouton est un simple
-   **« Marquer déposé »**.
+2. **Téléverser sur Vigie-Chiro** : l'application dépose elle-même les séquences de la nuit
+   (plusieurs en parallèle, avec une reprise en cas de coupure).
+3. **Lancer la participation** : demande à la plateforme de **traiter** ce que vous venez de déposer
+   (identification Tadarida).
 
-![À l'étape « Prêt à déposer », le bouton « Marquer déposé » devient actif.](../assets/captures/apercu-lot-deposer.png)
+Une quatrième étape, **« Générer les archives »**, s'intercale après la préparation dans deux cas : si
+vous avez choisi de déposer en **archives ZIP** ([Réglages](../ecrans/reglages.md) ▸ Dépôt), ou si
+l'application **n'est pas connectée**. Elle sert alors au dépôt **manuel** : « Ouvrir le dossier », dépôt
+depuis votre navigateur, puis **« Marquer déposé »** à la place de « Lancer la participation ».
+
+![En archives ZIP, à l'étape « Prêt à déposer » : quatre étapes, dont « Générer les archives ».](../assets/captures/apercu-lot-deposer.png)
 
 !!! warning "Déposer ≠ faire traiter"
     Téléverser les fichiers ne déclenche **pas** le calcul : sans « Lancer la participation », la

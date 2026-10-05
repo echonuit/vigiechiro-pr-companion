@@ -263,13 +263,10 @@ Activée par **+ Ajouter un point** ou par **✏ Modifier** d'une carte. Le code
   <text x="124" y="322" class="section-label">GÉOLOCALISATION (OPTIONNELLE)</text>
   <text x="124" y="340" class="field-hint">📡 Les coordonnées doivent rester dans le carré du site ; à la carte, le point est contraint à sa maille (R26).</text>
 
-  <text x="124" y="368" class="field-label">Latitude</text>
-  <rect x="124" y="378" width="180" height="34" rx="3" class="field-input"/>
-  <text x="138" y="400" class="field-placeholder">43.4010</text>
-  <text x="324" y="368" class="field-label">Longitude</text>
-  <rect x="324" y="378" width="180" height="34" rx="3" class="field-input"/>
-  <text x="338" y="400" class="field-placeholder">-1.5740</text>
-  <text x="524" y="398" class="field-hint">Décimal, point séparateur</text>
+  <text x="124" y="368" class="field-label">Position</text>
+  <rect x="124" y="378" width="380" height="34" rx="3" class="field-input"/>
+  <text x="138" y="400" class="field-placeholder">43.4010, -1.5740</text>
+  <text x="524" y="398" class="field-hint">Collée, lue au fil de la saisie</text>
 
   <rect x="466" y="420" width="100" height="34" rx="4" class="btn-secondary"/>
   <text x="516" y="441" class="btn-txt-dark" text-anchor="middle">Annuler</text>
@@ -280,8 +277,10 @@ Activée par **+ Ajouter un point** ou par **✏ Modifier** d'une carte. Le code
 
 ### Notes sur la modale
 
-- Seul le **code de point** est obligatoire (étoile rouge `*`) ; le descriptif et les coordonnées GPS sont optionnels.
+- Seul le **code de point** est obligatoire (étoile rouge `*`) ; le descriptif et la position sont optionnels. À la création, le code est **proposé** : `Z` suivi du premier numéro libre du site.
 - La **validation R2** (1 lettre + 1 chiffre) est faite à la saisie : un code mal formé passe le champ en rouge.
+- La position se saisit dans **un seul champ**, comme celle du site : une paire collée depuis une carte ou un GPS, lue au fil de la saisie, dans les mêmes formes (degrés décimaux, degrés et minutes, virgule décimale). Ce qui est lu, ou ce qui ne se lit pas, se dit sous le champ.
+- Un **point voisin** du même site, à 40 m ou moins, est signalé sans empêcher d'enregistrer.
 - Les coordonnées GPS doivent tomber **dans le carré du site** ([R26](../Modele%20conceptuel/Regles%20metier.md#r26)) ; sur la carte, le point se **place / se corrige au glisser**, contraint à sa maille.
 - Le bouton **+ Ajouter** devient **Enregistrer** en mode édition (valeurs pré-remplies).
 
