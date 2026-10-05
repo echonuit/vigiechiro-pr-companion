@@ -74,6 +74,22 @@ class InventaireTransformesReferencesTest {
                 });
     }
 
+    /// Trouvé par PIT à la clôture de #5596 : le repli sur un nom sans suffixe n'était joué par aucun cas.
+    @Test
+    @DisplayName("un nom sans suffixe de tranche est son propre original, d'index zéro")
+    void un_nom_sans_suffixe_est_son_propre_original() throws IOException {
+        ecrire("enregistrement.wav", 1);
+
+        assertThat(InventaireTransformesReferences.inventorier(dossier))
+                .singleElement()
+                .satisfies(original -> {
+                    assertThat(original.nomOriginal()).isEqualTo("enregistrement.wav");
+                    assertThat(original.sequences())
+                            .extracting(SequenceTransformee::index)
+                            .containsExactly(0);
+                });
+    }
+
     /// Un petit WAV mono 16 bits ; le `germe` varie le contenu pour des empreintes distinctes.
     private void ecrire(String nom, int germe) throws IOException {
         byte[] pcm = new byte[800];

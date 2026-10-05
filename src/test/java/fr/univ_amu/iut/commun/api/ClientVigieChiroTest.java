@@ -291,6 +291,22 @@ class ClientVigieChiroTest {
         assertThat(issue.echec()).get(as(InstanceOfAssertFactories.STRING)).contains("interrompu");
     }
 
+    /// Trouvé par PIT à la clôture de #5596 : le fichier illisible n'était joué par aucun cas. Aucune
+    /// requête ne doit partir, et l'issue vient de l'application, pas du stockage (#5598).
+    @Test
+    @DisplayName("#5598 : un fichier illisible rend une issue injoignable, sans une seule requête")
+    void depot_en_parts_d_un_fichier_illisible(@TempDir Path dossier) throws Exception {
+        HttpClient http = mock(HttpClient.class);
+        ClientVigieChiro client = clientAvec(http);
+
+        IssueDeDepot depot =
+                client.deposerEnParts("f-1", dossier.resolve("absent.zip"), 3, fraction -> {}, SuiviReprise.SILENCIEUX);
+
+        assertThat(depot.reponse()).isInstanceOf(ReponseApi.Injoignable.class);
+        assertThat(depot.provenance()).isEqualTo(Provenance.API);
+        org.mockito.Mockito.verifyNoInteractions(http);
+    }
+
     @Test
     @DisplayName("#2354 : deposerEnParts s'arrête à la première partie refusée (4xx), sans finaliser")
     void depot_en_parts_echoue_sur_une_partie(@TempDir Path dossier) throws Exception {

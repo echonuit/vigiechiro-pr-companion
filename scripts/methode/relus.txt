@@ -1452,7 +1452,7 @@ ffd3c4583804  src/test/java/fr/univ_amu/iut/cliquet/CliquetFixturePassageTest.ja
 bfa1642021af  src/test/java/fr/univ_amu/iut/commun/api/ChaineDuCarreStocTest.java
 80a2127fd522  src/test/java/fr/univ_amu/iut/commun/api/ClientGbifTest.java
 d40353c406b2  src/test/java/fr/univ_amu/iut/commun/api/ClientSurReseauSimule.java
-118a7c65bece  src/test/java/fr/univ_amu/iut/commun/api/ClientVigieChiroTest.java
+33342c8afcaa  src/test/java/fr/univ_amu/iut/commun/api/ClientVigieChiroTest.java
 c3f19600dfb9  src/test/java/fr/univ_amu/iut/commun/api/ContratApiVigieChiroLiveTest.java
 3031abb0adaf  src/test/java/fr/univ_amu/iut/commun/api/CorpsFichierAvecProgressionTest.java
 11e5d8601181  src/test/java/fr/univ_amu/iut/commun/api/DonneesVigieChiroTest.java
@@ -1511,7 +1511,7 @@ e3b0c44298fc  src/test/java/fr/univ_amu/iut/commun/model/EcrivainCsvTest.java
 5ce1f37e49dc  src/test/java/fr/univ_amu/iut/commun/model/FuseauDExecutionTest.java
 2761ff51003c  src/test/java/fr/univ_amu/iut/commun/model/FuseauDuPointTest.java
 3b38045ac886  src/test/java/fr/univ_amu/iut/commun/model/FuseauDuSiteTest.java
-e2180a68ec67  src/test/java/fr/univ_amu/iut/commun/model/HorodatageTest.java
+01695792c22d  src/test/java/fr/univ_amu/iut/commun/model/HorodatageTest.java
 30c1d43fe6cf  src/test/java/fr/univ_amu/iut/commun/model/JetonAnnulationTest.java
 e3b0c44298fc  src/test/java/fr/univ_amu/iut/commun/model/LecteurCsvTest.java
 09ebd7ae5a23  src/test/java/fr/univ_amu/iut/commun/model/LectureBorneeTest.java
@@ -1790,7 +1790,7 @@ ba774b0b0cd0  src/test/java/fr/univ_amu/iut/importation/ExtracteurZipQuotasTest.
 4228af73ba11  src/test/java/fr/univ_amu/iut/importation/FrequenceAcquisitionTest.java
 5e58cfbffce8  src/test/java/fr/univ_amu/iut/importation/ImportationModuleTest.java
 8a750e308ae9  src/test/java/fr/univ_amu/iut/importation/InspecteurDossierTest.java
-141946411ce6  src/test/java/fr/univ_amu/iut/importation/InventaireTransformesReferencesTest.java
+e89cf3acd11c  src/test/java/fr/univ_amu/iut/importation/InventaireTransformesReferencesTest.java
 2d2770579a48  src/test/java/fr/univ_amu/iut/importation/PariteSupportEnLectureSeuleTest.java
 df08aaf9e42e  src/test/java/fr/univ_amu/iut/importation/PartitionNuitsTest.java
 d7ed7a26f062  src/test/java/fr/univ_amu/iut/importation/RapportImportTest.java
@@ -1836,7 +1836,7 @@ fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
 140614766d08  src/test/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixeTest.java
 4d3bfc4da711  src/test/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspectionTest.java
 61591c87b641  src/test/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduChiffreImportTest.java
-1023e4762aaa  src/test/java/fr/univ_amu/iut/importation/viewmodel/ImportationViewModelTest.java
+edcb8a8e0960  src/test/java/fr/univ_amu/iut/importation/viewmodel/ImportationViewModelTest.java
 2617c11d93d8  src/test/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModelTest.java
 3ca0577cb634  src/test/java/fr/univ_amu/iut/importation/viewmodel/NuitVMBadgeTest.java
 d5f0438815d0  src/test/java/fr/univ_amu/iut/importation/viewmodel/NuitsDeLaCarteTest.java
@@ -1853,7 +1853,7 @@ cc02b2cd91a1  src/test/java/fr/univ_amu/iut/lot/DepotUniteDaoTest.java
 2a3bfd660174  src/test/java/fr/univ_amu/iut/lot/LancementCalculGroupeTest.java
 9cd611a22679  src/test/java/fr/univ_amu/iut/lot/LotModuleTest.java
 0b05eabc5c5d  src/test/java/fr/univ_amu/iut/lot/PreparationGroupeeTest.java
-02c4bf3bb5bb  src/test/java/fr/univ_amu/iut/lot/RegenerationPendantUnDepotTest.java
+3a38410b382f  src/test/java/fr/univ_amu/iut/lot/RegenerationPendantUnDepotTest.java
 9f96a1ede18a  src/test/java/fr/univ_amu/iut/lot/ServiceLotMockTest.java
 c297d804ea4c  src/test/java/fr/univ_amu/iut/lot/ServiceLotTest.java
 cf6b5fa299a2  src/test/java/fr/univ_amu/iut/lot/SeuilDisqueDepotTest.java
@@ -1883,17 +1883,17 @@ e7d064ad6306  src/test/java/fr/univ_amu/iut/lot/view/ScenarioConnecteLancementTe
 a11734ef6c52  src/test/java/fr/univ_amu/iut/lot/view/ScenarioPerceptifRefusDepotTest.java
 029a40b4f056  src/test/java/fr/univ_amu/iut/lot/viewmodel/ActionsLotPossiblesTest.java
 227eb4b62ef9  src/test/java/fr/univ_amu/iut/lot/viewmodel/AnticipationEspaceDisqueTest.java
-0fc5dd8ca223  src/test/java/fr/univ_amu/iut/lot/viewmodel/CompteRenduChiffreDepotTest.java
+b0447f9efb96  src/test/java/fr/univ_amu/iut/lot/viewmodel/CompteRenduChiffreDepotTest.java
 c12d87d916d9  src/test/java/fr/univ_amu/iut/lot/viewmodel/DepotViewModelTest.java
-b3dc4e7f32a6  src/test/java/fr/univ_amu/iut/lot/viewmodel/DernierGesteDuDepotTest.java
+f446ec5c5f84  src/test/java/fr/univ_amu/iut/lot/viewmodel/DernierGesteDuDepotTest.java
 f61a0b707877  src/test/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepotTest.java
 c8d105f62892  src/test/java/fr/univ_amu/iut/lot/viewmodel/FormatsLotTest.java
 8223d90ad531  src/test/java/fr/univ_amu/iut/lot/viewmodel/LotViewModelTest.java
 33cf48ab34a4  src/test/java/fr/univ_amu/iut/lot/viewmodel/MessagesLotTest.java
 2569a85cd5fb  src/test/java/fr/univ_amu/iut/lot/viewmodel/OngletReglagesDepotTest.java
 fba37f0ed141  src/test/java/fr/univ_amu/iut/lot/viewmodel/SuiviLignesArchivesTest.java
-a723ee52c670  src/test/java/fr/univ_amu/iut/lot/viewmodel/SuiviLignesDepotTest.java
-b7c8226f8fd1  src/test/java/fr/univ_amu/iut/lot/viewmodel/TraitementViewModelTest.java
+c369c0bfa447  src/test/java/fr/univ_amu/iut/lot/viewmodel/SuiviLignesDepotTest.java
+d6862e6f4151  src/test/java/fr/univ_amu/iut/lot/viewmodel/TraitementViewModelTest.java
 7d26d8333e53  src/test/java/fr/univ_amu/iut/maj/api/DerniereVersionGitHubTest.java
 ba4246a4e004  src/test/java/fr/univ_amu/iut/maj/model/ConseilDeMiseAJourTest.java
 e5cfdc5ae19a  src/test/java/fr/univ_amu/iut/maj/model/JarDeVersion.java
@@ -2173,8 +2173,8 @@ a296cc4d6fa6  src/test/java/fr/univ_amu/iut/sites/view/SitesVueIntegrationTest.j
 a3c0f1cdee8d  src/test/java/fr/univ_amu/iut/sites/viewmodel/FraicheurTest.java
 7d06d9ea61b0  src/test/java/fr/univ_amu/iut/sites/viewmodel/IndicateurPointsTest.java
 f02bfa7e131e  src/test/java/fr/univ_amu/iut/sites/viewmodel/IndicateurSitesTest.java
-bb466b50263f  src/test/java/fr/univ_amu/iut/sites/viewmodel/PointEditPositionTest.java
-c33345011ec1  src/test/java/fr/univ_amu/iut/sites/viewmodel/PointEditViewModelTest.java
+642731605c75  src/test/java/fr/univ_amu/iut/sites/viewmodel/PointEditPositionTest.java
+c89f902dbdb2  src/test/java/fr/univ_amu/iut/sites/viewmodel/PointEditViewModelTest.java
 2dd7f5ed7ead  src/test/java/fr/univ_amu/iut/sites/viewmodel/PositionColleeViewModelTest.java
 d78ce89d6667  src/test/java/fr/univ_amu/iut/sites/viewmodel/SiteDetailViewModelTest.java
 836f585ed0be  src/test/java/fr/univ_amu/iut/sites/viewmodel/SiteEditCycleDeVieTest.java

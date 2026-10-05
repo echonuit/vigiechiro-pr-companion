@@ -18,6 +18,21 @@ class SuiviLignesDepotTest {
 
     private static final String MAINTENANT = "2026-07-11T14:00:00";
 
+    /// Trouvé par PIT à la clôture de #5596 : l'avertissement n'était lu que par des tests d'écran.
+    @Test
+    @DisplayName("#4631 : une réconciliation impossible pose son avertissement, avec la raison et l'unité du plan")
+    void une_reconciliation_impossible_pose_son_avertissement() {
+        SuiviLignesDepot suivi = new SuiviLignesDepot();
+        suivi.planifier(List.of(unite(1L, "a.zip", StatutDepotUnite.A_DEPOSER, null)));
+        assertThat(suivi.reconciliationImpossibleProperty().get()).isEmpty();
+
+        suivi.reconciliationImpossible("HTTP 503", false);
+
+        assertThat(suivi.reconciliationImpossibleProperty().get())
+                .isEqualTo("Déjà déposées : impossible à vérifier, des archives vont repartir pour rien (HTTP 503)"
+                        + " Réessayez plus tard.");
+    }
+
     @Test
     @DisplayName(
             "planifier() traduit chaque statut persisté : à déposer/interrompu → attente, déposé → terminée, échec → échec")
