@@ -67,6 +67,46 @@ public final class GesteVisible {
         }
     }
 
+    /// Cale la page de `selecteur` sur son **bas**, et vérifie que `selecteur` y est dans le cadre.
+    ///
+    /// Dernier geste d'un clip dont le verdict est le dernier élément de sa page : il fixe la dernière
+    /// image, que [#amenerDansLeCadre] ne fixe pas. Celui-ci place la cible par un quotient calculé sur
+    /// la hauteur du contenu à cet instant, et JavaFX garde ensuite le décalage en pixels : une carte
+    /// qui grandit après avoir été amenée laisse la page en deçà de son bas. Mesuré sur `S4-47` : 20 %
+    /// d'écart entre deux tournages du même commit (#5870).
+    ///
+    /// Elle s'appelle **une fois le verdict affiché**, et refuse une cible qui n'est pas au bas :
+    /// employée ailleurs, elle mettrait le verdict hors du cadre en ayant l'air de l'y amener.
+    public static void allerAuBasDeLaPage(FxRobot robot, String selecteur) {
+        // Par [Attente], et non par un `waitFor` en propre : une attente qui expire dit ce qu'elle
+        // attendait (ADR 4974). La passe ouvre elle-même ses `interact`, d'où `que` et non `queSurLeFil`.
+        Attente.que(
+                () -> unePasseVersLeBas(robot, selecteur),
+                "« " + selecteur + " » dans le cadre quand sa page est à son bas. Ce geste ne vaut que"
+                        + " pour le dernier élément d'une page : ailleurs, amenerDansLeCadre",
+                SECONDES_CADRE * 1000L);
+    }
+
+    /// Une passe : tous les panneaux dont la cible descend vont à leur maximum, puis le verdict.
+    ///
+    /// Rejouée comme [#unePasse], et pour la même raison : sur un écran qui vient de changer, le
+    /// maximum posé peut ne pas porter du premier coup.
+    private static boolean unePasseVersLeBas(FxRobot robot, String selecteur) {
+        AtomicBoolean tenu = new AtomicBoolean();
+        robot.interact(() -> {
+            for (ScrollPane panneau : panneauxDont(robot.lookup(selecteur).query())) {
+                panneau.setVvalue(panneau.getVmax());
+            }
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> {
+            boolean auBas = panneauxDont(robot.lookup(selecteur).query()).stream()
+                    .allMatch(panneau -> panneau.getVvalue() >= panneau.getVmax());
+            tenu.set(auBas && estDansLeCadre(robot, selecteur));
+        });
+        return tenu.get();
+    }
+
     /// Une passe de calcul, puis le verdict : la cible est-elle atteignable ?
     ///
     /// Le calcul se refait à chaque tour parce que ses **bornes** peuvent ne pas encore être établies -

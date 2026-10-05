@@ -210,7 +210,7 @@ class ScenarioConnecteActualisationTest {
         assertThat(observationsEnBase())
                 .as("les observations sont en base, sans être passé par « Sons & validation »")
                 .isEqualTo(SEQUENCES.size());
-        GesteVisible.amenerDansLeCadre(robot, IMPORT);
+        GesteVisible.allerAuBasDeLaPage(robot, IMPORT);
         Respiration.surLeMomentCle(robot);
         Respiration.leTempsDeLire(robot);
 
@@ -224,6 +224,9 @@ class ScenarioConnecteActualisationTest {
         assertThat(observationsEnBase())
                 .as("le second relevé n'a rien réimporté")
                 .isEqualTo(SEQUENCES.size());
+        // La phrase du second relevé est plus longue que celle du premier : la carte peut avoir
+        // grandi, et la dernière image se cale de nouveau sur le bas de la page (#5870).
+        GesteVisible.allerAuBasDeLaPage(robot, IMPORT);
         Respiration.surLeMomentCle(robot);
         Respiration.leTempsDeLire(robot);
     }
