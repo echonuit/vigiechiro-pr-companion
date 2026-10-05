@@ -319,6 +319,11 @@ def _auto_test() -> int:
             [],
         )
 
+    # Le compte se DERIVE du harnais : un litteral reste juste le jour ou on l ecrit et
+    # faux au cas suivant (#5744).
+    print(
+        f"\n{echecs.joues()} cas joue(s) : la resolution des appels de gage, par import direct, par alias et par module."
+    )
     return echecs()
 
 

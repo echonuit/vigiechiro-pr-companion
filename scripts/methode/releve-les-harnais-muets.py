@@ -286,6 +286,11 @@ def _auto_test() -> int:
     # qu aucun harnais n appelle est inerte, et `verifie_gages_joues.py` le refuse (ADR 5483).
     for libelle, tenu in apercu.verifie_grammaire():
         verifie(libelle, lambda tenu=tenu: tenu, True)
+    # Le compte se DERIVE du harnais : un litteral reste juste le jour ou on l ecrit et
+    # faux au cas suivant (#5744).
+    print(
+        f"\n{echecs.joues()} cas joue(s) : les harnais muets, leurs deux familles, la portee du balayage et l apercu borne."
+    )
     return echecs()
 
 

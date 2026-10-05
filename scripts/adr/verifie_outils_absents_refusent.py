@@ -323,6 +323,11 @@ def _auto_test() -> int:
         lambda: dans_un_bac("def f(lanceur, args):\n    return lanceur(args, check=False)\n"),
         [],
     )
+    # Le compte se DERIVE du harnais : un litteral reste juste le jour ou on l ecrit et
+    # faux au cas suivant (#5744).
+    print(
+        f"\n{echecs.joues()} cas joue(s) : le refus d un outil absent, ses formes declarees et ses coutures."
+    )
     return echecs()
 
 

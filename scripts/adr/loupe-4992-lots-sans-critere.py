@@ -174,7 +174,7 @@ def candidats(chantiers: list[dict], lots: dict[int, list[dict]]) -> list[str]:
     return lignes
 
 
-def _auto_test_plafond() -> None:
+def _auto_test_plafond(joues: list[int]) -> None:
     from contextlib import redirect_stderr
     from io import StringIO
     from unittest.mock import patch
@@ -193,38 +193,56 @@ def _auto_test_plafond() -> None:
                 _corpus()
             except SystemExit as refus:
                 code = refus.code
+        joues[0] += 1
         assert code == (2 if nombre >= PLAFOND else 0), (
             f"collecte de {nombre} issues : code {code}, refus attendu au plafond {PLAFOND}"
         )
         if nombre >= PLAFOND:
+            joues[0] += 1
             assert "plafond" in erreur.getvalue(), erreur.getvalue()
 
 
 def _autoTest() -> int:
     """Les temoins : une par formulation du motif, un lot muet sort, la borne tient."""
-    _auto_test_plafond()
+    # ⟨le compte se DERIVE de chaque assertion⟩ Ce harnais emploie des `assert` nus : le
+    # compteur s incremente devant chacun, et dans les boucles il compte par ITERATION.
+    # Un `len(...)` ecrit a la main serait juste le jour ou on l ecrit (#5744).
+    joues = [0]
+    _auto_test_plafond(joues)
+    joues[0] += 1
     assert ditSonCritere("blabla\n\n## Fini quand\n\nil rougit."), "« Fini quand » doit compter"
+    joues[0] += 1
     assert ditSonCritere("**Fait quand** : les six y sont."), "« Fait quand » doit compter"
+    joues[0] += 1
     assert ditSonCritere("## Comment on saura que chaque lot est fini\n\nil rougit."), (
         "la section doit compter"
     )
+    joues[0] += 1
     assert ditSonCritere("Le critère de fin est le suivant."), "« critère de fin » doit compter"
     # Ce temoin est ce qui tient le « comment » du motif. Sans lui, restreindre `on saur...` a
     # `comment on saur...` ne serait prouve par rien : « on ne saura pas s il est fini » ne discrimine
     # pas, les deux mots n y etant pas adjacents. Celui-ci les colle, et il est mort si le « comment »
     # tombe.
+    joues[0] += 1
     assert not ditSonCritere("Personne ne dit si on saura que c est fini."), (
         "« on saura ... fini » seul n est pas un critere"
     )
+    joues[0] += 1
     assert not ditSonCritere("On ne saura pas s il est fini."), "une negation n est pas un critere"
+    joues[0] += 1
     assert not ditSonCritere("Un lot sans rien."), "un corps muet ne doit pas compter"
+    joues[0] += 1
     assert ditSonCritere("**Ce que je vérifierai** : le garde rougit."), (
         "« Ce que je vérifierai » est le mot que CLAUDE.md prescrit"
     )
 
+    joues[0] += 1
     assert estEpic({"title": "[epic] X", "labels": []}), "le titre suffit"
+    joues[0] += 1
     assert estEpic({"title": "[chantier] X", "labels": []}), "« [chantier] » aussi"
+    joues[0] += 1
     assert estEpic({"title": "fix(x) : y", "labels": [{"name": "epic"}]}), "le label suffit"
+    joues[0] += 1
     assert not estEpic({"title": "fix(x) : y", "labels": []}), "ni l un ni l autre"
 
     chantiers = [
@@ -244,13 +262,18 @@ def _autoTest() -> int:
         20: [{"number": 21, "title": "muet aussi", "body": "rien non plus"}],
     }
     vus = candidats(chantiers, lots)
+    joues[0] += 1
     assert len(vus) == 2, vus
+    joues[0] += 1
     assert "#21" in vus[0], "l ordre va du chantier le plus recent au plus ancien"
+    joues[0] += 1
     assert "#11" in vus[1], vus
+    joues[0] += 1
     assert all("#12" not in v for v in vus), "un lot qui dit son critere ne sort pas"
 
     # La borne historique : un chantier anterieur a la regle n entre pas dans le corpus. Elle est
     # appliquee dans `_corpus`, qui lit la forge ; on eprouve ici la COMPARAISON qui la porte.
+    joues[0] += 1
     assert "2026-08-28T23:59:59Z" < NAISSANCE < "2026-08-29T06:00:00Z", "la borne a bouge"
 
     # ⟨les cas du module PARTAGE, joues ici⟩ `_commun/forge.py` porte l appel des quatre
@@ -259,6 +282,7 @@ def _autoTest() -> int:
     # qui exerce l APPEL et non le verdict, apres qu une mutation ait montre que retirer le refus
     # laissait cet auto-test vert.
     for libelle, tenu in forge.verifie_grammaire():
+        joues[0] += 1
         assert tenu, f"appel a la forge : {libelle}"
 
     # L APPEL, et non le verdict (ADR 4331). Les cas ci-dessus n exercent jamais `_forge`, et une
@@ -269,6 +293,7 @@ def _autoTest() -> int:
     try:
         interroge(["issue", "list"], quoi="un cas")
     except SystemExit as sortie:
+        joues[0] += 1
         assert sortie.code == 2, f"le refus doit sortir en 2, pas en {sortie.code}"
     else:
         raise AssertionError("sans « gh », l appel doit REFUSER au lieu de conclure")
@@ -284,13 +309,16 @@ def _autoTest() -> int:
         env={**os.environ, "CRITERE_MOTIF_FICHIER": "/nulle/part/critere.motif"},
         check=False,
     )
+    joues[0] += 1
     assert manquant.returncode == 2, (
         f"un motif introuvable doit REFUSER en 2, pas en {manquant.returncode}"
     )
+    joues[0] += 1
     assert "introuvable" in manquant.stderr, manquant.stderr
 
     print(
-        "Auto-test concluant : les formulations du motif reconnues, la negation ecartee, un lot muet vu."
+        f"\n{joues[0]} cas joue(s) : les formulations du motif reconnues, la negation ecartee,"
+        " un lot muet vu."
     )
     return 0
 

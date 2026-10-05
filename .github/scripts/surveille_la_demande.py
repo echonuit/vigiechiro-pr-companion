@@ -414,6 +414,11 @@ def _auto_test() -> int:
     finally:
         os.environ["PATH"] = chemin
 
+    # Le compte se DERIVE du harnais : un litteral reste juste le jour ou on l ecrit et
+    # faux au cas suivant (#5744).
+    print(
+        f"\n{echecs.joues()} cas joue(s) : la surveillance d une demande, ses verdicts et la lecture des ateliers."
+    )
     return echecs()
 
 
