@@ -17,7 +17,7 @@ enforced_by:
   - "src/test/java/fr/univ_amu/iut/cli/commande/DeposerVigieChiroTest.java"
   - "src/test/java/fr/univ_amu/iut/cli/commande/DeposerTest.java"
   - "src/test/java/fr/univ_amu/iut/audit/model/ServiceRecuperabiliteTest.java"
-verification_note: "la première classe tient la règle cause par cause sur le plan enregistré dans une vraie base ; la deuxième, le repli offert ou non selon la forme, la connexion et le statut ; la troisième fait refuser un téléversement à l écran, trouve la carte sous celle du téléversement et clique son dernier geste ; la quatrième, le refus définitif gardé au rechargement ; les trois dernières, la sortie des deux commandes et le verdict de récupérabilité. Aucune ne dit ce que le portail fait d une archive en partie déjà en ligne : c est une hypothèse, nommée plus bas"
+verification_note: "la première classe tient la règle cause par cause sur le plan enregistré dans une vraie base ; la deuxième, le repli offert ou non selon la forme, la connexion et le statut ; la troisième fait refuser un téléversement à l écran, trouve la carte sous celle du téléversement et clique son dernier geste ; la quatrième, le refus définitif gardé au rechargement ; les trois dernières, la sortie des deux commandes et le verdict de récupérabilité. Aucune ne dit ce que le serveur fait d une archive en partie déjà en ligne : c est observé à part, par ArchiveDuRepliSurLaPlateformeDeTestTest (#5970), et dit plus bas"
 relations:
   complete: ["5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode", "5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert"]
 verified:
