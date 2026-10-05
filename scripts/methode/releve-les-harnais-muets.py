@@ -41,7 +41,7 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import cas_d_auto_test, rapporte, sort_si_contrat_demande
+from _commun import apercu, cas_d_auto_test, rapporte, sort_si_contrat_demande
 
 # Les dossiers ou vivent les gardes du depot. Une LISTE, et elle est declaree : la deriver des
 # ateliers donnerait la population d UN flux, quand ce releve veut celle du depot (article A3).
@@ -278,6 +278,14 @@ def _auto_test() -> int:
     muets, b, a, _ = suspects()
     verifie("un suspect par harnais, pas par site", lambda: len(muets) == b + a, True)
     verifie("et chaque suspect nomme sa famille", lambda: all("famille" in s for s in muets), True)
+
+    # ⟨les cas du module PARTAGE, joues ici⟩ `_a_montrer` decide ce qu un apercu borne montre et ce
+    # qu il avoue, pour les TREIZE gardes qui bornent. Ce garde-la les joue parce que c est le sien
+    # qui a fait decouvrir le defaut : il borne a douze et rend quatre-vingt-deux suspects, si bien
+    # qu un harnais neuf, qui porte peu de sites, tombait toujours hors de l apercu (#5829). Un gage
+    # qu aucun harnais n appelle est inerte, et `verifie_gages_joues.py` le refuse (ADR 5483).
+    for libelle, tenu in apercu.verifie_grammaire():
+        verifie(libelle, lambda tenu=tenu: tenu, True)
     return echecs()
 
 

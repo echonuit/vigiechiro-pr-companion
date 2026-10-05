@@ -219,6 +219,13 @@ def rapporte_plancher(
     return 0
 
 
+# L apercu borne et ses deux gestes vivent dans leur propre module : les NEUF gages du depot
+# sont declares dans un sous-module, jamais dans un `__init__.py`, et `verifie_gages_joues.py`
+# nomme un gage par son module - `_commun.__init__` cote declaration contre `_commun` cote
+# appel, deux noms qui ne se rencontrent jamais. Suivre la forme etablie coute un fichier.
+from _commun.apercu import _a_montrer
+
+
 def rapporte(
     numero: str,
     titre: str,
@@ -251,14 +258,12 @@ def rapporte(
     """
     marge = cliquet(numero)
     print(f"ADR {numero} - {titre}")
-    montres = suspects if apercu is None else suspects[:apercu]
+    montres, aveu = _a_montrer(suspects, apercu)
     for suspect in montres:
         print(f"  {suspect}")
     # Un apercu qui ne dit pas ce qu il tait est un compte rendu partiel qui se donne pour complet.
-    if len(montres) < len(suspects):
-        print(
-            f"  … et {len(suspects) - len(montres)} autres, non montrés (aperçu borné à {apercu})"
-        )
+    if aveu:
+        print(aveu)
 
     verdict = "ok"
     if lus == 0:
