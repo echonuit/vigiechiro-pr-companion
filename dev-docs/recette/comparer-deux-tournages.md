@@ -387,6 +387,11 @@ Et un **outil absent** est une panne d'installation, pas une mesure : le script 
 et nomme ce qui manque, au lieu de rendre cinquante « ? » qui se liraient comme cinquante cas stables.
 Les deux ne se réparent pas au même endroit, donc ils ne doivent pas se lire pareil.
 
+La mesure des planchers a le même refus depuis #5847. Un dossier absent ou vide, ou des tournages
+qui n'ont aucun clip en commun, la font échouer en nommant ce qui manque, et le fichier n'est pas
+touché. Avant cela, deux chemins faux rendaient « 0 cas », « plancher le plus haut : 0 % » et un code
+de sortie nul, ce qui se lit comme un excellent résultat.
+
 Ce n'est pas de la prudence de principe : le premier jet de cet outil rendait « ? » sur les sept cas
 d'un vrai tournage, et son index annonçait tranquillement « aucun cas ne bouge ». La cause était que
 `identify` écrit `1.152e+06` pour une toile de 1280 × 900, et le test d'entier qui suivait refusait la

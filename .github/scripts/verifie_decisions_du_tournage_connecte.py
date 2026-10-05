@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Huit decisions des ateliers de tournage tiennent dans le YAML (#5221, porte du bash).
+"""Neuf decisions des ateliers de tournage tiennent dans le YAML (#5221, porte du bash).
 
 Elles ne se tiennent pas par un test : elles vivent dans la forme de trois ateliers, et rien ne les
 relisait. Chacune a un cout connu si elle lache. Les cinq premieres sont celles du tournage connecte,
-qui a donne son nom au fichier ; les trois dernieres sont celles de la mesure des planchers (#5885).
+qui a donne son nom au fichier ; les quatre dernieres sont celles de la mesure des planchers (#5885).
 
 1. **`comparer-tournages.yml` REFUSE la source `clips-connectes`.** Comparer un tournage connecte a
    un autre mesure la plateforme au lieu du produit, et rend un chiffre qui a l air juste (#4306).
@@ -33,6 +33,10 @@ qui a donne son nom au fichier ; les trois dernieres sont celles de la mesure de
 8. **La mesure n ecrit rien sur le depot.** Le fichier sort en artefact et se committe par une
    demande. Un plancher qui monte rend la comparaison moins sensible : cela se relit, et un atelier
    qui pousserait sur la branche par defaut l oterait a la relecture.
+9. **Une execution ne rend ses clips que si elle porte UN artefact de clips, et un seul.** Une
+   execution relancee en porte un par tentative (#5797). Les reprendre tous rangerait deux tournages
+   sous le meme numero : la mesure comparerait alors un melange, et rien ne le dirait. Ajoutee a la
+   cloture de #5644, dont la passe 6 a trouve ce refus ecrit et jamais eprouve.
 
 ## Le leurre pour `gh`, et pourquoi le verdict se prend sur le MESSAGE
 
@@ -69,6 +73,36 @@ def _charge(chemin: pathlib.Path):
     return yaml.safe_load(chemin.read_text(encoding="utf-8"))
 
 
+def _lance_un_bloc(bloc: str, leurre: str, variables: dict[str, str]) -> str:
+    """Lance le `run:` d un atelier face a un `gh` leurre, et rend tout ce qu il a ecrit.
+
+    Trois decisions s eprouvent ainsi, et chacune ecrivait son bac, son leurre et son appel. Le
+    leurre vient en TETE du chemin : le bloc ne doit jamais atteindre le vrai `gh`, ni le reseau. Le
+    code de sortie n est pas rendu, a dessein : un leurre fait echouer tout ce qu il ne connait pas,
+    donc seul le MESSAGE dit laquelle des raisons a arrete le bloc.
+    """
+    with tempfile.TemporaryDirectory(prefix="vc-bloc-") as tmp:
+        bac = pathlib.Path(tmp)
+        (bac / "bin").mkdir()
+        faux = bac / "bin" / "gh"
+        faux.write_text(leurre, encoding="utf-8")
+        faux.chmod(0o755)
+        script = bac / "bloc.sh"
+        script.write_text(bloc, encoding="utf-8")
+        env = dict(os.environ)
+        env["PATH"] = f"{bac / 'bin'}{os.pathsep}{env.get('PATH', '')}"
+        env.update(variables)
+        rendu = subprocess.run(
+            ["bash", str(script)], capture_output=True, text=True, cwd=bac, env=env, check=False
+        )
+        return rendu.stdout + rendu.stderr
+
+
+# Un `gh` qui echoue toujours : le refus d une source doit tomber AVANT tout appel reseau, et si un
+# jour il tombe apres, on veut le voir ici plutot qu en production.
+LEURRE_MUET = "#!/usr/bin/env bash\nexit 1\n"
+
+
 def refus_de_la_source_connectee(flux: pathlib.Path) -> bool:
     """La premiere decision, eprouvee en EXECUTANT le bloc de l atelier."""
     blocs = [
@@ -85,53 +119,34 @@ def refus_de_la_source_connectee(flux: pathlib.Path) -> bool:
         print("   de rendre un vert qui ne vaudrait rien.")
         return False
 
-    with tempfile.TemporaryDirectory(prefix="vc-conn-") as tmp:
-        bac = pathlib.Path(tmp)
-        # Un leurre pour `gh` : le refus doit tomber AVANT tout appel reseau, et si un jour il
-        # tombe apres, on veut le voir ici plutot qu en production.
-        (bac / "bin").mkdir()
-        leurre = bac / "bin" / "gh"
-        leurre.write_text("#!/usr/bin/env bash\nexit 1\n", encoding="utf-8")
-        leurre.chmod(0o755)
-        bloc = bac / "reprendre.sh"
-        bloc.write_text(blocs[0], encoding="utf-8")
+    def lance(avant: str, apres: str) -> str:
+        return _lance_un_bloc(blocs[0], LEURRE_MUET, {"AVANT": avant, "APRES": apres})
 
-        def lance(avant: str, apres: str) -> str:
-            env = dict(os.environ)
-            env["PATH"] = f"{bac / 'bin'}{os.pathsep}{env.get('PATH', '')}"
-            env["AVANT"], env["APRES"] = avant, apres
-            rendu = subprocess.run(
-                ["bash", str(bloc)], capture_output=True, text=True, cwd=bac, env=env, check=False
-            )
-            return rendu.stdout + rendu.stderr
-
-        if "ne se compare pas" not in lance("clips-connectes", "v1.0.0"):
-            print("❌ comparer-tournages.yml n a pas refusé la source « clips-connectes ».")
-            print(
-                "   Ce refus EST un garde : sans lui, la comparaison mesure la plateforme au lieu"
-            )
-            print("   du produit et rend un chiffre qui a l air juste (#4306).")
-            return False
-        # La plateforme de test, elle, n est PAS refusee (#5793, ADR 5641) : son etat de depart est
-        # declare, et la condition de sa comparaison se mesure (#5797), elle ne se refuse pas.
-        if "ne se compare pas" in lance("clips-plateforme-de-test", "v1.0.0"):
-            print("❌ comparer-tournages.yml refuse la source « clips-plateforme-de-test ».")
-            print("   L ADR 5641 leve ce refus pour la plateforme de test : il ne vaut que pour la")
-            print("   plateforme nationale, dont l ecran suit des donnees vivantes.")
-            return False
-        # Ni son tournage precedent, qui est l autre cote de sa comparaison (#5854).
-        if "ne se compare pas" in lance(PRECEDENTE, "clips-plateforme-de-test"):
-            print(f"❌ comparer-tournages.yml refuse la source « {PRECEDENTE} ».")
-            print("   C est le second cote de la comparaison des clips de la plateforme de test :")
-            print("   sans lui, elle n a rien a comparer.")
-            return False
-        # Le controle de l autre bord : une source ordinaire ne doit PAS declencher ce refus.
-        if "ne se compare pas" in lance("v2.186.0", "v2.187.0"):
-            print(
-                "❌ comparer-tournages.yml refuse AUSSI une source ordinaire : le refus ne "
-                "discrimine plus."
-            )
-            return False
+    if "ne se compare pas" not in lance("clips-connectes", "v1.0.0"):
+        print("❌ comparer-tournages.yml n a pas refusé la source « clips-connectes ».")
+        print("   Ce refus EST un garde : sans lui, la comparaison mesure la plateforme au lieu")
+        print("   du produit et rend un chiffre qui a l air juste (#4306).")
+        return False
+    # La plateforme de test, elle, n est PAS refusee (#5793, ADR 5641) : son etat de depart est
+    # declare, et la condition de sa comparaison se mesure (#5797), elle ne se refuse pas.
+    if "ne se compare pas" in lance("clips-plateforme-de-test", "v1.0.0"):
+        print("❌ comparer-tournages.yml refuse la source « clips-plateforme-de-test ».")
+        print("   L ADR 5641 leve ce refus pour la plateforme de test : il ne vaut que pour la")
+        print("   plateforme nationale, dont l ecran suit des donnees vivantes.")
+        return False
+    # Ni son tournage precedent, qui est l autre cote de sa comparaison (#5854).
+    if "ne se compare pas" in lance(PRECEDENTE, "clips-plateforme-de-test"):
+        print(f"❌ comparer-tournages.yml refuse la source « {PRECEDENTE} ».")
+        print("   C est le second cote de la comparaison des clips de la plateforme de test :")
+        print("   sans lui, elle n a rien a comparer.")
+        return False
+    # Le controle de l autre bord : une source ordinaire ne doit PAS declencher ce refus.
+    if "ne se compare pas" in lance("v2.186.0", "v2.187.0"):
+        print(
+            "❌ comparer-tournages.yml refuse AUSSI une source ordinaire : le refus ne "
+            "discrimine plus."
+        )
+        return False
     return True
 
 
@@ -341,21 +356,9 @@ def _joue_le_choix_des_tournages(flux: pathlib.Path):
         return None
 
     def lance(executions: str, temoins: str = "") -> str:
-        with tempfile.TemporaryDirectory(prefix="vc-mes-") as tmp:
-            bac = pathlib.Path(tmp)
-            (bac / "bin").mkdir()
-            leurre = bac / "bin" / "gh"
-            leurre.write_text(LEURRE_DES_EXECUTIONS, encoding="utf-8")
-            leurre.chmod(0o755)
-            bloc = bac / "choisir.sh"
-            bloc.write_text(blocs[0], encoding="utf-8")
-            env = dict(os.environ)
-            env["PATH"] = f"{bac / 'bin'}{os.pathsep}{env.get('PATH', '')}"
-            env["EXECUTIONS"], env["TEMOINS"] = executions, temoins
-            rendu = subprocess.run(
-                ["bash", str(bloc)], capture_output=True, text=True, cwd=bac, env=env, check=False
-            )
-            return rendu.stdout + rendu.stderr
+        return _lance_un_bloc(
+            blocs[0], LEURRE_DES_EXECUTIONS, {"EXECUTIONS": executions, "TEMOINS": temoins}
+        )
 
     return lance
 
@@ -431,8 +434,70 @@ def mesure_sans_ecriture(flux: pathlib.Path) -> bool:
     return tiennent
 
 
+# Le leurre de la reprise. `gh api .../runs/<n>/artifacts` rend UN nom pour l execution 1, DEUX pour
+# la 2 (une execution relancee), aucun pour la 3. `gh run download` fabrique un clip, pour que le bon
+# cas aille au bout au lieu d echouer plus loin pour une autre raison.
+LEURRE_DES_ARTEFACTS = """#!/usr/bin/env bash
+if [ "$1" = "api" ]; then
+  case "$2" in
+    */runs/1/artifacts) echo "clips-toutes-ubuntu-1" ;;
+    */runs/2/artifacts) printf 'clips-toutes-ubuntu-1\\nclips-toutes-ubuntu-2\\n' ;;
+    */runs/3/artifacts) ;;
+    *) exit 1 ;;
+  esac
+  exit 0
+fi
+if [ "$1 $2" = "run download" ]; then
+  mkdir -p "$7/target/recette/clips" && : > "$7/target/recette/clips/Cas.mp4"
+  exit 0
+fi
+exit 1
+"""
+
+PLUSIEURS_ARTEFACTS = "ne porte pas UN artefact de clips"
+
+
+def un_seul_artefact_de_clips(flux: pathlib.Path) -> bool:
+    """La neuvieme : la reprise refuse une execution qui porte zero ou plusieurs artefacts de clips."""
+    if not (flux / MESURE).is_file():
+        print(f"❌ L atelier {MESURE} a disparu : la mesure des planchers n a plus de flux.")
+        return False
+    blocs = [
+        e["run"]
+        for j in (_charge(flux / MESURE)["jobs"]).values()
+        for e in j.get("steps", [])
+        if 'startswith("clips-")' in e.get("run", "")
+    ]
+    if len(blocs) != 1:
+        print(f"❌ {len(blocs)} pas reprennent les artefacts de clips dans {MESURE}, attendu 1.")
+        print("   La forme a changé : ce garde ne sait plus quoi lancer, et il le dit.")
+        return False
+
+    def lance(executions: str) -> str:
+        return _lance_un_bloc(
+            blocs[0],
+            LEURRE_DES_ARTEFACTS,
+            {"EXECUTIONS": executions, "TEMOINS": "", "GH_REPO": "depot/essai"},
+        )
+
+    tiennent = True
+    # L autre bord d abord : une execution a UN artefact va au bout, et compte son clip.
+    if "Exécution 1 : 1 clip(s)." not in lance("1"):
+        print(f"❌ {MESURE} ne reprend pas une exécution qui porte un seul artefact de clips.")
+        print("   Les refus qui suivent ne discriminent plus.")
+        tiennent = False
+    if PLUSIEURS_ARTEFACTS not in lance("2"):
+        print(f"❌ {MESURE} reprend une exécution qui porte DEUX artefacts de clips.")
+        print("   Deux tentatives se rangeraient sous le même numéro, et la mesure les mêlerait.")
+        tiennent = False
+    if PLUSIEURS_ARTEFACTS not in lance("3"):
+        print(f"❌ {MESURE} ne dit rien d une exécution sans artefact de clips.")
+        tiennent = False
+    return tiennent
+
+
 def verdict(flux: pathlib.Path) -> bool:
-    """Les huit, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
+    """Les neuf, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
     tiennent = [
         refus_de_la_source_connectee(flux),
         versement_conditionne(flux),
@@ -442,6 +507,7 @@ def verdict(flux: pathlib.Path) -> bool:
         planchers_d_un_seul_commit(flux),
         temoins_hors_de_la_mesure(flux),
         mesure_sans_ecriture(flux),
+        un_seul_artefact_de_clips(flux),
     ]
     return all(tiennent)
 
@@ -637,6 +703,24 @@ def _la_mesure_tait_ses_permissions(dossier: pathlib.Path) -> None:
     _remplace_dans_la_mesure(dossier, "permissions:\n  contents: read\n  actions: read\n", "")
 
 
+def _reprend_plusieurs_artefacts(dossier: pathlib.Path) -> None:
+    """Le compte des artefacts n est plus controle : seul le vide est refuse."""
+    _remplace_dans_la_mesure(
+        dossier,
+        """if [ -z "$liste" ] || [ "$(printf '%s\\n' "$liste" | wc -l)" -ne 1 ]; then""",
+        'if [ -z "$liste" ]; then',
+    )
+
+
+def _reprend_sans_artefact(dossier: pathlib.Path) -> None:
+    """Le vide n est plus refuse : seul le pluriel l est."""
+    _remplace_dans_la_mesure(
+        dossier,
+        """if [ -z "$liste" ] || [ "$(printf '%s\\n' "$liste" | wc -l)" -ne 1 ]; then""",
+        """if [ -n "$liste" ] && [ "$(printf '%s\\n' "$liste" | wc -l)" -ne 1 ]; then""",
+    )
+
+
 CASSURES = (
     (_casse_le_refus, "le refus de clips-connectes neutralisé"),
     (_casse_la_fonction_d_etat, "publier-connecte privé de sa fonction d état"),
@@ -655,6 +739,8 @@ CASSURES = (
     (_temoin_pris_dans_la_mesure, "témoin pris dans la mesure"),
     (_la_mesure_peut_ecrire, "atelier de mesure autorisé à écrire"),
     (_la_mesure_tait_ses_permissions, "atelier de mesure sans permissions déclarées"),
+    (_reprend_plusieurs_artefacts, "reprise d une exécution à deux artefacts de clips"),
+    (_reprend_sans_artefact, "reprise d une exécution sans artefact de clips"),
 )
 
 
@@ -710,12 +796,12 @@ if __name__ == "__main__":
     flux = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else RACINE / ".github" / "workflows"
     if verdict(flux):
         print(
-            "✓ Les huit décisions des ateliers de tournage tiennent : refus de clips-connectes,"
+            "✓ Les neuf décisions des ateliers de tournage tiennent : refus de clips-connectes,"
             " versement"
         )
         print("  conditionné, contrôle du jeton avant le tournage, artefact nommé par le tournage,")
         print("  tournage précédent gardé avant l'écrasement, planchers d'un seul commit, témoins")
-        print("  hors de la mesure, mesure sans écriture.")
+        print("  hors de la mesure, mesure sans écriture, un seul artefact de clips par exécution.")
         sys.exit(0)
     print(
         "::error::Une décision des ateliers de tournage n est plus tenue par le YAML, cf. ci-dessus."

@@ -549,7 +549,17 @@ def planchers(dossiers: list[str | pathlib.Path], fichier: str = "") -> int:
             _refuse_l_instrument(du_fichier, ici, "mesure jouée")
             return 1
 
+    # Un dossier absent ou vide est une PANNE, pas une mesure. Sans ce refus, deux chemins faux
+    # rendaient « 0 cas », « plancher le plus haut : 0 % » et un code 0, trois fois de suite : cela se
+    # lit comme un excellent resultat (#5847). C est le pendant d `exige_ses_outils`.
+    vides = [str(d) for d in dossiers if not cas_du_dossier(d)]
+    if vides:
+        print(f"::error::Aucun clip dans : {', '.join(f'« {v} »' for v in vides)}.")
+        print("::error::Un dossier absent ou vide ne mesure rien : vérifier les chemins.")
+        return 1
+
     pire = "0"
+    mesures = 0
     refuses: dict[str, str] = {}
     with tempfile.TemporaryDirectory(prefix="vc-plancher-") as tmp:
         bac = pathlib.Path(tmp)
@@ -574,6 +584,7 @@ def planchers(dossiers: list[str | pathlib.Path], fichier: str = "") -> int:
                 f_fin = part_changee(fa, fb, TOLERANCE_PAR_DEFAUT, 3)
                 f_deb = part_changee(da, db, TOLERANCE_PAR_DEFAUT, 3)
                 print(f"{nom:<56} fin brut {brut:>8} %   fin {f_fin:>8} %   début {f_deb:>8} %")
+                mesures += 1
 
                 if nom in SANS_PLANCHER:
                     # Mesure et AFFICHE, mais ni ecrit ni retenu : le chiffre reste sous les yeux
@@ -590,6 +601,15 @@ def planchers(dossiers: list[str | pathlib.Path], fichier: str = "") -> int:
                     sol_fin[nom] = f_fin if not vu_f or float(f_fin) > float(vu_f) else vu_f
                     sol_deb[nom] = f_deb if not vu_d or float(f_deb) > float(vu_d) else vu_d
                     nbp[nom] = str(int(nbp.get(nom, "0")) + 1)
+
+    # Des tournages qui n ont aucun clip EN COMMUN ne font aucune paire : rien n a ete mesure, et
+    # reecrire le fichier a l identique en sortant 0 dirait le contraire (#5847).
+    if mesures == 0:
+        print(
+            "::error::Aucun clip commun à deux de ces tournages : aucune paire, donc aucune mesure."
+        )
+        print("::error::Le fichier de planchers n'est pas touché.")
+        return 1
 
     if fichier:
         for nom in SANS_PLANCHER:
@@ -678,9 +698,18 @@ def _auto_test() -> int:
         return ligne.startswith("#")
 
     def joue(action) -> tuple[str, int]:
+        """La sortie et le code d une action. Une action qui LEVE rend sa trace et un code a part.
+
+        Sans cela, un cas dont l action leve arretait le harnais sur une trace de pile, sans dire
+        lequel avait rougi : vu en mutant le refus d un instrument illisible, ou la mesure repartait
+        avec des leurres pour outils et tombait trois appels plus loin (#5644, passe 6).
+        """
         tampon = io.StringIO()
         with contextlib.redirect_stdout(tampon), contextlib.redirect_stderr(tampon):
-            code = action()
+            try:
+                code = action()
+            except (OSError, ValueError) as leve:
+                return f"{tampon.getvalue()}\nA LEVÉ : {type(leve).__name__} : {leve}", 99
         return tampon.getvalue(), code
 
     with tempfile.TemporaryDirectory(prefix="vc-tournages-") as tmp:
@@ -1024,6 +1053,94 @@ def _auto_test() -> int:
             )
         finally:
             del SANS_PLANCHER["trio"]
+
+        # 19. L instrument se lit sur la VERSION AMONT, et la revision du paquet ne le change pas.
+        #
+        # Deux leurres rendent la premiere ligne que les vrais outils rendent sur le runner. Sans ce
+        # cas, l instrument n etait lu que sur la machine qui joue l auto-test : la regle « un
+        # correctif de la distribution ne fait pas remesurer cent clips » n etait eprouvee par rien,
+        # et un motif qui aurait garde la revision passait (#5644, passe 6).
+        (bac / "outils").mkdir()
+
+        def instrument_lu(ffmpeg: str, compare: str) -> str:
+            for nom, ligne in (("ffmpeg", ffmpeg), ("compare", compare)):
+                leurre = bac / "outils" / nom
+                leurre.write_text(f"#!/bin/sh\necho '{ligne}'\n", encoding="utf-8")
+                leurre.chmod(0o755)
+            ancien = os.environ["PATH"]
+            os.environ["PATH"] = str(bac / "outils")
+            try:
+                return instrument()
+            finally:
+                os.environ["PATH"] = ancien
+
+        magick = "Version: ImageMagick 6.9.12-98 Q16 x86_64 18038 https://legacy.imagemagick.org"
+        runner = "ffmpeg 6.1.1 · ImageMagick 6.9.12-98"
+        verifie(
+            "l'instrument du runner se lit sur ses deux premières lignes",
+            runner,
+            lambda: instrument_lu("ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023", magick),
+        )
+        verifie(
+            "une révision de paquet ne le change pas",
+            f"[{runner}]",
+            lambda: "[" + instrument_lu("ffmpeg version 6.1.1-3ubuntu6 Copyright", magick) + "]",
+        )
+        verifie(
+            "une version amont, si",
+            "ffmpeg 7.0.2 · ImageMagick 6.9.12-98",
+            lambda: instrument_lu("ffmpeg version 7.0.2 Copyright", magick),
+        )
+        verifie(
+            "et une version qui ne se lit pas se dit « ? », sans être devinée",
+            "[ffmpeg ? · ImageMagick 6.9.12-98]",
+            lambda: "[" + instrument_lu("ffmpeg version N-118193-gabcdef Copyright", magick) + "]",
+        )
+
+        # 20. Un instrument ILLISIBLE n ecrit aucun plancher.
+        #
+        # Le fichier porterait « ffmpeg ? », que toute comparaison refuserait ensuite : autant
+        # refuser a la mesure, la ou la cause se voit, que laisser un fichier que personne ne lira.
+        illisible = bac / "illisible.tsv"
+        ancien_path = os.environ["PATH"]
+        instrument_lu("ffmpeg version N-118193-gabcdef Copyright", magick)
+        os.environ["PATH"] = str(bac / "outils")
+        try:
+            sortie, code = joue(lambda: planchers([bac / "p1a", bac / "p1b"], str(illisible)))
+        finally:
+            os.environ["PATH"] = ancien_path
+        if code == 0:
+            echecs = 1
+        verifie("un instrument illisible refuse de mesurer", "Instrument illisible", sortie)
+        verifie(
+            "et n'écrit aucun fichier",
+            "absent",
+            "absent" if not illisible.exists() else "écrit",
+        )
+
+        # 21. Un dossier ABSENT est une panne, et il est nomme (#5847).
+        #
+        # Le defaut d origine : deux chemins faux, « 0 cas », un code 0. Le fichier est celui du cas
+        # 17, pour prouver qu un refus ne le reecrit pas, meme a l identique.
+        avant_panne = texte_de(trois)()
+        sortie, code = joue(lambda: planchers([bac / "q1", bac / "pas-la"], str(trois)))
+        if code == 0:
+            echecs = 1
+        verifie("un dossier absent ne mesure rien", "Aucun clip dans", sortie)
+        verifie("et il est nommé", "pas-la", sortie)
+
+        # 22. Deux tournages sans aucun clip COMMUN : aucune paire, donc une panne aussi.
+        (bac / "seul").mkdir()
+        clip(bac / "seul/autre.mp4", "white")
+        sortie, code = joue(lambda: planchers([bac / "q1", bac / "seul"], str(trois)))
+        if code == 0:
+            echecs = 1
+        verifie("deux tournages sans clip commun ne mesurent rien", "Aucun clip commun", sortie)
+        verifie(
+            "et aucun des deux refus n'a touché le fichier",
+            "intact",
+            lambda: "intact" if texte_de(trois)() == avant_panne else "réécrit",
+        )
 
     if echecs == 0:
         print(

@@ -529,6 +529,12 @@ fork, ce que garantit le profil, qui ne joue que ce tag.
 Dans les trois cas la classe porte `@Tag("plateforme-de-test")`, et `DeclarationDeLaPlateformeTest`
 le refuse sinon.
 
+Un scénario d'écran peut aussi se **filmer** sur cette cible : `tournage-recette.yml` prend l'entrée
+`plateforme_de_test`, et ses clips vont sur leur propre pré-version, où ils se comparent d'un tournage
+au suivant (#5644). Un scénario qui n'existe que sur la plateforme de test porte en plus
+`@Tag("plateforme-de-test-seule")`, que le tournage national exclut. Le détail est dans
+[Les clips connectés](recette/clips-connectes.md).
+
 ### Ses épingles
 
 `epingles.properties` est le **seul** endroit qui porte la révision de l'API et le digest de Mongo.
