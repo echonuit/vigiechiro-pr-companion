@@ -254,8 +254,12 @@ def _auto_test() -> int:
         ),
     )
     echecs = 0
+    # ⟨le compte se DERIVE⟩ Un `len(cas) + 2` serait juste le jour ou on l ecrit
+    # et faux au cas suivant : on incremente a chaque assertion (#5744).
+    joues = 0
     for libelle, issue, attendu in cas:
         vu = bool(non_tenus([issue], hier))
+        joues += 1
         if vu is not attendu:
             echecs += 1
             print(f"  ✘ {libelle} : attendu {attendu}, obtenu {vu}")
@@ -267,6 +271,7 @@ def _auto_test() -> int:
     tous = [c[1] for c in cas]
     rendus = non_tenus(tous, hier)
     attendus = sum(1 for c in cas if c[2])
+    joues += 1
     if len(rendus) != attendus:
         echecs += 1
         print(f"  ✘ sur le lot entier : {len(rendus)} releve(s) pour {attendus} attendu(s)")
@@ -289,6 +294,7 @@ def _auto_test() -> int:
         if ancien is not None:
             os.environ["ECHEANCES_RELEVE_FICHIER"] = ancien
         pathlib.Path(chemin).unlink(missing_ok=True)
+    joues += 1
     if lu != [tous[0]]:
         echecs += 1
         print("  ✘ la couture d injection ne remplace pas la forge")
@@ -317,7 +323,7 @@ def _auto_test() -> int:
         if injecte is not None:
             os.environ["ECHEANCES_RELEVE_FICHIER"] = injecte
 
-    print("\nAuto-test concluant : les deux moitiés, leurs contraires, et la règle d'exclusion.")
+    print(f"\n{joues} cas joue(s) : les deux moitiés, leurs contraires, et la règle d'exclusion.")
     return 0
 
 

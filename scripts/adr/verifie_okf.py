@@ -609,6 +609,7 @@ def auto_test() -> int:
     Le dernier cas est le contrôle de non-vacuité : un paquet SAIN doit rester vert. Un garde qui
     rougit de toute façon rougirait aussi sur les mutations, et son rouge ne prouverait rien.
     """
+    joues: list[str] = []
     echecs = []
 
     def cas(
@@ -620,6 +621,10 @@ def auto_test() -> int:
         fichiers: dict[str, str] | None = None,
         index: str | None = None,
     ) -> None:
+        # ⟨compte ICI et non dans `sonde`⟩ `sonde` ne couvre que le dernier bloc, deux cas sur
+        # cinquante-cinq : y poser le compteur aurait fait annoncer « 2 cas » pour un harnais qui en
+        # joue cinquante-cinq, ce qui est pire que pas de compte du tout (#5744).
+        joues.append(titre)
         with tempfile.TemporaryDirectory() as d:
             fautes = _fixture(d, documents, plancher, annexe=annexe, fichiers=fichiers, index=index)
         vu = any(attendu in f for f in fautes) if attendu else not fautes
@@ -971,6 +976,8 @@ def auto_test() -> int:
     # refuse. Les douze cas portent la forme ; les cinq ci-dessus portent ce que l INDEX en fait.
     for libelle, tenu in tableaux.verifie_grammaire():
         cas_du_module = f"forme d un tableau : {libelle}"
+        # Les cas du module partage comptent comme les autres : ils sont joues ici (#5744).
+        joues.append(cas_du_module)
         print(f"  {'✔' if tenu else '✘'} {cas_du_module}")
         if not tenu:
             echecs.append(cas_du_module)
@@ -985,6 +992,9 @@ def auto_test() -> int:
     # l autre un simple constat. Ils s eprouvent donc sur un corpus jetable, faute de quoi ils ne
     # seraient tenus par rien.
     def sonde(titre: str, obtenu, attendu) -> None:
+        # ⟨compte a l ENTREE⟩ Un cas qui echoue a quand meme ete joue, et le compter au succes
+        # ferait baisser le total quand un cas casse (#5744).
+        joues.append(titre)
         ok = obtenu == attendu
         print(
             f"  {'✔' if ok else '✘'} {titre:32} -> {'vert' if ok else f'{obtenu} au lieu de {attendu}'}"
@@ -1007,7 +1017,8 @@ def auto_test() -> int:
         sonde("suspects : l'ADR hors usage est épargnée", len(suspects_ergonomie(r)), 1)
 
     print(
-        "\nAuto-test concluant : chaque refus rougit sur sa propre violation, et un paquet sain reste vert."
+        f"\n{len(joues)} cas joue(s) : chaque refus rougit sur sa propre violation, et un paquet"
+        " sain reste vert."
     )
     return 0
 

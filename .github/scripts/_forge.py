@@ -313,9 +313,11 @@ def cas_d_auto_test_de_forge() -> tuple:
     bancs de mutation l epargnent : neutraliser la machinerie d un auto-test le fait echouer
     trivialement au lieu de prouver qu il a cesse de detecter.
     """
-    marque = [0]
+    marque = [0, 0]  # [echec rencontre, cas joues]
 
     def verifie(attendu: str, libelle: str, motif: str, juger: Callable[[], int]) -> None:
+        # Compte a l ENTREE : un cas qui leve a quand meme ete joue (#5744).
+        marque[1] += 1
         code, ecrit = joue_pour_auto_test(juger)
         obtenu = {1: "rouge", 2: "refus"}.get(code, "ok")
         if obtenu == attendu and (not motif or motif in ecrit):
@@ -329,4 +331,13 @@ def cas_d_auto_test_de_forge() -> tuple:
             )
             marque[0] = 1
 
-    return verifie, (lambda: marque[0])
+    def echecs() -> int:
+        """La marque d echec, lue par l appelant comme avant."""
+        return marque[0]
+
+    def joues() -> int:
+        """Combien de cas ont ete joues. Derive, jamais ecrit a la main (#5744)."""
+        return marque[1]
+
+    echecs.joues = joues
+    return verifie, echecs

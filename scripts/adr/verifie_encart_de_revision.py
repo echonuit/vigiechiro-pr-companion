@@ -238,7 +238,12 @@ def _auto_test() -> int:
             file=sys.stderr,
         )
         return 1
-    print("\nLe garde de l encart de revision detecte ses violations temoins.")
+    # ⟨il comptait deja, et ne le disait qu a l ECHEC⟩ Son compte servait au message rouge et
+    # restait tu au vert, donc un cas qui disparaissait ne se voyait pas (#5744).
+    print(
+        f"\n{joues[0]} cas joue(s) : le garde de l encart de revision detecte ses"
+        " violations temoins."
+    )
     return 0
 
 

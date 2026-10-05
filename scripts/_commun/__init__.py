@@ -611,7 +611,7 @@ def cas_d_auto_test() -> tuple:
     Le `!r` n est pas decoratif : « attendu 'ok', obtenu 'ok ' » se lit, « attendu ok, obtenu ok »
     ne se lit pas.
     """
-    marque = [0]
+    marque = [0, 0]  # [echec rencontre, cas joues]
 
     def verifie(libelle: str, obtenu: object, attendu: object) -> None:
         """Compare `obtenu` a `attendu`. Un APPELABLE est evalue ICI, et son echec se NOMME.
@@ -639,6 +639,10 @@ def cas_d_auto_test() -> tuple:
         rendent un entier, une chaine ou une liste, verifies un par un le 2026-09-07. Un tel cas
         devrait envelopper deux fois : `lambda: la_fonction`.
         """
+        # ⟨compte a l ENTREE, et non au succes⟩ Un cas qui leve a quand meme ete JOUE : le compter
+        # au succes ferait baisser le total quand un cas casse, donc un harnais qui se degrade
+        # annoncerait moins de cas sans que personne ne lise cela comme une perte (#5744).
+        marque[1] += 1
         if callable(obtenu):
             try:
                 obtenu = obtenu()
@@ -655,7 +659,25 @@ def cas_d_auto_test() -> tuple:
             print(f"  ✘ {libelle} : attendu {attendu!r}, obtenu {obtenu!r}")
             marque[0] = 1
 
-    return verifie, (lambda: marque[0])
+    def echecs() -> int:
+        """La marque d echec, lue par l appelant comme avant."""
+        return marque[0]
+
+    def joues() -> int:
+        """Combien de cas `verifie` a JOUES, derive et jamais ecrit a la main.
+
+        Un nombre litteral dans une ligne de verdict mente sans rougir : il reste juste le jour ou on
+        l ecrit et faux au cas suivant. Neuf auto-tests sur dix-sept ne disaient aucun compte, si bien
+        qu un cas qui disparaissait ne se voyait pas - un vert reste un vert, que le harnais joue
+        vingt cas ou deux (#5744).
+        """
+        return marque[1]
+
+    # ⟨attache plutot qu un troisieme element⟩ Le couple est deballe depuis 172 sites. Lui ajouter un
+    # element les casserait tous, ce que la docstring de cette fabrique donne justement comme la raison
+    # de sa forme. Le compte voyage donc SUR le lecteur d echecs, et `echecs()` ne change pas.
+    echecs.joues = joues
+    return verifie, echecs
 
 
 # ⟨la forme d un refus se DECLARE⟩ La porte montrait les deux premieres lignes non vides d un refus,
