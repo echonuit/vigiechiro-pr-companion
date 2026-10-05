@@ -6,8 +6,8 @@
 
 24-48 h après le dépôt sur Vigie-Chiro (parcours [P4](P4%20-%20Preparer%20un%20lot%20pret%20a%20deposer.md)), Tadarida a analysé les séquences d'écoute et restitué un fichier de **résultats d'identification** (CSV listant les espèces détectées dans chaque séquence, avec leur probabilité). Marie veut **passer en revue ces résultats** pour valider ou corriger les classifications avant que les données ne soient consolidées dans la base nationale.
 
-1. Marie télécharge le fichier de résultats depuis le portail Vigie-Chiro et le sauvegarde sur son disque.
-2. Dans l'application, elle ouvre la fiche du passage concerné et clique sur « **Importer les résultats Tadarida** ». Elle pointe sur le fichier téléchargé.
+1. Le plus souvent, Marie n'a rien à télécharger : « Actualiser » sur l'écran de lot, ou « **Vérifier le traitement** » sur la fiche du passage, a importé les observations dès que l'analyse s'est terminée ([P4](P4%20-%20Preparer%20un%20lot%20pret%20a%20deposer.md)). En repli, elle télécharge le fichier de résultats depuis le portail Vigie-Chiro et le sauvegarde sur son disque.
+2. Dans l'application, elle ouvre « **Sons & validation** ». Si elle part du fichier téléchargé, elle le dépose sur l'écran ; ☰ ▸ « Importer depuis Vigie-Chiro » redemande les résultats à la plateforme.
 3. L'application parse le fichier (formats `Brut` ou `Vu` reconnus, R17), associe chaque ligne à la séquence d'écoute correspondante en base, et affiche la **vue de validation** :
     - liste des observations à gauche (triable par séquence, taxon Tadarida, probabilité, statut)
     - panneau de détail à droite : taxon proposé, probabilité, fréquence médiane, lecteur audio pour la séquence, bouton de validation

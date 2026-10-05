@@ -106,7 +106,8 @@ le compte vit sur le modèle de vue du dépôt, dont c'est l'état.
 
 Les archives du repli contiennent **toute la nuit**, séquences déjà en ligne comprises : le générateur n'est
 pas touché. Ce que le portail fait d'une archive dont une partie des sons est déjà dans la participation
-n'est **pas établi** ; c'est une hypothèse de ce lot, acceptée comme telle par le porteur.
+n'est **pas établi** ; c'est une hypothèse de ce lot, acceptée comme telle par le porteur. Le cas de
+recette `S4-105` l'éprouve contre le vrai portail.
 
 Une nuit finie par le repli est annoncée perdue par le bilan de récupérabilité si son disque ne suffit pas,
 avec le compte de ce qui manque.
