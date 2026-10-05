@@ -988,6 +988,34 @@ def refus_affiche(ligne: str) -> list[str]:
     return [f"      {l[:160]}" for l in ligne.splitlines() if l.strip()]
 
 
+MARQUE_DE_TRACE = "Traceback (most recent call last):"
+
+
+def _extrait_du_repli(lignes: list[str]) -> str:
+    """Les deux lignes a montrer quand rien n est declare : les PREMIERES, sauf sur une TRACE.
+
+    « La premiere ligne, jamais la derniere » vaut pour un garde qui REFUSE en prose : il explique
+    comment se corriger APRES avoir refuse, donc sa queue est calme et sa tete nomme la cause.
+
+    **Une trace d exception est l inverse exact.** Sa tete est `Traceback (most recent call last):`
+    suivi de chemins de fichiers, et son dernier mot est sa cause. La regle se retournait donc contre
+    le seul cas ou le garde n a rien choisi de dire.
+
+    Mesure du 2026-10-05 sur un `verifie_scripts.py` qui plantait : la porte montrait
+    « Auto-test des scripts de verification ADR (#2467) : » et « ✔ un plancher tenu passe », deux
+    lignes vraies et inutiles, pendant que l `AttributeError` qui expliquait tout etait la derniere
+    des 263 (#5890).
+
+    Le declencheur est etroit a dessein : la presence de la marque de trace, et rien d autre. Un garde
+    qui refuse en prose garde le comportement d avant, ce qu un cas tient.
+    """
+    if not lignes:
+        return "(sans sortie)"
+    if any(ligne.startswith(MARQUE_DE_TRACE) for ligne in lignes):
+        return "\n".join(lignes[-2:])
+    return "\n".join(lignes[:2])
+
+
 def verdict_du_lancement(nom: str, code: int, stdout: str, stderr: str) -> tuple[str, str]:
     """Ce qu un lancement de garde veut dire, et la ligne qui l explique.
 
@@ -1047,12 +1075,13 @@ def verdict_du_lancement(nom: str, code: int, stdout: str, stderr: str) -> tuple
     # de plus, et c est precisement la panne que ce lot repare.
     #
     # Le repli a deux lignes reste pour tout ce qui ne rend aucun verdict qui refuse : un garde non
-    # converti, une trace d exception, un `Usage abusif de`.
+    # converti, une trace d exception, un `Usage abusif de`. Il choisit QUELLES deux lignes selon la
+    # forme de la sortie, et `_extrait_du_repli` dit pourquoi.
     refus = lignes_du_refus(stdout + "\n" + stderr)
     premiere = (
         f"{declare[0]}\n{declare[1]}"
         if declare
-        else (refus if refus else ("\n".join(lignes[:2]) if lignes else "(sans sortie)"))
+        else (refus if refus else _extrait_du_repli(lignes))
     )
     if nom not in EXIGENT_DES_ARGUMENTS:
         # ⟨LE TROISIEME VERDICT, decide sur ce que cette fonction LIT DEJA⟩ Un garde qui emploie la
@@ -2204,6 +2233,50 @@ def _auto_test() -> int:
         lambda: (
             verdict_du_lancement("x.py", 2, "REFUS : x\nautre chose", "")[1]
             == "REFUS : x\nautre chose"
+        ),
+    )
+
+    # ⟨le repli choisit QUELLES deux lignes, et une trace inverse la regle⟩ « La premiere ligne,
+    # jamais la derniere » vaut pour un garde qui refuse en PROSE. Une trace d exception a sa cause
+    # au dernier mot et son titre en tete, donc la regle se retournait contre le seul cas ou le garde
+    # n a rien choisi de dire (#5890). Les quatre cas tiennent les deux branches ET le declencheur.
+    TRACE = (
+        "Auto-test des scripts de verification ADR (#2467) :\n"
+        "  ✔ un plancher tenu passe\n"
+        "Traceback (most recent call last):\n"
+        '  File "x.py", line 1973, in test_x\n'
+        "AttributeError: module 'adr_rapport' has no attribute 'LIGNE_CLIQUET'\n"
+    )
+    echecs += juge(
+        "sur une TRACE, le repli montre la cause et non le titre",
+        lambda: "AttributeError" in verdict_du_lancement("x.py", 1, TRACE, "")[1],
+    )
+    echecs += juge(
+        "et il ne montre PAS les deux premieres, vraies et inutiles",
+        lambda: "un plancher tenu passe" not in verdict_du_lancement("x.py", 1, TRACE, "")[1],
+    )
+    # Le CONTROLE : sans trace, le comportement d avant est intact. Sans ce cas, on pourrait montrer
+    # la queue partout, et un garde qui explique comment se corriger apres avoir refuse perdrait sa
+    # cause au profit de sa prose calme.
+    echecs += juge(
+        "sans trace, il montre toujours les deux PREMIERES lignes",
+        lambda: (
+            verdict_du_lancement("x.py", 1, "la cause\nson detail\nle geste calme", "")[1]
+            == "la cause\nson detail"
+        ),
+    )
+    # Le DECLENCHEUR est etroit : la marque en TETE de ligne, jamais citee au milieu d une phrase.
+    # Une prose qui parle d une trace n en est pas une, et basculerait sinon sur sa queue.
+    echecs += juge(
+        "une prose qui CITE la marque n est pas une trace",
+        lambda: (
+            verdict_du_lancement(
+                "x.py",
+                1,
+                "la cause\nelle evite un Traceback (most recent call last):\nle geste",
+                "",
+            )[1]
+            == "la cause\nelle evite un Traceback (most recent call last):"
         ),
     )
 

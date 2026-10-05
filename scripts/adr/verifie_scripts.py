@@ -1237,6 +1237,9 @@ def test_4475_stage_non_dimensionne() -> None:
 
 
 def test_4617_code_mort_et_zone_de_test() -> None:
+    import contextlib
+    import io
+
     m = _charge("4617-code-mort-et-zone-de-test.py")
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
@@ -1343,12 +1346,28 @@ def test_4617_code_mort_et_zone_de_test() -> None:
 
         # Un garde qui ne sait pas lire REFUSE. Rendre zero sur un rapport absent le rendrait vert
         # au moment precis ou il sert - le defaut de #4544 sous une autre forme.
+        #
+        # ⟨la sortie du refus se CAPTURE, et c est le lot #5890⟩ Ce refus est EPROUVE, pas subi : il
+        # appartient a la fixture, pas a ce garde. Laisse libre, il partait sur `stderr` - non
+        # tamponne, donc en TETE de la sortie - et y restait meme quand ce garde concluait en 0.
+        #
+        # La porte lit le refus DECLARE avant tout repli, et elle classe par les MARQUES et non par le
+        # code de sortie. Donc des que ce garde sortait non nul pour n importe quelle raison, elle le
+        # disait « muet » avec la cause de cette fixture : « PMD n a pas tourne », suivi de la commande
+        # a relancer. Vecu le 2026-10-05 sur #5830, ou la vraie cause etait un `AttributeError` et ou
+        # la preparation PMD venait de REUSSIR en 86 s.
+        #
+        # Mesure qui a decide du remede : sur les 75 gardes de la porte, **un seul** portait une marque
+        # de refus en concluant 0, celui-ci. Borner la lecture de la porte ou distinguer dans `_commun`
+        # aurait touche les 74 autres pour un cas unique.
         absent = racine / "jamais-produit.xml"
-        try:
-            m.suspects(absent)
-            _verifie("4617 un rapport absent fait REFUSER", 0, 1)
-        except SystemExit:
-            _verifie("4617 un rapport absent fait REFUSER", 1, 1)
+        with contextlib.redirect_stderr(io.StringIO()):
+            try:
+                m.suspects(absent)
+                refus = 0
+            except SystemExit:
+                refus = 1
+        _verifie("4617 un rapport absent fait REFUSER", refus, 1)
 
 
 def test_4476_javadoc_raconte_son_extraction() -> None:
