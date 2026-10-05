@@ -65,6 +65,9 @@
        lit, et décoché par défaut. Une position qui situe le carré n'est pas forcément là où l'on écoute. -->
   <CheckBox fx:id="chkPremierPoint" text="Créer aussi le premier point d'écoute à cette position"
             managed="false" visible="false"/>
+  <!-- Ce que la case a à dire avant de créer (#5860) : la position tombe dans un autre carré que le numéro
+       saisi. Un avertissement, pas un refus : la création reste offerte. -->
+  <Label fx:id="avertissementPremierPoint" wrapText="true" managed="false" visible="false"/>
   <!-- Ce que la plateforme a répondu sur ce carré : distinct du bandeau de retour, qui porte l'issue de
        l'enregistrement. Les confondre effacerait l'un par l'autre. -->
   <Label fx:id="messageCarreExistant" wrapText="true" managed="false" visible="false"/>

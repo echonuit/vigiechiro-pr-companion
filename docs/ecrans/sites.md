@@ -90,6 +90,14 @@ Sans la case, rien ne change : le site est créé sans point, et vous ajoutez le
 site est créé mais que le point ne peut pas l'être, le message de retour le dit, et le point s'ajoute
 à la main.
 
+Le site prend le **numéro** du champ, et le point la **position** collée. Si vous avez tapé un numéro
+puis collé une position sans cliquer « Situer », les deux peuvent ne pas parler du même carré. Case
+cochée, un avertissement le dit alors sous la case, en nommant les deux carrés. Il n'empêche pas de
+créer : vous pouvez tenir à ce numéro. « Situer » le fait disparaître, en prenant le carré de la
+position. Sur une frontière entre deux carrés, rien ne s'affiche : l'application n'en choisit aucun.
+
+![La case du premier point est cochée, et la position tombe dans un autre carré que le numéro saisi : un avertissement nomme les deux, sans empêcher de créer.](../assets/captures/apercu-sites-modale-site-premier-point-autre-carre.png)
+
 ### Savoir si le carré existe déjà sur Vigie-Chiro
 
 Le bouton **Vérifier sur Vigie-Chiro**, à droite du numéro, pose la question **au portail** avant que

@@ -127,6 +127,11 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
   « Créer aussi le premier point d'écoute à cette position », **décochée**. La cocher et « Créer » : la
   fiche du site montre un point `Z1`, situé, sans ressaisie. Refaire sans cocher : le site n'a aucun
   point. Saisir un numéro sans coller de position : la case ne paraît pas (#5687).
+- **S1-45** · « + Nouveau site », taper `130711`, coller `44.44674980384396, 6.298116860416506` **sans**
+  cliquer « Situer », puis cocher la case du premier point : un avertissement dit que la position tombe
+  dans le carré 040110 alors que le site déclare le 130711, et « Créer » reste offert. Cliquer « Situer » :
+  le numéro devient 040110 et l'avertissement disparaît. Avec `44.444990, 6.306335`, sur une frontière,
+  rien ne s'affiche (#5860).
 - **S1-14** · Carte de site complète : nom, points, passages, badge fraîcheur, badges « Enregistré / Verrouillé
   sur Vigie-Chiro », chevron ›.
 - **S1-15** · Navigation clavier (Tab / Entrée / Espace) sur les cartes.

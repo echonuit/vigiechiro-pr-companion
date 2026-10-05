@@ -120,6 +120,10 @@ public class ModaleSiteController {
     @FXML
     private CheckBox chkPremierPoint;
 
+    /// L'avertissement de la case, quand la position tombe dans un autre carré que le numéro (#5860).
+    @FXML
+    private Label avertissementPremierPoint;
+
     /// Ligne du geste « Récupérer ce carré » (#3806) : elle n'existe qu'après un verdict « il existe
     /// déjà », et se retire de la mise en page le reste du temps.
     @FXML
@@ -319,7 +323,13 @@ public class ModaleSiteController {
                 .bindBidirectional(viewModel.premierPoint().demande());
         chkPremierPoint.visibleProperty().bind(viewModel.premierPoint().offert());
         chkPremierPoint.managedProperty().bind(chkPremierPoint.visibleProperty());
-        Modales.suivreLaCroissance(racine, messagePosition.managedProperty(), chkPremierPoint.managedProperty());
+        LibelleRetour.installer(
+                avertissementPremierPoint, viewModel.premierPoint().avertissement());
+        Modales.suivreLaCroissance(
+                racine,
+                messagePosition.managedProperty(),
+                chkPremierPoint.managedProperty(),
+                avertissementPremierPoint.managedProperty());
         // Fermé tant qu'il n'y a rien à situer, et JAMAIS pour cause de connexion : le carroyage est
         // embarqué. C'est la difference avec « Vérifier sur Vigie-Chiro », dont le motif ci-dessus parle
         // de jeton.
