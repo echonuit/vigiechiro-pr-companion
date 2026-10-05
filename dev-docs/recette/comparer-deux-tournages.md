@@ -85,22 +85,23 @@ runners GitHub distincts, soit **quinze paires** par clip. Mesurés le 5 octobre
 `mesurer-les-planchers.yml`, avec l'instrument du flux, ffmpeg 6.1.1 et ImageMagick 6.9.12-98
 (#5885).
 
-Sept clips n'ont pas de plancher, parce qu'ils ont deux fins (voir plus bas). Sur les **88** autres :
+Six clips n'ont pas de plancher, parce qu'ils ont deux fins (voir plus bas). Sur les **94** autres :
 
 | plancher à 5 % de tolérance | cas |
 |---|---|
-| 0,5 à 1 % | 9 |
-| 0,1 à 0,5 % | 48 |
-| 0,05 à 0,1 % | 10 |
-| < 0,05 % | 21, dont 5 à zéro |
+| > 1 % | 1 |
+| 0,5 à 1 % | 10 |
+| 0,1 à 0,5 % | 53 |
+| 0,05 à 0,1 % | 8 |
+| < 0,05 % | 22, dont 5 à zéro |
 
-**Médiane : 0,160 %.** Le pire vaut 0,979 %, sur
+**Médiane : 0,173 %.** Le pire vaut 1,033 %, sur
 `ScenarioJournalAbsentTest.sans_journal_la_nuit_est_inconnue`.
 
 !!! danger "Un seuil global mentirait dans les deux sens"
 
-    Retenir le pire plancher, 0,979 %, comme seuil unique **aveuglerait 79 cas pour se protéger de
-    neuf** : un libellé entier changé, qui vaut 0,364 %, passerait sous le seuil sans être vu.
+    Retenir le pire plancher, 1,033 %, comme seuil unique **aveuglerait 83 cas pour se protéger de
+    onze** : un libellé entier changé, qui vaut 0,364 %, passerait sous le seuil sans être vu.
 
     Retenir la médiane laisserait au contraire la moitié des cas crier au changement à chaque
     tournage.
