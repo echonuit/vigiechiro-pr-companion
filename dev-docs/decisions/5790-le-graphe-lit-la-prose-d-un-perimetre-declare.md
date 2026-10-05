@@ -13,7 +13,7 @@ verified:
     at: 2026-10-04
 relations:
   prolonge: ["5553-trois-index-repondent-aucun-ne-devient-un-garde"]
-  completee_par: ["5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache", "5857-un-registre-sort-du-perimetre-et-une-page-sortie-quitte-la-couche"]
+  completee_par: ["5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache", "5857-un-registre-sort-du-perimetre-et-une-page-sortie-quitte-la-couche", "5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages"]
 generated:
   by: "process:assistance-par-agents"
 ---
@@ -30,6 +30,11 @@ generated:
     [5857](5857-un-registre-sort-du-perimetre-et-une-page-sortie-quitte-la-couche.md).
     `scripts/methode/relus.txt` en sort, et une page sortie du périmètre quitte la couche par la
     commande `oublie`.
+
+    **2026-10-05** : ce que la couche ne garantit pas est **complété** par
+    [5877](5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages.md).
+    `graphify update .` conserve la couche, mais ne relit plus la structure d'une page qui la
+    porte. `rebuild.py --mets-a-jour` la relit, et dit ce qu'il retire.
 
 ## Le contexte
 
