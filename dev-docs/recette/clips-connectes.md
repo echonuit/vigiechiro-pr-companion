@@ -27,8 +27,9 @@ S4-98 (#5836) : leurs scénarios portent en plus
 
 Ses clips vont sur une pré-version à elle, `clips-plateforme-de-test`, et non sur `clips-connectes`.
 Leur état de départ étant déclaré, ils se comparent, et la condition que l'ADR 5641 posait est
-mesurée (#5797) : quatre tournages du même commit, six paires, et aucun des cinq clips ne s'écarte de
-plus de 0,267 %. Leurs planchers sont dans `planchers-tournages.tsv`, et
+mesurée (#5797, puis #5870 avec l'instrument du flux) : deux tournages du même commit ne s'écartent
+pas de plus de 0,503 %, sur quinze paires par clip. Leurs planchers sont dans
+`planchers-tournages.tsv`, et
 [la page de la comparaison](comparer-deux-tournages.md) dit comment les lire.
 
 `comparer-tournages.yml` prend ses deux tournages dans des versions publiées, et celle-ci est écrasée à

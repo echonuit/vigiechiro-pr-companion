@@ -198,6 +198,11 @@ class ScenarioConnecteLancementTest {
                 () -> texte(robot, "#lblEtatTraitement").contains(PLANIFIEE),
                 "la carte « Traitement Vigie-Chiro » ne dit pas « Analyse planifiée »",
                 REPONSE_DU_SERVEUR_MS);
+        // La carte a été amenée dans le cadre AVANT d'avoir son état, pour qu'on la voie changer. Elle
+        // a grandi depuis, et la page est restée là où elle était : deux tournages du même commit
+        // finissaient à douze pixels l'un de l'autre, soit 20 % d'écart (#5870). Le bas de la page,
+        // lui, ne dépend pas de l'instant où la carte a grandi.
+        GesteVisible.allerAuBasDeLaPage(robot, "#zoneTraitement");
 
         assertThat(visible(robot, "#zoneTraitement"))
                 .as("la carte du traitement est à l'écran, pas seulement renseignée")

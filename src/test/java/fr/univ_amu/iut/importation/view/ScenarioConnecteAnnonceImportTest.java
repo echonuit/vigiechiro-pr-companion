@@ -189,7 +189,11 @@ class ScenarioConnecteAnnonceImportTest {
         // s'arrêtait sur le formulaire, pendant la transformation : le verdict des deux cas était lu
         // par le banc et jamais montré, et la dernière image changeait d'un tournage à l'autre
         // (19 % d'écart entre deux tournages du même commit, mesuré en #5797).
-        GesteVisible.amenerDansLeCadre(robot, "#compteRenduChiffre");
+        //
+        // Au BAS de la page, et non seulement dans le cadre : le compte rendu est son dernier élément,
+        // et il grandit encore après être paru. Amené par son haut, il laissait la page à un pixel près
+        // selon l'instant (0,115 % d'écart, sept fois son plancher, #5870).
+        GesteVisible.allerAuBasDeLaPage(robot, "#compteRenduChiffre");
         Respiration.surLeMomentCle(robot);
         Respiration.leTempsDeLire(robot);
 

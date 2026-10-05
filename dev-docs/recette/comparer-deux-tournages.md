@@ -118,36 +118,62 @@ trois :
 
 L'[ADR 5641](../decisions/5641-les-tests-connectes-ont-deux-cibles.md) ne levait le refus de comparer
 les clips connectés, pour la plateforme de test, que si la mesure le permettait. Elle a été prise le
-5 octobre 2026 (#5797) : **quatre** tournages du commit `edc6b69b5`, sur quatre runners, soit six
-paires.
+5 octobre 2026 : **six** tournages du commit `82f90b2a6`, sur six runners, soit quinze paires,
+mesurées avec l'instrument du flux (#5870).
 
-| clip | cas | son plancher, sur six paires |
+| clip | cas | son plancher, sur quinze paires |
 |---|---|---|
-| `ScenarioConnectePublicationTest` | S4-90, S4-92 | 0,003 % |
-| `ScenarioConnecteAnnonceImportTest` | S2-59, S2-60 | 0,016 % |
-| `ScenarioConnecteConnexionTest` | S8-01, S8-05, S8-06 | 0,017 % |
-| `ScenarioConnecteActualisationTest` | S4-98 | 0,230 % |
-| `ScenarioConnecteLancementTest` | S4-47 | 0,267 % |
+| `ScenarioConnectePublicationTest` | S4-90, S4-92 | 0,005 % |
+| `ScenarioConnecteConnexionTest` | S8-01, S8-05, S8-06 | 0,134 % |
+| `ScenarioConnecteActualisationTest` | S4-98 | 0,302 % |
+| `ScenarioConnecteAnnonceImportTest` | S2-59, S2-60 | 0,325 % |
+| `ScenarioConnecteLancementTest` | S4-47 | 0,503 % |
 
-Les deux plus hauts sont ceux de l'écran de lot, qui affiche un chemin temporaire au nom tiré au sort.
 Aucun ne dépasse le pire plancher des clips ordinaires, 0,809 % : ces clips se comparent.
 
-!!! warning "Le quatrième tournage a dépassé un plancher, et c'est le résultat attendu"
+!!! danger "Un plancher se mesure avec l'instrument du flux, pas avec celui du poste"
 
-    Les planchers tirés des trois premiers tournages ont été éprouvés contre un quatrième, qu'ils
-    n'avaient jamais vu. Le clip de la connexion est sorti à 0,017 %, pour un plancher de 0,013 % :
-    **1,3 fois son bruit**. Les quatre autres sont restés à leur plancher ou dessous.
+    Le même script, sur la même paire de clips, ne rend pas le même chiffre partout. Mesuré sur une
+    paire de ces tournages : le clip de la connexion sort à **0,020 %** sur un poste (ffmpeg 8,
+    ImageMagick 7) et à **0,134 %** sur le runner de `comparer-tournages.yml` (ffmpeg 6.1.1,
+    ImageMagick 6.9.12) ; celui de l'import à 0,040 % et 0,325 %.
 
-    Un plancher est le pire de ses tirages, et un tirage de plus le dépasse de temps en temps. Un
-    rapport voisin de 1 se lit donc comme du bruit, et le fichier s'enrichit de la paire. Ce qui se
-    regarde est un rapport qui s'en éloigne nettement.
+    Les premiers planchers de ces clips (#5797) avaient été pris sur un poste. Le flux les lisait
+    ensuite avec ses propres outils, et annonçait quatre clips sur cinq « au-dessus de leur plancher »
+    pour deux tournages du même commit. Une partie de ce qu'on a d'abord pris pour un défaut des clips
+    était cet écart d'instrument.
+
+    Les planchers se mesurent donc dans un conteneur de la distribution du runner, qui rend les
+    chiffres du flux à la troisième décimale :
+
+    ```
+    docker run --rm -v <tournages>:/t -v "$PWD/.github/assets":/a ubuntu:24.04 bash -c '
+      apt-get update -qq && apt-get install -y -qq ffmpeg imagemagick python3 &&
+      python3 /a/compare_tournages.py --plancher /t/<A> /t/<B> /a/planchers-tournages.tsv'
+    ```
+
+    L'instrument qui a mesuré les planchers des clips ordinaires, plus bas dans ce fichier, n'est pas
+    connu : c'est l'objet de #5885.
+
+!!! danger "Peu de paires ne voient pas le second mode d'un clip"
+
+    La première comparaison lancée par le flux (#5854) a rendu le clip de `S4-47` à **20,044 %**
+    entre deux tournages du même commit. Le contenu était le même, la page n'était pas défilée au même
+    endroit : le scénario amenait sa carte dans le cadre avant qu'elle ait pris sa hauteur finale, et
+    JavaFX garde alors le décalage en pixels. Les quatre tournages de la première mesure étaient
+    tombés du même côté.
+
+    Un plancher bas ne prouve donc pas qu'un clip n'a qu'un mode. Ce qui l'établit est la **cause**,
+    reproduite par un banc (`GesteVisibleBasDePageTest`), et son remède : un clip dont le verdict est
+    le dernier élément de sa page finit par `GesteVisible.allerAuBasDeLaPage` (#5870). Les quinze
+    paires ci-dessus ne montrent plus ce mode.
 
 !!! note "Une dernière image qui change tout"
 
     Avant correction, le clip de l'import s'arrêtait pendant la transformation, à un endroit de la
-    page différent à chaque tournage : **19,275 %** d'écart entre deux tournages du même commit. Une
-    fois son compte rendu amené dans le cadre, **0,016 %**. Un plancher aberrant désigne d'abord un
-    clip qui ne finit pas sur ce qu'il doit montrer.
+    page différent à chaque tournage : **19,275 %** d'écart entre deux tournages du même commit, sur
+    un poste. Une fois son compte rendu amené dans le cadre, 0,040 % avec le même instrument. Un
+    plancher aberrant désigne d'abord un clip qui ne finit pas sur ce qu'il doit montrer.
 
 ### Ce que cette mesure a corrigé
 
