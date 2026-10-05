@@ -82,8 +82,8 @@ scripts/**
 # et cette declaration lui est confrontee. Une sixieme classe qui lirait un `.md` sans etre ici fait
 # rougir. Une liste qu un garde confronte n est plus une liste, c est un inventaire.
 #
-# Le cout est ce qui rend l omission chere : `DocumentationAJourTest` met 2,4 s pour vingt et un
-# invariants, contre huit minutes de `build` entier.
+# Le cout est ce qui rend l omission chere : `DocumentationAJourTest` met 2,4 s pour vingt et un invariants - temps de la CLASSE sur un arbre chaud. Mesure du 2026-10-05 : 2,8 s a chaud, 5,1 s sur un arbre plus froid, et 11,4 s de PAROI pour l invocation entiere. Les trois decrivent la meme classe, et un chiffre sans son protocole se compare a tort (#5884),
+# contre huit minutes de `build` entier.
 GARDES_JAVA: dict[str, str] = {
     "DocumentationAJourTest": """
 dev-docs/**
@@ -112,6 +112,72 @@ dev-docs/recette/**
 """,
     "InventaireDesSessionsTest": """
 dev-docs/recette/**
+""",
+    # ⟨les treize classes qui jugent le CODE, et non la prose (#5884)⟩ Les cinq ci-dessus lisent de la
+    # prose, et `gardes-java-declares.py` les tient par la population « toute classe de test qui
+    # construit un chemin vers de la prose ». AUCUNE regle ne couvrait celles qui jugent le code : le
+    # paquet `architecture` en porte treize, et la porte n en nommait aucune, ni jouee ni imprimee.
+    # Un lot qui en cassait une l apprenait de `build`, huit minutes plus tard.
+    #
+    # Cout mesure le 2026-10-05, dans une fenetre obtenue des quatre sessions pairs : **27,043 s de
+    # PAROI** pour les treize, contre 11,354 s de paroi pour `DocumentationAJourTest` seule. Meme
+    # ordre de grandeur, donc elles entrent toutes. La SOMME de leurs treize `elapsed` fait 51,6 s,
+    # et s en servir aurait surestime du double : surefire parallelise ses forks.
+    #
+    # Les `chemins` sont releves par le CODE de chaque classe, jamais par son nom, et il y a trois
+    # categories que ni un `grep` ni « lit-elle l arbre ? » ne separent :
+    #
+    #   - dix lisent `src/main/java`, par `Path.of("src", "main", "java")` ou une racine plus etroite ;
+    #   - `ArchitectureTest` lit le BYTECODE par ArchUnit, avec `DO_NOT_INCLUDE_TESTS` : la production
+    #     seule, donc un diff de test ne paie pas ses 16,2 s, qui sont 60 % du total ;
+    #   - deux ne lisent AUCUN fichier et dependent du BATI. `ProprietesMinionPitTest` ouvre
+    #     `pom.xml` ; `ButoirsTestFxTest` n ouvre rien et verifie que les coupe-circuits de TestFX
+    #     sont ceux que le pom a calibres, en lisant des PROPRIETES SYSTEME. Un compteur de lectures
+    #     d arbre lui donne zero, et sa dependance est quand meme le `pom.xml`.
+    #
+    # Et `AnnonceDesMutationsTest` a failli etre mal declaree : ses chemins litteraux les plus precis
+    # sont les ARGUMENTS d une fonction auxiliaire eprouvee sur des chaines, pas son corpus. Un releve
+    # par motif dit a quoi une classe ressemble, pas ce qu elle lit.
+    "AnnonceDesMutationsTest": """
+src/main/java/**
+src/test/java/**
+""",
+    "ArchitectureTest": """
+src/main/java/**
+""",
+    "ButoirsTestFxTest": """
+pom.xml
+""",
+    "ConventionsDEcritureTest": """
+src/main/java/**
+src/test/java/**
+""",
+    "DeclarationDesBindingsTest": """
+src/main/java/**
+""",
+    "FormatFlottantLocaliseTest": """
+src/main/java/**
+""",
+    "IsolationFeatureSourcesTest": """
+src/main/java/**
+""",
+    "LibelleDeNavigationTest": """
+src/main/java/**
+""",
+    "MessageExterneBorneTest": """
+src/main/java/**
+""",
+    "ParcoursDeDossierTest": """
+src/main/java/**
+""",
+    "ProprietesMinionPitTest": """
+pom.xml
+""",
+    "SecretsEcritsProtegesTest": """
+src/main/java/**
+""",
+    "TablesACheminTest": """
+src/main/resources/db/migration/**
 """,
 }
 
@@ -735,7 +801,10 @@ def rendre(
         print(f"  ENGAGE ({len(java)} classe(s) Java qui jugent la prose)")
         print(f"    ./mvnw -B test -Dglass.platform=Headless -Dtest={','.join(java)}")
         print("       Ce depot teste sa documentation comme du code : ces classes lisent des `.md`")
-        print("       et refusent quand ils derivent. `DocumentationAJourTest` met 2,4 s.")
+        print(
+            "       et refusent quand ils derivent. `DocumentationAJourTest` met 2,4 s a"
+            " chaud, 11,4 s de paroi (mesure du 2026-10-05)."
+        )
 
     sans = [g for g, c in gardes(racine) if not c]
     print()
