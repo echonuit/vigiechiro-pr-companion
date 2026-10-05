@@ -49,12 +49,17 @@ remplace en silence une extraction plus riche.
 - Ne nommez pas un nœud comme le titre de la section qui le porte : choisissez un libellé qui dit le
   concept, pas le titre. La fusion replie ces homonymes sur le titre, et votre nœud n'y gagne rien.
 - Aucun numéro de lot ni suffixe dans un identifiant.
+- **Un libellé ne se partage pas.** Le moteur fond deux énoncés de même libellé en un seul, et
+  l'identifiant de l'un disparaît. L'audit refuse donc un libellé que porte déjà un autre énoncé,
+  dans votre lot ou dans celui d'un autre lecteur. Quand votre page dit la même chose qu'une
+  autre, écrivez ce que **cette page** en dit, et reliez les deux par une arête.
 
 ## Les arêtes
 
 Chaque extrémité d'arête est un nœud que vous émettez, ou un identifiant recopié **octet pour
 octet** depuis l'un des trois fichiers. Certains portent des accents : copiez-les depuis le JSON,
-ne les retapez pas.
+ne les retapez pas. Un énoncé d'une autre page n'est une extrémité admise que si la fiche le range
+sous `ailleurs`, comme dit plus bas.
 
 - **Ancrez chaque nœud** : une arête `references`, `EXTRACTED`, depuis le titre de la section qui
   le définit. Quand ce titre manque à `structure`, un `###`, un encart ou une ligne d'un grand
@@ -131,6 +136,9 @@ libellé et la justification d'avant : comparez-les à la page, au lieu de les r
   d'identifiant, donc rien ne vous oblige à la réémettre ni à la déclarer : c'est la page qui dit
   si elle tient encore. Comparez-les à ce que vous émettez, et gardez celles que la page porte
   toujours, vers une autre page ou vers le code en particulier.
+- Quand une de ces arêtes aboutit sur une page que personne ne relit dans cette passe, la fiche
+  range cette extrémité sous `ailleurs` : recopiez-la telle quelle, l'audit l'admet. Sans
+  `ailleurs`, l'autre bout est dans votre lot, dans un index, ou dans le lot d'un autre lecteur.
 - Une hyperarête réémise garde la confiance que la fiche lui donne, sauf si la page a changé ce
   qu'elle dit de ce flux.
 - Un membre d'hyperarête est un nœud que vous émettez, un titre de la page, une classe de l'index,
@@ -152,11 +160,16 @@ Un seul fichier, `rendu_NN.json`, dans le dossier de travail :
 Écrivez vos brouillons dans un sous-dossier `travail_NN/` que vous créez, avec le numéro de
 votre lot : d'autres agents travaillent à côté, chacun dans le sien, et un nom générique s'écrase.
 
-L'audit complet, `couche_semantique.py audite`, attend tous les lots : il n'est pas à votre
-portée. Avant de finir, vérifiez donc vous-même, en Python, ce qu'il vérifiera :
-aucun identifiant de structure réémis, chaque extrémité d'arête connue, `source_location` nul,
-`_origin` posé, chaque page du lot avec au moins un nœud, chaque identifiant de `semantique` et
-chaque hyperarête de la fiche réémis ou déclaré dans `laches`, chaque membre d'hyperarête connu.
+L'audit, `python3 -B scripts/graphify/couche_semantique.py audite --dossier <dossier>`, écrit une
+ligne par lot : `sain` avec ses comptes, `ABSENT`, ou le défaut. Lancez-le et lisez la vôtre. Les
+lots des autres lecteurs sont absents tant qu'ils n'ont pas rendu, et sa sortie reste en 1 jusque
+là : ce n'est pas votre affaire. Un libellé pris par un autre lot ne se voit qu'une fois les deux
+rendus là.
+
+Il vérifie : aucun identifiant de structure réémis, chaque extrémité d'arête connue,
+`source_location` nul, `_origin` posé, chaque page du lot avec au moins un nœud, chaque
+identifiant de `semantique` et chaque hyperarête de la fiche réémis ou déclaré dans `laches`,
+chaque membre d'hyperarête connu, aucun libellé porté par deux énoncés.
 
 ## Quand une seule session fait tout
 

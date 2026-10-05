@@ -15,11 +15,19 @@ verified:
     at: 2026-10-05
 relations:
   complete: ["5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache"]
+  completee_par: ["5936-un-libelle-ne-se-partage-pas-et-une-passe-a-plusieurs-lots-dit-ce-qu-elle-perd"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # Une hyperarête se déclare quand on la lâche, et les ponts parcourent les pages que le graphe porte
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-05** : « la fiche d'une page nomme ses hyperarêtes » est **complété** par
+    [5936](5936-un-libelle-ne-se-partage-pas-et-une-passe-a-plusieurs-lots-dit-ce-qu-elle-perd.md).
+    La fiche nomme aussi l'extrémité d'une arête qui vit hors de la passe, l'audit refuse un
+    libellé que portent deux énoncés, et la fusion nomme l'énoncé que le moteur a fondu. Le reste
+    fait foi.
 
 ## Le contexte
 

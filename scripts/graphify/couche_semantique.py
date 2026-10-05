@@ -15,7 +15,11 @@ leurs parades, et un quatrieme controle que la mise a jour du 4 octobre 2026 a r
      ne reemet pas est efface, et les aretes venues d autres pages se rompent. Il le DECLARE ;
   5. une hyperarete SANS IDENTIFIANT tombe a la fusion suivante, meme a vide. Elle en recoit un ;
   6. une HYPERARETE de la page se remplace avec le reste de sa couche : celle que le lot ne
-     reemet pas est effacee. La fiche la nomme, et le lot la DECLARE comme un identifiant.
+     reemet pas est effacee. La fiche la nomme, et le lot la DECLARE comme un identifiant ;
+  7. une ARETE d avant peut aboutir sur une page HORS de la passe : la fiche range cette
+     extremite sous `ailleurs`, et l audit l admet, comme le membre d une hyperarete ;
+  8. un LIBELLE ne se partage pas : le moteur fond deux enonces de meme libelle, et l identifiant
+     de l un disparait. L audit le refuse entre deux lots, et la fusion NOMME ce qu elle a fondu.
 
 La cinquieme a ete trouvee en rejouant cet outil sur des lots reels, le 4 octobre 2026 : 25 des 71
 hyperaretes de la premiere extraction n avaient pas d `id`, et la mise a jour du meme jour les a
@@ -26,6 +30,12 @@ page avec la seule documentation du depot (#5904). La fiche ne nommait pas l hyp
 page, l audit n en regardait aucune, et la fusion la retirait sous un verdict « 0 perdu » : 63
 pages sur 589 en portaient une. La fusion retire aussi, en le DISANT, le membre d une hyperarete
 qui ne designe plus aucun noeud : celle d une autre page en gardait un quand le lot le lachait.
+
+Les deux dernieres ont ete trouvees le 5 octobre 2026 par la premiere reextraction a plusieurs
+lecteurs depuis que cet outil est au depot : 37 pages, 4 lots (#5936). Les quatre rendus passaient
+l audit et la fusion rendait « perdus du fait des lots=0 ». Treize aretes d avant sur 1 023
+n avaient pas pu etre reemises, et un enonce d avant sur 918 avait ete fondu dans un autre : le
+verdict ne comptait que la structure, et l audit jugeait chaque lot seul.
 
 Mesure du 4 octobre 2026, sur la premiere fusion de 32 lots : 62 identifiants de structure perdus
 sans la parade 2, dont 10 par ressemblance approchee ; 101 replis et aucune perte avec elle.
@@ -63,7 +73,10 @@ de ce que les lots font perdre.
 
 LIRE SA SORTIE. Trois comptes de noeuds s y suivent, et un seul est celui du graphe ecrit :
 `FUSION | noeuds=` compte la fusion des lots, les lignes `resultat :` sont celles des ponts, et
-la derniere ligne `[graphify] N noeuds` est le graphe ecrit. `HYPERARETES | dans le graphe=`
+la derniere ligne `[graphify] N noeuds` est le graphe ecrit. `ENONCES | attendus=` compte les
+enonces qui devaient s y trouver, et chaque ligne `fondu :` nomme celui que le moteur a fondu dans
+un autre de meme libelle, avec celui qui reste : la fusion le DIT et sort en 0, c est a l audit
+que le lecteur pouvait encore renommer. `HYPERARETES | dans le graphe=`
 donne leur nombre apres fusion, et `amputees` nomme celles dont un membre ne designait plus
 rien. Les ponts comptent ce qu ils AJOUTENT : un zero y dit que tout etait deja relie.
 
@@ -257,7 +270,11 @@ def replie_les_homonymes(
 
 
 def audite(
-    rendu: dict, fiche: dict, autres_connus: set[str], emis_ailleurs: frozenset[str] = frozenset()
+    rendu: dict,
+    fiche: dict,
+    autres_connus: set[str],
+    emis_ailleurs: frozenset[str] = frozenset(),
+    libelles_d_ailleurs: dict[str, str] | None = None,
 ) -> dict[str, list[str]]:
     """Les defauts d un lot rendu, confronte a la fiche que `decoupe` lui avait donnee.
 
@@ -267,6 +284,10 @@ def audite(
     `emis_ailleurs` porte ce que les AUTRES lots de la meme passe emettent. Une arete peut y
     aboutir : deux ADR qui s amendent tombent dans deux lots des que le decoupage les separe, et
     le premier rejeu sur des lots reels refusait a tort cinq aretes de cette forme.
+
+    `libelles_d_ailleurs` porte les libelles que ces autres lots donnent, chacun avec l enonce qui
+    le porte. Le moteur dedoublonne par libelle : deux enonces de meme libelle n en font qu un, et
+    l identifiant de l un disparait sans qu aucun `laches` le nomme (#5936).
     """
     structure = {n["id"] for page in fiche.values() for n in page["structure"]}
     semantiques = {n["id"] for page in fiche.values() for n in page.get("semantique", [])}
@@ -287,6 +308,22 @@ def audite(
         for m in h.get("ailleurs", [])
     }
     membres_admis = ensemble | structure | autres_connus | emis_ailleurs | ailleurs
+    # Une arete d avant peut aboutir sur une page HORS de la passe : la fiche la porte pour que le
+    # lecteur garde celles que la page porte toujours, et nomme cette extremite (#5936).
+    bouts_d_ailleurs = {
+        bout
+        for page in fiche.values()
+        for arete in page.get("aretes", [])
+        for bout in arete.get("ailleurs", [])
+    }
+    bouts_admis = ensemble | structure | autres_connus | emis_ailleurs | bouts_d_ailleurs
+    pris = dict(libelles_d_ailleurs or {})
+    en_double: list[str] = []
+    for noeud in rendu.get("nodes", []):
+        cle = cle_de_libelle(noeud.get("label"))
+        if cle in pris:
+            en_double.append(f"{noeud['id']} = {pris[cle]}")
+        pris.setdefault(cle, f"lot courant : {noeud['id']}")
     defauts = {
         "identifiant de structure reemis": sorted(ensemble & (structure | autres_connus)),
         "identifiant mal forme": sorted(
@@ -298,9 +335,10 @@ def audite(
                 arete[bout]
                 for arete in rendu.get("edges", [])
                 for bout in ("source", "target")
-                if arete[bout] not in ensemble | structure | autres_connus | emis_ailleurs
+                if arete[bout] not in bouts_admis
             }
         ),
+        "libelle deja porte par un autre enonce": sorted(en_double),
         "source_location non nul": sorted(
             {str(x.get("id", x.get("source"))) for x in items if x.get("source_location")}
         ),
@@ -604,13 +642,29 @@ def commande_decoupe(dossier: Path, graphe: Path, pages: list[str], racine: Path
     # page ou vers le code que le lecteur ne reemet pas part sans que rien le dise. Deux sessions
     # neuves sur deux l ont releve. Elles informent, l audit ne les exige pas : une arete n a pas
     # d identifiant, et c est la page qui dit si elle tient encore.
+    # Une extremite qui vit sur une page HORS de la passe n est ni dans les lots ni dans les index :
+    # l audit la refusait, et le lecteur ne pouvait pas garder l arete (#5936). La fiche la range
+    # sous `ailleurs`, comme le membre d une hyperarete. Sur une page de la passe, rien a nommer :
+    # son lecteur reemettra l enonce ou le declarera.
+    de_la_passe = set(pages)
+    aux_index = {
+        n["id"] for n in noeuds if n.get("_callable_class") or n.get("node_kind") == "page"
+    }
     for arete in brut.get("links", brut.get("edges", [])):
         if arete.get("_origin") == "semantic":
+            hors_de_la_passe = [
+                arete[bout]
+                for bout in ("source", "target")
+                if page_de[arete[bout]] not in de_la_passe and arete[bout] not in aux_index
+            ]
             par_page.setdefault(arete.get("source_file"), _fiche_vide())["aretes"].append(
                 {
-                    c: arete[c]
-                    for c in ("source", "target", "relation", *CONFIANCE)
-                    if arete.get(c) is not None
+                    **{
+                        c: arete[c]
+                        for c in ("source", "target", "relation", *CONFIANCE)
+                        if arete.get(c) is not None
+                    },
+                    **({"ailleurs": hors_de_la_passe} if hors_de_la_passe else {}),
                 }
             )
     textes = {p: (racine / p).read_text(encoding="utf-8", errors="ignore") for p in pages}
@@ -673,10 +727,25 @@ def commande_audite(dossier: Path) -> int:
         ailleurs = frozenset(
             n["id"] for autre, rendu in rendus.items() if autre != numero for n in rendu["nodes"]
         )
+        libelles = {
+            cle_de_libelle(n.get("label")): f"lot {autre:02d} : {n['id']}"
+            for autre, rendu in rendus.items()
+            if autre != numero
+            for n in rendu["nodes"]
+        }
         fiche = _lis(dossier / f"lot_{numero:02d}.json")
-        defauts = audite(rendus[numero], fiche, connus, ailleurs)
+        defauts = audite(rendus[numero], fiche, connus, ailleurs, libelles)
         for nom, liste in defauts.items():
             print(f"lot {numero:02d} : {nom} ({len(liste)}) : {liste[:5]}")
+        if not defauts:
+            # Un lot sain etait MUET : tant que d autres lots manquaient, son lecteur ne distinguait
+            # pas « mon lot passe » de « mon lot n a pas ete lu ». Quatre sur quatre, le 5 octobre.
+            rendu = rendus[numero]
+            print(
+                f"lot {numero:02d} : sain ({len(rendu.get('nodes', []))} noeuds,"
+                f" {len(rendu.get('edges', []))} aretes,"
+                f" {len(rendu.get('hyperedges', []))} hyperarete)"
+            )
         refus += bool(defauts)
     print(f"AUDIT | lots={len(plan)} | refuses={refus}")
     return 1 if refus else 0
@@ -725,9 +794,10 @@ def commande_fusionne(dossier: Path, graphe: Path) -> int:
     print(f"replis sur un noeud de structure : {len(replis)}")
 
     vide = {"nodes": [], "edges": [], "hyperedges": []}
-    a_vide = ids_de_structure - set(
+    restent_a_vide = set(
         build_merge([vide], graph_path=str(graphe), root=str(RACINE), directed=False).nodes
     )
+    a_vide = ids_de_structure - restent_a_vide
     lot = {"nodes": gardes, "edges": recablees, "hyperedges": hyper}
     fusion = build_merge([lot], graph_path=str(graphe), root=str(RACINE), directed=False)
     perdus = perdus_imputables(ids_de_structure, set(fusion.nodes), a_vide)
@@ -744,6 +814,32 @@ def commande_fusionne(dossier: Path, graphe: Path) -> int:
     for cible, texte in justifications.items():
         if cible in fusion.nodes:
             fusion.nodes[cible]["rationale"] = texte
+    # Les ENONCES aussi se comptent. Le moteur dedoublonne par libelle : un enonce qui porte celui
+    # d un autre disparait, et le verdict ci-dessus, qui ne compte que la structure, rendait
+    # « 0 perdu ». Un identifiant sur 918 le 5 octobre 2026. La fusion le NOMME et ne refuse pas :
+    # deux pages peuvent dire la meme chose, et c est a l audit que le lecteur peut encore renommer.
+    pages_de_la_passe = {page for lot in plan for page in lot}
+    d_avant = {n["id"]: n for n in avant if n.get("_origin") == "semantic"}
+    hors_de_la_passe = {
+        i for i, n in d_avant.items() if n.get("source_file") not in pages_de_la_passe
+    }
+    attendus = hors_de_la_passe | {n["id"] for n in gardes}
+    absents_a_vide = hors_de_la_passe - restent_a_vide
+    fondus = sorted(attendus - set(fusion.nodes) - absents_a_vide)
+    print(
+        f"ENONCES | attendus={len(attendus)} | absents a vide={len(absents_a_vide)}"
+        f" | fondus du fait des lots={len(fondus)}"
+    )
+    libelle_de = {
+        **{i: n.get("label") for i, n in d_avant.items()},
+        **{n["id"]: n.get("label") for n in gardes},
+    }
+    restes: dict[str, str] = {}
+    for identifiant, donnees in fusion.nodes(data=True):
+        restes.setdefault(cle_de_libelle(donnees.get("label")), identifiant)
+    for identifiant in fondus:
+        reste = restes.get(cle_de_libelle(libelle_de.get(identifiant)))
+        print(f"  fondu : {identifiant} -> {reste or 'aucun enonce de meme libelle'}")
     tenues, retires = sans_membres_pendants(
         list(fusion.graph.get("hyperedges", [])), set(fusion.nodes)
     )
@@ -850,6 +946,30 @@ def auto_test() -> int:
         return sorted(audite(rendu, fiche, connus))
 
     verifie("un lot sain ne porte aucun defaut", lambda: noms(sain), [])
+
+    # ⟨les aretes d avant vers une autre page, #5936⟩ la fiche les porte pour que le lecteur garde
+    # celles que la page porte toujours, et l audit refusait leur cible : 13 aretes sur 1 023 le
+    # 5 octobre 2026, que quatre lecteurs sur quatre ont du remplacer ou abandonner.
+    vers_ailleurs = {
+        "source": "dev_docs_page_ancien",
+        "target": "enonce_d_une_autre_page",
+        "relation": "references",
+        "ailleurs": ["enonce_d_une_autre_page"],
+    }
+    fiche_reliee = {page: {**fiche[page], "aretes": [vers_ailleurs]}}
+    reemise_ailleurs = avec(
+        edges=[*sain["edges"], arete("dev_docs_page_ancien", "enonce_d_une_autre_page")]
+    )
+    verifie(
+        "une arete d avant vers un enonce d une autre page, que la fiche nomme, est admise",
+        lambda: sorted(audite(reemise_ailleurs, fiche_reliee, connus)),
+        [],
+    )
+    verifie(
+        "une extremite que la fiche ne nomme pas reste refusee",
+        lambda: sorted(audite(reemise_ailleurs, fiche, connus)),
+        ["extremite inconnue"],
+    )
 
     # ⟨les hyperaretes de la page⟩ une page reextraite perdait la sienne sans que rien le dise
     # (#5904) : la fiche ne la nommait pas, l audit ne regardait aucune hyperarete, et la fusion la
@@ -1171,6 +1291,65 @@ def auto_test() -> int:
     verifie("`audite` sort en 1 sur un lot en defaut", lambda: par_main(lache), 1)
     verifie("`audite` sort en 1 quand un lot attendu est ABSENT", lambda: par_main(None), 1)
 
+    # ⟨deux lots, #5936⟩ l audit jugeait chaque lot seul. Deux lecteurs ont donne le meme libelle
+    # a un enonce sur deux pages, le moteur a fondu les deux noeuds, et un identifiant d avant a
+    # disparu sans qu aucun `laches` le nomme.
+    seconde = "dev-docs/seconde.md"
+
+    def lot_de_la_seconde(libelle: str) -> dict:
+        return {
+            "nodes": [{**noeud("dev_docs_seconde_enonce", libelle), "source_file": seconde}],
+            "edges": [],
+        }
+
+    def par_deux_lots(premier: dict, second: dict) -> tuple[int, list[str]]:
+        """Le code de l audit sur deux lots, et ses lignes de lot."""
+        fiche_seconde = {seconde: {"lignes": 3, "structure": [], "semantique": []}}
+        sortie = io.StringIO()
+        with tempfile.TemporaryDirectory() as temporaire:
+            dossier = Path(temporaire)
+            _ecris(dossier / "plan.json", {"lots": [[page], [seconde]]})
+            _ecris(dossier / "lot_01.json", fiche)
+            _ecris(dossier / "lot_02.json", fiche_seconde)
+            _ecris(dossier / "index-du-code.json", [{"id": "une_classe"}])
+            _ecris(dossier / "index-des-pages.json", [])
+            _ecris(dossier / "rendu_01.json", premier)
+            _ecris(dossier / "rendu_02.json", second)
+            with contextlib.redirect_stdout(sortie):
+                code = main(["couche_semantique.py", "audite", "--dossier", str(dossier)])
+        return code, [ligne for ligne in sortie.getvalue().splitlines() if ligne.startswith("lot ")]
+
+    refus_du_premier = (
+        "lot 01 : libelle deja porte par un autre enonce (1) : "
+        "['dev_docs_page_neuf = lot 02 : dev_docs_seconde_enonce']"
+    )
+    refus_du_second = (
+        "lot 02 : libelle deja porte par un autre enonce (1) : "
+        "['dev_docs_seconde_enonce = lot 01 : dev_docs_page_neuf']"
+    )
+    verifie(
+        "deux lots qui donnent le meme libelle a deux enonces sont refuses tous les deux",
+        lambda: par_deux_lots(sain, lot_de_la_seconde("Un concept neuf")),
+        (1, [refus_du_premier, refus_du_second]),
+    )
+    verifie(
+        "deux lots aux libelles distincts sont sains, et chacun a sa ligne",
+        lambda: par_deux_lots(sain, lot_de_la_seconde("Un tout autre concept")),
+        (
+            0,
+            [
+                "lot 01 : sain (2 noeuds, 2 aretes, 0 hyperarete)",
+                "lot 02 : sain (1 noeuds, 0 aretes, 0 hyperarete)",
+            ],
+        ),
+    )
+    jumeaux = avec(nodes=[*sain["nodes"], noeud("dev_docs_page_bis", "Un concept neuf")])
+    verifie(
+        "deux enonces d un meme lot au meme libelle sont refuses aussi",
+        lambda: noms(jumeaux),
+        ["libelle deja porte par un autre enonce"],
+    )
+
     # ⟨la fusion elle-meme⟩ la commande importe le moteur, absent du runner : ses calculs avaient
     # leurs cas, son cablage et son REFUS n en avaient aucun. Un faux moteur les joue. Il rend un
     # graphe qui garde la structure, moins ce qu on lui dit de perdre : a vide, ou du fait du lot.
@@ -1179,8 +1358,9 @@ def auto_test() -> int:
             return list(self.items()) if data else list(self)
 
     class Fusion:
-        def __init__(self, identifiants, hyperaretes):
-            self.nodes = Noeuds({identifiant: {} for identifiant in identifiants})
+        def __init__(self, identifiants, hyperaretes, donnees=None):
+            donnees = donnees or {}
+            self.nodes = Noeuds({i: dict(donnees.get(i, {})) for i in identifiants})
             self.graph = {"hyperedges": [dict(h) for h in hyperaretes]}
 
         def edges(self, data=False):
@@ -1196,18 +1376,27 @@ def auto_test() -> int:
         moteur_present=True,
         graphe_de_l_arbre=True,
         hyperaretes=(),
+        enonces_d_avant=(),
+        fondus=(),
+        enonces_perdus_a_vide=(),
     ):
         """Ce qu une fusion jouee a fait : son code, ses etapes, ses verdicts, et ce qui reste."""
         de_structure = {s["id"] for s in structure}
+        d_avant_semantiques = {e["id"]: e for e in enonces_d_avant}
         etapes: list = []
         fusions = [0]
 
         def faux_build_merge(lots, graph_path=None, root=None, directed=False):
             fusions[0] += 1
-            restent = de_structure - set(perdus_a_vide)
+            restent = (de_structure | set(d_avant_semantiques)) - set(perdus_a_vide)
+            restent -= set(enonces_perdus_a_vide)
+            donnees = dict(d_avant_semantiques)
             if lots[0]["nodes"]:
+                restent -= {i for i, e in d_avant_semantiques.items() if e["source_file"] == page}
                 restent = (restent - set(perdus_de_plus)) | {n["id"] for n in lots[0]["nodes"]}
-            return Fusion(restent, hyperaretes)
+                restent -= set(fondus)
+                donnees.update({n["id"]: n for n in lots[0]["nodes"]})
+            return Fusion(restent, hyperaretes, donnees)
 
         noms_des_modules = ("graphify", "graphify.build", "rebuild")
         d_avant = {nom: sys.modules.get(nom) for nom in noms_des_modules}
@@ -1219,7 +1408,13 @@ def auto_test() -> int:
             _ecris(dossier / "index-des-pages.json", [])
             _ecris(dossier / "rendu_01.json", rendu)
             graphe = dossier / "graph.json"
-            _ecris(graphe, {"nodes": [{**s, "_origin": "ast"} for s in structure], "links": []})
+            _ecris(
+                graphe,
+                {
+                    "nodes": [{**s, "_origin": "ast"} for s in structure] + list(enonces_d_avant),
+                    "links": [],
+                },
+            )
             extrait = dossier / "extrait.json"
             faux_rebuild = types.ModuleType("rebuild")
             faux_rebuild.GRAPHE = graphe if graphe_de_l_arbre else dossier / "ailleurs.json"
@@ -1263,18 +1458,26 @@ def auto_test() -> int:
             notees = sorted(notees_de(graphe)) if registre_de(graphe).is_file() else []
             # Les verdicts sans le compte de noeuds, qui depend du lot et n est pas le propos.
             verdicts = [
-                ligne.split(" | ", 2)[2] if ligne.startswith("FUSION") else ligne
+                ligne.split(" | ", 2)[2] if ligne.startswith(("FUSION", "ENONCES")) else ligne
                 for ligne in sortie.getvalue().splitlines()
-                if ligne.startswith(("FUSION |", "HYPERARETES |"))
+                if ligne.startswith(("FUSION |", "ENONCES |", "  fondu :", "HYPERARETES |"))
             ]
             return code, etapes, fusions[0], extrait.exists(), notees, verdicts
 
     sans_perte = "perdus a vide=0 | perdus du fait des lots=0"
+    aucun_fondu = "absents a vide=0 | fondus du fait des lots=0"
     aucune_hyper = "HYPERARETES | dans le graphe=0 | membres pendants retires=0 | amputees=[]"
     verifie(
         "`fusionne` ecrit l extrait AVANT les ponts, reconstruit, le retire, et note les pages",
         lambda: par_fusionne(sain),
-        (0, [("ponts", []), "reconstruction"], 2, False, [page], [sans_perte, aucune_hyper]),
+        (
+            0,
+            [("ponts", []), "reconstruction"],
+            2,
+            False,
+            [page],
+            [sans_perte, aucun_fondu, aucune_hyper],
+        ),
     )
     verifie(
         "`fusionne` REFUSE un lot qui fait tomber un identifiant de structure, sans rien ecrire",
@@ -1290,7 +1493,7 @@ def auto_test() -> int:
             2,
             False,
             [page],
-            ["perdus a vide=1 | perdus du fait des lots=0", aucune_hyper],
+            ["perdus a vide=1 | perdus du fait des lots=0", aucun_fondu, aucune_hyper],
         ),
     )
     verifie(
@@ -1324,7 +1527,90 @@ def auto_test() -> int:
             [page],
             [
                 sans_perte,
+                aucun_fondu,
                 "HYPERARETES | dans le graphe=1 | membres pendants retires=1 | amputees=['h_voisine']",
+            ],
+        ),
+    )
+    # ⟨un enonce fondu dans un autre, #5936⟩ le moteur dedoublonne par libelle : un enonce du lot
+    # qui porte le libelle d un enonce d une AUTRE page disparait, sous « perdus du fait des
+    # lots=0 ». Le verdict ne comptait que la structure. La fusion le nomme, et ne refuse pas.
+    d_une_autre_page = {
+        "id": "autre_page_enonce",
+        "label": "Un concept neuf",
+        "source_file": "autre.md",
+        "_origin": "semantic",
+    }
+    sans_rapport = {**d_une_autre_page, "id": "autre_page_sans_rapport", "label": "Sans rapport"}
+    verifie(
+        "`fusionne` nomme l enonce fondu dans un autre et celui qui reste, sans refuser",
+        lambda: par_fusionne(
+            sain, enonces_d_avant=[d_une_autre_page], fondus=["dev_docs_page_neuf"]
+        ),
+        (
+            0,
+            [("ponts", []), "reconstruction"],
+            2,
+            False,
+            [page],
+            [
+                sans_perte,
+                "absents a vide=0 | fondus du fait des lots=1",
+                "  fondu : dev_docs_page_neuf -> autre_page_enonce",
+                aucune_hyper,
+            ],
+        ),
+    )
+    de_la_page = {**d_une_autre_page, "id": "dev_docs_page_ancien", "source_file": page}
+    declare = {
+        "nodes": [noeud("dev_docs_page_neuf", "Un concept neuf")],
+        "edges": sain["edges"],
+        "laches": ["dev_docs_page_ancien"],
+    }
+    verifie(
+        "un enonce de la page que le lot lache en le declarant n est pas compte comme fondu",
+        lambda: par_fusionne(declare, enonces_d_avant=[de_la_page]),
+        (
+            0,
+            [("ponts", []), "reconstruction"],
+            2,
+            False,
+            [page],
+            [sans_perte, aucun_fondu, aucune_hyper],
+        ),
+    )
+    verifie(
+        "`fusionne` n impute pas au lot un enonce d avant que la fusion a vide perd deja",
+        lambda: par_fusionne(
+            sain,
+            enonces_d_avant=[d_une_autre_page, sans_rapport],
+            enonces_perdus_a_vide=["autre_page_sans_rapport"],
+        ),
+        (
+            0,
+            [("ponts", []), "reconstruction"],
+            2,
+            False,
+            [page],
+            [sans_perte, "absents a vide=1 | fondus du fait des lots=0", aucune_hyper],
+        ),
+    )
+    verifie(
+        "un enonce d avant d une autre page qui disparait du fait du lot est nomme lui aussi",
+        lambda: par_fusionne(
+            sain, enonces_d_avant=[sans_rapport], fondus=["autre_page_sans_rapport"]
+        ),
+        (
+            0,
+            [("ponts", []), "reconstruction"],
+            2,
+            False,
+            [page],
+            [
+                sans_perte,
+                "absents a vide=0 | fondus du fait des lots=1",
+                "  fondu : autre_page_sans_rapport -> aucun enonce de meme libelle",
+                aucune_hyper,
             ],
         ),
     )
@@ -1700,6 +1986,11 @@ def auto_test() -> int:
                 "nodes": [
                     {**avec_raison, "file_type": "rationale"},
                     du_graphe("concept_voisin", "semantic", racine_de_dossier),
+                    {
+                        **du_graphe("une_classe", "ast", "src/UneClasse.java"),
+                        "_callable_class": True,
+                    },
+                    du_graphe("titre", "ast", profonde),
                 ],
                 "links": [
                     {
@@ -1709,6 +2000,10 @@ def auto_test() -> int:
                     },
                     lien("concept_voisin", "concept_profond", "semantic", racine_de_dossier),
                     lien("titre", "concept_profond", "ast", profonde),
+                    {
+                        **lien("concept_profond", "concept_voisin", "semantic", profonde),
+                        "relation": "conceptually_related_to",
+                    },
                 ],
                 "hyperedges": [
                     {
@@ -1767,9 +2062,33 @@ def auto_test() -> int:
                         "target": "une_classe",
                         "relation": "references",
                         "confidence": "EXTRACTED",
-                    }
+                    },
+                    {
+                        "source": "concept_profond",
+                        "target": "concept_voisin",
+                        "relation": "conceptually_related_to",
+                        "ailleurs": ["concept_voisin"],
+                    },
                 ],
             ),
+        )
+        # L autre page est dans la passe : son lecteur reemettra l enonce ou le declarera, et
+        # c est par ce que les autres lots emettent que l audit admet l arete. Rien a nommer ici.
+        deux_pages = Path(temporaire) / "fiches-deux-pages"
+        verifie(
+            "une extremite sur une page de la MEME passe n est pas rangee sous `ailleurs`",
+            lambda: (
+                joue("decoupe", "--dossier", str(deux_pages), profonde, racine_de_dossier)[0],
+                [
+                    arete_lue.get("ailleurs")
+                    for numero in (1, 2)
+                    if (deux_pages / f"lot_{numero:02d}.json").is_file()
+                    for arete_lue in _lis(deux_pages / f"lot_{numero:02d}.json")
+                    .get(profonde, {})
+                    .get("aretes", [])
+                ],
+            ),
+            (0, [None, None]),
         )
 
         def empreintes_de_la_fiche() -> tuple[bool, bool, bool]:
