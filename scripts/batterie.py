@@ -191,7 +191,12 @@ def gardes(racine: pathlib.Path | None = None) -> list[tuple[str, list[str]]]:
     # Le critere ne change pas d un dossier a l autre - c est le `CONTRAT` declare, jamais le chemin
     # du fichier. La CI lance aussi `revoque_jeton.py` et `installer_paquets.py` dans ce dossier : une
     # regle fondee sur le dossier ferait revoquer un jeton depuis un poste (#5525).
-    for dossier in ("scripts/adr", "scripts/methode", ".github/scripts"):
+    # ⟨`.github/assets` depuis #5809⟩ La regle reste celle de #5525, et le tableau des gardes
+    # l ecrit : le `CONTRAT` declare, JAMAIS le dossier. Cette liste borne OU la porte regarde, et le
+    # contrat decide LEQUEL elle prend - sans quoi elle lancerait `revoque_jeton.py` depuis un poste.
+    # Les six autres fichiers de `.github/assets` n en declarent aucun et restent donc dehors : ce
+    # sont des outils de rendu, pas des gardes.
+    for dossier in ("scripts/adr", "scripts/methode", ".github/scripts", ".github/assets"):
         for f in sorted((base / dossier).glob("*.py")):
             if f.name.startswith("_"):
                 continue
@@ -1180,6 +1185,59 @@ def _auto_test() -> int:
 
         # ⟨PMD se paie sur le Java, et seulement la⟩ Les deux sens, car un dispositif qui rendrait
         # toujours vrai passerait le premier cas sans rien trier (#5405).
+        # ⟨les gardes de captures, et le DOSSIER qui les portait hors de vue⟩ Les trois declarent un
+        # `CONTRAT` depuis #5809, mais cela n a servi qu une fois `.github/assets` ajoute a la liste
+        # ci-dessus : un contrat dans un dossier non balaye n est jamais lu. La porte avait rendu
+        # « 0 refus » sur un diff qui ajoutait une capture sans la declarer.
+        vus = [g for g, _ in gardes(None)]
+        for attendu, libelle in (
+            (".github/assets/check_captures.py", "la completude des captures est vue"),
+            (".github/assets/check_doc_images.py", "les images de la doc aussi"),
+            (".github/assets/check_capture_mains.py", "et le garde des mains de capture"),
+        ):
+            if attendu in vus:
+                print(f"  ✔ {libelle}")
+            else:
+                print(f"  ✘ {libelle} : absent de la population")
+                echecs += 1
+        # Le CONTRASTE du dossier : les six autres fichiers de `.github/assets` sont des OUTILS de
+        # rendu. Sans ce cas, elargir la liste pourrait les prendre, et la porte lancerait un outil
+        # qui produit au lieu de juger - c est la raison pour laquelle la regle est le `CONTRAT`
+        # declare et jamais le dossier.
+        pris = [
+            g
+            for g in vus
+            if any(n in g for n in ("capture_screenshots", "compare_apercus", "mesure_pixels"))
+        ]
+        if pris:
+            print(f"  ✘ mais pas les outils de rendu du meme dossier : {pris}")
+            echecs += 1
+        else:
+            print("  ✔ mais pas les outils de rendu du meme dossier")
+        # ⟨les chemins SEPARENT les trois, et c est la seconde moitie du critere de #5809⟩ Un diff de
+        # prose ne doit en engager aucun : sans ce cas, des chemins trop larges les lanceraient a
+        # chaque lot, et le banc de captures n a pas a etre paye par un changement de javadoc.
+        for diff, attendus, libelle in (
+            (
+                [".github/assets/apercu-x.png"],
+                2,
+                "un PNG engage la completude ET les images de doc",
+            ),
+            (["docs/ecrans/lot.md"], 1, "une page de doc n engage que les images de doc"),
+            (
+                ["src/main/java/fr/univ_amu/iut/lot/outils/CaptureLot.java"],
+                1,
+                "un outil de capture n engage que le garde des mains",
+            ),
+            (["dev-docs/x.md"], 0, "un diff de prose n engage aucun garde de captures"),
+        ):
+            combien = len([g for g in engage(diff)[0] if "assets" in g])
+            if combien == attendus:
+                print(f"  ✔ {libelle}")
+            else:
+                print(f"  ✘ {libelle} : {combien} engage(s), {attendus} attendu(s)")
+                echecs += 1
+
         for diff, attendu, libelle in (
             (["src/main/java/X.java"], True, "un diff Java demande le rapport PMD"),
             (["src/test/java/XTest.java"], True, "un diff de test Java aussi"),

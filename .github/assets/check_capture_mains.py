@@ -210,6 +210,25 @@ def _auto_test() -> int:
     return echecs
 
 
+# ⟨pourquoi ce garde declare un contrat⟩ Meme raison que ses deux voisins (#5809). `invariant` parce
+# qu il tient une relation : tout outil de capture est enregistre dans le tableau qui le fait tourner.
+# Sans lui, un PNG se figerait, perime, pendant que `check_captures.py` passerait au vert.
+CONTRAT = {
+    "geste": "tout outil Capture*.java portant un main est enregistre dans capture_screenshots.py",
+    "population": "les classes */outils/Capture*.java de src/main et le tableau MAINS",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": ".github/assets/check_capture_mains.py --auto-test",
+    "decision": "issue #3293, porte du bash en #5229",
+    # Le script qui porte le tableau est dans sa population, donc dans ses chemins : l oubli peut venir
+    # de l outil neuf comme du tableau qu on a laisse en arriere.
+    "chemins": """
+    .github/assets/capture_screenshots.py
+    src/main/java/**/outils/Capture*.java
+    """,
+}
+
+
 if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
