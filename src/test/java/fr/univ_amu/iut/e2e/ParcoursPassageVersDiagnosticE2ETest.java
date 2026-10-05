@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -116,7 +117,7 @@ class ParcoursPassageVersDiagnosticE2ETest {
         //    début de nuit, puis Appliquer (enregistre le relevé dans passage.weather_data et ferme).
         robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));
         robot.interact(robot.lookup("#boutonRattachement").queryAs(Button.class)::fire);
-        robot.clickOn("#champTemperature").write("8,5");
+        GesteVisible.remplacerLeTexte(robot, "#champTemperature", "8,5");
         robot.clickOn("Appliquer");
 
         // 2) Ouvrir M-Diagnostic : la température persistée est relue de la base et affichée.

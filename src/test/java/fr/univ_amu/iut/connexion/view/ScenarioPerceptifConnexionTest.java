@@ -148,7 +148,7 @@ class ScenarioPerceptifConnexionTest {
         ouvrirLaModaleParLeMenu(robot);
         Respiration.avantLeGeste(robot);
 
-        robot.clickOn("#champToken").write("jeton-de-scenario");
+        GesteVisible.remplacerLeTexte(robot, "#champToken", "jeton-de-scenario");
         robot.clickOn("Se connecter");
 
         // C'est ici que se joue le cas : la zone de progression paraît d'abord, seule, et le bandeau

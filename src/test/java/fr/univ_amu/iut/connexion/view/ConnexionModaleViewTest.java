@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
 import java.nio.file.Path;
 import java.util.Set;
@@ -207,7 +208,7 @@ class ConnexionModaleViewTest {
     void connecter_token_valide(FxRobot robot) {
         when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("u1", "chiro", "observateur")));
 
-        robot.clickOn("#champToken").write("jeton-valide");
+        GesteVisible.remplacerLeTexte(robot, "#champToken", "jeton-valide");
         robot.clickOn("Se connecter");
 
         Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
@@ -221,7 +222,7 @@ class ConnexionModaleViewTest {
     void connecter_token_invalide(FxRobot robot) {
         when(client.moi()).thenReturn(ReponseApi.refuse(401, "token invalide"));
 
-        robot.clickOn("#champToken").write("jeton-perime");
+        GesteVisible.remplacerLeTexte(robot, "#champToken", "jeton-perime");
         robot.clickOn("Se connecter");
 
         Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
@@ -238,7 +239,7 @@ class ConnexionModaleViewTest {
         // parfaitement valide parce que le Wi-Fi était coupé.
         when(client.moi()).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
 
-        robot.clickOn("#champToken").write("jeton-valide-mais-hors-ligne");
+        GesteVisible.remplacerLeTexte(robot, "#champToken", "jeton-valide-mais-hors-ligne");
         robot.clickOn("Se connecter");
 
         Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
@@ -255,7 +256,7 @@ class ConnexionModaleViewTest {
     void connecter_erreur_reseau(FxRobot robot) {
         when(client.moi()).thenThrow(new RuntimeException("Vigie-Chiro injoignable"));
 
-        robot.clickOn("#champToken").write("jeton-quelconque");
+        GesteVisible.remplacerLeTexte(robot, "#champToken", "jeton-quelconque");
         robot.clickOn("Se connecter");
 
         Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);

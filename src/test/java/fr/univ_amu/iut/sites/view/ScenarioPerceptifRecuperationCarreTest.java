@@ -192,7 +192,7 @@ class ScenarioPerceptifRecuperationCarreTest {
         // Et le numéro se TAPE, au lieu d'apparaître d'un coup par `setText`. Ce que le cas fait
         // juger, c'est un enchaînement vu de l'extérieur : un champ qui se remplit tout seul n'en
         // fait pas partie.
-        robot.clickOn("#champCarre").write(CARRE);
+        GesteVisible.remplacerLeTexte(robot, "#champCarre", CARRE);
         Respiration.entreDeuxGestes(robot);
         GesteVisible.cliquer(robot, "#btnVerifierCarre");
         // L'exécuteur est asynchrone : le verdict n'est PAS là au retour du clic (ADR 3668).

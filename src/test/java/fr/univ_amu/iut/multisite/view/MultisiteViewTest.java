@@ -38,6 +38,7 @@ import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Path;
@@ -400,7 +401,7 @@ class MultisiteViewTest {
     @DisplayName("Réinitialiser vide la recherche et réaffiche tous les passages")
     void tout_effacer_vide_la_recherche(FxRobot robot) {
         TextField recherche = robot.lookup("#champRecherche").queryAs(TextField.class);
-        robot.clickOn("#champRecherche").write("640380");
+        GesteVisible.remplacerLeTexte(robot, "#champRecherche", "640380");
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(recherche.getText()).isEqualTo("640380");
 

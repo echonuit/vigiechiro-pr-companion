@@ -307,8 +307,8 @@ class ScenarioPassagePivotTest {
                 .isGreaterThan(anneeAvant);
 
         // ─── S2-29 · la météo se SAISIT ─────────────────────────────────────────────────────────
-        robot.clickOn("#champTemperature").write("12,5");
-        robot.clickOn("#champTemperatureFin").write("8,5");
+        GesteVisible.remplacerLeTexte(robot, "#champTemperature", "12,5");
+        GesteVisible.remplacerLeTexte(robot, "#champTemperatureFin", "8,5");
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(texte(robot, "#champTemperature"))

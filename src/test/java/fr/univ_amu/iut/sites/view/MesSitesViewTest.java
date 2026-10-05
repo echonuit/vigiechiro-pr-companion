@@ -210,7 +210,7 @@ class MesSitesViewTest {
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.avantLeGeste(robot);
 
-        robot.clickOn("#champToken").write("jeton-de-recette");
+        GesteVisible.remplacerLeTexte(robot, "#champToken", "jeton-de-recette");
         robot.clickOn("#boutonConnecter");
         Attente.queSurLeFil(
                 () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible(),

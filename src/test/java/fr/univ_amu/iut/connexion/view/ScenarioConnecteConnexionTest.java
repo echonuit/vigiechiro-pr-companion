@@ -160,7 +160,7 @@ class ScenarioConnecteConnexionTest {
                         + " rend la suite lisible")
                 .isEmpty();
 
-        robot.clickOn("#champToken").write(jeton);
+        GesteVisible.remplacerLeTexte(robot, "#champToken", jeton);
         WaitForAsyncUtils.waitForFxEvents();
         // Le jeton doit rester à l'écran assez longtemps pour qu'on voie D'OÙ vient la connexion.
         Respiration.leTempsDeLire(robot);
@@ -293,7 +293,7 @@ class ScenarioConnecteConnexionTest {
         GesteVisible.choisir(robot, "#menuOutils", LIBELLE_ENTREE_MENU);
         WaitForAsyncUtils.waitForFxEvents();
 
-        robot.clickOn("#champToken").write(jeton);
+        GesteVisible.remplacerLeTexte(robot, "#champToken", jeton);
         WaitForAsyncUtils.waitForFxEvents();
         GesteVisible.cliquer(robot, "#boutonConnecter");
         WaitForAsyncUtils.waitForFxEvents();
