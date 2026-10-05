@@ -32,6 +32,7 @@ import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
@@ -548,7 +549,7 @@ class MultisiteVueIntegrationTest {
     @Test
     @DisplayName("La recherche filtre le tableau (n° de carré, point, date)")
     void recherche_filtre_le_tableau(FxRobot robot) {
-        robot.clickOn("#champRecherche").write("640381");
+        GesteVisible.remplacerLeTexte(robot, "#champRecherche", "640381");
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(tableau(robot).getItems())

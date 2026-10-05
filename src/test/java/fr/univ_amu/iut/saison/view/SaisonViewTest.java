@@ -28,6 +28,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.passage.model.Campagne;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.saison.model.CasePassage;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
@@ -334,7 +335,7 @@ class SaisonViewTest {
         // champ n'était relié à rien.
         TableView<?> table = robot.lookup("#tableSaison").queryAs(TableView.class);
 
-        robot.clickOn("#champRechercheLieu").write("640002");
+        GesteVisible.remplacerLeTexte(robot, "#champRechercheLieu", "640002");
 
         assertThat(table.getItems()).hasSize(1);
 

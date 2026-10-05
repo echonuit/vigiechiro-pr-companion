@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
+import fr.univ_amu.iut.recette.GesteVisible;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -110,7 +111,7 @@ class ConnexionProgressionIntegreeViewTest {
     void la_progression_reste_dans_la_modale(FxRobot robot) {
         int fenetresAvant = Window.getWindows().size();
 
-        robot.clickOn("#champToken").write("TOK-1");
+        GesteVisible.remplacerLeTexte(robot, "#champToken", "TOK-1");
         robot.clickOn("#boutonConnecter");
 
         assertThat(vuPendantLOperation)
@@ -122,7 +123,7 @@ class ConnexionProgressionIntegreeViewTest {
     @Test
     @DisplayName("#2642 : « Fermer » redevient cliquable une fois l'opération finie")
     void fermer_redevient_cliquable(FxRobot robot) {
-        robot.clickOn("#champToken").write("TOK-1");
+        GesteVisible.remplacerLeTexte(robot, "#champToken", "TOK-1");
         robot.clickOn("#boutonConnecter");
 
         // Pendant l'opération il est grisé (cf. l'instantané ci-dessus) ; le laisser grisé après serait
@@ -146,7 +147,7 @@ class ConnexionProgressionIntegreeViewTest {
     @Test
     @DisplayName("#2642 : l'opération finie, la zone se replie et rend la main")
     void la_zone_se_replie_apres_coup(FxRobot robot) {
-        robot.clickOn("#champToken").write("TOK-1");
+        GesteVisible.remplacerLeTexte(robot, "#champToken", "TOK-1");
         robot.clickOn("#boutonConnecter");
 
         StackPane zone = robot.lookup("#zoneProgression").queryAs(StackPane.class);

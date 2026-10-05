@@ -286,7 +286,7 @@ class ScenarioPerceptifIssuesConnexionTest {
         if (!jeton.isEmpty()) {
             // Le jeton se TAPE. Un champ qui se remplit d'un coup par `setText` ne montre pas le
             // geste, et c'est le geste que ce cas fait juger autant que le message.
-            robot.clickOn("#champToken").write(jeton);
+            GesteVisible.remplacerLeTexte(robot, "#champToken", jeton);
             Respiration.entreDeuxGestes(robot);
         }
         robot.clickOn("#boutonConnecter");

@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.recette.GesteVisible;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -167,7 +168,7 @@ class AuditVueIntegrationTest {
         // passerait même si le champ n'était relié à rien.
         TableView<?> table = robot.lookup("#tableConstats").queryAs(TableView.class);
 
-        robot.clickOn("#champRecherche").write("orphelin");
+        GesteVisible.remplacerLeTexte(robot, "#champRecherche", "orphelin");
 
         assertThat(table.getItems())
                 .as("« Fichier orphelin. » est dans le détail du second constat, pas du premier")
