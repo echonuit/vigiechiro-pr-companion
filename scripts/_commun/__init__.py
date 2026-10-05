@@ -106,6 +106,17 @@ PLANCHER = re.compile(r"^floor:\s*(\d+)\s*$", re.M)
 # que tout dispositif rend : le NUMERO de l ADR, et son VERDICT.
 LIGNE_VERDICT = re.compile(r"^(?:ADR|PLANCHER) (\d+) \|.*?\bverdict=(\S+)\s*$", re.M)
 
+# ⟨les verdicts qui REFUSENT, et pourquoi « pas ok » ne suffit pas⟩ Les deux emetteurs ci-dessous
+# rendent **1** sur quatre verdicts et **0** sur tous les autres. `a-resserrer` est le piege : il n est
+# pas `ok`, et il ne refuse pas non plus - c est une BONNE nouvelle, le garde etant passe sous sa
+# marge. La porte le comptait comme une cause de refus depuis #5828, si bien qu elle nommait deux ADR
+# quand une seule refusait, et accusait une decision innocente (#5834).
+#
+# L ensemble vit ICI, a cote des deux fonctions qui le decident, et non chez ses lecteurs : recopie
+# ailleurs, il se perimerait en silence le jour ou un verdict s ajoute, et c est exactement la panne
+# qu il vient de causer.
+VERDICTS_QUI_REFUSENT = frozenset({"population-vide", "perte", "a-relever", "regression"})
+
 
 def plancher(numero: str) -> int:
     """Le plancher déclaré par l'ADR `numero`, lu dans son en-tête OKF."""
@@ -286,6 +297,56 @@ def rapporte(
             f"à {len(suspects)} dans l'ADR, sinon la marge regagnée se reperdra en silence."
         )
     return 0
+
+
+# Le prefixe que les deux emetteurs donnent a chaque suspect, et dont `lignes_du_refus` se sert pour
+# les rattacher a leur ADR. Il vit a cote des `print` qui le posent, pour qu un changement de l un
+# oblige a regarder l autre.
+RETRAIT_DU_SUSPECT = "  "
+
+
+def lignes_du_refus(sortie: str, suspects_montres: int = 2) -> str | None:
+    """Les lignes de verdict qui REFUSENT, chacune suivie des suspects qui lui appartiennent.
+
+    Rend `None` quand la sortie ne porte aucun verdict qui refuse : son appelant garde alors son
+    repli, et aucun garde non converti ne change de comportement.
+
+    ## Pourquoi cette lecture vit ICI et non dans la porte
+
+    Les deux emetteurs impriment le titre, puis les suspects, puis la ligne de verdict. L association
+    entre un suspect et son ADR est donc **positionnelle**, et la deviner depuis la porte serait une
+    inference sur la forme d un texte, que l ADR 5398 refuse sur cette porte meme.
+
+    Elle est ici parce que c est ici que les positions sont **decidees** : le jour ou `rapporte`
+    imprimera une ligne de plus entre le titre et le verdict, le meme fichier portera l emetteur et
+    son lecteur, et la relecture verra les deux. Une association tenue chez le lecteur casserait ce
+    jour-la sans que rien ne rougisse (#5834).
+
+    ## Ce que la porte y gagnait et perdait avant
+
+    #5817 avait fait montrer a la porte la ligne de verdict qui refuse, a la place des deux premieres
+    lignes non vides. Sur un garde qui juge plusieurs ADR, c etait un gain entier : les deux premieres
+    lignes tombaient sur le titre de la premiere ADR et son verdict `ok`. Sur un garde qui n en juge
+    qu une, c etait une perte : les deux premieres lignes nommaient le FICHIER, et la ligne de verdict
+    ne donne qu un compte. Mesure du 2026-10-04 : **8** gardes appellent un emetteur plus d une fois,
+    **34** une seule. Le remede rend les deux a la fois.
+    """
+    montre: list[str] = []
+    suspects: list[str] = []
+    for ligne in sortie.splitlines():
+        trouve = LIGNE_VERDICT.match(ligne.strip())
+        if trouve is None:
+            if ligne.startswith(RETRAIT_DU_SUSPECT) and ligne.strip():
+                suspects.append(ligne.strip())
+            continue
+        if trouve.group(2) in VERDICTS_QUI_REFUSENT:
+            montre.append(ligne.strip())
+            montre.extend(suspects[:suspects_montres])
+        # ⟨vider dans TOUS les cas⟩ Les suspects accumules appartiennent a l ADR dont la ligne vient
+        # de passer, qu elle refuse ou non. Ne pas vider sur un verdict `ok` ferait porter ses
+        # suspects par l ADR suivante, ce qui est le defaut de #5817 sous une autre forme.
+        suspects = []
+    return "\n".join(montre) or None
 
 
 # Les six champs d'un contrat de garde, dans leur ORDRE (issue #5009). L'ordre n'est pas cosmétique :

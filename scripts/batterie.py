@@ -945,36 +945,35 @@ def verdict_du_lancement(nom: str, code: int, stdout: str, stderr: str) -> tuple
     # cause et son geste, et la porte les lit OU QU ILS SOIENT. Le repli a deux lignes reste pour les
     # gardes non convertis : rendre `None` plutot que de deviner est ce qui permet de les convertir
     # un a un sans fausser la porte entre-temps (#5485).
-    from _commun import LIGNE_VERDICT, lit_le_refus
+    from _commun import lignes_du_refus, lit_le_refus
 
     declare = lit_le_refus(stdout + "\n" + stderr)
-    # ⟨la ligne de VERDICT avant les deux premieres lignes, et pourquoi ce n est pas une inference⟩
-    # Un garde qui juge PLUSIEURS ADR rend une ligne de verdict par ADR, et le refus n appartient
-    # qu a l une d elles. Les deux premieres lignes non vides tombent alors sur le TITRE de la
-    # premiere ADR et sur son verdict `ok` : un refus du plancher 4587 s affichait sous l ADR 4395,
-    # et chercher « 4587 » dans la sortie de la porte ne rendait rien (#5817). Il fallait relancer
-    # le garde seul pour savoir laquelle des deux parlait.
+    # ⟨le refus, ses ADR et ses suspects, LUS dans `_commun` et non devines ici⟩ Un garde qui juge
+    # plusieurs ADR rend une ligne de verdict par ADR, et le refus n appartient qu a l une d elles.
+    # Les deux premieres lignes non vides tombaient sur le TITRE de la premiere ADR et son verdict
+    # `ok` : un refus du plancher 4587 s affichait sous l ADR 4395 (#5817).
     #
-    # Lire cette ligne n est pas deviner la forme d une prose : `rapporte` et `rapporte_plancher`
-    # declarent leur sortie « normalisee, pour que le rapport hebdomadaire puisse agreger sans
-    # deviner », et cinq lecteurs du depot la lisent deja. Le motif est donc IMPORTE de `_commun`
-    # plutot que reecrit ici, ce qui aurait ete sa troisieme ecriture.
+    # Deux defauts de cette premiere correction sont reparees ici, et tous deux mesures (#5834) :
     #
-    # Le repli a deux lignes reste pour tout ce qui ne rend pas de ligne de verdict - un garde non
-    # converti, une trace d exception, un `Usage abusif de`. Et seules les lignes dont le verdict
-    # n est PAS `ok` sont montrees : les rendre toutes noierait le refus de `verifie_scripts.py`,
-    # qui en rend douze.
-    refusants = [
-        l for l in lignes if (trouve := LIGNE_VERDICT.match(l)) and trouve.group(2) != "ok"
-    ]
+    #   - sur un garde qui ne juge qu UNE ADR, montrer la ligne de verdict RETIRAIT le nom du
+    #     fichier, que les deux premieres lignes donnaient. 8 gardes gagnaient l attribution, 34
+    #     perdaient le suspect ;
+    #   - `a-resserrer` n est pas `ok` et ne refuse pas non plus : il sort en 0, et c est une bonne
+    #     nouvelle. Le filtre « pas ok » l accusait, donc la porte nommait deux ADR quand une seule
+    #     refusait.
+    #
+    # Les deux savoirs qui manquaient, l ensemble des verdicts qui refusent et le rattachement d un
+    # suspect a son ADR, sont **decides** par `_commun` : ils vivent donc la-bas. Recopies ici, ils
+    # se perimeraient en silence le jour ou un verdict s ajoute ou ou un emetteur imprime une ligne
+    # de plus, et c est precisement la panne que ce lot repare.
+    #
+    # Le repli a deux lignes reste pour tout ce qui ne rend aucun verdict qui refuse : un garde non
+    # converti, une trace d exception, un `Usage abusif de`.
+    refus = lignes_du_refus(stdout + "\n" + stderr)
     premiere = (
         f"{declare[0]}\n{declare[1]}"
         if declare
-        else (
-            "\n".join(refusants)
-            if refusants
-            else ("\n".join(lignes[:2]) if lignes else "(sans sortie)")
-        )
+        else (refus if refus else ("\n".join(lignes[:2]) if lignes else "(sans sortie)"))
     )
     if nom not in EXIGENT_DES_ARGUMENTS:
         # ⟨LE TROISIEME VERDICT, decide sur ce que cette fonction LIT DEJA⟩ Un garde qui emploie la
@@ -1659,11 +1658,12 @@ def _auto_test() -> int:
             "",
             ("rouge", "PLANCHER 4587 | lus=937 | mesure=1305 | plancher=1304 | verdict=a-relever"),
         ),
-        # Le CONTRASTE a UNE ADR : sans lui, une lecture qui prendrait « la derniere ligne de
-        # verdict » passerait le cas precedent. Ici la ligne utile est la SEULE, et elle vient
-        # apres un apercu de suspects qui occupait les deux premieres lignes.
+        # ⟨le cas que #5834 a retourne⟩ Il attendait d abord « son compte, PAS son premier
+        # suspect », et cette attente etait le defaut : sur un garde a une seule ADR, les deux
+        # premieres lignes nommaient le FICHIER, et le remplacer par un compte retirait l information
+        # que le lecteur cherche. Il attend donc maintenant les DEUX, le compte et le fichier.
         (
-            "un cliquet depasse montre son compte, pas son premier suspect",
+            "un cliquet depasse montre son compte ET ses suspects",
             "scripts/adr/4359-javadoc-narratif.py",
             1,
             (
@@ -1673,7 +1673,55 @@ def _auto_test() -> int:
                 "\nADR 4359 | lus=1254 | suspects=742 | cliquet=740 | verdict=regression\n"
             ),
             "",
-            ("rouge", "ADR 4359 | lus=1254 | suspects=742 | cliquet=740 | verdict=regression"),
+            (
+                "rouge",
+                (
+                    "ADR 4359 | lus=1254 | suspects=742 | cliquet=740 | verdict=regression\n"
+                    "src/main/java/fr/univ_amu/iut/Launcher.java\n"
+                    "src/main/java/fr/univ_amu/iut/A.java"
+                ),
+            ),
+        ),
+        # ⟨`a-resserrer` n est pas `ok` et ne refuse pas⟩ Il sort en 0 : le garde est passe SOUS sa
+        # marge, et c est une bonne nouvelle. Le filtre « pas ok » de #5828 l accusait, si bien que
+        # la porte nommait deux ADR quand une seule refusait. Sans ce cas, le filtre peut y revenir.
+        (
+            "un verdict `a-resserrer` n est pas montre comme une cause de refus",
+            "x.py",
+            1,
+            (
+                "ADR 5068 - clic sur reference tenue\n"
+                "\nADR 5068 | lus=200 | suspects=33 | cliquet=37 | verdict=a-resserrer\n"
+                "ADR 5707 - geste du pointeur hors du fil\n"
+                "  ClicTest.java:42\n"
+                "\nADR 5707 | lus=166 | suspects=170 | cliquet=162 | verdict=regression\n"
+            ),
+            "",
+            (
+                "rouge",
+                (
+                    "ADR 5707 | lus=166 | suspects=170 | cliquet=162 | verdict=regression\n"
+                    "ClicTest.java:42"
+                ),
+            ),
+        ),
+        # ⟨les suspects d une ADR ne debordent pas sur la suivante⟩ `lignes_du_refus` vide son
+        # accumulateur sur CHAQUE ligne de verdict, y compris un `ok`. Sans cela, les suspects d une
+        # ADR verte seraient montres sous l ADR qui refuse apres elle, ce qui est le defaut de #5817
+        # sous une autre forme : nommer les lignes de quelqu un d autre.
+        (
+            "les suspects d une ADR verte ne passent pas a l ADR qui refuse",
+            "x.py",
+            1,
+            (
+                "ADR 1111 - la verte\n"
+                "  AppartientALaVerte.java\n"
+                "\nADR 1111 | lus=10 | suspects=1 | cliquet=1 | verdict=ok\n"
+                "ADR 2222 - celle qui refuse\n"
+                "\nADR 2222 | lus=10 | suspects=5 | cliquet=0 | verdict=regression\n"
+            ),
+            "",
+            ("rouge", "ADR 2222 | lus=10 | suspects=5 | cliquet=0 | verdict=regression"),
         ),
         # Le CONTRASTE NEGATIF : tous les verdicts `ok` et un code non nul. Montrer une ligne `ok`
         # dirait au lecteur que tout va bien sur un garde qui refuse ; on retombe donc sur le repli,
