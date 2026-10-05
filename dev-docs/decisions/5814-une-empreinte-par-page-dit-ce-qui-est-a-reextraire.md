@@ -14,11 +14,18 @@ verified:
     at: 2026-10-05
 relations:
   complete: ["5790-le-graphe-lit-la-prose-d-un-perimetre-declare"]
+  completee_par: ["5940-la-partition-du-graphe-se-garde-et-ne-se-refait-que-sur-demande"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # Une empreinte par page dit ce qui est à réextraire, et les libellés des communautés suivent leurs membres
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-05** : « les libellés des communautés suivent leurs membres » est **complété** par
+    [5940](5940-la-partition-du-graphe-se-garde-et-ne-se-refait-que-sur-demande.md).
+    La partition se garde d'une reconstruction à la suivante, et ses libellés se reportent par
+    identifiant. Le recouvrement ne sert plus qu'après une repartition demandée. Le reste fait foi.
 
 ## Le contexte
 

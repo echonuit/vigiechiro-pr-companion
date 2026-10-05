@@ -154,6 +154,10 @@ suivent qu'à la mise à jour, qui relit la structure de toutes les pages :
 "$(cat graphify-out/.graphify_python)" scripts/graphify/rebuild.py --mets-a-jour
 ```
 
+Elle garde la partition du graphe : chaque nœud reste dans sa communauté, un nœud neuf va chez
+ses voisins, et les libellés ne bougent pas d'une lecture à l'autre. `--repartitionne` la refait
+en entier quand elle a vieilli ([ADR 5940]).
+
 Elle se lance depuis la copie principale, et avec l'interprète de graphify, que ce fichier nomme. Le
 `python3` du poste peut trouver la commande `graphify` sans importer son module : la mise à jour
 refuse alors en le disant, avant d'avoir touché au graphe.
@@ -216,5 +220,6 @@ relu comme « 33 clips » alors qu'il comptait les cas d'un auto-test.
 [ADR 5813]: decisions/5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache.md
 [ADR 5904]: decisions/5904-une-hyperarete-se-declare-et-les-ponts-parcourent-les-pages-du-graphe.md
 [ADR 5939]: decisions/5939-une-question-de-prose-se-pose-aux-enonces-de-la-couche.md
+[ADR 5940]: decisions/5940-la-partition-du-graphe-se-garde-et-ne-se-refait-que-sur-demande.md
 [ADR 5941]: decisions/5941-le-crochet-relit-la-structure-des-pages-en-une-extraction-avec-le-code.md
 [ADR 5877]: decisions/5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages.md
