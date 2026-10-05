@@ -100,19 +100,19 @@ voisines de sujet sans être des doublons. Toute fusion se décide par paire, et
 
 Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.py`, et gardée par lui.
 
-**9 rattachement(s), portés par 7 décision(s).** Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.
+**22 rattachement(s), portés par 15 décision(s).** Les deux nombres diffèrent dès qu'une décision sert plusieurs heuristiques : c'est le cas ordinaire, et les confondre ferait croire à une couverture qui n'existe pas.
 
 | Clé | Heuristique | ADR | Lesquelles |
 |---|---|---:|---|
-| `nielsen-1` | Visibilité de l'état du système | 3 | [4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas](../decisions/4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas.md), [5065-un-verdict-dit-ce-qu-il-n-a-pas-juge](../decisions/5065-un-verdict-dit-ce-qu-il-n-a-pas-juge.md), [5093-la-couverture-et-la-completude-sont-deux-axes](../decisions/5093-la-couverture-et-la-completude-sont-deux-axes.md) |
-| `nielsen-2` | Correspondance avec le monde réel | 1 | [4366-un-avertissement-se-dit-en-mots](../decisions/4366-un-avertissement-se-dit-en-mots.md) |
+| `nielsen-1` | Visibilité de l'état du système | 6 | [4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas](../decisions/4984-le-protocole-est-un-plancher-et-ce-qu-on-ignore-ne-se-decide-pas.md), [5065-un-verdict-dit-ce-qu-il-n-a-pas-juge](../decisions/5065-un-verdict-dit-ce-qu-il-n-a-pas-juge.md), [5093-la-couverture-et-la-completude-sont-deux-axes](../decisions/5093-la-couverture-et-la-completude-sont-deux-axes.md), et 3 autres |
+| `nielsen-2` | Correspondance avec le monde réel | 2 | [4366-un-avertissement-se-dit-en-mots](../decisions/4366-un-avertissement-se-dit-en-mots.md), [5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert](../decisions/5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert.md) |
 | `nielsen-3` | Contrôle et liberté | 0 | **aucune** |
-| `nielsen-4` | Cohérence et standards | 1 | [4368-l-apostrophe-d-un-libelle-est-droite](../decisions/4368-l-apostrophe-d-un-libelle-est-droite.md) |
-| `nielsen-5` | Prévention de l'erreur | 1 | [5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode](../decisions/5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode.md) |
+| `nielsen-4` | Cohérence et standards | 3 | [4368-l-apostrophe-d-un-libelle-est-droite](../decisions/4368-l-apostrophe-d-un-libelle-est-droite.md), [5676-un-geste-a-un-seul-point-d-action-et-son-resultat-se-lit-pres-de-lui](../decisions/5676-un-geste-a-un-seul-point-d-action-et-son-resultat-se-lit-pres-de-lui.md), [5688-une-position-se-saisit-d-une-seule-facon](../decisions/5688-une-position-se-saisit-d-une-seule-facon.md) |
+| `nielsen-5` | Prévention de l'erreur | 4 | [5599-un-depot-entame-se-regenere-sauf-pendant-un-televersement](../decisions/5599-un-depot-entame-se-regenere-sauf-pendant-un-televersement.md), [5607-un-carre-se-classe-a-un-seul-endroit-et-creer-est-une-demande](../decisions/5607-un-carre-se-classe-a-un-seul-endroit-et-creer-est-une-demande.md), [5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode](../decisions/5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode.md), et 1 autre |
 | `nielsen-6` | Reconnaissance plutôt que rappel | 0 | **aucune** |
-| `nielsen-7` | Flexibilité et efficience | 1 | [1874-la-cli-rend-le-lien-sans-ouvrir-de-navigateur](../decisions/1874-la-cli-rend-le-lien-sans-ouvrir-de-navigateur.md) |
-| `nielsen-8` | Esthétique et sobriété | 1 | [4366-un-avertissement-se-dit-en-mots](../decisions/4366-un-avertissement-se-dit-en-mots.md) |
-| `nielsen-9` | Reconnaître, diagnostiquer, corriger | 0 | **aucune** |
+| `nielsen-7` | Flexibilité et efficience | 2 | [1874-la-cli-rend-le-lien-sans-ouvrir-de-navigateur](../decisions/1874-la-cli-rend-le-lien-sans-ouvrir-de-navigateur.md), [5784-un-releve-qui-trouve-l-analyse-terminee-importe](../decisions/5784-un-releve-qui-trouve-l-analyse-terminee-importe.md) |
+| `nielsen-8` | Esthétique et sobriété | 2 | [4366-un-avertissement-se-dit-en-mots](../decisions/4366-un-avertissement-se-dit-en-mots.md), [5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert](../decisions/5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert.md) |
+| `nielsen-9` | Reconnaître, diagnostiquer, corriger | 2 | [5598-la-provenance-d-un-refus-remonte-par-le-depot](../decisions/5598-la-provenance-d-un-refus-remonte-par-le-depot.md), [5720-un-perdant-de-collision-est-une-absence-attendue](../decisions/5720-un-perdant-de-collision-est-une-absence-attendue.md) |
 | `nielsen-10` | Aide et documentation | 0 | **aucune** |
 | `affordance` | Affordance | 0 | **aucune** |
 | `signifiant` | Signifiant | 0 | **aucune** |
@@ -128,11 +128,10 @@ Engendrée depuis les en-têtes des ADR par `scripts/methode/matrice-ergonomie.p
 | `wcag-focus-visible` | 2.4.7 | 0 | **aucune** |
 | `wcag-cible` | 2.5.8 | 0 | **aucune** |
 
-**16 heuristique(s) sur 23 que rien ne sert.** Ce n'est pas une faute : c'est ce dont personne n'a eu à décider, et il faut le voir pour savoir si c'est un choix ou un angle mort.
+**15 heuristique(s) sur 23 que rien ne sert.** Ce n'est pas une faute : c'est ce dont personne n'a eu à décider, et il faut le voir pour savoir si c'est un choix ou un angle mort.
 
 - `nielsen-3` · Contrôle et liberté
 - `nielsen-6` · Reconnaissance plutôt que rappel
-- `nielsen-9` · Reconnaître, diagnostiquer, corriger
 - `nielsen-10` · Aide et documentation
 - `affordance` · Affordance
 - `signifiant` · Signifiant
