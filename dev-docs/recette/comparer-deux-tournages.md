@@ -108,6 +108,41 @@ trois :
     - « douze fois son bruit » - ne valent donc pas mieux que leur échantillon, et un cas ne se déclare
     instable qu'après plusieurs paires.
 
+### Les clips de la plateforme de test, mesurés
+
+L'[ADR 5641](../decisions/5641-les-tests-connectes-ont-deux-cibles.md) ne levait le refus de comparer
+les clips connectés, pour la plateforme de test, que si la mesure le permettait. Elle a été prise le
+5 octobre 2026 (#5797) : **quatre** tournages du commit `edc6b69b5`, sur quatre runners, soit six
+paires.
+
+| clip | cas | son plancher, sur six paires |
+|---|---|---|
+| `ScenarioConnectePublicationTest` | S4-90, S4-92 | 0,003 % |
+| `ScenarioConnecteAnnonceImportTest` | S2-59, S2-60 | 0,016 % |
+| `ScenarioConnecteConnexionTest` | S8-01, S8-05, S8-06 | 0,017 % |
+| `ScenarioConnecteActualisationTest` | S4-98 | 0,230 % |
+| `ScenarioConnecteLancementTest` | S4-47 | 0,267 % |
+
+Les deux plus hauts sont ceux de l'écran de lot, qui affiche un chemin temporaire au nom tiré au sort.
+Aucun ne dépasse le pire plancher des clips ordinaires, 0,809 % : ces clips se comparent.
+
+!!! warning "Le quatrième tournage a dépassé un plancher, et c'est le résultat attendu"
+
+    Les planchers tirés des trois premiers tournages ont été éprouvés contre un quatrième, qu'ils
+    n'avaient jamais vu. Le clip de la connexion est sorti à 0,017 %, pour un plancher de 0,013 % :
+    **1,3 fois son bruit**. Les quatre autres sont restés à leur plancher ou dessous.
+
+    Un plancher est le pire de ses tirages, et un tirage de plus le dépasse de temps en temps. Un
+    rapport voisin de 1 se lit donc comme du bruit, et le fichier s'enrichit de la paire. Ce qui se
+    regarde est un rapport qui s'en éloigne nettement.
+
+!!! note "Une dernière image qui change tout"
+
+    Avant correction, le clip de l'import s'arrêtait pendant la transformation, à un endroit de la
+    page différent à chaque tournage : **19,275 %** d'écart entre deux tournages du même commit. Une
+    fois son compte rendu amené dans le cadre, **0,016 %**. Un plancher aberrant désigne d'abord un
+    clip qui ne finit pas sur ce qu'il doit montrer.
+
 ### Ce que cette mesure a corrigé
 
 Sur une comparaison réelle, deux cas dépassaient 1 % et semblaient donc être les vrais changements.

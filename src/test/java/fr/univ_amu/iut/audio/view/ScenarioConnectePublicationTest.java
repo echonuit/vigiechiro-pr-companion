@@ -116,7 +116,9 @@ class ScenarioConnectePublicationTest {
     @Start
     void start(Stage stage) throws IOException {
         injecteur = BancDeRecette.surLeChrome()
-                .taille(1400, 900)
+                // 1180 de large, comme les autres scénarios : le film en fait 1280, et un banc plus
+                // large que lui sort rogné des deux côtés (vu sur le premier tournage, #5797).
+                .taille(1180, 900)
                 .executeur(BancDeRecette.Executeur.ASYNCHRONE)
                 .surLaPlateformeDeTest("observatrice")
                 .semer(this::semerLaNuitTraiteeEtReliee)

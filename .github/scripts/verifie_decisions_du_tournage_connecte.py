@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Trois decisions du tournage connecte tiennent dans le YAML (#5221, porte du bash).
+"""Quatre decisions du tournage connecte tiennent dans le YAML (#5221, porte du bash).
 
 Elles ne se tiennent pas par un test : elles vivent dans la forme de deux ateliers, et rien ne les
 relisait. Chacune a un cout connu si elle lache.
@@ -13,6 +13,10 @@ relisait. Chacune a un cout connu si elle lache.
 3. **Le controle du jeton vient AVANT le pas qui filme**, et reste garde par `inputs.connecte`.
    Sonder apres avoir filme ne coute rien et ne sert a rien ; sonder sans la garde refuserait tout
    tournage hors ligne, qui n a pas de jeton et n en veut pas.
+4. **Le job qui filme NOMME son artefact, tentative comprise, et toute reprise le lit de lui.** Deux
+   tentatives d une meme execution versaient sous le meme nom, et une publication relancee reprenait
+   l artefact de la tentative ECHOUEE : sur l execution 37229250872, l oracle disait « 8 / 8 » et la
+   pre-version recevait 3 clips et un index de 5 cas, sans que rien ne rougisse (#5797).
 
 ## Le leurre pour `gh`, et pourquoi le verdict se prend sur le MESSAGE
 
@@ -177,12 +181,66 @@ def controle_avant_le_tournage(flux: pathlib.Path) -> bool:
     return True
 
 
+SORTIE_ARTEFACT = "${{ needs.filmer.outputs.artefact }}"
+
+
+def artefact_nomme_par_le_tournage(flux: pathlib.Path) -> bool:
+    """La quatrieme : `filmer` nomme son artefact avec SA tentative, et toute reprise le lit de lui.
+
+    Trois proprietes, parce que chacune seule laisse passer le defaut. Le nom porte la tentative,
+    sinon deux tentatives se recouvrent. Le versement emploie ce nom, sinon la sortie ment. Et la
+    reprise lit la SORTIE de `filmer` au lieu de recalculer le nom : une publication relancee seule
+    porte un autre numero de tentative que le filmage qu elle doit reprendre.
+    """
+    f = _charge(flux / "tournage-recette.yml")
+    filmer = f["jobs"].get("filmer") or {}
+    nom = str((filmer.get("outputs") or {}).get("artefact", ""))
+    tiennent = True
+    if "github.run_attempt" not in nom:
+        print("❌ `filmer` ne nomme plus son artefact avec sa tentative :")
+        print(f"     outputs.artefact: {nom or '(absente)'}")
+        print(
+            "   Deux tentatives verseraient sous le même nom, et la reprise prendrait l'une ou l'autre."
+        )
+        tiennent = False
+    verses = [
+        str((pas.get("with") or {}).get("name", ""))
+        for pas in filmer.get("steps") or []
+        if str(pas.get("uses", "")).startswith("actions/upload-artifact@")
+    ]
+    if verses != [nom]:
+        print("❌ `filmer` ne verse pas son artefact sous le nom qu'il annonce en sortie :")
+        print(f"     annoncé : {nom or '(rien)'}")
+        print(f"     versé   : {verses or '(aucun versement)'}")
+        tiennent = False
+    reprises = 0
+    for cle, job in f["jobs"].items():
+        for pas in job.get("steps") or []:
+            if not str(pas.get("uses", "")).startswith("actions/download-artifact@"):
+                continue
+            reprises += 1
+            repris = str((pas.get("with") or {}).get("name", ""))
+            if repris != SORTIE_ARTEFACT:
+                print(f"❌ `{cle}` reprend un artefact dont il recalcule le nom :")
+                print(f"     name: {repris or '(absent)'}")
+                print(f"   Attendu : {SORTIE_ARTEFACT}, que seul le job qui filme sait dire.")
+                tiennent = False
+    if reprises == 0:
+        # Zero reprise trouvee serait verte pour la pire des raisons : le motif ne correspond plus.
+        print(
+            "❌ Aucun pas ne reprend d'artefact dans tournage-recette.yml : le relevé ne lit plus rien."
+        )
+        tiennent = False
+    return tiennent
+
+
 def verdict(flux: pathlib.Path) -> bool:
-    """Les trois, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
+    """Les quatre, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
     tiennent = [
         refus_de_la_source_connectee(flux),
         versement_conditionne(flux),
         controle_avant_le_tournage(flux),
+        artefact_nomme_par_le_tournage(flux),
     ]
     return all(tiennent)
 
@@ -253,12 +311,50 @@ def _deplace_la_sonde(dossier: pathlib.Path) -> None:
 
 
 # Chaque cassure retire UNE decision, et rien d autre. C est la ou ce fichier gagne son verdict.
+def _recalcule_le_nom_a_la_reprise(dossier: pathlib.Path) -> None:
+    """Le defaut d origine : une reprise qui recalcule le nom au lieu de le lire de `filmer`."""
+    p = dossier / "tournage-recette.yml"
+    t = p.read_text(encoding="utf-8")
+    p.write_text(
+        t.replace(
+            "          name: ${{ needs.filmer.outputs.artefact }}",
+            "          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}",
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+
+def _retire_la_tentative_du_nom(dossier: pathlib.Path) -> None:
+    """Le nom ne distingue plus deux tentatives, au versement comme en sortie."""
+    p = dossier / "tournage-recette.yml"
+    t = p.read_text(encoding="utf-8")
+    p.write_text(t.replace("-${{ github.run_attempt }}", ""), encoding="utf-8")
+
+
+def _verse_sous_un_autre_nom(dossier: pathlib.Path) -> None:
+    """La sortie annonce un nom, et le versement en emploie un autre."""
+    p = dossier / "tournage-recette.yml"
+    t = p.read_text(encoding="utf-8")
+    p.write_text(
+        t.replace(
+            "          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}-${{ github.run_attempt }}\n          path:",
+            "          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}\n          path:",
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+
 CASSURES = (
     (_casse_le_refus, "le refus de clips-connectes neutralisé"),
     (_casse_la_fonction_d_etat, "publier-connecte privé de sa fonction d état"),
     (_deplace_la_sonde, "le contrôle du jeton déplacé après le tournage"),
     (_refuse_aussi_la_plateforme_de_test, "refus étendu à clips-plateforme-de-test"),
     (_casse_la_fonction_d_etat_de_test, "publier-plateforme-de-test privé de sa fonction d état"),
+    (_recalcule_le_nom_a_la_reprise, "une reprise recalcule le nom de l artefact"),
+    (_retire_la_tentative_du_nom, "nom d artefact sans numéro de tentative"),
+    (_verse_sous_un_autre_nom, "versement sous un autre nom que la sortie"),
 )
 
 
@@ -314,10 +410,10 @@ if __name__ == "__main__":
     flux = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else RACINE / ".github" / "workflows"
     if verdict(flux):
         print(
-            "✓ Les trois décisions du tournage connecté tiennent : refus de clips-connectes,"
+            "✓ Les quatre décisions du tournage connecté tiennent : refus de clips-connectes,"
             " versement"
         )
-        print("  conditionné, contrôle du jeton avant le tournage.")
+        print("  conditionné, contrôle du jeton avant le tournage, artefact nommé par le tournage.")
         sys.exit(0)
     print("::error::Une décision du tournage connecté n est plus tenue par le YAML, cf. ci-dessus.")
     sys.exit(1)

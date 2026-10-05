@@ -174,6 +174,13 @@ jobs:
     # échoué s'y verse comme les autres, et rien ne l'en distinguait (#4351).
     outputs:
       verdict: ${{ steps.oracle.outputs.verdict }}
+      # Le nom de l'artefact que CETTE exécution du job a versé, tentative comprise (#5797). Deux
+      # tentatives d'une même exécution versaient sous le même nom, et une publication relancée
+      # reprenait l'artefact de la tentative ÉCHOUÉE : mesuré sur 37229250872, l'oracle disait
+      # « 8 / 8 » et la pré-version recevait 3 clips et un index de 5 cas. Le nom sort du job qui
+      # filme, et non d'une expression recalculée par celui qui publie : si la publication seule est
+      # relancée, le filmage n'est pas rejoué, et sa sortie garde le numéro de SA tentative.
+      artefact: clips-${{ inputs.session }}-${{ inputs.plateforme }}-${{ github.run_attempt }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -528,7 +535,7 @@ jobs:
         if: ${{ always() && steps.formes.outcome == 'success' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}
+          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}-${{ github.run_attempt }}
           path: |
             target/recette/clips/
             tournage.log
@@ -608,7 +615,7 @@ jobs:
       - name: Reprendre les clips du tournage
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}
+          name: ${{ needs.filmer.outputs.artefact }}
           path: repris
 
       - name: Ouvrir la pré-version, et dire ce qu elle montre
@@ -716,7 +723,7 @@ jobs:
       - name: Reprendre les clips du tournage
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}
+          name: ${{ needs.filmer.outputs.artefact }}
           path: repris
 
       - name: Ouvrir la pré-version, et dire ce qu elle montre
@@ -794,7 +801,7 @@ jobs:
       - name: Reprendre les clips du tournage
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}
+          name: ${{ needs.filmer.outputs.artefact }}
           path: repris
 
       - name: Verser les clips sur le tag

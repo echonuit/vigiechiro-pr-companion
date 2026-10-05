@@ -1867,6 +1867,7 @@ d290c4438c53  src/test/java/fr/univ_amu/iut/lot/view/LotIdentiteStatutViewTest.j
 21de420b4e35  src/test/java/fr/univ_amu/iut/lot/view/LotViewTest.java
 0296639e177a  src/test/java/fr/univ_amu/iut/lot/view/LotVueIntegrationTest.java
 59fbfe99d0e1  src/test/java/fr/univ_amu/iut/lot/view/NavigationLotViewTest.java
+6f59867a2770  src/test/java/fr/univ_amu/iut/lot/view/ScenarioConnecteActualisationTest.java
 e7d064ad6306  src/test/java/fr/univ_amu/iut/lot/view/ScenarioConnecteLancementTest.java
 a11734ef6c52  src/test/java/fr/univ_amu/iut/lot/view/ScenarioPerceptifRefusDepotTest.java
 029a40b4f056  src/test/java/fr/univ_amu/iut/lot/viewmodel/ActionsLotPossiblesTest.java

@@ -19,16 +19,22 @@ l'[ADR 5641](../decisions/5641-les-tests-connectes-ont-deux-cibles.md), par l'en
 `plateforme_de_test` de `tournage-recette.yml` (#5793) : l'API Vigie-Chiro épinglée, montée par les
 tests eux-mêmes, sur un état de départ déclaré, sans jeton, sur Ubuntu seul. Le scénario est le même :
 le banc lit la cible que le profil déclare, et seuls ses cas qui ont un sens sur cette cible sont
-joués (`recette-connectee & plateforme-de-test`), aujourd'hui S8-01, S8-05, S8-06, S2-59, S2-60, S4-47, S4-90 et S4-92.
+joués (`recette-connectee & plateforme-de-test`), aujourd'hui S8-01, S8-05, S8-06, S2-59, S2-60, S4-47, S4-90, S4-92 et S4-98.
 
-S4-47 est le premier cas qui n'existe **que** là (#5795), S4-90 et S4-92 les suivants (#5796) : leurs
-scénarios portent en plus
+S4-47 est le premier cas qui n'existe **que** là (#5795), S4-90 et S4-92 les suivants (#5796), puis
+S4-98 (#5836) : leurs scénarios portent en plus
 `plateforme-de-test-seule`, que le tournage national exclut et que son oracle n'attend pas.
 
 Ses clips vont sur une pré-version à elle, `clips-plateforme-de-test`, et non sur `clips-connectes`.
-Leur état de départ étant déclaré, ils pourront se comparer, sous la condition que l'ADR 5641 pose et
-que #5797 mesure : deux tournages du même commit sous le plancher de l'ADR 4287. D'ici là, ne pas les
-comparer.
+Leur état de départ étant déclaré, ils se comparent, et la condition que l'ADR 5641 posait est
+mesurée (#5797) : quatre tournages du même commit, six paires, et aucun des cinq clips ne s'écarte de
+plus de 0,267 %. Leurs planchers sont dans `planchers-tournages.tsv`, et
+[la page de la comparaison](comparer-deux-tournages.md) dit comment les lire.
+
+Ce qui manque encore n'est pas une permission mais un **second côté** : `comparer-tournages.yml` prend
+ses deux tournages dans des versions publiées, et il n'existe qu'une pré-version
+`clips-plateforme-de-test`, écrasée à chaque tournage. D'ici là, deux tournages se comparent à la main,
+depuis les artefacts de leurs exécutions.
 
 ## Ce qu'un clip connecté prouve, et qu'un autre ne peut pas
 
@@ -177,6 +183,10 @@ l'observatrice y porte le site du carré 130711, et la participation créée dis
 posé ; la nationale, lente, masquait cette course, et la plateforme de test faisait lire un compte
 rendu vide.
 
+**Et il l'amène dans le cadre** (#5797). Au premier tournage sur la plateforme de test, le clip
+s'arrêtait sur le formulaire, pendant la transformation : le compte rendu était lu par le banc et
+jamais montré. Sa dernière image changeait donc d'un tournage à l'autre, de 19 % sur la première paire.
+
 **Ce qu'il ne prouve pas.** Que la participation soit correctement **remplie**. « Voir la
 participation » l'ouvre sur le portail, et cette moitié-là se juge à l'oeil, hors du banc - la session
 l'annonce déjà : deux de ces cas « exigent de regarder ailleurs que dans l'application ».
@@ -232,6 +242,30 @@ portée. Et pour S4-92 :
 > Le récapitulatif de confirmation, sur lequel S4-92 se juge, est lu par le banc et ne paraît pas à l'image : le clip montre les deux publications et leur compte rendu, pas la phrase qui dit que la seconde ne rapatrie plus rien.
 
 <video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-plateforme-de-test/ScenarioConnectePublicationTest.publier_une_correction_puis_la_republier.mp4"></video>
+
+
+### S4-98 · « Actualiser » importe les observations d'une analyse terminée
+
+> **S4-98** Une fois l'analyse terminée côté plateforme, « Actualiser » : la carte affiche « Analyse
+> terminée » et, dessous, les observations importées avec leur nombre. Cliquer de nouveau : la carte
+> dit que les observations sont déjà importées, et rien n'est réimporté.
+
+**D'où vient ce clip.** De la **plateforme de test**, et d'elle seule : il vit sur la pré-version
+`clips-plateforme-de-test`. Le geste part d'un relevé qui rend « terminée » ; contre un double, on
+lirait l'état qu'on lui a fait rendre.
+
+**Ce qu'il sème.** Un passage local déjà déposé, relié à la participation `nuit-traitee` de l'état de
+départ, avec ses deux séquences et **aucune observation en base**.
+
+**Ce qu'il prouve.** Avant le clic, la base est vide et la carte n'annonce rien. Après, elle dit
+« Analyse terminée » et « Observations importées depuis Vigie-Chiro : 2 observation(s) », et les deux
+observations sont en base sans être passé par « Sons & validation ». Au second clic, elle dit qu'elles
+sont déjà importées, et leur nombre n'a pas bougé.
+
+**Ce qu'il ne joue pas.** La moitié « ligne de commande » du cas, `etat-traitement-vigiechiro
+--importer`, ni l'ouverture de « Sons & validation » : le compte en base est lu par le banc.
+
+<video controls width="100%" src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-plateforme-de-test/ScenarioConnecteActualisationTest.actualiser_importe_les_observations_d_une_analyse_terminee.mp4"></video>
 
 
 ## Ce que ces clips publient, et le compte que cela engage

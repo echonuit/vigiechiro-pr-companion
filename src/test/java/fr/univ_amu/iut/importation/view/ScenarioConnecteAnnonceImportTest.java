@@ -185,6 +185,14 @@ class ScenarioConnecteAnnonceImportTest {
                 "l'import n'a pas abouti sur le compte de tournage",
                 FIN_SECONDES * 1000L);
 
+        // Le compte rendu vient DANS LE CADRE, et y reste le temps d'être lu. Sans cela le clip
+        // s'arrêtait sur le formulaire, pendant la transformation : le verdict des deux cas était lu
+        // par le banc et jamais montré, et la dernière image changeait d'un tournage à l'autre
+        // (19 % d'écart entre deux tournages du même commit, mesuré en #5797).
+        GesteVisible.amenerDansLeCadre(robot, "#compteRenduChiffre");
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
+
         String compteRendu = texteDe(robot, "#compteRenduChiffre");
         System.out.printf("  compte rendu : %s%n", compteRendu.replace("\n", " / "));
 

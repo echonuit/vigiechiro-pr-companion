@@ -21,6 +21,11 @@ MesSitesViewTest.une_carte_est_atteignable_au_clavier	0.000	0.005	2
 MesSitesViewTest.une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte	0.000	0.009	2
 ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce	0.000	0.809	2
 ScenarioAccueilTest.le_menu_ne_porte_plus_la_fiche_espece	0.000	0.000	2
+ScenarioConnecteActualisationTest.actualiser_importe_les_observations_d_une_analyse_terminee	0.000	0.230	6
+ScenarioConnecteAnnonceImportTest.connecte_l_import_annonce_la_participation	0.000	0.016	6
+ScenarioConnecteConnexionTest.coller_le_jeton_puis_lire_l_identite	0.000	0.017	6
+ScenarioConnecteLancementTest.lancer_la_participation_rend_l_analyse_planifiee	0.000	0.267	6
+ScenarioConnectePublicationTest.publier_une_correction_puis_la_republier	0.000	0.003	6
 ScenarioFicheSiteTest.ajouter_un_point_le_fait_paraitre_sur_la_fiche	0.000	0.036	2
 ScenarioFicheSiteTest.le_bandeau_dit_l_identite_du_carre	0.000	0.020	2
 ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge	0.000	0.020	2
