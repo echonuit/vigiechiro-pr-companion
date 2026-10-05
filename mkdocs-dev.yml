@@ -443,6 +443,7 @@ nav:
     - 5939 · Une question de prose se pose aux énoncés de la couche: decisions/5939-une-question-de-prose-se-pose-aux-enonces-de-la-couche.md
     - 5941 · Le crochet de commit relit la structure des pages: decisions/5941-le-crochet-relit-la-structure-des-pages-en-une-extraction-avec-le-code.md
     - 5940 · La partition du graphe se garde: decisions/5940-la-partition-du-graphe-se-garde-et-ne-se-refait-que-sur-demande.md
+    - 5862 · La vue d'un passage vérifie le traitement, dans les mots de l'écran de lot: decisions/5862-la-vue-d-un-passage-verifie-le-traitement-dans-les-mots-de-l-ecran-de-lot.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md

@@ -28,14 +28,15 @@ suit ses unités) et `LotViewModelTest`.
 ### Requirement: L'étape des archives n'est offerte que si elle sert
 
 L'écran de lot SHALL offrir l'étape « Générer les archives de dépôt » quand la forme du dépôt est le ZIP,
-ou quand l'application ne peut pas téléverser elle-même. Connecté et en forme WAV, il SHALL NOT l'offrir,
-ni les éléments de l'étape de téléversement qui servent au dépôt manuel d'archives (la mention du dépôt
-manuel, le chemin du dossier, « Copier », « Ouvrir le dossier (dépôt manuel) »).
+ou quand l'application ne peut pas téléverser elle-même. Connecté et en forme WAV, il SHALL NOT l'offrir
+comme une étape du fil, ni les éléments de l'étape de téléversement qui servent au dépôt manuel d'archives
+(la mention du dépôt manuel, le chemin du dossier, « Copier », « Ouvrir le dossier (dépôt manuel) »), tant
+que le repli manuel de l'exigence « Le repli manuel s'offre après un refus sans recours » n'est pas offert.
 
 *Vérifié par* : `LotDepotConnecteViewTest`, sur l'écran monté connecté, dans les deux formes, qui lit la
 présence de la carte et de ces éléments. Le cas hors connexion en forme WAV est tenu au modèle de vue, par
 `LotViewModelTest`, qui compte les étapes : aucun test d'interface ne monte l'écran hors connexion en
-forme WAV, et aucun aperçu ne le montre (#5838).
+forme WAV.
 
 #### Scenario: Connecté, forme WAV
 
@@ -108,3 +109,174 @@ les observations côté serveur avant de les recalculer. Dans les deux cas elle 
 
 - **WHEN** le relevé rend « terminée » pour une nuit déposée en séquences WAV
 - **THEN** le bouton de lancement est grisé, et son explication ne parle pas d'un audio non conservé
+
+### Requirement: La dernière étape du fil suit le dernier geste
+
+La dernière étape du fil d'étapes SHALL porter le nom que le bouton de la dernière carte porte :
+« Marquer déposé » tant qu'aucune participation n'est liée au passage, « Lancer la participation » dès
+qu'une participation est liée. Le fil et la carte MUST NOT nommer le même geste de deux façons.
+
+Sur une nuit déjà sur la plateforme dont la participation est liée, cette étape SHALL rester l'étape
+**courante** tant que l'analyse n'est ni demandée ni faite, et n'être franchie qu'ensuite. Sans
+participation liée, une nuit marquée déposée a tout son fil franchi. Tant que la nuit n'est pas sur la
+plateforme, le dernier geste ne déplace pas l'étape courante.
+
+*Vérifié par* : un test du geste appliqué à un fil calculé (nom et état, en trois comme en quatre étapes,
+pour chacun des trois états du geste), et un test d'interface qui confronte la dernière puce au texte du bouton, puis
+la lit courante avant le lancement et franchie une fois l'analyse planifiée. Figer le nom, figer l'état
+ou ignorer l'analyse demandée les fait rougir.
+
+#### Scenario: Nuit déposée, participation à lancer
+
+- **WHEN** l'observateur ouvre le lot d'une nuit que l'application a déposée, sans avoir lancé la
+  participation
+- **THEN** la dernière étape du fil dit « Lancer la participation » et elle est l'étape courante
+
+#### Scenario: Analyse demandée
+
+- **WHEN** l'observateur lance la participation et que le relevé rend l'analyse planifiée
+- **THEN** la dernière étape du fil est franchie, et le bouton n'est plus offert
+
+#### Scenario: Dépôt marqué à la main
+
+- **WHEN** aucune participation n'est liée et que le passage est marqué déposé
+- **THEN** la dernière étape dit « Marquer déposé » et tout le fil est franchi
+
+### Requirement: La confirmation de réinitialisation suit la forme du dépôt
+
+La question posée par « Réinitialiser le dépôt » SHALL dire ce que la réinitialisation conserve dans les
+mots de la forme du dépôt : les archives ZIP sur disque et la participation quand l'étape des archives
+est offerte, la participation seule sinon. Elle MUST NOT nommer d'archives pour un dépôt en séquences.
+L'infobulle du bouton et la question SHALL lire la même phrase.
+
+*Vérifié par* : un test d'interface qui lit la question posée sous les deux formes, sans confirmer.
+
+#### Scenario: Dépôt en séquences
+
+- **WHEN** l'observateur clique « Réinitialiser le dépôt » sur un dépôt connecté en séquences WAV
+- **THEN** la question dit « La participation Vigie-Chiro est conservée. » et ne nomme aucune archive
+
+### Requirement: Le repli manuel s'offre après un refus sans recours
+
+Connecté et en forme WAV, l'écran de lot SHALL offrir le repli manuel dès qu'au moins une séquence du dépôt
+est refusée définitivement par le stockage de Vigie-Chiro ou pour son contenu : une carte sans numéro,
+« Repli : déposer à la main », placée sous la carte du téléversement, qui génère les archives ZIP de la nuit,
+et avec elle les éléments du dépôt manuel. Il SHALL NOT l'offrir tant qu'aucun téléversement n'a été refusé,
+ni après un échec que la reprise peut lever, ni quand les seuls refus tiennent aux droits, qu'une reconnexion
+réarme. Le fil d'étapes SHALL rester à trois étapes, et leurs numéros inchangés. Le repli SHALL être offert
+de la même façon à la réouverture de l'écran, puisqu'il se lit dans le plan de dépôt enregistré.
+
+*Vérifié par* : `DepotUniteDaoTest` (la règle, cause par cause, sur le plan enregistré dans une vraie base),
+`DepotViewModelTest` (le compte relu à l'ouverture d'une nuit et après un téléversement),
+`EtapeDesArchivesTest` (repli offert ou non selon la forme, la connexion et le statut, fil à trois étapes) et
+`LotRepliManuelViewTest` (l'écran monté connecté, un téléversement refusé, la carte trouvée sous celle du
+téléversement, son titre et sa consigne lus).
+
+#### Scenario: Aucun refus
+
+- **WHEN** l'écran s'ouvre connecté sur une nuit en forme WAV dont aucune séquence n'est refusée
+- **THEN** le repli n'est pas offert
+
+#### Scenario: Échec que la reprise peut lever
+
+- **WHEN** un téléversement se termine avec des séquences en échec après une coupure
+- **THEN** le repli n'est pas offert, et l'écran propose de reprendre le dépôt
+
+#### Scenario: Refus de droits
+
+- **WHEN** toutes les séquences refusées le sont pour une cause de droits
+- **THEN** le repli n'est pas offert : le compte rendu dit de se reconnecter
+
+#### Scenario: Refus du stockage
+
+- **WHEN** le stockage de Vigie-Chiro refuse définitivement deux séquences
+- **THEN** la carte « Repli : déposer à la main » apparaît sous la carte du téléversement, sa consigne dit
+  que deux séquences ont été refusées, et le fil d'étapes compte toujours trois puces
+
+#### Scenario: Réouverture de l'écran
+
+- **WHEN** l'écran se rouvre sur une nuit dont le plan enregistré porte une séquence refusée pour son contenu
+- **THEN** le repli est offert sans relancer de téléversement
+
+### Requirement: La ligne de commande dit le même repli
+
+`deposer-vigiechiro` SHALL, quand le dépôt se termine avec au moins une séquence refusée définitivement par le
+stockage ou pour son contenu, nommer le repli manuel et la commande qui produit les archives,
+`exporter-lot --passage N`. Elle SHALL NOT le nommer pour un dépôt en archives, ni quand les seuls refus
+tiennent aux droits.
+
+*Vérifié par* : `DeposerVigieChiroTest`, qui joue la commande sur un dépôt refusé par le stockage et pour son
+contenu, puis sur un refus de droits. Le cas d'un dépôt en archives est tenu au niveau de la règle, par
+`DepotUniteDaoTest` : une archive refusée n'y est pas comptée.
+
+#### Scenario: Séquences refusées par le stockage
+
+- **WHEN** `deposer-vigiechiro` se termine sur un dépôt en séquences dont deux sont refusées par le stockage
+- **THEN** la sortie nomme `exporter-lot --passage N` et le dépôt à la main sur le portail
+
+#### Scenario: Refus de droits seulement
+
+- **WHEN** les seules séquences refusées le sont pour une cause de droits
+- **THEN** la sortie conseille de se reconnecter, et ne nomme pas le repli
+
+### Requirement: Le dernier geste du repli a sa porte
+
+En repli, la carte SHALL offrir « Marquer le passage déposé », grisé tant qu'aucune archive n'est générée, et
+qui rend le passage « Déposé ». Elle SHALL NOT l'offrir hors du repli, où ce geste appartient à la dernière
+étape. La commande `deposer` SHALL marquer déposé un passage dont le dépôt est déjà préparé ou entamé, sans
+le préparer de nouveau ; elle SHALL préparer d'abord un passage seulement vérifié, comme avant. Une fois le
+passage déposé, le repli SHALL se retirer.
+
+*Vérifié par* : `LotRepliManuelViewTest` (le bouton grisé sans archive, ouvert avec, cliqué, et absent en
+forme ZIP), `EtapeDesArchivesTest` (le repli retiré une fois le passage déposé) et `DeposerTest` (la commande
+sur un dépôt entamé puis sur un passage vérifié).
+
+#### Scenario: Archives générées, dépôt fait à la main
+
+- **WHEN** l'utilisateur, en repli et ses archives générées, clique « Marquer le passage déposé »
+- **THEN** le passage devient « Déposé », et la carte du repli se retire
+
+#### Scenario: La commande sur un dépôt entamé
+
+- **WHEN** `deposer --passage N` est lancée sur une nuit au statut « Dépôt en cours »
+- **THEN** le passage est marqué déposé, sans nouvelle préparation, et la sortie donne sa date de dépôt
+
+### Requirement: Un refus définitif le reste à la réouverture
+
+La table de dépôt, reposée depuis le plan enregistré à l'ouverture de l'écran, SHALL garder le caractère
+définitif d'un refus. Le bouton de téléversement SHALL NOT s'appeler « Reprendre le dépôt » quand il ne reste
+à téléverser que des unités refusées définitivement.
+
+*Vérifié par* : `SuiviLignesDepotTest` (le plan rechargé, un refus définitif et un échec rejouable) et
+`LotRepliManuelViewTest` (l'écran rouvert sur un tel plan, le libellé du bouton lu).
+
+#### Scenario: Réouverture sur un refus du stockage
+
+- **WHEN** l'écran s'ouvre sur une nuit dont une séquence est en ligne et l'autre refusée définitivement
+- **THEN** le bouton de téléversement s'appelle « Téléverser sur Vigie-Chiro », et le repli est offert
+
+### Requirement: La date de dépôt se lit en français
+
+La date de dépôt d'un passage SHALL s'afficher sous la forme « 21/06/2026 » dans toute phrase et toute
+colonne lue par un humain : l'état de l'écran de lot, le compte rendu de `deposer`, la ligne « Dépôt » de
+`statut-passage`, et la colonne « Déposé le » des tables. Elle MUST NOT s'afficher sous sa forme de
+stockage, ni se lire comme absente quand le passage est déposé. La forme de stockage est un instant
+local, avec son heure : c'est elle que les lecteurs SHALL accepter.
+
+Les sorties `--json` SHALL garder la valeur telle que la base la porte.
+
+*Vérifié par* : un test du lecteur commun sur la forme que la production écrit, construite par
+`LocalDateTime#toString` et non recopiée à la main ; les tests de `deposer`, de `statut-passage` et de
+l'écran de lot, dont les témoins portent cette forme. Rendre la chaîne brute, ou n'accepter qu'une date
+seule, les fait rougir.
+
+#### Scenario: Un passage déposé le 21 juin à 8 h
+
+- **WHEN** la base porte `2026-06-21T08:00:15.123456` comme date de dépôt
+- **THEN** l'écran de lot dit « Passage déposé le 21/06/2026. », et la colonne « Déposé le » affiche
+  « 21/06/2026 »
+
+#### Scenario: La sortie de script
+
+- **WHEN** `statut-passage --json` rend ce passage
+- **THEN** la clé `deposeLe` porte la valeur de la base, inchangée

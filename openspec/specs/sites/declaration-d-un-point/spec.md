@@ -98,3 +98,59 @@ recette S1 la montre.
 
 - **WHEN** l'observateur saisit le numéro du carré sans coller de position
 - **THEN** la case n'est pas offerte
+
+### Requirement: La distance entre deux points s'affiche sans se juger
+
+Sur la fiche d'un site, la carte d'un point géolocalisé SHALL afficher sa distance au point géolocalisé
+le plus proche du même site, quand il en existe un. Elle MUST NOT qualifier cette distance : ni
+avertissement, ni icône de sévérité, ni mention d'une règle de protocole, quelle que soit sa valeur. Le
+protocole Point Fixe n'impose aucune distance minimale entre deux points ; le seul voisinage que
+l'application signale est celui de la création, à 40 m.
+
+*Vérifié par* : un test du libellé (une distance de 100 m rend la phrase nue, sans le mot « protocole »),
+un test d'interface sur une fiche dont deux points sont à cent mètres l'un de l'autre, qui lit la
+distance et ne trouve aucune étiquette d'alerte. Remettre un seuil doit les faire rougir.
+
+#### Scenario: Deux points à cent mètres
+
+- **WHEN** l'observateur ouvre la fiche d'un site dont les points `A1` et `B2` sont à cent mètres l'un de
+  l'autre
+- **THEN** leurs cartes disent « à 100 m du point le plus proche », sans avertissement
+
+#### Scenario: Un seul point géolocalisé
+
+- **WHEN** le site n'a qu'un point géolocalisé
+- **THEN** sa carte n'affiche aucune distance
+
+### Requirement: La case du premier point prévient d'un autre carré
+
+À la déclaration d'un site, quand la case « Créer aussi le premier point d'écoute à cette position » est
+cochée et que la position collée tombe sans ambiguïté dans un autre carré que le numéro saisi, la modale
+SHALL l'afficher sous la case, en avertissement, en nommant le carré de la position et le carré saisi.
+L'avertissement MUST NOT empêcher de créer le site ni son point.
+
+Il MUST NOT s'afficher quand le numéro concorde, quand la case est décochée, quand le numéro saisi n'a
+pas ses six chiffres, ni quand la position est sur une frontière entre deux carrés. Le carré de la
+position SHALL se lire sur le carroyage embarqué, celui du bouton « Situer » : le verdict vaut hors
+connexion. Sa phrase SHALL être celle que la modale de point emploie pour la même divergence.
+
+*Vérifié par* : un test de ViewModel sur les cinq cas (autre carré, concordance, case décochée, frontière,
+numéro incomplet), qui exige la phrase de la modale de point par le même type et constate que la création
+aboutit ; un test d'interface qui lit l'avertissement, le bouton « Créer » resté offert, puis sa
+disparition après « Situer ». Taire la divergence fait rougir les deux.
+
+#### Scenario: Un numéro tapé, une position ailleurs
+
+- **WHEN** l'observateur tape le carré 130711, colle une position du carré 040110 sans cliquer « Situer »,
+  et coche la case
+- **THEN** un avertissement nomme le carré 040110 et le carré 130711, et « Créer » reste offert
+
+#### Scenario: Après « Situer »
+
+- **WHEN** l'observateur clique « Situer »
+- **THEN** le numéro devient 040110 et l'avertissement disparaît
+
+#### Scenario: Sur une frontière
+
+- **WHEN** la position collée est à distance égale de deux carrés
+- **THEN** aucun avertissement ne s'affiche

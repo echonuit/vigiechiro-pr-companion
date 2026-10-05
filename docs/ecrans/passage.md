@@ -554,8 +554,12 @@ s'il en reste : un script de fin de saison ne conclura donc pas au vert sur un r
 
 ### Importer les observations
 
-L'import des identifications Tadarida ne se fait pas depuis cet écran : il vit dans
-**« Sons & validation »** (menu principal (☰) « Importer depuis Vigie-Chiro », ou glisser-déposer d'un fichier CSV
-`_Vu`), là où vous écoutez et validez les sons. Sur l'écran [Préparer le dépôt](lot.md), « Actualiser »
-les importe aussi, d'office, dès que l'analyse est terminée. Si l'analyse n'est pas encore terminée, l'application vous
-dit **pourquoi** il n'y a rien à importer (jamais lancée, planifiée, en cours, ou en échec).
+Sur une nuit déposée, **Vérifier le traitement** (barre du haut de l'écran) importe les observations dès
+que l'analyse est terminée : c'est le geste d'« Actualiser » de l'écran [Préparer le dépôt](lot.md), et
+il rend le même résultat. Si l'analyse n'est pas encore terminée, l'application vous dit **pourquoi** il
+n'y a rien à importer (jamais lancée, planifiée, en cours, ou en échec).
+
+Ce qui ne se fait pas depuis cet écran, c'est de **réimporter** des observations déjà présentes, ou
+d'importer **un fichier** : les deux vivent dans **« Sons & validation »** (menu principal (☰)
+« Importer depuis Vigie-Chiro », ou glisser-déposer d'un fichier CSV `_Vu`), là où vous écoutez et
+validez les sons.

@@ -293,9 +293,9 @@ Vigie-Chiro » sur l'écran Mes sites).
   **« GPS manquant : placer sur la carte »**, précédé d'une **icône d'avertissement**, ouvre cette même
   carte sur le carré du site, **mode édition déjà actif** : le point, affiché au centre de son carré, n'a plus qu'à être
   **glissé** à sa vraie position (puis enregistré). Le bouton **+ Ajouter un point** crée un nouveau
-  point. Chaque carte indique aussi la **distance au point le plus proche** du site ; si deux points sont
-  **anormalement rapprochés** (sous le seuil de protocole), une **icône d'avertissement** le signale, pour
-  repérer une saisie GPS erronée ou des points trop serrés.
+  point. Chaque carte indique aussi la **distance au point le plus proche** du site : c'est une
+  information, que l'application ne juge pas (voir la note « La distance au point le plus proche », plus
+  haut). Elle aide à repérer une saisie GPS erronée.
 - **Publier un point sur Vigie-Chiro** : sur un point que **vous** avez créé, le lien
   **« Publier sur Vigie-Chiro »** l'ajoute aux points du carré sur la plateforme, sans toucher à ceux
   qui y sont déjà. Une fois le point en ligne, la carte l'indique par **« Publié sur Vigie-Chiro »** et

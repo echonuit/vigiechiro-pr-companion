@@ -447,7 +447,7 @@ CONTRAT = {
     "geste": "javadoc qui raconte au lieu de contracter",
     "population": "PRODUCTION + TESTS",
     "dispositif": "cliquet",
-    "seuil": "740, polarite=descend",
+    "seuil": "739, polarite=descend",
     "temoin": "scripts/adr/4359-javadoc-narratif.py --auto-test",
     "decision": "ADR 4359",
 }
