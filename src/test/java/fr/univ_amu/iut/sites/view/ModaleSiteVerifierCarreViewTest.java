@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.PresenceDuCarre;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
@@ -153,14 +154,15 @@ class ModaleSiteVerifierCarreViewTest {
     private void saisirCarre(FxRobot robot, String carre) {
         TextField champ = robot.lookup("#champCarre").queryAs(TextField.class);
         robot.interact(champ::clear);
-        robot.clickOn(champ).write(carre);
+        GesteVisible.cliquer(robot, champ);
+        robot.write(carre);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
     /// Clique « Vérifier », en laissant voir l'écran avant le geste et le verdict après lui.
     private void verifierLeCarre(FxRobot robot) {
         Respiration.avantLeGeste(robot);
-        robot.clickOn(verifier(robot));
+        GesteVisible.cliquer(robot, verifier(robot));
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
     }
@@ -325,7 +327,7 @@ class ModaleSiteVerifierCarreViewTest {
         // `saisirCarre` vide le champ et retape tout, si bien que le clip montrait le verdict
         // disparaître au VIDAGE - un champ qui se vide seul, puis un numéro qui se réécrit, et
         // l'encart parti entre les deux. On ne voyait pas la correction (#4166).
-        robot.clickOn(robot.lookup("#champCarre").queryAs(TextField.class));
+        GesteVisible.cliquer(robot, "#champCarre");
         robot.push(KeyCode.END);
         robot.push(KeyCode.BACK_SPACE);
         robot.write("1");
@@ -373,7 +375,7 @@ class ModaleSiteVerifierCarreViewTest {
                 .thenReturn(new RapatriementCarre.Resultat.Rapatrie(site, 41));
 
         Respiration.avantLeGeste(robot);
-        robot.clickOn(recuperer(robot));
+        GesteVisible.cliquer(robot, recuperer(robot));
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
 
@@ -396,7 +398,7 @@ class ModaleSiteVerifierCarreViewTest {
                         "Vigie-Chiro est injoignable (bouchon). Réessayez plus tard."));
 
         Respiration.avantLeGeste(robot);
-        robot.clickOn(recuperer(robot));
+        GesteVisible.cliquer(robot, recuperer(robot));
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
 

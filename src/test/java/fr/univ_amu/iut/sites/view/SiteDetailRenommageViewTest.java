@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.EtapeNavigation;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -121,7 +122,7 @@ class SiteDetailRenommageViewTest {
         // L'en-tête AVANT : sans elle, on ne peut pas dire que le numéro a changé.
         Respiration.leTempsDeLire(robot);
 
-        robot.clickOn("#boutonModifier");
+        GesteVisible.cliquer(robot, "#boutonModifier");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
 
@@ -137,7 +138,7 @@ class SiteDetailRenommageViewTest {
     void renommer_relibelle_l_etape(FxRobot robot) {
         assertThat(libelleDeLEtapeCourante()).isEqualTo("Carré " + CARRE_AVANT);
 
-        robot.clickOn("#boutonModifier");
+        GesteVisible.cliquer(robot, "#boutonModifier");
 
         // Le libellé est un `String` figé dans `EtapeNavigation` : c'est le symptôme que le balayage
         // #3545 avait repéré. Il ne se distingue pas à l'écran, la fiche n'ayant pas
