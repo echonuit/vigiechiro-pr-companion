@@ -1,11 +1,12 @@
 # Chercher dans le dépôt
 
-Six outils, et ils ne répondent pas aux mêmes questions. Se tromper d'outil coûte rarement une
+Sept outils, et ils ne répondent pas aux mêmes questions. Se tromper d'outil coûte rarement une
 erreur visible : cela coûte une réponse **fausse et plausible**, ce qui est pire.
 
 | La question porte sur… | L'outil | Ce qu'il rend |
 |---|---|---|
 | un concept, ses voisins, ce qui lui ressemble | `graphify` | un sous-graphe déjà réduit |
+| le **pourquoi** d'une règle, ce que la prose en dit | `scripts/graphify/couche_semantique.py cherche` | les énoncés de la couche, avec leur justification et leur page |
 | **qui appelle CETTE méthode Java**, résolu | `scripts/qualite/appelants.py` | ses porteurs et leurs appelants, types résolus |
 | **qui tient CE contrat Java**, résolu | `scripts/qualite/implemente.py` | ses porteurs, noms qualifiés |
 | **qui lit CE champ Java**, hors de sa classe | `scripts/qualite/lecteurs.py` | ses déclarations, et qui les lit |
@@ -88,18 +89,23 @@ Cela ne veut pas dire que personne ne lit ces pages. La prose de `.github/` est 
 textuel de la passe 3 de la clôture, que porte la compétence `recoller-la-doc-au-code` depuis #5791 :
 le graphe n'en connaît que les titres, et cet instrument en est le lecteur.
 
-!!! warning "Une question en langage courant n'atteint pas toujours la prose"
+!!! warning "Une question en langage courant se pose aux énoncés"
 
     `graphify query` part des libellés qui ressemblent aux mots de la question, et un symbole de
     code homonyme capte le départ. « Pourquoi le dépôt se fait en WAV par défaut plutôt qu'en
-    ZIP » ne rend que du code : `WAV` et `ZIP` sont aussi deux constantes Java, alors que la
-    couche porte plus de trente énoncés sur le sujet. Posée avec les mots de la page, « forme du
-    dépôt par défaut », la même question rend les deux énoncés qui y répondent.
+    ZIP » n'y rend que du code : `WAV` et `ZIP` sont aussi deux constantes Java, alors que la
+    couche porte plus de trente énoncés sur le sujet.
 
-    Mesuré le 5 octobre 2026 sur sept questions, posées au graphe avec puis sans sa couche : cinq
-    reçoivent de la prose qui touche au sujet, une reçoit une prose sans rapport, une n'en reçoit
-    aucune. Quand
-    la réponse ne rend que du code, reposer la question avec les mots d'un titre ou d'une règle.
+    Pour une question sur un pourquoi ou sur une règle, la commande du dépôt cherche les énoncés
+    par leurs mots, justification comprise :
+
+    ```bash
+    python3 scripts/graphify/couche_semantique.py cherche "pourquoi le dépôt se fait en WAV"
+    ```
+
+    Elle compare des mots, pas des sens : quand elle rend zéro, la prose n'en dit rien, ou le dit
+    autrement. Mesuré le 5 octobre 2026 sur sept questions : six rendent la page attendue parmi
+    leurs cinq premiers énoncés, la septième au huitième rang. La raison est dans l'[ADR 5939].
 
 !!! warning "Une page récente répond avec sa version d'avant"
 
@@ -208,4 +214,5 @@ relu comme « 33 clips » alors qu'il comptait les cas d'un auto-test.
 [ADR 5790]: decisions/5790-le-graphe-lit-la-prose-d-un-perimetre-declare.md
 [ADR 5813]: decisions/5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache.md
 [ADR 5904]: decisions/5904-une-hyperarete-se-declare-et-les-ponts-parcourent-les-pages-du-graphe.md
+[ADR 5939]: decisions/5939-une-question-de-prose-se-pose-aux-enonces-de-la-couche.md
 [ADR 5877]: decisions/5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages.md

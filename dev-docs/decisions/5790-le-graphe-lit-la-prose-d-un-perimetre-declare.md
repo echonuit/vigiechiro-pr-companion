@@ -13,7 +13,7 @@ verified:
     at: 2026-10-04
 relations:
   prolonge: ["5553-trois-index-repondent-aucun-ne-devient-un-garde"]
-  completee_par: ["5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache", "5857-un-registre-sort-du-perimetre-et-une-page-sortie-quitte-la-couche", "5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages", "5814-une-empreinte-par-page-dit-ce-qui-est-a-reextraire", "5868-une-citation-part-du-noeud-de-page-et-un-pont-ne-fabrique-pas-de-noeud-de-document"]
+  completee_par: ["5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache", "5857-un-registre-sort-du-perimetre-et-une-page-sortie-quitte-la-couche", "5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages", "5814-une-empreinte-par-page-dit-ce-qui-est-a-reextraire", "5868-une-citation-part-du-noeud-de-page-et-un-pont-ne-fabrique-pas-de-noeud-de-document", "5939-une-question-de-prose-se-pose-aux-enonces-de-la-couche"]
 generated:
   by: "process:assistance-par-agents"
 ---
@@ -43,6 +43,11 @@ generated:
     **2026-10-05** : la reconstruction des ponts est **complétée** par
     [5868](5868-une-citation-part-du-noeud-de-page-et-un-pont-ne-fabrique-pas-de-noeud-de-document.md).
     Une citation part du nœud de page, et un pont ne fabrique pas de nœud de document.
+
+    **2026-10-05** : « une question conceptuelle reçoit des titres » est **complété** par
+    [5939](5939-une-question-de-prose-se-pose-aux-enonces-de-la-couche.md).
+    Une question de prose se pose aux énoncés, par `cherche` : le moteur part des libellés, et un
+    symbole de code homonyme captait le départ.
 
 ## Le contexte
 
