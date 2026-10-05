@@ -71,7 +71,11 @@ Un état montré **incidemment** est presque aussi fragile qu'un état montré n
 
 Trois gardes tournent sur cette passe, et ils refusent plutôt qu'ils n'avertissent :
 `check_captures.py` refuse une vue sans aperçu, `check_doc_images.py` une page qui pointe une image
-absente, `check_doc_videos.py` la même chose pour les clips.
+absente. `check_doc_videos.py` en juge **trois** et non une : que le parcours cité existe, qu'il ait
+encore son scénario au banc, et que son chemin résolve dans le site **construit**. Sa première version
+ne vérifiait que l'existence du fichier, et elle est restée verte pendant que le site rendait un
+lecteur vide, MkDocs ne réécrivant pas les chemins du HTML brut. « La même chose pour les clips »
+est donc une description à moitié vraie, qui laisse croire le contrôle plus faible qu'il n'est.
 
 Le premier lit le **code** et non le disque : une vue qui existe sans capture est un défaut, même si
 aucune page ne la cite encore.
