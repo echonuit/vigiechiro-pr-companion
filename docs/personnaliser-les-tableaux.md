@@ -49,7 +49,9 @@ Deux chemins mènent au **même** panneau « Colonnes… » :
 
 Les deux ouvrent le panneau de gauche à droite illustré ci-dessus, où l'on affiche, masque et réordonne
 les colonnes. Les changements s'appliquent **en direct** : il n'y a rien à valider, refermez le panneau
-quand le tableau vous convient.
+quand le tableau vous convient, par son bouton **« Fermer »** ou d'un clic à côté.
+
+![Le panneau « Colonnes… » tel qu'il s'ouvre : son titre, une ligne par colonne avec sa poignée et sa case, et le bouton « Fermer ».](assets/captures/apercu-analyse-colonnes-popup.png)
 
 !!! note "La colonne d'identité reste toujours affichée"
     Chaque tableau a une colonne qui **identifie** la ligne (l'espèce, la date du passage, le nom de

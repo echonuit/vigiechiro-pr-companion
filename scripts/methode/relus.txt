@@ -24,7 +24,7 @@ f39525018491  src/main/java/fr/univ_amu/iut/analyse/model/ServiceActivite.java
 7dc8946c4fe7  src/main/java/fr/univ_amu/iut/analyse/model/ServiceAnalyse.java
 01b6418958b2  src/main/java/fr/univ_amu/iut/analyse/model/ServiceSynthese.java
 5dc0ded69470  src/main/java/fr/univ_amu/iut/analyse/outils/CaptureActivite.java
-cc6904a8806b  src/main/java/fr/univ_amu/iut/analyse/outils/CaptureAnalyse.java
+1da3405031a9  src/main/java/fr/univ_amu/iut/analyse/outils/CaptureAnalyse.java
 8ec36e570676  src/main/java/fr/univ_amu/iut/analyse/outils/CaptureSynthese.java
 4a1eb11ae57b  src/main/java/fr/univ_amu/iut/analyse/outils/CaptureSyntheseSansReferentiel.java
 eae3ce762806  src/main/java/fr/univ_amu/iut/analyse/view/ActiviteAnalyse.java
@@ -448,7 +448,7 @@ f50d8061a9e9  src/main/java/fr/univ_amu/iut/commun/model/dao/UtilisateurDao.java
 34ecdca578f8  src/main/java/fr/univ_amu/iut/commun/model/dao/VueSauvegardeeDao.java
 83993481f6e9  src/main/java/fr/univ_amu/iut/commun/model/validation/ValidateurCarre.java
 5478639ec6d0  src/main/java/fr/univ_amu/iut/commun/model/validation/ValidateurCodePoint.java
-c08ed299a059  src/main/java/fr/univ_amu/iut/commun/outils/ApercuFx.java
+7a068b0368e3  src/main/java/fr/univ_amu/iut/commun/outils/ApercuFx.java
 e544b4024f7d  src/main/java/fr/univ_amu/iut/commun/outils/AttenteAudio.java
 84eebce33323  src/main/java/fr/univ_amu/iut/commun/outils/AttenteTuiles.java
 cc89daffa54a  src/main/java/fr/univ_amu/iut/commun/outils/CaptureAccueil.java
@@ -1551,6 +1551,7 @@ a52f280a8fc0  src/test/java/fr/univ_amu/iut/commun/model/dao/ReleveTraitementDao
 02a9d3cc97eb  src/test/java/fr/univ_amu/iut/commun/model/validation/ValidateurCarreTest.java
 637e7ea891dd  src/test/java/fr/univ_amu/iut/commun/model/validation/ValidateurCodePointTest.java
 e542e73ce851  src/test/java/fr/univ_amu/iut/commun/outils/ApercuFxElisionTest.java
+b9e0277ec4a6  src/test/java/fr/univ_amu/iut/commun/outils/ApercuFxFenetreSurgissanteTest.java
 9eaac53ad246  src/test/java/fr/univ_amu/iut/commun/outils/ApercuFxInviteTest.java
 450a5af8282d  src/test/java/fr/univ_amu/iut/commun/outils/ApercuFxLibelleTest.java
 5882f5d1f083  src/test/java/fr/univ_amu/iut/commun/outils/ApercuFxMenuTest.java

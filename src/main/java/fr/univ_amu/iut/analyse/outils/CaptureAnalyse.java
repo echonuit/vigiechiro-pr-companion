@@ -27,6 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -105,7 +106,10 @@ public final class CaptureAnalyse {
         rendre(injecteur, null, sortie.resolve("apercu-analyse.png"));
         rendre(injecteur, Regroupement.PAR_CARRE, sortie.resolve("apercu-analyse-carre.png"));
         rendreCarte(injecteur, sortie.resolve("apercu-analyse-carte.png"));
-        rendreColonnes(injecteur, sortie.resolve("apercu-analyse-colonnes.png"));
+        rendreColonnes(
+                injecteur,
+                sortie.resolve("apercu-analyse-colonnes.png"),
+                sortie.resolve("apercu-analyse-colonnes-popup.png"));
         rendreListeLieu(injecteur, sortie.resolve("apercu-analyse-lieu.png"));
 
         System.out.println("Apercus ecrits dans " + sortie.toAbsolutePath());
@@ -169,7 +173,10 @@ public final class CaptureAnalyse {
     /// `Popup` que le `snapshot` de scène ne capturerait pas) posé en surimpression en haut à droite, là où
     /// s'ancre le ☰ « outils ». On joint palette + design **à la scène** : le panneau, frère de la vue, n'hérite
     /// pas des feuilles chargées par le FXML sur la vue.
-    private static void rendreColonnes(Injector injecteur, Path fichier) throws IOException {
+    ///
+    /// `popup` reçoit le **vrai** popup, ouvert par le geste du produit (#5861) : seul ce rendu passe par
+    /// sa scène, où la palette manquait (#5602). Le panneau en surimpression ne peut pas le montrer.
+    private static void rendreColonnes(Injector injecteur, Path fichier, Path popup) throws IOException {
         FXMLLoader loader = new FXMLLoader(AnalyseController.class.getResource(FXML_ANALYSE));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
@@ -182,11 +189,16 @@ public final class CaptureAnalyse {
                 () -> {
                     if (vue.lookup(ID_TABLE_ESPECES) instanceof TableView<?> table) {
                         table.getSelectionModel().select(0);
+                        List<GestionnaireColonnes.Colonne> colonnes = GestionnaireColonnes.colonnesParDefaut(table);
+                        if (!ApercuFx.enregistrerFenetreSurgissante(
+                                () -> GestionnaireColonnes.ouvrir(table, colonnes, table), popup)) {
+                            throw new IllegalStateException("Popup des colonnes non rendu : " + popup);
+                        }
+                        System.out.println("Apercu ecrit dans " + popup.toAbsolutePath());
                         // Geste de fermeture vide : un apercu n'a pas de fenetre a refermer. Le bouton
                         // « Fermer » est neanmoins RENDU, puisque le produit l'affiche (cf. passe 8 du
                         // chantier #4002 : la capture le montrait absent).
-                        VBox panneau = GestionnaireColonnes.construirePanneau(
-                                table, GestionnaireColonnes.colonnesParDefaut(table), () -> {});
+                        VBox panneau = GestionnaireColonnes.construirePanneau(table, colonnes, () -> {});
                         panneau.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
                         StackPane.setAlignment(panneau, Pos.TOP_RIGHT);
                         StackPane.setMargin(panneau, new Insets(70, 24, 0, 0));
