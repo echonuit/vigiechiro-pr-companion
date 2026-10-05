@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.lot.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.EtatLot;
@@ -125,7 +126,7 @@ public final class FormatsLot {
             return "Nuit récupérée de Vigie-Chiro : elle y est déjà déposée, il n'y a rien à téléverser.";
         }
         if (etat.statut() == StatutWorkflow.DEPOSE) {
-            return "Passage déposé le " + etat.deposeLe() + ".";
+            return "Passage déposé le " + Horodatage.dateSeule(etat.deposeLe()) + ".";
         }
         if (etat.statut() == StatutWorkflow.DEPOT_EN_COURS) {
             // Dépôt automatique entamé mais incomplet (#980) : interrompu ou en cours d'exécution. La

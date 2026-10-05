@@ -194,7 +194,7 @@ class ScenarioCarteMultiNuitsTest {
         rattacherAuPremierPoint(robot);
         // Résolue et basculée d'un même geste sur le fil JavaFX : une ligne de table se recycle, et une
         // référence tenue jusqu'au clic pourrait viser une autre nuit (ADR 5068).
-        robot.interact(() -> caseDeLaNuit(robot, "2026-07-03").fire());
+        robot.interact(() -> caseDeLaNuit(robot, "03/07/2026").fire());
         WaitForAsyncUtils.waitForFxEvents();
         GesteVisible.amenerDansLeCadre(robot, BOUTON_IMPORTER);
         GesteVisible.cliquer(robot, BOUTON_IMPORTER);

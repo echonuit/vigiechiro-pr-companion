@@ -319,7 +319,7 @@ class LotViewModelTest {
 
         assertThat(viewModel.etatLotProperty().get())
                 .as("l'état de la nuit survit au compte rendu de l'opération")
-                .isEqualTo("Passage déposé le 2026-06-23T08:00.");
+                .isEqualTo("Passage déposé le 23/06/2026.");
         assertThat(viewModel.retourProperty().get().texte())
                 .as("et le compte rendu survit au rechargement de l'état")
                 .contains("libérés");
@@ -347,7 +347,7 @@ class LotViewModelTest {
         assertThat(viewModel.deposeProperty().get()).isTrue();
         assertThat(viewModel.peutPreparerProperty().get()).isFalse();
         assertThat(viewModel.peutDeposerProperty().get()).isFalse();
-        assertThat(viewModel.etatLotProperty().get()).isEqualTo("Passage déposé le 2026-06-23T08:00.");
+        assertThat(viewModel.etatLotProperty().get()).isEqualTo("Passage déposé le 23/06/2026.");
     }
 
     @Test

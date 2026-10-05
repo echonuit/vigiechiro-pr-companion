@@ -15,7 +15,9 @@ class DeposerTest {
         String texte = Deposer.rendreDepot(12L, 128, 536_870_912L, "2026-06-20T10:00:00");
 
         assertThat(texte)
-                .contains("Passage #12 déposé le 2026-06-20T10:00:00")
+                // La base porte la date avec son heure, en ISO : elle se lit comme dans `statut-passage` (#5761).
+                .contains("Passage #12 déposé le 20/06/2026.")
+                .doesNotContain("2026-06-20")
                 .contains("128 séquence(s)")
                 .contains("537 Mo");
     }

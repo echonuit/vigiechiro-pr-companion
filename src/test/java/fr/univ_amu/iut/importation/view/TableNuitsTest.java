@@ -13,6 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.TableCell;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.framework.junit5.ApplicationExtension;
@@ -56,5 +57,36 @@ class TableNuitsTest {
                     .as("le texte du badge doit tenir entre les marges de la cellule")
                     .isLessThanOrEqualTo(largeurDisponible);
         }
+    }
+
+    /// L'avertissement juste au-dessus de la table dit « nuit du 04/07/2026 » ; la table disait
+    /// « 2026-07-04 », la forme de `LocalDate#toString`.
+    @Test
+    @DisplayName("#5761 : la colonne « Nuit du » se lit en français, et non en forme ISO")
+    void la_nuit_se_lit_en_francais() {
+        LocalDate date = LocalDate.of(2026, 7, 3);
+        var nuits = FXCollections.<NuitVM>observableArrayList(new NuitVM(new NuitDetectee(
+                date,
+                date.atTime(21, 0),
+                date.plusDays(1).atTime(6, 0),
+                List.of(),
+                Completude.COMPLETE,
+                null,
+                List.of())));
+        var table = TableNuits.creer(nuits);
+        StackPane racine = new StackPane(table);
+        Scene scene = Habillage.scene(racine);
+        racine.resize(1020, 180);
+        scene.getRoot().applyCss();
+        scene.getRoot().layout();
+
+        var textes = table.lookupAll(".table-cell").stream()
+                .filter(TableCell.class::isInstance)
+                .map(TableCell.class::cast)
+                .map(cellule -> cellule.getText())
+                .filter(texte -> texte != null && !texte.isBlank())
+                .toList();
+
+        assertThat(textes).contains("03/07/2026").doesNotContain("2026-07-03");
     }
 }
