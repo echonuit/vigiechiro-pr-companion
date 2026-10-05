@@ -216,4 +216,45 @@ class SuiviLignesDepotTest {
     private static DepotUnite unite(Long id, String identifiant, StatutDepotUnite statut, String erreur) {
         return new DepotUnite(id, 42L, identifiant, TypeDepotUnite.ZIP, statut, null, erreur, MAINTENANT);
     }
+
+    /// La réouverture de l'écran repose la table depuis le plan enregistré (#5867). Le plan dit si un refus
+    /// est définitif ; la table l'oubliait, et le bouton promettait de nouveau une reprise que #3687 avait
+    /// retirée pendant la session.
+    @Test
+    @DisplayName("#5867 : rechargé depuis le plan, un refus définitif le reste, et il n'y a rien à reprendre")
+    void planifier_garde_le_caractere_definitif_d_un_refus() {
+        SuiviLignesDepot suivi = new SuiviLignesDepot();
+
+        suivi.planifier(List.of(
+                unite(1L, "a.wav", StatutDepotUnite.DEPOSE, null),
+                new DepotUnite(
+                        2L,
+                        42L,
+                        "b.wav",
+                        TypeDepotUnite.WAV,
+                        StatutDepotUnite.ECHEC,
+                        null,
+                        "HTTP 403 : SignatureDoesNotMatch",
+                        true,
+                        MAINTENANT)));
+
+        assertThat(suivi.refusDefinitifsProperty().get()).isEqualTo(1);
+        assertThat(suivi.lignes().get(1).echecDefinitif()).isTrue();
+        assertThat(suivi.resteAReprendreProperty().get())
+                .as("une séquence en ligne, une refusée définitivement : la reprise ne ferait rien passer")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#5867 : rechargé depuis le plan, un échec rejouable reste à reprendre")
+    void planifier_laisse_a_reprendre_un_echec_rejouable() {
+        SuiviLignesDepot suivi = new SuiviLignesDepot();
+
+        suivi.planifier(List.of(
+                unite(1L, "a.wav", StatutDepotUnite.DEPOSE, null),
+                unite(2L, "b.wav", StatutDepotUnite.ECHEC, "HTTP 503")));
+
+        assertThat(suivi.refusDefinitifsProperty().get()).isZero();
+        assertThat(suivi.resteAReprendreProperty().get()).isTrue();
+    }
 }

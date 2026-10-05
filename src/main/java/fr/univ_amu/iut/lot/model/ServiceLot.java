@@ -351,6 +351,17 @@ public class ServiceLot {
         return modeDuDepotEntame(idPassage).orElseGet(choixSource::modeRegle);
     }
 
+    /// Combien de séquences de la nuit sont **refusées sans recours** (#5867) : c'est ce qui offre le repli
+    /// manuel, à l'écran comme en ligne de commande.
+    ///
+    /// Sans recours veut dire que ni la reprise ni une reconnexion ne les feront passer. La cause qu'une
+    /// reconnexion lève est nommée ici une seule fois, comme [RearmementDepotUnites] la nomme pour réarmer :
+    /// les deux lectures du plan ne peuvent pas diverger sur ce qu'un refus de droits vaut.
+    public int sequencesRefuseesSansRecours(Long idPassage) {
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
+        return depotUnites.sequencesRefuseesSansRecours(idPassage, CauseRefus.AUTHENTIFICATION);
+    }
+
     /// La [SourceDepot] du dépôt **par défaut** du passage (#1994), remplaçante de
     /// [#sourceDepotParDefaut] pour les appelants qui téléversent.
     ///

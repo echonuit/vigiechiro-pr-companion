@@ -79,7 +79,9 @@
        hors connexion pour le dépôt manuel. Connecté en séquences WAV, rien ne produit d'archive. -->
   <VBox fx:id="carteArchives" spacing="4.0" styleClass="carte-section">
     <HBox alignment="CENTER_LEFT" spacing="8.0">
-      <Label text="2. Générer les archives de dépôt" styleClass="section-titre" HBox.hgrow="ALWAYS"/>
+      <!-- Titre et consigne suivent le repli manuel (#5867) : posés par RepliManuelUI. -->
+      <Label fx:id="lblTitreCarteArchives" text="2. Générer les archives de dépôt" styleClass="section-titre"
+             HBox.hgrow="ALWAYS"/>
       <MenuButton fx:id="menuOutils" styleClass="menu-actions" accessibleText="Outils : colonnes">
         <graphic>
           <FontIcon iconLiteral="fas-bars"/>
@@ -94,7 +96,8 @@
         <FontIcon iconLiteral="fas-file-archive"/>
       </graphic>
     </Label>
-    <Label text="Découpe les séquences en archives ZIP « préfixe-N.zip » prêtes à téléverser, écrites dans le sous-dossier « depot/ » de la session."
+    <Label fx:id="lblConsigneCarteArchives"
+           text="Découpe les séquences en archives ZIP « préfixe-N.zip » prêtes à téléverser, écrites dans le sous-dossier « depot/ » de la session."
            styleClass="section-sous" wrapText="true"/>
     <HBox spacing="8.0" alignment="CENTER_LEFT">
       <Button fx:id="btnGenererArchives" text="Générer les archives de dépôt"
@@ -116,6 +119,17 @@
     <!-- Table de suivi (#820) : une ligne + une barre par archive ZIP (en attente / en cours / terminée).
          Colonnes et cellule d'état construites par le controller (TableSuiviArchives). -->
     <TableView fx:id="tableArchives" minHeight="120.0" prefHeight="160.0"/>
+    <!-- Le dernier geste du repli manuel (#5867) : dès qu'une participation est liée, la dernière étape
+         offre « Lancer la participation » et plus rien ne marque déposé. Offert en repli seulement,
+         actif une fois les archives générées. Câblé par RepliManuelUI. -->
+    <StackPane fx:id="enveloppeMarquerDeposeRepli" alignment="CENTER_LEFT" visible="false" managed="false">
+      <Button fx:id="btnMarquerDeposeRepli" text="Marquer le passage déposé"
+              styleClass="bouton-secondaire" onAction="#marquerDeposeApresRepli">
+        <graphic>
+          <FontIcon iconLiteral="fas-check"/>
+        </graphic>
+      </Button>
+    </StackPane>
   </VBox>
 
   <!-- Étape 3 - Téléverser sur Vigie-Chiro. Sous-vue depuis #2745 : cette carte portait dix champs

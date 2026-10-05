@@ -14,7 +14,7 @@ enforced_by:
 verification_note: "les deux classes tiennent le comportement : le mode sans réglage, le mode d une valeur inconnue, le défaut que l onglet affiche, et la reprise d un dépôt entamé. Elles ne disent rien du bien-fondé du défaut, qui repose sur un retour d expérience du porteur et non sur une mesure : aucun dispositif du dépôt ne compare la durée d un dépôt ZIP à celle d un dépôt WAV"
 relations:
   amende: ["0006-depot-zip-par-defaut-perte-audio-serveur-assumee", "0034-la-forme-du-depot-se-choisit"]
-  completee_par: ["5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert"]
+  completee_par: ["5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert", "5867-le-repli-manuel-s-offre-apres-un-refus-sans-recours"]
 verified:
   - by: machine:ci
     at: 2026-10-04
@@ -31,6 +31,11 @@ generated:
     défaut sans avoir cherché ce qui supposait l'ancien : l'écran de lot et la ligne de commande
     parlaient encore d'archives pour un dépôt en séquences. Ils lisent désormais la forme du dépôt et
     n'offrent que ce qui la sert. Le reste fait foi.
+
+    **2026-10-05** : cette décision est **complétée** par
+    [5867](5867-le-repli-manuel-s-offre-apres-un-refus-sans-recours.md). La règle 3 tient pour ce que
+    l'application téléverse. Après un refus sans recours, le repli manuel fait partir des archives à la
+    main : la participation peut alors porter les deux formes.
 
 ## Contexte
 

@@ -14,6 +14,8 @@ import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
@@ -75,6 +77,11 @@ public class DepotViewModel {
     /// Table de dépôt (#983) : une [LigneDepot] par unité suivie (`depot_unite`, #981), réhydratée à
     /// l'ouverture ([#rehydrater]) et mise à jour en direct pendant un dépôt (relais du controller).
     private final SuiviLignesDepot suiviLignes = new SuiviLignesDepot();
+
+    /// Les séquences de la nuit refusées **sans recours** (#5867), telles que le plan enregistré les
+    /// porte : c'est ce qui offre le repli manuel. Un état du dépôt, donc porté ici.
+    private final ReadOnlyIntegerWrapper sequencesRefuseesSansRecours =
+            new ReadOnlyIntegerWrapper(this, "sequencesRefuseesSansRecours", 0);
 
     public DepotViewModel(ServiceLot service, Optional<DepotVigieChiro> depot) {
         this.service = Objects.requireNonNull(service, "service");
@@ -198,6 +205,7 @@ public class DepotViewModel {
     public void rehydrater(Long idPassage) {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         suiviLignes.planifier(service.unitesDepot(idPassage));
+        relireLesRefus(idPassage);
         participationLiee.set(depot.map(d -> d.participationLiee(idPassage)).orElse(false));
         // Le résultat d'un lancement appartient au passage qui l'a demandé : un autre passage ouvert ne le
         // reprend pas. L'état connu de l'analyse, lui, revient par le dernier relevé.
@@ -212,6 +220,18 @@ public class DepotViewModel {
         service.reinitialiserDepot(idPassage);
         rehydrater(idPassage);
         retour.set(RetourOperation.succes("Dépôt réinitialisé : vous pouvez re-téléverser la nuit."));
+    }
+
+    /// Relit dans le plan enregistré les séquences refusées sans recours (#5867). À appeler sur le fil
+    /// JavaFX, à l'ouverture d'une nuit et après un téléversement : c'est lui qui peut en ajouter.
+    public void relireLesRefus(Long idPassage) {
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
+        sequencesRefuseesSansRecours.set(service.sequencesRefuseesSansRecours(idPassage));
+    }
+
+    /// Les séquences refusées sans recours de la nuit ouverte ; `0` quand il n'y en a pas.
+    public ReadOnlyIntegerProperty sequencesRefuseesSansRecoursProperty() {
+        return sequencesRefuseesSansRecours.getReadOnlyProperty();
     }
 
     /// Table de dépôt observable (#983) : lignes à lier à la `TableView`, drapeau « reste à reprendre »

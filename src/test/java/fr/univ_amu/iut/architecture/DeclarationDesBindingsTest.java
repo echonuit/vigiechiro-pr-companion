@@ -55,7 +55,11 @@ class DeclarationDesBindingsTest {
     /// trois ; `DernierGesteDuDepot.de` est pur. Déclaration jugée **complète**.
     // +1 le 05/10/2026 (#5860) : `PremierPoint.avertissement` lit `demande`, `offert`, le numéro saisi et la
     // position (celle-ci dans `divergence`), et les déclare tous les quatre. Déclaration jugée complète.
-    private static final int SITES_RELEVES = 67; // +1 #5687, +1 #5859, +1 #5860
+    // +1 le 05/10/2026 (#5867) : `RepliManuelUI.cabler` compose la consigne de la carte des archives. Son
+    // calcul lit `enRepli` et le compte des séquences refusées, et déclare les deux. Dans le même lot, le
+    // texte de la table vide de `LotController` lit en plus `EtapeDesArchives.offerte`, qui ne dépend que
+    // du fil d'étapes : `viewModel.etapes()` est ajouté à ses dépendances. Déclarations jugées complètes.
+    private static final int SITES_RELEVES = 68; // +1 #5687, +1 #5859, +1 #5860, +1 #5867
 
     private static final Pattern APPEL = Pattern.compile("Bindings\\.create[A-Za-z]*Binding\\s*\\(");
 

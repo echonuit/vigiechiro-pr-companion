@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.lot.model.DepotUnite;
+import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -99,14 +100,20 @@ public class ServiceRecuperabilite {
     }
 
     /// Quand le disque ne suffit pas : le serveur peut-il prendre le relais ? Uniquement si la nuit a été
-    /// **rattachée** à une participation **et** déposée en **WAV**.
+    /// **rattachée** à une participation **et** que **toutes** ses unités sont **déposées** en **WAV**.
     private RecuperabiliteNuit sansDisqueComplet(Passage passage, String libelle, int presentes, int total) {
         boolean rattachee = liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(passage.id()))
                 .isPresent();
         List<DepotUnite> plan = depotDao.parPassage(passage.id());
-        boolean deposeEnWav = !plan.isEmpty() && plan.stream().allMatch(unite -> unite.type() == TypeDepotUnite.WAV);
+        boolean enWav = !plan.isEmpty() && plan.stream().allMatch(unite -> unite.type() == TypeDepotUnite.WAV);
+        // Le serveur ne rend que ce qu'il a REÇU (#5867) : une séquence refusée ou jamais partie n'y est
+        // pas, même dans un plan entièrement en séquences. Après un repli manuel elle est partie en
+        // archive, dont la plateforme ne garde pas l'audio.
+        long horsServeur = plan.stream()
+                .filter(unite -> unite.statut() != StatutDepotUnite.DEPOSE)
+                .count();
 
-        if (rattachee && deposeEnWav) {
+        if (rattachee && enWav && horsServeur == 0) {
             return new RecuperabiliteNuit(
                     passage.id(),
                     libelle,
@@ -115,8 +122,11 @@ public class ServiceRecuperabilite {
                     total,
                     "déposée en WAV et rattachée : le serveur a gardé les fichiers");
         }
-        return new RecuperabiliteNuit(
-                passage.id(), libelle, SourceAudio.PERDU, presentes, total, motifPerte(rattachee, plan));
+        String motif = rattachee && enWav
+                ? "déposée en WAV, mais " + horsServeur + " séquence(s) sur " + plan.size()
+                        + " ne sont pas sur le serveur : il ne peut pas tout rendre"
+                : motifPerte(rattachee, plan);
+        return new RecuperabiliteNuit(passage.id(), libelle, SourceAudio.PERDU, presentes, total, motif);
     }
 
     /// Pourquoi l'audio est perdu : en nommant la **vraie** cause, celle qui aurait pu être évitée.

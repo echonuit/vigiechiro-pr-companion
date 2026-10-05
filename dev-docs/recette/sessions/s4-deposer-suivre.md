@@ -118,6 +118,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 - **S4-35** · *geste: reprendre-un-depot-apres-un-refus* · Reprendre le dépôt : seules les archives refusées repartent, jamais celles déjà en ligne.
 - **S4-36** · *geste: un-refus-422-ne-conseille-pas-la-reconnexion* · Rejouer S4-30 à S4-33 avec `VIGIECHIRO_STUB_REFUS=422` : le compte rendu **ne conseille pas** la
   reconnexion, parce qu'un contenu refusé ne se répare pas ainsi. Une reconnexion ne réarme rien.
+- **S4-104** · En forme par défaut (séquences WAV), téléverser avec `VIGIECHIRO_STUB_REFUS=422` : sous l'étape « 2. Téléverser sur Vigie-Chiro », la carte « **Repli : déposer à la main** » apparaît, dit combien de séquences ont été refusées et offre « Générer les archives de dépôt ». Le fil d'étapes compte toujours **trois** étapes, et le chemin du dossier `depot/` revient dans l'étape 2. Fermer puis rouvrir l'écran : le repli est toujours là, et le bouton de l'étape 2 **ne s'appelle pas** « Reprendre le dépôt ». Générer les archives : « **Marquer le passage déposé** » s'ouvre dans la carte ; le cliquer rend le passage « Déposé » et retire la carte. Avec `VIGIECHIRO_STUB_REFUS=403`, il n'apparaît pas : le compte rendu conseille la reconnexion, qui suffit.
 
 **Bloc B · Dépôt réel (130711, nuit du 05/07, ZIP, calcul lancé)**
 

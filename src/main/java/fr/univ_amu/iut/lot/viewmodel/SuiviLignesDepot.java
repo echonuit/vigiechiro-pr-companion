@@ -56,7 +56,8 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
 
     /// Pose (ou re-pose) la table depuis l'état **persisté** des unités : chaque statut de `depot_unite`
     /// est traduit en état de ligne (à déposer → en attente ; en cours interrompu → en attente, il sera
-    /// re-tenté ; déposé → terminée ; échec → échec avec sa raison en infobulle).
+    /// re-tenté ; déposé → terminée ; échec → échec avec sa raison en infobulle, définitif si le plan le
+    /// dit).
     public void planifier(List<DepotUnite> unites) {
         List<LigneDepot> lignes = new ArrayList<>(unites.size());
         int numero = 1;
@@ -70,7 +71,15 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
                     // Interrompue sans confirmation (#981) : elle sera re-tentée, on la montre en attente.
                 }
                 case DEPOSE -> ligne.terminer();
-                case ECHEC -> ligne.echouer(unite.messageErreur());
+                // Le plan dit si le refus est définitif (#5867) : l'oublier ici rendait à chaque
+                // réouverture la promesse de reprise que #3687 avait retirée pendant la session.
+                case ECHEC -> {
+                    if (unite.echecDefinitif()) {
+                        ligne.echouerDefinitivement(unite.messageErreur());
+                    } else {
+                        ligne.echouer(unite.messageErreur());
+                    }
+                }
             }
             lignes.add(ligne);
         }

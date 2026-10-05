@@ -139,10 +139,13 @@ public class EtapeTeleversementController {
                                 + " archives ZIP reste possible depuis le dossier :")
                         .otherwise("Téléversez la nuit directement sur Vigie-Chiro : les séquences transformées"
                                 + " partent une à une, au format attendu par la plateforme."));
-        ligneCheminDepot.visibleProperty().bind(archives);
-        ligneCheminDepot.managedProperty().bind(archives);
-        enveloppeOuvrirDepot.visibleProperty().bind(archives);
-        enveloppeOuvrirDepot.managedProperty().bind(archives);
+        // Le chemin et « Ouvrir le dossier » servent au dépôt manuel : ils reviennent aussi en repli
+        // (#5867), là où le numéro et la consigne de l'étape, eux, ne changent pas.
+        BooleanBinding depotManuel = EtapeDesArchives.servent(appuis.viewModel(), appuis.depotViewModel());
+        ligneCheminDepot.visibleProperty().bind(depotManuel);
+        ligneCheminDepot.managedProperty().bind(depotManuel);
+        enveloppeOuvrirDepot.visibleProperty().bind(depotManuel);
+        enveloppeOuvrirDepot.managedProperty().bind(depotManuel);
         Tooltip annulation = new Tooltip();
         annulation
                 .textProperty()
@@ -275,6 +278,8 @@ public class EtapeTeleversementController {
                         () -> appuis.depotViewModel().televerser(idPassage, suivi),
                         bilan -> {
                             appuis.depotViewModel().appliquerBilan(bilan);
+                            // Un téléversement peut laisser des séquences refusées sans recours (#5867).
+                            appuis.depotViewModel().relireLesRefus(idPassage);
                             // Statut honnête (#982) : le moteur a déjà posé le bon statut (jamais
                             // « Déposé » sur un dépôt partiel) ; on recharge l'état pour le refléter.
                             appuis.viewModel().ouvrirSur(idPassage);

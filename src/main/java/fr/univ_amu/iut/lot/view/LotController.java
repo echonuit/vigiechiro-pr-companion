@@ -222,6 +222,22 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private VBox carteArchives;
 
     @FXML
+    private Label lblTitreCarteArchives;
+
+    @FXML
+    private Label lblConsigneCarteArchives;
+
+    /// La carte du téléversement elle-même : l'inclusion injecte son nœud sous son `fx:id`.
+    @FXML
+    private Node televersement;
+
+    @FXML
+    private StackPane enveloppeMarquerDeposeRepli;
+
+    @FXML
+    private Button btnMarquerDeposeRepli;
+
+    @FXML
     private Label lblAlerteTraitement;
 
     @FXML
@@ -339,8 +355,19 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 () -> contexte.get().idPassage()));
 
         // L'étape des archives n'est offerte que si elle sert (#5824) : sa carte suit le ViewModel.
-        carteArchives.visibleProperty().bind(EtapeDesArchives.offerte(viewModel));
+        // Elle revient aussi en repli manuel, sous l'étape refusée (#5867).
+        carteArchives.visibleProperty().bind(EtapeDesArchives.servent(viewModel, depotViewModel));
         carteArchives.managedProperty().bind(carteArchives.visibleProperty());
+        RepliManuelUI.cabler(
+                new RepliManuelUI.Vue(
+                        carteArchives,
+                        lblTitreCarteArchives,
+                        lblConsigneCarteArchives,
+                        televersement,
+                        enveloppeMarquerDeposeRepli,
+                        btnMarquerDeposeRepli),
+                viewModel,
+                depotViewModel);
 
         // Stepper du dépôt (#251), reconstruit à chaque changement d'étapes (mêmes styles que M-Passage).
         viewModel.etapes().addListener((ListChangeListener<EtapeDepot>) changement -> majStepper());
@@ -420,10 +447,15 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 TableSuiviArchives.configurer(
                         tableArchives,
                         Bindings.createStringBinding(
+                                // Le téléversement ne produit d'archives que là où leur étape est offerte :
+                                // en repli manuel (#5867), la table vide n'a rien à dire de lui.
                                 () -> FormatsLot.archivesAbsentes(
-                                        depotViewModel.disponible(),
+                                        depotViewModel.disponible()
+                                                && EtapeDesArchives.offerte(viewModel)
+                                                        .get(),
                                         depotViewModel.enCoursProperty().get()),
-                                depotViewModel.enCoursProperty())),
+                                depotViewModel.enCoursProperty(),
+                                viewModel.etapes())),
                 depotColonnes,
                 "lot",
                 "principale",
@@ -573,6 +605,13 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     @FXML
     private void preparer() {
         viewModel.preparer();
+    }
+
+    /// Marque le passage déposé depuis la carte du repli (#5867) : le dépôt a été fini à la main, et la
+    /// dernière étape, qui lance la participation, ne le marque pas.
+    @FXML
+    private void marquerDeposeApresRepli() {
+        viewModel.deposer();
     }
 
     @FXML

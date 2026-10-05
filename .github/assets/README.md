@@ -802,6 +802,15 @@ Le second gros pourvoyeur d'états : préparation, téléversement, reprise, int
 
 <table>
 <tr>
+<th width="50%">Repli manuel après un refus sans recours</th>
+</tr>
+<tr>
+<td><a href="apercu-lot-repli-manuel.png"><img src="apercu-lot-repli-manuel.png" width="430" alt="Repli manuel : connecté en séquences WAV, deux séquences refusées par le stockage, la carte « Repli : déposer à la main » sous l'étape de téléversement, et le fil à trois étapes"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
 <th width="50%">Lancement accepté</th>
 <th width="50%">Analyse déjà demandée</th>
 </tr>

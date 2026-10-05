@@ -17,7 +17,9 @@ déposée n'est pas une nuit traitée. Elle n'est franchie qu'une fois l'analyse
 
 En séquences WAV, rien ne produit d'archive : l'étape « Générer les archives » n'a pas lieu d'être, et
 l'écran ne l'affiche pas. Elle revient si vous choisissez les archives ZIP, et elle reste quand
-l'application n'est pas connectée, parce qu'elle sert alors au dépôt manuel.
+l'application n'est pas connectée, parce qu'elle sert alors au dépôt manuel. Elle revient aussi, sans
+numéro, quand Vigie-Chiro refuse des séquences sans recours : c'est le
+[repli manuel](#le-repli-manuel-quand-des-sequences-sont-refusees-sans-recours).
 
 Un dépôt **déjà entamé garde sa forme** : si une archive de la nuit est en ligne, l'écran reste celui
 des archives, quoi que dise le réglage.
@@ -147,8 +149,8 @@ La table garde le détail : la cause de chaque échec y est lisible, archive par
 | Ce que dit le refus | Ce qui le lève |
 |---|---|
 | **droits ou jeton** (session expirée, autorisation manquante) | **vous reconnecter**. Les archives refusées pour cette raison redeviennent reprenables aussitôt, sans autre geste |
-| **contenu refusé** (l'archive elle-même ne convient pas) | se reconnecter n'y change rien : il faut **régénérer les archives** de la nuit, puis relancer le téléversement |
-| **stockage** (l'espace de stockage de Vigie-Chiro refuse l'envoi des octets) | se reconnecter n'y change rien : **relancez le téléversement**, qui redemande de nouvelles autorisations d'envoi. Si le refus persiste, déposez depuis le dossier de la nuit, comme le permet le dépôt manuel |
+| **contenu refusé** (l'archive ou la séquence elle-même ne convient pas) | se reconnecter n'y change rien. Pour des archives, il faut **régénérer les archives** de la nuit, puis relancer le téléversement. Pour des séquences, l'écran offre le [repli manuel](#le-repli-manuel-quand-des-sequences-sont-refusees-sans-recours) |
+| **stockage** (l'espace de stockage de Vigie-Chiro refuse l'envoi des octets) | se reconnecter n'y change rien : **relancez le téléversement**, qui redemande de nouvelles autorisations d'envoi. Si le refus persiste : pour des archives, déposez-les depuis le dossier de la nuit, comme le permet le dépôt manuel ; pour des séquences, l'écran offre le [repli manuel](#le-repli-manuel-quand-des-sequences-sont-refusees-sans-recours) |
 
 !!! tip "Après une régénération, relancez simplement le téléversement"
     Le bouton s'appelle alors « Téléverser sur Vigie-Chiro » et non « Reprendre le dépôt » : c'est
@@ -164,6 +166,34 @@ La table garde le détail : la cause de chaque échec y est lisible, archive par
 ![Un dépôt entamé : l'en-tête dit « Dépôt Vigie-Chiro entamé », le téléversement reste l'étape courante, et « Générer les archives de dépôt » reste offert.](../assets/captures/apercu-lot-depot-entame.png)
 
 ![Pendant un téléversement, la génération est refusée : le bandeau demande d'attendre la fin du téléversement ou de l'annuler, et « Annuler le dépôt » est offert au-dessus de la table de suivi.](../assets/captures/apercu-lot-generation-refusee.png)
+
+#### Le repli manuel, quand des séquences sont refusées sans recours
+
+En séquences WAV, l'écran n'offre ni archives ni dépôt manuel : tant que le téléversement passe, ils ne
+servent pas. Si Vigie-Chiro refuse des séquences pour une raison que ni « Reprendre le dépôt » ni une
+reconnexion ne lèveront, c'est-à-dire un refus du stockage ou un contenu refusé, une carte
+**« Repli : déposer à la main »** apparaît **sous** l'étape de téléversement.
+
+Elle dit combien de séquences ont été refusées, et offre « **Générer les archives de dépôt** » : les
+archives ZIP de la nuit sont écrites dans le sous-dossier `depot/`. Le chemin de ce dossier et
+« Ouvrir le dossier (dépôt manuel) » reviennent avec elle, dans l'étape de téléversement. Déposez ces
+archives à la main sur le portail, puis cliquez « **Marquer le passage déposé** », dans la même carte :
+le bouton s'ouvre une fois les archives générées. Il reste alors à « Lancer la participation », comme
+après tout dépôt.
+
+Le fil d'étapes ne change pas : il compte toujours trois étapes. Le repli n'est pas une étape de plus,
+c'est l'issue de celle qui vient d'être refusée.
+
+Les archives contiennent **toute la nuit**, séquences déjà en ligne comprises.
+
+Un refus de **droits** n'offre pas le repli, puisqu'il suffit de vous reconnecter. Un échec que
+« Reprendre le dépôt » peut rattraper ne l'offre pas non plus.
+
+En ligne de commande, `deposer-vigiechiro` nomme le même repli sous son bilan :
+`exporter-lot --passage N` génère les archives, et `deposer --passage N` marque le passage une fois
+qu'elles sont sur le portail.
+
+![Le repli manuel : une séquence en ligne, deux refusées par le stockage, et sous l'étape de téléversement la carte « Repli : déposer à la main » avec « Générer les archives de dépôt » et « Marquer le passage déposé ».](../assets/captures/apercu-lot-repli-manuel.png)
 
 ### Ce que le dépôt vous rend à la fin
 

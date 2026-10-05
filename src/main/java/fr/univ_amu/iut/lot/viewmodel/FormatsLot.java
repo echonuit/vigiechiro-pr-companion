@@ -90,7 +90,8 @@ public final class FormatsLot {
     /// l'étape 3, qui les montrait partir. Le dépôt automatique est présent dans toute l'application,
     /// connecté ou non ; seuls les contextes partiels (outils, tests) s'en passent.
     ///
-    /// @param depotAutomatique `true` si le téléversement vers Vigie-Chiro est offert
+    /// @param depotAutomatique `true` si le téléversement vers Vigie-Chiro est offert **et produit des
+    ///     archives** : en séquences WAV il n'en produit aucune, et le repli manuel (#5867) passe `false`
     /// @param televersementEnCours `true` pendant un téléversement
     /// @return le texte, jamais vide
     public static String archivesAbsentes(boolean depotAutomatique, boolean televersementEnCours) {

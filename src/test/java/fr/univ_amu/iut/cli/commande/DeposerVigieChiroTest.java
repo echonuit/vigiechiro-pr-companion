@@ -241,6 +241,58 @@ class DeposerVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#5867 : des séquences refusées sans recours font nommer le repli et la commande des archives")
+    void des_sequences_refusees_sans_recours_font_nommer_le_repli() {
+        when(serviceLot.sourceDepotParDefaut(42L))
+                .thenReturn(SourceDepot.desFichiers(List.of(Path.of("/ws/a.wav"), Path.of("/ws/b.wav"))));
+        when(depot.deposer(eq(42L), any(), any(), any()))
+                .thenReturn(new BilanDepot(
+                        "part-1",
+                        0,
+                        List.of(
+                                new EchecUnite("a.wav", "HTTP 403", true, CauseRefus.STOCKAGE),
+                                new EchecUnite("b.wav", "HTTP 422", true, CauseRefus.CONTENU))));
+        when(serviceLot.sequencesRefuseesSansRecours(42L)).thenReturn(2);
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(Optional.of(depot), sortie).execute("--passage", "42");
+
+        assertThat(code).isEqualTo(1);
+        assertThat(sortie.toString())
+                .contains("Repli : 2 séquence(s) refusée(s) sans recours")
+                .contains("exporter-lot --passage 42")
+                .contains("à la main sur le portail")
+                .contains("deposer --passage 42");
+    }
+
+    @Test
+    @DisplayName("#5867 : sans séquence refusée sans recours, la commande ne nomme pas le repli")
+    void sans_sequence_refusee_sans_recours_le_repli_n_est_pas_nomme() {
+        when(serviceLot.sourceDepotParDefaut(42L)).thenReturn(SourceDepot.desFichiers(List.of(Path.of("/ws/a.wav"))));
+        when(depot.deposer(eq(42L), any(), any(), any()))
+                .thenReturn(new BilanDepot(
+                        "part-1", 0, List.of(new EchecUnite("a.wav", "HTTP 403", true, CauseRefus.AUTHENTIFICATION))));
+        when(serviceLot.sequencesRefuseesSansRecours(42L)).thenReturn(0);
+        StringWriter sortie = new StringWriter();
+
+        ligne(Optional.of(depot), sortie).execute("--passage", "42");
+
+        assertThat(sortie.toString()).contains("Reconnectez-vous").doesNotContain("Repli");
+    }
+
+    @Test
+    @DisplayName("#5867 : en séquences, le refus du stockage renvoie au repli, pas au dossier de la nuit")
+    void rendre_bilan_en_sequences_le_stockage_renvoie_au_repli() {
+        String texte = DeposerVigieChiro.rendreBilan(new BilanDepot(
+                "p-1", 0, List.of(new EchecUnite("Car_000.wav", "HTTP 403", true, CauseRefus.STOCKAGE)), 0));
+
+        assertThat(texte)
+                .contains("se reconnecter n'y changera rien")
+                .contains("si le refus persiste, suivez le repli ci-dessous.")
+                .doesNotContain("depuis le dossier de la nuit");
+    }
+
+    @Test
     @DisplayName("#5598 : sur un lot mêlé de droits et de stockage, chaque geste est nommé avec son nombre")
     void rendre_bilan_droits_et_stockage_melanges() {
         String texte = DeposerVigieChiro.rendreBilan(droitsEtStockage());

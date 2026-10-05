@@ -38,8 +38,16 @@ public final class CompteRenduChiffreDepot {
     /// Ce qui s'applique à un refus du stockage, et que la relance a vérifié (#5598) : chaque tentative
     /// redéclare le fichier, donc redemande des URL signées neuves, et le dépôt manuel reste possible.
     private static final String GESTE_STOCKAGE = "se reconnecter n'y changera rien. Relancez le téléversement,"
-            + " qui redemande de nouvelles autorisations d'envoi ; si le refus persiste, déposez-les"
-            + " manuellement depuis le dossier de la nuit.";
+            + " qui redemande de nouvelles autorisations d'envoi ; si le refus persiste, ";
+
+    /// Le dépôt manuel, selon ce qui est parti (#5867). Des archives sont déjà dans le dossier de la
+    /// nuit ; des séquences n'y ont pas d'archive tant que le repli de l'écran ne les a pas générées.
+    private static String gesteStockage(UniteDeDepot unite) {
+        return GESTE_STOCKAGE
+                + (unite == UniteDeDepot.ARCHIVE
+                        ? "déposez-les manuellement depuis le dossier de la nuit."
+                        : "utilisez le repli ci-dessous.");
+    }
 
     private CompteRenduChiffreDepot() {}
 
@@ -193,7 +201,8 @@ public final class CompteRenduChiffreDepot {
                     : debut + " Le détail par " + unite.singulier() + " est dans la table.";
         }
         if (stockage == refuses.size()) {
-            return refuses.size() + " " + nom + " ont été refusées par le stockage de Vigie-Chiro : " + GESTE_STOCKAGE;
+            return refuses.size() + " " + nom + " ont été refusées par le stockage de Vigie-Chiro : "
+                    + gesteStockage(unite);
         }
         // Le cas mêlé, trouvé en ouvrant l'aperçu (#3962) : l'ADR 3854 demande de ne nommer que ce qui
         // s'applique, pas de se taire quand cela s'applique à une partie. Chaque cause dit donc son
@@ -210,7 +219,7 @@ public final class CompteRenduChiffreDepot {
                     .append(stockage)
                     .append(accord(stockage, " d'entre elles a été refusée", " d'entre elles ont été refusées"))
                     .append(" par le stockage : ")
-                    .append(GESTE_STOCKAGE);
+                    .append(gesteStockage(unite));
         }
         if (contenu > 0) {
             phrase.append(" ")

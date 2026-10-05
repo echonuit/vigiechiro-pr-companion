@@ -9,7 +9,9 @@ import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.DepotUnite;
+import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
@@ -90,7 +92,8 @@ class ServiceRecuperabiliteTest {
     @DisplayName("Disque vide + dépôt WAV rattaché : le SERVEUR peut rendre l'audio")
     void audio_depuis_le_serveur() throws IOException {
         Long idPassage = creerNuit(1, false);
-        depotDao.insert(DepotUnite.aDeposer(idPassage, "seq-1.wav", TypeDepotUnite.WAV, "2026-07-01"));
+        // Une séquence DÉPOSÉE : « à déposer » ne dit pas que le serveur l'a (#5867).
+        deposer(depotDao.insert(DepotUnite.aDeposer(idPassage, "seq-1.wav", TypeDepotUnite.WAV, "2026-07-01")));
         liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), "6a53f5fa"));
 
         BilanRecuperabilite bilan = service.bilan();
@@ -194,5 +197,36 @@ class ServiceRecuperabiliteTest {
                     null, nom, idOriginal, index, null, null, fichier.toString(), false, idSession, null));
         }
         return idPassage;
+    }
+
+    /// Le serveur ne rend que ce qu'il a reçu en WAV (#5867). Une séquence refusée n'y est pas, même si le
+    /// plan est entièrement en séquences : après un repli manuel elle est partie en archive, dont la
+    /// plateforme ne garde pas l'audio. Le verdict lisait le TYPE des unités, pas leur statut.
+    @Test
+    @DisplayName(
+            "#5867 : dépôt WAV dont une séquence est refusée : le serveur ne peut pas tout rendre, et le motif le compte")
+    void une_sequence_refusee_n_est_pas_sur_le_serveur() throws IOException {
+        Long idPassage = creerNuit(1, false);
+        deposer(depotDao.insert(DepotUnite.aDeposer(idPassage, "seq-1.wav", TypeDepotUnite.WAV, "2026-07-01")));
+        DepotUnite refusee =
+                depotDao.insert(DepotUnite.aDeposer(idPassage, "seq-2.wav", TypeDepotUnite.WAV, "2026-07-01"));
+        depotDao.marquerEchec(
+                refusee.id(), "HTTP 403 : SignatureDoesNotMatch", true, CauseRefus.STOCKAGE, "2026-07-01");
+        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), "6a53f5fa"));
+
+        BilanRecuperabilite bilan = service.bilan();
+
+        assertThat(bilan.nuits()).singleElement().satisfies(nuit -> {
+            assertThat(nuit.source())
+                    .as("une séquence n'est nulle part : annoncer « le serveur a gardé les fichiers » ferait"
+                            + " perdre un son à qui remet sa base à zéro sur cette foi")
+                    .isEqualTo(SourceAudio.PERDU);
+            assertThat(nuit.motif()).contains("1 séquence(s) sur 2");
+        });
+        assertThat(bilan.perteAnnoncee()).isTrue();
+    }
+
+    private void deposer(DepotUnite unite) {
+        depotDao.mettreAJour(unite.id(), StatutDepotUnite.DEPOSE, "fichier-" + unite.id(), null, "2026-07-01");
     }
 }
