@@ -32,7 +32,9 @@ class StatutPassageTest {
                 "SM4-0042",
                 StatutWorkflow.DEPOSE,
                 Verdict.OK,
-                "2026-06-20",
+                // La forme que la production écrit : `horloge.maintenant().toString()` (#5761). Une date
+                // seule faisait passer ce test sur une donnée que la base ne porte jamais.
+                "2026-06-20T10:00:15.123456",
                 4_509_715_660L, // ~4,2 Go
                 536_870_912L, // 512 Mo
                 128,
@@ -127,7 +129,7 @@ class StatutPassageTest {
                 // différents. Franciser ces deux clés casserait tout script en aval, et sans
                 // ces deux lignes, personne ne s'en apercevrait avant l'utilisateur.
                 .containsEntry("date", "2026-06-15")
-                .containsEntry("deposeLe", "2026-06-20");
+                .containsEntry("deposeLe", "2026-06-20T10:00:15.123456");
     }
 
     @Test

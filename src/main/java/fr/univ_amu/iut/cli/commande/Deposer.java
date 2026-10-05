@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.Lot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
@@ -51,7 +52,9 @@ public final class Deposer implements Callable<Integer> {
     /// Compte rendu du dépôt. Fonction pure (testable sans base) : le volume peut être `null` (non calculé).
     static String rendreDepot(long idPassage, int nombreSequences, Long volumeOctets, String deposeLe) {
         String volume = volumeOctets == null ? "volume inconnu" : Formats.octetsLisibles(volumeOctets);
-        return "Passage #" + idPassage + " déposé le " + deposeLe + ".\n" + "  Dépôt : " + nombreSequences
+        // La date se lit comme dans `statut-passage` (#5761) : la base la porte avec son heure, en ISO.
+        return "Passage #" + idPassage + " déposé le " + Horodatage.dateSeule(deposeLe) + ".\n" + "  Dépôt : "
+                + nombreSequences
                 + " séquence(s), " + volume + ".";
     }
 }

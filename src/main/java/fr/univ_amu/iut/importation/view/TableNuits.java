@@ -1,8 +1,10 @@
 package fr.univ_amu.iut.importation.view;
 
 import fr.univ_amu.iut.commun.view.ColonneBadge;
+import fr.univ_amu.iut.commun.view.ColonneDate;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.importation.viewmodel.NuitVM;
+import java.time.LocalDate;
 import java.util.function.Function;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -44,12 +46,21 @@ final class TableNuits {
         table.minHeightProperty().bind(hauteur);
         table.prefHeightProperty().bind(hauteur);
         table.getColumns().add(colonneInclure());
-        table.getColumns().add(colonneTexte("Nuit du", 110, nuit -> nuit.date().toString()));
+        table.getColumns().add(colonneNuit());
         table.getColumns().add(colonneTexte("Fichiers", 80, nuit -> Integer.toString(nuit.nombreFichiers())));
         table.getColumns().add(colonneEtat());
         table.getColumns().add(colonnePassage());
         table.getColumns().add(colonneDejaImportee());
         return table;
+    }
+
+    /// Colonne « Nuit du » : la date se lit « 03/07/2026 », comme dans l'avertissement juste au-dessus, et
+    /// se trie en date (#5761). Elle affichait la forme ISO de `LocalDate#toString`.
+    private static TableColumn<NuitVM, LocalDate> colonneNuit() {
+        TableColumn<NuitVM, LocalDate> colonne = new TableColumn<>("Nuit du");
+        colonne.setPrefWidth(110);
+        ColonneDate.configurer(colonne, nuit -> nuit.date().toString());
+        return colonne;
     }
 
     /// Colonne « Importer » : case à cocher **éditable** liée à `inclureProperty` (écriture bidirectionnelle).

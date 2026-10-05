@@ -2,7 +2,6 @@ package fr.univ_amu.iut.commun.view;
 
 import fr.univ_amu.iut.commun.model.Horodatage;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -50,14 +49,9 @@ public final class ColonneDate {
 
     /// La date d'une chaîne ISO, ou `null` si elle est absente ou illisible.
     public static LocalDate analyser(String iso) {
-        if (iso == null || iso.isBlank()) {
-            return null;
-        }
-        try {
-            return LocalDate.parse(iso);
-        } catch (DateTimeParseException illisible) {
-            return null;
-        }
+        // Une date seule ou un instant local, comme la base les porte (#5761) : la date de dépôt s'écrit
+        // avec son heure, et la colonne « Déposé le » la lisait absente.
+        return Horodatage.dateDe(iso).orElse(null);
     }
 
     /// Le libellé français d'une chaîne ISO - `22/06/2026` - ou la chaîne telle quelle si elle est

@@ -51,10 +51,30 @@ public final class Horodatage {
         if (dateIso == null || dateIso.isBlank()) {
             return "";
         }
+        return dateDe(dateIso).map(DATE_SEULE::format).orElse(dateIso);
+    }
+
+    /// La date d'une chaîne que la **base** porte : une date seule (`2026-06-21`, une nuit) ou un instant
+    /// local (`2026-06-21T08:00:15.123456`, une date de dépôt). Vide si elle est absente ou illisible.
+    ///
+    /// La date de dépôt s'écrit par `horloge.maintenant().toString()`, donc avec son heure. Les lecteurs
+    /// n'acceptaient qu'une date seule : dans une phrase elle restait brute, et dans une colonne elle se
+    /// lisait absente (#5761). Leurs tests leur donnaient une date seule, que la base ne porte jamais ici.
+    ///
+    /// Un instant **avec décalage**, celui de la plateforme, n'est pas lu : le couper au `T` change le
+    /// jour dès que le décalage traverse minuit (#4017). Il passe par [#dateMuraleLisible].
+    public static Optional<java.time.LocalDate> dateDe(String iso) {
+        if (iso == null || iso.isBlank()) {
+            return Optional.empty();
+        }
         try {
-            return DATE_SEULE.format(java.time.LocalDate.parse(dateIso));
-        } catch (java.time.format.DateTimeParseException illisible) {
-            return dateIso;
+            return Optional.of(java.time.LocalDate.parse(iso));
+        } catch (java.time.format.DateTimeParseException pasUneDateSeule) {
+            try {
+                return Optional.of(LocalDateTime.parse(iso).toLocalDate());
+            } catch (java.time.format.DateTimeParseException illisible) {
+                return Optional.empty();
+            }
         }
     }
 
