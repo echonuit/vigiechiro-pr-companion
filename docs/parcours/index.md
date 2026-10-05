@@ -88,7 +88,7 @@ vous avez choisi de déposer en **archives ZIP** ([Réglages](../ecrans/reglages
 l'application **n'est pas connectée**. Elle sert alors au dépôt **manuel** : « Ouvrir le dossier », dépôt
 depuis votre navigateur, puis **« Marquer déposé »** à la place de « Lancer la participation ».
 
-![En archives ZIP, à l'étape « Prêt à déposer » : quatre étapes, dont « Générer les archives ».](../assets/captures/apercu-lot-deposer.png)
+![Application non connectée, à l'étape « Prêt à déposer » : quatre étapes, dont « Générer les archives », et le dépôt manuel pour seul chemin.](../assets/captures/apercu-lot-deposer.png)
 
 !!! warning "Déposer ≠ faire traiter"
     Téléverser les fichiers ne déclenche **pas** le calcul : sans « Lancer la participation », la
