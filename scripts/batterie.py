@@ -407,7 +407,64 @@ def engage_pmd(diff: list[str]) -> bool:
     #5421 engage quels que soient ses chemins. Deriver la reponse du consommateur ferme ce cas sans
     liste a tenir : le rapport existe exactement quand quelqu un le lit.
     """
-    return any("4617" in g for g in engage(diff)[0])
+    return any(consomme_le_rapport_pmd(g) for g in engage(diff)[0])
+
+
+def consomme_le_rapport_pmd(garde: str) -> bool:
+    """Ce garde LIT-il `target/pmd.xml` ? Fonction PURE, pour le temoin.
+
+    Le consommateur est nomme ICI et nulle part ailleurs. `engage_pmd` decide d en produire le
+    rapport, et `renvoi_a_la_preparation` decide d avouer que sa production a echoue : deux
+    designations du meme concept divergeraient le jour ou il change de numero (#5850).
+    """
+    return "4617" in garde
+
+
+def _cause_possiblement_locale(pmd_a_echoue: bool) -> str:
+    """La fin de la phrase qui conclut sur les muets. Fonction PURE, pour le temoin.
+
+    Sans echec de preparation, leur refus est bien etranger au diff : un outil absent, un paquet
+    manquant. Avec un echec de preparation, il ne l est PAS, et le dire l etait envoyait chercher du
+    cote du poste alors que l arbre ne compilait pas.
+    """
+    if pmd_a_echoue:
+        return " L un d eux attend un rapport que cette porte n a PAS pu produire, et il"
+    return " Leur refus ne parle pas de votre diff, et il"
+
+
+def renvoi_a_la_preparation(garde: str, pmd_a_echoue: bool) -> str:
+    """La ligne qui renvoie un garde MUET a l echec de preparation qui l explique, ou `""`.
+
+    ## Le defaut que ceci repare
+
+    Un garde qui refuse faute de `target/pmd.xml` nomme sa cause et prescrit la commande qui produit
+    le rapport. Son refus est juste, et il ne peut pas savoir que la porte vient de lancer cette
+    commande et qu elle a echoue. Le lecteur, lui, lit le bloc du muet SEUL : il relance donc une
+    commande deja tentee, et c est un tour de trop.
+
+    Vecu par une session pair le 2026-10-05, dont l arbre ne compilait pas : une javadoc coupee hors
+    de son commentaire par le formateur. Elle a trouve la cause en relancant `./mvnw` sans `-q`, ce
+    que le bloc suggerait - donc le chemin fonctionnait, en un tour de trop.
+
+    ## Ce que ce renvoi n est PAS
+
+    La porte DIT deja l echec de sa preparation, a l endroit ou elle le constate. Le pair ne l avait
+    pas lu parce qu il filtrait la sortie sur trois motifs dont aucun ne la couvrait : le defaut
+    n est donc pas le silence de la porte, mais le fait que le bloc du muet ne renvoie a rien.
+
+    ## Pourquoi la condition porte sur le CONSOMMATEUR
+
+    Un garde muet pour une autre raison - l outil OpenSpec absent, un paquet manquant - n a rien a
+    voir avec PMD, et lui coller ce renvoi le rendrait bavard au lieu de juste. C est le second cas
+    du critere de fin, et sans lui le remede serait indiscernable d un bavardage.
+    """
+    if not (pmd_a_echoue and consomme_le_rapport_pmd(garde)):
+        return ""
+    return (
+        "      La PREPARATION de ce rapport a ECHOUE plus haut : la commande ci-dessus a deja ete\n"
+        "      tentee par cette porte. Rejouez-la SANS `-q` pour en lire la cause, qui est souvent\n"
+        "      que votre arbre ne compile pas."
+    )
 
 
 def engage(diff: list[str], racine: pathlib.Path | None = None) -> tuple[list[str], list[str]]:
@@ -688,6 +745,7 @@ def rendre(
     # ⟨la porte POSE ce qui est cher et conditionnel⟩ Le crochet `post-checkout` pose ce qui est bon
     # marche - six secondes - a la creation d un worktree (#5406). PMD, lui, depend de ce que le diff
     # touche, et la porte est le seul endroit qui le sache.
+    pmd_a_echoue = False
     if engage_pmd(diff):
         print()
         print("  Rapport PMD : `4617` REFUSE sans lui, et se classerait « environnemental ».")
@@ -706,8 +764,19 @@ def rendre(
             # Dire, et poursuivre. Une preparation muette qui echoue rendrait la porte MOINS sure
             # qu avant : le lecteur croirait l environnement complet, et `4617` refuserait sans qu on
             # sache si c est le rapport ou le code.
+            pmd_a_echoue = True
             print(f"    ECHEC apres {mis:.0f} s : `./mvnw -o test-compile pmd:pmd`.")
-            print("    `4617` refusera donc, et son refus ne dira RIEN de ce diff.")
+            # ⟨l ORDRE de ces deux lignes est le remede, et il vient d un pair⟩ L ecriture d avant
+            # disait « `4617` refusera donc, et son refus ne dira RIEN de ce diff ». Elle repondait a
+            # « que vaut le refus de 4617 » alors que le lecteur, a cet instant, se demande « qu est-ce
+            # qui a casse ». Et sa reponse ecartait precisement la bonne : dans le cas vecu, Spotless
+            # avait coupe une ligne de javadoc hors de son commentaire, donc la cause ETAIT le diff.
+            #
+            # On dit donc la cause d abord, puis seulement ce que le verdict de `4617` vaut. La
+            # formulation est celle du pair qui a vecu le cas, et il la donne pour ce qu elle est : un
+            # jugement a la relecture, sur un seul cas, et non une mesure (#5850).
+            print("    La compilation a echoue : la cause la plus probable est VOTRE diff.")
+            print("    Le verdict de `4617` n est pas a lire tant qu elle n est pas retablie.")
 
     print()
     # ⟨on va AU BOUT, et on rend tous les rouges⟩ La premiere ecriture s arretait au premier refus,
@@ -850,15 +919,20 @@ def rendre(
         print(f"  ? {g} n a PAS pu juger")
         for affichee in refus_affiche(ligne):
             print(affichee)
+        renvoi = renvoi_a_la_preparation(g, pmd_a_echoue)
+        if renvoi:
+            print(renvoi)
     for ligne in reste_a_lancer(diff, absents, racine):
         print(ligne)
     if not rouges:
         if muets:
             print()
             print("  Rien n est rouge, et tout n a pas ete juge : les gardes ci-dessus ont REFUSE")
-            print(
-                "  de conclure faute d un prerequis. Leur refus ne parle pas de votre diff, et il"
-            )
+            # ⟨« ne parle pas de votre diff » n est pas toujours vrai⟩ Pour un muet faute de `node`
+            # ou d un paquet, l affirmation est juste. Quand la PREPARATION du rapport PMD a echoue,
+            # elle est fausse : la cause la plus probable d un `test-compile` qui echoue est le diff
+            # lui-meme, et la promettre etrangere au diff envoie chercher du cote du poste (#5850).
+            print(f"  de conclure faute d un prerequis.{_cause_possiblement_locale(pmd_a_echoue)}")
             print("  ne vaut pas un vert. Code 2 : « je n ai pas pu tout juger ».")
             return 2
         return 0
@@ -2007,6 +2081,48 @@ def _auto_test() -> int:
     )
     # Le CONTRASTE de la forme : la cause SEULE ne suffit pas. Rendre le geste vide serait pire que
     # le repli, puisque le lecteur croirait avoir tout vu.
+    # ⟨le renvoi a la preparation, et ses DEUX contrastes⟩ Un garde muet qui consomme le rapport PMD
+    # doit apprendre que sa production a echoue ; tout autre muet ne doit RIEN apprendre de plus. Sans
+    # le second cas, le remede rendrait le bloc bavard sur tous les muets au lieu de le rendre juste,
+    # et les deux etats seraient indiscernables (#5850).
+    consommateur = "scripts/adr/4617-code-mort-et-zone-de-test.py"
+    autre = "scripts/methode/verifie-specs-valides.py"
+    echecs += juge(
+        "un muet qui consomme le rapport PMD est renvoye a la preparation",
+        lambda: "ECHOUE plus haut" in renvoi_a_la_preparation(consommateur, True),
+    )
+    echecs += juge(
+        "et il lui dit de rejouer SANS `-q`, ce qui donne la cause",
+        lambda: "-q" in renvoi_a_la_preparation(consommateur, True),
+    )
+    # Le PREMIER contraste : preparation reussie, donc rien a avouer.
+    echecs += juge(
+        "le meme garde ne recoit rien quand la preparation a reussi",
+        lambda: renvoi_a_la_preparation(consommateur, False) == "",
+    )
+    # Le SECOND : un muet qui ne consomme pas ce rapport n a rien a voir avec PMD.
+    echecs += juge(
+        "un muet qui ne consomme pas le rapport ne recoit rien",
+        lambda: renvoi_a_la_preparation(autre, True) == "",
+    )
+    # Et le consommateur est nomme UNE fois : si les deux designations divergent, la porte produirait
+    # le rapport pour un garde et avouerait l echec pour un autre.
+    # ⟨la conclusion des muets ne promet pas l innocence du diff quand elle ne la connait pas⟩
+    echecs += juge(
+        "sans echec de preparation, la conclusion dit le refus etranger au diff",
+        lambda: "ne parle pas de votre diff" in _cause_possiblement_locale(False),
+    )
+    echecs += juge(
+        "avec un echec, elle ne le promet plus et nomme le rapport manquant",
+        lambda: (
+            "ne parle pas de votre diff" not in _cause_possiblement_locale(True)
+            and "PAS pu produire" in _cause_possiblement_locale(True)
+        ),
+    )
+    echecs += juge(
+        "le consommateur du rapport est nomme une seule fois",
+        lambda: consomme_le_rapport_pmd(consommateur) and not consomme_le_rapport_pmd(autre),
+    )
     echecs += juge(
         "une cause sans geste retombe sur le repli",
         lambda: (
