@@ -27,6 +27,14 @@ RUN mkdir /api \
     && pip install --no-cache-dir -r /api/requirements.txt \
     && pip install --no-cache-dir -e /api
 
+# `unzip` : le serveur extrait une archive déposée en appelant ce binaire, et non la bibliothèque de
+# Python (`TASK_PARTICIPATION_EXTRACT_BACKEND`, `unzip` par défaut). `joue_l_extraction.py` lance cette
+# moitié du worker pour observer ce qu'une archive du repli devient (#5970). Posé après les dépendances,
+# pour ne pas refaire leur couche.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /api
 
 # `/api/v1` : le préfixe de la plateforme nationale, que Companion emploie. Sans lui, l'API servirait

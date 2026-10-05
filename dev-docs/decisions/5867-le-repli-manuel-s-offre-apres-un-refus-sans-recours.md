@@ -105,9 +105,9 @@ le compte vit sur le modèle de vue du dépôt, dont c'est l'état.
 ## Conséquences
 
 Les archives du repli contiennent **toute la nuit**, séquences déjà en ligne comprises : le générateur n'est
-pas touché. Ce que le portail fait d'une archive dont une partie des sons est déjà dans la participation
-n'est **pas établi** ; c'est une hypothèse de ce lot, acceptée comme telle par le porteur. Le cas de
-recette `S4-105` l'éprouve contre le vrai portail.
+pas touché. Le serveur les ajoute sans chercher si elles y sont déjà (#5970) : une séquence déjà en ligne
+figure **deux fois** dans les fichiers de la participation, et **une fois** dans ses observations.
+`ArchiveDuRepliSurLaPlateformeDeTestTest` le tient ; ce que le repli doit contenir reste à décider.
 
 Une nuit finie par le repli est annoncée perdue par le bilan de récupérabilité si son disque ne suffit pas,
 avec le compte de ce qui manque.

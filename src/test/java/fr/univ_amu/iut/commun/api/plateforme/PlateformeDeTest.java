@@ -91,6 +91,9 @@ public final class PlateformeDeTest implements BeforeAllCallback {
     private static final String MONGO_DANS_LE_RESEAU = "mongodb://mongo:27017/vigiechiro";
     private static Acces acces;
 
+    /// Le conteneur de l'API, gardé pour [#api()].
+    private static GenericContainer<?> apiMontee;
+
     @Override
     public void beforeAll(ExtensionContext contexte) {
         acces();
@@ -102,6 +105,13 @@ public final class PlateformeDeTest implements BeforeAllCallback {
             acces = monter(dossierDeLaPlateforme());
         }
         return acces;
+    }
+
+    /// Le conteneur de l'API, pour qui doit y lancer ce que la plateforme n'a pas : la moitié du worker
+    /// ([WorkerDeLaPlateformeDeTest]).
+    static synchronized GenericContainer<?> api() {
+        acces();
+        return apiMontee;
     }
 
     private static Acces monter(Path dossier) {
@@ -140,6 +150,7 @@ public final class PlateformeDeTest implements BeforeAllCallback {
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forListeningPort());
         api.start();
+        apiMontee = api;
 
         JsonObject amorce = amorcer(api, dossier);
         deposer(urlS3, amorce.getAsJsonObject("objets"));
