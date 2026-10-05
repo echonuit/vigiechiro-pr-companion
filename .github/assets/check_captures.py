@@ -291,6 +291,27 @@ def _auto_test() -> int:
     return echecs
 
 
+# ⟨pourquoi ce garde declare un contrat⟩ Sans lui, la porte locale ne le connait pas : elle ne retient
+# que les scripts qui en declarent un, et elle a rendu « 0 refus » sur un diff qui ajoutait une capture
+# sans la declarer, que la CI a refuse deux fois (#5809). Le `dispositif` n est pas choisi par
+# commodite : ce garde verifie qu une RELATION tient partout, toute vue a sa capture et toute capture
+# sa ligne de galerie, ce que `verifie_contrats_tiennent.DISPOSITIFS` nomme un invariant.
+CONTRAT = {
+    "geste": "completude des captures : vue declaree, capture presente, capture en galerie",
+    "population": "les vues FXML de src/main, le manifeste et les PNG de .github/assets",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": ".github/assets/check_captures.py --auto-test",
+    "decision": "issue #86, porte du bash en #5229",
+    # Les PNG et le manifeste vivent dans le meme dossier, et une vue neuve engage aussi ce garde :
+    # c est par une vue sans capture qu il refuse, pas seulement par un PNG non declare.
+    "chemins": """
+    .github/assets/**
+    src/main/java/**/view/*.fxml
+    """,
+}
+
+
 if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())

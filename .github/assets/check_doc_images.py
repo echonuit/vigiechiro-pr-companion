@@ -198,6 +198,25 @@ def _auto_test() -> int:
     return echecs
 
 
+# ⟨pourquoi ce garde declare un contrat⟩ Meme raison que son voisin `check_captures.py` : la porte ne
+# retient que les scripts qui en declarent un, et elle ignorait les trois gardes de captures (#5809).
+# `invariant` parce qu il tient une relation : toute image citee par la doc existe ET est declaree.
+CONTRAT = {
+    "geste": "toute capture citee par la doc utilisateur existe et est declaree au manifeste",
+    "population": "les pages de docs/**/*.md et le manifeste de .github/assets",
+    "dispositif": "invariant",
+    "seuil": "(sans objet)",
+    "temoin": ".github/assets/check_doc_images.py --auto-test",
+    "decision": "issue #3293, porte du bash en #5229",
+    # Une page de `docs/` qui cite une image neuve l engage autant qu un PNG ajoute : le defaut peut
+    # venir des deux cotes de la relation.
+    "chemins": """
+    .github/assets/**
+    docs/**/*.md
+    """,
+}
+
+
 if __name__ == "__main__":
     if "--auto-test" in sys.argv:
         sys.exit(_auto_test())
