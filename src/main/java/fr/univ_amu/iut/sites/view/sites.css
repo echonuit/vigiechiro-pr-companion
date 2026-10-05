@@ -174,20 +174,12 @@
     -fx-text-fill: -couleur-texte-discret;
 }
 
-/* #154 : deux points trop proches (sous le seuil) - avertissement orange, non bloquant. */
-/* Ces trois classes portent aussi l'ICONE de severite (posee par IconesSeverite, #2221) en plus du texte :
-   `-fx-icon-color` la colore de la meme teinte, le glyphe litteral d'antan (« ⚠ »/« ✓ ») etant remplace. */
-.carte-point-alerte {
-    -fx-font-size: 12px;
-    -fx-text-fill: -couleur-avertissement-texte;
-    -fx-icon-color: -couleur-avertissement-texte;
-    -fx-font-weight: bold;
-}
-
 .carte-point-actions {
     -fx-spacing: 10;
 }
 
+/* Ces deux classes portent aussi l'ICONE de severite (posee par IconesSeverite, #2221) en plus du texte :
+   `-fx-icon-color` la colore de la meme teinte, le glyphe litteral d'antan (« ⚠ »/« ✓ ») etant remplace. */
 .gps-ok {
     -fx-font-size: 12px;
     -fx-font-weight: bold;

@@ -258,9 +258,21 @@ class ScenarioFicheSiteTest {
         assertThat(cartesPortant(robot, ".gps-manquant"))
                 .as("le point sans GPS porte l'invite à le poser, et c'est ce qui se juge à l'oeil")
                 .isEqualTo(1);
-        assertThat(robot.lookup(".carte-point-alerte").queryAll())
-                .as("A1 et B2 sont à une centaine de mètres, sous le seuil : l'alerte de proximité paraît")
-                .isNotEmpty();
+        // Le Point Fixe n'impose aucune distance entre deux points (#5839) : la carte dit la distance et
+        // ne la juge pas. Le texte est exigé EN ENTIER, parce que l'alerte d'avant le prolongeait.
+        List<Label> distances = robot.lookup(".carte-point .label").queryAllAs(Label.class).stream()
+                .filter(etiquette ->
+                        etiquette.getText() != null && etiquette.getText().contains("du point le plus proche"))
+                .toList();
+        assertThat(distances)
+                .as("A1 et B2, les deux points géolocalisés, disent chacun leur distance à l'autre")
+                .hasSize(2)
+                .allSatisfy(etiquette -> {
+                    assertThat(etiquette.getText()).isEqualTo("à 100 m du point le plus proche");
+                    assertThat(etiquette.getGraphic())
+                            .as("aucune icône de sévérité : cent mètres ne sont pas une faute")
+                            .isNull();
+                });
         assertThat(CadreVisible.contient(premiereCarte))
                 .as("les cartes de points sont ce que ce cas fait juger")
                 .isTrue();
@@ -532,9 +544,9 @@ class ScenarioFicheSiteTest {
 
     /// Le carré jugé, et son voisin de comparaison.
     ///
-    /// A1 et B2 sont séparés d'environ cent mètres, ce qui est **sous le seuil de proximité** : c'est
-    /// ce qui fait paraître l'alerte que `S1-20` fait juger. Un écart choisi au hasard rendrait un clip
-    /// vert et muet sur la moitié du cas.
+    /// A1 et B2 sont séparés de cent mètres : c'est la distance que `S1-20` fait lire sur leurs cartes,
+    /// et celle où l'application alertait à tort avant #5839. Un écart choisi au hasard ne dirait rien
+    /// du retrait.
     private void semerLesDeuxCarres(Injector inj, SourceDeDonnees source) {
         ServiceSites service = inj.getInstance(ServiceSites.class);
 

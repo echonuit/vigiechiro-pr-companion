@@ -169,13 +169,13 @@ class SiteDetailViewModelTest {
     }
 
     @Test
-    @DisplayName("Distance au point le plus proche et alerte si sous le seuil (#154)")
-    void distance_et_alerte_proximite() {
+    @DisplayName("Chaque point géolocalisé porte sa distance au plus proche (#154), sans verdict (#5839)")
+    void distance_au_point_le_plus_proche() {
         Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
-        // A1 et B2 séparés d'environ 100 m (≈ 0,0009° de latitude) → sous le seuil de 200 m.
+        // A1 et B2 séparés d'environ 100 m (≈ 0,0009° de latitude).
         service.ajouterPoint(site.id(), "A1", 43.5000, 5.4000, null);
         service.ajouterPoint(site.id(), "B2", 43.5009, 5.4000, null);
-        // C3 éloigné (≈ 1 km) → au-dessus du seuil.
+        // C3 éloigné (≈ 1 km de A1).
         service.ajouterPoint(site.id(), "C3", 43.5090, 5.4000, null);
 
         viewModel.chargerSite(site);
@@ -185,14 +185,13 @@ class SiteDetailViewModelTest {
                 .findFirst()
                 .orElseThrow();
         assertThat(a1.distanceProche()).hasValueSatisfying(d -> assertThat(d).isCloseTo(100, within(10.0)));
-        assertThat(a1.tropProche()).isTrue();
 
         CartePoint c3 = viewModel.points().stream()
                 .filter(c -> c.point().code().equals("C3"))
                 .findFirst()
                 .orElseThrow();
-        // Le plus proche de C3 est B2 (≈ 900 m) → au-dessus du seuil, pas d'alerte.
-        assertThat(c3.tropProche()).isFalse();
+        // Le plus proche de C3 est B2 et non A1 : c'est le PLUS proche qui est rendu, pas le premier.
+        assertThat(c3.distanceProche()).hasValueSatisfying(d -> assertThat(d).isCloseTo(900, within(10.0)));
     }
 
     @Test

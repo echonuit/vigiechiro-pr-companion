@@ -5,41 +5,32 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// L'étiquette de proximité **dit pourquoi** c'est une alerte (#1379).
+/// L'étiquette de proximité **donne une distance et ne la juge pas** (#5839).
 ///
-/// Le libellé chiffrait la distance et posait une icône d'avertissement sous le seuil, sans jamais dire
-/// ce qui cloche. L'icône signale ; elle n'explique pas - c'est le même défaut que le « ⚠ » écrit dans le
-/// texte qu'elle a remplacé, sous une forme plus polie.
+/// Elle a porté une alerte sous un seuil emprunté à un autre protocole. Le Point Fixe n'impose aucune
+/// distance entre deux points : la phrase est la même à dix mètres qu'à huit cents (ADR 5839).
 class LibelleProximiteTest {
 
     @Test
-    @DisplayName("#1379 : sous le seuil, le libellé donne la règle et non le seul chiffre")
-    void alerte_donne_la_regle() {
-        String libelle = CartesPointsSite.libelleProximite(120, true);
+    @DisplayName("#5839 : à cent mètres, la distance se dit nue, sans règle ni reproche")
+    void cent_metres_ne_sont_pas_une_faute() {
+        String libelle = CartesPointsSite.libelleProximite(100);
 
-        assertThat(libelle).as("le chiffre situe, il reste").contains("120 m");
-        // La règle est écrite dans le code (« garde-fou de protocole ») et n'apparaissait nulle part à
-        // l'écran. C'est elle que l'utilisateur doit lire pour savoir s'il doit agir.
-        assertThat(libelle).contains("protocole");
-        // Et la double cause, que `tropProche()` documente : deux points réellement trop rapprochés, ou
-        // une coordonnée saisie de travers. Sans elle, on cherche l'erreur au mauvais endroit.
-        assertThat(libelle).contains("GPS");
+        // Le texte est exigé EN ENTIER : l'alerte d'avant le prolongeait, et un simple `contains` sur la
+        // distance l'aurait laissée revenir.
+        assertThat(libelle).isEqualTo("à 100 m du point le plus proche");
     }
 
     @Test
-    @DisplayName("#1379 : au-dessus du seuil, l'information reste nue")
-    void cas_neutre_reste_nu() {
-        String libelle = CartesPointsSite.libelleProximite(850, false);
-
-        assertThat(libelle).isEqualTo("à 850 m du point le plus proche");
-        // Rien à expliquer quand rien ne cloche : accrocher la règle au cas nominal en ferait du bruit
-        // permanent, et l'alerte cesserait de se distinguer.
-        assertThat(libelle).doesNotContain("protocole");
+    @DisplayName("#5839 : la phrase a la même forme à dix mètres qu'à huit cents")
+    void la_forme_ne_depend_pas_de_la_distance() {
+        assertThat(CartesPointsSite.libelleProximite(10)).isEqualTo("à 10 m du point le plus proche");
+        assertThat(CartesPointsSite.libelleProximite(850)).isEqualTo("à 850 m du point le plus proche");
     }
 
     @Test
     @DisplayName("Au-delà du kilomètre, la distance se lit en kilomètres")
     void distance_lisible_en_kilometres() {
-        assertThat(CartesPointsSite.libelleProximite(2400, false)).contains("2,4 km");
+        assertThat(CartesPointsSite.libelleProximite(2400)).isEqualTo("à 2,4 km du point le plus proche");
     }
 }
