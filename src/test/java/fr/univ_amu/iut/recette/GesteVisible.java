@@ -202,24 +202,14 @@ public final class GesteVisible {
         }
     }
 
-    /// Écrit `texte` **à la suite** du contenu du champ, et relit pour s'assurer de l'avoir fait.
+    /// Écrit `texte` à la suite du contenu du champ, caret posé à la fin, et relit pour le vérifier.
     ///
-    /// **Pourquoi « à la fin » et non « là où le clic tombe »** : `clickOn("#x").write("t")` tape à la
-    /// position du caret, que le clic pose au pixel visé - au milieu du texte s'il y en a. Aucune aide
-    /// ne peut promettre cette sémantique, qui dépend de la largeur des glyphes et du point cliqué. Le
-    /// caret se pose donc à la fin par [TextInputControl#end], ce qui est déterministe et se documente.
+    /// **Pas un remplaçant exact** de `clickOn("#x").write("t")`, qui tape au pixel visé, donc au
+    /// milieu d'un texte : « à la fin » par [TextInputControl#end] est la seule sémantique qu'une
+    /// aide puisse promettre. Pour écraser le contenu, c'est [#remplacerLeTexte].
     ///
-    /// **Elle n'est donc PAS un remplaçant exact** de la forme qu'elle remplace : elle est ce que les
-    /// deux cas connus voulaient dire. Pour écraser le contenu, c'est [#remplacerLeTexte].
-    ///
-    /// **Les deux cas qui l'ont fait écrire** (#5869) : `#champPassage` de l'assistant d'import, lié
-    /// bidirectionnellement à une propriété numérique par un `NumberStringConverter`, donc jamais vide
-    /// - et son cas éprouve que l'aperçu SUIT la saisie, donc que la valeur change, ce qu'un
-    /// `selectAll()` suivi du même chiffre ne garantit pas ; et le numéro proposé d'une fiche de site,
-    /// auquel le code tapé s'ajoute.
-    ///
-    /// La relecture confronte `avant + texte` et non `texte` : c'est ce qui la distingue de sa sœur, et
-    /// elle fait tomber l'échec ici plutôt que sur l'assertion suivante.
+    /// La relecture confronte `avant + texte` et non `texte`, pour que l'échec tombe ici plutôt que
+    /// sur l'assertion suivante. Les deux champs pré-remplis qui l'ont fait écrire sont dans #5869.
     public static void ecrireALaSuite(FxRobot robot, String selecteur, String texte) {
         cliquer(robot, selecteur);
         TextInputControl champ = robot.lookup(selecteur).queryAs(TextInputControl.class);
