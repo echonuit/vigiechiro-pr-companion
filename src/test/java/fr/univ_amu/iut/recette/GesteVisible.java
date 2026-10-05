@@ -347,9 +347,7 @@ public final class GesteVisible {
     /// tombait hors de la fenêtre pour un champ qui dépasse. L'ADR porte la mesure et le récit.
     private static Point2D pointSurLeFil(FxRobot robot, String cible) {
         return Attente.surLeFil(
-                () -> robot.point(exigerVisible(robot, cible)).query(),
-                "situer « " + cible + " » sur le fil JavaFX",
-                SELECTION_MS);
+                () -> robot.point(exigerVisible(robot, cible)).query(), "situer « " + cible + " »", SELECTION_MS);
     }
 
     /// La même, pour un nœud déjà en main : `moveTo(Node)` situe ses bornes hors du fil tout autant.
@@ -359,8 +357,7 @@ public final class GesteVisible {
     /// changerait le comportement des gestes qui tiennent un nœud, sous couvert de corriger un
     /// défaut de fil.
     private static Point2D pointSurLeFil(FxRobot robot, Node cible) {
-        return Attente.surLeFil(
-                () -> robot.point(cible).query(), "situer le nœud en main sur le fil JavaFX", SELECTION_MS);
+        return Attente.surLeFil(() -> robot.point(cible).query(), "situer le nœud en main", SELECTION_MS);
     }
 
     /// Le point de la cible que `reconnue` désigne, résolu ET situé sur le fil (#5734).
@@ -368,8 +365,7 @@ public final class GesteVisible {
     /// `robot.point(Predicate)` fait les deux, donc aucune référence ne sort de l'aller-retour. Si
     /// le prédicat ne reconnaît rien, TestFX lève, et `Attente.surLeFil` nomme ce qu'on cherchait.
     private static Point2D pointSurLeFil(FxRobot robot, Predicate<Node> reconnue, String ceQueOnCherche) {
-        return Attente.surLeFil(
-                () -> robot.point(reconnue).query(), "situer " + ceQueOnCherche + " sur le fil JavaFX", SELECTION_MS);
+        return Attente.surLeFil(() -> robot.point(reconnue).query(), "situer " + ceQueOnCherche, SELECTION_MS);
     }
 
     /// Le nœud que `cible` désigne, **visible au sens de TestFX**, ou un refus qui le dit.
