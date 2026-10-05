@@ -150,9 +150,14 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x .github/assets/compare_tournages.py
-          # Les planchers mesurés sur runner : un écart se lit contre le bruit de SON cas, pas
-          # contre zéro (#4287). Le fichier est versionné, et `--plancher` l'enrichit paire après
-          # paire.
+          # Un écart se lit contre le bruit de SON cas, pas contre zéro (#4287). Le fichier est
+          # versionné, et `mesurer-les-planchers.yml` le remplit avec l'instrument de ce runner.
+          #
+          # L'outil confronte cet instrument à celui que le fichier déclare, et REFUSE de comparer
+          # s'ils diffèrent : le même clip rend 0,020 % sur un poste et 0,134 % ici, et un index
+          # classé contre le mauvais sol a l'air aussi juste que l'autre (#5885). Le jour où l'image
+          # du runner change de version, ce pas rougit en nommant les deux, et c'est le signal qu'il
+          # faut remesurer.
           python3 .github/assets/compare_tournages.py avant apres comparaison "${TOLERANCE}" \
             .github/assets/planchers-tournages.tsv
           cat comparaison/index.md >> "${GITHUB_STEP_SUMMARY}"

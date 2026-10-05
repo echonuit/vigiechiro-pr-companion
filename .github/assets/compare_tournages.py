@@ -39,14 +39,29 @@ Mesure sur 51 cas, deux tournages du meme commit sur deux runners : la mediane d
 0,008 %, 48 cas sur 51 sont sous 0,05 %, et TROIS depassent - jusqu a 0,809 %. Un seuil unique
 mentirait donc dans les deux sens (#4287).
 
+## Un plancher appartient a l instrument qui l a pris
+
+Le meme clip ne rend pas le meme ecart d une machine a l autre. Mesure sur la meme paire (#5885) :
+0,020 % avec ffmpeg 8.0.1 et ImageMagick 7.1.2, 0,134 % avec ffmpeg 6.1.1 et ImageMagick 6.9.12. Sur
+95 clips, l ecart du second instrument n est jamais inferieur a celui du premier, et sa mediane en
+vaut 5,5 fois. Un plancher pris par l un et lu par l autre annoncait donc une trentaine de clips
+« changes » pour un code identique.
+
+Le fichier de planchers porte depuis son instrument en en-tete, et l outil le confronte au sien dans
+les deux sens : il refuse de COMPARER contre des planchers pris ailleurs, et refuse d en AJOUTER a un
+fichier pris ailleurs. Refuser, et non prevenir : un avertissement se lit une fois.
+
 Usage : python3 .github/assets/compare_tournages.py <avant> <après> <sortie> [tolérance %] [planchers]
         python3 .github/assets/compare_tournages.py --plancher <A> <B> [fichier de planchers]
+        python3 .github/assets/compare_tournages.py --planchers <fichier de planchers> <A> <B> [<C> ...]
         python3 .github/assets/compare_tournages.py --auto-test
 """
 
 from __future__ import annotations
 
+import itertools
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -61,6 +76,27 @@ from mesure_pixels import INCONNUE, part_changee
 
 TOLERANCE_PAR_DEFAUT = 5
 OUTILS = ("ffmpeg", "ffprobe", "compare", "convert", "identify")
+
+# La ligne d en-tete qui dit par quel instrument les planchers du fichier ont ete pris.
+MARQUE_INSTRUMENT = "# Instrument : "
+
+# Les clips auxquels on REFUSE un plancher, et l issue qui dit pourquoi.
+#
+# Un plancher mesure le bruit d un clip qui finit sur son verdict. Ceux-ci ont DEUX fins : ils
+# s arretent pendant une transformation, pendant un fondu, ou sur une page que rien n a calee, et
+# deux tournages du meme commit y different de 3 a 26 %, une fois sur quatre pour la plupart. Leur
+# ecrire ce « plancher » rendrait la comparaison aveugle a tout changement plus petit, encart
+# compris (4,2 %). Ils restent donc sans plancher, et la comparaison le DIT au lieu de les ranger
+# parmi les cas stables. Une ligne se retire avec l issue qui la porte.
+SANS_PLANCHER = {
+    "ScenarioAnnonceConnexionTest.deconnecte_le_compte_rendu_ne_pretend_rien": "#5893",
+    "ScenarioRejetsEtArchiveTest.l_import_aboutit_malgre_les_rejets": "#5893",
+    "ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection": "#5893",
+    "ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce": "#5911",
+    "ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit": "#5911",
+    "ScenarioMenuDeLigneImportTest.le_menu_de_ligne_s_ouvre_pendant_l_import": "#5911",
+    "ScenarioPassagePivotTest.modifier_le_passage": "#5911",
+}
 
 
 def exige_ses_outils() -> bool:
@@ -82,6 +118,48 @@ def exige_ses_outils() -> bool:
     )
     print("::error::résultat : installer ffmpeg et imagemagick avant de comparer.", file=sys.stderr)
     return False
+
+
+def _version(commande: list[str], motif: str) -> str:
+    """La version qu un outil annonce sur sa premiere ligne, ou « ? » s il ne la dit pas."""
+    if shutil.which(commande[0]) is None:
+        return INCONNUE
+    rendu = subprocess.run(commande, capture_output=True, text=True, check=False)
+    lignes = rendu.stdout.splitlines()
+    trouve = re.search(motif, lignes[0]) if lignes else None
+    return trouve.group(1) if trouve else INCONNUE
+
+
+def instrument() -> str:
+    """L instrument de CETTE machine : ce qui extrait l image, et ce qui compte les pixels.
+
+    La version AMONT, sans la revision du paquet : « 6.1.1 » et non « 6.1.1-3ubuntu5 ». Une
+    revision de distribution est un correctif reporte, et refuser de comparer a chacune ferait
+    remesurer cent clips pour un correctif de securite. Laquelle des deux moities porte l ecart
+    n est pas departage (#5885) : les deux sont donc nommees.
+    """
+    extraction = _version(["ffmpeg", "-version"], r"version \D*?(\d+(?:\.\d+)+)")
+    comptage = _version(["compare", "-version"], r"ImageMagick (\d+\.\d+\.\d+(?:-\d+)?)")
+    return f"ffmpeg {extraction} · ImageMagick {comptage}"
+
+
+def _instrument_du_fichier(fichier: pathlib.Path) -> str:
+    """L instrument que le fichier de planchers DECLARE, ou une chaine vide s il n en dit rien."""
+    if not fichier.is_file():
+        return ""
+    for ligne in fichier.read_text(encoding="utf-8").splitlines():
+        if ligne.startswith(MARQUE_INSTRUMENT):
+            return ligne[len(MARQUE_INSTRUMENT) :].strip()
+    return ""
+
+
+def _refuse_l_instrument(du_fichier: str, ici: str, geste: str) -> None:
+    """Le refus, qui NOMME les deux instruments : sans les deux noms, on ne sait pas lequel changer."""
+    declare = f"« {du_fichier} »" if du_fichier else "un instrument que le fichier ne déclare pas"
+    print(f"::error::Planchers pris par {declare}, {geste} par « {ici} ».")
+    print("::error::Le même clip ne rend pas le même écart d'un instrument à l'autre (#5885) : un")
+    print("::error::plancher ne vaut que pour celui qui l'a pris. Remesurer par l'atelier")
+    print("::error::`mesurer-les-planchers.yml`, ou comparer sans fichier de planchers.")
 
 
 def derniere_image(clip: pathlib.Path, sortie: pathlib.Path) -> bool:
@@ -210,7 +288,16 @@ def comparer(
         if not pathlib.Path(planchers).is_file():
             print(f"::error::Fichier de planchers introuvable : « {planchers} ».")
             return 1
+        # Un plancher pris par un autre instrument ne se lit pas : il sous-estime ou surestime le
+        # bruit de celui-ci, et l index classerait les cas contre un sol qui n est pas le leur.
+        du_fichier, ici = _instrument_du_fichier(pathlib.Path(planchers)), instrument()
+        if du_fichier != ici:
+            _refuse_l_instrument(du_fichier, ici, "comparaison jouée")
+            return 1
         sol_deb, sol_fin, nbp = _lit_les_planchers(pathlib.Path(planchers))
+        for nom in SANS_PLANCHER:
+            sol_deb.pop(nom, None)
+            sol_fin.pop(nom, None)
 
     dossier.mkdir(parents=True, exist_ok=True)
     index = dossier / "index.md"
@@ -344,7 +431,13 @@ def comparer(
             r_deb = rapport_de(p_deb, sol_deb.get(nom, ""))
             if r_fin == INCONNUE and r_deb == INCONNUE:
                 # Un cas sans plancher connu se DIT : le prendre pour stable serait inventer une mesure.
-                cellule = f"fin {p_fin} % · ⚠️ plancher inconnu"
+                # Et celui auquel on en REFUSE un dit lequel des deux il est, avec son issue.
+                motif = (
+                    f"sans plancher, {SANS_PLANCHER[nom]}"
+                    if nom in SANS_PLANCHER
+                    else "plancher inconnu"
+                )
+                cellule = f"fin {p_fin} % · ⚠️ {motif}"
                 cle = p_deb if float(p_deb) > float(p_fin) else p_fin
             else:
                 x = 0.0 if r_deb == INCONNUE else float(r_deb)
@@ -424,57 +517,100 @@ def comparer(
     return 0
 
 
-def plancher(a: str | pathlib.Path, b: str | pathlib.Path, fichier: str = "") -> int:
-    """Remesure le plancher : deux tournages qu on SAIT identiques.
+def planchers(dossiers: list[str | pathlib.Path], fichier: str = "") -> int:
+    """Remesure le plancher : des tournages qu on SAIT identiques, TOUTES PAIRES.
 
-    Avec un fichier, ecrit le plancher PAR CAS et l ACCUMULE : relancer sur une autre paire garde le
-    PIRE plancher observe et compte une paire de plus. Le pire, et non la moyenne : un plancher qui
-    sous-estime le bruit fabrique des faux positifs. Le compte de paires est ecrit parce qu un
+    Avec un fichier, ecrit le plancher PAR CAS et l ACCUMULE : relancer sur d autres tournages garde
+    le PIRE plancher observe et compte les paires en plus. Le pire, et non la moyenne : un plancher
+    qui sous-estime le bruit fabrique des faux positifs. Le compte de paires est ecrit parce qu un
     plancher tire d UNE paire ne prouve rien (#4287).
-    """
-    a, b = pathlib.Path(a), pathlib.Path(b)
-    pire = "0"
-    sol_deb, sol_fin, nbp = _lit_les_planchers(pathlib.Path(fichier)) if fichier else ({}, {}, {})
 
+    Chaque clip est extrait UNE fois, puis compare a tous les autres. Quatre tournages font six
+    paires : extraire par paire lirait chaque clip trois fois, et c est l extraction qui coute.
+
+    L instrument s ecrit en en-tete, et un fichier pris par un AUTRE instrument n est pas complete :
+    garder le pire de deux instruments ne decrit le bruit d aucun (#5885).
+    """
+    dossiers = [pathlib.Path(d) for d in dossiers]
+    ici = instrument()
+    sol_deb: dict[str, str] = {}
+    sol_fin: dict[str, str] = {}
+    nbp: dict[str, str] = {}
+    if fichier:
+        if INCONNUE in ici:
+            print(
+                f"::error::Instrument illisible sur cette machine : « {ici} ». Un plancher qui ne"
+            )
+            print("::error::dit pas par quoi il a été pris ne s'écrit pas.")
+            return 1
+        sol_deb, sol_fin, nbp = _lit_les_planchers(pathlib.Path(fichier))
+        du_fichier = _instrument_du_fichier(pathlib.Path(fichier))
+        if sol_fin and du_fichier != ici:
+            _refuse_l_instrument(du_fichier, ici, "mesure jouée")
+            return 1
+
+    pire = "0"
+    refuses: dict[str, str] = {}
     with tempfile.TemporaryDirectory(prefix="vc-plancher-") as tmp:
         bac = pathlib.Path(tmp)
-        for nom in cas_du_dossier(a):
-            if not (b / f"{nom}.mp4").is_file():
-                continue
-            if not (
-                derniere_image(a / f"{nom}.mp4", bac / "fa.png")
-                and derniere_image(b / f"{nom}.mp4", bac / "fb.png")
-                and premiere_image(a / f"{nom}.mp4", bac / "da.png")
-                and premiere_image(b / f"{nom}.mp4", bac / "db.png")
-            ):
-                continue
+        vues: list[dict[str, tuple[pathlib.Path, pathlib.Path]]] = []
+        for rang, dossier in enumerate(dossiers):
+            (bac / str(rang)).mkdir()
+            lues = {}
+            for nom in cas_du_dossier(dossier):
+                deb, fin = bac / str(rang) / f"{nom}.deb.png", bac / str(rang) / f"{nom}.fin.png"
+                if derniere_image(dossier / f"{nom}.mp4", fin) and premiere_image(
+                    dossier / f"{nom}.mp4", deb
+                ):
+                    lues[nom] = (deb, fin)
+            vues.append(lues)
 
-            brut = part_changee(bac / "fa.png", bac / "fb.png", 0, 3)
-            f_fin = part_changee(bac / "fa.png", bac / "fb.png", TOLERANCE_PAR_DEFAUT, 3)
-            f_deb = part_changee(bac / "da.png", bac / "db.png", TOLERANCE_PAR_DEFAUT, 3)
-            print(f"{nom:<56} fin brut {brut:>8} %   fin {f_fin:>8} %   début {f_deb:>8} %")
-            if float(f_fin) > float(pire):
-                pire = f_fin
+        for i, j in itertools.combinations(range(len(dossiers)), 2):
+            if len(dossiers) > 2:
+                print(f"── {dossiers[i].name} ↔ {dossiers[j].name}")
+            for nom in sorted(vues[i].keys() & vues[j].keys()):
+                (da, fa), (db, fb) = vues[i][nom], vues[j][nom]
+                brut = part_changee(fa, fb, 0, 3)
+                f_fin = part_changee(fa, fb, TOLERANCE_PAR_DEFAUT, 3)
+                f_deb = part_changee(da, db, TOLERANCE_PAR_DEFAUT, 3)
+                print(f"{nom:<56} fin brut {brut:>8} %   fin {f_fin:>8} %   début {f_deb:>8} %")
 
-            if fichier:
-                # Le PIRE observe, et non la derniere valeur vue : un plancher ne redescend jamais.
-                vu_f, vu_d = sol_fin.get(nom, ""), sol_deb.get(nom, "")
-                sol_fin[nom] = f_fin if not vu_f or float(f_fin) > float(vu_f) else vu_f
-                sol_deb[nom] = f_deb if not vu_d or float(f_deb) > float(vu_d) else vu_d
-                nbp[nom] = str(int(nbp.get(nom, "0")) + 1)
+                if nom in SANS_PLANCHER:
+                    # Mesure et AFFICHE, mais ni ecrit ni retenu : le chiffre reste sous les yeux
+                    # de qui lance la mesure, sans devenir le sol contre lequel on lira ce clip.
+                    vu = refuses.get(nom, "0")
+                    refuses[nom] = f_fin if float(f_fin) > float(vu) else vu
+                    continue
+                if float(f_fin) > float(pire):
+                    pire = f_fin
+
+                if fichier:
+                    # Le PIRE observe, et non la derniere valeur vue : un plancher ne redescend jamais.
+                    vu_f, vu_d = sol_fin.get(nom, ""), sol_deb.get(nom, "")
+                    sol_fin[nom] = f_fin if not vu_f or float(f_fin) > float(vu_f) else vu_f
+                    sol_deb[nom] = f_deb if not vu_d or float(f_deb) > float(vu_d) else vu_d
+                    nbp[nom] = str(int(nbp.get(nom, "0")) + 1)
 
     if fichier:
+        for nom in SANS_PLANCHER:
+            sol_fin.pop(nom, None)
         entete = [
             f"# Plancher de bruit PAR CAS, à {TOLERANCE_PAR_DEFAUT} % de tolérance.",
+            f"{MARQUE_INSTRUMENT}{ici}",
+            "# Un plancher ne vaut que pour l'instrument qui l'a pris : l'outil refuse de comparer",
+            "# contre ce fichier, ou de le compléter, depuis un autre (#5885).",
             "# Colonnes : cas, plancher de la PREMIÈRE image, plancher de la DERNIÈRE, nombre de paires.",
-            "# ⚠️ Le PIRE plancher observé est gardé : sous-estimer le bruit fabrique des faux positifs.",
-            "# ⚠️ Un plancher tiré d'UNE seule paire ne prouve rien. Lire la quatrième colonne.",
+            "# Le PIRE plancher observé est gardé : sous-estimer le bruit fabrique des faux positifs.",
+            "# Un plancher tiré d'UNE seule paire ne prouve rien. Lire la quatrième colonne.",
         ]
         corps = sorted(
             f"{nom}\t{sol_deb.get(nom) or '0.000'}\t{sol_fin[nom]}\t{nbp[nom]}" for nom in sol_fin
         )
         pathlib.Path(fichier).write_text("\n".join(entete + corps) + "\n", encoding="utf-8")
-        print(f"Planchers écrits dans « {fichier} » : {len(sol_fin)} cas.")
+        print(f"Planchers écrits dans « {fichier} » : {len(sol_fin)} cas, pris par « {ici} ».")
+
+    for nom, vu in sorted(refuses.items()):
+        print(f"Sans plancher, {SANS_PLANCHER[nom]} : {nom} (jusqu'à {vu} % ici).")
 
     print()
     print(f"Plancher le plus haut à {TOLERANCE_PAR_DEFAUT} % de tolérance : {pire} %.")
@@ -486,7 +622,7 @@ def plancher(a: str | pathlib.Path, b: str | pathlib.Path, fichier: str = "") ->
 
 
 def _auto_test() -> int:
-    """Vingt-trois assertions, dont les deux bouts et les planchers par cas.
+    """Les deux bouts, les planchers par cas, et l instrument qui les a pris.
 
     Le premier cas est le plus important : deux dossiers vides doivent etre une PANNE, et non un
     « rien n a change ». Sans cette distinction, une comparaison qui a echoue a recuperer ses clips se
@@ -504,9 +640,26 @@ def _auto_test() -> int:
         return 2
 
     echecs = 0
+    joues = 0
+    # Lu UNE fois, avant tout cas : c est la mise en place, et aucun cas n a a en repondre.
+    ici = instrument()
 
-    def verifie(libelle: str, attendu: str, obtenu: str) -> None:
-        nonlocal echecs
+    def verifie(libelle: str, attendu: str, obtenu) -> None:
+        """`obtenu` est un texte, ou un APPELABLE qui le rend : ce qui lit un fichier se differe.
+
+        Une comparaison refusee n ecrit pas son index. Lu chez l appelant, ce fichier absent arretait
+        le harnais sur une trace de pile, sans dire lequel de ses cas avait rougi (ADR 4918) : vu en
+        mutant l en-tete des planchers, ou le cas 10 tombait a la place du cas 13 (#5885).
+        """
+        nonlocal echecs, joues
+        joues += 1
+        if callable(obtenu):
+            try:
+                obtenu = obtenu()
+            except OSError as leve:
+                print(f"  ✘ {libelle} : la lecture a levé, {type(leve).__name__} : {leve}")
+                echecs = 1
+                return
         if attendu in obtenu:
             print(f"  ✔ {libelle}")
         else:
@@ -514,6 +667,15 @@ def _auto_test() -> int:
             for l in obtenu.splitlines():
                 print(f"      {l}")
             echecs = 1
+
+    def texte_de(fichier: pathlib.Path, garde=lambda ligne: True):
+        """La lecture DIFFEREE d un fichier, reduite aux lignes que `garde` retient."""
+        return lambda: "\n".join(
+            l for l in fichier.read_text(encoding="utf-8").splitlines() if garde(l)
+        )
+
+    def commentaire(ligne: str) -> bool:
+        return ligne.startswith("#")
 
     def joue(action) -> tuple[str, int]:
         tampon = io.StringIO()
@@ -553,7 +715,7 @@ def _auto_test() -> int:
         verifie(
             "et l'index refuse de dire « rien n'a changé »",
             "rien à comparer",
-            (bac / "rien" / "index.md").read_text(encoding="utf-8"),
+            texte_de(bac / "rien" / "index.md"),
         )
 
         # 2. Deux clips identiques : aucun cas ne bouge, et ca se dit aussi.
@@ -566,7 +728,7 @@ def _auto_test() -> int:
         verifie(
             "et l'index le dit",
             "Aucun cas ne bouge",
-            (bac / "identique" / "index.md").read_text(encoding="utf-8"),
+            texte_de(bac / "identique" / "index.md"),
         )
 
         # 3. Un cas present seulement apres : apparu.
@@ -576,7 +738,7 @@ def _auto_test() -> int:
         verifie(
             "et l'index le nomme",
             "cas **apparu**",
-            (bac / "apparu" / "index.md").read_text(encoding="utf-8"),
+            texte_de(bac / "apparu" / "index.md"),
         )
 
         # 4. Un cas present seulement avant : disparu.
@@ -593,7 +755,7 @@ def _auto_test() -> int:
         verifie(
             "et sa part de pixels vaut 100",
             "100.000 %",
-            (bac / "change" / "index.md").read_text(encoding="utf-8"),
+            texte_de(bac / "change" / "index.md"),
         )
         if (bac / "change/pareil.avant-apres.png").is_file() and (
             bac / "change/pareil.ou.png"
@@ -618,7 +780,7 @@ def _auto_test() -> int:
         verifie(
             "et son écart est chiffré, pas rendu « ? »",
             "100.000 %",
-            (bac / "grand" / "index.md").read_text(encoding="utf-8"),
+            texte_de(bac / "grand" / "index.md"),
         )
 
         # 7. Un OUTIL ABSENT, et c est le cas qui compte le plus.
@@ -659,18 +821,14 @@ def _auto_test() -> int:
         clip(bac / "p2b/stable.mp4", "black")
 
         sols = bac / "sols.tsv"
-        joue(lambda: plancher(bac / "p1a", bac / "p1b", str(sols)))
-        lu = "\n".join(
-            l for l in sols.read_text(encoding="utf-8").splitlines() if not l.startswith("#")
-        )
+        joue(lambda: planchers([bac / "p1a", bac / "p1b"], str(sols)))
+        lu = texte_de(sols, lambda ligne: not commentaire(ligne))
         verifie(
             "le plancher d'une paire muette vaut zéro aux deux bouts", "stable\t0.000\t0.000\t1", lu
         )
 
-        joue(lambda: plancher(bac / "p2a", bac / "p2b", str(sols)))
-        lu = "\n".join(
-            l for l in sols.read_text(encoding="utf-8").splitlines() if not l.startswith("#")
-        )
+        joue(lambda: planchers([bac / "p2a", bac / "p2b"], str(sols)))
+        lu = texte_de(sols, lambda ligne: not commentaire(ligne))
         verifie("une seconde paire bruyante ÉCRASE par le haut", "stable\t100.000\t100.000\t2", lu)
 
         # 9. Un ecart se lit contre le plancher de son cas, et le compte le dit.
@@ -683,7 +841,7 @@ def _auto_test() -> int:
         verifie(
             "un écart égal à son plancher ne le dépasse pas", "0 au-dessus de leur plancher", sortie
         )
-        avec = (bac / "avec-sols" / "index.md").read_text(encoding="utf-8")
+        avec = texte_de(bac / "avec-sols" / "index.md")
         verifie("et le rapport au bruit propre est affiché", "**×", avec)
         verifie("avec les deux bouts, début et fin", "début", avec)
 
@@ -694,7 +852,7 @@ def _auto_test() -> int:
         verifie(
             "un cas sans plancher connu est SIGNALÉ",
             "plancher inconnu",
-            (bac / "sans-sol" / "index.md").read_text(encoding="utf-8"),
+            texte_de(bac / "sans-sol" / "index.md"),
         )
 
         # 11. Un fichier de planchers ANNONCE mais absent : une erreur de chemin.
@@ -744,13 +902,133 @@ def _auto_test() -> int:
         )
         shutil.copy(bac / "noir.mp4", bac / "d2/virage.mp4")
         joue(lambda: comparer(bac / "d1", bac / "d2", bac / "derniere"))
-        derniere = (bac / "derniere" / "index.md").read_text(encoding="utf-8")
+        derniere = texte_de(bac / "derniere" / "index.md")
         verifie("la dernière image est bien la fin : 0 %", "fin 0.000 %", derniere)
         verifie("et la première est bien le début : 100 %", "début 100.000 %", derniere)
 
+        # 13. L en-tete DIT son instrument, et ne porte aucun pictogramme.
+        #
+        # Le gabarit en ecrivait deux, que le fichier suivi ne portait plus : chaque mesure refaisait
+        # la regression, et il fallait retoucher l en-tete a la main avant de committer (#5846).
+        entete = texte_de(sols, commentaire)
+        verifie(
+            "l'en-tête dit par quel instrument les planchers sont pris",
+            f"{MARQUE_INSTRUMENT}{ici}",
+            entete,
+        )
+        verifie(
+            "et il ne porte aucun pictogramme",
+            "aucun",
+            lambda: "aucun" if "⚠" not in entete() else entete(),
+        )
+
+        # 14. Des planchers pris par un AUTRE instrument : la comparaison refuse, et nomme les deux.
+        #
+        # Le fichier est celui que l outil vient d ecrire, dont seule la ligne d instrument change :
+        # c est le LECTEUR de cette ligne qui est eprouve, et non une chaine construite a cote. Le cas
+        # 9 est son autre bord : le meme fichier, intact, y est accepte.
+        sain = sols.read_text(encoding="utf-8")
+        ailleurs = "ffmpeg 0.0.1 · ImageMagick 0.0.1-1"
+        sols.write_text(
+            sain.replace(f"{MARQUE_INSTRUMENT}{ici}", f"{MARQUE_INSTRUMENT}{ailleurs}"),
+            encoding="utf-8",
+        )
+        sortie, code = joue(
+            lambda: comparer(bac / "p2a", bac / "p2b", bac / "autre-instrument", 5, str(sols))
+        )
+        if code == 0:
+            echecs = 1
+        verifie("des planchers pris ailleurs ne se lisent pas", f"« {ailleurs} »", sortie)
+        verifie("et le refus nomme aussi l'instrument d'ici", f"« {ici} »", sortie)
+        verifie(
+            "sans rien classer : aucun index n'est écrit",
+            "absent",
+            "absent" if not (bac / "autre-instrument" / "index.md").exists() else "écrit",
+        )
+
+        # 15. On ne COMPLETE pas non plus un fichier pris ailleurs, et il sort intact.
+        #
+        # Garder le pire de deux instruments ne decrit le bruit d aucun, et le compte de paires
+        # additionnerait des mesures qui ne se comparent pas.
+        avant_refus = sols.read_text(encoding="utf-8")
+        sortie, code = joue(lambda: planchers([bac / "p1a", bac / "p1b"], str(sols)))
+        if code == 0:
+            echecs = 1
+        verifie("un fichier pris ailleurs ne se complète pas", "mesure jouée", sortie)
+        verifie(
+            "et il n'est pas réécrit",
+            "intact",
+            lambda: "intact" if texte_de(sols)() == avant_refus.rstrip("\n") else "réécrit",
+        )
+
+        # 16. Un fichier qui ne DIT PAS son instrument est refuse lui aussi.
+        #
+        # C est l etat de tout fichier d avant #5885 : le prendre pour « le meme instrument » serait
+        # supposer exactement ce qui s est revele faux.
+        sols.write_text(
+            "\n".join(l for l in sain.splitlines() if not l.startswith(MARQUE_INSTRUMENT)) + "\n",
+            encoding="utf-8",
+        )
+        sortie, code = joue(
+            lambda: comparer(bac / "p2a", bac / "p2b", bac / "sans-instrument", 5, str(sols))
+        )
+        if code == 0:
+            echecs = 1
+        verifie("un fichier qui tait son instrument ne se lit pas", "ne déclare pas", sortie)
+        sols.write_text(sain, encoding="utf-8")
+
+        # 17. Trois tournages font TROIS paires, et le pire des trois est garde.
+        #
+        # Un noir puis deux blancs : deux paires a 100 %, et la paire muette jouee la DERNIERE. Un
+        # compte de 3 prouve que toutes les paires sont jouees ; le 100 prouve que c est le pire qui
+        # est garde, et non la derniere valeur vue. Le cas 8 ne le prouve pas : son ecart MONTE, et
+        # le pire y est aussi le dernier.
+        for nom in ("q1", "q2", "q3"):
+            (bac / nom).mkdir()
+        clip(bac / "q1/trio.mp4", "white")
+        shutil.copy(bac / "q1/trio.mp4", bac / "q2/trio.mp4")
+        clip(bac / "q3/trio.mp4", "black")
+        trois = bac / "trois.tsv"
+        sortie, _ = joue(lambda: planchers([bac / "q3", bac / "q1", bac / "q2"], str(trois)))
+        verifie(
+            "trois tournages font trois paires, et le pire est gardé",
+            "trio\t100.000\t100.000\t3",
+            texte_de(trois),
+        )
+        verifie("et chaque paire est nommée", "── q1 ↔ q2", sortie)
+
+        # 18. Un clip auquel on REFUSE un plancher.
+        #
+        # La comparaison D ABORD, contre un fichier qui porte ENCORE sa ligne : c est l etat d un
+        # fichier ecrit avant le refus, et le sol qu il porte ne doit pas etre lu. Puis la mesure,
+        # qui affiche le chiffre sans l ecrire ni le compter parmi les planchers.
+        SANS_PLANCHER["trio"] = "#0000"
+        try:
+            joue(lambda: comparer(bac / "q1", bac / "q3", bac / "refuse", 5, str(trois)))
+            verifie(
+                "un clip sans plancher le dit, avec son issue, même si le fichier en porte un",
+                "sans plancher, #0000",
+                texte_de(bac / "refuse" / "index.md"),
+            )
+            sortie, _ = joue(lambda: planchers([bac / "q1", bac / "q3"], str(trois)))
+            verifie("la mesure l'affiche sans l'écrire", "Sans plancher, #0000 : trio", sortie)
+            verifie(
+                "ne le compte pas parmi les planchers",
+                "Plancher le plus haut à 5 % de tolérance : 0 %.",
+                sortie,
+            )
+            verifie(
+                "et retire la ligne que le fichier portait",
+                "retirée",
+                lambda: "retirée" if "trio\t" not in texte_de(trois)() else "gardée",
+            )
+        finally:
+            del SANS_PLANCHER["trio"]
+
     if echecs == 0:
         print(
-            "Auto-test de la comparaison de deux tournages : OK (23 cas, dont les deux bouts et les planchers par cas)."
+            f"Auto-test de la comparaison de deux tournages : OK ({joues} cas, dont les deux bouts, "
+            "les planchers par cas et l'instrument qui les a pris)."
         )
     else:
         print("Auto-test de la comparaison de deux tournages : ÉCHEC.")
@@ -770,7 +1048,21 @@ if __name__ == "__main__":
             sys.exit(2)
         if not exige_ses_outils():
             sys.exit(3)
-        sys.exit(plancher(sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else ""))
+        sys.exit(planchers(sys.argv[2:4], sys.argv[4] if len(sys.argv) > 4 else ""))
+
+    # Le fichier D ABORD, puis autant de tournages qu on veut : la forme a deux dossiers ne peut pas
+    # en accueillir un troisieme sans le confondre avec le fichier.
+    if sys.argv[1:2] == ["--planchers"]:
+        if len(sys.argv) < 5:
+            print(
+                f"usage : {pathlib.Path(sys.argv[0]).name} --planchers <fichier> <dossier A> "
+                "<dossier B> [<dossier C> ...]",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        if not exige_ses_outils():
+            sys.exit(3)
+        sys.exit(planchers(sys.argv[3:], sys.argv[2]))
 
     if len(sys.argv) < 4:
         print(

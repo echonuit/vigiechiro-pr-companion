@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Cinq decisions du tournage connecte tiennent dans le YAML (#5221, porte du bash).
+"""Huit decisions des ateliers de tournage tiennent dans le YAML (#5221, porte du bash).
 
-Elles ne se tiennent pas par un test : elles vivent dans la forme de deux ateliers, et rien ne les
-relisait. Chacune a un cout connu si elle lache.
+Elles ne se tiennent pas par un test : elles vivent dans la forme de trois ateliers, et rien ne les
+relisait. Chacune a un cout connu si elle lache. Les cinq premieres sont celles du tournage connecte,
+qui a donne son nom au fichier ; les trois dernieres sont celles de la mesure des planchers (#5885).
 
 1. **`comparer-tournages.yml` REFUSE la source `clips-connectes`.** Comparer un tournage connecte a
    un autre mesure la plateforme au lieu du produit, et rend un chiffre qui a l air juste (#4306).
@@ -21,6 +22,17 @@ relisait. Chacune a un cout connu si elle lache.
    veut deux tournages, et la pre-version n en porte qu un. Recopier apres le versement garderait
    le tournage courant sous les deux noms : la comparaison dirait « rien n a change » entre un
    tournage et lui-meme, et ce serait vert (#5854).
+6. **`mesurer-les-planchers.yml` REFUSE des tournages qui ne sont pas du meme commit, ou qui n ont pas
+   conclu.** Un plancher est le bruit entre deux tournages IDENTIQUES. Pris entre deux commits, il
+   range un changement du produit parmi le bruit, et la comparaison ne voit plus jamais ce
+   changement-la : c est un plancher trop haut, donc un defaut qui ne rougit nulle part. Ce refus
+   s eprouve lui aussi en **executant** le bloc.
+7. **Un temoin n est jamais pris dans la mesure.** Le plancher est le pire de ses propres paires : un
+   temoin qui en fait partie reste dessous par construction, et le controle serait vert sans avoir
+   rien controle.
+8. **La mesure n ecrit rien sur le depot.** Le fichier sort en artefact et se committe par une
+   demande. Un plancher qui monte rend la comparaison moins sensible : cela se relit, et un atelier
+   qui pousserait sur la branche par defaut l oterait a la relecture.
 
 ## Le leurre pour `gh`, et pourquoi le verdict se prend sur le MESSAGE
 
@@ -291,14 +303,145 @@ def artefact_nomme_par_le_tournage(flux: pathlib.Path) -> bool:
     return tiennent
 
 
+MESURE = "mesurer-les-planchers.yml"
+
+# Le leurre pour `gh run view <n> --json headSha,conclusion --jq ...`. Six executions : quatre du
+# meme commit, une d un AUTRE, une du meme commit qui a ECHOUE. Tout autre appel echoue, pour qu un
+# bloc qui irait chercher autre chose que ces deux champs le dise au lieu de passer.
+LEURRE_DES_EXECUTIONS = """#!/usr/bin/env bash
+[ "$1 $2" = "run view" ] || exit 1
+case "$3" in
+  1|2|3|4) echo "aaaaaaaaaaaaaaaa success" ;;
+  5) echo "bbbbbbbbbbbbbbbb success" ;;
+  6) echo "aaaaaaaaaaaaaaaa failure" ;;
+  *) exit 1 ;;
+esac
+"""
+
+
+def _joue_le_choix_des_tournages(flux: pathlib.Path):
+    """Le bloc qui choisit les tournages de la mesure, pret a etre lance, ou None s il a change de forme.
+
+    Rend une fonction `(executions, temoins) -> sortie`. Le bloc se termine par le controle, donc il
+    ne touche a rien d autre que le leurre : ni reseau, ni disque.
+    """
+    if not (flux / MESURE).is_file():
+        print(f"❌ L atelier {MESURE} a disparu : la mesure des planchers n a plus de flux.")
+        return None
+    blocs = [
+        e["run"]
+        for j in (_charge(flux / MESURE)["jobs"]).values()
+        for e in j.get("steps", [])
+        if "du_meme_commit()" in e.get("run", "")
+    ]
+    if len(blocs) != 1:
+        print(f"❌ {len(blocs)} pas définissent `du_meme_commit()` dans {MESURE}, attendu 1.")
+        print("   La forme a changé : ce garde ne sait plus quoi lancer, et il le dit plutôt que")
+        print("   de rendre un vert qui ne vaudrait rien.")
+        return None
+
+    def lance(executions: str, temoins: str = "") -> str:
+        with tempfile.TemporaryDirectory(prefix="vc-mes-") as tmp:
+            bac = pathlib.Path(tmp)
+            (bac / "bin").mkdir()
+            leurre = bac / "bin" / "gh"
+            leurre.write_text(LEURRE_DES_EXECUTIONS, encoding="utf-8")
+            leurre.chmod(0o755)
+            bloc = bac / "choisir.sh"
+            bloc.write_text(blocs[0], encoding="utf-8")
+            env = dict(os.environ)
+            env["PATH"] = f"{bac / 'bin'}{os.pathsep}{env.get('PATH', '')}"
+            env["EXECUTIONS"], env["TEMOINS"] = executions, temoins
+            rendu = subprocess.run(
+                ["bash", str(bloc)], capture_output=True, text=True, cwd=bac, env=env, check=False
+            )
+            return rendu.stdout + rendu.stderr
+
+    return lance
+
+
+AUTRE_COMMIT = "ne sont pas du même commit"
+
+
+def planchers_d_un_seul_commit(flux: pathlib.Path) -> bool:
+    """La sixieme : la mesure refuse deux commits, et un tournage qui n a pas conclu.
+
+    Le verdict se prend sur le MESSAGE, comme pour la premiere : le leurre ne sait repondre qu a une
+    question, et un code de sortie ne dirait pas laquelle des raisons a fait echouer le bloc.
+    """
+    lance = _joue_le_choix_des_tournages(flux)
+    if lance is None:
+        return False
+    tiennent = True
+    # L autre bord D ABORD : sans lui, un bloc qui refuserait tout serait vert sur les trois refus.
+    if "Même commit pour 4 exécution(s)" not in lance("1 2", "3 4"):
+        print(f"❌ {MESURE} n accepte pas quatre tournages du même commit, témoins compris.")
+        print(
+            "   Les refus qui suivent ne discriminent plus : ils tomberaient aussi sur le bon cas."
+        )
+        tiennent = False
+    if AUTRE_COMMIT not in lance("1 5"):
+        print(f"❌ {MESURE} mesure un plancher entre deux COMMITS.")
+        print(
+            "   Un changement du produit y passe pour du bruit, et la comparaison ne le verra plus."
+        )
+        tiennent = False
+    if AUTRE_COMMIT not in lance("1 2", "3 5"):
+        print(f"❌ {MESURE} accepte un témoin d un autre commit que la mesure.")
+        print("   Son écart serait un changement du produit, lu comme un plancher trop bas.")
+        tiennent = False
+    if "pas conclu en succès" not in lance("1 6"):
+        print(f"❌ {MESURE} mesure un tournage qui n a pas conclu.")
+        print("   Il lui manque des clips, et ceux qu il porte ont pu s arrêter avant leur fin.")
+        tiennent = False
+    return tiennent
+
+
+def temoins_hors_de_la_mesure(flux: pathlib.Path) -> bool:
+    """La septieme : un temoin pris dans la mesure est refuse."""
+    lance = _joue_le_choix_des_tournages(flux)
+    if lance is None:
+        return False
+    if "fait partie de la mesure" not in lance("1 2 3", "3 4"):
+        print(f"❌ {MESURE} accepte un témoin qui fait partie de la mesure.")
+        print("   Le plancher est le pire de ses propres paires : ce témoin reste dessous par")
+        print("   construction, et le contrôle est vert sans avoir rien contrôlé.")
+        return False
+    return True
+
+
+def mesure_sans_ecriture(flux: pathlib.Path) -> bool:
+    """La huitieme : aucune permission d ecriture, ni sur l atelier ni sur un de ses jobs."""
+    if not (flux / MESURE).is_file():
+        print(f"❌ L atelier {MESURE} a disparu : la mesure des planchers n a plus de flux.")
+        return False
+    f = _charge(flux / MESURE)
+    portees = {"l atelier": f.get("permissions")}
+    for nom, job in f["jobs"].items():
+        if "permissions" in job:
+            portees[f"le job `{nom}`"] = job["permissions"]
+    tiennent = True
+    for ou, droits in portees.items():
+        # Absentes, les permissions sont celles du depot, qui peuvent ecrire : le silence ne vaut
+        # pas lecture seule. Et `write-all` est une chaine, pas une table.
+        if not isinstance(droits, dict) or any(v != "read" for v in droits.values()):
+            print(f"❌ {MESURE} peut écrire sur le dépôt, par {ou} : permissions = {droits!r}.")
+            print("   Un plancher se committe par une demande, pour être relu avant de compter.")
+            tiennent = False
+    return tiennent
+
+
 def verdict(flux: pathlib.Path) -> bool:
-    """Les cinq, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
+    """Les huit, et le verdict d ensemble. Chacune s exprime, meme si une precedente a lache."""
     tiennent = [
         refus_de_la_source_connectee(flux),
         versement_conditionne(flux),
         controle_avant_le_tournage(flux),
         artefact_nomme_par_le_tournage(flux),
         precedent_garde_avant_l_ecrasement(flux),
+        planchers_d_un_seul_commit(flux),
+        temoins_hors_de_la_mesure(flux),
+        mesure_sans_ecriture(flux),
     ]
     return all(tiennent)
 
@@ -447,6 +590,53 @@ def _refuse_la_precedente(dossier: pathlib.Path) -> None:
     )
 
 
+def _remplace_dans_la_mesure(dossier: pathlib.Path, avant: str, apres: str) -> None:
+    """Une substitution dans l atelier de mesure, qui LEVE si son motif n y est plus.
+
+    Une cassure qui ne casse rien laisserait l atelier sain, donc le cas rouge serait VERT et
+    l auto-test le dirait. Mais il le dirait sans dire pourquoi : autant le dire ici.
+    """
+    p = dossier / MESURE
+    t = p.read_text(encoding="utf-8")
+    if avant not in t:
+        raise AssertionError(f"motif absent de {MESURE} : {avant!r}")
+    p.write_text(t.replace(avant, apres, 1), encoding="utf-8")
+
+
+def _mesure_entre_deux_commits(dossier: pathlib.Path) -> None:
+    _remplace_dans_la_mesure(dossier, 'elif [ "$sha" != "$reference" ]; then', "elif false; then")
+
+
+def _temoins_d_un_commit_libre(dossier: pathlib.Path) -> None:
+    """Les temoins ne passent plus par le controle : seule la mesure est tenue au meme commit."""
+    _remplace_dans_la_mesure(
+        dossier,
+        'du_meme_commit "${mesurees[@]}" "${hors_mesure[@]}"',
+        'du_meme_commit "${mesurees[@]}"',
+    )
+
+
+def _mesure_un_tournage_echoue(dossier: pathlib.Path) -> None:
+    _remplace_dans_la_mesure(dossier, 'if [ "$fin" != "success" ]; then', "if false; then")
+
+
+def _temoin_pris_dans_la_mesure(dossier: pathlib.Path) -> None:
+    _remplace_dans_la_mesure(dossier, 'if [ "$t" = "$m" ]; then', "if false; then")
+
+
+def _la_mesure_peut_ecrire(dossier: pathlib.Path) -> None:
+    _remplace_dans_la_mesure(
+        dossier,
+        "permissions:\n  contents: read\n  actions: read",
+        "permissions:\n  contents: write\n  actions: read",
+    )
+
+
+def _la_mesure_tait_ses_permissions(dossier: pathlib.Path) -> None:
+    """Sans le bloc, l atelier herite des permissions du depot : le silence n est pas la lecture."""
+    _remplace_dans_la_mesure(dossier, "permissions:\n  contents: read\n  actions: read\n", "")
+
+
 CASSURES = (
     (_casse_le_refus, "le refus de clips-connectes neutralisé"),
     (_casse_la_fonction_d_etat, "publier-connecte privé de sa fonction d état"),
@@ -459,6 +649,12 @@ CASSURES = (
     (_recopie_apres_le_versement, "tournage précédent recopié après le versement"),
     (_retire_la_recopie, "aucun pas ne garde le tournage précédent"),
     (_refuse_la_precedente, "comparaison qui refuse le tournage précédent"),
+    (_mesure_entre_deux_commits, "planchers mesurés entre deux commits"),
+    (_temoins_d_un_commit_libre, "témoins libres de venir d un autre commit"),
+    (_mesure_un_tournage_echoue, "mesure sur un tournage qui n a pas conclu"),
+    (_temoin_pris_dans_la_mesure, "témoin pris dans la mesure"),
+    (_la_mesure_peut_ecrire, "atelier de mesure autorisé à écrire"),
+    (_la_mesure_tait_ses_permissions, "atelier de mesure sans permissions déclarées"),
 )
 
 
@@ -486,7 +682,7 @@ def _auto_test() -> int:
         bac = pathlib.Path(tmp)
         sain = bac / "sain"
         sain.mkdir()
-        for nom in ("tournage-recette.yml", "comparer-tournages.yml"):
+        for nom in ("tournage-recette.yml", "comparer-tournages.yml", MESURE):
             shutil.copy(RACINE / ".github" / "workflows" / nom, sain / nom)
         # `sain` doit etre VERT, sinon tout le reste ment.
         essai(sain, "vert", "les workflows tels qu ils sont")
@@ -514,11 +710,14 @@ if __name__ == "__main__":
     flux = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else RACINE / ".github" / "workflows"
     if verdict(flux):
         print(
-            "✓ Les cinq décisions du tournage connecté tiennent : refus de clips-connectes,"
+            "✓ Les huit décisions des ateliers de tournage tiennent : refus de clips-connectes,"
             " versement"
         )
         print("  conditionné, contrôle du jeton avant le tournage, artefact nommé par le tournage,")
-        print("  tournage précédent gardé avant l'écrasement.")
+        print("  tournage précédent gardé avant l'écrasement, planchers d'un seul commit, témoins")
+        print("  hors de la mesure, mesure sans écriture.")
         sys.exit(0)
-    print("::error::Une décision du tournage connecté n est plus tenue par le YAML, cf. ci-dessus.")
+    print(
+        "::error::Une décision des ateliers de tournage n est plus tenue par le YAML, cf. ci-dessus."
+    )
     sys.exit(1)
