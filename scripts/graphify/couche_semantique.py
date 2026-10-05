@@ -13,11 +13,19 @@ leurs parades, et un quatrieme controle que la mise a jour du 4 octobre 2026 a r
      le moteur n en lit qu une, et les autres hyperaretes tombent sans message ;
   4. un lot de MISE A JOUR remplace toute la couche de sa page : un identifiant semantique qu il
      ne reemet pas est efface, et les aretes venues d autres pages se rompent. Il le DECLARE ;
-  5. une hyperarete SANS IDENTIFIANT tombe a la fusion suivante, meme a vide. Elle en recoit un.
+  5. une hyperarete SANS IDENTIFIANT tombe a la fusion suivante, meme a vide. Elle en recoit un ;
+  6. une HYPERARETE de la page se remplace avec le reste de sa couche : celle que le lot ne
+     reemet pas est effacee. La fiche la nomme, et le lot la DECLARE comme un identifiant.
 
 La cinquieme a ete trouvee en rejouant cet outil sur des lots reels, le 4 octobre 2026 : 25 des 71
 hyperaretes de la premiere extraction n avaient pas d `id`, et la mise a jour du meme jour les a
 toutes effacees, dont 22 sur des pages qu elle ne touchait pas. Aucun compte de noeuds ne le montre.
+
+La sixieme a ete trouvee le 5 octobre 2026 par une session neuve, qui refaisait la couche d une
+page avec la seule documentation du depot (#5904). La fiche ne nommait pas l hyperarete de la
+page, l audit n en regardait aucune, et la fusion la retirait sous un verdict « 0 perdu » : 63
+pages sur 589 en portaient une. La fusion retire aussi, en le DISANT, le membre d une hyperarete
+qui ne designe plus aucun noeud : celle d une autre page en gardait un quand le lot le lachait.
 
 Mesure du 4 octobre 2026, sur la premiere fusion de 32 lots : 62 identifiants de structure perdus
 sans la parade 2, dont 10 par ressemblance approchee ; 101 replis et aucune perte avec elle.
@@ -30,14 +38,37 @@ Usage :
     couche_semantique.py a-reextraire [--graphe G]
     couche_semantique.py decoupe  --dossier DIR [--graphe G] (--a-reextraire | PAGE [PAGE ...])
     couche_semantique.py audite   --dossier DIR
-    couche_semantique.py fusionne --dossier DIR [--graphe G]
+    couche_semantique.py fusionne --dossier DIR
     couche_semantique.py note     [--graphe G] [--commit C] (--perimetre | PAGE [PAGE ...])
     couche_semantique.py oublie   [--graphe G] PAGE [PAGE ...]
     couche_semantique.py --auto-test
 
-`decoupe` ecrit dans DIR un `lot_NN.json` par lot, plus les index du code et des pages. Chaque agent
-lit `consigne-des-agents.md` et rend `rendu_NN.json` dans le meme dossier. `fusionne` refuse si
-l audit refuse, et abandonne sans toucher au graphe si un identifiant de structure manque.
+L ORDRE, pour qui refait la couche d une ou de plusieurs pages : `a-reextraire` dit lesquelles,
+`decoupe` prepare DIR, chaque lot est lu et rendu, `audite` juge les rendus, `fusionne` les verse
+au graphe. `G` est le chemin d un fichier `graph.json` ; sans lui c est `graphify-out/graph.json`
+de l arbre du script.
+
+`decoupe` ecrit dans DIR un `lot_NN.json` par lot, plus les index du code et des pages. La fiche
+d une page porte sa structure, sa couche semantique d avant avec ses aretes et ses hyperaretes, et deux
+empreintes : celle que la fusion avait notee et celle d aujourd hui, pour que `git diff` de l une
+a l autre montre ce qui a change. Chaque agent lit `consigne-des-agents.md` et rend
+`rendu_NN.json` dans le meme dossier.
+
+`fusionne` refuse si l audit refuse, et abandonne sans toucher au graphe si un identifiant de
+structure manque. Il se lance DEPUIS L ARBRE QUI PORTE LE GRAPHE, et avec l interprete de
+graphify, que nomme `graphify-out/.graphify_python`. Il ecrit le graphe de son arbre : un graphe
+designe ailleurs est refuse, car la fusion le lirait et noterait son registre pendant que la
+reconstruction ecrirait celui de l arbre. Son verdict dit ce qu une fusion A VIDE perd, a cote
+de ce que les lots font perdre.
+
+LIRE SA SORTIE. Trois comptes de noeuds s y suivent, et un seul est celui du graphe ecrit :
+`FUSION | noeuds=` compte la fusion des lots, les lignes `resultat :` sont celles des ponts, et
+la derniere ligne `[graphify] N noeuds` est le graphe ecrit. `HYPERARETES | dans le graphe=`
+donne leur nombre apres fusion, et `amputees` nomme celles dont un membre ne designait plus
+rien. Les ponts comptent ce qu ils AJOUTENT : un zero y dit que tout etait deja relie.
+
+POUR CONSTATER qu une fusion a pris, rejouer `decoupe` sur la page dans un autre dossier : la
+fiche neuve porte les noeuds, les aretes et les hyperaretes que le graphe a maintenant.
 
 ## Quelles pages reextraire
 
@@ -59,7 +90,8 @@ resteraient a repondre pour une page que plus personne ne relit. Il refuse une p
 perimetre : celle-la se reextrait, elle ne s oublie pas.
 
 Le graphe et son registre sont ignores par git et ne vivent que dans la copie principale. Depuis
-un worktree, `--graphe` les designe, et la liste porte l arbre qu elle a compare. Sans graphe ou
+un worktree, `--graphe` les designe pour LIRE, par `a-reextraire` et `decoupe`, et la liste porte
+l arbre qu elle a compare. Sans graphe ou
 sans registre l outil REFUSE : une liste vide y serait le resultat le plus facile a obtenir, et
 celui qui ne prouve rien.
 
@@ -78,6 +110,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import types
 import unicodedata
 from pathlib import Path, PurePosixPath
 
@@ -104,6 +137,7 @@ PAGES_EXCLUES = ("CHANGELOG.md", "scripts/methode/relus.txt")
 RACINES_DE_CODE = ("scripts", "src")
 EXTENSIONS_DE_PAGE = (".md", ".txt")
 REGISTRE = "couche-semantique.json"
+CONFIANCE = ("confidence", "confidence_score")
 
 
 class Refus(Exception):
@@ -240,6 +274,19 @@ def audite(
     ensemble = set(emis)
     items = rendu.get("nodes", []) + rendu.get("edges", [])
     declares = set(rendu.get("laches", []))
+    # Les hyperaretes se lisent comme la fusion les lira : membres sous `nodes`, et un identifiant
+    # derive pour celle qui n en porte pas, qui ne peut donc pas tenir lieu de celle de la page.
+    hyperaretes = normalise_hyperaretes(rendu.get("hyperedges", []))
+    tenues = {h["id"] for page in fiche.values() for h in page.get("hyperaretes", [])}
+    # Un membre peut vivre sur une AUTRE page : 34 hyperaretes sur 71 le 5 octobre 2026. L audit
+    # ne voit pas le graphe, c est la fiche qui les nomme.
+    ailleurs = {
+        m
+        for page in fiche.values()
+        for h in page.get("hyperaretes", [])
+        for m in h.get("ailleurs", [])
+    }
+    membres_admis = ensemble | structure | autres_connus | emis_ailleurs | ailleurs
     defauts = {
         "identifiant de structure reemis": sorted(ensemble & (structure | autres_connus)),
         "identifiant mal forme": sorted(
@@ -261,7 +308,11 @@ def audite(
             {str(x.get("id", x.get("source"))) for x in items if x.get("_origin") != "semantic"}
         ),
         "source_file hors du lot": sorted(
-            {str(x.get("source_file")) for x in items if x.get("source_file") not in fiche}
+            {
+                str(x.get("source_file"))
+                for x in items + hyperaretes
+                if x.get("source_file") not in fiche
+            }
         ),
         "page sans noeud": sorted(
             page
@@ -269,8 +320,34 @@ def audite(
             if not any(n.get("source_file") == page for n in rendu.get("nodes", []))
         ),
         "identifiant semantique lache sans le declarer": sorted(semantiques - ensemble - declares),
+        "hyperarete lachee sans le declarer": sorted(
+            tenues - {h["id"] for h in hyperaretes} - declares
+        ),
+        "membre d hyperarete inconnu": sorted(
+            {m for h in hyperaretes for m in h["nodes"] if m not in membres_admis}
+        ),
     }
     return {nom: liste for nom, liste in defauts.items() if liste}
+
+
+def sans_membres_pendants(
+    hyperaretes: list[dict], identifiants: set[str]
+) -> tuple[list[dict], dict[str, list[str]]]:
+    """Retire de chaque hyperarete les membres qui ne designent plus aucun noeud, et dit lesquels.
+
+    Le moteur le fait pour l hyperarete du lot, sans le dire. Il ne le fait pas pour celle d une
+    AUTRE page dont un membre vivait sur la page reextraite : elle gardait un membre pendant.
+    """
+    tenues: list[dict] = []
+    retires: dict[str, list[str]] = {}
+    for hyperarete in hyperaretes:
+        membres = list(hyperarete.get("nodes", []))
+        partis = [m for m in membres if m not in identifiants]
+        if partis:
+            retires[str(hyperarete.get("id"))] = partis
+            hyperarete = {**hyperarete, "nodes": [m for m in membres if m in identifiants]}
+        tenues.append(hyperarete)
+    return tenues, retires
 
 
 def perdus_imputables(avant: set[str], apres: set[str], a_vide: set[str]) -> set[str]:
@@ -306,6 +383,10 @@ def _lis(chemin: Path) -> dict:
 
 def _ecris(chemin: Path, contenu: object) -> None:
     chemin.write_text(json.dumps(contenu, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def _fiche_vide() -> dict[str, list[dict]]:
+    return {"structure": [], "semantique": [], "hyperaretes": [], "aretes": []}
 
 
 def _noeuds_du_graphe(graphe: Path) -> list[dict]:
@@ -487,30 +568,64 @@ def commande_decoupe(dossier: Path, graphe: Path, pages: list[str], racine: Path
     if not pages:
         print("DECOUPE | pages=0 | lots=0 : rien a reextraire, aucun dossier ecrit.")
         return 0
-    noeuds = _noeuds_du_graphe(graphe)
+    brut = _lis(graphe)
+    noeuds = brut["nodes"]
     par_page: dict[str, dict[str, list[dict]]] = {}
     for noeud in noeuds:
         origine = noeud.get("_origin")
         if origine not in ("ast", "semantic"):
             continue
-        fiche = par_page.setdefault(noeud.get("source_file"), {"structure": [], "semantique": []})
+        fiche = par_page.setdefault(noeud.get("source_file"), _fiche_vide())
         court = {"id": noeud["id"], "label": noeud["label"]}
         if origine == "ast":
             fiche["structure"].append({**court, "node_kind": noeud.get("node_kind")})
-        elif noeud.get("rationale"):
+        else:
             # La justification d avant, pour que l agent la COMPARE a la page au lieu de la
             # reecrire a l aveugle : cinq agents sur cinq l ont reecrite sans l avoir, le 5 octobre.
-            fiche["semantique"].append({**court, "rationale": noeud["rationale"]})
-        else:
-            fiche["semantique"].append(court)
+            # Et son type, que deux sessions neuves ont du redeviner (#5904).
+            fiche["semantique"].append(
+                {**court, **{c: noeud[c] for c in ("file_type", "rationale") if noeud.get(c)}}
+            )
+    # Les hyperaretes de la page, que le rendu remplace avec le reste de sa couche : sans elles
+    # dans la fiche, l agent ne sait pas qu elles existent, et la fusion les retire (#5904).
+    page_de = {n["id"]: n.get("source_file") for n in noeuds}
+    for hyperarete in normalise_hyperaretes(brut.get("hyperedges", [])):
+        sienne = hyperarete.get("source_file")
+        par_page.setdefault(sienne, _fiche_vide())["hyperaretes"].append(
+            {
+                "id": hyperarete["id"],
+                "label": hyperarete.get("label"),
+                "nodes": hyperarete["nodes"],
+                "ailleurs": [m for m in hyperarete["nodes"] if page_de.get(m) != sienne],
+                **{c: hyperarete[c] for c in CONFIANCE if hyperarete.get(c) is not None},
+            }
+        )
+    # Les aretes d avant, pour COMPARER : le rendu les remplace toutes, et une arete vers une autre
+    # page ou vers le code que le lecteur ne reemet pas part sans que rien le dise. Deux sessions
+    # neuves sur deux l ont releve. Elles informent, l audit ne les exige pas : une arete n a pas
+    # d identifiant, et c est la page qui dit si elle tient encore.
+    for arete in brut.get("links", brut.get("edges", [])):
+        if arete.get("_origin") == "semantic":
+            par_page.setdefault(arete.get("source_file"), _fiche_vide())["aretes"].append(
+                {
+                    c: arete[c]
+                    for c in ("source", "target", "relation", *CONFIANCE)
+                    if arete.get(c) is not None
+                }
+            )
     textes = {p: (racine / p).read_text(encoding="utf-8", errors="ignore") for p in pages}
+    courantes = empreintes(racine, sorted(textes))
+    # L empreinte que la fusion avait notee, quand il y en a une : `git diff` de celle-la a celle
+    # d aujourd hui montre ce qui a change dans la page, que l agent devinait jusqu ici (#5904).
+    notees = _lis(registre_de(graphe)).get("pages", {}) if registre_de(graphe).is_file() else {}
     lots = decoupe({p: len(t.split()) for p, t in textes.items()})
     dossier.mkdir(parents=True, exist_ok=True)
     for numero, lot in enumerate(lots, 1):
         fiche = {
             page: {
                 "lignes": textes[page].count("\n") + 1,
-                **par_page.get(page, {"structure": [], "semantique": []}),
+                "empreintes": {"notee": notees.get(page), "courante": courantes.get(page)},
+                **par_page.get(page, _fiche_vide()),
             }
             for page in lot
         }
@@ -529,7 +644,7 @@ def commande_decoupe(dossier: Path, graphe: Path, pages: list[str], racine: Path
     _ecris(dossier / "index-des-pages.json", feuilles)
     # L empreinte se releve ICI, quand les agents commencent a lire, et non a la fusion : une page
     # modifiee entre les deux doit ressortir comme modifiee.
-    _ecris(dossier / "plan.json", {"lots": lots, "empreintes": empreintes(racine, sorted(textes))})
+    _ecris(dossier / "plan.json", {"lots": lots, "empreintes": courantes})
     print(f"DECOUPE | pages={len(pages)} | lots={len(lots)} | dossier={dossier}")
     return 0
 
@@ -578,6 +693,16 @@ def commande_fusionne(dossier: Path, graphe: Path) -> int:
             file=sys.stderr,
         )
         return 2
+    import rebuild
+
+    if graphe.resolve() != rebuild.GRAPHE.resolve():
+        # La fusion lirait le graphe designe et noterait son registre, mais la reconstruction
+        # ecrit celui de l arbre du script : joue le 5 octobre 2026, le graphe designe n avait pas
+        # bouge et son registre disait la page extraite.
+        raise Refus(
+            f"`fusionne` ecrit le graphe de l arbre d ou il est lance, {rebuild.GRAPHE}, et"
+            f" {graphe} n en est pas. Lancer la commande depuis l arbre qui porte ce graphe."
+        )
     if commande_audite(dossier):
         print("REFUS : l audit refuse, la fusion n est pas tentee.", file=sys.stderr)
         return 1
@@ -606,7 +731,12 @@ def commande_fusionne(dossier: Path, graphe: Path) -> int:
     lot = {"nodes": gardes, "edges": recablees, "hyperedges": hyper}
     fusion = build_merge([lot], graph_path=str(graphe), root=str(RACINE), directed=False)
     perdus = perdus_imputables(ids_de_structure, set(fusion.nodes), a_vide)
-    print(f"FUSION | noeuds={fusion.number_of_nodes()} | perdus du fait des lots={len(perdus)}")
+    # La perte a vide se DIT : sans elle, des identifiants de structure disparaissent sous un
+    # verdict « 0 perdu », et rien ne permet de savoir qu ils ne doivent rien au lot.
+    print(
+        f"FUSION | noeuds={fusion.number_of_nodes()} | perdus a vide={len(a_vide)}"
+        f" | perdus du fait des lots={len(perdus)}"
+    )
     if perdus:
         print(f"REFUS : identifiants de structure perdus : {sorted(perdus)[:10]}", file=sys.stderr)
         print("Le graphe n a pas ete touche.", file=sys.stderr)
@@ -614,8 +744,14 @@ def commande_fusionne(dossier: Path, graphe: Path) -> int:
     for cible, texte in justifications.items():
         if cible in fusion.nodes:
             fusion.nodes[cible]["rationale"] = texte
-
-    import rebuild
+    tenues, retires = sans_membres_pendants(
+        list(fusion.graph.get("hyperedges", [])), set(fusion.nodes)
+    )
+    print(
+        f"HYPERARETES | dans le graphe={len(tenues)}"
+        f" | membres pendants retires={sum(map(len, retires.values()))}"
+        f" | amputees={sorted(retires)}"
+    )
 
     rebuild.EXTRAIT.write_text(
         json.dumps(
@@ -633,7 +769,7 @@ def commande_fusionne(dossier: Path, graphe: Path) -> int:
                     }
                     for u, v, d in fusion.edges(data=True)
                 ],
-                "hyperedges": list(fusion.graph.get("hyperedges", [])),
+                "hyperedges": tenues,
             },
             ensure_ascii=False,
         ),
@@ -714,6 +850,111 @@ def auto_test() -> int:
         return sorted(audite(rendu, fiche, connus))
 
     verifie("un lot sain ne porte aucun defaut", lambda: noms(sain), [])
+
+    # ⟨les hyperaretes de la page⟩ une page reextraite perdait la sienne sans que rien le dise
+    # (#5904) : la fiche ne la nommait pas, l audit ne regardait aucune hyperarete, et la fusion la
+    # retirait sous un verdict « 0 perdu ». 63 pages sur 589 en portaient une le 5 octobre 2026.
+    tenue = {
+        "id": "dev_docs_page_hyper_ensemble",
+        "label": "Un ensemble",
+        "nodes": ["dev_docs_page_ancien", "dev_docs_page_le_portail"],
+    }
+    fiche_tenue = {page: {**fiche[page], "hyperaretes": [tenue]}}
+
+    def hyper(membres: list[str], **plus: object) -> dict:
+        return {
+            "id": tenue["id"],
+            "label": "Un ensemble",
+            "nodes": membres,
+            "source_file": page,
+            "source_location": None,
+            "_origin": "semantic",
+            **plus,
+        }
+
+    def noms_tenue(rendu: dict) -> list[str]:
+        return sorted(audite(rendu, fiche_tenue, connus))
+
+    reemise = hyper(tenue["nodes"])
+    verifie(
+        "un lot qui reemet l hyperarete de sa page est sain",
+        lambda: noms_tenue(avec(hyperedges=[reemise])),
+        [],
+    )
+    verifie(
+        "un lot qui OMET l hyperarete de sa page est refuse",
+        lambda: noms_tenue(sain),
+        ["hyperarete lachee sans le declarer"],
+    )
+    verifie(
+        "un lot qui la lache en le DECLARANT est sain",
+        lambda: noms_tenue(avec(laches=[tenue["id"]])),
+        [],
+    )
+    sans_identifiant = {k: v for k, v in reemise.items() if k != "id"}
+    verifie(
+        "une hyperarete rendue sans identifiant ne tient pas lieu de celle de la page",
+        lambda: noms_tenue(avec(hyperedges=[sans_identifiant])),
+        ["hyperarete lachee sans le declarer"],
+    )
+    verifie(
+        "une hyperarete dont un membre n existe nulle part est refusee",
+        lambda: noms_tenue(avec(hyperedges=[hyper(["dev_docs_page_ancien", "nulle_part"])])),
+        ["membre d hyperarete inconnu"],
+    )
+    partout = ["dev_docs_page_neuf", "dev_docs_page_le_portail", "une_classe"]
+    verifie(
+        "un membre peut etre un noeud du lot, un titre de la page ou une classe de l index",
+        lambda: noms_tenue(avec(hyperedges=[hyper(partout)])),
+        [],
+    )
+    autrement = {**sans_identifiant, "id": tenue["id"], "member_ids": ["nulle_part"]}
+    del autrement["nodes"]
+    verifie(
+        "les membres se lisent sous leurs quatre noms, comme a la fusion",
+        lambda: noms_tenue(avec(hyperedges=[autrement])),
+        ["membre d hyperarete inconnu"],
+    )
+    verifie(
+        "une hyperarete rangee sous une autre page que celles du lot est refusee",
+        lambda: noms_tenue(avec(hyperedges=[hyper(tenue["nodes"], source_file="autre.md")])),
+        ["source_file hors du lot"],
+    )
+    verifie(
+        "une fiche sans hyperarete n en exige aucune",
+        lambda: noms(avec(hyperedges=[hyper(tenue["nodes"])])),
+        [],
+    )
+    # Un membre qui vit sur une AUTRE page n est ni dans le lot ni dans les index : c est la
+    # fiche qui le nomme, sous `ailleurs`. Sans cela, reemettre fidelement l hyperarete serait
+    # refuse. Le temoin est le meme membre que la fiche ne nomme pas.
+    voisine = {**tenue, "nodes": [*tenue["nodes"], "concept_d_une_autre_page"]}
+    fiche_voisine = {
+        page: {
+            **fiche[page],
+            "hyperaretes": [{**voisine, "ailleurs": ["concept_d_une_autre_page"]}],
+        }
+    }
+    verifie(
+        "un membre d une autre page est admis quand la fiche le nomme, et refuse sinon",
+        lambda: [
+            sorted(audite(avec(hyperedges=[hyper(voisine["nodes"])]), fiche_voisine, connus)),
+            noms_tenue(avec(hyperedges=[hyper(voisine["nodes"])])),
+        ],
+        [[], ["membre d hyperarete inconnu"]],
+    )
+    # A la fusion, un membre qui ne designe plus aucun noeud se retire, et se DIT. Le moteur ne
+    # le fait pas pour l hyperarete d une autre page.
+    pendante = {"id": "h_voisine", "nodes": ["reste", "parti", "parti_aussi"]}
+    entiere = {"id": "h_entiere", "nodes": ["reste"]}
+    verifie(
+        "un membre pendant se retire de son hyperarete, qui reste, et les autres ne bougent pas",
+        lambda: sans_membres_pendants([pendante, entiere], {"reste"}),
+        (
+            [{"id": "h_voisine", "nodes": ["reste"]}, entiere],
+            {"h_voisine": ["parti", "parti_aussi"]},
+        ),
+    )
 
     # ⟨parade 1⟩ un identifiant de structure, ou de l index du code, ne se reemet pas.
     verifie(
@@ -917,13 +1158,176 @@ def auto_test() -> int:
             return main(["couche_semantique.py", "audite", "--dossier", str(dossier)])
 
     def sans_plan() -> int:
-        with tempfile.TemporaryDirectory() as temporaire:
+        # Le refus se tait ici : sa marque sortirait d un auto-test qui PASSE, et la porte la
+        # citerait comme la cause le jour ou il rougirait pour une autre raison (#5890).
+        with (
+            tempfile.TemporaryDirectory() as temporaire,
+            contextlib.redirect_stderr(io.StringIO()),
+        ):
             return main(["couche_semantique.py", "audite", "--dossier", temporaire])
 
     verifie("`audite` refuse en 2 un dossier que `decoupe` n a pas prepare", lambda: sans_plan(), 2)
     verifie("`audite` sort en 0 sur un lot sain", lambda: par_main(sain), 0)
     verifie("`audite` sort en 1 sur un lot en defaut", lambda: par_main(lache), 1)
     verifie("`audite` sort en 1 quand un lot attendu est ABSENT", lambda: par_main(None), 1)
+
+    # ⟨la fusion elle-meme⟩ la commande importe le moteur, absent du runner : ses calculs avaient
+    # leurs cas, son cablage et son REFUS n en avaient aucun. Un faux moteur les joue. Il rend un
+    # graphe qui garde la structure, moins ce qu on lui dit de perdre : a vide, ou du fait du lot.
+    class Noeuds(dict):
+        def __call__(self, data=False):
+            return list(self.items()) if data else list(self)
+
+    class Fusion:
+        def __init__(self, identifiants, hyperaretes):
+            self.nodes = Noeuds({identifiant: {} for identifiant in identifiants})
+            self.graph = {"hyperedges": [dict(h) for h in hyperaretes]}
+
+        def edges(self, data=False):
+            return []
+
+        def number_of_nodes(self):
+            return len(self.nodes)
+
+    def par_fusionne(
+        rendu,
+        perdus_a_vide=(),
+        perdus_de_plus=(),
+        moteur_present=True,
+        graphe_de_l_arbre=True,
+        hyperaretes=(),
+    ):
+        """Ce qu une fusion jouee a fait : son code, ses etapes, ses verdicts, et ce qui reste."""
+        de_structure = {s["id"] for s in structure}
+        etapes: list = []
+        fusions = [0]
+
+        def faux_build_merge(lots, graph_path=None, root=None, directed=False):
+            fusions[0] += 1
+            restent = de_structure - set(perdus_a_vide)
+            if lots[0]["nodes"]:
+                restent = (restent - set(perdus_de_plus)) | {n["id"] for n in lots[0]["nodes"]}
+            return Fusion(restent, hyperaretes)
+
+        noms_des_modules = ("graphify", "graphify.build", "rebuild")
+        d_avant = {nom: sys.modules.get(nom) for nom in noms_des_modules}
+        with tempfile.TemporaryDirectory() as temporaire:
+            dossier = Path(temporaire)
+            _ecris(dossier / "plan.json", {"lots": [[page]], "empreintes": {page: "abc123"}})
+            _ecris(dossier / "lot_01.json", fiche)
+            _ecris(dossier / "index-du-code.json", [{"id": "une_classe"}])
+            _ecris(dossier / "index-des-pages.json", [])
+            _ecris(dossier / "rendu_01.json", rendu)
+            graphe = dossier / "graph.json"
+            _ecris(graphe, {"nodes": [{**s, "_origin": "ast"} for s in structure], "links": []})
+            extrait = dossier / "extrait.json"
+            faux_rebuild = types.ModuleType("rebuild")
+            faux_rebuild.GRAPHE = graphe if graphe_de_l_arbre else dossier / "ailleurs.json"
+            faux_rebuild.EXTRAIT = extrait
+            faux_rebuild.jouer_les_passes = lambda: etapes.append(
+                ("ponts", [h["nodes"] for h in _lis(extrait)["hyperedges"]])
+                if extrait.is_file()
+                else ("ponts", None)
+            )
+            faux_rebuild.reconstruire = lambda: etapes.append("reconstruction")
+            sortie = io.StringIO()
+            try:
+                if moteur_present:
+                    paquet = types.ModuleType("graphify")
+                    paquet.__path__ = []
+                    module = types.ModuleType("graphify.build")
+                    module.build_merge = faux_build_merge
+                    sys.modules["graphify"], sys.modules["graphify.build"] = paquet, module
+                else:
+                    # `None` dans `sys.modules` fait lever l import : un poste sans le module.
+                    sys.modules["graphify"] = None
+                    sys.modules.pop("graphify.build", None)
+                sys.modules["rebuild"] = faux_rebuild
+                with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(io.StringIO()):
+                    code = main(
+                        [
+                            "couche_semantique.py",
+                            "fusionne",
+                            "--dossier",
+                            temporaire,
+                            "--graphe",
+                            str(graphe),
+                        ]
+                    )
+            finally:
+                for nom, module in d_avant.items():
+                    if module is None:
+                        sys.modules.pop(nom, None)
+                    else:
+                        sys.modules[nom] = module
+            notees = sorted(notees_de(graphe)) if registre_de(graphe).is_file() else []
+            # Les verdicts sans le compte de noeuds, qui depend du lot et n est pas le propos.
+            verdicts = [
+                ligne.split(" | ", 2)[2] if ligne.startswith("FUSION") else ligne
+                for ligne in sortie.getvalue().splitlines()
+                if ligne.startswith(("FUSION |", "HYPERARETES |"))
+            ]
+            return code, etapes, fusions[0], extrait.exists(), notees, verdicts
+
+    sans_perte = "perdus a vide=0 | perdus du fait des lots=0"
+    aucune_hyper = "HYPERARETES | dans le graphe=0 | membres pendants retires=0 | amputees=[]"
+    verifie(
+        "`fusionne` ecrit l extrait AVANT les ponts, reconstruit, le retire, et note les pages",
+        lambda: par_fusionne(sain),
+        (0, [("ponts", []), "reconstruction"], 2, False, [page], [sans_perte, aucune_hyper]),
+    )
+    verifie(
+        "`fusionne` REFUSE un lot qui fait tomber un identifiant de structure, sans rien ecrire",
+        lambda: par_fusionne(sain, perdus_de_plus=["dev_docs_page_le_portail"]),
+        (1, [], 2, False, [], ["perdus a vide=0 | perdus du fait des lots=1"]),
+    )
+    verifie(
+        "`fusionne` n impute pas au lot ce que la fusion a vide perd deja, et DIT cette perte",
+        lambda: par_fusionne(sain, perdus_a_vide=["dev_docs_autre_titre"]),
+        (
+            0,
+            [("ponts", []), "reconstruction"],
+            2,
+            False,
+            [page],
+            ["perdus a vide=1 | perdus du fait des lots=0", aucune_hyper],
+        ),
+    )
+    verifie(
+        "`fusionne` ne tente aucune fusion quand l audit refuse",
+        lambda: par_fusionne(lache),
+        (1, [], 0, False, [], []),
+    )
+    verifie(
+        "`fusionne` refuse en 2, avant tout audit, sur un poste sans le module graphify",
+        lambda: par_fusionne(sain, moteur_present=False),
+        (2, [], 0, False, [], []),
+    )
+    # Le graphe designe n est pas celui de l arbre du script : la fusion le lirait et noterait son
+    # registre, mais la reconstruction ecrirait ailleurs. Joue pour de bon le 5 octobre 2026.
+    verifie(
+        "`fusionne` refuse en 2 un graphe qui n est pas celui de son arbre, sans rien noter",
+        lambda: par_fusionne(sain, graphe_de_l_arbre=False),
+        (2, [], 0, False, [], []),
+    )
+    # L hyperarete d une AUTRE page garde un membre que le lot vient de retirer : la fusion le
+    # retire avant d ecrire l extrait, et le dit.
+    d_ailleurs = [{"id": "h_voisine", "nodes": ["dev_docs_page_ancien", "noeud_parti"]}]
+    verifie(
+        "`fusionne` retire un membre pendant avant d ecrire l extrait, et le declare",
+        lambda: par_fusionne(sain, hyperaretes=d_ailleurs),
+        (
+            0,
+            [("ponts", [["dev_docs_page_ancien"]]), "reconstruction"],
+            2,
+            False,
+            [page],
+            [
+                sans_perte,
+                "HYPERARETES | dans le graphe=1 | membres pendants retires=1 | amputees=['h_voisine']",
+            ],
+        ),
+    )
 
     # ⟨le perimetre de l ADR 5790⟩ ecrit ici chemin par chemin, pour que la regle ne se juge pas
     # elle-meme. Les deux pieges d enumeration y sont : la page a la racine d un dossier, que le
@@ -1288,6 +1692,119 @@ def auto_test() -> int:
             ),
         )
 
+        # ⟨la fiche nomme les hyperaretes de la page, #5904⟩ avec leurs membres, et ceux qui
+        # vivent sur une autre page. L hyperarete d une autre page n y entre pas.
+        _ecris(
+            graphe_du_depot,
+            {
+                "nodes": [
+                    {**avec_raison, "file_type": "rationale"},
+                    du_graphe("concept_voisin", "semantic", racine_de_dossier),
+                ],
+                "links": [
+                    {
+                        **lien("concept_profond", "une_classe", "semantic", profonde),
+                        "relation": "references",
+                        "confidence": "EXTRACTED",
+                    },
+                    lien("concept_voisin", "concept_profond", "semantic", racine_de_dossier),
+                    lien("titre", "concept_profond", "ast", profonde),
+                ],
+                "hyperedges": [
+                    {
+                        "id": "profonde_hyper",
+                        "label": "Un ensemble",
+                        "members": ["concept_profond", "concept_voisin"],
+                        "source_file": profonde,
+                        "confidence": "INFERRED",
+                        "confidence_score": 0.85,
+                    },
+                    {"id": "h_d_ailleurs", "nodes": ["concept_voisin"], "source_file": "README.md"},
+                ],
+            },
+        )
+        fiches_tenues = Path(temporaire) / "fiches-tenues"
+        verifie(
+            "la fiche nomme l hyperarete de la page, ses membres, et ceux d une autre page",
+            lambda: (
+                joue("decoupe", "--dossier", str(fiches_tenues), profonde)[0],
+                _lis(fiches_tenues / "lot_01.json")[profonde]["hyperaretes"],
+            ),
+            (
+                0,
+                [
+                    {
+                        "id": "profonde_hyper",
+                        "label": "Un ensemble",
+                        "nodes": ["concept_profond", "concept_voisin"],
+                        "ailleurs": ["concept_voisin"],
+                        "confidence": "INFERRED",
+                        "confidence_score": 0.85,
+                    }
+                ],
+            ),
+        )
+        # Le type de l ancien noeud et les aretes d avant de la page, pour comparer : ni l arete
+        # d une autre page, ni une arete de structure.
+        verifie(
+            "la fiche porte le type des anciens noeuds et les aretes semantiques d avant de la page",
+            lambda: (
+                _lis(fiches_tenues / "lot_01.json")[profonde]["semantique"],
+                _lis(fiches_tenues / "lot_01.json")[profonde]["aretes"],
+            ),
+            (
+                [
+                    {
+                        "id": "concept_profond",
+                        "label": "concept_profond",
+                        "file_type": "rationale",
+                        "rationale": "parce que",
+                    }
+                ],
+                [
+                    {
+                        "source": "concept_profond",
+                        "target": "une_classe",
+                        "relation": "references",
+                        "confidence": "EXTRACTED",
+                    }
+                ],
+            ),
+        )
+
+        def empreintes_de_la_fiche() -> tuple[bool, bool, bool]:
+            """La courante vaut celle de git, la notee celle du registre, et elles different."""
+            fiche_lue = _lis(fiches_tenues / "lot_01.json")[racine_de_dossier]["empreintes"]
+            de_git = subprocess.run(
+                ["git", "-C", str(depot), "hash-object", racine_de_dossier],
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout.strip()
+            au_registre = _lis(depot / "graphify-out" / REGISTRE)["pages"][racine_de_dossier]
+            return (
+                fiche_lue["courante"] == de_git,
+                fiche_lue["notee"] == au_registre,
+                fiche_lue["courante"] != fiche_lue["notee"],
+            )
+
+        verifie(
+            "la fiche d une page modifiee porte l empreinte notee et celle d aujourd hui",
+            lambda: (
+                joue("decoupe", "--dossier", str(fiches_tenues), racine_de_dossier)[0],
+                empreintes_de_la_fiche(),
+            ),
+            (0, (True, True, True)),
+        )
+
+    def aide() -> tuple[int, bool, str]:
+        sortie, erreur = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(erreur):
+            code = main(["couche_semantique.py", "--help"])
+        return code, sortie.getvalue().startswith("Usage :"), erreur.getvalue()
+
+    verifie("`--help` imprime l usage et sort en 0", aide, (0, True, ""))
+
     return echecs()
 
 
@@ -1299,6 +1816,9 @@ def main(argv: list[str]) -> int:
     arguments = argv[1:]
     if "--auto-test" in arguments:
         return auto_test()
+    if arguments and arguments[0] in ("-h", "--help"):
+        print("Usage :" + USAGE)
+        return 0
     if not arguments or arguments[0] not in COMMANDES:
         print("Usage :" + USAGE, file=sys.stderr)
         return 2

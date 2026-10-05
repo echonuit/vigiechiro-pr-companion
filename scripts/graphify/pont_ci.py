@@ -28,7 +28,7 @@ from pont_doc_code import (
     joue_sur_un_depot_fabrique,
     noeud_de_document,
     noeuds_de_page,
-    pages_du_depot,
+    pages_reliees,
 )
 
 
@@ -39,12 +39,20 @@ def auto_test():
         noeud_de_document("testing", "TESTING.md", "TESTING.md", node_kind="page"),
         noeud_de_document("testing_tester", "Tester", "TESTING.md", node_kind="heading"),
         noeud_de_document("docs_guide", "guide.md", "docs/guide.md", node_kind="page"),
+        noeud_de_document(
+            "openspec_specs_ci_spec", "spec.md", "openspec/specs/ci/spec.md", node_kind="page"
+        ),
+        noeud_de_document(
+            "claude_skills_x_skill", "SKILL.md", ".claude/skills/x/SKILL.md", node_kind="page"
+        ),
     ]
     fichiers = {
         ".github/workflows/lint.yml": "name: Quality gate\njobs:\n  lint:\n    runs-on: x\n",
         "TESTING.md": "# Tester\n\nLe portail vit dans `lint.yml`.\n",
         "docs/guide.md": "# Guide\n\nVoir `lint.yml`, et lint.yml hors de tout span.\n",
         "SECURITY.md": "# Securite\n\nRien de `lint.yml` n entre ici sans noeud de page.\n",
+        "openspec/specs/ci/spec.md": "# Spec\n\nLe portail est `lint.yml`.\n",
+        ".claude/skills/x/SKILL.md": "# Copie\n\nVoir `lint.yml`.\n",
     }
 
     def citations():
@@ -65,6 +73,7 @@ def auto_test():
             0,
             [
                 ("docs_guide", "github_workflows_lint_yml"),
+                ("openspec_specs_ci_spec", "github_workflows_lint_yml"),
                 ("testing", "github_workflows_lint_yml"),
             ],
         ),
@@ -205,8 +214,8 @@ for p in sorted(wf_dir.glob("*.yml")) + sorted(wf_dir.glob("*.yaml")):
             if uses in wf_par_fichier:
                 n_appel += lier(wid, wf_par_fichier[uses], "references", "ci_call", p, i)
 print(
-    f"D2 : {n_wf} workflows, {n_job} jobs, {n_lien_prof} liens vers un profil Maven, "
-    f"{n_script} vers un script, {n_appel} appels entre workflows"
+    f"D2 : {n_wf} workflows lus ; ajoutes : {n_job} jobs, {n_lien_prof} liens vers un profil "
+    f"Maven, {n_script} vers un script, {n_appel} appels entre workflows"
 )
 
 # ------------------------------------------------------------------ D3 : citations
@@ -220,10 +229,8 @@ cible["pom.xml"] = nid(pom)
 
 fichier_node = noeuds_de_page(nodes.values())
 n_cit = 0
-for p in pages_du_depot():
-    src = fichier_node.get(str(p))
-    if src is None:
-        continue
+for p in pages_reliees(nodes.values()):
+    src = fichier_node[str(p)]
     lignes = p.read_text(encoding="utf-8", errors="ignore").splitlines()
     dans_bloc = False
     for i, ln in enumerate(lignes, 1):
@@ -235,7 +242,7 @@ for p in pages_du_depot():
             for nom, tid in cible.items():
                 if re.search(r"(?<![\w.-])" + re.escape(nom) + r"(?![\w-])", s):
                     n_cit += lier(src["id"], tid, "references", "code_span", p, i)
-print(f"D3 : {n_cit} citations de la doc vers un workflow, un profil ou le pom")
+print(f"D3 : {n_cit} citations ajoutees, de la doc vers un workflow, un profil ou le pom")
 
 Path("graphify-out/.graphify_extract.json").write_text(
     json.dumps(

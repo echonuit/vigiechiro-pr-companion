@@ -13,11 +13,18 @@ verified:
     at: 2026-10-05
 relations:
   complete: ["5790-le-graphe-lit-la-prose-d-un-perimetre-declare"]
+  completee_par: ["5904-une-hyperarete-se-declare-et-les-ponts-parcourent-les-pages-du-graphe"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # Une hyperarête porte un identifiant, et une mise à jour déclare ce qu'elle lâche
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-05** : « une mise à jour déclare ce qu'elle lâche » est **complété** par
+    [5904](5904-une-hyperarete-se-declare-et-les-ponts-parcourent-les-pages-du-graphe.md).
+    La règle vaut aussi pour les hyperarêtes de la page, que la fiche nomme désormais. Le reste
+    fait foi.
 
 ## Le contexte
 
