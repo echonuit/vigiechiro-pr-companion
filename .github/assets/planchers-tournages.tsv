@@ -34,6 +34,11 @@ ScenarioCarreAbsentTest.le_carre_en_routier_dit_le_geste_du_portail	0.000	0.020	
 ScenarioCarteMultiNuitsTest.deux_nuits_deux_configurations	0.000	0.773	15
 ScenarioCarteMultiNuitsTest.la_table_des_nuits_et_ses_badges	0.000	0.892	15
 ScenarioCarteMultiNuitsTest.les_nuits_deja_importees_sont_celles_de_la_carte	0.000	0.299	15
+ScenarioConnecteActualisationTest.actualiser_importe_les_observations_d_une_analyse_terminee	0.000	0.302	15
+ScenarioConnecteAnnonceImportTest.connecte_l_import_annonce_la_participation	0.000	0.325	15
+ScenarioConnecteConnexionTest.coller_le_jeton_puis_lire_l_identite	0.000	0.134	15
+ScenarioConnecteLancementTest.lancer_la_participation_rend_l_analyse_planifiee	0.000	0.503	15
+ScenarioConnectePublicationTest.publier_une_correction_puis_la_republier	0.000	0.005	15
 ScenarioCourbeActiviteTest.lire_la_courbe_d_activite	0.000	0.211	15
 ScenarioDiagnosticPassageTest.la_fin_manque_et_l_alerte_le_nomme	0.000	0.073	15
 ScenarioDiagnosticPassageTest.les_deux_bords_manquent_et_l_alerte_ne_concede_rien	0.000	0.199	15
