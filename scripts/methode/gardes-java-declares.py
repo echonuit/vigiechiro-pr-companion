@@ -44,7 +44,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, rapporte, sort_si_contrat_demande
+from _commun import RACINE_DEPOT, champs_du_verdict, rapporte, sort_si_contrat_demande
 
 ADR = "5373"
 
@@ -186,6 +186,21 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     )
 
 
+def population(racine: pathlib.Path | None = None) -> set[str]:
+    """Les deux familles reunies : ce que le verdict declare avoir LU.
+
+    **L union, et non la somme.** Une classe peut juger la prose ET le code - `DocumentationAJourTest`
+    et `CorrespondanceRecetteTest` sont dans les deux -, donc additionner les compterait deux fois.
+
+    **Et elle est NOMMEE parce que le verdict l ecrivait en ligne.** Aucun cas ne pouvait alors
+    epingler ce qu il declarait avoir lu : la ramener a `lisent_la_prose()` seule faisait tomber le
+    compte de dix-sept a treize sans faire rougir personne. Un `lus` qui sous-estime cache
+    l elargissement aussi surement qu un `lus` qui depasse annonce un faux vert (ADR 5007). Trouve a
+    la passe 6 de la cloture de #5915, par mutation.
+    """
+    return lisent_la_prose(racine) | jugent_le_code(racine)
+
+
 def _auto_test() -> int:
     """Les DEUX sens, et le bord ou la detection crierait sur du juste."""
     import tempfile
@@ -258,7 +273,58 @@ def _auto_test() -> int:
             else:
                 print(f"  ✘ {libelle} : codes={sorted(codes)}")
                 echecs += 1
-    print("\n9 cas de détection et de bord, sur les deux populations.")
+        # ⟨ce que le VERDICT declare avoir lu⟩ L expression vivait en ligne dans l appel a
+        # `rapporte`, donc aucun cas ne l atteignait : la ramener a une seule famille ne faisait
+        # rougir personne. L attendu est ecrit a la main depuis les fichiers poses plus haut, et non
+        # derive des fonctions sous test, sans quoi le cas serait tautologique.
+        attendue = {"LitLaProseTest", "JugeLeCodeTest", "ParArchUnitTest", "LitLePomTest"}
+        lue = population(faux)
+        for libelle, obtenu, attendu in (
+            ("le verdict declare l UNION des deux familles", lue, attendue),
+            (
+                "et elle EXCEDE chacune, aucune ne contenant l autre",
+                (len(lue) > len(vus), len(lue) > len(codes)),
+                (True, True),
+            ),
+        ):
+            if obtenu == attendu:
+                print(f"  ✔ {libelle}")
+            else:
+                print(f"  ✘ {libelle} : obtenu {obtenu!r}, attendu {attendu!r}")
+                echecs += 1
+
+    # ⟨le cas qui lit la LIGNE DE VERDICT⟩ Nommer `population` ne suffisait pas : les deux cas
+    # ci-dessus eprouvent la fonction, pas ce que le verdict en fait. Ramener `lus` a une seule
+    # famille DANS l appel a `rapporte` survivait encore. Ce cas relance le garde dans son mode de
+    # verdict et confronte le `lus` imprime a la population nommee.
+    import subprocess
+
+    rendu = subprocess.run(
+        [sys.executable, str(pathlib.Path(__file__).resolve())],
+        capture_output=True,
+        text=True,
+        timeout=300,
+        # Le garde SORT NON NUL quand il a des suspects : un `check=True` ferait lever ici au lieu
+        # de laisser le cas juger ce qu il a imprime.
+        check=False,
+    )
+    ligne = next(
+        (l for l in (rendu.stdout + rendu.stderr).splitlines() if champs_du_verdict(l) is not None),
+        "",
+    )
+    champs = champs_du_verdict(ligne) or {}
+    # ⟨LA LIMITE NOMMEE⟩ Ce cas tue toute derivation fausse, sauf une : `lus=17` ecrit en dur, qui
+    # vaut aujourd hui la verite et mentira le jour ou la population bouge. La tuer demanderait que
+    # le mode de verdict accepte une racine, pour qu on le joue sur l arbre temoin ou la population
+    # vaut quatre. Le trou est connu, borne et ecrit, plutot que laisse en silence.
+    attendu = str(len(population()))
+    if champs.get("lus") == attendu:
+        print(f"  ✔ le `lus` IMPRIME est celui de la population nommee ({attendu})")
+    else:
+        print(f"  ✘ le `lus` imprime vaut {champs.get('lus')!r}, la population en compte {attendu}")
+        echecs += 1
+
+    print("\n12 cas de détection, de bord, de population declaree et de verdict imprime.")
     return 1 if echecs else 0
 
 
@@ -285,11 +351,6 @@ if __name__ == "__main__":
             ADR,
             "classe Java qui juge la prose ou le code sans etre declaree",
             suspects(),
-            # ⟨`lus` compte LES DEUX populations⟩ Il n en comptait qu une, et la seconde a double la
-            # taille du corpus : un `lus` qui sous-estime cache l elargissement aussi surement qu un
-            # `lus` qui depasse annonce un faux vert (ADR 5007). L union, parce qu une classe peut
-            # juger la prose ET le code - `DocumentationAJourTest` et `CorrespondanceRecetteTest` sont
-            # dans les deux, et les additionner les compterait deux fois.
-            lus=len(lisent_la_prose() | jugent_le_code()),
+            lus=len(population()),
         )
     )

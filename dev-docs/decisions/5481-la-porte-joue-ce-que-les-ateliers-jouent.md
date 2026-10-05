@@ -13,11 +13,22 @@ verified:
     at: 2026-09-25
 relations:
   complete: ["5157-le-dispositif-se-lit-sans-mode", "5340-chemins-non-declares"]
+  completee_par: ["5931-la-porte-derive-ce-qu-elle-nomme-et-n-ecrit-qu-une-liste-confrontee"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # La porte joue ce que les ateliers jouent, et dit sous son verdict ce qu'elle ne joue pas
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-05** : « jamais d'une liste écrite dans la porte » est **précisé** par
+    [5931](5931-la-porte-derive-ce-qu-elle-nomme-et-n-ecrit-qu-une-liste-confrontee.md). L'interdiction
+    vise la liste **non confrontée** : l'ADR 5373 admet une liste dont un garde dérive la même
+    population et refuse quand les deux divergent, et `GARDES_JAVA` est dans ce cas. Les deux règles ne
+    se citaient pas, et un chantier s'est tenu à leur intersection sans que rien ne le dise. S'y ajoute
+    que la dérivation vaut aussi pour ce que la porte **nomme**, et pas seulement pour ce qu'elle joue.
+    Le reste fait foi, la limite de cette page comprise : une règle indexée sur la CI est muette là où
+    la CI est muette.
 
 ## Le contexte
 
@@ -37,9 +48,6 @@ sans les lancer. Cinq fois en vingt-quatre heures, une porte verte a précédé 
 ## La décision
 
 **Les arguments et les outils se dérivent des ateliers**, jamais d'une liste écrite dans la porte.
-Une forme et une seule est rejouée, faite de drapeaux uniquement ; un garde que les ateliers lancent
-tantôt nu, tantôt avec des arguments, reste lancé nu, parce que la porte ne choisit pas à la place de
-l'atelier.
 
 **Et ce que la porte ne joue pas se dit SOUS sa ligne de verdict.** La position est la décision : ce
 qui est annoncé au-dessus d'un résumé n'est pas lu par qui descend jusqu'au résumé.
