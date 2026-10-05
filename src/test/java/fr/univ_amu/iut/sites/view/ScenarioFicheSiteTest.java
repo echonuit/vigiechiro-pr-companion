@@ -364,7 +364,7 @@ class ScenarioFicheSiteTest {
         // La VRAIE modale d'édition, ouverte par le bouton. `SiteDetailRenommageViewTest` la
         // remplaçait par un double qui écrivait le nouveau numéro : le clip montrait un clic sur
         // « Modifier » puis un numéro qui change, sans qu'aucune modale ne paraisse (#4174).
-        robot.clickOn("#boutonModifier");
+        GesteVisible.cliquer(robot, "#boutonModifier");
         Attente.queSurLeFil(
                 () -> robot.lookup("#champNom").tryQuery().isPresent(), "le champ de nom du site paraît", 10 * 1000L);
         Respiration.leTempsDeLire(robot);
@@ -381,11 +381,12 @@ class ScenarioFicheSiteTest {
                 .isEqualTo("Enregistrer");
 
         robot.interact(nom::clear);
-        robot.clickOn(nom).write("Étang de la Tuilière (rive nord)");
+        GesteVisible.cliquer(robot, nom);
+        robot.write("Étang de la Tuilière (rive nord)");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.avantLeGeste(robot);
 
-        robot.clickOn("#boutonValider");
+        GesteVisible.cliquer(robot, "#boutonValider");
         Attente.queSurLeFil(
                 () -> robot.lookup("#champNom").tryQuery().isEmpty(),
                 "le champ de nom disparaît à la fermeture",
@@ -421,7 +422,8 @@ class ScenarioFicheSiteTest {
         // degrés/minutes/secondes, et les colle dans une application qui parle en décimal. Le script
         // promet que les deux formats se synchronisent ; c'est la moitié du cas que personne ne filmait,
         // couverte en unitaire seulement (#4232). Depuis #5688, la paire se colle dans un seul champ.
-        robot.clickOn(robot.lookup("#champPosition").queryAs(TextField.class)).write("43°31'47\"N 5°26'51\"E");
+        GesteVisible.cliquer(robot, robot.lookup("#champPosition").queryAs(TextField.class));
+        robot.write("43°31'47\"N 5°26'51\"E");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
 
@@ -468,7 +470,7 @@ class ScenarioFicheSiteTest {
         assertThat(avant).isEqualTo(3);
         Respiration.leTempsDeLire(robot);
 
-        robot.clickOn("+ Ajouter un point");
+        GesteVisible.cliquer(robot, "+ Ajouter un point");
         Attente.queSurLeFil(
                 () -> robot.lookup("#champCode").tryQuery().isPresent(), "le champ de code paraît", 10 * 1000L);
         Respiration.leTempsDeLire(robot);
@@ -478,7 +480,7 @@ class ScenarioFicheSiteTest {
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.avantLeGeste(robot);
 
-        robot.clickOn("#boutonValider");
+        GesteVisible.cliquer(robot, "#boutonValider");
         Attente.queSurLeFil(
                 () -> robot.lookup(".carte-point").queryAll().size() > avant,
                 "une carte de point de plus paraît",

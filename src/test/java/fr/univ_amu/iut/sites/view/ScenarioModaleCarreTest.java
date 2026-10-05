@@ -404,7 +404,8 @@ class ScenarioModaleCarreTest {
 
         // Les chiffres se tapent un par un : c'est une validation EN DIRECT que ce cas fait juger, et
         // un champ qui se remplit d'un coup ne la montre pas.
-        robot.clickOn(champCarre(robot)).write("9999");
+        GesteVisible.cliquer(robot, champCarre(robot));
+        robot.write("9999");
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(creer.isDisabled())
                 .as("quatre chiffres : toujours pas un carré")
@@ -417,7 +418,7 @@ class ScenarioModaleCarreTest {
         Respiration.surLeMomentCle(robot);
 
         // Et l'écran d'ARRIVÉE, sans quoi on ne voit pas ce que la modale a changé (ADR 4188).
-        robot.clickOn(creer);
+        GesteVisible.cliquer(robot, creer);
         Attente.queSurLeFil(
                 () -> robot.lookup(".carte-site").queryAll().size() > avant,
                 "une carte de site de plus paraît",
@@ -440,11 +441,12 @@ class ScenarioModaleCarreTest {
         Respiration.leTempsDeLire(robot);
 
         ouvrirLaDeclaration(robot);
-        robot.clickOn(champCarre(robot)).write(CARRE_LIBRE);
+        GesteVisible.cliquer(robot, champCarre(robot));
+        robot.write(CARRE_LIBRE);
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.avantLeGeste(robot);
 
-        robot.clickOn("Annuler");
+        GesteVisible.cliquer(robot, "Annuler");
         Attente.queSurLeFil(
                 () -> robot.lookup("#champCarre").tryQuery().isEmpty(), "le champ de carré se vide", 10 * 1000L);
         Respiration.surLeMomentCle(robot);
@@ -469,7 +471,8 @@ class ScenarioModaleCarreTest {
 
     /// Tape le numéro, chiffre à chiffre, dans le champ qu'on vient de cliquer.
     private void saisir(FxRobot robot, String carre) {
-        robot.clickOn(champCarre(robot)).write(carre);
+        GesteVisible.cliquer(robot, champCarre(robot));
+        robot.write(carre);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
@@ -487,7 +490,7 @@ class ScenarioModaleCarreTest {
     /// C'est le geste que le script décrit - « changer un chiffre du carré ». Vider le champ et
     /// retaper montrerait le verdict disparaître au VIDAGE, ce qui n'est pas le cas jugé.
     private void corrigerLeDernierChiffre(FxRobot robot, String chiffre) {
-        robot.clickOn(champCarre(robot));
+        GesteVisible.cliquer(robot, champCarre(robot));
         robot.push(KeyCode.END);
         robot.push(KeyCode.BACK_SPACE);
         robot.write(chiffre);
@@ -525,7 +528,8 @@ class ScenarioModaleCarreTest {
     /// exactement ce que ces trois cas montrent, et pourquoi ils ne bouchonnent aucun client.
     private void situer(FxRobot robot, String position) throws TimeoutException {
         Respiration.avantLeGeste(robot);
-        robot.clickOn(champPosition(robot)).write(position);
+        GesteVisible.cliquer(robot, champPosition(robot));
+        robot.write(position);
         WaitForAsyncUtils.waitForFxEvents();
         GesteVisible.cliquer(robot, "#btnSituer");
         Attente.queSurLeFil(

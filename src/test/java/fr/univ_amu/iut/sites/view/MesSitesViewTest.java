@@ -138,7 +138,7 @@ class MesSitesViewTest {
             return ReponseApi.injoignable("bouchon");
         });
 
-        robot.clickOn("#btnSyncVigieChiro");
+        GesteVisible.cliquer(robot, "#btnSyncVigieChiro");
 
         // Ce que le voile opaque ne donnait pas : un avancement visible, et un moyen de renoncer.
         assertThat(vuPendantLaSynchro).containsExactly("fenetre_de_suivi=true", "annuler=true");
@@ -157,7 +157,7 @@ class MesSitesViewTest {
         // ensuite (`NavigationConnexion.libelleMenu`) : c'est le produit qui dit qu'on n'est pas
         // connecté, le clip n'a rien à affirmer par-dessus. Demande de la revue (#4171) : « il
         // faudrait montrer que si on n'est pas connecté, en affichant le menu action par exemple ».
-        robot.clickOn("#menuOutils");
+        GesteVisible.cliquer(robot, "#menuOutils");
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(robot.lookup(LIBELLE_SE_CONNECTER).tryQuery())
                 .as("le menu annonce qu'il reste à se connecter : c'est la situation que ce clip pose")
@@ -203,7 +203,7 @@ class MesSitesViewTest {
         // précédente basculait un booléen du mock et sautait de « fermé » à « ouvert » sans rien
         // montrer : la revue n'y voyait pas ce qui avait changé l'état (#4171). Ici le jeton arrive
         // par le seul chemin qu'un utilisateur emprunte, et c'est LUI qui rouvre le bouton.
-        robot.clickOn("#menuOutils");
+        GesteVisible.cliquer(robot, "#menuOutils");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.entreDeuxGestes(robot);
         GesteVisible.cliquer(robot, LIBELLE_SE_CONNECTER);
@@ -211,7 +211,7 @@ class MesSitesViewTest {
         Respiration.avantLeGeste(robot);
 
         GesteVisible.remplacerLeTexte(robot, "#champToken", "jeton-de-recette");
-        robot.clickOn("#boutonConnecter");
+        GesteVisible.cliquer(robot, "#boutonConnecter");
         Attente.queSurLeFil(
                 () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible(),
                 "le bandeau de statut paraît",
@@ -220,7 +220,7 @@ class MesSitesViewTest {
 
         // ADR 4188 : une modale se filme avec son écran de départ ET son écran d'arrivée. On la
         // referme donc, et « Mes sites » revient : c'est là que le changement se lit.
-        robot.clickOn("#boutonFermer");
+        GesteVisible.cliquer(robot, "#boutonFermer");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.apresLeGeste(robot);
 
@@ -230,7 +230,7 @@ class MesSitesViewTest {
                 .isFalse();
         Respiration.avantLeGeste(robot);
 
-        robot.clickOn(bouton);
+        GesteVisible.cliquer(robot, bouton);
         WaitForAsyncUtils.waitForFxEvents();
 
         Label message = robot.lookup("#lblSynchro").queryAs(Label.class);
