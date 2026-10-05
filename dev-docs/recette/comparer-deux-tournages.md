@@ -80,55 +80,61 @@ ci-dessus le montre.
 
 ## Le plancher du runner, mesuré
 
-**Quatre** tournages des 95 clips ordinaires, sur le **même commit** (`f9c9e1218`), lancés sur quatre
-runners GitHub distincts, soit **six paires** par clip. Mesurés le 5 octobre 2026 avec l'instrument du
-flux, ffmpeg 6.1.1 et ImageMagick 6.9.12-98 (#5885).
+**Six** tournages des 95 clips ordinaires, sur le **même commit** (`f9c9e1218`), lancés sur six
+runners GitHub distincts, soit **quinze paires** par clip. Mesurés le 5 octobre 2026 par l'atelier
+`mesurer-les-planchers.yml`, avec l'instrument du flux, ffmpeg 6.1.1 et ImageMagick 6.9.12-98
+(#5885).
 
 Sept clips n'ont pas de plancher, parce qu'ils ont deux fins (voir plus bas). Sur les **88** autres :
 
 | plancher à 5 % de tolérance | cas |
 |---|---|
-| 0,5 à 1 % | 8 |
-| 0,1 à 0,5 % | 44 |
-| 0,05 à 0,1 % | 8 |
-| < 0,05 % | 28, dont 8 à zéro |
+| 0,5 à 1 % | 9 |
+| 0,1 à 0,5 % | 48 |
+| 0,05 à 0,1 % | 10 |
+| < 0,05 % | 21, dont 5 à zéro |
 
-**Médiane : 0,147 %.** Le pire vaut 0,953 %, sur
+**Médiane : 0,160 %.** Le pire vaut 0,979 %, sur
 `ScenarioJournalAbsentTest.sans_journal_la_nuit_est_inconnue`.
 
 !!! danger "Un seuil global mentirait dans les deux sens"
 
-    Retenir le pire plancher, 0,953 %, comme seuil unique **aveuglerait 80 cas pour se protéger de
-    huit** : un libellé entier changé, qui vaut 0,364 %, passerait sous le seuil sans être vu.
+    Retenir le pire plancher, 0,979 %, comme seuil unique **aveuglerait 79 cas pour se protéger de
+    neuf** : un libellé entier changé, qui vaut 0,364 %, passerait sous le seuil sans être vu.
 
     Retenir la médiane laisserait au contraire la moitié des cas crier au changement à chaque
     tournage.
 
     Un écart se lit donc contre **le plancher de son propre cas**, pas contre un seuil unique.
 
-!!! warning "Six paires voient un mode qui sort une fois sur quatre, pas une fois sur vingt"
+!!! warning "Quelques tournages voient un mode qui sort une fois sur quatre, pas une fois sur vingt"
 
-    Un cas dont le plancher est ressorti à 0,000 % sur six paires n'est pas prouvé stable : il l'était
-    ces quatre fois-là. Quatre clips n'ont montré leur seconde fin que dans **un** tournage sur les
-    quatre (#5911), et la paire unique qui avait précédé cette mesure ne l'avait pas vue.
+    Un cas dont le plancher est ressorti à 0,000 % sur quinze paires n'est pas prouvé stable : il
+    l'était ces six fois-là. Quatre clips n'ont montré leur seconde fin que dans **un** tournage sur
+    les quatre premiers (#5911), et la paire unique qui avait précédé cette mesure ne l'avait pas vue.
 
-!!! warning "Six paires ne font pas encore le plancher : le contrôle hors échantillon"
+!!! warning "Le contrôle hors échantillon, et ce que les paires y changent"
 
-    Deux **autres** tournages du même commit, qui n'ont pas servi à la mesure, ont été comparés
-    contre ces planchers. Sur les 88 clips, **22** dépassent le leur, dont **8** de plus du double.
+    Le plancher d'un cas est le pire de ses propres paires : les tournages qui l'ont mesuré restent
+    dessous par construction. Le contrôle se fait donc sur deux **autres** tournages du même commit,
+    comparés contre le fichier.
 
-    Ces écarts sont petits : les huit vont de 0,010 à 0,318 %. Les plus gros rapports viennent des
-    clips dont le plancher vaut 0,000 % sur six paires, où un écart de 0,024 % s'affiche « ×24 ».
-    Le plancher est le pire de six valeurs, et une septième le dépasse à peu près une fois sur sept :
-    c'est ce que le contrôle montre, pas un défaut de ces clips.
+    | planchers pris sur | dans leur plancher | de 1 à 2 fois | au-delà du double |
+    |---|---|---|---|
+    | six paires (quatre tournages) | 66 | 14 | 8 |
+    | quinze paires (six tournages) | 81 | 4 | 3 |
 
-    Un rapport élevé sur un plancher proche de zéro se lit donc avec son écart absolu, et la carte
-    des différences tranche. Ajouter des paires est le remède, et c'est ce que fait l'atelier.
+    Les trois qui restent valent 0,015 %, 0,195 % et 0,300 % d'écart. Le premier s'affiche « ×15 »
+    parce que son plancher vaut 0,001 % : un rapport élevé sur un plancher proche de zéro se lit
+    avec son écart absolu, et la carte des différences tranche.
+
+    Ce reste n'est pas un défaut de ces clips. Un maximum pris sur quinze valeurs est dépassé par
+    une seizième de temps en temps, et chaque passage de l'atelier ajoute des paires.
 
 !!! note "Ce que valaient les planchers d'avant"
 
     Le fichier portait 51 planchers ordinaires, médiane **0,009 %**, pris sur un poste. Remesurés
-    avec l'instrument du flux, 39 des 50 clips communs montent, et la médiane est seize fois plus
+    avec l'instrument du flux, 43 des 50 clips communs montent, et la médiane est dix-sept fois plus
     haute. Deux tournages du même commit, comparés par le flux contre ces planchers, sortaient 32
     clips sur 51 à plus du double de leur plancher.
 
@@ -147,7 +153,7 @@ mesurées avec l'instrument du flux (#5870).
 | `ScenarioConnecteAnnonceImportTest` | S2-59, S2-60 | 0,325 % |
 | `ScenarioConnecteLancementTest` | S4-47 | 0,503 % |
 
-Aucun ne dépasse le pire plancher des clips ordinaires, 0,953 % : ces clips se comparent.
+Aucun ne dépasse le pire plancher des clips ordinaires, 0,979 % : ces clips se comparent.
 
 !!! danger "Un plancher se mesure avec l'instrument du flux, pas avec celui du poste"
 
@@ -296,10 +302,10 @@ Un plancher mesure le bruit d'un clip qui **finit sur son verdict**. Sept clips 
 tournages du même commit y diffèrent de 3 à 26 %, parce que le clip s'arrête pendant une
 transformation, pendant un fondu, ou sur une page que rien n'a calée.
 
-| clip | ses six paires vont jusqu'à | issue |
+| clip | ses quinze paires vont jusqu'à | issue |
 |---|---|---|
-| `ScenarioAnnonceConnexionTest.deconnecte_le_compte_rendu_ne_pretend_rien` | 23,3 % | #5893 |
-| `ScenarioRejetsEtArchiveTest.l_import_aboutit_malgre_les_rejets` | 23,2 % | #5893 |
+| `ScenarioAnnonceConnexionTest.deconnecte_le_compte_rendu_ne_pretend_rien` | 23,9 % | #5893 |
+| `ScenarioRejetsEtArchiveTest.l_import_aboutit_malgre_les_rejets` | 23,8 % | #5893 |
 | `ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection` | 22,5 % | #5893 |
 | `ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce` | 26,2 % | #5911 |
 | `ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit` | 21,2 % | #5911 |
@@ -335,8 +341,8 @@ Depuis l'[ADR 4296](../decisions/4296-on-compare-les-deux-bouts-du-clip.md), la 
 **première** image du clip autant que sur la dernière. Chacune a son plancher, et le classement retient
 le plus grand des deux rapports.
 
-La première image est **plus stable que la dernière** : sur 95 clips et six paires de tournages, soit
-570 mesures avec l'instrument du flux, son plancher vaut **0,000 % sans exception** (#5885). Elle
+La première image est **plus stable que la dernière** : sur 95 clips et quinze paires de tournages, soit
+1 425 mesures avec l'instrument du flux, son plancher vaut **0,000 % sans exception** (#5885). Elle
 n'est pas pour autant aveugle - les premières images de deux cas différents diffèrent de 2,4 à 3 %.
 
 !!! warning "Un plancher haut peut n'être qu'un mauvais tirage, ou un clip à deux fins"
