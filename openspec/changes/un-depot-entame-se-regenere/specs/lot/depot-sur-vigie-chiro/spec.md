@@ -17,7 +17,7 @@ qui manque.
 
 *Vérifié par* : un banc de bout en bout, sur base réelle, qui dépose, provoque un contenu refusé,
 régénère par le service de lot **sans réponse simulée pour la génération**, relance, et constate l'unité
-déposée. À écrire. Le test de #3946 simulait la génération et ne pouvait pas voir le refus.
+déposée.  Le test de #3946 simulait la génération et ne pouvait pas voir le refus.
 
 #### Scenario: Régénérer après un contenu refusé
 
@@ -40,7 +40,7 @@ Décidé par Sébastien pendant la réalisation (option a) : la commande refusai
 déjà préparé, parce qu'elle préparait avant de générer et que la préparation n'admet que « Vérifié ».
 
 *Vérifié par* : `ExporterLotTest`, la commande sur un service simulé, avec un passage « Vérifié » (préparé puis généré) et un
-passage « Dépôt en cours » (généré sans préparation). À écrire.
+passage « Dépôt en cours » (généré sans préparation).
 
 #### Scenario: Régénérer un dépôt entamé en ligne de commande
 
@@ -62,8 +62,7 @@ La garde SHALL tenir dans les deux sens de la course : elle s'arme au début du 
 lève à sa fin, qu'il aboutisse, échoue ou soit annulé.
 
 *Vérifié par* : des cas unitaires sur le registre des téléversements en cours (armé, levé après succès,
-levé après exception), et un cas sur le service de lot qui refuse pendant un téléversement armé. À
-écrire.
+levé après exception), et un cas sur le service de lot qui refuse pendant un téléversement armé.
 
 #### Scenario: Générer pendant un téléversement
 

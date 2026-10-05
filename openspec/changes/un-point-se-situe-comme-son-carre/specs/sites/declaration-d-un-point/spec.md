@@ -18,8 +18,7 @@ champ. En édition, le champ SHALL montrer la position enregistrée sous la mêm
 
 *Vérifié par* : un test de ViewModel qui lit le même texte, décimal puis degrés-minutes-secondes, dans
 le site et dans le point, et obtient les mêmes coordonnées ; un test d'interface qui saisit une paire,
-lit la position du marqueur, déplace le marqueur et relit le champ. À écrire, rouges avant la
-réalisation. Une mutation qui fait diverger la lecture du point de celle du site doit les faire rougir.
+lit la position du marqueur, déplace le marqueur et relit le champ.  Une mutation qui fait diverger la lecture du point de celle du site doit les faire rougir.
 
 #### Scenario: Le même texte, deux écrans, une position
 
@@ -45,7 +44,7 @@ code proposé reste modifiable dans la modale de point. Les noms des points syst
 `H2`, relèvent de #5608 et ne sont pas proposés ici.
 
 *Vérifié par* : un test du calcul pur (site vide, `Z1` et `Z3` présents, codes non `Z`), et un test de
-ViewModel qui ouvre une création et lit le code proposé. À écrire.
+ViewModel qui ouvre une création et lit le code proposé.
 
 #### Scenario: Le premier numéro libre
 
@@ -64,7 +63,7 @@ déclencher un avertissement qui le nomme, sans empêcher d'enregistrer. 40 m es
 utilise pour rattacher un point à un nom.
 
 *Vérifié par* : un test du calcul pur de distance et de seuil (39 m signale, 41 m non), et un test de
-ViewModel qui saisit une position voisine d'un point existant et lit l'avertissement. À écrire.
+ViewModel qui saisit une position voisine d'un point existant et lit l'avertissement.
 
 #### Scenario: Un point à 30 m
 
@@ -81,7 +80,7 @@ apporte ses points.
 
 *Vérifié par* : un test d'interface qui colle une position, coche la case, crée, et constate un site et
 un seul point à la position collée ; un second qui crée sans cocher et constate un site sans point ;
-un troisième, sur un carré récupéré, qui constate l'absence de la case. À écrire. Une case de
+un troisième, sur un carré récupéré, qui constate l'absence de la case.  Une case de
 recette S1 la montre.
 
 #### Scenario: Case cochée

@@ -16,8 +16,8 @@ La même règle lit la position du site et celle d'un point d'écoute.
 **Vérifié par** : `PositionColleeTest`, six cas sur l'analyseur pur -
 `degres_decimaux_latitude_puis_longitude`, `degres_minutes_secondes_valent_leur_equivalent_decimal`,
 `sud_et_ouest_comptent_negativement`, `ouest_s_ecrit_aussi_en_francais`,
-`url_de_carte_refuse_avec_son_propre_motif`, `texte_illisible_refuse_en_disant_quoi_coller`. Trois cas
-à écrire : les degrés-minutes décimales, le cardinal après un décimal, et la virgule décimale refusée
+`url_de_carte_refuse_avec_son_propre_motif`, `texte_illisible_refuse_en_disant_quoi_coller`. Trois autres
+cas tiennent les degrés-minutes décimales, le cardinal après un décimal, et la virgule décimale refusée
 avec son motif.
 
 #### Scenario: Position en degrés décimaux

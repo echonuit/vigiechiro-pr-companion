@@ -17,7 +17,7 @@ de la réponse.
 
 *Vérifié par* : un banc de `TeleverseurArchive`, qui n'en a aucun aujourd'hui, provoquant un `403` à
 chacune des étapes (dépôt d'un seul bloc, URL de partie, `PUT` de partie, finalisation) et lisant la
-cause retenue. À écrire.
+cause retenue.
 
 #### Scenario: Le stockage refuse le dépôt d'un seul bloc
 
@@ -45,7 +45,6 @@ Le système SHALL ranger un refus définitif dans l'une de trois causes :
 Un refus rejouable (`429`, `5xx`, coupure) SHALL ne porter aucune cause, comme aujourd'hui.
 
 *Vérifié par* : des cas unitaires sur la règle de classement, un par couple statut et provenance.
-À écrire.
 
 #### Scenario: Un 403 de l'API
 

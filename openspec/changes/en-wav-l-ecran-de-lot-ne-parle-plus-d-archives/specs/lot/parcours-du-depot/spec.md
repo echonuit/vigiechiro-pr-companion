@@ -11,8 +11,8 @@ L'écran de lot SHALL tenir la forme du dépôt de la nuit affichée : celle des
 dépôt est entamé, sinon celle du réglage, dont le défaut est le WAV. Il SHALL la relire à l'ouverture et
 après chaque téléversement.
 
-*Vérifié par* : `ServiceLotTest` (la forme d'une nuit sans dépôt suit le réglage ; celle d'un dépôt entamé
-suit ses unités) et `LotViewModelTest`. À écrire, rouges avant la réalisation.
+*Vérifié par* : `RegenerationPendantUnDepotTest` (la forme d'une nuit sans dépôt suit le réglage ; celle d'un dépôt entamé
+suit ses unités) et `LotViewModelTest`.
 
 #### Scenario: Aucun dépôt entamé
 
@@ -31,9 +31,10 @@ ou quand l'application ne peut pas téléverser elle-même. Connecté et en form
 ni les éléments de l'étape de téléversement qui servent au dépôt manuel d'archives (la mention du dépôt
 manuel, le chemin du dossier, « Copier », « Ouvrir le dossier (dépôt manuel) »).
 
-*Vérifié par* : un test d'interface sur l'écran monté connecté, dans les deux formes, qui lit la présence
-de la carte et de ces éléments ; et un cas hors connexion en forme WAV, où la carte reste. À écrire, rouge
-en forme WAV avant la réalisation.
+*Vérifié par* : `LotDepotConnecteViewTest`, sur l'écran monté connecté, dans les deux formes, qui lit la
+présence de la carte et de ces éléments. Le cas hors connexion en forme WAV est tenu au modèle de vue, par
+`LotViewModelTest`, qui compte les étapes : aucun test d'interface ne monte l'écran hors connexion en
+forme WAV, et aucun aperçu ne le montre (#5838).
 
 #### Scenario: Connecté, forme WAV
 
@@ -58,7 +59,7 @@ Sans l'étape des archives : « 1 » préparer, « 2 » téléverser, « 3 » la
 passage déposé. Avec elle : la numérotation actuelle, de 1 à 4.
 
 *Vérifié par* : `EtapesDepotTest` (trois étapes ou quatre, et le rang de l'étape courante dans chaque
-cas), et le test d'interface de l'exigence précédente, qui lit les titres. À écrire.
+cas), et le test d'interface de l'exigence précédente, qui lit les titres.
 
 #### Scenario: Trois étapes
 
@@ -74,12 +75,12 @@ cas), et le test d'interface de l'exigence précédente, qui lit les titres. À 
 ### Requirement: Le compte rendu du dépôt nomme ce qui est parti
 
 Le compte rendu d'un dépôt SHALL nommer ses unités d'après leur type : « séquence(s) » quand elles sont
-toutes des séquences WAV, « archive(s) » quand elles sont toutes des archives ZIP, « fichier(s) » quand le
+toutes des séquences WAV, « archive(s) » quand elles sont toutes des archives ZIP, « unité(s) » quand le
 plan mêle les deux. Il SHALL NOT conseiller de régénérer les archives pour une unité qui n'est pas une
 archive.
 
 *Vérifié par* : `CompteRenduChiffreDepotTest`, un cas par type pour chaque phrase qui nomme l'unité, et un
-cas de contenu refusé en WAV qui constate l'absence du conseil. À écrire.
+cas de contenu refusé en WAV qui constate l'absence du conseil.
 
 #### Scenario: Dépôt complet en WAV
 
@@ -100,8 +101,7 @@ les observations ne pourraient pas être recalculées ; pour un dépôt en séqu
 les observations côté serveur avant de les recalculer. Dans les deux cas elle SHALL nommer
 `lancer-traitement-vigiechiro --forcer`.
 
-*Vérifié par* : un test d'interface qui lit l'infobulle dans les deux formes après un relevé « terminée ».
-À écrire. Le blocage lui-même est déjà tenu par `LotDepotConnecteViewTest`.
+*Vérifié par* : un test d'interface qui lit l'infobulle dans les deux formes après un relevé « terminée ».  Le blocage lui-même est déjà tenu par `LotDepotConnecteViewTest`.
 
 #### Scenario: Nuit analysée, déposée en WAV
 
