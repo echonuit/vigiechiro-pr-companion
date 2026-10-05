@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -104,7 +105,7 @@ class ModalePointViewTest {
         assertThat(valider.isDisabled()).isFalse();
         Respiration.leTempsDeLire(robot);
 
-        robot.clickOn(valider);
+        GesteVisible.cliquer(robot, valider);
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
 

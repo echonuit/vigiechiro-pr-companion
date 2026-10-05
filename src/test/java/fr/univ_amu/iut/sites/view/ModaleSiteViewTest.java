@@ -22,6 +22,7 @@ import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -155,7 +156,8 @@ class ModaleSiteViewTest {
         // puis à « 640380 » d'un coup : le clip montrait un bouton qui change d'état sans qu'on voie
         // ce qui le fait changer, et c'est justement la validation EN DIRECT que ce cas fait juger.
         TextField carre = robot.lookup("#champCarre").queryAs(TextField.class);
-        robot.clickOn(carre).write("6403");
+        GesteVisible.cliquer(robot, carre);
+        robot.write("6403");
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(valider(robot).isDisabled())
                 .as("quatre chiffres : toujours pas un carré")
@@ -211,11 +213,12 @@ class ModaleSiteViewTest {
 
         TextField nom = robot.lookup("#champNom").queryAs(TextField.class);
         robot.interact(nom::clear);
-        robot.clickOn(nom).write("Nouveau nom");
+        GesteVisible.cliquer(robot, nom);
+        robot.write("Nouveau nom");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.avantLeGeste(robot);
 
-        robot.clickOn(valider(robot));
+        GesteVisible.cliquer(robot, valider(robot));
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
 
@@ -229,11 +232,12 @@ class ModaleSiteViewTest {
         enCreation(robot);
 
         // La saisie se voit, sinon « Annuler » n'annule rien de visible.
-        robot.clickOn(robot.lookup("#champCarre").queryAs(TextField.class)).write("640380");
+        GesteVisible.cliquer(robot, "#champCarre");
+        robot.write("640380");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.avantLeGeste(robot);
 
-        robot.clickOn(robot.lookup(".bouton-secondaire").queryAs(Button.class));
+        GesteVisible.cliquer(robot, ".bouton-secondaire");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
 

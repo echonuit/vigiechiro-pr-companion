@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
@@ -72,7 +73,7 @@ class SiteDetailVersImportViewTest {
     @Test
     @DisplayName("Cliquer « Importer une nuit » sur la fiche ouvre l'assistant pré-rattaché au site")
     void importer_depuis_fiche_preselectionne_le_site(FxRobot robot) {
-        robot.clickOn("#boutonImporterNuit");
+        GesteVisible.cliquer(robot, "#boutonImporterNuit");
 
         ComboBox<?> comboSites = robot.lookup("#comboSites").queryAs(ComboBox.class);
         assertThat(comboSites.getValue()).isInstanceOf(Site.class);
@@ -82,11 +83,11 @@ class SiteDetailVersImportViewTest {
     @Test
     @DisplayName("Le bouton Retour depuis l'import ramène à la fiche site appelante (historique empilé)")
     void retour_revient_a_la_fiche_site(FxRobot robot) {
-        robot.clickOn("#boutonImporterNuit");
+        GesteVisible.cliquer(robot, "#boutonImporterNuit");
         // Sur l'assistant d'import : la fiche site (et son bouton « Importer ») ne sont plus affichées.
         assertThat(robot.lookup("#boutonImporterNuit").tryQuery()).isEmpty();
 
-        robot.clickOn("#boutonRetour");
+        GesteVisible.cliquer(robot, "#boutonRetour");
 
         // De retour sur la fiche site : le bouton « Importer » réapparaît (il n'existe que sur
         // M-Site-detail). Avec une ouverture en racine, Retour mènerait à l'accueil et le bouton

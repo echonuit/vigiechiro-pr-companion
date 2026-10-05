@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -170,7 +171,7 @@ class SiteDetailPublierPointViewTest {
         // Rapatrié et sans passage, il est masqué par défaut (#1738). On le RÉVÈLE : sans cela,
         // « la carte ne porte pas l'action » serait vrai parce que la carte n'existe pas, ce qui ne
         // prouverait rien du tout.
-        robot.clickOn("#lienPointsNonUtilises");
+        GesteVisible.cliquer(robot, "#lienPointsNonUtilises");
 
         assertThat(libellesDe(carte(robot, "Z9")))
                 .as("`synchronise` et « publié » sont deux drapeaux opposés, pas deux noms du même")
