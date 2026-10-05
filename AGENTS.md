@@ -281,3 +281,15 @@ Elle lance l'outil, relit les titres de toutes les pages, rejoue les ponts et re
 des communautés qu'elle retrouve.
 Ce que le graphe lit et ne lit pas est dans
 [`dev-docs/chercher-dans-le-depot.md`](dev-docs/chercher-dans-le-depot.md).
+
+**Une question de prose se pose aux énoncés.** `graphify query` part des libellés qui ressemblent
+aux mots de la question, et un symbole de code homonyme capte le départ : une question sur un
+pourquoi ou sur une règle peut ne rendre que du code. Pour celle-là, la commande du dépôt cherche
+les énoncés que la prose porte, justification comprise :
+
+```bash
+python3 scripts/graphify/couche_semantique.py cherche "<question>"
+```
+
+Depuis un worktree, le graphe se désigne par `--graphe`, il ne vit que dans la copie principale.
+`graphify query` reste l'outil pour aller d'un nœud à ses voisins, et pour le code.

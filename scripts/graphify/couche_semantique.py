@@ -45,6 +45,7 @@ tous des titres repetes du journal des versions. Le premier garde en comptait 61
 tort : seul l ecart est imputable au lot.
 
 Usage :
+    couche_semantique.py cherche  [--graphe G] [--nombre N] "QUESTION"
     couche_semantique.py a-reextraire [--graphe G]
     couche_semantique.py decoupe  --dossier DIR [--graphe G] (--a-reextraire | PAGE [PAGE ...])
     couche_semantique.py audite   --dossier DIR
@@ -52,6 +53,10 @@ Usage :
     couche_semantique.py note     [--graphe G] [--commit C] (--perimetre | PAGE [PAGE ...])
     couche_semantique.py oublie   [--graphe G] PAGE [PAGE ...]
     couche_semantique.py --auto-test
+
+`cherche` rend les enonces de la couche qui repondent a une question posee en langage courant,
+chacun avec sa justification et sa page. Il lit le graphe sans importer le moteur. `graphify
+query` reste l outil pour aller d un noeud a ses voisins.
 
 L ORDRE, pour qui refait la couche d une ou de plusieurs pages : `a-reextraire` dit lesquelles,
 `decoupe` prepare DIR, chaque lot est lu et rendu, `audite` juge les rendus, `fusionne` les verse
@@ -119,12 +124,14 @@ import difflib
 import hashlib
 import io
 import json
+import math
 import re
 import subprocess
 import sys
 import tempfile
 import types
 import unicodedata
+from collections import Counter
 from pathlib import Path, PurePosixPath
 
 RACINE = Path(__file__).resolve().parents[2]
@@ -191,6 +198,120 @@ def cle_de_libelle(libelle: object) -> str:
     """
     plat = unicodedata.normalize("NFKD", str(libelle)).encode("ascii", "ignore").decode()
     return re.sub(r"[^a-z0-9]", "", plat.casefold())
+
+
+# Les mots qui ne disent rien d une question. Ecrits sans accent : `mots_de` les compare apres
+# avoir aplati le texte.
+MOTS_VIDES = frozenset(
+    [
+        "a",
+        "au",
+        "aux",
+        "avec",
+        "ce",
+        "ces",
+        "cet",
+        "cette",
+        "comment",
+        "d",
+        "dans",
+        "de",
+        "des",
+        "du",
+        "elle",
+        "elles",
+        "en",
+        "est",
+        "et",
+        "etre",
+        "fait",
+        "faire",
+        "il",
+        "ils",
+        "je",
+        "l",
+        "la",
+        "le",
+        "les",
+        "leur",
+        "leurs",
+        "n",
+        "ne",
+        "nous",
+        "on",
+        "ont",
+        "ou",
+        "par",
+        "pas",
+        "plus",
+        "plutot",
+        "pour",
+        "pourquoi",
+        "qu",
+        "que",
+        "quel",
+        "quelle",
+        "quelles",
+        "quels",
+        "qui",
+        "quoi",
+        "s",
+        "sa",
+        "sans",
+        "se",
+        "ses",
+        "son",
+        "sont",
+        "sur",
+        "tu",
+        "un",
+        "une",
+        "vous",
+        "y",
+    ]
+)
+
+
+def mots_de(texte: object) -> list[str]:
+    """Les mots d un texte, sans accent ni casse, sans mots vides, ramenes a une racine courte.
+
+    La racine est grossiere, et c est voulu : un `s` ou un `x` final tombe, puis le mot se coupe a
+    sept lettres. « depots » et « depot », « relancable » et « relancables » se rejoignent sans
+    qu aucun dictionnaire n entre au depot.
+    """
+    plat = unicodedata.normalize("NFKD", str(texte or "")).encode("ascii", "ignore").decode()
+    mots = [m for m in re.findall(r"[a-z0-9]+", plat.casefold()) if m not in MOTS_VIDES]
+    return [(m[:-1] if len(m) > 3 and m[-1] in "sx" else m)[:7] for m in mots if len(m) > 1]
+
+
+def enonces_qui_repondent(
+    question: str, enonces: list[dict], nombre: int = 5
+) -> tuple[list[str], list[dict]]:
+    """Les mots retenus de la question, et les enonces qui les portent, du mieux au moins bien note.
+
+    Le moteur choisit ses points de depart parmi les libelles qui ressemblent a la question : un
+    symbole de code au libelle exact, `WAV`, capte le depart, et la justification d un enonce, qui
+    porte le pourquoi, n est jamais lue (#5939). Ici seuls les ENONCES sont candidats, et leur
+    justification compte.
+
+    Un mot compte une fois, deux s il est dans le libelle : c est la PRESENCE qui note, pas la
+    repetition, sans quoi une longue justification qui redit « depot » passe devant l enonce dont
+    le libelle porte tous les mots de la question. Un mot rare pese plus qu un mot que beaucoup
+    d enonces portent. A note egale, le plus court passe devant.
+    """
+    demandes = sorted(set(mots_de(question)))
+    lus = [(e, set(mots_de(e.get("label"))), set(mots_de(e.get("rationale")))) for e in enonces]
+    porteurs = Counter(mot for _, du_libelle, du_reste in lus for mot in du_libelle | du_reste)
+    notes = []
+    for enonce, du_libelle, du_reste in lus:
+        note = sum(
+            (2 if mot in du_libelle else 1) * math.log(1 + len(lus) / porteurs[mot])
+            for mot in demandes
+            if mot in du_libelle | du_reste
+        )
+        if note:
+            notes.append((-note, len(du_libelle | du_reste), enonce["id"], enonce))
+    return demandes, [n[3] for n in sorted(notes, key=lambda n: n[:3])[:nombre]]
 
 
 def identifiant_d_hyperarete(hyperarete: dict, membres: list[str]) -> str:
@@ -594,6 +715,29 @@ def commande_oublie(graphe: Path, racine: Path, pages: list[str]) -> int:
         f"OUBLIE | pages={len(pages)} | noeuds={compte['noeuds']} | aretes={compte['aretes']}"
         f" | hyperaretes={compte['hyperaretes']} | empreintes={oubliees}"
     )
+    return 0
+
+
+def commande_cherche(graphe: Path, question: str, nombre: int) -> int:
+    """Rend les enonces de la couche qui repondent a une question, avec la page de chacun."""
+    enonces = [n for n in _noeuds_du_graphe(graphe) if n.get("_origin") == "semantic"]
+    if not enonces:
+        # Une liste vide se lirait « rien dans la prose » alors qu aucune prose n a ete lue.
+        raise Refus(f"{graphe} ne porte aucune couche semantique : la recherche n y lirait rien.")
+    demandes, rendus = enonces_qui_repondent(question, enonces, nombre)
+    print(f"CHERCHE | enonces={len(enonces)} | mots retenus={demandes} | rendus={len(rendus)}")
+    if not demandes:
+        print("Aucun mot de la question n est retenu : elle ne porte que des mots vides.")
+    elif not rendus:
+        print(
+            "Aucun enonce de la couche ne porte ces mots. La prose n en dit rien, ou le dit autrement."
+        )
+    for rang, enonce in enumerate(rendus, 1):
+        print(f"{rang}. {enonce['label']}")
+        if enonce.get("rationale"):
+            print(f"   parce que : {enonce['rationale']}")
+        print(f"   page : {enonce.get('source_file')}")
+        print(f"   id : {enonce['id']}")
     return 0
 
 
@@ -2116,6 +2260,173 @@ def auto_test() -> int:
             (0, (True, True, True)),
         )
 
+    # ⟨une question en langage courant, #5939⟩ le moteur part des libelles qui ressemblent aux
+    # mots de la question, et un symbole de code homonyme capte le depart : « pourquoi le depot se
+    # fait en WAV par defaut plutot qu en ZIP » ne rendait que du code, alors que la couche portait
+    # plus de trente enonces sur le sujet. `cherche` lit les ENONCES, libelle et justification.
+    def enonce(
+        identifiant: str, libelle: str, justification: str = "", fichier: str = "a.md"
+    ) -> dict:
+        return {
+            "id": identifiant,
+            "label": libelle,
+            "rationale": justification,
+            "source_file": fichier,
+            "_origin": "semantic",
+        }
+
+    constante = {"id": "wav", "label": "WAV", "source_file": "TypeDepot.java", "_origin": "ast"}
+    par_defaut = enonce(
+        "e_par_defaut",
+        "Sans réglage, le dépôt part en séquences WAV",
+        "Le retour du porteur : la compression coûte du temps et du disque.",
+    )
+    forme = enonce(
+        "e_forme", "Deux formes au choix", "Le ZIP n'est plus le défaut depuis la décision 5677."
+    )
+    relancable = enonce(
+        "e_relancable", "Une participation relançable", "Chaque son du dépôt reste en ligne."
+    )
+    bavard = enonce(
+        "e_bavard",
+        "Un plancher se remesure",
+        "Il se remesure après chaque rebase, même quand il ne conflicte pas, parce que deux"
+        " branches peuvent poser la même valeur et masquer le conflit qui les oppose.",
+    )
+    court = enonce("e_court", "Autre règle", "Un plancher protège.")
+
+    def cherche(question: str, noeuds: list[dict], *options: str) -> tuple[int, str, list[str]]:
+        """Le code, la ligne de verdict, et les identifiants rendus, dans l ordre."""
+        sortie = io.StringIO()
+        with tempfile.TemporaryDirectory() as temporaire:
+            graphe_cherche = Path(temporaire) / "graph.json"
+            _ecris(graphe_cherche, {"nodes": noeuds, "links": []})
+            with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(io.StringIO()):
+                code = main(
+                    ["couche_semantique.py", "cherche", "--graphe", str(graphe_cherche), *options]
+                    + [question]
+                )
+        lignes = sortie.getvalue().splitlines()
+        verdict = next((ligne for ligne in lignes if ligne.startswith("CHERCHE |")), "")
+        return code, verdict, [ligne[8:] for ligne in lignes if ligne.startswith("   id : ")]
+
+    corpus = [constante, par_defaut, forme, relancable, bavard, court]
+    verifie(
+        "une question dont un symbole de code porte le mot rend l enonce de prose, pas le symbole",
+        lambda: cherche("pourquoi le dépôt part en WAV", corpus),
+        (
+            0,
+            "CHERCHE | enonces=5 | mots retenus=['depot', 'part', 'wav'] | rendus=2",
+            ["e_par_defaut", "e_relancable"],
+        ),
+    )
+    verifie(
+        "la justification repond quand le libelle ne porte aucun mot de la question",
+        lambda: cherche("pourquoi le ZIP n'est plus le défaut", corpus)[2],
+        ["e_forme"],
+    )
+    verifie(
+        "un mot du libelle pese plus que le meme mot dans la justification",
+        lambda: cherche("plancher", [bavard, court])[2],
+        ["e_bavard", "e_court"],
+    )
+    long_ = enonce(
+        "e_a_long",
+        "Une règle",
+        "La graine du tirage est fixée, pour que deux passes sur le même graphe rendent la même"
+        " partition, et que la comparaison de deux états ne mesure pas le hasard du partitionneur.",
+    )
+    bref = enonce("e_z_bref", "Une autre règle", "La graine est fixée.")
+    verifie(
+        "a note egale, l enonce court passe devant le long, quel que soit l ordre des identifiants",
+        lambda: cherche("graine", [long_, bref])[2],
+        ["e_z_bref", "e_a_long"],
+    )
+    # Les deux libelles portent chacun UN mot de la question : sans la rarete ils sont a egalite,
+    # et c est le plus court, celui du mot courant, qui passerait devant.
+    commun = enonce("e_commun", "Le dépôt")
+    rare = enonce("e_rare", "La graine du tirage")
+    verifie(
+        "un mot rare pese plus qu un mot que beaucoup d enonces portent",
+        lambda: cherche("dépôt graine", [commun, rare, par_defaut, relancable])[2][:2],
+        ["e_rare", "e_commun"],
+    )
+    verifie(
+        "les accents, la casse et le pluriel ne comptent pas",
+        lambda: cherche("DÉPÔTS", corpus)[2],
+        ["e_par_defaut", "e_relancable"],
+    )
+    verifie(
+        "quand rien ne repond, la ligne le dit et la commande sort en 0",
+        lambda: cherche("chiroptère", corpus),
+        (0, "CHERCHE | enonces=5 | mots retenus=['chiropt'] | rendus=0", []),
+    )
+    verifie(
+        "une question faite de mots vides ne retient aucun mot",
+        lambda: cherche("pourquoi est-ce que le la", corpus)[1],
+        "CHERCHE | enonces=5 | mots retenus=[] | rendus=0",
+    )
+    verifie(
+        "sur un graphe sans couche, la recherche refuse en 2 au lieu de ne rien rendre",
+        lambda: cherche("dépôt", [constante]),
+        (2, "", []),
+    )
+
+    def dit_la_recherche(*arguments: str, noeuds: list[dict] | None = None) -> tuple[int, str]:
+        """Le code, et ce que la commande ecrit apres sa ligne de verdict, ou son refus."""
+        sortie, erreur = io.StringIO(), io.StringIO()
+        with tempfile.TemporaryDirectory() as temporaire:
+            graphe_cherche = Path(temporaire) / "graph.json"
+            _ecris(graphe_cherche, {"nodes": noeuds or corpus, "links": []})
+            morceaux = [str(graphe_cherche) if a == "LE_GRAPHE" else a for a in arguments]
+            with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(erreur):
+                code = main(["couche_semantique.py", "cherche", *morceaux])
+        suite = [
+            ligne for ligne in sortie.getvalue().splitlines() if not ligne.startswith("CHERCHE")
+        ]
+        return code, " ".join(suite + erreur.getvalue().splitlines())
+
+    verifie(
+        "quand rien ne repond, la commande dit que la prose n en dit rien, ou le dit autrement",
+        lambda: dit_la_recherche("--graphe", "LE_GRAPHE", "chiroptère"),
+        (
+            0,
+            "Aucun enonce de la couche ne porte ces mots. La prose n en dit rien, ou le dit autrement.",
+        ),
+    )
+    verifie(
+        "et quand la question n a que des mots vides, elle le dit aussi",
+        lambda: dit_la_recherche("--graphe", "LE_GRAPHE", "pourquoi est-ce que"),
+        (0, "Aucun mot de la question n est retenu : elle ne porte que des mots vides."),
+    )
+    sans_raison = enonce("e_sans_raison", "Graine unique")
+    verifie(
+        "chaque enonce rendu porte son rang, son libelle, sa justification, sa page et son identifiant",
+        lambda: dit_la_recherche("--graphe", "LE_GRAPHE", "participation relançable")[1],
+        "1. Une participation relançable    parce que : Chaque son du dépôt reste en ligne."
+        "    page : a.md    id : e_relancable",
+    )
+    verifie(
+        "un enonce sans justification n en invente pas",
+        lambda: dit_la_recherche("--graphe", "LE_GRAPHE", "unique", noeuds=[sans_raison])[1],
+        "1. Graine unique    page : a.md    id : e_sans_raison",
+    )
+    verifie(
+        "sans question, `cherche` refuse en 2",
+        lambda: dit_la_recherche("--graphe", "LE_GRAPHE"),
+        (2, "REFUS : `cherche` attend une question."),
+    )
+    verifie(
+        "sans graphe a l endroit designe, `cherche` refuse en 2",
+        lambda: dit_la_recherche("--graphe", "/nulle/part/graph.json", "dépôt"),
+        (2, "REFUS : aucun graphe a /nulle/part/graph.json."),
+    )
+    verifie(
+        "`--nombre` borne ce qui est rendu",
+        lambda: cherche("dépôt", corpus, "--nombre", "1")[2],
+        ["e_par_defaut"],
+    )
+
     def aide() -> tuple[int, bool, str]:
         sortie, erreur = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(erreur):
@@ -2128,7 +2439,7 @@ def auto_test() -> int:
 
 
 USAGE = __doc__.split("Usage :")[1].split("\n\n")[0]
-COMMANDES = ("a-reextraire", "decoupe", "audite", "fusionne", "note", "oublie")
+COMMANDES = ("a-reextraire", "cherche", "decoupe", "audite", "fusionne", "note", "oublie")
 
 
 def main(argv: list[str]) -> int:
@@ -2150,6 +2461,7 @@ def main(argv: list[str]) -> int:
 
 def _joue(commande: str, reste: list[str]) -> int:
     dossier = graphe = commit = None
+    nombre = 5
     racine = RACINE
     pages: list[str] = []
     drapeaux: set[str] = set()
@@ -2161,6 +2473,8 @@ def _joue(commande: str, reste: list[str]) -> int:
             graphe = Path(reste.pop(0))
         elif mot == "--commit" and reste:
             commit = reste.pop(0)
+        elif mot == "--nombre" and reste:
+            nombre = int(reste.pop(0))
         elif mot == "--racine" and reste:
             # Pour les cas de l auto-test, qui jouent l outil sur un depot temoin.
             racine = Path(reste.pop(0))
@@ -2171,6 +2485,12 @@ def _joue(commande: str, reste: list[str]) -> int:
     graphe = graphe or racine / "graphify-out" / "graph.json"
     if commande == "a-reextraire":
         return commande_a_reextraire(graphe, racine)
+    if commande == "cherche":
+        if not pages:
+            raise Refus("`cherche` attend une question.")
+        if not graphe.is_file():
+            raise Refus(f"aucun graphe a {graphe}.")
+        return commande_cherche(graphe, " ".join(pages), nombre)
     if commande == "note":
         if "--perimetre" in drapeaux:
             pages = pages_du_perimetre(racine)
