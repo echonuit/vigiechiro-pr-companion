@@ -14,11 +14,18 @@ verified:
 relations:
   complete: ["5790-le-graphe-lit-la-prose-d-un-perimetre-declare"]
   prolonge: ["5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache"]
+  completee_par: ["5941-le-crochet-relit-la-structure-des-pages-en-une-extraction-avec-le-code"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # La mise à jour du graphe relit la structure de toutes les pages, et dit ce qu'elle retire
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-05** : « le crochet de commit ne relit que le code » est **complété** par
+    [5941](5941-le-crochet-relit-la-structure-des-pages-en-une-extraction-avec-le-code.md).
+    Le chemin du crochet relit la structure des pages que le commit touche, dans la même
+    extraction que le code. Le reste fait foi.
 
 ## Le contexte
 
