@@ -23,7 +23,12 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from _commun import RACINE_DEPOT, cas_d_auto_test, sort_si_contrat_demande
+from _commun import (
+    RACINE_DEPOT,
+    cas_d_auto_test,
+    champs_du_verdict,
+    sort_si_contrat_demande,
+)
 
 ICI = pathlib.Path(__file__).parent
 # Le champ `lus` (issue #5007) se lit en groupe NON capturant, et ce n'est pas un detail : les
@@ -34,15 +39,16 @@ ICI = pathlib.Path(__file__).parent
 #
 # `?` est accepte parce qu'un garde qui ne declare pas son compte n'est pas toujours une panne : les
 # quatre muets qui restent sont des exclusions ECRITES, non des retardataires (#5015).
-LIGNE_CLIQUET = re.compile(
-    r"^ADR (\d+) \| lus=(\?|\d+) \| suspects=(\d+) \| cliquet=(\d+) \| verdict=(\S+)$", re.M
-)
+# ⟨les lignes de cliquet et de plancher se lisent par le motif PARTAGE⟩ Ce rapport en portait deux
+# versions strictes, qui enumeraient les champs dans l ordre. Elles refusaient une ligne qui en gagne
+# un, et un `finditer` qui ne trouve rien ne leve pas : la ligne aurait cesse d etre comptee sans que
+# rien ne rougisse, et ce rapport AGREGE, donc une ligne ratee est un chiffre manquant et non une
+# erreur visible. Le motif vit desormais dans `_commun`, borne de la meme facon pour ses trois
+# lecteurs, et les champs se prennent en seconde passe (#5830).
 LIGNE_LOUPE = re.compile(r"^LOUPE (\d+) \| lus=(\?|\d+) \| candidats=(\d+)$", re.M)
 # Le PLANCHER est la polarite inverse du cliquet, et il a sa propre ligne. Ce rapport ne la lisait
 # pas : le garde des renvois annoncait « a-relever » a chaque passage, sans que rien ne le montre.
-LIGNE_PLANCHER = re.compile(
-    r"^PLANCHER (\d+) \| lus=(\?|\d+) \| mesure=(\d+) \| plancher=(\d+) \| verdict=(\S+)$", re.M
-)
+# Les deux familles passent par le meme motif partage depuis #5830, et `dispositif` les separe.
 
 
 def executer(script: pathlib.Path) -> str:
@@ -89,25 +95,34 @@ def collecter(executeur=None, scripts=None):
         # `verdicts` compte les LIGNES lues dans cette sortie, et non les unites qu'un garde a lues.
         # Les deux s'appelaient `lus`, a un caractere pres du champ : deux sens sous un nom.
         verdicts = 0
-        for m in LIGNE_CLIQUET.finditer(sortie):
-            num, lus, suspects, cliquet, verdict = (
-                m.group(1),
-                m.group(2),
-                int(m.group(3)),
-                int(m.group(4)),
-                m.group(5),
-            )
-            cliquets.append((num, lus, suspects, cliquet, verdict))
-            verdicts += 1
-        for m in LIGNE_PLANCHER.finditer(sortie):
-            num, lus, mesure, plancher, verdict = (
-                m.group(1),
-                m.group(2),
-                int(m.group(3)),
-                int(m.group(4)),
-                m.group(5),
-            )
-            planchers.append((num, lus, mesure, plancher, verdict))
+        for ligne in sortie.splitlines():
+            champs = champs_du_verdict(ligne)
+            if champs is None:
+                continue
+            # ⟨`lus` peut MANQUER, et c est declare⟩ La docstring de `rapporte_plancher` donne en
+            # exemple une ligne sans ce champ. Un motif strict la refusait ; ici elle est comptee, et
+            # son `lus` se lit « ? » comme celui d une population qui ne se compte pas.
+            lus = champs.get("lus", "?")
+            if champs["dispositif"] == "ADR":
+                cliquets.append(
+                    (
+                        champs["numero"],
+                        lus,
+                        int(champs["suspects"]),
+                        int(champs["cliquet"]),
+                        champs["verdict"],
+                    )
+                )
+            else:
+                planchers.append(
+                    (
+                        champs["numero"],
+                        lus,
+                        int(champs["mesure"]),
+                        int(champs["plancher"]),
+                        champs["verdict"],
+                    )
+                )
             verdicts += 1
         if not verdicts:
             muets.append((script.name, premiere_ligne_de_verdict(sortie)))
@@ -239,6 +254,65 @@ def auto_test() -> int:
             )
         finally:
             os.chdir(ancien)
+
+    # ⟨le motif PARTAGE, et les deux cas que son arbitrage exige⟩ Ce rapport portait deux motifs
+    # STRICTS qui enumeraient les champs dans l ordre. Le choix retenu est le LACHE, parce qu il etait
+    # deja fait et deja eprouve dans `releve-les-planchers.py`, dont un cas dit « un champ INCONNU de
+    # plus ne la fera pas perdre non plus ». Le danger du strict est qu il AGREGE : une ligne qu il
+    # rate est un chiffre manquant, pas une erreur visible (#5830).
+    futur = "ADR 4368 | lus=12 | source=git | suspects=0 | cliquet=0 | verdict=ok"
+    verifie(
+        "une ligne qui GAGNE un champ est toujours comptee",
+        lambda: (champs_du_verdict(futur) or {}).get("numero"),
+        "4368",
+    )
+    verifie(
+        "et ses champs connus se lisent quand meme",
+        lambda: (champs_du_verdict(futur) or {}).get("cliquet"),
+        "0",
+    )
+    # Le CONTRASTE : une ligne MALFORMEE n est pas comptee. Sans lui, un motif qui prendrait tout
+    # ferait compter de la prose comme un verdict, ce qui est le defaut inverse et aussi grave.
+    verifie(
+        "une ligne malformee n est PAS prise pour un verdict",
+        lambda: champs_du_verdict("ADR 4368 sans barre ni verdict"),
+        None,
+    )
+    # ⟨le champ `verdict` est EXIGE, et un cas le dit⟩ Sans lui, retirer cette exigence du motif ne
+    # tuait que par un KeyError plus loin : un mutant tue par accident n est pas tenu par un temoin.
+    verifie(
+        "une ligne qui porte le mot-cle mais AUCUN verdict n est pas comptee",
+        lambda: champs_du_verdict("ADR 4368 | lus=12 | suspects=0 | cliquet=0"),
+        None,
+    )
+    # Et le `dispositif` est RENDU : c est lui qui separe les cliquets des planchers chez l appelant,
+    # et sans ce cas son retrait ne tuait qu en levant.
+    verifie(
+        "le dispositif est rendu, et il separe les deux familles",
+        lambda: (
+            (champs_du_verdict("ADR 4368 | lus=1 | suspects=0 | cliquet=0 | verdict=ok") or {}).get(
+                "dispositif"
+            ),
+            (champs_du_verdict("PLANCHER 4395 | mesure=1 | plancher=1 | verdict=ok") or {}).get(
+                "dispositif"
+            ),
+        ),
+        ("ADR", "PLANCHER"),
+    )
+    verifie(
+        "ni une ligne de LOUPE, qui ne juge pas",
+        lambda: champs_du_verdict("LOUPE 4712 | lus=12 | candidats=3"),
+        None,
+    )
+    # Et le champ `lus` peut MANQUER : c est la forme que la docstring de `rapporte_plancher` donne en
+    # exemple, et que les deux motifs stricts refusaient.
+    verifie(
+        "un plancher sans champ `lus` est compte, et son `lus` se lit « ? »",
+        lambda: (
+            champs_du_verdict("PLANCHER 4395 | mesure=4026 | plancher=4026 | verdict=ok") or {}
+        ).get("lus", "?"),
+        "?",
+    )
 
     return echecs()
 
