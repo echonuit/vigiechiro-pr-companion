@@ -32,6 +32,7 @@ Usage :
     couche_semantique.py audite   --dossier DIR
     couche_semantique.py fusionne --dossier DIR [--graphe G]
     couche_semantique.py note     [--graphe G] [--commit C] (--perimetre | PAGE [PAGE ...])
+    couche_semantique.py oublie   [--graphe G] PAGE [PAGE ...]
     couche_semantique.py --auto-test
 
 `decoupe` ecrit dans DIR un `lot_NN.json` par lot, plus les index du code et des pages. Chaque agent
@@ -51,6 +52,11 @@ note : une page modifiee PENDANT l extraction ressort donc comme modifiee, au li
 
 `note` sert a amorcer le registre, ou a attester qu une page a ete relue et que son changement ne
 touche pas sa couche, un chiffre regenere par exemple. Avec `--commit`, il note l etat de ce commit.
+
+`oublie` retire du graphe la couche semantique d une page qui a quitte le perimetre ou le depot,
+et son empreinte du registre. Sans lui la page sortirait « disparue » a chaque passe, et ses noeuds
+resteraient a repondre pour une page que plus personne ne relit. Il refuse une page encore dans le
+perimetre : celle-la se reextrait, elle ne s oublie pas.
 
 Le graphe et son registre sont ignores par git et ne vivent que dans la copie principale. Depuis
 un worktree, `--graphe` les designe, et la liste porte l arbre qu elle a compare. Sans graphe ou
@@ -87,9 +93,14 @@ CHAMPS_DES_MEMBRES = ("nodes", "members", "member_ids", "node_ids")
 SEUIL_DE_RESSEMBLANCE = 0.85
 PLAFOND_DE_MOTS = 22_000
 PLAFOND_DE_PAGES = 40
-# Le perimetre de l ADR 5790. Rejoue sur le commit de la premiere extraction, cette regle rend ses
-# 577 pages, sans une de plus ni de moins : c est le compte connu d avance qui la tient.
+# Le perimetre de l ADR 5790, complete par l ADR 5857. Rejoue sur le commit de la premiere
+# extraction, cette regle rend 576 de ses 577 pages : toutes sauf le registre que l ADR 5857 en
+# sort. C est ce compte connu d avance qui la tient.
 RACINES_DE_PROSE = ("brief", "dev-docs", "docs")
+# Deux pages nommees, parce qu aucune regle de forme ne les distingue de leurs voisines. Le journal
+# des versions est engendre. Le registre des javadocs relues est reecrit a chaque relecture : 15 des
+# 33 fusions qui ont suivi la premiere extraction le touchaient, pour une couche d un seul noeud.
+PAGES_EXCLUES = ("CHANGELOG.md", "scripts/methode/relus.txt")
 RACINES_DE_CODE = ("scripts", "src")
 EXTENSIONS_DE_PAGE = (".md", ".txt")
 REGISTRE = "couche-semantique.json"
@@ -102,10 +113,10 @@ class Refus(Exception):
 def du_perimetre(chemin: str) -> bool:
     """Cette page entre-t-elle dans la couche semantique, d apres l ADR 5790 ?"""
     page = PurePosixPath(chemin)
-    if page.suffix not in EXTENSIONS_DE_PAGE:
+    if page.suffix not in EXTENSIONS_DE_PAGE or chemin in PAGES_EXCLUES:
         return False
     if len(page.parts) == 1:
-        return page.suffix == ".md" and chemin != "CHANGELOG.md"
+        return page.suffix == ".md"
     if page.parts[0] in RACINES_DE_PROSE:
         return True
     return page.parts[0] in RACINES_DE_CODE and not chemin.endswith(".approved.txt")
@@ -301,6 +312,43 @@ def _noeuds_du_graphe(graphe: Path) -> list[dict]:
     return _lis(graphe)["nodes"]
 
 
+def sans_la_couche_de(graphe: dict, pages: set[str]) -> tuple[dict, dict[str, int]]:
+    """Le graphe sans la couche SEMANTIQUE de ces pages, et le compte de ce qui en sort.
+
+    Sortent : les noeuds semantiques de ces pages, toute arete qui touche l un d eux quelle que soit
+    son origine, puisqu elle n aurait plus d extremite, les aretes semantiques que ces pages
+    portaient, et leurs hyperaretes. Une hyperarete d une AUTRE page perd ses membres retires, et
+    reste. La couche de structure n est pas touchee : c est la mise a jour de la structure qui la
+    tient, et elle sait deja retirer une page disparue.
+    """
+    partis = {
+        n["id"]
+        for n in graphe["nodes"]
+        if n.get("_origin") == "semantic" and n.get("source_file") in pages
+    }
+    noeuds = [n for n in graphe["nodes"] if n["id"] not in partis]
+    aretes = [
+        a
+        for a in graphe["links"]
+        if a["source"] not in partis
+        and a["target"] not in partis
+        and not (a.get("_origin") == "semantic" and a.get("source_file") in pages)
+    ]
+    hyperaretes = []
+    for hyperarete in graphe.get("hyperedges", []):
+        if hyperarete.get("source_file") in pages:
+            continue
+        hyperaretes.append(
+            {**hyperarete, "nodes": [m for m in hyperarete.get("nodes", []) if m not in partis]}
+        )
+    compte = {
+        "noeuds": len(graphe["nodes"]) - len(noeuds),
+        "aretes": len(graphe["links"]) - len(aretes),
+        "hyperaretes": len(graphe.get("hyperedges", [])) - len(hyperaretes),
+    }
+    return {**graphe, "nodes": noeuds, "links": aretes, "hyperedges": hyperaretes}, compte
+
+
 def _git(racine: Path, *arguments: str, entree: str | None = None) -> str:
     """La sortie d une commande git jouee dans `racine`, ou un Refus qui nomme la commande."""
     commande = ["git", "-C", str(racine), "-c", "core.quotePath=false", *arguments]
@@ -403,6 +451,33 @@ def commande_note(graphe: Path, racine: Path, pages: list[str], commit: str | No
     return 0
 
 
+def commande_oublie(graphe: Path, racine: Path, pages: list[str]) -> int:
+    """Retire du graphe la couche semantique de ces pages, et leur empreinte du registre."""
+    if not graphe.is_file():
+        raise Refus(f"aucun graphe a {graphe}.")
+    encore_la = sorted(set(pages) & set(pages_du_perimetre(racine)))
+    if encore_la:
+        raise Refus(
+            f"{len(encore_la)} page(s) encore dans le perimetre : {encore_la[:3]}. Une page du"
+            " perimetre se reextrait, elle ne s oublie pas."
+        )
+    allege, compte = sans_la_couche_de(_lis(graphe), set(pages))
+    # Le graphe pese plusieurs dizaines de Mo : il s ecrit d un bloc, sans indentation, comme
+    # `graphify` l ecrit lui-meme.
+    graphe.write_text(json.dumps(allege, ensure_ascii=False), encoding="utf-8")
+    registre = registre_de(graphe)
+    oubliees = 0
+    if registre.is_file():
+        notees = _lis(registre)["pages"]
+        oubliees = sum(1 for page in pages if notees.pop(page, None) is not None)
+        _ecris(registre, {"pages": notees})
+    print(
+        f"OUBLIE | pages={len(pages)} | noeuds={compte['noeuds']} | aretes={compte['aretes']}"
+        f" | hyperaretes={compte['hyperaretes']} | empreintes={oubliees}"
+    )
+    return 0
+
+
 def commande_decoupe(dossier: Path, graphe: Path, pages: list[str], racine: Path = RACINE) -> int:
     """Ecrit les fiches de lot et les deux index dont les agents ont besoin."""
     absentes = [p for p in pages if not (racine / p).is_file()]
@@ -422,6 +497,10 @@ def commande_decoupe(dossier: Path, graphe: Path, pages: list[str], racine: Path
         court = {"id": noeud["id"], "label": noeud["label"]}
         if origine == "ast":
             fiche["structure"].append({**court, "node_kind": noeud.get("node_kind")})
+        elif noeud.get("rationale"):
+            # La justification d avant, pour que l agent la COMPARE a la page au lieu de la
+            # reecrire a l aveugle : cinq agents sur cinq l ont reecrite sans l avoir, le 5 octobre.
+            fiche["semantique"].append({**court, "rationale": noeud["rationale"]})
         else:
             fiche["semantique"].append(court)
     textes = {p: (racine / p).read_text(encoding="utf-8", errors="ignore") for p in pages}
@@ -860,6 +939,9 @@ def auto_test() -> int:
         (".github/copilot-instructions.md", False),
         ("openspec/specs/une-spec.md", False),
         ("scripts/adr/critere-de-fin.motif.md", True),
+        ("scripts/methode/relus.txt", False),
+        ("scripts/methode/versions-verifiees.txt", True),
+        ("scripts/adr/non-declarees.txt", True),
         ("src/main/resources/fonts/LICENCE.txt", True),
         ("src/test/java/Golden.sortie.approved.txt", False),
     ):
@@ -882,6 +964,117 @@ def auto_test() -> int:
         "deux etats egaux ne rendent rien",
         lambda: a_reextraire(etat_note, etat_note),
         ([], [], []),
+    )
+
+    # ⟨le retrait d une couche, #5857⟩ sur un graphe fabrique : la page P s en va, la page Q reste.
+    def du_graphe(identifiant: str, origine: str, fichier: str) -> dict:
+        return {"id": identifiant, "label": identifiant, "_origin": origine, "source_file": fichier}
+
+    def lien(source: str, cible: str, origine: str, fichier: str) -> dict:
+        return {"source": source, "target": cible, "_origin": origine, "source_file": fichier}
+
+    graphe_temoin = {
+        "directed": False,
+        "nodes": [
+            du_graphe("titre_p", "ast", "P.md"),
+            du_graphe("concept_p", "semantic", "P.md"),
+            du_graphe("concept_q", "semantic", "Q.md"),
+            du_graphe("classe", "ast", "Classe.java"),
+        ],
+        "links": [
+            lien("titre_p", "concept_p", "semantic", "P.md"),
+            lien("titre_p", "classe", "semantic", "P.md"),
+            lien("concept_q", "concept_p", "semantic", "Q.md"),
+            lien("classe", "concept_p", "pont", "Classe.java"),
+            lien("concept_q", "classe", "semantic", "Q.md"),
+            lien("titre_p", "classe", "ast", "P.md"),
+        ],
+        "hyperedges": [
+            {"id": "flux_p", "source_file": "P.md", "nodes": ["concept_p", "classe", "titre_p"]},
+            {"id": "flux_q", "source_file": "Q.md", "nodes": ["concept_q", "concept_p", "classe"]},
+        ],
+    }
+    allege, sortis = sans_la_couche_de(graphe_temoin, {"P.md"})
+    verifie(
+        "le noeud semantique de la page s en va, son titre de structure et l autre page restent",
+        lambda: [n["id"] for n in allege["nodes"]],
+        ["titre_p", "concept_q", "classe"],
+    )
+    verifie(
+        "partent les aretes de la page et celles qui touchent son noeud, quelle que soit l origine",
+        lambda: [(a["source"], a["target"], a["_origin"]) for a in allege["links"]],
+        [("concept_q", "classe", "semantic"), ("titre_p", "classe", "ast")],
+    )
+    verifie(
+        "l hyperarete de la page part, celle d une autre page perd le membre retire et reste",
+        lambda: [(h["id"], h["nodes"]) for h in allege["hyperedges"]],
+        [("flux_q", ["concept_q", "classe"])],
+    )
+    verifie(
+        "le compte dit ce qui est sorti",
+        lambda: sortis,
+        {"noeuds": 1, "aretes": 4, "hyperaretes": 1},
+    )
+    verifie(
+        "les autres champs du graphe sont rendus tels quels",
+        lambda: allege["directed"],
+        False,
+    )
+    verifie(
+        "oublier une page qui n a aucune couche ne retire rien",
+        lambda: sans_la_couche_de(graphe_temoin, {"Classe.java"})[1],
+        {"noeuds": 0, "aretes": 0, "hyperaretes": 0},
+    )
+
+    # ⟨la consigne nomme chaque champ que l audit et la fusion lisent, #5857⟩ Sa premiere lecture
+    # reelle a montre le manque : quatre agents sur cinq ont du deviner ces cles dans les cas
+    # ci-dessus. La liste est ECRITE ici, et confrontee au texte que les agents recoivent.
+    consigne = Path(__file__).with_name("consigne-des-agents.md").read_text(encoding="utf-8")
+
+    def section(titre: str) -> str:
+        """Le texte d une section de la consigne, de son titre au titre suivant."""
+        apres = consigne.split(f"## {titre}\n", 1)
+        return apres[1].split("\n## ", 1)[0] if len(apres) == 2 else ""
+
+    # Chaque champ se cherche sur la LIGNE de l objet qui le porte, et non dans la page entiere ni
+    # dans le tableau pris en bloc. Les deux formes larges ont ete essayees : un champ cite ailleurs,
+    # puis le meme champ nomme sur la ligne d un autre objet, laissaient le cas vert quand on le
+    # retirait de sa ligne.
+    champs_par_objet = {
+        "Nœud": ("id", "label", "file_type", "source_file", "source_location", "_origin",
+                 "rationale"),
+        "Arête": ("source", "target", "relation", "confidence", "confidence_score", "source_file",
+                  "source_location", "_origin"),
+        "Hyperarête": ("id", "label", "nodes", "relation", "confidence", "confidence_score",
+                       "source_file", "source_location", "_origin"),
+    }  # fmt: skip
+    lignes_du_tableau = {
+        ligne.split("|")[1].strip(): ligne
+        for ligne in section("Les champs, exactement").splitlines()
+        if ligne.startswith("| ")
+    }
+    for objet, attendus in champs_par_objet.items():
+        verifie(
+            f"la consigne nomme chaque champ d un objet « {objet} » sur sa propre ligne",
+            lambda objet=objet, attendus=attendus: [
+                champ for champ in attendus if f"`{champ}`" not in lignes_du_tableau.get(objet, "")
+            ],
+            [],
+        )
+    rendu_attendu = section("Le rendu")
+    verifie(
+        "la section du rendu nomme ses quatre listes, dont celle des identifiants laches",
+        lambda: [
+            cle
+            for cle in ("nodes", "edges", "hyperedges", "laches")
+            if f'"{cle}"' not in rendu_attendu
+        ],
+        [],
+    )
+    verifie(
+        "une section absente de la consigne ne passe pas pour une section complete",
+        lambda: section("Une section qui n existe pas"),
+        "",
     )
 
     # ⟨le critere de fin de #5814⟩ sur un depot temoin, par le point d entree entier.
@@ -1028,11 +1221,78 @@ def auto_test() -> int:
             (4, [f"modifiee\t{racine_de_dossier}", "disparue\tREADME.md"]),
         )
 
+        # ⟨`oublie`, #5857⟩ la page disparue quitte le graphe et le registre, et sort de la liste.
+        graphe_du_depot = depot / "graphify-out" / "graph.json"
+        avec_raison = {
+            **du_graphe("concept_profond", "semantic", profonde),
+            "rationale": "parce que",
+        }
+        _ecris(
+            graphe_du_depot,
+            {
+                "nodes": [
+                    du_graphe("concept_lisezmoi", "semantic", "README.md"),
+                    avec_raison,
+                    du_graphe("concept_sans_raison", "semantic", profonde),
+                ],
+                "links": [],
+                "hyperedges": [],
+            },
+        )
+        verifie(
+            "`oublie` refuse en 2 une page encore dans le perimetre : elle se reextrait",
+            lambda: joue("oublie", profonde),
+            (2, []),
+        )
+        verifie(
+            "`oublie` dit ce qu il retire : un noeud et une empreinte pour la page disparue",
+            lambda: (
+                "noeuds=1 | aretes=0 | hyperaretes=0 | empreintes=1" in dit("oublie", "README.md")
+            ),
+            True,
+        )
+        verifie(
+            "il n a rien retire de la couche des autres pages",
+            lambda: [n["id"] for n in _lis(graphe_du_depot)["nodes"]],
+            ["concept_profond", "concept_sans_raison"],
+        )
+        verifie(
+            "l empreinte a quitte le registre : la page ne sort plus, ni modifiee ni disparue",
+            lambda: joue("a-reextraire")[1],
+            [f"modifiee\t{racine_de_dossier}"],
+        )
+        verifie(
+            "rejoue, `oublie` ne retire plus rien et sort en 0",
+            lambda: (
+                joue("oublie", "README.md")[0],
+                "noeuds=0 | aretes=0 | hyperaretes=0 | empreintes=0" in dit("oublie", "README.md"),
+            ),
+            (0, True),
+        )
+
+        # ⟨la fiche d un lot porte la justification d avant, #5857⟩
+        fiches = Path(temporaire) / "fiches"
+        verifie(
+            "la fiche rend la justification d un noeud existant qui en porte une, et pas de cle"
+            " vide pour celui qui n en a pas",
+            lambda: (
+                joue("decoupe", "--dossier", str(fiches), profonde)[0],
+                _lis(fiches / "lot_01.json")[profonde]["semantique"],
+            ),
+            (
+                0,
+                [
+                    {"id": "concept_profond", "label": "concept_profond", "rationale": "parce que"},
+                    {"id": "concept_sans_raison", "label": "concept_sans_raison"},
+                ],
+            ),
+        )
+
     return echecs()
 
 
 USAGE = __doc__.split("Usage :")[1].split("\n\n")[0]
-COMMANDES = ("a-reextraire", "decoupe", "audite", "fusionne", "note")
+COMMANDES = ("a-reextraire", "decoupe", "audite", "fusionne", "note", "oublie")
 
 
 def main(argv: list[str]) -> int:
@@ -1078,6 +1338,10 @@ def _joue(commande: str, reste: list[str]) -> int:
         if not pages:
             raise Refus("`note` attend des pages, ou --perimetre pour toutes celles du perimetre.")
         return commande_note(graphe, racine, pages, commit)
+    if commande == "oublie":
+        if not pages:
+            raise Refus("`oublie` attend au moins une page.")
+        return commande_oublie(graphe, racine, pages)
     if dossier is None:
         print("REFUS : --dossier est obligatoire.\nUsage :" + USAGE, file=sys.stderr)
         return 2

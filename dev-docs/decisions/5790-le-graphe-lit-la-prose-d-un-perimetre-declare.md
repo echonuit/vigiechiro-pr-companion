@@ -13,7 +13,7 @@ verified:
     at: 2026-10-04
 relations:
   prolonge: ["5553-trois-index-repondent-aucun-ne-devient-un-garde"]
-  completee_par: ["5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache"]
+  completee_par: ["5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache", "5857-un-registre-sort-du-perimetre-et-une-page-sortie-quitte-la-couche"]
 generated:
   by: "process:assistance-par-agents"
 ---
@@ -25,6 +25,11 @@ generated:
     [5813](5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache.md).
     L'outil en porte cinq : une hyperarête sans identifiant en reçoit un, et une mise à jour déclare
     l'identifiant sémantique qu'elle lâche. Le reste fait foi.
+
+    **2026-10-05** : le périmètre est **complété** par
+    [5857](5857-un-registre-sort-du-perimetre-et-une-page-sortie-quitte-la-couche.md).
+    `scripts/methode/relus.txt` en sort, et une page sortie du périmètre quitte la couche par la
+    commande `oublie`.
 
 ## Le contexte
 
