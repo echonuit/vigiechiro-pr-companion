@@ -19,8 +19,10 @@
 #   commit : extraction AST du code modifié, les quatre passes de pont, puis
 #   clustering et rapport. Environ 20 s, sans bloquer le terminal.
 # - La documentation demande un LLM, que le hook n'a pas : un `.md` modifié pose le
-#   drapeau graphify-out/.needs_update, à résorber en session par
-#   `/graphify . --update`. Le graphe du code, lui, reste à jour tout seul.
+#   drapeau graphify-out/.needs_update, à résorber en session.
+#   `scripts/graphify/couche_semantique.py a-reextraire` dit quelles pages, et ce n'est
+#   pas `/graphify . --update`, qui signale le corpus entier (ADR 5790). Le graphe du
+#   code, lui, reste à jour tout seul.
 #
 # Le journal du rebuild est dans graphify-out/rebuild.log (jamais versionné).
 

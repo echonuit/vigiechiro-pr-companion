@@ -411,6 +411,7 @@ nav:
     - 5774 · Un refus ne voyage pas dans le canal des constats: decisions/5774-un-refus-ne-voyage-pas-dans-le-canal-des-constats.md
     - 5775 · Le dépôt demande au poste où vit son outil: decisions/5775-le-depot-demande-au-poste-ou-vit-son-outil.md
     - 5790 · Le graphe lit la prose d'un périmètre déclaré: decisions/5790-le-graphe-lit-la-prose-d-un-perimetre-declare.md
+    - 5813 · Une hyperarête porte un identifiant, une mise à jour déclare ce qu'elle lâche: decisions/5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache.md
     - 5677 · Le dépôt part en WAV, un dépôt entamé garde son mode: decisions/5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode.md
   - Recette (acceptation):
     - Méthode: recette/index.md

@@ -13,11 +13,18 @@ verified:
     at: 2026-10-04
 relations:
   prolonge: ["5553-trois-index-repondent-aucun-ne-devient-un-garde"]
+  completee_par: ["5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache"]
 generated:
   by: "process:assistance-par-agents"
 ---
 
 # Le graphe lit la prose d'un périmètre déclaré, et dit ce qu'il n'a pas lu
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-05** : les trois parades sont **complétées** par
+    [5813](5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache.md).
+    L'outil en porte cinq : une hyperarête sans identifiant en reçoit un, et une mise à jour déclare
+    l'identifiant sémantique qu'elle lâche. Le reste fait foi.
 
 ## Le contexte
 

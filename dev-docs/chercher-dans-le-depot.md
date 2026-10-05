@@ -85,9 +85,13 @@ le graphe n'en connaît que les titres, et cet instrument en est le lecteur.
 
 !!! warning "Une page récente répond avec sa version d'avant"
 
-    La couche sémantique date d'un commit. Une page modifiée depuis garde ses nœuds d'avant, sans
-    rien signaler : le graphe répond, et il répond l'ancienne prose. Sur une page qui vient de
-    changer, lire la page.
+    Une page modifiée depuis son extraction garde ses nœuds d'avant, sans rien signaler : le
+    graphe répond, et il répond l'ancienne prose. Sur une page qui vient de changer, lire la page.
+
+    `python3 scripts/graphify/couche_semantique.py a-reextraire` rend ces pages, une par ligne
+    avec sa raison. Il refuse plutôt que de rendre une liste vide quand il n'a rien à comparer :
+    le graphe est ignoré par git et ne vit que dans la copie principale, donc depuis un worktree
+    il se désigne par `--graphe`.
 
 Personne n'écrit ce graphe à la main : quand `VIGIECHIRO_GRAPHIFY=1` est posé, le crochet
 `post-commit` le refait par `scripts/graphify/rebuild.py`, qui conserve la couche sémantique.
