@@ -164,7 +164,7 @@ C'est l'écran central de la chaîne de production. L'assistant est une **page u
 | Combobox **Site** : « + Créer un site » | Crée un site à la volée sans quitter l'import |
 | Modification du n° de passage / du point | Met à jour l'aperçu du préfixe et la carte |
 | Bouton **Annuler** | Revient en arrière ; aucun fichier touché ([R9](../Modele%20conceptuel/Regles%20metier.md#r9)) |
-| Bouton **📥 Importer cette nuit** | Lance copie vérifiée + renommage + transformation (variante « en cours » ci-dessous) |
+| Bouton **📥 Importer cette nuit** | Lance copie vérifiée + renommage + transformation (variante « en cours » ci-dessous). Sur une carte de plusieurs nuits, son libellé dit le nombre de nuits cochées : « Importer ces 3 nuits » |
 
 ---
 

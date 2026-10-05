@@ -802,7 +802,7 @@ ea4721561642  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduChi
 af9890a9cd3e  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduDInspection.java
 769e9b592a2f  src/main/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduImport.java
 2b3d83c5cf76  src/main/java/fr/univ_amu/iut/importation/viewmodel/ControleNumeroPassage.java
-3345eeaeb800  src/main/java/fr/univ_amu/iut/importation/viewmodel/CoordinationNuits.java
+2df695fd4e6d  src/main/java/fr/univ_amu/iut/importation/viewmodel/CoordinationNuits.java
 e228832ae4ee  src/main/java/fr/univ_amu/iut/importation/viewmodel/EtatImport.java
 ef0a4852afcd  src/main/java/fr/univ_amu/iut/importation/viewmodel/ExecutionImport.java
 6596a0f4b04a  src/main/java/fr/univ_amu/iut/importation/viewmodel/IdentiteNuit.java
@@ -1811,7 +1811,7 @@ d49c5a1ab907  src/test/java/fr/univ_amu/iut/importation/view/ConfirmationsImport
 1f88ba526bef  src/test/java/fr/univ_amu/iut/importation/view/FormatsImportTest.java
 859907610dfd  src/test/java/fr/univ_amu/iut/importation/view/ImportationClicImporterTest.java
 0767238fef45  src/test/java/fr/univ_amu/iut/importation/view/ImportationControllerGardeTest.java
-3fca3c395fc1  src/test/java/fr/univ_amu/iut/importation/view/ImportationViewTest.java
+9874f12088db  src/test/java/fr/univ_amu/iut/importation/view/ImportationViewTest.java
 837d09ad81c0  src/test/java/fr/univ_amu/iut/importation/view/ImportationVueIntegrationTest.java
 f7da17f4e1d8  src/test/java/fr/univ_amu/iut/importation/view/ParcoursImporterUneNuitTest.java
 8ffdac54cb48  src/test/java/fr/univ_amu/iut/importation/view/PreambuleImport.java
@@ -1829,7 +1829,7 @@ fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
 140614766d08  src/test/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixeTest.java
 4d3bfc4da711  src/test/java/fr/univ_amu/iut/importation/viewmodel/AvertissementsInspectionTest.java
 61591c87b641  src/test/java/fr/univ_amu/iut/importation/viewmodel/CompteRenduChiffreImportTest.java
-be005305ed51  src/test/java/fr/univ_amu/iut/importation/viewmodel/ImportationViewModelTest.java
+1023e4762aaa  src/test/java/fr/univ_amu/iut/importation/viewmodel/ImportationViewModelTest.java
 2617c11d93d8  src/test/java/fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModelTest.java
 3ca0577cb634  src/test/java/fr/univ_amu/iut/importation/viewmodel/NuitVMBadgeTest.java
 d5f0438815d0  src/test/java/fr/univ_amu/iut/importation/viewmodel/NuitsDeLaCarteTest.java

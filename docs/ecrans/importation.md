@@ -298,6 +298,10 @@ seule** nuit, l'inspection **détecte les nuits** et propose de **découper l'im
 donnera un **passage distinct** (au même point, avec des **numéros de passage consécutifs** et la
 **date propre** de chaque nuit).
 
+Le bouton du bas de l'écran dit alors combien de nuits partiront : **« Importer ces 3 nuits »** pour
+trois nuits cochées, et il suit les cases que vous décochez. Il redevient « Importer cette nuit » quand
+il n'en reste qu'une.
+
 Une **table des nuits** apparaît alors, une ligne par nuit :
 
 ![Plusieurs nuits détectées : la table liste chaque nuit (inclure, date, nombre de fichiers, état, n° de passage proposé) ; chacune deviendra un passage distinct.](../assets/captures/apercu-import-multi-nuits.png)

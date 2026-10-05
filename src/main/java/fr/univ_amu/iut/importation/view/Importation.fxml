@@ -161,7 +161,7 @@
          et un refus long rognait le libellé du bouton (constaté à la clôture du lot #2722, sur le refus
          d'une archive trop grosse pour le disque). L'action ne se sacrifie pas à l'explication. -->
     <StackPane fx:id="enveloppeImporter" minWidth="-Infinity">
-      <Button fx:id="boutonImporter" text="Importer cette nuit" styleClass="bouton-primaire"
+      <Button fx:id="boutonImporter" styleClass="bouton-primaire"
               onAction="#importer">
         <graphic>
           <FontIcon iconLiteral="fas-file-import"/>

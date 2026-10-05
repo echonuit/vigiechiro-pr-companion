@@ -105,6 +105,16 @@ class ImportationViewTest {
         assertThat(importer.isDisabled()).isTrue();
     }
 
+    /// Le libellé était écrit en dur dans la vue : il ne pouvait pas suivre le nombre de nuits (#5843).
+    @Test
+    @DisplayName("#5843 : le libellé du bouton d'import est lié au modèle de vue, et non écrit dans la vue")
+    void le_libelle_du_bouton_importer_est_lie(FxRobot robot) {
+        Button importer = robot.lookup("#boutonImporter").queryAs(Button.class);
+
+        assertThat(importer.textProperty().isBound()).isTrue();
+        assertThat(importer.getText()).isEqualTo("Importer cette nuit");
+    }
+
     @Test
     @DisplayName("#801 : le bouton « Écraser et réimporter » porte la classe destructive canonique")
     void bouton_ecraser_est_style_danger(FxRobot robot) {

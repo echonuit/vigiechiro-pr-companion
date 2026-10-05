@@ -23,6 +23,8 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
 
 /// Coordination de l'import **multi-nuits** côté ViewModel (#664), extraite de [ImportationViewModel]
@@ -60,6 +62,14 @@ public final class CoordinationNuits {
     /// qui peut en compter une dizaine (#2050).
     private final ReadOnlyObjectWrapper<CompteRendu> blocage =
             new ReadOnlyObjectWrapper<>(this, "blocage", CompteRendu.de("", List.of()));
+
+    /// Ce que le bouton d'import annonce : **combien de nuits** partiront (#5843).
+    ///
+    /// Il disait « Importer cette nuit » au-dessus d'une table de trois nuits cochées, que la phrase
+    /// voisine annonçait comme trois passages distincts. Le compte vit ici, où chaque (dé)coche est déjà
+    /// suivie pour renuméroter.
+    private final ReadOnlyStringWrapper libelleImport =
+            new ReadOnlyStringWrapper(this, "libelleImport", libelleDeLImport(1));
 
     CoordinationNuits(
             ServiceImport serviceImport,
@@ -107,14 +117,34 @@ public final class CoordinationNuits {
         if (point == null) {
             return;
         }
-        int incluses =
-                (int) inspection.nuits().stream().filter(NuitVM::estIncluse).count();
-        int taille = inspection.plusieursNuits() ? Math.max(1, incluses) : 1;
+        int taille = Math.max(1, nuitsAImporter());
         int base = serviceImport.prochainBlocPassagesLibre(
                 point.id(), rattachement.anneeProperty().get(), taille);
         if (base >= 1) {
             rattachement.numeroPassageProperty().set(base);
         }
+    }
+
+    /// Le libellé du bouton d'import, accordé au nombre de nuits cochées (#5843).
+    public ReadOnlyStringProperty libelleImportProperty() {
+        return libelleImport.getReadOnlyProperty();
+    }
+
+    /// Le libellé pour `nuits` nuits à importer. Zéro n'arrive que sur une carte de plusieurs nuits
+    /// toutes décochées : le bouton est alors grisé, et il ne promet aucune nuit.
+    static String libelleDeLImport(int nuits) {
+        if (nuits == 1) {
+            return "Importer cette nuit";
+        }
+        return nuits < 1 ? "Importer" : "Importer ces " + nuits + " nuits";
+    }
+
+    /// Une carte d'une seule nuit n'a pas de table : sa nuit part, cochée ou non.
+    private int nuitsAImporter() {
+        if (!inspection.plusieursNuits()) {
+            return 1;
+        }
+        return (int) inspection.nuits().stream().filter(NuitVM::estIncluse).count();
     }
 
     /// Validité de la numérotation multi-nuits (entre dans `peutImporter` de l'orchestrateur).
@@ -133,6 +163,8 @@ public final class CoordinationNuits {
     /// ; les nuits exclues repassent à 0. Met à jour la validité (≥ 1 nuit incluse **et** tous les n° proposés
     /// libres, R5). Sans rattachement complet ou hors multi-nuits, ne propose rien.
     private void renumeroter() {
+        // Avant toute sortie anticipée : le libellé ne dépend ni du rattachement ni des numéros (#5843).
+        libelleImport.set(libelleDeLImport(nuitsAImporter()));
         if (!inspection.plusieursNuits()) {
             numerotationValide.set(true); // non pertinent : le pré-contrôle mono-nuit (#108) fait foi
             blocage.set(CompteRendu.de("", List.of()));
