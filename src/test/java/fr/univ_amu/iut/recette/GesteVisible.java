@@ -294,6 +294,40 @@ public final class GesteVisible {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /// Double-clique `cible`, **située sur le fil JavaFX** (ADR 5707).
+    ///
+    /// Même forme que [#cliquer(FxRobot, String)], et pour la même raison : `doubleClickOn(String)`
+    /// passe par `pointOfVisibleNode`, qui lit les bornes de chaque candidat sur le fil APPELANT.
+    /// Le point se RECALCULE entre l'arrivée et l'appui, la mise en page ayant pu bouger.
+    public static void doubleCliquer(FxRobot robot, String cible) {
+        robot.moveTo(pointSurLeFil(robot, cible));
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.entreDeuxGestes(robot);
+
+        // Exemption de l'ADR 4650 : `DoubleClicDeterministe` envoie l'événement à la ligne trouvée
+        // par son contenu, donc SANS déplacer le curseur, et un clip montrerait une table qui change
+        // toute seule. Cette aide existe pour qu'on VOIE le geste (#4181, #4177) : la position est
+        // bien ce que ses appelants éprouvent. La conversion de #5908 a déplacé ICI l'appel
+        // positionnel, qui vivait dans quatre bancs portant chacun sa raison au point d'appel.
+        robot.doubleClickOn(pointSurLeFil(robot, cible));
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    /// Clique droit sur `cible`, **située sur le fil JavaFX** (ADR 5707).
+    ///
+    /// Un nœud en main plutôt qu'un sélecteur, parce que le seul site du dépôt tient sa table. Et
+    /// **aucun contrôle de visibilité**, comme [#cliquer(FxRobot, Node)] : `rightClickOn(Node)` n'en
+    /// faisait pas non plus, et en ajouter un changerait le comportement des gestes qui tiennent un
+    /// nœud sous couvert de corriger un défaut de fil.
+    public static void cliquerDroit(FxRobot robot, Node cible) {
+        robot.moveTo(pointSurLeFil(robot, cible));
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.entreDeuxGestes(robot);
+
+        robot.rightClickOn(pointSurLeFil(robot, cible));
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
     /// Choisit `libelle` dans un menu **déjà en main**, quand plusieurs écrans portent le même
     /// identifiant.
     ///

@@ -282,7 +282,7 @@ CONTRAT = {
     "on ne verifie pas que toute lecture y est enfermee - une aide qui route PUIS lit hors du fil "
     "passe encore",
     "dispositif": "cliquet",
-    "seuil": "134, polarite=descend",
+    "seuil": "129, polarite=descend",
     "temoin": "scripts/adr/5707-geste-du-pointeur-hors-du-fil.py --auto-test",
     "decision": "ADR 5707",
     # Lire par l arbre coute. Declarer les chemins rend la hausse indolore sur toute demande qui ne

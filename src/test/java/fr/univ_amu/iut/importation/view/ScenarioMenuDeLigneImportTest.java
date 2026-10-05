@@ -141,7 +141,7 @@ class ScenarioMenuDeLigneImportTest {
         // hors du cadre ne se filme pas.
         GesteVisible.amenerDansLeCadre(robot, "#tableFichiers");
         Respiration.surLeMomentCle(robot);
-        robot.rightClickOn(table);
+        GesteVisible.cliquerDroit(robot, table);
         WaitForAsyncUtils.waitForFxEvents();
         ContextMenu menu = table.getContextMenu();
 

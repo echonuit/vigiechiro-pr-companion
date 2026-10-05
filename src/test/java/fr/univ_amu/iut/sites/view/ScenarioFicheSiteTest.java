@@ -306,7 +306,7 @@ class ScenarioFicheSiteTest {
         // Le vrai geste, et non `DoubleClicDeterministe` (#4554) : ce cas est FILMÉ, et un
         // événement envoyé directement à la ligne ne déplace pas le curseur. Le clip montrerait
         // une table qui change toute seule, ce qui est précisément ce que la session vient voir.
-        robot.doubleClickOn(DATE_AFFICHEE);
+        GesteVisible.doubleCliquer(robot, DATE_AFFICHEE);
         Attente.queSurLeFil(
                 () -> robot.lookup("#stepper").tryQuery().isPresent(), "le sélecteur de passage s'ouvre", 10 * 1000L);
         Respiration.surLeMomentCle(robot);

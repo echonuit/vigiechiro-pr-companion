@@ -19,6 +19,7 @@ import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.multisite.view.NavigationMultisite;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -225,7 +226,7 @@ class ParcoursMultisiteVersPassageE2ETest {
                 // Le vrai geste, et non `DoubleClicDeterministe` (#4554), pour la même raison
                 // qu'au parcours jumeau : c'est le chemin de l'utilisateur qui est éprouvé ici.
                 AttenteAvantClic.attendreCliquable(robot, DATE_NUIT, 3, null);
-                robot.doubleClickOn(DATE_NUIT);
+                GesteVisible.doubleCliquer(robot, DATE_NUIT);
                 WaitForAsyncUtils.waitFor(3, TimeUnit.SECONDS, () -> "passage".equals(navigation.getVueCourante()));
                 return;
             } catch (AssertionError | TimeoutException reessai) {

@@ -8,7 +8,7 @@ decided_at: 2026-10-01
 verification: probable
 enforced_by:
   - "scripts/adr/5707-geste-du-pointeur-hors-du-fil.py"
-ratchet: 134
+ratchet: 129
 verified:
   - by: machine:suspects
     at: 2026-10-01

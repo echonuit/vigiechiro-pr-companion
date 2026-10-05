@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.recette.Attente;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -149,7 +150,7 @@ class ParcoursSitesVersPassageE2ETest {
         // rendrait ce test stable en lui retirant ce qu'il sert à attraper.
         TimeoutException derniere = null;
         for (int essai = 1; essai <= 3; essai++) {
-            robot.doubleClickOn(DATE_NUIT);
+            GesteVisible.doubleCliquer(robot, DATE_NUIT);
             try {
                 WaitForAsyncUtils.waitFor(3, TimeUnit.SECONDS, () -> "passage".equals(navigation.getVueCourante()));
                 return;
