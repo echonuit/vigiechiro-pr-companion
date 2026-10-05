@@ -106,6 +106,56 @@ class CliControleDuCarreTest {
                 .isEmpty();
     }
 
+    /// L'écran signale depuis #5688 un point du même site à 40 m ou moins de la position saisie. La
+    /// commande crée le même point par le même service et n'en disait rien (#5837, ADR 0014).
+    @Test
+    @DisplayName("#5837 : ajouter-point à moins de 40 m d'un point du site le dit, en le nommant, sans changer le code")
+    void un_point_voisin_se_dit() {
+        String site = creerSite("040110");
+        ajouterPoint(site, "A1", LAT_DANS_040110, LON_DANS_040110);
+        capture.vider();
+
+        // 0,0002 degré de latitude : environ 22 m.
+        int code = ajouterPoint(site, "Z1", LAT_DANS_040110 + 0.0002, LON_DANS_040110);
+
+        assertThat(code).as("un voisinage se signale, il n'interdit rien").isZero();
+        assertThat(capture.texteErreur()).contains("A1", "22 m");
+        assertThat(capture.texte().strip())
+                .as("l'identifiant du point reste seul sur stdout")
+                .matches("\\d+");
+    }
+
+    @Test
+    @DisplayName("#5837 : au-delà de 40 m, ajouter-point ne dit rien d'un voisin")
+    void un_point_eloigne_ne_se_dit_pas() {
+        String site = creerSite("040110");
+        ajouterPoint(site, "A1", LAT_DANS_040110, LON_DANS_040110);
+        capture.vider();
+
+        // 0,001 degré de latitude : environ 111 m.
+        int code = ajouterPoint(site, "Z1", LAT_DANS_040110 + 0.001, LON_DANS_040110);
+
+        assertThat(code).isZero();
+        assertThat(capture.texteErreur()).isEmpty();
+    }
+
+    private int ajouterPoint(String site, String codePoint, double latitude, double longitude) {
+        return cli.executer(
+                new String[] {
+                    "ajouter-point",
+                    "--site",
+                    site,
+                    "--code",
+                    codePoint,
+                    "--lat",
+                    String.valueOf(latitude),
+                    "--lon",
+                    String.valueOf(longitude)
+                },
+                sortie,
+                erreur);
+    }
+
     @Test
     @DisplayName("ajouter-point sans coordonnées : rien à confronter, donc rien à dire")
     void point_sans_coordonnees_se_tait() {

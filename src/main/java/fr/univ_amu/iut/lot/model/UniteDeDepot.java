@@ -1,6 +1,5 @@
-package fr.univ_amu.iut.lot.viewmodel;
+package fr.univ_amu.iut.lot.model;
 
-import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Set;
@@ -40,6 +39,12 @@ public enum UniteDeDepot {
     /// « archives », « séquences » ou « unités ».
     public String pluriel() {
         return pluriel;
+    }
+
+    /// Le nom qui convient à des unités connues par leurs **identifiants** : ce dont dispose le bilan
+    /// d'une tentative, que la ligne de commande rend sans avoir le plan (#5835).
+    public static UniteDeDepot desIdentifiants(Collection<String> identifiants) {
+        return de(identifiants.stream().map(TypeDepotUnite::deLIdentifiant).toList());
     }
 
     /// Le nom qui convient à un plan dont les unités ont ces types. Un plan vide se dit en archives,

@@ -13,6 +13,7 @@ import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.SuiviDepot;
+import fr.univ_amu.iut.lot.model.UniteDeDepot;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Objects;
@@ -171,6 +172,12 @@ public final class DeposerVigieChiro implements Callable<Integer> {
     /// Un geste par cause, avec la part qu'il concerne quand les causes sont mêlées (#5598). Les mêmes
     /// gestes que l'écran (`CompteRenduChiffreDepot`), dans les mots de la commande (ADR 0014).
     private static String gestesDesRefus(List<EchecUnite> refuses) {
+        // « Régénérez les archives » n'est un geste vérifié QUE pour des archives (#5835). Pour des
+        // séquences, rien ne change leur contenu : la commande a déjà nommé chaque refus et sa raison,
+        // et ne conseille rien de plus (ADR 3854).
+        boolean archives = UniteDeDepot.desIdentifiants(
+                        refuses.stream().map(EchecUnite::identifiantUnite).toList())
+                == UniteDeDepot.ARCHIVE;
         // Le prédicat reste la seule autorité sur « une reconnexion répare ceci » (#3961).
         long droits =
                 refuses.stream().filter(EchecUnite::seRearmeParUneReconnexion).count();
@@ -183,7 +190,7 @@ public final class DeposerVigieChiro implements Callable<Integer> {
             // Geste VÉRIFIÉ (#3946) : la relance retente bien ces unités - `restantes()` rend « tout
             // sauf déposé » et rien ne les écarte sur leur drapeau. Ce qu'il faut changer, c'est le
             // CONTENU de l'archive, pas la façon de la renvoyer.
-            return " Régénérez les archives, puis relancez : les nouvelles repartiront.";
+            return archives ? " Régénérez les archives, puis relancez : les nouvelles repartiront." : "";
         }
         if (stockage == refuses.size()) {
             return " Refusées par le stockage de Vigie-Chiro : " + GESTE_STOCKAGE;
@@ -206,7 +213,9 @@ public final class DeposerVigieChiro implements Callable<Integer> {
             gestes.append(" ")
                     .append(contenu)
                     .append(accord(contenu, " d'entre elles a", " d'entre elles ont"))
-                    .append(" un contenu refusé : régénérez les archives, puis relancez.");
+                    .append(archives
+                            ? " un contenu refusé : régénérez les archives, puis relancez."
+                            : " un contenu refusé.");
         }
         return gestes.toString();
     }
@@ -263,12 +272,12 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         }
 
         /// La réconciliation n'a pas pu lire (#4631). Marquée `~` et non `!` : aucune unité n'a échoué,
-        /// c'est l'étape d'avant qui n'a pas tourné, et sa conséquence est que des archives déjà
-        /// déposées vont repartir. Un script qui lit cette sortie doit pouvoir distinguer les deux.
+        /// c'est l'étape d'avant qui n'a pas tourné, et sa conséquence est que des fichiers déjà
+        /// déposés vont repartir, archives ou séquences (#5835). Un script qui lit cette sortie doit pouvoir distinguer les deux.
         @Override
         public void reconciliationImpossible(String raison, boolean definitif) {
-            sortie.println("  ~ déjà déposées : impossible à vérifier, des archives vont repartir" + " pour rien ("
-                    + raison + ")" + (definitif ? "" : " Réessayez plus tard."));
+            sortie.println("  ~ déjà déposées : impossible à vérifier, des fichiers vont repartir pour rien (" + raison
+                    + ")" + (definitif ? "" : " Réessayez plus tard."));
         }
 
         /// Parité avec l'IHM (clôture #2350) : depuis le réessai gradué (#2354), une coupure momentanée

@@ -9,6 +9,8 @@ import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
+import fr.univ_amu.iut.lot.model.ModeDepot;
+import fr.univ_amu.iut.lot.model.ServiceLot;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
@@ -22,6 +24,7 @@ import picocli.CommandLine;
 class LancerTraitementVigieChiroTest {
 
     private final DepotVigieChiro depot = mock(DepotVigieChiro.class);
+    private final ServiceLot serviceLot = mock(ServiceLot.class);
 
     @AfterEach
     void nettoyerJetonPonctuel() {
@@ -29,7 +32,7 @@ class LancerTraitementVigieChiroTest {
     }
 
     private CommandLine ligne(Optional<DepotVigieChiro> moteur, StringWriter sortie) {
-        CommandLine ligne = new CommandLine(new LancerTraitementVigieChiro(moteur));
+        CommandLine ligne = new CommandLine(new LancerTraitementVigieChiro(moteur, serviceLot));
         ligne.setOut(new PrintWriter(sortie, true));
         ligne.setErr(new PrintWriter(new StringWriter(), true));
         return ligne;
@@ -75,6 +78,40 @@ class LancerTraitementVigieChiroTest {
 
         assertThat(code).isEqualTo(1);
         assertThat(sortie.toString()).contains("déjà été analysée", "importer-vigiechiro");
+    }
+
+    /// L'écran a cessé de donner cette raison pour un dépôt en séquences (#5824) : l'audio y est conservé,
+    /// c'est l'effacement avant recalcul qui coûte. La commande la donnait encore (#5835).
+    @Test
+    @DisplayName("#5835 : la relance bloquée d'une nuit en séquences ne parle pas d'un audio non conservé")
+    void relance_bloquee_d_une_nuit_en_sequences() {
+        when(depot.lancerTraitement(42L, false))
+                .thenReturn(ResultatLancement.relanceBloquee(
+                        new Traitement(EtatTraitement.FINI, null, null, null, null, null)));
+        when(serviceLot.formeDuDepot(42L)).thenReturn(ModeDepot.SEQUENCES_WAV);
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(Optional.of(depot), sortie).execute("--passage", "42");
+
+        assertThat(code).isEqualTo(1);
+        assertThat(sortie.toString())
+                .contains("déjà été analysée", "avant de les recalculer", "importer-vigiechiro")
+                .doesNotContain("audio non conservé")
+                .doesNotContain("archives");
+    }
+
+    @Test
+    @DisplayName("#5835 : en archives, la relance bloquée garde sa raison, l'audio n'étant pas conservé")
+    void relance_bloquee_d_une_nuit_en_archives() {
+        when(depot.lancerTraitement(42L, false))
+                .thenReturn(ResultatLancement.relanceBloquee(
+                        new Traitement(EtatTraitement.FINI, null, null, null, null, null)));
+        when(serviceLot.formeDuDepot(42L)).thenReturn(ModeDepot.ARCHIVES_ZIP);
+        StringWriter sortie = new StringWriter();
+
+        ligne(Optional.of(depot), sortie).execute("--passage", "42");
+
+        assertThat(sortie.toString()).contains("audio non conservé pour un dépôt en archives");
     }
 
     @Test

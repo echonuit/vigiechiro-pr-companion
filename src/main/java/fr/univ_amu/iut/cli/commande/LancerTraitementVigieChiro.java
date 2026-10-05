@@ -5,6 +5,8 @@ import fr.univ_amu.iut.cli.GesteAttenduCli;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
+import fr.univ_amu.iut.lot.model.ModeDepot;
+import fr.univ_amu.iut.lot.model.ServiceLot;
 import java.io.PrintWriter;
 import java.util.Objects;
 import java.util.Optional;
@@ -62,10 +64,12 @@ public final class LancerTraitementVigieChiro implements Callable<Integer> {
     private CommandSpec spec;
 
     private final Optional<DepotVigieChiro> depot;
+    private final ServiceLot serviceLot;
 
     @Inject
-    public LancerTraitementVigieChiro(Optional<DepotVigieChiro> depot) {
+    public LancerTraitementVigieChiro(Optional<DepotVigieChiro> depot, ServiceLot serviceLot) {
         this.depot = Objects.requireNonNull(depot, "depot");
+        this.serviceLot = Objects.requireNonNull(serviceLot, "serviceLot");
     }
 
     @Override
@@ -92,6 +96,18 @@ public final class LancerTraitementVigieChiro implements Callable<Integer> {
         }
     }
 
+    /// La relance reste bloquée quelle que soit la forme du dépôt ; sa raison, non (#5835, comme l'écran
+    /// depuis #5824). En archives l'audio n'est pas conservé ; en séquences il l'est, et c'est
+    /// l'effacement avant le recalcul qui coûte.
+    private String relanceBloquee() {
+        return serviceLot.formeDuDepot(idPassage) == ModeDepot.SEQUENCES_WAV
+                ? "Cette nuit a déjà été analysée. La relancer effacerait les observations du serveur avant de"
+                        + " les recalculer : importez-les plutôt (importer-vigiechiro)."
+                : "Cette nuit a déjà été analysée. La relancer effacerait les observations du serveur sans"
+                        + " pouvoir les recalculer (audio non conservé pour un dépôt en archives) :"
+                        + " importez-les plutôt (importer-vigiechiro).";
+    }
+
     /// Compte rendu du lancement, une ligne par issue. Le message d'avant s'achevait sur « (déjà en
     /// cours ?) » : la question est désormais tranchée par la relecture de l'état (#1261).
     private String compteRendu(ResultatLancement resultat) {
@@ -100,10 +116,7 @@ public final class LancerTraitementVigieChiro implements Callable<Integer> {
                 "Traitement lancé sur Vigie-Chiro pour le passage " + idPassage
                         + " : les résultats arriveront après le calcul serveur.";
             case DEJA_LANCE -> "Le traitement de ce passage est déjà en cours sur Vigie-Chiro : rien à faire.";
-            case RELANCE_BLOQUEE ->
-                "Cette nuit a déjà été analysée. La relancer effacerait les observations du serveur sans"
-                        + " pouvoir les recalculer (audio non conservé pour un dépôt en archives) :"
-                        + " importez-les plutôt (importer-vigiechiro).";
+            case RELANCE_BLOQUEE -> relanceBloquee();
             case REFUSE -> "Vigie-Chiro a refusé le lancement du traitement : " + resultat.detail();
             case INJOIGNABLE -> "Vigie-Chiro est injoignable : le traitement n'a pas pu être lancé.";
         };
