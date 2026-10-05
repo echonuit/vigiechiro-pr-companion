@@ -202,6 +202,43 @@ public final class GesteVisible {
         }
     }
 
+    /// Écrit `texte` **à la suite** du contenu du champ, et relit pour s'assurer de l'avoir fait.
+    ///
+    /// **Pourquoi « à la fin » et non « là où le clic tombe »** : `clickOn("#x").write("t")` tape à la
+    /// position du caret, que le clic pose au pixel visé - au milieu du texte s'il y en a. Aucune aide
+    /// ne peut promettre cette sémantique, qui dépend de la largeur des glyphes et du point cliqué. Le
+    /// caret se pose donc à la fin par [TextInputControl#end], ce qui est déterministe et se documente.
+    ///
+    /// **Elle n'est donc PAS un remplaçant exact** de la forme qu'elle remplace : elle est ce que les
+    /// deux cas connus voulaient dire. Pour écraser le contenu, c'est [#remplacerLeTexte].
+    ///
+    /// **Les deux cas qui l'ont fait écrire** (#5869) : `#champPassage` de l'assistant d'import, lié
+    /// bidirectionnellement à une propriété numérique par un `NumberStringConverter`, donc jamais vide
+    /// - et son cas éprouve que l'aperçu SUIT la saisie, donc que la valeur change, ce qu'un
+    /// `selectAll()` suivi du même chiffre ne garantit pas ; et le numéro proposé d'une fiche de site,
+    /// auquel le code tapé s'ajoute.
+    ///
+    /// La relecture confronte `avant + texte` et non `texte` : c'est ce qui la distingue de sa sœur, et
+    /// elle fait tomber l'échec ici plutôt que sur l'assertion suivante.
+    public static void ecrireALaSuite(FxRobot robot, String selecteur, String texte) {
+        cliquer(robot, selecteur);
+        TextInputControl champ = robot.lookup(selecteur).queryAs(TextInputControl.class);
+
+        Callable<String> lecture = champ::getText;
+        String avant = Attente.surLeFil(lecture, "lire « " + selecteur + " » avant d'écrire", SELECTION_MS);
+        Attente.surLeFil(champ::end, "poser le caret à la fin de « " + selecteur + " »", SELECTION_MS);
+        robot.write(texte);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        String lu = Attente.surLeFil(lecture, "relire « " + selecteur + " »", SELECTION_MS);
+        if (!(avant + texte).equals(lu)) {
+            throw new IllegalStateException("« " + selecteur + " » contenait « " + avant
+                    + " » et devait contenir « " + avant + texte + " » après la saisie ; il contient"
+                    + " « " + lu + " ». Rendre la main ici reporterait l'échec sur l'assertion"
+                    + " suivante, qui l'annoncerait comme un défaut du dialogue.");
+        }
+    }
+
     /// Amène le pointeur sur `cible` et y fait paraître son infobulle, pour qu'un clip la montre.
     ///
     /// **Deux gestes, pas un** : `moveTo` met le pointeur à l'image et rien de plus, car sur un symbole
