@@ -106,6 +106,30 @@ PLANCHER = re.compile(r"^floor:\s*(\d+)\s*$", re.M)
 # que tout dispositif rend : le NUMERO de l ADR, et son VERDICT.
 LIGNE_VERDICT = re.compile(r"^(?:ADR|PLANCHER) (\d+) \|.*?\bverdict=(\S+)\s*$", re.M)
 
+# ⟨les CHAMPS de la ligne, en seconde passe⟩ Le motif ci-dessus est LACHE sur le milieu, a dessein :
+# il survit a un champ qui s ajoute. Mais `rapport.py` a besoin des champs, et les lire par un motif
+# strict l aurait fait cesser de compter la ligne le jour ou elle en gagne un - sans rougir, puisqu un
+# `finditer` qui ne trouve rien ne leve pas. La borne est donc la MEME pour tous, et les champs se
+# prennent ensuite, un par un (#5830).
+_CHAMP_DU_VERDICT = re.compile(r"\b([a-z_]+)=([^\s|]+)")
+
+
+def champs_du_verdict(ligne: str) -> dict[str, str] | None:
+    """Les champs d une ligne de verdict, ou `None` si cette ligne n en est pas une.
+
+    Rend aussi `dispositif`, « ADR » ou « PLANCHER », et `numero`. Un appelant qui cherche un champ
+    absent le verra manquer de son dictionnaire plutot que de ne pas voir la ligne du tout : c est la
+    difference entre « je n ai pas compris cette ligne » et « je ne l ai pas vue ».
+    """
+    trouve = LIGNE_VERDICT.match(ligne.strip())
+    if trouve is None:
+        return None
+    champs = dict(_CHAMP_DU_VERDICT.findall(ligne))
+    champs["dispositif"] = ligne.strip().split(None, 1)[0]
+    champs["numero"] = trouve.group(1)
+    return champs
+
+
 # ⟨les verdicts qui REFUSENT, et pourquoi « pas ok » ne suffit pas⟩ Les deux emetteurs ci-dessous
 # rendent **1** sur quatre verdicts et **0** sur tous les autres. `a-resserrer` est le piege : il n est
 # pas `ok`, et il ne refuse pas non plus - c est une BONNE nouvelle, le garde etant passe sous sa
@@ -169,7 +193,7 @@ def rapporte_plancher(
 
     Sortie normalisée, pour que le rapport hebdomadaire puisse agréger sans deviner :
 
-        PLANCHER 4395 | mesure=4026 | plancher=4026 | verdict=ok
+        PLANCHER 4395 | lus=1254 | mesure=4026 | plancher=4026 | verdict=ok
     """
     seuil = plancher(numero)
     print(f"ADR {numero} - {titre}")

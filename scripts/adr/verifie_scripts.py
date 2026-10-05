@@ -1962,22 +1962,34 @@ def test_le_rapport_lit_encore_les_trois_lignes() -> None:
             appel()
         return sortie.getvalue()
 
-    # On verifie les VALEURS capturees, et non le seul appariement : un groupe capturant ajoute pour
-    # `lus` decalerait les indices, `rapport.py` lirait le mauvais nombre, et un cas qui ne teste que
-    # « ca apparie » resterait vert. C est le meme defaut, un cran plus fin.
+    # On verifie les VALEURS lues, et non le seul appariement : un motif qui apparie sans rendre
+    # `lus` ferait lire « ? » a `rapport.py` pour une population pourtant comptee, et un cas qui ne
+    # teste que « ca apparie » resterait vert. C est le meme defaut, un cran plus fin.
     #
-    # Ce cas a fait exactement cela le 2026-09-01 : quand `lus` est devenu capturant (#5053), il a
-    # rougi sur les trois motifs a la fois, en disant a chaque fois quelle valeur il obtenait a la
-    # place. Les indices ci-dessous ont donc bouge d un cran, et le compte LU est desormais verifie
-    # lui aussi : ce que le motif capture doit etre ce qu on croit, pas seulement quelque chose.
-    cliquet = rapport.LIGNE_CLIQUET.search(
-        rendu(lambda: commun.rapporte("0008", "temoin de couture", [], lus=2076))
-    )
+    # ⟨les indices ont disparu, et une famille de pannes avec eux⟩ Ce cas lisait des groupes NUMEROTES,
+    # et le 2026-09-01, quand `lus` est devenu capturant (#5053), il a rougi sur les trois motifs a la
+    # fois parce que tous les indices avaient glisse d un cran. Les champs se prennent par leur NOM
+    # depuis #5830 : un champ qui s ajoute ne decale plus rien, et ce qui s eprouve ici est devenu
+    # autre chose - que chaque champ porte le nom sous lequel ses lecteurs le cherchent.
+    def champs(sortie: str) -> dict[str, str] | None:
+        """Les champs de la ligne de verdict d un rendu, par le chemin meme que `rapport.py` prend."""
+        for ligne in sortie.splitlines():
+            trouves = commun.champs_du_verdict(ligne)
+            if trouves is not None:
+                return trouves
+        return None
+
+    cliquet = champs(rendu(lambda: commun.rapporte("0008", "temoin de couture", [], lus=2076)))
     _verifie("le rapport lit une ligne de cliquet", bool(cliquet), True)
-    _verifie("et il en tire le bon numero", cliquet.group(1) if cliquet else None, "0008")
-    _verifie("et le compte LU", cliquet.group(2) if cliquet else None, "2076")
-    _verifie("et le bon compte de suspects", cliquet.group(3) if cliquet else None, "0")
-    _verifie("et le bon verdict", cliquet.group(5) if cliquet else None, "ok")
+    _verifie("et il en tire le bon numero", cliquet.get("numero") if cliquet else None, "0008")
+    _verifie("et le compte LU", cliquet.get("lus") if cliquet else None, "2076")
+    _verifie("et le bon compte de suspects", cliquet.get("suspects") if cliquet else None, "0")
+    _verifie("et le bon verdict", cliquet.get("verdict") if cliquet else None, "ok")
+    _verifie(
+        "et le dispositif, qui separe les deux familles",
+        cliquet.get("dispositif") if cliquet else None,
+        "ADR",
+    )
 
     loupe = rapport.LIGNE_LOUPE.search(
         rendu(lambda: commun.loupe("0020", "temoin de couture", ["x"], lus=9))
@@ -1986,23 +1998,37 @@ def test_le_rapport_lit_encore_les_trois_lignes() -> None:
     _verifie("et il en tire le compte LU", loupe.group(2) if loupe else None, "9")
     _verifie("et le bon compte de candidats", loupe.group(3) if loupe else None, "1")
 
-    plancher = rapport.LIGNE_PLANCHER.search(
+    plancher = champs(
         rendu(
             lambda: commun.rapporte_plancher("4395", "temoin de couture", 3245, "renvois", lus=4026)
         )
     )
     _verifie("le rapport lit une ligne de plancher", bool(plancher), True)
-    _verifie("et il en tire le compte LU", plancher.group(2) if plancher else None, "4026")
-    _verifie("et la bonne mesure", plancher.group(3) if plancher else None, "3245")
+    _verifie("et il en tire le compte LU", plancher.get("lus") if plancher else None, "4026")
+    _verifie("et la bonne mesure", plancher.get("mesure") if plancher else None, "3245")
+    # Un seul motif lit les deux familles depuis #5830, donc c est ce champ, et lui seul, qui dit a
+    # `rapport.py` dans quelle colonne ranger la ligne. Un motif qui ne le rendrait plus laisserait
+    # tous les planchers se compter comme des cliquets, et le rapport RESTERAIT NON VIDE.
+    _verifie(
+        "et son dispositif le distingue d un cliquet",
+        plancher.get("dispositif") if plancher else None,
+        "PLANCHER",
+    )
 
     _verifie(
         "et il les lit encore quand le compte n est pas declare",
-        bool(
-            rapport.LIGNE_CLIQUET.search(
-                rendu(lambda: commun.rapporte("0008", "temoin de couture", []))
-            )
-        ),
+        bool(champs(rendu(lambda: commun.rapporte("0008", "temoin de couture", [])))),
         True,
+    )
+    # ⟨l EN-TETE n est pas une ligne de verdict⟩ Les deux emetteurs impriment d abord « ADR 0008 -
+    # temoin de couture », qui ouvre sur le meme mot-cle et le meme numero que le verdict qui suit. Le
+    # motif partage exige `verdict=` en fin de ligne, donc il la laisse passer ; sans ce cas, un motif
+    # relache la compterait comme un verdict sans champs, et le rapport porterait une ligne de plus
+    # par garde (#5830).
+    _verifie(
+        "et l en-tete qui la precede n en est pas une",
+        commun.champs_du_verdict("ADR 0008 - temoin de couture"),
+        None,
     )
 
 
@@ -2363,19 +2389,36 @@ def test_rapport_et_resserrement() -> None:
     # fait produire la ligne par `_commun` et la fait lire par `rapport.py` : il attrape une dérive
     # d'UN côté, jamais une dérive des DEUX, qui resterait verte. Le littéral, lui, ne bouge que si
     # quelqu'un décide de changer le format, et le fait alors sciemment.
+    #
+    # ⟨et sa raison d'exister s'est RENFORCÉE⟩ Jusqu'à #5830, l'émetteur vivait dans `_commun` et le
+    # motif dans `rapport.py` : une dérive des deux côtés demandait deux fichiers. Le motif a rejoint
+    # l'émetteur, donc un seul fichier suffit désormais à la produire, et ce littéral, qui vit dans un
+    # troisième, est la seule chose du dépôt qui la refuse.
+    #
+    # Le parseur se prend PAR `rapport.py`, et non par `_commun` : c'est l'objet que ce rapport tient
+    # réellement, donc retirer son import ferait rougir ce cas plutôt que de le laisser éprouver une
+    # fonction que son usager n'appelle plus.
     ligne = "ADR 0099 | lus=42 | suspects=2 | cliquet=5 | verdict=a-resserrer"
-    trouve = rapport.LIGNE_CLIQUET.search(ligne)
+    trouve = rapport.champs_du_verdict(ligne)
     _verifie("rapport.py parse une ligne de cliquet", bool(trouve), True)
     _verifie(
         "et il en tire les bons champs, le compte lu compris",
-        trouve.groups() if trouve else None,
-        ("0099", "42", "2", "5", "a-resserrer"),
+        {c: trouve.get(c) for c in ("numero", "lus", "suspects", "cliquet", "verdict")}
+        if trouve
+        else None,
+        {
+            "numero": "0099",
+            "lus": "42",
+            "suspects": "2",
+            "cliquet": "5",
+            "verdict": "a-resserrer",
+        },
     )
     # La seconde forme acceptee : un garde qui ne declare pas encore son compte rend `lus=?`.
     _verifie(
         "rapport.py parse un compte non declare",
         bool(
-            rapport.LIGNE_CLIQUET.search(
+            rapport.champs_du_verdict(
                 "ADR 0099 | lus=? | suspects=2 | cliquet=5 | verdict=a-resserrer"
             )
         ),

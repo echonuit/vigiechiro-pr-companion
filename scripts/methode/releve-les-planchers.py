@@ -27,7 +27,12 @@ import sys
 
 RACINE = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
-from _commun import DECISIONS, cas_d_auto_test, sort_si_contrat_demande
+from _commun import (
+    DECISIONS,
+    cas_d_auto_test,
+    champs_du_verdict,
+    sort_si_contrat_demande,
+)
 
 GARDE = RACINE / "scripts" / "adr" / "4395-renvois-en-javadoc.py"
 
@@ -35,9 +40,10 @@ GARDE = RACINE / "scripts" / "adr" / "4395-renvois-en-javadoc.py"
 # champ `lus=` entre le numero et la mesure : un motif positionnel a cesse de reconnaitre la ligne,
 # sans rien dire, et ce script a annonce que tout allait bien pendant qu il ne lisait rien (#5021).
 # Apprendre le champ de #5014 aurait repare ce cas-la et laisse le suivant.
-VERDICT = re.compile(
-    r"^PLANCHER (\d+) \|.*?\bmesure=(\d+)\b.*?\bplancher=(\d+)\b.*?\bverdict=(\S+)\s*$", re.M
-)
+# ⟨le motif vient de `_commun` depuis #5830⟩ Ce script portait le sien, deja LACHE sur le milieu, et
+# ses cas disaient pourquoi : « un champ INCONNU de plus ne la fera pas perdre non plus ». C est ce
+# choix-la qui a ete retenu pour les trois lecteurs, parce qu il etait deja fait ici et deja eprouve.
+# Les champs se prennent ensuite, par `champs_du_verdict`.
 
 # Ce qui ANNONCE un plancher, quel que soit le reste de la ligne. Sert a distinguer « le garde n en a
 # rendu aucun » de « il en a rendu et je n ai pas su les lire ».
@@ -68,7 +74,12 @@ def lire(sortie: str) -> dict:
     Fonction pure, et c est deliberé : le refus se mute et s eprouve ici, la ou il n exige aucun
     sous-processus. Il vivait dans `mesures()` et aucun cas ne pouvait le faire rougir (#5021).
     """
-    lues = {m.group(1): (int(m.group(2)), int(m.group(3))) for m in VERDICT.finditer(sortie)}
+    lues = {}
+    for ligne in sortie.splitlines():
+        champs = champs_du_verdict(ligne)
+        if champs is None or champs["dispositif"] != "PLANCHER":
+            continue
+        lues[champs["numero"]] = (int(champs["mesure"]), int(champs["plancher"]))
     annoncees = len(ANNONCE.findall(sortie))
     if annoncees and not lues:
         raise VerdictIllisible(
@@ -163,18 +174,20 @@ def auto_test() -> int:
     ancien = "PLANCHER 4395 | mesure=3246 | plancher=3245 | verdict=a-relever"
     actuel = "PLANCHER 4395 | lus=? | mesure=3246 | plancher=3245 | verdict=a-relever"
     futur = "PLANCHER 4395 | lus=12 | source=git | mesure=3246 | plancher=3245 | verdict=a-relever"
-    verifie("le format d origine se lit", bool(VERDICT.search(ancien)), True)
+    verifie("le format d origine se lit", champs_du_verdict(ancien) is not None, True)
     verifie(
         "le champ lus= inséré par #5014 ne fait plus perdre la ligne",
-        bool(VERDICT.search(actuel)),
+        champs_du_verdict(actuel) is not None,
         True,
     )
     verifie(
-        "un champ INCONNU de plus ne la fera pas perdre non plus", bool(VERDICT.search(futur)), True
+        "un champ INCONNU de plus ne la fera pas perdre non plus",
+        champs_du_verdict(futur) is not None,
+        True,
     )
     verifie(
         "la mesure lue est la bonne, et non le premier nombre venu",
-        VERDICT.search(actuel).group(2),
+        champs_du_verdict(actuel)["mesure"],
         "3246",
     )
 
