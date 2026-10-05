@@ -859,6 +859,11 @@ jobs:
           # L'outillage de la couche sémantique (#5813) : ses cinq parades s'éprouvent sur des lots
           # fabriqués, donc sans `graphify` non plus. Seule sa commande `fusionne` l'importe.
           python3 scripts/graphify/couche_semantique.py --auto-test
+          # Les deux passes qui relient une page à ce qu'elle cite (#5868) n'avaient aucun
+          # dispositif non plus. Elles se jouent sur un dépôt fabriqué, comme `rebuild.py` les
+          # joue : par `runpy`, dans la boucle d'un appelant qui doit reprendre la main.
+          python3 scripts/graphify/pont_doc_code.py --auto-test
+          python3 scripts/graphify/pont_ci.py --auto-test
       - name: "Auto-test de la veille des plateformes (bloquant, #3526)"
         # Le verdict rougit dans le train de publication ; l'auto-test du JUGE tourne ici, à chaque PR.
         # Un juge qui aurait cessé de juger laisserait partir le train sur une preuve absente, et son

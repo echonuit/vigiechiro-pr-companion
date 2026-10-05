@@ -15,7 +15,65 @@ pas dans le graphe : la doc CI parlait dans le vide. Meme chose pour les profils
 
 import json
 import re
+import sys
 from pathlib import Path
+
+# Le noeud de fichier d'une page se choisit a UN endroit, la passe B. Cette passe en portait
+# une copie, avec le meme filtre a trois dossiers : une page de la racine n'y avait jamais de
+# noeud de fichier, et ses citations d'un workflow ou du pom n'etaient pas reliees (#5868).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from _commun import cas_d_auto_test
+from pont_doc_code import (
+    joue_sur_un_depot_fabrique,
+    noeud_de_document,
+    noeuds_de_page,
+    pages_du_depot,
+)
+
+
+def auto_test():
+    """Les citations de D3, jouees sur un depot fabrique."""
+    verifie, echecs = cas_d_auto_test()
+    structure = [
+        noeud_de_document("testing", "TESTING.md", "TESTING.md", node_kind="page"),
+        noeud_de_document("testing_tester", "Tester", "TESTING.md", node_kind="heading"),
+        noeud_de_document("docs_guide", "guide.md", "docs/guide.md", node_kind="page"),
+    ]
+    fichiers = {
+        ".github/workflows/lint.yml": "name: Quality gate\njobs:\n  lint:\n    runs-on: x\n",
+        "TESTING.md": "# Tester\n\nLe portail vit dans `lint.yml`.\n",
+        "docs/guide.md": "# Guide\n\nVoir `lint.yml`, et lint.yml hors de tout span.\n",
+        "SECURITY.md": "# Securite\n\nRien de `lint.yml` n entre ici sans noeud de page.\n",
+    }
+
+    def citations():
+        code, _, liens = joue_sur_un_depot_fabrique(
+            Path(__file__).resolve(), structure, [], fichiers
+        )
+        return code, sorted(
+            (e["source"], e["target"]) for e in liens if e.get("context") == "code_span"
+        )
+
+    # `docs/guide.md` est le temoin : il etait deja relie. `TESTING.md` ne l'etait pas, et
+    # `SECURITY.md`, que la structure ne porte pas ici, ne recoit rien : cette passe ne fabrique
+    # pas de noeud de fichier.
+    verifie(
+        "une page de la racine qui nomme un workflow dans un span y est reliee, depuis sa page",
+        citations,
+        (
+            0,
+            [
+                ("docs_guide", "github_workflows_lint_yml"),
+                ("testing", "github_workflows_lint_yml"),
+            ],
+        ),
+    )
+    return echecs()
+
+
+if __name__ == "__main__" and "--auto-test" in sys.argv:
+    raise SystemExit(auto_test())
 
 SRC = Path("graphify-out/.graphify_extract.json")
 if not SRC.exists():
@@ -160,18 +218,9 @@ for nom, i in profils.items():
         cible[nom] = i
 cible["pom.xml"] = nid(pom)
 
-fichier_node = {}
-for n in nodes.values():
-    sf = n.get("source_file") or ""
-    if sf.startswith(("brief/", "dev-docs/", "docs/")) and n.get("file_type") == "document":
-        cur = fichier_node.get(sf)
-        if cur is None or len(n["id"]) < len(cur["id"]):
-            fichier_node[sf] = n
-
-docs = [p for d in ("brief", "dev-docs", "docs") for p in Path(d).rglob("*.md")]
-docs += [p for p in Path(".").glob("*.md") if p.name != "CHANGELOG.md"]
+fichier_node = noeuds_de_page(nodes.values())
 n_cit = 0
-for p in sorted(docs):
+for p in pages_du_depot():
     src = fichier_node.get(str(p))
     if src is None:
         continue
