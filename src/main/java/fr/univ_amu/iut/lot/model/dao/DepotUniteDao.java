@@ -207,6 +207,23 @@ public class DepotUniteDao extends DaoGenerique<DepotUnite, Long> {
                 cause.name());
     }
 
+    /// Combien de **séquences** du passage sont refusées sans recours (#5867) : définitivement, et pour
+    /// une cause qu'une reconnexion ne lève pas.
+    ///
+    /// C'est ce qui offre le repli manuel : ni la reprise ni la reconnexion ne feront passer ces
+    /// séquences. Une ligne d'avant la migration V41, définitive et sans cause, compte : elle ne se réarme
+    /// pas non plus. Une archive refusée ne compte pas, un dépôt en archives ayant déjà sa carte.
+    ///
+    /// @param leveeParUneReconnexion la cause que [#rearmer] réarme, reçue de l'appelant pour la même
+    ///     raison : un seul endroit la nomme
+    public int sequencesRefuseesSansRecours(Long passageId, CauseRefus leveeParUneReconnexion) {
+        return (int) compterSi(
+                "passage_id = ? AND type = ? AND echec_definitif = 1 AND (cause_refus IS NULL OR cause_refus != ?)",
+                passageId,
+                TypeDepotUnite.WAV.valeur(),
+                leveeParUneReconnexion.name());
+    }
+
     private static void supprimerHorsPlan(Connection cx, Long passageId, Set<String> identifiantsPlan)
             throws SQLException {
         try (PreparedStatement lister =

@@ -15,6 +15,7 @@ import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -312,5 +313,85 @@ class DepotUniteDaoTest {
         assertThat(dao.parPassage(autre))
                 .extracting(DepotUnite::identifiantUnite)
                 .containsExactly("b.wav");
+    }
+
+    /// Pose un plan d'unités à déposer et rend leurs identifiants de ligne, dans l'ordre.
+    private List<Long> poser(Long passage, TypeDepotUnite type, String... identifiants) {
+        dao.synchroniserPlan(
+                passage,
+                Arrays.stream(identifiants)
+                        .map(identifiant -> DepotUnite.aDeposer(passage, identifiant, type, MAINTENANT))
+                        .toList());
+        return dao.parPassage(passage).stream().map(DepotUnite::id).toList();
+    }
+
+    @Test
+    @DisplayName("#5867 : sans refus, aucune séquence n'est sans recours")
+    void sans_refus_aucune_sequence_n_est_sans_recours() {
+        poser(idPassage, TypeDepotUnite.WAV, "a.wav", "b.wav");
+
+        assertThat(dao.sequencesRefuseesSansRecours(idPassage, CauseRefus.AUTHENTIFICATION))
+                .isZero();
+    }
+
+    @Test
+    @DisplayName("#5867 : un échec que la reprise peut lever n'est pas un refus sans recours")
+    void un_echec_rejouable_n_est_pas_sans_recours() {
+        List<Long> lignes = poser(idPassage, TypeDepotUnite.WAV, "a.wav");
+        // Coupure réseau : ni définitif, ni cause. La reprise renverra cette séquence.
+        dao.marquerEchec(lignes.get(0), "délai dépassé", false, null, MAINTENANT);
+
+        assertThat(dao.sequencesRefuseesSansRecours(idPassage, CauseRefus.AUTHENTIFICATION))
+                .isZero();
+    }
+
+    @Test
+    @DisplayName("#5867 : un refus de droits a un recours, la reconnexion")
+    void un_refus_de_droits_a_un_recours() {
+        List<Long> lignes = poser(idPassage, TypeDepotUnite.WAV, "a.wav");
+        dao.marquerEchec(lignes.get(0), "HTTP 403 : refus", true, CauseRefus.AUTHENTIFICATION, MAINTENANT);
+
+        assertThat(dao.sequencesRefuseesSansRecours(idPassage, CauseRefus.AUTHENTIFICATION))
+                .isZero();
+    }
+
+    @Test
+    @DisplayName("#5867 : stockage, contenu et refus sans cause se comptent, à côté d'un refus de droits")
+    void stockage_contenu_et_sans_cause_se_comptent() {
+        List<Long> lignes = poser(idPassage, TypeDepotUnite.WAV, "a.wav", "b.wav", "c.wav", "d.wav", "e.wav");
+        dao.marquerEchec(lignes.get(0), "HTTP 403 : SignatureDoesNotMatch", true, CauseRefus.STOCKAGE, MAINTENANT);
+        dao.marquerEchec(lignes.get(1), "HTTP 422 : refus", true, CauseRefus.CONTENU, MAINTENANT);
+        // Une ligne d'avant la migration V41 : définitive, sans cause. Elle ne se réarme pas non plus.
+        dao.marquerEchec(lignes.get(2), "HTTP 400 : refus", true, null, MAINTENANT);
+        dao.marquerEchec(lignes.get(3), "HTTP 401 : refus", true, CauseRefus.AUTHENTIFICATION, MAINTENANT);
+
+        assertThat(dao.sequencesRefuseesSansRecours(idPassage, CauseRefus.AUTHENTIFICATION))
+                .as("trois des cinq : la séquence aux droits refusés et la séquence encore à déposer n'en sont pas")
+                .isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("#5867 : une archive refusée n'est pas une séquence")
+    void une_archive_refusee_n_est_pas_une_sequence() {
+        List<Long> lignes = poser(idPassage, TypeDepotUnite.ZIP, "a.zip");
+        dao.marquerEchec(lignes.get(0), "HTTP 422 : refus", true, CauseRefus.CONTENU, MAINTENANT);
+
+        assertThat(dao.sequencesRefuseesSansRecours(idPassage, CauseRefus.AUTHENTIFICATION))
+                .as("un dépôt en archives a déjà sa carte : le repli ne le concerne pas")
+                .isZero();
+    }
+
+    @Test
+    @DisplayName("#5867 : le refus d'une autre nuit ne compte pas pour celle-ci")
+    void le_refus_d_une_autre_nuit_ne_compte_pas() {
+        Long autre = insererPassage(3).id();
+        List<Long> lignes = poser(autre, TypeDepotUnite.WAV, "b.wav");
+        dao.marquerEchec(lignes.get(0), "HTTP 422 : refus", true, CauseRefus.CONTENU, MAINTENANT);
+        poser(idPassage, TypeDepotUnite.WAV, "a.wav");
+
+        assertThat(dao.sequencesRefuseesSansRecours(idPassage, CauseRefus.AUTHENTIFICATION))
+                .isZero();
+        assertThat(dao.sequencesRefuseesSansRecours(autre, CauseRefus.AUTHENTIFICATION))
+                .isEqualTo(1);
     }
 }

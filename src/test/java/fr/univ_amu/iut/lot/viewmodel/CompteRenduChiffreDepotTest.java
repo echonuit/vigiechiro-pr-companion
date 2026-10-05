@@ -229,6 +229,40 @@ class CompteRenduChiffreDepotTest {
     }
 
     @Test
+    @DisplayName("#5867 : en séquences, un refus du stockage renvoie au repli de l'écran, pas au dossier de la nuit")
+    void en_sequences_un_refus_du_stockage_renvoie_au_repli() {
+        BilanDepot bilan = new BilanDepot(
+                "p-1",
+                8,
+                List.of(
+                        new EchecUnite("Car_008.wav", "HTTP 403", true, CauseRefus.STOCKAGE),
+                        new EchecUnite("Car_009.wav", "HTTP 403", true, CauseRefus.STOCKAGE)),
+                0L);
+
+        List<String> textes = textes(traduire(bilan, sequences(10, 8, false)));
+
+        assertThat(textes).anyMatch(texte -> texte.contains("se reconnecter n'y changera rien"));
+        assertThat(textes)
+                .as("le repli est une carte de l'écran : la phrase y renvoie")
+                .anyMatch(texte -> texte.contains("si le refus persiste, utilisez le repli ci-dessous."));
+        assertThat(textes)
+                .as("le dossier de la nuit ne porte pas d'archives à déposer tant que le repli ne les a pas générées")
+                .noneMatch(texte -> texte.contains("depuis le dossier de la nuit"));
+    }
+
+    @Test
+    @DisplayName("#5867 : en archives, le dépôt manuel reste dit depuis le dossier de la nuit, sans parler de repli")
+    void en_archives_le_depot_manuel_reste_dit_depuis_le_dossier() {
+        BilanDepot bilan = new BilanDepot(
+                "p-1", 0, List.of(new EchecUnite("Car-1.zip", "HTTP 403", true, CauseRefus.STOCKAGE)), 0L);
+
+        List<String> textes = textes(traduire(bilan, plan(1, 0, false)));
+
+        assertThat(textes).anyMatch(texte -> texte.contains("manuellement depuis le dossier de la nuit"));
+        assertThat(textes).noneMatch(texte -> texte.contains("repli"));
+    }
+
+    @Test
     @DisplayName("#5598 : sur un lot mêlé de droits et de stockage, chaque geste est nommé avec son nombre")
     void droits_et_stockage_melanges() {
         BilanDepot bilan = new BilanDepot(

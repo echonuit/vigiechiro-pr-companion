@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
+import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.Lot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -18,14 +19,16 @@ import picocli.CommandLine.Spec;
 /// le **marque déposé** ([ServiceLot#marquerDepose], Prêt à déposer → Déposé). Réutilise `ServiceLot` sans
 /// logique nouvelle. Tout refus métier (statut incompatible, passage « Inexploitable », session introuvable)
 /// sort en échec d'exécution (code 1), avant tout changement d'état si la préparation échoue.
-@Command(name = "deposer", description = "Clôture le dépôt d'un passage : prépare le dépôt puis le marque déposé.")
+@Command(
+        name = "deposer",
+        description = "Clôture le dépôt d'un passage : prépare le dépôt s'il ne l'est pas, puis le marque déposé.")
 public final class Deposer implements Callable<Integer> {
 
     @Option(
             names = "--passage",
             required = true,
             paramLabel = "<id>",
-            description = "Passage à déposer (doit être vérifié).")
+            description = "Passage à déposer (vérifié, ou dont le dépôt est déjà préparé ou entamé).")
     private Long idPassage;
 
     @Spec
@@ -40,12 +43,19 @@ public final class Deposer implements Callable<Integer> {
 
     @Override
     public Integer call() {
-        Lot lot = service.preparerLot(idPassage);
+        // Préparer seulement ce qui ne l'est pas (#5867), comme `exporter-lot` depuis #5599 : la
+        // préparation n'admet que « Vérifié », et la commande refusait donc un dépôt entamé, que le
+        // moteur autorise pourtant à passer « Déposé ». C'est le dernier geste du repli manuel.
+        EtatLot etat = service.consulterLot(idPassage);
+        int sequences = etat.nombreSequences();
+        Long volume = etat.volumeSequencesOctets();
+        if (!ServiceLot.archivesSeGenerent(etat.statut())) {
+            Lot lot = service.preparerLot(idPassage);
+            sequences = lot.sequences().size();
+            volume = lot.volumeSequencesOctets();
+        }
         Passage depose = service.marquerDepose(idPassage);
-        spec.commandLine()
-                .getOut()
-                .println(
-                        rendreDepot(idPassage, lot.sequences().size(), lot.volumeSequencesOctets(), depose.deposeLe()));
+        spec.commandLine().getOut().println(rendreDepot(idPassage, sequences, volume, depose.deposeLe()));
         return 0;
     }
 

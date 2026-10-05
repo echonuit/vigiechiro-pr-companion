@@ -43,9 +43,11 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.lot.di.DepotVigieChiroModule;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
+import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.SuiviArchives;
 import fr.univ_amu.iut.lot.model.TeleversementsEnCours;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
@@ -138,6 +140,10 @@ public final class CaptureLot {
     /// La hauteur des aperçus de la carte du traitement, celle des autres aperçus de l'écran.
     private static final int HAUTEUR_TRAITEMENT = 1200;
 
+    /// L'état de repli (#5867) empile une carte de plus sous le téléversement : à 1200, la carte du
+    /// traitement sortait du cadre, et l'aperçu ne montrait pas l'écran que l'utilisateur fait défiler.
+    private static final int HAUTEUR_REPLI = 1390;
+
     private CaptureLot() {}
 
     public static void main(String[] args) throws InterruptedException {
@@ -171,6 +177,12 @@ public final class CaptureLot {
     /// La propriété qui impose la forme du dépôt, relue à chaque dépôt par `LotModule`.
     private static final String FORME_DU_DEPOT = "vigiechiro.depot.mode";
 
+    /// La forme en archives, que la plupart de ces aperçus racontent.
+    private static final String FORME_ZIP = "zip";
+
+    /// L'instant où les plans de dépôt de ces aperçus sont posés.
+    private static final String INSTANT_DU_PLAN = "2026-06-21T09:00:00";
+
     private static void capturer() throws IOException {
         Path workspace = Files.createTempDirectory("vc-capture-lot");
         System.setProperty("vigiechiro.workspace", workspace.toString());
@@ -181,7 +193,7 @@ public final class CaptureLot {
         // Ces aperçus racontent le dépôt en ARCHIVES : génération, table des ZIP, dépôt manuel. Depuis
         // #5824 l'écran ne les offre qu'en forme ZIP, et le défaut est le WAV (#5677) : sans ce réglage
         // ils montreraient tous trois étapes et aucune archive. La forme par défaut a son aperçu à elle.
-        System.setProperty(FORME_DU_DEPOT, "zip");
+        System.setProperty(FORME_DU_DEPOT, FORME_ZIP);
         Injector injecteur = creerInjecteur();
         // Second injecteur, connecté : il partage la même base (le workspace est un chemin, pas un objet),
         // donc il voit les mêmes passages. Seuls les deux aperçus connectés passent par lui.
@@ -207,7 +219,7 @@ public final class CaptureLot {
         // Hors connexion (#5838), l'application ne peut pas téléverser : l'étape des archives reste offerte
         // pour le dépôt manuel, quelle que soit la forme réglée. Rendu en séquences WAV, l'écran est le
         // même au pixel près, donc un seul aperçu le montre.
-        System.setProperty(FORME_DU_DEPOT, "zip");
+        System.setProperty(FORME_DU_DEPOT, FORME_ZIP);
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-deposer.png"));
         // ② bis (#1998) : **connecté et sans archives**. C'est l'état neuf du chantier, le téléversement
         // produisant lui-même ce dont il a besoin, l'étape ③ est courante alors qu'aucune archive n'existe
@@ -259,6 +271,20 @@ public final class CaptureLot {
                 sortie.resolve("apercu-lot-generation-refusee.png"),
                 HAUTEUR_DEPOT_SUIVI,
                 (vm, depot) -> refuserLaGeneration(connecte, idCoherent, vm, depot));
+        // #5867 : le REPLI MANUEL. Connecté en séquences WAV, le stockage a refusé deux séquences sans
+        // recours : la carte des archives revient sous le téléversement, sans numéro, et le fil reste à
+        // trois étapes. Le plan est posé puis retiré, et la forme rétablie : les aperçus qui suivent
+        // racontent un dépôt en archives, et ne doivent pas changer d'un pixel.
+        System.clearProperty(FORME_DU_DEPOT);
+        poserUnPlanRefuse(injecteur, idCoherent);
+        // Un dépôt entamé a toujours sa participation : sans ce lien, la dernière étape offrirait
+        // « Marquer le passage déposé », que l'utilisateur ne voit jamais dans cet état. Les aperçus
+        // suivants jusqu'à « participation liée » sont rendus hors connexion, où ce lien ne se lit pas.
+        lierParticipation(injecteur, idCoherent);
+        rendrePilote(
+                connecte, idCoherent, sortie.resolve("apercu-lot-repli-manuel.png"), HAUTEUR_REPLI, (vm, depot) -> {});
+        injecteur.getInstance(DepotUniteDao.class).supprimerPlan(idCoherent);
+        System.setProperty(FORME_DU_DEPOT, FORME_ZIP);
         // ④ Déposé : état final, toutes les étapes franchies.
         service.marquerDepose(idCoherent);
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-depose.png"));
@@ -346,6 +372,24 @@ public final class CaptureLot {
                 passage.idCampagne()));
     }
 
+    /// Le plan d'un dépôt en séquences dont une est en ligne et deux refusées par le stockage (#5867) :
+    /// l'état où ni la reprise ni une reconnexion ne feront passer ce qui manque.
+    private static void poserUnPlanRefuse(Injector injecteur, long idPassage) {
+        DepotUniteDao unites = injecteur.getInstance(DepotUniteDao.class);
+        unites.synchroniserPlan(
+                idPassage,
+                List.of("_000.wav", "_001.wav", "_002.wav").stream()
+                        .map(suffixe -> DepotUnite.aDeposer(
+                                idPassage, NOM_ORIGINAL.replace(".wav", suffixe), TypeDepotUnite.WAV, INSTANT_DU_PLAN))
+                        .toList());
+        List<DepotUnite> posees = unites.parPassage(idPassage);
+        unites.mettreAJour(posees.get(0).id(), StatutDepotUnite.DEPOSE, "fichier-000", null, INSTANT_DU_PLAN);
+        for (DepotUnite refusee : posees.subList(1, posees.size())) {
+            unites.marquerEchec(
+                    refusee.id(), "HTTP 403 : SignatureDoesNotMatch", true, CauseRefus.STOCKAGE, INSTANT_DU_PLAN);
+        }
+    }
+
     /// Un téléversement en cours, sa table de suivi peuplée, puis une génération demandée pendant ce
     /// temps : le service la refuse, et c'est ce refus que l'écran restitue (#5599).
     private static void refuserLaGeneration(Injector injecteur, long idPassage, LotViewModel vm, DepotViewModel depot) {
@@ -367,8 +411,8 @@ public final class CaptureLot {
         SuiviLignesDepot lignes = depot.suiviLignes();
         String deposee = "Car040962-2026-Pass1-A1-originaux.zip";
         lignes.planifier(List.of(
-                DepotUnite.aDeposer(idPassage, deposee, TypeDepotUnite.ZIP, "2026-06-21T09:00:00"),
-                DepotUnite.aDeposer(idPassage, ARCHIVE_EN_COURS, TypeDepotUnite.ZIP, "2026-06-21T09:00:00")));
+                DepotUnite.aDeposer(idPassage, deposee, TypeDepotUnite.ZIP, INSTANT_DU_PLAN),
+                DepotUnite.aDeposer(idPassage, ARCHIVE_EN_COURS, TypeDepotUnite.ZIP, INSTANT_DU_PLAN)));
         lignes.demarree(deposee);
         lignes.deposee(deposee);
         lignes.demarree(ARCHIVE_EN_COURS);

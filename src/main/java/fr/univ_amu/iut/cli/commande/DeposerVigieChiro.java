@@ -49,8 +49,22 @@ public final class DeposerVigieChiro implements Callable<Integer> {
     /// Ce qui s'applique à un refus du stockage (#5598) : chaque relance redéclare le fichier, donc
     /// redemande des URL signées neuves, et le dépôt manuel reste possible.
     private static final String GESTE_STOCKAGE = "se reconnecter n'y changera rien. Relancez la commande,"
-            + " qui redemande de nouvelles autorisations d'envoi ; si le refus persiste, déposez-les"
-            + " manuellement depuis le dossier de la nuit.";
+            + " qui redemande de nouvelles autorisations d'envoi ; si le refus persiste, ";
+
+    /// Le dépôt manuel, selon ce qui est parti (#5867) : des archives sont déjà dans le dossier de la
+    /// nuit, des séquences passent par le repli que la commande nomme sous son bilan.
+    private static String gesteStockage(boolean archives) {
+        return GESTE_STOCKAGE
+                + (archives ? "déposez-les manuellement depuis le dossier de la nuit." : "suivez le repli ci-dessous.");
+    }
+
+    /// Le repli manuel (#5867), dit comme l'écran le dit : ce qui a été refusé sans recours, puis la
+    /// commande qui produit les archives à déposer à la main. Fonction pure.
+    static String rendreRepli(int sequences, long idPassage) {
+        return "Repli : " + sequences + " séquence(s) refusée(s) sans recours. Générez les archives avec"
+                + " `exporter-lot --passage " + idPassage + "`, déposez-les à la main sur le portail, puis"
+                + " lancez `deposer --passage " + idPassage + "`.";
+    }
 
     @Option(
             names = "--passage",
@@ -103,6 +117,11 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         PrintWriter sortie = spec.commandLine().getOut();
         BilanDepot bilan = moteur.deposer(idPassage, source, () -> false, new SuiviConsole(sortie));
         sortie.println(rendreBilan(bilan));
+        // La même règle que l'écran, lue dans le plan que le dépôt vient d'enregistrer (#5867).
+        int enRepli = serviceLot.sequencesRefuseesSansRecours(idPassage);
+        if (enRepli > 0) {
+            sortie.println(rendreRepli(enRepli, idPassage));
+        }
         return bilan.estComplet() ? 0 : 1;
     }
 
@@ -193,7 +212,7 @@ public final class DeposerVigieChiro implements Callable<Integer> {
             return archives ? " Régénérez les archives, puis relancez : les nouvelles repartiront." : "";
         }
         if (stockage == refuses.size()) {
-            return " Refusées par le stockage de Vigie-Chiro : " + GESTE_STOCKAGE;
+            return " Refusées par le stockage de Vigie-Chiro : " + gesteStockage(archives);
         }
         StringBuilder gestes = new StringBuilder();
         if (droits > 0) {
@@ -207,7 +226,7 @@ public final class DeposerVigieChiro implements Callable<Integer> {
                     .append(stockage)
                     .append(accord(stockage, " d'entre elles a été refusée", " d'entre elles ont été refusées"))
                     .append(" par le stockage : ")
-                    .append(GESTE_STOCKAGE);
+                    .append(gesteStockage(archives));
         }
         if (contenu > 0) {
             gestes.append(" ")

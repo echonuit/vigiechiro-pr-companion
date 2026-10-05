@@ -373,4 +373,45 @@ class DepotViewModelTest {
         assertThat(vm.retourProperty().get().texte()).contains("Token expiré");
         assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
     }
+
+    /// Les séquences refusées sans recours (#5867) sont un état du dépôt : c'est ce modèle de vue qui les
+    /// porte, relues dans le plan enregistré à l'ouverture d'une nuit et après chaque téléversement.
+    @Test
+    @DisplayName("#5867 : rehydrater() relit dans le plan les séquences refusées sans recours")
+    void rehydrater_relit_les_sequences_refusees_sans_recours() {
+        when(service.unitesDepot(ID_PASSAGE)).thenReturn(List.of());
+        when(service.sequencesRefuseesSansRecours(ID_PASSAGE)).thenReturn(2);
+        DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
+
+        vm.rehydrater(ID_PASSAGE);
+
+        assertThat(vm.sequencesRefuseesSansRecoursProperty().get()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("#5867 : après un téléversement, le compte se relit sans rouvrir la nuit")
+    void le_compte_se_relit_apres_un_televersement() {
+        when(service.sequencesRefuseesSansRecours(ID_PASSAGE)).thenReturn(3);
+        DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
+        assertThat(vm.sequencesRefuseesSansRecoursProperty().get()).isZero();
+
+        vm.relireLesRefus(ID_PASSAGE);
+
+        assertThat(vm.sequencesRefuseesSansRecoursProperty().get()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("#5867 : une autre nuit ouverte ne garde pas les refus de la précédente")
+    void une_autre_nuit_ne_garde_pas_les_refus_de_la_precedente() {
+        when(service.unitesDepot(ID_PASSAGE)).thenReturn(List.of());
+        when(service.unitesDepot(43L)).thenReturn(List.of());
+        when(service.sequencesRefuseesSansRecours(ID_PASSAGE)).thenReturn(2);
+        when(service.sequencesRefuseesSansRecours(43L)).thenReturn(0);
+        DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
+        vm.rehydrater(ID_PASSAGE);
+
+        vm.rehydrater(43L);
+
+        assertThat(vm.sequencesRefuseesSansRecoursProperty().get()).isZero();
+    }
 }

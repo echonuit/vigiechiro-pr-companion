@@ -432,6 +432,7 @@ nav:
     - 5904 · Une hyperarête se déclare, et les ponts parcourent les pages du graphe: decisions/5904-une-hyperarete-se-declare-et-les-ponts-parcourent-les-pages-du-graphe.md
     - 5814 · Une empreinte par page dit ce qui est à réextraire: decisions/5814-une-empreinte-par-page-dit-ce-qui-est-a-reextraire.md
     - 5868 · Une citation part du nœud de page: decisions/5868-une-citation-part-du-noeud-de-page-et-un-pont-ne-fabrique-pas-de-noeud-de-document.md
+    - 5867 · Le repli manuel s'offre après un refus sans recours: decisions/5867-le-repli-manuel-s-offre-apres-un-refus-sans-recours.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md
