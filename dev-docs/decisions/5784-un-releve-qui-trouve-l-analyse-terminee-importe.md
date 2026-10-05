@@ -13,7 +13,7 @@ enforced_by:
   - "src/test/java/fr/univ_amu/iut/lot/viewmodel/TraitementViewModelTest.java"
   - "src/test/java/fr/univ_amu/iut/cli/commande/EtatTraitementVigieChiroTest.java"
   - "src/test/java/fr/univ_amu/iut/lot/view/LotDepotConnecteViewTest.java"
-verification_note: "les trois classes tiennent l import au relevé, l absence de réimport, l échec dit sans masquer l état, l absence d import à l ouverture, et la commande. Toutes passent par un port bouchonné : aucune ne joue une plateforme qui répond « terminée », ce que #5836 doit filmer"
+verification_note: "les trois classes tiennent l import au relevé, l absence de réimport, l échec dit sans masquer l état, l absence d import à l ouverture, et la commande. Toutes passent par un port bouchonné. Le geste contre une plateforme qui répond « terminée » est joué à part, sur la plateforme de test, par `ScenarioConnecteActualisationTest` (#5836), qu aucune demande de fusion ne lance"
 verified:
   - by: machine:ci
     at: 2026-10-05
