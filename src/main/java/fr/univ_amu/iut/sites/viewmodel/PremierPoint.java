@@ -5,13 +5,16 @@ import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.CodePointLibre;
 import fr.univ_amu.iut.sites.model.LecturePosition;
 import fr.univ_amu.iut.sites.model.PositionCollee;
+import fr.univ_amu.iut.sites.model.PropositionCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.VerdictCarre;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableBooleanValue;
@@ -31,12 +34,25 @@ public final class PremierPoint {
     private final ObservableStringValue position;
     private final BooleanProperty demande = new SimpleBooleanProperty(this, "demande", false);
     private final BooleanBinding offert;
+    private final PropositionCarre proposition;
+    private final ObjectBinding<RetourOperation> avertissement;
     private RetourOperation annonce = RetourOperation.AUCUN;
 
-    PremierPoint(ServiceSites service, ObservableStringValue position, ObservableBooleanValue enCreation) {
+    /// @param proposition le carroyage qui situe une position, celui que « Situer » lit
+    /// @param numeroSaisi le numéro de carré du formulaire, que la position est confrontée à
+    PremierPoint(
+            ServiceSites service,
+            ObservableStringValue position,
+            ObservableBooleanValue enCreation,
+            PropositionCarre proposition,
+            ObservableStringValue numeroSaisi) {
         this.service = Objects.requireNonNull(service, "service");
         this.position = Objects.requireNonNull(position, "position");
+        this.proposition = Objects.requireNonNull(proposition, "proposition");
+        Objects.requireNonNull(numeroSaisi, "numeroSaisi");
         offert = Bindings.createBooleanBinding(() -> enCreation.get() && lue().isPresent(), position, enCreation);
+        avertissement = Bindings.createObjectBinding(
+                () -> divergence(numeroSaisi.get()), position, numeroSaisi, demande, offert);
     }
 
     /// La case a-t-elle lieu d'être ? Vrai à la création, quand la position collée se lit.
@@ -47,6 +63,28 @@ public final class PremierPoint {
     /// La case elle-même, décochée par défaut.
     public BooleanProperty demande() {
         return demande;
+    }
+
+    /// Ce que la case a à dire **avant** de créer (#5860) : la position collée tombe dans un autre carré
+    /// que le numéro saisi. Vide sinon, et sur une frontière, où aucun carré ne l'emporte.
+    ///
+    /// Le carré se lit sur le carroyage embarqué, celui de « Situer » : le verdict vaut hors connexion.
+    /// Sa phrase est celle de la modale de point ([VerdictCarre.Diverge]), et il ne bloque pas.
+    public ObjectBinding<RetourOperation> avertissement() {
+        return avertissement;
+    }
+
+    private RetourOperation divergence(String numeroSaisi) {
+        if (!demande.get() || !offert.get() || numeroSaisi == null || !numeroSaisi.matches("\\d{6}")) {
+            return RetourOperation.AUCUN;
+        }
+        return proposition
+                .pour(position.get())
+                .numeroAProposer()
+                .filter(officiel -> !officiel.equals(numeroSaisi))
+                .map(officiel ->
+                        RetourOperation.avertissement(new VerdictCarre.Diverge(officiel, numeroSaisi).message()))
+                .orElse(RetourOperation.AUCUN);
     }
 
     /// Ce que la dernière création a à dire du premier point : vide s'il a été créé ou n'était pas

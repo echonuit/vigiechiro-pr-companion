@@ -297,6 +297,14 @@ La liste des carrés suivis, peuplée et à l'état initial.
 <td><a href="apercu-sites-modale-site-position-frontiere.png"><img src="apercu-sites-modale-site-position-frontiere.png" width="430" alt="Modale site : la position est sur une frontière, les deux carrés candidats sont nommés et aucun n'est déposé"></a></td>
 </tr>
 <tr>
+<th width="50%">Modale site : premier point hors du carré saisi</th>
+<th width="50%"></th>
+</tr>
+<tr>
+<td><a href="apercu-sites-modale-site-premier-point-autre-carre.png"><img src="apercu-sites-modale-site-premier-point-autre-carre.png" width="430" alt="Modale site : la case du premier point est cochée, et un avertissement dit que la position tombe dans un autre carré que le numéro saisi"></a></td>
+<td></td>
+</tr>
+<tr>
 <th width="50%">Compte rendu : carré récupéré</th>
 <th width="50%">Compte rendu : carré déclaré, absent de Vigie-Chiro</th>
 </tr>

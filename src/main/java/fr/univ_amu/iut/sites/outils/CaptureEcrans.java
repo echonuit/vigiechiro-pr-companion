@@ -57,6 +57,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -175,8 +176,20 @@ public final class CaptureEcrans {
                 new RechercheCarreExistant.Verdict.Indisponible(),
                 sortie.resolve("apercu-sites-modale-site-carre-non-verifie.png"));
         capturerVerdictApresCreation(creerInjecteur(), sortie.resolve("apercu-sites-mes-sites-carre-absent.png"));
-        capturerModaleSitePositionSituee(sortie.resolve("apercu-sites-modale-site-position-situee.png"));
-        capturerModaleSitePositionFrontaliere(sortie.resolve("apercu-sites-modale-site-position-frontiere.png"));
+        capturerModaleSiteEnCreation(
+                sortie.resolve("apercu-sites-modale-site-position-situee.png"),
+                scene -> situer(scene, POSITION_DANS_UN_CARRE));
+        capturerModaleSiteEnCreation(
+                sortie.resolve("apercu-sites-modale-site-position-frontiere.png"),
+                scene -> situer(scene, "44.444990, 6.306335"));
+        // Un numéro tapé, une position collée sans « Situer », la case cochée : le site prendrait le
+        // numéro et le point la position. L'avertissement nomme les deux carrés (#5860).
+        capturerModaleSiteEnCreation(
+                sortie.resolve("apercu-sites-modale-site-premier-point-autre-carre.png"), scene -> {
+                    ((TextField) exiger(scene, "#champCarre")).setText("130711");
+                    ((TextField) exiger(scene, CHAMP_POSITION)).setText(POSITION_DANS_UN_CARRE);
+                    ((CheckBox) exiger(scene, "#chkPremierPoint")).setSelected(true);
+                });
         capturerCompteRenduRapatriement(
                 creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-carre-recupere.png"));
         capturerSynchroEnCours(sortie.resolve("apercu-sites-synchro-progression.png"));
@@ -258,6 +271,9 @@ public final class CaptureEcrans {
 
     /// Le champ où se colle une position : il porte le même identifiant dans les deux modales.
     private static final String CHAMP_POSITION = "#champPosition";
+
+    /// Une position au milieu du carré 040110, loin de toute frontière.
+    private static final String POSITION_DANS_UN_CARRE = "44.44674980384396, 6.298116860416506";
 
     /// Vingt mètres vers le nord, en degrés de latitude.
     private static final double VINGT_METRES_AU_NORD = 0.00018;
@@ -397,36 +413,26 @@ public final class CaptureEcrans {
         injecteur.getInstance(ServiceSites.class).supprimerSite(declare.id());
     }
 
-    /// Modale de déclaration **après avoir situé une position** (#4573).
+    /// Modale de déclaration **dans un état qu'une capture au repos ne montre pas** (#4573, #5860).
     ///
-    /// L'état ne se devine pas d'une capture au repos : le champ des six chiffres s'est rempli tout
-    /// seul, et un message dit d'où vient le numéro. C'est le geste qui dispense d'aller chercher son
-    /// carré sur le portail, et il marche hors connexion.
-    private static void capturerModaleSitePositionSituee(Path fichier) throws IOException {
+    /// `etat` amène la modale où il faut avant la prise : une position située, dont le numéro s'est
+    /// rempli seul ; une position sur une frontière, où rien ne se remplit et où ce n'est pas une panne ;
+    /// ou un premier point qui tomberait hors du carré saisi.
+    private static void capturerModaleSiteEnCreation(Path fichier, Consumer<Scene> etat) throws IOException {
         FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE_SITE));
         loader.setControllerFactory(creerInjecteur()::getInstance);
         Parent vue = loader.load();
         ((ModaleSiteController) loader.getController()).demarrerCreation(() -> {});
         Scene scene = new Scene(vue);
-        ((TextField) exiger(scene, CHAMP_POSITION)).setText("44.44674980384396, 6.298116860416506");
-        ((Button) exiger(scene, "#btnSituer")).fire();
+        etat.accept(scene);
         ApercuFx.enregistrerPng(scene, fichier);
     }
 
-    /// Modale de déclaration quand la position tombe **sur une frontière** (#4573).
-    ///
-    /// L'état est le plus trompeur des trois sans image : rien ne s'est rempli, et ce n'est pas une
-    /// panne. Deux carrés sont à distance strictement égale, l'application les nomme, et c'est
-    /// l'observateur qui tranche - lui seul sait de quel côté était le micro.
-    private static void capturerModaleSitePositionFrontaliere(Path fichier) throws IOException {
-        FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE_SITE));
-        loader.setControllerFactory(creerInjecteur()::getInstance);
-        Parent vue = loader.load();
-        ((ModaleSiteController) loader.getController()).demarrerCreation(() -> {});
-        Scene scene = new Scene(vue);
-        ((TextField) exiger(scene, CHAMP_POSITION)).setText("44.444990, 6.306335");
+    /// Colle une position et clique « Situer » : le geste qui dispense d'aller chercher son carré sur le
+    /// portail, et qui marche hors connexion.
+    private static void situer(Scene scene, String position) {
+        ((TextField) exiger(scene, CHAMP_POSITION)).setText(position);
         ((Button) exiger(scene, "#btnSituer")).fire();
-        ApercuFx.enregistrerPng(scene, fichier);
     }
 
     /// Le **compte rendu** que l'utilisateur lit après avoir récupéré un carré (#3806).

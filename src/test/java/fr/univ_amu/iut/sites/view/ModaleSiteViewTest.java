@@ -342,6 +342,41 @@ class ModaleSiteViewTest {
         verify(service).ajouterPoint(7L, "Z1", 44.44674980384396, 6.298116860416506, null);
     }
 
+    /// Le site prend le numéro du champ, le point la position collée. Sans « Situer », rien ne les confrontait.
+    @Test
+    @DisplayName(
+            "#5860 : case cochée, une position hors du carré saisi fait paraître un avertissement, et « Créer » reste offert")
+    void la_case_previent_d_un_autre_carre(FxRobot robot) {
+        enCreation(robot);
+        Label avertissement = robot.lookup("#avertissementPremierPoint").queryAs(Label.class);
+
+        robot.interact(() -> {
+            robot.lookup("#champCarre").queryAs(TextField.class).setText("130711");
+            robot.lookup("#champPosition").queryAs(TextField.class).setText(POSITION);
+        });
+        assertThat(avertissement.isVisible())
+                .as("case décochée : aucun point ne sera créé, rien à dire")
+                .isFalse();
+
+        robot.interact(
+                () -> robot.lookup("#chkPremierPoint").queryAs(CheckBox.class).setSelected(true));
+
+        assertThat(avertissement.isVisible()).isTrue();
+        assertThat(avertissement.isManaged())
+                .as("il prend sa place dans la modale au lieu de la recouvrir")
+                .isTrue();
+        assertThat(avertissement.getText()).contains("040110").contains("130711");
+        assertThat(valider(robot).isDisabled())
+                .as("un avertissement, pas un refus")
+                .isFalse();
+
+        robot.interact(() -> robot.lookup("#btnSituer").queryAs(Button.class).fire());
+
+        assertThat(avertissement.isVisible())
+                .as("« Situer » a pris le carré de la position : plus rien ne diverge")
+                .isFalse();
+    }
+
     @Test
     @DisplayName("#5687 : en modification d'un site, la case n'est pas offerte")
     void en_modification_pas_de_case(FxRobot robot) {

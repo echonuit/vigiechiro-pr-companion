@@ -15,9 +15,11 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.VerdictCarre;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,8 @@ class SiteEditPremierPointTest {
 
     private static final String POSITION = "44.44674980384396, 6.298116860416506";
     private static final String CARRE = "040110";
+    private static final String AUTRE_CARRE = "130711";
+    private static final String FRONTIERE = "44.444990, 6.306335";
     private static final long ID_SITE = 7L;
 
     private final ServiceSites service = mock(ServiceSites.class);
@@ -111,5 +115,82 @@ class SiteEditPremierPointTest {
                 .contains("Ajouter un point d'écoute")
                 .contains("base verrouillée");
         assertThat(vm.premierPoint().annonce().severite()).isEqualTo(Severite.AVERTISSEMENT);
+    }
+
+    /// La case crée un point à la position collée, et le site au numéro du champ. Rien ne les confrontait :
+    /// qui tape un numéro, colle une position et coche sans cliquer « Situer » créait un point hors de son
+    /// carré, sans un mot (#5860, garde-fou proposé au lot 19 et livré sans).
+    @Test
+    @DisplayName("#5860 : case cochée, la position dans un autre carré que le numéro saisi se dit, sans bloquer")
+    void la_position_dans_un_autre_carre_se_dit() {
+        SiteEditViewModel vm = neuf();
+        vm.numeroCarreProperty().set(AUTRE_CARRE);
+        vm.position().texte().set(POSITION);
+        vm.premierPoint().demande().set(true);
+
+        RetourOperation dit = vm.premierPoint().avertissement().getValue();
+        assertThat(dit.severite()).isEqualTo(Severite.AVERTISSEMENT);
+        // La phrase est celle de la modale de point, par le même type : une seule rédaction de la divergence.
+        assertThat(dit.texte()).isEqualTo(new VerdictCarre.Diverge(CARRE, AUTRE_CARRE).message());
+        assertThat(dit.texte()).contains(CARRE).contains(AUTRE_CARRE);
+
+        assertThat(vm.enregistrer())
+                .as("l'avertissement n'empêche pas de créer")
+                .isTrue();
+        verify(service).ajouterPoint(ID_SITE, "Z1", 44.44674980384396, 6.298116860416506, null);
+    }
+
+    @Test
+    @DisplayName("#5860 : quand le numéro concorde, rien ne s'affiche")
+    void le_numero_qui_concorde_ne_dit_rien() {
+        SiteEditViewModel vm = neuf();
+        vm.numeroCarreProperty().set(CARRE);
+        vm.position().texte().set(POSITION);
+        vm.premierPoint().demande().set(true);
+
+        assertThat(vm.premierPoint().avertissement().getValue().present()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#5860 : case décochée, aucun point ne sera créé, donc rien à dire")
+    void case_decochee_rien_a_dire() {
+        SiteEditViewModel vm = neuf();
+        vm.numeroCarreProperty().set(AUTRE_CARRE);
+        vm.position().texte().set(POSITION);
+
+        assertThat(vm.premierPoint().avertissement().getValue().present()).isFalse();
+
+        vm.premierPoint().demande().set(true);
+        assertThat(vm.premierPoint().avertissement().getValue().present())
+                .as("cocher la case le fait paraître")
+                .isTrue();
+    }
+
+    /// Sur une frontière, aucun carré ne l'emporte : dire « un autre carré » serait en choisir un.
+    @Test
+    @DisplayName("#5860 : une position sur une frontière ne dit rien")
+    void une_frontiere_ne_dit_rien() {
+        SiteEditViewModel vm = neuf();
+        vm.numeroCarreProperty().set(AUTRE_CARRE);
+        vm.position().texte().set(FRONTIERE);
+        vm.premierPoint().demande().set(true);
+
+        assertThat(vm.premierPoint().avertissement().getValue().present()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#5860 : un numéro incomplet n'est pas encore un carré, rien ne se dit")
+    void un_numero_incomplet_ne_dit_rien() {
+        SiteEditViewModel vm = neuf();
+        vm.numeroCarreProperty().set("1307");
+        vm.position().texte().set(POSITION);
+        vm.premierPoint().demande().set(true);
+
+        assertThat(vm.premierPoint().avertissement().getValue().present()).isFalse();
+
+        vm.numeroCarreProperty().set(AUTRE_CARRE);
+        assertThat(vm.premierPoint().avertissement().getValue().present())
+                .as("le numéro complété, la divergence paraît")
+                .isTrue();
     }
 }

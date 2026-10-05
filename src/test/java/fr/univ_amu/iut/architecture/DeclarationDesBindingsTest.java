@@ -53,7 +53,9 @@ class DeclarationDesBindingsTest {
     /// **+1 le 05/10/2026 (#5859)** : `EtapeDeposerUI.dernierGeste` compose le dernier geste du dépôt. Son
     /// calcul lit `participationLiee`, `relanceBloquee` et `analyseDemandee`, et les déclare tous les
     /// trois ; `DernierGesteDuDepot.de` est pur. Déclaration jugée **complète**.
-    private static final int SITES_RELEVES = 66; // +1 #5687 (case du premier point), +1 #5859 (dernier geste)
+    // +1 le 05/10/2026 (#5860) : `PremierPoint.avertissement` lit `demande`, `offert`, le numéro saisi et la
+    // position (celle-ci dans `divergence`), et les déclare tous les quatre. Déclaration jugée complète.
+    private static final int SITES_RELEVES = 67; // +1 #5687, +1 #5859, +1 #5860
 
     private static final Pattern APPEL = Pattern.compile("Bindings\\.create[A-Za-z]*Binding\\s*\\(");
 

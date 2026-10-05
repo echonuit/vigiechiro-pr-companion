@@ -103,8 +103,9 @@ public class SiteEditViewModel {
     /// C'est la décision D0 du chantier - le carré se calcule hors ligne - et c'est ce qui la rend
     /// visible dans le code, là où `recherche` et `rapatriement` sont `Optional` parce qu'ils ont
     /// besoin de la plateforme.
-    private final PositionColleeViewModel position =
-            new PositionColleeViewModel(new PropositionCarre(CarroyageNational.embarque()));
+    private final PropositionCarre proposition = new PropositionCarre(CarroyageNational.embarque());
+
+    private final PositionColleeViewModel position = new PositionColleeViewModel(proposition);
 
     /// La modale sert à **déclarer** (et non à modifier) : la distinction décide de ce qu'un verdict
     /// « ce carré existe déjà » entraîne. En déclaration il ferme l'enregistrement ; en édition il ne
@@ -126,7 +127,7 @@ public class SiteEditViewModel {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
         this.carre = new CarreExistantViewModel(recherche, rapatriement);
-        this.premierPoint = new PremierPoint(service, position.texte(), enCreation);
+        this.premierPoint = new PremierPoint(service, position.texte(), enCreation, proposition, numeroCarre);
         carreValide = Bindings.createBooleanBinding(() -> numeroCarre.get().matches("\\d{6}"), numeroCarre);
         carreInvalideEtSaisi = Bindings.createBooleanBinding(
                 () -> !numeroCarre.get().isEmpty() && !numeroCarre.get().matches("\\d{6}"), numeroCarre);
