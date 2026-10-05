@@ -128,7 +128,8 @@ public final class StatutPassage implements Callable<Integer>, LectureSeule {
         ligne(
                 texte,
                 "Résultats Tadarida",
-                tadarida.map(r -> "oui (" + r.formatDetecte() + ", importé le " + r.dateImport() + ")")
+                tadarida.map(r -> "oui (" + r.formatDetecte() + ", importé le " + Horodatage.dateSeule(r.dateImport())
+                                + ")")
                         .orElse("non"));
         return texte.toString().stripTrailing();
     }

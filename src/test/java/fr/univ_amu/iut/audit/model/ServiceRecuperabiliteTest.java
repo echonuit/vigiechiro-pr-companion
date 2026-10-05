@@ -83,7 +83,10 @@ class ServiceRecuperabiliteTest {
             assertThat(nuit.libelle())
                     .as("l'utilisateur qui s'apprête à tout perdre ne raisonne pas en identifiants")
                     .contains("130711")
-                    .contains("Z41");
+                    .contains("Z41")
+                    // La nuit se lit en français, pas comme la base l'écrit (#5901).
+                    .contains("01/07/2026")
+                    .doesNotContain("2026-07");
         });
         assertThat(bilan.perteAnnoncee()).isFalse();
     }

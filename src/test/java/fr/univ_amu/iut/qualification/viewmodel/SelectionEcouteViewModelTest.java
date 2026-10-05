@@ -104,6 +104,8 @@ class SelectionEcouteViewModelTest {
 
         assertThat(viewModel.titreContexteProperty().get()).contains("640380").contains("A1");
         assertThat(viewModel.volumetrieProperty().get()).contains("20 séquences");
+        // Même forme que la fiche d'un passage (#5901) : la date en français, les heures sans secondes.
+        assertThat(viewModel.plageHoraireProperty().get()).isEqualTo("22/06/2026  20:25 -> 07:47");
         assertThat(viewModel.lignes()).hasSize(20);
         assertThat(viewModel.messageProperty().get()).isEmpty();
         assertThat(viewModel.filArianeProperty().get())

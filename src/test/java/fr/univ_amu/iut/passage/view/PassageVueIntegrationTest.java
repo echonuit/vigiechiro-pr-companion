@@ -105,10 +105,10 @@ class PassageVueIntegrationTest {
     @Test
     @DisplayName("Bandeau d'identité : plage horaire, enregistreur, statut et verdict reflètent le VM")
     void bandeau_reflete_le_vm(FxRobot robot) {
+        // La date se lit en français et les heures sans leurs secondes (#5901) : la base porte
+        // `2026-06-22`, `20:25:00` et `07:47:00`, que l'écran recopiait tels quels.
         assertThat(robot.lookup("#lblPlageHoraire").queryAs(Label.class).getText())
-                .contains("2026-06-22")
-                .contains("20:25:00")
-                .contains("07:47:00");
+                .isEqualTo("22/06/2026  20:25 -> 07:47");
         assertThat(robot.lookup("#lblEnregistreur").queryAs(Label.class).getText())
                 .isEqualTo("PR 1925492");
         assertThat(robot.lookup("#lblStatut").queryAs(Label.class).getText()).isEqualTo("Vérifié");

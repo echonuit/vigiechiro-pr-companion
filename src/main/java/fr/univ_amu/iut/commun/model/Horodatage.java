@@ -54,6 +54,26 @@ public final class Horodatage {
         return dateDe(dateIso).map(DATE_SEULE::format).orElse(dateIso);
     }
 
+    private static final DateTimeFormatter HEURE_COURTE = DateTimeFormatter.ofPattern("HH:mm", Locale.FRANCE);
+
+    /// « 20:25 » : une heure de la base, telle qu'un écran la lit (#5901).
+    ///
+    /// La base porte `20:25:00`, et un écran qui la recopie affiche des secondes que personne n'a
+    /// saisies. Une heure illisible est rendue telle quelle, pour la même raison que [#dateSeule] : la
+    /// masquer priverait l'utilisateur du seul indice de ce qu'il y a à corriger.
+    ///
+    /// @param heure l'heure au format de la base, `HH:mm:ss` ou `HH:mm`, éventuellement `null`
+    public static String heureCourte(String heure) {
+        if (heure == null || heure.isBlank()) {
+            return "";
+        }
+        try {
+            return HEURE_COURTE.format(java.time.LocalTime.parse(heure.trim()));
+        } catch (java.time.format.DateTimeParseException illisible) {
+            return heure.trim();
+        }
+    }
+
     /// La date d'une chaîne que la **base** porte : une date seule (`2026-06-21`, une nuit) ou un instant
     /// local (`2026-06-21T08:00:15.123456`, une date de dépôt). Vide si elle est absente ou illisible.
     ///

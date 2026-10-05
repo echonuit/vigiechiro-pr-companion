@@ -85,7 +85,8 @@ class StatutPassageTest {
                 .contains("début 18,5 °C")
                 .contains("vent moyen")
                 .contains("nuages 25 à 50 %")
-                .contains("oui (\"Vu\", importé le 2026-06-21T08:00:00)")
+                // La date d'import se lit en français, comme la date de dépôt deux lignes plus haut (#5901).
+                .contains("oui (\"Vu\", importé le 21/06/2026)")
                 .contains("[attestées par les enregistrements]");
     }
 

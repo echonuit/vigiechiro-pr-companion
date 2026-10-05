@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.multisite.viewmodel;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.FuseauDuSite;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -160,7 +162,10 @@ public class ReconstructionViewModel {
     public void restituer(ParticipationOrpheline orpheline, RapportReconstruction rapport) {
         orphelines.remove(orpheline);
         reconstruit.set(true);
-        String rendu = "Nuit du " + orpheline.dateDebut() + " complétée (passage archivé) : "
+        // La plateforme rend la nuit en instant ISO avec son décalage : on la dit à l'heure du site,
+        // comme la commande `reconstruire-passage`, mais dans la forme d'une phrase (#5901).
+        String rendu = "Nuit du " + Horodatage.instantDansUnePhrase(orpheline.dateDebut(), FuseauDuSite.ZONE)
+                + " complétée (passage archivé) : "
                 + rapport.sequencesRecreees() + " séquence(s), " + rapport.observationsImportees()
                 + " observation(s) rapatriée(s)."
                 + System.lineSeparator()

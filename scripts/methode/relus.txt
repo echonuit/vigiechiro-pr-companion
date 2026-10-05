@@ -42,12 +42,13 @@ a0e9f51e4c70  src/main/java/fr/univ_amu/iut/analyse/view/CriteresActivite.java
 77cf1ba928d4  src/main/java/fr/univ_amu/iut/analyse/view/DetailObservationsController.java
 a029a94f83f3  src/main/java/fr/univ_amu/iut/analyse/view/ExportImageActivite.java
 93bd47624522  src/main/java/fr/univ_amu/iut/analyse/view/FiltresVuesActivite.java
-23c50128c7eb  src/main/java/fr/univ_amu/iut/analyse/view/FormatAnalyse.java
+61fd3e9c8cbd  src/main/java/fr/univ_amu/iut/analyse/view/FormatAnalyse.java
 2b987ca61bee  src/main/java/fr/univ_amu/iut/analyse/view/LegendeExportActivite.java
 c5222fbedd9e  src/main/java/fr/univ_amu/iut/analyse/view/NatureNuit.java
 7a053a34edb3  src/main/java/fr/univ_amu/iut/analyse/view/NavigationActivite.java
 ce26e9f428fb  src/main/java/fr/univ_amu/iut/analyse/view/NavigationAnalyse.java
 813aedf914f1  src/main/java/fr/univ_amu/iut/analyse/view/NavigationSynthese.java
+7f6e29378c11  src/main/java/fr/univ_amu/iut/analyse/view/PassageObserve.java
 06dbd78db9e9  src/main/java/fr/univ_amu/iut/analyse/view/RichesseParCarre.java
 0a2beca0270d  src/main/java/fr/univ_amu/iut/analyse/view/SelecteurColonnesAnalyse.java
 f5d85984faaa  src/main/java/fr/univ_amu/iut/analyse/view/SyntheseController.java
@@ -364,7 +365,7 @@ d0bdf35964ee  src/main/java/fr/univ_amu/iut/commun/model/FichierWav.java
 495fbc5da8d8  src/main/java/fr/univ_amu/iut/commun/model/Horloge.java
 4916fd98afac  src/main/java/fr/univ_amu/iut/commun/model/HorlogeFigee.java
 ef1911f3fc78  src/main/java/fr/univ_amu/iut/commun/model/HorlogeSysteme.java
-e5d5f5d5fae5  src/main/java/fr/univ_amu/iut/commun/model/Horodatage.java
+db1a2d82afad  src/main/java/fr/univ_amu/iut/commun/model/Horodatage.java
 0f633b5db0c8  src/main/java/fr/univ_amu/iut/commun/model/ImportApresReleve.java
 b8422845e5aa  src/main/java/fr/univ_amu/iut/commun/model/ImportObservations.java
 8bfb27047d41  src/main/java/fr/univ_amu/iut/commun/model/InfosPoint.java
@@ -1286,6 +1287,7 @@ be1e4da73d1f  src/test/java/fr/univ_amu/iut/analyse/view/ActiviteControllerTest.
 561e45fa9764  src/test/java/fr/univ_amu/iut/analyse/view/ActiviteNuitTest.java
 ae9a8d6a80e5  src/test/java/fr/univ_amu/iut/analyse/view/ActiviteViewTest.java
 6a5e8657be23  src/test/java/fr/univ_amu/iut/analyse/view/AnalyseViewTest.java
+e0a45fb41307  src/test/java/fr/univ_amu/iut/analyse/view/ColonnePassageDesObservationsTest.java
 5d036ff3aa17  src/test/java/fr/univ_amu/iut/analyse/view/ConstructeurDonneesCarteEspecesTest.java
 c768760b41eb  src/test/java/fr/univ_amu/iut/analyse/view/CriteresActiviteTest.java
 0632047deef6  src/test/java/fr/univ_amu/iut/analyse/view/CriteresAnalyseTest.java
@@ -1293,6 +1295,7 @@ c768760b41eb  src/test/java/fr/univ_amu/iut/analyse/view/CriteresActiviteTest.ja
 42b8d69e756f  src/test/java/fr/univ_amu/iut/analyse/view/LegendeExportActiviteTest.java
 a12caf7daa04  src/test/java/fr/univ_amu/iut/analyse/view/NatureNuitTest.java
 8f12eacb0e37  src/test/java/fr/univ_amu/iut/analyse/view/NavigationSyntheseViewTest.java
+bff8cd9b7713  src/test/java/fr/univ_amu/iut/analyse/view/PassageObserveTest.java
 e453f0b46c13  src/test/java/fr/univ_amu/iut/analyse/view/ScenarioCourbeActiviteTest.java
 3e4d63b5214a  src/test/java/fr/univ_amu/iut/analyse/view/SelecteurColonnesAnalyseTest.java
 910e6164fca6  src/test/java/fr/univ_amu/iut/analyse/view/SyntheseLargeurColonnesTest.java

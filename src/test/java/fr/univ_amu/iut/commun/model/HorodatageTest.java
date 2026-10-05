@@ -56,4 +56,22 @@ class HorodatageTest {
         assertThat(Horodatage.heureMurale("2026-09-30T16:07:45", java.time.ZoneId.of("America/Cayenne")))
                 .contains(java.time.LocalDateTime.of(2026, 9, 30, 16, 7, 45));
     }
+
+    @Test
+    @DisplayName("#5901 : une heure de la base se lit sans ses secondes, qu'elles soient nulles ou non")
+    void une_heure_de_la_base_se_lit_sans_ses_secondes() {
+        assertThat(Horodatage.heureCourte("20:25:00")).isEqualTo("20:25");
+        assertThat(Horodatage.heureCourte("07:47:30"))
+                .as("les secondes sont retirées, pas seulement quand elles valent zéro")
+                .isEqualTo("07:47");
+        assertThat(Horodatage.heureCourte("21:00")).isEqualTo("21:00");
+    }
+
+    @Test
+    @DisplayName("#5901 : une heure absente rend une chaîne vide, une heure illisible est rendue telle quelle")
+    void une_heure_absente_ou_illisible_ne_casse_pas() {
+        assertThat(Horodatage.heureCourte(null)).isEmpty();
+        assertThat(Horodatage.heureCourte("  ")).isEmpty();
+        assertThat(Horodatage.heureCourte("vers 21 h")).isEqualTo("vers 21 h");
+    }
 }

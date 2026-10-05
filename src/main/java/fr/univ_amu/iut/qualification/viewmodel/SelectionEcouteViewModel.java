@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.qualification.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VerdictFichier;
@@ -202,7 +203,9 @@ public class SelectionEcouteViewModel {
     private void appliquerContexte(ContexteVerification contexte) {
         String quadruplet = quadrupletLisible(contexte);
         titreContexte.set(quadruplet + " (" + contexte.annee() + ")");
-        plageHoraire.set(contexte.date() + "  " + contexte.heureDebut() + " -> " + contexte.heureFin());
+        // Même forme que la fiche d'un passage (#5901) : la date en français, les heures sans secondes.
+        plageHoraire.set(Horodatage.dateSeule(contexte.date()) + "  " + Horodatage.heureCourte(contexte.heureDebut())
+                + " -> " + Horodatage.heureCourte(contexte.heureFin()));
         volumetrie.set(contexte.sequencesTotales()
                 + " séquences · durée enregistrée "
                 + Formats.dureeLisible(contexte.dureeEnregistreeSecondes()));

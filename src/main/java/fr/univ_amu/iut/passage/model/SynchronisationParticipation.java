@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.InfosPoint;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
@@ -338,8 +339,8 @@ public final class SynchronisationParticipation {
             ecarts.add("date de début absente ou illisible sur la participation");
         } else if (passage.dateEnregistrement() != null
                 && !nuitDistante.get().toString().equals(passage.dateEnregistrement())) {
-            ecarts.add("nuit du " + passage.dateEnregistrement() + " en local, du " + nuitDistante.get()
-                    + " sur la participation");
+            ecarts.add("nuit du " + Horodatage.dateSeule(passage.dateEnregistrement()) + " en local, du "
+                    + Horodatage.dateSeule(nuitDistante.get().toString()) + " sur la participation");
         }
         return List.copyOf(ecarts);
     }

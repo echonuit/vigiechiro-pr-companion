@@ -71,6 +71,6 @@ class LegendeExportActiviteTest {
     @Test
     void la_provenance_porte_la_version_et_la_date() {
         assertThat(LegendeExport.provenance("1.4.0", LocalDate.of(2026, 7, 26)))
-                .isEqualTo("VigieChiro Companion 1.4.0 · exporté le 2026-07-26");
+                .isEqualTo("VigieChiro Companion 1.4.0 · exporté le 26/07/2026");
     }
 }

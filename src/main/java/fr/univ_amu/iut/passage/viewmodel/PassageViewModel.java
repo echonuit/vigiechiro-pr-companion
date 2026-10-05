@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -204,7 +205,10 @@ public class PassageViewModel {
         // visible via la date d'enregistrement (plage horaire).
         titreContexte.set(new ContextePassage(idPassage, detail.numeroPassage(), contexte).identiteStatut());
         numeroPassage = detail.numeroPassage();
-        plageHoraire.set(detail.dateEnregistrement() + "  " + detail.heureDebut() + " -> " + detail.heureFin());
+        // La date en français et les heures sans leurs secondes (#5901) : la fiche recopiait les trois
+        // valeurs telles que la base les porte.
+        plageHoraire.set(Horodatage.dateSeule(detail.dateEnregistrement()) + "  "
+                + Horodatage.heureCourte(detail.heureDebut()) + " -> " + Horodatage.heureCourte(detail.heureFin()));
         enregistreur.set("PR " + detail.idEnregistreur());
         statut.set(detail.statut());
         verdict.set(detail.verdict());

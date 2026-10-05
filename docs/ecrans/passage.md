@@ -522,7 +522,7 @@ Les mêmes gestes existent en ligne de commande, sous les mêmes mots :
 corriger :
 
 ```
-Nuit                : 2026-07-04  (21:00 → 06:00)  [attestées par les enregistrements]
+Nuit                : 04/07/2026  (21:00 → 06:00)  [attestées par les enregistrements]
 ```
 
 Une nuit ainsi marquée refusera `--heure-debut` : ses heures se réalignent seules. Une nuit

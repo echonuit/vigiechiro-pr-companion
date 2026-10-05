@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.analyse.view;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
@@ -13,9 +14,10 @@ public final class FormatAnalyse {
 
     private FormatAnalyse() {}
 
-    /// Libellé du passage d'une observation : `date · n°X`.
+    /// Libellé du passage d'une observation : `22/06/2026 · n°X`, la date en français (#5901). Une date
+    /// que la base ne porte pas lisible est rendue telle quelle.
     public static String libellePassage(ObservationEspece observation) {
-        return observation.dateEnregistrement() + " · n°" + observation.numeroPassage();
+        return Horodatage.dateSeule(observation.dateEnregistrement()) + " · n°" + observation.numeroPassage();
     }
 
     /// Taxon suivi de sa probabilité si présente (`Pippip (0,92)`) ; `—` si pas de taxon (non touchée).
