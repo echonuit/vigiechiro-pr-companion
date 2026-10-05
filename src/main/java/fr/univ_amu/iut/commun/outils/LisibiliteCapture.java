@@ -27,7 +27,8 @@ public final class LisibiliteCapture {
     private static final String SUFFIXE_PX = " px)";
 
     /// Tolerance de comparaison, en pixels : la mise en page produit des ecarts d'arrondi qui ne sont
-    /// pas des elisions.
+    /// pas des elisions. Pour la **hauteur** d'un libelle enroulable elle est une borne **atteinte** :
+    /// un pixel entier qui manque elide deja (#5899).
     private static final double TOLERANCE_PX = 1.0;
 
     /// Refuse la capture si un libelle enroulable y a ete **comprime**, plutot que d'ecrire une image
@@ -66,7 +67,11 @@ public final class LisibiliteCapture {
         }
         if (noeud instanceof Labeled libelle && libelle.isWrapText() && libelle.getWidth() > 0) {
             double manque = libelle.prefHeight(libelle.getWidth()) - libelle.getHeight();
-            if (manque > TOLERANCE_PX) {
+            // Inclusif (#5899) : il suffit d'un pixel a JavaFX pour rabattre deux lignes sur une et finir
+            // par une ellipse. La comparaison stricte laissait passer cet ecart-la exactement, et deux
+            // apercus sont partis avec des consignes coupees. La tolerance n'ecarte que les arrondis,
+            // qui restent sous le pixel.
+            if (manque >= TOLERANCE_PX) {
                 comprimes.add(resumer(libelle) + " (manque " + Math.round(manque) + SUFFIXE_PX);
             }
         }

@@ -459,7 +459,7 @@ b9be86b7d16d  src/main/java/fr/univ_amu/iut/commun/outils/CaptureBandeauAnnonce.
 dfa344d2a534  src/main/java/fr/univ_amu/iut/commun/outils/CaptureEcranReglages.java
 1a0edda6df26  src/main/java/fr/univ_amu/iut/commun/outils/CaptureFicheEspece.java
 8b189f077b63  src/main/java/fr/univ_amu/iut/commun/outils/CaptureMenuOutils.java
-2a33d7c5c456  src/main/java/fr/univ_amu/iut/commun/outils/LisibiliteCapture.java
+87031277b43e  src/main/java/fr/univ_amu/iut/commun/outils/LisibiliteCapture.java
 a64311dc0d63  src/main/java/fr/univ_amu/iut/commun/outils/MesureBandeauRetour.java
 c78158882263  src/main/java/fr/univ_amu/iut/commun/outils/ModuleCaptureCommun.java
 efbbc0569604  src/main/java/fr/univ_amu/iut/commun/outils/ModuleCaptureNavigationAudio.java
@@ -1569,6 +1569,7 @@ e5deda0b5314  src/test/java/fr/univ_amu/iut/commun/outils/ApercuFxTest.java
 a25ef3528c39  src/test/java/fr/univ_amu/iut/commun/outils/IndexDesAppels.java
 faa28982eefc  src/test/java/fr/univ_amu/iut/commun/outils/IndexDesChamps.java
 e387febb4bc2  src/test/java/fr/univ_amu/iut/commun/outils/IndexDesImplementations.java
+32d617bbeea1  src/test/java/fr/univ_amu/iut/commun/outils/LisibiliteCaptureUnPixelTest.java
 9f83a27c5b4f  src/test/java/fr/univ_amu/iut/commun/outils/TypesDuModele.java
 140aa0ee17fc  src/test/java/fr/univ_amu/iut/commun/outils/ZoneCarteApercuTest.java
 36ff8b6d8210  src/test/java/fr/univ_amu/iut/commun/persistence/ArborescenceFichiersTest.java
