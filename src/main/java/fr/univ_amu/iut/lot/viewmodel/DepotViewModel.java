@@ -9,6 +9,7 @@ import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.SuiviDepot;
+import fr.univ_amu.iut.lot.model.UniteDeDepot;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.property.ReadOnlyBooleanProperty;

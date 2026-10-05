@@ -2,6 +2,7 @@ package fr.univ_amu.iut.lot.viewmodel;
 
 import fr.univ_amu.iut.commun.viewmodel.SuiviLignes;
 import fr.univ_amu.iut.lot.model.DepotUnite;
+import fr.univ_amu.iut.lot.model.UniteDeDepot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

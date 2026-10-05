@@ -299,6 +299,70 @@ class DeposerVigieChiroTest {
     }
 
     /// Le cas de Samuel le 14 septembre, réduit à trois archives.
+    /// La commande conseillait « Régénérez les archives » quel que soit ce qui était parti. Pour des
+    /// séquences, le défaut depuis #5677, ce geste ne répare rien : l'écran a cessé de le nommer en
+    /// #5824, la commande doit suivre (#5835, ADR 0014).
+    @Test
+    @DisplayName("#5835 : un contenu refusé en séquences ne conseille pas de régénérer des archives")
+    void rendre_bilan_un_contenu_refuse_en_sequences() {
+        String texte = DeposerVigieChiro.rendreBilan(contenuRefuse("Car_000.wav", "Car_001.wav"));
+
+        assertThat(texte)
+                .contains("2 refusée(s) par Vigie-Chiro", "Car_000.wav", "Car_001.wav")
+                .doesNotContain("archive")
+                .doesNotContain("égénérez");
+    }
+
+    @Test
+    @DisplayName("#5835 : en archives, le contenu refusé garde son geste vérifié, régénérer puis relancer")
+    void rendre_bilan_un_contenu_refuse_en_archives() {
+        assertThat(DeposerVigieChiro.rendreBilan(contenuRefuse("Car-1.zip", "Car-2.zip")))
+                .contains("Régénérez les archives, puis relancez");
+    }
+
+    @Test
+    @DisplayName("#5835 : en séquences, ni l'écran ni la commande ne nomment d'archive ni de régénération")
+    void l_ecran_et_la_commande_ne_nomment_aucune_archive_en_sequences() {
+        BilanDepot bilan = contenuRefuse("Car_000.wav", "Car_001.wav");
+        String commande = DeposerVigieChiro.rendreBilan(bilan);
+        String ecran = fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot.de(
+                        bilan,
+                        new fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot.Plan(
+                                11, 9, false, fr.univ_amu.iut.lot.model.UniteDeDepot.SEQUENCE),
+                        List.of())
+                .avertissements()
+                .stream()
+                .map(fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Avertissement::texte)
+                .reduce("", String::concat);
+
+        for (String mot : List.of("archive", "égénérez")) {
+            assertThat(commande).as("la commande ne dit pas « %s »", mot).doesNotContain(mot);
+            assertThat(ecran).as("l'écran ne dit pas « %s »", mot).doesNotContain(mot);
+        }
+    }
+
+    @Test
+    @DisplayName("#5835 : la réconciliation impossible ne dit pas que des archives vont repartir")
+    void la_reconciliation_impossible_ne_nomme_pas_d_archive() {
+        StringWriter sortie = new StringWriter();
+
+        new DeposerVigieChiro.SuiviConsole(new PrintWriter(sortie, true)).reconciliationImpossible("HTTP 503", false);
+
+        assertThat(sortie.toString())
+                .contains("impossible à vérifier", "vont repartir pour rien", "HTTP 503")
+                .doesNotContain("archive");
+    }
+
+    private static BilanDepot contenuRefuse(String... identifiants) {
+        return new BilanDepot(
+                "p-1",
+                9,
+                java.util.Arrays.stream(identifiants)
+                        .map(identifiant -> new EchecUnite(identifiant, "HTTP 422", true, CauseRefus.CONTENU))
+                        .toList(),
+                1L);
+    }
+
     private static BilanDepot refusDuStockage() {
         return new BilanDepot(
                 "p-1",

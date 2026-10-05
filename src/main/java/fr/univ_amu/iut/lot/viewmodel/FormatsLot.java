@@ -3,6 +3,7 @@ package fr.univ_amu.iut.lot.viewmodel;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.EtatLot;
+import fr.univ_amu.iut.lot.model.UniteDeDepot;
 
 /// Formatage **textuel** pur des éléments de l'écran M-Lot (récapitulatif, message d'état, ligne
 /// d'archive). Sans état ni dépendance JavaFX : directement testable.

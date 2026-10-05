@@ -3,7 +3,9 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.sites.model.ControleCarreLocal;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.PointVoisin;
 import fr.univ_amu.iut.sites.model.ServiceSites;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import picocli.CommandLine.Command;
@@ -59,9 +61,23 @@ public final class AjouterPoint implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        // Les voisins se cherchent AVANT la création : après, le point serait son propre voisin.
+        List<PointDEcoute> dejaLa = service.listerPoints(idSite);
         PointDEcoute point = service.ajouterPoint(idSite, code, latitude, longitude, description);
         spec.commandLine().getOut().println(point.id());
+        direUnVoisin(dejaLa);
         AvertissementCarre.direSiDivergence(spec, controle, service.site(idSite).numeroCarre(), latitude, longitude);
         return 0;
+    }
+
+    /// Un point du site à 40 m ou moins de la position donnée se **dit**, comme l'écran le dit depuis
+    /// #5688 (#5837, ADR 0014). Sur la sortie d'erreur et sans toucher au code de retour, pour la raison
+    /// d'[AvertissementCarre] : la sortie standard ne porte que l'identifiant du point.
+    private void direUnVoisin(List<PointDEcoute> dejaLa) {
+        if (latitude == null || longitude == null) {
+            return;
+        }
+        PointVoisin.lePlusProche(latitude, longitude, dejaLa)
+                .ifPresent(voisin -> spec.commandLine().getErr().println(voisin.avertissement()));
     }
 }

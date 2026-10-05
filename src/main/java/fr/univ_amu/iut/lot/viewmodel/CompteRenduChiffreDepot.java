@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.EchecUnite;
+import fr.univ_amu.iut.lot.model.UniteDeDepot;
 import java.util.ArrayList;
 import java.util.List;
 

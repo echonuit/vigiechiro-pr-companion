@@ -318,7 +318,7 @@ CONTRAT = {
     "geste": "clic tenant une reference entre la resolution et le geste",
     "population": "TESTS",
     "dispositif": "cliquet",
-    "seuil": "37, polarite=descend",
+    "seuil": "33, polarite=descend",
     "temoin": "scripts/adr/5068-clic-sur-reference-tenue.py --auto-test",
     "decision": "ADR 5068",
     # Lire par l arbre coute, et #5400 retire du temps a la batterie. Declarer les chemins rend la

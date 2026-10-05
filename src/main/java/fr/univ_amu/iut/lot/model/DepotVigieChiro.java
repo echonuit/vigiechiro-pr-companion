@@ -21,7 +21,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -396,7 +395,8 @@ public final class DepotVigieChiro {
         String maintenant = maintenant();
         List<DepotUnite> plan = new ArrayList<>(identifiants.size());
         for (String identifiant : identifiants) {
-            plan.add(DepotUnite.aDeposer(idPassage, identifiant, typeDe(identifiant), maintenant));
+            plan.add(DepotUnite.aDeposer(
+                    idPassage, identifiant, TypeDepotUnite.deLIdentifiant(identifiant), maintenant));
         }
         return plan;
     }
@@ -458,10 +458,5 @@ public final class DepotVigieChiro {
 
     private String maintenant() {
         return horloge.maintenant().toString();
-    }
-
-    /// Type d'unité déduit de l'extension (`.zip` → archive, sinon séquence WAV).
-    private static TypeDepotUnite typeDe(String nom) {
-        return nom.toLowerCase(Locale.ROOT).endsWith(".zip") ? TypeDepotUnite.ZIP : TypeDepotUnite.WAV;
     }
 }

@@ -237,9 +237,7 @@ public class PointEditViewModel {
     private void signalerLeVoisin() {
         retourVoisin.set(position.coordonnees()
                 .flatMap(lue -> PointVoisin.lePlusProche(lue[0], lue[1], pointsDuSite))
-                .map(voisin -> RetourOperation.avertissement("Le point "
-                        + voisin.point().code() + " de ce site est à " + voisin.metres()
-                        + " m de cette position. Vérifiez que vous ne le créez pas une seconde fois."))
+                .map(voisin -> RetourOperation.avertissement(voisin.avertissement()))
                 .orElse(RetourOperation.AUCUN));
     }
 
