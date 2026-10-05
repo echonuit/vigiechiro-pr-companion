@@ -1478,11 +1478,13 @@ b3aaf034461c  src/test/java/fr/univ_amu/iut/commun/api/ReponsesGrilleStocTest.ja
 07fb601235e0  src/test/java/fr/univ_amu/iut/commun/api/TraitementVigieChiroTest.java
 39defdc92f7f  src/test/java/fr/univ_amu/iut/commun/api/TransportVigieChiroTest.java
 efdb83418f82  src/test/java/fr/univ_amu/iut/commun/api/UrlSigneeAdmiseTest.java
+86f557b44ff9  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ArchiveDuRepliSurLaPlateformeDeTestTest.java
 720ef0063de2  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLive.java
 eb4b2f869205  src/test/java/fr/univ_amu/iut/commun/api/plateforme/CibleLiveTest.java
 306bdc2a1902  src/test/java/fr/univ_amu/iut/commun/api/plateforme/DepotSurLaPlateformeDeTestTest.java
 fa9a82d31b32  src/test/java/fr/univ_amu/iut/commun/api/plateforme/ImageDeLApiSansRevisionTest.java
-9120b24c101a  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
+09978cf73382  src/test/java/fr/univ_amu/iut/commun/api/plateforme/PlateformeDeTest.java
+7292391074af  src/test/java/fr/univ_amu/iut/commun/api/plateforme/WorkerDeLaPlateformeDeTest.java
 08562833df8b  src/test/java/fr/univ_amu/iut/commun/di/AmorcageTest.java
 9ceb8cd1b78e  src/test/java/fr/univ_amu/iut/commun/di/DecouverteModulesTest.java
 65f32a89bdfc  src/test/java/fr/univ_amu/iut/commun/di/DiagnosticGuice.java

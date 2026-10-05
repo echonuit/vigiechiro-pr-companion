@@ -17,7 +17,7 @@ enforced_by:
   - "src/test/java/fr/univ_amu/iut/cli/commande/DeposerVigieChiroTest.java"
   - "src/test/java/fr/univ_amu/iut/cli/commande/DeposerTest.java"
   - "src/test/java/fr/univ_amu/iut/audit/model/ServiceRecuperabiliteTest.java"
-verification_note: "la première classe tient la règle cause par cause sur le plan enregistré dans une vraie base ; la deuxième, le repli offert ou non selon la forme, la connexion et le statut ; la troisième fait refuser un téléversement à l écran, trouve la carte sous celle du téléversement et clique son dernier geste ; la quatrième, le refus définitif gardé au rechargement ; les trois dernières, la sortie des deux commandes et le verdict de récupérabilité. Aucune ne dit ce que le portail fait d une archive en partie déjà en ligne : c est une hypothèse, nommée plus bas"
+verification_note: "la première classe tient la règle cause par cause sur le plan enregistré dans une vraie base ; la deuxième, le repli offert ou non selon la forme, la connexion et le statut ; la troisième fait refuser un téléversement à l écran, trouve la carte sous celle du téléversement et clique son dernier geste ; la quatrième, le refus définitif gardé au rechargement ; les trois dernières, la sortie des deux commandes et le verdict de récupérabilité. Aucune ne dit ce que le serveur fait d une archive en partie déjà en ligne : c est observé à part, par ArchiveDuRepliSurLaPlateformeDeTestTest (#5970), et dit plus bas"
 relations:
   complete: ["5677-le-depot-part-en-wav-et-un-depot-entame-garde-son-mode", "5824-l-ecran-et-la-commande-n-offrent-et-ne-nomment-que-ce-qui-sert"]
 verified:
@@ -105,9 +105,9 @@ le compte vit sur le modèle de vue du dépôt, dont c'est l'état.
 ## Conséquences
 
 Les archives du repli contiennent **toute la nuit**, séquences déjà en ligne comprises : le générateur n'est
-pas touché. Ce que le portail fait d'une archive dont une partie des sons est déjà dans la participation
-n'est **pas établi** ; c'est une hypothèse de ce lot, acceptée comme telle par le porteur. Le cas de
-recette `S4-105` l'éprouve contre le vrai portail.
+pas touché. Le serveur les ajoute sans chercher si elles y sont déjà (#5970) : une séquence déjà en ligne
+figure **deux fois** dans les fichiers de la participation, et **une fois** dans ses observations.
+`ArchiveDuRepliSurLaPlateformeDeTestTest` le tient ; ce que le repli doit contenir reste à décider.
 
 Une nuit finie par le repli est annoncée perdue par le bilan de récupérabilité si son disque ne suffit pas,
 avec le compte de ce qui manque.
