@@ -213,9 +213,10 @@ public final class DeposerVigieChiro implements Callable<Integer> {
             gestes.append(" ")
                     .append(contenu)
                     .append(accord(contenu, " d'entre elles a", " d'entre elles ont"))
-                    .append(archives
-                            ? " un contenu refusé : régénérez les archives, puis relancez."
-                            : " un contenu refusé.");
+                    .append(
+                            archives
+                                    ? " un contenu refusé : régénérez les archives, puis relancez."
+                                    : " un contenu refusé.");
         }
         return gestes.toString();
     }
@@ -273,7 +274,8 @@ public final class DeposerVigieChiro implements Callable<Integer> {
 
         /// La réconciliation n'a pas pu lire (#4631). Marquée `~` et non `!` : aucune unité n'a échoué,
         /// c'est l'étape d'avant qui n'a pas tourné, et sa conséquence est que des fichiers déjà
-        /// déposés vont repartir, archives ou séquences (#5835). Un script qui lit cette sortie doit pouvoir distinguer les deux.
+        /// déposés vont repartir, archives ou séquences (#5835). Un script qui lit cette sortie doit
+        /// pouvoir distinguer les deux.
         @Override
         public void reconciliationImpossible(String raison, boolean definitif) {
             sortie.println("  ~ déjà déposées : impossible à vérifier, des fichiers vont repartir pour rien (" + raison

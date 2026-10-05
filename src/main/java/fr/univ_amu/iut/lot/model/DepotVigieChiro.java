@@ -21,7 +21,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -396,7 +395,8 @@ public final class DepotVigieChiro {
         String maintenant = maintenant();
         List<DepotUnite> plan = new ArrayList<>(identifiants.size());
         for (String identifiant : identifiants) {
-            plan.add(DepotUnite.aDeposer(idPassage, identifiant, TypeDepotUnite.deLIdentifiant(identifiant), maintenant));
+            plan.add(DepotUnite.aDeposer(
+                    idPassage, identifiant, TypeDepotUnite.deLIdentifiant(identifiant), maintenant));
         }
         return plan;
     }

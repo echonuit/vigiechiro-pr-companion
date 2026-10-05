@@ -33,7 +33,8 @@ public final class PointVoisin {
         return points.stream()
                 .filter(point -> point.latitude() != null && point.longitude() != null)
                 .map(point -> new Voisin(
-                        point, Math.round(DistanceGeo.metresEntre(latitude, longitude, point.latitude(), point.longitude()))))
+                        point,
+                        Math.round(DistanceGeo.metresEntre(latitude, longitude, point.latitude(), point.longitude()))))
                 .filter(voisin -> voisin.metres() <= RAYON_METRES)
                 .min(Comparator.comparingLong(Voisin::metres));
     }
