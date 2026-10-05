@@ -94,7 +94,6 @@ SANS_PLANCHER = {
     "ScenarioRejetsEtArchiveTest.la_decompression_se_voit_avant_l_inspection": "#5893",
     "ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce": "#5911",
     "ScenarioBandeauLectureSeuleTest.le_support_en_lecture_seule_s_annonce_et_l_import_aboutit": "#5911",
-    "ScenarioMenuDeLigneImportTest.le_menu_de_ligne_s_ouvre_pendant_l_import": "#5911",
     "ScenarioPassagePivotTest.modifier_le_passage": "#5911",
 }
 

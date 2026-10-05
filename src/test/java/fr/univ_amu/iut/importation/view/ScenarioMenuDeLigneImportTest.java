@@ -44,6 +44,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.Clipboard;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -195,6 +196,19 @@ class ScenarioMenuDeLigneImportTest {
                         libelles)
                 .contains(COLONNES);
 
+        // Et le menu se REFERME, par la touche que le produit offre. `declencher` tire l'item sans
+        // passer par le pointeur - c'est ce qui rend le sous-menu jouable sans écran - mais ce détour
+        // saute aussi la fermeture qu'un vrai clic aurait provoquée : le popup survivait au geste et
+        // se posait sur la dernière image du clip (#5911, #5952). Échap plutôt que `menu.hide()` :
+        // l'un éprouve le chemin de fermeture du produit, l'autre rendrait l'image juste sans rien
+        // prouver, et un popup qui s'éteint sans cause n'est pas ce qu'un clip doit montrer (#4181).
+        robot.type(KeyCode.ESCAPE);
+        Attente.queSurLeFil(
+                () -> !menu.isShowing(),
+                "Échap n'a pas refermé le menu de ligne. Un popup qui survit à son geste se pose sur la"
+                        + " dernière image du clip, et c'était une des deux fins mesurées en #5911",
+                APPARITION_SECONDES * 1000L);
+
         // Et on LAISSE L'IMPORT CONCLURE. Sans cela le geste part sur un travail en cours - copie,
         // renommage et transformation freinés à 900 ms par fichier - que les classes suivantes du
         // fork subissent. Mesuré : `ordre-alternatif`, qui rejoue toute la suite dans un fork UNIQUE,
@@ -212,6 +226,19 @@ class ScenarioMenuDeLigneImportTest {
                 "l'import lancé pour faire paraître le suivi n'a jamais abouti : le banc laisserait"
                         + " alors du travail derrière lui",
                 FIN_SECONDES * 1000L);
+
+        // Puis la page SE CALE SUR SON BAS, et le compte rendu y reste le temps d'être lu. Sans cela
+        // la dernière image dépendait du défilement du moment : sur trois tournages de `main`, deux
+        // finissaient sur le panneau « Import terminé · 6 importés », le troisième sur les étapes 1
+        // à 3 de l'assistant, le verdict hors du cadre (#5952).
+        //
+        // Au BAS de la page, et non seulement dans le cadre : `amenerDansLeCadre` place sa cible par un
+        // quotient calculé sur la hauteur du contenu à cet instant, et le compte rendu grandit encore
+        // après avoir paru (#5870). C'est déjà le geste que `ScenarioConnecteAnnonceImportTest` pose
+        // sur ce même nœud.
+        GesteVisible.allerAuBasDeLaPage(robot, "#compteRenduChiffre");
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
     }
 
     /// Déclenche l'item `item` du sous-menu `sousMenu`, sans passer par le pointeur.
