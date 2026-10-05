@@ -78,6 +78,11 @@ LOCAUX = {
     # job - et `verifie_portees_de_ci.py` les lui emprunte plutot que de les redeclarer : ecrire une
     # seconde liste aurait fait diverger la garde de ce qu elle garde, defaut mesure en #5175.
     "porte_du_job",
+    # La passe B du graphe, ajoutee en #5868. `pont_ci.py` lui emprunte le choix du noeud de page
+    # et le harnais qui joue une passe sur un depot fabrique. Il en portait une COPIE, avec le
+    # meme filtre a trois dossiers : les pages de la racine n avaient de noeud de fichier dans
+    # aucune des deux, et corriger l une aurait laisse l autre fautive.
+    "pont_doc_code",
 }
 
 
