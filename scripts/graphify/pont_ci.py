@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _commun import cas_d_auto_test
 from pont_doc_code import (
+    joue_et_rend_le_journal,
     joue_sur_un_depot_fabrique,
     noeud_de_document,
     noeuds_de_page,
@@ -77,6 +78,114 @@ def auto_test():
                 ("testing", "github_workflows_lint_yml"),
             ],
         ),
+    )
+
+    # ⟨D2, les scripts lances⟩ un atelier d une seule etape, et le script qu elle nomme. Chaque
+    # ecriture d un chemin a son cas : la passe en reliait deux sur quatre, et c est ce qui a
+    # cache le defaut (#5919).
+    script_connu = noeud_de_document(
+        "github_scripts_x", "x.py", ".github/scripts/x.py", file_type="code"
+    )
+
+    def scripts_relies(commande, presents, structure_du_cas=()):
+        atelier = f"name: CI\njobs:\n  gardes:\n    steps:\n      - run: {commande}\n"
+        code, _, liens = joue_sur_un_depot_fabrique(
+            Path(__file__).resolve(),
+            list(structure_du_cas),
+            [],
+            {".github/workflows/ci.yml": atelier, **dict.fromkeys(presents, "")},
+        )
+        return code, sorted(
+            (e["source"], e["target"]) for e in liens if e.get("context") == "ci_script"
+        )
+
+    atelier_fabrique = "github_workflows_ci_yml"
+    verifie(
+        "un atelier est relie au script de `.github/` qu il lance",
+        lambda: scripts_relies("python3 .github/assets/w.py", [".github/assets/w.py"]),
+        (0, [(atelier_fabrique, "github_assets_w_py")]),
+    )
+    verifie(
+        "le lien atterrit sur le noeud du script deja dans le graphe, pas sur une coquille",
+        lambda: scripts_relies(
+            "python3 .github/scripts/x.py --verifie", [".github/scripts/x.py"], [script_connu]
+        ),
+        (0, [(atelier_fabrique, "github_scripts_x")]),
+    )
+    verifie(
+        "un chemin ecrit `./.github/` est relie comme `.github/`",
+        lambda: scripts_relies("./.github/scripts/v.sh", [".github/scripts/v.sh"]),
+        (0, [(atelier_fabrique, "github_scripts_v_sh")]),
+    )
+    verifie(
+        "un chemin ecrit avec `./` retrouve lui aussi le noeud deja dans le graphe",
+        lambda: scripts_relies("./.github/scripts/x.py", [".github/scripts/x.py"], [script_connu]),
+        (0, [(atelier_fabrique, "github_scripts_x")]),
+    )
+    verifie(
+        "un chemin ecrit `./scripts/` est relie, sans son prefixe",
+        lambda: scripts_relies("./scripts/y.sh --verifie", ["scripts/y.sh"]),
+        (0, [(atelier_fabrique, "scripts_y_sh")]),
+    )
+    verifie(
+        "un chemin ecrit `scripts/` est relie",
+        lambda: scripts_relies("python3 scripts/z.py", ["scripts/z.py"]),
+        (0, [(atelier_fabrique, "scripts_z_py")]),
+    )
+    verifie(
+        "un script nomme qui n existe pas ne recoit ni noeud ni lien",
+        lambda: scripts_relies("python3 .github/scripts/absent.py", ["scripts/z.py"]),
+        (0, []),
+    )
+    verifie(
+        "deux scripts d une meme etape sont relies tous les deux",
+        lambda: scripts_relies(
+            "python3 scripts/z.py && python3 .github/assets/w.py",
+            ["scripts/z.py", ".github/assets/w.py"],
+        ),
+        (0, [(atelier_fabrique, "github_assets_w_py"), (atelier_fabrique, "scripts_z_py")]),
+    )
+
+    # ⟨D2, ce que la passe dit avoir lu⟩ elle compte ce qu elle AJOUTE, et « 0 vers un script »
+    # se lisait de deux facons. Les deux cas rendent ce meme zero ou presque, et se distinguent
+    # par ce qui a ete lu.
+    def ligne_des_ateliers(commande, presents, structure_du_cas=(), aretes=()):
+        atelier = f"name: CI\njobs:\n  gardes:\n    steps:\n      - run: {commande}\n"
+        code, _, _, journal = joue_et_rend_le_journal(
+            Path(__file__).resolve(),
+            list(structure_du_cas),
+            list(aretes),
+            {".github/workflows/ci.yml": atelier, **dict.fromkeys(presents, "")},
+        )
+        return code, [ligne for ligne in journal if ligne.startswith("D2 :")]
+
+    deja_relie = {
+        "source": atelier_fabrique,
+        "target": "github_scripts_x",
+        "relation": "references",
+    }
+    trois_lues_dont_une_sans_fichier = (
+        "D2 : 1 workflows lus, 3 invocations d un script dont 1 sans fichier ; ajoutes : "
+        "1 jobs, 0 liens vers un profil Maven, 2 vers un script, 0 appels entre workflows"
+    )
+    une_lue_deja_reliee = (
+        "D2 : 1 workflows lus, 1 invocations d un script dont 0 sans fichier ; ajoutes : "
+        "1 jobs, 0 liens vers un profil Maven, 0 vers un script, 0 appels entre workflows"
+    )
+    verifie(
+        "la passe dit les invocations lues et celles sans fichier, a cote de ce qu elle ajoute",
+        lambda: ligne_des_ateliers(
+            "python3 .github/scripts/x.py && scripts/z.py && python3 scripts/absent.py",
+            [".github/scripts/x.py", "scripts/z.py"],
+        ),
+        (0, [trois_lues_dont_une_sans_fichier]),
+    )
+    verifie(
+        "un script deja relie n est pas ajoute, mais il est compte parmi les invocations lues",
+        lambda: ligne_des_ateliers(
+            "python3 .github/scripts/x.py", [".github/scripts/x.py"], [script_connu], [deja_relie]
+        ),
+        (0, [une_lue_deja_reliee]),
     )
     return echecs()
 
@@ -178,6 +287,9 @@ print(f"D1 : pom.xml, {len(profils)} profils Maven -> {sorted(profils)[:6]}...")
 wf_dir = Path(".github/workflows")
 wf_par_fichier = {}
 n_wf = n_job = n_lien_prof = n_script = n_appel = 0
+# Ce que la passe a LU, a cote de ce qu elle ajoute : « 0 vers un script » disait aussi bien
+# « tout etait deja relie » que « rien n a ete reconnu », et c est le second qui etait vrai.
+n_invocation = n_sans_fichier = 0
 for p in sorted(wf_dir.glob("*.yml")) + sorted(wf_dir.glob("*.yaml")):
     lignes = p.read_text(encoding="utf-8", errors="ignore").splitlines()
     nom = next(
@@ -204,17 +316,24 @@ for p in sorted(wf_dir.glob("*.yml")) + sorted(wf_dir.glob("*.yaml")):
             for nom_p in prof.split(","):
                 if nom_p in profils:
                     n_lien_prof += lier(wid, profils[nom_p], "references", "maven_profile", p, i)
-        # scripts lances
+        # scripts lances. `Path` replie deja un `./` de tete : aucun retrait a la main. Celui qui
+        # vivait ici, `lstrip("./")`, retire des CARACTERES et non un prefixe : il mangeait le
+        # point de `.github`, le chemin n existait plus, et le lien etait saute sans un mot. 205
+        # invocations sur 321 se perdaient ainsi (#5919).
         for sc in re.findall(r"((?:\./)?(?:\.github|scripts)/[\w./-]+\.(?:sh|py|bash))", ln):
-            q = Path(sc.lstrip("./"))
+            q = Path(sc)
+            n_invocation += 1
             if q.exists():
                 n_script += lier(wid, noeud_fichier(q, i), "references", "ci_script", p, i)
+            else:
+                n_sans_fichier += 1
         # appels d'un autre workflow
         for uses in re.findall(r"uses:\s*\./\.github/workflows/([\w.-]+)", ln):
             if uses in wf_par_fichier:
                 n_appel += lier(wid, wf_par_fichier[uses], "references", "ci_call", p, i)
 print(
-    f"D2 : {n_wf} workflows lus ; ajoutes : {n_job} jobs, {n_lien_prof} liens vers un profil "
+    f"D2 : {n_wf} workflows lus, {n_invocation} invocations d un script dont {n_sans_fichier} "
+    f"sans fichier ; ajoutes : {n_job} jobs, {n_lien_prof} liens vers un profil "
     f"Maven, {n_script} vers un script, {n_appel} appels entre workflows"
 )
 
