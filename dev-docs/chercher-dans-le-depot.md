@@ -146,8 +146,9 @@ refuse sinon, est dans l'[ADR 5813] et l'[ADR 5904].
 Personne n'écrit ce graphe à la main : quand `VIGIECHIRO_GRAPHIFY=1` est posé, le crochet
 `post-commit` le refait par `scripts/graphify/rebuild.py`, qui conserve la couche sémantique.
 
-Ce crochet ne relit que le code. Les titres d'une page ne suivent qu'à la mise à jour, qui relit la
-structure de toutes les pages et dit ce qu'elle retire :
+Ce crochet relit le code et les titres des pages que le commit touche, et dit les titres qu'il
+retire ([ADR 5941]). Sa prose, elle, attend un lecteur. Les pages que le commit ne touche pas ne
+suivent qu'à la mise à jour, qui relit la structure de toutes les pages :
 
 ```bash
 "$(cat graphify-out/.graphify_python)" scripts/graphify/rebuild.py --mets-a-jour
@@ -215,4 +216,5 @@ relu comme « 33 clips » alors qu'il comptait les cas d'un auto-test.
 [ADR 5813]: decisions/5813-une-hyperarete-porte-un-identifiant-et-une-mise-a-jour-declare-ce-qu-elle-lache.md
 [ADR 5904]: decisions/5904-une-hyperarete-se-declare-et-les-ponts-parcourent-les-pages-du-graphe.md
 [ADR 5939]: decisions/5939-une-question-de-prose-se-pose-aux-enonces-de-la-couche.md
+[ADR 5941]: decisions/5941-le-crochet-relit-la-structure-des-pages-en-une-extraction-avec-le-code.md
 [ADR 5877]: decisions/5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages.md

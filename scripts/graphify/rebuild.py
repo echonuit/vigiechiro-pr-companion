@@ -2,13 +2,14 @@
 """Reconstruit le graphe de connaissance graphify apres un commit ou une fusion.
 
 Enchaine, sans aucun appel LLM :
-  1. extraction AST des fichiers de code modifies, puis fusion dans graph.json
+  1. extraction de structure des fichiers modifies, le code ET les pages, en une fois, puis
+     fusion dans graph.json
   2. les quatre passes de pont (doc/code, vues/CLI, CI/pom, MCD)
   3. clustering, libelles, GRAPH_REPORT.md et graph.html
 
-L'extraction semantique de la documentation, elle, demande un LLM : quand un `.md`
-change, on se contente de poser le drapeau `graphify-out/.needs_update`, que l'on
-resorbe en session. `scripts/graphify/couche_semantique.py a-reextraire` dit quelles
+Les TITRES d'une page modifiee se relisent donc ici, et le journal dit ceux qui sortent du
+graphe (#5941). Sa PROSE, elle, demande un LLM : quand un `.md` change, on pose le drapeau
+`graphify-out/.needs_update`, que l'on resorbe en session. `scripts/graphify/couche_semantique.py a-reextraire` dit quelles
 pages, puis `decoupe`, les agents et `fusionne` font le reste. Ce n'est PAS
 `/graphify . --update` : son detecteur signale le corpus entier, et il fusionne sans
 les parades de l'ADR 5790.
@@ -83,20 +84,46 @@ def refus_sans_le_moteur() -> int:
     return 0
 
 
-def extraire_le_code(
+def extraire_les_modifies(
     changes: list[Path], racine: Path = RACINE, graphe: Path = GRAPHE, extrait: Path = EXTRAIT
 ) -> bool:
-    """Re-extrait les fichiers de code modifies et les fusionne dans graph.json."""
+    """Re-extrait le code ET les pages modifies, et les fusionne dans graph.json.
+
+    Ce chemin, celui du crochet de commit, ne relisait que le code : une page dont un titre
+    changeait gardait ses titres d'avant jusqu'a la prochaine mise a jour complete (#5941). Le
+    lot 6 avait donne ce geste a `--mets-a-jour`, pas a lui.
+
+    UNE seule extraction pour les deux. La fusion part du graphe du disque et ecrit l'extrait :
+    deux fusions de suite partiraient chacune du meme graphe, et la seconde effacerait ce que la
+    premiere venait d'y mettre.
+    """
     from graphify.build import build_merge
     from graphify.extract import extract
 
     fichiers = [p for p in changes if p.suffix in EXT_CODE and (racine / p).exists()]
-    if not fichiers:
+    pages = [p for p in changes if p.suffix in EXT_DOC and (racine / p).is_file()]
+    if not fichiers and not pages:
         return False
-    journal(f"{len(fichiers)} fichier(s) de code modifie(s), extraction AST")
+    journal(
+        f"{len(fichiers)} fichier(s) de code et {len(pages)} page(s) modifie(s), "
+        "extraction de structure"
+    )
     # root= est obligatoire : sans lui, source_file ET les identifiants sont
     # tronques au nom de fichier, ce qui rend les noeuds introuvables par chemin.
-    resultat = extract([racine / p for p in fichiers], cache_root=racine, root=racine)
+    resultat = extract([racine / p for p in fichiers + pages], cache_root=racine, root=racine)
+    if pages:
+        # Seules les pages NOMMEES sont jugees : l'extraction peut en rendre d'autres, et le
+        # code a sa propre fusion, qui ne declare rien.
+        brut = json.loads(graphe.read_text(encoding="utf-8"))
+        nommees = {str(p) for p in pages}
+        dit_le_bilan(
+            bilan_de_relecture(
+                brut.get("nodes", []),
+                brut.get("edges") if "edges" in brut else brut.get("links", []),
+                [n for n in resultat["nodes"] if n.get("source_file") in nommees],
+            ),
+            len(pages),
+        )
     fusion = fusionner_une_extraction(resultat, build_merge, graphe, extrait, racine)
     journal(f"fusion : {fusion.number_of_nodes()} noeuds, {fusion.number_of_edges()} aretes")
     return True
@@ -199,6 +226,21 @@ def bilan_de_relecture(noeuds: list[dict], aretes: list[dict], extraits: list[di
     }
 
 
+def dit_le_bilan(bilan: dict, demandees: int) -> None:
+    """Ecrit au journal ce qu'une relecture de structure retire, pour qui lit sa sortie."""
+    journal(
+        f"structure relue : {bilan['pages']} page(s) sur {demandees} ; "
+        f"{sum(len(v) for v in bilan['retires'].values())} titre(s) retire(s) "
+        f"sur {len(bilan['retires'])} page(s)"
+    )
+    if bilan["laches"]:
+        journal(
+            f"{sum(bilan['laches'].values())} arete(s) semantique(s) lachee(s), ancree(s) sur un "
+            f"titre disparu : {', '.join(f'{sf} ({n})' for sf, n in bilan['laches'].items())}"
+        )
+        journal("ces pages sont a reextraire : scripts/graphify/couche_semantique.py a-reextraire")
+
+
 def relire_la_structure(
     graphe: Path = GRAPHE, extrait: Path = EXTRAIT, racine: Path = RACINE
 ) -> bool:
@@ -214,17 +256,7 @@ def relire_la_structure(
     bilan = bilan_de_relecture(
         brut["nodes"], brut.get("edges") if "edges" in brut else brut["links"], resultat["nodes"]
     )
-    journal(
-        f"structure relue : {bilan['pages']} page(s) sur {len(pages)} ; "
-        f"{sum(len(v) for v in bilan['retires'].values())} titre(s) retire(s) "
-        f"sur {len(bilan['retires'])} page(s)"
-    )
-    if bilan["laches"]:
-        journal(
-            f"{sum(bilan['laches'].values())} arete(s) semantique(s) lachee(s), ancree(s) sur un "
-            f"titre disparu : {', '.join(f'{sf} ({n})' for sf, n in bilan['laches'].items())}"
-        )
-        journal("ces pages sont a reextraire : scripts/graphify/couche_semantique.py a-reextraire")
+    dit_le_bilan(bilan, len(pages))
     fusionner_une_extraction(resultat, build_merge, graphe, extrait, racine)
     return True
 
@@ -750,8 +782,9 @@ def auto_test():
         f"obtenu : {(rien, recu['extractions'], jamais_ecrit)}",
     )
 
-    # 10 : le chemin du crochet de commit. Il ne re-extrait que le CODE qui est encore sur le
-    # disque : ni une page, ni un fichier parti. Joue avec le meme faux moteur que le cas 9.
+    # 10 : le chemin du crochet de commit. Il re-extrait ce qui est encore sur le disque, le
+    # code ET les pages, en UNE extraction : deux fusions de suite partiraient chacune du graphe
+    # du disque, et la seconde effacerait la premiere. Joue avec le faux moteur du cas 9.
     def sous_un_faux_moteur(action):
         d_avant = {n: sys.modules.get(n) for n in noms}
         try:
@@ -782,7 +815,7 @@ def auto_test():
         lu.write_text(json.dumps({"nodes": [], "links": []}), encoding="utf-8")
         modifies = [Path("src/Classe.java"), Path("docs/page.md"), Path("src/Partie.java")]
         avant_extraction = recu["extractions"]
-        code_relu = sous_un_faux_moteur(lambda: extraire_le_code(modifies, racine, lu, ecrit))
+        code_relu = sous_un_faux_moteur(lambda: extraire_les_modifies(modifies, racine, lu, ecrit))
         obtenu = (
             code_relu,
             recu.get("chemins"),
@@ -790,20 +823,88 @@ def auto_test():
             recu.get("graphe"),
             ecrit.exists(),
         )
-        attendu = (True, [racine / "src/Classe.java"], racine, str(lu), True)
+        attendu = (
+            True,
+            [racine / "src/Classe.java", racine / "docs/page.md"],
+            racine,
+            str(lu),
+            True,
+        )
+        page_seule = sous_un_faux_moteur(
+            lambda: extraire_les_modifies([Path("docs/page.md")], racine, lu, ecrit)
+        )
+        chemins_de_la_page_seule = recu.get("chemins")
+        partis = [Path("src/Partie.java"), Path("docs/partie.md")]
         rien_a_relire = sous_un_faux_moteur(
-            lambda: extraire_le_code([Path("docs/page.md")], racine, lu, racine / "jamais.json")
+            lambda: extraire_les_modifies(partis, racine, lu, racine / "jamais.json")
         )
         extractions = recu["extractions"] - avant_extraction
+        jamais_ecrit = (racine / "jamais.json").exists()
     verifier(
-        "le crochet ne re-extrait que le code encore sur le disque, depuis la racine donnee",
+        "le crochet re-extrait en une fois le code et la page encore sur le disque",
         obtenu == attendu,
         f"obtenu : {obtenu}",
     )
     verifier(
-        "une page seule ne lance aucune extraction de code",
-        (rien_a_relire, extractions) == (False, 1),
-        f"obtenu : {(rien_a_relire, extractions)}",
+        "une page seule fait relire sa structure",
+        (page_seule, chemins_de_la_page_seule) == (True, [racine / "docs/page.md"]),
+        f"obtenu : {(page_seule, chemins_de_la_page_seule)}",
+    )
+    verifier(
+        "un fichier et une page partis du disque ne lancent aucune extraction, et rien n est ecrit",
+        (rien_a_relire, extractions, jamais_ecrit) == (False, 2, False),
+        f"obtenu : {(rien_a_relire, extractions, jamais_ecrit)}",
+    )
+
+    # 10 bis : ce que le crochet DIT de la page relue (#5941). Le graphe et le faux moteur sont
+    # ceux des cas 8 et 9 : la page `docs/ecran.md` a perdu un titre, deux aretes semantiques y
+    # tenaient. L'extraction rend aussi `docs/autre.md`, qu'on ne lui a pas nommee : elle ne
+    # compte pas.
+    def journal_du_crochet(modifies):
+        sortie = io.StringIO()
+        with tempfile.TemporaryDirectory() as temporaire:
+            racine = Path(temporaire)
+            for chemin in (page, "docs/autre.md", "src/Classe.java"):
+                (racine / chemin).parent.mkdir(parents=True, exist_ok=True)
+                (racine / chemin).write_text("x", encoding="utf-8")
+            lu = racine / "graph.json"
+            lu.write_text(json.dumps({"nodes": avant_relecture, "links": liens}), encoding="utf-8")
+            with contextlib.redirect_stdout(sortie):
+                sous_un_faux_moteur(
+                    lambda: extraire_les_modifies(modifies, racine, lu, racine / "extrait.json")
+                )
+        return [ligne.removeprefix("[graphify] ") for ligne in sortie.getvalue().splitlines()][:4]
+
+    obtenu = journal_du_crochet([Path(page)])
+    attendu = [
+        "0 fichier(s) de code et 1 page(s) modifie(s), extraction de structure",
+        "structure relue : 1 page(s) sur 1 ; 1 titre(s) retire(s) sur 1 page(s)",
+        "2 arete(s) semantique(s) lachee(s), ancree(s) sur un titre disparu : docs/ecran.md (2)",
+        "ces pages sont a reextraire : scripts/graphify/couche_semantique.py a-reextraire",
+    ]
+    verifier(
+        "le crochet dit le titre retire de la page relue et les aretes semantiques qui tombent",
+        obtenu == attendu,
+        f"obtenu : {obtenu}",
+    )
+    # `docs/autre.md` n'a pas change de titres : l'extraction rend celui que le graphe porte.
+    obtenu = journal_du_crochet([Path("docs/autre.md")])[:3]
+    verifier(
+        "une page dont les titres n ont pas change ne fait rien retirer, et rien n est dit lache",
+        obtenu[:2]
+        == [
+            "0 fichier(s) de code et 1 page(s) modifie(s), extraction de structure",
+            "structure relue : 1 page(s) sur 1 ; 0 titre(s) retire(s) sur 0 page(s)",
+        ]
+        and not any("lachee" in ligne for ligne in obtenu),
+        f"obtenu : {obtenu}",
+    )
+    obtenu = journal_du_crochet([Path("src/Classe.java")])[:2]
+    verifier(
+        "sans page au commit, le crochet ne dit rien d une structure relue",
+        obtenu[:1] == ["1 fichier(s) de code et 0 page(s) modifie(s), extraction de structure"]
+        and not any("structure relue" in ligne for ligne in obtenu),
+        f"obtenu : {obtenu}",
     )
 
     # 11 : les passes se jouent dans l'ordre donne, et une passe absente ne casse pas la chaine.
@@ -835,7 +936,7 @@ def auto_test():
                 "GRAPHE": sortie / "graph.json",
                 "SORTIE": sortie,
                 "EXTRAIT": sortie / "extrait.json",
-                "extraire_le_code": lambda changes: appels.append("extraction"),
+                "extraire_les_modifies": lambda changes: appels.append("extraction"),
                 "jouer_les_passes": lambda: appels.append("ponts"),
                 "reconstruire": lambda reference=None: appels.append("reconstruction"),
             }
@@ -858,7 +959,7 @@ def auto_test():
 
     obtenu = chemin_du_crochet(True)
     verifier(
-        "le crochet extrait le code, rejoue les ponts, reconstruit, et signale la page modifiee",
+        "le crochet extrait ce qui a change, rejoue les ponts, reconstruit, et signale la page",
         obtenu == (0, ["extraction", "ponts", "reconstruction"], True),
         f"obtenu : {obtenu}",
     )
@@ -926,7 +1027,7 @@ def main(argv: list[str]) -> int:
         )
         journal("documentation modifiee, drapeau .needs_update pose")
     try:
-        extraire_le_code(changes)
+        extraire_les_modifies(changes)
         jouer_les_passes()
         reconstruire()
     finally:

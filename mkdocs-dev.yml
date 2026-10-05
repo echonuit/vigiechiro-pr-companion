@@ -441,6 +441,7 @@ nav:
     - 5936 · Un libellé ne se partage pas, et une passe à plusieurs lots dit ce qu'elle perd: decisions/5936-un-libelle-ne-se-partage-pas-et-une-passe-a-plusieurs-lots-dit-ce-qu-elle-perd.md
     - 5931 · La porte dérive ce qu'elle nomme, et n'écrit qu'une liste qu'un garde confronte: decisions/5931-la-porte-derive-ce-qu-elle-nomme-et-n-ecrit-qu-une-liste-confrontee.md
     - 5939 · Une question de prose se pose aux énoncés de la couche: decisions/5939-une-question-de-prose-se-pose-aux-enonces-de-la-couche.md
+    - 5941 · Le crochet de commit relit la structure des pages: decisions/5941-le-crochet-relit-la-structure-des-pages-en-une-extraction-avec-le-code.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md
