@@ -26,9 +26,9 @@ des archives, quoi que dise le réglage.
 
 ## Vérifier et préparer le dépôt
 
-![L'écran Préparer le dépôt : récapitulatif du dépôt et première étape « Vérifier et préparer le dépôt ».](../assets/captures/apercu-lot-preparer.png)
+![L'écran Préparer le dépôt, application non connectée : la checklist de cohérence, et la première étape « Vérifier et préparer le dépôt » à faire.](../assets/captures/apercu-lot-preparer.png)
 
-Le **récapitulatif** indique le nombre de séquences et le volume. Une **checklist de cohérence** montre,
+Le **récapitulatif**, dans la barre de statut, indique le nombre de séquences et le volume. Une **checklist de cohérence** montre,
 contrôle par contrôle et **même quand tout est satisfait**, ce qui est vérifié : transformation
 effectuée, fichiers bien nommés, journal du capteur présent, relevé climatique. Chaque ligne est marquée
 **✓** (satisfait), **✗** (à corriger, bloquant) ou **⚠** (avertissement non bloquant, comme un relevé
@@ -40,7 +40,7 @@ déposer ».
 
 Cette étape n'apparaît pas pour un dépôt en séquences WAV fait par l'application.
 
-![L'état « Prêt à déposer » en archives ZIP : l'étape « Générer les archives » est offerte, et le téléversement est déjà l'étape courante.](../assets/captures/apercu-lot-deposer.png)
+![L'état « Prêt à déposer », application non connectée : « Générer les archives » est l'étape courante, et l'étape 3 n'offre que le dépôt manuel. L'écran est le même quelle que soit la forme réglée.](../assets/captures/apercu-lot-deposer.png)
 
 En forme ZIP, ce que l'on téléverse sur Vigie-Chiro, ce sont des **archives** (au plus 700 Mo par défaut, réglable dans [Réglages](reglages.md)), découpées depuis les
 séquences et écrites dans le sous-dossier `depot/` de la session. La génération peut être **longue**
@@ -63,7 +63,7 @@ sont neutralisées le temps de l'écriture (on ne risque pas de téléverser une
     liste que les archives conservées sur votre machine. Il le dit, et vous renvoie à l'étape de
     téléversement, qui suit celles qui partent.
 
-![Génération des archives en cours : indicateur d'activité, actions désactivées.](../assets/captures/apercu-lot-generation.png)
+![Génération des archives en cours, application non connectée : indicateur d'activité, actions désactivées.](../assets/captures/apercu-lot-generation.png)
 
 Le tableau de suivi des archives laisse **choisir et réordonner ses colonnes** (clic droit ou menu principal (☰)
 « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md). La **table de dépôt**
@@ -76,7 +76,7 @@ Il n'y a rien à générer avant, et l'étape ne propose pas de dépôt manuel :
 choisissez les archives ZIP dans les réglages. Ce qui suit décrit l'étape en forme ZIP ; la table de
 dépôt, la reprise et le compte rendu valent pour les deux formes.
 
-![Archives générées : la liste des ZIP s'affiche et « Ouvrir le dossier » s'active.](../assets/captures/apercu-lot-archives.png)
+![Archives générées, application non connectée : la liste des ZIP s'affiche, « Ouvrir le dossier » s'active, et le dépôt manuel est le seul chemin offert.](../assets/captures/apercu-lot-archives.png)
 
 Connecté, vous pouvez téléverser **sans avoir rien généré** : le téléversement est déjà l'étape
 courante, et la table des archives est vide.
@@ -196,7 +196,7 @@ proposée en pied, parce que la suite est **« Reprendre le dépôt »**, un bou
 
 C'est la dernière étape : la quatrième en forme ZIP, la troisième en séquences WAV.
 
-![L'état « Déposé » : toutes les étapes sont franchies.](../assets/captures/apercu-lot-depose.png)
+![L'état « Déposé » après un dépôt manuel : toutes les étapes sont franchies, et la dernière s'appelle « Marquer déposé ».](../assets/captures/apercu-lot-depose.png)
 
 Le bouton de cette dernière étape **change selon votre situation**.
 
@@ -213,7 +213,7 @@ vous venez de déposer : la plateforme décompresse les archives, puis lance l'i
 Ce que Vigie-Chiro répond s'affiche **juste sous le bouton** : la demande est acceptée, l'analyse était
 déjà demandée, ou la plateforme refuse, et elle dit alors pourquoi.
 
-![Après « Lancer la participation » : la dernière étape dit, sous son bouton, que l'analyse est demandée.](../assets/captures/apercu-lot-lancement-accepte.png)
+![Après « Lancer la participation » : la dernière étape dit, sous son bouton grisé, que l'analyse est demandée, et la carte « Traitement Vigie-Chiro » la montre planifiée.](../assets/captures/apercu-lot-lancement-accepte.png)
 
 Tant que l'analyse est **planifiée, en cours ou relancée** par la plateforme, le bouton reste grisé :
 il n'y a rien à relancer, et la carte « Traitement Vigie-Chiro » ci-dessous dit où en est le calcul.
@@ -330,7 +330,8 @@ L'écran est long ; la **barre de statut** du bas de fenêtre garde l'essentiel 
 
 Si la nuit n'est pas en état d'être déposée (par exemple séquences d'écoute absentes ou journal du
 capteur manquant), les contrôles concernés passent en **✗** dans la checklist, avec la raison et la
-correction à apporter. Le bouton « Vérifier et préparer le dépôt » reste grisé tant qu'un contrôle est en
-échec. Un **⚠** (relevé climatique absent) n'empêche pas, lui, de préparer le dépôt.
+correction à apporter. La suite du dépôt est neutralisée tant qu'un contrôle est en échec. Le bouton
+« Vérifier et préparer le dépôt » reste offert : il relance la vérification une fois la correction faite.
+Un **⚠** (relevé climatique absent) n'empêche pas, lui, de préparer le dépôt.
 
-![L'état incohérent : la checklist montre les contrôles ✓ et ✗ ; la préparation est bloquée.](../assets/captures/apercu-lot-alertes.png)
+![L'état incohérent : la checklist montre les contrôles ✓ et ✗, l'en-tête demande de les corriger, et les étapes suivantes sont grisées.](../assets/captures/apercu-lot-alertes.png)

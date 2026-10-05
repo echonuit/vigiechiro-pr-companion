@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.OptionalBinder;
@@ -40,6 +41,7 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.lot.di.DepotVigieChiroModule;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
@@ -82,7 +84,6 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -90,8 +91,8 @@ import javafx.scene.Scene;
 
 /// Outil de capture : l'écran M-Lot en PNG, comparé à la maquette, étape par étape du dépôt (#251).
 ///
-///  - `apercu-lot-preparer` : passage **Vérifié** cohérent, étape ① active ;
-///  - `apercu-lot-deposer` : **Prêt à déposer**, étape ② active ;
+///  - `apercu-lot-preparer` : passage **Vérifié** cohérent, étape ① active, hors connexion ;
+///  - `apercu-lot-deposer` : **Prêt à déposer**, étape ② active, hors connexion (même écran en WAV et en ZIP) ;
 ///  - `apercu-lot-televerser-sans-archives` : **Prêt à déposer**, connecté, aucune archive, étape ③
 ///    courante et étape ② qui n'est plus un passage obligé (#1998) ;
 ///  - `apercu-lot-generation` : génération en cours, indicateur d'activité, bouton désactivé ;
@@ -100,7 +101,7 @@ import javafx.scene.Scene;
 ///    manuel (#1890) ;
 ///  - `apercu-lot-depose` : **Déposé**, état final, toutes les étapes franchies ;
 ///  - `apercu-lot-participation` : participation liée, le bouton ④ sur « Lancer la participation » ;
-///  - `apercu-lot-alertes` : **Vérifié incohérent**, zone d'alertes (R14), « Préparer le lot » désactivé ;
+///  - `apercu-lot-alertes` : **Vérifié incohérent**, zone d'alertes (R14), la vérification reste relançable ;
 ///  - `apercu-lot-reprise` : dépôt en cours (#2354), une archive déposée, une autre dont le `PUT` a
 ///    rencontré une coupure, en « Nouvelle tentative dans N s… ».
 ///
@@ -129,9 +130,13 @@ public final class CaptureLot {
     /// L'archive qu'un dépôt en cours est en train d'envoyer, dans les aperçus qui montrent la table.
     private static final String ARCHIVE_EN_COURS = "Car040962-2026-Pass1-A1-sequences.zip";
 
-    /// Hauteur de scène d'un dépôt suivi **et** d'un bandeau d'erreur : les deux s'empilent, et 1200
-    /// laissait au garde-fou anti-troncature « 8 px » de manque au rendu local de #5599.
+    /// Hauteur de scène d'un écran plus chargé que les quatre étapes seules : un dépôt suivi **et** un
+    /// bandeau d'erreur qui s'empilent (1200 laissait au garde-fou anti-troncature « 8 px » de manque au
+    /// rendu local de #5599), ou un bandeau de retour au-dessus de la carte « Libérer l'espace disque ».
     private static final int HAUTEUR_DEPOT_SUIVI = 1300;
+
+    /// La hauteur des aperçus de la carte du traitement, celle des autres aperçus de l'écran.
+    private static final int HAUTEUR_TRAITEMENT = 1200;
 
     private CaptureLot() {}
 
@@ -158,6 +163,10 @@ public final class CaptureLot {
 
     /// Identifiant volontairement absent de la base : l'ouverture échoue et l'écran rend son bandeau.
     private static final long PASSAGE_INEXISTANT = 999_999L;
+
+    /// L'analyse telle qu'un lancement accepté la laisse : planifiée, à l'instant du relevé de la recette.
+    private static final Traitement ANALYSE_PLANIFIEE =
+            new Traitement(EtatTraitement.PLANIFIE, "2026-09-30T14:07:45.136000+00:00", null, null, null, null);
 
     /// La propriété qui impose la forme du dépôt, relue à chaque dépôt par `LotModule`.
     private static final String FORME_DU_DEPOT = "vigiechiro.depot.mode";
@@ -195,6 +204,9 @@ public final class CaptureLot {
         // déposée, un dépôt entamé gardant sa forme.
         System.clearProperty(FORME_DU_DEPOT);
         rendre(connecte, idCoherent, sortie.resolve("apercu-lot-sequences.png"));
+        // Hors connexion (#5838), l'application ne peut pas téléverser : l'étape des archives reste offerte
+        // pour le dépôt manuel, quelle que soit la forme réglée. Rendu en séquences WAV, l'écran est le
+        // même au pixel près, donc un seul aperçu le montre.
         System.setProperty(FORME_DU_DEPOT, "zip");
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-deposer.png"));
         // ② bis (#1998) : **connecté et sans archives**. C'est l'état neuf du chantier, le téléversement
@@ -209,10 +221,15 @@ public final class CaptureLot {
                 sortie.resolve("apercu-lot-generation.png"),
                 (vm, depot) -> vm.marquerGenerationEnCours());
         // ③ Archives générées : liste des ZIP, « Ouvrir le dossier » actif, étape « Téléverser » courante.
+        // Le bandeau de succès et la carte « Libérer l'espace disque » s'ajoutent à l'écran : à 1200, les
+        // consignes de l'étape ③ et de cette carte se rabattaient sur une ligne et finissaient par une
+        // ellipse. Il leur manquait un pixel (33 pour 34), ce que le garde-fou tolère : il n'a rien vu,
+        // et l'image s'est jugée à l'œil (#5838).
         rendrePilote(
                 injecteur,
                 idCoherent,
                 sortie.resolve("apercu-lot-archives.png"),
+                HAUTEUR_DEPOT_SUIVI,
                 (vm, depot) -> vm.appliquerGeneration(archivesDemo(vm)));
         // ③ bis (#1890) : mêmes archives, mais **connecté**. L'étape « Téléverser sur Vigie-Chiro » n'est
         // visible que si le dépôt est disponible : sans ce rendu, aucun aperçu ne la montrait.
@@ -220,6 +237,7 @@ public final class CaptureLot {
                 connecte,
                 idCoherent,
                 sortie.resolve("apercu-lot-televerser.png"),
+                HAUTEUR_DEPOT_SUIVI,
                 (vm, depot) -> vm.appliquerGeneration(archivesDemo(vm)));
         // #2354 : dépôt EN COURS, une unité réessayée. Une archive déjà déposée, une en cours dont le PUT
         // a rencontré une coupure momentanée : sa ligne porte la mention discrète « Nouvelle tentative
@@ -254,7 +272,8 @@ public final class CaptureLot {
                 connecte,
                 idCoherent,
                 sortie.resolve("apercu-lot-traitement-en-cours.png"),
-                traitement -> traitement.appliquer(new Traitement(
+                HAUTEUR_TRAITEMENT,
+                (depot, traitement) -> traitement.appliquer(new Traitement(
                         EtatTraitement.EN_COURS, null, "2026-09-30T14:07:45.136000+00:00", null, null, null)));
         // « Actualiser » a trouvé l'analyse terminée : les observations sont importées, la carte le dit
         // sous l'état (#5784).
@@ -262,21 +281,33 @@ public final class CaptureLot {
                 connecte,
                 idCoherent,
                 sortie.resolve("apercu-lot-traitement-termine.png"),
-                traitement -> traitement.appliquer(new TraitementViewModel.Releve(
+                HAUTEUR_TRAITEMENT,
+                (depot, traitement) -> traitement.appliquer(new TraitementViewModel.Releve(
                         new Traitement(EtatTraitement.FINI, null, null, "2026-09-30T14:52:10.000000+00:00", null, null),
                         new ImportApresReleve.Issue.Fait(
                                 "Observations importées depuis Vigie-Chiro : 1284 observation(s)."))));
         // Le résultat du lancement, sous le bouton de l'étape ④ (#5682) : une issue par aperçu.
-        rendrePilote(
+        // Un lancement accepté ou déjà demandé laisse l'analyse **planifiée** : le relevé qui suit grise le
+        // bouton et la carte du traitement le dit. Sans cet état, l'aperçu montrait « Analyse demandée »
+        // au-dessus d'un bouton actif et d'une analyse « non lancée », que le produit ne rend pas (#5838).
+        rendreTraitement(
                 connecte,
                 idCoherent,
                 sortie.resolve("apercu-lot-lancement-accepte.png"),
-                (vm, depot) -> depot.restituerLancement(ResultatLancement.accepte()));
-        rendrePilote(
+                HAUTEUR_DEPOT_SUIVI,
+                (depot, traitement) -> {
+                    depot.restituerLancement(ResultatLancement.accepte());
+                    traitement.appliquer(ANALYSE_PLANIFIEE);
+                });
+        rendreTraitement(
                 connecte,
                 idCoherent,
                 sortie.resolve("apercu-lot-lancement-deja-demande.png"),
-                (vm, depot) -> depot.restituerLancement(ResultatLancement.dejaLance(Traitement.absent())));
+                HAUTEUR_DEPOT_SUIVI,
+                (depot, traitement) -> {
+                    depot.restituerLancement(ResultatLancement.dejaLance(ANALYSE_PLANIFIEE));
+                    traitement.appliquer(ANALYSE_PLANIFIEE);
+                });
         rendrePilote(
                 connecte,
                 idCoherent,
@@ -356,18 +387,25 @@ public final class CaptureLot {
                         LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), "6480c0ffee0000000000dead", false));
     }
 
-    /// Injecteur de cet outil de capture : la composition **complète** de l'application, surchargée pour
-    /// le déterminisme. Exposé pour le garde-fou de câblage (test).
+    /// Injecteur **hors connexion** de cet outil : la composition de l'application, surchargée pour le
+    /// déterminisme, et **sans la liaison du dépôt**. Exposé pour le garde-fou de câblage (test).
+    ///
+    /// L'application complète charge `DepotVigieChiroModule`, qui pose le dépôt dès qu'un client existe.
+    /// Tant qu'il restait dans la liste, cet injecteur résolvait un dépôt présent, et ses aperçus dits
+    /// hors connexion montraient « Téléverser sur Vigie-Chiro » (#5838).
     public static Injector creerInjecteur() {
-        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
-                .with(ModuleCaptureCommun.executeursSynchrones(), new ModuleCaptureLot()));
+        List<Module> horsConnexion = RacineInjecteur.modules().stream()
+                .filter(module -> !(module instanceof DepotVigieChiroModule))
+                .toList();
+        return Guice.createInjector(Modules.override(horsConnexion)
+                .with(ModuleCaptureCommun.executeursSynchrones(), new ModuleCaptureLot(), new ModuleSuiviSansDepot()));
     }
 
     /// Variante **connectée** de [#creerInjecteur] (#1890) : mêmes modules, plus la liaison du dépôt.
     ///
     /// Deux injecteurs et non un seul, parce que les deux modes se rendent différemment et que **les
-    /// deux méritent d'être relus** : le déconnecté masque l'étape ③ et n'offre que le dépôt manuel.
-    /// Tout basculer en connecté aurait simplement déplacé l'angle mort d'un mode à l'autre.
+    /// deux méritent d'être relus** : hors connexion, l'écran n'offre que le dépôt manuel. Tout basculer
+    /// en connecté aurait simplement déplacé l'angle mort d'un mode à l'autre.
     public static Injector creerInjecteurConnecte() {
         return Guice.createInjector(Modules.override(RacineInjecteur.modules())
                 .with(ModuleCaptureCommun.executeursSynchrones(), new ModuleCaptureLot(), new ModuleDepotConnecte()));
@@ -397,6 +435,23 @@ public final class CaptureLot {
         @Singleton
         TraitementVigieChiro traitementVigieChiro(ClientVigieChiro client) {
             return new TraitementVigieChiro(client);
+        }
+    }
+
+    /// Ce que `DepotVigieChiroModule` fournit **en plus** du dépôt, et dont l'écran a besoin même hors
+    /// connexion : les deux DAO du suivi, que `ServiceLot` exige. Le module retiré, il faut les rendre.
+    private static final class ModuleSuiviSansDepot extends AbstractModule {
+
+        @Provides
+        @Singleton
+        DepotUniteDao depotUnites(SourceDeDonnees source) {
+            return new DepotUniteDao(source);
+        }
+
+        @Provides
+        @Singleton
+        DepotPlanDao depotPlans(SourceDeDonnees source) {
+            return new DepotPlanDao(source);
         }
     }
 
@@ -527,7 +582,12 @@ public final class CaptureLot {
     /// client, donc pas de suivi : un ViewModel qui se dit disponible fait paraître la carte, et l'état lui
     /// est appliqué une fois l'écran ouvert, l'ouverture relisant d'abord un relevé qui n'existe pas.
     private static void rendreTraitement(
-            Injector injecteur, long idPassage, Path fichier, Consumer<TraitementViewModel> etat) throws IOException {
+            Injector injecteur,
+            long idPassage,
+            Path fichier,
+            int hauteur,
+            BiConsumer<DepotViewModel, TraitementViewModel> etat)
+            throws IOException {
         TraitementViewModel traitement =
                 new TraitementViewModel(Optional.empty(), injecteur.getInstance(Horloge.class)) {
                     @Override
@@ -535,7 +595,7 @@ public final class CaptureLot {
                         return true;
                     }
                 };
-        rendrePilote(injecteur, idPassage, fichier, 1200, traitement, (vm, depot) -> etat.accept(traitement));
+        rendrePilote(injecteur, idPassage, fichier, hauteur, traitement, (vm, depot) -> etat.accept(depot, traitement));
     }
 
     /// Archives ZIP de **démonstration** (#251) pour l'aperçu « archives générées » : on ne zippe pas
