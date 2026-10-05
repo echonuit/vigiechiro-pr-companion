@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.ImportApresReleve;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
+import fr.univ_amu.iut.commun.viewmodel.FormatsTraitement;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import java.time.ZoneId;
 import java.util.Objects;
@@ -33,6 +34,9 @@ public class TraitementViewModel {
     /// Le fuseau des heures affichées : celui du **poste**, comme la commande depuis #3678 (#5683). C'est
     /// l'heure de celui qui lit, et c'est elle qui lui dit s'il attend ou s'il revient plus tard.
     private static final ZoneId FUSEAU = ZoneId.systemDefault();
+
+    /// Le nom du bouton qui relève sur cet écran, que la phrase d'un import en échec invite à recliquer.
+    private static final String GESTE = "Actualiser";
 
     private final Optional<SuiviTraitement> suivi;
     private final Optional<ImportObservations> importation;
@@ -126,7 +130,7 @@ public class TraitementViewModel {
     public void appliquer(Releve releve) {
         Objects.requireNonNull(releve, "releve");
         appliquer(releve.traitement());
-        importObservations.set(FormatsTraitement.importObservations(releve.issue()));
+        importObservations.set(FormatsTraitement.importObservations(releve.issue(), GESTE));
     }
 
     /// Restitue un état fraîchement relevé, **sur le fil JavaFX**.

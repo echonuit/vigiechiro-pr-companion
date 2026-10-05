@@ -45,6 +45,16 @@
             </graphic>
           </Button>
         </StackPane>
+        <!-- « Vérifier le traitement » (#5862) : relève l'analyse et importe les observations, comme
+             « Actualiser » sur l'écran de lot. Enveloppe (#789) : grisé, il dit ce qui manque. -->
+        <StackPane fx:id="enveloppeVerifierTraitement">
+          <Button fx:id="boutonVerifierTraitement" text="Vérifier le traitement"
+                  styleClass="bouton-secondaire">
+            <graphic>
+              <FontIcon iconLiteral="fas-sync-alt"/>
+            </graphic>
+          </Button>
+        </StackPane>
         <!-- Enveloppe (#789) : le tooltip d'explication doit survivre à la désactivation du bouton
              (un passage déposé n'est plus renommable). -->
         <StackPane fx:id="enveloppeRattachement">

@@ -125,9 +125,9 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 ### Annotations
 
 - **Barre du chrome (cadre commun)** : le bouton **← Retour** ramène à l'écran réellement précédent (historique de navigation) ; le **fil d'Ariane** affiche l'emplacement hiérarchique cliquable (`🏠 Accueil › Mes sites › Carré N › Détails du passage N° X`). Ces deux affordances ne sont **pas** propres à M-Passage : elles sont rendues par le chrome sur tous les écrans (navigation homogène). M-Passage déclare seulement son emplacement.
-- **En-tête** : le titre identifie le passage (`Carré N / Point / N° X (année)`). Les actions de tête sont **contextuelles selon l'état** ; il en existe **six** :
+- **En-tête** : le titre identifie le passage (`Carré N / Point / N° X (année)`). Les actions de tête sont **contextuelles selon l'état** ; il en existe **sept** :
     - **toujours** : **🗺 Voir sur la carte**, **✏ Modifier le passage** (année, n° de passage - avec re-renommage des fichiers -, campagne, participation opportuniste), **🗑 Supprimer** (refusé si le passage est déposé) ;
-    - **après dépôt** : **🔗 Voir la participation** (ouvre la fiche de la participation sur la plateforme), **↩ Annuler le dépôt** ;
+    - **après dépôt** : **🔗 Voir la participation** (ouvre la fiche de la participation sur la plateforme), **🔄 Vérifier le traitement** (relève où en est l'analyse et, si elle est terminée, importe les observations ; le résultat se lit dans le bandeau de retour), **↩ Annuler le dépôt** ;
     - si le passage est **archivé** (audio absent du disque) : **♻ Réactiver ce passage**.
 
     L'écran ci-dessus montre l'état **Vérifié** (pas encore déposé) : seules les **trois actions permanentes** s'y affichent.
@@ -146,6 +146,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 | Bouton **✏ Modifier le passage** | Ouvre la **modale** d'édition (année, n° de passage, campagne, participation opportuniste) ; changer l'année ou le n° re-renomme les fichiers (voir variante ci-dessous) |
 | Bouton **🗑 Supprimer** | Confirmation forte (suppression de la nuit et des fichiers) ; refusée si le passage est déposé |
 | Bouton **🔗 Voir la participation** *(après dépôt)* | Ouvre la fiche de la participation sur la plateforme |
+| Bouton **🔄 Vérifier le traitement** *(après dépôt)* | Relève l'état de l'analyse et importe les observations si elle est terminée ; c'est le geste d'« Actualiser » de [M-Lot](M-Lot.md). Grisé, avec sa raison, sans participation liée ou hors connexion |
 | Bouton **↩ Annuler le dépôt** *(après dépôt)* | Ramène le passage à un état pré-dépôt (le dépôt en ligne n'est pas défait automatiquement) |
 | Bouton **♻ Réactiver ce passage** *(si archivé)* | Retrouve les fichiers d'un passage dont l'audio a été purgé ([E4.S6](../Story%20mapping/E4%20-%20Preparer%20et%20tracer%20le%20depot%20VigieChiro.md#e4s6)) |
 | Carte **🎧 Vérifier l'enregistrement** | Ouvre [M-Qualification](M-Qualification.md) (active dès que la nuit est transformée) |

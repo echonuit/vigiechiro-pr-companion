@@ -14,7 +14,14 @@ De haut en bas :
   passage (**Modifier le passage**, **Supprimer**). Le bouton **Voir la participation** ouvre
   la participation liée sur le **portail Vigie-Chiro** dans votre navigateur, pour vérifier d'un
   coup d'œil que la nuit est rattachée au bon endroit ; il reste grisé tant que le passage n'est
-  pas lié (la participation est créée à l'import connecté, ou au premier dépôt).
+  pas lié (la participation est créée à l'import connecté, ou au premier dépôt). À côté de lui,
+  **Vérifier le traitement** demande à Vigie-Chiro où en est l'analyse de la nuit et, si elle est
+  terminée, **importe ses observations** : c'est le geste d'« Actualiser » sur l'écran
+  [Préparer le dépôt](lot.md), sans quitter le passage. La réponse s'affiche dans le bandeau de
+  retour, sous la frise du statut. Le bouton reste grisé tant que le passage n'est pas lié à une participation, ou que
+  l'application n'est pas connectée ; son infobulle dit ce qui manque.
+
+    ![La fiche d'un passage déposé après « Vérifier le traitement » : sous la frise du statut, le bandeau dit que l'analyse est terminée et que les observations sont importées.](../assets/captures/apercu-passage-traitement-verifie.png)
 - **Bandeau d'identité** : date et plage horaire, enregistreur, **statut** et **verdict**.
 - **Statut du workflow** : une frise qui situe la nuit dans sa progression
   (Importé, Transformé, Vérifié, Prêt à déposer, Dépôt en cours, Déposé). Une nuit **récupérée** de
@@ -497,7 +504,9 @@ elle les corrige, elle vous le dit.
 !!! tip "Vérifier sur la plateforme"
     Après un envoi, le bouton **Voir la participation** (barre du haut de l'écran du passage) ouvre la
     fiche dans votre navigateur : c'est le moyen le plus sûr de confirmer que la plateforme affiche
-    bien ce que vous attendiez.
+    bien ce que vous attendiez. Pour savoir si l'analyse est finie sans ouvrir le navigateur,
+    **Vérifier le traitement**, juste à côté, pose la question à la plateforme et rapatrie les
+    observations dès qu'elles existent.
 
 ### En ligne de commande
 

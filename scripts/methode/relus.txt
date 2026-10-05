@@ -677,6 +677,7 @@ ef1d5352df14  src/main/java/fr/univ_amu/iut/commun/viewmodel/EtatConnexion.java
 04aafb3a7bea  src/main/java/fr/univ_amu/iut/commun/viewmodel/EtatUnite.java
 36d6a673cb8b  src/main/java/fr/univ_amu/iut/commun/viewmodel/Filtres.java
 ffe2f3ab6863  src/main/java/fr/univ_amu/iut/commun/viewmodel/Formats.java
+56bdd75a87f5  src/main/java/fr/univ_amu/iut/commun/viewmodel/FormatsTraitement.java
 8fdc3286b4e4  src/main/java/fr/univ_amu/iut/commun/viewmodel/GesteAttendu.java
 bb9f113343aa  src/main/java/fr/univ_amu/iut/commun/viewmodel/IndicateurAccueil.java
 20422afe7028  src/main/java/fr/univ_amu/iut/commun/viewmodel/LigneSuivi.java
@@ -882,7 +883,6 @@ cc463aea3d3e  src/main/java/fr/univ_amu/iut/lot/viewmodel/DernierGesteDuDepot.ja
 e9f04bc3d4e2  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapeDepot.java
 048fd54b68ea  src/main/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepot.java
 95a96e7df5a1  src/main/java/fr/univ_amu/iut/lot/viewmodel/FormatsLot.java
-bb5803005851  src/main/java/fr/univ_amu/iut/lot/viewmodel/FormatsTraitement.java
 134f854b8d1d  src/main/java/fr/univ_amu/iut/lot/viewmodel/LigneArchive.java
 1491fefec699  src/main/java/fr/univ_amu/iut/lot/viewmodel/LigneDepot.java
 452adccf06d1  src/main/java/fr/univ_amu/iut/lot/viewmodel/LotViewModel.java
@@ -891,7 +891,7 @@ d6e9c69ce390  src/main/java/fr/univ_amu/iut/lot/viewmodel/MessagesLot.java
 a1490134e151  src/main/java/fr/univ_amu/iut/lot/viewmodel/SuiviEtapesLot.java
 2566b15f8dfb  src/main/java/fr/univ_amu/iut/lot/viewmodel/SuiviLignesArchives.java
 da6d0a1d368a  src/main/java/fr/univ_amu/iut/lot/viewmodel/SuiviLignesDepot.java
-f50d32f101fd  src/main/java/fr/univ_amu/iut/lot/viewmodel/TraitementViewModel.java
+0e725dd2695f  src/main/java/fr/univ_amu/iut/lot/viewmodel/TraitementViewModel.java
 c8097b9ba37e  src/main/java/fr/univ_amu/iut/maj/api/DerniereVersionGitHub.java
 d4f2c00a5c12  src/main/java/fr/univ_amu/iut/maj/di/MajModule.java
 146a336421c9  src/main/java/fr/univ_amu/iut/maj/model/ConseilDeMiseAJour.java
@@ -1046,11 +1046,11 @@ f5c33fd4d3c2  src/main/java/fr/univ_amu/iut/passage/model/dao/PassageDao.java
 382c52bc1d1d  src/main/java/fr/univ_amu/iut/passage/model/dao/ReleveClimatiqueDao.java
 a9b019d36690  src/main/java/fr/univ_amu/iut/passage/model/dao/SequenceDao.java
 0b6900fcf0e9  src/main/java/fr/univ_amu/iut/passage/model/dao/SessionDao.java
-1d19f514872a  src/main/java/fr/univ_amu/iut/passage/outils/CapturePassage.java
+65ae3ab17bce  src/main/java/fr/univ_amu/iut/passage/outils/CapturePassage.java
 101ec8ac88cf  src/main/java/fr/univ_amu/iut/passage/outils/CaptureRefusRattachement.java
 bd14d0cfff4a  src/main/java/fr/univ_amu/iut/passage/view/ActionReactivation.java
 a5d98d1a51d1  src/main/java/fr/univ_amu/iut/passage/view/ActionsFichePassage.java
-ec052b9bc411  src/main/java/fr/univ_amu/iut/passage/view/AppuisPassage.java
+971cb3d5af82  src/main/java/fr/univ_amu/iut/passage/view/AppuisPassage.java
 702b9b3a633b  src/main/java/fr/univ_amu/iut/passage/view/CartesActionPassage.java
 8df1cd8b65b3  src/main/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleController.java
 08afea411a9e  src/main/java/fr/univ_amu/iut/passage/view/NavigationPassage.java
@@ -1058,6 +1058,7 @@ ec052b9bc411  src/main/java/fr/univ_amu/iut/passage/view/AppuisPassage.java
 17822834eb2b  src/main/java/fr/univ_amu/iut/passage/view/PassageController.java
 0dd6e58afbe5  src/main/java/fr/univ_amu/iut/passage/view/RattachementModaleController.java
 000fb58a763f  src/main/java/fr/univ_amu/iut/passage/view/ReactivationModaleController.java
+08a25758cdd8  src/main/java/fr/univ_amu/iut/passage/view/VerificationDuTraitementUI.java
 65a0d2a007e8  src/main/java/fr/univ_amu/iut/passage/viewmodel/ActionRecommandee.java
 ace9f3756eef  src/main/java/fr/univ_amu/iut/passage/viewmodel/ApercuRenommage.java
 7e7457954276  src/main/java/fr/univ_amu/iut/passage/viewmodel/ChoixDuPoint.java
@@ -1070,13 +1071,14 @@ b49f8d47d5c6  src/main/java/fr/univ_amu/iut/passage/viewmodel/GestionCampagnesVi
 70fd4370037e  src/main/java/fr/univ_amu/iut/passage/viewmodel/IndicateurPassages.java
 f8508cf63d48  src/main/java/fr/univ_amu/iut/passage/viewmodel/MessagesRattachement.java
 3465dcd6c034  src/main/java/fr/univ_amu/iut/passage/viewmodel/MotifsBlocagePassage.java
-5989f3cb0000  src/main/java/fr/univ_amu/iut/passage/viewmodel/PassageViewModel.java
+f8109eb29faf  src/main/java/fr/univ_amu/iut/passage/viewmodel/PassageViewModel.java
 3fb55177fc79  src/main/java/fr/univ_amu/iut/passage/viewmodel/RattachementViewModel.java
 2100200f3684  src/main/java/fr/univ_amu/iut/passage/viewmodel/ReactivationModaleViewModel.java
 4131e5a1220c  src/main/java/fr/univ_amu/iut/passage/viewmodel/SaisieHorairesNuit.java
 e827f307792b  src/main/java/fr/univ_amu/iut/passage/viewmodel/SaisieOpportuniste.java
 952d4ddb6079  src/main/java/fr/univ_amu/iut/passage/viewmodel/SaisiePassageConditions.java
 ebc7965c702c  src/main/java/fr/univ_amu/iut/passage/viewmodel/SelectionCampagne.java
+9e30cc6f7ce1  src/main/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTraitement.java
 25e89bb43a5d  src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java
 d8df481f824d  src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java
 6a9aa62cbaf1  src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java
@@ -1701,6 +1703,7 @@ d338bab90357  src/test/java/fr/univ_amu/iut/commun/view/carte/PointGeoTest.java
 c961103e6467  src/test/java/fr/univ_amu/iut/commun/viewmodel/ContextePassageTest.java
 4f4ac19acee6  src/test/java/fr/univ_amu/iut/commun/viewmodel/FiltresTest.java
 55f311c41ef2  src/test/java/fr/univ_amu/iut/commun/viewmodel/FormatsTest.java
+d6631c931ec3  src/test/java/fr/univ_amu/iut/commun/viewmodel/FormatsTraitementFuseauTest.java
 16bcfa411270  src/test/java/fr/univ_amu/iut/commun/viewmodel/ProgressionOperationTest.java
 a61eb0a5ae3c  src/test/java/fr/univ_amu/iut/commun/viewmodel/ReglagesReactifsTest.java
 f1049a5bf879  src/test/java/fr/univ_amu/iut/commun/viewmodel/RetourOperationTest.java
@@ -1882,7 +1885,6 @@ a11734ef6c52  src/test/java/fr/univ_amu/iut/lot/view/ScenarioPerceptifRefusDepot
 b3dc4e7f32a6  src/test/java/fr/univ_amu/iut/lot/viewmodel/DernierGesteDuDepotTest.java
 f61a0b707877  src/test/java/fr/univ_amu/iut/lot/viewmodel/EtapesDepotTest.java
 c8d105f62892  src/test/java/fr/univ_amu/iut/lot/viewmodel/FormatsLotTest.java
-d6631c931ec3  src/test/java/fr/univ_amu/iut/lot/viewmodel/FormatsTraitementFuseauTest.java
 8223d90ad531  src/test/java/fr/univ_amu/iut/lot/viewmodel/LotViewModelTest.java
 33cf48ab34a4  src/test/java/fr/univ_amu/iut/lot/viewmodel/MessagesLotTest.java
 2569a85cd5fb  src/test/java/fr/univ_amu/iut/lot/viewmodel/OngletReglagesDepotTest.java
@@ -1977,7 +1979,7 @@ acd643d069e5  src/test/java/fr/univ_amu/iut/passage/model/PropositionsEnregistre
 8a9952c6166d  src/test/java/fr/univ_amu/iut/passage/model/VerificationIdentiteAudioTest.java
 434ae859e67a  src/test/java/fr/univ_amu/iut/passage/view/GestionCampagnesModaleViewTest.java
 f4286d23a74d  src/test/java/fr/univ_amu/iut/passage/view/NavigationPassageViewTest.java
-ca08d0312ad1  src/test/java/fr/univ_amu/iut/passage/view/PassageActionsFicheViewTest.java
+f492068c695e  src/test/java/fr/univ_amu/iut/passage/view/PassageActionsFicheViewTest.java
 3a52056aeff5  src/test/java/fr/univ_amu/iut/passage/view/PassageControllerEmplacementTest.java
 3a7e7d486f43  src/test/java/fr/univ_amu/iut/passage/view/PassageReactivationViewTest.java
 6693574eadac  src/test/java/fr/univ_amu/iut/passage/view/PassageViewTest.java
@@ -1987,14 +1989,17 @@ ca08d0312ad1  src/test/java/fr/univ_amu/iut/passage/view/PassageActionsFicheView
 e96caab1b9b1  src/test/java/fr/univ_amu/iut/passage/view/ReactivationModaleQuestionTest.java
 cbc014bf6958  src/test/java/fr/univ_amu/iut/passage/view/ReactivationModaleViewTest.java
 bffcab754b0f  src/test/java/fr/univ_amu/iut/passage/view/ScenarioPassagePivotTest.java
+30b7ca5477f6  src/test/java/fr/univ_amu/iut/passage/view/VerificationDuTraitementUITest.java
 dcebab754186  src/test/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduDEnvoiTest.java
 cd203af38495  src/test/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduRattachementTest.java
 1b869e0cc43b  src/test/java/fr/univ_amu/iut/passage/viewmodel/CorrectionPointTest.java
 1933f68af71f  src/test/java/fr/univ_amu/iut/passage/viewmodel/GestionCampagnesViewModelTest.java
 50b5a9020e94  src/test/java/fr/univ_amu/iut/passage/viewmodel/IndicateurPassagesTest.java
+ab70d6f6344b  src/test/java/fr/univ_amu/iut/passage/viewmodel/MemesMotsQueLEcranDeLotTest.java
 2a87b71158e4  src/test/java/fr/univ_amu/iut/passage/viewmodel/PassageViewModelTest.java
 9e7a28b504c9  src/test/java/fr/univ_amu/iut/passage/viewmodel/RattachementViewModelTest.java
 59c6503e55be  src/test/java/fr/univ_amu/iut/passage/viewmodel/SaisieHorairesNuitTest.java
+a8f5b54b21d0  src/test/java/fr/univ_amu/iut/passage/viewmodel/VerificationDuTraitementTest.java
 49766a118987  src/test/java/fr/univ_amu/iut/perf/JeuDuBancTest.java
 a915ebf9d263  src/test/java/fr/univ_amu/iut/qualification/AgregationVerdictTest.java
 134e5d009078  src/test/java/fr/univ_amu/iut/qualification/FenetreDeCouvertureTest.java

@@ -442,6 +442,11 @@ public class PassageViewModel {
         retour.set(RetourOperation.erreur(motif));
     }
 
+    /// Pose dans le bandeau le résultat d'une action de l'écran qui rend le sien (#5862).
+    public void restituer(RetourOperation resultat) {
+        retour.set(Objects.requireNonNull(resultat, "resultat"));
+    }
+
     /// Efface le retour (l'utilisateur a lu le bandeau et le ferme).
     public void effacerRetour() {
         retour.set(RetourOperation.AUCUN);

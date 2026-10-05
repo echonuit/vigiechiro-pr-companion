@@ -16,8 +16,10 @@ import com.google.inject.Provides;
 import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.Navigateur;
@@ -139,6 +141,9 @@ class PassageViewTest {
                 // `synthese-nuit` (#2351) : binder VIDE. Sans lui, Guice ne sait pas fabriquer
                 // l'Optional et le contrôleur devient inconstructible : l'écran ne charge plus du tout.
                 OptionalBinder.newOptionalBinder(binder(), OuvrirSynthese.class);
+                // Hors connexion (#5862) : deux binders VIDES rendent « Vérifier le traitement » constructible.
+                OptionalBinder.newOptionalBinder(binder(), SuiviTraitement.class);
+                OptionalBinder.newOptionalBinder(binder(), ImportObservations.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirVerification.class)
                         .setBinding()
                         .toInstance(passage -> verificationOuverte.set(passage.idPassage()));

@@ -17,6 +17,7 @@ import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import fr.univ_amu.iut.passage.viewmodel.VerificationDuTraitement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -60,7 +61,8 @@ class PassageControllerEmplacementTest {
                         mock(PortailVigieChiro.class),
                         url -> {},
                         // Synthèse absente : ce test porte sur le fil d'Ariane, pas sur les cartes.
-                        Optional.empty()),
+                        Optional.empty(),
+                        new VerificationDuTraitement(Optional.empty(), Optional.empty())),
                 SelecteursDeTest.auDefaut());
     }
 

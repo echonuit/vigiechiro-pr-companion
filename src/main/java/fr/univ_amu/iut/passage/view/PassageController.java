@@ -36,6 +36,7 @@ import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.passage.viewmodel.ActionRecommandee;
 import fr.univ_amu.iut.passage.viewmodel.EtapeWorkflow;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import fr.univ_amu.iut.passage.viewmodel.VerificationDuTraitement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -83,6 +84,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private final CompteurValidations compteurValidations;
     private final ExecuteurTache executeur;
     private final PortailVigieChiro portail;
+    private final VerificationDuTraitement verification;
     private final OuvreurDeLien ouvreurDeLien;
 
     /// Entrée vers la Synthèse de la nuit (#2351), dépaquetée des appuis comme les trois précédentes.
@@ -228,6 +230,12 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @FXML
     private StackPane enveloppeOuvrirPortail;
 
+    @FXML
+    private Button boutonVerifierTraitement;
+
+    @FXML
+    private StackPane enveloppeVerifierTraitement;
+
     /// Enveloppe (non désactivée) du bouton « Supprimer » : porte le tooltip expliquant le blocage sur un
     /// passage déposé (un Button désactivé n'affiche pas de tooltip). Cf. [IndicateurBlocage].
     @FXML
@@ -275,6 +283,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         Objects.requireNonNull(appuis, "appuis");
         this.executeur = appuis.executeur();
         this.portail = appuis.portail();
+        this.verification = appuis.verification();
         this.ouvreurDeLien = appuis.ouvreurDeLien();
         this.ouvrirSynthese = appuis.ouvrirSynthese();
         this.selecteur = selecteurs.pour(
@@ -373,6 +382,13 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         majActionRecommandee(viewModel.actionRecommandeeProperty().get());
 
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
+        VerificationDuTraitementUI.cabler(
+                new VerificationDuTraitementUI.Vue(boutonVerifierTraitement, enveloppeVerifierTraitement),
+                verification,
+                lienParticipation,
+                occupation,
+                () -> idPassage,
+                viewModel);
     }
 
     /// Applique le liseré « recommandée » à la seule carte correspondant à la prochaine étape du

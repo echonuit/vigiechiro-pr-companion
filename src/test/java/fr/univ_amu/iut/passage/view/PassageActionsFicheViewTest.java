@@ -14,12 +14,16 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.multibindings.OptionalBinder;
+import fr.univ_amu.iut.commun.api.EtatTraitement;
+import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.di.DiagnosticGuice;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.outils.FenetreAjustable;
 import fr.univ_amu.iut.commun.view.Confirmateur;
@@ -109,6 +113,9 @@ class PassageActionsFicheViewTest {
     private ServicePassage service;
     private PassageController controleur;
 
+    /// Le suivi du traitement que « Vérifier le traitement » interroge (#5862).
+    private final SuiviTraitement suivi = mock(SuiviTraitement.class);
+
     @Start
     void start(Stage stage) throws Exception {
         service = mock(ServicePassage.class);
@@ -127,6 +134,11 @@ class PassageActionsFicheViewTest {
                 OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class);
                 // Idem pour `synthese-nuit` (#2351) : le binder VIDE rend l'Optional constructible.
                 OptionalBinder.newOptionalBinder(binder(), OuvrirSynthese.class);
+                // Connecté (#5862) : « Vérifier le traitement » relève par ce double, et n'importe rien.
+                OptionalBinder.newOptionalBinder(binder(), SuiviTraitement.class)
+                        .setBinding()
+                        .toInstance(suivi);
+                OptionalBinder.newOptionalBinder(binder(), ImportObservations.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
                         .setBinding()
                         .toInstance(passage -> {});
@@ -375,6 +387,26 @@ class PassageActionsFicheViewTest {
         assertThat(annonces)
                 .as("annuler un dépôt ne détruit rien : son refus ne doit plus bloquer (ADR 0023)")
                 .isEmpty();
+    }
+
+    /// Le geste du lot 24, depuis la fiche (#5862) : la fixture porte une participation liée et un suivi
+    /// branché, donc le bouton est ouvert. Le bandeau doit porter la phrase d'état, pas une erreur.
+    @Test
+    @DisplayName("#5862 : « Vérifier le traitement » relève l'analyse et le dit dans le bandeau")
+    void verifier_le_traitement_dit_ou_en_est_l_analyse(FxRobot robot) {
+        when(suivi.relever(ID_PASSAGE))
+                .thenReturn(new Traitement(EtatTraitement.EN_COURS, null, null, null, null, null));
+
+        cliquer(robot, "#boutonVerifierTraitement");
+
+        HBox bandeau = robot.lookup("#bandeauRetour").queryAs(HBox.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
+        assertThat(bandeau.isVisible()).isTrue();
+        assertThat(bandeau.getStyleClass()).doesNotContain("retour-erreur");
+        assertThat(message.getText())
+                .isEqualTo("Analyse en cours. Comptez plusieurs dizaines de minutes ; vous pouvez fermer"
+                        + " l'application.");
+        verify(suivi).relever(ID_PASSAGE);
     }
 
     @Test

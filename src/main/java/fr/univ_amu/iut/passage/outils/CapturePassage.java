@@ -7,23 +7,29 @@ import com.google.inject.Provider;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.EtatTraitement;
+import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.AcquisitionAncrage;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeSysteme;
+import fr.univ_amu.iut.commun.model.ImportApresReleve;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.ReleveParticipationDao;
+import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
@@ -65,6 +71,7 @@ import fr.univ_amu.iut.passage.view.PassageController;
 import fr.univ_amu.iut.passage.view.RattachementModaleController;
 import fr.univ_amu.iut.passage.view.ReactivationModaleController;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import fr.univ_amu.iut.passage.viewmodel.VerificationDuTraitement;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -79,6 +86,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -119,6 +127,9 @@ public final class CapturePassage {
 
     /// Participation Vigie-Chiro à laquelle la nuit squelette est rattachée. Aucun appel réseau n'a lieu :
     /// seule la PRÉSENCE du lien compte pour la règle qui autorise la réactivation.
+    /// Une adresse où rien n'écoute : les clients construits pour l'aperçu ne sont jamais interrogés.
+    private static final String URL_SANS_PLATEFORME = "http://localhost:1";
+
     private static final String PARTICIPATION_DEMO = "6a53f5faae21902a597394d3";
     private static final String APERCU_ECRIT = "Apercu ecrit dans ";
     private static final String FXML_RATTACHEMENT = "RattachementModale.fxml";
@@ -204,13 +215,20 @@ public final class CapturePassage {
         new LienVigieChiroDao(source)
                 .upsert(new LienVigieChiro(
                         LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idSquelette), PARTICIPATION_DEMO));
-        rendrePivot(injecteurConnecte(), idSquelette, sortie.resolve("apercu-passage-squelette.png"));
+        // Connecté et lié : « Vérifier le traitement » y est donc ouvert, comme dans le produit (#5862).
+        rendrePivot(
+                injecteurConnecte(),
+                idSquelette,
+                sortie.resolve("apercu-passage-squelette.png"),
+                verificationConnectee(source),
+                passageVm -> {});
         // Modale « Réactiver ce passage » (#1780) : les deux barres de phase en cours (régénération pleine,
         // ancrage à mi-course), montrant que la barre ne reste plus figée pendant l'ancrage réseau.
         rendreModaleReactivation(injecteur, sortie.resolve("apercu-passage-reactivation.png"));
         // Bandeau de retour en erreur (#1917) : ouvrir sur un passage inexistant produit le cas réel sans
         // mock. Aucun aperçu ne montrait de bandeau avant cette passe.
         rendrePivot(injecteur, PASSAGE_INEXISTANT, sortie.resolve("apercu-passage-retour.png"));
+        rendreTraitementVerifie(injecteur, source, idDepose, sortie.resolve("apercu-passage-traitement-verifie.png"));
         rendreRattachementRetour(injecteur, idVerifie, sortie.resolve("apercu-passage-rattachement-retour.png"));
         rendreCompteRenduReactivation(
                 injecteur, sortie.resolve("apercu-passage-reactivation-compte-rendu.png"), rapportComplet());
@@ -275,7 +293,7 @@ public final class CapturePassage {
                                     public HydratationSquelette get() {
                                         return new HydratationSquelette(
                                                 source.get(),
-                                                new ClientVigieChiro("http://localhost:1", Optional::empty),
+                                                new ClientVigieChiro(URL_SANS_PLATEFORME, Optional::empty),
                                                 workspace.get(),
                                                 horloge.get(),
                                                 Optional.empty(),
@@ -286,7 +304,7 @@ public final class CapturePassage {
 
                     private SynchronisationParticipation passerelleDApercu(SourceDeDonnees source) {
                         return new SynchronisationParticipation(
-                                new ClientVigieChiro("http://localhost:1", Optional::empty),
+                                new ClientVigieChiro(URL_SANS_PLATEFORME, Optional::empty),
                                 new LienVigieChiroDao(source),
                                 new PassageDao(source),
                                 new MaterielMicroDao(source),
@@ -307,6 +325,24 @@ public final class CapturePassage {
     /// Charge `Passage.fxml` sur `idPassage` (ViewModel connu + contrats de navigation neutres) et
     /// rend le pivot hors-écran.
     private static void rendrePivot(Injector injecteur, long idPassage, Path fichier) throws IOException {
+        // Hors connexion (#5862) : « Vérifier le traitement » y est grisé, avec sa raison.
+        rendrePivot(
+                injecteur,
+                idPassage,
+                fichier,
+                new VerificationDuTraitement(Optional.empty(), Optional.empty()),
+                passageVm -> {});
+    }
+
+    /// Variante qui reçoit le geste « Vérifier le traitement » et **pilote le ViewModel** une fois l'écran
+    /// ouvert, pour l'aperçu qui montre son résultat (#5862).
+    private static void rendrePivot(
+            Injector injecteur,
+            long idPassage,
+            Path fichier,
+            VerificationDuTraitement verification,
+            Consumer<PassageViewModel> pilote)
+            throws IOException {
         PassageViewModel passageVm = new PassageViewModel(
                 injecteur.getInstance(ServicePassage.class),
                 injecteur.getInstance(ServiceReactivationPassage.class),
@@ -336,18 +372,53 @@ public final class CapturePassage {
                                 url -> {},
                                 // Synthèse absente de l'injecteur de capture : la carte se masque, comme
                                 // elle le ferait la feature coupée. L'aperçu montre l'écran sans elle.
-                                Optional.empty()),
+                                Optional.empty(),
+                                verification),
                         injecteur.getInstance(fr.univ_amu.iut.commun.view.Selecteurs.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         PassageController controleur = loader.getController();
         controleur.ouvrirSur(idPassage, new ContexteSite(NUMERO_CARRE, CODE_POINT, NOM_SITE));
+        pilote.accept(passageVm);
         // 1280 et non 1100 depuis la 5e carte d'actions (« Activité de la nuit », #2352) : à largeur
         // constante, cinq cartes se partagent ce que quatre occupaient, les titres passent à deux lignes et
         // la garde des libellés comprimés refuse l'aperçu. On rend donc la fenêtre de référence d'un cran
         // plus large, ce qui redonne à chaque carte la largeur qu'elle avait à quatre.
         ApercuFx.enregistrerPng(new Scene(vue, 1280, 620), fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
+    }
+
+    /// La fiche d'un passage déposé **après « Vérifier le traitement »** (#5862) : le bouton ouvert, et le
+    /// bandeau qui dit l'analyse terminée et les observations importées.
+    ///
+    /// L'outil n'a pas de plateforme : le relevé et l'issue de l'import sont posés, et c'est le code de
+    /// production qui en fait les phrases, comme pour la carte de l'écran de lot (`CaptureLot`).
+    private static void rendreTraitementVerifie(
+            Injector injecteur, SourceDeDonnees source, long idPassage, Path fichier) throws IOException {
+        new LienVigieChiroDao(source)
+                .upsert(new LienVigieChiro(
+                        LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), PARTICIPATION_DEMO));
+        Traitement terminee =
+                new Traitement(EtatTraitement.FINI, null, null, "2026-09-30T14:52:10.000000+00:00", null, null);
+        ImportApresReleve.Issue importee =
+                new ImportApresReleve.Issue.Fait("Observations importées depuis Vigie-Chiro : 1284 observation(s).");
+        rendrePivot(
+                injecteur,
+                idPassage,
+                fichier,
+                verificationConnectee(source),
+                passageVm -> passageVm.restituer(VerificationDuTraitement.enMots(terminee, importee)));
+    }
+
+    /// Le geste tel qu'une application **connectée** le porte : un suivi réel, jamais interrogé par
+    /// l'outil. Il suffit qu'il existe pour que le bouton s'ouvre sur un passage lié.
+    private static VerificationDuTraitement verificationConnectee(SourceDeDonnees source) {
+        SuiviTraitement suivi = new SuiviTraitement(
+                new TraitementVigieChiro(new ClientVigieChiro(URL_SANS_PLATEFORME, Optional::empty)),
+                new LienVigieChiroDao(source),
+                new ReleveTraitementDao(source),
+                new HorlogeSysteme());
+        return new VerificationDuTraitement(Optional.of(suivi), Optional.empty());
     }
 
     /// Contrat [fr.univ_amu.iut.commun.view.OuvrirSite] neutre (no-op) pour la capture : la navigation
