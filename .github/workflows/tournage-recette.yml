@@ -726,23 +726,78 @@ jobs:
           name: ${{ needs.filmer.outputs.artefact }}
           path: repris
 
+      # La comparaison a besoin de DEUX tournages, et la pré-version n'en garde qu'un : chaque
+      # versement l'écrase (#5854). Le tournage qu'elle porte est donc recopié sous un second nom
+      # AVANT que quoi que ce soit n'y soit écrit. `comparer-tournages.yml` lit ensuite les deux,
+      # de `clips-plateforme-de-test-precedent` à `clips-plateforme-de-test`.
+      #
+      # Une RELANCE de ce job ne recopie rien : la pré-version courante porte déjà la marque de
+      # cette exécution, et la recopier rendrait les deux côtés identiques. La comparaison dirait
+      # alors « rien n'a changé » entre un tournage et lui-même.
+      - name: Garder le tournage précédent, avant de l écraser
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          EXECUTION: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if ! gh release view clips-plateforme-de-test >/dev/null 2>&1; then
+            echo "Aucune pré-version encore : c'est le premier tournage, rien à garder."
+            exit 0
+          fi
+          notes=$(gh release view clips-plateforme-de-test --json body --jq .body)
+          if grep -qF "exécution ${EXECUTION} " <<< "${notes}"; then
+            echo "La pré-version porte déjà cette exécution : c'est une relance, rien à recopier."
+            exit 0
+          fi
+          mkdir -p precedent
+          gh release download clips-plateforme-de-test --dir precedent \
+            --pattern '*.mp4' --pattern 'index.md' --clobber || true
+          gardes=(precedent/*.mp4)
+          [ -e "${gardes[0]}" ] || {
+            echo "La pré-version ne porte aucun clip : rien à garder."
+            exit 0
+          }
+          entete="Le tournage **précédent** de la plateforme de test, gardé pour être comparé au courant (#5854). Ce qui suit est ce que ce tournage disait de lui-même."
+          if gh release view clips-plateforme-de-test-precedent >/dev/null 2>&1; then
+            gh release edit clips-plateforme-de-test-precedent --notes "${entete}"$'\n\n'"${notes}"
+            # Tout ce qu'elle portait s'en va d'abord : un cas disparu entre-temps y resterait, et
+            # la comparaison l'annoncerait présent dans un tournage qui ne l'a jamais filmé.
+            while IFS= read -r nom; do
+              [ -n "${nom}" ] || continue
+              gh release delete-asset clips-plateforme-de-test-precedent "${nom}" --yes
+            done < <(gh release view clips-plateforme-de-test-precedent --json assets --jq '.assets[].name')
+          else
+            gh release create clips-plateforme-de-test-precedent \
+              --prerelease \
+              --title "Clips de la plateforme de test, tournage précédent" \
+              --notes "${entete}"$'\n\n'"${notes}"
+          fi
+          gh release upload clips-plateforme-de-test-precedent precedent/* --clobber
+          echo "${#gardes[@]} clip(s) du tournage précédent gardé(s) sur « clips-plateforme-de-test-precedent »." >> "${GITHUB_STEP_SUMMARY}"
+
       - name: Ouvrir la pré-version, et dire ce qu elle montre
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           VERDICT: ${{ needs.filmer.outputs.verdict }}
+          EXECUTION: ${{ github.run_id }}
+          COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
           corps=$(cat <<'FIN'
           Clips tournés contre la **plateforme de test** (ADR 5641) : l'API Vigie-Chiro épinglée,
           montée par les tests eux-mêmes, sur un état de départ déclaré, sans jeton.
 
-          **Ils se compareront sous condition.** Deux tournages du même commit doivent rester sous le
-          plancher de bruit de l'ADR 4287 ; la mesure est l'objet de #5797. D'ici là, ne pas les
-          comparer.
+          **Ils se comparent.** Deux tournages du même commit restent dans le bruit de leur cas,
+          mesuré en #5797. Le tournage d'avant est gardé sur `clips-plateforme-de-test-precedent` :
+          lancer `comparer-tournages.yml` de l'une à l'autre.
           FIN
           )
-          corps="${corps}"$'\n\n'"Dernier versement le $(date -u +%F) à $(date -u +%H:%M) UTC."$'\n\n'"${VERDICT}"
+          # « exécution N » suivi d'une espace : c'est la marque que le pas précédent cherche pour
+          # reconnaître une relance. La changer ici sans la changer là-bas ferait recopier la
+          # pré-version sur elle-même.
+          corps="${corps}"$'\n\n'"Tourné par l'exécution ${EXECUTION} sur le commit ${COMMIT}."$'\n\n'"Dernier versement le $(date -u +%F) à $(date -u +%H:%M) UTC."$'\n\n'"${VERDICT}"
           if gh release view clips-plateforme-de-test >/dev/null 2>&1; then
             gh release edit clips-plateforme-de-test --notes "${corps}"
           else
