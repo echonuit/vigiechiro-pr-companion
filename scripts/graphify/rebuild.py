@@ -35,6 +35,8 @@ semantiques tombent avec lui, et sur quelles pages.
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import runpy
 import shutil
@@ -57,20 +59,46 @@ def journal(message: str) -> None:
     print(f"[graphify] {message}", flush=True)
 
 
-def extraire_le_code(changes: list[Path]) -> bool:
+def refus_sans_le_moteur() -> int:
+    """0 si cet interprete importe graphify, sinon 2 apres avoir dit le remede (ADR 5407).
+
+    `graphify` est une commande, posee avec son propre interprete : le `python3` du poste peut la
+    trouver sans importer son module. `--mets-a-jour` lancait alors `graphify update .`, qui
+    reecrit le graphe et renomme toutes ses communautes, puis tombait a l'import suivant. Il
+    restait un graphe reecrit, sans ponts ni reconstruction, et les libelles d'avant etaient
+    perdus avec le dossier temporaire qui les gardait. Le refus vient donc AVANT l'outil.
+    """
+    try:
+        import graphify  # noqa: F401
+    except ModuleNotFoundError:
+        journal(
+            "REFUS : graphify n est pas importable par cet interprete. Ce refus parle du poste,"
+            " pas du depot, et rien n a ete touche."
+        )
+        journal(
+            "POUR REPARER : relancer avec l interprete de graphify, que nomme"
+            " graphify-out/.graphify_python."
+        )
+        return 2
+    return 0
+
+
+def extraire_le_code(
+    changes: list[Path], racine: Path = RACINE, graphe: Path = GRAPHE, extrait: Path = EXTRAIT
+) -> bool:
     """Re-extrait les fichiers de code modifies et les fusionne dans graph.json."""
     from graphify.build import build_merge
     from graphify.extract import extract
 
-    fichiers = [p for p in changes if p.suffix in EXT_CODE and (RACINE / p).exists()]
+    fichiers = [p for p in changes if p.suffix in EXT_CODE and (racine / p).exists()]
     if not fichiers:
         return False
     journal(f"{len(fichiers)} fichier(s) de code modifie(s), extraction AST")
     # root= est obligatoire : sans lui, source_file ET les identifiants sont
     # tronques au nom de fichier, ce qui rend les noeuds introuvables par chemin.
-    resultat = extract([RACINE / p for p in fichiers], cache_root=RACINE, root=RACINE)
-    graphe = fusionner_une_extraction(resultat, build_merge)
-    journal(f"fusion : {graphe.number_of_nodes()} noeuds, {graphe.number_of_edges()} aretes")
+    resultat = extract([racine / p for p in fichiers], cache_root=racine, root=racine)
+    fusion = fusionner_une_extraction(resultat, build_merge, graphe, extrait, racine)
+    journal(f"fusion : {fusion.number_of_nodes()} noeuds, {fusion.number_of_edges()} aretes")
     return True
 
 
@@ -201,10 +229,10 @@ def relire_la_structure(
     return True
 
 
-def jouer_les_passes() -> None:
+def jouer_les_passes(dossier: Path | None = None, passes: tuple = PASSES) -> None:
     """Rejoue les quatre passes de pont, qui rescannent le disque et se chainent."""
-    dossier = Path(__file__).resolve().parent
-    for nom in PASSES:
+    dossier = dossier or Path(__file__).resolve().parent
+    for nom in passes:
         chemin = dossier / nom
         if not chemin.exists():
             journal(f"passe absente, ignoree : {nom}")
@@ -502,7 +530,7 @@ def auto_test():
     # ponts (#5877). Le moteur ne relit plus une page qui porte une couche : sans ce geste, ses
     # titres datent du jour ou elle l'a recue. On remplace l'outil et les trois etapes par des
     # temoins, pour lire l'ordre sans graphify ni graphe.
-    def ordre_de_la_mise_a_jour(code_de_l_outil):
+    def ordre_de_la_mise_a_jour(code_de_l_outil, moteur_present=True):
         appels = []
         temoins = {
             "relire_la_structure": lambda: appels.append("structure"),
@@ -511,17 +539,28 @@ def auto_test():
         }
         portee = globals()
         d_avant = {nom: portee.get(nom) for nom in temoins}
+        moteur_d_avant = sys.modules.get("graphify")
         which, run = shutil.which, subprocess.run
         try:
             portee.update(temoins)
+            # `None` dans `sys.modules` fait lever l'import : c'est un poste sans le module.
+            sys.modules["graphify"] = types.ModuleType("graphify") if moteur_present else None
             shutil.which = lambda nom: "/faux/graphify"
             subprocess.run = lambda *a, **k: (
                 appels.append("update"),
                 types.SimpleNamespace(returncode=code_de_l_outil),
             )[1]
-            code = mets_a_jour()
+            # Le journal se tait ici : un refus joue par un cas imprimerait ses marques dans la
+            # sortie d un auto-test qui PASSE, et la porte les citerait comme la cause le jour
+            # ou cet auto-test rougirait pour une autre raison (#5890).
+            with contextlib.redirect_stdout(io.StringIO()):
+                code = mets_a_jour()
         finally:
             shutil.which, subprocess.run = which, run
+            if moteur_d_avant is None:
+                sys.modules.pop("graphify", None)
+            else:
+                sys.modules["graphify"] = moteur_d_avant
             for nom, valeur in d_avant.items():
                 if valeur is None:
                     portee.pop(nom, None)
@@ -539,6 +578,14 @@ def auto_test():
     verifier(
         "si l outil echoue, rien n est relu ni reconstruit, et son code remonte",
         obtenu == (3, ["update"]),
+        f"obtenu : {obtenu}",
+    )
+    # L'ADR 5407 : sans le module, la mise a jour refuse AVANT l'outil. Lance, il reecrirait le
+    # graphe et renommerait ses communautes, et l'import suivant tomberait apres coup.
+    obtenu = ordre_de_la_mise_a_jour(0, moteur_present=False)
+    verifier(
+        "sans le module graphify, la mise a jour refuse en 2 sans avoir lance l outil",
+        obtenu == (2, []),
         f"obtenu : {obtenu}",
     )
 
@@ -619,6 +666,12 @@ def auto_test():
         def edges(self, data=False):
             return [("ecran", "x", {"relation": "contains", "_src": "x", "_tgt": "ecran"})]
 
+        def number_of_nodes(self):
+            return 1
+
+        def number_of_edges(self):
+            return 1
+
     recu = {"extractions": 0}
 
     def faux_extract(chemins, cache_root=None, root=None):
@@ -697,6 +750,125 @@ def auto_test():
         f"obtenu : {(rien, recu['extractions'], jamais_ecrit)}",
     )
 
+    # 10 : le chemin du crochet de commit. Il ne re-extrait que le CODE qui est encore sur le
+    # disque : ni une page, ni un fichier parti. Joue avec le meme faux moteur que le cas 9.
+    def sous_un_faux_moteur(action):
+        d_avant = {n: sys.modules.get(n) for n in noms}
+        try:
+            paquet = types.ModuleType("graphify")
+            paquet.__path__ = []
+            for nom, attribut, faux_objet in (
+                ("graphify.extract", "extract", faux_extract),
+                ("graphify.build", "build_merge", faux_build_merge),
+            ):
+                module = types.ModuleType(nom)
+                setattr(module, attribut, faux_objet)
+                sys.modules[nom] = module
+            sys.modules["graphify"] = paquet
+            return action()
+        finally:
+            for nom, mod in d_avant.items():
+                if mod is None:
+                    sys.modules.pop(nom, None)
+                else:
+                    sys.modules[nom] = mod
+
+    with tempfile.TemporaryDirectory() as temporaire:
+        racine = Path(temporaire)
+        for chemin in ("src/Classe.java", "docs/page.md"):
+            (racine / chemin).parent.mkdir(parents=True, exist_ok=True)
+            (racine / chemin).write_text("x", encoding="utf-8")
+        lu, ecrit = racine / "graph.json", racine / "extrait.json"
+        lu.write_text(json.dumps({"nodes": [], "links": []}), encoding="utf-8")
+        modifies = [Path("src/Classe.java"), Path("docs/page.md"), Path("src/Partie.java")]
+        avant_extraction = recu["extractions"]
+        code_relu = sous_un_faux_moteur(lambda: extraire_le_code(modifies, racine, lu, ecrit))
+        obtenu = (
+            code_relu,
+            recu.get("chemins"),
+            recu.get("root"),
+            recu.get("graphe"),
+            ecrit.exists(),
+        )
+        attendu = (True, [racine / "src/Classe.java"], racine, str(lu), True)
+        rien_a_relire = sous_un_faux_moteur(
+            lambda: extraire_le_code([Path("docs/page.md")], racine, lu, racine / "jamais.json")
+        )
+        extractions = recu["extractions"] - avant_extraction
+    verifier(
+        "le crochet ne re-extrait que le code encore sur le disque, depuis la racine donnee",
+        obtenu == attendu,
+        f"obtenu : {obtenu}",
+    )
+    verifier(
+        "une page seule ne lance aucune extraction de code",
+        (rien_a_relire, extractions) == (False, 1),
+        f"obtenu : {(rien_a_relire, extractions)}",
+    )
+
+    # 11 : les passes se jouent dans l'ordre donne, et une passe absente ne casse pas la chaine.
+    with tempfile.TemporaryDirectory() as temporaire:
+        dossier = Path(temporaire)
+        for nom in ("premiere", "seconde"):
+            (dossier / f"{nom}.py").write_text(
+                "from pathlib import Path\n"
+                "trace = Path(__file__).with_name('trace.txt')\n"
+                f"trace.write_text((trace.read_text() if trace.exists() else '') + '{nom} ')\n",
+                encoding="utf-8",
+            )
+        jouer_les_passes(dossier, ("premiere.py", "absente.py", "seconde.py"))
+        trace = (dossier / "trace.txt").read_text(encoding="utf-8")
+    verifier(
+        "les passes se jouent dans l ordre, et une passe absente ne casse pas la chaine",
+        trace == "premiere seconde ",
+        f"obtenu : {trace!r}",
+    )
+
+    # 12 : le chemin du crochet de commit, `rebuild.py <fichiers>`. Meme refus que la mise a jour
+    # quand le module manque, et le meme ordre sinon : extraction, ponts, reconstruction.
+    def chemin_du_crochet(moteur_present):
+        appels = []
+        with tempfile.TemporaryDirectory() as temporaire:
+            sortie = Path(temporaire)
+            (sortie / "graph.json").write_text("{}", encoding="utf-8")
+            temoins = {
+                "GRAPHE": sortie / "graph.json",
+                "SORTIE": sortie,
+                "EXTRAIT": sortie / "extrait.json",
+                "extraire_le_code": lambda changes: appels.append("extraction"),
+                "jouer_les_passes": lambda: appels.append("ponts"),
+                "reconstruire": lambda reference=None: appels.append("reconstruction"),
+            }
+            portee = globals()
+            d_avant = {nom: portee.get(nom) for nom in temoins}
+            moteur_d_avant = sys.modules.get("graphify")
+            try:
+                portee.update(temoins)
+                sys.modules["graphify"] = types.ModuleType("graphify") if moteur_present else None
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = main(["src/Classe.java", "docs/page.md"])
+            finally:
+                if moteur_d_avant is None:
+                    sys.modules.pop("graphify", None)
+                else:
+                    sys.modules["graphify"] = moteur_d_avant
+                portee.update(d_avant)
+            drapeau = (sortie / ".needs_update").exists()
+        return code, appels, drapeau
+
+    obtenu = chemin_du_crochet(True)
+    verifier(
+        "le crochet extrait le code, rejoue les ponts, reconstruit, et signale la page modifiee",
+        obtenu == (0, ["extraction", "ponts", "reconstruction"], True),
+        f"obtenu : {obtenu}",
+    )
+    obtenu = chemin_du_crochet(False)
+    verifier(
+        "sans le module graphify, le crochet refuse en 2 sans rien extraire ni signaler",
+        obtenu == (2, [], False),
+        f"obtenu : {obtenu}",
+    )
+
     if echecs:
         print(f"\n{len(echecs)} cas en echec : {', '.join(echecs)}")
         return 1
@@ -706,6 +878,8 @@ def auto_test():
 
 def mets_a_jour() -> int:
     """`graphify update .`, puis ponts et reconstruction avec les libelles de l'etat d'avant."""
+    if refus_sans_le_moteur():
+        return 2
     outil = shutil.which("graphify")
     if outil is None:
         journal("REFUS : `graphify` est introuvable. Ce refus parle du poste, pas du depot.")
@@ -741,6 +915,8 @@ def main(argv: list[str]) -> int:
         return 0
     if "--mets-a-jour" in argv:
         return mets_a_jour()
+    if refus_sans_le_moteur():
+        return 2
     changes = [Path(a) for a in argv]
     if any(p.suffix in EXT_DOC for p in changes):
         (SORTIE / ".needs_update").write_text(

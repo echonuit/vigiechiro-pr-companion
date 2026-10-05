@@ -117,7 +117,7 @@ ensemble, mais leurs étapes sont distinctes et ce qui suit les sépare.
 ## Passe 0 : la fonction de garde de la relecture
 
 ```
-0. METTRE A JOUR le graphe du depot : graphify update .
+0. METTRE A JOUR le graphe du depot : scripts/graphify/rebuild.py --mets-a-jour
 1. RELIRE    la PROMESSE de l EPIC, et la confronter a ce qui a atterri.
              Un « non » suspend la cloture : voir plus bas.
 2. LISTER    les ADR apparues PENDANT le chantier, contre origin/main.
@@ -183,11 +183,20 @@ sorti en EPIC #4937, par décision.
 ### Le graphe d'abord, parce que la passe s'en sert
 
 ```bash
-graphify update .
+"$(cat graphify-out/.graphify_python)" scripts/graphify/rebuild.py --mets-a-jour
 ```
 
 La passe 0 cherche ce qui est apparu pendant le chantier. Un graphe périmé oriente cette recherche à
 côté, et il vieillit sans le dire.
+
+**Ce n'est plus `graphify update .` seul.** Depuis que le graphe porte une couche sémantique, cet
+outil ne relit plus la structure d'une page qui en porte une : le titre périmé de la mesure
+ci-dessous y resterait. La commande du dépôt le lance, relit ensuite les titres de toutes les pages,
+rejoue les ponts et reporte les libellés des communautés qu'elle retrouve
+([ADR 5877](../../../dev-docs/decisions/5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages.md)).
+
+Elle se lance depuis la copie principale, où vit le graphe, et avec l'interprète de graphify : avec
+un autre, elle refuse en le disant, avant d'avoir rien touché.
 
 Mesuré le 30 août 2026 : le graphe datait de vingt heures et rendait « Passe 9 · identification des
 nouveaux chantiers » à la ligne 843, un titre et un emplacement que la passe 9 n'avait plus depuis le
