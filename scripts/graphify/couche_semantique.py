@@ -27,14 +27,35 @@ tous des titres repetes du journal des versions. Le premier garde en comptait 61
 tort : seul l ecart est imputable au lot.
 
 Usage :
-    couche_semantique.py decoupe  --dossier DIR [--graphe G] PAGE [PAGE ...]
+    couche_semantique.py a-reextraire [--graphe G]
+    couche_semantique.py decoupe  --dossier DIR [--graphe G] (--a-reextraire | PAGE [PAGE ...])
     couche_semantique.py audite   --dossier DIR
     couche_semantique.py fusionne --dossier DIR [--graphe G]
+    couche_semantique.py note     [--graphe G] [--commit C] (--perimetre | PAGE [PAGE ...])
     couche_semantique.py --auto-test
 
 `decoupe` ecrit dans DIR un `lot_NN.json` par lot, plus les index du code et des pages. Chaque agent
 lit `consigne-des-agents.md` et rend `rendu_NN.json` dans le meme dossier. `fusionne` refuse si
 l audit refuse, et abandonne sans toucher au graphe si un identifiant de structure manque.
+
+## Quelles pages reextraire
+
+Une page modifiee apres son extraction garde ses noeuds semantiques d avant, et rien ne le signale
+a qui interroge le graphe. `a-reextraire` rend ces pages. Il compare l EMPREINTE git de chaque page
+du perimetre a celle que la fusion a notee dans `couche-semantique.json`, a cote du graphe.
+
+Une empreinte PAR PAGE et non un commit pour toute la couche : le 4 octobre 2026 elle a ete faite
+en deux passes, et six pages ont ete ecartees de la seconde expres. Un seul commit ne decrit pas
+cela. `decoupe` releve l empreinte au moment ou les agents commencent a lire, et `fusionne` la
+note : une page modifiee PENDANT l extraction ressort donc comme modifiee, au lieu d etre crue lue.
+
+`note` sert a amorcer le registre, ou a attester qu une page a ete relue et que son changement ne
+touche pas sa couche, un chiffre regenere par exemple. Avec `--commit`, il note l etat de ce commit.
+
+Le graphe et son registre sont ignores par git et ne vivent que dans la copie principale. Depuis
+un worktree, `--graphe` les designe, et la liste porte l arbre qu elle a compare. Sans graphe ou
+sans registre l outil REFUSE : une liste vide y serait le resultat le plus facile a obtenir, et
+celui qui ne prouve rien.
 
 Cet outil ne juge aucune demande et ne declare pas de CONTRAT : il repond a qui refait la couche.
 Seul `fusionne` a besoin de graphify, et il sort en 2 quand il manque.
@@ -42,20 +63,22 @@ Seul `fusionne` a besoin de graphify, et il sort en 2 quand il manque.
 
 from __future__ import annotations
 
+import contextlib
 import difflib
 import hashlib
+import io
 import json
 import re
+import subprocess
 import sys
 import tempfile
 import unicodedata
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 RACINE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RACINE / "scripts"))
 from _commun import cas_d_auto_test
 
-GRAPHE = RACINE / "graphify-out" / "graph.json"
 IDENTIFIANT = re.compile(r"^[a-z0-9_]+$")
 # Les quatre noms que les agents ont donnes au champ des membres, le 4 octobre 2026. Le moteur ne
 # lit que le premier et normalise le deuxieme ; les deux autres faisaient tomber l hyperarete.
@@ -64,6 +87,42 @@ CHAMPS_DES_MEMBRES = ("nodes", "members", "member_ids", "node_ids")
 SEUIL_DE_RESSEMBLANCE = 0.85
 PLAFOND_DE_MOTS = 22_000
 PLAFOND_DE_PAGES = 40
+# Le perimetre de l ADR 5790. Rejoue sur le commit de la premiere extraction, cette regle rend ses
+# 577 pages, sans une de plus ni de moins : c est le compte connu d avance qui la tient.
+RACINES_DE_PROSE = ("brief", "dev-docs", "docs")
+RACINES_DE_CODE = ("scripts", "src")
+EXTENSIONS_DE_PAGE = (".md", ".txt")
+REGISTRE = "couche-semantique.json"
+
+
+class Refus(Exception):
+    """Ce que l outil ne peut pas faire, dit a qui l appelle au lieu d une liste vide."""
+
+
+def du_perimetre(chemin: str) -> bool:
+    """Cette page entre-t-elle dans la couche semantique, d apres l ADR 5790 ?"""
+    page = PurePosixPath(chemin)
+    if page.suffix not in EXTENSIONS_DE_PAGE:
+        return False
+    if len(page.parts) == 1:
+        return page.suffix == ".md" and chemin != "CHANGELOG.md"
+    if page.parts[0] in RACINES_DE_PROSE:
+        return True
+    return page.parts[0] in RACINES_DE_CODE and not chemin.endswith(".approved.txt")
+
+
+def a_reextraire(
+    courantes: dict[str, str], notees: dict[str, str]
+) -> tuple[list[str], list[str], list[str]]:
+    """Les pages modifiees, neuves et disparues, de l etat courant contre l etat note.
+
+    Une page NEUVE n a jamais ete extraite ; une page DISPARUE laisse des noeuds que rien ne
+    viendra remplacer. Les trois listes sont separees parce qu elles n appellent pas le meme geste.
+    """
+    modifiees = sorted(p for p in courantes if p in notees and courantes[p] != notees[p])
+    neuves = sorted(p for p in courantes if p not in notees)
+    disparues = sorted(p for p in notees if p not in courantes)
+    return modifiees, neuves, disparues
 
 
 def cle_de_libelle(libelle: object) -> str:
@@ -242,12 +301,117 @@ def _noeuds_du_graphe(graphe: Path) -> list[dict]:
     return _lis(graphe)["nodes"]
 
 
-def commande_decoupe(dossier: Path, graphe: Path, pages: list[str]) -> int:
+def _git(racine: Path, *arguments: str, entree: str | None = None) -> str:
+    """La sortie d une commande git jouee dans `racine`, ou un Refus qui nomme la commande."""
+    commande = ["git", "-C", str(racine), "-c", "core.quotePath=false", *arguments]
+    try:
+        rendu = subprocess.run(commande, input=entree, capture_output=True, text=True, check=False)
+    except FileNotFoundError as absent:
+        raise Refus("git est introuvable sur ce poste") from absent
+    if rendu.returncode:
+        raise Refus(f"`git {' '.join(arguments[:2])}` a echoue : {rendu.stderr.strip()[:200]}")
+    return rendu.stdout
+
+
+def pages_du_perimetre(racine: Path) -> list[str]:
+    """Les pages SUIVIES du perimetre.
+
+    Par `git ls-files` et non par un glob : un glob compte `node_modules`, que le crochet pose par
+    worktree, et rend 94 pages sous `.github/` la ou le depot en suit 5. Et sans motif de chemin :
+    le `**` d un pathspec git ne couvre pas le niveau zero, et rend 3 de ces 5 pages.
+    """
+    suivies = _git(racine, "ls-files", "-z").split("\0")
+    return sorted(page for page in suivies if page and du_perimetre(page))
+
+
+def empreintes(racine: Path, pages: list[str], commit: str | None = None) -> dict[str, str]:
+    """L empreinte git de chaque page, dans l arbre de travail ou a un commit donne."""
+    if commit is None:
+        sorties = _git(racine, "hash-object", "--stdin-paths", entree="\n".join(pages) + "\n")
+        return dict(zip(pages, sorties.split(), strict=True))
+    rendues = {}
+    for ligne in _git(racine, "ls-tree", "-r", "-z", commit).split("\0"):
+        if ligne:
+            meta, page = ligne.split("\t", 1)
+            rendues[page] = meta.split()[2]
+    absentes = [page for page in pages if page not in rendues]
+    if absentes:
+        raise Refus(f"{len(absentes)} page(s) absente(s) du commit {commit} : {absentes[:3]}")
+    return {page: rendues[page] for page in pages}
+
+
+def arbre_compare(racine: Path) -> str:
+    """Le commit de l arbre lu, marque quand des pages suivies y sont modifiees sans etre commises."""
+    court = _git(racine, "rev-parse", "--short", "HEAD").strip()
+    return court + ("+modifs" if _git(racine, "status", "--porcelain", "-uno").strip() else "")
+
+
+def registre_de(graphe: Path) -> Path:
+    return graphe.parent / REGISTRE
+
+
+def notees_de(graphe: Path) -> dict[str, str]:
+    """Les empreintes notees, ou un Refus : sans elles aucune comparaison n a de sens."""
+    if not graphe.is_file():
+        raise Refus(
+            f"aucun graphe a {graphe}. Il est ignore par git et ne vit que dans la copie"
+            " principale : depuis un worktree, le designer par --graphe."
+        )
+    registre = registre_de(graphe)
+    if not registre.is_file():
+        raise Refus(
+            f"aucune empreinte notee a {registre}. Une liste vide ne dirait pas « rien n a"
+            " change » mais « rien n a ete compare » : amorcer par `note`."
+        )
+    return _lis(registre)["pages"]
+
+
+def note(graphe: Path, neuves: dict[str, str]) -> int:
+    """Ajoute ces empreintes au registre, sans toucher celles des autres pages."""
+    registre = registre_de(graphe)
+    pages = _lis(registre)["pages"] if registre.is_file() else {}
+    pages.update(neuves)
+    _ecris(registre, {"pages": dict(sorted(pages.items()))})
+    return len(pages)
+
+
+def commande_a_reextraire(graphe: Path, racine: Path) -> int:
+    """Imprime les pages a reextraire, une par ligne avec sa raison, puis la ligne de compte."""
+    notees = notees_de(graphe)
+    courantes = empreintes(racine, pages_du_perimetre(racine))
+    modifiees, neuves, disparues = a_reextraire(courantes, notees)
+    for raison, pages in (("modifiee", modifiees), ("neuve", neuves), ("disparue", disparues)):
+        for page in pages:
+            print(f"{raison}\t{page}")
+    print(
+        f"A REEXTRAIRE | perimetre={len(courantes)} | notees={len(notees)}"
+        f" | modifiees={len(modifiees)} | neuves={len(neuves)} | disparues={len(disparues)}"
+        f" | arbre={arbre_compare(racine)}"
+    )
+    return 0
+
+
+def commande_note(graphe: Path, racine: Path, pages: list[str], commit: str | None) -> int:
+    """Note l empreinte de ces pages : leur couche reflete leur contenu a cet instant."""
+    if not graphe.is_file():
+        raise Refus(f"aucun graphe a {graphe} : le registre se pose a cote de lui.")
+    hors = [page for page in pages if not du_perimetre(page)]
+    if hors:
+        raise Refus(f"{len(hors)} page(s) hors du perimetre de l ADR 5790 : {hors[:3]}")
+    total = note(graphe, empreintes(racine, pages, commit))
+    print(f"NOTE | pages={len(pages)} | registre={total} | etat={commit or arbre_compare(racine)}")
+    return 0
+
+
+def commande_decoupe(dossier: Path, graphe: Path, pages: list[str], racine: Path = RACINE) -> int:
     """Ecrit les fiches de lot et les deux index dont les agents ont besoin."""
-    absentes = [p for p in pages if not (RACINE / p).is_file()]
+    absentes = [p for p in pages if not (racine / p).is_file()]
     if absentes:
         print(f"REFUS : {len(absentes)} page(s) introuvable(s) : {absentes[:5]}", file=sys.stderr)
         return 2
+    if not pages:
+        print("DECOUPE | pages=0 | lots=0 : rien a reextraire, aucun dossier ecrit.")
+        return 0
     noeuds = _noeuds_du_graphe(graphe)
     par_page: dict[str, dict[str, list[dict]]] = {}
     for noeud in noeuds:
@@ -260,7 +424,7 @@ def commande_decoupe(dossier: Path, graphe: Path, pages: list[str]) -> int:
             fiche["structure"].append({**court, "node_kind": noeud.get("node_kind")})
         else:
             fiche["semantique"].append(court)
-    textes = {p: (RACINE / p).read_text(encoding="utf-8", errors="ignore") for p in pages}
+    textes = {p: (racine / p).read_text(encoding="utf-8", errors="ignore") for p in pages}
     lots = decoupe({p: len(t.split()) for p, t in textes.items()})
     dossier.mkdir(parents=True, exist_ok=True)
     for numero, lot in enumerate(lots, 1):
@@ -284,7 +448,9 @@ def commande_decoupe(dossier: Path, graphe: Path, pages: list[str]) -> int:
     ]
     _ecris(dossier / "index-du-code.json", classes)
     _ecris(dossier / "index-des-pages.json", feuilles)
-    _ecris(dossier / "plan.json", {"lots": lots})
+    # L empreinte se releve ICI, quand les agents commencent a lire, et non a la fusion : une page
+    # modifiee entre les deux doit ressortir comme modifiee.
+    _ecris(dossier / "plan.json", {"lots": lots, "empreintes": empreintes(racine, sorted(textes))})
     print(f"DECOUPE | pages={len(pages)} | lots={len(lots)} | dossier={dossier}")
     return 0
 
@@ -399,6 +565,8 @@ def commande_fusionne(dossier: Path, graphe: Path) -> int:
         rebuild.reconstruire()
     finally:
         rebuild.EXTRAIT.unlink(missing_ok=True)
+    releve = _lis(dossier / "plan.json").get("empreintes", {})
+    print(f"NOTE | pages={len(releve)} | registre={note(graphe, releve)}")
     return 0
 
 
@@ -678,34 +846,241 @@ def auto_test() -> int:
     verifie("`audite` sort en 1 sur un lot en defaut", lambda: par_main(lache), 1)
     verifie("`audite` sort en 1 quand un lot attendu est ABSENT", lambda: par_main(None), 1)
 
+    # ⟨le perimetre de l ADR 5790⟩ ecrit ici chemin par chemin, pour que la regle ne se juge pas
+    # elle-meme. Les deux pieges d enumeration y sont : la page a la racine d un dossier, que le
+    # `**` d un pathspec git rate, et celles de `.github/`, hors couche.
+    for chemin, attendu in (
+        ("README.md", True),
+        ("CHANGELOG.md", False),
+        ("pom.xml", False),
+        ("dev-docs/a-la-racine.md", True),
+        ("dev-docs/sous/profonde.md", True),
+        ("brief/docs/Une page avec des espaces.md", True),
+        ("docs/ecrans/capture.png", False),
+        (".github/copilot-instructions.md", False),
+        ("openspec/specs/une-spec.md", False),
+        ("scripts/adr/critere-de-fin.motif.md", True),
+        ("src/main/resources/fonts/LICENCE.txt", True),
+        ("src/test/java/Golden.sortie.approved.txt", False),
+    ):
+        verifie(
+            f"perimetre : `{chemin}` {'entre' if attendu else 'reste dehors'}",
+            lambda chemin=chemin: du_perimetre(chemin),
+            attendu,
+        )
+
+    # ⟨la comparaison, sans git⟩ trois listes, parce que trois gestes.
+    etat_note = {"a.md": "1", "b.md": "2", "partie.md": "3"}
+    etat_courant = {"a.md": "1", "b.md": "9", "neuve.md": "4"}
+    verifie(
+        "une empreinte qui a change rend la page modifiee, une page inconnue neuve, une absente"
+        " disparue",
+        lambda: a_reextraire(etat_courant, etat_note),
+        (["b.md"], ["neuve.md"], ["partie.md"]),
+    )
+    verifie(
+        "deux etats egaux ne rendent rien",
+        lambda: a_reextraire(etat_note, etat_note),
+        ([], [], []),
+    )
+
+    # ⟨le critere de fin de #5814⟩ sur un depot temoin, par le point d entree entier.
+    with tempfile.TemporaryDirectory() as temporaire:
+        depot = Path(temporaire) / "depot"
+        racine_de_dossier = "dev-docs/a-la-racine.md"
+        profonde = "dev-docs/sous/profonde.md"
+        hors_perimetre = ".github/hors-couche.md"
+        suivies = (racine_de_dossier, profonde, hors_perimetre, "README.md", "CHANGELOG.md")
+
+        def ecris_la_page(chemin: str, texte: str) -> None:
+            fichier = depot / chemin
+            fichier.parent.mkdir(parents=True, exist_ok=True)
+            fichier.write_text(texte, encoding="utf-8")
+
+        def commets() -> None:
+            _git(depot, "add", "-A")
+            identite = ("-c", "user.name=temoin", "-c", "user.email=temoin@exemple.invalid")
+            _git(depot, *identite, "-c", "commit.gpgsign=false", "commit", "-q", "-m", "temoin")
+
+        def joue(*arguments: str) -> tuple[int, list[str]]:
+            """Le code de sortie, et les pages rendues : une ligne `raison<TAB>chemin` chacune."""
+            sortie = io.StringIO()
+            with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(io.StringIO()):
+                code = main(["couche_semantique.py", *arguments, "--racine", str(depot)])
+            return code, [ligne for ligne in sortie.getvalue().splitlines() if "\t" in ligne]
+
+        def dit(*arguments: str) -> str:
+            """Ce que l outil ecrit hors de la liste : sa ligne de compte, ou son refus."""
+            sortie, erreur = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(erreur):
+                main(["couche_semantique.py", *arguments, "--racine", str(depot)])
+            lignes = [ligne for ligne in sortie.getvalue().splitlines() if "\t" not in ligne]
+            return " ".join(lignes + erreur.getvalue().splitlines())
+
+        for chemin in suivies:
+            ecris_la_page(chemin, "avant\n")
+        _git(depot, "init", "-q")
+        commets()
+        # Non suivie, comme le `node_modules` que le crochet pose par worktree : un glob la
+        # compterait, et elle sortirait « neuve » a chaque passe.
+        ecris_la_page("docs/node_modules/paquet/LISEZMOI.md", "un paquet tiers\n")
+
+        verifie(
+            "sans graphe, `a-reextraire` refuse en 2 au lieu de rendre une liste vide",
+            lambda: joue("a-reextraire"),
+            (2, []),
+        )
+        verifie(
+            "et ce refus nomme le graphe qui manque, pas le registre",
+            lambda: "aucun graphe" in dit("a-reextraire"),
+            True,
+        )
+        (depot / "graphify-out").mkdir()
+        _ecris(depot / "graphify-out" / "graph.json", {"nodes": []})
+        verifie(
+            "sans empreinte notee, il refuse en 2 lui aussi",
+            lambda: joue("a-reextraire"),
+            (2, []),
+        )
+        verifie(
+            "`note` refuse une page hors du perimetre",
+            lambda: joue("note", hors_perimetre),
+            (2, []),
+        )
+        verifie(
+            "`note --perimetre` amorce le registre", lambda: joue("note", "--perimetre"), (0, [])
+        )
+        verifie(
+            "le registre ne porte que les pages SUIVIES du perimetre",
+            lambda: sorted(_lis(depot / "graphify-out" / REGISTRE)["pages"]),
+            ["README.md", racine_de_dossier, profonde],
+        )
+        verifie(
+            "rien n a change : la liste est vide, et cette fois elle le prouve",
+            lambda: joue("a-reextraire"),
+            (0, []),
+        )
+        verifie(
+            "la ligne de compte porte l arbre compare, sans marque quand il est propre",
+            lambda: (
+                dit("a-reextraire").endswith("arbre=" + arbre_compare(depot))
+                and "+modifs" not in dit("a-reextraire")
+            ),
+            True,
+        )
+        for chemin in (racine_de_dossier, profonde, hors_perimetre):
+            ecris_la_page(chemin, "apres\n")
+        verifie(
+            "et elle marque l arbre quand des pages suivies y sont modifiees sans etre commises",
+            lambda: dit("a-reextraire").endswith("+modifs"),
+            True,
+        )
+        verifie(
+            "elle compte ce qu elle rend",
+            lambda: (
+                "perimetre=3 | notees=3 | modifiees=2 | neuves=0 | disparues=0"
+                in dit("a-reextraire")
+            ),
+            True,
+        )
+        verifie(
+            "les deux pages du perimetre modifiees sont rendues, celle hors perimetre ne l est pas",
+            lambda: joue("a-reextraire"),
+            (0, [f"modifiee\t{racine_de_dossier}", f"modifiee\t{profonde}"]),
+        )
+        verifie(
+            "`note --commit` note l etat COMMIS : la page modifiee depuis reste a reextraire",
+            lambda: (joue("note", "--commit", "HEAD", profonde)[0], joue("a-reextraire")[1]),
+            (0, [f"modifiee\t{racine_de_dossier}", f"modifiee\t{profonde}"]),
+        )
+        verifie(
+            "`note` sans commit note l arbre de travail : la page sort de la liste",
+            lambda: (joue("note", profonde)[0], joue("a-reextraire")[1]),
+            (0, [f"modifiee\t{racine_de_dossier}"]),
+        )
+        ecris_la_page("docs/neuve.md", "une page neuve\n")
+        _git(depot, "add", "docs/neuve.md")
+        _git(depot, "rm", "-q", "-f", "README.md")
+        verifie(
+            "une page neuve du perimetre et une page disparue sont rendues, chacune a son nom",
+            lambda: joue("a-reextraire")[1],
+            [f"modifiee\t{racine_de_dossier}", "neuve\tdocs/neuve.md", "disparue\tREADME.md"],
+        )
+
+        # `decoupe --a-reextraire` prend ces pages sans passer par le shell, qui couperait un
+        # chemin a ses espaces. Et il releve l empreinte au moment ou la lecture commence.
+        lots = Path(temporaire) / "lots"
+        verifie(
+            "`decoupe --a-reextraire` decoupe les pages modifiees et neuves, pas les disparues",
+            lambda: (
+                joue("decoupe", "--a-reextraire", "--dossier", str(lots))[0],
+                _lis(lots / "plan.json")["lots"],
+            ),
+            (0, [[racine_de_dossier, "docs/neuve.md"]]),
+        )
+        ecris_la_page(racine_de_dossier, "modifiee pendant que les agents lisaient\n")
+        verifie(
+            "une page modifiee PENDANT l extraction reste a reextraire apres la note de fusion",
+            lambda: (
+                note(depot / "graphify-out" / "graph.json", _lis(lots / "plan.json")["empreintes"]),
+                joue("a-reextraire")[1],
+            ),
+            (4, [f"modifiee\t{racine_de_dossier}", "disparue\tREADME.md"]),
+        )
+
     return echecs()
 
 
 USAGE = __doc__.split("Usage :")[1].split("\n\n")[0]
+COMMANDES = ("a-reextraire", "decoupe", "audite", "fusionne", "note")
 
 
 def main(argv: list[str]) -> int:
     arguments = argv[1:]
     if "--auto-test" in arguments:
         return auto_test()
-    if not arguments or arguments[0] not in ("decoupe", "audite", "fusionne"):
+    if not arguments or arguments[0] not in COMMANDES:
         print("Usage :" + USAGE, file=sys.stderr)
         return 2
-    commande, reste = arguments[0], arguments[1:]
-    dossier = graphe = None
-    pages = []
+    try:
+        return _joue(arguments[0], arguments[1:])
+    except Refus as refus:
+        print(f"REFUS : {refus}", file=sys.stderr)
+        return 2
+
+
+def _joue(commande: str, reste: list[str]) -> int:
+    dossier = graphe = commit = None
+    racine = RACINE
+    pages: list[str] = []
+    drapeaux: set[str] = set()
     while reste:
         mot = reste.pop(0)
         if mot == "--dossier" and reste:
             dossier = Path(reste.pop(0))
         elif mot == "--graphe" and reste:
             graphe = Path(reste.pop(0))
+        elif mot == "--commit" and reste:
+            commit = reste.pop(0)
+        elif mot == "--racine" and reste:
+            # Pour les cas de l auto-test, qui jouent l outil sur un depot temoin.
+            racine = Path(reste.pop(0))
+        elif mot in ("--a-reextraire", "--perimetre"):
+            drapeaux.add(mot)
         else:
             pages.append(mot)
+    graphe = graphe or racine / "graphify-out" / "graph.json"
+    if commande == "a-reextraire":
+        return commande_a_reextraire(graphe, racine)
+    if commande == "note":
+        if "--perimetre" in drapeaux:
+            pages = pages_du_perimetre(racine)
+        if not pages:
+            raise Refus("`note` attend des pages, ou --perimetre pour toutes celles du perimetre.")
+        return commande_note(graphe, racine, pages, commit)
     if dossier is None:
         print("REFUS : --dossier est obligatoire.\nUsage :" + USAGE, file=sys.stderr)
         return 2
-    graphe = graphe or GRAPHE
     if commande != "decoupe" and not (dossier / "plan.json").is_file():
         # Un dossier que `decoupe` n a pas prepare n est pas un audit vide : c est une erreur
         # d appel, et elle se dit au lieu de se lire dans une trace de pile.
@@ -720,7 +1095,12 @@ def main(argv: list[str]) -> int:
         print(f"REFUS : aucun graphe a {graphe}.", file=sys.stderr)
         return 2
     if commande == "decoupe":
-        return commande_decoupe(dossier, graphe, pages)
+        if "--a-reextraire" in drapeaux:
+            modifiees, neuves, _ = a_reextraire(
+                empreintes(racine, pages_du_perimetre(racine)), notees_de(graphe)
+            )
+            pages = modifiees + neuves
+        return commande_decoupe(dossier, graphe, pages, racine)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     return commande_fusionne(dossier, graphe)
 

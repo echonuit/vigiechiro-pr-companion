@@ -8,20 +8,32 @@ Enchaine, sans aucun appel LLM :
 
 L'extraction semantique de la documentation, elle, demande un LLM : quand un `.md`
 change, on se contente de poser le drapeau `graphify-out/.needs_update`, que l'on
-resorbe en session avec `/graphify . --update`.
+resorbe en session. `scripts/graphify/couche_semantique.py a-reextraire` dit quelles
+pages, puis `decoupe`, les agents et `fusionne` font le reste. Ce n'est PAS
+`/graphify . --update` : son detecteur signale le corpus entier, et il fusionne sans
+les parades de l'ADR 5790.
 
 Usage :
     python3 scripts/graphify/rebuild.py [fichier ...]
+    python3 scripts/graphify/rebuild.py --mets-a-jour
 
 Sans argument, reconstruit a partir du graphe existant sans rien re-extraire.
 Les chemins passes en argument sont relatifs a la racine du depot.
+
+`--mets-a-jour` lance `graphify update .`, qui reextrait toute la structure, puis
+rejoue les ponts et la reconstruction en reportant les libelles de communautes de
+l'etat d'AVANT. `graphify update .` seul les renomme toutes d'apres leur noeud le plus
+connecte : 1 074 communautes le 4 octobre 2026 (#5814).
 """
 
 from __future__ import annotations
 
 import json
 import runpy
+import shutil
+import subprocess
 import sys
+import tempfile
 from collections import Counter
 from pathlib import Path
 
@@ -97,15 +109,46 @@ def jouer_les_passes() -> None:
         runpy.run_path(str(chemin), run_name="__main__")
 
 
-def libeller(communautes: dict, noeuds: dict) -> dict:
+RECOUVREMENT_MINIMAL = 0.3
+
+
+def reporte(libelles_avant: dict, membres_avant: dict, communautes: dict) -> dict:
+    """Les libelles d'avant, portes sur les communautes d'apres par recouvrement de membres.
+
+    Un libelle va a la communaute qui recouvre le mieux l'ancienne, au sens de Jaccard, si ce
+    recouvrement atteint le seuil. Il ne se donne qu'une fois : deux anciennes communautes qui
+    ont fusionne ne nomment pas deux fois la meme.
+    """
+    repris: dict[int, str] = {}
+    for cid_avant, libelle in libelles_avant.items():
+        ref = membres_avant.get(int(cid_avant))
+        if not ref:
+            continue
+        meilleur, score = None, 0.0
+        for cid, membres in communautes.items():
+            m = set(membres)
+            j = len(ref & m) / len(ref | m)
+            if j > score:
+                meilleur, score = int(cid), j
+        if meilleur is not None and score >= RECOUVREMENT_MINIMAL and meilleur not in repris:
+            repris[meilleur] = libelle
+    return repris
+
+
+def libeller(communautes: dict, noeuds: dict, reference: Path | None = None) -> dict:
     """Nomme les communautes, en reprenant les libelles de la passe precedente.
 
     Les identifiants de communaute changent a chaque clustering : le report se fait
     par recouvrement de membres, jamais par identifiant. Reprendre les anciens
     libelles evite qu'un nommage manuel ne s'erode a chaque reconstruction.
+
+    `reference` designe le dossier ou lire l'etat d'avant. Par defaut c'est la sortie
+    elle-meme ; `--mets-a-jour` y passe une copie prise AVANT `graphify update .`, qui
+    reecrit le graphe et ses libelles sur place.
     """
-    precedents = SORTIE / ".graphify_labels.json"
-    ancien_graphe = GRAPHE
+    reference = reference or SORTIE
+    precedents = reference / ".graphify_labels.json"
+    ancien_graphe = reference / "graph.json"
     repris = {}
     if precedents.exists() and ancien_graphe.exists():
         libelles_avant = json.loads(precedents.read_text(encoding="utf-8"))
@@ -113,18 +156,7 @@ def libeller(communautes: dict, noeuds: dict) -> dict:
         for n in json.loads(ancien_graphe.read_text(encoding="utf-8"))["nodes"]:
             if n.get("community") is not None:
                 membres_avant.setdefault(int(n["community"]), set()).add(n["id"])
-        for cid_avant, libelle in libelles_avant.items():
-            ref = membres_avant.get(int(cid_avant))
-            if not ref:
-                continue
-            meilleur, score = None, 0.0
-            for cid, membres in communautes.items():
-                m = set(membres)
-                j = len(ref & m) / len(ref | m)
-                if j > score:
-                    meilleur, score = int(cid), j
-            if meilleur is not None and score >= 0.3 and meilleur not in repris:
-                repris[meilleur] = libelle
+        repris = reporte(libelles_avant, membres_avant, communautes)
 
     def paquet(n):
         sf = n.get("source_file") or ""
@@ -149,7 +181,7 @@ def libeller(communautes: dict, noeuds: dict) -> dict:
     return libelles
 
 
-def reconstruire() -> None:
+def reconstruire(reference: Path | None = None) -> None:
     from graphify.analyze import god_nodes, suggest_questions, surprising_connections
     from graphify.build import build_from_json
     from graphify.cluster import cluster, score_all
@@ -169,7 +201,7 @@ def reconstruire() -> None:
         raise SystemExit(1)
     communautes = cluster(graphe)
     noeuds = {n["id"]: n for n in extraction["nodes"]}
-    libelles = libeller(communautes, noeuds)
+    libelles = libeller(communautes, noeuds, reference)
     cohesion = score_all(graphe, communautes)
     dieux = god_nodes(graphe)
     surprises = surprising_connections(graphe, communautes)
@@ -308,10 +340,88 @@ def auto_test():
         f"obtenu : {sans_argument.get('total_files')}",
     )
 
+    # 4 : le report des libelles, sur des communautes fabriquees (#5814). Les identifiants
+    # changent expres entre l'avant et l'apres : c'est le recouvrement qui porte le libelle.
+    avant = {"0": "Le depot", "1": "La synchro", "2": "Le lot"}
+    membres = {0: {"a", "b", "c", "d"}, 1: {"e", "f", "g", "h"}, 2: {"x", "y"}}
+    apres = {7: ["a", "b", "c", "z"], 8: ["e", "p", "q", "r", "s"], 9: ["x", "y"]}
+    repris = reporte(avant, membres, apres)
+    verifier(
+        "un libelle suit sa communaute quand elle change d identifiant",
+        repris.get(7) == "Le depot" and repris.get(9) == "Le lot",
+        f"obtenu : {repris}",
+    )
+    verifier(
+        "sous le seuil de recouvrement, le libelle n est pas reporte",
+        8 not in repris,
+        f"obtenu : {repris}",
+    )
+    fusionnees = reporte(
+        {"0": "Premier", "1": "Second"}, {0: {"a", "b"}, 1: {"c", "d"}}, {5: ["a", "b", "c", "d"]}
+    )
+    verifier(
+        "deux anciennes communautes fusionnees ne nomment pas deux fois la meme",
+        fusionnees == {5: "Premier"},
+        f"obtenu : {fusionnees}",
+    )
+
+    # 5 : `libeller` lit l'etat d'avant dans la REFERENCE qu'on lui passe, et non dans la
+    # sortie, que `graphify update .` vient de reecrire. Sans reference, sur un depot qui n'a
+    # pas de graphe, il nomme par le paquet dominant.
+    with tempfile.TemporaryDirectory() as temporaire:
+        dossier = Path(temporaire)
+        (dossier / ".graphify_labels.json").write_text(json.dumps(avant), encoding="utf-8")
+        (dossier / "graph.json").write_text(
+            json.dumps(
+                {"nodes": [{"id": i, "community": c} for c, ids in membres.items() for i in ids]}
+            ),
+            encoding="utf-8",
+        )
+        noeuds = {
+            i: {"id": i, "source_file": "docs/page.md"} for ids in apres.values() for i in ids
+        }
+        avec_reference = libeller(apres, noeuds, dossier)
+        vide = Path(temporaire) / "vide"
+        vide.mkdir()
+        sans_reference = libeller(apres, noeuds, vide)
+    verifier(
+        "avec une reference, les libelles d avant sont reportes",
+        avec_reference.get(7) == "Le depot" and avec_reference.get(9) == "Le lot",
+        f"obtenu : {avec_reference}",
+    )
+    verifier(
+        "sans etat d avant, chaque communaute recoit un libelle calcule",
+        sans_reference == {7: "docs - page", 8: "docs - page", 9: "docs - page"},
+        f"obtenu : {sans_reference}",
+    )
+
     if echecs:
         print(f"\n{len(echecs)} cas en echec : {', '.join(echecs)}")
         return 1
     print("\nauto-test : tous les cas passent")
+    return 0
+
+
+def mets_a_jour() -> int:
+    """`graphify update .`, puis ponts et reconstruction avec les libelles de l'etat d'avant."""
+    outil = shutil.which("graphify")
+    if outil is None:
+        journal("REFUS : `graphify` est introuvable. Ce refus parle du poste, pas du depot.")
+        return 2
+    with tempfile.TemporaryDirectory() as temporaire:
+        reference = Path(temporaire)
+        for nom in ("graph.json", ".graphify_labels.json"):
+            if (SORTIE / nom).exists():
+                shutil.copy(SORTIE / nom, reference / nom)
+        rendu = subprocess.run([outil, "update", "."], cwd=RACINE, check=False)
+        if rendu.returncode:
+            journal(f"`graphify update .` est sorti en {rendu.returncode}, rien n est reconstruit")
+            return rendu.returncode
+        try:
+            jouer_les_passes()
+            reconstruire(reference)
+        finally:
+            EXTRAIT.unlink(missing_ok=True)
     return 0
 
 
@@ -323,10 +433,14 @@ def main(argv: list[str]) -> int:
             "aucun graphe existant, rien a mettre a jour (lancer /graphify . une premiere fois)"
         )
         return 0
+    if "--mets-a-jour" in argv:
+        return mets_a_jour()
     changes = [Path(a) for a in argv]
     if any(p.suffix in EXT_DOC for p in changes):
         (SORTIE / ".needs_update").write_text(
-            "documentation modifiee : lancer /graphify . --update\n", encoding="utf-8"
+            "documentation modifiee : scripts/graphify/couche_semantique.py a-reextraire"
+            " dit quelles pages\n",
+            encoding="utf-8",
         )
         journal("documentation modifiee, drapeau .needs_update pose")
     try:
