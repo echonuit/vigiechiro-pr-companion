@@ -9,6 +9,8 @@ verification: certaine
 enforced_by:
   - "scripts/methode/verifie-sous-commandes-openspec.py"
   - "scripts/methode/verifie-specs-valides.py"
+relations:
+  completee_par: ["5743-un-invariant-se-borne-par-une-liste-nommee"]
 verified:
   - by: machine:ci
     at: 2026-10-04
@@ -18,6 +20,41 @@ generated:
 ---
 
 # Un refus ne voyage pas dans le canal des constats, sinon il hérite de leur titre
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **2026-10-05** : cette décision est **complétée** par
+    [5743](5743-un-invariant-se-borne-par-une-liste-nommee.md). Ses deux attentes sont tenues, et une
+    mesure la précise sur un point qui peut la faire appliquer de travers.
+
+    **Le troisième verdict existe.** « Elle ne promet pas que la porte en tienne compte [...] et c'est
+    l'issue #5780 » : ce lot est livré, et `scripts/batterie.py` sépare désormais « rouge » de
+    « muet ».
+
+    **Mais la porte classe par les MARQUES, pas par le code de sortie.** Mesuré sur
+    `verdict_du_lancement` :
+
+    ```
+    code=1 AVEC « REFUS : » et « POUR REPARER : »  ->  muet
+    code=2 AVEC ces marques                        ->  muet
+    code=1 SANS ces marques                        ->  rouge
+    code=2 SANS ces marques                        ->  rouge
+    ```
+
+    « Le code de sortie suit le canal » dit comment ÉCRIRE un garde ; il ne décrit pas comment la
+    porte LIT. Un garde qui a jugé et qui emploie `refuse(..., code=1)` pour profiter de la forme
+    déclarée est donc annoncé « n'a PAS pu juger », ce qui se lit « ça ne vient pas de mon diff ».
+    C'est exactement le faux signal que cette décision combat, retourné.
+
+    Vécu le 2026-10-05 sur #5743, par un premier jet poussé en demande : **28 checks verts**, parce
+    qu'un garde passe tant que son invariant tient, donc le mauvais canal n'est emprunté par aucune
+    exécution verte. Trouvé en relisant cette décision à la passe 0 d'une clôture, et non par un
+    dispositif.
+
+    **Donc un constat rouge sort en 1 et n'emploie ni `refuse` ni `message_de_refus`** : deux `print`
+    sur `stderr` et un `SystemExit(1)`. Le cas qui tient cela regarde la SORTIE et non le code, et
+    `verifie_temoins_non_decoratifs.py` en porte un.
+
+    Le reste fait foi.
 
 ## Contexte
 
