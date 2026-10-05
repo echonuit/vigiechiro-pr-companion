@@ -385,18 +385,16 @@ public final class CaptureEcrans {
     /// déclaré » au-dessus d'une liste qui ne le portait pas, vu en rouvrant l'image à la clôture de
     /// #5596. Il est retiré ensuite, les aperçus suivants partageant la même base.
     private static void capturerVerdictApresCreation(Injector injecteur, Path fichier) throws IOException {
-        ServiceSites service = injecteur.getInstance(ServiceSites.class);
-        Site declare = service.creerSite(CARRE_ABSENT, null, Protocole.STANDARD, null, ID_UTILISATEUR);
-        try {
-            Parent chrome = chargerFxml(injecteur, CHROME);
-            injecteur.getInstance(NavigationSites.class).ouvrirAccueil();
-            RechercheCarreExistant.Verdict absent = new RechercheCarreExistant.Verdict.Inexistant();
-            ecranMesSites(injecteur)
-                    .annoncerLeVerdict(new RetourOperation(absent.apresDeclaration(CARRE_ABSENT), absent.severite()));
-            ApercuFx.enregistrerPng(new Scene(chrome, 1180, 920), fichier);
-        } finally {
-            service.supprimerSite(declare.id());
-        }
+        Site declare = injecteur
+                .getInstance(ServiceSites.class)
+                .creerSite(CARRE_ABSENT, null, Protocole.STANDARD, null, ID_UTILISATEUR);
+        Parent chrome = chargerFxml(injecteur, CHROME);
+        injecteur.getInstance(NavigationSites.class).ouvrirAccueil();
+        RechercheCarreExistant.Verdict absent = new RechercheCarreExistant.Verdict.Inexistant();
+        ecranMesSites(injecteur)
+                .annoncerLeVerdict(new RetourOperation(absent.apresDeclaration(CARRE_ABSENT), absent.severite()));
+        ApercuFx.enregistrerPng(new Scene(chrome, 1180, 920), fichier);
+        injecteur.getInstance(ServiceSites.class).supprimerSite(declare.id());
     }
 
     /// Modale de déclaration **après avoir situé une position** (#4573).
