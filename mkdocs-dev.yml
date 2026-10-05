@@ -428,6 +428,7 @@ nav:
     - 5839 · Le Point Fixe n'impose aucune distance entre deux points: decisions/5839-le-point-fixe-n-impose-aucune-distance-entre-deux-points.md
     - 5859 · Le fil d'étapes suit le dernier geste du dépôt: decisions/5859-le-fil-d-etapes-suit-le-dernier-geste-du-depot.md
     - 5877 · La mise à jour du graphe relit la structure de toutes les pages: decisions/5877-la-mise-a-jour-du-graphe-relit-la-structure-de-toutes-les-pages.md
+    - 5743 · Un invariant se borne par une liste nommée: decisions/5743-un-invariant-se-borne-par-une-liste-nommee.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md
