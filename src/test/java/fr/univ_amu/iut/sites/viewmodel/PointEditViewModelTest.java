@@ -2,6 +2,9 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FournisseurToken;
@@ -17,11 +20,13 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.VerdictCarre;
 import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
@@ -85,6 +90,31 @@ class PointEditViewModelTest {
         FournisseurToken token = () -> Optional.of("jeton-de-test");
         return new PublicationDepuisLaFiche(
                 publies, liens, Optional.of(new PublicationPoint(new ClientVigieChiro(token), publies, token)));
+    }
+
+    /// Trouvé par PIT à la clôture de #5596 : le contrôle n'était joué qu'absent. Présent, rien ne tenait
+    /// qu'il reçoive le carré du site et la position lue, ni qu'il ne soit pas appelé sans position.
+    @Test
+    @DisplayName("#733 : le contrôle du carré reçoit le carré du site et la position lue, et rien sans position")
+    void le_controle_du_carre_recoit_le_carre_et_la_position() {
+        ControleCarreStoc controle = mock(ControleCarreStoc.class);
+        VerdictCarre concorde = new VerdictCarre.Concorde("640380");
+        when(controle.confronter("640380", 43.5298, 5.4474)).thenReturn(concorde);
+        PointEditViewModel avecControle = new PointEditViewModel(
+                service,
+                new ServiceCommunes(pointDao, communeDao, position -> Optional.empty()),
+                Optional.of(controle),
+                sansPublication());
+        avecControle.preparerCreation(site);
+
+        assertThat(avecControle.controlerCarre())
+                .as("sans position, il n'y a rien à confronter")
+                .isInstanceOf(VerdictCarre.Indisponible.class);
+        verifyNoInteractions(controle);
+
+        avecControle.positionProperty().set("43.5298, 5.4474");
+
+        assertThat(avecControle.controlerCarre()).isEqualTo(concorde);
     }
 
     @Test

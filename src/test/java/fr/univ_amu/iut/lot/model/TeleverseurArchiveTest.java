@@ -39,6 +39,9 @@ class TeleverseurArchiveTest {
         DECLARATION(false, CauseRefus.AUTHENTIFICATION),
         PUT_D_UN_BLOC(false, CauseRefus.STOCKAGE),
         FINALISATION_D_UN_BLOC(false, CauseRefus.AUTHENTIFICATION),
+        // Trouvé par PIT à la clôture de #5596 : la déclaration d'un envoi en parties n'était jouée par
+        // aucun cas, celle d'un bloc passant par un autre chemin.
+        DECLARATION_DES_PARTIES(true, CauseRefus.AUTHENTIFICATION),
         URL_DE_PARTIE(true, CauseRefus.AUTHENTIFICATION),
         PUT_D_UNE_PARTIE(true, CauseRefus.STOCKAGE),
         FINALISATION_DES_PARTIES(true, CauseRefus.AUTHENTIFICATION);
@@ -83,7 +86,7 @@ class TeleverseurArchiveTest {
                     : reponse(200, "", Map.of("ETag", List.of("\"etag-x\"")));
         }
         if (chemin.endsWith("/fichiers")) {
-            return etape == Etape.DECLARATION
+            return etape == Etape.DECLARATION || etape == Etape.DECLARATION_DES_PARTIES
                     ? reponse(403, "{}", Map.of())
                     : reponse(201, "{\"_id\": \"f-1\", \"s3_signed_url\": \"" + URL_S3 + "\"}", Map.of());
         }

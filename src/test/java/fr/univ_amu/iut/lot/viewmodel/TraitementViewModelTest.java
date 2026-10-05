@@ -265,6 +265,38 @@ class TraitementViewModelTest {
         assertThat(vm.importObservationsProperty().get()).isEmpty();
     }
 
+    /// Trouvés par PIT à la clôture de #5596 : la ligne d'import n'était effacée que sur le chemin qui
+    /// la réécrit aussitôt. Les deux autres chemins la laissaient en place sans qu'aucun cas le voie.
+    @Test
+    @DisplayName("#5784 : un état posé seul, sans relevé d'import, efface la ligne d'import")
+    void un_etat_pose_seul_efface_la_ligne_d_import() {
+        when(suivi.relever(ID_PASSAGE)).thenReturn(terminee());
+        when(importation.importer(ID_PASSAGE, false)).thenReturn(COMPTE_RENDU);
+        TraitementViewModel vm = viewModelAvecImport();
+        vm.appliquer(vm.releverEtImporter(ID_PASSAGE));
+        assertThat(vm.importObservationsProperty().get()).isEqualTo(COMPTE_RENDU);
+
+        vm.appliquer(enCours());
+
+        assertThat(vm.importObservationsProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#5784 : rouvrir sur une nuit jamais relevée n'y laisse pas l'import de la nuit d'avant")
+    void une_nuit_jamais_relevee_ne_garde_pas_l_import_d_une_autre() {
+        Long autrePassage = 43L;
+        when(suivi.relever(ID_PASSAGE)).thenReturn(terminee());
+        when(importation.importer(ID_PASSAGE, false)).thenReturn(COMPTE_RENDU);
+        when(suivi.dernierReleve(autrePassage)).thenReturn(Optional.empty());
+        TraitementViewModel vm = viewModelAvecImport();
+        vm.appliquer(vm.releverEtImporter(ID_PASSAGE));
+
+        vm.chargerDernierReleve(autrePassage);
+
+        assertThat(vm.importObservationsProperty().get()).isEmpty();
+        assertThat(vm.messageProperty().get()).contains("Analyse non lancée");
+    }
+
     private TraitementViewModel viewModel() {
         return new TraitementViewModel(Optional.of(suivi), LE_13_JUILLET);
     }

@@ -47,4 +47,13 @@ class HorodatageTest {
                 .as("une chaîne d'espaces vient d'une colonne remplie à la main ; elle vaut une absence")
                 .isEmpty();
     }
+
+    /// Trouvé par PIT à la clôture de #5596 : la troisième forme lue, sans décalage, n'était exigée par
+    /// aucun cas. Une borne sans décalage est déjà une heure murale, et ne se convertit pas.
+    @Test
+    @DisplayName("#5683 : une borne sans décalage se lit telle quelle, quel que soit le fuseau")
+    void une_borne_sans_decalage_est_deja_une_heure_murale() {
+        assertThat(Horodatage.heureMurale("2026-09-30T16:07:45", java.time.ZoneId.of("America/Cayenne")))
+                .contains(java.time.LocalDateTime.of(2026, 9, 30, 16, 7, 45));
+    }
 }

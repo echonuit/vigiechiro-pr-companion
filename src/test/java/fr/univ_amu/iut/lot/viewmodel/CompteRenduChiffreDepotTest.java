@@ -319,6 +319,42 @@ class CompteRenduChiffreDepotTest {
                 .noneMatch(texte -> texte.contains("vos droits"));
     }
 
+    /// Trouvés par PIT à la clôture de #5596. Le geste d'un contenu refusé n'était tenu que sur un lot
+    /// où tout est contenu : sur un lot mêlé, la phrase est construite ailleurs, et rien n'y exigeait ni
+    /// le geste en archives, ni son absence en séquences.
+    @Test
+    @DisplayName("#5824 : sur un lot mêlé, le contenu refusé nomme la régénération en archives, pas en séquences")
+    void sur_un_lot_mele_le_geste_du_contenu_suit_la_forme() {
+        EchecUnite droits = new EchecUnite("Car-10.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION);
+        EchecUnite contenu = new EchecUnite("Car-12.zip", "HTTP 422", true, CauseRefus.CONTENU);
+        BilanDepot bilan = new BilanDepot("p-1", 9, List.of(droits, contenu), 0L);
+
+        assertThat(textes(traduire(bilan, plan(11, 9, false))))
+                .anyMatch(texte ->
+                        texte.contains("1 d'entre elles a un contenu refusé : régénérez les archives, puis relancez."));
+        List<String> enSequences = textes(traduire(bilan, sequences(11, 9, false)));
+        assertThat(enSequences).anyMatch(texte -> texte.contains("1 d'entre elles a un contenu refusé."));
+        assertThat(enSequences).noneMatch(texte -> texte.contains("égénérez"));
+    }
+
+    @Test
+    @DisplayName("#3962 : les refus définitifs ont leur motif, à côté de celui des échecs qui repartiront")
+    void les_refus_definitifs_ont_leur_motif() {
+        BilanDepot bilan = new BilanDepot(
+                "p-1",
+                9,
+                List.of(
+                        EchecUnite.rejouable("Car-10.zip", "HTTP 503"),
+                        new EchecUnite("Car-11.zip", "HTTP 422", true, CauseRefus.CONTENU)),
+                0L);
+
+        CompteRenduChiffre rendu = traduire(bilan, plan(11, 9, false));
+
+        assertThat(rendu.motifs()).hasSize(2);
+        assertThat(rendu.motifs().get(1).libelle()).isEqualTo("archive(s) refusée(s) par Vigie-Chiro");
+        assertThat(rendu.motifs().get(1).sujets()).containsExactly("Car-11.zip");
+    }
+
     /// Le lot que l'aperçu montre : deux refus de droits, un contenu refusé.
     private record BitmapMele() {
         BilanDepot bilan() {

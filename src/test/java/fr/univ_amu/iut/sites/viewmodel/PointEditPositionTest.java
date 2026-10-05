@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -63,6 +64,32 @@ class PointEditPositionTest {
                 new PublicationDepuisLaFiche(
                         new PointPublieDao(source), new LienVigieChiroDao(source), Optional.empty()));
         site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+    }
+
+    /// Trouvés par PIT à la clôture de #5596 : la modale est réutilisée d'une ouverture à l'autre, et
+    /// rien ne tenait que la position de l'ouverture d'avant en soit retirée.
+    @Test
+    @DisplayName("#5688 : rouvrir la création ne garde pas la position saisie à l'ouverture d'avant")
+    void la_creation_ne_garde_pas_la_position_d_avant() {
+        viewModel.preparerCreation(site);
+        viewModel.positionProperty().set("43.4010, 5.4474");
+
+        viewModel.preparerCreation(site);
+
+        assertThat(viewModel.positionProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#5688 : éditer un point sans position ne montre pas celle du point édité avant lui")
+    void l_edition_d_un_point_sans_position_vide_le_champ() {
+        PointDEcoute situe = service.ajouterPoint(site.id(), "A1", 43.40, -1.57, null);
+        PointDEcoute sansPosition = service.ajouterPoint(site.id(), "B2", null, null, null);
+        viewModel.preparerEdition(site, situe);
+        assertThat(viewModel.positionProperty().get()).isNotEmpty();
+
+        viewModel.preparerEdition(site, sansPosition);
+
+        assertThat(viewModel.positionProperty().get()).isEmpty();
     }
 
     /// Une seule règle de lecture pour toute l'interface (#5688) : le point lit ce que lit le site, y

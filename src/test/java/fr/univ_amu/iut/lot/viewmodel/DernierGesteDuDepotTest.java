@@ -94,6 +94,16 @@ class DernierGesteDuDepotTest {
                 .isEmpty();
     }
 
+    /// Trouvé par PIT à la clôture de #5596 : le nom que la vue lit n'était tenu que par les tests de
+    /// vue. Il l'est ici, là où il est écrit.
+    @Test
+    @DisplayName("#5859 : chaque geste porte le nom du bouton de la dernière étape")
+    void chaque_geste_porte_le_nom_de_son_bouton() {
+        assertThat(DernierGesteDuDepot.MARQUER_DEPOSE.nom()).isEqualTo("Marquer déposé");
+        assertThat(DernierGesteDuDepot.LANCER_LA_PARTICIPATION.nom()).isEqualTo("Lancer la participation");
+        assertThat(DernierGesteDuDepot.PARTICIPATION_LANCEE.nom()).isEqualTo("Lancer la participation");
+    }
+
     private static List<EtapeDepot> quatre(StatutWorkflow statut) {
         return EtapesDepot.calculer(statut, true, HORS_LIGNE, true);
     }

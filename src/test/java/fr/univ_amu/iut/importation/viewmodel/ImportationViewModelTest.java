@@ -1084,6 +1084,25 @@ class ImportationViewModelTest {
         assertThat(viewModel.coordinationNuits().libelleImportProperty().get()).isEqualTo("Importer cette nuit");
     }
 
+    /// Trouvé par PIT à la clôture de #5596 : le singulier d'une carte d'une seule nuit n'était lu qu'à
+    /// la valeur initiale de la propriété, jamais après un recalcul. Une carte d'une nuit n'a pas de
+    /// table, donc aucune case à compter : sa nuit part.
+    @Test
+    @DisplayName("#5843 : après une carte de plusieurs nuits, une carte d'une seule nuit retrouve le singulier")
+    void une_carte_d_une_nuit_retrouve_le_singulier() throws IOException {
+        Path multi = carteMultiNuits();
+        when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
+        viewModel.inspection().dossierSourceProperty().set(multi);
+        viewModel.inspecter();
+        assertThat(viewModel.coordinationNuits().libelleImportProperty().get()).isEqualTo("Importer ces 3 nuits");
+
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        viewModel.inspection().dossierSourceProperty().set(sd);
+        viewModel.inspecter();
+
+        assertThat(viewModel.coordinationNuits().libelleImportProperty().get()).isEqualTo("Importer cette nuit");
+    }
+
     @Test
     @DisplayName("Multi-nuits : décocher une nuit la met à 0 et renumérote les incluses consécutivement")
     void multi_nuits_exclure_renumerote() throws IOException {

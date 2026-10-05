@@ -256,6 +256,23 @@ class RegenerationPendantUnDepotTest {
                 .isEqualTo(ModeDepot.ARCHIVES_ZIP);
     }
 
+    /// Trouvé par PIT à la clôture de #5596 : c'est ce qui est **en ligne** qui décide, et rien ne tenait
+    /// qu'une unité planifiée mais refusée ne décide de rien. Un plan écrit n'est pas un dépôt entamé.
+    @Test
+    @DisplayName("#5677 : un dépôt dont rien n'est en ligne n'est pas entamé, il suit encore le réglage")
+    void un_depot_sans_rien_en_ligne_suit_encore_le_reglage() throws Exception {
+        Long id = passagePrepare();
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenAnswer(appel -> ReponseApi.refuse(422, "contenu refusé"));
+        BilanDepot tentative = depot.deposer(id, service.sourceDepotParDefaut(id), () -> false, SuiviDepot.inerte());
+        assertThat(tentative.deposees()).as("rien n'est en ligne").isZero();
+        assertThat(tentative.echecs()).as("et le plan a bien été joué").isNotEmpty();
+
+        mode.set(ModeDepot.SEQUENCES_WAV);
+
+        assertThat(service.formeDuDepot(id)).isEqualTo(ModeDepot.SEQUENCES_WAV);
+    }
+
     @Test
     @DisplayName("#5677 : un dépôt qui commence suit le réglage, WAV compris")
     void un_depot_qui_commence_suit_le_reglage() throws Exception {
