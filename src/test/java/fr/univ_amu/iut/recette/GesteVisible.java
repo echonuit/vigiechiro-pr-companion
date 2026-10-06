@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -121,17 +122,18 @@ public final class GesteVisible {
     /// est dans le cadre quand même, et le geste conclut. Deux tournages sur douze du même commit
     /// finissaient ainsi la page en haut, à 21 % des dix autres.
     ///
-    /// Deux choses le distinguent. Il **met en page avant de lire** les bornes, au lieu d'attendre
-    /// qu'une pulsation l'ait fait. Et sa condition d'arrêt est [#estPoseDansLeCadre] : la position,
-    /// au demi-pixel, et non la seule présence dans le cadre.
+    /// Ce qui le distingue est sa **condition d'arrêt**, [#estPoseDansLeCadre] : la position, au
+    /// demi-pixel, lue sur des bornes fraîchement mises en page, et non la seule présence dans le
+    /// cadre. Tant qu'elle est fausse, il règle de nouveau : le premier réglage peut être celui d'un
+    /// écran qui n'existe plus, le suivant ne l'est pas.
     ///
     /// Une cible qui ne descend d'aucun panneau de défilement est **refusée** : il n'y aurait rien à
     /// poser, et réussir en silence ferait croire le contraire.
     public static void poserDansLeCadre(FxRobot robot, String selecteur) {
-        AtomicBoolean defilable = new AtomicBoolean();
-        robot.interact(() ->
-                defilable.set(!panneauxDont(robot.lookup(selecteur).query()).isEmpty()));
-        if (!defilable.get()) {
+        // Le réglage est le PREMIER `interact` du geste, et le refus se lit dessus. Un contrôle posé
+        // avant lui laisserait passer une mise en page, et le geste réussirait alors pour une raison
+        // qui n'est pas la sienne : c'est ce qu'une mutation a montré sur son premier dessin.
+        if (reglerLesPanneaux(robot, selecteur) == 0) {
             throw new IllegalStateException("« " + selecteur + " » ne descend d'aucun panneau de défilement :"
                     + " il n'y a aucune position à poser. Ce geste ne vaut que pour une page qui défile.");
         }
@@ -162,17 +164,27 @@ public final class GesteVisible {
         return pose.get();
     }
 
-    /// Une passe : la mise en page, le réglage de chaque panneau, puis le verdict sur la POSITION.
+    /// Une passe : le verdict sur la POSITION du réglage en place, et un nouveau réglage s'il a échoué.
     private static boolean unePassePosee(FxRobot robot, String selecteur) {
+        WaitForAsyncUtils.waitForFxEvents();
+        if (estPoseDansLeCadre(robot, selecteur)) {
+            return true;
+        }
+        reglerLesPanneaux(robot, selecteur);
+        return false;
+    }
+
+    /// Règle chaque panneau dont `selecteur` descend, et dit combien il y en avait.
+    private static int reglerLesPanneaux(FxRobot robot, String selecteur) {
+        AtomicInteger regles = new AtomicInteger();
         robot.interact(() -> {
             Node cible = robot.lookup(selecteur).query();
-            mettreEnPage(cible);
             for (ScrollPane panneau : panneauxDont(cible)) {
                 amener(panneau, cible);
+                regles.incrementAndGet();
             }
         });
-        WaitForAsyncUtils.waitForFxEvents();
-        return estPoseDansLeCadre(robot, selecteur);
+        return regles.get();
     }
 
     /// Établit les bornes de tout ce que la scène doit encore mettre en page.

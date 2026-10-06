@@ -139,6 +139,32 @@ class GesteVisiblePositionPoseeTest {
     }
 
     @Test
+    @DisplayName("#6069 : le prédicat met en page avant de juger, il ne lit pas les bornes d'avant")
+    void le_predicat_ne_juge_pas_des_bornes_perimees(FxRobot robot) {
+        faireParaitreLaSection(robot);
+        GesteVisible.poserDansLeCadre(robot, "#section");
+
+        // Le contenu grandit, et RIEN ne sépare ce changement de la lecture : ni attente, ni pulsation.
+        Platform.runLater(() -> ((VBox) pane.getContent()).getChildren().add(remplissage(CROISSANCE)));
+
+        assertThat(GesteVisible.estPoseDansLeCadre(robot, "#section"))
+                .as("lu sur les bornes d'avant, le réglage aurait l'air en place : la page n'a pas encore"
+                        + " bougé, le contenu n'a pas encore grandi. Une assertion de fin posée juste"
+                        + " après un changement d'écran jugerait alors l'écran précédent")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#6069 : une section qui n'a pas paru n'est pas posée, même si la page n'a pas à bouger")
+    void une_section_qui_n_a_pas_paru_n_est_pas_posee(FxRobot robot) {
+        assertThat(GesteVisible.estPoseDansLeCadre(robot, "#section"))
+                .as("la page est bien là où le réglage la mettrait, puisqu'il n'y a rien à régler : c'est"
+                        + " la présence dans le cadre qui manque. Le prédicat demande les deux, sans quoi"
+                        + " un verdict absent passerait pour un verdict posé")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("#6069 : une cible qui ne descend d'aucun panneau est refusée, pas posée en silence")
     void une_cible_sans_panneau_est_refusee(FxRobot robot) {
         assertThatThrownBy(() -> GesteVisible.poserDansLeCadre(robot, "#panneau"))
