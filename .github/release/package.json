@@ -5,8 +5,8 @@
   "description": "Outillage de publication (semantic-release et ses plugins), figé par lockfile : voir README.md de ce dossier.",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "@semantic-release/changelog": "6.0.3",
-    "@semantic-release/git": "10.0.1",
+    "@semantic-release/changelog": "7.0.0",
+    "@semantic-release/git": "11.0.1",
     "semantic-release": "25.0.9"
   }
 }

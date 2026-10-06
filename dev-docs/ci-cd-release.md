@@ -1338,7 +1338,8 @@ compter sur le mécanisme censé le combler :
 Les deux outillages figés par lockfile, `.github/release/` et `.github/openspec/`, n'avaient aucun
 signal de retard. Dependabot porte une entrée pour le premier et ne peut ouvrir aucune demande : son
 service refuse chaque soumission, 40 exécutions en échec sur 40 au 2026-10-06. Ce jour-là, deux
-greffons de l'outillage de publication avaient une majeure de retard depuis juillet.
+greffons de l'outillage de publication avaient une majeure de retard depuis juillet. Ils ont été
+montés le jour même (#6099), pour que le job naisse vert.
 
 Un troisième job du même atelier, `fraicheur-des-outillages-npm`, lance
 `verifie_fraicheur_npm.py`. Sa règle est celle du tableau ci-dessus, et ses seuils sont les mêmes,
@@ -1603,6 +1604,12 @@ majeure LTS, le job de publication aurait changé de Node **sans PR ni relecture
 
 L'occasion l'a rendu concret : `semantic-release@25` exige `^22.14.0 || >= 24.10.0`. Avec `lts/*`, la
 satisfaction de cette contrainte dépendait de ce que le runner avait en cache ce jour-là.
+
+Les deux greffons d'écriture sont plus exigeants depuis leur montée (#6099) :
+`@semantic-release/changelog` 7.0.0 et `@semantic-release/git` 11.0.1 demandent
+`^22.22.2 || >=24.15`. Aucun check de demande ne les juge, la répétition à blanc ne chargeant que les
+greffons de calcul : la façon de les éprouver sans publier est dans
+[`.github/release/README.md`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/release/README.md).
 
 ### L'arbre de publication et ses alertes
 

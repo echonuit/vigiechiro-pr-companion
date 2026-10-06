@@ -24,8 +24,9 @@ manifeste porte les mêmes paquets que celui-ci, et #15237) ; le relevé est dan
 
 **Un garde dit ce retard à sa place, depuis #6095.** `.github/scripts/verifie_fraicheur_npm.py`
 interroge le registre chaque lundi, dans `securite-dependances.yml`. Une majeure de retard le fait
-rougir : le premier lundi après sa pose, il rougit donc sur les deux greffons ci-dessus, et il
-rougira jusqu'à leur montée. Il se lance aussi à la main, sans `node` ni `npm` :
+rougir, et il aurait rougi dès son premier lundi sur les deux greffons ci-dessus : ils ont donc été
+montés à la main avant, à 7.0.0 et à 11.0.1 (#6099). Il se lance aussi à la main, sans `node` ni
+`npm` :
 
 ```bash
 python3 .github/scripts/verifie_fraicheur_npm.py
@@ -62,12 +63,43 @@ cd .github/release && ./node_modules/.bin/semantic-release --dry-run
 
 `node_modules/` n'est pas versionné : seul le lockfile l'est.
 
+### Ce qu'aucune de ces deux commandes ne juge : les greffons d'écriture
+
+`@semantic-release/changelog` et `@semantic-release/git` ne travaillent qu'à l'étape `prepare`, et
+`--dry-run` la saute. La répétition à blanc des demandes ne les charge même pas : le job
+`outillage-release` joue la configuration d'analyse, qui n'en garde aucun. **Une montée de l'un des
+deux n'est donc jugée par aucun check de demande**, et la seconde commande ci-dessus ne dit d'eux que
+ceci : ils se chargent et leurs options sont acceptées. Elle demande en outre un `GITHUB_TOKEN`,
+que le greffon `github` réclame dès `verifyConditions`.
+
+Leur montée de 6.0.3 et 10.0.1 vers 7.0.0 et 11.0.1 (#6099) a été jugée autrement, sans jeton et
+sans rien pousser vers la forge :
+
+1. un dépôt nu local reçoit `main` et ses étiquettes, et un clone jetable le prend pour seul distant ;
+2. le distant du clone porte une URL en `.invalid`, que `git config url.<chemin>.insteadOf` réécrit
+   vers le dépôt nu : `release-notes-generator` refuse un chemin nu par `ERR_INVALID_URL` ;
+3. dans le clone, `.releaserc.json` perd le greffon `github`, et un commit `fix:` rend une version
+   calculable ;
+4. `npm ci --prefix .github/release`, puis `./.github/release/node_modules/.bin/semantic-release
+   --no-ci` depuis la racine du clone, comme le fait `release.yml`.
+
+Ce qu'on doit y lire : `prepare` conclu pour les deux greffons, un commit `chore(release): <version>`
+qui ne porte que `CHANGELOG.md` arrivé sur le dépôt nu, et l'étiquette posée là et nulle part
+ailleurs. Rejoué avec les anciennes versions, le `CHANGELOG.md` produit est le même à une ligne près,
+celle du commit témoin. Et la même commande rougit dans quatre cas joués : chacun des deux greffons
+retiré de `node_modules` (`Cannot find module`), `assets` invalide (`EINVALIDASSETS`), `changelogFile`
+invalide (`EINVALIDCHANGELOGFILE`).
+
+Ce banc ne joue pas le greffon `github`, ni le poste qui publie : ce qui juge ces deux-là reste la
+publication suivante.
+
 **Cet arbre n'est pas posé par le crochet, et c'est une décision.** L'ADR 5407 range un prérequis
 selon qu'un garde en dépend : celui dont un garde dépend se **pose** à la création du worktree, celui
 dont aucun ne dépend se **propose**, parce que « la poser coûterait à chaque worktree pour un outil
 qu'on ouvre rarement ». Mesuré le 2026-10-04 : **aucun garde local ne lit
 `.github/release/node_modules`**, les deux scripts qui citent `.github/release` ne parlent que de
-`release.config.js` et de portées, la porte ne l'engage pas, et son lockfile porte **476 paquets**.
+`release.config.js` et de portées, la porte ne l'engage pas, et son lockfile portait **476 paquets**
+(449 depuis la montée des deux greffons d'écriture, #6099).
 Il reste donc à poser à la main, dans chaque arbre où l'on veut vérifier la publication, à la
 différence de l'arbre d'OpenSpec, dont un garde dépend et que le crochet pose depuis #5775.
 
@@ -87,7 +119,9 @@ il reste à poser à la main, dans chaque arbre de travail où l'on veut vérifi
 `npm audit` signalait **7 paquets vulnérables** (2 hautes, 5 moyennes) au passage en
 `semantic-release@25` (#3264), contre **18** (15 hautes) avant lui. **Refait le 2026-10-06 sur le même
 lockfile : 17 paquets, 16 hautes et 1 moyenne.** La base des avis a grandi, l'arbre n'a pas bougé, et
-ce qui suit décrit l'état d'août : la relecture de ces dix-sept n'est pas faite (#5290). Ces vulnérabilités **existaient déjà** avec `npx --yes` ;
+ce qui suit décrit l'état d'août : la relecture de ces dix-sept n'est pas faite (#5290). **Refait le
+même jour après la montée des deux greffons d'écriture (#6099) : les mêmes 17 paquets, aux mêmes
+gravités.** La montée n'en retire aucun et n'en ajoute aucun. Ces vulnérabilités **existaient déjà** avec `npx --yes` ;
 la différence est qu'elles sont désormais **visibles**, et c'était l'objet du lockfile.
 
 Ce qui reste **ne se corrige pas ici**, à aucune version de `semantic-release` : les deux hautes
@@ -140,3 +174,10 @@ laissait flotter le **runtime qui l'exécute** : au prochain passage de majeure 
 publication aurait changé de Node sans PR ni relecture. `semantic-release@25` exige d'ailleurs
 `^22.14.0 || >= 24.10.0` - avec `lts/*`, la satisfaction de cette contrainte dépendait de ce que le
 runner avait en cache ce jour-là.
+
+**La contrainte la plus étroite de l'arbre n'est plus celle de `semantic-release`.** Depuis leur
+montée (#6099), `@semantic-release/changelog` 7.0.0 et `@semantic-release/git` 11.0.1 exigent
+`^22.22.2 || >=24.15` : c'est leur champ `engines` au registre, que leurs notes de version ne
+citent pas. `node-version: "24"` la satisfait tant que le runner installe une 24 d'au moins 24.15 :
+la publication du 2026-10-06 (exécution 37454826583) tournait sous 24.21.0. Les deux greffons sont
+aussi devenus des modules ES, et demandent `semantic-release` 20.1.0 au moins.
