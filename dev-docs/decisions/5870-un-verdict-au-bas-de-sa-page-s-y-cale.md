@@ -11,6 +11,7 @@ enforced_by:
 verification_note: "trois cas : le défaut d origine reproduit, sans lequel le suivant passerait sur un banc où rien ne bouge ; l aide qui cale la page au pixel ; le refus d une cible qui n est pas au bas. Mutation sans le calage au maximum : rouge sur le deuxième. Rien ne tient qu un scénario dont le verdict est au bas de sa page emploie l aide : c est la comparaison de deux tournages qui le montre"
 relations:
   complete: ["4274-on-compare-la-derniere-image-pas-le-chemin"]
+  amendee_par: ["6069-le-dernier-geste-d-un-clip-pose-une-position"]
 verified:
   - by: machine:ci
     at: 2026-10-05
@@ -20,6 +21,9 @@ generated:
 ---
 
 # Un clip dont le verdict est au bas de sa page finit calé sur ce bas
+
+!!! warning "Ce qui fait foi aujourd'hui"
+    **Amendée le 2026-10-06** par l'[ADR 6069](6069-le-dernier-geste-d-un-clip-pose-une-position.md) : `amenerDansLeCadre` n'est plus le geste qui **finit** un clip dont le verdict est au milieu de sa page. Sa condition d'arrêt est vraie à plusieurs positions, et un clip y a gagné une seconde fin. Le calage au bas, lui, tient toujours.
 
 ## Contexte
 

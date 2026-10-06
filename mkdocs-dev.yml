@@ -450,6 +450,7 @@ nav:
     - 5265 · Trois bancs de mutation partagent ce qu'ils rendent, pas leur mécanique: decisions/5265-trois-bancs-partagent-ce-qu-ils-rendent-pas-leur-mecanique.md
     - 5987 · Un tag de version sans publication se signale, et sa borne est la version et non le graphe: decisions/5987-un-tag-de-version-sans-publication-se-signale.md
     - 4775 · Les sujets de main n'ont pas de garde, et fusionner sans --subject en tient lieu: decisions/4775-les-sujets-de-main-n-ont-pas-de-garde.md
+    - 6069 · Le dernier geste d'un clip pose une position: decisions/6069-le-dernier-geste-d-un-clip-pose-une-position.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Retour de terrain de la 2.189.0: retours/2189-ce-que-ton-retour-a-produit.md

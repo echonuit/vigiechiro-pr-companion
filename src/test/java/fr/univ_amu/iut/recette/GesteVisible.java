@@ -7,9 +7,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextInputControl;
 import org.testfx.api.FxRobot;
@@ -45,6 +47,9 @@ public final class GesteVisible {
 
     /// De quoi laisser passer une mise en page, jamais de quoi masquer un blocage.
     private static final long SELECTION_MS = 5_000;
+
+    /// L'écart qu'une position **posée** tolère : en deçà, deux images sont la même au pixel.
+    private static final double DEMI_PIXEL = 0.5;
 
     private GesteVisible() {}
 
@@ -107,6 +112,97 @@ public final class GesteVisible {
         return tenu.get();
     }
 
+    /// Amène `selecteur` à la place que sa page lui donne, et **vérifie qu'il y est** (#6069).
+    ///
+    /// Dernier geste d'un clip : il **pose** une position, là où [#amenerDansLeCadre] s'arrête dès que
+    /// la cible est dans le cadre, ce qui est vrai à plusieurs positions. Appelé avant la mise en page
+    /// qui fait paraître une section, celui-là réglait la page sur les bornes d'avant et concluait
+    /// quand même : deux tournages sur douze finissaient la page en haut, à 21 % des dix autres.
+    ///
+    /// Sa condition d'arrêt est [#estPoseDansLeCadre], la position au demi-pixel ; tant qu'elle est
+    /// fausse, il règle de nouveau. Une cible qui ne descend d'aucun panneau de défilement est
+    /// **refusée** : il n'y aurait rien à poser, et réussir en silence ferait croire le contraire.
+    public static void poserDansLeCadre(FxRobot robot, String selecteur) {
+        // Le réglage est le PREMIER `interact` du geste, et le refus se lit dessus. Un contrôle posé
+        // avant lui laisserait passer une mise en page, et le geste réussirait alors pour une raison
+        // qui n'est pas la sienne : c'est ce qu'une mutation a montré sur son premier dessin.
+        if (reglerLesPanneaux(robot, selecteur) == 0) {
+            throw new IllegalStateException("« " + selecteur + " » ne descend d'aucun panneau de défilement :"
+                    + " il n'y a aucune position à poser. Ce geste ne vaut que pour une page qui défile.");
+        }
+        // Par [Attente], comme [#allerAuBasDeLaPage] et pour la même raison (ADR 4974). La passe ouvre
+        // elle-même ses `interact`, d'où `que` et non `queSurLeFil`.
+        Attente.que(
+                () -> unePassePosee(robot, selecteur),
+                "« " + selecteur + " » posé à la place que sa page lui donne, et dans le cadre",
+                SECONDES_CADRE * 1000L);
+    }
+
+    /// La page de `selecteur` est-elle **là où le réglage la met**, la cible dans le cadre ?
+    ///
+    /// C'est ce qu'une assertion de fin demande : « la cible est dans le cadre » est vrai à plusieurs
+    /// positions de la page, et ne tient donc pas la dernière image. Le prédicat met en page avant de
+    /// lire, pour ne pas juger des bornes périmées, et répond faux quand la page a bougé depuis le
+    /// geste - un contenu qui grandit laisse la page en deçà, JavaFX gardant le décalage en pixels.
+    public static boolean estPoseDansLeCadre(FxRobot robot, String selecteur) {
+        AtomicBoolean pose = new AtomicBoolean();
+        robot.interact(() -> {
+            Node cible = robot.lookup(selecteur).query();
+            mettreEnPage(cible);
+            List<ScrollPane> panneaux = panneauxDont(cible);
+            pose.set(!panneaux.isEmpty()
+                    && panneaux.stream().allMatch(panneau -> estRegle(panneau, reglage(panneau, cible)))
+                    && estDansLeCadre(robot, selecteur));
+        });
+        return pose.get();
+    }
+
+    /// Une passe : le verdict sur la POSITION du réglage en place, et un nouveau réglage s'il a échoué.
+    private static boolean unePassePosee(FxRobot robot, String selecteur) {
+        WaitForAsyncUtils.waitForFxEvents();
+        if (estPoseDansLeCadre(robot, selecteur)) {
+            return true;
+        }
+        reglerLesPanneaux(robot, selecteur);
+        return false;
+    }
+
+    /// Règle chaque panneau dont `selecteur` descend, et dit combien il y en avait.
+    private static int reglerLesPanneaux(FxRobot robot, String selecteur) {
+        AtomicInteger regles = new AtomicInteger();
+        robot.interact(() -> {
+            Node cible = robot.lookup(selecteur).query();
+            for (ScrollPane panneau : panneauxDont(cible)) {
+                amener(panneau, cible);
+                regles.incrementAndGet();
+            }
+        });
+        return regles.get();
+    }
+
+    /// Établit les bornes de tout ce que la scène doit encore mettre en page.
+    ///
+    /// Un nœud qui vient de devenir visible garde ses bornes d'avant jusqu'à la prochaine pulsation.
+    /// Les lire entre les deux, c'est régler la page pour un écran qui n'existe plus.
+    private static void mettreEnPage(Node cible) {
+        Parent racine = cible.getScene().getRoot();
+        racine.applyCss();
+        racine.layout();
+    }
+
+    /// `panneau` est-il, au demi-pixel, à la place `voulue` que [#reglage] vient de calculer ?
+    private static boolean estRegle(ScrollPane panneau, double voulue) {
+        Node contenu = panneau.getContent();
+        if (contenu == null) {
+            return true;
+        }
+        double course = Math.max(
+                1,
+                contenu.getBoundsInLocal().getHeight()
+                        - panneau.getViewportBounds().getHeight());
+        return Math.abs(panneau.getVvalue() - voulue) * course <= DEMI_PIXEL;
+    }
+
     /// Une passe de calcul, puis le verdict : la cible est-elle atteignable ?
     ///
     /// Le calcul se refait à chaque tour parce que ses **bornes** peuvent ne pas encore être établies -
@@ -154,15 +250,27 @@ public final class GesteVisible {
     /// **Le quotient est borné, sans garde** : il sort de `[0, 1]` onze fois sur quatre-vingt-seize
     /// appels réels, mais JavaFX normalise la valeur stockée. Hygiène, pas remède (#4795).
     private static void amener(ScrollPane panneau, Node cible) {
+        if (panneau.getContent() == null) {
+            return;
+        }
+        panneau.setVvalue(reglage(panneau, cible));
+    }
+
+    /// La position qui met `cible` en haut du champ de `panneau`, bornée à ce que la page permet.
+    ///
+    /// Sortie de [#amener] pour que [#estPoseDansLeCadre] relise la **même** formule : deux calculs
+    /// d'une même position finiraient par diverger, et le prédicat jugerait autre chose que le geste.
+    /// Un panneau sans contenu n'a rien à régler, et garde sa position.
+    private static double reglage(ScrollPane panneau, Node cible) {
         Node contenu = panneau.getContent();
         if (contenu == null) {
-            return;
+            return panneau.getVvalue();
         }
         double hauteurContenu = contenu.getBoundsInLocal().getHeight();
         double hauteurVue = panneau.getViewportBounds().getHeight();
         double y = cible.localToScene(cible.getBoundsInLocal()).getMinY();
         double yContenu = contenu.localToScene(contenu.getBoundsInLocal()).getMinY();
-        panneau.setVvalue(Math.clamp((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue), 0, 1));
+        return Math.clamp((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue), 0, 1);
     }
 
     /// La cible est-elle dans le cadre, **au sens de TestFX** ?

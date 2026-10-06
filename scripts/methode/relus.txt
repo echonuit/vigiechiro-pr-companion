@@ -1837,7 +1837,7 @@ e37c915aa4db  src/test/java/fr/univ_amu/iut/importation/view/ScenarioBandeauxDIn
 c9e8e1a12452  src/test/java/fr/univ_amu/iut/importation/view/ScenarioImportNominalTest.java
 7e677ede1765  src/test/java/fr/univ_amu/iut/importation/view/ScenarioJournalAbsentTest.java
 50b97d3ba2a4  src/test/java/fr/univ_amu/iut/importation/view/ScenarioMenuDeLigneImportTest.java
-5f15516007f1  src/test/java/fr/univ_amu/iut/importation/view/ScenarioRejetsEtArchiveTest.java
+4d71b34e162f  src/test/java/fr/univ_amu/iut/importation/view/ScenarioRejetsEtArchiveTest.java
 b1d6fa384619  src/test/java/fr/univ_amu/iut/importation/view/TableNuitsTest.java
 fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
 140614766d08  src/test/java/fr/univ_amu/iut/importation/viewmodel/ApercuPrefixeTest.java
@@ -1998,7 +1998,7 @@ f492068c695e  src/test/java/fr/univ_amu/iut/passage/view/PassageActionsFicheView
 3d6110c2ae06  src/test/java/fr/univ_amu/iut/passage/view/RattachementModaleViewTest.java
 e96caab1b9b1  src/test/java/fr/univ_amu/iut/passage/view/ReactivationModaleQuestionTest.java
 cbc014bf6958  src/test/java/fr/univ_amu/iut/passage/view/ReactivationModaleViewTest.java
-85607695e093  src/test/java/fr/univ_amu/iut/passage/view/ScenarioPassagePivotTest.java
+f88c0100d0a8  src/test/java/fr/univ_amu/iut/passage/view/ScenarioPassagePivotTest.java
 30b7ca5477f6  src/test/java/fr/univ_amu/iut/passage/view/VerificationDuTraitementUITest.java
 dcebab754186  src/test/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduDEnvoiTest.java
 cd203af38495  src/test/java/fr/univ_amu/iut/passage/viewmodel/CompteRenduRattachementTest.java
@@ -2074,13 +2074,14 @@ fdd506b206bf  src/test/java/fr/univ_amu/iut/recette/FixtureMultiConfigsTest.java
 70dc392bf31e  src/test/java/fr/univ_amu/iut/recette/GenerateurCartesSD.java
 d36d168d30f5  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDCliquetTest.java
 4576ada12c8a  src/test/java/fr/univ_amu/iut/recette/GenerationCartesSDImportCliquetTest.java
-6bf2096798cb  src/test/java/fr/univ_amu/iut/recette/GesteVisible.java
+39d95bd4972c  src/test/java/fr/univ_amu/iut/recette/GesteVisible.java
 498e41068498  src/test/java/fr/univ_amu/iut/recette/GesteVisibleBasDePageTest.java
 e2160d2b8a89  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreImbriqueTest.java
 4159f62c57b5  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCadreTest.java
 c5ea5b2b360d  src/test/java/fr/univ_amu/iut/recette/GesteVisibleCibleReconstruiteTest.java
 2634bceecc02  src/test/java/fr/univ_amu/iut/recette/GesteVisibleDoubleEtDroitTest.java
 e51fc6abd4b8  src/test/java/fr/univ_amu/iut/recette/GesteVisibleMessageDeRefusTest.java
+978983eee831  src/test/java/fr/univ_amu/iut/recette/GesteVisiblePositionPoseeTest.java
 e20d6b203e0e  src/test/java/fr/univ_amu/iut/recette/GesteVisibleRemplacementTest.java
 dafa1a11a4e7  src/test/java/fr/univ_amu/iut/recette/GesteVisibleSuiteTest.java
 14c1819af275  src/test/java/fr/univ_amu/iut/recette/GuichetQuiCompte.java

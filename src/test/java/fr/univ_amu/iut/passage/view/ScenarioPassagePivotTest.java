@@ -95,6 +95,9 @@ class ScenarioPassagePivotTest {
     /// Ce que le fournisseur de météo substitué rend, et qu'on doit retrouver dans les champs.
     private static final String TEMPERATURE_RELEVEE = "17";
 
+    /// Ce sur quoi le clip de la modale finit : le bouton qui suit les champs météo.
+    private static final String FIN_DE_LA_MODALE = "#boutonTirerVigieChiro";
+
     private static final int APPARITION_SECONDES = 30;
 
     private static final long PAUSE_PAR_FICHIER_MS = 900;
@@ -383,19 +386,29 @@ class ScenarioPassagePivotTest {
         // six tournages du même commit (#5911). Le saut est un comportement du produit, consigné en
         // #6054, et il reste visible dans le clip. La fin, elle, revient sur les champs que le
         // bandeau demande de vérifier, et y reste le temps d'être lue.
-        GesteVisible.amenerDansLeCadre(robot, "#boutonTirerVigieChiro");
+        // Elle s'y POSE, au lieu d'y être seulement amenée : [#exigerLaMeteoALImage] dit pourquoi.
+        GesteVisible.poserDansLeCadre(robot, FIN_DE_LA_MODALE);
         Respiration.leTempsDeLire(robot);
         exigerLaMeteoALImage(robot);
     }
 
     /// Les champs que « Météo pré-remplie : vérifiez puis appliquez » demande de vérifier sont-ils à
     /// l'image quand le cas finit ? Sans le geste de fin, la modale a pu défiler jusqu'à son bas.
+    ///
+    /// Et la modale est-elle **là où ce geste l'a posée** ? « Dans le cadre » est vrai à plusieurs
+    /// positions. Aucune seconde fin n'a été vue sur ce clip, mais c'est en s'arrêtant sur cette seule
+    /// condition qu'un geste en a donné une au clip de la décompression (#6069).
     private static void exigerLaMeteoALImage(FxRobot robot) {
         assertThat(CadreVisible.contient(robot.lookup("#champTemperature").query())
                         && CadreVisible.contient(
                                 robot.lookup("#boutonRecupererMeteo").query()))
                 .as("la température relevée et le bouton qui l'a remplie doivent être dans le cadre de"
                         + " la modale quand le cas finit : c'est ce que le bandeau demande de vérifier")
+                .isTrue();
+        assertThat(GesteVisible.estPoseDansLeCadre(robot, FIN_DE_LA_MODALE))
+                .as("la modale n'est plus à la place où le geste de fin l'a posée : « dans le cadre » est"
+                        + " vrai à plusieurs positions, et deux tournages du même commit ne finiraient pas"
+                        + " sur la même image (#6069)")
                 .isTrue();
     }
 
