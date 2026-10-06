@@ -101,8 +101,8 @@ EXACTE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 INCONNU = "?"
 
 GESTE_REGISTRE = (
-    "Relancez le job : le registre npm bafouille parfois. S il persiste, lisez la reponse de "
-    "https://registry.npmjs.org/<paquet> a la main, et regardez si le paquet a ete retire ou renomme."
+    "Relancez le job : le registre npm bafouille parfois. S'il persiste, lisez la réponse de "
+    "https://registry.npmjs.org/<paquet> à la main, et regardez si le paquet a été retiré ou renommé."
 )
 
 
