@@ -22,6 +22,7 @@ import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CarteDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.ExecuteurTacheRalenti;
+import fr.univ_amu.iut.recette.ExecuteurTacheRetenu;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
@@ -84,10 +85,20 @@ class ScenarioMenuDeLigneImportTest {
 
     private static final long PAUSE_PAR_FICHIER_MS = 900;
 
+    /// Le rang du point de progression où l'import s'arrête et attend le geste.
+    ///
+    /// Trois et non un : retenu au premier, le suivi ne porte qu'une ligne, la table est trop courte
+    /// pour que sa page se cale, et le clic droit se joue au ras du bord inférieur. Trois lignes
+    /// suffisent à ce que le clip montre une table, et l'import est visiblement en vol.
+    private static final int POINT_OU_L_IMPORT_ATTEND = 3;
+
     /// « Colonnes… » ferme la grammaire de tous les menus de ligne du produit (#1792).
     private static final String COLONNES = "Colonnes";
 
     private Injector injecteur;
+
+    /// La retenue posee sur l import, relachee par le cas une fois son geste eprouve.
+    private ExecuteurTacheRetenu retenue;
 
     @Start
     void start(Stage stage) throws IOException {
@@ -98,7 +109,10 @@ class ScenarioMenuDeLigneImportTest {
                     @Provides
                     @Singleton
                     ExecuteurTache executeurFreine() {
-                        return new ExecuteurTacheRalenti(new ExecuteurTacheAsynchrone(), PAUSE_PAR_FICHIER_MS);
+                        retenue = new ExecuteurTacheRetenu(
+                                new ExecuteurTacheRalenti(new ExecuteurTacheAsynchrone(), PAUSE_PAR_FICHIER_MS),
+                                POINT_OU_L_IMPORT_ATTEND);
+                        return retenue;
                     }
                 })
                 .semer(this::poserLeCarreEtSonPoint)
@@ -140,10 +154,37 @@ class ScenarioMenuDeLigneImportTest {
         // L'assistant est plus haut que la scène : la table du suivi est sous le bord, et TestFX
         // refuse de cliquer ce qu'on ne voit pas. C'est aussi ce que le clip doit montrer - un geste
         // hors du cadre ne se filme pas.
+        // L'ÉCRAN SE POSE AVANT QU'ON LE CALE. Les points de progression ajoutent des lignes au
+        // suivi, et caler une page dont le contenu grandit encore ne vaut rien : le calage reste où
+        // il était pendant que la table s'allonge sous lui.
+        retenue.attendreLaRetenue(APPARITION_SECONDES * 1000L);
+
+        // `amenerDansLeCadre` et non `allerAuBasDeLaPage` : sur cet écran, la seconde rend un succès
+        // SANS RIEN CALER. Elle cherche les `ScrollPane` parmi les ANCÊTRES de sa cible, et quand
+        // elle n'en trouve aucun, son `allMatch` sur une liste vide vaut vrai - il ne lui reste que
+        // « la cible est dans le cadre », que l'en-tête de la table satisfait déjà. Mesuré ici : la
+        // page est au même endroit avant et après l'appel, et le geste ne refuse pas (#5961).
         GesteVisible.amenerDansLeCadre(robot, "#tableFichiers");
         Respiration.surLeMomentCle(robot);
+
         GesteVisible.cliquerDroit(robot, table);
         WaitForAsyncUtils.waitForFxEvents();
+
+        // L'IMPORT DOIT ÊTRE ENCORE EN VOL à l'instant du clic, sinon le cas n'a plus d'objet : son
+        // nom dit « pendant l'import », et une table de progression disparue ne porte plus de ligne.
+        // Le contrôle est APRÈS le geste et non avant, parce que `cliquerDroit` dure : il amène le
+        // pointeur, respire, puis clique, et l'import peut conclure dans cet intervalle.
+        //
+        // Il ne protège de rien, il NOMME. Sans lui, la course perdue se présente comme « le menu ne
+        // s'est pas ouvert », et l'on cherche le menu au lieu de chercher le temps.
+        assertThat(robot.lookup("#compteRenduChiffre")
+                        .tryQuery()
+                        .map(Node::isVisible)
+                        .orElse(false))
+                .as("l'import a conclu PENDANT le clic droit : la table de progression a cédé la place"
+                        + " au compte rendu, il n'y a plus de ligne, et le menu ne peut pas s'ouvrir."
+                        + " Le cas a perdu sa course, il n'a pas perdu son menu")
+                .isFalse();
         ContextMenu menu = table.getContextMenu();
 
         // ─── S2-51 · le menu s'OUVRE ─────────────────────────────────────────────────────────────
@@ -208,6 +249,11 @@ class ScenarioMenuDeLigneImportTest {
                 "Échap n'a pas refermé le menu de ligne. Un popup qui survit à son geste se pose sur la"
                         + " dernière image du clip, et c'était une des deux fins mesurées en #5911",
                 APPARITION_SECONDES * 1000L);
+
+        // L'IMPORT REPART. Il etait retenu a son premier point depuis le debut du cas : c'est ce
+        // qui garantit qu'il tournait encore pendant le clic droit, au lieu de l'esperer d'un
+        // freinage dont la duree se perd sur une machine rapide (#5961).
+        retenue.relacher();
 
         // Et on LAISSE L'IMPORT CONCLURE. Sans cela le geste part sur un travail en cours - copie,
         // renommage et transformation freinés à 900 ms par fichier - que les classes suivantes du

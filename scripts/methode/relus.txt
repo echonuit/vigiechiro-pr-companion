@@ -1835,7 +1835,7 @@ ffd29c294827  src/test/java/fr/univ_amu/iut/importation/view/ScenarioCarteMultiN
 915038a8845a  src/test/java/fr/univ_amu/iut/importation/view/ScenarioConnecteAnnonceImportTest.java
 c9e8e1a12452  src/test/java/fr/univ_amu/iut/importation/view/ScenarioImportNominalTest.java
 7e677ede1765  src/test/java/fr/univ_amu/iut/importation/view/ScenarioJournalAbsentTest.java
-f5134b2729cb  src/test/java/fr/univ_amu/iut/importation/view/ScenarioMenuDeLigneImportTest.java
+50b97d3ba2a4  src/test/java/fr/univ_amu/iut/importation/view/ScenarioMenuDeLigneImportTest.java
 61baa82e82c8  src/test/java/fr/univ_amu/iut/importation/view/ScenarioRejetsEtArchiveTest.java
 b1d6fa384619  src/test/java/fr/univ_amu/iut/importation/view/TableNuitsTest.java
 fd7a84ce2c5e  src/test/java/fr/univ_amu/iut/importation/view/ZoneNuitsTest.java
@@ -2060,6 +2060,7 @@ fb2f197b3036  src/test/java/fr/univ_amu/iut/recette/DispositionDesBrutsTest.java
 f77cce1c3b9d  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffere.java
 a0cad8cca4aa  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheDiffereTest.java
 af9b80216119  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheRalenti.java
+0e4bf851cbbc  src/test/java/fr/univ_amu/iut/recette/ExecuteurTacheRetenu.java
 bd083deb8799  src/test/java/fr/univ_amu/iut/recette/ExtractionCarteReelleTest.java
 502c93ef7362  src/test/java/fr/univ_amu/iut/recette/FabriqueWav.java
 9c8e7edb2e4f  src/test/java/fr/univ_amu/iut/recette/FenetreDuBanc.java
