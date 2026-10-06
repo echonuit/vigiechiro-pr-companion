@@ -823,7 +823,9 @@ def test_4359_blocs_relus() -> None:
             "src/test/java/Methode.java",
             "class Methode {\n" + bloc(seuils["methode"] + 1, "    void f() {}") + "}\n",
         )
-        sous_cliquet = set(m.blocs_du_corpus(racine).values())
+        # `dict(...)` et non `.values()` sur le rendu : le banc des temoins neutralise la fonction en
+        # liste vide, et un `.values()` y PLANTAIT au lieu de laisser les cas rougir (#6007).
+        sous_cliquet = set(dict(m.blocs_du_corpus(racine)).values())
         _verifie(
             "4359 registre : un type entre le seuil des methodes et le sien n est pas sous cliquet",
             "src/main/java/Entre.java" in sous_cliquet,
