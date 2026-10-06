@@ -114,21 +114,14 @@ public final class GesteVisible {
 
     /// Amène `selecteur` à la place que sa page lui donne, et **vérifie qu'il y est** (#6069).
     ///
-    /// Dernier geste d'un clip dont le verdict n'est pas le dernier élément de sa page : il **pose**
-    /// une position, là où [#amenerDansLeCadre] se contente d'une position acceptable. Celui-ci
-    /// s'arrête dès que la cible est dans le cadre, et cette condition est vraie à plusieurs
-    /// positions. Appelé juste après qu'une section devient visible, il règle la page sur des bornes
-    /// d'**avant** la mise en page qui place cette section ; la page reste où elle était, la section
-    /// est dans le cadre quand même, et le geste conclut. Deux tournages sur douze du même commit
-    /// finissaient ainsi la page en haut, à 21 % des dix autres.
+    /// Dernier geste d'un clip : il **pose** une position, là où [#amenerDansLeCadre] s'arrête dès que
+    /// la cible est dans le cadre, ce qui est vrai à plusieurs positions. Appelé avant la mise en page
+    /// qui fait paraître une section, celui-là réglait la page sur les bornes d'avant et concluait
+    /// quand même : deux tournages sur douze finissaient la page en haut, à 21 % des dix autres.
     ///
-    /// Ce qui le distingue est sa **condition d'arrêt**, [#estPoseDansLeCadre] : la position, au
-    /// demi-pixel, lue sur des bornes fraîchement mises en page, et non la seule présence dans le
-    /// cadre. Tant qu'elle est fausse, il règle de nouveau : le premier réglage peut être celui d'un
-    /// écran qui n'existe plus, le suivant ne l'est pas.
-    ///
-    /// Une cible qui ne descend d'aucun panneau de défilement est **refusée** : il n'y aurait rien à
-    /// poser, et réussir en silence ferait croire le contraire.
+    /// Sa condition d'arrêt est [#estPoseDansLeCadre], la position au demi-pixel ; tant qu'elle est
+    /// fausse, il règle de nouveau. Une cible qui ne descend d'aucun panneau de défilement est
+    /// **refusée** : il n'y aurait rien à poser, et réussir en silence ferait croire le contraire.
     public static void poserDansLeCadre(FxRobot robot, String selecteur) {
         // Le réglage est le PREMIER `interact` du geste, et le refus se lit dessus. Un contrôle posé
         // avant lui laisserait passer une mise en page, et le geste réussirait alors pour une raison

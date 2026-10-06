@@ -386,10 +386,7 @@ class ScenarioPassagePivotTest {
         // six tournages du même commit (#5911). Le saut est un comportement du produit, consigné en
         // #6054, et il reste visible dans le clip. La fin, elle, revient sur les champs que le
         // bandeau demande de vérifier, et y reste le temps d'être lue.
-        //
-        // Elle s'y POSE : le geste d'avant s'arrêtait dès que sa cible était dans le cadre, ce qui est
-        // vrai à plusieurs positions de la modale. Aucune seconde fin n'a été vue sur ce clip, mais
-        // c'est ce même geste qui en a donné une à celui de la décompression (#6069).
+        // Elle s'y POSE, au lieu d'y être seulement amenée : [#exigerLaMeteoALImage] dit pourquoi.
         GesteVisible.poserDansLeCadre(robot, FIN_DE_LA_MODALE);
         Respiration.leTempsDeLire(robot);
         exigerLaMeteoALImage(robot);
@@ -397,6 +394,10 @@ class ScenarioPassagePivotTest {
 
     /// Les champs que « Météo pré-remplie : vérifiez puis appliquez » demande de vérifier sont-ils à
     /// l'image quand le cas finit ? Sans le geste de fin, la modale a pu défiler jusqu'à son bas.
+    ///
+    /// Et la modale est-elle **là où ce geste l'a posée** ? « Dans le cadre » est vrai à plusieurs
+    /// positions. Aucune seconde fin n'a été vue sur ce clip, mais c'est en s'arrêtant sur cette seule
+    /// condition qu'un geste en a donné une au clip de la décompression (#6069).
     private static void exigerLaMeteoALImage(FxRobot robot) {
         assertThat(CadreVisible.contient(robot.lookup("#champTemperature").query())
                         && CadreVisible.contient(
